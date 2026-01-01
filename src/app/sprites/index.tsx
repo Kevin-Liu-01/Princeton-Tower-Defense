@@ -5,21 +5,20 @@ import type { TowerType, HeroType, SpellType } from "../types";
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
-
 export function darkenColor(color: string, amount: number): string {
-  const hex = color?.replace("#", "");
-  const r = Math.max(0, parseInt(hex?.substr(0, 2), 16) - amount);
-  const g = Math.max(0, parseInt(hex?.substr(2, 2), 16) - amount);
-  const b = Math.max(0, parseInt(hex?.substr(4, 2), 16) - amount);
+  const hex = color?.replace("#", "") || "888888";
+  const r = Math.max(0, parseInt(hex.substr(0, 2), 16) - amount);
+  const g = Math.max(0, parseInt(hex.substr(2, 2), 16) - amount);
+  const b = Math.max(0, parseInt(hex.substr(4, 2), 16) - amount);
   return `#${r.toString(16).padStart(2, "0")}${g
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
 export function lightenColor(color: string, amount: number): string {
-  const hex = color?.replace("#", "");
-  const r = Math.min(255, parseInt(hex?.substr(0, 2), 16) + amount);
-  const g = Math.min(255, parseInt(hex?.substr(2, 2), 16) + amount);
+  const hex = color?.replace("#", "") || "888888";
+  const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + amount);
+  const g = Math.min(255, parseInt(hex.substr(2, 2), 16) + amount);
   const b = Math.min(255, parseInt(hex.substr(4, 2), 16) + amount);
   return `#${r.toString(16).padStart(2, "0")}${g
     .toString(16)
@@ -29,7 +28,6 @@ export function lightenColor(color: string, amount: number): string {
 // =============================================================================
 // TOWER SPRITES - Matches actual game rendering
 // =============================================================================
-
 export const TowerSprite: React.FC<{
   type: TowerType;
   size?: number;
@@ -64,9 +62,9 @@ export const TowerSprite: React.FC<{
 
     switch (type) {
       case "cannon": {
-        // Nassau Cannon - Artillery tower
-        // Base platform
-        ctx.fillStyle = "#4a4a4a";
+        // Nassau Cannon - Artillery tower with isometric base
+        // Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
@@ -79,33 +77,48 @@ export const TowerSprite: React.FC<{
         );
         ctx.fill();
 
-        // Stone base
-        ctx.fillStyle = "#5a5a5a";
+        // Mechanical base - left face
+        ctx.fillStyle = "#4a4a52";
         ctx.beginPath();
         ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
         ctx.lineTo(cx - 12 * scale, cy - 8 * scale);
-        ctx.lineTo(cx + 12 * scale, cy - 8 * scale);
-        ctx.lineTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx, cy - 4 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
 
-        // Battlements
-        ctx.fillStyle = "#6a6a6a";
-        for (let i = -1; i <= 1; i += 2) {
-          ctx.fillRect(
-            cx + i * 8 * scale - 4 * scale,
-            cy - 14 * scale,
-            8 * scale,
-            8 * scale
-          );
-        }
+        // Right face
+        ctx.fillStyle = "#3a3a42";
+        ctx.beginPath();
+        ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 12 * scale, cy - 8 * scale);
+        ctx.lineTo(cx, cy - 4 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top face
+        ctx.fillStyle = "#5a5a62";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 12 * scale);
+        ctx.lineTo(cx - 12 * scale, cy - 8 * scale);
+        ctx.lineTo(cx, cy - 4 * scale);
+        ctx.lineTo(cx + 12 * scale, cy - 8 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tech vents (glowing)
+        const ventGlow = 0.5 + Math.sin(t * 4) * 0.3;
+        ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow})`;
+        ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 3 * scale, 6 * scale);
+        ctx.fillRect(cx + 5 * scale, cy - 2 * scale, 3 * scale, 6 * scale);
 
         // Turret base
         ctx.fillStyle = "#3a3a3a";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy - 6 * scale,
+          cy - 10 * scale,
           10 * scale,
           6 * scale,
           0,
@@ -117,19 +130,20 @@ export const TowerSprite: React.FC<{
         // Cannon barrel
         ctx.fillStyle = "#2a2a2a";
         ctx.save();
-        ctx.translate(cx, cy - 6 * scale);
+        ctx.translate(cx, cy - 10 * scale);
         ctx.rotate(-0.4);
         ctx.fillRect(0, -4 * scale, 22 * scale, 8 * scale);
-        // Barrel rings
         ctx.fillStyle = "#4a4a4a";
         ctx.fillRect(8 * scale, -5 * scale, 3 * scale, 10 * scale);
         ctx.fillRect(16 * scale, -5 * scale, 3 * scale, 10 * scale);
-        // Muzzle
-        ctx.fillStyle = "#1a1a1a";
-        ctx.fillRect(20 * scale, -5 * scale, 4 * scale, 10 * scale);
+        // Muzzle glow
+        ctx.fillStyle = `rgba(255, 100, 0, ${ventGlow})`;
+        ctx.beginPath();
+        ctx.arc(22 * scale, 0, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
 
-        // Level stars
+        // Level indicator
         if (level > 1) {
           ctx.fillStyle = "#ffd700";
           for (let i = 0; i < Math.min(level - 1, 3); i++) {
@@ -140,8 +154,7 @@ export const TowerSprite: React.FC<{
       }
 
       case "library": {
-        // Firestone Library - Magic tower with gothic architecture
-        // Shadow
+        // Firestone Library - Gothic magic tower
         ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.beginPath();
         ctx.ellipse(
@@ -155,13 +168,23 @@ export const TowerSprite: React.FC<{
         );
         ctx.fill();
 
-        // Main building
-        ctx.fillStyle = "#6b5344";
+        // Main building - left face
+        ctx.fillStyle = "#6b5b4b";
         ctx.beginPath();
         ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
         ctx.lineTo(cx - 12 * scale, cy - 6 * scale);
+        ctx.lineTo(cx, cy - 2 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
         ctx.lineTo(cx + 12 * scale, cy - 6 * scale);
-        ctx.lineTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx, cy - 2 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
 
@@ -174,7 +197,7 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
 
-        // Roof detail
+        // Roof highlight
         ctx.fillStyle = "#5a4a3a";
         ctx.beginPath();
         ctx.moveTo(cx, cy - 28 * scale);
@@ -183,7 +206,7 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
 
-        // Gothic window (pointed arch)
+        // Gothic window
         ctx.fillStyle = "#1a1a1a";
         ctx.beginPath();
         ctx.moveTo(cx - 5 * scale, cy + 6 * scale);
@@ -230,8 +253,7 @@ export const TowerSprite: React.FC<{
 
       case "lab": {
         // E-Quad Lab - Tesla/electric tower
-        // Base
-        ctx.fillStyle = "#2d4a5a";
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
@@ -244,13 +266,23 @@ export const TowerSprite: React.FC<{
         );
         ctx.fill();
 
-        // Industrial building
+        // Industrial building - left
         ctx.fillStyle = "#3d5a6b";
         ctx.beginPath();
         ctx.moveTo(cx - 12 * scale, cy + 10 * scale);
         ctx.lineTo(cx - 10 * scale, cy - 10 * scale);
+        ctx.lineTo(cx, cy - 6 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right
+        ctx.fillStyle = "#2d4a5a";
+        ctx.beginPath();
+        ctx.moveTo(cx + 12 * scale, cy + 10 * scale);
         ctx.lineTo(cx + 10 * scale, cy - 10 * scale);
-        ctx.lineTo(cx + 12 * scale, cy + 10 * scale);
+        ctx.lineTo(cx, cy - 6 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
 
@@ -258,20 +290,6 @@ export const TowerSprite: React.FC<{
         ctx.fillStyle = "#4d6a7b";
         ctx.beginPath();
         ctx.arc(cx, cy - 10 * scale, 10 * scale, Math.PI, 0);
-        ctx.fill();
-
-        // Tesla coil base
-        ctx.fillStyle = "#2a3a4a";
-        ctx.beginPath();
-        ctx.ellipse(
-          cx,
-          cy - 18 * scale,
-          6 * scale,
-          3 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
         ctx.fill();
 
         // Tesla coil
@@ -307,29 +325,12 @@ export const TowerSprite: React.FC<{
           }
         }
         ctx.shadowBlur = 0;
-
-        // Pistons
-        ctx.fillStyle = "#5a6a7a";
-        const pistonExtend = animated ? Math.sin(t * 4) * 3 * scale : 0;
-        ctx.fillRect(
-          cx - 16 * scale,
-          cy - 5 * scale + pistonExtend,
-          4 * scale,
-          12 * scale
-        );
-        ctx.fillRect(
-          cx + 12 * scale,
-          cy - 5 * scale - pistonExtend,
-          4 * scale,
-          12 * scale
-        );
         break;
       }
 
       case "arch": {
         // Blair Arch - Sound/music tower
-        // Foundation
-        ctx.fillStyle = "#5b4b3f";
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
@@ -345,9 +346,14 @@ export const TowerSprite: React.FC<{
         // Left pillar
         ctx.fillStyle = "#7b6b55";
         ctx.fillRect(cx - 16 * scale, cy - 18 * scale, 8 * scale, 30 * scale);
+        ctx.fillStyle = "#6b5b45";
+        ctx.fillRect(cx - 16 * scale, cy - 18 * scale, 4 * scale, 30 * scale);
 
         // Right pillar
+        ctx.fillStyle = "#7b6b55";
         ctx.fillRect(cx + 8 * scale, cy - 18 * scale, 8 * scale, 30 * scale);
+        ctx.fillStyle = "#8b7b65";
+        ctx.fillRect(cx + 12 * scale, cy - 18 * scale, 4 * scale, 30 * scale);
 
         // Arch
         ctx.fillStyle = "#8b7b65";
@@ -391,23 +397,11 @@ export const TowerSprite: React.FC<{
             ctx.stroke();
           }
         }
-
-        // Keystone
-        ctx.fillStyle = "#9b8b75";
-        ctx.beginPath();
-        ctx.moveTo(cx - 4 * scale, cy - 28 * scale);
-        ctx.lineTo(cx, cy - 32 * scale);
-        ctx.lineTo(cx + 4 * scale, cy - 28 * scale);
-        ctx.lineTo(cx + 3 * scale, cy - 24 * scale);
-        ctx.lineTo(cx - 3 * scale, cy - 24 * scale);
-        ctx.closePath();
-        ctx.fill();
         break;
       }
 
       case "club": {
         // Eating Club - Economy/buff tower
-        // Shadow
         ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.beginPath();
         ctx.ellipse(
@@ -421,13 +415,23 @@ export const TowerSprite: React.FC<{
         );
         ctx.fill();
 
-        // Building
+        // Building - left
         ctx.fillStyle = "#2d6b2d";
         ctx.beginPath();
         ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
         ctx.lineTo(cx - 12 * scale, cy - 4 * scale);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right
+        ctx.fillStyle = "#1d5b1d";
+        ctx.beginPath();
+        ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
         ctx.lineTo(cx + 12 * scale, cy - 4 * scale);
-        ctx.lineTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
 
@@ -444,7 +448,7 @@ export const TowerSprite: React.FC<{
         ctx.fillStyle = "#5d3a1a";
         ctx.fillRect(cx - 4 * scale, cy, 8 * scale, 10 * scale);
 
-        // Dollar sign emblem
+        // Dollar sign
         ctx.fillStyle = "#ffd700";
         ctx.shadowColor = "#ffd700";
         ctx.shadowBlur = 6 * scale;
@@ -453,36 +457,12 @@ export const TowerSprite: React.FC<{
         ctx.textBaseline = "middle";
         ctx.fillText("$", cx, cy - 12 * scale);
         ctx.shadowBlur = 0;
-
-        // Coins at base
-        ctx.fillStyle = "#ffd700";
-        ctx.beginPath();
-        ctx.ellipse(
-          cx - 8 * scale,
-          cy + 8 * scale,
-          4 * scale,
-          2 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.ellipse(
-          cx + 8 * scale,
-          cy + 8 * scale,
-          4 * scale,
-          2 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
         break;
       }
 
       case "station": {
         // Dinky Station - Troop spawner
-        // Platform
-        ctx.fillStyle = "#6b1a1a";
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
@@ -495,27 +475,29 @@ export const TowerSprite: React.FC<{
         );
         ctx.fill();
 
-        // Station building
+        // Station building - left
         ctx.fillStyle = "#8b2a2a";
-        ctx.fillRect(cx - 16 * scale, cy - 2 * scale, 32 * scale, 16 * scale);
+        ctx.beginPath();
+        ctx.moveTo(cx - 16 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 16 * scale, cy - 2 * scale);
+        ctx.lineTo(cx, cy + 2 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right
+        ctx.fillStyle = "#7b1a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx + 16 * scale, cy + 14 * scale);
+        ctx.lineTo(cx + 16 * scale, cy - 2 * scale);
+        ctx.lineTo(cx, cy + 2 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
 
         // Roof
         ctx.fillStyle = "#6b0000";
         ctx.fillRect(cx - 18 * scale, cy - 8 * scale, 36 * scale, 8 * scale);
-
-        // Roof overhang
-        ctx.fillStyle = "#5b0000";
-        ctx.beginPath();
-        ctx.moveTo(cx - 20 * scale, cy - 8 * scale);
-        ctx.lineTo(cx - 18 * scale, cy - 12 * scale);
-        ctx.lineTo(cx + 18 * scale, cy - 12 * scale);
-        ctx.lineTo(cx + 20 * scale, cy - 8 * scale);
-        ctx.closePath();
-        ctx.fill();
-
-        // Door
-        ctx.fillStyle = "#3a1a0a";
-        ctx.fillRect(cx - 5 * scale, cy + 2 * scale, 10 * scale, 12 * scale);
 
         // Windows
         ctx.fillStyle = "#ffd700";
@@ -534,11 +516,7 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy - 18 * scale);
         ctx.fill();
 
-        // Flag pole
-        ctx.fillStyle = "#4a3020";
-        ctx.fillRect(cx - 1 * scale, cy - 26 * scale, 2 * scale, 16 * scale);
-
-        // Train tracks hint
+        // Train tracks
         ctx.strokeStyle = "#4a4a4a";
         ctx.lineWidth = 2 * scale;
         ctx.beginPath();
@@ -572,9 +550,8 @@ function drawStar(
 }
 
 // =============================================================================
-// HERO SPRITES
+// HERO SPRITES - Matching rendering.ts detailed style
 // =============================================================================
-
 export const HERO_COLORS: Record<string, string> = {
   tiger: "#ff8c00",
   mathey: "#6366f1",
@@ -613,375 +590,698 @@ export const HeroSprite: React.FC<{
     const cy = size / 2;
     const scale = size / 50;
     const color = HERO_COLORS[type] || "#ff8c00";
-    const bounce = animated ? Math.sin(time * 0.15) * 2 : 0;
+    const t = time * 0.08;
+    const bounce = animated ? Math.sin(t) * 2 : 0;
 
     // Shadow
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.beginPath();
     ctx.ellipse(cx, cy + 18 * scale, 14 * scale, 5 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body with gradient
-    const bodyGrad = ctx.createRadialGradient(
-      cx,
-      cy + bounce,
-      0,
-      cx,
-      cy + bounce,
-      18 * scale
-    );
-    bodyGrad.addColorStop(0, lightenColor(color, 40));
-    bodyGrad.addColorStop(0.6, color);
-    bodyGrad.addColorStop(1, darkenColor(color, 50));
-    ctx.fillStyle = bodyGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      cx,
-      cy + 2 * scale + bounce,
-      14 * scale,
-      16 * scale,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-    ctx.strokeStyle = darkenColor(color, 60);
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Type-specific features
     switch (type) {
-      case "tiger":
-        // Tiger stripes
-        ctx.strokeStyle = darkenColor(color, 60);
+      case "tiger": {
+        // Tiger body (muscular orange)
+        const bodyGrad = ctx.createRadialGradient(
+          cx,
+          cy + bounce,
+          0,
+          cx,
+          cy + bounce,
+          18 * scale
+        );
+        bodyGrad.addColorStop(0, "#ff9933");
+        bodyGrad.addColorStop(0.6, "#ff6600");
+        bodyGrad.addColorStop(1, "#cc4400");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy + 2 * scale + bounce,
+          14 * scale,
+          17 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Tiger stripes on body
+        ctx.strokeStyle = "#1a1a1a";
         ctx.lineWidth = 2.5 * scale;
-        for (let i = -1; i <= 1; i++) {
+        for (let i = 0; i < 3; i++) {
+          const stripeY = cy - 4 * scale + i * 6 * scale + bounce;
           ctx.beginPath();
-          ctx.moveTo(cx + i * 6 * scale, cy - 2 * scale + bounce);
-          ctx.lineTo(cx + i * 6 * scale, cy + 10 * scale + bounce);
+          ctx.moveTo(cx - 10 * scale, stripeY);
+          ctx.quadraticCurveTo(
+            cx - 4 * scale,
+            stripeY - 3 * scale,
+            cx,
+            stripeY
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 10 * scale, stripeY);
+          ctx.quadraticCurveTo(
+            cx + 4 * scale,
+            stripeY - 3 * scale,
+            cx,
+            stripeY
+          );
           ctx.stroke();
         }
+
+        // Tiger head
+        ctx.fillStyle = "#ff8c00";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 12 * scale + bounce,
+          11 * scale,
+          9 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
         // Ears
-        ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(
-          cx - 10 * scale,
-          cy - 14 * scale + bounce,
-          5 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.arc(
-          cx + 10 * scale,
-          cy - 14 * scale + bounce,
-          5 * scale,
-          0,
-          Math.PI * 2
-        );
+        ctx.moveTo(cx - 8 * scale, cy - 18 * scale + bounce);
+        ctx.lineTo(cx - 12 * scale, cy - 26 * scale + bounce);
+        ctx.lineTo(cx - 4 * scale, cy - 20 * scale + bounce);
+        ctx.closePath();
         ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 8 * scale, cy - 18 * scale + bounce);
+        ctx.lineTo(cx + 12 * scale, cy - 26 * scale + bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 20 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+
         // Inner ears
-        ctx.fillStyle = "#ffb6c1";
+        ctx.fillStyle = "#ffccaa";
         ctx.beginPath();
-        ctx.arc(
-          cx - 10 * scale,
-          cy - 14 * scale + bounce,
-          2.5 * scale,
+        ctx.moveTo(cx - 7 * scale, cy - 19 * scale + bounce);
+        ctx.lineTo(cx - 10 * scale, cy - 24 * scale + bounce);
+        ctx.lineTo(cx - 5 * scale, cy - 20 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 7 * scale, cy - 19 * scale + bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 24 * scale + bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 20 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head stripes
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy - 20 * scale + bounce);
+        ctx.lineTo(cx - 3 * scale, cy - 14 * scale + bounce);
+        ctx.moveTo(cx + 5 * scale, cy - 20 * scale + bounce);
+        ctx.lineTo(cx + 3 * scale, cy - 14 * scale + bounce);
+        ctx.moveTo(cx, cy - 22 * scale + bounce);
+        ctx.lineTo(cx, cy - 16 * scale + bounce);
+        ctx.stroke();
+
+        // Muzzle
+        ctx.fillStyle = "#fff8e7";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 9 * scale + bounce,
+          5 * scale,
+          4 * scale,
           0,
-          Math.PI * 2
-        );
-        ctx.arc(
-          cx + 10 * scale,
-          cy - 14 * scale + bounce,
-          2.5 * scale,
           0,
           Math.PI * 2
         );
         ctx.fill();
-        // Face
-        ctx.fillStyle = "#ffdbac";
+
+        // Nose
+        ctx.fillStyle = "#2a1a0a";
         ctx.beginPath();
-        ctx.arc(cx, cy - 6 * scale + bounce, 10 * scale, 0, Math.PI * 2);
+        ctx.moveTo(cx, cy - 11 * scale + bounce);
+        ctx.lineTo(cx - 2 * scale, cy - 9 * scale + bounce);
+        ctx.lineTo(cx + 2 * scale, cy - 9 * scale + bounce);
+        ctx.closePath();
         ctx.fill();
-        // Eyes
-        ctx.fillStyle = "#333";
+
+        // Fierce eyes (glowing)
+        ctx.shadowColor = "#ffcc00";
+        ctx.shadowBlur = 6 * scale;
+        ctx.fillStyle = "#ffcc00";
         ctx.beginPath();
         ctx.ellipse(
           cx - 4 * scale,
-          cy - 7 * scale + bounce,
-          2.5 * scale,
+          cy - 14 * scale + bounce,
           3 * scale,
+          2.5 * scale,
+          -0.15,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 4 * scale,
+          cy - 14 * scale + bounce,
+          3 * scale,
+          2.5 * scale,
+          0.15,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Pupils
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 4 * scale,
+          cy - 14 * scale + bounce,
+          1 * scale,
+          2 * scale,
           0,
           0,
           Math.PI * 2
         );
         ctx.ellipse(
           cx + 4 * scale,
-          cy - 7 * scale + bounce,
-          2.5 * scale,
-          3 * scale,
+          cy - 14 * scale + bounce,
+          1 * scale,
+          2 * scale,
           0,
           0,
           Math.PI * 2
         );
         ctx.fill();
-        // Nose
-        ctx.fillStyle = "#333";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 3 * scale + bounce, 2 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        break;
 
-      case "mathey":
-        // Roman helmet
-        ctx.fillStyle = "#6366f1";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 10 * scale + bounce, 12 * scale, Math.PI, 0);
-        ctx.fill();
-        // Helmet crest
-        ctx.fillStyle = "#ff6b6b";
+        // Mouth with fangs
+        ctx.fillStyle = "#8b0000";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy - 20 * scale + bounce,
-          4 * scale,
+          cy - 7 * scale + bounce,
+          3 * scale,
+          2 * scale,
+          0,
+          0,
+          Math.PI
+        );
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale, cy - 7 * scale + bounce);
+        ctx.lineTo(cx - 1.5 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx - 1 * scale, cy - 7 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 2 * scale, cy - 7 * scale + bounce);
+        ctx.lineTo(cx + 1.5 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx + 1 * scale, cy - 7 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+
+      case "mathey": {
+        // Knight armor body
+        const armorGrad = ctx.createLinearGradient(
+          cx - 14 * scale,
+          cy,
+          cx + 14 * scale,
+          cy
+        );
+        armorGrad.addColorStop(0, "#6a6a7a");
+        armorGrad.addColorStop(0.3, "#9a9aaa");
+        armorGrad.addColorStop(0.5, "#cacaca");
+        armorGrad.addColorStop(0.7, "#9a9aaa");
+        armorGrad.addColorStop(1, "#6a6a7a");
+        ctx.fillStyle = armorGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx - 14 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx - 8 * scale, cy - 10 * scale + bounce);
+        ctx.lineTo(cx, cy - 12 * scale + bounce);
+        ctx.lineTo(cx + 8 * scale, cy - 10 * scale + bounce);
+        ctx.lineTo(cx + 14 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx + 12 * scale, cy + 14 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#4a4a5a";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.stroke();
+
+        // Armor segments
+        ctx.strokeStyle = "#5a5a6a";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy + bounce);
+        ctx.lineTo(cx + 10 * scale, cy + bounce);
+        ctx.moveTo(cx - 9 * scale, cy + 6 * scale + bounce);
+        ctx.lineTo(cx + 9 * scale, cy + 6 * scale + bounce);
+        ctx.stroke();
+
+        // Princeton crest
+        ctx.fillStyle = "#ff6600";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6 * scale + bounce);
+        ctx.lineTo(cx - 4 * scale, cy + 2 * scale + bounce);
+        ctx.lineTo(cx, cy + 8 * scale + bounce);
+        ctx.lineTo(cx + 4 * scale, cy + 2 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Helmet
+        ctx.fillStyle = "#7a7a8a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 18 * scale + bounce,
+          10 * scale,
           8 * scale,
           0,
           0,
           Math.PI * 2
         );
         ctx.fill();
-        // Face
-        ctx.fillStyle = "#ffdbac";
+        // Visor
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(
+          cx - 7 * scale,
+          cy - 20 * scale + bounce,
+          14 * scale,
+          3 * scale
+        );
+        // Crest
+        ctx.fillStyle = "#ff6b6b";
         ctx.beginPath();
-        ctx.arc(cx, cy - 4 * scale + bounce, 8 * scale, 0, Math.PI * 2);
+        ctx.moveTo(cx, cy - 24 * scale + bounce);
+        ctx.lineTo(cx - 3 * scale, cy - 18 * scale + bounce);
+        ctx.lineTo(cx + 3 * scale, cy - 18 * scale + bounce);
+        ctx.closePath();
         ctx.fill();
-        // Eyes
-        ctx.fillStyle = "#333";
         ctx.beginPath();
-        ctx.arc(
-          cx - 3 * scale,
-          cy - 5 * scale + bounce,
-          2 * scale,
+        ctx.ellipse(
+          cx,
+          cy - 28 * scale + bounce,
+          3 * scale,
+          6 * scale,
+          0,
           0,
           Math.PI * 2
         );
-        ctx.arc(
-          cx + 3 * scale,
-          cy - 5 * scale + bounce,
-          2 * scale,
-          0,
-          Math.PI * 2
-        );
         ctx.fill();
+
         // Shield
         ctx.fillStyle = "#4338ca";
         ctx.beginPath();
-        ctx.moveTo(cx - 16 * scale, cy + bounce);
-        ctx.lineTo(cx - 16 * scale, cy + 12 * scale + bounce);
-        ctx.lineTo(cx - 10 * scale, cy + 16 * scale + bounce);
-        ctx.lineTo(cx - 10 * scale, cy + bounce);
+        ctx.moveTo(cx - 16 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx - 16 * scale, cy + 8 * scale + bounce);
+        ctx.lineTo(cx - 12 * scale, cy + 12 * scale + bounce);
+        ctx.lineTo(cx - 12 * scale, cy - 4 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-        // Shield emblem
         ctx.fillStyle = "#ffd700";
         ctx.beginPath();
         ctx.arc(
-          cx - 13 * scale,
-          cy + 8 * scale + bounce,
-          3 * scale,
+          cx - 14 * scale,
+          cy + 4 * scale + bounce,
+          2 * scale,
           0,
           Math.PI * 2
         );
         ctx.fill();
         break;
+      }
 
-      case "rocky":
-        // Rock body texture
-        ctx.fillStyle = "#5a5a5a";
-        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      case "rocky": {
+        // Rock golem body
+        const rockGrad = ctx.createRadialGradient(
+          cx,
+          cy + bounce,
+          0,
+          cx,
+          cy + bounce,
+          18 * scale
+        );
+        rockGrad.addColorStop(0, "#7a7a7a");
+        rockGrad.addColorStop(0.5, "#5a5a5a");
+        rockGrad.addColorStop(1, "#3a3a3a");
+        ctx.fillStyle = rockGrad;
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy + 2 * scale + bounce,
+          14 * scale,
+          16 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Rock cracks
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
         ctx.lineWidth = 2 * scale;
-        // Cracks
         for (let i = 0; i < 4; i++) {
           ctx.beginPath();
-          ctx.moveTo(cx - 10 * scale + i * 6 * scale, cy - 5 * scale + bounce);
-          ctx.lineTo(cx - 8 * scale + i * 6 * scale, cy + 10 * scale + bounce);
+          ctx.moveTo(cx - 10 * scale + i * 5 * scale, cy - 5 * scale + bounce);
+          ctx.lineTo(cx - 8 * scale + i * 5 * scale, cy + 10 * scale + bounce);
           ctx.stroke();
         }
-        // Face area
+
+        // Rocky head
         ctx.fillStyle = "#6a6a6a";
         ctx.beginPath();
-        ctx.arc(cx, cy - 4 * scale + bounce, 9 * scale, 0, Math.PI * 2);
+        ctx.moveTo(cx - 10 * scale, cy - 8 * scale + bounce);
+        ctx.lineTo(cx - 8 * scale, cy - 20 * scale + bounce);
+        ctx.lineTo(cx, cy - 24 * scale + bounce);
+        ctx.lineTo(cx + 8 * scale, cy - 20 * scale + bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 8 * scale + bounce);
+        ctx.closePath();
         ctx.fill();
+
         // Glowing eyes
-        ctx.fillStyle = "#ffaa00";
         ctx.shadowColor = "#ffaa00";
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 8 * scale;
+        ctx.fillStyle = "#ffaa00";
         ctx.beginPath();
         ctx.arc(
           cx - 4 * scale,
-          cy - 5 * scale + bounce,
+          cy - 14 * scale + bounce,
           3 * scale,
           0,
           Math.PI * 2
         );
         ctx.arc(
           cx + 4 * scale,
-          cy - 5 * scale + bounce,
+          cy - 14 * scale + bounce,
           3 * scale,
           0,
           Math.PI * 2
         );
         ctx.fill();
         ctx.shadowBlur = 0;
-        break;
 
-      case "tenor":
-        // Face
-        ctx.fillStyle = "#ffdbac";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 6 * scale + bounce, 10 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        // Eyes (singing expression)
-        ctx.fillStyle = "#333";
-        ctx.beginPath();
-        ctx.arc(
-          cx - 4 * scale,
-          cy - 7 * scale + bounce,
-          2 * scale,
-          0,
-          Math.PI * 2
+        // Glowing cracks
+        if (animated) {
+          ctx.strokeStyle = `rgba(255, 100, 0, ${0.5 + Math.sin(t * 3) * 0.3})`;
+          ctx.lineWidth = 1.5 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 6 * scale, cy - 2 * scale + bounce);
+          ctx.lineTo(cx - 2 * scale, cy + 8 * scale + bounce);
+          ctx.moveTo(cx + 6 * scale, cy + bounce);
+          ctx.lineTo(cx + 3 * scale, cy + 6 * scale + bounce);
+          ctx.stroke();
+        }
+        break;
+      }
+
+      case "tenor": {
+        // Tuxedo body
+        const tuxGrad = ctx.createLinearGradient(
+          cx - 12 * scale,
+          cy,
+          cx + 12 * scale,
+          cy
         );
-        ctx.arc(
-          cx + 4 * scale,
-          cy - 7 * scale + bounce,
-          2 * scale,
-          0,
-          Math.PI * 2
-        );
+        tuxGrad.addColorStop(0, "#1a1a1a");
+        tuxGrad.addColorStop(0.3, "#2a2a2a");
+        tuxGrad.addColorStop(0.7, "#2a2a2a");
+        tuxGrad.addColorStop(1, "#1a1a1a");
+        ctx.fillStyle = tuxGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx - 14 * scale, cy - 6 * scale + bounce);
+        ctx.lineTo(cx, cy - 12 * scale + bounce);
+        ctx.lineTo(cx + 14 * scale, cy - 6 * scale + bounce);
+        ctx.lineTo(cx + 12 * scale, cy + 14 * scale + bounce);
+        ctx.closePath();
         ctx.fill();
-        // Mouth (open, singing)
-        ctx.fillStyle = "#333";
+
+        // White shirt front
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 10 * scale + bounce);
+        ctx.lineTo(cx - 3 * scale, cy + 10 * scale + bounce);
+        ctx.lineTo(cx + 3 * scale, cy + 10 * scale + bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 10 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bow tie
+        ctx.fillStyle = "#ff6600";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 8 * scale + bounce);
+        ctx.lineTo(cx - 4 * scale, cy - 10 * scale + bounce);
+        ctx.lineTo(cx - 4 * scale, cy - 6 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 8 * scale + bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 10 * scale + bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 6 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 16 * scale + bounce, 9 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Slicked back hair
+        ctx.fillStyle = "#2a1a0a";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy - 1 * scale + bounce,
+          cy - 22 * scale + bounce,
+          8 * scale,
           4 * scale,
-          3 * scale,
           0,
           0,
-          Math.PI * 2
+          Math.PI
         );
         ctx.fill();
-        // Musical notes floating
-        ctx.fillStyle = "#8b5cf6";
-        ctx.font = `${12 * scale}px Arial`;
-        const noteOffset = animated ? Math.sin(time * 0.1) * 3 : 0;
-        ctx.fillText(
-          "♪",
-          cx - 14 * scale,
-          cy - 12 * scale + bounce + noteOffset
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, cy - 20 * scale + bounce);
+        ctx.quadraticCurveTo(
+          cx - 9 * scale,
+          cy - 26 * scale + bounce,
+          cx,
+          cy - 28 * scale + bounce
         );
-        ctx.fillText(
-          "♫",
-          cx + 8 * scale,
-          cy - 16 * scale + bounce - noteOffset
+        ctx.quadraticCurveTo(
+          cx + 9 * scale,
+          cy - 26 * scale + bounce,
+          cx + 7 * scale,
+          cy - 20 * scale + bounce
         );
-        // Microphone
-        ctx.fillStyle = "#333";
-        ctx.fillRect(
-          cx + 12 * scale,
-          cy - 4 * scale + bounce,
-          3 * scale,
-          14 * scale
-        );
-        ctx.fillStyle = "#666";
+        ctx.fill();
+
+        // Closed singing eyes
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1.5 * scale;
         ctx.beginPath();
         ctx.arc(
-          cx + 13.5 * scale,
-          cy - 6 * scale + bounce,
-          5 * scale,
+          cx - 3 * scale,
+          cy - 17 * scale + bounce,
+          2 * scale,
+          0.2 * Math.PI,
+          0.8 * Math.PI
+        );
+        ctx.arc(
+          cx + 3 * scale,
+          cy - 17 * scale + bounce,
+          2 * scale,
+          0.2 * Math.PI,
+          0.8 * Math.PI
+        );
+        ctx.stroke();
+
+        // Singing mouth
+        ctx.fillStyle = "#4a2020";
+        const mouthSize = animated ? 3 + Math.sin(t * 1.5) * 0.5 : 3;
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 12 * scale + bounce,
+          3 * scale,
+          mouthSize * scale,
+          0,
           0,
           Math.PI * 2
         );
         ctx.fill();
-        break;
 
-      case "scott":
-        // Face
-        ctx.fillStyle = "#ffdbac";
+        // Musical notes
+        if (animated) {
+          ctx.fillStyle = `rgba(139, 92, 246, ${0.6 + Math.sin(t * 2) * 0.3})`;
+          ctx.font = `${10 * scale}px Arial`;
+          for (let i = 0; i < 2; i++) {
+            const notePhase = (t * 0.5 + i * 0.5) % 1.5;
+            const noteX =
+              cx + 12 * scale + Math.sin(notePhase * Math.PI) * 5 * scale;
+            const noteY = cy - 12 * scale - notePhase * 12 * scale + bounce;
+            ctx.globalAlpha = Math.max(0, 1 - notePhase / 1.5);
+            ctx.fillText(i % 2 === 0 ? "♪" : "♫", noteX, noteY);
+          }
+          ctx.globalAlpha = 1;
+        }
+        break;
+      }
+
+      case "scott": {
+        // Vintage suit body
+        ctx.fillStyle = "#14b8a6";
         ctx.beginPath();
-        ctx.arc(cx, cy - 6 * scale + bounce, 10 * scale, 0, Math.PI * 2);
+        ctx.moveTo(cx - 11 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx - 13 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx, cy - 10 * scale + bounce);
+        ctx.lineTo(cx + 13 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx + 11 * scale, cy + 14 * scale + bounce);
+        ctx.closePath();
         ctx.fill();
+
+        // Vest
+        ctx.fillStyle = "#0d9488";
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy - 8 * scale + bounce);
+        ctx.lineTo(cx - 4 * scale, cy + 12 * scale + bounce);
+        ctx.lineTo(cx + 4 * scale, cy + 12 * scale + bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 8 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 15 * scale + bounce, 9 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Parted hair
+        ctx.fillStyle = "#4a3020";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 21 * scale + bounce,
+          8 * scale,
+          4 * scale,
+          0,
+          0,
+          Math.PI
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 24 * scale + bounce);
+        ctx.quadraticCurveTo(
+          cx - 6 * scale,
+          cy - 26 * scale,
+          cx - 9 * scale,
+          cy - 20 * scale + bounce
+        );
+        ctx.quadraticCurveTo(
+          cx - 8 * scale,
+          cy - 16 * scale,
+          cx - 5 * scale,
+          cy - 18 * scale + bounce
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 24 * scale + bounce);
+        ctx.quadraticCurveTo(
+          cx + 6 * scale,
+          cy - 26 * scale,
+          cx + 9 * scale,
+          cy - 20 * scale + bounce
+        );
+        ctx.quadraticCurveTo(
+          cx + 8 * scale,
+          cy - 16 * scale,
+          cx + 5 * scale,
+          cy - 18 * scale + bounce
+        );
+        ctx.closePath();
+        ctx.fill();
+
         // Glasses
         ctx.strokeStyle = "#333";
         ctx.lineWidth = 1.5 * scale;
         ctx.beginPath();
         ctx.arc(
-          cx - 5 * scale,
-          cy - 7 * scale + bounce,
-          4 * scale,
+          cx - 4 * scale,
+          cy - 16 * scale + bounce,
+          3 * scale,
           0,
           Math.PI * 2
         );
         ctx.arc(
-          cx + 5 * scale,
-          cy - 7 * scale + bounce,
-          4 * scale,
+          cx + 4 * scale,
+          cy - 16 * scale + bounce,
+          3 * scale,
           0,
           Math.PI * 2
         );
-        ctx.moveTo(cx - 1 * scale, cy - 7 * scale + bounce);
-        ctx.lineTo(cx + 1 * scale, cy - 7 * scale + bounce);
+        ctx.moveTo(cx - 1 * scale, cy - 16 * scale + bounce);
+        ctx.lineTo(cx + 1 * scale, cy - 16 * scale + bounce);
         ctx.stroke();
-        // Eyes behind glasses
+
+        // Eyes
         ctx.fillStyle = "#333";
         ctx.beginPath();
         ctx.arc(
-          cx - 5 * scale,
-          cy - 7 * scale + bounce,
+          cx - 4 * scale,
+          cy - 16 * scale + bounce,
           1.5 * scale,
           0,
           Math.PI * 2
         );
         ctx.arc(
-          cx + 5 * scale,
-          cy - 7 * scale + bounce,
+          cx + 4 * scale,
+          cy - 16 * scale + bounce,
           1.5 * scale,
           0,
           Math.PI * 2
         );
         ctx.fill();
+
         // Quill pen
         ctx.fillStyle = "#14b8a6";
         ctx.save();
-        ctx.translate(cx + 12 * scale, cy - 6 * scale + bounce);
+        ctx.translate(cx + 14 * scale, cy - 6 * scale + bounce);
         ctx.rotate(0.5);
-        ctx.fillRect(-2 * scale, -18 * scale, 4 * scale, 22 * scale);
-        // Feather tip
+        ctx.fillRect(-1.5 * scale, -12 * scale, 3 * scale, 16 * scale);
         ctx.fillStyle = "#ffd700";
         ctx.beginPath();
-        ctx.moveTo(0, -18 * scale);
-        ctx.lineTo(-4 * scale, -24 * scale);
-        ctx.lineTo(4 * scale, -24 * scale);
+        ctx.moveTo(0, -12 * scale);
+        ctx.lineTo(-3 * scale, -18 * scale);
+        ctx.lineTo(3 * scale, -18 * scale);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
+
         // Book
         ctx.fillStyle = "#8b4513";
         ctx.fillRect(
           cx - 16 * scale,
           cy + 4 * scale + bounce,
-          10 * scale,
-          12 * scale
+          8 * scale,
+          10 * scale
         );
         ctx.fillStyle = "#ffd700";
         ctx.fillRect(
           cx - 15 * scale,
           cy + 5 * scale + bounce,
-          8 * scale,
-          1.5 * scale
+          6 * scale,
+          1 * scale
         );
         break;
+      }
     }
   }, [type, size, time, animated]);
 
@@ -991,7 +1291,6 @@ export const HeroSprite: React.FC<{
 // =============================================================================
 // SPELL SPRITES
 // =============================================================================
-
 export const SpellSprite: React.FC<{
   type: SpellType;
   size?: number;
@@ -1028,7 +1327,6 @@ export const SpellSprite: React.FC<{
         const flameHeight = animated ? 14 + Math.sin(t * 3) * 2 : 14;
         ctx.shadowColor = "#ff4400";
         ctx.shadowBlur = 15 * scale;
-
         const fireGrad = ctx.createRadialGradient(
           cx,
           cy + 2 * scale,
@@ -1043,7 +1341,6 @@ export const SpellSprite: React.FC<{
         fireGrad.addColorStop(0.7, "#ff4400");
         fireGrad.addColorStop(1, "#cc0000");
         ctx.fillStyle = fireGrad;
-
         ctx.beginPath();
         ctx.moveTo(cx, cy - flameHeight * scale);
         ctx.quadraticCurveTo(
@@ -1072,8 +1369,6 @@ export const SpellSprite: React.FC<{
         );
         ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Inner flame
         ctx.fillStyle = "#ffff88";
         ctx.beginPath();
         ctx.moveTo(cx, cy - 6 * scale);
@@ -1093,12 +1388,10 @@ export const SpellSprite: React.FC<{
         ctx.fill();
         break;
       }
-
       case "lightning": {
         ctx.shadowColor = "#ffff00";
         ctx.shadowBlur = 12 * scale;
         ctx.fillStyle = "#ffdd00";
-
         ctx.beginPath();
         ctx.moveTo(cx + 8 * scale, cy - 16 * scale);
         ctx.lineTo(cx - 2 * scale, cy - 3 * scale);
@@ -1109,8 +1402,6 @@ export const SpellSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Electric sparks
         if (animated) {
           ctx.strokeStyle = "#ffff88";
           ctx.lineWidth = 1.5;
@@ -1127,15 +1418,12 @@ export const SpellSprite: React.FC<{
         }
         break;
       }
-
       case "freeze": {
         ctx.shadowColor = "#00ddff";
         ctx.shadowBlur = 10 * scale;
         ctx.strokeStyle = "#00ddff";
         ctx.fillStyle = "#aaffff";
         ctx.lineWidth = 2.5 * scale;
-
-        // Snowflake arms
         for (let i = 0; i < 6; i++) {
           ctx.save();
           ctx.translate(cx, cy);
@@ -1143,7 +1431,6 @@ export const SpellSprite: React.FC<{
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(0, -14 * scale);
-          // Branches
           ctx.moveTo(0, -7 * scale);
           ctx.lineTo(-5 * scale, -10 * scale);
           ctx.moveTo(0, -7 * scale);
@@ -1155,20 +1442,15 @@ export const SpellSprite: React.FC<{
           ctx.stroke();
           ctx.restore();
         }
-
-        // Center crystal
         ctx.beginPath();
         ctx.arc(cx, cy, 5 * scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
         break;
       }
-
       case "payday": {
         ctx.shadowColor = "#ffaa00";
         ctx.shadowBlur = 12 * scale;
-
-        // Coins stack
         for (let i = 2; i >= 0; i--) {
           ctx.fillStyle = i === 0 ? "#ffd700" : "#daa520";
           ctx.beginPath();
@@ -1186,16 +1468,12 @@ export const SpellSprite: React.FC<{
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }
-
-        // Dollar sign
         ctx.fillStyle = "#8b6914";
         ctx.font = `bold ${16 * scale}px Arial`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("$", cx, cy - 2 * scale);
         ctx.shadowBlur = 0;
-
-        // Sparkles
         ctx.fillStyle = "#ffff88";
         const sparkleOffset = animated ? Math.sin(t) * 2 : 0;
         ctx.beginPath();
@@ -1216,18 +1494,14 @@ export const SpellSprite: React.FC<{
         ctx.fill();
         break;
       }
-
       case "reinforcements": {
-        // Three soldiers in formation
         const positions = [
           { x: cx - 10 * scale, y: cy + 5 * scale },
           { x: cx + 10 * scale, y: cy + 5 * scale },
           { x: cx, y: cy - 5 * scale },
         ];
-
         positions.forEach((pos, i) => {
           const yOffset = animated ? Math.sin(t + i) * 2 : 0;
-          // Body
           ctx.fillStyle = i === 2 ? "#9966ff" : "#7744dd";
           ctx.beginPath();
           ctx.ellipse(
@@ -1240,7 +1514,6 @@ export const SpellSprite: React.FC<{
             Math.PI * 2
           );
           ctx.fill();
-          // Head
           ctx.fillStyle = "#ffdbac";
           ctx.beginPath();
           ctx.arc(
@@ -1251,14 +1524,11 @@ export const SpellSprite: React.FC<{
             Math.PI * 2
           );
           ctx.fill();
-          // Helmet
           ctx.fillStyle = "#666";
           ctx.beginPath();
           ctx.arc(pos.x, pos.y - 6 * scale + yOffset, 5 * scale, Math.PI, 0);
           ctx.fill();
         });
-
-        // Glow effect
         ctx.shadowColor = "#9966ff";
         ctx.shadowBlur = 10 * scale;
         ctx.strokeStyle = "#9966ff";
@@ -1276,9 +1546,8 @@ export const SpellSprite: React.FC<{
 };
 
 // =============================================================================
-// ENEMY SPRITES
+// ENEMY SPRITES - Matching rendering.ts human-like style
 // =============================================================================
-
 export type EnemyType =
   | "frosh"
   | "sophomore"
@@ -1328,9 +1597,9 @@ export const EnemySprite: React.FC<{
 
     const cx = size / 2;
     const cy = size / 2;
-    const scale = size / 40;
-    const color = ENEMY_COLORS[type];
-    const bounce = animated ? Math.abs(Math.sin(time * 0.15)) * 3 : 0;
+    const scale = size / 45;
+    const t = time * 0.1;
+    const bounce = animated ? Math.sin(t * 1.5) * 2 : 0;
 
     // Shadow
     ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -1338,218 +1607,1070 @@ export const EnemySprite: React.FC<{
     ctx.ellipse(cx, cy + 16 * scale, 10 * scale, 4 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.ellipse(
-      cx,
-      cy + 2 * scale - bounce,
-      10 * scale,
-      12 * scale,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-    ctx.strokeStyle = darkenColor(color, 40);
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Head
-    ctx.fillStyle = "#3a3a3a";
-    ctx.beginPath();
-    ctx.arc(cx, cy - 10 * scale - bounce, 8 * scale, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Eyes (angry)
-    ctx.fillStyle = "#ff4444";
-    ctx.beginPath();
-    ctx.arc(
-      cx - 3 * scale,
-      cy - 11 * scale - bounce,
-      2 * scale,
-      0,
-      Math.PI * 2
-    );
-    ctx.arc(
-      cx + 3 * scale,
-      cy - 11 * scale - bounce,
-      2 * scale,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    // Type-specific features
     switch (type) {
-      case "frosh":
-        // Beanie
-        ctx.fillStyle = "#22c55e";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 15 * scale - bounce, 6 * scale, Math.PI, 0);
-        ctx.fill();
-        // Propeller
-        ctx.fillStyle = "#ffd700";
-        ctx.save();
-        ctx.translate(cx, cy - 20 * scale - bounce);
-        ctx.rotate(animated ? time * 0.3 : 0);
-        ctx.fillRect(-6 * scale, -1 * scale, 12 * scale, 2 * scale);
-        ctx.restore();
-        break;
-
-      case "sophomore":
+      case "frosh": {
+        // Freshman - nervous student with hoodie and backpack
         // Backpack
-        ctx.fillStyle = "#3b82f6";
-        ctx.fillRect(
-          cx - 12 * scale,
-          cy - 4 * scale - bounce,
-          6 * scale,
-          12 * scale
+        ctx.fillStyle = "#2255aa";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy + 2 * scale - bounce,
+          8 * scale,
+          10 * scale,
+          0,
+          0,
+          Math.PI * 2
         );
-        break;
+        ctx.fill();
 
-      case "junior":
-        // Coffee cup
-        ctx.fillStyle = "#8b4513";
-        ctx.fillRect(
+        // Hoodie body
+        const hoodieGrad = ctx.createLinearGradient(
+          cx - 8 * scale,
+          cy,
           cx + 8 * scale,
-          cy - 2 * scale - bounce,
-          5 * scale,
-          8 * scale
+          cy
         );
+        hoodieGrad.addColorStop(0, "#ff6600");
+        hoodieGrad.addColorStop(0.5, "#ff8833");
+        hoodieGrad.addColorStop(1, "#ff6600");
+        ctx.fillStyle = hoodieGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx - 10 * scale,
+          cy - 2 * scale - bounce,
+          cx - 5 * scale,
+          cy - 8 * scale - bounce
+        );
+        ctx.lineTo(cx + 5 * scale, cy - 8 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx + 10 * scale,
+          cy - 2 * scale - bounce,
+          cx + 8 * scale,
+          cy + 12 * scale - bounce
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Head (skin tone)
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Nervous big eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 2.5 * scale,
+          cy - 13 * scale - bounce,
+          2.5 * scale,
+          3 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 2.5 * scale,
+          cy - 13 * scale - bounce,
+          2.5 * scale,
+          3 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        // Pupils (darting)
+        const pupilOffset = animated ? Math.sin(t * 2) * 0.8 * scale : 0;
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 2.5 * scale + pupilOffset,
+          cy - 13 * scale - bounce,
+          1.2 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 2.5 * scale + pupilOffset,
+          cy - 13 * scale - bounce,
+          1.2 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Worried eyebrows
+        ctx.strokeStyle = "#5a3825";
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4.5 * scale, cy - 17 * scale - bounce);
+        ctx.lineTo(cx - 0.5 * scale, cy - 15 * scale - bounce);
+        ctx.moveTo(cx + 4.5 * scale, cy - 17 * scale - bounce);
+        ctx.lineTo(cx + 0.5 * scale, cy - 15 * scale - bounce);
+        ctx.stroke();
+
+        // Small frown
+        ctx.strokeStyle = "#8b6655";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.arc(
+          cx,
+          cy - 8 * scale - bounce,
+          2 * scale,
+          0.2 * Math.PI,
+          0.8 * Math.PI
+        );
+        ctx.stroke();
+
+        // Lanyard
+        ctx.strokeStyle = "#ff6600";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, cy - 6 * scale - bounce);
+        ctx.lineTo(cx - 1.5 * scale, cy + 4 * scale - bounce);
+        ctx.stroke();
         ctx.fillStyle = "#fff";
         ctx.fillRect(
+          cx - 3 * scale,
+          cy + 2 * scale - bounce,
+          4 * scale,
+          5 * scale
+        );
+        break;
+      }
+
+      case "sophomore": {
+        // Confident student with coffee
+        // Body (casual shirt)
+        const shirtGrad = ctx.createLinearGradient(
+          cx,
+          cy - 8 * scale,
+          cx,
+          cy + 12 * scale
+        );
+        shirtGrad.addColorStop(0, "#4a90d9");
+        shirtGrad.addColorStop(1, "#3a70b9");
+        ctx.fillStyle = shirtGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 12 * scale - bounce);
+        ctx.lineTo(cx - 9 * scale, cy - 4 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 10 * scale - bounce,
           cx + 9 * scale,
-          cy - 1 * scale - bounce,
-          3 * scale,
+          cy - 4 * scale - bounce
+        );
+        ctx.lineTo(cx + 8 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Jeans hint
+        ctx.fillStyle = "#3a5a8a";
+        ctx.fillRect(
+          cx - 5 * scale,
+          cy + 8 * scale - bounce,
+          4 * scale,
+          6 * scale
+        );
+        ctx.fillRect(
+          cx + 1 * scale,
+          cy + 8 * scale - bounce,
+          4 * scale,
+          6 * scale
+        );
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Messy hair
+        ctx.fillStyle = "#4a3728";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 17 * scale - bounce,
+          6 * scale,
+          3.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        for (let i = 0; i < 4; i++) {
+          const angle = -0.5 + i * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(
+            cx + Math.cos(angle) * 4 * scale,
+            cy - 18 * scale - bounce
+          );
+          ctx.lineTo(
+            cx + Math.cos(angle) * 6 * scale,
+            cy - 22 * scale - bounce + Math.sin(t + i) * 1
+          );
+          ctx.lineWidth = 1.5 * scale;
+          ctx.strokeStyle = "#4a3728";
+          ctx.stroke();
+        }
+
+        // Confident eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 2.5 * scale,
+          cy - 13 * scale - bounce,
+          2 * scale,
+          2.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 2.5 * scale,
+          cy - 13 * scale - bounce,
+          2 * scale,
+          2.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.fillStyle = "#2a5a3a";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 2.5 * scale,
+          cy - 13 * scale - bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 2.5 * scale,
+          cy - 13 * scale - bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Smirk
+        ctx.strokeStyle = "#8b6655";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.arc(
+          cx + 0.5 * scale,
+          cy - 9 * scale - bounce,
+          2 * scale,
+          0.9 * Math.PI,
+          0.1 * Math.PI,
+          true
+        );
+        ctx.stroke();
+
+        // Coffee cup
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(
+          cx + 10 * scale,
+          cy - 2 * scale - bounce,
+          4 * scale,
+          6 * scale
+        );
+        ctx.fillStyle = "#6b4423";
+        ctx.fillRect(
+          cx + 10 * scale,
+          cy - 0.5 * scale - bounce,
+          4 * scale,
           2 * scale
         );
         break;
+      }
 
-      case "senior":
-        // Graduation cap
-        ctx.fillStyle = "#1e1e1e";
+      case "junior": {
+        // Stressed academic with glasses and books
+        // Stack of books
+        const bookColors = ["#8b0000", "#00008b", "#006400"];
+        for (let i = 0; i < 3; i++) {
+          ctx.fillStyle = bookColors[i];
+          ctx.fillRect(
+            cx - 11 * scale,
+            cy - 2 * scale - bounce + i * 2 * scale,
+            7 * scale,
+            1.8 * scale
+          );
+        }
+
+        // Body (button-up)
+        ctx.fillStyle = "#f5f5dc";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, cy + 12 * scale - bounce);
+        ctx.lineTo(cx - 8 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx, cy - 8 * scale - bounce);
+        ctx.lineTo(cx + 8 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx + 7 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glasses
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.rect(
+          cx - 5 * scale,
+          cy - 15 * scale - bounce,
+          4 * scale,
+          3 * scale
+        );
+        ctx.rect(
+          cx + 1 * scale,
+          cy - 15 * scale - bounce,
+          4 * scale,
+          3 * scale
+        );
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 1 * scale, cy - 13.5 * scale - bounce);
+        ctx.lineTo(cx + 1 * scale, cy - 13.5 * scale - bounce);
+        ctx.stroke();
+
+        // Tired eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 3 * scale,
+          cy - 13.5 * scale - bounce,
+          1.2 * scale,
+          1.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 3 * scale,
+          cy - 13.5 * scale - bounce,
+          1.2 * scale,
+          1.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 3 * scale,
+          cy - 13.5 * scale - bounce,
+          0.7 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 3 * scale,
+          cy - 13.5 * scale - bounce,
+          0.7 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Dark circles
+        ctx.fillStyle = "rgba(100, 80, 120, 0.4)";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 3 * scale,
+          cy - 11 * scale - bounce,
+          1.5 * scale,
+          0.6 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 3 * scale,
+          cy - 11 * scale - bounce,
+          1.5 * scale,
+          0.6 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Disheveled hair
+        ctx.fillStyle = "#3a2a1a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 17 * scale - bounce,
+          6 * scale,
+          3 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        const stressTwitch = animated ? Math.sin(t * 2.5) * 0.8 : 0;
+        ctx.strokeStyle = "#3a2a1a";
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale + stressTwitch, cy - 19 * scale - bounce);
+        ctx.lineTo(cx - 5 * scale + stressTwitch, cy - 23 * scale - bounce);
+        ctx.moveTo(cx + 2 * scale, cy - 19 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 22 * scale - bounce);
+        ctx.stroke();
+        break;
+      }
+
+      case "senior": {
+        // Confident senior with blazer
+        // Body (blazer)
+        const blazerGrad = ctx.createLinearGradient(
+          cx - 9 * scale,
+          cy,
+          cx + 9 * scale,
+          cy
+        );
+        blazerGrad.addColorStop(0, "#1a1a2e");
+        blazerGrad.addColorStop(0.5, "#2a2a4e");
+        blazerGrad.addColorStop(1, "#1a1a2e");
+        ctx.fillStyle = blazerGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 10 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx - 5 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx + 9 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tie
+        ctx.fillStyle = "#ff6600";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6 * scale - bounce);
+        ctx.lineTo(cx - 1.5 * scale, cy + 6 * scale - bounce);
+        ctx.lineTo(cx, cy + 8 * scale - bounce);
+        ctx.lineTo(cx + 1.5 * scale, cy + 6 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Styled hair
+        ctx.fillStyle = "#2a1a0a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 19 * scale - bounce,
+          6 * scale,
+          3 * scale,
+          0,
+          0,
+          Math.PI
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy - 17 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx - 7 * scale,
+          cy - 22 * scale - bounce,
+          cx - 3 * scale,
+          cy - 23 * scale - bounce
+        );
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 21 * scale - bounce,
+          cx + 3 * scale,
+          cy - 20 * scale - bounce
+        );
+        ctx.lineTo(cx + 5 * scale, cy - 17 * scale - bounce);
+        ctx.fill();
+
+        // Confident eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 2.5 * scale,
+          cy - 15 * scale - bounce,
+          1.5 * scale,
+          2 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 2.5 * scale,
+          cy - 15 * scale - bounce,
+          1.5 * scale,
+          2 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.fillStyle = "#2a4a2a";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 2.5 * scale,
+          cy - 15 * scale - bounce,
+          0.8 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 2.5 * scale,
+          cy - 15 * scale - bounce,
+          0.8 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Confident smirk
+        ctx.strokeStyle = "#8b6655";
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.arc(
+          cx,
+          cy - 11 * scale - bounce,
+          2 * scale,
+          0.1 * Math.PI,
+          0.9 * Math.PI
+        );
+        ctx.stroke();
+
+        // Diploma
+        ctx.fillStyle = "#f5f5dc";
+        ctx.save();
+        ctx.translate(cx + 11 * scale, cy + 2 * scale - bounce);
+        ctx.rotate(0.3);
+        ctx.fillRect(-1.5 * scale, -5 * scale, 3 * scale, 10 * scale);
+        ctx.fillStyle = "#8b0000";
+        ctx.fillRect(-2 * scale, -5 * scale, 4 * scale, 1 * scale);
+        ctx.restore();
+        break;
+      }
+
+      case "grad": {
+        // Exhausted grad student with lab coat
+        const exhaustion = animated ? Math.sin(t * 0.5) * 1.5 : 0;
+
+        // Body
+        ctx.fillStyle = "#6a8a9a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 9 * scale, cy - 4 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 10 * scale - bounce,
+          cx + 9 * scale,
+          cy - 4 * scale - bounce
+        );
+        ctx.lineTo(cx + 8 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lab coat sides
+        ctx.fillStyle = "#f0f0f0";
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx - 10 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 5 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 4 * scale, cy - 2 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 9 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 2 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(
+          cx + exhaustion * 0.3,
+          cy - 13 * scale - bounce,
+          7 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Messy hair
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx + exhaustion * 0.3,
+          cy - 18 * scale - bounce,
+          7 * scale,
+          3.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(
+            cx - 5 * scale + i * 2.5 * scale + exhaustion * 0.3,
+            cy - 20 * scale - bounce
+          );
+          ctx.lineTo(
+            cx -
+              6 * scale +
+              i * 2.5 * scale +
+              Math.sin(t + i) * 1 +
+              exhaustion * 0.3,
+            cy - 24 * scale - bounce
+          );
+          ctx.lineWidth = 1.2 * scale;
+          ctx.strokeStyle = "#5a4a3a";
+          ctx.stroke();
+        }
+
+        // Very tired eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 2.5 * scale + exhaustion * 0.3,
+          cy - 14 * scale - bounce,
+          2 * scale,
+          1.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 2.5 * scale + exhaustion * 0.3,
+          cy - 14 * scale - bounce,
+          2 * scale,
+          1.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.fillStyle = "#8b7b6b";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 2.5 * scale + exhaustion * 0.3,
+          cy - 14 * scale - bounce,
+          0.7 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 2.5 * scale + exhaustion * 0.3,
+          cy - 14 * scale - bounce,
+          0.7 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Heavy dark circles
+        ctx.fillStyle = "rgba(80, 60, 100, 0.5)";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 2.5 * scale + exhaustion * 0.3,
+          cy - 11.5 * scale - bounce,
+          2 * scale,
+          1 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 2.5 * scale + exhaustion * 0.3,
+          cy - 11.5 * scale - bounce,
+          2 * scale,
+          1 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Large coffee cup
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(
+          cx + 9 * scale,
+          cy - 6 * scale - bounce,
+          4 * scale,
+          8 * scale
+        );
+        ctx.fillStyle = "#4a3020";
+        ctx.fillRect(
+          cx + 9 * scale,
+          cy - 4 * scale - bounce,
+          4 * scale,
+          3 * scale
+        );
+        break;
+      }
+
+      case "professor": {
+        // Distinguished professor with tweed
+        // Body (tweed jacket)
+        ctx.fillStyle = "#6a5a4a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 10 * scale, cy - 3 * scale - bounce);
+        ctx.lineTo(cx, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 3 * scale - bounce);
+        ctx.lineTo(cx + 9 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Elbow patches
+        ctx.fillStyle = "#8b7b6b";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 10 * scale,
+          cy + 2 * scale - bounce,
+          2.5 * scale,
+          3.5 * scale,
+          0.3,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 10 * scale,
+          cy + 2 * scale - bounce,
+          2.5 * scale,
+          3.5 * scale,
+          -0.3,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Bow tie
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6 * scale - bounce);
+        ctx.lineTo(cx - 3 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx - 3 * scale, cy - 4 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6 * scale - bounce);
+        ctx.lineTo(cx + 3 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx + 3 * scale, cy - 4 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gray hair (balding)
+        ctx.fillStyle = "#9a9a9a";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 5 * scale,
+          cy - 17 * scale - bounce,
+          3 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 5 * scale,
+          cy - 17 * scale - bounce,
+          3 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Glasses
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1.3 * scale;
+        ctx.beginPath();
+        ctx.arc(
+          cx - 3 * scale,
+          cy - 15 * scale - bounce,
+          2.5 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 3 * scale,
+          cy - 15 * scale - bounce,
+          2.5 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.moveTo(cx - 0.5 * scale, cy - 15 * scale - bounce);
+        ctx.lineTo(cx + 0.5 * scale, cy - 15 * scale - bounce);
+        ctx.stroke();
+
+        // Eyes
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 3 * scale,
+          cy - 15 * scale - bounce,
+          0.9 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 3 * scale,
+          cy - 15 * scale - bounce,
+          0.9 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Stern mouth
+        ctx.strokeStyle = "#8b6655";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 2 * scale, cy - 10 * scale - bounce);
+        ctx.stroke();
+        break;
+      }
+
+      case "dean": {
+        // Important dean with robes and crown
+        // Body (formal robes)
+        const robeGrad = ctx.createLinearGradient(
+          cx - 10 * scale,
+          cy,
+          cx + 10 * scale,
+          cy
+        );
+        robeGrad.addColorStop(0, "#4a1a6a");
+        robeGrad.addColorStop(0.5, "#6a2a8a");
+        robeGrad.addColorStop(1, "#4a1a6a");
+        ctx.fillStyle = robeGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 11 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 11 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gold trim
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Silver hair
+        ctx.fillStyle = "#c0c0c0";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 19 * scale - bounce,
+          6 * scale,
+          3 * scale,
+          0,
+          0,
+          Math.PI
+        );
+        ctx.fill();
+
+        // Crown
+        ctx.fillStyle = "#ffd700";
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy - 20 * scale - bounce);
+        ctx.lineTo(cx - 5 * scale, cy - 24 * scale - bounce);
+        ctx.lineTo(cx - 2.5 * scale, cy - 22 * scale - bounce);
+        ctx.lineTo(cx, cy - 26 * scale - bounce);
+        ctx.lineTo(cx + 2.5 * scale, cy - 22 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 24 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 20 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Jewel
+        ctx.fillStyle = "#ff0000";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 23.5 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stern eyes
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 2.5 * scale,
+          cy - 15 * scale - bounce,
+          1.3 * scale,
+          1.8 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 2.5 * scale,
+          cy - 15 * scale - bounce,
+          1.3 * scale,
+          1.8 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Disapproving frown
+        ctx.strokeStyle = "#8b6655";
+        ctx.lineWidth = 1.2 * scale;
+        ctx.beginPath();
+        ctx.arc(
+          cx,
+          cy - 10 * scale - bounce,
+          2 * scale,
+          0.2 * Math.PI,
+          0.8 * Math.PI
+        );
+        ctx.stroke();
+        break;
+      }
+
+      case "trustee": {
+        // Wealthy trustee with top hat
+        // Body (fine suit)
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 10 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx + 9 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gold vest
+        ctx.fillStyle = "#daa520";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx - 3 * scale, cy + 10 * scale - bounce);
+        ctx.lineTo(cx + 3 * scale, cy + 10 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 8 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Top hat
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(
+          cx - 6 * scale,
+          cy - 26 * scale - bounce,
+          12 * scale,
+          10 * scale
+        );
         ctx.fillRect(
           cx - 8 * scale,
           cy - 18 * scale - bounce,
           16 * scale,
-          3 * scale
-        );
-        ctx.beginPath();
-        ctx.moveTo(cx - 10 * scale, cy - 18 * scale - bounce);
-        ctx.lineTo(cx, cy - 22 * scale - bounce);
-        ctx.lineTo(cx + 10 * scale, cy - 18 * scale - bounce);
-        ctx.closePath();
-        ctx.fill();
-        // Tassel
-        ctx.strokeStyle = "#ffd700";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 22 * scale - bounce);
-        ctx.lineTo(cx + 8 * scale, cy - 16 * scale - bounce);
-        ctx.stroke();
-        break;
-
-      case "grad":
-        // Lab coat
-        ctx.fillStyle = "#f0f0f0";
-        ctx.beginPath();
-        ctx.moveTo(cx - 10 * scale, cy - 6 * scale - bounce);
-        ctx.lineTo(cx - 12 * scale, cy + 14 * scale - bounce);
-        ctx.lineTo(cx + 12 * scale, cy + 14 * scale - bounce);
-        ctx.lineTo(cx + 10 * scale, cy - 6 * scale - bounce);
-        ctx.closePath();
-        ctx.fill();
-        break;
-
-      case "professor":
-        // Glasses
-        ctx.strokeStyle = "#333";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(
-          cx - 4 * scale,
-          cy - 11 * scale - bounce,
-          3 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.arc(
-          cx + 4 * scale,
-          cy - 11 * scale - bounce,
-          3 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.moveTo(cx - 1 * scale, cy - 11 * scale - bounce);
-        ctx.lineTo(cx + 1 * scale, cy - 11 * scale - bounce);
-        ctx.stroke();
-        // Bow tie
-        ctx.fillStyle = "#dc2626";
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 4 * scale - bounce);
-        ctx.lineTo(cx - 4 * scale, cy - 6 * scale - bounce);
-        ctx.lineTo(cx - 4 * scale, cy - 2 * scale - bounce);
-        ctx.lineTo(cx, cy - 4 * scale - bounce);
-        ctx.lineTo(cx + 4 * scale, cy - 6 * scale - bounce);
-        ctx.lineTo(cx + 4 * scale, cy - 2 * scale - bounce);
-        ctx.closePath();
-        ctx.fill();
-        break;
-
-      case "dean":
-        // Crown
-        ctx.fillStyle = "#ffd700";
-        ctx.beginPath();
-        ctx.moveTo(cx - 8 * scale, cy - 16 * scale - bounce);
-        ctx.lineTo(cx - 8 * scale, cy - 22 * scale - bounce);
-        ctx.lineTo(cx - 4 * scale, cy - 18 * scale - bounce);
-        ctx.lineTo(cx, cy - 24 * scale - bounce);
-        ctx.lineTo(cx + 4 * scale, cy - 18 * scale - bounce);
-        ctx.lineTo(cx + 8 * scale, cy - 22 * scale - bounce);
-        ctx.lineTo(cx + 8 * scale, cy - 16 * scale - bounce);
-        ctx.closePath();
-        ctx.fill();
-        break;
-
-      case "trustee":
-        // Top hat
-        ctx.fillStyle = "#1a1a1a";
-        ctx.fillRect(
-          cx - 7 * scale,
-          cy - 26 * scale - bounce,
-          14 * scale,
-          12 * scale
-        );
-        ctx.fillRect(
-          cx - 10 * scale,
-          cy - 16 * scale - bounce,
-          20 * scale,
-          3 * scale
+          2 * scale
         );
         // Gold band
         ctx.fillStyle = "#ffd700";
         ctx.fillRect(
-          cx - 7 * scale,
-          cy - 18 * scale - bounce,
-          14 * scale,
+          cx - 6 * scale,
+          cy - 20 * scale - bounce,
+          12 * scale,
           2 * scale
         );
+
         // Monocle
         ctx.strokeStyle = "#ffd700";
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.2 * scale;
         ctx.beginPath();
         ctx.arc(
-          cx + 4 * scale,
-          cy - 11 * scale - bounce,
-          4 * scale,
+          cx + 3 * scale,
+          cy - 15 * scale - bounce,
+          3.5 * scale,
           0,
           Math.PI * 2
         );
-        ctx.moveTo(cx + 8 * scale, cy - 11 * scale - bounce);
-        ctx.lineTo(cx + 12 * scale, cy - 5 * scale - bounce);
+        ctx.moveTo(cx + 6.5 * scale, cy - 15 * scale - bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 10 * scale - bounce);
         ctx.stroke();
+
+        // Eyes
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 2.5 * scale,
+          cy - 15 * scale - bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 3 * scale,
+          cy - 15 * scale - bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Mustache
+        ctx.fillStyle = "#4a4a4a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 10 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx - 6 * scale,
+          cy - 11 * scale - bounce,
+          cx - 5 * scale,
+          cy - 9 * scale - bounce
+        );
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 10 * scale - bounce,
+          cx + 5 * scale,
+          cy - 9 * scale - bounce
+        );
+        ctx.quadraticCurveTo(
+          cx + 6 * scale,
+          cy - 11 * scale - bounce,
+          cx + 4 * scale,
+          cy - 10 * scale - bounce
+        );
+        ctx.closePath();
+        ctx.fill();
         break;
+      }
     }
   }, [type, size, time, animated]);
 
@@ -1559,7 +2680,6 @@ export const EnemySprite: React.FC<{
 // =============================================================================
 // REGION/MAP ICONS
 // =============================================================================
-
 export type RegionType = "grassland" | "desert" | "winter" | "volcanic";
 
 export const RegionIcon: React.FC<{
@@ -1585,7 +2705,6 @@ export const RegionIcon: React.FC<{
     const cy = size / 2;
     const scale = size / 60;
 
-    // Background circle
     let bgColor = "#4a7c59";
     switch (type) {
       case "grassland":
@@ -1606,13 +2725,11 @@ export const RegionIcon: React.FC<{
     ctx.beginPath();
     ctx.arc(cx, cy, 26 * scale, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.strokeStyle = locked ? "#333" : darkenColor(bgColor, 30);
     ctx.lineWidth = 3 * scale;
     ctx.stroke();
 
     if (locked) {
-      // Lock icon
       ctx.fillStyle = "#666";
       ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 16 * scale, 14 * scale);
       ctx.strokeStyle = "#666";
@@ -1627,10 +2744,8 @@ export const RegionIcon: React.FC<{
       return;
     }
 
-    // Region-specific icon
     switch (type) {
       case "grassland":
-        // Tree
         ctx.fillStyle = "#5d4037";
         ctx.fillRect(cx - 3 * scale, cy, 6 * scale, 14 * scale);
         ctx.fillStyle = "#2e7d32";
@@ -1642,24 +2757,19 @@ export const RegionIcon: React.FC<{
         ctx.arc(cx, cy - 8 * scale, 10 * scale, 0, Math.PI * 2);
         ctx.fill();
         break;
-
       case "desert":
-        // Cactus
         ctx.fillStyle = "#2e7d32";
         ctx.fillRect(cx - 4 * scale, cy - 8 * scale, 8 * scale, 22 * scale);
         ctx.fillRect(cx - 14 * scale, cy - 4 * scale, 10 * scale, 6 * scale);
         ctx.fillRect(cx - 14 * scale, cy - 10 * scale, 6 * scale, 10 * scale);
         ctx.fillRect(cx + 4 * scale, cy, 10 * scale, 6 * scale);
         ctx.fillRect(cx + 8 * scale, cy - 8 * scale, 6 * scale, 12 * scale);
-        // Sun
         ctx.fillStyle = "#ffd700";
         ctx.beginPath();
         ctx.arc(cx + 12 * scale, cy - 14 * scale, 6 * scale, 0, Math.PI * 2);
         ctx.fill();
         break;
-
       case "winter":
-        // Snowflake
         ctx.strokeStyle = "#fff";
         ctx.lineWidth = 2.5 * scale;
         for (let i = 0; i < 6; i++) {
@@ -1677,9 +2787,7 @@ export const RegionIcon: React.FC<{
           ctx.restore();
         }
         break;
-
       case "volcanic":
-        // Volcano
         ctx.fillStyle = "#5d4037";
         ctx.beginPath();
         ctx.moveTo(cx - 20 * scale, cy + 14 * scale);
@@ -1688,7 +2796,6 @@ export const RegionIcon: React.FC<{
         ctx.lineTo(cx + 20 * scale, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-        // Lava
         ctx.fillStyle = "#ff4400";
         ctx.beginPath();
         ctx.moveTo(cx - 6 * scale, cy - 10 * scale);
@@ -1699,7 +2806,6 @@ export const RegionIcon: React.FC<{
           cy - 10 * scale
         );
         ctx.fill();
-        // Smoke
         ctx.fillStyle = "rgba(100,100,100,0.6)";
         ctx.beginPath();
         ctx.arc(cx - 4 * scale, cy - 18 * scale, 4 * scale, 0, Math.PI * 2);
@@ -1715,7 +2821,6 @@ export const RegionIcon: React.FC<{
 // =============================================================================
 // ANIMATED DECORATIVE SPRITES
 // =============================================================================
-
 export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
@@ -1781,16 +2886,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     ctx.closePath();
     ctx.fill();
 
-    // Portcullis
-    ctx.strokeStyle = "#4a3a2a";
-    ctx.lineWidth = 2 * scale;
-    for (let i = -15; i <= 15; i += 10) {
-      ctx.beginPath();
-      ctx.moveTo(cx + i * scale, cy + 50 * scale);
-      ctx.lineTo(cx + i * scale, cy + 10 * scale);
-      ctx.stroke();
-    }
-
     // Draw towers
     const drawTowerFn = (x: number, y: number, w: number, h: number) => {
       const towerGrad = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
@@ -1805,8 +2900,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
       ctx.lineTo(x + w / 2, y + h / 2);
       ctx.closePath();
       ctx.fill();
-
-      // Conical roof
       ctx.fillStyle = "#8b4513";
       ctx.beginPath();
       ctx.moveTo(x - w / 2 - 5, y - h / 2);
@@ -1814,13 +2907,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
       ctx.lineTo(x + w / 2 + 5, y - h / 2);
       ctx.closePath();
       ctx.fill();
-
-      // Battlements
-      ctx.fillStyle = "#6a5a4a";
-      const bw = w / 4;
-      for (let i = -1.5; i <= 1.5; i++) {
-        ctx.fillRect(x + i * bw - bw / 3, y - h / 2 - 5, bw * 0.6, 10);
-      }
     };
 
     drawTowerFn(cx - 55 * scale, cy - 20 * scale, 30 * scale, 80 * scale);
@@ -1842,7 +2928,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     const drawFlagFn = (x: number, y: number, s: number, color: string) => {
       ctx.fillStyle = "#4a3020";
       ctx.fillRect(x - 2 * s, y, 4 * s, 25 * s);
-
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.moveTo(x + 2 * s, y);
@@ -1864,29 +2949,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     drawFlagFn(cx - 55 * scale, cy - 95 * scale, scale, "#ff6b35");
     drawFlagFn(cx + 55 * scale, cy - 95 * scale, scale, "#ff6b35");
     drawFlagFn(cx, cy - 145 * scale, scale * 1.3, "#ffd700");
-
-    // Banner
-    ctx.fillStyle = "#8b0000";
-    ctx.beginPath();
-    ctx.moveTo(cx - 25 * scale, cy - 30 * scale);
-    ctx.lineTo(cx + 25 * scale, cy - 30 * scale);
-    ctx.lineTo(cx + 25 * scale, cy - 15 * scale);
-    ctx.lineTo(cx, cy - 5 * scale);
-    ctx.lineTo(cx - 25 * scale, cy - 15 * scale);
-    ctx.closePath();
-    ctx.fill();
-
-    // Shield emblem
-    ctx.fillStyle = "#ffd700";
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - 28 * scale);
-    ctx.lineTo(cx - 8 * scale, cy - 22 * scale);
-    ctx.lineTo(cx - 8 * scale, cy - 12 * scale);
-    ctx.lineTo(cx, cy - 8 * scale);
-    ctx.lineTo(cx + 8 * scale, cy - 12 * scale);
-    ctx.lineTo(cx + 8 * scale, cy - 22 * scale);
-    ctx.closePath();
-    ctx.fill();
   }, [size, time]);
 
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
@@ -1916,7 +2978,7 @@ export const MarchingEnemies: React.FC<{ size?: number }> = ({
     ctx.clearRect(0, 0, size, 60);
 
     const t = time * 0.15;
-    const colors = ["#4ade80", "#60a5fa", "#f472b6", "#a78bfa", "#fb923c"];
+    const colors = ["#ff6600", "#4a90d9", "#f5f5dc", "#2a2a4e", "#f0f0f0"];
 
     for (let i = 0; i < 8; i++) {
       const x = ((i * 45 + t * 30) % (size + 50)) - 25;
@@ -1928,39 +2990,30 @@ export const MarchingEnemies: React.FC<{ size?: number }> = ({
       ctx.ellipse(x, 50, 12, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Body
+      // Body (shirt)
       ctx.fillStyle = colors[i % colors.length];
       ctx.beginPath();
       ctx.ellipse(x, 35 - bounce, 10, 14, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Head
-      ctx.fillStyle = "#3a3a3a";
+      // Head (skin tone)
+      ctx.fillStyle = "#ffe0bd";
       ctx.beginPath();
       ctx.arc(x, 18 - bounce, 8, 0, Math.PI * 2);
       ctx.fill();
 
-      // Eyes
-      ctx.fillStyle = "#ff4444";
+      // Hair
+      ctx.fillStyle = "#4a3728";
       ctx.beginPath();
-      ctx.arc(x - 3, 16 - bounce, 2, 0, Math.PI * 2);
-      ctx.arc(x + 3, 16 - bounce, 2, 0, Math.PI * 2);
+      ctx.ellipse(x, 12 - bounce, 6, 3, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Weapon
-      ctx.fillStyle = "#666";
-      ctx.save();
-      ctx.translate(x + 8, 25 - bounce);
-      ctx.rotate(Math.sin(t * 2 + i) * 0.3);
-      ctx.fillRect(-2, -20, 4, 25);
-      ctx.fillStyle = "#aaa";
+      // Eyes
+      ctx.fillStyle = "#333";
       ctx.beginPath();
-      ctx.moveTo(0, -25);
-      ctx.lineTo(-5, -18);
-      ctx.lineTo(5, -18);
-      ctx.closePath();
+      ctx.arc(x - 3, 17 - bounce, 1.5, 0, Math.PI * 2);
+      ctx.arc(x + 3, 17 - bounce, 1.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
   }, [size, time]);
 
