@@ -37,7 +37,14 @@ export type EnemyType =
   | "catapult";
 
 // Hero types
-export type HeroType = "tiger" | "tenor" | "mathey" | "rocky" | "scott";
+export type HeroType =
+  | "tiger"
+  | "tenor"
+  | "mathey"
+  | "rocky"
+  | "scott"
+  | "captain"
+  | "engineer";
 
 // Spell types
 export type SpellType =
@@ -102,6 +109,10 @@ export interface Tower {
   lastSpawn?: number;
   chainTargets?: string[];
   damageAccumulator?: number;
+  damageBoost?: number;
+  boostEnd?: number;
+  temporary?: boolean;
+  expireTime?: number;
 }
 
 // Enemy entity
@@ -129,6 +140,8 @@ export interface Enemy {
   burnUntil?: number;
   slowed?: boolean;
   slowIntensity?: number;
+  taunted?: boolean;
+  tauntTarget?: string;
 }
 
 // Hero entity
@@ -152,28 +165,33 @@ export interface Hero {
   homePos?: Position;
   aggroTarget?: string;
   returning?: boolean;
+  shieldActive?: boolean;
+  shieldEnd?: number;
 }
 
 // Troop entity
 export interface Troop {
   id: string;
   ownerId: string;
-  type: TroopType;
+  type?: TroopType;
   pos: Position;
   targetPos?: Position;
   hp: number;
   maxHp: number;
   moving: boolean;
-  lastAttack: number;
-  rotation: number;
-  attackAnim: number;
+  lastAttack?: number;
+  rotation?: number;
+  attackAnim?: number;
   selected: boolean;
-  spawnPoint: Position;
-  moveRadius: number;
-  spawnSlot: number;
+  spawnPoint?: Position;
+  moveRadius?: number;
+  spawnSlot?: number;
   userTargetPos?: Position;
   dead?: boolean;
   respawnTimer?: number;
+  rallyPoint?: Position | null;
+  targetEnemy?: string | null;
+  attackCooldown?: number;
 }
 
 // Projectile
@@ -290,6 +308,8 @@ export interface HeroData {
   ability: string;
   abilityDesc: string;
   color: string;
+  icon: string;
+  description: string;
 }
 
 // Spell data definition
@@ -340,6 +360,7 @@ export interface Renderable {
 // Game state
 export type GameState =
   | "menu"
+  | "worldmap"
   | "setup"
   | "playing"
   | "paused"

@@ -22,6 +22,11 @@ import {
   Wind,
   ArrowUp,
   Info,
+  Timer,
+  Crosshair,
+  Users,
+  Coins,
+  Gauge,
 } from "lucide-react";
 import type { GameState, LevelStars, HeroType, SpellType } from "../../types";
 import {
@@ -31,6 +36,7 @@ import {
   ENEMY_DATA,
   LEVEL_WAVES,
   LEVEL_DATA,
+  HERO_ABILITY_COOLDOWNS,
 } from "../../constants";
 import {
   TowerSprite,
@@ -40,7 +46,7 @@ import {
 } from "../../sprites";
 
 // =============================================================================
-// LEVEL DATA - More spread out
+// LEVEL DATA
 // =============================================================================
 
 interface LevelNode {
@@ -185,12 +191,11 @@ const getWaveCount = (levelId: string): number => {
 };
 
 // =============================================================================
-// EPIC ANIMATED LOGO
+// LOGO COMPONENT
 // =============================================================================
 
 const PrincetonLogo: React.FC = () => {
   const [pulse, setPulse] = useState(0);
-
   useEffect(() => {
     const interval = setInterval(() => setPulse((p) => (p + 1) % 100), 50);
     return () => clearInterval(interval);
@@ -204,7 +209,6 @@ const PrincetonLogo: React.FC = () => {
           style={{ transform: `scale(${1 + Math.sin(pulse * 0.1) * 0.1})` }}
         />
       </div>
-
       <div className="relative">
         <svg viewBox="0 0 56 68" className="w-14 h-17 drop-shadow-2xl">
           <defs>
@@ -237,26 +241,6 @@ const PrincetonLogo: React.FC = () => {
             d="M28 10 L46 18 L46 36 C46 47 28 57 28 57 C28 57 10 47 10 36 L10 18 Z"
             fill="url(#shieldInner)"
           />
-          <g opacity="0.3">
-            <path
-              d="M20 20 L22 35"
-              stroke="#f59e0b"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <path
-              d="M28 18 L28 38"
-              stroke="#f59e0b"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <path
-              d="M36 20 L34 35"
-              stroke="#f59e0b"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-          </g>
           <text
             x="28"
             y="42"
@@ -269,46 +253,23 @@ const PrincetonLogo: React.FC = () => {
           >
             P
           </text>
-          <path
-            d="M18 6 L22 2 L28 5 L34 2 L38 6 L36 8 L20 8 Z"
-            fill="#fcd34d"
-            stroke="#f59e0b"
-            strokeWidth="1"
-          />
         </svg>
-        <div className="absolute -top-2 left-1/2 w-2 h-2 bg-amber-400 rounded-full animate-ping" />
-        <div className="absolute top-0 -right-1 w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
       </div>
-
       <div className="relative flex flex-col">
-        <div className="relative">
-          <span
-            className="text-3xl font-black tracking-wider"
-            style={{
-              fontFamily: "'Cinzel', serif",
-              background:
-                "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              textShadow: "0 4px 12px rgba(245, 158, 11, 0.4)",
-              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.8))",
-            }}
-          >
-            PRINCETON
-          </span>
-          <div
-            className="absolute -bottom-0.5 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent"
-            style={{ opacity: 0.5 + Math.sin(pulse * 0.15) * 0.3 }}
-          />
-        </div>
+        <span
+          className="text-3xl font-black tracking-wider"
+          style={{
+            fontFamily: "'Cinzel', serif",
+            background:
+              "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          PRINCETON
+        </span>
         <div className="flex items-center gap-2 mt-0.5">
-          <Swords
-            size={14}
-            className="text-orange-400"
-            style={{
-              transform: `rotate(${-15 + Math.sin(pulse * 0.1) * 5}deg)`,
-            }}
-          />
+          <Swords size={14} className="text-orange-400" />
           <span
             className="text-sm font-bold tracking-[0.3em] text-amber-500/90"
             style={{ fontFamily: "'Cinzel', serif" }}
@@ -318,11 +279,7 @@ const PrincetonLogo: React.FC = () => {
           <Swords
             size={14}
             className="text-orange-400"
-            style={{
-              transform: `rotate(${
-                15 - Math.sin(pulse * 0.1) * 5
-              }deg) scaleX(-1)`,
-            }}
+            style={{ transform: "scaleX(-1)" }}
           />
         </div>
       </div>
@@ -331,7 +288,7 @@ const PrincetonLogo: React.FC = () => {
 };
 
 // =============================================================================
-// ENHANCED CODEX MODAL WITH FULL UPGRADE STATS
+// CODEX MODAL (FROM CODE 2 - ENHANCED)
 // =============================================================================
 
 interface CodexModalProps {
@@ -343,12 +300,14 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
     "towers" | "heroes" | "enemies" | "spells"
   >("towers");
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
+  const [selectedHeroDetail, setSelectedHeroDetail] = useState<string | null>(
+    null
+  );
   const towerTypes = Object.keys(TOWER_DATA) as (keyof typeof TOWER_DATA)[];
   const heroTypes = Object.keys(HERO_DATA) as HeroType[];
   const enemyTypes = Object.keys(ENEMY_DATA) as (keyof typeof ENEMY_DATA)[];
   const spellTypes = Object.keys(SPELL_DATA) as SpellType[];
 
-  // Calculate tower stats at each level
   const getTowerStats = (
     type: keyof typeof TOWER_DATA,
     level: number,
@@ -358,8 +317,6 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
     let damage = base.damage;
     let range = base.range;
     let attackSpeed = base.attackSpeed;
-
-    // Level scaling
     if (level >= 2) {
       damage = Math.floor(damage * 1.5);
       range += 15;
@@ -372,8 +329,6 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
       damage = Math.floor(damage * 1.36);
       range += 20;
     }
-
-    // Special upgrade effects
     if (upgrade === "A" && type === "cannon") {
       attackSpeed = Math.floor(attackSpeed / 8);
       damage = Math.floor(damage * 0.4);
@@ -381,14 +336,12 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
     if (upgrade === "B" && type === "lab") {
       damage = Math.floor(damage * 0.7);
     }
-
     return { damage, range, attackSpeed };
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-      <div className="relative w-full max-w-5xl max-h-[90vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden">
-        {/* Header */}
+      <div className="relative w-full max-w-6xl max-h-[92vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden">
         <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900/90 via-stone-800/90 to-amber-900/90 backdrop-blur px-6 py-4 border-b-2 border-amber-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Book className="text-amber-400" size={28} />
@@ -398,6 +351,9 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             >
               War Codex
             </h2>
+            <span className="text-xs text-amber-500/70 ml-2">
+              Complete Battle Encyclopedia
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -407,19 +363,39 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-amber-800/40 bg-stone-900/50">
           {[
-            { id: "towers", label: "Towers", icon: <Crown size={16} /> },
-            { id: "heroes", label: "Heroes", icon: <Shield size={16} /> },
-            { id: "enemies", label: "Enemies", icon: <Skull size={16} /> },
-            { id: "spells", label: "Spells", icon: <Zap size={16} /> },
+            {
+              id: "towers",
+              label: "Towers",
+              icon: <Crown size={16} />,
+              count: towerTypes.length,
+            },
+            {
+              id: "heroes",
+              label: "Heroes",
+              icon: <Shield size={16} />,
+              count: heroTypes.length,
+            },
+            {
+              id: "enemies",
+              label: "Enemies",
+              icon: <Skull size={16} />,
+              count: enemyTypes.length,
+            },
+            {
+              id: "spells",
+              label: "Spells",
+              icon: <Zap size={16} />,
+              count: spellTypes.length,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => {
                 setActiveTab(tab.id as typeof activeTab);
                 setSelectedTower(null);
+                setSelectedHeroDetail(null);
               }}
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all font-medium ${
                 activeTab === tab.id
@@ -429,12 +405,14 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             >
               {tab.icon}
               <span>{tab.label}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-800/60 text-amber-500">
+                {tab.count}
+              </span>
             </button>
           ))}
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(92vh-140px)]">
           {activeTab === "towers" && !selectedTower && (
             <div className="grid grid-cols-3 gap-4">
               {towerTypes.map((type) => {
@@ -443,7 +421,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                   <button
                     key={type}
                     onClick={() => setSelectedTower(type)}
-                    className="bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40 p-4 hover:border-amber-500/60 hover:scale-[1.02] text-left group"
+                    className="bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40 p-4 hover:border-amber-500/60 hover:scale-[1.02] text-left group transition-all"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-16 h-16 rounded-lg bg-stone-800 border border-amber-700/50 flex items-center justify-center group-hover:border-amber-500">
@@ -453,14 +431,18 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         <h3 className="text-lg font-bold text-amber-300 group-hover:text-amber-200">
                           {tower.name}
                         </h3>
-                        <p className="text-xs text-amber-500/80 mb-2">
+                        <p className="text-xs text-amber-500/80 mb-2 line-clamp-2">
                           {tower.desc}
                         </p>
                         <div className="flex gap-3 text-xs">
-                          <span className="text-red-400">⚔ {tower.damage}</span>
-                          <span className="text-blue-400">◎ {tower.range}</span>
-                          <span className="text-amber-400">
-                            💰 {tower.cost}
+                          <span className="text-red-400 flex items-center gap-1">
+                            <Swords size={10} /> {tower.damage}
+                          </span>
+                          <span className="text-blue-400 flex items-center gap-1">
+                            <Target size={10} /> {tower.range}
+                          </span>
+                          <span className="text-amber-400 flex items-center gap-1">
+                            <Coins size={10} /> {tower.cost}
                           </span>
                         </div>
                       </div>
@@ -475,22 +457,21 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             </div>
           )}
 
-          {activeTab === "towers" && selectedTower && (
-            <div>
-              <button
-                onClick={() => setSelectedTower(null)}
-                className="flex items-center gap-2 text-amber-400 hover:text-amber-300 mb-4"
-              >
-                <ChevronRight size={16} className="rotate-180" />
-                <span>Back to all towers</span>
-              </button>
-
-              {(() => {
-                const tower =
-                  TOWER_DATA[selectedTower as keyof typeof TOWER_DATA];
-                return (
+          {activeTab === "towers" &&
+            selectedTower &&
+            (() => {
+              const tower =
+                TOWER_DATA[selectedTower as keyof typeof TOWER_DATA];
+              return (
+                <div>
+                  <button
+                    onClick={() => setSelectedTower(null)}
+                    className="flex items-center gap-2 text-amber-400 hover:text-amber-300 mb-4"
+                  >
+                    <ChevronRight size={16} className="rotate-180" />
+                    <span>Back to all towers</span>
+                  </button>
                   <div className="space-y-6">
-                    {/* Tower Header */}
                     <div className="flex items-start gap-6 p-4 bg-amber-950/30 rounded-xl border border-amber-800/40">
                       <div className="w-24 h-24 rounded-xl bg-stone-800 border-2 border-amber-600 flex items-center justify-center">
                         <TowerSprite
@@ -504,30 +485,41 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                           {tower.name}
                         </h3>
                         <p className="text-amber-500 mb-3">{tower.desc}</p>
-                        <div className="flex gap-4 text-sm">
+                        <div className="flex flex-wrap gap-3 text-sm">
                           <div className="px-3 py-1.5 bg-amber-900/50 rounded-lg border border-amber-700/50">
                             <span className="text-amber-500">Base Cost:</span>
                             <span className="text-amber-300 font-bold ml-2">
                               {tower.cost} PP
                             </span>
                           </div>
-                          <div className="px-3 py-1.5 bg-red-900/30 rounded-lg border border-red-800/40">
-                            <span className="text-red-500">Base Damage:</span>
-                            <span className="text-red-300 font-bold ml-2">
-                              {tower.damage}
-                            </span>
-                          </div>
+                          {tower.damage > 0 && (
+                            <div className="px-3 py-1.5 bg-red-900/30 rounded-lg border border-red-800/40">
+                              <span className="text-red-500">Base Damage:</span>
+                              <span className="text-red-300 font-bold ml-2">
+                                {tower.damage}
+                              </span>
+                            </div>
+                          )}
                           <div className="px-3 py-1.5 bg-blue-900/30 rounded-lg border border-blue-800/40">
                             <span className="text-blue-500">Range:</span>
                             <span className="text-blue-300 font-bold ml-2">
                               {tower.range}
                             </span>
                           </div>
+                          {tower.attackSpeed > 0 && (
+                            <div className="px-3 py-1.5 bg-green-900/30 rounded-lg border border-green-800/40">
+                              <span className="text-green-500">
+                                Attack Speed:
+                              </span>
+                              <span className="text-green-300 font-bold ml-2">
+                                {tower.attackSpeed}ms
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Level Progression */}
                     <div>
                       <h4 className="text-lg font-bold text-amber-300 mb-3 flex items-center gap-2">
                         <ArrowUp size={18} />
@@ -575,20 +567,21 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                               </p>
                               <div className="space-y-1 text-[10px]">
                                 {tower.damage > 0 && (
-                                  <div className="text-red-400">
-                                    Damage: {stats.damage}
+                                  <div className="text-red-400 flex items-center gap-1">
+                                    <Swords size={10} /> Damage: {stats.damage}
                                   </div>
                                 )}
-                                <div className="text-blue-400">
-                                  Range: {stats.range}
+                                <div className="text-blue-400 flex items-center gap-1">
+                                  <Target size={10} /> Range: {stats.range}
                                 </div>
                                 {tower.attackSpeed > 0 && (
-                                  <div className="text-green-400">
-                                    Atk Speed: {stats.attackSpeed}ms
+                                  <div className="text-green-400 flex items-center gap-1">
+                                    <Gauge size={10} /> Speed:{" "}
+                                    {stats.attackSpeed}ms
                                   </div>
                                 )}
-                                <div className="text-amber-400 mt-1 pt-1 border-t border-amber-800/30">
-                                  Cost: {upgradeCost} PP
+                                <div className="text-amber-400 mt-1 pt-1 border-t border-amber-800/30 flex items-center gap-1">
+                                  <Coins size={10} /> Cost: {upgradeCost} PP
                                 </div>
                               </div>
                             </div>
@@ -597,166 +590,116 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                       </div>
                     </div>
 
-                    {/* Evolution Paths */}
                     <div>
                       <h4 className="text-lg font-bold text-amber-300 mb-3 flex items-center gap-2">
                         <Flame size={18} />
                         Evolution Paths (Level 4)
                       </h4>
                       <div className="grid grid-cols-2 gap-4">
-                        {/* Path A */}
-                        <div className="bg-gradient-to-br from-red-950/50 to-stone-900/60 rounded-xl border-2 border-red-700/50 p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-16 h-16 rounded-lg bg-red-900/30 border border-red-700/50 flex items-center justify-center">
-                              <TowerSprite
-                                type={selectedTower as keyof typeof TOWER_DATA}
-                                size={52}
-                                level={4}
-                              />
-                            </div>
-                            <div>
-                              <div className="text-xs text-red-400 uppercase tracking-wider">
-                                Path A
+                        {(["A", "B"] as const).map((path) => {
+                          const upgrade = tower.upgrades[path];
+                          const color = path === "A" ? "red" : "blue";
+                          const stats = getTowerStats(
+                            selectedTower as keyof typeof TOWER_DATA,
+                            4,
+                            path
+                          );
+                          return (
+                            <div
+                              key={path}
+                              className={`bg-gradient-to-br from-${color}-950/50 to-stone-900/60 rounded-xl border-2 border-${color}-700/50 p-4`}
+                            >
+                              <div className="flex items-center gap-3 mb-3">
+                                <div
+                                  className={`w-16 h-16 rounded-lg bg-${color}-900/30 border border-${color}-700/50 flex items-center justify-center`}
+                                >
+                                  <TowerSprite
+                                    type={
+                                      selectedTower as keyof typeof TOWER_DATA
+                                    }
+                                    size={52}
+                                    level={4}
+                                  />
+                                </div>
+                                <div>
+                                  <div
+                                    className={`text-xs text-${color}-400 uppercase tracking-wider`}
+                                  >
+                                    Path {path} -{" "}
+                                    {path === "A" ? "Offensive" : "Utility"}
+                                  </div>
+                                  <h5
+                                    className={`text-xl font-bold text-${color}-300`}
+                                  >
+                                    {upgrade.name}
+                                  </h5>
+                                </div>
                               </div>
-                              <h5 className="text-xl font-bold text-red-300">
-                                {tower.upgrades.A.name}
-                              </h5>
-                            </div>
-                          </div>
-                          <p className="text-sm text-red-400/80 mb-3">
-                            {tower.upgrades.A.desc}
-                          </p>
-                          <div className="bg-red-950/50 rounded-lg p-3 border border-red-800/40">
-                            <div className="text-xs text-red-500 uppercase tracking-wider mb-1">
-                              Special Effect
-                            </div>
-                            <p className="text-sm text-red-200">
-                              {tower.upgrades.A.effect}
-                            </p>
-                          </div>
-                          <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-                            {(() => {
-                              const stats = getTowerStats(
-                                selectedTower as keyof typeof TOWER_DATA,
-                                4,
-                                "A"
-                              );
-                              return (
-                                <>
-                                  {tower.damage > 0 && (
-                                    <div className="bg-stone-800/50 rounded p-1.5 text-center">
-                                      <div className="text-red-400">DMG</div>
-                                      <div className="text-red-300 font-bold">
-                                        {stats.damage}
-                                      </div>
-                                    </div>
-                                  )}
+                              <p
+                                className={`text-sm text-${color}-400/80 mb-3`}
+                              >
+                                {upgrade.desc}
+                              </p>
+                              <div
+                                className={`bg-${color}-950/50 rounded-lg p-3 border border-${color}-800/40`}
+                              >
+                                <div
+                                  className={`text-xs text-${color}-500 uppercase tracking-wider mb-1 flex items-center gap-1`}
+                                >
+                                  <Sparkles size={12} /> Special Effect
+                                </div>
+                                <p className={`text-sm text-${color}-200`}>
+                                  {upgrade.effect}
+                                </p>
+                              </div>
+                              <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
+                                {tower.damage > 0 && (
                                   <div className="bg-stone-800/50 rounded p-1.5 text-center">
-                                    <div className="text-blue-400">RNG</div>
-                                    <div className="text-blue-300 font-bold">
-                                      {stats.range}
+                                    <div className="text-red-400">DMG</div>
+                                    <div className="text-red-300 font-bold">
+                                      {stats.damage}
                                     </div>
                                   </div>
-                                  {tower.attackSpeed > 0 && (
-                                    <div className="bg-stone-800/50 rounded p-1.5 text-center">
-                                      <div className="text-green-400">SPD</div>
-                                      <div className="text-green-300 font-bold">
-                                        {stats.attackSpeed}ms
-                                      </div>
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        </div>
-
-                        {/* Path B */}
-                        <div className="bg-gradient-to-br from-blue-950/50 to-stone-900/60 rounded-xl border-2 border-blue-700/50 p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-16 h-16 rounded-lg bg-blue-900/30 border border-blue-700/50 flex items-center justify-center">
-                              <TowerSprite
-                                type={selectedTower as keyof typeof TOWER_DATA}
-                                size={52}
-                                level={4}
-                              />
-                            </div>
-                            <div>
-                              <div className="text-xs text-blue-400 uppercase tracking-wider">
-                                Path B
-                              </div>
-                              <h5 className="text-xl font-bold text-blue-300">
-                                {tower.upgrades.B.name}
-                              </h5>
-                            </div>
-                          </div>
-                          <p className="text-sm text-blue-400/80 mb-3">
-                            {tower.upgrades.B.desc}
-                          </p>
-                          <div className="bg-blue-950/50 rounded-lg p-3 border border-blue-800/40">
-                            <div className="text-xs text-blue-500 uppercase tracking-wider mb-1">
-                              Special Effect
-                            </div>
-                            <p className="text-sm text-blue-200">
-                              {tower.upgrades.B.effect}
-                            </p>
-                          </div>
-                          <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-                            {(() => {
-                              const stats = getTowerStats(
-                                selectedTower as keyof typeof TOWER_DATA,
-                                4,
-                                "B"
-                              );
-                              return (
-                                <>
-                                  {tower.damage > 0 && (
-                                    <div className="bg-stone-800/50 rounded p-1.5 text-center">
-                                      <div className="text-red-400">DMG</div>
-                                      <div className="text-red-300 font-bold">
-                                        {stats.damage}
-                                      </div>
-                                    </div>
-                                  )}
+                                )}
+                                <div className="bg-stone-800/50 rounded p-1.5 text-center">
+                                  <div className="text-blue-400">RNG</div>
+                                  <div className="text-blue-300 font-bold">
+                                    {stats.range}
+                                  </div>
+                                </div>
+                                {tower.attackSpeed > 0 && (
                                   <div className="bg-stone-800/50 rounded p-1.5 text-center">
-                                    <div className="text-blue-400">RNG</div>
-                                    <div className="text-blue-300 font-bold">
-                                      {stats.range}
+                                    <div className="text-green-400">SPD</div>
+                                    <div className="text-green-300 font-bold">
+                                      {stats.attackSpeed}ms
                                     </div>
                                   </div>
-                                  {tower.attackSpeed > 0 && (
-                                    <div className="bg-stone-800/50 rounded p-1.5 text-center">
-                                      <div className="text-green-400">SPD</div>
-                                      <div className="text-green-300 font-bold">
-                                        {stats.attackSpeed}ms
-                                      </div>
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            })()}
-                          </div>
-                        </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
-                );
-              })()}
-            </div>
-          )}
+                </div>
+              );
+            })()}
 
-          {activeTab === "heroes" && (
+          {activeTab === "heroes" && !selectedHeroDetail && (
             <div className="grid grid-cols-2 gap-4">
               {heroTypes.map((type) => {
                 const hero = HERO_DATA[type];
+                const cooldown = HERO_ABILITY_COOLDOWNS[type];
                 return (
-                  <div
+                  <button
                     key={type}
-                    className="bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40 p-4"
+                    onClick={() => setSelectedHeroDetail(type)}
+                    className="bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40 p-4 hover:border-amber-500/60 text-left group transition-all"
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className="w-20 h-20 rounded-xl border-2 flex items-center justify-center"
+                        className="w-20 h-20 rounded-xl border-2 flex items-center justify-center flex-shrink-0"
                         style={{
                           borderColor: hero.color,
                           backgroundColor: hero.color + "20",
@@ -764,66 +707,295 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                       >
                         <HeroSprite type={type} size={64} color={hero.color} />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-amber-300">
-                          {hero.name}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-amber-300 group-hover:text-amber-200">
+                          {hero.name} {hero.icon}
                         </h3>
-                        <div className="text-sm text-purple-400 mb-3 flex items-center gap-1 bg-purple-900/30 px-2 py-1 rounded-lg border border-purple-700/40 mt-1">
-                          <Sparkles size={14} />
-                          <span className="font-medium">{hero.ability}:</span>
-                          <span className="text-purple-300">
-                            {hero.abilityDesc}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-2">
-                          <div className="bg-red-950/50 rounded-lg p-2 text-center border border-red-800/40">
-                            <Heart
-                              size={14}
-                              className="mx-auto text-red-400 mb-1"
-                            />
-                            <div className="text-xs text-red-500">HP</div>
-                            <div className="text-red-300 font-bold">
+                        <p className="text-xs text-amber-500/70 mb-2 line-clamp-2">
+                          {hero.description}
+                        </p>
+                        <div className="grid grid-cols-4 gap-1.5 mb-2">
+                          <div className="bg-red-950/50 rounded px-1.5 py-1 text-center border border-red-800/40">
+                            <div className="text-[9px] text-red-500">HP</div>
+                            <div className="text-red-300 font-bold text-xs">
                               {hero.hp}
                             </div>
                           </div>
-                          <div className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                            <Swords
-                              size={14}
-                              className="mx-auto text-orange-400 mb-1"
-                            />
-                            <div className="text-xs text-orange-500">DMG</div>
-                            <div className="text-orange-300 font-bold">
+                          <div className="bg-orange-950/50 rounded px-1.5 py-1 text-center border border-orange-800/40">
+                            <div className="text-[9px] text-orange-500">
+                              DMG
+                            </div>
+                            <div className="text-orange-300 font-bold text-xs">
                               {hero.damage}
                             </div>
                           </div>
-                          <div className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-800/40">
-                            <Target
-                              size={14}
-                              className="mx-auto text-blue-400 mb-1"
-                            />
-                            <div className="text-xs text-blue-500">RNG</div>
-                            <div className="text-blue-300 font-bold">
+                          <div className="bg-blue-950/50 rounded px-1.5 py-1 text-center border border-blue-800/40">
+                            <div className="text-[9px] text-blue-500">RNG</div>
+                            <div className="text-blue-300 font-bold text-xs">
                               {hero.range}
                             </div>
                           </div>
-                          <div className="bg-green-950/50 rounded-lg p-2 text-center border border-green-800/40">
-                            <Wind
-                              size={14}
+                          <div className="bg-green-950/50 rounded px-1.5 py-1 text-center border border-green-800/40">
+                            <div className="text-[9px] text-green-500">SPD</div>
+                            <div className="text-green-300 font-bold text-xs">
+                              {hero.speed}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-purple-400 flex items-center gap-1 bg-purple-900/30 px-2 py-1 rounded border border-purple-700/40">
+                          <Sparkles size={10} />
+                          <span className="font-medium">{hero.ability}</span>
+                          <span className="text-purple-500">|</span>
+                          <Timer size={10} />
+                          <span className="text-purple-300">
+                            {cooldown / 1000}s
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight
+                        size={20}
+                        className="text-amber-600 group-hover:text-amber-400 mt-2"
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === "heroes" &&
+            selectedHeroDetail &&
+            (() => {
+              const hero = HERO_DATA[selectedHeroDetail as HeroType];
+              const cooldown =
+                HERO_ABILITY_COOLDOWNS[selectedHeroDetail as HeroType];
+              const abilityDetails: Record<string, string[]> = {
+                tiger: [
+                  "Stuns ALL enemies within 180 range for 3 seconds",
+                  "Applies 50% slow effect after stun ends",
+                  "Creates orange fear shockwave visual effect",
+                ],
+                tenor: [
+                  "Deals 80 damage to all enemies within 250 range",
+                  "Stuns affected enemies for 2 seconds",
+                  "Purple sonic waves with musical notes",
+                ],
+                mathey: [
+                  "Hero becomes invincible for 5 seconds",
+                  "Taunts all nearby enemies within 150 range",
+                  "Enemies forced to target the hero",
+                  "Hexagonal blue shield with rotating runes",
+                ],
+                rocky: [
+                  "Massive AoE damage in target area",
+                  "Damage falls off from center of impact",
+                  "Ground crater with dust cloud effect",
+                ],
+                scott: [
+                  "Boosts ALL tower damage by 50% for 8 seconds",
+                  "Golden light rays emanate from hero",
+                  "Affects every tower on the map",
+                ],
+                captain: [
+                  "Summons 3 knight troops near the hero",
+                  "Knights have 500 HP and 30 damage each",
+                  "Summoning circle with energy pillars effect",
+                ],
+                engineer: [
+                  "Deploys a Level 2 Cannon turret nearby",
+                  "Turret lasts for 20 seconds",
+                  "Construction sparks and build effect",
+                ],
+              };
+              const roleInfo: Record<
+                string,
+                { role: string; strategy: string }
+              > = {
+                tiger: {
+                  role: "Frontline Brawler / Crowd Controller",
+                  strategy:
+                    "The Tiger excels at diving into enemy formations. Use Mighty Roar when enemies are clustered.",
+                },
+                tenor: {
+                  role: "Area Damage / Support",
+                  strategy:
+                    "The Tenor provides excellent AoE damage. Position near chokepoints to maximize damage output.",
+                },
+                mathey: {
+                  role: "Tank / Protector",
+                  strategy:
+                    "Use Fortress Shield when overwhelmed to draw enemy fire and protect towers. Highest HP in the game.",
+                },
+                rocky: {
+                  role: "Ranged Artillery",
+                  strategy:
+                    "Rocky provides devastating ranged damage. Position him behind your front line.",
+                },
+                scott: {
+                  role: "Support / Buffer",
+                  strategy:
+                    "F. Scott is a pure support hero. Use Inspiration during critical waves to boost tower damage.",
+                },
+                captain: {
+                  role: "Summoner / Commander",
+                  strategy:
+                    "The Captain summons reinforcements. Use Rally Knights when you need extra bodies on the field.",
+                },
+                engineer: {
+                  role: "Tactical Support",
+                  strategy:
+                    "The Engineer provides additional tower coverage. Place turrets strategically to cover weak points.",
+                },
+              };
+              return (
+                <div>
+                  <button
+                    onClick={() => setSelectedHeroDetail(null)}
+                    className="flex items-center gap-2 text-amber-400 hover:text-amber-300 mb-4"
+                  >
+                    <ChevronRight size={16} className="rotate-180" />
+                    <span>Back to all heroes</span>
+                  </button>
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-6 p-5 bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40">
+                      <div
+                        className="w-28 h-28 rounded-xl border-3 flex items-center justify-center flex-shrink-0"
+                        style={{
+                          borderColor: hero.color,
+                          backgroundColor: hero.color + "25",
+                          boxShadow: `0 0 30px ${hero.color}40`,
+                        }}
+                      >
+                        <HeroSprite
+                          type={selectedHeroDetail as HeroType}
+                          size={96}
+                          color={hero.color}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-3xl font-bold text-amber-200">
+                            {hero.name}
+                          </h3>
+                          <span className="text-2xl">{hero.icon}</span>
+                        </div>
+                        <p className="text-amber-500 text-sm mb-4">
+                          {hero.description}
+                        </p>
+                        <div className="grid grid-cols-5 gap-3">
+                          <div className="bg-red-950/50 rounded-lg p-3 text-center border border-red-800/40">
+                            <Heart
+                              size={18}
+                              className="mx-auto text-red-400 mb-1"
+                            />
+                            <div className="text-xs text-red-500">Health</div>
+                            <div className="text-red-300 font-bold text-xl">
+                              {hero.hp}
+                            </div>
+                          </div>
+                          <div className="bg-orange-950/50 rounded-lg p-3 text-center border border-orange-800/40">
+                            <Swords
+                              size={18}
+                              className="mx-auto text-orange-400 mb-1"
+                            />
+                            <div className="text-xs text-orange-500">
+                              Damage
+                            </div>
+                            <div className="text-orange-300 font-bold text-xl">
+                              {hero.damage}
+                            </div>
+                          </div>
+                          <div className="bg-blue-950/50 rounded-lg p-3 text-center border border-blue-800/40">
+                            <Target
+                              size={18}
+                              className="mx-auto text-blue-400 mb-1"
+                            />
+                            <div className="text-xs text-blue-500">Range</div>
+                            <div className="text-blue-300 font-bold text-xl">
+                              {hero.range}
+                            </div>
+                          </div>
+                          <div className="bg-green-950/50 rounded-lg p-3 text-center border border-green-800/40">
+                            <Gauge
+                              size={18}
                               className="mx-auto text-green-400 mb-1"
                             />
-                            <div className="text-xs text-green-500">SPD</div>
-                            <div className="text-green-300 font-bold">
+                            <div className="text-xs text-green-500">
+                              Atk Speed
+                            </div>
+                            <div className="text-green-300 font-bold text-xl">
+                              {hero.attackSpeed}ms
+                            </div>
+                          </div>
+                          <div className="bg-cyan-950/50 rounded-lg p-3 text-center border border-cyan-800/40">
+                            <Wind
+                              size={18}
+                              className="mx-auto text-cyan-400 mb-1"
+                            />
+                            <div className="text-xs text-cyan-500">
+                              Move Speed
+                            </div>
+                            <div className="text-cyan-300 font-bold text-xl">
                               {hero.speed}
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    <div className="bg-gradient-to-br from-purple-950/50 to-stone-900/60 rounded-xl border-2 border-purple-700/50 p-5">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-lg bg-purple-800/50 border border-purple-600/50 flex items-center justify-center">
+                          <Sparkles size={24} className="text-purple-300" />
+                        </div>
+                        <div>
+                          <div className="text-xs text-purple-400 uppercase tracking-wider">
+                            Special Ability
+                          </div>
+                          <h4 className="text-2xl font-bold text-purple-200">
+                            {hero.ability}
+                          </h4>
+                        </div>
+                        <div className="ml-auto flex items-center gap-2 bg-purple-900/50 px-4 py-2 rounded-lg border border-purple-700/50">
+                          <Timer size={16} className="text-purple-400" />
+                          <span className="text-purple-300 font-bold">
+                            {cooldown / 1000}s Cooldown
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-purple-200 text-lg mb-4">
+                        {hero.abilityDesc}
+                      </p>
+                      <div className="bg-purple-950/50 rounded-lg p-4 border border-purple-800/40">
+                        <div className="text-xs text-purple-500 uppercase tracking-wider mb-2">
+                          Ability Details
+                        </div>
+                        <ul className="text-sm text-purple-300 space-y-1">
+                          {abilityDetails[selectedHeroDetail]?.map(
+                            (detail, i) => (
+                              <li key={i}>• {detail}</li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="bg-stone-800/50 rounded-xl border border-stone-700/50 p-4">
+                      <h4 className="text-amber-300 font-bold mb-3 flex items-center gap-2">
+                        <Info size={16} /> Combat Role & Strategy
+                      </h4>
+                      <div className="text-amber-500/80 text-sm space-y-2">
+                        <p>
+                          <strong className="text-amber-300">Role:</strong>{" "}
+                          {roleInfo[selectedHeroDetail]?.role}
+                        </p>
+                        <p>{roleInfo[selectedHeroDetail]?.strategy}</p>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </div>
+              );
+            })()}
 
           {activeTab === "enemies" && (
             <div className="grid grid-cols-3 gap-4">
@@ -834,15 +1006,15 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                     key={type}
                     className="bg-gradient-to-br from-red-950/30 to-stone-900/60 rounded-xl border border-red-800/30 p-4"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-xl bg-stone-800 border border-red-700/40 flex items-center justify-center">
+                    <div className="flex items-start gap-4">
+                      <div className="w-16 h-16 rounded-xl bg-stone-800 border border-red-700/40 flex items-center justify-center flex-shrink-0">
                         <EnemySprite type={type} size={52} />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-red-300">
                           {enemy.name}
                         </h3>
-                        <p className="text-xs text-red-400/70 mb-2">
+                        <p className="text-xs text-red-400/70 mb-2 line-clamp-2">
                           {enemy.desc}
                         </p>
                         <div className="grid grid-cols-3 gap-1 text-[10px]">
@@ -865,16 +1037,23 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                             </div>
                           </div>
                         </div>
-                        {enemy.armor > 0 && (
-                          <div className="mt-1 text-[9px] text-stone-400">
-                            Armor: {Math.round(enemy.armor * 100)}%
-                          </div>
-                        )}
-                        {enemy.flying && (
-                          <div className="mt-1 text-[9px] text-cyan-400">
-                            ✈ Flying unit
-                          </div>
-                        )}
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {enemy.armor > 0 && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-stone-700/50 rounded text-stone-300 border border-stone-600/50">
+                              🛡️ {Math.round(enemy.armor * 100)}% Armor
+                            </span>
+                          )}
+                          {enemy.flying && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-700/50">
+                              ✈️ Flying
+                            </span>
+                          )}
+                          {(enemy as any).isRanged && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-purple-900/50 rounded text-purple-300 border border-purple-700/50">
+                              🏹 Ranged
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -884,48 +1063,89 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
           )}
 
           {activeTab === "spells" && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {spellTypes.map((type) => {
                 const spell = SPELL_DATA[type];
+                const spellDetails: Record<string, string[]> = {
+                  fireball: [
+                    "Meteor falls from sky with 1 second delay",
+                    "200 base damage at center",
+                    "Damage falls off with distance (50% at edge)",
+                    "150 unit AoE radius",
+                    "Best against clustered enemies",
+                  ],
+                  lightning: [
+                    "Chains to up to 5 different enemies",
+                    "600 total damage split among targets",
+                    "Each strike stuns for 0.5 seconds",
+                    "200ms delay between each chain",
+                    "Best for picking off multiple targets",
+                  ],
+                  freeze: [
+                    "Freezes ALL enemies on the map",
+                    "Enemies completely immobilized for 3 seconds",
+                    "Creates expanding ice wave effect",
+                    "Best when you need breathing room",
+                  ],
+                  payday: [
+                    "Base payout: 80 Paw Points",
+                    "Bonus: +5 PP per enemy on screen (max +50)",
+                    "Maximum possible: 130 PP",
+                    "Gold aura effect on all enemies",
+                    "Best used when many enemies present",
+                  ],
+                  reinforcements: [
+                    "Summons 3 armored knight troops",
+                    "Each knight has 500 HP and 30 damage",
+                    "Click to place them anywhere on the map",
+                    "Knights fight independently",
+                    "Best for blocking or supporting weak points",
+                  ],
+                };
                 return (
                   <div
                     key={type}
-                    className="bg-gradient-to-br from-purple-950/40 to-stone-900/60 rounded-xl border border-purple-800/40 p-4"
+                    className="bg-gradient-to-br from-purple-950/40 to-stone-900/60 rounded-xl border border-purple-800/40 p-5"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-18 h-18 rounded-xl bg-purple-900/50 border-2 border-purple-600/50 flex items-center justify-center p-2">
-                        <SpellSprite type={type} size={56} />
+                    <div className="flex items-start gap-5">
+                      <div className="w-20 h-20 rounded-xl bg-purple-900/50 border-2 border-purple-600/50 flex items-center justify-center p-2 flex-shrink-0">
+                        <SpellSprite type={type} size={64} />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-purple-300">
-                          {spell.name}
-                        </h3>
-                        <p className="text-sm text-purple-400/80 mb-3">
-                          {spell.desc}
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {spell.damage > 0 && (
-                            <div className="bg-red-950/50 rounded-lg p-2 text-center border border-red-800/40">
-                              <div className="text-xs text-red-500">Damage</div>
-                              <div className="text-red-300 font-bold text-lg">
-                                {spell.damage}
-                              </div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-2xl font-bold text-purple-300">
+                            {spell.name}
+                          </h3>
+                          <span className="text-2xl">{spell.icon}</span>
+                        </div>
+                        <p className="text-purple-400/80 mb-4">{spell.desc}</p>
+                        <div className="flex gap-4 mb-4">
+                          <div className="bg-amber-950/50 rounded-lg px-4 py-2 border border-amber-800/40">
+                            <div className="text-xs text-amber-500">Cost</div>
+                            <div className="text-amber-300 font-bold text-xl flex items-center gap-1">
+                              <Coins size={16} />
+                              {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
                             </div>
-                          )}
-                          <div className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-800/40">
+                          </div>
+                          <div className="bg-blue-950/50 rounded-lg px-4 py-2 border border-blue-800/40">
                             <div className="text-xs text-blue-500">
                               Cooldown
                             </div>
-                            <div className="text-blue-300 font-bold text-lg">
+                            <div className="text-blue-300 font-bold text-xl flex items-center gap-1">
+                              <Timer size={16} />
                               {spell.cooldown / 1000}s
                             </div>
                           </div>
-                          <div className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
-                            <div className="text-xs text-amber-500">Cost</div>
-                            <div className="text-amber-300 font-bold text-lg">
-                              {spell.cost || "FREE"}
-                            </div>
+                        </div>
+                        <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800/30">
+                          <div className="text-xs text-purple-500 uppercase tracking-wider mb-2">
+                            Effect Details
                           </div>
+                          <ul className="text-sm text-purple-300 space-y-1">
+                            {spellDetails[type]?.map((detail, i) => (
+                              <li key={i}>• {detail}</li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     </div>
@@ -941,11 +1161,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 };
 
 // =============================================================================
-// MAIN WORLD MAP COMPONENT
-// =============================================================================
-
-// =============================================================================
-// BATTLEFIELD PREVIEW WITH CYCLING SCENES
+// BATTLEFIELD PREVIEW (RESTORED FROM CODE 1)
 // =============================================================================
 
 const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
@@ -1142,6 +1358,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
         <div className="w-24 h-24 rounded-full bg-amber-900/50 border-2 border-amber-700/60 flex items-center justify-center mb-4 backdrop-blur-sm">
           <MapPin size={40} className="text-amber-500" />
         </div>
+
         <h3 className="text-xl font-bold text-amber-300 mb-2 drop-shadow-lg">
           Select a Battlefield
         </h3>
@@ -1194,16 +1411,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCodex, setShowCodex] = useState(false);
   const [animTime, setAnimTime] = useState(0);
   const [mapHeight, setMapHeight] = useState(500);
-
-  // New Ref to cache images
+  const [hoveredHero, setHoveredHero] = useState<HeroType | null>(null);
+  const [hoveredSpell, setHoveredSpell] = useState<SpellType | null>(null);
   const imageCache = useRef<Record<string, HTMLImageElement>>({});
 
   useEffect(() => {
     const updateHeight = () => {
-      if (containerRef.current) {
-        const height = containerRef.current.clientHeight;
-        setMapHeight(Math.max(300, height));
-      }
+      if (containerRef.current)
+        setMapHeight(Math.max(300, containerRef.current.clientHeight));
     };
     updateHeight();
     window.addEventListener("resize", updateHeight);
@@ -1212,7 +1427,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
   const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
   const maxStars = WORLD_LEVELS.length * 3;
-
   const isLevelUnlocked = useCallback(
     (levelId: string) => unlockedMaps.includes(levelId),
     [unlockedMaps]
@@ -1221,7 +1435,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     (id: string) => WORLD_LEVELS.find((l) => l.id === id),
     []
   );
-  // Map Y percentage to actual Y coordinate, using 85% of height (leaving space for header and overlay)
   const getY = useCallback(
     (pct: number) => {
       const usableHeight = mapHeight - 70; // Leave 60px top for labels, 40px bottom for overlay
@@ -1229,36 +1442,27 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     },
     [mapHeight]
   );
-
   const handleLevelClick = (levelId: string) => {
     if (isLevelUnlocked(levelId)) {
       setSelectedLevel(levelId);
       setSelectedMap(levelId);
     }
   };
-
   const startGame = () => {
-    if (selectedLevel && selectedHero && selectedSpells.length === 3) {
+    if (selectedLevel && selectedHero && selectedSpells.length === 3)
       setGameState("playing");
-    }
   };
-
   const toggleSpell = (spell: SpellType) => {
-    if (selectedSpells.includes(spell)) {
+    if (selectedSpells.includes(spell))
       setSelectedSpells(selectedSpells.filter((s) => s !== spell));
-    } else if (selectedSpells.length < 3) {
+    else if (selectedSpells.length < 3)
       setSelectedSpells([...selectedSpells, spell]);
-    }
   };
-
   const seededRandom = useCallback((seed: number) => {
     const x = Math.sin(seed * 9999) * 10000;
     return x - Math.floor(x);
   }, []);
 
-  // ===================
-  // DRAW MAP - Enhanced with war details
-  // ===================
   const drawMap = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -2399,6 +2603,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     "mathey",
     "rocky",
     "scott",
+    "captain",
+    "engineer",
   ];
   const spellOptions: SpellType[] = [
     "fireball",
@@ -2443,15 +2649,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       </div>
 
       {/* MAIN CONTENT */}
+
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* LEFT: Map with Overlayed Selection */}
+        {/* LEFT: Map */}
         <div className="flex-1 flex flex-col min-w-0 p-4">
-          {/* Map Container with Overlay */}
           <div
             ref={containerRef}
             className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 overflow-hidden shadow-2xl min-h-0"
           >
-            {/* Canvas Map */}
             <div className="absolute inset-0 overflow-x-auto overflow-y-hidden">
               <canvas
                 ref={canvasRef}
@@ -2462,11 +2667,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               />
             </div>
 
-            {/* OVERLAYED HERO & SPELL SELECTION */}
+            {/* HERO & SPELL SELECTION OVERLAY */}
             <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/95 to-transparent pointer-events-none">
               <div className="flex gap-3 pointer-events-auto">
-                {/* Lore/Intro Panel */}
-                <div className="bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-80 flex-shrink-0">
+                <div className="bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Crown size={14} className="text-amber-400" />
                     <span className="text-xs font-bold text-amber-300 tracking-wide">
@@ -2477,186 +2681,304 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     <p>
                       The Kingdom of Princeton stands as the last bastion
                       against the invading hordes. Ancient towers guard our
-                      sacred halls, powered by knowledge and arcane energy.
+                      halls, powered by arcane knowledge.
                     </p>
-                    <p className="text-amber-400/70 italic">
+                    {/* <p className="text-amber-400/70 italic">
                       Select your champion wisely, arm yourself with powerful
                       spells, and lead the Tiger forces to victory!
-                    </p>
+                    </p> */}
                   </div>
                   <div className="mt-2 pt-2 border-t border-amber-800/30 flex items-center gap-2 text-[9px] text-amber-500">
                     <Swords size={10} />
-                    <span>
-                      Build towers • Summon heroes • Cast spells • Defend the
-                      realm
-                    </span>
+                    <span>Defend the realm!</span>
                   </div>
                 </div>
-
-                {/* Hero Panel with More Info */}
-                <div className="bg-gradient-to-br from-amber-950/90 to-stone-900/95 rounded-xl border border-amber-700/60 p-2.5 shadow-xl backdrop-blur-sm flex-1">
+                {/* Hero Panel */}
+                <div className="bg-gradient-to-br from-amber-950/95 to-stone-900/98 rounded-xl border border-amber-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield size={14} className="text-amber-400" />
                     <span className="text-xs font-bold text-amber-300 tracking-wide">
-                      CHAMPION
+                      SELECT CHAMPION
                     </span>
                   </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-1.5">
-                      {heroOptions.map((heroType) => {
-                        const hero = HERO_DATA[heroType];
-                        const isSelected = selectedHero === heroType;
-                        return (
-                          <button
-                            key={heroType}
-                            onClick={() => setSelectedHero(heroType)}
-                            className={`relative p-1 rounded-lg ${
-                              isSelected
-                                ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
-                                : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
-                            }`}
-                          >
-                            <HeroSprite
-                              type={heroType}
-                              size={32}
-                              color={hero.color}
-                            />
-                            {isSelected && (
-                              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-green-300 text-[8px] text-white font-bold">
-                                ✓
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {selectedHero ? (
-                      <div className="flex-1 min-w-0 pl-3 border-l border-amber-800/40">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-bold text-amber-200">
-                            {HERO_DATA[selectedHero].name}
-                          </span>
-                          <div className="flex gap-1.5 text-[9px]">
-                            <span className="text-red-400 bg-red-950/50 px-1.5 py-0.5 rounded">
-                              ❤{HERO_DATA[selectedHero].hp}
-                            </span>
-                            <span className="text-orange-400 bg-orange-950/50 px-1.5 py-0.5 rounded">
-                              ⚔{HERO_DATA[selectedHero].damage}
-                            </span>
-                            <span className="text-blue-400 bg-blue-950/50 px-1.5 py-0.5 rounded">
-                              ◎{HERO_DATA[selectedHero].range}
-                            </span>
+                  <div className="flex gap-1.5 mb-2">
+                    {heroOptions.map((heroType) => {
+                      const hero = HERO_DATA[heroType];
+                      const isSelected = selectedHero === heroType;
+                      return (
+                        <button
+                          key={heroType}
+                          onClick={() => setSelectedHero(heroType)}
+                          onMouseEnter={() => setHoveredHero(heroType)}
+                          onMouseLeave={() => setHoveredHero(null)}
+                          className={`relative p-1 rounded-lg transition-all ${
+                            isSelected
+                              ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
+                              : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
+                          }`}
+                        >
+                          <HeroSprite
+                            type={heroType}
+                            size={36}
+                            color={hero.color}
+                          />
+                          {isSelected && (
+                            <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-green-300 text-[8px] text-white font-bold">
+                              ✓
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedHero ? (
+                    <div className="bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-amber-200">
+                          {HERO_DATA[selectedHero].name}
+                        </span>
+                        <span className="text-lg">
+                          {HERO_DATA[selectedHero].icon}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-1 mb-1.5 text-[9px]">
+                        <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-red-500">HP</div>
+                          <div className="text-red-300 font-bold">
+                            {HERO_DATA[selectedHero].hp}
                           </div>
                         </div>
-                        <div className="text-[9px] text-purple-300 flex items-center gap-1 mb-1">
-                          <Sparkles size={10} className="text-purple-400" />
-                          <span className="font-semibold">
-                            {HERO_DATA[selectedHero].ability}:
-                          </span>
-                          <span className="text-purple-200/80">
-                            {HERO_DATA[selectedHero].abilityDesc}
-                          </span>
+                        <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-orange-500">DMG</div>
+                          <div className="text-orange-300 font-bold">
+                            {HERO_DATA[selectedHero].damage}
+                          </div>
+                        </div>
+                        <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-blue-500">RNG</div>
+                          <div className="text-blue-300 font-bold">
+                            {HERO_DATA[selectedHero].range}
+                          </div>
+                        </div>
+                        <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-green-500">SPD</div>
+                          <div className="text-green-300 font-bold">
+                            {HERO_DATA[selectedHero].speed}
+                          </div>
+                        </div>
+                        <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-purple-500">CD</div>
+                          <div className="text-purple-300 font-bold">
+                            {HERO_ABILITY_COOLDOWNS[selectedHero] / 1000}s
+                          </div>
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center text-amber-600/60 text-[10px]">
-                        <span>← Choose your champion</span>
+                      <div className="text-[9px] text-purple-300 flex items-center gap-1 bg-purple-900/40 px-2 py-1 rounded">
+                        <Sparkles size={10} className="text-purple-400" />
+                        <span className="font-semibold text-purple-200">
+                          {HERO_DATA[selectedHero].ability}:
+                        </span>
+                        <span className="text-purple-300/80 truncate">
+                          {HERO_DATA[selectedHero].abilityDesc}
+                        </span>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="text-amber-600/60 text-[10px] text-center py-2">
+                      ← Choose your champion
+                    </div>
+                  )}
+                  {hoveredHero && hoveredHero !== selectedHero && (
+                    <div className="absolute bg-gradient-to-br from-amber-950 to-stone-900 bottom-full left-0 mb-2 w-72 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-amber-200 font-bold">
+                          {HERO_DATA[hoveredHero].name}
+                        </span>
+                        <span>{HERO_DATA[hoveredHero].icon}</span>
+                      </div>
+                      <p className="text-xs text-amber-500/80 mb-2">
+                        {HERO_DATA[hoveredHero].description}
+                      </p>
+                      <div className="grid grid-cols-5 gap-1 text-[9px] mb-2">
+                        <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-red-500">HP</div>
+                          <div className="text-red-300 font-bold">
+                            {HERO_DATA[hoveredHero].hp}
+                          </div>
+                        </div>
+                        <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-orange-500">DMG</div>
+                          <div className="text-orange-300 font-bold">
+                            {HERO_DATA[hoveredHero].damage}
+                          </div>
+                        </div>
+                        <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-blue-500">RNG</div>
+                          <div className="text-blue-300 font-bold">
+                            {HERO_DATA[hoveredHero].range}
+                          </div>
+                        </div>
+                        <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-green-500">SPD</div>
+                          <div className="text-green-300 font-bold">
+                            {HERO_DATA[hoveredHero].speed}
+                          </div>
+                        </div>
+                        <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
+                          <div className="text-purple-500">CD</div>
+                          <div className="text-purple-300 font-bold">
+                            {HERO_ABILITY_COOLDOWNS[hoveredHero] / 1000}s
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-1 rounded">
+                        <span className="font-semibold text-purple-200">
+                          {HERO_DATA[hoveredHero].ability}:
+                        </span>{" "}
+                        {HERO_DATA[hoveredHero].abilityDesc}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Spell Panel with More Info */}
-                <div className="bg-gradient-to-br from-purple-950/90 to-stone-900/95 rounded-xl border border-purple-700/60 p-2.5 shadow-xl backdrop-blur-sm flex-1">
+                {/* Spell Panel */}
+                <div className="bg-gradient-to-br from-purple-950/95 to-stone-900/98 rounded-xl border border-purple-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Zap size={14} className="text-purple-400" />
                       <span className="text-xs font-bold text-amber-300 tracking-wide">
-                        SPELLS
+                        SELECT SPELLS
                       </span>
                     </div>
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${
                         selectedSpells.length === 3
-                          ? "bg-green-900/60 text-green-300"
-                          : "bg-purple-900/60 text-purple-300"
+                          ? "bg-green-900/60 text-green-300 border border-green-700/50"
+                          : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
                       }`}
                     >
-                      {selectedSpells.length}/3
+                      {selectedSpells.length}/3 Selected
                     </span>
                   </div>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex gap-1.5">
-                      {spellOptions.map((spellType) => {
-                        const isSelected = selectedSpells.includes(spellType);
-                        const canSelect =
-                          isSelected || selectedSpells.length < 3;
-                        const spellIndex = selectedSpells.indexOf(spellType);
-                        return (
-                          <button
-                            key={spellType}
-                            onClick={() => toggleSpell(spellType)}
-                            disabled={!canSelect && !isSelected}
-                            className={`relative p-1 rounded-lg ${
-                              isSelected
-                                ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
-                                : canSelect
-                                ? "bg-stone-800/80 border border-stone-600/50 hover:border-purple-500/60 hover:scale-105"
-                                : "bg-stone-900/60 border border-stone-800/40 opacity-40 cursor-not-allowed"
-                            }`}
-                          >
-                            <SpellSprite type={spellType} size={30} />
-                            {isSelected && (
-                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center text-[9px] text-white font-bold border border-purple-300">
-                                {spellIndex + 1}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {selectedSpells.length > 0 ? (
-                      <div className="flex-1 min-w-0 pl-3 border-l border-purple-800/40">
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedSpells.map((sp, i) => {
-                            const spell = SPELL_DATA[sp];
-                            return (
-                              <div
-                                key={sp}
-                                className="flex items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
-                              >
-                                <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
-                                  {i + 1}
-                                </span>
-                                <span className="text-purple-200 font-medium">
-                                  {spell.name}
-                                </span>
-                                <span className="text-purple-400/70">|</span>
-                                {spell.damage > 0 && (
-                                  <span className="text-red-400">
-                                    ⚔{spell.damage}
-                                  </span>
-                                )}
-                                <span className="text-blue-400">
-                                  ⏱{spell.cooldown / 1000}s
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {selectedSpells.length < 3 && (
-                          <div className="text-[8px] text-purple-500/60 mt-1">
-                            Select {3 - selectedSpells.length} more spell
-                            {3 - selectedSpells.length > 1 ? "s" : ""}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center text-purple-600/60 text-[10px]">
-                        <span>← Select 3 spells for battle</span>
-                      </div>
-                    )}
+                  <div className="flex gap-1.5 mb-2">
+                    {spellOptions.map((spellType) => {
+                      const isSelected = selectedSpells.includes(spellType);
+                      const canSelect = isSelected || selectedSpells.length < 3;
+                      const spellIndex = selectedSpells.indexOf(spellType);
+                      return (
+                        <button
+                          key={spellType}
+                          onClick={() => toggleSpell(spellType)}
+                          onMouseEnter={() => setHoveredSpell(spellType)}
+                          onMouseLeave={() => setHoveredSpell(null)}
+                          disabled={!canSelect && !isSelected}
+                          className={`relative p-1.5 rounded-lg transition-all ${
+                            isSelected
+                              ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
+                              : canSelect
+                              ? "bg-stone-800/80 border border-stone-600/50 hover:border-purple-500/60 hover:scale-105"
+                              : "bg-stone-900/60 border border-stone-800/40 opacity-40 cursor-not-allowed"
+                          }`}
+                        >
+                          <SpellSprite type={spellType} size={32} />
+                          {isSelected && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border border-purple-300">
+                              {spellIndex + 1}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                  {selectedSpells.length > 0 ? (
+                    <div className="bg-stone-900/60 rounded-lg p-2 border border-purple-800/40">
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedSpells.map((sp, i) => {
+                          const spell = SPELL_DATA[sp];
+                          return (
+                            <div
+                              key={sp}
+                              className="flex items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
+                            >
+                              <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+                                {i + 1}
+                              </span>
+                              <span className="text-purple-200 font-medium">
+                                {spell.name}
+                              </span>
+                              <span className="text-purple-500">|</span>
+                              <span className="text-amber-400 flex items-center gap-0.5">
+                                <Coins size={8} />
+                                {spell.cost > 0 ? spell.cost : "FREE"}
+                              </span>
+                              <span className="text-blue-400 flex items-center gap-0.5">
+                                <Timer size={8} />
+                                {spell.cooldown / 1000}s
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {selectedSpells.length < 3 && (
+                        <div className="text-[8px] text-purple-500/60 mt-1">
+                          Select {3 - selectedSpells.length} more spell
+                          {3 - selectedSpells.length > 1 ? "s" : ""}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-purple-600/60 text-[10px] text-center py-2">
+                      ← Select 3 spells for battle
+                    </div>
+                  )}
+                  {hoveredSpell && (
+                    <div className="absolute bottom-full right-0 mb-2 w-80 bg-gradient-to-br from-purple-950 to-stone-900 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-purple-200 font-bold text-lg">
+                          {SPELL_DATA[hoveredSpell].name}
+                        </span>
+                        <span className="text-xl">
+                          {SPELL_DATA[hoveredSpell].icon}
+                        </span>
+                      </div>
+                      <p className="text-xs text-purple-400/80 mb-3">
+                        {SPELL_DATA[hoveredSpell].desc}
+                      </p>
+                      <div className="flex gap-3 mb-3">
+                        <div className="bg-amber-950/60 rounded px-3 py-1.5 text-center">
+                          <div className="text-[9px] text-amber-500">Cost</div>
+                          <div className="text-amber-300 font-bold">
+                            {SPELL_DATA[hoveredSpell].cost > 0
+                              ? `${SPELL_DATA[hoveredSpell].cost} PP`
+                              : "FREE"}
+                          </div>
+                        </div>
+                        <div className="bg-blue-950/60 rounded px-3 py-1.5 text-center">
+                          <div className="text-[9px] text-blue-500">
+                            Cooldown
+                          </div>
+                          <div className="text-blue-300 font-bold">
+                            {SPELL_DATA[hoveredSpell].cooldown / 1000}s
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-2 rounded border border-purple-800/40">
+                        <div className="text-purple-500 uppercase text-[8px] mb-1">
+                          Effect Details
+                        </div>
+                        {hoveredSpell === "fireball" &&
+                          "Meteor falls from sky (1s delay), 200 AoE damage with falloff, 150 radius"}
+                        {hoveredSpell === "lightning" &&
+                          "Chains to 5 enemies, 600 total damage split, 0.5s stun each"}
+                        {hoveredSpell === "freeze" &&
+                          "Freezes ALL enemies for 3 seconds, expanding ice wave"}
+                        {hoveredSpell === "payday" &&
+                          "80 base + 5 per enemy (max 50 bonus) = up to 130 PP"}
+                        {hoveredSpell === "reinforcements" &&
+                          "Summons 3 knights (500 HP, 30 DMG each), click to place"}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2667,11 +2989,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-l-2 border-amber-800/50 flex flex-col overflow-hidden">
           {selectedLevel && currentLevel ? (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Level Header */}
               <div className="flex-shrink-0 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-transparent to-transparent" />
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent animate-pulse" />
-
                 <div className="relative p-4 border-b border-amber-800/50">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -2692,11 +3012,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <X size={18} />
                     </button>
                   </div>
-
                   <p className="text-amber-500/80 text-sm italic mb-3">
                     &ldquo;{currentLevel.description}&rdquo;
                   </p>
-
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex items-center gap-2 px-2 py-1 bg-stone-800/60 rounded-lg border border-stone-700/50">
                       <Skull size={14} className="text-amber-500" />
@@ -2726,7 +3044,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </span>
                     </div>
                   </div>
-
                   <div className="flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
                     <Trophy size={18} className="text-yellow-500" />
                     <span className="text-amber-500 text-sm">Best Score:</span>
@@ -2747,7 +3064,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              {/* Map Preview */}
               <div className="flex-shrink-0 p-4 border-b border-amber-800/30">
                 <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
                   Battlefield Preview
@@ -2800,7 +3116,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              {/* Region Progress */}
               <div className="flex-1 p-4 overflow-y-auto">
                 <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3">
                   Region Campaign
@@ -2881,7 +3196,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 })()}
               </div>
 
-              {/* START Button */}
               <div className="flex-shrink-0 p-4 border-t border-amber-800/50 bg-gradient-to-t from-stone-950 to-transparent">
                 <button
                   onClick={startGame}

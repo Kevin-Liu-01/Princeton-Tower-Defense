@@ -1206,26 +1206,103 @@ export default function PrincetonTowerDefense() {
       towers.forEach((tower) => {
         const tData = TOWER_DATA[tower.type];
         if (tower.type === "club") {
-          // Level 3: Grand Club - better income
-          // Level 4A: Investment Bank - high passive income
-          // Level 4B: Recruitment Center - moderate income + buff nearby towers
-          if (now - tower.lastAttack > 10000) {
-            const amount =
-              tower.level === 1
-                ? 5
-                : tower.level === 2
-                ? 12
-                : tower.level === 3
-                ? 18 // Grand Club
-                : tower.upgrade === "A"
-                ? 30 // Investment Bank
-                : 20; // Recruitment Center (less income but buffs)
+          // ENHANCED CLUB TOWER - More useful income generator
+          // Level 1: Basic Club - 8 PP every 8s
+          // Level 2: Popular Club - 15 PP every 7s + bonus on kills nearby
+          // Level 3: Grand Club - 25 PP every 6s + slow enemies in range
+          // Level 4A: Investment Bank - 40 PP every 5s + 10% bonus on all income
+          // Level 4B: Recruitment Center - 20 PP every 6s + 15% damage buff to nearby towers
+
+          const incomeInterval =
+            tower.level === 1
+              ? 8000
+              : tower.level === 2
+              ? 7000
+              : tower.level === 3
+              ? 6000
+              : tower.upgrade === "A"
+              ? 5000
+              : 6000;
+
+          const baseAmount =
+            tower.level === 1
+              ? 8
+              : tower.level === 2
+              ? 15
+              : tower.level === 3
+              ? 25
+              : tower.upgrade === "A"
+              ? 40
+              : 20;
+
+          if (now - tower.lastAttack > incomeInterval) {
+            // Base income
+            let amount = baseAmount;
+
+            // Investment Bank bonus: 10% bonus on income
+            if (tower.level === 4 && tower.upgrade === "A") {
+              amount = Math.floor(amount * 1.1);
+            }
+
             setPawPoints((pp) => pp + amount);
-            addParticles(gridToWorld(tower.pos), "glow", 8);
+            addParticles(gridToWorld(tower.pos), "gold", 10);
+
+            // Level 3+ Grand Club: Create gold particle fountain effect
+            if (tower.level >= 3) {
+              for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                  addParticles(gridToWorld(tower.pos), "gold", 3);
+                }, i * 100);
+              }
+            }
+
             setTowers((prev) =>
               prev.map((t) =>
                 t.id === tower.id ? { ...t, lastAttack: now } : t
               )
+            );
+          }
+
+          // Level 3+ Grand Club: Slow nearby enemies (greed aura)
+          if (tower.level >= 3) {
+            const towerWorldPos = gridToWorld(tower.pos);
+            const auraRange = 100 + tower.level * 20;
+            enemies.forEach((e) => {
+              const enemyPos = getEnemyPosition(e, selectedMap);
+              if (distance(towerWorldPos, enemyPos) <= auraRange) {
+                const slowAmount = tower.level === 3 ? 0.15 : 0.2;
+                setEnemies((prev) =>
+                  prev.map((enemy) =>
+                    enemy.id === e.id
+                      ? {
+                          ...enemy,
+                          slowEffect: Math.max(enemy.slowEffect, slowAmount),
+                        }
+                      : enemy
+                  )
+                );
+              }
+            });
+          }
+
+          // Level 4B Recruitment Center: Buff nearby towers
+          if (tower.level === 4 && tower.upgrade === "B") {
+            const towerWorldPos = gridToWorld(tower.pos);
+            const buffRange = 150;
+            setTowers((prev) =>
+              prev.map((t) => {
+                if (t.id !== tower.id && t.type !== "club") {
+                  const otherPos = gridToWorld(t.pos);
+                  if (distance(towerWorldPos, otherPos) <= buffRange) {
+                    return {
+                      ...t,
+                      damageBoost: Math.max(t.damageBoost || 1, 1.15),
+                      boostEnd: now + 2000,
+                    };
+                  }
+                }
+                return t;
+              })
             );
           }
         } else if (tower.type === "library") {
@@ -1867,8 +1944,14 @@ export default function PrincetonTowerDefense() {
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
               );
             if (validEnemies.length > 0) {
-              // All levels are multi-target now: base = 2, elite = 3, symphony = 5
-              const numTargets = isSymphony ? 5 : isEliteArchers ? 3 : 2;
+              // Level 1: single target, Level 2: 2 targets, Level 3 Elite: 3 targets, Level 4 Symphony: 5 targets
+              const numTargets = isSymphony
+                ? 5
+                : isEliteArchers
+                ? 3
+                : tower.level >= 2
+                ? 2
+                : 1;
               const targets = validEnemies.slice(0, numTargets);
               let damage = tData.damage;
               if (tower.level === 2) damage *= 1.5;
@@ -2240,18 +2323,29 @@ export default function PrincetonTowerDefense() {
           cooldown: Math.max(0, spell.cooldown - deltaTime),
         }))
       );
-      // Check win/lose conditions
-      if (lives <= 0) setGameState("defeat");
+      // Check win/lose conditions - only if still playing to prevent duplicate triggers
+      if (lives <= 0 && gameState === "playing") {
+        setGameState("defeat");
+      }
       if (
+        gameState === "playing" &&
         currentWave >= levelWaves.length &&
         enemies.length === 0 &&
         !waveInProgress
       ) {
+        // Calculate stars based on lives remaining
         const stars = lives >= 18 ? 3 : lives >= 10 ? 2 : 1;
         setStarsEarned(stars);
-        // Save progress to localStorage
-        updateLevelStars(selectedMap, stars);
+
+        // IMPORTANT: Set game state first to prevent duplicate triggers
         setGameState("victory");
+
+        // Save progress to localStorage (stars are always saved, even on first win)
+        // Using setTimeout to ensure state update completes first
+        setTimeout(() => {
+          updateLevelStars(selectedMap, stars);
+        }, 0);
+
         // Level unlock progression
         const unlockMap: Record<string, string> = {
           poe: "carnegie",
@@ -2286,6 +2380,7 @@ export default function PrincetonTowerDefense() {
       addParticles,
       updateLevelStars,
       unlockLevel,
+      gameState,
     ]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation
@@ -4488,98 +4583,187 @@ export default function PrincetonTowerDefense() {
         return;
       }
       setPawPoints((pp) => pp - cost);
+
       switch (spellType) {
-        case "fireball":
+        case "fireball": {
+          // ENHANCED FIREBALL - Comes from sky with delay before massive explosion
           if (enemies.length > 0) {
             const randomEnemy =
               enemies[Math.floor(Math.random() * enemies.length)];
             const targetPos = getEnemyPosition(randomEnemy, selectedMap);
-            setEnemies((prev) =>
-              prev
-                .map((e) => {
-                  const pos = getEnemyPosition(e, selectedMap);
-                  if (distance(pos, targetPos) < 120) {
-                    const newHp = e.hp - 150;
-                    if (newHp <= 0) {
-                      setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                      addParticles(pos, "explosion", 15);
-                      setEffects((ef) => [
-                        ...ef,
-                        {
-                          id: generateId("eff"),
-                          pos,
-                          type: "explosion",
-                          progress: 0,
-                          size: 40,
-                        },
-                      ]);
-                      return null as any;
-                    }
-                    return { ...e, hp: newHp, damageFlash: 200 };
-                  }
-                  return e;
-                })
-                .filter(Boolean)
-            );
+
+            // Create incoming meteor effect (1 second delay)
             setEffects((ef) => [
               ...ef,
               {
-                id: generateId("fireball"),
-                pos: targetPos,
-                type: "explosion",
+                id: generateId("meteor_incoming"),
+                pos: { x: targetPos.x, y: targetPos.y - 300 },
+                targetPos: targetPos,
+                type: "meteor_incoming",
                 progress: 0,
-                size: 100,
+                size: 150,
+                duration: 1000,
               },
             ]);
-            addParticles(targetPos, "explosion", 30);
-          }
-          break;
-        case "lightning":
-          if (enemies.length > 0) {
-            const targetCount = Math.min(3, enemies.length);
-            const shuffled = [...enemies].sort(() => Math.random() - 0.5);
-            const targets = shuffled.slice(0, targetCount);
-            targets.forEach((target) => {
-              const targetPos = getEnemyPosition(target, selectedMap);
+
+            // Delayed impact after 1 second
+            setTimeout(() => {
               setEnemies((prev) =>
                 prev
                   .map((e) => {
-                    if (e.id === target.id) {
-                      const newHp = e.hp - 200;
+                    const pos = getEnemyPosition(e, selectedMap);
+                    const dist = distance(pos, targetPos);
+                    if (dist < 150) {
+                      // Damage falls off with distance
+                      const damageMultiplier = 1 - (dist / 150) * 0.5;
+                      const damage = Math.floor(200 * damageMultiplier);
+                      const newHp = e.hp - damage;
                       if (newHp <= 0) {
                         setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                        addParticles(targetPos, "spark", 20);
-                        setEffects((ef) => [
-                          ...ef,
-                          {
-                            id: generateId("lightning"),
-                            pos: targetPos,
-                            type: "lightning",
-                            progress: 0,
-                            size: 50,
-                          },
-                        ]);
+                        addParticles(pos, "explosion", 15);
+                        addParticles(pos, "fire", 10);
                         return null as any;
                       }
-                      return { ...e, hp: newHp, damageFlash: 200 };
+                      return { ...e, hp: newHp, damageFlash: 300 };
                     }
                     return e;
                   })
                   .filter(Boolean)
               );
-              addParticles(targetPos, "spark", 15);
+
+              // Create massive explosion effect
+              setEffects((ef) => [
+                ...ef,
+                {
+                  id: generateId("meteor_impact"),
+                  pos: targetPos,
+                  type: "meteor_impact",
+                  progress: 0,
+                  size: 150,
+                },
+              ]);
+              addParticles(targetPos, "explosion", 50);
+              addParticles(targetPos, "fire", 30);
+              addParticles(targetPos, "smoke", 20);
+            }, 1000);
+          }
+          break;
+        }
+
+        case "lightning": {
+          // ENHANCED LIGHTNING - Strikes 5 enemies one by one with chain effect
+          if (enemies.length > 0) {
+            const totalDamage = 600;
+            const targetCount = Math.min(5, enemies.length);
+            const damagePerTarget = Math.floor(totalDamage / targetCount);
+            const shuffled = [...enemies].sort(() => Math.random() - 0.5);
+            const targets = shuffled.slice(0, targetCount);
+
+            // Strike each target with a delay for dramatic effect
+            targets.forEach((target, index) => {
+              setTimeout(() => {
+                const targetPos = getEnemyPosition(target, selectedMap);
+
+                // Create lightning bolt from sky
+                setEffects((ef) => [
+                  ...ef,
+                  {
+                    id: generateId("lightning_bolt"),
+                    pos: { x: targetPos.x, y: targetPos.y - 400 },
+                    targetPos: targetPos,
+                    type: "lightning_bolt",
+                    progress: 0,
+                    size: 80,
+                    strikeIndex: index,
+                  },
+                ]);
+
+                setEnemies((prev) =>
+                  prev
+                    .map((e) => {
+                      if (e.id === target.id) {
+                        const newHp = e.hp - damagePerTarget;
+                        if (newHp <= 0) {
+                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          addParticles(targetPos, "spark", 25);
+                          addParticles(targetPos, "glow", 15);
+                          return null as any;
+                        }
+                        return {
+                          ...e,
+                          hp: newHp,
+                          damageFlash: 250,
+                          stunUntil: Date.now() + 500,
+                        };
+                      }
+                      return e;
+                    })
+                    .filter(Boolean)
+                );
+                addParticles(targetPos, "spark", 20);
+              }, index * 200); // 200ms delay between each strike
             });
           }
           break;
+        }
+
         case "freeze":
           setEnemies((prev) => prev.map((e) => ({ ...e, frozen: true })));
+          // Create freeze wave effect
+          if (enemies.length > 0) {
+            const centerEnemy = enemies[Math.floor(enemies.length / 2)];
+            const centerPos = getEnemyPosition(centerEnemy, selectedMap);
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("freeze_wave"),
+                pos: centerPos,
+                type: "freeze_wave",
+                progress: 0,
+                size: 400,
+              },
+            ]);
+          }
+          enemies.forEach((e) => {
+            const pos = getEnemyPosition(e, selectedMap);
+            addParticles(pos, "ice", 8);
+          });
           setTimeout(() => {
             setEnemies((prev) => prev.map((e) => ({ ...e, frozen: false })));
           }, 3000);
           break;
-        case "payday":
-          setPawPoints((pp) => pp + 100);
+
+        case "payday": {
+          // ENHANCED PAYDAY - Creates money aura around all enemies for duration
+          const bonusPerEnemy = 5;
+          const basePayout = 80;
+          const enemyBonus = Math.min(enemies.length * bonusPerEnemy, 50);
+          const totalPayout = basePayout + enemyBonus;
+
+          setPawPoints((pp) => pp + totalPayout);
+
+          // Create money aura around all enemies
+          setEffects((ef) => [
+            ...ef,
+            {
+              id: generateId("payday_aura"),
+              pos: { x: 0, y: 0 },
+              type: "payday_aura",
+              progress: 0,
+              size: 0,
+              duration: 3000,
+              enemies: enemies.map((e) => e.id),
+            },
+          ]);
+
+          // Create gold particles on each enemy
+          enemies.forEach((e) => {
+            const pos = getEnemyPosition(e, selectedMap);
+            addParticles(pos, "gold", 12);
+          });
           break;
+        }
+
         case "reinforcements":
           setPlacingTroop(true);
           break;
@@ -4594,48 +4778,281 @@ export default function PrincetonTowerDefense() {
   );
   const useHeroAbility = useCallback(() => {
     if (!hero || !hero.abilityReady || hero.dead) return;
+
     switch (hero.type) {
-      case "tiger":
-        const nearbyEnemy = enemies.find(
-          (e) => distance(hero.pos, getEnemyPosition(e, selectedMap)) < 100
-        );
-        if (nearbyEnemy) {
-          setEnemies((prev) =>
-            prev.map((e) =>
-              e.id === nearbyEnemy.id
-                ? { ...e, stunUntil: Date.now() + 3000 }
-                : e
-            )
-          );
-          addParticles(hero.pos, "spark", 20);
-        }
-        break;
-      case "tenor":
+      case "tiger": {
+        // MIGHTY ROAR - Stuns ALL enemies in radius with fear effect
+        const roarRadius = 180;
         const nearbyEnemies = enemies.filter(
-          (e) => distance(hero.pos, getEnemyPosition(e, selectedMap)) < 150
+          (e) =>
+            distance(hero.pos, getEnemyPosition(e, selectedMap)) < roarRadius
         );
         nearbyEnemies.forEach((e) => {
           setEnemies((prev) =>
             prev.map((enemy) =>
               enemy.id === e.id
-                ? { ...enemy, stunUntil: Date.now() + 1000 }
+                ? { ...enemy, stunUntil: Date.now() + 3000, slowEffect: 0.5 }
                 : enemy
             )
           );
         });
+        // Create roar shockwave effect
         setEffects((ef) => [
           ...ef,
           {
-            id: generateId("sound"),
+            id: generateId("roar"),
             pos: hero.pos,
-            type: "explosion",
+            type: "roar_wave",
             progress: 0,
-            size: 120,
+            size: roarRadius,
           },
         ]);
-        addParticles(hero.pos, "light", 25);
+        addParticles(hero.pos, "spark", 30);
+        addParticles(hero.pos, "explosion", 15);
         break;
+      }
+
+      case "tenor": {
+        // HIGH NOTE - Devastating sonic blast with huge radius
+        const noteRadius = 250;
+        const nearbyEnemies = enemies.filter(
+          (e) =>
+            distance(hero.pos, getEnemyPosition(e, selectedMap)) < noteRadius
+        );
+        // Deal damage and stun
+        setEnemies((prev) =>
+          prev
+            .map((e) => {
+              const isTarget = nearbyEnemies.find((ne) => ne.id === e.id);
+              if (isTarget) {
+                const newHp = e.hp - 80;
+                if (newHp <= 0) {
+                  addParticles(
+                    getEnemyPosition(e, selectedMap),
+                    "explosion",
+                    8
+                  );
+                  setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                  return null as any;
+                }
+                return {
+                  ...e,
+                  hp: newHp,
+                  stunUntil: Date.now() + 2000,
+                  damageFlash: 200,
+                };
+              }
+              return e;
+            })
+            .filter(Boolean)
+        );
+        // Create musical shockwave effect
+        setEffects((ef) => [
+          ...ef,
+          {
+            id: generateId("note"),
+            pos: hero.pos,
+            type: "high_note",
+            progress: 0,
+            size: noteRadius,
+          },
+        ]);
+        addParticles(hero.pos, "light", 35);
+        addParticles(hero.pos, "magic", 20);
+        break;
+      }
+
+      case "mathey": {
+        // FORTRESS SHIELD - Invincible and taunt nearby enemies
+        const tauntRadius = 150;
+        // Make hero invincible for 5 seconds
+        setHero((prev) =>
+          prev
+            ? { ...prev, shieldActive: true, shieldEnd: Date.now() + 5000 }
+            : null
+        );
+        // Force enemies to target the hero (taunt effect)
+        const nearbyEnemies = enemies.filter(
+          (e) =>
+            distance(hero.pos, getEnemyPosition(e, selectedMap)) < tauntRadius
+        );
+        nearbyEnemies.forEach((e) => {
+          setEnemies((prev) =>
+            prev.map((enemy) =>
+              enemy.id === e.id
+                ? { ...enemy, taunted: true, tauntTarget: hero.id }
+                : enemy
+            )
+          );
+        });
+        // Create shield effect
+        setEffects((ef) => [
+          ...ef,
+          {
+            id: generateId("shield"),
+            pos: hero.pos,
+            type: "fortress_shield",
+            progress: 0,
+            size: 60,
+            duration: 5000,
+          },
+        ]);
+        addParticles(hero.pos, "glow", 25);
+        addParticles(hero.pos, "spark", 15);
+        break;
+      }
+
+      case "rocky": {
+        // METEOR STRIKE - Massive AoE damage
+        const strikeRadius = 120;
+        const nearbyEnemies = enemies.filter(
+          (e) =>
+            distance(hero.pos, getEnemyPosition(e, selectedMap)) < strikeRadius
+        );
+        // Deal massive damage
+        setEnemies((prev) =>
+          prev
+            .map((e) => {
+              const isTarget = nearbyEnemies.find((ne) => ne.id === e.id);
+              if (isTarget) {
+                const newHp = e.hp - 200;
+                if (newHp <= 0) {
+                  addParticles(
+                    getEnemyPosition(e, selectedMap),
+                    "explosion",
+                    12
+                  );
+                  setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                  return null as any;
+                }
+                return {
+                  ...e,
+                  hp: newHp,
+                  stunUntil: Date.now() + 500,
+                  damageFlash: 300,
+                };
+              }
+              return e;
+            })
+            .filter(Boolean)
+        );
+        // Create meteor strike effect
+        setEffects((ef) => [
+          ...ef,
+          {
+            id: generateId("meteor"),
+            pos: hero.pos,
+            type: "meteor_strike",
+            progress: 0,
+            size: strikeRadius,
+          },
+        ]);
+        addParticles(hero.pos, "explosion", 40);
+        addParticles(hero.pos, "fire", 25);
+        addParticles(hero.pos, "smoke", 15);
+        break;
+      }
+
+      case "scott": {
+        // INSPIRATION - Boost all tower damage
+        setTowers((prev) =>
+          prev.map((t) => ({
+            ...t,
+            damageBoost: 1.5,
+            boostEnd: Date.now() + 8000,
+          }))
+        );
+        // Create inspiration aura effect
+        setEffects((ef) => [
+          ...ef,
+          {
+            id: generateId("inspire"),
+            pos: hero.pos,
+            type: "inspiration",
+            progress: 0,
+            size: 300,
+            duration: 8000,
+          },
+        ]);
+        addParticles(hero.pos, "light", 30);
+        addParticles(hero.pos, "gold", 20);
+        break;
+      }
+
+      case "captain": {
+        // RALLY KNIGHTS - Summon 3 reinforcement knights
+        const knightHP = TROOP_DATA.knight.hp;
+        const knightOffsets = [
+          { x: -30, y: -20 },
+          { x: 30, y: -20 },
+          { x: 0, y: 30 },
+        ];
+        const newTroops: Troop[] = knightOffsets.map((offset, i) => ({
+          id: generateId("troop"),
+          ownerId: hero.id,
+          type: "knight",
+          pos: { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y },
+          hp: knightHP,
+          maxHp: knightHP,
+          moving: false,
+          targetPos: null,
+          targetEnemy: null,
+          rallyPoint: null,
+          selected: false,
+          attackCooldown: 0,
+          attackAnim: 0,
+        }));
+        setTroops((prev) => [...prev, ...newTroops]);
+        // Create summon effect
+        setEffects((ef) => [
+          ...ef,
+          {
+            id: generateId("summon"),
+            pos: hero.pos,
+            type: "knight_summon",
+            progress: 0,
+            size: 80,
+          },
+        ]);
+        addParticles(hero.pos, "spark", 25);
+        addParticles(hero.pos, "gold", 15);
+        break;
+      }
+
+      case "engineer": {
+        // DEPLOY TURRET - Create a temporary defensive turret
+        const turretPos = { x: hero.pos.x + 40, y: hero.pos.y };
+        const newTower: Tower = {
+          id: generateId("turret"),
+          type: "cannon",
+          pos: {
+            x: Math.floor(turretPos.x / TILE_SIZE),
+            y: Math.floor(turretPos.y / TILE_SIZE),
+          },
+          level: 2,
+          lastAttack: 0,
+          rotation: 0,
+          temporary: true,
+          expireTime: Date.now() + 20000, // 20 second duration
+        };
+        setTowers((prev) => [...prev, newTower]);
+        // Create deploy effect
+        setEffects((ef) => [
+          ...ef,
+          {
+            id: generateId("deploy"),
+            pos: turretPos,
+            type: "turret_deploy",
+            progress: 0,
+            size: 60,
+          },
+        ]);
+        addParticles(turretPos, "spark", 30);
+        addParticles(turretPos, "smoke", 10);
+        break;
+      }
     }
+
     setHero((prev) =>
       prev
         ? {
@@ -4645,7 +5062,7 @@ export default function PrincetonTowerDefense() {
           }
         : null
     );
-  }, [hero, enemies, selectedMap, addParticles]);
+  }, [hero, enemies, selectedMap, addParticles, towers]);
   const resetGame = useCallback(() => {
     setGameState("menu");
     setPawPoints(INITIAL_PAW_POINTS);
@@ -4668,6 +5085,7 @@ export default function PrincetonTowerDefense() {
     setGameSpeed(1);
     setCameraOffset({ x: -40, y: -60 });
     setCameraZoom(1.5);
+    setStarsEarned(0);
   }, []);
   // Render different screens based on game state
   // Show WorldMap for both menu and setup (combined into one screen)

@@ -127,6 +127,349 @@ function drawIsometricPrism(
   ctx.stroke();
 }
 
+// ============================================================================
+// ENHANCED MECHANICAL HELPER FUNCTIONS - Moving parts, gears, steam, etc.
+// ============================================================================
+
+// Draw an animated rotating gear
+function drawGear(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  outerRadius: number,
+  innerRadius: number,
+  teeth: number,
+  rotation: number,
+  colors: { outer: string; inner: string; teeth: string; highlight: string },
+  zoom: number
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+
+  // Draw teeth
+  ctx.fillStyle = colors.teeth;
+  for (let i = 0; i < teeth; i++) {
+    const angle = (i / teeth) * Math.PI * 2;
+    const toothWidth = (Math.PI / teeth) * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(
+      Math.cos(angle - toothWidth) * innerRadius * zoom,
+      Math.sin(angle - toothWidth) * innerRadius * zoom * 0.5
+    );
+    ctx.lineTo(
+      Math.cos(angle - toothWidth * 0.5) * outerRadius * zoom,
+      Math.sin(angle - toothWidth * 0.5) * outerRadius * zoom * 0.5
+    );
+    ctx.lineTo(
+      Math.cos(angle + toothWidth * 0.5) * outerRadius * zoom,
+      Math.sin(angle + toothWidth * 0.5) * outerRadius * zoom * 0.5
+    );
+    ctx.lineTo(
+      Math.cos(angle + toothWidth) * innerRadius * zoom,
+      Math.sin(angle + toothWidth) * innerRadius * zoom * 0.5
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Gear body
+  ctx.fillStyle = colors.outer;
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    0,
+    innerRadius * zoom,
+    innerRadius * zoom * 0.5,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Inner ring
+  ctx.fillStyle = colors.inner;
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    0,
+    innerRadius * 0.6 * zoom,
+    innerRadius * 0.6 * zoom * 0.5,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Center hub
+  ctx.fillStyle = colors.highlight;
+  ctx.beginPath();
+  ctx.ellipse(
+    0,
+    0,
+    innerRadius * 0.25 * zoom,
+    innerRadius * 0.25 * zoom * 0.5,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Spokes
+  ctx.strokeStyle = colors.teeth;
+  ctx.lineWidth = 2 * zoom;
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(
+      Math.cos(angle) * innerRadius * 0.3 * zoom,
+      Math.sin(angle) * innerRadius * 0.3 * zoom * 0.5
+    );
+    ctx.lineTo(
+      Math.cos(angle) * innerRadius * 0.85 * zoom,
+      Math.sin(angle) * innerRadius * 0.85 * zoom * 0.5
+    );
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+// Draw animated steam/smoke effect
+function drawSteamVent(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  time: number,
+  intensity: number,
+  zoom: number,
+  color: string = "rgba(200, 200, 200, "
+) {
+  const numPuffs = 4;
+  for (let i = 0; i < numPuffs; i++) {
+    const phase = (time * 2 + i * 0.3) % 1;
+    const puffY = y - phase * 25 * zoom * intensity;
+    const puffSize = (3 + phase * 4) * zoom * intensity;
+    const alpha = (1 - phase) * 0.4;
+    const drift = Math.sin(time * 3 + i) * 4 * zoom;
+
+    ctx.fillStyle = `${color}${alpha})`;
+    ctx.beginPath();
+    ctx.ellipse(x + drift, puffY, puffSize, puffSize * 0.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Draw animated conveyor belt with items
+function drawConveyorBelt(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  width: number,
+  time: number,
+  zoom: number,
+  itemColor: string
+) {
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx);
+
+  ctx.save();
+  ctx.translate(startX, startY);
+  ctx.rotate(angle);
+
+  // Belt track
+  ctx.fillStyle = "#2a2a32";
+  ctx.fillRect(0, -width * zoom * 0.5, length, width * zoom);
+
+  // Belt segments (animated)
+  ctx.fillStyle = "#3a3a42";
+  const segmentWidth = 8 * zoom;
+  const numSegments = Math.floor(length / segmentWidth) + 2;
+  const offset = (time * 40 * zoom) % segmentWidth;
+
+  for (let i = 0; i < numSegments; i++) {
+    const segX = i * segmentWidth - offset;
+    if (segX >= -segmentWidth && segX <= length) {
+      ctx.fillRect(
+        segX,
+        -width * zoom * 0.4,
+        segmentWidth * 0.6,
+        width * zoom * 0.8
+      );
+    }
+  }
+
+  // Moving items (ammo boxes)
+  const numItems = 2;
+  for (let i = 0; i < numItems; i++) {
+    const itemPhase = (time * 0.5 + i * 0.5) % 1;
+    const itemX = itemPhase * length;
+
+    ctx.fillStyle = itemColor;
+    ctx.fillRect(
+      itemX - 4 * zoom,
+      -width * zoom * 0.35,
+      8 * zoom,
+      width * zoom * 0.7
+    );
+
+    // Item detail
+    ctx.fillStyle = darkenColor(itemColor, 20);
+    ctx.fillRect(
+      itemX - 3 * zoom,
+      -width * zoom * 0.25,
+      2 * zoom,
+      width * zoom * 0.5
+    );
+  }
+
+  ctx.restore();
+}
+
+// Draw glowing energy tube/pipe
+function drawEnergyTube(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  radius: number,
+  time: number,
+  zoom: number,
+  color: string
+) {
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const length = Math.sqrt(dx * dx + dy * dy);
+
+  // Tube body
+  ctx.strokeStyle = "#2a2a32";
+  ctx.lineWidth = radius * 2 * zoom;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(endX, endY);
+  ctx.stroke();
+
+  // Inner glow
+  const glowPulse = 0.5 + Math.sin(time * 4) * 0.3;
+  ctx.strokeStyle = color
+    .replace(")", `, ${glowPulse})`)
+    .replace("rgb", "rgba");
+  ctx.lineWidth = radius * zoom;
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(endX, endY);
+  ctx.stroke();
+
+  // Energy flow particles
+  const numParticles = 3;
+  for (let i = 0; i < numParticles; i++) {
+    const phase = (time * 2 + i / numParticles) % 1;
+    const px = startX + dx * phase;
+    const py = startY + dy * phase;
+    const alpha = Math.sin(phase * Math.PI) * 0.8;
+
+    ctx.fillStyle = color.replace(")", `, ${alpha})`).replace("rgb", "rgba");
+    ctx.beginPath();
+    ctx.arc(px, py, radius * 0.6 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Draw animated ammunition/supply box
+function drawAmmoBox(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  depth: number,
+  colors: { main: string; accent: string; label: string },
+  zoom: number,
+  bouncePhase: number = 0
+) {
+  const bounce = Math.sin(bouncePhase) * 2 * zoom;
+  const boxY = y - bounce;
+
+  // Box body (isometric)
+  const hw = width * zoom * 0.5;
+  const hd = depth * zoom * 0.25;
+  const hh = height * zoom;
+
+  // Left face
+  ctx.fillStyle = darkenColor(colors.main, 15);
+  ctx.beginPath();
+  ctx.moveTo(x - hw, boxY);
+  ctx.lineTo(x, boxY + hd);
+  ctx.lineTo(x, boxY + hd - hh);
+  ctx.lineTo(x - hw, boxY - hh);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right face
+  ctx.fillStyle = darkenColor(colors.main, 30);
+  ctx.beginPath();
+  ctx.moveTo(x + hw, boxY);
+  ctx.lineTo(x, boxY + hd);
+  ctx.lineTo(x, boxY + hd - hh);
+  ctx.lineTo(x + hw, boxY - hh);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top face
+  ctx.fillStyle = colors.main;
+  ctx.beginPath();
+  ctx.moveTo(x, boxY - hh - hd);
+  ctx.lineTo(x - hw, boxY - hh);
+  ctx.lineTo(x, boxY - hh + hd);
+  ctx.lineTo(x + hw, boxY - hh);
+  ctx.closePath();
+  ctx.fill();
+
+  // Warning stripes
+  ctx.fillStyle = colors.accent;
+  ctx.fillRect(x - hw * 0.4, boxY - hh * 0.7, hw * 0.8, hh * 0.15);
+}
+
+// Draw pulsing warning light
+function drawWarningLight(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radius: number,
+  time: number,
+  zoom: number,
+  color: string,
+  flashSpeed: number = 3
+) {
+  const flash = 0.5 + Math.sin(time * flashSpeed) * 0.5;
+
+  // Glow
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10 * zoom * flash;
+
+  // Light body
+  ctx.fillStyle = darkenColor(color, 30);
+  ctx.beginPath();
+  ctx.arc(x, y, radius * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Bright center
+  ctx.fillStyle = color;
+  ctx.globalAlpha = flash;
+  ctx.beginPath();
+  ctx.arc(x, y, radius * 0.7 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.shadowBlur = 0;
+}
+
 function drawTowerBase(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -605,6 +948,130 @@ function drawMechanicalTowerBase(
   const w = width * zoom * 0.5;
   const d = width * zoom * 0.25;
 
+  // ========== ROTATING GEARS ==========
+  const gearRotation = time * 1.5;
+
+  // Large gear on left side (visible on front face)
+  drawGear(
+    ctx,
+    x - w * 0.6,
+    y - height * zoom * 0.5,
+    12 + level * 2,
+    8 + level,
+    8 + level * 2,
+    gearRotation,
+    {
+      outer: "#4a4a52",
+      inner: "#3a3a42",
+      teeth: "#5a5a62",
+      highlight: colors.accent,
+    },
+    zoom
+  );
+
+  // Smaller gear meshing with large gear (counter-rotation)
+  drawGear(
+    ctx,
+    x - w * 0.35,
+    y - height * zoom * 0.65,
+    8 + level,
+    5 + level * 0.5,
+    6 + level,
+    -gearRotation * 1.5,
+    {
+      outer: "#5a5a62",
+      inner: "#4a4a52",
+      teeth: "#6a6a72",
+      highlight: colors.accent,
+    },
+    zoom
+  );
+
+  // Gear on right side
+  if (level >= 2) {
+    drawGear(
+      ctx,
+      x + w * 0.55,
+      y - height * zoom * 0.45,
+      10 + level,
+      7,
+      8 + level,
+      gearRotation * 0.8,
+      {
+        outer: "#4a4a52",
+        inner: "#3a3a42",
+        teeth: "#5a5a62",
+        highlight: colors.accent,
+      },
+      zoom
+    );
+  }
+
+  // ========== CONVEYOR BELT WITH AMMO ==========
+  if (level >= 2) {
+    drawConveyorBelt(
+      ctx,
+      x - w * 0.8,
+      y + 6 * zoom,
+      x + w * 0.2,
+      y - height * zoom * 0.2,
+      4,
+      time,
+      zoom,
+      "#8b4513" // Brass ammo color
+    );
+  }
+
+  // ========== STEAM VENTS ==========
+  // Left side steam vent
+  drawSteamVent(
+    ctx,
+    x - w * 0.75,
+    y - height * zoom * 0.1,
+    time,
+    0.8 + level * 0.2,
+    zoom
+  );
+
+  // Right side steam vent (higher levels)
+  if (level >= 2) {
+    drawSteamVent(
+      ctx,
+      x + w * 0.7,
+      y - height * zoom * 0.15,
+      time + 0.5,
+      0.6 + level * 0.15,
+      zoom
+    );
+  }
+
+  // ========== ENERGY TUBES ==========
+  drawEnergyTube(
+    ctx,
+    x - w * 0.4,
+    y,
+    x - w * 0.2,
+    y - height * zoom * 0.6,
+    2,
+    time,
+    zoom,
+    "rgb(255, 102, 0)"
+  );
+
+  if (level >= 3) {
+    drawEnergyTube(
+      ctx,
+      x + w * 0.3,
+      y - 4 * zoom,
+      x + w * 0.45,
+      y - height * zoom * 0.55,
+      2.5,
+      time + 0.3,
+      zoom,
+      "rgb(255, 80, 0)"
+    );
+  }
+
   // Tech panel lines on front faces (flipped orientation)
   ctx.strokeStyle = lightenColor(colors.light, 20);
   ctx.lineWidth = 1 * zoom;
@@ -627,25 +1094,11 @@ function drawMechanicalTowerBase(
     ctx.stroke();
   }
 
-  // Glowing vents/lights on front faces
+  // ========== GLOWING VENTS WITH PULSING LIGHT ==========
   const ventGlow = 0.6 + Math.sin(time * 4) * 0.3;
   ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow})`;
-
-  // Right face vents
-  for (let i = 0; i < Math.min(level, 3); i++) {
-    const ventY = y - height * zoom * 0.3 - i * 14 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      x + w * 0.55,
-      ventY + d * 0.2,
-      3 * zoom,
-      2 * zoom,
-      -0.4,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-  }
+  ctx.shadowColor = "#ff6600";
+  ctx.shadowBlur = 6 * zoom;
 
   // Left face vents
   for (let i = 0; i < Math.min(level, 3); i++) {
@@ -656,11 +1109,80 @@ function drawMechanicalTowerBase(
       ventY + d * 0.2,
       3 * zoom,
       2 * zoom,
+      -0.4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  // Right face vents
+  for (let i = 0; i < Math.min(level, 3); i++) {
+    const ventY = y - height * zoom * 0.3 - i * 14 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + w * 0.55,
+      ventY + d * 0.2,
+      3 * zoom,
+      2 * zoom,
       0.4,
       0,
       Math.PI * 2
     );
     ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // ========== WARNING LIGHTS ==========
+  drawWarningLight(
+    ctx,
+    x - w * 0.85,
+    y - height * zoom + 12 * zoom,
+    3,
+    time,
+    zoom,
+    "#ff4400",
+    4
+  );
+  if (level >= 2) {
+    drawWarningLight(
+      ctx,
+      x + w * 0.85,
+      y - height * zoom + 12 * zoom,
+      3,
+      time + 0.5,
+      zoom,
+      "#ffaa00",
+      3
+    );
+  }
+
+  // ========== AMMO BOXES ==========
+  if (level >= 2) {
+    drawAmmoBox(
+      ctx,
+      x + w * 0.75,
+      y + 8 * zoom,
+      8,
+      6,
+      6,
+      { main: "#5a4a3a", accent: "#ff6600", label: "#ffd700" },
+      zoom,
+      time * 2
+    );
+  }
+  if (level >= 3) {
+    drawAmmoBox(
+      ctx,
+      x + w * 0.55,
+      y + 10 * zoom,
+      7,
+      5,
+      5,
+      { main: "#4a3a2a", accent: "#ffaa00", label: "#ffd700" },
+      zoom,
+      time * 2 + 1
+    );
   }
 
   // Corner reinforcement bolts
@@ -3177,6 +3699,103 @@ function renderLabTower(
     zoom
   );
 
+  // ========== ROTATING ENERGY RINGS ==========
+  const ringRotation = time * 2;
+  for (let ring = 0; ring < 2 + tower.level; ring++) {
+    const ringY = screenPos.y - h * (0.3 + ring * 0.15);
+    const ringRadius = 12 + tower.level * 2 - ring * 2;
+    const ringAlpha = 0.3 + Math.sin(time * 4 + ring) * 0.15;
+
+    ctx.strokeStyle = `rgba(0, 255, 255, ${ringAlpha})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      ringY,
+      ringRadius * zoom,
+      ringRadius * 0.4 * zoom,
+      ringRotation + ring * 0.5,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
+  }
+
+  // ========== ENERGY TUBES (multiple) ==========
+  // Left side energy tubes
+  drawEnergyTube(
+    ctx,
+    screenPos.x - w * 0.8,
+    screenPos.y + 8 * zoom,
+    screenPos.x - w * 0.5,
+    screenPos.y - h * 0.6,
+    2.5,
+    time,
+    zoom,
+    "rgb(0, 200, 255)"
+  );
+
+  // Right side energy tubes
+  drawEnergyTube(
+    ctx,
+    screenPos.x + w * 0.8,
+    screenPos.y + 8 * zoom,
+    screenPos.x + w * 0.5,
+    screenPos.y - h * 0.6,
+    2.5,
+    time + 0.5,
+    zoom,
+    "rgb(0, 200, 255)"
+  );
+
+  // Cross-connecting tube
+  if (tower.level >= 2) {
+    drawEnergyTube(
+      ctx,
+      screenPos.x - w * 0.6,
+      screenPos.y - h * 0.3,
+      screenPos.x + w * 0.6,
+      screenPos.y - h * 0.4,
+      2,
+      time + 0.3,
+      zoom,
+      "rgb(100, 255, 255)"
+    );
+  }
+
+  // ========== ROTATING CAPACITOR DISCS ==========
+  const discRotation = time * 3;
+  ctx.save();
+  ctx.translate(screenPos.x, screenPos.y - h * 0.7);
+
+  // Multiple rotating discs
+  for (let disc = 0; disc < tower.level; disc++) {
+    const discAngle = discRotation + (disc * Math.PI) / tower.level;
+    const discRadius = 6 + disc * 2;
+    const discY = disc * 8 * zoom;
+
+    ctx.fillStyle = `rgba(40, 80, 120, ${0.6 - disc * 0.1})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      0,
+      discY,
+      discRadius * zoom,
+      discRadius * 0.4 * zoom,
+      discAngle,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Disc edge glow
+    ctx.strokeStyle = `rgba(0, 255, 255, ${
+      0.5 + Math.sin(time * 5 + disc) * 0.3
+    })`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.stroke();
+  }
+  ctx.restore();
+
   // Add sci-fi panel details on left face (flipped orientation)
   const panelGlow = 0.4 + Math.sin(time * 3) * 0.2;
   ctx.strokeStyle = `rgba(0, 255, 255, ${panelGlow})`;
@@ -3206,10 +3825,66 @@ function renderLabTower(
     ctx.stroke();
   }
 
-  // Glowing vents on sides
+  // ========== ANIMATED COOLANT FLOW ==========
+  // Coolant tanks on sides
+  ctx.fillStyle = "#1a4a6a";
+  ctx.beginPath();
+  ctx.ellipse(
+    screenPos.x - w * 0.75,
+    screenPos.y - h * 0.15,
+    5 * zoom,
+    8 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(
+    screenPos.x + w * 0.75,
+    screenPos.y - h * 0.15,
+    5 * zoom,
+    8 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Animated coolant bubbles
+  for (let i = 0; i < 3; i++) {
+    const bubblePhase = (time * 2 + i * 0.4) % 1;
+    const bubbleY = screenPos.y - h * 0.05 - bubblePhase * h * 0.2;
+    const bubbleAlpha = Math.sin(bubblePhase * Math.PI) * 0.6;
+
+    ctx.fillStyle = `rgba(100, 200, 255, ${bubbleAlpha})`;
+    ctx.beginPath();
+    ctx.arc(
+      screenPos.x - w * 0.75 + (i - 1) * 2 * zoom,
+      bubbleY,
+      2 * zoom,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(
+      screenPos.x + w * 0.75 + (i - 1) * 2 * zoom,
+      bubbleY + 3 * zoom,
+      2 * zoom,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  // Glowing vents on sides with enhanced glow
   for (let i = 0; i < tower.level; i++) {
     const ventY = screenPos.y - h * 0.3 - i * 12 * zoom;
     const ventGlow = 0.5 + Math.sin(time * 4 + i * 0.5) * 0.3;
+
+    ctx.shadowColor = "#00ffff";
+    ctx.shadowBlur = 8 * zoom;
 
     // Left vent
     ctx.fillStyle = `rgba(0, 255, 255, ${ventGlow})`;
@@ -3237,9 +3912,11 @@ function renderLabTower(
       Math.PI * 2
     );
     ctx.fill();
+
+    ctx.shadowBlur = 0;
   }
 
-  // Circuit board patterns (flipped)
+  // ========== CIRCUIT BOARD PATTERNS WITH ANIMATED CURRENT ==========
   ctx.strokeStyle = "#5a8aab";
   ctx.lineWidth = 1.5 * zoom;
 
@@ -3257,14 +3934,38 @@ function renderLabTower(
   ctx.lineTo(screenPos.x + w * 0.7, screenPos.y - h * 0.5);
   ctx.stroke();
 
-  // Node points with glow (at flipped circuit endpoints)
+  // Animated current flowing through circuits
+  const currentPhase = (time * 3) % 1;
+  ctx.fillStyle = `rgba(0, 255, 255, ${0.8})`;
+  ctx.shadowColor = "#00ffff";
+  ctx.shadowBlur = 6 * zoom;
+
+  // Left circuit current
+  const leftCurrentX = screenPos.x - w * (0.4 + currentPhase * 0.3);
+  const leftCurrentY = screenPos.y - h * (0.2 + currentPhase * 0.3);
+  ctx.beginPath();
+  ctx.arc(leftCurrentX, leftCurrentY, 2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Right circuit current
+  const rightCurrentX = screenPos.x + w * (0.4 + currentPhase * 0.3);
+  const rightCurrentY = screenPos.y - h * (0.2 + currentPhase * 0.3);
+  ctx.beginPath();
+  ctx.arc(rightCurrentX, rightCurrentY, 2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+
+  // Node points with enhanced glow
   const nodeGlow = 0.6 + Math.sin(time * 5) * 0.3;
   ctx.fillStyle = `rgba(0, 255, 255, ${nodeGlow})`;
+  ctx.shadowColor = "#00ffff";
+  ctx.shadowBlur = 10 * zoom;
   ctx.beginPath();
   ctx.arc(
     screenPos.x - w * 0.7,
     screenPos.y - h * 0.5,
-    2 * zoom,
+    3 * zoom,
     0,
     Math.PI * 2
   );
@@ -3273,34 +3974,80 @@ function renderLabTower(
   ctx.arc(
     screenPos.x + w * 0.7,
     screenPos.y - h * 0.5,
-    2 * zoom,
+    3 * zoom,
     0,
     Math.PI * 2
   );
   ctx.fill();
+  ctx.shadowBlur = 0;
 
-  // Data screen on front
+  // ========== HOLOGRAPHIC DATA DISPLAY ==========
   ctx.fillStyle = "#0a2030";
-  const screenW = 8 * zoom;
-  const screenH = 6 * zoom;
+  const screenW = 10 * zoom;
+  const screenH = 8 * zoom;
   ctx.fillRect(
     screenPos.x - screenW / 2,
-    screenPos.y - h * 0.35,
+    screenPos.y - h * 0.38,
     screenW,
     screenH
   );
 
-  // Screen content (scrolling data)
-  ctx.fillStyle = `rgba(0, 255, 255, 0.7)`;
-  for (let i = 0; i < 3; i++) {
-    const lineOffset = (time * 20 + i * 2) % 6;
+  // Screen frame glow
+  ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(time * 3) * 0.2})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.strokeRect(
+    screenPos.x - screenW / 2,
+    screenPos.y - h * 0.38,
+    screenW,
+    screenH
+  );
+
+  // Screen content (scrolling data with waveform)
+  ctx.fillStyle = `rgba(0, 255, 255, 0.8)`;
+  for (let i = 0; i < 4; i++) {
+    const lineOffset = (time * 30 + i * 2) % 8;
     ctx.fillRect(
       screenPos.x - screenW / 2 + 1 * zoom,
-      screenPos.y - h * 0.35 + lineOffset * zoom,
-      (3 + Math.sin(time * 10 + i) * 2) * zoom,
+      screenPos.y - h * 0.38 + lineOffset * zoom,
+      (3 + Math.sin(time * 15 + i * 2) * 2) * zoom,
       1 * zoom
     );
   }
+
+  // Waveform on screen
+  ctx.strokeStyle = `rgba(0, 255, 255, 0.9)`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const waveX = screenPos.x - screenW / 2 + 1 * zoom + i * zoom;
+    const waveY =
+      screenPos.y - h * 0.34 + Math.sin(time * 10 + i * 0.8) * 2 * zoom;
+    if (i === 0) ctx.moveTo(waveX, waveY);
+    else ctx.lineTo(waveX, waveY);
+  }
+  ctx.stroke();
+
+  // ========== WARNING LIGHTS ==========
+  drawWarningLight(
+    ctx,
+    screenPos.x - w * 0.85,
+    screenPos.y - h * 0.1,
+    2.5,
+    time,
+    zoom,
+    "#00ffff",
+    5
+  );
+  drawWarningLight(
+    ctx,
+    screenPos.x + w * 0.85,
+    screenPos.y - h * 0.1,
+    2.5,
+    time + 0.3,
+    zoom,
+    "#00ffff",
+    5
+  );
 
   const topY = screenPos.y - baseHeight * zoom;
 
@@ -4803,7 +5550,7 @@ function renderArchTower(
   ctx.restore();
 }
 
-// CLUB TOWER - Sci-fi Resource Generator
+// CLUB TOWER - Epic Resource Generator with mechanical gold production
 function renderClubTower(
   ctx: CanvasRenderingContext2D,
   screenPos: Position,
@@ -4819,7 +5566,7 @@ function renderClubTower(
   const d = baseWidth * zoom * 0.25;
   const h = baseHeight * zoom;
 
-  // Sci-fi foundation
+  // Sci-fi foundation with gold accents
   drawIsometricPrism(
     ctx,
     screenPos.x,
@@ -4837,7 +5584,7 @@ function renderClubTower(
     zoom
   );
 
-  // Main tower body - dark green tech
+  // Main tower body - dark green tech with gold trim
   drawIsometricPrism(
     ctx,
     screenPos.x,
@@ -4857,6 +5604,130 @@ function renderClubTower(
 
   const topY = screenPos.y - baseHeight * zoom;
 
+  // ========== ROTATING GOLD GEARS ==========
+  const gearRotation = time * 1.2;
+
+  // Large main gear (gold production mechanism)
+  drawGear(
+    ctx,
+    screenPos.x - w * 0.5,
+    screenPos.y - h * 0.5,
+    14 + tower.level * 2,
+    9 + tower.level,
+    10 + tower.level * 2,
+    gearRotation,
+    {
+      outer: "#8b7355",
+      inner: "#6b5335",
+      teeth: "#a08060",
+      highlight: "#ffd700",
+    },
+    zoom
+  );
+
+  // Smaller meshing gear
+  drawGear(
+    ctx,
+    screenPos.x - w * 0.2,
+    screenPos.y - h * 0.65,
+    10 + tower.level,
+    6,
+    8 + tower.level,
+    -gearRotation * 1.4,
+    {
+      outer: "#7a6245",
+      inner: "#5a4225",
+      teeth: "#9a8260",
+      highlight: "#ffd700",
+    },
+    zoom
+  );
+
+  // Right side gear
+  if (tower.level >= 2) {
+    drawGear(
+      ctx,
+      screenPos.x + w * 0.45,
+      screenPos.y - h * 0.45,
+      12 + tower.level,
+      8,
+      9 + tower.level,
+      gearRotation * 0.9,
+      {
+        outer: "#7a6245",
+        inner: "#5a4225",
+        teeth: "#9a8260",
+        highlight: "#ffd700",
+      },
+      zoom
+    );
+  }
+
+  // ========== GOLD COIN CONVEYOR ==========
+  if (tower.level >= 2) {
+    // Conveyor track
+    ctx.strokeStyle = "#3a3a42";
+    ctx.lineWidth = 6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.7, screenPos.y + 4 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.1, screenPos.y - h * 0.3);
+    ctx.stroke();
+
+    // Animated gold coins on conveyor
+    for (let c = 0; c < 3; c++) {
+      const coinPhase = (time * 0.6 + c * 0.33) % 1;
+      const coinX = screenPos.x - w * 0.7 + w * 0.8 * coinPhase;
+      const coinY = screenPos.y + 4 * zoom - (h * 0.3 + 4) * coinPhase;
+
+      ctx.fillStyle = "#ffd700";
+      ctx.shadowColor = "#ffaa00";
+      ctx.shadowBlur = 4 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(coinX, coinY, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // ========== GOLD STORAGE VAULT ==========
+  // Vault door on front face
+  ctx.fillStyle = "#4a4a52";
+  ctx.beginPath();
+  ctx.ellipse(
+    screenPos.x,
+    screenPos.y - h * 0.25,
+    8 * zoom,
+    10 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Vault spokes
+  ctx.strokeStyle = "#6a6a72";
+  ctx.lineWidth = 2 * zoom;
+  for (let spoke = 0; spoke < 6; spoke++) {
+    const spokeAngle = (spoke / 6) * Math.PI * 2 + time * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, screenPos.y - h * 0.25);
+    ctx.lineTo(
+      screenPos.x + Math.cos(spokeAngle) * 6 * zoom,
+      screenPos.y - h * 0.25 + Math.sin(spokeAngle) * 8 * zoom
+    );
+    ctx.stroke();
+  }
+
+  // Vault center (glowing gold)
+  const vaultGlow = 0.6 + Math.sin(time * 3) * 0.3;
+  ctx.fillStyle = `rgba(255, 215, 0, ${vaultGlow})`;
+  ctx.shadowColor = "#ffd700";
+  ctx.shadowBlur = 8 * zoom;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, screenPos.y - h * 0.25, 3 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
   // Tech panel lines (flipped orientation)
   const panelGlow = 0.4 + Math.sin(time * 3) * 0.2;
   ctx.strokeStyle = `rgba(0, 255, 100, ${panelGlow})`;
@@ -4874,11 +5745,40 @@ function renderClubTower(
     ctx.stroke();
   }
 
-  // Glowing resource vents
+  // ========== MONEY TUBES (flowing gold particles) ==========
+  drawEnergyTube(
+    ctx,
+    screenPos.x - w * 0.6,
+    screenPos.y + 6 * zoom,
+    screenPos.x - w * 0.4,
+    screenPos.y - h * 0.7,
+    2.5,
+    time,
+    zoom,
+    "rgb(255, 215, 0)"
+  );
+
+  if (tower.level >= 2) {
+    drawEnergyTube(
+      ctx,
+      screenPos.x + w * 0.5,
+      screenPos.y + 2 * zoom,
+      screenPos.x + w * 0.35,
+      screenPos.y - h * 0.65,
+      2.5,
+      time + 0.4,
+      zoom,
+      "rgb(255, 200, 50)"
+    );
+  }
+
+  // Glowing resource vents with enhanced glow
   for (let i = 0; i < tower.level; i++) {
     const ventY = screenPos.y - h * 0.3 - i * 12 * zoom;
     const ventGlow = 0.5 + Math.sin(time * 4 + i * 0.5) * 0.3;
 
+    ctx.shadowColor = "#00ff66";
+    ctx.shadowBlur = 6 * zoom;
     ctx.fillStyle = `rgba(0, 255, 100, ${ventGlow})`;
     ctx.beginPath();
     ctx.ellipse(
@@ -4902,9 +5802,11 @@ function renderClubTower(
       Math.PI * 2
     );
     ctx.fill();
+    ctx.shadowBlur = 0;
   }
 
-  // Tech roof structure
+  // ========== ENHANCED ROOF WITH GOLD DOME ==========
+  // Base roof structure
   ctx.fillStyle = "#1a3a2a";
   ctx.beginPath();
   ctx.moveTo(screenPos.x, topY - 18 * zoom);
@@ -4923,7 +5825,33 @@ function renderClubTower(
   ctx.closePath();
   ctx.fill();
 
-  // Data screens as windows
+  // Gold dome top
+  const domeGrad = ctx.createRadialGradient(
+    screenPos.x - 3 * zoom,
+    topY - 20 * zoom,
+    0,
+    screenPos.x,
+    topY - 15 * zoom,
+    12 * zoom
+  );
+  domeGrad.addColorStop(0, "#fff8dc");
+  domeGrad.addColorStop(0.3, "#ffd700");
+  domeGrad.addColorStop(0.7, "#daa520");
+  domeGrad.addColorStop(1, "#b8860b");
+  ctx.fillStyle = domeGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    screenPos.x,
+    topY - 15 * zoom,
+    10 * zoom,
+    6 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Data screens as windows (enhanced)
   const screenGlow = 0.6 + Math.sin(time * 2) * 0.2;
   ctx.fillStyle = "#0a1a10";
   ctx.fillRect(
@@ -4953,7 +5881,7 @@ function renderClubTower(
     10 * zoom
   );
 
-  // Data bars on screens
+  // Stock ticker on screens
   ctx.fillStyle = "#0a2a1a";
   for (let i = 0; i < 3; i++) {
     const barY =
@@ -4963,15 +5891,53 @@ function renderClubTower(
     ctx.fillRect(screenPos.x + 4 * zoom, barY, (barW + 1) * zoom, 2 * zoom);
   }
 
-  // Holographic credit/resource display
-  const coinY = topY - 28 * zoom + Math.sin(time * 3) * 5 * zoom;
+  // ========== WARNING LIGHTS ==========
+  drawWarningLight(
+    ctx,
+    screenPos.x - w * 0.8,
+    screenPos.y - h * 0.1,
+    2.5,
+    time,
+    zoom,
+    "#00ff66",
+    4
+  );
+  if (tower.level >= 2) {
+    drawWarningLight(
+      ctx,
+      screenPos.x + w * 0.8,
+      screenPos.y - h * 0.15,
+      2.5,
+      time + 0.5,
+      zoom,
+      "#ffd700",
+      3
+    );
+  }
 
-  // Energy ring around credit symbol
-  ctx.strokeStyle = `rgba(0, 255, 100, ${0.4 + Math.sin(time * 4) * 0.2})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, coinY, 16 * zoom, 8 * zoom, 0, 0, Math.PI * 2);
-  ctx.stroke();
+  // ========== HOLOGRAPHIC CREDIT DISPLAY (enhanced) ==========
+  const coinY = topY - 32 * zoom + Math.sin(time * 3) * 5 * zoom;
+
+  // Multiple rotating rings
+  for (let ring = 0; ring < 2 + tower.level; ring++) {
+    const ringAlpha = 0.3 - ring * 0.08;
+    const ringSize = 18 + ring * 4;
+    ctx.strokeStyle = `rgba(255, 215, 0, ${
+      ringAlpha + Math.sin(time * 4 + ring) * 0.1
+    })`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      coinY,
+      ringSize * zoom,
+      ringSize * 0.5 * zoom,
+      time * 0.5 + ring * 0.3,
+      0,
+      Math.PI * 2
+    );
+    ctx.stroke();
+  }
 
   // Holographic credit symbol
   const coinRotation = time * 4;
@@ -4981,65 +5947,72 @@ function renderClubTower(
 
   // Outer glow
   const creditGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 14 * zoom);
-  creditGrad.addColorStop(0, `rgba(0, 255, 100, 0.8)`);
-  creditGrad.addColorStop(0.5, `rgba(0, 200, 80, 0.5)`);
-  creditGrad.addColorStop(1, `rgba(0, 150, 60, 0)`);
+  creditGrad.addColorStop(0, `rgba(255, 255, 200, 0.9)`);
+  creditGrad.addColorStop(0.3, `rgba(255, 215, 0, 0.7)`);
+  creditGrad.addColorStop(0.6, `rgba(218, 165, 32, 0.4)`);
+  creditGrad.addColorStop(1, `rgba(184, 134, 11, 0)`);
   ctx.fillStyle = creditGrad;
-  ctx.shadowColor = "#00ff66";
-  ctx.shadowBlur = 15 * zoom;
+  ctx.shadowColor = "#ffd700";
+  ctx.shadowBlur = 20 * zoom;
   ctx.beginPath();
-  ctx.arc(0, 0, 12 * zoom, 0, Math.PI * 2);
+  ctx.arc(0, 0, 14 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Credit symbol
-  ctx.fillStyle = "#003318";
-  ctx.font = `bold ${14 * zoom}px Arial`;
+  // Credit symbol (Princeton P with paw)
+  ctx.fillStyle = "#4a3a1a";
+  ctx.font = `bold ${16 * zoom}px Arial`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("¤", 0, 0);
+  ctx.fillText("$", 0, 0);
   ctx.restore();
 
-  // Resource flow particles
-  for (let i = 0; i < tower.level + 2; i++) {
-    const pPhase = (time * 2 + i * 0.4) % 1;
-    const pY = screenPos.y - pPhase * h * 1.5;
-    const pX = screenPos.x + Math.sin(time * 3 + i * 2) * 8 * zoom;
-    const pAlpha = Math.sin(pPhase * Math.PI) * 0.6;
+  // ========== GOLD PARTICLE FOUNTAIN ==========
+  for (let i = 0; i < tower.level + 3; i++) {
+    const pPhase = (time * 2.5 + i * 0.25) % 1;
+    const pY = coinY + 10 * zoom - pPhase * h * 0.6;
+    const pX = screenPos.x + Math.sin(time * 4 + i * 2.5) * 12 * zoom;
+    const pAlpha = Math.sin(pPhase * Math.PI) * 0.7;
+    const pSize = 2 + Math.sin(time * 6 + i) * 1;
 
-    ctx.fillStyle = `rgba(0, 255, 100, ${pAlpha})`;
+    ctx.fillStyle = `rgba(255, 215, 0, ${pAlpha})`;
+    ctx.shadowColor = "#ffd700";
+    ctx.shadowBlur = 4 * zoom;
     ctx.beginPath();
-    ctx.arc(pX, pY, 2 * zoom, 0, Math.PI * 2);
+    ctx.arc(pX, pY, pSize * zoom, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
   }
 
   // Level 3+ upgrade visuals
   if (tower.level >= 3) {
     if (tower.upgrade === "A") {
-      // Investment Fund - holographic stock chart
+      // Investment Fund - holographic stock chart (enhanced)
       ctx.strokeStyle = "#00ff66";
       ctx.lineWidth = 3 * zoom;
       ctx.shadowColor = "#00ff66";
-      ctx.shadowBlur = 6 * zoom;
+      ctx.shadowBlur = 8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 18 * zoom, topY - 35 * zoom);
-      ctx.lineTo(screenPos.x - 6 * zoom, topY - 48 * zoom);
-      ctx.lineTo(screenPos.x + 6 * zoom, topY - 41 * zoom);
-      ctx.lineTo(screenPos.x + 18 * zoom, topY - 55 * zoom);
+      ctx.moveTo(screenPos.x - 20 * zoom, topY - 40 * zoom);
+      ctx.lineTo(screenPos.x - 8 * zoom, topY - 55 * zoom);
+      ctx.lineTo(screenPos.x + 4 * zoom, topY - 48 * zoom);
+      ctx.lineTo(screenPos.x + 20 * zoom, topY - 65 * zoom);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
       // Arrow head
       ctx.fillStyle = "#00ff66";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + 18 * zoom, topY - 55 * zoom);
-      ctx.lineTo(screenPos.x + 12 * zoom, topY - 53 * zoom);
-      ctx.lineTo(screenPos.x + 14 * zoom, topY - 47 * zoom);
+      ctx.moveTo(screenPos.x + 20 * zoom, topY - 65 * zoom);
+      ctx.lineTo(screenPos.x + 14 * zoom, topY - 62 * zoom);
+      ctx.lineTo(screenPos.x + 16 * zoom, topY - 56 * zoom);
       ctx.closePath();
       ctx.fill();
 
-      // Data points
-      ctx.fillStyle = `rgba(0, 255, 100, 0.8)`;
+      // Data points with glow
+      ctx.shadowColor = "#00ff66";
+      ctx.shadowBlur = 6 * zoom;
+      ctx.fillStyle = `rgba(0, 255, 100, 0.9)`;
       ctx.beginPath();
       ctx.arc(
         screenPos.x - 6 * zoom,
@@ -5145,7 +6118,7 @@ function renderStationTower(
     rightColor: string
   ) => {
     const hw = w * zoom * 0.5;
-    const hd = d * zoom * 0.3;
+    const hd = d * zoom * 0.25;
     const hh = h * zoom;
 
     // Top face (diamond)
@@ -5432,7 +6405,7 @@ function renderStationTower(
     const roofY = drawStation(30, 26, 38, 20, 2);
 
     // Clock tower
-    const towerX = stationX;
+    const towerX = stationX + 10 * zoom;
     const towerBaseY = roofY - 6 * zoom;
     drawIsometricPrism(
       ctx,
@@ -8112,8 +9085,15 @@ function drawHeroSprite(
     case "rocky":
       drawRockyHero(ctx, x, y, size, color, time, zoom, attackPhase);
       break;
+    case "scott":
     case "fscott":
       drawFScottHero(ctx, x, y, size, color, time, zoom, attackPhase);
+      break;
+    case "captain":
+      drawCaptainHero(ctx, x, y, size, color, time, zoom, attackPhase);
+      break;
+    case "engineer":
+      drawEngineerHero(ctx, x, y, size, color, time, zoom, attackPhase);
       break;
     default:
       drawDefaultHero(ctx, x, y, size, color, time, zoom, attackPhase);
@@ -9943,6 +10923,491 @@ function drawFScottHero(
       0,
       Math.PI * 2
     );
+    ctx.stroke();
+  }
+}
+
+function drawCaptainHero(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+  time: number,
+  zoom: number,
+  attackPhase: number = 0
+) {
+  // Captain - Military Commander who rallies knights
+  const breathe = Math.sin(time * 2) * 2;
+  const isAttacking = attackPhase > 0;
+  const swordSwing = isAttacking ? Math.sin(attackPhase * Math.PI * 2) : 0;
+  const commandPose = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
+
+  // === COMMAND AURA ===
+  const auraIntensity = 0.15 + Math.sin(time * 3) * 0.1;
+  const auraGrad = ctx.createRadialGradient(x, y, size * 0.2, x, y, size * 0.9);
+  auraGrad.addColorStop(0, `rgba(220, 38, 38, ${auraIntensity})`);
+  auraGrad.addColorStop(1, `rgba(220, 38, 38, 0)`);
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y, size * 0.85, size * 0.55, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === SHADOW ===
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.5, size * 0.45, size * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === CAPE (billowing heroically) ===
+  const capeWave = Math.sin(time * 3) * 0.1;
+  ctx.fillStyle = "#8b0000";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.25, y - size * 0.25);
+  ctx.quadraticCurveTo(
+    x - size * 0.5 - capeWave * size,
+    y + size * 0.3,
+    x - size * 0.4,
+    y + size * 0.55
+  );
+  ctx.lineTo(x + size * 0.4, y + size * 0.55);
+  ctx.quadraticCurveTo(
+    x + size * 0.5 + capeWave * size,
+    y + size * 0.3,
+    x + size * 0.25,
+    y - size * 0.25
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // === ARMORED BODY ===
+  const armorGrad = ctx.createLinearGradient(
+    x - size * 0.4,
+    y,
+    x + size * 0.4,
+    y
+  );
+  armorGrad.addColorStop(0, "#4a4a4a");
+  armorGrad.addColorStop(0.3, "#6a6a6a");
+  armorGrad.addColorStop(0.5, "#8a8a8a");
+  armorGrad.addColorStop(0.7, "#6a6a6a");
+  armorGrad.addColorStop(1, "#4a4a4a");
+  ctx.fillStyle = armorGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y + breathe * 0.5,
+    size * 0.38,
+    size * 0.48,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Red trim on armor
+  ctx.strokeStyle = "#dc2626";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y - size * 0.15);
+  ctx.lineTo(x, y + size * 0.1);
+  ctx.lineTo(x + size * 0.35, y - size * 0.15);
+  ctx.stroke();
+
+  // === PAULDRONS (shoulder armor) ===
+  ctx.fillStyle = "#5a5a5a";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.42,
+    y - size * 0.18,
+    size * 0.18,
+    size * 0.12,
+    -0.3,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.42,
+    y - size * 0.18,
+    size * 0.18,
+    size * 0.12,
+    0.3,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Red crests on pauldrons
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.42,
+    y - size * 0.22,
+    size * 0.08,
+    size * 0.05,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.42,
+    y - size * 0.22,
+    size * 0.08,
+    size * 0.05,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // === COMMANDER'S SWORD ===
+  ctx.save();
+  ctx.translate(x + size * 0.5, y + size * 0.1);
+  ctx.rotate(0.8 + swordSwing * 1.2);
+
+  // Sword blade
+  ctx.fillStyle = "#d4d4d4";
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-size * 0.04, -size * 0.55);
+  ctx.lineTo(0, -size * 0.6);
+  ctx.lineTo(size * 0.04, -size * 0.55);
+  ctx.closePath();
+  ctx.fill();
+
+  // Blood groove
+  ctx.strokeStyle = "#a0a0a0";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.08);
+  ctx.lineTo(0, -size * 0.45);
+  ctx.stroke();
+
+  // Guard
+  ctx.fillStyle = "#ffd700";
+  ctx.fillRect(-size * 0.1, -size * 0.02, size * 0.2, size * 0.04);
+
+  // Pommel
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.arc(0, size * 0.08, size * 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // === BANNER/FLAG (rallying symbol) ===
+  ctx.save();
+  ctx.translate(x - size * 0.55, y - size * 0.1);
+
+  // Banner pole
+  ctx.fillStyle = "#8b4513";
+  ctx.fillRect(-size * 0.02, -size * 0.6, size * 0.04, size * 0.7);
+
+  // Banner fabric
+  const bannerWave = Math.sin(time * 4) * 0.15;
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.02, -size * 0.55);
+  ctx.quadraticCurveTo(
+    size * 0.2 + bannerWave * size,
+    -size * 0.5,
+    size * 0.25,
+    -size * 0.35
+  );
+  ctx.quadraticCurveTo(
+    size * 0.2 + bannerWave * size * 0.5,
+    -size * 0.25,
+    size * 0.02,
+    -size * 0.2
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // Banner emblem
+  ctx.fillStyle = "#ffd700";
+  ctx.beginPath();
+  ctx.arc(size * 0.12, -size * 0.38, size * 0.06, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // === HELMETED HEAD ===
+  const headGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.48,
+    0,
+    x,
+    y - size * 0.48,
+    size * 0.28
+  );
+  headGrad.addColorStop(0, "#7a7a7a");
+  headGrad.addColorStop(0.6, "#5a5a5a");
+  headGrad.addColorStop(1, "#3a3a3a");
+  ctx.fillStyle = headGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.48, size * 0.26, size * 0.24, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Visor slot
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillRect(x - size * 0.18, y - size * 0.52, size * 0.36, size * 0.06);
+
+  // Red plume
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.7);
+  ctx.quadraticCurveTo(
+    x + size * 0.15,
+    y - size * 0.85 + Math.sin(time * 4) * size * 0.05,
+    x + size * 0.25,
+    y - size * 0.65
+  );
+  ctx.quadraticCurveTo(x + size * 0.1, y - size * 0.6, x, y - size * 0.7);
+  ctx.fill();
+
+  // === COMMAND EFFECT WHEN ATTACKING ===
+  if (isAttacking) {
+    ctx.strokeStyle = `rgba(255, 215, 0, ${commandPose * 0.6})`;
+    ctx.lineWidth = 2 * zoom;
+    for (let i = 0; i < 3; i++) {
+      const ringRadius = size * (0.6 + i * 0.15 + commandPose * 0.2);
+      ctx.beginPath();
+      ctx.ellipse(x, y, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawEngineerHero(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+  time: number,
+  zoom: number,
+  attackPhase: number = 0
+) {
+  // Engineer - Tech specialist who deploys turrets
+  const breathe = Math.sin(time * 2) * 1.5;
+  const isAttacking = attackPhase > 0;
+  const workAnimation = isAttacking ? Math.sin(attackPhase * Math.PI * 4) : 0;
+  const toolSpark = isAttacking ? Math.sin(attackPhase * Math.PI * 8) : 0;
+
+  // === TECH AURA ===
+  const auraIntensity = 0.12 + Math.sin(time * 4) * 0.08;
+  const auraGrad = ctx.createRadialGradient(x, y, size * 0.2, x, y, size * 0.8);
+  auraGrad.addColorStop(0, `rgba(234, 179, 8, ${auraIntensity})`);
+  auraGrad.addColorStop(1, `rgba(234, 179, 8, 0)`);
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y, size * 0.8, size * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === SHADOW ===
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.5, size * 0.4, size * 0.13, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === UTILITY BACKPACK ===
+  ctx.fillStyle = "#4a4a4a";
+  ctx.beginPath();
+  ctx.roundRect(
+    x - size * 0.22,
+    y - size * 0.2,
+    size * 0.44,
+    size * 0.5,
+    size * 0.08
+  );
+  ctx.fill();
+
+  // Backpack details
+  ctx.fillStyle = "#3a3a3a";
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(
+      x - size * 0.15,
+      y - size * 0.1 + i * size * 0.12,
+      size * 0.3,
+      size * 0.08
+    );
+  }
+
+  // Glowing tech on backpack
+  ctx.fillStyle = `rgba(234, 179, 8, ${0.5 + Math.sin(time * 5) * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(x, y + size * 0.15, size * 0.06, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === JUMPSUIT BODY ===
+  const suitGrad = ctx.createLinearGradient(
+    x - size * 0.35,
+    y,
+    x + size * 0.35,
+    y
+  );
+  suitGrad.addColorStop(0, "#5a5a00");
+  suitGrad.addColorStop(0.5, "#8a8a20");
+  suitGrad.addColorStop(1, "#5a5a00");
+  ctx.fillStyle = suitGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y + breathe * 0.3,
+    size * 0.35,
+    size * 0.45,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Orange safety stripes
+  ctx.fillStyle = "#ea580c";
+  ctx.fillRect(x - size * 0.32, y - size * 0.15, size * 0.08, size * 0.4);
+  ctx.fillRect(x + size * 0.24, y - size * 0.15, size * 0.08, size * 0.4);
+
+  // === TOOL BELT ===
+  ctx.fillStyle = "#8b4513";
+  ctx.fillRect(x - size * 0.38, y + size * 0.15, size * 0.76, size * 0.1);
+
+  // Belt pouches
+  ctx.fillStyle = "#654321";
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(
+      x - size * 0.32 + i * size * 0.25,
+      y + size * 0.12,
+      size * 0.12,
+      size * 0.15
+    );
+  }
+
+  // === ARMS WITH TOOLS ===
+  // Left arm holding wrench
+  ctx.fillStyle = "#7a7a20";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.4,
+    y - size * 0.05 + workAnimation * size * 0.05,
+    size * 0.12,
+    size * 0.2,
+    -0.2,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Wrench
+  ctx.fillStyle = "#6a6a6a";
+  ctx.save();
+  ctx.translate(x - size * 0.5, y + size * 0.1);
+  ctx.rotate(-0.5 + workAnimation * 0.3);
+  ctx.fillRect(-size * 0.02, -size * 0.25, size * 0.04, size * 0.25);
+  ctx.fillRect(-size * 0.06, -size * 0.28, size * 0.12, size * 0.06);
+  ctx.restore();
+
+  // Right arm with welding tool
+  ctx.fillStyle = "#7a7a20";
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.4,
+    y - size * 0.05 - workAnimation * size * 0.05,
+    size * 0.12,
+    size * 0.2,
+    0.2,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Welding tool
+  ctx.fillStyle = "#2a2a2a";
+  ctx.save();
+  ctx.translate(x + size * 0.5, y + size * 0.05);
+  ctx.rotate(0.3 - workAnimation * 0.2);
+  ctx.fillRect(-size * 0.02, -size * 0.2, size * 0.04, size * 0.2);
+
+  // Welding spark effect
+  if (isAttacking) {
+    ctx.fillStyle = `rgba(255, 200, 50, ${Math.abs(toolSpark)})`;
+    ctx.shadowColor = "#ffaa00";
+    ctx.shadowBlur = 8 * zoom;
+    ctx.beginPath();
+    ctx.arc(0, -size * 0.22, size * 0.04, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+
+  // === HARD HAT HEAD ===
+  // Face
+  ctx.fillStyle = "#d4a574";
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.42, size * 0.2, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hard hat
+  ctx.fillStyle = "#eab308";
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.55, size * 0.26, size * 0.14, 0, 0, Math.PI);
+  ctx.fill();
+
+  // Hat brim
+  ctx.fillStyle = "#ca9a08";
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.48, size * 0.3, size * 0.08, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hat light
+  ctx.fillStyle = `rgba(255, 255, 200, ${0.5 + Math.sin(time * 3) * 0.3})`;
+  ctx.shadowColor = "#ffffaa";
+  ctx.shadowBlur = 6 * zoom;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.58, size * 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Safety goggles
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillRect(x - size * 0.18, y - size * 0.48, size * 0.36, size * 0.08);
+  ctx.fillStyle = `rgba(100, 200, 255, 0.5)`;
+  ctx.fillRect(x - size * 0.16, y - size * 0.47, size * 0.14, size * 0.06);
+  ctx.fillRect(x + size * 0.02, y - size * 0.47, size * 0.14, size * 0.06);
+
+  // Mouth
+  ctx.fillStyle = "#8b4513";
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.36, size * 0.04, 0, Math.PI);
+  ctx.fill();
+
+  // === GEAR ICONS (floating around) ===
+  ctx.strokeStyle = `rgba(234, 179, 8, ${0.4 + Math.sin(time * 2) * 0.2})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let g = 0; g < 3; g++) {
+    const gearAngle = time * 2 + g * Math.PI * 0.67;
+    const gearDist = size * 0.55;
+    const gearX = x + Math.cos(gearAngle) * gearDist;
+    const gearY = y - size * 0.1 + Math.sin(gearAngle) * gearDist * 0.4;
+    const gearSize = size * 0.08;
+
+    // Simple gear shape
+    ctx.beginPath();
+    for (let tooth = 0; tooth < 6; tooth++) {
+      const tAngle = (tooth / 6) * Math.PI * 2 + time * 3;
+      const innerR = gearSize * 0.5;
+      const outerR = gearSize;
+      ctx.lineTo(
+        gearX + Math.cos(tAngle) * outerR,
+        gearY + Math.sin(tAngle) * outerR * 0.5
+      );
+      ctx.lineTo(
+        gearX + Math.cos(tAngle + Math.PI / 6) * innerR,
+        gearY + Math.sin(tAngle + Math.PI / 6) * innerR * 0.5
+      );
+    }
+    ctx.closePath();
     ctx.stroke();
   }
 }
@@ -13246,6 +14711,715 @@ export function renderEffect(
         ctx.stroke();
       }
       break;
+
+    // ========== NEW SPELL EFFECTS ==========
+
+    case "meteor_incoming": {
+      // Meteor falling from sky with warning circle
+      const meteorProgress = progress;
+      const targetScreen = effect.targetPos
+        ? worldToScreen(
+            effect.targetPos,
+            canvasWidth,
+            canvasHeight,
+            dpr,
+            cameraOffset,
+            cameraZoom
+          )
+        : screenPos;
+
+      // Warning circle on ground (pulsing)
+      const warningPulse = 0.5 + Math.sin(Date.now() / 100) * 0.3;
+      ctx.strokeStyle = `rgba(255, 100, 0, ${warningPulse})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.setLineDash([10, 5]);
+      ctx.beginPath();
+      ctx.ellipse(
+        targetScreen.x,
+        targetScreen.y,
+        effect.size * zoom * 0.6,
+        effect.size * zoom * 0.3,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Meteor position (falling from sky)
+      const meteorY = targetScreen.y - 300 * zoom * (1 - meteorProgress);
+      const meteorX = targetScreen.x;
+
+      // Fire trail
+      for (let t = 0; t < 8; t++) {
+        const trailY = meteorY - t * 15 * zoom;
+        const trailAlpha = (1 - t / 8) * 0.6;
+        const trailSize = (20 - t * 2) * zoom;
+
+        const trailGrad = ctx.createRadialGradient(
+          meteorX,
+          trailY,
+          0,
+          meteorX,
+          trailY,
+          trailSize
+        );
+        trailGrad.addColorStop(0, `rgba(255, 200, 50, ${trailAlpha})`);
+        trailGrad.addColorStop(0.5, `rgba(255, 100, 0, ${trailAlpha * 0.6})`);
+        trailGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
+        ctx.fillStyle = trailGrad;
+        ctx.beginPath();
+        ctx.arc(
+          meteorX + Math.sin(t) * 3 * zoom,
+          trailY,
+          trailSize,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+
+      // Meteor core
+      ctx.shadowColor = "#ff6600";
+      ctx.shadowBlur = 30 * zoom;
+      const meteorGrad = ctx.createRadialGradient(
+        meteorX,
+        meteorY,
+        0,
+        meteorX,
+        meteorY,
+        25 * zoom
+      );
+      meteorGrad.addColorStop(0, "#ffffff");
+      meteorGrad.addColorStop(0.3, "#ffcc00");
+      meteorGrad.addColorStop(0.6, "#ff6600");
+      meteorGrad.addColorStop(1, "#cc3300");
+      ctx.fillStyle = meteorGrad;
+      ctx.beginPath();
+      ctx.arc(meteorX, meteorY, 20 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      break;
+    }
+
+    case "meteor_impact": {
+      // Massive explosion with shockwave
+      const impactProgress = progress;
+
+      // Ground crater
+      ctx.fillStyle = `rgba(50, 30, 20, ${alpha * 0.6})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y + 5 * zoom,
+        effect.size * zoom * 0.4,
+        effect.size * zoom * 0.2,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Main explosion
+      const expSize = effect.size * zoom * (0.3 + impactProgress * 0.7);
+      ctx.shadowColor = "#ff4400";
+      ctx.shadowBlur = 40 * zoom * alpha;
+
+      const expGrad = ctx.createRadialGradient(
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        expSize
+      );
+      expGrad.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
+      expGrad.addColorStop(0.2, `rgba(255, 200, 50, ${alpha * 0.9})`);
+      expGrad.addColorStop(0.5, `rgba(255, 100, 0, ${alpha * 0.7})`);
+      expGrad.addColorStop(0.8, `rgba(200, 50, 0, ${alpha * 0.4})`);
+      expGrad.addColorStop(1, `rgba(100, 20, 0, 0)`);
+      ctx.fillStyle = expGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        expSize,
+        expSize * 0.6,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Shockwave rings
+      for (let ring = 0; ring < 3; ring++) {
+        const ringProgress = Math.min(1, impactProgress * 1.5 + ring * 0.1);
+        const ringRadius = effect.size * zoom * ringProgress;
+        const ringAlpha = (1 - ringProgress) * alpha * 0.5;
+
+        ctx.strokeStyle = `rgba(255, 150, 50, ${ringAlpha})`;
+        ctx.lineWidth = (4 - ring) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          ringRadius,
+          ringRadius * 0.5,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
+      // Flying debris
+      for (let d = 0; d < 12; d++) {
+        const debrisAngle = (d / 12) * Math.PI * 2;
+        const debrisDist =
+          effect.size *
+          zoom *
+          0.3 *
+          impactProgress *
+          (0.5 + Math.sin(d * 2.5) * 0.5);
+        const debrisX = screenPos.x + Math.cos(debrisAngle) * debrisDist;
+        const debrisY =
+          screenPos.y +
+          Math.sin(debrisAngle) * debrisDist * 0.5 -
+          impactProgress * 30 * zoom * Math.sin(d);
+
+        ctx.fillStyle = `rgba(100, 60, 30, ${alpha * (1 - impactProgress)})`;
+        ctx.beginPath();
+        ctx.arc(debrisX, debrisY, 3 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      break;
+    }
+
+    case "lightning_bolt": {
+      // Lightning strike from sky
+      const strikeProgress = progress;
+      const targetScreen = effect.targetPos
+        ? worldToScreen(
+            effect.targetPos,
+            canvasWidth,
+            canvasHeight,
+            dpr,
+            cameraOffset,
+            cameraZoom
+          )
+        : screenPos;
+
+      // Sky flash
+      if (strikeProgress < 0.3) {
+        ctx.fillStyle = `rgba(200, 220, 255, ${(0.3 - strikeProgress) * 0.3})`;
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      }
+
+      // Lightning bolt with branching
+      ctx.save();
+      ctx.strokeStyle = `rgba(200, 220, 255, ${alpha})`;
+      ctx.lineWidth = 4 * zoom;
+      ctx.shadowColor = "#88aaff";
+      ctx.shadowBlur = 25 * zoom;
+      ctx.lineCap = "round";
+
+      const startY = targetScreen.y - 400 * zoom;
+      const segments = 12;
+
+      // Main bolt
+      ctx.beginPath();
+      ctx.moveTo(targetScreen.x, startY);
+      let lastX = targetScreen.x;
+      let lastY = startY;
+
+      for (let i = 1; i <= segments; i++) {
+        const t = i / segments;
+        const baseY = startY + (targetScreen.y - startY) * t;
+        const jitter = (1 - t) * 30 * zoom * (Math.random() - 0.5);
+        const x = targetScreen.x + jitter;
+        ctx.lineTo(x, baseY);
+
+        // Branch lightning
+        if (i > 2 && i < segments - 2 && Math.random() > 0.6) {
+          ctx.moveTo(x, baseY);
+          const branchAngle = (Math.random() - 0.5) * Math.PI * 0.5;
+          const branchLen = 40 * zoom * Math.random();
+          ctx.lineTo(
+            x + Math.cos(branchAngle) * branchLen,
+            baseY + Math.sin(branchAngle) * branchLen * 0.3
+          );
+          ctx.moveTo(x, baseY);
+        }
+        lastX = x;
+        lastY = baseY;
+      }
+      ctx.lineTo(targetScreen.x, targetScreen.y);
+      ctx.stroke();
+
+      // Impact glow
+      const impactGrad = ctx.createRadialGradient(
+        targetScreen.x,
+        targetScreen.y,
+        0,
+        targetScreen.x,
+        targetScreen.y,
+        50 * zoom
+      );
+      impactGrad.addColorStop(0, `rgba(200, 220, 255, ${alpha})`);
+      impactGrad.addColorStop(0.3, `rgba(100, 150, 255, ${alpha * 0.6})`);
+      impactGrad.addColorStop(1, `rgba(50, 80, 200, 0)`);
+      ctx.fillStyle = impactGrad;
+      ctx.beginPath();
+      ctx.arc(targetScreen.x, targetScreen.y, 40 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "freeze_wave": {
+      // Expanding ice wave
+      const freezeRadius = effect.size * zoom * progress;
+
+      // Ice crystals pattern
+      ctx.save();
+      ctx.strokeStyle = `rgba(150, 220, 255, ${alpha * 0.6})`;
+      ctx.fillStyle = `rgba(200, 240, 255, ${alpha * 0.2})`;
+      ctx.lineWidth = 2 * zoom;
+
+      // Central frost
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        freezeRadius,
+        freezeRadius * 0.5,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      // Ice crystals radiating outward
+      for (let c = 0; c < 8; c++) {
+        const angle = (c / 8) * Math.PI * 2;
+        const crystalDist = freezeRadius * 0.8;
+        const cx = screenPos.x + Math.cos(angle) * crystalDist;
+        const cy = screenPos.y + Math.sin(angle) * crystalDist * 0.5;
+
+        // Snowflake pattern
+        ctx.strokeStyle = `rgba(200, 240, 255, ${alpha * 0.8})`;
+        for (let arm = 0; arm < 6; arm++) {
+          const armAngle = angle + (arm / 6) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(
+            cx + Math.cos(armAngle) * 8 * zoom,
+            cy + Math.sin(armAngle) * 4 * zoom
+          );
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+      break;
+    }
+
+    case "payday_aura": {
+      // Gold aura effect (rendered around enemies in main loop)
+      // This effect just marks that payday is active
+      break;
+    }
+
+    // ========== NEW HERO ABILITY EFFECTS ==========
+
+    case "roar_wave": {
+      // Tiger's roar shockwave
+      const roarRadius = effect.size * zoom * (0.2 + progress * 0.8);
+
+      // Orange fear energy
+      ctx.save();
+      ctx.shadowColor = "#ff6600";
+      ctx.shadowBlur = 20 * zoom;
+
+      for (let ring = 0; ring < 4; ring++) {
+        const ringProgress = (progress + ring * 0.1) % 1;
+        const ringRadius = roarRadius * (0.4 + ringProgress * 0.6);
+        const ringAlpha = (1 - ringProgress) * alpha * 0.5;
+
+        ctx.strokeStyle = `rgba(255, 150, 50, ${ringAlpha})`;
+        ctx.lineWidth = (4 - ring) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          ringRadius,
+          ringRadius * 0.5,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
+      // Roar lines radiating outward
+      for (let line = 0; line < 12; line++) {
+        const angle = (line / 12) * Math.PI * 2;
+        const lineAlpha = alpha * 0.6;
+        ctx.strokeStyle = `rgba(255, 200, 100, ${lineAlpha})`;
+        ctx.lineWidth = 2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(
+          screenPos.x + Math.cos(angle) * 20 * zoom,
+          screenPos.y + Math.sin(angle) * 10 * zoom
+        );
+        ctx.lineTo(
+          screenPos.x + Math.cos(angle) * roarRadius * 0.8,
+          screenPos.y + Math.sin(angle) * roarRadius * 0.4
+        );
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "high_note": {
+      // Tenor's sonic blast with musical notes
+      const noteRadius = effect.size * zoom * (0.3 + progress * 0.7);
+
+      ctx.save();
+      ctx.shadowColor = "#aa66ff";
+      ctx.shadowBlur = 15 * zoom;
+
+      // Purple sonic waves
+      for (let wave = 0; wave < 5; wave++) {
+        const waveProgress = (progress + wave * 0.08) % 1;
+        const waveRadius = noteRadius * (0.3 + waveProgress * 0.7);
+        const waveAlpha = (1 - waveProgress) * alpha * 0.4;
+
+        ctx.strokeStyle = `rgba(180, 100, 255, ${waveAlpha})`;
+        ctx.lineWidth = (3 - wave * 0.4) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          waveRadius,
+          waveRadius * 0.5,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
+      // Floating musical notes
+      for (let n = 0; n < 8; n++) {
+        const noteAngle = (n / 8) * Math.PI * 2 + progress * Math.PI;
+        const noteDist =
+          noteRadius * 0.6 * (0.5 + Math.sin(progress * Math.PI * 2 + n) * 0.3);
+        const noteX = screenPos.x + Math.cos(noteAngle) * noteDist;
+        const noteY =
+          screenPos.y +
+          Math.sin(noteAngle) * noteDist * 0.5 -
+          progress * 20 * zoom;
+        const noteAlpha = alpha * 0.8;
+
+        ctx.fillStyle = `rgba(200, 150, 255, ${noteAlpha})`;
+        ctx.font = `${14 * zoom}px Arial`;
+        ctx.fillText("♪", noteX, noteY);
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "fortress_shield": {
+      // Mathey Knight's invincibility shield
+      const shieldRadius = effect.size * zoom;
+      const time = Date.now() / 1000;
+
+      ctx.save();
+      ctx.shadowColor = "#6666ff";
+      ctx.shadowBlur = 20 * zoom;
+
+      // Hexagonal shield pattern
+      const hexPoints = 6;
+      ctx.strokeStyle = `rgba(100, 150, 255, ${
+        0.6 + Math.sin(time * 5) * 0.2
+      })`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      for (let i = 0; i <= hexPoints; i++) {
+        const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2;
+        const x = screenPos.x + Math.cos(angle) * shieldRadius;
+        const y = screenPos.y + Math.sin(angle) * shieldRadius * 0.5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Inner glow
+      const shieldGrad = ctx.createRadialGradient(
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        shieldRadius
+      );
+      shieldGrad.addColorStop(0, `rgba(100, 150, 255, 0.1)`);
+      shieldGrad.addColorStop(0.7, `rgba(100, 150, 255, 0.2)`);
+      shieldGrad.addColorStop(1, `rgba(100, 150, 255, 0)`);
+      ctx.fillStyle = shieldGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        shieldRadius,
+        shieldRadius * 0.5,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Rotating runes
+      for (let r = 0; r < 4; r++) {
+        const runeAngle = time * 2 + (r / 4) * Math.PI * 2;
+        const runeX = screenPos.x + Math.cos(runeAngle) * shieldRadius * 0.7;
+        const runeY = screenPos.y + Math.sin(runeAngle) * shieldRadius * 0.35;
+
+        ctx.fillStyle = `rgba(150, 200, 255, ${
+          0.7 + Math.sin(time * 3 + r) * 0.3
+        })`;
+        ctx.font = `${10 * zoom}px Arial`;
+        ctx.fillText("✦", runeX - 4 * zoom, runeY + 4 * zoom);
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "meteor_strike": {
+      // Rocky's meteor ability (similar to spell but hero-sized)
+      const strikeRadius = effect.size * zoom * (0.4 + progress * 0.6);
+
+      ctx.save();
+      ctx.shadowColor = "#996633";
+      ctx.shadowBlur = 25 * zoom;
+
+      // Ground impact crater
+      ctx.fillStyle = `rgba(80, 60, 40, ${alpha * 0.5})`;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        strikeRadius * 0.6,
+        strikeRadius * 0.3,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Dust cloud
+      const dustGrad = ctx.createRadialGradient(
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        strikeRadius
+      );
+      dustGrad.addColorStop(0, `rgba(150, 120, 80, ${alpha * 0.7})`);
+      dustGrad.addColorStop(0.5, `rgba(120, 90, 60, ${alpha * 0.4})`);
+      dustGrad.addColorStop(1, `rgba(80, 60, 40, 0)`);
+      ctx.fillStyle = dustGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y - 10 * zoom * progress,
+        strikeRadius,
+        strikeRadius * 0.6,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Rock fragments
+      for (let rock = 0; rock < 8; rock++) {
+        const rockAngle = (rock / 8) * Math.PI * 2;
+        const rockDist = strikeRadius * 0.5 * progress;
+        const rockX = screenPos.x + Math.cos(rockAngle) * rockDist;
+        const rockY =
+          screenPos.y +
+          Math.sin(rockAngle) * rockDist * 0.5 -
+          progress * 15 * zoom;
+
+        ctx.fillStyle = `rgba(100, 80, 60, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(rockX, rockY, (4 - progress * 2) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "inspiration": {
+      // F. Scott's tower buff aura
+      const auraRadius = effect.size * zoom * (0.5 + progress * 0.3);
+      const time = Date.now() / 1000;
+
+      ctx.save();
+
+      // Golden light rays
+      for (let ray = 0; ray < 12; ray++) {
+        const rayAngle = (ray / 12) * Math.PI * 2 + time * 0.5;
+        const rayAlpha = alpha * 0.3 * (0.5 + Math.sin(time * 3 + ray) * 0.5);
+
+        ctx.strokeStyle = `rgba(255, 215, 0, ${rayAlpha})`;
+        ctx.lineWidth = 2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.lineTo(
+          screenPos.x + Math.cos(rayAngle) * auraRadius,
+          screenPos.y + Math.sin(rayAngle) * auraRadius * 0.5
+        );
+        ctx.stroke();
+      }
+
+      // Central glow
+      const inspireGrad = ctx.createRadialGradient(
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        auraRadius * 0.3
+      );
+      inspireGrad.addColorStop(0, `rgba(255, 230, 150, ${alpha * 0.4})`);
+      inspireGrad.addColorStop(1, `rgba(255, 215, 0, 0)`);
+      ctx.fillStyle = inspireGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        auraRadius * 0.3,
+        auraRadius * 0.15,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.restore();
+      break;
+    }
+
+    case "knight_summon": {
+      // Captain's knight summoning effect
+      const summonRadius = effect.size * zoom;
+      const time = Date.now() / 1000;
+
+      ctx.save();
+      ctx.shadowColor = "#ffaa00";
+      ctx.shadowBlur = 15 * zoom;
+
+      // Summoning circle
+      ctx.strokeStyle = `rgba(255, 200, 100, ${alpha})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        summonRadius,
+        summonRadius * 0.5,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+
+      // Rising energy pillars for each knight
+      for (let k = 0; k < 3; k++) {
+        const pillarAngle = (k / 3) * Math.PI * 2 - Math.PI / 2;
+        const pillarX =
+          screenPos.x + Math.cos(pillarAngle) * summonRadius * 0.6;
+        const pillarY =
+          screenPos.y + Math.sin(pillarAngle) * summonRadius * 0.3;
+        const pillarHeight = 40 * zoom * (1 - progress);
+
+        const pillarGrad = ctx.createLinearGradient(
+          pillarX,
+          pillarY,
+          pillarX,
+          pillarY - pillarHeight
+        );
+        pillarGrad.addColorStop(0, `rgba(255, 200, 100, ${alpha})`);
+        pillarGrad.addColorStop(1, `rgba(255, 200, 100, 0)`);
+        ctx.fillStyle = pillarGrad;
+        ctx.fillRect(
+          pillarX - 4 * zoom,
+          pillarY - pillarHeight,
+          8 * zoom,
+          pillarHeight
+        );
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "turret_deploy": {
+      // Engineer's turret deployment effect
+      const deployRadius = effect.size * zoom;
+
+      ctx.save();
+      ctx.shadowColor = "#ffcc00";
+      ctx.shadowBlur = 12 * zoom;
+
+      // Construction sparks
+      for (let spark = 0; spark < 8; spark++) {
+        const sparkAngle = (spark / 8) * Math.PI * 2 + progress * Math.PI * 4;
+        const sparkDist = deployRadius * 0.5 * (1 - progress * 0.5);
+        const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
+        const sparkY =
+          screenPos.y +
+          Math.sin(sparkAngle) * sparkDist * 0.5 -
+          progress * 10 * zoom;
+
+        ctx.fillStyle = `rgba(255, 220, 100, ${alpha * (1 - progress)})`;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, 2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Build-up circle
+      ctx.strokeStyle = `rgba(255, 200, 50, ${alpha})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        deployRadius * (1 - progress * 0.5),
+        deployRadius * 0.5 * (1 - progress * 0.5),
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
   }
 }
 

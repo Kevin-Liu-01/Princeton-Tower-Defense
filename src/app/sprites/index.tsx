@@ -1,7 +1,6 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import type { TowerType, HeroType, SpellType } from "../types";
-
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
@@ -14,7 +13,6 @@ export function darkenColor(color: string, amount: number): string {
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
-
 export function lightenColor(color: string, amount: number): string {
   const hex = color?.replace("#", "") || "888888";
   const r = Math.min(255, parseInt(hex.substr(0, 2), 16) + amount);
@@ -24,7 +22,6 @@ export function lightenColor(color: string, amount: number): string {
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
-
 // =============================================================================
 // TOWER SPRITES - Matches actual game rendering
 // =============================================================================
@@ -36,30 +33,25 @@ export const TowerSprite: React.FC<{
 }> = ({ type, size = 48, level = 1, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
-
   useEffect(() => {
     if (!animated) return;
     const interval = setInterval(() => setTime((t) => t + 1), 50);
     return () => clearInterval(interval);
   }, [animated]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-
     const cx = size / 2;
     const cy = size / 2 + 4;
     const scale = size / 60;
     const t = time * 0.05;
-
     switch (type) {
       case "cannon": {
         // Nassau Cannon - Artillery tower with isometric base
@@ -76,7 +68,6 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Mechanical base - left face
         ctx.fillStyle = "#4a4a52";
         ctx.beginPath();
@@ -86,7 +77,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Right face
         ctx.fillStyle = "#3a3a42";
         ctx.beginPath();
@@ -96,7 +86,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Top face
         ctx.fillStyle = "#5a5a62";
         ctx.beginPath();
@@ -106,13 +95,11 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 12 * scale, cy - 8 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Tech vents (glowing)
         const ventGlow = 0.5 + Math.sin(t * 4) * 0.3;
         ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow})`;
         ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 3 * scale, 6 * scale);
         ctx.fillRect(cx + 5 * scale, cy - 2 * scale, 3 * scale, 6 * scale);
-
         // Turret base
         ctx.fillStyle = "#3a3a3a";
         ctx.beginPath();
@@ -126,7 +113,6 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Cannon barrel
         ctx.fillStyle = "#2a2a2a";
         ctx.save();
@@ -142,7 +128,6 @@ export const TowerSprite: React.FC<{
         ctx.arc(22 * scale, 0, 4 * scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
-
         // Level indicator
         if (level > 1) {
           ctx.fillStyle = "#ffd700";
@@ -152,7 +137,6 @@ export const TowerSprite: React.FC<{
         }
         break;
       }
-
       case "library": {
         // Firestone Library - Gothic magic tower
         ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -167,7 +151,6 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Main building - left face
         ctx.fillStyle = "#6b5b4b";
         ctx.beginPath();
@@ -177,7 +160,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Right face
         ctx.fillStyle = "#5a4a3a";
         ctx.beginPath();
@@ -187,7 +169,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Gothic pointed roof
         ctx.fillStyle = "#4a3a2a";
         ctx.beginPath();
@@ -196,7 +177,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 16 * scale, cy - 6 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Roof highlight
         ctx.fillStyle = "#5a4a3a";
         ctx.beginPath();
@@ -205,7 +185,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 6 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Gothic window
         ctx.fillStyle = "#1a1a1a";
         ctx.beginPath();
@@ -220,7 +199,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 5 * scale, cy + 6 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Window glow
         const glowIntensity = animated ? 0.6 + Math.sin(t * 2) * 0.3 : 0.8;
         ctx.fillStyle = `rgba(255, 215, 0, ${glowIntensity})`;
@@ -239,7 +217,6 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-
         // Spire
         ctx.fillStyle = "#3a2a1a";
         ctx.beginPath();
@@ -250,7 +227,6 @@ export const TowerSprite: React.FC<{
         ctx.fill();
         break;
       }
-
       case "lab": {
         // E-Quad Lab - Tesla/electric tower
         ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -265,7 +241,6 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Industrial building - left
         ctx.fillStyle = "#3d5a6b";
         ctx.beginPath();
@@ -275,7 +250,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Right
         ctx.fillStyle = "#2d4a5a";
         ctx.beginPath();
@@ -285,13 +259,11 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Dome
         ctx.fillStyle = "#4d6a7b";
         ctx.beginPath();
         ctx.arc(cx, cy - 10 * scale, 10 * scale, Math.PI, 0);
         ctx.fill();
-
         // Tesla coil
         ctx.strokeStyle = "#00ffff";
         ctx.shadowColor = "#00ffff";
@@ -301,14 +273,12 @@ export const TowerSprite: React.FC<{
         ctx.moveTo(cx, cy - 18 * scale);
         ctx.lineTo(cx, cy - 32 * scale);
         ctx.stroke();
-
         // Energy orb
         const orbPulse = animated ? 1 + Math.sin(t * 3) * 0.2 : 1;
         ctx.fillStyle = "#00ffff";
         ctx.beginPath();
         ctx.arc(cx, cy - 32 * scale, 5 * scale * orbPulse, 0, Math.PI * 2);
         ctx.fill();
-
         // Electric arcs
         if (animated) {
           ctx.strokeStyle = "#00ffff";
@@ -327,7 +297,6 @@ export const TowerSprite: React.FC<{
         ctx.shadowBlur = 0;
         break;
       }
-
       case "arch": {
         // Blair Arch - Sound/music tower
         ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -342,19 +311,16 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Left pillar
         ctx.fillStyle = "#7b6b55";
         ctx.fillRect(cx - 16 * scale, cy - 18 * scale, 8 * scale, 30 * scale);
         ctx.fillStyle = "#6b5b45";
         ctx.fillRect(cx - 16 * scale, cy - 18 * scale, 4 * scale, 30 * scale);
-
         // Right pillar
         ctx.fillStyle = "#7b6b55";
         ctx.fillRect(cx + 8 * scale, cy - 18 * scale, 8 * scale, 30 * scale);
         ctx.fillStyle = "#8b7b65";
         ctx.fillRect(cx + 12 * scale, cy - 18 * scale, 4 * scale, 30 * scale);
-
         // Arch
         ctx.fillStyle = "#8b7b65";
         ctx.beginPath();
@@ -363,7 +329,6 @@ export const TowerSprite: React.FC<{
         ctx.arc(cx, cy - 18 * scale, 16 * scale, 0, Math.PI, true);
         ctx.closePath();
         ctx.fill();
-
         // Inner arch (portal)
         ctx.fillStyle = "#2a1a1a";
         ctx.beginPath();
@@ -372,7 +337,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx - 8 * scale, cy + 8 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Portal glow
         const portalGlow = animated ? 0.4 + Math.sin(t * 2) * 0.2 : 0.5;
         ctx.fillStyle = `rgba(180, 100, 255, ${portalGlow})`;
@@ -385,7 +349,6 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-
         // Sound waves
         if (animated) {
           ctx.strokeStyle = `rgba(180, 100, 255, ${0.6 - (t % 1) * 0.5})`;
@@ -399,7 +362,6 @@ export const TowerSprite: React.FC<{
         }
         break;
       }
-
       case "club": {
         // Eating Club - Economy/buff tower
         ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -414,7 +376,6 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Building - left
         ctx.fillStyle = "#2d6b2d";
         ctx.beginPath();
@@ -424,7 +385,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Right
         ctx.fillStyle = "#1d5b1d";
         ctx.beginPath();
@@ -434,7 +394,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Roof
         ctx.fillStyle = "#1a4a1a";
         ctx.beginPath();
@@ -443,11 +402,9 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 16 * scale, cy - 4 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Door
         ctx.fillStyle = "#5d3a1a";
         ctx.fillRect(cx - 4 * scale, cy, 8 * scale, 10 * scale);
-
         // Dollar sign
         ctx.fillStyle = "#ffd700";
         ctx.shadowColor = "#ffd700";
@@ -459,7 +416,6 @@ export const TowerSprite: React.FC<{
         ctx.shadowBlur = 0;
         break;
       }
-
       case "station": {
         // Dinky Station - Troop spawner
         ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -474,7 +430,6 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Station building - left
         ctx.fillStyle = "#8b2a2a";
         ctx.beginPath();
@@ -484,7 +439,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Right
         ctx.fillStyle = "#7b1a1a";
         ctx.beginPath();
@@ -494,11 +448,9 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-
         // Roof
         ctx.fillStyle = "#6b0000";
         ctx.fillRect(cx - 18 * scale, cy - 8 * scale, 36 * scale, 8 * scale);
-
         // Windows
         ctx.fillStyle = "#ffd700";
         ctx.shadowColor = "#ffd700";
@@ -506,7 +458,6 @@ export const TowerSprite: React.FC<{
         ctx.fillRect(cx - 14 * scale, cy + 2 * scale, 6 * scale, 6 * scale);
         ctx.fillRect(cx + 8 * scale, cy + 2 * scale, 6 * scale, 6 * scale);
         ctx.shadowBlur = 0;
-
         // Flag
         ctx.fillStyle = "#ff6600";
         ctx.beginPath();
@@ -515,7 +466,6 @@ export const TowerSprite: React.FC<{
         ctx.lineTo(cx + 10 * scale, cy - 22 * scale);
         ctx.lineTo(cx, cy - 18 * scale);
         ctx.fill();
-
         // Train tracks
         ctx.strokeStyle = "#4a4a4a";
         ctx.lineWidth = 2 * scale;
@@ -527,10 +477,8 @@ export const TowerSprite: React.FC<{
       }
     }
   }, [type, size, level, time, animated]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
-
 function drawStar(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -548,7 +496,6 @@ function drawStar(
   ctx.closePath();
   ctx.fill();
 }
-
 // =============================================================================
 // HERO SPRITES - Matching rendering.ts detailed style
 // =============================================================================
@@ -558,8 +505,9 @@ export const HERO_COLORS: Record<string, string> = {
   rocky: "#78716c",
   tenor: "#8b5cf6",
   scott: "#14b8a6",
+  captain: "#dc2626",
+  engineer: "#f59e0b",
 };
-
 export const HeroSprite: React.FC<{
   type: HeroType;
   size?: number;
@@ -567,38 +515,32 @@ export const HeroSprite: React.FC<{
 }> = ({ type, size = 48, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
-
   useEffect(() => {
     if (!animated) return;
     const interval = setInterval(() => setTime((t) => t + 1), 50);
     return () => clearInterval(interval);
   }, [animated]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 50;
     const color = HERO_COLORS[type] || "#ff8c00";
     const t = time * 0.08;
     const bounce = animated ? Math.sin(t) * 2 : 0;
-
     // Shadow
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.beginPath();
     ctx.ellipse(cx, cy + 18 * scale, 14 * scale, 5 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-
     switch (type) {
       case "tiger": {
         // Tiger body (muscular orange)
@@ -625,7 +567,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Tiger stripes on body
         ctx.strokeStyle = "#1a1a1a";
         ctx.lineWidth = 2.5 * scale;
@@ -650,7 +591,6 @@ export const HeroSprite: React.FC<{
           );
           ctx.stroke();
         }
-
         // Tiger head
         ctx.fillStyle = "#ff8c00";
         ctx.beginPath();
@@ -664,7 +604,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Ears
         ctx.beginPath();
         ctx.moveTo(cx - 8 * scale, cy - 18 * scale + bounce);
@@ -678,7 +617,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 20 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Inner ears
         ctx.fillStyle = "#ffccaa";
         ctx.beginPath();
@@ -693,7 +631,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 5 * scale, cy - 20 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head stripes
         ctx.strokeStyle = "#1a1a1a";
         ctx.lineWidth = 2 * scale;
@@ -705,7 +642,6 @@ export const HeroSprite: React.FC<{
         ctx.moveTo(cx, cy - 22 * scale + bounce);
         ctx.lineTo(cx, cy - 16 * scale + bounce);
         ctx.stroke();
-
         // Muzzle
         ctx.fillStyle = "#fff8e7";
         ctx.beginPath();
@@ -719,7 +655,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Nose
         ctx.fillStyle = "#2a1a0a";
         ctx.beginPath();
@@ -728,7 +663,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 2 * scale, cy - 9 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Fierce eyes (glowing)
         ctx.shadowColor = "#ffcc00";
         ctx.shadowBlur = 6 * scale;
@@ -754,7 +688,6 @@ export const HeroSprite: React.FC<{
         );
         ctx.fill();
         ctx.shadowBlur = 0;
-
         // Pupils
         ctx.fillStyle = "#1a1a1a";
         ctx.beginPath();
@@ -777,7 +710,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Mouth with fangs
         ctx.fillStyle = "#8b0000";
         ctx.beginPath();
@@ -806,7 +738,6 @@ export const HeroSprite: React.FC<{
         ctx.fill();
         break;
       }
-
       case "mathey": {
         // Knight armor body
         const armorGrad = ctx.createLinearGradient(
@@ -834,7 +765,6 @@ export const HeroSprite: React.FC<{
         ctx.strokeStyle = "#4a4a5a";
         ctx.lineWidth = 1.5 * scale;
         ctx.stroke();
-
         // Armor segments
         ctx.strokeStyle = "#5a5a6a";
         ctx.lineWidth = 1 * scale;
@@ -844,7 +774,6 @@ export const HeroSprite: React.FC<{
         ctx.moveTo(cx - 9 * scale, cy + 6 * scale + bounce);
         ctx.lineTo(cx + 9 * scale, cy + 6 * scale + bounce);
         ctx.stroke();
-
         // Princeton crest
         ctx.fillStyle = "#ff6600";
         ctx.beginPath();
@@ -854,7 +783,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy + 2 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Helmet
         ctx.fillStyle = "#7a7a8a";
         ctx.beginPath();
@@ -895,7 +823,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Shield
         ctx.fillStyle = "#4338ca";
         ctx.beginPath();
@@ -917,7 +844,6 @@ export const HeroSprite: React.FC<{
         ctx.fill();
         break;
       }
-
       case "rocky": {
         // Rock golem body
         const rockGrad = ctx.createRadialGradient(
@@ -943,7 +869,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Rock cracks
         ctx.strokeStyle = "rgba(0,0,0,0.5)";
         ctx.lineWidth = 2 * scale;
@@ -953,7 +878,6 @@ export const HeroSprite: React.FC<{
           ctx.lineTo(cx - 8 * scale + i * 5 * scale, cy + 10 * scale + bounce);
           ctx.stroke();
         }
-
         // Rocky head
         ctx.fillStyle = "#6a6a6a";
         ctx.beginPath();
@@ -964,7 +888,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 10 * scale, cy - 8 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Glowing eyes
         ctx.shadowColor = "#ffaa00";
         ctx.shadowBlur = 8 * scale;
@@ -986,7 +909,6 @@ export const HeroSprite: React.FC<{
         );
         ctx.fill();
         ctx.shadowBlur = 0;
-
         // Glowing cracks
         if (animated) {
           ctx.strokeStyle = `rgba(255, 100, 0, ${0.5 + Math.sin(t * 3) * 0.3})`;
@@ -1000,7 +922,6 @@ export const HeroSprite: React.FC<{
         }
         break;
       }
-
       case "tenor": {
         // Tuxedo body
         const tuxGrad = ctx.createLinearGradient(
@@ -1022,7 +943,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 12 * scale, cy + 14 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // White shirt front
         ctx.fillStyle = "#fff";
         ctx.beginPath();
@@ -1032,7 +952,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 10 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Bow tie
         ctx.fillStyle = "#ff6600";
         ctx.beginPath();
@@ -1047,13 +966,11 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 6 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 16 * scale + bounce, 9 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Slicked back hair
         ctx.fillStyle = "#2a1a0a";
         ctx.beginPath();
@@ -1082,7 +999,6 @@ export const HeroSprite: React.FC<{
           cy - 20 * scale + bounce
         );
         ctx.fill();
-
         // Closed singing eyes
         ctx.strokeStyle = "#333";
         ctx.lineWidth = 1.5 * scale;
@@ -1102,7 +1018,6 @@ export const HeroSprite: React.FC<{
           0.8 * Math.PI
         );
         ctx.stroke();
-
         // Singing mouth
         ctx.fillStyle = "#4a2020";
         const mouthSize = animated ? 3 + Math.sin(t * 1.5) * 0.5 : 3;
@@ -1117,7 +1032,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Musical notes
         if (animated) {
           ctx.fillStyle = `rgba(139, 92, 246, ${0.6 + Math.sin(t * 2) * 0.3})`;
@@ -1134,7 +1048,6 @@ export const HeroSprite: React.FC<{
         }
         break;
       }
-
       case "scott": {
         // Vintage suit body
         ctx.fillStyle = "#14b8a6";
@@ -1146,7 +1059,6 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 11 * scale, cy + 14 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Vest
         ctx.fillStyle = "#0d9488";
         ctx.beginPath();
@@ -1156,13 +1068,11 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 5 * scale, cy - 8 * scale + bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 15 * scale + bounce, 9 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Parted hair
         ctx.fillStyle = "#4a3020";
         ctx.beginPath();
@@ -1208,7 +1118,6 @@ export const HeroSprite: React.FC<{
         );
         ctx.closePath();
         ctx.fill();
-
         // Glasses
         ctx.strokeStyle = "#333";
         ctx.lineWidth = 1.5 * scale;
@@ -1230,7 +1139,6 @@ export const HeroSprite: React.FC<{
         ctx.moveTo(cx - 1 * scale, cy - 16 * scale + bounce);
         ctx.lineTo(cx + 1 * scale, cy - 16 * scale + bounce);
         ctx.stroke();
-
         // Eyes
         ctx.fillStyle = "#333";
         ctx.beginPath();
@@ -1249,7 +1157,6 @@ export const HeroSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Quill pen
         ctx.fillStyle = "#14b8a6";
         ctx.save();
@@ -1264,7 +1171,6 @@ export const HeroSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         ctx.restore();
-
         // Book
         ctx.fillStyle = "#8b4513";
         ctx.fillRect(
@@ -1282,12 +1188,408 @@ export const HeroSprite: React.FC<{
         );
         break;
       }
+      case "captain": {
+        // Captain - Military leader with cape and sword
+        // Flowing cape
+        const capeWave = animated ? Math.sin(t * 2) * 3 : 0;
+        ctx.fillStyle = "#b91c1c";
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy - 8 * scale + bounce);
+        ctx.quadraticCurveTo(
+          cx - 18 * scale + capeWave,
+          cy + bounce,
+          cx - 16 * scale + capeWave,
+          cy + 16 * scale + bounce
+        );
+        ctx.lineTo(cx - 8 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx - 8 * scale, cy - 6 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 10 * scale, cy - 8 * scale + bounce);
+        ctx.quadraticCurveTo(
+          cx + 18 * scale - capeWave,
+          cy + bounce,
+          cx + 16 * scale - capeWave,
+          cy + 16 * scale + bounce
+        );
+        ctx.lineTo(cx + 8 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx + 8 * scale, cy - 6 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        // Military coat body
+        const coatGrad = ctx.createLinearGradient(
+          cx - 10 * scale,
+          cy,
+          cx + 10 * scale,
+          cy
+        );
+        coatGrad.addColorStop(0, "#1e3a5f");
+        coatGrad.addColorStop(0.5, "#2d4a6f");
+        coatGrad.addColorStop(1, "#1e3a5f");
+        ctx.fillStyle = coatGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx - 12 * scale, cy - 6 * scale + bounce);
+        ctx.lineTo(cx, cy - 10 * scale + bounce);
+        ctx.lineTo(cx + 12 * scale, cy - 6 * scale + bounce);
+        ctx.lineTo(cx + 10 * scale, cy + 14 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        // Gold buttons
+        ctx.fillStyle = "#ffd700";
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.arc(
+            cx,
+            cy - 2 * scale + i * 5 * scale + bounce,
+            1.5 * scale,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        // Epaulettes (shoulder decorations)
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 11 * scale,
+          cy - 6 * scale + bounce,
+          4 * scale,
+          2 * scale,
+          -0.3,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 11 * scale,
+          cy - 6 * scale + bounce,
+          4 * scale,
+          2 * scale,
+          0.3,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        // Tassels
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 13 * scale + i * 2 * scale, cy - 5 * scale + bounce);
+          ctx.lineTo(cx - 14 * scale + i * 2 * scale, cy - 1 * scale + bounce);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 9 * scale + i * 2 * scale, cy - 5 * scale + bounce);
+          ctx.lineTo(cx + 10 * scale + i * 2 * scale, cy - 1 * scale + bounce);
+          ctx.stroke();
+        }
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 15 * scale + bounce, 8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Military cap
+        ctx.fillStyle = "#1e3a5f";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 20 * scale + bounce,
+          9 * scale,
+          4 * scale,
+          0,
+          0,
+          Math.PI
+        );
+        ctx.fill();
+        ctx.fillRect(
+          cx - 8 * scale,
+          cy - 24 * scale + bounce,
+          16 * scale,
+          5 * scale
+        );
+        // Cap brim
+        ctx.fillStyle = "#0f1f3a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 19 * scale + bounce,
+          10 * scale,
+          3 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        // Cap badge
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 22 * scale + bounce, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Star on badge
+        ctx.fillStyle = "#1e3a5f";
+        drawStar(ctx, cx, cy - 22 * scale + bounce, 1.5 * scale);
+        // Stern commanding eyes
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 3 * scale,
+          cy - 16 * scale + bounce,
+          2 * scale,
+          2.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 3 * scale,
+          cy - 16 * scale + bounce,
+          2 * scale,
+          2.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.fillStyle = "#2a4a6a";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 3 * scale,
+          cy - 16 * scale + bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 3 * scale,
+          cy - 16 * scale + bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        // Strong jawline
+        ctx.strokeStyle = "#d4a574";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy - 10 * scale + bounce);
+        ctx.lineTo(cx, cy - 8 * scale + bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 10 * scale + bounce);
+        ctx.stroke();
+        // Sword
+        ctx.fillStyle = "#c0c0c0";
+        ctx.save();
+        ctx.translate(cx + 14 * scale, cy + 4 * scale + bounce);
+        ctx.rotate(0.4);
+        ctx.fillRect(-1 * scale, -18 * scale, 2 * scale, 20 * scale);
+        // Sword hilt
+        ctx.fillStyle = "#8b4513";
+        ctx.fillRect(-3 * scale, 0, 6 * scale, 4 * scale);
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(0, 2 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "engineer": {
+        // Engineer - Tech specialist with hardhat and wrench
+        // Tool belt body
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy + 14 * scale + bounce);
+        ctx.lineTo(cx - 12 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx, cy - 10 * scale + bounce);
+        ctx.lineTo(cx + 12 * scale, cy - 4 * scale + bounce);
+        ctx.lineTo(cx + 10 * scale, cy + 14 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        // Orange safety vest
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 12 * scale + bounce);
+        ctx.lineTo(cx - 10 * scale, cy - 2 * scale + bounce);
+        ctx.lineTo(cx, cy - 6 * scale + bounce);
+        ctx.lineTo(cx + 10 * scale, cy - 2 * scale + bounce);
+        ctx.lineTo(cx + 8 * scale, cy + 12 * scale + bounce);
+        ctx.closePath();
+        ctx.fill();
+        // Reflective stripes
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy - 2 * scale + bounce);
+        ctx.lineTo(cx - 5 * scale, cy + 10 * scale + bounce);
+        ctx.moveTo(cx + 6 * scale, cy - 2 * scale + bounce);
+        ctx.lineTo(cx + 5 * scale, cy + 10 * scale + bounce);
+        ctx.stroke();
+        // Tool belt
+        ctx.fillStyle = "#451a03";
+        ctx.fillRect(
+          cx - 10 * scale,
+          cy + 6 * scale + bounce,
+          20 * scale,
+          4 * scale
+        );
+        // Tools on belt
+        ctx.fillStyle = "#71717a";
+        ctx.fillRect(
+          cx - 8 * scale,
+          cy + 7 * scale + bounce,
+          3 * scale,
+          5 * scale
+        );
+        ctx.fillRect(
+          cx + 5 * scale,
+          cy + 7 * scale + bounce,
+          3 * scale,
+          5 * scale
+        );
+        // Head
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale + bounce, 8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Hard hat
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 18 * scale + bounce,
+          10 * scale,
+          4 * scale,
+          0,
+          0,
+          Math.PI
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx, cy - 20 * scale + bounce, 8 * scale, Math.PI, 0);
+        ctx.fill();
+        // Hard hat ridge
+        ctx.fillStyle = "#f59e0b";
+        ctx.fillRect(
+          cx - 8 * scale,
+          cy - 22 * scale + bounce,
+          16 * scale,
+          2 * scale
+        );
+        // Hat lamp
+        ctx.fillStyle = animated
+          ? `rgba(255, 255, 200, ${0.6 + Math.sin(t * 3) * 0.3})`
+          : "#fff";
+        ctx.shadowColor = "#ffff00";
+        ctx.shadowBlur = animated ? 6 * scale : 0;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 24 * scale + bounce, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Safety goggles
+        ctx.fillStyle = "rgba(200, 230, 255, 0.6)";
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.ellipse(
+          cx - 3.5 * scale,
+          cy - 15 * scale + bounce,
+          3 * scale,
+          2.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          cx + 3.5 * scale,
+          cy - 15 * scale + bounce,
+          3 * scale,
+          2.5 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.stroke();
+        // Goggle bridge
+        ctx.beginPath();
+        ctx.moveTo(cx - 0.5 * scale, cy - 15 * scale + bounce);
+        ctx.lineTo(cx + 0.5 * scale, cy - 15 * scale + bounce);
+        ctx.stroke();
+        // Eyes behind goggles
+        ctx.fillStyle = "#333";
+        ctx.beginPath();
+        ctx.arc(
+          cx - 3.5 * scale,
+          cy - 15 * scale + bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.arc(
+          cx + 3.5 * scale,
+          cy - 15 * scale + bounce,
+          1 * scale,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        // Determined smile
+        ctx.strokeStyle = "#8b6655";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.arc(
+          cx,
+          cy - 10 * scale + bounce,
+          2.5 * scale,
+          0.1 * Math.PI,
+          0.9 * Math.PI
+        );
+        ctx.stroke();
+        // Large wrench
+        ctx.fillStyle = "#71717a";
+        ctx.save();
+        ctx.translate(cx + 14 * scale, cy + bounce);
+        ctx.rotate(-0.3);
+        // Wrench handle
+        ctx.fillRect(-2 * scale, -4 * scale, 4 * scale, 18 * scale);
+        // Wrench head
+        ctx.fillStyle = "#52525b";
+        ctx.beginPath();
+        ctx.moveTo(-5 * scale, -8 * scale);
+        ctx.lineTo(5 * scale, -8 * scale);
+        ctx.lineTo(4 * scale, -4 * scale);
+        ctx.lineTo(-4 * scale, -4 * scale);
+        ctx.closePath();
+        ctx.fill();
+        // Wrench jaw opening
+        ctx.fillStyle = "#27272a";
+        ctx.fillRect(-2 * scale, -10 * scale, 4 * scale, 3 * scale);
+        ctx.restore();
+        // Gear emblem on vest
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy + 2 * scale + bounce, 3 * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        // Gear teeth
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3;
+          ctx.beginPath();
+          ctx.moveTo(
+            cx + Math.cos(angle) * 3 * scale,
+            cy + 2 * scale + Math.sin(angle) * 3 * scale + bounce
+          );
+          ctx.lineTo(
+            cx + Math.cos(angle) * 4.5 * scale,
+            cy + 2 * scale + Math.sin(angle) * 4.5 * scale + bounce
+          );
+          ctx.stroke();
+        }
+        break;
+      }
     }
   }, [type, size, time, animated]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
-
 // =============================================================================
 // SPELL SPRITES
 // =============================================================================
@@ -1298,30 +1600,25 @@ export const SpellSprite: React.FC<{
 }> = ({ type, size = 36, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
-
   useEffect(() => {
     if (!animated) return;
     const interval = setInterval(() => setTime((t) => t + 1), 50);
     return () => clearInterval(interval);
   }, [animated]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 40;
     const t = time * 0.1;
-
     switch (type) {
       case "fireball": {
         const flameHeight = animated ? 14 + Math.sin(t * 3) * 2 : 14;
@@ -1541,10 +1838,8 @@ export const SpellSprite: React.FC<{
       }
     }
   }, [type, size, time, animated]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
-
 // =============================================================================
 // ENEMY SPRITES - Matching rendering.ts human-like style
 // =============================================================================
@@ -1557,7 +1852,6 @@ export type EnemyType =
   | "professor"
   | "dean"
   | "trustee";
-
 export const ENEMY_COLORS: Record<EnemyType, string> = {
   frosh: "#4ade80",
   sophomore: "#60a5fa",
@@ -1568,7 +1862,6 @@ export const ENEMY_COLORS: Record<EnemyType, string> = {
   dean: "#8b5cf6",
   trustee: "#fbbf24",
 };
-
 export const EnemySprite: React.FC<{
   type: EnemyType;
   size?: number;
@@ -1576,37 +1869,31 @@ export const EnemySprite: React.FC<{
 }> = ({ type, size = 40, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
-
   useEffect(() => {
     if (!animated) return;
     const interval = setInterval(() => setTime((t) => t + 1), 60);
     return () => clearInterval(interval);
   }, [animated]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 45;
     const t = time * 0.1;
     const bounce = animated ? Math.sin(t * 1.5) * 2 : 0;
-
     // Shadow
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.beginPath();
     ctx.ellipse(cx, cy + 16 * scale, 10 * scale, 4 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-
     switch (type) {
       case "frosh": {
         // Freshman - nervous student with hoodie and backpack
@@ -1623,7 +1910,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Hoodie body
         const hoodieGrad = ctx.createLinearGradient(
           cx - 8 * scale,
@@ -1652,13 +1938,11 @@ export const EnemySprite: React.FC<{
         );
         ctx.closePath();
         ctx.fill();
-
-        // Head (skin tone)
+        // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 12 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Nervous big eyes
         ctx.fillStyle = "#fff";
         ctx.beginPath();
@@ -1681,7 +1965,7 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        // Pupils (darting)
+        // Pupils
         const pupilOffset = animated ? Math.sin(t * 2) * 0.8 * scale : 0;
         ctx.fillStyle = "#333";
         ctx.beginPath();
@@ -1700,7 +1984,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Worried eyebrows
         ctx.strokeStyle = "#5a3825";
         ctx.lineWidth = 1.2 * scale;
@@ -1710,7 +1993,6 @@ export const EnemySprite: React.FC<{
         ctx.moveTo(cx + 4.5 * scale, cy - 17 * scale - bounce);
         ctx.lineTo(cx + 0.5 * scale, cy - 15 * scale - bounce);
         ctx.stroke();
-
         // Small frown
         ctx.strokeStyle = "#8b6655";
         ctx.lineWidth = 1 * scale;
@@ -1723,7 +2005,6 @@ export const EnemySprite: React.FC<{
           0.8 * Math.PI
         );
         ctx.stroke();
-
         // Lanyard
         ctx.strokeStyle = "#ff6600";
         ctx.lineWidth = 1.5 * scale;
@@ -1740,10 +2021,8 @@ export const EnemySprite: React.FC<{
         );
         break;
       }
-
       case "sophomore": {
         // Confident student with coffee
-        // Body (casual shirt)
         const shirtGrad = ctx.createLinearGradient(
           cx,
           cy - 8 * scale,
@@ -1765,28 +2044,11 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 8 * scale, cy + 12 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
-        // Jeans hint
-        ctx.fillStyle = "#3a5a8a";
-        ctx.fillRect(
-          cx - 5 * scale,
-          cy + 8 * scale - bounce,
-          4 * scale,
-          6 * scale
-        );
-        ctx.fillRect(
-          cx + 1 * scale,
-          cy + 8 * scale - bounce,
-          4 * scale,
-          6 * scale
-        );
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 12 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Messy hair
         ctx.fillStyle = "#4a3728";
         ctx.beginPath();
@@ -1800,22 +2062,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        for (let i = 0; i < 4; i++) {
-          const angle = -0.5 + i * 0.35;
-          ctx.beginPath();
-          ctx.moveTo(
-            cx + Math.cos(angle) * 4 * scale,
-            cy - 18 * scale - bounce
-          );
-          ctx.lineTo(
-            cx + Math.cos(angle) * 6 * scale,
-            cy - 22 * scale - bounce + Math.sin(t + i) * 1
-          );
-          ctx.lineWidth = 1.5 * scale;
-          ctx.strokeStyle = "#4a3728";
-          ctx.stroke();
-        }
-
         // Confident eyes
         ctx.fillStyle = "#fff";
         ctx.beginPath();
@@ -1855,7 +2101,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Smirk
         ctx.strokeStyle = "#8b6655";
         ctx.lineWidth = 1 * scale;
@@ -1869,7 +2114,6 @@ export const EnemySprite: React.FC<{
           true
         );
         ctx.stroke();
-
         // Coffee cup
         ctx.fillStyle = "#fff";
         ctx.fillRect(
@@ -1887,10 +2131,9 @@ export const EnemySprite: React.FC<{
         );
         break;
       }
-
       case "junior": {
-        // Stressed academic with glasses and books
-        // Stack of books
+        // Stressed academic with glasses
+        // Books
         const bookColors = ["#8b0000", "#00008b", "#006400"];
         for (let i = 0; i < 3; i++) {
           ctx.fillStyle = bookColors[i];
@@ -1901,8 +2144,7 @@ export const EnemySprite: React.FC<{
             1.8 * scale
           );
         }
-
-        // Body (button-up)
+        // Body
         ctx.fillStyle = "#f5f5dc";
         ctx.beginPath();
         ctx.moveTo(cx - 7 * scale, cy + 12 * scale - bounce);
@@ -1912,13 +2154,11 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 7 * scale, cy + 12 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 12 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Glasses
         ctx.strokeStyle = "#333";
         ctx.lineWidth = 1.2 * scale;
@@ -1940,7 +2180,6 @@ export const EnemySprite: React.FC<{
         ctx.moveTo(cx - 1 * scale, cy - 13.5 * scale - bounce);
         ctx.lineTo(cx + 1 * scale, cy - 13.5 * scale - bounce);
         ctx.stroke();
-
         // Tired eyes
         ctx.fillStyle = "#fff";
         ctx.beginPath();
@@ -1980,7 +2219,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Dark circles
         ctx.fillStyle = "rgba(100, 80, 120, 0.4)";
         ctx.beginPath();
@@ -2003,8 +2241,7 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
-        // Disheveled hair
+        // Hair
         ctx.fillStyle = "#3a2a1a";
         ctx.beginPath();
         ctx.ellipse(
@@ -2017,21 +2254,10 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        const stressTwitch = animated ? Math.sin(t * 2.5) * 0.8 : 0;
-        ctx.strokeStyle = "#3a2a1a";
-        ctx.lineWidth = 1.2 * scale;
-        ctx.beginPath();
-        ctx.moveTo(cx - 3 * scale + stressTwitch, cy - 19 * scale - bounce);
-        ctx.lineTo(cx - 5 * scale + stressTwitch, cy - 23 * scale - bounce);
-        ctx.moveTo(cx + 2 * scale, cy - 19 * scale - bounce);
-        ctx.lineTo(cx + 4 * scale, cy - 22 * scale - bounce);
-        ctx.stroke();
         break;
       }
-
       case "senior": {
         // Confident senior with blazer
-        // Body (blazer)
         const blazerGrad = ctx.createLinearGradient(
           cx - 9 * scale,
           cy,
@@ -2052,7 +2278,6 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 9 * scale, cy + 14 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Tie
         ctx.fillStyle = "#ff6600";
         ctx.beginPath();
@@ -2062,13 +2287,11 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 1.5 * scale, cy + 6 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Styled hair
         ctx.fillStyle = "#2a1a0a";
         ctx.beginPath();
@@ -2082,24 +2305,7 @@ export const EnemySprite: React.FC<{
           Math.PI
         );
         ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(cx - 5 * scale, cy - 17 * scale - bounce);
-        ctx.quadraticCurveTo(
-          cx - 7 * scale,
-          cy - 22 * scale - bounce,
-          cx - 3 * scale,
-          cy - 23 * scale - bounce
-        );
-        ctx.quadraticCurveTo(
-          cx,
-          cy - 21 * scale - bounce,
-          cx + 3 * scale,
-          cy - 20 * scale - bounce
-        );
-        ctx.lineTo(cx + 5 * scale, cy - 17 * scale - bounce);
-        ctx.fill();
-
-        // Confident eyes
+        // Eyes
         ctx.fillStyle = "#fff";
         ctx.beginPath();
         ctx.ellipse(
@@ -2138,7 +2344,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Confident smirk
         ctx.strokeStyle = "#8b6655";
         ctx.lineWidth = 1.2 * scale;
@@ -2151,23 +2356,11 @@ export const EnemySprite: React.FC<{
           0.9 * Math.PI
         );
         ctx.stroke();
-
-        // Diploma
-        ctx.fillStyle = "#f5f5dc";
-        ctx.save();
-        ctx.translate(cx + 11 * scale, cy + 2 * scale - bounce);
-        ctx.rotate(0.3);
-        ctx.fillRect(-1.5 * scale, -5 * scale, 3 * scale, 10 * scale);
-        ctx.fillStyle = "#8b0000";
-        ctx.fillRect(-2 * scale, -5 * scale, 4 * scale, 1 * scale);
-        ctx.restore();
         break;
       }
-
       case "grad": {
         // Exhausted grad student with lab coat
         const exhaustion = animated ? Math.sin(t * 0.5) * 1.5 : 0;
-
         // Body
         ctx.fillStyle = "#6a8a9a";
         ctx.beginPath();
@@ -2182,8 +2375,7 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 8 * scale, cy + 14 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
-        // Lab coat sides
+        // Lab coat
         ctx.fillStyle = "#f0f0f0";
         ctx.beginPath();
         ctx.moveTo(cx - 9 * scale, cy - 2 * scale - bounce);
@@ -2199,7 +2391,6 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 2 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
@@ -2211,7 +2402,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Messy hair
         ctx.fillStyle = "#5a4a3a";
         ctx.beginPath();
@@ -2225,25 +2415,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        for (let i = 0; i < 5; i++) {
-          ctx.beginPath();
-          ctx.moveTo(
-            cx - 5 * scale + i * 2.5 * scale + exhaustion * 0.3,
-            cy - 20 * scale - bounce
-          );
-          ctx.lineTo(
-            cx -
-              6 * scale +
-              i * 2.5 * scale +
-              Math.sin(t + i) * 1 +
-              exhaustion * 0.3,
-            cy - 24 * scale - bounce
-          );
-          ctx.lineWidth = 1.2 * scale;
-          ctx.strokeStyle = "#5a4a3a";
-          ctx.stroke();
-        }
-
         // Very tired eyes
         ctx.fillStyle = "#fff";
         ctx.beginPath();
@@ -2283,7 +2454,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Heavy dark circles
         ctx.fillStyle = "rgba(80, 60, 100, 0.5)";
         ctx.beginPath();
@@ -2306,8 +2476,7 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
-        // Large coffee cup
+        // Coffee cup
         ctx.fillStyle = "#fff";
         ctx.fillRect(
           cx + 9 * scale,
@@ -2324,10 +2493,8 @@ export const EnemySprite: React.FC<{
         );
         break;
       }
-
       case "professor": {
         // Distinguished professor with tweed
-        // Body (tweed jacket)
         ctx.fillStyle = "#6a5a4a";
         ctx.beginPath();
         ctx.moveTo(cx - 9 * scale, cy + 14 * scale - bounce);
@@ -2337,7 +2504,6 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 9 * scale, cy + 14 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Elbow patches
         ctx.fillStyle = "#8b7b6b";
         ctx.beginPath();
@@ -2360,7 +2526,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Bow tie
         ctx.fillStyle = "#dc2626";
         ctx.beginPath();
@@ -2375,13 +2540,11 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 3 * scale, cy - 4 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Gray hair (balding)
         ctx.fillStyle = "#9a9a9a";
         ctx.beginPath();
@@ -2400,7 +2563,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Glasses
         ctx.strokeStyle = "#333";
         ctx.lineWidth = 1.3 * scale;
@@ -2422,7 +2584,6 @@ export const EnemySprite: React.FC<{
         ctx.moveTo(cx - 0.5 * scale, cy - 15 * scale - bounce);
         ctx.lineTo(cx + 0.5 * scale, cy - 15 * scale - bounce);
         ctx.stroke();
-
         // Eyes
         ctx.fillStyle = "#333";
         ctx.beginPath();
@@ -2441,7 +2602,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Stern mouth
         ctx.strokeStyle = "#8b6655";
         ctx.lineWidth = 1 * scale;
@@ -2451,10 +2611,8 @@ export const EnemySprite: React.FC<{
         ctx.stroke();
         break;
       }
-
       case "dean": {
-        // Important dean with robes and crown
-        // Body (formal robes)
+        // Important dean with robes
         const robeGrad = ctx.createLinearGradient(
           cx - 10 * scale,
           cy,
@@ -2473,18 +2631,14 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 10 * scale, cy + 14 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
-        // Gold trim
         ctx.strokeStyle = "#ffd700";
         ctx.lineWidth = 1.5 * scale;
         ctx.stroke();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Silver hair
         ctx.fillStyle = "#c0c0c0";
         ctx.beginPath();
@@ -2498,7 +2652,6 @@ export const EnemySprite: React.FC<{
           Math.PI
         );
         ctx.fill();
-
         // Crown
         ctx.fillStyle = "#ffd700";
         ctx.shadowColor = "#ffd700";
@@ -2514,13 +2667,11 @@ export const EnemySprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-
         // Jewel
         ctx.fillStyle = "#ff0000";
         ctx.beginPath();
         ctx.arc(cx, cy - 23.5 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Stern eyes
         ctx.fillStyle = "#333";
         ctx.beginPath();
@@ -2543,7 +2694,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Disapproving frown
         ctx.strokeStyle = "#8b6655";
         ctx.lineWidth = 1.2 * scale;
@@ -2558,10 +2708,8 @@ export const EnemySprite: React.FC<{
         ctx.stroke();
         break;
       }
-
       case "trustee": {
         // Wealthy trustee with top hat
-        // Body (fine suit)
         ctx.fillStyle = "#1a1a1a";
         ctx.beginPath();
         ctx.moveTo(cx - 9 * scale, cy + 14 * scale - bounce);
@@ -2571,7 +2719,6 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 9 * scale, cy + 14 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Gold vest
         ctx.fillStyle = "#daa520";
         ctx.beginPath();
@@ -2581,13 +2728,11 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 8 * scale - bounce);
         ctx.closePath();
         ctx.fill();
-
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
         ctx.arc(cx, cy - 14 * scale - bounce, 7 * scale, 0, Math.PI * 2);
         ctx.fill();
-
         // Top hat
         ctx.fillStyle = "#1a1a1a";
         ctx.fillRect(
@@ -2610,7 +2755,6 @@ export const EnemySprite: React.FC<{
           12 * scale,
           2 * scale
         );
-
         // Monocle
         ctx.strokeStyle = "#ffd700";
         ctx.lineWidth = 1.2 * scale;
@@ -2625,7 +2769,6 @@ export const EnemySprite: React.FC<{
         ctx.moveTo(cx + 6.5 * scale, cy - 15 * scale - bounce);
         ctx.lineTo(cx + 10 * scale, cy - 10 * scale - bounce);
         ctx.stroke();
-
         // Eyes
         ctx.fillStyle = "#333";
         ctx.beginPath();
@@ -2644,7 +2787,6 @@ export const EnemySprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-
         // Mustache
         ctx.fillStyle = "#4a4a4a";
         ctx.beginPath();
@@ -2673,38 +2815,31 @@ export const EnemySprite: React.FC<{
       }
     }
   }, [type, size, time, animated]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
-
 // =============================================================================
 // REGION/MAP ICONS
 // =============================================================================
 export type RegionType = "grassland" | "desert" | "winter" | "volcanic";
-
 export const RegionIcon: React.FC<{
   type: RegionType;
   size?: number;
   locked?: boolean;
 }> = ({ type, size = 60, locked = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 60;
-
     let bgColor = "#4a7c59";
     switch (type) {
       case "grassland":
@@ -2720,7 +2855,6 @@ export const RegionIcon: React.FC<{
         bgColor = "#8b3a3a";
         break;
     }
-
     ctx.fillStyle = locked ? "#4a4a4a" : bgColor;
     ctx.beginPath();
     ctx.arc(cx, cy, 26 * scale, 0, Math.PI * 2);
@@ -2728,7 +2862,6 @@ export const RegionIcon: React.FC<{
     ctx.strokeStyle = locked ? "#333" : darkenColor(bgColor, 30);
     ctx.lineWidth = 3 * scale;
     ctx.stroke();
-
     if (locked) {
       ctx.fillStyle = "#666";
       ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 16 * scale, 14 * scale);
@@ -2743,7 +2876,6 @@ export const RegionIcon: React.FC<{
       ctx.fill();
       return;
     }
-
     switch (type) {
       case "grassland":
         ctx.fillStyle = "#5d4037";
@@ -2814,45 +2946,37 @@ export const RegionIcon: React.FC<{
         break;
     }
   }, [type, size, locked]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
-
 // =============================================================================
 // ANIMATED DECORATIVE SPRITES
 // =============================================================================
 export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
-
   useEffect(() => {
     const interval = setInterval(() => setTime((t) => t + 1), 50);
     return () => clearInterval(interval);
   }, []);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
-
     const cx = size / 2;
     const cy = size / 2 + 20;
     const scale = size / 200;
     const t = time * 0.1;
-
     // Ground shadow
     ctx.fillStyle = "rgba(0,0,0,0.3)";
     ctx.beginPath();
     ctx.ellipse(cx, cy + 60 * scale, 80 * scale, 25 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-
     // Main castle base
     const baseGrad = ctx.createLinearGradient(
       cx - 60 * scale,
@@ -2871,11 +2995,9 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     ctx.lineTo(cx + 70 * scale, cy + 50 * scale);
     ctx.closePath();
     ctx.fill();
-
     // Castle wall detail
     ctx.fillStyle = "#3a2a1a";
     ctx.fillRect(cx - 50 * scale, cy - 10 * scale, 100 * scale, 60 * scale);
-
     // Main gate
     ctx.fillStyle = "#1a0a00";
     ctx.beginPath();
@@ -2885,7 +3007,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     ctx.lineTo(cx + 20 * scale, cy + 50 * scale);
     ctx.closePath();
     ctx.fill();
-
     // Draw towers
     const drawTowerFn = (x: number, y: number, w: number, h: number) => {
       const towerGrad = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
@@ -2908,11 +3029,9 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
       ctx.closePath();
       ctx.fill();
     };
-
     drawTowerFn(cx - 55 * scale, cy - 20 * scale, 30 * scale, 80 * scale);
     drawTowerFn(cx + 55 * scale, cy - 20 * scale, 30 * scale, 80 * scale);
     drawTowerFn(cx, cy - 50 * scale, 35 * scale, 100 * scale);
-
     // Windows with glow
     const windowGlow = 0.7 + Math.sin(t * 2) * 0.3;
     ctx.fillStyle = `rgba(255, 200, 100, ${windowGlow})`;
@@ -2923,7 +3042,6 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     ctx.fillRect(cx + 37 * scale, cy, 8 * scale, 12 * scale);
     ctx.fillRect(cx + 37 * scale, cy - 20 * scale, 8 * scale, 12 * scale);
     ctx.shadowBlur = 0;
-
     // Flags
     const drawFlagFn = (x: number, y: number, s: number, color: string) => {
       ctx.fillStyle = "#4a3020";
@@ -2945,69 +3063,56 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
       ctx.closePath();
       ctx.fill();
     };
-
     drawFlagFn(cx - 55 * scale, cy - 95 * scale, scale, "#ff6b35");
     drawFlagFn(cx + 55 * scale, cy - 95 * scale, scale, "#ff6b35");
     drawFlagFn(cx, cy - 145 * scale, scale * 1.3, "#ffd700");
   }, [size, time]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
-
 export const MarchingEnemies: React.FC<{ size?: number }> = ({
   size = 300,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [time, setTime] = useState(0);
-
   useEffect(() => {
     const interval = setInterval(() => setTime((t) => t + 1), 80);
     return () => clearInterval(interval);
   }, []);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = 60 * dpr;
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, 60);
-
     const t = time * 0.15;
     const colors = ["#ff6600", "#4a90d9", "#f5f5dc", "#2a2a4e", "#f0f0f0"];
-
     for (let i = 0; i < 8; i++) {
       const x = ((i * 45 + t * 30) % (size + 50)) - 25;
       const bounce = Math.abs(Math.sin(t * 2 + i)) * 5;
-
       // Shadow
       ctx.fillStyle = "rgba(0,0,0,0.3)";
       ctx.beginPath();
       ctx.ellipse(x, 50, 12, 4, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Body (shirt)
+      // Body
       ctx.fillStyle = colors[i % colors.length];
       ctx.beginPath();
       ctx.ellipse(x, 35 - bounce, 10, 14, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Head (skin tone)
+      // Head
       ctx.fillStyle = "#ffe0bd";
       ctx.beginPath();
       ctx.arc(x, 18 - bounce, 8, 0, Math.PI * 2);
       ctx.fill();
-
       // Hair
       ctx.fillStyle = "#4a3728";
       ctx.beginPath();
       ctx.ellipse(x, 12 - bounce, 6, 3, 0, 0, Math.PI * 2);
       ctx.fill();
-
       // Eyes
       ctx.fillStyle = "#333";
       ctx.beginPath();
@@ -3016,6 +3121,5 @@ export const MarchingEnemies: React.FC<{ size?: number }> = ({
       ctx.fill();
     }
   }, [size, time]);
-
   return <canvas ref={canvasRef} style={{ width: size, height: 60 }} />;
 };

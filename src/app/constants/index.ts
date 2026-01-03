@@ -24,6 +24,7 @@ export const TOWER_DATA: Record<
   TowerType,
   {
     name: string;
+    icon: string;
     cost: number;
     damage: number;
     range: number;
@@ -39,6 +40,7 @@ export const TOWER_DATA: Record<
 > = {
   station: {
     name: "Dinky Station",
+    icon: "🚂",
     cost: 200,
     damage: 0,
     range: 0,
@@ -66,6 +68,7 @@ export const TOWER_DATA: Record<
   },
   cannon: {
     name: "Nassau Cannon",
+    icon: "💣",
     cost: 100,
     damage: 40,
     range: 240,
@@ -92,6 +95,7 @@ export const TOWER_DATA: Record<
   },
   library: {
     name: "Firestone Library",
+    icon: "📚",
     cost: 80,
     damage: 0,
     range: 220,
@@ -118,6 +122,7 @@ export const TOWER_DATA: Record<
   },
   lab: {
     name: "E-Quad Lab",
+    icon: "⚗️",
     cost: 120,
     damage: 25,
     range: 200,
@@ -144,6 +149,7 @@ export const TOWER_DATA: Record<
   },
   arch: {
     name: "Blair Arch",
+    icon: "🏛️",
     cost: 90,
     damage: 15,
     range: 260,
@@ -170,6 +176,7 @@ export const TOWER_DATA: Record<
   },
   club: {
     name: "Eating Club",
+    icon: "🏦",
     cost: 150,
     damage: 0,
     range: 0,
@@ -348,97 +355,140 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
 export const HERO_DATA: Record<HeroType, HeroData> = {
   tiger: {
     name: "Tiger",
+    icon: "🐯",
+    description:
+      "The fearsome Princeton Tiger - an apex predator with devastating claw attacks and a terrifying roar that freezes enemies in fear.",
     hp: 2500,
     damage: 80,
     range: 120,
     attackSpeed: 600,
     speed: 3.5,
-    ability: "Roar",
-    abilityDesc: "Stuns nearby enemy for 3s",
+    ability: "Mighty Roar",
+    abilityDesc: "Stuns all enemies in range for 3s with fear effect",
     color: "#f97316",
   },
   tenor: {
     name: "Tenor",
+    icon: "🎵",
+    description:
+      "A virtuoso vocalist whose voice is a weapon. The Tenor's sonic attacks pierce through even the toughest armor.",
     hp: 1800,
     damage: 60,
-    range: 180,
+    range: 250,
     attackSpeed: 450,
     speed: 2.5,
     ability: "High Note",
-    abilityDesc: "AoE damage and brief stun",
+    abilityDesc: "Devastating sonic blast stuns enemies in huge radius",
     color: "#8b5cf6",
   },
   mathey: {
     name: "Mathey Knight",
+    icon: "🛡️",
+    description:
+      "An elite defender from Mathey College, clad in enchanted armor. Draws enemy aggression and protects allies.",
     hp: 3500,
     damage: 70,
     range: 80,
     attackSpeed: 800,
     speed: 2,
-    ability: "Shield Wall",
-    abilityDesc: "Blocks all damage for 3s",
+    ability: "Fortress Shield",
+    abilityDesc: "Invincible for 5s and taunts all nearby enemies",
     color: "#6366f1",
   },
   rocky: {
     name: "Rocky",
+    icon: "🪨",
+    description:
+      "A legendary gargoyle awakened from the campus rooftops. Hurls massive boulders that devastate enemy formations.",
     hp: 2200,
     damage: 90,
-    range: 150,
+    range: 180,
     attackSpeed: 700,
     speed: 2.8,
-    ability: "Boulder Throw",
-    abilityDesc: "Throws rock dealing AoE damage",
+    ability: "Meteor Strike",
+    abilityDesc: "Throws massive boulder dealing huge AoE damage",
     color: "#78716c",
   },
   scott: {
     name: "F. Scott",
+    icon: "📖",
+    description:
+      "The ghost of F. Scott Fitzgerald inspires defenders with literary brilliance, boosting their combat effectiveness.",
     hp: 1500,
     damage: 50,
     range: 200,
     attackSpeed: 400,
     speed: 3.2,
     ability: "Inspiration",
-    abilityDesc: "Boosts all tower damage for 5s",
+    abilityDesc: "Boosts all tower damage by 50% for 8s",
     color: "#14b8a6",
+  },
+  captain: {
+    name: "Captain",
+    icon: "⚔️",
+    description:
+      "A legendary military commander who leads troops into battle. Rallies reinforcements with an inspiring battle cry.",
+    hp: 2800,
+    damage: 65,
+    range: 100,
+    attackSpeed: 650,
+    speed: 2.5,
+    ability: "Rally Knights",
+    abilityDesc: "Summons 3 reinforcement knights to fight",
+    color: "#dc2626",
+  },
+  engineer: {
+    name: "Engineer",
+    icon: "🔧",
+    description:
+      "A brilliant inventor from E-Quad. Deploys automated turrets and uses advanced technology to defend.",
+    hp: 1600,
+    damage: 40,
+    range: 150,
+    attackSpeed: 500,
+    speed: 3.0,
+    ability: "Deploy Turret",
+    abilityDesc: "Deploys a defensive turret that attacks enemies",
+    color: "#eab308",
   },
 };
 
 // Spell data
 export const SPELL_DATA: Record<SpellType, SpellData> = {
   fireball: {
-    name: "Fireball",
+    name: "Meteor Strike",
     cost: 50,
     cooldown: 15000,
-    desc: "Deals 150 AoE damage",
-    icon: "flame",
+    desc: "Calls down a meteor dealing 200 AoE damage with falloff",
+    icon: "☄️",
   },
   lightning: {
-    name: "Lightning",
+    name: "Chain Lightning",
     cost: 40,
     cooldown: 12000,
-    desc: "Chains to 3 enemies for 200 damage each",
-    icon: "zap",
+    desc: "Chains to 5 enemies, 600 total damage with stun",
+    icon: "⚡",
   },
   freeze: {
-    name: "Freeze",
+    name: "Arctic Blast",
     cost: 60,
     cooldown: 20000,
-    desc: "Freezes all enemies for 3s",
-    icon: "snowflake",
+    desc: "Freezes ALL enemies for 3 seconds",
+    icon: "❄️",
   },
   payday: {
-    name: "Payday",
+    name: "Gold Rush",
     cost: 0,
     cooldown: 30000,
-    desc: "Grants 100 Paw Points",
-    icon: "coins",
+    desc: "Grants 80+ Paw Points (bonus per enemy)",
+    icon: "💰",
   },
   reinforcements: {
-    name: "Reinforcements",
+    name: "Knight Squad",
     cost: 75,
     cooldown: 25000,
-    desc: "Summons 3 knight troops anywhere",
-    icon: "users",
+    desc: "Summons 3 armored knights to the battlefield",
+    icon: "🏇",
   },
 };
 
@@ -1569,6 +1619,8 @@ export const HERO_OPTIONS: HeroType[] = [
   "mathey",
   "rocky",
   "scott",
+  "captain",
+  "engineer",
 ];
 
 // Spell options for selection
@@ -1594,11 +1646,13 @@ export const MAX_STATION_TROOPS = 3;
 
 // Hero ability cooldowns
 export const HERO_ABILITY_COOLDOWNS: Record<HeroType, number> = {
-  tiger: 20000,
-  tenor: 15000,
-  mathey: 25000,
-  rocky: 18000,
-  scott: 30000,
+  tiger: 18000,
+  tenor: 12000,
+  mathey: 22000,
+  rocky: 15000,
+  scott: 25000,
+  captain: 30000,
+  engineer: 35000,
 };
 
 // Particle colors
