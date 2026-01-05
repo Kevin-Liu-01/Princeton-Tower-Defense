@@ -19,7 +19,58 @@ export function useLocalStorage<T>(
     }
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      if (!item) return initialValue;
+
+      const parsed = JSON.parse(item);
+
+      // For game progress, merge with defaults to ensure all keys exist
+      if (
+        key === "princeton-td-progress" &&
+        typeof initialValue === "object" &&
+        initialValue !== null
+      ) {
+        const defaults = initialValue as GameProgress;
+        const loaded = parsed as GameProgress;
+
+        // Ensure loaded.levelStars is an object
+        const loadedStars =
+          loaded &&
+          typeof loaded.levelStars === "object" &&
+          loaded.levelStars !== null
+            ? loaded.levelStars
+            : {};
+
+        // Merge levelStars with defaults, preferring loaded values when they're numbers > 0
+        const mergedLevelStars: Record<string, number> = {
+          ...defaults.levelStars,
+        };
+        for (const [levelId, stars] of Object.entries(loadedStars)) {
+          if (typeof stars === "number" && stars >= 0) {
+            mergedLevelStars[levelId] = stars;
+          }
+        }
+
+        // Ensure unlockedMaps is an array
+        const loadedMaps = Array.isArray(loaded?.unlockedMaps)
+          ? loaded.unlockedMaps
+          : [];
+        const mergedMaps = [
+          ...new Set([...defaults.unlockedMaps, ...loadedMaps]),
+        ];
+
+        return {
+          ...defaults,
+          ...loaded,
+          unlockedMaps: mergedMaps,
+          levelStars: mergedLevelStars,
+          totalStarsEarned: Object.values(mergedLevelStars).reduce(
+            (a, b) => a + b,
+            0
+          ),
+        } as T;
+      }
+
+      return parsed;
     } catch (error) {
       console.warn(`Error reading localStorage key "${key}":`, error);
       return initialValue;
@@ -31,18 +82,19 @@ export function useLocalStorage<T>(
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
       try {
-        // Allow value to be a function so we have same API as useState
-        const valueToStore =
-          value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore));
-        }
+        // Use functional update to avoid stale closure issues
+        setStoredValue((prev) => {
+          const valueToStore = value instanceof Function ? value(prev) : value;
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(key, JSON.stringify(valueToStore));
+          }
+          return valueToStore;
+        });
       } catch (error) {
         console.warn(`Error setting localStorage key "${key}":`, error);
       }
     },
-    [key, storedValue]
+    [key]
   );
 
   // Listen for changes to this key in other tabs/windows
@@ -114,22 +166,32 @@ export function useGameProgress() {
   // Update stars for a level (only if higher than current)
   const updateLevelStars = useCallback(
     (levelId: string, stars: number) => {
-      setProgress((prev) => {
-        const currentStars = prev.levelStars[levelId] || 0;
-        if (stars <= currentStars) return prev;
+      if (!levelId || stars < 1) return; // Guard against invalid inputs
 
-        const newLevelStars = { ...prev.levelStars, [levelId]: stars };
+      setProgress((prev) => {
+        // Ensure levelStars object exists
+        const currentLevelStars = prev.levelStars || {};
+        const currentStars = currentLevelStars[levelId] ?? 0; // Use nullish coalescing
+
+        // Only update if new stars are higher
+        if (stars <= currentStars) {
+          return prev;
+        }
+
+        const newLevelStars = { ...currentLevelStars, [levelId]: stars };
         const totalStars = Object.values(newLevelStars).reduce(
           (a, b) => a + b,
           0
         );
 
-        return {
+        const newProgress = {
           ...prev,
           levelStars: newLevelStars,
           totalStarsEarned: totalStars,
           lastPlayedLevel: levelId,
         };
+
+        return newProgress;
       });
     },
     [setProgress]

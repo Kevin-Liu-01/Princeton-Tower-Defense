@@ -63,7 +63,8 @@ export type TroopType =
   | "centaur"
   | "cavalry"
   | "thesis"
-  | "rowing";
+  | "rowing"
+  | "turret";
 
 // Tower upgrade paths
 export type TowerUpgrade = "A" | "B";
@@ -332,6 +333,7 @@ export interface TroopData {
   isMounted?: boolean;
   isRanged?: boolean;
   range?: number;
+  isStationary?: boolean; // For turrets that cannot move
 }
 
 // Tower dragging state

@@ -1015,8 +1015,12 @@ export default function PrincetonTowerDefense() {
         // Second pass: update positions with sight-based engagement
         return prev.map((troop) => {
           const updated = { ...troop };
+          if (!troop.type) return updated; // Skip troops without type
           const troopData = TROOP_DATA[troop.type];
+          if (!troopData) return updated; // Skip if no troop data
+
           const isRanged = troopData.isRanged;
+          const isStationary = troopData.isStationary || troop.moveRadius === 0; // Turrets can't move
           const attackRange = isRanged ? troopData.range || 150 : MELEE_RANGE;
           const sightRange = isRanged
             ? TROOP_RANGED_SIGHT_RANGE
@@ -1059,7 +1063,14 @@ export default function PrincetonTowerDefense() {
             const effectiveAttackRange =
               isRanged && closestDist > MELEE_RANGE ? attackRange : MELEE_RANGE;
 
-            if (closestDist > effectiveAttackRange && !wouldBeTooFar) {
+            // Stationary units (turrets) never move - they just rotate to face enemies
+            if (isStationary) {
+              // Just face the enemy but don't move
+              const dx = enemyPos.x - troop.pos.x;
+              const dy = enemyPos.y - troop.pos.y;
+              updated.rotation = Math.atan2(dy, dx);
+              updated.engaging = closestDist <= attackRange;
+            } else if (closestDist > effectiveAttackRange && !wouldBeTooFar) {
               // Enemy in sight but out of attack range - move toward it
               const dx = enemyPos.x - troop.pos.x;
               const dy = enemyPos.y - troop.pos.y;
@@ -1113,10 +1124,10 @@ export default function PrincetonTowerDefense() {
               updated.engaging = false; // Will return home
             }
           } else {
-            // No enemy in sight - return home if not there
+            // No enemy in sight - return home if not there (unless stationary)
             updated.engaging = false;
 
-            if (homePos) {
+            if (homePos && !isStationary) {
               const dx = homePos.x - troop.pos.x;
               const dy = homePos.y - troop.pos.y;
               const distToHome = Math.sqrt(dx * dx + dy * dy);
@@ -1141,9 +1152,9 @@ export default function PrincetonTowerDefense() {
             }
           }
 
-          // Apply separation force (only when not actively engaging)
+          // Apply separation force (only when not actively engaging and not stationary)
           const force = separationForces.get(troop.id);
-          if (force && !updated.engaging && !updated.moving) {
+          if (force && !updated.engaging && !updated.moving && !isStationary) {
             updated.pos = {
               x: updated.pos.x + force.x * deltaTime * 0.1,
               y: updated.pos.y + force.y * deltaTime * 0.1,
@@ -1159,8 +1170,13 @@ export default function PrincetonTowerDefense() {
             );
           }
 
-          // Handle player-commanded movement (overrides engagement)
-          if (troop.moving && troop.targetPos && !updated.engaging) {
+          // Handle player-commanded movement (overrides engagement, but not for stationary)
+          if (
+            troop.moving &&
+            troop.targetPos &&
+            !updated.engaging &&
+            !isStationary
+          ) {
             const dx = troop.targetPos.x - updated.pos.x;
             const dy = troop.targetPos.y - updated.pos.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -2175,12 +2191,18 @@ export default function PrincetonTowerDefense() {
             : null
         );
       }
-      // Troop attacks - with ranged support for centaurs
+      // Troop attacks - with ranged support for centaurs and turrets
       troops.forEach((troop) => {
+        if (!troop.type) return; // Skip troops without a type
         const troopData = TROOP_DATA[troop.type];
+        if (!troopData) return; // Skip if troop data not found
         const attackRange = troopData.isRanged ? troopData.range || 150 : 65;
         const attackCooldown = troopData.attackSpeed || 1000;
-        if (troop.attackAnim === 0 && now - troop.lastAttack > attackCooldown) {
+        const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
+        if (
+          (troop.attackAnim ?? 0) === 0 &&
+          now - lastAttack > attackCooldown
+        ) {
           const validEnemies = enemies.filter(
             (e) =>
               distance(troop.pos, getEnemyPosition(e, selectedMap)) <=
@@ -2220,8 +2242,9 @@ export default function PrincetonTowerDefense() {
                 })
                 .filter(Boolean)
             );
-            // For ranged troops (centaurs), create a spear projectile visual
+            // For ranged troops (centaurs/turrets), create a projectile visual
             if (troopData.isRanged) {
+              const projType = troop.type === "turret" ? "bullet" : "spear";
               setProjectiles((prev) => [
                 ...prev,
                 {
@@ -2229,7 +2252,7 @@ export default function PrincetonTowerDefense() {
                   from: troop.pos,
                   to: targetPos,
                   progress: 0,
-                  type: "spear",
+                  type: projType,
                   rotation,
                 },
               ]);
@@ -2340,11 +2363,10 @@ export default function PrincetonTowerDefense() {
         // IMPORTANT: Set game state first to prevent duplicate triggers
         setGameState("victory");
 
-        // Save progress to localStorage (stars are always saved, even on first win)
-        // Using setTimeout to ensure state update completes first
-        setTimeout(() => {
-          updateLevelStars(selectedMap, stars);
-        }, 0);
+        // Save progress to localStorage immediately (no setTimeout to avoid stale closure issues)
+        // Using the captured selectedMap value directly
+        const mapToSave = selectedMap;
+        updateLevelStars(mapToSave, stars);
 
         // Level unlock progression
         const unlockMap: Record<string, string> = {
@@ -2360,7 +2382,7 @@ export default function PrincetonTowerDefense() {
           lava: "crater",
           crater: "throne",
         };
-        const nextLevel = unlockMap[selectedMap];
+        const nextLevel = unlockMap[mapToSave];
         if (nextLevel && !unlockedMaps.includes(nextLevel)) {
           unlockLevel(nextLevel);
         }
@@ -4980,8 +5002,9 @@ export default function PrincetonTowerDefense() {
       }
 
       case "captain": {
-        // RALLY KNIGHTS - Summon 3 reinforcement knights
-        const knightHP = TROOP_DATA.knight.hp;
+        // RALLY KNIGHTS - Summon 3 reinforcement knights (weaker summoned version)
+        // Captain's summoned knights are weaker than Dinky Station knights
+        const summonedKnightHP = 350; // Reduced from 800
         const knightOffsets = [
           { x: -30, y: -20 },
           { x: 30, y: -20 },
@@ -4990,17 +5013,20 @@ export default function PrincetonTowerDefense() {
         const newTroops: Troop[] = knightOffsets.map((offset, i) => ({
           id: generateId("troop"),
           ownerId: hero.id,
-          type: "knight",
+          type: "knight" as TroopType,
           pos: { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y },
-          hp: knightHP,
-          maxHp: knightHP,
+          hp: summonedKnightHP,
+          maxHp: summonedKnightHP,
           moving: false,
-          targetPos: null,
+          targetPos: undefined,
           targetEnemy: null,
           rallyPoint: null,
           selected: false,
-          attackCooldown: 0,
+          lastAttack: 0, // IMPORTANT: Initialize for attack timing
+          rotation: 0, // IMPORTANT: Initialize rotation
           attackAnim: 0,
+          spawnPoint: { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y },
+          moveRadius: 150, // Allow knights to roam and engage enemies
         }));
         setTroops((prev) => [...prev, ...newTroops]);
         // Create summon effect
@@ -5020,22 +5046,29 @@ export default function PrincetonTowerDefense() {
       }
 
       case "engineer": {
-        // DEPLOY TURRET - Create a temporary defensive turret
+        // DEPLOY TURRET - Create a stationary defense turret (as a troop, not a tower)
+        // The turret is a fixed-position ranged unit that can be destroyed by enemies
         const turretPos = { x: hero.pos.x + 40, y: hero.pos.y };
-        const newTower: Tower = {
+        const turretHP = 400;
+        const newTurret: Troop = {
           id: generateId("turret"),
-          type: "cannon",
-          pos: {
-            x: Math.floor(turretPos.x / TILE_SIZE),
-            y: Math.floor(turretPos.y / TILE_SIZE),
-          },
-          level: 2,
+          ownerId: hero.id,
+          type: "turret" as TroopType,
+          pos: turretPos,
+          hp: turretHP,
+          maxHp: turretHP,
+          moving: false, // Turret doesn't move
+          targetPos: undefined,
+          targetEnemy: null,
+          rallyPoint: null,
+          selected: false,
           lastAttack: 0,
           rotation: 0,
-          temporary: true,
-          expireTime: Date.now() + 20000, // 20 second duration
+          attackAnim: 0,
+          spawnPoint: turretPos, // Fixed position
+          moveRadius: 0, // Cannot move at all
         };
-        setTowers((prev) => [...prev, newTower]);
+        setTroops((prev) => [...prev, newTurret]);
         // Create deploy effect
         setEffects((ef) => [
           ...ef,

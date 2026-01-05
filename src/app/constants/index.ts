@@ -520,9 +520,9 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   knight: {
     name: "Knight",
-    hp: 800,
-    damage: 40,
-    attackSpeed: 900,
+    hp: 500, // Reduced from 800 - still strong but not overpowered
+    damage: 30, // Reduced from 40
+    attackSpeed: 1000, // Slightly slower
     desc: "Elite warrior",
     color: "#c0c0c0",
   },
@@ -561,6 +561,17 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
     attackSpeed: 1000,
     desc: "Tanky unit that can take hits",
     color: "#f97316",
+  },
+  turret: {
+    name: "Defense Turret",
+    hp: 400,
+    damage: 35,
+    attackSpeed: 800,
+    desc: "Stationary defense emplacement",
+    color: "#f59e0b",
+    isRanged: true,
+    range: 140,
+    isStationary: true, // Custom flag for turret behavior
   },
 };
 
@@ -808,7 +819,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
-    previewImage: "/images/previews/poe.png",
+    previewImage: "/previews/poe.png",
   },
   carnegie: {
     name: "Carnegie Lake",
@@ -818,7 +829,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 2,
-    previewImage: "/images/previews/carnegie.png",
+    previewImage: "/previews/carnegie.png",
   },
   nassau: {
     name: "Nassau Hall",
@@ -828,7 +839,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    previewImage: "/images/previews/nassau.png",
+    previewImage: "/previews/nassau.png",
   },
   // =====================
   // DESERT REGION
@@ -841,7 +852,7 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 1,
-    previewImage: "/images/previews/oasis.png",
+    previewImage: "/previews/oasis.png",
   },
   pyramid: {
     name: "Pyramid Pass",
@@ -851,7 +862,7 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 2,
-    previewImage: "/images/previews/pyramid.png",
+    previewImage: "/previews/pyramid.png",
   },
   sphinx: {
     name: "Sphinx Gate",
@@ -861,7 +872,7 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 3,
-    previewImage: "/images/previews/sphinx.png",
+    previewImage: "/previews/sphinx.png",
   },
   // =====================
   // WINTER REGION
@@ -874,7 +885,7 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 1,
-    previewImage: "/images/previews/glacier.png",
+    previewImage: "/previews/glacier.png",
   },
   fortress: {
     name: "Frost Fortress",
@@ -884,7 +895,7 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 2,
-    previewImage: "/images/previews/fortress.png",
+    previewImage: "/previews/fortress.png",
   },
   peak: {
     name: "Summit Peak",
@@ -894,7 +905,7 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 3,
-    previewImage: "/images/previews/peak.png",
+    previewImage: "/previews/peak.png",
   },
   // =====================
   // VOLCANIC REGION
@@ -907,7 +918,7 @@ export const LEVEL_DATA: Record<
     region: "volcanic",
     theme: "volcanic",
     difficulty: 2,
-    previewImage: "/images/previews/lava.png",
+    previewImage: "/previews/lava.png",
   },
   crater: {
     name: "Caldera Basin",
@@ -917,7 +928,7 @@ export const LEVEL_DATA: Record<
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
-    previewImage: "/images/previews/crater.png",
+    previewImage: "/previews/crater.png",
   },
   throne: {
     name: "Obsidian Throne",
@@ -927,7 +938,7 @@ export const LEVEL_DATA: Record<
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
-    previewImage: "/images/previews/throne.png",
+    previewImage: "/previews/throne.png",
   },
 };
 
