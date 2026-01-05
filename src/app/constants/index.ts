@@ -819,7 +819,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
-    previewImage: "/previews/poe.png",
+    previewImage: "/images/previews/poe.png",
   },
   carnegie: {
     name: "Carnegie Lake",
@@ -829,7 +829,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 2,
-    previewImage: "/previews/carnegie.png",
+    previewImage: "/images/previews/carnegie.png",
   },
   nassau: {
     name: "Nassau Hall",
@@ -839,7 +839,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    previewImage: "/previews/nassau.png",
+    previewImage: "/images/previews/nassau.png",
   },
   // =====================
   // DESERT REGION
@@ -852,7 +852,7 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 1,
-    previewImage: "/previews/oasis.png",
+    previewImage: "/images/previews/oasis.png",
   },
   pyramid: {
     name: "Pyramid Pass",
@@ -862,7 +862,7 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 2,
-    previewImage: "/previews/pyramid.png",
+    previewImage: "/images/previews/pyramid.png",
   },
   sphinx: {
     name: "Sphinx Gate",
@@ -872,7 +872,7 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 3,
-    previewImage: "/previews/sphinx.png",
+    previewImage: "/images/previews/sphinx.png",
   },
   // =====================
   // WINTER REGION
@@ -885,7 +885,7 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 1,
-    previewImage: "/previews/glacier.png",
+    previewImage: "/images/previews/glacier.png",
   },
   fortress: {
     name: "Frost Fortress",
@@ -895,7 +895,7 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 2,
-    previewImage: "/previews/fortress.png",
+    previewImage: "/images/previews/fortress.png",
   },
   peak: {
     name: "Summit Peak",
@@ -905,7 +905,7 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 3,
-    previewImage: "/previews/peak.png",
+    previewImage: "/images/previews/peak.png",
   },
   // =====================
   // VOLCANIC REGION
@@ -918,7 +918,7 @@ export const LEVEL_DATA: Record<
     region: "volcanic",
     theme: "volcanic",
     difficulty: 2,
-    previewImage: "/previews/lava.png",
+    previewImage: "/images/previews/lava.png",
   },
   crater: {
     name: "Caldera Basin",
@@ -928,7 +928,7 @@ export const LEVEL_DATA: Record<
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
-    previewImage: "/previews/crater.png",
+    previewImage: "/images/previews/crater.png",
   },
   throne: {
     name: "Obsidian Throne",
@@ -938,7 +938,7 @@ export const LEVEL_DATA: Record<
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
-    previewImage: "/previews/throne.png",
+    previewImage: "/images/previews/throne.png",
   },
 };
 
