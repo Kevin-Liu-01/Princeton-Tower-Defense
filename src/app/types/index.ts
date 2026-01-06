@@ -34,7 +34,17 @@ export type EnemyType =
   | "mascot"
   | "archer"
   | "mage"
-  | "catapult";
+  | "catapult"
+  | "warlock"
+  | "crossbowman"
+  | "hexer"
+  | "harpy"
+  | "wyvern"
+  | "specter"
+  | "berserker"
+  | "golem"
+  | "necromancer"
+  | "shadow_knight";
 
 // Hero types
 export type HeroType =
@@ -311,6 +321,7 @@ export interface HeroData {
   color: string;
   icon: string;
   description: string;
+  isRanged?: boolean;
 }
 
 // Spell data definition

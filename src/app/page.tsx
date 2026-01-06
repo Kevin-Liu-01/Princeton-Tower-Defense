@@ -701,8 +701,9 @@ export default function PrincetonTowerDefense() {
                 damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
               };
             }
-            // Ranged enemy attacks
+            // Ranged enemy attacks - they stop and attack when target in range
             const enemyData = ENEMY_DATA[enemy.type];
+            let isAttackingRanged = false;
             if (
               enemyData.isRanged &&
               enemyData.range &&
@@ -733,38 +734,51 @@ export default function PrincetonTowerDefense() {
                   };
                 }
               }
-              if (
-                rangedTarget &&
-                now - enemy.lastRangedAttack > enemyData.attackSpeed
-              ) {
-                // Create projectile
-                const projType =
-                  enemy.type === "mage"
-                    ? "magicBolt"
-                    : enemy.type === "catapult"
-                    ? "rock"
-                    : "arrow";
-                setProjectiles((proj) => [
-                  ...proj,
-                  {
-                    id: generateId("eproj"),
-                    from: { x: enemyPos.x, y: enemyPos.y - 15 },
-                    to: rangedTarget!.pos,
-                    progress: 0,
-                    type: projType,
-                    rotation: Math.atan2(
-                      rangedTarget!.pos.y - enemyPos.y,
-                      rangedTarget!.pos.x - enemyPos.x
-                    ),
-                    damage: enemyData.projectileDamage || 15,
-                    targetType: rangedTarget!.type,
-                    targetId: rangedTarget!.id,
-                  },
-                ]);
+
+              // If ranged enemy has a target in range, stop and attack
+              if (rangedTarget) {
+                isAttackingRanged = true;
+
+                if (now - enemy.lastRangedAttack > enemyData.attackSpeed) {
+                  // Create projectile
+                  const projType =
+                    enemy.type === "mage" ||
+                    enemy.type === "warlock" ||
+                    enemy.type === "hexer" ||
+                    enemy.type === "necromancer"
+                      ? "magicBolt"
+                      : enemy.type === "catapult"
+                      ? "rock"
+                      : "arrow";
+                  setProjectiles((proj) => [
+                    ...proj,
+                    {
+                      id: generateId("eproj"),
+                      from: { x: enemyPos.x, y: enemyPos.y - 15 },
+                      to: rangedTarget!.pos,
+                      progress: 0,
+                      type: projType,
+                      rotation: Math.atan2(
+                        rangedTarget!.pos.y - enemyPos.y,
+                        rangedTarget!.pos.x - enemyPos.x
+                      ),
+                      damage: enemyData.projectileDamage || 15,
+                      targetType: rangedTarget!.type,
+                      targetId: rangedTarget!.id,
+                    },
+                  ]);
+                  return {
+                    ...enemy,
+                    lastRangedAttack: now,
+                    damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                    // Don't move - attacking from range
+                  };
+                }
+                // Has target but on cooldown - still stop and face target
                 return {
                   ...enemy,
-                  lastRangedAttack: now,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                  // Don't move - waiting for attack cooldown
                 };
               }
             }
@@ -854,8 +868,8 @@ export default function PrincetonTowerDefense() {
 
           const heroData = HERO_DATA[prev.type];
           const speed = heroData.speed;
-          const isRanged = prev.type === "rocky"; // Rocky is the ranged hero
-          const attackRange = isRanged ? 140 : MELEE_RANGE; // Rocky throws rocks from distance
+          const isRanged = heroData.isRanged || false; // Use isRanged from hero data
+          const attackRange = heroData.range; // Use the hero's actual range
           const sightRange = isRanged
             ? HERO_RANGED_SIGHT_RANGE
             : HERO_SIGHT_RANGE;
@@ -917,26 +931,58 @@ export default function PrincetonTowerDefense() {
             // Enemy in sight - engage!
             const enemyPos = getEnemyPosition(closestEnemy, selectedMap);
 
-            if (closestDist > attackRange) {
-              // Enemy in sight but out of attack range - move toward it
+            // Ranged heroes: stay at attack range and don't rush in
+            // Melee heroes: rush in to melee range
+            // Ranged heroes will switch to melee if enemy gets too close
+            const effectiveAttackRange = isRanged
+              ? closestDist <= MELEE_RANGE
+                ? MELEE_RANGE
+                : attackRange
+              : MELEE_RANGE;
+
+            if (closestDist > effectiveAttackRange) {
+              // Enemy in sight but out of attack range
+              // Melee heroes: always move toward enemy
+              // Ranged heroes: only move if enemy is beyond attack range
+              const shouldMove = !isRanged || closestDist > attackRange;
+
+              if (shouldMove) {
+                const dx = enemyPos.x - prev.pos.x;
+                const dy = enemyPos.y - prev.pos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // For ranged heroes, stop at attack range - 20 (safe distance)
+                // For melee heroes, get as close as possible
+                const targetDist = isRanged ? attackRange - 20 : MELEE_RANGE;
+                const moveRatio = Math.min(1, (dist - targetDist) / dist);
+
+                if (dist > 0 && moveRatio > 0) {
+                  const newX =
+                    prev.pos.x +
+                    ((dx / dist) * speed * deltaTime * moveRatio) / 16;
+                  const newY =
+                    prev.pos.y +
+                    ((dy / dist) * speed * deltaTime * moveRatio) / 16;
+                  const rotation = Math.atan2(dy, dx);
+                  return {
+                    ...prev,
+                    pos: { x: newX, y: newY },
+                    rotation,
+                    aggroTarget: closestEnemy.id,
+                    returning: false,
+                  };
+                }
+              }
+
+              // Ranged hero at attack range - face enemy but don't move
               const dx = enemyPos.x - prev.pos.x;
               const dy = enemyPos.y - prev.pos.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-
-              if (dist > 0) {
-                const newX =
-                  prev.pos.x + ((dx / dist) * speed * deltaTime) / 16;
-                const newY =
-                  prev.pos.y + ((dy / dist) * speed * deltaTime) / 16;
-                const rotation = Math.atan2(dy, dx);
-                return {
-                  ...prev,
-                  pos: { x: newX, y: newY },
-                  rotation,
-                  aggroTarget: closestEnemy.id,
-                  returning: false,
-                };
-              }
+              return {
+                ...prev,
+                rotation: Math.atan2(dy, dx),
+                aggroTarget: closestEnemy.id,
+                returning: false,
+              };
             } else {
               // Within attack range - face enemy but don't move
               const dx = enemyPos.x - prev.pos.x;
