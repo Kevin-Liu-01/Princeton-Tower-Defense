@@ -22,10 +22,9 @@ import {
   ArrowUp,
   Info,
   Timer,
-  Crosshair,
-  Users,
   Coins,
   Gauge,
+  ChevronLeft,
 } from "lucide-react";
 import type { GameState, LevelStars, HeroType, SpellType } from "../../types";
 import {
@@ -43,6 +42,7 @@ import {
   EnemySprite,
   SpellSprite,
 } from "../../sprites";
+import PrincetonTDLogo from "../ui/PrincetonTDLogo";
 
 // =============================================================================
 // LEVEL DATA
@@ -242,52 +242,7 @@ const PrincetonLogo: React.FC = () => {
           style={{ transform: `scale(${1 + Math.sin(pulse * 0.1) * 0.1})` }}
         />
       </div>
-      <div className="relative">
-        <svg viewBox="0 0 56 68" className="w-10 h-12 drop-shadow-2xl">
-          <defs>
-            <linearGradient id="shieldMain" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="30%" stopColor="#f59e0b" />
-              <stop offset="70%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#78350f" />
-            </linearGradient>
-            <linearGradient id="shieldInner" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1c1917" />
-              <stop offset="100%" stopColor="#292524" />
-            </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          <path
-            d="M28 3 L52 14 L52 38 C52 52 28 65 28 65 C28 65 4 52 4 38 L4 14 Z"
-            fill="url(#shieldMain)"
-            stroke="#fcd34d"
-            strokeWidth="2"
-            filter="url(#glow)"
-          />
-          <path
-            d="M28 10 L46 18 L46 36 C46 47 28 57 28 57 C28 57 10 47 10 36 L10 18 Z"
-            fill="url(#shieldInner)"
-          />
-          <text
-            x="28"
-            y="42"
-            textAnchor="middle"
-            fill="#f59e0b"
-            fontSize="28"
-            fontWeight="900"
-            fontFamily="serif"
-            filter="url(#glow)"
-          >
-            P
-          </text>
-        </svg>
-      </div>
+      <PrincetonTDLogo />
       <div className="relative flex flex-col">
         <span
           className="text-2xl font-black tracking-wider"
@@ -302,7 +257,7 @@ const PrincetonLogo: React.FC = () => {
         </span>
         <div className="flex items-center gap-2 -mt-0.5">
           <Swords size={14} className="text-orange-400" />
-          <span className="text-xs font-bold tracking-[0.3em] text-amber-500/90">
+          <span className="text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
             KINGDOM DEFENSE
           </span>
           <Swords
@@ -1405,7 +1360,6 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
 // =============================================================================
 
 interface WorldMapProps {
-  selectedMap: string;
   setSelectedMap: (map: string) => void;
   setGameState: (state: GameState) => void;
   levelStars: LevelStars;
@@ -1414,11 +1368,9 @@ interface WorldMapProps {
   setSelectedHero: (hero: HeroType | null) => void;
   selectedSpells: SpellType[];
   setSelectedSpells: (spells: SpellType[]) => void;
-  unlockLevel: (levelId: string) => void;
 }
 
 export const WorldMap: React.FC<WorldMapProps> = ({
-  selectedMap,
   setSelectedMap,
   setGameState,
   levelStars,
@@ -1427,7 +1379,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   setSelectedHero,
   selectedSpells,
   setSelectedSpells,
-  unlockLevel,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -2470,6 +2421,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         const flagColor =
           level.region === "grassland"
             ? "#228b22"
+            : level.region === "swamp"
+            ? "#5f9ea0"
             : level.region === "desert"
             ? "#daa520"
             : level.region === "winter"
@@ -2529,14 +2482,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.fillStyle =
           level.region === "grassland"
             ? "#6abe30"
+            : level.region === "swamp"
+            ? "#5f9ea0"
             : level.region === "desert"
             ? "#e8a838"
             : level.region === "winter"
             ? "#88c8e8"
             : level.region === "volcanic"
             ? "#e84848"
-            : level.region === "swamp"
-            ? "#5f9ea0"
             : "#e84848";
         ctx.globalAlpha = 0.8;
         if (level.region === "grassland") {
@@ -2839,6 +2792,43 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const currentLevel = selectedLevel ? getLevelById(selectedLevel) : null;
   const waveCount = selectedLevel ? getWaveCount(selectedLevel) : 0;
 
+  function goToNextLevel() {
+    // make sure to handle when you are at the last unlocked level, you need to loop back to the first level. do the same if you are at the last level possible.
+    if (!currentLevel) return;
+    const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
+      isLevelUnlocked(lvl.id)
+    ).map((lvl) => lvl.id);
+    const currentIndex = unlockedLevels.indexOf(currentLevel.id);
+    if (currentIndex === unlockedLevels.length - 1) {
+      const firstLevelId = unlockedLevels[0];
+      handleLevelClick(firstLevelId);
+      return;
+    }
+    if (currentIndex < unlockedLevels.length - 1) {
+      const nextLevelId = unlockedLevels[currentIndex + 1];
+      handleLevelClick(nextLevelId);
+    }
+  }
+  function goToPreviousLevel() {
+    if (!currentLevel) return;
+    if (currentLevel.id === WORLD_LEVELS[0].id) {
+      const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
+        isLevelUnlocked(lvl.id)
+      ).map((lvl) => lvl.id);
+      const lastLevelId = unlockedLevels[unlockedLevels.length - 1];
+      handleLevelClick(lastLevelId);
+      return;
+    }
+    const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
+      isLevelUnlocked(lvl.id)
+    ).map((lvl) => lvl.id);
+    const currentIndex = unlockedLevels.indexOf(currentLevel.id);
+    if (currentIndex > 0) {
+      const prevLevelId = unlockedLevels[currentIndex - 1];
+      handleLevelClick(prevLevelId);
+    }
+  }
+
   return (
     <div className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden">
       {/* TOP BAR */}
@@ -2866,14 +2856,26 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </span>
             <span className="text-yellow-600 text-sm">/ {maxStars}</span>
           </div>
+          <div className="flex items-center gap-3 bg-gradient-to-br from-amber-900/70 to-stone-900/80 px-1.5 py-1.5 rounded-xl border border-amber-600/60">
+            <button
+              onClick={() => goToPreviousLevel()}
+              className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+            >
+              <ChevronLeft size={23} />
+            </button>
+            <button
+              onClick={() => goToNextLevel()}
+              className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+            >
+              <ChevronRight size={23} />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
-
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* LEFT: Map */}
-        {/* RIGHT SIDEBAR */}
+      <div className="flex-1 flex overflow-y-hidden overflow-x-auto min-h-0">
+        {/* LEFT SIDEBAR */}
         <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col overflow-hidden">
           {selectedLevel && currentLevel ? (
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -2986,6 +2988,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <div className="text-4xl mb-2">
                           {currentLevel.region === "grassland"
                             ? "🌲"
+                            : currentLevel.region === "swamp"
+                            ? "🦆"
                             : currentLevel.region === "desert"
                             ? "🏜️"
                             : currentLevel.region === "winter"
@@ -3038,6 +3042,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             {isLevelUnlocked(l.id)
                               ? l.region === "grassland"
                                 ? "🌲"
+                                : l.region === "swamp"
+                                ? "🦆"
                                 : l.region === "desert"
                                 ? "🏜️"
                                 : l.region === "winter"
@@ -3102,7 +3108,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       size={24}
                       className={canStart ? "animate-pulse" : ""}
                     />
-                    <span>{canStart ? "BATTLE!" : "Prepare Your Forces"}</span>
+                    <span>{canStart ? "BATTLE" : "Prepare Your Forces"}</span>
                     {canStart && <Play size={20} />}
                   </div>
                 </button>
@@ -3124,12 +3130,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             <BattlefieldPreview animTime={animTime} />
           )}
         </div>
-        <div className="flex-1 flex flex-col min-w-0 p-4">
+        {/* RIGHT: Map */}
+        <div className="flex-1 flex flex-col min-w-0 p-4 overflow-x-auto">
           <div
             ref={containerRef}
-            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 overflow-hidden shadow-2xl min-h-0"
+            className="flex-1 relative  bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"
           >
-            <div className="absolute inset-0 overflow-x-auto overflow-y-hidden">
+            <div className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden">
               <canvas
                 ref={canvasRef}
                 className="block cursor-pointer"
@@ -3140,8 +3147,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </div>
 
             {/* HERO & SPELL SELECTION OVERLAY */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/95 to-transparent pointer-events-none">
-              <div className="flex gap-3 pointer-events-auto">
+            <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto">
+              <div className="flex w-full mt-auto gap-3 pointer-events-auto">
                 <div className="bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Crown size={14} className="text-amber-400" />
@@ -3173,7 +3180,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       SELECT CHAMPION
                     </span>
                   </div>
-                  <div className="flex gap-1.5 mb-2">
+                  <div className="flex gap-1.5 mb-2 w-full">
                     {heroOptions.map((heroType) => {
                       const hero = HERO_DATA[heroType];
                       const isSelected = selectedHero === heroType;
@@ -3183,7 +3190,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           onClick={() => setSelectedHero(heroType)}
                           onMouseEnter={() => setHoveredHero(heroType)}
                           onMouseLeave={() => setHoveredHero(null)}
-                          className={`relative p-1 rounded-lg transition-all ${
+                          className={`relative flex justify-center w-full p-1 rounded-lg transition-all ${
                             isSelected
                               ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
                               : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
@@ -3205,7 +3212,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   </div>
                   {selectedHero ? (
                     <div className="bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-bold text-amber-200">
                           {HERO_DATA[selectedHero].name}
                         </span>
@@ -3344,7 +3351,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           onMouseEnter={() => setHoveredSpell(spellType)}
                           onMouseLeave={() => setHoveredSpell(null)}
                           disabled={!canSelect && !isSelected}
-                          className={`relative p-1.5 rounded-lg transition-all ${
+                          className={`relative w-full p-1.5 flex justify-center rounded-lg transition-all ${
                             isSelected
                               ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
                               : canSelect
@@ -3363,14 +3370,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     })}
                   </div>
                   {selectedSpells.length > 0 ? (
-                    <div className="bg-stone-900/60 rounded-lg p-2 border border-purple-800/40">
+                    <div className="bg-stone-900/60 rounded-lg w-full p-2 border border-purple-800/40">
                       <div className="flex flex-wrap gap-1.5">
                         {selectedSpells.map((sp, i) => {
                           const spell = SPELL_DATA[sp];
                           return (
                             <div
                               key={sp}
-                              className="flex items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
+                              className="flex w-full items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
                             >
                               <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
                                 {i + 1}
@@ -3379,6 +3386,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                 {spell.name}
                               </span>
                               <span className="text-purple-500">|</span>
+                              <span className="text-purple-300 flex-1 truncate">
+                                {spell.desc}
+                              </span>
+                              <span className="text-purple-500">|</span>
+
                               <span className="text-amber-400 flex items-center gap-0.5">
                                 <Coins size={8} />
                                 {spell.cost > 0 ? spell.cost : "FREE"}

@@ -6169,7 +6169,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 14 * zoom,
       baseW + 18,
-      baseD + 16,
+      baseD + 28,
       8,
       "#4a3a2a",
       "#3a2a1a",
@@ -6180,7 +6180,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 6 * zoom,
       baseW + 10,
-      baseD + 9,
+      baseD + 18,
       6,
       "#6b5030",
       "#5a4020",
@@ -6191,7 +6191,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 2,
-      baseD + 2,
+      baseD + 8,
       4,
       "#8b7355",
       "#7a6244",
@@ -6215,8 +6215,8 @@ function renderStationTower(
     }
 
     // Small weapon rack (left side)
-    const rackX = screenPos.x - isoW * 0.6;
-    const rackY = screenPos.y + 6 * zoom;
+    const rackX = screenPos.x - isoW * 0.6 - 12 * zoom;
+    const rackY = screenPos.y + 22 * zoom;
     ctx.fillStyle = "#5a4020";
     ctx.fillRect(rackX - 2 * zoom, rackY - 12 * zoom, 4 * zoom, 12 * zoom);
     ctx.fillRect(rackX - 4 * zoom, rackY - 12 * zoom, 8 * zoom, 2 * zoom);
@@ -6245,7 +6245,7 @@ function renderStationTower(
 
     // Supply crate (right side)
     const crateX = screenPos.x + isoW * 0.5;
-    const crateY = screenPos.y + 4 * zoom;
+    const crateY = screenPos.y + 2 * zoom;
     drawIsometricPrism(
       ctx,
       crateX,
@@ -6280,9 +6280,9 @@ function renderStationTower(
     // Foundation stone
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 14 * zoom,
+      screenPos.y + 17 * zoom,
       baseW + 20,
-      baseD + 18,
+      baseD + 34,
       10,
       "#4a4a52",
       "#3a3a42",
@@ -6291,9 +6291,9 @@ function renderStationTower(
     // Cobblestone layer
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 6 * zoom,
+      screenPos.y + 7 * zoom,
       baseW + 12,
-      baseD + 10,
+      baseD + 24,
       7,
       "#5a5a62",
       "#4a4a52",
@@ -6304,7 +6304,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 4,
-      baseD + 4,
+      baseD + 14,
       5,
       "#6a6a72",
       "#5a5a62",

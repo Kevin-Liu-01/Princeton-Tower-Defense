@@ -1354,7 +1354,7 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "A cursed clearing where dark magic festers. The witch's hut pulses with evil energy.",
-    camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
+    camera: { offset: { x: -120, y: -170 }, zoom: 1.15 },
     region: "swamp",
     theme: "swamp",
     difficulty: 2,
@@ -1381,7 +1381,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "Ancient ruins half-submerged in fetid waters. Something stirs in the depths below.",
-    camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
+    camera: { offset: { x: -40, y: -210 }, zoom: 1.35 },
     region: "swamp",
     theme: "swamp",
     difficulty: 3,

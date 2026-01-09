@@ -25,6 +25,8 @@ import {
   Info,
   Crown,
   Wind,
+  Pause,
+  Play,
 } from "lucide-react";
 import type {
   Tower,
@@ -47,6 +49,7 @@ import {
   SpellSprite,
   HERO_COLORS,
 } from "../../sprites";
+import PrincetonTDLogo from "./PrincetonTDLogo";
 
 export { TowerSprite, HeroSprite, SpellSprite };
 
@@ -75,16 +78,20 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 }) => {
   return (
     <div
-      className="bg-gradient-to-r from-amber-900 via-yellow-900 to-amber-900 px-3 py-1.5 flex items-center justify-between border-b-2 border-amber-600 shadow-lg relative flex-shrink-0"
+      className="bg-gradient-to-r from-amber-900 via-yellow-900 to-amber-900 px-3 py-1.5 flex items-center border-b-2 border-amber-600 shadow-lg relative flex-shrink-0"
       style={{ zIndex: 100 }}
     >
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-950/60 border border-amber-600 shadow-sm rounded-lg">
+        <div className="flex items-center">
+          <PrincetonTDLogo height="h-10" width="w-8" />
+          <div className="h-8 border-l border-amber-600 ml-3" />
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-950/60 border border-amber-600 shadow-sm rounded-lg">
           <PawPrint size={18} className="text-amber-400" />
           <span className="font-bold text-lg text-amber-300">{pawPoints}</span>
           <span className="text-[10px] text-amber-500 ml-0.5">PP</span>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-950/60 border border-red-800 shadow-sm rounded-lg">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-950/60 border border-red-800 shadow-sm rounded-lg">
           <Heart size={18} className="text-red-400" fill="#f87171" />
           <span className="font-bold text-lg text-red-300">{lives}</span>
           <span className="text-[10px] text-red-500 ml-0.5">Lives</span>
@@ -105,7 +112,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         </div>
       </div>
       <div
-        className="flex items-center gap-1 border 
+        className="flex ml-auto items-center gap-1 border 
       border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
        px-2.5 py-1.5 rounded-lg shadow-sm"
       >
@@ -123,6 +130,36 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             {speed}x
           </button>
         ))}
+      </div>
+      <div
+        className="flex items-center gap-1 border 
+      border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
+       px-1 py-1 rounded-lg shadow-sm ml-3"
+      >
+        <button
+          onClick={() => {
+            if (gameSpeed === 0) {
+              setGameSpeed(1);
+            } else {
+              setGameSpeed(0);
+            }
+          }}
+          className="p-1.5 bg-amber-600/80 rounded-lg hover:bg-amber-600/60 border border-amber-700 shadow-md transition-colors"
+        >
+          {gameSpeed === 0 ? (
+            <Play size={16} className="text-white" />
+          ) : (
+            <Pause size={16} className="text-white" />
+          )}
+        </button>
+        <button
+          onClick={() => {
+            window.location.reload();
+          }}
+          className="p-1.5 bg-red-700/80 hover:bg-red-600/80 rounded-lg border border-red-800 shadow-md transition-colors"
+        >
+          <X size={16} className="text-white" />
+        </button>
       </div>
     </div>
   );
@@ -148,9 +185,9 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
     >
       <div className="bg-gradient-to-br from-amber-900/90 to-stone-900/90 p-2 rounded-lg border border-amber-700 shadow-lg backdrop-blur-sm">
         <div className="text-[9px] text-amber-300 mb-1 font-bold text-center tracking-wider">
-          CAM
+          CAMERA
         </div>
-        <div className="grid grid-cols-3 gap-0.5">
+        <div className="grid grid-cols-3 gap-0.5 bg-amber-950/20 p-1 rounded-lg border border-amber-800">
           <div></div>
           <button
             onClick={() => setCameraOffset((p) => ({ ...p, y: p.y + 30 }))}
@@ -262,7 +299,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         {hero && (
           <div className="flex h-full items-center gap-3">
             {hero.dead ? (
-              <div className="h-full bg-stone-900/80 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
+              <div className="h-full bg-stone-900/80 px-4 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
                   <HeroSprite type={hero.type} size={40} />
                 </div>
@@ -286,7 +323,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <div
                   className={
                     hero.selected
-                      ? "bg-amber-800/90 p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
+                      ? "bg-amber-950/40 p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
                       : "bg-amber-950/80 p-2 border border-amber-600 shadow-md rounded-lg transition-all "
                   }
                 >

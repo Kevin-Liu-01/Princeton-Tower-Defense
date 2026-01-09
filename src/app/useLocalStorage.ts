@@ -29,7 +29,7 @@ export function useLocalStorage<T>(
         typeof initialValue === "object" &&
         initialValue !== null
       ) {
-        const defaults = initialValue as GameProgress;
+        const defaults = initialValue as unknown as GameProgress;
         const loaded = parsed as GameProgress;
 
         // Ensure loaded.levelStars is an object
