@@ -431,10 +431,7 @@ const DestroyedTower: React.FC<{ x: number; size?: number }> = ({
 
 export const DefeatScreen: React.FC<DefeatScreenProps> = ({ resetGame }) => {
   return (
-    <div
-      className="w-full h-screen bg-gradient-to-br from-stone-900 via-stone-950 to-black flex flex-col items-center justify-center text-stone-300 relative overflow-hidden"
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <div className="w-full h-screen bg-gradient-to-br from-stone-900 via-stone-950 to-black flex flex-col items-center justify-center text-stone-300 relative overflow-hidden">
       {/* Dark fog effect */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(8)].map((_, i) => (

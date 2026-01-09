@@ -104,7 +104,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-1">
+      <div
+        className="flex items-center gap-1 border 
+      border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
+       px-2.5 py-1.5 rounded-lg shadow-sm"
+      >
         <span className="text-[10px] text-amber-500 mr-1">SPEED</span>
         {[1, 2, 3].map((speed) => (
           <button
@@ -245,11 +249,20 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       style={{ zIndex: 100 }}
     >
       {/* Hero Section */}
-      <div className="flex-1">
+      <button
+        className="flex-1 h-full"
+        onClick={() => {
+          if (!hero.selected) {
+            hero.selected = true;
+          } else {
+            hero.selected = false;
+          }
+        }}
+      >
         {hero && (
-          <div className="flex items-center gap-3">
+          <div className="flex h-full items-center gap-3">
             {hero.dead ? (
-              <div className="bg-stone-900/80 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
+              <div className="h-full bg-stone-900/80 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
                   <HeroSprite type={hero.type} size={40} />
                 </div>
@@ -270,7 +283,13 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               </div>
             ) : (
               <>
-                <div className="bg-amber-950/80 p-2 border border-amber-600 shadow-md rounded-lg">
+                <div
+                  className={
+                    hero.selected
+                      ? "bg-amber-800/90 p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
+                      : "bg-amber-950/80 p-2 border border-amber-600 shadow-md rounded-lg transition-all "
+                  }
+                >
                   <div className="flex items-center gap-3 mb-1.5">
                     <div
                       className="w-12 h-12 rounded-full border-2 flex items-center justify-center overflow-hidden"
@@ -285,19 +304,25 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       <div className="text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1">
                         {HERO_DATA[hero.type].name} {HERO_DATA[hero.type].icon}
                       </div>
-                      <div className="text-[9px] text-amber-500">
+                      <div className="text-[8px] text-left text-amber-500">
                         {hero.selected
-                          ? "✓ SELECTED (Click map to move)"
+                          ? "Click map to move hero"
                           : "Click hero to select"}
                       </div>
                       <div className="flex gap-2 mt-0.5 text-[9px]">
-                        <span className="text-orange-400">⚔{hero.damage}</span>
-                        <span className="text-blue-400">◎{hero.range}</span>
-                        <span className="text-green-400">♦{hero.speed}</span>
+                        <span className="text-orange-400 ">
+                          ⚔ {HERO_DATA[hero.type].damage} dmg
+                        </span>
+                        <span className="text-blue-400">
+                          ◎ {HERO_DATA[hero.type].range} px
+                        </span>
+                        <span className="text-green-400">
+                          ♦ {HERO_DATA[hero.type].speed} ms
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="w-32 bg-stone-800 h-2.5 border border-stone-700 rounded-full overflow-hidden">
+                  <div className="w-full bg-stone-800 h-2.5 border border-stone-700 rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all rounded-full"
                       style={{
@@ -318,22 +343,28 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <button
                   onClick={useHeroAbility}
                   disabled={!hero.abilityReady}
-                  className={`px-3 py-2.5 transition-all font-bold border rounded-lg flex flex-col items-center ${
+                  className={`px-3 py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${
                     hero.abilityReady
                       ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
                       : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
                   }`}
                 >
                   {hero.abilityReady ? (
-                    <>
-                      <Zap size={18} className="text-yellow-300 mb-0.5" />
-                      <span className="text-[9px] text-amber-200 font-bold">
+                    <div className="h-full flex flex-col py-1 justify-center">
+                      <span className="text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
+                        {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
+                      </span>
+                      <span className="flex flex-row gap-1 items-center text-[12px] text-amber-200 font-bold">
+                        <Zap size={18} className="text-yellow-300 mb-0.5" />
                         {HERO_DATA[hero.type].ability}
                       </span>
-                      <span className="text-[8px] text-amber-300/80">
+                      <div className="text-[7px] max-w-28 my-0.5">
+                        {HERO_DATA[hero.type].abilityDesc}
+                      </div>
+                      <span className="font-extrabold mt-1 text-[10px] text-amber-300/80">
                         READY
                       </span>
-                    </>
+                    </div>
                   ) : (
                     <>
                       <Timer size={18} className="text-stone-400 mb-0.5" />
@@ -350,10 +381,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
             )}
           </div>
         )}
-      </div>
+      </button>
 
       {/* Spell Section */}
-      <div className="flex items-center gap-2 relative">
+      <div className="flex items-center h-full gap-2 relative bg-amber-950/70 px-3 py-2 border border-amber-700 rounded-lg shadow-md">
         <span className="text-[9px] text-amber-500 font-bold tracking-wider mr-1">
           SPELLS
         </span>
@@ -409,7 +440,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 )}
               </button>
               {isHovered && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-stone-900/98 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
+                <div className="absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-purple-200 font-bold">
                       {spellData.name}
@@ -476,7 +507,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
   return (
     <div
-      className="bg-gradient-to-b from-amber-900/95 to-amber-950/95 px-3 py-2 border-t-2 border-amber-600 shadow-xl overflow-x-auto backdrop-blur-sm"
+      className="bg-gradient-to-br from-amber-900/95 to-amber-950/95 px-3 py-2 border-t-2 border-amber-600 shadow-xl overflow-x-auto backdrop-blur-sm"
       style={{ zIndex: 100 }}
     >
       <div className="flex items-center gap-2 min-w-max">

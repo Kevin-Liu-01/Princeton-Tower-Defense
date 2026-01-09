@@ -708,7 +708,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
 };
 
 // =============================================================================
-// MAP PATHS - All regions
+// MAP PATHS - All regions including secondary paths for dual-path levels
 // =============================================================================
 export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
   // =====================
@@ -786,12 +786,19 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 10, y: 0 },
     { x: 6, y: 0 },
     { x: 6, y: 4 },
-    { x: 10, y: 4 },
-    { x: 14, y: 4 },
-    { x: 14, y: 8 },
-    { x: 10, y: 8 },
     { x: 6, y: 8 },
     { x: 6, y: 12 },
+    { x: 10, y: 12 },
+    { x: 10, y: 16 },
+    { x: 10, y: 20 },
+  ],
+  // Secondary path for pyramid - comes from the right, merges at y:12
+  pyramid_b: [
+    { x: 28, y: 8 },
+    { x: 24, y: 8 },
+    { x: 20, y: 8 },
+    { x: 16, y: 8 },
+    { x: 16, y: 12 },
     { x: 10, y: 12 },
     { x: 10, y: 16 },
     { x: 10, y: 20 },
@@ -853,10 +860,20 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 0, y: 6 },
     { x: 4, y: 6 },
     { x: 8, y: 6 },
-    { x: 8, y: 2 },
-    { x: 12, y: 2 },
-    { x: 12, y: 6 },
-    { x: 16, y: 6 },
+    { x: 8, y: 10 },
+    { x: 12, y: 10 },
+    { x: 16, y: 10 },
+    { x: 20, y: 10 },
+    { x: 24, y: 10 },
+    { x: 28, y: 10 },
+  ],
+  // Secondary path for peak - comes from top, merges at x:12
+  peak_b: [
+    { x: 12, y: -8 },
+    { x: 12, y: -4 },
+    { x: 12, y: 0 },
+    { x: 12, y: 4 },
+    { x: 12, y: 10 },
     { x: 16, y: 10 },
     { x: 20, y: 10 },
     { x: 24, y: 10 },
@@ -903,26 +920,97 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: -8, y: 5 },
     { x: -4, y: 5 },
     { x: 0, y: 5 },
-    { x: 0, y: 9 },
-    { x: 4, y: 9 },
     { x: 4, y: 5 },
     { x: 8, y: 5 },
-    { x: 8, y: 9 },
-    { x: 12, y: 9 },
     { x: 12, y: 5 },
     { x: 16, y: 5 },
-    { x: 16, y: 9 },
-    { x: 20, y: 9 },
     { x: 20, y: 5 },
     { x: 24, y: 5 },
     { x: 28, y: 5 },
+  ],
+  // Secondary path for throne - comes from bottom, merges at x:20
+  throne_b: [
+    { x: -8, y: 12 },
+    { x: -4, y: 12 },
+    { x: 0, y: 12 },
+    { x: 4, y: 12 },
+    { x: 8, y: 12 },
+    { x: 12, y: 12 },
+    { x: 16, y: 12 },
+    { x: 16, y: 8 },
+    { x: 20, y: 8 },
+    { x: 20, y: 5 },
+    { x: 24, y: 5 },
+    { x: 28, y: 5 },
+  ],
+  // =====================
+  // SWAMP REGION (Murky Marshes) - NEW
+  // =====================
+  bog: [
+    { x: -8, y: 6 },
+    { x: -4, y: 6 },
+    { x: 0, y: 6 },
+    { x: 4, y: 6 },
+    { x: 4, y: 10 },
+    { x: 8, y: 10 },
+    { x: 8, y: 6 },
+    { x: 12, y: 6 },
+    { x: 12, y: 10 },
+    { x: 16, y: 10 },
+    { x: 16, y: 6 },
+    { x: 20, y: 6 },
+    { x: 24, y: 6 },
+    { x: 28, y: 6 },
+  ],
+  witch_hut: [
+    { x: 10, y: -8 },
+    { x: 10, y: -4 },
+    { x: 10, y: 0 },
+    { x: 6, y: 0 },
+    { x: 6, y: 4 },
+    { x: 6, y: 8 },
+    { x: 10, y: 8 },
+    { x: 14, y: 8 },
+    { x: 14, y: 4 },
+    { x: 18, y: 4 },
+    { x: 18, y: 8 },
+    { x: 18, y: 12 },
+    { x: 18, y: 16 },
+    { x: 18, y: 20 },
+  ],
+  sunken_temple: [
+    { x: -8, y: 4 },
+    { x: -4, y: 4 },
+    { x: 0, y: 4 },
+    { x: 4, y: 4 },
+    { x: 8, y: 4 },
+    { x: 12, y: 4 },
+    { x: 16, y: 4 },
+    { x: 20, y: 4 },
+    { x: 24, y: 4 },
+    { x: 28, y: 4 },
+  ],
+  // Secondary path for sunken temple - comes from bottom, merges at x:16
+  sunken_temple_b: [
+    { x: -8, y: 12 },
+    { x: -4, y: 12 },
+    { x: 0, y: 12 },
+    { x: 4, y: 12 },
+    { x: 8, y: 12 },
+    { x: 12, y: 12 },
+    { x: 12, y: 8 },
+    { x: 16, y: 8 },
+    { x: 16, y: 4 },
+    { x: 20, y: 4 },
+    { x: 24, y: 4 },
+    { x: 28, y: 4 },
   ],
 };
 
 // =============================================================================
 // LEVEL DATA - All regions with theme info and wave count
 // =============================================================================
-export type MapTheme = "grassland" | "desert" | "winter" | "volcanic";
+export type MapTheme = "grassland" | "desert" | "winter" | "volcanic" | "swamp";
 
 export const LEVEL_DATA: Record<
   string,
@@ -937,140 +1025,384 @@ export const LEVEL_DATA: Record<
     region: string;
     theme: MapTheme;
     difficulty: 1 | 2 | 3;
-    previewImage?: string; // Optional preview image URL for level selection
+    previewImage?: string;
+    // NEW: Map features
+    dualPath?: boolean; // Has two enemy spawn paths
+    secondaryPath?: string; // Key for second path in MAP_PATHS
+    specialTower?: {
+      // Special interactive structure
+      pos: { x: number; y: number };
+      type: "vault" | "beacon" | "shrine" | "barracks";
+      hp?: number; // For destructible objectives
+    };
+    decorations?: MapDecoration[]; // Map-specific decorations
+    hazards?: MapHazard[]; // Environmental hazards
   }
 > = {
   // =====================
-  // GRASSLAND REGION
+  // GRASSLAND REGION - Princeton Grounds
   // =====================
   poe: {
     name: "Poe Field",
     position: { x: 120, y: 200 },
-    description: "Training grounds for new defenders",
+    description:
+      "Training grounds for new defenders. A peaceful meadow where recruits learn the basics.",
     camera: { offset: { x: -100, y: -220 }, zoom: 1.1 },
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
     previewImage: "/images/previews/poe.png",
+    decorations: [
+      { type: "tree", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "tree", pos: { x: 22, y: 0 }, variant: 1 },
+      { type: "tree", pos: { x: 24, y: 14 }, variant: 0 },
+      { type: "bush", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "bush", pos: { x: 18, y: 0 }, variant: 1 },
+      { type: "rock", pos: { x: 4, y: 14 }, variant: 0 },
+      { type: "flowers", pos: { x: 12, y: 0 }, variant: 0 },
+      { type: "signpost", pos: { x: -4, y: 3 }, variant: 0 },
+    ],
   },
   carnegie: {
     name: "Carnegie Lake",
     position: { x: 300, y: 120 },
-    description: "Strategic waterfront defense",
-    camera: { offset: { x: -150, y: -140 }, zoom: 1.35 },
+    description:
+      "Strategic lakeside defense. The gleaming waters hide ancient secrets.",
+    camera: { offset: { x: -150, y: -240 }, zoom: 1.15 },
     region: "grassland",
     theme: "grassland",
     difficulty: 2,
+    decorations: [
+      { type: "lake", pos: { x: 0, y: 10 }, variant: 0, size: 3 },
+      { type: "dock", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "boat", pos: { x: 2, y: 12 }, variant: 0 },
+      { type: "tree", pos: { x: 0, y: 0 }, variant: 2 },
+      { type: "tree", pos: { x: 22, y: 0 }, variant: 0 },
+      { type: "reeds", pos: { x: 4, y: 14 }, variant: 0 },
+      { type: "bench", pos: { x: 20, y: 14 }, variant: 0 },
+      { type: "lamppost", pos: { x: 24, y: 8 }, variant: 0 },
+    ],
     previewImage: "/images/previews/carnegie.png",
   },
   nassau: {
     name: "Nassau Hall",
     position: { x: 480, y: 200 },
-    description: "The final stand at the heart of campus",
-    camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
+    description:
+      "The final stand at the heart of campus. Defend the iconic building at all costs!",
+    camera: { offset: { x: -60, y: -200 }, zoom: 1.15 },
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
+    specialTower: {
+      pos: { x: 18, y: 2 },
+      type: "beacon",
+    },
+    decorations: [
+      { type: "nassau_hall", pos: { x: 22, y: 2 }, variant: 0, size: 2 },
+      { type: "statue", pos: { x: 0, y: 2 }, variant: 0 },
+      { type: "fountain", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "tree", pos: { x: 10, y: 0 }, variant: 1 },
+      { type: "tree", pos: { x: 26, y: 14 }, variant: 0 },
+      { type: "bench", pos: { x: 6, y: 0 }, variant: 0 },
+      { type: "lamppost", pos: { x: 24, y: 2 }, variant: 0 },
+      { type: "hedge", pos: { x: 10, y: 14 }, variant: 0 },
+    ],
     previewImage: "/images/previews/nassau.png",
   },
   // =====================
-  // DESERT REGION
+  // DESERT REGION - Sahara Sands
   // =====================
   oasis: {
     name: "Desert Oasis",
     position: { x: 120, y: 200 },
-    description: "A precious water source under siege",
+    description:
+      "A precious water source under siege. Palm trees sway in the hot desert wind.",
     camera: { offset: { x: -100, y: -220 }, zoom: 1.1 },
     region: "desert",
     theme: "desert",
     difficulty: 1,
+    decorations: [
+      { type: "oasis_pool", pos: { x: 16, y: 12 }, variant: 0, size: 2 },
+      { type: "palm", pos: { x: 2, y: 2 }, variant: 0 },
+      { type: "palm", pos: { x: 14, y: 14 }, variant: 1 },
+      { type: "palm", pos: { x: 22, y: 2 }, variant: 0 },
+      { type: "cactus", pos: { x: 6, y: 2 }, variant: 0 },
+      { type: "cactus", pos: { x: 0, y: 12 }, variant: 1 },
+      { type: "dune", pos: { x: 24, y: 14 }, variant: 0 },
+      { type: "skull", pos: { x: 10, y: 2 }, variant: 0 },
+      { type: "pottery", pos: { x: 6, y: 14 }, variant: 0 },
+    ],
     previewImage: "/images/previews/oasis.png",
   },
   pyramid: {
     name: "Pyramid Pass",
     position: { x: 300, y: 120 },
-    description: "Navigate the treacherous canyon",
+    description:
+      "Navigate the ancient canyon beneath the great pyramid. Beware of ambushes!",
     camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
     region: "desert",
     theme: "desert",
     difficulty: 2,
+    dualPath: true,
+    secondaryPath: "pyramid_b",
+    decorations: [
+      { type: "pyramid", pos: { x: 22, y: 2 }, variant: 0, size: 3 },
+      { type: "obelisk", pos: { x: 2, y: 2 }, variant: 0 },
+      { type: "obelisk", pos: { x: 24, y: 14 }, variant: 1 },
+      { type: "sphinx_statue", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "hieroglyph_wall", pos: { x: 20, y: 16 }, variant: 0 },
+      { type: "skeleton", pos: { x: 1, y: 6 }, variant: 0 },
+      { type: "torch", pos: { x: 24, y: 6 }, variant: 0 },
+    ],
     previewImage: "/images/previews/pyramid.png",
   },
   sphinx: {
     name: "Sphinx Gate",
     position: { x: 480, y: 200 },
-    description: "The ancient guardian's domain",
+    description:
+      "The ancient guardian's domain. The Sphinx watches all who dare to pass.",
     camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
     region: "desert",
     theme: "desert",
     difficulty: 3,
+    specialTower: {
+      pos: { x: 4, y: 12 },
+      type: "shrine",
+    },
+    decorations: [
+      { type: "giant_sphinx", pos: { x: 22, y: 0 }, variant: 0, size: 3 },
+      { type: "temple_entrance", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "obelisk", pos: { x: 24, y: 12 }, variant: 0 },
+      { type: "sarcophagus", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "cobra_statue", pos: { x: 10, y: 0 }, variant: 0 },
+      { type: "sand_pile", pos: { x: 18, y: 14 }, variant: 0 },
+    ],
+    hazards: [{ type: "quicksand", pos: { x: 6, y: 14 }, radius: 1.5 }],
     previewImage: "/images/previews/sphinx.png",
   },
   // =====================
-  // WINTER REGION
+  // WINTER REGION - Frozen Frontier
   // =====================
   glacier: {
     name: "Glacier Path",
     position: { x: 120, y: 200 },
-    description: "Ice-covered mountain pass",
+    description:
+      "Ice-covered mountain pass. Freezing winds howl through the peaks.",
     camera: { offset: { x: -100, y: -220 }, zoom: 1.1 },
     region: "winter",
     theme: "winter",
     difficulty: 1,
+    decorations: [
+      { type: "pine_tree", pos: { x: 2, y: 2 }, variant: 0 },
+      { type: "pine_tree", pos: { x: 22, y: 2 }, variant: 1 },
+      { type: "pine_tree", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "snowman", pos: { x: 24, y: 14 }, variant: 0 },
+      { type: "ice_crystal", pos: { x: 6, y: 2 }, variant: 0 },
+      { type: "frozen_pond", pos: { x: 18, y: 14 }, variant: 0, size: 2 },
+      { type: "snow_pile", pos: { x: 10, y: 14 }, variant: 0 },
+      { type: "icicles", pos: { x: 14, y: 2 }, variant: 0 },
+    ],
     previewImage: "/images/previews/glacier.png",
   },
   fortress: {
     name: "Frost Fortress",
     position: { x: 300, y: 120 },
-    description: "An abandoned stronghold",
+    description:
+      "An abandoned stronghold of ice and stone. What dark forces drove out its defenders?",
     camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
     region: "winter",
     theme: "winter",
     difficulty: 2,
+    specialTower: {
+      pos: { x: 2, y: 10 },
+      type: "barracks",
+    },
+    decorations: [
+      { type: "ice_fortress", pos: { x: 20, y: 0 }, variant: 0, size: 3 },
+      { type: "frozen_gate", pos: { x: 24, y: 6 }, variant: 0 },
+      { type: "broken_wall", pos: { x: 0, y: 0 }, variant: 0 },
+      { type: "broken_wall", pos: { x: 22, y: 10 }, variant: 1 },
+      { type: "frozen_soldier", pos: { x: 0, y: 10 }, variant: 0 },
+      { type: "battle_crater", pos: { x: 2, y: 16 }, variant: 0 },
+      { type: "pine_tree", pos: { x: 22, y: 16 }, variant: 0 },
+      { type: "pine_tree", pos: { x: 24, y: 14 }, variant: 1 },
+    ],
+    hazards: [{ type: "slippery_ice", pos: { x: 6, y: 6 }, radius: 2 }],
     previewImage: "/images/previews/fortress.png",
   },
   peak: {
     name: "Summit Peak",
     position: { x: 480, y: 200 },
-    description: "The highest point of defense",
+    description:
+      "The highest point of defense. A frozen throne awaits at the mountain's apex.",
     camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
     region: "winter",
     theme: "winter",
     difficulty: 3,
+    dualPath: true,
+    secondaryPath: "peak_b",
+    decorations: [
+      { type: "ice_throne", pos: { x: 24, y: 2 }, variant: 0, size: 3 },
+      { type: "mountain_peak", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "mountain_peak", pos: { x: 26, y: 14 }, variant: 1 },
+      { type: "frozen_waterfall", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "aurora_crystal", pos: { x: 22, y: 14 }, variant: 0 },
+      { type: "snow_drift", pos: { x: 6, y: 14 }, variant: 0 },
+    ],
+    hazards: [{ type: "ice_sheet", pos: { x: 18, y: 12 }, radius: 2 }],
     previewImage: "/images/previews/peak.png",
   },
   // =====================
-  // VOLCANIC REGION
+  // VOLCANIC REGION - Inferno Depths
   // =====================
   lava: {
     name: "Lava Fields",
     position: { x: 120, y: 200 },
-    description: "Rivers of molten rock",
+    description: "Rivers of molten rock carve through the blackened landscape.",
     camera: { offset: { x: -100, y: -220 }, zoom: 1.1 },
     region: "volcanic",
     theme: "volcanic",
     difficulty: 2,
-    previewImage: "/images/previews/lava.png",
+    decorations: [
+      { type: "lava_pool", pos: { x: 0, y: 14 }, variant: 0, size: 2 },
+      { type: "lava_pool", pos: { x: 22, y: 0 }, variant: 1, size: 1 },
+      { type: "obsidian_spike", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "obsidian_spike", pos: { x: 18, y: 0 }, variant: 1 },
+      { type: "magma_vent", pos: { x: 24, y: 14 }, variant: 0 },
+      { type: "charred_tree", pos: { x: 0, y: 0 }, variant: 0 },
+      { type: "skull_pile", pos: { x: 10, y: 14 }, variant: 0 },
+      { type: "ember_rock", pos: { x: 20, y: 14 }, variant: 0 },
+    ],
+    hazards: [{ type: "lava_geyser", pos: { x: 6, y: 14 }, radius: 1.5 }],
+    previewImage: "/images/previews/lava_fields.png",
   },
   crater: {
     name: "Caldera Basin",
     position: { x: 300, y: 120 },
-    description: "Inside the volcano's heart",
+    description:
+      "Inside the volcano's heart. The ground trembles with each eruption.",
     camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
-    previewImage: "/images/previews/crater.png",
+    specialTower: {
+      pos: { x: 6, y: 10 },
+      type: "vault",
+      hp: 1000,
+    },
+    decorations: [
+      { type: "volcano_rim", pos: { x: 22, y: 0 }, variant: 0, size: 4 },
+      { type: "lava_fall", pos: { x: 0, y: 8 }, variant: 0 },
+      { type: "lava_fall", pos: { x: 22, y: 10 }, variant: 1 },
+      { type: "obsidian_pillar", pos: { x: 24, y: 2 }, variant: 0 },
+      { type: "fire_crystal", pos: { x: 2, y: 10 }, variant: 0 },
+      { type: "dead_adventurer", pos: { x: 22, y: 14 }, variant: 0 },
+      { type: "broken_weapon", pos: { x: 4, y: 14 }, variant: 0 },
+    ],
+    hazards: [{ type: "eruption_zone", pos: { x: 22, y: 6 }, radius: 2 }],
+    previewImage: "/images/previews/caldera.png",
   },
   throne: {
     name: "Obsidian Throne",
     position: { x: 480, y: 200 },
-    description: "The ultimate challenge awaits",
+    description:
+      "The ultimate challenge. An ancient dark lord's seat of power, guarded by his legions.",
     camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
+    dualPath: true,
+    secondaryPath: "throne_b",
+    decorations: [
+      { type: "obsidian_castle", pos: { x: 24, y: 0 }, variant: 0, size: 4 },
+      { type: "dark_throne", pos: { x: 26, y: 2 }, variant: 0 },
+      { type: "demon_statue", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "demon_statue", pos: { x: 2, y: 16 }, variant: 1 },
+      { type: "skull_throne", pos: { x: 24, y: 16 }, variant: 0 },
+      { type: "fire_pit", pos: { x: 6, y: 0 }, variant: 0 },
+      { type: "battle_standard", pos: { x: 22, y: 10 }, variant: 0 },
+    ],
     previewImage: "/images/previews/throne.png",
+  },
+  // =====================
+  // SWAMP REGION - Murky Marshes (NEW)
+  // =====================
+  bog: {
+    name: "Murky Bog",
+    position: { x: 120, y: 200 },
+    description:
+      "Treacherous wetlands filled with mist and mystery. Watch your step!",
+    camera: { offset: { x: -100, y: -220 }, zoom: 1.1 },
+    region: "swamp",
+    theme: "swamp",
+    difficulty: 1,
+    decorations: [
+      { type: "swamp_tree", pos: { x: 2, y: 2 }, variant: 0 },
+      { type: "swamp_tree", pos: { x: 22, y: 2 }, variant: 1 },
+      { type: "swamp_tree", pos: { x: 24, y: 14 }, variant: 2 },
+      { type: "lily_pads", pos: { x: 0, y: 14 }, variant: 0 },
+      { type: "mushroom_cluster", pos: { x: 18, y: 2 }, variant: 0 },
+      { type: "mushroom_cluster", pos: { x: 2, y: 14 }, variant: 1 },
+      { type: "fog_patch", pos: { x: 10, y: 2 }, variant: 0 },
+      { type: "broken_bridge", pos: { x: 14, y: 14 }, variant: 0 },
+      { type: "frog", pos: { x: 6, y: 14 }, variant: 0 },
+    ],
+    previewImage: "/images/previews/murky_bog.png",
+  },
+  witch_hut: {
+    name: "Witch's Domain",
+    position: { x: 300, y: 120 },
+    description:
+      "A cursed clearing where dark magic festers. The witch's hut pulses with evil energy.",
+    camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
+    region: "swamp",
+    theme: "swamp",
+    difficulty: 2,
+    specialTower: {
+      pos: { x: 2, y: 4 },
+      type: "shrine",
+    },
+    decorations: [
+      { type: "witch_cottage", pos: { x: 22, y: 2 }, variant: 0, size: 2 },
+      { type: "cauldron", pos: { x: 24, y: 6 }, variant: 0 },
+      { type: "swamp_tree", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "swamp_tree", pos: { x: 22, y: 12 }, variant: 1 },
+      { type: "tombstone", pos: { x: 2, y: 12 }, variant: 0 },
+      { type: "tombstone", pos: { x: 4, y: 14 }, variant: 1 },
+      { type: "glowing_runes", pos: { x: 24, y: 10 }, variant: 0 },
+      { type: "hanging_cage", pos: { x: 0, y: 6 }, variant: 0 },
+      { type: "poison_pool", pos: { x: 24, y: 14 }, variant: 0 },
+    ],
+    hazards: [{ type: "poison_fog", pos: { x: 22, y: 8 }, radius: 2 }],
+    previewImage: "/images/previews/witch_hut.png",
+  },
+  sunken_temple: {
+    name: "Sunken Temple",
+    position: { x: 480, y: 200 },
+    description:
+      "Ancient ruins half-submerged in fetid waters. Something stirs in the depths below.",
+    camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
+    region: "swamp",
+    theme: "swamp",
+    difficulty: 3,
+    dualPath: true,
+    secondaryPath: "sunken_temple_b",
+    specialTower: {
+      pos: { x: 8, y: 0 },
+      type: "vault",
+      hp: 800,
+    },
+    decorations: [
+      { type: "ruined_temple", pos: { x: 22, y: 0 }, variant: 0, size: 3 },
+      { type: "sunken_pillar", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "sunken_pillar", pos: { x: 26, y: 10 }, variant: 1 },
+      { type: "idol_statue", pos: { x: 24, y: 16 }, variant: 0 },
+      { type: "algae_pool", pos: { x: 2, y: 16 }, variant: 0, size: 2 },
+      { type: "tentacle", pos: { x: 6, y: 16 }, variant: 0 },
+      { type: "skeleton_pile", pos: { x: 18, y: 16 }, variant: 0 },
+    ],
+    hazards: [{ type: "deep_water", pos: { x: 4, y: 10 }, radius: 1.5 }],
+    previewImage: "/images/previews/sunken_temple.png",
   },
 };
 
@@ -1109,6 +1441,12 @@ export const REGION_THEMES: Record<
     path: ["#5a3a3a", "#6a4a4a", "#4a2a2a"],
     accent: "#ff4400",
     fog: "rgba(255, 100, 50, 0.15)",
+  },
+  swamp: {
+    ground: ["#1a2a1a", "#0f1f0f", "#0a150a"],
+    path: ["#3a4a3a", "#4a5a4a", "#2a3a2a"],
+    accent: "#4a8a4a",
+    fog: "rgba(100, 150, 100, 0.4)",
   },
 };
 
@@ -1748,6 +2086,179 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "trustee", count: 4, interval: 4000 },
       { type: "dean", count: 4, interval: 4200 },
       { type: "professor", count: 5, interval: 3000 },
+    ],
+  ],
+
+  // =====================
+  // SWAMP REGION - Dark magic and hexers
+  // =====================
+  bog: [
+    // 10 waves - Introduction to swamp enemies
+    [{ type: "frosh", count: 5, interval: 1600 }],
+    [{ type: "sophomore", count: 5, interval: 1500 }],
+    [
+      { type: "hexer", count: 2, interval: 2800 },
+      { type: "sophomore", count: 4, interval: 1600 },
+    ],
+    [
+      { type: "junior", count: 4, interval: 1800 },
+      { type: "hexer", count: 2, interval: 2800 },
+    ],
+    [
+      { type: "warlock", count: 2, interval: 3200 },
+      { type: "junior", count: 4, interval: 1800 },
+    ],
+    [
+      { type: "senior", count: 3, interval: 2400 },
+      { type: "hexer", count: 3, interval: 2500 },
+    ],
+    [
+      { type: "specter", count: 3, interval: 2600 },
+      { type: "sophomore", count: 5, interval: 1600 },
+    ],
+    [
+      { type: "warlock", count: 3, interval: 3000 },
+      { type: "senior", count: 3, interval: 2400 },
+    ],
+    [
+      { type: "necromancer", count: 1, interval: 4500 },
+      { type: "hexer", count: 4, interval: 2400 },
+    ],
+    [
+      { type: "necromancer", count: 2, interval: 4000 },
+      { type: "specter", count: 4, interval: 2400 },
+    ],
+  ],
+
+  witch_hut: [
+    // 14 waves - Witch's dark magic
+    [{ type: "junior", count: 5, interval: 1700 }],
+    [
+      { type: "hexer", count: 3, interval: 2600 },
+      { type: "junior", count: 4, interval: 1800 },
+    ],
+    [
+      { type: "warlock", count: 3, interval: 3000 },
+      { type: "senior", count: 4, interval: 2300 },
+    ],
+    [
+      { type: "specter", count: 4, interval: 2400 },
+      { type: "hexer", count: 3, interval: 2600 },
+    ],
+    [
+      { type: "necromancer", count: 2, interval: 4000 },
+      { type: "warlock", count: 3, interval: 3000 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 3000 },
+      { type: "specter", count: 4, interval: 2400 },
+    ],
+    [
+      { type: "berserker", count: 2, interval: 3500 },
+      { type: "hexer", count: 4, interval: 2400 },
+    ],
+    [
+      { type: "professor", count: 2, interval: 4000 },
+      { type: "necromancer", count: 2, interval: 4000 },
+    ],
+    [
+      { type: "warlock", count: 4, interval: 2800 },
+      { type: "berserker", count: 3, interval: 3200 },
+    ],
+    [
+      { type: "shadow_knight", count: 2, interval: 4500 },
+      { type: "specter", count: 5, interval: 2200 },
+    ],
+    [
+      { type: "necromancer", count: 3, interval: 3500 },
+      { type: "warlock", count: 4, interval: 2800 },
+    ],
+    [
+      { type: "dean", count: 1, interval: 6000 },
+      { type: "shadow_knight", count: 2, interval: 4500 },
+    ],
+    [
+      { type: "shadow_knight", count: 3, interval: 4000 },
+      { type: "berserker", count: 4, interval: 3000 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 5000 },
+      { type: "necromancer", count: 3, interval: 3500 },
+    ],
+  ],
+
+  sunken_temple: [
+    // 18 waves - Ancient horrors
+    [{ type: "senior", count: 5, interval: 2200 }],
+    [
+      { type: "warlock", count: 4, interval: 2800 },
+      { type: "hexer", count: 4, interval: 2400 },
+    ],
+    [
+      { type: "specter", count: 5, interval: 2200 },
+      { type: "necromancer", count: 2, interval: 4000 },
+    ],
+    [
+      { type: "golem", count: 2, interval: 5000 },
+      { type: "warlock", count: 4, interval: 2800 },
+    ],
+    [
+      { type: "shadow_knight", count: 3, interval: 4000 },
+      { type: "specter", count: 5, interval: 2200 },
+    ],
+    [
+      { type: "berserker", count: 4, interval: 3000 },
+      { type: "hexer", count: 5, interval: 2200 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 3500 },
+      { type: "golem", count: 2, interval: 5000 },
+    ],
+    [
+      { type: "necromancer", count: 4, interval: 3200 },
+      { type: "shadow_knight", count: 3, interval: 4000 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 5000 },
+      { type: "berserker", count: 4, interval: 3000 },
+    ],
+    [
+      { type: "golem", count: 3, interval: 4500 },
+      { type: "warlock", count: 5, interval: 2600 },
+    ],
+    [
+      { type: "shadow_knight", count: 4, interval: 3800 },
+      { type: "necromancer", count: 4, interval: 3200 },
+    ],
+    [
+      { type: "trustee", count: 1, interval: 8000 },
+      { type: "specter", count: 6, interval: 2000 },
+    ],
+    [
+      { type: "dean", count: 3, interval: 4500 },
+      { type: "golem", count: 3, interval: 4500 },
+    ],
+    [
+      { type: "berserker", count: 5, interval: 2800 },
+      { type: "shadow_knight", count: 4, interval: 3800 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 6000 },
+      { type: "necromancer", count: 4, interval: 3200 },
+    ],
+    [
+      { type: "golem", count: 4, interval: 4200 },
+      { type: "dean", count: 3, interval: 4500 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 5500 },
+      { type: "shadow_knight", count: 5, interval: 3500 },
+    ],
+    // Final wave - the temple awakens
+    [
+      { type: "trustee", count: 3, interval: 5000 },
+      { type: "golem", count: 4, interval: 4200 },
+      { type: "necromancer", count: 5, interval: 3000 },
     ],
   ],
 };

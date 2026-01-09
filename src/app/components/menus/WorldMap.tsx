@@ -13,7 +13,6 @@ import {
   Flag,
   Heart,
   Target,
-  Clock,
   Flame,
   Sparkles,
   MapPin,
@@ -53,7 +52,7 @@ interface LevelNode {
   id: string;
   name: string;
   description: string;
-  region: "grassland" | "desert" | "winter" | "volcanic";
+  region: "grassland" | "swamp" | "desert" | "winter" | "volcanic";
   difficulty: 1 | 2 | 3;
   x: number;
   y: number;
@@ -68,7 +67,7 @@ const WORLD_LEVELS: LevelNode[] = [
     region: "grassland",
     difficulty: 1,
     x: 100,
-    y: 68,
+    y: 70,
     connectsTo: ["carnegie"],
   },
   {
@@ -89,16 +88,48 @@ const WORLD_LEVELS: LevelNode[] = [
     difficulty: 3,
     x: 310,
     y: 60,
+    connectsTo: ["bog"],
+  },
+  // Swamp - Murky Marshes
+  {
+    id: "bog",
+    name: "Murky Bog",
+    description: "Treacherous wetlands",
+    region: "swamp",
+    difficulty: 1,
+    x: 440,
+    y: 39,
+    connectsTo: ["witch_hut"],
+  },
+  {
+    id: "witch_hut",
+    name: "Witch's Domain",
+    description: "Dark magic festers here",
+    region: "swamp",
+    difficulty: 2,
+    x: 540,
+    y: 65,
+    connectsTo: ["sunken_temple"],
+  },
+  {
+    id: "sunken_temple",
+    name: "Sunken Temple",
+    description: "Ancient ruins submerged",
+    region: "swamp",
+    difficulty: 3,
+    x: 650,
+    y: 32,
     connectsTo: ["oasis"],
   },
+  // Desert
   {
     id: "oasis",
     name: "Desert Oasis",
     description: "A precious water source",
     region: "desert",
     difficulty: 1,
-    x: 430,
-    y: 45,
+    x: 780,
+    y: 42,
     connectsTo: ["pyramid"],
   },
   {
@@ -107,8 +138,8 @@ const WORLD_LEVELS: LevelNode[] = [
     description: "Ancient canyon passage",
     region: "desert",
     difficulty: 2,
-    x: 530,
-    y: 25,
+    x: 900,
+    y: 41,
     connectsTo: ["sphinx"],
   },
   {
@@ -117,18 +148,19 @@ const WORLD_LEVELS: LevelNode[] = [
     description: "The guardian's domain",
     region: "desert",
     difficulty: 3,
-    x: 640,
-    y: 55,
+    x: 1000,
+    y: 60,
     connectsTo: ["glacier"],
   },
+  // Winter
   {
     id: "glacier",
     name: "Glacier Path",
     description: "Ice-covered mountain pass",
     region: "winter",
     difficulty: 1,
-    x: 760,
-    y: 38,
+    x: 1140,
+    y: 40,
     connectsTo: ["fortress"],
   },
   {
@@ -137,8 +169,8 @@ const WORLD_LEVELS: LevelNode[] = [
     description: "An abandoned stronghold",
     region: "winter",
     difficulty: 2,
-    x: 870,
-    y: 20,
+    x: 1270,
+    y: 36,
     connectsTo: ["peak"],
   },
   {
@@ -147,18 +179,19 @@ const WORLD_LEVELS: LevelNode[] = [
     description: "The highest defense point",
     region: "winter",
     difficulty: 3,
-    x: 980,
-    y: 48,
+    x: 1360,
+    y: 52,
     connectsTo: ["lava"],
   },
+  // Volcanic
   {
     id: "lava",
     name: "Lava Fields",
     description: "Rivers of molten rock",
     region: "volcanic",
     difficulty: 2,
-    x: 1100,
-    y: 62,
+    x: 1520,
+    y: 60,
     connectsTo: ["crater"],
   },
   {
@@ -167,8 +200,8 @@ const WORLD_LEVELS: LevelNode[] = [
     description: "Inside the volcano's heart",
     region: "volcanic",
     difficulty: 3,
-    x: 1210,
-    y: 32,
+    x: 1590,
+    y: 35,
     connectsTo: ["throne"],
   },
   {
@@ -177,13 +210,13 @@ const WORLD_LEVELS: LevelNode[] = [
     description: "The ultimate challenge",
     region: "volcanic",
     difficulty: 3,
-    x: 1320,
-    y: 50,
+    x: 1700,
+    y: 62,
     connectsTo: [],
   },
 ];
 
-const MAP_WIDTH = 1450;
+const MAP_WIDTH = 1800;
 
 const getWaveCount = (levelId: string): number => {
   const waves = LEVEL_WAVES[levelId];
@@ -210,7 +243,7 @@ const PrincetonLogo: React.FC = () => {
         />
       </div>
       <div className="relative">
-        <svg viewBox="0 0 56 68" className="w-14 h-17 drop-shadow-2xl">
+        <svg viewBox="0 0 56 68" className="w-10 h-12 drop-shadow-2xl">
           <defs>
             <linearGradient id="shieldMain" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#fbbf24" />
@@ -257,9 +290,8 @@ const PrincetonLogo: React.FC = () => {
       </div>
       <div className="relative flex flex-col">
         <span
-          className="text-3xl font-black tracking-wider"
+          className="text-2xl font-black tracking-wider"
           style={{
-            fontFamily: "'Cinzel', serif",
             background:
               "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
             WebkitBackgroundClip: "text",
@@ -268,12 +300,9 @@ const PrincetonLogo: React.FC = () => {
         >
           PRINCETON
         </span>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex items-center gap-2 -mt-0.5">
           <Swords size={14} className="text-orange-400" />
-          <span
-            className="text-sm font-bold tracking-[0.3em] text-amber-500/90"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
+          <span className="text-xs font-bold tracking-[0.3em] text-amber-500/90">
             KINGDOM DEFENSE
           </span>
           <Swords
@@ -288,7 +317,7 @@ const PrincetonLogo: React.FC = () => {
 };
 
 // =============================================================================
-// CODEX MODAL (FROM CODE 2 - ENHANCED)
+// CODEX MODAL
 // =============================================================================
 
 interface CodexModalProps {
@@ -345,12 +374,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
         <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900/90 via-stone-800/90 to-amber-900/90 backdrop-blur px-6 py-4 border-b-2 border-amber-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Book className="text-amber-400" size={28} />
-            <h2
-              className="text-2xl font-bold text-amber-300"
-              style={{ fontFamily: "'Cinzel', serif" }}
-            >
-              War Codex
-            </h2>
+            <h2 className="text-3xl font-bold text-amber-300">War Codex</h2>
             <span className="text-xs text-amber-500/70 ml-2">
               Complete Battle Encyclopedia
             </span>
@@ -598,7 +622,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                       <div className="grid grid-cols-2 gap-4">
                         {(["A", "B"] as const).map((path) => {
                           const upgrade = tower.upgrades[path];
-                          const color = path === "A" ? "red" : "blue";
+                          const color = path == "A" ? "red" : "blue";
                           const stats = getTowerStats(
                             selectedTower as keyof typeof TOWER_DATA,
                             4,
@@ -607,11 +631,11 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                           return (
                             <div
                               key={path}
-                              className={`bg-gradient-to-br from-${color}-950/50 to-stone-900/60 rounded-xl border-2 border-${color}-700/50 p-4`}
+                              className={`bg-gradient-to-br from-${color}-950/50 to-stone-900/60 rounded-xl border-amber-700 border p-4`}
                             >
                               <div className="flex items-center gap-3 mb-3">
                                 <div
-                                  className={`w-16 h-16 rounded-lg bg-${color}-900/30 border border-${color}-700/50 flex items-center justify-center`}
+                                  className={`w-16 h-16 rounded-lg bg-${color}-900/30 border border-stone-700 flex items-center justify-center`}
                                 >
                                   <TowerSprite
                                     type={
@@ -1161,7 +1185,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 };
 
 // =============================================================================
-// BATTLEFIELD PREVIEW (RESTORED FROM CODE 1)
+// BATTLEFIELD PREVIEW
 // =============================================================================
 
 const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
@@ -1193,6 +1217,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
     // Scene backgrounds based on region
     const scenes = [
       { bg1: "#2d4a1f", bg2: "#1a2a0f", accent: "#4ade80" }, // Grassland
+      { bg1: "#4a5a2a", bg2: "#2a3a1a", accent: "#4ade80" }, // Swamp
       { bg1: "#8a7050", bg2: "#5a4a30", accent: "#fbbf24" }, // Desert
       { bg1: "#4a5a6a", bg2: "#2a3a4a", accent: "#60a5fa" }, // Winter
       { bg1: "#4a2020", bg2: "#2a1010", accent: "#ef4444" }, // Volcanic
@@ -1553,23 +1578,30 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         labelColor: "#6abe30",
       },
       {
-        name: "SAHARA SANDS",
+        name: "MURKY MARSHES",
         x: 380,
+        w: 340,
+        colors: ["#2a3a2a", "#1a2a1a"],
+        labelColor: "#4a8a4a",
+      },
+      {
+        name: "SAHARA SANDS",
+        x: 720,
         w: 360,
         colors: ["#9a8060", "#8a7050"],
         labelColor: "#e8a838",
       },
       {
         name: "FROZEN FRONTIER",
-        x: 740,
+        x: 1080,
         w: 360,
         colors: ["#5a6a7a", "#4a5a6a"],
         labelColor: "#88c8e8",
       },
       {
         name: "INFERNO DEPTHS",
-        x: 1100,
-        w: 350,
+        x: 1440,
+        w: 380,
         colors: ["#5a3030", "#4a2020"],
         labelColor: "#e84848",
       },
@@ -1597,9 +1629,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     });
 
     // Draw rugged borders between regions
-    drawRuggedBorder(380, "#3d5a2f", "#9a8060");
-    drawRuggedBorder(740, "#9a8060", "#5a6a7a");
-    drawRuggedBorder(1100, "#5a6a7a", "#5a3030");
+    drawRuggedBorder(380, "#3d5a2f", "#2a3a2a");
+    drawRuggedBorder(720, "#2a3a2a", "#9a8060");
+    drawRuggedBorder(1080, "#9a8060", "#5a6a7a");
+    drawRuggedBorder(1450, "#5a6a7a", "#5a3030");
 
     // === GRASSLAND DETAILS ===
     // Trees
@@ -1625,7 +1658,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       [80, 82],
       [150, 22],
       [170, 75],
-      [240, 40],
+      [140, 33],
+      [238, 55],
+      [270, 41],
       [270, 85],
       [320, 25],
       [350, 68],
@@ -1675,8 +1710,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
       ctx.globalAlpha = 1;
     };
-    drawCamp(130, 55);
+    drawCamp(100, 25);
+    drawCamp(180, 55);
     drawCamp(290, 78);
+    drawCamp(620, 78);
+    drawCamp(540, 28);
+    drawCamp(860, 34);
 
     // Watch tower
     const drawWatchTower = (tx: number, tyPct: number) => {
@@ -1695,8 +1734,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       })`;
       ctx.fillRect(tx - 3, ty - 30, 6, 8);
     };
-    drawWatchTower(55, 58);
+    drawWatchTower(55, 66);
+    drawWatchTower(220, 25);
+    drawWatchTower(230, 70);
     drawWatchTower(330, 42);
+    drawWatchTower(490, 70);
+    drawWatchTower(867, 33);
+    drawWatchTower(1290, 52);
 
     // Crater (war damage)
     const drawCrater = (cx: number, cyPct: number, size: number) => {
@@ -1716,8 +1760,130 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     };
     drawCrater(180, 60, 15);
     drawCrater(260, 32, 12);
+    drawCrater(320, 80, 10);
+    drawCrater(600, 45, 18);
+    drawCrater(750, 70, 14);
+    drawCrater(920, 30, 11);
+    drawCrater(980, 65, 14);
+    drawCrater(1120, 55, 16);
+    drawCrater(1200, 50, 19);
+    drawCrater(1290, 25, 19);
+    drawCrater(1300, 60, 13);
+    drawCrater(1400, 60, 15);
+    drawCrater(1500, 75, 12);
+    drawCrater(1700, 85, 9);
 
-    // === DESERT DETAILS ===
+    // === SWAMP DETAILS ===
+    const drawWillowTree = (x: number, yPct: number, scale: number) => {
+      const y = getY(yPct);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(x + 5, y + 2, 12 * scale, 5 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Twisted Trunk
+      ctx.fillStyle = "#1a1614";
+      ctx.beginPath();
+      ctx.moveTo(x - 2 * scale, y);
+      ctx.quadraticCurveTo(x - 5 * scale, y - 10 * scale, x, y - 25 * scale);
+      ctx.quadraticCurveTo(x + 5 * scale, y - 10 * scale, x + 4 * scale, y);
+      ctx.fill();
+
+      // Drooping Canopy
+      ctx.fillStyle = "#2a3a2a";
+      ctx.beginPath();
+      ctx.arc(x, y - 28 * scale, 15 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 10 * scale, y - 22 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 10 * scale, y - 22 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Vines (hanging)
+      ctx.strokeStyle = "#1a2a1a";
+      ctx.lineWidth = 1 * scale;
+      for (let i = 0; i < 5; i++) {
+        const vx = x - 10 * scale + i * 5 * scale;
+        const vy = y - 20 * scale;
+        const len = 15 * scale + Math.sin(time * 2 + i + x) * 3;
+        ctx.beginPath();
+        ctx.moveTo(vx, vy);
+        ctx.quadraticCurveTo(
+          vx + Math.sin(time + i) * 2,
+          vy + len / 2,
+          vx,
+          vy + len
+        );
+        ctx.stroke();
+      }
+    };
+
+    [
+      [410, 30],
+      [430, 60],
+      [420, 70],
+      [450, 80],
+      [480, 25],
+      [500, 20],
+      [640, 55],
+      [550, 85],
+      [540, 45],
+      [580, 35],
+      [600, 40],
+      [630, 75],
+      [680, 75],
+    ].forEach(([x, yPct], i) => {
+      drawWillowTree(x, yPct, 0.7 + seededRandom(i + 500) * 0.4);
+    });
+
+    // Swamp Gas Bubbles
+    const drawSwampGas = (x: number, yPct: number) => {
+      const y = getY(yPct);
+      const tOffset = x * 0.1;
+      const bubbleY = y - ((time * 20 + tOffset * 50) % 30);
+      const opacity = 1 - ((time * 20 + tOffset * 50) % 30) / 30;
+
+      ctx.fillStyle = `rgba(100, 255, 100, ${opacity * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(x, bubbleY, 2 + Math.sin(time * 5 + x) * 1, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    for (let i = 0; i < 15; i++) {
+      drawSwampGas(
+        400 + seededRandom(i * 55) * 300,
+        30 + seededRandom(i * 22) * 60
+      );
+    }
+
+    // Fireflies
+    const drawFireflies = (xBase: number, yPct: number) => {
+      const yBase = getY(yPct);
+      const x = xBase + Math.sin(time * 0.5 + xBase) * 20;
+      const y = yBase + Math.cos(time * 0.7 + xBase) * 10;
+      const glow = 0.5 + Math.sin(time * 5 + xBase) * 0.5;
+
+      ctx.fillStyle = `rgba(200, 255, 100, ${glow})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    for (let i = 0; i < 10; i++) {
+      drawFireflies(
+        400 + seededRandom(i * 99) * 320,
+        20 + seededRandom(i * 88) * 70
+      );
+    }
+
+    // Low Mist
+    ctx.fillStyle = "rgba(180, 220, 200, 0.05)";
+    for (let i = 0; i < 5; i++) {
+      const mx = 380 + Math.sin(time * 0.2 + i) * 50 + i * 60;
+      const my = getY(60 + Math.cos(time * 0.3 + i) * 10);
+      ctx.beginPath();
+      ctx.ellipse(mx, my, 60, 20, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // === DESERT DETAILS === (Coordinates Shifted Right)
     // Cacti
     const drawCactus = (x: number, yPct: number, scale: number) => {
       const y = getY(yPct);
@@ -1729,13 +1895,17 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.fillRect(x + 8 * scale, y - 18 * scale, 4 * scale, 12 * scale);
     };
     [
-      [400, 35],
-      [460, 72],
-      [500, 20],
-      [560, 82],
-      [620, 45],
-      [680, 75],
-      [720, 28],
+      [760, 20],
+      [750, 35],
+      [800, 60],
+      [820, 72],
+      [840, 50],
+      [880, 20],
+      [900, 70],
+      [940, 82],
+      [970, 55],
+      [1000, 45],
+      [1030, 75],
     ].forEach(([x, yPct], i) => {
       drawCactus(x, yPct, 0.5 + seededRandom(i + 200) * 0.3);
     });
@@ -1759,8 +1929,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.lineTo(px - 3, py + 2);
       ctx.stroke();
     };
-    drawPyramidRuin(485, 65);
-    drawPyramidRuin(590, 38);
+    drawPyramidRuin(850, 65);
+    drawPyramidRuin(900, 70);
+    drawPyramidRuin(920, 60);
+
+    drawPyramidRuin(980, 38);
 
     // Desert camp with fire
     const drawDesertCamp = (cx: number, cyPct: number) => {
@@ -1789,8 +1962,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.quadraticCurveTo(cx + 24, cy - fireHeight * 0.6, cx + 25, cy + 2);
       ctx.fill();
     };
-    drawDesertCamp(440, 58);
-    drawDesertCamp(660, 32);
+    drawDesertCamp(800, 58);
+    drawDesertCamp(920, 22);
+    drawDesertCamp(810, 82);
+    drawDesertCamp(1020, 32);
 
     // Burning wreckage
     const drawBurningWreck = (wx: number, wyPct: number) => {
@@ -1811,10 +1986,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.fill();
       }
     };
-    drawBurningWreck(540, 55);
-    drawBurningWreck(700, 68);
+    drawBurningWreck(810, 25);
+    drawBurningWreck(960, 75);
+    drawBurningWreck(990, 20);
+    drawBurningWreck(1520, 32);
+    drawBurningWreck(1650, 62);
 
-    // === WINTER DETAILS ===
+    // === WINTER DETAILS === (Coordinates Shifted Right)
     // Snow trees
     const drawSnowTree = (x: number, yPct: number, scale: number) => {
       const y = getY(yPct);
@@ -1836,14 +2014,24 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.fill();
     };
     [
-      [760, 65],
-      [800, 28],
-      [850, 78],
-      [890, 42],
-      [940, 72],
-      [1000, 32],
-      [1050, 65],
-      [1080, 22],
+      [1200, 25],
+      [1020, 80],
+      [1120, 65],
+      [1140, 28],
+      [1150, 72],
+      [1160, 72],
+      [1190, 78],
+      [1240, 48],
+      [1230, 50],
+      [1230, 42],
+      [1250, 60],
+      [1280, 72],
+      [1300, 38],
+      [1320, 32],
+      [1340, 42],
+      [1350, 65],
+      [1360, 50],
+      [1380, 22],
     ].forEach(([x, yPct], i) => {
       drawSnowTree(x, yPct, 0.5 + seededRandom(i + 300) * 0.3);
     });
@@ -1867,8 +2055,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.ellipse(rx, ry + 3, 18, 6, 0, 0, Math.PI * 2);
       ctx.fill();
     };
-    drawIceRuin(820, 58);
-    drawIceRuin(960, 78);
+    drawIceRuin(1150, 58);
+    drawIceRuin(1210, 33);
+    drawIceRuin(1290, 78);
+    drawIceRuin(1390, 67);
+    drawIceRuin(1400, 42);
 
     // Frozen soldiers
     const drawFrozenSoldier = (sx: number, syPct: number) => {
@@ -1890,14 +2081,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.stroke();
       }
     };
-    drawFrozenSoldier(785, 48);
-    drawFrozenSoldier(920, 55);
-    drawFrozenSoldier(1030, 42);
+    drawFrozenSoldier(1125, 50);
+    drawFrozenSoldier(1180, 70);
+    drawFrozenSoldier(1260, 55);
+    drawFrozenSoldier(1330, 28);
+    drawFrozenSoldier(1350, 42);
 
     // Snowfall particles
     ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
     for (let i = 0; i < 30; i++) {
-      const sx = 740 + seededRandom(i * 7) * 360;
+      const sx = 1080 + seededRandom(i * 7) * 360;
       const sy = (time * 30 + seededRandom(i * 11) * height) % height;
       ctx.beginPath();
       ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
@@ -1924,16 +2117,28 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.stroke();
     };
     drawLavaRiver([
-      [1120, 75],
-      [1150, 68],
-      [1180, 72],
-      [1220, 65],
+      [1480, 75],
+      [1510, 68],
+      [1540, 72],
+      [1580, 65],
     ]);
     drawLavaRiver([
-      [1250, 20],
-      [1280, 28],
-      [1320, 25],
-      [1360, 30],
+      [1490, 31],
+      [1520, 35],
+      [1540, 33],
+      [1570, 35],
+    ]);
+    drawLavaRiver([
+      [1590, 20],
+      [1620, 28],
+      [1660, 25],
+      [1700, 30],
+    ]);
+    drawLavaRiver([
+      [1650, 80],
+      [1680, 82],
+      [1710, 78],
+      [1740, 70],
     ]);
 
     // Obsidian rocks
@@ -1959,11 +2164,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.stroke();
     };
     [
-      [1140, 42],
-      [1190, 78],
-      [1260, 58],
-      [1300, 38],
-      [1350, 72],
+      [1490, 42],
+      [1540, 78],
+      [1610, 58],
+      [1650, 38],
+      [1700, 72],
     ].forEach(([x, yPct], i) => {
       drawObsidianRock(x, yPct, 0.6 + seededRandom(i + 400) * 0.4);
     });
@@ -1993,9 +2198,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
       ctx.globalAlpha = 1;
     };
-    drawVolcanicVent(1160, 52);
-    drawVolcanicVent(1280, 70);
-    drawVolcanicVent(1340, 45);
+    drawVolcanicVent(1500, 52);
+    drawVolcanicVent(1600, 70);
+    drawVolcanicVent(1660, 45);
 
     // Destroyed fortress
     const drawDestroyedFortress = (fx: number, fyPct: number) => {
@@ -2024,11 +2229,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.quadraticCurveTo(fx, fy - 20 - fh, fx + 5, fy - 20);
       ctx.fill();
     };
-    drawDestroyedFortress(1230, 48);
+    drawDestroyedFortress(1590, 48);
 
     // Ember particles in volcanic region
     for (let i = 0; i < 20; i++) {
-      const ex = 1100 + seededRandom(i * 13) * 350;
+      const ex = 1450 + seededRandom(i * 13) * 350;
       const baseY = seededRandom(i * 17) * height * 0.8;
       const ey =
         baseY - ((time * 40 + seededRandom(i * 19) * 50) % (height * 0.6));
@@ -2112,6 +2317,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawBattleScene(1050, 38, true, 2);
     drawBattleScene(1200, 62, false, 2);
     drawBattleScene(1340, 68, true, 3);
+    drawBattleScene(1520, 25, false, 2);
+    drawBattleScene(1670, 75, true, 3);
 
     // === KINGDOM CASTLES ===
     const drawKingdomCastle = (x: number, yPct: number, isEnemy: boolean) => {
@@ -2181,8 +2388,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.fillText(isEnemy ? "ENEMY STRONGHOLD" : "YOUR KINGDOM", x, y + 27);
     };
 
-    drawKingdomCastle(45, 50, false);
-    drawKingdomCastle(MAP_WIDTH - 45, 50, true);
+    drawKingdomCastle(70, 50, false);
+    drawKingdomCastle(MAP_WIDTH - 70, 50, true);
 
     // --- PATH CONNECTIONS ---
     WORLD_LEVELS.forEach((level) => {
@@ -2326,6 +2533,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             ? "#e8a838"
             : level.region === "winter"
             ? "#88c8e8"
+            : level.region === "volcanic"
+            ? "#e84848"
+            : level.region === "swamp"
+            ? "#5f9ea0"
             : "#e84848";
         ctx.globalAlpha = 0.8;
         if (level.region === "grassland") {
@@ -2334,6 +2545,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           ctx.lineTo(x + 7, y + 5);
           ctx.lineTo(x - 7, y + 5);
           ctx.closePath();
+          ctx.fill();
+        } else if (level.region === "swamp") {
+          ctx.beginPath();
+          ctx.ellipse(x, y, 6, 8, 0, 0, Math.PI * 2);
           ctx.fill();
         } else if (level.region === "desert") {
           ctx.beginPath();
@@ -2350,6 +2565,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             ctx.fillRect(-1.5, -8, 3, 16);
             ctx.restore();
           }
+        } else if (level.region === "volcanic") {
+          ctx.beginPath();
+          ctx.moveTo(x, y - 8);
+          ctx.lineTo(x + 5, y + 5);
+          ctx.lineTo(x - 5, y + 5);
+          ctx.closePath();
+          ctx.fill();
         } else {
           ctx.beginPath();
           ctx.moveTo(x, y - 8);
@@ -2618,14 +2840,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const waveCount = selectedLevel ? getWaveCount(selectedLevel) : 0;
 
   return (
-    <div
-      className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden"
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <div className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden">
       {/* TOP BAR */}
-      <div className="flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-6 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
+      <div className="flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-5 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
         <PrincetonLogo />
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowCodex(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
+          >
+            <Book size={18} className="text-purple-400" />
+            <span className="text-purple-300 font-medium text-lg">
+              War Codex
+            </span>
+          </button>
           <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 shadow-lg">
             <div className="relative">
               <Star size={20} className="text-yellow-400 fill-yellow-400" />
@@ -2638,13 +2866,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </span>
             <span className="text-yellow-600 text-sm">/ {maxStars}</span>
           </div>
-          <button
-            onClick={() => setShowCodex(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
-          >
-            <Book size={18} className="text-purple-400" />
-            <span className="text-purple-300 font-medium">War Codex</span>
-          </button>
         </div>
       </div>
 
@@ -2652,6 +2873,257 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* LEFT: Map */}
+        {/* RIGHT SIDEBAR */}
+        <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col overflow-hidden">
+          {selectedLevel && currentLevel ? (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-shrink-0 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-transparent to-transparent" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent animate-pulse" />
+                <div className="relative p-4 border-b border-amber-800/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <MapPin size={20} className="text-amber-400" />
+                        <div className="absolute inset-0 animate-ping opacity-30">
+                          <MapPin size={20} className="text-amber-400" />
+                        </div>
+                      </div>
+                      <h2 className="text-xl font-bold text-amber-200">
+                        {currentLevel.name}
+                      </h2>
+                    </div>
+                    <button
+                      onClick={() => setSelectedLevel(null)}
+                      className="p-1.5 hover:bg-amber-900/40 rounded-lg transition-colors text-amber-500 hover:text-amber-300"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <p className="text-amber-500/80 text-sm italic mb-3">
+                    &ldquo;{currentLevel.description}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="flex items-center gap-2 px-2 py-1 bg-stone-800/60 rounded-lg border border-stone-700/50">
+                      <Skull size={14} className="text-amber-500" />
+                      <div className="flex gap-1">
+                        {[1, 2, 3].map((d) => (
+                          <div
+                            key={d}
+                            className={`w-3 h-3 rounded-full transition-all ${
+                              d <= currentLevel.difficulty
+                                ? `${
+                                    currentLevel.difficulty === 1
+                                      ? "bg-green-500 shadow-green-500/50"
+                                      : currentLevel.difficulty === 2
+                                      ? "bg-yellow-500 shadow-yellow-500/50"
+                                      : "bg-red-500 shadow-red-500/50"
+                                  } shadow-lg`
+                                : "bg-stone-700"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-900/40 rounded-lg border border-amber-700/50">
+                      <Flag size={14} className="text-amber-400" />
+                      <span className="text-amber-200 font-bold">
+                        {waveCount} Waves
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
+                    <Trophy size={18} className="text-yellow-500" />
+                    <span className="text-amber-500 text-sm">Best Score:</span>
+                    <div className="flex gap-1">
+                      {[1, 2, 3].map((s) => (
+                        <Star
+                          key={s}
+                          size={18}
+                          className={`transition-all ${
+                            (levelStars[currentLevel.id] || 0) >= s
+                              ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
+                              : "text-stone-600"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-shrink-0 p-4 border-b border-amber-800/30">
+                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
+                  Battlefield Preview
+                </div>
+                <div className="relative aspect-video bg-stone-900/80 rounded-xl border border-amber-800/40 overflow-hidden">
+                  {LEVEL_DATA[currentLevel.id]?.previewImage ? (
+                    <img
+                      src={LEVEL_DATA[currentLevel.id].previewImage}
+                      alt={`${currentLevel.name} preview`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : null}
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center ${
+                      LEVEL_DATA[currentLevel.id]?.previewImage
+                        ? "opacity-0"
+                        : "opacity-100"
+                    }`}
+                  >
+                    <div
+                      className={`w-full h-full ${
+                        currentLevel.region === "grassland"
+                          ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
+                          : currentLevel.region === "desert"
+                          ? "bg-gradient-to-br from-amber-800/80 via-yellow-900/60 to-orange-900/40"
+                          : currentLevel.region === "winter"
+                          ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
+                          : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
+                      } flex items-center justify-center`}
+                    >
+                      <div className="text-center">
+                        <div className="text-4xl mb-2">
+                          {currentLevel.region === "grassland"
+                            ? "🌲"
+                            : currentLevel.region === "desert"
+                            ? "🏜️"
+                            : currentLevel.region === "winter"
+                            ? "❄️"
+                            : "🌋"}
+                        </div>
+                        <span className="text-amber-400/70 text-xs">
+                          Preview Coming
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase bg-stone-900/90 text-amber-300 border border-amber-700/60">
+                    {currentLevel.region}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 p-4 overflow-y-auto">
+                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3">
+                  Region Campaign
+                </div>
+                {(() => {
+                  const regionLevels = WORLD_LEVELS.filter(
+                    (l) => l.region === currentLevel.region
+                  );
+                  const regionStars = regionLevels.reduce(
+                    (sum, l) => sum + (levelStars[l.id] || 0),
+                    0
+                  );
+                  const maxRegionStars = regionLevels.length * 3;
+                  return (
+                    <div className="space-y-2">
+                      {regionLevels.map((l) => (
+                        <div
+                          key={l.id}
+                          className={`flex items-center gap-3 p-2.5 rounded-lg transition-all ${
+                            l.id === selectedLevel
+                              ? "bg-amber-900/40 border border-amber-600/60"
+                              : "bg-stone-800/40 border border-stone-700/30 hover:bg-stone-800/60"
+                          }`}
+                        >
+                          <div
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
+                              isLevelUnlocked(l.id)
+                                ? "bg-amber-900/50"
+                                : "bg-stone-800"
+                            }`}
+                          >
+                            {isLevelUnlocked(l.id)
+                              ? l.region === "grassland"
+                                ? "🌲"
+                                : l.region === "desert"
+                                ? "🏜️"
+                                : l.region === "winter"
+                                ? "❄️"
+                                : "🌋"
+                              : "🔒"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-amber-200 font-medium truncate">
+                              {l.name}
+                            </div>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3].map((s) => (
+                              <Star
+                                key={s}
+                                size={14}
+                                className={
+                                  (levelStars[l.id] || 0) >= s
+                                    ? "text-yellow-400 fill-yellow-400"
+                                    : "text-stone-600"
+                                }
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <div className="mt-3 pt-3 border-t border-amber-800/40 flex items-center justify-between">
+                        <span className="text-amber-500 text-sm">
+                          Region Progress:
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Star
+                            size={16}
+                            className="text-yellow-400 fill-yellow-400"
+                          />
+                          <span className="text-amber-200 font-bold">
+                            {regionStars}/{maxRegionStars}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex-shrink-0 p-4 border-t border-amber-800/50 bg-gradient-to-t from-stone-950 to-transparent">
+                <button
+                  onClick={startGame}
+                  disabled={!canStart}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all relative overflow-hidden group ${
+                    canStart
+                      ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02]"
+                      : "bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700"
+                  }`}
+                >
+                  {canStart && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  )}
+                  <div className="relative flex items-center justify-center gap-3">
+                    <Swords
+                      size={24}
+                      className={canStart ? "animate-pulse" : ""}
+                    />
+                    <span>{canStart ? "BATTLE!" : "Prepare Your Forces"}</span>
+                    {canStart && <Play size={20} />}
+                  </div>
+                </button>
+                {!canStart && (
+                  <div className="mt-2 text-center text-xs text-amber-600">
+                    {!selectedLevel && "Select a battlefield"}
+                    {selectedLevel && !selectedHero && "Choose your champion"}
+                    {selectedLevel &&
+                      selectedHero &&
+                      selectedSpells.length < 3 &&
+                      `Select ${3 - selectedSpells.length} more spell${
+                        3 - selectedSpells.length > 1 ? "s" : ""
+                      }`}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <BattlefieldPreview animTime={animTime} />
+          )}
+        </div>
         <div className="flex-1 flex flex-col min-w-0 p-4">
           <div
             ref={containerRef}
@@ -2674,7 +3146,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <Crown size={14} className="text-amber-400" />
                     <span className="text-xs font-bold text-amber-300 tracking-wide">
-                      THE WAR CHRONICLES
+                      WAR IS COMING
                     </span>
                   </div>
                   <div className="text-[10px] text-amber-200/80 leading-relaxed space-y-1.5">
@@ -2983,260 +3455,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               </div>
             </div>
           </div>
-        </div>
-
-        {/* RIGHT SIDEBAR */}
-        <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-l-2 border-amber-800/50 flex flex-col overflow-hidden">
-          {selectedLevel && currentLevel ? (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-shrink-0 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-transparent to-transparent" />
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent animate-pulse" />
-                <div className="relative p-4 border-b border-amber-800/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <MapPin size={20} className="text-amber-400" />
-                        <div className="absolute inset-0 animate-ping opacity-30">
-                          <MapPin size={20} className="text-amber-400" />
-                        </div>
-                      </div>
-                      <h2 className="text-xl font-bold text-amber-200">
-                        {currentLevel.name}
-                      </h2>
-                    </div>
-                    <button
-                      onClick={() => setSelectedLevel(null)}
-                      className="p-1.5 hover:bg-amber-900/40 rounded-lg transition-colors text-amber-500 hover:text-amber-300"
-                    >
-                      <X size={18} />
-                    </button>
-                  </div>
-                  <p className="text-amber-500/80 text-sm italic mb-3">
-                    &ldquo;{currentLevel.description}&rdquo;
-                  </p>
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex items-center gap-2 px-2 py-1 bg-stone-800/60 rounded-lg border border-stone-700/50">
-                      <Skull size={14} className="text-amber-500" />
-                      <div className="flex gap-1">
-                        {[1, 2, 3].map((d) => (
-                          <div
-                            key={d}
-                            className={`w-3 h-3 rounded-full transition-all ${
-                              d <= currentLevel.difficulty
-                                ? `${
-                                    currentLevel.difficulty === 1
-                                      ? "bg-green-500 shadow-green-500/50"
-                                      : currentLevel.difficulty === 2
-                                      ? "bg-yellow-500 shadow-yellow-500/50"
-                                      : "bg-red-500 shadow-red-500/50"
-                                  } shadow-lg`
-                                : "bg-stone-700"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-900/40 rounded-lg border border-amber-700/50">
-                      <Flag size={14} className="text-amber-400" />
-                      <span className="text-amber-200 font-bold">
-                        {waveCount} Waves
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
-                    <Trophy size={18} className="text-yellow-500" />
-                    <span className="text-amber-500 text-sm">Best Score:</span>
-                    <div className="flex gap-1">
-                      {[1, 2, 3].map((s) => (
-                        <Star
-                          key={s}
-                          size={18}
-                          className={`transition-all ${
-                            (levelStars[currentLevel.id] || 0) >= s
-                              ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                              : "text-stone-600"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-shrink-0 p-4 border-b border-amber-800/30">
-                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
-                  Battlefield Preview
-                </div>
-                <div className="relative aspect-video bg-stone-900/80 rounded-xl border border-amber-800/40 overflow-hidden">
-                  {LEVEL_DATA[currentLevel.id]?.previewImage ? (
-                    <img
-                      src={LEVEL_DATA[currentLevel.id].previewImage}
-                      alt={`${currentLevel.name} preview`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : null}
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      LEVEL_DATA[currentLevel.id]?.previewImage
-                        ? "opacity-0"
-                        : "opacity-100"
-                    }`}
-                  >
-                    <div
-                      className={`w-full h-full ${
-                        currentLevel.region === "grassland"
-                          ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
-                          : currentLevel.region === "desert"
-                          ? "bg-gradient-to-br from-amber-800/80 via-yellow-900/60 to-orange-900/40"
-                          : currentLevel.region === "winter"
-                          ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
-                          : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
-                      } flex items-center justify-center`}
-                    >
-                      <div className="text-center">
-                        <div className="text-4xl mb-2">
-                          {currentLevel.region === "grassland"
-                            ? "🌲"
-                            : currentLevel.region === "desert"
-                            ? "🏜️"
-                            : currentLevel.region === "winter"
-                            ? "❄️"
-                            : "🌋"}
-                        </div>
-                        <span className="text-amber-400/70 text-xs">
-                          Preview Coming
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase bg-stone-900/90 text-amber-300 border border-amber-700/60">
-                    {currentLevel.region}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 p-4 overflow-y-auto">
-                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3">
-                  Region Campaign
-                </div>
-                {(() => {
-                  const regionLevels = WORLD_LEVELS.filter(
-                    (l) => l.region === currentLevel.region
-                  );
-                  const regionStars = regionLevels.reduce(
-                    (sum, l) => sum + (levelStars[l.id] || 0),
-                    0
-                  );
-                  const maxRegionStars = regionLevels.length * 3;
-                  return (
-                    <div className="space-y-2">
-                      {regionLevels.map((l) => (
-                        <div
-                          key={l.id}
-                          className={`flex items-center gap-3 p-2.5 rounded-lg transition-all ${
-                            l.id === selectedLevel
-                              ? "bg-amber-900/40 border border-amber-600/60"
-                              : "bg-stone-800/40 border border-stone-700/30 hover:bg-stone-800/60"
-                          }`}
-                        >
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
-                              isLevelUnlocked(l.id)
-                                ? "bg-amber-900/50"
-                                : "bg-stone-800"
-                            }`}
-                          >
-                            {isLevelUnlocked(l.id)
-                              ? l.region === "grassland"
-                                ? "🌲"
-                                : l.region === "desert"
-                                ? "🏜️"
-                                : l.region === "winter"
-                                ? "❄️"
-                                : "🌋"
-                              : "🔒"}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm text-amber-200 font-medium truncate">
-                              {l.name}
-                            </div>
-                          </div>
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3].map((s) => (
-                              <Star
-                                key={s}
-                                size={14}
-                                className={
-                                  (levelStars[l.id] || 0) >= s
-                                    ? "text-yellow-400 fill-yellow-400"
-                                    : "text-stone-600"
-                                }
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                      <div className="mt-3 pt-3 border-t border-amber-800/40 flex items-center justify-between">
-                        <span className="text-amber-500 text-sm">
-                          Region Progress:
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Star
-                            size={16}
-                            className="text-yellow-400 fill-yellow-400"
-                          />
-                          <span className="text-amber-200 font-bold">
-                            {regionStars}/{maxRegionStars}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              <div className="flex-shrink-0 p-4 border-t border-amber-800/50 bg-gradient-to-t from-stone-950 to-transparent">
-                <button
-                  onClick={startGame}
-                  disabled={!canStart}
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all relative overflow-hidden group ${
-                    canStart
-                      ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02]"
-                      : "bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700"
-                  }`}
-                >
-                  {canStart && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  )}
-                  <div className="relative flex items-center justify-center gap-3">
-                    <Swords
-                      size={24}
-                      className={canStart ? "animate-pulse" : ""}
-                    />
-                    <span>
-                      {canStart ? "CHARGE INTO BATTLE!" : "Prepare Your Forces"}
-                    </span>
-                    {canStart && <Play size={20} />}
-                  </div>
-                </button>
-                {!canStart && (
-                  <div className="mt-2 text-center text-xs text-amber-600">
-                    {!selectedLevel && "Select a battlefield"}
-                    {selectedLevel && !selectedHero && "Choose your champion"}
-                    {selectedLevel &&
-                      selectedHero &&
-                      selectedSpells.length < 3 &&
-                      `Select ${3 - selectedSpells.length} more spell${
-                        3 - selectedSpells.length > 1 ? "s" : ""
-                      }`}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <BattlefieldPreview animTime={animTime} />
-          )}
         </div>
       </div>
 

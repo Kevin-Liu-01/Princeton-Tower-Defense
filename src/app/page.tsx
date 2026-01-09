@@ -84,6 +84,12 @@ const MELEE_RANGE = 60; // Close range where ranged units switch to melee
 const FORMATION_SPACING = 30; // Distance between troops in formation
 const ENEMY_SPEED_MODIFIER = 0.75; // Global enemy speed multiplier (slower enemies)
 
+// Helper to get enemy position using their pathKey for dual-path support
+const getEnemyPosWithPath = (enemy: Enemy, defaultMap: string): Position => {
+  const pathKey = enemy.pathKey || defaultMap;
+  return getEnemyPosition(enemy, pathKey);
+};
+
 // Formation offsets relative to rally point (triangle pattern)
 const getFormationOffsets = (count: number): Position[] => {
   if (count === 1) {
@@ -431,6 +437,15 @@ export default function PrincetonTowerDefense() {
         laneOffset += (Math.random() - 0.5) * 0.15;
         laneOffset = Math.max(-0.9, Math.min(0.9, laneOffset));
 
+        // Check for dual-path levels
+        const levelData = LEVEL_DATA[selectedMap];
+        const isDualPath = levelData?.dualPath && levelData?.secondaryPath;
+        // Alternate between paths for dual-path levels
+        const useSecondaryPath = isDualPath && spawned % 2 === 1;
+        const pathKey = useSecondaryPath
+          ? levelData.secondaryPath
+          : selectedMap;
+
         const enemy: Enemy = {
           id: generateId("enemy"),
           type: group.type,
@@ -451,6 +466,7 @@ export default function PrincetonTowerDefense() {
           laneOffset: laneOffset,
           slowed: false,
           slowIntensity: 0,
+          pathKey: pathKey, // Track which path this enemy uses
         };
         setEnemies((prev) => [...prev, enemy]);
         spawned++;
@@ -510,7 +526,7 @@ export default function PrincetonTowerDefense() {
         if (ENEMY_DATA[enemy.type].flying) return;
         if (now - enemy.lastTroopAttack <= 1000) return;
 
-        const enemyPos = getEnemyPosition(enemy, selectedMap);
+        const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
 
         // Check if hero is nearby (hero takes combat priority over troops)
         const heroNearby =
@@ -608,7 +624,7 @@ export default function PrincetonTowerDefense() {
               if (newHp <= 0) {
                 setPawPoints((pp) => pp + ENEMY_DATA[enemy.type].bounty);
                 addParticles(
-                  getEnemyPosition(enemy, selectedMap),
+                  getEnemyPosWithPath(enemy, selectedMap),
                   "explosion",
                   8
                 );
@@ -632,7 +648,8 @@ export default function PrincetonTowerDefense() {
             const nearbyHero =
               hero &&
               !hero.dead &&
-              distance(getEnemyPosition(enemy, selectedMap), hero.pos) < 60 &&
+              distance(getEnemyPosWithPath(enemy, selectedMap), hero.pos) <
+                60 &&
               !ENEMY_DATA[enemy.type].flying
                 ? hero
                 : null;
@@ -670,7 +687,7 @@ export default function PrincetonTowerDefense() {
             // Check for nearby troop combat (damage already applied above)
             const nearbyTroop = troops.find(
               (t) =>
-                distance(getEnemyPosition(enemy, selectedMap), t.pos) < 60 &&
+                distance(getEnemyPosWithPath(enemy, selectedMap), t.pos) < 60 &&
                 !ENEMY_DATA[enemy.type].flying
             );
             if (nearbyTroop) {
@@ -709,7 +726,7 @@ export default function PrincetonTowerDefense() {
               enemyData.range &&
               enemyData.attackSpeed
             ) {
-              const enemyPos = getEnemyPosition(enemy, selectedMap);
+              const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
               // Check for targets in range (hero and troops)
               let rangedTarget: {
                 type: "hero" | "troop";
@@ -787,7 +804,9 @@ export default function PrincetonTowerDefense() {
             const slowIntensity = enemy.slowEffect;
             // Move enemy along path
             if (!enemy.inCombat) {
-              const path = MAP_PATHS[selectedMap];
+              // Use enemy's pathKey for dual-path support
+              const pathKey = enemy.pathKey || selectedMap;
+              const path = MAP_PATHS[pathKey];
               const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
               const newProgress =
                 enemy.progress +
@@ -833,12 +852,12 @@ export default function PrincetonTowerDefense() {
         const SEPARATION_DISTANCE = 25;
         const SEPARATION_FORCE = 0.3;
         return prev.map((enemy) => {
-          const enemyPos = getEnemyPosition(enemy, selectedMap);
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
           let separationX = 0;
           let separationY = 0;
           for (const other of prev) {
             if (other.id === enemy.id) continue;
-            const otherPos = getEnemyPosition(other, selectedMap);
+            const otherPos = getEnemyPosWithPath(other, selectedMap);
             const dx = enemyPos.x - otherPos.x;
             const dy = enemyPos.y - otherPos.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -876,7 +895,7 @@ export default function PrincetonTowerDefense() {
 
           // Find enemies within sight range (excluding flying for ground heroes)
           const enemiesInSight = enemies.filter((e) => {
-            const enemyPos = getEnemyPosition(e, selectedMap);
+            const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(prev.pos, enemyPos);
             return dist <= sightRange && !ENEMY_DATA[e.type].flying;
           });
@@ -885,7 +904,7 @@ export default function PrincetonTowerDefense() {
           let closestEnemy: (typeof enemies)[0] | null = null;
           let closestDist = Infinity;
           for (const e of enemiesInSight) {
-            const enemyPos = getEnemyPosition(e, selectedMap);
+            const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(prev.pos, enemyPos);
             if (dist < closestDist) {
               closestDist = dist;
@@ -929,7 +948,7 @@ export default function PrincetonTowerDefense() {
 
           if (closestEnemy) {
             // Enemy in sight - engage!
-            const enemyPos = getEnemyPosition(closestEnemy, selectedMap);
+            const enemyPos = getEnemyPosWithPath(closestEnemy, selectedMap);
 
             // Ranged heroes: stay at attack range and don't rush in
             // Melee heroes: rush in to melee range
@@ -1074,7 +1093,7 @@ export default function PrincetonTowerDefense() {
 
           // Find enemies within sight range (excluding flying enemies)
           const enemiesInSight = enemies.filter((e) => {
-            const enemyPos = getEnemyPosition(e, selectedMap);
+            const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(troop.pos, enemyPos);
             return dist <= sightRange && !ENEMY_DATA[e.type].flying;
           });
@@ -1083,7 +1102,7 @@ export default function PrincetonTowerDefense() {
           let closestEnemy: (typeof enemies)[0] | null = null;
           let closestDist = Infinity;
           for (const e of enemiesInSight) {
-            const enemyPos = getEnemyPosition(e, selectedMap);
+            const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(troop.pos, enemyPos);
             if (dist < closestDist) {
               closestDist = dist;
@@ -1097,7 +1116,7 @@ export default function PrincetonTowerDefense() {
 
           if (closestEnemy) {
             // Enemy in sight - engage!
-            const enemyPos = getEnemyPosition(closestEnemy, selectedMap);
+            const enemyPos = getEnemyPosWithPath(closestEnemy, selectedMap);
 
             // Check if chasing would take us too far from home
             const distFromHome = homePos ? distance(updated.pos, homePos) : 0;
@@ -1248,7 +1267,7 @@ export default function PrincetonTowerDefense() {
       // Hero HP regeneration
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
         const inCombat = enemies.some(
-          (e) => distance(hero.pos, getEnemyPosition(e, selectedMap)) <= 100
+          (e) => distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= 100
         );
         if (!inCombat) {
           setHero((prev) =>
@@ -1330,7 +1349,7 @@ export default function PrincetonTowerDefense() {
             const towerWorldPos = gridToWorld(tower.pos);
             const auraRange = 100 + tower.level * 20;
             enemies.forEach((e) => {
-              const enemyPos = getEnemyPosition(e, selectedMap);
+              const enemyPos = getEnemyPosWithPath(e, selectedMap);
               if (distance(towerWorldPos, enemyPos) <= auraRange) {
                 const slowAmount = tower.level === 3 ? 0.15 : 0.2;
                 setEnemies((prev) =>
@@ -1372,7 +1391,7 @@ export default function PrincetonTowerDefense() {
           let appliedSlow = false;
           let appliedDamage = false;
           enemies.forEach((e) => {
-            const enemyPos = getEnemyPosition(e, selectedMap);
+            const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(towerWorldPos, enemyPos);
             if (dist <= tData.range) {
               // Base slow effect - increases with level
@@ -1485,7 +1504,7 @@ export default function PrincetonTowerDefense() {
           if (
             enemies.some(
               (e) =>
-                distance(towerWorldPos, getEnemyPosition(e, selectedMap)) <=
+                distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
                 tData.range
             )
           ) {
@@ -1785,15 +1804,17 @@ export default function PrincetonTowerDefense() {
             const validEnemies = enemies
               .filter(
                 (e) =>
-                  distance(towerWorldPos, getEnemyPosition(e, selectedMap)) <=
-                  tData.range
+                  distance(
+                    towerWorldPos,
+                    getEnemyPosWithPath(e, selectedMap)
+                  ) <= tData.range
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
               );
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
-              const targetPos = getEnemyPosition(target, selectedMap);
+              const targetPos = getEnemyPosWithPath(target, selectedMap);
               let damage = tData.damage;
               if (tower.level === 2) damage *= 1.5;
               if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
@@ -1875,15 +1896,17 @@ export default function PrincetonTowerDefense() {
             const validEnemies = enemies
               .filter(
                 (e) =>
-                  distance(towerWorldPos, getEnemyPosition(e, selectedMap)) <=
-                  tData.range
+                  distance(
+                    towerWorldPos,
+                    getEnemyPosWithPath(e, selectedMap)
+                  ) <= tData.range
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
               );
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
-              const targetPos = getEnemyPosition(target, selectedMap);
+              const targetPos = getEnemyPosWithPath(target, selectedMap);
               let damage = tData.damage;
               if (tower.level === 2) damage *= 1.5;
               if (tower.level >= 3) damage *= 2; // Level 3 and 4 get 2x base damage
@@ -1913,7 +1936,7 @@ export default function PrincetonTowerDefense() {
                       if (newHp <= 0) {
                         setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
                         addParticles(
-                          getEnemyPosition(e, selectedMap),
+                          getEnemyPosWithPath(e, selectedMap),
                           "explosion",
                           8
                         );
@@ -1941,11 +1964,14 @@ export default function PrincetonTowerDefense() {
               if (isTeslaCoil || isChainLightning) {
                 // Draw chain lightning between all targets
                 chainTargets.forEach((chainTarget, i) => {
-                  const chainPos = getEnemyPosition(chainTarget, selectedMap);
+                  const chainPos = getEnemyPosWithPath(
+                    chainTarget,
+                    selectedMap
+                  );
                   const fromPos =
                     i === 0
                       ? towerWorldPos // Use tower base position, renderer will adjust to orb
-                      : getEnemyPosition(chainTargets[i - 1], selectedMap);
+                      : getEnemyPosWithPath(chainTargets[i - 1], selectedMap);
                   setEffects((ef) => [
                     ...ef,
                     {
@@ -1999,8 +2025,10 @@ export default function PrincetonTowerDefense() {
             const validEnemies = enemies
               .filter(
                 (e) =>
-                  distance(towerWorldPos, getEnemyPosition(e, selectedMap)) <=
-                  tData.range
+                  distance(
+                    towerWorldPos,
+                    getEnemyPosWithPath(e, selectedMap)
+                  ) <= tData.range
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
@@ -2024,7 +2052,7 @@ export default function PrincetonTowerDefense() {
                   .map((e) => {
                     const isTarget = targets.find((t) => t.id === e.id);
                     if (isTarget) {
-                      const targetPos = getEnemyPosition(e, selectedMap);
+                      const targetPos = getEnemyPosWithPath(e, selectedMap);
                       const newHp =
                         e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
                       const updates: any = { hp: newHp, damageFlash: 150 };
@@ -2044,7 +2072,7 @@ export default function PrincetonTowerDefense() {
                   .filter(Boolean)
               );
               const target = targets[0];
-              const targetPos = getEnemyPosition(target, selectedMap);
+              const targetPos = getEnemyPosWithPath(target, selectedMap);
               const dx = targetPos.x - towerWorldPos.x;
               const dy = targetPos.y - towerWorldPos.y;
               const rotation = Math.atan2(dy, dx);
@@ -2067,7 +2095,7 @@ export default function PrincetonTowerDefense() {
               ]);
               // Create music note cluster effects to each target
               targets.forEach((target, i) => {
-                const targetPos = getEnemyPosition(target, selectedMap);
+                const targetPos = getEnemyPosWithPath(target, selectedMap);
                 // Create multiple note projectiles per target
                 for (let n = 0; n < 3 + tower.level; n++) {
                   setEffects((ef) => [
@@ -2099,7 +2127,7 @@ export default function PrincetonTowerDefense() {
           const validEnemies = enemies
             .filter(
               (e) =>
-                distance(towerWorldPos, getEnemyPosition(e, selectedMap)) <=
+                distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
                 tData.range
             )
             .sort(
@@ -2107,7 +2135,7 @@ export default function PrincetonTowerDefense() {
             );
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
-            const targetPos = getEnemyPosition(target, selectedMap);
+            const targetPos = getEnemyPosWithPath(target, selectedMap);
             let damage = tData.damage;
             if (tower.level === 2) damage *= 1.5;
             if (tower.level === 3) damage *= 2;
@@ -2170,7 +2198,7 @@ export default function PrincetonTowerDefense() {
           const validEnemies = enemies
             .filter(
               (e) =>
-                distance(hero.pos, getEnemyPosition(e, selectedMap)) <=
+                distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <=
                 heroData.range
             )
             .sort(
@@ -2178,7 +2206,7 @@ export default function PrincetonTowerDefense() {
             );
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
-            const targetPos = getEnemyPosition(target, selectedMap);
+            const targetPos = getEnemyPosWithPath(target, selectedMap);
             setEnemies((prev) =>
               prev
                 .map((e) => {
@@ -2251,12 +2279,12 @@ export default function PrincetonTowerDefense() {
         ) {
           const validEnemies = enemies.filter(
             (e) =>
-              distance(troop.pos, getEnemyPosition(e, selectedMap)) <=
+              distance(troop.pos, getEnemyPosWithPath(e, selectedMap)) <=
                 attackRange && !ENEMY_DATA[e.type].flying
           );
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
-            const targetPos = getEnemyPosition(target, selectedMap);
+            const targetPos = getEnemyPosWithPath(target, selectedMap);
             const troopDamage = troopData.damage || 20;
             const dx = targetPos.x - troop.pos.x;
             const dy = targetPos.y - troop.pos.y;
@@ -2418,7 +2446,10 @@ export default function PrincetonTowerDefense() {
         const unlockMap: Record<string, string> = {
           poe: "carnegie",
           carnegie: "nassau",
-          nassau: "oasis",
+          nassau: "bog",
+          bog: "witch_hut",
+          witch_hut: "sunken_temple",
+          sunken_temple: "oasis",
           oasis: "pyramid",
           pyramid: "sphinx",
           sphinx: "glacier",
@@ -2489,6 +2520,16 @@ export default function PrincetonTowerDefense() {
     // Save state before camera transforms
     ctx.save();
     // Draw grid (no camera transform for background elements)
+    // Use seeded random for consistent grid fill
+    const gridSeed = selectedMap
+      .split("")
+      .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    let gridSeedState = gridSeed;
+    const gridRandom = () => {
+      gridSeedState = (gridSeedState * 1103515245 + 12345) & 0x7fffffff;
+      return gridSeedState / 0x7fffffff;
+    };
+
     for (let y = 0; y < GRID_HEIGHT; y++) {
       for (let x = 0; x < GRID_WIDTH; x++) {
         const worldPos = gridToWorld({ x, y });
@@ -2512,8 +2553,9 @@ export default function PrincetonTowerDefense() {
         ctx.lineTo(screenPos.x - tileWidth / 2, screenPos.y + tileHeight / 2);
         ctx.closePath();
         ctx.stroke();
-        if (Math.random() > 0.7) {
-          ctx.fillStyle = hexToRgba(theme.accent, 0.02 + Math.random() * 0.03);
+        // Use seeded random for consistent tile fills
+        if (gridRandom() > 0.7) {
+          ctx.fillStyle = hexToRgba(theme.accent, 0.02 + gridRandom() * 0.03);
           ctx.fill();
         }
       }
@@ -2781,6 +2823,107 @@ export default function PrincetonTowerDefense() {
       );
       ctx.fill();
     }
+
+    // Draw secondary path for dual-path levels
+    const levelData = LEVEL_DATA[selectedMap];
+    if (
+      levelData?.dualPath &&
+      levelData?.secondaryPath &&
+      MAP_PATHS[levelData.secondaryPath]
+    ) {
+      const secondaryPath = MAP_PATHS[levelData.secondaryPath];
+      const secondaryPathWorldPoints = secondaryPath.map((p) =>
+        gridToWorldPath(p)
+      );
+      const smoothSecondaryPath = generateSmoothPath(secondaryPathWorldPoints);
+
+      // Reset seed for consistent secondary path decoration
+      seedState = mapSeed + 500;
+
+      const {
+        left: secPathLeft,
+        right: secPathRight,
+        center: secPathCenter,
+      } = addPathWobble(smoothSecondaryPath, 10);
+      const screenSecCenter = smoothSecondaryPath.map(toScreen);
+      const screenSecLeft = secPathLeft.map(toScreen);
+      const screenSecRight = secPathRight.map(toScreen);
+
+      // Shadow layer for secondary path
+      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+      ctx.beginPath();
+      ctx.moveTo(screenSecLeft[0].x + 4, screenSecLeft[0].y + 4);
+      for (let i = 1; i < screenSecLeft.length; i++)
+        ctx.lineTo(screenSecLeft[i].x + 4, screenSecLeft[i].y + 4);
+      for (let i = screenSecRight.length - 1; i >= 0; i--)
+        ctx.lineTo(screenSecRight[i].x + 4, screenSecRight[i].y + 4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Main road edge - themed
+      ctx.fillStyle = theme.path[2];
+      ctx.beginPath();
+      ctx.moveTo(screenSecLeft[0].x, screenSecLeft[0].y);
+      for (let i = 1; i < screenSecLeft.length; i++)
+        ctx.lineTo(screenSecLeft[i].x, screenSecLeft[i].y);
+      for (let i = screenSecRight.length - 1; i >= 0; i--)
+        ctx.lineTo(screenSecRight[i].x, screenSecRight[i].y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner road - themed
+      ctx.fillStyle = theme.path[0];
+      ctx.beginPath();
+      for (let i = 0; i < screenSecCenter.length; i++) {
+        const lx =
+          screenSecCenter[i].x +
+          (screenSecLeft[i].x - screenSecCenter[i].x) * 0.88;
+        const ly =
+          screenSecCenter[i].y +
+          (screenSecLeft[i].y - screenSecCenter[i].y) * 0.88;
+        if (i === 0) ctx.moveTo(lx, ly);
+        else ctx.lineTo(lx, ly);
+      }
+      for (let i = screenSecCenter.length - 1; i >= 0; i--) {
+        const rx =
+          screenSecCenter[i].x +
+          (screenSecRight[i].x - screenSecCenter[i].x) * 0.88;
+        const ry =
+          screenSecCenter[i].y +
+          (screenSecRight[i].y - screenSecCenter[i].y) * 0.88;
+        ctx.lineTo(rx, ry);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      // Top road layer - themed
+      ctx.fillStyle = theme.path[1];
+      ctx.beginPath();
+      for (let i = 0; i < screenSecCenter.length; i++) {
+        const lx =
+          screenSecCenter[i].x +
+          (screenSecLeft[i].x - screenSecCenter[i].x) * 0.72;
+        const ly =
+          screenSecCenter[i].y +
+          (screenSecLeft[i].y - screenSecCenter[i].y) * 0.72 -
+          2;
+        if (i === 0) ctx.moveTo(lx, ly);
+        else ctx.lineTo(lx, ly);
+      }
+      for (let i = screenSecCenter.length - 1; i >= 0; i--) {
+        const rx =
+          screenSecCenter[i].x +
+          (screenSecRight[i].x - screenSecCenter[i].x) * 0.72;
+        const ry =
+          screenSecCenter[i].y +
+          (screenSecRight[i].y - screenSecCenter[i].y) * 0.72 -
+          2;
+        ctx.lineTo(rx, ry);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
     // Now draw fog OVER the road ends to create fade effect
     const firstWorldPos = gridToWorldPath(path[0]);
     const lastWorldPos = gridToWorldPath(path[path.length - 1]);
@@ -2975,7 +3118,38 @@ export default function PrincetonTowerDefense() {
     drawRoadEndFog(firstScreenPos, secondScreenPos, 120);
     // Draw fog at path end (enemy exit)
     drawRoadEndFog(lastScreenPos, secondLastScreenPos, 120);
-    // Generate comprehensive decorations with seeded random
+
+    // Draw fog for secondary path endpoints (dual-path levels)
+    if (
+      levelData?.dualPath &&
+      levelData?.secondaryPath &&
+      MAP_PATHS[levelData.secondaryPath]
+    ) {
+      const secPath = MAP_PATHS[levelData.secondaryPath];
+      const secFirstWorldPos = gridToWorldPath(secPath[0]);
+      const secLastWorldPos = gridToWorldPath(secPath[secPath.length - 1]);
+      const secFirstScreenPos = worldToScreen(
+        secFirstWorldPos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
+      const secSecondWorldPos = gridToWorldPath(secPath[1]);
+      const secSecondScreenPos = worldToScreen(
+        secSecondWorldPos,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
+      // Only draw fog at the secondary path entrance (start), not the end (they merge)
+      drawRoadEndFog(secFirstScreenPos, secSecondScreenPos, 120);
+    }
+
+    // Generate theme-specific decorations
     seedState = mapSeed + 400;
     type DecorationType =
       | "tree"
@@ -2993,7 +3167,28 @@ export default function PrincetonTowerDefense() {
       | "fence"
       | "gravestone"
       | "tent"
-      | "grass";
+      | "grass"
+      | "palm"
+      | "cactus"
+      | "dune"
+      | "pyramid"
+      | "obelisk"
+      | "pine"
+      | "snowman"
+      | "ice_crystal"
+      | "snow_pile"
+      | "lava_pool"
+      | "obsidian_spike"
+      | "charred_tree"
+      | "ember"
+      | "swamp_tree"
+      | "mushroom"
+      | "lily_pad"
+      | "fog_wisp"
+      | "ruins"
+      | "bones"
+      | "torch"
+      | "statue";
     interface Decoration {
       type: DecorationType;
       x: number;
@@ -3003,6 +3198,70 @@ export default function PrincetonTowerDefense() {
       variant: number;
     }
     const decorations: Decoration[] = [];
+
+    // Get current theme
+    const currentTheme = mapTheme;
+
+    // Theme-specific decoration types
+    const getThemeDecorations = (theme: string): DecorationType[] => {
+      switch (theme) {
+        case "desert":
+          return [
+            "palm",
+            "cactus",
+            "dune",
+            "rock",
+            "skeleton",
+            "bones",
+            "ruins",
+            "torch",
+          ];
+        case "winter":
+          return [
+            "pine",
+            "snowman",
+            "ice_crystal",
+            "snow_pile",
+            "rock",
+            "fence",
+            "ruins",
+          ];
+        case "volcanic":
+          return [
+            "lava_pool",
+            "obsidian_spike",
+            "charred_tree",
+            "ember",
+            "rock",
+            "skeleton",
+            "bones",
+          ];
+        case "swamp":
+          return [
+            "swamp_tree",
+            "mushroom",
+            "lily_pad",
+            "fog_wisp",
+            "rock",
+            "gravestone",
+            "ruins",
+            "bones",
+          ];
+        default: // grassland
+          return [
+            "tree",
+            "bush",
+            "rock",
+            "grass",
+            "fence",
+            "hut",
+            "barrel",
+            "tent",
+          ];
+      }
+    };
+
+    const themeDecorTypes = getThemeDecorations(currentTheme);
 
     // Environment decorations (avoid path)
     for (let i = 0; i < 55; i++) {
@@ -3021,18 +3280,28 @@ export default function PrincetonTowerDefense() {
           break;
         }
       }
+      // Also check secondary path
+      if (
+        !onPath &&
+        levelData?.secondaryPath &&
+        MAP_PATHS[levelData.secondaryPath]
+      ) {
+        const secPath = MAP_PATHS[levelData.secondaryPath];
+        for (let j = 0; j < secPath.length - 1; j++) {
+          const p1 = gridToWorldPath(secPath[j]);
+          const p2 = gridToWorldPath(secPath[j + 1]);
+          if (
+            distanceToLineSegment(worldPos, p1, p2) <
+            TOWER_PLACEMENT_BUFFER + 15
+          ) {
+            onPath = true;
+            break;
+          }
+        }
+      }
       if (onPath) continue;
-      const roll = seededRandom();
-      let type: DecorationType;
-      if (roll < 0.22) type = "tree";
-      else if (roll < 0.38) type = "rock";
-      else if (roll < 0.52) type = "bush";
-      else if (roll < 0.58) type = "hut";
-      else if (roll < 0.64) type = "fence";
-      else if (roll < 0.72) type = "barrel";
-      else if (roll < 0.78) type = "tent";
-      else if (roll < 0.88) type = "grass";
-      else type = "gravestone";
+      const type =
+        themeDecorTypes[Math.floor(seededRandom() * themeDecorTypes.length)];
       decorations.push({
         type,
         x: worldPos.x,
@@ -3043,21 +3312,24 @@ export default function PrincetonTowerDefense() {
       });
     }
 
-    // Battle damage (scattered everywhere including near path)
+    // Battle damage (theme-appropriate)
     seedState = mapSeed + 600;
+    const battleDecors: DecorationType[] =
+      currentTheme === "volcanic"
+        ? ["crater", "ember", "bones", "sword"]
+        : currentTheme === "winter"
+        ? ["crater", "debris", "sword", "arrow"]
+        : currentTheme === "desert"
+        ? ["crater", "skeleton", "sword", "arrow", "bones"]
+        : currentTheme === "swamp"
+        ? ["crater", "skeleton", "bones", "debris"]
+        : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
     for (let i = 0; i < 35; i++) {
       const gridX = seededRandom() * (GRID_WIDTH - 1) + 0.5;
       const gridY = seededRandom() * (GRID_HEIGHT - 1) + 0.5;
       const worldPos = gridToWorld({ x: gridX, y: gridY });
-      const roll = seededRandom();
-      let type: DecorationType;
-      if (roll < 0.15) type = "crater";
-      else if (roll < 0.28) type = "debris";
-      else if (roll < 0.38) type = "cart";
-      else if (roll < 0.5) type = "sword";
-      else if (roll < 0.68) type = "arrow";
-      else if (roll < 0.8) type = "skeleton";
-      else type = "fire";
+      const type =
+        battleDecors[Math.floor(seededRandom() * battleDecors.length)];
       decorations.push({
         type,
         x: worldPos.x,
@@ -3066,6 +3338,90 @@ export default function PrincetonTowerDefense() {
         rotation: seededRandom() * Math.PI * 2,
         variant: Math.floor(seededRandom() * 4),
       });
+    }
+
+    // Add major landmarks from LEVEL_DATA if defined
+    const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
+    if (levelDecorations) {
+      for (const dec of levelDecorations) {
+        const worldPos = gridToWorld(dec.pos);
+        const size = dec.size || 1;
+        // Add major landmark based on type
+        if (dec.type === "pyramid") {
+          decorations.push({
+            type: "pyramid",
+            x: worldPos.x - 300,
+            y: worldPos.y - 320,
+            scale: size * 1.5,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "obelisk") {
+          decorations.push({
+            type: "obelisk",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.2,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (
+          dec.type === "statue" ||
+          dec.type === "giant_sphinx" ||
+          dec.type === "demon_statue"
+        ) {
+          decorations.push({
+            type: "statue",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.3,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (
+          dec.type === "ice_fortress" ||
+          dec.type === "obsidian_castle" ||
+          dec.type === "nassau_hall" ||
+          dec.type === "ruined_temple" ||
+          dec.type === "witch_cottage"
+        ) {
+          decorations.push({
+            type: "ruins",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.5,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (
+          dec.type === "lava_pool" ||
+          dec.type === "oasis_pool" ||
+          dec.type === "lake" ||
+          dec.type === "algae_pool"
+        ) {
+          decorations.push({
+            type: "lava_pool",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.2,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (
+          dec.type === "torch" ||
+          dec.type === "fire_pit" ||
+          dec.type === "magma_vent"
+        ) {
+          decorations.push({
+            type: "torch",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        }
+      }
     }
 
     // Sort by Y for depth
@@ -3665,6 +4021,902 @@ export default function PrincetonTowerDefense() {
           ctx.closePath();
           ctx.fill();
           break;
+
+        // === DESERT DECORATIONS ===
+        case "palm":
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 15 * s,
+            screenPos.y + 5 * s,
+            25 * s,
+            12 * s,
+            0.3,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Trunk (curved)
+          ctx.strokeStyle = "#8b6914";
+          ctx.lineWidth = 6 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x + 8 * s,
+            screenPos.y - 20 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 45 * s
+          );
+          ctx.stroke();
+          // Trunk texture
+          ctx.strokeStyle = "#6b4c12";
+          ctx.lineWidth = 2 * s;
+          for (let i = 0; i < 6; i++) {
+            const ty = screenPos.y - i * 8 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 2 * s - 3 * s, ty);
+            ctx.lineTo(screenPos.x + 2 * s + 3 * s, ty);
+            ctx.stroke();
+          }
+          // Palm fronds
+          const palmColors = ["#228b22", "#2e8b57", "#3cb371"];
+          for (let f = 0; f < 7; f++) {
+            const angle = (f / 7) * Math.PI * 2 + decorTime * 0.3;
+            const frondLen = 30 * s;
+            ctx.strokeStyle = palmColors[f % 3];
+            ctx.lineWidth = 3 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 45 * s);
+            const endX = screenPos.x + 5 * s + Math.cos(angle) * frondLen;
+            const endY =
+              screenPos.y - 45 * s + Math.sin(angle) * frondLen * 0.4 + 10 * s;
+            ctx.quadraticCurveTo(
+              screenPos.x + 5 * s + Math.cos(angle) * frondLen * 0.5,
+              screenPos.y - 50 * s,
+              endX,
+              endY
+            );
+            ctx.stroke();
+          }
+          break;
+        case "cactus":
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 3 * s,
+            12 * s,
+            5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Main body
+          ctx.fillStyle = "#2d5a27";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 6 * s, screenPos.y + 2 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 25 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x,
+            screenPos.y - 30 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 25 * s
+          );
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y + 2 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Arms
+          if (variant > 1) {
+            ctx.fillStyle = "#2d5a27";
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
+            ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
+            ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 25 * s);
+            ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 18 * s);
+            ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 15 * s);
+            ctx.closePath();
+            ctx.fill();
+          }
+          // Highlight
+          ctx.fillStyle = "rgba(255,255,255,0.1)";
+          ctx.fillRect(
+            screenPos.x - 2 * s,
+            screenPos.y - 20 * s,
+            2 * s,
+            15 * s
+          );
+          break;
+        case "dune":
+          ctx.fillStyle = "#d4a84b";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 40 * s, screenPos.y + 5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 10 * s,
+            screenPos.y - 15 * s,
+            screenPos.x + 10 * s,
+            screenPos.y - 8 * s
+          );
+          ctx.quadraticCurveTo(
+            screenPos.x + 30 * s,
+            screenPos.y - 3 * s,
+            screenPos.x + 45 * s,
+            screenPos.y + 5 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#c9a227";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 35 * s, screenPos.y + 5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 5 * s,
+            screenPos.y - 10 * s,
+            screenPos.x + 15 * s,
+            screenPos.y - 5 * s
+          );
+          ctx.lineTo(screenPos.x + 40 * s, screenPos.y + 5 * s);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case "pyramid":
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 25 * s);
+          ctx.lineTo(screenPos.x - 50 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x + 50 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x + 50 * s, screenPos.y + 25 * s);
+          ctx.lineTo(screenPos.x - 50 * s, screenPos.y + 25 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Right face (lit)
+          ctx.fillStyle = "#d4a84b";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 60 * s);
+          ctx.lineTo(screenPos.x + 50 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 25 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Left face (shadow)
+          ctx.fillStyle = "#9a7a3a";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 60 * s);
+          ctx.lineTo(screenPos.x - 50 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 25 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Edge highlight
+          ctx.strokeStyle = "#e8c860";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 60 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 25 * s);
+          ctx.stroke();
+          break;
+        case "obelisk":
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 5 * s,
+            screenPos.y + 5 * s,
+            12 * s,
+            6 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Main shaft
+          ctx.fillStyle = "#8b7355";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x - 6 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 3 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Hieroglyphs
+          ctx.fillStyle = "#6b5344";
+          for (let h = 0; h < 4; h++) {
+            ctx.fillRect(
+              screenPos.x - 4 * s,
+              screenPos.y - 35 * s + h * 10 * s,
+              8 * s,
+              3 * s
+            );
+          }
+          break;
+
+        // === WINTER DECORATIONS ===
+        case "pine":
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 3 * s,
+            screenPos.y + 8 * s,
+            18 * s,
+            8 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Trunk
+          ctx.fillStyle = "#4a3728";
+          ctx.fillRect(screenPos.x - 4 * s, screenPos.y - 5 * s, 8 * s, 12 * s);
+          // Snow-covered layers
+          const pineColors = ["#1a4a3a", "#2a5a4a", "#3a6a5a"];
+          for (let layer = 0; layer < 3; layer++) {
+            const layerY = screenPos.y - 10 * s - layer * 15 * s;
+            const layerW = (25 - layer * 6) * s;
+            ctx.fillStyle = pineColors[layer];
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - layerW, layerY);
+            ctx.lineTo(screenPos.x, layerY - 18 * s);
+            ctx.lineTo(screenPos.x + layerW, layerY);
+            ctx.closePath();
+            ctx.fill();
+            // Snow on top
+            ctx.fillStyle = "rgba(255,255,255,0.7)";
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - layerW * 0.6, layerY - 5 * s);
+            ctx.lineTo(screenPos.x, layerY - 18 * s);
+            ctx.lineTo(screenPos.x + layerW * 0.6, layerY - 5 * s);
+            ctx.closePath();
+            ctx.fill();
+          }
+          break;
+        case "snowman":
+          // Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 5 * s,
+            18 * s,
+            8 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Bottom ball
+          ctx.fillStyle = "#f5f5f5";
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 5 * s, 15 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Middle ball
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 22 * s, 11 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Head
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 38 * s, 8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Eyes
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 3 * s,
+            screenPos.y - 40 * s,
+            2 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + 3 * s,
+            screenPos.y - 40 * s,
+            2 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Carrot nose
+          ctx.fillStyle = "#ff6b00";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 38 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 36 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 34 * s);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case "ice_crystal":
+          ctx.fillStyle = "rgba(100,200,255,0.3)";
+          for (let spike = 0; spike < 6; spike++) {
+            const angle = (spike / 6) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x, screenPos.y);
+            ctx.lineTo(
+              screenPos.x + Math.cos(angle) * 20 * s,
+              screenPos.y + Math.sin(angle) * 10 * s - 15 * s
+            );
+            ctx.lineTo(
+              screenPos.x + Math.cos(angle + 0.2) * 8 * s,
+              screenPos.y + Math.sin(angle + 0.2) * 4 * s
+            );
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.fillStyle = "rgba(200,240,255,0.6)";
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 5 * s, 6 * s, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        case "snow_pile":
+          ctx.fillStyle = "#e8e8e8";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y + 5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 10 * s,
+            screenPos.y - 10 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 5 * s
+          );
+          ctx.quadraticCurveTo(
+            screenPos.x + 20 * s,
+            screenPos.y,
+            screenPos.x + 30 * s,
+            screenPos.y + 5 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.8)";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 20 * s, screenPos.y + 3 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 5 * s,
+            screenPos.y - 5 * s,
+            screenPos.x + 10 * s,
+            screenPos.y
+          );
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 3 * s);
+          ctx.closePath();
+          ctx.fill();
+          break;
+
+        // === VOLCANIC DECORATIONS ===
+        case "lava_pool":
+          // Outer glow
+          ctx.fillStyle = "rgba(255,100,0,0.3)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            35 * s,
+            18 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Dark rim
+          ctx.fillStyle = "#2a1a1a";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            28 * s,
+            14 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Lava surface
+          ctx.fillStyle = "#ff4400";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            22 * s,
+            11 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Bright center
+          ctx.fillStyle = "#ff8800";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            12 * s,
+            6 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Animated bubbles
+          const bubblePhase = decorTime * 2;
+          ctx.fillStyle = "#ffaa00";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + Math.sin(bubblePhase) * 8 * s,
+            screenPos.y + Math.cos(bubblePhase * 1.3) * 4 * s,
+            3 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - Math.cos(bubblePhase * 0.7) * 10 * s,
+            screenPos.y + Math.sin(bubblePhase) * 3 * s,
+            2 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          break;
+        case "obsidian_spike":
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 3 * s,
+            screenPos.y + 5 * s,
+            12 * s,
+            6 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Main spike
+          ctx.fillStyle = "#1a1a2a";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + 10 * s, screenPos.y + 3 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Glossy highlight
+          ctx.fillStyle = "rgba(100,100,150,0.4)";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 3 * s);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case "charred_tree":
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 2 * s,
+            screenPos.y + 5 * s,
+            15 * s,
+            7 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Burnt trunk
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(
+            screenPos.x - 5 * s,
+            screenPos.y - 30 * s,
+            10 * s,
+            35 * s
+          );
+          // Broken branches
+          ctx.strokeStyle = "#2a2a2a";
+          ctx.lineWidth = 3 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 28 * s);
+          ctx.moveTo(screenPos.x, screenPos.y - 15 * s);
+          ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 20 * s);
+          ctx.stroke();
+          // Embers
+          ctx.fillStyle = "#ff4400";
+          ctx.globalAlpha = 0.5 + Math.sin(decorTime * 3) * 0.3;
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 2 * s,
+            screenPos.y - 25 * s,
+            2 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + 3 * s,
+            screenPos.y - 18 * s,
+            1.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          break;
+        case "ember":
+          ctx.fillStyle = `rgba(255,${
+            100 + Math.sin(decorTime * 5 + variant) * 50
+          },0,${0.5 + Math.sin(decorTime * 3) * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y, 4 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ff8800";
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+
+        // === SWAMP DECORATIONS ===
+        case "swamp_tree":
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 3 * s,
+            screenPos.y + 8 * s,
+            22 * s,
+            10 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Gnarled trunk
+          ctx.fillStyle = "#3a2a1a";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 12 * s,
+            screenPos.y - 15 * s,
+            screenPos.x - 5 * s,
+            screenPos.y - 35 * s
+          );
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 35 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x + 10 * s,
+            screenPos.y - 15 * s,
+            screenPos.x + 8 * s,
+            screenPos.y + 5 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+          // Hanging moss
+          ctx.strokeStyle = "#4a6a4a";
+          ctx.lineWidth = 2 * s;
+          for (let m = 0; m < 5; m++) {
+            const mx = screenPos.x - 15 * s + m * 8 * s;
+            const sway = Math.sin(decorTime + m) * 3 * s;
+            ctx.beginPath();
+            ctx.moveTo(mx, screenPos.y - 30 * s);
+            ctx.quadraticCurveTo(
+              mx + sway,
+              screenPos.y - 20 * s,
+              mx + sway * 0.5,
+              screenPos.y - 10 * s
+            );
+            ctx.stroke();
+          }
+          // Dark foliage
+          ctx.fillStyle = "#2a4a2a";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 35 * s,
+            20 * s,
+            12 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          break;
+        case "mushroom":
+          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 3 * s,
+            10 * s,
+            5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Stem
+          ctx.fillStyle = "#e8e0d0";
+          ctx.fillRect(screenPos.x - 3 * s, screenPos.y - 8 * s, 6 * s, 12 * s);
+          // Cap
+          const mushroomColors = ["#8b0000", "#4a0080", "#006400", "#804000"][
+            variant
+          ];
+          ctx.fillStyle = mushroomColors;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 10 * s, 12 * s, Math.PI, 0);
+          ctx.closePath();
+          ctx.fill();
+          // Spots
+          ctx.fillStyle = "rgba(255,255,255,0.6)";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 5 * s,
+            screenPos.y - 14 * s,
+            2 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + 4 * s,
+            screenPos.y - 12 * s,
+            1.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Glow effect for some
+          if (variant === 1) {
+            ctx.fillStyle = `rgba(150,0,200,${
+              0.2 + Math.sin(decorTime * 2) * 0.1
+            })`;
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - 10 * s, 15 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        case "lily_pad":
+          ctx.fillStyle = "#2a5a2a";
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y, 12 * s, 0.2, Math.PI * 2 - 0.2);
+          ctx.lineTo(screenPos.x, screenPos.y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#3a7a3a";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 2 * s,
+            screenPos.y - 2 * s,
+            8 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Flower on some
+          if (variant === 0) {
+            ctx.fillStyle = "#ff69b4";
+            for (let p = 0; p < 5; p++) {
+              const pa = (p / 5) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.ellipse(
+                screenPos.x + Math.cos(pa) * 4 * s,
+                screenPos.y + Math.sin(pa) * 2 * s - 3 * s,
+                3 * s,
+                2 * s,
+                pa,
+                0,
+                Math.PI * 2
+              );
+              ctx.fill();
+            }
+            ctx.fillStyle = "#ffff00";
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - 3 * s, 2 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        case "fog_wisp":
+          ctx.fillStyle = `rgba(100,150,100,${
+            0.15 + Math.sin(decorTime + variant) * 0.1
+          })`;
+          const wispX =
+            screenPos.x + Math.sin(decorTime * 0.5 + variant) * 10 * s;
+          const wispY = screenPos.y + Math.cos(decorTime * 0.3) * 5 * s;
+          ctx.beginPath();
+          ctx.ellipse(wispX, wispY, 30 * s, 15 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = `rgba(150,200,150,${
+            0.1 + Math.sin(decorTime * 0.7) * 0.05
+          })`;
+          ctx.beginPath();
+          ctx.ellipse(
+            wispX + 10 * s,
+            wispY - 5 * s,
+            20 * s,
+            10 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          break;
+
+        // === MISC DECORATIONS ===
+        case "ruins":
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 10 * s,
+            40 * s,
+            20 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Broken walls
+          ctx.fillStyle = "#5a5a5a";
+          ctx.fillRect(
+            screenPos.x - 30 * s,
+            screenPos.y - 20 * s,
+            15 * s,
+            30 * s
+          );
+          ctx.fillRect(
+            screenPos.x + 10 * s,
+            screenPos.y - 15 * s,
+            20 * s,
+            25 * s
+          );
+          // Rubble
+          ctx.fillStyle = "#4a4a4a";
+          for (let r = 0; r < 6; r++) {
+            const rx = screenPos.x - 20 * s + r * 10 * s + Math.sin(r) * 5 * s;
+            const ry = screenPos.y + 5 * s + Math.cos(r) * 3 * s;
+            ctx.beginPath();
+            ctx.ellipse(rx, ry, 5 * s, 3 * s, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // Broken column
+          ctx.fillStyle = "#6a6a6a";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 25 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 5 * s);
+          ctx.closePath();
+          ctx.fill();
+          break;
+        case "bones":
+          ctx.fillStyle = "#e8e0d0";
+          // Skull
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 3 * s, 6 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 2 * s,
+            screenPos.y - 4 * s,
+            1.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + 2 * s,
+            screenPos.y - 4 * s,
+            1.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Bones
+          ctx.fillStyle = "#d8d0c0";
+          ctx.save();
+          ctx.translate(screenPos.x, screenPos.y);
+          ctx.rotate(rotation);
+          ctx.fillRect(-12 * s, 2 * s, 24 * s, 3 * s);
+          ctx.beginPath();
+          ctx.arc(-12 * s, 3.5 * s, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(12 * s, 3.5 * s, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+          break;
+        case "torch":
+          // Stand
+          ctx.fillStyle = "#4a3a2a";
+          ctx.fillRect(
+            screenPos.x - 2 * s,
+            screenPos.y - 20 * s,
+            4 * s,
+            25 * s
+          );
+          // Flame
+          const flameFlicker = Math.sin(decorTime * 8) * 2 * s;
+          ctx.fillStyle = "#ff4400";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 20 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x + flameFlicker,
+            screenPos.y - 35 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 20 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#ff8800";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 3 * s, screenPos.y - 20 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - flameFlicker * 0.5,
+            screenPos.y - 30 * s,
+            screenPos.x + 3 * s,
+            screenPos.y - 20 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+          // Glow
+          ctx.fillStyle = `rgba(255,150,50,${
+            0.15 + Math.sin(decorTime * 6) * 0.05
+          })`;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 25 * s, 20 * s, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        case "statue":
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 8 * s,
+            20 * s,
+            10 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Pedestal
+          ctx.fillStyle = "#5a5a5a";
+          ctx.fillRect(
+            screenPos.x - 15 * s,
+            screenPos.y - 5 * s,
+            30 * s,
+            12 * s
+          );
+          ctx.fillStyle = "#6a6a6a";
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 8 * s,
+            24 * s,
+            5 * s
+          );
+          // Figure
+          ctx.fillStyle = "#4a4a4a";
+          ctx.fillRect(
+            screenPos.x - 8 * s,
+            screenPos.y - 35 * s,
+            16 * s,
+            30 * s
+          );
+          // Head
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 42 * s, 8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Arms
+          ctx.fillRect(
+            screenPos.x - 18 * s,
+            screenPos.y - 30 * s,
+            10 * s,
+            5 * s
+          );
+          ctx.fillRect(
+            screenPos.x + 8 * s,
+            screenPos.y - 30 * s,
+            10 * s,
+            5 * s
+          );
+          break;
       }
       ctx.restore();
     }
@@ -3714,7 +4966,7 @@ export default function PrincetonTowerDefense() {
       }
     }
     enemies.forEach((enemy) => {
-      const worldPos = getEnemyPosition(enemy, selectedMap);
+      const worldPos = getEnemyPosWithPath(enemy, selectedMap);
       renderables.push({
         type: "enemy",
         data: enemy,
@@ -4658,7 +5910,7 @@ export default function PrincetonTowerDefense() {
           if (enemies.length > 0) {
             const randomEnemy =
               enemies[Math.floor(Math.random() * enemies.length)];
-            const targetPos = getEnemyPosition(randomEnemy, selectedMap);
+            const targetPos = getEnemyPosWithPath(randomEnemy, selectedMap);
 
             // Create incoming meteor effect (1 second delay)
             setEffects((ef) => [
@@ -4679,7 +5931,7 @@ export default function PrincetonTowerDefense() {
               setEnemies((prev) =>
                 prev
                   .map((e) => {
-                    const pos = getEnemyPosition(e, selectedMap);
+                    const pos = getEnemyPosWithPath(e, selectedMap);
                     const dist = distance(pos, targetPos);
                     if (dist < 150) {
                       // Damage falls off with distance
@@ -4730,7 +5982,7 @@ export default function PrincetonTowerDefense() {
             // Strike each target with a delay for dramatic effect
             targets.forEach((target, index) => {
               setTimeout(() => {
-                const targetPos = getEnemyPosition(target, selectedMap);
+                const targetPos = getEnemyPosWithPath(target, selectedMap);
 
                 // Create lightning bolt from sky
                 setEffects((ef) => [
@@ -4780,7 +6032,7 @@ export default function PrincetonTowerDefense() {
           // Create freeze wave effect
           if (enemies.length > 0) {
             const centerEnemy = enemies[Math.floor(enemies.length / 2)];
-            const centerPos = getEnemyPosition(centerEnemy, selectedMap);
+            const centerPos = getEnemyPosWithPath(centerEnemy, selectedMap);
             setEffects((ef) => [
               ...ef,
               {
@@ -4793,7 +6045,7 @@ export default function PrincetonTowerDefense() {
             ]);
           }
           enemies.forEach((e) => {
-            const pos = getEnemyPosition(e, selectedMap);
+            const pos = getEnemyPosWithPath(e, selectedMap);
             addParticles(pos, "ice", 8);
           });
           setTimeout(() => {
@@ -4826,7 +6078,7 @@ export default function PrincetonTowerDefense() {
 
           // Create gold particles on each enemy
           enemies.forEach((e) => {
-            const pos = getEnemyPosition(e, selectedMap);
+            const pos = getEnemyPosWithPath(e, selectedMap);
             addParticles(pos, "gold", 12);
           });
           break;
@@ -4853,7 +6105,7 @@ export default function PrincetonTowerDefense() {
         const roarRadius = 180;
         const nearbyEnemies = enemies.filter(
           (e) =>
-            distance(hero.pos, getEnemyPosition(e, selectedMap)) < roarRadius
+            distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) < roarRadius
         );
         nearbyEnemies.forEach((e) => {
           setEnemies((prev) =>
@@ -4885,7 +6137,7 @@ export default function PrincetonTowerDefense() {
         const noteRadius = 250;
         const nearbyEnemies = enemies.filter(
           (e) =>
-            distance(hero.pos, getEnemyPosition(e, selectedMap)) < noteRadius
+            distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) < noteRadius
         );
         // Deal damage and stun
         setEnemies((prev) =>
@@ -4896,7 +6148,7 @@ export default function PrincetonTowerDefense() {
                 const newHp = e.hp - 80;
                 if (newHp <= 0) {
                   addParticles(
-                    getEnemyPosition(e, selectedMap),
+                    getEnemyPosWithPath(e, selectedMap),
                     "explosion",
                     8
                   );
@@ -4942,7 +6194,8 @@ export default function PrincetonTowerDefense() {
         // Force enemies to target the hero (taunt effect)
         const nearbyEnemies = enemies.filter(
           (e) =>
-            distance(hero.pos, getEnemyPosition(e, selectedMap)) < tauntRadius
+            distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <
+            tauntRadius
         );
         nearbyEnemies.forEach((e) => {
           setEnemies((prev) =>
@@ -4975,7 +6228,8 @@ export default function PrincetonTowerDefense() {
         const strikeRadius = 120;
         const nearbyEnemies = enemies.filter(
           (e) =>
-            distance(hero.pos, getEnemyPosition(e, selectedMap)) < strikeRadius
+            distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <
+            strikeRadius
         );
         // Deal massive damage
         setEnemies((prev) =>
@@ -4986,7 +6240,7 @@ export default function PrincetonTowerDefense() {
                 const newHp = e.hp - 200;
                 if (newHp <= 0) {
                   addParticles(
-                    getEnemyPosition(e, selectedMap),
+                    getEnemyPosWithPath(e, selectedMap),
                     "explosion",
                     12
                   );
@@ -5198,10 +6452,7 @@ export default function PrincetonTowerDefense() {
   // Main game view
   const { width, height, dpr } = getCanvasDimensions();
   return (
-    <div
-      className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden"
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <div className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden">
       <TopHUD
         pawPoints={pawPoints}
         lives={lives}

@@ -357,10 +357,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
   lives,
 }) => {
   return (
-    <div
-      className="w-full h-screen bg-gradient-to-br from-yellow-700 via-amber-800 to-orange-900 flex flex-col items-center justify-center text-amber-100 relative overflow-hidden"
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <div className="w-full h-screen bg-gradient-to-br from-yellow-700 via-amber-800 to-orange-900 flex flex-col items-center justify-center text-amber-100 relative overflow-hidden">
       {/* Animated background rays */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(12)].map((_, i) => (

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Theme } from "@radix-ui/themes";
-import { Inter } from "next/font/google"; // Using Inter as a clean default
+import { Cinzel } from "next/font/google"; // Using Inter as a clean default
 
-const inter = Inter({
+const cinzel = Cinzel({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-cinzel",
 });
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-primary antialiased`}>
+      <body className={`${cinzel.variable} font-cinzel antialiased`}>
         <Theme>{children}</Theme>
       </body>
     </html>

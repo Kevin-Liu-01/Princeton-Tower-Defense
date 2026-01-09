@@ -20,7 +20,7 @@ const config: Config = {
         "accent-foreground": "#000000", // Black (for text on accent)
       },
       fontFamily: {
-        primary: ["var(--font-inter)", "sans-serif"],
+        cinzel: ["var(--font-cinzel)", "sans-serif"],
       },
       backgroundImage: {
         "dot-pattern":

@@ -153,6 +153,7 @@ export interface Enemy {
   slowIntensity?: number;
   taunted?: boolean;
   tauntTarget?: string;
+  pathKey?: string; // For dual-path levels - which path this enemy is on
 }
 
 // Hero entity
@@ -405,4 +406,121 @@ export interface TowerUpgradeInfo {
 export interface CameraState {
   offset: Position;
   zoom: number;
+}
+
+// Map decoration types
+export type DecorationCategory =
+  // Grassland
+  | "tree"
+  | "bush"
+  | "rock"
+  | "flowers"
+  | "signpost"
+  | "lake"
+  | "dock"
+  | "boat"
+  | "reeds"
+  | "bench"
+  | "lamppost"
+  | "nassau_hall"
+  | "statue"
+  | "fountain"
+  | "hedge"
+  // Desert
+  | "palm"
+  | "cactus"
+  | "dune"
+  | "skull"
+  | "pottery"
+  | "oasis_pool"
+  | "pyramid"
+  | "obelisk"
+  | "sphinx_statue"
+  | "giant_sphinx"
+  | "hieroglyph_wall"
+  | "treasure_chest"
+  | "skeleton"
+  | "torch"
+  | "temple_entrance"
+  | "sarcophagus"
+  | "cobra_statue"
+  | "sand_pile"
+  // Winter
+  | "pine_tree"
+  | "snowman"
+  | "ice_crystal"
+  | "frozen_pond"
+  | "snow_pile"
+  | "icicles"
+  | "ice_fortress"
+  | "frozen_gate"
+  | "broken_wall"
+  | "frozen_soldier"
+  | "battle_crater"
+  | "ice_throne"
+  | "mountain_peak"
+  | "ice_bridge"
+  | "frozen_waterfall"
+  | "aurora_crystal"
+  | "snow_drift"
+  // Volcanic
+  | "lava_pool"
+  | "obsidian_spike"
+  | "magma_vent"
+  | "charred_tree"
+  | "skull_pile"
+  | "ember_rock"
+  | "volcano_rim"
+  | "lava_fall"
+  | "obsidian_pillar"
+  | "fire_crystal"
+  | "dead_adventurer"
+  | "broken_weapon"
+  | "obsidian_castle"
+  | "dark_throne"
+  | "demon_statue"
+  | "lava_moat"
+  | "skull_throne"
+  | "fire_pit"
+  | "battle_standard"
+  // Swamp
+  | "swamp_tree"
+  | "lily_pads"
+  | "mushroom_cluster"
+  | "fog_patch"
+  | "broken_bridge"
+  | "frog"
+  | "witch_cottage"
+  | "cauldron"
+  | "tombstone"
+  | "glowing_runes"
+  | "hanging_cage"
+  | "poison_pool"
+  | "ruined_temple"
+  | "sunken_pillar"
+  | "idol_statue"
+  | "algae_pool"
+  | "tentacle"
+  | "skeleton_pile"
+  | "treasure_hoard";
+
+export interface MapDecoration {
+  type: DecorationCategory;
+  pos: { x: number; y: number };
+  variant: number;
+  size?: number; // For larger decorations
+}
+
+export type HazardType =
+  | "quicksand"
+  | "ice_sheet"
+  | "lava_geyser"
+  | "eruption_zone"
+  | "poison_fog"
+  | "deep_water";
+
+export interface MapHazard {
+  type: HazardType;
+  pos: { x: number; y: number };
+  radius: number;
 }

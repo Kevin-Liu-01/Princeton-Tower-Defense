@@ -219,10 +219,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   const regionUnlocked = isRegionUnlocked(region);
 
   return (
-    <div
-      className="w-full h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex flex-col text-amber-100 relative overflow-hidden"
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <div className="w-full h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex flex-col text-amber-100 relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (

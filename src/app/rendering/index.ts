@@ -10778,7 +10778,9 @@ export function renderEnemy(
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
-  const worldPos = getEnemyPosition(enemy, selectedMap);
+  // Use enemy's pathKey for dual-path support
+  const pathKey = enemy.pathKey || selectedMap;
+  const worldPos = getEnemyPosition(enemy, pathKey);
   const screenPos = worldToScreen(
     worldPos,
     canvasWidth,
@@ -23894,7 +23896,8 @@ export function renderTowerPreview(
   gridWidth: number = 16,
   gridHeight: number = 10,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
+  decorationPositions?: Set<string>
 ) {
   const zoom = cameraZoom || 1;
   const width = canvasWidth / dpr;
@@ -23920,14 +23923,20 @@ export function renderTowerPreview(
     cameraZoom
   );
 
-  const isValid = isValidBuildPosition(
-    gridPos,
-    selectedMap,
-    towers,
-    gridWidth,
-    gridHeight,
-    40
-  );
+  // Check if position has a decoration
+  const hasDecoration =
+    decorationPositions?.has(`${gridPos.x},${gridPos.y}`) || false;
+
+  const isValid =
+    !hasDecoration &&
+    isValidBuildPosition(
+      gridPos,
+      selectedMap,
+      towers,
+      gridWidth,
+      gridHeight,
+      40
+    );
 
   // Base indicator
   ctx.fillStyle = isValid

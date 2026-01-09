@@ -220,10 +220,7 @@ export function SetupScreen({
   ];
 
   return (
-    <div
-      className="w-full h-screen flex flex-col bg-gradient-to-br from-stone-900 via-amber-950 to-stone-900 text-amber-100 overflow-hidden"
-      style={{ fontFamily: "'Cinzel', serif" }}
-    >
+    <div className="w-full h-screen flex flex-col bg-gradient-to-br from-stone-900 via-amber-950 to-stone-900 text-amber-100 overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 text-center py-4 border-b border-amber-900/50 bg-gradient-to-r from-transparent via-amber-950/50 to-transparent">
         <h1 className="text-3xl font-bold text-amber-400 tracking-widest">
