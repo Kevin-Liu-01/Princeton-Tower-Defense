@@ -157,8 +157,8 @@ export const TOWER_DATA: Record<
     desc: "Sonic attacks hit air and ground.",
     levelDesc: {
       1: "Sound Waves - Single target sonic",
-      2: "Resonance - 1.5x damage",
-      3: "Elite Archers - Hits 2 targets, 30% faster",
+      2: "Resonance - Hits 2 targets, 1.5x damage",
+      3: "Elite Archers - Hits 3 targets, 30% faster",
       4: "Choose: Shockwave or Symphony",
     },
     upgrades: {

@@ -29,6 +29,8 @@ import {
   Play,
   RefreshCcw,
   Crosshair,
+  CoinsIcon,
+  Snowflake,
 } from "lucide-react";
 import type {
   Tower,
@@ -831,6 +833,46 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               )}
             </div>
           )}
+          {towerData.name === "Firestone Library" && (
+            <>
+              {tower.level >= 3 && (
+                <div className="bg-red-950/60 p-2 rounded border border-red-800/50 text-center">
+                  <Swords size={14} className="mx-auto text-red-400 mb-0.5" />
+                  <div className="text-red-500">Damage</div>
+
+                  <div className="text-red-300 text-sm font-bold">
+                    {tower.level === 3
+                      ? "8"
+                      : tower.level === 4 && tower.upgrade === "A"
+                      ? "35"
+                      : "0"}
+                  </div>
+                </div>
+              )}
+              <div className="col-span-1 bg-purple-950/60 p-2 rounded border border-purple-800/50 text-center">
+                <div className="flex flex-col items-center gap-0.5">
+                  <Snowflake size={14} className="text-purple-400" />
+                  <span className="text-purple-500 ">Slow Effect</span>
+                </div>
+                <div className="text-purple-300 text-sm font-bold">
+                  {tower.level === 1
+                    ? "30%"
+                    : tower.level === 2
+                    ? "45%"
+                    : tower.level === 3
+                    ? "60%"
+                    : tower.level === 4 && tower.upgrade === "A"
+                    ? "80%"
+                    : tower.level === 4 && tower.upgrade === "B"
+                    ? "70%"
+                    : "0%"}
+                </div>
+                <div className="text-[9px] text-purple-400 mt-1">
+                  Reduces enemy speed within range.
+                </div>
+              </div>
+            </>
+          )}
           {towerData.range > 0 && (
             <div className="bg-blue-950/60 p-2 rounded border border-blue-800/50 text-center">
               <Target size={14} className="mx-auto text-blue-400 mb-0.5" />
@@ -854,6 +896,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               </div>
             </div>
           )}
+
           {towerData.name === "Dinky Station" &&
             (() => {
               // 1. Determine which key to use from TROOP_DATA based on level/upgrade
@@ -953,14 +996,39 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 </div>
               );
             })()}
+
+          {towerData.name === "Eating Club" && (
+            <div className="col-span-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1">
+                  <CoinsIcon size={12} /> PP Generation
+                </span>
+              </div>
+              <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
+                <div className="text-[9px] text-amber-400">
+                  Generates a certain amount of{" "}
+                  <span className="font-bold"> PP</span> per cycle to help fund
+                  your defenses. Build early to maximize your economy!
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Level description */}
         <div className="bg-amber-950/40 p-2 rounded text-[10px] text-amber-400 mb-3 border border-amber-800/50">
           <div className="text-amber-500 uppercase text-[9px] tracking-wider mb-0.5">
-            Current Ability
+            {tower.level < 4
+              ? TOWER_DATA[tower.type].desc
+              : tower.upgrade
+              ? towerData.upgrades[tower.upgrade].desc
+              : ""}
           </div>
-          {levelDesc}
+          {tower.level < 4
+            ? levelDesc
+            : tower.upgrade
+            ? towerData.upgrades[tower.upgrade].effect
+            : ""}
         </div>
 
         {/* Upgrade buttons */}

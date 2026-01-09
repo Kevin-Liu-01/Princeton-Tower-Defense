@@ -186,7 +186,7 @@ export const TowerSprite: React.FC<{
         ctx.closePath();
         ctx.fill();
         // Gothic window
-        ctx.fillStyle = "#1a1a1a";
+        ctx.fillStyle = "#2a1a1a";
         ctx.beginPath();
         ctx.moveTo(cx - 5 * scale, cy + 6 * scale);
         ctx.lineTo(cx - 5 * scale, cy - 2 * scale);

@@ -1412,7 +1412,7 @@ export default function PrincetonTowerDefense() {
                   : 0.7; // Blizzard
 
               // Level 3 (Arcane Library) - adds minor magic damage
-              if (tower.level === 3 && now - tower.lastAttack > 800) {
+              if (tower.level === 3 && now - tower.lastAttack > 500) {
                 const arcaneDamage = 8;
                 setEnemies((prev) =>
                   prev
@@ -6681,7 +6681,7 @@ export default function PrincetonTowerDefense() {
           setBuildingTower={setBuildingTower}
           setHoveredBuildTower={setHoveredBuildTower}
         />
-      </div>
+      </div>{" "}
     </div>
   );
 }
