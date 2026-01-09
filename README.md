@@ -32,8 +32,8 @@ Prevent enemies from reaching the end of the path by strategically placing tower
 | Place Tower       | Click & drag from build menu       |
 | Select Tower/Hero | Click on unit                      |
 | Move Hero         | Click on path (when hero selected) |
-| Pan Camera        | WASD or Arrow Keys                 |
-| Zoom              | +/- Keys                           |
+| Pan Camera        | Built-in console                   |
+| Zoom              | Built-in console                   |
 | Cast Spell        | Click spell icon in bottom bar     |
 
 ### Strategy Tips
