@@ -12,6 +12,7 @@ const cinzel = Cinzel({
 export const metadata: Metadata = {
   title: "Princeton Tower Defense",
   description: "Defend the campus from manifestations of student stress!",
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
 export default function RootLayout({
