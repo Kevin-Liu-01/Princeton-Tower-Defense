@@ -125,14 +125,6 @@ import {
 } from "./components/ui/GameUI";
 // Hooks
 import { useGameProgress } from "./useLocalStorage";
-// Add Google Fonts dynamically
-if (typeof window !== "undefined") {
-  const link = document.createElement("link");
-  link.href =
-    "https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap";
-  link.rel = "stylesheet";
-  document.head.appendChild(link);
-}
 
 // Helper to parse hex color to RGB
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
@@ -419,10 +411,22 @@ export default function PrincetonTowerDefense() {
 
         // Select formation based on enemy type
         let laneOffset: number;
-        if (group.type === "trustee" || group.type === "dean") {
+        if (
+          group.type === "trustee" ||
+          group.type === "dean" ||
+          group.type === "golem" ||
+          group.type === "necromancer" ||
+          group.type === "shadow_knight"
+        ) {
           // Bosses use wedge formation
           laneOffset = formationPatterns.wedge(spawned, group.count);
-        } else if (group.type === "athlete" || group.type === "mascot") {
+        } else if (
+          group.type === "harpy" ||
+          group.type === "mascot" ||
+          group.type === "wyvern" ||
+          group.type === "specter" ||
+          group.type === "berserker"
+        ) {
           // Fast enemies use diamond
           laneOffset = formationPatterns.diamond(spawned, group.count);
         } else if (group.count > 5) {
@@ -1556,11 +1560,17 @@ export default function PrincetonTowerDefense() {
           // Helper to find closest road point within station range
           const findRoadPoint = (pos: Position): Position => {
             const path = MAP_PATHS[selectedMap];
+            const secondaryPath = MAP_PATHS[selectedMap + "_b"] || null;
+            if (!path || path.length < 2) return pos;
+
+            // Combine primary and secondary paths if available
+            const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
+
             let closestPoint: Position = pos;
             let minDist = Infinity;
-            for (let i = 0; i < path.length - 1; i++) {
-              const p1 = gridToWorldPath(path[i]);
-              const p2 = gridToWorldPath(path[i + 1]);
+            for (let i = 0; i < fullPath.length - 1; i++) {
+              const p1 = gridToWorldPath(fullPath[i]);
+              const p2 = gridToWorldPath(fullPath[i + 1]);
               const roadPoint = closestPointOnLine(pos, p1, p2);
               const dist = distance(pos, roadPoint);
               if (dist < minDist) {
@@ -2835,93 +2845,141 @@ export default function PrincetonTowerDefense() {
       const secondaryPathWorldPoints = secondaryPath.map((p) =>
         gridToWorldPath(p)
       );
+      //the secondary path needs to have the same exact details as the primary path
+      // and thus we can reuse the same functions. it must have the same ruggedness
+      // and decorations to match the primary path
       const smoothSecondaryPath = generateSmoothPath(secondaryPathWorldPoints);
-
-      // Reset seed for consistent secondary path decoration
-      seedState = mapSeed + 500;
-
       const {
         left: secPathLeft,
         right: secPathRight,
         center: secPathCenter,
       } = addPathWobble(smoothSecondaryPath, 10);
-      const screenSecCenter = smoothSecondaryPath.map(toScreen);
-      const screenSecLeft = secPathLeft.map(toScreen);
-      const screenSecRight = secPathRight.map(toScreen);
+      const secScreenCenter = secPathCenter.map(toScreen);
+      const secScreenLeft = secPathLeft.map(toScreen);
+      const secScreenRight = secPathRight.map(toScreen);
 
-      // Shadow layer for secondary path
+      // Draw secondary road layers - themed
+      //add shadow layer
       ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
       ctx.beginPath();
-      ctx.moveTo(screenSecLeft[0].x + 4, screenSecLeft[0].y + 4);
-      for (let i = 1; i < screenSecLeft.length; i++)
-        ctx.lineTo(screenSecLeft[i].x + 4, screenSecLeft[i].y + 4);
-      for (let i = screenSecRight.length - 1; i >= 0; i--)
-        ctx.lineTo(screenSecRight[i].x + 4, screenSecRight[i].y + 4);
+      ctx.moveTo(secScreenLeft[0].x + 4, secScreenLeft[0].y + 4);
+      for (let i = 1; i < secScreenLeft.length; i++)
+        ctx.lineTo(secScreenLeft[i].x + 4, secScreenLeft[i].y + 4);
+      for (let i = secScreenRight.length - 1; i >= 0; i--)
+        ctx.lineTo(secScreenRight[i].x + 4, secScreenRight[i].y + 4);
       ctx.closePath();
       ctx.fill();
-
-      // Main road edge - themed
+      // Main road edge
       ctx.fillStyle = theme.path[2];
       ctx.beginPath();
-      ctx.moveTo(screenSecLeft[0].x, screenSecLeft[0].y);
-      for (let i = 1; i < screenSecLeft.length; i++)
-        ctx.lineTo(screenSecLeft[i].x, screenSecLeft[i].y);
-      for (let i = screenSecRight.length - 1; i >= 0; i--)
-        ctx.lineTo(screenSecRight[i].x, screenSecRight[i].y);
+      ctx.moveTo(secScreenLeft[0].x, secScreenLeft[0].y);
+      for (let i = 1; i < secScreenLeft.length; i++)
+        ctx.lineTo(secScreenLeft[i].x, secScreenLeft[i].y);
+      for (let i = secScreenRight.length - 1; i >= 0; i--)
+        ctx.lineTo(secScreenRight[i].x, secScreenRight[i].y);
       ctx.closePath();
       ctx.fill();
 
-      // Inner road - themed
+      // Inner road
       ctx.fillStyle = theme.path[0];
       ctx.beginPath();
-      for (let i = 0; i < screenSecCenter.length; i++) {
+      for (let i = 0; i < secScreenCenter.length; i++) {
         const lx =
-          screenSecCenter[i].x +
-          (screenSecLeft[i].x - screenSecCenter[i].x) * 0.88;
+          secScreenCenter[i].x +
+          (secScreenLeft[i].x - secScreenCenter[i].x) * 0.88;
         const ly =
-          screenSecCenter[i].y +
-          (screenSecLeft[i].y - screenSecCenter[i].y) * 0.88;
+          secScreenCenter[i].y +
+          (secScreenLeft[i].y - secScreenCenter[i].y) * 0.88;
         if (i === 0) ctx.moveTo(lx, ly);
         else ctx.lineTo(lx, ly);
       }
-      for (let i = screenSecCenter.length - 1; i >= 0; i--) {
+      for (let i = secScreenCenter.length - 1; i >= 0; i--) {
         const rx =
-          screenSecCenter[i].x +
-          (screenSecRight[i].x - screenSecCenter[i].x) * 0.88;
+          secScreenCenter[i].x +
+          (secScreenRight[i].x - secScreenCenter[i].x) * 0.88;
         const ry =
-          screenSecCenter[i].y +
-          (screenSecRight[i].y - screenSecCenter[i].y) * 0.88;
+          secScreenCenter[i].y +
+          (secScreenRight[i].y - secScreenCenter[i].y) * 0.88;
         ctx.lineTo(rx, ry);
       }
       ctx.closePath();
       ctx.fill();
 
-      // Top road layer - themed
+      // Top road layer
       ctx.fillStyle = theme.path[1];
       ctx.beginPath();
-      for (let i = 0; i < screenSecCenter.length; i++) {
+      for (let i = 0; i < secScreenCenter.length; i++) {
         const lx =
-          screenSecCenter[i].x +
-          (screenSecLeft[i].x - screenSecCenter[i].x) * 0.72;
+          secScreenCenter[i].x +
+          (secScreenLeft[i].x - secScreenCenter[i].x) * 0.92;
         const ly =
-          screenSecCenter[i].y +
-          (screenSecLeft[i].y - screenSecCenter[i].y) * 0.72 -
+          secScreenCenter[i].y +
+          (secScreenLeft[i].y - secScreenCenter[i].y) * 0.92 -
           2;
         if (i === 0) ctx.moveTo(lx, ly);
         else ctx.lineTo(lx, ly);
       }
-      for (let i = screenSecCenter.length - 1; i >= 0; i--) {
+      for (let i = secScreenCenter.length - 1; i >= 0; i--) {
         const rx =
-          screenSecCenter[i].x +
-          (screenSecRight[i].x - screenSecCenter[i].x) * 0.72;
+          secScreenCenter[i].x +
+          (secScreenRight[i].x - secScreenCenter[i].x) * 0.92;
         const ry =
-          screenSecCenter[i].y +
-          (screenSecRight[i].y - screenSecCenter[i].y) * 0.72 -
+          secScreenCenter[i].y +
+          (secScreenRight[i].y - secScreenCenter[i].y) * 0.92 -
           2;
         ctx.lineTo(rx, ry);
       }
       ctx.closePath();
       ctx.fill();
+
+      //add pebbles and wheel tracks as well
+      // Wheel tracks
+      ctx.strokeStyle = hexToRgba(theme.path[2], 0.18);
+      ctx.lineWidth = 3 * cameraZoom;
+      for (let track = -1; track <= 1; track += 2) {
+        ctx.beginPath();
+        for (let i = 0; i < smoothSecondaryPath.length; i++) {
+          const p = smoothSecondaryPath[i];
+          let perpX = 0,
+            perpY = 1;
+          if (i < smoothSecondaryPath.length - 1) {
+            const next = smoothSecondaryPath[i + 1];
+            const dx = next.x - p.x;
+            const dy = next.y - p.y;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            perpX = -dy / len;
+            perpY = dx / len;
+          }
+          const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
+          const screenP = toScreen({
+            x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
+            y:
+              p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
+          });
+          if (i === 0) ctx.moveTo(screenP.x, screenP.y);
+          else ctx.lineTo(screenP.x, screenP.y);
+        }
+        ctx.stroke();
+      }
+      // Pebbles on edges
+      seedState = mapSeed + 300;
+      ctx.fillStyle = theme.path[0];
+      for (let i = 0; i < smoothSecondaryPath.length; i += 2) {
+        if (i >= secScreenLeft.length || seededRandom() > 0.5) continue;
+        const side = seededRandom() > 0.5 ? secScreenLeft : secScreenRight;
+        const p = side[i];
+        ctx.beginPath();
+        ctx.ellipse(
+          p.x,
+          p.y,
+          (2 + seededRandom() * 3) * cameraZoom,
+          (1.5 + seededRandom() * 2) * cameraZoom,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
     }
 
     // Now draw fog OVER the road ends to create fade effect
@@ -5625,12 +5683,17 @@ export default function PrincetonTowerDefense() {
           cameraZoom
         );
         const path = MAP_PATHS[selectedMap];
+        const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
+        let fullPath = path;
+        if (secondaryPath) {
+          fullPath = path.concat(secondaryPath);
+        }
         let onPath = false;
         let closestPoint = worldPos;
         let minDist = Infinity;
-        for (let i = 0; i < path.length - 1; i++) {
-          const p1 = gridToWorldPath(path[i]);
-          const p2 = gridToWorldPath(path[i + 1]);
+        for (let i = 0; i < fullPath.length - 1; i++) {
+          const p1 = gridToWorldPath(fullPath[i]);
+          const p2 = gridToWorldPath(fullPath[i + 1]);
           const dist = distanceToLineSegment(worldPos, p1, p2);
           if (dist < HERO_PATH_HITBOX_SIZE && dist < minDist) {
             onPath = true;
@@ -5661,11 +5724,16 @@ export default function PrincetonTowerDefense() {
         if (dist <= selectedTroopUnit.moveRadius) {
           // Find the closest point on the road
           const path = MAP_PATHS[selectedMap];
+          const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
+          let fullPath = path;
+          if (secondaryPath) {
+            fullPath = path.concat(secondaryPath);
+          }
           let closestPoint = worldPos;
           let minDist = Infinity;
-          for (let i = 0; i < path.length - 1; i++) {
-            const p1 = gridToWorldPath(path[i]);
-            const p2 = gridToWorldPath(path[i + 1]);
+          for (let i = 0; i < fullPath.length - 1; i++) {
+            const p1 = gridToWorldPath(fullPath[i]);
+            const p2 = gridToWorldPath(fullPath[i + 1]);
             const roadPoint = closestPointOnLine(worldPos, p1, p2);
             const roadDist = distance(worldPos, roadPoint);
             if (roadDist < minDist) {
@@ -6461,6 +6529,30 @@ export default function PrincetonTowerDefense() {
         nextWaveTimer={nextWaveTimer}
         gameSpeed={gameSpeed}
         setGameSpeed={setGameSpeed}
+        quitLevel={() => {
+          resetGame();
+          setGameState("setup");
+        }}
+        retryLevel={() => {
+          setPawPoints(INITIAL_PAW_POINTS);
+          setLives(INITIAL_LIVES);
+          setCurrentWave(0);
+          setNextWaveTimer(WAVE_TIMER_BASE);
+          setTowers([]);
+          setEnemies([]);
+          setHero(null);
+          setTroops([]);
+          setProjectiles([]);
+          setEffects([]);
+          setParticles([]);
+          setSelectedTower(null);
+          setBuildingTower(null);
+          setDraggingTower(null);
+          setWaveInProgress(false);
+          setPlacingTroop(false);
+          setSpells([]);
+          setGameSpeed(1);
+        }}
       />
       <div className="flex-1 relative overflow-hidden">
         <div
@@ -6567,6 +6659,7 @@ export default function PrincetonTowerDefense() {
                   pawPoints={pawPoints}
                   upgradeTower={upgradeTower}
                   sellTower={sellTower}
+                  onClose={() => setSelectedTower(null)}
                 />
               );
             })()}

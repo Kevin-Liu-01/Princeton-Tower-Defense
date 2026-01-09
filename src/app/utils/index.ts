@@ -242,7 +242,20 @@ export function isValidBuildPosition(
 
   // Check path collision with buffer zone
   const path = MAP_PATHS[mapKey];
+  // check secondary paths as well
+  const secondaryPaths = MAP_PATHS[`${mapKey}_b`];
+
   const worldPos = gridToWorld(gridPos);
+
+  if (secondaryPaths) {
+    for (let i = 0; i < secondaryPaths.length - 1; i++) {
+      const p1 = gridToWorldPath(secondaryPaths[i]);
+      const p2 = gridToWorldPath(secondaryPaths[i + 1]);
+      if (distanceToLineSegment(worldPos, p1, p2) < buffer) {
+        return false;
+      }
+    }
+  }
 
   for (let i = 0; i < path.length - 1; i++) {
     // Use gridToWorldPath for path waypoints (corners/intersections)

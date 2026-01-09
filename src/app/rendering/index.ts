@@ -6391,9 +6391,9 @@ function renderStationTower(
     // Deep foundation
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 16 * zoom,
+      screenPos.y + 19 * zoom,
       baseW + 24,
-      baseD + 20,
+      baseD + 38,
       12,
       "#3a3a42",
       "#2a2a32",
@@ -6404,7 +6404,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 14,
-      baseD + 12,
+      baseD + 25,
       8,
       "#5a5a62",
       "#4a4a52",
@@ -6415,7 +6415,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 6,
-      baseD + 6,
+      baseD + 16,
       6,
       "#6a6a72",
       "#5a5a62",
@@ -6512,8 +6512,8 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 16 * zoom,
       baseW + 26,
-      baseD + 22,
-      12,
+      baseD + 42,
+      10,
       "#d0ccc4",
       "#c0bcb4",
       "#b0aca4"
@@ -6521,9 +6521,9 @@ function renderStationTower(
     // Middle marble tier
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 8 * zoom,
+      screenPos.y + 7 * zoom,
       baseW + 16,
-      baseD + 14,
+      baseD + 28,
       8,
       "#e0dcd4",
       "#d0ccc4",
@@ -6534,7 +6534,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 8,
-      baseD + 8,
+      baseD + 18,
       6,
       "#f0ece4",
       "#e0dcd4",
@@ -6641,10 +6641,10 @@ function renderStationTower(
     // Deep royal foundation
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 16 * zoom,
+      screenPos.y + 19 * zoom,
       baseW + 26,
-      baseD + 22,
-      14,
+      baseD + 42,
+      12,
       "#3a3a42",
       "#2a2a32",
       "#1a1a22"
@@ -6654,7 +6654,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 16,
-      baseD + 14,
+      baseD + 30,
       9,
       "#5a5a62",
       "#4a4a52",
@@ -6665,7 +6665,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 8,
-      baseD + 8,
+      baseD + 18,
       6,
       "#6a6a72",
       "#5a5a62",
@@ -7341,7 +7341,7 @@ function renderStationTower(
     // Stone chimney with smoke stack
     drawIsometricPrism(
       ctx,
-      bX + 10 * zoom,
+      bX + 6 * zoom,
       roofY - 8 * zoom,
       5,
       4,
@@ -7352,7 +7352,7 @@ function renderStationTower(
     // Chimney cap
     drawIsometricPrism(
       ctx,
-      bX + 10 * zoom,
+      bX + 6 * zoom,
       roofY - 22 * zoom,
       7,
       5,
@@ -7366,7 +7366,7 @@ function renderStationTower(
     const smokeOff1 = Math.sin(time * 1.5) * 3;
     ctx.beginPath();
     ctx.arc(
-      bX + 10 * zoom + smokeOff1,
+      bX + 6 * zoom + smokeOff1,
       roofY - 28 * zoom,
       3 * zoom,
       0,
@@ -7531,6 +7531,61 @@ function renderStationTower(
     ctx.fill();
     ctx.shadowBlur = 0;
 
+    // Clock tower (attached to main building)
+    const towerX = bX + 14 * zoom;
+    const towerY = bY - 6 * zoom;
+    drawIsometricPrism(
+      ctx,
+      towerX,
+      towerY,
+      14,
+      12,
+      44,
+      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+      zoom
+    );
+
+    // Tower stone texture
+    ctx.strokeStyle = "#3a3a42";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let i = 0; i < 8; i++) {
+      const ty = towerY - 4 * zoom - i * 5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(towerX - 6 * zoom, ty + 1.5 * zoom);
+      ctx.lineTo(towerX, ty + 3 * zoom);
+      ctx.stroke();
+    }
+
+    // Tower roof (pyramid with spire)
+    const tRoofY = towerY - 44 * zoom;
+    ctx.fillStyle = "#4a4a52";
+    ctx.beginPath();
+    ctx.moveTo(towerX, tRoofY - 16 * zoom);
+    ctx.lineTo(towerX - 8 * zoom, tRoofY);
+    ctx.lineTo(towerX, tRoofY + 4 * zoom);
+    ctx.lineTo(towerX + 8 * zoom, tRoofY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#3a3a42";
+    ctx.beginPath();
+    ctx.moveTo(towerX, tRoofY - 16 * zoom);
+    ctx.lineTo(towerX + 8 * zoom, tRoofY);
+    ctx.lineTo(towerX, tRoofY + 4 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold finial
+    ctx.fillStyle = "#c9a227";
+    ctx.shadowColor = "#c9a227";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.arc(towerX, tRoofY - 18 * zoom, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Clock face on tower
+    drawClockFace(towerX + 1 * zoom, towerY - 35 * zoom, 6 * zoom);
+
     // Main stone building
     drawIsometricPrism(
       ctx,
@@ -7630,61 +7685,6 @@ function renderStationTower(
     ctx.fillStyle = `rgba(255, 150, 50, ${slitGlow})`;
     ctx.fillRect(bX + 5.3 * zoom, bY - 21 * zoom, 1.4 * zoom, 8 * zoom);
     ctx.fillRect(bX + 10.3 * zoom, bY - 23 * zoom, 1.4 * zoom, 8 * zoom);
-
-    // Clock tower (attached to main building)
-    const towerX = bX + 14 * zoom;
-    const towerY = bY - 6 * zoom;
-    drawIsometricPrism(
-      ctx,
-      towerX,
-      towerY,
-      14,
-      12,
-      44,
-      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
-      zoom
-    );
-
-    // Tower stone texture
-    ctx.strokeStyle = "#3a3a42";
-    ctx.lineWidth = 0.6 * zoom;
-    for (let i = 0; i < 8; i++) {
-      const ty = towerY - 4 * zoom - i * 5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(towerX - 6 * zoom, ty + 1.5 * zoom);
-      ctx.lineTo(towerX, ty + 3 * zoom);
-      ctx.stroke();
-    }
-
-    // Tower roof (pyramid with spire)
-    const tRoofY = towerY - 44 * zoom;
-    ctx.fillStyle = "#4a4a52";
-    ctx.beginPath();
-    ctx.moveTo(towerX, tRoofY - 16 * zoom);
-    ctx.lineTo(towerX - 8 * zoom, tRoofY);
-    ctx.lineTo(towerX, tRoofY + 4 * zoom);
-    ctx.lineTo(towerX + 8 * zoom, tRoofY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#3a3a42";
-    ctx.beginPath();
-    ctx.moveTo(towerX, tRoofY - 16 * zoom);
-    ctx.lineTo(towerX + 8 * zoom, tRoofY);
-    ctx.lineTo(towerX, tRoofY + 4 * zoom);
-    ctx.closePath();
-    ctx.fill();
-
-    // Gold finial
-    ctx.fillStyle = "#c9a227";
-    ctx.shadowColor = "#c9a227";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.arc(towerX, tRoofY - 18 * zoom, 2.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Clock face on tower
-    drawClockFace(towerX - 3 * zoom, towerY - 30 * zoom, 6 * zoom);
 
     // === HIGH-TECH: Rotating radar/beacon on tower ===
     const beaconAngle = time * 2;
@@ -7791,10 +7791,10 @@ function renderStationTower(
     drawIsometricPrism(
       ctx,
       bX,
-      bY + 16 * zoom,
+      bY + 2 * zoom,
       42,
-      36,
-      12,
+      40,
+      4,
       { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
       zoom
     );
@@ -7876,13 +7876,27 @@ function renderStationTower(
       ctx.fill();
     }
 
+    // Right clock tower (taller) with machinery
+    const rtX = bX + 18 * zoom;
+    const rtY = bY - 6 * zoom;
+    drawIsometricPrism(
+      ctx,
+      rtX,
+      rtY,
+      12,
+      10,
+      48,
+      { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+      zoom
+    );
+
     // Main keep (central building)
     drawIsometricPrism(
       ctx,
       bX,
-      bY,
+      bY - 1 * zoom,
       32,
-      26,
+      30,
       32,
       { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
       zoom
@@ -7901,12 +7915,12 @@ function renderStationTower(
     }
 
     // Heavy battlements on main keep
-    const keepTop = bY - 32 * zoom;
+    const keepTop = bY - 32.5 * zoom;
     for (let i = 0; i < 5; i++) {
       if (i % 2 === 0) {
         drawIsometricPrism(
           ctx,
-          bX - 12 * zoom + i * 6 * zoom,
+          bX - 8 * zoom + i * 4.5 * zoom,
           keepTop,
           5,
           4,
@@ -7972,20 +7986,6 @@ function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
-    // Right clock tower (taller) with machinery
-    const rtX = bX + 16 * zoom;
-    const rtY = bY + 4 * zoom;
-    drawIsometricPrism(
-      ctx,
-      rtX,
-      rtY,
-      12,
-      10,
-      48,
-      { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
-      zoom
-    );
-
     // Tower gears
     const tGearX = rtX - 3 * zoom;
     const tGearY = rtY - 18 * zoom;
@@ -8027,15 +8027,15 @@ function renderStationTower(
     ctx.fillRect(rtX - 1 * zoom, rtRoofY - 24 * zoom, 2 * zoom, 8 * zoom);
 
     // Clock on right tower
-    drawClockFace(rtX - 3 * zoom, rtY - 32 * zoom, 6 * zoom, true);
+    drawClockFace(rtX + 1 * zoom, rtY - 36 * zoom, 6 * zoom, true);
 
     // Grand portcullis entrance
     ctx.fillStyle = "#1a1a22";
     ctx.beginPath();
-    ctx.moveTo(bX - 8 * zoom, bY - 2 * zoom);
-    ctx.lineTo(bX - 8 * zoom, bY - 18 * zoom);
-    ctx.arc(bX - 3 * zoom, bY - 18 * zoom, 5 * zoom, Math.PI, 0);
-    ctx.lineTo(bX + 2 * zoom, bY - 2 * zoom);
+    ctx.moveTo(bX - 7 * zoom, bY - 2 * zoom);
+    ctx.lineTo(bX - 7 * zoom, bY - 16 * zoom);
+    ctx.arc(bX - 2 * zoom, bY - 16 * zoom, 5 * zoom, Math.PI, 0);
+    ctx.lineTo(bX + 3 * zoom, bY - 2 * zoom);
     ctx.closePath();
     ctx.fill();
     // Portcullis bars
@@ -10044,14 +10044,28 @@ function renderStationTower(
       }
       // Smokestack
       const stackPos = isoOffset(locoPos.x, locoPos.y - 14 * zoom, 4);
-      ctx.fillStyle = "#4a4a52";
-      ctx.beginPath();
-      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y);
-      ctx.closePath();
-      ctx.fill();
+      // use an isometric prism
+      drawIsometricPrism(
+        ctx,
+        stackPos.x,
+        stackPos.y,
+        5,
+        5,
+        10,
+        { top: "#3a3a42", left: "#2a2a32", right: "#1a1a1a" },
+        zoom
+      );
+      // Stack cap
+      drawIsometricPrism(
+        ctx,
+        stackPos.x,
+        stackPos.y - 10 * zoom,
+        7,
+        7,
+        2,
+        { top: "#4a4a52", left: "#3a3a42", right: "#2a2a32" },
+        zoom
+      );
       // Steam
       const steam = 0.35 + Math.sin(time * 4) * 0.15;
       ctx.fillStyle = `rgba(180, 180, 180, ${steam})`;

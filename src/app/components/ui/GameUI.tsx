@@ -27,6 +27,8 @@ import {
   Wind,
   Pause,
   Play,
+  RefreshCcw,
+  Crosshair,
 } from "lucide-react";
 import type {
   Tower,
@@ -42,6 +44,7 @@ import {
   SPELL_DATA,
   HERO_DATA,
   HERO_ABILITY_COOLDOWNS,
+  TROOP_DATA,
 } from "../../constants";
 import {
   TowerSprite,
@@ -65,6 +68,8 @@ interface TopHUDProps {
   nextWaveTimer: number;
   gameSpeed: number;
   setGameSpeed: (speed: number) => void;
+  retryLevel: () => void;
+  quitLevel: () => void;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -75,6 +80,8 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   nextWaveTimer,
   gameSpeed,
   setGameSpeed,
+  retryLevel,
+  quitLevel,
 }) => {
   return (
     <div
@@ -154,7 +161,15 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         </button>
         <button
           onClick={() => {
-            window.location.reload();
+            retryLevel();
+          }}
+          className="p-1.5 bg-green-700/80 hover:bg-green-600/80 rounded-lg border border-green-800 shadow-md transition-colors"
+        >
+          <RefreshCcw size={16} className="text-white" />
+        </button>
+        <button
+          onClick={() => {
+            quitLevel();
           }}
           className="p-1.5 bg-red-700/80 hover:bg-red-600/80 rounded-lg border border-red-800 shadow-md transition-colors"
         >
@@ -697,7 +712,7 @@ interface TowerUpgradePanelProps {
   pawPoints: number;
   upgradeTower: (towerId: string, choice?: "A" | "B") => void;
   sellTower: (towerId: string) => void;
-  onClose?: () => void;
+  onClose: () => void;
 }
 
 export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
@@ -767,14 +782,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       style={{ left: panelX, top: panelY, zIndex: 200, width: panelWidth }}
     >
       <div className="bg-gradient-to-br from-amber-900/98 to-stone-900/98 p-3 border-2 border-amber-500 pointer-events-auto shadow-2xl rounded-xl backdrop-blur-sm relative">
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="absolute top-1 right-1 p-1 hover:bg-amber-800/50 rounded transition-colors"
-          >
-            <X size={14} className="text-amber-400" />
-          </button>
-        )}
+        <button
+          onClick={() => onClose()}
+          className="absolute top-2 right-2 p-1 hover:bg-amber-800/50 rounded-lg transition-colors"
+        >
+          <X size={14} className="text-amber-400" />
+        </button>
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-3 pb-2 border-b border-amber-700">
@@ -818,18 +831,20 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               )}
             </div>
           )}
-          <div className="bg-blue-950/60 p-2 rounded border border-blue-800/50 text-center">
-            <Target size={14} className="mx-auto text-blue-400 mb-0.5" />
-            <div className="text-blue-500">Range</div>
-            <div className="text-blue-300 font-bold text-sm">
-              {currentStats.range}
-            </div>
-            {nextStats && (
-              <div className="text-green-400 text-[9px]">
-                → {nextStats.range}
+          {towerData.range > 0 && (
+            <div className="bg-blue-950/60 p-2 rounded border border-blue-800/50 text-center">
+              <Target size={14} className="mx-auto text-blue-400 mb-0.5" />
+              <div className="text-blue-500">Range</div>
+              <div className="text-blue-300 font-bold text-sm">
+                {currentStats.range}
               </div>
-            )}
-          </div>
+              {nextStats && (
+                <div className="text-green-400 text-[9px]">
+                  → {nextStats.range}
+                </div>
+              )}
+            </div>
+          )}
           {towerData.attackSpeed > 0 && (
             <div className="bg-green-950/60 p-2 rounded border border-green-800/50 text-center">
               <Gauge size={14} className="mx-auto text-green-400 mb-0.5" />
@@ -839,6 +854,105 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               </div>
             </div>
           )}
+          {towerData.name === "Dinky Station" &&
+            (() => {
+              // 1. Determine which key to use from TROOP_DATA based on level/upgrade
+              const getTroopKey = () => {
+                if (tower.level === 1) return "footsoldier";
+                if (tower.level === 2) return "armored";
+                if (tower.level === 3) return "elite";
+                if (tower.level === 4) {
+                  if (tower.upgrade === "B") return "cavalry";
+                  if (tower.upgrade === "A") return "centaur";
+                  return "knight"; // Fallback for base level 4
+                }
+                return "footsoldier";
+              };
+
+              const key = getTroopKey();
+              const troop = TROOP_DATA[key];
+
+              if (!troop) return null;
+
+              return (
+                <div className="col-span-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users size={12} className="text-amber-500" />
+                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
+                      Garrison Unit
+                    </span>
+                  </div>
+
+                  <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
+                    {/* Name and Type Badge */}
+                    <div className="flex justify-between items-center border-b border-stone-800 pb-1">
+                      <span
+                        className="text-xs font-bold"
+                        style={{ color: troop.color }} // Uses the hex code from TROOP_DATA
+                      >
+                        {troop.name}
+                      </span>
+                      <span className="text-[9px] bg-stone-800 px-1.5 py-0.5 rounded text-stone-400">
+                        {troop.isMounted
+                          ? "Mounted"
+                          : troop.isRanged
+                          ? "Ranged"
+                          : "Infantry"}
+                      </span>
+                    </div>
+
+                    {/* Troop Stats Grid */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* HP */}
+                      <div className="bg-red-950/30 p-1 rounded border border-red-900/20 flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1 text-red-400/80 mb-0.5">
+                          <Heart size={10} />
+                          <span className="text-[9px]">HP</span>
+                        </div>
+                        <span className="text-red-200 font-bold text-xs">
+                          {troop.hp}
+                        </span>
+                      </div>
+
+                      {/* Damage */}
+                      <div className="bg-orange-950/30 p-1 rounded border border-orange-900/20 flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1 text-orange-400/80 mb-0.5">
+                          <Swords size={10} />
+                          <span className="text-[9px]">DMG</span>
+                        </div>
+                        <span className="text-orange-200 font-bold text-xs">
+                          {troop.damage}
+                        </span>
+                      </div>
+
+                      {/* Speed/Range */}
+                      <div className="bg-green-950/30 p-1 rounded border border-green-900/20 flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1 text-green-400/80 mb-0.5">
+                          {troop.isRanged ? (
+                            <Crosshair size={10} />
+                          ) : (
+                            <Gauge size={10} />
+                          )}
+                          <span className="text-[9px]">
+                            {troop.isRanged ? "RNG" : "SPD"}
+                          </span>
+                        </div>
+                        <span className="text-green-200 font-bold text-xs">
+                          {troop.isRanged
+                            ? troop.range
+                            : `${troop.attackSpeed}ms`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Description (Optional, fits nice at bottom) */}
+                    <div className="text-[9px] text-stone-500 italic text-center">
+                      {troop.desc}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
         </div>
 
         {/* Level description */}

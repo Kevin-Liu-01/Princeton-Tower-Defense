@@ -652,9 +652,9 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   knight: {
     name: "Knight",
-    hp: 500, // Reduced from 800 - still strong but not overpowered
-    damage: 30, // Reduced from 40
-    attackSpeed: 1000, // Slightly slower
+    hp: 500,
+    damage: 30,
+    attackSpeed: 1000,
     desc: "Elite warrior",
     color: "#c0c0c0",
   },
@@ -703,7 +703,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
     color: "#f59e0b",
     isRanged: true,
     range: 140,
-    isStationary: true, // Custom flag for turret behavior
+    isStationary: true,
   },
 };
 
@@ -867,11 +867,15 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 24, y: 10 },
     { x: 28, y: 10 },
   ],
-  // Secondary path for peak - comes from top, merges at x:12
+  // Secondary path for peak; comes from top, goes right, then goes down, then goes, merges at x:12
   peak_b: [
-    { x: 12, y: -8 },
+    // make this curvier and not a straight line
+    { x: 8, y: -8 },
+    { x: 8, y: -4 },
     { x: 12, y: -4 },
     { x: 12, y: 0 },
+    { x: 16, y: 0 },
+    { x: 16, y: 4 },
     { x: 12, y: 4 },
     { x: 12, y: 10 },
     { x: 16, y: 10 },
@@ -979,16 +983,19 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 18, y: 20 },
   ],
   sunken_temple: [
+    // make this not a straight line
     { x: -8, y: 4 },
     { x: -4, y: 4 },
     { x: 0, y: 4 },
     { x: 4, y: 4 },
     { x: 8, y: 4 },
-    { x: 12, y: 4 },
-    { x: 16, y: 4 },
-    { x: 20, y: 4 },
-    { x: 24, y: 4 },
-    { x: 28, y: 4 },
+    { x: 8, y: 8 },
+    { x: 12, y: 8 },
+    { x: 16, y: 8 },
+    { x: 16, y: 12 },
+    { x: 20, y: 12 },
+    { x: 24, y: 12 },
+    { x: 28, y: 12 },
   ],
   // Secondary path for sunken temple - comes from bottom, merges at x:16
   sunken_temple_b: [
@@ -1117,11 +1124,12 @@ export const LEVEL_DATA: Record<
     position: { x: 120, y: 200 },
     description:
       "A precious water source under siege. Palm trees sway in the hot desert wind.",
-    camera: { offset: { x: -100, y: -220 }, zoom: 1.1 },
+    camera: { offset: { x: -190, y: -220 }, zoom: 1.1 },
     region: "desert",
     theme: "desert",
     difficulty: 1,
     decorations: [
+      { type: "pyramid", pos: { x: 14, y: 2 }, variant: 0, size: 3 },
       { type: "oasis_pool", pos: { x: 16, y: 12 }, variant: 0, size: 2 },
       { type: "palm", pos: { x: 2, y: 2 }, variant: 0 },
       { type: "palm", pos: { x: 14, y: 14 }, variant: 1 },
@@ -1139,7 +1147,7 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "Navigate the ancient canyon beneath the great pyramid. Beware of ambushes!",
-    camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
+    camera: { offset: { x: -190, y: -200 }, zoom: 1.15 },
     region: "desert",
     theme: "desert",
     difficulty: 2,
@@ -1147,6 +1155,7 @@ export const LEVEL_DATA: Record<
     secondaryPath: "pyramid_b",
     decorations: [
       { type: "pyramid", pos: { x: 22, y: 2 }, variant: 0, size: 3 },
+      { type: "pyramid", pos: { x: 4, y: 1 }, variant: 0, size: 3 },
       { type: "obelisk", pos: { x: 2, y: 2 }, variant: 0 },
       { type: "obelisk", pos: { x: 24, y: 14 }, variant: 1 },
       { type: "sphinx_statue", pos: { x: 0, y: 14 }, variant: 0 },
@@ -1161,7 +1170,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "The ancient guardian's domain. The Sphinx watches all who dare to pass.",
-    camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
+    camera: { offset: { x: -100, y: -170 }, zoom: 1.25 },
     region: "desert",
     theme: "desert",
     difficulty: 3,
@@ -1170,7 +1179,7 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
-      { type: "giant_sphinx", pos: { x: 22, y: 0 }, variant: 0, size: 3 },
+      { type: "giant_sphinx", pos: { x: 10, y: 0 }, variant: 0, size: 3 },
       { type: "temple_entrance", pos: { x: 2, y: 0 }, variant: 0 },
       { type: "obelisk", pos: { x: 24, y: 12 }, variant: 0 },
       { type: "sarcophagus", pos: { x: 0, y: 14 }, variant: 0 },
@@ -1209,7 +1218,7 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "An abandoned stronghold of ice and stone. What dark forces drove out its defenders?",
-    camera: { offset: { x: -50, y: -40 }, zoom: 1.35 },
+    camera: { offset: { x: -90, y: -180 }, zoom: 1.35 },
     region: "winter",
     theme: "winter",
     difficulty: 2,
@@ -1218,7 +1227,10 @@ export const LEVEL_DATA: Record<
       type: "barracks",
     },
     decorations: [
-      { type: "ice_fortress", pos: { x: 20, y: 0 }, variant: 0, size: 3 },
+      { type: "ice_fortress", pos: { x: 9.5, y: -1 }, variant: 0, size: 2 },
+      { type: "ice_fortress", pos: { x: 0, y: 17 }, variant: 0, size: 3 },
+      { type: "ice_fortress", pos: { x: 8, y: 17 }, variant: 0, size: 2 },
+      { type: "ice_fortress", pos: { x: 16, y: -2 }, variant: 0, size: 2 },
       { type: "frozen_gate", pos: { x: 24, y: 6 }, variant: 0 },
       { type: "broken_wall", pos: { x: 0, y: 0 }, variant: 0 },
       { type: "broken_wall", pos: { x: 22, y: 10 }, variant: 1 },
@@ -1235,7 +1247,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "The highest point of defense. A frozen throne awaits at the mountain's apex.",
-    camera: { offset: { x: -60, y: -70 }, zoom: 1.5 },
+    camera: { offset: { x: -160, y: -210 }, zoom: 1.25 },
     region: "winter",
     theme: "winter",
     difficulty: 3,
@@ -1363,7 +1375,7 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
-      { type: "witch_cottage", pos: { x: 22, y: 2 }, variant: 0, size: 2 },
+      { type: "witch_cottage", pos: { x: 13, y: -2 }, variant: 0, size: 2 },
       { type: "cauldron", pos: { x: 24, y: 6 }, variant: 0 },
       { type: "swamp_tree", pos: { x: 2, y: 0 }, variant: 0 },
       { type: "swamp_tree", pos: { x: 22, y: 12 }, variant: 1 },
@@ -1381,7 +1393,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "Ancient ruins half-submerged in fetid waters. Something stirs in the depths below.",
-    camera: { offset: { x: -40, y: -210 }, zoom: 1.35 },
+    camera: { offset: { x: -150, y: -210 }, zoom: 1.15 },
     region: "swamp",
     theme: "swamp",
     difficulty: 3,
@@ -1393,7 +1405,7 @@ export const LEVEL_DATA: Record<
       hp: 800,
     },
     decorations: [
-      { type: "ruined_temple", pos: { x: 22, y: 0 }, variant: 0, size: 3 },
+      { type: "ruined_temple", pos: { x: 10, y: -1 }, variant: 0, size: 3 },
       { type: "sunken_pillar", pos: { x: 2, y: 0 }, variant: 0 },
       { type: "sunken_pillar", pos: { x: 26, y: 10 }, variant: 1 },
       { type: "idol_statue", pos: { x: 24, y: 16 }, variant: 0 },
