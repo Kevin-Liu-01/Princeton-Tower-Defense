@@ -25,6 +25,9 @@ export function lightenColor(color: string, amount: number): string {
 // =============================================================================
 // TOWER SPRITES - Matches actual game rendering
 // =============================================================================
+// =============================================================================
+// TOWER SPRITES - Matches actual game rendering
+// =============================================================================
 export const TowerSprite: React.FC<{
   type: TowerType;
   size?: number;
@@ -54,58 +57,171 @@ export const TowerSprite: React.FC<{
     const t = time * 0.05;
     switch (type) {
       case "cannon": {
-        // Nassau Cannon - Artillery tower with isometric base
-        // Shadow
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        // =====================================================================
+        // NASSAU CANNON - Heavy Artillery Tower with Detailed Mechanical Base
+        // =====================================================================
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy + 12 * scale,
-          18 * scale,
-          9 * scale,
+          cy + 14 * scale,
+          20 * scale,
+          10 * scale,
           0,
           0,
           Math.PI * 2
         );
         ctx.fill();
-        // Mechanical base - left face
-        ctx.fillStyle = "#4a4a52";
-        ctx.beginPath();
-        ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
-        ctx.lineTo(cx - 12 * scale, cy - 8 * scale);
-        ctx.lineTo(cx, cy - 4 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Right face
-        ctx.fillStyle = "#3a3a42";
-        ctx.beginPath();
-        ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
-        ctx.lineTo(cx + 12 * scale, cy - 8 * scale);
-        ctx.lineTo(cx, cy - 4 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Top face
+
+        // Layered hexagonal stone foundation platform
         ctx.fillStyle = "#5a5a62";
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 12 * scale);
-        ctx.lineTo(cx - 12 * scale, cy - 8 * scale);
-        ctx.lineTo(cx, cy - 4 * scale);
-        ctx.lineTo(cx + 12 * scale, cy - 8 * scale);
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3 - Math.PI / 6;
+          const px = cx + Math.cos(angle) * 18 * scale;
+          const py = cy + 12 * scale + Math.sin(angle) * 9 * scale;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
         ctx.closePath();
         ctx.fill();
-        // Tech vents (glowing)
-        const ventGlow = 0.5 + Math.sin(t * 4) * 0.3;
+
+        // Foundation edge highlight
+        ctx.strokeStyle = "#7a7a82";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+
+        // Foundation gradient shading
+        const foundGrad = ctx.createLinearGradient(
+          cx - 18 * scale,
+          cy,
+          cx + 18 * scale,
+          cy
+        );
+        foundGrad.addColorStop(0, "rgba(0,0,0,0.3)");
+        foundGrad.addColorStop(0.5, "rgba(255,255,255,0.1)");
+        foundGrad.addColorStop(1, "rgba(0,0,0,0.2)");
+        ctx.fillStyle = foundGrad;
+        ctx.fill();
+
+        // Decorative rivets on foundation
+        ctx.fillStyle = "#3a3a3a";
+        for (let i = 0; i < 3; i++) {
+          const angle = (i * Math.PI * 2) / 3 + Math.PI / 6;
+          const rx = cx + Math.cos(angle) * 14 * scale;
+          const ry = cy + 12 * scale + Math.sin(angle) * 7 * scale;
+          ctx.beginPath();
+          ctx.arc(rx, ry, 1.5 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Mechanical base platform - left face (shadowed)
+        const leftFaceGrad = ctx.createLinearGradient(
+          cx - 14 * scale,
+          cy,
+          cx,
+          cy
+        );
+        leftFaceGrad.addColorStop(0, "#3a3a42");
+        leftFaceGrad.addColorStop(1, "#4a4a52");
+        ctx.fillStyle = leftFaceGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx - 12 * scale, cy - 10 * scale);
+        ctx.lineTo(cx, cy - 6 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (lighter)
+        const rightFaceGrad = ctx.createLinearGradient(
+          cx,
+          cy,
+          cx + 14 * scale,
+          cy
+        );
+        rightFaceGrad.addColorStop(0, "#4a4a52");
+        rightFaceGrad.addColorStop(1, "#5a5a62");
+        ctx.fillStyle = rightFaceGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 12 * scale, cy - 10 * scale);
+        ctx.lineTo(cx, cy - 6 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top face
+        const topFaceGrad = ctx.createLinearGradient(
+          cx,
+          cy - 14 * scale,
+          cx,
+          cy - 6 * scale
+        );
+        topFaceGrad.addColorStop(0, "#6a6a72");
+        topFaceGrad.addColorStop(1, "#5a5a62");
+        ctx.fillStyle = topFaceGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 14 * scale);
+        ctx.lineTo(cx - 12 * scale, cy - 10 * scale);
+        ctx.lineTo(cx, cy - 6 * scale);
+        ctx.lineTo(cx + 12 * scale, cy - 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tech vents with animated orange glow
+        const ventGlow = animated ? 0.5 + Math.sin(t * 4) * 0.3 : 0.6;
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(cx - 9 * scale, cy - 3 * scale, 4 * scale, 8 * scale);
+        ctx.fillRect(cx + 5 * scale, cy - 3 * scale, 4 * scale, 8 * scale);
         ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow})`;
-        ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 3 * scale, 6 * scale);
-        ctx.fillRect(cx + 5 * scale, cy - 2 * scale, 3 * scale, 6 * scale);
-        // Turret base
+        ctx.shadowColor = "#ff6600";
+        ctx.shadowBlur = 6 * scale;
+        ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 2 * scale, 6 * scale);
+        ctx.fillRect(cx + 6 * scale, cy - 2 * scale, 2 * scale, 6 * scale);
+        ctx.shadowBlur = 0;
+
+        // Heat shimmer effect
+        if (animated) {
+          ctx.strokeStyle = `rgba(255, 150, 50, ${
+            0.2 + Math.sin(t * 5) * 0.1
+          })`;
+          ctx.lineWidth = 1 * scale;
+          for (let i = 0; i < 3; i++) {
+            const shimmerY = cy - 5 * scale - i * 4 * scale - ((t * 20) % 12);
+            ctx.beginPath();
+            ctx.moveTo(cx - 6 * scale, shimmerY);
+            ctx.quadraticCurveTo(cx - 3 * scale, shimmerY - 2, cx, shimmerY);
+            ctx.quadraticCurveTo(
+              cx + 3 * scale,
+              shimmerY + 2,
+              cx + 6 * scale,
+              shimmerY
+            );
+            ctx.stroke();
+          }
+        }
+
+        // Turret rotation base
+        ctx.fillStyle = "#2a2a2a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 12 * scale,
+          12 * scale,
+          7 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
         ctx.fillStyle = "#3a3a3a";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy - 10 * scale,
+          cy - 13 * scale,
           10 * scale,
           6 * scale,
           0,
@@ -113,197 +229,132 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        // Cannon barrel
-        ctx.fillStyle = "#2a2a2a";
+
+        // Gear detail on turret base
+        ctx.strokeStyle = "#4a4a4a";
+        ctx.lineWidth = 1.5 * scale;
+        const gearRotation = animated ? t * 0.5 : 0;
+        for (let i = 0; i < 8; i++) {
+          const angle = gearRotation + (i * Math.PI) / 4;
+          ctx.beginPath();
+          ctx.moveTo(
+            cx + Math.cos(angle) * 7 * scale,
+            cy - 13 * scale + Math.sin(angle) * 4 * scale
+          );
+          ctx.lineTo(
+            cx + Math.cos(angle) * 10 * scale,
+            cy - 13 * scale + Math.sin(angle) * 6 * scale
+          );
+          ctx.stroke();
+        }
+
+        // Detailed cannon barrel
         ctx.save();
-        ctx.translate(cx, cy - 10 * scale);
-        ctx.rotate(-0.4);
-        ctx.fillRect(0, -4 * scale, 22 * scale, 8 * scale);
-        ctx.fillStyle = "#4a4a4a";
-        ctx.fillRect(8 * scale, -5 * scale, 3 * scale, 10 * scale);
-        ctx.fillRect(16 * scale, -5 * scale, 3 * scale, 10 * scale);
-        // Muzzle glow
-        ctx.fillStyle = `rgba(255, 100, 0, ${ventGlow})`;
+        ctx.translate(cx, cy - 14 * scale);
+        ctx.rotate(-0.35);
+
+        // Barrel base section
+        ctx.fillStyle = "#2a2a2a";
         ctx.beginPath();
-        ctx.arc(22 * scale, 0, 4 * scale, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 6 * scale, 4 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        // Main barrel body with gradient
+        const barrelGrad = ctx.createLinearGradient(
+          0,
+          -5 * scale,
+          0,
+          5 * scale
+        );
+        barrelGrad.addColorStop(0, "#4a4a4a");
+        barrelGrad.addColorStop(0.3, "#3a3a3a");
+        barrelGrad.addColorStop(0.7, "#2a2a2a");
+        barrelGrad.addColorStop(1, "#1a1a1a");
+        ctx.fillStyle = barrelGrad;
+        ctx.fillRect(0, -4 * scale, 24 * scale, 8 * scale);
+
+        // Reinforcement rings
+        ctx.fillStyle = "#5a5a5a";
+        ctx.fillRect(6 * scale, -5 * scale, 3 * scale, 10 * scale);
+        ctx.fillRect(13 * scale, -5 * scale, 3 * scale, 10 * scale);
+        ctx.fillRect(20 * scale, -4.5 * scale, 2 * scale, 9 * scale);
+
+        // Barrel bore (dark interior)
+        ctx.fillStyle = "#0a0a0a";
+        ctx.beginPath();
+        ctx.ellipse(24 * scale, 0, 3 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Muzzle glow effect
+        ctx.fillStyle = `rgba(255, 100, 0, ${ventGlow * 0.8})`;
+        ctx.shadowColor = "#ff6600";
+        ctx.shadowBlur = 10 * scale;
+        ctx.beginPath();
+        ctx.arc(25 * scale, 0, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
         ctx.restore();
-        // Level indicator
+
+        // Smoke wisps from barrel
+        if (animated) {
+          ctx.fillStyle = `rgba(100, 100, 100, ${0.3 - (t % 2) * 0.15})`;
+          for (let i = 0; i < 2; i++) {
+            const smokeX = cx + 20 * scale + ((t * 5 + i * 8) % 15);
+            const smokeY = cy - 22 * scale - ((t * 3 + i * 5) % 10);
+            ctx.beginPath();
+            ctx.arc(smokeX, smokeY, (2 + i) * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Aiming sight on top
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(cx - 1 * scale, cy - 20 * scale, 2 * scale, 4 * scale);
+        ctx.fillStyle = "#00ff00";
+        ctx.shadowColor = "#00ff00";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 21 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Princeton crest emblem on base
+        ctx.fillStyle = "#ff6600";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 2 * scale);
+        ctx.lineTo(cx + 4 * scale, cy + 6 * scale);
+        ctx.lineTo(cx, cy + 10 * scale);
+        ctx.lineTo(cx - 4 * scale, cy + 6 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#ffa500";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Level indicator stars with gold glow
         if (level > 1) {
           ctx.fillStyle = "#ffd700";
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = 4 * scale;
           for (let i = 0; i < Math.min(level - 1, 3); i++) {
-            drawStar(ctx, cx - 8 + i * 8, cy + 18 * scale, 3 * scale);
+            drawStar(ctx, cx - 8 + i * 8, cy + 20 * scale, 3 * scale);
           }
+          ctx.shadowBlur = 0;
         }
         break;
       }
       case "library": {
-        // Firestone Library - Gothic magic tower
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(
-          cx,
-          cy + 12 * scale,
-          16 * scale,
-          8 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-        // Main building - left face
-        ctx.fillStyle = "#6b5b4b";
-        ctx.beginPath();
-        ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
-        ctx.lineTo(cx - 12 * scale, cy - 6 * scale);
-        ctx.lineTo(cx, cy - 2 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Right face
-        ctx.fillStyle = "#5a4a3a";
-        ctx.beginPath();
-        ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
-        ctx.lineTo(cx + 12 * scale, cy - 6 * scale);
-        ctx.lineTo(cx, cy - 2 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Gothic pointed roof
-        ctx.fillStyle = "#4a3a2a";
-        ctx.beginPath();
-        ctx.moveTo(cx - 16 * scale, cy - 6 * scale);
-        ctx.lineTo(cx, cy - 28 * scale);
-        ctx.lineTo(cx + 16 * scale, cy - 6 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Roof highlight
-        ctx.fillStyle = "#5a4a3a";
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 28 * scale);
-        ctx.lineTo(cx + 16 * scale, cy - 6 * scale);
-        ctx.lineTo(cx + 4 * scale, cy - 6 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Gothic window
-        ctx.fillStyle = "#2a1a1a";
-        ctx.beginPath();
-        ctx.moveTo(cx - 5 * scale, cy + 6 * scale);
-        ctx.lineTo(cx - 5 * scale, cy - 2 * scale);
-        ctx.quadraticCurveTo(
-          cx,
-          cy - 8 * scale,
-          cx + 5 * scale,
-          cy - 2 * scale
-        );
-        ctx.lineTo(cx + 5 * scale, cy + 6 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Window glow
-        const glowIntensity = animated ? 0.6 + Math.sin(t * 2) * 0.3 : 0.8;
-        ctx.fillStyle = `rgba(255, 215, 0, ${glowIntensity})`;
-        ctx.shadowColor = "#ffd700";
-        ctx.shadowBlur = 10 * scale;
-        ctx.beginPath();
-        ctx.moveTo(cx - 4 * scale, cy + 5 * scale);
-        ctx.lineTo(cx - 4 * scale, cy - 1 * scale);
-        ctx.quadraticCurveTo(
-          cx,
-          cy - 6 * scale,
-          cx + 4 * scale,
-          cy - 1 * scale
-        );
-        ctx.lineTo(cx + 4 * scale, cy + 5 * scale);
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-        // Spire
-        ctx.fillStyle = "#3a2a1a";
-        ctx.beginPath();
-        ctx.moveTo(cx - 2 * scale, cy - 28 * scale);
-        ctx.lineTo(cx, cy - 36 * scale);
-        ctx.lineTo(cx + 2 * scale, cy - 28 * scale);
-        ctx.closePath();
-        ctx.fill();
-        break;
-      }
-      case "lab": {
-        // E-Quad Lab - Tesla/electric tower
+        // =====================================================================
+        // FIRESTONE LIBRARY - Gothic Academic Tower with Purple Arcane Window
+        // =====================================================================
+
+        // Ground shadow
         ctx.fillStyle = "rgba(0,0,0,0.3)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy + 12 * scale,
-          14 * scale,
-          7 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-        // Industrial building - left
-        ctx.fillStyle = "#3d5a6b";
-        ctx.beginPath();
-        ctx.moveTo(cx - 12 * scale, cy + 10 * scale);
-        ctx.lineTo(cx - 10 * scale, cy - 10 * scale);
-        ctx.lineTo(cx, cy - 6 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Right
-        ctx.fillStyle = "#2d4a5a";
-        ctx.beginPath();
-        ctx.moveTo(cx + 12 * scale, cy + 10 * scale);
-        ctx.lineTo(cx + 10 * scale, cy - 10 * scale);
-        ctx.lineTo(cx, cy - 6 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Dome
-        ctx.fillStyle = "#4d6a7b";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 10 * scale, 10 * scale, Math.PI, 0);
-        ctx.fill();
-        // Tesla coil
-        ctx.strokeStyle = "#00ffff";
-        ctx.shadowColor = "#00ffff";
-        ctx.shadowBlur = animated ? 12 * scale : 8 * scale;
-        ctx.lineWidth = 3 * scale;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 18 * scale);
-        ctx.lineTo(cx, cy - 32 * scale);
-        ctx.stroke();
-        // Energy orb
-        const orbPulse = animated ? 1 + Math.sin(t * 3) * 0.2 : 1;
-        ctx.fillStyle = "#00ffff";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 32 * scale, 5 * scale * orbPulse, 0, Math.PI * 2);
-        ctx.fill();
-        // Electric arcs
-        if (animated) {
-          ctx.strokeStyle = "#00ffff";
-          ctx.lineWidth = 1.5 * scale;
-          for (let i = 0; i < 4; i++) {
-            const angle = t * 2 + (i * Math.PI) / 2;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - 32 * scale);
-            ctx.lineTo(
-              cx + Math.cos(angle) * 8 * scale,
-              cy - 32 * scale + Math.sin(angle) * 8 * scale
-            );
-            ctx.stroke();
-          }
-        }
-        ctx.shadowBlur = 0;
-        break;
-      }
-      case "arch": {
-        // Blair Arch - Sound/music tower
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
-        ctx.beginPath();
-        ctx.ellipse(
-          cx,
-          cy + 12 * scale,
+          cy + 14 * scale,
           18 * scale,
           9 * scale,
           0,
@@ -311,64 +362,305 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        // Left pillar
-        ctx.fillStyle = "#7b6b55";
-        ctx.fillRect(cx - 16 * scale, cy - 18 * scale, 8 * scale, 30 * scale);
-        ctx.fillStyle = "#6b5b45";
-        ctx.fillRect(cx - 16 * scale, cy - 18 * scale, 4 * scale, 30 * scale);
-        // Right pillar
-        ctx.fillStyle = "#7b6b55";
-        ctx.fillRect(cx + 8 * scale, cy - 18 * scale, 8 * scale, 30 * scale);
-        ctx.fillStyle = "#8b7b65";
-        ctx.fillRect(cx + 12 * scale, cy - 18 * scale, 4 * scale, 30 * scale);
-        // Arch
-        ctx.fillStyle = "#8b7b65";
+
+        // Stone foundation steps
+        ctx.fillStyle = "#5a4a3a";
         ctx.beginPath();
-        ctx.arc(cx, cy - 18 * scale, 12 * scale, Math.PI, 0);
-        ctx.lineTo(cx + 16 * scale, cy - 18 * scale);
-        ctx.arc(cx, cy - 18 * scale, 16 * scale, 0, Math.PI, true);
+        ctx.moveTo(cx - 18 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 18 * scale, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-        // Inner arch (portal)
+
+        // Main building - left face (shadowed)
+        const leftWallGrad = ctx.createLinearGradient(
+          cx - 16 * scale,
+          cy,
+          cx,
+          cy
+        );
+        leftWallGrad.addColorStop(0, "#5a4a3a");
+        leftWallGrad.addColorStop(1, "#6b5b4b");
+        ctx.fillStyle = leftWallGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx - 14 * scale, cy - 8 * scale);
+        ctx.lineTo(cx, cy - 4 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (lighter)
+        const rightWallGrad = ctx.createLinearGradient(
+          cx,
+          cy,
+          cx + 16 * scale,
+          cy
+        );
+        rightWallGrad.addColorStop(0, "#6b5b4b");
+        rightWallGrad.addColorStop(1, "#5a4a3a");
+        ctx.fillStyle = rightWallGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx + 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 14 * scale, cy - 8 * scale);
+        ctx.lineTo(cx, cy - 4 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone block pattern on walls
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let row = 0; row < 4; row++) {
+          const y = cy + 8 * scale - row * 4 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 14 * scale + row * 2 * scale, y);
+          ctx.lineTo(cx - 2 * scale, y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 2 * scale, y);
+          ctx.lineTo(cx + 14 * scale - row * 2 * scale, y);
+          ctx.stroke();
+        }
+
+        // Gothic pointed roof - main section
+        const roofGrad = ctx.createLinearGradient(
+          cx - 18 * scale,
+          cy - 8 * scale,
+          cx + 18 * scale,
+          cy - 8 * scale
+        );
+        roofGrad.addColorStop(0, "#3a2a1a");
+        roofGrad.addColorStop(0.5, "#4a3a2a");
+        roofGrad.addColorStop(1, "#3a2a1a");
+        ctx.fillStyle = roofGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 18 * scale, cy - 8 * scale);
+        ctx.lineTo(cx, cy - 32 * scale);
+        ctx.lineTo(cx + 18 * scale, cy - 8 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof highlight edge
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 32 * scale);
+        ctx.lineTo(cx + 18 * scale, cy - 8 * scale);
+        ctx.lineTo(cx + 14 * scale, cy - 8 * scale);
+        ctx.lineTo(cx, cy - 28 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof tile pattern
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 5; i++) {
+          const tileY = cy - 10 * scale - i * 4 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 16 * scale + i * 3 * scale, tileY);
+          ctx.lineTo(cx + 16 * scale - i * 3 * scale, tileY);
+          ctx.stroke();
+        }
+
+        // Decorative dormers on roof
+        ctx.fillStyle = "#4a3a2a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy - 14 * scale);
+        ctx.lineTo(cx - 6 * scale, cy - 20 * scale);
+        ctx.lineTo(cx - 4 * scale, cy - 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 4 * scale, cy - 14 * scale);
+        ctx.lineTo(cx + 6 * scale, cy - 20 * scale);
+        ctx.lineTo(cx + 8 * scale, cy - 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Small dormer windows with purple glow
+        const glowIntensity = animated ? 0.6 + Math.sin(t * 2) * 0.3 : 0.8;
+        ctx.fillStyle = `rgba(180, 100, 255, ${glowIntensity * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(cx - 6 * scale, cy - 16 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 6 * scale, cy - 16 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main Gothic arched window frame
         ctx.fillStyle = "#2a1a1a";
         ctx.beginPath();
-        ctx.arc(cx, cy - 10 * scale, 8 * scale, Math.PI, 0);
-        ctx.lineTo(cx + 8 * scale, cy + 8 * scale);
-        ctx.lineTo(cx - 8 * scale, cy + 8 * scale);
+        ctx.moveTo(cx - 6 * scale, cy + 8 * scale);
+        ctx.lineTo(cx - 6 * scale, cy - 2 * scale);
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 10 * scale,
+          cx + 6 * scale,
+          cy - 2 * scale
+        );
+        ctx.lineTo(cx + 6 * scale, cy + 8 * scale);
         ctx.closePath();
         ctx.fill();
-        // Portal glow
-        const portalGlow = animated ? 0.4 + Math.sin(t * 2) * 0.2 : 0.5;
-        ctx.fillStyle = `rgba(180, 100, 255, ${portalGlow})`;
-        ctx.shadowColor = "#b464ff";
-        ctx.shadowBlur = 10 * scale;
+
+        // Window stone frame detail
+        ctx.strokeStyle = "#7b6b5b";
+        ctx.lineWidth = 1.5 * scale;
         ctx.beginPath();
-        ctx.arc(cx, cy - 8 * scale, 6 * scale, Math.PI, 0);
-        ctx.lineTo(cx + 6 * scale, cy + 4 * scale);
-        ctx.lineTo(cx - 6 * scale, cy + 4 * scale);
+        ctx.moveTo(cx - 6 * scale, cy + 8 * scale);
+        ctx.lineTo(cx - 6 * scale, cy - 2 * scale);
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 10 * scale,
+          cx + 6 * scale,
+          cy - 2 * scale
+        );
+        ctx.lineTo(cx + 6 * scale, cy + 8 * scale);
+        ctx.stroke();
+
+        // PURPLE window glow (changed from yellow)
+        const purpleGrad = ctx.createRadialGradient(
+          cx,
+          cy,
+          0,
+          cx,
+          cy,
+          8 * scale
+        );
+        purpleGrad.addColorStop(0, `rgba(220, 180, 255, ${glowIntensity})`);
+        purpleGrad.addColorStop(
+          0.5,
+          `rgba(180, 100, 255, ${glowIntensity * 0.8})`
+        );
+        purpleGrad.addColorStop(
+          1,
+          `rgba(120, 50, 200, ${glowIntensity * 0.6})`
+        );
+        ctx.fillStyle = purpleGrad;
+        ctx.shadowColor = "#b464ff";
+        ctx.shadowBlur = 12 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy + 7 * scale);
+        ctx.lineTo(cx - 5 * scale, cy - 1 * scale);
+        ctx.quadraticCurveTo(
+          cx,
+          cy - 8 * scale,
+          cx + 5 * scale,
+          cy - 1 * scale
+        );
+        ctx.lineTo(cx + 5 * scale, cy + 7 * scale);
         ctx.closePath();
         ctx.fill();
         ctx.shadowBlur = 0;
-        // Sound waves
+
+        // Window mullions (cross pattern)
+        ctx.strokeStyle = "#1a0a0a";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 6 * scale);
+        ctx.lineTo(cx, cy + 7 * scale);
+        ctx.moveTo(cx - 4 * scale, cy + 2 * scale);
+        ctx.lineTo(cx + 4 * scale, cy + 2 * scale);
+        ctx.stroke();
+
+        // Floating magical runes around window
         if (animated) {
-          ctx.strokeStyle = `rgba(180, 100, 255, ${0.6 - (t % 1) * 0.5})`;
-          ctx.lineWidth = 2 * scale;
-          for (let i = 1; i <= 2; i++) {
-            const waveSize = (4 + ((t * 10) % 10) + i * 4) * scale;
-            ctx.beginPath();
-            ctx.arc(cx, cy - 5 * scale, waveSize, -0.8, 0.8);
-            ctx.stroke();
+          ctx.fillStyle = `rgba(180, 100, 255, ${0.5 + Math.sin(t * 3) * 0.3})`;
+          ctx.font = `${3 * scale}px serif`;
+          ctx.textAlign = "center";
+          const runeAngle = t * 0.5;
+          for (let i = 0; i < 4; i++) {
+            const angle = runeAngle + (i * Math.PI) / 2;
+            const rx = cx + Math.cos(angle) * 10 * scale;
+            const ry = cy + 2 * scale + Math.sin(angle) * 6 * scale;
+            ctx.fillText(["◇", "△", "○", "☆"][i], rx, ry);
           }
+        }
+
+        // Main spire
+        ctx.fillStyle = "#3a2a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, cy - 32 * scale);
+        ctx.lineTo(cx, cy - 42 * scale);
+        ctx.lineTo(cx + 3 * scale, cy - 32 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Spire highlight
+        ctx.fillStyle = "#4a3a2a";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 42 * scale);
+        ctx.lineTo(cx + 3 * scale, cy - 32 * scale);
+        ctx.lineTo(cx + 1 * scale, cy - 32 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Spire orb with purple glow
+        ctx.fillStyle = `rgba(180, 100, 255, ${glowIntensity})`;
+        ctx.shadowColor = "#b464ff";
+        ctx.shadowBlur = 6 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 43 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Side buttresses
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx - 18 * scale, cy + 2 * scale);
+        ctx.lineTo(cx - 14 * scale, cy - 2 * scale);
+        ctx.lineTo(cx - 14 * scale, cy + 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 18 * scale, cy + 2 * scale);
+        ctx.lineTo(cx + 14 * scale, cy - 2 * scale);
+        ctx.lineTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Entrance door
+        ctx.fillStyle = "#2a1a0a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 3 * scale, cy + 9 * scale);
+        ctx.arc(cx, cy + 9 * scale, 3 * scale, Math.PI, 0);
+        ctx.lineTo(cx + 3 * scale, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Door handle
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(cx + 1 * scale, cy + 11 * scale, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Level indicator
+        if (level > 1) {
+          ctx.fillStyle = "#b464ff";
+          ctx.shadowColor = "#b464ff";
+          ctx.shadowBlur = 4 * scale;
+          for (let i = 0; i < Math.min(level - 1, 3); i++) {
+            drawStar(ctx, cx - 8 + i * 8, cy + 20 * scale, 3 * scale);
+          }
+          ctx.shadowBlur = 0;
         }
         break;
       }
-      case "club": {
-        // Eating Club - Economy/buff tower
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
+      case "lab": {
+        // =====================================================================
+        // E-QUAD LAB - Tesla/Electric Tower with Detailed Industrial Design
+        // =====================================================================
+
+        //shift the overall sprite down
+        ctx.translate(0, 12 * scale);
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
         ctx.beginPath();
         ctx.ellipse(
           cx,
-          cy + 12 * scale,
+          cy + 14 * scale,
           16 * scale,
           8 * scale,
           0,
@@ -376,48 +668,281 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        // Building - left
-        ctx.fillStyle = "#2d6b2d";
+
+        // Concrete foundation platform
+        ctx.fillStyle = "#4a4a4a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 16 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 14 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 16 * scale, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Industrial building - left face (shadowed)
+        const leftLabGrad = ctx.createLinearGradient(
+          cx - 14 * scale,
+          cy,
+          cx,
+          cy
+        );
+        leftLabGrad.addColorStop(0, "#2d4a5a");
+        leftLabGrad.addColorStop(1, "#3d5a6b");
+        ctx.fillStyle = leftLabGrad;
         ctx.beginPath();
         ctx.moveTo(cx - 14 * scale, cy + 10 * scale);
-        ctx.lineTo(cx - 12 * scale, cy - 4 * scale);
-        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx - 12 * scale, cy - 12 * scale);
+        ctx.lineTo(cx, cy - 8 * scale);
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-        // Right
-        ctx.fillStyle = "#1d5b1d";
+
+        // Right face (lighter)
+        const rightLabGrad = ctx.createLinearGradient(
+          cx,
+          cy,
+          cx + 14 * scale,
+          cy
+        );
+        rightLabGrad.addColorStop(0, "#3d5a6b");
+        rightLabGrad.addColorStop(1, "#4d6a7b");
+        ctx.fillStyle = rightLabGrad;
         ctx.beginPath();
         ctx.moveTo(cx + 14 * scale, cy + 10 * scale);
-        ctx.lineTo(cx + 12 * scale, cy - 4 * scale);
-        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx + 12 * scale, cy - 12 * scale);
+        ctx.lineTo(cx, cy - 8 * scale);
         ctx.lineTo(cx, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-        // Roof
-        ctx.fillStyle = "#1a4a1a";
-        ctx.beginPath();
-        ctx.moveTo(cx - 16 * scale, cy - 4 * scale);
-        ctx.lineTo(cx, cy - 22 * scale);
-        ctx.lineTo(cx + 16 * scale, cy - 4 * scale);
-        ctx.closePath();
-        ctx.fill();
-        // Door
-        ctx.fillStyle = "#5d3a1a";
-        ctx.fillRect(cx - 4 * scale, cy, 8 * scale, 10 * scale);
-        // Dollar sign
-        ctx.fillStyle = "#ffd700";
-        ctx.shadowColor = "#ffd700";
+
+        // Industrial panel lines
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          const panelX = cx - 10 * scale + i * 3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(panelX, cy + 8 * scale);
+          ctx.lineTo(panelX + 1 * scale, cy - 8 * scale);
+          ctx.stroke();
+        }
+        for (let i = 0; i < 4; i++) {
+          const panelX = cx + 2 * scale + i * 3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(panelX, cy + 8 * scale);
+          ctx.lineTo(panelX - 1 * scale, cy - 8 * scale);
+          ctx.stroke();
+        }
+
+        // Ventilation grilles
+        ctx.fillStyle = "#1a2a3a";
+        ctx.fillRect(cx - 10 * scale, cy + 2 * scale, 6 * scale, 4 * scale);
+        ctx.fillRect(cx + 4 * scale, cy + 2 * scale, 6 * scale, 4 * scale);
+        // Grille slats
+        ctx.strokeStyle = "#3d5a6b";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 9 * scale, cy + 3 * scale + i * 1.2 * scale);
+          ctx.lineTo(cx - 5 * scale, cy + 3 * scale + i * 1.2 * scale);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 5 * scale, cy + 3 * scale + i * 1.2 * scale);
+          ctx.lineTo(cx + 9 * scale, cy + 3 * scale + i * 1.2 * scale);
+          ctx.stroke();
+        }
+
+        // Lab windows with cyan glow
+        const labGlow = animated ? 0.6 + Math.sin(t * 2) * 0.2 : 0.7;
+        ctx.fillStyle = "#0a1a2a";
+        ctx.fillRect(cx - 8 * scale, cy - 6 * scale, 5 * scale, 6 * scale);
+        ctx.fillRect(cx + 3 * scale, cy - 6 * scale, 5 * scale, 6 * scale);
+        ctx.fillStyle = `rgba(0, 255, 255, ${labGlow * 0.7})`;
+        ctx.shadowColor = "#00ffff";
         ctx.shadowBlur = 6 * scale;
-        ctx.font = `bold ${16 * scale}px Arial`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("$", cx, cy - 12 * scale);
+        ctx.fillRect(cx - 7 * scale, cy - 5 * scale, 3 * scale, 4 * scale);
+        ctx.fillRect(cx + 4 * scale, cy - 5 * scale, 3 * scale, 4 * scale);
         ctx.shadowBlur = 0;
+
+        // Dome structure
+        const domeGrad = ctx.createRadialGradient(
+          cx,
+          cy - 14 * scale,
+          0,
+          cx,
+          cy - 14 * scale,
+          12 * scale
+        );
+        domeGrad.addColorStop(0, "#5d7a8b");
+        domeGrad.addColorStop(0.7, "#4d6a7b");
+        domeGrad.addColorStop(1, "#3d5a6b");
+        ctx.fillStyle = domeGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale, 12 * scale, Math.PI, 0);
+        ctx.fill();
+
+        // Dome panel lines
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 5; i++) {
+          const angle = Math.PI + (i * Math.PI) / 5;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - 12 * scale);
+          ctx.lineTo(
+            cx + Math.cos(angle) * 12 * scale,
+            cy - 12 * scale + Math.sin(angle) * 12 * scale
+          );
+          ctx.stroke();
+        }
+
+        // Dome observation window
+        ctx.fillStyle = `rgba(0, 255, 255, ${labGlow * 0.5})`;
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 18 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Tesla coil base
+        ctx.fillStyle = "#2a2a2a";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy - 22 * scale,
+          4 * scale,
+          2 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Tesla coil tower
+        ctx.fillStyle = "#3a3a3a";
+        ctx.fillRect(cx - 2 * scale, cy - 38 * scale, 4 * scale, 16 * scale);
+
+        // Coil rings
+        ctx.strokeStyle = "#5a5a5a";
+        ctx.lineWidth = 1.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.ellipse(
+            cx,
+            cy - 26 * scale - i * 3 * scale,
+            5 * scale - i * 0.5 * scale,
+            1.5 * scale,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+        }
+
+        // Energy orb at top with pulsing animation
+        const orbPulse = animated ? 1 + Math.sin(t * 3) * 0.3 : 1;
+        ctx.fillStyle = "#00ffff";
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 15 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 40 * scale, 6 * scale * orbPulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner bright core
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 40 * scale, 3 * scale * orbPulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Electric arcs emanating from orb
+        if (animated) {
+          ctx.strokeStyle = `rgba(0, 255, 255, ${0.7 + Math.sin(t * 5) * 0.3})`;
+          ctx.lineWidth = 1.5 * scale;
+          for (let i = 0; i < 6; i++) {
+            const arcAngle = t * 2.5 + (i * Math.PI) / 3;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - 40 * scale);
+            // Jagged lightning path
+            let ax = cx,
+              ay = cy - 40 * scale;
+            for (let j = 0; j < 3; j++) {
+              const dist = (3 + j * 3) * scale;
+              const jitter = Math.sin(t * 10 + i + j) * 2 * scale;
+              ax = cx + Math.cos(arcAngle) * dist + jitter;
+              ay = cy - 40 * scale + Math.sin(arcAngle) * dist * 0.6 + jitter;
+              ctx.lineTo(ax, ay);
+            }
+            ctx.stroke();
+          }
+        }
+
+        // Ground electricity effect
+        if (animated) {
+          ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + Math.sin(t * 8) * 0.2})`;
+          ctx.lineWidth = 1 * scale;
+          for (let i = 0; i < 3; i++) {
+            const boltX = cx - 8 * scale + i * 8 * scale;
+            ctx.beginPath();
+            ctx.moveTo(boltX, cy + 10 * scale);
+            ctx.lineTo(boltX + 2 * scale, cy + 6 * scale);
+            ctx.lineTo(boltX - 1 * scale, cy + 4 * scale);
+            ctx.lineTo(boltX + 1 * scale, cy + 2 * scale);
+            ctx.stroke();
+          }
+        }
+
+        // Hazard stripes on base
+        ctx.fillStyle = "#ffcc00";
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 12 * scale + i * 6 * scale, cy + 14 * scale);
+          ctx.lineTo(cx - 10 * scale + i * 6 * scale, cy + 10 * scale);
+          ctx.lineTo(cx - 8 * scale + i * 6 * scale, cy + 10 * scale);
+          ctx.lineTo(cx - 10 * scale + i * 6 * scale, cy + 14 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Engineering emblem (gear)
+        ctx.strokeStyle = "#00ffff";
+        ctx.lineWidth = 1 * scale;
+        const gearRot = animated ? t * 0.5 : 0;
+        ctx.beginPath();
+        ctx.arc(cx, cy + 7 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let i = 0; i < 6; i++) {
+          const toothAngle = gearRot + (i * Math.PI) / 3;
+          ctx.beginPath();
+          ctx.moveTo(
+            cx + Math.cos(toothAngle) * 3 * scale,
+            cy + 7 * scale + Math.sin(toothAngle) * 3 * scale
+          );
+          ctx.lineTo(
+            cx + Math.cos(toothAngle) * 5 * scale,
+            cy + 7 * scale + Math.sin(toothAngle) * 5 * scale
+          );
+          ctx.stroke();
+        }
+
+        // Level indicator stars with cyan glow
+        if (level > 1) {
+          ctx.fillStyle = "#00ffff";
+          ctx.shadowColor = "#00ffff";
+          ctx.shadowBlur = 4 * scale;
+          for (let i = 0; i < Math.min(level - 1, 3); i++) {
+            drawStar(ctx, cx - 8 + i * 8, cy + 20 * scale, 3 * scale);
+          }
+          ctx.shadowBlur = 0;
+        }
         break;
       }
-      case "station": {
-        // Dinky Station - Troop spawner
+      case "arch": {
+        // =====================================================================
+        // BLAIR ARCH - Gothic Portal Tower with GREEN Magical Gateway
+        // =====================================================================
+        ctx.translate(0, 7 * scale);
+
+        // Ground shadow
         ctx.fillStyle = "rgba(0,0,0,0.3)";
         ctx.beginPath();
         ctx.ellipse(
@@ -430,49 +955,904 @@ export const TowerSprite: React.FC<{
           Math.PI * 2
         );
         ctx.fill();
-        // Station building - left
-        ctx.fillStyle = "#8b2a2a";
+
+        // Stone foundation platform
+        ctx.fillStyle = "#5a4a3a";
         ctx.beginPath();
-        ctx.moveTo(cx - 16 * scale, cy + 14 * scale);
-        ctx.lineTo(cx - 16 * scale, cy - 2 * scale);
-        ctx.lineTo(cx, cy + 2 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.moveTo(cx - 20 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 18 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 18 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 20 * scale, cy + 14 * scale);
         ctx.closePath();
         ctx.fill();
-        // Right
-        ctx.fillStyle = "#7b1a1a";
+
+        // Left pillar - multiple layers for depth
+        const leftPillarGrad = ctx.createLinearGradient(
+          cx - 18 * scale,
+          0,
+          cx - 8 * scale,
+          0
+        );
+        leftPillarGrad.addColorStop(0, "#5b4b3b");
+        leftPillarGrad.addColorStop(0.3, "#7b6b55");
+        leftPillarGrad.addColorStop(1, "#6b5b45");
+        ctx.fillStyle = leftPillarGrad;
+        ctx.fillRect(cx - 18 * scale, cy - 22 * scale, 10 * scale, 32 * scale);
+
+        // Left pillar shadow edge
+        ctx.fillStyle = "#4a3a2a";
+        ctx.fillRect(cx - 18 * scale, cy - 22 * scale, 2 * scale, 32 * scale);
+
+        // Left pillar highlight
+        ctx.fillStyle = "#8b7b65";
+        ctx.fillRect(cx - 10 * scale, cy - 22 * scale, 2 * scale, 32 * scale);
+
+        // Right pillar
+        const rightPillarGrad = ctx.createLinearGradient(
+          cx + 8 * scale,
+          0,
+          cx + 18 * scale,
+          0
+        );
+        rightPillarGrad.addColorStop(0, "#6b5b45");
+        rightPillarGrad.addColorStop(0.7, "#7b6b55");
+        rightPillarGrad.addColorStop(1, "#5b4b3b");
+        ctx.fillStyle = rightPillarGrad;
+        ctx.fillRect(cx + 8 * scale, cy - 22 * scale, 10 * scale, 32 * scale);
+
+        // Right pillar highlight
+        ctx.fillStyle = "#8b7b65";
+        ctx.fillRect(cx + 8 * scale, cy - 22 * scale, 2 * scale, 32 * scale);
+
+        // Stone block pattern on pillars
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let row = 0; row < 7; row++) {
+          const y = cy + 8 * scale - row * 4 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 17 * scale, y);
+          ctx.lineTo(cx - 9 * scale, y);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 9 * scale, y);
+          ctx.lineTo(cx + 17 * scale, y);
+          ctx.stroke();
+        }
+
+        // Pillar capitals (decorative tops)
+        ctx.fillStyle = "#8b7b65";
+        ctx.fillRect(cx - 20 * scale, cy - 24 * scale, 14 * scale, 3 * scale);
+        ctx.fillRect(cx + 6 * scale, cy - 24 * scale, 14 * scale, 3 * scale);
+
+        // Carved decorative bands on pillars
+        ctx.fillStyle = "#9b8b75";
+        ctx.fillRect(cx - 17 * scale, cy - 10 * scale, 8 * scale, 2 * scale);
+        ctx.fillRect(cx + 9 * scale, cy - 10 * scale, 8 * scale, 2 * scale);
+        ctx.fillRect(cx - 17 * scale, cy + 2 * scale, 8 * scale, 2 * scale);
+        ctx.fillRect(cx + 9 * scale, cy + 2 * scale, 8 * scale, 2 * scale);
+
+        // Gothic arch structure
+        ctx.fillStyle = "#8b7b65";
         ctx.beginPath();
-        ctx.moveTo(cx + 16 * scale, cy + 14 * scale);
-        ctx.lineTo(cx + 16 * scale, cy - 2 * scale);
-        ctx.lineTo(cx, cy + 2 * scale);
-        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.arc(cx, cy - 22 * scale, 14 * scale, Math.PI, 0);
+        ctx.lineTo(cx + 18 * scale, cy - 22 * scale);
+        ctx.arc(cx, cy - 22 * scale, 18 * scale, 0, Math.PI, true);
         ctx.closePath();
         ctx.fill();
-        // Roof
-        ctx.fillStyle = "#6b0000";
-        ctx.fillRect(cx - 18 * scale, cy - 8 * scale, 36 * scale, 8 * scale);
-        // Windows
-        ctx.fillStyle = "#ffd700";
-        ctx.shadowColor = "#ffd700";
-        ctx.shadowBlur = 4 * scale;
-        ctx.fillRect(cx - 14 * scale, cy + 2 * scale, 6 * scale, 6 * scale);
-        ctx.fillRect(cx + 8 * scale, cy + 2 * scale, 6 * scale, 6 * scale);
-        ctx.shadowBlur = 0;
-        // Flag
+
+        // Keystone at top of arch
+        ctx.fillStyle = "#9b8b75";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 36 * scale);
+        ctx.lineTo(cx, cy - 40 * scale);
+        ctx.lineTo(cx + 4 * scale, cy - 36 * scale);
+        ctx.lineTo(cx + 3 * scale, cy - 32 * scale);
+        ctx.lineTo(cx - 3 * scale, cy - 32 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Keystone carving (Princeton shield)
         ctx.fillStyle = "#ff6600";
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 12 * scale);
-        ctx.lineTo(cx, cy - 26 * scale);
-        ctx.lineTo(cx + 10 * scale, cy - 22 * scale);
-        ctx.lineTo(cx, cy - 18 * scale);
+        ctx.moveTo(cx, cy - 38 * scale);
+        ctx.lineTo(cx + 2 * scale, cy - 35 * scale);
+        ctx.lineTo(cx, cy - 33 * scale);
+        ctx.lineTo(cx - 2 * scale, cy - 35 * scale);
+        ctx.closePath();
         ctx.fill();
-        // Train tracks
-        ctx.strokeStyle = "#4a4a4a";
-        ctx.lineWidth = 2 * scale;
+
+        // Arch stone pattern
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 6; i++) {
+          const angle = Math.PI + (i * Math.PI) / 6;
+          ctx.beginPath();
+          ctx.moveTo(
+            cx + Math.cos(angle) * 14 * scale,
+            cy - 22 * scale + Math.sin(angle) * 14 * scale
+          );
+          ctx.lineTo(
+            cx + Math.cos(angle) * 18 * scale,
+            cy - 22 * scale + Math.sin(angle) * 18 * scale
+          );
+          ctx.stroke();
+        }
+
+        // Inner arch opening (dark passage)
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale, 10 * scale, Math.PI, 0);
+        ctx.lineTo(cx + 10 * scale, cy + 10 * scale);
+        ctx.lineTo(cx - 10 * scale, cy + 10 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // GREEN portal glow (changed from purple)
+        const portalGlow = animated ? 0.5 + Math.sin(t * 2) * 0.25 : 0.6;
+        const greenPortalGrad = ctx.createRadialGradient(
+          cx,
+          cy - 4 * scale,
+          0,
+          cx,
+          cy - 4 * scale,
+          10 * scale
+        );
+        greenPortalGrad.addColorStop(0, `rgba(100, 255, 150, ${portalGlow})`);
+        greenPortalGrad.addColorStop(
+          0.5,
+          `rgba(50, 200, 100, ${portalGlow * 0.7})`
+        );
+        greenPortalGrad.addColorStop(
+          1,
+          `rgba(20, 150, 80, ${portalGlow * 0.4})`
+        );
+        ctx.fillStyle = greenPortalGrad;
+        ctx.shadowColor = "#50ff80";
+        ctx.shadowBlur = 15 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale, 8 * scale, Math.PI, 0);
+        ctx.lineTo(cx + 8 * scale, cy + 6 * scale);
+        ctx.lineTo(cx - 8 * scale, cy + 6 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Portal swirl effect
+        if (animated) {
+          ctx.strokeStyle = `rgba(150, 255, 180, ${
+            0.4 + Math.sin(t * 3) * 0.2
+          })`;
+          ctx.lineWidth = 1.5 * scale;
+          for (let i = 0; i < 3; i++) {
+            const spiralOffset = t * 2 + i * Math.PI * 0.67;
+            ctx.beginPath();
+            for (let j = 0; j < 20; j++) {
+              const angle = spiralOffset + j * 0.3;
+              const radius = 2 * scale + j * 0.3 * scale;
+              const sx = cx + Math.cos(angle) * radius;
+              const sy = cy - 4 * scale + Math.sin(angle) * radius * 0.6;
+              if (j === 0) ctx.moveTo(sx, sy);
+              else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+          }
+        }
+
+        // Magical runes on arch
+        ctx.fillStyle = `rgba(100, 255, 150, ${0.6 + Math.sin(t * 2) * 0.3})`;
+        ctx.font = `${3 * scale}px serif`;
+        ctx.textAlign = "center";
+        const runes = ["ᚨ", "ᚱ", "ᚲ", "ᚺ"];
+        for (let i = 0; i < 4; i++) {
+          const angle = Math.PI + 0.3 + i * 0.6;
+          const rx = cx + Math.cos(angle) * 16 * scale;
+          const ry = cy - 22 * scale + Math.sin(angle) * 16 * scale;
+          ctx.fillText(runes[i], rx, ry);
+        }
+
+        // Sound/energy waves emanating from portal
+        if (animated) {
+          ctx.strokeStyle = `rgba(100, 255, 150, ${0.5 - (t % 1) * 0.4})`;
+          ctx.lineWidth = 2 * scale;
+          for (let i = 0; i < 3; i++) {
+            const waveSize = (5 + ((t * 8) % 12) + i * 4) * scale;
+            ctx.beginPath();
+            ctx.arc(cx, cy - 4 * scale, waveSize, -0.7, 0.7);
+            ctx.stroke();
+          }
+        }
+
+        // Torch holders on pillars
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(cx - 22 * scale, cy - 6 * scale, 4 * scale, 2 * scale);
+        ctx.fillRect(cx + 18 * scale, cy - 6 * scale, 4 * scale, 2 * scale);
+
+        // Animated torches with green flames
+        const flameFlicker = animated ? Math.sin(t * 8) * 0.3 : 0;
+
+        // Left torch
+        ctx.fillStyle = "#4a3020";
+        ctx.fillRect(cx - 24 * scale, cy - 14 * scale, 2 * scale, 8 * scale);
+        ctx.fillStyle = `rgba(100, 255, 150, ${0.8 + flameFlicker})`;
+        ctx.shadowColor = "#50ff80";
+        ctx.shadowBlur = 8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 25 * scale, cy - 14 * scale);
+        ctx.quadraticCurveTo(
+          cx - 23 * scale,
+          cy - 20 * scale - flameFlicker * 4,
+          cx - 21 * scale,
+          cy - 14 * scale
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Right torch
+        ctx.fillStyle = "#4a3020";
+        ctx.fillRect(cx + 22 * scale, cy - 14 * scale, 2 * scale, 8 * scale);
+        ctx.fillStyle = `rgba(100, 255, 150, ${0.8 - flameFlicker})`;
+        ctx.beginPath();
+        ctx.moveTo(cx + 21 * scale, cy - 14 * scale);
+        ctx.quadraticCurveTo(
+          cx + 23 * scale,
+          cy - 20 * scale + flameFlicker * 4,
+          cx + 25 * scale,
+          cy - 14 * scale
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Level indicator
+        if (level > 1) {
+          ctx.fillStyle = "#50ff80";
+          ctx.shadowColor = "#50ff80";
+          ctx.shadowBlur = 4 * scale;
+          for (let i = 0; i < Math.min(level - 1, 3); i++) {
+            drawStar(ctx, cx - 8 + i * 8, cy + 20 * scale, 3 * scale);
+          }
+          ctx.shadowBlur = 0;
+        }
+        break;
+      }
+      case "club": {
+        // =====================================================================
+        // EATING CLUB - Colonial Mansion with Grand Architecture
+        // =====================================================================
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy + 14 * scale,
+          18 * scale,
+          9 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Stone foundation/steps
+        ctx.fillStyle = "#4a4a3a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 18 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 18 * scale, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Step detail
+        ctx.fillStyle = "#5a5a4a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 14 * scale);
+        ctx.lineTo(cx - 6 * scale, cy + 11 * scale);
+        ctx.lineTo(cx + 6 * scale, cy + 11 * scale);
+        ctx.lineTo(cx + 8 * scale, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Main building - left face (shadowed)
+        const leftClubGrad = ctx.createLinearGradient(
+          cx - 16 * scale,
+          cy,
+          cx,
+          cy
+        );
+        leftClubGrad.addColorStop(0, "#1d5b1d");
+        leftClubGrad.addColorStop(1, "#2d6b2d");
+        ctx.fillStyle = leftClubGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx - 14 * scale, cy - 6 * scale);
+        ctx.lineTo(cx, cy - 2 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (lighter)
+        const rightClubGrad = ctx.createLinearGradient(
+          cx,
+          cy,
+          cx + 16 * scale,
+          cy
+        );
+        rightClubGrad.addColorStop(0, "#2d6b2d");
+        rightClubGrad.addColorStop(1, "#3d7b3d");
+        ctx.fillStyle = rightClubGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx + 16 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 14 * scale, cy - 6 * scale);
+        ctx.lineTo(cx, cy - 2 * scale);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Decorative horizontal bands
+        ctx.strokeStyle = "#4d8b4d";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 14 * scale, cy + 4 * scale);
+        ctx.lineTo(cx + 14 * scale, cy + 4 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 13 * scale, cy - 2 * scale);
+        ctx.lineTo(cx + 13 * scale, cy - 2 * scale);
+        ctx.stroke();
+
+        // Grand roof with steeper pitch
+        const roofGrad = ctx.createLinearGradient(
+          cx - 18 * scale,
+          cy - 6 * scale,
+          cx + 18 * scale,
+          cy - 6 * scale
+        );
+        roofGrad.addColorStop(0, "#0a3a0a");
+        roofGrad.addColorStop(0.5, "#1a4a1a");
+        roofGrad.addColorStop(1, "#0a3a0a");
+        ctx.fillStyle = roofGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 18 * scale, cy - 6 * scale);
+        ctx.lineTo(cx, cy - 28 * scale);
+        ctx.lineTo(cx + 18 * scale, cy - 6 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof highlight edge
+        ctx.fillStyle = "#2a5a2a";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 28 * scale);
+        ctx.lineTo(cx + 18 * scale, cy - 6 * scale);
+        ctx.lineTo(cx + 14 * scale, cy - 6 * scale);
+        ctx.lineTo(cx, cy - 24 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof shingle pattern
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let row = 0; row < 4; row++) {
+          const shingleY = cy - 8 * scale - row * 4 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 16 * scale + row * 3 * scale, shingleY);
+          ctx.lineTo(cx + 16 * scale - row * 3 * scale, shingleY);
+          ctx.stroke();
+        }
+
+        // Decorative dormer window
+        ctx.fillStyle = "#1a4a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 12 * scale);
+        ctx.lineTo(cx, cy - 18 * scale);
+        ctx.lineTo(cx + 4 * scale, cy - 12 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 215, 0, 0.7)`;
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Colonial columns (portico)
+        ctx.fillStyle = "#f5f5f0";
+        ctx.fillRect(cx - 6 * scale, cy - 2 * scale, 2 * scale, 12 * scale);
+        ctx.fillRect(cx + 4 * scale, cy - 2 * scale, 2 * scale, 12 * scale);
+
+        // Column capitals
+        ctx.fillStyle = "#e5e5e0";
+        ctx.fillRect(cx - 7 * scale, cy - 3 * scale, 4 * scale, 2 * scale);
+        ctx.fillRect(cx + 3 * scale, cy - 3 * scale, 4 * scale, 2 * scale);
+
+        // Column bases
+        ctx.fillRect(cx - 7 * scale, cy + 9 * scale, 4 * scale, 2 * scale);
+        ctx.fillRect(cx + 3 * scale, cy + 9 * scale, 4 * scale, 2 * scale);
+
+        // Portico roof
+        ctx.fillStyle = "#1a4a1a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy - 3 * scale);
+        ctx.lineTo(cx, cy - 8 * scale);
+        ctx.lineTo(cx + 10 * scale, cy - 3 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Grand entrance door
+        ctx.fillStyle = "#3a1a0a";
+        ctx.fillRect(cx - 3 * scale, cy + 2 * scale, 6 * scale, 8 * scale);
+
+        // Door panels
+        ctx.strokeStyle = "#2a0a00";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.strokeRect(cx - 2.5 * scale, cy + 3 * scale, 2 * scale, 3 * scale);
+        ctx.strokeRect(cx + 0.5 * scale, cy + 3 * scale, 2 * scale, 3 * scale);
+        ctx.strokeRect(cx - 2.5 * scale, cy + 7 * scale, 2 * scale, 2 * scale);
+        ctx.strokeRect(cx + 0.5 * scale, cy + 7 * scale, 2 * scale, 2 * scale);
+
+        // Door knocker
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(cx, cy + 6 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fanlight window above door
+        ctx.fillStyle = `rgba(255, 215, 0, 0.6)`;
+        ctx.beginPath();
+        ctx.arc(cx, cy + 2 * scale, 2.5 * scale, Math.PI, 0);
+        ctx.fill();
+        // Fanlight spokes
+        ctx.strokeStyle = "#2a1a0a";
+        ctx.lineWidth = 0.5 * scale;
+        for (let i = 0; i < 4; i++) {
+          const spokeAngle = Math.PI + (i * Math.PI) / 4;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy + 2 * scale);
+          ctx.lineTo(
+            cx + Math.cos(spokeAngle) * 2.5 * scale,
+            cy + 2 * scale + Math.sin(spokeAngle) * 2.5 * scale
+          );
+          ctx.stroke();
+        }
+
+        // Side windows with mullions
+        ctx.fillStyle = "#0a2a0a";
+        ctx.fillRect(cx - 13 * scale, cy + 1 * scale, 4 * scale, 5 * scale);
+        ctx.fillRect(cx + 9 * scale, cy + 1 * scale, 4 * scale, 5 * scale);
+        ctx.fillStyle = `rgba(255, 215, 0, 0.5)`;
+        ctx.fillRect(cx - 12 * scale, cy + 2 * scale, 2 * scale, 3 * scale);
+        ctx.fillRect(cx + 10 * scale, cy + 2 * scale, 2 * scale, 3 * scale);
+
+        // Ivy climbing on walls
+        ctx.fillStyle = "#1a5a1a";
+        const ivyPositions = [
+          { x: cx - 14 * scale, y: cy + 8 * scale },
+          { x: cx + 12 * scale, y: cy + 6 * scale },
+          { x: cx - 12 * scale, y: cy + 2 * scale },
+          { x: cx + 14 * scale, y: cy + 4 * scale },
+        ];
+        for (const ivy of ivyPositions) {
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.arc(
+              ivy.x + (i % 2) * 2 * scale,
+              ivy.y - i * 2 * scale,
+              1.5 * scale,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+        }
+
+        // Glowing dollar sign emblem
+        ctx.fillStyle = "#ffd700";
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 8 * scale;
+        ctx.font = `bold ${10 * scale}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("$", cx, cy - 22 * scale);
+        ctx.shadowBlur = 0;
+
+        // Chimney with smoke
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(cx + 10 * scale, cy - 20 * scale, 4 * scale, 8 * scale);
+        if (animated) {
+          ctx.fillStyle = `rgba(150, 150, 150, ${0.4 + Math.sin(t * 2) * 0.2})`;
+          for (let i = 0; i < 2; i++) {
+            const smokeY = cy - 22 * scale - ((t * 3 + i * 5) % 8);
+            ctx.beginPath();
+            ctx.arc(
+              cx + 12 * scale + Math.sin(t + i) * 2 * scale,
+              smokeY,
+              (2 + i) * scale,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+        }
+
+        // Level indicator
+        if (level > 1) {
+          ctx.fillStyle = "#ffd700";
+          ctx.shadowColor = "#ffd700";
+          ctx.shadowBlur = 4 * scale;
+          for (let i = 0; i < Math.min(level - 1, 3); i++) {
+            drawStar(ctx, cx - 8 + i * 8, cy + 20 * scale, 3 * scale);
+          }
+          ctx.shadowBlur = 0;
+        }
+        break;
+      }
+      case "station": {
+        // =====================================================================
+        // DINKY STATION - Victorian Railway Station with Clock Tower
+        // =====================================================================
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(
+          cx,
+          cy + 16 * scale,
+          22 * scale,
+          11 * scale,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+
+        // Railway platform base
+        ctx.fillStyle = "#4a4a4a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 24 * scale, cy + 16 * scale);
+        ctx.lineTo(cx - 22 * scale, cy + 12 * scale);
+        ctx.lineTo(cx + 22 * scale, cy + 12 * scale);
+        ctx.lineTo(cx + 24 * scale, cy + 16 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Platform edge markings (yellow safety stripe)
+        ctx.fillStyle = "#ffcc00";
         ctx.beginPath();
         ctx.moveTo(cx - 22 * scale, cy + 12 * scale);
+        ctx.lineTo(cx - 20 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 20 * scale, cy + 10 * scale);
         ctx.lineTo(cx + 22 * scale, cy + 12 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Train tracks
+        ctx.strokeStyle = "#3a3a3a";
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 26 * scale, cy + 14 * scale);
+        ctx.lineTo(cx + 26 * scale, cy + 14 * scale);
         ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 26 * scale, cy + 18 * scale);
+        ctx.lineTo(cx + 26 * scale, cy + 18 * scale);
+        ctx.stroke();
+
+        // Track ties
+        ctx.fillStyle = "#5a4030";
+        for (let i = -5; i <= 5; i++) {
+          ctx.fillRect(
+            cx + i * 4.5 * scale - 1 * scale,
+            cy + 13 * scale,
+            2 * scale,
+            6 * scale
+          );
+        }
+
+        // Main station building - left face (shadowed)
+        const leftStationGrad = ctx.createLinearGradient(
+          cx - 18 * scale,
+          cy,
+          cx,
+          cy
+        );
+        leftStationGrad.addColorStop(0, "#6b1a1a");
+        leftStationGrad.addColorStop(1, "#8b2a2a");
+        ctx.fillStyle = leftStationGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 18 * scale, cy + 10 * scale);
+        ctx.lineTo(cx - 16 * scale, cy - 4 * scale);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (lighter)
+        const rightStationGrad = ctx.createLinearGradient(
+          cx,
+          cy,
+          cx + 18 * scale,
+          cy
+        );
+        rightStationGrad.addColorStop(0, "#8b2a2a");
+        rightStationGrad.addColorStop(1, "#9b3a3a");
+        ctx.fillStyle = rightStationGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx + 18 * scale, cy + 10 * scale);
+        ctx.lineTo(cx + 16 * scale, cy - 4 * scale);
+        ctx.lineTo(cx, cy);
+        ctx.lineTo(cx, cy + 14 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brick pattern
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let row = 0; row < 5; row++) {
+          const brickY = cy + 8 * scale - row * 3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 16 * scale + row * scale, brickY);
+          ctx.lineTo(cx - 2 * scale, brickY);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 2 * scale, brickY);
+          ctx.lineTo(cx + 16 * scale - row * scale, brickY);
+          ctx.stroke();
+        }
+
+        // Main roof with overhang
+        ctx.fillStyle = "#5a0000";
+        ctx.beginPath();
+        ctx.moveTo(cx - 20 * scale, cy - 4 * scale);
+        ctx.lineTo(cx - 18 * scale, cy - 10 * scale);
+        ctx.lineTo(cx + 18 * scale, cy - 10 * scale);
+        ctx.lineTo(cx + 20 * scale, cy - 4 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof edge highlight
+        ctx.strokeStyle = "#7a2020";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 20 * scale, cy - 4 * scale);
+        ctx.lineTo(cx + 20 * scale, cy - 4 * scale);
+        ctx.stroke();
+
+        // Clock tower
+        ctx.fillStyle = "#7b1a1a";
+        ctx.fillRect(cx - 6 * scale, cy - 32 * scale, 12 * scale, 22 * scale);
+
+        // Clock tower brick detail
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 0.5 * scale;
+        for (let row = 0; row < 7; row++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 5 * scale, cy - 12 * scale - row * 3 * scale);
+          ctx.lineTo(cx + 5 * scale, cy - 12 * scale - row * 3 * scale);
+          ctx.stroke();
+        }
+
+        // Clock tower roof
+        ctx.fillStyle = "#4a0000";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy - 32 * scale);
+        ctx.lineTo(cx, cy - 40 * scale);
+        ctx.lineTo(cx + 8 * scale, cy - 32 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Clock tower spire
+        ctx.fillStyle = "#3a0000";
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale, cy - 40 * scale);
+        ctx.lineTo(cx, cy - 46 * scale);
+        ctx.lineTo(cx + 2 * scale, cy - 40 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Clock face
+        ctx.fillStyle = "#f5f5f0";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 24 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Clock numbers
+        ctx.fillStyle = "#1a1a1a";
+        ctx.font = `${2 * scale}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("12", cx, cy - 27.5 * scale);
+        ctx.fillText("3", cx + 3.5 * scale, cy - 24 * scale);
+        ctx.fillText("6", cx, cy - 20.5 * scale);
+        ctx.fillText("9", cx - 3.5 * scale, cy - 24 * scale);
+
+        // Clock hands (animated)
+        const hourAngle = animated ? t * 0.1 : Math.PI / 4;
+        const minuteAngle = animated ? t * 1.2 : Math.PI / 2;
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 24 * scale);
+        ctx.lineTo(
+          cx + Math.cos(hourAngle - Math.PI / 2) * 2.5 * scale,
+          cy - 24 * scale + Math.sin(hourAngle - Math.PI / 2) * 2.5 * scale
+        );
+        ctx.stroke();
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 24 * scale);
+        ctx.lineTo(
+          cx + Math.cos(minuteAngle - Math.PI / 2) * 3.5 * scale,
+          cy - 24 * scale + Math.sin(minuteAngle - Math.PI / 2) * 3.5 * scale
+        );
+        ctx.stroke();
+
+        // Clock center dot
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 24 * scale, 0.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Station windows with warm glow
+        const windowGlow = animated ? 0.6 + Math.sin(t * 2) * 0.2 : 0.7;
+        ctx.fillStyle = "#1a0a0a";
+        ctx.fillRect(cx - 14 * scale, cy + 1 * scale, 6 * scale, 6 * scale);
+        ctx.fillRect(cx + 8 * scale, cy + 1 * scale, 6 * scale, 6 * scale);
+        ctx.fillStyle = `rgba(255, 200, 100, ${windowGlow})`;
+        ctx.shadowColor = "#ffcc66";
+        ctx.shadowBlur = 6 * scale;
+        ctx.fillRect(cx - 13 * scale, cy + 2 * scale, 4 * scale, 4 * scale);
+        ctx.fillRect(cx + 9 * scale, cy + 2 * scale, 4 * scale, 4 * scale);
+        ctx.shadowBlur = 0;
+
+        // Window mullions
+        ctx.strokeStyle = "#2a1a0a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 11 * scale, cy + 2 * scale);
+        ctx.lineTo(cx - 11 * scale, cy + 6 * scale);
+        ctx.moveTo(cx - 13 * scale, cy + 4 * scale);
+        ctx.lineTo(cx - 9 * scale, cy + 4 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 11 * scale, cy + 2 * scale);
+        ctx.lineTo(cx + 11 * scale, cy + 6 * scale);
+        ctx.moveTo(cx + 9 * scale, cy + 4 * scale);
+        ctx.lineTo(cx + 13 * scale, cy + 4 * scale);
+        ctx.stroke();
+
+        // Small upper windows
+        ctx.fillStyle = `rgba(255, 200, 100, ${windowGlow * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(cx - 10 * scale, cy - 6 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 10 * scale, cy - 6 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Station door
+        ctx.fillStyle = "#2a1a0a";
+        ctx.fillRect(cx - 4 * scale, cy + 2 * scale, 8 * scale, 8 * scale);
+
+        // Door panels
+        ctx.strokeStyle = "#1a0a00";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.strokeRect(cx - 3 * scale, cy + 3 * scale, 2.5 * scale, 3 * scale);
+        ctx.strokeRect(
+          cx + 0.5 * scale,
+          cy + 3 * scale,
+          2.5 * scale,
+          3 * scale
+        );
+
+        // Door window
+        ctx.fillStyle = `rgba(255, 200, 100, ${windowGlow * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy + 4 * scale, 1.5 * scale, Math.PI, 0);
+        ctx.fill();
+
+        // Door handles
+        ctx.fillStyle = "#c9a227";
+        ctx.beginPath();
+        ctx.arc(cx - 1.5 * scale, cy + 7 * scale, 0.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 1.5 * scale, cy + 7 * scale, 0.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Platform awning supports
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(cx - 20 * scale, cy - 2 * scale, 2 * scale, 12 * scale);
+        ctx.fillRect(cx + 18 * scale, cy - 2 * scale, 2 * scale, 12 * scale);
+
+        // Decorative ironwork on supports
+        ctx.strokeStyle = "#5a4a3a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 19 * scale, cy + 2 * scale);
+        ctx.quadraticCurveTo(
+          cx - 16 * scale,
+          cy + 4 * scale,
+          cx - 16 * scale,
+          cy + 8 * scale
+        );
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 19 * scale, cy + 2 * scale);
+        ctx.quadraticCurveTo(
+          cx + 16 * scale,
+          cy + 4 * scale,
+          cx + 16 * scale,
+          cy + 8 * scale
+        );
+        ctx.stroke();
+
+        // Princeton flag on tower
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(cx + 6 * scale, cy - 38 * scale, 1 * scale, 12 * scale);
+        ctx.fillStyle = "#ff6600";
+        const flagWave = animated ? Math.sin(t * 4) * 0.15 : 0;
+        ctx.beginPath();
+        ctx.moveTo(cx + 7 * scale, cy - 38 * scale);
+        ctx.quadraticCurveTo(
+          cx + 12 * scale,
+          cy - 36 * scale + flagWave * 10,
+          cx + 15 * scale,
+          cy - 34 * scale
+        );
+        ctx.quadraticCurveTo(
+          cx + 12 * scale,
+          cy - 32 * scale - flagWave * 10,
+          cx + 7 * scale,
+          cy - 30 * scale
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Station sign
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(cx - 12 * scale, cy - 3 * scale, 24 * scale, 4 * scale);
+        ctx.fillStyle = "#c9a227";
+        ctx.font = `bold ${3 * scale}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("DINKY", cx, cy - 1 * scale);
+
+        // Lanterns on pillars
+        ctx.fillStyle = "#3a3a3a";
+        ctx.fillRect(cx - 21 * scale, cy - 6 * scale, 4 * scale, 4 * scale);
+        ctx.fillRect(cx + 17 * scale, cy - 6 * scale, 4 * scale, 4 * scale);
+        ctx.fillStyle = `rgba(255, 200, 100, ${windowGlow})`;
+        ctx.shadowColor = "#ffcc66";
+        ctx.shadowBlur = 4 * scale;
+        ctx.beginPath();
+        ctx.arc(cx - 19 * scale, cy - 4 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 19 * scale, cy - 4 * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Steam/smoke from waiting train
+        if (animated) {
+          ctx.fillStyle = `rgba(200, 200, 200, ${0.4 - (t % 2) * 0.2})`;
+          for (let i = 0; i < 3; i++) {
+            const steamX = cx - 20 * scale + ((t * 3 + i * 5) % 10);
+            const steamY = cy + 8 * scale - ((t * 4 + i * 3) % 12);
+            ctx.beginPath();
+            ctx.arc(steamX, steamY, (2 + i) * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Level indicator
+        if (level > 1) {
+          ctx.fillStyle = "#ff6600";
+          ctx.shadowColor = "#ff6600";
+          ctx.shadowBlur = 4 * scale;
+          for (let i = 0; i < Math.min(level - 1, 3); i++) {
+            drawStar(ctx, cx - 8 + i * 8, cy + 22 * scale, 3 * scale);
+          }
+          ctx.shadowBlur = 0;
+        }
         break;
       }
     }
@@ -496,6 +1876,7 @@ function drawStar(
   ctx.closePath();
   ctx.fill();
 }
+
 // =============================================================================
 // HERO SPRITES - Matching rendering.ts detailed style
 // =============================================================================
@@ -1830,33 +3211,37 @@ export const SpellSprite: React.FC<{
         break;
       }
       case "lightning": {
-        ctx.shadowColor = "#ffff00";
-        ctx.shadowBlur = 12 * scale;
+        // 1. Setup Intense Outer Glow
+        ctx.shadowColor = "#ffdd00";
+        ctx.shadowBlur = 25 * scale; // Increased blur for better atmosphere
         ctx.fillStyle = "#ffdd00";
+
+        // 2. Define the Main "Thick" Bolt Path
+        // We increase the vertical span (24) and the horizontal swing (14)
         ctx.beginPath();
-        ctx.moveTo(cx + 8 * scale, cy - 16 * scale);
-        ctx.lineTo(cx - 2 * scale, cy - 3 * scale);
-        ctx.lineTo(cx + 6 * scale, cy - 3 * scale);
-        ctx.lineTo(cx - 8 * scale, cy + 16 * scale);
-        ctx.lineTo(cx + 2 * scale, cy + 3 * scale);
-        ctx.lineTo(cx - 6 * scale, cy + 3 * scale);
+        ctx.moveTo(cx + 14 * scale, cy - 20 * scale); // Top Right Tip
+        ctx.lineTo(cx - 8 * scale, cy - 4 * scale); // Mid Left Bend
+        ctx.lineTo(cx + 12 * scale, cy - 4 * scale); // Mid Right Bend
+        ctx.lineTo(cx - 14 * scale, cy + 20 * scale); // Bottom Left Tip
+        ctx.lineTo(cx + 8 * scale, cy + 4 * scale); // Mid Right Bend (Return)
+        ctx.lineTo(cx - 12 * scale, cy + 4 * scale); // Mid Left Bend (Return)
         ctx.closePath();
         ctx.fill();
-        ctx.shadowBlur = 0;
-        if (animated) {
-          ctx.strokeStyle = "#ffff88";
-          ctx.lineWidth = 1.5;
-          for (let i = 0; i < 4; i++) {
-            const angle = t * 2 + (i * Math.PI) / 2;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(
-              cx + Math.cos(angle) * 10 * scale,
-              cy + Math.sin(angle) * 10 * scale
-            );
-            ctx.stroke();
-          }
-        }
+
+        // 3. Add a "Hot Core" (White Center)
+        // This makes the bolt look much more realistic and powerful
+        ctx.shadowBlur = 0; // Disable shadow for the core to keep it sharp
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(cx + 12 * scale, cy - 16 * scale);
+        ctx.lineTo(cx - 8 * scale, cy - 2 * scale);
+        ctx.lineTo(cx + 9 * scale, cy - 2 * scale);
+        ctx.lineTo(cx - 12 * scale, cy + 16 * scale);
+        ctx.lineTo(cx + 8 * scale, cy + 2 * scale);
+        ctx.lineTo(cx - 9 * scale, cy + 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+
         break;
       }
       case "freeze": {

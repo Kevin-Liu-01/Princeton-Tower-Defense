@@ -423,7 +423,7 @@ const DestroyedTower: React.FC<{ x: number; size?: number }> = ({
         height: size,
         position: "absolute",
         left: x,
-        bottom: 100,
+        bottom: 0,
       }}
     />
   );
@@ -450,15 +450,6 @@ export const DefeatScreen: React.FC<DefeatScreenProps> = ({ resetGame }) => {
 
       {/* Noise texture */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iNCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')] opacity-30" />
-
-      {/* Destroyed towers in background */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-        <DestroyedTower x={50} size={50} />
-        <DestroyedTower x={150} size={45} />
-        <DestroyedTower x={280} size={55} />
-        <DestroyedTower x={400} size={48} />
-        <DestroyedTower x={520} size={52} />
-      </div>
 
       {/* Skull/defeat icon */}
       <div className="z-10 mb-4">
@@ -487,8 +478,16 @@ export const DefeatScreen: React.FC<DefeatScreenProps> = ({ resetGame }) => {
       </div>
 
       {/* Victorious enemies */}
-      <div className="mb-8 z-10 opacity-70">
+      <div className="mb-8 relative z-10 opacity-70">
         <VictoriousEnemies size={400} />
+        {/* Destroyed towers in background */}
+        <div className="absolute bottom-0 left-0 pointer-events-none">
+          <DestroyedTower x={-30} size={50} />
+          <DestroyedTower x={90} size={45} />
+          <DestroyedTower x={170} size={55} />
+          <DestroyedTower x={270} size={48} />
+          <DestroyedTower x={370} size={52} />
+        </div>
       </div>
 
       {/* Retry button */}

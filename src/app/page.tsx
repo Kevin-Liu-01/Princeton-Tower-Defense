@@ -219,11 +219,7 @@ export default function PrincetonTowerDefense() {
   }, []);
   // Add particles helper
   const addParticles = useCallback(
-    (
-      pos: Position,
-      type: "spark" | "glow" | "smoke" | "explosion" | "light",
-      count: number
-    ) => {
+    (pos: Position, type: Particle["type"], count: number) => {
       const newParticles: Particle[] = [];
       const colors = PARTICLE_COLORS[type] || PARTICLE_COLORS.spark;
       for (let i = 0; i < count; i++) {
@@ -1330,7 +1326,7 @@ export default function PrincetonTowerDefense() {
             }
 
             setPawPoints((pp) => pp + amount);
-            addParticles(gridToWorld(tower.pos), "gold", 10);
+            addParticles(gridToWorld(tower.pos), "gold", 20);
 
             // Level 3+ Grand Club: Create gold particle fountain effect
             if (tower.level >= 3) {
@@ -5948,7 +5944,16 @@ export default function PrincetonTowerDefense() {
     (towerId: string) => {
       const tower = towers.find((t) => t.id === towerId);
       if (!tower) return;
-      const refund = Math.floor(TOWER_DATA[tower.type].cost * 0.7);
+      const refund =
+        Math.floor(TOWER_DATA[tower.type].cost * 0.7) +
+        (tower.level - 1) *
+          (tower.level === 2
+            ? 150 * 0.7
+            : tower.level === 3
+            ? 250 * 0.7
+            : tower.level === 4
+            ? 350 * 0.7
+            : 0);
       setPawPoints((pp) => pp + refund);
       addParticles(gridToWorld(tower.pos), "smoke", 15);
       setTowers((prev) => prev.filter((t) => t.id !== towerId));
@@ -6463,7 +6468,7 @@ export default function PrincetonTowerDefense() {
           }
         : null
     );
-  }, [hero, enemies, selectedMap, addParticles, towers]);
+  }, [hero, enemies, selectedMap, addParticles]);
   const resetGame = useCallback(() => {
     setGameState("menu");
     setPawPoints(INITIAL_PAW_POINTS);
@@ -6680,6 +6685,13 @@ export default function PrincetonTowerDefense() {
           buildingTower={buildingTower}
           setBuildingTower={setBuildingTower}
           setHoveredBuildTower={setHoveredBuildTower}
+          hoveredTower={hoveredTower}
+          setHoveredTower={setHoveredTower}
+          setDraggingTower={setDraggingTower}
+          placedTowers={towers.reduce((acc, t) => {
+            acc[t.type] = (acc[t.type] || 0) + 1;
+            return acc;
+          }, {} as Record<TowerType, number>)}
         />
       </div>{" "}
     </div>

@@ -57,7 +57,7 @@ export const TOWER_DATA: Record<
       A: {
         name: "Centaur Stables",
         desc: "Half-human, half-horse warriors",
-        effect: "Spawns fast centaur troops with ranged attacks",
+        effect: "Spawns centaur troops with ranged attacks",
       },
       B: {
         name: "Royal Cavalry",
@@ -183,21 +183,21 @@ export const TOWER_DATA: Record<
     attackSpeed: 0,
     desc: "Generates Paw Points over time.",
     levelDesc: {
-      1: "Basic Club - 5 PP per cycle",
-      2: "Popular Club - 12 PP per cycle",
-      3: "Grand Club - 18 PP per cycle",
+      1: "Basic Club - 8 PP per 8 seconds",
+      2: "Popular Club - 15 PP per 7 seconds + bonus on kills nearby",
+      3: "Grand Club - 25 PP per 6 seconds + slow enemies in range",
       4: "Choose: Investment Bank or Recruitment Center",
     },
     upgrades: {
       A: {
         name: "Investment Bank",
         desc: "Maximum passive income",
-        effect: "30 PP per cycle",
+        effect: "40 PP every 5s + 10% bonus on all income",
       },
       B: {
         name: "Recruitment Center",
         desc: "Income + tower support",
-        effect: "20 PP per cycle + buffs nearby towers",
+        effect: "20 PP every 6s + 15% damage buff to nearby towers",
       },
     },
   },

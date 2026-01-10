@@ -124,6 +124,7 @@ export interface Tower {
   boostEnd?: number;
   temporary?: boolean;
   expireTime?: number;
+  engaging?: boolean;
 }
 
 // Enemy entity
@@ -244,7 +245,13 @@ export interface Effect {
     | "music_notes"
     | "cannon_shot"
     | "bullet_stream"
-    | "flame_burst";
+    | "flame_burst"
+    | "payday_aura"
+    | "roar_wave"
+    | "meteor_strike"
+    | "inspiration"
+    | "knight_summon"
+    | "turret_deploy";
   progress: number;
   size: number;
   targetPos?: Position;

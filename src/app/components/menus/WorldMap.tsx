@@ -267,6 +267,12 @@ const PrincetonLogo: React.FC = () => {
           />
         </div>
       </div>
+
+      <img
+        src="/images/gameplay-cropped.png"
+        alt="Battle Scene"
+        className="w-full h-80 object-bottom object-contain absolute top-[-14rem] right-[-10rem] opacity-10 pointer-events-none select-none"
+      />
     </div>
   );
 };
@@ -326,6 +332,11 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
       <div className="relative w-full max-w-6xl max-h-[92vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden">
+        <img
+          src="/images/gameplay-cropped.png"
+          alt="Battle Scene"
+          className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.03] pointer-events-none select-none"
+        />
         <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900/90 via-stone-800/90 to-amber-900/90 backdrop-blur px-6 py-4 border-b-2 border-amber-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Book className="text-amber-400" size={28} />
@@ -342,7 +353,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
           </button>
         </div>
 
-        <div className="flex border-b border-amber-800/40 bg-stone-900/50">
+        <div className="flex z-10 relative border-b border-amber-800/40 bg-stone-900/50">
           {[
             {
               id: "towers",
@@ -391,7 +402,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
           ))}
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(92vh-140px)]">
+        <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
           {activeTab === "towers" && !selectedTower && (
             <div className="grid grid-cols-3 gap-4">
               {towerTypes.map((type) => {
@@ -400,7 +411,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                   <button
                     key={type}
                     onClick={() => setSelectedTower(type)}
-                    className="bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40 p-4 hover:border-amber-500/60 hover:scale-[1.02] text-left group transition-all"
+                    className="flex items-start flex-col bg-gradient-to-br from-amber-950/40 to-stone-900/60 rounded-xl border border-amber-800/40 p-4 hover:border-amber-500/60 hover:scale-[1.02] text-left group transition-all"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-16 h-16 rounded-lg bg-stone-800 border border-amber-700/50 flex items-center justify-center group-hover:border-amber-500">
@@ -429,6 +440,28 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         size={20}
                         className="text-amber-600 group-hover:text-amber-400 mt-2"
                       />
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {tower.upgrades.A && (
+                        <div className="mb-2 border rounded-lg border-amber-800/30 p-2">
+                          <span className="text-amber-400 text-sm font-semibold">
+                            {tower.upgrades.A.name}
+                          </span>
+                          <p className="text-amber-600 text-xs">
+                            {tower.upgrades.A.effect}
+                          </p>
+                        </div>
+                      )}
+                      {tower.upgrades.B && (
+                        <div className="mb-2 border rounded-lg border-amber-800/30 p-2">
+                          <span className="text-amber-400 text-sm font-semibold">
+                            {tower.upgrades.B.name}
+                          </span>
+                          <p className="text-amber-600 text-xs">
+                            {tower.upgrades.B.effect}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
@@ -2832,17 +2865,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   return (
     <div className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden">
       {/* TOP BAR */}
-      <div className="flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-5 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
+      <div className="flex-shrink-0 overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-5 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
         <PrincetonLogo />
+
         <div className="flex items-center gap-4">
           <button
             onClick={() => setShowCodex(true)}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
           >
             <Book size={18} className="text-purple-400" />
-            <span className="text-purple-300 font-medium text-lg">
-              War Codex
-            </span>
+            <span className="text-purple-300 font-medium text-lg">Codex</span>
           </button>
           <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 shadow-lg">
             <div className="relative">
@@ -3131,7 +3163,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           )}
         </div>
         {/* RIGHT: Map */}
-        <div className="flex-1 flex flex-col min-w-0 p-4 overflow-x-auto">
+        <div className="flex-1 flex flex-col min-w-0 p-3 overflow-x-auto">
           <div
             ref={containerRef}
             className="flex-1 relative  bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"
@@ -3190,7 +3222,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           onClick={() => setSelectedHero(heroType)}
                           onMouseEnter={() => setHoveredHero(heroType)}
                           onMouseLeave={() => setHoveredHero(null)}
-                          className={`relative flex justify-center w-full p-1 rounded-lg transition-all ${
+                          className={`relative pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${
                             isSelected
                               ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
                               : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
@@ -3322,7 +3354,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
                 {/* Spell Panel */}
                 <div className="bg-gradient-to-br from-purple-950/95 to-stone-900/98 rounded-xl border border-purple-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between -mt-0.5 mb-2">
                     <div className="flex items-center gap-2">
                       <Zap size={14} className="text-purple-400" />
                       <span className="text-xs font-bold text-amber-300 tracking-wide">

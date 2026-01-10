@@ -23445,7 +23445,26 @@ export function renderEffect(
 
     case "payday_aura": {
       // Gold aura effect (rendered around enemies in main loop)
-      // This effect just marks that payday is active
+      const auraRadius = effect.size * zoom;
+      const time = Date.now() / 1000;
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(time * 3) * 0.2})`;
+      ctx.lineWidth = 4 * zoom;
+      ctx.setLineDash([15, 10]);
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        auraRadius,
+        auraRadius * 0.5,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
       break;
     }
 

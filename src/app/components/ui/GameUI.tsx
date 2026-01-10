@@ -20,17 +20,26 @@ import {
   Target,
   Coins,
   Gauge,
-  Sparkles,
   Shield,
   Info,
   Crown,
-  Wind,
   Pause,
   Play,
   RefreshCcw,
   Crosshair,
   CoinsIcon,
   Snowflake,
+  UsersIcon,
+  TargetIcon,
+  GaugeIcon,
+  ShellIcon,
+  Wind,
+  FastForward,
+  Pointer,
+  Grab,
+  Clock,
+  PlusCircle,
+  Skull,
 } from "lucide-react";
 import type {
   Tower,
@@ -40,6 +49,7 @@ import type {
   SpellType,
   Position,
   Enemy,
+  DraggingTower,
 } from "../../types";
 import {
   TOWER_DATA,
@@ -48,12 +58,7 @@ import {
   HERO_ABILITY_COOLDOWNS,
   TROOP_DATA,
 } from "../../constants";
-import {
-  TowerSprite,
-  HeroSprite,
-  SpellSprite,
-  HERO_COLORS,
-} from "../../sprites";
+import { TowerSprite, HeroSprite, SpellSprite } from "../../sprites";
 import PrincetonTDLogo from "./PrincetonTDLogo";
 
 export { TowerSprite, HeroSprite, SpellSprite };
@@ -125,7 +130,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
        px-2.5 py-1.5 rounded-lg shadow-sm"
       >
-        <span className="text-[10px] text-amber-500 mr-1">SPEED</span>
+        <span className="text-[10px] text-amber-500 mr-1">
+          SPEED <FastForward size={10} className="inline ml-0.5" />
+        </span>
         {[1, 2, 3].map((speed) => (
           <button
             key={speed}
@@ -316,16 +323,16 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         {hero && (
           <div className="flex h-full items-center gap-3">
             {hero.dead ? (
-              <div className="h-full bg-stone-900/80 px-4 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
+              <div className="h-full bg-stone-900/80 animate-pulse pl-4 pr-8 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
+                <div className="w-12 h-12 pt-0.5 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
                   <HeroSprite type={hero.type} size={40} />
                 </div>
-                <div>
+                <div className="flex flex-col">
                   <div className="text-xs font-bold text-stone-400 uppercase tracking-wide flex items-center gap-1">
                     <Shield size={12} /> {HERO_DATA[hero.type].name} - FALLEN
                   </div>
-                  <div className="text-[10px] text-red-400 flex items-center gap-1 mt-0.5">
-                    <Timer size={10} />
+                  <div className="text-[10px] bg-red-800/30 rounded-lg px-1 mb-0.5 text-red-400 flex items-center mt-0.5">
+                    <Timer size={10} className="mr-0.5" />
                     <span>
                       Respawning in{" "}
                       <span className="font-bold">
@@ -333,6 +340,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       </span>
                     </span>
                   </div>
+                  <span className="flex items-center text-nowrap text-stone-500 text-[8px] p-0.5 bg-stone-900/80 px-1 rounded-lg">
+                    <Info size={10} className="mr-0.5" />
+                    Heroes respawn in 15s.
+                  </span>
                 </div>
               </div>
             ) : (
@@ -340,13 +351,25 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <div
                   className={
                     hero.selected
-                      ? "bg-amber-950/40 p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
-                      : "bg-amber-950/80 p-2 border border-amber-600 shadow-md rounded-lg transition-all "
+                      ? "bg-amber-950/40 relative p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
+                      : "bg-amber-950/80 relative p-2 border border-amber-600 shadow-md rounded-lg transition-all "
                   }
                 >
-                  <div className="flex items-center gap-3 mb-1.5">
+                  {hero.selected ? (
+                    <Grab
+                      size={18}
+                      className="text-amber-400 rounded p-0.5 bg-amber-900 absolute top-2 right-2"
+                    />
+                  ) : (
+                    <Pointer
+                      size={18}
+                      className="text-amber-600 rounded p-0.5 bg-amber-900 absolute top-2 right-2"
+                    />
+                  )}
+
+                  <div className="flex  items-center gap-3 mb-1.5">
                     <div
-                      className="w-12 h-12 rounded-full border-2 flex items-center justify-center overflow-hidden"
+                      className="w-12 h-12 rounded-lg pt-0.5 border-2 flex items-center justify-center overflow-hidden"
                       style={{
                         borderColor: HERO_DATA[hero.type].color,
                         backgroundColor: HERO_DATA[hero.type].color + "30",
@@ -364,14 +387,17 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           : "Click hero to select"}
                       </div>
                       <div className="flex gap-2 mt-0.5 text-[9px]">
-                        <span className="text-orange-400 ">
-                          ⚔ {HERO_DATA[hero.type].damage} dmg
+                        <span className="text-orange-400">
+                          <Swords size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].damage} DMG
                         </span>
                         <span className="text-blue-400">
-                          ◎ {HERO_DATA[hero.type].range} px
+                          <Target size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].range} RNG
                         </span>
                         <span className="text-green-400">
-                          ♦ {HERO_DATA[hero.type].speed} ms
+                          <Gauge size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].speed} SPD
                         </span>
                       </div>
                     </div>
@@ -420,15 +446,22 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <>
+                    <div className="flex flex-col h-full animate-pulse items-center justify-center px-4">
                       <Timer size={18} className="text-stone-400 mb-0.5" />
-                      <span className="text-[9px] text-stone-400">
+                      <span className="text-[11px] text-stone-400">
                         {Math.ceil(hero.abilityCooldown / 1000)}s
                       </span>
                       <span className="text-[8px] text-stone-500">
                         cooldown
                       </span>
-                    </>
+                      <div
+                        className="
+                        text-[10px] max-w-28 my-0.5 text-center text-stone-400
+                      "
+                      >
+                        {HERO_DATA[hero.type].ability}
+                      </div>
+                    </div>
                   )}
                 </button>
               </>
@@ -439,8 +472,9 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
 
       {/* Spell Section */}
       <div className="flex items-center h-full gap-2 relative bg-amber-950/70 px-3 py-2 border border-amber-700 rounded-lg shadow-md">
-        <span className="text-[9px] text-amber-500 font-bold tracking-wider mr-1">
-          SPELLS
+        <span className="flex items-center flex-col text-[9px] text-amber-500 font-bold tracking-wider mr-1">
+          <ShellIcon size={12} className="inline mb-0.5" />
+          SPELLS <Wind size={12} className="inline ml-0.5 rotate-90" />
         </span>
         {spells.map((spell) => {
           const spellData = SPELL_DATA[spell.type];
@@ -534,6 +568,10 @@ interface BuildMenuProps {
   buildingTower: TowerType | null;
   setBuildingTower: (tower: TowerType | null) => void;
   setHoveredBuildTower: (tower: TowerType | null) => void;
+  hoveredTower: string | null;
+  setHoveredTower: (tower: string | null) => void;
+  setDraggingTower: (dragging: DraggingTower | null) => void;
+  placedTowers: Record<TowerType, number>;
 }
 
 export const BuildMenu: React.FC<BuildMenuProps> = ({
@@ -541,11 +579,11 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   buildingTower,
   setBuildingTower,
   setHoveredBuildTower,
+  hoveredTower,
+  setHoveredTower,
+  setDraggingTower,
+  placedTowers,
 }) => {
-  const [hoveredTower, setHoveredTower] = React.useState<TowerType | null>(
-    null
-  );
-
   const towerStrategies: Record<string, string> = {
     cannon:
       "High single-target damage. Great for taking down tough enemies. Place along main paths.",
@@ -565,8 +603,13 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
       style={{ zIndex: 100 }}
     >
       <div className="flex items-center gap-2 min-w-max">
-        <h3 className="text-[10px] font-bold text-amber-300 tracking-wider flex items-center gap-1 whitespace-nowrap px-1">
-          <Construction size={14} /> BUILD TOWERS
+        <h3 className="text-[10px] font-bold text-amber-300 tracking-wider flex flex-col justify-center gap-1 whitespace-nowrap px-1">
+          <div className="flex items-center gap-1">
+            <Construction size={14} /> <div>BUILD TOWERS</div>
+          </div>
+          <div className="text-[8px] text-amber-500 font-normal">
+            (Click to Select / Deselect)
+          </div>
         </h3>
         {Object.entries(TOWER_DATA).map(([type, data]) => {
           const towerType = type as TowerType;
@@ -574,9 +617,22 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
           const isSelected = buildingTower === towerType;
           const isHovered = hoveredTower === towerType;
           return (
-            <div key={type} className="relative">
+            <div key={type} className="relative w-full">
               <button
-                onClick={() => setBuildingTower(isSelected ? null : towerType)}
+                onClick={() => {
+                  // if we have a tower selected, deselect it
+                  if (isSelected) {
+                    setBuildingTower(null);
+                    setHoveredBuildTower(null);
+                    setHoveredTower(null);
+                    setDraggingTower(null);
+                  } else {
+                    setBuildingTower(towerType);
+                    setHoveredBuildTower(towerType);
+                    setHoveredTower(towerType);
+                    setDraggingTower(null);
+                  }
+                }}
                 onMouseEnter={() => {
                   setHoveredBuildTower(towerType);
                   setHoveredTower(towerType);
@@ -586,7 +642,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   setHoveredTower(null);
                 }}
                 disabled={!canAfford}
-                className={`px-2.5 py-1.5 transition-all border flex items-center gap-2.5 whitespace-nowrap shadow-md rounded-lg ${
+                className={`px-2.5 py-1.5 w-full transition-all border flex items-center gap-2.5 whitespace-nowrap shadow-md rounded-lg ${
                   isSelected
                     ? "bg-gradient-to-b from-amber-600 to-amber-800 border-amber-400 shadow-amber-500/30 scale-105"
                     : canAfford
@@ -594,6 +650,11 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                     : "bg-stone-900/60 border-stone-700 opacity-40 cursor-not-allowed"
                 }`}
               >
+                <span className="absolute top-1.5 bg-amber-900 p-0.5 px-1 rounded-md  right-1.5 text-[9px] font-bold text-amber-400">
+                  {placedTowers[towerType] > 0
+                    ? `x${placedTowers[towerType]}`
+                    : "x0"}
+                </span>
                 <div className="w-10 h-10 flex items-center justify-center">
                   <TowerSprite type={towerType} size={36} />
                 </div>
@@ -606,11 +667,55 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   </div>
                   <div className="flex gap-1.5 text-[8px] mt-0.5">
                     {data.damage > 0 && (
-                      <span className="text-red-400">⚔{data.damage}</span>
+                      <span className="text-red-400 gap-1">
+                        <Swords size={10} className="inline" /> {data.damage}
+                      </span>
                     )}
-                    <span className="text-blue-400">◎{data.range}</span>
+                    {data.range > 0 && (
+                      <span className="text-blue-400 gap-1">
+                        <TargetIcon size={10} className="inline" /> {data.range}
+                      </span>
+                    )}
+                    {data.attackSpeed > 0 && (
+                      <span className="text-green-400 gap-1">
+                        <GaugeIcon size={10} className="inline" />{" "}
+                        {data.attackSpeed / 1000}s
+                      </span>
+                    )}
+                    {
+                      //if is dinky station
+                      type === "station" && (
+                        <span className="text-purple-300">
+                          <UsersIcon className="inline size-2" />{" "}
+                          {TROOP_DATA.footsoldier.hp}HP /{" "}
+                          {TROOP_DATA.footsoldier.damage}DMG
+                        </span>
+                      )
+                    }
+                    {type === "club" && (
+                      <span className="text-orange-400 gap-1">
+                        <CoinsIcon size={10} className="inline" /> +{8}
+                        PP per 8 sec.
+                      </span>
+                    )}
+                    {type === "library" && (
+                      <span className="text-cyan-400 gap-1">
+                        <Snowflake size={10} className="inline" /> 30% Slow
+                      </span>
+                    )}
                   </div>
                 </div>
+                {isSelected ? (
+                  <Grab
+                    size={18}
+                    className="text-amber-400 rounded p-0.5 absolute bottom-1.5 right-1.5"
+                  />
+                ) : (
+                  <PlusCircle
+                    size={18}
+                    className="text-amber-600 rounded p-0.5 absolute bottom-1.5 right-1.5"
+                  />
+                )}
               </button>
 
               {/* Enhanced Tooltip */}
@@ -727,7 +832,18 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 }) => {
   const towerData = TOWER_DATA[tower.type];
   const upgradeCost = tower.level === 1 ? 200 : 300;
-  const sellValue = Math.floor(towerData.cost * 0.7);
+  const sellValue = Math.round(
+    Math.floor(TOWER_DATA[tower.type].cost * 0.7) +
+      (tower.level - 1) *
+        (tower.level === 2
+          ? 150 * 0.7
+          : tower.level === 3
+          ? 250 * 0.7
+          : tower.level === 4
+          ? 350 * 0.7
+          : 0)
+  );
+
   const levelDesc = towerData.levelDesc[tower.level] || "";
 
   // Calculate current stats
