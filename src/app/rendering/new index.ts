@@ -744,7 +744,7 @@ export function renderTower(
 
   // Level indicator
   if (tower.level > 1) {
-    const starY = screenPos.y + 20 * zoom - tower.level * 8 * zoom;
+    const starY = screenPos.y - 60 * zoom - tower.level * 8 * zoom;
     ctx.fillStyle = "#c9a227";
     ctx.shadowColor = "#c9a227";
     ctx.shadowBlur = 6 * zoom;
@@ -759,13 +759,13 @@ export function renderTower(
 
   // Upgrade path badge
   if (tower.level === 4 && tower.upgrade) {
-    const badgeY = screenPos.y + 35 * zoom - tower.level * 8 * zoom;
+    const badgeY = screenPos.y - 75 * zoom - tower.level * 8 * zoom;
     ctx.fillStyle = tower.upgrade === "A" ? "#ff6b6b" : "#4ecdc4";
     ctx.beginPath();
-    ctx.arc(screenPos.x, badgeY, 6 * zoom, 0, Math.PI * 2);
+    ctx.arc(screenPos.x, badgeY, 8 * zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#fff";
-    ctx.font = `bold ${8 * zoom}px Arial`;
+    ctx.font = `bold ${10 * zoom}px Arial`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(tower.upgrade, screenPos.x, badgeY);
@@ -3233,16 +3233,6 @@ function renderLibraryTower(
   const d = baseWidth * zoom * 0.25;
   const h = baseHeight * zoom;
 
-  let mainColor = "rgba(180, 100, 255,";
-
-  if (tower.level > 3 && tower.upgrade === "A") {
-    // maincolor is orangeish
-    mainColor = "rgba(255, 150, 100,";
-  } else if (tower.level > 3 && tower.upgrade === "B") {
-    // maincolor is lightblue
-    mainColor = "rgba(100, 150, 255,";
-  }
-
   // Attack animation - piston mechanism (top part slams down into base)
   const timeSinceFire = Date.now() - tower.lastAttack;
   let attackPulse = 0;
@@ -3334,13 +3324,13 @@ function renderLibraryTower(
     const offset = row % 2 === 0 ? 0 : w * 0.3;
     // Left face blocks
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
+    ctx.moveTo(screenPos.x - w * 0.1, blockY - d * 0.05);
+    ctx.lineTo(screenPos.x - w * 0.85, blockY + d * 0.35);
     ctx.stroke();
     // Right face blocks
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
+    ctx.moveTo(screenPos.x + w * 0.1, blockY - d * 0.05);
+    ctx.lineTo(screenPos.x + w * 0.85, blockY + d * 0.35);
     ctx.stroke();
   }
 
@@ -3406,7 +3396,7 @@ function renderLibraryTower(
 
   // Rune inscriptions on plate
   const runeGlow = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5;
-  ctx.strokeStyle = `${mainColor} ${runeGlow})`;
+  ctx.strokeStyle = `rgba(180, 100, 255, ${runeGlow})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(
@@ -3422,7 +3412,7 @@ function renderLibraryTower(
 
   // Impact flash on the plate
   if (impactFlash > 0) {
-    ctx.fillStyle = `${mainColor} ${impactFlash * 0.8})`;
+    ctx.fillStyle = `rgba(180, 100, 255, ${impactFlash * 0.8})`;
     ctx.shadowColor = "#b466ff";
     ctx.shadowBlur = 20 * zoom * impactFlash;
     ctx.beginPath();
@@ -3497,6 +3487,45 @@ function renderLibraryTower(
     zoom
   );
 
+  // Stone blocks on upper piston section
+  ctx.strokeStyle = "#4a3a2a";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let row = 0; row < 3; row++) {
+    const blockY = pistonTopY - row * baseHeight * 0.12 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.65, blockY + d * 0.25);
+    ctx.lineTo(screenPos.x + w * 0.65, blockY - d * 0.25);
+    ctx.stroke();
+  }
+
+  const topY = pistonTopY - baseHeight * 0.4 * zoom;
+  const sX = screenPos.x;
+
+  // Purple accent panel lines on upper section
+  const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse;
+  ctx.strokeStyle = `rgba(180, 100, 255, ${panelGlow})`;
+  ctx.lineWidth = 1 * zoom;
+
+  // Left face tech lines on upper section
+  for (let i = 1; i <= tower.level; i++) {
+    const lineY =
+      pistonTopY - (baseHeight * 0.4 * zoom * i) / (tower.level + 1);
+    ctx.beginPath();
+    ctx.moveTo(sX - w * 0.15, lineY + d * 0.25);
+    ctx.lineTo(sX - w * 0.7, lineY - d * 0.15);
+    ctx.stroke();
+  }
+
+  // Right face tech lines on upper section
+  for (let i = 1; i <= tower.level; i++) {
+    const lineY =
+      pistonTopY - (baseHeight * 0.4 * zoom * i) / (tower.level + 1);
+    ctx.beginPath();
+    ctx.moveTo(sX + w * 0.7, lineY - d * 0.15);
+    ctx.lineTo(sX + w * 0.15, lineY + d * 0.25);
+    ctx.stroke();
+  }
+
   // Piston connector ring
   ctx.fillStyle = "#5a4a3a";
   ctx.beginPath();
@@ -3511,57 +3540,12 @@ function renderLibraryTower(
   );
   ctx.fill();
 
-  // Stone blocks on upper piston section
-  ctx.strokeStyle = "#4a3a2a";
-  ctx.lineWidth = 1 * zoom;
-  for (let row = 0; row < 4; row++) {
-    const blockY = pistonTopY + 12 - row * baseHeight * 0.12 * zoom;
-    // Left face blocks
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
-    ctx.stroke();
-    // Right face blocks
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
-    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
-    ctx.stroke();
-  }
-
-  const topY = pistonTopY - baseHeight * 0.4 * zoom;
-  const sX = screenPos.x;
-
-  // Purple accent panel lines on upper section
-  const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse;
-  ctx.strokeStyle = `${mainColor} ${panelGlow})`;
-  ctx.lineWidth = 1 * zoom;
-
-  // Left face tech lines on upper section
-  for (let i = 1; i <= tower.level; i++) {
-    const lineY =
-      pistonTopY + 16 - (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
-    ctx.beginPath();
-    ctx.moveTo(sX - w * 0.15, lineY + d * 0.3);
-    ctx.lineTo(sX - w * 0.7, lineY - d * 0.2);
-    ctx.stroke();
-  }
-
-  // Right face tech lines on upper section
-  for (let i = 1; i <= tower.level; i++) {
-    const lineY =
-      pistonTopY + 16 - (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
-    ctx.beginPath();
-    ctx.moveTo(sX + w * 0.7, lineY - d * 0.2);
-    ctx.lineTo(sX + w * 0.15, lineY + d * 0.3);
-    ctx.stroke();
-  }
-
   // Glowing purple energy vents on lower section (STAY IN PLACE)
   for (let i = 0; i < Math.min(tower.level, 2); i++) {
     const ventY = screenPos.y - lowerBodyHeight * zoom * 0.4 - i * 10 * zoom;
     const ventGlow = 0.5 + Math.sin(time * 4 + i * 0.5) * 0.3 + attackPulse;
 
-    ctx.fillStyle = `${mainColor} ${ventGlow})`;
+    ctx.fillStyle = `rgba(180, 100, 255, ${ventGlow})`;
     ctx.shadowColor = "#b466ff";
     ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();
@@ -3643,10 +3627,10 @@ function renderLibraryTower(
 
   // Floating arcane rings around spire
   const ringGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse * 0.5;
-  ctx.strokeStyle = `${mainColor} ${ringGlow})`;
+  ctx.strokeStyle = `rgba(180, 100, 255, ${ringGlow})`;
   ctx.lineWidth = 1.5 * zoom;
   for (let ring = 0; ring < 2; ring++) {
-    const ringY = topY - 12 - spireHeight * (0.5 + ring * 0.25);
+    const ringY = topY - spireHeight * (0.5 + ring * 0.25);
     const ringSize = (8 - ring * 2) * zoom;
     ctx.beginPath();
     ctx.ellipse(
@@ -3674,7 +3658,7 @@ function renderLibraryTower(
     topY - spireHeight - 8 * zoom,
     orbSize * 1.5
   );
-  outerGrad.addColorStop(0, `${mainColor} ${orbGlow * 0.3})`);
+  outerGrad.addColorStop(0, `rgba(180, 100, 255, ${orbGlow * 0.3})`);
   outerGrad.addColorStop(0.5, `rgba(140, 60, 200, ${orbGlow * 0.15})`);
   outerGrad.addColorStop(1, `rgba(100, 40, 160, 0)`);
   ctx.fillStyle = outerGrad;
@@ -3691,27 +3675,10 @@ function renderLibraryTower(
     topY - spireHeight - 8 * zoom,
     orbSize
   );
-
-  //change depending on tower level
-  if (tower.level <= 3) {
-    orbGrad.addColorStop(0, `rgba(255, 220, 255, ${orbGlow})`);
-    orbGrad.addColorStop(0.3, `rgba(200, 150, 255, ${orbGlow})`);
-    orbGrad.addColorStop(0.6, `rgba(150, 80, 220, ${orbGlow * 0.7})`);
-    orbGrad.addColorStop(1, `rgba(100, 50, 180, 0)`);
-  } else if (tower.level === 4 && tower.upgrade === "A") {
-    // make it orange
-    orbGrad.addColorStop(0, `rgba(255, 220, 180, ${orbGlow})`);
-    orbGrad.addColorStop(0.3, `rgba(255, 180, 100, ${orbGlow})`);
-    orbGrad.addColorStop(0.6, `rgba(220, 100, 40, ${orbGlow * 0.7})`);
-    orbGrad.addColorStop(1, `rgba(180, 60, 30, 0)`);
-  } else {
-    // make it ice blue
-    orbGrad.addColorStop(0, `rgba(180, 240, 255, ${orbGlow})`);
-    orbGrad.addColorStop(0.3, `rgba(100, 200, 255, ${orbGlow})`);
-    orbGrad.addColorStop(0.6, `rgba(40, 150, 220, ${orbGlow * 0.7})`);
-    orbGrad.addColorStop(1, `rgba(30, 100, 180, 0)`);
-  }
-
+  orbGrad.addColorStop(0, `rgba(255, 220, 255, ${orbGlow})`);
+  orbGrad.addColorStop(0.3, `rgba(200, 150, 255, ${orbGlow})`);
+  orbGrad.addColorStop(0.6, `rgba(150, 80, 220, ${orbGlow * 0.7})`);
+  orbGrad.addColorStop(1, `rgba(100, 50, 180, 0)`);
   ctx.fillStyle = orbGrad;
   ctx.shadowColor = "#b466ff";
   ctx.shadowBlur = 15 * zoom * orbGlow;
@@ -3731,7 +3698,7 @@ function renderLibraryTower(
     for (let t = 0; t < 4; t++) {
       const tendrilAngle = time * 5 + (t / 4) * Math.PI * 2;
       const tendrilLen = (15 + attackPulse * 20) * zoom;
-      ctx.strokeStyle = `${mainColor} ${attackPulse * 0.6})`;
+      ctx.strokeStyle = `rgba(180, 100, 255, ${attackPulse * 0.6})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(sX, topY - spireHeight - 8 * zoom);
@@ -3779,7 +3746,7 @@ function renderLibraryTower(
     ctx.stroke();
 
     // Glowing window interior
-    ctx.fillStyle = `${mainColor} ${glowIntensity})`;
+    ctx.fillStyle = `rgba(180, 100, 255, ${glowIntensity})`;
     ctx.shadowColor = "#b466ff";
     ctx.shadowBlur = 10 * zoom;
     ctx.beginPath();
@@ -3819,7 +3786,7 @@ function renderLibraryTower(
     topY + 5 * zoom,
     6 * zoom
   );
-  coreGrad.addColorStop(0, `${mainColor} ${glowIntensity})`);
+  coreGrad.addColorStop(0, `rgba(180, 100, 255, ${glowIntensity})`);
   coreGrad.addColorStop(0.5, `rgba(140, 80, 200, ${glowIntensity * 0.7})`);
   coreGrad.addColorStop(1, `rgba(100, 50, 150, ${glowIntensity * 0.4})`);
   ctx.fillStyle = coreGrad;
@@ -3853,7 +3820,7 @@ function renderLibraryTower(
       const bookY = topY - 18 * zoom + Math.sin(bookAngle * 2) * 8 * zoom;
       const bookFloat = Math.sin(time * 3 + i) * 3 * zoom;
 
-      ctx.fillStyle = `${mainColor} 0.3)`;
+      ctx.fillStyle = `rgba(180, 100, 255, 0.3)`;
       ctx.beginPath();
       ctx.ellipse(
         bookX,
@@ -3890,7 +3857,7 @@ function renderLibraryTower(
   // Level 3 - Energy amplifier rings
   if (tower.level === 3 && !tower.upgrade) {
     const ringGlow = 0.5 + Math.sin(time * 3) * 0.3 + attackPulse;
-    ctx.strokeStyle = `${mainColor} ${ringGlow})`;
+    ctx.strokeStyle = `rgba(180, 100, 255, ${ringGlow})`;
     ctx.lineWidth = 2 * zoom;
 
     ctx.beginPath();
@@ -4004,7 +3971,7 @@ function renderLibraryTower(
 
   // Purple energy field around tower
   const auraSize = 30 + Math.sin(time * 3) * 5;
-  ctx.strokeStyle = `${mainColor} ${
+  ctx.strokeStyle = `rgba(180, 100, 255, ${
     0.35 + Math.sin(time * 2) * 0.15 + attackPulse * 0.5
   })`;
   ctx.lineWidth = 2 * zoom;
@@ -4033,7 +4000,7 @@ function renderLibraryTower(
         const ringRadius = 30 + ringPhase * 70;
         const ringAlpha = (1 - ringPhase) * 0.6;
 
-        ctx.strokeStyle = `${mainColor} ${ringAlpha})`;
+        ctx.strokeStyle = `rgba(180, 100, 255, ${ringAlpha})`;
         ctx.lineWidth = (4 - ring) * zoom;
         ctx.beginPath();
         ctx.ellipse(
@@ -4051,7 +4018,7 @@ function renderLibraryTower(
 
     // Ground crack lines radiating outward
     if (groundCrackPhase > 0) {
-      ctx.strokeStyle = `${mainColor} ${(1 - groundCrackPhase) * 0.7})`;
+      ctx.strokeStyle = `rgba(180, 100, 255, ${(1 - groundCrackPhase) * 0.7})`;
       ctx.lineWidth = 2 * zoom;
       for (let i = 0; i < 8; i++) {
         const crackAngle = (i / 8) * Math.PI * 2 + Math.PI / 16;
@@ -4918,7 +4885,7 @@ function renderFocusedBeam(
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
-  const coilHeight = 65 * zoom;
+  const coilHeight = 55 * zoom;
   const timeSinceFire = Date.now() - tower.lastAttack;
   const isAttacking = timeSinceFire < 400;
   const attackPulse = isAttacking
@@ -4984,19 +4951,6 @@ function renderFocusedBeam(
   );
   ctx.fill();
 
-  // Platform machinery details
-  ctx.strokeStyle = "#2a5a7f";
-  ctx.lineWidth = 1 * zoom;
-  for (let i = 0; i < 5; i++) {
-    const detailAngle = (i / 5) * Math.PI * 2 + time;
-    const detailX = screenPos.x + Math.cos(detailAngle) * 18 * zoom;
-    const detailY = topY + 3 * zoom + Math.sin(detailAngle) * 9 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x, topY + 3 * zoom);
-    ctx.lineTo(detailX, detailY);
-    ctx.stroke();
-  }
-
   // === SUPPORT PYLONS ===
   for (let i = -1; i <= 1; i += 2) {
     const pylonX = screenPos.x + i * 12 * zoom;
@@ -5028,80 +4982,6 @@ function renderFocusedBeam(
     ctx.arc(pylonX, topY - coilHeight + 22 * zoom, 4 * zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
-  }
-
-  //support pylon amplifiers
-  for (let i = 0; i < 4; i++) {
-    const ampAngle = (i / 4) * Math.PI * 2 + time;
-    const ampX = screenPos.x + Math.cos(ampAngle) * 16 * zoom;
-    const ampY = topY - 4 * zoom + Math.sin(ampAngle) * 8 * zoom;
-    ctx.fillStyle = "#2d5a7b";
-    ctx.beginPath();
-    ctx.ellipse(ampX, ampY, 4 * zoom, 8 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // tesla coils on platform corners
-  for (let i = 0; i < 4; i++) {
-    const coilAngle = (i / 4) * Math.PI * 2 + time;
-    const coilX = screenPos.x + Math.cos(coilAngle) * 16 * zoom;
-    const coilY = topY - 4 * zoom + Math.sin(coilAngle) * 8 * zoom;
-    ctx.fillStyle = "#2d5a7b";
-    ctx.beginPath();
-    ctx.ellipse(coilX, coilY, 4 * zoom, 8 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // add actual copper coils
-    const coilTurns = 5;
-    for (let j = 0; j < coilTurns; j++) {
-      const turnY = coilY - 6 * zoom + (j / coilTurns) * (12 * zoom);
-      const turnGlow = 0.3 + Math.sin(time * 4 + j) * 0.2 + attackPulse * 0.4;
-      ctx.strokeStyle = `rgba(184, 115, 51, ${turnGlow})`;
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(coilX, turnY, 3 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // lightning from the amplifieer coils hits the dish. make it very random and energetic
-    const lightningGlow = 0.5 + Math.random() * 0.5 + attackPulse * 0.5;
-    ctx.strokeStyle = `rgba(0, 255, 255, ${lightningGlow})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.shadowColor = "#00ffff";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(coilX, coilY - 6 * zoom);
-    const segments = 5 + Math.floor(Math.random() * 3);
-    let px = coilX,
-      py = coilY - 6 * zoom;
-    for (let s = 1; s <= segments; s++) {
-      const t = s / segments;
-      const targetX = screenPos.x + (coilX - screenPos.x) * (1 - t) * 0.3;
-      const targetY =
-        topY -
-        coilHeight +
-        12 * zoom +
-        (coilY - (topY - coilHeight + 12 * zoom)) * (1 - t) * 0.3;
-      const jitter = (1 - t) * 8 * zoom;
-      const sx = targetX + (Math.random() - 0.5) * jitter;
-      const sy = targetY + (Math.random() - 0.5) * jitter * 0.5;
-      ctx.lineTo(sx, sy);
-    }
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-  }
-
-  // ring below pylon amplifiers
-  const ringGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse * 0.5;
-  ctx.strokeStyle = `rgba(0, 255, 255, ${ringGlow})`;
-  ctx.lineWidth = 2 * zoom;
-  for (let i = 0; i < 4; i++) {
-    const ringAngle = (i / 4) * Math.PI * 2 + time;
-    const ringX = screenPos.x + Math.cos(ringAngle) * 16 * zoom;
-    const ringY = topY + 12 * zoom + Math.sin(ringAngle) * 8 * zoom - 10 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(ringX, ringY, 6 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
-    ctx.stroke();
   }
 
   // === MASSIVE FOCUSING DISH ===
@@ -5188,7 +5068,7 @@ function renderFocusedBeam(
   // Floating crystal shards
   for (let i = 0; i < 4; i++) {
     const shardAngle = (i / 4) * Math.PI * 2 + time * 2;
-    const shardDist = 15 + Math.sin(time * 3 + i * 1.5) * 3;
+    const shardDist = 10 + Math.sin(time * 3 + i * 1.5) * 3;
     const shardX = screenPos.x + Math.cos(shardAngle) * shardDist * zoom;
     const shardY = crystalY + Math.sin(shardAngle) * shardDist * 0.4 * zoom;
 
@@ -5293,12 +5173,7 @@ function renderChainLightning(
   zoom: number,
   time: number
 ) {
-  const coilHeight = 65 * zoom;
-  const timeSinceFire = Date.now() - tower.lastAttack;
-  const isAttacking = timeSinceFire < 400;
-  const attackPulse = isAttacking
-    ? Math.sin((timeSinceFire / 400) * Math.PI)
-    : 0;
+  const coilHeight = 45 * zoom;
 
   // Base platform
   ctx.fillStyle = "#1a3a4f";
@@ -5313,65 +5188,6 @@ function renderChainLightning(
     Math.PI * 2
   );
   ctx.fill();
-
-  // === MASSIVE ARCANE BASE ===
-  // Dark iron foundation
-  ctx.fillStyle = "#0a1a2a";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topY + 8 * zoom,
-    28 * zoom,
-    14 * zoom,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  // Glowing tech modules that pulse the base
-  ctx.strokeStyle = `rgba(0, 255, 255, ${
-    0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.4
-  })`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topY + 6 * zoom,
-    24 * zoom,
-    12 * zoom,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.stroke();
-
-  // Elevated tech platform
-  ctx.fillStyle = "#1a3a4f";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topY + 3 * zoom,
-    22 * zoom,
-    11 * zoom,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  // machinery on foundation platform (not a spinning thing)
-  ctx.strokeStyle = "#2a5a7f";
-  ctx.lineWidth = 1 * zoom;
-  for (let i = 0; i < 5; i++) {
-    const detailAngle = (i / 5) * Math.PI * 2 + time;
-    const detailX = screenPos.x + Math.cos(detailAngle) * 18 * zoom;
-    const detailY = topY + 3 * zoom + Math.sin(detailAngle) * 9 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x, topY + 3 * zoom);
-    ctx.lineTo(detailX, detailY);
-    ctx.stroke();
-  }
 
   // Central pillar
   ctx.fillStyle = "#2d5a7b";
@@ -5410,34 +5226,6 @@ function renderChainLightning(
     );
     ctx.fill();
 
-    // big amplifier/vents on top of the main circle
-    ctx.fillStyle = "#3a6a8f";
-    ctx.beginPath();
-    ctx.ellipse(
-      cx,
-      cy - 2 * zoom * coilSize,
-      10 * zoom * coilSize,
-      5 * zoom * coilSize,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    // tech circles under pylons
-    ctx.fillStyle = "#2a4a5f";
-    ctx.beginPath();
-    ctx.ellipse(
-      cx,
-      cy - 1 * zoom * coilSize,
-      6 * zoom * coilSize,
-      3 * zoom * coilSize,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
     // Mini coil pillar
     ctx.fillStyle = "#2d5a7b";
     ctx.fillRect(
@@ -5447,29 +5235,8 @@ function renderChainLightning(
       20 * zoom * coilSize
     );
 
-    // add copper coils to pylons
-    const coilTurns = 4;
-    for (let j = 0; j < coilTurns; j++) {
-      const turnY =
-        cy - 10 * zoom * coilSize + (j / coilTurns) * (12 * zoom * coilSize);
-      const turnGlow = 0.3 + Math.sin(time * 4 + j) * 0.2 + attackPulse * 0.4;
-      ctx.strokeStyle = `rgba(184, 115, 51, ${turnGlow})`;
-      ctx.lineWidth = 2 * zoom * coilSize;
-      ctx.beginPath();
-      ctx.ellipse(
-        cx,
-        turnY,
-        5 * zoom * coilSize,
-        2 * zoom * coilSize,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.stroke();
-    }
-
-    // Mini orb using attackPulse
-    const pulse = 0.8 + Math.sin(time * 6 + pos.x) * 0.2 + attackPulse * 0.3;
+    // Mini orb
+    const pulse = 0.8 + Math.sin(time * 6 + pos.x) * 0.2;
     ctx.fillStyle = "rgba(0, 255, 255, 0.8)";
     ctx.shadowColor = "#00ffff";
     ctx.shadowBlur = 10 * zoom;
@@ -5486,43 +5253,21 @@ function renderChainLightning(
   }
 
   // Central main orb
-  // flash when using attackpulse
-  const mainOrbY = topY - coilHeight + 4 * zoom - attackPulse * 5 * zoom;
-  const mainOrbPulse = 0.9 + Math.sin(time * 5) * 0.2 + attackPulse * 0.3;
-  ctx.fillStyle = "rgba(0, 255, 255, 0.9)";
+  const mainOrbY = topY - coilHeight + 5 * zoom;
+  ctx.fillStyle = "#00ffff";
   ctx.shadowColor = "#00ffff";
-  ctx.shadowBlur = 20 * zoom * mainOrbPulse;
+  ctx.shadowBlur = 20 * zoom;
   ctx.beginPath();
-  ctx.arc(screenPos.x, mainOrbY, 12 * zoom * mainOrbPulse, 0, Math.PI * 2);
+  ctx.arc(screenPos.x, mainOrbY, 12 * zoom, 0, Math.PI * 2);
   ctx.fill();
-
-  // white flash in orb
-  if (attackPulse > 0.1) {
-    ctx.fillStyle = `rgba(255, 255, 255, ${attackPulse})`;
-    ctx.beginPath();
-    ctx.arc(screenPos.x, mainOrbY, 8 * zoom * mainOrbPulse, 0, Math.PI * 2);
-    ctx.fill();
-  }
   ctx.shadowBlur = 0;
-
-  // orb random lightning flashes
-  if (Math.random() < 0.1) {
-    ctx.strokeStyle = "rgba(0, 255, 255, 0.8)";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x, mainOrbY);
-    const flashX = screenPos.x + (Math.random() - 0.5) * 80 * zoom;
-    const flashY = mainOrbY + (Math.random() - 0.5) * 20 * zoom;
-    ctx.lineTo(flashX, flashY);
-    ctx.stroke();
-  }
 
   // Store orb position
   tower._orbScreenY = mainOrbY;
 
   // Connecting arcs between coils
-  // using attackPulse
   ctx.strokeStyle = "rgba(0, 255, 255, 0.6)";
+  ctx.lineWidth = 2 * zoom;
   for (let i = 0; i < coilPositions.length; i++) {
     const pos = coilPositions[i];
     const cx = screenPos.x + pos.x * zoom;
@@ -5561,14 +5306,6 @@ function renderArchTower(
 
   const isShockwave = tower.level === 4 && tower.upgrade === "A";
   const isSymphony = tower.level === 4 && tower.upgrade === "B";
-
-  let mainColor = "rgba(50, 200, 100,";
-  // change color from rgba(50, 200, 100) to ice blue if symphony and red if shockwave
-  if (isShockwave) {
-    mainColor = "rgba(255, 100, 100,";
-  } else if (isSymphony) {
-    mainColor = "rgba(100, 200, 255,";
-  }
 
   // Dynamic attack animation - everything moves and pulses
   const timeSinceFire = Date.now() - tower.lastAttack;
@@ -5632,8 +5369,8 @@ function renderArchTower(
     screenPos.x + foundationShift * 0.3,
     screenPos.y + 16 * zoom,
     subBuildingWidth,
-    baseDepth + 28,
-    12,
+    baseDepth + 16,
+    8,
     {
       top: "#786858",
       left: "#685848",
@@ -5655,9 +5392,9 @@ function renderArchTower(
   drawIsometricPrism(
     ctx,
     screenPos.x + foundationShift * 0.4 + subShift,
-    screenPos.y + 2 * zoom + subBounce,
+    screenPos.y + 4 * zoom + subBounce,
     subBuildingWidth - 6,
-    baseDepth + 22,
+    baseDepth + 8,
     subBuildingHeight,
     {
       top: "#a89878",
@@ -5674,10 +5411,10 @@ function renderArchTower(
   for (let side = -1; side <= 1; side += 2) {
     for (let row = 0; row < 2; row++) {
       const winX = screenPos.x + side * 16 * zoom + subShift * 0.5;
-      const winY = screenPos.y + 2 + subBounce - row * 8 * zoom;
+      const winY = screenPos.y + subBounce - row * 8 * zoom;
 
       // Gothic pointed arch window
-      ctx.fillStyle = `${mainColor} ${windowGlowBase})`;
+      ctx.fillStyle = `rgba(50, 200, 100, ${windowGlowBase})`;
       ctx.beginPath();
       ctx.moveTo(winX - 3 * zoom, winY + 4 * zoom);
       ctx.lineTo(winX - 3 * zoom, winY);
@@ -5712,7 +5449,7 @@ function renderArchTower(
     ctx.fill();
 
     // Glowing membrane
-    ctx.fillStyle = `${mainColor} ${chamberPulse})`;
+    ctx.fillStyle = `rgba(50, 200, 100, ${chamberPulse})`;
     ctx.beginPath();
     ctx.ellipse(
       0,
@@ -5728,7 +5465,7 @@ function renderArchTower(
     // Energy rings during attack
     if (timeSinceFire < 400) {
       const ringPhase = timeSinceFire / 400;
-      ctx.strokeStyle = `${mainColor} ${(1 - ringPhase) * 0.6})`;
+      ctx.strokeStyle = `rgba(50, 200, 100, ${(1 - ringPhase) * 0.6})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
       ctx.ellipse(
@@ -5747,15 +5484,15 @@ function renderArchTower(
 
   // Energy conduit pipes connecting to pillars (pulse during attack)
   const pipeGlow = 0.3 + attackPulse * 0.6;
-  ctx.strokeStyle = `${mainColor} ${pipeGlow})`;
+  ctx.strokeStyle = `rgba(50, 200, 100, ${pipeGlow})`;
   ctx.lineWidth = 2 * zoom;
   for (let side = -1; side <= 1; side += 2) {
-    const pipeStartX = screenPos.x + side * 28 * zoom;
+    const pipeStartX = screenPos.x + side * 18 * zoom;
     const pipeEndX = screenPos.x + side * (baseWidth * 0.35) * zoom;
     ctx.beginPath();
-    ctx.moveTo(pipeStartX + subShift * 0.3, screenPos.y + 9 * zoom + subBounce);
+    ctx.moveTo(pipeStartX + subShift * 0.3, screenPos.y + 4 * zoom + subBounce);
     ctx.quadraticCurveTo(
-      screenPos.x + side * 30 * zoom,
+      screenPos.x + side * 25 * zoom,
       screenPos.y - 5 * zoom,
       pipeEndX - pillarSpread * side * 0.3,
       screenPos.y - 10 * zoom
@@ -5764,7 +5501,7 @@ function renderArchTower(
 
     // Pipe energy nodes
     const nodeY = screenPos.y - 2 * zoom;
-    ctx.fillStyle = `${mainColor} ${pipeGlow + 0.2})`;
+    ctx.fillStyle = `rgba(50, 200, 100, ${pipeGlow + 0.2})`;
     ctx.beginPath();
     ctx.arc(
       screenPos.x + side * 22 * zoom,
@@ -5780,10 +5517,9 @@ function renderArchTower(
   drawIsometricPrism(
     ctx,
     screenPos.x + foundationShift * 0.5,
-    screenPos.y - 18 * zoom,
-    //make this platform expand with the pillars
-    baseWidth + 12 + pillarSpread * 2,
-    baseDepth + 18 + pillarSpread * 2,
+    screenPos.y + 8 * zoom,
+    baseWidth + 12,
+    baseDepth + 12,
     6,
     {
       top: "#a89880",
@@ -5797,11 +5533,11 @@ function renderArchTower(
 
   // Green tech panel lines on foundation (flipped)
   const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse;
-  ctx.strokeStyle = `${mainColor} ${panelGlow})`;
+  ctx.strokeStyle = `rgba(50, 200, 100, ${panelGlow})`;
   ctx.lineWidth = 1 * zoom;
 
   for (let i = 1; i <= 2; i++) {
-    const lineY = screenPos.y - 16 * zoom - i * 4 * zoom;
+    const lineY = screenPos.y + 6 * zoom - i * 4 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.2, lineY + d * 0.3);
     ctx.lineTo(screenPos.x - w * 0.9, lineY - d * 0.2);
@@ -5827,7 +5563,7 @@ function renderArchTower(
   drawIsometricPrism(
     ctx,
     pillarX + pillarBounce * 0.5,
-    screenPos.y - 24 * zoom - pillarBounce,
+    screenPos.y - pillarBounce,
     pillarWidth * pulseSize,
     pillarWidth * pulseSize,
     pillarHeight,
@@ -5846,7 +5582,7 @@ function renderArchTower(
   ctx.lineWidth = 1 * zoom;
   for (let row = 0; row < 5; row++) {
     const blockY =
-      screenPos.y - 28 - pillarBounce - row * pillarHeight * zoom * 0.18;
+      screenPos.y - pillarBounce - row * pillarHeight * zoom * 0.18;
     ctx.beginPath();
     ctx.moveTo(pillarX + pillarBounce * 0.5 - pw * 0.9, blockY - pd * 0.3);
     ctx.lineTo(pillarX + pillarBounce * 0.5 + pw * 0.9, blockY + pd * 0.3);
@@ -5854,7 +5590,7 @@ function renderArchTower(
   }
 
   // Pillar capital (decorative top) on left pillar
-  const capitalY = screenPos.y - 24 - pillarHeight * zoom - pillarBounce;
+  const capitalY = screenPos.y - pillarHeight * zoom - pillarBounce;
   ctx.fillStyle = "#d8c8b0";
   ctx.beginPath();
   ctx.moveTo(pillarX + pillarBounce * 0.5 - pw * 1.3, capitalY + 4 * zoom);
@@ -5868,7 +5604,7 @@ function renderArchTower(
   drawIsometricPrism(
     ctx,
     pillarXR - pillarBounce * 0.5,
-    screenPos.y - 24 * zoom - pillarBounce,
+    screenPos.y - pillarBounce,
     pillarWidth * pulseSize,
     pillarWidth * pulseSize,
     pillarHeight,
@@ -5885,7 +5621,7 @@ function renderArchTower(
   // Gothic stone block lines on right pillar
   for (let row = 0; row < 5; row++) {
     const blockY =
-      screenPos.y - 28 - pillarBounce - row * pillarHeight * zoom * 0.18;
+      screenPos.y - pillarBounce - row * pillarHeight * zoom * 0.18;
     ctx.beginPath();
     ctx.moveTo(pillarXR - pillarBounce * 0.5 - pw * 0.9, blockY - pd * 0.3);
     ctx.lineTo(pillarXR - pillarBounce * 0.5 + pw * 0.9, blockY + pd * 0.3);
@@ -5906,14 +5642,11 @@ function renderArchTower(
   for (let p of [pillarX + pillarBounce * 0.5, pillarXR - pillarBounce * 0.5]) {
     for (let i = 0; i < tower.level + 1; i++) {
       const stripY =
-        screenPos.y -
-        20 * zoom -
-        pillarHeight * zoom * (0.2 + i * 0.25) -
-        pillarBounce;
+        screenPos.y - pillarHeight * zoom * (0.2 + i * 0.25) - pillarBounce;
       const stripGlow =
         0.4 + Math.sin(time * 4 + i * 0.5) * 0.3 + attackPulse * 1.5;
 
-      ctx.fillStyle = `${mainColor} ${stripGlow})`;
+      ctx.fillStyle = `rgba(50, 200, 100, ${stripGlow})`;
       ctx.beginPath();
       ctx.ellipse(
         p - pw * 0.5,
@@ -5942,7 +5675,6 @@ function renderArchTower(
   // Arch position with lift animation
   const archTopY =
     screenPos.y -
-    24 * zoom -
     pillarHeight * zoom -
     6 * zoom +
     archVibrate * 0.5 -
@@ -5958,7 +5690,7 @@ function renderArchTower(
   ctx.moveTo(pillarX + pillarBounce * 0.5, archTopY + 8 * zoom);
   ctx.quadraticCurveTo(
     screenPos.x + archVibrate,
-    archTopY - 28 * zoom - archLift,
+    archTopY - 20 * zoom - archLift,
     pillarXR - pillarBounce * 0.5,
     archTopY + 8 * zoom
   );
@@ -6852,15 +6584,15 @@ function renderClubTower(
   ctx.closePath();
   ctx.fill();
 
-  // Roof tile pattern (forms a v shape)
+  // Roof tile pattern
   ctx.strokeStyle = "#0a2a1a";
-  ctx.lineWidth = 1 * zoom;
-  for (let tile = 0; tile < 8; tile++) {
-    const tileY = topY - 16 * zoom + (tile / 8) * 20 * zoom;
+  ctx.lineWidth = 0.8 * zoom;
+  for (let row = 0; row < 4; row++) {
+    const rowY = topY - 18 * zoom + row * 5 * zoom;
+    const rowWidth = (row + 1) * baseWidth * zoom * 0.1;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseWidth * 0.45 - tile * 2) * zoom, tileY);
-    ctx.lineTo(screenPos.x, tileY + (tile * 2 * zoom) / 3);
-    ctx.lineTo(screenPos.x + (baseWidth * 0.45 - tile * 2) * zoom, tileY);
+    ctx.moveTo(screenPos.x - rowWidth, rowY + row * 2 * zoom);
+    ctx.lineTo(screenPos.x + rowWidth, rowY + row * 2 * zoom);
     ctx.stroke();
   }
 
@@ -7243,7 +6975,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 14 * zoom,
       baseW + 18,
-      baseD + 28,
+      baseD + 16,
       8,
       "#4a3a2a",
       "#3a2a1a",
@@ -7254,7 +6986,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 6 * zoom,
       baseW + 10,
-      baseD + 18,
+      baseD + 9,
       6,
       "#6b5030",
       "#5a4020",
@@ -7265,7 +6997,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 2,
-      baseD + 8,
+      baseD + 2,
       4,
       "#8b7355",
       "#7a6244",
@@ -7289,8 +7021,8 @@ function renderStationTower(
     }
 
     // Small weapon rack (left side)
-    const rackX = screenPos.x - isoW * 0.6 - 12 * zoom;
-    const rackY = screenPos.y + 22 * zoom;
+    const rackX = screenPos.x - isoW * 0.6;
+    const rackY = screenPos.y + 6 * zoom;
     ctx.fillStyle = "#5a4020";
     ctx.fillRect(rackX - 2 * zoom, rackY - 12 * zoom, 4 * zoom, 12 * zoom);
     ctx.fillRect(rackX - 4 * zoom, rackY - 12 * zoom, 8 * zoom, 2 * zoom);
@@ -7319,7 +7051,7 @@ function renderStationTower(
 
     // Supply crate (right side)
     const crateX = screenPos.x + isoW * 0.5;
-    const crateY = screenPos.y + 2 * zoom;
+    const crateY = screenPos.y + 4 * zoom;
     drawIsometricPrism(
       ctx,
       crateX,
@@ -7354,9 +7086,9 @@ function renderStationTower(
     // Foundation stone
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 17 * zoom,
+      screenPos.y + 14 * zoom,
       baseW + 20,
-      baseD + 34,
+      baseD + 18,
       10,
       "#4a4a52",
       "#3a3a42",
@@ -7365,9 +7097,9 @@ function renderStationTower(
     // Cobblestone layer
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 7 * zoom,
+      screenPos.y + 6 * zoom,
       baseW + 12,
-      baseD + 24,
+      baseD + 10,
       7,
       "#5a5a62",
       "#4a4a52",
@@ -7378,7 +7110,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 4,
-      baseD + 14,
+      baseD + 4,
       5,
       "#6a6a72",
       "#5a5a62",
@@ -7465,9 +7197,9 @@ function renderStationTower(
     // Deep foundation
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 19 * zoom,
+      screenPos.y + 16 * zoom,
       baseW + 24,
-      baseD + 38,
+      baseD + 20,
       12,
       "#3a3a42",
       "#2a2a32",
@@ -7478,7 +7210,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 14,
-      baseD + 25,
+      baseD + 12,
       8,
       "#5a5a62",
       "#4a4a52",
@@ -7489,7 +7221,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 6,
-      baseD + 16,
+      baseD + 6,
       6,
       "#6a6a72",
       "#5a5a62",
@@ -7586,8 +7318,8 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 16 * zoom,
       baseW + 26,
-      baseD + 42,
-      10,
+      baseD + 22,
+      12,
       "#d0ccc4",
       "#c0bcb4",
       "#b0aca4"
@@ -7595,9 +7327,9 @@ function renderStationTower(
     // Middle marble tier
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 7 * zoom,
+      screenPos.y + 8 * zoom,
       baseW + 16,
-      baseD + 28,
+      baseD + 14,
       8,
       "#e0dcd4",
       "#d0ccc4",
@@ -7608,7 +7340,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 8,
-      baseD + 18,
+      baseD + 8,
       6,
       "#f0ece4",
       "#e0dcd4",
@@ -7715,10 +7447,10 @@ function renderStationTower(
     // Deep royal foundation
     drawIsoDiamond(
       screenPos.x,
-      screenPos.y + 19 * zoom,
+      screenPos.y + 16 * zoom,
       baseW + 26,
-      baseD + 42,
-      12,
+      baseD + 22,
+      14,
       "#3a3a42",
       "#2a2a32",
       "#1a1a22"
@@ -7728,7 +7460,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 16,
-      baseD + 30,
+      baseD + 14,
       9,
       "#5a5a62",
       "#4a4a52",
@@ -7739,7 +7471,7 @@ function renderStationTower(
       screenPos.x,
       screenPos.y,
       baseW + 8,
-      baseD + 18,
+      baseD + 8,
       6,
       "#6a6a72",
       "#5a5a62",
@@ -8415,7 +8147,7 @@ function renderStationTower(
     // Stone chimney with smoke stack
     drawIsometricPrism(
       ctx,
-      bX + 6 * zoom,
+      bX + 10 * zoom,
       roofY - 8 * zoom,
       5,
       4,
@@ -8426,7 +8158,7 @@ function renderStationTower(
     // Chimney cap
     drawIsometricPrism(
       ctx,
-      bX + 6 * zoom,
+      bX + 10 * zoom,
       roofY - 22 * zoom,
       7,
       5,
@@ -8440,7 +8172,7 @@ function renderStationTower(
     const smokeOff1 = Math.sin(time * 1.5) * 3;
     ctx.beginPath();
     ctx.arc(
-      bX + 6 * zoom + smokeOff1,
+      bX + 10 * zoom + smokeOff1,
       roofY - 28 * zoom,
       3 * zoom,
       0,
@@ -8605,61 +8337,6 @@ function renderStationTower(
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Clock tower (attached to main building)
-    const towerX = bX + 14 * zoom;
-    const towerY = bY - 6 * zoom;
-    drawIsometricPrism(
-      ctx,
-      towerX,
-      towerY,
-      14,
-      12,
-      44,
-      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
-      zoom
-    );
-
-    // Tower stone texture
-    ctx.strokeStyle = "#3a3a42";
-    ctx.lineWidth = 0.6 * zoom;
-    for (let i = 0; i < 8; i++) {
-      const ty = towerY - 4 * zoom - i * 5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(towerX - 6 * zoom, ty + 1.5 * zoom);
-      ctx.lineTo(towerX, ty + 3 * zoom);
-      ctx.stroke();
-    }
-
-    // Tower roof (pyramid with spire)
-    const tRoofY = towerY - 44 * zoom;
-    ctx.fillStyle = "#4a4a52";
-    ctx.beginPath();
-    ctx.moveTo(towerX, tRoofY - 16 * zoom);
-    ctx.lineTo(towerX - 8 * zoom, tRoofY);
-    ctx.lineTo(towerX, tRoofY + 4 * zoom);
-    ctx.lineTo(towerX + 8 * zoom, tRoofY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#3a3a42";
-    ctx.beginPath();
-    ctx.moveTo(towerX, tRoofY - 16 * zoom);
-    ctx.lineTo(towerX + 8 * zoom, tRoofY);
-    ctx.lineTo(towerX, tRoofY + 4 * zoom);
-    ctx.closePath();
-    ctx.fill();
-
-    // Gold finial
-    ctx.fillStyle = "#c9a227";
-    ctx.shadowColor = "#c9a227";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.arc(towerX, tRoofY - 18 * zoom, 2.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Clock face on tower
-    drawClockFace(towerX + 1 * zoom, towerY - 35 * zoom, 6 * zoom);
-
     // Main stone building
     drawIsometricPrism(
       ctx,
@@ -8759,6 +8436,61 @@ function renderStationTower(
     ctx.fillStyle = `rgba(255, 150, 50, ${slitGlow})`;
     ctx.fillRect(bX + 5.3 * zoom, bY - 21 * zoom, 1.4 * zoom, 8 * zoom);
     ctx.fillRect(bX + 10.3 * zoom, bY - 23 * zoom, 1.4 * zoom, 8 * zoom);
+
+    // Clock tower (attached to main building)
+    const towerX = bX + 14 * zoom;
+    const towerY = bY - 6 * zoom;
+    drawIsometricPrism(
+      ctx,
+      towerX,
+      towerY,
+      14,
+      12,
+      44,
+      { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+      zoom
+    );
+
+    // Tower stone texture
+    ctx.strokeStyle = "#3a3a42";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let i = 0; i < 8; i++) {
+      const ty = towerY - 4 * zoom - i * 5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(towerX - 6 * zoom, ty + 1.5 * zoom);
+      ctx.lineTo(towerX, ty + 3 * zoom);
+      ctx.stroke();
+    }
+
+    // Tower roof (pyramid with spire)
+    const tRoofY = towerY - 44 * zoom;
+    ctx.fillStyle = "#4a4a52";
+    ctx.beginPath();
+    ctx.moveTo(towerX, tRoofY - 16 * zoom);
+    ctx.lineTo(towerX - 8 * zoom, tRoofY);
+    ctx.lineTo(towerX, tRoofY + 4 * zoom);
+    ctx.lineTo(towerX + 8 * zoom, tRoofY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#3a3a42";
+    ctx.beginPath();
+    ctx.moveTo(towerX, tRoofY - 16 * zoom);
+    ctx.lineTo(towerX + 8 * zoom, tRoofY);
+    ctx.lineTo(towerX, tRoofY + 4 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold finial
+    ctx.fillStyle = "#c9a227";
+    ctx.shadowColor = "#c9a227";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.arc(towerX, tRoofY - 18 * zoom, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Clock face on tower
+    drawClockFace(towerX - 3 * zoom, towerY - 30 * zoom, 6 * zoom);
 
     // === HIGH-TECH: Rotating radar/beacon on tower ===
     const beaconAngle = time * 2;
@@ -8865,10 +8597,10 @@ function renderStationTower(
     drawIsometricPrism(
       ctx,
       bX,
-      bY + 2 * zoom,
+      bY + 16 * zoom,
       42,
-      40,
-      4,
+      36,
+      12,
       { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
       zoom
     );
@@ -8950,27 +8682,13 @@ function renderStationTower(
       ctx.fill();
     }
 
-    // Right clock tower (taller) with machinery
-    const rtX = bX + 18 * zoom;
-    const rtY = bY - 6 * zoom;
-    drawIsometricPrism(
-      ctx,
-      rtX,
-      rtY,
-      12,
-      10,
-      48,
-      { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
-      zoom
-    );
-
     // Main keep (central building)
     drawIsometricPrism(
       ctx,
       bX,
-      bY - 1 * zoom,
+      bY,
       32,
-      30,
+      26,
       32,
       { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
       zoom
@@ -8989,12 +8707,12 @@ function renderStationTower(
     }
 
     // Heavy battlements on main keep
-    const keepTop = bY - 32.5 * zoom;
+    const keepTop = bY - 32 * zoom;
     for (let i = 0; i < 5; i++) {
       if (i % 2 === 0) {
         drawIsometricPrism(
           ctx,
-          bX - 8 * zoom + i * 4.5 * zoom,
+          bX - 12 * zoom + i * 6 * zoom,
           keepTop,
           5,
           4,
@@ -9060,6 +8778,20 @@ function renderStationTower(
     ctx.closePath();
     ctx.fill();
 
+    // Right clock tower (taller) with machinery
+    const rtX = bX + 16 * zoom;
+    const rtY = bY + 4 * zoom;
+    drawIsometricPrism(
+      ctx,
+      rtX,
+      rtY,
+      12,
+      10,
+      48,
+      { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+      zoom
+    );
+
     // Tower gears
     const tGearX = rtX - 3 * zoom;
     const tGearY = rtY - 18 * zoom;
@@ -9101,15 +8833,15 @@ function renderStationTower(
     ctx.fillRect(rtX - 1 * zoom, rtRoofY - 24 * zoom, 2 * zoom, 8 * zoom);
 
     // Clock on right tower
-    drawClockFace(rtX + 1 * zoom, rtY - 36 * zoom, 6 * zoom, true);
+    drawClockFace(rtX - 3 * zoom, rtY - 32 * zoom, 6 * zoom, true);
 
     // Grand portcullis entrance
     ctx.fillStyle = "#1a1a22";
     ctx.beginPath();
-    ctx.moveTo(bX - 7 * zoom, bY - 2 * zoom);
-    ctx.lineTo(bX - 7 * zoom, bY - 16 * zoom);
-    ctx.arc(bX - 2 * zoom, bY - 16 * zoom, 5 * zoom, Math.PI, 0);
-    ctx.lineTo(bX + 3 * zoom, bY - 2 * zoom);
+    ctx.moveTo(bX - 8 * zoom, bY - 2 * zoom);
+    ctx.lineTo(bX - 8 * zoom, bY - 18 * zoom);
+    ctx.arc(bX - 3 * zoom, bY - 18 * zoom, 5 * zoom, Math.PI, 0);
+    ctx.lineTo(bX + 2 * zoom, bY - 2 * zoom);
     ctx.closePath();
     ctx.fill();
     // Portcullis bars
@@ -9636,7 +9368,7 @@ function renderStationTower(
     ctx.fillStyle = "#c9a227";
     ctx.font = `bold ${4.5 * zoom}px serif`;
     ctx.textAlign = "center";
-    ctx.fillText("STABLES", bX, bY + 19 * zoom);
+    ctx.fillText("CENTAUR STABLES", bX, bY + 19 * zoom);
   } else {
     // ========== LEVEL 4B: ROYAL CAVALRY FORTRESS - Orange Royal Military Stronghold ==========
     const bX = stationX;
@@ -10155,7 +9887,7 @@ function renderStationTower(
     ctx.fillStyle = "#e06000";
     ctx.font = `bold ${4 * zoom}px serif`;
     ctx.textAlign = "center";
-    ctx.fillText("CAVALRY", bX, bY + 19 * zoom);
+    ctx.fillText("ROYAL CAVALRY", bX, bY + 19 * zoom);
   }
 
   // ========== STATION DETAILS (Gears, Steam, Signs) ==========
@@ -10284,6 +10016,42 @@ function renderStationTower(
     ctx.fill();
   }
 
+  // "ON TIME" sign board
+  const signX = screenPos.x + 30 * zoom;
+  const signY = screenPos.y - 15 * zoom;
+
+  // Sign post
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#5a4a3a";
+  ctx.fillRect(signX - 1 * zoom, signY, 2 * zoom, 18 * zoom);
+
+  // Sign board
+  ctx.fillStyle = tower.level >= 4 ? "#2a2a32" : "#3a3a3a";
+  ctx.fillRect(signX - 8 * zoom, signY - 8 * zoom, 16 * zoom, 8 * zoom);
+  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#e06000";
+  ctx.lineWidth = 1 * zoom;
+  ctx.strokeRect(signX - 8 * zoom, signY - 8 * zoom, 16 * zoom, 8 * zoom);
+
+  // "ON TIME" text with glow
+  const onTimeGlow = 0.7 + Math.sin(time * 3) * 0.3;
+  ctx.fillStyle = `rgba(0, 255, 100, ${onTimeGlow})`;
+  ctx.shadowColor = "#00ff64";
+  ctx.shadowBlur = 4 * zoom;
+  ctx.font = `bold ${3.5 * zoom}px monospace`;
+  ctx.textAlign = "center";
+  ctx.fillText("ON TIME", signX, signY - 3 * zoom);
+  ctx.shadowBlur = 0;
+
+  // Small indicator lights on sign
+  for (let i = 0; i < 3; i++) {
+    const lightX = signX - 5 * zoom + i * 5 * zoom;
+    const lightY = signY - 1 * zoom;
+    const lightOn = Math.sin(time * 4 + i * 0.5) > 0;
+    ctx.fillStyle = lightOn ? "#00ff64" : "#1a3a1a";
+    ctx.beginPath();
+    ctx.arc(lightX, lightY, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // Pressure gauge (on station wall)
   const gaugeX = screenPos.x - 22 * zoom;
   const gaugeY = screenPos.y - 20 * zoom;
@@ -10333,42 +10101,6 @@ function renderStationTower(
   ctx.beginPath();
   ctx.arc(gaugeX, gaugeY, 0.8 * zoom, 0, Math.PI * 2);
   ctx.fill();
-
-  // "ON TIME" sign board
-  const signX = screenPos.x + 27 * zoom;
-  const signY = screenPos.y - 12 * zoom;
-
-  // Sign post
-  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#5a4a3a";
-  ctx.fillRect(signX - 1 * zoom, signY, 2 * zoom, 18 * zoom);
-
-  // Sign board
-  ctx.fillStyle = tower.level >= 4 ? "#2a2a32" : "#3a3a3a";
-  ctx.fillRect(signX - 8 * zoom, signY - 8 * zoom, 16 * zoom, 8 * zoom);
-  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#e06000";
-  ctx.lineWidth = 1 * zoom;
-  ctx.strokeRect(signX - 8 * zoom, signY - 8 * zoom, 16 * zoom, 8 * zoom);
-
-  // "ON TIME" text with glow
-  const onTimeGlow = 0.7 + Math.sin(time * 3) * 0.3;
-  ctx.fillStyle = `rgba(0, 255, 100, ${onTimeGlow})`;
-  ctx.shadowColor = "#00ff64";
-  ctx.shadowBlur = 4 * zoom;
-  ctx.font = `bold ${3.5 * zoom}px monospace`;
-  ctx.textAlign = "center";
-  ctx.fillText("ON TIME", signX, signY - 3 * zoom);
-  ctx.shadowBlur = 0;
-
-  // Small indicator lights on sign
-  for (let i = 0; i < 3; i++) {
-    const lightX = signX - 5 * zoom + i * 5 * zoom;
-    const lightY = signY - 1 * zoom;
-    const lightOn = Math.sin(time * 4 + i * 0.5) > 0;
-    ctx.fillStyle = lightOn ? "#00ff64" : "#1a3a1a";
-    ctx.beginPath();
-    ctx.arc(lightX, lightY, 1 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
 
   // Level-specific station extras
   if (tower.level >= 2) {
@@ -11118,28 +10850,14 @@ function renderStationTower(
       }
       // Smokestack
       const stackPos = isoOffset(locoPos.x, locoPos.y - 14 * zoom, 4);
-      // use an isometric prism
-      drawIsometricPrism(
-        ctx,
-        stackPos.x,
-        stackPos.y,
-        5,
-        5,
-        10,
-        { top: "#3a3a42", left: "#2a2a32", right: "#1a1a1a" },
-        zoom
-      );
-      // Stack cap
-      drawIsometricPrism(
-        ctx,
-        stackPos.x,
-        stackPos.y - 10 * zoom,
-        7,
-        7,
-        2,
-        { top: "#4a4a52", left: "#3a3a42", right: "#2a2a32" },
-        zoom
-      );
+      ctx.fillStyle = "#4a4a52";
+      ctx.beginPath();
+      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 10 * zoom);
+      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 10 * zoom);
+      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y);
+      ctx.closePath();
+      ctx.fill();
       // Steam
       const steam = 0.35 + Math.sin(time * 4) * 0.15;
       ctx.fillStyle = `rgba(180, 180, 180, ${steam})`;
@@ -24122,7 +23840,7 @@ export function renderEffect(
           const foreshorten = Math.abs(cosR);
 
           // Barrel length adjusted for foreshortening
-          const barrelOffset = -42 * zoom * (0.5 + foreshorten * 0.5);
+          const barrelOffset = 42 * zoom * (0.5 + foreshorten * 0.5);
 
           // Actual bullet source is at the end of the barrel
           const bulletSourceX = sourceX + cosR * barrelOffset;
@@ -24579,26 +24297,7 @@ export function renderEffect(
 
     case "payday_aura": {
       // Gold aura effect (rendered around enemies in main loop)
-      const auraRadius = effect.size * zoom;
-      const time = Date.now() / 1000;
-      ctx.save();
-      ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(time * 3) * 0.2})`;
-      ctx.lineWidth = 4 * zoom;
-      ctx.setLineDash([15, 10]);
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        auraRadius,
-        auraRadius * 0.5,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
-
+      // This effect just marks that payday is active
       break;
     }
 

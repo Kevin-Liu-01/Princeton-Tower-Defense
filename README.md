@@ -6,7 +6,7 @@ Battle through hordes of academic enemies across beautifully rendered isometric 
 
 **[➡️ Play the Game Here\!](http://princeton-tower-defense.vercel.app/)**
 
-![Gameplay Screenshot](/public/images/gameplay.png)
+![Gameplay Screenshot](/public/images/gameplay-new.png)
 
 ## ✨ Features
 
@@ -61,6 +61,8 @@ Each tower can be upgraded through 4 levels, with the final upgrade offering a c
 
 - **Path A**: Focuses on raw damage output
 - **Path B**: Emphasizes crowd control and utility
+
+![Upgraded Gameplay Screenshot](/public/images/gameplay-new-upgraded.png)
 
 ## 🦁 Heroes
 

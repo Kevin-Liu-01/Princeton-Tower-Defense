@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Theme } from "@radix-ui/themes";
-import { Cinzel } from "next/font/google"; // Using Inter as a clean default
+import { Cinzel } from "next/font/google";
 
 const cinzel = Cinzel({
   subsets: ["latin"],

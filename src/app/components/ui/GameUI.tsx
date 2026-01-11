@@ -40,6 +40,7 @@ import {
   Clock,
   PlusCircle,
   Skull,
+  Rewind,
 } from "lucide-react";
 import type {
   Tower,
@@ -130,10 +131,29 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
        px-2.5 py-1.5 rounded-lg shadow-sm"
       >
-        <span className="text-[10px] text-amber-500 mr-1">
-          SPEED <FastForward size={10} className="inline ml-0.5" />
+        <span className="text-[10px] text-amber-500 mr-1">SPEED</span>
+        <button
+          onClick={() => {
+            setGameSpeed((prev) => Math.max(prev - 0.5, 0));
+          }}
+          className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
+        >
+          <Rewind size={16} className="text-white" />
+        </button>
+        <span className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md">
+          {Number.isInteger(gameSpeed)
+            ? gameSpeed + "x"
+            : gameSpeed.toFixed(2) + "x"}
         </span>
-        {[1, 2, 3].map((speed) => (
+        <button
+          onClick={() => {
+            setGameSpeed((prev) => Math.min(prev + 0.5, 3));
+          }}
+          className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
+        >
+          <FastForward size={16} className="text-white" />
+        </button>
+        {[0.5, 1, 2].map((speed) => (
           <button
             key={speed}
             onClick={() => setGameSpeed(speed)}

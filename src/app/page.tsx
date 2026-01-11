@@ -1265,6 +1265,7 @@ export default function PrincetonTowerDefense() {
         });
       });
       // Hero HP regeneration
+
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
         const inCombat = enemies.some(
           (e) => distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= 100
@@ -2383,15 +2384,56 @@ export default function PrincetonTowerDefense() {
             : null
         );
       }
-      // Update projectiles
-      setProjectiles((prev) =>
-        prev
+      // Update projectiles and handle enemy projectile damage
+      setProjectiles((prev) => {
+        const completingProjectiles = prev.filter(
+          (p) =>
+            p.progress + deltaTime / 300 >= 1 &&
+            p.targetType &&
+            p.targetId &&
+            p.damage
+        );
+
+        // Deal damage from enemy projectiles to heroes/troops
+        completingProjectiles.forEach((proj) => {
+          if (proj.targetType === "hero" && proj.targetId) {
+            setHero((prev) => {
+              if (prev && prev.id === proj.targetId && !prev.dead) {
+                const newHp = prev.hp - (proj.damage || 20);
+                if (newHp <= 0) {
+                  return { ...prev, hp: 0, dead: true, respawnTimer: 15000 };
+                }
+                return { ...prev, hp: newHp };
+              }
+              return prev;
+            });
+          } else if (proj.targetType === "troop" && proj.targetId) {
+            // kill troops
+            setTroops((prev) =>
+              prev
+                .map((t) => {
+                  if (t.id === proj.targetId) {
+                    const newHp = t.hp - (proj.damage || 20);
+                    if (newHp <= 0) {
+                      addParticles(t.pos, "explosion", 6);
+                      return null as any;
+                    }
+                    return { ...t, hp: newHp };
+                  }
+                  return t;
+                })
+                .filter(Boolean)
+            );
+          }
+        });
+
+        return prev
           .map((proj) => ({
             ...proj,
             progress: Math.min(1, proj.progress + deltaTime / 300),
           }))
-          .filter((p) => p.progress < 1)
-      );
+          .filter((p) => p.progress < 1);
+      });
       // Update effects
       setEffects((prev) =>
         prev
