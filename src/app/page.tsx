@@ -157,11 +157,15 @@ export default function PrincetonTowerDefense() {
   const [selectedSpells, setSelectedSpells] = useState<SpellType[]>([]);
 
   // Persistent progress (saved to localStorage)
-  const { progress, updateLevelStars, unlockLevel } = useGameProgress();
+  const { progress, updateLevelStars, updateLevelStats, unlockLevel } =
+    useGameProgress();
   const unlockedMaps = progress.unlockedMaps;
   const levelStars = progress.levelStars as LevelStars;
+  const levelStats = progress.levelStats;
 
   const [starsEarned, setStarsEarned] = useState(0);
+  const [levelStartTime, setLevelStartTime] = useState<number>(0);
+  const [timeSpent, setTimeSpent] = useState<number>(0);
   // Game resources
   const [pawPoints, setPawPoints] = useState(INITIAL_PAW_POINTS);
   const [lives, setLives] = useState(INITIAL_LIVES);
@@ -339,6 +343,8 @@ export default function PrincetonTowerDefense() {
         }))
       );
       setNextWaveTimer(WAVE_TIMER_BASE);
+      setLevelStartTime(Date.now());
+      setTimeSpent(0);
       // Set camera to level-specific settings
       const levelSettings = LEVEL_DATA[selectedMap];
       if (levelSettings?.camera) {
@@ -755,6 +761,12 @@ export default function PrincetonTowerDefense() {
               // If ranged enemy has a target in range, stop and attack
               if (rangedTarget) {
                 isAttackingRanged = true;
+                // set inCombat state
+                enemy = {
+                  ...enemy,
+                  inCombat: true,
+                  combatTarget: rangedTarget.id,
+                };
 
                 if (now - enemy.lastRangedAttack > enemyData.attackSpeed) {
                   // Create projectile
@@ -1267,21 +1279,30 @@ export default function PrincetonTowerDefense() {
       // Hero HP regeneration
 
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
-        const inCombat = enemies.some(
-          (e) => distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= 100
-        );
+        // Consider in combat if any enemy is within 100 pixels OR currently targeting hero
+        const inCombat =
+          enemies.some(
+            (e) =>
+              distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= 100
+          ) || enemies.some((e) => e.combatTarget === hero.id);
+
+        // set a timer if the hero is in combat, only after this timer is done
+        // will the hero start regenerating HP
+
         if (!inCombat) {
-          setHero((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  hp: Math.min(
-                    prev.maxHp,
-                    prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
-                  ),
-                }
-              : null
-          );
+          setTimeout(() => {
+            setHero((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    hp: Math.min(
+                      prev.maxHp,
+                      prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
+                    ),
+                  }
+                : null
+            );
+          }, 5000);
         }
       }
       // Tower attacks
@@ -2470,6 +2491,12 @@ export default function PrincetonTowerDefense() {
       );
       // Check win/lose conditions - only if still playing to prevent duplicate triggers
       if (lives <= 0 && gameState === "playing") {
+        // Calculate time spent on defeat
+        const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
+        setTimeSpent(finalTime);
+
+        // Save stats for defeat (won = false)
+        updateLevelStats(selectedMap, finalTime, lives, false);
         setGameState("defeat");
       }
       if (
@@ -2482,6 +2509,10 @@ export default function PrincetonTowerDefense() {
         const stars = lives >= 18 ? 3 : lives >= 10 ? 2 : 1;
         setStarsEarned(stars);
 
+        // Calculate time spent
+        const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
+        setTimeSpent(finalTime);
+
         // IMPORTANT: Set game state first to prevent duplicate triggers
         setGameState("victory");
 
@@ -2489,6 +2520,9 @@ export default function PrincetonTowerDefense() {
         // Using the captured selectedMap value directly
         const mapToSave = selectedMap;
         updateLevelStars(mapToSave, stars);
+
+        // Save stats for victory (won = true)
+        updateLevelStats(mapToSave, finalTime, lives, true);
 
         // Level unlock progression
         const unlockMap: Record<string, string> = {
@@ -2526,8 +2560,10 @@ export default function PrincetonTowerDefense() {
       startWave,
       addParticles,
       updateLevelStars,
+      updateLevelStats,
       unlockLevel,
       gameState,
+      levelStartTime,
     ]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation
@@ -6534,6 +6570,8 @@ export default function PrincetonTowerDefense() {
     setCameraOffset({ x: -40, y: -60 });
     setCameraZoom(1.5);
     setStarsEarned(0);
+    setTimeSpent(0);
+    setLevelStartTime(0);
   }, []);
   // Render different screens based on game state
   // Show WorldMap for both menu and setup (combined into one screen)
@@ -6548,21 +6586,38 @@ export default function PrincetonTowerDefense() {
         setSelectedSpells={setSelectedSpells}
         unlockedMaps={unlockedMaps}
         levelStars={levelStars}
+        levelStats={levelStats}
+        gameState={gameState}
       />
     );
   }
   if (gameState === "victory") {
+    const currentLevelStats = levelStats?.[selectedMap] || {};
     return (
       <VictoryScreen
-        setGameState={setGameState}
         starsEarned={starsEarned}
         lives={lives}
+        timeSpent={timeSpent}
+        bestTime={currentLevelStats.bestTime}
+        bestHearts={currentLevelStats.bestHearts}
+        levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
         resetGame={resetGame}
       />
     );
   }
   if (gameState === "defeat") {
-    return <DefeatScreen resetGame={resetGame} />;
+    const currentLevelStats = levelStats?.[selectedMap] || {};
+    return (
+      <DefeatScreen
+        resetGame={resetGame}
+        timeSpent={timeSpent}
+        waveReached={currentWave}
+        totalWaves={totalWaves}
+        levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
+        bestTime={currentLevelStats.bestTime}
+        timesPlayed={currentLevelStats.timesPlayed || 1}
+      />
+    );
   }
   // Main game view
   const { width, height, dpr } = getCanvasDimensions();

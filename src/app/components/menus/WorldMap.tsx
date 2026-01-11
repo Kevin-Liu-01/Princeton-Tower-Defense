@@ -25,6 +25,7 @@ import {
   Coins,
   Gauge,
   ChevronLeft,
+  Clock,
 } from "lucide-react";
 import type { GameState, LevelStars, HeroType, SpellType } from "../../types";
 import {
@@ -63,7 +64,7 @@ const WORLD_LEVELS: LevelNode[] = [
   {
     id: "poe",
     name: "Poe Field",
-    description: "Training grounds for new defenders",
+    description: LEVEL_DATA["poe"].description,
     region: "grassland",
     difficulty: 1,
     x: 100,
@@ -1396,17 +1397,20 @@ interface WorldMapProps {
   setSelectedMap: (map: string) => void;
   setGameState: (state: GameState) => void;
   levelStars: LevelStars;
+  levelStats: Record<string, any>;
   unlockedMaps: string[];
   selectedHero: HeroType | null;
   setSelectedHero: (hero: HeroType | null) => void;
   selectedSpells: SpellType[];
   setSelectedSpells: (spells: SpellType[]) => void;
+  gameState: GameState;
 }
 
 export const WorldMap: React.FC<WorldMapProps> = ({
   setSelectedMap,
   setGameState,
   levelStars,
+  levelStats,
   unlockedMaps,
   selectedHero,
   setSelectedHero,
@@ -2876,6 +2880,27 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             <Book size={18} className="text-purple-400" />
             <span className="text-purple-300 font-medium text-lg">Codex</span>
           </button>
+          {/* total hearts */}
+          <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-xl border border-red-600/60 shadow-lg">
+            <div className="relative">
+              <Heart size={20} className="text-red-400 fill-red-400" />
+              <div className="absolute inset-0 animate-ping opacity-30">
+                <Heart size={20} className="text-red-400 fill-red-400" />
+              </div>
+            </div>
+            <span className="font-bold text-xl text-red-300">
+              {/* iterate through every level in levelStats and sum up hearts*/}
+              {levelStats
+                ? Object.values(levelStats).reduce(
+                    (acc, stats) => acc + (stats.bestHearts || 0),
+                    0
+                  )
+                : 0}
+            </span>
+            <span className="text-red-600 text-sm">/300</span>
+          </div>
+          {/* total stars */}
+
           <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 shadow-lg">
             <div className="relative">
               <Star size={20} className="text-yellow-400 fill-yellow-400" />
@@ -2908,9 +2933,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-y-hidden overflow-x-auto min-h-0">
         {/* LEFT SIDEBAR */}
-        <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col overflow-hidden">
+        <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col">
           {selectedLevel && currentLevel ? (
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col h-full overflow-auto">
               <div className="flex-shrink-0 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-transparent to-transparent" />
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent animate-pulse" />
@@ -2968,7 +2993,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   </div>
                   <div className="flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
                     <Trophy size={18} className="text-yellow-500" />
-                    <span className="text-amber-500 text-sm">Best Score:</span>
+                    <span className="text-amber-500 text-sm">Best Stars:</span>
                     <div className="flex gap-1">
                       {[1, 2, 3].map((s) => (
                         <Star
@@ -2983,6 +3008,31 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       ))}
                     </div>
                   </div>
+                  {levelStats[currentLevel.id] && (
+                    <div className=" grid grid-cols-2 gap-3">
+                      <div className="flex items-center gap-3 mt-2 p-2 bg-stone-800/50 rounded-lg border border-red-800/40">
+                        <Heart
+                          size={18}
+                          className="text-red-500 fill-red-500"
+                        />
+                        <div className="text-sm text-red-300 font-mono">
+                          {levelStats[currentLevel.id]?.bestHearts}/20
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 mt-2 p-2 bg-stone-800/50 rounded-lg border border-blue-800/40">
+                        <Clock size={18} className="text-blue-400" />
+                        <span className="text-blue-300 text-sm font-mono">
+                          {levelStats[currentLevel.id]?.bestTime
+                            ? `${Math.floor(
+                                levelStats[currentLevel.id]!.bestTime! / 60
+                              )}m ${
+                                levelStats[currentLevel.id]!.bestTime! % 60
+                              }s`
+                            : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

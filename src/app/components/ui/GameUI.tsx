@@ -143,7 +143,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <span className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md">
           {Number.isInteger(gameSpeed)
             ? gameSpeed + "x"
-            : gameSpeed.toFixed(2) + "x"}
+            : gameSpeed.toFixed(1) + "x"}
         </span>
         <button
           onClick={() => {
@@ -280,6 +280,19 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           >
             <ZoomOut size={12} className="text-amber-400" />
           </button>
+        </div>
+      </div>
+      <div className="bg-stone-900/90 text-amber-300 text-[8px] rounded-lg p-2 border border-stone-700 shadow-lg backdrop-blur-sm">
+        <div className="font-semibold tracking-wider mb-1 text-center">
+          CONTROLS
+        </div>
+        <div className="flex text-[8px] flex-col gap-1">
+          <div>
+            <span className="font-mono">WASD</span>: Move Camera
+          </div>
+          <div>
+            <span className="font-mono">+/-</span> : Zoom In / Out
+          </div>
         </div>
       </div>
     </div>

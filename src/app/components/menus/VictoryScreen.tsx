@@ -1,15 +1,23 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import type { GameState } from "../../types";
+import { ArrowRight, Clock, Heart } from "lucide-react";
+
+// Helper to format time as mm:ss
+const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
 
 interface VictoryScreenProps {
-  setGameState: (state: GameState) => void;
-  resetGame: () => void;
   starsEarned: number;
   lives: number;
+  timeSpent: number;
+  bestTime?: number;
+  bestHearts?: number;
+  levelName: string;
+  resetGame: () => void;
 }
-
 // Animated trophy with sparkles
 const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,8 +117,8 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
       cx - 42 * scale,
       cy - 15 * scale,
       15 * scale,
-      -Math.PI * 0.3,
-      Math.PI * 0.7
+      Math.PI * 0.3,
+      Math.PI * 1.6
     );
     ctx.stroke();
 
@@ -120,8 +128,8 @@ const TrophySprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
       cx + 42 * scale,
       cy - 15 * scale,
       15 * scale,
-      Math.PI * 0.3,
-      Math.PI * 1.3
+      Math.PI * 1.3,
+      Math.PI * 0.7
     );
     ctx.stroke();
 
@@ -350,14 +358,20 @@ function drawStar(
   ctx.fill();
 }
 
-export const VictoryScreen: React.FC<VictoryScreenProps> = ({
-  setGameState,
-  resetGame,
+export function VictoryScreen({
   starsEarned,
   lives,
-}) => {
+  timeSpent,
+  bestTime,
+  bestHearts,
+  levelName,
+  resetGame,
+}: VictoryScreenProps) {
+  const isNewBestTime = !bestTime || timeSpent < bestTime;
+  const isNewBestHearts = !bestHearts || lives > bestHearts;
+
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-yellow-700 via-amber-800 to-orange-900 flex flex-col items-center justify-center text-amber-100 relative overflow-hidden">
+    <div className="w-full h-screen bg-gradient-to-br from-yellow-700 via-amber-800 to-orange-900 flex flex-col items-center justify-center text-amber-100 relative overflow-auto py-8">
       {/* Animated background rays */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(12)].map((_, i) => (
@@ -402,19 +416,20 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
 
       {/* Trophy */}
       <div className="z-10 mb-4">
-        <TrophySprite size={140} />
+        <TrophySprite size={120} />
       </div>
 
       {/* Title */}
       <div className="relative mb-6 z-10">
         <h1
-          className="text-6xl md:text-8xl font-bold text-amber-200 tracking-widest drop-shadow-2xl"
+          className="text-6xl  font-bold text-amber-200 tracking-widest drop-shadow-2xl"
           style={{ textShadow: "4px 4px 0 rgba(92, 33, 4, 1)" }}
         >
           VICTORY!
         </h1>
         <div className="absolute -bottom-3 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
       </div>
+      <p className="text-3xl text-center text-amber-300 mt-3">{levelName}</p>
 
       {/* Star Rating */}
       <div className="mb-6 z-10">
@@ -424,17 +439,68 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
       {/* Victory message */}
       <div className="text-2xl md:text-3xl text-amber-400 mb-2 tracking-wide drop-shadow-lg z-10">
         {starsEarned === 3 && "★ Perfect Defense! ★"}
-        {starsEarned === 2 && "Strong Defense!"}
-        {starsEarned === 1 && "Victory Achieved!"}
+        {starsEarned === 2 && "Great Victory!"}
+        {starsEarned === 1 && "Victory by the skin of your teeth!"}
       </div>
 
-      <div className="text-lg md:text-xl text-amber-300 mb-6 z-10">
-        Lives Remaining: {lives}/20
+      {/* Stats Grid */}
+      <div className="bg-stone-800/50 rounded-lg p-2 mb-6 border border-amber-800">
+        <div className="grid grid-cols-2 gap-4">
+          {/* Time */}
+          <div className="text-center bg-blue-800/50 rounded-lg p-2">
+            <div className="text-amber-500 text-sm mb-1">
+              <Clock size={14} className="inline mb-0.5 mr-1" />
+              Time
+            </div>
+            <div className="text-2xl font-bold text-amber-300">
+              {formatTime(timeSpent)}
+              {isNewBestTime && (
+                <span className="ml-2 text-sm text-green-400 animate-pulse">
+                  NEW BEST!
+                </span>
+              )}
+            </div>
+            {bestTime && !isNewBestTime && (
+              <div className="text-xs text-gray-500">
+                Best: {formatTime(bestTime)}
+              </div>
+            )}
+          </div>
+
+          {/* Hearts */}
+          <div className="text-center bg-red-800/50 rounded-lg p-2">
+            <div className="text-amber-500 text-sm mb-1">
+              <Heart size={14} className="inline mb-0.5 mr-1" />
+              Lives Remaining:
+            </div>
+            <div className="text-2xl font-bold">
+              <div
+                className={
+                  lives >= 15
+                    ? "text-green-400"
+                    : lives >= 7
+                    ? "text-yellow-400"
+                    : "text-red-400"
+                }
+              >
+                {lives}/20
+              </div>
+              {isNewBestHearts && (
+                <span className="ml-2 text-sm text-green-400 animate-pulse">
+                  NEW BEST!
+                </span>
+              )}
+            </div>
+            {bestHearts && !isNewBestHearts && (
+              <div className="text-xs text-gray-500">Best: {bestHearts}/20</div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Celebrating heroes */}
-      <div className="mb-8 z-10">
-        <CelebratingHeroes size={350} />
+      <div className="mb-4 z-10">
+        <CelebratingHeroes size={300} />
       </div>
 
       {/* Button */}
@@ -449,13 +515,13 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({
               "polygon(10% 0, 90% 0, 100% 15%, 100% 85%, 90% 100%, 10% 100%, 0 85%, 0 15%)",
           }}
         >
-          <span className="flex items-center gap-3">
-            <ArrowLeft size={24} /> CONTINUE
+          <span className="flex items-center gap-1">
+            ONWARDS! <ArrowRight size={20} />
           </span>
         </button>
       </div>
     </div>
   );
-};
+}
 
 export default VictoryScreen;

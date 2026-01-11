@@ -1,9 +1,21 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Clock, RefreshCw, Wind } from "lucide-react";
+// Helper to format time as mm:ss
+const formatTime = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
 
 interface DefeatScreenProps {
   resetGame: () => void;
+  timeSpent: number;
+  waveReached: number;
+  totalWaves: number;
+  levelName: string;
+  bestTime?: number;
+  timesPlayed: number;
 }
 
 // Animated broken shield/skull sprite
@@ -165,94 +177,94 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
 };
 
 // Fallen heroes animation
-const FallenHeroes: React.FC<{ size?: number }> = ({ size = 400 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
+// const FallenHeroes: React.FC<{ size?: number }> = ({ size = 400 }) => {
+//   const canvasRef = useRef<HTMLCanvasElement>(null);
+//   const [time, setTime] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => setTime((t) => t + 1), 80);
-    return () => clearInterval(interval);
-  }, []);
+//   useEffect(() => {
+//     const interval = setInterval(() => setTime((t) => t + 1), 80);
+//     return () => clearInterval(interval);
+//   }, []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+//   useEffect(() => {
+//     const canvas = canvasRef.current;
+//     if (!canvas) return;
+//     const ctx = canvas.getContext("2d");
+//     if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = 80 * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, 80);
+//     const dpr = window.devicePixelRatio || 1;
+//     canvas.width = size * dpr;
+//     canvas.height = 80 * dpr;
+//     ctx.scale(dpr, dpr);
+//     ctx.clearRect(0, 0, size, 80);
 
-    const t = time * 0.05;
-    const heroes = [
-      { x: size * 0.2, color: "#f97316" },
-      { x: size * 0.4, color: "#8b5cf6" },
-      { x: size * 0.6, color: "#6366f1" },
-      { x: size * 0.8, color: "#78716c" },
-    ];
+//     const t = time * 0.05;
+//     const heroes = [
+//       { x: size * 0.2, color: "#f97316" },
+//       { x: size * 0.4, color: "#8b5cf6" },
+//       { x: size * 0.6, color: "#6366f1" },
+//       { x: size * 0.8, color: "#78716c" },
+//     ];
 
-    heroes.forEach((hero, i) => {
-      // Fallen on ground
-      const breathe = Math.sin(t * 2 + i) * 2;
+//     heroes.forEach((hero, i) => {
+//       // Fallen on ground
+//       const breathe = Math.sin(t * 2 + i) * 2;
 
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.ellipse(hero.x, 65, 25, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
+//       // Shadow
+//       ctx.fillStyle = "rgba(0,0,0,0.4)";
+//       ctx.beginPath();
+//       ctx.ellipse(hero.x, 65, 25, 8, 0, 0, Math.PI * 2);
+//       ctx.fill();
 
-      // Body - lying down
-      ctx.fillStyle = hero.color;
-      ctx.save();
-      ctx.translate(hero.x, 55);
-      ctx.rotate(Math.PI / 2 + (i % 2 === 0 ? 0.2 : -0.2));
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 14, 20 + breathe, 0, 0, Math.PI * 2);
-      ctx.fill();
+//       // Body - lying down
+//       ctx.fillStyle = hero.color;
+//       ctx.save();
+//       ctx.translate(hero.x, 55);
+//       ctx.rotate(Math.PI / 2 + (i % 2 === 0 ? 0.2 : -0.2));
+//       ctx.beginPath();
+//       ctx.ellipse(0, 0, 14, 20 + breathe, 0, 0, Math.PI * 2);
+//       ctx.fill();
 
-      // Head
-      ctx.fillStyle = "#d4c4b4";
-      ctx.beginPath();
-      ctx.arc(-22, 0, 10, 0, Math.PI * 2);
-      ctx.fill();
+//       // Head
+//       ctx.fillStyle = "#d4c4b4";
+//       ctx.beginPath();
+//       ctx.arc(-22, 0, 10, 0, Math.PI * 2);
+//       ctx.fill();
 
-      // X eyes (knocked out)
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-25, -3);
-      ctx.lineTo(-22, 0);
-      ctx.moveTo(-22, -3);
-      ctx.lineTo(-25, 0);
-      ctx.moveTo(-19, -3);
-      ctx.lineTo(-16, 0);
-      ctx.moveTo(-16, -3);
-      ctx.lineTo(-19, 0);
-      ctx.stroke();
+//       // X eyes (knocked out)
+//       ctx.strokeStyle = "#333";
+//       ctx.lineWidth = 2;
+//       ctx.beginPath();
+//       ctx.moveTo(-25, -3);
+//       ctx.lineTo(-22, 0);
+//       ctx.moveTo(-22, -3);
+//       ctx.lineTo(-25, 0);
+//       ctx.moveTo(-19, -3);
+//       ctx.lineTo(-16, 0);
+//       ctx.moveTo(-16, -3);
+//       ctx.lineTo(-19, 0);
+//       ctx.stroke();
 
-      ctx.restore();
+//       ctx.restore();
 
-      // Soul wisps rising
-      const soulAlpha = 0.2 + Math.sin(t * 2 + i) * 0.1;
-      ctx.fillStyle = `rgba(150, 150, 200, ${soulAlpha})`;
-      const soulY = 40 - ((t * 2) % 30);
-      ctx.beginPath();
-      ctx.arc(
-        hero.x + Math.sin(t + i) * 5,
-        soulY,
-        5 + Math.sin(t * 3 + i) * 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    });
-  }, [size, time]);
+//       // Soul wisps rising
+//       const soulAlpha = 0.2 + Math.sin(t * 2 + i) * 0.1;
+//       ctx.fillStyle = `rgba(150, 150, 200, ${soulAlpha})`;
+//       const soulY = 40 - ((t * 2) % 30);
+//       ctx.beginPath();
+//       ctx.arc(
+//         hero.x + Math.sin(t + i) * 5,
+//         soulY,
+//         5 + Math.sin(t * 3 + i) * 2,
+//         0,
+//         Math.PI * 2
+//       );
+//       ctx.fill();
+//     });
+//   }, [size, time]);
 
-  return <canvas ref={canvasRef} style={{ width: size, height: 80 }} />;
-};
+//   return <canvas ref={canvasRef} style={{ width: size, height: 80 }} />;
+// };
 
 // Marching enemies (victorious)
 const VictoriousEnemies: React.FC<{ size?: number }> = ({ size = 400 }) => {
@@ -429,7 +441,17 @@ const DestroyedTower: React.FC<{ x: number; size?: number }> = ({
   );
 };
 
-export const DefeatScreen: React.FC<DefeatScreenProps> = ({ resetGame }) => {
+export function DefeatScreen({
+  resetGame,
+  timeSpent,
+  waveReached,
+  totalWaves,
+  levelName,
+  bestTime,
+  timesPlayed,
+}: DefeatScreenProps) {
+  const waveProgress = Math.round((waveReached / totalWaves) * 100);
+
   return (
     <div className="w-full h-screen bg-gradient-to-br from-stone-900 via-stone-950 to-black flex flex-col items-center justify-center text-stone-300 relative overflow-hidden">
       {/* Dark fog effect */}
@@ -452,30 +474,92 @@ export const DefeatScreen: React.FC<DefeatScreenProps> = ({ resetGame }) => {
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuOSIgbnVtT2N0YXZlcz0iNCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')] opacity-30" />
 
       {/* Skull/defeat icon */}
-      <div className="z-10 mb-4">
+      <div className="z-10 mb-1">
         <DefeatSprite size={130} />
       </div>
 
       {/* Title */}
       <div className="relative mb-6 z-10">
         <h1
-          className="text-6xl md:text-8xl font-bold text-red-950 tracking-widest drop-shadow-2xl"
+          className="text-7xl font-bold text-red-950 tracking-widest drop-shadow-2xl"
           style={{ textShadow: "4px 4px 0 rgba(0, 0, 0, 1)" }}
         >
           DEFEAT
         </h1>
         <div className="absolute -bottom-3 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-red-900 to-transparent" />
       </div>
+      <p className="text-3xl text-red-400">{levelName}</p>
 
       {/* Message */}
-      <div className="text-2xl md:text-3xl text-red-950/80 mb-6 tracking-wide drop-shadow-lg z-10">
+      <div className=" text-red-800/80 mb-3 tracking-wide drop-shadow-lg z-10">
         The Kingdom Has Fallen
       </div>
 
-      {/* Fallen heroes */}
-      <div className="mb-4 z-10">
-        <FallenHeroes size={350} />
+      {/* Stats Grid */}
+      <div className="bg-stone-800/50 rounded-lg p-2 mb-3 border border-red-900">
+        <div className="grid grid-cols-2 gap-4">
+          {/* Time Survived */}
+          <div className="text-center bg-stone-700/30 p-3 rounded-lg">
+            <div className="text-red-400 text-sm mb-1">
+              <Clock size={14} className="inline mb-0.5 mr-1" />
+              Time Survived
+            </div>
+            <div className="text-2xl font-bold text-gray-300">
+              {formatTime(timeSpent)}
+            </div>
+            {bestTime && (
+              <div className="text-xs text-gray-500">
+                Best: {formatTime(bestTime)}
+              </div>
+            )}
+          </div>
+
+          {/* Waves */}
+          <div className="text-center bg-stone-700/30 p-3 rounded-lg">
+            <div className="text-red-400 text-sm mb-1">
+              <Wind size={14} className="inline mb-0.5 mr-1" />
+              Waves
+            </div>
+            <div className="text-2xl font-bold text-gray-300">
+              {waveReached} / {totalWaves}
+            </div>
+            <div className="text-xs text-gray-500">
+              {waveProgress}% complete
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-4">
+          <div className="w-full bg-stone-700 rounded-full h-2">
+            <div
+              className="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${waveProgress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Attempt Counter */}
+        <div className="mt-3 text-xs text-gray-500">Attempt #{timesPlayed}</div>
       </div>
+
+      {/* Encouragement */}
+      <div className="bg-stone-800/50 rounded-lg mb-3 p-2 border border-red-900">
+        <p className="text-gray-400 text-sm">
+          {waveProgress >= 75
+            ? "So close! You can do this!"
+            : waveProgress >= 50
+            ? "Halfway there - keep pushing!"
+            : waveProgress >= 25
+            ? "Learning the level... try new strategies!"
+            : "Every defeat is a lesson. Rise again, defender!"}
+        </p>
+      </div>
+
+      {/* Fallen heroes */}
+      {/* <div className="mb-4 z-10">
+        <FallenHeroes size={350} />
+      </div> */}
 
       {/* Victorious enemies */}
       <div className="mb-8 relative z-10 opacity-70">
@@ -505,6 +589,6 @@ export const DefeatScreen: React.FC<DefeatScreenProps> = ({ resetGame }) => {
       </button>
     </div>
   );
-};
+}
 
 export default DefeatScreen;

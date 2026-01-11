@@ -29,7 +29,7 @@ export function useLocalStorage<T>(
         typeof initialValue === "object" &&
         initialValue !== null
       ) {
-        const defaults = initialValue as unknown as GameProgress;
+        const defaults = initialValue as GameProgress;
         const loaded = parsed as GameProgress;
 
         // Ensure loaded.levelStars is an object
@@ -58,11 +58,20 @@ export function useLocalStorage<T>(
           ...new Set([...defaults.unlockedMaps, ...loadedMaps]),
         ];
 
+        // Ensure levelStats is an object
+        const loadedStats =
+          loaded &&
+          typeof loaded.levelStats === "object" &&
+          loaded.levelStats !== null
+            ? loaded.levelStats
+            : {};
+
         return {
           ...defaults,
           ...loaded,
           unlockedMaps: mergedMaps,
           levelStars: mergedLevelStars,
+          levelStats: loadedStats,
           totalStarsEarned: Object.values(mergedLevelStars).reduce(
             (a, b) => a + b,
             0
@@ -124,9 +133,19 @@ export function useLocalStorage<T>(
 /**
  * Game progress interface for type safety
  */
+export interface LevelStats {
+  bestTime?: number; // Best completion time in seconds
+  lastTime?: number; // Last completion time in seconds
+  bestHearts?: number; // Best hearts remaining (lives)
+  lastHearts?: number; // Last hearts remaining
+  timesPlayed?: number; // Number of attempts
+  timesWon?: number; // Number of victories
+}
+
 export interface GameProgress {
   unlockedMaps: string[];
   levelStars: Record<string, number>;
+  levelStats: Record<string, LevelStats>; // Track time and hearts per level
   lastPlayedLevel?: string;
   totalStarsEarned?: number;
 }
@@ -140,6 +159,9 @@ export const DEFAULT_GAME_PROGRESS: GameProgress = {
     poe: 0,
     carnegie: 0,
     nassau: 0,
+    bog: 0,
+    witch_hut: 0,
+    sunken_temple: 0,
     oasis: 0,
     pyramid: 0,
     sphinx: 0,
@@ -150,6 +172,7 @@ export const DEFAULT_GAME_PROGRESS: GameProgress = {
     crater: 0,
     throne: 0,
   },
+  levelStats: {},
   lastPlayedLevel: undefined,
   totalStarsEarned: 0,
 };
@@ -197,6 +220,46 @@ export function useGameProgress() {
     [setProgress]
   );
 
+  // Update stats for a level (time, hearts, play counts)
+  const updateLevelStats = useCallback(
+    (levelId: string, timeSpent: number, hearts: number, won: boolean) => {
+      if (!levelId) return;
+
+      setProgress((prev) => {
+        const currentStats = prev.levelStats?.[levelId] || {};
+        const timesPlayed = (currentStats.timesPlayed || 0) + 1;
+        const timesWon = (currentStats.timesWon || 0) + (won ? 1 : 0);
+
+        const newStats: LevelStats = {
+          ...currentStats,
+          lastTime: timeSpent,
+          lastHearts: hearts,
+          timesPlayed,
+          timesWon,
+        };
+
+        // Only update best time/hearts on victory
+        if (won) {
+          if (!currentStats.bestTime || timeSpent < currentStats.bestTime) {
+            newStats.bestTime = timeSpent;
+          }
+          if (!currentStats.bestHearts || hearts > currentStats.bestHearts) {
+            newStats.bestHearts = hearts;
+          }
+        }
+
+        return {
+          ...prev,
+          levelStats: {
+            ...prev.levelStats,
+            [levelId]: newStats,
+          },
+        };
+      });
+    },
+    [setProgress]
+  );
+
   // Unlock a new level
   const unlockLevel = useCallback(
     (levelId: string) => {
@@ -225,6 +288,7 @@ export function useGameProgress() {
     progress,
     setProgress,
     updateLevelStars,
+    updateLevelStats,
     unlockLevel,
     resetProgress,
     getTotalStars,

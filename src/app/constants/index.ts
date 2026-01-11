@@ -312,7 +312,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     armor: 0,
     flying: false,
     isRanged: true,
-    range: 120,
+    range: 200,
     attackSpeed: 2000,
     projectileDamage: 15,
     desc: "Ranged attacker that shoots arrows at heroes and troops.",
@@ -442,7 +442,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 26,
   },
   golem: {
-    name: "Stone Golem",
+    name: "Nassau Lion",
     hp: 1500,
     speed: 0.25,
     bounty: 100,
@@ -2302,7 +2302,7 @@ export const SPELL_OPTIONS: SpellType[] = [
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
 export const INITIAL_PAW_POINTS = 300;
-export const INITIAL_LIVES = 20;
+export const INITIAL_LIVES = 0;
 export const WAVE_TIMER_BASE = 10000;
 export const HERO_RESPAWN_TIME = 15000;
 export const TROOP_SPREAD_RADIUS = 45;
