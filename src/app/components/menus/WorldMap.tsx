@@ -236,7 +236,7 @@ const PrincetonLogo: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative flex items-center gap-4">
+    <div className="relative flex items-center gap-2 sm:gap-4">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
           className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40"
@@ -246,7 +246,7 @@ const PrincetonLogo: React.FC = () => {
       <PrincetonTDLogo />
       <div className="relative flex flex-col">
         <span
-          className="text-2xl font-black tracking-wider"
+          className="text-base sm:text-2xl font-black tracking-wider"
           style={{
             background:
               "linear-gradient(180deg, #fcd34d 0%, #f59e0b 40%, #d97706 70%, #92400e 100%)",
@@ -256,14 +256,14 @@ const PrincetonLogo: React.FC = () => {
         >
           PRINCETON
         </span>
-        <div className="flex items-center gap-2 -mt-0.5">
-          <Swords size={14} className="text-orange-400" />
-          <span className="text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
+        <div className="flex items-center gap-1 sm:gap-2 -mt-0.5">
+          <Swords size={14} className="text-orange-400 size-2 sm:size-auto" />
+          <span className="text-[6px] text-nowrap sm:text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
             KINGDOM DEFENSE
           </span>
           <Swords
             size={14}
-            className="text-orange-400"
+            className="text-orange-400 size-2 sm:size-auto"
             style={{ transform: "scaleX(-1)" }}
           />
         </div>
@@ -341,7 +341,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
         <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900/90 via-stone-800/90 to-amber-900/90 backdrop-blur px-6 py-4 border-b-2 border-amber-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Book className="text-amber-400" size={28} />
-            <h2 className="text-3xl font-bold text-amber-300">War Codex</h2>
+            <h2 className="text-3xl font-bold text-amber-300">Codex</h2>
             <span className="text-xs text-amber-500/70 ml-2">
               Complete Battle Encyclopedia
             </span>
@@ -354,7 +354,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
           </button>
         </div>
 
-        <div className="flex z-10 relative border-b border-amber-800/40 bg-stone-900/50">
+        <div className="flex z-10 overflow-scroll relative border-b border-amber-800/40 bg-stone-900/50">
           {[
             {
               id: "towers",
@@ -405,7 +405,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 
         <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
           {activeTab === "towers" && !selectedTower && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {towerTypes.map((type) => {
                 const tower = TOWER_DATA[type];
                 return (
@@ -538,7 +538,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         <ArrowUp size={18} />
                         Level Progression
                       </h4>
-                      <div className="grid grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {[1, 2, 3, 4].map((level) => {
                           const stats = getTowerStats(
                             selectedTower as keyof typeof TOWER_DATA,
@@ -608,7 +608,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         <Flame size={18} />
                         Evolution Paths (Level 4)
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid sm:grid-cols-2 gap-4">
                         {(["A", "B"] as const).map((path) => {
                           const upgrade = tower.upgrades[path];
                           const color = path == "A" ? "red" : "blue";
@@ -700,7 +700,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             })()}
 
           {activeTab === "heroes" && !selectedHeroDetail && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-4">
               {heroTypes.map((type) => {
                 const hero = HERO_DATA[type];
                 const cooldown = HERO_ABILITY_COOLDOWNS[type];
@@ -895,7 +895,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         <p className="text-amber-500 text-sm mb-4">
                           {hero.description}
                         </p>
-                        <div className="grid grid-cols-5 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                           <div className="bg-red-950/50 rounded-lg p-3 text-center border border-red-800/40">
                             <Heart
                               size={18}
@@ -1011,7 +1011,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             })()}
 
           {activeTab === "enemies" && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-3 gap-4">
               {enemyTypes.map((type) => {
                 const enemy = ENEMY_DATA[type];
                 return (
@@ -1369,7 +1369,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center">
-        <div className="w-24 h-24 rounded-full bg-amber-900/50 border-2 border-amber-700/60 flex items-center justify-center mb-4 backdrop-blur-sm">
+        <div className="size-20 sm:size-24 rounded-full bg-amber-900/50 border-2 border-amber-700/60 flex items-center justify-center mb-4 backdrop-blur-sm">
           <MapPin size={40} className="text-amber-500" />
         </div>
 
@@ -2869,16 +2869,18 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   return (
     <div className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden">
       {/* TOP BAR */}
-      <div className="flex-shrink-0 overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-5 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
+      <div className="flex-shrink-0 overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-3 sm:px-5 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
         <PrincetonLogo />
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => setShowCodex(true)}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
           >
             <Book size={18} className="text-purple-400" />
-            <span className="text-purple-300 font-medium text-lg">Codex</span>
+            <span className="hidden sm:inline text-purple-300 font-medium text-lg">
+              Codex
+            </span>
           </button>
           {/* total hearts */}
           <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-xl border border-red-600/60 shadow-lg">
@@ -2888,7 +2890,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <Heart size={20} className="text-red-400 fill-red-400" />
               </div>
             </div>
-            <span className="font-bold text-xl text-red-300">
+            <span className="font-bold text-sm sm:text-xl text-red-300">
               {/* iterate through every level in levelStats and sum up hearts*/}
               {levelStats
                 ? Object.values(levelStats).reduce(
@@ -2897,7 +2899,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   )
                 : 0}
             </span>
-            <span className="text-red-600 text-sm">/300</span>
+            <span className="hidden sm:inline text-red-600 text-sm">/300</span>
           </div>
           {/* total stars */}
 
@@ -2908,12 +2910,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <Star size={20} className="text-yellow-400 fill-yellow-400" />
               </div>
             </div>
-            <span className="font-bold text-xl text-yellow-300">
+            <span className="font-bold text-sm sm:text-xl text-yellow-300">
               {totalStars}
             </span>
-            <span className="text-yellow-600 text-sm">/ {maxStars}</span>
+            <span className="hidden sm:inline text-yellow-600 text-sm">
+              / {maxStars}
+            </span>
           </div>
-          <div className="flex items-center gap-3 bg-gradient-to-br from-amber-900/70 to-stone-900/80 px-1.5 py-1.5 rounded-xl border border-amber-600/60">
+          <div className="hidden sm:flex items-center gap-3 bg-gradient-to-br from-amber-900/70 to-stone-900/80 px-1.5 py-1.5 rounded-xl border border-amber-600/60">
             <button
               onClick={() => goToPreviousLevel()}
               className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
@@ -2931,9 +2935,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       </div>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex overflow-y-hidden overflow-x-auto min-h-0">
+      <div className="flex-1 flex flex-col sm:flex-row overflow-y-hidden overflow-x-auto min-h-0">
         {/* LEFT SIDEBAR */}
-        <div className="w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col">
+        <div className="sm:w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col">
           {selectedLevel && currentLevel ? (
             <div className="flex-1 flex flex-col h-full overflow-auto">
               <div className="flex-shrink-0 relative overflow-hidden">
@@ -2962,7 +2966,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   <p className="text-amber-500/80 text-sm italic mb-3">
                     &ldquo;{currentLevel.description}&rdquo;
                   </p>
-                  <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center gap-4 sm:mb-3">
                     <div className="flex items-center gap-2 px-2 py-1 bg-stone-800/60 rounded-lg border border-stone-700/50">
                       <Skull size={14} className="text-amber-500" />
                       <div className="flex gap-1">
@@ -2990,8 +2994,25 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         {waveCount} Waves
                       </span>
                     </div>
+                    <div className="flex sm:hidden items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
+                      <Trophy size={18} className="text-yellow-500" />
+                      <span className="text-amber-500 text-sm"></span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3].map((s) => (
+                          <Star
+                            key={s}
+                            size={18}
+                            className={`transition-all ${
+                              (levelStars[currentLevel.id] || 0) >= s
+                                ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
+                                : "text-stone-600"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
+                  <div className="hidden sm:flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
                     <Trophy size={18} className="text-yellow-500" />
                     <span className="text-amber-500 text-sm">Best Stars:</span>
                     <div className="flex gap-1">
@@ -3036,7 +3057,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              <div className="flex-shrink-0 p-4 border-b border-amber-800/30">
+              <div className="hidden sm:inline flex-shrink-0 p-4 border-b border-amber-800/30">
                 <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
                   Battlefield Preview
                 </div>
@@ -3090,7 +3111,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              <div className="flex-1 p-4 overflow-y-auto">
+              <div className="hidden sm:inline flex-1 p-4 overflow-y-auto">
                 <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3">
                   Region Campaign
                 </div>
@@ -3231,7 +3252,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             {/* HERO & SPELL SELECTION OVERLAY */}
             <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto">
               <div className="flex w-full mt-auto gap-3 pointer-events-auto">
-                <div className="bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
+                <div className="hidden sm:inline bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <Crown size={14} className="text-amber-400" />
                     <span className="text-xs font-bold text-amber-300 tracking-wide">

@@ -93,117 +93,127 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 }) => {
   return (
     <div
-      className="bg-gradient-to-r from-amber-900 via-yellow-900 to-amber-900 px-3 py-1.5 flex items-center border-b-2 border-amber-600 shadow-lg relative flex-shrink-0"
+      className="bg-gradient-to-r from-amber-900 via-yellow-900 to-amber-900 px-3 py-1.5 flex flex-col sm:flex-row items-center border-b-2 border-amber-600 shadow-lg relative flex-shrink-0"
       style={{ zIndex: 100 }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         <div className="flex items-center">
           <PrincetonTDLogo height="h-10" width="w-8" />
-          <div className="h-8 border-l border-amber-600 ml-3" />
+          <div className="h-8 border-l border-amber-600 ml-1 sm:ml-3" />
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-950/60 border border-amber-600 shadow-sm rounded-lg">
           <PawPrint size={18} className="text-amber-400" />
-          <span className="font-bold text-lg text-amber-300">{pawPoints}</span>
-          <span className="text-[10px] text-amber-500 ml-0.5">PP</span>
+          <span className="font-bold text-sm sm:text-lg text-amber-300">
+            {pawPoints}
+          </span>
+          <span className="text-[10px] text-amber-500 sm:ml-0.5">PP</span>
         </div>
         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-950/60 border border-red-800 shadow-sm rounded-lg">
           <Heart size={18} className="text-red-400" fill="#f87171" />
-          <span className="font-bold text-lg text-red-300">{lives}</span>
-          <span className="text-[10px] text-red-500 ml-0.5">Lives</span>
+          <span className="font-bold text-sm sm:text-lg text-red-300">
+            {lives}
+          </span>
+          <span className="text-[10px] text-red-500 sm:ml-0.5">Lives</span>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-950/60 border border-amber-700 shadow-sm rounded-lg">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 bg-amber-950/60 border border-amber-700 shadow-sm rounded-lg">
           <Crown size={16} className="text-amber-400" />
           <span className="text-[10px] text-amber-500">WAVE</span>
-          <span className="font-bold text-base text-amber-300">
+          <span className="font-bold text-sm sm:text-base text-amber-300">
             {currentWave}/{totalWaves}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-950/60 border border-blue-800 shadow-sm rounded-lg">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 bg-blue-950/60 border border-blue-800 shadow-sm rounded-lg">
           <Timer size={16} className="text-blue-400" />
-          <span className="text-[10px] text-blue-500">NEXT</span>
-          <span className="font-bold text-base text-blue-300">
+          <span className="hidden sm:inline text-[10px] text-blue-500">
+            NEXT
+          </span>
+          <span className="font-bold text-sm sm:text-base text-blue-300">
             {Math.ceil(nextWaveTimer / 1000)}s
           </span>
         </div>
       </div>
-      <div
-        className="flex ml-auto items-center gap-1 border 
+      <div className="mt-2 sm:mt-0 flex ml-auto gap-1 sm:gap-3">
+        <div
+          className="flex items-center gap-1 border 
       border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
        px-2.5 py-1.5 rounded-lg shadow-sm"
-      >
-        <span className="text-[10px] text-amber-500 mr-1">SPEED</span>
-        <button
-          onClick={() => {
-            setGameSpeed((prev) => Math.max(prev - 0.5, 0));
-          }}
-          className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
         >
-          <Rewind size={16} className="text-white" />
-        </button>
-        <span className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md">
-          {Number.isInteger(gameSpeed)
-            ? gameSpeed + "x"
-            : gameSpeed.toFixed(1) + "x"}
-        </span>
-        <button
-          onClick={() => {
-            setGameSpeed((prev) => Math.min(prev + 0.5, 3));
-          }}
-          className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
-        >
-          <FastForward size={16} className="text-white" />
-        </button>
-        {[0.5, 1, 2].map((speed) => (
+          <span className="text-[7px] sm:text-[10px] text-amber-500 mr-1">
+            SPEED
+          </span>
           <button
-            key={speed}
-            onClick={() => setGameSpeed(speed)}
-            className={`px-2.5 py-1 border transition-all shadow-sm rounded font-bold text-xs ${
-              gameSpeed === speed
-                ? "bg-yellow-600/80 border-yellow-400 text-yellow-100"
-                : "bg-blue-950/60 hover:bg-blue-900/60 border-blue-700 text-blue-300"
-            }`}
+            onClick={() => {
+              setGameSpeed((prev) => Math.max(prev - 0.5, 0));
+            }}
+            className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
           >
-            {speed}x
+            <Rewind size={16} className="text-white" />
           </button>
-        ))}
-      </div>
-      <div
-        className="flex items-center gap-1 border 
+          <span className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md">
+            {Number.isInteger(gameSpeed)
+              ? gameSpeed + "x"
+              : gameSpeed.toFixed(1) + "x"}
+          </span>
+          <button
+            onClick={() => {
+              setGameSpeed((prev) => Math.min(prev + 0.5, 3));
+            }}
+            className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
+          >
+            <FastForward size={16} className="text-white" />
+          </button>
+          {[0.5, 1, 2].map((speed) => (
+            <button
+              key={speed}
+              onClick={() => setGameSpeed(speed)}
+              className={`px-2.5 py-1 border transition-all shadow-sm rounded font-bold text-xs ${
+                gameSpeed === speed
+                  ? "bg-yellow-600/80 border-yellow-400 text-yellow-100"
+                  : "bg-blue-950/60 hover:bg-blue-900/60 border-blue-700 text-blue-300"
+              }`}
+            >
+              {speed}x
+            </button>
+          ))}
+        </div>
+        <div
+          className="flex items-center gap-1 border 
       border-amber-700 bg-gradient-to-br from-amber-950/70 to-stone-950/70
-       px-1 py-1 rounded-lg shadow-sm ml-3"
-      >
-        <button
-          onClick={() => {
-            if (gameSpeed === 0) {
-              setGameSpeed(1);
-            } else {
-              setGameSpeed(0);
-            }
-          }}
-          className="p-1.5 bg-amber-600/80 rounded-lg hover:bg-amber-600/60 border border-amber-700 shadow-md transition-colors"
+       px-1 py-1 rounded-lg shadow-sm sm:ml-3"
         >
-          {gameSpeed === 0 ? (
-            <Play size={16} className="text-white" />
-          ) : (
-            <Pause size={16} className="text-white" />
-          )}
-        </button>
-        <button
-          onClick={() => {
-            retryLevel();
-          }}
-          className="p-1.5 bg-green-700/80 hover:bg-green-600/80 rounded-lg border border-green-800 shadow-md transition-colors"
-        >
-          <RefreshCcw size={16} className="text-white" />
-        </button>
-        <button
-          onClick={() => {
-            quitLevel();
-          }}
-          className="p-1.5 bg-red-700/80 hover:bg-red-600/80 rounded-lg border border-red-800 shadow-md transition-colors"
-        >
-          <X size={16} className="text-white" />
-        </button>
+          <button
+            onClick={() => {
+              if (gameSpeed === 0) {
+                setGameSpeed(1);
+              } else {
+                setGameSpeed(0);
+              }
+            }}
+            className="p-1.5 bg-amber-600/80 rounded-lg hover:bg-amber-600/60 border border-amber-700 shadow-md transition-colors"
+          >
+            {gameSpeed === 0 ? (
+              <Play size={16} className="text-white" />
+            ) : (
+              <Pause size={16} className="text-white" />
+            )}
+          </button>
+          <button
+            onClick={() => {
+              retryLevel();
+            }}
+            className="p-1.5 bg-green-700/80 hover:bg-green-600/80 rounded-lg border border-green-800 shadow-md transition-colors"
+          >
+            <RefreshCcw size={16} className="text-white" />
+          </button>
+          <button
+            onClick={() => {
+              quitLevel();
+            }}
+            className="p-1.5 bg-red-700/80 hover:bg-red-600/80 rounded-lg border border-red-800 shadow-md transition-colors"
+          >
+            <X size={16} className="text-white" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -282,7 +292,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           </button>
         </div>
       </div>
-      <div className="bg-stone-900/90 text-amber-300 text-[8px] rounded-lg p-2 border border-stone-700 shadow-lg backdrop-blur-sm">
+      <div className="hidden sm:inline bg-stone-900/90 text-amber-300 text-[8px] rounded-lg p-2 border border-stone-700 shadow-lg backdrop-blur-sm">
         <div className="font-semibold tracking-wider mb-1 text-center">
           CONTROLS
         </div>
@@ -339,7 +349,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
 
   return (
     <div
-      className="bg-gradient-to-r from-amber-900/95 via-yellow-900/95 to-amber-900/95 px-3 py-2 flex items-center justify-between border-t border-amber-600 backdrop-blur-sm"
+      className="bg-gradient-to-r from-amber-900/95 via-yellow-900/95 to-amber-900/95 px-2 sm:px-3 py-2 flex items-center justify-between border-t border-amber-600 backdrop-blur-sm"
       style={{ zIndex: 100 }}
     >
       {/* Hero Section */}
@@ -354,14 +364,14 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         }}
       >
         {hero && (
-          <div className="flex h-full items-center gap-3">
+          <div className="flex h-full items-center gap-2 sm:gap-3">
             {hero.dead ? (
-              <div className="h-full bg-stone-900/80 animate-pulse pl-4 pr-8 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
+              <div className="h-full bg-stone-900/80 animate-pulse pl-3 sm:pl-4 pr-6 sm:pr-8 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
                 <div className="w-12 h-12 pt-0.5 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
                   <HeroSprite type={hero.type} size={40} />
                 </div>
                 <div className="flex flex-col">
-                  <div className="text-xs font-bold text-stone-400 uppercase tracking-wide flex items-center gap-1">
+                  <div className="text-xs font-bold text-stone-400 uppercase text-nowrap tracking-wide flex items-center gap-1">
                     <Shield size={12} /> {HERO_DATA[hero.type].name} - FALLEN
                   </div>
                   <div className="text-[10px] bg-red-800/30 rounded-lg px-1 mb-0.5 text-red-400 flex items-center mt-0.5">
@@ -412,14 +422,17 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     </div>
                     <div>
                       <div className="text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1">
-                        {HERO_DATA[hero.type].name} {HERO_DATA[hero.type].icon}
+                        {HERO_DATA[hero.type].name}{" "}
+                        <span className="hidden sm:inline">
+                          {HERO_DATA[hero.type].icon}
+                        </span>
                       </div>
                       <div className="text-[8px] text-left text-amber-500">
                         {hero.selected
                           ? "Click map to move hero"
                           : "Click hero to select"}
                       </div>
-                      <div className="flex gap-2 mt-0.5 text-[9px]">
+                      <div className="hidden sm:flex gap-2 mt-0.5 text-[9px]">
                         <span className="text-orange-400">
                           <Swords size={12} className="inline" />{" "}
                           {HERO_DATA[hero.type].damage} DMG
@@ -456,7 +469,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <button
                   onClick={useHeroAbility}
                   disabled={!hero.abilityReady}
-                  className={`px-3 py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${
+                  className={`px-3 mr-2 sm:mr-auto py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${
                     hero.abilityReady
                       ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
                       : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
@@ -467,11 +480,14 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       <span className="text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
                         {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
                       </span>
-                      <span className="flex flex-row gap-1 items-center text-[12px] text-amber-200 font-bold">
-                        <Zap size={18} className="text-yellow-300 mb-0.5" />
+                      <span className="flex flex-col sm:flex-row gap-1 items-center text-[12px] text-amber-200 font-bold">
+                        <Zap
+                          size={18}
+                          className="text-yellow-300 hidden sm:inline mb-0.5"
+                        />
                         {HERO_DATA[hero.type].ability}
                       </span>
-                      <div className="text-[7px] max-w-28 my-0.5">
+                      <div className="hidden sm:inline text-[7px] max-w-28 my-0.5">
                         {HERO_DATA[hero.type].abilityDesc}
                       </div>
                       <span className="font-extrabold mt-1 text-[10px] text-amber-300/80">
@@ -479,7 +495,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       </span>
                     </div>
                   ) : (
-                    <div className="flex flex-col h-full animate-pulse items-center justify-center px-4">
+                    <div className="flex flex-col h-full animate-pulse items-center justify-center sm:px-4">
                       <Timer size={18} className="text-stone-400 mb-0.5" />
                       <span className="text-[11px] text-stone-400">
                         {Math.ceil(hero.abilityCooldown / 1000)}s
@@ -504,8 +520,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       </button>
 
       {/* Spell Section */}
-      <div className="flex items-center h-full gap-2 relative bg-amber-950/70 px-3 py-2 border border-amber-700 rounded-lg shadow-md">
-        <span className="flex items-center flex-col text-[9px] text-amber-500 font-bold tracking-wider mr-1">
+      <div className="flex items-center h-full gap-2 relative bg-amber-950/70 px-2 sm:px-3 py-2 border border-amber-700 rounded-lg shadow-md">
+        <span className="hidden sm:flex items-center flex-col text-[9px] text-amber-500 font-bold tracking-wider mr-1">
           <ShellIcon size={12} className="inline mb-0.5" />
           SPELLS <Wind size={12} className="inline ml-0.5 rotate-90" />
         </span>
@@ -526,7 +542,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 disabled={!canCast}
                 onMouseEnter={() => setHoveredSpell(spell.type)}
                 onMouseLeave={() => setHoveredSpell(null)}
-                className={`relative px-2.5 py-2 transition-all border shadow-md rounded-lg overflow-hidden ${
+                className={`relative px-1 sm:px-2.5 py-2 transition-all border shadow-md rounded-lg overflow-hidden ${
                   canCast
                     ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
                     : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
@@ -632,11 +648,11 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
   return (
     <div
-      className="bg-gradient-to-br from-amber-900/95 to-amber-950/95 px-3 py-2 border-t-2 border-amber-600 shadow-xl overflow-x-auto backdrop-blur-sm"
+      className="bg-gradient-to-br from-amber-900/95 to-amber-950/95 px-2 sm:px-3 py-2 border-t-2 border-amber-600 shadow-xl overflow-x-auto backdrop-blur-sm"
       style={{ zIndex: 100 }}
     >
       <div className="flex items-center gap-2 min-w-max">
-        <h3 className="text-[10px] font-bold text-amber-300 tracking-wider flex flex-col justify-center gap-1 whitespace-nowrap px-1">
+        <h3 className="text-[10px] font-bold text-amber-300 tracking-wider hidden sm:flex flex-col justify-center gap-1 whitespace-nowrap px-1">
           <div className="flex items-center gap-1">
             <Construction size={14} /> <div>BUILD TOWERS</div>
           </div>
