@@ -3279,11 +3279,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <div className="bg-gradient-to-br from-amber-950/95 to-stone-900/98 rounded-xl border border-amber-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield size={14} className="text-amber-400" />
-                    <span className="text-xs font-bold text-amber-300 tracking-wide">
+                    <span className="text-xs text-nowrap font-bold text-amber-300 tracking-wide">
                       SELECT CHAMPION
                     </span>
                   </div>
-                  <div className="flex gap-1.5 mb-2 w-full">
+                  <div className="grid-cols-4 grid sm:flex gap-1.5 mb-2 w-full">
                     {heroOptions.map((heroType) => {
                       const hero = HERO_DATA[heroType];
                       const isSelected = selectedHero === heroType;
@@ -3293,7 +3293,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           onClick={() => setSelectedHero(heroType)}
                           onMouseEnter={() => setHoveredHero(heroType)}
                           onMouseLeave={() => setHoveredHero(null)}
-                          className={`relative pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${
+                          className={`relative px-4s sm:px-1 pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${
                             isSelected
                               ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
                               : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
@@ -3314,7 +3314,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     })}
                   </div>
                   {selectedHero ? (
-                    <div className="bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
+                    <div className="hidden sm:block bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-bold text-amber-200">
                           {HERO_DATA[selectedHero].name}
@@ -3429,7 +3429,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     <div className="flex items-center gap-2">
                       <Zap size={14} className="text-purple-400" />
                       <span className="text-xs font-bold text-amber-300 tracking-wide">
-                        SELECT SPELLS
+                        <span className="hidden sm:inline">SELECT</span> SPELLS
                       </span>
                     </div>
                     <span
@@ -3439,10 +3439,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
                       }`}
                     >
-                      {selectedSpells.length}/3 Selected
+                      {selectedSpells.length}/3{" "}
+                      <span className="hidden sm:inline">Selected</span>
                     </span>
                   </div>
-                  <div className="flex gap-1.5 mb-2">
+                  <div className="grid grid-cols-3 sm:flex gap-1.5 mb-2">
                     {spellOptions.map((spellType) => {
                       const isSelected = selectedSpells.includes(spellType);
                       const canSelect = isSelected || selectedSpells.length < 3;
@@ -3473,7 +3474,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     })}
                   </div>
                   {selectedSpells.length > 0 ? (
-                    <div className="bg-stone-900/60 rounded-lg w-full p-2 border border-purple-800/40">
+                    <div className="hidden sm:block bg-stone-900/60 rounded-lg w-full p-2 border border-purple-800/40">
                       <div className="flex flex-wrap gap-1.5">
                         {selectedSpells.map((sp, i) => {
                           const spell = SPELL_DATA[sp];
@@ -3507,14 +3508,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         })}
                       </div>
                       {selectedSpells.length < 3 && (
-                        <div className="text-[8px] text-purple-500/60 mt-1">
+                        <div className="hidden sm:inline text-[8px] text-purple-500/60 mt-1">
                           Select {3 - selectedSpells.length} more spell
                           {3 - selectedSpells.length > 1 ? "s" : ""}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-purple-600/60 text-[10px] text-center py-2">
+                    <div className="hidden sm:inline text-purple-600/60 text-[10px] text-center py-2">
                       ← Select 3 spells for battle
                     </div>
                   )}
