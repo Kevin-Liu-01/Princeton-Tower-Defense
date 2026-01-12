@@ -948,80 +948,6 @@ function drawMechanicalTowerBase(
   const w = width * zoom * 0.5;
   const d = width * zoom * 0.25;
 
-  // ========== ROTATING GEARS ==========
-  const gearRotation = time * 1.5;
-
-  // Large gear on left side (visible on front face)
-  drawGear(
-    ctx,
-    x - w * 0.6,
-    y - height * zoom * 0.5,
-    12 + level * 2,
-    8 + level,
-    8 + level * 2,
-    gearRotation,
-    {
-      outer: "#4a4a52",
-      inner: "#3a3a42",
-      teeth: "#5a5a62",
-      highlight: colors.accent,
-    },
-    zoom
-  );
-
-  // Smaller gear meshing with large gear (counter-rotation)
-  drawGear(
-    ctx,
-    x - w * 0.35,
-    y - height * zoom * 0.65,
-    8 + level,
-    5 + level * 0.5,
-    6 + level,
-    -gearRotation * 1.5,
-    {
-      outer: "#5a5a62",
-      inner: "#4a4a52",
-      teeth: "#6a6a72",
-      highlight: colors.accent,
-    },
-    zoom
-  );
-
-  // Gear on right side
-  if (level >= 2) {
-    drawGear(
-      ctx,
-      x + w * 0.55,
-      y - height * zoom * 0.45,
-      10 + level,
-      7,
-      8 + level,
-      gearRotation * 0.8,
-      {
-        outer: "#4a4a52",
-        inner: "#3a3a42",
-        teeth: "#5a5a62",
-        highlight: colors.accent,
-      },
-      zoom
-    );
-  }
-
-  // ========== CONVEYOR BELT WITH AMMO ==========
-  if (level >= 2) {
-    drawConveyorBelt(
-      ctx,
-      x - w * 0.8,
-      y + 6 * zoom,
-      x + w * 0.2,
-      y - height * zoom * 0.2,
-      4,
-      time,
-      zoom,
-      "#8b4513" // Brass ammo color
-    );
-  }
-
   // ========== STEAM VENTS ==========
   // Left side steam vent
   drawSteamVent(
@@ -1061,7 +987,7 @@ function drawMechanicalTowerBase(
   if (level >= 3) {
     drawEnergyTube(
       ctx,
-      x + w * 0.3,
+      x + w * 0.45,
       y - 4 * zoom,
       x + w * 0.45,
       y - height * zoom * 0.55,
@@ -1081,7 +1007,7 @@ function drawMechanicalTowerBase(
     const lineY = y + 4 * zoom - ((height - 8) * zoom * i) / (level + 1);
     ctx.beginPath();
     ctx.moveTo(x - w * 0.15, lineY + d * 0.3);
-    ctx.lineTo(x - w * 0.85, lineY - d * 0.3);
+    ctx.lineTo(x - w * 0.85, lineY - d * 0.4);
     ctx.stroke();
   }
 
@@ -1090,7 +1016,7 @@ function drawMechanicalTowerBase(
     const lineY = y + 4 * zoom - ((height - 8) * zoom * i) / (level + 1);
     ctx.beginPath();
     ctx.moveTo(x + w * 0.85, lineY - d * 0.3);
-    ctx.lineTo(x + w * 0.15, lineY + d * 0.3);
+    ctx.lineTo(x + w * 0.15, lineY + d * 0.4);
     ctx.stroke();
   }
 
@@ -1102,11 +1028,11 @@ function drawMechanicalTowerBase(
 
   // Left face vents
   for (let i = 0; i < Math.min(level, 3); i++) {
-    const ventY = y - height * zoom * 0.3 - i * 14 * zoom;
+    const ventY = y - height * zoom * 0.3 - i * 12 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      x - w * 0.55,
-      ventY + d * 0.2,
+      x + w * 0.55,
+      ventY + d * 1.4,
       3 * zoom,
       2 * zoom,
       -0.4,
@@ -1118,11 +1044,11 @@ function drawMechanicalTowerBase(
 
   // Right face vents
   for (let i = 0; i < Math.min(level, 3); i++) {
-    const ventY = y - height * zoom * 0.3 - i * 14 * zoom;
+    const ventY = y - height * zoom * 0.3 - i * 12 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      x + w * 0.55,
-      ventY + d * 0.2,
+      x - w * 0.55,
+      ventY + d * 1.4,
       3 * zoom,
       2 * zoom,
       0.4,
@@ -1132,6 +1058,80 @@ function drawMechanicalTowerBase(
     ctx.fill();
   }
   ctx.shadowBlur = 0;
+
+  // ========== ROTATING GEARS ==========
+  const gearRotation = 1.25;
+
+  // Large gear on left side (visible on front face)
+  drawGear(
+    ctx,
+    x - w * 0.7,
+    y - height * zoom * 0.5,
+    12 + level * 2,
+    8 + level,
+    8 + level * 2,
+    gearRotation,
+    {
+      outer: "#4a4a52",
+      inner: "#3a3a42",
+      teeth: "#5a5a62",
+      highlight: colors.accent,
+    },
+    zoom
+  );
+
+  // Smaller gear meshing with large gear (counter-rotation)
+  drawGear(
+    ctx,
+    x - w * 0.2,
+    y - height * zoom * 0.65,
+    8 + level,
+    5 + level * 0.5,
+    6 + level,
+    gearRotation,
+    {
+      outer: "#5a5a62",
+      inner: "#4a4a52",
+      teeth: "#6a6a72",
+      highlight: colors.accent,
+    },
+    zoom
+  );
+
+  // Gear on right side
+  if (level >= 2) {
+    drawGear(
+      ctx,
+      x + w * 0.55,
+      y - height * zoom * 0.55,
+      10 + level,
+      7,
+      8 + level,
+      -gearRotation,
+      {
+        outer: "#4a4a52",
+        inner: "#3a3a42",
+        teeth: "#5a5a62",
+        highlight: colors.accent,
+      },
+      zoom
+    );
+  }
+
+  // ========== CONVEYOR BELT WITH AMMO ==========
+  if (level >= 2) {
+    drawConveyorBelt(
+      ctx,
+      x - w * 0.5,
+      y + 6 * zoom,
+      x - w * 0.5,
+      y - height * zoom * 1.1,
+      6,
+      time,
+      zoom,
+      "#8b4513" // Brass ammo color
+    );
+  }
 
   // ========== WARNING LIGHTS ==========
   drawWarningLight(
@@ -1161,11 +1161,11 @@ function drawMechanicalTowerBase(
   if (level >= 2) {
     drawAmmoBox(
       ctx,
-      x + w * 0.75,
-      y + 8 * zoom,
-      8,
+      x - w * 0.5,
+      y + 5 * zoom,
+      12,
       6,
-      6,
+      12,
       { main: "#5a4a3a", accent: "#ff6600", label: "#c9a227" },
       zoom,
       time * 2
@@ -1174,11 +1174,11 @@ function drawMechanicalTowerBase(
   if (level >= 3) {
     drawAmmoBox(
       ctx,
-      x + w * 0.55,
-      y + 10 * zoom,
-      7,
+      x - w * 0.5,
+      y + 2 * zoom,
+      14,
       5,
-      5,
+      10,
       { main: "#4a3a2a", accent: "#ffaa00", label: "#c9a227" },
       zoom,
       time * 2 + 1
@@ -1611,9 +1611,9 @@ function drawCannonBarrel(
   ctx.fillStyle = "#1a1a1a";
   ctx.beginPath();
   ctx.ellipse(
-    endX + cosR * 2 * zoom,
+    endX + cosR * 1.35 * zoom,
     endY + sinR * 1 * zoom,
-    barrelWidth * 0.2 * foreshorten + barrelWidth * 0.1,
+    barrelWidth * 0.2 * foreshorten,
     barrelWidth * 0.15,
     rotation,
     0,
@@ -2866,6 +2866,30 @@ function renderFlamethrower(
     topY - 4 * zoom,
     18 * zoom,
     9 * zoom,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Rotating gear teeth around base (shows rotation)
+  ctx.fillStyle = "#5a5a62";
+  for (let i = 0; i < 16; i++) {
+    const toothAngle = rotation + (i / 16) * Math.PI * 2;
+    const toothX = screenPos.x + Math.cos(toothAngle) * 21 * zoom;
+    const toothY = topY - 2 * zoom + Math.sin(toothAngle) * 10.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(toothX, toothY, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "#3a3a42";
+  ctx.beginPath();
+  ctx.ellipse(
+    screenPos.x,
+    topY - 4 * zoom,
+    20 * zoom,
+    10 * zoom,
     0,
     0,
     Math.PI * 2
