@@ -122,6 +122,7 @@ import {
   TowerUpgradePanel,
   Tooltip,
   PlacingTroopIndicator,
+  SpecialBuildingTooltip,
 } from "./components/ui/GameUI";
 // Hooks
 import { useGameProgress } from "./useLocalStorage";
@@ -181,6 +182,9 @@ export default function PrincetonTowerDefense() {
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const [effects, setEffects] = useState<Effect[]>([]);
   const [particles, setParticles] = useState<Particle[]>([]);
+  // Special Objectives State
+  const [specialTowerHp, setSpecialTowerHp] = useState<number | null>(null);
+  const [vaultFlash, setVaultFlash] = useState(0);
   // UI state
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [hoveredTower, setHoveredTower] = useState<string | null>(null);
@@ -195,6 +199,7 @@ export default function PrincetonTowerDefense() {
   );
   const [placingTroop, setPlacingTroop] = useState(false);
   const [gameSpeed, setGameSpeed] = useState(1);
+  const [hoveredSpecial, setHoveredSpecial] = useState<boolean>(false);
   // Camera - start more zoomed in and centered
   const [cameraOffset, setCameraOffset] = useState<Position>({
     x: -40,
@@ -320,9 +325,14 @@ export default function PrincetonTowerDefense() {
       setPlacingTroop(false);
       setSpells([]);
       setGameSpeed(1);
+      const levelData = LEVEL_DATA[selectedMap];
+      if (levelData?.specialTower?.hp) {
+        setSpecialTowerHp(levelData.specialTower.hp);
+      } else {
+        setSpecialTowerHp(null);
+      }
     }
-  }, [gameState, clearAllTimers]);
-  // Initialize hero and spells when game starts
+  }, [gameState, clearAllTimers, selectedMap]); // Initialize hero and spells when game starts
   useEffect(() => {
     if (gameState === "playing" && selectedHero && !hero) {
       const heroData = HERO_DATA[selectedHero];
@@ -503,10 +513,19 @@ export default function PrincetonTowerDefense() {
     activeTimeoutsRef.current.push(waveOverTimeout);
   }, [waveInProgress, currentWave, selectedMap]);
   // Update game function
+  // Update game function
   const updateGame = useCallback(
     (deltaTime: number) => {
       const now = Date.now();
       const levelWaves = getLevelWaves(selectedMap);
+      const mapData = LEVEL_DATA[selectedMap];
+      const spec = mapData?.specialTower;
+      const specWorldPos = spec ? gridToWorld(spec.pos) : null;
+
+      // =========================================================================
+      // 1. GLOBAL HERO DEATH GUARD
+      // =========================================================================
+
       // Wave timer
       if (!waveInProgress && currentWave < levelWaves.length) {
         setNextWaveTimer((prev) => {
@@ -518,6 +537,379 @@ export default function PrincetonTowerDefense() {
           return newTimer;
         });
       }
+
+      // Reset dynamic tower flags and handle F. Scott buff cleanup
+      setTowers((prev) =>
+        prev.map((t) => {
+          const isBuffActive = t.boostEnd ? now < t.boostEnd : false;
+          return {
+            ...t,
+            rangeBoost: 1.0,
+            isBuffed: isBuffActive,
+            damageBoost: isBuffActive ? t.damageBoost : 1.0,
+          };
+        })
+      );
+
+      // =========================================================================
+      // HAZARD LOGIC
+      // =========================================================================
+      if (LEVEL_DATA[selectedMap]?.hazards) {
+        enemies.forEach((enemy) => {
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+          let environmentalSlow = 0;
+          let environmentalSpeed = 1;
+
+          LEVEL_DATA[selectedMap].hazards!.forEach((hazard) => {
+            const hazWorldPos = gridToWorld(hazard.pos);
+            const dist = distance(enemyPos, hazWorldPos);
+            const rad = hazard.radius * TILE_SIZE;
+
+            if (dist < rad) {
+              switch (hazard.type) {
+                case "poison_fog":
+                  // DoT logic
+                  const damage = (15 * deltaTime) / 1000;
+                  setEnemies((prev) =>
+                    prev.map((e) =>
+                      e.id === enemy.id
+                        ? {
+                            ...e,
+                            hp: Math.max(0, e.hp - damage),
+                            damageFlash: 200,
+                          }
+                        : e
+                    )
+                  );
+                  // Visual effect
+                  addParticles(hazWorldPos, "magic", 5);
+                  break;
+                case "quicksand":
+                  environmentalSlow = Math.max(environmentalSlow, 0.5);
+                  addParticles(hazWorldPos, "smoke", 5);
+
+                  break;
+                case "ice_sheet":
+                  environmentalSpeed = 1.6; // Enemies slide faster
+                  addParticles(hazWorldPos, "ice", 5);
+
+                  break;
+                case "lava_geyser":
+                  // Random burst damage
+                  if (Math.random() < 0.095) {
+                    // handle overkill properly
+                    const lavaDamage = 5;
+                    setEnemies((prev) =>
+                      prev.map((e) => {
+                        if (e.id === enemy.id) {
+                          const newHp = e.hp - lavaDamage;
+                          return {
+                            ...e,
+                            hp: newHp < 0 ? 0 : newHp,
+                            damageFlash: 200,
+                            dead: newHp <= 0,
+                          };
+                        }
+                        return e;
+                      })
+                    );
+
+                    addParticles(enemyPos, "fire", 10);
+                  }
+                  break;
+              }
+            }
+          });
+
+          // Apply modifiers to enemy
+          setEnemies((prev) =>
+            prev.map((e) => {
+              if (e.id === enemy.id) {
+                return {
+                  ...e,
+                  slowEffect: Math.max(e.slowEffect, environmentalSlow),
+                  speed: ENEMY_DATA[e.type].speed * environmentalSpeed,
+                };
+              }
+              return e;
+            })
+          );
+        });
+      }
+
+      // =========================================================================
+      // SPECIAL TOWER LOGIC
+      // =========================================================================
+      if (LEVEL_DATA[selectedMap]?.specialTower) {
+        const spec = LEVEL_DATA[selectedMap].specialTower;
+        const specWorldPos = gridToWorld(spec.pos);
+
+        // A. BEACON: Continuous Range Buff
+        if (spec.type === "beacon") {
+          setTowers((prev) =>
+            prev.map((t) => {
+              if (distance(gridToWorld(t.pos), specWorldPos) < 250) {
+                return { ...t, rangeBoost: 1.2, isBuffed: true };
+              }
+              return t;
+            })
+          );
+        }
+
+        // B. SHRINE: Periodic HP Pulse for Hero and Troops
+        if (spec.type === "shrine" && now % 5000 < deltaTime) {
+          const healRadius = 200;
+          const healAmount = 50;
+
+          // Heal Hero
+          if (
+            hero &&
+            !hero.dead &&
+            distance(hero.pos, specWorldPos) < healRadius
+          ) {
+            setHero((prev) =>
+              prev
+                ? { ...prev, hp: Math.min(prev.maxHp, prev.hp + healAmount) }
+                : null
+            );
+            addParticles(hero.pos, "magic", 10);
+          }
+          // Heal Troops
+          setTroops((prev) =>
+            prev.map((t) => {
+              if (distance(t.pos, specWorldPos) < healRadius) {
+                return { ...t, hp: Math.min(t.maxHp, t.hp + healAmount) };
+              }
+              return t;
+            })
+          );
+          // Visual pulse effect
+          setEffects((ef) => [
+            ...ef,
+            {
+              id: generateId("shrine"),
+              pos: specWorldPos,
+              type: "arcaneField",
+              progress: 0,
+              size: healRadius,
+            },
+          ]);
+        }
+
+        // C. BARRACKS: Capped & Spread Deployment
+        const isSpawnTick =
+          Math.floor(now / 12000) > Math.floor((now - deltaTime) / 12000);
+        if (spec.type === "barracks" && isSpawnTick) {
+          const barracksTroops = troops.filter(
+            (t) => t.ownerId === "special_barracks"
+          );
+
+          if (barracksTroops.length < 3) {
+            const slot = barracksTroops.length;
+            const offsets = getFormationOffsets(3);
+
+            // 1. Find the Anchor Point (closest point on the path to the barracks)
+            const path = MAP_PATHS[selectedMap];
+            const secondaryPath = MAP_PATHS[`${selectedMap}_b`] || null;
+            const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
+
+            let closestDist = Infinity;
+            let pathAnchor: Position = specWorldPos;
+            for (let i = 0; i < fullPath.length - 1; i++) {
+              const p1 = gridToWorldPath(fullPath[i]);
+              const p2 = gridToWorldPath(fullPath[i + 1]);
+              const candidate = closestPointOnLine(specWorldPos, p1, p2);
+              const dist = distance(specWorldPos, candidate);
+              if (dist < closestDist) {
+                closestDist = dist;
+                pathAnchor = candidate;
+              }
+            }
+
+            // 2. Calculate specific target within formation on the path
+            const targetPos = {
+              x: pathAnchor.x + offsets[slot].x,
+              y: pathAnchor.y + offsets[slot].y,
+            };
+
+            const newTroop: Troop = {
+              id: generateId("barracks_unit"),
+              ownerId: "special_barracks",
+              type: "knight",
+              pos: { ...specWorldPos }, // START at building center
+              hp: TROOP_DATA.knight.hp,
+              maxHp: TROOP_DATA.knight.hp,
+              moving: true, // Movement engine will walk them to the path
+              targetPos: targetPos,
+              userTargetPos: targetPos,
+              lastAttack: 0,
+              rotation: Math.atan2(
+                targetPos.y - specWorldPos.y,
+                targetPos.x - specWorldPos.x
+              ),
+              attackAnim: 0,
+              selected: false,
+              spawnPoint: pathAnchor, // Anchor move radius to the path spot
+              moveRadius: 150,
+              spawnSlot: slot,
+            };
+            setTroops((prev) => [...prev, newTroop]);
+            addParticles(specWorldPos, "smoke", 12);
+          }
+        }
+
+        // D. VAULT: Immobile Troop Logic (Targetable by Enemies)
+        if (spec.type === "vault" && specialTowerHp !== null) {
+          // Enemies find the vault as a combat target
+          enemies.forEach((e) => {
+            const ePos = getEnemyPosWithPath(e, selectedMap);
+            if (distance(ePos, specWorldPos) < 60) {
+              // Enemy stops to "attack" the vault
+              if (now - (e.lastTroopAttack || 0) > 1000) {
+                const dmg = 20;
+                setSpecialTowerHp((prev) => {
+                  const newVal = prev! - dmg;
+                  if (newVal <= 0) {
+                    setLives(() => Math.max(0, lives - 5));
+                    addParticles(specWorldPos, "explosion", 40);
+                    return 0;
+                  }
+                  return newVal;
+                });
+                setEnemies((prev) =>
+                  prev.map((en) =>
+                    en.id === e.id
+                      ? { ...en, inCombat: true, lastTroopAttack: now }
+                      : en
+                  )
+                );
+              }
+            }
+          });
+          // If HP hit 0, objective failed
+          if (specialTowerHp <= 0) setSpecialTowerHp(null);
+        }
+      }
+
+      // =========================================================================
+      // ENEMY AI: VAULT TARGETING & COMBAT
+      // =========================================================================
+      if (vaultFlash > 0) setVaultFlash((v) => Math.max(0, v - deltaTime));
+
+      setEnemies((prev) =>
+        prev
+          .map((enemy) => {
+            if (enemy.frozen || now < enemy.stunUntil) return enemy;
+            const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+
+            // 1. Check for Vault Targeting (High Priority)
+            if (
+              spec?.type === "vault" &&
+              specialTowerHp !== null &&
+              specWorldPos
+            ) {
+              if (distance(enemyPos, specWorldPos) < 70) {
+                if (now - (enemy.lastTroopAttack || 0) > 1000) {
+                  setSpecialTowerHp((prev) => {
+                    const newVal = Math.max(0, prev! - 25);
+                    if (newVal <= 0) {
+                      setLives((l) => Math.max(0, l - 5));
+                      addParticles(specWorldPos, "explosion", 40);
+                      return 0;
+                    }
+                    return newVal;
+                  });
+                  setVaultFlash(150);
+                  addParticles(specWorldPos, "smoke", 3);
+                  return {
+                    ...enemy,
+                    inCombat: true,
+                    combatTarget: "vault_objective",
+                    lastTroopAttack: now,
+                  };
+                }
+                return {
+                  ...enemy,
+                  inCombat: true,
+                  combatTarget: "vault_objective",
+                };
+              }
+            }
+            // Hero Combat Check
+            const nearbyHero =
+              hero &&
+              !hero.dead &&
+              distance(enemyPos, hero.pos) < 60 &&
+              !ENEMY_DATA[enemy.type].flying
+                ? hero
+                : null;
+            if (nearbyHero) {
+              if (now - enemy.lastHeroAttack > 1000) {
+                setHero((h) =>
+                  h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
+                );
+                return {
+                  ...enemy,
+                  inCombat: true,
+                  combatTarget: nearbyHero.id,
+                  lastHeroAttack: now,
+                };
+              }
+              return { ...enemy, inCombat: true, combatTarget: nearbyHero.id };
+            }
+
+            // Troop Combat Check
+            const nearbyTroop = troops.find(
+              (t) =>
+                distance(enemyPos, t.pos) < 60 && !ENEMY_DATA[enemy.type].flying
+            );
+            if (nearbyTroop) {
+              return { ...enemy, inCombat: true, combatTarget: nearbyTroop.id };
+            }
+
+            // Movement logic
+            if (!enemy.inCombat) {
+              const pathKey = enemy.pathKey || selectedMap;
+              const path = MAP_PATHS[pathKey];
+              const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
+              const newProgress =
+                enemy.progress + (enemy.speed * speedMult * deltaTime) / 1000;
+              if (newProgress >= 1 && enemy.pathIndex < path.length - 1) {
+                return {
+                  ...enemy,
+                  pathIndex: enemy.pathIndex + 1,
+                  progress: 0,
+                };
+              } else if (newProgress >= 1) {
+                setLives((l) => l - 1);
+                return null as any;
+              } else {
+                return { ...enemy, progress: newProgress };
+              }
+            }
+            return { ...enemy, inCombat: false };
+          })
+          .filter(Boolean)
+      );
+
+      // Hero death check
+      if (hero && !hero.dead && hero.hp <= 0) {
+        setHero((prev) =>
+          prev
+            ? {
+                ...prev,
+                hp: 0,
+                dead: true,
+                respawnTimer: HERO_RESPAWN_TIME,
+                selected: false,
+                moving: false,
+              }
+            : null
+        );
+        addParticles(hero.pos, "explosion", 20);
+        addParticles(hero.pos, "smoke", 10);
+      }
+
       // Hero respawn timer
       if (hero && hero.dead && hero.respawnTimer > 0) {
         setHero((prev) => {
@@ -6392,6 +6784,7 @@ export default function PrincetonTowerDefense() {
       }
       ctx.restore();
     }
+
     // Collect renderables
     const renderables: Renderable[] = [];
     towers.forEach((tower) => {
@@ -6500,6 +6893,1274 @@ export default function PrincetonTowerDefense() {
       });
     }
     renderables.sort((a, b) => a.isoY - b.isoY);
+
+    // =========================================================================
+    // EPIC ISOMETRIC BUFF AURA (Layered magical seal)
+    // =========================================================================
+    towers.forEach((t) => {
+      const isBuffed = t.isBuffed || (t.damageBoost && t.damageBoost > 1);
+      if (!isBuffed) return;
+
+      const time = Date.now() / 1000;
+      const sPos = toScreen(gridToWorld(t.pos));
+      const s = cameraZoom;
+
+      // Calculate dynamic pulse
+      const pulse = Math.sin(time * 4) * 0.05;
+      const opacity = 0.5 + Math.sin(time * 2) * 0.2;
+
+      ctx.save();
+      ctx.translate(sPos.x, sPos.y);
+
+      // IMPORTANT: Squish everything into isometric perspective (2:1 ratio)
+      ctx.scale(1, 0.5);
+
+      // --- 1. Soft Core Glow (No rotation) ---
+      const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 40 * s);
+      innerGlow.addColorStop(0, `rgba(0, 229, 255, ${0.4 * opacity})`);
+      innerGlow.addColorStop(1, "rgba(0, 229, 255, 0)");
+      ctx.fillStyle = innerGlow;
+      ctx.beginPath();
+      ctx.arc(0, 0, 45 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // --- 2. Outer Orbiting Ring (Counter-Clockwise) ---
+      ctx.save();
+      ctx.rotate(-time * 0.5);
+      ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 * opacity})`;
+      ctx.lineWidth = 2 * s;
+      ctx.setLineDash([15 * s, 10 * s]); // Etched segments
+      ctx.beginPath();
+      ctx.arc(0, 0, 40 * s * (1 + pulse), 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Add small dots on the outer ring
+      for (let i = 0; i < 4; i++) {
+        ctx.rotate(Math.PI / 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.beginPath();
+        ctx.arc(40 * s * (1 + pulse), 0, 2 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // --- 3. The Main Runic Seal (Overlapping Triangles) ---
+      ctx.save();
+      ctx.rotate(time * 0.8); // Fast clockwise rotation
+
+      const drawTriangle = (size: number, color: string) => {
+        ctx.beginPath();
+        for (let i = 0; i < 3; i++) {
+          const angle = (i * Math.PI * 2) / 3;
+          const x = Math.cos(angle) * size;
+          const y = Math.sin(angle) * size;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = color;
+        ctx.stroke();
+      };
+
+      ctx.lineWidth = 1.5 * s;
+      // Double triangle (Star of David style)
+      drawTriangle(28 * s, `rgba(128, 222, 234, ${0.8 * opacity})`);
+      ctx.rotate(Math.PI);
+      drawTriangle(28 * s, `rgba(128, 222, 234, ${0.8 * opacity})`);
+
+      // Fill the center of the hexagram
+      ctx.fillStyle = "rgba(0, 229, 255, 0.05)";
+      ctx.fill();
+      ctx.restore();
+
+      // --- 4. Inner Orbitals (Floating Particles) ---
+      ctx.save();
+      ctx.rotate(time * 1.5);
+      for (let i = 0; i < 3; i++) {
+        ctx.rotate((Math.PI * 2) / 3);
+        const orbitDist = 18 * s + Math.sin(time * 3 + i) * 5 * s;
+        ctx.fillStyle = "#E0F7FA";
+        ctx.shadowBlur = 10 * s;
+        ctx.shadowColor = "#00E5FF";
+        ctx.beginPath();
+        ctx.arc(orbitDist, 0, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.restore();
+    });
+
+    // =========================================================================
+    // SPECIAL BUILDING RANGE RINGS (On Hover)
+    // =========================================================================
+    if (hoveredSpecial && LEVEL_DATA[selectedMap]?.specialTower) {
+      const time = Date.now() / 1000;
+      const spec = LEVEL_DATA[selectedMap].specialTower;
+      const sPos = toScreen(gridToWorld(spec.pos));
+      const range =
+        spec.type === "beacon" ? 150 : spec.type === "shrine" ? 200 : 0;
+
+      if (range > 0) {
+        ctx.save();
+        ctx.translate(sPos.x, sPos.y);
+        ctx.scale(1, 0.5); // Perspective lock
+
+        // Animated spinning ring
+        ctx.rotate(time * 0.5);
+        ctx.strokeStyle =
+          spec.type === "beacon"
+            ? "rgba(0, 229, 255, 0.5)"
+            : "rgba(118, 255, 3, 0.5)";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([10 * cameraZoom, 10 * cameraZoom]);
+        ctx.beginPath();
+        ctx.arc(0, 0, range * cameraZoom, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner soft fill
+        ctx.fillStyle =
+          spec.type === "beacon"
+            ? "rgba(0, 229, 255, 0.05)"
+            : "rgba(118, 255, 3, 0.05)";
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // =========================================================================
+    // MASSIVELY IMPROVED EPIC HAZARD SPRITES
+    // =========================================================================
+    if (LEVEL_DATA[selectedMap].hazards) {
+      LEVEL_DATA[selectedMap].hazards.forEach((haz) => {
+        const sPos = toScreen(gridToWorld(haz.pos));
+        const sRad = haz.radius * TILE_SIZE * cameraZoom;
+        const time = Date.now() / 1000;
+
+        ctx.save();
+        ctx.translate(sPos.x, sPos.y);
+
+        if (haz.type === "poison_fog") {
+          // 1. Ground Stain (Corroded grass)
+          const stainGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad);
+          stainGrad.addColorStop(0, "rgba(46, 125, 50, 0.3)");
+          stainGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = stainGrad;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad, sRad * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Multi-layered Swirling Toxic Clouds
+          for (let i = 0; i < 8; i++) {
+            ctx.save();
+            const rotSpeed = time * (0.15 + i * 0.05);
+            ctx.rotate(rotSpeed + i);
+            const driftX = Math.sin(time + i) * 15 * cameraZoom;
+            const cloudScale = 0.7 + Math.sin(time * 0.5 + i) * 0.3;
+
+            const fogGrad = ctx.createRadialGradient(
+              driftX,
+              0,
+              0,
+              driftX,
+              0,
+              sRad * cloudScale
+            );
+            fogGrad.addColorStop(0, `rgba(170, 0, 255, ${0.15 + i * 0.02})`); // Purple
+            fogGrad.addColorStop(0.5, "rgba(0, 230, 118, 0.05)"); // Toxic Green edge
+            fogGrad.addColorStop(1, "transparent");
+
+            ctx.fillStyle = fogGrad;
+            ctx.beginPath();
+            ctx.ellipse(
+              driftX,
+              0,
+              sRad * cloudScale,
+              sRad * 0.5 * cloudScale,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            ctx.restore();
+          }
+
+          // 3. Spore Particles (Rising and fading)
+          for (let j = 0; j < 6; j++) {
+            const seed = (time + j * 1.5) % 3;
+            const px = Math.sin(j * 123.4) * sRad * 0.6;
+            const py = -seed * 40 * cameraZoom;
+            const pSize = (1 - seed / 3) * 4 * cameraZoom;
+            ctx.fillStyle = `rgba(185, 246, 202, ${1 - seed / 3})`;
+            ctx.beginPath();
+            ctx.arc(px, py, pSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (haz.type === "lava_geyser" || haz.type === "eruption_zone") {
+          const isErupting = time % 4 < 0.8; // Erupts every 4 seconds
+          const buildUp = time % 4 > 3.2; // Glows before eruption
+
+          // 1. Rock Vent (Obsidian)
+          ctx.fillStyle = "#121212";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad * 0.6, sRad * 0.3, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#333";
+          ctx.lineWidth = 2 * cameraZoom;
+          ctx.stroke();
+
+          // 2. Internal Magma Glow
+          const lavaGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.5);
+          lavaGlow.addColorStop(0, buildUp || isErupting ? "#FFF" : "#FFEB3B");
+          lavaGlow.addColorStop(0.4, "#FF9100");
+          lavaGlow.addColorStop(1, "transparent");
+
+          ctx.save();
+          if (buildUp) ctx.shadowBlur = 20 * cameraZoom;
+          ctx.shadowColor = "#FF3D00";
+          ctx.fillStyle = lavaGlow;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad * 0.5, sRad * 0.25, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // 3. Column of Fire (Activation Effect)
+          if (isErupting) {
+            const h = Math.sin(((time % 4) / 0.8) * Math.PI) * 180 * cameraZoom;
+            const beamGrad = ctx.createLinearGradient(0, 0, 0, -h);
+            beamGrad.addColorStop(0, "#FFD740");
+            beamGrad.addColorStop(0.5, "#FF3D00");
+            beamGrad.addColorStop(1, "transparent");
+
+            ctx.fillStyle = beamGrad;
+            ctx.beginPath();
+            ctx.moveTo(-10 * cameraZoom, 0);
+            ctx.quadraticCurveTo(0, -h * 1.1, 10 * cameraZoom, 0);
+            ctx.fill();
+
+            // Fire Splashes
+            for (let f = 0; f < 8; f++) {
+              const ang = (f * Math.PI) / 4;
+              const fx = Math.cos(ang) * sRad * 0.8 * (time % 4);
+              const fy = Math.sin(ang) * sRad * 0.4 * (time % 4);
+              ctx.fillStyle = "#FF6D00";
+              ctx.beginPath();
+              ctx.arc(fx, fy, 3 * cameraZoom, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        if (haz.type === "ice_sheet" || haz.type === "slippery_ice") {
+          // 1. Frosted Ground
+          ctx.fillStyle = "rgba(225, 245, 254, 0.4)";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad, sRad * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Crystal Refractions (Faceted look)
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.lineWidth = 1.5 * cameraZoom;
+          for (let i = 0; i < 4; i++) {
+            const angleOffset = (i * Math.PI) / 2.5 + time * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(
+              Math.cos(angleOffset) * sRad * 0.8,
+              Math.sin(angleOffset) * sRad * 0.4
+            );
+            ctx.lineTo(0, 0);
+            ctx.lineTo(
+              Math.cos(angleOffset + 0.65) * sRad * 0.5,
+              Math.sin(angleOffset + 0.5) * sRad * 0.25
+            );
+            ctx.stroke();
+          }
+
+          // 3. Glare Shimmer
+          const glarePos = Math.sin(time * 0.5) * sRad;
+          const glareGrad = ctx.createLinearGradient(
+            glarePos - 30,
+            0,
+            glarePos + 30,
+            0
+          );
+          glareGrad.addColorStop(0, "transparent");
+          glareGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.4)");
+          glareGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = glareGrad;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad, sRad * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4. Floating Frost Flakes
+          ctx.fillStyle = "white";
+          for (let f = 0; f < 5; f++) {
+            const fx = Math.cos(f + time) * sRad * 0.7;
+            const fy = Math.sin(f * 2 + time) * sRad * 0.3 - 10 * cameraZoom;
+            ctx.beginPath();
+            ctx.arc(fx, fy, 1.5 * cameraZoom, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (haz.type === "quicksand") {
+          // 1. Outer Swirl
+          ctx.save();
+          ctx.rotate(time * 0.5);
+          for (let i = 0; i < 3; i++) {
+            ctx.strokeStyle = `rgba(121, 85, 72, ${0.2 + i * 0.1})`;
+            ctx.lineWidth = 3 * cameraZoom;
+            ctx.beginPath();
+            ctx.ellipse(
+              0,
+              0,
+              sRad * (1 - i * 0.2),
+              sRad * 0.5 * (1 - i * 0.2),
+              i,
+              0,
+              Math.PI * 1.5
+            );
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          // 2. Central Sinking Void
+          const voidGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.4);
+          voidGrad.addColorStop(0, "#3E2723");
+          voidGrad.addColorStop(1, "#795548");
+          ctx.fillStyle = voidGrad;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad * 0.4, sRad * 0.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 3. Dust Clouds (Atmospheric)
+          ctx.fillStyle = "rgba(161, 136, 127, 0.2)";
+          for (let d = 0; d < 4; d++) {
+            const dx = Math.sin(time * 0.8 + d) * sRad * 0.8;
+            const dy = Math.cos(time * 0.8 + d) * sRad * 0.4;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 12 * cameraZoom, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (haz.type === "deep_water") {
+          // 1. Dark Depth Layer
+          ctx.fillStyle = "#012a4a";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sRad, sRad * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Refractive Surface (Moving waves)
+          const waveTime = time * 0.4;
+          for (let w = 0; w < 3; w++) {
+            ctx.strokeStyle = `rgba(169, 214, 229, ${0.1 + w * 0.05})`;
+            ctx.lineWidth = 2 * cameraZoom;
+            ctx.beginPath();
+            const wRad = sRad * (0.4 + w * 0.2);
+            ctx.ellipse(
+              Math.sin(waveTime + w) * 10,
+              0,
+              wRad,
+              wRad * 0.5,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.stroke();
+          }
+
+          // 3. Floating Algae/Debris
+          ctx.fillStyle = "#2d6a4f";
+          for (let a = 0; a < 3; a++) {
+            const ax = Math.cos(time * 0.2 + a) * sRad * 0.5;
+            const ay = Math.sin(time * 0.2 + a) * sRad * 0.2;
+            ctx.beginPath();
+            ctx.ellipse(
+              ax,
+              ay,
+              6 * cameraZoom,
+              3 * cameraZoom,
+              a,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+      });
+    }
+
+    // =========================================================================
+    // EPIC ANIMATED SPECIAL TOWERS
+    // =========================================================================
+    if (LEVEL_DATA[selectedMap]?.specialTower) {
+      const spec = LEVEL_DATA[selectedMap].specialTower;
+      const sPos = toScreen(gridToWorld(spec.pos));
+      const s = cameraZoom;
+      const time = Date.now() / 1000;
+
+      ctx.save();
+      ctx.translate(sPos.x, sPos.y);
+
+      switch (spec.type) {
+        case "beacon": {
+          const time = Date.now() / 1000;
+          const s2 = s * 1.1;
+          const pulse = Math.sin(time * 3) * 0.5 + 0.5;
+
+          // Isometric Constants
+          const w = 22 * s2;
+          const h = 55 * s2; // Slightly shorter for better grounding
+          const tanA = Math.tan(Math.PI / 6);
+
+          // 1. Ground Shadow (Tucked up to ground the base better)
+          ctx.fillStyle = "rgba(0,0,0,0.35)";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 32 * s2, 16 * s2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Lighter Tiered Granite Pedestal
+          const drawHex = (
+            hw: number,
+            hh: number,
+            y: number,
+            c1: string,
+            c2: string,
+            c3: string
+          ) => {
+            ctx.save();
+            ctx.translate(0, y + 4 * s2); // Lowered by 4s for better grounding
+            // Left Side (Shadow)
+            ctx.fillStyle = c1;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-hw, -hw * tanA);
+            ctx.lineTo(-hw, -hw * tanA - hh);
+            ctx.lineTo(0, -hh);
+            ctx.fill();
+            // Right Side (Mid)
+            ctx.fillStyle = c2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(hw, -hw * tanA);
+            ctx.lineTo(hw, -hw * tanA - hh);
+            ctx.lineTo(0, -hh);
+            ctx.fill();
+            // Top face (Highlight)
+            ctx.fillStyle = c3;
+            ctx.beginPath();
+            ctx.moveTo(0, -hh);
+            ctx.lineTo(-hw, -hw * tanA - hh);
+            ctx.lineTo(0, -hw * tanA * 2 - hh);
+            ctx.lineTo(hw, -hw * tanA - hh);
+            ctx.fill();
+            ctx.restore();
+          };
+
+          // Shifted colors from dark slate to light granite
+          drawHex(w, 8 * s2, 8 * s2, "#78909C", "#90A4AE", "#B0BEC5"); // Bottom Tier
+          drawHex(w * 0.7, 6 * s2, -4 * s2, "#546E7A", "#78909C", "#CFD8DC"); // Top Tier
+
+          // 3. The Spire (Lighter Faceted Monolith)
+          const spireW = 11 * s2;
+          const spireH = 55 * s2;
+          const topY = -9 * s2; // Moved DOWN from -15s
+
+          // Spire Left Face
+          ctx.fillStyle = "#546E7A";
+          ctx.beginPath();
+          ctx.moveTo(0, topY);
+          ctx.lineTo(-spireW, topY - spireW * tanA);
+          ctx.lineTo(-spireW * 0.6, topY - spireW * tanA - spireH);
+          ctx.lineTo(0, topY - spireH);
+          ctx.fill();
+
+          // Spire Right Face
+          ctx.fillStyle = "#78909C";
+          ctx.beginPath();
+          ctx.moveTo(0, topY);
+          ctx.lineTo(spireW, topY - spireW * tanA);
+          ctx.lineTo(spireW * 0.6, topY - spireW * tanA - spireH);
+          ctx.lineTo(0, topY - spireH);
+          ctx.fill();
+
+          // 4. ADVANCED VARIED RUNES
+          ctx.save();
+          ctx.shadowBlur = 12 * s2;
+          ctx.shadowColor = "#00E5FF";
+          ctx.strokeStyle = `rgba(128, 255, 255, ${0.4 + pulse * 0.6})`;
+          ctx.lineWidth = 1.8 * s2;
+          ctx.lineCap = "round";
+
+          for (let f = 0; f < 2; f++) {
+            const side = f === 0 ? -1 : 1;
+            const scroll = (time * 12) % 40;
+
+            for (let r = 0; r < 4; r++) {
+              const rY = topY - 10 * s2 - r * 15 * s2 + scroll;
+              // Only draw if within monolith bounds
+              if (rY > topY || rY < topY - spireH + 5 * s2) continue;
+
+              const xOff = side * (spireW * 0.5);
+              const yOff = rY + Math.abs(xOff) * tanA;
+
+              ctx.save();
+              ctx.translate(xOff, yOff);
+
+              // Varied Glyph Logic (Draws different shapes based on index 'r')
+              ctx.beginPath();
+              if (r % 4 === 0) {
+                // Diamond Rune
+                ctx.moveTo(0, -4 * s2);
+                ctx.lineTo(2 * s2, -2 * s2);
+                ctx.lineTo(0, 0);
+                ctx.lineTo(-2 * s2, -2 * s2);
+                ctx.closePath();
+              } else if (r % 4 === 1) {
+                // Forked Rune
+                ctx.moveTo(-2 * s2, 0);
+                ctx.lineTo(0, -4 * s2);
+                ctx.lineTo(2 * s2, 0);
+                ctx.moveTo(0, -4 * s2);
+                ctx.lineTo(0, -1 * s2);
+              } else if (r % 4 === 2) {
+                // Triple-Dot Rune
+                ctx.moveTo(-2 * s2, -2 * s2);
+                ctx.lineTo(2 * s2, -2 * s2);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -1 * s2);
+              } else {
+                // Circle-Cross
+                ctx.arc(0, -2 * s2, 2 * s2, 0, Math.PI * 2);
+              }
+              ctx.stroke();
+              ctx.restore();
+            }
+          }
+          ctx.restore();
+
+          // 5. Orbital Energy Rings (Cyan glow)
+          for (let r = 0; r < 2; r++) {
+            ctx.save();
+            const ringY =
+              topY - 15 * s2 - r * 22 * s2 + Math.sin(time + r) * 4 * s2;
+            ctx.translate(0, ringY);
+            ctx.scale(1, 0.5);
+            ctx.rotate(time * (r === 0 ? 0.7 : -1.2));
+
+            ctx.strokeStyle = `rgba(0, 229, 255, ${0.3 + pulse * 0.3})`;
+            ctx.lineWidth = 2.5 * s2;
+            ctx.setLineDash([10 * s2, 20 * s2]);
+            ctx.beginPath();
+            ctx.arc(0, 0, 20 * s2, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // 6. The Core Pulse Sphere
+          const coreY = topY - spireH - 12 * s2 + Math.sin(time * 2.5) * 6 * s2;
+
+          // Brighter multi-layer glow
+          const coreGlow = ctx.createRadialGradient(
+            0,
+            coreY,
+            0,
+            0,
+            coreY,
+            15 * s2
+          );
+          coreGlow.addColorStop(0, "#FFFFFF");
+          coreGlow.addColorStop(0.2, "#E0F7FA");
+          coreGlow.addColorStop(0.5, "#00E5FF");
+          coreGlow.addColorStop(1, "transparent");
+
+          ctx.save();
+          ctx.shadowBlur = 30 * s2;
+          ctx.shadowColor = "#00E5FF";
+          ctx.fillStyle = coreGlow;
+          ctx.beginPath();
+          ctx.arc(0, coreY, 15 * s2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // 7. Occasional Energy "Leaks" (Arcs)
+          if (Math.random() > 0.92) {
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, topY - spireH);
+            ctx.lineTo(
+              (Math.random() - 0.5) * 20,
+              coreY + (Math.random() - 0.5) * 20
+            );
+            ctx.stroke();
+          }
+          break;
+        }
+
+        case "vault": {
+          const hpPct =
+            specialTowerHp !== null && spec.hp ? specialTowerHp / spec.hp : 1;
+          const isFlashing = vaultFlash > 0;
+          const time = Date.now() / 1000;
+          const s2 = s * 1.2; // Slightly larger scale for more detail space
+
+          // Isometric constants
+          const w = 24 * s2; // Half width
+          const h = 32 * s2; // Base Height (without roof elements)
+          const angle = Math.PI / 6; // 30 degrees
+          const tanAngle = Math.tan(angle);
+          const roofOffset = w * tanAngle * 2;
+
+          // --- 0. Shadow (Moved up and tightened) ---
+          ctx.fillStyle = "rgba(0,0,0,0.5)";
+          ctx.beginPath();
+          // Tucked further under the base
+          ctx.ellipse(0, -12 * s2, 32 * s2, 16 * s2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // =========================================================================
+          // STATE: DESTROYED (HP <= 0)
+          // =========================================================================
+          if (
+            hpPct <= 0 ||
+            spec.hp === 0 ||
+            (spec.hp !== undefined && specialTowerHp === null)
+          ) {
+            // Wrecked base foundation
+            ctx.fillStyle = "#424242";
+            ctx.beginPath();
+            ctx.moveTo(-w - 5 * s2, 0);
+            ctx.lineTo(0, 10 * s2);
+            ctx.lineTo(w + 8 * s2, 2 * s2);
+            ctx.lineTo(0, -10 * s2);
+            ctx.fill();
+
+            // The main crumpled structure body (Back walls, dark interior)
+            ctx.fillStyle = "#263238"; // Dark grey interior
+            ctx.beginPath();
+            ctx.moveTo(-w * 0.8, -h * 0.2);
+            ctx.lineTo(w * 0.9, -h * 0.1);
+            ctx.lineTo(w * 0.9, -h - roofOffset * 0.8);
+            ctx.lineTo(-w * 0.8, -h - roofOffset * 0.6);
+            ctx.fill();
+
+            // Broken Left Face (Jagged edges)
+            ctx.fillStyle = "#546E7A"; // Dull damaged metal
+            ctx.beginPath();
+            ctx.moveTo(0, 5 * s2);
+            ctx.lineTo(-w, -w * tanAngle + 2 * s2); // bent corner
+            ctx.lineTo(-w * 0.9, -h * 0.5); // jagged break
+            ctx.lineTo(-w * 1.1, -h - roofOffset * 0.5);
+            ctx.lineTo(0, -h - 5 * s2); // collapsed roof line
+            ctx.fill();
+
+            // The Vault Door (Hanging off hinges)
+            ctx.save();
+            ctx.translate(w * 0.8, -h * 0.4);
+            ctx.rotate(Math.PI / 8); // Hanging angle
+            ctx.fillStyle = "#78909C";
+            ctx.fillRect(-12 * s2, -18 * s2, 24 * s2, 36 * s2);
+            // Broken dial
+            ctx.fillStyle = "#37474F";
+            ctx.beginPath();
+            ctx.arc(0, -5 * s2, 6 * s2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Smoke Effects (Rising plumes)
+            ctx.fillStyle = "rgba(100, 100, 100, 0.4)";
+            for (let i = 0; i < 3; i++) {
+              const smokeOffset = (time * 2 + i * 1.5) % 4;
+              const smokeX = Math.sin(time + i) * 10 * s2;
+              ctx.beginPath();
+              ctx.arc(
+                smokeX,
+                -h - roofOffset - smokeOffset * 15 * s2,
+                (5 + smokeOffset * 3) * s2,
+                0,
+                Math.PI * 2
+              );
+              ctx.fill();
+            }
+            // Exit early, no HP bar needed for dead vault
+            break;
+          }
+
+          // =========================================================================
+          // STATE: ACTIVE VAULT (Living)
+          // =========================================================================
+
+          // Color Palette (Normal vs Flash)
+          const c = isFlashing
+            ? {
+                top: "#FFFFFF",
+                left: "#FFCDD2",
+                right: "#EF9A9A",
+                frame: "#FF5252",
+                dark: "#B71C1C",
+                glow: "#FFFFFF",
+              }
+            : {
+                top: "#FFF59D", // Pale Gold
+                left: "#C5A535", // Dark Gold Shadow
+                right: "#FFD700", // Classic Gold
+                frame: "#DAA520", // Goldenrod Frame
+                dark: "#4E342E", // Dark bronze elements
+                glow: "#40E0D0", // Turquoise energy glow
+              };
+
+          // --- 1. Main Isometric Body ---
+
+          // Front-Left Face (Shadow Side)
+          ctx.fillStyle = c.left;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-w, -w * tanAngle);
+          ctx.lineTo(-w, -w * tanAngle - h);
+          ctx.lineTo(0, -h);
+          ctx.closePath();
+          ctx.fill();
+
+          // Front-Right Face (Lit Side - Door Side)
+          ctx.fillStyle = c.right;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(w, -w * tanAngle);
+          ctx.lineTo(w, -w * tanAngle - h);
+          ctx.lineTo(0, -h);
+          ctx.closePath();
+          ctx.fill();
+
+          // Top Face
+          ctx.fillStyle = c.top;
+          ctx.beginPath();
+          ctx.moveTo(0, -h);
+          ctx.lineTo(-w, -w * tanAngle - h);
+          ctx.lineTo(0, -roofOffset - h);
+          ctx.lineTo(w, -w * tanAngle - h);
+          ctx.closePath();
+          ctx.fill();
+
+          // --- 2. Reinforced Framing & Rivets ---
+          ctx.fillStyle = c.frame;
+          ctx.strokeStyle = c.dark;
+          ctx.lineWidth = 1 * s2;
+
+          // Central vertical pillar
+          ctx.fillRect(-2 * s2, -h, 4 * s2, h);
+          ctx.strokeRect(-2 * s2, -h, 4 * s2, h);
+
+          // Top Rim reinforcing
+          ctx.beginPath();
+          ctx.moveTo(0, -h + 3 * s2);
+          ctx.lineTo(-w, -w * tanAngle - h + 3 * s2);
+          ctx.lineTo(0, -roofOffset - h + 3 * s2);
+          ctx.lineTo(w, -w * tanAngle - h + 3 * s2);
+          ctx.closePath();
+          ctx.stroke();
+
+          // Rivets along the edges
+          ctx.fillStyle = c.dark;
+          for (let i = 0; i <= 4; i++) {
+            // Left edge rivets
+            ctx.beginPath();
+            ctx.arc(
+              -w + 1 * s2,
+              -w * tanAngle - h + (i / 4) * h,
+              1.5 * s2,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            // Right edge rivets
+            ctx.beginPath();
+            ctx.arc(
+              w - 1 * s2,
+              -w * tanAngle - h + (i / 4) * h,
+              1.5 * s2,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+
+          // --- 3. The Protruding Door Mechanism (Right Face) ---
+          ctx.save();
+          // Transform to the isometric plane of the right face
+          const rightFaceCenterX = w * 0.5;
+          const rightFaceCenterY = -h * 0.5 - w * tanAngle * 0.5;
+          ctx.translate(rightFaceCenterX, rightFaceCenterY);
+
+          // Door Frame (Protruding rectangle)
+          ctx.fillStyle = c.frame;
+          ctx.beginPath();
+          ctx.moveTo(-8 * s2, -12 * s2);
+          ctx.lineTo(12 * s2, -12 * s2 + 12 * tanAngle); // Isometric perspective slant
+          ctx.lineTo(12 * s2, 14 * s2 + 12 * tanAngle);
+          ctx.lineTo(-8 * s2, 14 * s2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // The Complex Lock Dial
+          ctx.scale(1, 0.8); // Flatten for isometric look
+          ctx.translate(2 * s2, 0);
+
+          // Outer Ring (Stationary)
+          ctx.fillStyle = c.dark;
+          ctx.beginPath();
+          ctx.arc(0, 0, 9 * s2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Inner Rotating Dial
+          const dialSpeed = time * 1.5;
+          ctx.save();
+          ctx.rotate(dialSpeed);
+          ctx.fillStyle = c.right;
+          ctx.beginPath();
+          ctx.arc(0, 0, 6 * s2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // The glowing indicator/keyhole
+          ctx.fillStyle = isFlashing ? "#FFF" : c.glow;
+          ctx.shadowColor = c.glow;
+          ctx.shadowBlur = isFlashing ? 20 : 10;
+          ctx.beginPath();
+          // A shape that looks like a keyhole/arrow
+          ctx.moveTo(4 * s2, 0);
+          ctx.lineTo(-2 * s2, 3 * s2);
+          ctx.lineTo(-2 * s2, -3 * s2);
+          ctx.fill();
+          ctx.shadowBlur = 0; // Reset shadow
+          ctx.restore(); // End dial rotation
+
+          ctx.restore(); // End door transform
+
+          // --- 4. Progressive Damage Effects ---
+
+          // Stage 1: Scratches and dents (HP < 75%)
+          if (hpPct < 0.75) {
+            ctx.strokeStyle = "rgba(0,0,0,0.4)";
+            ctx.lineWidth = 1 * s2;
+            ctx.beginPath();
+            // Random looking scratches on left face
+            ctx.moveTo(-w * 0.7, -h * 0.3);
+            ctx.lineTo(-w * 0.3, -h * 0.5);
+            ctx.moveTo(-w * 0.6, -h * 0.7);
+            ctx.lineTo(-w * 0.2, -h * 0.6);
+            // Dent on top rim
+            ctx.moveTo(-w * 0.1, -roofOffset - h + 3 * s2);
+            ctx.lineTo(w * 0.2, -roofOffset - h + 4 * s2);
+            ctx.stroke();
+          }
+
+          // Stage 2: Critical Failure - Glowing Cracks & Alarm (HP < 40%)
+          if (hpPct < 0.4) {
+            const flicker = Math.sin(time * 20) > 0;
+
+            // Molten Cracks
+            ctx.strokeStyle = flicker ? "#FFEB3B" : "#FF5722"; // Yellow/Orange flicker
+            ctx.shadowColor = "#FF5722";
+            ctx.shadowBlur = 15 * s2;
+            ctx.lineWidth = 2.5 * s2;
+            ctx.beginPath();
+            // Deep jagged crack running across left face and top
+            ctx.moveTo(-w * 0.2, 0);
+            ctx.lineTo(-w * 0.5, -h * 0.3);
+            ctx.lineTo(-w * 0.3, -h * 0.7);
+            ctx.lineTo(0, -h);
+            ctx.lineTo(w * 0.2, -h - roofOffset * 0.5);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Emergency Alarm Beacon on roof
+            const beaconY = -roofOffset - h - 4 * s2;
+            ctx.fillStyle = c.dark;
+            ctx.fillRect(-3 * s2, beaconY, 6 * s2, 4 * s2); // Base
+
+            // Rotating Red Light
+            ctx.save();
+            ctx.translate(0, beaconY);
+            ctx.fillStyle = flicker ? "#FF0000" : "#B71C1C";
+            ctx.shadowColor = "#FF0000";
+            ctx.shadowBlur = 25;
+            ctx.beginPath();
+            // Semi-circle dome
+            ctx.arc(0, 0, 4 * s2, Math.PI, Math.PI * 2);
+            ctx.fill();
+            // Rotating reflector beam effect
+            ctx.rotate(time * 6);
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(5 * s2, -3 * s2);
+            ctx.lineTo(5 * s2, 3 * s2);
+            ctx.fill();
+            ctx.restore();
+
+            // Occasional sparks (simple particles)
+            if (Math.random() > 0.85) {
+              ctx.fillStyle = "#FFF";
+              ctx.beginPath();
+              const sparkX = (Math.random() - 0.5) * w;
+              const sparkY = -h * 0.5 + (Math.random() - 0.5) * h;
+              ctx.arc(sparkX, sparkY, 2 * s2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // --- 5. Health Bar (Modernized) ---
+          if (specialTowerHp !== null && spec.hp) {
+            const barWidth = 70 * s2;
+            const barHeight = 10 * s2;
+            // Positioned higher due to larger sprite and roof elements
+            const yOffset = -roofOffset - h - 15 * s2;
+
+            ctx.save();
+            ctx.translate(0, yOffset);
+
+            // Bar Container + Shadow
+            ctx.shadowColor = "rgba(0,0,0,0.5)";
+            ctx.shadowBlur = 6;
+            ctx.shadowOffsetY = 3;
+            ctx.fillStyle = "#263238"; // Dark slate background
+            ctx.beginPath();
+            ctx.rect(-barWidth / 2, 0, barWidth, barHeight);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
+            // HP Fill Gradient
+            const hpColorStr =
+              hpPct > 0.6 ? "#00E676" : hpPct > 0.3 ? "#FFC107" : "#FF3D00";
+            const grad = ctx.createLinearGradient(
+              -barWidth / 2,
+              0,
+              barWidth / 2,
+              0
+            );
+            grad.addColorStop(0, hpColorStr);
+            grad.addColorStop(1, isFlashing ? "#FFF" : hpColorStr); // Flash white on hit
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            // Slightly smaller internal fill
+            ctx.rect(
+              -barWidth / 2 + 2 * s2,
+              2 * s2,
+              (barWidth - 4 * s2) * hpPct,
+              barHeight - 4 * s2
+            );
+            ctx.fill();
+
+            // Text Label
+            ctx.fillStyle = "white";
+            // Using a slightly nicer font stack if available, fallback to Arial
+            ctx.font = `800 ${7 * s2}px "Roboto", Arial, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.shadowColor = "black";
+            ctx.shadowBlur = 4;
+            ctx.fillText("PROTECT THE VAULT", 0, -2 * s2);
+            ctx.restore();
+          }
+          break;
+        }
+
+        case "shrine": {
+          const time = Date.now() / 1000;
+          const healCycle = Date.now() % 5000; // 5s loop
+          const isHealing = healCycle < 1200; // Visual pulse duration
+          const s2 = s * 1.1;
+
+          // Isometric Constants
+          const w = 28 * s2;
+          const h = 15 * s2;
+          const tanA = Math.tan(Math.PI / 6);
+
+          // 1. Foundation Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.4)";
+          ctx.beginPath();
+          ctx.ellipse(0, -15 * s2, 35 * s2, 22 * s2, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. Tiered Stone Base (Isometric steps)
+          const drawStep = (
+            sw: number,
+            sh: number,
+            color1: string,
+            color2: string
+          ) => {
+            // Left Face
+            ctx.fillStyle = color1;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-sw, -sw * tanA);
+            ctx.lineTo(-sw, -sw * tanA - sh);
+            ctx.lineTo(0, -sh);
+            ctx.fill();
+            // Right Face
+            ctx.fillStyle = color2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(sw, -sw * tanA);
+            ctx.lineTo(sw, -sw * tanA - sh);
+            ctx.lineTo(0, -sh);
+            ctx.fill();
+          };
+
+          // Bottom Step
+          ctx.save();
+          drawStep(w, h, "#455A64", "#607D8B");
+          // Mid Altar
+          ctx.translate(0, -h);
+          drawStep(w * 0.6, h * 1.5, "#37474F", "#546E7A");
+          ctx.restore();
+
+          // 3. Floating Faceted Runestones
+          for (let i = 0; i < 3; i++) {
+            ctx.save();
+            const orbitAngle = time * 0.8 + (i * Math.PI * 2) / 3;
+            const bob = Math.sin(time * 2 + i) * 6 * s2;
+            const rx = Math.cos(orbitAngle) * 22 * s2;
+            const ry = -35 * s2 + Math.sin(orbitAngle) * 10 * s2 + bob;
+
+            ctx.translate(rx, ry);
+
+            // Stone Sprite
+            ctx.fillStyle = "#263238";
+            ctx.beginPath();
+            ctx.moveTo(0, -8 * s2);
+            ctx.lineTo(5 * s2, 0);
+            ctx.lineTo(0, 8 * s2);
+            ctx.lineTo(-5 * s2, 0);
+            ctx.fill();
+
+            // Glowing Rune Detail
+            ctx.shadowBlur = isHealing ? 15 * s2 : 5 * s2;
+            ctx.shadowColor = "#76FF03";
+            ctx.fillStyle = "#CCFF90";
+            ctx.fillRect(-1 * s2, -4 * s2, 2 * s2, 8 * s2);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+          }
+
+          // 4. Central Arcane Flame
+          const flamePulse = 0.8 + Math.sin(time * 12) * 0.2;
+          const fireGrad = ctx.createRadialGradient(
+            0,
+            -35 * s2,
+            0,
+            0,
+            -35 * s2,
+            20 * s2 * flamePulse
+          );
+          fireGrad.addColorStop(0, "#FFFFFF");
+          fireGrad.addColorStop(0.3, "#CCFF90");
+          fireGrad.addColorStop(0.6, "rgba(118, 255, 3, 0.3)");
+          fireGrad.addColorStop(1, "transparent");
+
+          ctx.fillStyle = fireGrad;
+          ctx.beginPath();
+          ctx.arc(0, -35 * s2, 20 * s2 * flamePulse, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 5. HEALING PULSE EFFECT
+          if (isHealing) {
+            const prog = healCycle / 1200;
+            const ringRad = 200 * prog; // Expands to heal range
+
+            ctx.save();
+            ctx.scale(1, 0.5); // Isometric floor
+            ctx.strokeStyle = `rgba(118, 255, 3, ${1 - prog})`;
+            ctx.lineWidth = 4 * s2;
+            ctx.beginPath();
+            ctx.arc(0, 0, ringRad * s2, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Rising Cross Particles
+            ctx.fillStyle = `rgba(204, 255, 144, ${0.8 * (1 - prog)})`;
+            for (let p = 0; p < 4; p++) {
+              const px = Math.sin(p * 2) * 30 * s2;
+              const py = -prog * 100 * s2;
+              ctx.fillRect(px - 1 * s2, py - 4 * s2, 2 * s2, 8 * s2);
+              ctx.fillRect(px - 4 * s2, py - 1 * s2, 8 * s2, 2 * s2);
+            }
+            ctx.restore();
+          }
+          break;
+        }
+
+        case "barracks": {
+          const time = Date.now() / 1000;
+          const spawnCycle = Date.now() % 12000; // Matches the 12s logic in updateGame
+          const isSpawning = spawnCycle < 1500; // First 1.5 seconds of spawn
+          const isPreparing = spawnCycle > 10500; // Glowing before spawn
+
+          // Isometric Constants
+          const w = 32 * s;
+          const h = 40 * s;
+          const angle = Math.PI / 6;
+          const tanA = Math.tan(angle);
+
+          // 1. Foundation Shadow (Tighter grounding)
+          ctx.fillStyle = "rgba(0,0,0,0.4)";
+          ctx.beginPath();
+          ctx.ellipse(0, -15 * s, 40 * s, 20 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 2. The Main Building Faces (Directional Lighting)
+          // Front-Left (Shadow)
+          ctx.fillStyle = "#455A64";
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-w, -w * tanA);
+          ctx.lineTo(-w, -w * tanA - h);
+          ctx.lineTo(0, -h);
+          ctx.fill();
+
+          // Front-Right (Light)
+          ctx.fillStyle = "#607D8B";
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(w, -w * tanA);
+          ctx.lineTo(w, -w * tanA - h);
+          ctx.lineTo(0, -h);
+          ctx.fill();
+
+          // 3. Masonry Detail (Stone Blocks)
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.lineWidth = 1 * s;
+          for (let i = 1; i < 4; i++) {
+            const yOff = -(h / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(-w, -w * tanA + yOff);
+            ctx.lineTo(0, yOff);
+            ctx.lineTo(w, -w * tanA + yOff);
+            ctx.stroke();
+          }
+
+          // 4. The Archway (Entrance)
+          ctx.save();
+          // Glow effect when preparing/spawning
+          if (isPreparing || isSpawning) {
+            ctx.shadowBlur = 15 * s;
+            ctx.shadowColor = "#4FC3F7";
+          }
+
+          // Interior Dark Gradient
+          const archGrad = ctx.createLinearGradient(0, -20 * s, 0, 0);
+          archGrad.addColorStop(0, "#101010");
+          archGrad.addColorStop(1, isPreparing ? "#01579B" : "#263238");
+          ctx.fillStyle = archGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(-10 * s, 0);
+          ctx.lineTo(-10 * s, -20 * s);
+          ctx.quadraticCurveTo(0, -30 * s, 10 * s, -20 * s);
+          ctx.lineTo(10 * s, 0);
+          ctx.fill();
+          ctx.restore();
+
+          // 5. The Roof (Peaked Overhang)
+          const roofH = 25 * s;
+          // Left Roof Panel (Darker)
+          ctx.fillStyle = "#263238";
+          ctx.beginPath();
+          ctx.moveTo(0, -h);
+          ctx.lineTo(-w - 4 * s, -w * tanA - h);
+          ctx.lineTo(0, -h - roofH);
+          ctx.fill();
+          // Right Roof Panel (Lighter)
+          ctx.fillStyle = "#37474F";
+          ctx.beginPath();
+          ctx.moveTo(0, -h);
+          ctx.lineTo(w + 4 * s, -w * tanA - h);
+          ctx.lineTo(0, -h - roofH);
+          ctx.fill();
+
+          // Roof Trim (Wood beams)
+          ctx.strokeStyle = "#4E342E";
+          ctx.lineWidth = 3 * s;
+          ctx.beginPath();
+          ctx.moveTo(-w - 4 * s, -w * tanA - h);
+          ctx.lineTo(0, -h - roofH);
+          ctx.lineTo(w + 4 * s, -w * tanA - h);
+          ctx.stroke();
+
+          // 6. Detailed Waving Banner
+          ctx.save();
+          const poleX = -w * 0.6,
+            poleY = -w * tanA - h * 0.8;
+          ctx.translate(poleX, poleY);
+
+          // Flagpole
+          ctx.fillStyle = "#795548";
+          ctx.fillRect(-1.5 * s, 0, 3 * s, -45 * s);
+          ctx.fillStyle = "#FFD700";
+          ctx.beginPath();
+          ctx.arc(0, -45 * s, 3 * s, 0, Math.PI * 2);
+          ctx.fill(); // Gold tip
+
+          // Waving Banner Logic
+          const bannerTime = time * 3;
+          ctx.translate(0, -40 * s);
+          ctx.fillStyle = "#B71C1C"; // Deep War Red
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          for (let i = 0; i <= 20 * s; i += s) {
+            const wave = Math.sin(bannerTime + i * 0.2) * 4 * s;
+            ctx.lineTo(i, wave);
+          }
+          ctx.lineTo(
+            20 * s,
+            15 * s + Math.sin(bannerTime + 20 * s * 0.2) * 4 * s
+          );
+          for (let i = 20 * s; i >= 0; i -= s) {
+            const wave = Math.sin(bannerTime + i * 0.2) * 4 * s;
+            ctx.lineTo(i, 15 * s + wave);
+          }
+          ctx.fill();
+
+          // Banner Crest (Princeton-ish Orange Stripe)
+          ctx.fillStyle = "#f97316";
+          ctx.fillRect(5 * s, 4 * s, 10 * s, 7 * s);
+          ctx.restore();
+
+          // 7. Spawn Effect (Visual reaction to troop deployment)
+          if (isSpawning) {
+            // "Magic circle" on floor
+            ctx.save();
+            ctx.scale(1, 0.5);
+            ctx.rotate(time * 2);
+            ctx.strokeStyle = `rgba(79, 195, 247, ${1 - spawnCycle / 1500})`;
+            ctx.lineWidth = 4 * s;
+            ctx.setLineDash([10 * s, 5 * s]);
+            ctx.beginPath();
+            ctx.arc(0, 0, 40 * s, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+
+            // Light beam rising from entrance
+            const beamAlpha = 0.5 * (1 - spawnCycle / 1500);
+            const beamGrad = ctx.createLinearGradient(0, 0, 0, -100 * s);
+            beamGrad.addColorStop(0, `rgba(255, 255, 255, ${beamAlpha})`);
+            beamGrad.addColorStop(1, "transparent");
+            ctx.fillStyle = beamGrad;
+            ctx.fillRect(-12 * s, -30 * s, 24 * s, -70 * s);
+          }
+
+          break;
+        }
+      }
+      ctx.restore();
+    }
     // Render all entities with camera offset and zoom
     renderables.forEach((r) => {
       switch (r.type) {
@@ -6627,6 +8288,7 @@ export default function PrincetonTowerDefense() {
           break;
       }
     });
+
     // Restore state
     ctx.restore();
     // Draw atmospheric fog around entire battlefield (UI layer) - themed
@@ -7239,7 +8901,14 @@ export default function PrincetonTowerDefense() {
         setDraggingTower({ type: draggingTower.type, pos: { x, y } });
       }
       const { width, height, dpr } = getCanvasDimensions();
-
+      const mouseWorldPos = screenToWorld(
+        mousePos,
+        width,
+        height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
       // Check for tower hover
       const hoveredT = towers.find((t) => {
         const worldPos = gridToWorld(t.pos);
@@ -7253,6 +8922,16 @@ export default function PrincetonTowerDefense() {
         );
         return distance({ x, y }, screenPos) < 40;
       });
+
+      // Check if hovering near the special building
+      const spec = LEVEL_DATA[selectedMap]?.specialTower;
+      if (spec) {
+        const specWorldPos = gridToWorld(spec.pos);
+        const isHoveringSpec = distance(mouseWorldPos, specWorldPos) < 60;
+        setHoveredSpecial(isHoveringSpec);
+      } else {
+        setHoveredSpecial(false);
+      }
 
       // Check for troop hover (to show station range)
       let hoveredTroopOwnerId: string | null = null;
@@ -7778,12 +9457,20 @@ export default function PrincetonTowerDefense() {
 
       case "scott": {
         // INSPIRATION - Boost all tower damage
+        const boostRadius = 450;
         setTowers((prev) =>
-          prev.map((t) => ({
-            ...t,
-            damageBoost: 1.5,
-            boostEnd: Date.now() + 8000,
-          }))
+          prev.map((t) => {
+            const tWorldPos = gridToWorld(t.pos);
+            if (distance(hero.pos, tWorldPos) <= boostRadius) {
+              return {
+                ...t,
+                damageBoost: 1.5,
+                boostEnd: Date.now() + 8000, // 8 second duration
+                isBuffed: true,
+              };
+            }
+            return t;
+          })
         );
         // Create inspiration aura effect
         setEffects((ef) => [
@@ -7924,6 +9611,13 @@ export default function PrincetonTowerDefense() {
     setLevelStartTime(0);
     // clear all waves because if u end the level early, they might still be queued
     clearAllTimers();
+    if (LEVEL_DATA[selectedMap]?.specialTower?.hp) {
+      setSpecialTowerHp(LEVEL_DATA[selectedMap].specialTower.hp);
+    } else {
+      setSpecialTowerHp(null);
+    }
+    setTroops((prev) => prev.filter((t) => t.ownerId === "spell"));
+    setTroops((prev) => prev.filter((t) => t.ownerId === "special_barracks"));
   }, []);
   // Render different screens based on game state
   // Show WorldMap for both menu and setup (combined into one screen)
@@ -8009,6 +9703,12 @@ export default function PrincetonTowerDefense() {
           setGameSpeed(1);
           // clear all waves because if u end the level early, they might still be queued
           setLevelStartTime(Date.now());
+          //reset special towers
+          if (LEVEL_DATA[selectedMap]?.specialTower?.hp) {
+            setSpecialTowerHp(LEVEL_DATA[selectedMap].specialTower.hp);
+          } else {
+            setSpecialTowerHp(null);
+          }
         }}
       />
       <div className="flex-1 relative overflow-hidden">
@@ -8121,6 +9821,14 @@ export default function PrincetonTowerDefense() {
               );
             })()}
           {placingTroop && <PlacingTroopIndicator />}
+          {hoveredSpecial && LEVEL_DATA[selectedMap]?.specialTower && (
+            <SpecialBuildingTooltip
+              type={LEVEL_DATA[selectedMap].specialTower.type}
+              hp={specialTowerHp}
+              maxHp={LEVEL_DATA[selectedMap].specialTower.hp}
+              position={mousePos}
+            />
+          )}
         </div>
       </div>
       <div className="flex flex-col flex-shrink-0">

@@ -1214,6 +1214,16 @@ function drawMechanicalTowerBase(
   );
   ctx.fill();
 }
+// Helper function to calculate pitch based on tower elevation and typical range
+function calculateBarrelPitch(
+  towerElevation: number,
+  barrelLength: number
+): number {
+  // Towers are elevated, enemies are on ground - barrel should pitch down
+  // Use a reasonable pitch based on geometry (typically 15-25 degrees)
+  const typicalRange = barrelLength * 2.5;
+  return Math.atan2(towerElevation, typicalRange);
+}
 
 function renderStandardCannon(
   ctx: CanvasRenderingContext2D,
@@ -1235,18 +1245,15 @@ function renderStandardCannon(
   if (timeSinceFire < 400) {
     const firePhase = timeSinceFire / 400;
     if (firePhase < 0.1) {
-      // Initial recoil - barrel kicks back
       recoilOffset = (firePhase / 0.1) * 8 * zoom;
       turretShake = Math.sin(firePhase * Math.PI * 20) * 2 * zoom;
     } else if (firePhase < 0.4) {
-      // Return phase with damped oscillation
       const returnPhase = (firePhase - 0.1) / 0.3;
       recoilOffset =
         8 * zoom * (1 - returnPhase) * Math.cos(returnPhase * Math.PI * 2);
       turretShake =
         Math.sin(returnPhase * Math.PI * 6) * (1 - returnPhase) * 1.5 * zoom;
     } else {
-      // Reload phase - slight upward motion
       reloadPhase = (firePhase - 0.4) / 0.6;
     }
   }
@@ -1255,13 +1262,12 @@ function renderStandardCannon(
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
   const foreshorten = Math.abs(cosR);
-  const depthFactor = sinR;
 
   // Larger barrel dimensions
   const baseBarrelLength = (30 + level * 12) * zoom;
   const barrelLength =
     baseBarrelLength * (0.4 + foreshorten * 0.6) - recoilOffset;
-  const barrelWidth = (12 + level * 3) * zoom; // Increased width
+  const barrelWidth = (12 + level * 3) * zoom;
 
   // Determine if barrel is pointing "away" for draw order
   const facingAway = sinR < -0.3;
@@ -1367,20 +1373,17 @@ function renderStandardCannon(
   );
   ctx.fill();
 
-  // ROTATING ARMOR PLATES - These rotate with the turret!
-  // Draw armor segments that follow the turret rotation
+  // ROTATING ARMOR PLATES
   for (let i = 0; i < 6; i++) {
     const plateAngle = rotation + (i / 6) * Math.PI * 2;
-    const plateVisible = Math.cos(plateAngle - rotation); // Visibility based on angle to viewer
+    const plateVisible = Math.cos(plateAngle - rotation);
 
-    // Only draw plates on the visible side
     if (plateVisible > -0.3) {
       const plateX1 = turretX + Math.cos(plateAngle) * 8 * zoom;
       const plateY1 = turretY - 12 * zoom + Math.sin(plateAngle) * 4 * zoom;
       const plateX2 = turretX + Math.cos(plateAngle) * 15 * zoom;
       const plateY2 = turretY - 12 * zoom + Math.sin(plateAngle) * 7.5 * zoom;
 
-      // Plate shading based on angle
       const shade = 0.4 + plateVisible * 0.3;
       ctx.strokeStyle = `rgba(140, 140, 150, ${shade})`;
       ctx.lineWidth = 2 * zoom;
@@ -1389,7 +1392,6 @@ function renderStandardCannon(
       ctx.lineTo(plateX2, plateY2);
       ctx.stroke();
 
-      // Rivet at plate edge
       ctx.fillStyle = `rgba(100, 100, 110, ${shade})`;
       ctx.beginPath();
       ctx.arc(plateX2, plateY2, 2 * zoom, 0, Math.PI * 2);
@@ -1411,7 +1413,7 @@ function renderStandardCannon(
     ctx.stroke();
   }
 
-  // Central pivot mechanism - larger
+  // Central pivot mechanism
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.arc(turretX, turretY - 12 * zoom, 10 * zoom, 0, Math.PI * 2);
@@ -1424,7 +1426,7 @@ function renderStandardCannon(
   ctx.arc(turretX, turretY - 12 * zoom, 7 * zoom, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Glowing core with pulsing animation (brighter during reload)
+  // Glowing core with pulsing animation
   const coreGlow = 0.6 + Math.sin(time * 5) * 0.3 + reloadPhase * 0.3;
   const coreGrad = ctx.createRadialGradient(
     turretX,
@@ -1465,14 +1467,20 @@ function renderStandardCannon(
     );
   }
 
+  // Calculate pitch for muzzle flash positioning
+  const towerElevation = 25 * zoom;
+  const pitch = calculateBarrelPitch(towerElevation, barrelLength);
+  const pitchDrop = barrelLength * Math.sin(pitch) * 0.5;
+
   // Muzzle flash effect
   if (timeSinceFire < 100) {
     const flashPhase = timeSinceFire / 100;
     const flashSize = (15 - flashPhase * 10) * zoom;
     const turretRadius = 8 * zoom;
-    const totalLength = turretRadius + barrelLength + 5 * zoom;
+    const totalLength =
+      turretRadius + barrelLength * Math.cos(pitch) + 5 * zoom;
     const flashX = turretX + cosR * totalLength;
-    const flashY = turretY - 12 * zoom + sinR * totalLength * 0.5;
+    const flashY = turretY - 12 * zoom + sinR * totalLength * 0.5 + pitchDrop;
 
     ctx.fillStyle = `rgba(255, 200, 100, ${1 - flashPhase})`;
     ctx.shadowColor = "#ff6600";
@@ -1484,7 +1492,7 @@ function renderStandardCannon(
   }
 }
 
-// Helper function to draw cannon barrel with isometric perspective and recoil
+// Helper function to draw cannon barrel with isometric perspective, recoil, and pitch
 function drawCannonBarrel(
   ctx: CanvasRenderingContext2D,
   pivotX: number,
@@ -1500,41 +1508,46 @@ function drawCannonBarrel(
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
 
-  // Calculate recoil - barrel moves back briefly when firing
+  // Calculate pitch - barrel aims down at ground-level enemies
+  const towerElevation = 25 * zoom;
+  const pitch = calculateBarrelPitch(towerElevation, barrelLength);
+  const pitchCos = Math.cos(pitch);
+  const pitchSin = Math.sin(pitch);
+
+  // Calculate recoil
   const timeSinceFire = Date.now() - tower.lastAttack;
   let recoilOffset = 0;
   if (timeSinceFire < 150) {
-    // Quick snap back then slow return
     const recoilPhase = timeSinceFire / 150;
     if (recoilPhase < 0.2) {
-      // Initial snap back
       recoilOffset = (recoilPhase / 0.2) * 8 * zoom;
     } else {
-      // Slow return
       recoilOffset = 8 * zoom * (1 - (recoilPhase - 0.2) / 0.8);
     }
   }
 
-  // Barrel emerges from inside the turret housing - offset the start point inward
+  // Barrel emerges from inside the turret housing
   const turretRadius = 8 * zoom;
   const barrelStartX = pivotX + cosR * turretRadius;
   const barrelStartY = pivotY + sinR * turretRadius * 0.5;
 
-  // Apply recoil to barrel start position (barrel moves back along its axis)
+  // Apply recoil
   const recoiledPivotX = barrelStartX - cosR * recoilOffset;
   const recoiledPivotY = barrelStartY - sinR * recoilOffset * 0.5;
 
-  // Calculate barrel end point in isometric space
-  // X moves with cosR, Y moves with sinR * 0.5 (isometric Y compression)
-  const endX = recoiledPivotX + cosR * barrelLength;
-  const endY = recoiledPivotY + sinR * barrelLength * 0.5;
+  // Apply pitch to barrel length
+  const effectiveBarrelLength = barrelLength * pitchCos;
+  const pitchDrop = barrelLength * pitchSin * 0.5;
 
-  // Calculate perpendicular offset for barrel thickness (isometric)
+  // Calculate barrel end point with pitch
+  const endX = recoiledPivotX + cosR * effectiveBarrelLength;
+  const endY = recoiledPivotY + sinR * effectiveBarrelLength * 0.5 + pitchDrop;
+
+  // Calculate perpendicular offset for barrel thickness
   const perpX = -sinR * barrelWidth * 0.5;
-  const perpY = cosR * barrelWidth * 0.25; // Half for isometric
+  const perpY = cosR * barrelWidth * 0.25;
 
-  // Barrel depth shading based on angle
-  const lightSide = sinR < 0; // Top of barrel is lit when pointing up
+  const lightSide = sinR < 0;
 
   // Main barrel body
   const barrelGrad = ctx.createLinearGradient(
@@ -1552,10 +1565,8 @@ function drawCannonBarrel(
     barrelGrad.addColorStop(0.6, "#6a6a72");
     barrelGrad.addColorStop(1, "#5a5a62");
   }
-
   ctx.fillStyle = barrelGrad;
   ctx.beginPath();
-  // Barrel tapers toward muzzle
   const taperMult = 0.7;
   ctx.moveTo(recoiledPivotX + perpX, recoiledPivotY + perpY);
   ctx.lineTo(endX + perpX * taperMult, endY + perpY * taperMult);
@@ -1564,13 +1575,14 @@ function drawCannonBarrel(
   ctx.closePath();
   ctx.fill();
 
-  // Barrel reinforcement bands
+  // Barrel reinforcement bands - adjusted for pitch
   ctx.strokeStyle = "#8a8a92";
   ctx.lineWidth = 2.5 * zoom;
   for (let i = 0; i < 3; i++) {
     const t = 0.2 + i * 0.25;
-    const bx = recoiledPivotX + cosR * barrelLength * t;
-    const by = recoiledPivotY + sinR * barrelLength * t * 0.5;
+    const bx = recoiledPivotX + cosR * effectiveBarrelLength * t;
+    const by =
+      recoiledPivotY + sinR * effectiveBarrelLength * t * 0.5 + pitchDrop * t;
     const widthMult = 1 - t * 0.3;
     ctx.beginPath();
     ctx.moveTo(bx + perpX * widthMult, by + perpY * widthMult);
@@ -1582,23 +1594,25 @@ function drawCannonBarrel(
   const conduitGlow = 0.5 + Math.sin(time * 6) * 0.3;
   ctx.strokeStyle = `rgba(255, 102, 0, ${conduitGlow})`;
   ctx.lineWidth = 1.5 * zoom;
-  const conduitOffset = barrelWidth * 0.15;
-  // Top conduit
+
   ctx.beginPath();
   ctx.moveTo(recoiledPivotX + perpX * 0.3, recoiledPivotY + perpY * 0.3);
   ctx.lineTo(endX + perpX * 0.2 * taperMult, endY + perpY * 0.2 * taperMult);
   ctx.stroke();
-  // Bottom conduit
+
   ctx.beginPath();
   ctx.moveTo(recoiledPivotX - perpX * 0.3, recoiledPivotY - perpY * 0.3);
   ctx.lineTo(endX - perpX * 0.2 * taperMult, endY - perpY * 0.2 * taperMult);
   ctx.stroke();
 
-  // Muzzle assembly
+  // Muzzle assembly - adjusted for pitch
   ctx.fillStyle = "#3a3a42";
   const muzzleStart = 0.85;
-  const msx = recoiledPivotX + cosR * barrelLength * muzzleStart;
-  const msy = recoiledPivotY + sinR * barrelLength * muzzleStart * 0.5;
+  const msx = recoiledPivotX + cosR * effectiveBarrelLength * muzzleStart;
+  const msy =
+    recoiledPivotY +
+    sinR * effectiveBarrelLength * muzzleStart * 0.5 +
+    pitchDrop * muzzleStart;
   ctx.beginPath();
   ctx.moveTo(msx + perpX * taperMult * 0.9, msy + perpY * taperMult * 0.9);
   ctx.lineTo(endX + perpX * taperMult * 1.1, endY + perpY * taperMult * 1.1);
@@ -1607,13 +1621,13 @@ function drawCannonBarrel(
   ctx.closePath();
   ctx.fill();
 
-  // Muzzle bore
+  // Muzzle bore - angled for pitch
   ctx.fillStyle = "#1a1a1a";
   ctx.beginPath();
   ctx.ellipse(
     endX + cosR * 1.35 * zoom,
-    endY + sinR * 1 * zoom,
-    barrelWidth * 0.2 * foreshorten,
+    endY + sinR * 1 * zoom + pitchSin * 2 * zoom,
+    barrelWidth * 0.2 * foreshorten * pitchCos,
     barrelWidth * 0.15,
     rotation,
     0,
@@ -1625,7 +1639,7 @@ function drawCannonBarrel(
   if (timeSinceFire < 150) {
     const flash = 1 - timeSinceFire / 150;
     const flashX = endX + cosR * 10 * zoom;
-    const flashY = endY + sinR * 5 * zoom;
+    const flashY = endY + sinR * 5 * zoom + pitchDrop * 0.2;
     const flashGrad = ctx.createRadialGradient(
       flashX,
       flashY,
@@ -1665,18 +1679,15 @@ function renderHeavyCannon(
   if (timeSinceFire < 600) {
     const firePhase = timeSinceFire / 600;
     if (firePhase < 0.15) {
-      // Heavy initial recoil
       recoilOffset = (firePhase / 0.15) * 12 * zoom;
       turretShake = Math.sin(firePhase * Math.PI * 15) * 3 * zoom;
     } else if (firePhase < 0.5) {
-      // Slower return for heavy cannon
       const returnPhase = (firePhase - 0.15) / 0.35;
       recoilOffset =
         12 * zoom * (1 - returnPhase) * Math.cos(returnPhase * Math.PI * 1.5);
       turretShake =
         Math.sin(returnPhase * Math.PI * 4) * (1 - returnPhase) * 2 * zoom;
     } else {
-      // Reload phase with mechanical motion
       reloadPhase = (firePhase - 0.5) / 0.5;
     }
   }
@@ -1687,7 +1698,7 @@ function renderHeavyCannon(
   const foreshorten = Math.abs(cosR);
   const facingAway = sinR < -0.3;
 
-  // Larger barrel for heavy cannon - with recoil
+  // Larger barrel for heavy cannon
   const baseBarrelLength = 65 * zoom;
   const barrelLength =
     baseBarrelLength * (0.4 + foreshorten * 0.6) - recoilOffset;
@@ -1728,7 +1739,7 @@ function renderHeavyCannon(
   );
   ctx.stroke();
 
-  // Rotating gear teeth around base (shows rotation)
+  // Rotating gear teeth around base
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 16; i++) {
     const toothAngle = rotation + (i / 16) * Math.PI * 2;
@@ -1781,7 +1792,7 @@ function renderHeavyCannon(
     );
   }
 
-  // Armored turret housing with hexagonal details
+  // Armored turret housing
   const housingGrad = ctx.createRadialGradient(
     turretX - 5 * zoom,
     turretY - 20 * zoom,
@@ -1808,16 +1819,12 @@ function renderHeavyCannon(
   ctx.fill();
 
   // ROTATING ARMOR PLATES - Heavy duty version
-  // Draw thick armor segments that rotate with turret
   for (let i = 0; i < 8; i++) {
     const plateAngle = rotation + (i / 8) * Math.PI * 2;
     const plateVisible = Math.cos(plateAngle - rotation);
 
-    // Only draw plates on visible side
     if (plateVisible > -0.4) {
       const shade = 0.5 + plateVisible * 0.35;
-
-      // Main armor plate
       const innerR = 10 * zoom;
       const outerR = 18 * zoom;
       const plateX1 = turretX + Math.cos(plateAngle) * innerR;
@@ -1825,7 +1832,6 @@ function renderHeavyCannon(
       const plateX2 = turretX + Math.cos(plateAngle) * outerR;
       const plateY2 = turretY - 16 * zoom + Math.sin(plateAngle) * outerR * 0.5;
 
-      // Thick armored struts
       ctx.strokeStyle = `rgba(130, 130, 140, ${shade})`;
       ctx.lineWidth = 3 * zoom;
       ctx.beginPath();
@@ -1833,13 +1839,11 @@ function renderHeavyCannon(
       ctx.lineTo(plateX2, plateY2);
       ctx.stroke();
 
-      // Heavy rivets
       ctx.fillStyle = `rgba(90, 90, 100, ${shade})`;
       ctx.beginPath();
       ctx.arc(plateX2, plateY2, 3 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rivet highlight
       ctx.fillStyle = `rgba(150, 150, 160, ${shade * 0.7})`;
       ctx.beginPath();
       ctx.arc(
@@ -1853,7 +1857,7 @@ function renderHeavyCannon(
     }
   }
 
-  // Additional armor plate divider lines (rotate with turret)
+  // Additional armor plate divider lines
   ctx.strokeStyle = "#8a8a92";
   ctx.lineWidth = 1.5 * zoom;
   for (let i = 0; i < 6; i++) {
@@ -1868,7 +1872,7 @@ function renderHeavyCannon(
     ctx.stroke();
   }
 
-  // Bolt details on housing (rotating)
+  // Bolt details on housing
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 8; i++) {
     const angle = rotation + (i / 8) * Math.PI * 2;
@@ -1892,7 +1896,7 @@ function renderHeavyCannon(
   ctx.arc(turretX, turretY - 16 * zoom, 9 * zoom, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Power core (pulsing) with multiple rings - brighter during reload
+  // Power core
   const coreGlow = 0.7 + Math.sin(time * 4) * 0.3 + reloadPhase * 0.4;
   const coreGrad = ctx.createRadialGradient(
     turretX,
@@ -1941,14 +1945,20 @@ function renderHeavyCannon(
     );
   }
 
+  // Calculate pitch for muzzle flash positioning
+  const towerElevation = 35 * zoom;
+  const pitch = calculateBarrelPitch(towerElevation, barrelLength);
+  const pitchDrop = barrelLength * Math.sin(pitch) * 0.5;
+
   // Muzzle flash effect for heavy cannon
   if (timeSinceFire < 150) {
     const flashPhase = timeSinceFire / 150;
     const flashSize = (25 - flashPhase * 18) * zoom;
     const turretRadius = 10 * zoom;
-    const totalLength = turretRadius + barrelLength + 8 * zoom;
+    const totalLength =
+      turretRadius + barrelLength * Math.cos(pitch) + 8 * zoom;
     const flashX = turretX + cosR * totalLength;
-    const flashY = turretY - 16 * zoom + sinR * totalLength * 0.5;
+    const flashY = turretY - 16 * zoom + sinR * totalLength * 0.5 + pitchDrop;
 
     ctx.fillStyle = `rgba(255, 220, 100, ${1 - flashPhase})`;
     ctx.shadowColor = "#ff8800";
@@ -1960,7 +1970,7 @@ function renderHeavyCannon(
   }
 }
 
-// Heavy cannon barrel with stabilizers and recoil
+// Heavy cannon barrel with stabilizers, recoil, and pitch
 function drawHeavyCannonBarrel(
   ctx: CanvasRenderingContext2D,
   pivotX: number,
@@ -1976,6 +1986,12 @@ function drawHeavyCannonBarrel(
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
 
+  // Calculate pitch - heavier cannon, more elevated turret
+  const towerElevation = 35 * zoom;
+  const pitch = calculateBarrelPitch(towerElevation, barrelLength);
+  const pitchCos = Math.cos(pitch);
+  const pitchSin = Math.sin(pitch);
+
   // Calculate recoil
   const timeSinceFire = Date.now() - tower.lastAttack;
   let recoilOffset = 0;
@@ -1988,20 +2004,20 @@ function drawHeavyCannonBarrel(
     }
   }
 
-  // Barrel emerges from inside the turret housing - offset the start point inward
   const turretRadius = 10 * zoom;
   const barrelStartX = pivotX + cosR * turretRadius;
   const barrelStartY = pivotY + sinR * turretRadius * 0.5;
 
-  // Apply recoil
   const recoiledPivotX = barrelStartX - cosR * recoilOffset;
   const recoiledPivotY = barrelStartY - sinR * recoilOffset * 0.5;
 
-  // Calculate barrel end point in isometric space
-  const endX = recoiledPivotX + cosR * barrelLength;
-  const endY = recoiledPivotY + sinR * barrelLength * 0.5;
+  // Apply pitch
+  const effectiveBarrelLength = barrelLength * pitchCos;
+  const pitchDrop = barrelLength * pitchSin * 0.5;
 
-  // Perpendicular offset for barrel thickness
+  const endX = recoiledPivotX + cosR * effectiveBarrelLength;
+  const endY = recoiledPivotY + sinR * effectiveBarrelLength * 0.5 + pitchDrop;
+
   const perpX = -sinR * barrelWidth * 0.5;
   const perpY = cosR * barrelWidth * 0.25;
 
@@ -2049,32 +2065,45 @@ function drawHeavyCannonBarrel(
   ctx.closePath();
   ctx.fill();
 
-  // Stabilizer fins (scaled for isometric)
+  // Stabilizer fins (scaled for isometric and pitch)
   if (foreshorten > 0.3) {
     ctx.fillStyle = "#4a4a52";
     const finStart = 0.4;
     const finEnd = 0.75;
     const finPeak = 0.6;
-    // Top stabilizer
-    const fs1x = recoiledPivotX + cosR * barrelLength * finStart;
-    const fs1y = recoiledPivotY + sinR * barrelLength * finStart * 0.5;
-    const fp1x = recoiledPivotX + cosR * barrelLength * finPeak;
+
+    const fs1x = recoiledPivotX + cosR * effectiveBarrelLength * finStart;
+    const fs1y =
+      recoiledPivotY +
+      sinR * effectiveBarrelLength * finStart * 0.5 +
+      pitchDrop * finStart;
+    const fp1x = recoiledPivotX + cosR * effectiveBarrelLength * finPeak;
     const fp1y =
-      recoiledPivotY + sinR * barrelLength * finPeak * 0.5 - barrelWidth * 0.4;
-    const fe1x = recoiledPivotX + cosR * barrelLength * finEnd;
-    const fe1y = recoiledPivotY + sinR * barrelLength * finEnd * 0.5;
+      recoiledPivotY +
+      sinR * effectiveBarrelLength * finPeak * 0.5 +
+      pitchDrop * finPeak -
+      barrelWidth * 0.4;
+    const fe1x = recoiledPivotX + cosR * effectiveBarrelLength * finEnd;
+    const fe1y =
+      recoiledPivotY +
+      sinR * effectiveBarrelLength * finEnd * 0.5 +
+      pitchDrop * finEnd;
+
     ctx.beginPath();
     ctx.moveTo(fs1x + perpX * 0.5, fs1y + perpY * 0.5);
     ctx.lineTo(fp1x + perpX * 0.8, fp1y);
     ctx.lineTo(fe1x + perpX * 0.5, fe1y + perpY * 0.5);
     ctx.closePath();
     ctx.fill();
-    // Bottom stabilizer
+
     ctx.beginPath();
     ctx.moveTo(fs1x - perpX * 0.5, fs1y - perpY * 0.5);
     ctx.lineTo(
       fp1x - perpX * 0.8,
-      recoiledPivotY + sinR * barrelLength * finPeak * 0.5 + barrelWidth * 0.4
+      recoiledPivotY +
+        sinR * effectiveBarrelLength * finPeak * 0.5 +
+        pitchDrop * finPeak +
+        barrelWidth * 0.4
     );
     ctx.lineTo(fe1x - perpX * 0.5, fe1y - perpY * 0.5);
     ctx.closePath();
@@ -2086,8 +2115,9 @@ function drawHeavyCannonBarrel(
   ctx.lineWidth = 3.5 * zoom;
   for (let i = 0; i < 4; i++) {
     const t = 0.15 + i * 0.2;
-    const bx = recoiledPivotX + cosR * barrelLength * t;
-    const by = recoiledPivotY + sinR * barrelLength * t * 0.5;
+    const bx = recoiledPivotX + cosR * effectiveBarrelLength * t;
+    const by =
+      recoiledPivotY + sinR * effectiveBarrelLength * t * 0.5 + pitchDrop * t;
     const widthMult = 1 - t * 0.35;
     ctx.beginPath();
     ctx.moveTo(bx + perpX * widthMult, by + perpY * widthMult);
@@ -2111,8 +2141,11 @@ function drawHeavyCannonBarrel(
   // Heavy muzzle brake
   ctx.fillStyle = "#3a3a42";
   const muzzleStart = 0.82;
-  const msx = recoiledPivotX + cosR * barrelLength * muzzleStart;
-  const msy = recoiledPivotY + sinR * barrelLength * muzzleStart * 0.5;
+  const msx = recoiledPivotX + cosR * effectiveBarrelLength * muzzleStart;
+  const msy =
+    recoiledPivotY +
+    sinR * effectiveBarrelLength * muzzleStart * 0.5 +
+    pitchDrop * muzzleStart;
   ctx.beginPath();
   ctx.moveTo(msx + perpX * taperMult, msy + perpY * taperMult);
   ctx.lineTo(endX + perpX * taperMult * 1.2, endY + perpY * taperMult * 1.2);
@@ -2125,8 +2158,9 @@ function drawHeavyCannonBarrel(
   ctx.fillStyle = "#2a2a32";
   for (let i = 0; i < 2; i++) {
     const vt = 0.88 + i * 0.06;
-    const vx = recoiledPivotX + cosR * barrelLength * vt;
-    const vy = recoiledPivotY + sinR * barrelLength * vt * 0.5;
+    const vx = recoiledPivotX + cosR * effectiveBarrelLength * vt;
+    const vy =
+      recoiledPivotY + sinR * effectiveBarrelLength * vt * 0.5 + pitchDrop * vt;
     ctx.beginPath();
     ctx.moveTo(vx + perpX * taperMult * 1.1, vy + perpY * taperMult * 1.1);
     ctx.lineTo(vx - perpX * taperMult * 1.1, vy - perpY * taperMult * 1.1);
@@ -2134,13 +2168,13 @@ function drawHeavyCannonBarrel(
     ctx.stroke();
   }
 
-  // Muzzle bore
+  // Muzzle bore - angled for pitch
   ctx.fillStyle = "#1a1a1a";
   ctx.beginPath();
   ctx.ellipse(
     endX + cosR * 3 * zoom,
-    endY + sinR * 1.5 * zoom,
-    barrelWidth * 0.18 * foreshorten + barrelWidth * 0.08,
+    endY + sinR * 1.5 * zoom + pitchSin * 3 * zoom,
+    barrelWidth * 0.18 * foreshorten * pitchCos + barrelWidth * 0.08,
     barrelWidth * 0.12,
     rotation,
     0,
@@ -2152,7 +2186,7 @@ function drawHeavyCannonBarrel(
   if (timeSinceFire < 200) {
     const flash = 1 - timeSinceFire / 200;
     const flashX = endX + cosR * 12 * zoom;
-    const flashY = endY + sinR * 6 * zoom;
+    const flashY = endY + sinR * 6 * zoom + pitchDrop * 0.15;
     const flashGrad = ctx.createRadialGradient(
       flashX,
       flashY,
@@ -2171,7 +2205,6 @@ function drawHeavyCannonBarrel(
     ctx.arc(flashX, flashY, 40 * zoom * flash, 0, Math.PI * 2);
     ctx.fill();
 
-    // Bright core
     ctx.fillStyle = `rgba(255, 255, 255, ${flash})`;
     ctx.beginPath();
     ctx.arc(flashX, flashY, 10 * zoom * flash, 0, Math.PI * 2);
@@ -2188,29 +2221,26 @@ function renderGatlingGun(
   time: number
 ) {
   const rotation = tower.rotation || 0;
-  const spinAngle = time * 30; // Even faster spin
+  const spinAngle = time * 30;
   const timeSinceFire = Date.now() - tower.lastAttack;
   const isAttacking = timeSinceFire < 100;
   const attackPulse = isAttacking ? 1 - timeSinceFire / 100 : 0;
 
-  // Calculate isometric foreshortening
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
   const foreshorten = Math.abs(cosR);
   const facingAway = sinR < -0.3;
 
-  // Recoil animation - rapid fire vibration for gatling
+  // Recoil animation
   let recoilOffset = 0;
   let turretShake = 0;
 
   if (timeSinceFire < 150) {
     const firePhase = timeSinceFire / 150;
     if (firePhase < 0.2) {
-      // Quick snap back
       recoilOffset = (firePhase / 0.2) * 6 * zoom;
       turretShake = Math.sin(firePhase * Math.PI * 20) * 2 * zoom;
     } else {
-      // Rapid return
       const returnPhase = (firePhase - 0.2) / 0.8;
       recoilOffset = 6 * zoom * (1 - returnPhase);
       turretShake =
@@ -2218,14 +2248,12 @@ function renderGatlingGun(
     }
   }
 
-  // Apply turret shake
   const shakeX = turretShake * cosR;
   const shakeY = turretShake * sinR * 0.5;
   const turretX = screenPos.x + shakeX;
   const turretY = topY + shakeY;
 
   // === MASSIVE ARMORED BASE ===
-  // Foundation with skull emblem
   ctx.fillStyle = "#1a1a22";
   ctx.beginPath();
   ctx.ellipse(
@@ -2239,7 +2267,6 @@ function renderGatlingGun(
   );
   ctx.fill();
 
-  // Reinforced platform
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.ellipse(
@@ -2253,7 +2280,6 @@ function renderGatlingGun(
   );
   ctx.fill();
 
-  // Rotating gear teeth around base (shows rotation)
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 16; i++) {
     const toothAngle = rotation + (i / 16) * Math.PI * 2;
@@ -2277,7 +2303,7 @@ function renderGatlingGun(
   );
   ctx.fill();
 
-  // Glowing ammunition indicators (rotate with turret)
+  // Glowing ammunition indicators
   for (let i = 0; i < 6; i++) {
     const angle = rotation + (i / 6) * Math.PI * 2;
     const indicatorX = turretX + Math.cos(angle) * 18 * zoom;
@@ -2290,7 +2316,6 @@ function renderGatlingGun(
     ctx.fill();
   }
 
-  // Draw barrels behind if facing away
   if (facingAway) {
     drawGatlingBarrels(
       ctx,
@@ -2339,7 +2364,6 @@ function renderGatlingGun(
     ctx.stroke();
   }
 
-  // Shield reinforced edge
   ctx.strokeStyle = "#7a7a82";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
@@ -2386,7 +2410,7 @@ function renderGatlingGun(
     }
   }
 
-  // === CENTRAL TURRET MECHANISM - With rotating armor plates ===
+  // === CENTRAL TURRET MECHANISM ===
   const turretGrad = ctx.createRadialGradient(
     turretX - 3 * zoom,
     turretY - 18 * zoom,
@@ -2411,7 +2435,7 @@ function renderGatlingGun(
   );
   ctx.fill();
 
-  // ROTATING ARMOR PLATES on turret mechanism
+  // ROTATING ARMOR PLATES
   for (let i = 0; i < 8; i++) {
     const plateAngle = rotation + (i / 8) * Math.PI * 2;
     const plateVisible = Math.cos(plateAngle - rotation);
@@ -2432,7 +2456,6 @@ function renderGatlingGun(
       ctx.lineTo(plateX2, plateY2);
       ctx.stroke();
 
-      // Rivet at plate edge
       ctx.fillStyle = `rgba(90, 90, 100, ${shade})`;
       ctx.beginPath();
       ctx.arc(plateX2, plateY2, 2 * zoom, 0, Math.PI * 2);
@@ -2504,7 +2527,6 @@ function renderGatlingGun(
     ctx.stroke();
   }
 
-  // Draw barrels in front if not facing away
   if (!facingAway) {
     drawGatlingBarrels(
       ctx,
@@ -2522,7 +2544,6 @@ function renderGatlingGun(
 
   // === HEAT VENTS ===
   if (isAttacking) {
-    // Heat shimmer effect
     for (let i = 0; i < 3; i++) {
       const ventX = turretX + (i - 1) * 8 * zoom;
       const ventY = turretY - 24 * zoom - Math.random() * 5 * zoom;
@@ -2536,7 +2557,7 @@ function renderGatlingGun(
   }
 }
 
-// Helper for gatling barrel cluster - EPIC DARK FANTASY VERSION
+// Helper for gatling barrel cluster with pitch
 function drawGatlingBarrels(
   ctx: CanvasRenderingContext2D,
   pivotX: number,
@@ -2554,19 +2575,26 @@ function drawGatlingBarrels(
   const timeSinceFire = Date.now() - tower.lastAttack;
   const isAttacking = timeSinceFire < 80;
 
+  // Calculate pitch
+  const towerElevation = 30 * zoom;
   const baseLength = 42 * zoom;
-  const barrelLength = baseLength * (0.5 + foreshorten * 0.5) - recoilOffset;
+  const pitch = calculateBarrelPitch(towerElevation, baseLength);
+  const pitchCos = Math.cos(pitch);
+  const pitchSin = Math.sin(pitch);
 
-  // Calculate barrel end point
+  const barrelLength =
+    (baseLength * (0.5 + foreshorten * 0.5) - recoilOffset) * pitchCos;
+  const pitchDrop = baseLength * (0.5 + foreshorten * 0.5) * pitchSin * 0.5;
+
   const endX = pivotX + cosR * barrelLength;
-  const endY = pivotY + sinR * barrelLength * 0.5;
+  const endY = pivotY + sinR * barrelLength * 0.5 + pitchDrop;
 
-  // === ANGULAR BARREL HOUSING - No more ellipses! ===
-  const housingOffset = 10 * zoom - recoilOffset * 0.3;
+  // === ANGULAR BARREL HOUSING ===
+  const housingOffset = (10 * zoom - recoilOffset * 0.3) * pitchCos;
+  const housingPitchDrop = (10 * zoom - recoilOffset * 0.3) * pitchSin * 0.3;
   const housingCenterX = pivotX + cosR * housingOffset;
-  const housingCenterY = pivotY + sinR * housingOffset * 0.5;
+  const housingCenterY = pivotY + sinR * housingOffset * 0.5 + housingPitchDrop;
 
-  // Draw hexagonal housing body (mechanical look)
   const housingGrad = ctx.createLinearGradient(
     housingCenterX - 12 * zoom,
     housingCenterY - 10 * zoom,
@@ -2580,25 +2608,23 @@ function drawGatlingBarrels(
   housingGrad.addColorStop(1, "#3a3a42");
   ctx.fillStyle = housingGrad;
 
-  // Hexagonal housing with perspective
   ctx.beginPath();
   const hexRadius = 11 * zoom;
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 - Math.PI / 6;
     const hx = housingCenterX + Math.cos(angle) * hexRadius;
-    const hy = housingCenterY + Math.sin(angle) * hexRadius * 0.7; // Flatten for isometric
+    const hy = housingCenterY + Math.sin(angle) * hexRadius * 0.7;
     if (i === 0) ctx.moveTo(hx, hy);
     else ctx.lineTo(hx, hy);
   }
   ctx.closePath();
   ctx.fill();
 
-  // Housing edge highlight
   ctx.strokeStyle = "#9a9aa2";
   ctx.lineWidth = 2 * zoom;
   ctx.stroke();
 
-  // Armored face plates on housing
+  // Armored face plates
   ctx.fillStyle = "#4a4a52";
   for (let i = 0; i < 6; i++) {
     const angle = (i / 6) * Math.PI * 2 - Math.PI / 6;
@@ -2617,13 +2643,11 @@ function drawGatlingBarrels(
     if (i % 2 === 0) ctx.fill();
   }
 
-  // Center spindle in housing
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.arc(housingCenterX, housingCenterY, 5 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
-  // Rotating indicator ring
   ctx.strokeStyle = `rgba(255, 180, 50, ${
     0.6 + Math.sin(spinAngle * 0.5) * 0.3
   })`;
@@ -2638,33 +2662,33 @@ function drawGatlingBarrels(
   );
   ctx.stroke();
 
-  // === 8 SPINNING BARRELS ===
+  // === 8 SPINNING BARRELS with pitch ===
   for (let i = 0; i < 8; i++) {
     const barrelAngle = spinAngle + (i / 8) * Math.PI * 2;
     const barrelDepth = Math.cos(barrelAngle);
     const barrelOffset = Math.sin(barrelAngle) * 6 * zoom;
 
-    // Only draw barrels that should be visible
     if (barrelDepth > -0.6) {
       const shade = 0.3 + barrelDepth * 0.4;
       const barrelColor = Math.floor(50 + shade * 60);
 
-      // Perpendicular offset in isometric space
       const perpX = -sinR * barrelOffset;
       const perpY = cosR * barrelOffset * 0.5;
 
-      // Barrel body with gradient - apply recoil
-      const bStartX = pivotX + cosR * (10 * zoom - recoilOffset * 0.3) + perpX;
-      const bStartY = pivotY + sinR * (5 * zoom - recoilOffset * 0.15) + perpY;
+      const bStartX =
+        pivotX + cosR * ((10 * zoom - recoilOffset * 0.3) * pitchCos) + perpX;
+      const bStartY =
+        pivotY +
+        sinR * ((5 * zoom - recoilOffset * 0.15) * pitchCos) +
+        perpY +
+        housingPitchDrop;
       const bEndX = endX + perpX * 0.75;
       const bEndY = endY + perpY * 0.75;
 
-      // Tapered barrel
       const bw = 3 * zoom;
       const perpBX = -sinR * bw;
       const perpBY = cosR * bw * 0.5;
 
-      // Barrel gradient
       const barrelGrad = ctx.createLinearGradient(
         bStartX,
         bStartY,
@@ -2693,7 +2717,6 @@ function drawGatlingBarrels(
       ctx.closePath();
       ctx.fill();
 
-      // Barrel rifling lines
       if (barrelDepth > 0.2) {
         ctx.strokeStyle = `rgba(90, 90, 100, ${shade})`;
         ctx.lineWidth = 0.5 * zoom;
@@ -2703,7 +2726,6 @@ function drawGatlingBarrels(
         ctx.stroke();
       }
 
-      // Barrel bore (dark hole)
       if (barrelDepth > 0.2) {
         ctx.fillStyle = "#0a0a0a";
         ctx.beginPath();
@@ -2716,7 +2738,6 @@ function drawGatlingBarrels(
         );
         ctx.fill();
 
-        // Heat glow inside bore when firing
         if (isAttacking) {
           ctx.fillStyle = `rgba(255, 150, 50, ${
             0.5 * (1 - timeSinceFire / 80)
@@ -2735,11 +2756,10 @@ function drawGatlingBarrels(
     }
   }
 
-  // === FRONT BARREL PLATE - Angular hexagonal design ===
-  const plateX = endX - cosR * 5 * zoom;
+  // === FRONT BARREL PLATE ===
+  const plateX = endX - cosR * 5 * zoom * pitchCos;
   const plateY = endY - sinR * 2.5 * zoom;
 
-  // Hexagonal front plate
   const plateGrad = ctx.createRadialGradient(
     plateX - 2 * zoom,
     plateY - 1 * zoom,
@@ -2753,7 +2773,6 @@ function drawGatlingBarrels(
   plateGrad.addColorStop(1, "#4a4a52");
   ctx.fillStyle = plateGrad;
 
-  // Draw octagonal plate
   ctx.beginPath();
   const plateRadius = 9 * zoom * (0.6 + foreshorten * 0.4);
   for (let i = 0; i < 8; i++) {
@@ -2766,12 +2785,11 @@ function drawGatlingBarrels(
   ctx.closePath();
   ctx.fill();
 
-  // Plate edge highlight
   ctx.strokeStyle = "#9a9aa2";
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
 
-  // Barrel holes in plate (where barrels emerge)
+  // Barrel holes
   for (let i = 0; i < 8; i++) {
     const holeAngle = spinAngle + (i / 8) * Math.PI * 2;
     const holeDepth = Math.cos(holeAngle);
@@ -2786,7 +2804,6 @@ function drawGatlingBarrels(
     }
   }
 
-  // Center spindle
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.arc(plateX, plateY, 3 * zoom, 0, Math.PI * 2);
@@ -2796,12 +2813,11 @@ function drawGatlingBarrels(
   if (isAttacking) {
     const flash = 1 - timeSinceFire / 80;
     const flashX = endX + cosR * 8 * zoom;
-    const flashY = endY + sinR * 4 * zoom;
+    const flashY = endY + sinR * 4 * zoom + pitchDrop * 0.1;
 
     ctx.shadowColor = "#ffaa00";
     ctx.shadowBlur = 20 * zoom;
 
-    // Core flash
     const flashGrad = ctx.createRadialGradient(
       flashX,
       flashY,
@@ -2819,7 +2835,6 @@ function drawGatlingBarrels(
     ctx.arc(flashX, flashY, 18 * zoom * flash, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flash streaks
     for (let i = 0; i < 6; i++) {
       const streakAngle = rotation + (Math.random() - 0.5) * 0.8;
       const streakLen = (10 + Math.random() * 15) * zoom * flash;
@@ -2829,7 +2844,7 @@ function drawGatlingBarrels(
       ctx.moveTo(flashX, flashY);
       ctx.lineTo(
         flashX + Math.cos(streakAngle) * streakLen,
-        flashY + Math.sin(streakAngle) * streakLen * 0.5
+        flashY + Math.sin(streakAngle) * streakLen * 0.5 + pitchDrop * 0.05
       );
       ctx.stroke();
     }
@@ -2837,7 +2852,7 @@ function drawGatlingBarrels(
     ctx.shadowBlur = 0;
   }
 
-  // === SMOKE WISPS after firing ===
+  // === SMOKE WISPS ===
   if (timeSinceFire > 60 && timeSinceFire < 300) {
     const smokePhase = (timeSinceFire - 60) / 240;
     for (let i = 0; i < 3; i++) {
@@ -2866,13 +2881,11 @@ function renderFlamethrower(
 ) {
   const rotation = tower.rotation || 0;
 
-  // Calculate isometric foreshortening
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
   const foreshorten = Math.abs(cosR);
   const facingAway = sinR < -0.3;
 
-  // Recoil animation - slower push-back for flamethrower
   const timeSinceFire = Date.now() - tower.lastAttack;
   let recoilOffset = 0;
   let turretShake = 0;
@@ -2880,11 +2893,9 @@ function renderFlamethrower(
   if (timeSinceFire < 300) {
     const firePhase = timeSinceFire / 300;
     if (firePhase < 0.1) {
-      // Initial push back from flame burst
       recoilOffset = (firePhase / 0.1) * 5 * zoom;
       turretShake = Math.sin(firePhase * Math.PI * 12) * 1.5 * zoom;
     } else {
-      // Gradual return
       const returnPhase = (firePhase - 0.1) / 0.9;
       recoilOffset = 5 * zoom * (1 - returnPhase);
       turretShake =
@@ -2892,7 +2903,6 @@ function renderFlamethrower(
     }
   }
 
-  // Apply turret shake
   const shakeX = turretShake * cosR;
   const shakeY = turretShake * sinR * 0.5;
   const turretX = screenPos.x + shakeX;
@@ -2925,7 +2935,6 @@ function renderFlamethrower(
   );
   ctx.fill();
 
-  // Rotating gear teeth around base (shows rotation)
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 16; i++) {
     const toothAngle = rotation + (i / 16) * Math.PI * 2;
@@ -2949,7 +2958,6 @@ function renderFlamethrower(
   );
   ctx.fill();
 
-  // Draw nozzle behind if facing away
   if (facingAway) {
     drawFlamethrowerNozzle(
       ctx,
@@ -2964,7 +2972,7 @@ function renderFlamethrower(
     );
   }
 
-  // Main fuel tank (cylindrical, detailed)
+  // Main fuel tank
   const tankGrad = ctx.createLinearGradient(
     turretX - 12 * zoom,
     turretY - 24 * zoom,
@@ -3004,7 +3012,7 @@ function renderFlamethrower(
   );
   ctx.stroke();
 
-  // Warning stripes with better detail
+  // Warning stripes
   ctx.strokeStyle = "#ffcc00";
   ctx.lineWidth = 2.5 * zoom;
   for (let i = 0; i < 3; i++) {
@@ -3058,7 +3066,7 @@ function renderFlamethrower(
   ctx.arc(turretX - 6 * zoom, turretY - 26 * zoom, 3 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pressure gauge with needle
+  // Pressure gauge
   ctx.fillStyle = "#ddd";
   ctx.beginPath();
   ctx.arc(turretX + 2 * zoom, turretY - 6 * zoom, 5 * zoom, 0, Math.PI * 2);
@@ -3067,7 +3075,7 @@ function renderFlamethrower(
   ctx.beginPath();
   ctx.arc(turretX + 2 * zoom, turretY - 6 * zoom, 4 * zoom, 0, Math.PI * 2);
   ctx.fill();
-  // Gauge markings
+
   ctx.strokeStyle = "#0f0";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
@@ -3089,7 +3097,7 @@ function renderFlamethrower(
     Math.PI * 1.8
   );
   ctx.stroke();
-  // Needle - jumps during firing
+
   const needleJump =
     timeSinceFire < 300 ? Math.sin(timeSinceFire * 0.05) * 0.2 : 0;
   const needleAngle = Math.PI * (0.9 + Math.sin(time * 2) * 0.15 + needleJump);
@@ -3144,7 +3152,6 @@ function renderFlamethrower(
   );
   ctx.fill();
 
-  // Draw nozzle in front if not facing away
   if (!facingAway) {
     drawFlamethrowerNozzle(
       ctx,
@@ -3160,7 +3167,7 @@ function renderFlamethrower(
   }
 }
 
-// Helper for flamethrower nozzle
+// Helper for flamethrower nozzle with pitch
 function drawFlamethrowerNozzle(
   ctx: CanvasRenderingContext2D,
   pivotX: number,
@@ -3175,22 +3182,26 @@ function drawFlamethrowerNozzle(
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
 
-  // Apply recoil to pivot
+  // Calculate pitch
+  const towerElevation = 25 * zoom;
+  const baseLength = 35 * zoom;
+  const pitch = calculateBarrelPitch(towerElevation, baseLength);
+  const pitchCos = Math.cos(pitch);
+  const pitchSin = Math.sin(pitch);
+
   const recoiledPivotX = pivotX - cosR * recoilOffset;
   const recoiledPivotY = pivotY - sinR * recoilOffset * 0.5;
 
-  const baseLength = 35 * zoom;
-  const nozzleLength = baseLength * (0.5 + foreshorten * 0.5);
+  const nozzleLength = baseLength * (0.5 + foreshorten * 0.5) * pitchCos;
+  const pitchDrop = baseLength * (0.5 + foreshorten * 0.5) * pitchSin * 0.5;
 
-  // Calculate nozzle end point
   const endX = recoiledPivotX + cosR * nozzleLength;
-  const endY = recoiledPivotY + sinR * nozzleLength * 0.5;
+  const endY = recoiledPivotY + sinR * nozzleLength * 0.5 + pitchDrop;
 
-  // Perpendicular for width
   const perpX = -sinR * 5 * zoom;
   const perpY = cosR * 2.5 * zoom;
 
-  // Fuel line from tank to nozzle
+  // Fuel line
   ctx.strokeStyle = "#555";
   ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
@@ -3198,12 +3209,12 @@ function drawFlamethrowerNozzle(
   ctx.quadraticCurveTo(
     recoiledPivotX + cosR * 6 * zoom,
     recoiledPivotY + sinR * 3 * zoom - 4 * zoom,
-    recoiledPivotX + cosR * 10 * zoom,
-    recoiledPivotY + sinR * 5 * zoom
+    recoiledPivotX + cosR * 10 * zoom * pitchCos,
+    recoiledPivotY + sinR * 5 * zoom + pitchDrop * 0.3
   );
   ctx.stroke();
 
-  // Nozzle body with gradient
+  // Nozzle body
   const nozzleGrad = ctx.createLinearGradient(
     recoiledPivotX + perpX,
     recoiledPivotY + perpY,
@@ -3223,13 +3234,13 @@ function drawFlamethrowerNozzle(
   ctx.closePath();
   ctx.fill();
 
-  // Nozzle rings
+  // Nozzle rings - adjusted for pitch
   ctx.strokeStyle = "#7a7a82";
   ctx.lineWidth = 2 * zoom;
   for (let i = 0; i < 3; i++) {
     const t = 0.3 + i * 0.2;
     const rx = recoiledPivotX + cosR * nozzleLength * t;
-    const ry = recoiledPivotY + sinR * nozzleLength * t * 0.5;
+    const ry = recoiledPivotY + sinR * nozzleLength * t * 0.5 + pitchDrop * t;
     const ringMult = 1 - t * 0.3;
     ctx.beginPath();
     ctx.moveTo(rx + perpX * ringMult, ry + perpY * ringMult);
@@ -3241,7 +3252,10 @@ function drawFlamethrowerNozzle(
   ctx.fillStyle = "#3a3a42";
   const tipStart = 0.8;
   const tsx = recoiledPivotX + cosR * nozzleLength * tipStart;
-  const tsy = recoiledPivotY + sinR * nozzleLength * tipStart * 0.5;
+  const tsy =
+    recoiledPivotY +
+    sinR * nozzleLength * tipStart * 0.5 +
+    pitchDrop * tipStart;
   ctx.beginPath();
   ctx.moveTo(tsx + perpX * 0.7, tsy + perpY * 0.7);
   ctx.lineTo(endX + perpX * 1.4, endY + perpY * 1.4);
@@ -3250,19 +3264,19 @@ function drawFlamethrowerNozzle(
   ctx.closePath();
   ctx.fill();
 
-  // Pilot light (blue flame)
+  // Pilot light
   const pilotGlow = 0.7 + Math.sin(time * 10) * 0.3;
   ctx.fillStyle = `rgba(0, 180, 255, ${pilotGlow})`;
   ctx.shadowColor = "#00aaff";
   ctx.shadowBlur = 4 * zoom;
-  const pilotX = endX - cosR * 6 * zoom + perpX * 0.5;
+  const pilotX = endX - cosR * 6 * zoom * pitchCos + perpX * 0.5;
   const pilotY = endY - sinR * 3 * zoom + perpY * 0.5;
   ctx.beginPath();
   ctx.arc(pilotX, pilotY, 2.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Flame effect when firing
+  // Flame effect - follows pitched direction
   const timeSinceFire = Date.now() - tower.lastAttack;
   if (timeSinceFire < 500) {
     const flameIntensity = 1 - timeSinceFire / 500;
@@ -3272,7 +3286,10 @@ function drawFlamethrowerNozzle(
     for (let i = 0; i < 10; i++) {
       const flameT = 1 + i * 0.12;
       const flameX = recoiledPivotX + cosR * nozzleLength * flameT;
-      const flameY = recoiledPivotY + sinR * nozzleLength * flameT * 0.5;
+      const flameY =
+        recoiledPivotY +
+        sinR * nozzleLength * flameT * 0.5 +
+        pitchDrop * flameT;
       const wobble = Math.sin(time * 35 + i * 0.8) * (2 + i * 0.4) * zoom;
       const flameSize = (16 - i * 1.2) * zoom * flameIntensity;
 
@@ -14613,12 +14630,12 @@ function drawMascotEnemy(
   }
 
   // Wing shadow below (if flying)
-  if (isFlying) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-    ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.7, size * 0.6, size * 0.12, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  // if (isFlying) {
+  //   ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+  //   ctx.beginPath();
+  //   ctx.ellipse(x, y + size * 0.7, size * 0.6, size * 0.12, 0, 0, Math.PI * 2);
+  //   ctx.fill();
+  // }
 
   // Magnificent wings
   if (isFlying) {
@@ -16543,10 +16560,10 @@ function drawHarpyEnemy(
   const swoop = Math.sin(time * 4) * 3 * zoom;
 
   // Wing shadow below
-  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.7, size * 0.5, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  // ctx.beginPath();
+  // ctx.ellipse(x, y + size * 0.7, size * 0.5, size * 0.1, 0, 0, Math.PI * 2);
+  // ctx.fill();
 
   // Left wing
   ctx.save();
@@ -16738,10 +16755,10 @@ function drawWyvernEnemy(
   const tailSwing = Math.sin(time * 3) * 0.2;
 
   // Large shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.6, size * 0.6, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  // ctx.beginPath();
+  // ctx.ellipse(x, y + size * 0.6, size * 0.6, size * 0.15, 0, 0, Math.PI * 2);
+  // ctx.fill();
 
   // Tail
   ctx.save();

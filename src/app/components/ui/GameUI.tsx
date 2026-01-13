@@ -41,6 +41,10 @@ import {
   PlusCircle,
   Skull,
   Rewind,
+  Lock,
+  Activity,
+  Home,
+  Sparkles,
 } from "lucide-react";
 import type {
   Tower,
@@ -1352,6 +1356,101 @@ export const PlacingTroopIndicator: React.FC = () => {
         <span className="text-purple-100">Click to Deploy Reinforcements</span>
         <span className="text-purple-400 text-xs">
           (3 Knights with 500 HP each)
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// SPECIAL BUILDING TOOLTIP
+// =============================================================================
+
+interface SpecialBuildingTooltipProps {
+  type: "vault" | "beacon" | "shrine" | "barracks";
+  hp: number | null;
+  maxHp?: number;
+  position: Position;
+}
+
+export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
+  type,
+  hp,
+  maxHp,
+  position,
+}) => {
+  const info = {
+    vault: {
+      name: "Treasury Vault",
+      icon: <Lock className="text-yellow-400" size={18} />,
+      desc: "Critical Objective. If destroyed, you lose 10 lives instantly. Enemies will prioritize attacking this!",
+      stat: "Objective",
+      color: "from-yellow-900/90 to-amber-950/90",
+      borderColor: "border-yellow-500",
+    },
+    beacon: {
+      name: "Ancient Beacon",
+      icon: <Zap className="text-cyan-400" size={18} />,
+      desc: "Energy Spire. Emits a resonance field that boosts the range of all nearby towers by 20%.",
+      stat: "+20% Range Buff",
+      color: "from-cyan-900/90 to-slate-950/90",
+      borderColor: "border-cyan-500",
+    },
+    shrine: {
+      name: "Eldritch Shrine",
+      icon: <Sparkles className="text-green-400" size={18} />,
+      desc: "Restoration Point. Periodically emits an arcane pulse that heals the Hero and nearby Troops.",
+      stat: "Healing Aura",
+      color: "from-green-900/90 to-emerald-950/90",
+      borderColor: "border-green-500",
+    },
+    barracks: {
+      name: "Frontier Barracks",
+      icon: <Home className="text-red-400" size={18} />,
+      desc: "Automated Garrison. Periodically deploys up to 3 armored knights to defend the road.",
+      stat: "3x Knights Cap",
+      color: "from-red-900/90 to-stone-950/90",
+      borderColor: "border-red-500",
+    },
+  }[type];
+
+  return (
+    <div
+      className={`fixed pointer-events-none bg-gradient-to-br ${info.color} p-4 border-2 ${info.borderColor} shadow-2xl rounded-xl w-64 backdrop-blur-md z-[300]`}
+      style={{ left: position.x + 20, top: position.y - 100 }}
+    >
+      <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
+        {info.icon}
+        <h4 className="font-bold text-amber-100 uppercase tracking-tight">
+          {info.name}
+        </h4>
+      </div>
+
+      <p className="text-[11px] text-amber-200/80 leading-relaxed mb-3">
+        {info.desc}
+      </p>
+
+      {hp !== null && maxHp && (
+        <div className="mb-3">
+          <div className="flex justify-between text-[10px] mb-1 font-mono">
+            <span className="text-amber-400">INTEGRITY</span>
+            <span className="text-white">
+              {Math.ceil(hp)} / {maxHp}
+            </span>
+          </div>
+          <div className="w-full bg-black/40 h-2 rounded-full border border-white/5 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-red-500 to-green-500 transition-all duration-300"
+              style={{ width: `${(hp / maxHp) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded border border-white/5">
+        <Activity size={12} className="text-amber-400" />
+        <span className="text-[10px] font-bold text-amber-300 uppercase">
+          {info.stat}
         </span>
       </div>
     </div>

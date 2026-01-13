@@ -9,6 +9,8 @@ import type {
   SpellData,
   TroopType,
   TroopData,
+  MapDecoration,
+  MapHazard,
 } from "../types";
 
 // Grid settings - Larger maps for more strategic depth
@@ -70,7 +72,7 @@ export const TOWER_DATA: Record<
     name: "Nassau Cannon",
     icon: "💣",
     cost: 100,
-    damage: 40,
+    damage: 65,
     range: 240,
     attackSpeed: 1200,
     desc: "Heavy artillery against ground enemies.",
@@ -124,7 +126,7 @@ export const TOWER_DATA: Record<
     name: "E-Quad Lab",
     icon: "⚗️",
     cost: 120,
-    damage: 25,
+    damage: 45,
     range: 200,
     attackSpeed: 800,
     desc: "Fast energy attacks with electric damage.",
@@ -151,7 +153,7 @@ export const TOWER_DATA: Record<
     name: "Blair Arch",
     icon: "🏛️",
     cost: 90,
-    damage: 15,
+    damage: 28,
     range: 260,
     attackSpeed: 600,
     desc: "Sonic attacks hit air and ground.",
@@ -206,273 +208,270 @@ export const TOWER_DATA: Record<
 // Enemy data with visual properties
 export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   frosh: {
-    name: "Freshman",
-    hp: 80,
-    speed: 1.2,
-    bounty: 10,
+    name: "Writing Sem",
+    hp: 160,
+    speed: 0.8,
+    bounty: 12,
     armor: 0,
     flying: false,
-    desc: "Eager but weak. Easy to defeat.",
+    desc: "The first hurdle. Persistence is key.",
     color: "#4ade80",
     size: 20,
   },
   sophomore: {
-    name: "Sophomore",
-    hp: 150,
-    speed: 1.0,
-    bounty: 15,
+    name: "Sophomore Slump",
+    hp: 300,
+    speed: 0.7,
+    bounty: 18,
     armor: 0.1,
     flying: false,
-    desc: "More experienced, harder to stop.",
+    desc: "Heavy and demotivating. Harder to push through.",
     color: "#60a5fa",
     size: 22,
   },
   junior: {
-    name: "Junior",
-    hp: 250,
-    speed: 0.9,
-    bounty: 25,
-    armor: 0.15,
+    name: "Junior Paper",
+    hp: 550,
+    speed: 0.6,
+    bounty: 30,
+    armor: 0.2,
     flying: false,
-    desc: "Focused and determined.",
+    desc: "A significant research obstacle. Requires focus.",
     color: "#c084fc",
     size: 24,
   },
   senior: {
-    name: "Senior",
-    hp: 400,
-    speed: 0.8,
-    bounty: 40,
-    armor: 0.2,
-    flying: false,
-    desc: "Thesis-hardened veteran.",
-    color: "#f472b6",
-    size: 26,
-  },
-  gradstudent: {
-    name: "Grad Student",
-    hp: 600,
-    speed: 0.6,
-    bounty: 60,
-    armor: 0.25,
-    flying: false,
-    desc: "Sleepless and relentless.",
-    color: "#fb923c",
-    size: 28,
-  },
-  professor: {
-    name: "Professor",
-    hp: 800,
+    name: "Senior Thesis",
+    hp: 950,
     speed: 0.5,
-    bounty: 80,
+    bounty: 50,
     armor: 0.3,
     flying: false,
-    desc: "Tenured and tough.",
-    color: "#ef4444",
+    desc: "The ultimate academic titan. Slow but massive.",
+    color: "#f472b6",
+    size: 28,
+  },
+  gradstudent: {
+    name: "Grad School App",
+    hp: 1400,
+    speed: 0.4,
+    bounty: 75,
+    armor: 0.3,
+    flying: false,
+    desc: "An exhausting, soul-crushing process.",
+    color: "#fb923c",
     size: 30,
   },
-  dean: {
-    name: "Dean",
-    hp: 1200,
-    speed: 0.4,
-    bounty: 120,
-    armor: 0.35,
-    flying: false,
-    desc: "Administrative powerhouse.",
-    color: "#a855f7",
-    size: 34,
-  },
-  trustee: {
-    name: "Trustee",
-    hp: 2000,
-    speed: 0.3,
-    bounty: 200,
+  professor: {
+    name: "Tenured Professor",
+    hp: 2200,
+    speed: 0.35,
+    bounty: 100,
     armor: 0.4,
     flying: false,
-    desc: "Wealthy and well-protected.",
+    desc: "Immutable and deeply entrenched.",
+    color: "#ef4444",
+    size: 32,
+  },
+  dean: {
+    name: "Dean of College",
+    hp: 3500,
+    speed: 0.3,
+    bounty: 150,
+    armor: 0.45,
+    flying: false,
+    desc: "A massive administrative wall.",
+    color: "#a855f7",
+    size: 36,
+  },
+  trustee: {
+    name: "Board of Trustees",
+    hp: 7500,
+    speed: 0.25,
+    bounty: 300,
+    armor: 0.55,
+    flying: false,
+    desc: "The final authority. Practically immovable.",
     color: "#eab308",
-    size: 38,
+    size: 42,
   },
   mascot: {
     name: "Rival Mascot",
-    hp: 300,
-    speed: 1.5,
-    bounty: 50,
+    hp: 450,
+    speed: 1.1,
+    bounty: 60,
     armor: 0,
     flying: true,
-    desc: "Flying enemy that ignores ground troops.",
+    desc: "Flying distraction from other schools.",
     color: "#22d3d3",
     size: 26,
   },
   archer: {
-    name: "Archer Student",
-    hp: 120,
-    speed: 0.9,
-    bounty: 20,
-    armor: 0,
+    name: "P-Rade Marshall",
+    hp: 250,
+    speed: 0.65,
+    bounty: 25,
+    armor: 0.1,
     flying: false,
     isRanged: true,
-    range: 200,
-    attackSpeed: 2000,
-    projectileDamage: 15,
-    desc: "Ranged attacker that shoots arrows at heroes and troops.",
+    range: 220,
+    attackSpeed: 2200,
+    projectileDamage: 30,
+    desc: "Directs traffic and shoots order-enforcing arrows.",
     color: "#10b981",
     size: 22,
   },
   mage: {
-    name: "Mage Professor",
-    hp: 200,
-    speed: 0.6,
-    bounty: 45,
-    armor: 0.1,
+    name: "Pre-Med Student",
+    hp: 400,
+    speed: 0.5,
+    bounty: 55,
+    armor: 0.15,
     flying: false,
     isRanged: true,
-    range: 150,
-    attackSpeed: 2500,
-    projectileDamage: 25,
-    desc: "Casts magic bolts from a distance.",
+    range: 180,
+    attackSpeed: 2800,
+    projectileDamage: 55,
+    desc: "Throws volatile organic chemistry flasks.",
     color: "#8b5cf6",
     size: 24,
   },
   catapult: {
-    name: "Siege Engine",
-    hp: 500,
-    speed: 0.4,
-    bounty: 70,
-    armor: 0.3,
+    name: "Grad School Application",
+    hp: 1100,
+    speed: 0.3,
+    bounty: 90,
+    armor: 0.4,
     flying: false,
     isRanged: true,
-    range: 200,
-    attackSpeed: 4000,
-    projectileDamage: 40,
-    desc: "Slow but powerful ranged siege unit.",
+    range: 240,
+    attackSpeed: 4500,
+    projectileDamage: 100,
+    desc: "Heavy burdens launched from a distance.",
     color: "#854d0e",
-    size: 32,
+    size: 34,
   },
-  // === NEW RANGED ENEMIES ===
   warlock: {
-    name: "Dark Warlock",
-    hp: 180,
-    speed: 0.55,
-    bounty: 55,
-    armor: 0.05,
-    flying: false,
-    isRanged: true,
-    range: 160,
-    attackSpeed: 2200,
-    projectileDamage: 30,
-    desc: "Corrupted scholar wielding forbidden shadow magic.",
-    color: "#4c1d95",
-    size: 26,
-  },
-  crossbowman: {
-    name: "Heavy Crossbowman",
-    hp: 220,
-    speed: 0.7,
-    bounty: 35,
+    name: "Job Recruiter",
+    hp: 500,
+    speed: 0.45,
+    bounty: 70,
     armor: 0.2,
     flying: false,
     isRanged: true,
     range: 180,
-    attackSpeed: 3000,
-    projectileDamage: 35,
-    desc: "Armored ranged unit with armor-piercing bolts.",
+    attackSpeed: 2400,
+    projectileDamage: 70,
+    desc: "Promises high salaries while draining your spirit.",
+    color: "#4c1d95",
+    size: 28,
+  },
+  crossbowman: {
+    name: "Heavy Security",
+    hp: 600,
+    speed: 0.55,
+    bounty: 50,
+    armor: 0.35,
+    flying: false,
+    isRanged: true,
+    range: 200,
+    attackSpeed: 3500,
+    projectileDamage: 65,
+    desc: "Armored patrol with high-impact bolts.",
     color: "#78350f",
     size: 24,
   },
   hexer: {
-    name: "Hex Witch",
-    hp: 100,
-    speed: 0.8,
-    bounty: 40,
-    armor: 0,
+    name: "Dance Group Auditions",
+    hp: 350,
+    speed: 0.6,
+    bounty: 50,
+    armor: 0.1,
     flying: false,
     isRanged: true,
-    range: 140,
-    attackSpeed: 1800,
-    projectileDamage: 20,
-    desc: "Fast-casting witch that curses defenders.",
+    range: 160,
+    attackSpeed: 2000,
+    projectileDamage: 40,
+    desc: "Hypnotic movements that curse your defenders.",
     color: "#be185d",
     size: 22,
   },
-  // === NEW FLYING ENEMIES ===
   harpy: {
-    name: "Harpy",
-    hp: 180,
-    speed: 1.8,
-    bounty: 35,
-    armor: 0,
+    name: "Late Meal Rush",
+    hp: 380,
+    speed: 1.3,
+    bounty: 45,
+    armor: 0.05,
     flying: true,
-    desc: "Swift flying predator with razor talons.",
+    desc: "Swift and chaotic flying hunger.",
     color: "#7c3aed",
     size: 24,
   },
   wyvern: {
-    name: "Wyvern",
-    hp: 500,
-    speed: 1.0,
-    bounty: 90,
-    armor: 0.25,
+    name: "Tiger Transit Bus",
+    hp: 1200,
+    speed: 0.8,
+    bounty: 110,
+    armor: 0.3,
     flying: true,
-    desc: "Massive winged beast breathing poison.",
+    desc: "A massive flying vehicle that stops for no one.",
     color: "#059669",
-    size: 34,
+    size: 36,
   },
   specter: {
-    name: "Specter",
-    hp: 250,
-    speed: 1.3,
-    bounty: 60,
-    armor: 0.5,
+    name: "Firestone Ghost",
+    hp: 700,
+    speed: 0.9,
+    bounty: 80,
+    armor: 0.6,
     flying: true,
-    desc: "Ghostly apparition that phases through attacks.",
+    desc: "Faded spirit of an alum. Resistant to physical hits.",
     color: "#94a3b8",
     size: 26,
   },
-  // === NEW GROUND ENEMIES ===
   berserker: {
-    name: "Berserker",
-    hp: 350,
-    speed: 1.6,
-    bounty: 45,
+    name: "Cane Spree Athlete",
+    hp: 850,
+    speed: 1.1,
+    bounty: 65,
     armor: 0,
     flying: false,
-    desc: "Frenzied warrior charging at incredible speed.",
+    desc: "High energy ground unit charging forward.",
     color: "#dc2626",
     size: 26,
   },
   golem: {
     name: "Nassau Lion",
-    hp: 1500,
-    speed: 0.25,
-    bounty: 100,
-    armor: 0.5,
+    hp: 4500,
+    speed: 0.2,
+    bounty: 150,
+    armor: 0.65,
     flying: false,
-    desc: "Ancient construct of living stone. Nearly unstoppable.",
+    desc: "The stone guardian itself. Near-infinite HP.",
     color: "#57534e",
-    size: 40,
+    size: 44,
   },
   necromancer: {
-    name: "Necromancer",
-    hp: 300,
-    speed: 0.5,
-    bounty: 75,
-    armor: 0.1,
+    name: "Admissions Officer",
+    hp: 900,
+    speed: 0.4,
+    bounty: 100,
+    armor: 0.2,
     flying: false,
-    desc: "Dark sorcerer who raises fallen enemies.",
+    desc: "Raises 'rejected' spirits to haunt the path.",
     color: "#1e1b4b",
-    size: 28,
+    size: 30,
   },
   shadow_knight: {
-    name: "Shadow Knight",
-    hp: 700,
-    speed: 0.7,
-    bounty: 85,
-    armor: 0.4,
+    name: "Alumni Donor",
+    hp: 1800,
+    speed: 0.5,
+    bounty: 120,
+    armor: 0.5,
     flying: false,
-    desc: "Fallen champion clad in cursed armor.",
+    desc: "A powerful figure backed by immense resources.",
     color: "#18181b",
-    size: 30,
+    size: 32,
   },
 };
 
@@ -941,12 +940,9 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 12, y: 0 },
     { x: 16, y: 0 },
     { x: 16, y: 4 },
-    { x: 12, y: 4 },
-    { x: 12, y: 10 },
+    { x: 10, y: 4 },
+    { x: 13, y: 9.5 },
     { x: 16, y: 10 },
-    { x: 20, y: 10 },
-    { x: 24, y: 10 },
-    { x: 28, y: 10 },
   ],
   // =====================
   // VOLCANIC REGION (Inferno Depths)
@@ -1122,13 +1118,13 @@ export const LEVEL_DATA: Record<
     theme: "grassland",
     difficulty: 3,
     specialTower: {
-      pos: { x: 18, y: 2 },
+      pos: { x: 10, y: 4 },
       type: "beacon",
     },
     decorations: [
       { type: "nassau_hall", pos: { x: 12, y: -1 }, variant: 0, size: 2 },
       { type: "statue", pos: { x: 0, y: 2 }, variant: 0 },
-      { type: "fountain", pos: { x: 10, y: 6 }, variant: 0 },
+      { type: "fountain", pos: { x: 16, y: 4 }, variant: 0 },
       { type: "tree", pos: { x: 10, y: 0 }, variant: 1 },
       { type: "tree", pos: { x: 26, y: 14 }, variant: 0 },
       { type: "bench", pos: { x: 6, y: 2 }, variant: 0 },
@@ -1182,12 +1178,12 @@ export const LEVEL_DATA: Record<
     theme: "swamp",
     difficulty: 2,
     specialTower: {
-      pos: { x: 2, y: 4 },
+      pos: { x: 7, y: 7 },
       type: "shrine",
     },
     decorations: [
-      { type: "witch_cottage", pos: { x: 13, y: -2 }, variant: 0, size: 2 },
-      { type: "cauldron", pos: { x: 14, y: -1 }, variant: 0 },
+      { type: "witch_cottage", pos: { x: 14, y: 0 }, variant: 0, size: 2 },
+      { type: "cauldron", pos: { x: 15, y: 1 }, variant: 0 },
       { type: "swamp_tree", pos: { x: 2, y: 0 }, variant: 0 },
       { type: "cauldron", pos: { x: 16, y: 12 }, variant: 1 },
       { type: "cauldron", pos: { x: 2, y: 12 }, variant: 0 },
@@ -1196,7 +1192,7 @@ export const LEVEL_DATA: Record<
       { type: "cauldron", pos: { x: 0, y: 6 }, variant: 0 },
       { type: "poison_pool", pos: { x: 24, y: 14 }, variant: 0 },
     ],
-    hazards: [{ type: "poison_fog", pos: { x: 22, y: 8 }, radius: 2 }],
+    hazards: [{ type: "poison_fog", pos: { x: 12, y: 8 }, radius: 2 }],
     previewImage: "/images/previews/witch_hut.png",
   },
   sunken_temple: {
@@ -1211,7 +1207,7 @@ export const LEVEL_DATA: Record<
     dualPath: true,
     secondaryPath: "sunken_temple_b",
     specialTower: {
-      pos: { x: 8, y: 0 },
+      pos: { x: 14, y: 8 },
       type: "vault",
       hp: 800,
     },
@@ -1227,7 +1223,7 @@ export const LEVEL_DATA: Record<
 
       { type: "skeleton_pile", pos: { x: 18, y: 16 }, variant: 0 },
     ],
-    hazards: [{ type: "deep_water", pos: { x: 4, y: 10 }, radius: 1.5 }],
+    hazards: [{ type: "poison_fog", pos: { x: 3.5, y: 10 }, radius: 2.5 }],
     previewImage: "/images/previews/sunken_temple.png",
   },
   // =====================
@@ -1267,6 +1263,10 @@ export const LEVEL_DATA: Record<
     difficulty: 2,
     dualPath: true,
     secondaryPath: "pyramid_b",
+    specialTower: {
+      pos: { x: 15, y: 5 },
+      type: "barracks",
+    },
     decorations: [
       { type: "pyramid", pos: { x: 22, y: 2 }, variant: 0, size: 3 },
       { type: "pyramid", pos: { x: 4, y: 1 }, variant: 0, size: 3 },
@@ -1289,7 +1289,7 @@ export const LEVEL_DATA: Record<
     theme: "desert",
     difficulty: 3,
     specialTower: {
-      pos: { x: 4, y: 12 },
+      pos: { x: 14, y: 8 },
       type: "shrine",
     },
     decorations: [
@@ -1300,7 +1300,7 @@ export const LEVEL_DATA: Record<
       { type: "cobra_statue", pos: { x: 10, y: 0 }, variant: 0 },
       { type: "sand_pile", pos: { x: 18, y: 14 }, variant: 0 },
     ],
-    hazards: [{ type: "quicksand", pos: { x: 6, y: 14 }, radius: 1.5 }],
+    hazards: [{ type: "quicksand", pos: { x: 8, y: 7 }, radius: 1.5 }],
     previewImage: "/images/previews/sphinx.png",
   },
   // =====================
@@ -1315,6 +1315,10 @@ export const LEVEL_DATA: Record<
     region: "winter",
     theme: "winter",
     difficulty: 1,
+    specialTower: {
+      pos: { x: 7, y: 4 },
+      type: "beacon",
+    },
     decorations: [
       { type: "pine_tree", pos: { x: 2, y: 2 }, variant: 0 },
       { type: "pine_tree", pos: { x: 22, y: 2 }, variant: 1 },
@@ -1337,7 +1341,7 @@ export const LEVEL_DATA: Record<
     theme: "winter",
     difficulty: 2,
     specialTower: {
-      pos: { x: 2, y: 10 },
+      pos: { x: 8, y: 10 },
       type: "barracks",
     },
     decorations: [
@@ -1353,7 +1357,7 @@ export const LEVEL_DATA: Record<
       { type: "pine_tree", pos: { x: 22, y: 16 }, variant: 0 },
       { type: "pine_tree", pos: { x: 24, y: 14 }, variant: 1 },
     ],
-    hazards: [{ type: "slippery_ice", pos: { x: 6, y: 6 }, radius: 2 }],
+    hazards: [{ type: "ice_sheet", pos: { x: 12, y: 7 }, radius: 2 }],
     previewImage: "/images/previews/fortress.png",
   },
   peak: {
@@ -1367,6 +1371,10 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     dualPath: true,
     secondaryPath: "peak_b",
+    specialTower: {
+      pos: { x: 9, y: 9 },
+      type: "shrine",
+    },
     decorations: [
       { type: "ice_throne", pos: { x: 7.5, y: -1.5 }, variant: 0, size: 3 },
       { type: "ice_fortress", pos: { x: 2, y: 0 }, variant: 0 },
@@ -1376,7 +1384,7 @@ export const LEVEL_DATA: Record<
       { type: "ice_throne", pos: { x: 6, y: 14 }, variant: 0 },
       { type: "ice_throne", pos: { x: 13, y: 8 }, variant: 0 },
     ],
-    hazards: [{ type: "ice_sheet", pos: { x: 18, y: 12 }, radius: 2 }],
+    hazards: [{ type: "ice_sheet", pos: { x: 13, y: -2 }, radius: 2 }],
     previewImage: "/images/previews/peak.png",
   },
   // =====================
@@ -1400,7 +1408,7 @@ export const LEVEL_DATA: Record<
       { type: "dark_throne", pos: { x: 10, y: 14 }, variant: 0 },
       { type: "dark_throne", pos: { x: 20, y: 14 }, variant: 0 },
     ],
-    hazards: [{ type: "lava_geyser", pos: { x: 6, y: 14 }, radius: 1.5 }],
+    hazards: [{ type: "lava_geyser", pos: { x: 7, y: 6 }, radius: 2.5 }],
     previewImage: "/images/previews/lava_fields.png",
   },
   crater: {
@@ -1426,7 +1434,7 @@ export const LEVEL_DATA: Record<
       { type: "obsidian_castle", pos: { x: 22, y: 14 }, variant: 0 },
       { type: "obsidian_castle", pos: { x: 4, y: 14 }, variant: 0 },
     ],
-    hazards: [{ type: "eruption_zone", pos: { x: 22, y: 6 }, radius: 2 }],
+    hazards: [{ type: "lava_geyser", pos: { x: 22, y: 6 }, radius: 2 }],
     previewImage: "/images/previews/caldera.png",
   },
   throne: {
@@ -1440,6 +1448,10 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     dualPath: true,
     secondaryPath: "throne_b",
+    specialTower: {
+      pos: { x: 8, y: 10 },
+      type: "barracks",
+    },
     decorations: [
       { type: "obsidian_castle", pos: { x: 12, y: -2 }, variant: 0, size: 4 },
       { type: "dark_throne", pos: { x: 13, y: 2 }, variant: 0 },
@@ -1610,6 +1622,197 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   ],
 
   // =====================
+  // SWAMP REGION - Dark magic and hexers
+  // =====================
+  bog: [
+    // 10 waves - Introduction to swamp enemies
+    [{ type: "frosh", count: 5, interval: 1600 }],
+    [
+      { type: "sophomore", count: 5, interval: 1500 },
+      { type: "hexer", count: 3, interval: 5000 },
+    ],
+    [
+      { type: "hexer", count: 2, interval: 2800 },
+      { type: "sophomore", count: 4, interval: 1600 },
+    ],
+    [
+      { type: "junior", count: 4, interval: 1800 },
+      { type: "hexer", count: 2, interval: 2800 },
+    ],
+    [
+      { type: "warlock", count: 2, interval: 3200 },
+      { type: "junior", count: 4, interval: 1800 },
+    ],
+    [
+      { type: "senior", count: 3, interval: 2400 },
+      { type: "hexer", count: 3, interval: 2500 },
+    ],
+    [
+      { type: "specter", count: 3, interval: 2600 },
+      { type: "sophomore", count: 5, interval: 1600 },
+    ],
+    [
+      { type: "warlock", count: 3, interval: 3000 },
+      { type: "senior", count: 3, interval: 2400 },
+    ],
+    [
+      { type: "necromancer", count: 1, interval: 4500 },
+      { type: "hexer", count: 4, interval: 2400 },
+      { type: "berserker", count: 4, interval: 5000 },
+    ],
+    [
+      { type: "harpy", count: 6, interval: 4000 },
+      { type: "necromancer", count: 2, interval: 4000 },
+      { type: "specter", count: 4, interval: 2400 },
+    ],
+  ],
+
+  witch_hut: [
+    // 14 waves - Witch's dark magic
+    [
+      { type: "junior", count: 5, interval: 1700 },
+      { type: "harpy", count: 3, interval: 9000 },
+    ],
+    [
+      { type: "hexer", count: 3, interval: 2600 },
+      { type: "junior", count: 4, interval: 1800 },
+    ],
+    [
+      { type: "warlock", count: 3, interval: 3000 },
+      { type: "senior", count: 4, interval: 2300 },
+    ],
+    [
+      { type: "specter", count: 4, interval: 2400 },
+      { type: "hexer", count: 3, interval: 2600 },
+    ],
+    [
+      { type: "necromancer", count: 2, interval: 4000 },
+      { type: "warlock", count: 3, interval: 3000 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 3000 },
+      { type: "specter", count: 4, interval: 2400 },
+    ],
+    [
+      { type: "berserker", count: 2, interval: 3500 },
+      { type: "hexer", count: 4, interval: 2400 },
+    ],
+    [
+      { type: "professor", count: 2, interval: 4000 },
+      { type: "necromancer", count: 2, interval: 4000 },
+    ],
+    [
+      { type: "warlock", count: 4, interval: 2800 },
+      { type: "berserker", count: 3, interval: 3200 },
+    ],
+    [
+      { type: "shadow_knight", count: 2, interval: 4500 },
+      { type: "specter", count: 5, interval: 2200 },
+    ],
+    [
+      { type: "necromancer", count: 3, interval: 3500 },
+      { type: "warlock", count: 4, interval: 2800 },
+    ],
+    [
+      { type: "dean", count: 1, interval: 6000 },
+      { type: "shadow_knight", count: 2, interval: 4500 },
+    ],
+    [
+      { type: "shadow_knight", count: 3, interval: 4000 },
+      { type: "berserker", count: 4, interval: 3000 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 5000 },
+      { type: "necromancer", count: 3, interval: 3500 },
+      { type: "berserker", count: 4, interval: 3500 },
+      { type: "wyvern", count: 3, interval: 3000 },
+    ],
+  ],
+
+  sunken_temple: [
+    // 18 waves - Ancient horrors
+    [{ type: "senior", count: 5, interval: 2200 }],
+    [
+      { type: "shadow_knight", count: 3, interval: 8000 },
+      { type: "hexer", count: 5, interval: 4000 },
+      { type: "warlock", count: 2, interval: 2800 },
+      { type: "hexer", count: 2, interval: 2400 },
+    ],
+    [
+      { type: "wyvern", count: 3, interval: 9000 },
+      { type: "specter", count: 5, interval: 2200 },
+      { type: "necromancer", count: 2, interval: 4000 },
+    ],
+    [
+      { type: "wyvern", count: 3, interval: 9000 },
+      { type: "golem", count: 2, interval: 5000 },
+      { type: "warlock", count: 4, interval: 2800 },
+    ],
+    [
+      { type: "shadow_knight", count: 3, interval: 4000 },
+      { type: "specter", count: 5, interval: 2200 },
+      { type: "wyvern", count: 3, interval: 9000 },
+    ],
+    [
+      { type: "berserker", count: 4, interval: 3000 },
+      { type: "hexer", count: 5, interval: 2200 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 3500 },
+      { type: "golem", count: 2, interval: 5000 },
+    ],
+    [
+      { type: "necromancer", count: 4, interval: 3200 },
+      { type: "shadow_knight", count: 3, interval: 4000 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 5000 },
+      { type: "berserker", count: 4, interval: 3000 },
+    ],
+    [
+      { type: "golem", count: 3, interval: 4500 },
+      { type: "warlock", count: 5, interval: 2600 },
+    ],
+    [
+      { type: "shadow_knight", count: 4, interval: 3800 },
+      { type: "necromancer", count: 4, interval: 3200 },
+    ],
+    [
+      { type: "wyvern", count: 3, interval: 9000 },
+      { type: "trustee", count: 1, interval: 8000 },
+      { type: "specter", count: 2, interval: 2000 },
+    ],
+    [
+      { type: "dean", count: 3, interval: 4500 },
+      { type: "golem", count: 3, interval: 4500 },
+    ],
+    [
+      { type: "berserker", count: 5, interval: 2800 },
+      { type: "shadow_knight", count: 4, interval: 3800 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 6000 },
+      { type: "necromancer", count: 4, interval: 3200 },
+    ],
+    [
+      { type: "golem", count: 4, interval: 4200 },
+      { type: "dean", count: 3, interval: 4500 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 12000 },
+      { type: "trustee", count: 2, interval: 5500 },
+      { type: "shadow_knight", count: 5, interval: 3500 },
+    ],
+    // Final wave - the temple awakens
+    [
+      { type: "wyvern", count: 3, interval: 9000 },
+      { type: "trustee", count: 3, interval: 5000 },
+      { type: "golem", count: 4, interval: 4200 },
+      { type: "necromancer", count: 2, interval: 3000 },
+    ],
+  ],
+
+  // =====================
   // DESERT REGION - Introduces ranged enemies
   // =====================
   oasis: [
@@ -1688,12 +1891,15 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "professor", count: 1, interval: 5000 },
       { type: "archer", count: 5, interval: 2000 },
+      { type: "harpy", count: 4, interval: 3000 },
     ],
     [
       { type: "professor", count: 2, interval: 4000 },
       { type: "catapult", count: 1, interval: 5000 },
+      { type: "mage", count: 6, interval: 5000 },
     ],
     [
+      { type: "mascot", count: 4, interval: 5000 },
       { type: "professor", count: 2, interval: 3500 },
       { type: "gradstudent", count: 4, interval: 2500 },
     ],
@@ -1709,12 +1915,14 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "mage", count: 3, interval: 3000 },
       { type: "junior", count: 5, interval: 1700 },
+      { type: "warlock", count: 4, interval: 6500 },
     ],
     [
       { type: "gradstudent", count: 3, interval: 3000 },
       { type: "archer", count: 4, interval: 2200 },
     ],
     [
+      { type: "professor", count: 3, interval: 12000 },
       { type: "mascot", count: 5, interval: 2000 },
       { type: "mage", count: 3, interval: 3000 },
     ],
@@ -1729,6 +1937,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "gradstudent", count: 5, interval: 2600 },
       { type: "catapult", count: 2, interval: 4500 },
+      { type: "wyvern", count: 1, interval: 9000 },
     ],
     [
       { type: "professor", count: 3, interval: 3500 },
@@ -1737,6 +1946,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 1, interval: 6000 },
       { type: "gradstudent", count: 4, interval: 2800 },
+      { type: "wyvern", count: 2, interval: 9000 },
     ],
     [
       { type: "dean", count: 1, interval: 6000 },
@@ -1746,14 +1956,17 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 2, interval: 5000 },
       { type: "catapult", count: 2, interval: 4500 },
+      { type: "wyvern", count: 4, interval: 9000 },
     ],
     [
       { type: "dean", count: 2, interval: 4500 },
       { type: "professor", count: 3, interval: 3200 },
+      { type: "senior", count: 6, interval: 6000 },
     ],
     [
       { type: "dean", count: 3, interval: 4000 },
       { type: "mage", count: 5, interval: 2500 },
+      { type: "harpy", count: 4, interval: 3500 },
     ],
   ],
 
@@ -1762,13 +1975,25 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   glacier: [
     // 12 waves
-    [{ type: "junior", count: 6, interval: 1600 }],
-    [{ type: "senior", count: 4, interval: 2200 }],
+    [
+      { type: "crossbowman", count: 4, interval: 7000 },
+
+      { type: "junior", count: 3, interval: 1600 },
+      { type: "archer", count: 4, interval: 4500 },
+    ],
+    [
+      { type: "senior", count: 4, interval: 2200 },
+      { type: "hexer", count: 6, interval: 4500 },
+      { type: "mascot", count: 5, interval: 4000 },
+    ],
+
     [
       { type: "archer", count: 4, interval: 2100 },
       { type: "senior", count: 3, interval: 2400 },
+      { type: "mascot", count: 5, interval: 4000 },
     ],
     [
+      { type: "crossbowman", count: 4, interval: 7000 },
       { type: "mascot", count: 4, interval: 2200 },
       { type: "junior", count: 5, interval: 1700 },
     ],
@@ -1787,10 +2012,12 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "professor", count: 2, interval: 4000 },
       { type: "senior", count: 5, interval: 2200 },
+      { type: "crossbowman", count: 4, interval: 7000 },
     ],
     [
       { type: "mascot", count: 5, interval: 2000 },
       { type: "mage", count: 3, interval: 3000 },
+      { type: "harpy", count: 5, interval: 8000 },
     ],
     [
       { type: "professor", count: 2, interval: 3800 },
@@ -1799,19 +2026,28 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "gradstudent", count: 5, interval: 2600 },
       { type: "catapult", count: 2, interval: 4500 },
+      { type: "crossbowman", count: 4, interval: 7000 },
     ],
     [
       { type: "dean", count: 1, interval: 6000 },
+      { type: "crossbowman", count: 4, interval: 7000 },
+
       { type: "professor", count: 2, interval: 3800 },
+      { type: "wyvern", count: 5, interval: 8000 },
     ],
   ],
 
   fortress: [
     // 14 waves
-    [{ type: "senior", count: 5, interval: 2100 }],
+    [
+      { type: "senior", count: 5, interval: 2100 },
+      { type: "hexer", count: 6, interval: 4500 },
+    ],
     [
       { type: "gradstudent", count: 3, interval: 3000 },
       { type: "senior", count: 4, interval: 2200 },
+      { type: "mascot", count: 8, interval: 4000 },
+      { type: "crossbowman", count: 4, interval: 7000 },
     ],
     [
       { type: "archer", count: 5, interval: 2000 },
@@ -1820,6 +2056,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "mascot", count: 5, interval: 2000 },
       { type: "gradstudent", count: 3, interval: 3000 },
+      { type: "crossbowman", count: 4, interval: 7000 },
     ],
     [
       { type: "professor", count: 2, interval: 4000 },
@@ -1838,6 +2075,8 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "mascot", count: 5, interval: 2000 },
     ],
     [
+      { type: "catapult", count: 4, interval: 11000 },
+      { type: "wyvern", count: 5, interval: 8000 },
       { type: "dean", count: 1, interval: 6000 },
       { type: "gradstudent", count: 4, interval: 2800 },
     ],
@@ -1858,8 +2097,11 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "archer", count: 6, interval: 1800 },
     ],
     [
+      { type: "senior", count: 5, interval: 5500 },
+      { type: "hexer", count: 4, interval: 4500 },
       { type: "trustee", count: 1, interval: 8000 },
       { type: "dean", count: 2, interval: 5000 },
+      { type: "wyvern", count: 5, interval: 8000 },
     ],
   ],
 
@@ -1885,6 +2127,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "professor", count: 4, interval: 3200 },
       { type: "mascot", count: 5, interval: 2000 },
+      { type: "crossbowman", count: 4, interval: 6000 },
     ],
     [
       { type: "dean", count: 2, interval: 5000 },
@@ -1893,6 +2136,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "catapult", count: 3, interval: 4000 },
       { type: "mage", count: 4, interval: 2800 },
+      { type: "crossbowman", count: 4, interval: 6000 },
     ],
     [
       { type: "professor", count: 4, interval: 3200 },
@@ -1901,18 +2145,22 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 2, interval: 4800 },
       { type: "catapult", count: 2, interval: 4500 },
+      { type: "harpy", count: 6, interval: 8000 },
     ],
     [
       { type: "trustee", count: 1, interval: 8000 },
       { type: "professor", count: 3, interval: 3500 },
+      { type: "crossbowman", count: 4, interval: 6000 },
     ],
     [
       { type: "dean", count: 3, interval: 4500 },
       { type: "mascot", count: 6, interval: 1800 },
+      { type: "crossbowman", count: 4, interval: 6000 },
     ],
     [
       { type: "trustee", count: 1, interval: 7000 },
       { type: "dean", count: 2, interval: 4800 },
+      { type: "wyvern", count: 6, interval: 8000 },
     ],
     [
       { type: "trustee", count: 1, interval: 7000 },
@@ -1922,10 +2170,15 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "trustee", count: 2, interval: 6000 },
       { type: "dean", count: 2, interval: 5000 },
+      { type: "wyvern", count: 2, interval: 8000 },
+      { type: "crossbowman", count: 4, interval: 6000 },
+      { type: "mage", count: 4, interval: 5000 },
     ],
     [
+      { type: "golem", count: 3, interval: 18000 },
       { type: "trustee", count: 2, interval: 5500 },
-      { type: "catapult", count: 3, interval: 4000 },
+      { type: "crossbowman", count: 4, interval: 6000 },
+      { type: "catapult", count: 4, interval: 4000 },
     ],
   ],
 
@@ -1944,6 +2197,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "mage", count: 3, interval: 3000 },
     ],
     [
+      { type: "shadow_knight", count: 4, interval: 8000 },
       { type: "mascot", count: 6, interval: 1800 },
       { type: "senior", count: 5, interval: 2200 },
     ],
@@ -1962,55 +2216,73 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 2, interval: 5000 },
       { type: "catapult", count: 2, interval: 4500 },
+      { type: "mascot", count: 4, interval: 4000 },
     ],
     [
       { type: "professor", count: 4, interval: 3200 },
-      { type: "mascot", count: 6, interval: 1800 },
+      { type: "mascot", count: 3, interval: 1800 },
+      { type: "warlock", count: 4, interval: 6000 },
     ],
     [
       { type: "trustee", count: 1, interval: 8000 },
       { type: "dean", count: 2, interval: 5000 },
+      { type: "wyvern", count: 4, interval: 8000 },
     ],
     [
+      { type: "berserker", count: 12, interval: 3000 },
       { type: "dean", count: 3, interval: 4500 },
       { type: "mage", count: 5, interval: 2500 },
     ],
     [
       { type: "trustee", count: 1, interval: 7000 },
       { type: "professor", count: 4, interval: 3200 },
+      { type: "wyvern", count: 8, interval: 8000 },
     ],
     [
+      { type: "shadow_knight", count: 8, interval: 8000 },
       { type: "trustee", count: 2, interval: 6000 },
       { type: "catapult", count: 3, interval: 4000 },
+      { type: "golem", count: 2, interval: 18000 },
     ],
     [
+      { type: "necromancer", count: 4, interval: 9000 },
       { type: "trustee", count: 2, interval: 5500 },
       { type: "dean", count: 2, interval: 5000 },
+      { type: "golem", count: 3, interval: 18000 },
     ],
   ],
 
   crater: [
     // 16 waves
-    [{ type: "gradstudent", count: 5, interval: 2600 }],
     [
+      { type: "gradstudent", count: 5, interval: 2600 },
+      { type: "hexer", count: 4, interval: 4000 },
+      { type: "crossbowman", count: 3, interval: 6000 },
+    ],
+    [
+      { type: "shadow_knight", count: 4, interval: 7500 },
       { type: "professor", count: 3, interval: 3500 },
       { type: "archer", count: 5, interval: 2000 },
     ],
     [
       { type: "dean", count: 1, interval: 6000 },
       { type: "mage", count: 4, interval: 2800 },
+      { type: "specter", count: 4, interval: 5000 },
     ],
     [
       { type: "catapult", count: 3, interval: 4000 },
       { type: "gradstudent", count: 5, interval: 2600 },
+      { type: "harpy", count: 3, interval: 8000 },
     ],
     [
       { type: "mascot", count: 7, interval: 1600 },
       { type: "professor", count: 3, interval: 3500 },
+      { type: "mage", count: 5, interval: 4500 },
     ],
     [
       { type: "dean", count: 2, interval: 5000 },
       { type: "archer", count: 6, interval: 1800 },
+      { type: "wyvern", count: 4, interval: 7000 },
     ],
     [
       { type: "professor", count: 5, interval: 3000 },
@@ -2039,6 +2311,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "dean", count: 4, interval: 4200 },
       { type: "archer", count: 7, interval: 1600 },
+      { type: "necromancer", count: 3, interval: 8000 },
     ],
     [
       { type: "trustee", count: 2, interval: 5500 },
@@ -2047,39 +2320,53 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "trustee", count: 3, interval: 5000 },
       { type: "professor", count: 5, interval: 3000 },
+      { type: "necromancer", count: 6, interval: 8000 },
     ],
     [
       { type: "trustee", count: 3, interval: 4500 },
       { type: "catapult", count: 4, interval: 3800 },
+      { type: "shadow_knight", count: 4, interval: 7500 },
+      { type: "golem", count: 6, interval: 18000 },
     ],
   ],
 
   throne: [
     // The ultimate challenge - 20 brutal waves
-    [{ type: "professor", count: 4, interval: 3200 }],
+    [
+      { type: "professor", count: 4, interval: 3200 },
+      { type: "shadow_knight", count: 6, interval: 6000 },
+      { type: "golem", count: 2, interval: 18000 },
+    ],
     [
       { type: "dean", count: 2, interval: 5000 },
       { type: "gradstudent", count: 5, interval: 2600 },
+      { type: "shadow_knight", count: 5, interval: 6000 },
     ],
     [
       { type: "mage", count: 5, interval: 2500 },
       { type: "archer", count: 6, interval: 1800 },
+      { type: "berserker", count: 5, interval: 3000 },
     ],
     [
       { type: "catapult", count: 3, interval: 4000 },
       { type: "professor", count: 4, interval: 3200 },
+      { type: "golem", count: 2, interval: 18000 },
     ],
     [
       { type: "trustee", count: 1, interval: 8000 },
       { type: "dean", count: 2, interval: 5000 },
+      { type: "shadow_knight", count: 4, interval: 6000 },
     ],
     [
       { type: "mascot", count: 8, interval: 1500 },
       { type: "mage", count: 5, interval: 2500 },
+      { type: "golem", count: 2, interval: 18000 },
+      { type: "shadow_knight", count: 4, interval: 6000 },
     ],
     [
       { type: "dean", count: 3, interval: 4500 },
       { type: "catapult", count: 3, interval: 4000 },
+      { type: "hexer", count: 6, interval: 4000 },
     ],
     [
       { type: "professor", count: 5, interval: 3000 },
@@ -2088,26 +2375,36 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "trustee", count: 2, interval: 6000 },
       { type: "dean", count: 2, interval: 5000 },
+      { type: "hexer", count: 4, interval: 4000 },
     ],
     [
       { type: "mage", count: 6, interval: 2300 },
       { type: "catapult", count: 4, interval: 3800 },
+      { type: "golem", count: 2, interval: 18000 },
+      { type: "necromancer", count: 4, interval: 8000 },
     ],
     [
       { type: "dean", count: 4, interval: 4200 },
       { type: "professor", count: 4, interval: 3200 },
+      { type: "shadow_knight", count: 6, interval: 6000 },
+      { type: "golem", count: 2, interval: 18000 },
     ],
     [
       { type: "trustee", count: 2, interval: 5500 },
-      { type: "mascot", count: 8, interval: 1500 },
+      { type: "mascot", count: 4, interval: 1500 },
+      { type: "hexer", count: 3, interval: 4000 },
+      { type: "shadow_knight", count: 6, interval: 6000 },
     ],
     [
       { type: "catapult", count: 4, interval: 3800 },
       { type: "mage", count: 6, interval: 2300 },
+      { type: "golem", count: 2, interval: 18000 },
+      { type: "hexer", count: 6, interval: 4000 },
     ],
     [
       { type: "trustee", count: 3, interval: 5000 },
       { type: "archer", count: 8, interval: 1500 },
+      { type: "specter", count: 6, interval: 4500 },
     ],
     [
       { type: "dean", count: 4, interval: 4200 },
@@ -2120,193 +2417,26 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "mage", count: 7, interval: 2100 },
       { type: "mascot", count: 8, interval: 1500 },
+      { type: "specter", count: 6, interval: 4500 },
+      { type: "necromancer", count: 8, interval: 8000 },
     ],
     [
       { type: "trustee", count: 3, interval: 4500 },
       { type: "dean", count: 3, interval: 4500 },
+      { type: "golem", count: 2, interval: 18000 },
     ],
     [
       { type: "catapult", count: 5, interval: 3500 },
       { type: "trustee", count: 2, interval: 5500 },
+      { type: "specter", count: 4, interval: 4500 },
     ],
     // Final wave - the ultimate test
     [
       { type: "trustee", count: 4, interval: 4000 },
       { type: "dean", count: 4, interval: 4200 },
       { type: "professor", count: 5, interval: 3000 },
-    ],
-  ],
-
-  // =====================
-  // SWAMP REGION - Dark magic and hexers
-  // =====================
-  bog: [
-    // 10 waves - Introduction to swamp enemies
-    [{ type: "frosh", count: 5, interval: 1600 }],
-    [{ type: "sophomore", count: 5, interval: 1500 }],
-    [
-      { type: "hexer", count: 2, interval: 2800 },
-      { type: "sophomore", count: 4, interval: 1600 },
-    ],
-    [
-      { type: "junior", count: 4, interval: 1800 },
-      { type: "hexer", count: 2, interval: 2800 },
-    ],
-    [
-      { type: "warlock", count: 2, interval: 3200 },
-      { type: "junior", count: 4, interval: 1800 },
-    ],
-    [
-      { type: "senior", count: 3, interval: 2400 },
-      { type: "hexer", count: 3, interval: 2500 },
-    ],
-    [
-      { type: "specter", count: 3, interval: 2600 },
-      { type: "sophomore", count: 5, interval: 1600 },
-    ],
-    [
-      { type: "warlock", count: 3, interval: 3000 },
-      { type: "senior", count: 3, interval: 2400 },
-    ],
-    [
-      { type: "necromancer", count: 1, interval: 4500 },
-      { type: "hexer", count: 4, interval: 2400 },
-    ],
-    [
-      { type: "necromancer", count: 2, interval: 4000 },
-      { type: "specter", count: 4, interval: 2400 },
-    ],
-  ],
-
-  witch_hut: [
-    // 14 waves - Witch's dark magic
-    [{ type: "junior", count: 5, interval: 1700 }],
-    [
-      { type: "hexer", count: 3, interval: 2600 },
-      { type: "junior", count: 4, interval: 1800 },
-    ],
-    [
-      { type: "warlock", count: 3, interval: 3000 },
-      { type: "senior", count: 4, interval: 2300 },
-    ],
-    [
-      { type: "specter", count: 4, interval: 2400 },
-      { type: "hexer", count: 3, interval: 2600 },
-    ],
-    [
-      { type: "necromancer", count: 2, interval: 4000 },
-      { type: "warlock", count: 3, interval: 3000 },
-    ],
-    [
-      { type: "gradstudent", count: 3, interval: 3000 },
-      { type: "specter", count: 4, interval: 2400 },
-    ],
-    [
-      { type: "berserker", count: 2, interval: 3500 },
-      { type: "hexer", count: 4, interval: 2400 },
-    ],
-    [
-      { type: "professor", count: 2, interval: 4000 },
-      { type: "necromancer", count: 2, interval: 4000 },
-    ],
-    [
-      { type: "warlock", count: 4, interval: 2800 },
-      { type: "berserker", count: 3, interval: 3200 },
-    ],
-    [
-      { type: "shadow_knight", count: 2, interval: 4500 },
-      { type: "specter", count: 5, interval: 2200 },
-    ],
-    [
-      { type: "necromancer", count: 3, interval: 3500 },
-      { type: "warlock", count: 4, interval: 2800 },
-    ],
-    [
-      { type: "dean", count: 1, interval: 6000 },
-      { type: "shadow_knight", count: 2, interval: 4500 },
-    ],
-    [
-      { type: "shadow_knight", count: 3, interval: 4000 },
-      { type: "berserker", count: 4, interval: 3000 },
-    ],
-    [
-      { type: "dean", count: 2, interval: 5000 },
-      { type: "necromancer", count: 3, interval: 3500 },
-    ],
-  ],
-
-  sunken_temple: [
-    // 18 waves - Ancient horrors
-    [{ type: "senior", count: 5, interval: 2200 }],
-    [
-      { type: "warlock", count: 4, interval: 2800 },
-      { type: "hexer", count: 4, interval: 2400 },
-    ],
-    [
-      { type: "specter", count: 5, interval: 2200 },
-      { type: "necromancer", count: 2, interval: 4000 },
-    ],
-    [
-      { type: "golem", count: 2, interval: 5000 },
-      { type: "warlock", count: 4, interval: 2800 },
-    ],
-    [
-      { type: "shadow_knight", count: 3, interval: 4000 },
-      { type: "specter", count: 5, interval: 2200 },
-    ],
-    [
-      { type: "berserker", count: 4, interval: 3000 },
-      { type: "hexer", count: 5, interval: 2200 },
-    ],
-    [
-      { type: "professor", count: 3, interval: 3500 },
-      { type: "golem", count: 2, interval: 5000 },
-    ],
-    [
-      { type: "necromancer", count: 4, interval: 3200 },
-      { type: "shadow_knight", count: 3, interval: 4000 },
-    ],
-    [
-      { type: "dean", count: 2, interval: 5000 },
-      { type: "berserker", count: 4, interval: 3000 },
-    ],
-    [
-      { type: "golem", count: 3, interval: 4500 },
-      { type: "warlock", count: 5, interval: 2600 },
-    ],
-    [
-      { type: "shadow_knight", count: 4, interval: 3800 },
-      { type: "necromancer", count: 4, interval: 3200 },
-    ],
-    [
-      { type: "trustee", count: 1, interval: 8000 },
-      { type: "specter", count: 6, interval: 2000 },
-    ],
-    [
-      { type: "dean", count: 3, interval: 4500 },
-      { type: "golem", count: 3, interval: 4500 },
-    ],
-    [
-      { type: "berserker", count: 5, interval: 2800 },
-      { type: "shadow_knight", count: 4, interval: 3800 },
-    ],
-    [
-      { type: "trustee", count: 2, interval: 6000 },
-      { type: "necromancer", count: 4, interval: 3200 },
-    ],
-    [
-      { type: "golem", count: 4, interval: 4200 },
-      { type: "dean", count: 3, interval: 4500 },
-    ],
-    [
-      { type: "trustee", count: 2, interval: 5500 },
-      { type: "shadow_knight", count: 5, interval: 3500 },
-    ],
-    // Final wave - the temple awakens
-    [
-      { type: "trustee", count: 3, interval: 5000 },
-      { type: "golem", count: 4, interval: 4200 },
-      { type: "necromancer", count: 5, interval: 3000 },
+      { type: "wyvern", count: 4, interval: 7000 },
+      { type: "golem", count: 8, interval: 18000 },
     ],
   ],
 };
@@ -2337,7 +2467,7 @@ export const SPELL_OPTIONS: SpellType[] = [
 // Game constants
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
-export const INITIAL_PAW_POINTS = 300;
+export const INITIAL_PAW_POINTS = 3000;
 export const INITIAL_LIVES = 20;
 export const WAVE_TIMER_BASE = 10000;
 export const HERO_RESPAWN_TIME = 15000;
