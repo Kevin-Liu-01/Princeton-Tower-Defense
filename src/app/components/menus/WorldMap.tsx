@@ -3489,11 +3489,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               <span className="text-purple-200 font-medium">
                                 {spell.name}
                               </span>
-                              <span className="text-purple-500">|</span>
-                              <span className="text-purple-300 flex-1 truncate">
+                              <span className="hidden xl:inline text-purple-300 flex-1 truncate">
                                 {spell.desc}
                               </span>
-                              <span className="text-purple-500">|</span>
+                              <span className="ml-auto text-purple-500">|</span>
 
                               <span className="text-amber-400 flex items-center gap-0.5">
                                 <Coins size={8} />

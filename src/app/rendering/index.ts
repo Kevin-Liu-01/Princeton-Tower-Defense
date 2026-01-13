@@ -2199,13 +2199,38 @@ function renderGatlingGun(
   const foreshorten = Math.abs(cosR);
   const facingAway = sinR < -0.3;
 
+  // Recoil animation - rapid fire vibration for gatling
+  let recoilOffset = 0;
+  let turretShake = 0;
+
+  if (timeSinceFire < 150) {
+    const firePhase = timeSinceFire / 150;
+    if (firePhase < 0.2) {
+      // Quick snap back
+      recoilOffset = (firePhase / 0.2) * 6 * zoom;
+      turretShake = Math.sin(firePhase * Math.PI * 20) * 2 * zoom;
+    } else {
+      // Rapid return
+      const returnPhase = (firePhase - 0.2) / 0.8;
+      recoilOffset = 6 * zoom * (1 - returnPhase);
+      turretShake =
+        Math.sin(returnPhase * Math.PI * 8) * (1 - returnPhase) * 1.5 * zoom;
+    }
+  }
+
+  // Apply turret shake
+  const shakeX = turretShake * cosR;
+  const shakeY = turretShake * sinR * 0.5;
+  const turretX = screenPos.x + shakeX;
+  const turretY = topY + shakeY;
+
   // === MASSIVE ARMORED BASE ===
   // Foundation with skull emblem
   ctx.fillStyle = "#1a1a22";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY + 2 * zoom,
+    turretX,
+    turretY + 2 * zoom,
     26 * zoom,
     13 * zoom,
     0,
@@ -2218,8 +2243,8 @@ function renderGatlingGun(
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 2 * zoom,
+    turretX,
+    turretY - 2 * zoom,
     22 * zoom,
     11 * zoom,
     0,
@@ -2232,8 +2257,8 @@ function renderGatlingGun(
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 16; i++) {
     const toothAngle = rotation + (i / 16) * Math.PI * 2;
-    const toothX = screenPos.x + Math.cos(toothAngle) * 21 * zoom;
-    const toothY = topY - 2 * zoom + Math.sin(toothAngle) * 10.5 * zoom;
+    const toothX = turretX + Math.cos(toothAngle) * 21 * zoom;
+    const toothY = turretY - 2 * zoom + Math.sin(toothAngle) * 10.5 * zoom;
     ctx.beginPath();
     ctx.arc(toothX, toothY, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -2242,8 +2267,8 @@ function renderGatlingGun(
   ctx.fillStyle = "#3a3a42";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 4 * zoom,
+    turretX,
+    turretY - 4 * zoom,
     20 * zoom,
     10 * zoom,
     0,
@@ -2255,8 +2280,8 @@ function renderGatlingGun(
   // Glowing ammunition indicators (rotate with turret)
   for (let i = 0; i < 6; i++) {
     const angle = rotation + (i / 6) * Math.PI * 2;
-    const indicatorX = screenPos.x + Math.cos(angle) * 18 * zoom;
-    const indicatorY = topY - 3 * zoom + Math.sin(angle) * 9 * zoom;
+    const indicatorX = turretX + Math.cos(angle) * 18 * zoom;
+    const indicatorY = turretY - 3 * zoom + Math.sin(angle) * 9 * zoom;
     const glow = 0.4 + Math.sin(time * 8 + i * 0.5) * 0.3 + attackPulse * 0.3;
 
     ctx.fillStyle = `rgba(255, 180, 50, ${glow})`;
@@ -2269,23 +2294,24 @@ function renderGatlingGun(
   if (facingAway) {
     drawGatlingBarrels(
       ctx,
-      screenPos.x,
-      topY - 14 * zoom,
+      turretX,
+      turretY - 14 * zoom,
       rotation,
       foreshorten,
       spinAngle,
       zoom,
       tower,
-      time
+      time,
+      recoilOffset
     );
   }
 
   // === HEAVY GUN SHIELD ===
   const shieldGrad = ctx.createLinearGradient(
-    screenPos.x - 20 * zoom,
-    topY - 6 * zoom,
-    screenPos.x + 20 * zoom,
-    topY - 28 * zoom
+    turretX - 20 * zoom,
+    turretY - 6 * zoom,
+    turretX + 20 * zoom,
+    turretY - 28 * zoom
   );
   shieldGrad.addColorStop(0, "#3a3a42");
   shieldGrad.addColorStop(0.2, "#5a5a62");
@@ -2294,10 +2320,10 @@ function renderGatlingGun(
   shieldGrad.addColorStop(1, "#2a2a32");
   ctx.fillStyle = shieldGrad;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x - 18 * zoom, topY - 4 * zoom);
-  ctx.lineTo(screenPos.x - 14 * zoom, topY - 26 * zoom);
-  ctx.lineTo(screenPos.x + 14 * zoom, topY - 26 * zoom);
-  ctx.lineTo(screenPos.x + 18 * zoom, topY - 4 * zoom);
+  ctx.moveTo(turretX - 18 * zoom, turretY - 4 * zoom);
+  ctx.lineTo(turretX - 14 * zoom, turretY - 26 * zoom);
+  ctx.lineTo(turretX + 14 * zoom, turretY - 26 * zoom);
+  ctx.lineTo(turretX + 18 * zoom, turretY - 4 * zoom);
   ctx.closePath();
   ctx.fill();
 
@@ -2305,8 +2331,8 @@ function renderGatlingGun(
   ctx.strokeStyle = "#4a4a52";
   ctx.lineWidth = 1 * zoom;
   for (let i = 0; i < 3; i++) {
-    const markX = screenPos.x + (i - 1) * 8 * zoom;
-    const markY = topY - 12 * zoom - i * 4 * zoom;
+    const markX = turretX + (i - 1) * 8 * zoom;
+    const markY = turretY - 12 * zoom - i * 4 * zoom;
     ctx.beginPath();
     ctx.moveTo(markX - 3 * zoom, markY - 2 * zoom);
     ctx.lineTo(markX + 2 * zoom, markY + 3 * zoom);
@@ -2317,31 +2343,31 @@ function renderGatlingGun(
   ctx.strokeStyle = "#7a7a82";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x - 14 * zoom, topY - 26 * zoom);
-  ctx.lineTo(screenPos.x + 14 * zoom, topY - 26 * zoom);
+  ctx.moveTo(turretX - 14 * zoom, turretY - 26 * zoom);
+  ctx.lineTo(turretX + 14 * zoom, turretY - 26 * zoom);
   ctx.stroke();
 
   // Skull emblem on shield
   ctx.fillStyle = "#1a1a22";
   ctx.beginPath();
-  ctx.arc(screenPos.x, topY - 15 * zoom, 6 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX, turretY - 15 * zoom, 6 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = `rgba(255, 100, 50, ${0.5 + attackPulse * 0.5})`;
   ctx.beginPath();
-  ctx.arc(screenPos.x - 2 * zoom, topY - 16 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-  ctx.arc(screenPos.x + 2 * zoom, topY - 16 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX - 2 * zoom, turretY - 16 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX + 2 * zoom, turretY - 16 * zoom, 1.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   // Shield tech panels
   ctx.strokeStyle = "#5a5a62";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x - 10 * zoom, topY - 8 * zoom);
-  ctx.lineTo(screenPos.x - 8 * zoom, topY - 22 * zoom);
+  ctx.moveTo(turretX - 10 * zoom, turretY - 8 * zoom);
+  ctx.lineTo(turretX - 8 * zoom, turretY - 22 * zoom);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(screenPos.x + 10 * zoom, topY - 8 * zoom);
-  ctx.lineTo(screenPos.x + 8 * zoom, topY - 22 * zoom);
+  ctx.moveTo(turretX + 10 * zoom, turretY - 8 * zoom);
+  ctx.lineTo(turretX + 8 * zoom, turretY - 22 * zoom);
   ctx.stroke();
 
   // Heavy rivets
@@ -2350,8 +2376,8 @@ function renderGatlingGun(
     for (let i = -1; i <= 1; i += 2) {
       ctx.beginPath();
       ctx.arc(
-        screenPos.x + i * 11 * zoom,
-        topY - 10 * zoom - row * 8 * zoom,
+        turretX + i * 11 * zoom,
+        turretY - 10 * zoom - row * 8 * zoom,
         2.5 * zoom,
         0,
         Math.PI * 2
@@ -2362,11 +2388,11 @@ function renderGatlingGun(
 
   // === CENTRAL TURRET MECHANISM - With rotating armor plates ===
   const turretGrad = ctx.createRadialGradient(
-    screenPos.x - 3 * zoom,
-    topY - 18 * zoom,
+    turretX - 3 * zoom,
+    turretY - 18 * zoom,
     0,
-    screenPos.x,
-    topY - 14 * zoom,
+    turretX,
+    turretY - 14 * zoom,
     16 * zoom
   );
   turretGrad.addColorStop(0, "#7a7a82");
@@ -2375,8 +2401,8 @@ function renderGatlingGun(
   ctx.fillStyle = turretGrad;
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 14 * zoom,
+    turretX,
+    turretY - 14 * zoom,
     14 * zoom,
     12 * zoom,
     0,
@@ -2394,10 +2420,10 @@ function renderGatlingGun(
       const shade = 0.5 + plateVisible * 0.35;
       const innerR = 6 * zoom;
       const outerR = 13 * zoom;
-      const plateX1 = screenPos.x + Math.cos(plateAngle) * innerR;
-      const plateY1 = topY - 14 * zoom + Math.sin(plateAngle) * innerR * 0.8;
-      const plateX2 = screenPos.x + Math.cos(plateAngle) * outerR;
-      const plateY2 = topY - 14 * zoom + Math.sin(plateAngle) * outerR * 0.8;
+      const plateX1 = turretX + Math.cos(plateAngle) * innerR;
+      const plateY1 = turretY - 14 * zoom + Math.sin(plateAngle) * innerR * 0.8;
+      const plateX2 = turretX + Math.cos(plateAngle) * outerR;
+      const plateY2 = turretY - 14 * zoom + Math.sin(plateAngle) * outerR * 0.8;
 
       ctx.strokeStyle = `rgba(120, 120, 130, ${shade})`;
       ctx.lineWidth = 2.5 * zoom;
@@ -2417,18 +2443,18 @@ function renderGatlingGun(
   // Ammunition belt feed
   ctx.fillStyle = "#3a3a42";
   ctx.beginPath();
-  ctx.moveTo(screenPos.x - 8 * zoom, topY - 6 * zoom);
-  ctx.lineTo(screenPos.x - 14 * zoom, topY);
-  ctx.lineTo(screenPos.x - 10 * zoom, topY + 2 * zoom);
-  ctx.lineTo(screenPos.x - 4 * zoom, topY - 4 * zoom);
+  ctx.moveTo(turretX - 8 * zoom, turretY - 6 * zoom);
+  ctx.lineTo(turretX - 14 * zoom, turretY);
+  ctx.lineTo(turretX - 10 * zoom, turretY + 2 * zoom);
+  ctx.lineTo(turretX - 4 * zoom, turretY - 4 * zoom);
   ctx.closePath();
   ctx.fill();
 
   // Ammo belt bullets
   ctx.fillStyle = "#daa520";
   for (let i = 0; i < 4; i++) {
-    const bulletX = screenPos.x - 6 * zoom - i * 2.5 * zoom;
-    const bulletY = topY - 4 * zoom + i * 1.5 * zoom;
+    const bulletX = turretX - 6 * zoom - i * 2.5 * zoom;
+    const bulletY = turretY - 4 * zoom + i * 1.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(bulletX, bulletY, 1.5 * zoom, 2.5 * zoom, 0.3, 0, Math.PI * 2);
     ctx.fill();
@@ -2437,16 +2463,16 @@ function renderGatlingGun(
   // === POWER CORE ===
   ctx.fillStyle = "#1a1a22";
   ctx.beginPath();
-  ctx.arc(screenPos.x, topY - 14 * zoom, 7 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX, turretY - 14 * zoom, 7 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   const coreGlow = 0.7 + Math.sin(time * 10) * 0.3 + attackPulse * 0.3;
   const coreGrad = ctx.createRadialGradient(
-    screenPos.x,
-    topY - 14 * zoom,
+    turretX,
+    turretY - 14 * zoom,
     0,
-    screenPos.x,
-    topY - 14 * zoom,
+    turretX,
+    turretY - 14 * zoom,
     6 * zoom
   );
   coreGrad.addColorStop(0, `rgba(255, 240, 150, ${coreGlow})`);
@@ -2458,7 +2484,7 @@ function renderGatlingGun(
   ctx.shadowBlur = (10 + attackPulse * 10) * zoom;
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
-  ctx.arc(screenPos.x, topY - 14 * zoom, 6 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX, turretY - 14 * zoom, 6 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -2469,8 +2495,8 @@ function renderGatlingGun(
     const indicatorAngle = spinAngle * 0.2 + (i / 4) * Math.PI * 2;
     ctx.beginPath();
     ctx.arc(
-      screenPos.x,
-      topY - 14 * zoom,
+      turretX,
+      turretY - 14 * zoom,
       4 * zoom,
       indicatorAngle,
       indicatorAngle + 0.3
@@ -2482,14 +2508,15 @@ function renderGatlingGun(
   if (!facingAway) {
     drawGatlingBarrels(
       ctx,
-      screenPos.x,
-      topY - 14 * zoom,
+      turretX,
+      turretY - 14 * zoom,
       rotation,
       foreshorten,
       spinAngle,
       zoom,
       tower,
-      time
+      time,
+      recoilOffset
     );
   }
 
@@ -2497,8 +2524,8 @@ function renderGatlingGun(
   if (isAttacking) {
     // Heat shimmer effect
     for (let i = 0; i < 3; i++) {
-      const ventX = screenPos.x + (i - 1) * 8 * zoom;
-      const ventY = topY - 24 * zoom - Math.random() * 5 * zoom;
+      const ventX = turretX + (i - 1) * 8 * zoom;
+      const ventY = turretY - 24 * zoom - Math.random() * 5 * zoom;
       const ventAlpha = attackPulse * (0.3 + Math.random() * 0.2);
 
       ctx.fillStyle = `rgba(255, 150, 50, ${ventAlpha})`;
@@ -2519,7 +2546,8 @@ function drawGatlingBarrels(
   spinAngle: number,
   zoom: number,
   tower: Tower,
-  time: number
+  time: number,
+  recoilOffset: number = 0
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
@@ -2527,15 +2555,16 @@ function drawGatlingBarrels(
   const isAttacking = timeSinceFire < 80;
 
   const baseLength = 42 * zoom;
-  const barrelLength = baseLength * (0.5 + foreshorten * 0.5);
+  const barrelLength = baseLength * (0.5 + foreshorten * 0.5) - recoilOffset;
 
   // Calculate barrel end point
   const endX = pivotX + cosR * barrelLength;
   const endY = pivotY + sinR * barrelLength * 0.5;
 
   // === ANGULAR BARREL HOUSING - No more ellipses! ===
-  const housingCenterX = pivotX + cosR * 10 * zoom;
-  const housingCenterY = pivotY + sinR * 5 * zoom;
+  const housingOffset = 10 * zoom - recoilOffset * 0.3;
+  const housingCenterX = pivotX + cosR * housingOffset;
+  const housingCenterY = pivotY + sinR * housingOffset * 0.5;
 
   // Draw hexagonal housing body (mechanical look)
   const housingGrad = ctx.createLinearGradient(
@@ -2624,9 +2653,9 @@ function drawGatlingBarrels(
       const perpX = -sinR * barrelOffset;
       const perpY = cosR * barrelOffset * 0.5;
 
-      // Barrel body with gradient
-      const bStartX = pivotX + cosR * 10 * zoom + perpX;
-      const bStartY = pivotY + sinR * 5 * zoom + perpY;
+      // Barrel body with gradient - apply recoil
+      const bStartX = pivotX + cosR * (10 * zoom - recoilOffset * 0.3) + perpX;
+      const bStartY = pivotY + sinR * (5 * zoom - recoilOffset * 0.15) + perpY;
       const bEndX = endX + perpX * 0.75;
       const bEndY = endY + perpY * 0.75;
 
@@ -2668,8 +2697,6 @@ function drawGatlingBarrels(
       if (barrelDepth > 0.2) {
         ctx.strokeStyle = `rgba(90, 90, 100, ${shade})`;
         ctx.lineWidth = 0.5 * zoom;
-        const midX = (bStartX + bEndX) / 2;
-        const midY = (bStartY + bEndY) / 2;
         ctx.beginPath();
         ctx.moveTo(bStartX, bStartY);
         ctx.lineTo(bEndX, bEndY);
@@ -2845,12 +2872,38 @@ function renderFlamethrower(
   const foreshorten = Math.abs(cosR);
   const facingAway = sinR < -0.3;
 
+  // Recoil animation - slower push-back for flamethrower
+  const timeSinceFire = Date.now() - tower.lastAttack;
+  let recoilOffset = 0;
+  let turretShake = 0;
+
+  if (timeSinceFire < 300) {
+    const firePhase = timeSinceFire / 300;
+    if (firePhase < 0.1) {
+      // Initial push back from flame burst
+      recoilOffset = (firePhase / 0.1) * 5 * zoom;
+      turretShake = Math.sin(firePhase * Math.PI * 12) * 1.5 * zoom;
+    } else {
+      // Gradual return
+      const returnPhase = (firePhase - 0.1) / 0.9;
+      recoilOffset = 5 * zoom * (1 - returnPhase);
+      turretShake =
+        Math.sin(returnPhase * Math.PI * 3) * (1 - returnPhase) * zoom;
+    }
+  }
+
+  // Apply turret shake
+  const shakeX = turretShake * cosR;
+  const shakeY = turretShake * sinR * 0.5;
+  const turretX = screenPos.x + shakeX;
+  const turretY = topY + shakeY;
+
   // Armored base platform
   ctx.fillStyle = "#2a2a32";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 2 * zoom,
+    turretX,
+    turretY - 2 * zoom,
     20 * zoom,
     10 * zoom,
     0,
@@ -2862,8 +2915,8 @@ function renderFlamethrower(
   ctx.fillStyle = "#3a3a42";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 4 * zoom,
+    turretX,
+    turretY - 4 * zoom,
     18 * zoom,
     9 * zoom,
     0,
@@ -2876,8 +2929,8 @@ function renderFlamethrower(
   ctx.fillStyle = "#5a5a62";
   for (let i = 0; i < 16; i++) {
     const toothAngle = rotation + (i / 16) * Math.PI * 2;
-    const toothX = screenPos.x + Math.cos(toothAngle) * 21 * zoom;
-    const toothY = topY - 2 * zoom + Math.sin(toothAngle) * 10.5 * zoom;
+    const toothX = turretX + Math.cos(toothAngle) * 21 * zoom;
+    const toothY = turretY - 2 * zoom + Math.sin(toothAngle) * 10.5 * zoom;
     ctx.beginPath();
     ctx.arc(toothX, toothY, 2.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -2886,8 +2939,8 @@ function renderFlamethrower(
   ctx.fillStyle = "#3a3a42";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 4 * zoom,
+    turretX,
+    turretY - 4 * zoom,
     20 * zoom,
     10 * zoom,
     0,
@@ -2900,22 +2953,23 @@ function renderFlamethrower(
   if (facingAway) {
     drawFlamethrowerNozzle(
       ctx,
-      screenPos.x,
-      topY - 10 * zoom,
+      turretX,
+      turretY - 10 * zoom,
       rotation,
       foreshorten,
       zoom,
       tower,
-      time
+      time,
+      recoilOffset
     );
   }
 
   // Main fuel tank (cylindrical, detailed)
   const tankGrad = ctx.createLinearGradient(
-    screenPos.x - 12 * zoom,
-    topY - 24 * zoom,
-    screenPos.x + 4 * zoom,
-    topY
+    turretX - 12 * zoom,
+    turretY - 24 * zoom,
+    turretX + 4 * zoom,
+    turretY
   );
   tankGrad.addColorStop(0, "#cc3030");
   tankGrad.addColorStop(0.2, "#aa2020");
@@ -2925,8 +2979,8 @@ function renderFlamethrower(
   ctx.fillStyle = tankGrad;
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x - 6 * zoom,
-    topY - 12 * zoom,
+    turretX - 6 * zoom,
+    turretY - 12 * zoom,
     9 * zoom,
     14 * zoom,
     0,
@@ -2940,8 +2994,8 @@ function renderFlamethrower(
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x - 8 * zoom,
-    topY - 12 * zoom,
+    turretX - 8 * zoom,
+    turretY - 12 * zoom,
     2 * zoom,
     10 * zoom,
     0,
@@ -2954,10 +3008,10 @@ function renderFlamethrower(
   ctx.strokeStyle = "#ffcc00";
   ctx.lineWidth = 2.5 * zoom;
   for (let i = 0; i < 3; i++) {
-    const stripeY = topY - 18 * zoom + i * 6 * zoom;
+    const stripeY = turretY - 18 * zoom + i * 6 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - 6 * zoom,
+      turretX - 6 * zoom,
       stripeY,
       6 * zoom,
       9 * zoom,
@@ -2972,10 +3026,10 @@ function renderFlamethrower(
   ctx.strokeStyle = "#222";
   ctx.lineWidth = 1.5 * zoom;
   for (let i = 0; i < 2; i++) {
-    const stripeY = topY - 15 * zoom + i * 6 * zoom;
+    const stripeY = turretY - 15 * zoom + i * 6 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - 6 * zoom,
+      turretX - 6 * zoom,
       stripeY,
       6 * zoom,
       9 * zoom,
@@ -2990,8 +3044,8 @@ function renderFlamethrower(
   ctx.fillStyle = "#4a4a52";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x - 6 * zoom,
-    topY - 26 * zoom,
+    turretX - 6 * zoom,
+    turretY - 26 * zoom,
     6 * zoom,
     3 * zoom,
     0,
@@ -3001,25 +3055,25 @@ function renderFlamethrower(
   ctx.fill();
   ctx.fillStyle = "#5a5a62";
   ctx.beginPath();
-  ctx.arc(screenPos.x - 6 * zoom, topY - 26 * zoom, 3 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX - 6 * zoom, turretY - 26 * zoom, 3 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   // Pressure gauge with needle
   ctx.fillStyle = "#ddd";
   ctx.beginPath();
-  ctx.arc(screenPos.x + 2 * zoom, topY - 6 * zoom, 5 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX + 2 * zoom, turretY - 6 * zoom, 5 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#222";
   ctx.beginPath();
-  ctx.arc(screenPos.x + 2 * zoom, topY - 6 * zoom, 4 * zoom, 0, Math.PI * 2);
+  ctx.arc(turretX + 2 * zoom, turretY - 6 * zoom, 4 * zoom, 0, Math.PI * 2);
   ctx.fill();
   // Gauge markings
   ctx.strokeStyle = "#0f0";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.arc(
-    screenPos.x + 2 * zoom,
-    topY - 6 * zoom,
+    turretX + 2 * zoom,
+    turretY - 6 * zoom,
     3 * zoom,
     Math.PI * 0.8,
     Math.PI * 1.2
@@ -3028,22 +3082,24 @@ function renderFlamethrower(
   ctx.strokeStyle = "#f00";
   ctx.beginPath();
   ctx.arc(
-    screenPos.x + 2 * zoom,
-    topY - 6 * zoom,
+    turretX + 2 * zoom,
+    turretY - 6 * zoom,
     3 * zoom,
     Math.PI * 1.5,
     Math.PI * 1.8
   );
   ctx.stroke();
-  // Needle
-  const needleAngle = Math.PI * (0.9 + Math.sin(time * 2) * 0.15);
+  // Needle - jumps during firing
+  const needleJump =
+    timeSinceFire < 300 ? Math.sin(timeSinceFire * 0.05) * 0.2 : 0;
+  const needleAngle = Math.PI * (0.9 + Math.sin(time * 2) * 0.15 + needleJump);
   ctx.strokeStyle = "#fff";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x + 2 * zoom, topY - 6 * zoom);
+  ctx.moveTo(turretX + 2 * zoom, turretY - 6 * zoom);
   ctx.lineTo(
-    screenPos.x + 2 * zoom + Math.cos(needleAngle) * 3 * zoom,
-    topY - 6 * zoom + Math.sin(needleAngle) * 3 * zoom
+    turretX + 2 * zoom + Math.cos(needleAngle) * 3 * zoom,
+    turretY - 6 * zoom + Math.sin(needleAngle) * 3 * zoom
   );
   ctx.stroke();
 
@@ -3051,8 +3107,8 @@ function renderFlamethrower(
   ctx.fillStyle = "#884020";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x + 8 * zoom,
-    topY - 10 * zoom,
+    turretX + 8 * zoom,
+    turretY - 10 * zoom,
     5 * zoom,
     8 * zoom,
     0.2,
@@ -3065,12 +3121,12 @@ function renderFlamethrower(
   ctx.strokeStyle = "#555";
   ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x - 2 * zoom, topY - 8 * zoom);
+  ctx.moveTo(turretX - 2 * zoom, turretY - 8 * zoom);
   ctx.quadraticCurveTo(
-    screenPos.x + 4 * zoom,
-    topY - 14 * zoom,
-    screenPos.x + 6 * zoom,
-    topY - 10 * zoom
+    turretX + 4 * zoom,
+    turretY - 14 * zoom,
+    turretX + 6 * zoom,
+    turretY - 10 * zoom
   );
   ctx.stroke();
 
@@ -3078,8 +3134,8 @@ function renderFlamethrower(
   ctx.fillStyle = "#4a4a52";
   ctx.beginPath();
   ctx.ellipse(
-    screenPos.x,
-    topY - 10 * zoom,
+    turretX,
+    turretY - 10 * zoom,
     8 * zoom,
     6 * zoom,
     0,
@@ -3092,13 +3148,14 @@ function renderFlamethrower(
   if (!facingAway) {
     drawFlamethrowerNozzle(
       ctx,
-      screenPos.x,
-      topY - 10 * zoom,
+      turretX,
+      turretY - 10 * zoom,
       rotation,
       foreshorten,
       zoom,
       tower,
-      time
+      time,
+      recoilOffset
     );
   }
 }
@@ -3112,17 +3169,22 @@ function drawFlamethrowerNozzle(
   foreshorten: number,
   zoom: number,
   tower: Tower,
-  time: number
+  time: number,
+  recoilOffset: number = 0
 ) {
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
+
+  // Apply recoil to pivot
+  const recoiledPivotX = pivotX - cosR * recoilOffset;
+  const recoiledPivotY = pivotY - sinR * recoilOffset * 0.5;
 
   const baseLength = 35 * zoom;
   const nozzleLength = baseLength * (0.5 + foreshorten * 0.5);
 
   // Calculate nozzle end point
-  const endX = pivotX + cosR * nozzleLength;
-  const endY = pivotY + sinR * nozzleLength * 0.5;
+  const endX = recoiledPivotX + cosR * nozzleLength;
+  const endY = recoiledPivotY + sinR * nozzleLength * 0.5;
 
   // Perpendicular for width
   const perpX = -sinR * 5 * zoom;
@@ -3132,21 +3194,21 @@ function drawFlamethrowerNozzle(
   ctx.strokeStyle = "#555";
   ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
-  ctx.moveTo(pivotX - 4 * zoom, pivotY);
+  ctx.moveTo(recoiledPivotX - 4 * zoom, recoiledPivotY);
   ctx.quadraticCurveTo(
-    pivotX + cosR * 6 * zoom,
-    pivotY + sinR * 3 * zoom - 4 * zoom,
-    pivotX + cosR * 10 * zoom,
-    pivotY + sinR * 5 * zoom
+    recoiledPivotX + cosR * 6 * zoom,
+    recoiledPivotY + sinR * 3 * zoom - 4 * zoom,
+    recoiledPivotX + cosR * 10 * zoom,
+    recoiledPivotY + sinR * 5 * zoom
   );
   ctx.stroke();
 
   // Nozzle body with gradient
   const nozzleGrad = ctx.createLinearGradient(
-    pivotX + perpX,
-    pivotY + perpY,
-    pivotX - perpX,
-    pivotY - perpY
+    recoiledPivotX + perpX,
+    recoiledPivotY + perpY,
+    recoiledPivotX - perpX,
+    recoiledPivotY - perpY
   );
   nozzleGrad.addColorStop(0, "#5a5a62");
   nozzleGrad.addColorStop(0.3, "#6a6a72");
@@ -3154,10 +3216,10 @@ function drawFlamethrowerNozzle(
   nozzleGrad.addColorStop(1, "#4a4a52");
   ctx.fillStyle = nozzleGrad;
   ctx.beginPath();
-  ctx.moveTo(pivotX + perpX, pivotY + perpY);
+  ctx.moveTo(recoiledPivotX + perpX, recoiledPivotY + perpY);
   ctx.lineTo(endX + perpX * 0.7, endY + perpY * 0.7);
   ctx.lineTo(endX - perpX * 0.7, endY - perpY * 0.7);
-  ctx.lineTo(pivotX - perpX, pivotY - perpY);
+  ctx.lineTo(recoiledPivotX - perpX, recoiledPivotY - perpY);
   ctx.closePath();
   ctx.fill();
 
@@ -3166,8 +3228,8 @@ function drawFlamethrowerNozzle(
   ctx.lineWidth = 2 * zoom;
   for (let i = 0; i < 3; i++) {
     const t = 0.3 + i * 0.2;
-    const rx = pivotX + cosR * nozzleLength * t;
-    const ry = pivotY + sinR * nozzleLength * t * 0.5;
+    const rx = recoiledPivotX + cosR * nozzleLength * t;
+    const ry = recoiledPivotY + sinR * nozzleLength * t * 0.5;
     const ringMult = 1 - t * 0.3;
     ctx.beginPath();
     ctx.moveTo(rx + perpX * ringMult, ry + perpY * ringMult);
@@ -3178,8 +3240,8 @@ function drawFlamethrowerNozzle(
   // Flared nozzle tip
   ctx.fillStyle = "#3a3a42";
   const tipStart = 0.8;
-  const tsx = pivotX + cosR * nozzleLength * tipStart;
-  const tsy = pivotY + sinR * nozzleLength * tipStart * 0.5;
+  const tsx = recoiledPivotX + cosR * nozzleLength * tipStart;
+  const tsy = recoiledPivotY + sinR * nozzleLength * tipStart * 0.5;
   ctx.beginPath();
   ctx.moveTo(tsx + perpX * 0.7, tsy + perpY * 0.7);
   ctx.lineTo(endX + perpX * 1.4, endY + perpY * 1.4);
@@ -3201,15 +3263,16 @@ function drawFlamethrowerNozzle(
   ctx.shadowBlur = 0;
 
   // Flame effect when firing
-  if (Date.now() - tower.lastAttack < 500) {
-    const flameIntensity = 1 - (Date.now() - tower.lastAttack) / 500;
+  const timeSinceFire = Date.now() - tower.lastAttack;
+  if (timeSinceFire < 500) {
+    const flameIntensity = 1 - timeSinceFire / 500;
     ctx.shadowColor = "#ff4400";
     ctx.shadowBlur = 25 * zoom * flameIntensity;
 
     for (let i = 0; i < 10; i++) {
       const flameT = 1 + i * 0.12;
-      const flameX = pivotX + cosR * nozzleLength * flameT;
-      const flameY = pivotY + sinR * nozzleLength * flameT * 0.5;
+      const flameX = recoiledPivotX + cosR * nozzleLength * flameT;
+      const flameY = recoiledPivotY + sinR * nozzleLength * flameT * 0.5;
       const wobble = Math.sin(time * 35 + i * 0.8) * (2 + i * 0.4) * zoom;
       const flameSize = (16 - i * 1.2) * zoom * flameIntensity;
 

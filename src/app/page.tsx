@@ -207,6 +207,10 @@ export default function PrincetonTowerDefense() {
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
+  // Wave Management Refs
+  const spawnIntervalsRef = useRef<NodeJS.Timeout[]>([]);
+  const activeTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
   // Get current level waves - computed from selectedMap
   const currentLevelWaves = getLevelWaves(selectedMap);
   const totalWaves = currentLevelWaves.length;
@@ -221,6 +225,15 @@ export default function PrincetonTowerDefense() {
       dpr,
     };
   }, []);
+
+  // Timer Cleanup Helper
+  const clearAllTimers = useCallback(() => {
+    spawnIntervalsRef.current.forEach(clearInterval);
+    spawnIntervalsRef.current = [];
+    activeTimeoutsRef.current.forEach(clearTimeout);
+    activeTimeoutsRef.current = [];
+  }, []);
+
   // Add particles helper
   const addParticles = useCallback(
     (pos: Position, type: Particle["type"], count: number) => {
@@ -287,6 +300,7 @@ export default function PrincetonTowerDefense() {
   // Reset game state when starting a new game (entering "playing" state)
   useEffect(() => {
     if (gameState === "playing") {
+      clearAllTimers();
       // Reset all game state for a fresh start
       setPawPoints(INITIAL_PAW_POINTS);
       setLives(INITIAL_LIVES);
@@ -307,8 +321,7 @@ export default function PrincetonTowerDefense() {
       setSpells([]);
       setGameSpeed(1);
     }
-  }, [gameState]);
-
+  }, [gameState, clearAllTimers]);
   // Initialize hero and spells when game starts
   useEffect(() => {
     if (gameState === "playing" && selectedHero && !hero) {
@@ -322,6 +335,7 @@ export default function PrincetonTowerDefense() {
         id: "hero",
         type: selectedHero,
         pos: startPos,
+        homePos: startPos, // Add this line
         hp: heroData.hp,
         maxHp: heroData.hp,
         moving: false,
@@ -435,12 +449,12 @@ export default function PrincetonTowerDefense() {
           // Large groups use staggered
           laneOffset = formationPatterns.staggered(spawned);
         } else {
-          // Default cluster
-          laneOffset = formationPatterns.cluster(spawned);
+          // Default wedge
+          laneOffset = formationPatterns.wedge(spawned, group.count);
         }
 
         // Add slight randomness to prevent perfect alignment
-        laneOffset += (Math.random() - 0.5) * 0.15;
+        laneOffset += (Math.random() - 0.5) * 0.35;
         laneOffset = Math.max(-0.9, Math.min(0.9, laneOffset));
 
         // Check for dual-path levels
@@ -477,12 +491,16 @@ export default function PrincetonTowerDefense() {
         setEnemies((prev) => [...prev, enemy]);
         spawned++;
       }, group.interval);
+      // Track interval for cleanup
+      spawnIntervalsRef.current.push(spawnInterval);
     });
-    setTimeout(() => {
+    const waveOverTimeout = setTimeout(() => {
       setWaveInProgress(false);
       setCurrentWave((w) => w + 1);
       setNextWaveTimer(WAVE_TIMER_BASE);
     }, Math.max(...wave.map((g) => g.count * g.interval)) + 5000);
+    // Track timeout for cleanup
+    activeTimeoutsRef.current.push(waveOverTimeout);
   }, [waveInProgress, currentWave, selectedMap]);
   // Update game function
   const updateGame = useCallback(
@@ -1025,7 +1043,7 @@ export default function PrincetonTowerDefense() {
                 returning: false,
               };
             }
-          } else if (homePos && prev.aggroTarget) {
+          } else if (homePos) {
             // No enemy in sight but was in combat - return home
             const dx = homePos.x - prev.pos.x;
             const dy = homePos.y - prev.pos.y;
@@ -1248,12 +1266,7 @@ export default function PrincetonTowerDefense() {
           }
 
           // Handle player-commanded movement (overrides engagement, but not for stationary)
-          if (
-            troop.moving &&
-            troop.targetPos &&
-            !updated.engaging &&
-            !isStationary
-          ) {
+          if (troop.moving && troop.targetPos && !isStationary) {
             const dx = troop.targetPos.x - updated.pos.x;
             const dy = troop.targetPos.y - updated.pos.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1290,7 +1303,7 @@ export default function PrincetonTowerDefense() {
         // will the hero start regenerating HP
 
         if (!inCombat) {
-          setTimeout(() => {
+          const regenTimeout = setTimeout(() => {
             setHero((prev) =>
               prev
                 ? {
@@ -1303,6 +1316,7 @@ export default function PrincetonTowerDefense() {
                 : null
             );
           }, 5000);
+          activeTimeoutsRef.current.push(regenTimeout);
         }
       }
       // Tower attacks
@@ -1353,9 +1367,10 @@ export default function PrincetonTowerDefense() {
             // Level 3+ Grand Club: Create gold particle fountain effect
             if (tower.level >= 3) {
               for (let i = 0; i < 5; i++) {
-                setTimeout(() => {
+                const burstTimeout = setTimeout(() => {
                   addParticles(gridToWorld(tower.pos), "gold", 3);
                 }, i * 100);
+                activeTimeoutsRef.current.push(burstTimeout);
               }
             }
 
@@ -3320,7 +3335,9 @@ export default function PrincetonTowerDefense() {
       | "ruins"
       | "bones"
       | "torch"
-      | "statue";
+      | "statue"
+      | "nassau_hall";
+
     interface Decoration {
       type: DecorationType;
       x: number;
@@ -3497,11 +3514,16 @@ export default function PrincetonTowerDefense() {
             rotation: 0,
             variant: dec.variant,
           });
-        } else if (
-          dec.type === "statue" ||
-          dec.type === "giant_sphinx" ||
-          dec.type === "demon_statue"
-        ) {
+        } else if (dec.type === "nassau_hall") {
+          decorations.push({
+            type: "nassau_hall",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "statue" || dec.type === "demon_statue") {
           decorations.push({
             type: "statue",
             x: worldPos.x,
@@ -3510,13 +3532,7 @@ export default function PrincetonTowerDefense() {
             rotation: 0,
             variant: dec.variant,
           });
-        } else if (
-          dec.type === "ice_fortress" ||
-          dec.type === "obsidian_castle" ||
-          dec.type === "nassau_hall" ||
-          dec.type === "ruined_temple" ||
-          dec.type === "witch_cottage"
-        ) {
+        } else if (dec.type === "ruined_temple") {
           decorations.push({
             type: "ruins",
             x: worldPos.x,
@@ -3527,7 +3543,6 @@ export default function PrincetonTowerDefense() {
           });
         } else if (
           dec.type === "lava_pool" ||
-          dec.type === "oasis_pool" ||
           dec.type === "lake" ||
           dec.type === "algae_pool"
         ) {
@@ -3552,6 +3567,132 @@ export default function PrincetonTowerDefense() {
             rotation: 0,
             variant: dec.variant,
           });
+        } else if (dec.type === "flowers") {
+          decorations.push({
+            type: "flowers",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 0.6,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "signpost") {
+          decorations.push({
+            type: "signpost",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 0.8,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "fountain") {
+          decorations.push({
+            type: "fountain",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.2,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "bench") {
+          decorations.push({
+            type: "bench",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 0.7,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "lamppost") {
+          decorations.push({
+            type: "lamppost",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "witch_cottage") {
+          decorations.push({
+            type: "witch_cottage",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.1,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "cauldron") {
+          decorations.push({
+            type: "cauldron",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 0.8,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "tentacle") {
+          decorations.push({
+            type: "tentacle",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.2,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "giant_sphinx") {
+          decorations.push({
+            type: "giant_sphinx",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.4,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "oasis_pool") {
+          decorations.push({
+            type: "oasis_pool",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.1,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "ice_fortress") {
+          decorations.push({
+            type: "ice_fortress",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.3,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "ice_throne") {
+          decorations.push({
+            type: "ice_throne",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.2,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "obsidian_castle") {
+          decorations.push({
+            type: "obsidian_castle",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.5,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "dark_throne") {
+          decorations.push({
+            type: "dark_throne",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.2,
+            rotation: 0,
+            variant: dec.variant,
+          });
         }
       }
     }
@@ -3568,6 +3709,7 @@ export default function PrincetonTowerDefense() {
 
       ctx.save();
       switch (type) {
+        // === GRASSLAND DECORATIONS ===
         case "tree":
           ctx.fillStyle = "rgba(0,0,0,0.22)";
           ctx.beginPath();
@@ -3660,6 +3802,168 @@ export default function PrincetonTowerDefense() {
           ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 8 * s);
           ctx.closePath();
           ctx.fill();
+          break;
+        case "nassau_hall": // Unique Princeton Landmark - High Detail
+          // 1. Shadow for the entire building footprint
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 10 * s,
+            65 * s,
+            25 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // 2. Main Building Body (Sandstone/Orange-Brown brick)
+          // We use a gradient to simulate the weathered stone look
+          const stoneGrad = ctx.createLinearGradient(
+            screenPos.x,
+            screenPos.y - 40 * s,
+            screenPos.x,
+            screenPos.y + 20 * s
+          );
+          stoneGrad.addColorStop(0, "#a1887f"); // Lighter top
+          stoneGrad.addColorStop(1, "#8d6e63"); // Darker base
+          ctx.fillStyle = stoneGrad;
+          ctx.fillRect(
+            screenPos.x - 50 * s,
+            screenPos.y - 30 * s,
+            100 * s,
+            45 * s
+          );
+
+          // 3. Central Pavilion (The slightly protruding middle section)
+          ctx.fillStyle = "#795548"; // Slightly darker stone
+          ctx.fillRect(
+            screenPos.x - 15 * s,
+            screenPos.y - 35 * s,
+            30 * s,
+            50 * s
+          );
+
+          // 4. Windows (The iconic rows of windows)
+          ctx.fillStyle = "#263238"; // Dark window glass
+          for (let row = 0; row < 3; row++) {
+            for (let col = -4; col <= 4; col++) {
+              if (col === 0) continue; // Skip the center for the main door
+              const winX = screenPos.x + col * 11 * s - 2.5 * s;
+              const winY = screenPos.y - 22 * s + row * 12 * s;
+              ctx.fillRect(winX, winY, 5 * s, 7 * s);
+              // Window Sill (White detail)
+              ctx.fillStyle = "#f5f5f5";
+              ctx.fillRect(winX, winY + 7 * s, 5 * s, 1.5 * s);
+              ctx.fillStyle = "#263238";
+            }
+          }
+
+          // 5. Main Entrance (The famous center door)
+          ctx.fillStyle = "#3e2723"; // Dark wood
+          ctx.fillRect(
+            screenPos.x - 5 * s,
+            screenPos.y - 2 * s,
+            10 * s,
+            15 * s
+          );
+          // Door Arch
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 2 * s, 5 * s, Math.PI, 0);
+          ctx.fill();
+
+          // 6. The Roof (Oxidized Copper Green)
+          ctx.fillStyle = "#4a7c59"; // Princeton green/copper
+          ctx.beginPath();
+          // Left Slope
+          ctx.moveTo(screenPos.x - 52 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Right Slope
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 52 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 25 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Central Pediment (Triangle above the door)
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 18 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 55 * s);
+          ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 35 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // 7. The Cupola (White clock tower section)
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(
+            screenPos.x - 6 * s,
+            screenPos.y - 65 * s,
+            12 * s,
+            15 * s
+          ); // Base
+          // Clock Face
+          ctx.fillStyle = "#eceff1";
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 60 * s, 3.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#37474f";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          // 8. Cupola Roof and Spire
+          ctx.fillStyle = "#4a7c59";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 65 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 75 * s);
+          ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 65 * s);
+          ctx.fill();
+          // Golden Spire tip
+          ctx.strokeStyle = "#ffd600";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 75 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 85 * s);
+          ctx.stroke();
+
+          // 9. THE TIGERS (Entrance Statues)
+          const drawTigerStatue = (xOff) => {
+            ctx.fillStyle = "#546e7a"; // Bronze/Stone color
+            // Pedestal
+            ctx.fillRect(
+              screenPos.x + xOff - 4 * s,
+              screenPos.y + 12 * s,
+              8 * s,
+              5 * s
+            );
+            // Tiger Body
+            ctx.beginPath();
+            ctx.ellipse(
+              screenPos.x + xOff,
+              screenPos.y + 10 * s,
+              5 * s,
+              3 * s,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            // Tiger Head
+            ctx.beginPath();
+            ctx.arc(
+              screenPos.x + xOff + (xOff > 0 ? 4 : -4) * s,
+              screenPos.y + 8 * s,
+              2.5 * s,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          };
+          drawTigerStatue(-12 * s);
+          drawTigerStatue(12 * s);
           break;
         case "bush":
           ctx.fillStyle = "rgba(0,0,0,0.18)";
@@ -4153,6 +4457,364 @@ export default function PrincetonTowerDefense() {
           ctx.closePath();
           ctx.fill();
           break;
+        case "flowers":
+          const flowerColors = ["#FF5252", "#FFEB3B", "#E040FB", "#40C4FF"];
+          const fCol = flowerColors[variant % flowerColors.length];
+          // Stems
+          ctx.strokeStyle = "#2E7D32";
+          ctx.lineWidth = 2 * s;
+          for (let i = 0; i < 3; i++) {
+            const fx = screenPos.x + (i - 1) * 8 * s;
+            const fy = screenPos.y;
+            ctx.beginPath();
+            ctx.moveTo(fx, fy);
+            ctx.quadraticCurveTo(fx + 2 * s, fy - 5 * s, fx, fy - 10 * s);
+            ctx.stroke();
+            // Petals
+            ctx.fillStyle = fCol;
+            ctx.beginPath();
+            ctx.arc(fx, fy - 10 * s, 3 * s, 0, Math.PI * 2);
+            ctx.fill();
+            // Center
+            ctx.fillStyle = "#FFF176";
+            ctx.beginPath();
+            ctx.arc(fx, fy - 10 * s, 1 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        case "signpost":
+          // Isometric wooden post
+          const postW = 4 * s;
+          const postH = 25 * s;
+          // Ground Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            postW * 1.5,
+            postW * 0.8,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Post Side (Darker wood)
+          ctx.fillStyle = "#5D4037";
+          ctx.fillRect(screenPos.x, screenPos.y - postH, postW / 2, postH);
+          // Post Front (Lighter wood)
+          ctx.fillStyle = "#795548";
+          ctx.fillRect(
+            screenPos.x - postW / 2,
+            screenPos.y - postH + 2 * s,
+            postW / 2,
+            postH - 2 * s
+          );
+          // Post Top cap
+          ctx.fillStyle = "#8D6E63";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - postW / 2, screenPos.y - postH + 2 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - postH);
+          ctx.lineTo(screenPos.x + postW / 2, screenPos.y - postH + 2 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - postH + 4 * s);
+          ctx.fill();
+
+          // The Sign Board (with thickness and angle)
+          const signY = screenPos.y - postH + 5 * s;
+          ctx.save();
+          ctx.translate(screenPos.x, signY);
+          ctx.rotate(-0.1); // Slight tilt
+          // Sign shadow on post
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.fillRect(-postW / 2, 2 * s, postW, 4 * s);
+
+          // Sign thickness (dark edge)
+          ctx.fillStyle = "#4E342E";
+          ctx.beginPath();
+          ctx.moveTo(-15 * s, 0);
+          ctx.lineTo(15 * s, 0);
+          ctx.lineTo(15 * s, 8 * s);
+          ctx.lineTo(17 * s, 10 * s); // jagged edge
+          ctx.lineTo(15 * s, 12 * s);
+          ctx.lineTo(-15 * s, 12 * s);
+          ctx.lineTo(-17 * s, 6 * s); // jagged edge
+          ctx.closePath();
+          ctx.fill();
+          // Sign Front Face
+          ctx.fillStyle = "#8D6E63";
+          ctx.fillRect(-15 * s, -2 * s, 30 * s, 12 * s);
+          // Wood grain details
+          ctx.strokeStyle = "#6D4C41";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(-12 * s, 2 * s);
+          ctx.lineTo(10 * s, 2 * s);
+          ctx.moveTo(-10 * s, 6 * s);
+          ctx.lineTo(12 * s, 6 * s);
+          ctx.stroke();
+          ctx.restore();
+          break;
+        case "fountain":
+          // Basin
+          ctx.fillStyle = "#90A4AE";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            20 * s,
+            10 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.fillStyle = "#CFD8DC";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 2 * s,
+            16 * s,
+            8 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Water
+          ctx.fillStyle = "#4FC3F7";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 3 * s,
+            14 * s,
+            7 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Spout
+          const spray = Math.sin(decorTime * 4) * 2 * s;
+          ctx.fillStyle = "#E1F5FE";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x,
+            screenPos.y - 10 * s + spray,
+            4 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          break;
+        case "bench":
+          // Isometric view needs thickness for seat and legs
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          // Shadow under legs
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 10 * s,
+            screenPos.y,
+            4 * s,
+            2 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.ellipse(
+            screenPos.x + 10 * s,
+            screenPos.y,
+            4 * s,
+            2 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          const benchColor = "#5D4037";
+          const benchDark = "#3E2723";
+          const benchLight = "#795548";
+
+          // Front Legs (Darker faces)
+          ctx.fillStyle = benchDark;
+          ctx.fillRect(screenPos.x - 11 * s, screenPos.y - 8 * s, 2 * s, 8 * s);
+          ctx.fillRect(screenPos.x + 9 * s, screenPos.y - 8 * s, 2 * s, 8 * s);
+          // Side faces of legs (angled back)
+          ctx.fillStyle = benchColor;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 11 * s, screenPos.y - 8 * s);
+          ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x - 11 * s, screenPos.y);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 9 * s, screenPos.y - 8 * s);
+          ctx.lineTo(screenPos.x + 11 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x + 11 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x + 9 * s, screenPos.y);
+          ctx.fill();
+
+          // Seat support beams
+          ctx.fillStyle = benchDark;
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 10 * s,
+            24 * s,
+            2 * s
+          );
+
+          // Seat Slats (Top surface - Light)
+          ctx.fillStyle = benchLight;
+          for (let i = 0; i < 3; i++) {
+            // Offset back slats slightly for isometric depth
+            ctx.fillRect(
+              screenPos.x - 12 * s + i * s,
+              screenPos.y - 12 * s - i * 3 * s,
+              24 * s,
+              2.5 * s
+            );
+          }
+          // Seat Slats (Front thickness - Dark)
+          ctx.fillStyle = benchDark;
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 10 * s,
+            24 * s,
+            1 * s
+          );
+
+          // Backrest frames
+          ctx.fillStyle = benchColor;
+          ctx.fillRect(
+            screenPos.x - 11 * s,
+            screenPos.y - 20 * s,
+            2 * s,
+            10 * s
+          );
+          ctx.fillRect(
+            screenPos.x + 9 * s,
+            screenPos.y - 20 * s,
+            2 * s,
+            10 * s
+          );
+          // Backrest Slats
+          ctx.fillStyle = benchLight;
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 18 * s,
+            24 * s,
+            3 * s
+          );
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 23 * s,
+            24 * s,
+            3 * s
+          );
+          break;
+
+        case "lamppost":
+          // Victorian style isometric lamppost
+          // Ground Shadow
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            8 * s,
+            4 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          const metalDark = "#212121";
+          const metalMid = "#424242";
+
+          // Base (stepped)
+          ctx.fillStyle = metalDark;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 2 * s,
+            6 * s,
+            3 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.fillStyle = metalMid;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 4 * s,
+            5 * s,
+            2.5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Pole (Cylinder with gradient for roundness)
+          const poleGrad = ctx.createLinearGradient(
+            screenPos.x - 2 * s,
+            0,
+            screenPos.x + 2 * s,
+            0
+          );
+          poleGrad.addColorStop(0, metalDark);
+          poleGrad.addColorStop(0.5, metalMid);
+          poleGrad.addColorStop(1, metalDark);
+          ctx.fillStyle = poleGrad;
+          ctx.fillRect(
+            screenPos.x - 2 * s,
+            screenPos.y - 35 * s,
+            4 * s,
+            31 * s
+          );
+
+          // Lamp Head fixture
+          ctx.fillStyle = metalDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + 4 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 45 * s);
+          ctx.lineTo(screenPos.x - 6 * s, screenPos.y - 45 * s);
+          ctx.fill();
+
+          // Glass/Light
+          const flicker = 0.1 + Math.sin(decorTime * 3) * 0.05;
+          ctx.fillStyle = `rgba(255, 236, 179, ${0.8 + flicker})`;
+          ctx.fillRect(screenPos.x - 4 * s, screenPos.y - 44 * s, 8 * s, 8 * s);
+
+          // Glow Effect
+          const glowRad = ctx.createRadialGradient(
+            screenPos.x,
+            screenPos.y - 40 * s,
+            2 * s,
+            screenPos.x,
+            screenPos.y - 40 * s,
+            25 * s
+          );
+          glowRad.addColorStop(0, `rgba(255, 213, 79, ${0.4 + flicker})`);
+          glowRad.addColorStop(1, "rgba(255, 213, 79, 0)");
+          ctx.fillStyle = glowRad;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 40 * s, 25 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Lamp Top Cap
+          ctx.fillStyle = metalMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 45 * s);
+          ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 45 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 52 * s);
+          ctx.fill();
+          break;
 
         // === DESERT DECORATIONS ===
         case "palm":
@@ -4361,7 +5023,168 @@ export default function PrincetonTowerDefense() {
             );
           }
           break;
+        case "giant_sphinx":
+          const sandBase = "#C2B280";
+          const sandShadow = "#A09060";
+          const sandHighlight = "#D4C490";
 
+          // Large Pedestal Base (Isometric Block)
+          // Top face
+          ctx.fillStyle = sandBase;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 15 * s);
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
+          ctx.fill();
+          // Front face (darker)
+          ctx.fillStyle = sandShadow;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 15 * s);
+          ctx.lineTo(screenPos.x - 30 * s, screenPos.y + 5 * s);
+          ctx.fill();
+          // Side face (medium)
+          ctx.fillStyle = sandBase;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 15 * s);
+          ctx.fill();
+
+          // Body (Lion shape roughly)
+          ctx.fillStyle = sandShadow; // Back haunch shadow
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 15 * s,
+            screenPos.y - 15 * s,
+            12 * s,
+            8 * s,
+            -0.2,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.fillStyle = sandBase; // Main body
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x,
+            screenPos.y - 30 * s,
+            screenPos.x + 25 * s,
+            screenPos.y - 15 * s
+          ); // Back to front
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 5 * s); // Paws
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 5 * s);
+          ctx.fill();
+
+          // Head and Nemes (Headdress)
+          const headY = screenPos.y - 25 * s;
+          // Headdress back
+          ctx.fillStyle = sandHighlight;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 15 * s, headY + 10 * s);
+          ctx.lineTo(screenPos.x - 18 * s, headY - 5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x,
+            headY - 15 * s,
+            screenPos.x + 18 * s,
+            headY - 5 * s
+          );
+          ctx.lineTo(screenPos.x + 15 * s, headY + 10 * s);
+          ctx.fill();
+          // Face
+          ctx.fillStyle = sandBase;
+          ctx.fillRect(screenPos.x - 8 * s, headY - 5 * s, 16 * s, 14 * s);
+          // Stripes on headdress
+          ctx.strokeStyle = sandShadow;
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 16 * s, headY - 2 * s);
+          ctx.lineTo(screenPos.x - 8 * s, headY - 5 * s);
+          ctx.moveTo(screenPos.x + 16 * s, headY - 2 * s);
+          ctx.lineTo(screenPos.x + 8 * s, headY - 5 * s);
+          ctx.stroke();
+          break;
+        case "oasis_pool":
+          // Irregular Sand Bank with height
+          ctx.fillStyle = "#E6BF7E"; // Sand
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 35 * s, screenPos.y);
+          ctx.quadraticCurveTo(
+            screenPos.x - 10 * s,
+            screenPos.y - 20 * s,
+            screenPos.x + 30 * s,
+            screenPos.y - 5 * s
+          );
+          ctx.quadraticCurveTo(
+            screenPos.x + 40 * s,
+            screenPos.y + 10 * s,
+            screenPos.x,
+            screenPos.y + 15 * s
+          );
+          ctx.quadraticCurveTo(
+            screenPos.x - 40 * s,
+            screenPos.y + 10 * s,
+            screenPos.x - 35 * s,
+            screenPos.y
+          );
+          ctx.fill();
+          // Sand bank side edge (thickness)
+          ctx.fillStyle = "#C4A164";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 35 * s, screenPos.y);
+          ctx.quadraticCurveTo(
+            screenPos.x,
+            screenPos.y + 15 * s,
+            screenPos.x + 30 * s,
+            screenPos.y - 5 * s
+          );
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y);
+          ctx.quadraticCurveTo(
+            screenPos.x,
+            screenPos.y + 20 * s,
+            screenPos.x - 35 * s,
+            screenPos.y + 5 * s
+          );
+          ctx.fill();
+
+          // Water (inset)
+          const waterGrad = ctx.createRadialGradient(
+            screenPos.x,
+            screenPos.y,
+            5 * s,
+            screenPos.x,
+            screenPos.y,
+            30 * s
+          );
+          waterGrad.addColorStop(0, "#0277BD"); // Deep blue center
+          waterGrad.addColorStop(1, "#4FC3F7"); // Lighter edge
+          ctx.fillStyle = waterGrad;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 2 * s,
+            28 * s,
+            12 * s,
+            0.1,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Simple reflections/ripples
+          ctx.strokeStyle = "rgba(255,255,255,0.3)";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y + 5 * s);
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 2 * s);
+          ctx.stroke();
+          break;
         // === WINTER DECORATIONS ===
         case "pine":
           ctx.fillStyle = "rgba(0,0,0,0.2)";
@@ -4509,6 +5332,142 @@ export default function PrincetonTowerDefense() {
           ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 3 * s);
           ctx.closePath();
           ctx.fill();
+          break;
+        case "ice_fortress":
+          // Crystalline structure using faceted polygons
+          const iceLight = "#B3E5FC";
+          const iceMid = "#81D4FA";
+          const iceDark = "#29B6F6";
+          const iceShadow = "rgba(0, 96, 100, 0.4)";
+
+          // Ground shadow blob
+          ctx.fillStyle = iceShadow;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 25,
+            40 * s,
+            15 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Helper to draw crystal spires
+          const drawSpire = (x, y, h, w) => {
+            // Left face (Mid)
+            ctx.fillStyle = iceMid;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x - w, y - h * 0.2);
+            ctx.lineTo(x, y - h);
+            ctx.lineTo(x + w * 0.5, y - h * 0.8);
+            ctx.fill();
+            // Right face (Dark)
+            ctx.fillStyle = iceDark;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y - h * 0.2);
+            ctx.lineTo(x + w * 0.5, y - h * 0.8);
+            ctx.fill();
+            // Top face (Light)
+            ctx.fillStyle = iceLight;
+            ctx.beginPath();
+            ctx.moveTo(x, y - h);
+            ctx.lineTo(x - w, y - h * 0.2);
+            ctx.lineTo(x + w * 0.5, y - h * 0.8);
+            ctx.fill();
+            // Edge highlight
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 1 * s;
+            ctx.beginPath();
+            ctx.moveTo(x, y - h);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+          };
+
+          // Draw cluster of spires back to front
+          drawSpire(screenPos.x - 20 * s, screenPos.y - 5 * s, 50 * s, 15 * s);
+          drawSpire(screenPos.x + 15 * s, screenPos.y - 8 * s, 45 * s, 12 * s);
+          drawSpire(screenPos.x, screenPos.y, 65 * s, 20 * s); // Main spire
+          drawSpire(screenPos.x - 10 * s, screenPos.y + 5 * s, 30 * s, 10 * s);
+          break;
+
+        case "ice_throne":
+          // Jagged ice shards forming a chair
+          ctx.fillStyle = "rgba(0, 96, 100, 0.3)"; // Shadow
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 10 * s,
+            20 * s,
+            8 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          const throneBase = "#4FC3F7";
+          const throneHighlight = "#B3E5FC";
+
+          // Base block
+          ctx.fillStyle = throneBase;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 15 * s, screenPos.y + 2);
+          ctx.lineTo(screenPos.x, screenPos.y + 7 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y + 2);
+          ctx.lineTo(screenPos.x, screenPos.y - 7 * s);
+          ctx.fill();
+          //throneBase but darker
+          ctx.fillStyle = "#29B6F6";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 15 * s, screenPos.y + 2);
+          ctx.lineTo(screenPos.x, screenPos.y + 7 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 17 * s);
+          ctx.lineTo(screenPos.x - 15 * s, screenPos.y + 10 * s);
+          ctx.fill();
+          // right side, darkest
+          ctx.fillStyle = "#0288D1";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 15 * s, screenPos.y + 2);
+          ctx.lineTo(screenPos.x, screenPos.y + 7 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 17 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y + 10 * s);
+          ctx.fill();
+
+          // connector
+          ctx.fillStyle = "#0288D1";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y + 2 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y + 2 * s);
+          ctx.fill();
+
+          // Seat and Backrest (jagged polygons)
+          ctx.fillStyle = throneHighlight;
+          ctx.beginPath();
+          // Seat area
+          ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 5 * s);
+          // Backrest rising up
+          ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 35 * s); // Right point
+          ctx.lineTo(screenPos.x, screenPos.y - 50 * s); // Top point
+          ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 35 * s); // Left point
+          ctx.closePath();
+          ctx.fill();
+
+          // Facet definitions
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 50 * s);
+          ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 35 * s);
+          ctx.stroke();
           break;
 
         // === VOLCANIC DECORATIONS ===
@@ -4682,6 +5641,153 @@ export default function PrincetonTowerDefense() {
           ctx.beginPath();
           ctx.arc(screenPos.x, screenPos.y, 2 * s, 0, Math.PI * 2);
           ctx.fill();
+          break;
+        case "obsidian_castle":
+          // Sharp, dark, glossy volcanic glass structure
+          const obsDark = "#1A1A1A";
+          const obsMid = "#333333";
+          const obsLight = "#555555"; // For sharp highlights
+          const lavaGlow = "#FF3D00";
+
+          // Ground presence
+          ctx.fillStyle = "rgba(0,0,0,0.5)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            35 * s,
+            15 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Main Tower (Isometric Prism with jagged top)
+          // Side Face (Darkest)
+          ctx.fillStyle = obsDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 10 * s);
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y);
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
+          ctx.fill();
+          // Front Face (Mid)
+          ctx.fillStyle = obsMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 10 * s);
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y);
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
+          ctx.fill();
+
+          // top face (lightest)
+          ctx.fillStyle = obsLight;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 60 * s);
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
+          ctx.fill();
+
+          // Jagged Battlements
+          ctx.fillStyle = obsMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 60 * s); // Spike 1
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 65 * s); // Main Spike
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 50 * s);
+          ctx.lineTo(screenPos.x + 23 * s, screenPos.y - 60 * s); // Spike 3
+          ctx.lineTo(screenPos.x + 23 * s, screenPos.y - 50 * s);
+          ctx.fill();
+
+          // Lava "Windows" (Glowing cracks)
+          ctx.shadowColor = lavaGlow;
+          ctx.shadowBlur = 15 * s;
+          ctx.fillStyle = lavaGlow;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 10 * s);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Sharp Edge Highlights (makes it look shiny)
+          ctx.strokeStyle = obsLight;
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 10 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 40 * s); // center corner
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 45 * s); // top edge
+          ctx.stroke();
+          break;
+
+        case "dark_throne":
+          ctx.fillStyle = "rgba(0,0,0,0.4)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 10 * s,
+            18 * s,
+            8 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          const metal = "#263238";
+          const metalHigh = "#546E7A";
+          const cushion = "#B71C1c";
+
+          // Spiky Base angled outwards
+          ctx.fillStyle = metal;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 40 * s); // Left spike
+          ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 25 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 55 * s); // Center spike
+          ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 25 * s);
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 40 * s); // Right spike
+          ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 10 * s);
+          ctx.fill();
+
+          // Seat Cushion (Velvet look with gradient)
+          const cushionGrad = ctx.createLinearGradient(
+            screenPos.x,
+            screenPos.y - 20 * s,
+            screenPos.x,
+            screenPos.y
+          );
+          cushionGrad.addColorStop(0, cushion);
+          cushionGrad.addColorStop(1, "#880E4F");
+          ctx.fillStyle = cushionGrad;
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 20 * s,
+            24 * s,
+            12 * s
+          );
+          // Cushion edge highlight
+          ctx.fillStyle = "#FF5252";
+          ctx.fillRect(
+            screenPos.x - 12 * s,
+            screenPos.y - 20 * s,
+            24 * s,
+            2 * s
+          );
+
+          // Highlights on metal spikes
+          ctx.strokeStyle = metalHigh;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 40 * s);
+          ctx.moveTo(screenPos.x, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 55 * s);
+          ctx.stroke();
           break;
 
         // === SWAMP DECORATIONS ===
@@ -4866,6 +5972,240 @@ export default function PrincetonTowerDefense() {
             Math.PI * 2
           );
           ctx.fill();
+          break;
+        case "witch_cottage":
+          // Ramshackle hut with depth
+          // Dark shadow underneath
+          ctx.fillStyle = "rgba(0,0,0,0.4)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 7 * s,
+            35 * s,
+            15 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          const woodWall = "#4E342E";
+          const woodDark = "#2D1E1A";
+          const roofStraw = "#6D4C41";
+
+          // Main Structure (Isometric box, slightly crooked)
+          // Front face
+          ctx.fillStyle = woodWall;
+          ctx.fillRect(
+            screenPos.x - 25 * s,
+            screenPos.y - 35 * s,
+            40 * s,
+            35 * s
+          );
+          // Side face (angled back)
+          ctx.fillStyle = woodDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 15 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 45 * s);
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y);
+          ctx.fill();
+
+          // Roof (Overhanging and saggy)
+          ctx.fillStyle = roofStraw;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 60 * s); // Peak
+          ctx.lineTo(screenPos.x + 35 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 30 * s);
+          ctx.fill();
+          // Roof thick edge
+          ctx.fillStyle = "#5D4037";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 25 * s);
+          ctx.lineTo(screenPos.x - 30 * s, screenPos.y - 25 * s);
+          ctx.fill();
+
+          // Door & Window
+          ctx.fillStyle = woodDark;
+          ctx.fillRect(
+            screenPos.x - 15 * s,
+            screenPos.y - 25 * s,
+            10 * s,
+            25 * s
+          ); // Door
+          // Glowing Window
+          ctx.fillStyle = "#76FF03"; // Poison green glow
+          ctx.shadowColor = "#76FF03";
+          ctx.shadowBlur = 10 * s;
+          ctx.fillRect(screenPos.x + 2 * s, screenPos.y - 25 * s, 8 * s, 8 * s);
+          ctx.shadowBlur = 0;
+          break;
+
+        case "cauldron":
+          // Large iron pot with volume and bubbling goo
+          ctx.fillStyle = "rgba(0,0,0,0.3)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 3 * s,
+            15 * s,
+            6 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          const iron = "#212121";
+          const ironLight = "#424242";
+
+          // Little legs
+          ctx.fillStyle = iron;
+          ctx.fillRect(screenPos.x - 10 * s, screenPos.y, 3 * s, 4 * s);
+          ctx.fillRect(screenPos.x + 7 * s, screenPos.y, 3 * s, 4 * s);
+
+          // Main Pot body (gradient spherical look)
+          const potGrad = ctx.createRadialGradient(
+            screenPos.x - 5 * s,
+            screenPos.y - 15 * s,
+            5 * s,
+            screenPos.x,
+            screenPos.y - 15 * s,
+            20 * s
+          );
+          potGrad.addColorStop(0, ironLight);
+          potGrad.addColorStop(1, iron);
+          ctx.fillStyle = potGrad;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 15 * s, 18 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rim (thick torus shape)
+          ctx.fillStyle = ironLight;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 28 * s,
+            18 * s,
+            6 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.fillStyle = iron; // inner hole
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 28 * s,
+            14 * s,
+            4 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Bubbling Goo content
+          const gooHeight = Math.sin(decorTime * 3) * 2 * s;
+          ctx.fillStyle = "#64DD17";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y - 26 * s + gooHeight,
+            13 * s,
+            3.5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Bubbles
+          const b1 = Math.sin(decorTime * 5) * 3 * s;
+          const b2 = Math.cos(decorTime * 4) * 3 * s;
+          ctx.fillStyle = "#B2FF59";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + b1,
+            screenPos.y - 28 * s + gooHeight,
+            3 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - b2,
+            screenPos.y - 25 * s + gooHeight,
+            2 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          break;
+
+        case "tentacle":
+          // Thicker, segmented tentacle emerging from ground
+          const tentacleColor = "#7B1FA2";
+          const suckerColor = "#E1BEE7";
+          const sway = Math.sin(decorTime * 1.5 + dec.x) * 15 * s;
+
+          // Dark hole at base
+          ctx.fillStyle = "#1A0F21";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            10 * s,
+            5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Tentacle body (segmented look using varying line width)
+          ctx.strokeStyle = tentacleColor;
+          ctx.lineCap = "round";
+          // Base segment (thick)
+          ctx.lineWidth = 14 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y);
+          ctx.lineTo(screenPos.x + sway * 0.2, screenPos.y - 15 * s);
+          ctx.stroke();
+          // Middle segment
+          ctx.lineWidth = 10 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + sway * 0.2, screenPos.y - 15 * s);
+          ctx.lineTo(screenPos.x + sway * 0.6, screenPos.y - 35 * s);
+          ctx.stroke();
+          // Tip segment (thin)
+          ctx.lineWidth = 5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + sway * 0.6, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + sway, screenPos.y - 50 * s);
+          ctx.stroke();
+
+          // Suckers (lighter circles on the underside)
+          ctx.fillStyle = suckerColor;
+          const suckerPos = [
+            { t: 0.2, s: 4 },
+            { t: 0.4, s: 3.5 },
+            { t: 0.6, s: 3 },
+            { t: 0.8, s: 2 },
+          ];
+          suckerPos.forEach((p) => {
+            // Interpolate position based on sway
+            const sx = screenPos.x + sway * p.t;
+            const sy = screenPos.y - 50 * s * p.t;
+            ctx.beginPath();
+            // Offset slightly to the "front"
+            ctx.arc(sx - 3 * s, sy, p.s * s, 0, Math.PI * 2);
+            ctx.fill();
+          });
           break;
 
         // === MISC DECORATIONS ===
@@ -5784,6 +7124,8 @@ export default function PrincetonTowerDefense() {
         return;
       }
       // Troop movement - constrained to road, save userTargetPos for respawn
+      // Around line 1553 - Inside handleCanvasClick
+      // Troop movement - constrained to road and owner range
       const selectedTroopUnit = troops.find((t) => t.selected);
       if (selectedTroopUnit) {
         const worldPos = screenToWorld(
@@ -5794,64 +7136,72 @@ export default function PrincetonTowerDefense() {
           cameraOffset,
           cameraZoom
         );
-        const dist = distance(worldPos, selectedTroopUnit.spawnPoint);
-        if (dist <= selectedTroopUnit.moveRadius) {
-          // Find the closest point on the road
-          const path = MAP_PATHS[selectedMap];
-          const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
-          let fullPath = path;
-          if (secondaryPath) {
-            fullPath = path.concat(secondaryPath);
-          }
-          let closestPoint = worldPos;
-          let minDist = Infinity;
-          for (let i = 0; i < fullPath.length - 1; i++) {
-            const p1 = gridToWorldPath(fullPath[i]);
-            const p2 = gridToWorldPath(fullPath[i + 1]);
-            const roadPoint = closestPointOnLine(worldPos, p1, p2);
-            const roadDist = distance(worldPos, roadPoint);
-            if (roadDist < minDist) {
-              minDist = roadDist;
-              closestPoint = roadPoint;
-            }
-          }
-          // Only move if the road point is within range
-          const finalDist = distance(
-            closestPoint,
-            selectedTroopUnit.spawnPoint
-          );
-          if (finalDist <= selectedTroopUnit.moveRadius) {
-            // Move entire formation to new rally point
-            const ownerId = selectedTroopUnit.ownerId;
-            const formationTroops = troops.filter((t) => t.ownerId === ownerId);
-            const formationOffsets = getFormationOffsets(
-              formationTroops.length
-            );
 
-            setTroops((prev) =>
-              prev.map((t) => {
-                if (t.ownerId === ownerId) {
-                  const offset = formationOffsets[t.spawnSlot] || {
-                    x: 0,
-                    y: 0,
-                  };
-                  const newTarget = {
-                    x: closestPoint.x + offset.x,
-                    y: closestPoint.y + offset.y,
-                  };
-                  return {
-                    ...t,
-                    moving: true,
-                    targetPos: newTarget,
-                    userTargetPos: newTarget,
-                    spawnPoint: closestPoint, // Update spawn point to new rally
-                  };
-                }
-                return t;
-              })
-            );
-            addParticles(closestPoint, "light", 5);
+        // 1. Determine Anchor Position and Range Radius based on Owner
+        const station = towers.find((t) => t.id === selectedTroopUnit.ownerId);
+
+        // If it's a station troop, center range on the tower.
+        // Otherwise (Spell/Hero), center on the original summon spawnPoint.
+        const anchorPos = station
+          ? gridToWorld(station.pos)
+          : selectedTroopUnit.spawnPoint;
+
+        // Use tower data range for stations, or the individual troop's moveRadius for summons
+        const rangeRadius = station
+          ? TOWER_DATA.station.spawnRange || 180
+          : selectedTroopUnit.moveRadius || 200;
+
+        // 2. Find the closest point on the road (Path Snapping)
+        const path = MAP_PATHS[selectedMap];
+        const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
+        let fullPath = path;
+        if (secondaryPath) {
+          fullPath = path.concat(secondaryPath);
+        }
+
+        let closestRoadPoint = worldPos;
+        let minDist = Infinity;
+        for (let i = 0; i < fullPath.length - 1; i++) {
+          const p1 = gridToWorldPath(fullPath[i]);
+          const p2 = gridToWorldPath(fullPath[i + 1]);
+          const roadPoint = closestPointOnLine(worldPos, p1, p2);
+          const roadDist = distance(worldPos, roadPoint);
+          if (roadDist < minDist) {
+            minDist = roadDist;
+            closestRoadPoint = roadPoint;
           }
+        }
+
+        // 3. Distance Check: Is the snapped road point within the allowed range?
+        const distFromAnchor = distance(closestRoadPoint, anchorPos);
+
+        if (distFromAnchor <= rangeRadius) {
+          // Move entire group (if part of a station/spell group)
+          const ownerId = selectedTroopUnit.ownerId;
+          const formationTroops = troops.filter((t) => t.ownerId === ownerId);
+          const formationOffsets = getFormationOffsets(formationTroops.length);
+
+          setTroops((prev) =>
+            prev.map((t) => {
+              if (t.ownerId === ownerId) {
+                const offset = formationOffsets[t.spawnSlot] || { x: 0, y: 0 };
+                const newTarget = {
+                  x: closestRoadPoint.x + offset.x,
+                  y: closestRoadPoint.y + offset.y,
+                };
+                return {
+                  ...t,
+                  moving: true,
+                  targetPos: newTarget,
+                  userTargetPos: newTarget, // Saves home for return-after-combat
+                  // For summons, we update the spawnPoint to the new rally to allow local movement
+                  spawnPoint: station ? t.spawnPoint : closestRoadPoint,
+                };
+              }
+              return t;
+            })
+          );
+          addParticles(closestRoadPoint, "light", 5);
         }
         return;
       }
@@ -6572,6 +7922,8 @@ export default function PrincetonTowerDefense() {
     setStarsEarned(0);
     setTimeSpent(0);
     setLevelStartTime(0);
+    // clear all waves because if u end the level early, they might still be queued
+    clearAllTimers();
   }, []);
   // Render different screens based on game state
   // Show WorldMap for both menu and setup (combined into one screen)
@@ -6636,6 +7988,7 @@ export default function PrincetonTowerDefense() {
           setGameState("setup");
         }}
         retryLevel={() => {
+          clearAllTimers();
           setPawPoints(INITIAL_PAW_POINTS);
           setLives(INITIAL_LIVES);
           setCurrentWave(0);
@@ -6654,6 +8007,8 @@ export default function PrincetonTowerDefense() {
           setPlacingTroop(false);
           setSpells([]);
           setGameSpeed(1);
+          // clear all waves because if u end the level early, they might still be queued
+          setLevelStartTime(Date.now());
         }}
       />
       <div className="flex-1 relative overflow-hidden">
