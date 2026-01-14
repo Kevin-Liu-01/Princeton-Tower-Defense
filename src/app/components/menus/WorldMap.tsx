@@ -3234,7 +3234,21 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           )}
         </div>
         {/* RIGHT: Map */}
-        <div className="flex-1 flex flex-col min-w-0 p-3 overflow-x-auto">
+        <div className="relative flex-1 flex flex-col min-w-0 p-3 overflow-x-auto">
+          <div className="z-20 sm:hidden absolute flex top-4 right-4  items-center gap-1 px-1.5 py-1.5 rounded-xl">
+            <button
+              onClick={() => goToPreviousLevel()}
+              className="p-0.5 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => goToNextLevel()}
+              className="p-0.5 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
           <div
             ref={containerRef}
             className="flex-1 relative  bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"

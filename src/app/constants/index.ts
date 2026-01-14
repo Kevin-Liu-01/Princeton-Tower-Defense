@@ -1164,8 +1164,12 @@ export const LEVEL_DATA: Record<
       { type: "fog_patch", pos: { x: 10, y: 2 }, variant: 0 },
       { type: "broken_bridge", pos: { x: 14, y: 14 }, variant: 0 },
       { type: "frog", pos: { x: 6, y: 14 }, variant: 0 },
+      { type: "deep_water", pos: { x: 10, y: 3 }, variant: 0 },
+
       { type: "tentacle", pos: { x: 4, y: 1 }, variant: 0 },
+      { type: "tentacle", pos: { x: 10, y: 3 }, variant: 0, size: 1 },
     ],
+
     previewImage: "/images/previews/murky_bog.png",
   },
   witch_hut: {
@@ -1182,7 +1186,8 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
-      { type: "witch_cottage", pos: { x: 14, y: 0 }, variant: 0, size: 2 },
+      { type: "deep_water", pos: { x: 14, y: -0.5 }, variant: 0, size: 3 },
+      { type: "witch_cottage", pos: { x: 14, y: 0 }, variant: 0, size: 1.25 },
       { type: "cauldron", pos: { x: 15, y: 1 }, variant: 0 },
       { type: "swamp_tree", pos: { x: 2, y: 0 }, variant: 0 },
       { type: "cauldron", pos: { x: 16, y: 12 }, variant: 1 },
@@ -1190,7 +1195,6 @@ export const LEVEL_DATA: Record<
       { type: "tombstone", pos: { x: 4, y: 14 }, variant: 1 },
       { type: "cauldron", pos: { x: 14, y: 10 }, variant: 0 },
       { type: "cauldron", pos: { x: 0, y: 6 }, variant: 0 },
-      { type: "poison_pool", pos: { x: 24, y: 14 }, variant: 0 },
     ],
     hazards: [{ type: "poison_fog", pos: { x: 12, y: 8 }, radius: 2 }],
     previewImage: "/images/previews/witch_hut.png",
@@ -1216,7 +1220,7 @@ export const LEVEL_DATA: Record<
       { type: "sunken_pillar", pos: { x: 2, y: 0 }, variant: 0 },
       { type: "sunken_pillar", pos: { x: 26, y: 10 }, variant: 1 },
       { type: "idol_statue", pos: { x: 24, y: 16 }, variant: 0 },
-      { type: "oasis_pool", pos: { x: 13, y: 2 }, variant: 0, size: 2 },
+      { type: "deep_water", pos: { x: 13, y: 2 }, variant: 0, size: 2 },
       { type: "tentacle", pos: { x: 14, y: 2 }, variant: 0 },
       { type: "tentacle", pos: { x: 12.3, y: 3 }, variant: 0 },
       { type: "tentacle", pos: { x: 13, y: 2 }, variant: 0 },
@@ -1238,8 +1242,14 @@ export const LEVEL_DATA: Record<
     region: "desert",
     theme: "desert",
     difficulty: 1,
+    specialTower: {
+      pos: { x: 16, y: 6 },
+      type: "beacon",
+    },
     decorations: [
       { type: "pyramid", pos: { x: 14, y: 2 }, variant: 0, size: 3 },
+      { type: "sphinx", pos: { x: 1, y: 2 }, variant: 0 },
+
       { type: "oasis_pool", pos: { x: 16, y: 10 }, variant: 0, size: 2 },
       { type: "palm", pos: { x: 2, y: 2 }, variant: 0 },
       { type: "palm", pos: { x: 14, y: 14 }, variant: 1 },
@@ -1268,12 +1278,12 @@ export const LEVEL_DATA: Record<
       type: "barracks",
     },
     decorations: [
+      { type: "sphinx", pos: { x: 10, y: 2 }, variant: 0 },
       { type: "pyramid", pos: { x: 22, y: 2 }, variant: 0, size: 3 },
       { type: "pyramid", pos: { x: 4, y: 1 }, variant: 0, size: 3 },
       { type: "obelisk", pos: { x: 2, y: 2 }, variant: 0 },
       { type: "obelisk", pos: { x: 24, y: 14 }, variant: 1 },
-      { type: "giant_sphinx", pos: { x: 0, y: 14 }, variant: 0 },
-      { type: "hieroglyph_wall", pos: { x: 20, y: 16 }, variant: 0 },
+
       { type: "skeleton", pos: { x: 1, y: 6 }, variant: 0 },
       { type: "torch", pos: { x: 24, y: 6 }, variant: 0 },
     ],
@@ -1293,11 +1303,11 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
-      { type: "giant_sphinx", pos: { x: 10, y: 0 }, variant: 0, size: 3 },
-      { type: "temple_entrance", pos: { x: 2, y: 0 }, variant: 0 },
+      { type: "giant_sphinx", pos: { x: 10, y: 0 }, variant: 0, size: 1 },
+      { type: "sphinx", pos: { x: 7, y: 0 }, variant: 0 },
       { type: "obelisk", pos: { x: 24, y: 12 }, variant: 0 },
       { type: "sarcophagus", pos: { x: 0, y: 14 }, variant: 0 },
-      { type: "cobra_statue", pos: { x: 10, y: 0 }, variant: 0 },
+      { type: "sphinx", pos: { x: 14, y: 0 }, variant: 0 },
       { type: "sand_pile", pos: { x: 18, y: 14 }, variant: 0 },
     ],
     hazards: [{ type: "quicksand", pos: { x: 8, y: 7 }, radius: 1.5 }],
@@ -1421,7 +1431,7 @@ export const LEVEL_DATA: Record<
     theme: "volcanic",
     difficulty: 3,
     specialTower: {
-      pos: { x: 6, y: 10 },
+      pos: { x: 10, y: 10 },
       type: "vault",
       hp: 1000,
     },
@@ -1434,7 +1444,7 @@ export const LEVEL_DATA: Record<
       { type: "obsidian_castle", pos: { x: 22, y: 14 }, variant: 0 },
       { type: "obsidian_castle", pos: { x: 4, y: 14 }, variant: 0 },
     ],
-    hazards: [{ type: "lava_geyser", pos: { x: 22, y: 6 }, radius: 2 }],
+    hazards: [{ type: "lava_geyser", pos: { x: 12, y: 3.5 }, radius: 2 }],
     previewImage: "/images/previews/caldera.png",
   },
   throne: {

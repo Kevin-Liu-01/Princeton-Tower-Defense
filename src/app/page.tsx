@@ -513,7 +513,6 @@ export default function PrincetonTowerDefense() {
     activeTimeoutsRef.current.push(waveOverTimeout);
   }, [waveInProgress, currentWave, selectedMap]);
   // Update game function
-  // Update game function
   const updateGame = useCallback(
     (deltaTime: number) => {
       const now = Date.now();
@@ -521,10 +520,6 @@ export default function PrincetonTowerDefense() {
       const mapData = LEVEL_DATA[selectedMap];
       const spec = mapData?.specialTower;
       const specWorldPos = spec ? gridToWorld(spec.pos) : null;
-
-      // =========================================================================
-      // 1. GLOBAL HERO DEATH GUARD
-      // =========================================================================
 
       // Wave timer
       if (!waveInProgress && currentWave < levelWaves.length) {
@@ -538,15 +533,22 @@ export default function PrincetonTowerDefense() {
         });
       }
 
-      // Reset dynamic tower flags and handle F. Scott buff cleanup
+      // =========================================================================
+      // DYNAMIC BUFF REGISTRATION
+      // We compute these "live" rather than relying on stale state
+      // =========================================================================
       setTowers((prev) =>
         prev.map((t) => {
-          const isBuffActive = t.boostEnd ? now < t.boostEnd : false;
+          const tWorldPos = gridToWorld(t.pos);
+          const isBeaconNearby =
+            spec?.type === "beacon" && distance(tWorldPos, specWorldPos!) < 250;
+          const isScottActive = t.boostEnd ? now < t.boostEnd : false;
+
           return {
             ...t,
-            rangeBoost: 1.0,
-            isBuffed: isBuffActive,
-            damageBoost: isBuffActive ? t.damageBoost : 1.0,
+            rangeBoost: isBeaconNearby ? 1.2 : 1.0,
+            damageBoost: isScottActive ? t.damageBoost || 1.5 : 1.0,
+            isBuffed: isBeaconNearby || isScottActive,
           };
         })
       );
@@ -802,7 +804,33 @@ export default function PrincetonTowerDefense() {
             if (enemy.frozen || now < enemy.stunUntil) return enemy;
             const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
 
-            // 1. Check for Vault Targeting (High Priority)
+            // 1. TAUNT LOGIC (Highest Priority)
+            // If the enemy is taunted, they ignore the path and troops to hit the hero
+            if (enemy.taunted && hero && !hero.dead) {
+              const distToHero = distance(enemyPos, hero.pos);
+              if (distToHero < 80) {
+                // Slightly larger engagement for taunt
+                if (now - (enemy.lastHeroAttack || 0) > 1000) {
+                  // Play hit effect but do NO damage if shield is active
+                  if (hero.shieldActive) {
+                    addParticles(hero.pos, "spark", 5);
+                  } else {
+                    setHero((h) =>
+                      h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
+                    );
+                  }
+                  return {
+                    ...enemy,
+                    inCombat: true,
+                    combatTarget: hero.id,
+                    lastHeroAttack: now,
+                  };
+                }
+                return { ...enemy, inCombat: true, combatTarget: hero.id };
+              }
+            }
+
+            // 2. CHECK FOR VAULT LOGIC (Second Priority)
             if (
               spec?.type === "vault" &&
               specialTowerHp !== null &&
@@ -845,9 +873,13 @@ export default function PrincetonTowerDefense() {
                 : null;
             if (nearbyHero) {
               if (now - enemy.lastHeroAttack > 1000) {
-                setHero((h) =>
-                  h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
-                );
+                if (!hero.shieldActive) {
+                  setHero((h) =>
+                    h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
+                  );
+                } else {
+                  addParticles(hero.pos, "spark", 5); // Visual feedback of "Blocked"
+                }
                 return {
                   ...enemy,
                   inCombat: true,
@@ -855,6 +887,7 @@ export default function PrincetonTowerDefense() {
                   lastHeroAttack: now,
                 };
               }
+
               return { ...enemy, inCombat: true, combatTarget: nearbyHero.id };
             }
 
@@ -892,22 +925,33 @@ export default function PrincetonTowerDefense() {
           .filter(Boolean)
       );
 
-      // Hero death check
-      if (hero && !hero.dead && hero.hp <= 0) {
-        setHero((prev) =>
-          prev
-            ? {
-                ...prev,
-                hp: 0,
-                dead: true,
-                respawnTimer: HERO_RESPAWN_TIME,
-                selected: false,
-                moving: false,
-              }
-            : null
-        );
-        addParticles(hero.pos, "explosion", 20);
-        addParticles(hero.pos, "smoke", 10);
+      // Hero death check & shield maintainance
+      if (hero && !hero.dead) {
+        if (hero.hp <= 0) {
+          setHero((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  hp: 0,
+                  dead: true,
+                  respawnTimer: HERO_RESPAWN_TIME,
+                  selected: false,
+                  moving: false,
+                }
+              : null
+          );
+
+          addParticles(hero.pos, "explosion", 20);
+          addParticles(hero.pos, "smoke", 10);
+        }
+        // Shield Expiration Logic
+        if (hero.shieldActive && now > (hero.shieldEnd || 0)) {
+          setHero((prev) => (prev ? { ...prev, shieldActive: false } : null));
+          // Clear taunts from all enemies
+          setEnemies((prev) =>
+            prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined }))
+          );
+        }
       }
 
       // Hero respawn timer
@@ -1714,6 +1758,12 @@ export default function PrincetonTowerDefense() {
       // Tower attacks
       towers.forEach((tower) => {
         const tData = TOWER_DATA[tower.type];
+        const towerWorldPos = gridToWorld(tower.pos);
+
+        // Final Buffed Stats for this tick
+        const finalRange = tData.range * (tower.rangeBoost || 1.0);
+        const finalDamageMult = tower.damageBoost || 1.0;
+
         if (tower.type === "club") {
           // ENHANCED CLUB TOWER - More useful income generator
           // Level 1: Basic Club - 8 PP every 8s
@@ -1775,7 +1825,6 @@ export default function PrincetonTowerDefense() {
 
           // Level 3+ Grand Club: Slow nearby enemies (greed aura)
           if (tower.level >= 3) {
-            const towerWorldPos = gridToWorld(tower.pos);
             const auraRange = 100 + tower.level * 20;
             enemies.forEach((e) => {
               const enemyPos = getEnemyPosWithPath(e, selectedMap);
@@ -1797,7 +1846,6 @@ export default function PrincetonTowerDefense() {
 
           // Level 4B Recruitment Center: Buff nearby towers
           if (tower.level === 4 && tower.upgrade === "B") {
-            const towerWorldPos = gridToWorld(tower.pos);
             const buffRange = 150;
             setTowers((prev) =>
               prev.map((t) => {
@@ -1816,13 +1864,12 @@ export default function PrincetonTowerDefense() {
             );
           }
         } else if (tower.type === "library") {
-          const towerWorldPos = gridToWorld(tower.pos);
           let appliedSlow = false;
           let appliedDamage = false;
           enemies.forEach((e) => {
             const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(towerWorldPos, enemyPos);
-            if (dist <= tData.range) {
+            if (dist <= finalRange) {
               // Base slow effect - increases with level
               // Level 1: 0.3, Level 2: 0.45, Level 3: 0.6, Level 4A: 0.8, Level 4B: 0.7
               const slowAmount =
@@ -1838,7 +1885,7 @@ export default function PrincetonTowerDefense() {
 
               // Level 3 (Arcane Library) - adds minor magic damage
               if (tower.level === 3 && now - tower.lastAttack > 500) {
-                const arcaneDamage = 8;
+                const arcaneDamage = 8 * finalDamageMult;
                 setEnemies((prev) =>
                   prev
                     .map((enemy) => {
@@ -1868,7 +1915,7 @@ export default function PrincetonTowerDefense() {
               ) {
                 setEnemies((prev) =>
                   prev.map((enemy) =>
-                    dist <= tData.range && enemy.id === e.id
+                    dist <= finalRange && enemy.id === e.id
                       ? {
                           ...enemy,
                           frozen: true,
@@ -1934,7 +1981,7 @@ export default function PrincetonTowerDefense() {
             enemies.some(
               (e) =>
                 distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
-                tData.range
+                finalRange
             )
           ) {
             const effectType =
@@ -2221,7 +2268,6 @@ export default function PrincetonTowerDefense() {
             );
           }
         } else if (tower.type === "cannon") {
-          const towerWorldPos = gridToWorld(tower.pos);
           // Level 3: Heavy Cannon - increased damage and minor splash
           // Level 4A: Gatling gun - rapid fire
           // Level 4B: Flamethrower - continuous damage with burn
@@ -2242,7 +2288,7 @@ export default function PrincetonTowerDefense() {
                   distance(
                     towerWorldPos,
                     getEnemyPosWithPath(e, selectedMap)
-                  ) <= tData.range
+                  ) <= finalRange
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
@@ -2250,7 +2296,7 @@ export default function PrincetonTowerDefense() {
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosWithPath(target, selectedMap);
-              let damage = tData.damage;
+              let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
               if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
               if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
@@ -2319,7 +2365,6 @@ export default function PrincetonTowerDefense() {
             }
           }
         } else if (tower.type === "lab") {
-          const towerWorldPos = gridToWorld(tower.pos);
           // Level 3: Tesla Coil - chains to 2 targets
           // Level 4A: Focused Beam - continuous lock-on with increasing damage
           // Level 4B: Chain Lightning - hits up to 5 targets
@@ -2334,7 +2379,7 @@ export default function PrincetonTowerDefense() {
                   distance(
                     towerWorldPos,
                     getEnemyPosWithPath(e, selectedMap)
-                  ) <= tData.range
+                  ) <= finalRange
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
@@ -2342,7 +2387,7 @@ export default function PrincetonTowerDefense() {
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosWithPath(target, selectedMap);
-              let damage = tData.damage;
+              let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
               if (tower.level >= 3) damage *= 2; // Level 3 and 4 get 2x base damage
               if (tower.level === 4) damage *= 1.3; // Level 4 gets additional bonus
@@ -2446,7 +2491,6 @@ export default function PrincetonTowerDefense() {
           }
         } else if (tower.type === "arch") {
           // Arch tower - sonic attacks
-          const towerWorldPos = gridToWorld(tower.pos);
           // Level 3: Elite Archers - faster attack, hits 2 targets
           // Level 4A: Shockwave - stun chance
           // Level 4B: Symphony - hits up to 5 targets
@@ -2463,7 +2507,7 @@ export default function PrincetonTowerDefense() {
                   distance(
                     towerWorldPos,
                     getEnemyPosWithPath(e, selectedMap)
-                  ) <= tData.range
+                  ) <= finalRange
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
@@ -2478,7 +2522,7 @@ export default function PrincetonTowerDefense() {
                 ? 2
                 : 1;
               const targets = validEnemies.slice(0, numTargets);
-              let damage = tData.damage;
+              let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
               if (tower.level >= 3) damage *= 2;
               if (tower.level === 4) damage *= 1.25; // Additional level 4 bonus
@@ -2525,7 +2569,7 @@ export default function PrincetonTowerDefense() {
                   pos: towerWorldPos,
                   type: "sonic",
                   progress: 0,
-                  size: tData.range,
+                  size: finalRange,
                 },
               ]);
               // Create music note cluster effects to each target
@@ -2558,12 +2602,11 @@ export default function PrincetonTowerDefense() {
           now - tower.lastAttack > tData.attackSpeed
         ) {
           // Generic tower attack (fallback)
-          const towerWorldPos = gridToWorld(tower.pos);
           const validEnemies = enemies
             .filter(
               (e) =>
                 distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
-                tData.range
+                finalRange
             )
             .sort(
               (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
@@ -2571,7 +2614,7 @@ export default function PrincetonTowerDefense() {
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetPos = getEnemyPosWithPath(target, selectedMap);
-            let damage = tData.damage;
+            let damage = tData.damage * finalDamageMult;
             if (tower.level === 2) damage *= 1.5;
             if (tower.level === 3) damage *= 2;
             setEnemies((prev) =>
@@ -2824,7 +2867,13 @@ export default function PrincetonTowerDefense() {
 
         // Deal damage from enemy projectiles to heroes/troops
         completingProjectiles.forEach((proj) => {
-          if (proj.targetType === "hero" && proj.targetId) {
+          if (
+            proj.targetType === "hero" &&
+            proj.targetId &&
+            hero.id === proj.targetId &&
+            !hero.dead &&
+            !hero.shieldActive
+          ) {
             setHero((prev) => {
               if (prev && prev.id === proj.targetId && !prev.dead) {
                 const newHp = prev.hp - (proj.damage || 20);
@@ -2835,6 +2884,8 @@ export default function PrincetonTowerDefense() {
               }
               return prev;
             });
+          } else if (hero?.shieldActive) {
+            addParticles(hero.pos, "spark", 8); // Deflect visual
           } else if (proj.targetType === "troop" && proj.targetId) {
             // kill troops
             setTroops((prev) =>
@@ -3728,7 +3779,8 @@ export default function PrincetonTowerDefense() {
       | "bones"
       | "torch"
       | "statue"
-      | "nassau_hall";
+      | "nassau_hall"
+      | "deep_water";
 
     interface Decoration {
       type: DecorationType;
@@ -4031,9 +4083,27 @@ export default function PrincetonTowerDefense() {
             rotation: 0,
             variant: dec.variant,
           });
+        } else if (dec.type === "deep_water") {
+          decorations.push({
+            type: "deep_water",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.3,
+            rotation: 0,
+            variant: dec.variant,
+          });
         } else if (dec.type === "giant_sphinx") {
           decorations.push({
             type: "giant_sphinx",
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: size * 1.4,
+            rotation: 0,
+            variant: dec.variant,
+          });
+        } else if (dec.type === "sphinx") {
+          decorations.push({
+            type: "sphinx",
             x: worldPos.x,
             y: worldPos.y,
             scale: size * 1.4,
@@ -5415,7 +5485,812 @@ export default function PrincetonTowerDefense() {
             );
           }
           break;
-        case "giant_sphinx":
+        case "giant_sphinx": {
+          const time = Date.now() / 1000;
+
+          // Color palette - aged sandstone
+          const sandLight = "#d4c490";
+          const sandBase = "#c2b280";
+          const sandMid = "#b0a070";
+          const sandDark = "#8a7a55";
+          const sandShadow = "#6a5a40";
+          const goldAccent = "#d4a850";
+          const goldDark = "#a08030";
+          const eyeGlow = "#40d0ff";
+
+          // Subtle mystical pulse
+          const mysticPulse = 0.6 + Math.sin(time * 1.5) * 0.2;
+
+          // ========== GROUND SHADOW ==========
+          ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 5 * s,
+            screenPos.y + 18 * s,
+            55 * s,
+            22 * s,
+            0.1,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // ========== SAND AROUND BASE ==========
+          const sandGrad = ctx.createRadialGradient(
+            screenPos.x,
+            screenPos.y + 10 * s,
+            20 * s,
+            screenPos.x,
+            screenPos.y + 10 * s,
+            60 * s
+          );
+          sandGrad.addColorStop(0, "rgba(194, 178, 128, 0.4)");
+          sandGrad.addColorStop(0.5, "rgba(194, 178, 128, 0.2)");
+          sandGrad.addColorStop(1, "rgba(194, 178, 128, 0)");
+          ctx.fillStyle = sandGrad;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y + 10 * s,
+            60 * s,
+            25 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // ========== GRAND PEDESTAL BASE ==========
+          // Multi-tiered base for monumentality
+
+          // Bottom tier (largest)
+          ctx.fillStyle = sandDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 45 * s, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x + 45 * s, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 32 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Bottom tier front face
+          ctx.fillStyle = sandShadow;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 45 * s, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 32 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 38 * s);
+          ctx.lineTo(screenPos.x - 45 * s, screenPos.y + 18 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Bottom tier side face
+          ctx.fillStyle = sandDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 32 * s);
+          ctx.lineTo(screenPos.x + 45 * s, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x + 45 * s, screenPos.y + 18 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 38 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Middle tier
+          ctx.fillStyle = sandMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 38 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 28 * s);
+          ctx.lineTo(screenPos.x + 38 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 14 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Middle tier front
+          ctx.fillStyle = sandDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 38 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 20 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 28 * s);
+          ctx.lineTo(screenPos.x - 38 * s, screenPos.y + 12 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Middle tier side
+          ctx.fillStyle = sandMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 20 * s);
+          ctx.lineTo(screenPos.x + 38 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x + 38 * s, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 28 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Top tier (main platform)
+          ctx.fillStyle = sandBase;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 32 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 16 * s);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 14 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Top tier front
+          ctx.fillStyle = sandMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 32 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 18 * s);
+          ctx.lineTo(screenPos.x - 32 * s, screenPos.y + 5 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Top tier side
+          ctx.fillStyle = sandBase;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y + 12 * s);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x, screenPos.y + 18 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // ========== HIEROGLYPHIC CARVINGS ON BASE ==========
+          ctx.strokeStyle = sandShadow;
+          ctx.lineWidth = 1 * s;
+
+          // Front face hieroglyphics
+          const glyphY = screenPos.y + 8 * s;
+          // Ankh symbol
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 20 * s,
+            glyphY - 3 * s,
+            2.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 20 * s, glyphY - 0.5 * s);
+          ctx.lineTo(screenPos.x - 20 * s, glyphY + 6 * s);
+          ctx.moveTo(screenPos.x - 23 * s, glyphY + 2 * s);
+          ctx.lineTo(screenPos.x - 17 * s, glyphY + 2 * s);
+          ctx.stroke();
+
+          // Eye of Horus
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 8 * s,
+            glyphY + 1 * s,
+            4 * s,
+            2.5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(screenPos.x - 8 * s, glyphY + 1 * s, 1.5 * s, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, glyphY + 3.5 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 10 * s,
+            glyphY + 6 * s,
+            screenPos.x - 12 * s,
+            glyphY + 5 * s
+          );
+          ctx.stroke();
+
+          // Cartouche border on side
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.roundRect(
+            screenPos.x + 8 * s,
+            screenPos.y + 3 * s,
+            18 * s,
+            8 * s,
+            3 * s
+          );
+          ctx.stroke();
+
+          // ========== EXTENDED FRONT PAWS ==========
+          // Right paw (front)
+          const pawGrad = ctx.createLinearGradient(
+            screenPos.x + 15 * s,
+            screenPos.y - 5 * s,
+            screenPos.x + 35 * s,
+            screenPos.y + 5 * s
+          );
+          pawGrad.addColorStop(0, sandBase);
+          pawGrad.addColorStop(0.5, sandLight);
+          pawGrad.addColorStop(1, sandMid);
+          ctx.fillStyle = pawGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 8 * s);
+          ctx.lineTo(screenPos.x + 35 * s, screenPos.y - 2 * s);
+          ctx.lineTo(screenPos.x + 38 * s, screenPos.y + 2 * s);
+          ctx.lineTo(screenPos.x + 35 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y);
+          ctx.closePath();
+          ctx.fill();
+
+          // Paw details - toes
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 32 * s, screenPos.y - 1 * s);
+          ctx.lineTo(screenPos.x + 35 * s, screenPos.y + 2 * s);
+          ctx.moveTo(screenPos.x + 29 * s, screenPos.y);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y + 3 * s);
+          ctx.stroke();
+
+          // Left paw (behind, darker)
+          ctx.fillStyle = sandMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 6 * s);
+          ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 12 * s);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 6 * s);
+          ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 2 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // ========== LION BODY ==========
+          // Back haunch
+          ctx.fillStyle = sandDark;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 18 * s,
+            screenPos.y - 18 * s,
+            14 * s,
+            10 * s,
+            -0.3,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Main body gradient
+          const bodyGrad = ctx.createLinearGradient(
+            screenPos.x - 25 * s,
+            screenPos.y - 30 * s,
+            screenPos.x + 20 * s,
+            screenPos.y
+          );
+          bodyGrad.addColorStop(0, sandLight);
+          bodyGrad.addColorStop(0.3, sandBase);
+          bodyGrad.addColorStop(0.6, sandMid);
+          bodyGrad.addColorStop(1, sandDark);
+          ctx.fillStyle = bodyGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 12 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 20 * s,
+            screenPos.y - 35 * s,
+            screenPos.x - 5 * s,
+            screenPos.y - 32 * s
+          );
+          ctx.quadraticCurveTo(
+            screenPos.x + 15 * s,
+            screenPos.y - 28 * s,
+            screenPos.x + 22 * s,
+            screenPos.y - 18 * s
+          );
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 8 * s);
+          ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 6 * s);
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 8 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Body contour lines (muscle definition)
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 5 * s,
+            screenPos.y - 20 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 22 * s
+          );
+          ctx.stroke();
+
+          // Ribcage suggestion
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 18 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 8 * s,
+            screenPos.y - 14 * s,
+            screenPos.x - 5 * s,
+            screenPos.y - 12 * s
+          );
+          ctx.stroke();
+
+          // ========== CHEST AND NECK ==========
+          // Broad chest
+          const chestGrad = ctx.createLinearGradient(
+            screenPos.x + 5 * s,
+            screenPos.y - 35 * s,
+            screenPos.x + 25 * s,
+            screenPos.y - 15 * s
+          );
+          chestGrad.addColorStop(0, sandLight);
+          chestGrad.addColorStop(0.5, sandBase);
+          chestGrad.addColorStop(1, sandMid);
+          ctx.fillStyle = chestGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 32 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x + 18 * s,
+            screenPos.y - 35 * s,
+            screenPos.x + 25 * s,
+            screenPos.y - 25 * s
+          );
+          ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 18 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x + 15 * s,
+            screenPos.y - 25 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 28 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          // ========== NEMES HEADDREs (Back portion first) ==========
+          // Back drape of headdres
+          ctx.fillStyle = sandMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 55 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 20 * s,
+            screenPos.y - 50 * s,
+            screenPos.x - 22 * s,
+            screenPos.y - 25 * s
+          );
+          ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 20 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 12 * s,
+            screenPos.y - 35 * s,
+            screenPos.x,
+            screenPos.y - 45 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          // ========== HEAD AND FACE ==========
+          const headCenterX = screenPos.x + 8 * s;
+          const headCenterY = screenPos.y - 45 * s;
+
+          // Face base shape
+          const faceGrad = ctx.createLinearGradient(
+            headCenterX - 10 * s,
+            headCenterY - 10 * s,
+            headCenterX + 10 * s,
+            headCenterY + 15 * s
+          );
+          faceGrad.addColorStop(0, sandLight);
+          faceGrad.addColorStop(0.4, sandBase);
+          faceGrad.addColorStop(0.8, sandMid);
+          faceGrad.addColorStop(1, sandDark);
+          ctx.fillStyle = faceGrad;
+
+          // Face shape - more angular/Egyptian
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 10 * s, headCenterY - 8 * s);
+          ctx.lineTo(headCenterX - 12 * s, headCenterY + 5 * s);
+          ctx.quadraticCurveTo(
+            headCenterX - 10 * s,
+            headCenterY + 12 * s,
+            headCenterX,
+            headCenterY + 15 * s
+          );
+          ctx.quadraticCurveTo(
+            headCenterX + 10 * s,
+            headCenterY + 12 * s,
+            headCenterX + 12 * s,
+            headCenterY + 5 * s
+          );
+          ctx.lineTo(headCenterX + 10 * s, headCenterY - 8 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // ========== NEMES HEADDREs (Front) ==========
+          // Main headdres
+          const nemesGrad = ctx.createLinearGradient(
+            headCenterX - 18 * s,
+            headCenterY - 15 * s,
+            headCenterX + 18 * s,
+            headCenterY + 10 * s
+          );
+          nemesGrad.addColorStop(0, goldAccent);
+          nemesGrad.addColorStop(0.3, sandLight);
+          nemesGrad.addColorStop(0.5, goldAccent);
+          nemesGrad.addColorStop(0.7, sandLight);
+          nemesGrad.addColorStop(1, goldDark);
+          ctx.fillStyle = nemesGrad;
+
+          // Headdres shape
+          ctx.beginPath();
+          ctx.moveTo(headCenterX, headCenterY - 18 * s); // Top
+          ctx.quadraticCurveTo(
+            headCenterX - 18 * s,
+            headCenterY - 15 * s,
+            headCenterX - 20 * s,
+            headCenterY
+          );
+          ctx.lineTo(headCenterX - 18 * s, headCenterY + 20 * s); // Left drape
+          ctx.lineTo(headCenterX - 12 * s, headCenterY + 5 * s);
+          ctx.lineTo(headCenterX - 10 * s, headCenterY - 8 * s);
+          ctx.lineTo(headCenterX + 10 * s, headCenterY - 8 * s);
+          ctx.lineTo(headCenterX + 12 * s, headCenterY + 5 * s);
+          ctx.lineTo(headCenterX + 18 * s, headCenterY + 20 * s); // Right drape
+          ctx.quadraticCurveTo(
+            headCenterX + 18 * s,
+            headCenterY - 15 * s,
+            headCenterX,
+            headCenterY - 18 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          // Headdres stripes
+          ctx.strokeStyle = goldDark;
+          ctx.lineWidth = 1.5 * s;
+
+          // Left side stripes
+          for (let i = 0; i < 5; i++) {
+            const stripeT = i / 5;
+            ctx.beginPath();
+            ctx.moveTo(
+              headCenterX - 10 * s - stripeT * 8 * s,
+              headCenterY - 8 * s + stripeT * 5 * s
+            );
+            ctx.lineTo(
+              headCenterX - 12 * s - stripeT * 6 * s,
+              headCenterY + 5 * s + stripeT * 15 * s
+            );
+            ctx.stroke();
+          }
+
+          // Right side stripes
+          for (let i = 0; i < 5; i++) {
+            const stripeT = i / 5;
+            ctx.beginPath();
+            ctx.moveTo(
+              headCenterX + 10 * s + stripeT * 8 * s,
+              headCenterY - 8 * s + stripeT * 5 * s
+            );
+            ctx.lineTo(
+              headCenterX + 12 * s + stripeT * 6 * s,
+              headCenterY + 5 * s + stripeT * 15 * s
+            );
+            ctx.stroke();
+          }
+
+          // ========== URAEUS (Cobra on forehead) ==========
+          ctx.fillStyle = goldAccent;
+          // Cobra body
+          ctx.beginPath();
+          ctx.moveTo(headCenterX, headCenterY - 18 * s);
+          ctx.quadraticCurveTo(
+            headCenterX + 2 * s,
+            headCenterY - 22 * s,
+            headCenterX,
+            headCenterY - 26 * s
+          );
+          ctx.quadraticCurveTo(
+            headCenterX - 2 * s,
+            headCenterY - 22 * s,
+            headCenterX,
+            headCenterY - 18 * s
+          );
+          ctx.fill();
+
+          // Cobra hood
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 4 * s, headCenterY - 24 * s);
+          ctx.quadraticCurveTo(
+            headCenterX,
+            headCenterY - 30 * s,
+            headCenterX + 4 * s,
+            headCenterY - 24 * s
+          );
+          ctx.quadraticCurveTo(
+            headCenterX,
+            headCenterY - 26 * s,
+            headCenterX - 4 * s,
+            headCenterY - 24 * s
+          );
+          ctx.fill();
+
+          // Cobra eyes (glowing)
+          ctx.fillStyle = `rgba(255, 50, 50, ${mysticPulse})`;
+          ctx.beginPath();
+          ctx.arc(
+            headCenterX - 1.5 * s,
+            headCenterY - 26 * s,
+            0.8 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.arc(
+            headCenterX + 1.5 * s,
+            headCenterY - 26 * s,
+            0.8 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // ========== FACIAL FEATURES ==========
+          // Eyebrows (carved)
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 8 * s, headCenterY - 3 * s);
+          ctx.quadraticCurveTo(
+            headCenterX - 5 * s,
+            headCenterY - 5 * s,
+            headCenterX - 2 * s,
+            headCenterY - 3 * s
+          );
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(headCenterX + 2 * s, headCenterY - 3 * s);
+          ctx.quadraticCurveTo(
+            headCenterX + 5 * s,
+            headCenterY - 5 * s,
+            headCenterX + 8 * s,
+            headCenterY - 3 * s
+          );
+          ctx.stroke();
+
+          // Eye sockets
+          ctx.fillStyle = sandShadow;
+          ctx.beginPath();
+          ctx.ellipse(
+            headCenterX - 5 * s,
+            headCenterY,
+            3.5 * s,
+            2 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(
+            headCenterX + 5 * s,
+            headCenterY,
+            3.5 * s,
+            2 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Mystical glowing eyes
+          const eyeGlowIntensity = mysticPulse * 0.8;
+          ctx.fillStyle = `rgba(64, 208, 255, ${eyeGlowIntensity})`;
+          ctx.shadowColor = eyeGlow;
+          ctx.shadowBlur = 8 * s;
+          ctx.beginPath();
+          ctx.ellipse(
+            headCenterX - 5 * s,
+            headCenterY,
+            2.5 * s,
+            1.5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(
+            headCenterX + 5 * s,
+            headCenterY,
+            2.5 * s,
+            1.5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Eye pupils
+          ctx.fillStyle = "#104050";
+          ctx.beginPath();
+          ctx.arc(headCenterX - 5 * s, headCenterY, 1 * s, 0, Math.PI * 2);
+          ctx.arc(headCenterX + 5 * s, headCenterY, 1 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Nose
+          ctx.fillStyle = sandMid;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX, headCenterY + 1 * s);
+          ctx.lineTo(headCenterX - 2.5 * s, headCenterY + 7 * s);
+          ctx.lineTo(headCenterX, headCenterY + 6 * s);
+          ctx.lineTo(headCenterX + 2.5 * s, headCenterY + 7 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Nose shadow
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 2 * s, headCenterY + 7 * s);
+          ctx.lineTo(headCenterX + 2 * s, headCenterY + 7 * s);
+          ctx.stroke();
+
+          // Mouth (serene smile)
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 5 * s, headCenterY + 10 * s);
+          ctx.quadraticCurveTo(
+            headCenterX,
+            headCenterY + 12 * s,
+            headCenterX + 5 * s,
+            headCenterY + 10 * s
+          );
+          ctx.stroke();
+
+          // Chin definition
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 3 * s, headCenterY + 13 * s);
+          ctx.quadraticCurveTo(
+            headCenterX,
+            headCenterY + 15 * s,
+            headCenterX + 3 * s,
+            headCenterY + 13 * s
+          );
+          ctx.stroke();
+
+          // ========== CEREMONIAL BEARD ==========
+          ctx.fillStyle = goldDark;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 2 * s, headCenterY + 15 * s);
+          ctx.lineTo(headCenterX - 3 * s, headCenterY + 28 * s);
+          ctx.quadraticCurveTo(
+            headCenterX,
+            headCenterY + 30 * s,
+            headCenterX + 3 * s,
+            headCenterY + 28 * s
+          );
+          ctx.lineTo(headCenterX + 2 * s, headCenterY + 15 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Beard stripes
+          ctx.strokeStyle = sandDark;
+          ctx.lineWidth = 1 * s;
+          for (let i = 0; i < 4; i++) {
+            const beardY = headCenterY + 18 * s + i * 3 * s;
+            ctx.beginPath();
+            ctx.moveTo(headCenterX - 2.5 * s, beardY);
+            ctx.lineTo(headCenterX + 2.5 * s, beardY);
+            ctx.stroke();
+          }
+
+          // ========== COLLAR/BROAD COLLAR ==========
+          // Decorative collar at neck
+          const collarY = headCenterY + 15 * s;
+          ctx.fillStyle = goldAccent;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 15 * s, collarY + 5 * s);
+          ctx.quadraticCurveTo(
+            headCenterX,
+            collarY + 12 * s,
+            headCenterX + 15 * s,
+            collarY + 5 * s
+          );
+          ctx.quadraticCurveTo(
+            headCenterX,
+            collarY + 8 * s,
+            headCenterX - 15 * s,
+            collarY + 5 * s
+          );
+          ctx.fill();
+
+          // Collar details
+          ctx.strokeStyle = goldDark;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(headCenterX - 12 * s, collarY + 6 * s);
+          ctx.quadraticCurveTo(
+            headCenterX,
+            collarY + 10 * s,
+            headCenterX + 12 * s,
+            collarY + 6 * s
+          );
+          ctx.stroke();
+
+          // Gem on collar
+          ctx.fillStyle = `rgba(64, 208, 255, ${mysticPulse})`;
+          ctx.shadowColor = eyeGlow;
+          ctx.shadowBlur = 6 * s;
+          ctx.beginPath();
+          ctx.arc(headCenterX, collarY + 8 * s, 2.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // ========== WEATHERING AND CRACKS ==========
+          ctx.strokeStyle = "rgba(80, 60, 40, 0.3)";
+          ctx.lineWidth = 0.5 * s;
+
+          // Crack on face
+          ctx.beginPath();
+          ctx.moveTo(headCenterX + 8 * s, headCenterY + 3 * s);
+          ctx.lineTo(headCenterX + 10 * s, headCenterY + 8 * s);
+          ctx.lineTo(headCenterX + 9 * s, headCenterY + 12 * s);
+          ctx.stroke();
+
+          // Crack on body
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 15 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 10 * s);
+          ctx.stroke();
+
+          // ========== MYSTICAL AURA ==========
+          // Subtle glow around the sphinx
+          const auraGrad = ctx.createRadialGradient(
+            screenPos.x + 5 * s,
+            screenPos.y - 30 * s,
+            10 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 30 * s,
+            50 * s
+          );
+          auraGrad.addColorStop(0, `rgba(64, 208, 255, ${mysticPulse * 0.1})`);
+          auraGrad.addColorStop(
+            0.5,
+            `rgba(64, 208, 255, ${mysticPulse * 0.05})`
+          );
+          auraGrad.addColorStop(1, "rgba(64, 208, 255, 0)");
+          ctx.fillStyle = auraGrad;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 5 * s,
+            screenPos.y - 25 * s,
+            50 * s,
+            35 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // ========== FLOATING DUST PARTICLES ==========
+          ctx.fillStyle = `rgba(212, 196, 144, 0.4)`;
+          for (let i = 0; i < 6; i++) {
+            const dustTime = (time * 0.3 + i * 0.8) % 3;
+            const dustAngle = (i / 6) * Math.PI * 2 + time * 0.2;
+            const dustDist = 35 + Math.sin(time + i * 2) * 10;
+            const dustX = screenPos.x + Math.cos(dustAngle) * dustDist * s;
+            const dustY =
+              screenPos.y -
+              20 * s +
+              Math.sin(dustAngle) * dustDist * 0.4 * s -
+              dustTime * 8 * s;
+            const dustAlpha = 0.3 + Math.sin(time * 2 + i) * 0.15;
+
+            ctx.fillStyle = `rgba(212, 196, 144, ${dustAlpha})`;
+            ctx.beginPath();
+            ctx.arc(dustX, dustY, 1.5 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          break;
+        }
+        case "sphinx":
           const sandBase = "#C2B280";
           const sandShadow = "#A09060";
           const sandHighlight = "#D4C490";
@@ -6365,76 +7240,737 @@ export default function PrincetonTowerDefense() {
           );
           ctx.fill();
           break;
-        case "witch_cottage":
-          // Ramshackle hut with depth
-          // Dark shadow underneath
-          ctx.fillStyle = "rgba(0,0,0,0.4)";
+        case "witch_cottage": {
+          const time = Date.now() / 1000;
+
+          // Color palette
+          const woodDark = "#1a1210";
+          const woodMid = "#2d1f1a";
+          const woodLight = "#3d2a22";
+          const woodHighlight = "#4a3328";
+          const roofDark = "#1f1a15";
+          const roofMid = "#2a2018";
+          const roofMoss = "#1a2a1a";
+          const glowGreen = "#4aff4a";
+          const glowPurple = "#9b4dff";
+
+          // Eerie ambient glow
+          const ambientPulse = 0.6 + Math.sin(time * 2) * 0.15;
+
+          // ========== GROUND SHADOW ==========
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 5 * s,
+            screenPos.y + 5 * s,
+            45 * s,
+            18 * s,
+            0.2,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // ========== DEAD GROUND / CORRUPTION ==========
+          // Corrupted earth around cottage
+          const corruptGrad = ctx.createRadialGradient(
+            screenPos.x,
+            screenPos.y,
+            10 * s,
+            screenPos.x,
+            screenPos.y,
+            50 * s
+          );
+          corruptGrad.addColorStop(0, "rgba(30, 15, 30, 0.6)");
+          corruptGrad.addColorStop(0.5, "rgba(20, 25, 15, 0.3)");
+          corruptGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = corruptGrad;
           ctx.beginPath();
           ctx.ellipse(
             screenPos.x,
-            screenPos.y - 7 * s,
-            35 * s,
-            15 * s,
+            screenPos.y,
+            50 * s,
+            22 * s,
             0,
             0,
             Math.PI * 2
           );
           ctx.fill();
 
-          const woodWall = "#4E342E";
-          const woodDark = "#2D1E1A";
-          const roofStraw = "#6D4C41";
+          // ========== BONE FENCE POSTS ==========
+          // Scattered bone/stick fence
+          for (let i = 0; i < 5; i++) {
+            const fenceAngle = -0.6 + i * 0.3;
+            const fenceX = screenPos.x - 40 * s + i * 18 * s;
+            const fenceY = screenPos.y + 8 * s - Math.abs(i - 2) * 3 * s;
+            const lean = Math.sin(i * 1.5) * 0.15;
 
-          // Main Structure (Isometric box, slightly crooked)
-          // Front face
-          ctx.fillStyle = woodWall;
-          ctx.fillRect(
-            screenPos.x - 25 * s,
-            screenPos.y - 35 * s,
-            40 * s,
-            35 * s
+            ctx.save();
+            ctx.translate(fenceX, fenceY);
+            ctx.rotate(lean);
+
+            // Gnarled post
+            ctx.fillStyle = i % 2 === 0 ? "#3a3530" : "#d4c8b8";
+            ctx.beginPath();
+            ctx.moveTo(-2 * s, 0);
+            ctx.lineTo(-1 * s, -18 * s - Math.sin(i) * 5 * s);
+            ctx.lineTo(1 * s, -16 * s - Math.cos(i) * 4 * s);
+            ctx.lineTo(2 * s, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            // Skull on some posts
+            if (i === 1 || i === 3) {
+              ctx.fillStyle = "#d4c8b8";
+              ctx.beginPath();
+              ctx.ellipse(0, -20 * s, 4 * s, 5 * s, 0, 0, Math.PI * 2);
+              ctx.fill();
+              // Eye sockets
+              ctx.fillStyle = "#1a1a1a";
+              ctx.beginPath();
+              ctx.arc(-1.5 * s, -21 * s, 1.2 * s, 0, Math.PI * 2);
+              ctx.arc(1.5 * s, -21 * s, 1.2 * s, 0, Math.PI * 2);
+              ctx.fill();
+              // Glow in sockets
+              ctx.fillStyle = `rgba(74, 255, 74, ${ambientPulse * 0.5})`;
+              ctx.beginPath();
+              ctx.arc(-1.5 * s, -21 * s, 0.8 * s, 0, Math.PI * 2);
+              ctx.arc(1.5 * s, -21 * s, 0.8 * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            ctx.restore();
+          }
+
+          // ========== FOUNDATION STONES ==========
+          ctx.fillStyle = "#252020";
+          // Irregular stone foundation
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 32 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x - 30 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 35 * s, screenPos.y - 12 * s);
+          ctx.lineTo(screenPos.x + 38 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 20 * s, screenPos.y + 5 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Foundation stones detail
+          ctx.strokeStyle = "#1a1515";
+          ctx.lineWidth = 1 * s;
+          for (let i = 0; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 25 * s + i * 12 * s, screenPos.y + 3 * s);
+            ctx.lineTo(screenPos.x - 22 * s + i * 12 * s, screenPos.y - 3 * s);
+            ctx.stroke();
+          }
+
+          // ========== MAIN STRUCTURE - CROOKED WALLS ==========
+          // Back wall (darker, recessed)
+          ctx.fillStyle = woodDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 48 * s);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y - 55 * s);
+          ctx.lineTo(screenPos.x + 35 * s, screenPos.y - 12 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Side wall (angled, shows depth)
+          const sideGrad = ctx.createLinearGradient(
+            screenPos.x + 18 * s,
+            screenPos.y,
+            screenPos.x + 38 * s,
+            screenPos.y - 20 * s
           );
-          // Side face (angled back)
-          ctx.fillStyle = woodDark;
+          sideGrad.addColorStop(0, woodMid);
+          sideGrad.addColorStop(0.5, woodLight);
+          sideGrad.addColorStop(1, woodDark);
+          ctx.fillStyle = sideGrad;
+
           ctx.beginPath();
-          ctx.moveTo(screenPos.x + 15 * s, screenPos.y - 35 * s);
-          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 45 * s);
-          ctx.lineTo(screenPos.x + 30 * s, screenPos.y - 10 * s);
-          ctx.lineTo(screenPos.x + 15 * s, screenPos.y);
+          ctx.moveTo(screenPos.x + 18 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 45 * s);
+          ctx.lineTo(screenPos.x + 32 * s, screenPos.y - 55 * s);
+          ctx.lineTo(screenPos.x + 38 * s, screenPos.y - 12 * s);
+          ctx.closePath();
           ctx.fill();
 
-          // Roof (Overhanging and saggy)
-          ctx.fillStyle = roofStraw;
+          // Side wall planks
+          ctx.strokeStyle = woodDark;
+          ctx.lineWidth = 1 * s;
+          for (let i = 0; i < 4; i++) {
+            const plankT = 0.15 + i * 0.22;
+            ctx.beginPath();
+            ctx.moveTo(
+              screenPos.x + 18 * s + plankT * 20 * s,
+              screenPos.y - 5 * s - plankT * 7 * s
+            );
+            ctx.lineTo(
+              screenPos.x + 15 * s + plankT * 17 * s,
+              screenPos.y - 45 * s - plankT * 10 * s
+            );
+            ctx.stroke();
+          }
+
+          // Front wall
+          const frontGrad = ctx.createLinearGradient(
+            screenPos.x - 30 * s,
+            screenPos.y,
+            screenPos.x + 10 * s,
+            screenPos.y - 30 * s
+          );
+          frontGrad.addColorStop(0, woodMid);
+          frontGrad.addColorStop(0.3, woodLight);
+          frontGrad.addColorStop(0.7, woodMid);
+          frontGrad.addColorStop(1, woodDark);
+          ctx.fillStyle = frontGrad;
+
           ctx.beginPath();
-          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 30 * s);
-          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 60 * s); // Peak
-          ctx.lineTo(screenPos.x + 35 * s, screenPos.y - 40 * s);
-          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 30 * s);
-          ctx.fill();
-          // Roof thick edge
-          ctx.fillStyle = "#5D4037";
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 30 * s);
-          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 30 * s);
-          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 25 * s);
-          ctx.lineTo(screenPos.x - 30 * s, screenPos.y - 25 * s);
+          ctx.moveTo(screenPos.x - 30 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 28 * s, screenPos.y - 42 * s);
+          ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 45 * s);
+          ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 5 * s);
+          ctx.closePath();
           ctx.fill();
 
-          // Door & Window
+          // Front wall planks (vertical, warped)
+          ctx.strokeStyle = woodDark;
+          ctx.lineWidth = 1.5 * s;
+          for (let i = 0; i < 6; i++) {
+            const warp = Math.sin(i * 0.8) * 2 * s;
+            ctx.beginPath();
+            ctx.moveTo(
+              screenPos.x - 25 * s + i * 8 * s + warp,
+              screenPos.y - 5 * s
+            );
+            ctx.quadraticCurveTo(
+              screenPos.x - 26 * s + i * 8 * s - warp * 0.5,
+              screenPos.y - 25 * s,
+              screenPos.x - 24 * s + i * 8 * s + warp * 0.3,
+              screenPos.y - 43 * s + i * 0.5 * s
+            );
+            ctx.stroke();
+          }
+
+          // ========== CROOKED DOOR ==========
+          // Door frame (darker recess)
+          ctx.fillStyle = "#0a0808";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 18 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 16 * s, screenPos.y - 28 * s);
+          ctx.lineTo(screenPos.x - 4 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 5 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Door (slightly ajar)
           ctx.fillStyle = woodDark;
-          ctx.fillRect(
-            screenPos.x - 15 * s,
-            screenPos.y - 25 * s,
-            10 * s,
-            25 * s
-          ); // Door
-          // Glowing Window
-          ctx.fillStyle = "#76FF03"; // Poison green glow
-          ctx.shadowColor = "#76FF03";
-          ctx.shadowBlur = 10 * s;
-          ctx.fillRect(screenPos.x + 2 * s, screenPos.y - 25 * s, 8 * s, 8 * s);
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 17 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 27 * s);
+          ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 28 * s);
+          ctx.lineTo(screenPos.x - 6 * s, screenPos.y - 5 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Door planks
+          ctx.strokeStyle = "#151010";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 27 * s);
+          ctx.stroke();
+
+          // Door handle (bone)
+          ctx.fillStyle = "#c8baa8";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 8 * s,
+            screenPos.y - 15 * s,
+            1.5 * s,
+            2.5 * s,
+            0.3,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Eerie glow from inside door gap
+          ctx.fillStyle = `rgba(74, 255, 74, ${ambientPulse * 0.4})`;
+          ctx.shadowColor = glowGreen;
+          ctx.shadowBlur = 8 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 6 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 28 * s);
+          ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 29 * s);
+          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 5 * s);
+          ctx.closePath();
+          ctx.fill();
           ctx.shadowBlur = 0;
+
+          // ========== WINDOWS ==========
+          // Main window (glowing)
+          ctx.fillStyle = "#0a0808";
+          ctx.fillRect(
+            screenPos.x + 2 * s,
+            screenPos.y - 35 * s,
+            12 * s,
+            12 * s
+          );
+
+          // Window glow
+          const windowPulse = 0.7 + Math.sin(time * 2.5 + 1) * 0.2;
+          ctx.fillStyle = `rgba(74, 255, 74, ${windowPulse})`;
+          ctx.shadowColor = glowGreen;
+          ctx.shadowBlur = 15 * s;
+          ctx.fillRect(
+            screenPos.x + 3 * s,
+            screenPos.y - 34 * s,
+            10 * s,
+            10 * s
+          );
+          ctx.shadowBlur = 0;
+
+          // Window cross frame
+          ctx.strokeStyle = woodDark;
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 34 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 24 * s);
+          ctx.moveTo(screenPos.x + 3 * s, screenPos.y - 29 * s);
+          ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 29 * s);
+          ctx.stroke();
+
+          // Silhouette in window (creepy!)
+          ctx.fillStyle = `rgba(0, 0, 0, ${0.5 + Math.sin(time * 0.5) * 0.2})`;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 8 * s,
+            screenPos.y - 30 * s,
+            3 * s,
+            4 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Eyes in silhouette
+          ctx.fillStyle = `rgba(255, 100, 100, ${windowPulse})`;
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x + 6.5 * s,
+            screenPos.y - 31 * s,
+            0.8 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.arc(
+            screenPos.x + 9.5 * s,
+            screenPos.y - 31 * s,
+            0.8 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Small side window
+          ctx.fillStyle = "#0a0808";
+          ctx.fillRect(
+            screenPos.x + 24 * s,
+            screenPos.y - 38 * s,
+            8 * s,
+            8 * s
+          );
+          ctx.fillStyle = `rgba(155, 77, 255, ${windowPulse * 0.8})`;
+          ctx.shadowColor = glowPurple;
+          ctx.shadowBlur = 10 * s;
+          ctx.fillRect(
+            screenPos.x + 25 * s,
+            screenPos.y - 37 * s,
+            6 * s,
+            6 * s
+          );
+          ctx.shadowBlur = 0;
+
+          // ========== THATCHED ROOF ==========
+          // Roof back layer
+          ctx.fillStyle = roofDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 35 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 72 * s);
+          ctx.lineTo(screenPos.x + 40 * s, screenPos.y - 52 * s);
+          ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 42 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Roof front layer
+          const roofGrad = ctx.createLinearGradient(
+            screenPos.x - 30 * s,
+            screenPos.y - 35 * s,
+            screenPos.x + 5 * s,
+            screenPos.y - 65 * s
+          );
+          roofGrad.addColorStop(0, roofMid);
+          roofGrad.addColorStop(0.4, "#3a3025");
+          roofGrad.addColorStop(0.7, roofMid);
+          roofGrad.addColorStop(1, roofDark);
+          ctx.fillStyle = roofGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 35 * s, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 72 * s);
+          ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 42 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Thatch texture lines
+          ctx.strokeStyle = roofDark;
+          ctx.lineWidth = 1 * s;
+          for (let i = 0; i < 12; i++) {
+            const thatchT = i / 12;
+            const startX = screenPos.x - 35 * s + thatchT * 55 * s;
+            const startY = screenPos.y - 40 * s - thatchT * 2 * s;
+            const endX = screenPos.x - 5 * s + thatchT * 25 * s;
+            const endY = screenPos.y - 72 * s + thatchT * 30 * s;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+          }
+
+          // Moss patches on roof
+          ctx.fillStyle = roofMoss;
+          for (let i = 0; i < 4; i++) {
+            const mossX =
+              screenPos.x - 20 * s + i * 12 * s + Math.sin(i * 2) * 5 * s;
+            const mossY = screenPos.y - 48 * s - i * 5 * s;
+            ctx.beginPath();
+            ctx.ellipse(mossX, mossY, 5 * s, 3 * s, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Overhanging roof edge (thick thatch)
+          ctx.fillStyle = "#2a2218";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 38 * s, screenPos.y - 38 * s);
+          ctx.lineTo(screenPos.x - 35 * s, screenPos.y - 42 * s);
+          ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 43 * s);
+          ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 38 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Dripping moss/vines from roof edge
+          ctx.strokeStyle = "#1a3018";
+          ctx.lineWidth = 2 * s;
+          for (let i = 0; i < 6; i++) {
+            const vineX = screenPos.x - 32 * s + i * 10 * s;
+            const vineLen = 8 + Math.sin(i * 1.5) * 4;
+            ctx.beginPath();
+            ctx.moveTo(vineX, screenPos.y - 38 * s);
+            ctx.quadraticCurveTo(
+              vineX - 2 * s,
+              screenPos.y - 38 * s + vineLen * s * 0.5,
+              vineX + Math.sin(i) * 3 * s,
+              screenPos.y - 38 * s + vineLen * s
+            );
+            ctx.stroke();
+          }
+
+          // ========== CROOKED CHIMNEY ==========
+          // Chimney base
+          ctx.fillStyle = "#252020";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 55 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 78 * s);
+          ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 80 * s);
+          ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 58 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Chimney stones
+          ctx.strokeStyle = "#1a1515";
+          ctx.lineWidth = 1 * s;
+          for (let i = 0; i < 4; i++) {
+            const stoneY = screenPos.y - 58 * s - i * 6 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 7 * s, stoneY);
+            ctx.lineTo(screenPos.x + 19 * s, stoneY - 1 * s);
+            ctx.stroke();
+          }
+
+          // Chimney cap
+          ctx.fillStyle = "#1a1515";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 4 * s, screenPos.y - 78 * s);
+          ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 82 * s);
+          ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 80 * s);
+          ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 76 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Smoke from chimney
+          ctx.fillStyle = `rgba(60, 50, 60, ${
+            0.4 + Math.sin(time * 1.5) * 0.15
+          })`;
+          for (let i = 0; i < 4; i++) {
+            const smokeOffset = (time * 8 + i * 20) % 40;
+            const smokeX =
+              screenPos.x + 13 * s + Math.sin(time * 2 + i) * 4 * s;
+            const smokeY = screenPos.y - 82 * s - smokeOffset * s;
+            const smokeSize = (3 + i * 1.5 + smokeOffset * 0.15) * s;
+            const smokeAlpha = Math.max(0, 0.5 - smokeOffset * 0.012);
+
+            ctx.fillStyle = `rgba(50, 40, 55, ${smokeAlpha})`;
+            ctx.beginPath();
+            ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // ========== CAULDRON ==========
+          // Cauldron body
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 38 * s,
+            screenPos.y - 2 * s,
+            10 * s,
+            5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 48 * s, screenPos.y - 2 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 48 * s,
+            screenPos.y + 8 * s,
+            screenPos.x - 38 * s,
+            screenPos.y + 10 * s
+          );
+          ctx.quadraticCurveTo(
+            screenPos.x - 28 * s,
+            screenPos.y + 8 * s,
+            screenPos.x - 28 * s,
+            screenPos.y - 2 * s
+          );
+          ctx.fill();
+
+          // Cauldron rim
+          ctx.strokeStyle = "#2a2a2a";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 38 * s,
+            screenPos.y - 2 * s,
+            10 * s,
+            5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.stroke();
+
+          // Bubbling potion
+          const bubbleGlow = 0.8 + Math.sin(time * 4) * 0.2;
+          ctx.fillStyle = `rgba(74, 255, 74, ${bubbleGlow * 0.7})`;
+          ctx.shadowColor = glowGreen;
+          ctx.shadowBlur = 12 * s;
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 38 * s,
+            screenPos.y - 3 * s,
+            8 * s,
+            4 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Bubbles
+          for (let i = 0; i < 5; i++) {
+            const bubbleTime = (time * 2 + i * 1.3) % 3;
+            const bubbleX =
+              screenPos.x - 42 * s + i * 3 * s + Math.sin(i * 2) * 2 * s;
+            const bubbleY = screenPos.y - 3 * s - bubbleTime * 4 * s;
+            const bubbleSize = (1.5 + Math.sin(i) * 0.5) * s;
+            const bubbleAlpha = Math.max(0, 1 - bubbleTime * 0.4);
+
+            ctx.fillStyle = `rgba(150, 255, 150, ${bubbleAlpha * 0.6})`;
+            ctx.beginPath();
+            ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // ========== HANGING ITEMS ==========
+          // Rope/chain from roof
+          ctx.strokeStyle = "#3a3530";
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 38 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 28 * s,
+            screenPos.y - 30 * s,
+            screenPos.x - 26 * s,
+            screenPos.y - 22 * s
+          );
+          ctx.stroke();
+
+          // Hanging skull
+          ctx.fillStyle = "#d4c8b8";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 26 * s,
+            screenPos.y - 18 * s,
+            4 * s,
+            5 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Jaw
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x - 26 * s,
+            screenPos.y - 13 * s,
+            3 * s,
+            2 * s,
+            0,
+            0,
+            Math.PI
+          );
+          ctx.fill();
+          // Eye sockets
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.arc(
+            screenPos.x - 28 * s,
+            screenPos.y - 19 * s,
+            1.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.arc(
+            screenPos.x - 24 * s,
+            screenPos.y - 19 * s,
+            1.5 * s,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Second hanging item - herbs/garlic
+          ctx.strokeStyle = "#3a3530";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 15 * s, screenPos.y - 43 * s);
+          ctx.lineTo(screenPos.x + 16 * s, screenPos.y - 32 * s);
+          ctx.stroke();
+
+          // Dried herbs bundle
+          ctx.fillStyle = "#4a5540";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x + 16 * s,
+            screenPos.y - 30 * s,
+            3 * s,
+            5 * s,
+            0.2,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.strokeStyle = "#3a4530";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 14 * s, screenPos.y - 32 * s);
+          ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 25 * s);
+          ctx.moveTo(screenPos.x + 18 * s, screenPos.y - 32 * s);
+          ctx.lineTo(screenPos.x + 19 * s, screenPos.y - 25 * s);
+          ctx.stroke();
+
+          // ========== COBWEBS ==========
+          ctx.strokeStyle = `rgba(200, 200, 200, 0.3)`;
+          ctx.lineWidth = 0.5 * s;
+
+          // Corner web
+          const webCenterX = screenPos.x - 28 * s;
+          const webCenterY = screenPos.y - 42 * s;
+          for (let i = 0; i < 6; i++) {
+            const webAngle = Math.PI * 0.5 + (i / 6) * Math.PI * 0.7;
+            ctx.beginPath();
+            ctx.moveTo(webCenterX, webCenterY);
+            ctx.lineTo(
+              webCenterX + Math.cos(webAngle) * 12 * s,
+              webCenterY + Math.sin(webAngle) * 8 * s
+            );
+            ctx.stroke();
+          }
+          // Web spirals
+          for (let ring = 1; ring < 4; ring++) {
+            ctx.beginPath();
+            for (let i = 0; i <= 6; i++) {
+              const webAngle = Math.PI * 0.5 + (i / 6) * Math.PI * 0.7;
+              const ringDist = ring * 3.5 * s;
+              const x = webCenterX + Math.cos(webAngle) * ringDist;
+              const y = webCenterY + Math.sin(webAngle) * ringDist * 0.7;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+
+          // ========== MUSHROOMS ==========
+          // Creepy glowing mushrooms near base
+          const mushroomPositions = [
+            { x: 28, y: 3 },
+            { x: 32, y: 6 },
+            { x: -35, y: 8 },
+          ];
+
+          mushroomPositions.forEach((pos, i) => {
+            const mushX = screenPos.x + pos.x * s;
+            const mushY = screenPos.y + pos.y * s;
+            const mushGlow = 0.6 + Math.sin(time * 2 + i) * 0.2;
+
+            // Stem
+            ctx.fillStyle = "#c8b8a8";
+            ctx.beginPath();
+            ctx.moveTo(mushX - 1.5 * s, mushY);
+            ctx.lineTo(mushX - 1 * s, mushY - 5 * s);
+            ctx.lineTo(mushX + 1 * s, mushY - 5 * s);
+            ctx.lineTo(mushX + 1.5 * s, mushY);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cap
+            ctx.fillStyle = `rgba(180, 50, 50, ${0.8 + mushGlow * 0.2})`;
+            ctx.beginPath();
+            ctx.ellipse(
+              mushX,
+              mushY - 6 * s,
+              4 * s,
+              2.5 * s,
+              0,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+
+            // Glow spots on cap
+            ctx.fillStyle = `rgba(255, 200, 100, ${mushGlow * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(mushX - 1.5 * s, mushY - 6 * s, 0.8 * s, 0, Math.PI * 2);
+            ctx.arc(mushX + 1 * s, mushY - 7 * s, 0.6 * s, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
           break;
+        }
 
         case "cauldron":
           // Large iron pot with volume and bubbling goo
@@ -6598,6 +8134,52 @@ export default function PrincetonTowerDefense() {
             ctx.arc(sx - 3 * s, sy, p.s * s, 0, Math.PI * 2);
             ctx.fill();
           });
+          break;
+
+        case "deep_water":
+          // Animated deep water pool with layers
+
+          // outside glow
+          ctx.fillStyle = "rgba(0,0,100,0.3)";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            30 * s,
+            15 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          // Dark rim
+          ctx.fillStyle = "#0a0a4a";
+          ctx.beginPath();
+          ctx.ellipse(
+            screenPos.x,
+            screenPos.y,
+            24 * s,
+            12 * s,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+
+          // Light reflections
+          ctx.fillStyle = "rgba(255,255,255,0.3)";
+          for (let r = 0; r < 3; r++) {
+            const rx =
+              screenPos.x -
+              10 * s +
+              r * 10 * s +
+              Math.sin(decorTime * 3 + r) * 3 * s;
+            const ry =
+              screenPos.y - 2 * s + Math.cos(decorTime * 2 + r) * 2 * s;
+            ctx.beginPath();
+            ctx.ellipse(rx, ry, 6 * s, 3 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
 
         // === MISC DECORATIONS ===
@@ -6895,11 +8477,38 @@ export default function PrincetonTowerDefense() {
     renderables.sort((a, b) => a.isoY - b.isoY);
 
     // =========================================================================
-    // EPIC ISOMETRIC BUFF AURA (Layered magical seal)
+    // EPIC ISOMETRIC BUFF AURA (Dynamic Color: Red for Damage, Blue for Range)
     // =========================================================================
     towers.forEach((t) => {
-      const isBuffed = t.isBuffed || (t.damageBoost && t.damageBoost > 1);
-      if (!isBuffed) return;
+      const hasDamageBuff = t.damageBoost && t.damageBoost > 1;
+      const hasRangeBuff = t.rangeBoost && t.rangeBoost > 1;
+
+      // If no buff is active, don't render the aura
+      if (!hasDamageBuff && !hasRangeBuff && !t.isBuffed) return;
+
+      // Color Configuration logic
+      // Priority: Damage (Red) > Range (Blue)
+      // Account for having both (purple)
+      const theme = hasDamageBuff
+        ? hasRangeBuff
+          ? {
+              base: "128, 0, 255", // Purple
+              accent: "178, 102, 255",
+              glow: "#A500FF",
+              fill: "rgba(128, 0, 255, 0.05)",
+            }
+          : {
+              base: "255, 23, 68", // Red
+              accent: "255, 138, 128",
+              glow: "#FF1744",
+              fill: "rgba(255, 23, 68, 0.05)",
+            }
+        : {
+            base: "0, 229, 255", // Cyan/Blue
+            accent: "128, 255, 255",
+            glow: "#00E5FF",
+            fill: "rgba(0, 229, 255, 0.05)",
+          };
 
       const time = Date.now() / 1000;
       const sPos = toScreen(gridToWorld(t.pos));
@@ -6917,8 +8526,8 @@ export default function PrincetonTowerDefense() {
 
       // --- 1. Soft Core Glow (No rotation) ---
       const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 40 * s);
-      innerGlow.addColorStop(0, `rgba(0, 229, 255, ${0.4 * opacity})`);
-      innerGlow.addColorStop(1, "rgba(0, 229, 255, 0)");
+      innerGlow.addColorStop(0, `rgba(${theme.base}, ${0.4 * opacity})`);
+      innerGlow.addColorStop(1, `rgba(${theme.base}, 0)`);
       ctx.fillStyle = innerGlow;
       ctx.beginPath();
       ctx.arc(0, 0, 45 * s, 0, Math.PI * 2);
@@ -6927,9 +8536,9 @@ export default function PrincetonTowerDefense() {
       // --- 2. Outer Orbiting Ring (Counter-Clockwise) ---
       ctx.save();
       ctx.rotate(-time * 0.5);
-      ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 * opacity})`;
+      ctx.strokeStyle = `rgba(${theme.base}, ${0.6 * opacity})`;
       ctx.lineWidth = 2 * s;
-      ctx.setLineDash([15 * s, 10 * s]); // Etched segments
+      ctx.setLineDash([15 * s, 10 * s]);
       ctx.beginPath();
       ctx.arc(0, 0, 40 * s * (1 + pulse), 0, Math.PI * 2);
       ctx.stroke();
@@ -6946,7 +8555,7 @@ export default function PrincetonTowerDefense() {
 
       // --- 3. The Main Runic Seal (Overlapping Triangles) ---
       ctx.save();
-      ctx.rotate(time * 0.8); // Fast clockwise rotation
+      ctx.rotate(time * 0.8);
 
       const drawTriangle = (size: number, color: string) => {
         ctx.beginPath();
@@ -6964,12 +8573,11 @@ export default function PrincetonTowerDefense() {
 
       ctx.lineWidth = 1.5 * s;
       // Double triangle (Star of David style)
-      drawTriangle(28 * s, `rgba(128, 222, 234, ${0.8 * opacity})`);
+      drawTriangle(28 * s, `rgba(${theme.accent}, ${0.8 * opacity})`);
       ctx.rotate(Math.PI);
-      drawTriangle(28 * s, `rgba(128, 222, 234, ${0.8 * opacity})`);
+      drawTriangle(28 * s, `rgba(${theme.accent}, ${0.8 * opacity})`);
 
-      // Fill the center of the hexagram
-      ctx.fillStyle = "rgba(0, 229, 255, 0.05)";
+      ctx.fillStyle = theme.fill;
       ctx.fill();
       ctx.restore();
 
@@ -6979,9 +8587,9 @@ export default function PrincetonTowerDefense() {
       for (let i = 0; i < 3; i++) {
         ctx.rotate((Math.PI * 2) / 3);
         const orbitDist = 18 * s + Math.sin(time * 3 + i) * 5 * s;
-        ctx.fillStyle = "#E0F7FA";
+        ctx.fillStyle = "#FFFFFF";
         ctx.shadowBlur = 10 * s;
-        ctx.shadowColor = "#00E5FF";
+        ctx.shadowColor = theme.glow;
         ctx.beginPath();
         ctx.arc(orbitDist, 0, 3 * s, 0, Math.PI * 2);
         ctx.fill();
@@ -6990,7 +8598,6 @@ export default function PrincetonTowerDefense() {
 
       ctx.restore();
     });
-
     // =========================================================================
     // SPECIAL BUILDING RANGE RINGS (On Hover)
     // =========================================================================
@@ -7242,51 +8849,6 @@ export default function PrincetonTowerDefense() {
             const dy = Math.cos(time * 0.8 + d) * sRad * 0.4;
             ctx.beginPath();
             ctx.arc(dx, dy, 12 * cameraZoom, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-
-        if (haz.type === "deep_water") {
-          // 1. Dark Depth Layer
-          ctx.fillStyle = "#012a4a";
-          ctx.beginPath();
-          ctx.ellipse(0, 0, sRad, sRad * 0.5, 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          // 2. Refractive Surface (Moving waves)
-          const waveTime = time * 0.4;
-          for (let w = 0; w < 3; w++) {
-            ctx.strokeStyle = `rgba(169, 214, 229, ${0.1 + w * 0.05})`;
-            ctx.lineWidth = 2 * cameraZoom;
-            ctx.beginPath();
-            const wRad = sRad * (0.4 + w * 0.2);
-            ctx.ellipse(
-              Math.sin(waveTime + w) * 10,
-              0,
-              wRad,
-              wRad * 0.5,
-              0,
-              0,
-              Math.PI * 2
-            );
-            ctx.stroke();
-          }
-
-          // 3. Floating Algae/Debris
-          ctx.fillStyle = "#2d6a4f";
-          for (let a = 0; a < 3; a++) {
-            const ax = Math.cos(time * 0.2 + a) * sRad * 0.5;
-            const ay = Math.sin(time * 0.2 + a) * sRad * 0.2;
-            ctx.beginPath();
-            ctx.ellipse(
-              ax,
-              ay,
-              6 * cameraZoom,
-              3 * cameraZoom,
-              a,
-              0,
-              Math.PI * 2
-            );
             ctx.fill();
           }
         }
@@ -8225,6 +9787,15 @@ export default function PrincetonTowerDefense() {
           );
           break;
         case "troop":
+          let targetPos: Position | undefined = undefined;
+          if (r.data.targetEnemy) {
+            const targetEnemy = enemies.find(
+              (e) => e.id === r.data.targetEnemy
+            );
+            if (targetEnemy) {
+              targetPos = getEnemyPosWithPath(targetEnemy, selectedMap);
+            }
+          }
           renderTroop(
             ctx,
             r.data,
@@ -8232,7 +9803,8 @@ export default function PrincetonTowerDefense() {
             canvas.height,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
+            targetPos
           );
           break;
         case "projectile":
@@ -9363,39 +10935,37 @@ export default function PrincetonTowerDefense() {
       }
 
       case "mathey": {
-        // FORTRESS SHIELD - Invincible and taunt nearby enemies
-        const tauntRadius = 150;
-        // Make hero invincible for 5 seconds
+        const tauntRadius = 300; // Increased for better effectiveness
+        const duration = 5000; // 5 seconds
+
+        // 1. Set Hero state
         setHero((prev) =>
           prev
-            ? { ...prev, shieldActive: true, shieldEnd: Date.now() + 5000 }
+            ? { ...prev, shieldActive: true, shieldEnd: Date.now() + duration }
             : null
         );
-        // Force enemies to target the hero (taunt effect)
-        const nearbyEnemies = enemies.filter(
-          (e) =>
-            distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <
-            tauntRadius
+
+        // 2. Force enemies to target the hero (Update state of current enemies)
+        setEnemies((prev) =>
+          prev.map((enemy) => {
+            const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+            if (distance(hero.pos, enemyPos) < tauntRadius) {
+              return { ...enemy, taunted: true, tauntTarget: hero.id };
+            }
+            return enemy;
+          })
         );
-        nearbyEnemies.forEach((e) => {
-          setEnemies((prev) =>
-            prev.map((enemy) =>
-              enemy.id === e.id
-                ? { ...enemy, taunted: true, tauntTarget: hero.id }
-                : enemy
-            )
-          );
-        });
-        // Create shield effect
+
+        // 3. Visuals
         setEffects((ef) => [
           ...ef,
           {
             id: generateId("shield"),
-            pos: hero.pos,
+            pos: { ...hero.pos },
             type: "fortress_shield",
             progress: 0,
-            size: 60,
-            duration: 5000,
+            size: 80,
+            duration,
           },
         ]);
         addParticles(hero.pos, "glow", 25);

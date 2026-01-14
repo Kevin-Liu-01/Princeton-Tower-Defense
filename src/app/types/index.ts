@@ -121,10 +121,12 @@ export interface Tower {
   chainTargets?: string[];
   damageAccumulator?: number;
   damageBoost?: number;
+  rangeBoost?: number;
   boostEnd?: number;
   temporary?: boolean;
   expireTime?: number;
   engaging?: boolean;
+  isBuffed?: boolean;
 }
 
 // Enemy entity
@@ -251,7 +253,9 @@ export interface Effect {
     | "meteor_strike"
     | "inspiration"
     | "knight_summon"
-    | "turret_deploy";
+    | "turret_deploy"
+    | "fortress_shield"
+    | "high_note";
   progress: number;
   size: number;
   targetPos?: Position;
@@ -442,7 +446,7 @@ export type DecorationCategory =
   | "oasis_pool"
   | "pyramid"
   | "obelisk"
-  | "sphinx_statue"
+  | "sphinx"
   | "giant_sphinx"
   | "hieroglyph_wall"
   | "treasure_chest"
@@ -509,7 +513,8 @@ export type DecorationCategory =
   | "algae_pool"
   | "tentacle"
   | "skeleton_pile"
-  | "treasure_hoard";
+  | "treasure_hoard"
+  | "deep_water";
 
 export interface MapDecoration {
   type: DecorationCategory;
