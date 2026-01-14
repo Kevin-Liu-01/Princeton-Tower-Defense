@@ -2477,7 +2477,7 @@ export const SPELL_OPTIONS: SpellType[] = [
 // Game constants
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
-export const INITIAL_PAW_POINTS = 3000;
+export const INITIAL_PAW_POINTS = 300;
 export const INITIAL_LIVES = 20;
 export const WAVE_TIMER_BASE = 10000;
 export const HERO_RESPAWN_TIME = 15000;
