@@ -707,259 +707,280 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
 };
 
 // =============================================================================
-// MAP PATHS - All regions with strict 90-degree turns only
-// Each waypoint changes ONLY x OR y, never both
-// All paths have fog extensions at start and end
+// MAP PATHS - All regions including secondary paths for dual-path levels
 // =============================================================================
 export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
   // =====================
   // GRASSLAND REGION (Princeton Grounds)
   // =====================
   poe: [
-    { x: -8, y: 7 },   // Fog entrance
-    { x: 2, y: 7 },    // Enter visible area
-    { x: 6, y: 7 },    // Continue right
-    { x: 6, y: 4 },    // Turn up
-    { x: 10, y: 4 },   // Turn right
-    { x: 10, y: 9 },   // Turn down
-    { x: 14, y: 9 },   // Turn right
-    { x: 14, y: 6 },   // Turn up
-    { x: 24, y: 6 },   // Continue right
-    { x: 32, y: 6 },   // Fog exit
+    { x: -2, y: 7 },
+    { x: 2, y: 7 },
+    { x: 6, y: 7 },
+    { x: 6, y: 4 },
+    { x: 10, y: 4 },
+    { x: 10, y: 9 },
+    { x: 14, y: 9 },
+    { x: 14, y: 6 },
+    { x: 18, y: 6 },
+    { x: 21, y: 6 },
+    { x: 24, y: 6 },
+    { x: 26, y: 6 },
   ],
   carnegie: [
-    { x: 10, y: -8 },  // Fog entrance (top)
-    { x: 10, y: 2 },   // Enter visible area
-    { x: 10, y: 4 },   // Continue down
-    { x: 6, y: 4 },    // Turn left
-    { x: 6, y: 8 },    // Turn down
-    { x: 10, y: 8 },   // Turn right
-    { x: 10, y: 12 },  // Turn down
-    { x: 14, y: 12 },  // Turn right
-    { x: 14, y: 6 },   // Turn up
-    { x: 18, y: 6 },   // Turn right
-    { x: 18, y: 12 },  // Turn down
-    { x: 18, y: 22 },  // Fog exit (bottom)
+    { x: 10, y: -2 },
+    { x: 10, y: 3 },
+    { x: 6, y: 3 },
+    { x: 6, y: 7 },
+    { x: 10, y: 7 },
+    { x: 10, y: 10 },
+    { x: 14, y: 10 },
+    { x: 14, y: 5 },
+    { x: 17, y: 5 },
+    { x: 17, y: 10 },
+    { x: 17, y: 14 },
+    { x: 17, y: 17 },
   ],
   nassau: [
-    { x: -8, y: 7 },   // Fog entrance
-    { x: 2, y: 7 },    // Enter visible area
-    { x: 4, y: 7 },    // Continue right
-    { x: 4, y: 11 },   // Turn down
-    { x: 9, y: 11 },   // Turn right
-    { x: 9, y: 5 },    // Turn up
-    { x: 14, y: 5 },   // Turn right
-    { x: 14, y: 9 },   // Turn down
-    { x: 24, y: 9 },   // Continue right
-    { x: 32, y: 9 },   // Fog exit
+    { x: -2, y: 6 },
+    { x: 3, y: 6 },
+    { x: 3, y: 10 },
+    { x: 8, y: 10 },
+    { x: 8, y: 4 },
+    { x: 13, y: 4 },
+    { x: 13, y: 9 },
+    { x: 17, y: 9 },
+    { x: 21, y: 9 },
+    { x: 24, y: 9 },
+    { x: 26, y: 9 },
   ],
   // =====================
-  // SWAMP REGION (Murky Marshes)
+  // SWAMP REGION (Murky Marshes) - NEW
   // =====================
   bog: [
-    { x: -8, y: 7 },   // Fog entrance
-    { x: 2, y: 7 },    // Enter visible area
-    { x: 4, y: 7 },    // Continue right
-    { x: 4, y: 11 },   // Turn down
-    { x: 8, y: 11 },   // Turn right
-    { x: 8, y: 7 },    // Turn up
-    { x: 12, y: 7 },   // Turn right
-    { x: 12, y: 11 },  // Turn down
-    { x: 16, y: 11 },  // Turn right
-    { x: 16, y: 7 },   // Turn up
-    { x: 24, y: 7 },   // Continue right
-    { x: 32, y: 7 },   // Fog exit
+    { x: -2, y: 6 },
+    { x: 4, y: 6 },
+    { x: 4, y: 10 },
+    { x: 8, y: 10 },
+    { x: 8, y: 6 },
+    { x: 12, y: 6 },
+    { x: 12, y: 10 },
+    { x: 16, y: 10 },
+    { x: 16, y: 6 },
+    { x: 20, y: 6 },
+    { x: 24, y: 6 },
+    { x: 26, y: 6 },
   ],
   witch_hut: [
-    { x: 10, y: -8 },  // Fog entrance (top)
-    { x: 10, y: 2 },   // Enter visible area
-    { x: 10, y: 4 },   // Continue down
-    { x: 6, y: 4 },    // Turn left
-    { x: 6, y: 8 },    // Turn down
-    { x: 10, y: 8 },   // Turn right
-    { x: 14, y: 8 },   // Continue right
-    { x: 14, y: 4 },   // Turn up
-    { x: 18, y: 4 },   // Turn right
-    { x: 18, y: 10 },  // Turn down
-    { x: 18, y: 22 },  // Fog exit (bottom)
+    { x: 10, y: -2 },
+    { x: 10, y: 0 },
+    { x: 6, y: 0 },
+    { x: 6, y: 4 },
+    { x: 6, y: 8 },
+    { x: 10, y: 8 },
+    { x: 14, y: 8 },
+    { x: 14, y: 4 },
+    { x: 18, y: 4 },
+    { x: 18, y: 8 },
+    { x: 18, y: 12 },
+    { x: 18, y: 17 },
   ],
   sunken_temple: [
-    { x: -8, y: 5 },   // Fog entrance
-    { x: 2, y: 5 },    // Enter visible area
-    { x: 6, y: 5 },    // Continue right
-    { x: 6, y: 9 },    // Turn down
-    { x: 12, y: 9 },   // Turn right - MERGE POINT
-    { x: 18, y: 9 },   // Continue right
-    { x: 18, y: 6 },   // Turn up
-    { x: 24, y: 6 },   // Turn right
-    { x: 32, y: 6 },   // Fog exit
+    { x: -2, y: 4 },
+    { x: 4, y: 4 },
+    { x: 8, y: 4 },
+    { x: 8, y: 8 },
+    { x: 12, y: 8 },
+    { x: 16, y: 8 },
+    { x: 16, y: 12 },
+    { x: 20, y: 12 },
+    { x: 24, y: 12 },
+    { x: 26, y: 12 },
   ],
-  // Secondary path for sunken temple - merges at x:12 y:9
+  // Secondary path for sunken temple - comes from bottom, merges at x:16 y:8, ends at same point
   sunken_temple_b: [
-    { x: -8, y: 12 },  // Fog entrance (bottom path)
-    { x: 2, y: 12 },   // Enter visible area
-    { x: 6, y: 12 },   // Continue right
-    { x: 6, y: 9 },    // Turn up to merge
-    { x: 12, y: 9 },   // MERGE with primary
-    { x: 18, y: 9 },   // Continue right (same as primary)
-    { x: 18, y: 6 },   // Turn up
-    { x: 24, y: 6 },   // Turn right
-    { x: 32, y: 6 },   // Fog exit - SAME as primary
+    { x: -2, y: 12 },
+    { x: 4, y: 12 },
+    { x: 8, y: 12 },
+    { x: 12, y: 12 },
+    { x: 12, y: 8 },
+    { x: 16, y: 8 },
+    { x: 16, y: 4 },
+    { x: 20, y: 4 },
+    { x: 24, y: 4 },
+    { x: 26, y: 4 },
   ],
   // =====================
   // DESERT REGION (Sahara Sands)
   // =====================
   oasis: [
-    { x: -8, y: 6 },   // Fog entrance
-    { x: 2, y: 6 },    // Enter visible area
-    { x: 4, y: 6 },    // Continue right
-    { x: 4, y: 10 },   // Turn down
-    { x: 9, y: 10 },   // Turn right
-    { x: 9, y: 6 },    // Turn up
-    { x: 14, y: 6 },   // Turn right
-    { x: 14, y: 10 },  // Turn down
-    { x: 24, y: 10 },  // Continue right
-    { x: 32, y: 10 },  // Fog exit
+    { x: -2, y: 5 },
+    { x: 4, y: 5 },
+    { x: 4, y: 9 },
+    { x: 8, y: 9 },
+    { x: 12, y: 9 },
+    { x: 12, y: 5 },
+    { x: 16, y: 5 },
+    { x: 20, y: 5 },
+    { x: 20, y: 9 },
+    { x: 24, y: 9 },
+    { x: 26, y: 9 },
   ],
   pyramid: [
-    { x: 10, y: -8 },  // Fog entrance (top)
-    { x: 10, y: 2 },   // Enter visible area
-    { x: 10, y: 4 },   // Continue down
-    { x: 6, y: 4 },    // Turn left
-    { x: 6, y: 10 },   // Turn down
-    { x: 6, y: 14 },   // Continue down - MERGE POINT
-    { x: 10, y: 14 },  // Turn right
-    { x: 10, y: 22 },  // Fog exit (bottom)
+    { x: 10, y: -2 },
+    { x: 10, y: 0 },
+    { x: 6, y: 0 },
+    { x: 6, y: 4 },
+    { x: 6, y: 8 },
+    { x: 6, y: 12 },
+    { x: 10, y: 12 },
+    { x: 10, y: 16 },
+    { x: 10, y: 17 },
   ],
-  // Secondary path for pyramid - comes from right, merges at y:14
+  // Secondary path for pyramid - comes from the right, merges at y:12, ends at same point
   pyramid_b: [
-    { x: 32, y: 9 },   // Fog entrance (right)
-    { x: 22, y: 9 },   // Enter visible area
-    { x: 18, y: 9 },   // Continue left
-    { x: 18, y: 14 },  // Turn down
-    { x: 6, y: 14 },   // Turn left - MERGE POINT
-    { x: 10, y: 14 },  // Continue right (same as primary)
-    { x: 10, y: 22 },  // Fog exit - SAME as primary
+    { x: 26, y: 8 },
+    { x: 24, y: 8 },
+    { x: 20, y: 8 },
+    { x: 16, y: 8 },
+    { x: 16, y: 12 },
+    { x: 10, y: 12 },
+    { x: 10, y: 16 },
+    { x: 10, y: 17 },
   ],
   sphinx: [
-    { x: -8, y: 8 },   // Fog entrance
-    { x: 2, y: 8 },    // Enter visible area
-    { x: 4, y: 8 },    // Continue right
-    { x: 4, y: 4 },    // Turn up
-    { x: 9, y: 4 },    // Turn right
-    { x: 9, y: 8 },    // Turn down
-    { x: 14, y: 8 },   // Turn right
-    { x: 14, y: 4 },   // Turn up
-    { x: 24, y: 4 },   // Continue right
-    { x: 24, y: 8 },   // Turn down
-    { x: 32, y: 8 },   // Fog exit
+    { x: -2, y: 8 },
+    { x: 0, y: 8 },
+    { x: 0, y: 4 },
+    { x: 4, y: 4 },
+    { x: 8, y: 4 },
+    { x: 8, y: 8 },
+    { x: 12, y: 8 },
+    { x: 12, y: 4 },
+    { x: 16, y: 4 },
+    { x: 16, y: 8 },
+    { x: 20, y: 8 },
+    { x: 24, y: 8 },
+    { x: 26, y: 8 },
   ],
   // =====================
   // WINTER REGION (Frozen Frontier)
   // =====================
   glacier: [
-    { x: -8, y: 7 },   // Fog entrance
-    { x: 2, y: 7 },    // Enter visible area
-    { x: 4, y: 7 },    // Continue right
-    { x: 4, y: 11 },   // Turn down
-    { x: 9, y: 11 },   // Turn right
-    { x: 9, y: 7 },    // Turn up
-    { x: 14, y: 7 },   // Turn right
-    { x: 14, y: 11 },  // Turn down
-    { x: 24, y: 11 },  // Continue right
-    { x: 24, y: 7 },   // Turn up
-    { x: 32, y: 7 },   // Fog exit
+    { x: -2, y: 6 },
+    { x: 4, y: 6 },
+    { x: 4, y: 10 },
+    { x: 8, y: 10 },
+    { x: 8, y: 6 },
+    { x: 12, y: 6 },
+    { x: 12, y: 10 },
+    { x: 16, y: 10 },
+    { x: 20, y: 10 },
+    { x: 20, y: 6 },
+    { x: 24, y: 6 },
+    { x: 26, y: 6 },
   ],
   fortress: [
-    { x: 10, y: -8 },  // Fog entrance (top)
-    { x: 10, y: 2 },   // Enter visible area
-    { x: 10, y: 4 },   // Continue down
-    { x: 6, y: 4 },    // Turn left
-    { x: 6, y: 8 },    // Turn down
-    { x: 10, y: 8 },   // Turn right
-    { x: 14, y: 8 },   // Continue right
-    { x: 14, y: 4 },   // Turn up
-    { x: 18, y: 4 },   // Turn right
-    { x: 18, y: 12 },  // Turn down
-    { x: 14, y: 12 },  // Turn left
-    { x: 14, y: 22 },  // Fog exit (bottom)
+    { x: 10, y: -2 },
+    { x: 6, y: -2 },
+    { x: 6, y: 0 },
+    { x: 6, y: 4 },
+    { x: 10, y: 4 },
+    { x: 14, y: 4 },
+    { x: 14, y: 8 },
+    { x: 10, y: 8 },
+    { x: 10, y: 12 },
+    { x: 14, y: 12 },
+    { x: 14, y: 16 },
+    { x: 14, y: 17 },
   ],
   peak: [
-    { x: -8, y: 8 },   // Fog entrance
-    { x: 2, y: 8 },    // Enter visible area
-    { x: 4, y: 8 },    // Continue right
-    { x: 4, y: 4 },    // Turn up
-    { x: 9, y: 4 },    // Turn right
-    { x: 9, y: 8 },    // Turn down
-    { x: 14, y: 8 },   // Turn right - MERGE POINT
-    { x: 24, y: 8 },   // Continue right
-    { x: 32, y: 8 },   // Fog exit
+    { x: -2, y: 10 },
+    { x: 0, y: 10 },
+    { x: 0, y: 6 },
+    { x: 4, y: 6 },
+    { x: 8, y: 6 },
+    { x: 8, y: 10 },
+    { x: 12, y: 10 },
+    { x: 16, y: 10 },
+    { x: 20, y: 10 },
+    { x: 24, y: 10 },
+    { x: 26, y: 10 },
   ],
-  // Secondary path for peak - comes from top, merges at x:14 y:8
+  // Secondary path for peak - comes from top, zigzags down, merges at y:10, ends at same point
   peak_b: [
-    { x: 16, y: -8 },  // Fog entrance (top)
-    { x: 16, y: 2 },   // Enter visible area
-    { x: 16, y: 4 },   // Continue down
-    { x: 10, y: 4 },   // Turn left
-    { x: 10, y: 8 },   // Turn down
-    { x: 14, y: 8 },   // Turn right - MERGE POINT
-    { x: 24, y: 8 },   // Continue right (same as primary)
-    { x: 32, y: 8 },   // Fog exit - SAME as primary
+    { x: 15, y: -2 },
+    { x: 15, y: 0 },
+    { x: 14, y: 0 },
+    { x: 14, y: 4 },
+    { x: 12, y: 4 },
+    { x: 12, y: 10 }, // Merge point with primary path
+    { x: 16, y: 10 },
+    { x: 20, y: 10 },
+    { x: 24, y: 10 },
+    { x: 26, y: 10 },
   ],
   // =====================
   // VOLCANIC REGION (Inferno Depths)
   // =====================
   lava: [
-    { x: -8, y: 7 },   // Fog entrance
-    { x: 2, y: 7 },    // Enter visible area
-    { x: 4, y: 7 },    // Continue right
-    { x: 4, y: 3 },    // Turn up
-    { x: 9, y: 3 },    // Turn right
-    { x: 9, y: 7 },    // Turn down
-    { x: 14, y: 7 },   // Turn right
-    { x: 14, y: 11 },  // Turn down
-    { x: 24, y: 11 },  // Continue right
-    { x: 24, y: 7 },   // Turn up
-    { x: 32, y: 7 },   // Fog exit
+    { x: -2, y: 7 },
+    { x: 4, y: 7 },
+    { x: 4, y: 3 },
+    { x: 8, y: 3 },
+    { x: 8, y: 7 },
+    { x: 12, y: 7 },
+    { x: 12, y: 11 },
+    { x: 16, y: 11 },
+    { x: 16, y: 7 },
+    { x: 20, y: 7 },
+    { x: 24, y: 7 },
+    { x: 26, y: 7 },
   ],
   crater: [
-    { x: 10, y: -8 },  // Fog entrance (top)
-    { x: 10, y: 2 },   // Enter visible area
-    { x: 10, y: 4 },   // Continue down
-    { x: 4, y: 4 },    // Turn left
-    { x: 4, y: 8 },    // Turn down
-    { x: 10, y: 8 },   // Turn right
-    { x: 16, y: 8 },   // Continue right
-    { x: 16, y: 4 },   // Turn up
-    { x: 10, y: 4 },   // Turn left
-    { x: 10, y: 12 },  // Turn down
-    { x: 10, y: 22 },  // Fog exit (bottom)
+    { x: 10, y: -2 },
+    { x: 10, y: 0 },
+    { x: 6, y: 0 },
+    { x: 2, y: 0 },
+    { x: 2, y: 4 },
+    { x: 6, y: 4 },
+    { x: 10, y: 4 },
+    { x: 14, y: 4 },
+    { x: 18, y: 4 },
+    { x: 18, y: 8 },
+    { x: 14, y: 8 },
+    { x: 10, y: 8 },
+    { x: 10, y: 12 },
+    { x: 10, y: 16 },
+    { x: 10, y: 17 },
   ],
   throne: [
-    { x: -8, y: 6 },   // Fog entrance
-    { x: 2, y: 6 },    // Enter visible area
-    { x: 4, y: 6 },    // Continue right
-    { x: 4, y: 3 },    // Turn up
-    { x: 9, y: 3 },    // Turn right
-    { x: 9, y: 6 },    // Turn down
-    { x: 14, y: 6 },   // Turn right
-    { x: 14, y: 3 },   // Turn up
-    { x: 20, y: 3 },   // Turn right - MERGE POINT
-    { x: 20, y: 6 },   // Turn down
-    { x: 32, y: 6 },   // Fog exit
+    { x: -2, y: 5 },
+    { x: 0, y: 5 },
+    { x: 0, y: 7 },
+    { x: 4, y: 7 },
+    { x: 4, y: 5 },
+    { x: 8, y: 5 },
+    { x: 8, y: 3 },
+    { x: 12, y: 3 },
+    { x: 12, y: 5 },
+    { x: 16, y: 5 },
+    { x: 20, y: 5 }, // MERGE POINT
+    { x: 24, y: 5 },
+    { x: 26, y: 5 },
   ],
-  // Secondary path for throne - comes from bottom, merges at x:20 y:3
+  // Secondary path for throne - comes from bottom, merges at x:20, ends at same point
   throne_b: [
-    { x: -8, y: 11 },  // Fog entrance (bottom path)
-    { x: 2, y: 11 },   // Enter visible area
-    { x: 8, y: 11 },   // Continue right
-    { x: 8, y: 7 },    // Turn up
-    { x: 14, y: 7 },   // Turn right
-    { x: 14, y: 11 },  // Turn down
-    { x: 20, y: 11 },  // Turn right
-    { x: 20, y: 3 },   // Turn up - MERGE POINT
-    { x: 20, y: 6 },   // Continue down (same as primary)
-    { x: 32, y: 6 },   // Fog exit - SAME as primary
+    { x: -2, y: 12 },
+    { x: 4, y: 12 },
+    { x: 8, y: 12 },
+    { x: 12, y: 12 },
+    { x: 16, y: 12 },
+    { x: 16, y: 8 },
+    { x: 20, y: 8 },
+    { x: 20, y: 5 }, // Merge point with primary path
+    { x: 24, y: 5 },
+    { x: 26, y: 5 },
   ],
 };
 
@@ -1019,7 +1040,7 @@ export const LEVEL_DATA: Record<
       { type: "rock", pos: { x: 4, y: 14 }, variant: 0 },
       { type: "flowers", pos: { x: 12, y: 0 }, variant: 0 },
       { type: "signpost", pos: { x: -4, y: 3 }, variant: 0 },
-      { type: "statue", pos: { x: 13, y: 4 }, variant: 0 },
+      { type: "statue", pos: { x: 11.5, y: 3 }, variant: 0 },
       { type: "lamppost", pos: { x: 11, y: 8 }, variant: 0 },
       { type: "lamppost", pos: { x: 8, y: 2 }, variant: 0 },
       { type: "lamppost", pos: { x: 4, y: 6 }, variant: 0 },

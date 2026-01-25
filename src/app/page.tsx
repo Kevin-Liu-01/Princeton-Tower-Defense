@@ -775,15 +775,17 @@ export default function PrincetonTowerDefense() {
 
           if (barracksTroops.length < 3) {
             const slot = barracksTroops.length;
-            const offsets = getFormationOffsets(3);
 
-            // 1. Find the Anchor Point (closest point on the path to the barracks)
+            // 1. Find the closest path segment to the barracks
             const path = MAP_PATHS[selectedMap];
             const secondaryPath = MAP_PATHS[`${selectedMap}_b`] || null;
             const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
 
             let closestDist = Infinity;
             let pathAnchor: Position = specWorldPos;
+            let closestSegmentStart: Position = specWorldPos;
+            let closestSegmentEnd: Position = specWorldPos;
+
             for (let i = 0; i < fullPath.length - 1; i++) {
               const p1 = gridToWorldPath(fullPath[i]);
               const p2 = gridToWorldPath(fullPath[i + 1]);
@@ -792,13 +794,26 @@ export default function PrincetonTowerDefense() {
               if (dist < closestDist) {
                 closestDist = dist;
                 pathAnchor = candidate;
+                closestSegmentStart = p1;
+                closestSegmentEnd = p2;
               }
             }
 
-            // 2. Calculate specific target within formation on the path
+            // 2. Calculate direction along the path segment
+            const segDx = closestSegmentEnd.x - closestSegmentStart.x;
+            const segDy = closestSegmentEnd.y - closestSegmentStart.y;
+            const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
+            const pathDirX = segLen > 0 ? segDx / segLen : 1;
+            const pathDirY = segLen > 0 ? segDy / segLen : 0;
+
+            // 3. Position troops along the path at different distances from anchor
+            // Spacing between troops along the path
+            const troopSpacing = 35;
+            const slotOffsets = [-troopSpacing, 0, troopSpacing]; // spread along path
+
             const targetPos = {
-              x: pathAnchor.x + offsets[slot].x,
-              y: pathAnchor.y + offsets[slot].y,
+              x: pathAnchor.x + pathDirX * slotOffsets[slot],
+              y: pathAnchor.y + pathDirY * slotOffsets[slot],
             };
 
             const newTroop: Troop = {
@@ -3250,33 +3265,91 @@ export default function PrincetonTowerDefense() {
 
     const smoothPath = generateSmoothPath(pathWorldPoints);
 
-    // Add organic wobble to path edges
-    const addPathWobble = (pathPoints: Position[], wobbleAmount: number) => {
+    // Calculate smoothed perpendicular direction at a point by averaging neighbors
+    const getSmoothedPerpendicular = (
+      pathPoints: Position[],
+      index: number,
+      lookAhead: number = 4
+    ): { perpX: number; perpY: number } => {
+      let avgPerpX = 0;
+      let avgPerpY = 0;
+      let count = 0;
+
+      // Sample perpendiculars from neighboring segments and average them
+      for (let offset = -lookAhead; offset <= lookAhead; offset++) {
+        const i = Math.max(0, Math.min(pathPoints.length - 2, index + offset));
+        const next = Math.min(i + 1, pathPoints.length - 1);
+
+        const dx = pathPoints[next].x - pathPoints[i].x;
+        const dy = pathPoints[next].y - pathPoints[i].y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+
+        if (len > 0.001) {
+          // Weight closer samples more heavily
+          const weight = 1 / (1 + Math.abs(offset) * 0.5);
+          avgPerpX += (-dy / len) * weight;
+          avgPerpY += (dx / len) * weight;
+          count += weight;
+        }
+      }
+
+      if (count > 0) {
+        avgPerpX /= count;
+        avgPerpY /= count;
+        // Normalize the averaged perpendicular
+        const len = Math.sqrt(avgPerpX * avgPerpX + avgPerpY * avgPerpY);
+        if (len > 0.001) {
+          avgPerpX /= len;
+          avgPerpY /= len;
+        }
+      } else {
+        avgPerpX = 0;
+        avgPerpY = 1;
+      }
+
+      return { perpX: avgPerpX, perpY: avgPerpY };
+    };
+
+    // Add organic wobble to path edges with consistent thickness at turns
+    const addPathWobble = (pathPoints: Position[], wobbleAmount: number, pathWidth: number = 38) => {
       seedState = mapSeed + 100;
       const left: Position[] = [],
         right: Position[] = [],
         center: Position[] = [];
       for (let i = 0; i < pathPoints.length; i++) {
         const p = pathPoints[i];
-        let perpX = 0,
-          perpY = 1;
-        if (i < pathPoints.length - 1) {
+
+        // Use smoothed perpendicular for consistent thickness at corners
+        const { perpX, perpY } = getSmoothedPerpendicular(pathPoints, i, 4);
+
+        // Reduce wobble at corners (where direction changes significantly)
+        let cornerFactor = 1.0;
+        if (i > 0 && i < pathPoints.length - 1) {
+          const prev = pathPoints[i - 1];
           const next = pathPoints[i + 1];
-          const dx = next.x - p.x;
-          const dy = next.y - p.y;
-          const len = Math.sqrt(dx * dx + dy * dy) || 1;
-          perpX = -dy / len;
-          perpY = dx / len;
+          const dx1 = p.x - prev.x;
+          const dy1 = p.y - prev.y;
+          const dx2 = next.x - p.x;
+          const dy2 = next.y - p.y;
+          const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+          const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+          if (len1 > 0.001 && len2 > 0.001) {
+            // Dot product to detect corners
+            const dot = (dx1 * dx2 + dy1 * dy2) / (len1 * len2);
+            // Reduce wobble when turning (dot < 1 means turning)
+            cornerFactor = 0.3 + 0.7 * Math.max(0, dot);
+          }
         }
-        const leftW = (seededRandom() - 0.5) * wobbleAmount;
-        const rightW = (seededRandom() - 0.5) * wobbleAmount;
+
+        const leftW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
+        const rightW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
         left.push({
-          x: p.x + perpX * (38 + leftW),
-          y: p.y + perpY * (38 + leftW) * 0.5,
+          x: p.x + perpX * (pathWidth + leftW),
+          y: p.y + perpY * (pathWidth + leftW) * 0.5,
         });
         right.push({
-          x: p.x - perpX * (38 + rightW),
-          y: p.y - perpY * (38 + rightW) * 0.5,
+          x: p.x - perpX * (pathWidth + rightW),
+          y: p.y - perpY * (pathWidth + rightW) * 0.5,
         });
         center.push(p);
       }
@@ -3386,7 +3459,7 @@ export default function PrincetonTowerDefense() {
       ctx.fill();
     }
 
-    // Wheel tracks - themed
+    // Wheel tracks - themed (use smoothed perpendiculars for consistent corners)
     ctx.strokeStyle = hexToRgba(theme.path[2], 0.18);
     ctx.lineWidth = 3 * cameraZoom;
     const trackOffset = 18 * cameraZoom;
@@ -3394,16 +3467,7 @@ export default function PrincetonTowerDefense() {
       ctx.beginPath();
       for (let i = 0; i < smoothPath.length; i++) {
         const p = smoothPath[i];
-        let perpX = 0,
-          perpY = 1;
-        if (i < smoothPath.length - 1) {
-          const next = smoothPath[i + 1];
-          const dx = next.x - p.x;
-          const dy = next.y - p.y;
-          const len = Math.sqrt(dx * dx + dy * dy) || 1;
-          perpX = -dy / len;
-          perpY = dx / len;
-        }
+        const { perpX, perpY } = getSmoothedPerpendicular(smoothPath, i, 3);
         const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
         const screenP = toScreen({
           x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
@@ -3534,23 +3598,14 @@ export default function PrincetonTowerDefense() {
       ctx.fill();
 
       //add pebbles and wheel tracks as well
-      // Wheel tracks
+      // Wheel tracks (use smoothed perpendiculars for consistent corners)
       ctx.strokeStyle = hexToRgba(theme.path[2], 0.18);
       ctx.lineWidth = 3 * cameraZoom;
       for (let track = -1; track <= 1; track += 2) {
         ctx.beginPath();
         for (let i = 0; i < smoothSecondaryPath.length; i++) {
           const p = smoothSecondaryPath[i];
-          let perpX = 0,
-            perpY = 1;
-          if (i < smoothSecondaryPath.length - 1) {
-            const next = smoothSecondaryPath[i + 1];
-            const dx = next.x - p.x;
-            const dy = next.y - p.y;
-            const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            perpX = -dy / len;
-            perpY = dx / len;
-          }
+          const { perpX, perpY } = getSmoothedPerpendicular(smoothSecondaryPath, i, 3);
           const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
           const screenP = toScreen({
             x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
@@ -3584,43 +3639,12 @@ export default function PrincetonTowerDefense() {
     }
 
     // Now draw fog OVER the road ends to create fade effect
-    const firstWorldPos = gridToWorldPath(path[0]);
-    const lastWorldPos = gridToWorldPath(path[path.length - 1]);
-    const firstScreenPos = worldToScreen(
-      firstWorldPos,
-      canvas.width,
-      canvas.height,
-      dpr,
-      cameraOffset,
-      cameraZoom
-    );
-    const lastScreenPos = worldToScreen(
-      lastWorldPos,
-      canvas.width,
-      canvas.height,
-      dpr,
-      cameraOffset,
-      cameraZoom
-    );
-    // Get direction for each path end for gradient direction
-    const secondWorldPos = gridToWorldPath(path[1]);
-    const secondLastWorldPos = gridToWorldPath(path[path.length - 2]);
-    const secondScreenPos = worldToScreen(
-      secondWorldPos,
-      canvas.width,
-      canvas.height,
-      dpr,
-      cameraOffset,
-      cameraZoom
-    );
-    const secondLastScreenPos = worldToScreen(
-      secondLastWorldPos,
-      canvas.width,
-      canvas.height,
-      dpr,
-      cameraOffset,
-      cameraZoom
-    );
+    // Use screenCenter (the actual smoothed road positions) for accurate fog placement
+    const directionOffset = Math.min(30, Math.floor(screenCenter.length / 4)); // ~3 control points into path
+    const firstScreenPos = screenCenter[0];
+    const secondScreenPos = screenCenter[Math.min(directionOffset, screenCenter.length - 1)];
+    const lastScreenPos = screenCenter[screenCenter.length - 1];
+    const secondLastScreenPos = screenCenter[Math.max(0, screenCenter.length - 1 - directionOffset)];
     // Helper function to draw fog that gradually obscures road end
     // Helper function to draw fog that gradually obscures road end - themed
     const fogBaseRgb = hexToRgb(theme.ground[2]);
@@ -3630,18 +3654,17 @@ export default function PrincetonTowerDefense() {
       size: number
     ) => {
       const time = Date.now() / 4000;
-      // Calculate direction from visible road towards the fog-obscured end
+      // Calculate direction from endPos outward (away from the visible path)
       const dx = endPos.x - towardsPos.x;
       const dy = endPos.y - towardsPos.y;
       const len = Math.sqrt(dx * dx + dy * dy);
       const dirX = len > 0 ? dx / len : 1;
       const dirY = len > 0 ? dy / len : 0;
-      // Draw graduated fog layers from road towards end
-      // Start from the visible road and get progressively more obscured
+      // Draw graduated fog layers CENTERED at endPos, spreading outward
       for (let layer = 0; layer < 8; layer++) {
-        const layerDist = (layer - 2) * size * 0.2; // Start slightly before visible road
-        const layerX = towardsPos.x + dirX * layerDist;
-        const layerY = towardsPos.y + dirY * layerDist * 0.5; // Isometric Y compression
+        const layerDist = (layer - 4) * size * 0.15; // Center at endPos, spread both directions
+        const layerX = endPos.x + dirX * layerDist;
+        const layerY = endPos.y + dirY * layerDist * 0.5; // Isometric Y compression
         const layerSize = size * (0.8 + layer * 0.1);
         const layerAlpha = Math.min(0.9, layer * 0.12); // Gradually increase opacity
         // Animated offset for cloud-like movement
@@ -3779,47 +3802,20 @@ export default function PrincetonTowerDefense() {
       MAP_PATHS[levelData.secondaryPath]
     ) {
       const secPath = MAP_PATHS[levelData.secondaryPath];
+      // Generate smooth path for accurate fog placement
+      const secPathWorldPoints = secPath.map((p) => gridToWorldPath(p));
+      const secSmoothPath = generateSmoothPath(secPathWorldPoints);
+      const secSmoothScreenPath = secSmoothPath.map(toScreen);
+      const secDirOffset = Math.min(30, Math.floor(secSmoothScreenPath.length / 4));
 
       // Secondary path START (entrance) fog
-      const secFirstWorldPos = gridToWorldPath(secPath[0]);
-      const secSecondWorldPos = gridToWorldPath(secPath[1]);
-      const secFirstScreenPos = worldToScreen(
-        secFirstWorldPos,
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom
-      );
-      const secSecondScreenPos = worldToScreen(
-        secSecondWorldPos,
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom
-      );
+      const secFirstScreenPos = secSmoothScreenPath[0];
+      const secSecondScreenPos = secSmoothScreenPath[Math.min(secDirOffset, secSmoothScreenPath.length - 1)];
       drawRoadEndFog(secFirstScreenPos, secSecondScreenPos, 120);
 
       // Secondary path END (exit) fog
-      const secLastWorldPos = gridToWorldPath(secPath[secPath.length - 1]);
-      const secSecondLastWorldPos = gridToWorldPath(secPath[secPath.length - 2]);
-      const secLastScreenPos = worldToScreen(
-        secLastWorldPos,
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom
-      );
-      const secSecondLastScreenPos = worldToScreen(
-        secSecondLastWorldPos,
-        canvas.width,
-        canvas.height,
-        dpr,
-        cameraOffset,
-        cameraZoom
-      );
+      const secLastScreenPos = secSmoothScreenPath[secSmoothScreenPath.length - 1];
+      const secSecondLastScreenPos = secSmoothScreenPath[Math.max(0, secSmoothScreenPath.length - 1 - secDirOffset)];
       drawRoadEndFog(secLastScreenPos, secSecondLastScreenPos, 120);
     }
 

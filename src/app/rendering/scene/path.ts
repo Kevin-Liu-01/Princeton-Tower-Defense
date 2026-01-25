@@ -81,11 +81,57 @@ export function createSeededRandom(seed: number) {
   };
 }
 
-// Add organic wobble to path edges
+// Calculate smoothed perpendicular direction at a point by averaging neighbors
+function getSmoothedPerpendicular(
+  pathPoints: Position[],
+  index: number,
+  lookAhead: number = 3
+): { perpX: number; perpY: number } {
+  let avgPerpX = 0;
+  let avgPerpY = 0;
+  let count = 0;
+
+  // Sample perpendiculars from neighboring segments and average them
+  for (let offset = -lookAhead; offset <= lookAhead; offset++) {
+    const i = Math.max(0, Math.min(pathPoints.length - 2, index + offset));
+    const next = Math.min(i + 1, pathPoints.length - 1);
+    
+    const dx = pathPoints[next].x - pathPoints[i].x;
+    const dy = pathPoints[next].y - pathPoints[i].y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    
+    if (len > 0.001) {
+      // Weight closer samples more heavily
+      const weight = 1 / (1 + Math.abs(offset) * 0.5);
+      avgPerpX += (-dy / len) * weight;
+      avgPerpY += (dx / len) * weight;
+      count += weight;
+    }
+  }
+
+  if (count > 0) {
+    avgPerpX /= count;
+    avgPerpY /= count;
+    // Normalize the averaged perpendicular
+    const len = Math.sqrt(avgPerpX * avgPerpX + avgPerpY * avgPerpY);
+    if (len > 0.001) {
+      avgPerpX /= len;
+      avgPerpY /= len;
+    }
+  } else {
+    avgPerpX = 0;
+    avgPerpY = 1;
+  }
+
+  return { perpX: avgPerpX, perpY: avgPerpY };
+}
+
+// Add organic wobble to path edges with consistent thickness at turns
 export function addPathWobble(
   pathPoints: Position[],
   wobbleAmount: number,
-  seededRandom: () => number
+  seededRandom: () => number,
+  pathWidth: number = 38
 ): { left: Position[]; right: Position[]; center: Position[] } {
   const left: Position[] = [];
   const right: Position[] = [];
@@ -93,25 +139,39 @@ export function addPathWobble(
   
   for (let i = 0; i < pathPoints.length; i++) {
     const p = pathPoints[i];
-    let perpX = 0;
-    let perpY = 1;
-    if (i < pathPoints.length - 1) {
+    
+    // Use smoothed perpendicular for consistent thickness at corners
+    const { perpX, perpY } = getSmoothedPerpendicular(pathPoints, i, 4);
+    
+    // Reduce wobble at corners (where direction changes significantly)
+    let cornerFactor = 1.0;
+    if (i > 0 && i < pathPoints.length - 1) {
+      const prev = pathPoints[i - 1];
       const next = pathPoints[i + 1];
-      const dx = next.x - p.x;
-      const dy = next.y - p.y;
-      const len = Math.sqrt(dx * dx + dy * dy) || 1;
-      perpX = -dy / len;
-      perpY = dx / len;
+      const dx1 = p.x - prev.x;
+      const dy1 = p.y - prev.y;
+      const dx2 = next.x - p.x;
+      const dy2 = next.y - p.y;
+      const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+      const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+      if (len1 > 0.001 && len2 > 0.001) {
+        // Dot product to detect corners
+        const dot = (dx1 * dx2 + dy1 * dy2) / (len1 * len2);
+        // Reduce wobble when turning (dot < 1 means turning)
+        cornerFactor = 0.3 + 0.7 * Math.max(0, dot);
+      }
     }
-    const leftW = (seededRandom() - 0.5) * wobbleAmount;
-    const rightW = (seededRandom() - 0.5) * wobbleAmount;
+    
+    const leftW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
+    const rightW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
+    
     left.push({
-      x: p.x + perpX * (38 + leftW),
-      y: p.y + perpY * (38 + leftW) * 0.5,
+      x: p.x + perpX * (pathWidth + leftW),
+      y: p.y + perpY * (pathWidth + leftW) * 0.5,
     });
     right.push({
-      x: p.x - perpX * (38 + rightW),
-      y: p.y - perpY * (38 + rightW) * 0.5,
+      x: p.x - perpX * (pathWidth + rightW),
+      y: p.y - perpY * (pathWidth + rightW) * 0.5,
     });
     center.push(p);
   }
