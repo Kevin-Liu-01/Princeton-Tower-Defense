@@ -178,7 +178,7 @@ export function generateDecorations(
   }
 
   // Environment decorations - clustered by zone
-  for (let i = 0; i < 320; i++) {
+  for (let i = 0; i < 400; i++) {
     const zoneX = Math.floor(random() * zonesX);
     const zoneY = Math.floor(random() * zonesY);
     const category = zoneAssignments[zoneX][zoneY];
@@ -286,7 +286,7 @@ export function generateDecorations(
 
   // Battle damage decorations
   const battleRandom = createSeededRandom(seed + 600);
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 240; i++) {
     const gridX = battleRandom() * (GRID_WIDTH + 19) - 9.5;
     const gridY = battleRandom() * (GRID_HEIGHT + 19) - 9.5;
     const worldPos = gridToWorld({ x: gridX, y: gridY });

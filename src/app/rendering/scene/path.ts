@@ -3,8 +3,7 @@
 
 import type { Position } from "../../types";
 import { TILE_SIZE, MAP_PATHS, LEVEL_DATA, REGION_THEMES } from "../../constants";
-import { worldToScreen, gridToWorld, distanceToLineSegment } from "../../utils";
-import { colorWithAlpha } from "../helpers";
+import { worldToScreen } from "../../utils";
 
 // ============================================================================
 // PATH MATH HELPERS
@@ -131,22 +130,19 @@ export function addPathWobble(
   pathPoints: Position[],
   wobbleAmount: number,
   seededRandom: () => number,
-  pathWidth: number = 38
+  pathWidth: number = 42
 ): { left: Position[]; right: Position[]; center: Position[] } {
   const left: Position[] = [];
   const right: Position[] = [];
   const center: Position[] = [];
   
+  // First pass: calculate corner factors for all points
+  const cornerFactors: number[] = [];
   for (let i = 0; i < pathPoints.length; i++) {
-    const p = pathPoints[i];
-    
-    // Use smoothed perpendicular for consistent thickness at corners
-    const { perpX, perpY } = getSmoothedPerpendicular(pathPoints, i, 4);
-    
-    // Reduce wobble at corners (where direction changes significantly)
     let cornerFactor = 1.0;
     if (i > 0 && i < pathPoints.length - 1) {
       const prev = pathPoints[i - 1];
+      const p = pathPoints[i];
       const next = pathPoints[i + 1];
       const dx1 = p.x - prev.x;
       const dy1 = p.y - prev.y;
@@ -155,23 +151,48 @@ export function addPathWobble(
       const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
       const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
       if (len1 > 0.001 && len2 > 0.001) {
-        // Dot product to detect corners
         const dot = (dx1 * dx2 + dy1 * dy2) / (len1 * len2);
-        // Reduce wobble when turning (dot < 1 means turning)
-        cornerFactor = 0.3 + 0.7 * Math.max(0, dot);
+        // Smoother corner detection with gradual falloff
+        cornerFactor = 0.2 + 0.8 * Math.pow(Math.max(0, (dot + 1) / 2), 0.5);
       }
     }
+    cornerFactors.push(cornerFactor);
+  }
+  
+  // Smooth corner factors across neighbors
+  const smoothedFactors = cornerFactors.map((f, i) => {
+    let sum = f * 2;
+    let count = 2;
+    for (let j = 1; j <= 3; j++) {
+      if (i - j >= 0) { sum += cornerFactors[i - j]; count++; }
+      if (i + j < cornerFactors.length) { sum += cornerFactors[i + j]; count++; }
+    }
+    return sum / count;
+  });
+  
+  for (let i = 0; i < pathPoints.length; i++) {
+    const p = pathPoints[i];
     
-    const leftW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
-    const rightW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
+    // Use smoothed perpendicular for consistent thickness at corners
+    const { perpX, perpY } = getSmoothedPerpendicular(pathPoints, i, 5);
     
+    // Use smoothed corner factor
+    const cornerFactor = smoothedFactors[i];
+    
+    // Subtle wobble that doesn't affect width much
+    const wobbleMag = wobbleAmount * cornerFactor * 0.5;
+    const leftW = (seededRandom() - 0.5) * wobbleMag;
+    const rightW = (seededRandom() - 0.5) * wobbleMag;
+    
+    // Keep consistent width - the perpendicular offset defines the edge
+    // Use 0.75 for Y to make paths in the X direction wider (matching Y direction paths better)
     left.push({
       x: p.x + perpX * (pathWidth + leftW),
-      y: p.y + perpY * (pathWidth + leftW) * 0.5,
+      y: p.y + perpY * (pathWidth + leftW) * 0.75,
     });
     right.push({
       x: p.x - perpX * (pathWidth + rightW),
-      y: p.y - perpY * (pathWidth + rightW) * 0.5,
+      y: p.y - perpY * (pathWidth + rightW) * 0.75,
     });
     center.push(p);
   }
@@ -228,12 +249,12 @@ export function renderPath(context: PathRenderContext): void {
   // Convert path to world coordinates
   const pathWorldPoints = path.map((p) => gridToWorldPath(p));
   
-  // Generate smooth path
+  // Generate smooth path with more sample points for better corners
   const smoothPath = generateSmoothPath(pathWorldPoints);
   
-  // Add organic wobble
-  const { left: pathLeft, right: pathRight, center: pathCenter } = 
-    addPathWobble(smoothPath, 10, seededRandom);
+  // Add organic wobble with consistent width
+  const { left: pathLeft, right: pathRight } = 
+    addPathWobble(smoothPath, 6, seededRandom, 44);
   
   // Helper to convert to screen coordinates
   const toScreen = (p: Position) =>
@@ -250,18 +271,18 @@ export function renderPath(context: PathRenderContext): void {
   const screenLeft = pathLeft.map(toScreen);
   const screenRight = pathRight.map(toScreen);
   
-  // Shadow layer
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  // Shadow layer - softer, larger offset
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
   ctx.beginPath();
-  ctx.moveTo(screenLeft[0].x + 4, screenLeft[0].y + 4);
+  ctx.moveTo(screenLeft[0].x + 6, screenLeft[0].y + 6);
   for (let i = 1; i < screenLeft.length; i++)
-    ctx.lineTo(screenLeft[i].x + 4, screenLeft[i].y + 4);
+    ctx.lineTo(screenLeft[i].x + 6, screenLeft[i].y + 6);
   for (let i = screenRight.length - 1; i >= 0; i--)
-    ctx.lineTo(screenRight[i].x + 4, screenRight[i].y + 4);
+    ctx.lineTo(screenRight[i].x + 6, screenRight[i].y + 6);
   ctx.closePath();
   ctx.fill();
   
-  // Main road edge - themed
+  // Main road edge - themed (outer border)
   ctx.fillStyle = theme.path[2];
   ctx.beginPath();
   ctx.moveTo(screenLeft[0].x, screenLeft[0].y);
@@ -272,59 +293,51 @@ export function renderPath(context: PathRenderContext): void {
   ctx.closePath();
   ctx.fill();
   
-  // Inner road - themed
+  // Inner road layer 1 - base
   ctx.fillStyle = theme.path[0];
   ctx.beginPath();
   for (let i = 0; i < screenCenter.length; i++) {
-    const lx =
-      screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * 0.88;
-    const ly =
-      screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * 0.88;
+    const lx = screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * 0.9;
+    const ly = screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * 0.9;
     if (i === 0) ctx.moveTo(lx, ly);
     else ctx.lineTo(lx, ly);
   }
   for (let i = screenCenter.length - 1; i >= 0; i--) {
-    const rx =
-      screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.88;
-    const ry =
-      screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.88;
+    const rx = screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.9;
+    const ry = screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.9;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
   ctx.fill();
   
-  // Top road layer - themed
+  // Top road layer - main walking surface
   ctx.fillStyle = theme.path[1];
   ctx.beginPath();
   for (let i = 0; i < screenCenter.length; i++) {
-    const lx =
-      screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * 0.72;
-    const ly =
-      screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * 0.72 - 2;
+    const lx = screenCenter[i].x + (screenLeft[i].x - screenCenter[i].x) * 0.75;
+    const ly = screenCenter[i].y + (screenLeft[i].y - screenCenter[i].y) * 0.75 - 1;
     if (i === 0) ctx.moveTo(lx, ly);
     else ctx.lineTo(lx, ly);
   }
   for (let i = screenCenter.length - 1; i >= 0; i--) {
-    const rx =
-      screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.72;
-    const ry =
-      screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.72 - 2;
+    const rx = screenCenter[i].x + (screenRight[i].x - screenCenter[i].x) * 0.75;
+    const ry = screenCenter[i].y + (screenRight[i].y - screenCenter[i].y) * 0.75 - 1;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
   ctx.fill();
   
-  // Road texture patches - themed
+  // Road texture - dirt patches and wear marks
   const textureRandom = createSeededRandom(mapSeed + 200);
-  ctx.fillStyle = hexToRgba(theme.ground[2], 0.12);
-  for (let i = 0; i < smoothPath.length; i += 3) {
+  ctx.fillStyle = hexToRgba(theme.ground[2], 0.08);
+  for (let i = 0; i < smoothPath.length; i += 2) {
     if (i >= screenCenter.length) break;
     const sp = screenCenter[i];
-    const patchSize = (3 + textureRandom() * 6) * cameraZoom;
+    const patchSize = (4 + textureRandom() * 8) * cameraZoom;
     ctx.beginPath();
     ctx.ellipse(
-      sp.x + (textureRandom() - 0.5) * 35 * cameraZoom,
-      sp.y + (textureRandom() - 0.5) * 18 * cameraZoom,
+      sp.x + (textureRandom() - 0.5) * 40 * cameraZoom,
+      sp.y + (textureRandom() - 0.5) * 20 * cameraZoom,
       patchSize,
       patchSize * 0.5,
       textureRandom() * Math.PI,
@@ -334,28 +347,31 @@ export function renderPath(context: PathRenderContext): void {
     ctx.fill();
   }
   
-  // Wheel tracks - themed
-  ctx.strokeStyle = hexToRgba(theme.path[2], 0.18);
-  ctx.lineWidth = 3 * cameraZoom;
-  const trackOffset = 18 * cameraZoom;
+  // Center line detail - worn path
+  ctx.strokeStyle = hexToRgba(theme.path[0], 0.15);
+  ctx.lineWidth = 8 * cameraZoom;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i < screenCenter.length; i++) {
+    if (i === 0) ctx.moveTo(screenCenter[i].x, screenCenter[i].y - 1);
+    else ctx.lineTo(screenCenter[i].x, screenCenter[i].y - 1);
+  }
+  ctx.stroke();
+  
+  // Wheel tracks - subtle parallel lines
+  ctx.strokeStyle = hexToRgba(theme.path[2], 0.12);
+  ctx.lineWidth = 2.5 * cameraZoom;
+  ctx.lineCap = "round";
+  const trackOffset = 16 * cameraZoom;
   for (let track = -1; track <= 1; track += 2) {
     ctx.beginPath();
     for (let i = 0; i < smoothPath.length; i++) {
-      const p = smoothPath[i];
-      let perpX = 0;
-      let perpY = 1;
-      if (i < smoothPath.length - 1) {
-        const next = smoothPath[i + 1];
-        const dx = next.x - p.x;
-        const dy = next.y - p.y;
-        const len = Math.sqrt(dx * dx + dy * dy) || 1;
-        perpX = -dy / len;
-        perpY = dx / len;
-      }
-      const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
+      const { perpX, perpY } = getSmoothedPerpendicular(smoothPath, i, 3);
+      const wobble = Math.sin(i * 0.3 + mapSeed) * 1.5;
       const screenP = toScreen({
-        x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
-        y: p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
+        x: smoothPath[i].x + perpX * ((trackOffset * track) / cameraZoom + wobble),
+        y: smoothPath[i].y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
       });
       if (i === 0) ctx.moveTo(screenP.x, screenP.y);
       else ctx.lineTo(screenP.x, screenP.y);
@@ -363,24 +379,46 @@ export function renderPath(context: PathRenderContext): void {
     ctx.stroke();
   }
   
-  // Pebbles on edges - themed
+  // Edge stones/pebbles - decorative border
   const pebbleRandom = createSeededRandom(mapSeed + 300);
-  ctx.fillStyle = theme.path[0];
-  for (let i = 0; i < smoothPath.length; i += 2) {
-    if (i >= screenLeft.length || pebbleRandom() > 0.5) continue;
-    const side = pebbleRandom() > 0.5 ? screenLeft : screenRight;
-    const p = side[i];
+  for (let i = 0; i < smoothPath.length; i += 3) {
+    if (i >= screenLeft.length) continue;
+    if (pebbleRandom() > 0.6) continue;
+    
+    // Left edge stones
+    ctx.fillStyle = hexToRgba(theme.path[2], 0.4);
+    const lp = screenLeft[i];
+    const lpSize = (2 + pebbleRandom() * 4) * cameraZoom;
     ctx.beginPath();
-    ctx.ellipse(
-      p.x,
-      p.y,
-      (2 + pebbleRandom() * 3) * cameraZoom,
-      (1.5 + pebbleRandom() * 2) * cameraZoom,
-      0,
-      0,
-      Math.PI * 2
-    );
+    ctx.ellipse(lp.x, lp.y, lpSize, lpSize * 0.6, pebbleRandom() * Math.PI, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Right edge stones
+    if (pebbleRandom() > 0.4) {
+      const rp = screenRight[i];
+      const rpSize = (2 + pebbleRandom() * 4) * cameraZoom;
+      ctx.fillStyle = hexToRgba(theme.path[0], 0.5);
+      ctx.beginPath();
+      ctx.ellipse(rp.x, rp.y, rpSize, rpSize * 0.6, pebbleRandom() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  
+  // Scattered gravel on path surface
+  const gravelRandom = createSeededRandom(mapSeed + 400);
+  ctx.fillStyle = hexToRgba(theme.path[2], 0.2);
+  for (let i = 0; i < smoothPath.length; i += 4) {
+    if (i >= screenCenter.length) break;
+    for (let j = 0; j < 3; j++) {
+      if (gravelRandom() > 0.5) continue;
+      const sp = screenCenter[i];
+      const offsetX = (gravelRandom() - 0.5) * 30 * cameraZoom;
+      const offsetY = (gravelRandom() - 0.5) * 15 * cameraZoom;
+      const size = (1 + gravelRandom() * 2) * cameraZoom;
+      ctx.beginPath();
+      ctx.arc(sp.x + offsetX, sp.y + offsetY, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -413,9 +451,9 @@ export function renderSecondaryPath(context: PathRenderContext): void {
   // Generate smooth path
   const smoothSecondaryPath = generateSmoothPath(secondaryPathWorldPoints);
   
-  // Add organic wobble
-  const { left: secPathLeft, right: secPathRight, center: secPathCenter } = 
-    addPathWobble(smoothSecondaryPath, 10, seededRandom);
+  // Add organic wobble with consistent width
+  const { left: secPathLeft, right: secPathRight } = 
+    addPathWobble(smoothSecondaryPath, 6, seededRandom, 44);
   
   // Helper to convert to screen coordinates
   const toScreen = (p: Position) =>
@@ -428,18 +466,18 @@ export function renderSecondaryPath(context: PathRenderContext): void {
       cameraZoom
     );
   
-  const secScreenCenter = secPathCenter.map(toScreen);
+  const secScreenCenter = smoothSecondaryPath.map(toScreen);
   const secScreenLeft = secPathLeft.map(toScreen);
   const secScreenRight = secPathRight.map(toScreen);
   
   // Shadow layer
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
   ctx.beginPath();
-  ctx.moveTo(secScreenLeft[0].x + 4, secScreenLeft[0].y + 4);
+  ctx.moveTo(secScreenLeft[0].x + 6, secScreenLeft[0].y + 6);
   for (let i = 1; i < secScreenLeft.length; i++)
-    ctx.lineTo(secScreenLeft[i].x + 4, secScreenLeft[i].y + 4);
+    ctx.lineTo(secScreenLeft[i].x + 6, secScreenLeft[i].y + 6);
   for (let i = secScreenRight.length - 1; i >= 0; i--)
-    ctx.lineTo(secScreenRight[i].x + 4, secScreenRight[i].y + 4);
+    ctx.lineTo(secScreenRight[i].x + 6, secScreenRight[i].y + 6);
   ctx.closePath();
   ctx.fill();
   
@@ -454,26 +492,18 @@ export function renderSecondaryPath(context: PathRenderContext): void {
   ctx.closePath();
   ctx.fill();
   
-  // Inner road
+  // Inner road layer 1
   ctx.fillStyle = theme.path[0];
   ctx.beginPath();
   for (let i = 0; i < secScreenCenter.length; i++) {
-    const lx =
-      secScreenCenter[i].x +
-      (secScreenLeft[i].x - secScreenCenter[i].x) * 0.88;
-    const ly =
-      secScreenCenter[i].y +
-      (secScreenLeft[i].y - secScreenCenter[i].y) * 0.88;
+    const lx = secScreenCenter[i].x + (secScreenLeft[i].x - secScreenCenter[i].x) * 0.9;
+    const ly = secScreenCenter[i].y + (secScreenLeft[i].y - secScreenCenter[i].y) * 0.9;
     if (i === 0) ctx.moveTo(lx, ly);
     else ctx.lineTo(lx, ly);
   }
   for (let i = secScreenCenter.length - 1; i >= 0; i--) {
-    const rx =
-      secScreenCenter[i].x +
-      (secScreenRight[i].x - secScreenCenter[i].x) * 0.88;
-    const ry =
-      secScreenCenter[i].y +
-      (secScreenRight[i].y - secScreenCenter[i].y) * 0.88;
+    const rx = secScreenCenter[i].x + (secScreenRight[i].x - secScreenCenter[i].x) * 0.9;
+    const ry = secScreenCenter[i].y + (secScreenRight[i].y - secScreenCenter[i].y) * 0.9;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
@@ -483,52 +513,64 @@ export function renderSecondaryPath(context: PathRenderContext): void {
   ctx.fillStyle = theme.path[1];
   ctx.beginPath();
   for (let i = 0; i < secScreenCenter.length; i++) {
-    const lx =
-      secScreenCenter[i].x +
-      (secScreenLeft[i].x - secScreenCenter[i].x) * 0.92;
-    const ly =
-      secScreenCenter[i].y +
-      (secScreenLeft[i].y - secScreenCenter[i].y) * 0.92 -
-      2;
+    const lx = secScreenCenter[i].x + (secScreenLeft[i].x - secScreenCenter[i].x) * 0.75;
+    const ly = secScreenCenter[i].y + (secScreenLeft[i].y - secScreenCenter[i].y) * 0.75 - 1;
     if (i === 0) ctx.moveTo(lx, ly);
     else ctx.lineTo(lx, ly);
   }
   for (let i = secScreenCenter.length - 1; i >= 0; i--) {
-    const rx =
-      secScreenCenter[i].x +
-      (secScreenRight[i].x - secScreenCenter[i].x) * 0.92;
-    const ry =
-      secScreenCenter[i].y +
-      (secScreenRight[i].y - secScreenCenter[i].y) * 0.92 -
-      2;
+    const rx = secScreenCenter[i].x + (secScreenRight[i].x - secScreenCenter[i].x) * 0.75;
+    const ry = secScreenCenter[i].y + (secScreenRight[i].y - secScreenCenter[i].y) * 0.75 - 1;
     ctx.lineTo(rx, ry);
   }
   ctx.closePath();
   ctx.fill();
   
+  // Road texture
+  const textureRandom = createSeededRandom(mapSeed + 250);
+  ctx.fillStyle = hexToRgba(theme.ground[2], 0.08);
+  for (let i = 0; i < smoothSecondaryPath.length; i += 2) {
+    if (i >= secScreenCenter.length) break;
+    const sp = secScreenCenter[i];
+    const patchSize = (4 + textureRandom() * 8) * cameraZoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      sp.x + (textureRandom() - 0.5) * 40 * cameraZoom,
+      sp.y + (textureRandom() - 0.5) * 20 * cameraZoom,
+      patchSize,
+      patchSize * 0.5,
+      textureRandom() * Math.PI,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+  
+  // Center line detail
+  ctx.strokeStyle = hexToRgba(theme.path[0], 0.15);
+  ctx.lineWidth = 8 * cameraZoom;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  for (let i = 0; i < secScreenCenter.length; i++) {
+    if (i === 0) ctx.moveTo(secScreenCenter[i].x, secScreenCenter[i].y - 1);
+    else ctx.lineTo(secScreenCenter[i].x, secScreenCenter[i].y - 1);
+  }
+  ctx.stroke();
+  
   // Wheel tracks
-  ctx.strokeStyle = hexToRgba(theme.path[2], 0.18);
-  ctx.lineWidth = 3 * cameraZoom;
-  const trackOffset = 18 * cameraZoom;
+  ctx.strokeStyle = hexToRgba(theme.path[2], 0.12);
+  ctx.lineWidth = 2.5 * cameraZoom;
+  ctx.lineCap = "round";
+  const trackOffset = 16 * cameraZoom;
   for (let track = -1; track <= 1; track += 2) {
     ctx.beginPath();
     for (let i = 0; i < smoothSecondaryPath.length; i++) {
-      const p = smoothSecondaryPath[i];
-      let perpX = 0;
-      let perpY = 1;
-      if (i < smoothSecondaryPath.length - 1) {
-        const next = smoothSecondaryPath[i + 1];
-        const dx = next.x - p.x;
-        const dy = next.y - p.y;
-        const len = Math.sqrt(dx * dx + dy * dy) || 1;
-        perpX = -dy / len;
-        perpY = dx / len;
-      }
-      const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
+      const { perpX, perpY } = getSmoothedPerpendicular(smoothSecondaryPath, i, 3);
+      const wobble = Math.sin(i * 0.3 + mapSeed + 50) * 1.5;
       const screenP = toScreen({
-        x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
-        y:
-          p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
+        x: smoothSecondaryPath[i].x + perpX * ((trackOffset * track) / cameraZoom + wobble),
+        y: smoothSecondaryPath[i].y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
       });
       if (i === 0) ctx.moveTo(screenP.x, screenP.y);
       else ctx.lineTo(screenP.x, screenP.y);
@@ -536,24 +578,27 @@ export function renderSecondaryPath(context: PathRenderContext): void {
     ctx.stroke();
   }
   
-  // Pebbles on edges
+  // Edge stones
   const pebbleRandom = createSeededRandom(mapSeed + 350);
-  ctx.fillStyle = theme.path[0];
-  for (let i = 0; i < smoothSecondaryPath.length; i += 2) {
-    if (i >= secScreenLeft.length || pebbleRandom() > 0.5) continue;
-    const side = pebbleRandom() > 0.5 ? secScreenLeft : secScreenRight;
-    const p = side[i];
+  for (let i = 0; i < smoothSecondaryPath.length; i += 3) {
+    if (i >= secScreenLeft.length) continue;
+    if (pebbleRandom() > 0.6) continue;
+    
+    ctx.fillStyle = hexToRgba(theme.path[2], 0.4);
+    const lp = secScreenLeft[i];
+    const lpSize = (2 + pebbleRandom() * 4) * cameraZoom;
     ctx.beginPath();
-    ctx.ellipse(
-      p.x,
-      p.y,
-      (2 + pebbleRandom() * 3) * cameraZoom,
-      (1.5 + pebbleRandom() * 2) * cameraZoom,
-      0,
-      0,
-      Math.PI * 2
-    );
+    ctx.ellipse(lp.x, lp.y, lpSize, lpSize * 0.6, pebbleRandom() * Math.PI, 0, Math.PI * 2);
     ctx.fill();
+    
+    if (pebbleRandom() > 0.4) {
+      const rp = secScreenRight[i];
+      const rpSize = (2 + pebbleRandom() * 4) * cameraZoom;
+      ctx.fillStyle = hexToRgba(theme.path[0], 0.5);
+      ctx.beginPath();
+      ctx.ellipse(rp.x, rp.y, rpSize, rpSize * 0.6, pebbleRandom() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 

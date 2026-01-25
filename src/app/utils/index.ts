@@ -408,6 +408,19 @@ export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+// Get the length of a path segment in world units
+export function getPathSegmentLength(
+  pathIndex: number,
+  mapKey: string
+): number {
+  const path = MAP_PATHS[mapKey];
+  if (!path || pathIndex < 0 || pathIndex >= path.length - 1) return TILE_SIZE;
+  
+  const p1 = gridToWorldPath(path[pathIndex]);
+  const p2 = gridToWorldPath(path[pathIndex + 1]);
+  return distance(p1, p2);
+}
+
 // Clamp utility
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));

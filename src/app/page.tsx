@@ -57,6 +57,7 @@ import {
   getEnemyPosition,
   isValidBuildPosition,
   generateId,
+  getPathSegmentLength,
 } from "./utils";
 // Rendering
 import {
@@ -982,13 +983,17 @@ export default function PrincetonTowerDefense() {
               return { ...enemy, inCombat: true, combatTarget: nearbyTroop.id };
             }
 
-            // Movement logic
+            // Movement logic - normalize speed by segment length for consistent world-space speed
             if (!enemy.inCombat) {
               const pathKey = enemy.pathKey || selectedMap;
               const path = MAP_PATHS[pathKey];
               const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
-              const newProgress =
-                enemy.progress + (enemy.speed * speedMult * deltaTime) / 1000;
+              // Get segment length to normalize movement speed
+              const segmentLength = getPathSegmentLength(enemy.pathIndex, pathKey);
+              // Scale speed by TILE_SIZE to convert from old progress-based system to pixel-based
+              // Then divide by actual segment length for consistent world-space speed
+              const progressIncrement = (enemy.speed * speedMult * deltaTime * TILE_SIZE) / 200 / segmentLength;
+              const newProgress = enemy.progress + progressIncrement;
               if (newProgress >= 1 && enemy.pathIndex < path.length - 1) {
                 return {
                   ...enemy,
@@ -1350,15 +1355,18 @@ export default function PrincetonTowerDefense() {
             // Update slowed visual indicator
             const slowedVisual = enemy.slowEffect > 0;
             const slowIntensity = enemy.slowEffect;
-            // Move enemy along path
+            // Move enemy along path - normalize speed by segment length for consistent world-space speed
             if (!enemy.inCombat) {
               // Use enemy's pathKey for dual-path support
               const pathKey = enemy.pathKey || selectedMap;
               const path = MAP_PATHS[pathKey];
               const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
-              const newProgress =
-                enemy.progress +
-                (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime) / 1000;
+              // Get segment length to normalize movement speed
+              const segmentLength = getPathSegmentLength(enemy.pathIndex, pathKey);
+              // Scale speed by TILE_SIZE to convert from old progress-based system to pixel-based
+              // Then divide by actual segment length for consistent world-space speed
+              const progressIncrement = (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime * TILE_SIZE) / 1000 / segmentLength;
+              const newProgress = enemy.progress + progressIncrement;
               if (newProgress >= 1 && enemy.pathIndex < path.length - 1) {
                 return {
                   ...enemy,
@@ -3345,11 +3353,11 @@ export default function PrincetonTowerDefense() {
         const rightW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
         left.push({
           x: p.x + perpX * (pathWidth + leftW),
-          y: p.y + perpY * (pathWidth + leftW) * 0.5,
+          y: p.y + perpY * (pathWidth + leftW) * 0.75,
         });
         right.push({
           x: p.x - perpX * (pathWidth + rightW),
-          y: p.y - perpY * (pathWidth + rightW) * 0.5,
+          y: p.y - perpY * (pathWidth + rightW) * 0.75,
         });
         center.push(p);
       }
@@ -3471,7 +3479,7 @@ export default function PrincetonTowerDefense() {
         const wobble = Math.sin(i * 0.5 + mapSeed) * 2;
         const screenP = toScreen({
           x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
-          y: p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
+          y: p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.75,
         });
         if (i === 0) ctx.moveTo(screenP.x, screenP.y);
         else ctx.lineTo(screenP.x, screenP.y);
@@ -3610,7 +3618,7 @@ export default function PrincetonTowerDefense() {
           const screenP = toScreen({
             x: p.x + perpX * ((trackOffset * track) / cameraZoom + wobble),
             y:
-              p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.5,
+              p.y + perpY * ((trackOffset * track) / cameraZoom + wobble) * 0.75,
           });
           if (i === 0) ctx.moveTo(screenP.x, screenP.y);
           else ctx.lineTo(screenP.x, screenP.y);
@@ -4061,7 +4069,7 @@ export default function PrincetonTowerDefense() {
     }
 
     // Environment decorations - clustered by zone with variation
-    for (let i = 0; i < 320; i++) {
+    for (let i = 0; i < 400; i++) {
       // Pick a zone first, then place within that zone with some jitter
       const zoneX = Math.floor(seededRandom() * zonesX);
       const zoneY = Math.floor(seededRandom() * zonesY);
@@ -4111,7 +4119,7 @@ export default function PrincetonTowerDefense() {
     }
 
     // Add extra tree clusters at edges (forests feel)
-    for (let cluster = 0; cluster < 12; cluster++) {
+    for (let cluster = 0; cluster < 16; cluster++) {
       // Pick cluster center at map edges
       const edgeSide = Math.floor(seededRandom() * 4);
       let clusterX: number, clusterY: number;
@@ -4150,7 +4158,7 @@ export default function PrincetonTowerDefense() {
     }
 
     // Add structure clusters (small villages/camps)
-    for (let village = 0; village < 4; village++) {
+    for (let village = 0; village < 6; village++) {
       const villageX = minX + 4 + seededRandom() * (maxX - minX - 8);
       const villageY = minY + 4 + seededRandom() * (maxY - minY - 8);
 
@@ -4190,7 +4198,7 @@ export default function PrincetonTowerDefense() {
               ? ["crater", "skeleton", "bones", "debris"]
               : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
     // Battle damage - expanded +10 in every direction isometrically
-    for (let i = 0; i < 180; i++) {
+    for (let i = 0; i < 240; i++) {
       const gridX = seededRandom() * (GRID_WIDTH + 19) - 9.5;
       const gridY = seededRandom() * (GRID_HEIGHT + 19) - 9.5;
       const worldPos = gridToWorld({ x: gridX, y: gridY });
