@@ -26038,3 +26038,25 @@ export function renderTowerPreview(
     ctx.setLineDash([]);
   }
 }
+
+// Re-export environment effects
+export { renderEnvironment, renderAmbientVisuals } from "./maps/environment";
+
+// Re-export path rendering functions
+export {
+  renderPath,
+  renderSecondaryPath,
+  gridToWorldPath,
+  generateSmoothPath,
+  addPathWobble,
+  createSeededRandom,
+  catmullRom,
+  hexToRgba,
+  type PathRenderContext,
+} from "./scene/path";
+
+// Re-export fog effects
+export { renderRoadEndFog } from "./effects/fog";
+
+// Re-export hazards rendering
+export { renderHazard } from "./hazards";

@@ -12,6 +12,7 @@ import type {
   Effect,
   Particle,
   TowerType,
+  TroopType,
   HeroType,
   SpellType,
   GameState,
@@ -69,6 +70,8 @@ import {
   renderTowerPreview,
   renderStationRange,
   renderTowerRange,
+  renderEnvironment,
+  renderAmbientVisuals,
 } from "./rendering";
 
 // Dinky Station spawn management constants
@@ -132,10 +135,10 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    }
     : { r: 0, g: 0, b: 0 };
 };
 
@@ -576,10 +579,10 @@ export default function PrincetonTowerDefense() {
                     prev.map((e) =>
                       e.id === enemy.id
                         ? {
-                            ...e,
-                            hp: Math.max(0, e.hp - damage),
-                            damageFlash: 200,
-                          }
+                          ...e,
+                          hp: Math.max(0, e.hp - damage),
+                          damageFlash: 200,
+                        }
                         : e
                     )
                   );
@@ -866,9 +869,9 @@ export default function PrincetonTowerDefense() {
             // Hero Combat Check
             const nearbyHero =
               hero &&
-              !hero.dead &&
-              distance(enemyPos, hero.pos) < 60 &&
-              !ENEMY_DATA[enemy.type].flying
+                !hero.dead &&
+                distance(enemyPos, hero.pos) < 60 &&
+                !ENEMY_DATA[enemy.type].flying
                 ? hero
                 : null;
             if (nearbyHero) {
@@ -931,13 +934,13 @@ export default function PrincetonTowerDefense() {
           setHero((prev) =>
             prev
               ? {
-                  ...prev,
-                  hp: 0,
-                  dead: true,
-                  respawnTimer: HERO_RESPAWN_TIME,
-                  selected: false,
-                  moving: false,
-                }
+                ...prev,
+                hp: 0,
+                dead: true,
+                respawnTimer: HERO_RESPAWN_TIME,
+                selected: false,
+                moving: false,
+              }
               : null
           );
 
@@ -1107,10 +1110,10 @@ export default function PrincetonTowerDefense() {
             // Check for nearby hero combat
             const nearbyHero =
               hero &&
-              !hero.dead &&
-              distance(getEnemyPosWithPath(enemy, selectedMap), hero.pos) <
+                !hero.dead &&
+                distance(getEnemyPosWithPath(enemy, selectedMap), hero.pos) <
                 60 &&
-              !ENEMY_DATA[enemy.type].flying
+                !ENEMY_DATA[enemy.type].flying
                 ? hero
                 : null;
             if (nearbyHero) {
@@ -1226,13 +1229,13 @@ export default function PrincetonTowerDefense() {
                   // Create projectile
                   const projType =
                     enemy.type === "mage" ||
-                    enemy.type === "warlock" ||
-                    enemy.type === "hexer" ||
-                    enemy.type === "necromancer"
+                      enemy.type === "warlock" ||
+                      enemy.type === "hexer" ||
+                      enemy.type === "necromancer"
                       ? "magicBolt"
                       : enemy.type === "catapult"
-                      ? "rock"
-                      : "arrow";
+                        ? "rock"
+                        : "arrow";
                   setProjectiles((proj) => [
                     ...proj,
                     {
@@ -1743,12 +1746,12 @@ export default function PrincetonTowerDefense() {
             setHero((prev) =>
               prev
                 ? {
-                    ...prev,
-                    hp: Math.min(
-                      prev.maxHp,
-                      prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
-                    ),
-                  }
+                  ...prev,
+                  hp: Math.min(
+                    prev.maxHp,
+                    prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
+                  ),
+                }
                 : null
             );
           }, 5000);
@@ -1776,23 +1779,23 @@ export default function PrincetonTowerDefense() {
             tower.level === 1
               ? 8000
               : tower.level === 2
-              ? 7000
-              : tower.level === 3
-              ? 6000
-              : tower.upgrade === "A"
-              ? 5000
-              : 6000;
+                ? 7000
+                : tower.level === 3
+                  ? 6000
+                  : tower.upgrade === "A"
+                    ? 5000
+                    : 6000;
 
           const baseAmount =
             tower.level === 1
               ? 8
               : tower.level === 2
-              ? 15
-              : tower.level === 3
-              ? 25
-              : tower.upgrade === "A"
-              ? 40
-              : 20;
+                ? 15
+                : tower.level === 3
+                  ? 25
+                  : tower.upgrade === "A"
+                    ? 40
+                    : 20;
 
           if (now - tower.lastAttack > incomeInterval) {
             // Base income
@@ -1834,9 +1837,9 @@ export default function PrincetonTowerDefense() {
                   prev.map((enemy) =>
                     enemy.id === e.id
                       ? {
-                          ...enemy,
-                          slowEffect: Math.max(enemy.slowEffect, slowAmount),
-                        }
+                        ...enemy,
+                        slowEffect: Math.max(enemy.slowEffect, slowAmount),
+                      }
                       : enemy
                   )
                 );
@@ -1876,12 +1879,12 @@ export default function PrincetonTowerDefense() {
                 tower.level === 1
                   ? 0.3
                   : tower.level === 2
-                  ? 0.45
-                  : tower.level === 3
-                  ? 0.6 // Arcane Library
-                  : tower.upgrade === "A"
-                  ? 0.8 // Earthquake - stronger slow
-                  : 0.7; // Blizzard
+                    ? 0.45
+                    : tower.level === 3
+                      ? 0.6 // Arcane Library
+                      : tower.upgrade === "A"
+                        ? 0.8 // Earthquake - stronger slow
+                        : 0.7; // Blizzard
 
               // Level 3 (Arcane Library) - adds minor magic damage
               if (tower.level === 3 && now - tower.lastAttack > 500) {
@@ -1917,12 +1920,12 @@ export default function PrincetonTowerDefense() {
                   prev.map((enemy) =>
                     dist <= finalRange && enemy.id === e.id
                       ? {
-                          ...enemy,
-                          frozen: true,
-                          stunUntil: now + 2000,
-                          slowed: true,
-                          slowIntensity: 1,
-                        }
+                        ...enemy,
+                        frozen: true,
+                        stunUntil: now + 2000,
+                        slowed: true,
+                        slowIntensity: 1,
+                      }
                       : enemy
                   )
                 );
@@ -1931,11 +1934,11 @@ export default function PrincetonTowerDefense() {
                   prev.map((enemy) =>
                     enemy.id === e.id
                       ? {
-                          ...enemy,
-                          slowEffect: slowAmount,
-                          slowed: true,
-                          slowIntensity: slowAmount,
-                        }
+                        ...enemy,
+                        slowEffect: slowAmount,
+                        slowed: true,
+                        slowIntensity: slowAmount,
+                      }
                       : enemy
                   )
                 );
@@ -1988,10 +1991,10 @@ export default function PrincetonTowerDefense() {
               tower.level === 4 && tower.upgrade === "B"
                 ? "freezeField"
                 : tower.level === 4 && tower.upgrade === "A"
-                ? "earthquakeField"
-                : tower.level === 3
-                ? "arcaneField"
-                : "slowField";
+                  ? "earthquakeField"
+                  : tower.level === 3
+                    ? "arcaneField"
+                    : "slowField";
             // Update or add slow field effect
             setEffects((ef) => {
               const existingField = ef.find(
@@ -2166,12 +2169,12 @@ export default function PrincetonTowerDefense() {
                 tower.level === 1
                   ? "footsoldier"
                   : tower.level === 2
-                  ? "armored"
-                  : tower.level === 3
-                  ? "elite"
-                  : tower.upgrade === "A"
-                  ? "centaur"
-                  : "cavalry";
+                    ? "armored"
+                    : tower.level === 3
+                      ? "elite"
+                      : tower.upgrade === "A"
+                        ? "centaur"
+                        : "cavalry";
               const troopHP = TROOP_DATA[troopType]?.hp || 100;
 
               const newTroop: Troop = {
@@ -2226,13 +2229,13 @@ export default function PrincetonTowerDefense() {
                 prev.map((t) =>
                   t.id === tower.id
                     ? {
-                        ...t,
-                        lastAttack: now,
-                        trainAnimProgress:
-                          newProgress >= 1 ? 0.01 : newProgress,
-                        currentTroopCount: stationTroops.length + 1,
-                        pendingRespawns: remainingRespawns,
-                      }
+                      ...t,
+                      lastAttack: now,
+                      trainAnimProgress:
+                        newProgress >= 1 ? 0.01 : newProgress,
+                      currentTroopCount: stationTroops.length + 1,
+                      pendingRespawns: remainingRespawns,
+                    }
                     : t
                 )
               );
@@ -2242,12 +2245,12 @@ export default function PrincetonTowerDefense() {
                 prev.map((t) =>
                   t.id === tower.id
                     ? {
-                        ...t,
-                        trainAnimProgress:
-                          newProgress >= 1 ? 0.01 : newProgress,
-                        currentTroopCount: stationTroops.length,
-                        pendingRespawns: remainingRespawns,
-                      }
+                      ...t,
+                      trainAnimProgress:
+                        newProgress >= 1 ? 0.01 : newProgress,
+                      currentTroopCount: stationTroops.length,
+                      pendingRespawns: remainingRespawns,
+                    }
                     : t
                 )
               );
@@ -2258,11 +2261,11 @@ export default function PrincetonTowerDefense() {
               prev.map((t) =>
                 t.id === tower.id
                   ? {
-                      ...t,
-                      trainAnimProgress: 0.35,
-                      currentTroopCount: stationTroops.length,
-                      pendingRespawns: remainingRespawns,
-                    }
+                    ...t,
+                    trainAnimProgress: 0.35,
+                    currentTroopCount: stationTroops.length,
+                    pendingRespawns: remainingRespawns,
+                  }
                   : t
               )
             );
@@ -2277,10 +2280,10 @@ export default function PrincetonTowerDefense() {
           const attackCooldown = isGatling
             ? 150 // Gatling is 8x faster
             : isFlamethrower
-            ? 100 // Flamethrower is continuous
-            : isHeavyCannon
-            ? 900 // Heavy cannon slightly slower but more damage
-            : tData.attackSpeed;
+              ? 100 // Flamethrower is continuous
+              : isHeavyCannon
+                ? 900 // Heavy cannon slightly slower but more damage
+                : tData.attackSpeed;
           if (now - tower.lastAttack > attackCooldown) {
             const validEnemies = enemies
               .filter(
@@ -2341,8 +2344,8 @@ export default function PrincetonTowerDefense() {
               const effectType = isFlamethrower
                 ? "flame_burst"
                 : isGatling
-                ? "bullet_stream"
-                : "cannon_shot";
+                  ? "bullet_stream"
+                  : "cannon_shot";
               setEffects((ef) => [
                 ...ef,
                 {
@@ -2396,8 +2399,8 @@ export default function PrincetonTowerDefense() {
               const numChainTargets = isChainLightning
                 ? 5
                 : isTeslaCoil
-                ? 2
-                : 1;
+                  ? 2
+                  : 1;
               const chainTargets =
                 isTeslaCoil || isChainLightning
                   ? validEnemies.slice(0, numChainTargets)
@@ -2517,10 +2520,10 @@ export default function PrincetonTowerDefense() {
               const numTargets = isSymphony
                 ? 5
                 : isEliteArchers
-                ? 3
-                : tower.level >= 2
-                ? 2
-                : 1;
+                  ? 3
+                  : tower.level >= 2
+                    ? 2
+                    : 1;
               const targets = validEnemies.slice(0, numTargets);
               let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
@@ -2758,7 +2761,7 @@ export default function PrincetonTowerDefense() {
           const validEnemies = enemies.filter(
             (e) =>
               distance(troop.pos, getEnemyPosWithPath(e, selectedMap)) <=
-                attackRange && !ENEMY_DATA[e.type].flying
+              attackRange && !ENEMY_DATA[e.type].flying
           );
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
@@ -2848,10 +2851,10 @@ export default function PrincetonTowerDefense() {
         setHero((prev) =>
           prev
             ? {
-                ...prev,
-                abilityCooldown: Math.max(0, prev.abilityCooldown - deltaTime),
-                abilityReady: prev.abilityCooldown - deltaTime <= 0,
-              }
+              ...prev,
+              abilityCooldown: Math.max(0, prev.abilityCooldown - deltaTime),
+              abilityReady: prev.abilityCooldown - deltaTime <= 0,
+            }
             : null
         );
       }
@@ -3593,20 +3596,17 @@ export default function PrincetonTowerDefense() {
         );
         fogGradient.addColorStop(
           0.3,
-          `rgba(${fogBaseRgb.r + 4}, ${fogBaseRgb.g + 4}, ${
-            fogBaseRgb.b + 4
+          `rgba(${fogBaseRgb.r + 4}, ${fogBaseRgb.g + 4}, ${fogBaseRgb.b + 4
           }, ${layerAlpha * 0.75})`
         );
         fogGradient.addColorStop(
           0.6,
-          `rgba(${fogBaseRgb.r + 8}, ${fogBaseRgb.g + 8}, ${
-            fogBaseRgb.b + 8
+          `rgba(${fogBaseRgb.r + 8}, ${fogBaseRgb.g + 8}, ${fogBaseRgb.b + 8
           }, ${layerAlpha * 0.4})`
         );
         fogGradient.addColorStop(
           1,
-          `rgba(${fogBaseRgb.r + 12}, ${fogBaseRgb.g + 12}, ${
-            fogBaseRgb.b + 12
+          `rgba(${fogBaseRgb.r + 12}, ${fogBaseRgb.g + 12}, ${fogBaseRgb.b + 12
           }, 0)`
         );
         ctx.fillStyle = fogGradient;
@@ -3641,20 +3641,17 @@ export default function PrincetonTowerDefense() {
         );
         puffGradient.addColorStop(
           0,
-          `rgba(${fogBaseRgb.r + 20}, ${fogBaseRgb.g + 18}, ${
-            fogBaseRgb.b + 14
+          `rgba(${fogBaseRgb.r + 20}, ${fogBaseRgb.g + 18}, ${fogBaseRgb.b + 14
           }, 0.5)`
         );
         puffGradient.addColorStop(
           0.5,
-          `rgba(${fogBaseRgb.r + 15}, ${fogBaseRgb.g + 14}, ${
-            fogBaseRgb.b + 10
+          `rgba(${fogBaseRgb.r + 15}, ${fogBaseRgb.g + 14}, ${fogBaseRgb.b + 10
           }, 0.25)`
         );
         puffGradient.addColorStop(
           1,
-          `rgba(${fogBaseRgb.r + 10}, ${fogBaseRgb.g + 10}, ${
-            fogBaseRgb.b + 8
+          `rgba(${fogBaseRgb.r + 10}, ${fogBaseRgb.g + 10}, ${fogBaseRgb.b + 8
           }, 0)`
         );
         ctx.fillStyle = puffGradient;
@@ -3739,6 +3736,507 @@ export default function PrincetonTowerDefense() {
       drawRoadEndFog(secFirstScreenPos, secSecondScreenPos, 120);
     }
 
+    // =========================================================================
+    // HAZARDS - Rendered AFTER path, BEFORE decorations for proper layering
+    // =========================================================================
+    if (LEVEL_DATA[selectedMap].hazards) {
+      LEVEL_DATA[selectedMap].hazards.forEach((haz) => {
+        const sPos = toScreen(gridToWorld(haz.pos));
+        const sRad = haz.radius * TILE_SIZE * cameraZoom;
+        const time = Date.now() / 1000;
+        const isoRatio = 0.5;
+
+        ctx.save();
+        ctx.translate(sPos.x, sPos.y);
+
+        // Helper function to draw organic blob shape instead of perfect ellipse
+        const drawOrganicBlob = (radiusX: number, radiusY: number, seed: number, bumpiness: number = 0.15) => {
+          ctx.beginPath();
+          const points = 24;
+          for (let i = 0; i <= points; i++) {
+            const angle = (i / points) * Math.PI * 2;
+            const noise1 = Math.sin(angle * 3 + seed) * bumpiness;
+            const noise2 = Math.sin(angle * 5 + seed * 2.3) * bumpiness * 0.5;
+            const noise3 = Math.sin(angle * 7 + seed * 4.1) * bumpiness * 0.25;
+            const variation = 1 + noise1 + noise2 + noise3;
+            const x = Math.cos(angle) * radiusX * variation;
+            const y = Math.sin(angle) * radiusY * variation;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+        };
+
+        if (haz.type === "poison_fog") {
+          const hazSeed = (haz.pos?.x || 0) * 17.3 + (haz.pos?.y || 0) * 31.7;
+          const soilGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 1.1);
+          soilGrad.addColorStop(0, "rgba(25, 45, 25, 0.85)");
+          soilGrad.addColorStop(0.4, "rgba(35, 55, 30, 0.7)");
+          soilGrad.addColorStop(0.7, "rgba(45, 65, 35, 0.4)");
+          soilGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = soilGrad;
+          drawOrganicBlob(sRad * 1.1, sRad * 1.1 * isoRatio, hazSeed, 0.2);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(80, 200, 80, 0.4)";
+          ctx.lineWidth = 1.5 * cameraZoom;
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2 + Math.sin(hazSeed + i) * 0.3;
+            const len = sRad * (0.5 + Math.sin(time * 0.3 + i) * 0.2);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(Math.cos(angle) * len * 0.5 + Math.sin(i * 2 + hazSeed) * 12 * cameraZoom, Math.sin(angle) * len * 0.5 * isoRatio + Math.cos(i * 2 + hazSeed) * 6 * cameraZoom, Math.cos(angle) * len, Math.sin(angle) * len * isoRatio);
+            ctx.stroke();
+          }
+
+          for (let pool = 0; pool < 4; pool++) {
+            const poolSeed = hazSeed + pool * 23.7;
+            const poolAngle = (pool / 4) * Math.PI * 2 + Math.sin(poolSeed) * 0.5;
+            const poolDist = sRad * (0.4 + Math.sin(poolSeed * 1.3) * 0.15);
+            const poolX = Math.cos(poolAngle) * poolDist;
+            const poolY = Math.sin(poolAngle) * poolDist * isoRatio;
+            const poolSize = sRad * (0.15 + Math.sin(poolSeed * 2.1) * 0.05);
+            ctx.save();
+            ctx.translate(poolX, poolY);
+            const poolGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, poolSize);
+            poolGrad.addColorStop(0, "rgba(100, 220, 100, 0.8)");
+            poolGrad.addColorStop(0.6, "rgba(60, 180, 60, 0.6)");
+            poolGrad.addColorStop(1, "rgba(40, 100, 40, 0.3)");
+            ctx.fillStyle = poolGrad;
+            drawOrganicBlob(poolSize, poolSize * isoRatio, poolSeed, 0.25);
+            ctx.fill();
+            ctx.restore();
+            for (let b = 0; b < 3; b++) {
+              const bubblePhase = (time * 1.5 + pool + b * 0.3) % 1;
+              const bubbleSize = (3 + b) * cameraZoom * (1 - bubblePhase * 0.5);
+              ctx.fillStyle = `rgba(150, 255, 150, ${0.6 * (1 - bubblePhase)})`;
+              ctx.beginPath();
+              ctx.arc(poolX + Math.sin(time * 3 + b + poolSeed) * 5 * cameraZoom, poolY - bubblePhase * 25 * cameraZoom, bubbleSize, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          for (let layer = 0; layer < 5; layer++) {
+            const layerHeight = -layer * 12 * cameraZoom;
+            const layerScale = 1 - layer * 0.1;
+            const layerAlpha = 0.25 - layer * 0.04;
+            const drift = Math.sin(time * 0.5 + layer) * 15 * cameraZoom;
+            ctx.save();
+            ctx.translate(drift, layerHeight);
+            const fogGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * layerScale);
+            fogGrad.addColorStop(0, `rgba(120, 40, 180, ${layerAlpha})`);
+            fogGrad.addColorStop(0.3, `rgba(80, 180, 80, ${layerAlpha * 0.8})`);
+            fogGrad.addColorStop(0.6, `rgba(60, 140, 60, ${layerAlpha * 0.5})`);
+            fogGrad.addColorStop(1, "transparent");
+            ctx.fillStyle = fogGrad;
+            drawOrganicBlob(sRad * layerScale, sRad * layerScale * isoRatio * 0.8, hazSeed + layer * 7, 0.18);
+            ctx.fill();
+            ctx.restore();
+          }
+
+          for (let j = 0; j < 12; j++) {
+            const seed = j * 0.618;
+            const particleLife = (time + seed * 2) % 2.5;
+            const px = Math.sin(seed * 17.3 + hazSeed) * sRad * 0.7 + Math.sin(time + j) * 10 * cameraZoom;
+            const py = -particleLife * 35 * cameraZoom + Math.cos(seed * 23.7 + hazSeed) * sRad * 0.3 * isoRatio;
+            const pSize = (1 - particleLife / 2.5) * (3 + (j % 3)) * cameraZoom;
+            ctx.save();
+            ctx.shadowColor = "rgba(100, 255, 100, 0.8)";
+            ctx.shadowBlur = 8 * cameraZoom;
+            ctx.fillStyle = `rgba(150, 255, 150, ${(1 - particleLife / 2.5) * 0.8})`;
+            ctx.beginPath();
+            ctx.arc(px, py, pSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        if (haz.type === "lava_geyser" || haz.type === "eruption_zone") {
+          const hazSeed = (haz.pos?.x || 0) * 13.7 + (haz.pos?.y || 0) * 29.3;
+          const cycleTime = time % 5;
+          const isErupting = cycleTime < 1.2;
+          const buildUp = cycleTime > 4.0;
+          const eruptionIntensity = isErupting ? Math.sin((cycleTime / 1.2) * Math.PI) : 0;
+          const lavaIsoRatio = 0.55;
+
+          const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.3, 0, 0, sRad * 1.4);
+          scorchGrad.addColorStop(0, "rgba(60, 30, 15, 0.9)");
+          scorchGrad.addColorStop(0.4, "rgba(40, 20, 10, 0.7)");
+          scorchGrad.addColorStop(0.7, "rgba(30, 15, 8, 0.4)");
+          scorchGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = scorchGrad;
+          drawOrganicBlob(sRad * 1.4, sRad * 1.4 * lavaIsoRatio, hazSeed, 0.2);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255, 100, 0, 0.4)";
+          ctx.lineWidth = 2 * cameraZoom;
+          for (let c = 0; c < 12; c++) {
+            const crackAngle = (c / 12) * Math.PI * 2 + Math.sin(hazSeed + c * 2) * 0.2;
+            const crackLen = sRad * (0.4 + Math.sin(c * 3 + hazSeed) * 0.3);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(crackAngle) * sRad * 0.35, Math.sin(crackAngle) * sRad * 0.35 * lavaIsoRatio);
+            ctx.quadraticCurveTo(Math.cos(crackAngle + Math.sin(hazSeed + c) * 0.15) * crackLen * 0.6, Math.sin(crackAngle + Math.sin(hazSeed + c) * 0.15) * crackLen * 0.6 * lavaIsoRatio, Math.cos(crackAngle) * crackLen, Math.sin(crackAngle) * crackLen * lavaIsoRatio);
+            ctx.stroke();
+          }
+
+          const ventWidth = sRad * 0.8;
+          ctx.fillStyle = "#1a1a1a";
+          for (let r = 0; r < 5; r++) {
+            const rockAngle = Math.PI + (r / 5) * Math.PI;
+            const rockOffset = Math.sin(hazSeed + r * 3) * 0.15;
+            const rockX = Math.cos(rockAngle) * ventWidth * (0.5 + rockOffset);
+            const rockY = Math.sin(rockAngle) * ventWidth * (0.3 + rockOffset * 0.5) * lavaIsoRatio;
+            const rockH = (12 + r * 4 + Math.sin(hazSeed + r) * 5) * cameraZoom;
+            const rockW = (6 + Math.sin(hazSeed + r * 2) * 2) * cameraZoom;
+            ctx.beginPath();
+            ctx.moveTo(rockX - rockW, rockY);
+            ctx.lineTo(rockX - rockW * 0.7, rockY - rockH);
+            ctx.lineTo(rockX + rockW * 0.7, rockY - rockH);
+            ctx.lineTo(rockX + rockW, rockY);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          const magmaGrad = ctx.createRadialGradient(0, -5 * cameraZoom, 0, 0, -5 * cameraZoom, ventWidth * 0.5);
+          const magmaIntensity = buildUp ? 1.3 : (isErupting ? 1.5 : 1);
+          magmaGrad.addColorStop(0, `rgba(255, 255, ${buildUp ? 200 : 100}, ${magmaIntensity})`);
+          magmaGrad.addColorStop(0.3, "#ff6600");
+          magmaGrad.addColorStop(0.6, "#cc3300");
+          magmaGrad.addColorStop(1, "#661100");
+          ctx.save();
+          ctx.translate(0, -5 * cameraZoom);
+          if (buildUp || isErupting) { ctx.shadowColor = "#ff4400"; ctx.shadowBlur = (20 + eruptionIntensity * 30) * cameraZoom; }
+          ctx.fillStyle = magmaGrad;
+          drawOrganicBlob(ventWidth * 0.45, ventWidth * 0.25 * lavaIsoRatio, hazSeed + 100, 0.12);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.strokeStyle = "rgba(255, 200, 50, 0.6)";
+          ctx.lineWidth = 2 * cameraZoom;
+          for (let conv = 0; conv < 3; conv++) {
+            const convAngle = time * 0.5 + conv * 2;
+            const convR = ventWidth * 0.2 * (1 + conv * 0.2);
+            ctx.beginPath();
+            ctx.arc(Math.cos(convAngle) * convR * 0.3, -5 * cameraZoom + Math.sin(convAngle) * convR * 0.15 * lavaIsoRatio, convR * 0.3, 0, Math.PI * 1.5);
+            ctx.stroke();
+          }
+
+          for (let r = 0; r < 5; r++) {
+            const rockAngle = (r / 5) * Math.PI;
+            const rockOffset = Math.sin(hazSeed + r * 5) * 0.15;
+            const rockX = Math.cos(rockAngle) * ventWidth * (0.5 + rockOffset);
+            const rockY = Math.sin(rockAngle) * ventWidth * (0.3 + rockOffset * 0.5) * lavaIsoRatio;
+            const rockH = (10 + (r % 2) * 6 + Math.sin(hazSeed + r * 3) * 4) * cameraZoom;
+            const rockW = (5 + Math.sin(hazSeed + r * 4) * 2) * cameraZoom;
+            ctx.fillStyle = "#222";
+            ctx.beginPath();
+            ctx.moveTo(rockX - rockW, rockY);
+            ctx.lineTo(rockX - rockW * 0.6, rockY - rockH);
+            ctx.lineTo(rockX + rockW * 0.6, rockY - rockH);
+            ctx.lineTo(rockX + rockW, rockY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = `rgba(255, 100, 0, ${0.3 + eruptionIntensity * 0.4})`;
+            ctx.lineWidth = 2 * cameraZoom;
+            ctx.beginPath();
+            ctx.moveTo(rockX - rockW, rockY);
+            ctx.lineTo(rockX - rockW * 0.6, rockY - rockH);
+            ctx.stroke();
+          }
+
+          if (isErupting) {
+            const columnHeight = eruptionIntensity * 120 * cameraZoom;
+            const columnGrad = ctx.createLinearGradient(0, 0, 0, -columnHeight);
+            columnGrad.addColorStop(0, "#ffcc00");
+            columnGrad.addColorStop(0.2, "#ff8800");
+            columnGrad.addColorStop(0.5, "#ff4400");
+            columnGrad.addColorStop(0.8, "rgba(255, 68, 0, 0.5)");
+            columnGrad.addColorStop(1, "transparent");
+            ctx.save();
+            ctx.shadowColor = "#ff4400";
+            ctx.shadowBlur = 30 * cameraZoom;
+            ctx.fillStyle = columnGrad;
+            ctx.beginPath();
+            ctx.moveTo(-15 * cameraZoom * eruptionIntensity, -10 * cameraZoom);
+            ctx.quadraticCurveTo(-5 * cameraZoom + Math.sin(time * 20) * 8 * cameraZoom, -columnHeight * 0.5, 0, -columnHeight);
+            ctx.quadraticCurveTo(5 * cameraZoom + Math.sin(time * 20 + 1) * 8 * cameraZoom, -columnHeight * 0.5, 15 * cameraZoom * eruptionIntensity, -10 * cameraZoom);
+            ctx.fill();
+            ctx.restore();
+            for (let bomb = 0; bomb < 8; bomb++) {
+              const bombPhase = (cycleTime + bomb * 0.1) % 1.2;
+              const bombAngle = (bomb / 8) * Math.PI * 2 + time;
+              const bombDist = bombPhase * sRad * 1.5;
+              const bombHeight = Math.sin(bombPhase * Math.PI) * 80 * cameraZoom;
+              const bombX = Math.cos(bombAngle) * bombDist;
+              const bombY = Math.sin(bombAngle) * bombDist * lavaIsoRatio - bombHeight;
+              const bombSize = (6 - bombPhase * 3) * cameraZoom;
+              if (bombPhase < 1) {
+                ctx.save();
+                ctx.shadowColor = "#ff6600";
+                ctx.shadowBlur = 10 * cameraZoom;
+                const bombGrad = ctx.createRadialGradient(bombX, bombY, 0, bombX, bombY, bombSize);
+                bombGrad.addColorStop(0, "#ffcc00");
+                bombGrad.addColorStop(0.5, "#ff6600");
+                bombGrad.addColorStop(1, "#cc3300");
+                ctx.fillStyle = bombGrad;
+                ctx.beginPath();
+                ctx.arc(bombX, bombY, bombSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+              }
+            }
+          }
+
+          for (let ember = 0; ember < 6; ember++) {
+            const emberPhase = (time * 0.7 + ember * 0.4) % 2;
+            const emberX = Math.sin(ember * 2.3 + time * 0.5) * sRad * 0.4;
+            const emberY = -emberPhase * 40 * cameraZoom;
+            const emberSize = (2 + Math.sin(ember)) * cameraZoom * (1 - emberPhase / 2);
+            ctx.fillStyle = `rgba(255, ${150 + ember * 10}, 0, ${0.8 * (1 - emberPhase / 2)})`;
+            ctx.beginPath();
+            ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (haz.type === "ice_sheet" || haz.type === "slippery_ice") {
+          const hazSeed = (haz.pos?.x || 0) * 19.3 + (haz.pos?.y || 0) * 37.1;
+          const frostGrad = ctx.createRadialGradient(0, 0, sRad * 0.7, 0, 0, sRad * 1.2);
+          frostGrad.addColorStop(0, "transparent");
+          frostGrad.addColorStop(0.5, "rgba(240, 248, 255, 0.4)");
+          frostGrad.addColorStop(1, "rgba(255, 255, 255, 0.2)");
+          ctx.fillStyle = frostGrad;
+          drawOrganicBlob(sRad * 1.2, sRad * 1.2 * isoRatio, hazSeed, 0.2);
+          ctx.fill();
+
+          ctx.fillStyle = "rgba(250, 250, 255, 0.7)";
+          for (let mound = 0; mound < 10; mound++) {
+            const moundAngle = (mound / 10) * Math.PI * 2 + Math.sin(hazSeed + mound) * 0.3;
+            const moundDist = sRad * (0.85 + Math.sin(hazSeed + mound * 2) * 0.15);
+            const moundX = Math.cos(moundAngle) * moundDist;
+            const moundY = Math.sin(moundAngle) * moundDist * isoRatio;
+            const moundSize = (6 + Math.sin(hazSeed + mound * 3) * 4) * cameraZoom;
+            ctx.beginPath();
+            ctx.ellipse(moundX, moundY, moundSize, moundSize * 0.4, moundAngle + Math.sin(hazSeed + mound) * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          const iceDeepGrad = ctx.createRadialGradient(0, 5 * cameraZoom, 0, 0, 5 * cameraZoom, sRad);
+          iceDeepGrad.addColorStop(0, "rgba(100, 150, 180, 0.9)");
+          iceDeepGrad.addColorStop(0.5, "rgba(80, 130, 170, 0.8)");
+          iceDeepGrad.addColorStop(1, "rgba(60, 110, 150, 0.6)");
+          ctx.fillStyle = iceDeepGrad;
+          ctx.save();
+          ctx.translate(0, 5 * cameraZoom);
+          drawOrganicBlob(sRad * 0.95, sRad * 0.95 * isoRatio, hazSeed + 50, 0.15);
+          ctx.fill();
+          ctx.restore();
+
+          const iceSurfGrad = ctx.createRadialGradient(-sRad * 0.3, -sRad * 0.15 * isoRatio, 0, 0, 0, sRad);
+          iceSurfGrad.addColorStop(0, "rgba(220, 240, 255, 0.9)");
+          iceSurfGrad.addColorStop(0.3, "rgba(180, 210, 240, 0.7)");
+          iceSurfGrad.addColorStop(0.7, "rgba(140, 180, 220, 0.5)");
+          iceSurfGrad.addColorStop(1, "rgba(100, 150, 200, 0.3)");
+          ctx.fillStyle = iceSurfGrad;
+          drawOrganicBlob(sRad * 0.9, sRad * 0.9 * isoRatio, hazSeed + 100, 0.15);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+          ctx.lineWidth = 1 * cameraZoom;
+          for (let crack = 0; crack < 6; crack++) {
+            const crackAngle = (crack / 6) * Math.PI * 2 + Math.sin(hazSeed + crack) * 0.4;
+            const crackLen = sRad * (0.4 + Math.sin(crack * 2 + hazSeed) * 0.3);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            for (let seg = 1; seg <= 4; seg++) {
+              const progress = seg / 4;
+              const baseX = Math.cos(crackAngle) * crackLen * progress;
+              const baseY = Math.sin(crackAngle) * crackLen * progress * isoRatio;
+              const jitter = (Math.sin(crack * 5 + seg * 3 + hazSeed) * 8) * cameraZoom;
+              ctx.lineTo(baseX + Math.cos(crackAngle + Math.PI / 2) * jitter, baseY + Math.sin(crackAngle + Math.PI / 2) * jitter * isoRatio);
+            }
+            ctx.stroke();
+          }
+
+          const crystalPositions = [{ angle: 0.5, dist: 0.4, h: 35, w: 8 }, { angle: 2.3, dist: 0.35, h: 28, w: 7 }, { angle: 4.1, dist: 0.45, h: 22, w: 6 }, { angle: 1.2, dist: 0.25, h: 40, w: 10 }];
+          for (const crystal of crystalPositions) {
+            const cx = Math.cos(crystal.angle + hazSeed * 0.1) * sRad * crystal.dist;
+            const cy = Math.sin(crystal.angle + hazSeed * 0.1) * sRad * crystal.dist * isoRatio;
+            const ch = crystal.h * cameraZoom;
+            const cw = crystal.w * cameraZoom;
+            ctx.fillStyle = "rgba(150, 200, 240, 0.8)";
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - ch);
+            ctx.lineTo(cx - cw, cy - ch * 0.3);
+            ctx.lineTo(cx - cw * 0.5, cy);
+            ctx.lineTo(cx + cw * 0.5, cy);
+            ctx.lineTo(cx + cw, cy - ch * 0.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = "rgba(220, 240, 255, 0.95)";
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - ch);
+            ctx.lineTo(cx + cw, cy - ch * 0.3);
+            ctx.lineTo(cx + cw * 0.5, cy);
+            ctx.lineTo(cx, cy - ch * 0.15);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          for (let p = 0; p < 10; p++) {
+            const pPhase = (time + p * 0.7) % 3;
+            const pAngle = p * 0.618 * Math.PI * 2 + hazSeed;
+            const pDist = sRad * 0.3 + pPhase * sRad * 0.2;
+            const px = Math.cos(pAngle + time * 0.2) * pDist;
+            const py = Math.sin(pAngle + time * 0.2) * pDist * isoRatio - pPhase * 15 * cameraZoom;
+            const pSize = (2 + Math.sin(p * 2) * 1) * cameraZoom * (1 - pPhase / 3);
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.7 * (1 - pPhase / 3)})`;
+            ctx.beginPath();
+            ctx.arc(px, py, pSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          for (let mist = 0; mist < 4; mist++) {
+            const mistPhase = (time * 0.5 + mist) % 2;
+            const mistX = Math.sin(time * 0.3 + mist * 2 + hazSeed) * sRad * 0.6;
+            const mistY = sRad * 0.2 * isoRatio;
+            const mistSize = sRad * 0.4 * (0.5 + mistPhase * 0.3);
+            const mistGrad = ctx.createRadialGradient(mistX, mistY, 0, mistX, mistY, mistSize);
+            mistGrad.addColorStop(0, `rgba(200, 230, 255, ${0.15 * (1 - mistPhase / 2)})`);
+            mistGrad.addColorStop(1, "transparent");
+            ctx.fillStyle = mistGrad;
+            ctx.beginPath();
+            ctx.ellipse(mistX, mistY, mistSize, mistSize * 0.3, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (haz.type === "quicksand") {
+          const hazSeed = (haz.pos?.x || 0) * 23.1 + (haz.pos?.y || 0) * 41.9;
+          const disturbedGrad = ctx.createRadialGradient(0, 0, sRad * 0.5, 0, 0, sRad * 1.3);
+          disturbedGrad.addColorStop(0, "transparent");
+          disturbedGrad.addColorStop(0.5, "rgba(139, 119, 101, 0.5)");
+          disturbedGrad.addColorStop(0.8, "rgba(160, 140, 120, 0.3)");
+          disturbedGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = disturbedGrad;
+          drawOrganicBlob(sRad * 1.3, sRad * 1.3 * isoRatio, hazSeed, 0.22);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(100, 80, 60, 0.5)";
+          ctx.lineWidth = 1.5 * cameraZoom;
+          for (let crack = 0; crack < 12; crack++) {
+            const crackAngle = (crack / 12) * Math.PI * 2 + Math.sin(hazSeed + crack) * 0.25;
+            const crackStart = sRad * (0.8 + Math.sin(hazSeed + crack * 2) * 0.1);
+            const crackEnd = sRad * (1.1 + Math.sin(hazSeed + crack * 3) * 0.1);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(crackAngle) * crackStart, Math.sin(crackAngle) * crackStart * isoRatio);
+            ctx.lineTo(Math.cos(crackAngle + 0.1) * crackEnd, Math.sin(crackAngle + 0.1) * crackEnd * isoRatio);
+            ctx.stroke();
+          }
+
+          const deepGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.4);
+          deepGrad.addColorStop(0, "rgba(50, 35, 25, 0.95)");
+          deepGrad.addColorStop(0.7, "rgba(70, 50, 35, 0.9)");
+          deepGrad.addColorStop(1, "rgba(90, 65, 45, 0.8)");
+          ctx.fillStyle = deepGrad;
+          drawOrganicBlob(sRad * 0.4, sRad * 0.4 * isoRatio, hazSeed + 50, 0.18);
+          ctx.fill();
+
+          const midGrad = ctx.createRadialGradient(0, 0, sRad * 0.3, 0, 0, sRad * 0.7);
+          midGrad.addColorStop(0, "rgba(100, 75, 55, 0.85)");
+          midGrad.addColorStop(1, "rgba(140, 110, 80, 0.7)");
+          ctx.fillStyle = midGrad;
+          drawOrganicBlob(sRad * 0.7, sRad * 0.7 * isoRatio, hazSeed + 100, 0.16);
+          ctx.fill();
+
+          const surfGrad = ctx.createRadialGradient(0, 0, sRad * 0.5, 0, 0, sRad);
+          surfGrad.addColorStop(0, "rgba(180, 150, 120, 0.6)");
+          surfGrad.addColorStop(0.5, "rgba(200, 170, 130, 0.75)");
+          surfGrad.addColorStop(1, "rgba(180, 150, 110, 0.65)");
+          ctx.fillStyle = surfGrad;
+          drawOrganicBlob(sRad, sRad * isoRatio, hazSeed + 150, 0.18);
+          ctx.fill();
+
+          const spiralSpeed = time * 0.8;
+          for (let arm = 0; arm < 4; arm++) {
+            ctx.strokeStyle = `rgba(90, 70, 50, ${0.3 + arm * 0.1})`;
+            ctx.lineWidth = (3 - arm * 0.5) * cameraZoom;
+            ctx.beginPath();
+            for (let t = 0; t < 3; t += 0.05) {
+              const spiralR = sRad * 0.1 + t * sRad * 0.25;
+              const spiralAngle = t * 3 + spiralSpeed + arm * (Math.PI / 2);
+              const sx = Math.cos(spiralAngle) * spiralR;
+              const sy = Math.sin(spiralAngle) * spiralR * isoRatio;
+              if (t === 0) ctx.moveTo(sx, sy);
+              else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+          }
+
+          for (let ripple = 0; ripple < 4; ripple++) {
+            const ripplePhase = (time * 0.5 + ripple * 0.25) % 1;
+            const rippleR = sRad * (1 - ripplePhase * 0.6);
+            ctx.strokeStyle = `rgba(160, 130, 100, ${0.4 * (1 - ripplePhase)})`;
+            ctx.lineWidth = 2 * cameraZoom * (1 - ripplePhase * 0.5);
+            drawOrganicBlob(rippleR, rippleR * isoRatio, hazSeed + ripple * 20, 0.1);
+            ctx.stroke();
+          }
+
+          const debrisItems = [{ type: 'bone', angle: 0.5 + hazSeed * 0.01, dist: 0.6 }, { type: 'rock', angle: 3.8 + hazSeed * 0.01, dist: 0.5 }, { type: 'skull', angle: 5.2 + hazSeed * 0.01, dist: 0.4 }];
+          for (const debris of debrisItems) {
+            const sinkProgress = (time * 0.15 + debris.angle) % 1;
+            const debrisDist = debris.dist * sRad * (1 - sinkProgress * 0.5);
+            const debrisX = Math.cos(debris.angle + sinkProgress * 0.5) * debrisDist;
+            const debrisY = Math.sin(debris.angle + sinkProgress * 0.5) * debrisDist * isoRatio;
+            const debrisSink = sinkProgress * 8 * cameraZoom;
+            ctx.save();
+            ctx.translate(debrisX, debrisY + debrisSink);
+            ctx.rotate(sinkProgress * 0.5);
+            ctx.globalAlpha = 1 - sinkProgress * 0.7;
+            if (debris.type === 'bone') { ctx.fillStyle = "#e8dcc8"; ctx.beginPath(); ctx.ellipse(0, 0, 12 * cameraZoom, 3 * cameraZoom, 0, 0, Math.PI * 2); ctx.fill(); }
+            else if (debris.type === 'rock') { ctx.fillStyle = "#7a7a7a"; ctx.beginPath(); ctx.moveTo(-8 * cameraZoom, 5 * cameraZoom); ctx.lineTo(-5 * cameraZoom, -6 * cameraZoom); ctx.lineTo(7 * cameraZoom, -4 * cameraZoom); ctx.lineTo(9 * cameraZoom, 4 * cameraZoom); ctx.closePath(); ctx.fill(); }
+            else if (debris.type === 'skull') { ctx.fillStyle = "#d4c8b8"; ctx.beginPath(); ctx.arc(0, -3 * cameraZoom, 8 * cameraZoom, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#3d3d3d"; ctx.beginPath(); ctx.arc(-3 * cameraZoom, -4 * cameraZoom, 2 * cameraZoom, 0, Math.PI * 2); ctx.arc(3 * cameraZoom, -4 * cameraZoom, 2 * cameraZoom, 0, Math.PI * 2); ctx.fill(); }
+            ctx.restore();
+          }
+
+          for (let bubble = 0; bubble < 8; bubble++) {
+            const bubblePhase = (time * 1.2 + bubble * 0.4) % 1;
+            const bubbleAngle = bubble * 0.785 + Math.sin(time + bubble + hazSeed) * 0.3;
+            const bubbleDist = sRad * 0.3 + Math.sin(bubble * 2 + hazSeed) * sRad * 0.2;
+            const bubbleX = Math.cos(bubbleAngle) * bubbleDist;
+            const bubbleY = Math.sin(bubbleAngle) * bubbleDist * isoRatio;
+            if (bubblePhase < 0.5) {
+              const bubbleSize = (4 + bubble % 3) * cameraZoom * Math.sin(bubblePhase * Math.PI);
+              ctx.fillStyle = `rgba(200, 170, 130, ${0.6 * (1 - bubblePhase * 2)})`;
+              ctx.beginPath();
+              ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          ctx.save();
+          const signAngle = hazSeed * 0.1;
+          ctx.translate(Math.cos(signAngle) * sRad * 0.9, Math.sin(signAngle) * sRad * 0.4 * isoRatio - sRad * 0.3 * isoRatio);
+          ctx.fillStyle = "#5d4e37";
+          ctx.fillRect(-3 * cameraZoom, -25 * cameraZoom, 6 * cameraZoom, 30 * cameraZoom);
+          ctx.fillStyle = "#c4a35a";
+          ctx.beginPath();
+          ctx.moveTo(0, -35 * cameraZoom);
+          ctx.lineTo(-12 * cameraZoom, -20 * cameraZoom);
+          ctx.lineTo(12 * cameraZoom, -20 * cameraZoom);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#8b0000";
+          ctx.font = `bold ${12 * cameraZoom}px Arial`;
+          ctx.textAlign = "center";
+          ctx.fillText("!", 0, -23 * cameraZoom);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      });
+    }
+
     // Generate theme-specific decorations
     seedState = mapSeed + 400;
     type DecorationType =
@@ -3746,6 +4244,8 @@ export default function PrincetonTowerDefense() {
       | "rock"
       | "bush"
       | "crater"
+      | "battle_crater"
+      | "fire_pit"
       | "debris"
       | "cart"
       | "hut"
@@ -3758,6 +4258,11 @@ export default function PrincetonTowerDefense() {
       | "gravestone"
       | "tent"
       | "grass"
+      | "flowers"
+      | "signpost"
+      | "fountain"
+      | "bench"
+      | "lamppost"
       | "palm"
       | "cactus"
       | "dune"
@@ -3780,7 +4285,17 @@ export default function PrincetonTowerDefense() {
       | "torch"
       | "statue"
       | "nassau_hall"
-      | "deep_water";
+      | "deep_water"
+      | "giant_sphinx"
+      | "sphinx"
+      | "oasis_pool"
+      | "ice_fortress"
+      | "ice_throne"
+      | "obsidian_castle"
+      | "dark_throne"
+      | "witch_cottage"
+      | "cauldron"
+      | "tentacle";
 
     interface Decoration {
       type: DecorationType;
@@ -3795,139 +4310,259 @@ export default function PrincetonTowerDefense() {
     // Get current theme
     const currentTheme = mapTheme;
 
-    // Theme-specific decoration types
-    const getThemeDecorations = (theme: string): DecorationType[] => {
+    // Categorize decorations by type for clustering
+    const getDecorationCategories = (theme: string) => {
       switch (theme) {
         case "desert":
-          return [
-            "palm",
-            "cactus",
-            "dune",
-            "rock",
-            "skeleton",
-            "bones",
-            "ruins",
-            "torch",
-          ];
+          return {
+            trees: ["palm", "cactus"],
+            structures: ["ruins", "torch", "obelisk"],
+            terrain: ["rock", "dune", "sand_pile"],
+            scattered: ["skeleton", "bones", "skull", "pottery"],
+          };
         case "winter":
-          return [
-            "pine",
-            "snowman",
-            "ice_crystal",
-            "snow_pile",
-            "rock",
-            "fence",
-            "ruins",
-          ];
+          return {
+            trees: ["pine_tree", "pine"],
+            structures: ["ruins", "fence", "broken_wall"],
+            terrain: ["rock", "snow_pile", "ice_crystal", "icicles"],
+            scattered: ["snowman", "frozen_soldier"],
+          };
         case "volcanic":
-          return [
-            "lava_pool",
-            "obsidian_spike",
-            "charred_tree",
-            "ember",
-            "rock",
-            "skeleton",
-            "bones",
-          ];
+          return {
+            trees: ["charred_tree"],
+            structures: ["obsidian_spike", "fire_pit", "torch"],
+            terrain: ["rock", "lava_pool", "ember_rock"],
+            scattered: ["skeleton", "bones", "ember", "skull"],
+          };
         case "swamp":
-          return [
-            "swamp_tree",
-            "mushroom",
-            "lily_pad",
-            "fog_wisp",
-            "rock",
-            "gravestone",
-            "ruins",
-            "bones",
-          ];
+          return {
+            trees: ["swamp_tree", "mushroom", "mushroom_cluster"],
+            structures: ["ruins", "gravestone", "tombstone", "broken_bridge"],
+            terrain: ["rock", "lily_pad", "lily_pads", "fog_patch"],
+            scattered: ["bones", "frog", "tentacle"],
+          };
         default: // grassland
-          return [
-            "tree",
-            "bush",
-            "rock",
-            "grass",
-            "fence",
-            "hut",
-            "barrel",
-            "tent",
-          ];
+          return {
+            trees: ["tree", "bush"],
+            structures: ["hut", "fence", "tent", "barrel", "bench", "cart"],
+            terrain: ["rock", "grass", "flowers"],
+            scattered: ["lamppost", "signpost"],
+          };
       }
     };
 
-    const themeDecorTypes = getThemeDecorations(currentTheme);
+    const categories = getDecorationCategories(currentTheme);
 
-    // Environment decorations (avoid path)
-    for (let i = 0; i < 55; i++) {
-      const gridX = seededRandom() * (GRID_WIDTH - 2) + 1;
-      const gridY = seededRandom() * (GRID_HEIGHT - 2) + 1;
-      const worldPos = gridToWorld({ x: gridX, y: gridY });
-      let onPath = false;
+    // Helper to check if position is on path (+2 grid spaces buffer = ~128 world units)
+    const pathBuffer = TILE_SIZE * 2; // 2 grid spaces from path
+    const isOnPath = (worldPos: Position): boolean => {
       for (let j = 0; j < path.length - 1; j++) {
         const p1 = gridToWorldPath(path[j]);
         const p2 = gridToWorldPath(path[j + 1]);
-        if (
-          distanceToLineSegment(worldPos, p1, p2) <
-          TOWER_PLACEMENT_BUFFER + 15
-        ) {
-          onPath = true;
-          break;
+        if (distanceToLineSegment(worldPos, p1, p2) < pathBuffer) {
+          return true;
         }
       }
-      // Also check secondary path
-      if (
-        !onPath &&
-        levelData?.secondaryPath &&
-        MAP_PATHS[levelData.secondaryPath]
-      ) {
+      if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
         const secPath = MAP_PATHS[levelData.secondaryPath];
         for (let j = 0; j < secPath.length - 1; j++) {
           const p1 = gridToWorldPath(secPath[j]);
           const p2 = gridToWorldPath(secPath[j + 1]);
-          if (
-            distanceToLineSegment(worldPos, p1, p2) <
-            TOWER_PLACEMENT_BUFFER + 15
-          ) {
-            onPath = true;
-            break;
+          if (distanceToLineSegment(worldPos, p1, p2) < pathBuffer) {
+            return true;
           }
         }
       }
-      if (onPath) continue;
-      const type =
-        themeDecorTypes[Math.floor(seededRandom() * themeDecorTypes.length)];
+      return false;
+    };
+
+    // Create deterministic zones for different decoration types
+    // Divide the expanded grid into zones (+10 in every direction isometrically)
+    const zoneSize = 6; // Grid units per zone
+    const minX = -9, maxX = GRID_WIDTH + 9;
+    const minY = -9, maxY = GRID_HEIGHT + 9;
+    const zonesX = Math.ceil((maxX - minX) / zoneSize);
+    const zonesY = Math.ceil((maxY - minY) / zoneSize);
+
+    // Generate zone assignments deterministically based on seed
+    const zoneAssignments: (keyof typeof categories)[][] = [];
+    for (let zx = 0; zx < zonesX; zx++) {
+      zoneAssignments[zx] = [];
+      for (let zy = 0; zy < zonesY; zy++) {
+        // Use a deterministic hash based on zone position and seed
+        const zoneHash = (mapSeed * 31 + zx * 17 + zy * 13) % 100;
+        // Weight towards trees (40%), terrain (30%), structures (20%), scattered (10%)
+        let cat: keyof typeof categories;
+        if (zoneHash < 40) cat = "trees";
+        else if (zoneHash < 70) cat = "terrain";
+        else if (zoneHash < 90) cat = "structures";
+        else cat = "scattered";
+        zoneAssignments[zx][zy] = cat;
+      }
+    }
+
+    // Environment decorations - clustered by zone with variation (expanded +10 in every direction)
+    for (let i = 0; i < 320; i++) {
+      // Pick a zone first, then place within that zone with some jitter
+      const zoneX = Math.floor(seededRandom() * zonesX);
+      const zoneY = Math.floor(seededRandom() * zonesY);
+      const category = zoneAssignments[zoneX][zoneY];
+      const categoryDecors = categories[category];
+
+      if (!categoryDecors || categoryDecors.length === 0) continue;
+
+      // Position within zone with clustering (bias towards zone center)
+      const zoneCenterX = minX + (zoneX + 0.5) * zoneSize;
+      const zoneCenterY = minY + (zoneY + 0.5) * zoneSize;
+      // Gaussian-like distribution towards center
+      const offsetX = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
+      const offsetY = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
+      const gridX = zoneCenterX + offsetX;
+      const gridY = zoneCenterY + offsetY;
+
+      const worldPos = gridToWorld({ x: gridX, y: gridY });
+      if (isOnPath(worldPos)) continue;
+
+      // Pick decoration from category (slight bias towards first items for consistency)
+      const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
+      const type = categoryDecors[typeIndex] as DecorationType;
+
+      // Scale varies by category with natural multi-factor variation
+      let baseScale = 0.7;
+      let scaleVar = 0.4;
+      if (category === "trees") {
+        baseScale = 0.75;
+        scaleVar = 0.55;
+      } else if (category === "structures") {
+        baseScale = 0.85;
+        scaleVar = 0.35;
+      } else if (category === "scattered") {
+        baseScale = 0.45;
+        scaleVar = 0.45;
+      } else { // terrain
+        baseScale = 0.6;
+        scaleVar = 0.5;
+      }
+
+      // Multi-factor scale variation for more natural look
+      const scaleFactor1 = seededRandom();
+      const scaleFactor2 = seededRandom();
+      const combinedScale = (scaleFactor1 + scaleFactor2) / 2;
+      const finalScale = baseScale + combinedScale * scaleVar * (0.8 + seededRandom() * 0.4);
+
       decorations.push({
         type,
         x: worldPos.x,
         y: worldPos.y,
-        scale: 0.7 + seededRandom() * 0.5,
+        scale: finalScale,
         rotation: seededRandom() * Math.PI * 2,
         variant: Math.floor(seededRandom() * 4),
       });
     }
 
-    // Battle damage (theme-appropriate)
+    // Add extra tree clusters at edges (forests feel)
+    for (let cluster = 0; cluster < 12; cluster++) {
+      // Pick cluster center at map edges
+      const edgeSide = Math.floor(seededRandom() * 4);
+      let clusterX: number, clusterY: number;
+      if (edgeSide === 0) { // Left edge
+        clusterX = minX + seededRandom() * 4;
+        clusterY = minY + seededRandom() * (maxY - minY);
+      } else if (edgeSide === 1) { // Right edge
+        clusterX = maxX - seededRandom() * 4;
+        clusterY = minY + seededRandom() * (maxY - minY);
+      } else if (edgeSide === 2) { // Top edge
+        clusterX = minX + seededRandom() * (maxX - minX);
+        clusterY = minY + seededRandom() * 4;
+      } else { // Bottom edge
+        clusterX = minX + seededRandom() * (maxX - minX);
+        clusterY = maxY - seededRandom() * 4;
+      }
+
+      // Add 4-8 trees in this cluster
+      const treesInCluster = 4 + Math.floor(seededRandom() * 5);
+      const treeTypes = categories.trees;
+      for (let t = 0; t < treesInCluster; t++) {
+        const treeX = clusterX + (seededRandom() - 0.5) * 3;
+        const treeY = clusterY + (seededRandom() - 0.5) * 3;
+        const worldPos = gridToWorld({ x: treeX, y: treeY });
+        if (isOnPath(worldPos)) continue;
+
+        // Natural tree scale variation
+        const treeScaleBase = 0.65 + seededRandom() * 0.25;
+        const treeScaleVar = (seededRandom() + seededRandom()) / 2 * 0.5;
+
+        decorations.push({
+          type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+          x: worldPos.x,
+          y: worldPos.y,
+          scale: treeScaleBase + treeScaleVar,
+          rotation: seededRandom() * Math.PI * 2,
+          variant: Math.floor(seededRandom() * 4),
+        });
+      }
+    }
+
+    // Add structure clusters (small villages/camps)
+    for (let village = 0; village < 4; village++) {
+      const villageX = minX + 4 + seededRandom() * (maxX - minX - 8);
+      const villageY = minY + 4 + seededRandom() * (maxY - minY - 8);
+
+      // Check if village center is on path
+      const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
+      if (isOnPath(villageCenterWorld)) continue;
+
+      const structureTypes = categories.structures;
+      const structuresInVillage = 3 + Math.floor(seededRandom() * 4);
+      for (let s = 0; s < structuresInVillage; s++) {
+        const structX = villageX + (seededRandom() - 0.5) * 4;
+        const structY = villageY + (seededRandom() - 0.5) * 4;
+        const worldPos = gridToWorld({ x: structX, y: structY });
+        if (isOnPath(worldPos)) continue;
+
+        // Structure scale variation
+        const structScaleBase = 0.75 + seededRandom() * 0.2;
+        const structScaleVar = (seededRandom() + seededRandom()) / 2 * 0.35;
+
+        decorations.push({
+          type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
+          x: worldPos.x,
+          y: worldPos.y,
+          scale: structScaleBase + structScaleVar,
+          rotation: seededRandom() * Math.PI * 0.25 - Math.PI * 0.125, // Slight rotation only
+          variant: Math.floor(seededRandom() * 5),
+        });
+      }
+    }
+
+    // Battle damage (theme-appropriate) - expanded +10 in every direction
     seedState = mapSeed + 600;
     const battleDecors: DecorationType[] =
       currentTheme === "volcanic"
         ? ["crater", "ember", "bones", "sword"]
         : currentTheme === "winter"
-        ? ["crater", "debris", "sword", "arrow"]
-        : currentTheme === "desert"
-        ? ["crater", "skeleton", "sword", "arrow", "bones"]
-        : currentTheme === "swamp"
-        ? ["crater", "skeleton", "bones", "debris"]
-        : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
-    for (let i = 0; i < 35; i++) {
-      const gridX = seededRandom() * (GRID_WIDTH - 1) + 0.5;
-      const gridY = seededRandom() * (GRID_HEIGHT - 1) + 0.5;
+          ? ["crater", "debris", "sword", "arrow"]
+          : currentTheme === "desert"
+            ? ["crater", "skeleton", "sword", "arrow", "bones"]
+            : currentTheme === "swamp"
+              ? ["crater", "skeleton", "bones", "debris"]
+              : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
+    for (let i = 0; i < 180; i++) {
+      const gridX = seededRandom() * (GRID_WIDTH + 19) - 9.5;
+      const gridY = seededRandom() * (GRID_HEIGHT + 19) - 9.5;
       const worldPos = gridToWorld({ x: gridX, y: gridY });
       const type =
         battleDecors[Math.floor(seededRandom() * battleDecors.length)];
+
+      // Battle debris scale variation
+      const battleScaleBase = 0.4 + seededRandom() * 0.25;
+      const battleScaleVar = (seededRandom() + seededRandom() + seededRandom()) / 3 * 0.5;
+
       decorations.push({
         type,
         x: worldPos.x,
         y: worldPos.y,
-        scale: 0.5 + seededRandom() * 0.5,
+        scale: battleScaleBase + battleScaleVar,
         rotation: seededRandom() * Math.PI * 2,
         variant: Math.floor(seededRandom() * 4),
       });
@@ -4172,69 +4807,105 @@ export default function PrincetonTowerDefense() {
       ctx.save();
       switch (type) {
         // === GRASSLAND DECORATIONS ===
-        case "tree":
-          ctx.fillStyle = "rgba(0,0,0,0.22)";
+        case "tree": {
+          // Enhanced 3D isometric tree with detailed foliage and trunk
+          const treeSway = Math.sin(decorTime * 1.2 + screenPos.x * 0.01) * 2 * s;
+
+          // Ground shadow with gradient
+          const treeShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 5 * s, screenPos.y + 10 * s, 0,
+            screenPos.x + 5 * s, screenPos.y + 10 * s, 28 * s
+          );
+          treeShadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
+          treeShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = treeShadowGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x + 2,
-            screenPos.y + 8 * s,
-            20 * s,
-            10 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x + 5 * s, screenPos.y + 10 * s, 28 * s, 14 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = variant < 2 ? "#5d4037" : "#4a3728";
-          ctx.fillRect(
-            screenPos.x - 4 * s,
-            screenPos.y - 18 * s,
-            8 * s,
-            22 * s
+
+          // Trunk with 3D gradient
+          const trunkGrad = ctx.createLinearGradient(
+            screenPos.x - 6 * s, 0, screenPos.x + 6 * s, 0
           );
+          trunkGrad.addColorStop(0, "#3d2817");
+          trunkGrad.addColorStop(0.3, "#5d4037");
+          trunkGrad.addColorStop(0.7, "#4a3428");
+          trunkGrad.addColorStop(1, "#2d1a0f");
+
+          ctx.fillStyle = trunkGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, screenPos.y + 5 * s);
+          ctx.quadraticCurveTo(screenPos.x - 6 * s, screenPos.y - 10 * s, screenPos.x - 4 * s + treeSway * 0.3, screenPos.y - 22 * s);
+          ctx.lineTo(screenPos.x + 4 * s + treeSway * 0.3, screenPos.y - 22 * s);
+          ctx.quadraticCurveTo(screenPos.x + 6 * s, screenPos.y - 10 * s, screenPos.x + 5 * s, screenPos.y + 5 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Trunk bark texture
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.lineWidth = 1 * s;
+          for (let b = 0; b < 4; b++) {
+            const by = screenPos.y - 5 * s - b * 5 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 3 * s, by);
+            ctx.quadraticCurveTo(screenPos.x, by - 2 * s, screenPos.x + 3 * s, by);
+            ctx.stroke();
+          }
+
+          // Foliage color palettes
           const treeColors = [
-            ["#2e7d32", "#388e3c", "#43a047"],
-            ["#1b5e20", "#2e7d32", "#388e3c"],
-            ["#33691e", "#558b2f", "#689f38"],
-            ["#4a6741", "#5a7751", "#6a8761"],
-          ][variant];
-          ctx.fillStyle = treeColors[0];
+            { base: "#2e7d32", mid: "#388e3c", light: "#4caf50", highlight: "#66bb6a" },
+            { base: "#1b5e20", mid: "#2e7d32", light: "#388e3c", highlight: "#43a047" },
+            { base: "#33691e", mid: "#558b2f", light: "#689f38", highlight: "#7cb342" },
+            { base: "#3d5a3d", mid: "#4a6a4a", light: "#5a7a5a", highlight: "#6a8a6a" },
+          ][variant] || { base: "#2e7d32", mid: "#388e3c", light: "#4caf50", highlight: "#66bb6a" };
+
+          // Bottom foliage layer (darkest, largest)
+          ctx.fillStyle = treeColors.base;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y - 18 * s,
-            24 * s,
-            12 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x + treeSway * 0.5, screenPos.y - 20 * s, 28 * s, 14 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = treeColors[1];
+
+          // Left cluster
+          ctx.fillStyle = treeColors.mid;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y - 24 * s,
-            20 * s,
-            10 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x - 10 * s + treeSway * 0.6, screenPos.y - 26 * s, 18 * s, 12 * s, -0.2, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = treeColors[2];
+
+          // Right cluster
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y - 29 * s,
-            15 * s,
-            7 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x + 12 * s + treeSway * 0.6, screenPos.y - 24 * s, 16 * s, 11 * s, 0.2, 0, Math.PI * 2);
           ctx.fill();
+
+          // Middle layer
+          ctx.fillStyle = treeColors.light;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + treeSway * 0.7, screenPos.y - 30 * s, 22 * s, 11 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Top layer (lightest, smallest)
+          ctx.fillStyle = treeColors.highlight;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + treeSway * 0.8, screenPos.y - 38 * s, 16 * s, 8 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Crown highlight
+          ctx.fillStyle = "rgba(255,255,255,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x - 5 * s + treeSway, screenPos.y - 40 * s, 10 * s, 5 * s, -0.3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Subtle leaf detail dots
+          ctx.fillStyle = "rgba(0,80,0,0.3)";
+          for (let d = 0; d < 8; d++) {
+            const dx = screenPos.x + (Math.sin(d * 2.5 + variant) * 15) * s + treeSway * 0.5;
+            const dy = screenPos.y - 25 * s + (Math.cos(d * 1.8) * 8) * s;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 3 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
+        }
         case "rock":
           ctx.fillStyle = "rgba(0,0,0,0.18)";
           ctx.beginPath();
@@ -4465,63 +5136,201 @@ export default function PrincetonTowerDefense() {
           );
           ctx.fill();
           break;
-        case "grass":
-          ctx.strokeStyle = ["#4a5d23", "#3d4f1c", "#556b2f", "#6b8e23"][
-            variant
-          ];
-          ctx.lineWidth = 1.5 * s;
-          for (let g = 0; g < 5; g++) {
-            const gx = screenPos.x + (g - 2) * 4 * s;
-            const sway = Math.sin(decorTime * 2 + g + dec.x) * 2 * s;
+        case "grass": {
+          // Enhanced 3D isometric grass tuft with wind animation
+          const grassTime = decorTime * 1.8 + dec.x * 0.05;
+          const grassPalettes = [
+            { base: "#3a5a1a", mid: "#4a6a28", tip: "#5a7a38", accent: "#6a8a48" },
+            { base: "#2d4f15", mid: "#3d5f22", tip: "#4d6f32", accent: "#5d7f42" },
+            { base: "#456a2a", mid: "#557a38", tip: "#658a48", accent: "#759a58" },
+            { base: "#5a7e32", mid: "#6a8e42", tip: "#7a9e52", accent: "#8aae62" }
+          ][variant] || { base: "#3a5a1a", mid: "#4a6a28", tip: "#5a7a38", accent: "#6a8a48" };
+
+          // Subtle ground shadow
+          ctx.fillStyle = "rgba(0,30,0,0.12)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 12 * s, 5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Draw multiple grass blades
+          const bladeCount = 8;
+          for (let g = 0; g < bladeCount; g++) {
+            const bladeAngle = (g / bladeCount) * Math.PI - Math.PI / 2;
+            const gx = screenPos.x + Math.cos(bladeAngle + Math.PI / 2) * (3 + g % 3) * s;
+            const bladeHeight = (12 + (g % 3) * 4) * s;
+            const bladePhase = grassTime + g * 0.4;
+            const sway = Math.sin(bladePhase) * (3 + g % 2) * s;
+            const swayCurve = Math.sin(bladePhase * 1.3) * 1.5 * s;
+
+            // Blade thickness varies
+            const bladeWidth = (1.2 + (g % 2) * 0.5) * s;
+
+            // Gradient along blade
+            const bladeGrad = ctx.createLinearGradient(
+              gx, screenPos.y,
+              gx + sway, screenPos.y - bladeHeight
+            );
+            bladeGrad.addColorStop(0, grassPalettes.base);
+            bladeGrad.addColorStop(0.4, grassPalettes.mid);
+            bladeGrad.addColorStop(0.7, grassPalettes.tip);
+            bladeGrad.addColorStop(1, grassPalettes.accent);
+
+            ctx.strokeStyle = bladeGrad;
+            ctx.lineWidth = bladeWidth;
+            ctx.lineCap = "round";
             ctx.beginPath();
             ctx.moveTo(gx, screenPos.y);
-            ctx.quadraticCurveTo(
-              gx + sway,
-              screenPos.y - 8 * s,
-              gx + sway * 1.5,
-              screenPos.y - 14 * s
+            ctx.bezierCurveTo(
+              gx + swayCurve * 0.3, screenPos.y - bladeHeight * 0.35,
+              gx + sway * 0.6, screenPos.y - bladeHeight * 0.65,
+              gx + sway, screenPos.y - bladeHeight
             );
             ctx.stroke();
           }
+
+          // A few tiny seed heads on taller blades
+          if (variant > 1) {
+            ctx.fillStyle = grassPalettes.accent;
+            for (let sh = 0; sh < 2; sh++) {
+              const shX = screenPos.x + (sh - 0.5) * 4 * s + Math.sin(grassTime + sh) * 2.5 * s;
+              const shY = screenPos.y - 14 * s - sh * 2 * s;
+              ctx.beginPath();
+              ctx.ellipse(shX, shY, 1.5 * s, 2.5 * s, 0.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
           break;
+        }
         case "crater":
-          ctx.fillStyle = "rgba(30,15,5,0.35)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            30 * s,
-            15 * s,
-            rotation,
-            0,
-            Math.PI * 2
+        case "battle_crater":
+        case "fire_pit": {
+          // Subtle, environment-blending crater/pit - natural depression in terrain
+          const isBattle = type === "battle_crater";
+          const isFirePit = type === "fire_pit";
+          const safeVariant = (variant ?? 0) % 4;
+
+          // Variant-based size variations
+          const craterVariants = [
+            { outerRx: 24, outerRy: 12, depth: 3, debris: 3 },
+            { outerRx: 16, outerRy: 8, depth: 4, debris: 2 },
+            { outerRx: 32, outerRy: 16, depth: 2, debris: 4 },
+            { outerRx: 28, outerRy: 10, depth: 3.5, debris: 3 },
+          ];
+          const cv = craterVariants[safeVariant];
+
+          const craterX = screenPos.x;
+          const craterY = screenPos.y;
+
+          // Very subtle outer shadow - barely visible depression
+          const outerShadow = ctx.createRadialGradient(
+            craterX, craterY, cv.outerRx * 0.3 * s,
+            craterX, craterY, (cv.outerRx + 4) * s
           );
-          ctx.fill();
-          ctx.fillStyle = "#3d2817";
+          outerShadow.addColorStop(0, "rgba(40,35,25,0.12)");
+          outerShadow.addColorStop(0.7, "rgba(35,30,20,0.06)");
+          outerShadow.addColorStop(1, "rgba(30,25,15,0)");
+          ctx.fillStyle = outerShadow;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            22 * s,
-            11 * s,
-            rotation,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(craterX, craterY, (cv.outerRx + 4) * s, (cv.outerRy + 2) * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = "#2a1a0f";
+
+          // Rim - very subtle earthy tone, blends with ground
+          const rimGrad = ctx.createRadialGradient(
+            craterX, craterY - 1 * s, cv.outerRx * 0.5 * s,
+            craterX, craterY, cv.outerRx * s
+          );
+          rimGrad.addColorStop(0, "rgba(70,60,45,0.25)");
+          rimGrad.addColorStop(0.6, "rgba(60,50,35,0.18)");
+          rimGrad.addColorStop(1, "rgba(50,45,30,0.08)");
+          ctx.fillStyle = rimGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y + 2 * s,
-            16 * s,
-            8 * s,
-            rotation,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(craterX, craterY, cv.outerRx * s, cv.outerRy * s, 0, 0, Math.PI * 2);
           ctx.fill();
+
+          // Inner depression - darker but still subtle
+          const innerGrad = ctx.createRadialGradient(
+            craterX, craterY + cv.depth * 0.3 * s, 0,
+            craterX, craterY + cv.depth * 0.3 * s, (cv.outerRx - 3) * s
+          );
+          innerGrad.addColorStop(0, "rgba(25,20,12,0.35)");
+          innerGrad.addColorStop(0.5, "rgba(35,28,18,0.25)");
+          innerGrad.addColorStop(1, "rgba(45,38,25,0.12)");
+          ctx.fillStyle = innerGrad;
+          ctx.beginPath();
+          ctx.ellipse(craterX, craterY + 1 * s, (cv.outerRx - 2) * s, (cv.outerRy - 1) * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Subtle depth shading on back edge
+          ctx.fillStyle = "rgba(20,15,8,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(craterX, craterY - 1 * s, (cv.outerRx - 4) * s, (cv.outerRy - 2) * s, 0, Math.PI * 1.1, Math.PI * 1.9);
+          ctx.fill();
+
+          // A few subtle dirt clumps around edge
+          ctx.fillStyle = "rgba(65,55,40,0.2)";
+          for (let d = 0; d < cv.debris; d++) {
+            const debrisAngle = (d / cv.debris) * Math.PI * 2 + safeVariant * 0.8;
+            const debrisDist = cv.outerRx * 0.9 + Math.sin(d * 2.1 + safeVariant) * 2;
+            const debrisX = craterX + Math.cos(debrisAngle) * debrisDist * s;
+            const debrisY = craterY + Math.sin(debrisAngle) * debrisDist * 0.5 * s;
+            ctx.beginPath();
+            ctx.ellipse(debrisX, debrisY, 1.5 * s, 0.8 * s, debrisAngle * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Battle crater - subtle scorch marks
+          if (isBattle) {
+            ctx.strokeStyle = "rgba(35,25,15,0.15)";
+            ctx.lineWidth = 1.5 * s;
+            for (let sc = 0; sc < 3; sc++) {
+              const scorchAngle = sc * 2 + safeVariant * 0.5;
+              const scorchStart = cv.outerRx * 0.7;
+              const scorchEnd = cv.outerRx + 3;
+              ctx.beginPath();
+              ctx.moveTo(
+                craterX + Math.cos(scorchAngle) * scorchStart * s,
+                craterY + Math.sin(scorchAngle) * scorchStart * 0.5 * s
+              );
+              ctx.lineTo(
+                craterX + Math.cos(scorchAngle) * scorchEnd * s,
+                craterY + Math.sin(scorchAngle) * scorchEnd * 0.5 * s
+              );
+              ctx.stroke();
+            }
+          }
+
+          // Fire pit - subtle warm glow
+          if (isFirePit) {
+            const firePulse = 0.2 + Math.sin(decorTime * 3) * 0.08;
+            const fireGlow = ctx.createRadialGradient(
+              craterX, craterY + cv.depth * 0.2 * s, 0,
+              craterX, craterY + cv.depth * 0.2 * s, (cv.outerRx - 4) * s
+            );
+            fireGlow.addColorStop(0, `rgba(180,80,20,${firePulse})`);
+            fireGlow.addColorStop(0.5, `rgba(120,40,10,${firePulse * 0.4})`);
+            fireGlow.addColorStop(1, "rgba(60,20,5,0)");
+            ctx.fillStyle = fireGlow;
+            ctx.beginPath();
+            ctx.ellipse(craterX, craterY + cv.depth * 0.2 * s, (cv.outerRx - 4) * s, (cv.outerRy - 2) * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tiny ember particles
+            for (let e = 0; e < 2; e++) {
+              const emberPhase = (decorTime * 1.2 + e * 1.2 + safeVariant) % 2;
+              const emberAlpha = (emberPhase < 1 ? emberPhase : 2 - emberPhase) * 0.5;
+              const emberRise = emberPhase * 5 * s;
+              const emberX = craterX + Math.sin(e * 3 + decorTime) * 4 * s;
+              const emberY = craterY - emberRise;
+
+              ctx.fillStyle = `rgba(255,150,50,${emberAlpha})`;
+              ctx.beginPath();
+              ctx.arc(emberX, emberY, 1 * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
           break;
+        }
         case "debris":
           ctx.fillStyle = "#4a3525";
           for (let d = 0; d < 5; d++) {
@@ -4919,31 +5728,112 @@ export default function PrincetonTowerDefense() {
           ctx.closePath();
           ctx.fill();
           break;
-        case "flowers":
-          const flowerColors = ["#FF5252", "#FFEB3B", "#E040FB", "#40C4FF"];
-          const fCol = flowerColors[variant % flowerColors.length];
-          // Stems
-          ctx.strokeStyle = "#2E7D32";
-          ctx.lineWidth = 2 * s;
-          for (let i = 0; i < 3; i++) {
-            const fx = screenPos.x + (i - 1) * 8 * s;
-            const fy = screenPos.y;
+        case "flowers": {
+          // Enhanced 3D isometric wildflower cluster
+          const flowerTime = decorTime + variant;
+          const flowerPalettes = [
+            { petals: "#ff5252", petalDark: "#d32f2f", center: "#ffeb3b", centerDark: "#f9a825", stem: "#2e7d32", leaf: "#388e3c" },
+            { petals: "#ffeb3b", petalDark: "#f9a825", center: "#ff9800", centerDark: "#e65100", stem: "#2e7d32", leaf: "#388e3c" },
+            { petals: "#e040fb", petalDark: "#9c27b0", center: "#fff176", centerDark: "#fdd835", stem: "#2e7d32", leaf: "#388e3c" },
+            { petals: "#40c4ff", petalDark: "#0288d1", center: "#fff9c4", centerDark: "#fff59d", stem: "#2e7d32", leaf: "#388e3c" }
+          ][variant % 4];
+
+          // Ground shadow
+          ctx.fillStyle = "rgba(0,30,0,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y + 3 * s, 16 * s, 7 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Draw 4 flowers at different heights
+          const flowerPositions = [
+            { x: -8, height: 18, size: 1.1, phase: 0 },
+            { x: 0, height: 22, size: 1.3, phase: 0.8 },
+            { x: 8, height: 16, size: 1, phase: 1.6 },
+            { x: -3, height: 12, size: 0.8, phase: 2.2 }
+          ];
+
+          // Draw leaves first (behind)
+          ctx.fillStyle = flowerPalettes.leaf;
+          for (let lf = 0; lf < 3; lf++) {
+            const lfX = screenPos.x + (lf - 1) * 7 * s;
+            const lfSway = Math.sin(flowerTime * 1.5 + lf * 1.2) * 2 * s;
+
             ctx.beginPath();
-            ctx.moveTo(fx, fy);
-            ctx.quadraticCurveTo(fx + 2 * s, fy - 5 * s, fx, fy - 10 * s);
-            ctx.stroke();
-            // Petals
-            ctx.fillStyle = fCol;
-            ctx.beginPath();
-            ctx.arc(fx, fy - 10 * s, 3 * s, 0, Math.PI * 2);
-            ctx.fill();
-            // Center
-            ctx.fillStyle = "#FFF176";
-            ctx.beginPath();
-            ctx.arc(fx, fy - 10 * s, 1 * s, 0, Math.PI * 2);
+            ctx.ellipse(
+              lfX + lfSway, screenPos.y - 4 * s,
+              2 * s, 5 * s, 0.3 + lf * 0.2, 0, Math.PI * 2
+            );
             ctx.fill();
           }
+
+          for (const fp of flowerPositions) {
+            const fx = screenPos.x + fp.x * s;
+            const sway = Math.sin(flowerTime * 1.5 + fp.phase) * 3 * s;
+            const fTop = screenPos.y - fp.height * s;
+
+            // Stem with curve
+            const stemGrad = ctx.createLinearGradient(fx, screenPos.y, fx + sway, fTop);
+            stemGrad.addColorStop(0, "#1b5e20");
+            stemGrad.addColorStop(1, flowerPalettes.stem);
+            ctx.strokeStyle = stemGrad;
+            ctx.lineWidth = 2 * s * fp.size;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(fx, screenPos.y);
+            ctx.quadraticCurveTo(fx + sway * 0.5, screenPos.y - fp.height * 0.5 * s, fx + sway, fTop);
+            ctx.stroke();
+
+            // Flower head
+            const flowerX = fx + sway;
+            const flowerY = fTop;
+            const petalCount = 5 + (variant % 2);
+            const petalSize = 4 * s * fp.size;
+
+            // Outer petals with slight 3D
+            for (let p = 0; p < petalCount; p++) {
+              const pAngle = (p / petalCount) * Math.PI * 2 + flowerTime * 0.3;
+              const pX = flowerX + Math.cos(pAngle) * petalSize * 0.9;
+              const pY = flowerY + Math.sin(pAngle) * petalSize * 0.45;
+
+              // Petal shadow
+              ctx.fillStyle = flowerPalettes.petalDark;
+              ctx.beginPath();
+              ctx.ellipse(pX + 0.5 * s, pY + 0.5 * s, petalSize * 0.7, petalSize * 0.4, pAngle, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Petal
+              ctx.fillStyle = flowerPalettes.petals;
+              ctx.beginPath();
+              ctx.ellipse(pX, pY, petalSize * 0.7, petalSize * 0.4, pAngle, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Center
+            ctx.fillStyle = flowerPalettes.centerDark;
+            ctx.beginPath();
+            ctx.arc(flowerX, flowerY, petalSize * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = flowerPalettes.center;
+            ctx.beginPath();
+            ctx.arc(flowerX - 0.5 * s * fp.size, flowerY - 0.5 * s * fp.size, petalSize * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pollen dots
+            ctx.fillStyle = "rgba(255,200,50,0.6)";
+            for (let pd = 0; pd < 3; pd++) {
+              const pdAngle = (pd / 3) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(
+                flowerX + Math.cos(pdAngle) * petalSize * 0.15,
+                flowerY + Math.sin(pdAngle) * petalSize * 0.1,
+                0.8 * s * fp.size, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+          }
           break;
+        }
         case "signpost":
           // Isometric wooden post
           const postW = 4 * s;
@@ -5017,58 +5907,170 @@ export default function PrincetonTowerDefense() {
           ctx.stroke();
           ctx.restore();
           break;
-        case "fountain":
-          // Basin
-          ctx.fillStyle = "#90A4AE";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            20 * s,
-            10 * s,
-            0,
-            0,
-            Math.PI * 2
+        case "fountain": {
+          // Enhanced 3D isometric ornate fountain with animated water
+          const fountainTime = decorTime;
+          const sprayPhase = Math.sin(fountainTime * 3);
+
+          // Ground shadow
+          const ftnShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 5 * s, screenPos.y + 8 * s, 0,
+            screenPos.x + 5 * s, screenPos.y + 8 * s, 35 * s
           );
+          ftnShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
+          ftnShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = ftnShadowGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 5 * s, screenPos.y + 8 * s, 35 * s, 18 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.fillStyle = "#CFD8DC";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y - 2 * s,
-            16 * s,
-            8 * s,
-            0,
-            0,
-            Math.PI * 2
+
+          // Outer basin rim (stone)
+          const basinGrad = ctx.createLinearGradient(
+            screenPos.x - 25 * s, screenPos.y - 5 * s,
+            screenPos.x + 25 * s, screenPos.y + 5 * s
           );
+          basinGrad.addColorStop(0, "#78909c");
+          basinGrad.addColorStop(0.5, "#b0bec5");
+          basinGrad.addColorStop(1, "#607d8b");
+
+          ctx.fillStyle = basinGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 28 * s, 14 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Water
-          ctx.fillStyle = "#4FC3F7";
+
+          // Basin top surface
+          ctx.fillStyle = "#cfd8dc";
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y - 3 * s,
-            14 * s,
-            7 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x, screenPos.y - 1 * s, 26 * s, 13 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Spout
-          const spray = Math.sin(decorTime * 4) * 2 * s;
-          ctx.fillStyle = "#E1F5FE";
+
+          // Inner basin (darker rim)
+          ctx.fillStyle = "#90a4ae";
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x,
-            screenPos.y - 10 * s + spray,
-            4 * s,
-            0,
-            Math.PI * 2
+          ctx.ellipse(screenPos.x, screenPos.y - 2 * s, 22 * s, 11 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Water surface with ripples
+          const waterGrad = ctx.createRadialGradient(
+            screenPos.x - 5 * s, screenPos.y - 6 * s, 0,
+            screenPos.x, screenPos.y - 4 * s, 20 * s
           );
+          waterGrad.addColorStop(0, "#81d4fa");
+          waterGrad.addColorStop(0.5, "#4fc3f7");
+          waterGrad.addColorStop(1, "#29b6f6");
+          ctx.fillStyle = waterGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 4 * s, 20 * s, 10 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Animated ripples
+          ctx.strokeStyle = "rgba(255,255,255,0.3)";
+          ctx.lineWidth = 1 * s;
+          for (let rp = 0; rp < 3; rp++) {
+            const ripplePhase = (fountainTime * 0.8 + rp * 0.5) % 1.5;
+            const rippleSize = 5 + ripplePhase * 10;
+            const rippleAlpha = 0.4 - ripplePhase * 0.25;
+            ctx.strokeStyle = `rgba(255,255,255,${rippleAlpha})`;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y - 4 * s, rippleSize * s, rippleSize * 0.5 * s, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Center pedestal
+          const pedGrad = ctx.createLinearGradient(
+            screenPos.x - 6 * s, 0, screenPos.x + 6 * s, 0
+          );
+          pedGrad.addColorStop(0, "#78909c");
+          pedGrad.addColorStop(0.3, "#cfd8dc");
+          pedGrad.addColorStop(0.7, "#b0bec5");
+          pedGrad.addColorStop(1, "#607d8b");
+
+          ctx.fillStyle = pedGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 6 * s, screenPos.y - 4 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 25 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 25 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 4 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Decorative ring on pedestal
+          ctx.fillStyle = "#b0bec5";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 15 * s, 6 * s, 2.5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Top bowl
+          ctx.fillStyle = "#90a4ae";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 25 * s, 10 * s, 5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#4fc3f7";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 26 * s, 8 * s, 4 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Water spout - main jet
+          const sprayHeight = 20 + sprayPhase * 4;
+          const sprayGrad = ctx.createLinearGradient(
+            screenPos.x, screenPos.y - 27 * s,
+            screenPos.x, screenPos.y - 27 * s - sprayHeight * s
+          );
+          sprayGrad.addColorStop(0, "rgba(225,245,254,0.9)");
+          sprayGrad.addColorStop(0.5, "rgba(179,229,252,0.7)");
+          sprayGrad.addColorStop(1, "rgba(129,212,250,0.3)");
+
+          ctx.fillStyle = sprayGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 3 * s, screenPos.y - 27 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x, screenPos.y - 27 * s - sprayHeight * s,
+            screenPos.x + 3 * s, screenPos.y - 27 * s
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          // Water droplets falling
+          for (let wd = 0; wd < 8; wd++) {
+            const dropPhase = (fountainTime * 2 + wd * 0.4) % 1.5;
+            const dropAngle = (wd / 8) * Math.PI * 2 + fountainTime * 0.5;
+            const dropDist = 8 + dropPhase * 12;
+            const dropX = screenPos.x + Math.cos(dropAngle) * dropDist * s;
+            const dropY = screenPos.y - 30 * s + dropPhase * 30 * s + Math.pow(dropPhase, 2) * 15 * s;
+            const dropAlpha = 0.7 - dropPhase * 0.4;
+            const dropSize = 2 - dropPhase * 0.8;
+
+            if (dropSize > 0 && dropY < screenPos.y - 4 * s) {
+              ctx.fillStyle = `rgba(225,245,254,${dropAlpha})`;
+              ctx.beginPath();
+              ctx.ellipse(dropX, dropY, dropSize * s, dropSize * 1.5 * s, 0, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Splash effects at water surface
+          for (let sp = 0; sp < 4; sp++) {
+            const splashPhase = (fountainTime * 2.5 + sp * 0.6) % 1;
+            const splashAngle = (sp / 4) * Math.PI * 2 + 0.3;
+            const splashX = screenPos.x + Math.cos(splashAngle) * 12 * s;
+            const splashY = screenPos.y - 4 * s + Math.sin(splashAngle) * 5 * s;
+            const splashAlpha = (1 - splashPhase) * 0.5;
+
+            if (splashPhase < 0.4) {
+              ctx.fillStyle = `rgba(255,255,255,${splashAlpha})`;
+              ctx.beginPath();
+              ctx.arc(splashX, splashY - splashPhase * 6 * s, (2 - splashPhase * 3) * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Light reflection on water
+          ctx.fillStyle = "rgba(255,255,255,0.25)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x - 8 * s, screenPos.y - 6 * s, 6 * s, 3 * s, -0.3, 0, Math.PI * 2);
           ctx.fill();
           break;
+        }
         case "bench":
           // Isometric view needs thickness for seat and legs
           ctx.fillStyle = "rgba(0,0,0,0.2)";
@@ -5279,143 +6281,320 @@ export default function PrincetonTowerDefense() {
           break;
 
         // === DESERT DECORATIONS ===
-        case "palm":
-          // Shadow
-          ctx.fillStyle = "rgba(0,0,0,0.2)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x + 15 * s,
-            screenPos.y + 5 * s,
-            25 * s,
-            12 * s,
-            0.3,
-            0,
-            Math.PI * 2
+        case "palm": {
+          // Enhanced 3D isometric palm tree with detailed fronds
+          const palmSway = Math.sin(decorTime * 0.8 + screenPos.x * 0.01) * 3 * s;
+
+          // Ground shadow
+          const palmShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 20 * s, screenPos.y + 8 * s, 0,
+            screenPos.x + 20 * s, screenPos.y + 8 * s, 35 * s
           );
+          palmShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
+          palmShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = palmShadowGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 20 * s, screenPos.y + 8 * s, 35 * s, 15 * s, 0.3, 0, Math.PI * 2);
           ctx.fill();
-          // Trunk (curved)
-          ctx.strokeStyle = "#8b6914";
-          ctx.lineWidth = 6 * s;
+
+          // Trunk with 3D gradient
+          const trunkGrad = ctx.createLinearGradient(
+            screenPos.x - 5 * s, 0, screenPos.x + 8 * s, 0
+          );
+          trunkGrad.addColorStop(0, "#5a4510");
+          trunkGrad.addColorStop(0.4, "#8b6914");
+          trunkGrad.addColorStop(1, "#5a4010");
+
+          ctx.strokeStyle = trunkGrad;
+          ctx.lineWidth = 8 * s;
+          ctx.lineCap = "round";
           ctx.beginPath();
           ctx.moveTo(screenPos.x, screenPos.y + 5 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x + 8 * s,
-            screenPos.y - 20 * s,
-            screenPos.x + 5 * s,
-            screenPos.y - 45 * s
+          ctx.bezierCurveTo(
+            screenPos.x + 6 * s, screenPos.y - 15 * s,
+            screenPos.x + 10 * s + palmSway * 0.3, screenPos.y - 35 * s,
+            screenPos.x + 5 * s + palmSway * 0.5, screenPos.y - 55 * s
           );
           ctx.stroke();
-          // Trunk texture
-          ctx.strokeStyle = "#6b4c12";
-          ctx.lineWidth = 2 * s;
-          for (let i = 0; i < 6; i++) {
-            const ty = screenPos.y - i * 8 * s;
+
+          // Trunk texture bands
+          ctx.strokeStyle = "#4a3508";
+          ctx.lineWidth = 1.5 * s;
+          for (let i = 0; i < 9; i++) {
+            const progress = i / 9;
+            const tx = screenPos.x + (5 + progress * 3) * s + palmSway * progress * 0.3;
+            const ty = screenPos.y + 2 * s - progress * 52 * s;
             ctx.beginPath();
-            ctx.moveTo(screenPos.x + 2 * s - 3 * s, ty);
-            ctx.lineTo(screenPos.x + 2 * s + 3 * s, ty);
+            ctx.arc(tx, ty, (4 - progress * 1.5) * s, -0.8, Math.PI + 0.8);
             ctx.stroke();
           }
-          // Palm fronds
-          const palmColors = ["#228b22", "#2e8b57", "#3cb371"];
-          for (let f = 0; f < 7; f++) {
-            const angle = (f / 7) * Math.PI * 2 + decorTime * 0.3;
-            const frondLen = 30 * s;
-            ctx.strokeStyle = palmColors[f % 3];
-            ctx.lineWidth = 3 * s;
+
+          // Palm fronds (layered for depth)
+          const frondColors = ["#1a5a18", "#228b22", "#2e8b40", "#3cb360"];
+          const palmTopX = screenPos.x + 5 * s + palmSway * 0.5;
+          const palmTopY = screenPos.y - 55 * s;
+
+          // Draw 8 fronds with leaflets
+          for (let f = 0; f < 8; f++) {
+            const baseAngle = (f / 8) * Math.PI * 2;
+            const frondSway = Math.sin(decorTime * 1.2 + f * 0.7) * 0.15;
+            const angle = baseAngle + frondSway;
+            const frondLen = (38 - (f % 2) * 5) * s;
+
+            // Frond stem
+            ctx.strokeStyle = frondColors[f % 4];
+            ctx.lineWidth = (3.5 - f * 0.1) * s;
+            ctx.lineCap = "round";
+
+            const endX = palmTopX + Math.cos(angle) * frondLen;
+            const endY = palmTopY + Math.sin(angle) * frondLen * 0.4 + 18 * s;
+            const ctrlX = palmTopX + Math.cos(angle) * frondLen * 0.4;
+            const ctrlY = palmTopY - 10 * s + Math.sin(angle) * 5 * s;
+
             ctx.beginPath();
-            ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 45 * s);
-            const endX = screenPos.x + 5 * s + Math.cos(angle) * frondLen;
-            const endY =
-              screenPos.y - 45 * s + Math.sin(angle) * frondLen * 0.4 + 10 * s;
+            ctx.moveTo(palmTopX, palmTopY);
+            ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+            ctx.stroke();
+
+            // Leaflets along the frond
+            ctx.lineWidth = 1.2 * s;
+            for (let l = 0.25; l < 1; l += 0.12) {
+              const lx = palmTopX + (endX - palmTopX) * l;
+              const ly = palmTopY + (ctrlY - palmTopY) * l * 0.6 + (endY - ctrlY) * l;
+              const leafAngle = angle + (l - 0.5) * 0.3;
+              const leafLen = 10 * s * (1 - l * 0.4);
+
+              ctx.beginPath();
+              ctx.moveTo(lx, ly);
+              ctx.lineTo(lx + Math.cos(leafAngle + 0.6) * leafLen, ly + Math.sin(leafAngle + 0.6) * leafLen * 0.3);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(lx, ly);
+              ctx.lineTo(lx + Math.cos(leafAngle - 0.6) * leafLen, ly + Math.sin(leafAngle - 0.6) * leafLen * 0.3);
+              ctx.stroke();
+            }
+          }
+
+          // Coconuts for some variants
+          if (variant < 2) {
+            ctx.fillStyle = "#5a3a1a";
+            for (let c = 0; c < 3; c++) {
+              const cx = palmTopX - 4 * s + c * 4 * s;
+              const cy = palmTopY + 5 * s;
+              ctx.beginPath();
+              ctx.arc(cx, cy, 3.5 * s, 0, Math.PI * 2);
+              ctx.fill();
+              // Coconut highlight
+              ctx.fillStyle = "#7a5a3a";
+              ctx.beginPath();
+              ctx.arc(cx - 1 * s, cy - 1 * s, 1.5 * s, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = "#5a3a1a";
+            }
+          }
+          break;
+        }
+        case "cactus": {
+          // Enhanced 3D isometric saguaro cactus
+
+          // Ground shadow
+          const cacShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 5 * s, screenPos.y + 5 * s, 0,
+            screenPos.x + 5 * s, screenPos.y + 5 * s, 22 * s
+          );
+          cacShadowGrad.addColorStop(0, "rgba(0,0,0,0.22)");
+          cacShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = cacShadowGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 5 * s, screenPos.y + 5 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Main body gradient for 3D roundness
+          const cacGrad = ctx.createLinearGradient(
+            screenPos.x - 9 * s, 0, screenPos.x + 9 * s, 0
+          );
+          cacGrad.addColorStop(0, "#1a4a18");
+          cacGrad.addColorStop(0.25, "#2a6a28");
+          cacGrad.addColorStop(0.5, "#3a8a38");
+          cacGrad.addColorStop(0.75, "#2a6a28");
+          cacGrad.addColorStop(1, "#1a4a18");
+
+          // Main body - rounded pillar
+          ctx.fillStyle = cacGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 3 * s);
+          ctx.quadraticCurveTo(screenPos.x - 9 * s, screenPos.y - 18 * s, screenPos.x - 7 * s, screenPos.y - 35 * s);
+          ctx.quadraticCurveTo(screenPos.x, screenPos.y - 42 * s, screenPos.x + 7 * s, screenPos.y - 35 * s);
+          ctx.quadraticCurveTo(screenPos.x + 9 * s, screenPos.y - 18 * s, screenPos.x + 8 * s, screenPos.y + 3 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Vertical ridges
+          ctx.strokeStyle = "rgba(0,50,0,0.25)";
+          ctx.lineWidth = 1.2 * s;
+          for (let r = -2; r <= 2; r++) {
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + r * 2.5 * s, screenPos.y + 2 * s);
             ctx.quadraticCurveTo(
-              screenPos.x + 5 * s + Math.cos(angle) * frondLen * 0.5,
-              screenPos.y - 50 * s,
-              endX,
-              endY
+              screenPos.x + r * 2.2 * s, screenPos.y - 18 * s,
+              screenPos.x + r * 1.8 * s, screenPos.y - 36 * s
             );
             ctx.stroke();
           }
-          break;
-        case "cactus":
-          ctx.fillStyle = "rgba(0,0,0,0.15)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y + 3 * s,
-            12 * s,
-            5 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          // Main body
-          ctx.fillStyle = "#2d5a27";
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x - 6 * s, screenPos.y + 2 * s);
-          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 25 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x,
-            screenPos.y - 30 * s,
-            screenPos.x + 5 * s,
-            screenPos.y - 25 * s
-          );
-          ctx.lineTo(screenPos.x + 6 * s, screenPos.y + 2 * s);
-          ctx.closePath();
-          ctx.fill();
-          // Arms
-          if (variant > 1) {
-            ctx.fillStyle = "#2d5a27";
+
+          // Arms for variants
+          if (variant > 0) {
+            // Left arm
+            const armGradL = ctx.createLinearGradient(
+              screenPos.x - 22 * s, 0, screenPos.x - 10 * s, 0
+            );
+            armGradL.addColorStop(0, "#1a4a18");
+            armGradL.addColorStop(0.5, "#3a8a38");
+            armGradL.addColorStop(1, "#2a6a28");
+
+            ctx.fillStyle = armGradL;
             ctx.beginPath();
-            ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
-            ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 15 * s);
-            ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
-            ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 25 * s);
-            ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 18 * s);
-            ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 15 * s);
+            ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 14 * s);
+            ctx.quadraticCurveTo(screenPos.x - 20 * s, screenPos.y - 16 * s, screenPos.x - 20 * s, screenPos.y - 26 * s);
+            ctx.quadraticCurveTo(screenPos.x - 20 * s, screenPos.y - 36 * s, screenPos.x - 15 * s, screenPos.y - 36 * s);
+            ctx.quadraticCurveTo(screenPos.x - 12 * s, screenPos.y - 36 * s, screenPos.x - 12 * s, screenPos.y - 26 * s);
+            ctx.quadraticCurveTo(screenPos.x - 12 * s, screenPos.y - 18 * s, screenPos.x - 7 * s, screenPos.y - 17 * s);
             ctx.closePath();
             ctx.fill();
           }
-          // Highlight
-          ctx.fillStyle = "rgba(255,255,255,0.1)";
-          ctx.fillRect(
-            screenPos.x - 2 * s,
-            screenPos.y - 20 * s,
-            2 * s,
-            15 * s
-          );
-          break;
-        case "dune":
-          ctx.fillStyle = "#d4a84b";
+
+          if (variant > 1) {
+            // Right arm
+            const armGradR = ctx.createLinearGradient(
+              screenPos.x + 10 * s, 0, screenPos.x + 18 * s, 0
+            );
+            armGradR.addColorStop(0, "#2a6a28");
+            armGradR.addColorStop(0.5, "#3a8a38");
+            armGradR.addColorStop(1, "#1a4a18");
+
+            ctx.fillStyle = armGradR;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 7 * s, screenPos.y - 10 * s);
+            ctx.quadraticCurveTo(screenPos.x + 17 * s, screenPos.y - 12 * s, screenPos.x + 17 * s, screenPos.y - 22 * s);
+            ctx.quadraticCurveTo(screenPos.x + 17 * s, screenPos.y - 32 * s, screenPos.x + 12 * s, screenPos.y - 32 * s);
+            ctx.quadraticCurveTo(screenPos.x + 9 * s, screenPos.y - 32 * s, screenPos.x + 9 * s, screenPos.y - 22 * s);
+            ctx.quadraticCurveTo(screenPos.x + 9 * s, screenPos.y - 14 * s, screenPos.x + 7 * s, screenPos.y - 13 * s);
+            ctx.closePath();
+            ctx.fill();
+          }
+
+          // Spines
+          ctx.fillStyle = "#e8e0c0";
+          for (let sy = 0; sy < 7; sy++) {
+            for (let sx = -1; sx <= 1; sx++) {
+              const spineX = screenPos.x + sx * 4 * s + (sy % 2) * 2 * s;
+              const spineY = screenPos.y - 5 * s - sy * 5 * s;
+              ctx.beginPath();
+              ctx.arc(spineX, spineY, 1 * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Top highlight
+          ctx.fillStyle = "rgba(255,255,255,0.18)";
           ctx.beginPath();
-          ctx.moveTo(screenPos.x - 40 * s, screenPos.y + 5 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x - 10 * s,
-            screenPos.y - 15 * s,
-            screenPos.x + 10 * s,
-            screenPos.y - 8 * s
+          ctx.ellipse(screenPos.x, screenPos.y - 38 * s, 5 * s, 2.5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Flower for variant 3
+          if (variant === 3) {
+            ctx.fillStyle = "#ff69b4";
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - 42 * s, 4 * s, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ffff00";
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - 42 * s, 2 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        case "dune": {
+          // Enhanced 3D isometric sand dune with wind-swept look
+
+          // Main dune body gradient
+          const duneGrad = ctx.createLinearGradient(
+            screenPos.x - 50 * s, screenPos.y - 20 * s,
+            screenPos.x + 50 * s, screenPos.y + 8 * s
           );
-          ctx.quadraticCurveTo(
-            screenPos.x + 30 * s,
-            screenPos.y - 3 * s,
-            screenPos.x + 45 * s,
-            screenPos.y + 5 * s
-          );
+          duneGrad.addColorStop(0, "#e8c868");
+          duneGrad.addColorStop(0.4, "#d4a84b");
+          duneGrad.addColorStop(1, "#a08028");
+
+          ctx.fillStyle = duneGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 55 * s, screenPos.y + 8 * s);
+          ctx.quadraticCurveTo(screenPos.x - 28 * s, screenPos.y - 5 * s, screenPos.x - 8 * s, screenPos.y - 22 * s);
+          ctx.quadraticCurveTo(screenPos.x + 15 * s, screenPos.y - 12 * s, screenPos.x + 38 * s, screenPos.y - 6 * s);
+          ctx.quadraticCurveTo(screenPos.x + 55 * s, screenPos.y, screenPos.x + 60 * s, screenPos.y + 8 * s);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#c9a227";
+
+          // Wind-blown crest highlight
+          ctx.strokeStyle = "#f0d878";
+          ctx.lineWidth = 2 * s;
           ctx.beginPath();
-          ctx.moveTo(screenPos.x - 35 * s, screenPos.y + 5 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x - 5 * s,
-            screenPos.y - 10 * s,
-            screenPos.x + 15 * s,
-            screenPos.y - 5 * s
+          ctx.moveTo(screenPos.x - 28 * s, screenPos.y - 5 * s);
+          ctx.quadraticCurveTo(screenPos.x - 8 * s, screenPos.y - 22 * s, screenPos.x + 15 * s, screenPos.y - 12 * s);
+          ctx.stroke();
+
+          // Secondary foreground dune
+          const dune2Grad = ctx.createLinearGradient(
+            screenPos.x - 45 * s, screenPos.y,
+            screenPos.x + 45 * s, screenPos.y + 8 * s
           );
-          ctx.lineTo(screenPos.x + 40 * s, screenPos.y + 5 * s);
+          dune2Grad.addColorStop(0, "#d4a84b");
+          dune2Grad.addColorStop(0.5, "#c9a040");
+          dune2Grad.addColorStop(1, "#9a7828");
+
+          ctx.fillStyle = dune2Grad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 45 * s, screenPos.y + 8 * s);
+          ctx.quadraticCurveTo(screenPos.x - 18 * s, screenPos.y - 2 * s, screenPos.x + 8 * s, screenPos.y - 10 * s);
+          ctx.quadraticCurveTo(screenPos.x + 32 * s, screenPos.y - 4 * s, screenPos.x + 50 * s, screenPos.y + 8 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Wind ripple lines
+          ctx.strokeStyle = "rgba(160,120,50,0.35)";
+          ctx.lineWidth = 1 * s;
+          for (let r = 0; r < 5; r++) {
+            const ry = screenPos.y + 1 * s + r * 1.3 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 38 * s + r * 6 * s, ry);
+            ctx.quadraticCurveTo(
+              screenPos.x - 12 * s + r * 4 * s, ry - 2.5 * s,
+              screenPos.x + 22 * s + r * 6 * s, ry
+            );
+            ctx.stroke();
+          }
+
+          // Wind-blown sand particles
+          const windOffset = Math.sin(decorTime * 2.5) * 6 * s;
+          ctx.fillStyle = "rgba(220,190,100,0.4)";
+          for (let p = 0; p < 5; p++) {
+            const px = screenPos.x - 12 * s + p * 10 * s + windOffset;
+            const py = screenPos.y - 14 * s + p * 2 * s + Math.sin(decorTime * 3 + p) * 2 * s;
+            ctx.beginPath();
+            ctx.ellipse(px, py, 4 * s, 1.2 * s, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Sharp shadow edge on lee side
+          ctx.fillStyle = "rgba(0,0,0,0.08)";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 10 * s);
+          ctx.quadraticCurveTo(screenPos.x + 25 * s, screenPos.y - 5 * s, screenPos.x + 50 * s, screenPos.y + 8 * s);
+          ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 8 * s);
           ctx.closePath();
           ctx.fill();
           break;
+        }
         case "pyramid":
           // Shadow
           ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -6453,153 +7632,450 @@ export default function PrincetonTowerDefense() {
           ctx.stroke();
           break;
         // === WINTER DECORATIONS ===
-        case "pine":
-          ctx.fillStyle = "rgba(0,0,0,0.2)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x + 3 * s,
-            screenPos.y + 8 * s,
-            18 * s,
-            8 * s,
-            0,
-            0,
-            Math.PI * 2
+        case "pine": {
+          // Enhanced 3D isometric snow-covered pine tree
+          const pineSway = Math.sin(decorTime * 0.6 + screenPos.x * 0.01) * 2 * s;
+
+          // Ground shadow
+          const pineShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 5 * s, screenPos.y + 10 * s, 0,
+            screenPos.x + 5 * s, screenPos.y + 10 * s, 25 * s
           );
+          pineShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
+          pineShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = pineShadowGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 5 * s, screenPos.y + 10 * s, 25 * s, 12 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Trunk
-          ctx.fillStyle = "#4a3728";
-          ctx.fillRect(screenPos.x - 4 * s, screenPos.y - 5 * s, 8 * s, 12 * s);
-          // Snow-covered layers
-          const pineColors = ["#1a4a3a", "#2a5a4a", "#3a6a5a"];
-          for (let layer = 0; layer < 3; layer++) {
-            const layerY = screenPos.y - 10 * s - layer * 15 * s;
-            const layerW = (25 - layer * 6) * s;
-            ctx.fillStyle = pineColors[layer];
+
+          // Trunk with gradient
+          const pinetrunkGrad = ctx.createLinearGradient(
+            screenPos.x - 5 * s, 0, screenPos.x + 5 * s, 0
+          );
+          pinetrunkGrad.addColorStop(0, "#3a2718");
+          pinetrunkGrad.addColorStop(0.5, "#5a4030");
+          pinetrunkGrad.addColorStop(1, "#3a2718");
+          ctx.fillStyle = pinetrunkGrad;
+          ctx.fillRect(screenPos.x - 5 * s, screenPos.y - 8 * s, 10 * s, 18 * s);
+
+          // Bark texture
+          ctx.strokeStyle = "rgba(0,0,0,0.2)";
+          ctx.lineWidth = 1 * s;
+          for (let b = 0; b < 3; b++) {
             ctx.beginPath();
-            ctx.moveTo(screenPos.x - layerW, layerY);
-            ctx.lineTo(screenPos.x, layerY - 18 * s);
-            ctx.lineTo(screenPos.x + layerW, layerY);
+            ctx.moveTo(screenPos.x - 3 * s, screenPos.y - 2 * s - b * 4 * s);
+            ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 2 * s - b * 4 * s);
+            ctx.stroke();
+          }
+
+          // Snow-covered layers with depth
+          const pineLayerColors = [
+            { dark: "#0a3a2a", mid: "#1a4a3a", light: "#2a5a4a" },
+            { dark: "#1a4a3a", mid: "#2a5a4a", light: "#3a6a5a" },
+            { dark: "#2a5a4a", mid: "#3a6a5a", light: "#4a7a6a" },
+            { dark: "#3a6a5a", mid: "#4a7a6a", light: "#5a8a7a" },
+          ];
+
+          for (let layer = 0; layer < 4; layer++) {
+            const layerY = screenPos.y - 12 * s - layer * 16 * s;
+            const layerW = (28 - layer * 6) * s;
+            const colors = pineLayerColors[layer];
+            const sway = pineSway * (layer + 1) * 0.15;
+
+            // Back side (dark)
+            ctx.fillStyle = colors.dark;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - layerW + sway, layerY);
+            ctx.lineTo(screenPos.x + sway, layerY - 20 * s);
+            ctx.lineTo(screenPos.x - layerW * 0.3 + sway, layerY - 5 * s);
             ctx.closePath();
             ctx.fill();
-            // Snow on top
-            ctx.fillStyle = "rgba(255,255,255,0.7)";
+
+            // Front side (mid)
+            ctx.fillStyle = colors.mid;
             ctx.beginPath();
-            ctx.moveTo(screenPos.x - layerW * 0.6, layerY - 5 * s);
-            ctx.lineTo(screenPos.x, layerY - 18 * s);
-            ctx.lineTo(screenPos.x + layerW * 0.6, layerY - 5 * s);
+            ctx.moveTo(screenPos.x + layerW + sway, layerY);
+            ctx.lineTo(screenPos.x + sway, layerY - 20 * s);
+            ctx.lineTo(screenPos.x + layerW * 0.3 + sway, layerY - 5 * s);
             ctx.closePath();
+            ctx.fill();
+
+            // Snow layer on top
+            ctx.fillStyle = "rgba(255,255,255,0.85)";
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - layerW * 0.7 + sway, layerY - 6 * s);
+            ctx.quadraticCurveTo(
+              screenPos.x - layerW * 0.3 + sway, layerY - 12 * s,
+              screenPos.x + sway, layerY - 20 * s
+            );
+            ctx.quadraticCurveTo(
+              screenPos.x + layerW * 0.3 + sway, layerY - 12 * s,
+              screenPos.x + layerW * 0.7 + sway, layerY - 6 * s
+            );
+            ctx.closePath();
+            ctx.fill();
+
+            // Snow edge highlight
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 1.5 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - layerW * 0.5 + sway, layerY - 8 * s);
+            ctx.lineTo(screenPos.x + sway, layerY - 20 * s);
+            ctx.stroke();
+
+            // Dripping snow/icicles
+            if (layer < 3) {
+              ctx.fillStyle = "rgba(200,230,255,0.7)";
+              for (let ic = 0; ic < 3; ic++) {
+                const icX = screenPos.x + (ic - 1) * layerW * 0.5 + sway;
+                const icLen = (4 + ic * 2) * s;
+                ctx.beginPath();
+                ctx.moveTo(icX - 2 * s, layerY);
+                ctx.lineTo(icX, layerY + icLen);
+                ctx.lineTo(icX + 2 * s, layerY);
+                ctx.closePath();
+                ctx.fill();
+              }
+            }
+          }
+
+          // Star/snow on top
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(screenPos.x + pineSway * 0.6, screenPos.y - 75 * s, 3 * s, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case "snowman": {
+          // Enhanced 3D isometric snowman with detailed features
+
+          // Ground shadow
+          const snowmanShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 3 * s, screenPos.y + 8 * s, 0,
+            screenPos.x + 3 * s, screenPos.y + 8 * s, 22 * s
+          );
+          snowmanShadowGrad.addColorStop(0, "rgba(100,130,180,0.2)");
+          snowmanShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = snowmanShadowGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 8 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Bottom ball with 3D shading
+          const bottomGrad = ctx.createRadialGradient(
+            screenPos.x - 5 * s, screenPos.y - 10 * s, 0,
+            screenPos.x, screenPos.y - 5 * s, 18 * s
+          );
+          bottomGrad.addColorStop(0, "#ffffff");
+          bottomGrad.addColorStop(0.5, "#f5f5f5");
+          bottomGrad.addColorStop(1, "#d0dce8");
+          ctx.fillStyle = bottomGrad;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 5 * s, 17 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Middle ball
+          const middleGrad = ctx.createRadialGradient(
+            screenPos.x - 4 * s, screenPos.y - 26 * s, 0,
+            screenPos.x, screenPos.y - 24 * s, 13 * s
+          );
+          middleGrad.addColorStop(0, "#ffffff");
+          middleGrad.addColorStop(0.6, "#f5f5f5");
+          middleGrad.addColorStop(1, "#d8e4f0");
+          ctx.fillStyle = middleGrad;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 24 * s, 12 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Head
+          const headGrad = ctx.createRadialGradient(
+            screenPos.x - 3 * s, screenPos.y - 42 * s, 0,
+            screenPos.x, screenPos.y - 40 * s, 10 * s
+          );
+          headGrad.addColorStop(0, "#ffffff");
+          headGrad.addColorStop(0.5, "#f8f8f8");
+          headGrad.addColorStop(1, "#e0e8f0");
+          ctx.fillStyle = headGrad;
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 40 * s, 9 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Top hat
+          ctx.fillStyle = "#1a1a1a";
+          ctx.fillRect(screenPos.x - 8 * s, screenPos.y - 48 * s, 16 * s, 3 * s); // Brim
+          ctx.fillRect(screenPos.x - 5 * s, screenPos.y - 60 * s, 10 * s, 12 * s); // Crown
+          // Hat band
+          ctx.fillStyle = "#c62828";
+          ctx.fillRect(screenPos.x - 5 * s, screenPos.y - 52 * s, 10 * s, 3 * s);
+          // Hat highlight
+          ctx.fillStyle = "rgba(255,255,255,0.15)";
+          ctx.fillRect(screenPos.x - 4 * s, screenPos.y - 58 * s, 3 * s, 8 * s);
+
+          // Eyes
+          ctx.fillStyle = "#0a0a0a";
+          ctx.beginPath();
+          ctx.arc(screenPos.x - 3 * s, screenPos.y - 42 * s, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(screenPos.x + 3 * s, screenPos.y - 42 * s, 2 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Eye shine
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(screenPos.x - 3.5 * s, screenPos.y - 42.5 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(screenPos.x + 2.5 * s, screenPos.y - 42.5 * s, 0.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Carrot nose with 3D
+          const noseGrad = ctx.createLinearGradient(
+            screenPos.x, screenPos.y - 40 * s,
+            screenPos.x + 12 * s, screenPos.y - 38 * s
+          );
+          noseGrad.addColorStop(0, "#ff8c00");
+          noseGrad.addColorStop(0.5, "#ff6b00");
+          noseGrad.addColorStop(1, "#cc5500");
+          ctx.fillStyle = noseGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 40 * s);
+          ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 38 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - 36 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Smile (coal pieces)
+          ctx.fillStyle = "#1a1a1a";
+          for (let sm = 0; sm < 5; sm++) {
+            const smAngle = Math.PI * 0.15 + (sm / 4) * Math.PI * 0.4;
+            const smX = screenPos.x + Math.cos(smAngle) * 5 * s;
+            const smY = screenPos.y - 35 * s + Math.sin(smAngle) * 3 * s;
+            ctx.beginPath();
+            ctx.arc(smX, smY, 1 * s, 0, Math.PI * 2);
             ctx.fill();
           }
-          break;
-        case "snowman":
-          // Shadow
-          ctx.fillStyle = "rgba(0,0,0,0.15)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y + 5 * s,
-            18 * s,
-            8 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          // Bottom ball
-          ctx.fillStyle = "#f5f5f5";
-          ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y - 5 * s, 15 * s, 0, Math.PI * 2);
-          ctx.fill();
-          // Middle ball
-          ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y - 22 * s, 11 * s, 0, Math.PI * 2);
-          ctx.fill();
-          // Head
-          ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y - 38 * s, 8 * s, 0, Math.PI * 2);
-          ctx.fill();
-          // Eyes
+
+          // Buttons
           ctx.fillStyle = "#1a1a1a";
+          for (let btn = 0; btn < 3; btn++) {
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - 18 * s - btn * 6 * s, 2 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Stick arms
+          ctx.strokeStyle = "#4a3728";
+          ctx.lineWidth = 2.5 * s;
+          ctx.lineCap = "round";
+          // Left arm
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x - 3 * s,
-            screenPos.y - 40 * s,
-            2 * s,
-            0,
-            Math.PI * 2
-          );
+          ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 24 * s);
+          ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 30 * s);
+          ctx.stroke();
+          // Left fingers
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x - 28 * s, screenPos.y - 35 * s);
+          ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 30 * s);
+          ctx.lineTo(screenPos.x - 30 * s, screenPos.y - 30 * s);
+          ctx.stroke();
+          // Right arm
+          ctx.lineWidth = 2.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 24 * s);
+          ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 28 * s);
+          ctx.stroke();
+          // Right fingers
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 22 * s, screenPos.y - 28 * s);
+          ctx.lineTo(screenPos.x + 26 * s, screenPos.y - 32 * s);
+          ctx.moveTo(screenPos.x + 22 * s, screenPos.y - 28 * s);
+          ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 27 * s);
+          ctx.stroke();
+
+          // Scarf
+          ctx.fillStyle = "#c62828";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 32 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
           ctx.fill();
+          // Scarf tails
+          ctx.fillStyle = "#b71c1c";
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x + 3 * s,
-            screenPos.y - 40 * s,
-            2 * s,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          // Carrot nose
-          ctx.fillStyle = "#ff6b00";
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x, screenPos.y - 38 * s);
-          ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 36 * s);
-          ctx.lineTo(screenPos.x, screenPos.y - 34 * s);
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 31 * s);
+          ctx.quadraticCurveTo(screenPos.x + 15 * s, screenPos.y - 28 * s, screenPos.x + 12 * s, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 21 * s);
+          ctx.quadraticCurveTo(screenPos.x + 10 * s, screenPos.y - 27 * s, screenPos.x + 6 * s, screenPos.y - 30 * s);
           ctx.closePath();
           ctx.fill();
           break;
-        case "ice_crystal":
-          ctx.fillStyle = "rgba(100,200,255,0.3)";
+        }
+        case "ice_crystal": {
+          // Enhanced 3D isometric ice crystal formation
+          const crystalPulse = 0.8 + Math.sin(decorTime * 2) * 0.2;
+
+          // Ground glow
+          const iceGlow = ctx.createRadialGradient(
+            screenPos.x, screenPos.y + 3 * s, 0,
+            screenPos.x, screenPos.y + 3 * s, 25 * s
+          );
+          iceGlow.addColorStop(0, `rgba(150,220,255,${0.3 * crystalPulse})`);
+          iceGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = iceGlow;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y + 3 * s, 25 * s, 12 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Main crystal spikes (6 pointed)
           for (let spike = 0; spike < 6; spike++) {
             const angle = (spike / 6) * Math.PI * 2;
+            const spikeLen = (22 + (spike % 2) * 8) * s;
+            const spikeWidth = 6 * s;
+
+            // Crystal body
+            ctx.fillStyle = spike % 2 === 0 ? "rgba(150,220,255,0.7)" : "rgba(100,180,255,0.6)";
             ctx.beginPath();
-            ctx.moveTo(screenPos.x, screenPos.y);
+            ctx.moveTo(screenPos.x, screenPos.y - 5 * s);
             ctx.lineTo(
-              screenPos.x + Math.cos(angle) * 20 * s,
-              screenPos.y + Math.sin(angle) * 10 * s - 15 * s
+              screenPos.x + Math.cos(angle) * spikeLen,
+              screenPos.y + Math.sin(angle) * spikeLen * 0.4 - 20 * s
             );
             ctx.lineTo(
-              screenPos.x + Math.cos(angle + 0.2) * 8 * s,
-              screenPos.y + Math.sin(angle + 0.2) * 4 * s
+              screenPos.x + Math.cos(angle + 0.15) * spikeWidth,
+              screenPos.y + Math.sin(angle + 0.15) * spikeWidth * 0.4
+            );
+            ctx.closePath();
+            ctx.fill();
+
+            // Crystal highlight edge
+            ctx.fillStyle = "rgba(220,245,255,0.8)";
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x, screenPos.y - 5 * s);
+            ctx.lineTo(
+              screenPos.x + Math.cos(angle) * spikeLen,
+              screenPos.y + Math.sin(angle) * spikeLen * 0.4 - 20 * s
+            );
+            ctx.lineTo(
+              screenPos.x + Math.cos(angle - 0.08) * spikeLen * 0.7,
+              screenPos.y + Math.sin(angle - 0.08) * spikeLen * 0.3 - 12 * s
             );
             ctx.closePath();
             ctx.fill();
           }
-          ctx.fillStyle = "rgba(200,240,255,0.6)";
+
+          // Central core glow
+          const coreGrad = ctx.createRadialGradient(
+            screenPos.x, screenPos.y - 8 * s, 0,
+            screenPos.x, screenPos.y - 8 * s, 10 * s
+          );
+          coreGrad.addColorStop(0, `rgba(255,255,255,${crystalPulse})`);
+          coreGrad.addColorStop(0.4, `rgba(200,240,255,${0.7 * crystalPulse})`);
+          coreGrad.addColorStop(1, "rgba(150,220,255,0)");
+          ctx.fillStyle = coreGrad;
           ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y - 5 * s, 6 * s, 0, Math.PI * 2);
+          ctx.arc(screenPos.x, screenPos.y - 8 * s, 10 * s, 0, Math.PI * 2);
           ctx.fill();
+
+          // Floating ice particles
+          for (let p = 0; p < 6; p++) {
+            const pAngle = (p / 6) * Math.PI * 2 + decorTime * 0.5;
+            const pDist = 15 + Math.sin(decorTime * 2 + p) * 5;
+            const pX = screenPos.x + Math.cos(pAngle) * pDist * s;
+            const pY = screenPos.y - 10 * s + Math.sin(pAngle) * pDist * 0.4 * s - Math.sin(decorTime * 3 + p) * 5 * s;
+
+            ctx.fillStyle = `rgba(200,240,255,${0.6 + Math.sin(decorTime * 2 + p) * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(pX, pY, 2 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
-        case "snow_pile":
-          ctx.fillStyle = "#e8e8e8";
+        }
+        case "snow_pile": {
+          // Enhanced 3D isometric snow drift with sparkles
+
+          // Subtle shadow
+          ctx.fillStyle = "rgba(100,130,170,0.15)";
           ctx.beginPath();
-          ctx.moveTo(screenPos.x - 25 * s, screenPos.y + 5 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x - 10 * s,
-            screenPos.y - 10 * s,
-            screenPos.x + 5 * s,
-            screenPos.y - 5 * s
+          ctx.ellipse(screenPos.x, screenPos.y + 8 * s, 40 * s, 15 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Main snow mound - back layer
+          const snowGrad1 = ctx.createLinearGradient(
+            screenPos.x - 35 * s, screenPos.y - 18 * s,
+            screenPos.x + 35 * s, screenPos.y + 6 * s
           );
-          ctx.quadraticCurveTo(
-            screenPos.x + 20 * s,
-            screenPos.y,
-            screenPos.x + 30 * s,
-            screenPos.y + 5 * s
-          );
+          snowGrad1.addColorStop(0, "#f5f8fc");
+          snowGrad1.addColorStop(0.5, "#e8eef5");
+          snowGrad1.addColorStop(1, "#d0d8e5");
+
+          ctx.fillStyle = snowGrad1;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 35 * s, screenPos.y + 6 * s);
+          ctx.quadraticCurveTo(screenPos.x - 20 * s, screenPos.y - 10 * s, screenPos.x - 5 * s, screenPos.y - 18 * s);
+          ctx.quadraticCurveTo(screenPos.x + 12 * s, screenPos.y - 10 * s, screenPos.x + 28 * s, screenPos.y - 6 * s);
+          ctx.quadraticCurveTo(screenPos.x + 40 * s, screenPos.y, screenPos.x + 42 * s, screenPos.y + 6 * s);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "rgba(255,255,255,0.8)";
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x - 20 * s, screenPos.y + 3 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x - 5 * s,
-            screenPos.y - 5 * s,
-            screenPos.x + 10 * s,
-            screenPos.y
+
+          // Front snow layer
+          const snowGrad2 = ctx.createLinearGradient(
+            screenPos.x - 30 * s, screenPos.y - 8 * s,
+            screenPos.x + 30 * s, screenPos.y + 6 * s
           );
-          ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 3 * s);
+          snowGrad2.addColorStop(0, "#ffffff");
+          snowGrad2.addColorStop(0.4, "#f8fafc");
+          snowGrad2.addColorStop(1, "#e5ecf2");
+
+          ctx.fillStyle = snowGrad2;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 30 * s, screenPos.y + 6 * s);
+          ctx.quadraticCurveTo(screenPos.x - 12 * s, screenPos.y - 4 * s, screenPos.x + 5 * s, screenPos.y - 10 * s);
+          ctx.quadraticCurveTo(screenPos.x + 22 * s, screenPos.y - 4 * s, screenPos.x + 35 * s, screenPos.y + 6 * s);
           ctx.closePath();
           ctx.fill();
+
+          // Edge highlight
+          ctx.strokeStyle = "rgba(255,255,255,0.9)";
+          ctx.lineWidth = 2 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 18 * s, screenPos.y - 6 * s);
+          ctx.quadraticCurveTo(screenPos.x - 5 * s, screenPos.y - 16 * s, screenPos.x + 10 * s, screenPos.y - 8 * s);
+          ctx.stroke();
+
+          // Blue shadow tint
+          ctx.fillStyle = "rgba(170,200,230,0.12)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 18 * s, screenPos.y + 2 * s, 12 * s, 5 * s, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Sparkles
+          ctx.fillStyle = "rgba(255,255,255,0.95)";
+          const sparkleTime = decorTime * 2.5;
+          for (let sp = 0; sp < 6; sp++) {
+            const sparklePhase = (sparkleTime + sp * 1.1) % 2;
+            if (sparklePhase < 0.6) {
+              const sparkleAlpha = Math.sin(sparklePhase / 0.6 * Math.PI);
+              const spx = screenPos.x - 18 * s + (sp * 12 + Math.sin(sp * 2.1) * 6) * s;
+              const spy = screenPos.y - 6 * s - sp * 1.5 * s + Math.sin(sp * 1.5) * 4 * s;
+
+              ctx.fillStyle = `rgba(255,255,255,${sparkleAlpha * 0.9})`;
+              // Star sparkle shape
+              ctx.beginPath();
+              ctx.moveTo(spx, spy - 2.5 * s);
+              ctx.lineTo(spx + 0.6 * s, spy - 0.6 * s);
+              ctx.lineTo(spx + 2.5 * s, spy);
+              ctx.lineTo(spx + 0.6 * s, spy + 0.6 * s);
+              ctx.lineTo(spx, spy + 2.5 * s);
+              ctx.lineTo(spx - 0.6 * s, spy + 0.6 * s);
+              ctx.lineTo(spx - 2.5 * s, spy);
+              ctx.lineTo(spx - 0.6 * s, spy - 0.6 * s);
+              ctx.closePath();
+              ctx.fill();
+            }
+          }
           break;
+        }
         case "ice_fortress":
           // Crystalline structure using faceted polygons
           const iceLight = "#B3E5FC";
@@ -6738,177 +8214,443 @@ export default function PrincetonTowerDefense() {
           break;
 
         // === VOLCANIC DECORATIONS ===
-        case "lava_pool":
-          // Outer glow
-          ctx.fillStyle = "rgba(255,100,0,0.3)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            35 * s,
-            18 * s,
-            0,
-            0,
-            Math.PI * 2
+        case "lava_pool": {
+          // Enhanced 3D isometric lava pool with dynamic effects
+          const lavaTime = decorTime * 1.5;
+          const lavaPulse = 0.85 + Math.sin(lavaTime * 2) * 0.15;
+
+          // Outer heat glow
+          const heatGlow = ctx.createRadialGradient(
+            screenPos.x, screenPos.y, 15 * s,
+            screenPos.x, screenPos.y, 50 * s
           );
-          ctx.fill();
-          // Dark rim
-          ctx.fillStyle = "#2a1a1a";
+          heatGlow.addColorStop(0, `rgba(255,80,0,${0.4 * lavaPulse})`);
+          heatGlow.addColorStop(0.5, `rgba(255,40,0,${0.2 * lavaPulse})`);
+          heatGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = heatGlow;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            28 * s,
-            14 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x, screenPos.y, 50 * s, 25 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Lava surface
-          ctx.fillStyle = "#ff4400";
+
+          // Outer rock rim
+          const rimGrad = ctx.createRadialGradient(
+            screenPos.x, screenPos.y, 18 * s,
+            screenPos.x, screenPos.y, 32 * s
+          );
+          rimGrad.addColorStop(0, "#3a2020");
+          rimGrad.addColorStop(0.5, "#1a1010");
+          rimGrad.addColorStop(1, "#2a1818");
+          ctx.fillStyle = rimGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            22 * s,
-            11 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x, screenPos.y, 32 * s, 16 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Bright center
-          ctx.fillStyle = "#ff8800";
+
+          // Rock rim texture
+          ctx.strokeStyle = "#4a3030";
+          ctx.lineWidth = 2 * s;
+          for (let r = 0; r < 8; r++) {
+            const rAngle = (r / 8) * Math.PI * 2;
+            const rX = screenPos.x + Math.cos(rAngle) * 28 * s;
+            const rY = screenPos.y + Math.sin(rAngle) * 14 * s;
+            ctx.beginPath();
+            ctx.arc(rX, rY, 4 * s, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Inner dark edge
+          ctx.fillStyle = "#1a0808";
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            12 * s,
-            6 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x, screenPos.y, 26 * s, 13 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Animated bubbles
-          const bubblePhase = decorTime * 2;
-          ctx.fillStyle = "#ffaa00";
+
+          // Main lava surface with gradient
+          const lavaGrad = ctx.createRadialGradient(
+            screenPos.x - 5 * s, screenPos.y - 2 * s, 0,
+            screenPos.x, screenPos.y, 22 * s
+          );
+          lavaGrad.addColorStop(0, "#ffcc00");
+          lavaGrad.addColorStop(0.3, "#ff8800");
+          lavaGrad.addColorStop(0.6, "#ff4400");
+          lavaGrad.addColorStop(1, "#cc2200");
+          ctx.fillStyle = lavaGrad;
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x + Math.sin(bubblePhase) * 8 * s,
-            screenPos.y + Math.cos(bubblePhase * 1.3) * 4 * s,
-            3 * s,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x, screenPos.y, 22 * s, 11 * s, 0, 0, Math.PI * 2);
           ctx.fill();
+
+          // Lava crust patterns (cooled areas)
+          ctx.fillStyle = "rgba(60,20,0,0.5)";
+          for (let c = 0; c < 5; c++) {
+            const cAngle = (c / 5) * Math.PI * 2 + lavaTime * 0.2;
+            const cDist = 10 + Math.sin(lavaTime + c * 1.5) * 5;
+            const cX = screenPos.x + Math.cos(cAngle) * cDist * s;
+            const cY = screenPos.y + Math.sin(cAngle) * cDist * 0.5 * s;
+            const cSize = 4 + Math.sin(lavaTime * 2 + c) * 2;
+            ctx.beginPath();
+            ctx.ellipse(cX, cY, cSize * s, cSize * 0.5 * s, cAngle, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bright hot spot
+          const hotGrad = ctx.createRadialGradient(
+            screenPos.x - 4 * s, screenPos.y - 2 * s, 0,
+            screenPos.x - 4 * s, screenPos.y - 2 * s, 10 * s
+          );
+          hotGrad.addColorStop(0, `rgba(255,255,200,${lavaPulse})`);
+          hotGrad.addColorStop(0.4, `rgba(255,220,100,${0.7 * lavaPulse})`);
+          hotGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = hotGrad;
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x - Math.cos(bubblePhase * 0.7) * 10 * s,
-            screenPos.y + Math.sin(bubblePhase) * 3 * s,
-            2 * s,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x - 4 * s, screenPos.y - 2 * s, 10 * s, 5 * s, 0, 0, Math.PI * 2);
           ctx.fill();
+
+          // Animated bubbles with pop effect
+          for (let b = 0; b < 4; b++) {
+            const bubblePhase = (lavaTime * 1.5 + b * 1.2) % 2;
+            if (bubblePhase < 1.5) {
+              const bubbleX = screenPos.x + Math.sin(b * 2.5) * 12 * s;
+              const bubbleY = screenPos.y + Math.cos(b * 1.8) * 5 * s - bubblePhase * 3 * s;
+              const bubbleSize = (3 - bubblePhase * 1.5) * s;
+
+              if (bubbleSize > 0) {
+                ctx.fillStyle = bubblePhase < 1 ? "#ffdd88" : "#ffaa44";
+                ctx.beginPath();
+                ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Bubble highlight
+                ctx.fillStyle = "rgba(255,255,200,0.6)";
+                ctx.beginPath();
+                ctx.arc(bubbleX - bubbleSize * 0.3, bubbleY - bubbleSize * 0.3, bubbleSize * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
+
+          // Rising heat distortion particles
+          ctx.fillStyle = "rgba(255,150,50,0.4)";
+          for (let h = 0; h < 3; h++) {
+            const hPhase = (lavaTime + h * 0.8) % 1.5;
+            const hX = screenPos.x + Math.sin(h * 3.2 + lavaTime) * 8 * s;
+            const hY = screenPos.y - 5 * s - hPhase * 15 * s;
+            const hAlpha = 0.5 - hPhase * 0.3;
+            ctx.fillStyle = `rgba(255,150,50,${hAlpha})`;
+            ctx.beginPath();
+            ctx.ellipse(hX, hY, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
-        case "obsidian_spike":
-          ctx.fillStyle = "rgba(0,0,0,0.25)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x + 3 * s,
-            screenPos.y + 5 * s,
-            12 * s,
-            6 * s,
-            0,
-            0,
-            Math.PI * 2
+        }
+        case "obsidian_spike": {
+          // Enhanced 3D isometric obsidian spike with glossy volcanic glass look
+          const spikeHeight = (40 + variant * 8) * s;
+
+          // Ground shadow
+          const spikeShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 8 * s, screenPos.y + 6 * s, 0,
+            screenPos.x + 8 * s, screenPos.y + 6 * s, 20 * s
           );
-          ctx.fill();
-          // Main spike
-          ctx.fillStyle = "#1a1a2a";
+          spikeShadowGrad.addColorStop(0, "rgba(0,0,0,0.35)");
+          spikeShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = spikeShadowGrad;
           ctx.beginPath();
-          ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 3 * s);
-          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 35 * s);
+          ctx.ellipse(screenPos.x + 8 * s, screenPos.y + 6 * s, 20 * s, 10 * s, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Back facet (darkest)
+          ctx.fillStyle = "#0a0a12";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 6 * s, screenPos.y + 4 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - spikeHeight);
+          ctx.lineTo(screenPos.x - 12 * s, screenPos.y + 4 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Main spike body - left facet
+          ctx.fillStyle = "#15151f";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 12 * s, screenPos.y + 4 * s);
+          ctx.lineTo(screenPos.x, screenPos.y - spikeHeight);
+          ctx.lineTo(screenPos.x + 2 * s, screenPos.y - spikeHeight * 0.7);
+          ctx.lineTo(screenPos.x - 2 * s, screenPos.y + 4 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Main spike body - right facet (slightly lighter)
+          ctx.fillStyle = "#1a1a28";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 2 * s, screenPos.y + 4 * s);
+          ctx.lineTo(screenPos.x + 2 * s, screenPos.y - spikeHeight * 0.7);
+          ctx.lineTo(screenPos.x, screenPos.y - spikeHeight);
+          ctx.lineTo(screenPos.x + 12 * s, screenPos.y + 4 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Glossy highlight strip (volcanic glass reflection)
+          const glossGrad = ctx.createLinearGradient(
+            screenPos.x - 8 * s, screenPos.y - spikeHeight * 0.8,
+            screenPos.x + 4 * s, screenPos.y
+          );
+          glossGrad.addColorStop(0, "rgba(150,150,200,0.5)");
+          glossGrad.addColorStop(0.3, "rgba(100,100,160,0.3)");
+          glossGrad.addColorStop(0.6, "rgba(80,80,140,0.15)");
+          glossGrad.addColorStop(1, "transparent");
+
+          ctx.fillStyle = glossGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
+          ctx.lineTo(screenPos.x - 1 * s, screenPos.y - spikeHeight * 0.95);
+          ctx.lineTo(screenPos.x + 1 * s, screenPos.y - spikeHeight * 0.6);
+          ctx.lineTo(screenPos.x - 3 * s, screenPos.y + 2 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Secondary small spike
+          ctx.fillStyle = "#12121a";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y + 4 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - spikeHeight * 0.4);
+          ctx.lineTo(screenPos.x + 14 * s, screenPos.y + 4 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Secondary spike highlight
+          ctx.fillStyle = "rgba(130,130,180,0.25)";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 8 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - spikeHeight * 0.38);
           ctx.lineTo(screenPos.x + 10 * s, screenPos.y + 3 * s);
           ctx.closePath();
           ctx.fill();
-          // Glossy highlight
-          ctx.fillStyle = "rgba(100,100,150,0.4)";
+
+          // Sharp edge highlights
+          ctx.strokeStyle = "rgba(180,180,220,0.35)";
+          ctx.lineWidth = 1 * s;
           ctx.beginPath();
-          ctx.moveTo(screenPos.x - 5 * s, screenPos.y + 3 * s);
-          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 35 * s);
-          ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 20 * s);
-          ctx.lineTo(screenPos.x, screenPos.y + 3 * s);
+          ctx.moveTo(screenPos.x, screenPos.y - spikeHeight);
+          ctx.lineTo(screenPos.x - 2 * s, screenPos.y - spikeHeight * 0.5);
+          ctx.stroke();
+
+          // Base crack detail
+          ctx.strokeStyle = "rgba(40,20,0,0.4)";
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 3 * s);
+          ctx.lineTo(screenPos.x - 4 * s, screenPos.y - 5 * s);
+          ctx.lineTo(screenPos.x + 2 * s, screenPos.y + 2 * s);
+          ctx.stroke();
+
+          // Subtle lava glow at base for some variants
+          if (variant > 1) {
+            const baseGlow = ctx.createRadialGradient(
+              screenPos.x, screenPos.y + 2 * s, 0,
+              screenPos.x, screenPos.y + 2 * s, 12 * s
+            );
+            baseGlow.addColorStop(0, "rgba(255,80,0,0.25)");
+            baseGlow.addColorStop(1, "transparent");
+            ctx.fillStyle = baseGlow;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 12 * s, 6 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        case "charred_tree": {
+          // Enhanced 3D isometric charred/burnt tree
+          const charTime = decorTime;
+
+          // Ground shadow and ash
+          const ashGrad = ctx.createRadialGradient(
+            screenPos.x + 3 * s, screenPos.y + 8 * s, 0,
+            screenPos.x + 3 * s, screenPos.y + 8 * s, 25 * s
+          );
+          ashGrad.addColorStop(0, "rgba(30,30,30,0.3)");
+          ashGrad.addColorStop(0.5, "rgba(40,35,30,0.2)");
+          ashGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = ashGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 8 * s, 25 * s, 12 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Trunk with charred texture gradient
+          const trunkCharGrad = ctx.createLinearGradient(
+            screenPos.x - 7 * s, 0, screenPos.x + 7 * s, 0
+          );
+          trunkCharGrad.addColorStop(0, "#0a0a0a");
+          trunkCharGrad.addColorStop(0.3, "#1a1a1a");
+          trunkCharGrad.addColorStop(0.5, "#252525");
+          trunkCharGrad.addColorStop(0.7, "#1a1a1a");
+          trunkCharGrad.addColorStop(1, "#0a0a0a");
+
+          ctx.fillStyle = trunkCharGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 7 * s, screenPos.y + 5 * s);
+          ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 35 * s);
+          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 38 * s);
+          ctx.lineTo(screenPos.x + 7 * s, screenPos.y + 5 * s);
           ctx.closePath();
           ctx.fill();
+
+          // Charred bark texture
+          ctx.strokeStyle = "#2a2520";
+          ctx.lineWidth = 1.5 * s;
+          for (let cb = 0; cb < 6; cb++) {
+            const cbY = screenPos.y - 5 * s - cb * 6 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 5 * s + cb % 2 * 2 * s, cbY);
+            ctx.lineTo(screenPos.x + 4 * s - cb % 2 * 2 * s, cbY + 2 * s);
+            ctx.stroke();
+          }
+
+          // Broken branch stumps
+          ctx.fillStyle = "#151515";
+
+          // Left broken branch
+          ctx.save();
+          ctx.translate(screenPos.x - 4 * s, screenPos.y - 22 * s);
+          ctx.rotate(-0.6);
+          ctx.fillRect(0, -2 * s, 18 * s, 4 * s);
+          // Jagged break end
+          ctx.fillStyle = "#252520";
+          ctx.beginPath();
+          ctx.moveTo(18 * s, -2 * s);
+          ctx.lineTo(20 * s, 0);
+          ctx.lineTo(17 * s, 2 * s);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // Right broken branch (higher)
+          ctx.save();
+          ctx.translate(screenPos.x + 4 * s, screenPos.y - 28 * s);
+          ctx.rotate(0.5);
+          ctx.fillStyle = "#151515";
+          ctx.fillRect(0, -1.5 * s, 14 * s, 3 * s);
+          ctx.fillStyle = "#252520";
+          ctx.beginPath();
+          ctx.moveTo(14 * s, -1.5 * s);
+          ctx.lineTo(16 * s, 0);
+          ctx.lineTo(13 * s, 1.5 * s);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // Small broken stump
+          ctx.fillStyle = "#181818";
+          ctx.save();
+          ctx.translate(screenPos.x + 3 * s, screenPos.y - 15 * s);
+          ctx.rotate(0.8);
+          ctx.fillRect(0, -1 * s, 8 * s, 2 * s);
+          ctx.restore();
+
+          // Glowing embers on trunk
+          const emberPositions = [
+            { x: -2, y: -26, size: 2.5 },
+            { x: 3, y: -18, size: 2 },
+            { x: -1, y: -12, size: 1.8 },
+            { x: 2, y: -30, size: 1.5 },
+            { x: -3, y: -8, size: 2.2 }
+          ];
+
+          for (let e = 0; e < emberPositions.length; e++) {
+            const ep = emberPositions[e];
+            const emberPulse = 0.5 + Math.sin(charTime * 3 + e * 1.2) * 0.4;
+
+            // Ember glow
+            const emberGlow = ctx.createRadialGradient(
+              screenPos.x + ep.x * s, screenPos.y + ep.y * s, 0,
+              screenPos.x + ep.x * s, screenPos.y + ep.y * s, ep.size * 3 * s
+            );
+            emberGlow.addColorStop(0, `rgba(255,100,0,${emberPulse})`);
+            emberGlow.addColorStop(0.5, `rgba(255,50,0,${emberPulse * 0.4})`);
+            emberGlow.addColorStop(1, "transparent");
+            ctx.fillStyle = emberGlow;
+            ctx.beginPath();
+            ctx.arc(screenPos.x + ep.x * s, screenPos.y + ep.y * s, ep.size * 3 * s, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ember core
+            ctx.fillStyle = `rgba(255,${150 + Math.sin(charTime * 4 + e) * 50},50,${emberPulse})`;
+            ctx.beginPath();
+            ctx.arc(screenPos.x + ep.x * s, screenPos.y + ep.y * s, ep.size * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Rising smoke wisps
+          ctx.fillStyle = "rgba(80,80,80,0.25)";
+          for (let sw = 0; sw < 3; sw++) {
+            const smokePhase = (charTime * 0.8 + sw * 0.6) % 2;
+            const smokeX = screenPos.x - 3 * s + sw * 3 * s + Math.sin(charTime + sw) * 3 * s;
+            const smokeY = screenPos.y - 38 * s - smokePhase * 20 * s;
+            const smokeAlpha = 0.3 - smokePhase * 0.15;
+            const smokeSize = 3 + smokePhase * 4;
+
+            ctx.fillStyle = `rgba(80,80,80,${smokeAlpha})`;
+            ctx.beginPath();
+            ctx.ellipse(smokeX, smokeY, smokeSize * s, smokeSize * 0.6 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
-        case "charred_tree":
-          ctx.fillStyle = "rgba(0,0,0,0.2)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x + 2 * s,
-            screenPos.y + 5 * s,
-            15 * s,
-            7 * s,
-            0,
-            0,
-            Math.PI * 2
+        }
+        case "ember": {
+          // Enhanced floating ember particle with trails and glow
+          const emberTime = decorTime * 2 + variant;
+          const emberFloat = Math.sin(emberTime * 1.5) * 5 * s;
+          const emberDrift = Math.sin(emberTime * 0.8 + variant * 2) * 3 * s;
+          const emberPulse = 0.7 + Math.sin(emberTime * 4) * 0.3;
+          const emberSize = (3 + variant * 0.5) * s;
+
+          const emberX = screenPos.x + emberDrift;
+          const emberY = screenPos.y + emberFloat;
+
+          // Outer glow halo
+          const outerGlow = ctx.createRadialGradient(
+            emberX, emberY, 0,
+            emberX, emberY, emberSize * 5
           );
+          outerGlow.addColorStop(0, `rgba(255,100,0,${0.4 * emberPulse})`);
+          outerGlow.addColorStop(0.4, `rgba(255,50,0,${0.2 * emberPulse})`);
+          outerGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = outerGlow;
+          ctx.beginPath();
+          ctx.arc(emberX, emberY, emberSize * 5, 0, Math.PI * 2);
           ctx.fill();
-          // Burnt trunk
-          ctx.fillStyle = "#1a1a1a";
-          ctx.fillRect(
-            screenPos.x - 5 * s,
-            screenPos.y - 30 * s,
-            10 * s,
-            35 * s
+
+          // Main ember body with gradient
+          const emberGrad = ctx.createRadialGradient(
+            emberX - emberSize * 0.3, emberY - emberSize * 0.3, 0,
+            emberX, emberY, emberSize * 1.5
           );
-          // Broken branches
-          ctx.strokeStyle = "#2a2a2a";
-          ctx.lineWidth = 3 * s;
+          emberGrad.addColorStop(0, "#ffffcc");
+          emberGrad.addColorStop(0.3, "#ffcc44");
+          emberGrad.addColorStop(0.6, `rgb(255,${100 + Math.sin(emberTime * 3) * 50},0)`);
+          emberGrad.addColorStop(1, "#cc3300");
+
+          ctx.fillStyle = emberGrad;
           ctx.beginPath();
-          ctx.moveTo(screenPos.x, screenPos.y - 20 * s);
-          ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 28 * s);
-          ctx.moveTo(screenPos.x, screenPos.y - 15 * s);
-          ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 20 * s);
-          ctx.stroke();
-          // Embers
-          ctx.fillStyle = "#ff4400";
-          ctx.globalAlpha = 0.5 + Math.sin(decorTime * 3) * 0.3;
-          ctx.beginPath();
-          ctx.arc(
-            screenPos.x - 2 * s,
-            screenPos.y - 25 * s,
-            2 * s,
-            0,
-            Math.PI * 2
-          );
+          ctx.arc(emberX, emberY, emberSize * 1.2, 0, Math.PI * 2);
           ctx.fill();
+
+          // Hot core
+          ctx.fillStyle = `rgba(255,255,200,${emberPulse})`;
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x + 3 * s,
-            screenPos.y - 18 * s,
-            1.5 * s,
-            0,
-            Math.PI * 2
-          );
+          ctx.arc(emberX - emberSize * 0.2, emberY - emberSize * 0.2, emberSize * 0.5, 0, Math.PI * 2);
           ctx.fill();
-          ctx.globalAlpha = 1;
+
+          // Trailing sparks (3 small trailing particles)
+          for (let tr = 1; tr <= 3; tr++) {
+            const trailDelay = tr * 0.15;
+            const trailX = emberX - emberDrift * trailDelay * 2 - tr * 2 * s;
+            const trailY = emberY - emberFloat * trailDelay - tr * 3 * s;
+            const trailSize = emberSize * (0.5 - tr * 0.12);
+            const trailAlpha = 0.6 - tr * 0.18;
+
+            ctx.fillStyle = `rgba(255,${150 - tr * 30},0,${trailAlpha})`;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
           break;
-        case "ember":
-          ctx.fillStyle = `rgba(255,${
-            100 + Math.sin(decorTime * 5 + variant) * 50
-          },0,${0.5 + Math.sin(decorTime * 3) * 0.3})`;
-          ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y, 4 * s, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#ff8800";
-          ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y, 2 * s, 0, Math.PI * 2);
-          ctx.fill();
-          break;
+        }
         case "obsidian_castle":
           // Sharp, dark, glossy volcanic glass structure
           const obsDark = "#1A1A1A";
@@ -7058,188 +8800,534 @@ export default function PrincetonTowerDefense() {
           break;
 
         // === SWAMP DECORATIONS ===
-        case "swamp_tree":
-          ctx.fillStyle = "rgba(0,0,0,0.2)";
+        case "swamp_tree": {
+          // Enhanced 3D isometric gnarled swamp tree with hanging moss
+          const swampTime = decorTime;
+
+          // Murky water reflection/shadow
+          const swampShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 5 * s, screenPos.y + 10 * s, 0,
+            screenPos.x + 5 * s, screenPos.y + 10 * s, 30 * s
+          );
+          swampShadowGrad.addColorStop(0, "rgba(20,40,20,0.35)");
+          swampShadowGrad.addColorStop(0.7, "rgba(10,30,15,0.2)");
+          swampShadowGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = swampShadowGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x + 3 * s,
-            screenPos.y + 8 * s,
-            22 * s,
-            10 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x + 5 * s, screenPos.y + 10 * s, 30 * s, 15 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Gnarled trunk
-          ctx.fillStyle = "#3a2a1a";
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 5 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x - 12 * s,
-            screenPos.y - 15 * s,
-            screenPos.x - 5 * s,
-            screenPos.y - 35 * s
-          );
-          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 35 * s);
-          ctx.quadraticCurveTo(
-            screenPos.x + 10 * s,
-            screenPos.y - 15 * s,
-            screenPos.x + 8 * s,
-            screenPos.y + 5 * s
-          );
-          ctx.closePath();
-          ctx.fill();
-          // Hanging moss
-          ctx.strokeStyle = "#4a6a4a";
-          ctx.lineWidth = 2 * s;
-          for (let m = 0; m < 5; m++) {
-            const mx = screenPos.x - 15 * s + m * 8 * s;
-            const sway = Math.sin(decorTime + m) * 3 * s;
+
+          // Exposed roots
+          ctx.strokeStyle = "#2a1a10";
+          ctx.lineWidth = 3 * s;
+          ctx.lineCap = "round";
+          for (let rt = 0; rt < 4; rt++) {
+            const rtAngle = -0.6 + rt * 0.4;
             ctx.beginPath();
-            ctx.moveTo(mx, screenPos.y - 30 * s);
+            ctx.moveTo(screenPos.x + Math.cos(rtAngle) * 6 * s, screenPos.y + 4 * s);
             ctx.quadraticCurveTo(
-              mx + sway,
-              screenPos.y - 20 * s,
-              mx + sway * 0.5,
-              screenPos.y - 10 * s
+              screenPos.x + Math.cos(rtAngle) * 18 * s, screenPos.y + 2 * s,
+              screenPos.x + Math.cos(rtAngle) * 25 * s, screenPos.y + 8 * s
             );
             ctx.stroke();
           }
-          // Dark foliage
-          ctx.fillStyle = "#2a4a2a";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y - 35 * s,
-            20 * s,
-            12 * s,
-            0,
-            0,
-            Math.PI * 2
+
+          // Gnarled trunk with gradient
+          const swampTrunkGrad = ctx.createLinearGradient(
+            screenPos.x - 10 * s, 0, screenPos.x + 10 * s, 0
           );
-          ctx.fill();
-          break;
-        case "mushroom":
-          ctx.fillStyle = "rgba(0,0,0,0.15)";
+          swampTrunkGrad.addColorStop(0, "#1a1208");
+          swampTrunkGrad.addColorStop(0.3, "#3a2a18");
+          swampTrunkGrad.addColorStop(0.6, "#4a3a20");
+          swampTrunkGrad.addColorStop(1, "#2a1a10");
+
+          ctx.fillStyle = swampTrunkGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y + 3 * s,
-            10 * s,
-            5 * s,
-            0,
-            0,
-            Math.PI * 2
+          ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 6 * s);
+          ctx.bezierCurveTo(
+            screenPos.x - 15 * s, screenPos.y - 10 * s,
+            screenPos.x - 8 * s, screenPos.y - 25 * s,
+            screenPos.x - 5 * s, screenPos.y - 45 * s
           );
-          ctx.fill();
-          // Stem
-          ctx.fillStyle = "#e8e0d0";
-          ctx.fillRect(screenPos.x - 3 * s, screenPos.y - 8 * s, 6 * s, 12 * s);
-          // Cap
-          const mushroomColors = ["#8b0000", "#4a0080", "#006400", "#804000"][
-            variant
-          ];
-          ctx.fillStyle = mushroomColors;
-          ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y - 10 * s, 12 * s, Math.PI, 0);
+          ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 48 * s);
+          ctx.bezierCurveTo(
+            screenPos.x + 12 * s, screenPos.y - 25 * s,
+            screenPos.x + 15 * s, screenPos.y - 10 * s,
+            screenPos.x + 10 * s, screenPos.y + 6 * s
+          );
           ctx.closePath();
           ctx.fill();
-          // Spots
-          ctx.fillStyle = "rgba(255,255,255,0.6)";
-          ctx.beginPath();
-          ctx.arc(
-            screenPos.x - 5 * s,
-            screenPos.y - 14 * s,
-            2 * s,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(
-            screenPos.x + 4 * s,
-            screenPos.y - 12 * s,
-            1.5 * s,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          // Glow effect for some
-          if (variant === 1) {
-            ctx.fillStyle = `rgba(150,0,200,${
-              0.2 + Math.sin(decorTime * 2) * 0.1
-            })`;
+
+          // Bark texture/knots
+          ctx.fillStyle = "#1a1008";
+          for (let kn = 0; kn < 3; kn++) {
+            const knY = screenPos.y - 10 * s - kn * 12 * s;
+            const knX = screenPos.x + (kn % 2 - 0.5) * 4 * s;
             ctx.beginPath();
-            ctx.arc(screenPos.x, screenPos.y - 10 * s, 15 * s, 0, Math.PI * 2);
+            ctx.ellipse(knX, knY, 3 * s, 4 * s, 0.3, 0, Math.PI * 2);
             ctx.fill();
           }
-          break;
-        case "lily_pad":
-          ctx.fillStyle = "#2a5a2a";
+
+          // Branches
+          ctx.strokeStyle = "#3a2a18";
+          ctx.lineWidth = 4 * s;
+          // Left branch
           ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y, 12 * s, 0.2, Math.PI * 2 - 0.2);
-          ctx.lineTo(screenPos.x, screenPos.y);
+          ctx.moveTo(screenPos.x - 6 * s, screenPos.y - 35 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 25 * s, screenPos.y - 40 * s,
+            screenPos.x - 30 * s, screenPos.y - 32 * s
+          );
+          ctx.stroke();
+          // Right branch
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 38 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x + 22 * s, screenPos.y - 45 * s,
+            screenPos.x + 28 * s, screenPos.y - 38 * s
+          );
+          ctx.stroke();
+
+          // Dark sparse foliage
+          const foliageColors = ["#1a3a1a", "#2a4a25", "#1a3520"];
+          for (let fc = 0; fc < 5; fc++) {
+            const fcX = screenPos.x - 20 * s + fc * 12 * s + Math.sin(fc * 1.5) * 5 * s;
+            const fcY = screenPos.y - 42 * s - fc * 3 * s + Math.cos(fc * 2) * 5 * s;
+            ctx.fillStyle = foliageColors[fc % 3];
+            ctx.beginPath();
+            ctx.ellipse(fcX, fcY, 12 * s, 8 * s, fc * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Hanging spanish moss
+          ctx.lineWidth = 1.5 * s;
+          const mossColors = ["#4a6a45", "#5a7a55", "#3a5a35"];
+          for (let m = 0; m < 8; m++) {
+            const mx = screenPos.x - 25 * s + m * 7 * s;
+            const mStartY = screenPos.y - 38 * s + Math.sin(m * 1.2) * 8 * s;
+            const mLen = 15 + Math.sin(m * 2.1) * 8;
+            const sway = Math.sin(swampTime * 0.8 + m * 0.7) * 4 * s;
+
+            ctx.strokeStyle = mossColors[m % 3];
+            ctx.beginPath();
+            ctx.moveTo(mx, mStartY);
+            ctx.bezierCurveTo(
+              mx + sway * 0.5, mStartY + mLen * 0.3 * s,
+              mx + sway, mStartY + mLen * 0.6 * s,
+              mx + sway * 0.7, mStartY + mLen * s
+            );
+            ctx.stroke();
+
+            // Moss wisps
+            if (m % 2 === 0) {
+              ctx.lineWidth = 1 * s;
+              ctx.beginPath();
+              ctx.moveTo(mx + sway * 0.3, mStartY + mLen * 0.5 * s);
+              ctx.lineTo(mx + sway * 0.3 - 4 * s, mStartY + mLen * 0.7 * s);
+              ctx.stroke();
+              ctx.lineWidth = 1.5 * s;
+            }
+          }
+
+          // Fireflies/swamp lights
+          for (let fl = 0; fl < 3; fl++) {
+            const flPhase = (swampTime * 0.5 + fl * 1.5) % 3;
+            if (flPhase < 2) {
+              const flX = screenPos.x - 15 * s + fl * 15 * s + Math.sin(swampTime + fl * 2) * 8 * s;
+              const flY = screenPos.y - 25 * s - fl * 5 * s + Math.cos(swampTime * 0.7 + fl) * 6 * s;
+              const flAlpha = Math.sin(flPhase / 2 * Math.PI) * 0.7;
+
+              const flyGlow = ctx.createRadialGradient(flX, flY, 0, flX, flY, 5 * s);
+              flyGlow.addColorStop(0, `rgba(180,255,100,${flAlpha})`);
+              flyGlow.addColorStop(1, "transparent");
+              ctx.fillStyle = flyGlow;
+              ctx.beginPath();
+              ctx.arc(flX, flY, 5 * s, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = `rgba(200,255,150,${flAlpha})`;
+              ctx.beginPath();
+              ctx.arc(flX, flY, 1.5 * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          break;
+        }
+        case "mushroom": {
+          // Enhanced 3D isometric fantasy mushroom
+          const mushTime = decorTime;
+          const mushPulse = 0.85 + Math.sin(mushTime * 2.5 + variant) * 0.15;
+
+          // Mushroom color palettes
+          const mushPalettes = [
+            { cap: "#9b1a1a", capDark: "#6b0a0a", capLight: "#bb3a3a", spots: "#f5f0e0", glow: null },
+            { cap: "#5a1a8a", capDark: "#3a0a5a", capLight: "#7a3aaa", spots: "#e0f0ff", glow: "#9b4dff" },
+            { cap: "#1a6a2a", capDark: "#0a4a1a", capLight: "#3a8a4a", spots: "#fff8e0", glow: "#4aff8a" },
+            { cap: "#8a5020", capDark: "#5a3010", capLight: "#aa7040", spots: "#f8f0e8", glow: null }
+          ][variant] || { cap: "#9b1a1a", capDark: "#6b0a0a", capLight: "#bb3a3a", spots: "#f5f0e0", glow: null };
+
+          // Ground shadow
+          ctx.fillStyle = "rgba(0,0,0,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y + 4 * s, 14 * s, 6 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Bioluminescent glow for magic variants
+          if (mushPalettes.glow) {
+            const glowGrad = ctx.createRadialGradient(
+              screenPos.x, screenPos.y - 8 * s, 0,
+              screenPos.x, screenPos.y - 8 * s, 25 * s
+            );
+            glowGrad.addColorStop(0, `${mushPalettes.glow}${Math.floor(mushPulse * 60).toString(16).padStart(2, '0')}`);
+            glowGrad.addColorStop(0.5, `${mushPalettes.glow}${Math.floor(mushPulse * 25).toString(16).padStart(2, '0')}`);
+            glowGrad.addColorStop(1, "transparent");
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y - 8 * s, 25 * s, 18 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Stem with 3D shading
+          const stemGrad = ctx.createLinearGradient(
+            screenPos.x - 5 * s, 0, screenPos.x + 5 * s, 0
+          );
+          stemGrad.addColorStop(0, "#c8c0b0");
+          stemGrad.addColorStop(0.3, "#f0e8d8");
+          stemGrad.addColorStop(0.7, "#f8f0e0");
+          stemGrad.addColorStop(1, "#d8d0c0");
+
+          ctx.fillStyle = stemGrad;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 4 * s, screenPos.y + 3 * s);
+          ctx.quadraticCurveTo(screenPos.x - 5 * s, screenPos.y - 5 * s, screenPos.x - 3 * s, screenPos.y - 10 * s);
+          ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 10 * s);
+          ctx.quadraticCurveTo(screenPos.x + 5 * s, screenPos.y - 5 * s, screenPos.x + 4 * s, screenPos.y + 3 * s);
           ctx.closePath();
           ctx.fill();
-          ctx.fillStyle = "#3a7a3a";
+
+          // Stem ring details
+          ctx.strokeStyle = "#b8b0a0";
+          ctx.lineWidth = 1 * s;
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x - 2 * s,
-            screenPos.y - 2 * s,
-            8 * s,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x, screenPos.y - 3 * s, 4 * s, 1.5 * s, 0, 0, Math.PI);
+          ctx.stroke();
+
+          // Cap underside (gills)
+          ctx.fillStyle = mushPalettes.capDark;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 9 * s, 14 * s, 5 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Flower on some
+
+          // Gill lines
+          ctx.strokeStyle = mushPalettes.cap;
+          ctx.lineWidth = 0.8 * s;
+          for (let g = 0; g < 12; g++) {
+            const gAngle = (g / 12) * Math.PI - Math.PI / 2;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x, screenPos.y - 9 * s);
+            ctx.lineTo(
+              screenPos.x + Math.cos(gAngle) * 13 * s,
+              screenPos.y - 9 * s + Math.sin(gAngle) * 4 * s
+            );
+            ctx.stroke();
+          }
+
+          // Cap top with gradient
+          const capGrad = ctx.createRadialGradient(
+            screenPos.x - 4 * s, screenPos.y - 18 * s, 0,
+            screenPos.x, screenPos.y - 12 * s, 16 * s
+          );
+          capGrad.addColorStop(0, mushPalettes.capLight);
+          capGrad.addColorStop(0.5, mushPalettes.cap);
+          capGrad.addColorStop(1, mushPalettes.capDark);
+
+          ctx.fillStyle = capGrad;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y - 12 * s, 14 * s, 10 * s, 0, Math.PI, Math.PI * 2);
+          ctx.closePath();
+          ctx.fill();
+
+          // Cap spots with slight 3D
+          ctx.fillStyle = mushPalettes.spots;
+          const spotPositions = [
+            { x: -6, y: -16, r: 2.5 },
+            { x: 4, y: -18, r: 2 },
+            { x: -2, y: -20, r: 1.8 },
+            { x: 7, y: -14, r: 1.5 },
+            { x: -8, y: -13, r: 1.8 },
+            { x: 1, y: -16, r: 2.2 }
+          ];
+          for (const spot of spotPositions) {
+            // Spot shadow
+            ctx.fillStyle = "rgba(0,0,0,0.15)";
+            ctx.beginPath();
+            ctx.ellipse(
+              screenPos.x + spot.x * s + 0.5 * s,
+              screenPos.y + spot.y * s + 0.5 * s,
+              spot.r * s, spot.r * 0.7 * s, 0, 0, Math.PI * 2
+            );
+            ctx.fill();
+            // Spot
+            ctx.fillStyle = mushPalettes.spots;
+            ctx.beginPath();
+            ctx.ellipse(
+              screenPos.x + spot.x * s,
+              screenPos.y + spot.y * s,
+              spot.r * s, spot.r * 0.7 * s, 0, 0, Math.PI * 2
+            );
+            ctx.fill();
+          }
+
+          // Cap highlight
+          ctx.fillStyle = "rgba(255,255,255,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x - 4 * s, screenPos.y - 17 * s, 6 * s, 4 * s, -0.3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Spore particles for glowing variants
+          if (mushPalettes.glow) {
+            for (let sp = 0; sp < 5; sp++) {
+              const spPhase = (mushTime * 0.5 + sp * 0.8) % 2;
+              const spX = screenPos.x - 8 * s + sp * 4 * s + Math.sin(mushTime + sp) * 3 * s;
+              const spY = screenPos.y - 10 * s - spPhase * 15 * s;
+              const spAlpha = (1 - spPhase * 0.5) * mushPulse * 0.6;
+
+              ctx.fillStyle = `rgba(200,255,200,${spAlpha})`;
+              ctx.beginPath();
+              ctx.arc(spX, spY, 1.5 * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          break;
+        }
+        case "lily_pad": {
+          // Enhanced 3D isometric lily pad floating on water
+          const padFloat = Math.sin(decorTime * 1.2 + screenPos.x * 0.01) * 1.5 * s;
+          const padRot = Math.sin(decorTime * 0.8 + variant) * 0.08;
+
+          // Water ripple underneath
+          ctx.strokeStyle = "rgba(100,150,130,0.25)";
+          ctx.lineWidth = 1.5 * s;
+          for (let rp = 0; rp < 2; rp++) {
+            const rpPhase = (decorTime * 0.5 + rp * 0.5) % 1.5;
+            const rpSize = 14 + rpPhase * 12;
+            const rpAlpha = 0.25 - rpPhase * 0.15;
+            ctx.strokeStyle = `rgba(100,150,130,${rpAlpha})`;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y + padFloat * 0.3, rpSize * s, rpSize * 0.4 * s, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Pad shadow on water
+          ctx.fillStyle = "rgba(20,50,30,0.2)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 2 * s, screenPos.y + 3 * s + padFloat * 0.3, 15 * s, 7 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Main pad with gradient
+          const padGrad = ctx.createRadialGradient(
+            screenPos.x - 4 * s, screenPos.y - 3 * s + padFloat, 0,
+            screenPos.x, screenPos.y + padFloat, 15 * s
+          );
+          padGrad.addColorStop(0, "#4a9a4a");
+          padGrad.addColorStop(0.5, "#3a7a3a");
+          padGrad.addColorStop(1, "#2a5a2a");
+
+          ctx.save();
+          ctx.translate(screenPos.x, screenPos.y + padFloat);
+          ctx.rotate(padRot);
+
+          ctx.fillStyle = padGrad;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, 14 * s, 0.25, Math.PI * 2 - 0.25);
+          ctx.closePath();
+          ctx.fill();
+
+          // Pad veins
+          ctx.strokeStyle = "#2a6a2a";
+          ctx.lineWidth = 1 * s;
+          for (let v = 0; v < 7; v++) {
+            const vAngle = 0.4 + (v / 6) * (Math.PI * 2 - 0.8);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(vAngle) * 11 * s, Math.sin(vAngle) * 5 * s);
+            ctx.stroke();
+          }
+
+          // Center highlight
+          ctx.fillStyle = "rgba(100,180,100,0.4)";
+          ctx.beginPath();
+          ctx.ellipse(-3 * s, -2 * s, 6 * s, 3 * s, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+
+          // Flower for variant 0
           if (variant === 0) {
-            ctx.fillStyle = "#ff69b4";
-            for (let p = 0; p < 5; p++) {
-              const pa = (p / 5) * Math.PI * 2;
+            const flowerY = screenPos.y - 5 * s + padFloat * 0.8;
+
+            // Flower stem
+            ctx.strokeStyle = "#4a8a4a";
+            ctx.lineWidth = 2 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 3 * s, screenPos.y + padFloat);
+            ctx.quadraticCurveTo(screenPos.x - 4 * s, flowerY + 3 * s, screenPos.x, flowerY);
+            ctx.stroke();
+
+            // Lotus petals (multiple layers)
+            // Outer petals
+            ctx.fillStyle = "#ffb6c1";
+            for (let p = 0; p < 6; p++) {
+              const pa = (p / 6) * Math.PI * 2;
               ctx.beginPath();
               ctx.ellipse(
-                screenPos.x + Math.cos(pa) * 4 * s,
-                screenPos.y + Math.sin(pa) * 2 * s - 3 * s,
-                3 * s,
-                2 * s,
-                pa,
-                0,
-                Math.PI * 2
+                screenPos.x + Math.cos(pa) * 5 * s,
+                flowerY + Math.sin(pa) * 2.5 * s,
+                4 * s, 2.5 * s, pa, 0, Math.PI * 2
               );
               ctx.fill();
             }
-            ctx.fillStyle = "#ffff00";
+            // Inner petals
+            ctx.fillStyle = "#ffc0cb";
+            for (let p = 0; p < 5; p++) {
+              const pa = (p / 5) * Math.PI * 2 + 0.3;
+              ctx.beginPath();
+              ctx.ellipse(
+                screenPos.x + Math.cos(pa) * 3 * s,
+                flowerY - 2 * s + Math.sin(pa) * 1.5 * s,
+                3 * s, 2 * s, pa, 0, Math.PI * 2
+              );
+              ctx.fill();
+            }
+            // Center
+            ctx.fillStyle = "#ffeb3b";
             ctx.beginPath();
-            ctx.arc(screenPos.x, screenPos.y - 3 * s, 2 * s, 0, Math.PI * 2);
+            ctx.arc(screenPos.x, flowerY - 2 * s, 2.5 * s, 0, Math.PI * 2);
+            ctx.fill();
+            // Center texture
+            ctx.fillStyle = "#ffc107";
+            ctx.beginPath();
+            ctx.arc(screenPos.x - 0.5 * s, flowerY - 2.5 * s, 1 * s, 0, Math.PI * 2);
             ctx.fill();
           }
+
+          // Water droplets on pad
+          if (variant > 1) {
+            ctx.fillStyle = "rgba(200,240,255,0.5)";
+            const droplets = [{ x: -4, y: -1 }, { x: 3, y: 1 }, { x: -1, y: 2 }];
+            for (const d of droplets) {
+              ctx.beginPath();
+              ctx.ellipse(
+                screenPos.x + d.x * s, screenPos.y + d.y * s + padFloat,
+                2 * s, 1 * s, 0, 0, Math.PI * 2
+              );
+              ctx.fill();
+              // Droplet highlight
+              ctx.fillStyle = "rgba(255,255,255,0.7)";
+              ctx.beginPath();
+              ctx.arc(screenPos.x + d.x * s - 0.5 * s, screenPos.y + d.y * s - 0.3 * s + padFloat, 0.6 * s, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = "rgba(200,240,255,0.5)";
+            }
+          }
           break;
-        case "fog_wisp":
-          ctx.fillStyle = `rgba(100,150,100,${
-            0.15 + Math.sin(decorTime + variant) * 0.1
-          })`;
-          const wispX =
-            screenPos.x + Math.sin(decorTime * 0.5 + variant) * 10 * s;
-          const wispY = screenPos.y + Math.cos(decorTime * 0.3) * 5 * s;
-          ctx.beginPath();
-          ctx.ellipse(wispX, wispY, 30 * s, 15 * s, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = `rgba(150,200,150,${
-            0.1 + Math.sin(decorTime * 0.7) * 0.05
-          })`;
-          ctx.beginPath();
-          ctx.ellipse(
-            wispX + 10 * s,
-            wispY - 5 * s,
-            20 * s,
-            10 * s,
-            0,
-            0,
-            Math.PI * 2
+        }
+        case "fog_wisp": {
+          // Enhanced ethereal swamp fog wisp with layered atmospheric effect
+          const fogTime = decorTime * 0.7;
+          const fogDrift = Math.sin(fogTime + variant * 1.5) * 15 * s;
+          const fogRise = Math.cos(fogTime * 0.6 + variant) * 8 * s;
+          const fogPulse = 0.8 + Math.sin(fogTime * 1.5 + variant * 2) * 0.2;
+
+          const baseFogX = screenPos.x + fogDrift;
+          const baseFogY = screenPos.y + fogRise;
+
+          // Multiple fog layers for depth
+          // Back layer (largest, most transparent)
+          const backFogGrad = ctx.createRadialGradient(
+            baseFogX - 10 * s, baseFogY + 5 * s, 0,
+            baseFogX - 10 * s, baseFogY + 5 * s, 50 * s
           );
+          backFogGrad.addColorStop(0, `rgba(80,120,80,${0.12 * fogPulse})`);
+          backFogGrad.addColorStop(0.5, `rgba(90,130,90,${0.08 * fogPulse})`);
+          backFogGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = backFogGrad;
+          ctx.beginPath();
+          ctx.ellipse(baseFogX - 10 * s, baseFogY + 5 * s, 50 * s, 25 * s, 0.1, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Mid layer
+          const midFogGrad = ctx.createRadialGradient(
+            baseFogX, baseFogY, 0,
+            baseFogX, baseFogY, 38 * s
+          );
+          midFogGrad.addColorStop(0, `rgba(100,150,100,${0.18 * fogPulse})`);
+          midFogGrad.addColorStop(0.6, `rgba(110,160,110,${0.1 * fogPulse})`);
+          midFogGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = midFogGrad;
+          ctx.beginPath();
+          ctx.ellipse(baseFogX, baseFogY, 38 * s, 18 * s, -0.05, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Front wisp tendrils
+          const tendrilGrad = ctx.createRadialGradient(
+            baseFogX + 15 * s, baseFogY - 8 * s, 0,
+            baseFogX + 15 * s, baseFogY - 8 * s, 28 * s
+          );
+          tendrilGrad.addColorStop(0, `rgba(130,180,130,${0.15 * fogPulse})`);
+          tendrilGrad.addColorStop(0.7, `rgba(120,170,120,${0.08 * fogPulse})`);
+          tendrilGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = tendrilGrad;
+          ctx.beginPath();
+          ctx.ellipse(baseFogX + 15 * s, baseFogY - 8 * s, 28 * s, 12 * s, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Swirling internal detail
+          ctx.strokeStyle = `rgba(150,200,150,${0.08 * fogPulse})`;
+          ctx.lineWidth = 3 * s;
+          ctx.beginPath();
+          ctx.moveTo(baseFogX - 20 * s, baseFogY + 5 * s);
+          ctx.bezierCurveTo(
+            baseFogX - 5 * s, baseFogY - 8 * s,
+            baseFogX + 10 * s, baseFogY + 3 * s,
+            baseFogX + 30 * s, baseFogY - 5 * s
+          );
+          ctx.stroke();
+
+          // Dense core
+          const coreGrad = ctx.createRadialGradient(
+            baseFogX + 5 * s, baseFogY - 2 * s, 0,
+            baseFogX + 5 * s, baseFogY - 2 * s, 18 * s
+          );
+          coreGrad.addColorStop(0, `rgba(160,210,160,${0.22 * fogPulse})`);
+          coreGrad.addColorStop(0.5, `rgba(140,190,140,${0.12 * fogPulse})`);
+          coreGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = coreGrad;
+          ctx.beginPath();
+          ctx.ellipse(baseFogX + 5 * s, baseFogY - 2 * s, 18 * s, 10 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Floating particles within fog
+          for (let fp = 0; fp < 4; fp++) {
+            const fpTime = (fogTime * 0.8 + fp * 1.2) % 2.5;
+            const fpX = baseFogX - 15 * s + fp * 12 * s + Math.sin(fogTime + fp * 2) * 8 * s;
+            const fpY = baseFogY + 3 * s - fpTime * 8 * s + Math.cos(fogTime * 1.3 + fp) * 4 * s;
+            const fpAlpha = 0.25 * (1 - fpTime * 0.3) * fogPulse;
+
+            ctx.fillStyle = `rgba(180,220,180,${fpAlpha})`;
+            ctx.beginPath();
+            ctx.arc(fpX, fpY, 2.5 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Subtle ground interaction
+          ctx.fillStyle = `rgba(80,120,80,${0.06 * fogPulse})`;
+          ctx.beginPath();
+          ctx.ellipse(baseFogX, baseFogY + 18 * s, 35 * s, 8 * s, 0, 0, Math.PI * 2);
           ctx.fill();
           break;
+        }
         case "witch_cottage": {
           const time = Date.now() / 1000;
 
@@ -7711,9 +9799,8 @@ export default function PrincetonTowerDefense() {
           ctx.fill();
 
           // Smoke from chimney
-          ctx.fillStyle = `rgba(60, 50, 60, ${
-            0.4 + Math.sin(time * 1.5) * 0.15
-          })`;
+          ctx.fillStyle = `rgba(60, 50, 60, ${0.4 + Math.sin(time * 1.5) * 0.15
+            })`;
           for (let i = 0; i < 4; i++) {
             const smokeOffset = (time * 8 + i * 20) % 40;
             const smokeX =
@@ -8137,98 +10224,507 @@ export default function PrincetonTowerDefense() {
           break;
 
         case "deep_water":
-          // Animated deep water pool with layers
+          // Ultra-detailed isometric deep water pool
+          const waterSeed = (dec.x || 0) * 11.3 + (dec.y || 0) * 23.7;
+          const isoRatioWater = 0.5;
 
-          // outside glow
-          ctx.fillStyle = "rgba(0,0,100,0.3)";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            30 * s,
-            15 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          // Dark rim
-          ctx.fillStyle = "#0a0a4a";
-          ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y,
-            24 * s,
-            12 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-
-          // Light reflections
-          ctx.fillStyle = "rgba(255,255,255,0.3)";
-          for (let r = 0; r < 3; r++) {
-            const rx =
-              screenPos.x -
-              10 * s +
-              r * 10 * s +
-              Math.sin(decorTime * 3 + r) * 3 * s;
-            const ry =
-              screenPos.y - 2 * s + Math.cos(decorTime * 2 + r) * 2 * s;
+          // Helper for organic blob edges (water-specific)
+          const drawWaterBlob = (cx: number, cy: number, rx: number, ry: number, seed: number, bumpy: number = 0.12) => {
             ctx.beginPath();
-            ctx.ellipse(rx, ry, 6 * s, 3 * s, 0, 0, Math.PI * 2);
+            const pts = 20;
+            for (let i = 0; i <= pts; i++) {
+              const ang = (i / pts) * Math.PI * 2;
+              const n1 = Math.sin(ang * 3 + seed) * bumpy;
+              const n2 = Math.sin(ang * 5 + seed * 2.1) * bumpy * 0.5;
+              const variation = 1 + n1 + n2;
+              const x = cx + Math.cos(ang) * rx * variation;
+              const y = cy + Math.sin(ang) * ry * variation;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+          };
+
+          // 1. Outer wet ground ring (organic edges)
+          const wetGrad = ctx.createRadialGradient(screenPos.x, screenPos.y, 20 * s, screenPos.x, screenPos.y, 38 * s);
+          wetGrad.addColorStop(0, "transparent");
+          wetGrad.addColorStop(0.5, "rgba(20, 50, 80, 0.4)");
+          wetGrad.addColorStop(1, "rgba(30, 60, 90, 0.15)");
+          ctx.fillStyle = wetGrad;
+          drawWaterBlob(screenPos.x, screenPos.y, 38 * s, 19 * s * isoRatioWater, waterSeed, 0.18);
+          ctx.fill();
+
+          // 2. Stone/dirt rim around water (organic)
+          ctx.fillStyle = "rgba(60, 55, 50, 0.85)";
+          drawWaterBlob(screenPos.x, screenPos.y, 32 * s, 16 * s * isoRatioWater, waterSeed + 10, 0.15);
+          ctx.fill();
+
+          // 3. Deep water abyss layer (organic shape)
+          const deepGradW = ctx.createRadialGradient(screenPos.x, screenPos.y + 4 * s, 0, screenPos.x, screenPos.y, 28 * s);
+          deepGradW.addColorStop(0, "rgba(5, 15, 40, 0.98)");
+          deepGradW.addColorStop(0.4, "rgba(10, 30, 60, 0.95)");
+          deepGradW.addColorStop(0.7, "rgba(20, 50, 90, 0.9)");
+          deepGradW.addColorStop(1, "rgba(30, 70, 120, 0.85)");
+          ctx.fillStyle = deepGradW;
+          drawWaterBlob(screenPos.x, screenPos.y, 28 * s, 14 * s * isoRatioWater, waterSeed + 20, 0.12);
+          ctx.fill();
+
+          // 4. Surface water layer with slight offset (organic)
+          const surfGradW = ctx.createRadialGradient(screenPos.x - 8 * s, screenPos.y - 4 * s, 0, screenPos.x, screenPos.y, 26 * s);
+          surfGradW.addColorStop(0, "rgba(80, 150, 200, 0.7)");
+          surfGradW.addColorStop(0.4, "rgba(50, 120, 180, 0.5)");
+          surfGradW.addColorStop(1, "rgba(30, 80, 140, 0.3)");
+          ctx.fillStyle = surfGradW;
+          drawWaterBlob(screenPos.x, screenPos.y - 2 * s, 25 * s, 12.5 * s * isoRatioWater, waterSeed + 30, 0.1);
+          ctx.fill();
+
+          // 5. Animated ripples (concentric, moving outward)
+          for (let rip = 0; rip < 3; rip++) {
+            const ripPhase = (decorTime * 0.6 + rip * 0.33) % 1;
+            const ripR = (8 + ripPhase * 16) * s;
+            ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 * (1 - ripPhase)})`;
+            ctx.lineWidth = (1.5 - ripPhase) * s;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y, ripR, ripR * isoRatioWater, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // 6. Shimmer highlights (animated)
+          ctx.fillStyle = "rgba(200, 230, 255, 0.5)";
+          for (let sh = 0; sh < 4; sh++) {
+            const shAngle = sh * 0.7 + decorTime * 0.5 + waterSeed * 0.1;
+            const shDist = (10 + Math.sin(decorTime + sh) * 5) * s;
+            const shX = screenPos.x + Math.cos(shAngle) * shDist * 0.8;
+            const shY = screenPos.y + Math.sin(shAngle) * shDist * 0.4 - 2 * s;
+            const shSize = (4 + Math.sin(decorTime * 2 + sh * 2) * 2) * s;
+            ctx.beginPath();
+            ctx.ellipse(shX, shY, shSize, shSize * 0.4, shAngle * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // 7. Underwater glow from center (mysterious depth)
+          const glowPhase = Math.sin(decorTime * 0.8 + waterSeed) * 0.3 + 0.7;
+          const underwaterGlow = ctx.createRadialGradient(screenPos.x, screenPos.y + 3 * s, 0, screenPos.x, screenPos.y, 20 * s);
+          underwaterGlow.addColorStop(0, `rgba(50, 150, 200, ${0.25 * glowPhase})`);
+          underwaterGlow.addColorStop(0.5, `rgba(30, 100, 150, ${0.15 * glowPhase})`);
+          underwaterGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = underwaterGlow;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, screenPos.y, 18 * s, 9 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 8. Bubbles rising occasionally
+          for (let bub = 0; bub < 3; bub++) {
+            const bubPhase = (decorTime * 0.8 + bub * 0.5 + waterSeed * 0.01) % 2;
+            if (bubPhase < 1.2) {
+              const bubX = screenPos.x + Math.sin(bub * 3 + waterSeed) * 12 * s;
+              const bubY = screenPos.y + 5 * s - bubPhase * 18 * s;
+              const bubSize = (2 + bub * 0.5) * s * (1 - bubPhase / 1.5);
+              ctx.fillStyle = `rgba(180, 220, 255, ${0.6 * (1 - bubPhase / 1.2)})`;
+              ctx.beginPath();
+              ctx.arc(bubX, bubY, bubSize, 0, Math.PI * 2);
+              ctx.fill();
+              // Bubble highlight
+              ctx.fillStyle = `rgba(255, 255, 255, ${0.5 * (1 - bubPhase / 1.2)})`;
+              ctx.beginPath();
+              ctx.arc(bubX - bubSize * 0.3, bubY - bubSize * 0.3, bubSize * 0.35, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // 9. Rocks/pebbles at edge
+          ctx.fillStyle = "#4a4540";
+          for (let rock = 0; rock < 6; rock++) {
+            const rockAngle = (rock / 6) * Math.PI * 2 + Math.sin(waterSeed + rock) * 0.4;
+            const rockDist = (26 + Math.sin(rock * 2 + waterSeed) * 4) * s;
+            const rockX = screenPos.x + Math.cos(rockAngle) * rockDist;
+            const rockY = screenPos.y + Math.sin(rockAngle) * rockDist * isoRatioWater;
+            const rockSize = (3 + Math.sin(waterSeed + rock * 3) * 1.5) * s;
+            ctx.beginPath();
+            ctx.ellipse(rockX, rockY, rockSize, rockSize * 0.6, rockAngle, 0, Math.PI * 2);
             ctx.fill();
           }
           break;
 
         // === MISC DECORATIONS ===
-        case "ruins":
-          ctx.fillStyle = "rgba(0,0,0,0.25)";
+        case "ruins": {
+          // 5 unique ruin variants
+          const ruinVariant = variant % 5;
+          const stoneBase = "#5a5a5a";
+          const stoneDark = "#3a3a3a";
+          const stoneLight = "#7a7a7a";
+          const mossColor = "#4a5d3a";
+
+          // Ground shadow for all variants
+          const shadowGrad = ctx.createRadialGradient(
+            screenPos.x + 3 * s, screenPos.y + 8 * s, 0,
+            screenPos.x + 3 * s, screenPos.y + 8 * s, 45 * s
+          );
+          shadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
+          shadowGrad.addColorStop(0.7, "rgba(0,0,0,0.1)");
+          shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = shadowGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y + 10 * s,
-            40 * s,
-            20 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 8 * s, 45 * s, 22 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Broken walls
-          ctx.fillStyle = "#5a5a5a";
-          ctx.fillRect(
-            screenPos.x - 30 * s,
-            screenPos.y - 20 * s,
-            15 * s,
-            30 * s
-          );
-          ctx.fillRect(
-            screenPos.x + 10 * s,
-            screenPos.y - 15 * s,
-            20 * s,
-            25 * s
-          );
-          // Rubble
-          ctx.fillStyle = "#4a4a4a";
-          for (let r = 0; r < 6; r++) {
-            const rx = screenPos.x - 20 * s + r * 10 * s + Math.sin(r) * 5 * s;
-            const ry = screenPos.y + 5 * s + Math.cos(r) * 3 * s;
+
+          if (ruinVariant === 0) {
+            // VARIANT 0: Broken Roman column with scattered debris
+            // Column base
+            ctx.fillStyle = stoneLight;
             ctx.beginPath();
-            ctx.ellipse(rx, ry, 5 * s, 3 * s, r, 0, Math.PI * 2);
+            ctx.ellipse(screenPos.x, screenPos.y + 5 * s, 12 * s, 6 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y + 8 * s, 12 * s, 6 * s, 0, 0, Math.PI);
+            ctx.fill();
+
+            // Column shaft (broken, angled)
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x - 7 * s, screenPos.y - 35 * s);
+            ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 40 * s);
+            ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 38 * s);
+            ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 2 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Column fluting (vertical lines)
+            ctx.strokeStyle = stoneDark;
+            ctx.lineWidth = 0.5 * s;
+            for (let i = -5; i <= 5; i += 2) {
+              ctx.beginPath();
+              ctx.moveTo(screenPos.x + i * s, screenPos.y + 2 * s);
+              ctx.lineTo(screenPos.x + i * s - 1, screenPos.y - 35 * s);
+              ctx.stroke();
+            }
+
+            // Broken capital piece lying nearby
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 18 * s, screenPos.y + 3 * s);
+            ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 2 * s);
+            ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 5 * s);
+            ctx.lineTo(screenPos.x + 22 * s, screenPos.y + 8 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Scattered rubble
+            ctx.fillStyle = stoneDark;
+            for (let r = 0; r < 5; r++) {
+              const rx = screenPos.x - 25 * s + r * 12 * s + Math.sin(r * 2.5) * 8 * s;
+              const ry = screenPos.y + 5 * s + Math.cos(r * 1.7) * 5 * s;
+              ctx.beginPath();
+              ctx.ellipse(rx, ry, (4 + r % 3) * s, (2 + r % 2) * s, r * 0.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Moss patches
+            ctx.fillStyle = mossColor;
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x - 5 * s, screenPos.y - 15 * s, 4 * s, 2.5 * s, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x + 3 * s, screenPos.y - 5 * s, 3 * s, 2 * s, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+          } else if (ruinVariant === 1) {
+            // VARIANT 1: Crumbling archway
+            // Left pillar
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 25 * s, screenPos.y + 10 * s);
+            ctx.lineTo(screenPos.x - 28 * s, screenPos.y - 30 * s);
+            ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 35 * s);
+            ctx.lineTo(screenPos.x - 15 * s, screenPos.y + 8 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Left pillar highlight
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 15 * s, screenPos.y + 8 * s);
+            ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 35 * s);
+            ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 32 * s);
+            ctx.lineTo(screenPos.x - 10 * s, screenPos.y + 10 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Right pillar (broken shorter)
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 15 * s, screenPos.y + 10 * s);
+            ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 18 * s);
+            ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 8 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 25 * s, screenPos.y + 8 * s);
+            ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 18 * s);
+            ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 10 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Partial arch connecting
+            ctx.strokeStyle = stoneBase;
+            ctx.lineWidth = 6 * s;
+            ctx.beginPath();
+            ctx.arc(screenPos.x, screenPos.y - 20 * s, 22 * s, Math.PI * 1.1, Math.PI * 1.6);
+            ctx.stroke();
+
+            // Fallen arch stones
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 5 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 5 * s);
+            ctx.lineTo(screenPos.x + 18 * s, screenPos.y + 3 * s);
+            ctx.lineTo(screenPos.x + 10 * s, screenPos.y + 8 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Scattered debris
+            ctx.fillStyle = stoneDark;
+            for (let r = 0; r < 4; r++) {
+              const rx = screenPos.x - 8 * s + r * 8 * s;
+              const ry = screenPos.y + 6 * s + Math.sin(r * 2) * 3 * s;
+              ctx.beginPath();
+              ctx.ellipse(rx, ry, 3 * s, 1.8 * s, r, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+          } else if (ruinVariant === 2) {
+            // VARIANT 2: Collapsed wall section with vegetation
+            // Back wall segment
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 30 * s, screenPos.y + 5 * s);
+            ctx.lineTo(screenPos.x - 28 * s, screenPos.y - 25 * s);
+            ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 35 * s);
+            ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 5 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Wall texture - brick lines
+            ctx.strokeStyle = "#2a2a2a";
+            ctx.lineWidth = 0.5 * s;
+            for (let row = 0; row < 5; row++) {
+              const yOff = -5 - row * 6;
+              ctx.beginPath();
+              ctx.moveTo(screenPos.x - 28 * s, screenPos.y + yOff * s);
+              ctx.lineTo(screenPos.x + 6 * s, screenPos.y + (yOff - 8) * s);
+              ctx.stroke();
+            }
+
+            // Collapsed section (pile of stones)
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 8 * s, screenPos.y + 8 * s);
+            ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 8 * s);
+            ctx.lineTo(screenPos.x + 28 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 10 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 12 * s, screenPos.y + 5 * s);
+            ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 3 * s);
+            ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 4 * s);
+            ctx.lineTo(screenPos.x + 20 * s, screenPos.y + 8 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Vegetation growing through cracks
+            ctx.fillStyle = "#3d5c2a";
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 15 * s);
+            ctx.quadraticCurveTo(screenPos.x - 15 * s, screenPos.y - 30 * s, screenPos.x - 8 * s, screenPos.y - 28 * s);
+            ctx.quadraticCurveTo(screenPos.x - 5 * s, screenPos.y - 22 * s, screenPos.x - 10 * s, screenPos.y - 15 * s);
+            ctx.fill();
+
+            ctx.fillStyle = "#4a7a35";
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 18 * s);
+            ctx.quadraticCurveTo(screenPos.x - 2 * s, screenPos.y - 32 * s, screenPos.x + 3 * s, screenPos.y - 25 * s);
+            ctx.quadraticCurveTo(screenPos.x, screenPos.y - 20 * s, screenPos.x - 5 * s, screenPos.y - 18 * s);
+            ctx.fill();
+
+            // Ivy tendrils
+            ctx.strokeStyle = mossColor;
+            ctx.lineWidth = 1.5 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
+            ctx.quadraticCurveTo(screenPos.x - 15 * s, screenPos.y - 5 * s, screenPos.x - 18 * s, screenPos.y + 2 * s);
+            ctx.stroke();
+
+          } else if (ruinVariant === 3) {
+            // VARIANT 3: Ruined tower base with spiral staircase remains
+            // Circular base
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x, screenPos.y + 5 * s, 25 * s, 15 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tower wall remains (partial cylinder)
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 5 * s);
+            ctx.lineTo(screenPos.x - 20 * s, screenPos.y - 30 * s);
+            ctx.quadraticCurveTo(screenPos.x - 5 * s, screenPos.y - 38 * s, screenPos.x + 10 * s, screenPos.y - 25 * s);
+            ctx.lineTo(screenPos.x + 12 * s, screenPos.y + 3 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner darkness (hollow center)
+            ctx.fillStyle = "#1a1a1a";
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x - 2 * s, screenPos.y, 14 * s, 8 * s, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Spiral stair remains
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 2 * s);
+            ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 10 * s);
+            ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
+            ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 5 * s);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
+            ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 20 * s);
+            ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 22 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 15 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Broken top edge detail
+            ctx.strokeStyle = stoneDark;
+            ctx.lineWidth = 2 * s;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 30 * s);
+            ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 32 * s);
+            ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 28 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 32 * s);
+            ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 25 * s);
+            ctx.stroke();
+
+            // Rubble around base
+            ctx.fillStyle = stoneDark;
+            for (let r = 0; r < 6; r++) {
+              const angle = r * 1.1 + 0.5;
+              const rx = screenPos.x + Math.cos(angle) * 28 * s;
+              const ry = screenPos.y + Math.sin(angle) * 14 * s + 3 * s;
+              ctx.beginPath();
+              ctx.ellipse(rx, ry, 4 * s, 2.5 * s, angle, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+          } else {
+            // VARIANT 4: Ancient altar/foundation with carved details
+            // Foundation platform
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 30 * s, screenPos.y + 8 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 5 * s);
+            ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 8 * s);
+            ctx.lineTo(screenPos.x, screenPos.y + 20 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Top surface
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 25 * s, screenPos.y + 5 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 8 * s);
+            ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 5 * s);
+            ctx.lineTo(screenPos.x, screenPos.y + 15 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Central altar stone
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 5 * s);
+            ctx.lineTo(screenPos.x + 10 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x, screenPos.y + 8 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Altar sides
+            ctx.fillStyle = stoneDark;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 10 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 22 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 5 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = stoneBase;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x + 10 * s, screenPos.y + 2 * s);
+            ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 22 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 5 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Altar top
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 22 * s);
+            ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x, screenPos.y - 10 * s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Carved runes/symbols on front
+            ctx.strokeStyle = "#2a2a2a";
+            ctx.lineWidth = 1 * s;
+            // Symbol 1
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
+            ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 18 * s);
+            ctx.lineTo(screenPos.x - 1 * s, screenPos.y - 12 * s);
+            ctx.stroke();
+            // Symbol 2  
+            ctx.beginPath();
+            ctx.arc(screenPos.x + 4 * s, screenPos.y - 14 * s, 2.5 * s, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Corner pillar remains
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 3 * s);
+            ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 12 * s);
+            ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 15 * s);
+            ctx.lineTo(screenPos.x - 16 * s, screenPos.y);
+            ctx.closePath();
+            ctx.fill();
+
+            // Scattered offering bowls/debris
+            ctx.fillStyle = "#6a5a4a";
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x + 15 * s, screenPos.y + 8 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#5a4a3a";
+            ctx.beginPath();
+            ctx.ellipse(screenPos.x + 15 * s, screenPos.y + 7 * s, 3 * s, 1.5 * s, 0.3, 0, Math.PI * 2);
             ctx.fill();
           }
-          // Broken column
-          ctx.fillStyle = "#6a6a6a";
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x - 5 * s, screenPos.y + 5 * s);
-          ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 25 * s);
-          ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 30 * s);
-          ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 5 * s);
-          ctx.closePath();
-          ctx.fill();
           break;
+        }
         case "bones":
           ctx.fillStyle = "#e8e0d0";
           // Skull
@@ -8302,67 +10798,337 @@ export default function PrincetonTowerDefense() {
           ctx.closePath();
           ctx.fill();
           // Glow
-          ctx.fillStyle = `rgba(255,150,50,${
-            0.15 + Math.sin(decorTime * 6) * 0.05
-          })`;
+          ctx.fillStyle = `rgba(255,150,50,${0.15 + Math.sin(decorTime * 6) * 0.05
+            })`;
           ctx.beginPath();
           ctx.arc(screenPos.x, screenPos.y - 25 * s, 20 * s, 0, Math.PI * 2);
           ctx.fill();
           break;
-        case "statue":
-          ctx.fillStyle = "rgba(0,0,0,0.25)";
+        case "statue": {
+          // Grayscale stone statue with raised sword
+          const stoneLight = "#a8a8a8";
+          const stoneMid = "#888888";
+          const stoneDark = "#686868";
+          const stoneShadow = "#484848";
+          const figureHighlight = "#b0b0b0";
+          const figureLight = "#909090";
+          const figureMid = "#707070";
+          const figureDark = "#505050";
+          const figureShadow = "#383838";
+          const steelLight = "#c8c8c8";
+          const steelDark = "#606060";
+
+          // Ground shadow
+          const statueShadowGrad = ctx.createRadialGradient(
+            screenPos.x + 4 * s, screenPos.y + 8 * s, 0,
+            screenPos.x + 4 * s, screenPos.y + 8 * s, 25 * s
+          );
+          statueShadowGrad.addColorStop(0, "rgba(0,0,0,0.4)");
+          statueShadowGrad.addColorStop(0.5, "rgba(0,0,0,0.15)");
+          statueShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = statueShadowGrad;
           ctx.beginPath();
-          ctx.ellipse(
-            screenPos.x,
-            screenPos.y + 8 * s,
-            20 * s,
-            10 * s,
-            0,
-            0,
-            Math.PI * 2
-          );
+          ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 8 * s, 22 * s, 11 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Pedestal
-          ctx.fillStyle = "#5a5a5a";
-          ctx.fillRect(
-            screenPos.x - 15 * s,
-            screenPos.y - 5 * s,
-            30 * s,
-            12 * s
+
+          // ========== STONE PEDESTAL (3-tier, bottom to top) ==========
+          const baseY = screenPos.y + 5 * s;
+
+          // === BOTTOM TIER (largest) ===
+          const tier1W = 16 * s;
+          const tier1H = 6 * s;
+          // Top surface
+          ctx.fillStyle = stoneLight;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier1W, baseY - tier1H);
+          ctx.lineTo(screenPos.x, baseY - tier1H - tier1W * 0.5);
+          ctx.lineTo(screenPos.x + tier1W, baseY - tier1H);
+          ctx.lineTo(screenPos.x, baseY - tier1H + tier1W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          // Left face
+          ctx.fillStyle = stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier1W, baseY - tier1H);
+          ctx.lineTo(screenPos.x - tier1W, baseY);
+          ctx.lineTo(screenPos.x, baseY + tier1W * 0.5);
+          ctx.lineTo(screenPos.x, baseY - tier1H + tier1W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          // Right face
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + tier1W, baseY - tier1H);
+          ctx.lineTo(screenPos.x + tier1W, baseY);
+          ctx.lineTo(screenPos.x, baseY + tier1W * 0.5);
+          ctx.lineTo(screenPos.x, baseY - tier1H + tier1W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+
+          // === MIDDLE TIER ===
+          const tier2Y = baseY - tier1H;
+          const tier2W = 12 * s;
+          const tier2H = 10 * s;
+          // Top surface
+          ctx.fillStyle = stoneLight;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier2W, tier2Y - tier2H);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H - tier2W * 0.5);
+          ctx.lineTo(screenPos.x + tier2W, tier2Y - tier2H);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H + tier2W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          // Left face
+          ctx.fillStyle = stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier2W, tier2Y - tier2H);
+          ctx.lineTo(screenPos.x - tier2W, tier2Y);
+          ctx.lineTo(screenPos.x, tier2Y + tier2W * 0.5);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H + tier2W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          // Right face
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + tier2W, tier2Y - tier2H);
+          ctx.lineTo(screenPos.x + tier2W, tier2Y);
+          ctx.lineTo(screenPos.x, tier2Y + tier2W * 0.5);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H + tier2W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+
+          // Decorative line on middle tier
+          ctx.strokeStyle = stoneShadow;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier2W + 2 * s, tier2Y - tier2H * 0.5);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.5 + tier2W * 0.4);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + tier2W - 2 * s, tier2Y - tier2H * 0.5);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.5 + tier2W * 0.4);
+          ctx.stroke();
+
+          // === TOP TIER (smallest, figure stands on this) ===
+          const tier3Y = tier2Y - tier2H;
+          const tier3W = 8 * s;
+          const tier3H = 4 * s;
+          // Top surface
+          ctx.fillStyle = stoneLight;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier3W, tier3Y - tier3H);
+          ctx.lineTo(screenPos.x, tier3Y - tier3H - tier3W * 0.5);
+          ctx.lineTo(screenPos.x + tier3W, tier3Y - tier3H);
+          ctx.lineTo(screenPos.x, tier3Y - tier3H + tier3W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          // Left face
+          ctx.fillStyle = stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - tier3W, tier3Y - tier3H);
+          ctx.lineTo(screenPos.x - tier3W, tier3Y);
+          ctx.lineTo(screenPos.x, tier3Y + tier3W * 0.5);
+          ctx.lineTo(screenPos.x, tier3Y - tier3H + tier3W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          // Right face
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + tier3W, tier3Y - tier3H);
+          ctx.lineTo(screenPos.x + tier3W, tier3Y);
+          ctx.lineTo(screenPos.x, tier3Y + tier3W * 0.5);
+          ctx.lineTo(screenPos.x, tier3Y - tier3H + tier3W * 0.5);
+          ctx.closePath();
+          ctx.fill();
+
+          // ========== STONE FIGURE ==========
+          const figureBase = tier3Y - tier3H;
+
+          // Legs/Robe base
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, figureBase);
+          ctx.lineTo(screenPos.x - 6 * s, figureBase - 18 * s);
+          ctx.lineTo(screenPos.x, figureBase - 20 * s);
+          ctx.lineTo(screenPos.x, figureBase);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = figureMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 5 * s, figureBase);
+          ctx.lineTo(screenPos.x + 6 * s, figureBase - 18 * s);
+          ctx.lineTo(screenPos.x, figureBase - 20 * s);
+          ctx.lineTo(screenPos.x, figureBase);
+          ctx.closePath();
+          ctx.fill();
+
+          // Torso
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 5 * s, figureBase - 18 * s);
+          ctx.lineTo(screenPos.x - 4 * s, figureBase - 32 * s);
+          ctx.lineTo(screenPos.x, figureBase - 34 * s);
+          ctx.lineTo(screenPos.x, figureBase - 20 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = figureMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 5 * s, figureBase - 18 * s);
+          ctx.lineTo(screenPos.x + 4 * s, figureBase - 32 * s);
+          ctx.lineTo(screenPos.x, figureBase - 34 * s);
+          ctx.lineTo(screenPos.x, figureBase - 20 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Cape flowing back
+          ctx.fillStyle = figureShadow;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 4 * s, figureBase - 30 * s);
+          ctx.quadraticCurveTo(
+            screenPos.x - 12 * s, figureBase - 25 * s,
+            screenPos.x - 10 * s, figureBase - 12 * s
           );
-          ctx.fillStyle = "#6a6a6a";
-          ctx.fillRect(
-            screenPos.x - 12 * s,
-            screenPos.y - 8 * s,
-            24 * s,
-            5 * s
-          );
-          // Figure
-          ctx.fillStyle = "#4a4a4a";
-          ctx.fillRect(
-            screenPos.x - 8 * s,
-            screenPos.y - 35 * s,
-            16 * s,
-            30 * s
-          );
+          ctx.lineTo(screenPos.x - 6 * s, figureBase - 18 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Left arm (holding shield at side)
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 4 * s, figureBase - 30 * s);
+          ctx.lineTo(screenPos.x - 8 * s, figureBase - 20 * s);
+          ctx.lineTo(screenPos.x - 6 * s, figureBase - 19 * s);
+          ctx.lineTo(screenPos.x - 3 * s, figureBase - 28 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Shield at side
+          ctx.fillStyle = figureMid;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x - 10 * s, figureBase - 18 * s, 5 * s, 7 * s, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = figureLight;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x - 10 * s, figureBase - 18 * s, 3 * s, 4.5 * s, 0.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.arc(screenPos.x - 10 * s, figureBase - 18 * s, 1.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Right arm (raised high, holding sword)
+          ctx.fillStyle = figureMid;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 3 * s, figureBase - 30 * s);
+          ctx.lineTo(screenPos.x + 10 * s, figureBase - 45 * s);
+          ctx.lineTo(screenPos.x + 12 * s, figureBase - 43 * s);
+          ctx.lineTo(screenPos.x + 5 * s, figureBase - 28 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Hand gripping sword
+          ctx.fillStyle = figureLight;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 11 * s, figureBase - 44 * s, 2 * s, 1.5 * s, 0.7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Sword blade (raised high)
+          ctx.fillStyle = steelLight;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 10 * s, figureBase - 46 * s);
+          ctx.lineTo(screenPos.x + 8 * s, figureBase - 70 * s);
+          ctx.lineTo(screenPos.x + 10 * s, figureBase - 72 * s);
+          ctx.lineTo(screenPos.x + 12 * s, figureBase - 70 * s);
+          ctx.lineTo(screenPos.x + 12 * s, figureBase - 46 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Blade dark edge
+          ctx.fillStyle = steelDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 10 * s, figureBase - 46 * s);
+          ctx.lineTo(screenPos.x + 8 * s, figureBase - 70 * s);
+          ctx.lineTo(screenPos.x + 10 * s, figureBase - 72 * s);
+          ctx.lineTo(screenPos.x + 10 * s, figureBase - 46 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Blade highlight
+          ctx.fillStyle = "rgba(255,255,255,0.4)";
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 11 * s, figureBase - 48 * s);
+          ctx.lineTo(screenPos.x + 10 * s, figureBase - 68 * s);
+          ctx.lineTo(screenPos.x + 11 * s, figureBase - 68 * s);
+          ctx.lineTo(screenPos.x + 11.5 * s, figureBase - 48 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Sword crossguard
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 7 * s, figureBase - 45 * s);
+          ctx.lineTo(screenPos.x + 15 * s, figureBase - 47 * s);
+          ctx.lineTo(screenPos.x + 15 * s, figureBase - 45 * s);
+          ctx.lineTo(screenPos.x + 7 * s, figureBase - 43 * s);
+          ctx.closePath();
+          ctx.fill();
+
           // Head
+          const headY = figureBase - 38 * s;
+          const headGrad = ctx.createRadialGradient(
+            screenPos.x - 1 * s, headY - 2 * s, 0,
+            screenPos.x, headY, 6 * s
+          );
+          headGrad.addColorStop(0, figureHighlight);
+          headGrad.addColorStop(0.4, figureLight);
+          headGrad.addColorStop(0.8, figureMid);
+          headGrad.addColorStop(1, figureDark);
+          ctx.fillStyle = headGrad;
           ctx.beginPath();
-          ctx.arc(screenPos.x, screenPos.y - 42 * s, 8 * s, 0, Math.PI * 2);
+          ctx.ellipse(screenPos.x, headY, 5 * s, 6 * s, 0, 0, Math.PI * 2);
           ctx.fill();
-          // Arms
-          ctx.fillRect(
-            screenPos.x - 18 * s,
-            screenPos.y - 30 * s,
-            10 * s,
-            5 * s
-          );
-          ctx.fillRect(
-            screenPos.x + 8 * s,
-            screenPos.y - 30 * s,
-            10 * s,
-            5 * s
-          );
+
+          // Helmet
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, headY - 3 * s, 5.5 * s, 3.5 * s, 0, Math.PI, Math.PI * 2);
+          ctx.fill();
+          // Helmet crest
+          ctx.fillStyle = figureShadow;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, headY - 6 * s);
+          ctx.lineTo(screenPos.x - 1 * s, headY - 3 * s);
+          ctx.lineTo(screenPos.x + 1 * s, headY - 3 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Face features (subtle)
+          ctx.fillStyle = figureShadow;
+          ctx.beginPath();
+          ctx.arc(screenPos.x - 1.5 * s, headY - 1 * s, 0.7 * s, 0, Math.PI * 2);
+          ctx.arc(screenPos.x + 1.5 * s, headY - 1 * s, 0.7 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Highlights
+          ctx.fillStyle = "rgba(255,255,255,0.15)";
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x - 2 * s, headY - 3 * s, 2 * s, 1.5 * s, -0.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 2 * s, figureBase - 28 * s, 1.5 * s, 3 * s, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pedestal plaque
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 6 * s, tier2Y - tier2H * 0.3);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.3 + 3 * s);
+          ctx.lineTo(screenPos.x + 6 * s, tier2Y - tier2H * 0.3);
+          ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.3 - 3 * s);
+          ctx.closePath();
+          ctx.fill();
           break;
+        }
       }
       ctx.restore();
     }
@@ -8492,23 +11258,23 @@ export default function PrincetonTowerDefense() {
       const theme = hasDamageBuff
         ? hasRangeBuff
           ? {
-              base: "128, 0, 255", // Purple
-              accent: "178, 102, 255",
-              glow: "#A500FF",
-              fill: "rgba(128, 0, 255, 0.05)",
-            }
+            base: "128, 0, 255", // Purple
+            accent: "178, 102, 255",
+            glow: "#A500FF",
+            fill: "rgba(128, 0, 255, 0.05)",
+          }
           : {
-              base: "255, 23, 68", // Red
-              accent: "255, 138, 128",
-              glow: "#FF1744",
-              fill: "rgba(255, 23, 68, 0.05)",
-            }
+            base: "255, 23, 68", // Red
+            accent: "255, 138, 128",
+            glow: "#FF1744",
+            fill: "rgba(255, 23, 68, 0.05)",
+          }
         : {
-            base: "0, 229, 255", // Cyan/Blue
-            accent: "128, 255, 255",
-            glow: "#00E5FF",
-            fill: "rgba(0, 229, 255, 0.05)",
-          };
+          base: "0, 229, 255", // Cyan/Blue
+          accent: "128, 255, 255",
+          glow: "#00E5FF",
+          fill: "rgba(0, 229, 255, 0.05)",
+        };
 
       const time = Date.now() / 1000;
       const sPos = toScreen(gridToWorld(t.pos));
@@ -8636,9 +11402,9 @@ export default function PrincetonTowerDefense() {
     }
 
     // =========================================================================
-    // MASSIVELY IMPROVED EPIC HAZARD SPRITES
+    // OLD HAZARD RENDERING - DISABLED (using new version above decorations)
     // =========================================================================
-    if (LEVEL_DATA[selectedMap].hazards) {
+    if (false && LEVEL_DATA[selectedMap].hazards) {
       LEVEL_DATA[selectedMap].hazards.forEach((haz) => {
         const sPos = toScreen(gridToWorld(haz.pos));
         const sRad = haz.radius * TILE_SIZE * cameraZoom;
@@ -9161,21 +11927,21 @@ export default function PrincetonTowerDefense() {
           // Color Palette (Normal vs Flash)
           const c = isFlashing
             ? {
-                top: "#FFFFFF",
-                left: "#FFCDD2",
-                right: "#EF9A9A",
-                frame: "#FF5252",
-                dark: "#B71C1C",
-                glow: "#FFFFFF",
-              }
+              top: "#FFFFFF",
+              left: "#FFCDD2",
+              right: "#EF9A9A",
+              frame: "#FF5252",
+              dark: "#B71C1C",
+              glow: "#FFFFFF",
+            }
             : {
-                top: "#FFF59D", // Pale Gold
-                left: "#C5A535", // Dark Gold Shadow
-                right: "#FFD700", // Classic Gold
-                frame: "#DAA520", // Goldenrod Frame
-                dark: "#4E342E", // Dark bronze elements
-                glow: "#40E0D0", // Turquoise energy glow
-              };
+              top: "#FFF59D", // Pale Gold
+              left: "#C5A535", // Dark Gold Shadow
+              right: "#FFD700", // Classic Gold
+              frame: "#DAA520", // Goldenrod Frame
+              dark: "#4E342E", // Dark bronze elements
+              glow: "#40E0D0", // Turquoise energy glow
+            };
 
           // --- 1. Main Isometric Body ---
 
@@ -9863,264 +12629,11 @@ export default function PrincetonTowerDefense() {
 
     // Restore state
     ctx.restore();
-    // Draw atmospheric fog around entire battlefield (UI layer) - themed
+
+    // Draw environmental effects (particles, atmosphere) based on theme
     const time = Date.now() / 1000;
-    const edgeFogRgb = hexToRgb(theme.ground[2]);
-    // Left edge fog - extensive and atmospheric
-    const leftFog = ctx.createLinearGradient(
-      0,
-      height / 2,
-      width * 0.35,
-      height / 2
-    );
-    leftFog.addColorStop(
-      0,
-      `rgba(${edgeFogRgb.r}, ${edgeFogRgb.g}, ${edgeFogRgb.b}, 0.95)`
-    );
-    leftFog.addColorStop(
-      0.3,
-      `rgba(${edgeFogRgb.r + 4}, ${edgeFogRgb.g + 4}, ${edgeFogRgb.b + 4}, 0.7)`
-    );
-    leftFog.addColorStop(
-      0.6,
-      `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 7}, ${
-        edgeFogRgb.b + 7
-      }, 0.35)`
-    );
-    leftFog.addColorStop(
-      0.85,
-      `rgba(${edgeFogRgb.r + 12}, ${edgeFogRgb.g + 10}, ${
-        edgeFogRgb.b + 10
-      }, 0.1)`
-    );
-    leftFog.addColorStop(
-      1,
-      `rgba(${edgeFogRgb.r + 14}, ${edgeFogRgb.g + 12}, ${
-        edgeFogRgb.b + 12
-      }, 0)`
-    );
-    ctx.fillStyle = leftFog;
-    ctx.fillRect(0, 0, width * 0.35, height);
-    // Right edge fog
-    const rightFog = ctx.createLinearGradient(
-      width * 0.65,
-      height / 2,
-      width,
-      height / 2
-    );
-    rightFog.addColorStop(
-      0,
-      `rgba(${edgeFogRgb.r + 14}, ${edgeFogRgb.g + 12}, ${
-        edgeFogRgb.b + 12
-      }, 0)`
-    );
-    rightFog.addColorStop(
-      0.15,
-      `rgba(${edgeFogRgb.r + 12}, ${edgeFogRgb.g + 10}, ${
-        edgeFogRgb.b + 10
-      }, 0.1)`
-    );
-    rightFog.addColorStop(
-      0.4,
-      `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 7}, ${
-        edgeFogRgb.b + 7
-      }, 0.35)`
-    );
-    rightFog.addColorStop(
-      0.7,
-      `rgba(${edgeFogRgb.r + 4}, ${edgeFogRgb.g + 4}, ${edgeFogRgb.b + 4}, 0.7)`
-    );
-    rightFog.addColorStop(
-      1,
-      `rgba(${edgeFogRgb.r}, ${edgeFogRgb.g}, ${edgeFogRgb.b}, 0.95)`
-    );
-    ctx.fillStyle = rightFog;
-    ctx.fillRect(width * 0.65, 0, width * 0.35, height);
-    // Top edge fog
-    const topFog = ctx.createLinearGradient(
-      width / 2,
-      0,
-      width / 2,
-      height * 0.3
-    );
-    topFog.addColorStop(
-      0,
-      `rgba(${edgeFogRgb.r}, ${edgeFogRgb.g}, ${edgeFogRgb.b}, 0.9)`
-    );
-    topFog.addColorStop(
-      0.4,
-      `rgba(${edgeFogRgb.r + 4}, ${edgeFogRgb.g + 4}, ${edgeFogRgb.b + 4}, 0.5)`
-    );
-    topFog.addColorStop(
-      0.75,
-      `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 7}, ${
-        edgeFogRgb.b + 7
-      }, 0.15)`
-    );
-    topFog.addColorStop(
-      1,
-      `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 7}, ${edgeFogRgb.b + 7}, 0)`
-    );
-    ctx.fillStyle = topFog;
-    ctx.fillRect(0, 0, width, height * 0.3);
-    // Bottom edge fog
-    const bottomFog = ctx.createLinearGradient(
-      width / 2,
-      height * 0.7,
-      width / 2,
-      height
-    );
-    bottomFog.addColorStop(
-      0,
-      `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 7}, ${edgeFogRgb.b + 7}, 0)`
-    );
-    bottomFog.addColorStop(
-      0.25,
-      `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 7}, ${
-        edgeFogRgb.b + 7
-      }, 0.15)`
-    );
-    bottomFog.addColorStop(
-      0.6,
-      `rgba(${edgeFogRgb.r + 4}, ${edgeFogRgb.g + 4}, ${edgeFogRgb.b + 4}, 0.5)`
-    );
-    bottomFog.addColorStop(
-      1,
-      `rgba(${edgeFogRgb.r}, ${edgeFogRgb.g}, ${edgeFogRgb.b}, 0.9)`
-    );
-    ctx.fillStyle = bottomFog;
-    ctx.fillRect(0, height * 0.7, width, height * 0.3);
-    // Additional fog cloud puffs for depth throughout the battlefield edges - themed
-    const drawFogCloud = (
-      x: number,
-      y: number,
-      radius: number,
-      baseAlpha: number
-    ) => {
-      const animOffset = Math.sin(time * 0.3) * 8;
-      for (let i = 0; i < 4; i++) {
-        const puffX = x + Math.sin(time * 0.25 + i * 1.5) * 15 + animOffset;
-        const puffY = y + Math.cos(time * 0.35 + i) * 8;
-        const puffR = radius * (0.7 + i * 0.15);
-        const cloudGradient = ctx.createRadialGradient(
-          puffX,
-          puffY,
-          0,
-          puffX,
-          puffY,
-          puffR
-        );
-        cloudGradient.addColorStop(
-          0,
-          `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 6}, ${
-            edgeFogRgb.b + 6
-          }, ${baseAlpha * 0.7})`
-        );
-        cloudGradient.addColorStop(
-          0.4,
-          `rgba(${edgeFogRgb.r + 14}, ${edgeFogRgb.g + 10}, ${
-            edgeFogRgb.b + 10
-          }, ${baseAlpha * 0.4})`
-        );
-        cloudGradient.addColorStop(
-          0.7,
-          `rgba(${edgeFogRgb.r + 19}, ${edgeFogRgb.g + 14}, ${
-            edgeFogRgb.b + 14
-          }, ${baseAlpha * 0.15})`
-        );
-        cloudGradient.addColorStop(
-          1,
-          `rgba(${edgeFogRgb.r + 24}, ${edgeFogRgb.g + 18}, ${
-            edgeFogRgb.b + 16
-          }, 0)`
-        );
-        ctx.fillStyle = cloudGradient;
-        ctx.beginPath();
-        ctx.ellipse(puffX, puffY, puffR, puffR * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    };
-    // Scatter fog clouds along edges
-    drawFogCloud(width * 0.08, height * 0.2, 100, 0.6);
-    drawFogCloud(width * 0.12, height * 0.5, 120, 0.5);
-    drawFogCloud(width * 0.06, height * 0.75, 90, 0.55);
-    drawFogCloud(width * 0.92, height * 0.25, 110, 0.55);
-    drawFogCloud(width * 0.88, height * 0.55, 100, 0.5);
-    drawFogCloud(width * 0.94, height * 0.8, 95, 0.6);
-    drawFogCloud(width * 0.3, height * 0.06, 85, 0.5);
-    drawFogCloud(width * 0.6, height * 0.04, 90, 0.55);
-    drawFogCloud(width * 0.4, height * 0.94, 95, 0.55);
-    drawFogCloud(width * 0.7, height * 0.96, 80, 0.5);
-    // Corner fog puffs for extra atmosphere - themed
-    const drawCornerFog = (x: number, y: number, radius: number) => {
-      const animOffset = Math.sin(time * 0.5) * 5;
-      for (let i = 0; i < 5; i++) {
-        const puffX = x + Math.sin(time * 0.3 + i) * 12 + animOffset;
-        const puffY = y + Math.cos(time * 0.4 + i) * 6;
-        const puffR = radius * (0.6 + i * 0.15);
-        const cornerGradient = ctx.createRadialGradient(
-          puffX,
-          puffY,
-          0,
-          puffX,
-          puffY,
-          puffR
-        );
-        cornerGradient.addColorStop(
-          0,
-          `rgba(${edgeFogRgb.r + 4}, ${edgeFogRgb.g + 4}, ${edgeFogRgb.b}, 0.7)`
-        );
-        cornerGradient.addColorStop(
-          0.4,
-          `rgba(${edgeFogRgb.r + 9}, ${edgeFogRgb.g + 8}, ${
-            edgeFogRgb.b + 4
-          }, 0.4)`
-        );
-        cornerGradient.addColorStop(
-          0.7,
-          `rgba(${edgeFogRgb.r + 14}, ${edgeFogRgb.g + 12}, ${
-            edgeFogRgb.b + 8
-          }, 0.15)`
-        );
-        cornerGradient.addColorStop(
-          1,
-          `rgba(${edgeFogRgb.r + 19}, ${edgeFogRgb.g + 17}, ${
-            edgeFogRgb.b + 11
-          }, 0)`
-        );
-        ctx.fillStyle = cornerGradient;
-        ctx.beginPath();
-        ctx.ellipse(puffX, puffY, puffR, puffR * 0.55, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    };
-    // Add fog puffs at corners
-    drawCornerFog(width * 0.08, height * 0.08, 120);
-    drawCornerFog(width * 0.92, height * 0.08, 120);
-    drawCornerFog(width * 0.08, height * 0.92, 120);
-    drawCornerFog(width * 0.92, height * 0.92, 120);
-    // Fireflies / particles based on theme
-    const particleColor =
-      mapTheme === "volcanic"
-        ? "rgba(255, 100, 0,"
-        : mapTheme === "winter"
-        ? "rgba(200, 220, 255,"
-        : mapTheme === "desert"
-        ? "rgba(255, 220, 150,"
-        : "rgba(255, 215, 0,";
-    for (let i = 0; i < 10; i++) {
-      const x = (i * 137.5 + time * 20) % width;
-      const y = (i * 421.3 + time * 15) % height;
-      const size = 2 + Math.sin(time + i) * 0.8;
-      const alpha = 0.06 + Math.sin(time * 2 + i) * 0.06;
-      const lightGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
-      lightGlow.addColorStop(0, `${particleColor} ${alpha})`);
-      lightGlow.addColorStop(1, `${particleColor} 0)`);
-      ctx.fillStyle = lightGlow;
-      ctx.beginPath();
-      ctx.arc(x, y, size * 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    renderEnvironment(ctx, mapTheme, width, height, time);
+    renderAmbientVisuals(ctx, mapTheme, width, height, time);
   }, [
     cameraOffset,
     cameraZoom,
@@ -10560,10 +13073,10 @@ export default function PrincetonTowerDefense() {
         tower.level === 1
           ? 150
           : tower.level === 2
-          ? 250
-          : tower.level === 3
-          ? 350
-          : 0;
+            ? 250
+            : tower.level === 3
+              ? 350
+              : 0;
       if (cost === 0 || pawPoints < cost) return;
 
       // Level progression: 1→2, 2→3, 3→4 (with A/B choice)
@@ -10589,10 +13102,10 @@ export default function PrincetonTowerDefense() {
           newLevel === 2
             ? "armored"
             : newLevel === 3
-            ? "elite"
-            : newUpgrade === "A"
-            ? "centaur"
-            : "cavalry";
+              ? "elite"
+              : newUpgrade === "A"
+                ? "centaur"
+                : "cavalry";
         const newHP = TROOP_DATA[newTroopType]?.hp || 100;
 
         setTroops((prev) =>
@@ -10626,13 +13139,13 @@ export default function PrincetonTowerDefense() {
       const refund =
         Math.floor(TOWER_DATA[tower.type].cost * 0.7) +
         (tower.level - 1) *
-          (tower.level === 2
-            ? 150 * 0.7
-            : tower.level === 3
+        (tower.level === 2
+          ? 150 * 0.7
+          : tower.level === 3
             ? 250 * 0.7
             : tower.level === 4
-            ? 350 * 0.7
-            : 0);
+              ? 350 * 0.7
+              : 0);
       setPawPoints((pp) => pp + refund);
       addParticles(gridToWorld(tower.pos), "smoke", 15);
       setTowers((prev) => prev.filter((t) => t.id !== towerId));
@@ -11147,10 +13660,10 @@ export default function PrincetonTowerDefense() {
     setHero((prev) =>
       prev
         ? {
-            ...prev,
-            abilityReady: false,
-            abilityCooldown: HERO_ABILITY_COOLDOWNS[hero.type],
-          }
+          ...prev,
+          abilityReady: false,
+          abilityCooldown: HERO_ABILITY_COOLDOWNS[hero.type],
+        }
         : null
     );
   }, [hero, enemies, selectedMap, addParticles]);

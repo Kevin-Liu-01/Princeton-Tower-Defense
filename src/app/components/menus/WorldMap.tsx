@@ -388,11 +388,10 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                 setSelectedTower(null);
                 setSelectedHeroDetail(null);
               }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all font-medium ${
-                activeTab === tab.id
-                  ? "bg-amber-900/50 text-amber-300 border-b-2 border-amber-500"
-                  : "text-amber-600 hover:text-amber-400 hover:bg-stone-800/50"
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all font-medium ${activeTab === tab.id
+                ? "bg-amber-900/50 text-amber-300 border-b-2 border-amber-500"
+                : "text-amber-600 hover:text-amber-400 hover:bg-stone-800/50"
+                }`}
             >
               {tab.icon}
               <span>{tab.label}</span>
@@ -548,18 +547,17 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                             level === 1
                               ? tower.cost
                               : level === 2
-                              ? 60
-                              : level === 3
-                              ? 90
-                              : 150;
+                                ? 60
+                                : level === 3
+                                  ? 90
+                                  : 150;
                           return (
                             <div
                               key={level}
-                              className={`p-3 rounded-lg border ${
-                                level === 4
-                                  ? "bg-purple-950/40 border-purple-700/50"
-                                  : "bg-stone-800/50 border-stone-700/40"
-                              }`}
+                              className={`p-3 rounded-lg border ${level === 4
+                                ? "bg-purple-950/40 border-purple-700/50"
+                                : "bg-stone-800/50 border-stone-700/40"
+                                }`}
                             >
                               <div className="flex items-center gap-2 mb-2">
                                 <div className="flex">
@@ -1419,6 +1417,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredLevel, setHoveredLevel] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [showCodex, setShowCodex] = useState(false);
@@ -1427,6 +1426,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [hoveredHero, setHoveredHero] = useState<HeroType | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<SpellType | null>(null);
   const imageCache = useRef<Record<string, HTMLImageElement>>({});
+
+  // Drag-to-scroll state
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [scrollStartLeft, setScrollStartLeft] = useState(0);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -1495,7 +1500,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
     const time = animTime;
 
-    // Background with war atmosphere
+    // Background with war atmosphere - enhanced with richer gradient
     const bgGrad = ctx.createRadialGradient(
       width / 2,
       height / 2,
@@ -1505,17 +1510,119 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       width
     );
     bgGrad.addColorStop(0, "#4a3a2a");
-    bgGrad.addColorStop(0.5, "#3a2a1a");
+    bgGrad.addColorStop(0.3, "#3d2d1d");
+    bgGrad.addColorStop(0.6, "#3a2a1a");
     bgGrad.addColorStop(1, "#2a1a0a");
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Parchment texture
-    ctx.globalAlpha = 0.05;
+    // === ENHANCED GROUND TEXTURES ===
+    // Layer 1: Large terrain patches for depth
+    ctx.globalAlpha = 0.12;
+    for (let i = 0; i < 80; i++) {
+      const px = seededRandom(i * 7) * width;
+      const py = seededRandom(i * 7 + 1) * height;
+      const psize = 30 + seededRandom(i * 7 + 2) * 60;
+      const hue = seededRandom(i * 7 + 3) > 0.5 ? "#5a4a3a" : "#3a2a1a";
+      ctx.fillStyle = hue;
+      ctx.beginPath();
+      // Organic blob shape
+      ctx.moveTo(px + psize * 0.5, py);
+      for (let a = 0; a < Math.PI * 2; a += 0.3) {
+        const r = psize * (0.4 + seededRandom(i + a * 100) * 0.3);
+        ctx.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.5);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 2: Dirt/soil texture with isometric perspective
+    ctx.globalAlpha = 0.08;
+    for (let i = 0; i < 500; i++) {
+      const dx = seededRandom(i * 11) * width;
+      const dy = seededRandom(i * 11 + 1) * height;
+      const dw = 3 + seededRandom(i * 11 + 2) * 10;
+      const dh = dw * 0.4; // Isometric flattening
+      ctx.fillStyle = seededRandom(i * 11 + 3) > 0.6 ? "#6a5a4a" : "#2a1a0a";
+      ctx.beginPath();
+      ctx.ellipse(dx, dy, dw, dh, seededRandom(i) * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 3: Small pebbles and debris
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < 400; i++) {
+      const sx = seededRandom(i * 13) * width;
+      const sy = seededRandom(i * 13 + 1) * height;
+      const ss = 1 + seededRandom(i * 13 + 2) * 3;
+      ctx.fillStyle = ["#5a4a3a", "#7a6a5a", "#3a2a1a", "#4a3a2a"][
+        Math.floor(seededRandom(i * 13 + 3) * 4)
+      ];
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, ss, ss * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 4: Grass tufts in isometric style (scattered across map)
+    const drawGrassTuft = (gx: number, gy: number, scale: number, color: string) => {
+      ctx.fillStyle = color;
+      const blades = 3 + Math.floor(seededRandom(gx + gy) * 4);
+      for (let b = 0; b < blades; b++) {
+        const bx = gx + (b - blades / 2) * 2 * scale;
+        const bh = (6 + seededRandom(gx + b) * 6) * scale;
+        const sway = Math.sin(time * 2 + gx * 0.1 + b) * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx, gy);
+        ctx.quadraticCurveTo(bx + sway, gy - bh * 0.6, bx + sway * 1.5, gy - bh);
+        ctx.quadraticCurveTo(bx + sway * 0.5, gy - bh * 0.4, bx, gy);
+        ctx.fill();
+      }
+    };
+    ctx.globalAlpha = 0.4;
     for (let i = 0; i < 300; i++) {
+      const gx = seededRandom(i * 17) * width;
+      const gy = seededRandom(i * 17 + 1) * height;
+      // Determine grass color based on region
+      let grassColor = "#3a5a2a";
+      if (gx > 1440) grassColor = "#3a2020"; // volcanic - dead grass
+      else if (gx > 1080) grassColor = "#4a5a5a"; // winter - frosty
+      else if (gx > 720) grassColor = "#6a5a3a"; // desert - dry
+      else if (gx > 380) grassColor = "#2a4a2a"; // swamp - dark green
+
+      drawGrassTuft(gx, gy, 0.5 + seededRandom(i * 17 + 2) * 0.5, grassColor);
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 5: Cracks and weathering lines
+    ctx.globalAlpha = 0.06;
+    ctx.strokeStyle = "#1a0a00";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 100; i++) {
+      const cx = seededRandom(i * 19) * width;
+      const cy = seededRandom(i * 19 + 1) * height;
+      const clen = 15 + seededRandom(i * 19 + 2) * 40;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      let px = cx, py = cy;
+      for (let j = 0; j < 4; j++) {
+        const nx = px + (seededRandom(i * 19 + j * 3) - 0.5) * clen * 0.5;
+        const ny = py + seededRandom(i * 19 + j * 3 + 1) * clen * 0.3;
+        ctx.lineTo(nx, ny);
+        px = nx; py = ny;
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // Layer 6: Enhanced parchment texture overlay
+    ctx.globalAlpha = 0.04;
+    for (let i = 0; i < 400; i++) {
       const x = seededRandom(i * 3) * width;
       const y = seededRandom(i * 3 + 1) * height;
-      const size = 2 + seededRandom(i * 3 + 2) * 8;
+      const size = 2 + seededRandom(i * 3 + 2) * 10;
       ctx.fillStyle = seededRandom(i) > 0.5 ? "#6a5a4a" : "#2a1a0a";
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
@@ -1576,22 +1683,22 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         name: "SAHARA SANDS",
         x: 720,
         w: 360,
-        colors: ["#9a8060", "#8a7050"],
-        labelColor: "#e8a838",
+        colors: ["#d4a574", "#b8956a"],
+        labelColor: "#ffd700",
       },
       {
         name: "FROZEN FRONTIER",
         x: 1080,
         w: 360,
-        colors: ["#5a6a7a", "#4a5a6a"],
-        labelColor: "#88c8e8",
+        colors: ["#a8c8e8", "#7aa8d8"],
+        labelColor: "#e0f4ff",
       },
       {
         name: "INFERNO DEPTHS",
         x: 1440,
         w: 380,
-        colors: ["#5a3030", "#4a2020"],
-        labelColor: "#e84848",
+        colors: ["#4a1a1a", "#2a0808"],
+        labelColor: "#ff6644",
       },
     ];
 
@@ -1623,22 +1730,81 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawRuggedBorder(1450, "#5a6a7a", "#5a3030");
 
     // === GRASSLAND DETAILS ===
-    // Trees
+    // Enhanced 3D Isometric Trees with more detail
     const drawTree = (x: number, yPct: number, scale: number) => {
       const y = getY(yPct);
-      ctx.fillStyle = "rgba(0,0,0,0.15)";
+
+      // Ground shadow with depth
+      const shadowGrad = ctx.createRadialGradient(x + 3, y + 6, 0, x + 3, y + 6, 14 * scale);
+      shadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
+      shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = shadowGrad;
       ctx.beginPath();
-      ctx.ellipse(x + 2, y + 5, 10 * scale, 4 * scale, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 3, y + 6, 14 * scale, 5 * scale, 0.1, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#4a3020";
-      ctx.fillRect(x - 3 * scale, y - 12 * scale, 6 * scale, 17 * scale);
+
+      // Tree trunk with bark texture
+      const trunkGrad = ctx.createLinearGradient(x - 4 * scale, 0, x + 4 * scale, 0);
+      trunkGrad.addColorStop(0, "#3a2010");
+      trunkGrad.addColorStop(0.3, "#5a4030");
+      trunkGrad.addColorStop(0.7, "#4a3020");
+      trunkGrad.addColorStop(1, "#2a1008");
+      ctx.fillStyle = trunkGrad;
+      ctx.beginPath();
+      ctx.moveTo(x - 4 * scale, y + 5);
+      ctx.quadraticCurveTo(x - 5 * scale, y - 6 * scale, x - 3 * scale, y - 14 * scale);
+      ctx.lineTo(x + 3 * scale, y - 14 * scale);
+      ctx.quadraticCurveTo(x + 5 * scale, y - 6 * scale, x + 4 * scale, y + 5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bark detail lines
+      ctx.strokeStyle = "#2a1808";
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + (i - 1) * 2 * scale, y + 3);
+        ctx.lineTo(x + (i - 1) * 1.5 * scale, y - 10 * scale);
+        ctx.stroke();
+      }
+
+      // Main foliage - multiple layered leaves for depth
+      // Back layer (darker)
+      ctx.fillStyle = "#1d4a0f";
+      ctx.beginPath();
+      ctx.arc(x - 2 * scale, y - 22 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 6 * scale, y - 20 * scale, 8 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Middle layer
       ctx.fillStyle = "#2d5a1f";
       ctx.beginPath();
-      ctx.arc(x, y - 18 * scale, 12 * scale, 0, Math.PI * 2);
+      ctx.arc(x, y - 20 * scale, 13 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 6 * scale, y - 16 * scale, 9 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 5 * scale, y - 16 * scale, 9 * scale, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#3d6a2f";
+
+      // Front layer (lighter - highlights)
+      ctx.fillStyle = "#3d7a2f";
       ctx.beginPath();
-      ctx.arc(x - 4 * scale, y - 14 * scale, 8 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 3 * scale, y - 18 * scale, 7 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 4 * scale, y - 22 * scale, 6 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Leaf details / texture
+      ctx.fillStyle = "#4d8a3f";
+      for (let i = 0; i < 6; i++) {
+        const lx = x + (seededRandom(x + i * 7) - 0.5) * 16 * scale;
+        const ly = y - 16 * scale - seededRandom(x + i * 7 + 1) * 10 * scale;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Subtle light dappling
+      ctx.fillStyle = "rgba(100, 180, 80, 0.15)";
+      ctx.beginPath();
+      ctx.arc(x + 2 * scale, y - 24 * scale, 5 * scale, 0, Math.PI * 2);
       ctx.fill();
     };
     [
@@ -1652,51 +1818,170 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       [270, 85],
       [320, 25],
       [350, 68],
+      [45, 65],
+      [130, 90],
+      [190, 38],
+      [280, 60],
+      [360, 45],
     ].forEach(([x, yPct], i) => {
       drawTree(x, yPct, 0.6 + seededRandom(i + 100) * 0.4);
     });
 
-    // Military camp (grassland)
+    // Enhanced Military camp with isometric detail
     const drawCamp = (cx: number, cyPct: number) => {
       const cy = getY(cyPct);
-      // Tent
-      ctx.fillStyle = "#5a4a3a";
+
+      // Ground patch / cleared area
+      ctx.fillStyle = "rgba(80, 60, 40, 0.4)";
       ctx.beginPath();
-      ctx.moveTo(cx, cy - 18);
-      ctx.lineTo(cx + 20, cy + 6);
-      ctx.lineTo(cx - 20, cy + 6);
+      ctx.ellipse(cx, cy + 8, 35, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tent shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 8, 22, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main tent body with 3D shading
+      const tentGrad = ctx.createLinearGradient(cx - 20, cy, cx + 20, cy);
+      tentGrad.addColorStop(0, "#4a3a2a");
+      tentGrad.addColorStop(0.4, "#6a5a4a");
+      tentGrad.addColorStop(0.6, "#5a4a3a");
+      tentGrad.addColorStop(1, "#3a2a1a");
+      ctx.fillStyle = tentGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 20);
+      ctx.lineTo(cx + 22, cy + 6);
+      ctx.lineTo(cx - 22, cy + 6);
       ctx.closePath();
       ctx.fill();
+
+      // Tent opening (dark)
+      ctx.fillStyle = "#1a1008";
+      ctx.beginPath();
+      ctx.moveTo(cx - 5, cy + 6);
+      ctx.lineTo(cx, cy - 5);
+      ctx.lineTo(cx + 5, cy + 6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Tent seams
       ctx.strokeStyle = "#3a2a1a";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // Flag
-      ctx.fillStyle = "#4a3020";
-      ctx.fillRect(cx + 18, cy - 20, 2, 26);
-      ctx.fillStyle = "#f59e0b";
-      const fw = Math.sin(time * 3 + cx) * 2;
+      ctx.lineWidth = 0.5;
       ctx.beginPath();
-      ctx.moveTo(cx + 20, cy - 18);
-      ctx.quadraticCurveTo(cx + 28, cy - 14 + fw, cx + 32, cy - 12);
-      ctx.quadraticCurveTo(cx + 28, cy - 10 + fw, cx + 20, cy - 6);
+      ctx.moveTo(cx, cy - 20);
+      ctx.lineTo(cx, cy + 6);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 20);
+      ctx.lineTo(cx - 11, cy - 7);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 20);
+      ctx.lineTo(cx + 11, cy - 7);
+      ctx.stroke();
+
+      // Flag pole with shadow
+      ctx.fillStyle = "#3a2010";
+      ctx.fillRect(cx + 19, cy - 26, 3, 34);
+      // Flag with wave animation
+      ctx.fillStyle = "#f59e0b";
+      const fw = Math.sin(time * 3 + cx) * 3;
+      const fw2 = Math.sin(time * 3.5 + cx) * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + 22, cy - 24);
+      ctx.quadraticCurveTo(cx + 30, cy - 20 + fw, cx + 38, cy - 16 + fw2);
+      ctx.quadraticCurveTo(cx + 30, cy - 12 + fw, cx + 22, cy - 8);
       ctx.closePath();
       ctx.fill();
-      // Campfire with animated glow
-      ctx.fillStyle = `rgba(255, 100, 0, ${0.5 + Math.sin(time * 5) * 0.3})`;
+      // Flag detail (stripes)
+      ctx.strokeStyle = "#d97706";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx - 10, cy + 4, 4, 0, Math.PI * 2);
+      ctx.moveTo(cx + 24, cy - 16 + fw * 0.5);
+      ctx.quadraticCurveTo(cx + 30, cy - 14 + fw * 0.7, cx + 36, cy - 12 + fw2 * 0.8);
+      ctx.stroke();
+
+      // Campfire with detailed flames
+      // Fire glow
+      const glowGrad = ctx.createRadialGradient(cx - 12, cy + 2, 0, cx - 12, cy + 2, 12);
+      glowGrad.addColorStop(0, `rgba(255, 150, 50, ${0.4 + Math.sin(time * 6) * 0.2})`);
+      glowGrad.addColorStop(1, "rgba(255, 100, 0, 0)");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx - 12, cy + 2, 12, 0, Math.PI * 2);
       ctx.fill();
-      // Smoke particles
-      for (let i = 0; i < 3; i++) {
-        const sy = cy - 5 - ((time * 15 + i * 8) % 20);
-        const sx = cx - 10 + Math.sin(time * 2 + i) * 3;
-        ctx.globalAlpha = 0.3 - ((time * 15 + i * 8) % 20) / 60;
-        ctx.fillStyle = "#888";
+
+      // Fire stones
+      ctx.fillStyle = "#4a4040";
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const fx = cx - 12 + Math.cos(angle) * 5;
+        const fy = cy + 4 + Math.sin(angle) * 2;
         ctx.beginPath();
-        ctx.arc(sx, sy, 2 + i, 0, Math.PI * 2);
+        ctx.ellipse(fx, fy, 2.5, 1.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Fire flames
+      for (let f = 0; f < 3; f++) {
+        const fh = 6 + Math.sin(time * 8 + f * 2) * 3;
+        const fx = cx - 14 + f * 3;
+        ctx.fillStyle = f === 1 ? "#ffcc00" : "#ff6600";
+        ctx.globalAlpha = 0.8 + Math.sin(time * 7 + f) * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(fx - 2, cy + 3);
+        ctx.quadraticCurveTo(fx, cy - fh, fx + 2, cy + 3);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
+
+      // Smoke particles with better animation
+      for (let i = 0; i < 4; i++) {
+        const sy = cy - 8 - ((time * 18 + i * 10) % 25);
+        const sx = cx - 12 + Math.sin(time * 1.5 + i * 1.2) * 4;
+        const sAlpha = 0.35 - ((time * 18 + i * 10) % 25) / 70;
+        if (sAlpha > 0) {
+          ctx.globalAlpha = sAlpha;
+          ctx.fillStyle = "#888";
+          ctx.beginPath();
+          ctx.arc(sx, sy, 2.5 + i * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Supply crates
+      ctx.fillStyle = "#5a4030";
+      ctx.fillRect(cx + 25, cy + 1, 8, 6);
+      ctx.fillStyle = "#4a3020";
+      ctx.fillRect(cx + 26, cy - 4, 6, 5);
+      // Crate detail lines
+      ctx.strokeStyle = "#3a2010";
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx + 25, cy + 1, 8, 6);
+
+      // Weapon rack
+      ctx.fillStyle = "#4a3020";
+      ctx.fillRect(cx - 28, cy, 2, 10);
+      ctx.fillRect(cx - 22, cy, 2, 10);
+      ctx.fillRect(cx - 29, cy - 2, 10, 2);
+      // Spears
+      ctx.strokeStyle = "#6a6a6a";
+      ctx.lineWidth = 1;
+      for (let s = 0; s < 3; s++) {
+        ctx.beginPath();
+        ctx.moveTo(cx - 28 + s * 3, cy - 1);
+        ctx.lineTo(cx - 28 + s * 3, cy - 12);
+        ctx.stroke();
+        ctx.fillStyle = "#8a8a8a";
+        ctx.beginPath();
+        ctx.moveTo(cx - 29 + s * 3, cy - 12);
+        ctx.lineTo(cx - 27 + s * 3, cy - 15);
+        ctx.lineTo(cx - 25 + s * 3, cy - 12);
+        ctx.fill();
+      }
     };
     drawCamp(100, 25);
     drawCamp(180, 55);
@@ -1704,23 +1989,127 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawCamp(620, 78);
     drawCamp(540, 28);
     drawCamp(860, 34);
+    drawCamp(1020, 75);
+    drawCamp(1580, 82);
 
-    // Watch tower
+    // Enhanced Watch tower with 3D isometric detail
     const drawWatchTower = (tx: number, tyPct: number) => {
       const ty = getY(tyPct);
-      ctx.fillStyle = "#5a4a3a";
-      ctx.fillRect(tx - 8, ty - 35, 16, 40);
-      ctx.fillStyle = "#4a3a2a";
-      ctx.fillRect(tx - 12, ty - 40, 24, 8);
-      // Crenellations
-      for (let i = 0; i < 5; i++) {
-        ctx.fillRect(tx - 12 + i * 6, ty - 46, 4, 6);
+
+      // Tower shadow
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(tx + 4, ty + 8, 14, 5, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Base stones
+      ctx.fillStyle = "#3a3030";
+      ctx.beginPath();
+      ctx.moveTo(tx - 12, ty + 5);
+      ctx.lineTo(tx + 12, ty + 5);
+      ctx.lineTo(tx + 10, ty - 2);
+      ctx.lineTo(tx - 10, ty - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Main tower body with 3D shading
+      const towerGrad = ctx.createLinearGradient(tx - 10, 0, tx + 10, 0);
+      towerGrad.addColorStop(0, "#4a3a2a");
+      towerGrad.addColorStop(0.3, "#6a5a4a");
+      towerGrad.addColorStop(0.7, "#5a4a3a");
+      towerGrad.addColorStop(1, "#3a2a1a");
+      ctx.fillStyle = towerGrad;
+      ctx.fillRect(tx - 9, ty - 38, 18, 40);
+
+      // Stone texture lines
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.5;
+      for (let row = 0; row < 8; row++) {
+        const ry = ty - 35 + row * 5;
+        ctx.beginPath();
+        ctx.moveTo(tx - 9, ry);
+        ctx.lineTo(tx + 9, ry);
+        ctx.stroke();
+        // Vertical brick lines (offset each row)
+        for (let col = 0; col < 3; col++) {
+          const offset = row % 2 === 0 ? 0 : 3;
+          ctx.beginPath();
+          ctx.moveTo(tx - 9 + col * 6 + offset, ry);
+          ctx.lineTo(tx - 9 + col * 6 + offset, ry + 5);
+          ctx.stroke();
+        }
       }
-      // Window with light
-      ctx.fillStyle = `rgba(255, 200, 100, ${
-        0.4 + Math.sin(time * 2 + tx) * 0.2
-      })`;
-      ctx.fillRect(tx - 3, ty - 30, 6, 8);
+
+      // Platform
+      ctx.fillStyle = "#4a3a2a";
+      ctx.fillRect(tx - 14, ty - 45, 28, 10);
+      // Platform rim (3D effect)
+      ctx.fillStyle = "#5a4a3a";
+      ctx.fillRect(tx - 14, ty - 45, 28, 3);
+
+      // Crenellations with 3D depth
+      for (let i = 0; i < 5; i++) {
+        const cx = tx - 12 + i * 7;
+        // Back face
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(cx, ty - 52, 5, 8);
+        // Front face
+        ctx.fillStyle = "#5a4a3a";
+        ctx.fillRect(cx, ty - 52, 4, 7);
+        // Top face (lighter)
+        ctx.fillStyle = "#6a5a4a";
+        ctx.fillRect(cx, ty - 52, 4, 2);
+      }
+
+      // Window with warm light glow
+      const windowGlow = ctx.createRadialGradient(tx, ty - 25, 0, tx, ty - 25, 8);
+      windowGlow.addColorStop(0, `rgba(255, 200, 100, ${0.6 + Math.sin(time * 2 + tx) * 0.3})`);
+      windowGlow.addColorStop(1, "rgba(255, 150, 50, 0)");
+      ctx.fillStyle = windowGlow;
+      ctx.beginPath();
+      ctx.arc(tx, ty - 25, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Window frame
+      ctx.fillStyle = "#2a1a0a";
+      ctx.fillRect(tx - 4, ty - 32, 8, 12);
+      // Window light
+      ctx.fillStyle = `rgba(255, 200, 100, ${0.5 + Math.sin(time * 2 + tx) * 0.25})`;
+      ctx.fillRect(tx - 3, ty - 31, 6, 10);
+      // Window cross
+      ctx.fillStyle = "#2a1a0a";
+      ctx.fillRect(tx - 0.5, ty - 31, 1, 10);
+      ctx.fillRect(tx - 3, ty - 27, 6, 1);
+
+      // Roof / beacon
+      ctx.fillStyle = "#5a3020";
+      ctx.beginPath();
+      ctx.moveTo(tx, ty - 58);
+      ctx.lineTo(tx + 8, ty - 48);
+      ctx.lineTo(tx - 8, ty - 48);
+      ctx.closePath();
+      ctx.fill();
+
+      // Beacon fire (flickering)
+      const beaconFlicker = Math.sin(time * 6 + tx) * 0.3;
+      ctx.fillStyle = `rgba(255, 100, 0, ${0.6 + beaconFlicker})`;
+      ctx.beginPath();
+      ctx.arc(tx, ty - 48, 3 + beaconFlicker * 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255, 200, 50, ${0.4 + beaconFlicker})`;
+      ctx.beginPath();
+      ctx.arc(tx, ty - 48, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Door
+      ctx.fillStyle = "#2a1a0a";
+      ctx.beginPath();
+      ctx.moveTo(tx - 4, ty + 5);
+      ctx.lineTo(tx - 4, ty - 5);
+      ctx.arc(tx, ty - 5, 4, Math.PI, 0);
+      ctx.lineTo(tx + 4, ty + 5);
+      ctx.closePath();
+      ctx.fill();
     };
     drawWatchTower(55, 66);
     drawWatchTower(220, 25);
@@ -1728,7 +2117,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawWatchTower(330, 42);
     drawWatchTower(490, 70);
     drawWatchTower(867, 33);
-    drawWatchTower(1290, 52);
+    drawWatchTower(1240, 52);
+    drawWatchTower(1180, 25);
+    drawWatchTower(1620, 30);
 
     // Crater (war damage)
     const drawCrater = (cx: number, cyPct: number, size: number) => {
@@ -1762,47 +2153,111 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawCrater(1700, 85, 9);
 
     // === SWAMP DETAILS ===
+    // Enhanced gnarled swamp trees with more atmosphere
     const drawWillowTree = (x: number, yPct: number, scale: number) => {
       const y = getY(yPct);
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
+
+      // Murky water reflection shadow
+      ctx.fillStyle = "rgba(20, 40, 20, 0.4)";
       ctx.beginPath();
-      ctx.ellipse(x + 5, y + 2, 12 * scale, 5 * scale, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 5, y + 4, 16 * scale, 6 * scale, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Twisted Trunk
-      ctx.fillStyle = "#1a1614";
-      ctx.beginPath();
-      ctx.moveTo(x - 2 * scale, y);
-      ctx.quadraticCurveTo(x - 5 * scale, y - 10 * scale, x, y - 25 * scale);
-      ctx.quadraticCurveTo(x + 5 * scale, y - 10 * scale, x + 4 * scale, y);
-      ctx.fill();
-
-      // Drooping Canopy
-      ctx.fillStyle = "#2a3a2a";
-      ctx.beginPath();
-      ctx.arc(x, y - 28 * scale, 15 * scale, 0, Math.PI * 2);
-      ctx.arc(x - 10 * scale, y - 22 * scale, 10 * scale, 0, Math.PI * 2);
-      ctx.arc(x + 10 * scale, y - 22 * scale, 10 * scale, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Vines (hanging)
-      ctx.strokeStyle = "#1a2a1a";
-      ctx.lineWidth = 1 * scale;
-      for (let i = 0; i < 5; i++) {
-        const vx = x - 10 * scale + i * 5 * scale;
-        const vy = y - 20 * scale;
-        const len = 15 * scale + Math.sin(time * 2 + i + x) * 3;
+      // Exposed roots
+      ctx.strokeStyle = "#1a1612";
+      ctx.lineWidth = 2 * scale;
+      for (let r = 0; r < 4; r++) {
+        const rx = x + (r - 1.5) * 6 * scale;
         ctx.beginPath();
-        ctx.moveTo(vx, vy);
-        ctx.quadraticCurveTo(
-          vx + Math.sin(time + i) * 2,
-          vy + len / 2,
-          vx,
-          vy + len
-        );
+        ctx.moveTo(x + (r - 1.5) * 2 * scale, y - 2);
+        ctx.quadraticCurveTo(rx - 2, y + 2, rx + seededRandom(x + r) * 4, y + 4);
         ctx.stroke();
       }
+
+      // Twisted trunk with bark texture
+      const trunkGrad = ctx.createLinearGradient(x - 5 * scale, 0, x + 5 * scale, 0);
+      trunkGrad.addColorStop(0, "#0a0a08");
+      trunkGrad.addColorStop(0.3, "#1a1a14");
+      trunkGrad.addColorStop(0.7, "#141410");
+      trunkGrad.addColorStop(1, "#080806");
+      ctx.fillStyle = trunkGrad;
+      ctx.beginPath();
+      ctx.moveTo(x - 4 * scale, y);
+      ctx.quadraticCurveTo(x - 7 * scale, y - 8 * scale, x - 3 * scale, y - 18 * scale);
+      ctx.quadraticCurveTo(x - 5 * scale, y - 25 * scale, x, y - 30 * scale);
+      ctx.quadraticCurveTo(x + 5 * scale, y - 25 * scale, x + 3 * scale, y - 18 * scale);
+      ctx.quadraticCurveTo(x + 7 * scale, y - 8 * scale, x + 4 * scale, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bark knots
+      ctx.fillStyle = "#0a0806";
+      ctx.beginPath();
+      ctx.ellipse(x - 1 * scale, y - 12 * scale, 2 * scale, 3 * scale, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(x + 2 * scale, y - 22 * scale, 1.5 * scale, 2 * scale, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Drooping canopy - back layer
+      ctx.fillStyle = "#1a2a1a";
+      ctx.beginPath();
+      ctx.arc(x - 4 * scale, y - 32 * scale, 12 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 8 * scale, y - 30 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Middle layer
+      ctx.fillStyle = "#2a3a2a";
+      ctx.beginPath();
+      ctx.arc(x, y - 34 * scale, 16 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 12 * scale, y - 26 * scale, 11 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 12 * scale, y - 26 * scale, 11 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Front layer (highlights)
+      ctx.fillStyle = "#3a4a3a";
+      ctx.beginPath();
+      ctx.arc(x + 4 * scale, y - 36 * scale, 8 * scale, 0, Math.PI * 2);
+      ctx.arc(x - 6 * scale, y - 28 * scale, 6 * scale, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spanish moss / hanging vines
+      ctx.lineWidth = 1.2 * scale;
+      for (let i = 0; i < 8; i++) {
+        const vx = x - 14 * scale + i * 4 * scale;
+        const vy = y - 24 * scale + seededRandom(x + i * 3) * 8 * scale;
+        const len = 18 * scale + Math.sin(time * 1.5 + i + x) * 4 + seededRandom(x + i) * 10;
+
+        // Vine with gradient (darker at bottom)
+        const vineGrad = ctx.createLinearGradient(vx, vy, vx, vy + len);
+        vineGrad.addColorStop(0, "#2a3a2a");
+        vineGrad.addColorStop(1, "#1a2a1a");
+        ctx.strokeStyle = vineGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(vx, vy);
+        const sway = Math.sin(time * 1.2 + i * 0.8) * 3;
+        ctx.bezierCurveTo(
+          vx + sway * 0.5, vy + len * 0.3,
+          vx + sway, vy + len * 0.7,
+          vx + sway * 0.3, vy + len
+        );
+        ctx.stroke();
+
+        // Small leaves on vines
+        if (i % 2 === 0) {
+          ctx.fillStyle = "#2a4a2a";
+          ctx.beginPath();
+          ctx.ellipse(vx + sway * 0.5, vy + len * 0.5, 1.5 * scale, 2.5 * scale, 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Glowing fungus on trunk
+      ctx.fillStyle = `rgba(100, 200, 100, ${0.3 + Math.sin(time * 2 + x) * 0.15})`;
+      ctx.beginPath();
+      ctx.ellipse(x + 3 * scale, y - 8 * scale, 2 * scale, 1.5 * scale, 0.3, 0, Math.PI * 2);
+      ctx.fill();
     };
 
     [
@@ -1819,9 +2274,36 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       [600, 40],
       [630, 75],
       [680, 75],
+      [395, 55],
+      [465, 45],
+      [570, 75],
+      [695, 50],
     ].forEach(([x, yPct], i) => {
       drawWillowTree(x, yPct, 0.7 + seededRandom(i + 500) * 0.4);
     });
+
+    // Swamp pools/puddles
+    const drawSwampPool = (px: number, pyPct: number, psize: number) => {
+      const py = getY(pyPct);
+      // Dark water
+      const poolGrad = ctx.createRadialGradient(px, py, 0, px, py, psize);
+      poolGrad.addColorStop(0, "rgba(20, 40, 30, 0.7)");
+      poolGrad.addColorStop(0.7, "rgba(30, 50, 35, 0.5)");
+      poolGrad.addColorStop(1, "rgba(40, 60, 40, 0.2)");
+      ctx.fillStyle = poolGrad;
+      ctx.beginPath();
+      ctx.ellipse(px, py, psize * 1.3, psize * 0.5, seededRandom(px) * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      // Surface reflection
+      ctx.fillStyle = `rgba(100, 150, 100, ${0.1 + Math.sin(time * 1.5 + px) * 0.05})`;
+      ctx.beginPath();
+      ctx.ellipse(px - psize * 0.3, py - psize * 0.1, psize * 0.4, psize * 0.15, 0, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    drawSwampPool(425, 50, 20);
+    drawSwampPool(515, 65, 25);
+    drawSwampPool(605, 50, 18);
+    drawSwampPool(660, 40, 22);
 
     // Swamp Gas Bubbles
     const drawSwampGas = (x: number, yPct: number) => {
@@ -1871,89 +2353,497 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.fill();
     }
 
-    // === DESERT DETAILS === (Coordinates Shifted Right)
-    // Cacti
-    const drawCactus = (x: number, yPct: number, scale: number) => {
+    // === SAHARA SANDS DETAILS === (Enhanced Desert Environment)
+
+    // Isometric 3D sand dune with depth
+    const drawSandDune = (dx: number, dyPct: number, width: number, heightPx: number, colorLight: string, colorMid: string, colorDark: string) => {
+      const dy = getY(dyPct);
+      const isoDepth = heightPx * 0.4; // Isometric depth for 3D effect
+
+      // Shadow underneath
+      ctx.fillStyle = "rgba(80, 60, 40, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(dx + width * 0.1, dy + isoDepth * 0.3, width * 0.55, isoDepth * 0.5, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Back face (darker, shadowed side)
+      ctx.fillStyle = colorDark;
+      ctx.beginPath();
+      ctx.moveTo(dx + width * 0.1, dy - heightPx); // Peak (offset for isometric)
+      ctx.quadraticCurveTo(dx + width * 0.4, dy - heightPx * 0.5, dx + width * 0.5, dy);
+      ctx.lineTo(dx + width * 0.5, dy + isoDepth * 0.3);
+      ctx.quadraticCurveTo(dx + width * 0.3, dy + isoDepth * 0.5, dx + width * 0.1, dy + isoDepth * 0.3);
+      ctx.lineTo(dx + width * 0.1, dy - heightPx);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front face (lit side) with gradient
+      const duneGrad = ctx.createLinearGradient(dx - width * 0.4, dy - heightPx, dx + width * 0.2, dy + isoDepth);
+      duneGrad.addColorStop(0, colorLight);
+      duneGrad.addColorStop(0.5, colorMid);
+      duneGrad.addColorStop(1, colorDark);
+      ctx.fillStyle = duneGrad;
+      ctx.beginPath();
+      ctx.moveTo(dx + width * 0.1, dy - heightPx); // Peak
+      ctx.quadraticCurveTo(dx - width * 0.2, dy - heightPx * 0.6, dx - width * 0.4, dy);
+      ctx.lineTo(dx - width * 0.4, dy + isoDepth * 0.3);
+      ctx.quadraticCurveTo(dx - width * 0.1, dy + isoDepth * 0.5, dx + width * 0.1, dy + isoDepth * 0.3);
+      ctx.lineTo(dx + width * 0.1, dy - heightPx);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top ridge highlight
+      ctx.strokeStyle = `rgba(255, 248, 220, ${0.4 + Math.sin(time * 0.5 + dx * 0.01) * 0.15})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(dx - width * 0.15, dy - heightPx * 0.7);
+      ctx.quadraticCurveTo(dx, dy - heightPx + 1, dx + width * 0.2, dy - heightPx * 0.6);
+      ctx.stroke();
+
+      // Wind ripples on front face
+      ctx.strokeStyle = `rgba(180, 150, 100, 0.2)`;
+      ctx.lineWidth = 0.5;
+      for (let r = 0; r < 3; r++) {
+        const rippleY = dy - heightPx * 0.3 + r * (heightPx * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(dx - width * 0.3 + r * 3, rippleY);
+        ctx.quadraticCurveTo(dx - width * 0.1, rippleY - 2, dx + width * 0.05, rippleY + 1);
+        ctx.stroke();
+      }
+    };
+
+    // Back dunes (darker, distant)
+    drawSandDune(760, 25, 40, 10, "#c49a6c", "#b08a5c", "#9a7a4c");
+    drawSandDune(870, 20, 45, 12, "#c8a070", "#b89060", "#a88050");
+    drawSandDune(980, 28, 35, 9, "#c49a6c", "#b08a5c", "#9a7a4c");
+    drawSandDune(1050, 22, 32, 8, "#c8a070", "#b89060", "#a88050");
+    // Mid dunes
+    drawSandDune(800, 45, 48, 12, "#d4aa7a", "#c49a6a", "#b08a5a");
+    drawSandDune(920, 50, 42, 11, "#d8b080", "#c8a070", "#b89060");
+    drawSandDune(1010, 42, 38, 10, "#d4aa7a", "#c49a6a", "#b08a5a");
+    // Front dunes (lighter, closer)
+    drawSandDune(750, 75, 35, 9, "#e0be8a", "#d0ae7a", "#c09e6a");
+    drawSandDune(860, 80, 40, 10, "#e4c490", "#d4b480", "#c4a470");
+    drawSandDune(960, 78, 32, 8, "#e0be8a", "#d0ae7a", "#c09e6a");
+    drawSandDune(1040, 82, 28, 7, "#e4c490", "#d4b480", "#c4a470");
+
+    // Majestic Golden Pyramid with hieroglyphics
+    const drawGoldenPyramid = (px: number, pyPct: number, size: number) => {
+      const py = getY(pyPct);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(px + size * 0.3, py + 8, size * 1.2, size * 0.3, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      // Pyramid body with gradient
+      const pyrGrad = ctx.createLinearGradient(px - size, py, px + size * 0.5, py - size * 1.5);
+      pyrGrad.addColorStop(0, "#8b7355");
+      pyrGrad.addColorStop(0.3, "#c9a86c");
+      pyrGrad.addColorStop(0.5, "#e8d4a0");
+      pyrGrad.addColorStop(0.7, "#c9a86c");
+      pyrGrad.addColorStop(1, "#8b7355");
+      ctx.fillStyle = pyrGrad;
+      ctx.beginPath();
+      ctx.moveTo(px, py - size * 1.5);
+      ctx.lineTo(px + size, py + 5);
+      ctx.lineTo(px - size, py + 5);
+      ctx.closePath();
+      ctx.fill();
+      // Golden capstone
+      ctx.fillStyle = `rgba(255, 215, 0, ${0.7 + Math.sin(time * 2) * 0.2})`;
+      ctx.beginPath();
+      ctx.moveTo(px, py - size * 1.5);
+      ctx.lineTo(px + size * 0.15, py - size * 1.25);
+      ctx.lineTo(px - size * 0.15, py - size * 1.25);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone block lines
+      ctx.strokeStyle = "rgba(90, 74, 58, 0.3)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 6; i++) {
+        const lineY = py + 5 - i * (size * 0.25);
+        const lineHalfWidth = size * (1 - i * 0.16);
+        ctx.beginPath();
+        ctx.moveTo(px - lineHalfWidth, lineY);
+        ctx.lineTo(px + lineHalfWidth, lineY);
+        ctx.stroke();
+      }
+    };
+    drawGoldenPyramid(770, 66, 27);
+    drawGoldenPyramid(820, 70, 27);
+    drawGoldenPyramid(860, 65, 27);
+    drawGoldenPyramid(850, 50, 25);
+    drawGoldenPyramid(950, 23, 17);
+
+    drawGoldenPyramid(970, 85, 20);
+
+
+    drawGoldenPyramid(960, 35, 28);
+
+    // Sphinx statue
+    const drawSphinx = (sx: number, syPct: number, scale: number) => {
+      const sy = getY(syPct);
+      // Body shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(sx + 5 * scale, sy + 8 * scale, 25 * scale, 6 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Lion body
+      const bodyGrad = ctx.createLinearGradient(sx - 20 * scale, sy, sx + 20 * scale, sy);
+      bodyGrad.addColorStop(0, "#a08060");
+      bodyGrad.addColorStop(0.5, "#c8a878");
+      bodyGrad.addColorStop(1, "#a08060");
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, 22 * scale, 10 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Paws
+      ctx.fillStyle = "#b89868";
+      ctx.beginPath();
+      ctx.ellipse(sx + 18 * scale, sy + 4 * scale, 8 * scale, 4 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Human head
+      const headGrad = ctx.createRadialGradient(sx - 15 * scale, sy - 10 * scale, 0, sx - 15 * scale, sy - 10 * scale, 12 * scale);
+      headGrad.addColorStop(0, "#d8b888");
+      headGrad.addColorStop(1, "#a08060");
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.arc(sx - 15 * scale, sy - 8 * scale, 9 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Headdress (Nemes)
+      ctx.fillStyle = "#c9a050";
+      ctx.beginPath();
+      ctx.moveTo(sx - 24 * scale, sy - 4 * scale);
+      ctx.lineTo(sx - 18 * scale, sy - 18 * scale);
+      ctx.lineTo(sx - 8 * scale, sy - 18 * scale);
+      ctx.lineTo(sx - 6 * scale, sy - 4 * scale);
+      ctx.closePath();
+      ctx.fill();
+      // Face details
+      ctx.fillStyle = "#5a4a3a";
+      ctx.beginPath();
+      ctx.arc(sx - 17 * scale, sy - 10 * scale, 1.5 * scale, 0, Math.PI * 2);
+      ctx.arc(sx - 12 * scale, sy - 10 * scale, 1.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    drawSphinx(920, 68, 0.8);
+
+    // Palm tree oasis
+    const drawPalmTree = (tx: number, tyPct: number, scale: number) => {
+      const ty = getY(tyPct);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(tx + 8 * scale, ty + 4 * scale, 15 * scale, 5 * scale, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Curved trunk
+      const trunkGrad = ctx.createLinearGradient(tx - 4 * scale, ty, tx + 4 * scale, ty);
+      trunkGrad.addColorStop(0, "#5a4020");
+      trunkGrad.addColorStop(0.5, "#8a6840");
+      trunkGrad.addColorStop(1, "#5a4020");
+      ctx.strokeStyle = trunkGrad;
+      ctx.lineWidth = 6 * scale;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.quadraticCurveTo(tx + 8 * scale, ty - 20 * scale, tx + 4 * scale, ty - 40 * scale);
+      ctx.stroke();
+      // Trunk rings
+      ctx.strokeStyle = "#4a3015";
+      ctx.lineWidth = 1;
+      for (let r = 0; r < 6; r++) {
+        const ringY = ty - 5 * scale - r * 6 * scale;
+        ctx.beginPath();
+        ctx.arc(tx + 2 * scale + r * scale * 0.5, ringY, 3 * scale, 0, Math.PI);
+        ctx.stroke();
+      }
+      // Palm fronds
+      const frondColors = ["#1d6b2c", "#2d8b3c", "#1d6b2c", "#2d8b3c", "#1d6b2c"];
+      const frondAngles = [-0.8, -0.3, 0.2, 0.7, 1.1];
+      frondAngles.forEach((angle, i) => {
+        ctx.save();
+        ctx.translate(tx + 4 * scale, ty - 40 * scale);
+        ctx.rotate(angle + Math.sin(time * 1.5 + i) * 0.05);
+        ctx.fillStyle = frondColors[i];
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(15 * scale, -8 * scale, 30 * scale, 5 * scale);
+        ctx.quadraticCurveTo(15 * scale, -2 * scale, 0, 0);
+        ctx.fill();
+        // Frond details
+        ctx.strokeStyle = "#0d4b1c";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(2 * scale, 0);
+        ctx.quadraticCurveTo(15 * scale, -5 * scale, 28 * scale, 3 * scale);
+        ctx.stroke();
+        ctx.restore();
+      });
+      // Coconuts
+      ctx.fillStyle = "#5a4030";
+      ctx.beginPath();
+      ctx.arc(tx + 3 * scale, ty - 38 * scale, 3 * scale, 0, Math.PI * 2);
+      ctx.arc(tx + 7 * scale, ty - 37 * scale, 3 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    // Oasis water pool
+    const drawOasis = (ox: number, oyPct: number, size: number) => {
+      const oy = getY(oyPct);
+      // Water with shimmer
+      const waterGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, size);
+      waterGrad.addColorStop(0, `rgba(64, 164, 200, ${0.7 + Math.sin(time * 2) * 0.1})`);
+      waterGrad.addColorStop(0.7, `rgba(40, 120, 160, ${0.8 + Math.sin(time * 2.5) * 0.1})`);
+      waterGrad.addColorStop(1, "rgba(30, 90, 120, 0.6)");
+      ctx.fillStyle = waterGrad;
+      ctx.beginPath();
+      ctx.ellipse(ox, oy, size, size * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Water sparkles
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + Math.sin(time * 4) * 0.2})`;
+      for (let s = 0; s < 4; s++) {
+        const sparkX = ox - size * 0.5 + seededRandom(ox + s) * size;
+        const sparkY = oy - size * 0.1 + seededRandom(ox + s + 10) * size * 0.2;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Grass border
+      ctx.fillStyle = "#4a8a3a";
+      for (let g = 0; g < 12; g++) {
+        const gAngle = (g / 12) * Math.PI * 2;
+        const gx = ox + Math.cos(gAngle) * size * 1.1;
+        const gy = oy + Math.sin(gAngle) * size * 0.45;
+        ctx.beginPath();
+        ctx.moveTo(gx - 2, gy + 2);
+        ctx.lineTo(gx, gy - 6 - Math.sin(time * 3 + g) * 2);
+        ctx.lineTo(gx + 2, gy + 2);
+        ctx.fill();
+      }
+    };
+    drawOasis(780, 42, 25);
+    drawPalmTree(765, 40, 0.7);
+    drawPalmTree(795, 44, 0.6);
+    drawPalmTree(778, 38, 0.8);
+
+    // Detailed cactus with flowers
+    const drawDesertCactus = (x: number, yPct: number, scale: number) => {
       const y = getY(yPct);
-      ctx.fillStyle = "#2d5a1e";
-      ctx.fillRect(x - 4 * scale, y - 25 * scale, 8 * scale, 30 * scale);
-      ctx.fillRect(x - 12 * scale, y - 18 * scale, 8 * scale, 4 * scale);
-      ctx.fillRect(x - 12 * scale, y - 24 * scale, 4 * scale, 10 * scale);
-      ctx.fillRect(x + 4 * scale, y - 10 * scale, 8 * scale, 4 * scale);
-      ctx.fillRect(x + 8 * scale, y - 18 * scale, 4 * scale, 12 * scale);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      ctx.beginPath();
+      ctx.ellipse(x + 3 * scale, y + 3 * scale, 8 * scale, 3 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Main stem with gradient
+      const cactusGrad = ctx.createLinearGradient(x - 5 * scale, y, x + 5 * scale, y);
+      cactusGrad.addColorStop(0, "#1a5a2a");
+      cactusGrad.addColorStop(0.3, "#3a8a4a");
+      cactusGrad.addColorStop(0.7, "#2a7a3a");
+      cactusGrad.addColorStop(1, "#1a5a2a");
+      ctx.fillStyle = cactusGrad;
+      // Main body
+      ctx.beginPath();
+      ctx.moveTo(x - 5 * scale, y);
+      ctx.quadraticCurveTo(x - 6 * scale, y - 15 * scale, x - 4 * scale, y - 30 * scale);
+      ctx.quadraticCurveTo(x, y - 33 * scale, x + 4 * scale, y - 30 * scale);
+      ctx.quadraticCurveTo(x + 6 * scale, y - 15 * scale, x + 5 * scale, y);
+      ctx.closePath();
+      ctx.fill();
+      // Left arm
+      ctx.beginPath();
+      ctx.moveTo(x - 4 * scale, y - 18 * scale);
+      ctx.quadraticCurveTo(x - 14 * scale, y - 18 * scale, x - 14 * scale, y - 26 * scale);
+      ctx.quadraticCurveTo(x - 14 * scale, y - 30 * scale, x - 10 * scale, y - 30 * scale);
+      ctx.quadraticCurveTo(x - 8 * scale, y - 26 * scale, x - 4 * scale, y - 22 * scale);
+      ctx.fill();
+      // Right arm
+      ctx.beginPath();
+      ctx.moveTo(x + 4 * scale, y - 12 * scale);
+      ctx.quadraticCurveTo(x + 12 * scale, y - 12 * scale, x + 12 * scale, y - 20 * scale);
+      ctx.quadraticCurveTo(x + 12 * scale, y - 24 * scale, x + 8 * scale, y - 24 * scale);
+      ctx.quadraticCurveTo(x + 6 * scale, y - 18 * scale, x + 4 * scale, y - 16 * scale);
+      ctx.fill();
+      // Ridges
+      ctx.strokeStyle = "#1a4a1a";
+      ctx.lineWidth = 0.5;
+      for (let r = -2; r <= 2; r++) {
+        ctx.beginPath();
+        ctx.moveTo(x + r * 1.5 * scale, y - 2 * scale);
+        ctx.lineTo(x + r * 1.2 * scale, y - 28 * scale);
+        ctx.stroke();
+      }
+      // Pink flower on top
+      ctx.fillStyle = "#ff6b9d";
+      ctx.beginPath();
+      ctx.arc(x, y - 32 * scale, 4 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffb6c1";
+      ctx.beginPath();
+      ctx.arc(x, y - 32 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
     };
     [
-      [760, 20],
-      [750, 35],
-      [800, 60],
-      [820, 72],
-      [840, 50],
-      [880, 20],
-      [900, 70],
-      [940, 82],
-      [970, 55],
-      [1000, 45],
-      [1030, 75],
+      [840, 60], [890, 25], [950, 75], [1000, 40], [1040, 65], [1060, 30],
     ].forEach(([x, yPct], i) => {
-      drawCactus(x, yPct, 0.5 + seededRandom(i + 200) * 0.3);
+      drawDesertCactus(x, yPct, 0.6 + seededRandom(i + 200) * 0.3);
     });
 
-    // Pyramid ruins
-    const drawPyramidRuin = (px: number, pyPct: number) => {
-      const py = getY(pyPct);
-      ctx.fillStyle = "#8a7a5a";
+    // Camel caravan
+    const drawCamel = (cx: number, cyPct: number, scale: number, facing: number) => {
+      const cy = getY(cyPct);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(facing, 1);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
       ctx.beginPath();
-      ctx.moveTo(px, py - 30);
-      ctx.lineTo(px + 25, py + 5);
-      ctx.lineTo(px - 25, py + 5);
-      ctx.closePath();
+      ctx.ellipse(0, 8 * scale, 18 * scale, 5 * scale, 0, 0, Math.PI * 2);
       ctx.fill();
-      // Damage/cracks
-      ctx.strokeStyle = "#6a5a3a";
-      ctx.lineWidth = 1;
+      // Body
+      const camelGrad = ctx.createLinearGradient(-15 * scale, -10 * scale, 15 * scale, 10 * scale);
+      camelGrad.addColorStop(0, "#c4a070");
+      camelGrad.addColorStop(0.5, "#d8b888");
+      camelGrad.addColorStop(1, "#b89060");
+      ctx.fillStyle = camelGrad;
       ctx.beginPath();
-      ctx.moveTo(px - 5, py - 15);
-      ctx.lineTo(px + 5, py - 5);
-      ctx.lineTo(px - 3, py + 2);
-      ctx.stroke();
+      ctx.ellipse(0, 0, 16 * scale, 10 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Hump
+      ctx.beginPath();
+      ctx.arc(-2 * scale, -12 * scale, 8 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Neck
+      ctx.beginPath();
+      ctx.moveTo(12 * scale, -4 * scale);
+      ctx.quadraticCurveTo(20 * scale, -10 * scale, 18 * scale, -22 * scale);
+      ctx.quadraticCurveTo(16 * scale, -10 * scale, 10 * scale, -2 * scale);
+      ctx.fill();
+      // Head
+      ctx.beginPath();
+      ctx.ellipse(18 * scale, -24 * scale, 6 * scale, 4 * scale, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      // Legs
+      ctx.fillStyle = "#a88050";
+      ctx.fillRect(-10 * scale, 6 * scale, 3 * scale, 12 * scale);
+      ctx.fillRect(-4 * scale, 6 * scale, 3 * scale, 12 * scale);
+      ctx.fillRect(4 * scale, 6 * scale, 3 * scale, 12 * scale);
+      ctx.fillRect(10 * scale, 6 * scale, 3 * scale, 12 * scale);
+      // Eye
+      ctx.fillStyle = "#2a1a0a";
+      ctx.beginPath();
+      ctx.arc(20 * scale, -25 * scale, 1 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     };
-    drawPyramidRuin(850, 65);
-    drawPyramidRuin(900, 70);
-    drawPyramidRuin(920, 60);
+    drawCamel(880, 72, 0.6, 1);
+    drawCamel(905, 74, 0.55, 1);
+    drawCamel(1010, 50, 0.65, -1);
 
-    drawPyramidRuin(980, 38);
-
-    // Desert camp with fire
+    // Desert camp with ornate tent
     const drawDesertCamp = (cx: number, cyPct: number) => {
       const cy = getY(cyPct);
-      // Tent (different style)
-      ctx.fillStyle = "#9a8060";
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
       ctx.beginPath();
-      ctx.moveTo(cx, cy - 15);
-      ctx.lineTo(cx + 18, cy + 5);
-      ctx.lineTo(cx - 18, cy + 5);
+      ctx.ellipse(cx, cy + 8, 28, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Tent base with gradient
+      const tentGrad = ctx.createLinearGradient(cx - 22, cy - 20, cx + 22, cy + 5);
+      tentGrad.addColorStop(0, "#f5e6c8");
+      tentGrad.addColorStop(0.5, "#e8d4b0");
+      tentGrad.addColorStop(1, "#c8b090");
+      ctx.fillStyle = tentGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 22);
+      ctx.lineTo(cx + 24, cy + 5);
+      ctx.lineTo(cx - 24, cy + 5);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#6a5a3a";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // Fire
-      const fireHeight = 8 + Math.sin(time * 6) * 3;
-      ctx.fillStyle = `rgba(255, 150, 50, ${0.6 + Math.sin(time * 8) * 0.3})`;
+      // Tent stripes
+      ctx.fillStyle = "#b8432f";
+      for (let s = 0; s < 3; s++) {
+        const stripeY = cy - 15 + s * 8;
+        ctx.beginPath();
+        ctx.moveTo(cx - 18 + s * 6, stripeY);
+        ctx.lineTo(cx - 15 + s * 6, stripeY + 3);
+        ctx.lineTo(cx + 15 - s * 6, stripeY + 3);
+        ctx.lineTo(cx + 18 - s * 6, stripeY);
+        ctx.fill();
+      }
+      // Tent opening
+      ctx.fillStyle = "#3a2a1a";
       ctx.beginPath();
-      ctx.moveTo(cx + 22, cy + 3);
-      ctx.quadraticCurveTo(cx + 24, cy - fireHeight, cx + 26, cy + 3);
+      ctx.moveTo(cx - 5, cy + 5);
+      ctx.lineTo(cx, cy - 8);
+      ctx.lineTo(cx + 5, cy + 5);
+      ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = `rgba(255, 80, 20, ${0.8})`;
+      // Golden finial
+      ctx.fillStyle = `rgba(255, 200, 50, ${0.8 + Math.sin(time * 3) * 0.2})`;
       ctx.beginPath();
-      ctx.moveTo(cx + 23, cy + 2);
-      ctx.quadraticCurveTo(cx + 24, cy - fireHeight * 0.6, cx + 25, cy + 2);
+      ctx.arc(cx, cy - 24, 3, 0, Math.PI * 2);
+      ctx.fill();
+      // Campfire with animated flames
+      const fireX = cx + 30;
+      const fireY = cy;
+      // Fire pit
+      ctx.fillStyle = "#3a3030";
+      ctx.beginPath();
+      ctx.ellipse(fireX, fireY + 3, 8, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Animated flames
+      for (let f = 0; f < 5; f++) {
+        const fh = 12 + Math.sin(time * 8 + f * 1.3) * 5;
+        const fw = 3 + Math.sin(time * 6 + f * 0.7) * 1;
+        const fx = fireX - 6 + f * 3;
+        ctx.fillStyle = `rgba(255, ${100 + f * 30}, 20, ${0.8 - f * 0.1})`;
+        ctx.beginPath();
+        ctx.moveTo(fx - fw, fireY);
+        ctx.quadraticCurveTo(fx, fireY - fh, fx + fw, fireY);
+        ctx.fill();
+      }
+      // Fire glow
+      const glowGrad = ctx.createRadialGradient(fireX, fireY - 5, 0, fireX, fireY - 5, 20);
+      glowGrad.addColorStop(0, "rgba(255, 150, 50, 0.3)");
+      glowGrad.addColorStop(1, "rgba(255, 100, 20, 0)");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(fireX, fireY - 5, 20, 0, Math.PI * 2);
       ctx.fill();
     };
-    drawDesertCamp(800, 58);
-    drawDesertCamp(920, 22);
-    drawDesertCamp(810, 82);
-    drawDesertCamp(1020, 32);
+    drawDesertCamp(820, 22);
+    drawDesertCamp(1030, 58);
+
+    // Swirling sand/dust particles
+    ctx.fillStyle = "rgba(210, 180, 140, 0.3)";
+    for (let p = 0; p < 25; p++) {
+      const px = 720 + seededRandom(p * 23) * 360;
+      const py = height * 0.3 + seededRandom(p * 31) * height * 0.5;
+      const drift = Math.sin(time * 2 + p * 0.5) * 15;
+      ctx.beginPath();
+      ctx.arc(px + drift, py, 1 + seededRandom(p) * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Heat shimmer effect at horizon
+    ctx.save();
+    ctx.globalAlpha = 0.05 + Math.sin(time * 3) * 0.02;
+    for (let h = 0; h < 5; h++) {
+      const shimmerY = getY(15 + h * 5);
+      ctx.fillStyle = "#fff8dc";
+      ctx.beginPath();
+      for (let sx = 720; sx < 1080; sx += 8) {
+        const shimmerOffset = Math.sin(time * 4 + sx * 0.05 + h) * 3;
+        if (sx === 720) ctx.moveTo(sx, shimmerY + shimmerOffset);
+        else ctx.lineTo(sx, shimmerY + shimmerOffset);
+      }
+      ctx.lineTo(1080, shimmerY + 8);
+      ctx.lineTo(720, shimmerY + 8);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
 
     // Burning wreckage
     const drawBurningWreck = (wx: number, wyPct: number) => {
@@ -1965,9 +2855,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       for (let i = 0; i < 3; i++) {
         const fx = wx - 6 + i * 6;
         const fh = 10 + Math.sin(time * 7 + i * 2) * 4;
-        ctx.fillStyle = `rgba(255, ${100 + i * 30}, 0, ${
-          0.7 + Math.sin(time * 5 + i) * 0.2
-        })`;
+        ctx.fillStyle = `rgba(255, ${100 + i * 30}, 0, ${0.7 + Math.sin(time * 5 + i) * 0.2
+          })`;
         ctx.beginPath();
         ctx.moveTo(fx - 3, wy - 10);
         ctx.quadraticCurveTo(fx, wy - 10 - fh, fx + 3, wy - 10);
@@ -1980,262 +2869,1040 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawBurningWreck(1520, 32);
     drawBurningWreck(1650, 62);
 
-    // === WINTER DETAILS === (Coordinates Shifted Right)
-    // Snow trees
-    const drawSnowTree = (x: number, yPct: number, scale: number) => {
-      const y = getY(yPct);
-      ctx.fillStyle = "#3a3530";
-      ctx.fillRect(x - 2 * scale, y - 4 * scale, 4 * scale, 12 * scale);
-      ctx.fillStyle = "#4a6a5a";
+    // === FROZEN FRONTIER DETAILS === (Enhanced Winter Environment)
+
+    // Aurora Borealis effect at the top
+    ctx.save();
+    for (let a = 0; a < 4; a++) {
+      const auroraY = 15 + a * 12;
+      const auroraGrad = ctx.createLinearGradient(1080, 0, 1440, 0);
+      const hueShift = (time * 20 + a * 30) % 360;
+      auroraGrad.addColorStop(0, `hsla(${120 + hueShift * 0.2}, 80%, 60%, 0)`);
+      auroraGrad.addColorStop(0.3, `hsla(${150 + hueShift * 0.3}, 70%, 55%, ${0.15 + Math.sin(time * 0.8 + a) * 0.05})`);
+      auroraGrad.addColorStop(0.5, `hsla(${180 + hueShift * 0.2}, 75%, 60%, ${0.2 + Math.sin(time * 1.2 + a * 0.5) * 0.08})`);
+      auroraGrad.addColorStop(0.7, `hsla(${200 + hueShift * 0.3}, 70%, 55%, ${0.15 + Math.sin(time * 0.9 + a * 0.3) * 0.05})`);
+      auroraGrad.addColorStop(1, `hsla(${220 + hueShift * 0.2}, 80%, 60%, 0)`);
+      ctx.fillStyle = auroraGrad;
       ctx.beginPath();
-      ctx.moveTo(x, y - 28 * scale);
-      ctx.lineTo(x + 14 * scale, y + 4 * scale);
-      ctx.lineTo(x - 14 * scale, y + 4 * scale);
+      ctx.moveTo(1080, auroraY);
+      for (let ax = 1080; ax <= 1440; ax += 20) {
+        const waveY = auroraY + Math.sin(time * 0.5 + ax * 0.02 + a * 0.5) * 8;
+        ctx.lineTo(ax, waveY);
+      }
+      ctx.lineTo(1440, auroraY + 25);
+      ctx.lineTo(1080, auroraY + 25);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#e8e8e8";
+    }
+    ctx.restore();
+
+    // Snow-covered mountains in background
+    const drawSnowMountain = (mx: number, myPct: number, width: number, heightPx: number) => {
+      const my = getY(myPct);
+      const isoDepth = heightPx * 0.35; // Isometric depth
+
+      // Shadow underneath
+      ctx.fillStyle = "rgba(40, 60, 80, 0.25)";
       ctx.beginPath();
-      ctx.moveTo(x, y - 28 * scale);
-      ctx.lineTo(x + 9 * scale, y - 12 * scale);
-      ctx.lineTo(x - 9 * scale, y - 12 * scale);
+      ctx.ellipse(mx + width * 0.08, my + isoDepth * 0.4, width * 0.5, isoDepth * 0.4, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Back face (shadowed right side)
+      const backGrad = ctx.createLinearGradient(mx, my - heightPx, mx + width * 0.5, my);
+      backGrad.addColorStop(0, "#8a9aaa");
+      backGrad.addColorStop(0.5, "#6a7a8a");
+      backGrad.addColorStop(1, "#5a6a7a");
+      ctx.fillStyle = backGrad;
+      ctx.beginPath();
+      ctx.moveTo(mx + width * 0.05, my - heightPx); // Peak (offset for isometric)
+      ctx.lineTo(mx + width * 0.45, my);
+      ctx.lineTo(mx + width * 0.45, my + isoDepth * 0.4);
+      ctx.lineTo(mx + width * 0.05, my + isoDepth * 0.25);
       ctx.closePath();
       ctx.fill();
-    };
-    [
-      [1200, 25],
-      [1020, 80],
-      [1120, 65],
-      [1140, 28],
-      [1150, 72],
-      [1160, 72],
-      [1190, 78],
-      [1240, 48],
-      [1230, 50],
-      [1230, 42],
-      [1250, 60],
-      [1280, 72],
-      [1300, 38],
-      [1320, 32],
-      [1340, 42],
-      [1350, 65],
-      [1360, 50],
-      [1380, 22],
-    ].forEach(([x, yPct], i) => {
-      drawSnowTree(x, yPct, 0.5 + seededRandom(i + 300) * 0.3);
-    });
 
-    // Ice fortress ruins
-    const drawIceRuin = (rx: number, ryPct: number) => {
-      const ry = getY(ryPct);
-      ctx.fillStyle = "#8a9aaa";
-      ctx.fillRect(rx - 15, ry - 25, 12, 30);
-      ctx.fillRect(rx + 3, ry - 18, 12, 23);
-      // Ice sparkle
-      ctx.fillStyle = `rgba(200, 230, 255, ${
-        0.4 + Math.sin(time * 3 + rx) * 0.3
-      })`;
+      // Front face (lit left side) with gradient
+      const mtGrad = ctx.createLinearGradient(mx - width * 0.4, my - heightPx, mx + width * 0.1, my + isoDepth);
+      mtGrad.addColorStop(0, "#f0f8ff");
+      mtGrad.addColorStop(0.25, "#e0eef8");
+      mtGrad.addColorStop(0.5, "#c0d8e8");
+      mtGrad.addColorStop(0.75, "#9aacbc");
+      mtGrad.addColorStop(1, "#7a8a9a");
+      ctx.fillStyle = mtGrad;
       ctx.beginPath();
-      ctx.arc(rx - 9, ry - 18, 3, 0, Math.PI * 2);
+      ctx.moveTo(mx + width * 0.05, my - heightPx); // Peak
+      ctx.lineTo(mx - width * 0.4, my);
+      ctx.lineTo(mx - width * 0.4, my + isoDepth * 0.4);
+      ctx.lineTo(mx + width * 0.05, my + isoDepth * 0.25);
+      ctx.closePath();
       ctx.fill();
-      // Snow pile
-      ctx.fillStyle = "#e0e8f0";
-      ctx.beginPath();
-      ctx.ellipse(rx, ry + 3, 18, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-    };
-    drawIceRuin(1150, 58);
-    drawIceRuin(1210, 33);
-    drawIceRuin(1290, 78);
-    drawIceRuin(1390, 67);
-    drawIceRuin(1400, 42);
 
-    // Frozen soldiers
-    const drawFrozenSoldier = (sx: number, syPct: number) => {
-      const sy = getY(syPct);
-      ctx.fillStyle = "#7a8a9a";
+      // Isometric base edge
+      ctx.fillStyle = "#6a7a8a";
       ctx.beginPath();
-      ctx.ellipse(sx, sy, 5, 8, 0, 0, Math.PI * 2);
+      ctx.moveTo(mx - width * 0.4, my + isoDepth * 0.4);
+      ctx.lineTo(mx + width * 0.05, my + isoDepth * 0.25);
+      ctx.lineTo(mx + width * 0.45, my + isoDepth * 0.4);
+      ctx.quadraticCurveTo(mx + width * 0.1, my + isoDepth * 0.55, mx - width * 0.4, my + isoDepth * 0.4);
       ctx.fill();
+
+      // Snow cap with 3D effect
+      ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(sx, sy - 10, 4, 0, Math.PI * 2);
+      ctx.moveTo(mx + width * 0.05, my - heightPx);
+      ctx.lineTo(mx + width * 0.18, my - heightPx * 0.65);
+      ctx.lineTo(mx + width * 0.05, my - heightPx * 0.6);
+      ctx.lineTo(mx - width * 0.1, my - heightPx * 0.68);
+      ctx.closePath();
       ctx.fill();
-      // Ice crystals
-      ctx.strokeStyle = "#a0c0e0";
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 3; i++) {
+
+      // Snow highlight on front face
+      ctx.fillStyle = "#e8f4fc";
+      ctx.beginPath();
+      ctx.moveTo(mx + width * 0.05, my - heightPx);
+      ctx.lineTo(mx - width * 0.15, my - heightPx * 0.6);
+      ctx.lineTo(mx - width * 0.08, my - heightPx * 0.55);
+      ctx.lineTo(mx - width * 0.2, my - heightPx * 0.4);
+      ctx.lineTo(mx - width * 0.12, my - heightPx * 0.35);
+      ctx.lineTo(mx + width * 0.02, my - heightPx * 0.55);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rocky texture lines on front face
+      ctx.strokeStyle = "rgba(90, 100, 110, 0.3)";
+      ctx.lineWidth = 0.5;
+      for (let r = 0; r < 3; r++) {
+        const lineY = my - heightPx * (0.25 + r * 0.12);
         ctx.beginPath();
-        ctx.moveTo(sx, sy - 5);
-        ctx.lineTo(sx + Math.cos(i * 2.1) * 8, sy - 5 + Math.sin(i * 2.1) * 8);
+        ctx.moveTo(mx - width * 0.35 + r * 5, lineY);
+        ctx.lineTo(mx - width * 0.1 + r * 3, lineY - heightPx * 0.08);
         ctx.stroke();
       }
     };
-    drawFrozenSoldier(1125, 50);
-    drawFrozenSoldier(1180, 70);
-    drawFrozenSoldier(1260, 55);
-    drawFrozenSoldier(1330, 28);
-    drawFrozenSoldier(1350, 42);
+    drawSnowMountain(1130, 30, 35, 16);
+    drawSnowMountain(1250, 25, 45, 20);
+    drawSnowMountain(1350, 26, 48, 28);
+    drawSnowMountain(1380, 28, 48, 28);
 
-    // Snowfall particles
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    for (let i = 0; i < 30; i++) {
-      const sx = 1080 + seededRandom(i * 7) * 360;
-      const sy = (time * 30 + seededRandom(i * 11) * height) % height;
+    drawSnowMountain(1310, 80, 68, 38);
+    drawSnowMountain(1350, 82, 68, 38);
+
+    // Detailed snow-covered pine trees
+    const drawFrostedPine = (x: number, yPct: number, scale: number) => {
+      const y = getY(yPct);
+      // Shadow
+      ctx.fillStyle = "rgba(40, 60, 80, 0.2)";
       ctx.beginPath();
-      ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+      ctx.ellipse(x + 4 * scale, y + 4 * scale, 12 * scale, 4 * scale, 0.2, 0, Math.PI * 2);
       ctx.fill();
+      // Trunk
+      const trunkGrad = ctx.createLinearGradient(x - 3 * scale, y, x + 3 * scale, y);
+      trunkGrad.addColorStop(0, "#3a2820");
+      trunkGrad.addColorStop(0.5, "#5a4838");
+      trunkGrad.addColorStop(1, "#3a2820");
+      ctx.fillStyle = trunkGrad;
+      ctx.fillRect(x - 3 * scale, y - 6 * scale, 6 * scale, 14 * scale);
+      // Tree layers (3 tiers)
+      const tiers = [
+        { y: -8, w: 16, h: 18 },
+        { y: -20, w: 13, h: 16 },
+        { y: -30, w: 9, h: 14 },
+      ];
+      tiers.forEach((tier) => {
+        // Green foliage
+        const treeGrad = ctx.createLinearGradient(x, y + tier.y * scale - tier.h * scale, x, y + tier.y * scale);
+        treeGrad.addColorStop(0, "#1a4a3a");
+        treeGrad.addColorStop(1, "#2a5a4a");
+        ctx.fillStyle = treeGrad;
+        ctx.beginPath();
+        ctx.moveTo(x, y + tier.y * scale - tier.h * scale);
+        ctx.lineTo(x + tier.w * scale, y + tier.y * scale);
+        ctx.lineTo(x - tier.w * scale, y + tier.y * scale);
+        ctx.closePath();
+        ctx.fill();
+        // Snow on branches
+        ctx.fillStyle = "#f0f8ff";
+        ctx.beginPath();
+        ctx.moveTo(x, y + tier.y * scale - tier.h * scale);
+        ctx.lineTo(x + tier.w * 0.7 * scale, y + tier.y * scale - tier.h * 0.3 * scale);
+        ctx.quadraticCurveTo(x + tier.w * 0.4 * scale, y + tier.y * scale - tier.h * 0.4 * scale, x, y + tier.y * scale - tier.h * 0.6 * scale);
+        ctx.quadraticCurveTo(x - tier.w * 0.4 * scale, y + tier.y * scale - tier.h * 0.4 * scale, x - tier.w * 0.7 * scale, y + tier.y * scale - tier.h * 0.3 * scale);
+        ctx.closePath();
+        ctx.fill();
+      });
+      // Snow pile at base
+      ctx.fillStyle = "#e8f0f8";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 2 * scale, 10 * scale, 4 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    [
+      [1095, 72], [1115, 55], [1140, 78], [1165, 42], [1185, 68],
+      [1220, 75], [1255, 38], [1280, 62], [1305, 48], [1325, 72],
+      [1355, 35], [1375, 58], [1400, 45], [1420, 68],
+    ].forEach(([x, yPct], i) => {
+      drawFrostedPine(x, yPct, 0.6 + seededRandom(i + 300) * 0.25);
+    });
+
+    // Ice crystal formations
+    const drawIceCrystal = (cx: number, cyPct: number, scale: number) => {
+      const cy = getY(cyPct);
+      // Crystal glow
+      const glowGrad = ctx.createRadialGradient(cx, cy - 15 * scale, 0, cx, cy - 15 * scale, 25 * scale);
+      glowGrad.addColorStop(0, `rgba(150, 220, 255, ${0.2 + Math.sin(time * 2 + cx) * 0.1})`);
+      glowGrad.addColorStop(1, "rgba(150, 220, 255, 0)");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 15 * scale, 25 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Main crystal spire
+      const crystalGrad = ctx.createLinearGradient(cx - 8 * scale, cy, cx + 8 * scale, cy - 35 * scale);
+      crystalGrad.addColorStop(0, "rgba(180, 220, 255, 0.9)");
+      crystalGrad.addColorStop(0.5, "rgba(220, 240, 255, 0.95)");
+      crystalGrad.addColorStop(1, "rgba(255, 255, 255, 1)");
+      ctx.fillStyle = crystalGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 35 * scale);
+      ctx.lineTo(cx + 6 * scale, cy - 10 * scale);
+      ctx.lineTo(cx + 4 * scale, cy + 2 * scale);
+      ctx.lineTo(cx - 4 * scale, cy + 2 * scale);
+      ctx.lineTo(cx - 6 * scale, cy - 10 * scale);
+      ctx.closePath();
+      ctx.fill();
+      // Side crystals
+      ctx.fillStyle = "rgba(200, 230, 255, 0.8)";
+      ctx.beginPath();
+      ctx.moveTo(cx - 4 * scale, cy - 8 * scale);
+      ctx.lineTo(cx - 15 * scale, cy - 20 * scale);
+      ctx.lineTo(cx - 6 * scale, cy - 5 * scale);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx + 4 * scale, cy - 12 * scale);
+      ctx.lineTo(cx + 12 * scale, cy - 25 * scale);
+      ctx.lineTo(cx + 6 * scale, cy - 8 * scale);
+      ctx.closePath();
+      ctx.fill();
+      // Sparkle
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.6 + Math.sin(time * 4 + cx) * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 30 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    drawIceCrystal(1120, 62, 0.8);
+    drawIceCrystal(1270, 48, 1);
+    drawIceCrystal(1350, 72, 0.7);
+    drawIceCrystal(1410, 38, 0.9);
+
+    // Frozen lake with reflection
+    const drawFrozenLake = (lx: number, lyPct: number, width: number, heightRatio: number) => {
+      const ly = getY(lyPct);
+      // Ice surface
+      const iceGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, width);
+      iceGrad.addColorStop(0, "rgba(200, 230, 255, 0.7)");
+      iceGrad.addColorStop(0.5, "rgba(170, 210, 240, 0.8)");
+      iceGrad.addColorStop(1, "rgba(140, 180, 220, 0.6)");
+      ctx.fillStyle = iceGrad;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, width, width * heightRatio, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Ice cracks
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.lineWidth = 1;
+      for (let c = 0; c < 5; c++) {
+        const startAngle = seededRandom(lx + c) * Math.PI * 2;
+        const crackLen = 15 + seededRandom(lx + c + 10) * 20;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(
+          lx + Math.cos(startAngle) * crackLen,
+          ly + Math.sin(startAngle) * crackLen * heightRatio
+        );
+        ctx.stroke();
+      }
+      // Shimmer spots
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(time * 3) * 0.2})`;
+      for (let s = 0; s < 3; s++) {
+        const sx = lx - width * 0.4 + seededRandom(lx + s * 7) * width * 0.8;
+        const sy = ly - width * heightRatio * 0.3 + seededRandom(lx + s * 11) * width * heightRatio * 0.6;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, 4, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    drawFrozenLake(1200, 82, 45, 0.35);
+    drawFrozenLake(1340, 58, 35, 0.3);
+
+    // Igloo
+    const drawIgloo = (ix: number, iyPct: number, scale: number) => {
+      const iy = getY(iyPct);
+      // Shadow
+      ctx.fillStyle = "rgba(60, 80, 100, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(ix + 3 * scale, iy + 5 * scale, 22 * scale, 7 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Dome
+      const domeGrad = ctx.createRadialGradient(ix - 5 * scale, iy - 10 * scale, 0, ix, iy, 20 * scale);
+      domeGrad.addColorStop(0, "#ffffff");
+      domeGrad.addColorStop(0.5, "#e8f4fc");
+      domeGrad.addColorStop(1, "#c8d8e8");
+      ctx.fillStyle = domeGrad;
+      ctx.beginPath();
+      ctx.arc(ix, iy - 2 * scale, 18 * scale, Math.PI, 0);
+      ctx.lineTo(ix + 18 * scale, iy + 2 * scale);
+      ctx.lineTo(ix - 18 * scale, iy + 2 * scale);
+      ctx.closePath();
+      ctx.fill();
+      // Ice block lines
+      ctx.strokeStyle = "rgba(150, 180, 200, 0.4)";
+      ctx.lineWidth = 1;
+      for (let row = 0; row < 3; row++) {
+        const rowRadius = 18 * scale * Math.cos(row * 0.3);
+        ctx.beginPath();
+        ctx.arc(ix, iy - 2 * scale, rowRadius, Math.PI, 0);
+        ctx.stroke();
+      }
+      // Entrance tunnel
+      ctx.fillStyle = "#2a3a4a";
+      ctx.beginPath();
+      ctx.ellipse(ix + 18 * scale, iy - 2 * scale, 6 * scale, 8 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#d8e8f0";
+      ctx.beginPath();
+      ctx.arc(ix + 18 * scale, iy - 2 * scale, 6 * scale, Math.PI, 0);
+      ctx.lineTo(ix + 26 * scale, iy + 2 * scale);
+      ctx.lineTo(ix + 10 * scale, iy + 2 * scale);
+      ctx.closePath();
+      ctx.fill();
+    };
+    drawIgloo(1160, 50, 0.8);
+    drawIgloo(1390, 75, 0.7);
+
+    // Woolly mammoth
+    const drawMammoth = (mx: number, myPct: number, scale: number, facing: number) => {
+      const my = getY(myPct);
+      ctx.save();
+      ctx.translate(mx, my);
+      ctx.scale(facing, 1);
+      // Shadow
+      ctx.fillStyle = "rgba(40, 60, 80, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(0, 10 * scale, 25 * scale, 8 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Body fur
+      const furGrad = ctx.createLinearGradient(-20 * scale, -15 * scale, 20 * scale, 10 * scale);
+      furGrad.addColorStop(0, "#5a4030");
+      furGrad.addColorStop(0.5, "#6a5040");
+      furGrad.addColorStop(1, "#4a3020");
+      ctx.fillStyle = furGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 22 * scale, 14 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Fur texture
+      ctx.strokeStyle = "#3a2010";
+      ctx.lineWidth = 1;
+      for (let f = 0; f < 8; f++) {
+        const fx = -15 * scale + f * 4 * scale;
+        ctx.beginPath();
+        ctx.moveTo(fx, -8 * scale);
+        ctx.quadraticCurveTo(fx + 2 * scale, 5 * scale, fx, 12 * scale);
+        ctx.stroke();
+      }
+      // Head
+      ctx.fillStyle = "#5a4030";
+      ctx.beginPath();
+      ctx.ellipse(18 * scale, -5 * scale, 12 * scale, 10 * scale, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Trunk
+      ctx.fillStyle = "#4a3020";
+      ctx.beginPath();
+      ctx.moveTo(26 * scale, -2 * scale);
+      ctx.quadraticCurveTo(35 * scale, 5 * scale, 30 * scale, 15 * scale);
+      ctx.quadraticCurveTo(28 * scale, 18 * scale, 25 * scale, 15 * scale);
+      ctx.quadraticCurveTo(28 * scale, 8 * scale, 24 * scale, 0);
+      ctx.fill();
+      // Tusks
+      ctx.fillStyle = "#f8f0e8";
+      ctx.beginPath();
+      ctx.moveTo(22 * scale, 2 * scale);
+      ctx.quadraticCurveTo(35 * scale, -5 * scale, 40 * scale, 5 * scale);
+      ctx.quadraticCurveTo(38 * scale, 8 * scale, 35 * scale, 5 * scale);
+      ctx.quadraticCurveTo(30 * scale, 0, 22 * scale, 4 * scale);
+      ctx.fill();
+      // Eye
+      ctx.fillStyle = "#1a0a00";
+      ctx.beginPath();
+      ctx.arc(24 * scale, -8 * scale, 2 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Legs
+      ctx.fillStyle = "#4a3020";
+      ctx.fillRect(-12 * scale, 10 * scale, 6 * scale, 14 * scale);
+      ctx.fillRect(-4 * scale, 10 * scale, 6 * scale, 14 * scale);
+      ctx.fillRect(6 * scale, 10 * scale, 6 * scale, 14 * scale);
+      ctx.fillRect(14 * scale, 10 * scale, 6 * scale, 14 * scale);
+      // Snow on back
+      ctx.fillStyle = "#f0f8ff";
+      ctx.beginPath();
+      ctx.ellipse(-2 * scale, -12 * scale, 15 * scale, 4 * scale, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+    drawMammoth(1230, 65, 0.5, 1);
+    drawMammoth(1300, 25, 0.4, -1);
+
+    // Enhanced snowfall with depth
+    for (let layer = 0; layer < 3; layer++) {
+      const speed = 20 + layer * 15;
+      const size = 1 + layer * 0.8;
+      const opacity = 0.3 + layer * 0.15;
+      ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+      for (let i = 0; i < 20; i++) {
+        const sx = 1080 + seededRandom(i * 7 + layer * 100) * 360;
+        const baseY = seededRandom(i * 11 + layer * 50) * height;
+        const sy = (time * speed + baseY) % height;
+        const drift = Math.sin(time * 2 + i * 0.3 + layer) * (3 + layer * 2);
+        ctx.beginPath();
+        ctx.arc(sx + drift, sy, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
-    // === VOLCANIC DETAILS ===
-    // Lava rivers
+    // Frost overlay at edges
+    ctx.save();
+    const frostGrad = ctx.createLinearGradient(1080, 0, 1100, 0);
+    frostGrad.addColorStop(0, "rgba(200, 230, 255, 0.15)");
+    frostGrad.addColorStop(1, "rgba(200, 230, 255, 0)");
+    ctx.fillStyle = frostGrad;
+    ctx.fillRect(1080, 0, 40, height);
+    const frostGrad2 = ctx.createLinearGradient(1420, 0, 1440, 0);
+    frostGrad2.addColorStop(0, "rgba(200, 230, 255, 0)");
+    frostGrad2.addColorStop(1, "rgba(200, 230, 255, 0.15)");
+    ctx.fillStyle = frostGrad2;
+    ctx.fillRect(1400, 0, 40, height);
+    ctx.restore()
+
+    // === INFERNO DEPTHS DETAILS === (Enhanced Volcanic Environment)
+
+    // Hellish sky gradient overlay
+    ctx.save();
+    const skyGrad = ctx.createLinearGradient(1440, 0, 1440, height * 0.4);
+    skyGrad.addColorStop(0, `rgba(80, 20, 10, ${0.3 + Math.sin(time * 0.5) * 0.05})`);
+    skyGrad.addColorStop(0.5, `rgba(120, 40, 20, ${0.2 + Math.sin(time * 0.7) * 0.05})`);
+    skyGrad.addColorStop(1, "rgba(60, 15, 8, 0)");
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(1440, 0, 380, height * 0.5);
+    ctx.restore();
+
+    // Massive volcano in background
+    const drawVolcano = (vx: number, vyPct: number, width: number, heightPx: number) => {
+      const vy = getY(vyPct);
+      // Volcano body with gradient
+      const volcGrad = ctx.createLinearGradient(vx, vy - heightPx, vx, vy + 10);
+      volcGrad.addColorStop(0, "#3a2020");
+      volcGrad.addColorStop(0.3, "#4a2828");
+      volcGrad.addColorStop(0.6, "#2a1515");
+      volcGrad.addColorStop(1, "#1a0a0a");
+      ctx.fillStyle = volcGrad;
+      ctx.beginPath();
+      ctx.moveTo(vx - width / 2, vy + 10);
+      ctx.lineTo(vx - width * 0.15, vy - heightPx);
+      ctx.lineTo(vx + width * 0.15, vy - heightPx);
+      ctx.lineTo(vx + width / 2, vy + 10);
+      ctx.closePath();
+      ctx.fill();
+      // Crater
+      ctx.fillStyle = "#1a0808";
+      ctx.beginPath();
+      ctx.ellipse(vx, vy - heightPx + 5, width * 0.18, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Lava glow in crater
+      const craterGlow = ctx.createRadialGradient(vx, vy - heightPx + 5, 0, vx, vy - heightPx + 5, width * 0.2);
+      craterGlow.addColorStop(0, `rgba(255, 150, 50, ${0.6 + Math.sin(time * 3) * 0.2})`);
+      craterGlow.addColorStop(0.5, `rgba(255, 80, 20, ${0.4 + Math.sin(time * 2.5) * 0.15})`);
+      craterGlow.addColorStop(1, "rgba(200, 50, 10, 0)");
+      ctx.fillStyle = craterGlow;
+      ctx.beginPath();
+      ctx.arc(vx, vy - heightPx + 5, width * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Lava streaks down the side
+      ctx.strokeStyle = `rgba(255, 100, 30, ${0.5 + Math.sin(time * 2) * 0.2})`;
+      ctx.lineWidth = 3;
+      for (let streak = 0; streak < 4; streak++) {
+        const startX = vx - width * 0.1 + streak * (width * 0.07);
+        ctx.beginPath();
+        ctx.moveTo(startX, vy - heightPx + 8);
+        ctx.quadraticCurveTo(
+          startX + (streak - 1.5) * 15,
+          vy - heightPx * 0.5,
+          startX + (streak - 1.5) * 25,
+          vy
+        );
+        ctx.stroke();
+      }
+      // Smoke plumes from crater
+      for (let s = 0; s < 5; s++) {
+        const smokeTime = (time * 15 + s * 20) % 60;
+        const smokeY = vy - heightPx - smokeTime;
+        const smokeX = vx + Math.sin(time * 1.5 + s * 2) * (5 + smokeTime * 0.3);
+        const smokeSize = 8 + smokeTime * 0.4;
+        const smokeAlpha = Math.max(0, 0.4 - smokeTime / 80);
+        ctx.fillStyle = `rgba(60, 50, 50, ${smokeAlpha})`;
+        ctx.beginPath();
+        ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    drawVolcano(1530, 22, 95, 35);
+    drawVolcano(1700, 21, 85, 30);
+
+    drawVolcano(1720, 24, 95, 45);
+
+    drawVolcano(1720, 84, 95, 45);
+    drawVolcano(1700, 86, 85, 30);
+
+    // Lava pools with bubbling effect
+    const drawLavaPool = (px: number, pyPct: number, width: number, heightRatio: number) => {
+      const py = getY(pyPct);
+      // Outer glow
+      const glowGrad = ctx.createRadialGradient(px, py, 0, px, py, width * 1.5);
+      glowGrad.addColorStop(0, `rgba(255, 100, 30, ${0.25 + Math.sin(time * 2) * 0.1})`);
+      glowGrad.addColorStop(0.5, `rgba(255, 60, 20, ${0.15 + Math.sin(time * 2.5) * 0.05})`);
+      glowGrad.addColorStop(1, "rgba(200, 40, 10, 0)");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.ellipse(px, py, width * 1.5, width * heightRatio * 1.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Pool edge (cooled lava)
+      ctx.fillStyle = "#2a1a15";
+      ctx.beginPath();
+      ctx.ellipse(px, py, width + 4, width * heightRatio + 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Main lava surface
+      const lavaGrad = ctx.createRadialGradient(px - width * 0.2, py - width * heightRatio * 0.2, 0, px, py, width);
+      lavaGrad.addColorStop(0, "#ffcc44");
+      lavaGrad.addColorStop(0.3, "#ff8822");
+      lavaGrad.addColorStop(0.7, "#ee4411");
+      lavaGrad.addColorStop(1, "#aa2200");
+      ctx.fillStyle = lavaGrad;
+      ctx.beginPath();
+      ctx.ellipse(px, py, width, width * heightRatio, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Bubbles
+      for (let b = 0; b < 4; b++) {
+        const bubblePhase = (time * 3 + b * 1.5 + px * 0.1) % 2;
+        if (bubblePhase < 1.5) {
+          const bx = px - width * 0.5 + seededRandom(px + b) * width;
+          const by = py - width * heightRatio * 0.3 + seededRandom(px + b + 10) * width * heightRatio * 0.6;
+          const bSize = 2 + bubblePhase * 2;
+          ctx.fillStyle = `rgba(255, 200, 100, ${0.6 - bubblePhase * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      // Surface shimmer
+      ctx.strokeStyle = `rgba(255, 220, 150, ${0.3 + Math.sin(time * 4) * 0.15})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(px - width * 0.3, py - width * heightRatio * 0.2, width * 0.3, width * heightRatio * 0.2, 0.3, 0, Math.PI);
+      ctx.stroke();
+    };
+    drawLavaPool(1500, 65, 30, 0.35);
+    drawLavaPool(1620, 78, 25, 0.3);
+    drawLavaPool(1700, 55, 35, 0.4);
+    drawLavaPool(1760, 75, 28, 0.35);
+
+    // Enhanced lava rivers with glow
     const drawLavaRiver = (points: number[][]) => {
-      ctx.strokeStyle = `rgba(255, 80, 0, ${0.6 + Math.sin(time * 2) * 0.2})`;
-      ctx.lineWidth = 6;
+      // Outer glow
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 100, 30, ${0.2 + Math.sin(time * 2) * 0.1})`;
+      ctx.lineWidth = 20;
       ctx.lineCap = "round";
+      ctx.lineJoin = "round";
       ctx.beginPath();
       ctx.moveTo(points[0][0], getY(points[0][1]));
       for (let i = 1; i < points.length; i++) {
         ctx.lineTo(points[i][0], getY(points[i][1]));
       }
       ctx.stroke();
-      // Glow
-      ctx.strokeStyle = `rgba(255, 200, 100, ${
-        0.3 + Math.sin(time * 3) * 0.15
-      })`;
-      ctx.lineWidth = 12;
+      // Main lava flow
+      ctx.strokeStyle = `rgba(255, 80, 0, ${0.7 + Math.sin(time * 3) * 0.2})`;
+      ctx.lineWidth = 8;
       ctx.stroke();
+      // Hot center
+      ctx.strokeStyle = `rgba(255, 200, 100, ${0.6 + Math.sin(time * 4) * 0.2})`;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
     };
     drawLavaRiver([
-      [1480, 75],
-      [1510, 68],
-      [1540, 72],
-      [1580, 65],
+      [1460, 72], [1490, 65], [1520, 68], [1560, 62], [1590, 68],
     ]);
     drawLavaRiver([
-      [1490, 31],
-      [1520, 35],
-      [1540, 33],
-      [1570, 35],
+      [1480, 38], [1510, 42], [1550, 38], [1590, 45],
     ]);
     drawLavaRiver([
-      [1590, 20],
-      [1620, 28],
-      [1660, 25],
-      [1700, 30],
-    ]);
-    drawLavaRiver([
-      [1650, 80],
-      [1680, 82],
-      [1710, 78],
-      [1740, 70],
+      [1640, 45], [1680, 50], [1720, 48], [1760, 55],
     ]);
 
-    // Obsidian rocks
-    const drawObsidianRock = (rx: number, ryPct: number, scale: number) => {
-      const ry = getY(ryPct);
-      ctx.fillStyle = "#2a1a1a";
+    // Obsidian spires with glowing cracks
+    const drawObsidianSpire = (sx: number, syPct: number, scale: number) => {
+      const sy = getY(syPct);
+      // Shadow
+      ctx.fillStyle = "rgba(20, 10, 10, 0.3)";
       ctx.beginPath();
-      ctx.moveTo(rx - 12 * scale, ry + 4 * scale);
-      ctx.lineTo(rx - 8 * scale, ry - 16 * scale);
-      ctx.lineTo(rx + 4 * scale, ry - 20 * scale);
-      ctx.lineTo(rx + 12 * scale, ry - 8 * scale);
-      ctx.lineTo(rx + 12 * scale, ry + 4 * scale);
+      ctx.ellipse(sx + 5 * scale, sy + 4 * scale, 12 * scale, 4 * scale, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Spire body
+      const spireGrad = ctx.createLinearGradient(sx - 10 * scale, sy, sx + 10 * scale, sy - 40 * scale);
+      spireGrad.addColorStop(0, "#1a1015");
+      spireGrad.addColorStop(0.3, "#2a1a20");
+      spireGrad.addColorStop(0.6, "#1a1015");
+      spireGrad.addColorStop(1, "#0a0508");
+      ctx.fillStyle = spireGrad;
+      ctx.beginPath();
+      ctx.moveTo(sx - 10 * scale, sy + 2 * scale);
+      ctx.lineTo(sx - 6 * scale, sy - 25 * scale);
+      ctx.lineTo(sx - 2 * scale, sy - 40 * scale);
+      ctx.lineTo(sx + 3 * scale, sy - 35 * scale);
+      ctx.lineTo(sx + 8 * scale, sy - 18 * scale);
+      ctx.lineTo(sx + 10 * scale, sy + 2 * scale);
       ctx.closePath();
       ctx.fill();
-      // Lava glow cracks
-      ctx.strokeStyle = `rgba(255, 68, 0, ${
-        0.5 + Math.sin(time * 3 + rx) * 0.3
-      })`;
+      // Glass-like reflection
+      ctx.fillStyle = "rgba(80, 60, 70, 0.3)";
+      ctx.beginPath();
+      ctx.moveTo(sx - 7 * scale, sy - 5 * scale);
+      ctx.lineTo(sx - 4 * scale, sy - 30 * scale);
+      ctx.lineTo(sx - 2 * scale, sy - 28 * scale);
+      ctx.lineTo(sx - 5 * scale, sy - 5 * scale);
+      ctx.closePath();
+      ctx.fill();
+      // Glowing magma cracks
+      ctx.strokeStyle = `rgba(255, 100, 30, ${0.6 + Math.sin(time * 3 + sx) * 0.3})`;
       ctx.lineWidth = 2 * scale;
       ctx.beginPath();
-      ctx.moveTo(rx - 4 * scale, ry);
-      ctx.lineTo(rx + 2 * scale, ry - 10 * scale);
+      ctx.moveTo(sx - 4 * scale, sy - 5 * scale);
+      ctx.lineTo(sx - 2 * scale, sy - 18 * scale);
+      ctx.lineTo(sx + 2 * scale, sy - 25 * scale);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(sx + 3 * scale, sy - 8 * scale);
+      ctx.lineTo(sx + 5 * scale, sy - 20 * scale);
       ctx.stroke();
     };
     [
-      [1490, 42],
-      [1540, 78],
-      [1610, 58],
-      [1650, 38],
-      [1700, 72],
+      [1475, 48], [1530, 72], [1580, 35], [1640, 62],
+      [1690, 42], [1740, 68], [1780, 38],
     ].forEach(([x, yPct], i) => {
-      drawObsidianRock(x, yPct, 0.6 + seededRandom(i + 400) * 0.4);
+      drawObsidianSpire(x, yPct, 0.7 + seededRandom(i + 400) * 0.4);
     });
 
-    // Volcanic vents with smoke
-    const drawVolcanicVent = (vx: number, vyPct: number) => {
-      const vy = getY(vyPct);
-      ctx.fillStyle = "#3a2020";
+    // Demon statue/idol
+    const drawDemonStatue = (dx: number, dyPct: number, scale: number) => {
+      const dy = getY(dyPct);
+      // Pedestal
+      ctx.fillStyle = "#2a1a18";
+      ctx.fillRect(dx - 12 * scale, dy - 5 * scale, 24 * scale, 10 * scale);
+      ctx.fillStyle = "#3a2a28";
+      ctx.fillRect(dx - 10 * scale, dy - 8 * scale, 20 * scale, 5 * scale);
+      // Body
+      const statueGrad = ctx.createLinearGradient(dx - 8 * scale, dy - 40 * scale, dx + 8 * scale, dy - 8 * scale);
+      statueGrad.addColorStop(0, "#2a2025");
+      statueGrad.addColorStop(0.5, "#3a2a30");
+      statueGrad.addColorStop(1, "#1a1015");
+      ctx.fillStyle = statueGrad;
       ctx.beginPath();
-      ctx.ellipse(vx, vy, 10, 5, 0, 0, Math.PI * 2);
+      ctx.moveTo(dx - 8 * scale, dy - 8 * scale);
+      ctx.lineTo(dx - 6 * scale, dy - 25 * scale);
+      ctx.lineTo(dx - 4 * scale, dy - 32 * scale);
+      ctx.lineTo(dx + 4 * scale, dy - 32 * scale);
+      ctx.lineTo(dx + 6 * scale, dy - 25 * scale);
+      ctx.lineTo(dx + 8 * scale, dy - 8 * scale);
+      ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = `rgba(255, 100, 50, ${
-        0.3 + Math.sin(time * 4 + vx) * 0.2
-      })`;
+      // Head
       ctx.beginPath();
-      ctx.ellipse(vx, vy - 2, 6, 3, 0, 0, Math.PI * 2);
+      ctx.arc(dx, dy - 36 * scale, 6 * scale, 0, Math.PI * 2);
       ctx.fill();
-      // Smoke/steam
-      for (let i = 0; i < 4; i++) {
-        const smokeY = vy - 10 - ((time * 25 + i * 12) % 35);
-        const smokeX = vx + Math.sin(time * 2 + i * 1.5) * 5;
-        ctx.globalAlpha = 0.25 - ((time * 25 + i * 12) % 35) / 100;
-        ctx.fillStyle = "#555";
-        ctx.beginPath();
-        ctx.arc(smokeX, smokeY, 4 + i * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
+      // Horns
+      ctx.fillStyle = "#1a1015";
+      ctx.beginPath();
+      ctx.moveTo(dx - 4 * scale, dy - 40 * scale);
+      ctx.lineTo(dx - 10 * scale, dy - 50 * scale);
+      ctx.lineTo(dx - 6 * scale, dy - 42 * scale);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(dx + 4 * scale, dy - 40 * scale);
+      ctx.lineTo(dx + 10 * scale, dy - 50 * scale);
+      ctx.lineTo(dx + 6 * scale, dy - 42 * scale);
+      ctx.fill();
+      // Glowing eyes
+      ctx.fillStyle = `rgba(255, 50, 20, ${0.7 + Math.sin(time * 4 + dx) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(dx - 2 * scale, dy - 37 * scale, 1.5 * scale, 0, Math.PI * 2);
+      ctx.arc(dx + 2 * scale, dy - 37 * scale, 1.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Eye glow
+      const eyeGlow = ctx.createRadialGradient(dx, dy - 37 * scale, 0, dx, dy - 37 * scale, 10 * scale);
+      eyeGlow.addColorStop(0, `rgba(255, 50, 20, ${0.2 + Math.sin(time * 3) * 0.1})`);
+      eyeGlow.addColorStop(1, "rgba(255, 50, 20, 0)");
+      ctx.fillStyle = eyeGlow;
+      ctx.beginPath();
+      ctx.arc(dx, dy - 37 * scale, 10 * scale, 0, Math.PI * 2);
+      ctx.fill();
     };
-    drawVolcanicVent(1500, 52);
-    drawVolcanicVent(1600, 70);
-    drawVolcanicVent(1660, 45);
+    drawDemonStatue(1560, 52, 0.8);
+    drawDemonStatue(1720, 28, 0.7);
 
-    // Destroyed fortress
-    const drawDestroyedFortress = (fx: number, fyPct: number) => {
+    // Fire elemental/spirit
+    const drawFireElemental = (fx: number, fyPct: number, scale: number) => {
       const fy = getY(fyPct);
-      ctx.fillStyle = "#3a2a2a";
-      ctx.fillRect(fx - 20, fy - 20, 15, 25);
-      ctx.fillRect(fx + 5, fy - 12, 15, 17);
-      // Rubble
-      ctx.fillStyle = "#4a3a3a";
-      for (let i = 0; i < 5; i++) {
+      const bob = Math.sin(time * 3 + fx) * 3;
+      // Glow aura
+      const auraGrad = ctx.createRadialGradient(fx, fy - 15 * scale + bob, 0, fx, fy - 15 * scale + bob, 25 * scale);
+      auraGrad.addColorStop(0, `rgba(255, 150, 50, ${0.3 + Math.sin(time * 4 + fx) * 0.1})`);
+      auraGrad.addColorStop(0.5, `rgba(255, 80, 20, ${0.15 + Math.sin(time * 3) * 0.05})`);
+      auraGrad.addColorStop(1, "rgba(255, 50, 10, 0)");
+      ctx.fillStyle = auraGrad;
+      ctx.beginPath();
+      ctx.arc(fx, fy - 15 * scale + bob, 25 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      // Body flames
+      for (let f = 0; f < 5; f++) {
+        const flameHeight = 20 + Math.sin(time * 6 + f * 1.2) * 8;
+        const flameWidth = 8 - f * 0.8;
+        const flamex = fx - 8 * scale + f * 4 * scale;
+        const flamey = fy + bob;
+        ctx.fillStyle = `rgba(${255 - f * 20}, ${100 + f * 30}, ${20 + f * 10}, ${0.8 - f * 0.1})`;
         ctx.beginPath();
-        ctx.arc(
-          fx - 10 + i * 8 + seededRandom(i + fx) * 6,
-          fy + 3,
-          3 + seededRandom(i) * 2,
-          0,
-          Math.PI * 2
-        );
+        ctx.moveTo(flamex - flameWidth * scale * 0.5, flamey);
+        ctx.quadraticCurveTo(flamex, flamey - flameHeight * scale, flamex + flameWidth * scale * 0.5, flamey);
         ctx.fill();
       }
-      // Fire
-      const fh = 12 + Math.sin(time * 6) * 4;
-      ctx.fillStyle = `rgba(255, 120, 30, ${0.7 + Math.sin(time * 7) * 0.2})`;
+      // Face/eyes
+      ctx.fillStyle = "#ffff88";
       ctx.beginPath();
-      ctx.moveTo(fx - 5, fy - 20);
-      ctx.quadraticCurveTo(fx, fy - 20 - fh, fx + 5, fy - 20);
+      ctx.arc(fx - 4 * scale, fy - 12 * scale + bob, 2 * scale, 0, Math.PI * 2);
+      ctx.arc(fx + 4 * scale, fy - 12 * scale + bob, 2 * scale, 0, Math.PI * 2);
       ctx.fill();
     };
-    drawDestroyedFortress(1590, 48);
+    drawFireElemental(1490, 55, 0.6);
+    drawFireElemental(1660, 38, 0.5);
+    drawFireElemental(1750, 62, 0.55);
 
-    // Ember particles in volcanic region
-    for (let i = 0; i < 20; i++) {
-      const ex = 1450 + seededRandom(i * 13) * 350;
-      const baseY = seededRandom(i * 17) * height * 0.8;
-      const ey =
-        baseY - ((time * 40 + seededRandom(i * 19) * 50) % (height * 0.6));
-      if (ey > 0) {
-        ctx.fillStyle = `rgba(255, ${150 + seededRandom(i) * 100}, 50, ${
-          0.6 + Math.sin(time * 4 + i) * 0.3
-        })`;
+    // Destroyed/burning fortress
+    const drawBurningRuins = (rx: number, ryPct: number, scale: number) => {
+      const ry = getY(ryPct);
+      // Rubble base
+      ctx.fillStyle = "#2a2020";
+      for (let r = 0; r < 8; r++) {
+        const rubX = rx - 25 * scale + seededRandom(rx + r) * 50 * scale;
+        const rubY = ry + seededRandom(rx + r + 10) * 8 * scale;
+        const rubSize = 4 + seededRandom(rx + r + 20) * 6;
         ctx.beginPath();
-        ctx.arc(ex + Math.sin(time * 2 + i) * 3, ey, 2, 0, Math.PI * 2);
+        ctx.arc(rubX, rubY, rubSize * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Standing wall sections
+      const wallGrad = ctx.createLinearGradient(rx - 20 * scale, ry - 35 * scale, rx + 20 * scale, ry);
+      wallGrad.addColorStop(0, "#3a2a28");
+      wallGrad.addColorStop(1, "#2a1a18");
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(rx - 22 * scale, ry - 30 * scale, 12 * scale, 35 * scale);
+      ctx.fillRect(rx + 5 * scale, ry - 22 * scale, 14 * scale, 27 * scale);
+      // Broken edges
+      ctx.fillStyle = "#2a1a18";
+      ctx.beginPath();
+      ctx.moveTo(rx - 22 * scale, ry - 30 * scale);
+      ctx.lineTo(rx - 18 * scale, ry - 35 * scale);
+      ctx.lineTo(rx - 14 * scale, ry - 28 * scale);
+      ctx.lineTo(rx - 10 * scale, ry - 32 * scale);
+      ctx.lineTo(rx - 10 * scale, ry - 30 * scale);
+      ctx.lineTo(rx - 22 * scale, ry - 30 * scale);
+      ctx.fill();
+      // Flames from windows/top
+      for (let flame = 0; flame < 3; flame++) {
+        const flameX = rx - 16 * scale + flame * 15 * scale;
+        const flameY = ry - 20 * scale - flame * 5 * scale;
+        const fh = 15 + Math.sin(time * 7 + flame * 1.5) * 6;
+        ctx.fillStyle = `rgba(255, ${80 + flame * 40}, 20, ${0.8 - flame * 0.15})`;
+        ctx.beginPath();
+        ctx.moveTo(flameX - 4 * scale, flameY);
+        ctx.quadraticCurveTo(flameX, flameY - fh * scale, flameX + 4 * scale, flameY);
+        ctx.fill();
+      }
+      // Smoke
+      for (let s = 0; s < 4; s++) {
+        const smokePhase = (time * 20 + s * 15) % 50;
+        const smokeX = rx - 10 * scale + s * 8 * scale + Math.sin(time + s) * 5;
+        const smokeY = ry - 35 * scale - smokePhase;
+        const smokeSize = 6 + smokePhase * 0.3;
+        ctx.fillStyle = `rgba(50, 40, 40, ${Math.max(0, 0.35 - smokePhase / 80)})`;
+        ctx.beginPath();
+        ctx.arc(smokeX, smokeY, smokeSize * scale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    drawBurningRuins(1600, 68, 0.8);
+
+    // Ash/ember particles rising
+    for (let i = 0; i < 40; i++) {
+      const ex = 1440 + seededRandom(i * 13) * 380;
+      const baseY = height * 0.9 - seededRandom(i * 17) * height * 0.3;
+      const riseSpeed = 30 + seededRandom(i * 23) * 20;
+      const ey = baseY - ((time * riseSpeed) % (height * 0.8));
+      if (ey > 10 && ey < height - 10) {
+        const drift = Math.sin(time * 2 + i * 0.5) * (8 + seededRandom(i) * 5);
+        const size = 1.5 + seededRandom(i * 7) * 2;
+        const brightness = 150 + seededRandom(i * 11) * 105;
+        ctx.fillStyle = `rgba(255, ${brightness}, 50, ${0.5 + Math.sin(time * 4 + i) * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(ex + drift, ey, size, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    // === BATTLE SCENES ===
+    // Heat distortion effect overlay
+    ctx.save();
+    ctx.globalAlpha = 0.03 + Math.sin(time * 2) * 0.01;
+    for (let h = 0; h < 8; h++) {
+      const heatY = height * 0.3 + h * 15;
+      ctx.fillStyle = "#ff4400";
+      ctx.beginPath();
+      for (let hx = 1440; hx < 1820; hx += 10) {
+        const distort = Math.sin(time * 5 + hx * 0.03 + h * 0.5) * 2;
+        if (hx === 1440) ctx.moveTo(hx, heatY + distort);
+        else ctx.lineTo(hx, heatY + distort);
+      }
+      ctx.lineTo(1820, heatY + 10);
+      ctx.lineTo(1440, heatY + 10);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Hellfire border glow at edges
+    const fireGlowLeft = ctx.createLinearGradient(1440, 0, 1470, 0);
+    fireGlowLeft.addColorStop(0, `rgba(255, 60, 20, ${0.15 + Math.sin(time * 2) * 0.05})`);
+    fireGlowLeft.addColorStop(1, "rgba(255, 60, 20, 0)");
+    ctx.fillStyle = fireGlowLeft;
+    ctx.fillRect(1440, 0, 50, height);
+
+    const fireGlowRight = ctx.createLinearGradient(1790, 0, 1820, 0);
+    fireGlowRight.addColorStop(0, "rgba(255, 60, 20, 0)");
+    fireGlowRight.addColorStop(1, `rgba(255, 60, 20, ${0.2 + Math.sin(time * 2.5) * 0.05})`);
+    ctx.fillStyle = fireGlowRight;
+    ctx.fillRect(1770, 0, 50, height)
+
+    // === ENVIRONMENTAL DETAILS - ROADS, BRIDGES, DEBRIS ===
+
+    // Isometric wooden bridges between regions
+    const drawBridge = (bx: number, byPct: number, length: number, angle: number) => {
+      const by = getY(byPct);
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(angle);
+
+      // Bridge shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(length / 2, 6, length / 2 + 5, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bridge planks
+      const plankWidth = 8;
+      for (let p = 0; p < length / plankWidth; p++) {
+        const px = p * plankWidth;
+        const plankY = Math.sin(p * 0.3) * 1; // Slight wave
+        ctx.fillStyle = p % 2 === 0 ? "#5a4030" : "#4a3020";
+        ctx.fillRect(px, plankY - 3, plankWidth - 1, 6);
+        // Plank edge highlight
+        ctx.fillStyle = "#6a5040";
+        ctx.fillRect(px, plankY - 3, plankWidth - 1, 1);
+      }
+
+      // Bridge railings
+      ctx.fillStyle = "#3a2510";
+      ctx.fillRect(0, -6, length, 2);
+      ctx.fillRect(0, 4, length, 2);
+      // Railing posts
+      for (let post = 0; post <= length; post += 15) {
+        ctx.fillRect(post - 1, -8, 2, 4);
+        ctx.fillRect(post - 1, 4, 2, 4);
+      }
+
+      ctx.restore();
+    };
+
+    // Bridges at region borders
+    drawBridge(375, 58, 50, -0.1);
+    drawBridge(715, 48, 45, 0.05);
+    drawBridge(1075, 55, 50, 0.08);
+    drawBridge(1445, 52, 48, -0.05);
+
+    // Dirt road paths (worn into the ground)
+    const drawRoadSegment = (points: [number, number][]) => {
+      if (points.length < 2) return;
+
+      // Road shadow/depth
+      ctx.strokeStyle = "rgba(30, 20, 10, 0.3)";
+      ctx.lineWidth = 18;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], getY(points[0][1]));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i][0], getY(points[i][1]));
+      }
+      ctx.stroke();
+
+      // Main road surface
+      ctx.strokeStyle = "rgba(80, 60, 40, 0.25)";
+      ctx.lineWidth = 14;
+      ctx.stroke();
+
+      // Road wear (center line)
+      ctx.strokeStyle = "rgba(60, 45, 30, 0.2)";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+    };
+
+    // Main travel routes
+    drawRoadSegment([[50, 50], [100, 50], [150, 45], [200, 48]]);
+    drawRoadSegment([[200, 48], [250, 52], [310, 55]]);
+    drawRoadSegment([[440, 50], [500, 55], [560, 52], [620, 48]]);
+    drawRoadSegment([[780, 50], [850, 55], [920, 52], [980, 50]]);
+    drawRoadSegment([[1140, 50], [1200, 48], [1270, 52], [1340, 55]]);
+    drawRoadSegment([[1520, 55], [1580, 52], [1650, 55], [1720, 50]]);
+
+    // Scattered rocks and boulders
+    const drawBoulder = (bx: number, byPct: number, size: number) => {
+      const by = getY(byPct);
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(bx + 2, by + size * 0.3, size * 1.2, size * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Boulder body with 3D shading
+      const boulderGrad = ctx.createRadialGradient(bx - size * 0.2, by - size * 0.3, 0, bx, by, size);
+      boulderGrad.addColorStop(0, "#6a5a4a");
+      boulderGrad.addColorStop(0.6, "#4a3a2a");
+      boulderGrad.addColorStop(1, "#2a1a0a");
+      ctx.fillStyle = boulderGrad;
+      ctx.beginPath();
+      ctx.ellipse(bx, by, size, size * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Highlight
+      ctx.fillStyle = "rgba(120, 100, 80, 0.3)";
+      ctx.beginPath();
+      ctx.ellipse(bx - size * 0.3, by - size * 0.2, size * 0.3, size * 0.2, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    // Scatter boulders across the map
+    [
+      [60, 85, 8], [130, 18, 6], [210, 72, 7], [280, 28, 5],
+      [400, 85, 6], [470, 18, 8], [590, 82, 5], [660, 22, 7],
+      [740, 80, 6], [820, 25, 5], [910, 78, 7], [1030, 22, 6],
+      [1100, 82, 5], [1180, 80, 7], [1250, 28, 6], [1380, 75, 5],
+      [1460, 22, 8], [1550, 85, 6], [1640, 25, 7], [1710, 80, 5],
+    ].forEach(([x, y, size]) => {
+      drawBoulder(x, y, size);
+    });
+
+    // Wagon wheels and debris (signs of battle and travel)
+    const drawWagonWheel = (wx: number, wyPct: number, size: number, rotation: number) => {
+      const wy = getY(wyPct);
+      ctx.save();
+      ctx.translate(wx, wy);
+      ctx.rotate(rotation);
+      // Wheel rim
+      ctx.strokeStyle = "#4a3020";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, size, 0, Math.PI * 2);
+      ctx.stroke();
+      // Spokes
+      for (let s = 0; s < 8; s++) {
+        const angle = (s / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(angle) * size, Math.sin(angle) * size * 0.5);
+        ctx.stroke();
+      }
+      // Hub
+      ctx.fillStyle = "#3a2010";
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    };
+
+    // Broken wagon wheels scattered around
+    drawWagonWheel(155, 68, 8, 0.5);
+    drawWagonWheel(295, 35, 6, 1.2);
+    drawWagonWheel(485, 72, 7, 0.8);
+    drawWagonWheel(715, 28, 6, 2.1);
+    drawWagonWheel(945, 70, 8, 0.3);
+    drawWagonWheel(1165, 32, 7, 1.8);
+    drawWagonWheel(1395, 68, 6, 0.9);
+    drawWagonWheel(1605, 25, 8, 1.5);
+
+    // Scattered arrows in the ground
+    const drawArrow = (ax: number, ayPct: number, angle: number) => {
+      const ay = getY(ayPct);
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(angle);
+      // Arrow shaft sticking up from ground
+      ctx.strokeStyle = "#5a4030";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, -12);
+      ctx.stroke();
+      // Fletching
+      ctx.fillStyle = "#3a2010";
+      ctx.beginPath();
+      ctx.moveTo(-2, -10);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(2, -10);
+      ctx.lineTo(0, -8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    };
+
+    // Arrows scattered across battlefields
+    for (let i = 0; i < 40; i++) {
+      const ax = seededRandom(i * 23) * width;
+      const ay = 25 + seededRandom(i * 23 + 1) * 55;
+      const angle = (seededRandom(i * 23 + 2) - 0.5) * 0.6;
+      drawArrow(ax, ay, angle);
+    }
+
+    // Shields and helmets on ground
+    const drawFallenShield = (sx: number, syPct: number, isEnemy: boolean) => {
+      const sy = getY(syPct);
+      ctx.fillStyle = isEnemy ? "#5a1010" : "#8a6a20";
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, 5, 3, seededRandom(sx) * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = isEnemy ? "#8a0000" : "#f59e0b";
+      ctx.beginPath();
+      ctx.arc(sx, sy - 0.5, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    for (let i = 0; i < 25; i++) {
+      const sx = seededRandom(i * 31) * width;
+      const sy = 30 + seededRandom(i * 31 + 1) * 50;
+      drawFallenShield(sx, sy, seededRandom(i * 31 + 2) > 0.5);
+    }
+
+    // === ENHANCED BATTLE SCENES ===
     const drawBattleScene = (
       x: number,
       yPct: number,
@@ -2245,56 +3912,190 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       const y = getY(yPct);
       const t = time * 4 + x;
 
-      for (let s = 0; s < intensity; s++) {
-        const offset = s * 18 * (flip ? -1 : 1);
+      // Battle dust cloud
+      ctx.fillStyle = "rgba(100, 80, 60, 0.15)";
+      ctx.beginPath();
+      ctx.ellipse(x, y + 4, 25 + intensity * 8, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-        // Friendly soldier (orange)
-        const sx1 = x + offset + (flip ? 8 : -8) + Math.sin(t + s) * 2;
+      for (let s = 0; s < intensity; s++) {
+        const offset = s * 20 * (flip ? -1 : 1);
+        const combatSway = Math.sin(t + s * 1.5) * 3;
+
+        // Friendly soldier (orange) - more detailed
+        const sx1 = x + offset + (flip ? 10 : -10) + combatSway;
+        const bob1 = Math.sin(t * 2 + s) * 1.5;
+
+        // Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(sx1, y + 6, 5, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body
+        ctx.fillStyle = "#d97706";
+        ctx.beginPath();
+        ctx.ellipse(sx1, y + bob1, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
         ctx.fillStyle = "#f59e0b";
         ctx.beginPath();
-        ctx.arc(sx1, y - 8, 4, 0, Math.PI * 2);
+        ctx.arc(sx1, y - 9 + bob1, 4.5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillRect(sx1 - 2.5, y - 3, 5, 8);
-        // Sword
-        ctx.strokeStyle = "#aaa";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(sx1 + (flip ? -3 : 3), y - 4);
-        ctx.lineTo(sx1 + (flip ? -10 : 10) + Math.sin(t * 2 + s) * 4, y - 7);
-        ctx.stroke();
 
-        // Enemy soldier (red)
-        const sx2 = x + offset + (flip ? -8 : 8) + Math.sin(t + 1 + s) * 2;
+        // Helmet
+        ctx.fillStyle = "#b45309";
+        ctx.beginPath();
+        ctx.arc(sx1, y - 11 + bob1, 4, Math.PI, 0);
+        ctx.fill();
+
+        // Face details
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(sx1 + (flip ? -1.5 : 1.5), y - 9 + bob1, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shield
+        ctx.fillStyle = "#92400e";
+        const shieldX = sx1 + (flip ? 5 : -5);
+        ctx.beginPath();
+        ctx.ellipse(shieldX, y - 2 + bob1, 3, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#f59e0b";
+        ctx.beginPath();
+        ctx.arc(shieldX, y - 2 + bob1, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sword with swing animation
+        const swordAngle = Math.sin(t * 3 + s) * 0.8;
+        ctx.save();
+        ctx.translate(sx1 + (flip ? -4 : 4), y - 4 + bob1);
+        ctx.rotate(swordAngle * (flip ? -1 : 1));
+        ctx.fillStyle = "#c0c0c0";
+        ctx.fillRect(-1, -12, 2, 12);
+        ctx.fillStyle = "#ffd700";
+        ctx.fillRect(-1.5, -2, 3, 3);
+        ctx.restore();
+
+        // Enemy soldier (red) - more detailed
+        const sx2 = x + offset + (flip ? -10 : 10) + Math.sin(t + 1 + s) * 2;
+        const bob2 = Math.sin(t * 2 + s + 1) * 1.5;
+
+        // Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath();
+        ctx.ellipse(sx2, y + 6, 5, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body
+        ctx.fillStyle = "#991b1b";
+        ctx.beginPath();
+        ctx.ellipse(sx2, y + bob2, 4, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
         ctx.fillStyle = "#dc2626";
         ctx.beginPath();
-        ctx.arc(sx2, y - 8, 4, 0, Math.PI * 2);
+        ctx.arc(sx2, y - 9 + bob2, 4.5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillRect(sx2 - 2.5, y - 3, 5, 8);
+
+        // Horned helmet
+        ctx.fillStyle = "#450a0a";
         ctx.beginPath();
-        ctx.moveTo(sx2 + (flip ? 3 : -3), y - 4);
-        ctx.lineTo(
-          sx2 + (flip ? 10 : -10) + Math.sin(t * 2 + 2 + s) * 4,
-          y - 7
-        );
-        ctx.stroke();
+        ctx.arc(sx2, y - 11 + bob2, 4, Math.PI, 0);
+        ctx.fill();
+        // Horns
+        ctx.fillStyle = "#1a0a0a";
+        ctx.beginPath();
+        ctx.moveTo(sx2 - 4, y - 13 + bob2);
+        ctx.lineTo(sx2 - 6, y - 18 + bob2);
+        ctx.lineTo(sx2 - 2, y - 13 + bob2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(sx2 + 4, y - 13 + bob2);
+        ctx.lineTo(sx2 + 6, y - 18 + bob2);
+        ctx.lineTo(sx2 + 2, y - 13 + bob2);
+        ctx.fill();
+
+        // Glowing red eyes
+        ctx.fillStyle = "#ff0000";
+        ctx.globalAlpha = 0.8 + Math.sin(t * 5) * 0.2;
+        ctx.beginPath();
+        ctx.arc(sx2 + (flip ? 1.5 : -1.5), y - 9 + bob2, 1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Enemy weapon (axe/spear)
+        const weaponAngle = Math.sin(t * 3 + s + 1.5) * 0.6;
+        ctx.save();
+        ctx.translate(sx2 + (flip ? 4 : -4), y - 4 + bob2);
+        ctx.rotate(weaponAngle * (flip ? 1 : -1));
+        ctx.fillStyle = "#4a4a4a";
+        ctx.fillRect(-1, -14, 2, 14);
+        ctx.fillStyle = "#2a2a2a";
+        ctx.beginPath();
+        ctx.moveTo(-4, -14);
+        ctx.lineTo(0, -18);
+        ctx.lineTo(4, -14);
+        ctx.lineTo(0, -12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
       }
 
-      // Sparks
-      if (Math.sin(t * 3) > 0.3) {
+      // Sparks from clashing weapons
+      const sparkIntensity = Math.sin(t * 3);
+      if (sparkIntensity > 0.2) {
         ctx.fillStyle = "#ffd700";
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 5; i++) {
+          const sparkX = x + (seededRandom(x + i + Math.floor(t)) - 0.5) * 20;
+          const sparkY = y - 5 + (seededRandom(x + i + 10 + Math.floor(t)) - 0.5) * 15;
+          const sparkSize = 1 + seededRandom(i + x) * 1.5;
+          ctx.globalAlpha = sparkIntensity * 0.8;
           ctx.beginPath();
-          ctx.arc(
-            x + seededRandom(x + i) * 16 - 8,
-            y - 5 + seededRandom(x + i + 10) * 10 - 5,
-            1.5,
-            0,
-            Math.PI * 2
-          );
+          ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
           ctx.fill();
         }
+        ctx.globalAlpha = 1;
+      }
+
+      // Blood splatters (subtle)
+      ctx.fillStyle = "rgba(139, 0, 0, 0.15)";
+      for (let i = 0; i < 3; i++) {
+        const bx = x + (seededRandom(x + i * 7) - 0.5) * 30;
+        const by = y + 4 + seededRandom(x + i * 7 + 1) * 4;
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 2 + seededRandom(i) * 3, 1, seededRandom(i) * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
       }
     };
+
+    // Fallen soldiers (corpses and debris)
+    const drawFallenSoldier = (fx: number, fyPct: number, isEnemy: boolean) => {
+      const fy = getY(fyPct);
+      ctx.fillStyle = isEnemy ? "rgba(139, 0, 0, 0.5)" : "rgba(180, 100, 0, 0.5)";
+      ctx.beginPath();
+      ctx.ellipse(fx, fy, 6, 3, seededRandom(fx) * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+      // Dropped weapon
+      ctx.strokeStyle = "#5a5a5a";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(fx - 4, fy + 1);
+      ctx.lineTo(fx + 8, fy - 2);
+      ctx.stroke();
+    };
+    // Scatter fallen soldiers across the map
+    [
+      [150, 50, true], [200, 62, false], [290, 40, true],
+      [460, 60, false], [530, 40, true], [590, 55, true],
+      [780, 35, false], [870, 68, true], [950, 50, false],
+      [1100, 65, true], [1220, 45, false], [1310, 58, true],
+      [1480, 40, false], [1560, 70, true], [1680, 55, false],
+    ].forEach(([x, y, isEnemy]) => {
+      drawFallenSoldier(x as number, y as number, isEnemy as boolean);
+    });
 
     // Multiple battle scenes across regions
     drawBattleScene(165, 42, false, 2);
@@ -2308,72 +4109,247 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawBattleScene(1520, 25, false, 2);
     drawBattleScene(1670, 75, true, 3);
 
-    // === KINGDOM CASTLES ===
+    // === ENHANCED KINGDOM CASTLES ===
     const drawKingdomCastle = (x: number, yPct: number, isEnemy: boolean) => {
       const y = getY(yPct);
       const color1 = isEnemy ? "#4a2020" : "#5a4a3a";
       const color2 = isEnemy ? "#3a1010" : "#4a3a2a";
+      const color3 = isEnemy ? "#2a0808" : "#3a2a1a";
       const accent = isEnemy ? "#8b0000" : "#f59e0b";
+      const accentGlow = isEnemy ? "#ff4400" : "#ffcc00";
 
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      // Large ground shadow
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
       ctx.beginPath();
-      ctx.ellipse(x, y + 10, 40, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 8, y + 15, 55, 18, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = color1;
-      ctx.fillRect(x - 30, y - 35, 60, 45);
-      ctx.fillStyle = color2;
-      ctx.fillRect(x - 38, y - 58, 18, 68);
-      ctx.fillRect(x + 20, y - 58, 18, 68);
-
-      for (let i = 0; i < 4; i++) {
-        ctx.fillRect(x - 38 + i * 5.5, y - 65, 4, 7);
-        ctx.fillRect(x + 20 + i * 5.5, y - 65, 4, 7);
-      }
-
-      ctx.fillStyle = color1;
-      ctx.fillRect(x - 14, y - 75, 28, 85);
-      for (let i = 0; i < 6; i++) {
-        ctx.fillRect(x - 14 + i * 6, y - 82, 4, 7);
-      }
-
-      ctx.fillStyle = "#4a3020";
-      ctx.fillRect(x - 1, y - 100, 3, 25);
-      ctx.fillStyle = accent;
-      const flagWave = Math.sin(time * 3 + x) * 4;
+      // Castle moat/trench
+      ctx.fillStyle = isEnemy ? "rgba(100, 20, 0, 0.3)" : "rgba(60, 80, 100, 0.3)";
       ctx.beginPath();
-      ctx.moveTo(x + 2, y - 98);
-      ctx.quadraticCurveTo(x + 14, y - 93 + flagWave, x + 22, y - 88);
-      ctx.quadraticCurveTo(x + 14, y - 83 + flagWave, x + 2, y - 78);
+      ctx.ellipse(x, y + 12, 48, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer walls (3D effect)
+      const wallGrad = ctx.createLinearGradient(x - 45, 0, x + 45, 0);
+      wallGrad.addColorStop(0, color3);
+      wallGrad.addColorStop(0.2, color2);
+      wallGrad.addColorStop(0.5, color1);
+      wallGrad.addColorStop(0.8, color2);
+      wallGrad.addColorStop(1, color3);
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(x - 42, y - 30, 84, 40);
+
+      // Wall stone texture
+      ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.lineWidth = 0.5;
+      for (let row = 0; row < 6; row++) {
+        const wy = y - 28 + row * 7;
+        ctx.beginPath();
+        ctx.moveTo(x - 42, wy);
+        ctx.lineTo(x + 42, wy);
+        ctx.stroke();
+        for (let col = 0; col < 10; col++) {
+          const offset = row % 2 === 0 ? 0 : 4;
+          ctx.beginPath();
+          ctx.moveTo(x - 42 + col * 9 + offset, wy);
+          ctx.lineTo(x - 42 + col * 9 + offset, wy + 7);
+          ctx.stroke();
+        }
+      }
+
+      // Left tower with 3D shading
+      const leftTowerGrad = ctx.createLinearGradient(x - 48, 0, x - 26, 0);
+      leftTowerGrad.addColorStop(0, color3);
+      leftTowerGrad.addColorStop(0.4, color2);
+      leftTowerGrad.addColorStop(1, color1);
+      ctx.fillStyle = leftTowerGrad;
+      ctx.fillRect(x - 48, y - 65, 22, 75);
+
+      // Right tower
+      const rightTowerGrad = ctx.createLinearGradient(x + 26, 0, x + 48, 0);
+      rightTowerGrad.addColorStop(0, color1);
+      rightTowerGrad.addColorStop(0.6, color2);
+      rightTowerGrad.addColorStop(1, color3);
+      ctx.fillStyle = rightTowerGrad;
+      ctx.fillRect(x + 26, y - 65, 22, 75);
+
+      // Tower battlements (3D)
+      for (let i = 0; i < 4; i++) {
+        // Left tower
+        ctx.fillStyle = color2;
+        ctx.fillRect(x - 48 + i * 6, y - 73, 5, 9);
+        ctx.fillStyle = color1;
+        ctx.fillRect(x - 48 + i * 6, y - 73, 4, 8);
+        // Right tower
+        ctx.fillStyle = color2;
+        ctx.fillRect(x + 26 + i * 6, y - 73, 5, 9);
+        ctx.fillStyle = color1;
+        ctx.fillRect(x + 26 + i * 6, y - 73, 4, 8);
+      }
+
+      // Tower roofs
+      ctx.fillStyle = isEnemy ? "#3a1515" : "#4a3520";
+      ctx.beginPath();
+      ctx.moveTo(x - 37, y - 85);
+      ctx.lineTo(x - 50, y - 70);
+      ctx.lineTo(x - 24, y - 70);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x + 37, y - 85);
+      ctx.lineTo(x + 24, y - 70);
+      ctx.lineTo(x + 50, y - 70);
       ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = isEnemy ? "#ff4400" : "#ffcc00";
-      ctx.globalAlpha = 0.6 + Math.sin(time * 2 + x) * 0.25;
-      ctx.fillRect(x - 6, y - 58, 12, 16);
-      ctx.fillRect(x - 32, y - 40, 7, 10);
-      ctx.fillRect(x + 25, y - 40, 7, 10);
+      // Main keep (central tower)
+      const keepGrad = ctx.createLinearGradient(x - 18, 0, x + 18, 0);
+      keepGrad.addColorStop(0, color2);
+      keepGrad.addColorStop(0.3, color1);
+      keepGrad.addColorStop(0.7, color1);
+      keepGrad.addColorStop(1, color2);
+      ctx.fillStyle = keepGrad;
+      ctx.fillRect(x - 18, y - 85, 36, 95);
+
+      // Keep battlements
+      for (let i = 0; i < 7; i++) {
+        ctx.fillStyle = color2;
+        ctx.fillRect(x - 18 + i * 6, y - 93, 5, 9);
+        ctx.fillStyle = color1;
+        ctx.fillRect(x - 18 + i * 6, y - 93, 4, 8);
+      }
+
+      // Flag pole and banner
+      ctx.fillStyle = "#4a3020";
+      ctx.fillRect(x - 1.5, y - 118, 3, 28);
+      ctx.fillStyle = accent;
+      const fw1 = Math.sin(time * 3 + x) * 4;
+      const fw2 = Math.sin(time * 3.3 + x) * 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 1.5, y - 116);
+      ctx.quadraticCurveTo(x + 14, y - 110 + fw1, x + 26, y - 104 + fw2);
+      ctx.quadraticCurveTo(x + 14, y - 98 + fw1, x + 1.5, y - 92);
+      ctx.closePath();
+      ctx.fill();
+      // Banner emblem
+      ctx.fillStyle = isEnemy ? "#1a0000" : "#1a1a00";
+      ctx.beginPath();
+      ctx.arc(x + 12, y - 104 + fw1 * 0.5, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.arc(x + 12, y - 104 + fw1 * 0.5, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Windows with warm light
+      const windowGlowIntensity = 0.5 + Math.sin(time * 2 + x) * 0.25;
+      ctx.fillStyle = accentGlow;
+      ctx.globalAlpha = windowGlowIntensity;
+
+      // Keep windows
+      ctx.fillRect(x - 8, y - 70, 16, 20);
+      // Cross dividers
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = color2;
+      ctx.fillRect(x - 0.5, y - 70, 1, 20);
+      ctx.fillRect(x - 8, y - 61, 16, 1);
+
+      // Tower windows
+      ctx.fillStyle = accentGlow;
+      ctx.globalAlpha = windowGlowIntensity * 0.8;
+      ctx.fillRect(x - 42, y - 50, 10, 14);
+      ctx.fillRect(x + 32, y - 50, 10, 14);
       ctx.globalAlpha = 1;
 
+      // Window glow effect
+      const glowGrad = ctx.createRadialGradient(x, y - 60, 0, x, y - 60, 30);
+      glowGrad.addColorStop(0, `${accentGlow}40`);
+      glowGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(x, y - 60, 30, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main gate (arched door)
       ctx.fillStyle = "#1a0a0a";
       ctx.beginPath();
-      ctx.moveTo(x - 12, y + 10);
-      ctx.lineTo(x - 12, y - 10);
-      ctx.arc(x, y - 10, 12, Math.PI, 0);
-      ctx.lineTo(x + 12, y + 10);
+      ctx.moveTo(x - 14, y + 10);
+      ctx.lineTo(x - 14, y - 12);
+      ctx.arc(x, y - 12, 14, Math.PI, 0);
+      ctx.lineTo(x + 14, y + 10);
       ctx.closePath();
       ctx.fill();
 
-      ctx.font = "bold 10px 'Cinzel', serif";
+      // Gate portcullis (iron bars)
+      ctx.strokeStyle = "#3a3a3a";
+      ctx.lineWidth = 1.5;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + i * 5, y - 20);
+        ctx.lineTo(x + i * 5, y + 8);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(x - 12, y - 5);
+      ctx.lineTo(x + 12, y - 5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x - 12, y + 3);
+      ctx.lineTo(x + 12, y + 3);
+      ctx.stroke();
+
+      // Smoke from chimneys
+      for (let c = 0; c < 2; c++) {
+        const cx = x + (c === 0 ? -37 : 37);
+        for (let s = 0; s < 3; s++) {
+          const sy = y - 85 - ((time * 12 + s * 8 + c * 20) % 25);
+          const sx = cx + Math.sin(time * 1.5 + s + c) * 3;
+          ctx.globalAlpha = 0.25 - ((time * 12 + s * 8 + c * 20) % 25) / 80;
+          ctx.fillStyle = "#666";
+          ctx.beginPath();
+          ctx.arc(sx, sy, 3 + s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Guards on towers
+      for (let g = 0; g < 2; g++) {
+        const gx = x + (g === 0 ? -37 : 37);
+        const sway = Math.sin(time * 0.5 + g * 2) * 1;
+        ctx.fillStyle = isEnemy ? "#8b0000" : "#f59e0b";
+        ctx.beginPath();
+        ctx.arc(gx + sway, y - 77, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = isEnemy ? "#5a0000" : "#b45309";
+        ctx.fillRect(gx - 2 + sway, y - 74, 4, 6);
+        // Spear
+        ctx.strokeStyle = "#6a6a6a";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(gx + 3 + sway, y - 78);
+        ctx.lineTo(gx + 3 + sway, y - 90);
+        ctx.stroke();
+        ctx.fillStyle = "#9a9a9a";
+        ctx.beginPath();
+        ctx.moveTo(gx + 1 + sway, y - 90);
+        ctx.lineTo(gx + 3 + sway, y - 95);
+        ctx.lineTo(gx + 5 + sway, y - 90);
+        ctx.fill();
+      }
+
+      // Castle name label with shadow
+      ctx.font = "bold 11px 'Cinzel', serif";
       ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fillText(
         isEnemy ? "ENEMY STRONGHOLD" : "YOUR KINGDOM",
         x + 1,
-        y + 28
+        y + 32
       );
       ctx.fillStyle = accent;
-      ctx.fillText(isEnemy ? "ENEMY STRONGHOLD" : "YOUR KINGDOM", x, y + 27);
+      ctx.fillText(isEnemy ? "ENEMY STRONGHOLD" : "YOUR KINGDOM", x, y + 31);
     };
 
     drawKingdomCastle(70, 50, false);
@@ -2408,8 +4384,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.strokeStyle = isUnlocked
           ? "#c9a227"
           : isPartial
-          ? "#6a5a4a"
-          : "#3a3020";
+            ? "#6a5a4a"
+            : "#3a3020";
         ctx.lineWidth = isUnlocked ? 7 : 5;
         ctx.setLineDash(isUnlocked ? [] : [7, 5]);
         ctx.beginPath();
@@ -2459,12 +4435,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           level.region === "grassland"
             ? "#228b22"
             : level.region === "swamp"
-            ? "#5f9ea0"
-            : level.region === "desert"
-            ? "#daa520"
-            : level.region === "winter"
-            ? "#4682b4"
-            : "#8b0000";
+              ? "#5f9ea0"
+              : level.region === "desert"
+                ? "#daa520"
+                : level.region === "winter"
+                  ? "#4682b4"
+                  : "#8b0000";
         ctx.fillStyle = flagColor;
         ctx.beginPath();
         ctx.moveTo(x + 2, y - 40);
@@ -2496,10 +4472,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.strokeStyle = isSelected
         ? "#ffd700"
         : isHovered
-        ? "#ffcc00"
-        : isUnlocked
-        ? "#8b7355"
-        : "#4a4a4a";
+          ? "#ffcc00"
+          : isUnlocked
+            ? "#8b7355"
+            : "#4a4a4a";
       ctx.lineWidth = isSelected ? 4 : 2;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -2520,14 +4496,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           level.region === "grassland"
             ? "#6abe30"
             : level.region === "swamp"
-            ? "#5f9ea0"
-            : level.region === "desert"
-            ? "#e8a838"
-            : level.region === "winter"
-            ? "#88c8e8"
-            : level.region === "volcanic"
-            ? "#e84848"
-            : "#e84848";
+              ? "#5f9ea0"
+              : level.region === "desert"
+                ? "#e8a838"
+                : level.region === "winter"
+                  ? "#88c8e8"
+                  : level.region === "volcanic"
+                    ? "#e84848"
+                    : "#e84848";
         ctx.globalAlpha = 0.8;
         if (level.region === "grassland") {
           ctx.beginPath();
@@ -2581,8 +4557,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               ? level.difficulty === 1
                 ? "#4ade80"
                 : level.difficulty === 2
-                ? "#fbbf24"
-                : "#ef4444"
+                  ? "#fbbf24"
+                  : "#ef4444"
               : "#4a4a4a";
           ctx.fill();
         }
@@ -2614,13 +4590,19 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.stroke();
       }
 
-      // Tooltip with Preview Image
+      // Tooltip with Preview Image - smart positioning based on Y position
       if ((isHovered || isSelected) && isUnlocked) {
         // Setup dimensions for the card
         const cardWidth = 150;
         const cardHeight = 110;
         const cardX = x - cardWidth / 2;
-        const cardY = y - size - cardHeight - 12;
+
+        // Determine if tooltip should appear above or below based on level Y position
+        // If level is in upper 40% of map, show tooltip below; otherwise show above
+        const showBelow = level.y < 50;
+        const cardY = showBelow
+          ? y + size + 12 // Below the level node
+          : y - size - cardHeight - 12; // Above the level node
 
         // Draw Background
         ctx.save();
@@ -2790,6 +4772,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    // Don't process click if we were actually dragging (moved more than threshold)
+    if (hasDragged) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -2807,6 +4792,36 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
     }
     setSelectedLevel(null);
+  };
+
+  // Drag-to-scroll handlers
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    setIsDragging(true);
+    setHasDragged(false);
+    setDragStartX(e.pageX - container.offsetLeft);
+    setScrollStartLeft(container.scrollLeft);
+  };
+
+  const handleDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const x = e.pageX - container.offsetLeft;
+    const walk = (x - dragStartX) * 1.5; // Multiply for faster scrolling
+    // Only consider it a drag if moved more than 5 pixels
+    if (Math.abs(x - dragStartX) > 5) {
+      setHasDragged(true);
+    }
+    container.scrollLeft = scrollStartLeft - walk;
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    // Reset hasDragged after a short delay to allow click handler to check it
+    setTimeout(() => setHasDragged(false), 50);
   };
 
   const heroOptions: HeroType[] = [
@@ -2830,8 +4845,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const waveCount = selectedLevel ? getWaveCount(selectedLevel) : 0;
 
   function goToNextLevel() {
-    // make sure to handle when you are at the last unlocked level, you need to loop back to the first level. do the same if you are at the last level possible.
-    if (!currentLevel) return;
+    // If no level is selected, go to level 1
+    if (!currentLevel) {
+      handleLevelClick(WORLD_LEVELS[0].id);
+      return;
+    }
     const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
       isLevelUnlocked(lvl.id)
     ).map((lvl) => lvl.id);
@@ -2847,7 +4865,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     }
   }
   function goToPreviousLevel() {
-    if (!currentLevel) return;
+    // If no level is selected, go to level 1
+    if (!currentLevel) {
+      handleLevelClick(WORLD_LEVELS[0].id);
+      return;
+    }
     if (currentLevel.id === WORLD_LEVELS[0].id) {
       const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
         isLevelUnlocked(lvl.id)
@@ -2894,9 +4916,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               {/* iterate through every level in levelStats and sum up hearts*/}
               {levelStats
                 ? Object.values(levelStats).reduce(
-                    (acc, stats) => acc + (stats.bestHearts || 0),
-                    0
-                  )
+                  (acc, stats) => acc + (stats.bestHearts || 0),
+                  0
+                )
                 : 0}
             </span>
             <span className="hidden sm:inline text-red-600 text-sm">/300</span>
@@ -2973,17 +4995,15 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         {[1, 2, 3].map((d) => (
                           <div
                             key={d}
-                            className={`w-3 h-3 rounded-full transition-all ${
-                              d <= currentLevel.difficulty
-                                ? `${
-                                    currentLevel.difficulty === 1
-                                      ? "bg-green-500 shadow-green-500/50"
-                                      : currentLevel.difficulty === 2
-                                      ? "bg-yellow-500 shadow-yellow-500/50"
-                                      : "bg-red-500 shadow-red-500/50"
-                                  } shadow-lg`
-                                : "bg-stone-700"
-                            }`}
+                            className={`w-3 h-3 rounded-full transition-all ${d <= currentLevel.difficulty
+                              ? `${currentLevel.difficulty === 1
+                                ? "bg-green-500 shadow-green-500/50"
+                                : currentLevel.difficulty === 2
+                                  ? "bg-yellow-500 shadow-yellow-500/50"
+                                  : "bg-red-500 shadow-red-500/50"
+                              } shadow-lg`
+                              : "bg-stone-700"
+                              }`}
                           />
                         ))}
                       </div>
@@ -3002,11 +5022,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           <Star
                             key={s}
                             size={18}
-                            className={`transition-all ${
-                              (levelStars[currentLevel.id] || 0) >= s
-                                ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                                : "text-stone-600"
-                            }`}
+                            className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
+                              ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
+                              : "text-stone-600"
+                              }`}
                           />
                         ))}
                       </div>
@@ -3020,11 +5039,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <Star
                           key={s}
                           size={18}
-                          className={`transition-all ${
-                            (levelStars[currentLevel.id] || 0) >= s
-                              ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                              : "text-stone-600"
-                          }`}
+                          className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
+                            ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
+                            : "text-stone-600"
+                            }`}
                         />
                       ))}
                     </div>
@@ -3045,10 +5063,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <span className="text-blue-300 text-sm font-mono">
                           {levelStats[currentLevel.id]?.bestTime
                             ? `${Math.floor(
-                                levelStats[currentLevel.id]!.bestTime! / 60
-                              )}m ${
-                                levelStats[currentLevel.id]!.bestTime! % 60
-                              }s`
+                              levelStats[currentLevel.id]!.bestTime! / 60
+                            )}m ${levelStats[currentLevel.id]!.bestTime! % 60
+                            }s`
                             : "N/A"}
                         </span>
                       </div>
@@ -3070,34 +5087,32 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     />
                   ) : null}
                   <div
-                    className={`absolute inset-0 flex items-center justify-center ${
-                      LEVEL_DATA[currentLevel.id]?.previewImage
-                        ? "opacity-0"
-                        : "opacity-100"
-                    }`}
+                    className={`absolute inset-0 flex items-center justify-center ${LEVEL_DATA[currentLevel.id]?.previewImage
+                      ? "opacity-0"
+                      : "opacity-100"
+                      }`}
                   >
                     <div
-                      className={`w-full h-full ${
-                        currentLevel.region === "grassland"
-                          ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
-                          : currentLevel.region === "desert"
+                      className={`w-full h-full ${currentLevel.region === "grassland"
+                        ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
+                        : currentLevel.region === "desert"
                           ? "bg-gradient-to-br from-amber-800/80 via-yellow-900/60 to-orange-900/40"
                           : currentLevel.region === "winter"
-                          ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
-                          : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
-                      } flex items-center justify-center`}
+                            ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
+                            : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
+                        } flex items-center justify-center`}
                     >
                       <div className="text-center">
                         <div className="text-4xl mb-2">
                           {currentLevel.region === "grassland"
                             ? "🌲"
                             : currentLevel.region === "swamp"
-                            ? "🦆"
-                            : currentLevel.region === "desert"
-                            ? "🏜️"
-                            : currentLevel.region === "winter"
-                            ? "❄️"
-                            : "🌋"}
+                              ? "🦆"
+                              : currentLevel.region === "desert"
+                                ? "🏜️"
+                                : currentLevel.region === "winter"
+                                  ? "❄️"
+                                  : "🌋"}
                         </div>
                         <span className="text-amber-400/70 text-xs">
                           Preview Coming
@@ -3129,29 +5144,27 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       {regionLevels.map((l) => (
                         <div
                           key={l.id}
-                          className={`flex items-center gap-3 p-2.5 rounded-lg transition-all ${
-                            l.id === selectedLevel
-                              ? "bg-amber-900/40 border border-amber-600/60"
-                              : "bg-stone-800/40 border border-stone-700/30 hover:bg-stone-800/60"
-                          }`}
+                          className={`flex items-center gap-3 p-2.5 rounded-lg transition-all ${l.id === selectedLevel
+                            ? "bg-amber-900/40 border border-amber-600/60"
+                            : "bg-stone-800/40 border border-stone-700/30 hover:bg-stone-800/60"
+                            }`}
                         >
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
-                              isLevelUnlocked(l.id)
-                                ? "bg-amber-900/50"
-                                : "bg-stone-800"
-                            }`}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${isLevelUnlocked(l.id)
+                              ? "bg-amber-900/50"
+                              : "bg-stone-800"
+                              }`}
                           >
                             {isLevelUnlocked(l.id)
                               ? l.region === "grassland"
                                 ? "🌲"
                                 : l.region === "swamp"
-                                ? "🦆"
-                                : l.region === "desert"
-                                ? "🏜️"
-                                : l.region === "winter"
-                                ? "❄️"
-                                : "🌋"
+                                  ? "🦆"
+                                  : l.region === "desert"
+                                    ? "🏜️"
+                                    : l.region === "winter"
+                                      ? "❄️"
+                                      : "🌋"
                               : "🔒"}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -3197,11 +5210,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <button
                   onClick={startGame}
                   disabled={!canStart}
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all relative overflow-hidden group ${
-                    canStart
-                      ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02]"
-                      : "bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700"
-                  }`}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all relative overflow-hidden group ${canStart
+                    ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02]"
+                    : "bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700"
+                    }`}
                 >
                   {canStart && (
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -3222,8 +5234,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     {selectedLevel &&
                       selectedHero &&
                       selectedSpells.length < 3 &&
-                      `Select ${3 - selectedSpells.length} more spell${
-                        3 - selectedSpells.length > 1 ? "s" : ""
+                      `Select ${3 - selectedSpells.length} more spell${3 - selectedSpells.length > 1 ? "s" : ""
                       }`}
                   </div>
                 )}
@@ -3253,18 +5264,26 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             ref={containerRef}
             className="flex-1 relative  bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"
           >
-            <div className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden">
+            <div
+              ref={scrollContainerRef}
+              className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
+              style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+              onMouseDown={handleDragStart}
+              onMouseMove={handleDragMove}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+            >
               <canvas
                 ref={canvasRef}
-                className="block cursor-pointer"
-                style={{ minWidth: `${MAP_WIDTH}px`, height: "100%" }}
+                className="block"
+                style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
                 onMouseMove={handleMouseMove}
                 onClick={handleClick}
               />
             </div>
 
             {/* HERO & SPELL SELECTION OVERLAY */}
-            <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto">
+            <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto z-20">
               <div className="flex w-full mt-auto gap-3 pointer-events-auto">
                 <div className="hidden sm:inline bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
                   <div className="flex items-center gap-2 mb-2">
@@ -3307,11 +5326,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           onClick={() => setSelectedHero(heroType)}
                           onMouseEnter={() => setHoveredHero(heroType)}
                           onMouseLeave={() => setHoveredHero(null)}
-                          className={`relative px-4s sm:px-1 pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${
-                            isSelected
-                              ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
-                              : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
-                          }`}
+                          className={`relative px-4s sm:px-1 pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${isSelected
+                            ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
+                            : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
+                            }`}
                         >
                           <HeroSprite
                             type={heroType}
@@ -3447,11 +5465,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </span>
                     </div>
                     <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full ${
-                        selectedSpells.length === 3
-                          ? "bg-green-900/60 text-green-300 border border-green-700/50"
-                          : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
-                      }`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${selectedSpells.length === 3
+                        ? "bg-green-900/60 text-green-300 border border-green-700/50"
+                        : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
+                        }`}
                     >
                       {selectedSpells.length}/3{" "}
                       <span className="hidden sm:inline">Selected</span>
@@ -3469,13 +5486,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           onMouseEnter={() => setHoveredSpell(spellType)}
                           onMouseLeave={() => setHoveredSpell(null)}
                           disabled={!canSelect && !isSelected}
-                          className={`relative w-full p-1.5 flex justify-center rounded-lg transition-all ${
-                            isSelected
-                              ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
-                              : canSelect
+                          className={`relative w-full p-1.5 flex justify-center rounded-lg transition-all ${isSelected
+                            ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
+                            : canSelect
                               ? "bg-stone-800/80 border border-stone-600/50 hover:border-purple-500/60 hover:scale-105"
                               : "bg-stone-900/60 border border-stone-800/40 opacity-40 cursor-not-allowed"
-                          }`}
+                            }`}
                         >
                           <SpellSprite type={spellType} size={32} />
                           {isSelected && (

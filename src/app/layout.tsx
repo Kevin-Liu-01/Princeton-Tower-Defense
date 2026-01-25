@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Theme } from "@radix-ui/themes";
-import { Cinzel } from "next/font/google";
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-cinzel",
-});
 
 export const metadata: Metadata = {
   title: "Princeton Tower Defense",
@@ -22,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${cinzel.variable} font-cinzel antialiased`}>
+      <body className="antialiased" style={{ fontFamily: '"bc-novatica-cyr", sans-serif' }}>
         <Theme>{children}</Theme>
       </body>
     </html>

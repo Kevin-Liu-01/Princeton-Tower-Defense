@@ -63,6 +63,11 @@ import {
   HERO_ABILITY_COOLDOWNS,
   TROOP_DATA,
 } from "../../constants";
+import {
+  calculateTowerStats,
+  getUpgradeCost,
+  TOWER_STATS,
+} from "../../constants/towerStats";
 import { TowerSprite, HeroSprite, SpellSprite } from "../../sprites";
 import PrincetonTDLogo from "./PrincetonTDLogo";
 
@@ -170,11 +175,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             <button
               key={speed}
               onClick={() => setGameSpeed(speed)}
-              className={`px-2.5 py-1 border transition-all shadow-sm rounded font-bold text-xs ${
-                gameSpeed === speed
-                  ? "bg-yellow-600/80 border-yellow-400 text-yellow-100"
-                  : "bg-blue-950/60 hover:bg-blue-900/60 border-blue-700 text-blue-300"
-              }`}
+              className={`px-2.5 py-1 border transition-all shadow-sm rounded font-bold text-xs ${gameSpeed === speed
+                ? "bg-yellow-600/80 border-yellow-400 text-yellow-100"
+                : "bg-blue-950/60 hover:bg-blue-900/60 border-blue-700 text-blue-300"
+                }`}
             >
               {speed}x
             </button>
@@ -461,8 +465,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                           hero.hp / hero.maxHp > 0.5
                             ? "#22c55e"
                             : hero.hp / hero.maxHp > 0.25
-                            ? "#eab308"
-                            : "#ef4444",
+                              ? "#eab308"
+                              : "#ef4444",
                       }}
                     />
                   </div>
@@ -473,11 +477,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <button
                   onClick={useHeroAbility}
                   disabled={!hero.abilityReady}
-                  className={`px-3 mr-2 sm:mr-auto py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${
-                    hero.abilityReady
-                      ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
-                      : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                  }`}
+                  className={`px-3 mr-2 sm:mr-auto py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${hero.abilityReady
+                    ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
+                    : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                    }`}
                 >
                   {hero.abilityReady ? (
                     <div className="h-full flex flex-col py-1 justify-center">
@@ -546,11 +549,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 disabled={!canCast}
                 onMouseEnter={() => setHoveredSpell(spell.type)}
                 onMouseLeave={() => setHoveredSpell(null)}
-                className={`relative px-1 sm:px-2.5 py-2 transition-all border shadow-md rounded-lg overflow-hidden ${
-                  canCast
-                    ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
-                    : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
-                }`}
+                className={`relative px-1 sm:px-2.5 py-2 transition-all border shadow-md rounded-lg overflow-hidden ${canCast
+                  ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
+                  : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
+                  }`}
               >
                 <div className="flex flex-col items-center min-w-[44px]">
                   <SpellSprite type={spell.type} size={28} />
@@ -573,9 +575,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   <div
                     className="absolute inset-0 bg-black/70"
                     style={{
-                      clipPath: `inset(${
-                        100 - (spell.cooldown / spell.maxCooldown) * 100
-                      }% 0 0 0)`,
+                      clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100
+                        }% 0 0 0)`,
                     }}
                   />
                 )}
@@ -695,13 +696,12 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   setHoveredTower(null);
                 }}
                 disabled={!canAfford}
-                className={`px-2.5 py-1.5 w-full transition-all border flex items-center gap-2.5 whitespace-nowrap shadow-md rounded-lg ${
-                  isSelected
-                    ? "bg-gradient-to-b from-amber-600 to-amber-800 border-amber-400 shadow-amber-500/30 scale-105"
-                    : canAfford
+                className={`px-2.5 py-1.5 w-full transition-all border flex items-center gap-2.5 whitespace-nowrap shadow-md rounded-lg ${isSelected
+                  ? "bg-gradient-to-b from-amber-600 to-amber-800 border-amber-400 shadow-amber-500/30 scale-105"
+                  : canAfford
                     ? "bg-gradient-to-b from-amber-950/80 to-stone-950/80 hover:from-amber-900/80 hover:to-stone-900/80 border-amber-700 hover:border-amber-500"
                     : "bg-stone-900/60 border-stone-700 opacity-40 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 <span className="absolute top-1.5 bg-amber-900 p-0.5 px-1 rounded-md  right-1.5 text-[9px] font-bold text-amber-400">
                   {placedTowers[towerType] > 0
@@ -884,61 +884,49 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   onClose,
 }) => {
   const towerData = TOWER_DATA[tower.type];
-  const upgradeCost = tower.level === 1 ? 200 : 300;
-  const sellValue = Math.round(
-    Math.floor(TOWER_DATA[tower.type].cost * 0.7) +
-      (tower.level - 1) *
-        (tower.level === 2
-          ? 150 * 0.7
-          : tower.level === 3
-          ? 250 * 0.7
-          : tower.level === 4
-          ? 350 * 0.7
-          : 0)
-  );
+
+  // Get upgrade cost from towerStats.ts
+  const upgradeCost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
+
+  // Calculate sell value based on invested costs
+  const baseCost = TOWER_DATA[tower.type].cost;
+  const level2Cost = tower.level >= 2 ? (TOWER_STATS[tower.type]?.levels[2]?.cost || 150) : 0;
+  const level3Cost = tower.level >= 3 ? (TOWER_STATS[tower.type]?.levels[3]?.cost || 250) : 0;
+  const level4Cost = tower.level >= 4 ? 400 : 0;
+  const totalInvested = baseCost + level2Cost + level3Cost + level4Cost;
+  const sellValue = Math.round(totalInvested * 0.7);
 
   const levelDesc = towerData.levelDesc[tower.level] || "";
 
-  // Calculate current stats
-  const getCurrentStats = () => {
-    let damage = towerData.damage;
-    let range = towerData.range;
-    if (tower.level >= 2) {
-      damage = Math.floor(damage * 1.5);
-      range += 15;
-    }
-    if (tower.level >= 3) {
-      damage = Math.floor(damage * 1.47);
-      range += 15;
-    }
-    if (tower.level >= 4) {
-      damage = Math.floor(damage * 1.36);
-      range += 20;
-    }
-    return { damage, range, attackSpeed: towerData.attackSpeed };
-  };
+  // Get current stats using calculateTowerStats (without external buffs for base display)
+  const baseStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, 1, 1);
 
-  const getNextLevelStats = () => {
-    let damage = towerData.damage;
-    let range = towerData.range;
-    const nextLevel = tower.level + 1;
-    if (nextLevel >= 2) {
-      damage = Math.floor(damage * 1.5);
-      range += 15;
-    }
-    if (nextLevel >= 3) {
-      damage = Math.floor(damage * 1.47);
-      range += 15;
-    }
-    if (nextLevel >= 4) {
-      damage = Math.floor(damage * 1.36);
-      range += 20;
-    }
-    return { damage, range };
-  };
+  // Apply tower's current buffs for buffed display
+  const rangeBoost = tower.rangeBoost || 1;
+  const damageBoost = tower.damageBoost || 1;
+  const buffedStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, rangeBoost, damageBoost);
 
-  const currentStats = getCurrentStats();
-  const nextStats = tower.level < 4 ? getNextLevelStats() : null;
+  // Get next level stats for comparison
+  const nextLevel = tower.level + 1;
+  const nextStats = tower.level < 4
+    ? calculateTowerStats(tower.type, nextLevel, undefined, 1, 1)
+    : null;
+
+  // Determine if stats are being buffed
+  const hasRangeBuff = rangeBoost > 1;
+  const hasDamageBuff = damageBoost > 1;
+
+  const currentStats = {
+    damage: baseStats.damage,
+    range: baseStats.range,
+    attackSpeed: baseStats.attackSpeed,
+    buffedDamage: buffedStats.damage,
+    buffedRange: buffedStats.range,
+    slowAmount: baseStats.slowAmount,
+    income: baseStats.income,
+    incomeInterval: baseStats.incomeInterval,
+    chainTargets: baseStats.chainTargets,
+  };
 
   const panelWidth = 300;
   const panelHeight = tower.level === 3 ? 400 : 320;
@@ -960,6 +948,26 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           <X size={14} className="text-amber-400" />
         </button>
 
+        {/* Buff Banner */}
+        {(hasRangeBuff || hasDamageBuff) && (
+          <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/80 to-orange-950/80 rounded-lg border border-cyan-600/50 flex items-center justify-center gap-2 text-[9px]">
+            <Sparkles size={12} className="text-yellow-400" />
+            <span className="text-amber-200 font-bold uppercase tracking-wider">
+              Buffed
+            </span>
+            {hasRangeBuff && (
+              <span className="px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 border border-cyan-700/50">
+                +{Math.round((rangeBoost - 1) * 100)}% Range
+              </span>
+            )}
+            {hasDamageBuff && (
+              <span className="px-1.5 py-0.5 bg-orange-900/60 rounded text-orange-300 border border-orange-700/50">
+                +{Math.round((damageBoost - 1) * 100)}% DMG
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center gap-3 mb-3 pb-2 border-b border-amber-700">
           <div className="w-14 h-14 rounded-lg border border-amber-500 bg-amber-950/50 flex items-center justify-center">
@@ -971,9 +979,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
             <div className="text-[10px] text-amber-500">
               {tower.level === 4 && tower.upgrade
-                ? `Path ${tower.upgrade}: ${
-                    towerData.upgrades[tower.upgrade].name
-                  }`
+                ? `Path ${tower.upgrade}: ${towerData.upgrades[tower.upgrade].name
+                }`
                 : `Level ${tower.level}`}
             </div>
             <div className="flex mt-0.5">
@@ -988,34 +995,55 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 
         {/* Current Stats */}
         <div className="grid grid-cols-3 gap-2 mb-3 text-[10px]">
-          {towerData.damage > 0 && (
-            <div className="bg-red-950/60 p-2 rounded border border-red-800/50 text-center">
-              <Swords size={14} className="mx-auto text-red-400 mb-0.5" />
-              <div className="text-red-500">Damage</div>
-              <div className="text-red-300 font-bold text-sm">
-                {currentStats.damage}
+          {/* Generic damage display - exclude Library since it has special handling */}
+          {(baseStats.damage > 0 || currentStats.damage > 0) && towerData.name !== "Firestone Library" && (
+            <div className={`p-2 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
+              <Swords size={14} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
+              <div className={hasDamageBuff ? 'text-orange-500' : 'text-red-500'}>
+                Damage {hasDamageBuff && <span className="text-orange-300">★</span>}
               </div>
-              {nextStats && (
+              <div className={`font-bold text-sm ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
+                {hasDamageBuff ? (
+                  <>
+                    <span className="line-through text-red-400/60 text-xs mr-1">{Math.floor(currentStats.damage)}</span>
+                    {Math.floor(currentStats.buffedDamage)}
+                  </>
+                ) : (
+                  Math.floor(currentStats.damage)
+                )}
+              </div>
+              {hasDamageBuff && (
+                <div className="text-[8px] text-orange-400">+{Math.round((damageBoost - 1) * 100)}% buff</div>
+              )}
+              {nextStats && !hasDamageBuff && nextStats.damage > currentStats.damage && (
                 <div className="text-green-400 text-[9px]">
-                  → {nextStats.damage}
+                  → {Math.floor(nextStats.damage)}
                 </div>
               )}
             </div>
           )}
+          {/* Firestone Library special handling - show damage and slow */}
           {towerData.name === "Firestone Library" && (
             <>
-              {tower.level >= 3 && (
-                <div className="bg-red-950/60 p-2 rounded border border-red-800/50 text-center">
-                  <Swords size={14} className="mx-auto text-red-400 mb-0.5" />
-                  <div className="text-red-500">Damage</div>
-
-                  <div className="text-red-300 text-sm font-bold">
-                    {tower.level === 3
-                      ? "8"
-                      : tower.level === 4 && tower.upgrade === "A"
-                      ? "35"
-                      : "0"}
+              {(tower.level >= 3 || currentStats.damage > 0) && currentStats.damage > 0 && (
+                <div className={`p-2 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
+                  <Swords size={14} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
+                  <div className={hasDamageBuff ? 'text-orange-500' : 'text-red-500'}>
+                    Damage {hasDamageBuff && <span className="text-orange-300">★</span>}
                   </div>
+                  <div className={`text-sm font-bold ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
+                    {hasDamageBuff ? (
+                      <>
+                        <span className="line-through text-red-400/60 text-xs mr-1">{Math.floor(currentStats.damage)}</span>
+                        {Math.floor(currentStats.buffedDamage)}
+                      </>
+                    ) : (
+                      Math.floor(currentStats.damage)
+                    )}
+                  </div>
+                  {hasDamageBuff && (
+                    <div className="text-[8px] text-orange-400">+{Math.round((damageBoost - 1) * 100)}% buff</div>
+                  )}
                 </div>
               )}
               <div className="col-span-1 bg-purple-950/60 p-2 rounded border border-purple-800/50 text-center">
@@ -1024,16 +1052,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                   <span className="text-purple-500 ">Slow Effect</span>
                 </div>
                 <div className="text-purple-300 text-sm font-bold">
-                  {tower.level === 1
-                    ? "30%"
-                    : tower.level === 2
-                    ? "45%"
-                    : tower.level === 3
-                    ? "60%"
-                    : tower.level === 4 && tower.upgrade === "A"
-                    ? "80%"
-                    : tower.level === 4 && tower.upgrade === "B"
-                    ? "70%"
+                  {currentStats.slowAmount
+                    ? `${Math.round((currentStats.slowAmount || 0) * 100)}%`
                     : "0%"}
                 </div>
                 <div className="text-[9px] text-purple-400 mt-1">
@@ -1042,27 +1062,44 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               </div>
             </>
           )}
-          {towerData.range > 0 && (
-            <div className="bg-blue-950/60 p-2 rounded border border-blue-800/50 text-center">
-              <Target size={14} className="mx-auto text-blue-400 mb-0.5" />
-              <div className="text-blue-500">Range</div>
-              <div className="text-blue-300 font-bold text-sm">
-                {currentStats.range}
+          {(towerData.range > 0 || currentStats.range > 0) && (
+            <div className={`p-2 rounded border text-center ${hasRangeBuff ? 'bg-cyan-950/60 border-cyan-500/70' : 'bg-blue-950/60 border-blue-800/50'}`}>
+              <Target size={14} className={`mx-auto mb-0.5 ${hasRangeBuff ? 'text-cyan-400' : 'text-blue-400'}`} />
+              <div className={hasRangeBuff ? 'text-cyan-500' : 'text-blue-500'}>
+                Range {hasRangeBuff && <span className="text-cyan-300">★</span>}
               </div>
-              {nextStats && (
+              <div className={`font-bold text-sm ${hasRangeBuff ? 'text-cyan-300' : 'text-blue-300'}`}>
+                {hasRangeBuff ? (
+                  <>
+                    <span className="line-through text-blue-400/60 text-xs mr-1">{Math.floor(currentStats.range)}</span>
+                    {Math.floor(currentStats.buffedRange)}
+                  </>
+                ) : (
+                  Math.floor(currentStats.range)
+                )}
+              </div>
+              {hasRangeBuff && (
+                <div className="text-[8px] text-cyan-400">+{Math.round((rangeBoost - 1) * 100)}% buff</div>
+              )}
+              {nextStats && !hasRangeBuff && nextStats.range > currentStats.range && (
                 <div className="text-green-400 text-[9px]">
-                  → {nextStats.range}
+                  → {Math.floor(nextStats.range)}
                 </div>
               )}
             </div>
           )}
-          {towerData.attackSpeed > 0 && (
+          {(towerData.attackSpeed > 0 || currentStats.attackSpeed > 0) && (
             <div className="bg-green-950/60 p-2 rounded border border-green-800/50 text-center">
               <Gauge size={14} className="mx-auto text-green-400 mb-0.5" />
               <div className="text-green-500">Speed</div>
               <div className="text-green-300 font-bold text-sm">
                 {currentStats.attackSpeed}ms
               </div>
+              {nextStats && nextStats.attackSpeed !== currentStats.attackSpeed && nextStats.attackSpeed > 0 && (
+                <div className="text-green-400 text-[9px]">
+                  → {Math.floor(nextStats.attackSpeed)}ms
+                </div>
+              )}
             </div>
           )}
 
@@ -1108,8 +1145,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                         {troop.isMounted
                           ? "Mounted"
                           : troop.isRanged
-                          ? "Ranged"
-                          : "Infantry"}
+                            ? "Ranged"
+                            : "Infantry"}
                       </span>
                     </div>
 
@@ -1174,9 +1211,19 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 </span>
               </div>
               <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-2 mb-1">
+                  <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
+                    <div className="text-amber-500 text-[9px]">Income</div>
+                    <div className="text-amber-300 font-bold">+{currentStats.income || 8} PP</div>
+                  </div>
+                  <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
+                    <div className="text-amber-500 text-[9px]">Interval</div>
+                    <div className="text-amber-300 font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</div>
+                  </div>
+                </div>
                 <div className="text-[9px] text-amber-400">
-                  Generates a certain amount of{" "}
-                  <span className="font-bold"> PP</span> per cycle to help fund
+                  Generates <span className="font-bold">{currentStats.income || 8} PP</span> every{" "}
+                  <span className="font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</span> to help fund
                   your defenses. Build early to maximize your economy!
                 </div>
               </div>
@@ -1190,14 +1237,14 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             {tower.level < 4
               ? TOWER_DATA[tower.type].desc
               : tower.upgrade
-              ? towerData.upgrades[tower.upgrade].desc
-              : ""}
+                ? towerData.upgrades[tower.upgrade].desc
+                : ""}
           </div>
           {tower.level < 4
             ? levelDesc
             : tower.upgrade
-            ? towerData.upgrades[tower.upgrade].effect
-            : ""}
+              ? towerData.upgrades[tower.upgrade].effect
+              : ""}
         </div>
 
         {/* Upgrade buttons */}
@@ -1206,11 +1253,10 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             <button
               onClick={() => upgradeTower(tower.id)}
               disabled={pawPoints < upgradeCost}
-              className={`flex-1 py-2.5 rounded-lg font-bold transition-all border text-xs ${
-                pawPoints >= upgradeCost
-                  ? "bg-gradient-to-b from-green-600 to-green-800 border-green-500 hover:from-green-500 hover:to-green-700"
-                  : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-              }`}
+              className={`flex-1 py-2.5 rounded-lg font-bold transition-all border text-xs ${pawPoints >= upgradeCost
+                ? "bg-gradient-to-b from-green-600 to-green-800 border-green-500 hover:from-green-500 hover:to-green-700"
+                : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                }`}
             >
               <div className="flex items-center justify-center gap-1">
                 <ArrowUp size={16} />
@@ -1228,11 +1274,10 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               <button
                 onClick={() => upgradeTower(tower.id, "A")}
                 disabled={pawPoints < upgradeCost}
-                className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${
-                  pawPoints >= upgradeCost
-                    ? "bg-gradient-to-b from-red-600 to-red-800 border-red-500 hover:from-red-500 hover:to-red-700"
-                    : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                }`}
+                className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${pawPoints >= upgradeCost
+                  ? "bg-gradient-to-b from-red-600 to-red-800 border-red-500 hover:from-red-500 hover:to-red-700"
+                  : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                  }`}
               >
                 <div className="text-sm text-red-200 font-bold">Path A</div>
                 <div className="text-[9px] text-red-300">
@@ -1243,11 +1288,10 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               <button
                 onClick={() => upgradeTower(tower.id, "B")}
                 disabled={pawPoints < upgradeCost}
-                className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${
-                  pawPoints >= upgradeCost
-                    ? "bg-gradient-to-b from-blue-600 to-blue-800 border-blue-500 hover:from-blue-500 hover:to-blue-700"
-                    : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                }`}
+                className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${pawPoints >= upgradeCost
+                  ? "bg-gradient-to-b from-blue-600 to-blue-800 border-blue-500 hover:from-blue-500 hover:to-blue-700"
+                  : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                  }`}
               >
                 <div className="text-sm text-blue-200 font-bold">Path B</div>
                 <div className="text-[9px] text-blue-300">
