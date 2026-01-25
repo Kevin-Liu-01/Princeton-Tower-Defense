@@ -259,7 +259,7 @@ const PrincetonLogo: React.FC = () => {
         <div className="flex items-center gap-1 sm:gap-2 -mt-0.5">
           <Swords size={14} className="text-orange-400 size-2 sm:size-auto" />
           <span className="text-[6px] text-nowrap sm:text-[8.5px] font-bold tracking-[0.3em] text-amber-500/90">
-            KINGDOM DEFENSE
+            TOWER DEFENSE
           </span>
           <Swords
             size={14}
@@ -4590,76 +4590,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.stroke();
       }
 
-      // Tooltip with Preview Image - smart positioning based on Y position
-      if ((isHovered || isSelected) && isUnlocked) {
-        // Setup dimensions for the card
-        const cardWidth = 150;
-        const cardHeight = 110;
-        const cardX = x - cardWidth / 2;
-
-        // Determine if tooltip should appear above or below based on level Y position
-        // If level is in upper 40% of map, show tooltip below; otherwise show above
-        const showBelow = level.y < 50;
-        const cardY = showBelow
-          ? y + size + 12 // Below the level node
-          : y - size - cardHeight - 12; // Above the level node
-
-        // Draw Background
-        ctx.save();
-        ctx.fillStyle = "rgba(12, 10, 8, 0.95)";
-        ctx.strokeStyle = "#a0824d";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 6);
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw Image
-        const lvlData = LEVEL_DATA[level.id];
-        if (lvlData?.previewImage) {
-          if (!imageCache.current[level.id]) {
-            const img = new Image();
-            img.src = lvlData.previewImage;
-            imageCache.current[level.id] = img;
-          }
-          const img = imageCache.current[level.id];
-
-          if (img.complete && img.naturalWidth > 0) {
-            // Clip to top rounded corners
-            ctx.save();
-            ctx.beginPath();
-            ctx.roundRect(
-              cardX + 2,
-              cardY + 2,
-              cardWidth - 4,
-              cardHeight - 24,
-              [4, 4, 0, 0]
-            );
-            ctx.clip();
-            // Draw image filling the top area
-            ctx.drawImage(
-              img,
-              cardX + 2,
-              cardY + 2,
-              cardWidth - 4,
-              cardHeight - 24
-            );
-            ctx.restore();
-          } else {
-            // Placeholder while loading or if missing
-            ctx.fillStyle = "#222";
-            ctx.fillRect(cardX + 2, cardY + 2, cardWidth - 4, cardHeight - 24);
-          }
-        }
-
-        // Draw Text
-        ctx.fillStyle = "#ffd700";
-        ctx.textAlign = "center";
-        ctx.font = "bold 11px 'Cinzel', serif";
-        ctx.fillText(level.name, x, cardY + cardHeight - 8);
-
-        ctx.restore();
-      }
     });
 
     // --- MARCHING ENEMIES near selected level ---
@@ -4701,6 +4631,79 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.textAlign = "left";
         ctx.fillStyle = "rgba(180, 20, 20, 0.9)";
         ctx.fillText("⚔ ENEMIES APPROACH!", lx + 45, ly - 24);
+      }
+    }
+
+    // Tooltip with Preview Image - only show on hover (drawn after enemies so it's on top)
+    if (hoveredLevel) {
+      const level = getLevelById(hoveredLevel);
+      if (level && isLevelUnlocked(level.id)) {
+        const x = level.x;
+        const y = getY(level.y);
+        const size = 28;
+
+        const cardWidth = 150;
+        const cardHeight = 110;
+        const cardX = x - cardWidth / 2;
+
+        // Determine if tooltip should appear above or below based on level Y position
+        const showBelow = level.y < 50;
+        const cardY = showBelow
+          ? y + size + 12
+          : y - size - cardHeight - 12;
+
+        // Draw Background
+        ctx.save();
+        ctx.fillStyle = "rgba(12, 10, 8, 0.95)";
+        ctx.strokeStyle = "#a0824d";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(cardX, cardY, cardWidth, cardHeight, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw Image
+        const lvlData = LEVEL_DATA[level.id];
+        if (lvlData?.previewImage) {
+          if (!imageCache.current[level.id]) {
+            const img = new Image();
+            img.src = lvlData.previewImage;
+            imageCache.current[level.id] = img;
+          }
+          const img = imageCache.current[level.id];
+
+          if (img.complete && img.naturalWidth > 0) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(
+              cardX + 2,
+              cardY + 2,
+              cardWidth - 4,
+              cardHeight - 24,
+              [4, 4, 0, 0]
+            );
+            ctx.clip();
+            ctx.drawImage(
+              img,
+              cardX + 2,
+              cardY + 2,
+              cardWidth - 4,
+              cardHeight - 24
+            );
+            ctx.restore();
+          } else {
+            ctx.fillStyle = "#222";
+            ctx.fillRect(cardX + 2, cardY + 2, cardWidth - 4, cardHeight - 24);
+          }
+        }
+
+        // Draw Text
+        ctx.fillStyle = "#ffd700";
+        ctx.textAlign = "center";
+        ctx.font = "bold 11px 'Cinzel', serif";
+        ctx.fillText(level.name, x, cardY + cardHeight - 8);
+
+        ctx.restore();
       }
     }
 
@@ -4794,7 +4797,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     setSelectedLevel(null);
   };
 
-  // Drag-to-scroll handlers
+  // Drag-to-scroll handlers (mouse)
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -4821,6 +4824,33 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const handleDragEnd = () => {
     setIsDragging(false);
     // Reset hasDragged after a short delay to allow click handler to check it
+    setTimeout(() => setHasDragged(false), 50);
+  };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const container = scrollContainerRef.current;
+    if (!container || e.touches.length !== 1) return;
+    setIsDragging(true);
+    setHasDragged(false);
+    setDragStartX(e.touches[0].pageX - container.offsetLeft);
+    setScrollStartLeft(container.scrollLeft);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const container = scrollContainerRef.current;
+    if (!container || e.touches.length !== 1) return;
+    const x = e.touches[0].pageX - container.offsetLeft;
+    const walk = (x - dragStartX) * 1.5;
+    if (Math.abs(x - dragStartX) > 5) {
+      setHasDragged(true);
+    }
+    container.scrollLeft = scrollStartLeft - walk;
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
     setTimeout(() => setHasDragged(false), 50);
   };
 
@@ -5267,11 +5297,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             <div
               ref={scrollContainerRef}
               className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
-              style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+              style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
               onMouseDown={handleDragStart}
               onMouseMove={handleDragMove}
               onMouseUp={handleDragEnd}
               onMouseLeave={handleDragEnd}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               <canvas
                 ref={canvasRef}

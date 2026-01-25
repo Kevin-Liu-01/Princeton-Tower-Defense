@@ -180,7 +180,7 @@ export function renderGrasslandEnvironment(
       vx: windDirection * (35 + Math.random() * 45),
       vy: (Math.random() - 0.5) * 25,
       size: 2 + Math.random() * 3,
-      alpha: 0.15 + Math.random() * 0.2,
+      alpha: 0.08 + Math.random() * 0.12,
       life: 1,
       maxLife: 1,
       color: Math.random() > 0.5 ? "#ffffff" : "#ffffcc",
@@ -246,7 +246,7 @@ export function renderGrasslandEnvironment(
       ctx.ellipse(0, 0, p.size * 0.1, p.size * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.45);
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.3);
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();

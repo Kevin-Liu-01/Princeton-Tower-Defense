@@ -1,9 +1,9 @@
 // Princeton Tower Defense - Decorations Rendering Module
 // Renders map decorations like trees, rocks, buildings, etc.
 
-import type { Position, MapDecoration, DecorationCategory } from "../../types";
+import type { Position, MapDecoration } from "../../types";
 import { worldToScreen } from "../../utils";
-import { lightenColor, darkenColor } from "../helpers";
+import { lightenColor, darkenColor, drawIsometricPrism } from "../helpers";
 
 // Import landmark renderers
 import {
@@ -80,6 +80,24 @@ export function renderDecoration(
       break;
     case "ruins":
       drawRuins(ctx, screenPos.x, screenPos.y, scale, variantStr);
+      break;
+    case "crater":
+      drawCrater(ctx, screenPos.x, screenPos.y, scale, variantNum, time);
+      break;
+    case "debris":
+      drawDebris(ctx, screenPos.x, screenPos.y, scale, variantNum);
+      break;
+    case "skeleton":
+      drawSkeleton(ctx, screenPos.x, screenPos.y, scale, variantNum);
+      break;
+    case "bones":
+      drawBones(ctx, screenPos.x, screenPos.y, scale, variantNum);
+      break;
+    case "sword":
+      drawSword(ctx, screenPos.x, screenPos.y, scale, variantNum);
+      break;
+    case "arrow":
+      drawArrow(ctx, screenPos.x, screenPos.y, scale, variantNum);
       break;
     // Major landmarks
     case "pyramid":
@@ -213,33 +231,42 @@ function drawRock(
   ctx.ellipse(x, y + 3 * scale, 15 * scale, 7 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Rock body
+  // Top face (lightest)
   ctx.fillStyle = rockColor;
+  ctx.beginPath();
+  ctx.moveTo(x - 8 * scale, y - 15 * scale);
+  ctx.lineTo(x + 5 * scale, y - 18 * scale);
+  ctx.lineTo(x + 14 * scale, y - 8 * scale);
+  ctx.lineTo(x, y - 5 * scale);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front face (medium dark - faces viewer)
+  ctx.fillStyle = darkenColor(rockColor, 15);
   ctx.beginPath();
   ctx.moveTo(x - 12 * scale, y);
   ctx.lineTo(x - 8 * scale, y - 15 * scale);
-  ctx.lineTo(x + 5 * scale, y - 18 * scale);
-  ctx.lineTo(x + 14 * scale, y - 8 * scale);
-  ctx.lineTo(x + 10 * scale, y);
+  ctx.lineTo(x, y - 5 * scale);
+  ctx.lineTo(x, y + 2 * scale);
   ctx.closePath();
   ctx.fill();
 
-  // Darker side
+  // Right side face (darkest)
   ctx.fillStyle = darkenColor(rockColor, 30);
   ctx.beginPath();
-  ctx.moveTo(x + 5 * scale, y - 18 * scale);
+  ctx.moveTo(x, y - 5 * scale);
   ctx.lineTo(x + 14 * scale, y - 8 * scale);
   ctx.lineTo(x + 10 * scale, y);
-  ctx.lineTo(x, y);
+  ctx.lineTo(x, y + 2 * scale);
   ctx.closePath();
   ctx.fill();
 
-  // Highlight
+  // Highlight on top face
   ctx.fillStyle = lightenColor(rockColor, 30);
   ctx.beginPath();
-  ctx.moveTo(x - 8 * scale, y - 15 * scale);
-  ctx.lineTo(x - 2 * scale, y - 12 * scale);
-  ctx.lineTo(x - 4 * scale, y - 5 * scale);
+  ctx.moveTo(x - 6 * scale, y - 14 * scale);
+  ctx.lineTo(x + 2 * scale, y - 15 * scale);
+  ctx.lineTo(x - 2 * scale, y - 8 * scale);
   ctx.closePath();
   ctx.fill();
 
@@ -604,6 +631,7 @@ function drawRuins(
   x: number,
   y: number,
   scale: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   variant?: string
 ): void {
   const stoneColor = "#a0a090";
@@ -635,6 +663,561 @@ function drawRuins(
     ctx.arc(rubbleX, rubbleY, (2 + Math.random() * 3) * scale, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+// ============================================================================
+// CRATER RENDERING - Isometric holes with depth and variations
+// ============================================================================
+
+function drawCrater(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  variant: number = 0,
+  time: number = 0
+): void {
+  // Variant determines crater style:
+  // 0: Standard crater - round impact hole
+  // 1: Elongated crater - stretched impact
+  // 2: Deep pit - darker, more dramatic
+  // 3: Shallow depression - subtle ground damage
+  
+  const craterStyles = [
+    { widthMult: 1.0, depthMult: 1.0, rimHeight: 0.3, name: "standard" },
+    { widthMult: 1.4, depthMult: 0.7, rimHeight: 0.2, name: "elongated" },
+    { widthMult: 0.85, depthMult: 1.3, rimHeight: 0.4, name: "deep" },
+    { widthMult: 1.2, depthMult: 0.5, rimHeight: 0.15, name: "shallow" },
+  ];
+  
+  const style = craterStyles[variant % craterStyles.length];
+  
+  // Base dimensions - isometric ratio (2:1 for proper perspective)
+  const baseWidth = 18 * scale * style.widthMult;
+  const baseDepth = baseWidth * 0.5; // Isometric foreshortening
+  const craterDepth = 8 * scale * style.depthMult;
+  const rimThickness = 4 * scale * style.rimHeight;
+  
+  // Slight rotation based on position for variety
+  const rotationOffset = Math.sin(x * 0.01 + y * 0.02) * 0.15;
+  
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotationOffset);
+  
+  // === OUTER RIM / DISPLACED EARTH ===
+  // Dirt pushed up around crater edges
+  const rimGradient = ctx.createRadialGradient(0, 0, baseWidth * 0.6, 0, 0, baseWidth * 1.2);
+  rimGradient.addColorStop(0, "rgba(90, 75, 55, 0)");
+  rimGradient.addColorStop(0.5, "rgba(100, 85, 65, 0.4)");
+  rimGradient.addColorStop(0.8, "rgba(80, 65, 45, 0.2)");
+  rimGradient.addColorStop(1, "rgba(70, 55, 35, 0)");
+  
+  ctx.fillStyle = rimGradient;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, baseWidth * 1.3, baseDepth * 1.3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // === CRATER RIM HIGHLIGHT ===
+  // Lit edge on the upper rim
+  ctx.strokeStyle = `rgba(140, 125, 100, ${0.3 + style.rimHeight * 0.5})`;
+  ctx.lineWidth = rimThickness;
+  ctx.beginPath();
+  ctx.ellipse(0, -rimThickness * 0.3, baseWidth, baseDepth, 0, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.stroke();
+  
+  // === MAIN CRATER HOLE ===
+  // Dark interior with layered depth
+  
+  // Outer edge (lighter brown/earth)
+  ctx.fillStyle = "#4a3d2e";
+  ctx.beginPath();
+  ctx.ellipse(0, 0, baseWidth, baseDepth, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Mid layer (darker)
+  const midWidth = baseWidth * 0.75;
+  const midDepth = baseDepth * 0.75;
+  ctx.fillStyle = "#3a2d1e";
+  ctx.beginPath();
+  ctx.ellipse(0, craterDepth * 0.15, midWidth, midDepth, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Inner shadow / deep hole
+  const innerWidth = baseWidth * 0.5;
+  const innerDepth = baseDepth * 0.5;
+  const innerGradient = ctx.createRadialGradient(
+    0, craterDepth * 0.25,
+    0,
+    0, craterDepth * 0.25,
+    innerWidth
+  );
+  innerGradient.addColorStop(0, "#1a1510");
+  innerGradient.addColorStop(0.6, "#2a2015");
+  innerGradient.addColorStop(1, "#3a2d1e");
+  
+  ctx.fillStyle = innerGradient;
+  ctx.beginPath();
+  ctx.ellipse(0, craterDepth * 0.25, innerWidth, innerDepth, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // === 3D DEPTH ILLUSION - Inner wall visible on far side ===
+  // The "back wall" of the crater should be slightly visible
+  ctx.fillStyle = "#4d3f30";
+  ctx.beginPath();
+  ctx.ellipse(0, -craterDepth * 0.1, baseWidth * 0.85, baseDepth * 0.4, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+  
+  // === SHADOW INSIDE (bottom of crater) ===
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.beginPath();
+  ctx.ellipse(innerWidth * 0.15, craterDepth * 0.3, innerWidth * 0.7, innerDepth * 0.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // === SCATTERED DEBRIS / RUBBLE around edges ===
+  const debrisCount = 4 + Math.floor(variant * 1.5);
+  const seed = x * 73 + y * 137; // Deterministic randomness
+  
+  for (let i = 0; i < debrisCount; i++) {
+    const angle = (i / debrisCount) * Math.PI * 2 + seed * 0.01;
+    const dist = baseWidth * (0.9 + Math.sin(seed + i * 47) * 0.3);
+    const debrisX = Math.cos(angle) * dist;
+    const debrisY = Math.sin(angle) * dist * 0.5; // Isometric
+    const debrisSize = (2 + Math.abs(Math.sin(seed + i * 31)) * 3) * scale;
+    
+    // Small rocks/dirt chunks
+    ctx.fillStyle = `rgb(${85 + Math.floor(Math.sin(seed + i) * 20)}, ${70 + Math.floor(Math.cos(seed + i) * 15)}, ${50 + Math.floor(Math.sin(seed + i * 2) * 15)})`;
+    ctx.beginPath();
+    ctx.ellipse(debrisX, debrisY, debrisSize, debrisSize * 0.6, angle * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // === SUBTLE SMOKE/DUST for fresh craters (variant 2) ===
+  if (variant === 2) {
+    const smokeAlpha = 0.15 + Math.sin(time * 0.5) * 0.05;
+    ctx.fillStyle = `rgba(60, 50, 40, ${smokeAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      Math.sin(time) * 2 * scale,
+      -craterDepth * 0.5 + Math.cos(time * 0.7) * scale,
+      baseWidth * 0.6,
+      baseDepth * 0.4,
+      0, 0, Math.PI * 2
+    );
+    ctx.fill();
+  }
+  
+  ctx.restore();
+}
+
+// ============================================================================
+// DEBRIS RENDERING - Scattered battlefield wreckage
+// ============================================================================
+
+function drawDebris(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  variant: number = 0
+): void {
+  const seed = x * 73 + y * 137;
+  
+  // Debris types: 0=wood splinters, 1=stone chunks, 2=metal scraps, 3=mixed
+  const colors = [
+    ["#6b5344", "#8b7355", "#5d4037"], // Wood
+    ["#808080", "#a0a090", "#606060"], // Stone
+    ["#5a5a5a", "#7a7a7a", "#4a4a4a"], // Metal
+    ["#7a6a5a", "#8a8070", "#5a4a3a"], // Mixed
+  ];
+  const palette = colors[variant % colors.length];
+  
+  ctx.save();
+  ctx.translate(x, y);
+  
+  // Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.beginPath();
+  ctx.ellipse(0, 3 * scale, 12 * scale, 6 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Scattered pieces
+  const pieceCount = 5 + (variant % 3);
+  for (let i = 0; i < pieceCount; i++) {
+    const angle = (seed + i * 67) % (Math.PI * 2);
+    const dist = (3 + ((seed + i * 31) % 10)) * scale;
+    const px = Math.cos(angle) * dist;
+    const py = Math.sin(angle) * dist * 0.5;
+    const size = (3 + ((seed + i * 23) % 5)) * scale;
+    const rotation = (seed + i * 41) % (Math.PI * 2);
+    
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(rotation);
+    
+    if (variant === 0) {
+      // Wood splinters - elongated
+      ctx.fillRect(-size, -size * 0.2, size * 2, size * 0.4);
+    } else if (variant === 1) {
+      // Stone chunks - angular
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.8, size * 0.3);
+      ctx.lineTo(-size * 0.5, -size * 0.5);
+      ctx.lineTo(size * 0.6, -size * 0.4);
+      ctx.lineTo(size * 0.7, size * 0.4);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      // Irregular shapes
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size, size * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  
+  ctx.restore();
+}
+
+// ============================================================================
+// SKELETON RENDERING - Fallen warriors
+// ============================================================================
+
+function drawSkeleton(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  variant: number = 0
+): void {
+  const boneColor = "#e8e0d0";
+  const boneShade = "#c8c0b0";
+  const seed = x * 73 + y * 137;
+  
+  ctx.save();
+  ctx.translate(x, y);
+  
+  // Pose variants: 0=lying flat, 1=reaching, 2=curled, 3=scattered
+  const rotation = (variant === 3) ? 0 : ((seed % 4) - 2) * 0.3;
+  ctx.rotate(rotation);
+  
+  // Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * scale, 15 * scale, 7 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  if (variant === 3) {
+    // Scattered bones
+    for (let i = 0; i < 6; i++) {
+      const bx = ((seed + i * 47) % 20 - 10) * scale;
+      const by = ((seed + i * 31) % 10 - 5) * scale * 0.5;
+      const boneRot = (seed + i * 23) % (Math.PI);
+      ctx.save();
+      ctx.translate(bx, by);
+      ctx.rotate(boneRot);
+      ctx.fillStyle = i % 2 === 0 ? boneColor : boneShade;
+      ctx.fillRect(-4 * scale, -1 * scale, 8 * scale, 2 * scale);
+      // Bone ends
+      ctx.beginPath();
+      ctx.arc(-4 * scale, 0, 1.5 * scale, 0, Math.PI * 2);
+      ctx.arc(4 * scale, 0, 1.5 * scale, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  } else {
+    // Ribcage
+    ctx.fillStyle = boneShade;
+    ctx.beginPath();
+    ctx.ellipse(0, -2 * scale, 6 * scale, 4 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Ribs
+    ctx.strokeStyle = boneColor;
+    ctx.lineWidth = 1.5 * scale;
+    for (let i = 0; i < 4; i++) {
+      const ribY = -4 * scale + i * 2 * scale;
+      ctx.beginPath();
+      ctx.ellipse(0, ribY, 5 * scale, 1.5 * scale, 0, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.stroke();
+    }
+    
+    // Skull
+    ctx.fillStyle = boneColor;
+    const skullY = -8 * scale;
+    ctx.beginPath();
+    ctx.ellipse(0, skullY, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Eye sockets
+    ctx.fillStyle = "#2a2520";
+    ctx.beginPath();
+    ctx.ellipse(-1.5 * scale, skullY - 0.5 * scale, 1 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(1.5 * scale, skullY - 0.5 * scale, 1 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Limbs
+    ctx.strokeStyle = boneColor;
+    ctx.lineWidth = 2 * scale;
+    
+    // Arms
+    if (variant === 1) {
+      // Reaching pose
+      ctx.beginPath();
+      ctx.moveTo(-5 * scale, -2 * scale);
+      ctx.lineTo(-12 * scale, -8 * scale);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(5 * scale, -2 * scale);
+      ctx.lineTo(10 * scale, 2 * scale);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(-5 * scale, -2 * scale);
+      ctx.lineTo(-10 * scale, 3 * scale);
+      ctx.moveTo(5 * scale, -2 * scale);
+      ctx.lineTo(10 * scale, 3 * scale);
+      ctx.stroke();
+    }
+    
+    // Legs
+    ctx.beginPath();
+    ctx.moveTo(-2 * scale, 2 * scale);
+    ctx.lineTo(-5 * scale, 10 * scale);
+    ctx.moveTo(2 * scale, 2 * scale);
+    ctx.lineTo(5 * scale, 10 * scale);
+    ctx.stroke();
+  }
+  
+  ctx.restore();
+}
+
+// ============================================================================
+// BONES RENDERING - Scattered bone fragments
+// ============================================================================
+
+function drawBones(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  variant: number = 0
+): void {
+  const boneColor = "#e8e0d0";
+  const boneShade = "#d0c8b8";
+  const seed = x * 73 + y * 137;
+  
+  ctx.save();
+  ctx.translate(x, y);
+  
+  // Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * scale, 10 * scale, 5 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  const boneCount = 3 + (variant % 3);
+  for (let i = 0; i < boneCount; i++) {
+    const bx = ((seed + i * 47) % 16 - 8) * scale;
+    const by = ((seed + i * 31) % 8 - 4) * scale * 0.5;
+    const boneLen = (4 + (seed + i * 13) % 4) * scale;
+    const boneRot = ((seed + i * 23) % 180) * Math.PI / 180;
+    
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(boneRot);
+    
+    // Bone shaft
+    ctx.fillStyle = i % 2 === 0 ? boneColor : boneShade;
+    ctx.fillRect(-boneLen, -0.8 * scale, boneLen * 2, 1.6 * scale);
+    
+    // Bone ends (knobby)
+    ctx.beginPath();
+    ctx.arc(-boneLen, 0, 1.8 * scale, 0, Math.PI * 2);
+    ctx.arc(boneLen, 0, 1.8 * scale, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  }
+  
+  ctx.restore();
+}
+
+// ============================================================================
+// SWORD RENDERING - Fallen weapons
+// ============================================================================
+
+function drawSword(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  variant: number = 0
+): void {
+  const seed = x * 73 + y * 137;
+  const rotation = ((seed % 360) - 180) * Math.PI / 180;
+  
+  // Variant: 0=steel, 1=bronze, 2=rusted, 3=broken
+  const bladeColors = ["#c0c0c0", "#cd7f32", "#8b6914", "#a0a0a0"];
+  const bladeColor = bladeColors[variant % bladeColors.length];
+  
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  
+  // Shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.beginPath();
+  ctx.ellipse(0, 2 * scale, 12 * scale, 4 * scale, rotation, 0, Math.PI * 2);
+  ctx.fill();
+  
+  const bladeLen = variant === 3 ? 8 * scale : 14 * scale;
+  
+  // Blade
+  ctx.fillStyle = bladeColor;
+  ctx.beginPath();
+  ctx.moveTo(-bladeLen, 0);
+  ctx.lineTo(-bladeLen + 3 * scale, -1.5 * scale);
+  ctx.lineTo(bladeLen - 2 * scale, -0.5 * scale);
+  ctx.lineTo(bladeLen, 0);
+  ctx.lineTo(bladeLen - 2 * scale, 0.5 * scale);
+  ctx.lineTo(-bladeLen + 3 * scale, 1.5 * scale);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Blade highlight
+  ctx.fillStyle = lightenColor(bladeColor, 30);
+  ctx.beginPath();
+  ctx.moveTo(-bladeLen + 3 * scale, -1 * scale);
+  ctx.lineTo(bladeLen - 3 * scale, -0.3 * scale);
+  ctx.lineTo(bladeLen - 3 * scale, 0);
+  ctx.lineTo(-bladeLen + 3 * scale, 0);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Guard
+  ctx.fillStyle = "#8b7355";
+  ctx.fillRect(-bladeLen - 1 * scale, -3 * scale, 2 * scale, 6 * scale);
+  
+  // Handle
+  ctx.fillStyle = "#5d4037";
+  ctx.fillRect(-bladeLen - 6 * scale, -1.5 * scale, 5 * scale, 3 * scale);
+  
+  // Handle wrap
+  ctx.strokeStyle = "#3d2017";
+  ctx.lineWidth = 0.5 * scale;
+  for (let i = 0; i < 4; i++) {
+    const hx = -bladeLen - 5.5 * scale + i * 1.2 * scale;
+    ctx.beginPath();
+    ctx.moveTo(hx, -1.5 * scale);
+    ctx.lineTo(hx, 1.5 * scale);
+    ctx.stroke();
+  }
+  
+  // Pommel
+  ctx.fillStyle = "#cd853f";
+  ctx.beginPath();
+  ctx.arc(-bladeLen - 7 * scale, 0, 2 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Rust spots for variant 2
+  if (variant === 2) {
+    ctx.fillStyle = "rgba(139, 69, 19, 0.5)";
+    for (let i = 0; i < 5; i++) {
+      const rx = -bladeLen + 5 * scale + ((seed + i * 37) % 15) * scale * 0.8;
+      const ry = ((seed + i * 23) % 3 - 1.5) * scale * 0.5;
+      ctx.beginPath();
+      ctx.arc(rx, ry, (1 + (seed + i) % 2) * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  
+  ctx.restore();
+}
+
+// ============================================================================
+// ARROW RENDERING - Fallen projectiles
+// ============================================================================
+
+function drawArrow(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  variant: number = 0
+): void {
+  const seed = x * 73 + y * 137;
+  const rotation = ((seed % 360) - 180) * Math.PI / 180;
+  const stuck = variant % 2 === 0; // Stuck in ground or lying flat
+  
+  ctx.save();
+  ctx.translate(x, y);
+  
+  if (stuck) {
+    // Arrow stuck in ground at angle
+    ctx.rotate(-0.3 + rotation * 0.3);
+    
+    // Shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.beginPath();
+    ctx.ellipse(3 * scale, 4 * scale, 6 * scale, 2 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Shaft (angled up)
+    ctx.fillStyle = "#8b7355";
+    ctx.fillRect(-2 * scale, -12 * scale, 1.5 * scale, 14 * scale);
+    
+    // Fletching
+    ctx.fillStyle = variant === 1 ? "#dc143c" : variant === 3 ? "#228b22" : "#f5f5dc";
+    ctx.beginPath();
+    ctx.moveTo(-2 * scale, -12 * scale);
+    ctx.lineTo(-5 * scale, -10 * scale);
+    ctx.lineTo(-2 * scale, -8 * scale);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-0.5 * scale, -12 * scale);
+    ctx.lineTo(2.5 * scale, -10 * scale);
+    ctx.lineTo(-0.5 * scale, -8 * scale);
+    ctx.fill();
+  } else {
+    // Arrow lying flat
+    ctx.rotate(rotation);
+    
+    // Shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+    ctx.beginPath();
+    ctx.ellipse(0, 2 * scale, 10 * scale, 3 * scale, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Shaft
+    ctx.fillStyle = "#8b7355";
+    ctx.fillRect(-8 * scale, -0.5 * scale, 16 * scale, 1 * scale);
+    
+    // Arrowhead
+    ctx.fillStyle = "#808080";
+    ctx.beginPath();
+    ctx.moveTo(10 * scale, 0);
+    ctx.lineTo(8 * scale, -1.5 * scale);
+    ctx.lineTo(8 * scale, 1.5 * scale);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Fletching
+    ctx.fillStyle = variant === 1 ? "#dc143c" : variant === 3 ? "#228b22" : "#f5f5dc";
+    ctx.beginPath();
+    ctx.moveTo(-8 * scale, 0);
+    ctx.lineTo(-6 * scale, -2.5 * scale);
+    ctx.lineTo(-4 * scale, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-8 * scale, 0);
+    ctx.lineTo(-6 * scale, 2.5 * scale);
+    ctx.lineTo(-4 * scale, 0);
+    ctx.fill();
+  }
+  
+  ctx.restore();
 }
 
 // ============================================================================

@@ -948,25 +948,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           <X size={14} className="text-amber-400" />
         </button>
 
-        {/* Buff Banner */}
-        {(hasRangeBuff || hasDamageBuff) && (
-          <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/80 to-orange-950/80 rounded-lg border border-cyan-600/50 flex items-center justify-center gap-2 text-[9px]">
-            <Sparkles size={12} className="text-yellow-400" />
-            <span className="text-amber-200 font-bold uppercase tracking-wider">
-              Buffed
-            </span>
-            {hasRangeBuff && (
-              <span className="px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 border border-cyan-700/50">
-                +{Math.round((rangeBoost - 1) * 100)}% Range
-              </span>
-            )}
-            {hasDamageBuff && (
-              <span className="px-1.5 py-0.5 bg-orange-900/60 rounded text-orange-300 border border-orange-700/50">
-                +{Math.round((damageBoost - 1) * 100)}% DMG
-              </span>
-            )}
-          </div>
-        )}
+
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-3 pb-2 border-b border-amber-700">
@@ -992,6 +974,25 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
           </div>
         </div>
+        {/* Buff Banner */}
+        {(hasRangeBuff || hasDamageBuff) && (
+          <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/80 to-orange-950/80 rounded-lg border border-cyan-600/50 flex items-center justify-center gap-2 text-[9px]">
+            <Sparkles size={12} className="text-yellow-400" />
+            <span className="text-amber-200 font-bold uppercase tracking-wider">
+              Buffed
+            </span>
+            {hasRangeBuff && (
+              <span className="px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 border border-cyan-700/50">
+                +{Math.round((rangeBoost - 1) * 100)}% Range
+              </span>
+            )}
+            {hasDamageBuff && (
+              <span className="px-1.5 py-0.5 bg-orange-900/60 rounded text-orange-300 border border-orange-700/50">
+                +{Math.round((damageBoost - 1) * 100)}% DMG
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Current Stats */}
         <div className="grid grid-cols-3 gap-2 mb-3 text-[10px]">

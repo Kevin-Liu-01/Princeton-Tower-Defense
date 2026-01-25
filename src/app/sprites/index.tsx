@@ -1982,6 +1982,7 @@ export const HeroSprite: React.FC<{
             stripeY
           );
           ctx.stroke();
+
           ctx.beginPath();
           ctx.moveTo(cx + 10 * scale, stripeY);
           ctx.quadraticCurveTo(
