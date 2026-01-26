@@ -998,116 +998,113 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         )}
 
         {/* Current Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-3 text-[10px]">
-          {/* Generic damage display - exclude Library since it has special handling */}
-          {(baseStats.damage > 0 || currentStats.damage > 0) && towerData.name !== "Firestone Library" && (
-            <div className={`p-2 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
-              <Swords size={14} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
-              <div className={hasDamageBuff ? 'text-orange-500' : 'text-red-500'}>
-                Damage {hasDamageBuff && <span className="text-orange-300">★</span>}
-              </div>
-              <div className={`font-bold text-sm ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
-                {hasDamageBuff ? (
-                  <>
-                    <span className="line-through text-red-400/60 text-xs mr-1">{Math.floor(currentStats.damage)}</span>
-                    {Math.floor(currentStats.buffedDamage)}
-                  </>
-                ) : (
-                  Math.floor(currentStats.damage)
-                )}
-              </div>
-              {hasDamageBuff && (
-                <div className="text-[8px] text-orange-400">+{Math.round((damageBoost - 1) * 100)}% buff</div>
-              )}
-              {nextStats && !hasDamageBuff && nextStats.damage > currentStats.damage && (
-                <div className="text-green-400 text-[9px]">
-                  → {Math.floor(nextStats.damage)}
+        {/* Firestone Library special handling - 4 stats in a row */}
+        {towerData.name === "Firestone Library" ? (
+          <div className="grid grid-cols-4 gap-1.5 mb-3 text-[9px]">
+            {currentStats.damage > 0 && (
+              <div className={`p-1.5 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
+                <Swords size={12} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
+                <div className={`text-[8px] ${hasDamageBuff ? 'text-orange-500' : 'text-red-500'}`}>DMG</div>
+                <div className={`font-bold text-xs ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
+                  {Math.floor(hasDamageBuff ? currentStats.buffedDamage : currentStats.damage)}
                 </div>
-              )}
+              </div>
+            )}
+            <div className={`p-1.5 rounded border text-center ${hasRangeBuff ? 'bg-cyan-950/60 border-cyan-500/70' : 'bg-blue-950/60 border-blue-800/50'}`}>
+              <Target size={12} className={`mx-auto mb-0.5 ${hasRangeBuff ? 'text-cyan-400' : 'text-blue-400'}`} />
+              <div className={`text-[8px] ${hasRangeBuff ? 'text-cyan-500' : 'text-blue-500'}`}>RNG</div>
+              <div className={`font-bold text-xs ${hasRangeBuff ? 'text-cyan-300' : 'text-blue-300'}`}>
+                {Math.floor(hasRangeBuff ? currentStats.buffedRange : currentStats.range)}
+              </div>
             </div>
-          )}
-          {/* Firestone Library special handling - show damage and slow */}
-          {towerData.name === "Firestone Library" && (
-            <>
-              {(tower.level >= 3 || currentStats.damage > 0) && currentStats.damage > 0 && (
-                <div className={`p-2 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
-                  <Swords size={14} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
-                  <div className={hasDamageBuff ? 'text-orange-500' : 'text-red-500'}>
-                    Damage {hasDamageBuff && <span className="text-orange-300">★</span>}
-                  </div>
-                  <div className={`text-sm font-bold ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
-                    {hasDamageBuff ? (
-                      <>
-                        <span className="line-through text-red-400/60 text-xs mr-1">{Math.floor(currentStats.damage)}</span>
-                        {Math.floor(currentStats.buffedDamage)}
-                      </>
-                    ) : (
-                      Math.floor(currentStats.damage)
-                    )}
-                  </div>
-                  {hasDamageBuff && (
-                    <div className="text-[8px] text-orange-400">+{Math.round((damageBoost - 1) * 100)}% buff</div>
+            <div className="p-1.5 rounded border text-center bg-purple-950/60 border-purple-800/50">
+              <Snowflake size={12} className="mx-auto mb-0.5 text-purple-400" />
+              <div className="text-[8px] text-purple-500">SLOW</div>
+              <div className="font-bold text-xs text-purple-300">
+                {currentStats.slowAmount ? `${Math.round(currentStats.slowAmount * 100)}%` : "0%"}
+              </div>
+            </div>
+            {currentStats.attackSpeed > 0 && (
+              <div className="p-1.5 rounded border text-center bg-green-950/60 border-green-800/50">
+                <Gauge size={12} className="mx-auto mb-0.5 text-green-400" />
+                <div className="text-[8px] text-green-500">SPD</div>
+                <div className="font-bold text-xs text-green-300">
+                  {currentStats.attackSpeed}ms
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 mb-3 text-[10px]">
+            {/* Generic damage display */}
+            {(baseStats.damage > 0 || currentStats.damage > 0) && (
+              <div className={`p-2 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
+                <Swords size={14} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
+                <div className={hasDamageBuff ? 'text-orange-500' : 'text-red-500'}>
+                  Damage {hasDamageBuff && <span className="text-orange-300">★</span>}
+                </div>
+                <div className={`font-bold text-sm ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
+                  {hasDamageBuff ? (
+                    <>
+                      <span className="line-through text-red-400/60 text-xs mr-1">{Math.floor(currentStats.damage)}</span>
+                      {Math.floor(currentStats.buffedDamage)}
+                    </>
+                  ) : (
+                    Math.floor(currentStats.damage)
                   )}
                 </div>
-              )}
-              <div className="col-span-1 bg-purple-950/60 p-2 rounded border border-purple-800/50 text-center">
-                <div className="flex flex-col items-center gap-0.5">
-                  <Snowflake size={14} className="text-purple-400" />
-                  <span className="text-purple-500 ">Slow Effect</span>
-                </div>
-                <div className="text-purple-300 text-sm font-bold">
-                  {currentStats.slowAmount
-                    ? `${Math.round((currentStats.slowAmount || 0) * 100)}%`
-                    : "0%"}
-                </div>
-                <div className="text-[9px] text-purple-400 mt-1">
-                  Reduces enemy speed within range.
-                </div>
-              </div>
-            </>
-          )}
-          {(towerData.range > 0 || currentStats.range > 0) && (
-            <div className={`p-2 rounded border text-center ${hasRangeBuff ? 'bg-cyan-950/60 border-cyan-500/70' : 'bg-blue-950/60 border-blue-800/50'}`}>
-              <Target size={14} className={`mx-auto mb-0.5 ${hasRangeBuff ? 'text-cyan-400' : 'text-blue-400'}`} />
-              <div className={hasRangeBuff ? 'text-cyan-500' : 'text-blue-500'}>
-                Range {hasRangeBuff && <span className="text-cyan-300">★</span>}
-              </div>
-              <div className={`font-bold text-sm ${hasRangeBuff ? 'text-cyan-300' : 'text-blue-300'}`}>
-                {hasRangeBuff ? (
-                  <>
-                    <span className="line-through text-blue-400/60 text-xs mr-1">{Math.floor(currentStats.range)}</span>
-                    {Math.floor(currentStats.buffedRange)}
-                  </>
-                ) : (
-                  Math.floor(currentStats.range)
+                {hasDamageBuff && (
+                  <div className="text-[8px] text-orange-400">+{Math.round((damageBoost - 1) * 100)}% buff</div>
+                )}
+                {nextStats && !hasDamageBuff && nextStats.damage > currentStats.damage && (
+                  <div className="text-green-400 text-[9px]">
+                    → {Math.floor(nextStats.damage)}
+                  </div>
                 )}
               </div>
-              {hasRangeBuff && (
-                <div className="text-[8px] text-cyan-400">+{Math.round((rangeBoost - 1) * 100)}% buff</div>
-              )}
-              {nextStats && !hasRangeBuff && nextStats.range > currentStats.range && (
-                <div className="text-green-400 text-[9px]">
-                  → {Math.floor(nextStats.range)}
+            )}
+            {(towerData.range > 0 || currentStats.range > 0) && (
+              <div className={`p-2 rounded border text-center ${hasRangeBuff ? 'bg-cyan-950/60 border-cyan-500/70' : 'bg-blue-950/60 border-blue-800/50'}`}>
+                <Target size={14} className={`mx-auto mb-0.5 ${hasRangeBuff ? 'text-cyan-400' : 'text-blue-400'}`} />
+                <div className={hasRangeBuff ? 'text-cyan-500' : 'text-blue-500'}>
+                  Range {hasRangeBuff && <span className="text-cyan-300">★</span>}
                 </div>
-              )}
-            </div>
-          )}
-          {(towerData.attackSpeed > 0 || currentStats.attackSpeed > 0) && (
-            <div className="bg-green-950/60 p-2 rounded border border-green-800/50 text-center">
-              <Gauge size={14} className="mx-auto text-green-400 mb-0.5" />
-              <div className="text-green-500">Speed</div>
-              <div className="text-green-300 font-bold text-sm">
-                {currentStats.attackSpeed}ms
+                <div className={`font-bold text-sm ${hasRangeBuff ? 'text-cyan-300' : 'text-blue-300'}`}>
+                  {hasRangeBuff ? (
+                    <>
+                      <span className="line-through text-blue-400/60 text-xs mr-1">{Math.floor(currentStats.range)}</span>
+                      {Math.floor(currentStats.buffedRange)}
+                    </>
+                  ) : (
+                    Math.floor(currentStats.range)
+                  )}
+                </div>
+                {hasRangeBuff && (
+                  <div className="text-[8px] text-cyan-400">+{Math.round((rangeBoost - 1) * 100)}% buff</div>
+                )}
+                {nextStats && !hasRangeBuff && nextStats.range > currentStats.range && (
+                  <div className="text-green-400 text-[9px]">
+                    → {Math.floor(nextStats.range)}
+                  </div>
+                )}
               </div>
-              {nextStats && nextStats.attackSpeed !== currentStats.attackSpeed && nextStats.attackSpeed > 0 && (
-                <div className="text-green-400 text-[9px]">
-                  → {Math.floor(nextStats.attackSpeed)}ms
+            )}
+            {(towerData.attackSpeed > 0 || currentStats.attackSpeed > 0) && (
+              <div className="bg-green-950/60 p-2 rounded border border-green-800/50 text-center">
+                <Gauge size={14} className="mx-auto text-green-400 mb-0.5" />
+                <div className="text-green-500">Speed</div>
+                <div className="text-green-300 font-bold text-sm">
+                  {currentStats.attackSpeed}ms
                 </div>
-              )}
-            </div>
-          )}
+                {nextStats && nextStats.attackSpeed !== currentStats.attackSpeed && nextStats.attackSpeed > 0 && (
+                  <div className="text-green-400 text-[9px]">
+                    → {Math.floor(nextStats.attackSpeed)}ms
+                  </div>
+                )}
+              </div>
+            )}
 
-          {towerData.name === "Dinky Station" &&
+            {towerData.name === "Dinky Station" &&
             (() => {
               // 1. Determine which key to use from TROOP_DATA based on level/upgrade
               const getTroopKey = () => {
@@ -1207,33 +1204,34 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
               );
             })()}
 
-          {towerData.name === "Eating Club" && (
-            <div className="col-span-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1">
-                  <CoinsIcon size={12} /> PP Generation
-                </span>
-              </div>
-              <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2 mb-1">
-                  <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
-                    <div className="text-amber-500 text-[9px]">Income</div>
-                    <div className="text-amber-300 font-bold">+{currentStats.income || 8} PP</div>
+            {towerData.name === "Eating Club" && (
+              <div className="col-span-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1">
+                    <CoinsIcon size={12} /> PP Generation
+                  </span>
+                </div>
+                <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
+                  <div className="grid grid-cols-2 gap-2 mb-1">
+                    <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
+                      <div className="text-amber-500 text-[9px]">Income</div>
+                      <div className="text-amber-300 font-bold">+{currentStats.income || 8} PP</div>
+                    </div>
+                    <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
+                      <div className="text-amber-500 text-[9px]">Interval</div>
+                      <div className="text-amber-300 font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</div>
+                    </div>
                   </div>
-                  <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
-                    <div className="text-amber-500 text-[9px]">Interval</div>
-                    <div className="text-amber-300 font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</div>
+                  <div className="text-[9px] text-amber-400">
+                    Generates <span className="font-bold">{currentStats.income || 8} PP</span> every{" "}
+                    <span className="font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</span> to help fund
+                    your defenses. Build early to maximize your economy!
                   </div>
                 </div>
-                <div className="text-[9px] text-amber-400">
-                  Generates <span className="font-bold">{currentStats.income || 8} PP</span> every{" "}
-                  <span className="font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</span> to help fund
-                  your defenses. Build early to maximize your economy!
-                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Level description */}
         <div className="bg-amber-950/40 p-2 rounded text-[10px] text-amber-400 mb-3 border border-amber-800/50">
@@ -1369,8 +1367,8 @@ interface TooltipProps {
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({ content, position }) => {
-  const tooltipWidth = 180;
-  const tooltipHeight = 80;
+  const tooltipWidth = 220;
+  const tooltipHeight = 100;
   let tooltipX = position.x + 15;
   let tooltipY = position.y - 40;
   if (tooltipX + tooltipWidth > window.innerWidth - 10)
@@ -1381,7 +1379,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ content, position }) => {
 
   return (
     <div
-      className="fixed pointer-events-none bg-gradient-to-br from-amber-950/98 to-stone-950/98 p-2 border border-amber-600 shadow-xl rounded-lg max-w-[180px] backdrop-blur-sm text-[10px]"
+      className="fixed pointer-events-none bg-gradient-to-br from-amber-950/98 to-stone-950/98 p-2 border border-amber-600 shadow-xl rounded-lg max-w-[220px] backdrop-blur-sm text-[10px]"
       style={{ left: tooltipX, top: tooltipY, zIndex: 250 }}
     >
       {content}

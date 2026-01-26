@@ -100,6 +100,7 @@ export interface Tower {
   burnTargets?: string[];
   freezeCharges?: number;
   lastSpawn?: number;
+  lastFreezeCheck?: number; // For Blizzard tower freeze timing
   chainTargets?: string[];
   damageAccumulator?: number;
   // Buff state

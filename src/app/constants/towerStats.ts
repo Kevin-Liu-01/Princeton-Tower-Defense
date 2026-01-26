@@ -189,35 +189,35 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       damage: 0,
       range: 220,
       attackSpeed: 0,
-      slowAmount: 0.3,
+      slowAmount: 0.2,
       slowDuration: 1000,
       specialEffect: "Slows enemies with ancient knowledge",
     },
     levels: {
       1: {
         cost: 80,
-        description: "Basic Slowing - 30% slow field",
+        description: "Basic Slowing - 20% slow field",
       },
       2: {
         cost: 100,
-        description: "Enhanced Slowing - 45% slow field",
-        overrides: { slowAmount: 0.45 },
+        description: "Enhanced Slowing - 35% slow field",
+        overrides: { slowAmount: 0.35 },
       },
       3: {
         cost: 180,
-        description: "Arcane Library - 60% slow + magic damage",
-        overrides: { slowAmount: 0.6, damage: 30, attackSpeed: 500 },
+        description: "Arcane Library - 45% slow + magic damage",
+        overrides: { slowAmount: 0.45, damage: 30, attackSpeed: 500 },
       },
     },
     upgrades: {
       A: {
         name: "Earthquake Smasher",
         description: "Seismic waves damage and slow",
-        effect: "Deals 35 AoE damage + 80% slow",
+        effect: "Deals 35 AoE damage + 50% slow",
         stats: {
           damage: 35,
           range: 330, // 1.5x base range for level 4
-          slowAmount: 0.8,
+          slowAmount: 0.5,
           attackSpeed: 500,
           splashRadius: 80,
           specialEffect: "Ground-shaking AoE attacks",
@@ -226,13 +226,13 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       B: {
         name: "Blizzard",
         description: "Freezes enemies completely",
-        effect: "70% slow + periodic 2s freeze",
+        effect: "50% slow + 25% freeze chance every 2s",
         stats: {
           range: 385, // 1.75x base range - wide freeze area
-          slowAmount: 0.7,
+          slowAmount: 0.5,
           attackSpeed: 1000,
           stunDuration: 2000,
-          stunChance: 1,
+          stunChance: 0.25, // 25% chance every 2 seconds
           specialEffect: "Freezes enemies solid",
         },
       },
@@ -467,11 +467,24 @@ export function calculateTowerStats(
     }
   }
 
+  // Apply level-based range bonuses (these are standard across all towers)
+  if (level === 2) {
+    stats.range = towerDef.baseStats.range * 1.15;
+  }
+  if (level === 3) {
+    stats.range = towerDef.baseStats.range * 1.25;
+  }
+
   // Apply upgrade path stats if at level 4 (upgrade selected)
   if (level >= 4 && upgrade) {
     const upgradePath = towerDef.upgrades[upgrade];
     if (upgradePath) {
+      // Level 4 upgrade stats override everything
       stats = { ...stats, ...upgradePath.stats };
+    }
+    // If no specific range in upgrade path, use 1.5x base range
+    if (upgradePath && upgradePath.stats?.range === undefined) {
+      stats.range = towerDef.baseStats.range * 1.5;
     }
   }
 

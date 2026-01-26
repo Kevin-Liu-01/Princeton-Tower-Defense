@@ -59,6 +59,8 @@ import {
   generateId,
   getPathSegmentLength,
 } from "./utils";
+// Tower Stats
+import { calculateTowerStats } from "./constants/towerStats";
 // Rendering
 import {
   renderTower,
@@ -86,7 +88,7 @@ const HERO_RANGED_SIGHT_RANGE = 220; // Extended sight for Rocky (ranged hero)
 const COMBAT_RANGE = 50; // Range at which units stop to fight
 const MELEE_RANGE = 60; // Close range where ranged units switch to melee
 const FORMATION_SPACING = 30; // Distance between troops in formation
-const ENEMY_SPEED_MODIFIER = 0.75; // Global enemy speed multiplier (slower enemies)
+const ENEMY_SPEED_MODIFIER = 1.25; // Global enemy speed multiplier (slower enemies)
 
 // Helper to get enemy position using their pathKey for dual-path support
 const getEnemyPosWithPath = (enemy: Enemy, defaultMap: string): Position => {
@@ -851,7 +853,7 @@ export default function PrincetonTowerDefense() {
         }
 
         // D. VAULT: Immobile Troop Logic (Targetable by Enemies)
-        if (spec.type === "vault" && specialTowerHp !== null) {
+        if (spec.type === "vault" && specialTowerHp !== null && specialTowerHp > 0) {
           // Enemies find the vault as a combat target - skip attacks when paused
           enemies.forEach((e) => {
             const ePos = getEnemyPosWithPath(e, selectedMap);
@@ -861,9 +863,12 @@ export default function PrincetonTowerDefense() {
               if (!isPaused && now - (e.lastTroopAttack || 0) > effectiveEnemyAttackInterval) {
                 const dmg = 20;
                 setSpecialTowerHp((prev) => {
-                  const newVal = prev! - dmg;
+                  // Skip if vault already destroyed
+                  if (prev === null || prev <= 0) return prev;
+                  const newVal = prev - dmg;
                   if (newVal <= 0) {
-                    setLives(() => Math.max(0, lives - 5));
+                    // Only subtract lives once when transitioning to destroyed
+                    setLives((l) => Math.max(0, l - 5));
                     addParticles(specWorldPos, "explosion", 40);
                     return 0;
                   }
@@ -926,6 +931,7 @@ export default function PrincetonTowerDefense() {
             if (
               spec?.type === "vault" &&
               specialTowerHp !== null &&
+              specialTowerHp > 0 &&
               specWorldPos
             ) {
               if (distance(enemyPos, specWorldPos) < 70) {
@@ -933,8 +939,11 @@ export default function PrincetonTowerDefense() {
                 const effectiveVaultAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
                 if (!isPaused && now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval) {
                   setSpecialTowerHp((prev) => {
-                    const newVal = Math.max(0, prev! - 25);
+                    // Skip if vault already destroyed
+                    if (prev === null || prev <= 0) return prev;
+                    const newVal = Math.max(0, prev - 25);
                     if (newVal <= 0) {
+                      // Only subtract lives once when transitioning to destroyed
                       setLives((l) => Math.max(0, l - 5));
                       addParticles(specWorldPos, "explosion", 40);
                       return 0;
@@ -1082,27 +1091,27 @@ export default function PrincetonTowerDefense() {
       const enemiesAttackingTroops: { [enemyId: string]: string } = {};
 
       if (!isPaused) {
-      // Scale enemy attack interval with game speed
-      const effectiveTroopAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
-      enemies.forEach((enemy) => {
-        if (enemy.frozen || now < enemy.stunUntil) return;
-        if (ENEMY_DATA[enemy.type].flying) return;
-        if (now - enemy.lastTroopAttack <= effectiveTroopAttackInterval) return;
+        // Scale enemy attack interval with game speed
+        const effectiveTroopAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+        enemies.forEach((enemy) => {
+          if (enemy.frozen || now < enemy.stunUntil) return;
+          if (ENEMY_DATA[enemy.type].flying) return;
+          if (now - enemy.lastTroopAttack <= effectiveTroopAttackInterval) return;
 
-        const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
 
-        // Check if hero is nearby (hero takes combat priority over troops)
-        const heroNearby =
-          hero && !hero.dead && distance(enemyPos, hero.pos) < 60;
-        if (heroNearby) return; // Hero will handle this enemy
+          // Check if hero is nearby (hero takes combat priority over troops)
+          const heroNearby =
+            hero && !hero.dead && distance(enemyPos, hero.pos) < 60;
+          if (heroNearby) return; // Hero will handle this enemy
 
-        // Check for nearby troop
-        const nearbyTroop = troops.find((t) => distance(enemyPos, t.pos) < 60);
-        if (nearbyTroop) {
-          troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + 15;
-          enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
-        }
-      });
+          // Check for nearby troop
+          const nearbyTroop = troops.find((t) => distance(enemyPos, t.pos) < 60);
+          if (nearbyTroop) {
+            troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + 15;
+            enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
+          }
+        });
       } // End of !isPaused check for enemy attacks on troops
 
       // Calculate which troops will die based on damage
@@ -1201,6 +1210,10 @@ export default function PrincetonTowerDefense() {
               now >= enemy.burnUntil
             ) {
               enemy = { ...enemy, burning: false, burnDamage: 0, burnUntil: 0 };
+            }
+            // Clear frozen state when stun duration expires
+            if (enemy.frozen && enemy.stunUntil && now >= enemy.stunUntil) {
+              enemy = { ...enemy, frozen: false };
             }
             if (enemy.frozen || now < enemy.stunUntil) {
               return {
@@ -1868,488 +1881,519 @@ export default function PrincetonTowerDefense() {
       }
       // Tower attacks - skip when paused
       if (!isPaused) {
-      towers.forEach((tower) => {
-        const tData = TOWER_DATA[tower.type];
-        const towerWorldPos = gridToWorld(tower.pos);
+        towers.forEach((tower) => {
+          const tData = TOWER_DATA[tower.type];
+          const towerWorldPos = gridToWorld(tower.pos);
 
-        // Final Buffed Stats for this tick
-        const finalRange = tData.range * (tower.rangeBoost || 1.0);
-        const finalDamageMult = tower.damageBoost || 1.0;
+          // Final Buffed Stats for this tick - use calculateTowerStats for proper level-based range
+          const towerStats = calculateTowerStats(
+            tower.type,
+            tower.level,
+            tower.upgrade,
+            tower.rangeBoost || 1,
+            tower.damageBoost || 1
+          );
+          const finalRange = towerStats.range;
+          const finalDamageMult = tower.damageBoost || 1.0;
 
-        if (tower.type === "club") {
-          // ENHANCED CLUB TOWER - More useful income generator
-          // Level 1: Basic Club - 8 PP every 8s
-          // Level 2: Popular Club - 15 PP every 7s + bonus on kills nearby
-          // Level 3: Grand Club - 25 PP every 6s + slow enemies in range
-          // Level 4A: Investment Bank - 40 PP every 5s + 10% bonus on all income
-          // Level 4B: Recruitment Center - 20 PP every 6s + 15% damage buff to nearby towers
+          if (tower.type === "club") {
+            // ENHANCED CLUB TOWER - More useful income generator
+            // Level 1: Basic Club - 8 PP every 8s
+            // Level 2: Popular Club - 15 PP every 7s + bonus on kills nearby
+            // Level 3: Grand Club - 25 PP every 6s + slow enemies in range
+            // Level 4A: Investment Bank - 40 PP every 5s + 10% bonus on all income
+            // Level 4B: Recruitment Center - 20 PP every 6s + 15% damage buff to nearby towers
 
-          const incomeInterval =
-            tower.level === 1
-              ? 8000
-              : tower.level === 2
-                ? 7000
-                : tower.level === 3
-                  ? 6000
-                  : tower.upgrade === "A"
-                    ? 5000
-                    : 6000;
-
-          const baseAmount =
-            tower.level === 1
-              ? 8
-              : tower.level === 2
-                ? 15
-                : tower.level === 3
-                  ? 25
-                  : tower.upgrade === "A"
-                    ? 40
-                    : 20;
-
-          // Scale income interval with game speed (faster at higher speeds)
-          const effectiveIncomeInterval = gameSpeed > 0 ? incomeInterval / gameSpeed : incomeInterval;
-          if (now - tower.lastAttack > effectiveIncomeInterval) {
-            // Base income
-            let amount = baseAmount;
-
-            // Investment Bank bonus: 10% bonus on income
-            if (tower.level === 4 && tower.upgrade === "A") {
-              amount = Math.floor(amount * 1.1);
-            }
-
-            setPawPoints((pp) => pp + amount);
-            addParticles(gridToWorld(tower.pos), "gold", 20);
-
-            // Level 3+ Grand Club: Create gold particle fountain effect
-            if (tower.level >= 3) {
-              for (let i = 0; i < 5; i++) {
-                const burstTimeout = setTimeout(() => {
-                  addParticles(gridToWorld(tower.pos), "gold", 3);
-                }, i * 100);
-                activeTimeoutsRef.current.push(burstTimeout);
-              }
-            }
-
-            setTowers((prev) =>
-              prev.map((t) =>
-                t.id === tower.id ? { ...t, lastAttack: now } : t
-              )
-            );
-          }
-
-          // Level 3+ Grand Club: Slow nearby enemies (greed aura)
-          if (tower.level >= 3) {
-            const auraRange = 100 + tower.level * 20;
-            enemies.forEach((e) => {
-              const enemyPos = getEnemyPosWithPath(e, selectedMap);
-              if (distance(towerWorldPos, enemyPos) <= auraRange) {
-                const slowAmount = tower.level === 3 ? 0.15 : 0.2;
-                setEnemies((prev) =>
-                  prev.map((enemy) =>
-                    enemy.id === e.id
-                      ? {
-                        ...enemy,
-                        slowEffect: Math.max(enemy.slowEffect, slowAmount),
-                      }
-                      : enemy
-                  )
-                );
-              }
-            });
-          }
-
-          // Level 4B Recruitment Center: Buff nearby towers
-          if (tower.level === 4 && tower.upgrade === "B") {
-            const buffRange = 150;
-            setTowers((prev) =>
-              prev.map((t) => {
-                if (t.id !== tower.id && t.type !== "club") {
-                  const otherPos = gridToWorld(t.pos);
-                  if (distance(towerWorldPos, otherPos) <= buffRange) {
-                    return {
-                      ...t,
-                      damageBoost: Math.max(t.damageBoost || 1, 1.15),
-                      boostEnd: now + 2000,
-                    };
-                  }
-                }
-                return t;
-              })
-            );
-          }
-        } else if (tower.type === "library") {
-          let appliedSlow = false;
-          let appliedDamage = false;
-
-          // OPTIMIZED: Batch all library slow/damage effects into a single setEnemies call
-          const slowAmount =
-            tower.level === 1
-              ? 0.3
-              : tower.level === 2
-                ? 0.45
-                : tower.level === 3
-                  ? 0.6 // Arcane Library
-                  : tower.upgrade === "A"
-                    ? 0.8 // Earthquake - stronger slow
-                    : 0.7; // Blizzard
-
-          // Scale library damage intervals with game speed
-          const libraryDamageInterval = gameSpeed > 0 ? 500 / gameSpeed : 500;
-          const libraryFreezeInterval = gameSpeed > 0 ? 4000 / gameSpeed : 4000;
-          const shouldApplyArcaneDamage = tower.level === 3 && now - tower.lastAttack > libraryDamageInterval;
-          const shouldApplyBlizzardFreeze = tower.level === 4 && tower.upgrade === "B" && now - tower.lastAttack > libraryFreezeInterval;
-          const shouldApplyEarthquakeDamage = tower.level === 4 && tower.upgrade === "A" && now - tower.lastAttack > libraryDamageInterval;
-          const arcaneDamage = 8 * finalDamageMult;
-          const earthquakeDamage = 35;
-
-          // Collect enemy IDs affected by this tower for batched update
-          const affectedEnemyIds = new Set<string>();
-          const enemyDistances = new Map<string, { dist: number; pos: Position }>();
-
-          for (const e of enemies) {
-            const enemyPos = getEnemyPosWithPath(e, selectedMap);
-            const dist = distance(towerWorldPos, enemyPos);
-            if (dist <= finalRange) {
-              affectedEnemyIds.add(e.id);
-              enemyDistances.set(e.id, { dist, pos: enemyPos });
-              appliedSlow = true;
-            }
-          }
-
-          // Single batched update for all affected enemies
-          if (affectedEnemyIds.size > 0) {
-            let bountyEarned = 0;
-            const particlePositions: Position[] = [];
-            const sparkPositions: Position[] = [];
-
-            setEnemies((prev) =>
-              prev
-                .map((enemy) => {
-                  if (!affectedEnemyIds.has(enemy.id)) return enemy;
-                  const info = enemyDistances.get(enemy.id)!;
-
-                  let newEnemy = { ...enemy };
-
-                  // Apply slow
-                  newEnemy.slowEffect = slowAmount;
-                  newEnemy.slowed = true;
-                  newEnemy.slowIntensity = slowAmount;
-
-                  // Blizzard freeze
-                  if (shouldApplyBlizzardFreeze) {
-                    newEnemy.frozen = true;
-                    newEnemy.stunUntil = now + 2000;
-                    newEnemy.slowIntensity = 1;
-                  }
-
-                  // Arcane damage
-                  if (shouldApplyArcaneDamage) {
-                    newEnemy.hp -= arcaneDamage;
-                    newEnemy.damageFlash = 80;
-                    appliedDamage = true;
-                    if (newEnemy.hp <= 0) {
-                      bountyEarned += ENEMY_DATA[enemy.type].bounty;
-                      sparkPositions.push(info.pos);
-                      return null as any;
-                    }
-                  }
-
-                  // Earthquake damage
-                  if (shouldApplyEarthquakeDamage) {
-                    newEnemy.hp -= earthquakeDamage;
-                    newEnemy.damageFlash = 150;
-                    newEnemy.slowIntensity = 0.8;
-                    appliedDamage = true;
-                    if (newEnemy.hp <= 0) {
-                      bountyEarned += ENEMY_DATA[enemy.type].bounty;
-                      particlePositions.push(info.pos);
-                      return null as any;
-                    }
-                  }
-
-                  return newEnemy;
-                })
-                .filter(Boolean)
-            );
-
-            // Apply bounties and particles outside of setEnemies
-            if (bountyEarned > 0) {
-              setPawPoints((pp) => pp + bountyEarned);
-            }
-            particlePositions.forEach((pos) => addParticles(pos, "explosion", 8));
-            sparkPositions.forEach((pos) => addParticles(pos, "spark", 6));
-          }
-          // Continuous slow field visual effect
-          if (
-            enemies.some(
-              (e) =>
-                distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
-                finalRange
-            )
-          ) {
-            const effectType =
-              tower.level === 4 && tower.upgrade === "B"
-                ? "freezeField"
-                : tower.level === 4 && tower.upgrade === "A"
-                  ? "earthquakeField"
+            const incomeInterval =
+              tower.level === 1
+                ? 8000
+                : tower.level === 2
+                  ? 7000
                   : tower.level === 3
-                    ? "arcaneField"
-                    : "slowField";
-            // Update or add slow field effect
-            setEffects((ef) => {
-              const existingField = ef.find(
-                (e) => e.type === effectType && e.towerId === tower.id
+                    ? 6000
+                    : tower.upgrade === "A"
+                      ? 5000
+                      : 6000;
+
+            const baseAmount =
+              tower.level === 1
+                ? 8
+                : tower.level === 2
+                  ? 15
+                  : tower.level === 3
+                    ? 25
+                    : tower.upgrade === "A"
+                      ? 40
+                      : 20;
+
+            // Scale income interval with game speed (faster at higher speeds)
+            const effectiveIncomeInterval = gameSpeed > 0 ? incomeInterval / gameSpeed : incomeInterval;
+            if (now - tower.lastAttack > effectiveIncomeInterval) {
+              // Base income
+              let amount = baseAmount;
+
+              // Investment Bank bonus: 10% bonus on income
+              if (tower.level === 4 && tower.upgrade === "A") {
+                amount = Math.floor(amount * 1.1);
+              }
+
+              setPawPoints((pp) => pp + amount);
+              addParticles(gridToWorld(tower.pos), "gold", 20);
+
+              // Level 3+ Grand Club: Create gold particle fountain effect
+              if (tower.level >= 3) {
+                for (let i = 0; i < 5; i++) {
+                  const burstTimeout = setTimeout(() => {
+                    addParticles(gridToWorld(tower.pos), "gold", 3);
+                  }, i * 100);
+                  activeTimeoutsRef.current.push(burstTimeout);
+                }
+              }
+
+              setTowers((prev) =>
+                prev.map((t) =>
+                  t.id === tower.id ? { ...t, lastAttack: now } : t
+                )
               );
-              if (existingField) {
-                return ef.map((e) =>
-                  e.id === existingField.id ? { ...e, progress: 0 } : e
-                );
-              }
-              return [
-                ...ef,
-                {
-                  id: generateId("field"),
-                  pos: towerWorldPos,
-                  type: effectType,
-                  progress: 0,
-                  size: tData.range,
-                  towerId: tower.id,
-                  intensity:
-                    tower.level >= 3 ? 1 : tower.level === 2 ? 0.7 : 0.5,
-                },
-              ];
-            });
-          }
-          if ((appliedSlow || appliedDamage) && now - tower.lastAttack > libraryDamageInterval) {
-            setTowers((prev) =>
-              prev.map((t) =>
-                t.id === tower.id ? { ...t, lastAttack: now } : t
-              )
-            );
-          }
-        } else if (tower.type === "station") {
-          // Count living troops belonging to this station
-          const stationTroops = troops.filter((t) => t.ownerId === tower.id);
-          const pendingRespawns = tower.pendingRespawns || [];
-
-          // Helper to find closest road point within station range
-          const findRoadPoint = (pos: Position): Position => {
-            const path = MAP_PATHS[selectedMap];
-            const secondaryPath = MAP_PATHS[selectedMap + "_b"] || null;
-            if (!path || path.length < 2) return pos;
-
-            // Combine primary and secondary paths if available
-            const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
-
-            let closestPoint: Position = pos;
-            let minDist = Infinity;
-            for (let i = 0; i < fullPath.length - 1; i++) {
-              const p1 = gridToWorldPath(fullPath[i]);
-              const p2 = gridToWorldPath(fullPath[i + 1]);
-              const roadPoint = closestPointOnLine(pos, p1, p2);
-              const dist = distance(pos, roadPoint);
-              if (dist < minDist) {
-                minDist = dist;
-                closestPoint = roadPoint;
-              }
             }
-            return closestPoint;
-          };
 
-          // Process pending respawns - decrement timers and spawn when ready
-          const troopsToSpawn: Troop[] = [];
-          const remainingRespawns: typeof pendingRespawns = [];
-          const stationPos = gridToWorld(tower.pos);
-
-          // Find rally point from existing troops or use road near station
-          const existingRallyTroop = stationTroops.find((t) => t.userTargetPos);
-          const rallyPoint =
-            existingRallyTroop?.userTargetPos || findRoadPoint(stationPos);
-
-          for (const r of pendingRespawns) {
-            const newTimer = r.timer - deltaTime;
-            if (newTimer <= 0) {
-              // Calculate how many troops will exist after this spawn
-              const futureCount =
-                stationTroops.length + troopsToSpawn.length + 1;
-              const formationOffsets = getFormationOffsets(futureCount);
-              const slotOffset = formationOffsets[r.slot] || { x: 0, y: 0 };
-
-              const targetPos = {
-                x: rallyPoint.x + slotOffset.x,
-                y: rallyPoint.y + slotOffset.y,
-              };
-
-              const troopHP =
-                TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp || 100;
-              troopsToSpawn.push({
-                id: generateId("troop"),
-                ownerId: tower.id,
-                pos: stationPos, // Spawn at station
-                hp: troopHP,
-                maxHp: troopHP,
-                moving: true, // Walk to target
-                targetPos: targetPos,
-                lastAttack: 0,
-                type: r.troopType as any,
-                rotation: Math.atan2(
-                  targetPos.y - stationPos.y,
-                  targetPos.x - stationPos.x
-                ),
-                attackAnim: 0,
-                selected: false,
-                spawnPoint: rallyPoint,
-                moveRadius: TOWER_DATA.station.spawnRange || 180,
-                spawnSlot: r.slot,
-                userTargetPos: targetPos,
+            // Level 3+ Grand Club: Slow nearby enemies (greed aura)
+            if (tower.level >= 3) {
+              const auraRange = 100 + tower.level * 20;
+              enemies.forEach((e) => {
+                const enemyPos = getEnemyPosWithPath(e, selectedMap);
+                if (distance(towerWorldPos, enemyPos) <= auraRange) {
+                  const slowAmount = tower.level === 3 ? 0.15 : 0.2;
+                  setEnemies((prev) =>
+                    prev.map((enemy) =>
+                      enemy.id === e.id
+                        ? {
+                          ...enemy,
+                          slowEffect: Math.max(enemy.slowEffect, slowAmount),
+                        }
+                        : enemy
+                    )
+                  );
+                }
               });
-              addParticles(stationPos, "glow", 12);
-              // Don't add to remaining (remove from pending)
-            } else {
-              // Keep in pending with updated timer
-              remainingRespawns.push({ ...r, timer: newTimer });
             }
-          }
 
-          // Spawn any respawning troops
-          if (troopsToSpawn.length > 0) {
-            setTroops((prev) => [...prev, ...troopsToSpawn]);
-          }
-
-          // Total occupied = living troops + pending respawns
-          const totalOccupied = stationTroops.length + remainingRespawns.length;
-          const canSpawn = totalOccupied < MAX_STATION_TROOPS;
-
-          // Find available spawn slot
-          const occupiedSlots = new Set([
-            ...stationTroops.map((t) => t.spawnSlot ?? 0),
-            ...remainingRespawns.map((r) => r.slot),
-          ]);
-          const availableSlot =
-            [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? -1;
-
-          // Train animation
-          const currentProgress = tower.trainAnimProgress || 0;
-
-          if (canSpawn && availableSlot !== -1) {
-            // Train is running - animate it
-            const newProgress = currentProgress + deltaTime / 3000;
-
-            // Check if train just arrived at platform
-            const arrivedAtPlatform =
-              currentProgress < 0.3 && newProgress >= 0.3;
-
-            // Scale station spawn interval with game speed
-            const stationSpawnInterval = gameSpeed > 0 ? 8000 / gameSpeed : 8000;
-            if (arrivedAtPlatform && now - tower.lastAttack > stationSpawnInterval) {
-              // Spawn troop at station, it will walk to formation position
-              const stationPos = gridToWorld(tower.pos);
-
-              // Find rally point from existing troops or use road near station
-              const existingRallyTroop = stationTroops.find(
-                (t) => t.userTargetPos
-              );
-              const rallyPoint =
-                existingRallyTroop?.userTargetPos || findRoadPoint(stationPos);
-
-              // Calculate formation position
-              const futureCount = stationTroops.length + 1;
-              const formationOffsets = getFormationOffsets(futureCount);
-              const slotOffset = formationOffsets[availableSlot] || {
-                x: 0,
-                y: 0,
-              };
-
-              const targetPos = {
-                x: rallyPoint.x + slotOffset.x,
-                y: rallyPoint.y + slotOffset.y,
-              };
-
-              // Determine troop type based on tower level
-              // Level 1: footsoldier, Level 2: armored, Level 3: elite, Level 4A: centaur, Level 4B: cavalry
-              const troopType =
-                tower.level === 1
-                  ? "footsoldier"
-                  : tower.level === 2
-                    ? "armored"
-                    : tower.level === 3
-                      ? "elite"
-                      : tower.upgrade === "A"
-                        ? "centaur"
-                        : "cavalry";
-              const troopHP = TROOP_DATA[troopType]?.hp || 100;
-
-              const newTroop: Troop = {
-                id: generateId("troop"),
-                ownerId: tower.id,
-                pos: stationPos, // Start at station
-                hp: troopHP,
-                maxHp: troopHP,
-                moving: true, // Walk to target
-                targetPos: targetPos,
-                lastAttack: 0,
-                type: troopType,
-                rotation: Math.atan2(
-                  targetPos.y - stationPos.y,
-                  targetPos.x - stationPos.x
-                ),
-                attackAnim: 0,
-                selected: false,
-                spawnPoint: rallyPoint,
-                moveRadius: TOWER_DATA.station.spawnRange || 180,
-                spawnSlot: availableSlot,
-                userTargetPos: targetPos,
-              };
-
-              // Also update existing troops to reposition in new formation
-              setTroops((prev) => {
-                const updated = prev.map((t) => {
-                  if (t.ownerId === tower.id) {
-                    const newFormation = getFormationOffsets(futureCount);
-                    const offset = newFormation[t.spawnSlot] || { x: 0, y: 0 };
-                    const newTarget = {
-                      x: rallyPoint.x + offset.x,
-                      y: rallyPoint.y + offset.y,
-                    };
-                    // Only reposition if not engaging enemies
-                    if (!t.engaging) {
+            // Level 4B Recruitment Center: Buff nearby towers
+            if (tower.level === 4 && tower.upgrade === "B") {
+              const buffRange = 150;
+              setTowers((prev) =>
+                prev.map((t) => {
+                  if (t.id !== tower.id && t.type !== "club") {
+                    const otherPos = gridToWorld(t.pos);
+                    if (distance(towerWorldPos, otherPos) <= buffRange) {
                       return {
                         ...t,
-                        targetPos: newTarget,
-                        moving: true,
-                        userTargetPos: newTarget,
+                        damageBoost: Math.max(t.damageBoost || 1, 1.15),
+                        boostEnd: now + 2000,
                       };
                     }
                   }
                   return t;
-                });
-                return [...updated, newTroop];
-              });
-              addParticles(stationPos, "spark", 10);
-
-              setTowers((prev) =>
-                prev.map((t) =>
-                  t.id === tower.id
-                    ? {
-                      ...t,
-                      lastAttack: now,
-                      trainAnimProgress:
-                        newProgress >= 1 ? 0.01 : newProgress,
-                      currentTroopCount: stationTroops.length + 1,
-                      pendingRespawns: remainingRespawns,
-                    }
-                    : t
-                )
+                })
               );
+            }
+          } else if (tower.type === "library") {
+            let appliedSlow = false;
+            let appliedDamage = false;
+
+            // OPTIMIZED: Batch all library slow/damage effects into a single setEnemies call
+            const slowAmount =
+              tower.level === 1
+                ? 0.2
+                : tower.level === 2
+                  ? 0.35
+                  : tower.level === 3
+                    ? 0.45 // Arcane Library
+                    : 0.5; // Both Earthquake and Blizzard cap at 50%
+
+            // Scale library damage intervals with game speed
+            const libraryDamageInterval = gameSpeed > 0 ? 500 / gameSpeed : 500;
+            const shouldApplyArcaneDamage = tower.level === 3 && now - tower.lastAttack > libraryDamageInterval;
+            // Blizzard freeze: 25% chance every 2 seconds (scaled with game speed, uses separate timer)
+            const blizzardFreezeInterval = gameSpeed > 0 ? 2000 / gameSpeed : 2000;
+            const lastFreezeCheck = tower.lastFreezeCheck || 0;
+            const shouldCheckBlizzardFreeze = tower.level === 4 && tower.upgrade === "B" && now - lastFreezeCheck > blizzardFreezeInterval;
+            const shouldApplyBlizzardFreeze = shouldCheckBlizzardFreeze && Math.random() < 0.25;
+            const shouldApplyEarthquakeDamage = tower.level === 4 && tower.upgrade === "A" && now - tower.lastAttack > libraryDamageInterval;
+            const arcaneDamage = 8 * finalDamageMult;
+            const earthquakeDamage = 35;
+
+            // Collect enemy IDs affected by this tower for batched update
+            const affectedEnemyIds = new Set<string>();
+            const enemyDistances = new Map<string, { dist: number; pos: Position }>();
+
+            for (const e of enemies) {
+              const enemyPos = getEnemyPosWithPath(e, selectedMap);
+              const dist = distance(towerWorldPos, enemyPos);
+              if (dist <= finalRange) {
+                affectedEnemyIds.add(e.id);
+                enemyDistances.set(e.id, { dist, pos: enemyPos });
+                appliedSlow = true;
+              }
+            }
+
+            // Single batched update for all affected enemies
+            if (affectedEnemyIds.size > 0) {
+              let bountyEarned = 0;
+              const particlePositions: Position[] = [];
+              const sparkPositions: Position[] = [];
+
+              setEnemies((prev) =>
+                prev
+                  .map((enemy) => {
+                    if (!affectedEnemyIds.has(enemy.id)) return enemy;
+                    const info = enemyDistances.get(enemy.id)!;
+
+                    let newEnemy = { ...enemy };
+
+                    // Apply slow
+                    newEnemy.slowEffect = slowAmount;
+                    newEnemy.slowed = true;
+                    newEnemy.slowIntensity = slowAmount;
+
+                    // Blizzard freeze
+                    if (shouldApplyBlizzardFreeze) {
+                      newEnemy.frozen = true;
+                      newEnemy.stunUntil = now + 2000;
+                      newEnemy.slowIntensity = 1;
+                    }
+
+                    // Arcane damage
+                    if (shouldApplyArcaneDamage) {
+                      newEnemy.hp -= arcaneDamage;
+                      newEnemy.damageFlash = 80;
+                      appliedDamage = true;
+                      if (newEnemy.hp <= 0) {
+                        bountyEarned += ENEMY_DATA[enemy.type].bounty;
+                        sparkPositions.push(info.pos);
+                        return null as any;
+                      }
+                    }
+
+                    // Earthquake damage
+                    if (shouldApplyEarthquakeDamage) {
+                      newEnemy.hp -= earthquakeDamage;
+                      newEnemy.damageFlash = 150;
+                      newEnemy.slowIntensity = 0.8;
+                      appliedDamage = true;
+                      if (newEnemy.hp <= 0) {
+                        bountyEarned += ENEMY_DATA[enemy.type].bounty;
+                        particlePositions.push(info.pos);
+                        return null as any;
+                      }
+                    }
+
+                    return newEnemy;
+                  })
+                  .filter(Boolean)
+              );
+
+              // Apply bounties and particles outside of setEnemies
+              if (bountyEarned > 0) {
+                setPawPoints((pp) => pp + bountyEarned);
+              }
+              particlePositions.forEach((pos) => addParticles(pos, "explosion", 8));
+              sparkPositions.forEach((pos) => addParticles(pos, "spark", 6));
+            }
+            // Continuous slow field visual effect
+            if (
+              enemies.some(
+                (e) =>
+                  distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
+                  finalRange
+              )
+            ) {
+              const effectType =
+                tower.level === 4 && tower.upgrade === "B"
+                  ? "freezeField"
+                  : tower.level === 4 && tower.upgrade === "A"
+                    ? "earthquakeField"
+                    : tower.level === 3
+                      ? "arcaneField"
+                      : "slowField";
+              // Update or add slow field effect
+              setEffects((ef) => {
+                const existingField = ef.find(
+                  (e) => e.type === effectType && e.towerId === tower.id
+                );
+                if (existingField) {
+                  return ef.map((e) =>
+                    e.id === existingField.id ? { ...e, progress: 0 } : e
+                  );
+                }
+                return [
+                  ...ef,
+                  {
+                    id: generateId("field"),
+                    pos: towerWorldPos,
+                    type: effectType,
+                    progress: 0,
+                    size: finalRange,
+                    towerId: tower.id,
+                    intensity:
+                      tower.level >= 3 ? 1 : tower.level === 2 ? 0.7 : 0.5,
+                  },
+                ];
+              });
+            }
+            // Update tower timers
+            const shouldUpdateLastAttack = (appliedSlow || appliedDamage) && now - tower.lastAttack > libraryDamageInterval;
+            const shouldUpdateFreezeCheck = shouldCheckBlizzardFreeze;
+            if (shouldUpdateLastAttack || shouldUpdateFreezeCheck) {
+              setTowers((prev) =>
+                prev.map((t) => {
+                  if (t.id !== tower.id) return t;
+                  return {
+                    ...t,
+                    lastAttack: shouldUpdateLastAttack ? now : t.lastAttack,
+                    lastFreezeCheck: shouldUpdateFreezeCheck ? now : t.lastFreezeCheck,
+                  };
+                })
+              );
+            }
+          } else if (tower.type === "station") {
+            // Count living troops belonging to this station
+            const stationTroops = troops.filter((t) => t.ownerId === tower.id);
+            const pendingRespawns = tower.pendingRespawns || [];
+
+            // Helper to find closest road point within station range
+            const findRoadPoint = (pos: Position): Position => {
+              const path = MAP_PATHS[selectedMap];
+              const secondaryPath = MAP_PATHS[selectedMap + "_b"] || null;
+              if (!path || path.length < 2) return pos;
+
+              // Combine primary and secondary paths if available
+              const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
+
+              let closestPoint: Position = pos;
+              let minDist = Infinity;
+              for (let i = 0; i < fullPath.length - 1; i++) {
+                const p1 = gridToWorldPath(fullPath[i]);
+                const p2 = gridToWorldPath(fullPath[i + 1]);
+                const roadPoint = closestPointOnLine(pos, p1, p2);
+                const dist = distance(pos, roadPoint);
+                if (dist < minDist) {
+                  minDist = dist;
+                  closestPoint = roadPoint;
+                }
+              }
+              return closestPoint;
+            };
+
+            // Process pending respawns - decrement timers and spawn when ready
+            const troopsToSpawn: Troop[] = [];
+            const remainingRespawns: typeof pendingRespawns = [];
+            const stationPos = gridToWorld(tower.pos);
+
+            // Find rally point from existing troops or use road near station
+            const existingRallyTroop = stationTroops.find((t) => t.userTargetPos);
+            const rallyPoint =
+              existingRallyTroop?.userTargetPos || findRoadPoint(stationPos);
+
+            for (const r of pendingRespawns) {
+              const newTimer = r.timer - deltaTime;
+              if (newTimer <= 0) {
+                // Calculate how many troops will exist after this spawn
+                const futureCount =
+                  stationTroops.length + troopsToSpawn.length + 1;
+                const formationOffsets = getFormationOffsets(futureCount);
+                const slotOffset = formationOffsets[r.slot] || { x: 0, y: 0 };
+
+                const targetPos = {
+                  x: rallyPoint.x + slotOffset.x,
+                  y: rallyPoint.y + slotOffset.y,
+                };
+
+                const troopHP =
+                  TROOP_DATA[r.troopType as keyof typeof TROOP_DATA]?.hp || 100;
+                troopsToSpawn.push({
+                  id: generateId("troop"),
+                  ownerId: tower.id,
+                  pos: stationPos, // Spawn at station
+                  hp: troopHP,
+                  maxHp: troopHP,
+                  moving: true, // Walk to target
+                  targetPos: targetPos,
+                  lastAttack: 0,
+                  type: r.troopType as any,
+                  rotation: Math.atan2(
+                    targetPos.y - stationPos.y,
+                    targetPos.x - stationPos.x
+                  ),
+                  attackAnim: 0,
+                  selected: false,
+                  spawnPoint: rallyPoint,
+                  moveRadius: TOWER_DATA.station.spawnRange || 180,
+                  spawnSlot: r.slot,
+                  userTargetPos: targetPos,
+                });
+                addParticles(stationPos, "glow", 12);
+                // Don't add to remaining (remove from pending)
+              } else {
+                // Keep in pending with updated timer
+                remainingRespawns.push({ ...r, timer: newTimer });
+              }
+            }
+
+            // Spawn any respawning troops
+            if (troopsToSpawn.length > 0) {
+              setTroops((prev) => [...prev, ...troopsToSpawn]);
+            }
+
+            // Total occupied = living troops + pending respawns
+            const totalOccupied = stationTroops.length + remainingRespawns.length;
+            const canSpawn = totalOccupied < MAX_STATION_TROOPS;
+
+            // Find available spawn slot
+            const occupiedSlots = new Set([
+              ...stationTroops.map((t) => t.spawnSlot ?? 0),
+              ...remainingRespawns.map((r) => r.slot),
+            ]);
+            const availableSlot =
+              [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? -1;
+
+            // Train animation
+            const currentProgress = tower.trainAnimProgress || 0;
+
+            if (canSpawn && availableSlot !== -1) {
+              // Train is running - animate it
+              const newProgress = currentProgress + deltaTime / 3000;
+
+              // Check if train just arrived at platform
+              const arrivedAtPlatform =
+                currentProgress < 0.3 && newProgress >= 0.3;
+
+              // Scale station spawn interval with game speed
+              const stationSpawnInterval = gameSpeed > 0 ? 8000 / gameSpeed : 8000;
+              if (arrivedAtPlatform && now - tower.lastAttack > stationSpawnInterval) {
+                // Spawn troop at station, it will walk to formation position
+                const stationPos = gridToWorld(tower.pos);
+
+                // Find rally point from existing troops or use road near station
+                const existingRallyTroop = stationTroops.find(
+                  (t) => t.userTargetPos
+                );
+                const rallyPoint =
+                  existingRallyTroop?.userTargetPos || findRoadPoint(stationPos);
+
+                // Calculate formation position
+                const futureCount = stationTroops.length + 1;
+                const formationOffsets = getFormationOffsets(futureCount);
+                const slotOffset = formationOffsets[availableSlot] || {
+                  x: 0,
+                  y: 0,
+                };
+
+                const targetPos = {
+                  x: rallyPoint.x + slotOffset.x,
+                  y: rallyPoint.y + slotOffset.y,
+                };
+
+                // Determine troop type based on tower level
+                // Level 1: footsoldier, Level 2: armored, Level 3: elite, Level 4A: centaur, Level 4B: cavalry
+                const troopType =
+                  tower.level === 1
+                    ? "footsoldier"
+                    : tower.level === 2
+                      ? "armored"
+                      : tower.level === 3
+                        ? "elite"
+                        : tower.upgrade === "A"
+                          ? "centaur"
+                          : "cavalry";
+                const troopHP = TROOP_DATA[troopType]?.hp || 100;
+
+                const newTroop: Troop = {
+                  id: generateId("troop"),
+                  ownerId: tower.id,
+                  pos: stationPos, // Start at station
+                  hp: troopHP,
+                  maxHp: troopHP,
+                  moving: true, // Walk to target
+                  targetPos: targetPos,
+                  lastAttack: 0,
+                  type: troopType,
+                  rotation: Math.atan2(
+                    targetPos.y - stationPos.y,
+                    targetPos.x - stationPos.x
+                  ),
+                  attackAnim: 0,
+                  selected: false,
+                  spawnPoint: rallyPoint,
+                  moveRadius: TOWER_DATA.station.spawnRange || 180,
+                  spawnSlot: availableSlot,
+                  userTargetPos: targetPos,
+                };
+
+                // Also update existing troops to reposition in new formation
+                setTroops((prev) => {
+                  const updated = prev.map((t) => {
+                    if (t.ownerId === tower.id) {
+                      const newFormation = getFormationOffsets(futureCount);
+                      const offset = newFormation[t.spawnSlot] || { x: 0, y: 0 };
+                      const newTarget = {
+                        x: rallyPoint.x + offset.x,
+                        y: rallyPoint.y + offset.y,
+                      };
+                      // Only reposition if not engaging enemies
+                      if (!t.engaging) {
+                        return {
+                          ...t,
+                          targetPos: newTarget,
+                          moving: true,
+                          userTargetPos: newTarget,
+                        };
+                      }
+                    }
+                    return t;
+                  });
+                  return [...updated, newTroop];
+                });
+                addParticles(stationPos, "spark", 10);
+
+                setTowers((prev) =>
+                  prev.map((t) =>
+                    t.id === tower.id
+                      ? {
+                        ...t,
+                        lastAttack: now,
+                        trainAnimProgress:
+                          newProgress >= 1 ? 0.01 : newProgress,
+                        currentTroopCount: stationTroops.length + 1,
+                        pendingRespawns: remainingRespawns,
+                      }
+                      : t
+                  )
+                );
+              } else {
+                // Just animate the train and update respawns
+                setTowers((prev) =>
+                  prev.map((t) =>
+                    t.id === tower.id
+                      ? {
+                        ...t,
+                        trainAnimProgress:
+                          newProgress >= 1 ? 0.01 : newProgress,
+                        currentTroopCount: stationTroops.length,
+                        pendingRespawns: remainingRespawns,
+                      }
+                      : t
+                  )
+                );
+              }
             } else {
-              // Just animate the train and update respawns
+              // At max capacity - park train at platform
               setTowers((prev) =>
                 prev.map((t) =>
                   t.id === tower.id
                     ? {
                       ...t,
-                      trainAnimProgress:
-                        newProgress >= 1 ? 0.01 : newProgress,
+                      trainAnimProgress: 0.35,
                       currentTroopCount: stationTroops.length,
                       pendingRespawns: remainingRespawns,
                     }
@@ -2357,45 +2401,352 @@ export default function PrincetonTowerDefense() {
                 )
               );
             }
-          } else {
-            // At max capacity - park train at platform
-            setTowers((prev) =>
-              prev.map((t) =>
-                t.id === tower.id
-                  ? {
-                    ...t,
-                    trainAnimProgress: 0.35,
-                    currentTroopCount: stationTroops.length,
-                    pendingRespawns: remainingRespawns,
+          } else if (tower.type === "cannon") {
+            // Level 3: Heavy Cannon - increased damage and minor splash
+            // Level 4A: Gatling gun - rapid fire
+            // Level 4B: Flamethrower - continuous damage with burn
+            const isHeavyCannon = tower.level === 3;
+            const isGatling = tower.level === 4 && tower.upgrade === "A";
+            const isFlamethrower = tower.level === 4 && tower.upgrade === "B";
+            const attackCooldown = isGatling
+              ? 150 // Gatling is 8x faster
+              : isFlamethrower
+                ? 100 // Flamethrower is continuous
+                : isHeavyCannon
+                  ? 900 // Heavy cannon slightly slower but more damage
+                  : tData.attackSpeed;
+            // Scale attack cooldown with game speed
+            const effectiveAttackCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+            if (now - tower.lastAttack > effectiveAttackCooldown) {
+              const validEnemies = enemies
+                .filter(
+                  (e) =>
+                    distance(
+                      towerWorldPos,
+                      getEnemyPosWithPath(e, selectedMap)
+                    ) <= finalRange
+                )
+                .sort(
+                  (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
+                );
+              if (validEnemies.length > 0) {
+                const target = validEnemies[0];
+                const targetPos = getEnemyPosWithPath(target, selectedMap);
+                let damage = tData.damage * finalDamageMult;
+                if (tower.level === 2) damage *= 1.5;
+                if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
+                if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
+                if (isFlamethrower) damage *= 0.3; // DoT damage
+                // Apply damage
+                setEnemies((prev) =>
+                  prev
+                    .map((e) => {
+                      if (e.id === target.id) {
+                        const newHp =
+                          e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
+                        const updates: any = { hp: newHp, damageFlash: 100 };
+                        // Flamethrower applies burn
+                        if (isFlamethrower) {
+                          updates.burning = true;
+                          updates.burnDamage = 15;
+                          updates.burnUntil = now + 3000;
+                        }
+                        if (newHp <= 0) {
+                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          addParticles(targetPos, "explosion", 12);
+                          return null as any;
+                        }
+                        return { ...e, ...updates };
+                      }
+                      return e;
+                    })
+                    .filter(Boolean)
+                );
+                // Simple rotation calculation - renderer handles visual adjustments
+                const dx = targetPos.x - towerWorldPos.x;
+                const dy = targetPos.y - towerWorldPos.y;
+                const rotation = Math.atan2(dy, dx);
+                setTowers((prev) =>
+                  prev.map((t) =>
+                    t.id === tower.id
+                      ? { ...t, lastAttack: now, rotation, target: target.id }
+                      : t
+                  )
+                );
+                // Create cannon shot effect - renderer will position from turret
+                const effectType = isFlamethrower
+                  ? "flame_burst"
+                  : isGatling
+                    ? "bullet_stream"
+                    : "cannon_shot";
+                setEffects((ef) => [
+                  ...ef,
+                  {
+                    id: generateId("cannon"),
+                    pos: towerWorldPos, // Use tower base, renderer adjusts to turret
+                    type: effectType,
+                    progress: 0,
+                    size: distance(towerWorldPos, targetPos),
+                    targetPos,
+                    towerId: tower.id,
+                    towerLevel: tower.level,
+                    towerUpgrade: tower.upgrade,
+                    rotation,
+                  },
+                ]);
+                // Add particles at tower position
+                if (!isFlamethrower) {
+                  addParticles(towerWorldPos, "smoke", 2);
+                }
+              }
+            }
+          } else if (tower.type === "lab") {
+            // Level 3: Tesla Coil - chains to 2 targets
+            // Level 4A: Focused Beam - continuous lock-on with increasing damage
+            // Level 4B: Chain Lightning - hits up to 5 targets
+            const isTeslaCoil = tower.level === 3;
+            const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
+            const isChainLightning = tower.level === 4 && tower.upgrade === "B";
+            const attackCooldown = isFocusedBeam ? 100 : tData.attackSpeed;
+            // Scale attack cooldown with game speed
+            const effectiveLabCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+            if (now - tower.lastAttack > effectiveLabCooldown) {
+              const validEnemies = enemies
+                .filter(
+                  (e) =>
+                    distance(
+                      towerWorldPos,
+                      getEnemyPosWithPath(e, selectedMap)
+                    ) <= finalRange
+                )
+                .sort(
+                  (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
+                );
+              if (validEnemies.length > 0) {
+                const target = validEnemies[0];
+                const targetPos = getEnemyPosWithPath(target, selectedMap);
+                let damage = tData.damage * finalDamageMult;
+                if (tower.level === 2) damage *= 1.5;
+                if (tower.level >= 3) damage *= 2; // Level 3 and 4 get 2x base damage
+                if (tower.level === 4) damage *= 1.3; // Level 4 gets additional bonus
+                if (isFocusedBeam) damage *= 0.15; // Continuous beam
+                // Chain targets: Tesla Coil = 2, Chain Lightning = 5
+                const numChainTargets = isChainLightning
+                  ? 5
+                  : isTeslaCoil
+                    ? 2
+                    : 1;
+                const chainTargets =
+                  isTeslaCoil || isChainLightning
+                    ? validEnemies.slice(0, numChainTargets)
+                    : [target];
+                const chainDamage =
+                  isTeslaCoil || isChainLightning ? damage * 0.7 : damage;
+                setEnemies((prev) =>
+                  prev
+                    .map((e) => {
+                      const isChainTarget = chainTargets.find(
+                        (t) => t.id === e.id
+                      );
+                      if (isChainTarget) {
+                        const newHp =
+                          e.hp - chainDamage * (1 - ENEMY_DATA[e.type].armor);
+                        if (newHp <= 0) {
+                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          addParticles(
+                            getEnemyPosWithPath(e, selectedMap),
+                            "explosion",
+                            8
+                          );
+                          return null as any;
+                        }
+                        return { ...e, hp: newHp, damageFlash: 150 };
+                      }
+                      return e;
+                    })
+                    .filter(Boolean)
+                );
+                const dx = targetPos.x - towerWorldPos.x;
+                const dy = targetPos.y - towerWorldPos.y;
+                const rotation = Math.atan2(dy, dx);
+                setTowers((prev) =>
+                  prev.map((t) =>
+                    t.id === tower.id
+                      ? { ...t, lastAttack: now, rotation, target: target.id }
+                      : t
+                  )
+                );
+                // Tesla coil position at top of tower - must match visual rendering
+                // In renderer: baseHeight = 25 + level * 8, coilHeight = 35 + level * 8
+                // orbY = topY - coilHeight + 5 = -(baseHeight + coilHeight - 5)
+                if (isTeslaCoil || isChainLightning) {
+                  // Draw chain lightning between all targets
+                  chainTargets.forEach((chainTarget, i) => {
+                    const chainPos = getEnemyPosWithPath(
+                      chainTarget,
+                      selectedMap
+                    );
+                    const fromPos =
+                      i === 0
+                        ? towerWorldPos // Use tower base position, renderer will adjust to orb
+                        : getEnemyPosWithPath(chainTargets[i - 1], selectedMap);
+                    setEffects((ef) => [
+                      ...ef,
+                      {
+                        id: generateId("chain"),
+                        pos: fromPos,
+                        type: "chain",
+                        progress: 0,
+                        size: distance(fromPos, chainPos),
+                        targetPos: chainPos,
+                        intensity: 1 - i * 0.15, // Fade with each jump
+                        towerId: i === 0 ? tower.id : undefined,
+                        towerLevel: tower.level,
+                        towerUpgrade: tower.upgrade,
+                      },
+                    ]);
+                  });
+                } else {
+                  setEffects((ef) => [
+                    ...ef,
+                    {
+                      id: generateId("zap"),
+                      pos: towerWorldPos, // Use tower base position, renderer will adjust to orb
+                      type: isFocusedBeam ? "beam" : "lightning",
+                      progress: 0,
+                      size: distance(towerWorldPos, targetPos),
+                      targetPos,
+                      intensity: isFocusedBeam ? 0.8 : 1,
+                      towerId: tower.id,
+                      towerLevel: tower.level,
+                      towerUpgrade: tower.upgrade,
+                    },
+                  ]);
+                }
+                // Add spark particles at tower position
+                addParticles(towerWorldPos, "spark", 3);
+              }
+            }
+          } else if (tower.type === "arch") {
+            // Arch tower - sonic attacks
+            // Level 3: Elite Archers - faster attack, hits 2 targets
+            // Level 4A: Shockwave - stun chance
+            // Level 4B: Symphony - hits up to 5 targets
+            const isEliteArchers = tower.level === 3;
+            const isShockwave = tower.level === 4 && tower.upgrade === "A"; // Stun chance
+            const isSymphony = tower.level === 4 && tower.upgrade === "B"; // Multi-target
+            const attackSpeed = isEliteArchers
+              ? tData.attackSpeed * 0.7
+              : tData.attackSpeed;
+            // Scale attack cooldown with game speed
+            const effectiveArcherSpeed = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
+            if (now - tower.lastAttack > effectiveArcherSpeed) {
+              const validEnemies = enemies
+                .filter(
+                  (e) =>
+                    distance(
+                      towerWorldPos,
+                      getEnemyPosWithPath(e, selectedMap)
+                    ) <= finalRange
+                )
+                .sort(
+                  (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
+                );
+              if (validEnemies.length > 0) {
+                // Level 1: single target, Level 2: 2 targets, Level 3 Elite: 3 targets, Level 4 Symphony: 5 targets
+                const numTargets = isSymphony
+                  ? 5
+                  : isEliteArchers
+                    ? 3
+                    : tower.level >= 2
+                      ? 2
+                      : 1;
+                const targets = validEnemies.slice(0, numTargets);
+                let damage = tData.damage * finalDamageMult;
+                if (tower.level === 2) damage *= 1.5;
+                if (tower.level >= 3) damage *= 2;
+                if (tower.level === 4) damage *= 1.25; // Additional level 4 bonus
+                setEnemies((prev) =>
+                  prev
+                    .map((e) => {
+                      const isTarget = targets.find((t) => t.id === e.id);
+                      if (isTarget) {
+                        const targetPos = getEnemyPosWithPath(e, selectedMap);
+                        const newHp =
+                          e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
+                        const updates: any = { hp: newHp, damageFlash: 150 };
+                        // Shockwave has 30% stun chance
+                        if (isShockwave && Math.random() < 0.3) {
+                          updates.stunUntil = now + 1000;
+                        }
+                        if (newHp <= 0) {
+                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          addParticles(targetPos, "explosion", 10);
+                          return null as any;
+                        }
+                        return { ...e, ...updates };
+                      }
+                      return e;
+                    })
+                    .filter(Boolean)
+                );
+                const target = targets[0];
+                const targetPos = getEnemyPosWithPath(target, selectedMap);
+                const dx = targetPos.x - towerWorldPos.x;
+                const dy = targetPos.y - towerWorldPos.y;
+                const rotation = Math.atan2(dy, dx);
+                setTowers((prev) =>
+                  prev.map((t) =>
+                    t.id === tower.id
+                      ? { ...t, lastAttack: now, rotation, target: target.id }
+                      : t
+                  )
+                );
+                setEffects((ef) => [
+                  ...ef,
+                  {
+                    id: generateId("sonic"),
+                    pos: towerWorldPos,
+                    type: "sonic",
+                    progress: 0,
+                    size: finalRange,
+                  },
+                ]);
+                // Create music note cluster effects to each target
+                targets.forEach((target, i) => {
+                  const targetPos = getEnemyPosWithPath(target, selectedMap);
+                  // Create multiple note projectiles per target
+                  for (let n = 0; n < 3 + tower.level; n++) {
+                    setEffects((ef) => [
+                      ...ef,
+                      {
+                        id: generateId("note"),
+                        pos: towerWorldPos,
+                        type: "music_notes",
+                        progress: 0,
+                        size: distance(towerWorldPos, targetPos),
+                        targetPos,
+                        intensity: 1 - i * 0.1,
+                        towerId: tower.id,
+                        towerLevel: tower.level,
+                        towerUpgrade: tower.upgrade,
+                        noteIndex: n, // Different note variations
+                      },
+                    ]);
                   }
-                  : t
-              )
-            );
-          }
-        } else if (tower.type === "cannon") {
-          // Level 3: Heavy Cannon - increased damage and minor splash
-          // Level 4A: Gatling gun - rapid fire
-          // Level 4B: Flamethrower - continuous damage with burn
-          const isHeavyCannon = tower.level === 3;
-          const isGatling = tower.level === 4 && tower.upgrade === "A";
-          const isFlamethrower = tower.level === 4 && tower.upgrade === "B";
-          const attackCooldown = isGatling
-            ? 150 // Gatling is 8x faster
-            : isFlamethrower
-              ? 100 // Flamethrower is continuous
-              : isHeavyCannon
-                ? 900 // Heavy cannon slightly slower but more damage
-                : tData.attackSpeed;
-          // Scale attack cooldown with game speed
-          const effectiveAttackCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
-          if (now - tower.lastAttack > effectiveAttackCooldown) {
+                });
+              }
+            }
+          } else if (
+            tData.attackSpeed > 0 &&
+            now - tower.lastAttack > (gameSpeed > 0 ? tData.attackSpeed / gameSpeed : tData.attackSpeed)
+          ) {
+            // Generic tower attack (fallback)
             const validEnemies = enemies
               .filter(
                 (e) =>
-                  distance(
-                    towerWorldPos,
-                    getEnemyPosWithPath(e, selectedMap)
-                  ) <= finalRange
+                  distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
+                  finalRange
               )
               .sort(
                 (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
@@ -2405,35 +2756,34 @@ export default function PrincetonTowerDefense() {
               const targetPos = getEnemyPosWithPath(target, selectedMap);
               let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
-              if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
-              if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
-              if (isFlamethrower) damage *= 0.3; // DoT damage
-              // Apply damage
+              if (tower.level === 3) damage *= 2;
               setEnemies((prev) =>
                 prev
                   .map((e) => {
                     if (e.id === target.id) {
                       const newHp =
                         e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
-                      const updates: any = { hp: newHp, damageFlash: 100 };
-                      // Flamethrower applies burn
-                      if (isFlamethrower) {
-                        updates.burning = true;
-                        updates.burnDamage = 15;
-                        updates.burnUntil = now + 3000;
-                      }
                       if (newHp <= 0) {
                         setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
                         addParticles(targetPos, "explosion", 12);
+                        setEffects((ef) => [
+                          ...ef,
+                          {
+                            id: generateId("eff"),
+                            pos: targetPos,
+                            type: "explosion",
+                            progress: 0,
+                            size: 30,
+                          },
+                        ]);
                         return null as any;
                       }
-                      return { ...e, ...updates };
+                      return { ...e, hp: newHp, damageFlash: 200 };
                     }
                     return e;
                   })
                   .filter(Boolean)
               );
-              // Simple rotation calculation - renderer handles visual adjustments
               const dx = targetPos.x - towerWorldPos.x;
               const dy = targetPos.y - towerWorldPos.y;
               const rotation = Math.atan2(dy, dx);
@@ -2444,342 +2794,21 @@ export default function PrincetonTowerDefense() {
                     : t
                 )
               );
-              // Create cannon shot effect - renderer will position from turret
-              const effectType = isFlamethrower
-                ? "flame_burst"
-                : isGatling
-                  ? "bullet_stream"
-                  : "cannon_shot";
-              setEffects((ef) => [
-                ...ef,
+              setProjectiles((prev) => [
+                ...prev,
                 {
-                  id: generateId("cannon"),
-                  pos: towerWorldPos, // Use tower base, renderer adjusts to turret
-                  type: effectType,
+                  id: generateId("proj"),
+                  from: towerWorldPos,
+                  to: targetPos,
                   progress: 0,
-                  size: distance(towerWorldPos, targetPos),
-                  targetPos,
-                  towerId: tower.id,
-                  towerLevel: tower.level,
-                  towerUpgrade: tower.upgrade,
+                  type: tower.type,
                   rotation,
                 },
               ]);
-              // Add particles at tower position
-              if (!isFlamethrower) {
-                addParticles(towerWorldPos, "smoke", 2);
-              }
+              addParticles(towerWorldPos, "smoke", 3);
             }
           }
-        } else if (tower.type === "lab") {
-          // Level 3: Tesla Coil - chains to 2 targets
-          // Level 4A: Focused Beam - continuous lock-on with increasing damage
-          // Level 4B: Chain Lightning - hits up to 5 targets
-          const isTeslaCoil = tower.level === 3;
-          const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
-          const isChainLightning = tower.level === 4 && tower.upgrade === "B";
-          const attackCooldown = isFocusedBeam ? 100 : tData.attackSpeed;
-          // Scale attack cooldown with game speed
-          const effectiveLabCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
-          if (now - tower.lastAttack > effectiveLabCooldown) {
-            const validEnemies = enemies
-              .filter(
-                (e) =>
-                  distance(
-                    towerWorldPos,
-                    getEnemyPosWithPath(e, selectedMap)
-                  ) <= finalRange
-              )
-              .sort(
-                (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
-              );
-            if (validEnemies.length > 0) {
-              const target = validEnemies[0];
-              const targetPos = getEnemyPosWithPath(target, selectedMap);
-              let damage = tData.damage * finalDamageMult;
-              if (tower.level === 2) damage *= 1.5;
-              if (tower.level >= 3) damage *= 2; // Level 3 and 4 get 2x base damage
-              if (tower.level === 4) damage *= 1.3; // Level 4 gets additional bonus
-              if (isFocusedBeam) damage *= 0.15; // Continuous beam
-              // Chain targets: Tesla Coil = 2, Chain Lightning = 5
-              const numChainTargets = isChainLightning
-                ? 5
-                : isTeslaCoil
-                  ? 2
-                  : 1;
-              const chainTargets =
-                isTeslaCoil || isChainLightning
-                  ? validEnemies.slice(0, numChainTargets)
-                  : [target];
-              const chainDamage =
-                isTeslaCoil || isChainLightning ? damage * 0.7 : damage;
-              setEnemies((prev) =>
-                prev
-                  .map((e) => {
-                    const isChainTarget = chainTargets.find(
-                      (t) => t.id === e.id
-                    );
-                    if (isChainTarget) {
-                      const newHp =
-                        e.hp - chainDamage * (1 - ENEMY_DATA[e.type].armor);
-                      if (newHp <= 0) {
-                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                        addParticles(
-                          getEnemyPosWithPath(e, selectedMap),
-                          "explosion",
-                          8
-                        );
-                        return null as any;
-                      }
-                      return { ...e, hp: newHp, damageFlash: 150 };
-                    }
-                    return e;
-                  })
-                  .filter(Boolean)
-              );
-              const dx = targetPos.x - towerWorldPos.x;
-              const dy = targetPos.y - towerWorldPos.y;
-              const rotation = Math.atan2(dy, dx);
-              setTowers((prev) =>
-                prev.map((t) =>
-                  t.id === tower.id
-                    ? { ...t, lastAttack: now, rotation, target: target.id }
-                    : t
-                )
-              );
-              // Tesla coil position at top of tower - must match visual rendering
-              // In renderer: baseHeight = 25 + level * 8, coilHeight = 35 + level * 8
-              // orbY = topY - coilHeight + 5 = -(baseHeight + coilHeight - 5)
-              if (isTeslaCoil || isChainLightning) {
-                // Draw chain lightning between all targets
-                chainTargets.forEach((chainTarget, i) => {
-                  const chainPos = getEnemyPosWithPath(
-                    chainTarget,
-                    selectedMap
-                  );
-                  const fromPos =
-                    i === 0
-                      ? towerWorldPos // Use tower base position, renderer will adjust to orb
-                      : getEnemyPosWithPath(chainTargets[i - 1], selectedMap);
-                  setEffects((ef) => [
-                    ...ef,
-                    {
-                      id: generateId("chain"),
-                      pos: fromPos,
-                      type: "chain",
-                      progress: 0,
-                      size: distance(fromPos, chainPos),
-                      targetPos: chainPos,
-                      intensity: 1 - i * 0.15, // Fade with each jump
-                      towerId: i === 0 ? tower.id : undefined,
-                      towerLevel: tower.level,
-                      towerUpgrade: tower.upgrade,
-                    },
-                  ]);
-                });
-              } else {
-                setEffects((ef) => [
-                  ...ef,
-                  {
-                    id: generateId("zap"),
-                    pos: towerWorldPos, // Use tower base position, renderer will adjust to orb
-                    type: isFocusedBeam ? "beam" : "lightning",
-                    progress: 0,
-                    size: distance(towerWorldPos, targetPos),
-                    targetPos,
-                    intensity: isFocusedBeam ? 0.8 : 1,
-                    towerId: tower.id,
-                    towerLevel: tower.level,
-                    towerUpgrade: tower.upgrade,
-                  },
-                ]);
-              }
-              // Add spark particles at tower position
-              addParticles(towerWorldPos, "spark", 3);
-            }
-          }
-        } else if (tower.type === "arch") {
-          // Arch tower - sonic attacks
-          // Level 3: Elite Archers - faster attack, hits 2 targets
-          // Level 4A: Shockwave - stun chance
-          // Level 4B: Symphony - hits up to 5 targets
-          const isEliteArchers = tower.level === 3;
-          const isShockwave = tower.level === 4 && tower.upgrade === "A"; // Stun chance
-          const isSymphony = tower.level === 4 && tower.upgrade === "B"; // Multi-target
-          const attackSpeed = isEliteArchers
-            ? tData.attackSpeed * 0.7
-            : tData.attackSpeed;
-          // Scale attack cooldown with game speed
-          const effectiveArcherSpeed = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
-          if (now - tower.lastAttack > effectiveArcherSpeed) {
-            const validEnemies = enemies
-              .filter(
-                (e) =>
-                  distance(
-                    towerWorldPos,
-                    getEnemyPosWithPath(e, selectedMap)
-                  ) <= finalRange
-              )
-              .sort(
-                (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
-              );
-            if (validEnemies.length > 0) {
-              // Level 1: single target, Level 2: 2 targets, Level 3 Elite: 3 targets, Level 4 Symphony: 5 targets
-              const numTargets = isSymphony
-                ? 5
-                : isEliteArchers
-                  ? 3
-                  : tower.level >= 2
-                    ? 2
-                    : 1;
-              const targets = validEnemies.slice(0, numTargets);
-              let damage = tData.damage * finalDamageMult;
-              if (tower.level === 2) damage *= 1.5;
-              if (tower.level >= 3) damage *= 2;
-              if (tower.level === 4) damage *= 1.25; // Additional level 4 bonus
-              setEnemies((prev) =>
-                prev
-                  .map((e) => {
-                    const isTarget = targets.find((t) => t.id === e.id);
-                    if (isTarget) {
-                      const targetPos = getEnemyPosWithPath(e, selectedMap);
-                      const newHp =
-                        e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
-                      const updates: any = { hp: newHp, damageFlash: 150 };
-                      // Shockwave has 30% stun chance
-                      if (isShockwave && Math.random() < 0.3) {
-                        updates.stunUntil = now + 1000;
-                      }
-                      if (newHp <= 0) {
-                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                        addParticles(targetPos, "explosion", 10);
-                        return null as any;
-                      }
-                      return { ...e, ...updates };
-                    }
-                    return e;
-                  })
-                  .filter(Boolean)
-              );
-              const target = targets[0];
-              const targetPos = getEnemyPosWithPath(target, selectedMap);
-              const dx = targetPos.x - towerWorldPos.x;
-              const dy = targetPos.y - towerWorldPos.y;
-              const rotation = Math.atan2(dy, dx);
-              setTowers((prev) =>
-                prev.map((t) =>
-                  t.id === tower.id
-                    ? { ...t, lastAttack: now, rotation, target: target.id }
-                    : t
-                )
-              );
-              setEffects((ef) => [
-                ...ef,
-                {
-                  id: generateId("sonic"),
-                  pos: towerWorldPos,
-                  type: "sonic",
-                  progress: 0,
-                  size: finalRange,
-                },
-              ]);
-              // Create music note cluster effects to each target
-              targets.forEach((target, i) => {
-                const targetPos = getEnemyPosWithPath(target, selectedMap);
-                // Create multiple note projectiles per target
-                for (let n = 0; n < 3 + tower.level; n++) {
-                  setEffects((ef) => [
-                    ...ef,
-                    {
-                      id: generateId("note"),
-                      pos: towerWorldPos,
-                      type: "music_notes",
-                      progress: 0,
-                      size: distance(towerWorldPos, targetPos),
-                      targetPos,
-                      intensity: 1 - i * 0.1,
-                      towerId: tower.id,
-                      towerLevel: tower.level,
-                      towerUpgrade: tower.upgrade,
-                      noteIndex: n, // Different note variations
-                    },
-                  ]);
-                }
-              });
-            }
-          }
-        } else if (
-          tData.attackSpeed > 0 &&
-          now - tower.lastAttack > (gameSpeed > 0 ? tData.attackSpeed / gameSpeed : tData.attackSpeed)
-        ) {
-          // Generic tower attack (fallback)
-          const validEnemies = enemies
-            .filter(
-              (e) =>
-                distance(towerWorldPos, getEnemyPosWithPath(e, selectedMap)) <=
-                finalRange
-            )
-            .sort(
-              (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
-            );
-          if (validEnemies.length > 0) {
-            const target = validEnemies[0];
-            const targetPos = getEnemyPosWithPath(target, selectedMap);
-            let damage = tData.damage * finalDamageMult;
-            if (tower.level === 2) damage *= 1.5;
-            if (tower.level === 3) damage *= 2;
-            setEnemies((prev) =>
-              prev
-                .map((e) => {
-                  if (e.id === target.id) {
-                    const newHp =
-                      e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
-                    if (newHp <= 0) {
-                      setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                      addParticles(targetPos, "explosion", 12);
-                      setEffects((ef) => [
-                        ...ef,
-                        {
-                          id: generateId("eff"),
-                          pos: targetPos,
-                          type: "explosion",
-                          progress: 0,
-                          size: 30,
-                        },
-                      ]);
-                      return null as any;
-                    }
-                    return { ...e, hp: newHp, damageFlash: 200 };
-                  }
-                  return e;
-                })
-                .filter(Boolean)
-            );
-            const dx = targetPos.x - towerWorldPos.x;
-            const dy = targetPos.y - towerWorldPos.y;
-            const rotation = Math.atan2(dy, dx);
-            setTowers((prev) =>
-              prev.map((t) =>
-                t.id === tower.id
-                  ? { ...t, lastAttack: now, rotation, target: target.id }
-                  : t
-              )
-            );
-            setProjectiles((prev) => [
-              ...prev,
-              {
-                id: generateId("proj"),
-                from: towerWorldPos,
-                to: targetPos,
-                progress: 0,
-                type: tower.type,
-                rotation,
-              },
-            ]);
-            addParticles(towerWorldPos, "smoke", 3);
-          }
-        }
-      });
+        });
       } // End of !isPaused check for tower attacks
       // Hero attacks - skip when paused
       if (!isPaused && hero && !hero.dead && hero.attackAnim === 0) {
@@ -2859,89 +2888,95 @@ export default function PrincetonTowerDefense() {
       }
       // Troop attacks - with ranged support for centaurs and turrets - skip when paused
       if (!isPaused) {
-      troops.forEach((troop) => {
-        if (!troop.type) return; // Skip troops without a type
-        const troopData = TROOP_DATA[troop.type];
-        if (!troopData) return; // Skip if troop data not found
-        const attackRange = troopData.isRanged ? troopData.range || 150 : 65;
-        const attackCooldown = troopData.attackSpeed || 1000;
-        // Scale troop attack cooldown with game speed
-        const effectiveTroopCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
-        const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
-        if (
-          (troop.attackAnim ?? 0) === 0 &&
-          now - lastAttack > effectiveTroopCooldown
-        ) {
-          const validEnemies = enemies.filter(
-            (e) =>
-              distance(troop.pos, getEnemyPosWithPath(e, selectedMap)) <=
-              attackRange && !ENEMY_DATA[e.type].flying
-          );
-          if (validEnemies.length > 0) {
-            const target = validEnemies[0];
-            const targetPos = getEnemyPosWithPath(target, selectedMap);
-            const troopDamage = troopData.damage || 20;
-            const dx = targetPos.x - troop.pos.x;
-            const dy = targetPos.y - troop.pos.y;
-            const rotation = Math.atan2(dy, dx);
-            // Apply damage immediately (projectile is just visual)
-            setEnemies((prev) =>
-              prev
-                .map((e) => {
-                  if (e.id === target.id) {
-                    const newHp = e.hp - troopDamage;
-                    if (newHp <= 0) {
-                      setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                      addParticles(targetPos, "explosion", 8);
-                      setEffects((ef) => [
-                        ...ef,
+        troops.forEach((troop) => {
+          if (!troop.type) return; // Skip troops without a type
+          const troopData = TROOP_DATA[troop.type];
+          if (!troopData) return; // Skip if troop data not found
+          const attackRange = troopData.isRanged ? troopData.range || 150 : 65;
+          const attackCooldown = troopData.attackSpeed || 1000;
+          // Scale troop attack cooldown with game speed
+          const effectiveTroopCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+          const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
+          if (
+            (troop.attackAnim ?? 0) === 0 &&
+            now - lastAttack > effectiveTroopCooldown
+          ) {
+            const validEnemies = enemies.filter(
+              (e) =>
+                distance(troop.pos, getEnemyPosWithPath(e, selectedMap)) <=
+                attackRange && !ENEMY_DATA[e.type].flying
+            );
+            if (validEnemies.length > 0) {
+              const target = validEnemies[0];
+              const targetPos = getEnemyPosWithPath(target, selectedMap);
+              const troopDamage = troopData.damage || 20;
+              const dx = targetPos.x - troop.pos.x;
+              const dy = targetPos.y - troop.pos.y;
+              const rotation = Math.atan2(dy, dx);
+              // Apply damage immediately (projectile is just visual)
+              setEnemies((prev) =>
+                prev
+                  .map((e) => {
+                    if (e.id === target.id) {
+                      const newHp = e.hp - troopDamage;
+                      if (newHp <= 0) {
+                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                        addParticles(targetPos, "explosion", 8);
+                        setEffects((ef) => [
+                          ...ef,
+                          {
+                            id: generateId("eff"),
+                            pos: targetPos,
+                            type: "explosion",
+                            progress: 0,
+                            size: 20,
+                          },
+                        ]);
+                        return null as any;
+                      }
+                      return { ...e, hp: newHp, damageFlash: 200 };
+                    }
+                    return e;
+                  })
+                  .filter(Boolean)
+              );
+              // Update troop state and create projectile from CURRENT position
+              // (not the stale position from outer troops state)
+              setTroops((prev) =>
+                prev.map((t) => {
+                  if (t.id === troop.id) {
+                    // For ranged troops (centaurs/turrets), create a projectile visual
+                    // using the CURRENT troop position from this callback
+                    if (troopData.isRanged) {
+                      const projType = t.type === "turret" ? "bullet" : "spear";
+                      // For centaurs, spawn arrow from bow position (upper body)
+                      // The bow is at approximately y - 20 pixels from center
+                      const spawnOffset = t.type === "centaur" ? { x: 0, y: -20 } : { x: 0, y: 0 };
+                      setProjectiles((prevProj) => [
+                        ...prevProj,
                         {
-                          id: generateId("eff"),
-                          pos: targetPos,
-                          type: "explosion",
+                          id: generateId("proj"),
+                          from: { x: t.pos.x + spawnOffset.x, y: t.pos.y + spawnOffset.y },
+                          to: targetPos,
                           progress: 0,
-                          size: 20,
+                          type: projType,
+                          rotation,
                         },
                       ]);
-                      return null as any;
                     }
-                    return { ...e, hp: newHp, damageFlash: 200 };
+                    return {
+                      ...t,
+                      lastAttack: now,
+                      attackAnim: troopData.isRanged ? 400 : 300,
+                      rotation,
+                    };
                   }
-                  return e;
+                  return t;
                 })
-                .filter(Boolean)
-            );
-            // For ranged troops (centaurs/turrets), create a projectile visual
-            if (troopData.isRanged) {
-              const projType = troop.type === "turret" ? "bullet" : "spear";
-              setProjectiles((prev) => [
-                ...prev,
-                {
-                  id: generateId("proj"),
-                  from: troop.pos,
-                  to: targetPos,
-                  progress: 0,
-                  type: projType,
-                  rotation,
-                },
-              ]);
+              );
             }
-            setTroops((prev) =>
-              prev.map((t) => {
-                if (t.id === troop.id) {
-                  return {
-                    ...t,
-                    lastAttack: now,
-                    attackAnim: troopData.isRanged ? 400 : 300,
-                    rotation,
-                  };
-                }
-                return t;
-              })
-            );
           }
-        }
-      });
+        });
       } // End of !isPaused check for troop attacks
       setTroops((prev) =>
         prev.map((t) =>
@@ -16454,12 +16489,19 @@ export default function PrincetonTowerDefense() {
             setCameraOffset={setCameraOffset}
             setCameraZoom={setCameraZoom}
           />
-          {/* Tooltips */}
-          {hoveredTower &&
+          {/* Tooltips - hide when upgrade panel is open */}
+          {hoveredTower && !selectedTower &&
             (() => {
               const tower = towers.find((t) => t.id === hoveredTower);
               if (!tower) return null;
               const tData = TOWER_DATA[tower.type];
+              const stats = calculateTowerStats(
+                tower.type,
+                tower.level,
+                tower.upgrade,
+                tower.rangeBoost || 1,
+                tower.damageBoost || 1
+              );
               return (
                 <Tooltip
                   position={mousePos}
@@ -16474,11 +16516,27 @@ export default function PrincetonTowerDefense() {
                         {tower.level === 4 &&
                           tower.upgrade &&
                           ` (Path ${tower.upgrade})`}
+                      </div>
+                      <div className="flex flex-wrap gap-x-2 text-[9px] mt-1">
+                        {stats.damage > 0 && (
+                          <span className="text-red-400">DMG: {Math.floor(stats.damage)}</span>
+                        )}
+                        {stats.range > 0 && (
+                          <span className="text-blue-400">RNG: {Math.floor(stats.range)}</span>
+                        )}
+                        {stats.attackSpeed > 0 && (
+                          <span className="text-green-400">SPD: {stats.attackSpeed}ms</span>
+                        )}
+                        {stats.slowAmount && stats.slowAmount > 0 && (
+                          <span className="text-purple-400">SLOW: {Math.round(stats.slowAmount * 100)}%</span>
+                        )}
                         {tower.type === "station" && (
-                          <span className="ml-2">
-                            Troops: {tower.currentTroopCount || 0}/
-                            {MAX_STATION_TROOPS}
+                          <span className="text-amber-400">
+                            Troops: {tower.currentTroopCount || 0}/{MAX_STATION_TROOPS}
                           </span>
+                        )}
+                        {tower.type === "club" && stats.income && (
+                          <span className="text-amber-400">+{stats.income}PP/{(stats.incomeInterval || 8000) / 1000}s</span>
                         )}
                       </div>
                     </>
