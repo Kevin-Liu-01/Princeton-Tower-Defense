@@ -3,6 +3,7 @@
 
 import type { Tower, Enemy, Position, DraggingTower } from "../../types";
 import { TOWER_DATA, TOWER_COLORS, TILE_SIZE } from "../../constants";
+import { TOWER_STATS } from "../../constants/towerStats";
 import { gridToWorld, worldToScreen, isValidBuildPosition } from "../../utils";
 import { lightenColor, darkenColor, colorWithAlpha, drawRangeIndicator } from "../helpers";
 
@@ -121,12 +122,25 @@ export function renderTowerRange(
   const zoom = cameraZoom || 1;
 
   // Calculate effective range with level bonuses
-  let range = tData.range * (tower.rangeBoost || 1);
+  let range = tData.range;
   if (tower.level === 2) range *= 1.15;
   if (tower.level === 3) {
     if (tower.type === "library" && tower.upgrade === "B") range *= 1.5;
     else range *= 1.25;
   }
+  // Level 4 uses the range from TOWER_STATS upgrade paths
+  if (tower.level >= 4 && tower.upgrade) {
+    const towerStats = TOWER_STATS[tower.type];
+    const upgradeRange = towerStats?.upgrades?.[tower.upgrade]?.stats?.range;
+    if (upgradeRange !== undefined) {
+      range = upgradeRange;
+    } else {
+      // Fallback: 1.5x base range if no specific range defined
+      range = tData.range * 1.5;
+    }
+  }
+  // Apply external range buff (from beacons etc)
+  range *= (tower.rangeBoost || 1);
 
   // Use more subtle colors for hover state
   const alpha = tower.isHovered ? 0.3 : 0.5;

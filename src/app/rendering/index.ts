@@ -18,6 +18,7 @@ import {
   TOWER_COLORS,
   TROOP_DATA,
 } from "../constants";
+import { TOWER_STATS } from "../constants/towerStats";
 import {
   gridToWorld,
   worldToScreen,
@@ -11927,12 +11928,25 @@ export function renderTowerRange(
   );
   const zoom = cameraZoom || 1;
 
-  let range = tData.range * (tData.rangeBoost || 1);
+  let range = tData.range;
   if (tower.level === 2) range *= 1.15;
   if (tower.level === 3) {
     if (tower.type === "library" && tower.upgrade === "B") range *= 1.5;
     else range *= 1.25;
   }
+  // Level 4 uses the range from TOWER_STATS upgrade paths
+  if (tower.level >= 4 && tower.upgrade) {
+    const towerStats = TOWER_STATS[tower.type];
+    const upgradeRange = towerStats?.upgrades?.[tower.upgrade]?.stats?.range;
+    if (upgradeRange !== undefined) {
+      range = upgradeRange;
+    } else {
+      // Fallback: 1.5x base range if no specific range defined
+      range = tData.range * 1.5;
+    }
+  }
+  // Apply external range buff (from beacons etc)
+  range *= (tower.rangeBoost || 1);
 
   // Use more subtle colors for hover state
   if (tower.isHovered) {
@@ -18329,66 +18343,327 @@ function drawTigerHero(
 
   // === POWERFUL ARMS/SHOULDERS ===
   const armOffset = isAttacking ? clawSwipe * size * 0.15 : 0;
-  ctx.fillStyle = "#ff6600";
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.42 - armOffset,
-    y - size * 0.08,
-    size * 0.2,
-    size * 0.28,
-    -0.3 - clawSwipe * 0.3,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.42 + armOffset,
-    y - size * 0.08,
-    size * 0.2,
-    size * 0.28,
-    0.3 + clawSwipe * 0.3,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
+  const armPulse = Math.sin(time * 3) * 0.03;
+  const muscleFlexIntensity = isAttacking ? attackIntensity * 0.15 : 0;
 
-  // === DEADLY CLAWS ===
   for (let side = -1; side <= 1; side += 2) {
-    const clawX = x + side * (size * 0.55 + armOffset * side);
-    const clawY = y + size * 0.15;
-    const clawExtend = isAttacking ? attackIntensity * size * 0.15 : 0;
+    const armSwing = isAttacking ? clawSwipe * side * 0.4 : Math.sin(time * 2 + side) * 0.1;
+    const shoulderX = x + side * size * 0.38;
+    const shoulderY = y - size * 0.15;
+    const elbowX = x + side * (size * 0.52 + armOffset * side);
+    const elbowY = y + size * 0.05;
+    const wristX = x + side * (size * 0.58 + armOffset * side * 1.3);
+    const wristY = y + size * 0.22;
 
-    ctx.fillStyle = "#1a1a1a";
-    for (let c = 0; c < 4; c++) {
-      const clawAngle = (c - 1.5) * 0.25 + side * (clawSwipe * 0.5);
-      ctx.save();
-      ctx.translate(clawX, clawY);
-      ctx.rotate(clawAngle);
+    ctx.save();
+    ctx.translate(shoulderX, shoulderY);
+    ctx.rotate(armSwing);
+    ctx.translate(-shoulderX, -shoulderY);
+
+    // === ARM GLOW DURING ATTACK ===
+    if (isAttacking) {
+      ctx.shadowColor = "#ff4400";
+      ctx.shadowBlur = 15 * zoom * attackIntensity;
+    }
+
+    // === SHOULDER MUSCLE ===
+    const shoulderGrad = ctx.createRadialGradient(
+      shoulderX - side * size * 0.05,
+      shoulderY - size * 0.02,
+      0,
+      shoulderX,
+      shoulderY,
+      size * 0.22
+    );
+    shoulderGrad.addColorStop(0, "#ffb050");
+    shoulderGrad.addColorStop(0.3, "#ff8833");
+    shoulderGrad.addColorStop(0.6, "#dd5500");
+    shoulderGrad.addColorStop(1, "#aa3300");
+    ctx.fillStyle = shoulderGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      shoulderX,
+      shoulderY,
+      size * (0.18 + muscleFlexIntensity),
+      size * (0.22 + muscleFlexIntensity + armPulse),
+      side * -0.3,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // === UPPER ARM (BICEP/TRICEP) ===
+    const upperArmGrad = ctx.createLinearGradient(
+      shoulderX,
+      shoulderY,
+      elbowX,
+      elbowY
+    );
+    upperArmGrad.addColorStop(0, "#ff8833");
+    upperArmGrad.addColorStop(0.3, "#ee6622");
+    upperArmGrad.addColorStop(0.7, "#cc5511");
+    upperArmGrad.addColorStop(1, "#993300");
+    ctx.fillStyle = upperArmGrad;
+    ctx.beginPath();
+    ctx.moveTo(shoulderX - side * size * 0.12, shoulderY + size * 0.08);
+    ctx.quadraticCurveTo(
+      (shoulderX + elbowX) / 2 - side * size * (0.08 + muscleFlexIntensity * 0.5),
+      (shoulderY + elbowY) / 2 - size * 0.02,
+      elbowX - side * size * 0.1,
+      elbowY
+    );
+    ctx.lineTo(elbowX + side * size * 0.08, elbowY + size * 0.02);
+    ctx.quadraticCurveTo(
+      (shoulderX + elbowX) / 2 + side * size * (0.12 + muscleFlexIntensity * 0.3),
+      (shoulderY + elbowY) / 2,
+      shoulderX + side * size * 0.1,
+      shoulderY + size * 0.1
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // === BICEP HIGHLIGHT ===
+    ctx.fillStyle = "rgba(255, 200, 150, 0.4)";
+    ctx.beginPath();
+    ctx.ellipse(
+      (shoulderX + elbowX) / 2 - side * size * 0.05,
+      (shoulderY + elbowY) / 2 - size * 0.03,
+      size * (0.06 + muscleFlexIntensity * 0.3),
+      size * 0.04,
+      side * 0.5,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // === FOREARM ===
+    const forearmGrad = ctx.createLinearGradient(
+      elbowX,
+      elbowY,
+      wristX,
+      wristY
+    );
+    forearmGrad.addColorStop(0, "#ee7722");
+    forearmGrad.addColorStop(0.4, "#dd5511");
+    forearmGrad.addColorStop(1, "#aa3300");
+    ctx.fillStyle = forearmGrad;
+    ctx.beginPath();
+    ctx.moveTo(elbowX - side * size * 0.1, elbowY);
+    ctx.quadraticCurveTo(
+      (elbowX + wristX) / 2 - side * size * 0.06,
+      (elbowY + wristY) / 2 - size * 0.02,
+      wristX - side * size * 0.08,
+      wristY - size * 0.02
+    );
+    ctx.lineTo(wristX + side * size * 0.04, wristY + size * 0.02);
+    ctx.quadraticCurveTo(
+      (elbowX + wristX) / 2 + side * size * 0.08,
+      (elbowY + wristY) / 2 + size * 0.02,
+      elbowX + side * size * 0.08,
+      elbowY + size * 0.02
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // === ARM STRIPES (TIGER PATTERN) ===
+    ctx.strokeStyle = "#1a0800";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineCap = "round";
+    // Upper arm stripes
+    for (let stripe = 0; stripe < 3; stripe++) {
+      const t = 0.25 + stripe * 0.25;
+      const stripeX = shoulderX + (elbowX - shoulderX) * t;
+      const stripeY = shoulderY + (elbowY - shoulderY) * t;
+      const stripeAngle = side * (0.6 + stripe * 0.1);
       ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(-size * 0.02, size * 0.08 + clawExtend);
-      ctx.lineTo(size * 0.02, size * 0.08 + clawExtend);
+      ctx.moveTo(stripeX - Math.cos(stripeAngle) * size * 0.08, stripeY - Math.sin(stripeAngle) * size * 0.08);
+      ctx.quadraticCurveTo(
+        stripeX + side * size * 0.02,
+        stripeY - size * 0.03,
+        stripeX + Math.cos(stripeAngle) * size * 0.06,
+        stripeY + Math.sin(stripeAngle) * size * 0.06
+      );
+      ctx.stroke();
+    }
+    // Forearm stripes
+    for (let stripe = 0; stripe < 2; stripe++) {
+      const t = 0.3 + stripe * 0.35;
+      const stripeX = elbowX + (wristX - elbowX) * t;
+      const stripeY = elbowY + (wristY - elbowY) * t;
+      const stripeAngle = side * (0.5 + stripe * 0.15);
+      ctx.beginPath();
+      ctx.moveTo(stripeX - Math.cos(stripeAngle) * size * 0.06, stripeY - Math.sin(stripeAngle) * size * 0.06);
+      ctx.quadraticCurveTo(
+        stripeX + side * size * 0.015,
+        stripeY - size * 0.02,
+        stripeX + Math.cos(stripeAngle) * size * 0.05,
+        stripeY + Math.sin(stripeAngle) * size * 0.05
+      );
+      ctx.stroke();
+    }
+
+    // === ELBOW JOINT ===
+    const elbowGrad = ctx.createRadialGradient(
+      elbowX,
+      elbowY,
+      0,
+      elbowX,
+      elbowY,
+      size * 0.1
+    );
+    elbowGrad.addColorStop(0, "#cc5500");
+    elbowGrad.addColorStop(0.5, "#aa4400");
+    elbowGrad.addColorStop(1, "#882200");
+    ctx.fillStyle = elbowGrad;
+    ctx.beginPath();
+    ctx.ellipse(elbowX, elbowY, size * 0.09, size * 0.08, side * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // === WRIST/PAW BASE ===
+    const pawGrad = ctx.createRadialGradient(
+      wristX,
+      wristY + size * 0.04,
+      0,
+      wristX,
+      wristY + size * 0.04,
+      size * 0.12
+    );
+    pawGrad.addColorStop(0, "#ffaa66");
+    pawGrad.addColorStop(0.4, "#dd6622");
+    pawGrad.addColorStop(1, "#993311");
+    ctx.fillStyle = pawGrad;
+    ctx.beginPath();
+    ctx.ellipse(wristX, wristY + size * 0.04, size * 0.1, size * 0.08, side * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // === PAW PAD ===
+    ctx.fillStyle = "#2a1a10";
+    ctx.beginPath();
+    ctx.ellipse(wristX + side * size * 0.02, wristY + size * 0.08, size * 0.05, size * 0.035, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Toe pads
+    for (let pad = 0; pad < 4; pad++) {
+      const padAngle = (pad - 1.5) * 0.3;
+      const padX = wristX + side * size * 0.04 + Math.sin(padAngle) * size * 0.06;
+      const padY = wristY + size * 0.12 + Math.cos(padAngle) * size * 0.02;
+      ctx.beginPath();
+      ctx.ellipse(padX, padY, size * 0.02, size * 0.015, padAngle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+
+    // === DEADLY CLAWS ===
+    const clawX = wristX + side * size * 0.02;
+    const clawY = wristY + size * 0.1;
+    const clawExtend = isAttacking ? attackIntensity * size * 0.18 : size * 0.02;
+
+    for (let c = 0; c < 4; c++) {
+      const clawAngle = (c - 1.5) * 0.28 + side * (clawSwipe * 0.4);
+      const clawSpread = isAttacking ? attackIntensity * 0.15 : 0;
+      const individualClawAngle = clawAngle + (c - 1.5) * clawSpread;
+
+      ctx.save();
+      ctx.translate(clawX + Math.sin(individualClawAngle) * size * 0.04, clawY);
+      ctx.rotate(individualClawAngle);
+
+      // Claw shadow/depth
+      ctx.fillStyle = "#0a0505";
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.012, 0);
+      ctx.lineTo(-size * 0.008, size * 0.1 + clawExtend);
+      ctx.quadraticCurveTo(0, size * 0.12 + clawExtend * 1.1, size * 0.008, size * 0.1 + clawExtend);
+      ctx.lineTo(size * 0.012, 0);
       ctx.closePath();
       ctx.fill();
+
+      // Claw highlight (bone/ivory look)
+      const clawHighlightGrad = ctx.createLinearGradient(
+        -size * 0.01,
+        0,
+        size * 0.01,
+        size * 0.08 + clawExtend
+      );
+      clawHighlightGrad.addColorStop(0, "#f5f0e8");
+      clawHighlightGrad.addColorStop(0.3, "#e8e0d5");
+      clawHighlightGrad.addColorStop(0.7, "#c0b0a0");
+      clawHighlightGrad.addColorStop(1, "#1a1510");
+      ctx.fillStyle = clawHighlightGrad;
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.008, size * 0.005);
+      ctx.lineTo(-size * 0.004, size * 0.09 + clawExtend);
+      ctx.quadraticCurveTo(0, size * 0.1 + clawExtend * 1.05, size * 0.004, size * 0.09 + clawExtend);
+      ctx.lineTo(size * 0.008, size * 0.005);
+      ctx.closePath();
+      ctx.fill();
+
       ctx.restore();
     }
 
-    // Claw slash effect during attack
-    if (isAttacking && attackPhase > 0.3 && attackPhase < 0.8) {
-      const slashAlpha = Math.sin(((attackPhase - 0.3) / 0.5) * Math.PI) * 0.7;
-      ctx.strokeStyle = `rgba(255, 200, 100, ${slashAlpha})`;
-      ctx.lineWidth = 3 * zoom;
-      for (let s = 0; s < 3; s++) {
+    // === CLAW SLASH EFFECTS ===
+    if (isAttacking && attackPhase > 0.2 && attackPhase < 0.85) {
+      const slashProgress = (attackPhase - 0.2) / 0.65;
+      const slashAlpha = Math.sin(slashProgress * Math.PI) * 0.85;
+
+      // Energy trails
+      ctx.strokeStyle = `rgba(255, 150, 50, ${slashAlpha})`;
+      ctx.lineWidth = 4 * zoom;
+      ctx.lineCap = "round";
+      for (let s = 0; s < 4; s++) {
+        const trailOffset = s * size * 0.05;
+        const trailLength = size * (0.3 + slashProgress * 0.2);
         ctx.beginPath();
-        ctx.moveTo(clawX, clawY);
-        ctx.lineTo(
-          clawX + side * size * 0.3,
-          clawY + size * 0.2 + s * size * 0.08
+        ctx.moveTo(clawX, clawY + trailOffset);
+        ctx.quadraticCurveTo(
+          clawX + side * trailLength * 0.5,
+          clawY + trailOffset + size * 0.1,
+          clawX + side * trailLength,
+          clawY + trailOffset + size * 0.15
         );
         ctx.stroke();
       }
+
+      // Spark particles
+      ctx.fillStyle = `rgba(255, 220, 100, ${slashAlpha})`;
+      for (let spark = 0; spark < 5; spark++) {
+        const sparkT = (slashProgress + spark * 0.1) % 1;
+        const sparkX = clawX + side * size * 0.3 * sparkT + Math.sin(time * 10 + spark) * size * 0.05;
+        const sparkY = clawY + size * 0.1 + sparkT * size * 0.15 + Math.cos(time * 8 + spark) * size * 0.03;
+        const sparkSize = size * 0.02 * (1 - sparkT);
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Claw energy glow
+      ctx.shadowColor = "#ff6600";
+      ctx.shadowBlur = 12 * zoom * slashAlpha;
+      ctx.strokeStyle = `rgba(255, 100, 0, ${slashAlpha * 0.6})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.arc(clawX, clawY, size * 0.12, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
+
+    ctx.restore();
+  }
+
+  // === VEINS/MUSCLE DEFINITION (visible during attack) ===
+  if (isAttacking && attackIntensity > 0.3) {
+    const veinAlpha = (attackIntensity - 0.3) * 0.5;
+    ctx.strokeStyle = `rgba(180, 60, 30, ${veinAlpha})`;
+    ctx.lineWidth = 1.5 * zoom;
+    // Left arm vein
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.45, y - size * 0.1);
+    ctx.quadraticCurveTo(x - size * 0.5, y + size * 0.05, x - size * 0.55, y + size * 0.15);
+    ctx.stroke();
+    // Right arm vein
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.45, y - size * 0.1);
+    ctx.quadraticCurveTo(x + size * 0.5, y + size * 0.05, x + size * 0.55, y + size * 0.15);
+    ctx.stroke();
   }
 
   // === FIERCE TIGER HEAD ===
@@ -25997,7 +26272,7 @@ export function renderTowerPreview(
 
   ctx.restore();
 
-  // Range preview
+  // Range preview - show level 1 base range when placing
   const tData = TOWER_DATA[dragging.type];
   if (tData.range > 0) {
     ctx.strokeStyle = isValid
@@ -26009,8 +26284,8 @@ export function renderTowerPreview(
     ctx.ellipse(
       screenPos.x,
       screenPos.y,
-      tData.range * tData.rangeBoost * zoom * 0.7,
-      tData.range * tData.rangeBoost * zoom * 0.35,
+      tData.range * zoom * 0.7,
+      tData.range * zoom * 0.35,
       0,
       0,
       Math.PI * 2

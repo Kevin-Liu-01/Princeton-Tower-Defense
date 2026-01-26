@@ -161,6 +161,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "8x attack speed, 0.4x damage per shot",
         stats: {
           damage: 65 * 2.2 * 0.4,
+          range: 360, // 1.5x base range for level 4
           attackSpeed: 150,
           specialEffect: "Rapid-fire suppression",
         },
@@ -171,6 +172,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "Deals burn damage over time to enemies",
         stats: {
           damage: 65 * 2.2 * 0.3,
+          range: 300, // Shorter range but burns
           attackSpeed: 100,
           burnDamage: 15,
           burnDuration: 3000,
@@ -214,6 +216,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "Deals 35 AoE damage + 80% slow",
         stats: {
           damage: 35,
+          range: 330, // 1.5x base range for level 4
           slowAmount: 0.8,
           attackSpeed: 500,
           splashRadius: 80,
@@ -225,6 +228,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Freezes enemies completely",
         effect: "70% slow + periodic 2s freeze",
         stats: {
+          range: 385, // 1.75x base range - wide freeze area
           slowAmount: 0.7,
           attackSpeed: 1000,
           stunDuration: 2000,
@@ -269,6 +273,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "Continuous lock-on, damage increases over time",
         stats: {
           damage: 45 * 2 * 0.15,
+          range: 320, // 1.6x base range - sniper beam
           attackSpeed: 100,
           specialEffect: "Lock-on damage ramp",
         },
@@ -279,6 +284,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "Hits up to 5 targets at once",
         stats: {
           damage: 45 * 2 * 0.7,
+          range: 300, // 1.5x base range
           chainTargets: 5,
           specialEffect: "Bouncing lightning",
         },
@@ -321,6 +327,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "30% chance to stun enemies for 1s",
         stats: {
           damage: 28 * 2 * 1.25,
+          range: 390, // 1.5x base range
           stunChance: 0.3,
           stunDuration: 1000,
           chainTargets: 3,
@@ -333,6 +340,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         effect: "Hits up to 5 enemies simultaneously",
         stats: {
           damage: 28 * 2 * 1.125,
+          range: 416, // 1.6x base range - concert hall coverage
           chainTargets: 5,
           specialEffect: "Multi-target harmony",
         },
@@ -527,4 +535,40 @@ export function getUpgradePath(
   if (!towerDef) return null;
 
   return towerDef.upgrades[path] || null;
+}
+
+/**
+ * Get the effective range for a tower at a given level and upgrade path
+ */
+export function getTowerRange(
+  towerType: string,
+  level: number,
+  upgrade?: "A" | "B",
+  rangeBoost: number = 1
+): number {
+  const towerDef = TOWER_STATS[towerType];
+  if (!towerDef) return 0;
+
+  let range = towerDef.baseStats.range;
+
+  // Apply level range bonuses
+  if (level === 2) range *= 1.15;
+  if (level === 3) {
+    if (towerType === "library" && upgrade === "B") range *= 1.5;
+    else range *= 1.25;
+  }
+
+  // Level 4 uses the range from upgrade paths if specified
+  if (level >= 4 && upgrade) {
+    const upgradePath = towerDef.upgrades[upgrade];
+    if (upgradePath?.stats?.range !== undefined) {
+      range = upgradePath.stats.range;
+    } else {
+      // Fallback: 1.5x base range if no specific range defined
+      range = towerDef.baseStats.range * 1.5;
+    }
+  }
+
+  // Apply external range buff
+  return range * rangeBoost;
 }

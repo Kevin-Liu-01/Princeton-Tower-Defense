@@ -311,6 +311,9 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
           <div>
             <span className="font-mono">+/-</span> : Zoom In / Out
           </div>
+          <div>
+            <span className="font-mono">ESC</span> : Unselect
+          </div>
         </div>
       </div>
     </div>

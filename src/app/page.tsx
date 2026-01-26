@@ -331,6 +331,12 @@ export default function PrincetonTowerDefense() {
         case "_":
           setCameraZoom((prev) => Math.max(prev - 0.1, 0.5));
           break;
+        case "escape":
+          // Unselect all towers, heroes, and troops
+          setSelectedTower(null);
+          setHero((prev) => (prev ? { ...prev, selected: false } : null));
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+          break;
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -554,6 +560,7 @@ export default function PrincetonTowerDefense() {
   const updateGame = useCallback(
     (deltaTime: number) => {
       const now = Date.now();
+      const isPaused = gameSpeed === 0;
       const levelWaves = getLevelWaves(selectedMap);
       const mapData = LEVEL_DATA[selectedMap];
       const spec = mapData?.specialTower;
@@ -845,12 +852,13 @@ export default function PrincetonTowerDefense() {
 
         // D. VAULT: Immobile Troop Logic (Targetable by Enemies)
         if (spec.type === "vault" && specialTowerHp !== null) {
-          // Enemies find the vault as a combat target
+          // Enemies find the vault as a combat target - skip attacks when paused
           enemies.forEach((e) => {
             const ePos = getEnemyPosWithPath(e, selectedMap);
             if (distance(ePos, specWorldPos) < 60) {
-              // Enemy stops to "attack" the vault
-              if (now - (e.lastTroopAttack || 0) > 1000) {
+              // Enemy stops to "attack" the vault - skip when paused
+              const effectiveEnemyAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+              if (!isPaused && now - (e.lastTroopAttack || 0) > effectiveEnemyAttackInterval) {
                 const dmg = 20;
                 setSpecialTowerHp((prev) => {
                   const newVal = prev! - dmg;
@@ -892,8 +900,9 @@ export default function PrincetonTowerDefense() {
             if (enemy.taunted && hero && !hero.dead) {
               const distToHero = distance(enemyPos, hero.pos);
               if (distToHero < 80) {
-                // Slightly larger engagement for taunt
-                if (now - (enemy.lastHeroAttack || 0) > 1000) {
+                // Slightly larger engagement for taunt - skip attacks when paused
+                const effectiveEnemyAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+                if (!isPaused && now - (enemy.lastHeroAttack || 0) > effectiveEnemyAttackInterval) {
                   // Play hit effect but do NO damage if shield is active
                   if (hero.shieldActive) {
                     addParticles(hero.pos, "spark", 5);
@@ -920,7 +929,9 @@ export default function PrincetonTowerDefense() {
               specWorldPos
             ) {
               if (distance(enemyPos, specWorldPos) < 70) {
-                if (now - (enemy.lastTroopAttack || 0) > 1000) {
+                // Scale enemy attack interval with game speed - skip when paused
+                const effectiveVaultAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+                if (!isPaused && now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval) {
                   setSpecialTowerHp((prev) => {
                     const newVal = Math.max(0, prev! - 25);
                     if (newVal <= 0) {
@@ -946,7 +957,7 @@ export default function PrincetonTowerDefense() {
                 };
               }
             }
-            // Hero Combat Check
+            // Hero Combat Check - skip attacks when paused
             const nearbyHero =
               hero &&
                 !hero.dead &&
@@ -955,7 +966,9 @@ export default function PrincetonTowerDefense() {
                 ? hero
                 : null;
             if (nearbyHero) {
-              if (now - enemy.lastHeroAttack > 1000) {
+              // Scale enemy attack interval with game speed
+              const effectiveHeroAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+              if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval) {
                 if (!hero.shieldActive) {
                   setHero((h) =>
                     h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
@@ -1064,14 +1077,17 @@ export default function PrincetonTowerDefense() {
         });
       }
 
-      // First pass: Calculate troop damage from enemies
+      // First pass: Calculate troop damage from enemies - skip when paused
       const troopDamage: { [id: string]: number } = {};
       const enemiesAttackingTroops: { [enemyId: string]: string } = {};
 
+      if (!isPaused) {
+      // Scale enemy attack interval with game speed
+      const effectiveTroopAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
       enemies.forEach((enemy) => {
         if (enemy.frozen || now < enemy.stunUntil) return;
         if (ENEMY_DATA[enemy.type].flying) return;
-        if (now - enemy.lastTroopAttack <= 1000) return;
+        if (now - enemy.lastTroopAttack <= effectiveTroopAttackInterval) return;
 
         const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
 
@@ -1087,6 +1103,7 @@ export default function PrincetonTowerDefense() {
           enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
         }
       });
+      } // End of !isPaused check for enemy attacks on troops
 
       // Calculate which troops will die based on damage
       const deathsToQueue: Array<{
@@ -1201,7 +1218,9 @@ export default function PrincetonTowerDefense() {
                 ? hero
                 : null;
             if (nearbyHero) {
-              if (now - enemy.lastHeroAttack > 1000) {
+              // Scale enemy attack interval with game speed - skip when paused
+              const effectiveHeroAttackInterval2 = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+              if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval2) {
                 setHero((prevHero) => {
                   if (!prevHero || prevHero.dead) return prevHero;
                   const newHp = prevHero.hp - 20;
@@ -1309,7 +1328,9 @@ export default function PrincetonTowerDefense() {
                   combatTarget: rangedTarget.id,
                 };
 
-                if (now - enemy.lastRangedAttack > enemyData.attackSpeed) {
+                // Scale ranged enemy attack speed with game speed - skip when paused
+                const effectiveRangedAttackSpeed = gameSpeed > 0 ? enemyData.attackSpeed / gameSpeed : enemyData.attackSpeed;
+                if (!isPaused && now - enemy.lastRangedAttack > effectiveRangedAttackSpeed) {
                   // Create projectile
                   const projType =
                     enemy.type === "mage" ||
@@ -1845,7 +1866,8 @@ export default function PrincetonTowerDefense() {
           activeTimeoutsRef.current.push(regenTimeout);
         }
       }
-      // Tower attacks
+      // Tower attacks - skip when paused
+      if (!isPaused) {
       towers.forEach((tower) => {
         const tData = TOWER_DATA[tower.type];
         const towerWorldPos = gridToWorld(tower.pos);
@@ -1884,7 +1906,9 @@ export default function PrincetonTowerDefense() {
                     ? 40
                     : 20;
 
-          if (now - tower.lastAttack > incomeInterval) {
+          // Scale income interval with game speed (faster at higher speeds)
+          const effectiveIncomeInterval = gameSpeed > 0 ? incomeInterval / gameSpeed : incomeInterval;
+          if (now - tower.lastAttack > effectiveIncomeInterval) {
             // Base income
             let amount = baseAmount;
 
@@ -1969,9 +1993,12 @@ export default function PrincetonTowerDefense() {
                     ? 0.8 // Earthquake - stronger slow
                     : 0.7; // Blizzard
 
-          const shouldApplyArcaneDamage = tower.level === 3 && now - tower.lastAttack > 500;
-          const shouldApplyBlizzardFreeze = tower.level === 4 && tower.upgrade === "B" && now - tower.lastAttack > 4000;
-          const shouldApplyEarthquakeDamage = tower.level === 4 && tower.upgrade === "A" && now - tower.lastAttack > 500;
+          // Scale library damage intervals with game speed
+          const libraryDamageInterval = gameSpeed > 0 ? 500 / gameSpeed : 500;
+          const libraryFreezeInterval = gameSpeed > 0 ? 4000 / gameSpeed : 4000;
+          const shouldApplyArcaneDamage = tower.level === 3 && now - tower.lastAttack > libraryDamageInterval;
+          const shouldApplyBlizzardFreeze = tower.level === 4 && tower.upgrade === "B" && now - tower.lastAttack > libraryFreezeInterval;
+          const shouldApplyEarthquakeDamage = tower.level === 4 && tower.upgrade === "A" && now - tower.lastAttack > libraryDamageInterval;
           const arcaneDamage = 8 * finalDamageMult;
           const earthquakeDamage = 35;
 
@@ -2093,7 +2120,7 @@ export default function PrincetonTowerDefense() {
               ];
             });
           }
-          if ((appliedSlow || appliedDamage) && now - tower.lastAttack > 500) {
+          if ((appliedSlow || appliedDamage) && now - tower.lastAttack > libraryDamageInterval) {
             setTowers((prev) =>
               prev.map((t) =>
                 t.id === tower.id ? { ...t, lastAttack: now } : t
@@ -2212,7 +2239,9 @@ export default function PrincetonTowerDefense() {
             const arrivedAtPlatform =
               currentProgress < 0.3 && newProgress >= 0.3;
 
-            if (arrivedAtPlatform && now - tower.lastAttack > 8000) {
+            // Scale station spawn interval with game speed
+            const stationSpawnInterval = gameSpeed > 0 ? 8000 / gameSpeed : 8000;
+            if (arrivedAtPlatform && now - tower.lastAttack > stationSpawnInterval) {
               // Spawn troop at station, it will walk to formation position
               const stationPos = gridToWorld(tower.pos);
 
@@ -2357,7 +2386,9 @@ export default function PrincetonTowerDefense() {
               : isHeavyCannon
                 ? 900 // Heavy cannon slightly slower but more damage
                 : tData.attackSpeed;
-          if (now - tower.lastAttack > attackCooldown) {
+          // Scale attack cooldown with game speed
+          const effectiveAttackCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+          if (now - tower.lastAttack > effectiveAttackCooldown) {
             const validEnemies = enemies
               .filter(
                 (e) =>
@@ -2448,7 +2479,9 @@ export default function PrincetonTowerDefense() {
           const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
           const isChainLightning = tower.level === 4 && tower.upgrade === "B";
           const attackCooldown = isFocusedBeam ? 100 : tData.attackSpeed;
-          if (now - tower.lastAttack > attackCooldown) {
+          // Scale attack cooldown with game speed
+          const effectiveLabCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+          if (now - tower.lastAttack > effectiveLabCooldown) {
             const validEnemies = enemies
               .filter(
                 (e) =>
@@ -2576,7 +2609,9 @@ export default function PrincetonTowerDefense() {
           const attackSpeed = isEliteArchers
             ? tData.attackSpeed * 0.7
             : tData.attackSpeed;
-          if (now - tower.lastAttack > attackSpeed) {
+          // Scale attack cooldown with game speed
+          const effectiveArcherSpeed = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
+          if (now - tower.lastAttack > effectiveArcherSpeed) {
             const validEnemies = enemies
               .filter(
                 (e) =>
@@ -2675,7 +2710,7 @@ export default function PrincetonTowerDefense() {
           }
         } else if (
           tData.attackSpeed > 0 &&
-          now - tower.lastAttack > tData.attackSpeed
+          now - tower.lastAttack > (gameSpeed > 0 ? tData.attackSpeed / gameSpeed : tData.attackSpeed)
         ) {
           // Generic tower attack (fallback)
           const validEnemies = enemies
@@ -2745,10 +2780,13 @@ export default function PrincetonTowerDefense() {
           }
         }
       });
-      // Hero attacks
-      if (hero && !hero.dead && hero.attackAnim === 0) {
+      } // End of !isPaused check for tower attacks
+      // Hero attacks - skip when paused
+      if (!isPaused && hero && !hero.dead && hero.attackAnim === 0) {
         const heroData = HERO_DATA[hero.type];
-        if (now - hero.lastAttack > heroData.attackSpeed) {
+        // Scale hero attack speed with game speed
+        const effectiveHeroAttackSpeed = gameSpeed > 0 ? heroData.attackSpeed / gameSpeed : heroData.attackSpeed;
+        if (now - hero.lastAttack > effectiveHeroAttackSpeed) {
           const validEnemies = enemies
             .filter(
               (e) =>
@@ -2819,17 +2857,20 @@ export default function PrincetonTowerDefense() {
             : null
         );
       }
-      // Troop attacks - with ranged support for centaurs and turrets
+      // Troop attacks - with ranged support for centaurs and turrets - skip when paused
+      if (!isPaused) {
       troops.forEach((troop) => {
         if (!troop.type) return; // Skip troops without a type
         const troopData = TROOP_DATA[troop.type];
         if (!troopData) return; // Skip if troop data not found
         const attackRange = troopData.isRanged ? troopData.range || 150 : 65;
         const attackCooldown = troopData.attackSpeed || 1000;
+        // Scale troop attack cooldown with game speed
+        const effectiveTroopCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
         const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
         if (
           (troop.attackAnim ?? 0) === 0 &&
-          now - lastAttack > attackCooldown
+          now - lastAttack > effectiveTroopCooldown
         ) {
           const validEnemies = enemies.filter(
             (e) =>
@@ -2901,6 +2942,7 @@ export default function PrincetonTowerDefense() {
           }
         }
       });
+      } // End of !isPaused check for troop attacks
       setTroops((prev) =>
         prev.map((t) =>
           t.attackAnim > 0
@@ -3114,6 +3156,7 @@ export default function PrincetonTowerDefense() {
       unlockLevel,
       gameState,
       levelStartTime,
+      gameSpeed,
     ]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation

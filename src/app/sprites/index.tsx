@@ -185,9 +185,8 @@ export const TowerSprite: React.FC<{
 
         // Heat shimmer effect
         if (animated) {
-          ctx.strokeStyle = `rgba(255, 150, 50, ${
-            0.2 + Math.sin(t * 5) * 0.1
-          })`;
+          ctx.strokeStyle = `rgba(255, 150, 50, ${0.2 + Math.sin(t * 5) * 0.1
+            })`;
           ctx.lineWidth = 1 * scale;
           for (let i = 0; i < 3; i++) {
             const shimmerY = cy - 5 * scale - i * 4 * scale - ((t * 20) % 12);
@@ -1119,9 +1118,8 @@ export const TowerSprite: React.FC<{
 
         // Portal swirl effect
         if (animated) {
-          ctx.strokeStyle = `rgba(150, 255, 180, ${
-            0.4 + Math.sin(t * 3) * 0.2
-          })`;
+          ctx.strokeStyle = `rgba(150, 255, 180, ${0.4 + Math.sin(t * 3) * 0.2
+            })`;
           ctx.lineWidth = 1.5 * scale;
           for (let i = 0; i < 3; i++) {
             const spiralOffset = t * 2 + i * Math.PI * 0.67;
@@ -1993,6 +1991,112 @@ export const HeroSprite: React.FC<{
           );
           ctx.stroke();
         }
+
+        // === POWERFUL MUSCULAR ARMS ===
+        const armSwing = animated ? Math.sin(t * 3) * 0.15 : 0;
+
+        // Left arm - muscular upper arm
+        ctx.save();
+        ctx.translate(cx - 12 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(-0.4 + armSwing);
+
+        // Upper arm with gradient
+        const leftArmGrad = ctx.createLinearGradient(-6 * scale, -8 * scale, 6 * scale, 8 * scale);
+        leftArmGrad.addColorStop(0, "#ff9933");
+        leftArmGrad.addColorStop(0.4, "#ff7722");
+        leftArmGrad.addColorStop(1, "#cc4400");
+        ctx.fillStyle = leftArmGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 4 * scale, 6 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arm stripes
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-4 * scale, 0);
+        ctx.quadraticCurveTo(0, -2 * scale, 3 * scale, 1 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-4 * scale, 5 * scale);
+        ctx.quadraticCurveTo(0, 3 * scale, 3 * scale, 6 * scale);
+        ctx.stroke();
+
+        // Forearm/paw
+        ctx.fillStyle = "#ff8822";
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 5 * scale, 6 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Deadly claws
+        ctx.fillStyle = "#e8e0d0";
+        ctx.strokeStyle = "#2a2a2a";
+        ctx.lineWidth = 0.5 * scale;
+        for (let c = 0; c < 4; c++) {
+          const clawAngle = -0.4 + c * 0.25;
+          const clawX = Math.cos(clawAngle) * 5 * scale;
+          const clawY = 16 * scale + Math.sin(clawAngle) * 2 * scale;
+          ctx.beginPath();
+          ctx.moveTo(clawX - 1.5 * scale, clawY);
+          ctx.lineTo(clawX, clawY + 5 * scale);
+          ctx.lineTo(clawX + 1.5 * scale, clawY);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Right arm - muscular upper arm
+        ctx.save();
+        ctx.translate(cx + 12 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(0.4 - armSwing);
+
+        // Upper arm with gradient
+        const rightArmGrad = ctx.createLinearGradient(-6 * scale, -8 * scale, 6 * scale, 8 * scale);
+        rightArmGrad.addColorStop(0, "#cc4400");
+        rightArmGrad.addColorStop(0.6, "#ff7722");
+        rightArmGrad.addColorStop(1, "#ff9933");
+        ctx.fillStyle = rightArmGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 4 * scale, 6 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Arm stripes
+        ctx.strokeStyle = "#1a1a1a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(4 * scale, 0);
+        ctx.quadraticCurveTo(0, -2 * scale, -3 * scale, 1 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(4 * scale, 5 * scale);
+        ctx.quadraticCurveTo(0, 3 * scale, -3 * scale, 6 * scale);
+        ctx.stroke();
+
+        // Forearm/paw
+        ctx.fillStyle = "#ff8822";
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 5 * scale, 6 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Deadly claws
+        ctx.fillStyle = "#e8e0d0";
+        ctx.strokeStyle = "#2a2a2a";
+        ctx.lineWidth = 0.5 * scale;
+        for (let c = 0; c < 4; c++) {
+          const clawAngle = 0.4 - c * 0.25;
+          const clawX = Math.cos(clawAngle) * 5 * scale;
+          const clawY = 16 * scale + Math.sin(clawAngle) * 2 * scale;
+          ctx.beginPath();
+          ctx.moveTo(clawX - 1.5 * scale, clawY);
+          ctx.lineTo(clawX, clawY + 5 * scale);
+          ctx.lineTo(clawX + 1.5 * scale, clawY);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+
         // Tiger head
         ctx.fillStyle = "#ff8c00";
         ctx.beginPath();
@@ -2215,6 +2319,111 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 9 * scale, cy + 6 * scale + bounce);
         ctx.stroke();
 
+        // === ARMORED KNIGHT ARMS ===
+        const armSwing = animated ? Math.sin(t * 2.5) * 0.1 : 0;
+
+        // Left arm (behind shield) - armored pauldron and gauntlet
+        ctx.save();
+        ctx.translate(cx - 14 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(-0.5 + armSwing);
+
+        // Pauldron (shoulder armor)
+        const leftPauldronGrad = ctx.createLinearGradient(-5 * scale, -5 * scale, 5 * scale, 5 * scale);
+        leftPauldronGrad.addColorStop(0, "#9a9aba");
+        leftPauldronGrad.addColorStop(0.5, "#7a7a9a");
+        leftPauldronGrad.addColorStop(1, "#5a5a7a");
+        ctx.fillStyle = leftPauldronGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 6 * scale, 5 * scale, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a4a6a";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+
+        // Upper arm armor
+        ctx.fillStyle = "#6a6a8a";
+        ctx.beginPath();
+        ctx.ellipse(0, 6 * scale, 5 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a4a6a";
+        ctx.stroke();
+
+        // Gauntlet (armored glove)
+        ctx.fillStyle = "#7a7a9a";
+        ctx.beginPath();
+        ctx.ellipse(-1 * scale, 14 * scale, 4 * scale, 5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#5a5a7a";
+        ctx.stroke();
+
+        // Purple trim on gauntlet
+        ctx.strokeStyle = "#7c3aed";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.arc(-1 * scale, 12 * scale, 3 * scale, 0, Math.PI);
+        ctx.stroke();
+        ctx.restore();
+
+        // Right arm - sword arm with armored gauntlet
+        ctx.save();
+        ctx.translate(cx + 14 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(0.5 - armSwing);
+
+        // Pauldron
+        const rightPauldronGrad = ctx.createLinearGradient(-5 * scale, -5 * scale, 5 * scale, 5 * scale);
+        rightPauldronGrad.addColorStop(0, "#5a5a7a");
+        rightPauldronGrad.addColorStop(0.5, "#7a7a9a");
+        rightPauldronGrad.addColorStop(1, "#9a9aba");
+        ctx.fillStyle = rightPauldronGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 6 * scale, 5 * scale, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a4a6a";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+
+        // Upper arm armor
+        ctx.fillStyle = "#6a6a8a";
+        ctx.beginPath();
+        ctx.ellipse(0, 6 * scale, 5 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a4a6a";
+        ctx.stroke();
+
+        // Gauntlet with sword grip
+        ctx.fillStyle = "#7a7a9a";
+        ctx.beginPath();
+        ctx.ellipse(1 * scale, 14 * scale, 4 * scale, 5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#5a5a7a";
+        ctx.stroke();
+
+        // Purple trim
+        ctx.strokeStyle = "#7c3aed";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.arc(1 * scale, 12 * scale, 3 * scale, 0, Math.PI);
+        ctx.stroke();
+
+        // Enchanted sword in right hand
+        ctx.fillStyle = "#a0a0b0";
+        ctx.shadowColor = "#7c3aed";
+        ctx.shadowBlur = 4 * scale;
+        ctx.fillRect(-1 * scale, 16 * scale, 2 * scale, 14 * scale);
+        ctx.shadowBlur = 0;
+        // Sword hilt
+        ctx.fillStyle = "#7c3aed";
+        ctx.fillRect(-3 * scale, 14 * scale, 6 * scale, 3 * scale);
+        // Blade tip
+        ctx.beginPath();
+        ctx.moveTo(-1 * scale, 30 * scale);
+        ctx.lineTo(0, 34 * scale);
+        ctx.lineTo(1 * scale, 30 * scale);
+        ctx.closePath();
+        ctx.fillStyle = "#c0c0d0";
+        ctx.fill();
+        ctx.restore();
+
         // Glowing Princeton crest
         ctx.fillStyle = "#ff6600";
         ctx.shadowColor = "#ff6600";
@@ -2367,6 +2576,112 @@ export const HeroSprite: React.FC<{
           ctx.lineTo(cx - 8 * scale + i * 5 * scale, cy + 10 * scale + bounce);
           ctx.stroke();
         }
+
+        // === MASSIVE STONE ARMS ===
+        const armSwing = animated ? Math.sin(t * 1.5) * 0.08 : 0;
+
+        // Left boulder arm
+        ctx.save();
+        ctx.translate(cx - 14 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(-0.35 + armSwing);
+
+        // Upper arm boulder
+        const leftArmGrad = ctx.createRadialGradient(0, 5 * scale, 0, 0, 5 * scale, 10 * scale);
+        leftArmGrad.addColorStop(0, "#7a7a7a");
+        leftArmGrad.addColorStop(0.5, "#5a5a5a");
+        leftArmGrad.addColorStop(1, "#3a3a3a");
+        ctx.fillStyle = leftArmGrad;
+        ctx.beginPath();
+        ctx.moveTo(-6 * scale, -2 * scale);
+        ctx.lineTo(-7 * scale, 6 * scale);
+        ctx.lineTo(-5 * scale, 12 * scale);
+        ctx.lineTo(5 * scale, 14 * scale);
+        ctx.lineTo(7 * scale, 4 * scale);
+        ctx.lineTo(5 * scale, -3 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rock cracks on arm
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-4 * scale, 0);
+        ctx.lineTo(-2 * scale, 8 * scale);
+        ctx.moveTo(2 * scale, 2 * scale);
+        ctx.lineTo(0, 10 * scale);
+        ctx.stroke();
+
+        // Glowing crack
+        if (animated) {
+          ctx.strokeStyle = `rgba(255, 100, 0, ${0.4 + Math.sin(t * 3) * 0.3})`;
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(-3 * scale, 4 * scale);
+          ctx.lineTo(0, 12 * scale);
+          ctx.stroke();
+        }
+
+        // Stone fist
+        ctx.fillStyle = "#5a5a5a";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 6 * scale, 5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+        ctx.restore();
+
+        // Right boulder arm
+        ctx.save();
+        ctx.translate(cx + 14 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(0.35 - armSwing);
+
+        // Upper arm boulder
+        const rightArmGrad = ctx.createRadialGradient(0, 5 * scale, 0, 0, 5 * scale, 10 * scale);
+        rightArmGrad.addColorStop(0, "#7a7a7a");
+        rightArmGrad.addColorStop(0.5, "#5a5a5a");
+        rightArmGrad.addColorStop(1, "#3a3a3a");
+        ctx.fillStyle = rightArmGrad;
+        ctx.beginPath();
+        ctx.moveTo(6 * scale, -2 * scale);
+        ctx.lineTo(7 * scale, 6 * scale);
+        ctx.lineTo(5 * scale, 12 * scale);
+        ctx.lineTo(-5 * scale, 14 * scale);
+        ctx.lineTo(-7 * scale, 4 * scale);
+        ctx.lineTo(-5 * scale, -3 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rock cracks on arm
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(4 * scale, 0);
+        ctx.lineTo(2 * scale, 8 * scale);
+        ctx.moveTo(-2 * scale, 2 * scale);
+        ctx.lineTo(0, 10 * scale);
+        ctx.stroke();
+
+        // Glowing crack
+        if (animated) {
+          ctx.strokeStyle = `rgba(255, 100, 0, ${0.4 + Math.sin(t * 3 + 1) * 0.3})`;
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(3 * scale, 4 * scale);
+          ctx.lineTo(0, 12 * scale);
+          ctx.stroke();
+        }
+
+        // Stone fist
+        ctx.fillStyle = "#5a5a5a";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 6 * scale, 5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+        ctx.restore();
+
         // Rocky head
         ctx.fillStyle = "#6a6a6a";
         ctx.beginPath();
@@ -2463,6 +2778,116 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 4 * scale, cy - 10 * scale + bounce);
         ctx.closePath();
         ctx.fill();
+
+        // === ELEGANT TUXEDO ARMS ===
+        const armGesture = animated ? Math.sin(t * 2) * 0.15 : 0;
+
+        // Left arm - elegant sleeve with expressive gesture
+        ctx.save();
+        ctx.translate(cx - 13 * scale, cy - 4 * scale + bounce);
+        ctx.rotate(-0.6 + armGesture);
+
+        // Tuxedo sleeve
+        const leftSleeveGrad = ctx.createLinearGradient(-4 * scale, 0, 4 * scale, 0);
+        leftSleeveGrad.addColorStop(0, "#1a1a1a");
+        leftSleeveGrad.addColorStop(0.5, "#2a2a2a");
+        leftSleeveGrad.addColorStop(1, "#1a1a1a");
+        ctx.fillStyle = leftSleeveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 5 * scale, 5 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White cuff
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 4 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pink cufflink
+        ctx.fillStyle = "#ec4899";
+        ctx.shadowColor = "#ec4899";
+        ctx.shadowBlur = 2 * scale;
+        ctx.beginPath();
+        ctx.arc(-2 * scale, 12 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Elegant hand
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 3.5 * scale, 4 * scale, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Graceful fingers
+        for (let f = 0; f < 4; f++) {
+          const fingerAngle = -0.4 + f * 0.25;
+          ctx.beginPath();
+          ctx.ellipse(
+            Math.cos(fingerAngle) * 3 * scale,
+            18 * scale + Math.sin(fingerAngle) * scale,
+            1 * scale,
+            2.5 * scale,
+            fingerAngle,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Right arm - dramatic singing gesture
+        ctx.save();
+        ctx.translate(cx + 13 * scale, cy - 4 * scale + bounce);
+        ctx.rotate(0.7 - armGesture * 1.5);
+
+        // Tuxedo sleeve
+        const rightSleeveGrad = ctx.createLinearGradient(-4 * scale, 0, 4 * scale, 0);
+        rightSleeveGrad.addColorStop(0, "#1a1a1a");
+        rightSleeveGrad.addColorStop(0.5, "#2a2a2a");
+        rightSleeveGrad.addColorStop(1, "#1a1a1a");
+        ctx.fillStyle = rightSleeveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 5 * scale, 5 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White cuff
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 4 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pink cufflink
+        ctx.fillStyle = "#ec4899";
+        ctx.shadowColor = "#ec4899";
+        ctx.shadowBlur = 2 * scale;
+        ctx.beginPath();
+        ctx.arc(2 * scale, 12 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Elegant hand (more open for dramatic gesture)
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 3.5 * scale, 4 * scale, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Graceful spread fingers
+        for (let f = 0; f < 5; f++) {
+          const fingerAngle = 0.5 - f * 0.25;
+          const fingerLength = f === 2 ? 3 * scale : 2.5 * scale;
+          ctx.beginPath();
+          ctx.ellipse(
+            Math.cos(fingerAngle) * 3.5 * scale,
+            17 * scale + Math.sin(fingerAngle) * scale,
+            1 * scale,
+            fingerLength,
+            fingerAngle,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        ctx.restore();
 
         // Pink bow tie (matching theme)
         ctx.fillStyle = "#ec4899";
@@ -2594,6 +3019,72 @@ export const HeroSprite: React.FC<{
         ctx.lineTo(cx + 5 * scale, cy - 8 * scale + bounce);
         ctx.closePath();
         ctx.fill();
+
+        // === VINTAGE SUIT ARMS ===
+        const writingMotion = animated ? Math.sin(t * 2.5) * 0.1 : 0;
+
+        // Left arm - holding book
+        ctx.save();
+        ctx.translate(cx - 12 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(-0.4);
+
+        // Teal sleeve
+        const leftSleeveGrad = ctx.createLinearGradient(-4 * scale, 0, 4 * scale, 0);
+        leftSleeveGrad.addColorStop(0, "#0d9488");
+        leftSleeveGrad.addColorStop(0.5, "#14b8a6");
+        leftSleeveGrad.addColorStop(1, "#0d9488");
+        ctx.fillStyle = leftSleeveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 5 * scale, 5 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White cuff
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 3.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hand
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.ellipse(0, 15 * scale, 3 * scale, 4 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Right arm - writing with quill
+        ctx.save();
+        ctx.translate(cx + 12 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(0.5 + writingMotion);
+
+        // Teal sleeve
+        const rightSleeveGrad = ctx.createLinearGradient(-4 * scale, 0, 4 * scale, 0);
+        rightSleeveGrad.addColorStop(0, "#0d9488");
+        rightSleeveGrad.addColorStop(0.5, "#14b8a6");
+        rightSleeveGrad.addColorStop(1, "#0d9488");
+        ctx.fillStyle = rightSleeveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 5 * scale, 5 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White cuff
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 3.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hand holding quill
+        ctx.fillStyle = "#ffe0bd";
+        ctx.beginPath();
+        ctx.ellipse(0, 15 * scale, 3 * scale, 4 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fingers gripping quill
+        ctx.beginPath();
+        ctx.ellipse(1 * scale, 18 * scale, 1.5 * scale, 2 * scale, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(-1 * scale, 18 * scale, 1.5 * scale, 2 * scale, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
@@ -2810,6 +3301,92 @@ export const HeroSprite: React.FC<{
           ctx.lineTo(cx + 10 * scale + i * 2 * scale, cy - 1 * scale + bounce);
           ctx.stroke();
         }
+
+        // === MILITARY UNIFORM ARMS ===
+        const saluteMotion = animated ? Math.sin(t * 1.8) * 0.08 : 0;
+
+        // Left arm - at attention
+        ctx.save();
+        ctx.translate(cx - 12 * scale, cy - 4 * scale + bounce);
+        ctx.rotate(-0.2 + saluteMotion);
+
+        // Military sleeve
+        const leftSleeveGrad = ctx.createLinearGradient(-4 * scale, 0, 4 * scale, 0);
+        leftSleeveGrad.addColorStop(0, "#1e3a5f");
+        leftSleeveGrad.addColorStop(0.5, "#2d4a6f");
+        leftSleeveGrad.addColorStop(1, "#1e3a5f");
+        ctx.fillStyle = leftSleeveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 6 * scale, 5 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gold trim on sleeve
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 4 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // White glove
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 3.5 * scale, 4.5 * scale, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glove details
+        ctx.strokeStyle = "#e0e0e0";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-2 * scale, 14 * scale);
+        ctx.lineTo(-2 * scale, 18 * scale);
+        ctx.moveTo(0, 14 * scale);
+        ctx.lineTo(0, 19 * scale);
+        ctx.moveTo(2 * scale, 14 * scale);
+        ctx.lineTo(2 * scale, 18 * scale);
+        ctx.stroke();
+        ctx.restore();
+
+        // Right arm - holding sword
+        ctx.save();
+        ctx.translate(cx + 12 * scale, cy - 4 * scale + bounce);
+        ctx.rotate(0.3 - saluteMotion);
+
+        // Military sleeve
+        const rightSleeveGrad = ctx.createLinearGradient(-4 * scale, 0, 4 * scale, 0);
+        rightSleeveGrad.addColorStop(0, "#1e3a5f");
+        rightSleeveGrad.addColorStop(0.5, "#2d4a6f");
+        rightSleeveGrad.addColorStop(1, "#1e3a5f");
+        ctx.fillStyle = rightSleeveGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 6 * scale, 5 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gold trim on sleeve
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.ellipse(0, 12 * scale, 4 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // White glove gripping sword
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 3.5 * scale, 4.5 * scale, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glove details
+        ctx.strokeStyle = "#e0e0e0";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-2 * scale, 14 * scale);
+        ctx.lineTo(-2 * scale, 18 * scale);
+        ctx.moveTo(0, 14 * scale);
+        ctx.lineTo(0, 19 * scale);
+        ctx.moveTo(2 * scale, 14 * scale);
+        ctx.lineTo(2 * scale, 18 * scale);
+        ctx.stroke();
+        ctx.restore();
+
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
@@ -2971,6 +3548,106 @@ export const HeroSprite: React.FC<{
           3 * scale,
           5 * scale
         );
+
+        // === ENGINEER WORK ARMS ===
+        const workMotion = animated ? Math.sin(t * 2) * 0.12 : 0;
+
+        // Left arm - safety gear
+        ctx.save();
+        ctx.translate(cx - 11 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(-0.35 + workMotion);
+
+        // Orange safety sleeve
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.ellipse(0, 5 * scale, 5 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Reflective stripe on sleeve
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-3 * scale, 0);
+        ctx.lineTo(-2 * scale, 10 * scale);
+        ctx.stroke();
+
+        // Work glove
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.ellipse(0, 14 * scale, 4 * scale, 5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glove padding
+        ctx.fillStyle = "#92400e";
+        ctx.beginPath();
+        ctx.ellipse(-1 * scale, 16 * scale, 3 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fingers
+        ctx.fillStyle = "#78350f";
+        for (let f = 0; f < 4; f++) {
+          ctx.beginPath();
+          ctx.ellipse(
+            -2 * scale + f * 1.5 * scale,
+            18 * scale,
+            1 * scale,
+            2 * scale,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Right arm - holding wrench
+        ctx.save();
+        ctx.translate(cx + 11 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(0.4 - workMotion);
+
+        // Orange safety sleeve
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.ellipse(0, 5 * scale, 5 * scale, 9 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Reflective stripe on sleeve
+        ctx.strokeStyle = "#fef08a";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(3 * scale, 0);
+        ctx.lineTo(2 * scale, 10 * scale);
+        ctx.stroke();
+
+        // Work glove gripping wrench
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.ellipse(0, 14 * scale, 4 * scale, 5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glove padding
+        ctx.fillStyle = "#92400e";
+        ctx.beginPath();
+        ctx.ellipse(1 * scale, 16 * scale, 3 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fingers wrapped around wrench handle
+        ctx.fillStyle = "#78350f";
+        for (let f = 0; f < 4; f++) {
+          ctx.beginPath();
+          ctx.ellipse(
+            2 * scale - f * 1.5 * scale,
+            18 * scale,
+            1 * scale,
+            2 * scale,
+            0,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        ctx.restore();
+
         // Head
         ctx.fillStyle = "#ffe0bd";
         ctx.beginPath();
@@ -3117,7 +3794,7 @@ export const HeroSprite: React.FC<{
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 // =============================================================================
-// SPELL SPRITES
+// SPELL SPRITES - Epic Fantasy Style
 // =============================================================================
 export const SpellSprite: React.FC<{
   type: SpellType;
@@ -3128,7 +3805,7 @@ export const SpellSprite: React.FC<{
   const [time, setTime] = useState(0);
   useEffect(() => {
     if (!animated) return;
-    const interval = setInterval(() => setTime((t) => t + 1), 50);
+    const interval = setInterval(() => setTime((t) => t + 1), 30);
     return () => clearInterval(interval);
   }, [animated]);
   useEffect(() => {
@@ -3144,226 +3821,765 @@ export const SpellSprite: React.FC<{
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 40;
-    const t = time * 0.1;
+    const t = time * 0.08;
     switch (type) {
       case "fireball": {
-        const flameHeight = animated ? 14 + Math.sin(t * 3) * 2 : 14;
+        // === INFERNO ORB - A swirling vortex of hellfire ===
+        const pulseScale = 1 + (animated ? Math.sin(t * 4) * 0.08 : 0);
+        const rotationAngle = animated ? t * 2 : 0;
+
+        // Outer hellfire aura - multiple layers
+        for (let layer = 3; layer >= 0; layer--) {
+          const layerRadius = (19 + layer * 3.5) * scale * pulseScale;
+          const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, layerRadius);
+          auraGrad.addColorStop(0, `rgba(255, 200, 50, ${0.15 - layer * 0.03})`);
+          auraGrad.addColorStop(0.5, `rgba(255, 80, 0, ${0.12 - layer * 0.02})`);
+          auraGrad.addColorStop(1, "rgba(150, 0, 0, 0)");
+          ctx.fillStyle = auraGrad;
+          ctx.beginPath();
+          ctx.arc(cx, cy, layerRadius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Swirling fire particles
+        if (animated) {
+          for (let i = 0; i < 12; i++) {
+            const angle = rotationAngle + (i * Math.PI * 2) / 12;
+            const dist = (10 + Math.sin(t * 3 + i * 1.5) * 3.5) * scale;
+            const px = cx + Math.cos(angle) * dist;
+            const py = cy + Math.sin(angle) * dist - Math.sin(t * 4 + i) * 2.5 * scale;
+            const particleSize = (1.8 + Math.sin(t * 5 + i) * 0.6) * scale;
+            const particleGrad = ctx.createRadialGradient(px, py, 0, px, py, particleSize * 2);
+            particleGrad.addColorStop(0, "#ffffff");
+            particleGrad.addColorStop(0.3, "#ffdd00");
+            particleGrad.addColorStop(0.7, "#ff6600");
+            particleGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+            ctx.fillStyle = particleGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, particleSize * 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Main fireball core with intense glow
         ctx.shadowColor = "#ff4400";
-        ctx.shadowBlur = 15 * scale;
-        const fireGrad = ctx.createRadialGradient(
-          cx,
-          cy + 2 * scale,
-          0,
-          cx,
-          cy,
-          flameHeight * scale
+        ctx.shadowBlur = 28 * scale;
+        const coreGrad = ctx.createRadialGradient(
+          cx - 2.5 * scale, cy - 2.5 * scale, 0,
+          cx, cy, 14 * scale * pulseScale
         );
-        fireGrad.addColorStop(0, "#ffffff");
-        fireGrad.addColorStop(0.15, "#ffff00");
-        fireGrad.addColorStop(0.4, "#ff8800");
-        fireGrad.addColorStop(0.7, "#ff4400");
-        fireGrad.addColorStop(1, "#cc0000");
-        ctx.fillStyle = fireGrad;
+        coreGrad.addColorStop(0, "#ffffff");
+        coreGrad.addColorStop(0.15, "#ffffcc");
+        coreGrad.addColorStop(0.3, "#ffcc00");
+        coreGrad.addColorStop(0.5, "#ff8800");
+        coreGrad.addColorStop(0.75, "#ff4400");
+        coreGrad.addColorStop(1, "#991100");
+        ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.moveTo(cx, cy - flameHeight * scale);
-        ctx.quadraticCurveTo(
-          cx + 12 * scale,
-          cy - 8 * scale,
-          cx + 12 * scale,
-          cy + 4 * scale
-        );
-        ctx.quadraticCurveTo(
-          cx + 10 * scale,
-          cy + 14 * scale,
-          cx,
-          cy + 12 * scale
-        );
-        ctx.quadraticCurveTo(
-          cx - 10 * scale,
-          cy + 14 * scale,
-          cx - 12 * scale,
-          cy + 4 * scale
-        );
-        ctx.quadraticCurveTo(
-          cx - 12 * scale,
-          cy - 8 * scale,
-          cx,
-          cy - flameHeight * scale
-        );
+        ctx.arc(cx, cy, 12 * scale * pulseScale, 0, Math.PI * 2);
         ctx.fill();
+
+        // Inner plasma swirls
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotationAngle);
+        for (let i = 0; i < 3; i++) {
+          const swirlAngle = (i * Math.PI * 2) / 3;
+          ctx.strokeStyle = `rgba(255, 255, 200, ${0.6 - i * 0.1})`;
+          ctx.lineWidth = 1.8 * scale;
+          ctx.beginPath();
+          for (let j = 0; j < 22; j++) {
+            const r = (2.5 + j * 0.4) * scale;
+            const a = swirlAngle + j * 0.3;
+            const x = Math.cos(a) * r;
+            const y = Math.sin(a) * r;
+            if (j === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Rising flame tongues
+        ctx.shadowBlur = 18 * scale;
+        for (let i = 0; i < 5; i++) {
+          const flameAngle = (i * Math.PI * 2) / 5 + (animated ? Math.sin(t * 2 + i) * 0.3 : 0);
+          const flameHeight = (7 + (animated ? Math.sin(t * 5 + i * 2) * 3.5 : 0)) * scale;
+          const baseX = cx + Math.cos(flameAngle) * 7 * scale;
+          const baseY = cy + Math.sin(flameAngle) * 7 * scale;
+          const tipX = cx + Math.cos(flameAngle) * (12 + flameHeight / scale) * scale;
+          const tipY = cy + Math.sin(flameAngle) * (12 + flameHeight / scale) * scale;
+
+          const flameGrad = ctx.createLinearGradient(baseX, baseY, tipX, tipY);
+          flameGrad.addColorStop(0, "#ffff88");
+          flameGrad.addColorStop(0.4, "#ff8800");
+          flameGrad.addColorStop(1, "rgba(200, 0, 0, 0)");
+          ctx.fillStyle = flameGrad;
+          ctx.beginPath();
+          ctx.moveTo(tipX, tipY);
+          const perpX = Math.cos(flameAngle + Math.PI / 2) * 3 * scale;
+          const perpY = Math.sin(flameAngle + Math.PI / 2) * 3 * scale;
+          ctx.quadraticCurveTo(
+            baseX + perpX, baseY + perpY,
+            cx + Math.cos(flameAngle) * 5 * scale, cy + Math.sin(flameAngle) * 5 * scale
+          );
+          ctx.quadraticCurveTo(
+            baseX - perpX, baseY - perpY,
+            tipX, tipY
+          );
+          ctx.fill();
+        }
+
+        // Bright center highlight
         ctx.shadowBlur = 0;
-        ctx.fillStyle = "#ffff88";
+        const highlightGrad = ctx.createRadialGradient(
+          cx - 2.5 * scale, cy - 2.5 * scale, 0,
+          cx, cy, 6 * scale
+        );
+        highlightGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+        highlightGrad.addColorStop(0.5, "rgba(255, 255, 200, 0.4)");
+        highlightGrad.addColorStop(1, "rgba(255, 200, 100, 0)");
+        ctx.fillStyle = highlightGrad;
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 6 * scale);
-        ctx.quadraticCurveTo(
-          cx + 5 * scale,
-          cy,
-          cx + 4 * scale,
-          cy + 5 * scale
-        );
-        ctx.quadraticCurveTo(
-          cx,
-          cy + 7 * scale,
-          cx - 4 * scale,
-          cy + 5 * scale
-        );
-        ctx.quadraticCurveTo(cx - 5 * scale, cy, cx, cy - 6 * scale);
+        ctx.arc(cx - 2.5 * scale, cy - 2.5 * scale, 6 * scale, 0, Math.PI * 2);
         ctx.fill();
         break;
       }
       case "lightning": {
-        // 1. Setup Intense Outer Glow
-        ctx.shadowColor = "#ffdd00";
-        ctx.shadowBlur = 25 * scale; // Increased blur for better atmosphere
-        ctx.fillStyle = "#ffdd00";
+        // === THUNDERSTRIKE - Crackling electric devastation ===
+        const flickerIntensity = animated ? 0.7 + Math.random() * 0.3 : 1;
+        const boltOffset = animated ? (Math.random() - 0.5) * 2 * scale : 0;
 
-        // 2. Define the Main "Thick" Bolt Path
-        // We increase the vertical span (24) and the horizontal swing (14)
+        // Electric storm aura
+        const stormGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        stormGrad.addColorStop(0, `rgba(200, 220, 255, ${0.3 * flickerIntensity})`);
+        stormGrad.addColorStop(0.4, `rgba(100, 150, 255, ${0.2 * flickerIntensity})`);
+        stormGrad.addColorStop(0.7, `rgba(80, 100, 200, ${0.1 * flickerIntensity})`);
+        stormGrad.addColorStop(1, "rgba(50, 50, 150, 0)");
+        ctx.fillStyle = stormGrad;
         ctx.beginPath();
-        ctx.moveTo(cx + 14 * scale, cy - 20 * scale); // Top Right Tip
-        ctx.lineTo(cx - 8 * scale, cy - 4 * scale); // Mid Left Bend
-        ctx.lineTo(cx + 12 * scale, cy - 4 * scale); // Mid Right Bend
-        ctx.lineTo(cx - 14 * scale, cy + 20 * scale); // Bottom Left Tip
-        ctx.lineTo(cx + 8 * scale, cy + 4 * scale); // Mid Right Bend (Return)
-        ctx.lineTo(cx - 12 * scale, cy + 4 * scale); // Mid Left Bend (Return)
-        ctx.closePath();
+        ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. Add a "Hot Core" (White Center)
-        // This makes the bolt look much more realistic and powerful
-        ctx.shadowBlur = 0; // Disable shadow for the core to keep it sharp
-        ctx.fillStyle = "#ffffff";
+        // Crackling background sparks
+        if (animated) {
+          for (let i = 0; i < 8; i++) {
+            if (Math.random() > 0.5) {
+              const sparkAngle = Math.random() * Math.PI * 2;
+              const sparkDist = (8 + Math.random() * 8) * scale;
+              const sparkX = cx + Math.cos(sparkAngle) * sparkDist;
+              const sparkY = cy + Math.sin(sparkAngle) * sparkDist;
+              ctx.strokeStyle = `rgba(200, 230, 255, ${0.4 + Math.random() * 0.4})`;
+              ctx.lineWidth = 0.5 * scale;
+              ctx.beginPath();
+              ctx.moveTo(sparkX, sparkY);
+              ctx.lineTo(
+                sparkX + (Math.random() - 0.5) * 4 * scale,
+                sparkY + (Math.random() - 0.5) * 4 * scale
+              );
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Main lightning bolt - outer glow layer
+        ctx.shadowColor = "#88aaff";
+        ctx.shadowBlur = 20 * scale * flickerIntensity;
+        ctx.strokeStyle = `rgba(150, 180, 255, ${0.8 * flickerIntensity})`;
+        ctx.lineWidth = 6 * scale;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
         ctx.beginPath();
-        ctx.moveTo(cx + 12 * scale, cy - 16 * scale);
-        ctx.lineTo(cx - 8 * scale, cy - 2 * scale);
-        ctx.lineTo(cx + 9 * scale, cy - 2 * scale);
-        ctx.lineTo(cx - 12 * scale, cy + 16 * scale);
-        ctx.lineTo(cx + 8 * scale, cy + 2 * scale);
-        ctx.lineTo(cx - 9 * scale, cy + 2 * scale);
-        ctx.closePath();
+        ctx.moveTo(cx + 2 * scale + boltOffset, cy - 16 * scale);
+        ctx.lineTo(cx - 4 * scale + boltOffset * 0.5, cy - 4 * scale);
+        ctx.lineTo(cx + 4 * scale + boltOffset * 0.3, cy - 2 * scale);
+        ctx.lineTo(cx - 2 * scale + boltOffset * 0.7, cy + 16 * scale);
+        ctx.stroke();
+
+        // Middle electric layer
+        ctx.shadowColor = "#aaccff";
+        ctx.shadowBlur = 12 * scale * flickerIntensity;
+        ctx.strokeStyle = `rgba(200, 220, 255, ${0.9 * flickerIntensity})`;
+        ctx.lineWidth = 3.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx + 2 * scale + boltOffset, cy - 16 * scale);
+        ctx.lineTo(cx - 4 * scale + boltOffset * 0.5, cy - 4 * scale);
+        ctx.lineTo(cx + 4 * scale + boltOffset * 0.3, cy - 2 * scale);
+        ctx.lineTo(cx - 2 * scale + boltOffset * 0.7, cy + 16 * scale);
+        ctx.stroke();
+
+        // Hot white core
+        ctx.shadowBlur = 8 * scale * flickerIntensity;
+        ctx.shadowColor = "#ffffff";
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx + 2 * scale + boltOffset, cy - 16 * scale);
+        ctx.lineTo(cx - 4 * scale + boltOffset * 0.5, cy - 4 * scale);
+        ctx.lineTo(cx + 4 * scale + boltOffset * 0.3, cy - 2 * scale);
+        ctx.lineTo(cx - 2 * scale + boltOffset * 0.7, cy + 16 * scale);
+        ctx.stroke();
+
+        // Secondary branching bolts
+        ctx.shadowColor = "#aaccff";
+        ctx.shadowBlur = 8 * scale * flickerIntensity;
+        ctx.strokeStyle = `rgba(180, 200, 255, ${0.7 * flickerIntensity})`;
+        ctx.lineWidth = 2 * scale;
+
+        // Left branch
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale + boltOffset * 0.5, cy - 4 * scale);
+        ctx.lineTo(cx - 10 * scale + boltOffset, cy - 6 * scale);
+        ctx.lineTo(cx - 12 * scale + boltOffset * 1.2, cy - 2 * scale);
+        ctx.stroke();
+
+        // Right branch
+        ctx.beginPath();
+        ctx.moveTo(cx + 4 * scale + boltOffset * 0.3, cy - 2 * scale);
+        ctx.lineTo(cx + 10 * scale + boltOffset * 0.8, cy + 2 * scale);
+        ctx.lineTo(cx + 8 * scale + boltOffset, cy + 6 * scale);
+        ctx.stroke();
+
+        // White cores for branches
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale + boltOffset * 0.5, cy - 4 * scale);
+        ctx.lineTo(cx - 10 * scale + boltOffset, cy - 6 * scale);
+        ctx.lineTo(cx - 12 * scale + boltOffset * 1.2, cy - 2 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 4 * scale + boltOffset * 0.3, cy - 2 * scale);
+        ctx.lineTo(cx + 10 * scale + boltOffset * 0.8, cy + 2 * scale);
+        ctx.lineTo(cx + 8 * scale + boltOffset, cy + 6 * scale);
+        ctx.stroke();
+
+        // Electric impact orbs at ends
+        ctx.shadowBlur = 15 * scale * flickerIntensity;
+        ctx.shadowColor = "#ffffff";
+        const topOrbGrad = ctx.createRadialGradient(
+          cx + 2 * scale + boltOffset, cy - 16 * scale, 0,
+          cx + 2 * scale + boltOffset, cy - 16 * scale, 4 * scale
+        );
+        topOrbGrad.addColorStop(0, "#ffffff");
+        topOrbGrad.addColorStop(0.4, "rgba(200, 220, 255, 0.8)");
+        topOrbGrad.addColorStop(1, "rgba(100, 150, 255, 0)");
+        ctx.fillStyle = topOrbGrad;
+        ctx.beginPath();
+        ctx.arc(cx + 2 * scale + boltOffset, cy - 16 * scale, 4 * scale, 0, Math.PI * 2);
         ctx.fill();
 
+        const bottomOrbGrad = ctx.createRadialGradient(
+          cx - 2 * scale + boltOffset * 0.7, cy + 16 * scale, 0,
+          cx - 2 * scale + boltOffset * 0.7, cy + 16 * scale, 5 * scale
+        );
+        bottomOrbGrad.addColorStop(0, "#ffffff");
+        bottomOrbGrad.addColorStop(0.3, "rgba(200, 220, 255, 0.9)");
+        bottomOrbGrad.addColorStop(0.6, "rgba(150, 180, 255, 0.5)");
+        bottomOrbGrad.addColorStop(1, "rgba(100, 150, 255, 0)");
+        ctx.fillStyle = bottomOrbGrad;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale + boltOffset * 0.7, cy + 16 * scale, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
         break;
       }
       case "freeze": {
-        ctx.shadowColor = "#00ddff";
-        ctx.shadowBlur = 10 * scale;
-        ctx.strokeStyle = "#00ddff";
-        ctx.fillStyle = "#aaffff";
-        ctx.lineWidth = 2.5 * scale;
+        // === GLACIAL NOVA - Ancient ice magic crystallization ===
+        const rotationAngle = animated ? t * 0.4 : 0;
+        const pulseIntensity = animated ? 0.8 + Math.sin(t * 2) * 0.2 : 1;
+        const shimmer = animated ? Math.sin(t * 5) * 0.15 : 0;
+
+        // Frozen mist aura
+        const mistGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        mistGrad.addColorStop(0, `rgba(200, 240, 255, ${0.3 * pulseIntensity})`);
+        mistGrad.addColorStop(0.5, `rgba(100, 200, 255, ${0.15 * pulseIntensity})`);
+        mistGrad.addColorStop(1, "rgba(50, 150, 200, 0)");
+        ctx.fillStyle = mistGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating ice particles
+        if (animated) {
+          for (let i = 0; i < 10; i++) {
+            const particleAngle = t * 0.8 + (i * Math.PI * 2) / 10;
+            const particleDist = (12 + Math.sin(t * 2 + i * 0.5) * 3) * scale;
+            const px = cx + Math.cos(particleAngle) * particleDist;
+            const py = cy + Math.sin(particleAngle) * particleDist;
+            const particleSize = (1 + Math.sin(t * 3 + i) * 0.3) * scale;
+            ctx.fillStyle = `rgba(200, 240, 255, ${0.5 + Math.sin(t * 4 + i) * 0.2})`;
+            ctx.beginPath();
+            // Diamond shape particle
+            ctx.moveTo(px, py - particleSize);
+            ctx.lineTo(px + particleSize * 0.6, py);
+            ctx.lineTo(px, py + particleSize);
+            ctx.lineTo(px - particleSize * 0.6, py);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        // Main crystal snowflake
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotationAngle);
+
+        // Draw 6 main arms
         for (let i = 0; i < 6; i++) {
           ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate((i * Math.PI) / 3 + (animated ? t * 0.5 : 0));
+          ctx.rotate((i * Math.PI) / 3);
+
+          // Outer glow for arm
+          ctx.shadowColor = "#00ccff";
+          ctx.shadowBlur = 8 * scale * pulseIntensity;
+
+          // Main crystal arm - gradient stroke
+          const armGrad = ctx.createLinearGradient(0, 0, 0, -15 * scale);
+          armGrad.addColorStop(0, "#ffffff");
+          armGrad.addColorStop(0.3, `rgba(180, 240, 255, ${0.9 + shimmer})`);
+          armGrad.addColorStop(0.7, `rgba(100, 200, 255, ${0.8 + shimmer})`);
+          armGrad.addColorStop(1, `rgba(50, 180, 230, ${0.6})`);
+
+          ctx.strokeStyle = armGrad;
+          ctx.lineWidth = 2.5 * scale;
+          ctx.lineCap = "round";
+
+          // Main arm stem
           ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(0, -14 * scale);
-          ctx.moveTo(0, -7 * scale);
-          ctx.lineTo(-5 * scale, -10 * scale);
-          ctx.moveTo(0, -7 * scale);
-          ctx.lineTo(5 * scale, -10 * scale);
-          ctx.moveTo(0, -11 * scale);
-          ctx.lineTo(-3 * scale, -14 * scale);
-          ctx.moveTo(0, -11 * scale);
-          ctx.lineTo(3 * scale, -14 * scale);
+          ctx.moveTo(0, -3 * scale);
+          ctx.lineTo(0, -15 * scale);
           ctx.stroke();
+
+          // Crystal tip
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(0, -15 * scale);
+          ctx.lineTo(-2 * scale, -13 * scale);
+          ctx.lineTo(0, -17 * scale);
+          ctx.lineTo(2 * scale, -13 * scale);
+          ctx.closePath();
+          ctx.fill();
+
+          // Side branches with crystals
+          ctx.lineWidth = 1.8 * scale;
+
+          // First pair of branches
+          ctx.beginPath();
+          ctx.moveTo(0, -6 * scale);
+          ctx.lineTo(-4 * scale, -9 * scale);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, -6 * scale);
+          ctx.lineTo(4 * scale, -9 * scale);
+          ctx.stroke();
+
+          // Second pair of branches
+          ctx.beginPath();
+          ctx.moveTo(0, -10 * scale);
+          ctx.lineTo(-3 * scale, -12.5 * scale);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, -10 * scale);
+          ctx.lineTo(3 * scale, -12.5 * scale);
+          ctx.stroke();
+
+          // Small crystal formations on branch tips
+          ctx.fillStyle = `rgba(220, 250, 255, ${0.9 + shimmer})`;
+          const crystalPositions = [
+            { x: -4 * scale, y: -9 * scale },
+            { x: 4 * scale, y: -9 * scale },
+            { x: -3 * scale, y: -12.5 * scale },
+            { x: 3 * scale, y: -12.5 * scale },
+          ];
+          crystalPositions.forEach((pos) => {
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y - 1.5 * scale);
+            ctx.lineTo(pos.x - 1 * scale, pos.y);
+            ctx.lineTo(pos.x, pos.y + 1.5 * scale);
+            ctx.lineTo(pos.x + 1 * scale, pos.y);
+            ctx.closePath();
+            ctx.fill();
+          });
+
           ctx.restore();
         }
+        ctx.restore();
+
+        // Central ice crystal core
+        ctx.shadowColor = "#00ddff";
+        ctx.shadowBlur = 12 * scale * pulseIntensity;
+        const coreGrad = ctx.createRadialGradient(
+          cx - 1 * scale, cy - 1 * scale, 0,
+          cx, cy, 5 * scale
+        );
+        coreGrad.addColorStop(0, "#ffffff");
+        coreGrad.addColorStop(0.4, "#ccffff");
+        coreGrad.addColorStop(0.7, "#66ddff");
+        coreGrad.addColorStop(1, "#00aadd");
+        ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.arc(cx, cy, 5 * scale, 0, Math.PI * 2);
+        // Hexagonal core
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3 + rotationAngle;
+          const x = cx + Math.cos(angle) * 4 * scale;
+          const y = cy + Math.sin(angle) * 4 * scale;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
         ctx.fill();
+
+        // Bright center highlight
         ctx.shadowBlur = 0;
+        const highlightGrad = ctx.createRadialGradient(
+          cx - 1 * scale, cy - 1 * scale, 0,
+          cx, cy, 2.5 * scale
+        );
+        highlightGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+        highlightGrad.addColorStop(0.5, "rgba(200, 240, 255, 0.5)");
+        highlightGrad.addColorStop(1, "rgba(150, 220, 255, 0)");
+        ctx.fillStyle = highlightGrad;
+        ctx.beginPath();
+        ctx.arc(cx - 1 * scale, cy - 1 * scale, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
         break;
       }
       case "payday": {
+        // === FORTUNE'S BLESSING - Divine golden treasure magic ===
+        const rotationAngle = animated ? t * 0.5 : 0;
+        const pulseScale = animated ? 1 + Math.sin(t * 3) * 0.06 : 1;
+        const shimmer = animated ? Math.sin(t * 6) : 0;
+
+        // Divine golden aura
+        const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        auraGrad.addColorStop(0, `rgba(255, 230, 100, ${0.35 * pulseScale})`);
+        auraGrad.addColorStop(0.5, `rgba(255, 200, 50, ${0.2 * pulseScale})`);
+        auraGrad.addColorStop(0.8, `rgba(200, 150, 0, ${0.1})`);
+        auraGrad.addColorStop(1, "rgba(150, 100, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Orbiting golden sparkles
+        if (animated) {
+          for (let i = 0; i < 8; i++) {
+            const sparkAngle = rotationAngle * 2 + (i * Math.PI * 2) / 8;
+            const sparkDist = (13 + Math.sin(t * 2 + i) * 2) * scale;
+            const sx = cx + Math.cos(sparkAngle) * sparkDist;
+            const sy = cy + Math.sin(sparkAngle) * sparkDist;
+
+            // 4-pointed star sparkle
+            ctx.fillStyle = `rgba(255, 255, 200, ${0.7 + Math.sin(t * 5 + i * 2) * 0.3})`;
+            ctx.beginPath();
+            const sparkSize = (1.5 + Math.sin(t * 4 + i) * 0.5) * scale;
+            ctx.moveTo(sx, sy - sparkSize * 1.5);
+            ctx.lineTo(sx + sparkSize * 0.4, sy);
+            ctx.lineTo(sx, sy + sparkSize * 1.5);
+            ctx.lineTo(sx - sparkSize * 0.4, sy);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(sx - sparkSize * 1.5, sy);
+            ctx.lineTo(sx, sy + sparkSize * 0.4);
+            ctx.lineTo(sx + sparkSize * 1.5, sy);
+            ctx.lineTo(sx, sy - sparkSize * 0.4);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        // Coin stack with 3D effect
         ctx.shadowColor = "#ffaa00";
-        ctx.shadowBlur = 12 * scale;
-        for (let i = 2; i >= 0; i--) {
-          ctx.fillStyle = i === 0 ? "#ffd700" : "#daa520";
-          ctx.beginPath();
-          ctx.ellipse(
-            cx,
-            cy + 6 * scale - i * 5 * scale,
-            14 * scale,
-            7 * scale,
-            0,
-            0,
-            Math.PI * 2
+        ctx.shadowBlur = 15 * scale;
+
+        for (let i = 3; i >= 0; i--) {
+          const coinY = cy + 4 * scale - i * 4 * scale;
+          const coinScale = 1 - i * 0.05;
+
+          // Coin edge (3D depth)
+          if (i < 3) {
+            ctx.fillStyle = "#a67c00";
+            ctx.beginPath();
+            ctx.ellipse(cx, coinY + 2 * scale, 11 * scale * coinScale, 5.5 * scale * coinScale, 0, 0, Math.PI);
+            ctx.fill();
+          }
+
+          // Main coin face gradient
+          const coinGrad = ctx.createLinearGradient(
+            cx - 10 * scale, coinY - 5 * scale,
+            cx + 10 * scale, coinY + 5 * scale
           );
+          coinGrad.addColorStop(0, "#fff5b8");
+          coinGrad.addColorStop(0.2, "#ffd700");
+          coinGrad.addColorStop(0.5, "#ffec8b");
+          coinGrad.addColorStop(0.8, "#daa520");
+          coinGrad.addColorStop(1, "#b8860b");
+          ctx.fillStyle = coinGrad;
+          ctx.beginPath();
+          ctx.ellipse(cx, coinY, 11 * scale * coinScale, 5.5 * scale * coinScale, 0, 0, Math.PI * 2);
           ctx.fill();
-          ctx.strokeStyle = "#b8860b";
-          ctx.lineWidth = 1.5;
+
+          // Coin rim
+          ctx.strokeStyle = "#8b6914";
+          ctx.lineWidth = 1.2 * scale;
+          ctx.stroke();
+
+          // Inner decorative circle
+          ctx.strokeStyle = `rgba(139, 105, 20, ${0.6 + shimmer * 0.2})`;
+          ctx.lineWidth = 0.8 * scale;
+          ctx.beginPath();
+          ctx.ellipse(cx, coinY, 8 * scale * coinScale, 4 * scale * coinScale, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
-        ctx.fillStyle = "#8b6914";
-        ctx.font = `bold ${16 * scale}px Arial`;
+
+        // Dollar sign on top coin
+        ctx.shadowBlur = 0;
+        ctx.font = `bold ${13 * scale}px Georgia, serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillText("$", cx, cy - 2 * scale);
+
+        // Dollar sign shadow
+        ctx.fillStyle = "rgba(100, 70, 0, 0.5)";
+        ctx.fillText("$", cx + 0.5 * scale, cy - 7 * scale + 0.5 * scale);
+
+        // Dollar sign gradient fill
+        const dollarGrad = ctx.createLinearGradient(
+          cx - 5 * scale, cy - 12 * scale,
+          cx + 5 * scale, cy - 2 * scale
+        );
+        dollarGrad.addColorStop(0, "#5a4a10");
+        dollarGrad.addColorStop(0.5, "#8b6914");
+        dollarGrad.addColorStop(1, "#5a4a10");
+        ctx.fillStyle = dollarGrad;
+        ctx.fillText("$", cx, cy - 7 * scale);
+
+        // Radiant sparkle bursts
+        ctx.shadowColor = "#ffdd00";
+        ctx.shadowBlur = 8 * scale;
+        const sparklePositions = [
+          { x: -13, y: -8, size: 2.5, phase: 0 },
+          { x: 13, y: -6, size: 2.2, phase: 1 },
+          { x: -11, y: 6, size: 2, phase: 2 },
+          { x: 12, y: 8, size: 2.3, phase: 3 },
+          { x: 0, y: -14, size: 2.8, phase: 4 },
+        ];
+        sparklePositions.forEach(({ x, y, size, phase }) => {
+          const sparkAlpha = animated ? 0.6 + Math.sin(t * 4 + phase) * 0.4 : 0.8;
+          const sparkScale = animated ? size * (0.8 + Math.sin(t * 5 + phase) * 0.3) : size;
+          ctx.fillStyle = `rgba(255, 255, 220, ${sparkAlpha})`;
+
+          // Draw 4-pointed sparkle
+          ctx.beginPath();
+          ctx.moveTo(cx + x * scale, cy + y * scale - sparkScale * scale);
+          ctx.lineTo(cx + x * scale + sparkScale * 0.3 * scale, cy + y * scale);
+          ctx.lineTo(cx + x * scale, cy + y * scale + sparkScale * scale);
+          ctx.lineTo(cx + x * scale - sparkScale * 0.3 * scale, cy + y * scale);
+          ctx.closePath();
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(cx + x * scale - sparkScale * scale, cy + y * scale);
+          ctx.lineTo(cx + x * scale, cy + y * scale + sparkScale * 0.3 * scale);
+          ctx.lineTo(cx + x * scale + sparkScale * scale, cy + y * scale);
+          ctx.lineTo(cx + x * scale, cy + y * scale - sparkScale * 0.3 * scale);
+          ctx.closePath();
+          ctx.fill();
+        });
         ctx.shadowBlur = 0;
-        ctx.fillStyle = "#ffff88";
-        const sparkleOffset = animated ? Math.sin(t) * 2 : 0;
-        ctx.beginPath();
-        ctx.arc(
-          cx - 12 * scale,
-          cy - 10 * scale + sparkleOffset,
-          2.5 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.arc(
-          cx + 12 * scale,
-          cy - 8 * scale - sparkleOffset,
-          2.5 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
         break;
       }
       case "reinforcements": {
-        const positions = [
-          { x: cx - 10 * scale, y: cy + 5 * scale },
-          { x: cx + 10 * scale, y: cy + 5 * scale },
-          { x: cx, y: cy - 5 * scale },
-        ];
-        positions.forEach((pos, i) => {
-          const yOffset = animated ? Math.sin(t + i) * 2 : 0;
-          ctx.fillStyle = i === 2 ? "#9966ff" : "#7744dd";
-          ctx.beginPath();
-          ctx.ellipse(
-            pos.x,
-            pos.y + 5 * scale + yOffset,
-            6 * scale,
-            8 * scale,
-            0,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          ctx.fillStyle = "#ffdbac";
-          ctx.beginPath();
-          ctx.arc(
-            pos.x,
-            pos.y - 4 * scale + yOffset,
-            5 * scale,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          ctx.fillStyle = "#666";
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y - 6 * scale + yOffset, 5 * scale, Math.PI, 0);
-          ctx.fill();
-        });
-        ctx.shadowColor = "#9966ff";
-        ctx.shadowBlur = 10 * scale;
-        ctx.strokeStyle = "#9966ff";
-        ctx.lineWidth = 1.5;
+        // === RALLY CRY - Summon heroic warriors from the void ===
+        const pulseIntensity = animated ? 0.7 + Math.sin(t * 2) * 0.3 : 1;
+        const rotationAngle = animated ? t * 0.3 : 0;
+
+        // Magical summoning circle aura
+        const summonAura = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        summonAura.addColorStop(0, `rgba(150, 100, 255, ${0.25 * pulseIntensity})`);
+        summonAura.addColorStop(0.5, `rgba(100, 50, 200, ${0.15 * pulseIntensity})`);
+        summonAura.addColorStop(1, "rgba(50, 20, 100, 0)");
+        ctx.fillStyle = summonAura;
         ctx.beginPath();
         ctx.arc(cx, cy, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outer magic circle
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotationAngle);
+
+        ctx.shadowColor = "#aa66ff";
+        ctx.shadowBlur = 10 * scale * pulseIntensity;
+        ctx.strokeStyle = `rgba(170, 100, 255, ${0.7 * pulseIntensity})`;
+        ctx.lineWidth = 1.5 * scale;
+
+        // Main circle
+        ctx.beginPath();
+        ctx.arc(0, 0, 16 * scale, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.shadowBlur = 0;
+
+        // Rune markings around circle
+        for (let i = 0; i < 6; i++) {
+          const runeAngle = (i * Math.PI) / 3;
+          const rx = Math.cos(runeAngle) * 16 * scale;
+          const ry = Math.sin(runeAngle) * 16 * scale;
+
+          // Small rune symbols
+          ctx.fillStyle = `rgba(200, 150, 255, ${0.8 * pulseIntensity})`;
+          ctx.beginPath();
+          ctx.arc(rx, ry, 2 * scale, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Connecting lines
+          ctx.beginPath();
+          ctx.moveTo(rx * 0.7, ry * 0.7);
+          ctx.lineTo(rx, ry);
+          ctx.stroke();
+        }
+
+        // Inner arcane pentagon
+        ctx.strokeStyle = `rgba(150, 100, 255, ${0.5 * pulseIntensity})`;
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+          const angle = (i * Math.PI * 2) / 5 - Math.PI / 2;
+          const x = Math.cos(angle) * 10 * scale;
+          const y = Math.sin(angle) * 10 * scale;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+
+        // Rising energy particles
+        if (animated) {
+          for (let i = 0; i < 12; i++) {
+            const particlePhase = t * 1.5 + i * 0.5;
+            const particleY = ((particlePhase * 20) % 30) - 15;
+            const particleX = Math.sin(particlePhase * 2 + i) * 8;
+            const alpha = 1 - Math.abs(particleY) / 15;
+            ctx.fillStyle = `rgba(180, 130, 255, ${alpha * 0.6})`;
+            ctx.beginPath();
+            ctx.arc(cx + particleX * scale, cy + particleY * scale, 1.2 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Three heroic figures
+        const warriors = [
+          { x: -9, y: 3, armor: "#7744dd", delay: 0 },
+          { x: 9, y: 3, armor: "#7744dd", delay: 1 },
+          { x: 0, y: -5, armor: "#9966ff", delay: 2 },
+        ];
+
+        warriors.forEach(({ x, y, armor, delay }) => {
+          const yOffset = animated ? Math.sin(t * 2 + delay) * 1.5 : 0;
+          const glowIntensity = animated ? 0.7 + Math.sin(t * 3 + delay) * 0.3 : 1;
+          const wx = cx + x * scale;
+          const wy = cy + y * scale - yOffset * scale;
+
+          // Warrior glow aura
+          const warriorAura = ctx.createRadialGradient(wx, wy, 0, wx, wy, 8 * scale);
+          warriorAura.addColorStop(0, `rgba(150, 100, 255, ${0.2 * glowIntensity})`);
+          warriorAura.addColorStop(1, "rgba(100, 50, 200, 0)");
+          ctx.fillStyle = warriorAura;
+          ctx.beginPath();
+          ctx.arc(wx, wy, 8 * scale, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Body/Cape
+          const capeGrad = ctx.createLinearGradient(wx - 5 * scale, wy, wx + 5 * scale, wy);
+          capeGrad.addColorStop(0, "#4a2288");
+          capeGrad.addColorStop(0.5, armor);
+          capeGrad.addColorStop(1, "#4a2288");
+          ctx.fillStyle = capeGrad;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy - 2 * scale);
+          ctx.quadraticCurveTo(wx - 7 * scale, wy + 2 * scale, wx - 5 * scale, wy + 9 * scale);
+          ctx.lineTo(wx - 3 * scale, wy + 7 * scale);
+          ctx.lineTo(wx, wy + 9 * scale);
+          ctx.lineTo(wx + 3 * scale, wy + 7 * scale);
+          ctx.lineTo(wx + 5 * scale, wy + 9 * scale);
+          ctx.quadraticCurveTo(wx + 7 * scale, wy + 2 * scale, wx, wy - 2 * scale);
+          ctx.fill();
+
+          // Armor chestplate
+          ctx.fillStyle = "#5533aa";
+          ctx.beginPath();
+          ctx.ellipse(wx, wy + 1 * scale, 4 * scale, 5 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Head
+          ctx.fillStyle = "#ffdbac";
+          ctx.beginPath();
+          ctx.arc(wx, wy - 5 * scale, 4 * scale, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Helmet
+          const helmetGrad = ctx.createLinearGradient(wx - 4 * scale, wy - 8 * scale, wx + 4 * scale, wy - 4 * scale);
+          helmetGrad.addColorStop(0, "#6b7280");
+          helmetGrad.addColorStop(0.5, "#9ca3af");
+          helmetGrad.addColorStop(1, "#6b7280");
+          ctx.fillStyle = helmetGrad;
+          ctx.beginPath();
+          ctx.arc(wx, wy - 6 * scale, 4.5 * scale, Math.PI, 0);
+          ctx.fill();
+
+          // Helmet plume
+          ctx.fillStyle = armor;
+          ctx.beginPath();
+          ctx.ellipse(wx, wy - 10 * scale, 1.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Eyes (glowing)
+          ctx.fillStyle = `rgba(200, 180, 255, ${glowIntensity})`;
+          ctx.shadowColor = "#aa88ff";
+          ctx.shadowBlur = 4 * scale * glowIntensity;
+          ctx.beginPath();
+          ctx.arc(wx - 1.5 * scale, wy - 5 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.arc(wx + 1.5 * scale, wy - 5 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Shield (front warrior only)
+          if (x === 0) {
+            const shieldGrad = ctx.createLinearGradient(wx - 6 * scale, wy, wx + 2 * scale, wy);
+            shieldGrad.addColorStop(0, "#8866cc");
+            shieldGrad.addColorStop(0.5, "#aa88ee");
+            shieldGrad.addColorStop(1, "#8866cc");
+            ctx.fillStyle = shieldGrad;
+            ctx.beginPath();
+            ctx.moveTo(wx - 7 * scale, wy - 2 * scale);
+            ctx.lineTo(wx - 7 * scale, wy + 4 * scale);
+            ctx.lineTo(wx - 4 * scale, wy + 6 * scale);
+            ctx.lineTo(wx - 1 * scale, wy + 4 * scale);
+            ctx.lineTo(wx - 1 * scale, wy - 2 * scale);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#5533aa";
+            ctx.lineWidth = 0.8 * scale;
+            ctx.stroke();
+          }
+
+          // Sword (back warriors)
+          if (x !== 0) {
+            const swordX = x > 0 ? wx + 5 * scale : wx - 5 * scale;
+            ctx.strokeStyle = "#c0c0c0";
+            ctx.lineWidth = 1.5 * scale;
+            ctx.beginPath();
+            ctx.moveTo(swordX, wy - 8 * scale);
+            ctx.lineTo(swordX, wy + 2 * scale);
+            ctx.stroke();
+            // Sword hilt
+            ctx.strokeStyle = "#8b4513";
+            ctx.beginPath();
+            ctx.moveTo(swordX - 2 * scale, wy + 2 * scale);
+            ctx.lineTo(swordX + 2 * scale, wy + 2 * scale);
+            ctx.stroke();
+          }
+        });
         break;
       }
     }
@@ -3491,9 +4707,8 @@ export const EnemySprite: React.FC<{
               2 * scale +
               Math.sin(particleAngle) * particleDist * 0.4 -
               bounce;
-            ctx.fillStyle = `rgba(74, 222, 128, ${
-              0.5 + Math.sin(t * 3 + i) * 0.2
-            })`;
+            ctx.fillStyle = `rgba(74, 222, 128, ${0.5 + Math.sin(t * 3 + i) * 0.2
+              })`;
             ctx.beginPath();
             ctx.arc(px, py, 1.5 * scale, 0, Math.PI * 2);
             ctx.fill();
@@ -3658,9 +4873,8 @@ export const EnemySprite: React.FC<{
               2 * scale +
               Math.sin(symbolAngle) * symbolDist * 0.35 -
               bounce;
-            ctx.fillStyle = `rgba(96, 165, 250, ${
-              0.4 + Math.sin(t * 2 + i) * 0.2
-            })`;
+            ctx.fillStyle = `rgba(96, 165, 250, ${0.4 + Math.sin(t * 2 + i) * 0.2
+              })`;
             ctx.font = `${4 * scale}px serif`;
             ctx.textAlign = "center";
             ctx.fillText(["◇", "△", "○"][i], sx, sy);
@@ -4061,10 +5275,10 @@ export const EnemySprite: React.FC<{
           );
           ctx.lineTo(
             cx -
-              5 * scale +
-              i * 2.5 * scale +
-              twitch * 0.3 +
-              Math.sin(t * 2 + i) * scale,
+            5 * scale +
+            i * 2.5 * scale +
+            twitch * 0.3 +
+            Math.sin(t * 2 + i) * scale,
             cy - 23 * scale - bounce
           );
           ctx.stroke();
@@ -4098,9 +5312,8 @@ export const EnemySprite: React.FC<{
           for (let i = 0; i < 3; i++) {
             const wispX = cx + Math.sin(t + i * 1.5) * 8 * scale;
             const wispY = cy + 8 * scale - bounce + Math.cos(t + i) * 2 * scale;
-            ctx.fillStyle = `rgba(31, 41, 55, ${
-              0.3 + Math.sin(t * 2 + i) * 0.1
-            })`;
+            ctx.fillStyle = `rgba(31, 41, 55, ${0.3 + Math.sin(t * 2 + i) * 0.1
+              })`;
             ctx.beginPath();
             ctx.ellipse(
               wispX,
@@ -4323,9 +5536,8 @@ export const EnemySprite: React.FC<{
             ctx.save();
             ctx.translate(px, py);
             ctx.rotate(Math.sin(t * 2 + i) * 0.4);
-            ctx.fillStyle = `rgba(254, 243, 199, ${
-              0.7 + Math.sin(t + i) * 0.2
-            })`;
+            ctx.fillStyle = `rgba(254, 243, 199, ${0.7 + Math.sin(t + i) * 0.2
+              })`;
             ctx.fillRect(-2 * scale, -2.5 * scale, 4 * scale, 5 * scale);
             // Scribbled lines
             ctx.strokeStyle = `rgba(120, 53, 15, ${0.5})`;
@@ -4594,9 +5806,8 @@ export const EnemySprite: React.FC<{
             ctx.save();
             ctx.translate(nx, ny);
             ctx.rotate(Math.sin(t + i) * 0.2);
-            ctx.fillStyle = `rgba(254, 226, 226, ${
-              0.6 + Math.sin(t * 2 + i) * 0.2
-            })`;
+            ctx.fillStyle = `rgba(254, 226, 226, ${0.6 + Math.sin(t * 2 + i) * 0.2
+              })`;
             ctx.fillRect(-2 * scale, -3 * scale, 4 * scale, 6 * scale);
             ctx.strokeStyle = `rgba(127, 29, 29, 0.5)`;
             ctx.lineWidth = 0.4 * scale;
@@ -4830,9 +6041,8 @@ export const EnemySprite: React.FC<{
             ctx.save();
             ctx.translate(sx, sy);
             ctx.rotate(t * 2 + i);
-            ctx.fillStyle = `rgba(126, 34, 206, ${
-              0.5 + Math.sin(t * 2 + i) * 0.2
-            })`;
+            ctx.fillStyle = `rgba(126, 34, 206, ${0.5 + Math.sin(t * 2 + i) * 0.2
+              })`;
             ctx.beginPath();
             ctx.moveTo(0, -2 * scale);
             ctx.lineTo(1.5 * scale, 0);
@@ -5061,9 +6271,8 @@ export const EnemySprite: React.FC<{
               Math.sin(coinAngle) * coinDist * 0.35 -
               bounce +
               coinFloat * (i % 2 === 0 ? 1 : -1);
-            ctx.fillStyle = `rgba(251, 191, 36, ${
-              0.7 + Math.sin(t * 2 + i) * 0.2
-            })`;
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.7 + Math.sin(t * 2 + i) * 0.2
+              })`;
             ctx.shadowColor = "#fbbf24";
             ctx.shadowBlur = 3 * scale;
             ctx.beginPath();

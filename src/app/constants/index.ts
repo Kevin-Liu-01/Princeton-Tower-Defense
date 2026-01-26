@@ -34,8 +34,8 @@ export const TOWER_DATA: Record<
     desc: string;
     spawnRange?: number;
     upgrades: {
-      A: { name: string; desc: string; effect: string };
-      B: { name: string; desc: string; effect: string };
+      A: { name: string; desc: string; effect: string; range?: number };
+      B: { name: string; desc: string; effect: string; range?: number };
     };
     levelDesc: { [key: number]: string };
   }
@@ -87,11 +87,13 @@ export const TOWER_DATA: Record<
         name: "Gatling Gun",
         desc: "Rapid-fire machine gun",
         effect: "8x attack speed, 0.4x damage per shot",
+        range: 360,
       },
       B: {
         name: "Flamethrower",
         desc: "Continuous fire stream",
         effect: "Deals burn damage over time to enemies",
+        range: 300,
       },
     },
   },
@@ -114,11 +116,13 @@ export const TOWER_DATA: Record<
         name: "Earthquake Smasher",
         desc: "Seismic waves damage and slow",
         effect: "Deals 35 AoE damage + 80% slow",
+        range: 330,
       },
       B: {
         name: "Blizzard",
         desc: "Freezes enemies completely",
         effect: "70% slow + periodic 2s freeze",
+        range: 385,
       },
     },
   },
@@ -141,11 +145,13 @@ export const TOWER_DATA: Record<
         name: "Focused Beam",
         desc: "Concentrated laser attack",
         effect: "Continuous lock-on, damage increases over time",
+        range: 320,
       },
       B: {
         name: "Chain Lightning",
         desc: "Multi-target electricity",
         effect: "Hits up to 5 targets at once",
+        range: 300,
       },
     },
   },
@@ -168,11 +174,13 @@ export const TOWER_DATA: Record<
         name: "Shockwave Emitter",
         desc: "Powerful stunning sound waves",
         effect: "30% chance to stun enemies for 1s",
+        range: 390,
       },
       B: {
         name: "Symphony Hall",
         desc: "Harmonious multi-target",
         effect: "Hits up to 5 enemies simultaneously",
+        range: 416,
       },
     },
   },
@@ -889,17 +897,17 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 14, y: 20 },
     { x: 20, y: 20 },
     { x: 26, y: 20 },
-    { x: 32, y: 20 },
+    { x: 35, y: 20 },
   ],
   // Secondary path for peak
   peak_b: [
-    { x: 22, y: -2 },
-    { x: 22, y: 4 },
-    { x: 20, y: 4 },
-    { x: 20, y: 10 },
-    { x: 20, y: 20 },
-    { x: 26, y: 20 },
-    { x: 32, y: 20 },
+    { x: 12, y: -2 },
+    { x: 12, y: 6 },
+    { x: 22, y: 6 },
+    { x: 22, y: 12 },
+    { x: 28, y: 12 },
+    { x: 28, y: 19 },
+    { x: 35, y: 20 },
   ],
   // =====================
   // VOLCANIC REGION (Inferno Depths)
@@ -1454,11 +1462,22 @@ export const LEVEL_DATA: Record<
       { type: "pine_tree", pos: { x: 4, y: 22 }, variant: 0 },
       { type: "pine_tree", pos: { x: 16, y: 24 }, variant: 1 },
       { type: "pine_tree", pos: { x: 28, y: 22 }, variant: 2 },
-      // Ice features
-      { type: "ice_crystal", pos: { x: 8, y: 6 }, variant: 0 },
-      { type: "ice_crystal", pos: { x: 20, y: 6 }, variant: 1 },
-
-      { type: "ice_crystal", pos: { x: 6, y: 20 }, variant: 2 },
+      // Ice crystals - scattered throughout with varied sizes
+      { type: "ice_fortress", pos: { x: 8, y: 6 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 20, y: 6 }, variant: 1, size: 2 },
+      { type: "ice_fortress", pos: { x: 4, y: 18 }, variant: 2, size: 1 },
+      { type: "ice_fortress", pos: { x: 2, y: 4 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 28, y: 4 }, variant: 1, size: 1 },
+      { type: "ice_fortress", pos: { x: 12, y: 2 }, variant: 2, size: 1 },
+      { type: "ice_fortress", pos: { x: 24, y: 16 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 8, y: 24 }, variant: 1, size: 1 },
+      { type: "ice_fortress", pos: { x: 30, y: 16 }, variant: 2, size: 1 },
+      // Ice thrones - majestic focal points
+      { type: "ice_throne", pos: { x: 10, y: 4 }, variant: 0, size: 2 },
+      { type: "ice_throne", pos: { x: 26, y: 6 }, variant: 1, size: 2 },
+      { type: "ice_throne", pos: { x: 2, y: 20 }, variant: 2, size: 1 },
+      { type: "ice_throne", pos: { x: 15, y: 4 }, variant: 0, size: 2 },
+      // Frozen ponds
       { type: "frozen_pond", pos: { x: 14, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 26, y: 12 }, variant: 1, size: 2 },
       // Snow decorations
@@ -1494,6 +1513,23 @@ export const LEVEL_DATA: Record<
       { type: "ice_fortress", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
       { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 0, size: 2 },
       { type: "frozen_gate", pos: { x: 12, y: 12 }, variant: 0 },
+      // Ice thrones - commanding positions among the ruins
+      { type: "ice_throne", pos: { x: 4, y: 8 }, variant: 0, size: 3 },
+      { type: "ice_throne", pos: { x: 26, y: 8 }, variant: 1, size: 2 },
+      { type: "ice_throne", pos: { x: 8, y: 24 }, variant: 2, size: 2 },
+      { type: "ice_throne", pos: { x: 24, y: 26 }, variant: 0, size: 1 },
+      { type: "ice_throne", pos: { x: 16, y: 26 }, variant: 1, size: 2 },
+      // Ice crystals - scattered throughout fortress ruins
+      { type: "ice_fortress", pos: { x: 12, y: 2 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 20, y: 6 }, variant: 1, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 2, y: 6 }, variant: 2, size: 0.5 },
+      { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 6, y: 14 }, variant: 1, size: 1 },
+      { type: "ice_fortress", pos: { x: 26, y: 18 }, variant: 2, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 2, y: 22 }, variant: 0, size: 0.5 },
+      { type: "ice_fortress", pos: { x: 9, y: 15 }, variant: 1, size: 1 },
+      { type: "ice_fortress", pos: { x: 30, y: 12 }, variant: 2, size: 1 },
+      { type: "ice_fortress", pos: { x: 14, y: 2 }, variant: 0, size: 0.5 },
       // Broken walls along path
       { type: "broken_wall", pos: { x: 6, y: 10 }, variant: 0 },
       { type: "broken_wall", pos: { x: 20, y: 14 }, variant: 1 },
@@ -1508,9 +1544,7 @@ export const LEVEL_DATA: Record<
       { type: "pine_tree", pos: { x: 4, y: 26 }, variant: 1 },
       { type: "pine_tree", pos: { x: 28, y: 14 }, variant: 2 },
       { type: "pine_tree", pos: { x: 28, y: 24 }, variant: 0 },
-      // Ice features
-      { type: "ice_crystal", pos: { x: 10, y: 4 }, variant: 0 },
-      { type: "ice_crystal", pos: { x: 20, y: 6 }, variant: 1 },
+      // Snow features
       { type: "snow_pile", pos: { x: 6, y: 24 }, variant: 0 },
       { type: "icicles", pos: { x: 18, y: 8 }, variant: 0 },
     ],
@@ -1530,25 +1564,40 @@ export const LEVEL_DATA: Record<
     dualPath: true,
     secondaryPath: "peak_b",
     specialTower: {
-      pos: { x: 16, y: 16 },
+      pos: { x: 16, y: 19 },
       type: "shrine",
     },
     decorations: [
-      // Ice throne and fortresses (paths: x:-2 to 32, y:10 to 22)
-      { type: "ice_throne", pos: { x: 14, y: 4 }, variant: 0, size: 3 },
+      // Grand ice throne centerpiece (paths: x:-2 to 35, y:10 to 22)
+      { type: "ice_throne", pos: { x: 10, y: 7 }, variant: 0, size: 3 },
+      // Ice fortresses at corners
       { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 0 },
-      { type: "ice_fortress", pos: { x: 24, y: 6 }, variant: 1 },
+      { type: "ice_fortress", pos: { x: 27, y: 6 }, variant: 1, size: 2 },
       { type: "ice_fortress", pos: { x: 4, y: 22 }, variant: 2 },
       { type: "ice_fortress", pos: { x: 26, y: 22 }, variant: 0 },
-      // Frozen pond central
+      // Frozen ponds central
       { type: "frozen_pond", pos: { x: 10, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 22, y: 14 }, variant: 1, size: 2 },
-      // Ice thrones and crystals
-      { type: "ice_throne", pos: { x: 8, y: 10 }, variant: 0 },
-      { type: "ice_throne", pos: { x: 22, y: 10 }, variant: 1 },
-      { type: "ice_crystal", pos: { x: 6, y: 14 }, variant: 0 },
-      { type: "ice_crystal", pos: { x: 18, y: 8 }, variant: 1 },
-      { type: "ice_crystal", pos: { x: 26, y: 16 }, variant: 2 },
+      // Multiple ice thrones - the summit is crowned with frozen majesty
+      { type: "ice_throne", pos: { x: 8, y: 8 }, variant: 0, size: 2 },
+      { type: "ice_throne", pos: { x: 16, y: 10 }, variant: 1, size: 2 },
+      { type: "ice_throne", pos: { x: 2, y: 4 }, variant: 2, size: 1 },
+      { type: "ice_throne", pos: { x: 28, y: 3 }, variant: 0, size: 2 },
+      { type: "ice_throne", pos: { x: 8, y: 24 }, variant: 1, size: 2 },
+      { type: "ice_throne", pos: { x: 32, y: 10 }, variant: 2, size: 1 },
+      // Ice crystals - abundant across the frozen peak
+      { type: "ice_fortress", pos: { x: 6, y: 14 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 12, y: 9 }, variant: 1, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 26, y: 16 }, variant: 2, size: 1 },
+      { type: "ice_fortress", pos: { x: 4, y: 2 }, variant: 0, size: 0.5 },
+      { type: "ice_fortress", pos: { x: 24, y: 2 }, variant: 1, size: 1 },
+      { type: "ice_fortress", pos: { x: 10, y: 2 }, variant: 2, size: 1 },
+      { type: "ice_fortress", pos: { x: 32, y: 6 }, variant: 0, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 2, y: 16 }, variant: 1, size: 0.5 },
+      { type: "ice_fortress", pos: { x: 30, y: 14 }, variant: 2, size: 1 },
+      { type: "ice_fortress", pos: { x: 16, y: 24 }, variant: 0, size: 1 },
+      { type: "ice_fortress", pos: { x: 30, y: 24 }, variant: 1, size: 0.5 },
+      { type: "ice_fortress", pos: { x: 6, y: 8 }, variant: 2, size: 0.5 },
       // Pine trees
       { type: "pine_tree", pos: { x: 2, y: 12 }, variant: 0 },
       { type: "pine_tree", pos: { x: 2, y: 20 }, variant: 1 },
@@ -1562,7 +1611,7 @@ export const LEVEL_DATA: Record<
       { type: "frozen_soldier", pos: { x: 4, y: 16 }, variant: 0 },
       { type: "bones", pos: { x: 26, y: 12 }, variant: 1 },
     ],
-    hazards: [{ type: "ice_sheet", pos: { x: 16, y: 12 }, radius: 2 }],
+    hazards: [{ type: "ice_sheet", pos: { x: 20, y: 7 }, radius: 2 }],
     previewImage: "/images/previews/peak.png",
   },
   // =====================
@@ -2864,7 +2913,7 @@ export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
 export const INITIAL_PAW_POINTS = 300;
 export const INITIAL_LIVES = 20;
-export const WAVE_TIMER_BASE = 10000;
+export const WAVE_TIMER_BASE = 15000;
 export const HERO_RESPAWN_TIME = 15000;
 export const TROOP_SPREAD_RADIUS = 45;
 export const ENEMY_SPAWN_FADE_DURATION = 500;
