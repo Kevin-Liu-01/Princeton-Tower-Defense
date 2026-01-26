@@ -367,7 +367,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 28,
   },
   crossbowman: {
-    name: "Heavy Security",
+    name: "Eating Club Bouncer",
     hp: 600,
     speed: 0.24,
     bounty: 50,
@@ -408,13 +408,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
   },
   wyvern: {
-    name: "Tiger Transit Bus",
+    name: "Tiger Transit Wyvern",
     hp: 1200,
     speed: 0.36,
     bounty: 110,
     armor: 0.3,
     flying: true,
-    desc: "A massive flying vehicle that stops for no one.",
+    desc: "A massive flying dragon that stops for no one.",
     color: "#059669",
     size: 36,
   },
@@ -944,7 +944,7 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 20, y: 6 },
     { x: 20, y: 10 },
     { x: 26, y: 10 },
-    { x: 32, y: 10 }, // MERGE POINT
+    { x: 36, y: 10 }, // MERGE POINT
   ],
   // Secondary path for throne
   throne_b: [
@@ -956,7 +956,7 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 24, y: 16 },
     { x: 30, y: 16 },
     { x: 30, y: 10 }, // Merge point with primary path
-    { x: 32, y: 10 },
+    { x: 36, y: 10 },
   ],
 };
 
@@ -1112,7 +1112,7 @@ export const LEVEL_DATA: Record<
       // Nassau Hall near path center (path: x:-2 to 32, y:8 to 20)
       { type: "nassau_hall", pos: { x: 14, y: 0 }, variant: 0, size: 3 },
       { type: "statue", pos: { x: 19, y: 0 }, variant: 0 },
-      { type: "fountain", pos: { x: 22, y: 12 }, variant: 0 },
+      { type: "fountain", pos: { x: 24, y: 7 }, variant: 0 },
       // Trees around the expanded area
       { type: "tree", pos: { x: 4, y: 4 }, variant: 1 },
       { type: "tree", pos: { x: 24, y: 4 }, variant: 0 },
@@ -1297,12 +1297,12 @@ export const LEVEL_DATA: Record<
     difficulty: 1,
     startingPawPoints: 425, // Beacon boost helps - ranged enemies require planning
     specialTower: {
-      pos: { x: 22, y: 14 },
+      pos: { x: 19, y: 10.5 },
       type: "beacon",
     },
     decorations: [
       // Desert features near path (path: x:-2 to 32, y:10 to 18)
-      { type: "pyramid", pos: { x: 20, y: 4 }, variant: 0, size: 2 },
+      { type: "pyramid", pos: { x: 16, y: 4 }, variant: 0, size: 2 },
       { type: "sphinx", pos: { x: 4, y: 4 }, variant: 0 },
       { type: "oasis_pool", pos: { x: 12, y: 14 }, variant: 0, size: 2 },
       // Palm trees around
@@ -1322,8 +1322,9 @@ export const LEVEL_DATA: Record<
       // Desert objects
       { type: "skull", pos: { x: 16, y: 6 }, variant: 0 },
       { type: "pottery", pos: { x: 10, y: 20 }, variant: 0 },
-      { type: "obelisk", pos: { x: 6, y: 12 }, variant: 0 },
-      { type: "obelisk", pos: { x: 22, y: 12 }, variant: 1 },
+      { type: "obelisk", pos: { x: 8, y: 6 }, variant: 0 },
+      { type: "statue", pos: { x: 9, y: 6.5 }, variant: 0 },
+      { type: "obelisk", pos: { x: 10, y: 7 }, variant: 1 },
       { type: "bones", pos: { x: 24, y: 4 }, variant: 0 },
       { type: "tent", pos: { x: 2, y: 20 }, variant: 0 },
       { type: "campfire", pos: { x: 28, y: 20 }, variant: 0 },
@@ -1343,19 +1344,23 @@ export const LEVEL_DATA: Record<
     dualPath: true,
     secondaryPath: "pyramid_b",
     specialTower: {
-      pos: { x: 19, y: 16 },
+      pos: { x: 20, y: 17 },
       type: "barracks",
     },
     decorations: [
       // Pyramids near path center (path: x:10-26, y:-2 to 32)
-      { type: "pyramid", pos: { x: 6, y: 4 }, variant: 0, size: 3 },
-      { type: "pyramid", pos: { x: 6, y: 19 }, variant: 0, size: 3 },
+      { type: "pyramid", pos: { x: 12, y: 4 }, variant: 0, size: 1 },
+      { type: "pyramid", pos: { x: 23, y: 14 }, variant: 0, size: 1 },
+      { type: "pyramid", pos: { x: 8, y: 17.5 }, variant: 0, size: 1.25 },
+      { type: "pyramid", pos: { x: 7, y: 20 }, variant: 0, size: 1 },
 
-      { type: "pyramid", pos: { x: 24, y: 6 }, variant: 1, size: 2 },
+      { type: "pyramid", pos: { x: 25, y: 6 }, variant: 1, size: 2 },
+      { type: "pyramid", pos: { x: 36, y: 10 }, variant: 1, size: 2.5 },
+
       { type: "sphinx", pos: { x: 14, y: 6 }, variant: 0 },
       // Obelisks and torches along path
       { type: "obelisk", pos: { x: 6, y: 14 }, variant: 0 },
-      { type: "obelisk", pos: { x: 22, y: 18 }, variant: 1 },
+      { type: "obelisk", pos: { x: 16, y: 16 }, variant: 1 },
       { type: "obelisk", pos: { x: 14, y: 22 }, variant: 2 },
       { type: "torch", pos: { x: 12, y: 10 }, variant: 0 },
       { type: "torch", pos: { x: 20, y: 14 }, variant: 1 },
@@ -1382,13 +1387,13 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "The ancient guardian's domain. The Sphinx watches all who dare to pass.",
-    camera: { offset: { x: -200, y: -380 }, zoom: 0.9 },
+    camera: { offset: { x: -90, y: -340 }, zoom: 0.8 },
     region: "desert",
     theme: "desert",
     difficulty: 3,
     startingPawPoints: 575, // Challenging boss waves with quicksand hazard
     specialTower: {
-      pos: { x: 14, y: 16 },
+      pos: { x: 24, y: 14.5 },
       type: "shrine",
     },
     decorations: [
@@ -1402,8 +1407,8 @@ export const LEVEL_DATA: Record<
       { type: "obelisk", pos: { x: 22, y: 14 }, variant: 2 },
       { type: "obelisk", pos: { x: 28, y: 18 }, variant: 0 },
       // Pyramids and decorations
-      { type: "pyramid", pos: { x: 4, y: 24 }, variant: 0, size: 2 },
-      { type: "pyramid", pos: { x: 26, y: 4 }, variant: 1, size: 2 },
+      { type: "pyramid", pos: { x: 15, y: 26 }, variant: 0, size: 1.5 },
+      { type: "pyramid", pos: { x: 26, y: 2 }, variant: 1, size: 2 },
       { type: "sarcophagus", pos: { x: 2, y: 18 }, variant: 0 },
       { type: "sarcophagus", pos: { x: 28, y: 10 }, variant: 1 },
       { type: "sand_pile", pos: { x: 16, y: 20 }, variant: 0 },
@@ -1421,7 +1426,7 @@ export const LEVEL_DATA: Record<
       { type: "torch", pos: { x: 12, y: 8 }, variant: 0 },
       { type: "torch", pos: { x: 20, y: 10 }, variant: 1 },
     ],
-    hazards: [{ type: "quicksand", pos: { x: 14, y: 14 }, radius: 1.5 }],
+    hazards: [{ type: "quicksand", pos: { x: 13, y: 14 }, radius: 1.5 }],
     previewImage: "/images/previews/sphinx.png",
   },
   // =====================
@@ -1432,13 +1437,13 @@ export const LEVEL_DATA: Record<
     position: { x: 120, y: 200 },
     description:
       "Ice-covered mountain pass. Freezing winds howl through the peaks.",
-    camera: { offset: { x: -180, y: -400 }, zoom: 0.9 },
+    camera: { offset: { x: 90, y: -420 }, zoom: 0.9 },
     region: "winter",
     theme: "winter",
     difficulty: 1,
     startingPawPoints: 475, // Winter intro - varied enemy types
     specialTower: {
-      pos: { x: 10, y: 14 },
+      pos: { x: 14, y: 12 },
       type: "beacon",
     },
     decorations: [
@@ -1452,6 +1457,7 @@ export const LEVEL_DATA: Record<
       // Ice features
       { type: "ice_crystal", pos: { x: 8, y: 6 }, variant: 0 },
       { type: "ice_crystal", pos: { x: 20, y: 6 }, variant: 1 },
+
       { type: "ice_crystal", pos: { x: 6, y: 20 }, variant: 2 },
       { type: "frozen_pond", pos: { x: 14, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 26, y: 12 }, variant: 1, size: 2 },
@@ -1473,13 +1479,13 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "An abandoned stronghold of ice and stone. What dark forces drove out its defenders?",
-    camera: { offset: { x: -180, y: -420 }, zoom: 0.85 },
+    camera: { offset: { x: -80, y: -420 }, zoom: 0.85 },
     region: "winter",
     theme: "winter",
     difficulty: 2,
     startingPawPoints: 550, // Barracks helps - ice sheet hazard speeds enemies
     specialTower: {
-      pos: { x: 16, y: 14 },
+      pos: { x: 14, y: 17 },
       type: "barracks",
     },
     decorations: [
@@ -1566,7 +1572,7 @@ export const LEVEL_DATA: Record<
     name: "Lava Fields",
     position: { x: 120, y: 200 },
     description: "Rivers of molten rock carve through the blackened landscape.",
-    camera: { offset: { x: -200, y: -400 }, zoom: 0.9 },
+    camera: { offset: { x: -20, y: -370 }, zoom: 0.85 },
     region: "volcanic",
     theme: "volcanic",
     difficulty: 2,
@@ -1575,18 +1581,19 @@ export const LEVEL_DATA: Record<
       // Lava pools and castles (path: x:-2 to 32, y:10 to 20)
       { type: "lava_pool", pos: { x: 2, y: 16 }, variant: 0, size: 2 },
       { type: "lava_pool", pos: { x: 26, y: 14 }, variant: 1, size: 2 },
-      { type: "obsidian_castle", pos: { x: 4, y: 4 }, variant: 0 },
-      { type: "obsidian_castle", pos: { x: 22, y: 4 }, variant: 1 },
-      { type: "obsidian_castle", pos: { x: 14, y: 22 }, variant: 2 },
+      { type: "dark_barracks", pos: { x: 4, y: 4 }, variant: 0 },
+      { type: "dark_barracks", pos: { x: 22, y: 4 }, variant: 1 },
+      { type: "dark_barracks", pos: { x: 14, y: 22 }, variant: 2 },
       // Charred trees around
       { type: "charred_tree", pos: { x: 8, y: 6 }, variant: 0 },
       { type: "charred_tree", pos: { x: 16, y: 4 }, variant: 1 },
       { type: "charred_tree", pos: { x: 28, y: 8 }, variant: 2 },
       { type: "charred_tree", pos: { x: 4, y: 22 }, variant: 0 },
       { type: "charred_tree", pos: { x: 26, y: 22 }, variant: 1 },
-      // Dark thrones
-      { type: "dark_throne", pos: { x: 10, y: 14 }, variant: 0 },
-      { type: "dark_throne", pos: { x: 20, y: 16 }, variant: 1 },
+      // Dark thrones and spires
+      { type: "dark_barracks", pos: { x: 10, y: 14 }, variant: 0 },
+      { type: "dark_spire", pos: { x: 20, y: 16 }, variant: 1 },
+      { type: "dark_spire", pos: { x: 8, y: 8 }, variant: 0 },
       // Fire pits and embers
       { type: "fire_pit", pos: { x: 6, y: 12 }, variant: 0 },
       { type: "fire_pit", pos: { x: 24, y: 10 }, variant: 1 },
@@ -1604,30 +1611,31 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 200 },
     description:
       "Inside the volcano's heart. The ground trembles with each eruption.",
-    camera: { offset: { x: -180, y: -420 }, zoom: 0.85 },
+    camera: { offset: { x: -90, y: -320 }, zoom: 0.8 },
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
     startingPawPoints: 675, // Vault defense - many tough enemies
     specialTower: {
-      pos: { x: 18, y: 16 },
+      pos: { x: 18, y: 10 },
       type: "vault",
       hp: 1000,
     },
     decorations: [
       // Dark throne and castles (path: x:10-26, y:-2 to 32)
-      { type: "dark_throne", pos: { x: 14, y: 4 }, variant: 0, size: 4 },
-      { type: "obsidian_castle", pos: { x: 4, y: 8 }, variant: 0 },
-      { type: "obsidian_castle", pos: { x: 24, y: 8 }, variant: 1 },
-      { type: "obsidian_castle", pos: { x: 4, y: 20 }, variant: 2 },
-      { type: "obsidian_castle", pos: { x: 26, y: 22 }, variant: 0 },
+      { type: "obsidian_castle", pos: { x: 26, y: 2 }, variant: 0, size: 2 },
+      { type: "dark_spire", pos: { x: 4, y: 8 }, variant: 0 },
+      { type: "dark_barracks", pos: { x: 24, y: 8 }, variant: 1 },
+      { type: "dark_barracks", pos: { x: 4, y: 20 }, variant: 2 },
+      { type: "dark_spire", pos: { x: 26, y: 22 }, variant: 0 },
       // Lava pools
       { type: "lava_pool", pos: { x: 6, y: 14 }, variant: 0, size: 2 },
       { type: "lava_pool", pos: { x: 22, y: 12 }, variant: 1, size: 2 },
       { type: "lava_pool", pos: { x: 14, y: 22 }, variant: 2, size: 2 },
-      // Dark thrones along path
-      { type: "dark_throne", pos: { x: 8, y: 10 }, variant: 0 },
-      { type: "dark_throne", pos: { x: 20, y: 18 }, variant: 1 },
+      // Dark thrones and spires along path
+      { type: "dark_spire", pos: { x: 8, y: 10 }, variant: 0 },
+      { type: "dark_spire", pos: { x: 20, y: 16 }, variant: 1 },
+      { type: "dark_spire", pos: { x: 16, y: 6 }, variant: 2 },
       // Charred trees
       { type: "charred_tree", pos: { x: 4, y: 4 }, variant: 0 },
       { type: "charred_tree", pos: { x: 26, y: 4 }, variant: 1 },
@@ -1643,7 +1651,7 @@ export const LEVEL_DATA: Record<
       { type: "bones", pos: { x: 2, y: 12 }, variant: 0 },
       { type: "skull", pos: { x: 28, y: 16 }, variant: 1 },
     ],
-    hazards: [{ type: "lava_geyser", pos: { x: 18, y: 14 }, radius: 2 }],
+    hazards: [{ type: "lava_geyser", pos: { x: 18, y: 17 }, radius: 2 }],
     previewImage: "/images/previews/caldera.png",
   },
   throne: {
@@ -1651,7 +1659,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "The ultimate challenge. An ancient dark lord's seat of power, guarded by his legions.",
-    camera: { offset: { x: -200, y: -400 }, zoom: 0.85 },
+    camera: { offset: { x: -40, y: -400 }, zoom: 0.85 },
     region: "volcanic",
     theme: "volcanic",
     difficulty: 3,
@@ -1659,18 +1667,18 @@ export const LEVEL_DATA: Record<
     dualPath: true,
     secondaryPath: "throne_b",
     specialTower: {
-      pos: { x: 14, y: 14 },
+      pos: { x: 16, y: 22 },
       type: "barracks",
     },
     decorations: [
       // Obsidian castle and dark throne center (paths: x:-2 to 32, y:8 to 20)
-      { type: "obsidian_castle", pos: { x: 14, y: 4 }, variant: 0, size: 4 },
-      { type: "dark_throne", pos: { x: 16, y: 6 }, variant: 0 },
-      // Castles around the map
-      { type: "obsidian_castle", pos: { x: 4, y: 6 }, variant: 1 },
-      { type: "obsidian_castle", pos: { x: 26, y: 6 }, variant: 2 },
-      { type: "obsidian_castle", pos: { x: 4, y: 22 }, variant: 0 },
-      { type: "obsidian_castle", pos: { x: 26, y: 22 }, variant: 1 },
+      { type: "obsidian_castle", pos: { x: 14, y: 0 }, variant: 0, size: 4 },
+      { type: "dark_throne", pos: { x: 16, y: 2 }, variant: 0 },
+      // Castles and barracks around the map
+      { type: "dark_barracks", pos: { x: 4, y: 6 }, variant: 1 },
+      { type: "dark_barracks", pos: { x: 26, y: 6 }, variant: 2 },
+      { type: "dark_barracks", pos: { x: 4, y: 22 }, variant: 0 },
+      { type: "dark_barracks", pos: { x: 26, y: 22 }, variant: 1 },
       // Demon statues
       { type: "demon_statue", pos: { x: 6, y: 10 }, variant: 0 },
       { type: "demon_statue", pos: { x: 24, y: 10 }, variant: 1 },
@@ -1684,9 +1692,11 @@ export const LEVEL_DATA: Record<
       { type: "fire_pit", pos: { x: 8, y: 4 }, variant: 0 },
       { type: "fire_pit", pos: { x: 22, y: 4 }, variant: 1 },
       { type: "fire_pit", pos: { x: 16, y: 20 }, variant: 0 },
-      // Dark thrones along paths
-      { type: "dark_throne", pos: { x: 8, y: 16 }, variant: 1 },
-      { type: "dark_throne", pos: { x: 22, y: 16 }, variant: 2 },
+      // Dark thrones and spires along paths
+      { type: "dark_spire", pos: { x: 8, y: 16 }, variant: 1 },
+      { type: "dark_spire", pos: { x: 22, y: 16 }, variant: 2 },
+      { type: "dark_spire", pos: { x: 10, y: 4 }, variant: 0 },
+      { type: "dark_spire", pos: { x: 20, y: 24 }, variant: 1 },
       // Charred trees
       { type: "charred_tree", pos: { x: 2, y: 8 }, variant: 0 },
       { type: "charred_tree", pos: { x: 28, y: 8 }, variant: 1 },

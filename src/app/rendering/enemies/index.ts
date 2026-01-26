@@ -135,7 +135,8 @@ export function renderEnemy(
       24,
       4,
       hpPercent,
-      zoom
+      zoom,
+      true // enemies have red health bars
     );
   }
 

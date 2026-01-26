@@ -323,7 +323,8 @@ export function drawHealthBar(
   width: number,
   height: number,
   percentage: number,
-  zoom: number = 1
+  zoom: number = 1,
+  isEnemy: boolean = false
 ): void {
   const scaledWidth = width * zoom;
   const scaledHeight = height * zoom;
@@ -332,9 +333,15 @@ export function drawHealthBar(
   ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
   ctx.fillRect(x - scaledWidth / 2, y, scaledWidth, scaledHeight);
 
-  // Health fill
-  const healthColor =
-    percentage > 0.6 ? "#22c55e" : percentage > 0.3 ? "#eab308" : "#ef4444";
+  // Health fill - enemies get red, friendly units get green
+  let healthColor: string;
+  if (isEnemy) {
+    // Enemies: red health bar that gets darker as health decreases
+    healthColor = percentage > 0.5 ? "#ef4444" : percentage > 0.25 ? "#dc2626" : "#b91c1c";
+  } else {
+    // Friendly (heroes/troops): green health bar that changes to yellow/red when low
+    healthColor = percentage > 0.6 ? "#22c55e" : percentage > 0.3 ? "#eab308" : "#ef4444";
+  }
   ctx.fillStyle = healthColor;
   ctx.fillRect(x - scaledWidth / 2, y, scaledWidth * percentage, scaledHeight);
 

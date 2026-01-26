@@ -543,6 +543,8 @@ export type DecorationCategory =
   | "broken_weapon"
   | "obsidian_castle"
   | "dark_throne"
+  | "dark_barracks"
+  | "dark_spire"
   | "demon_statue"
   | "lava_moat"
   | "skull_throne"

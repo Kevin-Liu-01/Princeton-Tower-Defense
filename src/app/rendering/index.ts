@@ -12173,8 +12173,9 @@ export function renderEnemy(
     ctx.fillRect(screenPos.x - barWidth / 2, barY, barWidth, barHeight);
 
     const hpPercent = enemy.hp / enemy.maxHp;
+    // Enemies have red health bars
     const hpColor =
-      hpPercent > 0.5 ? "#4ade80" : hpPercent > 0.25 ? "#fbbf24" : "#ef4444";
+      hpPercent > 0.5 ? "#ef4444" : hpPercent > 0.25 ? "#dc2626" : "#b91c1c";
     ctx.fillStyle = hpColor;
     ctx.fillRect(
       screenPos.x - barWidth / 2,
