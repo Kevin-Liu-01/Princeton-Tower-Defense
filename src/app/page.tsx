@@ -15728,16 +15728,7 @@ export default function PrincetonTowerDefense() {
         setHoveredHero(distance({ x, y }, heroScreen) < 28);
       }
     },
-    [
-      buildingTower,
-      draggingTower,
-      towers,
-      troops,
-      hero,
-      getCanvasDimensions,
-      cameraOffset,
-      cameraZoom,
-    ]
+    [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops]
   );
   // Game actions
   const upgradeTower = useCallback(
@@ -15792,7 +15783,7 @@ export default function PrincetonTowerDefense() {
               const hpPercent = t.hp / t.maxHp;
               return {
                 ...t,
-                type: newTroopType as any,
+                type: newTroopType as Troop,
                 maxHp: newHP,
                 hp: Math.round(newHP * hpPercent),
                 selected: false, // Deselect troops after upgrade
