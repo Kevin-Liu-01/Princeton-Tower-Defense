@@ -203,6 +203,7 @@ export interface Enemy {
   slowIntensity?: number;
   taunted?: boolean;
   tauntTarget?: string;
+  tauntOffset?: Position; // Offset from path position when moving toward taunt target
   // Dual-path support
   pathKey?: string;
   // Mark as dead for cleanup

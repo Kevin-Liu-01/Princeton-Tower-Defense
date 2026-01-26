@@ -7318,458 +7318,863 @@ export const EnemySprite: React.FC<{
         break;
       }
       case "hexer": {
-        // CURSE WEAVER - Malevolent witch queen with floating curse runes
+        // VOID WITCH QUEEN - Ancient crone channeling eldritch curse magic
         const hexPulse = 0.6 + Math.sin(t * 2) * 0.4;
         const runeFloat = Math.sin(t * 1.5) * 2 * scale;
-        const hatSway = Math.sin(t * 2) * 0.03;
+        const hatSway = Math.sin(t * 2) * 0.04;
+        const chainRattle = Math.sin(t * 6) * scale * 0.5;
+        const cloakBillow = Math.sin(t * 1.2) * 0.08;
+        const orbRotation = t * 1.5;
 
-        // Malevolent pink hex aura
-        const auraGrad = ctx.createRadialGradient(
-          cx,
-          cy - 4 * scale,
-          0,
-          cx,
-          cy - 4 * scale,
-          16 * scale
-        );
-        auraGrad.addColorStop(0, `rgba(236, 72, 153, ${hexPulse * 0.3})`);
-        auraGrad.addColorStop(0.5, `rgba(190, 24, 93, ${hexPulse * 0.15})`);
-        auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-        ctx.fillStyle = auraGrad;
+        // Outer void aura - dark energy field
+        const outerAura = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 22 * scale);
+        outerAura.addColorStop(0, `rgba(147, 51, 234, ${hexPulse * 0.15})`);
+        outerAura.addColorStop(0.4, `rgba(88, 28, 135, ${hexPulse * 0.1})`);
+        outerAura.addColorStop(0.7, `rgba(59, 7, 100, ${hexPulse * 0.05})`);
+        outerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = outerAura;
         ctx.beginPath();
-        ctx.arc(cx, cy - 4 * scale - bounce, 16 * scale, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 2 * scale - bounce, 22 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // Floating curse runes
+        // Inner hex aura - pulsing pink energy
+        const innerAura = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 14 * scale);
+        innerAura.addColorStop(0, `rgba(236, 72, 153, ${hexPulse * 0.35})`);
+        innerAura.addColorStop(0.5, `rgba(190, 24, 93, ${hexPulse * 0.2})`);
+        innerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = innerAura;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating spectral chains
         if (animated) {
-          for (let i = 0; i < 4; i++) {
-            const runeAngle = t * 0.8 + i * Math.PI * 0.5;
-            const runeDist = 11 * scale;
-            const rx = cx + Math.cos(runeAngle) * runeDist;
-            const ry =
-              cy - 4 * scale + Math.sin(runeAngle) * runeDist * 0.35 - bounce + runeFloat * (i % 2 === 0 ? 1 : -1);
-            ctx.fillStyle = `rgba(236, 72, 153, ${(0.5 + Math.sin(t * 2 + i) * 0.3) * 0.4})`;
-            ctx.font = `${6 * scale}px serif`;
-            ctx.textAlign = "center";
-            ctx.fillText(["⚝", "☽", "◇", "✧"][i], rx, ry);
-            ctx.fillStyle = `rgba(236, 72, 153, ${0.5 + Math.sin(t * 2 + i) * 0.3})`;
-            ctx.font = `${4 * scale}px serif`;
-            ctx.fillText(["⚝", "☽", "◇", "✧"][i], rx, ry);
+          ctx.strokeStyle = `rgba(168, 85, 247, ${0.4 + Math.sin(t * 3) * 0.2})`;
+          ctx.lineWidth = 1.5 * scale;
+          for (let i = 0; i < 3; i++) {
+            const chainAngle = t * 0.6 + i * Math.PI * 0.67;
+            const chainDist = 13 * scale;
+            ctx.beginPath();
+            for (let j = 0; j < 5; j++) {
+              const cx2 = cx + Math.cos(chainAngle + j * 0.3) * (chainDist - j * 2 * scale);
+              const cy2 = cy - 5 * scale + Math.sin(chainAngle + j * 0.3) * chainDist * 0.3 - bounce + chainRattle;
+              if (j === 0) ctx.moveTo(cx2, cy2);
+              else ctx.lineTo(cx2, cy2);
+            }
+            ctx.stroke();
           }
         }
 
-        // Flowing dark robes with purple undertones
-        const robeGrad = ctx.createLinearGradient(
-          cx - 10 * scale,
-          cy - 10 * scale,
-          cx + 10 * scale,
-          cy + 14 * scale
-        );
-        robeGrad.addColorStop(0, "#3b0764");
-        robeGrad.addColorStop(0.3, "#581c87");
-        robeGrad.addColorStop(0.5, "#7e22ce");
-        robeGrad.addColorStop(0.7, "#581c87");
-        robeGrad.addColorStop(1, "#3b0764");
-        ctx.fillStyle = robeGrad;
-        ctx.beginPath();
-        ctx.moveTo(cx - 10 * scale, cy + 14 * scale - bounce);
-        // Tattered flowing bottom
-        ctx.lineTo(cx - 8 * scale, cy + 17 * scale - bounce);
-        ctx.lineTo(cx - 4 * scale, cy + 14 * scale - bounce);
-        ctx.lineTo(cx, cy + 18 * scale - bounce);
-        ctx.lineTo(cx + 4 * scale, cy + 14 * scale - bounce);
-        ctx.lineTo(cx + 8 * scale, cy + 17 * scale - bounce);
-        ctx.lineTo(cx + 10 * scale, cy + 14 * scale - bounce);
-        ctx.quadraticCurveTo(
-          cx + 12 * scale,
-          cy - bounce,
-          cx + 5 * scale,
-          cy - 10 * scale - bounce
-        );
-        ctx.lineTo(cx - 5 * scale, cy - 10 * scale - bounce);
-        ctx.quadraticCurveTo(
-          cx - 12 * scale,
-          cy - bounce,
-          cx - 10 * scale,
-          cy + 14 * scale - bounce
-        );
-        ctx.fill();
+        // Floating curse runes - orbiting sigils
+        if (animated) {
+          for (let i = 0; i < 6; i++) {
+            const runeAngle = orbRotation + i * Math.PI / 3;
+            const runeDist = 12 * scale + Math.sin(t * 2 + i) * 2 * scale;
+            const rx = cx + Math.cos(runeAngle) * runeDist;
+            const ry = cy - 4 * scale + Math.sin(runeAngle) * runeDist * 0.3 - bounce + runeFloat * (i % 2 === 0 ? 1 : -1);
+            const runeAlpha = 0.5 + Math.sin(t * 2 + i) * 0.3;
+            // Rune glow
+            ctx.fillStyle = `rgba(236, 72, 153, ${runeAlpha * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(rx, ry, 3 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            // Rune symbol
+            ctx.fillStyle = `rgba(236, 72, 153, ${runeAlpha})`;
+            ctx.font = `${4 * scale}px serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(["⚝", "☽", "◇", "✧", "⚶", "☿"][i], rx, ry);
+          }
+        }
 
-        // Glowing rune symbols on robe
-        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.6})`;
-        ctx.font = `${3 * scale}px serif`;
-        ctx.textAlign = "center";
-        ctx.fillText("☠", cx, cy + 4 * scale - bounce);
-
-        // Pink sash
-        ctx.fillStyle = "#db2777";
-        ctx.beginPath();
-        ctx.moveTo(cx - 6 * scale, cy - 4 * scale - bounce);
-        ctx.quadraticCurveTo(cx, cy - bounce, cx + 6 * scale, cy - 4 * scale - bounce);
-        ctx.lineTo(cx + 5 * scale, cy - 2 * scale - bounce);
-        ctx.quadraticCurveTo(cx, cy + 2 * scale - bounce, cx - 5 * scale, cy - 2 * scale - bounce);
-        ctx.fill();
-
-        // Crooked witch hat with charm
+        // Massive billowing robes - layered
         ctx.save();
-        ctx.translate(cx, cy - 16 * scale - bounce);
-        ctx.rotate(hatSway);
-        ctx.fillStyle = "#1e1b4b";
+        ctx.translate(cx, cy - bounce);
+        ctx.rotate(cloakBillow);
+        // Outer robe layer - tattered edges
+        const outerRobeGrad = ctx.createLinearGradient(-12 * scale, -12 * scale, 12 * scale, 18 * scale);
+        outerRobeGrad.addColorStop(0, "#1e1b4b");
+        outerRobeGrad.addColorStop(0.3, "#312e81");
+        outerRobeGrad.addColorStop(0.6, "#3b0764");
+        outerRobeGrad.addColorStop(1, "#0f0a1a");
+        ctx.fillStyle = outerRobeGrad;
         ctx.beginPath();
-        ctx.moveTo(-8 * scale, 0);
-        ctx.quadraticCurveTo(-2 * scale, -8 * scale, 0, -14 * scale);
-        ctx.quadraticCurveTo(2 * scale, -8 * scale, 8 * scale, 0);
-        ctx.closePath();
-        ctx.fill();
-        // Hat band
-        ctx.fillStyle = "#db2777";
-        ctx.fillRect(-8 * scale, -2 * scale, 16 * scale, 3 * scale);
-        // Hat brim
-        ctx.fillStyle = "#0f0a1a";
-        ctx.fillRect(-9 * scale, 0, 18 * scale, 2.5 * scale);
-        // Dangling charm - layered glow
-        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.3})`;
-        ctx.beginPath();
-        ctx.arc(5 * scale, -12 * scale + Math.sin(t * 3) * scale, 3 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse})`;
-        ctx.beginPath();
-        ctx.arc(5 * scale, -12 * scale + Math.sin(t * 3) * scale, 1.5 * scale, 0, Math.PI * 2);
+        ctx.moveTo(-12 * scale, 14 * scale);
+        // Extremely tattered bottom with many points
+        for (let i = 0; i < 8; i++) {
+          const x = -12 * scale + i * 3 * scale;
+          const y = 14 * scale + (i % 2 === 0 ? 5 * scale : 8 * scale) + Math.sin(t * 2 + i) * scale;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(12 * scale, 14 * scale);
+        ctx.quadraticCurveTo(15 * scale, 2 * scale, 7 * scale, -10 * scale);
+        ctx.lineTo(-7 * scale, -10 * scale);
+        ctx.quadraticCurveTo(-15 * scale, 2 * scale, -12 * scale, 14 * scale);
         ctx.fill();
         ctx.restore();
 
-        // Gaunt pale face
-        ctx.fillStyle = "#fce7f3";
+        // Inner robe with arcane patterns
+        const innerRobeGrad = ctx.createLinearGradient(cx - 8 * scale, cy - 8 * scale, cx + 8 * scale, cy + 12 * scale);
+        innerRobeGrad.addColorStop(0, "#581c87");
+        innerRobeGrad.addColorStop(0.5, "#7e22ce");
+        innerRobeGrad.addColorStop(1, "#4c1d95");
+        ctx.fillStyle = innerRobeGrad;
         ctx.beginPath();
-        ctx.arc(cx, cy - 13 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.moveTo(cx - 8 * scale, cy + 12 * scale - bounce);
+        ctx.lineTo(cx + 8 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy - bounce, cx + 5 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx - 5 * scale, cy - 8 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy - bounce, cx - 8 * scale, cy + 12 * scale - bounce);
         ctx.fill();
 
-        // Dark hollowed cheeks
-        ctx.fillStyle = "rgba(91, 33, 182, 0.3)";
+        // Arcane rune embroidery on robes
+        ctx.strokeStyle = `rgba(236, 72, 153, ${hexPulse * 0.5})`;
+        ctx.lineWidth = 0.8 * scale;
         ctx.beginPath();
-        ctx.ellipse(
-          cx - 3 * scale,
-          cy - 11.5 * scale - bounce,
-          1.5 * scale,
-          2 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.ellipse(
-          cx + 3 * scale,
-          cy - 11.5 * scale - bounce,
-          1.5 * scale,
-          2 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-
-        // Glowing malevolent pink eyes
-        ctx.fillStyle = "#fff";
+        ctx.moveTo(cx - 4 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx, cy + 6 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx - 4 * scale, cy - 2 * scale - bounce);
+        ctx.stroke();
+        // Additional rune lines
         ctx.beginPath();
-        ctx.ellipse(
-          cx - 2 * scale,
-          cy - 14 * scale - bounce,
-          1.5 * scale,
-          2 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.ellipse(
-          cx + 2 * scale,
-          cy - 14 * scale - bounce,
-          1.5 * scale,
-          2 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-        // Layered glow for eyes
-        ctx.fillStyle = "rgba(236, 72, 153, 0.3)";
-        ctx.beginPath();
-        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce, 2.5 * scale, 0, Math.PI * 2);
-        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce, 2.5 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#ec4899";
-        ctx.beginPath();
-        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce, 1 * scale, 0, Math.PI * 2);
-        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce, 1 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        // Slit pupils
-        ctx.fillStyle = "#3b0764";
-        ctx.beginPath();
-        ctx.ellipse(
-          cx - 2 * scale,
-          cy - 14 * scale - bounce,
-          0.3 * scale,
-          0.8 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.ellipse(
-          cx + 2 * scale,
-          cy - 14 * scale - bounce,
-          0.3 * scale,
-          0.8 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-
-        // Wicked smile
-        ctx.strokeStyle = "#9d174d";
-        ctx.lineWidth = 1 * scale;
-        ctx.beginPath();
-        ctx.arc(cx, cy - 10 * scale - bounce, 2 * scale, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.moveTo(cx, cy - 4 * scale - bounce);
+        ctx.lineTo(cx, cy + 8 * scale - bounce);
         ctx.stroke();
 
-        // Curse orb in hand - layered glow
+        // Ornate belt with skull buckle
+        ctx.fillStyle = "#be185d";
+        ctx.fillRect(cx - 7 * scale, cy - 5 * scale - bounce, 14 * scale, 2.5 * scale);
+        // Skull buckle
+        ctx.fillStyle = "#fce7f3";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 4 * scale - bounce, 2 * scale, 1.8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#3b0764";
+        ctx.beginPath();
+        ctx.arc(cx - 0.6 * scale, cy - 4.2 * scale - bounce, 0.4 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 0.6 * scale, cy - 4.2 * scale - bounce, 0.4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crooked witch hat - more detailed
+        ctx.save();
+        ctx.translate(cx, cy - 17 * scale - bounce);
+        ctx.rotate(hatSway);
+        // Hat main body - gradient
+        const hatGrad = ctx.createLinearGradient(0, 0, 0, -18 * scale);
+        hatGrad.addColorStop(0, "#1e1b4b");
+        hatGrad.addColorStop(0.5, "#312e81");
+        hatGrad.addColorStop(1, "#0f0a1a");
+        ctx.fillStyle = hatGrad;
+        ctx.beginPath();
+        ctx.moveTo(-9 * scale, 0);
+        ctx.quadraticCurveTo(-4 * scale, -6 * scale, -2 * scale, -12 * scale);
+        ctx.quadraticCurveTo(0, -16 * scale, 3 * scale, -18 * scale);
+        ctx.quadraticCurveTo(4 * scale, -12 * scale, 9 * scale, 0);
+        ctx.closePath();
+        ctx.fill();
+        // Hat wrinkles/folds
+        ctx.strokeStyle = "#4c1d95";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-6 * scale, -2 * scale);
+        ctx.quadraticCurveTo(-2 * scale, -5 * scale, 0, -10 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(5 * scale, -1 * scale);
+        ctx.quadraticCurveTo(3 * scale, -6 * scale, 2 * scale, -14 * scale);
+        ctx.stroke();
+        // Hat band with gems
+        ctx.fillStyle = "#be185d";
+        ctx.fillRect(-9 * scale, -2 * scale, 18 * scale, 3 * scale);
+        // Gems on band
+        ctx.fillStyle = "#f472b6";
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.arc(-5 * scale + i * 5 * scale, -0.5 * scale, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Hat brim - detailed
+        ctx.fillStyle = "#0f0a1a";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 11 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1e1b4b";
+        ctx.beginPath();
+        ctx.ellipse(0, -0.5 * scale, 10 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Multiple dangling charms
+        for (let i = 0; i < 3; i++) {
+          const charmX = -4 * scale + i * 4 * scale;
+          const charmY = -14 * scale + i * 2 * scale + Math.sin(t * 3 + i) * scale;
+          const charmSize = (1.2 + i * 0.3) * scale;
+          // Charm chain
+          ctx.strokeStyle = "#a855f7";
+          ctx.lineWidth = 0.5 * scale;
+          ctx.beginPath();
+          ctx.moveTo(charmX, -2 * scale);
+          ctx.lineTo(charmX, charmY + charmSize);
+          ctx.stroke();
+          // Charm glow
+          ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.4})`;
+          ctx.beginPath();
+          ctx.arc(charmX, charmY, charmSize * 2, 0, Math.PI * 2);
+          ctx.fill();
+          // Charm
+          ctx.fillStyle = ["#ec4899", "#a855f7", "#f472b6"][i];
+          ctx.beginPath();
+          ctx.arc(charmX, charmY, charmSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Long wild hair flowing from under hat
+        ctx.fillStyle = "#4a044e";
+        for (let i = 0; i < 8; i++) {
+          const hairAngle = -Math.PI * 0.4 + i * Math.PI * 0.1;
+          const hairLen = 10 * scale + Math.sin(t * 2 + i) * 2 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(hairAngle) * 5 * scale, cy - 14 * scale - bounce);
+          ctx.quadraticCurveTo(
+            cx + Math.cos(hairAngle) * 8 * scale + Math.sin(t + i) * scale,
+            cy - 10 * scale - bounce,
+            cx + Math.cos(hairAngle) * 6 * scale + Math.sin(t * 1.5 + i) * 2 * scale,
+            cy - 14 * scale + hairLen - bounce
+          );
+          ctx.lineTo(cx + Math.cos(hairAngle + 0.1) * 5 * scale, cy - 14 * scale - bounce);
+          ctx.fill();
+        }
+
+        // Gaunt pale face with curse marks
+        ctx.fillStyle = "#fce7f3";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 13 * scale - bounce, 5 * scale, 5.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Curse marks/veins on face
+        ctx.strokeStyle = `rgba(147, 51, 234, ${0.4 + hexPulse * 0.3})`;
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 2 * scale, cy - 10 * scale - bounce, cx - 3 * scale, cy - 8 * scale - bounce);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 4 * scale, cy - 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 2 * scale, cy - 10 * scale - bounce, cx + 3 * scale, cy - 8 * scale - bounce);
+        ctx.stroke();
+
+        // Deep hollowed cheeks
+        ctx.fillStyle = "rgba(91, 33, 182, 0.35)";
+        ctx.beginPath();
+        ctx.ellipse(cx - 3 * scale, cy - 11 * scale - bounce, 1.8 * scale, 2.5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(cx + 3 * scale, cy - 11 * scale - bounce, 1.8 * scale, 2.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing malevolent eyes - more detailed
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 14 * scale - bounce, 1.8 * scale, 2.2 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 14 * scale - bounce, 1.8 * scale, 2.2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye glow outer
+        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.4})`;
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 14 * scale - bounce, 2.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 14 * scale - bounce, 2.5 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Iris
+        ctx.fillStyle = "#ec4899";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 14 * scale - bounce, 1.2 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 14 * scale - bounce, 1.2 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Slit pupils
+        ctx.fillStyle = "#0f0a1a";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 14 * scale - bounce, 0.3 * scale, 1.2 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 14 * scale - bounce, 0.3 * scale, 1.2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye highlights
+        ctx.fillStyle = "#fdf4ff";
+        ctx.beginPath();
+        ctx.arc(cx - 2.5 * scale, cy - 14.5 * scale - bounce, 0.4 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 1.5 * scale, cy - 14.5 * scale - bounce, 0.4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hooked nose
+        ctx.fillStyle = "#f5d0fe";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 13 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 1.5 * scale, cy - 11 * scale - bounce, cx, cy - 9.5 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 0.5 * scale, cy - 10 * scale - bounce, cx, cy - 13 * scale - bounce);
+        ctx.fill();
+
+        // Wicked grin with teeth
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 9 * scale - bounce, 2.5 * scale, 0.1 * Math.PI, 0.9 * Math.PI);
+        ctx.fill();
+        // Sharp teeth
+        ctx.fillStyle = "#fce7f3";
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 2 * scale + i * scale, cy - 9 * scale - bounce);
+          ctx.lineTo(cx - 1.5 * scale + i * scale, cy - 7.5 * scale - bounce);
+          ctx.lineTo(cx - 1 * scale + i * scale, cy - 9 * scale - bounce);
+          ctx.fill();
+        }
+
+        // Gnarled hands/claws
+        ctx.fillStyle = "#fce7f3";
+        // Left hand on staff
+        ctx.beginPath();
+        ctx.ellipse(cx - 9 * scale, cy + 2 * scale - bounce, 2 * scale, 1.5 * scale, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        // Clawed fingers
+        ctx.fillStyle = "#4a044e";
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 10 * scale + i * scale, cy + 2 * scale - bounce);
+          ctx.lineTo(cx - 11 * scale + i * scale, cy + 4 * scale - bounce);
+          ctx.lineTo(cx - 9.5 * scale + i * scale, cy + 2.5 * scale - bounce);
+          ctx.fill();
+        }
+
+        // Ornate staff with multiple crystals
+        ctx.save();
+        ctx.translate(cx - 10 * scale, cy - bounce);
+        // Staff shaft - gnarled wood
+        const staffGrad = ctx.createLinearGradient(0, -20 * scale, 0, 16 * scale);
+        staffGrad.addColorStop(0, "#4a044e");
+        staffGrad.addColorStop(0.5, "#581c87");
+        staffGrad.addColorStop(1, "#3b0764");
+        ctx.fillStyle = staffGrad;
+        ctx.beginPath();
+        ctx.moveTo(-1.5 * scale, 16 * scale);
+        ctx.quadraticCurveTo(-2 * scale, 0, -1 * scale, -15 * scale);
+        ctx.lineTo(1 * scale, -15 * scale);
+        ctx.quadraticCurveTo(2 * scale, 0, 1.5 * scale, 16 * scale);
+        ctx.fill();
+        // Staff knots
+        ctx.fillStyle = "#3b0764";
+        ctx.beginPath();
+        ctx.ellipse(0, -5 * scale, 2 * scale, 1 * scale, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(0, 5 * scale, 1.8 * scale, 1 * scale, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Staff head - twisted
+        ctx.fillStyle = "#581c87";
+        ctx.beginPath();
+        ctx.moveTo(-2 * scale, -15 * scale);
+        ctx.quadraticCurveTo(-4 * scale, -18 * scale, -2 * scale, -22 * scale);
+        ctx.quadraticCurveTo(0, -25 * scale, 2 * scale, -22 * scale);
+        ctx.quadraticCurveTo(4 * scale, -18 * scale, 2 * scale, -15 * scale);
+        ctx.fill();
+        // Main crystal - glow layers
         ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.3})`;
         ctx.beginPath();
-        ctx.arc(cx + 11 * scale, cy + scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.arc(0, -22 * scale, 5 * scale, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.6})`;
         ctx.beginPath();
-        ctx.arc(cx + 11 * scale, cy + scale - bounce, 4 * scale, 0, Math.PI * 2);
+        ctx.arc(0, -22 * scale, 3.5 * scale, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse})`;
+        // Crystal shape
+        ctx.fillStyle = "#f472b6";
         ctx.beginPath();
-        ctx.arc(cx + 11 * scale, cy + scale - bounce, 3 * scale, 0, Math.PI * 2);
+        ctx.moveTo(0, -26 * scale);
+        ctx.lineTo(-2.5 * scale, -22 * scale);
+        ctx.lineTo(0, -18 * scale);
+        ctx.lineTo(2.5 * scale, -22 * scale);
+        ctx.closePath();
         ctx.fill();
+        // Crystal highlight
         ctx.fillStyle = "#fdf4ff";
         ctx.beginPath();
-        ctx.arc(cx + 11 * scale, cy + scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.moveTo(-0.5 * scale, -25 * scale);
+        ctx.lineTo(-1.5 * scale, -22 * scale);
+        ctx.lineTo(-0.5 * scale, -20 * scale);
+        ctx.fill();
+        // Small orbiting crystals
+        for (let i = 0; i < 3; i++) {
+          const crystalAngle = t * 2 + i * Math.PI * 0.67;
+          const crystalX = Math.cos(crystalAngle) * 4 * scale;
+          const crystalY = -22 * scale + Math.sin(crystalAngle) * 2 * scale;
+          ctx.fillStyle = `rgba(168, 85, 247, ${0.6 + Math.sin(t * 3 + i) * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(crystalX, crystalY, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Curse orb in right hand - more detailed
+        const orbX = cx + 12 * scale;
+        const orbY = cy + scale - bounce;
+        // Outer glow rings
+        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(236, 72, 153, ${hexPulse * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 3.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Orb core
+        const orbGrad = ctx.createRadialGradient(orbX - scale, orbY - scale, 0, orbX, orbY, 3 * scale);
+        orbGrad.addColorStop(0, "#fdf4ff");
+        orbGrad.addColorStop(0.3, "#f472b6");
+        orbGrad.addColorStop(0.7, "#db2777");
+        orbGrad.addColorStop(1, "#9d174d");
+        ctx.fillStyle = orbGrad;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Swirling energy inside
+        ctx.strokeStyle = `rgba(253, 244, 255, ${hexPulse * 0.6})`;
+        ctx.lineWidth = 0.5 * scale;
+        ctx.beginPath();
+        ctx.arc(orbX, orbY, 1.5 * scale, t * 2, t * 2 + Math.PI);
+        ctx.stroke();
+        // Right hand holding orb
+        ctx.fillStyle = "#fce7f3";
+        ctx.beginPath();
+        ctx.ellipse(orbX - 2 * scale, orbY + 2 * scale, 2 * scale, 1.5 * scale, -0.3, 0, Math.PI * 2);
         ctx.fill();
         break;
       }
       case "harpy": {
-        // INFERNAL HARPY - Demonic bird-woman with flame feathers
-        const wingFlap = Math.sin(t * 8) * 0.45;
+        // STORM PHOENIX HARPY - Majestic terror of the skies with ember feathers
+        const wingFlap = Math.sin(t * 8) * 0.5;
         const flamePulse = 0.6 + Math.sin(t * 4) * 0.4;
-        const screechPulse = Math.sin(t * 5) * 0.1;
+        const screechPulse = Math.sin(t * 5) * 0.15;
+        const breathe = Math.sin(t * 2) * scale * 0.3;
+        const headTilt = Math.sin(t * 1.5) * 0.08;
+        const tailSway = Math.sin(t * 3) * 0.2;
+        const emberFloat = t * 2;
 
-        // Infernal flame aura
-        const auraGrad = ctx.createRadialGradient(
-          cx,
-          cy - 4 * scale,
-          0,
-          cx,
-          cy - 4 * scale,
-          16 * scale
-        );
-        auraGrad.addColorStop(0, `rgba(249, 115, 22, ${flamePulse * 0.25})`);
-        auraGrad.addColorStop(0.6, `rgba(234, 88, 12, ${flamePulse * 0.1})`);
-        auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-        ctx.fillStyle = auraGrad;
+        // Trailing ember particles
+        if (animated) {
+          for (let i = 0; i < 8; i++) {
+            const emberAge = (emberFloat + i * 0.5) % 3;
+            const emberX = cx + Math.sin(t * 2 + i * 1.2) * 8 * scale;
+            const emberY = cy + 8 * scale + emberAge * 6 * scale - bounce;
+            const emberAlpha = Math.max(0, 0.8 - emberAge * 0.3);
+            const emberSize = (1.5 - emberAge * 0.4) * scale;
+            if (emberAlpha > 0) {
+              ctx.fillStyle = `rgba(251, 191, 36, ${emberAlpha * 0.5})`;
+              ctx.beginPath();
+              ctx.arc(emberX, emberY, emberSize * 2, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = `rgba(251, 191, 36, ${emberAlpha})`;
+              ctx.beginPath();
+              ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // Multi-layer flame aura
+        const outerAura = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 22 * scale);
+        outerAura.addColorStop(0, `rgba(251, 146, 60, ${flamePulse * 0.15})`);
+        outerAura.addColorStop(0.5, `rgba(234, 88, 12, ${flamePulse * 0.08})`);
+        outerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = outerAura;
         ctx.beginPath();
-        ctx.arc(cx, cy - 4 * scale - bounce, 16 * scale, 0, Math.PI * 2);
+        ctx.arc(cx, cy - 2 * scale - bounce, 22 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // Magnificent burning wings - left
+        const innerAura = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 14 * scale);
+        innerAura.addColorStop(0, `rgba(249, 115, 22, ${flamePulse * 0.3})`);
+        innerAura.addColorStop(0.6, `rgba(234, 88, 12, ${flamePulse * 0.12})`);
+        innerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = innerAura;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Magnificent burning tail feathers
+        ctx.save();
+        ctx.translate(cx, cy + 8 * scale - bounce);
+        ctx.rotate(tailSway);
+        for (let i = 0; i < 7; i++) {
+          const tailAngle = -0.4 + i * 0.13;
+          const tailLen = 14 * scale + Math.sin(t * 3 + i) * 2 * scale;
+          ctx.save();
+          ctx.rotate(tailAngle);
+          // Feather base
+          const tailGrad = ctx.createLinearGradient(0, 0, 0, tailLen);
+          tailGrad.addColorStop(0, "#c2410c");
+          tailGrad.addColorStop(0.4, "#ea580c");
+          tailGrad.addColorStop(0.7, "#f97316");
+          tailGrad.addColorStop(1, "#fbbf24");
+          ctx.fillStyle = tailGrad;
+          ctx.beginPath();
+          ctx.moveTo(-1.5 * scale, 0);
+          ctx.quadraticCurveTo(-2 * scale, tailLen * 0.5, -0.5 * scale, tailLen);
+          ctx.lineTo(0.5 * scale, tailLen);
+          ctx.quadraticCurveTo(2 * scale, tailLen * 0.5, 1.5 * scale, 0);
+          ctx.fill();
+          // Feather center line
+          ctx.strokeStyle = "#7c2d12";
+          ctx.lineWidth = 0.5 * scale;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, tailLen * 0.9);
+          ctx.stroke();
+          // Flame tip
+          ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.8})`;
+          ctx.beginPath();
+          ctx.moveTo(-1 * scale, tailLen - 2 * scale);
+          ctx.lineTo(0, tailLen + 3 * scale + Math.sin(t * 6 + i) * scale);
+          ctx.lineTo(1 * scale, tailLen - 2 * scale);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+
+        // Left wing - detailed with individual feathers
         ctx.save();
         ctx.translate(cx - 6 * scale, cy - 4 * scale - bounce);
-        ctx.rotate(-0.6 - wingFlap);
-        // Wing base
-        const leftWingGrad = ctx.createLinearGradient(0, 0, -14 * scale, -4 * scale);
-        leftWingGrad.addColorStop(0, "#ea580c");
-        leftWingGrad.addColorStop(0.5, "#f97316");
-        leftWingGrad.addColorStop(1, "#fbbf24");
-        ctx.fillStyle = leftWingGrad;
+        ctx.rotate(-0.65 - wingFlap);
+        // Wing arm/bone structure
+        ctx.fillStyle = "#9a3412";
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(-8 * scale, -6 * scale, -14 * scale, -2 * scale);
-        ctx.lineTo(-12 * scale, 0);
-        ctx.lineTo(-10 * scale, 2 * scale);
-        ctx.lineTo(-6 * scale, scale);
-        ctx.lineTo(-4 * scale, 3 * scale);
-        ctx.lineTo(0, 2 * scale);
+        ctx.moveTo(0, -1 * scale);
+        ctx.lineTo(-5 * scale, -3 * scale);
+        ctx.lineTo(-12 * scale, -1 * scale);
+        ctx.lineTo(-12 * scale, 1 * scale);
+        ctx.lineTo(-5 * scale, 0);
+        ctx.lineTo(0, 1 * scale);
         ctx.fill();
-        // Wing feather tips - flame effect
-        ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.8})`;
-        for (let i = 0; i < 4; i++) {
-          const featherX = -4 * scale - i * 3 * scale;
+        // Primary flight feathers
+        for (let i = 0; i < 7; i++) {
+          const featherStart = -3 * scale - i * 1.5 * scale;
+          const featherLen = 10 * scale + i * 2 * scale;
+          const featherAngle = -0.3 - i * 0.12;
+          ctx.save();
+          ctx.translate(featherStart, 0);
+          ctx.rotate(featherAngle);
+          const featherGrad = ctx.createLinearGradient(0, 0, 0, featherLen);
+          featherGrad.addColorStop(0, "#c2410c");
+          featherGrad.addColorStop(0.5, "#ea580c");
+          featherGrad.addColorStop(0.8, "#f97316");
+          featherGrad.addColorStop(1, "#fbbf24");
+          ctx.fillStyle = featherGrad;
           ctx.beginPath();
-          ctx.moveTo(featherX, -3 * scale - i * scale);
-          ctx.lineTo(featherX - 2 * scale, -6 * scale - i * scale);
-          ctx.lineTo(featherX + scale, -3 * scale - i * scale);
+          ctx.moveTo(-1.2 * scale, 0);
+          ctx.quadraticCurveTo(-1.5 * scale, featherLen * 0.6, 0, featherLen);
+          ctx.quadraticCurveTo(1.5 * scale, featherLen * 0.6, 1.2 * scale, 0);
           ctx.fill();
+          // Feather barbs
+          ctx.strokeStyle = "#7c2d12";
+          ctx.lineWidth = 0.3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, featherLen * 0.85);
+          ctx.stroke();
+          // Flame tip on feather
+          ctx.fillStyle = `rgba(253, 224, 71, ${flamePulse * 0.9})`;
+          ctx.beginPath();
+          ctx.moveTo(-0.8 * scale, featherLen - scale);
+          ctx.lineTo(0, featherLen + 2 * scale + Math.sin(t * 8 + i) * scale);
+          ctx.lineTo(0.8 * scale, featherLen - scale);
+          ctx.fill();
+          ctx.restore();
+        }
+        // Secondary feathers (shorter, near body)
+        for (let i = 0; i < 4; i++) {
+          const featherStart = -2 * scale - i * 1.2 * scale;
+          const featherLen = 5 * scale + i * scale;
+          ctx.save();
+          ctx.translate(featherStart, 2 * scale);
+          ctx.rotate(-0.2 - i * 0.08);
+          ctx.fillStyle = "#ea580c";
+          ctx.beginPath();
+          ctx.ellipse(0, featherLen * 0.5, 1 * scale, featherLen * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
         ctx.restore();
 
-        // Right wing
+        // Right wing - mirror
         ctx.save();
         ctx.translate(cx + 6 * scale, cy - 4 * scale - bounce);
-        ctx.rotate(0.6 + wingFlap);
-        const rightWingGrad = ctx.createLinearGradient(0, 0, 14 * scale, -4 * scale);
-        rightWingGrad.addColorStop(0, "#ea580c");
-        rightWingGrad.addColorStop(0.5, "#f97316");
-        rightWingGrad.addColorStop(1, "#fbbf24");
-        ctx.fillStyle = rightWingGrad;
+        ctx.rotate(0.65 + wingFlap);
+        // Wing arm/bone
+        ctx.fillStyle = "#9a3412";
         ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(8 * scale, -6 * scale, 14 * scale, -2 * scale);
-        ctx.lineTo(12 * scale, 0);
-        ctx.lineTo(10 * scale, 2 * scale);
-        ctx.lineTo(6 * scale, scale);
-        ctx.lineTo(4 * scale, 3 * scale);
-        ctx.lineTo(0, 2 * scale);
+        ctx.moveTo(0, -1 * scale);
+        ctx.lineTo(5 * scale, -3 * scale);
+        ctx.lineTo(12 * scale, -1 * scale);
+        ctx.lineTo(12 * scale, 1 * scale);
+        ctx.lineTo(5 * scale, 0);
+        ctx.lineTo(0, 1 * scale);
         ctx.fill();
-        // Flame feather tips
-        ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.8})`;
-        for (let i = 0; i < 4; i++) {
-          const featherX = 4 * scale + i * 3 * scale;
+        // Primary flight feathers
+        for (let i = 0; i < 7; i++) {
+          const featherStart = 3 * scale + i * 1.5 * scale;
+          const featherLen = 10 * scale + i * 2 * scale;
+          const featherAngle = 0.3 + i * 0.12;
+          ctx.save();
+          ctx.translate(featherStart, 0);
+          ctx.rotate(featherAngle);
+          const featherGrad = ctx.createLinearGradient(0, 0, 0, featherLen);
+          featherGrad.addColorStop(0, "#c2410c");
+          featherGrad.addColorStop(0.5, "#ea580c");
+          featherGrad.addColorStop(0.8, "#f97316");
+          featherGrad.addColorStop(1, "#fbbf24");
+          ctx.fillStyle = featherGrad;
           ctx.beginPath();
-          ctx.moveTo(featherX, -3 * scale - i * scale);
-          ctx.lineTo(featherX + 2 * scale, -6 * scale - i * scale);
-          ctx.lineTo(featherX - scale, -3 * scale - i * scale);
+          ctx.moveTo(-1.2 * scale, 0);
+          ctx.quadraticCurveTo(-1.5 * scale, featherLen * 0.6, 0, featherLen);
+          ctx.quadraticCurveTo(1.5 * scale, featherLen * 0.6, 1.2 * scale, 0);
           ctx.fill();
+          ctx.strokeStyle = "#7c2d12";
+          ctx.lineWidth = 0.3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, featherLen * 0.85);
+          ctx.stroke();
+          ctx.fillStyle = `rgba(253, 224, 71, ${flamePulse * 0.9})`;
+          ctx.beginPath();
+          ctx.moveTo(-0.8 * scale, featherLen - scale);
+          ctx.lineTo(0, featherLen + 2 * scale + Math.sin(t * 8 + i) * scale);
+          ctx.lineTo(0.8 * scale, featherLen - scale);
+          ctx.fill();
+          ctx.restore();
+        }
+        for (let i = 0; i < 4; i++) {
+          const featherStart = 2 * scale + i * 1.2 * scale;
+          const featherLen = 5 * scale + i * scale;
+          ctx.save();
+          ctx.translate(featherStart, 2 * scale);
+          ctx.rotate(0.2 + i * 0.08);
+          ctx.fillStyle = "#ea580c";
+          ctx.beginPath();
+          ctx.ellipse(0, featherLen * 0.5, 1 * scale, featherLen * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
         ctx.restore();
 
-        // Scaled demonic body
-        const bodyGrad = ctx.createLinearGradient(
-          cx - 6 * scale,
-          cy - 8 * scale,
-          cx + 6 * scale,
-          cy + 10 * scale
-        );
-        bodyGrad.addColorStop(0, "#9a3412");
-        bodyGrad.addColorStop(0.3, "#c2410c");
-        bodyGrad.addColorStop(0.5, "#ea580c");
-        bodyGrad.addColorStop(0.7, "#c2410c");
+        // Scaled demonic body with detailed texture
+        const bodyGrad = ctx.createLinearGradient(cx - 6 * scale, cy - 8 * scale, cx + 6 * scale, cy + 10 * scale);
+        bodyGrad.addColorStop(0, "#7c2d12");
+        bodyGrad.addColorStop(0.2, "#9a3412");
+        bodyGrad.addColorStop(0.5, "#c2410c");
+        bodyGrad.addColorStop(0.8, "#9a3412");
         bodyGrad.addColorStop(1, "#7c2d12");
         ctx.fillStyle = bodyGrad;
         ctx.beginPath();
-        ctx.ellipse(
-          cx,
-          cy + 2 * scale - bounce,
-          6 * scale,
-          10 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
+        ctx.ellipse(cx, cy + 2 * scale - bounce + breathe, 6 * scale, 10 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Scale texture
+        // Chest plumage
+        const chestGrad = ctx.createRadialGradient(cx, cy - 2 * scale - bounce, 0, cx, cy - 2 * scale - bounce, 5 * scale);
+        chestGrad.addColorStop(0, "#fcd34d");
+        chestGrad.addColorStop(0.5, "#fbbf24");
+        chestGrad.addColorStop(1, "#f59e0b");
+        ctx.fillStyle = chestGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 2 * scale - bounce + breathe, 4 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Detailed scale pattern
         ctx.strokeStyle = "#7c2d12";
         ctx.lineWidth = 0.5 * scale;
+        for (let row = 0; row < 4; row++) {
+          for (let col = -2; col <= 2; col++) {
+            const scaleX = cx + col * 2.2 * scale + (row % 2) * 1.1 * scale;
+            const scaleY = cy + row * 2.5 * scale - bounce + breathe;
+            ctx.beginPath();
+            ctx.arc(scaleX, scaleY, 1.5 * scale, 0.8, Math.PI - 0.8);
+            ctx.stroke();
+          }
+        }
+
+        // Powerful legs with armor-like scales
+        ctx.fillStyle = "#9a3412";
+        // Left leg
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, cy + 8 * scale - bounce);
+        ctx.lineTo(cx - 4 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 2 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx - 2 * scale, cy + 8 * scale - bounce);
+        ctx.fill();
+        // Right leg
+        ctx.beginPath();
+        ctx.moveTo(cx + 3 * scale, cy + 8 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx + 2 * scale, cy + 14 * scale - bounce);
+        ctx.lineTo(cx + 2 * scale, cy + 8 * scale - bounce);
+        ctx.fill();
+        // Leg scales
+        ctx.strokeStyle = "#7c2d12";
+        ctx.lineWidth = 0.4 * scale;
         for (let i = 0; i < 3; i++) {
           ctx.beginPath();
-          ctx.arc(cx, cy + i * 4 * scale - bounce, 4 * scale, 0.3 * Math.PI, 0.7 * Math.PI);
+          ctx.moveTo(cx - 4 * scale, cy + 9 * scale + i * 1.5 * scale - bounce);
+          ctx.lineTo(cx - 2 * scale, cy + 9 * scale + i * 1.5 * scale - bounce);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 4 * scale, cy + 9 * scale + i * 1.5 * scale - bounce);
+          ctx.lineTo(cx + 2 * scale, cy + 9 * scale + i * 1.5 * scale - bounce);
           ctx.stroke();
         }
 
-        // Clawed feet
-        ctx.fillStyle = "#44403c";
-        ctx.beginPath();
-        ctx.moveTo(cx - 4 * scale, cy + 10 * scale - bounce);
-        ctx.lineTo(cx - 6 * scale, cy + 16 * scale - bounce);
-        ctx.lineTo(cx - 3 * scale, cy + 12 * scale - bounce);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(cx + 4 * scale, cy + 10 * scale - bounce);
-        ctx.lineTo(cx + 6 * scale, cy + 16 * scale - bounce);
-        ctx.lineTo(cx + 3 * scale, cy + 12 * scale - bounce);
-        ctx.fill();
-
-        // Feathered mane/crest
-        ctx.fillStyle = "#f97316";
-        for (let i = 0; i < 5; i++) {
-          const featherAngle = -Math.PI * 0.6 + i * Math.PI * 0.3;
+        // Vicious talons
+        ctx.fillStyle = "#1c1917";
+        // Left foot talons
+        for (let i = 0; i < 4; i++) {
+          const talonAngle = -0.6 + i * 0.4;
           ctx.beginPath();
-          ctx.moveTo(
-            cx + Math.cos(featherAngle) * 5 * scale,
-            cy - 15 * scale - bounce
-          );
-          ctx.lineTo(
-            cx + Math.cos(featherAngle) * 8 * scale,
-            cy - 20 * scale - bounce + Math.sin(t * 4 + i) * scale
-          );
-          ctx.lineTo(
-            cx + Math.cos(featherAngle + 0.15) * 5 * scale,
-            cy - 15 * scale - bounce
-          );
+          ctx.moveTo(cx - 3 * scale, cy + 14 * scale - bounce);
+          ctx.lineTo(cx - 3 * scale + Math.cos(talonAngle) * 4 * scale, cy + 14 * scale + Math.sin(talonAngle) * 4 * scale - bounce);
+          ctx.lineTo(cx - 3 * scale + Math.cos(talonAngle) * 2 * scale, cy + 15 * scale - bounce);
+          ctx.fill();
+        }
+        // Right foot talons
+        for (let i = 0; i < 4; i++) {
+          const talonAngle = -0.6 + i * 0.4;
+          ctx.beginPath();
+          ctx.moveTo(cx + 3 * scale, cy + 14 * scale - bounce);
+          ctx.lineTo(cx + 3 * scale + Math.cos(talonAngle) * 4 * scale, cy + 14 * scale + Math.sin(talonAngle) * 4 * scale - bounce);
+          ctx.lineTo(cx + 3 * scale + Math.cos(talonAngle) * 2 * scale, cy + 15 * scale - bounce);
           ctx.fill();
         }
 
+        // Magnificent crest/crown feathers
+        ctx.save();
+        ctx.translate(cx, cy - 16 * scale - bounce);
+        ctx.rotate(headTilt);
+        for (let i = 0; i < 9; i++) {
+          const crestAngle = -Math.PI * 0.4 + i * Math.PI * 0.1;
+          const crestLen = 6 * scale + Math.abs(i - 4) * scale + Math.sin(t * 4 + i) * scale;
+          ctx.save();
+          ctx.rotate(crestAngle);
+          const crestGrad = ctx.createLinearGradient(0, 0, 0, -crestLen);
+          crestGrad.addColorStop(0, "#ea580c");
+          crestGrad.addColorStop(0.6, "#f97316");
+          crestGrad.addColorStop(1, "#fbbf24");
+          ctx.fillStyle = crestGrad;
+          ctx.beginPath();
+          ctx.moveTo(-0.8 * scale, 0);
+          ctx.quadraticCurveTo(-1 * scale, -crestLen * 0.5, 0, -crestLen);
+          ctx.quadraticCurveTo(1 * scale, -crestLen * 0.5, 0.8 * scale, 0);
+          ctx.fill();
+          // Flame tip
+          ctx.fillStyle = `rgba(253, 224, 71, ${flamePulse})`;
+          ctx.beginPath();
+          ctx.arc(0, -crestLen, 1 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.restore();
+
         // Fierce angular head
-        ctx.fillStyle = "#fcd34d";
+        ctx.save();
+        ctx.translate(cx, cy - 12 * scale - bounce);
+        ctx.rotate(headTilt);
+        const headGrad = ctx.createRadialGradient(-scale, -scale, 0, 0, 0, 6 * scale);
+        headGrad.addColorStop(0, "#fef3c7");
+        headGrad.addColorStop(0.5, "#fcd34d");
+        headGrad.addColorStop(1, "#f59e0b");
+        ctx.fillStyle = headGrad;
         ctx.beginPath();
-        ctx.ellipse(
-          cx,
-          cy - 12 * scale - bounce,
-          5.5 * scale,
-          5 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
+        ctx.ellipse(0, 0, 5.5 * scale, 5 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Glowing predator eyes
-        ctx.fillStyle = "#fff";
+        // Facial markings
+        ctx.strokeStyle = "#c2410c";
+        ctx.lineWidth = 0.6 * scale;
         ctx.beginPath();
-        ctx.ellipse(
-          cx - 2 * scale,
-          cy - 13 * scale - bounce,
-          1.8 * scale,
-          2 * scale,
-          -0.2,
-          0,
-          Math.PI * 2
-        );
-        ctx.ellipse(
-          cx + 2 * scale,
-          cy - 13 * scale - bounce,
-          1.8 * scale,
-          2 * scale,
-          0.2,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
-        // Layered glow for eyes
-        ctx.fillStyle = "rgba(249, 115, 22, 0.3)";
+        ctx.moveTo(-4 * scale, -1 * scale);
+        ctx.lineTo(-2.5 * scale, 0);
+        ctx.stroke();
         ctx.beginPath();
-        ctx.ellipse(cx - 2 * scale, cy - 13 * scale - bounce, 2.5 * scale, 3 * scale, -0.2, 0, Math.PI * 2);
-        ctx.ellipse(cx + 2 * scale, cy - 13 * scale - bounce, 2.5 * scale, 3 * scale, 0.2, 0, Math.PI * 2);
+        ctx.moveTo(4 * scale, -1 * scale);
+        ctx.lineTo(2.5 * scale, 0);
+        ctx.stroke();
+
+        // Fierce predator eyes - large and detailed
+        // Eye sockets
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.ellipse(-2.2 * scale, -1 * scale, 2 * scale, 2.5 * scale, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(2.2 * scale, -1 * scale, 2 * scale, 2.5 * scale, 0.2, 0, Math.PI * 2);
         ctx.fill();
+        // Eye whites
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.ellipse(-2.2 * scale, -1 * scale, 1.6 * scale, 2 * scale, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(2.2 * scale, -1 * scale, 1.6 * scale, 2 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Iris glow
+        ctx.fillStyle = `rgba(249, 115, 22, ${0.4 + flamePulse * 0.3})`;
+        ctx.beginPath();
+        ctx.ellipse(-2.2 * scale, -1 * scale, 2.2 * scale, 2.8 * scale, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(2.2 * scale, -1 * scale, 2.2 * scale, 2.8 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Iris
         ctx.fillStyle = "#f97316";
         ctx.beginPath();
-        ctx.ellipse(cx - 2 * scale, cy - 13 * scale - bounce, 1 * scale, 1.4 * scale, -0.2, 0, Math.PI * 2);
-        ctx.ellipse(cx + 2 * scale, cy - 13 * scale - bounce, 1 * scale, 1.4 * scale, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(-2.2 * scale, -1 * scale, 1.2 * scale, 1.6 * scale, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(2.2 * scale, -1 * scale, 1.2 * scale, 1.6 * scale, 0.2, 0, Math.PI * 2);
         ctx.fill();
         // Slit pupils
         ctx.fillStyle = "#1c1917";
         ctx.beginPath();
-        ctx.ellipse(cx - 2 * scale, cy - 13 * scale - bounce, 0.3 * scale, 1.2 * scale, -0.2, 0, Math.PI * 2);
-        ctx.ellipse(cx + 2 * scale, cy - 13 * scale - bounce, 0.3 * scale, 1.2 * scale, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(-2.2 * scale, -1 * scale, 0.3 * scale, 1.4 * scale, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(2.2 * scale, -1 * scale, 0.3 * scale, 1.4 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye highlights
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.arc(-2.7 * scale, -1.8 * scale, 0.4 * scale, 0, Math.PI * 2);
+        ctx.arc(1.7 * scale, -1.8 * scale, 0.4 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // Sharp curved beak
-        ctx.fillStyle = "#292524";
+        // Powerful hooked beak
+        const beakGrad = ctx.createLinearGradient(0, 0, 0, 5 * scale);
+        beakGrad.addColorStop(0, "#44403c");
+        beakGrad.addColorStop(0.5, "#292524");
+        beakGrad.addColorStop(1, "#1c1917");
+        ctx.fillStyle = beakGrad;
+        // Upper beak
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 11 * scale - bounce);
-        ctx.lineTo(cx - 2.5 * scale, cy - 8 * scale - bounce);
-        ctx.quadraticCurveTo(cx, cy - 5 * scale - bounce + screechPulse * 15, cx, cy - 6 * scale - bounce);
-        ctx.quadraticCurveTo(cx, cy - 5 * scale - bounce + screechPulse * 15, cx + 2.5 * scale, cy - 8 * scale - bounce);
+        ctx.moveTo(-2 * scale, 2 * scale);
+        ctx.quadraticCurveTo(-1 * scale, 2.5 * scale, 0, 2 * scale);
+        ctx.quadraticCurveTo(1 * scale, 2.5 * scale, 2 * scale, 2 * scale);
+        ctx.lineTo(0, 7 * scale + screechPulse * 5);
         ctx.closePath();
         ctx.fill();
-        // Beak highlight
-        ctx.fillStyle = "#44403c";
+        // Lower beak (opens when screeching)
+        ctx.fillStyle = "#292524";
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 11 * scale - bounce);
-        ctx.lineTo(cx - 1 * scale, cy - 9 * scale - bounce);
-        ctx.lineTo(cx, cy - 7 * scale - bounce);
+        ctx.moveTo(-1.5 * scale, 3 * scale);
+        ctx.lineTo(0, 5 * scale + screechPulse * 8);
+        ctx.lineTo(1.5 * scale, 3 * scale);
+        ctx.quadraticCurveTo(0, 4 * scale, -1.5 * scale, 3 * scale);
         ctx.fill();
+        // Beak highlight
+        ctx.fillStyle = "#57534e";
+        ctx.beginPath();
+        ctx.moveTo(-1 * scale, 2.5 * scale);
+        ctx.lineTo(0, 2 * scale);
+        ctx.lineTo(0, 5 * scale);
+        ctx.lineTo(-0.5 * scale, 3 * scale);
+        ctx.fill();
+        // Tongue visible when screeching
+        if (screechPulse > 0.05) {
+          ctx.fillStyle = "#ef4444";
+          ctx.beginPath();
+          ctx.ellipse(0, 4.5 * scale + screechPulse * 3, 0.8 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
         break;
       }
       case "wyvern": {
@@ -8059,108 +8464,278 @@ export const EnemySprite: React.FC<{
         break;
       }
       case "specter": {
-        // SPECTER - Ghostly floating entity
-        const floatOffset = Math.sin(t * 2) * 3 * scale;
+        // SOUL REAVER WRAITH - Ancient tormented spirit with chains and dark magic
+        const floatOffset = Math.sin(t * 2) * 4 * scale;
         const ghostPulse = 0.4 + Math.sin(t * 3) * 0.3;
+        const wail = Math.sin(t * 5) * 0.15;
+        const chainRattle = Math.sin(t * 8) * scale * 0.8;
+        const soulSwirl = t * 1.5;
+        const cloakBillow = Math.sin(t * 1.5) * 0.1;
+        const flickerPhase = Math.sin(t * 12) > 0.8 ? 0.3 : 0;
 
-        // Ethereal glow
-        const glowGrad = ctx.createRadialGradient(
-          cx,
-          cy - 4 * scale,
-          0,
-          cx,
-          cy - 4 * scale,
-          14 * scale
-        );
-        glowGrad.addColorStop(0, `rgba(6, 182, 212, ${ghostPulse * 0.3})`);
-        glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-        ctx.fillStyle = glowGrad;
-        ctx.beginPath();
-        ctx.arc(
-          cx,
-          cy - 4 * scale - bounce + floatOffset,
-          14 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill();
+        // Captured soul wisps orbiting
+        if (animated) {
+          for (let i = 0; i < 5; i++) {
+            const soulAngle = soulSwirl + i * Math.PI * 0.4;
+            const soulDist = 14 * scale + Math.sin(t * 2 + i) * 3 * scale;
+            const soulX = cx + Math.cos(soulAngle) * soulDist;
+            const soulY = cy - 2 * scale + Math.sin(soulAngle) * soulDist * 0.35 - bounce + floatOffset;
+            const soulAlpha = 0.4 + Math.sin(t * 3 + i) * 0.2;
+            // Soul glow
+            ctx.fillStyle = `rgba(103, 232, 249, ${soulAlpha * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(soulX, soulY, 3 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            // Soul core
+            ctx.fillStyle = `rgba(6, 182, 212, ${soulAlpha})`;
+            ctx.beginPath();
+            ctx.arc(soulX, soulY, 1.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+            // Soul trail
+            ctx.strokeStyle = `rgba(6, 182, 212, ${soulAlpha * 0.5})`;
+            ctx.lineWidth = 1 * scale;
+            ctx.beginPath();
+            ctx.moveTo(soulX, soulY);
+            const trailAngle = soulAngle - 0.5;
+            ctx.lineTo(soulX + Math.cos(trailAngle) * 4 * scale, soulY + Math.sin(trailAngle) * 2 * scale);
+            ctx.stroke();
+          }
+        }
 
-        // Ghostly body
-        ctx.fillStyle = `rgba(6, 182, 212, ${0.5 + ghostPulse * 0.3})`;
+        // Multi-layer ethereal aura
+        const outerAura = ctx.createRadialGradient(cx, cy - 2 * scale + floatOffset, 0, cx, cy - 2 * scale + floatOffset, 24 * scale);
+        outerAura.addColorStop(0, `rgba(8, 145, 178, ${ghostPulse * 0.12})`);
+        outerAura.addColorStop(0.5, `rgba(6, 182, 212, ${ghostPulse * 0.06})`);
+        outerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = outerAura;
         ctx.beginPath();
-        ctx.moveTo(cx - 7 * scale, cy + 10 * scale - bounce + floatOffset);
-        ctx.quadraticCurveTo(
-          cx - 5 * scale,
-          cy + 14 * scale - bounce + floatOffset,
-          cx - 3 * scale,
-          cy + 10 * scale - bounce + floatOffset
-        );
-        ctx.quadraticCurveTo(
-          cx,
-          cy + 16 * scale - bounce + floatOffset,
-          cx + 3 * scale,
-          cy + 10 * scale - bounce + floatOffset
-        );
-        ctx.quadraticCurveTo(
-          cx + 5 * scale,
-          cy + 14 * scale - bounce + floatOffset,
-          cx + 7 * scale,
-          cy + 10 * scale - bounce + floatOffset
-        );
-        ctx.quadraticCurveTo(
-          cx + 10 * scale,
-          cy - bounce + floatOffset,
-          cx + 6 * scale,
-          cy - 10 * scale - bounce + floatOffset
-        );
-        ctx.lineTo(cx - 6 * scale, cy - 10 * scale - bounce + floatOffset);
-        ctx.quadraticCurveTo(
-          cx - 10 * scale,
-          cy - bounce + floatOffset,
-          cx - 7 * scale,
-          cy + 10 * scale - bounce + floatOffset
-        );
+        ctx.arc(cx, cy - 2 * scale - bounce + floatOffset, 24 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // Hollow eyes
-        ctx.fillStyle = "#0e7490";
+        const innerAura = ctx.createRadialGradient(cx, cy - 4 * scale + floatOffset, 0, cx, cy - 4 * scale + floatOffset, 14 * scale);
+        innerAura.addColorStop(0, `rgba(103, 232, 249, ${ghostPulse * 0.25})`);
+        innerAura.addColorStop(0.5, `rgba(6, 182, 212, ${ghostPulse * 0.15})`);
+        innerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = innerAura;
         ctx.beginPath();
-        ctx.ellipse(
-          cx - 2.5 * scale,
-          cy - 6 * scale - bounce + floatOffset,
-          2 * scale,
-          2.5 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
-        ctx.ellipse(
-          cx + 2.5 * scale,
-          cy - 6 * scale - bounce + floatOffset,
-          2 * scale,
-          2.5 * scale,
-          0,
-          0,
-          Math.PI * 2
-        );
+        ctx.arc(cx, cy - 4 * scale - bounce + floatOffset, 14 * scale, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#fff";
+
+        // Spectral chains trailing below
+        if (animated) {
+          ctx.strokeStyle = `rgba(148, 163, 184, ${0.5 + Math.sin(t * 4) * 0.2})`;
+          ctx.lineWidth = 1.5 * scale;
+          for (let c = 0; c < 3; c++) {
+            const chainStartX = cx - 4 * scale + c * 4 * scale;
+            ctx.beginPath();
+            ctx.moveTo(chainStartX, cy + 8 * scale - bounce + floatOffset);
+            for (let link = 0; link < 6; link++) {
+              const linkX = chainStartX + Math.sin(t * 6 + link + c) * 2 * scale + chainRattle * (link % 2 === 0 ? 1 : -1);
+              const linkY = cy + 8 * scale + link * 3 * scale - bounce + floatOffset;
+              ctx.lineTo(linkX, linkY);
+            }
+            ctx.stroke();
+            // Chain end weight
+            ctx.fillStyle = `rgba(100, 116, 139, ${0.6 + Math.sin(t * 3 + c) * 0.2})`;
+            const endX = chainStartX + Math.sin(t * 6 + 5 + c) * 2 * scale + chainRattle;
+            const endY = cy + 8 * scale + 15 * scale - bounce + floatOffset;
+            ctx.beginPath();
+            ctx.arc(endX, endY, 2 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Tattered ethereal cloak/shroud - multiple layers
+        ctx.save();
+        ctx.translate(cx, cy - bounce + floatOffset);
+        ctx.rotate(cloakBillow);
+        
+        // Back layer - darker, more transparent
+        ctx.fillStyle = `rgba(8, 145, 178, ${0.25 + ghostPulse * 0.1})`;
         ctx.beginPath();
-        ctx.arc(
-          cx - 2.5 * scale,
-          cy - 6.5 * scale - bounce + floatOffset,
-          0.8 * scale,
-          0,
-          Math.PI * 2
-        );
-        ctx.arc(
-          cx + 2.5 * scale,
-          cy - 6.5 * scale - bounce + floatOffset,
-          0.8 * scale,
-          0,
-          Math.PI * 2
-        );
+        ctx.moveTo(-9 * scale, 12 * scale);
+        // Very tattered bottom with many points
+        for (let i = 0; i < 10; i++) {
+          const x = -9 * scale + i * 1.8 * scale;
+          const y = 12 * scale + (i % 3 === 0 ? 8 * scale : i % 3 === 1 ? 5 * scale : 10 * scale) + Math.sin(t * 2 + i) * 2 * scale;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(9 * scale, 12 * scale);
+        ctx.quadraticCurveTo(12 * scale, 2 * scale, 8 * scale, -8 * scale);
+        ctx.lineTo(-8 * scale, -8 * scale);
+        ctx.quadraticCurveTo(-12 * scale, 2 * scale, -9 * scale, 12 * scale);
         ctx.fill();
+
+        // Middle layer - main body
+        const bodyGrad = ctx.createLinearGradient(0, -12 * scale, 0, 15 * scale);
+        bodyGrad.addColorStop(0, `rgba(103, 232, 249, ${0.5 + ghostPulse * 0.2 - flickerPhase})`);
+        bodyGrad.addColorStop(0.3, `rgba(6, 182, 212, ${0.6 + ghostPulse * 0.2 - flickerPhase})`);
+        bodyGrad.addColorStop(0.7, `rgba(8, 145, 178, ${0.4 + ghostPulse * 0.15 - flickerPhase})`);
+        bodyGrad.addColorStop(1, `rgba(14, 116, 144, ${0.2 - flickerPhase})`);
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.moveTo(-7 * scale, 10 * scale);
+        // Flowing tattered edges
+        ctx.quadraticCurveTo(-5 * scale, 14 * scale, -3 * scale, 10 * scale);
+        ctx.quadraticCurveTo(-1 * scale, 17 * scale + Math.sin(t * 2.5) * 2 * scale, 0, 12 * scale);
+        ctx.quadraticCurveTo(1 * scale, 17 * scale + Math.sin(t * 2.5 + 1) * 2 * scale, 3 * scale, 10 * scale);
+        ctx.quadraticCurveTo(5 * scale, 14 * scale, 7 * scale, 10 * scale);
+        ctx.quadraticCurveTo(10 * scale, 2 * scale, 7 * scale, -10 * scale);
+        ctx.lineTo(-7 * scale, -10 * scale);
+        ctx.quadraticCurveTo(-10 * scale, 2 * scale, -7 * scale, 10 * scale);
+        ctx.fill();
+
+        // Inner ethereal glow
+        const innerGlow = ctx.createRadialGradient(0, -4 * scale, 0, 0, -4 * scale, 8 * scale);
+        innerGlow.addColorStop(0, `rgba(165, 243, 252, ${ghostPulse * 0.4})`);
+        innerGlow.addColorStop(0.5, `rgba(103, 232, 249, ${ghostPulse * 0.2})`);
+        innerGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = innerGlow;
+        ctx.beginPath();
+        ctx.ellipse(0, -2 * scale, 5 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Hood/cowl
+        ctx.save();
+        ctx.translate(cx, cy - 10 * scale - bounce + floatOffset);
+        const hoodGrad = ctx.createLinearGradient(0, -6 * scale, 0, 4 * scale);
+        hoodGrad.addColorStop(0, `rgba(8, 145, 178, ${0.7 + ghostPulse * 0.2})`);
+        hoodGrad.addColorStop(0.5, `rgba(14, 116, 144, ${0.6 + ghostPulse * 0.15})`);
+        hoodGrad.addColorStop(1, `rgba(21, 94, 117, ${0.4})`);
+        ctx.fillStyle = hoodGrad;
+        ctx.beginPath();
+        ctx.moveTo(-6 * scale, 4 * scale);
+        ctx.quadraticCurveTo(-8 * scale, 0, -7 * scale, -4 * scale);
+        ctx.quadraticCurveTo(-5 * scale, -8 * scale, 0, -9 * scale);
+        ctx.quadraticCurveTo(5 * scale, -8 * scale, 7 * scale, -4 * scale);
+        ctx.quadraticCurveTo(8 * scale, 0, 6 * scale, 4 * scale);
+        ctx.quadraticCurveTo(4 * scale, 2 * scale, 0, 3 * scale);
+        ctx.quadraticCurveTo(-4 * scale, 2 * scale, -6 * scale, 4 * scale);
+        ctx.fill();
+        // Hood shadow/depth
+        ctx.fillStyle = `rgba(3, 105, 161, ${0.5})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 5 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Skeletal face within the hood
+        ctx.save();
+        ctx.translate(cx, cy - 8 * scale - bounce + floatOffset);
+        // Skull shape - faint
+        ctx.fillStyle = `rgba(165, 243, 252, ${0.25 + ghostPulse * 0.15})`;
+        ctx.beginPath();
+        ctx.ellipse(0, -2 * scale, 4 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Cheekbones
+        ctx.fillStyle = `rgba(103, 232, 249, ${0.15 + ghostPulse * 0.1})`;
+        ctx.beginPath();
+        ctx.ellipse(-2.5 * scale, 0, 2 * scale, 1.5 * scale, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(2.5 * scale, 0, 2 * scale, 1.5 * scale, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Hollow burning eye sockets - more detailed
+        const eyeY = cy - 8 * scale - bounce + floatOffset;
+        // Eye socket voids
+        ctx.fillStyle = "#0c4a6e";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2.5 * scale, eyeY, 2.5 * scale, 3.2 * scale, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2.5 * scale, eyeY, 2.5 * scale, 3.2 * scale, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye glow outer
+        ctx.fillStyle = `rgba(103, 232, 249, ${ghostPulse * 0.5})`;
+        ctx.beginPath();
+        ctx.ellipse(cx - 2.5 * scale, eyeY, 3 * scale, 4 * scale, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2.5 * scale, eyeY, 3 * scale, 4 * scale, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye inner glow
+        ctx.fillStyle = `rgba(34, 211, 238, ${0.6 + ghostPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.ellipse(cx - 2.5 * scale, eyeY, 1.8 * scale, 2.2 * scale, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2.5 * scale, eyeY, 1.8 * scale, 2.2 * scale, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Bright core
+        ctx.fillStyle = `rgba(236, 254, 255, ${0.7 + ghostPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2.5 * scale, eyeY - 0.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2.5 * scale, eyeY - 0.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye flame/wisp trailing upward
+        if (animated) {
+          ctx.strokeStyle = `rgba(103, 232, 249, ${0.5 + ghostPulse * 0.3})`;
+          ctx.lineWidth = 1 * scale;
+          ctx.beginPath();
+          ctx.moveTo(cx - 2.5 * scale, eyeY - 2 * scale);
+          ctx.quadraticCurveTo(cx - 3 * scale + Math.sin(t * 6) * scale, eyeY - 5 * scale, cx - 2 * scale, eyeY - 7 * scale + Math.sin(t * 4) * scale);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(cx + 2.5 * scale, eyeY - 2 * scale);
+          ctx.quadraticCurveTo(cx + 3 * scale + Math.sin(t * 6 + 1) * scale, eyeY - 5 * scale, cx + 2 * scale, eyeY - 7 * scale + Math.sin(t * 4 + 1) * scale);
+          ctx.stroke();
+        }
+
+        // Wailing mouth
+        ctx.fillStyle = `rgba(3, 105, 161, ${0.7})`;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 4 * scale - bounce + floatOffset, 2 * scale + wail * 3 * scale, 1.5 * scale + wail * 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Inner mouth void
+        ctx.fillStyle = "#0c4a6e";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 4 * scale - bounce + floatOffset, 1.2 * scale + wail * 2 * scale, 0.8 * scale + wail * 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spectral arms/claws reaching out
+        ctx.save();
+        ctx.translate(cx, cy - 2 * scale - bounce + floatOffset);
+        // Left arm
+        ctx.fillStyle = `rgba(6, 182, 212, ${0.4 + ghostPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(-6 * scale, 0);
+        ctx.quadraticCurveTo(-10 * scale, -2 * scale, -12 * scale + Math.sin(t * 3) * scale, 2 * scale);
+        ctx.lineTo(-11 * scale, 4 * scale);
+        ctx.quadraticCurveTo(-8 * scale, 2 * scale, -5 * scale, 2 * scale);
+        ctx.fill();
+        // Left claw fingers
+        ctx.strokeStyle = `rgba(103, 232, 249, ${0.5 + ghostPulse * 0.3})`;
+        ctx.lineWidth = 1 * scale;
+        for (let i = 0; i < 4; i++) {
+          const fingerAngle = -0.4 + i * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(-11 * scale + Math.sin(t * 3) * scale, 3 * scale);
+          ctx.lineTo(-13 * scale + Math.cos(fingerAngle) * 3 * scale + Math.sin(t * 4 + i) * scale, 3 * scale + Math.sin(fingerAngle) * 3 * scale);
+          ctx.stroke();
+        }
+        // Right arm
+        ctx.fillStyle = `rgba(6, 182, 212, ${0.4 + ghostPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(6 * scale, 0);
+        ctx.quadraticCurveTo(10 * scale, -2 * scale, 12 * scale + Math.sin(t * 3 + 1) * scale, 2 * scale);
+        ctx.lineTo(11 * scale, 4 * scale);
+        ctx.quadraticCurveTo(8 * scale, 2 * scale, 5 * scale, 2 * scale);
+        ctx.fill();
+        // Right claw fingers
+        for (let i = 0; i < 4; i++) {
+          const fingerAngle = -0.4 + i * 0.25;
+          ctx.beginPath();
+          ctx.moveTo(11 * scale + Math.sin(t * 3 + 1) * scale, 3 * scale);
+          ctx.lineTo(13 * scale + Math.cos(fingerAngle) * 3 * scale + Math.sin(t * 4 + i + 1) * scale, 3 * scale + Math.sin(fingerAngle) * 3 * scale);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Ethereal runes on the body
+        if (animated) {
+          ctx.fillStyle = `rgba(165, 243, 252, ${0.3 + Math.sin(t * 2) * 0.2})`;
+          ctx.font = `${3 * scale}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("☽", cx - 3 * scale, cy + 2 * scale - bounce + floatOffset);
+          ctx.fillText("✧", cx + 3 * scale, cy + 4 * scale - bounce + floatOffset);
+          ctx.fillText("⚶", cx, cy + 7 * scale - bounce + floatOffset);
+        }
         break;
       }
       case "berserker": {

@@ -821,8 +821,9 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 18, y: 10 },
     { x: 24, y: 10 },
     { x: 30, y: 10 },
-    { x: 30, y: 18 },
+    { x: 30, y: 17 },
     { x: 32, y: 18 },
+    { x: 36, y: 18 },
   ],
   pyramid: [
     { x: 15, y: -2 },
@@ -1112,7 +1113,7 @@ export const LEVEL_DATA: Record<
     difficulty: 3,
     startingPawPoints: 500, // Hard level with beacon - need more towers
     specialTower: {
-      pos: { x: 16, y: 8 },
+      pos: { x: 16, y: 8.5 },
       type: "beacon",
     },
     decorations: [

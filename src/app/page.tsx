@@ -93,7 +93,15 @@ const ENEMY_SPEED_MODIFIER = 1.25; // Global enemy speed multiplier (slower enem
 // Helper to get enemy position using their pathKey for dual-path support
 const getEnemyPosWithPath = (enemy: Enemy, defaultMap: string): Position => {
   const pathKey = enemy.pathKey || defaultMap;
-  return getEnemyPosition(enemy, pathKey);
+  const basePos = getEnemyPosition(enemy, pathKey);
+  // Apply taunt offset if enemy is being taunted and moving toward hero
+  if (enemy.tauntOffset) {
+    return {
+      x: basePos.x + enemy.tauntOffset.x,
+      y: basePos.y + enemy.tauntOffset.y,
+    };
+  }
+  return basePos;
 };
 
 // Formation offsets relative to rally point (triangle pattern)
@@ -924,6 +932,28 @@ export default function PrincetonTowerDefense() {
                   };
                 }
                 return { ...enemy, inCombat: true, combatTarget: hero.id };
+              } else {
+                // TAUNTED MOVEMENT: Enemy moves toward hero instead of following path
+                const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
+                const moveSpeed = enemy.speed * speedMult * deltaTime * 0.8; // Slightly slower when taunted
+                const dx = hero.pos.x - enemyPos.x;
+                const dy = hero.pos.y - enemyPos.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                  const moveX = (dx / dist) * moveSpeed;
+                  const moveY = (dy / dist) * moveSpeed;
+                  // Update enemy position by adjusting progress along current path segment
+                  // This is a workaround since enemies use path-based positioning
+                  // We'll store an offset that gets applied in getEnemyPosWithPath
+                  return {
+                    ...enemy,
+                    tauntOffset: {
+                      x: (enemy.tauntOffset?.x || 0) + moveX,
+                      y: (enemy.tauntOffset?.y || 0) + moveY,
+                    },
+                    inCombat: false, // Not in melee range yet
+                  };
+                }
               }
             }
 
@@ -1049,6 +1079,10 @@ export default function PrincetonTowerDefense() {
               }
               : null
           );
+          // Clear taunts when hero dies
+          setEnemies((prev) =>
+            prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
+          );
 
           addParticles(hero.pos, "explosion", 20);
           addParticles(hero.pos, "smoke", 10);
@@ -1056,9 +1090,9 @@ export default function PrincetonTowerDefense() {
         // Shield Expiration Logic
         if (hero.shieldActive && now > (hero.shieldEnd || 0)) {
           setHero((prev) => (prev ? { ...prev, shieldActive: false } : null));
-          // Clear taunts from all enemies
+          // Clear taunts from all enemies (including taunt offset)
           setEnemies((prev) =>
-            prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined }))
+            prev.map((e) => ({ ...e, taunted: false, tauntTarget: undefined, tauntOffset: undefined }))
           );
         }
       }
@@ -3278,33 +3312,47 @@ export default function PrincetonTowerDefense() {
 
     // Import map rendering functions (we'll call them inline)
     // Generate smooth path with Catmull-Rom splines
+    // tension: 0 = linear (no curve), 0.5 = standard Catmull-Rom, default 0.25 for subtle curves
     const catmullRom = (
       p0: Position,
       p1: Position,
       p2: Position,
       p3: Position,
-      t: number
+      t: number,
+      tension: number = 0.25
     ): Position => {
       const t2 = t * t;
       const t3 = t2 * t;
+      // Scale tension so 0.5 gives standard Catmull-Rom behavior
+      const s = tension * 2;
+      // Blend between linear interpolation and Catmull-Rom based on tension
+      const linearX = p1.x + (p2.x - p1.x) * t;
+      const linearY = p1.y + (p2.y - p1.y) * t;
+      const catmullX =
+        0.5 *
+        (2 * p1.x +
+          (-p0.x + p2.x) * t +
+          (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+          (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+      const catmullY =
+        0.5 *
+        (2 * p1.y +
+          (-p0.y + p2.y) * t +
+          (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+          (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
       return {
-        x:
-          0.5 *
-          (2 * p1.x +
-            (-p0.x + p2.x) * t +
-            (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-            (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
-        y:
-          0.5 *
-          (2 * p1.y +
-            (-p0.y + p2.y) * t +
-            (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
-            (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3),
+        x: linearX * (1 - s) + catmullX * s,
+        y: linearY * (1 - s) + catmullY * s,
       };
     };
 
-    // Generate smooth curve
-    const generateSmoothPath = (controlPoints: Position[]): Position[] => {
+    // Generate smooth curve with configurable tension
+    // tension: 0 = linear, 0.5 = standard Catmull-Rom, default 0.25 for subtle curves
+    const generateSmoothPath = (
+      controlPoints: Position[],
+      tension: number = 0.25,
+      subdivisions: number = 8
+    ): Position[] => {
       if (controlPoints.length < 2) return controlPoints;
       const smoothPath: Position[] = [];
       const extended = [
@@ -3323,14 +3371,15 @@ export default function PrincetonTowerDefense() {
         },
       ];
       for (let i = 1; i < extended.length - 2; i++) {
-        for (let j = 0; j < 10; j++) {
+        for (let j = 0; j < subdivisions; j++) {
           smoothPath.push(
             catmullRom(
               extended[i - 1],
               extended[i],
               extended[i + 1],
               extended[i + 2],
-              j / 10
+              j / subdivisions,
+              tension
             )
           );
         }
@@ -3397,7 +3446,7 @@ export default function PrincetonTowerDefense() {
     };
 
     // Add organic wobble to path edges with consistent thickness at turns
-    const addPathWobble = (pathPoints: Position[], wobbleAmount: number, pathWidth: number = 38) => {
+    const addPathWobble = (pathPoints: Position[], wobbleAmount: number, pathWidth: number = 48) => {
       seedState = mapSeed + 100;
       const left: Position[] = [],
         right: Position[] = [],
@@ -3430,12 +3479,12 @@ export default function PrincetonTowerDefense() {
         const leftW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
         const rightW = (seededRandom() - 0.5) * wobbleAmount * cornerFactor;
         left.push({
-          x: p.x + perpX * (pathWidth + leftW),
-          y: p.y + perpY * (pathWidth + leftW) * 0.75,
+          x: p.x + perpX * (pathWidth + leftW) * 1.05,
+          y: p.y + perpY * (pathWidth + leftW) * 0.95,
         });
         right.push({
           x: p.x - perpX * (pathWidth + rightW),
-          y: p.y - perpY * (pathWidth + rightW) * 0.75,
+          y: p.y - perpY * (pathWidth + rightW) * 0.95,
         });
         center.push(p);
       }
