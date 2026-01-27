@@ -225,11 +225,34 @@ function drawTigerHero(ctx: CanvasRenderingContext2D, x: number, y: number, size
 }
 
 function drawTenorHero(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, dark: string, light: string, time: number, zoom: number, attackPhase: number): void {
-  // Body
-  ctx.fillStyle = color;
+  // Purple aura glow
+  const auraPulse = 0.3 + Math.sin(time * 3) * 0.15;
+  ctx.fillStyle = `rgba(150, 80, 200, ${auraPulse})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, size * 0.7, size * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body - deep purple robe
+  const bodyGrad = ctx.createLinearGradient(x - size * 0.5, y, x + size * 0.5, y);
+  bodyGrad.addColorStop(0, "#3a1850");
+  bodyGrad.addColorStop(0.5, "#5a2870");
+  bodyGrad.addColorStop(1, "#3a1850");
+  ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(x, y, size * 0.5, size * 0.6, 0, 0, Math.PI * 2);
   ctx.fill();
+
+  // Purple lapel highlights
+  ctx.strokeStyle = "#a060c0";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.4);
+  ctx.lineTo(x - size * 0.4, y + size * 0.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.15, y - size * 0.4);
+  ctx.lineTo(x + size * 0.4, y + size * 0.2);
+  ctx.stroke();
 
   // Head
   ctx.fillStyle = "#ffd5b0";
@@ -237,15 +260,41 @@ function drawTenorHero(ctx: CanvasRenderingContext2D, x: number, y: number, size
   ctx.arc(x, y - size * 0.5, size * 0.3, 0, Math.PI * 2);
   ctx.fill();
 
-  // Musical staff
-  ctx.fillStyle = "#c9a227";
-  ctx.fillRect(x + size * 0.3, y - size * 0.8, size * 0.08, size * 1.2);
+  // Purple bow tie
+  ctx.fillStyle = "#a060d0";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.25);
+  ctx.lineTo(x - size * 0.12, y - size * 0.32);
+  ctx.lineTo(x - size * 0.12, y - size * 0.18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.25);
+  ctx.lineTo(x + size * 0.12, y - size * 0.32);
+  ctx.lineTo(x + size * 0.12, y - size * 0.18);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#c080f0";
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.25, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Music notes floating
-  ctx.fillStyle = color;
+  // Musical staff with purple glow
+  ctx.shadowColor = "#b080e0";
+  ctx.shadowBlur = 4 * zoom;
+  ctx.fillStyle = "#8050a0";
+  ctx.fillRect(x + size * 0.3, y - size * 0.8, size * 0.08, size * 1.2);
+  ctx.shadowBlur = 0;
+
+  // Music notes floating - purple
+  ctx.fillStyle = "#b080e0";
+  ctx.shadowColor = "#c080ff";
+  ctx.shadowBlur = 6 * zoom;
   ctx.font = `${size * 0.3}px Arial`;
   const noteY = y - size * 0.8 - Math.sin(time * 4) * size * 0.2;
   ctx.fillText("♪", x + size * 0.2, noteY);
+  ctx.fillText("♫", x - size * 0.3, noteY + Math.sin(time * 3) * size * 0.15);
+  ctx.shadowBlur = 0;
 }
 
 function drawMatheyHero(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, dark: string, light: string, time: number, zoom: number, attackPhase: number): void {
@@ -317,13 +366,32 @@ function drawRockyHero(ctx: CanvasRenderingContext2D, x: number, y: number, size
 }
 
 function drawScottHero(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, dark: string, light: string, time: number, zoom: number, attackPhase: number): void {
-  // Ghostly body
+  // Teal aura glow
+  const auraPulse = 0.25 + Math.sin(time * 2.5) * 0.15;
+  ctx.fillStyle = `rgba(60, 180, 180, ${auraPulse})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, size * 0.75, size * 0.85, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ghostly body with teal tint
   const ghostAlpha = 0.7 + Math.sin(time * 3) * 0.2;
-  ctx.fillStyle = `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, ${ghostAlpha})`;
+  ctx.fillStyle = `rgba(40, 60, 70, ${ghostAlpha})`;
   ctx.beginPath();
   ctx.ellipse(x, y, size * 0.5, size * 0.6, 0, 0, Math.PI);
   ctx.bezierCurveTo(x + size * 0.5, y + size * 0.3, x - size * 0.5, y + size * 0.3, x - size * 0.5, y);
   ctx.fill();
+
+  // Teal trim on jacket
+  ctx.strokeStyle = "#40c0c0";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, y - size * 0.3);
+  ctx.lineTo(x - size * 0.35, y + size * 0.15);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.1, y - size * 0.3);
+  ctx.lineTo(x + size * 0.35, y + size * 0.15);
+  ctx.stroke();
 
   // Head
   ctx.fillStyle = `rgba(255, 220, 200, ${ghostAlpha})`;
@@ -331,21 +399,58 @@ function drawScottHero(ctx: CanvasRenderingContext2D, x: number, y: number, size
   ctx.arc(x, y - size * 0.4, size * 0.3, 0, Math.PI * 2);
   ctx.fill();
 
-  // Book
-  ctx.fillStyle = "#8b4513";
-  ctx.fillRect(x - size * 0.25, y - size * 0.1, size * 0.5, size * 0.35);
-  ctx.fillStyle = "#ffd700";
-  ctx.fillRect(x - size * 0.22, y - size * 0.08, size * 0.44, size * 0.02);
+  // Glasses with teal reflection
+  ctx.strokeStyle = "#2a2a2a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.1, y - size * 0.42, size * 0.08, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.1, y - size * 0.42, size * 0.08, 0, Math.PI * 2);
+  ctx.stroke();
+  // Teal lens glint
+  ctx.fillStyle = `rgba(80, 200, 200, 0.4)`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.12, y - size * 0.44, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x + size * 0.08, y - size * 0.44, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Spectral glow
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 10 * zoom;
-  ctx.strokeStyle = `rgba(${parseInt(color.slice(1, 3), 16)}, ${parseInt(color.slice(3, 5), 16)}, ${parseInt(color.slice(5, 7), 16)}, 0.5)`;
+  // Book with teal accents
+  ctx.fillStyle = "#5a1a2a";
+  ctx.fillRect(x - size * 0.25, y - size * 0.1, size * 0.5, size * 0.35);
+  // Teal book decorations
+  ctx.shadowColor = "#40c0c0";
+  ctx.shadowBlur = 4 * zoom;
+  ctx.strokeStyle = "#50d0d0";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.strokeRect(x - size * 0.22, y - size * 0.07, size * 0.44, size * 0.29);
+  ctx.fillStyle = "#50d0d0";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.02);
+  ctx.lineTo(x - size * 0.06, y + size * 0.08);
+  ctx.lineTo(x, y + size * 0.18);
+  ctx.lineTo(x + size * 0.06, y + size * 0.08);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Spectral teal glow
+  ctx.shadowColor = "#40c0c0";
+  ctx.shadowBlur = 12 * zoom;
+  ctx.strokeStyle = `rgba(80, 200, 200, 0.5)`;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(x, y - size * 0.2, size * 0.7, size * 0.8, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.shadowBlur = 0;
+
+  // Floating teal letters
+  ctx.fillStyle = `rgba(80, 210, 210, ${0.5 + Math.sin(time * 2) * 0.3})`;
+  ctx.font = `${size * 0.2}px serif`;
+  ctx.fillText("F", x - size * 0.5, y - size * 0.6 + Math.sin(time * 2.5) * size * 0.1);
+  ctx.fillText("S", x + size * 0.4, y - size * 0.5 + Math.sin(time * 3) * size * 0.1);
 }
 
 function drawCaptainHero(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, dark: string, light: string, time: number, zoom: number, attackPhase: number): void {

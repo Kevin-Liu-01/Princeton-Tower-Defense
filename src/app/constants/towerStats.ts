@@ -140,7 +140,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     },
     levels: {
       1: {
-        cost: 100,
+        cost: 120,
         description: "Basic Cannon - Single shot artillery",
       },
       2: {
@@ -195,7 +195,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     },
     levels: {
       1: {
-        cost: 80,
+        cost: 150,
         description: "Basic Slowing - 20% slow field",
       },
       2: {
@@ -205,19 +205,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       },
       3: {
         cost: 180,
-        description: "Arcane Library - 45% slow + magic damage",
-        overrides: { slowAmount: 0.45, damage: 30, attackSpeed: 500 },
+        description: "Arcane Library - 40% slow + magic damage",
+        overrides: { slowAmount: 0.40, damage: 30, attackSpeed: 500 },
       },
     },
     upgrades: {
       A: {
         name: "Earthquake Smasher",
         description: "Seismic waves damage and slow",
-        effect: "Deals 35 AoE damage + 50% slow",
+        effect: "Deals 35 AoE damage + 45% slow",
         stats: {
           damage: 35,
           range: 330, // 1.5x base range for level 4
-          slowAmount: 0.5,
+          slowAmount: 0.45,
           attackSpeed: 500,
           splashRadius: 80,
           specialEffect: "Ground-shaking AoE attacks",
@@ -226,10 +226,10 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       B: {
         name: "Blizzard",
         description: "Freezes enemies completely",
-        effect: "50% slow + 25% freeze chance every 2s",
+        effect: "45% slow + 25% freeze chance every 2s",
         stats: {
           range: 385, // 1.75x base range - wide freeze area
-          slowAmount: 0.5,
+          slowAmount: 0.45,
           attackSpeed: 1000,
           stunDuration: 2000,
           stunChance: 0.25, // 25% chance every 2 seconds
@@ -251,7 +251,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     },
     levels: {
       1: {
-        cost: 120,
+        cost: 100,
         description: "Basic Zapper - Single target lightning",
       },
       2: {
@@ -304,7 +304,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     },
     levels: {
       1: {
-        cost: 90,
+        cost: 110,
         description: "Sound Waves - Single target sonic",
       },
       2: {

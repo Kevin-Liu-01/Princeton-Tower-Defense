@@ -479,28 +479,490 @@ function renderLabTowerInternal(
   target: Enemy | null | undefined,
   enemies: Enemy[]
 ): void {
-  // Tesla coil base
+  const level = tower.level;
+  const baseWidth = 36 + level * 3;
+  const towerHeight = 40 + level * 12;
+  
+  // === FOUNDATION PLATFORM ===
+  // Multi-layer tech platform
+  ctx.fillStyle = "#1a2a3a";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 6 * zoom, (baseWidth + 10) * zoom * 0.5, (baseWidth + 10) * zoom * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.fillStyle = "#2a3a4a";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 3 * zoom, (baseWidth + 4) * zoom * 0.5, (baseWidth + 4) * zoom * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Platform edge glow
+  ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + Math.sin(time * 2) * 0.1})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  // === MAIN HOUSING STRUCTURE ===
+  // Tapered tech housing with panels
+  const housingBottom = screenPos.y;
+  const housingTop = screenPos.y - towerHeight * zoom * 0.5;
+  
+  // Back panel
   ctx.fillStyle = colors.secondary;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x - 18 * zoom, screenPos.y);
-  ctx.lineTo(screenPos.x - 10 * zoom, screenPos.y - 35 * zoom);
-  ctx.lineTo(screenPos.x + 10 * zoom, screenPos.y - 35 * zoom);
-  ctx.lineTo(screenPos.x + 18 * zoom, screenPos.y);
+  ctx.moveTo(screenPos.x - 16 * zoom, housingBottom);
+  ctx.lineTo(screenPos.x - 12 * zoom, housingTop);
+  ctx.lineTo(screenPos.x + 12 * zoom, housingTop);
+  ctx.lineTo(screenPos.x + 16 * zoom, housingBottom);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Front panel (lighter)
+  ctx.fillStyle = colors.primary;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x - 14 * zoom, housingBottom - 2 * zoom);
+  ctx.lineTo(screenPos.x - 10 * zoom, housingTop + 2 * zoom);
+  ctx.lineTo(screenPos.x + 10 * zoom, housingTop + 2 * zoom);
+  ctx.lineTo(screenPos.x + 14 * zoom, housingBottom - 2 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Panel lines (tech detailing)
+  ctx.strokeStyle = "#0a1a2a";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x, housingBottom - 2 * zoom);
+  ctx.lineTo(screenPos.x, housingTop + 2 * zoom);
+  ctx.stroke();
+  
+  // Status lights on housing
+  const lightColors = ["#00ff00", "#ffff00", "#00ffff"];
+  for (let i = 0; i < 3; i++) {
+    const lightY = housingBottom - 8 * zoom - i * 6 * zoom;
+    const lightPulse = Math.sin(time * 4 + i * 1.5) > 0 ? 1 : 0.3;
+    ctx.fillStyle = colorWithAlpha(lightColors[i], lightPulse);
+    ctx.beginPath();
+    ctx.arc(screenPos.x - 8 * zoom, lightY, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(screenPos.x + 8 * zoom, lightY, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === CAPACITOR BANKS (Level 2+) ===
+  if (level >= 2) {
+    const capColors = ["#3a5a7a", "#4a6a8a"];
+    // Left capacitor bank
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = capColors[i % 2];
+      const capX = screenPos.x - 22 * zoom;
+      const capY = screenPos.y - 5 * zoom - i * 8 * zoom;
+      ctx.fillRect(capX - 4 * zoom, capY - 6 * zoom, 8 * zoom, 6 * zoom);
+      
+      // Capacitor glow ring
+      ctx.strokeStyle = `rgba(0, 200, 255, ${0.4 + Math.sin(time * 3 + i) * 0.3})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(capX, capY - 3 * zoom, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Right capacitor bank
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = capColors[i % 2];
+      const capX = screenPos.x + 22 * zoom;
+      const capY = screenPos.y - 5 * zoom - i * 8 * zoom;
+      ctx.fillRect(capX - 4 * zoom, capY - 6 * zoom, 8 * zoom, 6 * zoom);
+      
+      ctx.strokeStyle = `rgba(0, 200, 255, ${0.4 + Math.sin(time * 3 + i + 1) * 0.3})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(capX, capY - 3 * zoom, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Wiring from capacitors to main housing
+    ctx.strokeStyle = "#ff6600";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - 18 * zoom, screenPos.y - 15 * zoom);
+    ctx.quadraticCurveTo(screenPos.x - 16 * zoom, screenPos.y - 20 * zoom, screenPos.x - 14 * zoom, screenPos.y - 15 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + 18 * zoom, screenPos.y - 15 * zoom);
+    ctx.quadraticCurveTo(screenPos.x + 16 * zoom, screenPos.y - 20 * zoom, screenPos.x + 14 * zoom, screenPos.y - 15 * zoom);
+    ctx.stroke();
+    
+    // Blue power cables
+    ctx.strokeStyle = "#0066ff";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - 18 * zoom, screenPos.y - 8 * zoom);
+    ctx.quadraticCurveTo(screenPos.x - 16 * zoom, screenPos.y - 12 * zoom, screenPos.x - 14 * zoom, screenPos.y - 8 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + 18 * zoom, screenPos.y - 8 * zoom);
+    ctx.quadraticCurveTo(screenPos.x + 16 * zoom, screenPos.y - 12 * zoom, screenPos.x + 14 * zoom, screenPos.y - 8 * zoom);
+    ctx.stroke();
+  }
+
+  // === SCAFFOLDING & SUPPORT STRUCTURE (Level 2+) ===
+  if (level >= 2) {
+    ctx.strokeStyle = "#5a6a7a";
+    ctx.lineWidth = 2 * zoom;
+    
+    // Vertical support struts
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - 20 * zoom, screenPos.y + 3 * zoom);
+    ctx.lineTo(screenPos.x - 16 * zoom, screenPos.y - 30 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + 20 * zoom, screenPos.y + 3 * zoom);
+    ctx.lineTo(screenPos.x + 16 * zoom, screenPos.y - 30 * zoom);
+    ctx.stroke();
+    
+    // Cross bracing
+    ctx.strokeStyle = "#4a5a6a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - 19 * zoom, screenPos.y - 5 * zoom);
+    ctx.lineTo(screenPos.x + 17 * zoom, screenPos.y - 25 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + 19 * zoom, screenPos.y - 5 * zoom);
+    ctx.lineTo(screenPos.x - 17 * zoom, screenPos.y - 25 * zoom);
+    ctx.stroke();
+    
+    // Horizontal support rings
+    ctx.strokeStyle = "#6a7a8a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y - 15 * zoom, 18 * zoom, 6 * zoom, 0, Math.PI, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // === LEVEL 3+ ADVANCED EQUIPMENT ===
+  if (level >= 3) {
+    // Secondary coil towers on sides
+    const sideCoilHeight = 25 * zoom;
+    const sideCoilX = [-25, 25];
+    
+    for (const offsetX of sideCoilX) {
+      const coilX = screenPos.x + offsetX * zoom;
+      const coilBaseY = screenPos.y - 5 * zoom;
+      
+      // Mini coil housing
+      ctx.fillStyle = "#3a4a5a";
+      ctx.beginPath();
+      ctx.moveTo(coilX - 5 * zoom, coilBaseY);
+      ctx.lineTo(coilX - 3 * zoom, coilBaseY - sideCoilHeight);
+      ctx.lineTo(coilX + 3 * zoom, coilBaseY - sideCoilHeight);
+      ctx.lineTo(coilX + 5 * zoom, coilBaseY);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Mini coil orb
+      const miniOrbPulse = 0.5 + Math.sin(time * 5 + offsetX) * 0.3;
+      ctx.fillStyle = `rgba(0, 200, 255, ${miniOrbPulse})`;
+      ctx.shadowColor = "#00ffff";
+      ctx.shadowBlur = 8 * zoom;
+      ctx.beginPath();
+      ctx.arc(coilX, coilBaseY - sideCoilHeight - 4 * zoom, 4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      
+      // Energy arc to main coil
+      ctx.strokeStyle = `rgba(0, 255, 255, ${0.3 + Math.sin(time * 8 + offsetX) * 0.3})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(coilX, coilBaseY - sideCoilHeight - 4 * zoom);
+      const midX = screenPos.x + offsetX * 0.3 * zoom;
+      const midY = screenPos.y - towerHeight * zoom * 0.6;
+      ctx.quadraticCurveTo(midX, midY, screenPos.x, screenPos.y - towerHeight * zoom * 0.7);
+      ctx.stroke();
+    }
+    
+    // Plasma conduits on the ground
+    ctx.strokeStyle = `rgba(0, 255, 200, ${0.4 + Math.sin(time * 3) * 0.2})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.setLineDash([3 * zoom, 3 * zoom]);
+    ctx.lineDashOffset = -time * 20;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - 30 * zoom, screenPos.y + 5 * zoom);
+    ctx.lineTo(screenPos.x - 20 * zoom, screenPos.y + 3 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + 30 * zoom, screenPos.y + 5 * zoom);
+    ctx.lineTo(screenPos.x + 20 * zoom, screenPos.y + 3 * zoom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Extra wiring network
+    ctx.strokeStyle = "#ff4400";
+    ctx.lineWidth = 1 * zoom;
+    for (let i = 0; i < 3; i++) {
+      const wireY = screenPos.y - 10 * zoom - i * 10 * zoom;
+      const sag = Math.sin(time * 2 + i) * 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 25 * zoom, wireY);
+      ctx.quadraticCurveTo(screenPos.x - 20 * zoom, wireY + sag, screenPos.x - 15 * zoom, wireY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x + 25 * zoom, wireY);
+      ctx.quadraticCurveTo(screenPos.x + 20 * zoom, wireY + sag, screenPos.x + 15 * zoom, wireY);
+      ctx.stroke();
+    }
+    
+    // Control panel on front
+    ctx.fillStyle = "#1a1a2a";
+    ctx.fillRect(screenPos.x - 6 * zoom, screenPos.y - 12 * zoom, 12 * zoom, 8 * zoom);
+    
+    // Screen on control panel
+    const screenGlow = 0.6 + Math.sin(time * 4) * 0.2;
+    ctx.fillStyle = `rgba(0, 255, 128, ${screenGlow})`;
+    ctx.fillRect(screenPos.x - 4 * zoom, screenPos.y - 10 * zoom, 8 * zoom, 4 * zoom);
+    
+    // Blinking data on screen
+    ctx.fillStyle = "#00ff00";
+    for (let i = 0; i < 4; i++) {
+      if (Math.sin(time * 10 + i * 2) > 0) {
+        ctx.fillRect(screenPos.x - 3 * zoom + i * 2 * zoom, screenPos.y - 9 * zoom, 1 * zoom, 2 * zoom);
+      }
+    }
+  }
+
+  // === MAIN TESLA COIL ===
+  const coilBaseY = screenPos.y - towerHeight * zoom * 0.45;
+  const coilHeight = (30 + level * 10) * zoom;
+  const coilTopY = coilBaseY - coilHeight;
+  
+  // Coil mounting ring
+  ctx.fillStyle = "#4a5a6a";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, coilBaseY, 10 * zoom, 4 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#00ccff";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+  
+  // Coil core (central pillar)
+  const coreGrad = ctx.createLinearGradient(screenPos.x - 4 * zoom, coilBaseY, screenPos.x + 4 * zoom, coilBaseY);
+  coreGrad.addColorStop(0, "#2a3a4a");
+  coreGrad.addColorStop(0.5, "#4a6a8a");
+  coreGrad.addColorStop(1, "#2a3a4a");
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x - 5 * zoom, coilBaseY);
+  ctx.lineTo(screenPos.x - 3 * zoom, coilTopY + 8 * zoom);
+  ctx.lineTo(screenPos.x + 3 * zoom, coilTopY + 8 * zoom);
+  ctx.lineTo(screenPos.x + 5 * zoom, coilBaseY);
   ctx.closePath();
   ctx.fill();
 
-  // Coil sphere
-  ctx.fillStyle = colors.primary;
-  ctx.beginPath();
-  ctx.arc(screenPos.x, screenPos.y - 40 * zoom, 12 * zoom, 0, Math.PI * 2);
-  ctx.fill();
+  // === IMPROVED COPPER COIL WINDINGS ===
+  const coilTurns = 8 + level * 3;
+  const coilSegmentHeight = coilHeight / coilTurns;
+  
+  for (let i = 0; i < coilTurns; i++) {
+    const t = i / coilTurns;
+    const y = coilBaseY - t * coilHeight;
+    const coilWidth = (8 - t * 3) * zoom;
+    const coilDepth = coilWidth * 0.4;
+    
+    // Animated coil energy
+    const energyPhase = time * 3 + i * 0.4;
+    const energyPulse = 0.3 + Math.sin(energyPhase) * 0.3;
+    
+    // Copper coil base color
+    ctx.fillStyle = "#cd7f32";
+    ctx.strokeStyle = "#8b5a2b";
+    ctx.lineWidth = 0.5 * zoom;
+    
+    // Draw coil as 3D torus segment
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, y, coilWidth, coilDepth, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Coil highlight
+    ctx.strokeStyle = `rgba(255, 200, 100, ${0.4 + energyPulse * 0.3})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, y, coilWidth * 0.9, coilDepth * 0.9, 0, Math.PI * 0.8, Math.PI * 1.2);
+    ctx.stroke();
+    
+    // Energy glow between coils
+    if (i > 0 && i % 2 === 0) {
+      ctx.fillStyle = `rgba(0, 200, 255, ${energyPulse * 0.5})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, y + coilSegmentHeight * 0.5, coilWidth * 0.6, coilDepth * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
-  // Electric glow
-  const glowPulse = 0.5 + Math.sin(time * 6) * 0.3;
-  ctx.shadowColor = colors.accent;
-  ctx.shadowBlur = 20 * zoom * glowPulse;
+  // === ENERGY ORB AT TOP ===
+  const orbRadius = (8 + level * 2) * zoom;
+  const orbPulse = 0.6 + Math.sin(time * 4) * 0.4;
+  const orbY = coilTopY;
+  
+  // Outer energy field
+  ctx.fillStyle = `rgba(0, 100, 200, ${orbPulse * 0.2})`;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, orbY, orbRadius * 1.8, 0, Math.PI * 2);
   ctx.fill();
+  
+  // Main orb glow
+  ctx.shadowColor = "#00ffff";
+  ctx.shadowBlur = 25 * zoom * orbPulse;
+  
+  // Orb gradient
+  const orbGrad = ctx.createRadialGradient(
+    screenPos.x - 2 * zoom, orbY - 2 * zoom, 0,
+    screenPos.x, orbY, orbRadius
+  );
+  orbGrad.addColorStop(0, "#ffffff");
+  orbGrad.addColorStop(0.2, "#ccffff");
+  orbGrad.addColorStop(0.5, "#00ffff");
+  orbGrad.addColorStop(0.8, "#0088ff");
+  orbGrad.addColorStop(1, "#004488");
+  
+  ctx.fillStyle = orbGrad;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, orbY, orbRadius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Inner core highlight
+  ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + orbPulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(screenPos.x - 2 * zoom, orbY - 2 * zoom, orbRadius * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  
   ctx.shadowBlur = 0;
+
+  // === ELECTRIC ARCS FROM ORB ===
+  const arcCount = 4 + level;
+  ctx.strokeStyle = `rgba(0, 255, 255, ${orbPulse * 0.8})`;
+  ctx.lineWidth = 1.5 * zoom;
+  
+  for (let i = 0; i < arcCount; i++) {
+    const arcAngle = (i / arcCount) * Math.PI * 2 + time * 3;
+    const arcLength = (15 + level * 5 + Math.sin(time * 8 + i) * 8) * zoom;
+    const endX = screenPos.x + Math.cos(arcAngle) * arcLength;
+    const endY = orbY + Math.sin(arcAngle) * arcLength * 0.5;
+    
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, orbY);
+    
+    // Jagged lightning path with more segments for higher levels
+    const segments = 3 + level;
+    let prevX = screenPos.x;
+    let prevY = orbY;
+    
+    for (let s = 1; s <= segments; s++) {
+      const progress = s / segments;
+      const targetX = screenPos.x + (endX - screenPos.x) * progress;
+      const targetY = orbY + (endY - orbY) * progress;
+      const jitter = (1 - progress) * 8 * zoom;
+      const x = targetX + (Math.sin(time * 20 + i * 7 + s * 3) * jitter);
+      const y = targetY + (Math.cos(time * 15 + i * 5 + s * 2) * jitter * 0.5);
+      ctx.lineTo(x, y);
+      prevX = x;
+      prevY = y;
+    }
+    ctx.stroke();
+    
+    // Arc endpoint spark
+    ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(time * 12 + i) * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(prevX, prevY, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === LEVEL 3+ PLASMA FIELD EFFECT ===
+  if (level >= 3) {
+    // Rotating energy rings around orb
+    for (let ring = 0; ring < 2; ring++) {
+      const ringAngle = time * 2 + ring * Math.PI;
+      const ringRadius = orbRadius * (1.4 + ring * 0.3);
+      const ringAlpha = 0.3 + Math.sin(time * 4 + ring) * 0.2;
+      
+      ctx.strokeStyle = `rgba(0, 255, 200, ${ringAlpha})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        orbY,
+        ringRadius,
+        ringRadius * 0.3,
+        ringAngle,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+    }
+    
+    // Particle sparks
+    for (let p = 0; p < 6; p++) {
+      const particleAngle = time * 4 + p * (Math.PI * 2 / 6);
+      const particleDist = orbRadius * 1.5 + Math.sin(time * 6 + p) * 5 * zoom;
+      const px = screenPos.x + Math.cos(particleAngle) * particleDist;
+      const py = orbY + Math.sin(particleAngle) * particleDist * 0.4;
+      
+      ctx.fillStyle = `rgba(200, 255, 255, ${0.4 + Math.sin(time * 10 + p) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(px, py, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === LEVEL 4 UPGRADE EFFECTS ===
+  if (tower.level === 4) {
+    if (tower.upgrade === "A") {
+      // Focused beam - targeting laser sight
+      ctx.strokeStyle = `rgba(255, 0, 0, ${0.4 + Math.sin(time * 6) * 0.2})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.setLineDash([4, 4]);
+      ctx.lineDashOffset = -time * 30;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x, orbY);
+      const beamLength = 120 * zoom;
+      ctx.lineTo(
+        screenPos.x + Math.cos(tower.rotation || 0) * beamLength,
+        orbY + Math.sin(tower.rotation || 0) * beamLength * 0.5
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Beam source intensifier
+      ctx.fillStyle = `rgba(255, 0, 0, ${0.5 + Math.sin(time * 8) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, orbY, orbRadius * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (tower.upgrade === "B") {
+      // Chain lightning - orbiting sub-orbs
+      for (let i = 0; i < 4; i++) {
+        const subOrbAngle = (i / 4) * Math.PI * 2 + time * 3;
+        const subOrbDist = 18 * zoom;
+        const subX = screenPos.x + Math.cos(subOrbAngle) * subOrbDist;
+        const subY = orbY + Math.sin(subOrbAngle) * subOrbDist * 0.4;
+        
+        // Sub-orb glow
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 10 * zoom;
+        ctx.fillStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(time * 5 + i) * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(subX, subY, 4 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        // Connection arc to main orb
+        ctx.strokeStyle = `rgba(0, 200, 255, ${0.4 + Math.sin(time * 7 + i) * 0.2})`;
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, orbY);
+        ctx.lineTo(subX, subY);
+        ctx.stroke();
+      }
+    }
+  }
 }
 
 function renderArchTowerInternal(

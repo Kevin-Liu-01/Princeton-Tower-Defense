@@ -12,6 +12,7 @@ import type {
   MapDecoration,
   MapHazard,
 } from "../types";
+import { TOWER_STATS } from "./towerStats";
 
 // Grid settings - 30x30 maps for more strategic depth
 export const TILE_SIZE = 64;
@@ -41,12 +42,12 @@ export const TOWER_DATA: Record<
   }
 > = {
   station: {
-    name: "Dinky Station",
-    icon: "🚂",
-    cost: 200,
-    damage: 0,
-    range: 0,
-    attackSpeed: 0,
+    name: TOWER_STATS.station.name,
+    icon: TOWER_STATS.station.icon,
+    cost: TOWER_STATS.station.levels[1].cost,
+    damage: TOWER_STATS.station.baseStats.damage,
+    range: TOWER_STATS.station.baseStats.range,
+    attackSpeed: TOWER_STATS.station.baseStats.attackSpeed,
     desc: "Spawns soldiers to block enemies.",
     spawnRange: 220,
     levelDesc: {
@@ -69,12 +70,12 @@ export const TOWER_DATA: Record<
     },
   },
   cannon: {
-    name: "Nassau Cannon",
-    icon: "💣",
-    cost: 100,
-    damage: 65,
-    range: 240,
-    attackSpeed: 1200,
+    name: TOWER_STATS.cannon.name,
+    icon: TOWER_STATS.cannon.icon,
+    cost: TOWER_STATS.cannon.levels[1].cost,
+    damage: TOWER_STATS.cannon.baseStats.damage,
+    range: TOWER_STATS.cannon.baseStats.range,
+    attackSpeed: TOWER_STATS.cannon.baseStats.attackSpeed,
     desc: "Heavy artillery against ground enemies.",
     levelDesc: {
       1: "Basic Cannon - Single shot artillery",
@@ -98,17 +99,17 @@ export const TOWER_DATA: Record<
     },
   },
   library: {
-    name: "Firestone Library",
-    icon: "📚",
-    cost: 80,
-    damage: 0,
-    range: 220,
-    attackSpeed: 0,
+    name: TOWER_STATS.library.name,
+    icon: TOWER_STATS.library.icon,
+    cost: TOWER_STATS.library.levels[1].cost,
+    damage: TOWER_STATS.library.baseStats.damage,
+    range: TOWER_STATS.library.baseStats.range,
+    attackSpeed: TOWER_STATS.library.baseStats.attackSpeed,
     desc: "Slows enemies with ancient knowledge.",
     levelDesc: {
-      1: "Basic Slowing - 20% slow field",
-      2: "Enhanced Slowing - 35% slow field",
-      3: "Arcane Library - 45% slow + magic damage",
+      1: TOWER_STATS.library.levels[1].description,
+      2: TOWER_STATS.library.levels[2].description,
+      3: TOWER_STATS.library.levels[3].description,
       4: "Choose: Earthquake or Blizzard",
     },
     upgrades: {
@@ -127,12 +128,12 @@ export const TOWER_DATA: Record<
     },
   },
   lab: {
-    name: "E-Quad Lab",
-    icon: "⚗️",
-    cost: 120,
-    damage: 45,
-    range: 200,
-    attackSpeed: 800,
+    name: TOWER_STATS.lab.name,
+    icon: TOWER_STATS.lab.icon,
+    cost: TOWER_STATS.lab.levels[1].cost,
+    damage: TOWER_STATS.lab.baseStats.damage,
+    range: TOWER_STATS.lab.baseStats.range,
+    attackSpeed: TOWER_STATS.lab.baseStats.attackSpeed,
     desc: "Fast energy attacks with electric damage.",
     levelDesc: {
       1: "Basic Zapper - Single target lightning",
@@ -156,12 +157,12 @@ export const TOWER_DATA: Record<
     },
   },
   arch: {
-    name: "Blair Arch",
-    icon: "🏛️",
-    cost: 90,
-    damage: 28,
-    range: 260,
-    attackSpeed: 600,
+    name: TOWER_STATS.arch.name,
+    icon: TOWER_STATS.arch.icon,
+    cost: TOWER_STATS.arch.levels[1].cost,
+    damage: TOWER_STATS.arch.baseStats.damage,
+    range: TOWER_STATS.arch.baseStats.range,
+    attackSpeed: TOWER_STATS.arch.baseStats.attackSpeed,
     desc: "Sonic attacks hit air and ground.",
     levelDesc: {
       1: "Sound Waves - Single target sonic",
@@ -185,12 +186,12 @@ export const TOWER_DATA: Record<
     },
   },
   club: {
-    name: "Eating Club",
-    icon: "🏦",
-    cost: 150,
-    damage: 0,
-    range: 0,
-    attackSpeed: 0,
+    name: TOWER_STATS.club.name,
+    icon: TOWER_STATS.club.icon,
+    cost: TOWER_STATS.club.levels[1].cost,
+    damage: TOWER_STATS.club.baseStats.damage,
+    range: TOWER_STATS.club.baseStats.range,
+    attackSpeed: TOWER_STATS.club.baseStats.attackSpeed,
     desc: "Generates Paw Points over time.",
     levelDesc: {
       1: "Basic Club - 8 PP per 8 seconds",
@@ -532,7 +533,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   rocky: {
     name: "Rocky",
-    icon: "🪨",
+    icon: "🌰",
     description:
       "A legendary gargoyle awakened from the campus rooftops. Hurls massive boulders that devastate enemy formations.",
     hp: 2200,
@@ -1111,7 +1112,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    startingPawPoints: 500, // Hard level with beacon - need more towers
+    startingPawPoints: 5000, // Hard level with beacon - need more towers
     specialTower: {
       pos: { x: 16, y: 8.5 },
       type: "beacon",
