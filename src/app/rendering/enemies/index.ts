@@ -110,6 +110,54 @@ export function renderEnemy(
     ctx.fill();
   }
 
+  // Gold aura effect (Gold Rush spell) - Floating coins
+  if (enemy.goldAura) {
+    // Draw floating coins orbiting around the enemy
+    for (let i = 0; i < 5; i++) {
+      const coinAngle = time * 2.5 + (i * Math.PI * 2 / 5);
+      const coinOrbitX = Math.cos(coinAngle) * size * 1.3;
+      const coinOrbitY = Math.sin(coinAngle) * size * 0.65; // Flattened for isometric
+      const coinFloat = Math.sin(time * 4 + i * 1.2) * 4 * zoom; // Bobbing motion
+      const coinX = screenPos.x + coinOrbitX;
+      const coinY = screenPos.y - floatOffset + coinOrbitY - 8 * zoom + coinFloat;
+      const coinSize = 4 * zoom;
+      
+      // Coin body (gold)
+      ctx.fillStyle = "#ffd700";
+      ctx.beginPath();
+      ctx.ellipse(coinX, coinY, coinSize, coinSize * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Coin highlight
+      ctx.fillStyle = "#fff8dc";
+      ctx.beginPath();
+      ctx.ellipse(coinX - coinSize * 0.2, coinY - coinSize * 0.15, coinSize * 0.4, coinSize * 0.25, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Coin edge/shadow
+      ctx.strokeStyle = "#b8860b";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(coinX, coinY, coinSize, coinSize * 0.6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Soft golden glow underneath
+    const glowAlpha = 0.2 + Math.sin(time * 3) * 0.1;
+    ctx.fillStyle = `rgba(255, 215, 0, ${glowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y - floatOffset,
+      size * 1.2,
+      size * 0.6,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
   // Draw enemy sprite
   const flash = enemy.damageFlash;
   drawEnemySprite(

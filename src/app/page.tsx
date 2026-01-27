@@ -199,6 +199,8 @@ export default function PrincetonTowerDefense() {
   // Special Objectives State
   const [specialTowerHp, setSpecialTowerHp] = useState<number | null>(null);
   const [vaultFlash, setVaultFlash] = useState(0);
+  // HUD Animation state
+  const [goldSpellActive, setGoldSpellActive] = useState(false);
   // UI state
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [hoveredTower, setHoveredTower] = useState<string | null>(null);
@@ -380,13 +382,23 @@ export default function PrincetonTowerDefense() {
       setPlacingTroop(false);
       setSpells([]);
       setGameSpeed(1);
+      setGoldSpellActive(false);
       if (levelData?.specialTower?.hp) {
         setSpecialTowerHp(levelData.specialTower.hp);
       } else {
         setSpecialTowerHp(null);
       }
     }
-  }, [gameState, clearAllTimers, selectedMap]); // Initialize hero and spells when game starts
+  }, [gameState, clearAllTimers, selectedMap]);
+
+  // Clear all timers when leaving the playing state (defeat, victory, quit)
+  useEffect(() => {
+    if (gameState !== "playing") {
+      clearAllTimers();
+    }
+  }, [gameState, clearAllTimers]);
+
+  // Initialize hero and spells when game starts
   useEffect(() => {
     if (gameState === "playing" && selectedHero && !hero) {
       const heroData = HERO_DATA[selectedHero];
@@ -453,7 +465,17 @@ export default function PrincetonTowerDefense() {
   // Start wave function
   const startWave = useCallback(() => {
     const levelWaves = getLevelWaves(selectedMap);
-    if (waveInProgress || currentWave >= levelWaves.length) return;
+    // Double-check guards to prevent duplicate wave starts
+    if (waveInProgress) {
+      console.log("[Wave] Blocked: wave already in progress");
+      return;
+    }
+    if (currentWave >= levelWaves.length) {
+      console.log("[Wave] Blocked: all waves completed");
+      return;
+    }
+
+    console.log(`[Wave] Starting wave ${currentWave + 1} of ${levelWaves.length}`);
     setWaveInProgress(true);
     const wave = levelWaves[currentWave];
     wave.forEach((group) => {
@@ -558,11 +580,28 @@ export default function PrincetonTowerDefense() {
       // Track interval for cleanup
       spawnIntervalsRef.current.push(spawnInterval);
     });
+    const waveDuration = Math.max(...wave.map((g) => g.count * g.interval)) + 5000;
+    const waveNumberForTimeout = currentWave; // Capture for closure
+    console.log(`[Wave] Wave ${currentWave + 1} started, will complete in ${waveDuration}ms`);
+
     const waveOverTimeout = setTimeout(() => {
-      setWaveInProgress(false);
-      setCurrentWave((w) => w + 1);
-      setNextWaveTimer(WAVE_TIMER_BASE);
-    }, Math.max(...wave.map((g) => g.count * g.interval)) + 5000);
+      // Use functional updates to check current state before modifying
+      setCurrentWave((currentW) => {
+        // Only process if we're still on the wave this timeout was for
+        if (currentW !== waveNumberForTimeout) {
+          console.log(`[Wave] Timeout for wave ${waveNumberForTimeout + 1} ignored - current wave is ${currentW + 1}`);
+          return currentW; // Don't change anything
+        }
+
+        console.log(`[Wave] Wave ${currentW + 1} completed, advancing to wave ${currentW + 2}`);
+
+        // These are safe to call since we confirmed we're on the right wave
+        setWaveInProgress(false);
+        setNextWaveTimer(WAVE_TIMER_BASE);
+
+        return currentW + 1;
+      });
+    }, waveDuration);
     // Track timeout for cleanup
     activeTimeoutsRef.current.push(waveOverTimeout);
   }, [waveInProgress, currentWave, selectedMap]);
@@ -576,16 +615,15 @@ export default function PrincetonTowerDefense() {
       const spec = mapData?.specialTower;
       const specWorldPos = spec ? gridToWorld(spec.pos) : null;
 
-      // Wave timer
+      // Wave timer - check outside setState to avoid race conditions
       if (!waveInProgress && currentWave < levelWaves.length) {
-        setNextWaveTimer((prev) => {
-          const newTimer = prev - deltaTime;
-          if (newTimer <= 0) {
-            startWave();
-            return WAVE_TIMER_BASE;
-          }
-          return newTimer;
-        });
+        const shouldStartWave = nextWaveTimer - deltaTime <= 0;
+        if (shouldStartWave) {
+          startWave();
+          setNextWaveTimer(WAVE_TIMER_BASE);
+        } else {
+          setNextWaveTimer((prev) => Math.max(0, prev - deltaTime));
+        }
       }
 
       // =========================================================================
@@ -1229,12 +1267,15 @@ export default function PrincetonTowerDefense() {
               const burnDmg = ((enemy.burnDamage || 10) * deltaTime) / 1000;
               const newHp = enemy.hp - burnDmg;
               if (newHp <= 0) {
-                setPawPoints((pp) => pp + ENEMY_DATA[enemy.type].bounty);
+                const baseBounty = ENEMY_DATA[enemy.type].bounty;
+                const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                setPawPoints((pp) => pp + baseBounty + goldBonus);
                 addParticles(
                   getEnemyPosWithPath(enemy, selectedMap),
                   "explosion",
                   8
                 );
+                if (enemy.goldAura) addParticles(getEnemyPosWithPath(enemy, selectedMap), "gold", 6);
                 return null as any;
               }
               enemy = { ...enemy, hp: newHp };
@@ -2103,7 +2144,9 @@ export default function PrincetonTowerDefense() {
                       newEnemy.damageFlash = 80;
                       appliedDamage = true;
                       if (newEnemy.hp <= 0) {
-                        bountyEarned += ENEMY_DATA[enemy.type].bounty;
+                        const baseBounty = ENEMY_DATA[enemy.type].bounty;
+                        const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                        bountyEarned += baseBounty + goldBonus;
                         sparkPositions.push(info.pos);
                         return null as any;
                       }
@@ -2116,7 +2159,9 @@ export default function PrincetonTowerDefense() {
                       newEnemy.slowIntensity = 0.8;
                       appliedDamage = true;
                       if (newEnemy.hp <= 0) {
-                        bountyEarned += ENEMY_DATA[enemy.type].bounty;
+                        const baseBounty = ENEMY_DATA[enemy.type].bounty;
+                        const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                        bountyEarned += baseBounty + goldBonus;
                         particlePositions.push(info.pos);
                         return null as any;
                       }
@@ -2131,6 +2176,7 @@ export default function PrincetonTowerDefense() {
               if (bountyEarned > 0) {
                 setPawPoints((pp) => pp + bountyEarned);
               }
+              // Track kills for wave progress
               particlePositions.forEach((pos) => addParticles(pos, "explosion", 8));
               sparkPositions.forEach((pos) => addParticles(pos, "spark", 6));
             }
@@ -2508,8 +2554,11 @@ export default function PrincetonTowerDefense() {
                         updates.burnUntil = now + 3000;
                       }
                       if (newHp <= 0) {
-                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                        const baseBounty = ENEMY_DATA[e.type].bounty;
+                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                        setPawPoints((pp) => pp + baseBounty + goldBonus);
                         addParticles(targetPos, "explosion", 12);
+                        if (e.goldAura) addParticles(targetPos, "gold", 6);
                         return null as any;
                       }
                       return { ...e, ...updates };
@@ -2608,12 +2657,15 @@ export default function PrincetonTowerDefense() {
                         const newHp =
                           e.hp - chainDamage * (1 - ENEMY_DATA[e.type].armor);
                         if (newHp <= 0) {
-                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          const baseBounty = ENEMY_DATA[e.type].bounty;
+                          const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                          setPawPoints((pp) => pp + baseBounty + goldBonus);
                           addParticles(
                             getEnemyPosWithPath(e, selectedMap),
                             "explosion",
                             8
                           );
+                          if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
                           return null as any;
                         }
                         return { ...e, hp: newHp, damageFlash: 150 };
@@ -2736,8 +2788,11 @@ export default function PrincetonTowerDefense() {
                           updates.stunUntil = now + 1000;
                         }
                         if (newHp <= 0) {
-                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          const baseBounty = ENEMY_DATA[e.type].bounty;
+                          const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                          setPawPoints((pp) => pp + baseBounty + goldBonus);
                           addParticles(targetPos, "explosion", 10);
+                          if (e.goldAura) addParticles(targetPos, "gold", 6);
                           return null as any;
                         }
                         return { ...e, ...updates };
@@ -2820,8 +2875,11 @@ export default function PrincetonTowerDefense() {
                       const newHp =
                         e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
                       if (newHp <= 0) {
-                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                        const baseBounty = ENEMY_DATA[e.type].bounty;
+                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                        setPawPoints((pp) => pp + baseBounty + goldBonus);
                         addParticles(targetPos, "explosion", 12);
+                        if (e.goldAura) addParticles(targetPos, "gold", 6);
                         setEffects((ef) => [
                           ...ef,
                           {
@@ -2890,9 +2948,12 @@ export default function PrincetonTowerDefense() {
                   if (e.id === target.id) {
                     const newHp = e.hp - heroData.damage;
                     if (newHp <= 0) {
-                      setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                      const baseBounty = ENEMY_DATA[e.type].bounty;
+                      const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                      setPawPoints((pp) => pp + baseBounty + goldBonus);
                       if (hero.type === "scott") setPawPoints((pp) => pp + 1);
                       addParticles(targetPos, "explosion", 10);
+                      if (e.goldAura) addParticles(targetPos, "gold", 6);
                       setEffects((ef) => [
                         ...ef,
                         {
@@ -2976,8 +3037,11 @@ export default function PrincetonTowerDefense() {
                     if (e.id === target.id) {
                       const newHp = e.hp - troopDamage;
                       if (newHp <= 0) {
-                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                        const baseBounty = ENEMY_DATA[e.type].bounty;
+                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                        setPawPoints((pp) => pp + baseBounty + goldBonus);
                         addParticles(targetPos, "explosion", 8);
+                        if (e.goldAura) addParticles(targetPos, "gold", 6);
                         setEffects((ef) => [
                           ...ef,
                           {
@@ -3178,6 +3242,12 @@ export default function PrincetonTowerDefense() {
         const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
         setTimeSpent(finalTime);
 
+        // Clear all timers to stop wave spawning
+        clearAllTimers();
+
+        // Reset wave tracking
+        setWaveInProgress(false);
+
         // Save stats for defeat (won = false)
         updateLevelStats(selectedMap, finalTime, lives, false);
         setGameState("defeat");
@@ -3195,6 +3265,9 @@ export default function PrincetonTowerDefense() {
         // Calculate time spent
         const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
         setTimeSpent(finalTime);
+
+        // Clear all timers to ensure clean state
+        clearAllTimers();
 
         // IMPORTANT: Set game state first to prevent duplicate triggers
         setGameState("victory");
@@ -3238,6 +3311,7 @@ export default function PrincetonTowerDefense() {
       selectedMap,
       waveInProgress,
       currentWave,
+      nextWaveTimer,
       lives,
       unlockedMaps,
       startWave,
@@ -3248,6 +3322,7 @@ export default function PrincetonTowerDefense() {
       gameState,
       levelStartTime,
       gameSpeed,
+      clearAllTimers,
     ]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation
@@ -16774,9 +16849,12 @@ export default function PrincetonTowerDefense() {
                       const damage = Math.floor(200 * damageMultiplier);
                       const newHp = e.hp - damage;
                       if (newHp <= 0) {
-                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                        const baseBounty = ENEMY_DATA[e.type].bounty;
+                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                        setPawPoints((pp) => pp + baseBounty + goldBonus);
                         addParticles(pos, "explosion", 15);
                         addParticles(pos, "fire", 10);
+                        if (e.goldAura) addParticles(pos, "gold", 6);
                         return null as any;
                       }
                       return { ...e, hp: newHp, damageFlash: 300 };
@@ -16839,9 +16917,12 @@ export default function PrincetonTowerDefense() {
                       if (e.id === target.id) {
                         const newHp = e.hp - damagePerTarget;
                         if (newHp <= 0) {
-                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                          const baseBounty = ENEMY_DATA[e.type].bounty;
+                          const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                          setPawPoints((pp) => pp + baseBounty + goldBonus);
                           addParticles(targetPos, "spark", 25);
                           addParticles(targetPos, "glow", 15);
+                          if (e.goldAura) addParticles(targetPos, "gold", 6);
                           return null as any;
                         }
                         return {
@@ -16890,12 +16971,17 @@ export default function PrincetonTowerDefense() {
 
         case "payday": {
           // ENHANCED PAYDAY - Creates money aura around all enemies for duration
+          // Enemies killed while gold aura active give +50% bounty
           const bonusPerEnemy = 5;
           const basePayout = 80;
           const enemyBonus = Math.min(enemies.length * bonusPerEnemy, 50);
           const totalPayout = basePayout + enemyBonus;
 
           setPawPoints((pp) => pp + totalPayout);
+
+          // Apply gold aura effect to all enemies and activate HUD animation
+          setEnemies((prev) => prev.map((e) => ({ ...e, goldAura: true })));
+          setGoldSpellActive(true);
 
           // Create money aura around all enemies
           setEffects((ef) => [
@@ -16906,7 +16992,7 @@ export default function PrincetonTowerDefense() {
               type: "payday_aura",
               progress: 0,
               size: 0,
-              duration: 3000,
+              duration: 10000,
               enemies: enemies.map((e) => e.id),
             },
           ]);
@@ -16916,6 +17002,12 @@ export default function PrincetonTowerDefense() {
             const pos = getEnemyPosWithPath(e, selectedMap);
             addParticles(pos, "gold", 12);
           });
+
+          // Clear gold aura after 10 seconds
+          setTimeout(() => {
+            setEnemies((prev) => prev.map((e) => ({ ...e, goldAura: false })));
+            setGoldSpellActive(false);
+          }, 10000);
           break;
         }
 
@@ -16987,7 +17079,10 @@ export default function PrincetonTowerDefense() {
                     "explosion",
                     8
                   );
-                  setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                  const baseBounty = ENEMY_DATA[e.type].bounty;
+                  const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                  setPawPoints((pp) => pp + baseBounty + goldBonus);
+                  if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
                   return null as any;
                 }
                 return {
@@ -17077,7 +17172,10 @@ export default function PrincetonTowerDefense() {
                     "explosion",
                     12
                   );
-                  setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                  const baseBounty = ENEMY_DATA[e.type].bounty;
+                  const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                  setPawPoints((pp) => pp + baseBounty + goldBonus);
+                  if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
                   return null as any;
                 }
                 return {
@@ -17262,6 +17360,7 @@ export default function PrincetonTowerDefense() {
     setStarsEarned(0);
     setTimeSpent(0);
     setLevelStartTime(0);
+    setGoldSpellActive(false);
     // clear all waves because if u end the level early, they might still be queued
     clearAllTimers();
     if (LEVEL_DATA[selectedMap]?.specialTower?.hp) {
@@ -17310,7 +17409,7 @@ export default function PrincetonTowerDefense() {
       <DefeatScreen
         resetGame={resetGame}
         timeSpent={timeSpent}
-        waveReached={currentWave}
+        waveReached={Math.min(currentWave + 1, totalWaves)}
         totalWaves={totalWaves}
         levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
         bestTime={currentLevelStats.bestTime}
@@ -17330,6 +17429,7 @@ export default function PrincetonTowerDefense() {
         nextWaveTimer={nextWaveTimer}
         gameSpeed={gameSpeed}
         setGameSpeed={setGameSpeed}
+        goldSpellActive={goldSpellActive}
         quitLevel={() => {
           resetGame();
           setGameState("setup");
@@ -17357,6 +17457,7 @@ export default function PrincetonTowerDefense() {
           setPlacingTroop(false);
           setSpells([]);
           setGameSpeed(1);
+          setGoldSpellActive(false);
           // clear all waves because if u end the level early, they might still be queued
           setLevelStartTime(Date.now());
           //reset special towers

@@ -12403,6 +12403,53 @@ export function renderEnemy(
     }
   }
 
+  // GOLD AURA EFFECT - Floating coins (Gold Rush spell)
+  if (enemy.goldAura) {
+    // Draw floating coins orbiting around the enemy
+    for (let i = 0; i < 5; i++) {
+      const coinAngle = time * 2.5 + (i * Math.PI * 2 / 5);
+      const coinOrbitX = Math.cos(coinAngle) * size * 1.0;
+      const coinOrbitY = Math.sin(coinAngle) * size * 0.5; // Flattened for isometric
+      const coinFloat = Math.sin(time * 4 + i * 1.2) * 6 * zoom; // Bobbing motion
+      const coinX = screenPos.x + coinOrbitX;
+      const coinY = drawY + coinOrbitY - 10 * zoom + coinFloat;
+      const coinSize = 5 * zoom;
+      
+      // Coin body (gold)
+      ctx.fillStyle = "#ffd700";
+      ctx.beginPath();
+      ctx.ellipse(coinX, coinY, coinSize, coinSize * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Coin highlight
+      ctx.fillStyle = "#fff8dc";
+      ctx.beginPath();
+      ctx.ellipse(coinX - coinSize * 0.2, coinY - coinSize * 0.15, coinSize * 0.4, coinSize * 0.25, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Coin edge/shadow
+      ctx.strokeStyle = "#b8860b";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(coinX, coinY, coinSize, coinSize * 0.6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Dollar sign on coin
+      ctx.fillStyle = "#b8860b";
+      ctx.font = `bold ${coinSize * 0.8}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("$", coinX, coinY);
+    }
+    
+    // Soft golden glow underneath
+    const glowAlpha = 0.25 + Math.sin(time * 3) * 0.1;
+    ctx.fillStyle = `rgba(255, 215, 0, ${glowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // HP Bar
   if (enemy.hp < enemy.maxHp) {
     const barWidth = size * 1.3;
@@ -24528,6 +24575,7 @@ function drawFScottHero(
   ctx.beginPath();
   ctx.ellipse(x - size * 0.15, headY + size * 0.02, size * 0.06, size * 0.04, -0.3, 0, Math.PI * 2);
   ctx.fill();
+
   ctx.beginPath();
   ctx.ellipse(x + size * 0.15, headY + size * 0.02, size * 0.06, size * 0.04, 0.3, 0, Math.PI * 2);
   ctx.fill();

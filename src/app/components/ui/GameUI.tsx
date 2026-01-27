@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   PawPrint,
   Heart,
@@ -87,6 +87,8 @@ interface TopHUDProps {
   setGameSpeed: (speed: number) => void;
   retryLevel: () => void;
   quitLevel: () => void;
+  // Animation props
+  goldSpellActive?: boolean;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -99,7 +101,58 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   setGameSpeed,
   retryLevel,
   quitLevel,
+  goldSpellActive = false,
 }) => {
+  // Track previous values for animation triggers
+  const prevPawPoints = useRef(pawPoints);
+  const prevLives = useRef(lives);
+
+  // Animation states
+  const [ppGain, setPpGain] = useState<{ amount: number; isGold: boolean } | null>(null);
+  const [ppPulse, setPpPulse] = useState(false);
+  const [livesShake, setLivesShake] = useState(false);
+  const [livesFlash, setLivesFlash] = useState(false);
+
+  // Detect pawPoints changes
+  useEffect(() => {
+    const diff = pawPoints - prevPawPoints.current;
+    if (diff > 0) {
+      // Gained money - show floating +X
+      setPpGain({ amount: diff, isGold: goldSpellActive });
+      setPpPulse(true);
+
+      // Clear after animation
+      const timeout1 = setTimeout(() => setPpGain(null), 1000);
+      const timeout2 = setTimeout(() => setPpPulse(false), 300);
+
+      prevPawPoints.current = pawPoints;
+      return () => {
+        clearTimeout(timeout1);
+        clearTimeout(timeout2);
+      };
+    }
+    prevPawPoints.current = pawPoints;
+  }, [pawPoints, goldSpellActive]);
+
+  // Detect lives changes
+  useEffect(() => {
+    if (lives < prevLives.current) {
+      // Lost lives - shake and flash
+      setLivesShake(true);
+      setLivesFlash(true);
+
+      const timeout1 = setTimeout(() => setLivesShake(false), 500);
+      const timeout2 = setTimeout(() => setLivesFlash(false), 300);
+
+      prevLives.current = lives;
+      return () => {
+        clearTimeout(timeout1);
+        clearTimeout(timeout2);
+      };
+    }
+    prevLives.current = lives;
+  }, [lives]);
+
   return (
     <div
       className="bg-gradient-to-r from-amber-900 via-yellow-900 to-amber-900 px-3 py-1.5 flex flex-col sm:flex-row items-center border-b-2 border-amber-600 shadow-lg relative flex-shrink-0"
@@ -110,27 +163,80 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <PrincetonTDLogo height="h-10" width="w-8" />
           <div className="h-8 border-l border-amber-600 ml-1 sm:ml-3" />
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-950/60 border border-amber-600 shadow-sm rounded-lg">
-          <PawPrint size={18} className="text-amber-400" />
-          <span className="font-bold text-sm sm:text-lg text-amber-300">
+
+        {/* PawPoints with animation */}
+        <div
+          className={`relative flex items-center gap-1.5 px-2.5 py-1 border shadow-sm rounded-lg transition-all duration-200 ${goldSpellActive
+            ? 'bg-yellow-900/80 border-yellow-400 shadow-yellow-500/50 shadow-lg'
+            : 'bg-amber-950/60 border-amber-600'
+            } ${ppPulse ? 'scale-110' : 'scale-100'}`}
+        >
+          {/* Floating +X animation */}
+          {ppGain && (
+            <div
+              className={`absolute -top-6 left-1/2 -translate-x-1/2 font-bold text-sm whitespace-nowrap animate-bounce pointer-events-none ${ppGain.isGold ? 'text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-green-400'
+                }`}
+              style={{
+                animation: 'floatUp 1s ease-out forwards',
+              }}
+            >
+              +{ppGain.amount}{ppGain.isGold && ' ✨'}
+            </div>
+          )}
+          <PawPrint
+            size={18}
+            className={`transition-colors ${goldSpellActive ? 'text-yellow-300' : 'text-amber-400'}`}
+          />
+          <span
+            className={`font-bold text-sm sm:text-lg transition-colors ${goldSpellActive ? 'text-yellow-200' : 'text-amber-300'
+              }`}
+          >
             {pawPoints}
           </span>
-          <span className="text-[10px] text-amber-500 sm:ml-0.5">PP</span>
+          <span className={`text-[10px] sm:ml-0.5 ${goldSpellActive ? 'text-yellow-400' : 'text-amber-500'}`}>PP</span>
+
+          {/* Gold spell glow effect */}
+          {goldSpellActive && (
+            <div className="absolute inset-0 rounded-lg bg-yellow-400/20 animate-pulse pointer-events-none" />
+          )}
         </div>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-950/60 border border-red-800 shadow-sm rounded-lg">
-          <Heart size={18} className="text-red-400" fill="#f87171" />
-          <span className="font-bold text-sm sm:text-lg text-red-300">
+
+        {/* Lives with animation */}
+        <div
+          className={`relative flex items-center gap-1.5 px-2.5 py-1 bg-red-950/60 border border-red-800 shadow-sm rounded-lg transition-all ${livesShake ? 'animate-shake' : ''
+            } ${livesFlash ? 'bg-red-600/80 border-red-400' : ''}`}
+          style={{
+            animation: livesShake ? 'shake 0.5s ease-in-out' : 'none',
+          }}
+        >
+          <Heart
+            size={18}
+            className={`transition-all ${livesFlash ? 'text-red-200 scale-125' : 'text-red-400'}`}
+            fill={livesFlash ? "#fecaca" : "#f87171"}
+          />
+          <span
+            className={`font-bold text-sm sm:text-lg transition-colors ${livesFlash ? 'text-red-100' : 'text-red-300'
+              }`}
+          >
             {lives}
           </span>
           <span className="text-[10px] text-red-500 sm:ml-0.5">Lives</span>
+
+          {/* Flash overlay */}
+          {livesFlash && (
+            <div className="absolute inset-0 rounded-lg bg-red-500/40 pointer-events-none" />
+          )}
         </div>
+
+        {/* Wave indicator */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 bg-amber-950/60 border border-amber-700 shadow-sm rounded-lg">
           <Crown size={16} className="text-amber-400" />
           <span className="text-[10px] text-amber-500">WAVE</span>
           <span className="font-bold text-sm sm:text-base text-amber-300">
-            {currentWave}/{totalWaves}
+            {Math.min(currentWave + 1, totalWaves)}/{totalWaves}
           </span>
         </div>
+
         <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 bg-blue-950/60 border border-blue-800 shadow-sm rounded-lg">
           <Timer size={16} className="text-blue-400" />
           <span className="hidden sm:inline text-[10px] text-blue-500">
@@ -141,6 +247,32 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </span>
         </div>
       </div>
+
+      {/* CSS Keyframes for animations */}
+      <style jsx>{`
+        @keyframes floatUp {
+          0% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+          }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+          20%, 40%, 60%, 80% { transform: translateX(3px); }
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+      `}</style>
       <div className="mt-2 sm:mt-0 flex ml-auto gap-1 sm:gap-3">
         <div
           className="flex items-center gap-1 border 
@@ -1105,104 +1237,104 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             )}
 
             {towerData.name === "Dinky Station" &&
-            (() => {
-              // 1. Determine which key to use from TROOP_DATA based on level/upgrade
-              const getTroopKey = () => {
-                if (tower.level === 1) return "footsoldier";
-                if (tower.level === 2) return "armored";
-                if (tower.level === 3) return "elite";
-                if (tower.level === 4) {
-                  if (tower.upgrade === "B") return "cavalry";
-                  if (tower.upgrade === "A") return "centaur";
-                  return "knight"; // Fallback for base level 4
-                }
-                return "footsoldier";
-              };
+              (() => {
+                // 1. Determine which key to use from TROOP_DATA based on level/upgrade
+                const getTroopKey = () => {
+                  if (tower.level === 1) return "footsoldier";
+                  if (tower.level === 2) return "armored";
+                  if (tower.level === 3) return "elite";
+                  if (tower.level === 4) {
+                    if (tower.upgrade === "B") return "cavalry";
+                    if (tower.upgrade === "A") return "centaur";
+                    return "knight"; // Fallback for base level 4
+                  }
+                  return "footsoldier";
+                };
 
-              const key = getTroopKey();
-              const troop = TROOP_DATA[key];
+                const key = getTroopKey();
+                const troop = TROOP_DATA[key];
 
-              if (!troop) return null;
+                if (!troop) return null;
 
-              return (
-                <div className="col-span-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users size={12} className="text-amber-500" />
-                    <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
-                      Garrison Unit
-                    </span>
-                  </div>
-
-                  <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
-                    {/* Name and Type Badge */}
-                    <div className="flex justify-between items-center border-b border-stone-800 pb-1">
-                      <span
-                        className="text-xs font-bold"
-                        style={{ color: troop.color }} // Uses the hex code from TROOP_DATA
-                      >
-                        {troop.name}
-                      </span>
-                      <span className="text-[9px] bg-stone-800 px-1.5 py-0.5 rounded text-stone-400">
-                        {troop.isMounted
-                          ? "Mounted"
-                          : troop.isRanged
-                            ? "Ranged"
-                            : "Infantry"}
+                return (
+                  <div className="col-span-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users size={12} className="text-amber-500" />
+                      <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
+                        Garrison Unit
                       </span>
                     </div>
 
-                    {/* Troop Stats Grid */}
-                    <div className="grid grid-cols-3 gap-2">
-                      {/* HP */}
-                      <div className="bg-red-950/30 p-1 rounded border border-red-900/20 flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-1 text-red-400/80 mb-0.5">
-                          <Heart size={10} />
-                          <span className="text-[9px]">HP</span>
-                        </div>
-                        <span className="text-red-200 font-bold text-xs">
-                          {troop.hp}
+                    <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
+                      {/* Name and Type Badge */}
+                      <div className="flex justify-between items-center border-b border-stone-800 pb-1">
+                        <span
+                          className="text-xs font-bold"
+                          style={{ color: troop.color }} // Uses the hex code from TROOP_DATA
+                        >
+                          {troop.name}
+                        </span>
+                        <span className="text-[9px] bg-stone-800 px-1.5 py-0.5 rounded text-stone-400">
+                          {troop.isMounted
+                            ? "Mounted"
+                            : troop.isRanged
+                              ? "Ranged"
+                              : "Infantry"}
                         </span>
                       </div>
 
-                      {/* Damage */}
-                      <div className="bg-orange-950/30 p-1 rounded border border-orange-900/20 flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-1 text-orange-400/80 mb-0.5">
-                          <Swords size={10} />
-                          <span className="text-[9px]">DMG</span>
-                        </div>
-                        <span className="text-orange-200 font-bold text-xs">
-                          {troop.damage}
-                        </span>
-                      </div>
-
-                      {/* Speed/Range */}
-                      <div className="bg-green-950/30 p-1 rounded border border-green-900/20 flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-1 text-green-400/80 mb-0.5">
-                          {troop.isRanged ? (
-                            <Crosshair size={10} />
-                          ) : (
-                            <Gauge size={10} />
-                          )}
-                          <span className="text-[9px]">
-                            {troop.isRanged ? "RNG" : "SPD"}
+                      {/* Troop Stats Grid */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* HP */}
+                        <div className="bg-red-950/30 p-1 rounded border border-red-900/20 flex flex-col items-center justify-center">
+                          <div className="flex items-center gap-1 text-red-400/80 mb-0.5">
+                            <Heart size={10} />
+                            <span className="text-[9px]">HP</span>
+                          </div>
+                          <span className="text-red-200 font-bold text-xs">
+                            {troop.hp}
                           </span>
                         </div>
-                        <span className="text-green-200 font-bold text-xs">
-                          {troop.isRanged
-                            ? troop.range
-                            : `${troop.attackSpeed}ms`}
-                        </span>
+
+                        {/* Damage */}
+                        <div className="bg-orange-950/30 p-1 rounded border border-orange-900/20 flex flex-col items-center justify-center">
+                          <div className="flex items-center gap-1 text-orange-400/80 mb-0.5">
+                            <Swords size={10} />
+                            <span className="text-[9px]">DMG</span>
+                          </div>
+                          <span className="text-orange-200 font-bold text-xs">
+                            {troop.damage}
+                          </span>
+                        </div>
+
+                        {/* Speed/Range */}
+                        <div className="bg-green-950/30 p-1 rounded border border-green-900/20 flex flex-col items-center justify-center">
+                          <div className="flex items-center gap-1 text-green-400/80 mb-0.5">
+                            {troop.isRanged ? (
+                              <Crosshair size={10} />
+                            ) : (
+                              <Gauge size={10} />
+                            )}
+                            <span className="text-[9px]">
+                              {troop.isRanged ? "RNG" : "SPD"}
+                            </span>
+                          </div>
+                          <span className="text-green-200 font-bold text-xs">
+                            {troop.isRanged
+                              ? troop.range
+                              : `${troop.attackSpeed}ms`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Description (Optional, fits nice at bottom) */}
+                      <div className="text-[9px] text-stone-500 italic text-center">
+                        {troop.desc}
                       </div>
                     </div>
-
-                    {/* Description (Optional, fits nice at bottom) */}
-                    <div className="text-[9px] text-stone-500 italic text-center">
-                      {troop.desc}
-                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
 
             {towerData.name === "Eating Club" && (
               <div className="col-span-3">

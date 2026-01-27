@@ -204,6 +204,7 @@ export interface Enemy {
   taunted?: boolean;
   tauntTarget?: string;
   tauntOffset?: Position; // Offset from path position when moving toward taunt target
+  goldAura?: boolean; // Gold Rush spell glowing effect
   // Dual-path support
   pathKey?: string;
   // Mark as dead for cleanup
