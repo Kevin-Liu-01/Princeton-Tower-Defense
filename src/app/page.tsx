@@ -794,7 +794,7 @@ export default function PrincetonTowerDefense() {
           ) {
             setHero((prev) =>
               prev
-                ? { ...prev, hp: Math.min(prev.maxHp, prev.hp + healAmount) }
+                ? { ...prev, hp: Math.min(prev.maxHp, prev.hp + healAmount), healFlash: Date.now() }
                 : null
             );
             addParticles(hero.pos, "magic", 10);
@@ -803,7 +803,8 @@ export default function PrincetonTowerDefense() {
           setTroops((prev) =>
             prev.map((t) => {
               if (distance(t.pos, specWorldPos) < healRadius) {
-                return { ...t, hp: Math.min(t.maxHp, t.hp + healAmount) };
+                addParticles(t.pos, "magic", 5);
+                return { ...t, hp: Math.min(t.maxHp, t.hp + healAmount), healFlash: Date.now() };
               }
               return t;
             })
@@ -1728,12 +1729,20 @@ export default function PrincetonTowerDefense() {
             const dy = troop.pos.y - other.pos.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < TROOP_SEPARATION_DIST && dist > 0) {
-              // Push away from other troop
-              const pushStrength =
-                (TROOP_SEPARATION_DIST - dist) / TROOP_SEPARATION_DIST;
-              forceX += (dx / dist) * pushStrength * 0.5;
-              forceY += (dy / dist) * pushStrength * 0.5;
+            if (dist < TROOP_SEPARATION_DIST) {
+              // Handle near-zero distance to prevent direction instability (causes vibration)
+              if (dist < 1) {
+                // Troops almost exactly overlapping - push in a consistent direction based on id
+                const angle = (i * 0.618 + j * 0.382) * Math.PI * 2; // Golden ratio for distribution
+                forceX += Math.cos(angle) * 1.0;
+                forceY += Math.sin(angle) * 1.0;
+              } else {
+                // Push away from other troop with stronger force when closer
+                const pushStrength =
+                  (TROOP_SEPARATION_DIST - dist) / TROOP_SEPARATION_DIST;
+                forceX += (dx / dist) * pushStrength * 0.8;
+                forceY += (dy / dist) * pushStrength * 0.8;
+              }
             }
           }
 
@@ -1882,12 +1891,17 @@ export default function PrincetonTowerDefense() {
             }
           }
 
-          // Apply separation force (only when not actively engaging and not stationary)
+          // Apply separation force - ALWAYS apply (except stationary) to prevent bundling/vibration
+          // Use stronger force and always apply to prevent the oscillation bug where
+          // troops bundle when engaging then separate when not engaging
           const force = separationForces.get(troop.id);
-          if (force && !updated.engaging && !updated.moving && !isStationary) {
+          if (force && !isStationary) {
+            // Apply separation more aggressively to prevent overlap
+            // Scale down slightly when engaging to allow some grouping but prevent vibration
+            const forceMult = updated.engaging ? 0.15 : 0.2;
             updated.pos = {
-              x: updated.pos.x + force.x * deltaTime * 0.1,
-              y: updated.pos.y + force.y * deltaTime * 0.1,
+              x: updated.pos.x + force.x * deltaTime * forceMult,
+              y: updated.pos.y + force.y * deltaTime * forceMult,
             };
           }
 
@@ -14133,7 +14147,7 @@ export default function PrincetonTowerDefense() {
     renderables.sort((a, b) => a.isoY - b.isoY);
 
     // =========================================================================
-    // EPIC ISOMETRIC BUFF AURA (Dynamic Color: Red for Damage, Blue for Range)
+    // EPIC ISOMETRIC BUFF AURA (Dynamic Color: Red for Damage, Blue for Range, Gold for Both)
     // =========================================================================
     towers.forEach((t) => {
       const hasDamageBuff = t.damageBoost && t.damageBoost > 1;
@@ -14142,69 +14156,80 @@ export default function PrincetonTowerDefense() {
       // If no buff is active, don't render the aura
       if (!hasDamageBuff && !hasRangeBuff && !t.isBuffed) return;
 
-      // Color Configuration logic
-      // Priority: Damage (Red) > Range (Blue)
-      // Account for having both (purple)
-      const theme = hasDamageBuff
-        ? hasRangeBuff
+      // Color Configuration logic - Gold for both, Red for damage, Blue for range
+      const hasBothBuffs = hasDamageBuff && hasRangeBuff;
+      const theme = hasBothBuffs
+        ? {
+          base: "255, 215, 0", // Gold
+          accent: "255, 180, 0",
+          glow: "#ffd700",
+          fill: "rgba(255, 215, 0, 0.08)",
+          icon: "⚡",
+        }
+        : hasDamageBuff
           ? {
-            base: "128, 0, 255", // Purple
-            accent: "178, 102, 255",
-            glow: "#A500FF",
-            fill: "rgba(128, 0, 255, 0.05)",
+            base: "255, 100, 100", // Red/Orange
+            accent: "255, 150, 50",
+            glow: "#ff6464",
+            fill: "rgba(255, 100, 100, 0.06)",
+            icon: "🗡",
           }
           : {
-            base: "255, 23, 68", // Red
-            accent: "255, 138, 128",
-            glow: "#FF1744",
-            fill: "rgba(255, 23, 68, 0.05)",
-          }
-        : {
-          base: "0, 229, 255", // Cyan/Blue
-          accent: "128, 255, 255",
-          glow: "#00E5FF",
-          fill: "rgba(0, 229, 255, 0.05)",
-        };
+            base: "100, 200, 255", // Blue
+            accent: "50, 150, 255",
+            glow: "#64c8ff",
+            fill: "rgba(100, 200, 255, 0.06)",
+            icon: "◎",
+          };
 
       const time = Date.now() / 1000;
       const sPos = toScreen(gridToWorld(t.pos));
       const s = cameraZoom;
 
-      // Calculate dynamic pulse
-      const pulse = Math.sin(time * 4) * 0.05;
-      const opacity = 0.5 + Math.sin(time * 2) * 0.2;
+      // Calculate dynamic pulse - more pronounced for visibility
+      const pulse = Math.sin(time * 4) * 0.08;
+      const opacity = 0.6 + Math.sin(time * 2) * 0.25;
+      const buffPulse = 0.5 + Math.sin(time * 4) * 0.5;
 
       ctx.save();
       ctx.translate(sPos.x, sPos.y);
 
+      // --- Enhanced Glow Effect (before isometric transform) ---
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 25 * s * buffPulse;
+
       // IMPORTANT: Squish everything into isometric perspective (2:1 ratio)
       ctx.scale(1, 0.5);
 
-      // --- 1. Soft Core Glow (No rotation) ---
-      const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 40 * s);
-      innerGlow.addColorStop(0, `rgba(${theme.base}, ${0.4 * opacity})`);
+      // --- 1. Soft Core Glow (No rotation) - Larger and more visible ---
+      const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 * s);
+      innerGlow.addColorStop(0, `rgba(${theme.base}, ${0.5 * opacity})`);
+      innerGlow.addColorStop(0.5, `rgba(${theme.base}, ${0.25 * opacity})`);
       innerGlow.addColorStop(1, `rgba(${theme.base}, 0)`);
       ctx.fillStyle = innerGlow;
       ctx.beginPath();
-      ctx.arc(0, 0, 45 * s, 0, Math.PI * 2);
+      ctx.arc(0, 0, 55 * s, 0, Math.PI * 2);
       ctx.fill();
 
-      // --- 2. Outer Orbiting Ring (Counter-Clockwise) ---
+      // --- 2. Outer Orbiting Ring (Counter-Clockwise) - Thicker and brighter ---
       ctx.save();
-      ctx.rotate(-time * 0.5);
-      ctx.strokeStyle = `rgba(${theme.base}, ${0.6 * opacity})`;
-      ctx.lineWidth = 2 * s;
-      ctx.setLineDash([15 * s, 10 * s]);
+      ctx.rotate(-time * 0.6);
+      ctx.strokeStyle = `rgba(${theme.base}, ${0.7 * opacity})`;
+      ctx.lineWidth = 3 * s;
+      ctx.setLineDash([12 * s, 6 * s]);
       ctx.beginPath();
-      ctx.arc(0, 0, 40 * s * (1 + pulse), 0, Math.PI * 2);
+      ctx.arc(0, 0, 45 * s * (1 + pulse), 0, Math.PI * 2);
       ctx.stroke();
 
-      // Add small dots on the outer ring
-      for (let i = 0; i < 4; i++) {
-        ctx.rotate(Math.PI / 2);
-        ctx.fillStyle = "#FFFFFF";
+      // Add glowing dots on the outer ring
+      const dotCount = hasBothBuffs ? 6 : 4;
+      for (let i = 0; i < dotCount; i++) {
+        ctx.rotate((Math.PI * 2) / dotCount);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + Math.sin(time * 5 + i) * 0.2})`;
+        ctx.shadowColor = theme.glow;
+        ctx.shadowBlur = 8 * s;
         ctx.beginPath();
-        ctx.arc(40 * s * (1 + pulse), 0, 2 * s, 0, Math.PI * 2);
+        ctx.arc(45 * s * (1 + pulse), 0, 3 * s, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
@@ -14227,31 +14252,76 @@ export default function PrincetonTowerDefense() {
         ctx.stroke();
       };
 
-      ctx.lineWidth = 1.5 * s;
+      ctx.lineWidth = 2 * s;
       // Double triangle (Star of David style)
-      drawTriangle(28 * s, `rgba(${theme.accent}, ${0.8 * opacity})`);
+      drawTriangle(32 * s, `rgba(${theme.accent}, ${0.85 * opacity})`);
       ctx.rotate(Math.PI);
-      drawTriangle(28 * s, `rgba(${theme.accent}, ${0.8 * opacity})`);
+      drawTriangle(32 * s, `rgba(${theme.accent}, ${0.85 * opacity})`);
 
       ctx.fillStyle = theme.fill;
       ctx.fill();
       ctx.restore();
 
-      // --- 4. Inner Orbitals (Floating Particles) ---
+      // --- 4. Inner Orbitals (Floating Particles) - More particles for combined buff ---
       ctx.save();
       ctx.rotate(time * 1.5);
-      for (let i = 0; i < 3; i++) {
-        ctx.rotate((Math.PI * 2) / 3);
-        const orbitDist = 18 * s + Math.sin(time * 3 + i) * 5 * s;
+      const orbitalCount = hasBothBuffs ? 5 : 3;
+      for (let i = 0; i < orbitalCount; i++) {
+        ctx.rotate((Math.PI * 2) / orbitalCount);
+        const orbitDist = 20 * s + Math.sin(time * 3 + i) * 6 * s;
         ctx.fillStyle = "#FFFFFF";
-        ctx.shadowBlur = 10 * s;
+        ctx.shadowBlur = 12 * s;
         ctx.shadowColor = theme.glow;
         ctx.beginPath();
-        ctx.arc(orbitDist, 0, 3 * s, 0, Math.PI * 2);
+        ctx.arc(orbitDist, 0, 3.5 * s, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
 
+      // --- 5. Rising particles effect ---
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 4; i++) {
+        const riseProgress = ((time * 0.8 + i * 0.25) % 1);
+        const riseY = -riseProgress * 60 * s;
+        const riseAlpha = (1 - riseProgress) * 0.6 * buffPulse;
+        const riseX = Math.sin(time * 3 + i * 2) * 20 * s;
+
+        ctx.fillStyle = `rgba(${theme.base}, ${riseAlpha})`;
+        ctx.shadowColor = theme.glow;
+        ctx.shadowBlur = 6 * s;
+        ctx.beginPath();
+        ctx.arc(riseX, riseY, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // --- 6. Buff Icon at Bottom of Aura Ring (in isometric space) ---
+      ctx.shadowBlur = 0;
+      const iconY = 50 * s; // Bottom of the isometric ring
+
+      // Glowing icon background circle
+      ctx.fillStyle = `rgba(0, 0, 0, 0.6)`;
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 12 * s * buffPulse;
+      ctx.beginPath();
+      ctx.arc(0, iconY, 10 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Icon border
+      ctx.strokeStyle = `rgba(${theme.base}, ${0.8 + buffPulse * 0.2})`;
+      ctx.lineWidth = 2 * s;
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Draw icon outside isometric transform for proper text rendering
+      ctx.save();
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 8 * s * buffPulse;
+      ctx.fillStyle = `rgba(${theme.base}, 1)`;
+      ctx.font = `bold ${11 * s}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(theme.icon, sPos.x, sPos.y + 25 * s); // Bottom of aura in screen space
       ctx.restore();
     });
     // =========================================================================
@@ -16386,29 +16456,34 @@ export default function PrincetonTowerDefense() {
           cameraZoom
         );
         // Spawn 3 troops in a triangle formation
+        // Offsets are larger than TROOP_SEPARATION_DIST (35) to prevent immediate overlap
         const troopOffsets = [
-          { x: 0, y: -20 }, // Top
-          { x: -20, y: 15 }, // Bottom left
-          { x: 20, y: 15 }, // Bottom right
+          { x: 0, y: -25 }, // Top
+          { x: -25, y: 20 }, // Bottom left
+          { x: 25, y: 20 }, // Bottom right
         ];
         const knightHP = TROOP_DATA.knight.hp;
-        const newTroops: Troop[] = troopOffsets.map((offset, i) => ({
-          id: generateId("troop"),
-          ownerId: "spell",
-          pos: { x: worldPos.x + offset.x, y: worldPos.y + offset.y },
-          hp: knightHP,
-          maxHp: knightHP,
-          moving: false,
-          lastAttack: 0,
-          type: "knight" as const,
-          rotation: 0,
-          attackAnim: 0,
-          selected: false,
-          spawnPoint: worldPos,
-          moveRadius: 200,
-          spawnSlot: i,
-          userTargetPos: undefined,
-        }));
+        const newTroops: Troop[] = troopOffsets.map((offset, i) => {
+          // Each troop gets their own individual home position to prevent bundling/vibration
+          const troopPos = { x: worldPos.x + offset.x, y: worldPos.y + offset.y };
+          return {
+            id: generateId("troop"),
+            ownerId: "spell",
+            pos: troopPos,
+            hp: knightHP,
+            maxHp: knightHP,
+            moving: false,
+            lastAttack: 0,
+            type: "knight" as const,
+            rotation: 0,
+            attackAnim: 0,
+            selected: false,
+            spawnPoint: troopPos, // Individual spawn point, not shared center
+            moveRadius: 200,
+            spawnSlot: i,
+            userTargetPos: troopPos, // Set home position to their starting position
+          };
+        });
         setTroops((prev) => [...prev, ...newTroops]);
         addParticles(worldPos, "glow", 20);
         addParticles({ x: worldPos.x - 20, y: worldPos.y + 15 }, "spark", 8);
@@ -17060,8 +17135,11 @@ export default function PrincetonTowerDefense() {
       }
 
       case "tenor": {
-        // HIGH NOTE - Devastating sonic blast with huge radius
+        // HIGH NOTE - Devastating sonic blast with huge radius + Inspiring Melody that heals allies
         const noteRadius = 250;
+        const healRadius = 200; // Healing radius for allies
+        const healAmount = 75; // Healing for nearby troops
+
         const nearbyEnemies = enemies.filter(
           (e) =>
             distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) < noteRadius
@@ -17096,6 +17174,22 @@ export default function PrincetonTowerDefense() {
             })
             .filter(Boolean)
         );
+
+        // Heal nearby troops with inspiring melody
+        setTroops((prev) =>
+          prev.map((t) => {
+            if (!t.dead && distance(t.pos, hero.pos) < healRadius) {
+              addParticles(t.pos, "magic", 6);
+              return {
+                ...t,
+                hp: Math.min(t.maxHp, t.hp + healAmount),
+                healFlash: Date.now(),
+              };
+            }
+            return t;
+          })
+        );
+
         // Create musical shockwave effect
         setEffects((ef) => [
           ...ef,
@@ -17244,29 +17338,35 @@ export default function PrincetonTowerDefense() {
         // RALLY KNIGHTS - Summon 3 reinforcement knights (weaker summoned version)
         // Captain's summoned knights are weaker than Dinky Station knights
         const summonedKnightHP = 350; // Reduced from 800
+        // Offsets are larger than TROOP_SEPARATION_DIST (35) to prevent immediate overlap
         const knightOffsets = [
-          { x: -30, y: -20 },
-          { x: 30, y: -20 },
-          { x: 0, y: 30 },
+          { x: -35, y: -20 },
+          { x: 35, y: -20 },
+          { x: 0, y: 35 },
         ];
-        const newTroops: Troop[] = knightOffsets.map((offset, i) => ({
-          id: generateId("troop"),
-          ownerId: hero.id,
-          type: "knight" as TroopType,
-          pos: { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y },
-          hp: summonedKnightHP,
-          maxHp: summonedKnightHP,
-          moving: false,
-          targetPos: undefined,
-          targetEnemy: null,
-          rallyPoint: null,
-          selected: false,
-          lastAttack: 0, // IMPORTANT: Initialize for attack timing
-          rotation: 0, // IMPORTANT: Initialize rotation
-          attackAnim: 0,
-          spawnPoint: { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y },
-          moveRadius: 150, // Allow knights to roam and engage enemies
-        }));
+        const newTroops: Troop[] = knightOffsets.map((offset, i) => {
+          // Each knight gets their own home position to prevent bundling/vibration
+          const knightPos = { x: hero.pos.x + offset.x, y: hero.pos.y + offset.y };
+          return {
+            id: generateId("troop"),
+            ownerId: hero.id,
+            type: "knight" as TroopType,
+            pos: knightPos,
+            hp: summonedKnightHP,
+            maxHp: summonedKnightHP,
+            moving: false,
+            targetPos: undefined,
+            targetEnemy: null,
+            rallyPoint: null,
+            selected: false,
+            lastAttack: 0, // IMPORTANT: Initialize for attack timing
+            rotation: 0, // IMPORTANT: Initialize rotation
+            attackAnim: 0,
+            spawnPoint: knightPos,
+            moveRadius: 150, // Allow knights to roam and engage enemies
+            userTargetPos: knightPos, // Set home position to their starting position
+          };
+        });
         setTroops((prev) => [...prev, ...newTroops]);
         // Create summon effect
         setEffects((ef) => [

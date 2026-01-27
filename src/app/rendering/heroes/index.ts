@@ -60,6 +60,58 @@ export function renderHero(
     ctx.fill();
   }
 
+  // Heal effect - glowing green aura when recently healed
+  if (hero.healFlash) {
+    const healAge = Date.now() - hero.healFlash;
+    const healDuration = 800; // Effect lasts 800ms
+    if (healAge < healDuration) {
+      const healProgress = healAge / healDuration;
+      const healAlpha = (1 - healProgress) * 0.8;
+      const healPulse = 0.6 + Math.sin(healAge * 0.015) * 0.4;
+      
+      // Outer healing glow
+      ctx.save();
+      ctx.shadowColor = "#44ff88";
+      ctx.shadowBlur = 25 * zoom * healAlpha;
+      
+      // Healing ring expanding outward
+      const ringRadius = size * (0.8 + healProgress * 0.6);
+      ctx.strokeStyle = `rgba(68, 255, 136, ${healAlpha * healPulse})`;
+      ctx.lineWidth = 3 * zoom * (1 - healProgress * 0.5);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y - size * 0.3, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Inner healing shimmer
+      ctx.fillStyle = `rgba(150, 255, 180, ${healAlpha * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y - size * 0.3, size * 0.9, size * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Rising heal particles
+      for (let i = 0; i < 4; i++) {
+        const particleProgress = ((healAge * 0.002 + i * 0.25) % 1);
+        const particleY = screenPos.y - size * 0.3 - particleProgress * 40 * zoom;
+        const particleX = screenPos.x + Math.sin(time * 4 + i * 1.5) * 15 * zoom;
+        const particleAlpha = (1 - particleProgress) * healAlpha;
+        
+        ctx.fillStyle = `rgba(68, 255, 136, ${particleAlpha})`;
+        ctx.beginPath();
+        ctx.arc(particleX, particleY, 3 * zoom * (1 - particleProgress * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Plus sign indicator
+      ctx.fillStyle = `rgba(100, 255, 150, ${healAlpha})`;
+      ctx.font = `bold ${14 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("+", screenPos.x, screenPos.y - size - 25 * zoom);
+      
+      ctx.restore();
+    }
+  }
+
   // Draw hero sprite
   const attackPhase = hero.attackAnim / 300;
   drawHeroSprite(

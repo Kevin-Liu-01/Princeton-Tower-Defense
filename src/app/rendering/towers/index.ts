@@ -332,27 +332,122 @@ function drawBuffIndicator(
   time: number
 ): void {
   const buffPulse = 0.5 + Math.sin(time * 4) * 0.5;
+  const hasRangeBoost = (tower.rangeBoost || 1) > 1;
+  const hasDamageBoost = (tower.damageBoost || 1) > 1;
+  const hasBothBoosts = hasRangeBoost && hasDamageBoost;
 
-  // Buff aura
-  ctx.strokeStyle = `rgba(255, 215, 0, ${buffPulse * 0.5})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.setLineDash([5, 5]);
-  ctx.lineDashOffset = -time * 20;
+  // Determine buff colors based on type
+  // Range = Blue, Damage = Red/Orange, Both = Gold
+  let primaryColor: string;
+  let secondaryColor: string;
+  let glowColor: string;
+  let buffIcon: string;
+
+  if (hasBothBoosts) {
+    primaryColor = "255, 215, 0"; // Gold
+    secondaryColor = "255, 180, 0";
+    glowColor = "#ffd700";
+    buffIcon = "⚡";
+  } else if (hasRangeBoost) {
+    primaryColor = "100, 200, 255"; // Blue
+    secondaryColor = "50, 150, 255";
+    glowColor = "#64c8ff";
+    buffIcon = "◎";
+  } else if (hasDamageBoost) {
+    primaryColor = "255, 100, 100"; // Red/Orange
+    secondaryColor = "255, 150, 50";
+    glowColor = "#ff6464";
+    buffIcon = "🗡";
+  } else {
+    primaryColor = "255, 215, 0"; // Fallback gold
+    secondaryColor = "255, 180, 0";
+    glowColor = "#ffd700";
+    buffIcon = "✦";
+  }
+
+  ctx.save();
+
+  // Outer glow aura (much more visible)
+  ctx.shadowColor = glowColor;
+  ctx.shadowBlur = 20 * zoom * buffPulse;
+  ctx.strokeStyle = `rgba(${primaryColor}, ${0.4 + buffPulse * 0.4})`;
+  ctx.lineWidth = 3 * zoom;
+  ctx.setLineDash([8, 4]);
+  ctx.lineDashOffset = -time * 30;
   ctx.beginPath();
-  ctx.ellipse(screenPos.x, screenPos.y, 40 * zoom, 20 * zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(screenPos.x, screenPos.y, 45 * zoom, 22 * zoom, 0, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.setLineDash([]);
 
-  // Buff sparkles
-  ctx.fillStyle = `rgba(255, 215, 0, ${buffPulse})`;
-  for (let i = 0; i < 3; i++) {
-    const angle = time * 2 + (i / 3) * Math.PI * 2;
-    const sparkleX = screenPos.x + Math.cos(angle) * 35 * zoom;
-    const sparkleY = screenPos.y + Math.sin(angle) * 17 * zoom;
+  // Inner pulsing ring
+  const innerPulse = 0.7 + Math.sin(time * 6) * 0.3;
+  ctx.strokeStyle = `rgba(${secondaryColor}, ${innerPulse * 0.6})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y, 38 * zoom, 19 * zoom, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+
+  // Buff sparkles - more particles, rotating faster
+  const sparkleCount = hasBothBoosts ? 6 : 4;
+  for (let i = 0; i < sparkleCount; i++) {
+    const angle = time * 2.5 + (i / sparkleCount) * Math.PI * 2;
+    const sparkleX = screenPos.x + Math.cos(angle) * 40 * zoom;
+    const sparkleY = screenPos.y + Math.sin(angle) * 20 * zoom;
+    const sparkleSize = (3 + Math.sin(time * 5 + i) * 1) * zoom;
+    
+    // Sparkle glow
+    ctx.fillStyle = `rgba(${primaryColor}, ${buffPulse * 0.8})`;
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 8 * zoom;
     ctx.beginPath();
-    ctx.arc(sparkleX, sparkleY, 3 * zoom, 0, Math.PI * 2);
+    ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
     ctx.fill();
   }
+
+  // Rising particles effect
+  for (let i = 0; i < 3; i++) {
+    const riseProgress = ((time * 0.8 + i * 0.3) % 1);
+    const riseY = screenPos.y - riseProgress * 35 * zoom;
+    const riseAlpha = (1 - riseProgress) * 0.6 * buffPulse;
+    const riseX = screenPos.x + Math.sin(time * 3 + i * 2) * 12 * zoom;
+    
+    ctx.fillStyle = `rgba(${primaryColor}, ${riseAlpha})`;
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.arc(riseX, riseY, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.shadowBlur = 0;
+  ctx.setLineDash([]);
+
+  // Buff icon at bottom of aura ring
+  const iconY = screenPos.y + 24 * zoom; // Bottom of the elliptical aura
+  
+  // Glowing icon background circle
+  ctx.fillStyle = `rgba(0, 0, 0, 0.6)`;
+  ctx.shadowColor = glowColor;
+  ctx.shadowBlur = 10 * zoom * buffPulse;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, iconY, 9 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Icon border
+  ctx.strokeStyle = `rgba(${primaryColor}, ${0.7 + buffPulse * 0.3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  // Buff icon
+  ctx.shadowBlur = 6 * zoom * buffPulse;
+  ctx.fillStyle = `rgba(${primaryColor}, 1)`;
+  ctx.font = `bold ${10 * zoom}px Arial`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(buffIcon, screenPos.x, iconY);
+
+  ctx.restore();
 }
 
 function drawLevelIndicator(

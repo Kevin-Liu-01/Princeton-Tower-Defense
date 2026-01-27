@@ -789,6 +789,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                 tenor: [
                   "Deals 80 damage to all enemies within 250 range",
                   "Stuns affected enemies for 2 seconds",
+                  "Heals nearby troops for 75 HP",
                   "Purple sonic waves with musical notes",
                 ],
                 mathey: [

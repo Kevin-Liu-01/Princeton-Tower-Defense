@@ -48,6 +48,50 @@ export function renderTroop(
   ctx.ellipse(screenPos.x, screenPos.y + 3 * zoom, size * 0.7, size * 0.35, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Heal effect - glowing green aura when recently healed
+  if (troop.healFlash) {
+    const healAge = Date.now() - troop.healFlash;
+    const healDuration = 600; // Effect lasts 600ms for troops (shorter than hero)
+    if (healAge < healDuration) {
+      const healProgress = healAge / healDuration;
+      const healAlpha = (1 - healProgress) * 0.7;
+      const healPulse = 0.6 + Math.sin(healAge * 0.02) * 0.4;
+      
+      ctx.save();
+      ctx.shadowColor = "#44ff88";
+      ctx.shadowBlur = 15 * zoom * healAlpha;
+      
+      // Healing ring expanding outward
+      const ringRadius = size * (0.6 + healProgress * 0.5);
+      ctx.strokeStyle = `rgba(68, 255, 136, ${healAlpha * healPulse})`;
+      ctx.lineWidth = 2 * zoom * (1 - healProgress * 0.5);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y - size * 0.2, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Inner healing shimmer
+      ctx.fillStyle = `rgba(150, 255, 180, ${healAlpha * 0.25})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y - size * 0.2, size * 0.6, size * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Rising heal particles
+      for (let i = 0; i < 2; i++) {
+        const particleProgress = ((healAge * 0.003 + i * 0.5) % 1);
+        const particleY = screenPos.y - size * 0.2 - particleProgress * 25 * zoom;
+        const particleX = screenPos.x + Math.sin(time * 5 + i * 2) * 8 * zoom;
+        const particleAlpha = (1 - particleProgress) * healAlpha;
+        
+        ctx.fillStyle = `rgba(68, 255, 136, ${particleAlpha})`;
+        ctx.beginPath();
+        ctx.arc(particleX, particleY, 2 * zoom * (1 - particleProgress * 0.5), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.restore();
+    }
+  }
+
   // Draw troop sprite
   const attackPhase = (troop.attackAnim || 0) / 300;
   drawTroopSprite(

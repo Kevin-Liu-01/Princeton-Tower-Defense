@@ -263,6 +263,7 @@ export interface Hero {
   returning?: boolean;
   shieldActive?: boolean;
   shieldEnd?: number;
+  healFlash?: number; // Visual effect when healed (timestamp when healed)
 }
 
 // ============================================================================
@@ -318,6 +319,7 @@ export interface Troop {
   targetEnemy?: string | null;
   attackCooldown?: number;
   engaging?: boolean;
+  healFlash?: number; // Visual effect when healed (timestamp when healed)
 }
 
 // ============================================================================

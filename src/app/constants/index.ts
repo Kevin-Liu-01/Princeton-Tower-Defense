@@ -512,7 +512,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     attackSpeed: 450,
     speed: 2.5,
     ability: "High Note",
-    abilityDesc: "Devastating sonic blast stuns enemies in huge radius",
+    abilityDesc: "Devastating sonic blast stuns enemies and heals nearby allies",
     color: "#8b5cf6",
     isRanged: true,
   },
