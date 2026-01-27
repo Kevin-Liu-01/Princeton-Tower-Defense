@@ -8786,16 +8786,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               Codex
             </span>
           </button>
-          <div className="flex items-center  bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 p-1">
+          <div className="flex items-center  bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 p-1.5">
             {/* total hearts */}
-            <div className="flex items-center gap-2 px-4 py-1 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-l-lg border border-red-600/60 shadow-lg">
+            <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-l-lg border border-red-600/60 shadow-lg">
               <div className="relative">
                 <Heart size={20} className="text-red-400 fill-red-400" />
                 <div className="absolute inset-0 animate-ping opacity-30">
                   <Heart size={20} className="text-red-400 fill-red-400" />
                 </div>
               </div>
-              <span className="font-bold text-sm sm:text-xl text-red-300">
+              <span className="font-bold text-sm sm:text-lg text-red-300">
                 {/* iterate through every level in levelStats and sum up hearts*/}
                 {levelStats
                   ? Object.values(levelStats).reduce(
@@ -8808,14 +8808,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </div>
             {/* total stars */}
 
-            <div className="flex items-center gap-2 px-4 py-1 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-r-lg border border-amber-600/60 shadow-lg">
+            <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-r-lg border border-amber-600/60 shadow-lg">
               <div className="relative">
                 <Star size={20} className="text-yellow-400 fill-yellow-400" />
                 <div className="absolute inset-0 animate-ping opacity-30">
                   <Star size={20} className="text-yellow-400 fill-yellow-400" />
                 </div>
               </div>
-              <span className="font-bold text-sm sm:text-xl text-yellow-300">
+              <span className="font-bold text-sm sm:text-lg text-yellow-300">
                 {totalStars}
               </span>
               <span className="hidden sm:inline text-yellow-600 text-sm">

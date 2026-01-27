@@ -2442,6 +2442,40 @@ export default function PrincetonTowerDefense() {
             const isHeavyCannon = tower.level === 3;
             const isGatling = tower.level === 4 && tower.upgrade === "A";
             const isFlamethrower = tower.level === 4 && tower.upgrade === "B";
+
+            // Get all valid enemies in range for targeting
+            const validEnemies = enemies
+              .filter(
+                (e) =>
+                  distance(
+                    towerWorldPos,
+                    getEnemyPosWithPath(e, selectedMap)
+                  ) <= finalRange
+              )
+              .sort(
+                (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
+              );
+
+            // Continuously track target even when not firing
+            if (validEnemies.length > 0) {
+              const trackTarget = validEnemies[0];
+              const trackTargetPos = getEnemyPosWithPath(trackTarget, selectedMap);
+              const trackDx = trackTargetPos.x - towerWorldPos.x;
+              const trackDy = trackTargetPos.y - towerWorldPos.y;
+              // Account for isometric projection: isoX = (x-y)*0.5, isoY = (x+y)*0.25
+              // Visual angle needs: atan2(dx+dy, dx-dy) to match screen-space direction
+              const trackRotation = Math.atan2(trackDx + trackDy, trackDx - trackDy);
+
+              // Update rotation to track enemy continuously
+              setTowers((prev) =>
+                prev.map((t) =>
+                  t.id === tower.id
+                    ? { ...t, rotation: trackRotation, targetId: trackTarget.id }
+                    : t
+                )
+              );
+            }
+
             const attackCooldown = isGatling
               ? 150 // Gatling is 8x faster
               : isFlamethrower
@@ -2451,87 +2485,75 @@ export default function PrincetonTowerDefense() {
                   : tData.attackSpeed;
             // Scale attack cooldown with game speed
             const effectiveAttackCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
-            if (now - tower.lastAttack > effectiveAttackCooldown) {
-              const validEnemies = enemies
-                .filter(
-                  (e) =>
-                    distance(
-                      towerWorldPos,
-                      getEnemyPosWithPath(e, selectedMap)
-                    ) <= finalRange
-                )
-                .sort(
-                  (a, b) => b.pathIndex + b.progress - (a.pathIndex + a.progress)
-                );
-              if (validEnemies.length > 0) {
-                const target = validEnemies[0];
-                const targetPos = getEnemyPosWithPath(target, selectedMap);
-                let damage = tData.damage * finalDamageMult;
-                if (tower.level === 2) damage *= 1.5;
-                if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
-                if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
-                if (isFlamethrower) damage *= 0.3; // DoT damage
-                // Apply damage
-                setEnemies((prev) =>
-                  prev
-                    .map((e) => {
-                      if (e.id === target.id) {
-                        const newHp =
-                          e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
-                        const updates: any = { hp: newHp, damageFlash: 100 };
-                        // Flamethrower applies burn
-                        if (isFlamethrower) {
-                          updates.burning = true;
-                          updates.burnDamage = 15;
-                          updates.burnUntil = now + 3000;
-                        }
-                        if (newHp <= 0) {
-                          setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
-                          addParticles(targetPos, "explosion", 12);
-                          return null as any;
-                        }
-                        return { ...e, ...updates };
+            if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
+              const target = validEnemies[0];
+              const targetPos = getEnemyPosWithPath(target, selectedMap);
+              let damage = tData.damage * finalDamageMult;
+              if (tower.level === 2) damage *= 1.5;
+              if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
+              if (isGatling) damage *= 0.4; // Lower per-shot damage but much faster
+              if (isFlamethrower) damage *= 0.3; // DoT damage
+              // Apply damage
+              setEnemies((prev) =>
+                prev
+                  .map((e) => {
+                    if (e.id === target.id) {
+                      const newHp =
+                        e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
+                      const updates: any = { hp: newHp, damageFlash: 100 };
+                      // Flamethrower applies burn
+                      if (isFlamethrower) {
+                        updates.burning = true;
+                        updates.burnDamage = 15;
+                        updates.burnUntil = now + 3000;
                       }
-                      return e;
-                    })
-                    .filter(Boolean)
-                );
-                // Simple rotation calculation - renderer handles visual adjustments
-                const dx = targetPos.x - towerWorldPos.x;
-                const dy = targetPos.y - towerWorldPos.y;
-                const rotation = Math.atan2(dy, dx);
-                setTowers((prev) =>
-                  prev.map((t) =>
-                    t.id === tower.id
-                      ? { ...t, lastAttack: now, rotation, target: target.id }
-                      : t
-                  )
-                );
-                // Create cannon shot effect - renderer will position from turret
-                const effectType = isFlamethrower
-                  ? "flame_burst"
-                  : isGatling
-                    ? "bullet_stream"
-                    : "cannon_shot";
-                setEffects((ef) => [
-                  ...ef,
-                  {
-                    id: generateId("cannon"),
-                    pos: towerWorldPos, // Use tower base, renderer adjusts to turret
-                    type: effectType,
-                    progress: 0,
-                    size: distance(towerWorldPos, targetPos),
-                    targetPos,
-                    towerId: tower.id,
-                    towerLevel: tower.level,
-                    towerUpgrade: tower.upgrade,
-                    rotation,
-                  },
-                ]);
-                // Add particles at tower position
-                if (!isFlamethrower) {
-                  addParticles(towerWorldPos, "smoke", 2);
-                }
+                      if (newHp <= 0) {
+                        setPawPoints((pp) => pp + ENEMY_DATA[e.type].bounty);
+                        addParticles(targetPos, "explosion", 12);
+                        return null as any;
+                      }
+                      return { ...e, ...updates };
+                    }
+                    return e;
+                  })
+                  .filter(Boolean)
+              );
+              // Update lastAttack timestamp (rotation already tracked continuously above)
+              const dx = targetPos.x - towerWorldPos.x;
+              const dy = targetPos.y - towerWorldPos.y;
+              // Account for isometric projection: isoX = (x-y)*0.5, isoY = (x+y)*0.25
+              const rotation = Math.atan2(dx + dy, dx - dy);
+              setTowers((prev) =>
+                prev.map((t) =>
+                  t.id === tower.id
+                    ? { ...t, lastAttack: now }
+                    : t
+                )
+              );
+              // Create cannon shot effect - renderer will position from turret
+              const effectType = isFlamethrower
+                ? "flame_burst"
+                : isGatling
+                  ? "bullet_stream"
+                  : "cannon_shot";
+              setEffects((ef) => [
+                ...ef,
+                {
+                  id: generateId("cannon"),
+                  pos: towerWorldPos, // Use tower base, renderer adjusts to turret
+                  type: effectType,
+                  progress: 0,
+                  size: distance(towerWorldPos, targetPos),
+                  targetPos,
+                  towerId: tower.id,
+                  towerLevel: tower.level,
+                  towerUpgrade: tower.upgrade,
+                  rotation,
+                },
+              ]);
+              // Add particles at tower position
+              if (!isFlamethrower) {
+                addParticles(towerWorldPos, "smoke", 2);
               }
             }
           } else if (tower.type === "lab") {
