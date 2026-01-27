@@ -1451,7 +1451,7 @@ export const LEVEL_DATA: Record<
     difficulty: 1,
     startingPawPoints: 475, // Winter intro - varied enemy types
     specialTower: {
-      pos: { x: 14, y: 12 },
+      pos: { x: 9, y: 18.5 },
       type: "beacon",
     },
     decorations: [

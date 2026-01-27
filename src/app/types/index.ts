@@ -709,7 +709,8 @@ export interface Renderable {
     | "particle"
     | "tower-preview"
     | "station-range"
-    | "tower-range";
+    | "tower-range"
+    | "special-building";
   data: unknown;
   isoY: number;
 }
