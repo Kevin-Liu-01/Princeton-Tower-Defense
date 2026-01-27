@@ -293,6 +293,7 @@ export interface TroopData {
   isRanged?: boolean;
   range?: number;
   isStationary?: boolean;
+  canTargetFlying?: boolean;
 }
 
 // Troop entity - runtime state
@@ -392,6 +393,7 @@ export type EffectType =
   | "payday_aura"
   | "roar_wave"
   | "meteor_strike"
+  | "boulder_strike"
   | "inspiration"
   | "knight_summon"
   | "turret_deploy"

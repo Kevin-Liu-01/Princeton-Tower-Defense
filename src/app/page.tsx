@@ -1765,11 +1765,12 @@ export default function PrincetonTowerDefense() {
             ? TROOP_RANGED_SIGHT_RANGE
             : TROOP_SIGHT_RANGE;
 
-          // Find enemies within sight range (excluding flying enemies)
+          // Find enemies within sight range (excluding flying enemies unless troop can target them)
           const enemiesInSight = enemies.filter((e) => {
             const enemyPos = getEnemyPosWithPath(e, selectedMap);
             const dist = distance(troop.pos, enemyPos);
-            return dist <= sightRange && !ENEMY_DATA[e.type].flying;
+            const canHitFlying = troopData.canTargetFlying || false;
+            return dist <= sightRange && (!ENEMY_DATA[e.type].flying || canHitFlying);
           });
 
           // Find closest enemy in sight
@@ -3032,10 +3033,11 @@ export default function PrincetonTowerDefense() {
             (troop.attackAnim ?? 0) === 0 &&
             now - lastAttack > effectiveTroopCooldown
           ) {
+            const canHitFlying = troopData.canTargetFlying || false;
             const validEnemies = enemies.filter(
               (e) =>
                 distance(troop.pos, getEnemyPosWithPath(e, selectedMap)) <=
-                attackRange && !ENEMY_DATA[e.type].flying
+                attackRange && (!ENEMY_DATA[e.type].flying || canHitFlying)
             );
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
@@ -17246,20 +17248,68 @@ export default function PrincetonTowerDefense() {
       }
 
       case "rocky": {
-        // METEOR STRIKE - Massive AoE damage
-        const strikeRadius = 120;
-        const nearbyEnemies = enemies.filter(
-          (e) =>
-            distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <
-            strikeRadius
-        );
-        // Deal massive damage
+        // BOULDER STRIKE - Throws boulders at nearest enemies
+        const throwRange = 350; // How far Rocky can throw
+        const boulderDamage = 180;
+        const maxBoulders = 5; // Number of boulders thrown
+
+        // Find enemies in range and sort by distance
+        const enemiesInRange = enemies
+          .filter((e) => !e.dead && distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= throwRange)
+          .map((e) => ({
+            enemy: e,
+            dist: distance(hero.pos, getEnemyPosWithPath(e, selectedMap)),
+            pos: getEnemyPosWithPath(e, selectedMap),
+          }))
+          .sort((a, b) => a.dist - b.dist)
+          .slice(0, maxBoulders);
+
+        if (enemiesInRange.length === 0) {
+          // No enemies in range - throw boulders in random directions for visual flair
+          for (let i = 0; i < 3; i++) {
+            const angle = (i / 3) * Math.PI * 2 + Math.random() * 0.5;
+            const dist = 150 + Math.random() * 100;
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("boulder"),
+                pos: { ...hero.pos },
+                type: "boulder_strike",
+                progress: 0,
+                size: 40,
+                targetPos: {
+                  x: hero.pos.x + Math.cos(angle) * dist,
+                  y: hero.pos.y + Math.sin(angle) * dist,
+                },
+              },
+            ]);
+          }
+          addParticles(hero.pos, "smoke", 10);
+          break;
+        }
+
+        // Create boulder effects for each target enemy
+        const newEffects: any[] = [];
+        enemiesInRange.forEach((target, idx) => {
+          newEffects.push({
+            id: generateId(`boulder-${idx}`),
+            pos: { ...hero.pos },
+            type: "boulder_strike",
+            progress: 0,
+            size: 45,
+            targetPos: { ...target.pos },
+          });
+        });
+
+        setEffects((ef) => [...ef, ...newEffects]);
+
+        // Deal damage to targeted enemies
         setEnemies((prev) =>
           prev
             .map((e) => {
-              const isTarget = nearbyEnemies.find((ne) => ne.id === e.id);
+              const isTarget = enemiesInRange.find((t) => t.enemy.id === e.id);
               if (isTarget) {
-                const newHp = e.hp - 200;
+                const newHp = e.hp - boulderDamage;
                 if (newHp <= 0) {
                   addParticles(
                     getEnemyPosWithPath(e, selectedMap),
@@ -17275,7 +17325,7 @@ export default function PrincetonTowerDefense() {
                 return {
                   ...e,
                   hp: newHp,
-                  stunUntil: Date.now() + 500,
+                  stunUntil: Date.now() + 800, // Brief stun from boulder impact
                   damageFlash: 300,
                 };
               }
@@ -17283,20 +17333,10 @@ export default function PrincetonTowerDefense() {
             })
             .filter(Boolean)
         );
-        // Create meteor strike effect
-        setEffects((ef) => [
-          ...ef,
-          {
-            id: generateId("meteor"),
-            pos: hero.pos,
-            type: "meteor_strike",
-            progress: 0,
-            size: strikeRadius,
-          },
-        ]);
-        addParticles(hero.pos, "explosion", 40);
-        addParticles(hero.pos, "fire", 25);
+
+        // Throw particles from Rocky
         addParticles(hero.pos, "smoke", 15);
+        addParticles(hero.pos, "explosion", 8);
         break;
       }
 

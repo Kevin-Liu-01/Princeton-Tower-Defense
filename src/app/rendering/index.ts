@@ -31017,75 +31017,74 @@ function drawCentaurTroop(
   ctx.arc(x, y - size * 0.47 + gallop * 0.04, size * 0.035, 0.15, Math.PI - 0.15);
   ctx.stroke();
 
-  // === ORNATE EPIC BOW ===
+  // === ORNATE EPIC BOW === (drawn last so it appears ON TOP)
   ctx.save();
-  ctx.translate(x + size * 0.18, y - size * 0.27 + gallop * 0.06);
-  ctx.rotate(0.28 + (isAttacking ? bowDraw * 0.18 : 0));
+  ctx.translate(x - size * 0.22, y - size * 0.15 + gallop * 0.06);
+  ctx.rotate(-0.3 + (isAttacking ? -bowDraw * 0.15 : 0));
 
   // Bow flexes during draw
   const bowBend = isAttacking ? 0.58 + bowDraw * 0.18 : 0.58;
 
   // Bow outer layer (dark wood)
   ctx.strokeStyle = "#4a2a10";
-  ctx.lineWidth = 6 * zoom;
+  ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
-  ctx.arc(0, 0, size * 0.32, Math.PI - bowBend * Math.PI, Math.PI + bowBend * Math.PI);
+  ctx.arc(0, 0, size * 0.28, Math.PI - bowBend * Math.PI, Math.PI + bowBend * Math.PI);
   ctx.stroke();
 
   // Bow main layer (rich wood)
-  const bowGrad = ctx.createLinearGradient(-size * 0.32, 0, size * 0.1, 0);
+  const bowGrad = ctx.createLinearGradient(-size * 0.28, 0, size * 0.1, 0);
   bowGrad.addColorStop(0, "#5a3a1a");
   bowGrad.addColorStop(0.3, "#7a5a3a");
   bowGrad.addColorStop(0.7, "#6b4a2a");
   bowGrad.addColorStop(1, "#5a3a1a");
   ctx.strokeStyle = bowGrad;
-  ctx.lineWidth = 4.5 * zoom;
+  ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
-  ctx.arc(0, 0, size * 0.3, Math.PI - bowBend * Math.PI, Math.PI + bowBend * Math.PI);
+  ctx.arc(0, 0, size * 0.26, Math.PI - bowBend * Math.PI, Math.PI + bowBend * Math.PI);
   ctx.stroke();
 
-  // Ornate gold inlay patterns
+  // Gold inlay patterns
   ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1.8 * zoom;
+  ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.arc(0, 0, size * 0.3, Math.PI * 0.45, Math.PI * 0.55);
+  ctx.arc(0, 0, size * 0.26, Math.PI * 0.45, Math.PI * 0.55);
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(0, 0, size * 0.3, Math.PI * 1.45, Math.PI * 1.55);
+  ctx.arc(0, 0, size * 0.26, Math.PI * 1.45, Math.PI * 1.55);
   ctx.stroke();
 
   // Bow tip decorations
-  const topTipX = Math.cos(Math.PI - bowBend * Math.PI) * size * 0.32;
-  const topTipY = Math.sin(Math.PI - bowBend * Math.PI) * size * 0.32;
-  const botTipX = Math.cos(Math.PI + bowBend * Math.PI) * size * 0.32;
-  const botTipY = Math.sin(Math.PI + bowBend * Math.PI) * size * 0.32;
+  const topTipX = Math.cos(Math.PI - bowBend * Math.PI) * size * 0.28;
+  const topTipY = Math.sin(Math.PI - bowBend * Math.PI) * size * 0.28;
+  const botTipX = Math.cos(Math.PI + bowBend * Math.PI) * size * 0.28;
+  const botTipY = Math.sin(Math.PI + bowBend * Math.PI) * size * 0.28;
 
   // Gold tip caps
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
-  ctx.arc(topTipX, topTipY, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(topTipX, topTipY, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(botTipX, botTipY, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(botTipX, botTipY, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
 
-  // Center grip decoration
+  // Center grip
   ctx.fillStyle = "#3a2010";
-  ctx.fillRect(-size * 0.28, -size * 0.04, size * 0.08, size * 0.08);
+  ctx.fillRect(-size * 0.24, -size * 0.035, size * 0.07, size * 0.07);
   ctx.strokeStyle = "#c9a227";
   ctx.lineWidth = 1;
-  ctx.strokeRect(-size * 0.28, -size * 0.04, size * 0.08, size * 0.08);
-  // Grip gem
+  ctx.strokeRect(-size * 0.24, -size * 0.035, size * 0.07, size * 0.07);
   ctx.fillStyle = "#ff4400";
   ctx.shadowColor = "#ff6600";
   ctx.shadowBlur = 4 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(-size * 0.24, 0, size * 0.018, 0, Math.PI * 2);
+  ctx.arc(-size * 0.205, 0, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Bowstring (magical glow when drawn)
-  const stringPull = -size * (0.18 + (isAttacking ? bowDraw * 0.18 : 0));
+  // Bowstring
+  const stringPull = -size * (0.16 + (isAttacking ? bowDraw * 0.15 : 0));
   if (isAttacking) {
     ctx.shadowColor = "#ffcc00";
     ctx.shadowBlur = 6 * zoom * bowDraw;
@@ -31099,122 +31098,59 @@ function drawCentaurTroop(
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Arrow (nocked and ready)
+  // Arrow nocked
   if (!isAttacking || attackPhase < 0.5) {
-    const arrowOffset = isAttacking ? bowDraw * size * 0.12 : 0;
-
-    // Arrow shaft with gradient
-    const shaftGrad = ctx.createLinearGradient(stringPull - size * 0.45, 0, stringPull, 0);
+    const arrowOffset = isAttacking ? bowDraw * size * 0.1 : 0;
+    const shaftGrad = ctx.createLinearGradient(stringPull - size * 0.4, 0, stringPull, 0);
     shaftGrad.addColorStop(0, "#3a2010");
     shaftGrad.addColorStop(0.5, "#5a4020");
     shaftGrad.addColorStop(1, "#3a2010");
     ctx.fillStyle = shaftGrad;
-    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.45, -size * 0.018, size * 0.45, size * 0.036);
-
-    // Arrow gold bands
+    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.4, -size * 0.015, size * 0.4, size * 0.03);
     ctx.fillStyle = "#c9a227";
-    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.2, -size * 0.02, size * 0.025, size * 0.04);
-    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.35, -size * 0.02, size * 0.025, size * 0.04);
-
-    // Elaborate fletching
+    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.18, -size * 0.018, size * 0.02, size * 0.036);
+    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.3, -size * 0.018, size * 0.02, size * 0.036);
     ctx.fillStyle = "#e06000";
     ctx.beginPath();
-    ctx.moveTo(stringPull + arrowOffset * 0.3 + size * 0.02, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.5 + size * 0.08, -size * 0.04);
-    ctx.lineTo(stringPull + arrowOffset * 0.3 - size * 0.04, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.5 + size * 0.08, size * 0.04);
+    ctx.moveTo(stringPull + arrowOffset * 0.3 + size * 0.015, 0);
+    ctx.lineTo(stringPull + arrowOffset * 0.5 + size * 0.06, -size * 0.035);
+    ctx.lineTo(stringPull + arrowOffset * 0.3 - size * 0.03, 0);
+    ctx.lineTo(stringPull + arrowOffset * 0.5 + size * 0.06, size * 0.035);
     ctx.closePath();
     ctx.fill();
-    // Fletching highlight
     ctx.fillStyle = "#ff8030";
     ctx.beginPath();
-    ctx.moveTo(stringPull + arrowOffset * 0.3 + size * 0.01, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.4 + size * 0.05, -size * 0.025);
-    ctx.lineTo(stringPull + arrowOffset * 0.3 - size * 0.02, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.4 + size * 0.05, size * 0.025);
+    ctx.moveTo(stringPull + arrowOffset * 0.3 + size * 0.008, 0);
+    ctx.lineTo(stringPull + arrowOffset * 0.4 + size * 0.04, -size * 0.02);
+    ctx.lineTo(stringPull + arrowOffset * 0.3 - size * 0.015, 0);
+    ctx.lineTo(stringPull + arrowOffset * 0.4 + size * 0.04, size * 0.02);
     ctx.closePath();
     ctx.fill();
-
-    // Ornate arrowhead (glows during draw)
     if (isAttacking) {
       ctx.shadowColor = "#ffcc00";
       ctx.shadowBlur = 8 * zoom * bowDraw;
     }
-    const headGrad = ctx.createLinearGradient(stringPull - size * 0.5, -size * 0.04, stringPull - size * 0.5, size * 0.04);
+    const headGrad = ctx.createLinearGradient(stringPull - size * 0.45, -size * 0.035, stringPull - size * 0.45, size * 0.035);
     headGrad.addColorStop(0, "#c0c0c0");
     headGrad.addColorStop(0.5, isAttacking ? "#ffffff" : "#e8e8e8");
     headGrad.addColorStop(1, "#a0a0a0");
     ctx.fillStyle = headGrad;
     ctx.beginPath();
-    ctx.moveTo(stringPull - size * 0.48, 0);
-    ctx.lineTo(stringPull - size * 0.38, -size * 0.04);
-    ctx.lineTo(stringPull - size * 0.4, 0);
-    ctx.lineTo(stringPull - size * 0.38, size * 0.04);
+    ctx.moveTo(stringPull - size * 0.42, 0);
+    ctx.lineTo(stringPull - size * 0.34, -size * 0.035);
+    ctx.lineTo(stringPull - size * 0.36, 0);
+    ctx.lineTo(stringPull - size * 0.34, size * 0.035);
     ctx.closePath();
     ctx.fill();
-    // Arrowhead gold inlay
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.moveTo(stringPull - size * 0.46, 0);
-    ctx.lineTo(stringPull - size * 0.4, 0);
+    ctx.moveTo(stringPull - size * 0.4, 0);
+    ctx.lineTo(stringPull - size * 0.36, 0);
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
   ctx.restore();
-
-  // === FLYING ARROW WITH TRAIL ===
-  if (isAttacking && attackPhase > 0.4) {
-    const flyPhase = (attackPhase - 0.4) / 0.6;
-    const arrowX = x + flyPhase * size * 2.8;
-    const arrowY = y - size * 0.27 + gallop * 0.06 - flyPhase * size * 0.22;
-
-    ctx.save();
-    ctx.translate(arrowX, arrowY);
-    ctx.rotate(-0.18);
-
-    // Golden trailing glow
-    ctx.shadowColor = "#ffcc00";
-    ctx.shadowBlur = 15 * zoom * (1 - flyPhase);
-
-    // Trail particles
-    for (let tp = 0; tp < 6; tp++) {
-      const trailX = -size * 0.1 - tp * size * 0.08;
-      const trailY = Math.sin(time * 20 + tp) * size * 0.02;
-      const trailAlpha = (1 - flyPhase) * (1 - tp * 0.15);
-      ctx.fillStyle = `rgba(255, 215, 100, ${trailAlpha * 0.6})`;
-      ctx.beginPath();
-      ctx.arc(trailX, trailY, size * (0.02 - tp * 0.002), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Arrow shaft
-    ctx.fillStyle = "#5a4020";
-    ctx.fillRect(-size * 0.18, -size * 0.015, size * 0.4, size * 0.03);
-
-    // Fletching
-    ctx.fillStyle = "#e06000";
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.15, 0);
-    ctx.lineTo(-size * 0.2, -size * 0.035);
-    ctx.lineTo(-size * 0.08, 0);
-    ctx.lineTo(-size * 0.2, size * 0.035);
-    ctx.closePath();
-    ctx.fill();
-
-    // Glowing arrowhead
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.moveTo(size * 0.26, 0);
-    ctx.lineTo(size * 0.16, -size * 0.035);
-    ctx.lineTo(size * 0.18, 0);
-    ctx.lineTo(size * 0.16, size * 0.035);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.shadowBlur = 0;
-    ctx.restore();
-  }
 }
 
 // Elite Guard - Level 3 station troop with ornate royal armor and halberd
@@ -33759,7 +33695,10 @@ export function renderProjectile(
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
-  ctx.rotate(proj.rotation);
+  // Calculate rotation from from->to positions if not explicitly set, or use provided rotation
+  const effectiveRotation = proj.rotation !== undefined ? proj.rotation : 
+    Math.atan2(proj.to.y - proj.from.y, proj.to.x - proj.from.x);
+  ctx.rotate(effectiveRotation);
 
   if (proj.type === "flame") {
     ctx.shadowColor = "#ff4400";
@@ -33903,17 +33842,44 @@ export function renderProjectile(
   }
 
   if (proj.type === "spear") {
-    ctx.shadowColor = "#8b4513";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.fillStyle = "#8b4513";
-    ctx.fillRect(-12 * zoom, -2 * zoom, 24 * zoom, 4 * zoom);
-    ctx.fillStyle = "#c0c0c0";
+    // Compact golden arrow for centaurs - optimized for performance
+    // Scale factor to make arrow smaller
+    const s = 0.6;
+    
+    // Simple glow (no shadow blur for performance)
+    ctx.fillStyle = "rgba(255, 200, 50, 0.3)";
     ctx.beginPath();
-    ctx.moveTo(12 * zoom, 0);
-    ctx.lineTo(4 * zoom, -4 * zoom);
-    ctx.lineTo(4 * zoom, 4 * zoom);
+    ctx.ellipse(0, 0, 10 * zoom * s, 4 * zoom * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Arrow shaft
+    ctx.fillStyle = "#5a4020";
+    ctx.fillRect(-8 * zoom * s, -1.2 * zoom * s, 16 * zoom * s, 2.4 * zoom * s);
+    
+    // Gold band
+    ctx.fillStyle = "#c9a227";
+    ctx.fillRect(0, -1.5 * zoom * s, 1.5 * zoom * s, 3 * zoom * s);
+    
+    // Orange fletching
+    ctx.fillStyle = "#e06000";
+    ctx.beginPath();
+    ctx.moveTo(-6 * zoom * s, 0);
+    ctx.lineTo(-10 * zoom * s, -3.5 * zoom * s);
+    ctx.lineTo(-7 * zoom * s, 0);
+    ctx.lineTo(-10 * zoom * s, 3.5 * zoom * s);
     ctx.closePath();
     ctx.fill();
+    
+    // Silver arrowhead
+    ctx.fillStyle = "#e0e0e0";
+    ctx.beginPath();
+    ctx.moveTo(12 * zoom * s, 0);
+    ctx.lineTo(6 * zoom * s, -3.5 * zoom * s);
+    ctx.lineTo(7 * zoom * s, 0);
+    ctx.lineTo(6 * zoom * s, 3.5 * zoom * s);
+    ctx.closePath();
+    ctx.fill();
+    
     ctx.restore();
     return;
   }
@@ -35065,6 +35031,165 @@ export function renderEffect(
         ctx.fill();
       }
       ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+    }
+
+    case "boulder_strike": {
+      // Rocky's boulder throw ability - boulder flies from pos to targetPos
+      ctx.save();
+      
+      const targetPos = effect.targetPos || effect.pos;
+      const targetScreenPos = worldToScreen(
+        targetPos,
+        canvasWidth,
+        canvasHeight,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
+      
+      // Calculate current boulder position along the arc
+      const startX = screenPos.x;
+      const startY = screenPos.y;
+      const endX = targetScreenPos.x;
+      const endY = targetScreenPos.y;
+      
+      // Boulder travels in an arc
+      const travelProgress = Math.min(progress * 1.5, 1); // Boulder reaches target at 66% of effect duration
+      const currentX = startX + (endX - startX) * travelProgress;
+      const arcHeight = 80 * zoom; // Height of the arc
+      const arcY = -Math.sin(travelProgress * Math.PI) * arcHeight;
+      const currentY = startY + (endY - startY) * travelProgress + arcY;
+      
+      const boulderSize = effect.size * zoom * 0.4;
+      const rotation = travelProgress * Math.PI * 4; // Boulder rotates as it flies
+      
+      if (travelProgress < 1) {
+        // Draw shadow on ground
+        const shadowX = currentX;
+        const shadowY = startY + (endY - startY) * travelProgress;
+        const shadowScale = 1 - Math.abs(arcY) / (arcHeight * 2);
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.3 * alpha * shadowScale})`;
+        ctx.beginPath();
+        ctx.ellipse(shadowX, shadowY + 5 * zoom, boulderSize * 0.8, boulderSize * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Draw the flying boulder
+        ctx.save();
+        ctx.translate(currentX, currentY);
+        ctx.rotate(rotation);
+        
+        // Boulder shadow/depth
+        ctx.shadowColor = "#4a3a2a";
+        ctx.shadowBlur = 8 * zoom;
+        ctx.shadowOffsetY = 3 * zoom;
+        
+        // Main boulder body - irregular rock shape
+        const bGrad = ctx.createRadialGradient(-boulderSize * 0.3, -boulderSize * 0.3, 0, 0, 0, boulderSize);
+        bGrad.addColorStop(0, "#a08060");
+        bGrad.addColorStop(0.4, "#7a6040");
+        bGrad.addColorStop(0.8, "#5a4030");
+        bGrad.addColorStop(1, "#3a2820");
+        ctx.fillStyle = bGrad;
+        
+        // Draw irregular rock shape
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const variance = 0.7 + (Math.sin(i * 2.7 + rotation * 0.1) * 0.3);
+          const r = boulderSize * variance;
+          if (i === 0) {
+            ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          } else {
+            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+          }
+        }
+        ctx.closePath();
+        ctx.fill();
+        
+        // Rock texture/cracks
+        ctx.strokeStyle = `rgba(40, 30, 20, 0.5)`;
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(-boulderSize * 0.3, -boulderSize * 0.2);
+        ctx.lineTo(boulderSize * 0.2, boulderSize * 0.3);
+        ctx.moveTo(boulderSize * 0.1, -boulderSize * 0.4);
+        ctx.lineTo(-boulderSize * 0.1, boulderSize * 0.1);
+        ctx.stroke();
+        
+        // Highlight
+        ctx.fillStyle = `rgba(180, 150, 120, 0.4)`;
+        ctx.beginPath();
+        ctx.ellipse(-boulderSize * 0.25, -boulderSize * 0.25, boulderSize * 0.3, boulderSize * 0.2, -0.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+        
+        // Trailing dust particles
+        for (let i = 0; i < 3; i++) {
+          const trailProgress = Math.max(0, travelProgress - i * 0.1);
+          const trailX = startX + (endX - startX) * trailProgress;
+          const trailArcY = -Math.sin(trailProgress * Math.PI) * arcHeight;
+          const trailY = startY + (endY - startY) * trailProgress + trailArcY;
+          const dustAlpha = alpha * 0.3 * (1 - i * 0.3);
+          const dustSize = boulderSize * 0.2 * (1 - i * 0.2);
+          
+          ctx.fillStyle = `rgba(150, 130, 100, ${dustAlpha})`;
+          ctx.beginPath();
+          ctx.arc(trailX, trailY, dustSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      // Impact effect (when boulder lands)
+      if (travelProgress >= 0.9) {
+        const impactProgress = (travelProgress - 0.9) / 0.1;
+        const impactAlpha = alpha * (1 - impactProgress);
+        const impactRadius = boulderSize * (1 + impactProgress * 2);
+        
+        // Dust cloud
+        const dustGrad = ctx.createRadialGradient(
+          endX, endY, 0,
+          endX, endY, impactRadius * 2
+        );
+        dustGrad.addColorStop(0, `rgba(140, 110, 70, ${impactAlpha * 0.8})`);
+        dustGrad.addColorStop(0.5, `rgba(110, 85, 50, ${impactAlpha * 0.5})`);
+        dustGrad.addColorStop(1, `rgba(80, 60, 35, 0)`);
+        ctx.fillStyle = dustGrad;
+        ctx.beginPath();
+        ctx.ellipse(endX, endY, impactRadius * 2, impactRadius, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Ground crack/crater
+        ctx.strokeStyle = `rgba(60, 45, 30, ${impactAlpha})`;
+        ctx.lineWidth = 2 * zoom;
+        for (let c = 0; c < 6; c++) {
+          const crackAngle = (c / 6) * Math.PI * 2;
+          const crackLen = impactRadius * (0.8 + Math.random() * 0.4);
+          ctx.beginPath();
+          ctx.moveTo(endX, endY);
+          ctx.lineTo(
+            endX + Math.cos(crackAngle) * crackLen,
+            endY + Math.sin(crackAngle) * crackLen * 0.5
+          );
+          ctx.stroke();
+        }
+        
+        // Flying debris
+        for (let d = 0; d < 5; d++) {
+          const debrisAngle = (d / 5) * Math.PI * 2 + impactProgress;
+          const debrisDist = impactRadius * impactProgress * 1.5;
+          const debrisX = endX + Math.cos(debrisAngle) * debrisDist;
+          const debrisY = endY + Math.sin(debrisAngle) * debrisDist * 0.5 - impactProgress * 20 * zoom;
+          
+          ctx.fillStyle = `rgba(90, 70, 45, ${impactAlpha})`;
+          ctx.beginPath();
+          ctx.arc(debrisX, debrisY, (3 - impactProgress * 2) * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
       ctx.restore();
       break;
     }
