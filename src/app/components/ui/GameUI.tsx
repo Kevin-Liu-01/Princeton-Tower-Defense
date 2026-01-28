@@ -522,13 +522,13 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         {hero && (
           <div className="flex h-full items-center gap-2 sm:gap-3">
             {hero.dead ? (
-              <div className="h-full bg-stone-900/80 animate-pulse pl-3 sm:pl-4 pr-6 sm:pr-8 p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-3">
-                <div className="w-12 h-12 pt-0.5 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
-                  <HeroSprite type={hero.type} size={40} />
+              <div className="h-full bg-stone-900/80 animate-pulse pl-2 sm:pl-4 pr-4 sm:pr-8 p-1.5 sm:p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 pt-0.5 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
+                  <HeroSprite type={hero.type} size={28} />
                 </div>
                 <div className="flex flex-col">
-                  <div className="text-xs font-bold text-stone-400 uppercase text-nowrap tracking-wide flex items-center gap-1">
-                    <Shield size={12} /> {HERO_DATA[hero.type].name} - FALLEN
+                  <div className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase text-nowrap tracking-wide flex items-center gap-1">
+                    <Shield size={10} className="sm:w-3 sm:h-3" /> {HERO_DATA[hero.type].name} <span className="hidden sm:inline">- FALLEN</span>
                   </div>
                   <div className="text-[10px] bg-red-800/30 rounded-lg px-1 mb-0.5 text-red-400 flex items-center mt-0.5">
                     <Timer size={10} className="mr-0.5" />
@@ -550,34 +550,34 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <div
                   className={
                     hero.selected
-                      ? "bg-amber-950/40 relative p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
-                      : "bg-amber-950/80 relative p-2 border border-amber-600 shadow-md rounded-lg transition-all "
+                      ? "bg-amber-950/40 relative p-1.5 sm:p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
+                      : "bg-amber-950/80 relative p-1.5 sm:p-2 border border-amber-600 shadow-md rounded-lg transition-all "
                   }
                 >
                   {hero.selected ? (
                     <Grab
-                      size={18}
-                      className="text-amber-400 rounded p-0.5 bg-amber-900 absolute top-2 right-2"
+                      size={14}
+                      className="text-amber-400 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
                     />
                   ) : (
                     <Pointer
-                      size={18}
-                      className="text-amber-600 rounded p-0.5 bg-amber-900 absolute top-2 right-2"
+                      size={14}
+                      className="text-amber-600 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
                     />
                   )}
 
-                  <div className="flex  items-center gap-3 mb-1.5">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
                     <div
-                      className="w-12 h-12 rounded-lg pt-0.5 border-2 flex items-center justify-center overflow-hidden"
+                      className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg pt-0.5 border-2 flex items-center justify-center overflow-hidden"
                       style={{
                         borderColor: HERO_DATA[hero.type].color,
                         backgroundColor: HERO_DATA[hero.type].color + "30",
                       }}
                     >
-                      <HeroSprite type={hero.type} size={40} />
+                      <HeroSprite type={hero.type} size={28} />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1">
+                      <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left">
                         {HERO_DATA[hero.type].name}{" "}
                         <span className="hidden sm:inline">
                           {HERO_DATA[hero.type].icon}
@@ -604,7 +604,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="w-full bg-stone-800 h-2.5 border border-stone-700 rounded-full overflow-hidden">
+                  <div className="w-full bg-stone-800 h-2 sm:h-2.5 border border-stone-700 rounded-full overflow-hidden">
                     <div
                       className="h-full transition-all rounded-full"
                       style={{
@@ -618,26 +618,26 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       }}
                     />
                   </div>
-                  <div className="text-[9px] text-center mt-0.5 font-mono text-amber-400">
+                  <div className="text-[8px] sm:text-[9px] text-center mt-0.5 font-mono text-amber-400">
                     {Math.floor(hero.hp)}/{hero.maxHp} HP
                   </div>
                 </div>
                 <button
                   onClick={useHeroAbility}
                   disabled={!hero.abilityReady}
-                  className={`px-3 mr-2 sm:mr-auto py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${hero.abilityReady
+                  className={`px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${hero.abilityReady
                     ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
                     : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
                     }`}
                 >
                   {hero.abilityReady ? (
-                    <div className="h-full flex flex-col py-1 justify-center">
-                      <span className="text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
+                    <div className="h-full flex flex-col py-0.5 sm:py-1 justify-center">
+                      <span className="hidden sm:inline text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
                         {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
                       </span>
-                      <span className="flex flex-col sm:flex-row gap-1 items-center text-[12px] text-amber-200 font-bold">
+                      <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1 items-center text-[10px] sm:text-[12px] text-amber-200 font-bold">
                         <Zap
-                          size={18}
+                          size={14}
                           className="text-yellow-300 hidden sm:inline mb-0.5"
                         />
                         {HERO_DATA[hero.type].ability}
@@ -645,22 +645,22 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       <div className="hidden sm:inline text-[7px] max-w-28 my-0.5">
                         {HERO_DATA[hero.type].abilityDesc}
                       </div>
-                      <span className="font-extrabold mt-1 text-[10px] text-amber-300/80">
+                      <span className="font-extrabold mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] text-amber-300/80">
                         READY
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-col h-full animate-pulse items-center justify-center sm:px-4">
-                      <Timer size={18} className="text-stone-400 mb-0.5" />
-                      <span className="text-[11px] text-stone-400">
+                      <Timer size={14} className="text-stone-400 mb-0.5 sm:w-[18px] sm:h-[18px]" />
+                      <span className="text-[9px] sm:text-[11px] text-stone-400">
                         {Math.ceil(hero.abilityCooldown / 1000)}s
                       </span>
-                      <span className="text-[8px] text-stone-500">
+                      <span className="text-[7px] sm:text-[8px] text-stone-500">
                         cooldown
                       </span>
                       <div
                         className="
-                        text-[10px] max-w-28 my-0.5 text-center text-stone-400
+                        text-[8px] sm:text-[10px] max-w-28 my-0.5 text-center text-stone-400
                       "
                       >
                         {HERO_DATA[hero.type].ability}
@@ -675,7 +675,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       </button>
 
       {/* Spell Section */}
-      <div className="flex items-center h-full gap-2 relative bg-amber-950/70 px-2 sm:px-3 py-2 border border-amber-700 rounded-lg shadow-md">
+      <div className="flex items-center h-full gap-1 sm:gap-2 relative bg-amber-950/70 px-1.5 sm:px-3 py-1.5 sm:py-2 border border-amber-700 rounded-lg shadow-md">
         <span className="hidden sm:flex items-center flex-col text-[9px] text-amber-500 font-bold tracking-wider mr-1">
           <ShellIcon size={12} className="inline mb-0.5" />
           SPELLS <Wind size={12} className="inline ml-0.5 rotate-90" />
@@ -697,17 +697,17 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 disabled={!canCast}
                 onMouseEnter={() => setHoveredSpell(spell.type)}
                 onMouseLeave={() => setHoveredSpell(null)}
-                className={`relative px-1 sm:px-2.5 py-2 transition-all border shadow-md rounded-lg overflow-hidden ${canCast
+                className={`relative px-1 sm:px-2.5 py-1 sm:py-2 transition-all border shadow-md rounded-lg overflow-hidden ${canCast
                   ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
                   : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
                   }`}
               >
-                <div className="flex flex-col items-center min-w-[44px]">
-                  <SpellSprite type={spell.type} size={28} />
-                  <div className="font-bold uppercase text-[8px] tracking-wide text-purple-200 mt-0.5">
+                <div className="flex flex-col items-center min-w-[32px] sm:min-w-[44px]">
+                  <SpellSprite type={spell.type} size={22} />
+                  <div className="font-bold uppercase text-[7px] sm:text-[8px] tracking-wide text-purple-200 mt-0.5">
                     {spellData.name.split(" ")[0]}
                   </div>
-                  <div className="text-[9px] font-bold">
+                  <div className="text-[8px] sm:text-[9px] font-bold">
                     {spell.cooldown > 0 ? (
                       <span className="text-red-400">
                         {Math.ceil(spell.cooldown / 1000)}s
@@ -730,7 +730,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 )}
               </button>
               {isHovered && (
-                <div className="absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
+                <div className="hidden sm:block absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-purple-200 font-bold">
                       {spellData.name}
@@ -801,10 +801,10 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 
   return (
     <div
-      className="bg-gradient-to-br from-amber-900/95 to-amber-950/95 px-2 sm:px-3 py-2 border-t-2 border-amber-600 shadow-xl overflow-x-auto backdrop-blur-sm"
+      className="bg-gradient-to-br from-amber-900/95 to-amber-950/95 px-1.5 sm:px-3 py-1.5 sm:py-2 border-t-2 border-amber-600 shadow-xl overflow-x-auto backdrop-blur-sm"
       style={{ zIndex: 100 }}
     >
-      <div className="flex items-center gap-2 min-w-max">
+      <div className="flex items-center gap-1 sm:gap-2 min-w-max">
         <h3 className="text-[10px] font-bold text-amber-300 tracking-wider hidden sm:flex flex-col justify-center gap-1 whitespace-nowrap px-1">
           <div className="flex items-center gap-1">
             <Construction size={14} /> <div>BUILD TOWERS</div>
@@ -844,29 +844,29 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   setHoveredTower(null);
                 }}
                 disabled={!canAfford}
-                className={`px-2.5 py-1.5 w-full transition-all border flex items-center gap-2.5 whitespace-nowrap shadow-md rounded-lg ${isSelected
+                className={`px-1.5 sm:px-2.5 py-1 sm:py-1.5 w-full transition-all border flex items-center gap-1.5 sm:gap-2.5 whitespace-nowrap shadow-md rounded-lg ${isSelected
                   ? "bg-gradient-to-b from-amber-600 to-amber-800 border-amber-400 shadow-amber-500/30 scale-105"
                   : canAfford
                     ? "bg-gradient-to-b from-amber-950/80 to-stone-950/80 hover:from-amber-900/80 hover:to-stone-900/80 border-amber-700 hover:border-amber-500"
                     : "bg-stone-900/60 border-stone-700 opacity-40 cursor-not-allowed"
                   }`}
               >
-                <span className="absolute top-1.5 bg-amber-900 p-0.5 px-1 rounded-md  right-1.5 text-[9px] font-bold text-amber-400">
+                <span className="absolute top-1 sm:top-1.5 bg-amber-900 p-0.5 px-1 rounded-md right-1 sm:right-1.5 text-[7px] sm:text-[9px] font-bold text-amber-400">
                   {placedTowers[towerType] > 0
                     ? `x${placedTowers[towerType]}`
                     : "x0"}
                 </span>
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <TowerSprite type={towerType} size={36} />
+                <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center">
+                  <TowerSprite type={towerType} size={26} />
                 </div>
                 <div className="flex flex-col items-start">
-                  <div className="font-bold text-[10px] text-amber-200">
+                  <div className="font-bold text-[8px] sm:text-[10px] text-amber-200">
                     {data.name}
                   </div>
-                  <div className="text-[9px] text-amber-400 flex items-center gap-1">
-                    <PawPrint size={10} /> {data.cost} PP
+                  <div className="text-[7px] sm:text-[9px] text-amber-400 flex items-center gap-0.5 sm:gap-1">
+                    <PawPrint size={8} className="sm:w-2.5 sm:h-2.5" /> {data.cost} PP
                   </div>
-                  <div className="flex gap-1.5 text-[8px] mt-0.5 flex-wrap">
+                  <div className="hidden sm:flex gap-1.5 text-[8px] mt-0.5 flex-wrap">
                     {/* Standard combat towers */}
                     {data.damage > 0 && type !== "library" && (
                       <span className="text-red-400 flex items-center gap-0.5">
@@ -905,20 +905,20 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                 </div>
                 {isSelected ? (
                   <Grab
-                    size={18}
-                    className="text-amber-400 rounded p-0.5 absolute bottom-1.5 right-1.5"
+                    size={14}
+                    className="text-amber-400 rounded p-0.5 absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 sm:w-[18px] sm:h-[18px]"
                   />
                 ) : (
                   <PlusCircle
-                    size={18}
-                    className="text-amber-600 rounded p-0.5 absolute bottom-1.5 right-1.5"
+                    size={14}
+                    className="text-amber-600 rounded p-0.5 absolute bottom-1 right-1 sm:bottom-1.5 sm:right-1.5 sm:w-[18px] sm:h-[18px]"
                   />
                 )}
               </button>
 
-              {/* Enhanced Tooltip */}
+              {/* Enhanced Tooltip - hidden on mobile */}
               {isHovered && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-stone-900/98 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50 pointer-events-none">
+                <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-stone-900/98 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50 pointer-events-none">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-14 h-14 rounded-lg bg-stone-800 border border-amber-600/50 flex items-center justify-center">
                       <TowerSprite type={towerType} size={48} level={1} />

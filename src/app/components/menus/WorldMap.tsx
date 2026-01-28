@@ -9447,7 +9447,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <X size={18} />
                     </button>
                   </div>
-                  <p className="text-amber-500/80 text-sm italic mb-3">
+                  <p className="hidden sm:block text-amber-500/80 text-sm italic mb-3">
                     &ldquo;{currentLevel.description}&rdquo;
                   </p>
                   <div className="flex items-center gap-4 sm:mb-3">
@@ -9984,9 +9984,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               <span className="text-purple-200 font-medium">
                                 {spell.name}
                               </span>
-                              <span className="hidden xl:inline text-purple-300 flex-1 truncate">
-                                {spell.desc}
-                              </span>
+
                               <span className="ml-auto text-purple-500">|</span>
 
                               <span className="text-amber-400 flex items-center gap-0.5">

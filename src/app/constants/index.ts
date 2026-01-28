@@ -167,7 +167,7 @@ export const TOWER_DATA: Record<
     levelDesc: {
       1: "Sound Waves - Single target sonic",
       2: "Resonance - Hits 2 targets, 1.5x damage",
-      3: "Elite Archers - Hits 3 targets, 30% faster",
+      3: "Acoustic Bass - Hits 3 targets, 30% faster",
       4: "Choose: Shockwave or Symphony",
     },
     upgrades: {
@@ -451,9 +451,9 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   golem: {
     name: "Nassau Lion",
-    hp: 4500,
+    hp: 14500,
     speed: 0.09,
-    bounty: 150,
+    bounty: 450,
     armor: 0.65,
     flying: false,
     desc: "The stone guardian itself. Near-infinite HP.",
@@ -1113,7 +1113,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    startingPawPoints: 5000, // Hard level with beacon - need more towers
+    startingPawPoints: 500, // Hard level with beacon - need more towers
     specialTower: {
       pos: { x: 16, y: 8.5 },
       type: "beacon",
