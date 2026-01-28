@@ -85,6 +85,27 @@ import PrincetonTDLogo from "./PrincetonTDLogo";
 export { TowerSprite, HeroSprite, SpellSprite };
 
 // =============================================================================
+// TOUCH DEVICE DETECTION HOOK
+// =============================================================================
+
+const useIsTouchDevice = () => {
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  
+  useEffect(() => {
+    const checkTouch = () => {
+      setIsTouchDevice(
+        'ontouchstart' in window || 
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia('(pointer: coarse)').matches
+      );
+    };
+    checkTouch();
+  }, []);
+  
+  return isTouchDevice;
+};
+
+// =============================================================================
 // TOP HUD COMPONENT
 // =============================================================================
 
@@ -489,6 +510,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   const [hoveredSpell, setHoveredSpell] = React.useState<SpellType | null>(
     null
   );
+  const isTouchDevice = useIsTouchDevice();
 
   const spellDetails: Record<string, string> = {
     fireball:
@@ -695,8 +717,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               <button
                 onClick={() => castSpell(spell.type)}
                 disabled={!canCast}
-                onMouseEnter={() => setHoveredSpell(spell.type)}
-                onMouseLeave={() => setHoveredSpell(null)}
+                onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
+                onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
                 className={`relative px-1 sm:px-2.5 py-1 sm:py-2 transition-all border shadow-md rounded-lg overflow-hidden ${canCast
                   ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
                   : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
@@ -786,6 +808,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   setDraggingTower,
   placedTowers,
 }) => {
+  const isTouchDevice = useIsTouchDevice();
+  
   const towerStrategies: Record<string, string> = {
     cannon:
       "High single-target damage. Great for taking down tough enemies. Place along main paths.",
@@ -836,12 +860,16 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   }
                 }}
                 onMouseEnter={() => {
-                  setHoveredBuildTower(towerType);
-                  setHoveredTower(towerType);
+                  if (!isTouchDevice) {
+                    setHoveredBuildTower(towerType);
+                    setHoveredTower(towerType);
+                  }
                 }}
                 onMouseLeave={() => {
-                  setHoveredBuildTower(null);
-                  setHoveredTower(null);
+                  if (!isTouchDevice) {
+                    setHoveredBuildTower(null);
+                    setHoveredTower(null);
+                  }
                 }}
                 disabled={!canAfford}
                 className={`px-1.5 sm:px-2.5 py-1 sm:py-1.5 w-full transition-all border flex items-center gap-1.5 sm:gap-2.5 whitespace-nowrap shadow-md rounded-lg ${isSelected

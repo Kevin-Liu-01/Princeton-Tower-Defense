@@ -132,6 +132,48 @@ const getFormationOffsets = (count: number): Position[] => {
   }
 };
 
+// Dynamic tower hitbox calculation based on tower type and level
+// Tower heights grow with level, so hitboxes should too
+const getTowerHitboxRadius = (tower: Tower, zoom: number = 1): number => {
+  const level = tower.level;
+  let baseWidth: number;
+  let baseHeight: number;
+  
+  switch (tower.type) {
+    case "cannon":
+      baseWidth = 36 + level * 5;
+      baseHeight = 24 + level * 10;
+      break;
+    case "lab":
+    case "library":
+      baseWidth = 34 + level * 5;
+      baseHeight = 30 + level * 10;
+      break;
+    case "arch":
+      baseWidth = 32 + level * 4;
+      baseHeight = 28 + level * 8;
+      break;
+    case "club":
+      baseWidth = 38 + level * 5;
+      baseHeight = 32 + level * 10;
+      break;
+    case "station":
+      // Station has wider base dimensions
+      baseWidth = 56 + level * 6;
+      baseHeight = 40 + level * 12;
+      break;
+    default:
+      baseWidth = 36 + level * 5;
+      baseHeight = 24 + level * 10;
+  }
+  
+  // Calculate hitbox as a combination of width and height
+  // Wider for X, taller for Y - we use the larger dimension for a circular hitbox
+  // Scale by zoom and add a base minimum
+  const hitboxSize = Math.max(baseWidth * 0.5, baseHeight * 0.4) * zoom;
+  return Math.max(25, Math.min(hitboxSize, 60)); // Clamp between 25-60 pixels
+};
+
 // Components
 import { WorldMap } from "./components/menus/WorldMap";
 import { VictoryScreen } from "./components/menus/VictoryScreen";
@@ -5160,38 +5202,18 @@ export default function PrincetonTowerDefense() {
         setPlacingTroop(false);
         return;
       }
-      // Check tower clicks
-      const clickedTower = towers.find((t) => {
-        const worldPos = gridToWorld(t.pos);
-        const screenPos = worldToScreen(
-          worldPos,
-          width,
-          height,
-          dpr,
-          cameraOffset,
-          cameraZoom
-        );
-        return distance(clickPos, screenPos) < 40;
-      });
-      if (clickedTower) {
-        const isDeselecting = selectedTower === clickedTower.id;
-        setSelectedTower(isDeselecting ? null : clickedTower.id);
-        setHero((prev) => (prev ? { ...prev, selected: false } : null));
-        // If clicking on a Dinky Station, highlight its troops
-        if (clickedTower.type === "station" && !isDeselecting) {
-          setTroops((prev) =>
-            prev.map((t) => ({
-              ...t,
-              selected: t.ownerId === clickedTower.id, // Select troops owned by this station
-            }))
-          );
-        } else {
-          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
-        }
-        return;
-      }
-      // Check hero clicks
-      if (hero && !hero.dead) {
+
+      // ========== PRIORITIZED SELECTION LOGIC ==========
+      // When a hero or troop is selected, prioritize their interactions:
+      // 1. Clicking on themselves -> deselect
+      // 2. Clicking on path -> move
+      // 3. Clicking elsewhere -> deselect (don't select other entities)
+      
+      const selectedTroopUnit = troops.find((t) => t.selected);
+      const heroIsSelected = hero && !hero.dead && hero.selected;
+      
+      // ---------- HERO SELECTED MODE ----------
+      if (heroIsSelected) {
         const heroScreen = worldToScreen(
           hero.pos,
           width,
@@ -5200,39 +5222,14 @@ export default function PrincetonTowerDefense() {
           cameraOffset,
           cameraZoom
         );
+        
+        // Check if clicking on hero itself to deselect
         if (distance(clickPos, heroScreen) < 28) {
-          setHero((prev) =>
-            prev ? { ...prev, selected: !prev.selected } : null
-          );
-          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
-          setSelectedTower(null);
+          setHero((prev) => prev ? { ...prev, selected: false } : null);
           return;
         }
-      }
-      // Check troop clicks (only living troops can be selected)
-      for (const troop of troops) {
-        const troopScreen = worldToScreen(
-          troop.pos,
-          width,
-          height,
-          dpr,
-          cameraOffset,
-          cameraZoom
-        );
-        if (distance(clickPos, troopScreen) < 22) {
-          setTroops((prev) =>
-            prev.map((t) => ({
-              ...t,
-              selected: t.id === troop.id ? !t.selected : false,
-            }))
-          );
-          setHero((prev) => (prev ? { ...prev, selected: false } : null));
-          setSelectedTower(null);
-          return;
-        }
-      }
-      // Hero movement
-      if (hero && !hero.dead && hero.selected) {
+        
+        // Check for path movement
         const worldPos = screenToWorld(
           clickPos,
           width,
@@ -5265,14 +5262,31 @@ export default function PrincetonTowerDefense() {
             prev ? { ...prev, moving: true, targetPos: closestPoint } : null
           );
           addParticles(closestPoint, "glow", 5);
+          return;
         }
+        
+        // Clicked elsewhere - deselect hero (don't select other entities)
+        setHero((prev) => prev ? { ...prev, selected: false } : null);
         return;
       }
-      // Troop movement - constrained to road, save userTargetPos for respawn
-      // Around line 1553 - Inside handleCanvasClick
-      // Troop movement - constrained to road and owner range
-      const selectedTroopUnit = troops.find((t) => t.selected);
+      
+      // ---------- TROOP SELECTED MODE ----------
       if (selectedTroopUnit) {
+        // Check if clicking on the selected troop itself to deselect
+        const troopScreen = worldToScreen(
+          selectedTroopUnit.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        if (distance(clickPos, troopScreen) < 22) {
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+          return;
+        }
+        
+        // Check for path movement
         const worldPos = screenToWorld(
           clickPos,
           width,
@@ -5282,21 +5296,16 @@ export default function PrincetonTowerDefense() {
           cameraZoom
         );
 
-        // 1. Determine Anchor Position and Range Radius based on Owner
+        // Determine Anchor Position and Range Radius based on Owner
         const station = towers.find((t) => t.id === selectedTroopUnit.ownerId);
-
-        // If it's a station troop, center range on the tower.
-        // Otherwise (Spell/Hero), center on the original summon spawnPoint.
         const anchorPos = station
           ? gridToWorld(station.pos)
           : selectedTroopUnit.spawnPoint;
-
-        // Use tower data range for stations, or the individual troop's moveRadius for summons
         const rangeRadius = station
           ? TOWER_DATA.station.spawnRange || 180
           : selectedTroopUnit.moveRadius || 200;
 
-        // 2. Find the closest point on the road (Path Snapping)
+        // Find the closest point on the road (Path Snapping)
         const path = MAP_PATHS[selectedMap];
         const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
         let fullPath = path;
@@ -5317,11 +5326,11 @@ export default function PrincetonTowerDefense() {
           }
         }
 
-        // 3. Distance Check: Is the snapped road point within the allowed range?
+        // Distance Check: Is the snapped road point within the allowed range?
         const distFromAnchor = distance(closestRoadPoint, anchorPos);
 
-        if (distFromAnchor <= rangeRadius) {
-          // Move entire group (if part of a station/spell group)
+        // If clicked on path within range, move the troop group
+        if (distFromAnchor <= rangeRadius && minDist < HERO_PATH_HITBOX_SIZE) {
           const ownerId = selectedTroopUnit.ownerId;
           const formationTroops = troops.filter((t) => t.ownerId === ownerId);
           const formationOffsets = getFormationOffsets(formationTroops.length);
@@ -5338,8 +5347,7 @@ export default function PrincetonTowerDefense() {
                   ...t,
                   moving: true,
                   targetPos: newTarget,
-                  userTargetPos: newTarget, // Saves home for return-after-combat
-                  // For summons, we update the spawnPoint to the new rally to allow local movement
+                  userTargetPos: newTarget,
                   spawnPoint: station ? t.spawnPoint : closestRoadPoint,
                 };
               }
@@ -5347,10 +5355,91 @@ export default function PrincetonTowerDefense() {
             })
           );
           addParticles(closestRoadPoint, "light", 5);
+          return;
+        }
+        
+        // Clicked elsewhere - deselect troops (don't select other entities)
+        setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+        return;
+      }
+      
+      // ========== NORMAL SELECTION MODE (nothing selected) ==========
+      // Check tower clicks with dynamic hitbox based on tower level/height
+      const clickedTower = towers.find((t) => {
+        const worldPos = gridToWorld(t.pos);
+        const screenPos = worldToScreen(
+          worldPos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        const hitboxRadius = getTowerHitboxRadius(t, cameraZoom);
+        return distance(clickPos, screenPos) < hitboxRadius;
+      });
+      if (clickedTower) {
+        const isDeselecting = selectedTower === clickedTower.id;
+        setSelectedTower(isDeselecting ? null : clickedTower.id);
+        setHero((prev) => (prev ? { ...prev, selected: false } : null));
+        // If clicking on a Dinky Station, highlight its troops
+        if (clickedTower.type === "station" && !isDeselecting) {
+          setTroops((prev) =>
+            prev.map((t) => ({
+              ...t,
+              selected: t.ownerId === clickedTower.id,
+            }))
+          );
+        } else {
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
         }
         return;
       }
-      // Deselect all
+      
+      // Check hero clicks (when hero is not selected)
+      if (hero && !hero.dead) {
+        const heroScreen = worldToScreen(
+          hero.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        if (distance(clickPos, heroScreen) < 28) {
+          setHero((prev) =>
+            prev ? { ...prev, selected: true } : null
+          );
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+          setSelectedTower(null);
+          return;
+        }
+      }
+      
+      // Check troop clicks (only living troops can be selected)
+      for (const troop of troops) {
+        const troopScreen = worldToScreen(
+          troop.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        if (distance(clickPos, troopScreen) < 22) {
+          setTroops((prev) =>
+            prev.map((t) => ({
+              ...t,
+              selected: t.id === troop.id,
+            }))
+          );
+          setHero((prev) => (prev ? { ...prev, selected: false } : null));
+          setSelectedTower(null);
+          return;
+        }
+      }
+      
+      // Deselect all (clicked on empty space)
       setSelectedTower(null);
       setHero((prev) => (prev ? { ...prev, selected: false } : null));
       setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
@@ -5392,7 +5481,7 @@ export default function PrincetonTowerDefense() {
         cameraOffset,
         cameraZoom
       );
-      // Check for tower hover
+      // Check for tower hover with dynamic hitbox based on tower level/height
       const hoveredT = towers.find((t) => {
         const worldPos = gridToWorld(t.pos);
         const screenPos = worldToScreen(
@@ -5403,7 +5492,8 @@ export default function PrincetonTowerDefense() {
           cameraOffset,
           cameraZoom
         );
-        return distance({ x, y }, screenPos) < 40;
+        const hitboxRadius = getTowerHitboxRadius(t, cameraZoom);
+        return distance({ x, y }, screenPos) < hitboxRadius;
       });
 
       // Check if hovering near the special building
