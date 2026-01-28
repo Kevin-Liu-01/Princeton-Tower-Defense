@@ -62,7 +62,7 @@ import {
   getPathSegmentLength,
 } from "./utils";
 // Tower Stats
-import { calculateTowerStats } from "./constants/towerStats";
+import { calculateTowerStats, getUpgradeCost } from "./constants/towerStats";
 // Rendering
 import {
   renderTower,
@@ -239,6 +239,12 @@ export default function PrincetonTowerDefense() {
   // Wave Management Refs
   const spawnIntervalsRef = useRef<NodeJS.Timeout[]>([]);
   const activeTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Refs for current state values to avoid stale closures in callbacks
+  const towersRef = useRef(towers);
+  const pawPointsRef = useRef(pawPoints);
+  towersRef.current = towers;
+  pawPointsRef.current = pawPoints;
 
   // Get current level waves - computed from selectedMap
   const currentLevelWaves = getLevelWaves(selectedMap);
@@ -3133,7 +3139,7 @@ export default function PrincetonTowerDefense() {
       // Update effects - with hard cap
       setEffects((prev) => {
         const updated = prev
-          .map((eff) => ({ ...eff, progress: eff.progress + deltaTime / 500 }))
+          .map((eff) => ({ ...eff, progress: eff.progress + deltaTime / (eff.duration || 500) }))
           .filter((e) => e.progress < 1);
         // Hard cap on effects
         if (updated.length > MAX_EFFECTS) {
@@ -5429,19 +5435,16 @@ export default function PrincetonTowerDefense() {
   // Game actions
   const upgradeTower = useCallback(
     (towerId: string, choice?: "A" | "B") => {
-      const tower = towers.find((t) => t.id === towerId);
+      // Use refs to get current state values to avoid stale closure issues
+      const currentTowers = towersRef.current;
+      const currentPawPoints = pawPointsRef.current;
+
+      const tower = currentTowers.find((t) => t.id === towerId);
       if (!tower) return;
 
-      // Cost structure: Level 1→2: 150, Level 2→3: 250, Level 3→4: 350
-      const cost =
-        tower.level === 1
-          ? 150
-          : tower.level === 2
-            ? 250
-            : tower.level === 3
-              ? 350
-              : 0;
-      if (cost === 0 || pawPoints < cost) return;
+      // Use getUpgradeCost to match the cost shown in the UI
+      const cost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
+      if (cost === 0 || currentPawPoints < cost) return;
 
       // Level progression: 1→2, 2→3, 3→4 (with A/B choice)
       // Choice is only needed for level 3→4
@@ -5494,7 +5497,7 @@ export default function PrincetonTowerDefense() {
       addParticles(gridToWorld(tower.pos), "glow", 20);
       setSelectedTower(null);
     },
-    [towers, pawPoints, addParticles]
+    [addParticles]
   );
   const sellTower = useCallback(
     (towerId: string) => {
@@ -5535,69 +5538,104 @@ export default function PrincetonTowerDefense() {
 
       switch (spellType) {
         case "fireball": {
-          // ENHANCED FIREBALL - Comes from sky with delay before massive explosion
+          // METEOR SHOWER - Rains down 10 meteors in random locations, burning enemies
           if (enemies.length > 0) {
-            const randomEnemy =
-              enemies[Math.floor(Math.random() * enemies.length)];
-            const targetPos = getEnemyPosWithPath(randomEnemy, selectedMap);
+            const meteorCount = 10;
+            const damagePerMeteor = 50;
+            const impactRadius = 100;
+            const burnDuration = 4000; // 4 seconds burn
+            const burnDamage = 20; // damage per second while burning
+            const fallDuration = 1200; // How long meteor takes to fall (ms) - longer for dramatic effect
 
-            // Create incoming meteor effect (1 second delay)
-            setEffects((ef) => [
-              ...ef,
-              {
-                id: generateId("meteor_incoming"),
-                pos: { x: targetPos.x, y: targetPos.y - 300 },
-                targetPos: targetPos,
-                type: "meteor_incoming",
-                progress: 0,
-                size: 150,
-                duration: 1000,
-              },
-            ]);
+            // Generate random target positions around enemies
+            const meteorTargets: Position[] = [];
+            for (let i = 0; i < meteorCount; i++) {
+              // Pick a random enemy to target near
+              const randomEnemy = enemies[Math.floor(Math.random() * enemies.length)];
+              const basePos = getEnemyPosWithPath(randomEnemy, selectedMap);
+              // Add some random offset so meteors spread out more
+              const offsetX = (Math.random() - 0.5) * 300;
+              const offsetY = (Math.random() - 0.5) * 150;
+              meteorTargets.push({
+                x: basePos.x + offsetX,
+                y: basePos.y + offsetY,
+              });
+            }
 
-            // Delayed impact after 1 second
-            setTimeout(() => {
-              setEnemies((prev) =>
-                prev
-                  .map((e) => {
-                    const pos = getEnemyPosWithPath(e, selectedMap);
-                    const dist = distance(pos, targetPos);
-                    if (dist < 150) {
-                      // Damage falls off with distance
-                      const damageMultiplier = 1 - (dist / 150) * 0.5;
-                      const damage = Math.floor(200 * damageMultiplier);
-                      const newHp = e.hp - damage;
-                      if (newHp <= 0) {
-                        const baseBounty = ENEMY_DATA[e.type].bounty;
-                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                        setPawPoints((pp) => pp + baseBounty + goldBonus);
-                        addParticles(pos, "explosion", 15);
-                        addParticles(pos, "fire", 10);
-                        if (e.goldAura) addParticles(pos, "gold", 6);
-                        return null as any;
-                      }
-                      return { ...e, hp: newHp, damageFlash: 300 };
-                    }
-                    return e;
-                  })
-                  .filter(Boolean)
-              );
+            // Create all meteor effects with staggered delays
+            meteorTargets.forEach((targetPos, index) => {
+              const staggerDelay = index * 180; // 180ms between each meteor start
 
-              // Create massive explosion effect
-              setEffects((ef) => [
-                ...ef,
-                {
-                  id: generateId("meteor_impact"),
-                  pos: targetPos,
-                  type: "meteor_impact",
-                  progress: 0,
-                  size: 150,
-                },
-              ]);
-              addParticles(targetPos, "explosion", 50);
-              addParticles(targetPos, "fire", 30);
-              addParticles(targetPos, "smoke", 20);
-            }, 1000);
+              setTimeout(() => {
+                // Create falling meteor effect - comes from WAY across screen in top RIGHT
+                setEffects((ef) => [
+                  ...ef,
+                  {
+                    id: generateId("meteor_falling"),
+                    pos: { x: targetPos.x + 700, y: targetPos.y - 2800 }, // Start from far upper RIGHT
+                    targetPos: targetPos,
+                    type: "meteor_falling",
+                    progress: 0,
+                    size: 90,
+                    duration: fallDuration,
+                    meteorIndex: index,
+                  },
+                ]);
+
+                // Impact happens when meteor lands (synced with fall animation)
+                setTimeout(() => {
+                  const now = Date.now();
+                  setEnemies((prev) =>
+                    prev
+                      .map((e) => {
+                        const pos = getEnemyPosWithPath(e, selectedMap);
+                        const dist = distance(pos, targetPos);
+                        if (dist < impactRadius) {
+                          // Damage falls off with distance
+                          const damageMultiplier = 1 - (dist / impactRadius) * 0.5;
+                          const damage = Math.floor(damagePerMeteor * damageMultiplier);
+                          const newHp = e.hp - damage;
+                          if (newHp <= 0) {
+                            const baseBounty = ENEMY_DATA[e.type].bounty;
+                            const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                            setPawPoints((pp) => pp + baseBounty + goldBonus);
+                            addParticles(pos, "explosion", 20);
+                            addParticles(pos, "fire", 15);
+                            if (e.goldAura) addParticles(pos, "gold", 6);
+                            return null as any;
+                          }
+                          // Apply burn effect
+                          return {
+                            ...e,
+                            hp: newHp,
+                            damageFlash: 300,
+                            burning: true,
+                            burnDamage: burnDamage,
+                            burnUntil: now + burnDuration,
+                          };
+                        }
+                        return e;
+                      })
+                      .filter(Boolean)
+                  );
+
+                  // Create dramatic impact explosion effect
+                  setEffects((ef) => [
+                    ...ef,
+                    {
+                      id: generateId("meteor_impact"),
+                      pos: targetPos,
+                      type: "meteor_impact",
+                      progress: 0,
+                      size: impactRadius * 1.5,
+                    },
+                  ]);
+                  addParticles(targetPos, "explosion", 40);
+                  addParticles(targetPos, "fire", 35);
+                  addParticles(targetPos, "smoke", 25);
+                }, fallDuration);
+              }, staggerDelay);
+            });
           }
           break;
         }

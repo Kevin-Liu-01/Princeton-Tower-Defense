@@ -82,6 +82,116 @@ export function renderHero(
 
   ctx.restore();
 
+  // HEALING AURA EFFECT - Beautiful emerald healing visualization
+  if (hero.healFlash && Date.now() - hero.healFlash < 1000) {
+    const healProgress = (Date.now() - hero.healFlash) / 1000; // 0 to 1
+    const healAlpha = 1 - healProgress; // Fade out
+    const drawY = screenPos.y - size / 2;
+
+    // Healing glow base - layered green aura (larger for heroes)
+    const glowGrad = ctx.createRadialGradient(
+      screenPos.x, drawY, 0,
+      screenPos.x, drawY, size * 1.4
+    );
+    glowGrad.addColorStop(0, `rgba(74, 222, 128, ${0.45 * healAlpha})`);
+    glowGrad.addColorStop(0.35, `rgba(34, 197, 94, ${0.3 * healAlpha})`);
+    glowGrad.addColorStop(0.65, `rgba(22, 163, 74, ${0.15 * healAlpha})`);
+    glowGrad.addColorStop(1, "rgba(20, 83, 45, 0)");
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y, size * 1.1, size * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner bright core
+    ctx.fillStyle = `rgba(134, 239, 172, ${0.4 * healAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y, size * 0.55, size * 0.33, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dual rotating healing rings (heroes get 2 rings)
+    ctx.save();
+    ctx.translate(screenPos.x, screenPos.y);
+    ctx.rotate(time * 2);
+    ctx.strokeStyle = `rgba(74, 222, 128, ${0.85 * healAlpha})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.setLineDash([8 * zoom, 4 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.85, size * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(screenPos.x, screenPos.y);
+    ctx.rotate(-time * 1.5);
+    ctx.strokeStyle = `rgba(134, 239, 172, ${0.6 * healAlpha})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.setLineDash([5 * zoom, 5 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 1.0, size * 0.6, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // 6 Healing cross symbols orbiting (more for heroes)
+    const crossRotation = time * 1.2;
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + crossRotation;
+      const dist = size * 0.75;
+      const cx = screenPos.x + Math.cos(angle) * dist;
+      const cy = screenPos.y + Math.sin(angle) * dist * 0.5;
+      const crossSize = 6 * zoom * healAlpha;
+
+      // Healing cross with glow
+      ctx.fillStyle = `rgba(187, 247, 208, ${0.95 * healAlpha})`;
+      ctx.fillRect(cx - crossSize * 0.3, cy - crossSize, crossSize * 0.6, crossSize * 2);
+      ctx.fillRect(cx - crossSize, cy - crossSize * 0.3, crossSize * 2, crossSize * 0.6);
+
+      // Cross outline
+      ctx.strokeStyle = `rgba(34, 197, 94, ${0.7 * healAlpha})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.strokeRect(cx - crossSize * 0.3, cy - crossSize, crossSize * 0.6, crossSize * 2);
+      ctx.strokeRect(cx - crossSize, cy - crossSize * 0.3, crossSize * 2, crossSize * 0.6);
+    }
+
+    // Rising leaf/nature particles (more for heroes)
+    for (let i = 0; i < 8; i++) {
+      const particlePhase = (time * 2 + i * 0.28) % 1;
+      const px = screenPos.x + Math.sin(time * 3 + i * 1.5) * size * 0.5;
+      const py = screenPos.y - particlePhase * size * 1.4;
+      const particleAlpha = (1 - particlePhase) * healAlpha;
+      const particleSize = (2.5 + Math.sin(i * 0.5) * 1.2) * zoom;
+
+      // Leaf-shaped particle
+      ctx.fillStyle = `rgba(134, 239, 172, ${particleAlpha * 0.9})`;
+      ctx.beginPath();
+      ctx.ellipse(px, py, particleSize, particleSize * 2, Math.PI / 4 + i * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Enhanced sparkle burst effect at the start
+    if (healProgress < 0.35) {
+      const burstAlpha = (0.35 - healProgress) / 0.35;
+      for (let i = 0; i < 12; i++) {
+        const sparkleAngle = (i / 12) * Math.PI * 2;
+        const sparkleDist = size * 0.4 + healProgress * size * 1.8;
+        const sx = screenPos.x + Math.cos(sparkleAngle) * sparkleDist;
+        const sy = screenPos.y + Math.sin(sparkleAngle) * sparkleDist * 0.5;
+
+        ctx.fillStyle = `rgba(220, 252, 231, ${burstAlpha * 0.85})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3 * zoom * burstAlpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Central healing cross pulse
+      const crossPulse = 1 + Math.sin(healProgress * Math.PI * 6) * 0.2;
+      const centralCrossSize = 10 * zoom * burstAlpha * crossPulse;
+      ctx.fillStyle = `rgba(220, 252, 231, ${burstAlpha * 0.9})`;
+      ctx.fillRect(screenPos.x - centralCrossSize * 0.25, screenPos.y - size * 0.3 - centralCrossSize, centralCrossSize * 0.5, centralCrossSize * 2);
+      ctx.fillRect(screenPos.x - centralCrossSize, screenPos.y - size * 0.3 - centralCrossSize * 0.25, centralCrossSize * 2, centralCrossSize * 0.5);
+    }
+  }
+
   // HP Bar
   const barWidth = 45 * zoom;
   const barHeight = 6 * zoom;

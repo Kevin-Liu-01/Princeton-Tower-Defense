@@ -400,6 +400,7 @@ export type EffectType =
   | "fortress_shield"
   | "high_note"
   | "meteor_incoming"
+  | "meteor_falling"
   | "meteor_impact"
   | "lightning_bolt"
   | "freeze_wave";
@@ -420,6 +421,7 @@ export interface Effect {
   rotation?: number;
   duration?: number;
   strikeIndex?: number;
+  meteorIndex?: number;
 }
 
 // Particle types

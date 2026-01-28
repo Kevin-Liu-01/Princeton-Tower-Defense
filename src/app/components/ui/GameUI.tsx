@@ -1074,8 +1074,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     <div
       className="fixed pointer-events-none"
       style={{ left: panelX, top: panelY, zIndex: 200, width: panelWidth }}
+      onClick={(e) => e.stopPropagation()}
     >
-      <div className="bg-gradient-to-br from-amber-900/98 to-stone-900/98 p-3 border-2 border-amber-500 pointer-events-auto shadow-2xl rounded-xl backdrop-blur-sm relative">
+      <div 
+        className="bg-gradient-to-br from-amber-900/98 to-stone-900/98 p-3 border-2 border-amber-500 pointer-events-auto shadow-2xl rounded-xl backdrop-blur-sm relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={() => onClose()}
           className="absolute top-2 right-2 p-1 hover:bg-amber-800/50 rounded-lg transition-colors"
@@ -1385,7 +1389,10 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         <div className="flex gap-2">
           {(tower.level === 1 || tower.level === 2) && (
             <button
-              onClick={() => upgradeTower(tower.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                upgradeTower(tower.id);
+              }}
               disabled={pawPoints < upgradeCost}
               className={`flex-1 py-2.5 rounded-lg font-bold transition-all border text-xs ${pawPoints >= upgradeCost
                 ? "bg-gradient-to-b from-green-600 to-green-800 border-green-500 hover:from-green-500 hover:to-green-700"
@@ -1406,7 +1413,10 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           {tower.level === 3 && (
             <>
               <button
-                onClick={() => upgradeTower(tower.id, "A")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  upgradeTower(tower.id, "A");
+                }}
                 disabled={pawPoints < upgradeCost}
                 className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${pawPoints >= upgradeCost
                   ? "bg-gradient-to-b from-red-600 to-red-800 border-red-500 hover:from-red-500 hover:to-red-700"
@@ -1420,7 +1430,10 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 <div className="text-[10px] mt-0.5">{upgradeCost} PP</div>
               </button>
               <button
-                onClick={() => upgradeTower(tower.id, "B")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  upgradeTower(tower.id, "B");
+                }}
                 disabled={pawPoints < upgradeCost}
                 className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${pawPoints >= upgradeCost
                   ? "bg-gradient-to-b from-blue-600 to-blue-800 border-blue-500 hover:from-blue-500 hover:to-blue-700"

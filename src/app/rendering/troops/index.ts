@@ -104,6 +104,98 @@ export function renderTroop(
 
   ctx.restore();
 
+  // HEALING AURA EFFECT - Beautiful emerald healing visualization
+  if (troop.healFlash && Date.now() - troop.healFlash < 1000) {
+    const healProgress = (Date.now() - troop.healFlash) / 1000; // 0 to 1
+    const healAlpha = 1 - healProgress; // Fade out
+    const drawY = screenPos.y - size / 2;
+
+    // Healing glow base - layered green aura
+    const glowGrad = ctx.createRadialGradient(
+      screenPos.x, drawY, 0,
+      screenPos.x, drawY, size * 1.2
+    );
+    glowGrad.addColorStop(0, `rgba(74, 222, 128, ${0.4 * healAlpha})`);
+    glowGrad.addColorStop(0.4, `rgba(34, 197, 94, ${0.25 * healAlpha})`);
+    glowGrad.addColorStop(0.7, `rgba(22, 163, 74, ${0.1 * healAlpha})`);
+    glowGrad.addColorStop(1, "rgba(20, 83, 45, 0)");
+    ctx.fillStyle = glowGrad;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y, size * 0.9, size * 0.55, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner bright core
+    ctx.fillStyle = `rgba(134, 239, 172, ${0.35 * healAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y, size * 0.5, size * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rotating healing ring
+    ctx.save();
+    ctx.translate(screenPos.x, screenPos.y);
+    ctx.rotate(time * 2);
+    ctx.strokeStyle = `rgba(74, 222, 128, ${0.8 * healAlpha})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.setLineDash([6 * zoom, 4 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, size * 0.7, size * 0.42, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // 4 Healing cross symbols orbiting
+    const crossRotation = time * 1.5;
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2 + crossRotation;
+      const dist = size * 0.6;
+      const cx = screenPos.x + Math.cos(angle) * dist;
+      const cy = screenPos.y + Math.sin(angle) * dist * 0.5;
+      const crossSize = 5 * zoom * healAlpha;
+
+      // Healing cross with glow
+      ctx.fillStyle = `rgba(187, 247, 208, ${0.95 * healAlpha})`;
+      ctx.fillRect(cx - crossSize * 0.3, cy - crossSize, crossSize * 0.6, crossSize * 2);
+      ctx.fillRect(cx - crossSize, cy - crossSize * 0.3, crossSize * 2, crossSize * 0.6);
+
+      // Cross outline
+      ctx.strokeStyle = `rgba(34, 197, 94, ${0.7 * healAlpha})`;
+      ctx.lineWidth = 1 * zoom;
+      ctx.strokeRect(cx - crossSize * 0.3, cy - crossSize, crossSize * 0.6, crossSize * 2);
+      ctx.strokeRect(cx - crossSize, cy - crossSize * 0.3, crossSize * 2, crossSize * 0.6);
+    }
+
+    // Rising leaf/nature particles
+    for (let i = 0; i < 6; i++) {
+      const particlePhase = (time * 2 + i * 0.35) % 1;
+      const px = screenPos.x + Math.sin(time * 3 + i * 1.8) * size * 0.4;
+      const py = screenPos.y - particlePhase * size * 1.2;
+      const particleAlpha = (1 - particlePhase) * healAlpha;
+      const particleSize = (2 + Math.sin(i * 0.5) * 1) * zoom;
+
+      // Leaf-shaped particle
+      ctx.fillStyle = `rgba(134, 239, 172, ${particleAlpha * 0.9})`;
+      ctx.beginPath();
+      ctx.ellipse(px, py, particleSize, particleSize * 1.8, Math.PI / 4 + i * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Sparkle burst effect at the start
+    if (healProgress < 0.3) {
+      const burstAlpha = (0.3 - healProgress) / 0.3;
+      for (let i = 0; i < 8; i++) {
+        const sparkleAngle = (i / 8) * Math.PI * 2;
+        const sparkleDist = size * 0.3 + healProgress * size * 1.5;
+        const sx = screenPos.x + Math.cos(sparkleAngle) * sparkleDist;
+        const sy = screenPos.y + Math.sin(sparkleAngle) * sparkleDist * 0.5;
+
+        ctx.fillStyle = `rgba(220, 252, 231, ${burstAlpha * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2.5 * zoom * burstAlpha, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
   // HP Bar - scaled for larger troops
   if (troop.hp < troop.maxHp) {
     const barWidth = 30 * zoom * sizeScale;
