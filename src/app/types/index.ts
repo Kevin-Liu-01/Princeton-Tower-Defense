@@ -721,6 +721,95 @@ export interface Renderable {
 }
 
 // ============================================================================
+// DECORATION TYPES
+// ============================================================================
+
+export type DecorationType =
+  | "tree"
+  | "rock"
+  | "bush"
+  | "crater"
+  | "debris"
+  | "cart"
+  | "hut"
+  | "fire"
+  | "sword"
+  | "arrow"
+  | "skeleton"
+  | "barrel"
+  | "fence"
+  | "gravestone"
+  | "tent"
+  | "grass"
+  | "palm"
+  | "cactus"
+  | "dune"
+  | "pyramid"
+  | "obelisk"
+  | "pine"
+  | "snowman"
+  | "ice_crystal"
+  | "snow_pile"
+  | "lava_pool"
+  | "obsidian_spike"
+  | "charred_tree"
+  | "ember"
+  | "swamp_tree"
+  | "mushroom"
+  | "lily_pad"
+  | "fog_wisp"
+  | "ruins"
+  | "bones"
+  | "torch"
+  | "statue"
+  | "nassau_hall"
+  | "deep_water"
+  | "flowers"
+  | "signpost"
+  | "fountain"
+  | "bench"
+  | "lamppost"
+  | "witch_cottage"
+  | "cauldron"
+  | "tentacle"
+  | "giant_sphinx"
+  | "sphinx"
+  | "oasis_pool"
+  | "ice_fortress"
+  | "ice_throne"
+  | "obsidian_castle"
+  | "dark_throne"
+  | "dark_barracks"
+  | "dark_spire"
+  | "icicles"
+  | "frozen_pond"
+  | "frozen_gate"
+  | "broken_wall"
+  | "frozen_soldier"
+  | "battle_crater"
+  | "demon_statue"
+  | "fire_pit"
+  | "lily_pads"
+  | "mushroom_cluster"
+  | "fog_patch"
+  | "ruined_temple"
+  | "sunken_pillar"
+  | "idol_statue"
+  | "skeleton_pile"
+  | "tombstone"
+  | "broken_bridge"
+  | "frog";
+
+export interface Decoration {
+  type: DecorationType;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  variant: number;
+}
+
+// ============================================================================
 // CONSTANTS
 // ============================================================================
 

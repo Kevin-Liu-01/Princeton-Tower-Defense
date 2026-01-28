@@ -487,7 +487,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
 // Hero data - Enhanced HP for better survivability
 export const HERO_DATA: Record<HeroType, HeroData> = {
   tiger: {
-    name: "Tiger",
+    name: "Princeton Tiger",
     icon: "🐯",
     description:
       "The fearsome Princeton Tiger - an apex predator with devastating claw attacks and a terrifying roar that freezes enemies in fear.",
@@ -502,7 +502,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     isRanged: false,
   },
   tenor: {
-    name: "Tenor",
+    name: "Acapella Tenor",
     icon: "🎵",
     description:
       "A virtuoso vocalist whose voice is a weapon. The Tenor's sonic attacks pierce through even the toughest armor.",
@@ -532,7 +532,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     isRanged: false,
   },
   rocky: {
-    name: "Rocky",
+    name: "Rocky Raccoon",
     icon: "🌰",
     description:
       "A legendary gargoyle awakened from the campus rooftops. Hurls massive boulders that devastate enemy formations.",
@@ -562,7 +562,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     isRanged: true,
   },
   captain: {
-    name: "Captain",
+    name: "General Mercer",
     icon: "⚔️",
     description:
       "A legendary military commander who leads troops into battle. Rallies reinforcements with an inspiring battle cry.",
@@ -577,7 +577,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     isRanged: false,
   },
   engineer: {
-    name: "Engineer",
+    name: "BSE Engineer",
     icon: "🔧",
     description:
       "A brilliant inventor from E-Quad. Deploys automated turrets and uses advanced technology to defend.",
@@ -1113,7 +1113,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    startingPawPoints: 5000, // Hard level with beacon - need more towers
+    startingPawPoints: 500, // Hard level with beacon - need more towers
     specialTower: {
       pos: { x: 16, y: 8.5 },
       type: "beacon",

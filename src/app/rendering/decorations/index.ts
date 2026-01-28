@@ -15,6 +15,9 @@ import {
   drawWitchCottage,
 } from "./landmarks";
 
+// Export the decoration item renderer for use in page.tsx
+export { renderDecorationItem, type DecorationRenderParams } from "./renderDecorationItem";
+
 // ============================================================================
 // MAIN DECORATION RENDER FUNCTION
 // ============================================================================
