@@ -1965,7 +1965,7 @@ export default function PrincetonTowerDefense() {
             // ENHANCED CLUB TOWER - More useful income generator
             // Level 1: Basic Club - 8 PP every 8s
             // Level 2: Popular Club - 15 PP every 7s + bonus on kills nearby
-            // Level 3: Grand Club - 25 PP every 6s + slow enemies in range
+            // Level 3: Grand Club - 25 PP every 6s
             // Level 4A: Investment Bank - 40 PP every 5s + 10% bonus on all income
             // Level 4B: Recruitment Center - 20 PP every 6s + 15% damage buff to nearby towers
 
@@ -2020,27 +2020,6 @@ export default function PrincetonTowerDefense() {
                   t.id === tower.id ? { ...t, lastAttack: now } : t
                 )
               );
-            }
-
-            // Level 3+ Grand Club: Slow nearby enemies (greed aura)
-            if (tower.level >= 3) {
-              const auraRange = 100 + tower.level * 20;
-              enemies.forEach((e) => {
-                const enemyPos = getEnemyPosWithPath(e, selectedMap);
-                if (distance(towerWorldPos, enemyPos) <= auraRange) {
-                  const slowAmount = tower.level === 3 ? 0.15 : 0.2;
-                  setEnemies((prev) =>
-                    prev.map((enemy) =>
-                      enemy.id === e.id
-                        ? {
-                          ...enemy,
-                          slowEffect: Math.max(enemy.slowEffect, slowAmount),
-                        }
-                        : enemy
-                    )
-                  );
-                }
-              });
             }
 
             // Level 4B Recruitment Center and Level 4A Investment Bank buffs
@@ -3064,6 +3043,7 @@ export default function PrincetonTowerDefense() {
                       lastAttack: now,
                       attackAnim: troopData.isRanged ? 400 : 300,
                       rotation,
+                      targetEnemy: target.id,
                     };
                   }
                   return t;
@@ -4515,30 +4495,16 @@ export default function PrincetonTowerDefense() {
       });
     }
 
-
-    // Render decorations using the imported renderDecorationItem function
-    for (const dec of decorations) {
-      const screenPos = toScreen({ x: dec.x, y: dec.y });
-      const s = cameraZoom * dec.scale;
-
-      ctx.save();
-      renderDecorationItem({
-        ctx,
-        screenPos,
-        scale: s,
-        type: dec.type,
-        rotation: dec.rotation,
-        variant: dec.variant,
-        decorTime,
-        decorX: dec.x,
-        selectedMap,
-      });
-      ctx.restore();
-    }
-
-
     // Collect renderables
     const renderables: Renderable[] = [];
+    // Add decorations to renderables for proper depth sorting
+    decorations.forEach((dec) => {
+      renderables.push({
+        type: "decoration",
+        data: { ...dec, decorTime, selectedMap },
+        isoY: (dec.x + dec.y) * 0.25,
+      });
+    });
     towers.forEach((tower) => {
       const worldPos = gridToWorld(tower.pos);
       renderables.push({
@@ -4913,6 +4879,34 @@ export default function PrincetonTowerDefense() {
             cameraZoom
           );
           break;
+        case "decoration": {
+          const decData = r.data as {
+            type: DecorationType;
+            x: number;
+            y: number;
+            scale: number;
+            rotation: number;
+            variant: number;
+            decorTime: number;
+            selectedMap: string;
+          };
+          const decScreenPos = toScreen({ x: decData.x, y: decData.y });
+          const decScale = cameraZoom * decData.scale;
+          ctx.save();
+          renderDecorationItem({
+            ctx,
+            screenPos: decScreenPos,
+            scale: decScale,
+            type: decData.type,
+            rotation: decData.rotation,
+            variant: decData.variant,
+            decorTime: decData.decorTime,
+            decorX: decData.x,
+            selectedMap: decData.selectedMap,
+          });
+          ctx.restore();
+          break;
+        }
         case "tower":
           renderTower(
             ctx,
@@ -6329,6 +6323,7 @@ export default function PrincetonTowerDefense() {
           <CameraControls
             setCameraOffset={setCameraOffset}
             setCameraZoom={setCameraZoom}
+            defaultOffset={LEVEL_DATA[selectedMap]?.camera?.offset}
           />
           {/* Tooltips - hide when upgrade panel is open */}
           {hoveredTower && !selectedTower &&
@@ -6337,21 +6332,44 @@ export default function PrincetonTowerDefense() {
               if (!tower) return null;
               return <TowerHoverTooltip tower={tower} position={mousePos} />;
             })()}
-          {hoveredHero && hero && !hero.dead && (
-            <Tooltip
-              position={mousePos}
-              content={
-                <>
-                  <div className="text-sm font-bold text-amber-300 uppercase">
-                    {hero.type}
+          {hoveredHero && hero && !hero.dead && (() => {
+            const heroData = HERO_DATA[hero.type];
+            const tooltipWidth = 200;
+            let tooltipX = mousePos.x + 20;
+            let tooltipY = mousePos.y - 30;
+            if (tooltipX + tooltipWidth > window.innerWidth - 10)
+              tooltipX = mousePos.x - tooltipWidth - 20;
+            if (tooltipY < 60) tooltipY = 60;
+
+            return (
+              <div
+                className="fixed pointer-events-none bg-gradient-to-b from-stone-900/98 to-stone-950/98 border border-amber-500/70 shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+                style={{ left: tooltipX, top: tooltipY, zIndex: 250, width: tooltipWidth }}
+              >
+                {/* Header */}
+                <div className="bg-amber-900/40 px-3 py-1.5 border-b border-amber-700/50">
+                  <div className="font-bold text-amber-200 text-sm">{heroData.name}</div>
+                  <div className="text-xs text-red-300">HP: {Math.floor(hero.hp)}/{hero.maxHp}</div>
+                </div>
+
+                {/* Stats row */}
+                <div className="px-3 py-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+                  <div className="flex items-center gap-1">
+                    <span className="text-orange-400">⚔</span>
+                    <span className="text-orange-300 font-medium">{heroData.damage}</span>
                   </div>
-                  <div className="text-xs text-amber-400">
-                    HP: {Math.floor(hero.hp)}/{hero.maxHp}
+                  <div className="flex items-center gap-1">
+                    <span className="text-blue-400">◎</span>
+                    <span className="text-blue-300 font-medium">{heroData.range}</span>
                   </div>
-                </>
-              }
-            />
-          )}
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-400">»</span>
+                    <span className="text-green-300 font-medium">{heroData.speed}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           {/* Tower upgrade panel */}
           {selectedTower &&
             (() => {

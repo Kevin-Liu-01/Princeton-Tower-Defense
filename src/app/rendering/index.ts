@@ -17,7 +17,6 @@ export {
 
 export { renderSpecialBuilding } from "./towers/specialBuildings";
 
-
 // Enemy rendering 
 export { renderEnemy } from "./enemies";
 

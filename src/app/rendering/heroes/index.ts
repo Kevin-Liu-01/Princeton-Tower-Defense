@@ -221,7 +221,7 @@ export function renderHero(
   ctx.shadowColor = hData.color;
   ctx.shadowBlur = 4 * zoom;
   ctx.fillStyle = "#fff";
-  ctx.font = `bold ${10 * zoom}px Arial`;
+  ctx.font = `bold ${10 * zoom}px bc-novatica-cyr`;
   ctx.textAlign = "center";
   ctx.fillText(hData.name, screenPos.x, barY - 5 * zoom);
   ctx.shadowBlur = 0;

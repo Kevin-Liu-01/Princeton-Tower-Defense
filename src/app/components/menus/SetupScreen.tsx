@@ -1,6 +1,11 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { Shield, Zap, ChevronRight, Swords, X } from "lucide-react";
+import { 
+  Shield, Zap, ChevronRight, Swords, X, Crown, Heart, Target, 
+  Wind, Timer, Sparkles, Crosshair, Flame, Snowflake, Coins,
+  Users, Gauge, TrendingUp, Star, Info, Wrench, Volume2,
+  Mountain, Building, CircleDot, Check
+} from "lucide-react";
 import type {
   HeroType,
   SpellType,
@@ -9,7 +14,7 @@ import type {
   TowerType,
   EnemyType,
 } from "../../types";
-import { HERO_DATA, SPELL_DATA, TOWER_DATA, ENEMY_DATA } from "../../constants";
+import { HERO_DATA, SPELL_DATA, TOWER_DATA, ENEMY_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
 
 // Import sprite components from GameUI
 import { TowerSprite, HeroSprite, SpellSprite } from "../ui/GameUI";
@@ -186,6 +191,8 @@ export function SetupScreen({
     "mathey",
     "rocky",
     "scott",
+    "blair",
+    "engineer",
   ];
   const spellOptions: SpellType[] = [
     "fireball",
@@ -194,6 +201,26 @@ export function SetupScreen({
     "payday",
     "reinforcements",
   ];
+
+  // Hero role data for display
+  const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
+    tiger: { role: "Melee Fighter", icon: <Swords size={12} />, color: "orange" },
+    tenor: { role: "AoE Support", icon: <Volume2 size={12} />, color: "purple" },
+    mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
+    rocky: { role: "Ranged Artillery", icon: <Target size={12} />, color: "green" },
+    scott: { role: "Support Buffer", icon: <TrendingUp size={12} />, color: "cyan" },
+    blair: { role: "Summoner", icon: <Users size={12} />, color: "red" },
+    engineer: { role: "Turret Builder", icon: <Wrench size={12} />, color: "amber" },
+  };
+
+  // Spell type data for display
+  const spellInfo: Record<string, { category: string; icon: React.ReactNode; color: string }> = {
+    fireball: { category: "Damage", icon: <Flame size={12} />, color: "orange" },
+    lightning: { category: "Chain Damage", icon: <Zap size={12} />, color: "yellow" },
+    freeze: { category: "Crowd Control", icon: <Snowflake size={12} />, color: "cyan" },
+    payday: { category: "Economy", icon: <Coins size={12} />, color: "amber" },
+    reinforcements: { category: "Summon", icon: <Users size={12} />, color: "green" },
+  };
 
   const levels = [
     {

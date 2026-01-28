@@ -717,7 +717,8 @@ export interface Renderable {
     | "tower-preview"
     | "station-range"
     | "tower-range"
-    | "special-building";
+    | "special-building"
+    | "decoration";
   data: unknown;
   isoY: number;
 }

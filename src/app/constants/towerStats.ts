@@ -371,11 +371,10 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       },
       3: {
         cost: 280,
-        description: "Grand Club - 25 PP per 6 seconds + slow",
+        description: "Grand Club - 25 PP per 6 seconds",
         overrides: {
           income: 25,
           incomeInterval: 6000,
-          
         },
       },
     },

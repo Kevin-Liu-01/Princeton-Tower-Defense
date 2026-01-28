@@ -377,11 +377,13 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 interface CameraControlsProps {
   setCameraOffset: React.Dispatch<React.SetStateAction<Position>>;
   setCameraZoom: React.Dispatch<React.SetStateAction<number>>;
+  defaultOffset?: Position;
 }
 
 export const CameraControls: React.FC<CameraControlsProps> = ({
   setCameraOffset,
   setCameraZoom,
+  defaultOffset = { x: -40, y: -60 },
 }) => {
   return (
     <div
@@ -408,7 +410,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             <ArrowLeftCircle size={12} className="text-amber-400" />
           </button>
           <button
-            onClick={() => setCameraOffset({ x: -40, y: -60 })}
+            onClick={() => setCameraOffset(defaultOffset)}
             className="p-1 bg-amber-950/80 hover:bg-amber-700/60 rounded transition-colors border border-amber-800 text-amber-400 text-[8px]"
           >
             ●
@@ -1722,6 +1724,27 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
             </div>
           )}
         </div>
+
+        {/* Level 4 Eating Club Aura Buffs */}
+        {tower.type === "club" && tower.level === 4 && tower.upgrade && (
+          <div className="mt-2 pt-2 border-t border-amber-700/40">
+
+            {tower.upgrade === "A" && (
+              <div className="flex items-center gap-1 text-[10px]">
+                <Target size={11} className="text-cyan-400" />
+                <span className="text-cyan-300 font-medium">+15% Range</span>
+                <span className="text-cyan-500/70 text-[9px]">to nearby towers</span>
+              </div>
+            )}
+            {tower.upgrade === "B" && (
+              <div className="flex items-center gap-1 text-[10px]">
+                <Swords size={11} className="text-orange-400" />
+                <span className="text-orange-300 font-medium">+15% Damage</span>
+                <span className="text-orange-500/70 text-[9px]">to nearby towers</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Station troops */}
         {tower.type === "station" && (

@@ -787,7 +787,7 @@ export function renderSpecialBuilding(
           ctx.fill();
   
           ctx.fillStyle = "#E0E0E0";
-          ctx.font = `800 ${7 * s2}px "Roboto", Arial, sans-serif`;
+          ctx.font = `800 ${7 * s2}px "bc-novatica-cyr", Arial, sans-serif`;
           ctx.textAlign = "center";
           ctx.shadowColor = "black";
           ctx.shadowBlur = 4;
