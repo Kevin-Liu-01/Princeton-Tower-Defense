@@ -203,7 +203,7 @@ export const TOWER_DATA: Record<
       A: {
         name: "Investment Bank",
         desc: "Maximum passive income",
-        effect: "40 PP every 5s + 10% bonus on all income",
+        effect: "40 PP every 5s + 15% range buff to nearby towers",
       },
       B: {
         name: "Recruitment Center",

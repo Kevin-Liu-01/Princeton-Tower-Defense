@@ -143,6 +143,8 @@ import {
   BuildMenu,
   TowerUpgradePanel,
   Tooltip,
+  TowerHoverTooltip,
+  BuildTowerTooltip,
   PlacingTroopIndicator,
   SpecialBuildingTooltip,
 } from "./components/ui/GameUI";
@@ -642,20 +644,68 @@ export default function PrincetonTowerDefense() {
 
       // =========================================================================
       // DYNAMIC BUFF REGISTRATION
-      // We compute these "live" rather than relying on stale state
+      // Compute buffs from all sources: Beacon, Investment Bank, Recruitment Center, F. Scott
       // =========================================================================
       setTowers((prev) =>
         prev.map((t) => {
+          if (t.type === "club") return t; // Clubs don't receive buffs
+
           const tWorldPos = gridToWorld(t.pos);
+
+          // Calculate RANGE buffs (multiplicative stacking)
+          let rangeMultiplier = 1.0;
+
+          // Beacon range buff (+20%)
           const isBeaconNearby =
             spec?.type === "beacon" && distance(tWorldPos, specWorldPos!) < 250;
+          if (isBeaconNearby) {
+            rangeMultiplier *= 1.2;
+          }
+
+          // Investment Bank range buff (+15% each, from nearby level 4A clubs)
+          prev.forEach((club) => {
+            if (club.type === "club" && club.level === 4 && club.upgrade === "A" && club.id !== t.id) {
+              const clubPos = gridToWorld(club.pos);
+              if (distance(tWorldPos, clubPos) <= 200) {
+                rangeMultiplier *= 1.15;
+              }
+            }
+          });
+
+          // Cap range boost at 2.5x
+          rangeMultiplier = Math.min(rangeMultiplier, 2.5);
+
+          // Calculate DAMAGE buffs (multiplicative stacking)
+          let damageMultiplier = 1.0;
+
+          // F. Scott's Inspiration buff (+50%, time-limited)
           const isScottActive = t.boostEnd ? now < t.boostEnd : false;
+          if (isScottActive && t.isBuffed) {
+            damageMultiplier *= 1.5;
+          }
+
+          // Recruitment Center damage buff (+15% each, from nearby level 4B clubs)
+          prev.forEach((club) => {
+            if (club.type === "club" && club.level === 4 && club.upgrade === "B" && club.id !== t.id) {
+              const clubPos = gridToWorld(club.pos);
+              if (distance(tWorldPos, clubPos) <= 200) {
+                damageMultiplier *= 1.15;
+              }
+            }
+          });
+
+          // Cap damage boost at 3.0x
+          damageMultiplier = Math.min(damageMultiplier, 3.0);
+
+          const hasAnyBuff = rangeMultiplier > 1.0 || damageMultiplier > 1.0;
 
           return {
             ...t,
-            rangeBoost: isBeaconNearby ? 1.2 : 1.0,
-            damageBoost: isScottActive ? t.damageBoost || 1.5 : 1.0,
-            isBuffed: isBeaconNearby || isScottActive,
+            rangeBoost: rangeMultiplier,
+            damageBoost: damageMultiplier,
+            isBuffed: hasAnyBuff,
+            // Clear boostEnd if Scott's buff expired
+            boostEnd: isScottActive ? t.boostEnd : undefined,
           };
         })
       );
@@ -703,17 +753,8 @@ export default function PrincetonTowerDefense() {
         const spec = LEVEL_DATA[selectedMap].specialTower;
         const specWorldPos = gridToWorld(spec.pos);
 
-        // A. BEACON: Continuous Range Buff
-        if (spec.type === "beacon") {
-          setTowers((prev) =>
-            prev.map((t) => {
-              if (distance(gridToWorld(t.pos), specWorldPos) < 250) {
-                return { ...t, rangeBoost: 1.2, isBuffed: true };
-              }
-              return t;
-            })
-          );
-        }
+        // A. BEACON: Range buff is now handled in DYNAMIC BUFF REGISTRATION above
+        // which properly stacks with Investment Bank range buffs
 
         // B. SHRINE: Periodic HP Pulse for Hero and Troops
         if (spec.type === "shrine" && now % 5000 < deltaTime) {
@@ -2002,25 +2043,9 @@ export default function PrincetonTowerDefense() {
               });
             }
 
-            // Level 4B Recruitment Center: Buff nearby towers
-            if (tower.level === 4 && tower.upgrade === "B") {
-              const buffRange = 150;
-              setTowers((prev) =>
-                prev.map((t) => {
-                  if (t.id !== tower.id && t.type !== "club") {
-                    const otherPos = gridToWorld(t.pos);
-                    if (distance(towerWorldPos, otherPos) <= buffRange) {
-                      return {
-                        ...t,
-                        damageBoost: Math.max(t.damageBoost || 1, 1.15),
-                        boostEnd: now + 2000,
-                      };
-                    }
-                  }
-                  return t;
-                })
-              );
-            }
+            // Level 4B Recruitment Center and Level 4A Investment Bank buffs
+            // are now handled in the DYNAMIC BUFF REGISTRATION section above
+            // which runs every frame and properly calculates stacking buffs
           } else if (tower.type === "library") {
             let appliedSlow = false;
             let appliedDamage = false;
@@ -5529,7 +5554,7 @@ export default function PrincetonTowerDefense() {
       const cost = SPELL_DATA[spellType].cost;
       if (pawPoints < cost) return;
       if (
-        (spellType === "fireball" || spellType === "lightning") &&
+        (spellType === "fireball" || spellType === "lightning" || spellType === "freeze" || spellType === "payday") &&
         enemies.length === 0
       ) {
         return;
@@ -6021,17 +6046,19 @@ export default function PrincetonTowerDefense() {
       }
 
       case "scott": {
-        // INSPIRATION - Boost all tower damage
+        // INSPIRATION - Boost all tower damage (stacks with Recruitment Center and other buffs)
+        // Just mark towers as buffed with a boostEnd time - actual buff calculation is done
+        // in the DYNAMIC BUFF REGISTRATION section which handles stacking properly
         const boostRadius = 450;
         setTowers((prev) =>
           prev.map((t) => {
+            if (t.type === "club") return t; // Clubs don't receive buffs
             const tWorldPos = gridToWorld(t.pos);
             if (distance(hero.pos, tWorldPos) <= boostRadius) {
               return {
                 ...t,
-                damageBoost: 1.5,
                 boostEnd: Date.now() + 8000, // 8 second duration
-                isBuffed: true,
+                isBuffed: true, // Mark as having F. Scott's buff
               };
             }
             return t;
@@ -6308,77 +6335,7 @@ export default function PrincetonTowerDefense() {
             (() => {
               const tower = towers.find((t) => t.id === hoveredTower);
               if (!tower) return null;
-              const tData = TOWER_DATA[tower.type];
-              const stats = calculateTowerStats(
-                tower.type,
-                tower.level,
-                tower.upgrade,
-                tower.rangeBoost || 1,
-                tower.damageBoost || 1
-              );
-              return (
-                <Tooltip
-                  position={mousePos}
-                  content={
-                    <>
-                      <div className="text-sm font-bold text-amber-300 mb-1">
-                        {tData.name}
-                      </div>
-                      <div className="text-xs text-amber-400">{tData.desc}</div>
-                      <div className="text-[10px] text-amber-500 mt-1">
-                        Level {tower.level}
-                        {tower.level === 4 &&
-                          tower.upgrade &&
-                          ` (Path ${tower.upgrade})`}
-                      </div>
-                      <div className="flex flex-wrap gap-x-2 text-[9px] mt-1">
-                        {stats.damage > 0 && (
-                          <span className="text-red-400">DMG: {Math.floor(stats.damage)}</span>
-                        )}
-                        {stats.range > 0 && (
-                          <span className="text-blue-400">RNG: {Math.floor(stats.range)}</span>
-                        )}
-                        {stats.attackSpeed > 0 && (
-                          <span className="text-green-400">SPD: {stats.attackSpeed}ms</span>
-                        )}
-                        {stats.slowAmount && stats.slowAmount > 0 && (
-                          <span className="text-purple-400">SLOW: {Math.round(stats.slowAmount * 100)}%</span>
-                        )}
-                        {tower.type === "station" && (
-                          <span className="text-amber-400">
-                            Troops: {tower.currentTroopCount || 0}/{MAX_STATION_TROOPS}
-                          </span>
-                        )}
-                        {tower.type === "club" && stats.income && (
-                          <span className="text-amber-400">+{stats.income}PP/{(stats.incomeInterval || 8000) / 1000}s</span>
-                        )}
-                      </div>
-                    </>
-                  }
-                />
-              );
-            })()}
-          {hoveredBuildTower &&
-            (() => {
-              const tData = TOWER_DATA[hoveredBuildTower];
-              return (
-                <Tooltip
-                  position={mousePos}
-                  content={
-                    <>
-                      <div className="text-sm font-bold text-amber-300 mb-1">
-                        {tData.name}
-                      </div>
-                      <div className="text-xs text-amber-400">{tData.desc}</div>
-                      <div className="text-[10px] text-amber-500 mt-1">
-                        Cost: {tData.cost}PP
-                        {tData.attackSpeed > 0 &&
-                          ` | DMG: ${tData.damage} | RNG: ${tData.range}`}
-                      </div>
-                    </>
-                  }
-                />
-              );
+              return <TowerHoverTooltip tower={tower} position={mousePos} />;
             })()}
           {hoveredHero && hero && !hero.dead && (
             <Tooltip

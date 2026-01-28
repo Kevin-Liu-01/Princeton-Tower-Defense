@@ -45,6 +45,17 @@ import {
   Activity,
   Home,
   Sparkles,
+  Flame,
+  TrendingUp,
+  // Upgrade path icons
+  Radio,
+  Music,
+  Focus,
+  Mountain,
+  Landmark,
+  UserPlus,
+  Repeat,
+  CircleDot,
 } from "lucide-react";
 import type {
   Tower,
@@ -853,42 +864,39 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   <div className="text-[9px] text-amber-400 flex items-center gap-1">
                     <PawPrint size={10} /> {data.cost} PP
                   </div>
-                  <div className="flex gap-1.5 text-[8px] mt-0.5">
-                    {data.damage > 0 && (
-                      <span className="text-red-400 gap-1">
-                        <Swords size={10} className="inline" /> {data.damage}
+                  <div className="flex gap-1.5 text-[8px] mt-0.5 flex-wrap">
+                    {/* Standard combat towers */}
+                    {data.damage > 0 && type !== "library" && (
+                      <span className="text-red-400 flex items-center gap-0.5">
+                        <Swords size={9} /> {data.damage}
                       </span>
                     )}
-                    {data.range > 0 && (
-                      <span className="text-blue-400 gap-1">
-                        <TargetIcon size={10} className="inline" /> {data.range}
+                    {data.range > 0 && type !== "station" && type !== "club" && (
+                      <span className="text-blue-400 flex items-center gap-0.5">
+                        <TargetIcon size={9} /> {data.range}
                       </span>
                     )}
                     {data.attackSpeed > 0 && (
-                      <span className="text-green-400 gap-1">
-                        <GaugeIcon size={10} className="inline" />{" "}
-                        {data.attackSpeed / 1000}s
+                      <span className="text-green-400 flex items-center gap-0.5">
+                        <GaugeIcon size={9} /> {data.attackSpeed}ms
                       </span>
                     )}
-                    {
-                      //if is dinky station
-                      type === "station" && (
-                        <span className="text-purple-300">
-                          <UsersIcon className="inline size-2" />{" "}
-                          {TROOP_DATA.footsoldier.hp}HP /{" "}
-                          {TROOP_DATA.footsoldier.damage}DMG
-                        </span>
-                      )
-                    }
+                    {/* Dinky Station */}
+                    {type === "station" && (
+                      <span className="text-purple-300 flex items-center gap-0.5">
+                        <UsersIcon size={9} /> {TROOP_DATA.footsoldier.hp}HP / {TROOP_DATA.footsoldier.damage}DMG
+                      </span>
+                    )}
+                    {/* Eating Club */}
                     {type === "club" && (
-                      <span className="text-orange-400 gap-1">
-                        <CoinsIcon size={10} className="inline" /> +{8}
-                        PP per 8 sec.
+                      <span className="text-amber-400 flex items-center gap-0.5">
+                        <CoinsIcon size={9} /> +8 PP/8s
                       </span>
                     )}
+                    {/* Firestone Library */}
                     {type === "library" && (
-                      <span className="text-cyan-400 gap-1">
-                        <Snowflake size={10} className="inline" /> 30% Slow
+                      <span className="text-purple-400 flex items-center gap-0.5">
+                        <Snowflake size={9} /> 20% Slow
                       </span>
                     )}
                   </div>
@@ -921,7 +929,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                     </div>
                   </div>
 
-                  {/* Stats Grid */}
+                  {/* Stats Grid - Tower Type Specific */}
                   <div className="grid grid-cols-4 gap-1.5 mb-2 text-[10px]">
                     <div className="bg-amber-950/60 rounded px-2 py-1 text-center border border-amber-800/40">
                       <div className="text-amber-500">Cost</div>
@@ -929,20 +937,24 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                         {data.cost}
                       </div>
                     </div>
-                    {data.damage > 0 && (
+
+                    {/* Standard combat towers */}
+                    {data.damage > 0 && type !== "library" && (
                       <div className="bg-red-950/60 rounded px-2 py-1 text-center border border-red-800/40">
-                        <div className="text-red-500">DMG</div>
+                        <div className="text-red-500">Damage</div>
                         <div className="text-red-300 font-bold">
                           {data.damage}
                         </div>
                       </div>
                     )}
-                    <div className="bg-blue-950/60 rounded px-2 py-1 text-center border border-blue-800/40">
-                      <div className="text-blue-500">Range</div>
-                      <div className="text-blue-300 font-bold">
-                        {data.range}
+                    {data.range > 0 && type !== "station" && type !== "club" && (
+                      <div className="bg-blue-950/60 rounded px-2 py-1 text-center border border-blue-800/40">
+                        <div className="text-blue-500">Range</div>
+                        <div className="text-blue-300 font-bold">
+                          {data.range}
+                        </div>
                       </div>
-                    </div>
+                    )}
                     {data.attackSpeed > 0 && (
                       <div className="bg-green-950/60 rounded px-2 py-1 text-center border border-green-800/40">
                         <div className="text-green-500">Speed</div>
@@ -950,6 +962,56 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                           {data.attackSpeed}ms
                         </div>
                       </div>
+                    )}
+
+                    {/* Dinky Station - Show troop stats */}
+                    {type === "station" && (
+                      <>
+                        <div className="bg-red-950/60 rounded px-2 py-1 text-center border border-red-800/40">
+                          <div className="text-red-500">Troop HP</div>
+                          <div className="text-red-300 font-bold">
+                            {TROOP_DATA.footsoldier.hp}
+                          </div>
+                        </div>
+                        <div className="bg-orange-950/60 rounded px-2 py-1 text-center border border-orange-800/40">
+                          <div className="text-orange-500">Troop DMG</div>
+                          <div className="text-orange-300 font-bold">
+                            {TROOP_DATA.footsoldier.damage}
+                          </div>
+                        </div>
+                        <div className="bg-purple-950/60 rounded px-2 py-1 text-center border border-purple-800/40">
+                          <div className="text-purple-500">Max Troops</div>
+                          <div className="text-purple-300 font-bold">1</div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Firestone Library - Show slow stats */}
+                    {type === "library" && (
+                      <>
+                        <div className="bg-purple-950/60 rounded px-2 py-1 text-center border border-purple-800/40">
+                          <div className="text-purple-500">Slow</div>
+                          <div className="text-purple-300 font-bold">20%</div>
+                        </div>
+                        <div className="bg-cyan-950/60 rounded px-2 py-1 text-center border border-cyan-800/40">
+                          <div className="text-cyan-500">Duration</div>
+                          <div className="text-cyan-300 font-bold">1s</div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Eating Club - Show income stats */}
+                    {type === "club" && (
+                      <>
+                        <div className="bg-green-950/60 rounded px-2 py-1 text-center border border-green-800/40">
+                          <div className="text-green-500">Income</div>
+                          <div className="text-green-300 font-bold">+8 PP</div>
+                        </div>
+                        <div className="bg-cyan-950/60 rounded px-2 py-1 text-center border border-cyan-800/40">
+                          <div className="text-cyan-500">Interval</div>
+                          <div className="text-cyan-300 font-bold">8s</div>
+                        </div>
+                      </>
                     )}
                   </div>
 
@@ -1019,6 +1081,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   onClose,
 }) => {
   const towerData = TOWER_DATA[tower.type];
+  const towerStatsDef = TOWER_STATS[tower.type];
 
   // Get upgrade cost from towerStats.ts
   const upgradeCost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
@@ -1031,8 +1094,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const totalInvested = baseCost + level2Cost + level3Cost + level4Cost;
   const sellValue = Math.round(totalInvested * 0.7);
 
-  const levelDesc = towerData.levelDesc[tower.level] || "";
-
   // Get current stats using calculateTowerStats (without external buffs for base display)
   const baseStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, 1, 1);
 
@@ -1042,32 +1103,179 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const buffedStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, rangeBoost, damageBoost);
 
   // Get next level stats for comparison
-  const nextLevel = tower.level + 1;
   const nextStats = tower.level < 4
-    ? calculateTowerStats(tower.type, nextLevel, undefined, 1, 1)
+    ? calculateTowerStats(tower.type, tower.level + 1, undefined, 1, 1)
     : null;
+
+  // Get upgrade path stats for level 3 preview
+  const upgradeAStats = tower.level === 3 ? calculateTowerStats(tower.type, 4, "A", 1, 1) : null;
+  const upgradeBStats = tower.level === 3 ? calculateTowerStats(tower.type, 4, "B", 1, 1) : null;
 
   // Determine if stats are being buffed
   const hasRangeBuff = rangeBoost > 1;
   const hasDamageBuff = damageBoost > 1;
 
-  const currentStats = {
-    damage: baseStats.damage,
-    range: baseStats.range,
-    attackSpeed: baseStats.attackSpeed,
-    buffedDamage: buffedStats.damage,
-    buffedRange: buffedStats.range,
-    slowAmount: baseStats.slowAmount,
-    income: baseStats.income,
-    incomeInterval: baseStats.incomeInterval,
-    chainTargets: baseStats.chainTargets,
-  };
+  // Build dynamic stats array based on what this tower has
+  const statsToShow: Array<{
+    key: string;
+    label: string;
+    icon: React.ReactNode;
+    value: number | string;
+    buffedValue?: number | string;
+    nextValue?: number | string;
+    isBoosted?: boolean;
+    boostAmount?: number;
+    colorClass: string;
+    buffColorClass: string;
+  }> = [];
 
-  const panelWidth = 300;
-  const panelHeight = tower.level === 3 ? 400 : 320;
+  // Damage
+  if (baseStats.damage > 0) {
+    statsToShow.push({
+      key: "damage",
+      label: "Damage",
+      icon: <Swords size={14} />,
+      value: Math.floor(baseStats.damage),
+      buffedValue: hasDamageBuff ? Math.floor(buffedStats.damage) : undefined,
+      nextValue: nextStats && nextStats.damage > baseStats.damage ? Math.floor(nextStats.damage) : undefined,
+      isBoosted: hasDamageBuff,
+      boostAmount: hasDamageBuff ? Math.round((damageBoost - 1) * 100) : undefined,
+      colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
+      buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
+    });
+  }
+
+  // Range  
+  if (baseStats.range > 0 && tower.type !== "club") {
+    statsToShow.push({
+      key: "range",
+      label: "Range",
+      icon: <Target size={14} />,
+      value: Math.floor(baseStats.range),
+      buffedValue: hasRangeBuff ? Math.floor(buffedStats.range) : undefined,
+      nextValue: nextStats && nextStats.range > baseStats.range ? Math.floor(nextStats.range) : undefined,
+      isBoosted: hasRangeBuff,
+      boostAmount: hasRangeBuff ? Math.round((rangeBoost - 1) * 100) : undefined,
+      colorClass: "bg-blue-950/60 border-blue-800/50 text-blue-400",
+      buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
+    });
+  }
+
+  // Attack Speed
+  if (baseStats.attackSpeed > 0) {
+    statsToShow.push({
+      key: "speed",
+      label: "Speed",
+      icon: <Gauge size={14} />,
+      value: `${baseStats.attackSpeed}ms`,
+      nextValue: nextStats && nextStats.attackSpeed !== baseStats.attackSpeed && nextStats.attackSpeed > 0
+        ? `${Math.floor(nextStats.attackSpeed)}ms` : undefined,
+      colorClass: "bg-green-950/60 border-green-800/50 text-green-400",
+      buffColorClass: "bg-green-950/60 border-green-500/70 text-green-400",
+    });
+  }
+
+  // Slow Amount
+  if (baseStats.slowAmount && baseStats.slowAmount > 0) {
+    statsToShow.push({
+      key: "slow",
+      label: "Slow",
+      icon: <Snowflake size={14} />,
+      value: `${Math.round(baseStats.slowAmount * 100)}%`,
+      nextValue: nextStats && nextStats.slowAmount && nextStats.slowAmount > baseStats.slowAmount
+        ? `${Math.round(nextStats.slowAmount * 100)}%` : undefined,
+      colorClass: "bg-purple-950/60 border-purple-800/50 text-purple-400",
+      buffColorClass: "bg-purple-950/60 border-purple-500/70 text-purple-400",
+    });
+  }
+
+  // Chain Targets - Changed to "Targets" with Users icon
+  if (baseStats.chainTargets && baseStats.chainTargets > 1) {
+    statsToShow.push({
+      key: "chain",
+      label: "Targets",
+      icon: <Users size={14} />,
+      value: `${baseStats.chainTargets}`,
+      nextValue: nextStats && nextStats.chainTargets && nextStats.chainTargets > baseStats.chainTargets
+        ? `${nextStats.chainTargets}` : undefined,
+      colorClass: "bg-yellow-950/60 border-yellow-800/50 text-yellow-400",
+      buffColorClass: "bg-yellow-950/60 border-yellow-500/70 text-yellow-400",
+    });
+  }
+
+  // Splash Radius
+  if (baseStats.splashRadius && baseStats.splashRadius > 0) {
+    statsToShow.push({
+      key: "splash",
+      label: "Splash",
+      icon: <Target size={14} />,
+      value: Math.floor(baseStats.splashRadius),
+      colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
+      buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
+    });
+  }
+
+  // Stun Chance (for towers like Blizzard)
+  if (baseStats.stunChance && baseStats.stunChance > 0) {
+    statsToShow.push({
+      key: "stun",
+      label: "Freeze",
+      icon: <Snowflake size={14} />,
+      value: `${Math.round(baseStats.stunChance * 100)}%`,
+      colorClass: "bg-indigo-950/60 border-indigo-800/50 text-indigo-400",
+      buffColorClass: "bg-indigo-950/60 border-indigo-500/70 text-indigo-400",
+    });
+  }
+
+  // Burn Damage (for towers like Flamethrower)
+  if (baseStats.burnDamage && baseStats.burnDamage > 0) {
+    statsToShow.push({
+      key: "burn",
+      label: "Burn",
+      icon: <Flame size={14} />,
+      value: `${baseStats.burnDamage}/s`,
+      colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
+      buffColorClass: "bg-red-950/60 border-red-500/70 text-red-400",
+    });
+  }
+
+  // Support tower buffs - Check the active upgrade path for buffs
+  const activeUpgradeStats = tower.level === 4 && tower.upgrade ? towerStatsDef?.upgrades?.[tower.upgrade]?.stats : null;
+
+  // For non-club towers, show aura buffs in main stats grid
+  // For club towers, we'll show them in the Paw Points Generation box instead
+  if (tower.type !== "club") {
+    if (activeUpgradeStats?.rangeBuff) {
+      statsToShow.push({
+        key: "rangeBuff",
+        label: "Range Aura",
+        icon: <Target size={14} />,
+        value: `+${Math.round(activeUpgradeStats.rangeBuff * 100)}%`,
+        colorClass: "bg-cyan-950/60 border-cyan-800/50 text-cyan-400",
+        buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
+      });
+    }
+
+    if (activeUpgradeStats?.damageBuff) {
+      statsToShow.push({
+        key: "damageBuff",
+        label: "DMG Aura",
+        icon: <TrendingUp size={14} />,
+        value: `+${Math.round(activeUpgradeStats.damageBuff * 100)}%`,
+        colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
+        buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
+      });
+    }
+  }
+
+  // Determine grid columns based on stat count
+  const gridCols = statsToShow.length <= 2 ? 2 : statsToShow.length <= 3 ? 3 : 4;
+
+  // Position panel - shifted down to be closer to tower
+  const panelWidth = 280;
   let panelX = screenPos.x - panelWidth / 2;
   panelX = Math.max(10, Math.min(panelX, window.innerWidth - panelWidth - 10));
-  let panelY = screenPos.y - panelHeight - 60;
+  let panelY = screenPos.y - 180; // Shifted down from -300
   panelY = Math.max(60, panelY);
 
   return (
@@ -1076,404 +1284,288 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       style={{ left: panelX, top: panelY, zIndex: 200, width: panelWidth }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div 
+      <div
         className="bg-gradient-to-br from-amber-900/98 to-stone-900/98 p-3 border-2 border-amber-500 pointer-events-auto shadow-2xl rounded-xl backdrop-blur-sm relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={() => onClose()}
-          className="absolute top-2 right-2 p-1 hover:bg-amber-800/50 rounded-lg transition-colors"
+          className="absolute top-2 right-2 p-0.5 hover:bg-amber-800/50 rounded transition-colors"
         >
           <X size={14} className="text-amber-400" />
         </button>
 
-
-
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-3 pb-2 border-b border-amber-700">
-          <div className="w-14 h-14 rounded-lg border border-amber-500 bg-amber-950/50 flex items-center justify-center">
-            <TowerSprite type={tower.type} size={48} level={tower.level} />
+        {/* Header with tower name, level and description */}
+        <div className="flex items-center gap-2.5 mb-2 pb-2 border-b border-amber-700/50">
+          <div className="w-12 h-12 rounded-lg border border-amber-500/70 bg-amber-950/50 flex items-center justify-center flex-shrink-0">
+            <TowerSprite type={tower.type} size={40} level={tower.level} />
           </div>
-          <div className="flex-1">
-            <div className="text-base font-bold text-amber-300">
-              {towerData.name}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-amber-300 truncate">{towerData.name}</span>
+              <div className="flex">
+                {[...Array(tower.level)].map((_, i) => (
+                  <span key={i} className="text-yellow-400 text-[10px]">★</span>
+                ))}
+              </div>
             </div>
-            <div className="text-[10px] text-amber-500">
+            {tower.level === 4 && tower.upgrade && (
+              <div className="text-[10px] text-amber-400 font-medium">
+                {towerData.upgrades[tower.upgrade].name}
+              </div>
+            )}
+            <div className="text-[9px] text-amber-500/80 mt-0.5">
               {tower.level === 4 && tower.upgrade
-                ? `Path ${tower.upgrade}: ${towerData.upgrades[tower.upgrade].name
-                }`
-                : `Level ${tower.level}`}
-            </div>
-            <div className="flex mt-0.5">
-              {[...Array(tower.level)].map((_, i) => (
-                <span key={i} className="text-yellow-400 text-xs">
-                  ★
-                </span>
-              ))}
+                ? towerData.upgrades[tower.upgrade].desc
+                : towerData.desc}
             </div>
           </div>
         </div>
-        {/* Buff Banner */}
+
+        {/* Buff Banner with icons */}
         {(hasRangeBuff || hasDamageBuff) && (
-          <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/80 to-orange-950/80 rounded-lg border border-cyan-600/50 flex items-center justify-center gap-2 text-[9px]">
+          <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/70 to-orange-950/70 rounded-lg border border-yellow-600/40 flex items-center justify-center gap-2">
             <Sparkles size={12} className="text-yellow-400" />
-            <span className="text-amber-200 font-bold uppercase tracking-wider">
-              Buffed
-            </span>
+            <span className="text-[9px] text-yellow-300 font-bold">BUFFED</span>
             {hasRangeBuff && (
-              <span className="px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 border border-cyan-700/50">
-                +{Math.round((rangeBoost - 1) * 100)}% Range
+              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 text-[9px]">
+                <Target size={10} /> +{Math.round((rangeBoost - 1) * 100)}% Range
               </span>
             )}
             {hasDamageBuff && (
-              <span className="px-1.5 py-0.5 bg-orange-900/60 rounded text-orange-300 border border-orange-700/50">
-                +{Math.round((damageBoost - 1) * 100)}% DMG
+              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-900/60 rounded text-orange-300 text-[9px]">
+                <Swords size={10} /> +{Math.round((damageBoost - 1) * 100)}% Damage
               </span>
             )}
           </div>
         )}
 
-        {/* Current Stats */}
-        {/* Firestone Library special handling - 4 stats in a row */}
-        {towerData.name === "Firestone Library" ? (
-          <div className="grid grid-cols-4 gap-1.5 mb-3 text-[9px]">
-            {currentStats.damage > 0 && (
-              <div className={`p-1.5 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
-                <Swords size={12} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
-                <div className={`text-[8px] ${hasDamageBuff ? 'text-orange-500' : 'text-red-500'}`}>DMG</div>
-                <div className={`font-bold text-xs ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
-                  {Math.floor(hasDamageBuff ? currentStats.buffedDamage : currentStats.damage)}
+        {/* Dynamic Stats Grid - Combat towers */}
+        {statsToShow.length > 0 && (
+          <div className={`grid gap-1.5 mb-2`} style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
+            {statsToShow.map((stat) => (
+              <div
+                key={stat.key}
+                className={`p-1.5 rounded-lg border text-center ${stat.isBoosted ? stat.buffColorClass : stat.colorClass}`}
+              >
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  {stat.icon}
                 </div>
-              </div>
-            )}
-            <div className={`p-1.5 rounded border text-center ${hasRangeBuff ? 'bg-cyan-950/60 border-cyan-500/70' : 'bg-blue-950/60 border-blue-800/50'}`}>
-              <Target size={12} className={`mx-auto mb-0.5 ${hasRangeBuff ? 'text-cyan-400' : 'text-blue-400'}`} />
-              <div className={`text-[8px] ${hasRangeBuff ? 'text-cyan-500' : 'text-blue-500'}`}>RNG</div>
-              <div className={`font-bold text-xs ${hasRangeBuff ? 'text-cyan-300' : 'text-blue-300'}`}>
-                {Math.floor(hasRangeBuff ? currentStats.buffedRange : currentStats.range)}
-              </div>
-            </div>
-            <div className="p-1.5 rounded border text-center bg-purple-950/60 border-purple-800/50">
-              <Snowflake size={12} className="mx-auto mb-0.5 text-purple-400" />
-              <div className="text-[8px] text-purple-500">SLOW</div>
-              <div className="font-bold text-xs text-purple-300">
-                {currentStats.slowAmount ? `${Math.round(currentStats.slowAmount * 100)}%` : "0%"}
-              </div>
-            </div>
-            {currentStats.attackSpeed > 0 && (
-              <div className="p-1.5 rounded border text-center bg-green-950/60 border-green-800/50">
-                <Gauge size={12} className="mx-auto mb-0.5 text-green-400" />
-                <div className="text-[8px] text-green-500">SPD</div>
-                <div className="font-bold text-xs text-green-300">
-                  {currentStats.attackSpeed}ms
+                <div className="flex items-center justify-center gap-1 text-[8px] opacity-80">
+                  {stat.label}
+                  {stat.isBoosted && <TrendingUp size={10} className="text-yellow-400" />}
                 </div>
+                {stat.isBoosted && stat.buffedValue ? (
+                  <>
+                    <div className="font-bold text-lg leading-tight">
+                      <span className="text-white/40 line-through text-sm mr-1">{stat.value}</span>
+                      <span>{stat.buffedValue}</span>
+                    </div>
+                    <div className="text-[8px] text-yellow-400">+{stat.boostAmount}% buff</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-bold text-xs">{stat.value}</div>
+                    {stat.nextValue && (
+                      <div className="text-green-400 text-[8px]">→ {stat.nextValue}</div>
+                    )}
+                  </>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2 mb-3 text-[10px]">
-            {/* Generic damage display */}
-            {(baseStats.damage > 0 || currentStats.damage > 0) && (
-              <div className={`p-2 rounded border text-center ${hasDamageBuff ? 'bg-orange-950/60 border-orange-500/70' : 'bg-red-950/60 border-red-800/50'}`}>
-                <Swords size={14} className={`mx-auto mb-0.5 ${hasDamageBuff ? 'text-orange-400' : 'text-red-400'}`} />
-                <div className={hasDamageBuff ? 'text-orange-500' : 'text-red-500'}>
-                  Damage {hasDamageBuff && <span className="text-orange-300">★</span>}
-                </div>
-                <div className={`font-bold text-sm ${hasDamageBuff ? 'text-orange-300' : 'text-red-300'}`}>
-                  {hasDamageBuff ? (
-                    <>
-                      <span className="line-through text-red-400/60 text-xs mr-1">{Math.floor(currentStats.damage)}</span>
-                      {Math.floor(currentStats.buffedDamage)}
-                    </>
-                  ) : (
-                    Math.floor(currentStats.damage)
+        )}
+
+        {/* Eating Club Special Display */}
+        {tower.type === "club" && (
+          <div className="mb-2 bg-amber-950/40 rounded-lg p-2 border border-amber-700/50">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <CoinsIcon size={14} className="text-amber-400" />
+              <span className="text-[10px] font-bold text-amber-300">Paw Points Generation</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-1.5">
+              <div className="bg-amber-900/40 p-1.5 rounded border border-amber-700/40 text-center">
+                <div className="text-[8px] text-amber-500">Paw Points</div>
+                <div className="text-amber-300 font-bold text-sm">+{baseStats.income || 8}</div>
+                {nextStats && nextStats.income && nextStats.income > (baseStats.income || 0) && (
+                  <div className="text-green-400 text-[8px]">→ +{nextStats.income}</div>
+                )}
+              </div>
+              <div className="bg-amber-900/40 p-1.5 rounded border border-amber-700/40 text-center">
+                <div className="text-[8px] text-amber-500">Interval</div>
+                <div className="text-amber-300 font-bold text-sm">{(baseStats.incomeInterval || 8000) / 1000}s</div>
+                {nextStats && nextStats.incomeInterval && nextStats.incomeInterval < (baseStats.incomeInterval || 0) && (
+                  <div className="text-green-400 text-[8px]">→ {nextStats.incomeInterval / 1000}s</div>
+                )}
+              </div>
+            </div>
+            <div className="text-[8px] text-amber-400/80 text-center mb-1.5">
+              Earns <span className="font-bold text-amber-300">+{baseStats.income || 8} PP</span> every <span className="font-bold text-amber-300">{(baseStats.incomeInterval || 8000) / 1000}s</span>
+            </div>
+
+            {/* Level 4 Eating Club Aura Stats - shown inside Paw Points box */}
+            {tower.level === 4 && tower.upgrade && activeUpgradeStats && (activeUpgradeStats.rangeBuff || activeUpgradeStats.damageBuff) && (
+              <div className="pt-1.5 border-t border-amber-700/40">
+                <div className="grid grid-cols-1 gap-2">
+                  {activeUpgradeStats.rangeBuff && (
+                    <div className="bg-cyan-900/40 p-1.5 rounded border border-cyan-700/40 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-0.5">
+                        <Target size={12} className="text-cyan-400" />
+                      </div>
+                      <div className="text-[8px] text-cyan-500">Range Aura</div>
+                      <div className="text-cyan-300 font-bold text-sm">+{Math.round(activeUpgradeStats.rangeBuff * 100)}%</div>
+                      <div className="text-[7px] text-cyan-500/80">Nearby towers</div>
+                    </div>
                   )}
-                </div>
-                {hasDamageBuff && (
-                  <div className="text-[8px] text-orange-400">+{Math.round((damageBoost - 1) * 100)}% buff</div>
-                )}
-                {nextStats && !hasDamageBuff && nextStats.damage > currentStats.damage && (
-                  <div className="text-green-400 text-[9px]">
-                    → {Math.floor(nextStats.damage)}
-                  </div>
-                )}
-              </div>
-            )}
-            {(towerData.range > 0 || currentStats.range > 0) && (
-              <div className={`p-2 rounded border text-center ${hasRangeBuff ? 'bg-cyan-950/60 border-cyan-500/70' : 'bg-blue-950/60 border-blue-800/50'}`}>
-                <Target size={14} className={`mx-auto mb-0.5 ${hasRangeBuff ? 'text-cyan-400' : 'text-blue-400'}`} />
-                <div className={hasRangeBuff ? 'text-cyan-500' : 'text-blue-500'}>
-                  Range {hasRangeBuff && <span className="text-cyan-300">★</span>}
-                </div>
-                <div className={`font-bold text-sm ${hasRangeBuff ? 'text-cyan-300' : 'text-blue-300'}`}>
-                  {hasRangeBuff ? (
-                    <>
-                      <span className="line-through text-blue-400/60 text-xs mr-1">{Math.floor(currentStats.range)}</span>
-                      {Math.floor(currentStats.buffedRange)}
-                    </>
-                  ) : (
-                    Math.floor(currentStats.range)
+                  {activeUpgradeStats.damageBuff && (
+                    <div className="bg-orange-900/40 p-1.5 rounded border border-orange-700/40 text-center">
+                      <div className="flex items-center justify-center gap-1 mb-0.5">
+                        <TrendingUp size={12} className="text-orange-400" />
+                      </div>
+                      <div className="text-[8px] text-orange-500">Damage Aura</div>
+                      <div className="text-orange-300 font-bold text-sm">+{Math.round(activeUpgradeStats.damageBuff * 100)}%</div>
+                      <div className="text-[7px] text-orange-500/80">Nearby towers</div>
+                    </div>
                   )}
-                </div>
-                {hasRangeBuff && (
-                  <div className="text-[8px] text-cyan-400">+{Math.round((rangeBoost - 1) * 100)}% buff</div>
-                )}
-                {nextStats && !hasRangeBuff && nextStats.range > currentStats.range && (
-                  <div className="text-green-400 text-[9px]">
-                    → {Math.floor(nextStats.range)}
-                  </div>
-                )}
-              </div>
-            )}
-            {(towerData.attackSpeed > 0 || currentStats.attackSpeed > 0) && (
-              <div className="bg-green-950/60 p-2 rounded border border-green-800/50 text-center">
-                <Gauge size={14} className="mx-auto text-green-400 mb-0.5" />
-                <div className="text-green-500">Speed</div>
-                <div className="text-green-300 font-bold text-sm">
-                  {currentStats.attackSpeed}ms
-                </div>
-                {nextStats && nextStats.attackSpeed !== currentStats.attackSpeed && nextStats.attackSpeed > 0 && (
-                  <div className="text-green-400 text-[9px]">
-                    → {Math.floor(nextStats.attackSpeed)}ms
-                  </div>
-                )}
-              </div>
-            )}
-
-            {towerData.name === "Dinky Station" &&
-              (() => {
-                // 1. Determine which key to use from TROOP_DATA based on level/upgrade
-                const getTroopKey = () => {
-                  if (tower.level === 1) return "footsoldier";
-                  if (tower.level === 2) return "armored";
-                  if (tower.level === 3) return "elite";
-                  if (tower.level === 4) {
-                    if (tower.upgrade === "B") return "cavalry";
-                    if (tower.upgrade === "A") return "centaur";
-                    return "knight"; // Fallback for base level 4
-                  }
-                  return "footsoldier";
-                };
-
-                const key = getTroopKey();
-                const troop = TROOP_DATA[key];
-
-                if (!troop) return null;
-
-                return (
-                  <div className="col-span-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users size={12} className="text-amber-500" />
-                      <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider">
-                        Garrison Unit
-                      </span>
-                    </div>
-
-                    <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
-                      {/* Name and Type Badge */}
-                      <div className="flex justify-between items-center border-b border-stone-800 pb-1">
-                        <span
-                          className="text-xs font-bold"
-                          style={{ color: troop.color }} // Uses the hex code from TROOP_DATA
-                        >
-                          {troop.name}
-                        </span>
-                        <span className="text-[9px] bg-stone-800 px-1.5 py-0.5 rounded text-stone-400">
-                          {troop.isMounted
-                            ? "Mounted"
-                            : troop.isRanged
-                              ? "Ranged"
-                              : "Infantry"}
-                        </span>
-                      </div>
-
-                      {/* Troop Stats Grid */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {/* HP */}
-                        <div className="bg-red-950/30 p-1 rounded border border-red-900/20 flex flex-col items-center justify-center">
-                          <div className="flex items-center gap-1 text-red-400/80 mb-0.5">
-                            <Heart size={10} />
-                            <span className="text-[9px]">HP</span>
-                          </div>
-                          <span className="text-red-200 font-bold text-xs">
-                            {troop.hp}
-                          </span>
-                        </div>
-
-                        {/* Damage */}
-                        <div className="bg-orange-950/30 p-1 rounded border border-orange-900/20 flex flex-col items-center justify-center">
-                          <div className="flex items-center gap-1 text-orange-400/80 mb-0.5">
-                            <Swords size={10} />
-                            <span className="text-[9px]">DMG</span>
-                          </div>
-                          <span className="text-orange-200 font-bold text-xs">
-                            {troop.damage}
-                          </span>
-                        </div>
-
-                        {/* Speed/Range */}
-                        <div className="bg-green-950/30 p-1 rounded border border-green-900/20 flex flex-col items-center justify-center">
-                          <div className="flex items-center gap-1 text-green-400/80 mb-0.5">
-                            {troop.isRanged ? (
-                              <Crosshair size={10} />
-                            ) : (
-                              <Gauge size={10} />
-                            )}
-                            <span className="text-[9px]">
-                              {troop.isRanged ? "RNG" : "SPD"}
-                            </span>
-                          </div>
-                          <span className="text-green-200 font-bold text-xs">
-                            {troop.isRanged
-                              ? troop.range
-                              : `${troop.attackSpeed}ms`}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Description (Optional, fits nice at bottom) */}
-                      <div className="text-[9px] text-stone-500 italic text-center">
-                        {troop.desc}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-            {towerData.name === "Eating Club" && (
-              <div className="col-span-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1">
-                    <CoinsIcon size={12} /> PP Generation
-                  </span>
-                </div>
-                <div className="bg-stone-900/60 rounded-lg p-2 border border-stone-700/50 flex flex-col gap-2">
-                  <div className="grid grid-cols-2 gap-2 mb-1">
-                    <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
-                      <div className="text-amber-500 text-[9px]">Income</div>
-                      <div className="text-amber-300 font-bold">+{currentStats.income || 8} PP</div>
-                    </div>
-                    <div className="bg-amber-950/40 p-1.5 rounded border border-amber-800/40 text-center">
-                      <div className="text-amber-500 text-[9px]">Interval</div>
-                      <div className="text-amber-300 font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</div>
-                    </div>
-                  </div>
-                  <div className="text-[9px] text-amber-400">
-                    Generates <span className="font-bold">{currentStats.income || 8} PP</span> every{" "}
-                    <span className="font-bold">{(currentStats.incomeInterval || 8000) / 1000}s</span> to help fund
-                    your defenses. Build early to maximize your economy!
-                  </div>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Level description */}
-        <div className="bg-amber-950/40 p-2 rounded text-[10px] text-amber-400 mb-3 border border-amber-800/50">
-          <div className="text-amber-500 uppercase text-[9px] tracking-wider mb-0.5">
-            {tower.level < 4
-              ? TOWER_DATA[tower.type].desc
-              : tower.upgrade
-                ? towerData.upgrades[tower.upgrade].desc
-                : ""}
-          </div>
-          {tower.level < 4
-            ? levelDesc
-            : tower.upgrade
-              ? towerData.upgrades[tower.upgrade].effect
-              : ""}
-        </div>
+        {/* Dinky Station Troop Display with description */}
+        {tower.type === "station" && (() => {
+          const getTroopKey = () => {
+            if (tower.level === 1) return "footsoldier";
+            if (tower.level === 2) return "armored";
+            if (tower.level === 3) return "elite";
+            if (tower.level === 4) {
+              if (tower.upgrade === "B") return "cavalry";
+              if (tower.upgrade === "A") return "centaur";
+              return "knight";
+            }
+            return "footsoldier";
+          };
+          const troop = TROOP_DATA[getTroopKey()];
+          if (!troop) return null;
+
+          return (
+            <div className="mb-2 bg-stone-900/50 rounded-lg p-2 border border-stone-700/40">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Users size={14} className="text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-300">Garrison: {troop.name}</span>
+                <span className="text-[8px] bg-stone-800 px-1.5 py-0.5 rounded text-stone-400 ml-auto">
+                  {troop.isMounted ? "Mounted" : troop.isRanged ? "Ranged" : "Infantry"}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+                <div className="bg-red-950/40 p-1 rounded border border-red-900/30 text-center">
+                  <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
+                  <div className="text-[7px] text-red-500">Health</div>
+                  <span className="text-red-200 font-bold text-xs">{troop.hp}</span>
+                </div>
+                <div className="bg-orange-950/40 p-1 rounded border border-orange-900/30 text-center">
+                  <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
+                  <div className="text-[7px] text-orange-500">Damage</div>
+                  <span className="text-orange-200 font-bold text-xs">{troop.damage}</span>
+                </div>
+                <div className="bg-green-950/40 p-1 rounded border border-green-900/30 text-center">
+                  {troop.isRanged ? <Crosshair size={12} className="mx-auto text-green-400 mb-0.5" /> : <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />}
+                  <div className="text-[7px] text-green-500">{troop.isRanged ? "Range" : "Speed"}</div>
+                  <span className="text-green-200 font-bold text-xs">{troop.isRanged ? troop.range : `${troop.attackSpeed}ms`}</span>
+                </div>
+              </div>
+              <div className="text-[8px] text-stone-400 text-center italic">
+                {troop.desc}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Upgrade buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2">
           {(tower.level === 1 || tower.level === 2) && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                upgradeTower(tower.id);
-              }}
+              onClick={(e) => { e.stopPropagation(); upgradeTower(tower.id); }}
               disabled={pawPoints < upgradeCost}
-              className={`flex-1 py-2.5 rounded-lg font-bold transition-all border text-xs ${pawPoints >= upgradeCost
+              className={`flex-1 py-2 rounded-lg font-bold transition-all border ${pawPoints >= upgradeCost
                 ? "bg-gradient-to-b from-green-600 to-green-800 border-green-500 hover:from-green-500 hover:to-green-700"
                 : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
                 }`}
             >
-              <div className="flex items-center justify-center gap-1">
-                <ArrowUp size={16} />
-                <span>Upgrade to Lv.{tower.level + 1}</span>
+              <div className="flex items-center justify-center gap-1.5 text-[11px]">
+                <ArrowUp size={14} />
+                <span>Upgrade to Level {tower.level + 1}</span>
               </div>
-              <div className="text-[10px] mt-0.5 flex items-center justify-center gap-1">
-                <Coins size={10} />
-                {upgradeCost} PP
+              <div className="text-[9px] flex items-center justify-center gap-1 mt-0.5 opacity-90">
+                <Coins size={10} /> {upgradeCost} PP
               </div>
             </button>
           )}
 
-          {tower.level === 3 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  upgradeTower(tower.id, "A");
-                }}
-                disabled={pawPoints < upgradeCost}
-                className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${pawPoints >= upgradeCost
-                  ? "bg-gradient-to-b from-red-600 to-red-800 border-red-500 hover:from-red-500 hover:to-red-700"
-                  : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                  }`}
-              >
-                <div className="text-sm text-red-200 font-bold">Path A</div>
-                <div className="text-[9px] text-red-300">
-                  {towerData.upgrades.A.name}
-                </div>
-                <div className="text-[10px] mt-0.5">{upgradeCost} PP</div>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  upgradeTower(tower.id, "B");
-                }}
-                disabled={pawPoints < upgradeCost}
-                className={`flex-1 py-2 rounded-lg font-bold transition-all border text-[10px] ${pawPoints >= upgradeCost
-                  ? "bg-gradient-to-b from-blue-600 to-blue-800 border-blue-500 hover:from-blue-500 hover:to-blue-700"
-                  : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                  }`}
-              >
-                <div className="text-sm text-blue-200 font-bold">Path B</div>
-                <div className="text-[9px] text-blue-300">
-                  {towerData.upgrades.B.name}
-                </div>
-                <div className="text-[10px] mt-0.5">{upgradeCost} PP</div>
-              </button>
-            </>
-          )}
+          {tower.level === 3 && (() => {
+            // Unique icons for each tower's upgrade paths
+            const upgradeIcons: Record<string, { A: React.ReactNode; B: React.ReactNode }> = {
+              cannon: { A: <Repeat size={12} />, B: <Flame size={12} /> },
+              arch: { A: <Radio size={12} />, B: <Music size={12} /> },
+              lab: { A: <Focus size={12} />, B: <Zap size={12} /> },
+              library: { A: <Mountain size={12} />, B: <Snowflake size={12} /> },
+              station: { A: <CircleDot size={12} />, B: <Shield size={12} /> },
+              club: { A: <Landmark size={12} />, B: <UserPlus size={12} /> },
+            };
+            const icons = upgradeIcons[tower.type] || { A: <Zap size={12} />, B: <Shield size={12} /> };
+
+            return (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); upgradeTower(tower.id, "A"); }}
+                  disabled={pawPoints < upgradeCost}
+                  className={`flex-1 py-2 rounded-lg font-bold transition-all border ${pawPoints >= upgradeCost
+                    ? "bg-gradient-to-b from-red-600 to-red-800 border-red-500 hover:from-red-500 hover:to-red-700"
+                    : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                    }`}
+                >
+                  <div className="text-[11px] text-red-200 font-bold truncate px-1 flex items-center justify-center gap-1">
+                    {icons.A} {towerData.upgrades.A.name}
+                  </div>
+                  <div className="text-[8px] flex items-center justify-center gap-0.5 mt-0.5 opacity-90">
+                    <Coins size={9} /> {upgradeCost} PP
+                  </div>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); upgradeTower(tower.id, "B"); }}
+                  disabled={pawPoints < upgradeCost}
+                  className={`flex-1 py-2 rounded-lg font-bold transition-all border ${pawPoints >= upgradeCost
+                    ? "bg-gradient-to-b from-blue-600 to-blue-800 border-blue-500 hover:from-blue-500 hover:to-blue-700"
+                    : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                    }`}
+                >
+                  <div className="text-[11px] text-blue-200 font-bold truncate px-1 flex items-center justify-center gap-1">
+                    {icons.B} {towerData.upgrades.B.name}
+                  </div>
+                  <div className="text-[8px] flex items-center justify-center gap-0.5 mt-0.5 opacity-90">
+                    <Coins size={9} /> {upgradeCost} PP
+                  </div>
+                </button>
+              </>
+            );
+          })()}
 
           {tower.level === 4 && (
-            <div className="flex-1 py-2 text-center text-amber-400 text-xs bg-amber-950/30 rounded-lg border border-amber-700 flex items-center justify-center gap-1">
-              <Crown size={14} /> Maximum Level Reached
+            <div className="flex-1 py-2 text-center text-amber-400 text-[11px] bg-amber-950/30 rounded-lg border border-amber-700 flex items-center justify-center gap-1.5">
+              <Crown size={14} /> Maximum Level
             </div>
           )}
         </div>
 
-        {/* Upgrade descriptions for level 3 */}
-        {tower.level === 3 && (
-          <div className="grid grid-cols-2 gap-2 mt-2 text-[9px]">
-            <div className="bg-red-950/40 p-2 rounded border border-red-800/50">
-              <div className="text-red-300 font-bold mb-0.5">
-                {towerData.upgrades.A.name}
-              </div>
-              <div className="text-red-400/80">
-                {towerData.upgrades.A.effect}
-              </div>
+        {/* Upgrade Preview for Level 3 */}
+        {tower.level === 3 && upgradeAStats && upgradeBStats && (
+          <div className="grid grid-cols-2 gap-1.5 text-[8px] mb-2">
+            <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-800/40">
+              <div className="text-red-300 text-center">{towerData.upgrades.A.effect}</div>
             </div>
-            <div className="bg-blue-950/40 p-2 rounded border border-blue-800/50">
-              <div className="text-blue-300 font-bold mb-0.5">
-                {towerData.upgrades.B.name}
-              </div>
-              <div className="text-blue-400/80">
-                {towerData.upgrades.B.effect}
-              </div>
+            <div className="bg-blue-950/40 p-1.5 rounded-lg border border-blue-800/40">
+              <div className="text-blue-300 text-center">{towerData.upgrades.B.effect}</div>
             </div>
           </div>
         )}
@@ -1481,21 +1573,19 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         {/* Sell button */}
         <button
           onClick={() => sellTower(tower.id)}
-          className="w-full mt-2 py-2 bg-gradient-to-b from-stone-700 to-stone-900 hover:from-red-700 hover:to-red-900 border border-stone-600 hover:border-red-500 rounded-lg transition-all flex items-center justify-center gap-1.5 text-[10px]"
+          className="w-full py-1.5 bg-gradient-to-b from-stone-700 to-stone-900 hover:from-red-700 hover:to-red-900 border border-stone-600 hover:border-red-500 rounded-lg transition-all flex items-center justify-center gap-1.5 text-[10px]"
         >
-          <CircleDollarSign size={14} />
+          <CircleDollarSign size={12} />
           <span>Sell Tower</span>
           <span className="text-amber-400 font-bold">+{sellValue} PP</span>
         </button>
 
-        {/* Arrow */}
+        {/* Arrow pointer */}
         <div
           className="absolute left-1/2 -bottom-2 transform -translate-x-1/2"
-          style={{
-            display: panelY > screenPos.y - panelHeight - 40 ? "none" : "block",
-          }}
+          style={{ display: panelY > screenPos.y - 120 ? "none" : "block" }}
         >
-          <div className="w-4 h-4 bg-amber-900 border-b border-r border-amber-500 transform rotate-45" />
+          <div className="w-3 h-3 bg-amber-900 border-b border-r border-amber-500 transform rotate-45" />
         </div>
       </div>
     </div>
@@ -1512,22 +1602,194 @@ interface TooltipProps {
 }
 
 export const Tooltip: React.FC<TooltipProps> = ({ content, position }) => {
-  const tooltipWidth = 220;
-  const tooltipHeight = 100;
-  let tooltipX = position.x + 15;
-  let tooltipY = position.y - 40;
+  const tooltipWidth = 200;
+  const tooltipHeight = 80;
+  let tooltipX = position.x + 20;
+  let tooltipY = position.y - 30;
   if (tooltipX + tooltipWidth > window.innerWidth - 10)
-    tooltipX = position.x - tooltipWidth - 15;
+    tooltipX = position.x - tooltipWidth - 20;
   if (tooltipY < 60) tooltipY = 60;
   if (tooltipY + tooltipHeight > window.innerHeight - 10)
     tooltipY = window.innerHeight - tooltipHeight - 10;
 
   return (
     <div
-      className="fixed pointer-events-none bg-gradient-to-br from-amber-950/98 to-stone-950/98 p-2 border border-amber-600 shadow-xl rounded-lg max-w-[220px] backdrop-blur-sm text-[10px]"
+      className="fixed pointer-events-none bg-gradient-to-b from-stone-900/98 to-stone-950/98 px-3 py-2 border border-amber-600/80 shadow-2xl rounded-lg max-w-[200px] backdrop-blur-md"
       style={{ left: tooltipX, top: tooltipY, zIndex: 250 }}
     >
       {content}
+    </div>
+  );
+};
+
+// Tower Hover Tooltip - specialized for tower hover display
+interface TowerHoverTooltipProps {
+  tower: Tower;
+  position: Position;
+}
+
+export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, position }) => {
+  const tData = TOWER_DATA[tower.type];
+  const stats = calculateTowerStats(
+    tower.type,
+    tower.level,
+    tower.upgrade,
+    tower.rangeBoost || 1,
+    tower.damageBoost || 1
+  );
+
+  const hasRangeBuff = (tower.rangeBoost || 1) > 1;
+  const hasDamageBuff = (tower.damageBoost || 1) > 1;
+
+  const tooltipWidth = 220;
+  let tooltipX = position.x + 20;
+  let tooltipY = position.y - 30;
+  if (tooltipX + tooltipWidth > window.innerWidth - 10)
+    tooltipX = position.x - tooltipWidth - 20;
+  if (tooltipY < 60) tooltipY = 60;
+
+  return (
+    <div
+      className="fixed pointer-events-none bg-gradient-to-b from-stone-900/98 to-stone-950/98 border border-amber-500/70 shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+      style={{ left: tooltipX, top: tooltipY, zIndex: 250, width: tooltipWidth }}
+    >
+      {/* Header */}
+      <div className="bg-amber-900/40 px-3 py-1.5 border-b border-amber-700/50">
+        <div className="flex items-center justify-between">
+          <span className="font-bold text-amber-200 text-sm">{tData.name}</span>
+          <div className="flex items-center gap-0.5">
+            {[...Array(tower.level)].map((_, i) => (
+              <span key={i} className="text-yellow-400 text-[10px]">★</span>
+            ))}
+          </div>
+        </div>
+        {tower.level === 4 && tower.upgrade && (
+          <div className="text-[9px] text-amber-400">{tData.upgrades[tower.upgrade].name}</div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="px-3 py-2">
+        {/* Buff indicator */}
+        {(hasRangeBuff || hasDamageBuff) && (
+          <div className="flex items-center gap-1 mb-1.5 text-[9px]">
+            <Sparkles size={10} className="text-yellow-400" />
+            {hasRangeBuff && (
+              <span className="text-cyan-400">+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Range</span>
+            )}
+            {hasDamageBuff && (
+              <span className="text-orange-400">+{Math.round(((tower.damageBoost || 1) - 1) * 100)}% DMG</span>
+            )}
+          </div>
+        )}
+
+        {/* Stats grid */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+          {stats.damage > 0 && (
+            <div className="flex items-center gap-1">
+              <Swords size={11} className="text-red-400" />
+              <span className="text-red-300 font-medium">{Math.floor(stats.damage)}</span>
+            </div>
+          )}
+          {stats.range > 0 && tower.type !== "club" && (
+            <div className="flex items-center gap-1">
+              <Target size={11} className="text-blue-400" />
+              <span className="text-blue-300 font-medium">{Math.floor(stats.range)}</span>
+            </div>
+          )}
+          {stats.attackSpeed > 0 && (
+            <div className="flex items-center gap-1">
+              <Gauge size={11} className="text-green-400" />
+              <span className="text-green-300 font-medium">{stats.attackSpeed}ms</span>
+            </div>
+          )}
+          {stats.slowAmount && stats.slowAmount > 0 && (
+            <div className="flex items-center gap-1">
+              <Snowflake size={11} className="text-purple-400" />
+              <span className="text-purple-300 font-medium">{Math.round(stats.slowAmount * 100)}%</span>
+            </div>
+          )}
+          {stats.chainTargets && stats.chainTargets > 1 && (
+            <div className="flex items-center gap-1">
+              <Users size={11} className="text-yellow-400" />
+              <span className="text-yellow-300 font-medium">{stats.chainTargets}</span>
+            </div>
+          )}
+          {tower.type === "club" && stats.income && (
+            <div className="flex items-center gap-1">
+              <CoinsIcon size={11} className="text-amber-400" />
+              <span className="text-amber-300 font-medium">+{stats.income} PP/{(stats.incomeInterval || 8000) / 1000}s</span>
+            </div>
+          )}
+        </div>
+
+        {/* Station troops */}
+        {tower.type === "station" && (
+          <div className="flex items-center gap-1 mt-1.5 text-[10px]">
+            <Users size={11} className="text-amber-400" />
+            <span className="text-amber-300">Troops: {tower.currentTroopCount || 0}/3</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Build Tower Tooltip - for hovering over build menu items  
+interface BuildTowerTooltipProps {
+  towerType: TowerType;
+  position: Position;
+}
+
+export const BuildTowerTooltip: React.FC<BuildTowerTooltipProps> = ({ towerType, position }) => {
+  const tData = TOWER_DATA[towerType];
+
+  const tooltipWidth = 220;
+  let tooltipX = position.x + 20;
+  let tooltipY = position.y - 30;
+  if (tooltipX + tooltipWidth > window.innerWidth - 10)
+    tooltipX = position.x - tooltipWidth - 20;
+  if (tooltipY < 60) tooltipY = 60;
+
+  return (
+    <div
+      className="fixed pointer-events-none bg-gradient-to-b from-stone-900/98 to-stone-950/98 border border-amber-500/70 shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+      style={{ left: tooltipX, top: tooltipY, zIndex: 250, width: tooltipWidth }}
+    >
+      {/* Header */}
+      <div className="bg-amber-900/40 px-3 py-1.5 border-b border-amber-700/50 flex items-center justify-between">
+        <span className="font-bold text-amber-200 text-sm">{tData.name}</span>
+        <span className="flex items-center gap-1 text-amber-300 text-xs font-bold">
+          <Coins size={12} /> {tData.cost}
+        </span>
+      </div>
+
+      {/* Content */}
+      <div className="px-3 py-2">
+        <div className="text-[10px] text-stone-300 mb-2">{tData.desc}</div>
+
+        {/* Stats */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
+          {tData.damage > 0 && (
+            <div className="flex items-center gap-1">
+              <Swords size={11} className="text-red-400" />
+              <span className="text-red-300 font-medium">{tData.damage}</span>
+            </div>
+          )}
+          {tData.range > 0 && (
+            <div className="flex items-center gap-1">
+              <Target size={11} className="text-blue-400" />
+              <span className="text-blue-300 font-medium">{tData.range}</span>
+            </div>
+          )}
+          {tData.attackSpeed > 0 && (
+            <div className="flex items-center gap-1">
+              <Gauge size={11} className="text-green-400" />
+              <span className="text-green-300 font-medium">{tData.attackSpeed}ms</span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

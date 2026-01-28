@@ -375,9 +375,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         overrides: {
           income: 25,
           incomeInterval: 6000,
-          range: 150,
-          slowAmount: 0.2,
-          slowDuration: 500,
+          
         },
       },
     },
@@ -385,12 +383,14 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       A: {
         name: "Investment Bank",
         description: "Maximum passive income",
-        effect: "40 PP every 5s + 10% bonus on all income",
+        effect: "40 PP every 5s + 10% bonus income + 15% range aura",
         stats: {
           income: 40,
           incomeInterval: 5000,
           bonusIncomeMultiplier: 0.1,
-          specialEffect: "Global income boost",
+          rangeBuff: 0.15,
+          range: 200,
+          specialEffect: "Global income boost + range aura",
         },
       },
       B: {

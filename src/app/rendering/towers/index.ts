@@ -6055,33 +6055,34 @@ function renderTeslaCoil(
 
   // Energy orb at top - THIS IS WHERE LIGHTNING ORIGINATES
   const orbY = topY - coilHeight + 5 * zoom;
-  const orbPulse = 1 + Math.sin(time * 6) * 0.2;
+  const orbPulse = 1 + Math.sin(time * 6) * 0.2 + attackIntensity * 0.3;
   const orbSize = (10 + tower.level * 2) * zoom;
 
   // Store the orb position for projectile origin calculations
   tower._orbScreenY = orbY;
 
-  // Outer energy field
+  // Outer energy field - brighter when attacking
+  const fieldAlphaBase = isAttacking ? 0.25 : 0.15;
   const energyFieldGrad = ctx.createRadialGradient(
     screenPos.x,
     orbY,
     0,
     screenPos.x,
     orbY,
-    orbSize * 2.5 * orbPulse
+    orbSize * (2.5 + attackIntensity * 0.5) * orbPulse
   );
-  energyFieldGrad.addColorStop(0, "rgba(0, 255, 255, 0.15)");
-  energyFieldGrad.addColorStop(0.4, "rgba(0, 200, 255, 0.08)");
-  energyFieldGrad.addColorStop(0.7, "rgba(0, 150, 255, 0.03)");
+  energyFieldGrad.addColorStop(0, `rgba(0, 255, 255, ${fieldAlphaBase + attackIntensity * 0.2})`);
+  energyFieldGrad.addColorStop(0.4, `rgba(0, 200, 255, ${0.08 + attackIntensity * 0.15})`);
+  energyFieldGrad.addColorStop(0.7, `rgba(0, 150, 255, ${0.03 + attackIntensity * 0.08})`);
   energyFieldGrad.addColorStop(1, "rgba(0, 100, 255, 0)");
   ctx.fillStyle = energyFieldGrad;
   ctx.beginPath();
-  ctx.arc(screenPos.x, orbY, orbSize * 2.5 * orbPulse, 0, Math.PI * 2);
+  ctx.arc(screenPos.x, orbY, orbSize * (2.5 + attackIntensity * 0.5) * orbPulse, 0, Math.PI * 2);
   ctx.fill();
 
-  // Main orb
-  ctx.shadowColor = "#00ffff";
-  ctx.shadowBlur = 30 * zoom * orbPulse;
+  // Main orb - increased glow when attacking
+  ctx.shadowColor = isAttacking ? "#88ffff" : "#00ffff";
+  ctx.shadowBlur = (30 + attackIntensity * 25) * zoom * orbPulse;
   const orbGrad = ctx.createRadialGradient(
     screenPos.x - 3 * zoom,
     orbY - 3 * zoom,
@@ -6090,15 +6091,47 @@ function renderTeslaCoil(
     orbY,
     orbSize * orbPulse
   );
-  orbGrad.addColorStop(0, "#ffffff");
-  orbGrad.addColorStop(0.2, "#ccffff");
-  orbGrad.addColorStop(0.5, "#00ffff");
-  orbGrad.addColorStop(0.8, "#0088ff");
-  orbGrad.addColorStop(1, "#0044aa");
+  // Brighter gradient when attacking
+  if (isAttacking) {
+    orbGrad.addColorStop(0, "#ffffff");
+    orbGrad.addColorStop(0.15, "#ffffff");
+    orbGrad.addColorStop(0.35, "#ccffff");
+    orbGrad.addColorStop(0.6, "#00ffff");
+    orbGrad.addColorStop(0.85, "#0088ff");
+    orbGrad.addColorStop(1, "#0066cc");
+  } else {
+    orbGrad.addColorStop(0, "#ffffff");
+    orbGrad.addColorStop(0.2, "#ccffff");
+    orbGrad.addColorStop(0.5, "#00ffff");
+    orbGrad.addColorStop(0.8, "#0088ff");
+    orbGrad.addColorStop(1, "#0044aa");
+  }
   ctx.fillStyle = orbGrad;
   ctx.beginPath();
   ctx.arc(screenPos.x, orbY, orbSize * orbPulse, 0, Math.PI * 2);
   ctx.fill();
+  
+  // Bright solid glowing core when attacking
+  if (isAttacking) {
+    // Solid bright core
+    const coreGrad = ctx.createRadialGradient(
+      screenPos.x, orbY, 0,
+      screenPos.x, orbY, orbSize * 0.5 * orbPulse
+    );
+    coreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackIntensity})`);
+    coreGrad.addColorStop(0.5, `rgba(220, 255, 255, ${attackIntensity * 0.9})`);
+    coreGrad.addColorStop(1, `rgba(150, 255, 255, ${attackIntensity * 0.5})`);
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, orbY, orbSize * 0.5 * orbPulse, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Inner intense white point
+    ctx.fillStyle = `rgba(255, 255, 255, ${attackIntensity})`;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, orbY, orbSize * 0.2 * orbPulse, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.shadowBlur = 0;
 
   // Electric arcs from orb - Enhanced with jagged multi-segment lightning
@@ -6477,10 +6510,10 @@ function renderFocusedBeam(
     ctx.shadowBlur = 0;
   }
 
-  // Main crystal core
+  // Main crystal core - unique focused beam style
   ctx.fillStyle = "#00ffff";
-  ctx.shadowColor = "#00ffff";
-  ctx.shadowBlur = (20 + attackPulse * 15) * zoom;
+  ctx.shadowColor = isAttacking ? "#88ffff" : "#00ffff";
+  ctx.shadowBlur = (20 + attackPulse * 25) * zoom;
   ctx.beginPath();
   ctx.arc(screenPos.x, crystalY, 10 * crystalPulse * zoom, 0, Math.PI * 2);
   ctx.fill();
@@ -6490,6 +6523,22 @@ function renderFocusedBeam(
   ctx.beginPath();
   ctx.arc(screenPos.x, crystalY, 5 * crystalPulse * zoom, 0, Math.PI * 2);
   ctx.fill();
+  
+  // Bright solid core flash when attacking
+  if (attackPulse > 0.1) {
+    // Expanding bright core
+    const flashSize = 8 * crystalPulse * zoom * (1 + attackPulse * 0.5);
+    ctx.fillStyle = `rgba(255, 255, 255, ${attackPulse})`;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, crystalY, flashSize, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Inner intense white point
+    ctx.fillStyle = `rgba(255, 255, 255, ${attackPulse})`;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, crystalY, flashSize * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.shadowBlur = 0;
 
   // Store emitter position
@@ -6745,35 +6794,67 @@ function renderChainLightning(
     const pulse = 0.8 + Math.sin(time * 6 + pos.x) * 0.2 + attackPulse * 0.3;
     const miniOrbSize = 6 * zoom * pulse * coilSize;
     
-    // Outer energy field for mini orb
+    // Outer energy field for mini orb - brighter when attacking
+    const miniFieldAlpha = isAttacking ? 0.25 : 0.15;
     const miniFieldGrad = ctx.createRadialGradient(
       cx, miniOrbY, 0,
-      cx, miniOrbY, miniOrbSize * 2
+      cx, miniOrbY, miniOrbSize * (2 + attackPulse * 0.5)
     );
-    miniFieldGrad.addColorStop(0, "rgba(0, 255, 255, 0.15)");
-    miniFieldGrad.addColorStop(0.5, "rgba(0, 200, 255, 0.08)");
+    miniFieldGrad.addColorStop(0, `rgba(0, 255, 255, ${miniFieldAlpha + attackPulse * 0.2})`);
+    miniFieldGrad.addColorStop(0.5, `rgba(0, 200, 255, ${0.08 + attackPulse * 0.12})`);
     miniFieldGrad.addColorStop(1, "rgba(0, 150, 255, 0)");
     ctx.fillStyle = miniFieldGrad;
     ctx.beginPath();
-    ctx.arc(cx, miniOrbY, miniOrbSize * 2, 0, Math.PI * 2);
+    ctx.arc(cx, miniOrbY, miniOrbSize * (2 + attackPulse * 0.5), 0, Math.PI * 2);
     ctx.fill();
     
-    // Main mini orb with gradient
-    ctx.shadowColor = "#00ffff";
-    ctx.shadowBlur = 15 * zoom * pulse;
+    // Main mini orb with gradient - brighter glow when attacking
+    ctx.shadowColor = isAttacking ? "#88ffff" : "#00ffff";
+    ctx.shadowBlur = (15 + attackPulse * 15) * zoom * pulse;
     const miniOrbGrad = ctx.createRadialGradient(
       cx - 1.5 * zoom * coilSize, miniOrbY - 1.5 * zoom * coilSize, 0,
       cx, miniOrbY, miniOrbSize
     );
-    miniOrbGrad.addColorStop(0, "#ffffff");
-    miniOrbGrad.addColorStop(0.25, "#ccffff");
-    miniOrbGrad.addColorStop(0.5, "#00ffff");
-    miniOrbGrad.addColorStop(0.8, "#0088ff");
-    miniOrbGrad.addColorStop(1, "#0044aa");
+    if (isAttacking) {
+      miniOrbGrad.addColorStop(0, "#ffffff");
+      miniOrbGrad.addColorStop(0.15, "#ffffff");
+      miniOrbGrad.addColorStop(0.35, "#ccffff");
+      miniOrbGrad.addColorStop(0.6, "#00ffff");
+      miniOrbGrad.addColorStop(0.85, "#0088ff");
+      miniOrbGrad.addColorStop(1, "#0066cc");
+    } else {
+      miniOrbGrad.addColorStop(0, "#ffffff");
+      miniOrbGrad.addColorStop(0.25, "#ccffff");
+      miniOrbGrad.addColorStop(0.5, "#00ffff");
+      miniOrbGrad.addColorStop(0.8, "#0088ff");
+      miniOrbGrad.addColorStop(1, "#0044aa");
+    }
     ctx.fillStyle = miniOrbGrad;
     ctx.beginPath();
     ctx.arc(cx, miniOrbY, miniOrbSize, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Solid glowing core when attacking for mini orbs
+    if (attackPulse > 0.1) {
+      // Solid bright core
+      const miniCoreGrad = ctx.createRadialGradient(
+        cx, miniOrbY, 0,
+        cx, miniOrbY, miniOrbSize * 0.5
+      );
+      miniCoreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackPulse})`);
+      miniCoreGrad.addColorStop(0.5, `rgba(220, 255, 255, ${attackPulse * 0.9})`);
+      miniCoreGrad.addColorStop(1, `rgba(150, 255, 255, ${attackPulse * 0.5})`);
+      ctx.fillStyle = miniCoreGrad;
+      ctx.beginPath();
+      ctx.arc(cx, miniOrbY, miniOrbSize * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Inner intense white point
+      ctx.fillStyle = `rgba(255, 255, 255, ${attackPulse})`;
+      ctx.beginPath();
+      ctx.arc(cx, miniOrbY, miniOrbSize * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.shadowBlur = 0;
     
     // Mini electric arcs from mini orbs
@@ -6808,49 +6889,66 @@ function renderChainLightning(
   // Store orb position
   tower._orbScreenY = mainOrbY;
   
-  // Outer energy field
+  // Outer energy field - brighter when attacking
+  const mainFieldAlpha = isAttacking ? 0.3 : 0.2;
   const energyFieldGrad = ctx.createRadialGradient(
     screenPos.x, mainOrbY, 0,
-    screenPos.x, mainOrbY, mainOrbSize * 2.5
+    screenPos.x, mainOrbY, mainOrbSize * (2.5 + attackPulse * 0.5)
   );
-  energyFieldGrad.addColorStop(0, "rgba(0, 255, 255, 0.2)");
-  energyFieldGrad.addColorStop(0.4, "rgba(0, 200, 255, 0.1)");
-  energyFieldGrad.addColorStop(0.7, "rgba(0, 150, 255, 0.05)");
+  energyFieldGrad.addColorStop(0, `rgba(0, 255, 255, ${mainFieldAlpha + attackPulse * 0.25})`);
+  energyFieldGrad.addColorStop(0.4, `rgba(0, 200, 255, ${0.1 + attackPulse * 0.15})`);
+  energyFieldGrad.addColorStop(0.7, `rgba(0, 150, 255, ${0.05 + attackPulse * 0.1})`);
   energyFieldGrad.addColorStop(1, "rgba(0, 100, 255, 0)");
   ctx.fillStyle = energyFieldGrad;
   ctx.beginPath();
-  ctx.arc(screenPos.x, mainOrbY, mainOrbSize * 2.5, 0, Math.PI * 2);
+  ctx.arc(screenPos.x, mainOrbY, mainOrbSize * (2.5 + attackPulse * 0.5), 0, Math.PI * 2);
   ctx.fill();
   
-  // Main orb with detailed gradient
-  ctx.shadowColor = "#00ffff";
-  ctx.shadowBlur = 30 * zoom * mainOrbPulse;
+  // Main orb with detailed gradient - brighter glow when attacking
+  ctx.shadowColor = isAttacking ? "#88ffff" : "#00ffff";
+  ctx.shadowBlur = (30 + attackPulse * 30) * zoom * mainOrbPulse;
   const mainOrbGrad = ctx.createRadialGradient(
     screenPos.x - 4 * zoom, mainOrbY - 4 * zoom, 0,
     screenPos.x, mainOrbY, mainOrbSize
   );
-  mainOrbGrad.addColorStop(0, "#ffffff");
-  mainOrbGrad.addColorStop(0.2, "#ccffff");
-  mainOrbGrad.addColorStop(0.5, "#00ffff");
-  mainOrbGrad.addColorStop(0.8, "#0088ff");
-  mainOrbGrad.addColorStop(1, "#0044aa");
+  if (isAttacking) {
+    mainOrbGrad.addColorStop(0, "#ffffff");
+    mainOrbGrad.addColorStop(0.15, "#ffffff");
+    mainOrbGrad.addColorStop(0.35, "#ccffff");
+    mainOrbGrad.addColorStop(0.6, "#00ffff");
+    mainOrbGrad.addColorStop(0.85, "#0088ff");
+    mainOrbGrad.addColorStop(1, "#0066cc");
+  } else {
+    mainOrbGrad.addColorStop(0, "#ffffff");
+    mainOrbGrad.addColorStop(0.2, "#ccffff");
+    mainOrbGrad.addColorStop(0.5, "#00ffff");
+    mainOrbGrad.addColorStop(0.8, "#0088ff");
+    mainOrbGrad.addColorStop(1, "#0044aa");
+  }
   ctx.fillStyle = mainOrbGrad;
   ctx.beginPath();
   ctx.arc(screenPos.x, mainOrbY, mainOrbSize, 0, Math.PI * 2);
   ctx.fill();
   
-  // White core flash when attacking
+  // Solid glowing core when attacking
   if (attackPulse > 0.1) {
+    // Solid bright core
     const coreGrad = ctx.createRadialGradient(
       screenPos.x, mainOrbY, 0,
-      screenPos.x, mainOrbY, mainOrbSize * 0.7
+      screenPos.x, mainOrbY, mainOrbSize * 0.5
     );
     coreGrad.addColorStop(0, `rgba(255, 255, 255, ${attackPulse})`);
-    coreGrad.addColorStop(0.5, `rgba(200, 255, 255, ${attackPulse * 0.7})`);
-    coreGrad.addColorStop(1, "rgba(100, 255, 255, 0)");
+    coreGrad.addColorStop(0.5, `rgba(220, 255, 255, ${attackPulse * 0.9})`);
+    coreGrad.addColorStop(1, `rgba(150, 255, 255, ${attackPulse * 0.5})`);
     ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(screenPos.x, mainOrbY, mainOrbSize * 0.7, 0, Math.PI * 2);
+    ctx.arc(screenPos.x, mainOrbY, mainOrbSize * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Inner intense white point
+    ctx.fillStyle = `rgba(255, 255, 255, ${attackPulse})`;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, mainOrbY, mainOrbSize * 0.2, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.shadowBlur = 0;
