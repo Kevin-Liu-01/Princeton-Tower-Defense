@@ -5047,85 +5047,25 @@ function drawArcherEnemy(
   zoom: number,
   attackPhase: number = 0
 ) {
-  // PHANTOM DEADEYE - Spectral hunter with soul-piercing arrows and shadow magic
+  // PHANTOM DEADEYE - Optimized version (removed expensive shadowBlur operations)
   const isAttacking = attackPhase > 0;
-  const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+  const attackIntensity = attackPhase;
   const stance = Math.sin(time * 2.5) * 2.5 * zoom + (isAttacking ? attackIntensity * size * 0.12 : 0);
   const drawPull = 0.35 + Math.sin(time * 1.8) * 0.3;
   const shadowPulse = 0.6 + Math.sin(time * 4) * 0.4;
-  const deathAura = 0.5 + Math.sin(time * 5) * 0.3;
-  const soulFlicker = Math.sin(time * 8) > 0.3 ? 1 : 0.7;
 
-  // Shadow tendrils reaching out
-  ctx.save();
-  for (let tendril = 0; tendril < 5; tendril++) {
-    const tendrilAngle = tendril * Math.PI * 0.4 - Math.PI * 0.5 + Math.sin(time * 0.5) * 0.2;
-    ctx.strokeStyle = `rgba(6, 78, 59, ${deathAura * 0.4})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x, y + size * 0.3);
-    let tx = x, ty = y + size * 0.3;
-    for (let seg = 0; seg < 4; seg++) {
-      tx += Math.cos(tendrilAngle + Math.sin(time * 2 + seg) * 0.4) * size * 0.12;
-      ty += Math.sin(tendrilAngle + Math.sin(time * 2 + seg) * 0.3) * size * 0.08;
-      ctx.lineTo(tx, ty);
-    }
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // Death magic aura - more ominous
-  const auraGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.8);
-  auraGrad.addColorStop(0, `rgba(16, 185, 129, ${shadowPulse * 0.3})`);
-  auraGrad.addColorStop(0.3, `rgba(5, 150, 105, ${shadowPulse * 0.2})`);
-  auraGrad.addColorStop(0.6, `rgba(6, 78, 59, ${shadowPulse * 0.1})`);
-  auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = auraGrad;
+  // Simple shadow beneath
+  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
   ctx.beginPath();
-  ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.52, size * 0.32, size * 0.1, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Floating soul wisps/death leaves
-  for (let i = 0; i < 8; i++) {
-    const leafAngle = time * 1.2 + i * Math.PI * 0.25;
-    const leafDist = size * 0.5 + Math.sin(time * 2.5 + i) * size * 0.12;
-    const lx = x + Math.cos(leafAngle) * leafDist;
-    const ly = y + Math.sin(leafAngle) * leafDist * 0.5;
-    ctx.save();
-    ctx.translate(lx, ly);
-    ctx.rotate(time * 2.5 + i);
-    ctx.fillStyle = `rgba(52, 211, 153, ${0.4 + Math.sin(time * 3.5 + i) * 0.25})`;
-    ctx.shadowColor = "#34d399";
-    ctx.shadowBlur = 3 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(0, -size * 0.02);
-    ctx.quadraticCurveTo(size * 0.03, 0, 0, size * 0.02);
-    ctx.quadraticCurveTo(-size * 0.03, 0, 0, -size * 0.02);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.restore();
-  }
-
-  // Shadow beneath - darker
-  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.52, 0, x, y + size * 0.52, size * 0.35);
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-  shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.25)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Enchanted quiver with soul-bound arrows
+  // Enchanted quiver with arrows (simplified - no shadowBlur)
   ctx.save();
   ctx.translate(x + size * 0.28, y - size * 0.06 + stance * 0.3);
   ctx.rotate(0.28);
-  // Quiver body with runes
-  const quiverGrad = ctx.createLinearGradient(-size * 0.08, 0, size * 0.08, 0);
-  quiverGrad.addColorStop(0, "#1c1917");
-  quiverGrad.addColorStop(0.5, "#292524");
-  quiverGrad.addColorStop(1, "#1c1917");
-  ctx.fillStyle = quiverGrad;
+  // Quiver body
+  ctx.fillStyle = "#292524";
   ctx.fillRect(-size * 0.08, -size * 0.4, size * 0.16, size * 0.5);
   // Leather straps
   ctx.strokeStyle = "#78350f";
@@ -5133,86 +5073,60 @@ function drawArcherEnemy(
   ctx.beginPath();
   ctx.moveTo(-size * 0.06, -size * 0.38);
   ctx.lineTo(-size * 0.06, size * 0.08);
-  ctx.stroke();
-  ctx.beginPath();
   ctx.moveTo(size * 0.06, -size * 0.38);
   ctx.lineTo(size * 0.06, size * 0.08);
   ctx.stroke();
-  // Soul runes on quiver
-  ctx.strokeStyle = `rgba(52, 211, 153, ${shadowPulse * 0.6})`;
-  ctx.lineWidth = 1 * zoom;
+  // Soul arrows (simplified - 3 arrows instead of 6, no shadowBlur)
+  ctx.strokeStyle = "#047857";
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.3);
-  ctx.lineTo(-size * 0.03, -size * 0.2);
-  ctx.lineTo(size * 0.03, -size * 0.1);
-  ctx.lineTo(0, 0);
+  for (let i = 0; i < 3; i++) {
+    ctx.moveTo(-size * 0.03 + i * size * 0.03, -size * 0.38);
+    ctx.lineTo(-size * 0.03 + i * size * 0.03, -size * 0.58);
+  }
   ctx.stroke();
-  // Soul arrows
-  for (let i = 0; i < 6; i++) {
-    ctx.strokeStyle = "#047857";
-    ctx.lineWidth = 2 * zoom;
+  // Arrowheads (no shadowBlur)
+  ctx.fillStyle = "#34d399";
+  for (let i = 0; i < 3; i++) {
     ctx.beginPath();
-    ctx.moveTo(-size * 0.05 + i * size * 0.02, -size * 0.38);
-    ctx.lineTo(-size * 0.05 + i * size * 0.02, -size * 0.6);
-    ctx.stroke();
-    // Soul-fire arrowhead
-    ctx.fillStyle = `rgba(52, 211, 153, ${soulFlicker})`;
-    ctx.shadowColor = "#34d399";
-    ctx.shadowBlur = 5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.05 + i * size * 0.02, -size * 0.6);
-    ctx.lineTo(-size * 0.065 + i * size * 0.02, -size * 0.66);
-    ctx.lineTo(-size * 0.035 + i * size * 0.02, -size * 0.66);
+    ctx.moveTo(-size * 0.03 + i * size * 0.03, -size * 0.58);
+    ctx.lineTo(-size * 0.045 + i * size * 0.03, -size * 0.64);
+    ctx.lineTo(-size * 0.015 + i * size * 0.03, -size * 0.64);
     ctx.fill();
-    ctx.shadowBlur = 0;
   }
   ctx.restore();
 
-  // Flowing phantom cloak - more tattered and ghostly
+  // Flowing phantom cloak (simplified gradient)
   const cloakGrad = ctx.createLinearGradient(x - size * 0.4, y, x + size * 0.4, y);
   cloakGrad.addColorStop(0, "#022c22");
-  cloakGrad.addColorStop(0.2, "#064e3b");
-  cloakGrad.addColorStop(0.4, "#047857");
   cloakGrad.addColorStop(0.5, "#059669");
-  cloakGrad.addColorStop(0.6, "#047857");
-  cloakGrad.addColorStop(0.8, "#064e3b");
   cloakGrad.addColorStop(1, "#022c22");
   ctx.fillStyle = cloakGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.42, y + size * 0.55);
-  // Tattered flowing bottom edge
-  for (let i = 0; i < 7; i++) {
-    const waveX = x - size * 0.42 + i * size * 0.14;
-    const waveY = y + size * 0.55 + Math.sin(time * 5 + i * 1.3) * size * 0.05 + (i % 2) * size * 0.04 + (i % 3) * size * 0.02;
-    ctx.lineTo(waveX, waveY);
-  }
+  // Simplified tattered edge (fewer iterations)
+  ctx.lineTo(x - size * 0.28, y + size * 0.58);
+  ctx.lineTo(x - size * 0.14, y + size * 0.53);
+  ctx.lineTo(x, y + size * 0.56);
+  ctx.lineTo(x + size * 0.14, y + size * 0.52);
+  ctx.lineTo(x + size * 0.28, y + size * 0.57);
+  ctx.lineTo(x + size * 0.42, y + size * 0.55);
   ctx.quadraticCurveTo(x + size * 0.48, y - size * 0.15 + stance, x, y - size * 0.56 + stance);
   ctx.quadraticCurveTo(x - size * 0.48, y - size * 0.15 + stance, x - size * 0.42, y + size * 0.55);
   ctx.fill();
 
-  // Soul threads on cloak
+  // Cloak accent lines (simplified - 2 lines instead of 4 beziers)
   ctx.strokeStyle = `rgba(52, 211, 153, ${shadowPulse * 0.5})`;
   ctx.lineWidth = 1.5 * zoom;
-  for (let i = 0; i < 4; i++) {
-    ctx.beginPath();
-    ctx.moveTo(x - size * 0.15 + i * size * 0.1, y + size * 0.08 + i * size * 0.06);
-    ctx.bezierCurveTo(
-      x - size * 0.1 + i * size * 0.1 + Math.sin(time * 2 + i) * size * 0.03,
-      y + size * 0.15 + i * size * 0.06,
-      x - size * 0.05 + i * size * 0.1,
-      y + size * 0.2 + i * size * 0.08,
-      x + i * size * 0.1 + Math.cos(time * 2 + i) * size * 0.02,
-      y + size * 0.25 + i * size * 0.08
-    );
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, y + size * 0.1);
+  ctx.lineTo(x - size * 0.05, y + size * 0.35);
+  ctx.moveTo(x + size * 0.1, y + size * 0.12);
+  ctx.lineTo(x + size * 0.05, y + size * 0.35);
+  ctx.stroke();
 
-  // Spectral leather armor
-  const armorGrad = ctx.createLinearGradient(x - size * 0.2, y, x + size * 0.2, y);
-  armorGrad.addColorStop(0, "#44403c");
-  armorGrad.addColorStop(0.5, "#78350f");
-  armorGrad.addColorStop(1, "#44403c");
-  ctx.fillStyle = armorGrad;
+  // Spectral leather armor (simplified gradient)
+  ctx.fillStyle = "#78350f";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.2, y + size * 0.38);
   ctx.lineTo(x - size * 0.22, y - size * 0.18 + stance);
@@ -5226,23 +5140,17 @@ function drawArcherEnemy(
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.2 + stance);
   ctx.lineTo(x, y + size * 0.3);
-  ctx.stroke();
-  ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y + size * 0.05);
   ctx.lineTo(x + size * 0.15, y + size * 0.05);
   ctx.stroke();
 
-  // Spectral elven face
-  const faceGrad = ctx.createRadialGradient(x, y - size * 0.42 + stance, 0, x, y - size * 0.42 + stance, size * 0.18);
-  faceGrad.addColorStop(0, "#e7e5e4");
-  faceGrad.addColorStop(0.6, "#d6d3d1");
-  faceGrad.addColorStop(1, "#a8a29e");
-  ctx.fillStyle = faceGrad;
+  // Spectral elven face (simplified - no gradient)
+  ctx.fillStyle = "#d6d3d1";
   ctx.beginPath();
   ctx.arc(x, y - size * 0.42 + stance, size * 0.18, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pointed elven ears - longer
+  // Pointed elven ears
   ctx.fillStyle = "#d6d3d1";
   ctx.beginPath();
   ctx.moveTo(x - size * 0.16, y - size * 0.44 + stance);
@@ -5255,79 +5163,52 @@ function drawArcherEnemy(
   ctx.quadraticCurveTo(x + size * 0.22, y - size * 0.48 + stance, x + size * 0.18, y - size * 0.4 + stance);
   ctx.fill();
 
-  // Glowing death-green eyes
+  // Glowing death-green eyes (keep ONE shadowBlur for the signature glow)
   ctx.fillStyle = "#10b981";
   ctx.shadowColor = "#10b981";
-  ctx.shadowBlur = 10 * zoom;
+  ctx.shadowBlur = 6 * zoom;
   ctx.beginPath();
   ctx.ellipse(x - size * 0.06, y - size * 0.44 + stance, size * 0.035, size * 0.028, -0.1, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.06, y - size * 0.44 + stance, size * 0.035, size * 0.028, 0.1, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowBlur = 0;
   // Pupil slits
   ctx.fillStyle = "#022c22";
   ctx.beginPath();
   ctx.ellipse(x - size * 0.06, y - size * 0.44 + stance, size * 0.01, size * 0.022, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.06, y - size * 0.44 + stance, size * 0.01, size * 0.022, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
-  // Hood shadow - deeper
+  // Hood shadow
   ctx.fillStyle = "rgba(2, 44, 34, 0.7)";
   ctx.beginPath();
   ctx.arc(x, y - size * 0.56 + stance, size * 0.2, 0, Math.PI, true);
   ctx.fill();
-  // Hood edge details
+  // Hood edge
   ctx.strokeStyle = "#064e3b";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.arc(x, y - size * 0.56 + stance, size * 0.2, 0.1, Math.PI - 0.1, true);
   ctx.stroke();
 
-  // Magnificent spectral bow - bone and soul magic
+  // Spectral bow (simplified - no shadowBlur on bow)
   ctx.save();
   ctx.translate(x - size * 0.38, y + stance);
-  // Bow body - bone-like with soul energy
-  const bowGrad = ctx.createLinearGradient(-size * 0.12, -size * 0.45, size * 0.12, size * 0.45);
-  bowGrad.addColorStop(0, "#047857");
-  bowGrad.addColorStop(0.3, "#059669");
-  bowGrad.addColorStop(0.5, "#10b981");
-  bowGrad.addColorStop(0.7, "#059669");
-  bowGrad.addColorStop(1, "#047857");
-  ctx.strokeStyle = bowGrad;
-  ctx.shadowColor = "#10b981";
-  ctx.shadowBlur = 12 * zoom;
-  ctx.lineWidth = 5 * zoom;
+  // Bow body
+  ctx.strokeStyle = "#10b981";
+  ctx.lineWidth = 4 * zoom;
   ctx.beginPath();
   ctx.arc(0, 0, size * 0.46, -Math.PI * 0.48, Math.PI * 0.48);
   ctx.stroke();
-  ctx.shadowBlur = 0;
-  // Bone spurs on bow
-  ctx.fillStyle = "#a8a29e";
-  for (let spur = 0; spur < 4; spur++) {
-    const spurAngle = -Math.PI * 0.35 + spur * Math.PI * 0.23;
-    ctx.save();
-    ctx.translate(Math.cos(spurAngle) * size * 0.46, Math.sin(spurAngle) * size * 0.46);
-    ctx.rotate(spurAngle);
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(size * 0.04, -size * 0.02);
-    ctx.lineTo(size * 0.08, 0);
-    ctx.lineTo(size * 0.04, size * 0.02);
-    ctx.fill();
-    ctx.restore();
-  }
-  // Soul runes on bow
-  ctx.fillStyle = `rgba(52, 211, 153, ${shadowPulse})`;
-  ctx.shadowColor = "#34d399";
-  ctx.shadowBlur = 4 * zoom;
-  ctx.font = `${size * 0.07}px serif`;
-  ctx.textAlign = "center";
-  ctx.fillText("⚔", Math.cos(-0.25) * size * 0.4, Math.sin(-0.25) * size * 0.4);
-  ctx.fillText("⚔", Math.cos(0.25) * size * 0.4, Math.sin(0.25) * size * 0.4);
-  ctx.shadowBlur = 0;
+  // Bow highlights
+  ctx.strokeStyle = "#34d399";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.44, -Math.PI * 0.35, Math.PI * 0.35);
+  ctx.stroke();
   ctx.restore();
 
-  // Soul-string (pulsing ethereal energy)
+  // Soul-string
   ctx.strokeStyle = `rgba(52, 211, 153, ${shadowPulse})`;
   ctx.lineWidth = 2 * zoom;
   const bowTopX = x - size * 0.38 + Math.cos(-Math.PI * 0.48) * size * 0.46;
@@ -5341,50 +5222,33 @@ function drawArcherEnemy(
   ctx.lineTo(bowBotX, bowBotY);
   ctx.stroke();
 
-  // Soul-piercing arrow
+  // Nocked arrow (simplified)
   ctx.save();
   ctx.translate(pullX, y + stance);
   ctx.rotate(Math.PI);
-  // Arrow shaft - spectral
+  // Arrow shaft
   ctx.strokeStyle = "#047857";
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, 0);
   ctx.lineTo(size * 0.45, 0);
   ctx.stroke();
-  // Soul energy along shaft
-  ctx.strokeStyle = `rgba(52, 211, 153, ${soulFlicker * 0.5})`;
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(size * 0.05, 0);
-  for (let w = 0; w < 8; w++) {
-    ctx.lineTo(size * 0.08 + w * size * 0.045, Math.sin(time * 10 + w) * size * 0.015);
-  }
-  ctx.stroke();
-  // Soul-fire arrowhead
+  // Arrowhead (no shadowBlur)
   ctx.fillStyle = "#10b981";
-  ctx.shadowColor = "#10b981";
-  ctx.shadowBlur = 10 * zoom;
   ctx.beginPath();
   ctx.moveTo(size * 0.45, 0);
   ctx.lineTo(size * 0.52, -size * 0.04);
   ctx.lineTo(size * 0.58, 0);
   ctx.lineTo(size * 0.52, size * 0.04);
   ctx.fill();
-  // Inner glow
-  ctx.fillStyle = "#34d399";
-  ctx.beginPath();
-  ctx.arc(size * 0.5, 0, size * 0.015, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  // Arrow fletching - spectral feathers
+  // Arrow fletching
   ctx.fillStyle = `rgba(16, 185, 129, ${shadowPulse})`;
   ctx.beginPath();
   ctx.moveTo(0, 0);
-  ctx.quadraticCurveTo(-size * 0.04, -size * 0.06, -size * 0.08, -size * 0.05);
+  ctx.lineTo(-size * 0.06, -size * 0.04);
   ctx.lineTo(-size * 0.02, 0);
-  ctx.lineTo(-size * 0.08, size * 0.05);
-  ctx.quadraticCurveTo(-size * 0.04, size * 0.06, 0, 0);
+  ctx.lineTo(-size * 0.06, size * 0.04);
+  ctx.closePath();
   ctx.fill();
   ctx.restore();
 }
@@ -11265,120 +11129,309 @@ function drawAthleteEnemy(
   zoom: number,
   attackPhase: number = 0
 ) {
-  // TRACK STAR - Fast athletic runner with jersey
+  // VARSITY RUNNER - Elite sprinter with dynamic running animation
   const isAttacking = attackPhase > 0;
-  const runCycle = Math.sin(time * 12) * 0.3;
-  const armSwing = Math.sin(time * 12) * 0.4;
-  const bounce = Math.abs(Math.sin(time * 12)) * 3 * zoom;
+  const attackBoost = isAttacking ? 1.3 : 1; // Run faster when attacking
+  const runCycle = Math.sin(time * 14 * attackBoost) * 0.4;
+  const armSwing = Math.sin(time * 14 * attackBoost) * 0.5;
+  const bounce = Math.abs(Math.sin(time * 14 * attackBoost)) * 4 * zoom;
+  const leanForward = 0.15 + (isAttacking ? 0.1 : 0); // Lean more when attacking
 
-  // Shadow
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.4, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Running legs
-  ctx.fillStyle = "#fcd9b6";
-  // Back leg
-  ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.15 + runCycle * size * 0.2,
-    y + size * 0.25 - bounce,
-    size * 0.08,
-    size * 0.2,
-    runCycle * 0.5,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-  // Front leg
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.15 - runCycle * size * 0.2,
-    y + size * 0.25 - bounce,
-    size * 0.08,
-    size * 0.2,
-    -runCycle * 0.5,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
-
-  // Shorts
-  ctx.fillStyle = bodyColorDark;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.05 - bounce, size * 0.25, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Athletic jersey body
+  // Motion blur trails (speed effect)
+  ctx.globalAlpha = isAttacking ? 0.2 : 0.15;
   ctx.fillStyle = bodyColor;
+  for (let trail = 1; trail <= 3; trail++) {
+    ctx.beginPath();
+    ctx.ellipse(x - trail * 6 * zoom, y - size * 0.15, size * 0.25, size * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Ground shadow (elongated for speed)
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.15 - bounce, size * 0.3, size * 0.25, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.1, y + size * 0.45, size * 0.45, size * 0.1, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Jersey stripes
-  ctx.strokeStyle = bodyColorLight;
+  // --- LEGS with detailed anatomy ---
+  const skinTone = "#e8c4a0";
+  const skinHighlight = "#f5dcc4";
+  const skinShadow = "#d4a574";
+
+  // Back leg (bent back in running stride)
+  ctx.save();
+  ctx.translate(x - size * 0.1, y + size * 0.1 - bounce);
+  ctx.rotate(runCycle * 0.6 + leanForward);
+  // Thigh
+  const thighGrad = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
+  thighGrad.addColorStop(0, skinShadow);
+  thighGrad.addColorStop(0.5, skinTone);
+  thighGrad.addColorStop(1, skinHighlight);
+  ctx.fillStyle = thighGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.12, size * 0.08, size * 0.14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Calf
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(size * 0.02, size * 0.28, size * 0.06, size * 0.1, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Running shoe
+  ctx.fillStyle = "#1a1a2e";
+  ctx.beginPath();
+  ctx.ellipse(size * 0.05, size * 0.38, size * 0.1, size * 0.04, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Shoe accent stripe
+  ctx.strokeStyle = bodyColor;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, y - size * 0.2 - bounce);
-  ctx.lineTo(x + size * 0.2, y - size * 0.2 - bounce);
+  ctx.moveTo(-size * 0.02, size * 0.36);
+  ctx.lineTo(size * 0.1, size * 0.38);
+  ctx.stroke();
+  ctx.restore();
+
+  // Front leg (extended forward)
+  ctx.save();
+  ctx.translate(x + size * 0.1, y + size * 0.1 - bounce);
+  ctx.rotate(-runCycle * 0.6 + leanForward);
+  // Thigh
+  ctx.fillStyle = thighGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.12, size * 0.09, size * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Calf
+  ctx.fillStyle = skinHighlight;
+  ctx.beginPath();
+  ctx.ellipse(-size * 0.02, size * 0.28, size * 0.065, size * 0.11, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+  // Running shoe
+  ctx.fillStyle = "#1a1a2e";
+  ctx.beginPath();
+  ctx.ellipse(-size * 0.04, size * 0.38, size * 0.1, size * 0.045, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Shoe accent
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.04, size * 0.36);
+  ctx.lineTo(-size * 0.1, size * 0.39);
+  ctx.stroke();
+  ctx.restore();
+
+  // --- SHORTS with detail ---
+  const shortsGrad = ctx.createLinearGradient(x - size * 0.2, y, x + size * 0.2, y);
+  shortsGrad.addColorStop(0, "#1e3a5f");
+  shortsGrad.addColorStop(0.5, "#2d4a6f");
+  shortsGrad.addColorStop(1, "#1e3a5f");
+  ctx.fillStyle = shortsGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.22, y - size * 0.02 - bounce);
+  ctx.lineTo(x - size * 0.18, y + size * 0.18 - bounce);
+  ctx.lineTo(x, y + size * 0.15 - bounce);
+  ctx.lineTo(x + size * 0.18, y + size * 0.18 - bounce);
+  ctx.lineTo(x + size * 0.22, y - size * 0.02 - bounce);
+  ctx.closePath();
+  ctx.fill();
+  // Shorts side stripe
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.2, y - bounce);
+  ctx.lineTo(x - size * 0.16, y + size * 0.15 - bounce);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.2, y - bounce);
+  ctx.lineTo(x + size * 0.16, y + size * 0.15 - bounce);
   ctx.stroke();
 
-  // Swinging arms
-  ctx.fillStyle = "#fcd9b6";
-  // Left arm
+  // --- TORSO (Athletic jersey) ---
+  ctx.save();
+  ctx.translate(x, y - size * 0.18 - bounce);
+  ctx.rotate(leanForward * 0.3);
+  // Jersey body gradient
+  const jerseyGrad = ctx.createLinearGradient(-size * 0.25, -size * 0.2, size * 0.25, size * 0.2);
+  jerseyGrad.addColorStop(0, bodyColorDark);
+  jerseyGrad.addColorStop(0.3, bodyColor);
+  jerseyGrad.addColorStop(0.7, bodyColor);
+  jerseyGrad.addColorStop(1, bodyColorDark);
+  ctx.fillStyle = jerseyGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    x - size * 0.35 + armSwing * size * 0.15,
-    y - size * 0.1 - bounce,
-    size * 0.08,
-    size * 0.15,
-    armSwing * 0.3,
-    0,
-    Math.PI * 2
-  );
+  ctx.moveTo(-size * 0.25, size * 0.15);
+  ctx.quadraticCurveTo(-size * 0.28, 0, -size * 0.22, -size * 0.18);
+  ctx.lineTo(-size * 0.08, -size * 0.22);
+  ctx.quadraticCurveTo(0, -size * 0.24, size * 0.08, -size * 0.22);
+  ctx.lineTo(size * 0.22, -size * 0.18);
+  ctx.quadraticCurveTo(size * 0.28, 0, size * 0.25, size * 0.15);
+  ctx.closePath();
   ctx.fill();
-  // Right arm
+  // Jersey V-neck
+  ctx.fillStyle = skinTone;
   ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.35 - armSwing * size * 0.15,
-    y - size * 0.1 - bounce,
-    size * 0.08,
-    size * 0.15,
-    -armSwing * 0.3,
-    0,
-    Math.PI * 2
-  );
+  ctx.moveTo(-size * 0.06, -size * 0.18);
+  ctx.lineTo(0, -size * 0.08);
+  ctx.lineTo(size * 0.06, -size * 0.18);
+  ctx.closePath();
+  ctx.fill();
+  // Jersey shoulder stripes
+  ctx.strokeStyle = bodyColorLight;
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, -size * 0.15);
+  ctx.lineTo(-size * 0.25, -size * 0.05);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.2, -size * 0.15);
+  ctx.lineTo(size * 0.25, -size * 0.05);
+  ctx.stroke();
+  // Jersey number (on chest)
+  ctx.fillStyle = "#fff";
+  ctx.font = `bold ${size * 0.18}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("23", 0, size * 0.02);
+  // Number outline
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.strokeText("23", 0, size * 0.02);
+  ctx.restore();
+
+  // --- ARMS (pumping motion) ---
+  // Back arm
+  ctx.save();
+  ctx.translate(x - size * 0.28, y - size * 0.18 - bounce);
+  ctx.rotate(-armSwing * 0.7 + leanForward);
+  // Upper arm (sleeve)
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.08, size * 0.08, size * 0.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Forearm
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(size * 0.02, size * 0.22, size * 0.055, size * 0.1, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Fist
+  ctx.fillStyle = skinHighlight;
+  ctx.beginPath();
+  ctx.arc(size * 0.04, size * 0.32, size * 0.045, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Front arm
+  ctx.save();
+  ctx.translate(x + size * 0.28, y - size * 0.18 - bounce);
+  ctx.rotate(armSwing * 0.7 + leanForward);
+  // Upper arm
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.08, size * 0.08, size * 0.1, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Forearm
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(-size * 0.02, size * 0.22, size * 0.055, size * 0.1, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Fist
+  ctx.fillStyle = skinHighlight;
+  ctx.beginPath();
+  ctx.arc(-size * 0.04, size * 0.32, size * 0.045, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --- HEAD with detailed features ---
+  const headY = y - size * 0.52 - bounce;
+
+  // Neck
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(x, y - size * 0.32 - bounce, size * 0.08, size * 0.06, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Head with sweatband
-  ctx.fillStyle = "#fcd9b6";
+  // Head shape
+  const headGrad = ctx.createRadialGradient(x - size * 0.05, headY - size * 0.05, 0, x, headY, size * 0.2);
+  headGrad.addColorStop(0, skinHighlight);
+  headGrad.addColorStop(0.7, skinTone);
+  headGrad.addColorStop(1, skinShadow);
+  ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.45 - bounce, size * 0.2, 0, Math.PI * 2);
+  ctx.arc(x, headY, size * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Short athletic hair
+  ctx.fillStyle = "#2d1f1a";
+  ctx.beginPath();
+  ctx.arc(x, headY - size * 0.02, size * 0.17, Math.PI * 1.15, Math.PI * 1.85);
+  ctx.quadraticCurveTo(x, headY - size * 0.22, x, headY - size * 0.18);
   ctx.fill();
 
   // Sweatband
-  ctx.fillStyle = bodyColor;
+  const bandGrad = ctx.createLinearGradient(x - size * 0.2, headY, x + size * 0.2, headY);
+  bandGrad.addColorStop(0, bodyColorDark);
+  bandGrad.addColorStop(0.5, bodyColor);
+  bandGrad.addColorStop(1, bodyColorDark);
+  ctx.fillStyle = bandGrad;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.45 - bounce, size * 0.2, Math.PI * 1.1, Math.PI * 1.9);
-  ctx.lineTo(x + size * 0.15, y - size * 0.5 - bounce);
-  ctx.lineTo(x - size * 0.15, y - size * 0.5 - bounce);
+  ctx.arc(x, headY, size * 0.19, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.arc(x, headY, size * 0.15, Math.PI * 1.95, Math.PI * 1.05, true);
+  ctx.closePath();
+  ctx.fill();
+  // Sweatband logo
+  ctx.fillStyle = bodyColorLight;
+  ctx.beginPath();
+  ctx.arc(x, headY - size * 0.15, size * 0.025, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Determined eyebrows
+  ctx.strokeStyle = "#3d2d1a";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.12, headY - size * 0.06);
+  ctx.lineTo(x - size * 0.04, headY - size * 0.04);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.04, headY - size * 0.04);
+  ctx.lineTo(x + size * 0.12, headY - size * 0.06);
+  ctx.stroke();
+
+  // Focused eyes
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.07, headY + size * 0.01, size * 0.04, size * 0.03, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.07, headY + size * 0.01, size * 0.04, size * 0.03, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Pupils (looking ahead)
+  ctx.fillStyle = "#1a1a2e";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.065 + size * 0.01, headY + size * 0.01, size * 0.02, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.075 + size * 0.01, headY + size * 0.01, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nose
+  ctx.fillStyle = skinShadow;
+  ctx.beginPath();
+  ctx.moveTo(x, headY + size * 0.02);
+  ctx.lineTo(x - size * 0.025, headY + size * 0.08);
+  ctx.lineTo(x + size * 0.025, headY + size * 0.08);
   ctx.closePath();
   ctx.fill();
 
-  // Determined eyes
-  ctx.fillStyle = "#222";
+  // Determined mouth (slight grimace of effort)
+  ctx.strokeStyle = "#8b5a4a";
+  ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.08, y - size * 0.47 - bounce, size * 0.03, size * 0.04, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.08, y - size * 0.47 - bounce, size * 0.03, size * 0.04, 0, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(x - size * 0.05, headY + size * 0.12);
+  ctx.quadraticCurveTo(x, headY + size * 0.1, x + size * 0.05, headY + size * 0.12);
+  ctx.stroke();
 
-  // Jersey number
-  ctx.fillStyle = bodyColorLight;
-  ctx.font = `bold ${size * 0.2}px Arial`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("1", x, y - size * 0.15 - bounce);
+  // Sweat droplets (effort effect)
+  ctx.fillStyle = "rgba(135, 206, 250, 0.6)";
+  const sweatPhase = (time * 3) % 1;
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.2, headY + sweatPhase * size * 0.3, size * 0.02, size * 0.03, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.18, headY + size * 0.05 + sweatPhase * size * 0.2, size * 0.015, size * 0.025, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawProtestorEnemy(
@@ -11393,96 +11446,384 @@ function drawProtestorEnemy(
   zoom: number,
   attackPhase: number = 0
 ) {
-  // CAMPUS PROTESTOR - Student with a sign
+  // CAMPUS PROTESTOR - Passionate student activist with detailed sign and outfit
   const isAttacking = attackPhase > 0;
-  const signWave = Math.sin(time * 4) * 0.15;
-  const marchBob = Math.abs(Math.sin(time * 6)) * 2 * zoom;
+  const attackIntensity = isAttacking ? 1.4 : 1; // More vigorous when attacking
+  const signWave = Math.sin(time * 4.5 * attackIntensity) * (isAttacking ? 0.25 : 0.18);
+  const marchBob = Math.abs(Math.sin(time * 7 * attackIntensity)) * 3 * zoom;
+  const legPhase = Math.sin(time * 7 * attackIntensity);
+  const chantPhase = Math.sin(time * 8 * attackIntensity);
+  const armRaise = 0.1 + Math.abs(Math.sin(time * 4 * attackIntensity)) * (isAttacking ? 0.25 : 0.15);
 
-  // Shadow
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  // Ground shadow
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.4, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.48, size * 0.4, size * 0.1, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Legs (marching)
-  ctx.fillStyle = "#3b5998";
-  const legPhase = Math.sin(time * 6);
-  ctx.beginPath();
-  ctx.ellipse(x - size * 0.12 + legPhase * size * 0.1, y + size * 0.25 - marchBob, size * 0.1, size * 0.2, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.12 - legPhase * size * 0.1, y + size * 0.25 - marchBob, size * 0.1, size * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // --- LEGS (jeans with details) ---
+  const jeansColor = "#2d4263";
+  const jeansDark = "#1e2d4a";
+  const jeansLight = "#3d5273";
 
-  // Body (hoodie)
-  ctx.fillStyle = bodyColor;
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.1 - marchBob, size * 0.3, size * 0.3, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Hoodie details
-  ctx.fillStyle = bodyColorDark;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.15 - marchBob, size * 0.15, Math.PI * 0.8, Math.PI * 2.2);
-  ctx.fill();
-
-  // Sign pole
-  ctx.strokeStyle = "#8B4513";
-  ctx.lineWidth = 3 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.2, y - marchBob);
-  ctx.lineTo(x + size * 0.15 + signWave * size, y - size * 0.7 - marchBob);
-  ctx.stroke();
-
-  // Protest sign
+  // Back leg
   ctx.save();
-  ctx.translate(x + size * 0.15 + signWave * size, y - size * 0.9 - marchBob);
-  ctx.rotate(signWave);
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(-size * 0.3, -size * 0.2, size * 0.6, size * 0.35);
-  ctx.strokeStyle = "#333";
-  ctx.lineWidth = 1 * zoom;
-  ctx.strokeRect(-size * 0.3, -size * 0.2, size * 0.6, size * 0.35);
-  // Sign text
+  ctx.translate(x - size * 0.1, y + size * 0.15 - marchBob);
+  ctx.rotate(legPhase * 0.25);
+  // Jeans leg
+  const legGrad = ctx.createLinearGradient(-size * 0.08, 0, size * 0.08, 0);
+  legGrad.addColorStop(0, jeansDark);
+  legGrad.addColorStop(0.5, jeansColor);
+  legGrad.addColorStop(1, jeansDark);
+  ctx.fillStyle = legGrad;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, 0);
+  ctx.lineTo(-size * 0.08, size * 0.32);
+  ctx.lineTo(size * 0.08, size * 0.32);
+  ctx.lineTo(size * 0.1, 0);
+  ctx.closePath();
+  ctx.fill();
+  // Jeans cuff
+  ctx.fillStyle = jeansLight;
+  ctx.fillRect(-size * 0.09, size * 0.28, size * 0.18, size * 0.04);
+  // Sneaker
+  ctx.fillStyle = "#f5f5f5";
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.36, size * 0.09, size * 0.04, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Sneaker accent
   ctx.fillStyle = bodyColor;
-  ctx.font = `bold ${size * 0.12}px Arial`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("GO!", 0, 0);
+  ctx.beginPath();
+  ctx.arc(-size * 0.03, size * 0.35, size * 0.025, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
-  // Arms holding sign
-  ctx.fillStyle = "#fcd9b6";
+  // Front leg
+  ctx.save();
+  ctx.translate(x + size * 0.1, y + size * 0.15 - marchBob);
+  ctx.rotate(-legPhase * 0.25);
+  ctx.fillStyle = legGrad;
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.25, y - size * 0.1 - marchBob);
-  ctx.lineTo(x + size * 0.2, y - size * 0.05 - marchBob);
-  ctx.lineTo(x + size * 0.2, y + size * 0.05 - marchBob);
+  ctx.moveTo(-size * 0.1, 0);
+  ctx.lineTo(-size * 0.08, size * 0.32);
+  ctx.lineTo(size * 0.08, size * 0.32);
+  ctx.lineTo(size * 0.1, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = jeansLight;
+  ctx.fillRect(-size * 0.09, size * 0.28, size * 0.18, size * 0.04);
+  // Sneaker
+  ctx.fillStyle = "#f5f5f5";
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.36, size * 0.09, size * 0.04, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(-size * 0.03, size * 0.35, size * 0.025, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --- HOODIE BODY with details ---
+  const hoodieGrad = ctx.createLinearGradient(x - size * 0.35, y, x + size * 0.35, y);
+  hoodieGrad.addColorStop(0, bodyColorDark);
+  hoodieGrad.addColorStop(0.3, bodyColor);
+  hoodieGrad.addColorStop(0.7, bodyColor);
+  hoodieGrad.addColorStop(1, bodyColorDark);
+
+  // Main hoodie body
+  ctx.fillStyle = hoodieGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.32, y + size * 0.18 - marchBob);
+  ctx.quadraticCurveTo(x - size * 0.38, y - size * 0.1 - marchBob, x - size * 0.25, y - size * 0.28 - marchBob);
+  ctx.lineTo(x + size * 0.25, y - size * 0.28 - marchBob);
+  ctx.quadraticCurveTo(x + size * 0.38, y - size * 0.1 - marchBob, x + size * 0.32, y + size * 0.18 - marchBob);
+  ctx.closePath();
   ctx.fill();
 
-  // Head with beanie
-  ctx.fillStyle = "#fcd9b6";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.05, y - size * 0.4 - marchBob, size * 0.18, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Beanie
+  // Hoodie front pocket
   ctx.fillStyle = bodyColorDark;
   ctx.beginPath();
-  ctx.arc(x - size * 0.05, y - size * 0.42 - marchBob, size * 0.19, Math.PI, Math.PI * 2);
+  ctx.moveTo(x - size * 0.2, y + size * 0.05 - marchBob);
+  ctx.quadraticCurveTo(x, y + size * 0.12 - marchBob, x + size * 0.2, y + size * 0.05 - marchBob);
+  ctx.lineTo(x + size * 0.18, y + size * 0.15 - marchBob);
+  ctx.quadraticCurveTo(x, y + size * 0.18 - marchBob, x - size * 0.18, y + size * 0.15 - marchBob);
+  ctx.closePath();
   ctx.fill();
-  // Beanie pom-pom
+  // Pocket opening
+  ctx.strokeStyle = bodyColorLight;
+  ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.arc(x - size * 0.05, y - size * 0.62 - marchBob, size * 0.06, 0, Math.PI * 2);
+  ctx.moveTo(x - size * 0.15, y + size * 0.08 - marchBob);
+  ctx.quadraticCurveTo(x, y + size * 0.12 - marchBob, x + size * 0.15, y + size * 0.08 - marchBob);
+  ctx.stroke();
+
+  // Hoodie strings
+  ctx.strokeStyle = bodyColorLight;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, y - size * 0.2 - marchBob);
+  ctx.lineTo(x - size * 0.1, y + size * 0.02 - marchBob);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.08, y - size * 0.2 - marchBob);
+  ctx.lineTo(x + size * 0.1, y + size * 0.02 - marchBob);
+  ctx.stroke();
+  // String aglets
+  ctx.fillStyle = "#c0c0c0";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.1, y + size * 0.04 - marchBob, size * 0.015, size * 0.03, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.1, y + size * 0.04 - marchBob, size * 0.015, size * 0.03, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Passionate expression
-  ctx.fillStyle = "#222";
+  // --- SIGN POLE ---
+  const poleX = x + size * 0.22;
+  const poleTopY = y - size * 0.85 - marchBob;
+  ctx.strokeStyle = "#5d4037";
+  ctx.lineWidth = 4 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.12, y - size * 0.42 - marchBob, size * 0.025, size * 0.03, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.02, y - size * 0.42 - marchBob, size * 0.025, size * 0.03, 0, 0, Math.PI * 2);
+  ctx.moveTo(poleX, y + size * 0.05 - marchBob);
+  ctx.lineTo(poleX + signWave * size * 0.5, poleTopY);
+  ctx.stroke();
+  // Wood grain detail
+  ctx.strokeStyle = "#8d6e63";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(poleX - size * 0.01, y - size * 0.2 - marchBob);
+  ctx.lineTo(poleX + signWave * size * 0.3, y - size * 0.5 - marchBob);
+  ctx.stroke();
+
+  // --- PROTEST SIGN ---
+  ctx.save();
+  ctx.translate(poleX + signWave * size * 0.5, poleTopY - size * 0.15);
+  ctx.rotate(signWave * 0.8);
+
+  // Sign board with dimension
+  ctx.fillStyle = "#f0f0e8";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.38, -size * 0.22);
+  ctx.lineTo(size * 0.38, -size * 0.22);
+  ctx.lineTo(size * 0.4, -size * 0.2);
+  ctx.lineTo(size * 0.4, size * 0.18);
+  ctx.lineTo(size * 0.38, size * 0.2);
+  ctx.lineTo(-size * 0.38, size * 0.2);
+  ctx.closePath();
+  ctx.fill();
+  // Sign edge shadow
+  ctx.fillStyle = "#d0d0c8";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.38, -size * 0.22);
+  ctx.lineTo(size * 0.4, -size * 0.2);
+  ctx.lineTo(size * 0.4, size * 0.18);
+  ctx.lineTo(size * 0.38, size * 0.2);
+  ctx.lineTo(size * 0.38, -size * 0.22);
+  ctx.fill();
+  // Sign border
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 3 * zoom;
+  ctx.strokeRect(-size * 0.36, -size * 0.2, size * 0.72, size * 0.38);
+
+  // Sign text - "GO TIGERS!"
+  ctx.fillStyle = bodyColor;
+  ctx.font = `bold ${size * 0.14}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("GO", 0, -size * 0.08);
+  ctx.fillStyle = "#000";
+  ctx.font = `bold ${size * 0.12}px sans-serif`;
+  ctx.fillText("TIGERS!", 0, size * 0.06);
+
+  // Decorative stars
+  ctx.fillStyle = bodyColorLight;
+  ctx.font = `${size * 0.08}px sans-serif`;
+  ctx.fillText("★", -size * 0.28, -size * 0.08);
+  ctx.fillText("★", size * 0.28, -size * 0.08);
+  ctx.restore();
+
+  // --- ARMS ---
+  const skinTone = "#e8c4a0";
+  const skinHighlight = "#f5dcc4";
+
+  // Left arm (down, in pocket or relaxed)
+  ctx.save();
+  ctx.translate(x - size * 0.32, y - size * 0.12 - marchBob);
+  // Hoodie sleeve
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(0, size * 0.1, size * 0.1, size * 0.12, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  // Forearm
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(-size * 0.02, size * 0.25, size * 0.06, size * 0.1, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Hand in pocket area
+  ctx.fillStyle = skinHighlight;
+  ctx.beginPath();
+  ctx.arc(-size * 0.02, size * 0.35, size * 0.045, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Right arm (raised holding sign)
+  ctx.save();
+  ctx.translate(x + size * 0.28, y - size * 0.12 - marchBob);
+  ctx.rotate(-armRaise);
+  // Hoodie sleeve
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.ellipse(0, -size * 0.08, size * 0.1, size * 0.12, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Forearm reaching up
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(size * 0.03, -size * 0.22, size * 0.055, size * 0.12, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Hand gripping pole
+  ctx.fillStyle = skinHighlight;
+  ctx.beginPath();
+  ctx.arc(size * 0.05, -size * 0.34, size * 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --- HEAD with beanie and expressive face ---
+  const headX = x - size * 0.02;
+  const headY = y - size * 0.42 - marchBob;
+
+  // Neck
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(headX, y - size * 0.26 - marchBob, size * 0.07, size * 0.05, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Open mouth (chanting)
+  // Head
+  const headGrad = ctx.createRadialGradient(headX - size * 0.03, headY - size * 0.03, 0, headX, headY, size * 0.18);
+  headGrad.addColorStop(0, skinHighlight);
+  headGrad.addColorStop(0.8, skinTone);
+  headGrad.addColorStop(1, "#d4a574");
+  ctx.fillStyle = headGrad;
   ctx.beginPath();
-  ctx.arc(x - size * 0.05, y - size * 0.35 - marchBob, size * 0.04, 0, Math.PI);
+  ctx.arc(headX, headY, size * 0.17, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ears
+  ctx.fillStyle = skinTone;
+  ctx.beginPath();
+  ctx.ellipse(headX - size * 0.16, headY, size * 0.03, size * 0.05, 0, 0, Math.PI * 2);
+  ctx.ellipse(headX + size * 0.16, headY, size * 0.03, size * 0.05, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beanie with ribbed texture
+  const beanieGrad = ctx.createLinearGradient(headX - size * 0.2, headY, headX + size * 0.2, headY);
+  beanieGrad.addColorStop(0, bodyColorDark);
+  beanieGrad.addColorStop(0.5, bodyColor);
+  beanieGrad.addColorStop(1, bodyColorDark);
+  ctx.fillStyle = beanieGrad;
+  ctx.beginPath();
+  ctx.arc(headX, headY - size * 0.02, size * 0.19, Math.PI * 0.95, Math.PI * 2.05);
+  ctx.quadraticCurveTo(headX, headY - size * 0.28, headX, headY - size * 0.24);
+  ctx.closePath();
+  ctx.fill();
+
+  // Beanie ribbing lines
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 1 * zoom;
+  for (let i = 0; i < 5; i++) {
+    const ribX = headX - size * 0.12 + i * size * 0.06;
+    ctx.beginPath();
+    ctx.moveTo(ribX, headY - size * 0.08);
+    ctx.quadraticCurveTo(ribX, headY - size * 0.18, ribX + size * 0.01, headY - size * 0.22);
+    ctx.stroke();
+  }
+
+  // Beanie fold/cuff
+  ctx.fillStyle = bodyColorLight;
+  ctx.beginPath();
+  ctx.arc(headX, headY - size * 0.04, size * 0.18, Math.PI * 0.98, Math.PI * 2.02);
+  ctx.arc(headX, headY - size * 0.04, size * 0.15, Math.PI * 2.02, Math.PI * 0.98, true);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pom-pom with fluffy texture
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.arc(headX, headY - size * 0.3, size * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+  // Pom-pom fluff detail
+  ctx.fillStyle = bodyColorLight;
+  for (let i = 0; i < 5; i++) {
+    const angle = (i / 5) * Math.PI * 2 + time * 0.5;
+    ctx.beginPath();
+    ctx.arc(
+      headX + Math.cos(angle) * size * 0.04,
+      headY - size * 0.3 + Math.sin(angle) * size * 0.04,
+      size * 0.025,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+  }
+
+  // Expressive eyebrows (raised in enthusiasm)
+  ctx.strokeStyle = "#4a3728";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(headX - size * 0.11, headY - size * 0.06 - chantPhase * size * 0.02);
+  ctx.quadraticCurveTo(headX - size * 0.07, headY - size * 0.09 - chantPhase * size * 0.02, headX - size * 0.03, headY - size * 0.06);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(headX + size * 0.03, headY - size * 0.06);
+  ctx.quadraticCurveTo(headX + size * 0.07, headY - size * 0.09 - chantPhase * size * 0.02, headX + size * 0.11, headY - size * 0.06 - chantPhase * size * 0.02);
+  ctx.stroke();
+
+  // Passionate eyes
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(headX - size * 0.07, headY + size * 0.01, size * 0.035, size * 0.028, 0, 0, Math.PI * 2);
+  ctx.ellipse(headX + size * 0.07, headY + size * 0.01, size * 0.035, size * 0.028, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Pupils
+  ctx.fillStyle = "#2d1f1a";
+  ctx.beginPath();
+  ctx.arc(headX - size * 0.065, headY + size * 0.01, size * 0.018, 0, Math.PI * 2);
+  ctx.arc(headX + size * 0.075, headY + size * 0.01, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+  // Eye shine
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(headX - size * 0.07, headY, size * 0.006, 0, Math.PI * 2);
+  ctx.arc(headX + size * 0.07, headY, size * 0.006, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nose
+  ctx.fillStyle = "#d4a574";
+  ctx.beginPath();
+  ctx.moveTo(headX, headY + size * 0.02);
+  ctx.lineTo(headX - size * 0.02, headY + size * 0.07);
+  ctx.lineTo(headX + size * 0.02, headY + size * 0.07);
+  ctx.closePath();
+  ctx.fill();
+
+  // Open mouth (chanting!) - animated
+  const mouthOpen = 0.03 + Math.abs(chantPhase) * 0.03;
+  ctx.fillStyle = "#8b4a4a";
+  ctx.beginPath();
+  ctx.ellipse(headX, headY + size * 0.12, size * 0.05, size * mouthOpen, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Teeth hint
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.rect(headX - size * 0.03, headY + size * 0.1, size * 0.06, size * 0.015);
+  ctx.fill();
+  // Tongue
+  ctx.fillStyle = "#c77070";
+  ctx.beginPath();
+  ctx.ellipse(headX, headY + size * 0.13, size * 0.025, size * 0.015, 0, 0, Math.PI);
+  ctx.fill();
+
+  // Rosy cheeks (passionate)
+  ctx.fillStyle = "rgba(255, 150, 150, 0.3)";
+  ctx.beginPath();
+  ctx.ellipse(headX - size * 0.1, headY + size * 0.05, size * 0.03, size * 0.02, 0, 0, Math.PI * 2);
+  ctx.ellipse(headX + size * 0.1, headY + size * 0.05, size * 0.03, size * 0.02, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
