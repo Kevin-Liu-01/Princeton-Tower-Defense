@@ -435,7 +435,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </span>
           <button
             onClick={() => {
-              setGameSpeed((prev) => Math.max(prev - 0.5, 0));
+              setGameSpeed((prev) => Math.max(prev - 0.25, 0));
             }}
             className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
           >
@@ -448,7 +448,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </span>
           <button
             onClick={() => {
-              setGameSpeed((prev) => Math.min(prev + 0.5, 3));
+              setGameSpeed((prev) => Math.min(prev + 0.25, 5));
             }}
             className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
           >
@@ -765,7 +765,10 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   </div>
                 </div>
                 <button
-                  onClick={useHeroAbility}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent selecting hero when clicking ability
+                    useHeroAbility();
+                  }}
                   disabled={!hero.abilityReady}
                   className={`px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${hero.abilityReady
                     ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"

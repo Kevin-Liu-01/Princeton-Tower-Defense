@@ -1,9 +1,170 @@
 // Princeton Tower Defense - Troop Rendering Module
 // Renders all troop types spawned by stations
 
-import type { Troop, Position } from "../../types";
+import type { Troop, Position, TroopOwnerType } from "../../types";
 import { TROOP_DATA } from "../../constants";
 import { worldToScreen } from "../../utils";
+
+// ============================================================================
+// KNIGHT COLOR THEMES - Distinct visual styles based on owner type
+// ============================================================================
+
+export interface KnightTheme {
+  // Name for identification
+  name: string;
+  // Aura and flame colors
+  auraColorInner: string;   // Inner aura glow
+  auraColorMid: string;     // Mid aura
+  auraColorOuter: string;   // Outer aura edge
+  flameWisps: string;       // Floating flame wisps
+  energyRings: string;      // Attack energy rings
+  // Cape colors
+  capeLight: string;        // Cape highlight
+  capeMid: string;          // Cape main color
+  capeDark: string;         // Cape shadow
+  capeInner: string;        // Cape inner shadow
+  // Armor accent colors
+  sigilGlow: string;        // Chest sigil glow
+  beltBuckle: string;       // Belt buckle accent
+  // Weapon colors
+  crossguardMain: string;   // Sword crossguard
+  crossguardAccent: string; // Crossguard highlights
+  gemColor: string;         // Crossguard gems
+  bladeRunes: string;       // Glowing blade runes
+  swingTrail: string;       // Sword swing trail
+  swingTrailAlt: string;    // Secondary swing trail
+  // Shield and helm
+  shieldEmblem: string;     // Shield emblem color
+  plume: string;            // Helmet plume
+  eyeGlow: string;          // Glowing eye color
+  eyeShadow: string;        // Eye shadow/glow
+  // Effects
+  shockwave: string;        // Battle cry shockwave
+}
+
+// Orange theme - Default/Station knights (Princeton orange)
+const KNIGHT_THEME_ORANGE: KnightTheme = {
+  name: 'princeton',
+  auraColorInner: 'rgba(255, 100, 20, ',
+  auraColorMid: 'rgba(255, 60, 0, ',
+  auraColorOuter: 'rgba(200, 40, 0, 0)',
+  flameWisps: 'rgba(255, 150, 50, ',
+  energyRings: 'rgba(255, 80, 20, ',
+  capeLight: '#cc3300',
+  capeMid: '#ff5500',
+  capeDark: '#aa2200',
+  capeInner: '#8b2200',
+  sigilGlow: 'rgba(200, 80, 0, ',
+  beltBuckle: '#c0c0d0',
+  crossguardMain: '#8b0000',
+  crossguardAccent: '#aa2020',
+  gemColor: 'rgba(255, 200, 50, ',
+  bladeRunes: 'rgba(200, 80, 0, ',
+  swingTrail: 'rgba(255, 150, 50, ',
+  swingTrailAlt: 'rgba(255, 200, 100, ',
+  shieldEmblem: '#cc4400',
+  plume: '#dd4400',
+  eyeGlow: 'rgba(255, 150, 50, ',
+  eyeShadow: '#ff6600',
+  shockwave: 'rgba(255, 100, 50, ',
+};
+
+// Blue theme - Frontier Barracks knights
+const KNIGHT_THEME_BLUE: KnightTheme = {
+  name: 'frontier',
+  auraColorInner: 'rgba(80, 160, 255, ',
+  auraColorMid: 'rgba(40, 120, 220, ',
+  auraColorOuter: 'rgba(20, 80, 180, 0)',
+  flameWisps: 'rgba(100, 180, 255, ',
+  energyRings: 'rgba(60, 140, 255, ',
+  capeLight: '#1a4a8a',
+  capeMid: '#2266bb',
+  capeDark: '#0a3366',
+  capeInner: '#082244',
+  sigilGlow: 'rgba(80, 160, 255, ',
+  beltBuckle: '#8aa8cc',
+  crossguardMain: '#1a4080',
+  crossguardAccent: '#2855a0',
+  gemColor: 'rgba(150, 220, 255, ',
+  bladeRunes: 'rgba(80, 180, 255, ',
+  swingTrail: 'rgba(100, 180, 255, ',
+  swingTrailAlt: 'rgba(150, 210, 255, ',
+  shieldEmblem: '#2266aa',
+  plume: '#3388dd',
+  eyeGlow: 'rgba(120, 200, 255, ',
+  eyeShadow: '#4499ff',
+  shockwave: 'rgba(80, 160, 255, ',
+};
+
+// Red theme - General Mercer (Captain hero) summoned knights
+const KNIGHT_THEME_RED: KnightTheme = {
+  name: 'mercer',
+  auraColorInner: 'rgba(255, 60, 60, ',
+  auraColorMid: 'rgba(200, 30, 30, ',
+  auraColorOuter: 'rgba(150, 20, 20, 0)',
+  flameWisps: 'rgba(255, 100, 100, ',
+  energyRings: 'rgba(255, 50, 50, ',
+  capeLight: '#8b1a1a',
+  capeMid: '#cc2222',
+  capeDark: '#661111',
+  capeInner: '#440a0a',
+  sigilGlow: 'rgba(255, 80, 80, ',
+  beltBuckle: '#cc9999',
+  crossguardMain: '#660000',
+  crossguardAccent: '#882020',
+  gemColor: 'rgba(255, 180, 180, ',
+  bladeRunes: 'rgba(255, 60, 60, ',
+  swingTrail: 'rgba(255, 100, 100, ',
+  swingTrailAlt: 'rgba(255, 150, 150, ',
+  shieldEmblem: '#aa2222',
+  plume: '#dd3333',
+  eyeGlow: 'rgba(255, 120, 120, ',
+  eyeShadow: '#ff4444',
+  shockwave: 'rgba(255, 80, 80, ',
+};
+
+// Purple theme - Reinforcement spell knights
+const KNIGHT_THEME_PURPLE: KnightTheme = {
+  name: 'reinforcement',
+  auraColorInner: 'rgba(180, 80, 255, ',
+  auraColorMid: 'rgba(140, 40, 220, ',
+  auraColorOuter: 'rgba(100, 20, 180, 0)',
+  flameWisps: 'rgba(200, 120, 255, ',
+  energyRings: 'rgba(160, 60, 255, ',
+  capeLight: '#5a2a8a',
+  capeMid: '#7733bb',
+  capeDark: '#3a1a66',
+  capeInner: '#2a0a44',
+  sigilGlow: 'rgba(180, 100, 255, ',
+  beltBuckle: '#b8a0cc',
+  crossguardMain: '#4a1a80',
+  crossguardAccent: '#6830a0',
+  gemColor: 'rgba(220, 180, 255, ',
+  bladeRunes: 'rgba(180, 100, 255, ',
+  swingTrail: 'rgba(200, 120, 255, ',
+  swingTrailAlt: 'rgba(220, 170, 255, ',
+  shieldEmblem: '#7733aa',
+  plume: '#9944dd',
+  eyeGlow: 'rgba(200, 150, 255, ',
+  eyeShadow: '#aa66ff',
+  shockwave: 'rgba(180, 100, 255, ',
+};
+
+// Get knight theme based on owner type
+export function getKnightTheme(ownerType?: TroopOwnerType): KnightTheme {
+  switch (ownerType) {
+    case 'barracks':
+      return KNIGHT_THEME_BLUE;
+    case 'hero_summon':
+      return KNIGHT_THEME_RED;
+    case 'spell':
+      return KNIGHT_THEME_PURPLE;
+    case 'station':
+    case 'default':
+    default:
+      return KNIGHT_THEME_ORANGE;
+  }
+}
 
 // ============================================================================
 // TROOP RENDERING - Epic detailed troop sprites
@@ -116,100 +277,73 @@ export function renderTroop(
     targetScreenPos ? { 
       x: targetScreenPos.x - screenPos.x, 
       y: targetScreenPos.y - (screenPos.y - size / 2)
-    } : undefined
+    } : undefined,
+    troop.ownerType
   );
 
   ctx.restore();
 
-  // HEALING AURA EFFECT - Beautiful emerald healing visualization
-  if (troop.healFlash && Date.now() - troop.healFlash < 1000) {
-    const healProgress = (Date.now() - troop.healFlash) / 1000; // 0 to 1
-    const healAlpha = 1 - healProgress; // Fade out
-    const drawY = screenPos.y - size / 2;
+  // HEALING AURA EFFECT - Soft, elegant healing visualization
+  if (troop.healFlash && troop.hp < troop.maxHp) {
+    const pulseAlpha = 0.85 + Math.sin(time * 3) * 0.15; // Stronger breathing effect
 
-    // Healing glow base - layered green aura
-    const glowGrad = ctx.createRadialGradient(
-      screenPos.x, drawY, 0,
-      screenPos.x, drawY, size * 1.2
+    // Soft outer glow - diffuse emerald light
+    const outerGlow = ctx.createRadialGradient(
+      screenPos.x, screenPos.y, size * 0.1,
+      screenPos.x, screenPos.y, size * 1.0
     );
-    glowGrad.addColorStop(0, `rgba(74, 222, 128, ${0.4 * healAlpha})`);
-    glowGrad.addColorStop(0.4, `rgba(34, 197, 94, ${0.25 * healAlpha})`);
-    glowGrad.addColorStop(0.7, `rgba(22, 163, 74, ${0.1 * healAlpha})`);
-    glowGrad.addColorStop(1, "rgba(20, 83, 45, 0)");
-    ctx.fillStyle = glowGrad;
+    outerGlow.addColorStop(0, `rgba(134, 239, 172, ${0.5 * pulseAlpha})`);
+    outerGlow.addColorStop(0.4, `rgba(74, 222, 128, ${0.3 * pulseAlpha})`);
+    outerGlow.addColorStop(1, "rgba(34, 197, 94, 0)");
+    ctx.fillStyle = outerGlow;
     ctx.beginPath();
     ctx.ellipse(screenPos.x, screenPos.y, size * 0.9, size * 0.55, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Inner bright core
-    ctx.fillStyle = `rgba(134, 239, 172, ${0.35 * healAlpha})`;
+    // Inner warm core
+    const innerGlow = ctx.createRadialGradient(
+      screenPos.x, screenPos.y - size * 0.08, 0,
+      screenPos.x, screenPos.y, size * 0.45
+    );
+    innerGlow.addColorStop(0, `rgba(187, 247, 208, ${0.65 * pulseAlpha})`);
+    innerGlow.addColorStop(0.5, `rgba(134, 239, 172, ${0.3 * pulseAlpha})`);
+    innerGlow.addColorStop(1, "rgba(74, 222, 128, 0)");
+    ctx.fillStyle = innerGlow;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y, size * 0.5, size * 0.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, screenPos.y - size * 0.04, size * 0.45, size * 0.28, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Rotating healing ring
-    ctx.save();
-    ctx.translate(screenPos.x, screenPos.y);
-    ctx.rotate(time * 2);
-    ctx.strokeStyle = `rgba(74, 222, 128, ${0.8 * healAlpha})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([6 * zoom, 4 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(0, 0, size * 0.7, size * 0.42, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-
-    // 4 Healing cross symbols orbiting
-    const crossRotation = time * 1.5;
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2 + crossRotation;
-      const dist = size * 0.6;
-      const cx = screenPos.x + Math.cos(angle) * dist;
-      const cy = screenPos.y + Math.sin(angle) * dist * 0.5;
-      const crossSize = 5 * zoom * healAlpha;
-
-      // Healing cross with glow
-      ctx.fillStyle = `rgba(187, 247, 208, ${0.95 * healAlpha})`;
-      ctx.fillRect(cx - crossSize * 0.3, cy - crossSize, crossSize * 0.6, crossSize * 2);
-      ctx.fillRect(cx - crossSize, cy - crossSize * 0.3, crossSize * 2, crossSize * 0.6);
-
-      // Cross outline
-      ctx.strokeStyle = `rgba(34, 197, 94, ${0.7 * healAlpha})`;
-      ctx.lineWidth = 1 * zoom;
-      ctx.strokeRect(cx - crossSize * 0.3, cy - crossSize, crossSize * 0.6, crossSize * 2);
-      ctx.strokeRect(cx - crossSize, cy - crossSize * 0.3, crossSize * 2, crossSize * 0.6);
-    }
-
-    // Rising leaf/nature particles
+    // Floating sparkle particles - gentle upward drift
     for (let i = 0; i < 6; i++) {
-      const particlePhase = (time * 2 + i * 0.35) % 1;
-      const px = screenPos.x + Math.sin(time * 3 + i * 1.8) * size * 0.4;
-      const py = screenPos.y - particlePhase * size * 1.2;
-      const particleAlpha = (1 - particlePhase) * healAlpha;
-      const particleSize = (2 + Math.sin(i * 0.5) * 1) * zoom;
+      const sparklePhase = (time * 0.7 + i * 0.17) % 1;
+      const sparkleX = screenPos.x + Math.sin(time * 1.8 + i * 1.2) * size * 0.38;
+      const sparkleY = screenPos.y + size * 0.15 - sparklePhase * size * 0.9;
+      const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
+      const sparkleSize = (2.0 + Math.sin(i * 1.2) * 0.6) * zoom;
 
-      // Leaf-shaped particle
-      ctx.fillStyle = `rgba(134, 239, 172, ${particleAlpha * 0.9})`;
+      // Diamond-shaped sparkle
+      ctx.fillStyle = `rgba(220, 252, 231, ${sparkleAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(px, py, particleSize, particleSize * 1.8, Math.PI / 4 + i * 0.3, 0, Math.PI * 2);
+      ctx.moveTo(sparkleX, sparkleY - sparkleSize);
+      ctx.lineTo(sparkleX + sparkleSize * 0.5, sparkleY);
+      ctx.lineTo(sparkleX, sparkleY + sparkleSize);
+      ctx.lineTo(sparkleX - sparkleSize * 0.5, sparkleY);
+      ctx.closePath();
       ctx.fill();
     }
 
-    // Sparkle burst effect at the start
-    if (healProgress < 0.3) {
-      const burstAlpha = (0.3 - healProgress) / 0.3;
-      for (let i = 0; i < 8; i++) {
-        const sparkleAngle = (i / 8) * Math.PI * 2;
-        const sparkleDist = size * 0.3 + healProgress * size * 1.5;
-        const sx = screenPos.x + Math.cos(sparkleAngle) * sparkleDist;
-        const sy = screenPos.y + Math.sin(sparkleAngle) * sparkleDist * 0.5;
-
-        ctx.fillStyle = `rgba(220, 252, 231, ${burstAlpha * 0.8})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 2.5 * zoom * burstAlpha, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // Shimmer highlights orbiting
+    for (let i = 0; i < 3; i++) {
+      const shimmerAngle = time * 1.0 + i * (Math.PI * 2 / 3);
+      const shimmerDist = size * 0.35;
+      const shimmerX = screenPos.x + Math.cos(shimmerAngle) * shimmerDist;
+      const shimmerY = screenPos.y + Math.sin(shimmerAngle) * shimmerDist * 0.55;
+      const shimmerAlpha = (0.7 + Math.sin(time * 4 + i * 2) * 0.2) * pulseAlpha;
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha * 0.8})`;
+      ctx.beginPath();
+      ctx.arc(shimmerX, shimmerY, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -251,7 +385,8 @@ function drawTroopSprite(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
+  ownerType?: TroopOwnerType
 ) {
   switch (type) {
     case "soldier":
@@ -269,7 +404,7 @@ function drawTroopSprite(
       break;
     case "knight":
     case "armored":
-      drawKnightTroop(ctx, x, y, size, color, time, zoom, attackPhase);
+      drawKnightTroop(ctx, x, y, size, color, time, zoom, attackPhase, ownerType);
       break;
     case "turret":
       drawTurretTroop(
@@ -4278,9 +4413,13 @@ function drawKnightTroop(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
+  ownerType?: TroopOwnerType
 ) {
-  // DARK CHAMPION - Elite Princeton Knight with Soul-Forged Greatsword
+  // Get theme based on owner type
+  const theme = getKnightTheme(ownerType);
+  
+  // DARK CHAMPION - Elite Knight with Soul-Forged Greatsword
   const stance = Math.sin(time * 3) * 1;
   const breathe = Math.sin(time * 2) * 0.4;
   const capeWave = Math.sin(time * 4);
@@ -4297,7 +4436,7 @@ function drawKnightTroop(
   const auraIntensity = isAttacking ? 0.6 : 0.35;
   const auraPulse = 0.85 + Math.sin(time * 3.5) * 0.15;
 
-  // Fiery aura gradient
+  // Fiery aura gradient - THEMED
   const auraGrad = ctx.createRadialGradient(
     x,
     y + size * 0.1,
@@ -4308,37 +4447,37 @@ function drawKnightTroop(
   );
   auraGrad.addColorStop(
     0,
-    `rgba(255, 100, 20, ${auraIntensity * auraPulse * 0.5})`
+    `${theme.auraColorInner}${auraIntensity * auraPulse * 0.5})`
   );
   auraGrad.addColorStop(
     0.4,
-    `rgba(255, 60, 0, ${auraIntensity * auraPulse * 0.3})`
+    `${theme.auraColorMid}${auraIntensity * auraPulse * 0.3})`
   );
-  auraGrad.addColorStop(1, "rgba(200, 40, 0, 0)");
+  auraGrad.addColorStop(1, theme.auraColorOuter);
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
   ctx.ellipse(x, y + size * 0.15, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Flame wisps
+  // Flame wisps - THEMED
   for (let w = 0; w < 3; w++) {
     const wPhase = (time * 3 + w * 1.2) % 2;
     const wAlpha = wPhase < 1 ? (1 - wPhase) * 0.4 : 0;
     const wAngle = (w / 3) * Math.PI - Math.PI * 0.5;
     const wX = x + Math.cos(wAngle) * size * 0.4;
     const wY = y + size * 0.2 - wPhase * size * 0.3;
-    ctx.fillStyle = `rgba(255, 150, 50, ${wAlpha})`;
+    ctx.fillStyle = `${theme.flameWisps}${wAlpha})`;
     ctx.beginPath();
     ctx.ellipse(wX, wY, 3 * zoom, 5 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // === DARK ENERGY RINGS (during attack) ===
+  // === DARK ENERGY RINGS (during attack) - THEMED ===
   if (isAttacking) {
     for (let ring = 0; ring < 3; ring++) {
       const ringPhase = (attackPhase * 2 + ring * 0.15) % 1;
       const ringAlpha = (1 - ringPhase) * 0.5 * attackIntensity;
-      ctx.strokeStyle = `rgba(255, 80, 20, ${ringAlpha})`;
+      ctx.strokeStyle = `${theme.energyRings}${ringAlpha})`;
       ctx.lineWidth = (3.5 - ring) * zoom;
       ctx.beginPath();
       ctx.ellipse(
@@ -4365,16 +4504,16 @@ function drawKnightTroop(
   ctx.rotate(bodyLean);
   ctx.translate(-x, -y);
 
-  // === FLOWING BATTLE CAPE ===
+  // === FLOWING BATTLE CAPE - THEMED ===
   const capeGrad = ctx.createLinearGradient(
     x - size * 0.3,
     y - size * 0.2,
     x + size * 0.1,
     y + size * 0.5
   );
-  capeGrad.addColorStop(0, "#cc3300");
-  capeGrad.addColorStop(0.5, "#ff5500");
-  capeGrad.addColorStop(1, "#aa2200");
+  capeGrad.addColorStop(0, theme.capeLight);
+  capeGrad.addColorStop(0.5, theme.capeMid);
+  capeGrad.addColorStop(1, theme.capeDark);
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y - size * 0.15 + breathe);
@@ -4394,8 +4533,8 @@ function drawKnightTroop(
   ctx.closePath();
   ctx.fill();
 
-  // Cape inner shadow with pattern
-  ctx.fillStyle = "#8b2200";
+  // Cape inner shadow with pattern - THEMED
+  ctx.fillStyle = theme.capeInner;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.1, y - size * 0.1 + breathe);
   ctx.quadraticCurveTo(
@@ -4508,9 +4647,9 @@ function drawKnightTroop(
   ctx.lineTo(x + size * 0.08, y + size * 0.08 + breathe);
   ctx.closePath();
   ctx.fill();
-  // Glowing center
+  // Glowing center - THEMED
   const sigilGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackIntensity * 0.4;
-  ctx.fillStyle = `rgba(200, 80, 0, ${sigilGlow})`;
+  ctx.fillStyle = `${theme.sigilGlow}${sigilGlow})`;
   ctx.beginPath();
   ctx.arc(x, y + size * 0.08 + breathe, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
@@ -4523,8 +4662,8 @@ function drawKnightTroop(
     size * 0.4,
     size * 0.07
   );
-  // Belt skull buckle
-  ctx.fillStyle = "#c0c0d0";
+  // Belt skull buckle - THEMED
+  ctx.fillStyle = theme.beltBuckle;
   ctx.beginPath();
   ctx.arc(x, y + size * 0.315 + breathe, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
@@ -4643,24 +4782,24 @@ function drawKnightTroop(
     ctx.stroke();
   }
 
-  // Ornate crossguard
-  ctx.fillStyle = "#8b0000";
+  // Ornate crossguard - THEMED
+  ctx.fillStyle = theme.crossguardMain;
   ctx.fillRect(-size * 0.12, size * 0.07, size * 0.24, size * 0.05);
-  ctx.fillStyle = "#aa2020";
+  ctx.fillStyle = theme.crossguardAccent;
   ctx.beginPath();
   ctx.arc(-size * 0.12, size * 0.095, size * 0.03, 0, Math.PI * 2);
   ctx.arc(size * 0.12, size * 0.095, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  // Crossguard gems
-  ctx.fillStyle = `rgba(255, 200, 50, ${0.7 + attackIntensity * 0.3})`;
+  // Crossguard gems - THEMED
+  ctx.fillStyle = `${theme.gemColor}${0.7 + attackIntensity * 0.3})`;
   ctx.beginPath();
   ctx.arc(-size * 0.12, size * 0.095, size * 0.015, 0, Math.PI * 2);
   ctx.arc(size * 0.12, size * 0.095, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
 
-  // Massive blade with dark runes
+  // Massive blade with dark runes - THEMED shadow
   if (isAttacking) {
-    ctx.shadowColor = "#ff6600";
+    ctx.shadowColor = theme.eyeShadow;
     ctx.shadowBlur = (15 + attackIntensity * 10) * zoom;
   }
   const bladeGrad = ctx.createLinearGradient(-size * 0.05, 0, size * 0.05, 0);
@@ -4680,9 +4819,9 @@ function drawKnightTroop(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Blade runes (glow during attack)
+  // Blade runes (glow during attack) - THEMED
   const runeGlow = 0.3 + Math.sin(time * 4) * 0.15 + attackIntensity * 0.5;
-  ctx.fillStyle = `rgba(200, 80, 0, ${runeGlow})`;
+  ctx.fillStyle = `${theme.bladeRunes}${runeGlow})`;
   for (let i = 0; i < 4; i++) {
     const runeY = -size * 0.1 - i * size * 0.12;
     ctx.fillRect(-size * 0.015, runeY, size * 0.03, size * 0.06);
@@ -4696,18 +4835,18 @@ function drawKnightTroop(
   ctx.lineTo(0, -size * 0.62);
   ctx.stroke();
 
-  // Devastating swing trail
+  // Devastating swing trail - THEMED
   if (isAttacking && attackPhase > 0.15 && attackPhase < 0.85) {
     const trailAlpha = Math.sin(((attackPhase - 0.15) / 0.7) * Math.PI) * 0.7;
-    ctx.strokeStyle = `rgba(255, 150, 50, ${trailAlpha})`;
+    ctx.strokeStyle = `${theme.swingTrail}${trailAlpha})`;
     ctx.lineWidth = 5 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.65);
     ctx.quadraticCurveTo(size * 0.3, -size * 0.45, size * 0.25, -size * 0.1);
     ctx.stroke();
 
-    // Secondary trail
-    ctx.strokeStyle = `rgba(255, 200, 100, ${trailAlpha * 0.5})`;
+    // Secondary trail - THEMED
+    ctx.strokeStyle = `${theme.swingTrailAlt}${trailAlpha * 0.5})`;
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.65);
@@ -4731,8 +4870,8 @@ function drawKnightTroop(
   ctx.lineTo(size * 0.1, -size * 0.12);
   ctx.closePath();
   ctx.fill();
-  // Shield emblem
-  ctx.fillStyle = "#cc4400";
+  // Shield emblem - THEMED
+  ctx.fillStyle = theme.shieldEmblem;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.14);
   ctx.lineTo(-size * 0.06, -size * 0.06);
@@ -4802,10 +4941,10 @@ function drawKnightTroop(
     ctx.fill();
   }
 
-  // Glowing eyes
+  // Glowing eyes - THEMED
   const eyeGlow = 0.6 + Math.sin(time * 3) * 0.3 + attackIntensity * 0.4;
-  ctx.fillStyle = `rgba(255, 150, 50, ${eyeGlow})`;
-  ctx.shadowColor = "#ff6600";
+  ctx.fillStyle = `${theme.eyeGlow}${eyeGlow})`;
+  ctx.shadowColor = theme.eyeShadow;
   ctx.shadowBlur = 6 * zoom;
   ctx.beginPath();
   ctx.arc(
@@ -4825,8 +4964,8 @@ function drawKnightTroop(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Dramatic plume
-  ctx.fillStyle = "#dd4400";
+  // Dramatic plume - THEMED
+  ctx.fillStyle = theme.plume;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.56 + breathe * 0.2);
   const crestWave =
@@ -4856,10 +4995,10 @@ function drawKnightTroop(
   ctx.closePath();
   ctx.fill();
 
-  // Battle cry shockwave during attack
+  // Battle cry shockwave during attack - THEMED
   if (isAttacking && attackPhase > 0.25 && attackPhase < 0.65) {
     const cryAlpha = Math.sin(((attackPhase - 0.25) / 0.4) * Math.PI) * 0.5;
-    ctx.strokeStyle = `rgba(255, 100, 50, ${cryAlpha})`;
+    ctx.strokeStyle = `${theme.shockwave}${cryAlpha})`;
     ctx.lineWidth = 2.5 * zoom;
     for (let r = 1; r <= 3; r++) {
       ctx.beginPath();

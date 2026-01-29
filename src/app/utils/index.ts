@@ -512,3 +512,239 @@ export function isOnScreen(
     screenPos.y <= height + margin
   );
 }
+
+// ============================================================================
+// TROOP MOVEMENT UTILITIES
+// ============================================================================
+
+/**
+ * Find the closest point on the entire path to a given world position
+ */
+export function findClosestPathPoint(
+  worldPos: Position,
+  mapKey: string
+): { point: Position; distance: number; segmentIndex: number } | null {
+  const path = MAP_PATHS[mapKey];
+  const secondaryPath = MAP_PATHS[`${mapKey}_b`];
+  
+  let fullPath = path ? [...path] : [];
+  if (secondaryPath) {
+    fullPath = fullPath.concat(secondaryPath);
+  }
+  
+  if (fullPath.length < 2) return null;
+
+  let closestPoint = worldPos;
+  let minDist = Infinity;
+  let closestSegmentIndex = 0;
+
+  for (let i = 0; i < fullPath.length - 1; i++) {
+    const p1 = gridToWorldPath(fullPath[i]);
+    const p2 = gridToWorldPath(fullPath[i + 1]);
+    const point = closestPointOnLine(worldPos, p1, p2);
+    const dist = distance(worldPos, point);
+    if (dist < minDist) {
+      minDist = dist;
+      closestPoint = point;
+      closestSegmentIndex = i;
+    }
+  }
+
+  return { point: closestPoint, distance: minDist, segmentIndex: closestSegmentIndex };
+}
+
+/**
+ * Find the closest point on path that's within a certain radius of an anchor point
+ * Used for troops that can only move within a specific range
+ */
+export function findClosestPathPointWithinRadius(
+  worldPos: Position,
+  anchorPos: Position,
+  radius: number,
+  mapKey: string
+): { point: Position; isValid: boolean; clampedToRadius: boolean } | null {
+  const pathResult = findClosestPathPoint(worldPos, mapKey);
+  if (!pathResult) return null;
+
+  const distFromAnchor = distance(pathResult.point, anchorPos);
+  
+  // If the closest path point is within radius, it's valid
+  if (distFromAnchor <= radius) {
+    return { point: pathResult.point, isValid: true, clampedToRadius: false };
+  }
+
+  // Otherwise, we need to find the closest point on path that IS within the radius
+  // Walk along the path and find the intersection with the radius circle
+  const path = MAP_PATHS[mapKey];
+  const secondaryPath = MAP_PATHS[`${mapKey}_b`];
+  
+  let fullPath = path ? [...path] : [];
+  if (secondaryPath) {
+    fullPath = fullPath.concat(secondaryPath);
+  }
+
+  let bestPoint: Position | null = null;
+  let bestDist = Infinity;
+
+  for (let i = 0; i < fullPath.length - 1; i++) {
+    const p1 = gridToWorldPath(fullPath[i]);
+    const p2 = gridToWorldPath(fullPath[i + 1]);
+    
+    // Find intersections of this segment with the radius circle
+    const intersections = lineCircleIntersection(p1, p2, anchorPos, radius);
+    
+    for (const intersection of intersections) {
+      // Check if this intersection is closer to our target position
+      const distToTarget = distance(intersection, worldPos);
+      if (distToTarget < bestDist) {
+        bestDist = distToTarget;
+        bestPoint = intersection;
+      }
+    }
+    
+    // Also check if the segment endpoints are within radius
+    if (distance(p1, anchorPos) <= radius) {
+      const distToTarget = distance(p1, worldPos);
+      if (distToTarget < bestDist) {
+        bestDist = distToTarget;
+        bestPoint = p1;
+      }
+    }
+    if (distance(p2, anchorPos) <= radius) {
+      const distToTarget = distance(p2, worldPos);
+      if (distToTarget < bestDist) {
+        bestDist = distToTarget;
+        bestPoint = p2;
+      }
+    }
+  }
+
+  if (bestPoint) {
+    return { point: bestPoint, isValid: true, clampedToRadius: true };
+  }
+
+  // No valid point found within radius
+  return { point: pathResult.point, isValid: false, clampedToRadius: false };
+}
+
+/**
+ * Find intersection points between a line segment and a circle
+ */
+export function lineCircleIntersection(
+  p1: Position,
+  p2: Position,
+  center: Position,
+  radius: number
+): Position[] {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const fx = p1.x - center.x;
+  const fy = p1.y - center.y;
+
+  const a = dx * dx + dy * dy;
+  const b = 2 * (fx * dx + fy * dy);
+  const c = fx * fx + fy * fy - radius * radius;
+
+  const discriminant = b * b - 4 * a * c;
+  
+  if (discriminant < 0) return [];
+  
+  const intersections: Position[] = [];
+  const sqrtDisc = Math.sqrt(discriminant);
+  
+  const t1 = (-b - sqrtDisc) / (2 * a);
+  const t2 = (-b + sqrtDisc) / (2 * a);
+
+  if (t1 >= 0 && t1 <= 1) {
+    intersections.push({
+      x: p1.x + t1 * dx,
+      y: p1.y + t1 * dy,
+    });
+  }
+
+  if (t2 >= 0 && t2 <= 1 && Math.abs(t1 - t2) > 0.0001) {
+    intersections.push({
+      x: p1.x + t2 * dx,
+      y: p1.y + t2 * dy,
+    });
+  }
+
+  return intersections;
+}
+
+/**
+ * Calculate the movement info for a selected unit
+ */
+export interface TroopMoveInfo {
+  anchorPos: Position;
+  moveRadius: number;
+  canMoveAnywhere: boolean; // For heroes
+  ownerType: 'station' | 'barracks' | 'spell' | 'hero' | 'hero_summon';
+  ownerId: string;
+}
+
+// Default ranges for different troop types
+const STATION_TROOP_RANGE = 280; // Dinky Station base range (increased)
+const BARRACKS_TROOP_RANGE = 220; // Frontier Barracks range (increased)
+const SPELL_TROOP_RANGE = 200; // Reinforcement spell range
+const HERO_SUMMON_RANGE = 180; // Captain's rally range
+
+export function getTroopMoveInfo(
+  troop: Troop,
+  towers: { id: string; type: string; pos: { x: number; y: number } }[],
+  specialTower?: { type: string; pos: { x: number; y: number } }
+): TroopMoveInfo {
+  // Check if owned by a dinky station
+  const station = towers.find((t) => t.id === troop.ownerId && t.type === 'station');
+  if (station) {
+    return {
+      anchorPos: gridToWorld(station.pos),
+      moveRadius: STATION_TROOP_RANGE,
+      canMoveAnywhere: false,
+      ownerType: 'station',
+      ownerId: station.id,
+    };
+  }
+
+  // Check if owned by frontier barracks (special building)
+  if (troop.ownerId === 'special_barracks' && specialTower?.type === 'barracks') {
+    return {
+      anchorPos: gridToWorld(specialTower.pos),
+      moveRadius: BARRACKS_TROOP_RANGE,
+      canMoveAnywhere: false,
+      ownerType: 'barracks',
+      ownerId: 'special_barracks',
+    };
+  }
+
+  // Check if owned by hero (captain's rally ability)
+  if (troop.ownerId.startsWith('hero-')) {
+    return {
+      anchorPos: troop.spawnPoint || troop.pos,
+      moveRadius: troop.moveRadius || HERO_SUMMON_RANGE,
+      canMoveAnywhere: false,
+      ownerType: 'hero_summon',
+      ownerId: troop.ownerId,
+    };
+  }
+
+  // Spell-spawned troops (reinforcements)
+  if (troop.ownerId === 'spell') {
+    return {
+      anchorPos: troop.spawnPoint || troop.pos,
+      moveRadius: troop.moveRadius || SPELL_TROOP_RANGE,
+      canMoveAnywhere: false,
+      ownerType: 'spell',
+      ownerId: 'spell',
+    };
+  }
+
+  // Default fallback
+  return {
+    anchorPos: troop.spawnPoint || troop.pos,
+    moveRadius: troop.moveRadius || SPELL_TROOP_RANGE,
+    canMoveAnywhere: false,
+    ownerType: 'spell',
+    ownerId: troop.ownerId,
+  };
+}

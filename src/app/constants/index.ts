@@ -49,7 +49,7 @@ export const TOWER_DATA: Record<
     range: TOWER_STATS.station.baseStats.range,
     attackSpeed: TOWER_STATS.station.baseStats.attackSpeed,
     desc: "Spawns soldiers to block enemies.",
-    spawnRange: 220,
+    spawnRange: 280, // Increased base range for better troop movement
     levelDesc: {
       1: "Foot Soldiers - Basic infantry units",
       2: "Armored Soldiers - Equipped with armor",
@@ -557,7 +557,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     attackSpeed: 400,
     speed: 3.2,
     ability: "Inspiration",
-    abilityDesc: "Boosts all tower damage by 50% for 8s",
+    abilityDesc: "Boosts tower damage +50% and range +25% for 8s",
     color: "#14b8a6",
     isRanged: true,
   },

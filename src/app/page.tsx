@@ -60,6 +60,10 @@ import {
   isValidBuildPosition,
   generateId,
   getPathSegmentLength,
+  findClosestPathPoint,
+  findClosestPathPointWithinRadius,
+  getTroopMoveInfo,
+  type TroopMoveInfo,
 } from "./utils";
 // Tower Stats
 import { calculateTowerStats, getUpgradeCost } from "./constants/towerStats";
@@ -79,6 +83,8 @@ import {
   renderAmbientVisuals,
   renderHazard,
   renderSpecialBuilding,
+  renderTroopMoveRange,
+  renderPathTargetIndicator,
 } from "./rendering";
 // Decoration rendering
 import { renderDecorationItem } from "./rendering/decorations";
@@ -113,21 +119,22 @@ const getEnemyPosWithPath = (enemy: Enemy, defaultMap: string): Position => {
 };
 
 // Formation offsets relative to rally point (triangle pattern)
+// Spacing should be > TROOP_SEPARATION_DIST (35) to prevent clustering/vibration
 const getFormationOffsets = (count: number): Position[] => {
   if (count === 1) {
     return [{ x: 0, y: 0 }];
   } else if (count === 2) {
-    // Line formation
+    // Line formation - spread apart more to avoid separation force fighting
     return [
-      { x: -15, y: -10 },
-      { x: 15, y: 10 },
+      { x: -22, y: -12 },
+      { x: 22, y: 12 },
     ];
   } else {
-    // Triangle formation
+    // Triangle formation - larger spacing to prevent vibration
     return [
-      { x: 0, y: -20 }, // Front (tip of triangle)
-      { x: -20, y: 15 }, // Back left
-      { x: 20, y: 15 }, // Back right
+      { x: 0, y: -28 }, // Front (tip of triangle)
+      { x: -28, y: 18 }, // Back left
+      { x: 28, y: 18 }, // Back right
     ];
   }
 };
@@ -138,7 +145,7 @@ const getTowerHitboxRadius = (tower: Tower, zoom: number = 1): number => {
   const level = tower.level;
   let baseWidth: number;
   let baseHeight: number;
-  
+
   switch (tower.type) {
     case "cannon":
       baseWidth = 36 + level * 5;
@@ -166,7 +173,7 @@ const getTowerHitboxRadius = (tower: Tower, zoom: number = 1): number => {
       baseWidth = 36 + level * 5;
       baseHeight = 24 + level * 10;
   }
-  
+
   // Calculate hitbox as a combination of width and height
   // Wider for X, taller for Y - we use the larger dimension for a circular hitbox
   // Scale by zoom and add a base minimum
@@ -268,6 +275,10 @@ export default function PrincetonTowerDefense() {
   const [placingTroop, setPlacingTroop] = useState(false);
   const [gameSpeed, setGameSpeed] = useState(1);
   const [hoveredSpecial, setHoveredSpecial] = useState<boolean>(false);
+  // Troop/Hero movement target indicator state
+  const [moveTargetPos, setMoveTargetPos] = useState<Position | null>(null);
+  const [moveTargetValid, setMoveTargetValid] = useState(false);
+  const [selectedUnitMoveInfo, setSelectedUnitMoveInfo] = useState<TroopMoveInfo | null>(null);
   // Camera - start more zoomed in and centered
   const [cameraOffset, setCameraOffset] = useState<Position>({
     x: -40,
@@ -318,6 +329,8 @@ export default function PrincetonTowerDefense() {
   const MAX_EFFECTS = 50;
   const PARTICLE_THROTTLE_MS = 50; // Minimum time between particle spawns at same position
   const lastParticleSpawn = useRef<Map<string, number>>(new Map());
+  const particleUpdateAccumulator = useRef<number>(0); // Accumulate time between particle updates for throttling
+  const effectsUpdateAccumulator = useRef<number>(0); // Accumulate time between effects updates for throttling
 
   // Add particles helper - with performance limits
   const addParticles = useCallback(
@@ -697,6 +710,14 @@ export default function PrincetonTowerDefense() {
           // Calculate RANGE buffs (multiplicative stacking)
           let rangeMultiplier = 1.0;
 
+          // F. Scott's Inspiration buff check (used for both range and damage)
+          const isScottActive = t.boostEnd ? now < t.boostEnd : false;
+
+          // F. Scott's Inspiration range buff (+25%, time-limited)
+          if (isScottActive && t.isBuffed) {
+            rangeMultiplier *= 1.25;
+          }
+
           // Beacon range buff (+20%)
           const isBeaconNearby =
             spec?.type === "beacon" && distance(tWorldPos, specWorldPos!) < 250;
@@ -720,8 +741,7 @@ export default function PrincetonTowerDefense() {
           // Calculate DAMAGE buffs (multiplicative stacking)
           let damageMultiplier = 1.0;
 
-          // F. Scott's Inspiration buff (+50%, time-limited)
-          const isScottActive = t.boostEnd ? now < t.boostEnd : false;
+          // F. Scott's Inspiration damage buff (+50%, time-limited)
           if (isScottActive && t.isBuffed) {
             damageMultiplier *= 1.5;
           }
@@ -893,6 +913,7 @@ export default function PrincetonTowerDefense() {
             const newTroop: Troop = {
               id: generateId("barracks_unit"),
               ownerId: "special_barracks",
+              ownerType: "barracks", // Blue themed knight
               type: "knight",
               pos: { ...specWorldPos }, // START at building center
               hp: TROOP_DATA.knight.hp,
@@ -908,7 +929,7 @@ export default function PrincetonTowerDefense() {
               attackAnim: 0,
               selected: false,
               spawnPoint: pathAnchor, // Anchor move radius to the path spot
-              moveRadius: 150,
+              moveRadius: 220, // Increased range for frontier barracks
               spawnSlot: slot,
             };
             setTroops((prev) => [...prev, newTroop]);
@@ -977,7 +998,7 @@ export default function PrincetonTowerDefense() {
                     addParticles(hero.pos, "spark", 5);
                   } else {
                     setHero((h) =>
-                      h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
+                      h ? { ...h, hp: Math.max(0, h.hp - 20), lastCombatTime: Date.now() } : null
                     );
                   }
                   return {
@@ -1239,7 +1260,7 @@ export default function PrincetonTowerDefense() {
             .map((troop) => {
               const damage = troopDamage[troop.id] || 0;
               if (damage > 0) {
-                return { ...troop, hp: troop.hp - damage };
+                return { ...troop, hp: troop.hp - damage, lastCombatTime: Date.now() };
               }
               return troop;
             });
@@ -1806,7 +1827,9 @@ export default function PrincetonTowerDefense() {
           const homePos = troop.userTargetPos || troop.spawnPoint;
           const maxChaseRange = troop.moveRadius || 180; // Don't chase beyond this from home
 
-          if (closestEnemy) {
+          // Skip engagement logic if player has commanded this troop to move
+          // This allows troops to disengage from combat and follow orders
+          if (closestEnemy && !troop.moving) {
             // Enemy in sight - engage!
             const enemyPos = getEnemyPosWithPath(closestEnemy, selectedMap);
 
@@ -1881,10 +1904,11 @@ export default function PrincetonTowerDefense() {
               updated.engaging = false; // Will return home
             }
           } else {
-            // No enemy in sight - return home if not there (unless stationary)
+            // No enemy in sight OR player commanded movement - disengage
             updated.engaging = false;
 
-            if (homePos && !isStationary) {
+            // Only return home if not being moved by player and not stationary
+            if (homePos && !isStationary && !troop.moving) {
               const dx = homePos.x - troop.pos.x;
               const dy = homePos.y - troop.pos.y;
               const distToHome = Math.sqrt(dx * dx + dy * dy);
@@ -1923,13 +1947,28 @@ export default function PrincetonTowerDefense() {
             };
           }
 
-          // HP regeneration - regenerate 2% max HP per second when not in combat
-          const inCombat = enemiesInSight.length > 0;
-          if (!inCombat && troop.hp < troop.maxHp) {
+          // HP regeneration - regenerate 2% max HP per second when out of combat for 3+ seconds
+          const inCombat = enemiesInSight.length > 0 || updated.engaging;
+          const now = Date.now();
+          const HEAL_DELAY_MS = 3000; // 3 seconds out of combat before healing starts
+
+          // Update lastCombatTime if in combat
+          if (inCombat) {
+            updated.lastCombatTime = now;
+            updated.healFlash = undefined; // Stop healing effect when entering combat
+          }
+
+          // Only heal if out of combat for long enough
+          const timeSinceCombat = now - (updated.lastCombatTime || 0);
+          if (!inCombat && troop.hp < troop.maxHp && timeSinceCombat >= HEAL_DELAY_MS) {
             updated.hp = Math.min(
               troop.maxHp,
               troop.hp + (troop.maxHp * 0.02 * deltaTime) / 1000
             );
+            // Show healing aura while regenerating (only set once to avoid constant state updates)
+            if (!updated.healFlash || now - updated.healFlash > 800) {
+              updated.healFlash = now;
+            }
           }
 
           // Handle player-commanded movement (overrides engagement, but not for stationary)
@@ -1956,34 +1995,40 @@ export default function PrincetonTowerDefense() {
           return updated;
         });
       });
-      // Hero HP regeneration
-
+      // Hero HP regeneration - with combat buffer
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
-        // Consider in combat if any enemy is within 100 pixels OR currently targeting hero
+        const now = Date.now();
+        const HERO_HEAL_DELAY_MS = 5000; // 5 seconds out of combat before healing starts
+
+        // Consider in combat if any enemy is within 100 pixels OR currently targeting hero OR hero is attacking
         const inCombat =
           enemies.some(
             (e) =>
               distance(hero.pos, getEnemyPosWithPath(e, selectedMap)) <= 100
-          ) || enemies.some((e) => e.combatTarget === hero.id);
+          ) || enemies.some((e) => e.combatTarget === hero.id) || (hero.attackAnim > 0);
 
-        // set a timer if the hero is in combat, only after this timer is done
-        // will the hero start regenerating HP
-
-        if (!inCombat) {
-          const regenTimeout = setTimeout(() => {
-            setHero((prev) =>
-              prev
-                ? {
-                  ...prev,
-                  hp: Math.min(
-                    prev.maxHp,
-                    prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
-                  ),
-                }
-                : null
-            );
-          }, 5000);
-          activeTimeoutsRef.current.push(regenTimeout);
+        // Update lastCombatTime if in combat
+        if (inCombat) {
+          setHero((prev) => prev ? { ...prev, lastCombatTime: now, healFlash: undefined } : null);
+        } else {
+          // Only heal if out of combat for long enough
+          const timeSinceCombat = now - (hero.lastCombatTime || 0);
+          if (timeSinceCombat >= HERO_HEAL_DELAY_MS) {
+            setHero((prev) => {
+              if (!prev || prev.hp >= prev.maxHp) return prev;
+              // Only refresh healFlash if it's expired or doesn't exist (avoid constant state churn)
+              const needsNewHealFlash = !prev.healFlash || now - prev.healFlash > 800;
+              return {
+                ...prev,
+                hp: Math.min(
+                  prev.maxHp,
+                  prev.hp + (prev.maxHp * 0.03 * deltaTime) / 1000
+                ),
+                // Show healing aura while regenerating
+                healFlash: needsNewHealFlash ? now : prev.healFlash,
+              };
+            });
+          }
         }
       }
       // Tower attacks - skip when paused
@@ -2191,15 +2236,19 @@ export default function PrincetonTowerDefense() {
                     : tower.level === 3
                       ? "arcaneField"
                       : "slowField";
-              // Update or add slow field effect
+              // Update or add slow field effect (only add if doesn't exist, avoid resetting progress every frame)
               setEffects((ef) => {
                 const existingField = ef.find(
                   (e) => e.type === effectType && e.towerId === tower.id
                 );
                 if (existingField) {
-                  return ef.map((e) =>
-                    e.id === existingField.id ? { ...e, progress: 0 } : e
-                  );
+                  // Only reset progress if it's about to expire (> 0.8), otherwise let it continue
+                  if (existingField.progress > 0.8) {
+                    return ef.map((e) =>
+                      e.id === existingField.id ? { ...e, progress: 0 } : e
+                    );
+                  }
+                  return ef; // No change needed
                 }
                 return [
                   ...ef,
@@ -2289,6 +2338,7 @@ export default function PrincetonTowerDefense() {
                 troopsToSpawn.push({
                   id: generateId("troop"),
                   ownerId: tower.id,
+                  ownerType: "station" as const, // Orange themed (Princeton station)
                   pos: stationPos, // Spawn at station
                   hp: troopHP,
                   maxHp: troopHP,
@@ -2386,6 +2436,7 @@ export default function PrincetonTowerDefense() {
                 const newTroop: Troop = {
                   id: generateId("troop"),
                   ownerId: tower.id,
+                  ownerType: "station" as const, // Orange themed (Princeton station)
                   pos: stationPos, // Start at station
                   hp: troopHP,
                   maxHp: troopHP,
@@ -2407,10 +2458,19 @@ export default function PrincetonTowerDefense() {
 
                 // Also update existing troops to reposition in new formation
                 setTroops((prev) => {
+                  // Get current troops for this tower to create sequential formation indices
+                  const currentTowerTroops = prev.filter((t) => t.ownerId === tower.id);
+                  const troopIdToFormationIndex = new Map<string, number>();
+                  currentTowerTroops.forEach((t, idx) => {
+                    troopIdToFormationIndex.set(t.id, idx);
+                  });
+
                   const updated = prev.map((t) => {
                     if (t.ownerId === tower.id) {
                       const newFormation = getFormationOffsets(futureCount);
-                      const offset = newFormation[t.spawnSlot] || { x: 0, y: 0 };
+                      // Use sequential formation index, not spawnSlot which may have gaps
+                      const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
+                      const offset = newFormation[formationIndex] || { x: 0, y: 0 };
                       const newTarget = {
                         x: rallyPoint.x + offset.x,
                         y: rallyPoint.y + offset.y,
@@ -2972,7 +3032,7 @@ export default function PrincetonTowerDefense() {
             const rotation = Math.atan2(dy, dx);
             setHero((prev) =>
               prev
-                ? { ...prev, lastAttack: now, rotation, attackAnim: 300 }
+                ? { ...prev, lastAttack: now, lastCombatTime: now, rotation, attackAnim: 300 }
                 : null
             );
             if (heroData.range > 80) {
@@ -3083,6 +3143,7 @@ export default function PrincetonTowerDefense() {
                     return {
                       ...t,
                       lastAttack: now,
+                      lastCombatTime: now, // Track combat time for heal delay
                       attackAnim: troopData.isRanged ? 400 : 300,
                       rotation,
                       targetEnemy: target.id,
@@ -3125,8 +3186,10 @@ export default function PrincetonTowerDefense() {
             : null
         );
       }
-      // Update projectiles and handle enemy projectile damage
+      // Update projectiles and handle enemy projectile damage (skip if empty)
       setProjectiles((prev) => {
+        if (prev.length === 0) return prev;
+
         const completingProjectiles = prev.filter(
           (p) =>
             p.progress + deltaTime / 300 >= 1 &&
@@ -3148,9 +3211,9 @@ export default function PrincetonTowerDefense() {
               if (prev && prev.id === proj.targetId && !prev.dead) {
                 const newHp = prev.hp - (proj.damage || 20);
                 if (newHp <= 0) {
-                  return { ...prev, hp: 0, dead: true, respawnTimer: 15000 };
+                  return { ...prev, hp: 0, dead: true, respawnTimer: 15000, lastCombatTime: Date.now() };
                 }
-                return { ...prev, hp: newHp };
+                return { ...prev, hp: newHp, lastCombatTime: Date.now() };
               }
               return prev;
             });
@@ -3167,7 +3230,7 @@ export default function PrincetonTowerDefense() {
                       addParticles(t.pos, "explosion", 6);
                       return null as any;
                     }
-                    return { ...t, hp: newHp };
+                    return { ...t, hp: newHp, lastCombatTime: Date.now() };
                   }
                   return t;
                 })
@@ -3183,49 +3246,64 @@ export default function PrincetonTowerDefense() {
           }))
           .filter((p) => p.progress < 1);
       });
-      // Update effects - with hard cap
-      setEffects((prev) => {
-        const updated = prev
-          .map((eff) => ({ ...eff, progress: eff.progress + deltaTime / (eff.duration || 500) }))
-          .filter((e) => e.progress < 1);
-        // Hard cap on effects
-        if (updated.length > MAX_EFFECTS) {
-          return updated.slice(updated.length - MAX_EFFECTS);
-        }
-        return updated;
-      });
-      // Update particles - optimized batch update
-      setParticles((prev) => {
-        // Skip update if no particles
-        if (prev.length === 0) return prev;
+      // Update effects - with hard cap (throttled to reduce state updates)
+      effectsUpdateAccumulator.current += deltaTime;
+      if (effectsUpdateAccumulator.current >= 32) { // Update every ~32ms instead of every frame
+        const accumulatedDelta = effectsUpdateAccumulator.current;
+        effectsUpdateAccumulator.current = 0;
 
-        const updated: Particle[] = [];
-        const deltaScale = deltaTime / 16;
+        setEffects((prev) => {
+          if (prev.length === 0) return prev;
 
-        for (const p of prev) {
-          const newLife = p.life - deltaTime;
-          if (newLife <= 0) continue;
+          const updated = prev
+            .map((eff) => ({ ...eff, progress: eff.progress + accumulatedDelta / (eff.duration || 500) }))
+            .filter((e) => e.progress < 1);
 
-          updated.push({
-            ...p,
-            life: newLife,
-            pos: {
-              x: p.pos.x + p.velocity.x * deltaScale,
-              y: p.pos.y + p.velocity.y * deltaScale,
-            },
-            velocity: {
-              x: p.velocity.x * 0.98,
-              y: p.velocity.y * 0.98 + 0.02,
-            },
-          });
-        }
+          // Hard cap on effects
+          if (updated.length > MAX_EFFECTS) {
+            return updated.slice(updated.length - MAX_EFFECTS);
+          }
+          return updated;
+        });
+      }
+      // Update particles - optimized batch update (throttled to reduce state updates)
+      particleUpdateAccumulator.current += deltaTime;
+      if (particleUpdateAccumulator.current >= 32) { // Update every ~32ms instead of every frame
+        const accumulatedDelta = particleUpdateAccumulator.current;
+        particleUpdateAccumulator.current = 0;
 
-        // Hard cap check
-        if (updated.length > MAX_PARTICLES) {
-          return updated.slice(updated.length - MAX_PARTICLES);
-        }
-        return updated;
-      });
+        setParticles((prev) => {
+          // Skip update if no particles
+          if (prev.length === 0) return prev;
+
+          const updated: Particle[] = [];
+          const deltaScale = accumulatedDelta / 16;
+
+          for (const p of prev) {
+            const newLife = p.life - accumulatedDelta;
+            if (newLife <= 0) continue;
+
+            updated.push({
+              ...p,
+              life: newLife,
+              pos: {
+                x: p.pos.x + p.velocity.x * deltaScale,
+                y: p.pos.y + p.velocity.y * deltaScale,
+              },
+              velocity: {
+                x: p.velocity.x * 0.98,
+                y: p.velocity.y * 0.98 + 0.02,
+              },
+            });
+          }
+
+          // Hard cap check
+          if (updated.length > MAX_PARTICLES) {
+            return updated.slice(updated.length - MAX_PARTICLES);
+          }
+          return updated;
+        });
+      }
       // Update spell cooldowns
       setSpells((prev) =>
         prev.map((spell) => ({
@@ -4879,6 +4957,50 @@ export default function PrincetonTowerDefense() {
       }
     }
 
+    // ========== RENDER TROOP/HERO MOVEMENT INDICATORS (UNDER ENTITIES) ==========
+    // Draw movement range circle when a troop is selected (renders UNDER towers/decorations)
+    if (selectedUnitMoveInfo && !selectedUnitMoveInfo.canMoveAnywhere) {
+      renderTroopMoveRange(
+        ctx,
+        {
+          anchorPos: selectedUnitMoveInfo.anchorPos,
+          moveRadius: selectedUnitMoveInfo.moveRadius,
+          ownerType: selectedUnitMoveInfo.ownerType,
+          isSelected: true,
+        },
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
+    }
+
+    // Draw path target indicator when hovering with a selected unit (renders UNDER towers/decorations)
+    const selectedTroopForIndicator = troops.find((t) => t.selected);
+    const heroIsSelectedForIndicator = hero && !hero.dead && hero.selected;
+
+    if (moveTargetPos && (selectedTroopForIndicator || heroIsSelectedForIndicator)) {
+      const unitPos = selectedTroopForIndicator ? selectedTroopForIndicator.pos : (hero ? hero.pos : moveTargetPos);
+      // Get theme color - hero's color if hero selected, otherwise use troop default
+      const themeColor = heroIsSelectedForIndicator && hero ? HERO_DATA[hero.type].color : undefined;
+      renderPathTargetIndicator(
+        ctx,
+        {
+          targetPos: moveTargetPos,
+          isValid: moveTargetValid,
+          isHero: !!heroIsSelectedForIndicator,
+          unitPos: unitPos,
+          themeColor: themeColor,
+        },
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
+    }
+
     // Render all entities with camera offset and zoom (including special buildings)
     renderables.forEach((r) => {
       switch (r.type) {
@@ -5083,14 +5205,22 @@ export default function PrincetonTowerDefense() {
     draggingTower,
     hoveredTower,
     selectedTower,
+    moveTargetPos,
+    moveTargetValid,
+    selectedUnitMoveInfo,
   ]);
   // Game loop
   useEffect(() => {
     if (gameState !== "playing") return;
     const gameLoop = (timestamp: number) => {
-      const deltaTime = lastTimeRef.current
-        ? (timestamp - lastTimeRef.current) * gameSpeed
+      // Calculate delta time, but cap it to prevent issues when tab is inactive
+      // When user leaves tab and returns, deltaTime could be huge (seconds/minutes)
+      // which breaks game logic. Cap at 100ms (10 FPS equivalent) to stay stable.
+      const rawDelta = lastTimeRef.current
+        ? timestamp - lastTimeRef.current
         : 0;
+      const cappedDelta = Math.min(rawDelta, 100); // Max 100ms per frame
+      const deltaTime = cappedDelta * gameSpeed;
       lastTimeRef.current = timestamp;
       updateGame(deltaTime);
       render();
@@ -5180,6 +5310,7 @@ export default function PrincetonTowerDefense() {
           return {
             id: generateId("troop"),
             ownerId: "spell",
+            ownerType: "spell" as const, // Purple themed knight
             pos: troopPos,
             hp: knightHP,
             maxHp: knightHP,
@@ -5208,10 +5339,10 @@ export default function PrincetonTowerDefense() {
       // 1. Clicking on themselves -> deselect
       // 2. Clicking on path -> move
       // 3. Clicking elsewhere -> deselect (don't select other entities)
-      
+
       const selectedTroopUnit = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
-      
+
       // ---------- HERO SELECTED MODE ----------
       if (heroIsSelected) {
         const heroScreen = worldToScreen(
@@ -5222,54 +5353,27 @@ export default function PrincetonTowerDefense() {
           cameraOffset,
           cameraZoom
         );
-        
+
         // Check if clicking on hero itself to deselect
         if (distance(clickPos, heroScreen) < 28) {
           setHero((prev) => prev ? { ...prev, selected: false } : null);
           return;
         }
-        
-        // Check for path movement
-        const worldPos = screenToWorld(
-          clickPos,
-          width,
-          height,
-          dpr,
-          cameraOffset,
-          cameraZoom
-        );
-        const path = MAP_PATHS[selectedMap];
-        const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
-        let fullPath = path;
-        if (secondaryPath) {
-          fullPath = path.concat(secondaryPath);
-        }
-        let onPath = false;
-        let closestPoint = worldPos;
-        let minDist = Infinity;
-        for (let i = 0; i < fullPath.length - 1; i++) {
-          const p1 = gridToWorldPath(fullPath[i]);
-          const p2 = gridToWorldPath(fullPath[i + 1]);
-          const dist = distanceToLineSegment(worldPos, p1, p2);
-          if (dist < HERO_PATH_HITBOX_SIZE && dist < minDist) {
-            onPath = true;
-            minDist = dist;
-            closestPoint = closestPointOnLine(worldPos, p1, p2);
-          }
-        }
-        if (onPath) {
+
+        // Use pre-calculated move target if valid
+        if (moveTargetPos && moveTargetValid) {
           setHero((prev) =>
-            prev ? { ...prev, moving: true, targetPos: closestPoint } : null
+            prev ? { ...prev, moving: true, targetPos: moveTargetPos } : null
           );
-          addParticles(closestPoint, "glow", 5);
+          addParticles(moveTargetPos, "glow", 5);
           return;
         }
-        
+
         // Clicked elsewhere - deselect hero (don't select other entities)
         setHero((prev) => prev ? { ...prev, selected: false } : null);
         return;
       }
-      
+
       // ---------- TROOP SELECTED MODE ----------
       if (selectedTroopUnit) {
         // Check if clicking on the selected troop itself to deselect
@@ -5285,84 +5389,54 @@ export default function PrincetonTowerDefense() {
           setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
           return;
         }
-        
-        // Check for path movement
-        const worldPos = screenToWorld(
-          clickPos,
-          width,
-          height,
-          dpr,
-          cameraOffset,
-          cameraZoom
-        );
 
-        // Determine Anchor Position and Range Radius based on Owner
-        const station = towers.find((t) => t.id === selectedTroopUnit.ownerId);
-        const anchorPos = station
-          ? gridToWorld(station.pos)
-          : selectedTroopUnit.spawnPoint;
-        const rangeRadius = station
-          ? TOWER_DATA.station.spawnRange || 180
-          : selectedTroopUnit.moveRadius || 200;
-
-        // Find the closest point on the road (Path Snapping)
-        const path = MAP_PATHS[selectedMap];
-        const secondaryPath = MAP_PATHS[`${selectedMap}_b`];
-        let fullPath = path;
-        if (secondaryPath) {
-          fullPath = path.concat(secondaryPath);
-        }
-
-        let closestRoadPoint = worldPos;
-        let minDist = Infinity;
-        for (let i = 0; i < fullPath.length - 1; i++) {
-          const p1 = gridToWorldPath(fullPath[i]);
-          const p2 = gridToWorldPath(fullPath[i + 1]);
-          const roadPoint = closestPointOnLine(worldPos, p1, p2);
-          const roadDist = distance(worldPos, roadPoint);
-          if (roadDist < minDist) {
-            minDist = roadDist;
-            closestRoadPoint = roadPoint;
-          }
-        }
-
-        // Distance Check: Is the snapped road point within the allowed range?
-        const distFromAnchor = distance(closestRoadPoint, anchorPos);
-
-        // If clicked on path within range, move the troop group
-        if (distFromAnchor <= rangeRadius && minDist < HERO_PATH_HITBOX_SIZE) {
+        // Use pre-calculated move target if valid
+        if (moveTargetPos && moveTargetValid && selectedUnitMoveInfo) {
           const ownerId = selectedTroopUnit.ownerId;
           const formationTroops = troops.filter((t) => t.ownerId === ownerId);
           const formationOffsets = getFormationOffsets(formationTroops.length);
 
+          // Create a mapping from troop id to their formation index (0, 1, 2...)
+          // This ensures sequential positioning even if spawnSlots are non-sequential (e.g., 0 and 2 after one died)
+          const troopIdToFormationIndex = new Map<string, number>();
+          formationTroops.forEach((t, idx) => {
+            troopIdToFormationIndex.set(t.id, idx);
+          });
+
+          // Check if owned by a dinky station
+          const station = towers.find((t) => t.id === ownerId && t.type === 'station');
+
           setTroops((prev) =>
             prev.map((t) => {
               if (t.ownerId === ownerId) {
-                const offset = formationOffsets[t.spawnSlot] || { x: 0, y: 0 };
+                // Use formation index (sequential 0, 1, 2) not spawnSlot (may have gaps)
+                const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
+                const offset = formationOffsets[formationIndex] || { x: 0, y: 0 };
                 const newTarget = {
-                  x: closestRoadPoint.x + offset.x,
-                  y: closestRoadPoint.y + offset.y,
+                  x: moveTargetPos.x + offset.x,
+                  y: moveTargetPos.y + offset.y,
                 };
                 return {
                   ...t,
                   moving: true,
                   targetPos: newTarget,
                   userTargetPos: newTarget,
-                  spawnPoint: station ? t.spawnPoint : closestRoadPoint,
+                  // Update spawn point for spell/hero troops, keep for station troops
+                  spawnPoint: station ? t.spawnPoint : moveTargetPos,
                 };
               }
               return t;
             })
           );
-          addParticles(closestRoadPoint, "light", 5);
+          addParticles(moveTargetPos, "light", 5);
           return;
         }
-        
+
         // Clicked elsewhere - deselect troops (don't select other entities)
         setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
         return;
       }
-      
+
       // ========== NORMAL SELECTION MODE (nothing selected) ==========
       // Check tower clicks with dynamic hitbox based on tower level/height
       const clickedTower = towers.find((t) => {
@@ -5395,7 +5469,7 @@ export default function PrincetonTowerDefense() {
         }
         return;
       }
-      
+
       // Check hero clicks (when hero is not selected)
       if (hero && !hero.dead) {
         const heroScreen = worldToScreen(
@@ -5415,7 +5489,7 @@ export default function PrincetonTowerDefense() {
           return;
         }
       }
-      
+
       // Check troop clicks (only living troops can be selected)
       for (const troop of troops) {
         const troopScreen = worldToScreen(
@@ -5438,7 +5512,7 @@ export default function PrincetonTowerDefense() {
           return;
         }
       }
-      
+
       // Deselect all (clicked on empty space)
       setSelectedTower(null);
       setHero((prev) => (prev ? { ...prev, selected: false } : null));
@@ -5457,6 +5531,9 @@ export default function PrincetonTowerDefense() {
       addParticles,
       cameraOffset,
       cameraZoom,
+      moveTargetPos,
+      moveTargetValid,
+      selectedUnitMoveInfo,
     ]
   );
   const handleMouseMove = useCallback(
@@ -5474,7 +5551,7 @@ export default function PrincetonTowerDefense() {
       }
       const { width, height, dpr } = getCanvasDimensions();
       const mouseWorldPos = screenToWorld(
-        mousePos,
+        { x, y },
         width,
         height,
         dpr,
@@ -5537,6 +5614,59 @@ export default function PrincetonTowerDefense() {
           cameraZoom
         );
         setHoveredHero(distance({ x, y }, heroScreen) < 28);
+      }
+
+      // ========== MOVEMENT TARGET INDICATOR CALCULATION ==========
+      const selectedTroop = troops.find((t) => t.selected);
+      const heroIsSelected = hero && !hero.dead && hero.selected;
+
+      if (selectedTroop) {
+        // Get move info for this troop
+        const moveInfo = getTroopMoveInfo(selectedTroop, towers, spec);
+        setSelectedUnitMoveInfo(moveInfo);
+
+        // Find the valid path point within the troop's move radius
+        const pathResult = findClosestPathPointWithinRadius(
+          mouseWorldPos,
+          moveInfo.anchorPos,
+          moveInfo.moveRadius,
+          selectedMap
+        );
+
+        if (pathResult) {
+          // Check if the cursor is reasonably close to the path
+          const pathPoint = findClosestPathPoint(mouseWorldPos, selectedMap);
+          const isNearPath = pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2;
+
+          setMoveTargetPos(pathResult.point);
+          setMoveTargetValid(pathResult.isValid && isNearPath);
+        } else {
+          setMoveTargetPos(null);
+          setMoveTargetValid(false);
+        }
+      } else if (heroIsSelected) {
+        // Heroes can move anywhere on the path
+        setSelectedUnitMoveInfo({
+          anchorPos: hero.pos,
+          moveRadius: Infinity,
+          canMoveAnywhere: true,
+          ownerType: 'hero',
+          ownerId: hero.id,
+        });
+
+        const pathResult = findClosestPathPoint(mouseWorldPos, selectedMap);
+        if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2) {
+          setMoveTargetPos(pathResult.point);
+          setMoveTargetValid(true);
+        } else {
+          setMoveTargetPos(null);
+          setMoveTargetValid(false);
+        }
+      } else {
+        // Nothing selected - clear move target
+        setMoveTargetPos(null);
+        setMoveTargetValid(false);
+        setSelectedUnitMoveInfo(null);
       }
     },
     [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops]
@@ -5999,7 +6129,7 @@ export default function PrincetonTowerDefense() {
 
       case "mathey": {
         const tauntRadius = 300; // Increased for better effectiveness
-        const duration = 5000; // 5 seconds
+        const duration = 10000; // 10 seconds
 
         // 1. Set Hero state
         setHero((prev) =>
@@ -6181,6 +6311,7 @@ export default function PrincetonTowerDefense() {
           return {
             id: generateId("troop"),
             ownerId: hero.id,
+            ownerType: "hero_summon" as const, // Red themed knight (Mercer's rally)
             type: "knight" as TroopType,
             pos: knightPos,
             hp: summonedKnightHP,
@@ -6194,7 +6325,7 @@ export default function PrincetonTowerDefense() {
             rotation: 0, // IMPORTANT: Initialize rotation
             attackAnim: 0,
             spawnPoint: knightPos,
-            moveRadius: 150, // Allow knights to roam and engage enemies
+            moveRadius: 180, // Captain's summoned knights range
             userTargetPos: knightPos, // Set home position to their starting position
           };
         });

@@ -1276,68 +1276,136 @@ export function renderEffect(
     }
 
     case "fortress_shield": {
-      // Mathey Knight's invincibility shield
+      // Mathey Knight's FORTRESS SHIELD - Impenetrable blue defensive barrier
       const shieldRadius = effect.size * zoom;
       const time = Date.now() / 1000;
+      const pulsePhase = 0.85 + Math.sin(time * 3) * 0.15;
 
       ctx.save();
-      ctx.shadowColor = "#6666ff";
-      ctx.shadowBlur = 20 * zoom;
 
-      // Hexagonal shield pattern
-      const hexPoints = 6;
-      ctx.strokeStyle = `rgba(100, 150, 255, ${
-        0.6 + Math.sin(time * 5) * 0.2
-      })`;
-      ctx.lineWidth = 3 * zoom;
-      ctx.beginPath();
-      for (let i = 0; i <= hexPoints; i++) {
-        const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2;
-        const x = screenPos.x + Math.cos(angle) * shieldRadius;
-        const y = screenPos.y + Math.sin(angle) * shieldRadius * 0.5;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      // === OUTER DEFENSIVE RIPPLES (expanding waves) ===
+      for (let wave = 0; wave < 4; wave++) {
+        const wavePhase = ((time * 0.6 + wave * 0.25) % 1);
+        const waveRadius = shieldRadius * (0.6 + wavePhase * 0.5);
+        const waveAlpha = alpha * 0.35 * (1 - wavePhase);
+        
+        ctx.strokeStyle = `rgba(59, 130, 246, ${waveAlpha})`;
+        ctx.lineWidth = (2.5 - wave * 0.5) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, waveRadius, waveRadius * 0.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
       }
-      ctx.stroke();
 
-      // Inner glow
-      const shieldGrad = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        shieldRadius
+      // === HEXAGONAL SHIELD LATTICE (multiple layers) ===
+      const hexPoints = 6;
+      for (let layer = 0; layer < 3; layer++) {
+        const layerRadius = shieldRadius * (0.6 + layer * 0.15);
+        const layerRotation = time * (layer % 2 === 0 ? 0.5 : -0.3) + layer * 0.2;
+        const layerAlpha = alpha * (0.5 - layer * 0.1);
+        
+        ctx.strokeStyle = `rgba(96, 165, 250, ${layerAlpha})`;
+        ctx.lineWidth = (3 - layer * 0.5) * zoom;
+        ctx.beginPath();
+        for (let i = 0; i <= hexPoints; i++) {
+          const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRotation;
+          const x = screenPos.x + Math.cos(angle) * layerRadius;
+          const y = screenPos.y + Math.sin(angle) * layerRadius * 0.5;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // === INNER ENERGY FIELD (layered blue gradients) ===
+      // Outer azure glow
+      const outerShield = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, shieldRadius * 0.85
       );
-      shieldGrad.addColorStop(0, `rgba(100, 150, 255, 0.1)`);
-      shieldGrad.addColorStop(0.7, `rgba(100, 150, 255, 0.2)`);
-      shieldGrad.addColorStop(1, `rgba(100, 150, 255, 0)`);
-      ctx.fillStyle = shieldGrad;
+      outerShield.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.1})`);
+      outerShield.addColorStop(0.5, `rgba(59, 130, 246, ${alpha * 0.15 * pulsePhase})`);
+      outerShield.addColorStop(0.8, `rgba(37, 99, 235, ${alpha * 0.1})`);
+      outerShield.addColorStop(1, "rgba(37, 99, 235, 0)");
+      ctx.fillStyle = outerShield;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        shieldRadius,
-        shieldRadius * 0.5,
-        0,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(screenPos.x, screenPos.y, shieldRadius * 0.85, shieldRadius * 0.42, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rotating runes
-      for (let r = 0; r < 4; r++) {
-        const runeAngle = time * 2 + (r / 4) * Math.PI * 2;
-        const runeX = screenPos.x + Math.cos(runeAngle) * shieldRadius * 0.7;
-        const runeY = screenPos.y + Math.sin(runeAngle) * shieldRadius * 0.35;
+      // Inner bright core
+      const coreShield = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, shieldRadius * 0.35
+      );
+      coreShield.addColorStop(0, `rgba(191, 219, 254, ${alpha * 0.4})`);
+      coreShield.addColorStop(0.5, `rgba(147, 197, 253, ${alpha * 0.25})`);
+      coreShield.addColorStop(1, "rgba(96, 165, 250, 0)");
+      ctx.fillStyle = coreShield;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, shieldRadius * 0.35, shieldRadius * 0.17, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-        ctx.fillStyle = `rgba(150, 200, 255, ${
-          0.7 + Math.sin(time * 3 + r) * 0.3
-        })`;
-        ctx.font = `${10 * zoom}px Arial`;
-        ctx.fillText("✦", runeX - 4 * zoom, runeY + 4 * zoom);
+      // === DEFENSIVE RUNE CIRCLE ===
+      ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.5})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.setLineDash([8 * zoom, 4 * zoom]);
+      ctx.lineDashOffset = -time * 30;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, shieldRadius * 0.5, shieldRadius * 0.25, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // === ORBITING SHIELD RUNES ===
+      ctx.shadowColor = "#3b82f6";
+      ctx.shadowBlur = 10 * zoom;
+      const runeSymbols = ["🛡️", "⚔️", "🏰", "✦", "🛡️", "⚔️"];
+      ctx.font = `${10 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      for (let r = 0; r < 6; r++) {
+        const runeAngle = time * 1.2 + (r / 6) * Math.PI * 2;
+        const runeRadius = shieldRadius * 0.65;
+        const runeX = screenPos.x + Math.cos(runeAngle) * runeRadius;
+        const runeY = screenPos.y + Math.sin(runeAngle) * runeRadius * 0.5;
+        const runeAlpha = 0.6 + Math.sin(time * 2.5 + r * 1.2) * 0.25;
+        
+        ctx.globalAlpha = alpha * runeAlpha;
+        ctx.fillStyle = `rgba(191, 219, 254, ${runeAlpha})`;
+        ctx.fillText(runeSymbols[r], runeX, runeY);
+      }
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+
+      // === ENERGY SPARKS (floating around shield) ===
+      for (let spark = 0; spark < 12; spark++) {
+        const sparkAngle = (spark / 12) * Math.PI * 2 + time * 0.9;
+        const sparkWobble = Math.sin(time * 4 + spark * 0.7) * 8 * zoom;
+        const sparkDist = shieldRadius * 0.7 + sparkWobble;
+        const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
+        const sparkY = screenPos.y + Math.sin(sparkAngle) * sparkDist * 0.5;
+        const sparkAlpha = alpha * (0.4 + Math.sin(time * 5 + spark) * 0.3);
+        const sparkSize = (2 + Math.sin(time * 6 + spark * 0.9) * 1) * zoom;
+        
+        ctx.fillStyle = `rgba(147, 197, 253, ${sparkAlpha})`;
+        ctx.shadowColor = "#93c5fd";
+        ctx.shadowBlur = 5 * zoom;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.shadowBlur = 0;
+
+      // === CENTRAL SHIELD ICON ===
+      ctx.globalAlpha = alpha * (0.7 + Math.sin(time * 2) * 0.2);
+      ctx.font = `bold ${18 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "#3b82f6";
+      ctx.shadowBlur = 15 * zoom;
+      ctx.fillText("🛡️", screenPos.x, screenPos.y - 2 * zoom);
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+
       ctx.restore();
       break;
     }
@@ -1569,51 +1637,119 @@ export function renderEffect(
     }
 
     case "inspiration": {
-      // F. Scott's tower buff aura
-      const auraRadius = effect.size * zoom * (0.5 + progress * 0.3);
+      // F. Scott's INSPIRATION - Literary brilliance empowering towers
       const time = Date.now() / 1000;
+      const auraRadius = effect.size * zoom * (0.6 + progress * 0.25);
+      const pulsePhase = Math.sin(time * 2) * 0.15;
 
       ctx.save();
 
-      // Golden light rays
-      for (let ray = 0; ray < 12; ray++) {
-        const rayAngle = (ray / 12) * Math.PI * 2 + time * 0.5;
-        const rayAlpha = alpha * 0.3 * (0.5 + Math.sin(time * 3 + ray) * 0.5);
-
-        ctx.strokeStyle = `rgba(255, 215, 0, ${rayAlpha})`;
-        ctx.lineWidth = 2 * zoom;
+      // === OUTER TEAL ENERGY RING (expanding waves) ===
+      for (let ring = 0; ring < 3; ring++) {
+        const ringPhase = ((time * 0.8 + ring * 0.33) % 1);
+        const ringRadius = auraRadius * (0.5 + ringPhase * 0.5);
+        const ringAlpha = alpha * 0.4 * (1 - ringPhase);
+        
+        ctx.strokeStyle = `rgba(20, 184, 166, ${ringAlpha})`;
+        ctx.lineWidth = (3 - ring) * zoom;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x, screenPos.y);
-        ctx.lineTo(
-          screenPos.x + Math.cos(rayAngle) * auraRadius,
-          screenPos.y + Math.sin(rayAngle) * auraRadius * 0.5
-        );
+        ctx.ellipse(screenPos.x, screenPos.y, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
 
-      // Central glow
-      const inspireGrad = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        auraRadius * 0.3
+      // === LITERARY ENERGY SPIRAL (book pages / manuscript swirl) ===
+      ctx.strokeStyle = `rgba(255, 248, 220, ${alpha * 0.5})`;
+      ctx.lineWidth = 2 * zoom;
+      for (let arm = 0; arm < 4; arm++) {
+        ctx.beginPath();
+        for (let i = 0; i < 30; i++) {
+          const t = i / 30;
+          const spiralAngle = time * 1.5 + arm * Math.PI * 0.5 + t * Math.PI * 1.5;
+          const spiralDist = auraRadius * (0.15 + t * 0.65);
+          const x = screenPos.x + Math.cos(spiralAngle) * spiralDist;
+          const y = screenPos.y + Math.sin(spiralAngle) * spiralDist * 0.5;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // === FLOATING GOLDEN QUILL SPARKS ===
+      for (let spark = 0; spark < 16; spark++) {
+        const sparkAngle = (spark / 16) * Math.PI * 2 + time * 0.7;
+        const sparkDist = auraRadius * (0.3 + Math.sin(time * 3 + spark * 0.8) * 0.15);
+        const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
+        const sparkY = screenPos.y + Math.sin(sparkAngle) * sparkDist * 0.5;
+        const sparkAlpha = alpha * (0.5 + Math.sin(time * 4 + spark) * 0.3);
+        const sparkSize = (2 + Math.sin(time * 5 + spark * 1.3) * 1) * zoom;
+        
+        ctx.fillStyle = `rgba(255, 215, 0, ${sparkAlpha})`;
+        ctx.shadowColor = "#ffd700";
+        ctx.shadowBlur = 8 * zoom;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      // === CENTRAL INSPIRATION GLOW (teal + gold layered) ===
+      // Outer teal aura
+      const outerGlow = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, auraRadius * 0.5
       );
-      inspireGrad.addColorStop(0, `rgba(255, 230, 150, ${alpha * 0.4})`);
-      inspireGrad.addColorStop(1, `rgba(255, 215, 0, 0)`);
-      ctx.fillStyle = inspireGrad;
+      outerGlow.addColorStop(0, `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`);
+      outerGlow.addColorStop(0.5, `rgba(20, 184, 166, ${alpha * 0.1})`);
+      outerGlow.addColorStop(1, "rgba(20, 184, 166, 0)");
+      ctx.fillStyle = outerGlow;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        auraRadius * 0.3,
-        auraRadius * 0.15,
-        0,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(screenPos.x, screenPos.y, auraRadius * 0.5, auraRadius * 0.25, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      // Inner golden core
+      const coreGlow = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, auraRadius * 0.2
+      );
+      coreGlow.addColorStop(0, `rgba(255, 230, 150, ${alpha * 0.6})`);
+      coreGlow.addColorStop(0.6, `rgba(255, 215, 0, ${alpha * 0.3})`);
+      coreGlow.addColorStop(1, "rgba(255, 215, 0, 0)");
+      ctx.fillStyle = coreGlow;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, auraRadius * 0.2, auraRadius * 0.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === ORBITING BOOK SYMBOLS ===
+      ctx.font = `bold ${12 * zoom}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const symbols = ["📖", "✒️", "📜", "💫"];
+      for (let sym = 0; sym < 4; sym++) {
+        const symAngle = time * 0.8 + (sym / 4) * Math.PI * 2;
+        const symDist = auraRadius * 0.55;
+        const symX = screenPos.x + Math.cos(symAngle) * symDist;
+        const symY = screenPos.y + Math.sin(symAngle) * symDist * 0.5 - 5 * zoom;
+        const symAlpha = 0.6 + Math.sin(time * 2.5 + sym) * 0.2;
+        
+        ctx.globalAlpha = alpha * symAlpha;
+        ctx.fillText(symbols[sym], symX, symY);
+      }
+      ctx.globalAlpha = 1;
+
+      // === RISING INSPIRATION PARTICLES ===
+      for (let p = 0; p < 8; p++) {
+        const pPhase = ((time * 0.5 + p * 0.125) % 1);
+        const pAngle = (p / 8) * Math.PI * 2;
+        const pDist = auraRadius * 0.3;
+        const pX = screenPos.x + Math.cos(pAngle) * pDist + Math.sin(time * 2 + p) * 5 * zoom;
+        const pY = screenPos.y + Math.sin(pAngle) * pDist * 0.5 - pPhase * 40 * zoom;
+        const pAlpha = alpha * (1 - pPhase) * 0.7;
+        
+        ctx.fillStyle = `rgba(255, 248, 220, ${pAlpha})`;
+        ctx.beginPath();
+        ctx.arc(pX, pY, (2 + (1 - pPhase) * 2) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       ctx.restore();
       break;
@@ -1797,3 +1933,12 @@ export {
 
 // Re-export fog effects
 export { renderRoadEndFog } from "./effects/fog";
+
+// Re-export UI rendering functions for troop movement
+export {
+  renderTroopMoveRange,
+  renderPathTargetIndicator,
+  renderTroopSelectionUI,
+  type TroopMoveRangeConfig,
+  type PathTargetConfig,
+} from "./ui";

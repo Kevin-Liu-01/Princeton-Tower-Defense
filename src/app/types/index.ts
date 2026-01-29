@@ -264,6 +264,7 @@ export interface Hero {
   shieldActive?: boolean;
   shieldEnd?: number;
   healFlash?: number; // Visual effect when healed (timestamp when healed)
+  lastCombatTime?: number; // Timestamp of last attack given or received (for heal delay)
 }
 
 // ============================================================================
@@ -296,10 +297,14 @@ export interface TroopData {
   canTargetFlying?: boolean;
 }
 
+// Owner type for determining troop visual theme
+export type TroopOwnerType = 'station' | 'barracks' | 'hero_summon' | 'spell' | 'default';
+
 // Troop entity - runtime state
 export interface Troop {
   id: string;
   ownerId: string;
+  ownerType?: TroopOwnerType; // For determining visual theme (blue barracks, red mercer, purple spell)
   type?: TroopType;
   pos: Position;
   targetPos?: Position;
@@ -321,6 +326,7 @@ export interface Troop {
   attackCooldown?: number;
   engaging?: boolean;
   healFlash?: number; // Visual effect when healed (timestamp when healed)
+  lastCombatTime?: number; // Timestamp of last attack given or received (for heal delay)
 }
 
 // ============================================================================
