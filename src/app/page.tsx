@@ -10,6 +10,7 @@ import type {
   Spell,
   Projectile,
   Effect,
+  EffectType,
   Particle,
   TowerType,
   TroopType,
@@ -550,108 +551,137 @@ export default function PrincetonTowerDefense() {
     setWaveInProgress(true);
     const wave = levelWaves[currentWave];
     wave.forEach((group) => {
-      let spawned = 0;
-      const spawnInterval = setInterval(() => {
-        if (spawned >= group.count) {
-          clearInterval(spawnInterval);
-          return;
-        }
-        // Complex marching formations based on enemy type and group size
-        // Creates wedge, line, staggered, and diamond patterns
-        const formationPatterns = {
-          // V-formation (wedge) - good for bosses and elites
-          wedge: (i: number, total: number) => {
-            const mid = Math.floor(total / 2);
-            const offset = i - mid;
-            return Math.abs(offset) * 0.15 * Math.sign(offset);
-          },
-          // Staggered lines - for regular troops
-          staggered: (i: number) => {
-            const row = Math.floor(i / 3);
-            const col = i % 3;
-            return (col - 1) * 0.4 + (row % 2 === 0 ? 0.1 : -0.1);
-          },
-          // Diamond formation
-          diamond: (i: number, total: number) => {
-            const phase = (i / total) * Math.PI * 2;
-            return Math.sin(phase) * 0.6;
-          },
-          // Tight cluster for swarms
-          cluster: (i: number) => {
-            return (Math.random() - 0.5) * 0.8;
-          },
-        };
+      // Use delay if specified, otherwise start immediately
+      const startDelay = group.delay || 0;
 
-        // Select formation based on enemy type
-        let laneOffset: number;
-        if (
-          group.type === "trustee" ||
-          group.type === "dean" ||
-          group.type === "golem" ||
-          group.type === "necromancer" ||
-          group.type === "shadow_knight"
-        ) {
-          // Bosses use wedge formation
-          laneOffset = formationPatterns.wedge(spawned, group.count);
-        } else if (
-          group.type === "harpy" ||
-          group.type === "mascot" ||
-          group.type === "wyvern" ||
-          group.type === "specter" ||
-          group.type === "berserker"
-        ) {
-          // Fast enemies use diamond
-          laneOffset = formationPatterns.diamond(spawned, group.count);
-        } else if (group.count > 5) {
-          // Large groups use staggered
-          laneOffset = formationPatterns.staggered(spawned);
-        } else {
-          // Default wedge
-          laneOffset = formationPatterns.wedge(spawned, group.count);
-        }
+      const startSpawning = () => {
+        let spawned = 0;
+        const spawnInterval = setInterval(() => {
+          if (spawned >= group.count) {
+            clearInterval(spawnInterval);
+            return;
+          }
+          // Complex marching formations based on enemy type and group size
+          // Creates wedge, line, staggered, and diamond patterns
+          const formationPatterns = {
+            // V-formation (wedge) - good for bosses and elites
+            wedge: (i: number, total: number) => {
+              const mid = Math.floor(total / 2);
+              const offset = i - mid;
+              return Math.abs(offset) * 0.15 * Math.sign(offset);
+            },
+            // Staggered lines - for regular troops
+            staggered: (i: number) => {
+              const row = Math.floor(i / 3);
+              const col = i % 3;
+              return (col - 1) * 0.4 + (row % 2 === 0 ? 0.1 : -0.1);
+            },
+            // Diamond formation
+            diamond: (i: number, total: number) => {
+              const phase = (i / total) * Math.PI * 2;
+              return Math.sin(phase) * 0.6;
+            },
+            // Tight cluster for swarms
+            cluster: (i: number) => {
+              return (Math.random() - 0.5) * 0.8;
+            },
+          };
 
-        // Add slight randomness to prevent perfect alignment
-        laneOffset += (Math.random() - 0.5) * 0.35;
-        laneOffset = Math.max(-0.9, Math.min(0.9, laneOffset));
+          // Select formation based on enemy type
+          let laneOffset: number;
+          if (
+            group.type === "trustee" ||
+            group.type === "dean" ||
+            group.type === "golem" ||
+            group.type === "necromancer" ||
+            group.type === "shadow_knight" ||
+            group.type === "juggernaut" ||
+            group.type === "dragon" ||
+            group.type === "sandworm"
+          ) {
+            // Bosses and tanks use wedge formation - they lead the charge
+            laneOffset = formationPatterns.wedge(spawned, group.count);
+          } else if (
+            group.type === "harpy" ||
+            group.type === "mascot" ||
+            group.type === "wyvern" ||
+            group.type === "specter" ||
+            group.type === "berserker" ||
+            group.type === "assassin" ||
+            group.type === "frostling" ||
+            group.type === "banshee"
+          ) {
+            // Fast/flying enemies use diamond formation - scattered chaos
+            laneOffset = formationPatterns.diamond(spawned, group.count);
+          } else if (
+            group.type === "cultist" ||
+            group.type === "frosh" ||
+            group.type === "plaguebearer" ||
+            group.type === "thornwalker" ||
+            group.type === "infernal"
+          ) {
+            // Swarm enemies use cluster formation - tight groups
+            laneOffset = formationPatterns.cluster(spawned);
+          } else if (group.count > 5) {
+            // Large groups use staggered lines - organized march
+            laneOffset = formationPatterns.staggered(spawned);
+          } else {
+            // Default wedge
+            laneOffset = formationPatterns.wedge(spawned, group.count);
+          }
 
-        // Check for dual-path levels
-        const levelData = LEVEL_DATA[selectedMap];
-        const isDualPath = levelData?.dualPath && levelData?.secondaryPath;
-        // Alternate between paths for dual-path levels
-        const useSecondaryPath = isDualPath && spawned % 2 === 1;
-        const pathKey = useSecondaryPath
-          ? levelData.secondaryPath
-          : selectedMap;
+          // Add slight randomness to prevent perfect alignment
+          laneOffset += (Math.random() - 0.5) * 0.35;
+          laneOffset = Math.max(-0.9, Math.min(0.9, laneOffset));
 
-        const enemy: Enemy = {
-          id: generateId("enemy"),
-          type: group.type,
-          pathIndex: 0,
-          progress: 0,
-          hp: ENEMY_DATA[group.type].hp,
-          maxHp: ENEMY_DATA[group.type].hp,
-          speed: ENEMY_DATA[group.type].speed,
-          slowEffect: 0,
-          stunUntil: 0,
-          frozen: false,
-          damageFlash: 0,
-          inCombat: false,
-          lastTroopAttack: 0,
-          lastHeroAttack: 0,
-          lastRangedAttack: 0,
-          spawnProgress: 1, // Start fully visible
-          laneOffset: laneOffset,
-          slowed: false,
-          slowIntensity: 0,
-          pathKey: pathKey, // Track which path this enemy uses
-        };
-        setEnemies((prev) => [...prev, enemy]);
-        spawned++;
-      }, group.interval);
-      // Track interval for cleanup
-      spawnIntervalsRef.current.push(spawnInterval);
+          // Check for dual-path levels
+          const levelData = LEVEL_DATA[selectedMap];
+          const isDualPath = levelData?.dualPath && levelData?.secondaryPath;
+          // Alternate between paths for dual-path levels
+          const useSecondaryPath = isDualPath && spawned % 2 === 1;
+          const pathKey = useSecondaryPath
+            ? levelData.secondaryPath
+            : selectedMap;
+
+          const enemy: Enemy = {
+            id: generateId("enemy"),
+            type: group.type,
+            pathIndex: 0,
+            progress: 0,
+            hp: ENEMY_DATA[group.type].hp,
+            maxHp: ENEMY_DATA[group.type].hp,
+            speed: ENEMY_DATA[group.type].speed,
+            slowEffect: 0,
+            stunUntil: 0,
+            frozen: false,
+            damageFlash: 0,
+            inCombat: false,
+            lastTroopAttack: 0,
+            lastHeroAttack: 0,
+            lastRangedAttack: 0,
+            spawnProgress: 1, // Start fully visible
+            laneOffset: laneOffset,
+            slowed: false,
+            slowIntensity: 0,
+            pathKey: pathKey, // Track which path this enemy uses
+          };
+          setEnemies((prev) => [...prev, enemy]);
+          spawned++;
+        }, group.interval);
+        // Track interval for cleanup
+        spawnIntervalsRef.current.push(spawnInterval);
+      };
+
+      // If delay is specified, wait before starting to spawn this group
+      if (startDelay > 0) {
+        const delayTimeout = setTimeout(startSpawning, startDelay);
+        activeTimeoutsRef.current.push(delayTimeout);
+      } else {
+        startSpawning();
+      }
     });
-    const waveDuration = Math.max(...wave.map((g) => g.count * g.interval)) + 5000;
+    // Calculate wave duration including delays
+    const waveDuration = Math.max(...wave.map((g) => (g.delay || 0) + g.count * g.interval)) + 5000;
     const waveNumberForTimeout = currentWave; // Capture for closure
     console.log(`[Wave] Wave ${currentWave + 1} started, will complete in ${waveDuration}ms`);
 
@@ -1089,6 +1119,29 @@ export default function PrincetonTowerDefense() {
                   setHero((h) =>
                     h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
                   );
+                  // Add melee attack visual effect based on enemy type
+                  const attackAngle = Math.atan2(
+                    hero.pos.y - enemyPos.y,
+                    hero.pos.x - enemyPos.x
+                  );
+                  const effectType: EffectType =
+                    ["golem", "juggernaut", "dean", "trustee"].includes(enemy.type)
+                      ? "melee_smash"
+                      : ["berserker", "shadow_knight"].includes(enemy.type)
+                        ? "melee_slash"
+                        : "melee_swipe";
+                  setEffects((ef) => [
+                    ...ef,
+                    {
+                      id: generateId("eff"),
+                      pos: { x: (enemyPos.x + hero.pos.x) / 2, y: (enemyPos.y + hero.pos.y) / 2 },
+                      type: effectType,
+                      progress: 0,
+                      size: 40,
+                      slashAngle: attackAngle,
+                      attackerType: "enemy",
+                    },
+                  ]);
                 } else {
                   addParticles(hero.pos, "spark", 5); // Visual feedback of "Blocked"
                 }
@@ -1458,16 +1511,45 @@ export default function PrincetonTowerDefense() {
                 // Scale ranged enemy attack speed with game speed - skip when paused
                 const effectiveRangedAttackSpeed = gameSpeed > 0 ? enemyData.attackSpeed / gameSpeed : enemyData.attackSpeed;
                 if (!isPaused && now - enemy.lastRangedAttack > effectiveRangedAttackSpeed) {
-                  // Create projectile
-                  const projType =
-                    enemy.type === "mage" ||
-                      enemy.type === "warlock" ||
-                      enemy.type === "hexer" ||
-                      enemy.type === "necromancer"
-                      ? "magicBolt"
-                      : enemy.type === "catapult"
-                        ? "rock"
-                        : "arrow";
+                  // Create projectile with enemy-specific type
+                  const projType = (() => {
+                    switch (enemy.type) {
+                      case "mage":
+                        return "fireball";
+                      case "warlock":
+                        return "magicBolt";
+                      case "hexer":
+                        return "poisonBolt";
+                      case "necromancer":
+                        return "darkBolt";
+                      case "catapult":
+                        return "rock";
+                      case "crossbowman":
+                        return "bolt";
+                      case "harpy":
+                        return "arrow";
+                      case "wyvern":
+                        return "fireball";
+                      case "frostling":
+                        return "frostBolt";
+                      case "infernal":
+                        return "infernalFire";
+                      case "banshee":
+                        return "bansheeScream";
+                      case "dragon":
+                        return "dragonBreath";
+                      default:
+                        return "arrow";
+                    }
+                  })();
+
+                  // Determine if this is an AoE attack
+                  const isAoEAttack = ["catapult", "dragon", "infernal"].includes(enemy.type);
+                  const aoeRadius = isAoEAttack ? (enemy.type === "dragon" ? 80 : enemy.type === "catapult" ? 60 : 50) : 0;
+
+                  // Calculate arc height for projectiles that should arc
+                  const arcHeight = ["rock", "fireball"].includes(projType) ? 50 : 0;
+
                   setProjectiles((proj) => [
                     ...proj,
                     {
@@ -1483,6 +1565,9 @@ export default function PrincetonTowerDefense() {
                       damage: enemyData.projectileDamage || 15,
                       targetType: rangedTarget!.type,
                       targetId: rangedTarget!.id,
+                      arcHeight: arcHeight,
+                      isAoE: isAoEAttack,
+                      aoeRadius: aoeRadius,
                     },
                   ]);
                   return {
@@ -1551,35 +1636,105 @@ export default function PrincetonTowerDefense() {
           })
           .filter(Boolean)
       );
-      // Enemy separation - prevent stacking
+      // Enemy separation - soft collision avoidance with smart exceptions
       setEnemies((prev) => {
-        const SEPARATION_DISTANCE = 25;
-        const SEPARATION_FORCE = 0.3;
+        // Much gentler separation - enemies can overlap when needed
+        const BASE_SEPARATION_DISTANCE = 20;
+        const SEPARATION_FORCE = 0.15; // Gentler push
+        const PROGRESS_SEPARATION = 0.008; // Subtle path spreading
+
         return prev.map((enemy) => {
           const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+          const eData = ENEMY_DATA[enemy.type];
+          const enemySize = eData?.size || 20;
+          const enemyFlying = eData?.flying || false;
+
+          // Enemies in combat have MUCH reduced separation - they're allowed to crowd targets
+          const inCombatMultiplier = enemy.inCombat ? 0.1 : 1.0;
+
+          // Flying enemies have very minimal separation from ground enemies
+          // and reduced separation from other flying enemies
+          const flyingReduction = enemyFlying ? 0.3 : 1.0;
+
           let separationX = 0;
           let separationY = 0;
+          let progressPush = 0;
+          let overlappingCount = 0;
+
           for (const other of prev) {
             if (other.id === enemy.id) continue;
+            // Only separate enemies on the same path
+            if (enemy.pathKey !== other.pathKey) continue;
+
+            const oData = ENEMY_DATA[other.type];
+            const otherFlying = oData?.flying || false;
+
+            // Flying vs ground enemies: no separation at all
+            // They exist on different "layers"
+            if (enemyFlying !== otherFlying) continue;
+
             const otherPos = getEnemyPosWithPath(other, selectedMap);
+            const otherSize = oData?.size || 20;
+
+            // Both in combat with same target? Minimal separation
+            const bothInCombat = enemy.inCombat && other.inCombat;
+            const sameTarget = enemy.combatTarget && enemy.combatTarget === other.combatTarget;
+            const combatOverlapAllowed = bothInCombat && sameTarget;
+
+            // Dynamic separation distance - smaller when in combat together
+            const baseDist = combatOverlapAllowed ? 10 : BASE_SEPARATION_DISTANCE;
+            const combinedSize = (enemySize + otherSize) * 0.4;
+            const dynamicSepDist = Math.max(baseDist, combinedSize);
+
             const dx = enemyPos.x - otherPos.x;
             const dy = enemyPos.y - otherPos.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < SEPARATION_DISTANCE && dist > 0) {
-              const force =
-                ((SEPARATION_DISTANCE - dist) / SEPARATION_DISTANCE) *
-                SEPARATION_FORCE;
-              separationX += (dx / dist) * force;
-              separationY += (dy / dist) * force;
+
+            // Only apply separation if very close
+            if (dist < dynamicSepDist && dist > 0.1) {
+              overlappingCount++;
+
+              // Linear falloff instead of quadratic - gentler push
+              const forceMult = (dynamicSepDist - dist) / dynamicSepDist;
+              const force = forceMult * SEPARATION_FORCE * inCombatMultiplier * flyingReduction;
+
+              // If combat overlap allowed, almost no push
+              if (!combatOverlapAllowed) {
+                separationX += (dx / dist) * force;
+                separationY += (dy / dist) * force;
+              }
+
+              // Path progress spreading - only when NOT in combat
+              if (!enemy.inCombat && !combatOverlapAllowed) {
+                const progressDiff = enemy.progress - other.progress;
+                const pathIndexDiff = enemy.pathIndex - other.pathIndex;
+                const isBehind = pathIndexDiff < 0 || (pathIndexDiff === 0 && progressDiff < 0);
+
+                if (dist < dynamicSepDist * 0.5) {
+                  progressPush += isBehind ? -PROGRESS_SEPARATION * forceMult : PROGRESS_SEPARATION * forceMult * 0.5;
+                }
+              }
             }
           }
-          if (Math.abs(separationX) > 0.01 || Math.abs(separationY) > 0.01) {
-            // Apply separation as lane offset adjustment
+
+          // Only apply changes if significant overlap with non-combat enemies
+          if (overlappingCount > 0 && (Math.abs(separationX) > 0.005 || Math.abs(separationY) > 0.005 || Math.abs(progressPush) > 0.001)) {
+            // Apply separation as lane offset adjustment (perpendicular to path)
+            // Gentler application rate
             const newLaneOffset = Math.max(
-              -1,
-              Math.min(1, enemy.laneOffset + separationX * 0.02)
+              -1.5, // Allow wider spread
+              Math.min(1.5, enemy.laneOffset + separationX * 0.02)
             );
-            return { ...enemy, laneOffset: newLaneOffset };
+
+            // Apply progress adjustment (along path)
+            let newProgress = enemy.progress + progressPush;
+            newProgress = Math.max(0, Math.min(1, newProgress));
+
+            return {
+              ...enemy,
+              laneOffset: newLaneOffset,
+              progress: newProgress,
+            };
           }
           return enemy;
         });
@@ -2997,45 +3152,161 @@ export default function PrincetonTowerDefense() {
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetPos = getEnemyPosWithPath(target, selectedMap);
-            setEnemies((prev) =>
-              prev
-                .map((e) => {
-                  if (e.id === target.id) {
+            const dx = targetPos.x - hero.pos.x;
+            const dy = targetPos.y - hero.pos.y;
+            const rotation = Math.atan2(dy, dx);
+
+            // Determine attack type based on hero
+            const isAoEHero = hero.type === "mathey" || hero.type === "scott";
+            const isMultiTargetHero = hero.type === "tenor";
+            const aoeDamageRadius = hero.type === "mathey" ? 70 : hero.type === "scott" ? 60 : 0;
+            const maxTargets = hero.type === "tenor" ? 3 : 1;
+
+            // Get targets for multi-target heroes (Tenor hits up to 3)
+            const attackTargets = isMultiTargetHero
+              ? validEnemies.slice(0, maxTargets)
+              : [target];
+
+            // Apply damage to all targets
+            setEnemies((prev) => {
+              let updatedEnemies = [...prev];
+              const killedEnemyIds: string[] = [];
+
+              // Primary target damage
+              for (const attackTarget of attackTargets) {
+                const attackTargetPos = getEnemyPosWithPath(attackTarget, selectedMap);
+
+                updatedEnemies = updatedEnemies.map((e) => {
+                  if (e.id === attackTarget.id) {
                     const newHp = e.hp - heroData.damage;
                     if (newHp <= 0) {
+                      killedEnemyIds.push(e.id);
                       const baseBounty = ENEMY_DATA[e.type].bounty;
                       const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
                       setPawPoints((pp) => pp + baseBounty + goldBonus);
                       if (hero.type === "scott") setPawPoints((pp) => pp + 1);
-                      addParticles(targetPos, "explosion", 10);
-                      if (e.goldAura) addParticles(targetPos, "gold", 6);
-                      setEffects((ef) => [
-                        ...ef,
-                        {
-                          id: generateId("eff"),
-                          pos: targetPos,
-                          type: "explosion",
-                          progress: 0,
-                          size: 25,
-                        },
-                      ]);
+                      addParticles(attackTargetPos, "explosion", 10);
+                      if (e.goldAura) addParticles(attackTargetPos, "gold", 6);
                       return null as any;
                     }
                     return { ...e, hp: newHp, damageFlash: 200 };
                   }
                   return e;
-                })
-                .filter(Boolean)
-            );
-            const dx = targetPos.x - hero.pos.x;
-            const dy = targetPos.y - hero.pos.y;
-            const rotation = Math.atan2(dy, dx);
+                });
+              }
+
+              // AoE damage for Mathey Knight and F. Scott
+              if (isAoEHero && aoeDamageRadius > 0) {
+                const aoeDamage = Math.floor(heroData.damage * 0.5); // 50% damage to nearby enemies
+                updatedEnemies = updatedEnemies.map((e) => {
+                  if (!e || killedEnemyIds.includes(e.id)) return e;
+                  if (attackTargets.some(t => t.id === e.id)) return e; // Already hit as primary
+
+                  const enemyPos = getEnemyPosWithPath(e, selectedMap);
+                  const distToTarget = distance(targetPos, enemyPos);
+
+                  if (distToTarget <= aoeDamageRadius) {
+                    const newHp = e.hp - aoeDamage;
+                    if (newHp <= 0) {
+                      const baseBounty = ENEMY_DATA[e.type].bounty;
+                      const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
+                      setPawPoints((pp) => pp + baseBounty + goldBonus);
+                      addParticles(enemyPos, "explosion", 8);
+                      if (e.goldAura) addParticles(enemyPos, "gold", 4);
+                      return null as any;
+                    }
+                    return { ...e, hp: newHp, damageFlash: 150 };
+                  }
+                  return e;
+                });
+              }
+
+              return updatedEnemies.filter(Boolean);
+            });
+
+            // Create hero-specific attack effects
+            const heroEffectType: EffectType = (() => {
+              switch (hero.type) {
+                case "tiger": return "tiger_slash";
+                case "mathey": return "knight_cleave";
+                case "scott": return "scott_quill";
+                case "tenor": return "sonic_blast";
+                case "rocky": return "rock_impact";
+                default: return "impact_hit";
+              }
+            })();
+
+            // Add attack visual effect
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("eff"),
+                pos: isAoEHero ? targetPos : { x: (hero.pos.x + targetPos.x) / 2, y: (hero.pos.y + targetPos.y) / 2 },
+                type: heroEffectType,
+                progress: 0,
+                size: isAoEHero ? aoeDamageRadius : 50,
+                slashAngle: rotation,
+                sourceId: hero.id,
+                attackerType: "hero",
+              },
+            ]);
+
+            // For multi-target Tenor, add effects to each target
+            if (isMultiTargetHero && attackTargets.length > 1) {
+              attackTargets.slice(1).forEach((extraTarget, idx) => {
+                const extraPos = getEnemyPosWithPath(extraTarget, selectedMap);
+                setEffects((ef) => [
+                  ...ef,
+                  {
+                    id: generateId("eff"),
+                    pos: extraPos,
+                    type: "impact_hit",
+                    progress: 0,
+                    size: 30,
+                    color: "139, 92, 246",
+                  },
+                ]);
+                // Add projectile to extra targets
+                setProjectiles((prev) => [
+                  ...prev,
+                  {
+                    id: generateId("proj"),
+                    from: hero.pos,
+                    to: extraPos,
+                    progress: 0,
+                    type: "sonicWave",
+                    rotation: Math.atan2(extraPos.y - hero.pos.y, extraPos.x - hero.pos.x),
+                  },
+                ]);
+              });
+            }
+
             setHero((prev) =>
               prev
                 ? { ...prev, lastAttack: now, lastCombatTime: now, rotation, attackAnim: 300 }
                 : null
             );
-            if (heroData.range > 80) {
+
+            // Create projectile for ranged heroes
+            if (heroData.isRanged || heroData.range > 80) {
+              const projType = (() => {
+                switch (hero.type) {
+                  case "tenor": return "sonicWave";
+                  case "rocky": return "rock";
+                  case "scott": return "magicBolt";
+                  default: return "hero";
+                }
+              })();
+
+              // Hero-specific projectile colors
+              const projColor = (() => {
+                switch (hero.type) {
+                  case "scott": return "#c9a227"; // Golden for F. Scott
+                  case "tenor": return "#a855f7"; // Purple for Tenor
+                  default: return undefined;
+                }
+              })();
+
               setProjectiles((prev) => [
                 ...prev,
                 {
@@ -3043,8 +3314,10 @@ export default function PrincetonTowerDefense() {
                   from: hero.pos,
                   to: targetPos,
                   progress: 0,
-                  type: "hero",
+                  type: projType,
                   rotation,
+                  arcHeight: hero.type === "rocky" ? 60 : 0,
+                  color: projColor,
                 },
               ]);
             }
@@ -3116,6 +3389,28 @@ export default function PrincetonTowerDefense() {
                   })
                   .filter(Boolean)
               );
+
+              // Add melee attack visual effect for non-ranged troops
+              if (!troopData.isRanged) {
+                const troopEffectType: EffectType =
+                  troop.type === "knight" || troop.type === "cavalry"
+                    ? "melee_slash"
+                    : troop.type === "armored" || troop.type === "elite"
+                      ? "melee_swipe"
+                      : "impact_hit";
+                setEffects((ef) => [
+                  ...ef,
+                  {
+                    id: generateId("eff"),
+                    pos: { x: (troop.pos.x + targetPos.x) / 2, y: (troop.pos.y + targetPos.y) / 2 },
+                    type: troopEffectType,
+                    progress: 0,
+                    size: 35,
+                    slashAngle: rotation,
+                    attackerType: "troop",
+                  },
+                ]);
+              }
               // Update troop state and create projectile from CURRENT position
               // (not the stale position from outer troops state)
               setTroops((prev) =>
@@ -3200,6 +3495,30 @@ export default function PrincetonTowerDefense() {
 
         // Deal damage from enemy projectiles to heroes/troops
         completingProjectiles.forEach((proj) => {
+          // Determine impact effect type based on projectile
+          const getImpactEffect = (projType: string): EffectType => {
+            switch (projType) {
+              case "fireball":
+              case "infernalFire":
+              case "dragonBreath":
+                return "fire_impact";
+              case "rock":
+                return "rock_impact";
+              case "frostBolt":
+                return "frost_impact";
+              case "poisonBolt":
+                return "poison_splash";
+              case "magicBolt":
+              case "darkBolt":
+                return "magic_impact";
+              case "arrow":
+              case "bolt":
+                return "arrow_hit";
+              default:
+                return "impact_hit";
+            }
+          };
+
           if (
             proj.targetType === "hero" &&
             proj.targetId &&
@@ -3217,6 +3536,48 @@ export default function PrincetonTowerDefense() {
               }
               return prev;
             });
+            // Add impact effect at hero position
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("eff"),
+                pos: proj.to,
+                type: getImpactEffect(proj.type),
+                progress: 0,
+                size: 35,
+                rotation: proj.rotation,
+              },
+            ]);
+            // Handle AoE damage for enemy projectiles
+            if (proj.isAoE && proj.aoeRadius) {
+              const aoeEffectType: EffectType = proj.type === "rock" ? "shockwave" : "fire_nova";
+              setEffects((ef) => [
+                ...ef,
+                {
+                  id: generateId("eff"),
+                  pos: proj.to,
+                  type: aoeEffectType,
+                  progress: 0,
+                  size: proj.aoeRadius || 50,
+                },
+              ]);
+              // Deal AoE damage to nearby troops
+              setTroops((prevTroops) =>
+                prevTroops.map((t) => {
+                  const troopDist = distance(t.pos, proj.to);
+                  if (troopDist <= proj.aoeRadius!) {
+                    const aoeDamage = Math.floor((proj.damage || 20) * 0.5);
+                    const newHp = t.hp - aoeDamage;
+                    if (newHp <= 0) {
+                      addParticles(t.pos, "explosion", 5);
+                      return null as any;
+                    }
+                    return { ...t, hp: newHp, lastCombatTime: Date.now() };
+                  }
+                  return t;
+                }).filter(Boolean)
+              );
+            }
           } else if (hero?.shieldActive) {
             addParticles(hero.pos, "spark", 8); // Deflect visual
           } else if (proj.targetType === "troop" && proj.targetId) {
@@ -3236,6 +3597,18 @@ export default function PrincetonTowerDefense() {
                 })
                 .filter(Boolean)
             );
+            // Add impact effect at troop position
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("eff"),
+                pos: proj.to,
+                type: getImpactEffect(proj.type),
+                progress: 0,
+                size: 30,
+                rotation: proj.rotation,
+              },
+            ]);
           }
         });
 
@@ -4670,10 +5043,14 @@ export default function PrincetonTowerDefense() {
     }
     enemies.forEach((enemy) => {
       const worldPos = getEnemyPosWithPath(enemy, selectedMap);
+      // Add small offset based on enemy id hash to prevent z-fighting/flickering
+      // when enemies are at the same position
+      const idHash = enemy.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const stableOffset = (idHash % 1000) * 0.0001; // Tiny offset for stable sort
       renderables.push({
         type: "enemy",
         data: enemy,
-        isoY: (worldPos.x + worldPos.y) * 0.25,
+        isoY: (worldPos.x + worldPos.y) * 0.25 + stableOffset,
       });
     });
     if (hero && !hero.dead) {

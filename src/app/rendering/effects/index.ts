@@ -617,6 +617,800 @@ export function renderEffect(
       }
       break;
 
+    // ========================================================================
+    // PHYSICAL ATTACK EFFECTS - Slashes, impacts, swipes
+    // ========================================================================
+    
+    case "melee_slash":
+      // Sword/claw slash arc effect
+      const slashAngle = effect.slashAngle || 0;
+      const slashWidth = effect.slashWidth || Math.PI * 0.6;
+      const slashRadius = effect.size * zoom * (0.3 + progress * 0.7);
+      const slashAlpha = alpha * 0.9;
+      
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(slashAngle);
+      
+      // Multiple slash arcs for thickness
+      for (let layer = 0; layer < 3; layer++) {
+        const layerRadius = slashRadius * (1 - layer * 0.15);
+        const layerAlpha = slashAlpha * (1 - layer * 0.25);
+        
+        // Outer glow
+        ctx.strokeStyle = `rgba(255, 255, 255, ${layerAlpha * 0.3})`;
+        ctx.lineWidth = (8 - layer * 2) * zoom;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.arc(0, 0, layerRadius, -slashWidth / 2, slashWidth / 2);
+        ctx.stroke();
+        
+        // Inner bright line
+        ctx.strokeStyle = `rgba(255, 240, 200, ${layerAlpha})`;
+        ctx.lineWidth = (4 - layer) * zoom;
+        ctx.beginPath();
+        ctx.arc(0, 0, layerRadius, -slashWidth / 2, slashWidth / 2);
+        ctx.stroke();
+      }
+      
+      // Slash tip sparkles
+      const tipAngle1 = -slashWidth / 2;
+      const tipAngle2 = slashWidth / 2;
+      const sparkleSize = 4 * zoom * (1 - progress);
+      
+      ctx.fillStyle = `rgba(255, 255, 255, ${slashAlpha})`;
+      ctx.beginPath();
+      ctx.arc(Math.cos(tipAngle2) * slashRadius, Math.sin(tipAngle2) * slashRadius, sparkleSize, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+      break;
+      
+    case "melee_smash":
+      // Heavy ground pound effect
+      const smashProgress = progress;
+      const smashRadius = effect.size * zoom;
+      
+      // Ground crack lines radiating outward
+      ctx.strokeStyle = `rgba(139, 90, 43, ${alpha * 0.8})`;
+      ctx.lineWidth = 3 * zoom * (1 - smashProgress * 0.5);
+      
+      for (let i = 0; i < 8; i++) {
+        const crackAngle = (i / 8) * Math.PI * 2;
+        const crackLen = smashRadius * (0.5 + smashProgress * 0.5);
+        const jitter1 = (Math.sin(i * 3.7) * 0.3);
+        const jitter2 = (Math.cos(i * 2.3) * 0.2);
+        
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.lineTo(
+          screenPos.x + Math.cos(crackAngle + jitter1) * crackLen * 0.5,
+          screenPos.y + Math.sin(crackAngle + jitter1) * crackLen * 0.3
+        );
+        ctx.lineTo(
+          screenPos.x + Math.cos(crackAngle + jitter2) * crackLen,
+          screenPos.y + Math.sin(crackAngle + jitter2) * crackLen * 0.5
+        );
+        ctx.stroke();
+      }
+      
+      // Dust cloud
+      const dustGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, smashRadius
+      );
+      dustGrad.addColorStop(0, `rgba(180, 150, 100, ${alpha * 0.4})`);
+      dustGrad.addColorStop(0.5, `rgba(150, 120, 80, ${alpha * 0.2})`);
+      dustGrad.addColorStop(1, "rgba(120, 100, 70, 0)");
+      ctx.fillStyle = dustGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, smashRadius, smashRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Impact flash at center
+      if (smashProgress < 0.3) {
+        const flashAlpha = (0.3 - smashProgress) / 0.3 * alpha;
+        ctx.fillStyle = `rgba(255, 220, 150, ${flashAlpha})`;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y, smashRadius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+      
+    case "melee_swipe":
+      // Quick claw swipe - three parallel marks
+      const swipeAngle = effect.slashAngle || 0;
+      const swipeLen = effect.size * zoom * (0.4 + progress * 0.6);
+      const swipeAlpha = alpha * 0.85;
+      
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(swipeAngle);
+      
+      // Three claw marks
+      for (let claw = 0; claw < 3; claw++) {
+        const clawOffset = (claw - 1) * 8 * zoom;
+        const clawDelay = claw * 0.1;
+        const clawProgress = Math.max(0, progress - clawDelay) / (1 - clawDelay);
+        const clawAlpha = swipeAlpha * (1 - clawProgress * 0.5);
+        
+        // Claw mark gradient
+        const clawGrad = ctx.createLinearGradient(-swipeLen * 0.5, 0, swipeLen * 0.5, 0);
+        clawGrad.addColorStop(0, `rgba(255, 100, 100, 0)`);
+        clawGrad.addColorStop(0.2, `rgba(255, 150, 150, ${clawAlpha})`);
+        clawGrad.addColorStop(0.5, `rgba(255, 200, 200, ${clawAlpha})`);
+        clawGrad.addColorStop(0.8, `rgba(255, 150, 150, ${clawAlpha})`);
+        clawGrad.addColorStop(1, `rgba(255, 100, 100, 0)`);
+        
+        ctx.strokeStyle = clawGrad;
+        ctx.lineWidth = 3 * zoom;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-swipeLen * 0.5, clawOffset);
+        ctx.lineTo(swipeLen * 0.5, clawOffset);
+        ctx.stroke();
+      }
+      
+      ctx.restore();
+      break;
+      
+    case "impact_hit":
+      // Generic hit impact - star burst
+      const hitSize = effect.size * zoom;
+      const hitAlpha = alpha;
+      const hitColor = effect.color || "255, 255, 255";
+      
+      // Central flash
+      const hitGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, hitSize * (0.5 + progress * 0.5)
+      );
+      hitGrad.addColorStop(0, `rgba(${hitColor}, ${hitAlpha})`);
+      hitGrad.addColorStop(0.3, `rgba(${hitColor}, ${hitAlpha * 0.6})`);
+      hitGrad.addColorStop(1, `rgba(${hitColor}, 0)`);
+      ctx.fillStyle = hitGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, hitSize * (0.5 + progress * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Radiating lines
+      ctx.strokeStyle = `rgba(${hitColor}, ${hitAlpha * 0.8})`;
+      ctx.lineWidth = 2 * zoom * (1 - progress);
+      for (let i = 0; i < 6; i++) {
+        const rayAngle = (i / 6) * Math.PI * 2 + Math.PI / 6;
+        const rayLen = hitSize * (0.3 + progress * 0.7);
+        ctx.beginPath();
+        ctx.moveTo(
+          screenPos.x + Math.cos(rayAngle) * hitSize * 0.2,
+          screenPos.y + Math.sin(rayAngle) * hitSize * 0.2
+        );
+        ctx.lineTo(
+          screenPos.x + Math.cos(rayAngle) * rayLen,
+          screenPos.y + Math.sin(rayAngle) * rayLen
+        );
+        ctx.stroke();
+      }
+      break;
+      
+    case "ground_crack":
+      // Ground crack from heavy attack
+      const crackSize = effect.size * zoom;
+      const crackAlpha = alpha * 0.9;
+      
+      ctx.strokeStyle = `rgba(60, 40, 20, ${crackAlpha})`;
+      ctx.lineWidth = 2 * zoom;
+      
+      // Main cracks
+      for (let i = 0; i < 5; i++) {
+        const baseAngle = (i / 5) * Math.PI * 2;
+        const crackLen = crackSize * (0.6 + Math.random() * 0.4) * (0.3 + progress * 0.7);
+        
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        
+        let x = screenPos.x;
+        let y = screenPos.y;
+        const segments = 3 + Math.floor(Math.random() * 2);
+        for (let j = 0; j < segments; j++) {
+          const segAngle = baseAngle + (Math.random() - 0.5) * 0.5;
+          const segLen = crackLen / segments;
+          x += Math.cos(segAngle) * segLen;
+          y += Math.sin(segAngle) * segLen * 0.5;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      break;
+      
+    case "dust_cloud":
+      // Dust particles rising from impact
+      const dustSize = effect.size * zoom;
+      const dustAlpha = alpha * 0.6;
+      
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const dist = dustSize * (0.3 + progress * 0.7) * (0.7 + Math.sin(i * 2) * 0.3);
+        const pSize = (3 + Math.sin(i * 3) * 2) * zoom * (1 - progress * 0.5);
+        const rise = progress * 15 * zoom;
+        
+        ctx.fillStyle = `rgba(160, 140, 100, ${dustAlpha * (1 - i * 0.08)})`;
+        ctx.beginPath();
+        ctx.arc(
+          screenPos.x + Math.cos(angle) * dist,
+          screenPos.y + Math.sin(angle) * dist * 0.5 - rise,
+          pSize,
+          0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+      break;
+      
+    // ========================================================================
+    // AOE ATTACK EFFECTS
+    // ========================================================================
+    
+    case "aoe_ring":
+      // Expanding damage ring
+      const ringRadius = effect.size * zoom * (0.2 + progress * 0.8);
+      const ringColor = effect.color || "255, 100, 100";
+      const ringAlpha = alpha * 0.8;
+      
+      // Outer ring
+      ctx.strokeStyle = `rgba(${ringColor}, ${ringAlpha})`;
+      ctx.lineWidth = 4 * zoom * (1 - progress * 0.5);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Inner fill
+      const aoeFill = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, ringRadius
+      );
+      aoeFill.addColorStop(0, `rgba(${ringColor}, ${ringAlpha * 0.3})`);
+      aoeFill.addColorStop(0.7, `rgba(${ringColor}, ${ringAlpha * 0.1})`);
+      aoeFill.addColorStop(1, `rgba(${ringColor}, 0)`);
+      ctx.fillStyle = aoeFill;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+      
+    case "shockwave":
+      // Ground shockwave - multiple expanding rings
+      for (let wave = 0; wave < 3; wave++) {
+        const waveDelay = wave * 0.15;
+        const waveProgress = Math.max(0, (progress - waveDelay) / (1 - waveDelay));
+        if (waveProgress <= 0) continue;
+        
+        const waveRadius = effect.size * zoom * waveProgress;
+        const waveAlpha = alpha * (1 - waveProgress) * 0.6;
+        
+        ctx.strokeStyle = `rgba(200, 150, 100, ${waveAlpha})`;
+        ctx.lineWidth = (4 - wave) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, waveRadius, waveRadius * 0.4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      break;
+      
+    case "magic_burst":
+      // Magic AoE burst - purple energy
+      const burstRadius = effect.size * zoom * (0.3 + progress * 0.7);
+      const burstAlpha = alpha * 0.9;
+      
+      // Magical glow
+      const magicGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, burstRadius
+      );
+      magicGrad.addColorStop(0, `rgba(200, 150, 255, ${burstAlpha * 0.5})`);
+      magicGrad.addColorStop(0.5, `rgba(150, 100, 200, ${burstAlpha * 0.3})`);
+      magicGrad.addColorStop(1, "rgba(100, 50, 150, 0)");
+      ctx.fillStyle = magicGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, burstRadius, burstRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Magic particles
+      ctx.fillStyle = `rgba(220, 180, 255, ${burstAlpha})`;
+      for (let i = 0; i < 8; i++) {
+        const pAngle = (i / 8) * Math.PI * 2 + progress * 4;
+        const pDist = burstRadius * (0.5 + progress * 0.5);
+        ctx.beginPath();
+        ctx.arc(
+          screenPos.x + Math.cos(pAngle) * pDist,
+          screenPos.y + Math.sin(pAngle) * pDist * 0.5,
+          3 * zoom * (1 - progress * 0.5),
+          0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+      break;
+      
+    case "fire_nova":
+      // Fire explosion ring
+      const fireRadius = effect.size * zoom * (0.2 + progress * 0.8);
+      const fireAlpha = alpha;
+      
+      // Fire fill
+      const fireGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, fireRadius
+      );
+      fireGrad.addColorStop(0, `rgba(255, 255, 200, ${fireAlpha * 0.6})`);
+      fireGrad.addColorStop(0.3, `rgba(255, 200, 50, ${fireAlpha * 0.4})`);
+      fireGrad.addColorStop(0.6, `rgba(255, 100, 0, ${fireAlpha * 0.3})`);
+      fireGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+      ctx.fillStyle = fireGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fireRadius, fireRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Fire ring edge
+      ctx.strokeStyle = `rgba(255, 150, 50, ${fireAlpha * 0.8})`;
+      ctx.lineWidth = 3 * zoom * (1 - progress * 0.5);
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, fireRadius, fireRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+      
+    case "ice_nova":
+      // Ice explosion ring
+      const iceRadius = effect.size * zoom * (0.2 + progress * 0.8);
+      const iceAlpha = alpha;
+      
+      // Ice fill
+      const iceGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, iceRadius
+      );
+      iceGrad.addColorStop(0, `rgba(255, 255, 255, ${iceAlpha * 0.6})`);
+      iceGrad.addColorStop(0.3, `rgba(200, 230, 255, ${iceAlpha * 0.4})`);
+      iceGrad.addColorStop(0.6, `rgba(100, 180, 255, ${iceAlpha * 0.3})`);
+      iceGrad.addColorStop(1, "rgba(50, 150, 200, 0)");
+      ctx.fillStyle = iceGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, iceRadius, iceRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ice crystals at edge
+      ctx.fillStyle = `rgba(200, 230, 255, ${iceAlpha * 0.8})`;
+      for (let i = 0; i < 8; i++) {
+        const cAngle = (i / 8) * Math.PI * 2;
+        const cx = screenPos.x + Math.cos(cAngle) * iceRadius;
+        const cy = screenPos.y + Math.sin(cAngle) * iceRadius * 0.5;
+        const cSize = 5 * zoom * (1 - progress * 0.5);
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - cSize);
+        ctx.lineTo(cx + cSize * 0.6, cy);
+        ctx.lineTo(cx, cy + cSize);
+        ctx.lineTo(cx - cSize * 0.6, cy);
+        ctx.closePath();
+        ctx.fill();
+      }
+      break;
+      
+    case "dark_nova":
+      // Dark magic burst
+      const darkRadius = effect.size * zoom * (0.2 + progress * 0.8);
+      const darkAlpha = alpha;
+      
+      // Dark fill
+      const darkGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, darkRadius
+      );
+      darkGrad.addColorStop(0, `rgba(100, 0, 150, ${darkAlpha * 0.5})`);
+      darkGrad.addColorStop(0.4, `rgba(60, 0, 100, ${darkAlpha * 0.4})`);
+      darkGrad.addColorStop(0.7, `rgba(30, 0, 50, ${darkAlpha * 0.3})`);
+      darkGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = darkGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, darkRadius, darkRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Dark tendrils
+      ctx.strokeStyle = `rgba(150, 50, 200, ${darkAlpha * 0.6})`;
+      ctx.lineWidth = 2 * zoom;
+      for (let i = 0; i < 6; i++) {
+        const tAngle = (i / 6) * Math.PI * 2 + progress * 2;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y);
+        ctx.quadraticCurveTo(
+          screenPos.x + Math.cos(tAngle + 0.3) * darkRadius * 0.6,
+          screenPos.y + Math.sin(tAngle + 0.3) * darkRadius * 0.3,
+          screenPos.x + Math.cos(tAngle) * darkRadius,
+          screenPos.y + Math.sin(tAngle) * darkRadius * 0.5
+        );
+        ctx.stroke();
+      }
+      break;
+      
+    // ========================================================================
+    // PROJECTILE IMPACT EFFECTS
+    // ========================================================================
+    
+    case "arrow_hit":
+      // Arrow stuck in ground
+      const arrowAngle = effect.rotation || -Math.PI / 4;
+      const arrowAlpha = alpha;
+      
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(arrowAngle);
+      
+      // Arrow shaft sticking out
+      ctx.fillStyle = `rgba(90, 64, 32, ${arrowAlpha})`;
+      ctx.fillRect(-2 * zoom, -15 * zoom, 4 * zoom, 12 * zoom);
+      
+      // Fletching
+      ctx.fillStyle = `rgba(200, 50, 50, ${arrowAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(0, -15 * zoom);
+      ctx.lineTo(-4 * zoom, -12 * zoom);
+      ctx.lineTo(0, -13 * zoom);
+      ctx.lineTo(4 * zoom, -12 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      
+      ctx.restore();
+      break;
+      
+    case "magic_impact":
+      // Magic projectile impact sparkles
+      const magicSize = effect.size * zoom;
+      const magicAlpha = alpha;
+      const magicColor = effect.color || "150, 100, 255";
+      
+      // Central burst
+      const magicImpactGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, magicSize
+      );
+      magicImpactGrad.addColorStop(0, `rgba(255, 255, 255, ${magicAlpha})`);
+      magicImpactGrad.addColorStop(0.3, `rgba(${magicColor}, ${magicAlpha * 0.7})`);
+      magicImpactGrad.addColorStop(1, `rgba(${magicColor}, 0)`);
+      ctx.fillStyle = magicImpactGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, magicSize * (0.5 + progress * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Sparkles flying out
+      ctx.fillStyle = `rgba(${magicColor}, ${magicAlpha * 0.8})`;
+      for (let i = 0; i < 6; i++) {
+        const sAngle = (i / 6) * Math.PI * 2;
+        const sDist = magicSize * progress;
+        ctx.beginPath();
+        ctx.arc(
+          screenPos.x + Math.cos(sAngle) * sDist,
+          screenPos.y + Math.sin(sAngle) * sDist * 0.5,
+          2 * zoom * (1 - progress),
+          0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+      break;
+      
+    case "fire_impact":
+      // Fireball explosion
+      const fireImpactRadius = effect.size * zoom * (0.3 + progress * 0.7);
+      const fireImpactAlpha = alpha;
+      
+      // Fire explosion
+      const fireImpactGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y - fireImpactRadius * 0.2, 0,
+        screenPos.x, screenPos.y, fireImpactRadius
+      );
+      fireImpactGrad.addColorStop(0, `rgba(255, 255, 200, ${fireImpactAlpha})`);
+      fireImpactGrad.addColorStop(0.2, `rgba(255, 200, 50, ${fireImpactAlpha * 0.9})`);
+      fireImpactGrad.addColorStop(0.5, `rgba(255, 100, 0, ${fireImpactAlpha * 0.6})`);
+      fireImpactGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+      ctx.fillStyle = fireImpactGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, fireImpactRadius, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ember particles
+      ctx.fillStyle = `rgba(255, 200, 50, ${fireImpactAlpha * 0.8})`;
+      for (let i = 0; i < 8; i++) {
+        const eAngle = (i / 8) * Math.PI * 2;
+        const eDist = fireImpactRadius * (0.6 + progress * 0.4);
+        const eRise = progress * 20 * zoom;
+        ctx.beginPath();
+        ctx.arc(
+          screenPos.x + Math.cos(eAngle) * eDist,
+          screenPos.y + Math.sin(eAngle) * eDist * 0.5 - eRise,
+          3 * zoom * (1 - progress * 0.5),
+          0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+      break;
+      
+    case "rock_impact":
+      // Boulder crash - debris and dust
+      const rockSize = effect.size * zoom;
+      const rockAlpha = alpha;
+      
+      // Impact crater
+      ctx.fillStyle = `rgba(80, 60, 40, ${rockAlpha * 0.4})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, rockSize * 0.6, rockSize * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Flying debris
+      ctx.fillStyle = `rgba(120, 100, 80, ${rockAlpha})`;
+      for (let i = 0; i < 10; i++) {
+        const dAngle = (i / 10) * Math.PI * 2;
+        const dDist = rockSize * (0.3 + progress * 0.7);
+        const dRise = Math.sin(progress * Math.PI) * 15 * zoom;
+        const dSize = (4 + Math.sin(i * 2) * 2) * zoom * (1 - progress * 0.5);
+        
+        ctx.beginPath();
+        ctx.arc(
+          screenPos.x + Math.cos(dAngle) * dDist,
+          screenPos.y + Math.sin(dAngle) * dDist * 0.5 - dRise,
+          dSize,
+          0, Math.PI * 2
+        );
+        ctx.fill();
+      }
+      
+      // Dust cloud
+      ctx.fillStyle = `rgba(150, 130, 100, ${rockAlpha * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, rockSize, rockSize * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+      
+    case "poison_splash":
+      // Poison splatter
+      const poisonRadius = effect.size * zoom;
+      const poisonAlpha = alpha;
+      
+      // Poison puddle
+      const poisonGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, poisonRadius
+      );
+      poisonGrad.addColorStop(0, `rgba(100, 200, 50, ${poisonAlpha * 0.6})`);
+      poisonGrad.addColorStop(0.5, `rgba(80, 180, 30, ${poisonAlpha * 0.4})`);
+      poisonGrad.addColorStop(1, "rgba(60, 150, 20, 0)");
+      ctx.fillStyle = poisonGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, poisonRadius, poisonRadius * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Bubbles
+      ctx.fillStyle = `rgba(150, 255, 100, ${poisonAlpha * 0.7})`;
+      for (let i = 0; i < 5; i++) {
+        const bx = screenPos.x + (Math.sin(i * 2.5) - 0.5) * poisonRadius;
+        const by = screenPos.y + (Math.cos(i * 1.7) - 0.5) * poisonRadius * 0.3 - progress * 10 * zoom;
+        const bSize = 3 * zoom * (1 - progress * 0.3);
+        ctx.beginPath();
+        ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+      
+    case "frost_impact":
+      // Ice shatter effect
+      const frostRadius = effect.size * zoom;
+      const frostAlpha = alpha;
+      
+      // Ice burst
+      const frostGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, frostRadius
+      );
+      frostGrad.addColorStop(0, `rgba(255, 255, 255, ${frostAlpha * 0.8})`);
+      frostGrad.addColorStop(0.4, `rgba(200, 230, 255, ${frostAlpha * 0.5})`);
+      frostGrad.addColorStop(1, "rgba(100, 180, 255, 0)");
+      ctx.fillStyle = frostGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, frostRadius * (0.5 + progress * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ice shards flying out
+      ctx.fillStyle = `rgba(200, 240, 255, ${frostAlpha})`;
+      for (let i = 0; i < 6; i++) {
+        const shardAngle = (i / 6) * Math.PI * 2;
+        const shardDist = frostRadius * progress;
+        const sx = screenPos.x + Math.cos(shardAngle) * shardDist;
+        const sy = screenPos.y + Math.sin(shardAngle) * shardDist * 0.5;
+        const shardSize = 6 * zoom * (1 - progress * 0.5);
+        
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(shardAngle);
+        ctx.beginPath();
+        ctx.moveTo(0, -shardSize);
+        ctx.lineTo(shardSize * 0.4, 0);
+        ctx.lineTo(0, shardSize);
+        ctx.lineTo(-shardSize * 0.4, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      break;
+      
+    // ========================================================================
+    // HERO SPECIAL EFFECTS
+    // ========================================================================
+    
+    case "tiger_slash":
+      // Tiger claw attack - triple slash marks
+      const tigerAngle = effect.slashAngle || 0;
+      const tigerSize = effect.size * zoom;
+      const tigerAlpha = alpha;
+      
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(tigerAngle);
+      
+      // Three claw marks
+      for (let claw = 0; claw < 3; claw++) {
+        const clawY = (claw - 1) * 10 * zoom;
+        const clawProgress = Math.max(0, progress - claw * 0.08) / (1 - claw * 0.08);
+        const clawLen = tigerSize * (0.4 + clawProgress * 0.6);
+        const clawAlpha = tigerAlpha * (1 - clawProgress * 0.3);
+        
+        // Claw glow
+        ctx.shadowColor = "#ff8800";
+        ctx.shadowBlur = 8 * zoom;
+        
+        // Claw arc
+        ctx.strokeStyle = `rgba(255, 200, 100, ${clawAlpha})`;
+        ctx.lineWidth = 4 * zoom * (1 - clawProgress * 0.3);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.arc(0, clawY, clawLen, -0.3, 0.3);
+        ctx.stroke();
+        
+        // Inner bright line
+        ctx.strokeStyle = `rgba(255, 255, 200, ${clawAlpha})`;
+        ctx.lineWidth = 2 * zoom;
+        ctx.beginPath();
+        ctx.arc(0, clawY, clawLen, -0.3, 0.3);
+        ctx.stroke();
+        
+        ctx.shadowBlur = 0;
+      }
+      
+      ctx.restore();
+      break;
+      
+    case "knight_cleave":
+      // Mathey Knight sword swing - heavy sweeping arc
+      const knightAngle = effect.slashAngle || 0;
+      const knightSize = effect.size * zoom;
+      const knightAlpha = alpha;
+      
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(knightAngle);
+      
+      // Sword trail glow
+      ctx.shadowColor = "#6366f1";
+      ctx.shadowBlur = 15 * zoom;
+      
+      // Wide sweeping arc
+      const arcWidth = Math.PI * 0.8;
+      const arcRadius = knightSize * (0.4 + progress * 0.6);
+      
+      // Outer glow
+      ctx.strokeStyle = `rgba(99, 102, 241, ${knightAlpha * 0.5})`;
+      ctx.lineWidth = 12 * zoom * (1 - progress * 0.5);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(0, 0, arcRadius, -arcWidth / 2, arcWidth / 2);
+      ctx.stroke();
+      
+      // Inner bright arc
+      ctx.strokeStyle = `rgba(200, 200, 255, ${knightAlpha})`;
+      ctx.lineWidth = 4 * zoom;
+      ctx.beginPath();
+      ctx.arc(0, 0, arcRadius, -arcWidth / 2, arcWidth / 2);
+      ctx.stroke();
+      
+      // Sparks at the arc tip
+      const tipX = Math.cos(arcWidth / 2) * arcRadius;
+      const tipY = Math.sin(arcWidth / 2) * arcRadius;
+      ctx.fillStyle = `rgba(255, 255, 255, ${knightAlpha})`;
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 5 * zoom * (1 - progress), 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      break;
+      
+    case "scott_quill":
+      // F Scott pen/quill attack - ink splash and literary flourish
+      const scottSize = effect.size * zoom;
+      const scottAlpha = alpha;
+      
+      // Ink splash
+      const inkGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, scottSize
+      );
+      inkGrad.addColorStop(0, `rgba(20, 184, 166, ${scottAlpha * 0.6})`);
+      inkGrad.addColorStop(0.5, `rgba(13, 148, 136, ${scottAlpha * 0.4})`);
+      inkGrad.addColorStop(1, "rgba(15, 118, 110, 0)");
+      ctx.fillStyle = inkGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, scottSize * (0.4 + progress * 0.6), 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Floating letters/words (literary effect)
+      ctx.fillStyle = `rgba(94, 234, 212, ${scottAlpha * 0.8})`;
+      ctx.font = `${10 * zoom}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const words = ["✦", "★", "◆", "✧"];
+      for (let i = 0; i < 4; i++) {
+        const wAngle = (i / 4) * Math.PI * 2 + progress * 3;
+        const wDist = scottSize * (0.4 + progress * 0.5);
+        const wx = screenPos.x + Math.cos(wAngle) * wDist;
+        const wy = screenPos.y + Math.sin(wAngle) * wDist * 0.5 - progress * 10 * zoom;
+        ctx.fillText(words[i], wx, wy);
+      }
+      break;
+      
+    case "sonic_blast":
+      // Tenor multi-target sonic attack
+      const sonicSize = effect.size * zoom;
+      const sonicAlpha = alpha;
+      
+      // Multiple expanding sonic rings
+      for (let ring = 0; ring < 4; ring++) {
+        const ringDelay = ring * 0.1;
+        const ringProgress = Math.max(0, (progress - ringDelay) / (1 - ringDelay));
+        if (ringProgress <= 0) continue;
+        
+        const ringRadius = sonicSize * ringProgress;
+        const ringAlphaVal = sonicAlpha * (1 - ringProgress) * 0.7;
+        
+        ctx.strokeStyle = `rgba(139, 92, 246, ${ringAlphaVal})`;
+        ctx.lineWidth = (4 - ring) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, ringRadius, ringRadius * 0.4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      
+      // Central burst
+      const burstGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, sonicSize * 0.3
+      );
+      burstGrad.addColorStop(0, `rgba(200, 180, 255, ${sonicAlpha})`);
+      burstGrad.addColorStop(0.5, `rgba(139, 92, 246, ${sonicAlpha * 0.5})`);
+      burstGrad.addColorStop(1, "rgba(100, 50, 200, 0)");
+      ctx.fillStyle = burstGrad;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, sonicSize * 0.3 * (1 - progress * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Music notes floating
+      ctx.fillStyle = `rgba(220, 200, 255, ${sonicAlpha * 0.9})`;
+      ctx.font = `${12 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const notes = ["♪", "♫", "♬"];
+      for (let i = 0; i < 3; i++) {
+        const nAngle = (i / 3) * Math.PI * 2 + progress * 5;
+        const nDist = sonicSize * (0.3 + progress * 0.5);
+        ctx.fillText(
+          notes[i],
+          screenPos.x + Math.cos(nAngle) * nDist,
+          screenPos.y + Math.sin(nAngle) * nDist * 0.4
+        );
+      }
+      break;
+
     default:
       // Generic effect
       ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;

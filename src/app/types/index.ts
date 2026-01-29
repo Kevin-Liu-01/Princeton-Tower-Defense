@@ -156,7 +156,38 @@ export type EnemyType =
   | "berserker"
   | "golem"
   | "necromancer"
-  | "shadow_knight";
+  | "shadow_knight"
+  // New enemy types
+  | "cultist"
+  | "plaguebearer"
+  | "thornwalker"
+  | "sandworm"
+  | "frostling"
+  | "infernal"
+  | "banshee"
+  | "juggernaut"
+  | "assassin"
+  | "dragon"
+  // Region-specific common troops - Forest
+  | "freshman"
+  | "athlete"
+  | "protestor"
+  // Region-specific common troops - Swamp
+  | "bog_creature"
+  | "will_o_wisp"
+  | "swamp_troll"
+  // Region-specific common troops - Desert
+  | "nomad"
+  | "scorpion"
+  | "scarab"
+  // Region-specific common troops - Winter
+  | "snow_goblin"
+  | "yeti"
+  | "ice_witch"
+  // Region-specific common troops - Volcanic
+  | "magma_spawn"
+  | "fire_imp"
+  | "ember_guard";
 
 // Enemy data definition
 export interface EnemyData {
@@ -360,6 +391,31 @@ export interface Spell {
 // PROJECTILE & EFFECT TYPES
 // ============================================================================
 
+// Projectile types for visual variety
+export type ProjectileType =
+  | "arrow"          // Basic arrow (archers, crossbowmen)
+  | "bolt"           // Crossbow bolt
+  | "spear"          // Centaur spear/javelin
+  | "rock"           // Catapult boulder
+  | "fireball"       // Mage fire attack
+  | "magicBolt"      // Generic magic projectile (warlocks, hexers)
+  | "darkBolt"       // Dark magic (necromancers, shadow knights)
+  | "frostBolt"      // Ice projectile (frostlings)
+  | "poisonBolt"     // Poison magic (plaguebearers)
+  | "energyBlast"    // Generic energy (lab towers)
+  | "sonicWave"      // Sound wave (tenor, arch tower)
+  | "lightningOrb"   // Lightning projectile
+  | "flame"          // Flamethrower
+  | "bullet"         // Modern bullets (station turrets)
+  | "cannon"         // Cannonball
+  | "hero"           // Hero ranged attack
+  | "lab"            // Lab tower projectile
+  | "lightning"      // Lightning bolt
+  | "arch"           // Arch tower music note
+  | "infernalFire"   // Infernal demon fire
+  | "bansheeScream"  // Banshee wail
+  | "dragonBreath";  // Dragon fire
+
 // Projectile
 export interface Projectile {
   id: string;
@@ -374,6 +430,13 @@ export interface Projectile {
   damage?: number;
   targetType?: "hero" | "troop" | "enemy";
   targetId?: string;
+  // AoE properties
+  isAoE?: boolean;
+  aoeRadius?: number;
+  // Visual customization
+  color?: string;
+  scale?: number;
+  trailColor?: string;
 }
 
 // Visual effect types
@@ -409,7 +472,33 @@ export type EffectType =
   | "meteor_falling"
   | "meteor_impact"
   | "lightning_bolt"
-  | "freeze_wave";
+  | "freeze_wave"
+  // Physical attack effects
+  | "melee_slash"       // Sword/claw slash arc
+  | "melee_smash"       // Heavy ground pound
+  | "melee_swipe"       // Quick claw swipe
+  | "impact_hit"        // Generic hit impact
+  | "ground_crack"      // Ground crack from heavy attack
+  | "dust_cloud"        // Dust from ground impact
+  // AoE attack effects  
+  | "aoe_ring"          // Expanding damage ring
+  | "shockwave"         // Ground shockwave
+  | "magic_burst"       // Magic AoE burst
+  | "fire_nova"         // Fire explosion ring
+  | "ice_nova"          // Ice explosion ring
+  | "dark_nova"         // Dark magic burst
+  // Projectile impact effects
+  | "arrow_hit"         // Arrow stuck in ground
+  | "magic_impact"      // Magic projectile impact
+  | "fire_impact"       // Fireball explosion
+  | "rock_impact"       // Boulder crash
+  | "poison_splash"     // Poison splatter
+  | "frost_impact"      // Ice shatter
+  // Hero special effects
+  | "tiger_slash"       // Tiger claw attack
+  | "knight_cleave"     // Mathey Knight sword swing
+  | "scott_quill"       // F Scott pen/quill attack
+  | "sonic_blast";      // Tenor multi-target blast
 
 // Visual effect
 export interface Effect {
@@ -428,6 +517,15 @@ export interface Effect {
   duration?: number;
   strikeIndex?: number;
   meteorIndex?: number;
+  // Combat effect properties
+  color?: string;
+  sourceId?: string;         // Who caused this effect
+  damageDealt?: number;      // Visual damage number
+  isCritical?: boolean;      // Critical hit indicator
+  attackerType?: "enemy" | "hero" | "troop" | "tower";
+  // Slash/melee effect properties
+  slashAngle?: number;       // Direction of slash
+  slashWidth?: number;       // Arc width of slash
 }
 
 // Particle types
