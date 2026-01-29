@@ -63,6 +63,7 @@ export interface TowerStatsDefinition {
     2: TowerLevelUpgrade;
     3: TowerLevelUpgrade;
   };
+  level4Cost: number; // Cost to upgrade to level 4
   upgrades: {
     A: TowerUpgradePath;
     B: TowerUpgradePath;
@@ -93,16 +94,17 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         overrides: { maxTroops: 1, spawnTroopType: "footsoldier" },
       },
       2: {
-        cost: 150,
+        cost: 250,
         description: "Armored Soldiers - Equipped with armor",
         overrides: { maxTroops: 2, spawnTroopType: "armored" },
       },
       3: {
-        cost: 250,
+        cost: 350,
         description: "Elite Guard - Royal warriors with halberds",
         overrides: { maxTroops: 3, spawnTroopType: "elite" },
       },
     },
+    level4Cost: 500,
     upgrades: {
       A: {
         name: "Centaur Stables",
@@ -144,16 +146,17 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Basic Cannon - Single shot artillery",
       },
       2: {
-        cost: 120,
+        cost: 140,
         description: "Improved Cannon - Larger caliber",
         multipliers: { damage: 1.5 },
       },
       3: {
-        cost: 200,
+        cost: 220,
         description: "Heavy Cannon - Stabilized barrel",
         multipliers: { damage: 2.2, attackSpeed: 0.75 },
       },
     },
+    level4Cost: 400,
     upgrades: {
       A: {
         name: "Gatling Gun",
@@ -199,16 +202,17 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Basic Slowing - 20% slow field",
       },
       2: {
-        cost: 100,
-        description: "Enhanced Slowing - 35% slow field",
-        overrides: { slowAmount: 0.35 },
+        cost: 175,
+        description: "Enhanced Slowing - 30% slow field",
+        overrides: { slowAmount: 0.30 },
       },
       3: {
-        cost: 180,
+        cost: 275,
         description: "Arcane Library - 40% slow + magic damage",
         overrides: { slowAmount: 0.40, damage: 30, attackSpeed: 500 },
       },
     },
+    level4Cost: 600,
     upgrades: {
       A: {
         name: "Earthquake Smasher",
@@ -255,17 +259,18 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Basic Zapper - Single target lightning",
       },
       2: {
-        cost: 140,
+        cost: 150,
         description: "Enhanced Zapper - 1.5x damage",
         multipliers: { damage: 1.5 },
       },
       3: {
-        cost: 220,
+        cost: 250,
         description: "Tesla Coil - Chains to 2 targets",
         multipliers: { damage: 2 },
         overrides: { chainTargets: 2 },
       },
     },
+    level4Cost: 450,
     upgrades: {
       A: {
         name: "Focused Beam",
@@ -308,18 +313,19 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Sound Waves - Single target sonic",
       },
       2: {
-        cost: 110,
+        cost: 135,
         description: "Resonance - Hits 2 targets, 1.5x damage",
         multipliers: { damage: 1.5 },
         overrides: { chainTargets: 2 },
       },
       3: {
-        cost: 190,
+        cost: 225,
         description: "Elite Archers - Hits 3 targets, 30% faster",
         multipliers: { damage: 2, attackSpeed: 0.7 },
         overrides: { chainTargets: 3 },
       },
     },
+    level4Cost: 500,
     upgrades: {
       A: {
         name: "Shockwave Emitter",
@@ -365,19 +371,20 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
         description: "Basic Club - 8 PP per 8 seconds",
       },
       2: {
-        cost: 180,
-        description: "Popular Club - 15 PP per 7 seconds",
-        overrides: { income: 15, incomeInterval: 7000 },
+        cost: 200,
+        description: "Popular Club - 12 PP per 7 seconds",
+        overrides: { income: 12, incomeInterval: 7000 },
       },
       3: {
-        cost: 280,
-        description: "Grand Club - 25 PP per 6 seconds",
+        cost: 325,
+        description: "Grand Club - 20 PP per 6 seconds",
         overrides: {
-          income: 25,
+          income: 20,
           incomeInterval: 6000,
         },
       },
     },
+    level4Cost: 550,
     upgrades: {
       A: {
         name: "Investment Bank",
@@ -500,7 +507,7 @@ export function calculateTowerStats(
 export function getUpgradeCost(
   towerType: string,
   currentLevel: number,
-  upgrade?: "A" | "B"
+  _upgrade?: "A" | "B"
 ): number {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) return 0;
@@ -510,8 +517,17 @@ export function getUpgradeCost(
     return towerDef.levels[nextLevel]?.cost || 0;
   }
 
-  // Level 4 upgrade cost would be defined elsewhere or as a constant
-  return 400; // Default level 4 upgrade cost
+  // Level 4 upgrade cost from tower definition
+  return towerDef.level4Cost;
+}
+
+/**
+ * Get the level 4 upgrade cost for a specific tower type
+ */
+export function getLevel4Cost(towerType: string): number {
+  const towerDef = TOWER_STATS[towerType];
+  if (!towerDef) return 400; // Default fallback
+  return towerDef.level4Cost;
 }
 
 /**

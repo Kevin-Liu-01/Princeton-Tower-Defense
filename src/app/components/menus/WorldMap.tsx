@@ -322,7 +322,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
     if (level <= 3) {
       return towerDef.levels[level as 1 | 2 | 3]?.cost || 0;
     }
-    return 400; // Level 4 cost
+    return towerDef.level4Cost; // Level 4 cost from tower definition
   };
 
   // Get troop for station display
@@ -784,71 +784,158 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                                 </span>
                               </div>
                               <div className="p-3">
-                                <p className="text-xs text-stone-400 mb-3 line-clamp-2">
-                                  {tower.levelDesc[level as 1 | 2 | 3 | 4]}
-                                </p>
+                                {/* Level 4 shows both upgrade paths */}
+                                {level === 4 ? (
+                                  <div className="space-y-2">
+                                    {(["A", "B"] as const).map((path) => {
+                                      const pathStats = getDynamicStats(selectedTower, 4, path);
+                                      const pathTroop = isStation ? getTroopForLevel(4, path) : null;
 
-                                {/* Station shows troop stats */}
-                                {isStation && troop && (
-                                  <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                                    <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                      <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-red-300 font-bold">{troop.hp}</div>
-                                    </div>
-                                    <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                      <Swords size={10} className="mx-auto text-orange-400 mb-0.5" />
-                                      <div className="text-orange-300 font-bold">{troop.damage}</div>
-                                    </div>
-                                    <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                      <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
-                                      <div className="text-green-300 font-bold">{troop.attackSpeed}ms</div>
-                                    </div>
+                                      return (
+                                        <div
+                                          key={path}
+                                          className={`rounded-lg border overflow-hidden ${path === "A"
+                                            ? "bg-red-950/30 border-red-800/40"
+                                            : "bg-blue-950/30 border-blue-800/40"
+                                            }`}
+                                        >
+                                          {/* Path header */}
+                                          <div className={`px-2 py-1 text-[10px] font-bold ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"
+                                            }`}>
+                                            {tower.upgrades[path].name}
+                                          </div>
+
+                                          {/* Path stats */}
+                                          <div className="p-1.5">
+                                            {/* Station shows troop stats for each path */}
+                                            {isStation && pathTroop && (
+                                              <div className="grid grid-cols-3 gap-1 text-[9px]">
+                                                <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
+                                                  <div className="text-red-500 text-[7px]">HP</div>
+                                                  <div className="text-red-300 font-bold">{pathTroop.hp}</div>
+                                                </div>
+                                                <div className="bg-orange-950/50 rounded p-1 text-center border border-orange-900/30">
+                                                  <div className="text-orange-500 text-[7px]">DMG</div>
+                                                  <div className="text-orange-300 font-bold">{pathTroop.damage}</div>
+                                                </div>
+                                                <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
+                                                  <div className="text-green-500 text-[7px]">SPD</div>
+                                                  <div className="text-green-300 font-bold">{pathTroop.attackSpeed}ms</div>
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            {/* Combat towers show damage/range/speed for each path */}
+                                            {!isStation && selectedTower !== "club" && (
+                                              <div className="grid grid-cols-3 gap-1 text-[9px]">
+                                                {pathStats.damage > 0 && (
+                                                  <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
+                                                    <div className="text-red-500 text-[7px]">DMG</div>
+                                                    <div className="text-red-300 font-bold">{Math.floor(pathStats.damage)}</div>
+                                                  </div>
+                                                )}
+                                                {pathStats.range > 0 && (
+                                                  <div className="bg-blue-950/50 rounded p-1 text-center border border-blue-900/30">
+                                                    <div className="text-blue-500 text-[7px]">RNG</div>
+                                                    <div className="text-blue-300 font-bold">{Math.floor(pathStats.range)}</div>
+                                                  </div>
+                                                )}
+                                                {pathStats.attackSpeed > 0 && (
+                                                  <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
+                                                    <div className="text-green-500 text-[7px]">SPD</div>
+                                                    <div className="text-green-300 font-bold">{pathStats.attackSpeed}ms</div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+
+                                            {/* Club shows income for each path */}
+                                            {selectedTower === "club" && (
+                                              <div className="grid grid-cols-2 gap-1 text-[9px]">
+                                                <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
+                                                  <div className="text-amber-500 text-[7px]">Income</div>
+                                                  <div className="text-amber-300 font-bold">+{pathStats.income} PP</div>
+                                                </div>
+                                                <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
+                                                  <div className="text-amber-500 text-[7px]">Interval</div>
+                                                  <div className="text-amber-300 font-bold">{(pathStats.incomeInterval || 8000) / 1000}s</div>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                )}
+                                ) : (
+                                  <>
+                                    <p className="text-xs text-stone-400 mb-3 line-clamp-2">
+                                      {tower.levelDesc[level as 1 | 2 | 3]}
+                                    </p>
 
-                                {/* Combat towers show damage/range/speed */}
-                                {!isStation && selectedTower !== "club" && (
-                                  <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                                    {stats.damage > 0 && (
-                                      <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                        <div className="text-red-500 text-[8px]">DMG</div>
-                                        <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
+                                    {/* Station shows troop stats */}
+                                    {isStation && troop && (
+                                      <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                        <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
+                                          <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
+                                          <div className="text-red-300 font-bold">{troop.hp}</div>
+                                        </div>
+                                        <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
+                                          <Swords size={10} className="mx-auto text-orange-400 mb-0.5" />
+                                          <div className="text-orange-300 font-bold">{troop.damage}</div>
+                                        </div>
+                                        <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
+                                          <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
+                                          <div className="text-green-300 font-bold">{troop.attackSpeed}ms</div>
+                                        </div>
                                       </div>
                                     )}
-                                    {stats.range > 0 && (
-                                      <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                        <div className="text-blue-500 text-[8px]">RNG</div>
-                                        <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
+
+                                    {/* Combat towers show damage/range/speed */}
+                                    {!isStation && selectedTower !== "club" && (
+                                      <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                        {stats.damage > 0 && (
+                                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
+                                            <div className="text-red-500 text-[8px]">DMG</div>
+                                            <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
+                                          </div>
+                                        )}
+                                        {stats.range > 0 && (
+                                          <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
+                                            <div className="text-blue-500 text-[8px]">RNG</div>
+                                            <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
+                                          </div>
+                                        )}
+                                        {stats.attackSpeed > 0 && (
+                                          <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
+                                            <div className="text-green-500 text-[8px]">SPD</div>
+                                            <div className="text-green-300 font-bold">{stats.attackSpeed}ms</div>
+                                          </div>
+                                        )}
                                       </div>
                                     )}
-                                    {stats.attackSpeed > 0 && (
-                                      <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                        <div className="text-green-500 text-[8px]">SPD</div>
-                                        <div className="text-green-300 font-bold">{stats.attackSpeed}ms</div>
+
+                                    {/* Club shows income */}
+                                    {selectedTower === "club" && (
+                                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                                        <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
+                                          <div className="text-amber-500 text-[8px]">Income</div>
+                                          <div className="text-amber-300 font-bold">+{stats.income} PP</div>
+                                        </div>
+                                        <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
+                                          <div className="text-amber-500 text-[8px]">Interval</div>
+                                          <div className="text-amber-300 font-bold">{(stats.incomeInterval || 8000) / 1000}s</div>
+                                        </div>
                                       </div>
                                     )}
-                                  </div>
-                                )}
 
-                                {/* Club shows income */}
-                                {selectedTower === "club" && (
-                                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                                    <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                      <div className="text-amber-500 text-[8px]">Income</div>
-                                      <div className="text-amber-300 font-bold">+{stats.income} PP</div>
-                                    </div>
-                                    <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                      <div className="text-amber-500 text-[8px]">Interval</div>
-                                      <div className="text-amber-300 font-bold">{(stats.incomeInterval || 8000) / 1000}s</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Library shows slow */}
-                                {selectedTower === "library" && level < 4 && (
-                                  <div className="mt-1.5 text-[10px] text-cyan-400 flex items-center justify-center gap-1 bg-cyan-950/30 rounded p-1 border border-cyan-900/30">
-                                    <Snowflake size={10} /> {Math.round((stats.slowAmount || 0) * 100)}% slow
-                                  </div>
+                                    {/* Library shows slow */}
+                                    {selectedTower === "library" && (
+                                      <div className="mt-1.5 text-[10px] text-cyan-400 flex items-center justify-center gap-1 bg-cyan-950/30 rounded p-1 border border-cyan-900/30">
+                                        <Snowflake size={10} /> {Math.round((stats.slowAmount || 0) * 100)}% slow
+                                      </div>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </div>

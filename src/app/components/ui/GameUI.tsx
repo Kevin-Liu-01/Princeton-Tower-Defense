@@ -90,19 +90,109 @@ export { TowerSprite, HeroSprite, SpellSprite };
 
 const useIsTouchDevice = () => {
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  
+
   useEffect(() => {
     const checkTouch = () => {
       setIsTouchDevice(
-        'ontouchstart' in window || 
+        'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
         window.matchMedia('(pointer: coarse)').matches
       );
     };
     checkTouch();
   }, []);
-  
+
   return isTouchDevice;
+};
+
+// =============================================================================
+// RESPONSIVE SPRITE SIZE HOOK
+// =============================================================================
+
+interface ResponsiveSizes {
+  heroIcon: number;      // Hero icon in HeroSpellBar
+  heroIconLarge: number; // Hero icon in tooltips/larger contexts
+  towerIcon: number;     // Tower icon in BuildMenu
+  towerIconLarge: number; // Tower icon in tooltips/panels
+  spellIcon: number;     // Spell icons
+}
+
+const useResponsiveSizes = (): ResponsiveSizes => {
+  const [sizes, setSizes] = useState<ResponsiveSizes>({
+    heroIcon: 28,
+    heroIconLarge: 40,
+    towerIcon: 26,
+    towerIconLarge: 40,
+    spellIcon: 24,
+  });
+
+  useEffect(() => {
+    const updateSizes = () => {
+      const width = window.innerWidth;
+
+      if (width >= 1536) {
+        // 2xl screens
+        setSizes({
+          heroIcon: 48,
+          heroIconLarge: 64,
+          towerIcon: 44,
+          towerIconLarge: 60,
+          spellIcon: 40,
+        });
+      } else if (width >= 1280) {
+        // xl screens
+        setSizes({
+          heroIcon: 42,
+          heroIconLarge: 56,
+          towerIcon: 38,
+          towerIconLarge: 52,
+          spellIcon: 36,
+        });
+      } else if (width >= 1024) {
+        // lg screens
+        setSizes({
+          heroIcon: 36,
+          heroIconLarge: 48,
+          towerIcon: 34,
+          towerIconLarge: 48,
+          spellIcon: 32,
+        });
+      } else if (width >= 768) {
+        // md screens
+        setSizes({
+          heroIcon: 32,
+          heroIconLarge: 44,
+          towerIcon: 30,
+          towerIconLarge: 44,
+          spellIcon: 28,
+        });
+      } else if (width >= 640) {
+        // sm screens
+        setSizes({
+          heroIcon: 28,
+          heroIconLarge: 40,
+          towerIcon: 26,
+          towerIconLarge: 40,
+          spellIcon: 24,
+        });
+      } else {
+        // xs screens (mobile)
+        setSizes({
+          heroIcon: 24,
+          heroIconLarge: 36,
+          towerIcon: 22,
+          towerIconLarge: 36,
+          spellIcon: 20,
+        });
+      }
+    };
+
+    updateSizes();
+    window.addEventListener('resize', updateSizes);
+    return () => window.removeEventListener('resize', updateSizes);
+  }, []);
+
+  return sizes;
 };
 
 // =============================================================================
@@ -511,6 +601,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
     null
   );
   const isTouchDevice = useIsTouchDevice();
+  const sizes = useResponsiveSizes();
 
   const spellDetails: Record<string, string> = {
     fireball:
@@ -545,8 +636,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
           <div className="flex h-full items-center gap-2 sm:gap-3">
             {hero.dead ? (
               <div className="h-full bg-stone-900/80 animate-pulse pl-2 sm:pl-4 pr-4 sm:pr-8 p-1.5 sm:p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 pt-0.5 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
-                  <HeroSprite type={hero.type} size={28} />
+                <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
+                  <HeroSprite type={hero.type} size={sizes.heroIcon} />
                 </div>
                 <div className="flex flex-col">
                   <div className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase text-nowrap tracking-wide flex items-center gap-1">
@@ -590,13 +681,13 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
 
                   <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
                     <div
-                      className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg pt-0.5 border-2 flex items-center justify-center overflow-hidden"
+                      className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden"
                       style={{
                         borderColor: HERO_DATA[hero.type].color,
                         backgroundColor: HERO_DATA[hero.type].color + "30",
                       }}
                     >
-                      <HeroSprite type={hero.type} size={28} />
+                      <HeroSprite type={hero.type} size={sizes.heroIcon} />
                     </div>
                     <div>
                       <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left">
@@ -809,7 +900,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   placedTowers,
 }) => {
   const isTouchDevice = useIsTouchDevice();
-  
+  const sizes = useResponsiveSizes();
+
   const towerStrategies: Record<string, string> = {
     cannon:
       "High single-target damage. Great for taking down tough enemies. Place along main paths.",
@@ -885,7 +977,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                     : "x0"}
                 </span>
                 <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center">
-                  <TowerSprite type={towerType} size={26} />
+                  <TowerSprite type={towerType} size={sizes.towerIcon} />
                 </div>
                 <div className="flex flex-col items-start">
                   <div className="font-bold text-[8px] sm:text-[10px] text-amber-200">
@@ -949,7 +1041,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                 <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-stone-900/98 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50 pointer-events-none">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-14 h-14 rounded-lg bg-stone-800 border border-amber-600/50 flex items-center justify-center">
-                      <TowerSprite type={towerType} size={48} level={1} />
+                      <TowerSprite type={towerType} size={sizes.towerIconLarge} level={1} />
                     </div>
                     <div>
                       <h4 className="text-amber-200 font-bold text-base">
@@ -1110,6 +1202,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   sellTower,
   onClose,
 }) => {
+  const sizes = useResponsiveSizes();
   const towerData = TOWER_DATA[tower.type];
   const towerStatsDef = TOWER_STATS[tower.type];
 
@@ -1120,7 +1213,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const baseCost = TOWER_DATA[tower.type].cost;
   const level2Cost = tower.level >= 2 ? (TOWER_STATS[tower.type]?.levels[2]?.cost || 150) : 0;
   const level3Cost = tower.level >= 3 ? (TOWER_STATS[tower.type]?.levels[3]?.cost || 250) : 0;
-  const level4Cost = tower.level >= 4 ? 400 : 0;
+  const level4Cost = tower.level >= 4 ? (TOWER_STATS[tower.type]?.level4Cost || 400) : 0;
   const totalInvested = baseCost + level2Cost + level3Cost + level4Cost;
   const sellValue = Math.round(totalInvested * 0.7);
 
@@ -1328,7 +1421,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         {/* Header with tower name, level and description */}
         <div className="flex items-center gap-2.5 mb-2 pb-2 border-b border-amber-700/50">
           <div className="w-12 h-12 rounded-lg border border-amber-500/70 bg-amber-950/50 flex items-center justify-center flex-shrink-0">
-            <TowerSprite type={tower.type} size={40} level={tower.level} />
+            <TowerSprite type={tower.type} size={sizes.towerIconLarge} level={tower.level} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
