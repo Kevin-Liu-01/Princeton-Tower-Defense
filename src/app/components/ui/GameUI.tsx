@@ -89,17 +89,46 @@ export { TowerSprite, HeroSprite, SpellSprite };
 // =============================================================================
 
 const useIsTouchDevice = () => {
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  // Initialize with immediate check (safe for SSR with typeof check)
+  const [isTouchDevice, setIsTouchDevice] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return (
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches
+    );
+  });
 
   useEffect(() => {
-    const checkTouch = () => {
-      setIsTouchDevice(
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        window.matchMedia('(pointer: coarse)').matches
-      );
+    // Double-check on mount
+    const isTouch =
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches;
+
+    if (isTouch) {
+      setIsTouchDevice(true);
+      return;
+    }
+
+    // Listen for first touch event - immediately switch to touch mode
+    const onFirstTouch = () => {
+      setIsTouchDevice(true);
+      window.removeEventListener('touchstart', onFirstTouch);
     };
-    checkTouch();
+    window.addEventListener('touchstart', onFirstTouch, { passive: true });
+
+    // Listen for pointer media query changes
+    const mediaQuery = window.matchMedia('(pointer: coarse)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setIsTouchDevice(true);
+    };
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      window.removeEventListener('touchstart', onFirstTouch);
+      mediaQuery.removeEventListener('change', handleChange);
+    };
   }, []);
 
   return isTouchDevice;
@@ -842,8 +871,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   />
                 )}
               </button>
-              {isHovered && (
-                <div className="hidden sm:block absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
+              {isHovered && !isTouchDevice && (
+                <div className="hidden [@media(hover:hover)]:block absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-purple-200 font-bold">
                       {spellData.name}
@@ -1036,9 +1065,9 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                 )}
               </button>
 
-              {/* Enhanced Tooltip - hidden on mobile */}
-              {isHovered && (
-                <div className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-stone-900/98 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50 pointer-events-none">
+              {/* Enhanced Tooltip - hidden on touch devices */}
+              {isHovered && !isTouchDevice && (
+                <div className="hidden [@media(hover:hover)]:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 bg-stone-900/98 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50 pointer-events-none">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-14 h-14 rounded-lg bg-stone-800 border border-amber-600/50 flex items-center justify-center">
                       <TowerSprite type={towerType} size={sizes.towerIconLarge} level={1} />
