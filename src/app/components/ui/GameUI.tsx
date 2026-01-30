@@ -124,8 +124,20 @@ const useIsTouchDevice = () => {
     const onFirstTouch = () => {
       setIsTouchDevice(true);
       window.removeEventListener('touchstart', onFirstTouch);
+      window.removeEventListener('pointerdown', onFirstPointerTouch);
     };
     window.addEventListener('touchstart', onFirstTouch, { passive: true });
+
+    // BROWSER FIX: Also listen for pointer events with touch type
+    // This catches Chrome on mobile which may not fire touchstart reliably
+    const onFirstPointerTouch = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') {
+        setIsTouchDevice(true);
+        window.removeEventListener('touchstart', onFirstTouch);
+        window.removeEventListener('pointerdown', onFirstPointerTouch);
+      }
+    };
+    window.addEventListener('pointerdown', onFirstPointerTouch, { passive: true });
 
     // Listen for pointer media query changes
     const mediaQuery = window.matchMedia('(pointer: coarse)');
@@ -136,6 +148,7 @@ const useIsTouchDevice = () => {
 
     return () => {
       window.removeEventListener('touchstart', onFirstTouch);
+      window.removeEventListener('pointerdown', onFirstPointerTouch);
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, []);
@@ -249,6 +262,12 @@ interface TopHUDProps {
   quitLevel: () => void;
   // Animation props
   goldSpellActive?: boolean;
+  // Eating club income events for stacking floaters
+  eatingClubIncomeEvents?: Array<{ id: string; amount: number }>;
+  onEatingClubEventComplete?: (id: string) => void;
+  // Bounty income events (from enemy kills)
+  bountyIncomeEvents?: Array<{ id: string; amount: number; isGoldBoosted: boolean }>;
+  onBountyEventComplete?: (id: string) => void;
   // Inspector integration
   inspectorActive?: boolean;
   setInspectorActive?: (active: boolean) => void;
@@ -266,6 +285,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   retryLevel,
   quitLevel,
   goldSpellActive = false,
+  eatingClubIncomeEvents = [],
+  onEatingClubEventComplete,
+  bountyIncomeEvents = [],
+  onBountyEventComplete,
   inspectorActive = false,
   setInspectorActive,
   setSelectedInspectEnemy,
@@ -275,31 +298,107 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   const prevLives = useRef(lives);
 
   // Animation states
-  const [ppGain, setPpGain] = useState<{ amount: number; isGold: boolean } | null>(null);
   const [ppPulse, setPpPulse] = useState(false);
   const [livesShake, setLivesShake] = useState(false);
   const [livesFlash, setLivesFlash] = useState(false);
 
-  // Detect pawPoints changes
+  // Stacking eating club floaters
+  const [activeEatingClubFloaters, setActiveEatingClubFloaters] = useState<Array<{ id: string; amount: number; startTime: number }>>([]);
+  const [eatingClubFlash, setEatingClubFlash] = useState(false);
+  const processedEatingClubEventsRef = useRef<Set<string>>(new Set());
+
+  // Stacking bounty floaters (from enemy kills)
+  const [activeBountyFloaters, setActiveBountyFloaters] = useState<Array<{ id: string; amount: number; isGoldBoosted: boolean; startTime: number }>>([]);
+  const processedBountyEventsRef = useRef<Set<string>>(new Set());
+
+  // Process new eating club income events
   useEffect(() => {
-    const diff = pawPoints - prevPawPoints.current;
-    if (diff > 0) {
-      // Gained money - show floating +X
-      setPpGain({ amount: diff, isGold: goldSpellActive });
-      setPpPulse(true);
+    const newEvents = eatingClubIncomeEvents.filter(e => !processedEatingClubEventsRef.current.has(e.id));
 
-      // Clear after animation
-      const timeout1 = setTimeout(() => setPpGain(null), 1000);
-      const timeout2 = setTimeout(() => setPpPulse(false), 300);
+    if (newEvents.length > 0) {
+      // Trigger green flash
+      setEatingClubFlash(true);
+      setTimeout(() => setEatingClubFlash(false), 400);
 
-      prevPawPoints.current = pawPoints;
-      return () => {
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
-      };
+      // Add new floaters
+      const now = Date.now();
+      const newFloaters = newEvents.map((event, idx) => {
+        processedEatingClubEventsRef.current.add(event.id);
+        return {
+          id: event.id,
+          amount: event.amount,
+          startTime: now + idx * 80, // Stagger start times slightly
+        };
+      });
+
+      setActiveEatingClubFloaters(prev => [...prev, ...newFloaters]);
     }
+  }, [eatingClubIncomeEvents]);
+
+  // Clean up eating club floaters after animation completes
+  useEffect(() => {
+    if (activeEatingClubFloaters.length === 0) return;
+
+    const timers = activeEatingClubFloaters.map(floater => {
+      const elapsed = Date.now() - floater.startTime;
+      const remaining = Math.max(0, 1200 - elapsed); // 1.2s animation
+
+      return setTimeout(() => {
+        setActiveEatingClubFloaters(prev => prev.filter(f => f.id !== floater.id));
+        processedEatingClubEventsRef.current.delete(floater.id);
+        onEatingClubEventComplete?.(floater.id);
+      }, remaining);
+    });
+
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [activeEatingClubFloaters, onEatingClubEventComplete]);
+
+  // Process new bounty income events
+  useEffect(() => {
+    const newEvents = bountyIncomeEvents.filter(e => !processedBountyEventsRef.current.has(e.id));
+
+    if (newEvents.length > 0) {
+      setPpPulse(true);
+      setTimeout(() => setPpPulse(false), 300);
+
+      // Add new floaters
+      const now = Date.now();
+      const newFloaters = newEvents.map((event, idx) => {
+        processedBountyEventsRef.current.add(event.id);
+        return {
+          id: event.id,
+          amount: event.amount,
+          isGoldBoosted: event.isGoldBoosted,
+          startTime: now + idx * 50, // Stagger start times
+        };
+      });
+
+      setActiveBountyFloaters(prev => [...prev, ...newFloaters]);
+    }
+  }, [bountyIncomeEvents]);
+
+  // Clean up bounty floaters after animation completes
+  useEffect(() => {
+    if (activeBountyFloaters.length === 0) return;
+
+    const timers = activeBountyFloaters.map(floater => {
+      const elapsed = Date.now() - floater.startTime;
+      const remaining = Math.max(0, 1000 - elapsed); // 1s animation
+
+      return setTimeout(() => {
+        setActiveBountyFloaters(prev => prev.filter(f => f.id !== floater.id));
+        processedBountyEventsRef.current.delete(floater.id);
+        onBountyEventComplete?.(floater.id);
+      }, remaining);
+    });
+
+    return () => timers.forEach(t => clearTimeout(t));
+  }, [activeBountyFloaters, onBountyEventComplete]);
+
+  // Update previous pawPoints ref
+  useEffect(() => {
     prevPawPoints.current = pawPoints;
-  }, [pawPoints, goldSpellActive]);
+  }, [pawPoints]);
 
   // Detect lives changes
   useEffect(() => {
@@ -335,36 +434,71 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <div
           className={`relative flex items-center gap-1.5 px-2.5 py-1 border shadow-sm rounded-lg transition-all duration-200 ${goldSpellActive
             ? 'bg-yellow-900/80 border-yellow-400 shadow-yellow-500/50 shadow-lg'
-            : 'bg-amber-950/60 border-amber-600'
+            : eatingClubFlash
+              ? 'bg-emerald-900/80 border-emerald-400 shadow-emerald-500/50 shadow-lg'
+              : 'bg-amber-950/60 border-amber-600'
             } ${ppPulse ? 'scale-110' : 'scale-100'}`}
         >
-          {/* Floating +X animation */}
-          {ppGain && (
+          {/* Stacking bounty floaters (from enemy kills) */}
+          {activeBountyFloaters.map((floater, index) => (
             <div
-              className={`absolute -top-6 left-1/2 -translate-x-1/2 font-bold text-sm whitespace-nowrap animate-bounce pointer-events-none ${ppGain.isGold ? 'text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-green-400'
-                }`}
+              key={floater.id}
+              className="absolute left-1/2 font-bold text-sm whitespace-nowrap pointer-events-none"
               style={{
-                animation: 'floatUp 1s ease-out forwards',
+                animation: 'bountyFloat 1s ease-out forwards',
+                animationDelay: `${index * 30}ms`,
+                bottom: -8,
+                zIndex: 100 - index,
               }}
             >
-              +{ppGain.amount}{ppGain.isGold && ' ✨'}
+              <span className={floater.isGoldBoosted
+                ? 'text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]'
+                : 'text-amber-300 drop-shadow-[0_0_6px_rgba(217,119,6,0.7)]'}>
+                +{floater.amount}
+              </span>
+              {floater.isGoldBoosted && <Sparkles size={12} className="text-yellow-300 ml-0.5 inline-block" />}
             </div>
-          )}
+          ))}
+
+          {/* Stacking eating club floaters */}
+          {activeEatingClubFloaters.map((floater, index) => (
+            <div
+              key={floater.id}
+              className="absolute left-1/2 font-bold text-sm whitespace-nowrap pointer-events-none"
+              style={{
+                animation: 'eatingClubFloat 1.2s ease-out forwards',
+                animationDelay: `${index * 50}ms`,
+                bottom: -8,
+                zIndex: 90 - index,
+              }}
+            >
+              <span className="text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+                +{floater.amount}
+              </span>
+              <Landmark size={12} className="text-emerald-400 ml-0.5 inline-block" />
+            </div>
+          ))}
+
           <PawPrint
             size={18}
-            className={`transition-colors ${goldSpellActive ? 'text-yellow-300' : 'text-amber-400'}`}
+            className={`transition-colors duration-200 ${goldSpellActive ? 'text-yellow-300' : eatingClubFlash ? 'text-emerald-300' : 'text-amber-400'}`}
           />
           <span
-            className={`font-bold text-sm sm:text-lg transition-colors ${goldSpellActive ? 'text-yellow-200' : 'text-amber-300'
+            className={`font-bold text-sm sm:text-lg transition-colors duration-200 ${goldSpellActive ? 'text-yellow-200' : eatingClubFlash ? 'text-emerald-200' : 'text-amber-300'
               }`}
           >
             {pawPoints}
           </span>
-          <span className={`text-[10px] sm:ml-0.5 ${goldSpellActive ? 'text-yellow-400' : 'text-amber-500'}`}>PP</span>
+          <span className={`text-[10px] sm:ml-0.5 transition-colors duration-200 ${goldSpellActive ? 'text-yellow-400' : eatingClubFlash ? 'text-emerald-400' : 'text-amber-500'}`}>PP</span>
 
           {/* Gold spell glow effect */}
           {goldSpellActive && (
             <div className="absolute inset-0 rounded-lg bg-yellow-400/20 animate-pulse pointer-events-none" />
+          )}
+
+          {/* Eating club flash glow effect */}
+          {eatingClubFlash && (
+            <div className="absolute inset-0 rounded-lg bg-emerald-400/30 pointer-events-none" style={{ animation: 'eatingClubGlow 0.4s ease-out forwards' }} />
           )}
         </div>
 
@@ -427,6 +561,54 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             transform: translateX(-50%) translateY(-20px);
           }
         }
+        @keyframes bountyFloat {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(0) scale(0.5);
+          }
+          15% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-18px) scale(1.15);
+          }
+          30% {
+            transform: translateX(-50%) translateY(-24px) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-45px) scale(0.85);
+          }
+        }
+        @keyframes eatingClubFloat {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(0) scale(0.6);
+          }
+          12% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-20px) scale(1.2);
+          }
+          25% {
+            transform: translateX(-50%) translateY(-28px) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-55px) scale(0.9);
+          }
+        }
+        @keyframes eatingClubGlow {
+          0% {
+            opacity: 0.8;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.05);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1);
+          }
+        }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
           10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
@@ -452,6 +634,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <button
             onClick={() => {
               setGameSpeed((prev) => Math.max(prev - 0.25, 0));
+              if (inspectorActive && setInspectorActive) {
+                setInspectorActive(false);
+                if (setSelectedInspectEnemy) {
+                  setSelectedInspectEnemy(null);
+                }
+              }
             }}
             className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
           >
@@ -460,11 +648,19 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <span className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md">
             {Number.isInteger(gameSpeed)
               ? gameSpeed + "x"
-              : gameSpeed.toFixed(1) + "x"}
+              : gameSpeed % 0.5 === 0
+                ? gameSpeed.toFixed(1) + "x"
+                : gameSpeed.toFixed(2) + "x"}
           </span>
           <button
             onClick={() => {
               setGameSpeed((prev) => Math.min(prev + 0.25, 5));
+              if (inspectorActive && setInspectorActive) {
+                setInspectorActive(false);
+                if (setSelectedInspectEnemy) {
+                  setSelectedInspectEnemy(null);
+                }
+              }
             }}
             className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
           >
@@ -473,7 +669,15 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           {[0.5, 1, 2].map((speed) => (
             <button
               key={speed}
-              onClick={() => setGameSpeed(speed)}
+              onClick={() => {
+                setGameSpeed(speed);
+                if (inspectorActive && setInspectorActive) {
+                  setInspectorActive(false);
+                  if (setSelectedInspectEnemy) {
+                    setSelectedInspectEnemy(null);
+                  }
+                }
+              }}
               className={`px-2.5 py-1 border transition-all shadow-sm rounded font-bold text-xs ${gameSpeed === speed
                 ? "bg-yellow-600/80 border-yellow-400 text-yellow-100"
                 : "bg-blue-950/60 hover:bg-blue-900/60 border-blue-700 text-blue-300"

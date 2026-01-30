@@ -266,6 +266,10 @@ export default function PrincetonTowerDefense() {
   const [vaultFlash, setVaultFlash] = useState(0);
   // HUD Animation state
   const [goldSpellActive, setGoldSpellActive] = useState(false);
+  // Eating club income events for stacking floaters
+  const [eatingClubIncomeEvents, setEatingClubIncomeEvents] = useState<Array<{ id: string; amount: number }>>([]);
+  // Bounty income events (from enemy kills)
+  const [bountyIncomeEvents, setBountyIncomeEvents] = useState<Array<{ id: string; amount: number; isGoldBoosted: boolean }>>([]);
   // UI state
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [hoveredTower, setHoveredTower] = useState<string | null>(null);
@@ -300,6 +304,7 @@ export default function PrincetonTowerDefense() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTouchTimeRef = useRef<number>(0); // Track touch to prevent duplicate click events
+  const isTouchDeviceRef = useRef<boolean>(false); // Track if user is using touch input
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
@@ -308,7 +313,7 @@ export default function PrincetonTowerDefense() {
   // which cancels the animation frame and causes a noticeable freeze on mobile devices
   const updateGameRef = useRef<(deltaTime: number) => void>(() => { });
   const renderRef = useRef<() => void>(() => { });
-  
+
   // PERFORMANCE FIX: Cache decorations to avoid regenerating them every frame
   // This was causing major performance issues on mobile - generating 500+ decorations per frame
   const cachedDecorationsRef = useRef<{ mapKey: string; decorations: Decoration[] } | null>(null);
@@ -493,6 +498,21 @@ export default function PrincetonTowerDefense() {
     },
     []
   );
+
+  // Helper to award bounty and track for HUD animation
+  const awardBounty = useCallback(
+    (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => {
+      const goldBonus = hasGoldAura ? Math.floor(baseBounty * 0.5) : 0;
+      const totalBounty = baseBounty + goldBonus;
+      setPawPoints((pp) => pp + totalBounty);
+      // Track bounty event for HUD floater
+      const eventId = `bounty-${Date.now()}-${sourceId || Math.random().toString(36).slice(2)}`;
+      setBountyIncomeEvents((prev) => [...prev, { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura }]);
+      return totalBounty;
+    },
+    []
+  );
+
   // Keyboard controls for camera
   useEffect(() => {
     if (gameState !== "playing") return;
@@ -1733,8 +1753,7 @@ export default function PrincetonTowerDefense() {
               const newHp = enemy.hp - burnDmg;
               if (newHp <= 0) {
                 const baseBounty = ENEMY_DATA[enemy.type].bounty;
-                const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                setPawPoints((pp) => pp + baseBounty + goldBonus);
+                awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
                 addParticles(
                   getEnemyPosWithPath(enemy, selectedMap),
                   "explosion",
@@ -2812,6 +2831,8 @@ export default function PrincetonTowerDefense() {
               }
 
               setPawPoints((pp) => pp + amount);
+              // Add eating club income event for HUD animation
+              setEatingClubIncomeEvents((prev) => [...prev, { id: `${tower.id}-${now}`, amount }]);
               addParticles(gridToWorld(tower.pos), "gold", 20);
 
               // Level 3+ Grand Club: Create gold particle fountain effect
@@ -2877,6 +2898,7 @@ export default function PrincetonTowerDefense() {
             // Single batched update for all affected enemies
             if (affectedEnemyIds.size > 0) {
               let bountyEarned = 0;
+              let bountyHadGoldAura = false;
               const particlePositions: Position[] = [];
               const sparkPositions: Position[] = [];
 
@@ -2909,6 +2931,7 @@ export default function PrincetonTowerDefense() {
                         const baseBounty = ENEMY_DATA[enemy.type].bounty;
                         const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
                         bountyEarned += baseBounty + goldBonus;
+                        bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         sparkPositions.push(info.pos);
                         return null as any;
                       }
@@ -2924,6 +2947,7 @@ export default function PrincetonTowerDefense() {
                         const baseBounty = ENEMY_DATA[enemy.type].bounty;
                         const goldBonus = enemy.goldAura ? Math.floor(baseBounty * 0.5) : 0;
                         bountyEarned += baseBounty + goldBonus;
+                        bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         particlePositions.push(info.pos);
                         return null as any;
                       }
@@ -2936,7 +2960,7 @@ export default function PrincetonTowerDefense() {
 
               // Apply bounties and particles outside of setEnemies
               if (bountyEarned > 0) {
-                setPawPoints((pp) => pp + bountyEarned);
+                awardBounty(bountyEarned, bountyHadGoldAura, `library-${tower.id}`);
               }
               // Track kills for wave progress
               particlePositions.forEach((pos) => addParticles(pos, "explosion", 8));
@@ -3332,8 +3356,7 @@ export default function PrincetonTowerDefense() {
                       }
                       if (newHp <= 0) {
                         const baseBounty = ENEMY_DATA[e.type].bounty;
-                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                        setPawPoints((pp) => pp + baseBounty + goldBonus);
+                        awardBounty(baseBounty, e.goldAura || false, e.id);
                         addParticles(targetPos, "explosion", 12);
                         if (e.goldAura) addParticles(targetPos, "gold", 6);
                         return null as any;
@@ -3435,8 +3458,7 @@ export default function PrincetonTowerDefense() {
                           e.hp - chainDamage * (1 - ENEMY_DATA[e.type].armor);
                         if (newHp <= 0) {
                           const baseBounty = ENEMY_DATA[e.type].bounty;
-                          const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                          setPawPoints((pp) => pp + baseBounty + goldBonus);
+                          awardBounty(baseBounty, e.goldAura || false, e.id);
                           addParticles(
                             getEnemyPosWithPath(e, selectedMap),
                             "explosion",
@@ -3566,8 +3588,7 @@ export default function PrincetonTowerDefense() {
                         }
                         if (newHp <= 0) {
                           const baseBounty = ENEMY_DATA[e.type].bounty;
-                          const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                          setPawPoints((pp) => pp + baseBounty + goldBonus);
+                          awardBounty(baseBounty, e.goldAura || false, e.id);
                           addParticles(targetPos, "explosion", 10);
                           if (e.goldAura) addParticles(targetPos, "gold", 6);
                           return null as any;
@@ -3653,8 +3674,7 @@ export default function PrincetonTowerDefense() {
                         e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
                       if (newHp <= 0) {
                         const baseBounty = ENEMY_DATA[e.type].bounty;
-                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                        setPawPoints((pp) => pp + baseBounty + goldBonus);
+                        awardBounty(baseBounty, e.goldAura || false, e.id);
                         addParticles(targetPos, "explosion", 12);
                         if (e.goldAura) addParticles(targetPos, "gold", 6);
                         setEffects((ef) => [
@@ -3749,8 +3769,7 @@ export default function PrincetonTowerDefense() {
                     if (newHp <= 0) {
                       killedEnemyIds.push(e.id);
                       const baseBounty = ENEMY_DATA[e.type].bounty;
-                      const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                      setPawPoints((pp) => pp + baseBounty + goldBonus);
+                      awardBounty(baseBounty, e.goldAura || false, e.id);
                       if (hero.type === "scott") setPawPoints((pp) => pp + 1);
                       addParticles(attackTargetPos, "explosion", 10);
                       if (e.goldAura) addParticles(attackTargetPos, "gold", 6);
@@ -3776,8 +3795,7 @@ export default function PrincetonTowerDefense() {
                     const newHp = e.hp - aoeDamage;
                     if (newHp <= 0) {
                       const baseBounty = ENEMY_DATA[e.type].bounty;
-                      const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                      setPawPoints((pp) => pp + baseBounty + goldBonus);
+                      awardBounty(baseBounty, e.goldAura || false, e.id);
                       addParticles(enemyPos, "explosion", 8);
                       if (e.goldAura) addParticles(enemyPos, "gold", 4);
                       return null as any;
@@ -3934,8 +3952,7 @@ export default function PrincetonTowerDefense() {
                       const newHp = e.hp - troopDamage;
                       if (newHp <= 0) {
                         const baseBounty = ENEMY_DATA[e.type].bounty;
-                        const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                        setPawPoints((pp) => pp + baseBounty + goldBonus);
+                        awardBounty(baseBounty, e.goldAura || false, e.id);
                         addParticles(targetPos, "explosion", 8);
                         if (e.goldAura) addParticles(targetPos, "gold", 6);
                         setEffects((ef) => [
@@ -5050,7 +5067,7 @@ export default function PrincetonTowerDefense() {
     // PERFORMANCE FIX: Cache decorations to avoid regenerating 500+ objects every frame
     // This was a major cause of freezing on mobile devices
     let decorations: Decoration[];
-    
+
     if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === selectedMap) {
       // Use cached decorations
       decorations = cachedDecorationsRef.current.decorations;
@@ -5060,493 +5077,493 @@ export default function PrincetonTowerDefense() {
       seedState = mapSeed + 400;
       const currentTheme = mapTheme;
 
-    // Categorize decorations by type for clustering
-    const getDecorationCategories = (theme: string) => {
-      switch (theme) {
-        case "desert":
-          return {
-            trees: ["palm", "cactus"],
-            structures: ["ruins", "torch", "obelisk"],
-            terrain: ["rock", "dune", "sand_pile"],
-            scattered: ["skeleton", "bones", "skull", "pottery"],
-          };
-        case "winter":
-          return {
-            trees: ["pine_tree", "pine"],
-            structures: ["ruins", "fence", "broken_wall"],
-            terrain: ["rock", "snow_pile", "ice_crystal", "icicles"],
-            scattered: ["snowman", "frozen_soldier"],
-          };
-        case "volcanic":
-          return {
-            trees: ["charred_tree"],
-            structures: ["obsidian_spike", "fire_pit", "torch"],
-            terrain: ["rock", "lava_pool", "ember_rock"],
-            scattered: ["skeleton", "bones", "ember", "skull"],
-          };
-        case "swamp":
-          return {
-            trees: ["swamp_tree", "mushroom", "mushroom_cluster"],
-            structures: ["ruins", "gravestone", "tombstone", "broken_bridge"],
-            terrain: ["rock", "lily_pad", "lily_pads", "fog_patch"],
-            scattered: ["bones", "frog", "tentacle"],
-          };
-        default: // grassland
-          return {
-            trees: ["tree", "bush"],
-            structures: ["hut", "fence", "tent", "barrel", "bench", "cart"],
-            terrain: ["rock", "grass", "flowers"],
-            scattered: ["lamppost", "signpost"],
-          };
-      }
-    };
-
-    const categories = getDecorationCategories(currentTheme);
-
-    // Helper to check if position is on path
-    const isOnPath = (worldPos: Position): boolean => {
-      for (let j = 0; j < path.length - 1; j++) {
-        const p1 = gridToWorldPath(path[j]);
-        const p2 = gridToWorldPath(path[j + 1]);
-        if (distanceToLineSegment(worldPos, p1, p2) < TOWER_PLACEMENT_BUFFER + 15) {
-          return true;
+      // Categorize decorations by type for clustering
+      const getDecorationCategories = (theme: string) => {
+        switch (theme) {
+          case "desert":
+            return {
+              trees: ["palm", "cactus"],
+              structures: ["ruins", "torch", "obelisk"],
+              terrain: ["rock", "dune", "sand_pile"],
+              scattered: ["skeleton", "bones", "skull", "pottery"],
+            };
+          case "winter":
+            return {
+              trees: ["pine_tree", "pine"],
+              structures: ["ruins", "fence", "broken_wall"],
+              terrain: ["rock", "snow_pile", "ice_crystal", "icicles"],
+              scattered: ["snowman", "frozen_soldier"],
+            };
+          case "volcanic":
+            return {
+              trees: ["charred_tree"],
+              structures: ["obsidian_spike", "fire_pit", "torch"],
+              terrain: ["rock", "lava_pool", "ember_rock"],
+              scattered: ["skeleton", "bones", "ember", "skull"],
+            };
+          case "swamp":
+            return {
+              trees: ["swamp_tree", "mushroom", "mushroom_cluster"],
+              structures: ["ruins", "gravestone", "tombstone", "broken_bridge"],
+              terrain: ["rock", "lily_pad", "lily_pads", "fog_patch"],
+              scattered: ["bones", "frog", "tentacle"],
+            };
+          default: // grassland
+            return {
+              trees: ["tree", "bush"],
+              structures: ["hut", "fence", "tent", "barrel", "bench", "cart"],
+              terrain: ["rock", "grass", "flowers"],
+              scattered: ["lamppost", "signpost"],
+            };
         }
-      }
-      if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
-        const secPath = MAP_PATHS[levelData.secondaryPath];
-        for (let j = 0; j < secPath.length - 1; j++) {
-          const p1 = gridToWorldPath(secPath[j]);
-          const p2 = gridToWorldPath(secPath[j + 1]);
+      };
+
+      const categories = getDecorationCategories(currentTheme);
+
+      // Helper to check if position is on path
+      const isOnPath = (worldPos: Position): boolean => {
+        for (let j = 0; j < path.length - 1; j++) {
+          const p1 = gridToWorldPath(path[j]);
+          const p2 = gridToWorldPath(path[j + 1]);
           if (distanceToLineSegment(worldPos, p1, p2) < TOWER_PLACEMENT_BUFFER + 15) {
             return true;
           }
         }
-      }
-      return false;
-    };
+        if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
+          const secPath = MAP_PATHS[levelData.secondaryPath];
+          for (let j = 0; j < secPath.length - 1; j++) {
+            const p1 = gridToWorldPath(secPath[j]);
+            const p2 = gridToWorldPath(secPath[j + 1]);
+            if (distanceToLineSegment(worldPos, p1, p2) < TOWER_PLACEMENT_BUFFER + 15) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
 
-    // Create deterministic zones for different decoration types
-    // Divide the expanded grid into zones, each zone gets a primary decoration category
-    const zoneSize = 6; // Grid units per zone
-    const minX = -9, maxX = GRID_WIDTH + 9;
-    const minY = -9, maxY = GRID_HEIGHT + 9;
-    const zonesX = Math.ceil((maxX - minX) / zoneSize);
-    const zonesY = Math.ceil((maxY - minY) / zoneSize);
+      // Create deterministic zones for different decoration types
+      // Divide the expanded grid into zones, each zone gets a primary decoration category
+      const zoneSize = 6; // Grid units per zone
+      const minX = -9, maxX = GRID_WIDTH + 9;
+      const minY = -9, maxY = GRID_HEIGHT + 9;
+      const zonesX = Math.ceil((maxX - minX) / zoneSize);
+      const zonesY = Math.ceil((maxY - minY) / zoneSize);
 
-    // Generate zone assignments deterministically based on seed
-    const zoneAssignments: (keyof typeof categories)[][] = [];
-    for (let zx = 0; zx < zonesX; zx++) {
-      zoneAssignments[zx] = [];
-      for (let zy = 0; zy < zonesY; zy++) {
-        // Use a deterministic hash based on zone position and seed
-        const zoneHash = (mapSeed * 31 + zx * 17 + zy * 13) % 100;
-        // Weight towards trees (40%), terrain (30%), structures (20%), scattered (10%)
-        let cat: keyof typeof categories;
-        if (zoneHash < 40) cat = "trees";
-        else if (zoneHash < 70) cat = "terrain";
-        else if (zoneHash < 90) cat = "structures";
-        else cat = "scattered";
-        zoneAssignments[zx][zy] = cat;
-      }
-    }
-
-    // Environment decorations - clustered by zone with variation
-    for (let i = 0; i < 400; i++) {
-      // Pick a zone first, then place within that zone with some jitter
-      const zoneX = Math.floor(seededRandom() * zonesX);
-      const zoneY = Math.floor(seededRandom() * zonesY);
-      const category = zoneAssignments[zoneX][zoneY];
-      const categoryDecors = categories[category];
-
-      if (!categoryDecors || categoryDecors.length === 0) continue;
-
-      // Position within zone with clustering (bias towards zone center)
-      const zoneCenterX = minX + (zoneX + 0.5) * zoneSize;
-      const zoneCenterY = minY + (zoneY + 0.5) * zoneSize;
-      // Gaussian-like distribution towards center
-      const offsetX = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
-      const offsetY = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
-      const gridX = zoneCenterX + offsetX;
-      const gridY = zoneCenterY + offsetY;
-
-      const worldPos = gridToWorld({ x: gridX, y: gridY });
-      if (isOnPath(worldPos)) continue;
-
-      // Pick decoration from category (slight bias towards first items for consistency)
-      const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
-      const type = categoryDecors[typeIndex] as DecorationType;
-
-      // Scale varies by category
-      let baseScale = 0.7;
-      let scaleVar = 0.4;
-      if (category === "trees") {
-        baseScale = 0.8;
-        scaleVar = 0.5;
-      } else if (category === "structures") {
-        baseScale = 0.9;
-        scaleVar = 0.3;
-      } else if (category === "scattered") {
-        baseScale = 0.5;
-        scaleVar = 0.4;
+      // Generate zone assignments deterministically based on seed
+      const zoneAssignments: (keyof typeof categories)[][] = [];
+      for (let zx = 0; zx < zonesX; zx++) {
+        zoneAssignments[zx] = [];
+        for (let zy = 0; zy < zonesY; zy++) {
+          // Use a deterministic hash based on zone position and seed
+          const zoneHash = (mapSeed * 31 + zx * 17 + zy * 13) % 100;
+          // Weight towards trees (40%), terrain (30%), structures (20%), scattered (10%)
+          let cat: keyof typeof categories;
+          if (zoneHash < 40) cat = "trees";
+          else if (zoneHash < 70) cat = "terrain";
+          else if (zoneHash < 90) cat = "structures";
+          else cat = "scattered";
+          zoneAssignments[zx][zy] = cat;
+        }
       }
 
-      decorations.push({
-        type,
-        x: worldPos.x,
-        y: worldPos.y,
-        scale: baseScale + seededRandom() * scaleVar,
-        rotation: seededRandom() * Math.PI * 2,
-        variant: Math.floor(seededRandom() * 4),
-      });
-    }
+      // Environment decorations - clustered by zone with variation
+      for (let i = 0; i < 400; i++) {
+        // Pick a zone first, then place within that zone with some jitter
+        const zoneX = Math.floor(seededRandom() * zonesX);
+        const zoneY = Math.floor(seededRandom() * zonesY);
+        const category = zoneAssignments[zoneX][zoneY];
+        const categoryDecors = categories[category];
 
-    // Add extra tree clusters at edges (forests feel)
-    for (let cluster = 0; cluster < 16; cluster++) {
-      // Pick cluster center at map edges
-      const edgeSide = Math.floor(seededRandom() * 4);
-      let clusterX: number, clusterY: number;
-      if (edgeSide === 0) { // Left edge
-        clusterX = minX + seededRandom() * 4;
-        clusterY = minY + seededRandom() * (maxY - minY);
-      } else if (edgeSide === 1) { // Right edge
-        clusterX = maxX - seededRandom() * 4;
-        clusterY = minY + seededRandom() * (maxY - minY);
-      } else if (edgeSide === 2) { // Top edge
-        clusterX = minX + seededRandom() * (maxX - minX);
-        clusterY = minY + seededRandom() * 4;
-      } else { // Bottom edge
-        clusterX = minX + seededRandom() * (maxX - minX);
-        clusterY = maxY - seededRandom() * 4;
-      }
+        if (!categoryDecors || categoryDecors.length === 0) continue;
 
-      // Add 4-8 trees in this cluster
-      const treesInCluster = 4 + Math.floor(seededRandom() * 5);
-      const treeTypes = categories.trees;
-      for (let t = 0; t < treesInCluster; t++) {
-        const treeX = clusterX + (seededRandom() - 0.5) * 3;
-        const treeY = clusterY + (seededRandom() - 0.5) * 3;
-        const worldPos = gridToWorld({ x: treeX, y: treeY });
+        // Position within zone with clustering (bias towards zone center)
+        const zoneCenterX = minX + (zoneX + 0.5) * zoneSize;
+        const zoneCenterY = minY + (zoneY + 0.5) * zoneSize;
+        // Gaussian-like distribution towards center
+        const offsetX = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
+        const offsetY = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
+        const gridX = zoneCenterX + offsetX;
+        const gridY = zoneCenterY + offsetY;
+
+        const worldPos = gridToWorld({ x: gridX, y: gridY });
         if (isOnPath(worldPos)) continue;
 
+        // Pick decoration from category (slight bias towards first items for consistency)
+        const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
+        const type = categoryDecors[typeIndex] as DecorationType;
+
+        // Scale varies by category
+        let baseScale = 0.7;
+        let scaleVar = 0.4;
+        if (category === "trees") {
+          baseScale = 0.8;
+          scaleVar = 0.5;
+        } else if (category === "structures") {
+          baseScale = 0.9;
+          scaleVar = 0.3;
+        } else if (category === "scattered") {
+          baseScale = 0.5;
+          scaleVar = 0.4;
+        }
+
         decorations.push({
-          type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+          type,
           x: worldPos.x,
           y: worldPos.y,
-          scale: 0.7 + seededRandom() * 0.6,
+          scale: baseScale + seededRandom() * scaleVar,
           rotation: seededRandom() * Math.PI * 2,
           variant: Math.floor(seededRandom() * 4),
         });
       }
-    }
 
-    // Add structure clusters (small villages/camps)
-    for (let village = 0; village < 6; village++) {
-      const villageX = minX + 4 + seededRandom() * (maxX - minX - 8);
-      const villageY = minY + 4 + seededRandom() * (maxY - minY - 8);
+      // Add extra tree clusters at edges (forests feel)
+      for (let cluster = 0; cluster < 16; cluster++) {
+        // Pick cluster center at map edges
+        const edgeSide = Math.floor(seededRandom() * 4);
+        let clusterX: number, clusterY: number;
+        if (edgeSide === 0) { // Left edge
+          clusterX = minX + seededRandom() * 4;
+          clusterY = minY + seededRandom() * (maxY - minY);
+        } else if (edgeSide === 1) { // Right edge
+          clusterX = maxX - seededRandom() * 4;
+          clusterY = minY + seededRandom() * (maxY - minY);
+        } else if (edgeSide === 2) { // Top edge
+          clusterX = minX + seededRandom() * (maxX - minX);
+          clusterY = minY + seededRandom() * 4;
+        } else { // Bottom edge
+          clusterX = minX + seededRandom() * (maxX - minX);
+          clusterY = maxY - seededRandom() * 4;
+        }
 
-      // Check if village center is on path
-      const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
-      if (isOnPath(villageCenterWorld)) continue;
+        // Add 4-8 trees in this cluster
+        const treesInCluster = 4 + Math.floor(seededRandom() * 5);
+        const treeTypes = categories.trees;
+        for (let t = 0; t < treesInCluster; t++) {
+          const treeX = clusterX + (seededRandom() - 0.5) * 3;
+          const treeY = clusterY + (seededRandom() - 0.5) * 3;
+          const worldPos = gridToWorld({ x: treeX, y: treeY });
+          if (isOnPath(worldPos)) continue;
 
-      const structureTypes = categories.structures;
-      const structuresInVillage = 3 + Math.floor(seededRandom() * 4);
-      for (let s = 0; s < structuresInVillage; s++) {
-        const structX = villageX + (seededRandom() - 0.5) * 4;
-        const structY = villageY + (seededRandom() - 0.5) * 4;
-        const worldPos = gridToWorld({ x: structX, y: structY });
-        if (isOnPath(worldPos)) continue;
-
-        decorations.push({
-          type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
-          x: worldPos.x,
-          y: worldPos.y,
-          scale: 0.8 + seededRandom() * 0.4,
-          rotation: seededRandom() * Math.PI * 0.3 - Math.PI * 0.15, // Slight rotation only
-          variant: Math.floor(seededRandom() * 5),
-        });
-      }
-    }
-
-    // Battle damage (theme-appropriate)
-    seedState = mapSeed + 600;
-    const battleDecors: DecorationType[] =
-      currentTheme === "volcanic"
-        ? ["crater", "ember", "bones", "sword"]
-        : currentTheme === "winter"
-          ? ["crater", "debris", "sword", "arrow"]
-          : currentTheme === "desert"
-            ? ["crater", "skeleton", "sword", "arrow", "bones"]
-            : currentTheme === "swamp"
-              ? ["crater", "skeleton", "bones", "debris"]
-              : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
-    // Battle damage - expanded +10 in every direction isometrically
-    for (let i = 0; i < 240; i++) {
-      const gridX = seededRandom() * (GRID_WIDTH + 19) - 9.5;
-      const gridY = seededRandom() * (GRID_HEIGHT + 19) - 9.5;
-      const worldPos = gridToWorld({ x: gridX, y: gridY });
-      const type =
-        battleDecors[Math.floor(seededRandom() * battleDecors.length)];
-      decorations.push({
-        type,
-        x: worldPos.x,
-        y: worldPos.y,
-        scale: 0.5 + seededRandom() * 0.5,
-        rotation: seededRandom() * Math.PI * 2,
-        variant: Math.floor(seededRandom() * 4),
-      });
-    }
-
-    // Add major landmarks from LEVEL_DATA if defined
-    const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
-    if (levelDecorations) {
-      for (const dec of levelDecorations) {
-        const worldPos = gridToWorld(dec.pos);
-        const size = dec.size || 1;
-        // Add major landmark based on type
-        if (dec.type === "pyramid") {
           decorations.push({
-            type: "pyramid",
-            x: worldPos.x - 300,
-            y: worldPos.y - 320,
-            scale: size * 1.5,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "obelisk") {
-          decorations.push({
-            type: "obelisk",
+            type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "nassau_hall") {
-          decorations.push({
-            type: "nassau_hall",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "statue" || dec.type === "demon_statue") {
-          decorations.push({
-            type: "statue",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.3,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "ruined_temple") {
-          decorations.push({
-            type: "ruins",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.5,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (
-          dec.type === "lava_pool" ||
-          dec.type === "lake" ||
-          dec.type === "algae_pool"
-        ) {
-          decorations.push({
-            type: "lava_pool",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (
-          dec.type === "torch" ||
-          dec.type === "fire_pit" ||
-          dec.type === "magma_vent"
-        ) {
-          decorations.push({
-            type: "torch",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "flowers") {
-          decorations.push({
-            type: "flowers",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 0.6,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "signpost") {
-          decorations.push({
-            type: "signpost",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 0.8,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "fountain") {
-          decorations.push({
-            type: "fountain",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "bench") {
-          decorations.push({
-            type: "bench",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 0.7,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "lamppost") {
-          decorations.push({
-            type: "lamppost",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "witch_cottage") {
-          decorations.push({
-            type: "witch_cottage",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.1,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "cauldron") {
-          decorations.push({
-            type: "cauldron",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 0.8,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "tentacle") {
-          decorations.push({
-            type: "tentacle",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "deep_water") {
-          decorations.push({
-            type: "deep_water",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.3,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "giant_sphinx") {
-          decorations.push({
-            type: "giant_sphinx",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.4,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "sphinx") {
-          decorations.push({
-            type: "sphinx",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.4,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "oasis_pool") {
-          decorations.push({
-            type: "oasis_pool",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.1,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "ice_fortress") {
-          decorations.push({
-            type: "ice_fortress",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.3,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "ice_throne") {
-          decorations.push({
-            type: "ice_throne",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "obsidian_castle") {
-          decorations.push({
-            type: "obsidian_castle",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.5,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "dark_throne") {
-          decorations.push({
-            type: "dark_throne",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "dark_barracks") {
-          decorations.push({
-            type: "dark_barracks",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
-          });
-        } else if (dec.type === "dark_spire") {
-          decorations.push({
-            type: "dark_spire",
-            x: worldPos.x,
-            y: worldPos.y,
-            scale: size * 1.2,
-            rotation: 0,
-            variant: dec.variant,
+            scale: 0.7 + seededRandom() * 0.6,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
           });
         }
       }
-    }
 
-    // Sort by Y for depth
-    decorations.sort((a, b) => a.y - b.y);
-    
-    // Cache the generated decorations
-    cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
+      // Add structure clusters (small villages/camps)
+      for (let village = 0; village < 6; village++) {
+        const villageX = minX + 4 + seededRandom() * (maxX - minX - 8);
+        const villageY = minY + 4 + seededRandom() * (maxY - minY - 8);
+
+        // Check if village center is on path
+        const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
+        if (isOnPath(villageCenterWorld)) continue;
+
+        const structureTypes = categories.structures;
+        const structuresInVillage = 3 + Math.floor(seededRandom() * 4);
+        for (let s = 0; s < structuresInVillage; s++) {
+          const structX = villageX + (seededRandom() - 0.5) * 4;
+          const structY = villageY + (seededRandom() - 0.5) * 4;
+          const worldPos = gridToWorld({ x: structX, y: structY });
+          if (isOnPath(worldPos)) continue;
+
+          decorations.push({
+            type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.8 + seededRandom() * 0.4,
+            rotation: seededRandom() * Math.PI * 0.3 - Math.PI * 0.15, // Slight rotation only
+            variant: Math.floor(seededRandom() * 5),
+          });
+        }
+      }
+
+      // Battle damage (theme-appropriate)
+      seedState = mapSeed + 600;
+      const battleDecors: DecorationType[] =
+        currentTheme === "volcanic"
+          ? ["crater", "ember", "bones", "sword"]
+          : currentTheme === "winter"
+            ? ["crater", "debris", "sword", "arrow"]
+            : currentTheme === "desert"
+              ? ["crater", "skeleton", "sword", "arrow", "bones"]
+              : currentTheme === "swamp"
+                ? ["crater", "skeleton", "bones", "debris"]
+                : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
+      // Battle damage - expanded +10 in every direction isometrically
+      for (let i = 0; i < 240; i++) {
+        const gridX = seededRandom() * (GRID_WIDTH + 19) - 9.5;
+        const gridY = seededRandom() * (GRID_HEIGHT + 19) - 9.5;
+        const worldPos = gridToWorld({ x: gridX, y: gridY });
+        const type =
+          battleDecors[Math.floor(seededRandom() * battleDecors.length)];
+        decorations.push({
+          type,
+          x: worldPos.x,
+          y: worldPos.y,
+          scale: 0.5 + seededRandom() * 0.5,
+          rotation: seededRandom() * Math.PI * 2,
+          variant: Math.floor(seededRandom() * 4),
+        });
+      }
+
+      // Add major landmarks from LEVEL_DATA if defined
+      const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
+      if (levelDecorations) {
+        for (const dec of levelDecorations) {
+          const worldPos = gridToWorld(dec.pos);
+          const size = dec.size || 1;
+          // Add major landmark based on type
+          if (dec.type === "pyramid") {
+            decorations.push({
+              type: "pyramid",
+              x: worldPos.x - 300,
+              y: worldPos.y - 320,
+              scale: size * 1.5,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "obelisk") {
+            decorations.push({
+              type: "obelisk",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "nassau_hall") {
+            decorations.push({
+              type: "nassau_hall",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "statue" || dec.type === "demon_statue") {
+            decorations.push({
+              type: "statue",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.3,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "ruined_temple") {
+            decorations.push({
+              type: "ruins",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.5,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (
+            dec.type === "lava_pool" ||
+            dec.type === "lake" ||
+            dec.type === "algae_pool"
+          ) {
+            decorations.push({
+              type: "lava_pool",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (
+            dec.type === "torch" ||
+            dec.type === "fire_pit" ||
+            dec.type === "magma_vent"
+          ) {
+            decorations.push({
+              type: "torch",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "flowers") {
+            decorations.push({
+              type: "flowers",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 0.6,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "signpost") {
+            decorations.push({
+              type: "signpost",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 0.8,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "fountain") {
+            decorations.push({
+              type: "fountain",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "bench") {
+            decorations.push({
+              type: "bench",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 0.7,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "lamppost") {
+            decorations.push({
+              type: "lamppost",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "witch_cottage") {
+            decorations.push({
+              type: "witch_cottage",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.1,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "cauldron") {
+            decorations.push({
+              type: "cauldron",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 0.8,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "tentacle") {
+            decorations.push({
+              type: "tentacle",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "deep_water") {
+            decorations.push({
+              type: "deep_water",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.3,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "giant_sphinx") {
+            decorations.push({
+              type: "giant_sphinx",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.4,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "sphinx") {
+            decorations.push({
+              type: "sphinx",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.4,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "oasis_pool") {
+            decorations.push({
+              type: "oasis_pool",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.1,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "ice_fortress") {
+            decorations.push({
+              type: "ice_fortress",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.3,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "ice_throne") {
+            decorations.push({
+              type: "ice_throne",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "obsidian_castle") {
+            decorations.push({
+              type: "obsidian_castle",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.5,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "dark_throne") {
+            decorations.push({
+              type: "dark_throne",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "dark_barracks") {
+            decorations.push({
+              type: "dark_barracks",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "dark_spire") {
+            decorations.push({
+              type: "dark_spire",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          }
+        }
+      }
+
+      // Sort by Y for depth
+      decorations.sort((a, b) => a.y - b.y);
+
+      // Cache the generated decorations
+      cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
     } // End of decoration generation (else block)
-    
+
     const decorTime = Date.now() / 1000;
 
     // =========================================================================
@@ -6273,9 +6290,10 @@ export default function PrincetonTowerDefense() {
       // Use pointer type to determine if this is touch or mouse input
       // This is more reliable across browsers than checking for recent touch events
       const isTouch = e.pointerType === 'touch';
-      
-      // Mark touch time to prevent synthetic mouse events
+
+      // Track device type for UI decisions (hide tooltips on touch)
       if (isTouch) {
+        isTouchDeviceRef.current = true;
         lastTouchTimeRef.current = Date.now();
       }
 
@@ -6329,14 +6347,19 @@ export default function PrincetonTowerDefense() {
       }
 
       // ========== PREVENT TOWER PLACEMENT WHEN PAUSED ==========
-      if (gameSpeed === 0 && draggingTower) {
+      if (gameSpeed === 0 && (draggingTower || buildingTower)) {
         // Game is paused - cancel tower placement
         setDraggingTower(null);
         setBuildingTower(null);
         return;
       }
 
-      if (draggingTower) {
+      // ========== TOWER PLACEMENT ==========
+      // For touch: buildingTower might be set but draggingTower not (user tapped without dragging)
+      // For mouse: draggingTower is set on mouse move
+      const towerToPlace = draggingTower || (isTouch && buildingTower ? { type: buildingTower, pos: clickPos } : null);
+
+      if (towerToPlace) {
         const gridPos = screenToGrid(
           clickPos,
           width,
@@ -6345,7 +6368,7 @@ export default function PrincetonTowerDefense() {
           cameraOffset,
           cameraZoom
         );
-        const towerCost = TOWER_DATA[draggingTower.type].cost;
+        const towerCost = TOWER_DATA[towerToPlace.type].cost;
         if (
           pawPoints >= towerCost &&
           isValidBuildPosition(
@@ -6359,20 +6382,20 @@ export default function PrincetonTowerDefense() {
         ) {
           const newTower: Tower = {
             id: generateId("tower"),
-            type: draggingTower.type,
+            type: towerToPlace.type,
             pos: gridPos,
             level: 1,
             lastAttack: 0,
             rotation: 0,
             spawnRange:
-              draggingTower.type === "station"
+              towerToPlace.type === "station"
                 ? TOWER_DATA.station.spawnRange
                 : undefined,
             occupiedSpawnSlots:
-              draggingTower.type === "station"
+              towerToPlace.type === "station"
                 ? [false, false, false]
                 : undefined,
-            pendingRespawns: draggingTower.type === "station" ? [] : undefined,
+            pendingRespawns: towerToPlace.type === "station" ? [] : undefined,
           };
           setTowers((prev) => [...prev, newTower]);
           setPawPoints((pp) => pp - towerCost);
@@ -6438,7 +6461,7 @@ export default function PrincetonTowerDefense() {
       const selectedTroopUnit = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
       const spec = LEVEL_DATA[selectedMap]?.specialTower;
-      
+
       // Convert to world coordinates for touch-based path calculation
       const clickWorldPos = screenToWorld(
         clickPos,
@@ -6712,19 +6735,20 @@ export default function PrincetonTowerDefense() {
   );
   const handleMouseMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
-      // Skip touch pointer moves - only process mouse/pen for hover effects
-      // Touch devices don't have hover, so skip expensive calculations
-      if (e.pointerType === 'touch') {
-        return;
+      const isTouch = e.pointerType === 'touch';
+
+      // Track device type
+      if (isTouch) {
+        isTouchDeviceRef.current = true;
       }
-      
+
       // MOBILE FIX: Skip synthetic mouse events that follow touch events
       // Mobile browsers generate fake mousemove events after touchend which causes
       // expensive recalculations and freezing
-      if (Date.now() - lastTouchTimeRef.current < 500) {
+      if (!isTouch && Date.now() - lastTouchTimeRef.current < 500) {
         return;
       }
-      
+
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -6733,6 +6757,24 @@ export default function PrincetonTowerDefense() {
       setMousePos({ x, y });
 
       const { width, height, dpr } = getCanvasDimensions();
+
+      // For touch: only handle tower dragging, skip hover effects
+      if (isTouch) {
+        // ========== TOWER DRAGGING ON TOUCH ==========
+        if (gameSpeed === 0) {
+          if (draggingTower) {
+            setDraggingTower(null);
+            setBuildingTower(null);
+          }
+        } else {
+          if (buildingTower && !draggingTower) {
+            setDraggingTower({ type: buildingTower, pos: { x, y } });
+          } else if (draggingTower) {
+            setDraggingTower({ type: draggingTower.type, pos: { x, y } });
+          }
+        }
+        return; // Skip hover effects for touch
+      }
 
       // ========== INSPECTOR MODE - Handle enemy hover ==========
       if (inspectorActive) {
@@ -7078,8 +7120,7 @@ export default function PrincetonTowerDefense() {
                           const newHp = e.hp - damage;
                           if (newHp <= 0) {
                             const baseBounty = ENEMY_DATA[e.type].bounty;
-                            const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                            setPawPoints((pp) => pp + baseBounty + goldBonus);
+                            awardBounty(baseBounty, e.goldAura || false, e.id);
                             addParticles(pos, "explosion", 20);
                             addParticles(pos, "fire", 15);
                             if (e.goldAura) addParticles(pos, "gold", 6);
@@ -7156,8 +7197,7 @@ export default function PrincetonTowerDefense() {
                         const newHp = e.hp - damagePerTarget;
                         if (newHp <= 0) {
                           const baseBounty = ENEMY_DATA[e.type].bounty;
-                          const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                          setPawPoints((pp) => pp + baseBounty + goldBonus);
+                          awardBounty(baseBounty, e.goldAura || false, e.id);
                           addParticles(targetPos, "spark", 25);
                           addParticles(targetPos, "glow", 15);
                           if (e.goldAura) addParticles(targetPos, "gold", 6);
@@ -7323,8 +7363,7 @@ export default function PrincetonTowerDefense() {
                     8
                   );
                   const baseBounty = ENEMY_DATA[e.type].bounty;
-                  const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                  setPawPoints((pp) => pp + baseBounty + goldBonus);
+                  awardBounty(baseBounty, e.goldAura || false, e.id);
                   if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
                   return null as any;
                 }
@@ -7480,8 +7519,7 @@ export default function PrincetonTowerDefense() {
                     12
                   );
                   const baseBounty = ENEMY_DATA[e.type].bounty;
-                  const goldBonus = e.goldAura ? Math.floor(baseBounty * 0.5) : 0;
-                  setPawPoints((pp) => pp + baseBounty + goldBonus);
+                  awardBounty(baseBounty, e.goldAura || false, e.id);
                   if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
                   return null as any;
                 }
@@ -7749,6 +7787,10 @@ export default function PrincetonTowerDefense() {
         gameSpeed={gameSpeed}
         setGameSpeed={setGameSpeed}
         goldSpellActive={goldSpellActive}
+        eatingClubIncomeEvents={eatingClubIncomeEvents}
+        onEatingClubEventComplete={(id) => setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))}
+        bountyIncomeEvents={bountyIncomeEvents}
+        onBountyEventComplete={(id) => setBountyIncomeEvents((prev) => prev.filter((e) => e.id !== id))}
         inspectorActive={inspectorActive}
         setInspectorActive={setInspectorActive}
         setSelectedInspectEnemy={setSelectedInspectEnemy}
@@ -7818,14 +7860,14 @@ export default function PrincetonTowerDefense() {
             setCameraZoom={setCameraZoom}
             defaultOffset={LEVEL_DATA[selectedMap]?.camera?.offset}
           />
-          {/* Tooltips - hide when upgrade panel is open */}
-          {hoveredTower && !selectedTower &&
+          {/* Tooltips - hide on touch devices (too cluttered) and when upgrade panel is open */}
+          {!isTouchDeviceRef.current && hoveredTower && !selectedTower &&
             (() => {
               const tower = towers.find((t) => t.id === hoveredTower);
               if (!tower) return null;
               return <TowerHoverTooltip tower={tower} position={mousePos} />;
             })()}
-          {hoveredHero && hero && !hero.dead && (() => {
+          {!isTouchDeviceRef.current && hoveredHero && hero && !hero.dead && (() => {
             const heroData = HERO_DATA[hero.type];
             const tooltipWidth = 200;
             let tooltipX = mousePos.x + 20;
@@ -7889,7 +7931,7 @@ export default function PrincetonTowerDefense() {
               );
             })()}
           {placingTroop && <PlacingTroopIndicator />}
-          {hoveredSpecial && LEVEL_DATA[selectedMap]?.specialTower && (
+          {!isTouchDeviceRef.current && hoveredSpecial && LEVEL_DATA[selectedMap]?.specialTower && (
             <SpecialBuildingTooltip
               type={LEVEL_DATA[selectedMap].specialTower.type}
               hp={specialTowerHp}

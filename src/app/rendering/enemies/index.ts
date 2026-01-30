@@ -871,18 +871,16 @@ export function renderEnemy(
     const cornerRadius = 3 * zoom;
     const armor = eData.armor || 0;
 
-    // Outer glow for visibility
-    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-    ctx.shadowBlur = 4 * zoom;
-    ctx.shadowOffsetY = 1 * zoom;
-
-    // Background with rounded corners
+    // Background with rounded corners (removed shadowBlur for performance)
+    ctx.fillStyle = "rgba(10, 10, 15, 0.98)";
+    ctx.beginPath();
+    ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 1);
+    ctx.fill();
+    
     ctx.fillStyle = "rgba(15, 15, 20, 0.95)";
     ctx.beginPath();
     ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
     ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
 
     // Inner background
     ctx.fillStyle = "#1f1f23";
@@ -1756,14 +1754,11 @@ function drawFreshmanEnemy(
     ctx.moveTo(px, py);
     ctx.lineTo(px + Math.cos(particleAngle + Math.PI) * size * 0.08, py + Math.sin(particleAngle + Math.PI) * size * 0.04);
     ctx.stroke();
-    // Particle core
-    ctx.fillStyle = `rgba(74, 222, 128, ${0.5 + Math.sin(time * 5 + i) * 0.3})`;
-    ctx.shadowColor = "#4ade80";
-    ctx.shadowBlur = 4 * zoom;
+    // Particle core (optimized - no shadowBlur)
+    ctx.fillStyle = `rgba(120, 255, 160, ${0.6 + Math.sin(time * 5 + i) * 0.3})`;
     ctx.beginPath();
     ctx.arc(px, py, size * 0.02 + Math.sin(time * 6 + i) * size * 0.008, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
   // Eldritch tentacles emerging from ground
@@ -1825,14 +1820,12 @@ function drawFreshmanEnemy(
   ctx.fillStyle = `rgba(74, 222, 128, ${runeGlow * 0.4})`;
   ctx.fillRect(-size * 0.09, -size * 0.1, size * 0.18, size * 0.2);
   // Ancient eldritch runes
-  ctx.fillStyle = `rgba(74, 222, 128, ${runeGlow})`;
-  ctx.shadowColor = "#4ade80";
-  ctx.shadowBlur = 6 * zoom;
+  // Runes (optimized - no shadowBlur)
+  ctx.fillStyle = `rgba(120, 255, 160, ${runeGlow})`;
   ctx.font = `${size * 0.07}px serif`;
   ctx.textAlign = "center";
   ctx.fillText("ᛟᚨᛏ", 0, -size * 0.02);
   ctx.fillText("ᚷᛁᚱ", 0, size * 0.06);
-  ctx.shadowBlur = 0;
   // Floating pages
   for (let p = 0; p < 3; p++) {
     const pageAngle = time * 1.5 + p * Math.PI * 0.6;
@@ -1956,15 +1949,19 @@ function drawFreshmanEnemy(
   ctx.quadraticCurveTo(x + size * 0.04, y - size * 0.48 + bobble, x + size * 0.02, y - size * 0.42 + bobble);
   ctx.stroke();
 
-  // Possessed glowing eyes with void pupils
+  // Possessed glowing eyes with void pupils (optimized - no shadowBlur)
+  // Outer glow layer
+  ctx.fillStyle = "rgba(74, 222, 128, 0.3)";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.07, y - size * 0.42 + bobble, size * 0.07, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.07, y - size * 0.42 + bobble, size * 0.07, 0, Math.PI * 2);
+  ctx.fill();
+  // Core
   ctx.fillStyle = "#4ade80";
-  ctx.shadowColor = "#4ade80";
-  ctx.shadowBlur = 12 * zoom;
   ctx.beginPath();
   ctx.arc(x - size * 0.07, y - size * 0.42 + bobble, size * 0.045, 0, Math.PI * 2);
   ctx.arc(x + size * 0.07, y - size * 0.42 + bobble, size * 0.045, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Void center pupils
   ctx.fillStyle = "#001000";
   ctx.beginPath();
@@ -1997,14 +1994,15 @@ function drawFreshmanEnemy(
   for (let hand = 0; hand < 2; hand++) {
     const handX = x + (hand === 0 ? -1 : 1) * size * 0.28;
     const handY = y + size * 0.08;
-    // Energy orb
-    ctx.fillStyle = `rgba(74, 222, 128, ${pulseIntensity * 0.8})`;
-    ctx.shadowColor = "#4ade80";
-    ctx.shadowBlur = 10 * zoom;
+    // Energy orb (optimized - no shadowBlur)
+    ctx.fillStyle = `rgba(74, 222, 128, ${pulseIntensity * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(handX, handY, size * 0.09, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(120, 255, 160, ${pulseIntensity * 0.9})`;
     ctx.beginPath();
     ctx.arc(handX, handY, size * 0.06, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
     // Expanding rings
     ctx.strokeStyle = `rgba(74, 222, 128, ${pulseIntensity})`;
     ctx.lineWidth = 1.5 * zoom;
@@ -2104,19 +2102,16 @@ function drawSophomoreEnemy(
     }
   }
 
-  // Floating arcane symbols with enhanced glow
+  // Floating arcane symbols (optimized - no shadowBlur)
   for (let i = 0; i < 6; i++) {
     const symbolAngle = time * 1.5 + i * Math.PI * 0.33;
     const symbolDist = size * 0.5 + Math.sin(time * 2 + i) * size * 0.05;
     const sx = x + Math.cos(symbolAngle) * symbolDist;
     const sy = y - size * 0.1 + Math.sin(symbolAngle) * symbolDist * 0.35;
-    ctx.fillStyle = `rgba(147, 197, 253, ${0.5 + Math.sin(time * 4 + i) * 0.3})`;
-    ctx.shadowColor = "#60a5fa";
-    ctx.shadowBlur = 6 * zoom;
+    ctx.fillStyle = `rgba(180, 215, 255, ${0.6 + Math.sin(time * 4 + i) * 0.3})`;
     ctx.font = `${size * 0.1}px serif`;
     ctx.textAlign = "center";
     ctx.fillText(["⚡", "◇", "△", "☆", "◈", "⍟"][i], sx, sy);
-    ctx.shadowBlur = 0;
   }
 
   // Storm cloud wisps
@@ -2189,15 +2184,12 @@ function drawSophomoreEnemy(
   ctx.moveTo(x + size * 0.14, y - size * 0.28 + swagger * 0.2);
   ctx.lineTo(x + size * 0.17, y + size * 0.38);
   ctx.stroke();
-  // Gem on trim
-  ctx.fillStyle = "#60a5fa";
-  ctx.shadowColor = "#60a5fa";
-  ctx.shadowBlur = 6 * zoom;
+  // Gem on trim (optimized - no shadowBlur)
+  ctx.fillStyle = "#93c5fd";
   ctx.beginPath();
   ctx.arc(x - size * 0.155, y + size * 0.1, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.155, y + size * 0.1, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Apprentice sash with arcane embroidery
   const sashGrad = ctx.createLinearGradient(x - size * 0.25, y - size * 0.1, x + size * 0.25, y);
@@ -2256,15 +2248,12 @@ function drawSophomoreEnemy(
   ctx.ellipse(x - size * 0.085, y - size * 0.46 + swagger * 0.15, size * 0.06, size * 0.07, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.085, y - size * 0.46 + swagger * 0.15, size * 0.06, size * 0.07, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Electric blue magical pupils
-  ctx.fillStyle = "#3b82f6";
-  ctx.shadowColor = "#60a5fa";
-  ctx.shadowBlur = 8 * zoom;
+  // Electric blue magical pupils (optimized - no shadowBlur)
+  ctx.fillStyle = "#60a5fa";
   ctx.beginPath();
   ctx.arc(x - size * 0.085, y - size * 0.46 + swagger * 0.15, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.085, y - size * 0.46 + swagger * 0.15, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Inner spark
   ctx.fillStyle = "#dbeafe";
   ctx.beginPath();
@@ -2293,13 +2282,15 @@ function drawSophomoreEnemy(
   ctx.stroke();
 
   // Massive glowing storm orb in hand
-  ctx.fillStyle = `rgba(59, 130, 246, ${magicPulse * 0.9})`;
-  ctx.shadowColor = "#3b82f6";
-  ctx.shadowBlur = 18 * zoom;
+  // Magic orb (optimized - layered glow instead of shadowBlur)
+  ctx.fillStyle = `rgba(59, 130, 246, ${magicPulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(x + size * 0.42, y + swagger * 0.1, size * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(96, 165, 250, ${magicPulse * 0.9})`;
   ctx.beginPath();
   ctx.arc(x + size * 0.42, y + swagger * 0.1, size * 0.13, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Inner storm core
   ctx.fillStyle = "#dbeafe";
   ctx.beginPath();
@@ -2328,14 +2319,11 @@ function drawSophomoreEnemy(
     ctx.stroke();
   }
 
-  // Secondary spell forming in other hand
-  ctx.fillStyle = `rgba(147, 197, 253, ${stormIntensity * 0.6})`;
-  ctx.shadowColor = "#93c5fd";
-  ctx.shadowBlur = 8 * zoom;
+  // Secondary spell forming in other hand (optimized - no shadowBlur)
+  ctx.fillStyle = `rgba(200, 220, 255, ${stormIntensity * 0.7})`;
   ctx.beginPath();
   ctx.arc(x - size * 0.35, y + size * 0.1 + swagger * 0.05, size * 0.06, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 }
 
 function drawJuniorEnemy(
@@ -2417,14 +2405,11 @@ function drawJuniorEnemy(
     // Aged pages
     ctx.fillStyle = "#fef9c3";
     ctx.fillRect(-size * 0.055, -size * 0.075, size * 0.11, size * 0.15);
-    // Glowing forbidden runes
-    ctx.fillStyle = `rgba(192, 132, 252, ${madnessPulse})`;
-    ctx.shadowColor = "#a855f7";
-    ctx.shadowBlur = 4 * zoom;
+    // Glowing forbidden runes (optimized - no shadowBlur)
+    ctx.fillStyle = `rgba(220, 180, 255, ${madnessPulse})`;
     ctx.font = `${size * 0.055}px serif`;
     ctx.textAlign = "center";
     ctx.fillText(["◈", "⍟", "⌬", "☆", "◇"][i], 0, size * 0.015);
-    ctx.shadowBlur = 0;
     ctx.restore();
   }
 
@@ -2521,17 +2506,14 @@ function drawJuniorEnemy(
     ctx.fill();
   }
 
-  // Ancient symbols burning into robe
-  ctx.fillStyle = `rgba(192, 132, 252, ${madnessPulse * 0.7})`;
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 6 * zoom;
+  // Ancient symbols burning into robe (optimized - no shadowBlur)
+  ctx.fillStyle = `rgba(220, 180, 255, ${madnessPulse * 0.8})`;
   ctx.font = `${size * 0.09}px serif`;
   ctx.textAlign = "center";
   ctx.fillText("⍟", x, y + size * 0.08);
   ctx.fillText("⌘", x - size * 0.18, y + size * 0.28);
   ctx.fillText("⌬", x + size * 0.18, y + size * 0.22);
   ctx.fillText("◈", x, y + size * 0.38);
-  ctx.shadowBlur = 0;
 
   // Cracked spectacles floating askew with one lens missing
   ctx.save();
@@ -2590,15 +2572,12 @@ function drawJuniorEnemy(
   ctx.ellipse(x - size * 0.1 + eyeSpasm, y - size * 0.46 + twitch * 0.2, size * 0.06, size * 0.075, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.1 - eyeSpasm, y - size * 0.46 + twitch * 0.2, size * 0.06, size * 0.075, 0, 0, Math.PI * 2);
   ctx.fill();
-  // Purple irises with swirling knowledge
-  ctx.fillStyle = "#7c3aed";
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 10 * zoom;
+  // Purple irises with swirling knowledge (optimized - no shadowBlur)
+  ctx.fillStyle = "#a855f7";
   ctx.beginPath();
   ctx.arc(x - size * 0.1 + eyeSpasm, y - size * 0.46 + twitch * 0.2, size * 0.04, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1 - eyeSpasm, y - size * 0.46 + twitch * 0.2, size * 0.04, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Tiny pinprick pupils (dilated from madness)
   ctx.fillStyle = "#0f0520";
   ctx.beginPath();
@@ -3319,14 +3298,11 @@ function drawGradStudentEnemy(
   ctx.beginPath();
   ctx.ellipse(x - size * 0.05, y + size * 0.3, size * 0.05, size * 0.06, 0.5, 0, Math.PI * 2);
   ctx.fill();
-  // Dimensional residue (glowing)
-  ctx.fillStyle = `rgba(251, 146, 60, ${insanityPulse * 0.5})`;
-  ctx.shadowColor = "#fb923c";
-  ctx.shadowBlur = 6 * zoom;
+  // Dimensional residue (optimized - no shadowBlur)
+  ctx.fillStyle = `rgba(255, 180, 100, ${insanityPulse * 0.6})`;
   ctx.beginPath();
   ctx.ellipse(x + size * 0.2, y + size * 0.28, size * 0.045, size * 0.055, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Multiple pockets overflowing with tools
   ctx.fillStyle = "#e5e5e5";
@@ -3404,15 +3380,12 @@ function drawGradStudentEnemy(
       ctx.stroke();
     }
   }
-  // Orange dimensional-touched pupils
-  ctx.fillStyle = "#fb923c";
-  ctx.shadowColor = "#fb923c";
-  ctx.shadowBlur = 8 * zoom;
+  // Orange dimensional-touched pupils (optimized - no shadowBlur)
+  ctx.fillStyle = "#fbbf24";
   ctx.beginPath();
   ctx.arc(-size * 0.09 + eyeTwitch, -size * 0.02, size * 0.028, 0, Math.PI * 2);
   ctx.arc(size * 0.09 + eyeTwitch, -size * 0.02, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Tiny pinprick pupils (over-caffeinated)
   ctx.fillStyle = "#1c1917";
   ctx.beginPath();
@@ -3739,15 +3712,12 @@ function drawProfessorEnemy(
   ctx.lineTo(x + size * 0.22, y - size * 0.48 + hover);
   ctx.stroke();
 
-  // Glowing red eyes behind spectacles
-  ctx.fillStyle = "#ef4444";
-  ctx.shadowColor = "#ef4444";
-  ctx.shadowBlur = 8 * zoom;
+  // Glowing red eyes behind spectacles (optimized - no shadowBlur)
+  ctx.fillStyle = "#f87171";
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y - size * 0.5 + hover, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1, y - size * 0.5 + hover, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Distinguished but wispy white hair
   ctx.fillStyle = "#e7e5e4";
@@ -3852,13 +3822,10 @@ function drawProfessorEnemy(
   // Pointing finger bone
   ctx.fillRect(-size * 0.02, -size * 0.18, size * 0.04, size * 0.18);
   // Magical spark at fingertip
-  ctx.fillStyle = `rgba(239, 68, 68, ${powerPulse})`;
-  ctx.shadowColor = "#ef4444";
-  ctx.shadowBlur = 6 * zoom;
+  ctx.fillStyle = `rgba(255, 100, 100, ${powerPulse})`;
   ctx.beginPath();
   ctx.arc(0, -size * 0.2, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   ctx.restore();
 
   // Ancient tome floating beside
@@ -3972,15 +3939,12 @@ function drawDeanEnemy(
     ctx.translate(sx, sy);
     ctx.rotate(time * 2.5 + i);
     ctx.fillStyle = `rgba(168, 85, 247, ${0.6 + Math.sin(time * 4 + i) * 0.3})`;
-    ctx.shadowColor = "#a855f7";
-    ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();
     ctx.moveTo(0, -size * 0.05);
     ctx.lineTo(size * 0.025, 0);
     ctx.lineTo(0, size * 0.05);
     ctx.lineTo(-size * 0.025, 0);
     ctx.fill();
-    ctx.shadowBlur = 0;
     ctx.restore();
   }
 
@@ -4048,17 +4012,14 @@ function drawDeanEnemy(
   ctx.moveTo(x + size * 0.2, y - size * 0.36 + hover * 0.15);
   ctx.lineTo(x + size * 0.25, y + size * 0.48);
   ctx.stroke();
-  // Gem accents on trim
-  ctx.fillStyle = "#a855f7";
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 4 * zoom;
+  // Gem accents on trim (optimized - no shadowBlur)
+  ctx.fillStyle = "#c084fc";
   for (let g = 0; g < 3; g++) {
     ctx.beginPath();
     ctx.arc(x - size * 0.225, y + size * 0.05 + g * size * 0.15, size * 0.02, 0, Math.PI * 2);
     ctx.arc(x + size * 0.225, y + size * 0.05 + g * size * 0.15, size * 0.02, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.shadowBlur = 0;
 
   // Magnificent academic collar with massive central gem
   const collarGrad = ctx.createLinearGradient(x - size * 0.25, y - size * 0.35, x + size * 0.25, y);
@@ -4072,17 +4033,21 @@ function drawDeanEnemy(
   ctx.lineTo(x + size * 0.2, y - size * 0.08 + hover * 0.15);
   ctx.quadraticCurveTo(x, y + size * 0.05 + hover * 0.15, x - size * 0.2, y - size * 0.08 + hover * 0.15);
   ctx.fill();
-  // Central void gem
-  ctx.fillStyle = "#a855f7";
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 12 * zoom;
+  // Central void gem (optimized - layered glow)
+  ctx.fillStyle = "rgba(168, 85, 247, 0.4)";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.32 + hover * 0.15);
+  ctx.lineTo(x + size * 0.09, y - size * 0.18 + hover * 0.15);
+  ctx.lineTo(x, y - size * 0.06 + hover * 0.15);
+  ctx.lineTo(x - size * 0.09, y - size * 0.18 + hover * 0.15);
+  ctx.fill();
+  ctx.fillStyle = "#c084fc";
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.3 + hover * 0.15);
   ctx.lineTo(x + size * 0.07, y - size * 0.18 + hover * 0.15);
   ctx.lineTo(x, y - size * 0.08 + hover * 0.15);
   ctx.lineTo(x - size * 0.07, y - size * 0.18 + hover * 0.15);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Inner gem glow
   ctx.fillStyle = "#e9d5ff";
   ctx.beginPath();
@@ -4112,14 +4077,11 @@ function drawDeanEnemy(
   ctx.ellipse(x - size * 0.09, y - size * 0.57 + hover, size * 0.055, size * 0.065, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.09, y - size * 0.57 + hover, size * 0.055, size * 0.065, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#a855f7";
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 12 * zoom;
+  ctx.fillStyle = "#c084fc";
   ctx.beginPath();
   ctx.arc(x - size * 0.09, y - size * 0.57 + hover, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.09, y - size * 0.57 + hover, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Void pupils
   ctx.fillStyle = "#1e0a3a";
   ctx.beginPath();
@@ -4198,14 +4160,11 @@ function drawDeanEnemy(
   ctx.arc(0, -size * 0.12, size * 0.025, 0, Math.PI * 2);
   ctx.arc(0, size * 0.12, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  // Central power gem
-  ctx.fillStyle = "#a855f7";
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 10 * zoom;
+  // Central power gem (optimized - no shadowBlur)
+  ctx.fillStyle = "#c084fc";
   ctx.beginPath();
   ctx.arc(0, 0, size * 0.04, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Ornate golden tassel
   ctx.strokeStyle = "#c9a227";
   ctx.lineWidth = 4 * zoom;
@@ -4275,10 +4234,12 @@ function drawDeanEnemy(
   ctx.lineTo(size * 0.07, -size * 0.4);
   ctx.closePath();
   ctx.fill();
-  // Massive void power orb
-  ctx.fillStyle = "#a855f7";
-  ctx.shadowColor = "#a855f7";
-  ctx.shadowBlur = 15 * zoom;
+  // Massive void power orb (optimized - layered glow)
+  ctx.fillStyle = "rgba(168, 85, 247, 0.3)";
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.62, size * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#c084fc";
   ctx.beginPath();
   ctx.arc(0, -size * 0.62, size * 0.08, 0, Math.PI * 2);
   ctx.fill();
@@ -4293,7 +4254,6 @@ function drawDeanEnemy(
   ctx.beginPath();
   ctx.arc(0, -size * 0.62, size * 0.05, time * 3, time * 3 + Math.PI);
   ctx.stroke();
-  ctx.shadowBlur = 0;
   ctx.restore();
 }
 
@@ -4364,18 +4324,15 @@ function drawMascotEnemy(
   ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
   ctx.fill();
 
-  // Spectral fire particles - more numerous
+  // Spectral fire particles (optimized - no shadowBlur in loop)
   for (let i = 0; i < 12; i++) {
     const particlePhase = (time * 2.5 + i * 0.25) % 1.5;
     const px = x + Math.sin(time * 3.5 + i * 1.0) * size * 0.45;
     const py = y + size * 0.25 - particlePhase * size * 0.6;
-    ctx.fillStyle = `rgba(34, 211, 238, ${(1 - particlePhase / 1.5) * 0.7})`;
-    ctx.shadowColor = "#22d3ee";
-    ctx.shadowBlur = 4 * zoom;
+    ctx.fillStyle = `rgba(100, 230, 255, ${(1 - particlePhase / 1.5) * 0.8})`;
     ctx.beginPath();
     ctx.arc(px, py, size * 0.035 * (1 - particlePhase / 2), 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
   // Magnificent storm wings
@@ -4471,12 +4428,10 @@ function drawMascotEnemy(
   ctx.quadraticCurveTo(size * 0.35, -size * 0.08, size * 0.55, 0);
   ctx.quadraticCurveTo(size * 0.35, size * 0.08, 0, size * 0.04);
   ctx.fill();
-  // Tail flames - more elaborate
+  // Tail flames (optimized - no shadowBlur in loop)
   for (let i = 0; i < 4; i++) {
     const flameY = Math.sin(time * 8 + i * 1.2) * size * 0.06;
-    ctx.fillStyle = `rgba(103, 232, 249, ${0.7 - i * 0.12})`;
-    ctx.shadowColor = "#67e8f9";
-    ctx.shadowBlur = 4 * zoom;
+    ctx.fillStyle = `rgba(150, 240, 255, ${0.8 - i * 0.12})`;
     ctx.beginPath();
     ctx.moveTo(size * 0.5 + i * size * 0.1, flameY);
     ctx.quadraticCurveTo(
@@ -4492,7 +4447,6 @@ function drawMascotEnemy(
       flameY
     );
     ctx.fill();
-    ctx.shadowBlur = 0;
   }
   ctx.restore();
 
@@ -4547,10 +4501,8 @@ function drawMascotEnemy(
   ctx.arc(x, y - size * 0.4 + swoop, size * 0.26, 0, Math.PI * 2);
   ctx.fill();
 
-  // Crown crest feathers - more elaborate
-  ctx.fillStyle = "#22d3ee";
-  ctx.shadowColor = "#22d3ee";
-  ctx.shadowBlur = 4 * zoom;
+  // Crown crest feathers (optimized - no shadowBlur)
+  ctx.fillStyle = "#67e8f9";
   for (let i = 0; i < 9; i++) {
     const crestAngle = -Math.PI * 0.45 + i * Math.PI * 0.11;
     const crestLen = size * (0.18 + Math.sin(time * 6 + i * 0.8) * 0.04);
@@ -4566,17 +4518,13 @@ function drawMascotEnemy(
     ctx.fill();
     ctx.restore();
   }
-  ctx.shadowBlur = 0;
 
-  // Fierce glowing eyes with lightning reflection
-  ctx.fillStyle = "#fef08a";
-  ctx.shadowColor = "#fef08a";
-  ctx.shadowBlur = 12 * zoom;
+  // Fierce glowing eyes (optimized - no shadowBlur)
+  ctx.fillStyle = "#fef9c3";
   ctx.beginPath();
   ctx.ellipse(x - size * 0.1, y - size * 0.42 + swoop, size * 0.072, size * 0.055, -0.15, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.1, y - size * 0.42 + swoop, size * 0.072, size * 0.055, 0.15, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Predator slit pupils
   ctx.fillStyle = "#1c1917";
   ctx.beginPath();
@@ -4635,10 +4583,8 @@ function drawMascotEnemy(
       ctx.lineTo(size * 0.04, -size * 0.13 + s * size * 0.04);
       ctx.stroke();
     }
-    // Golden talons
-    ctx.fillStyle = "#fbbf24";
-    ctx.shadowColor = "#fbbf24";
-    ctx.shadowBlur = 2 * zoom;
+    // Golden talons (optimized - no shadowBlur)
+    ctx.fillStyle = "#fcd34d";
     for (let t = 0; t < 3; t++) {
       ctx.beginPath();
       ctx.moveTo(-size * 0.045 + t * size * 0.045, 0);
@@ -4646,7 +4592,6 @@ function drawMascotEnemy(
       ctx.lineTo(-size * 0.02 + t * size * 0.045, 0);
       ctx.fill();
     }
-    ctx.shadowBlur = 0;
     ctx.restore();
   }
 
@@ -4810,10 +4755,8 @@ function drawDefaultEnemy(
   );
   ctx.stroke();
 
-  // Small floating orb in hand
-  ctx.fillStyle = `rgba(99, 102, 241, ${voidPulse})`;
-  ctx.shadowColor = "#6366f1";
-  ctx.shadowBlur = 8 * zoom;
+  // Small floating orb in hand (optimized - no shadowBlur)
+  ctx.fillStyle = `rgba(140, 140, 255, ${voidPulse})`;
   ctx.beginPath();
   ctx.arc(
     x + size * 0.22,
@@ -4823,7 +4766,6 @@ function drawDefaultEnemy(
     Math.PI * 2
   );
   ctx.fill();
-  ctx.shadowBlur = 0;
 }
 
 // ============================================================================
@@ -4911,10 +4853,8 @@ function drawTrusteeEnemy(
     ctx.translate(itemX, itemY);
     ctx.rotate(time * 2.5 + i);
     if (i % 4 === 0) {
-      // Ancient gold coin with skull
-      ctx.fillStyle = "#ffd700";
-      ctx.shadowColor = "#ffd700";
-      ctx.shadowBlur = 4 * zoom;
+      // Ancient gold coin with skull (optimized - no shadowBlur)
+      ctx.fillStyle = "#ffe066";
       ctx.beginPath();
       ctx.ellipse(0, 0, size * 0.055, size * 0.04, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -4925,12 +4865,9 @@ function drawTrusteeEnemy(
       ctx.beginPath();
       ctx.arc(0, -size * 0.005, size * 0.015, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
     } else if (i % 4 === 1) {
-      // Ruby gem with inner fire
-      ctx.fillStyle = "#dc2626";
-      ctx.shadowColor = "#dc2626";
-      ctx.shadowBlur = 5 * zoom;
+      // Ruby gem (optimized - no shadowBlur)
+      ctx.fillStyle = "#ef4444";
       ctx.beginPath();
       ctx.moveTo(0, -size * 0.045);
       ctx.lineTo(size * 0.035, 0);
@@ -4941,21 +4878,15 @@ function drawTrusteeEnemy(
       ctx.beginPath();
       ctx.arc(-size * 0.008, -size * 0.012, size * 0.012, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
     } else if (i % 4 === 2) {
-      // Emerald with corruption
-      ctx.fillStyle = "#059669";
-      ctx.shadowColor = "#10b981";
-      ctx.shadowBlur = 4 * zoom;
+      // Emerald (optimized - no shadowBlur)
+      ctx.fillStyle = "#10b981";
       ctx.fillRect(-size * 0.028, -size * 0.04, size * 0.056, size * 0.08);
       ctx.fillStyle = "#6ee7b7";
       ctx.fillRect(-size * 0.015, -size * 0.028, size * 0.015, size * 0.022);
-      ctx.shadowBlur = 0;
     } else {
-      // Sapphire
-      ctx.fillStyle = "#2563eb";
-      ctx.shadowColor = "#3b82f6";
-      ctx.shadowBlur = 4 * zoom;
+      // Sapphire (optimized - no shadowBlur)
+      ctx.fillStyle = "#3b82f6";
       ctx.beginPath();
       ctx.moveTo(0, -size * 0.04);
       ctx.lineTo(size * 0.03, -size * 0.01);
@@ -4963,7 +4894,6 @@ function drawTrusteeEnemy(
       ctx.lineTo(-size * 0.02, size * 0.03);
       ctx.lineTo(-size * 0.03, -size * 0.01);
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
     ctx.restore();
   }
@@ -5054,31 +4984,25 @@ function drawTrusteeEnemy(
   ctx.moveTo(x - size * 0.15, y - size * 0.28 + float);
   ctx.quadraticCurveTo(x, y - size * 0.18 + float, x + size * 0.15, y - size * 0.28 + float);
   ctx.stroke();
-  // Central diamond - massive
-  ctx.fillStyle = "#e0f2fe";
-  ctx.shadowColor = "#e0f2fe";
-  ctx.shadowBlur = 14 * zoom;
+  // Central diamond (optimized - no shadowBlur)
+  ctx.fillStyle = "#f0f9ff";
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.32 + float);
   ctx.lineTo(x + size * 0.08, y - size * 0.22 + float);
   ctx.lineTo(x, y - size * 0.1 + float);
   ctx.lineTo(x - size * 0.08, y - size * 0.22 + float);
   ctx.fill();
-  ctx.shadowBlur = 0;
   // Diamond inner gleam
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.beginPath();
   ctx.arc(x - size * 0.02, y - size * 0.24 + float, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
-  // Side rubies
-  ctx.fillStyle = "#dc2626";
-  ctx.shadowColor = "#dc2626";
-  ctx.shadowBlur = 6 * zoom;
+  // Side rubies (optimized - no shadowBlur)
+  ctx.fillStyle = "#ef4444";
   ctx.beginPath();
   ctx.arc(x - size * 0.14, y - size * 0.26 + float, size * 0.03, 0, Math.PI * 2);
   ctx.arc(x + size * 0.14, y - size * 0.26 + float, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Distinguished aged face with corruption hints
   const faceGrad = ctx.createRadialGradient(x, y - size * 0.5 + float, 0, x, y - size * 0.5 + float, size * 0.24);
@@ -5157,15 +5081,12 @@ function drawTrusteeEnemy(
   ctx.arc(x - size * 0.09, y - size * 0.52 + float, size * 0.012, 0, Math.PI * 2);
   ctx.arc(x + size * 0.11, y - size * 0.52 + float, size * 0.01, 0, Math.PI * 2);
   ctx.fill();
-  // Eye gleam (greed)
-  ctx.fillStyle = `rgba(251, 191, 36, ${goldPulse})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 6 * zoom;
+  // Eye gleam (greed - optimized no shadowBlur)
+  ctx.fillStyle = `rgba(255, 220, 100, ${goldPulse})`;
   ctx.beginPath();
   ctx.arc(x - size * 0.09, y - size * 0.52 + float, size * 0.014, 0, Math.PI * 2);
   ctx.arc(x + size * 0.11, y - size * 0.52 + float, size * 0.012, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
 
   // Cruel mouth
   ctx.strokeStyle = "#78350f";
