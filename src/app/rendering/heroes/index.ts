@@ -4993,17 +4993,6 @@ function drawCaptainHero(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Visor grille bars - horizontal
-  ctx.strokeStyle = "#3a3a3a";
-  ctx.lineWidth = 2 * zoom;
-  for (let bar = 0; bar < 5; bar++) {
-    const barY = y - size * 0.56 + bar * size * 0.045;
-    const barWidth = size * (0.2 - bar * 0.015);
-    ctx.beginPath();
-    ctx.moveTo(x - barWidth, barY);
-    ctx.lineTo(x + barWidth, barY);
-    ctx.stroke();
-  }
   // Visor grille bars - vertical
   for (let vbar = -3; vbar <= 3; vbar++) {
     const vbarX = x + vbar * size * 0.055;
@@ -5026,16 +5015,6 @@ function drawCaptainHero(
     ctx.stroke();
   }
 
-  // Visor grille frame border
-  ctx.strokeStyle = "#2a2a2a";
-  ctx.lineWidth = 2.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.24, y - size * 0.58);
-  ctx.quadraticCurveTo(x, y - size * 0.52, x + size * 0.24, y - size * 0.58);
-  ctx.lineTo(x + size * 0.2, y - size * 0.38);
-  ctx.quadraticCurveTo(x, y - size * 0.32, x - size * 0.2, y - size * 0.38);
-  ctx.closePath();
-  ctx.stroke();
 
   // Glowing red eyes IN FRONT of grille
   ctx.fillStyle = isAttacking
@@ -5061,6 +5040,19 @@ function drawCaptainHero(
   ctx.ellipse(x + size * 0.09, y - size * 0.485, size * 0.025, size * 0.015, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
+ 
+
+  // Visor grille frame border (a little light gray)
+  ctx.strokeStyle = "#6a6a6a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.28, y - size * 0.58);
+  ctx.quadraticCurveTo(x, y - size * 0.52, x + size * 0.28, y - size * 0.58);
+  ctx.lineTo(x + size * 0.2, y - size * 0.38);
+  ctx.quadraticCurveTo(x, y - size * 0.32, x - size * 0.2, y - size * 0.38);
+  ctx.closePath();
+  ctx.stroke();
+
 
   // Visor breath holes at bottom
   ctx.fillStyle = "#000000";
