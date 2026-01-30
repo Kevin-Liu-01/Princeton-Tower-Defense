@@ -786,6 +786,15 @@ export default function PrincetonTowerDefense() {
     (deltaTime: number) => {
       const now = Date.now();
       const isPaused = gameSpeed === 0;
+
+      // CRITICAL: Skip ALL game logic when paused
+      // This prevents Date.now() based timers from advancing (status effects, healing, buffs)
+      // and ensures enemies/troops/heroes don't move or act while paused.
+      // Rendering still happens via the render() call in the game loop.
+      if (isPaused) {
+        return;
+      }
+
       const levelWaves = getLevelWaves(selectedMap);
       const mapData = LEVEL_DATA[selectedMap];
       const spec = mapData?.specialTower;
@@ -941,11 +950,10 @@ export default function PrincetonTowerDefense() {
             );
             addParticles(hero.pos, "magic", 10);
           }
-          // Heal Troops
+          // Heal Troops - uses heal aura effect instead of magic particles
           setTroops((prev) =>
             prev.map((t) => {
               if (distance(t.pos, specWorldPos) < healRadius) {
-                addParticles(t.pos, "magic", 5);
                 return { ...t, hp: Math.min(t.maxHp, t.hp + healAmount), healFlash: Date.now() };
               }
               return t;
@@ -5852,7 +5860,7 @@ export default function PrincetonTowerDefense() {
             const tower = r.data as Tower;
             const activeDebuffs = tower.debuffs?.filter(d => d.until > Date.now());
             if (activeDebuffs && activeDebuffs.length > 0) {
-              const towerPos = gridToWorld(tower.pos.x, tower.pos.y);
+              const towerPos = gridToWorld(tower.pos);
               const towerScreenPos = worldToScreen(
                 towerPos,
                 canvas.width,
@@ -6689,6 +6697,9 @@ export default function PrincetonTowerDefense() {
   );
   const castSpell = useCallback(
     (spellType: SpellType) => {
+      // Prevent spell casting when game is paused
+      if (gameSpeed === 0) return;
+
       const spell = spells.find((s) => s.type === spellType);
       if (!spell || spell.cooldown > 0) return;
       const cost = SPELL_DATA[spellType].cost;
@@ -6943,9 +6954,11 @@ export default function PrincetonTowerDefense() {
         )
       );
     },
-    [spells, pawPoints, enemies, selectedMap, addParticles]
+    [spells, pawPoints, enemies, selectedMap, addParticles, gameSpeed]
   );
   const useHeroAbility = useCallback(() => {
+    // Prevent hero ability usage when game is paused
+    if (gameSpeed === 0) return;
     if (!hero || !hero.abilityReady || hero.dead) return;
 
     switch (hero.type) {
@@ -7322,7 +7335,7 @@ export default function PrincetonTowerDefense() {
         }
         : null
     );
-  }, [hero, enemies, selectedMap, addParticles]);
+  }, [hero, enemies, selectedMap, addParticles, gameSpeed]);
   const resetGame = useCallback(() => {
     setGameState("menu");
     setPawPoints(INITIAL_PAW_POINTS);

@@ -284,7 +284,9 @@ export function renderTroop(
   ctx.restore();
 
   // HEALING AURA EFFECT - Soft, elegant healing visualization
-  if (troop.healFlash && troop.hp < troop.maxHp) {
+  // Show for 500ms after healFlash (for shrine heals), or while hp < maxHp (for regeneration)
+  const healAuraActive = troop.healFlash && (Date.now() - troop.healFlash < 500 || troop.hp < troop.maxHp);
+  if (healAuraActive) {
     const pulseAlpha = 0.85 + Math.sin(time * 3) * 0.15; // Stronger breathing effect
 
     // Soft outer glow - diffuse emerald light

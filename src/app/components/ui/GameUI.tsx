@@ -854,7 +854,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
             spell.cooldown <= 0 &&
             pawPoints >= spellData.cost &&
             !(
-              (spell.type === "fireball" || spell.type === "lightning") &&
+              (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze" || spell.type === "payday") &&
               enemies.length === 0
             );
           const isHovered = hoveredSpell === spell.type;
@@ -1990,16 +1990,27 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
           );
         })()}
 
-        {/* Buff indicator */}
+        {/* Buff indicator - styled similar to debuff box but with positive colors */}
         {(hasRangeBuff || hasDamageBuff) && (
-          <div className="flex items-center gap-1 mb-1.5 text-[9px]">
-            <Sparkles size={10} className="text-yellow-400" />
-            {hasRangeBuff && (
-              <span className="text-cyan-400">+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Range</span>
-            )}
-            {hasDamageBuff && (
-              <span className="text-orange-400">+{Math.round(((tower.damageBoost || 1) - 1) * 100)}% DMG</span>
-            )}
+          <div className="mb-2 p-1.5 bg-emerald-950/60 rounded border border-emerald-700/50">
+            <div className="flex items-center gap-1 mb-1">
+              <Sparkles size={10} className="text-emerald-400" />
+              <span className="text-[9px] font-bold text-emerald-300">BUFFED</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {hasRangeBuff && (
+                <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-cyan-400">
+                  <Target size={10} />
+                  <span>+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Range</span>
+                </div>
+              )}
+              {hasDamageBuff && (
+                <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-orange-400">
+                  <Swords size={10} />
+                  <span>+{Math.round(((tower.damageBoost || 1) - 1) * 100)}% DMG</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -2294,7 +2305,7 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
 
   return (
     <div
-      className="absolute top-16 left-2 flex flex-col gap-2"
+      className="absolute bottom-2 right-2 flex flex-col gap-2"
       style={{ zIndex: 60 }}
     >
       <button

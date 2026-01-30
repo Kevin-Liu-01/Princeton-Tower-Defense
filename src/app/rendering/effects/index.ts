@@ -1936,6 +1936,180 @@ export function renderParticle(
 // TOWER DEBUFF EFFECTS RENDERING
 // ============================================================================
 
+// RGB color type for debuff colors
+interface DebuffColor {
+  r: number;
+  g: number;
+  b: number;
+}
+
+// Helper to create rgba string from color and alpha
+function rgba(color: DebuffColor, alpha: number): string {
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
+}
+
+// Helper function to draw a broken/dimmed star (inverted, sad look)
+function drawDebuffStar(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  rotation: number,
+  color: DebuffColor,
+  alpha: number,
+  broken: boolean = false
+): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation + Math.PI); // Inverted (points down for sad effect)
+  
+  const points = 5;
+  const outerRadius = size;
+  const innerRadius = size * 0.4;
+  
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = (i * Math.PI) / points - Math.PI / 2;
+    // Add slight wobble for broken effect
+    const wobble = broken ? Math.sin(i * 1.3) * size * 0.15 : 0;
+    const px = Math.cos(angle) * (radius + wobble);
+    const py = Math.sin(angle) * (radius + wobble);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  
+  // Fill with gradient for depth
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, outerRadius);
+  grad.addColorStop(0, rgba(color, alpha * 0.9));
+  grad.addColorStop(0.6, rgba(color, alpha * 0.5));
+  grad.addColorStop(1, rgba(color, alpha * 0.2));
+  ctx.fillStyle = grad;
+  ctx.fill();
+  
+  // Darker outline
+  ctx.strokeStyle = rgba(color, alpha * 0.7);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Add crack lines if broken
+  if (broken) {
+    ctx.strokeStyle = `rgba(0, 0, 0, ${alpha * 0.4})`;
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -size * 0.3);
+    ctx.lineTo(size * 0.2, size * 0.4);
+    ctx.moveTo(-size * 0.1, 0);
+    ctx.lineTo(size * 0.3, size * 0.1);
+    ctx.stroke();
+  }
+  
+  ctx.restore();
+}
+
+// Lucide-style icon drawers
+function drawSlowIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: DebuffColor, alpha: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = size * 0.15;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  
+  // Clock circle
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Clock hands (pointing down for sad/slow feel)
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, size * 0.35); // Long hand pointing down
+  ctx.moveTo(0, 0);
+  ctx.lineTo(size * 0.25, size * 0.15); // Short hand
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function drawWeakenIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: DebuffColor, alpha: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = size * 0.15;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  
+  // Trending down arrow (Lucide trending-down style)
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.5, -size * 0.3);
+  ctx.lineTo(0, size * 0.1);
+  ctx.lineTo(size * 0.5, -size * 0.15);
+  ctx.stroke();
+  
+  // Arrow head pointing down-right
+  ctx.beginPath();
+  ctx.moveTo(size * 0.5, -size * 0.15);
+  ctx.lineTo(size * 0.2, -size * 0.15);
+  ctx.moveTo(size * 0.5, -size * 0.15);
+  ctx.lineTo(size * 0.5, size * 0.15);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function drawBlindIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: DebuffColor, alpha: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = size * 0.15;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  
+  // Eye shape (Lucide eye-off style)
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size * 0.6, size * 0.35, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Pupil
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Diagonal slash through
+  ctx.strokeStyle = rgba({ r: 200, g: 60, b: 60 }, alpha);
+  ctx.lineWidth = size * 0.18;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.7, -size * 0.5);
+  ctx.lineTo(size * 0.7, size * 0.5);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function drawDisableIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: DebuffColor, alpha: number): void {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.strokeStyle = rgba(color, alpha);
+  ctx.lineWidth = size * 0.15;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  
+  // Circle with slash (Lucide ban style)
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.65, 0, Math.PI * 2);
+  ctx.stroke();
+  
+  // Diagonal slash
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.45, -size * 0.45);
+  ctx.lineTo(size * 0.45, size * 0.45);
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
 export function renderTowerDebuffEffects(
   ctx: CanvasRenderingContext2D,
   tower: Tower,
@@ -1957,122 +2131,147 @@ export function renderTowerDebuffEffects(
   ctx.save();
   
   const baseSize = 35; // Tower visual radius
+  const time = now / 1000;
   
   for (const debuff of activeDebuffs) {
     const remaining = (debuff.until - now) / 1000;
     const alpha = Math.min(1, remaining / 2); // Fade out in last 2 seconds
     
+    // Determine debuff-specific colors (all muted/dark for sad effect)
+    let primaryColor: DebuffColor;
+    let secondaryColor: DebuffColor;
+    let glowColor: DebuffColor;
+    
     switch (debuff.type) {
-      case "slow": {
-        // Blue hourglass/timer effect
-        const slowPulse = Math.sin(now / 200) * 0.3 + 0.7;
-        
-        // Outer ring
-        ctx.strokeStyle = `rgba(59, 130, 246, ${alpha * 0.5 * slowPulse})`;
-        ctx.lineWidth = 2 * zoom;
-        ctx.setLineDash([4 * zoom, 4 * zoom]);
-        ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom, baseSize * zoom * 0.5, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // Clock icon
-        ctx.fillStyle = `rgba(147, 197, 253, ${alpha * 0.9})`;
-        ctx.font = `${12 * zoom}px Arial`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("⏳", screenPos.x - baseSize * zoom * 0.5, screenPos.y - baseSize * zoom * 0.7);
+      case "slow":
+        primaryColor = { r: 100, g: 140, b: 180 }; // Muted cold blue
+        secondaryColor = { r: 60, g: 90, b: 130 };
+        glowColor = { r: 80, g: 120, b: 160 };
         break;
-      }
-        
-      case "weaken": {
-        // Red damage reduction effect
-        const weakPulse = Math.sin(now / 150) * 0.3 + 0.7;
-        
-        // Red haze
-        const weakGrad = ctx.createRadialGradient(
-          screenPos.x, screenPos.y, 0,
-          screenPos.x, screenPos.y, baseSize * zoom * 1.2
-        );
-        weakGrad.addColorStop(0, `rgba(239, 68, 68, ${alpha * 0.2 * weakPulse})`);
-        weakGrad.addColorStop(0.7, `rgba(185, 28, 28, ${alpha * 0.1})`);
-        weakGrad.addColorStop(1, "rgba(127, 29, 29, 0)");
-        ctx.fillStyle = weakGrad;
-        ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.2, baseSize * zoom * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Down arrow
-        ctx.fillStyle = `rgba(252, 165, 165, ${alpha * 0.8})`;
-        ctx.font = `bold ${14 * zoom}px Arial`;
-        ctx.fillText("⬇", screenPos.x + baseSize * zoom * 0.5, screenPos.y - baseSize * zoom * 0.7);
+      case "weaken":
+        primaryColor = { r: 180, g: 80, b: 80 }; // Muted blood red
+        secondaryColor = { r: 130, g: 50, b: 50 };
+        glowColor = { r: 150, g: 60, b: 60 };
         break;
-      }
-        
-      case "blind": {
-        // Purple fog/mist effect
-        const blindPulse = Math.sin(now / 250) * 0.25 + 0.75;
-        
-        const blindGrad = ctx.createRadialGradient(
-          screenPos.x, screenPos.y, 0,
-          screenPos.x, screenPos.y, baseSize * zoom * 1.5
-        );
-        blindGrad.addColorStop(0, `rgba(168, 85, 247, ${alpha * 0.15 * blindPulse})`);
-        blindGrad.addColorStop(0.5, `rgba(126, 34, 206, ${alpha * 0.1})`);
-        blindGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
-        ctx.fillStyle = blindGrad;
-        ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.5, baseSize * zoom * 0.75, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Eye with X
-        ctx.fillStyle = `rgba(216, 180, 254, ${alpha * 0.8})`;
-        ctx.font = `${12 * zoom}px Arial`;
-        ctx.fillText("👁", screenPos.x, screenPos.y - baseSize * zoom * 0.8);
-        ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.7})`;
-        ctx.lineWidth = 1.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 6 * zoom, screenPos.y - baseSize * zoom * 0.8 - 4 * zoom);
-        ctx.lineTo(screenPos.x + 6 * zoom, screenPos.y - baseSize * zoom * 0.8 + 4 * zoom);
-        ctx.stroke();
+      case "blind":
+        primaryColor = { r: 120, g: 80, b: 140 }; // Muted purple
+        secondaryColor = { r: 80, g: 50, b: 100 };
+        glowColor = { r: 100, g: 60, b: 120 };
         break;
-      }
-        
-      case "disable": {
-        // Heavy red/rose disable effect
-        const disablePulse = Math.sin(now / 100) * 0.4 + 0.6;
-        
-        // Intense red aura
-        const disableGrad = ctx.createRadialGradient(
-          screenPos.x, screenPos.y, 0,
-          screenPos.x, screenPos.y, baseSize * zoom * 1.4
-        );
-        disableGrad.addColorStop(0, `rgba(225, 29, 72, ${alpha * 0.35 * disablePulse})`);
-        disableGrad.addColorStop(0.4, `rgba(190, 18, 60, ${alpha * 0.25})`);
-        disableGrad.addColorStop(0.7, `rgba(136, 19, 55, ${alpha * 0.12})`);
-        disableGrad.addColorStop(1, "rgba(76, 5, 25, 0)");
-        ctx.fillStyle = disableGrad;
-        ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.4, baseSize * zoom * 0.7, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // X symbol
-        ctx.strokeStyle = `rgba(251, 113, 133, ${alpha * 0.85})`;
-        ctx.lineWidth = 3 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 12 * zoom, screenPos.y - baseSize * zoom * 0.5 - 8 * zoom);
-        ctx.lineTo(screenPos.x + 12 * zoom, screenPos.y - baseSize * zoom * 0.5 + 8 * zoom);
-        ctx.moveTo(screenPos.x + 12 * zoom, screenPos.y - baseSize * zoom * 0.5 - 8 * zoom);
-        ctx.lineTo(screenPos.x - 12 * zoom, screenPos.y - baseSize * zoom * 0.5 + 8 * zoom);
-        ctx.stroke();
-        
-        // "DISABLED" banner
-        ctx.fillStyle = `rgba(254, 205, 211, ${alpha * 0.9})`;
-        ctx.font = `bold ${7 * zoom}px Arial`;
-        ctx.fillText("DISABLED", screenPos.x, screenPos.y - baseSize * zoom * 0.9);
+      case "disable":
+        primaryColor = { r: 60, g: 60, b: 70 }; // Dark gray/black
+        secondaryColor = { r: 40, g: 40, b: 50 };
+        glowColor = { r: 80, g: 80, b: 90 };
         break;
-      }
+      default:
+        primaryColor = { r: 100, g: 100, b: 100 };
+        secondaryColor = { r: 70, g: 70, b: 70 };
+        glowColor = { r: 90, g: 90, b: 90 };
     }
+    
+    // Dark oppressive aura underneath
+    const auraGrad = ctx.createRadialGradient(
+      screenPos.x, screenPos.y, 0,
+      screenPos.x, screenPos.y, baseSize * zoom * 1.3
+    );
+    auraGrad.addColorStop(0, rgba(secondaryColor, alpha * 0.25));
+    auraGrad.addColorStop(0.5, rgba(glowColor, alpha * 0.15));
+    auraGrad.addColorStop(1, rgba(secondaryColor, 0));
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.3, baseSize * zoom * 0.65, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Dripping/falling particles for sad effect
+    for (let i = 0; i < 4; i++) {
+      const dropPhase = ((time * 0.5 + i * 0.25) % 1);
+      const dropX = screenPos.x + Math.sin(i * 2.1 + time * 0.3) * baseSize * zoom * 0.6;
+      const dropY = screenPos.y - baseSize * zoom * 0.3 + dropPhase * baseSize * zoom * 1.2;
+      const dropAlpha = Math.sin(dropPhase * Math.PI) * alpha * 0.6;
+      const dropSize = (2 + Math.sin(i) * 0.5) * zoom;
+      
+      // Teardrop shape
+      ctx.fillStyle = rgba(primaryColor, dropAlpha);
+      ctx.beginPath();
+      ctx.ellipse(dropX, dropY, dropSize * 0.6, dropSize, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // 3 rotating broken stars (counterclockwise for ominous feel)
+    const starRadius = baseSize * zoom * 0.7;
+    const starSize = 6 * zoom;
+    const rotationSpeed = -time * 1.2; // Negative for counterclockwise
+    
+    for (let i = 0; i < 3; i++) {
+      const starAngle = rotationSpeed + (i * Math.PI * 2) / 3;
+      const starX = screenPos.x + Math.cos(starAngle) * starRadius;
+      const starY = screenPos.y + Math.sin(starAngle) * starRadius * 0.5; // Flattened for isometric
+      
+      // Pulsing/flickering effect
+      const flicker = 0.6 + Math.sin(time * 4 + i * 1.5) * 0.4;
+      
+      drawDebuffStar(
+        ctx,
+        starX,
+        starY - baseSize * zoom * 0.35, // Float above tower
+        starSize * flicker,
+        starAngle + time * 0.5, // Spin individually too
+        primaryColor,
+        alpha * flicker,
+        true // Broken/cracked
+      );
+    }
+    
+    // Icon position and pulse
+    const iconY = screenPos.y - baseSize * zoom * 0.85;
+    const iconPulse = 0.8 + Math.sin(time * 2) * 0.2;
+    const iconSize = 8 * zoom;
+    const circleRadius = iconSize * 1.3;
+    
+    // Draw circle background for icon contrast
+    const circleBgGrad = ctx.createRadialGradient(
+      screenPos.x, iconY, 0,
+      screenPos.x, iconY, circleRadius
+    );
+    circleBgGrad.addColorStop(0, `rgba(20, 20, 25, ${alpha * 0.85})`);
+    circleBgGrad.addColorStop(0.7, `rgba(30, 30, 35, ${alpha * 0.75})`);
+    circleBgGrad.addColorStop(1, `rgba(40, 40, 45, ${alpha * 0.5})`);
+    ctx.fillStyle = circleBgGrad;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, iconY, circleRadius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Circle border
+    ctx.strokeStyle = rgba(primaryColor, alpha * 0.6);
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, iconY, circleRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Draw Lucide-style icon based on debuff type
+    switch (debuff.type) {
+      case "slow":
+        drawSlowIcon(ctx, screenPos.x, iconY, iconSize, primaryColor, alpha * iconPulse);
+        break;
+      case "weaken":
+        drawWeakenIcon(ctx, screenPos.x, iconY, iconSize, primaryColor, alpha * iconPulse);
+        break;
+      case "blind":
+        drawBlindIcon(ctx, screenPos.x, iconY, iconSize, primaryColor, alpha * iconPulse);
+        break;
+      case "disable":
+        drawDisableIcon(ctx, screenPos.x, iconY, iconSize, primaryColor, alpha * iconPulse);
+        break;
+    }
+    
+    // Subtle dark vignette ring
+    ctx.strokeStyle = rgba(secondaryColor, alpha * 0.3);
+    ctx.lineWidth = 2 * zoom;
+    ctx.setLineDash([3 * zoom, 5 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * 0.45, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
   
   ctx.restore();
