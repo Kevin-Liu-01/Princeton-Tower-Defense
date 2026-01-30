@@ -1934,6 +1934,9 @@ export {
 // Re-export fog effects
 export { renderRoadEndFog } from "./effects/fog";
 
+// Re-export debuff/status effect rendering functions
+export { renderTowerDebuffEffects, renderUnitStatusEffects } from "./effects";
+
 // Re-export UI rendering functions for troop movement
 export {
   renderTroopMoveRange,

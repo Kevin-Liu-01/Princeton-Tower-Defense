@@ -249,6 +249,10 @@ interface TopHUDProps {
   quitLevel: () => void;
   // Animation props
   goldSpellActive?: boolean;
+  // Inspector integration
+  inspectorActive?: boolean;
+  setInspectorActive?: (active: boolean) => void;
+  setSelectedInspectEnemy?: (enemy: null) => void;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -262,6 +266,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   retryLevel,
   quitLevel,
   goldSpellActive = false,
+  inspectorActive = false,
+  setInspectorActive,
+  setSelectedInspectEnemy,
 }) => {
   // Track previous values for animation triggers
   const prevPawPoints = useRef(pawPoints);
@@ -484,7 +491,14 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <button
             onClick={() => {
               if (gameSpeed === 0) {
+                // Unpausing - also exit inspector if active
                 setGameSpeed(1);
+                if (inspectorActive && setInspectorActive) {
+                  setInspectorActive(false);
+                  if (setSelectedInspectEnemy) {
+                    setSelectedInspectEnemy(null);
+                  }
+                }
               } else {
                 setGameSpeed(0);
               }
@@ -1041,7 +1055,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                     )}
                     {data.attackSpeed > 0 && (
                       <span className="text-green-400 flex items-center gap-0.5">
-                        <GaugeIcon size={9} /> {data.attackSpeed}ms
+                        <GaugeIcon size={9} /> {(data.attackSpeed / 1000).toFixed(1)}s
                       </span>
                     )}
                     {/* Dinky Station */}
@@ -1122,7 +1136,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                       <div className="bg-green-950/60 rounded px-2 py-1 text-center border border-green-800/40">
                         <div className="text-green-500">Speed</div>
                         <div className="text-green-300 font-bold">
-                          {data.attackSpeed}ms
+                          {(data.attackSpeed / 1000).toFixed(1)}s
                         </div>
                       </div>
                     )}
@@ -1279,6 +1293,23 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const hasRangeBuff = rangeBoost > 1;
   const hasDamageBuff = damageBoost > 1;
 
+  // Calculate debuff modifiers from active debuffs
+  const now = Date.now();
+  const activeDebuffs = tower.debuffs?.filter(d => d.until > now) || [];
+  let attackSpeedDebuff = 0;
+  let damageDebuff = 0;
+  let rangeDebuff = 0;
+  for (const debuff of activeDebuffs) {
+    switch (debuff.type) {
+      case 'slow': attackSpeedDebuff = Math.max(attackSpeedDebuff, debuff.intensity); break;
+      case 'weaken': damageDebuff = Math.max(damageDebuff, debuff.intensity); break;
+      case 'blind': rangeDebuff = Math.max(rangeDebuff, debuff.intensity); break;
+    }
+  }
+  const hasSpeedDebuff = attackSpeedDebuff > 0;
+  const hasDamageDebuff = damageDebuff > 0;
+  const hasRangeDebuff = rangeDebuff > 0;
+
   // Build dynamic stats array based on what this tower has
   const statsToShow: Array<{
     key: string;
@@ -1286,56 +1317,75 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     icon: React.ReactNode;
     value: number | string;
     buffedValue?: number | string;
+    debuffedValue?: number | string;
     nextValue?: number | string;
     isBoosted?: boolean;
+    isDebuffed?: boolean;
     boostAmount?: number;
+    debuffAmount?: number;
     colorClass: string;
     buffColorClass: string;
+    debuffColorClass: string;
   }> = [];
 
   // Damage
   if (baseStats.damage > 0) {
+    const debuffedDamage = hasDamageDebuff ? Math.floor(buffedStats.damage * (1 - damageDebuff)) : undefined;
     statsToShow.push({
       key: "damage",
       label: "Damage",
       icon: <Swords size={14} />,
       value: Math.floor(baseStats.damage),
       buffedValue: hasDamageBuff ? Math.floor(buffedStats.damage) : undefined,
+      debuffedValue: debuffedDamage,
       nextValue: nextStats && nextStats.damage > baseStats.damage ? Math.floor(nextStats.damage) : undefined,
       isBoosted: hasDamageBuff,
+      isDebuffed: hasDamageDebuff,
       boostAmount: hasDamageBuff ? Math.round((damageBoost - 1) * 100) : undefined,
+      debuffAmount: hasDamageDebuff ? Math.round(damageDebuff * 100) : undefined,
       colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
       buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
 
   // Range  
   if (baseStats.range > 0 && tower.type !== "club") {
+    const debuffedRange = hasRangeDebuff ? Math.floor(buffedStats.range * (1 - rangeDebuff)) : undefined;
     statsToShow.push({
       key: "range",
       label: "Range",
       icon: <Target size={14} />,
       value: Math.floor(baseStats.range),
       buffedValue: hasRangeBuff ? Math.floor(buffedStats.range) : undefined,
+      debuffedValue: debuffedRange,
       nextValue: nextStats && nextStats.range > baseStats.range ? Math.floor(nextStats.range) : undefined,
       isBoosted: hasRangeBuff,
+      isDebuffed: hasRangeDebuff,
       boostAmount: hasRangeBuff ? Math.round((rangeBoost - 1) * 100) : undefined,
+      debuffAmount: hasRangeDebuff ? Math.round(rangeDebuff * 100) : undefined,
       colorClass: "bg-blue-950/60 border-blue-800/50 text-blue-400",
       buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
+      debuffColorClass: "bg-purple-950/60 border-purple-500/70 text-purple-400",
     });
   }
 
-  // Attack Speed
+  // Attack Speed (debuff makes it SLOWER, so increase the time value)
   if (baseStats.attackSpeed > 0) {
+    const debuffedSpeed = hasSpeedDebuff ? Math.floor(baseStats.attackSpeed / (1 - attackSpeedDebuff)) : undefined;
     statsToShow.push({
       key: "speed",
       label: "Speed",
       icon: <Gauge size={14} />,
-      value: `${baseStats.attackSpeed}ms`,
+      value: `${(baseStats.attackSpeed / 1000).toFixed(1)}s`,
+      debuffedValue: debuffedSpeed ? `${(debuffedSpeed / 1000).toFixed(1)}s` : undefined,
       nextValue: nextStats && nextStats.attackSpeed !== baseStats.attackSpeed && nextStats.attackSpeed > 0
-        ? `${Math.floor(nextStats.attackSpeed)}ms` : undefined,
+        ? `${(nextStats.attackSpeed / 1000).toFixed(1)}s` : undefined,
+      isDebuffed: hasSpeedDebuff,
+      debuffAmount: hasSpeedDebuff ? Math.round(attackSpeedDebuff * 100) : undefined,
       colorClass: "bg-green-950/60 border-green-800/50 text-green-400",
       buffColorClass: "bg-green-950/60 border-green-500/70 text-green-400",
+      debuffColorClass: "bg-blue-950/60 border-blue-500/70 text-blue-400",
     });
   }
 
@@ -1350,6 +1400,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         ? `${Math.round(nextStats.slowAmount * 100)}%` : undefined,
       colorClass: "bg-purple-950/60 border-purple-800/50 text-purple-400",
       buffColorClass: "bg-purple-950/60 border-purple-500/70 text-purple-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
 
@@ -1364,6 +1415,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         ? `${nextStats.chainTargets}` : undefined,
       colorClass: "bg-yellow-950/60 border-yellow-800/50 text-yellow-400",
       buffColorClass: "bg-yellow-950/60 border-yellow-500/70 text-yellow-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
 
@@ -1376,6 +1428,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       value: Math.floor(baseStats.splashRadius),
       colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
       buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
 
@@ -1388,6 +1441,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       value: `${Math.round(baseStats.stunChance * 100)}%`,
       colorClass: "bg-indigo-950/60 border-indigo-800/50 text-indigo-400",
       buffColorClass: "bg-indigo-950/60 border-indigo-500/70 text-indigo-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
 
@@ -1400,6 +1454,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       value: `${baseStats.burnDamage}/s`,
       colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
       buffColorClass: "bg-red-950/60 border-red-500/70 text-red-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
     });
   }
 
@@ -1417,6 +1472,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         value: `+${Math.round(activeUpgradeStats.rangeBuff * 100)}%`,
         colorClass: "bg-cyan-950/60 border-cyan-800/50 text-cyan-400",
         buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
+        debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
       });
     }
 
@@ -1428,6 +1484,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         value: `+${Math.round(activeUpgradeStats.damageBuff * 100)}%`,
         colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
         buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
+        debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
       });
     }
   }
@@ -1504,39 +1561,98 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           </div>
         )}
 
+        {/* Debuff Banner - show active debuffs from enemies */}
+        {tower.debuffs && tower.debuffs.filter(d => d.until > Date.now()).length > 0 && (() => {
+          // Consolidate debuffs by type (take highest intensity for each type)
+          const activeDebuffs = tower.debuffs!.filter(d => d.until > Date.now());
+          const consolidatedDebuffs = new Map<string, { type: string; intensity: number; until: number }>();
+          for (const d of activeDebuffs) {
+            const existing = consolidatedDebuffs.get(d.type);
+            if (!existing || d.intensity > existing.intensity) {
+              consolidatedDebuffs.set(d.type, d);
+            }
+          }
+          return (
+            <div className="mb-2 p-1.5 bg-gradient-to-r from-red-950/70 to-rose-950/70 rounded-lg border border-red-600/50">
+              <div className="flex items-center justify-center gap-2 mb-1.5">
+                <AlertTriangle size={12} className="text-red-400 animate-pulse" />
+                <span className="text-[9px] text-red-300 font-bold">UNDER ATTACK</span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-1">
+                {Array.from(consolidatedDebuffs.values()).map((debuff, i) => {
+                  const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
+                  const debuffInfo: Record<string, { icon: React.ReactNode; label: string; color: string; desc: string }> = {
+                    slow: { icon: <Timer size={10} />, label: "Slowed", color: "bg-blue-900/60 text-blue-300 border-blue-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
+                    weaken: { icon: <TrendingDown size={10} />, label: "Weakened", color: "bg-red-900/60 text-red-300 border-red-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Damage` },
+                    blind: { icon: <EyeOff size={10} />, label: "Blinded", color: "bg-purple-900/60 text-purple-300 border-purple-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
+                    disable: { icon: <Ban size={10} />, label: "Disabled", color: "bg-rose-900/60 text-rose-300 border-rose-700/50", desc: "Cannot Attack" },
+                  };
+                  const info = debuffInfo[debuff.type];
+                  return (
+                    <div key={i} className={`flex items-center gap-1 px-2 py-1 rounded border text-[9px] ${info.color}`}>
+                      {info.icon}
+                      <span className="font-medium">{info.desc}</span>
+                      <span className="opacity-60">({remaining}s)</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Dynamic Stats Grid - Combat towers */}
         {statsToShow.length > 0 && (
           <div className={`grid gap-1.5 mb-2`} style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
-            {statsToShow.map((stat) => (
-              <div
-                key={stat.key}
-                className={`p-1.5 rounded-lg border text-center ${stat.isBoosted ? stat.buffColorClass : stat.colorClass}`}
-              >
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  {stat.icon}
+            {statsToShow.map((stat) => {
+              // Determine the appropriate styling based on buff/debuff state
+              const isDebuffed = stat.isDebuffed && stat.debuffedValue !== undefined;
+              const isBoosted = stat.isBoosted && stat.buffedValue !== undefined;
+              const colorClass = isDebuffed ? stat.debuffColorClass : (isBoosted ? stat.buffColorClass : stat.colorClass);
+
+              return (
+                <div
+                  key={stat.key}
+                  className={`p-1.5 rounded-lg border text-center ${colorClass}`}
+                >
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    {stat.icon}
+                  </div>
+                  <div className="flex items-center justify-center gap-1 text-[8px] opacity-80">
+                    {stat.label}
+                    {isBoosted && !isDebuffed && <TrendingUp size={10} className="text-yellow-400" />}
+                    {isDebuffed && <TrendingDown size={10} className="text-red-400" />}
+                  </div>
+                  {/* Show debuffed value (takes priority if both buff and debuff exist) */}
+                  {isDebuffed ? (
+                    <>
+                      <div className="font-bold text-lg leading-tight">
+                        <span className="text-white/40 line-through text-sm mr-1">
+                          {isBoosted ? stat.buffedValue : stat.value}
+                        </span>
+                        <span className="text-red-300">{stat.debuffedValue}</span>
+                      </div>
+                      <div className="text-[8px] text-red-400">-{stat.debuffAmount}% debuff</div>
+                    </>
+                  ) : isBoosted ? (
+                    <>
+                      <div className="font-bold text-lg leading-tight">
+                        <span className="text-white/40 line-through text-sm mr-1">{stat.value}</span>
+                        <span>{stat.buffedValue}</span>
+                      </div>
+                      <div className="text-[8px] text-yellow-400">+{stat.boostAmount}% buff</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-bold text-xs">{stat.value}</div>
+                      {stat.nextValue && (
+                        <div className="text-green-400 text-[8px]">→ {stat.nextValue}</div>
+                      )}
+                    </>
+                  )}
                 </div>
-                <div className="flex items-center justify-center gap-1 text-[8px] opacity-80">
-                  {stat.label}
-                  {stat.isBoosted && <TrendingUp size={10} className="text-yellow-400" />}
-                </div>
-                {stat.isBoosted && stat.buffedValue ? (
-                  <>
-                    <div className="font-bold text-lg leading-tight">
-                      <span className="text-white/40 line-through text-sm mr-1">{stat.value}</span>
-                      <span>{stat.buffedValue}</span>
-                    </div>
-                    <div className="text-[8px] text-yellow-400">+{stat.boostAmount}% buff</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="font-bold text-xs">{stat.value}</div>
-                    {stat.nextValue && (
-                      <div className="text-green-400 text-[8px]">→ {stat.nextValue}</div>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -1636,7 +1752,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 <div className="bg-green-950/40 p-1 rounded border border-green-900/30 text-center">
                   {troop.isRanged ? <Crosshair size={12} className="mx-auto text-green-400 mb-0.5" /> : <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />}
                   <div className="text-[7px] text-green-500">{troop.isRanged ? "Range" : "Speed"}</div>
-                  <span className="text-green-200 font-bold text-xs">{troop.isRanged ? troop.range : `${troop.attackSpeed}ms`}</span>
+                  <span className="text-green-200 font-bold text-xs">{troop.isRanged ? troop.range : `${(troop.attackSpeed / 1000).toFixed(1)}s`}</span>
                 </div>
               </div>
               <div className="text-[8px] text-stone-400 text-center italic">
@@ -1834,6 +1950,46 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
 
       {/* Content */}
       <div className="px-3 py-2">
+        {/* Debuff indicator - show active debuffs from enemies */}
+        {tower.debuffs && tower.debuffs.filter(d => d.until > Date.now()).length > 0 && (() => {
+          // Consolidate debuffs by type (take highest intensity for each type)
+          const activeDebuffs = tower.debuffs.filter(d => d.until > Date.now());
+          const consolidatedDebuffs = new Map<string, { type: string; intensity: number; until: number }>();
+          for (const d of activeDebuffs) {
+            const existing = consolidatedDebuffs.get(d.type);
+            if (!existing || d.intensity > existing.intensity) {
+              consolidatedDebuffs.set(d.type, d);
+            }
+          }
+          return (
+            <div className="mb-2 p-1.5 bg-red-950/60 rounded border border-red-800/50">
+              <div className="flex items-center gap-1 mb-1">
+                <AlertTriangle size={10} className="text-red-400" />
+                <span className="text-[9px] font-bold text-red-300">DEBUFFED</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {Array.from(consolidatedDebuffs.values()).map((debuff, i) => {
+                  const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
+                  const debuffInfo: Record<string, { icon: React.ReactNode; label: string; color: string; desc: string }> = {
+                    slow: { icon: <Timer size={10} />, label: "Slowed", color: "text-blue-400", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
+                    weaken: { icon: <TrendingDown size={10} />, label: "Weakened", color: "text-red-400", desc: `-${Math.round(debuff.intensity * 100)}% DMG` },
+                    blind: { icon: <EyeOff size={10} />, label: "Blinded", color: "text-purple-400", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
+                    disable: { icon: <Ban size={10} />, label: "Disabled", color: "text-rose-400", desc: "Cannot attack" },
+                  };
+                  const info = debuffInfo[debuff.type];
+                  return (
+                    <div key={i} className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 ${info.color}`}>
+                      {info.icon}
+                      <span>{info.desc}</span>
+                      <span className="text-white/50">({remaining}s)</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Buff indicator */}
         {(hasRangeBuff || hasDamageBuff) && (
           <div className="flex items-center gap-1 mb-1.5 text-[9px]">
@@ -1864,7 +2020,7 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
           {stats.attackSpeed > 0 && (
             <div className="flex items-center gap-1">
               <Gauge size={11} className="text-green-400" />
-              <span className="text-green-300 font-medium">{stats.attackSpeed}ms</span>
+              <span className="text-green-300 font-medium">{(stats.attackSpeed / 1000).toFixed(1)}s</span>
             </div>
           )}
           {stats.slowAmount && stats.slowAmount > 0 && (
@@ -1970,7 +2126,7 @@ export const BuildTowerTooltip: React.FC<BuildTowerTooltipProps> = ({ towerType,
           {tData.attackSpeed > 0 && (
             <div className="flex items-center gap-1">
               <Gauge size={11} className="text-green-400" />
-              <span className="text-green-300 font-medium">{tData.attackSpeed}ms</span>
+              <span className="text-green-300 font-medium">{(tData.attackSpeed / 1000).toFixed(1)}s</span>
             </div>
           )}
         </div>
@@ -2361,7 +2517,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             </div>
             <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/40 text-center">
               <div className="text-[8px] text-purple-500">Atk Speed</div>
-              <div className="text-purple-200 font-bold text-xs">{eData.attackSpeed}ms</div>
+              <div className="text-purple-200 font-bold text-xs">{(eData.attackSpeed / 1000).toFixed(1)}s</div>
             </div>
             <div className="bg-purple-950/40 p-1.5 rounded-lg border border-purple-900/40 text-center">
               <div className="text-[8px] text-purple-500">Proj Dmg</div>

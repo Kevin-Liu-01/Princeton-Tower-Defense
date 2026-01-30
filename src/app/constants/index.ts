@@ -215,7 +215,11 @@ export const TOWER_DATA: Record<
 };
 
 // Enemy data with visual properties
+// Categories: academic, campus, ranged, flying, boss, nature, swarm
 export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
+  // =============================================================================
+  // ACADEMIC ENEMIES - Academic progression and milestones
+  // =============================================================================
   frosh: {
     name: "Writing Sem",
     hp: 160,
@@ -226,6 +230,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The first hurdle. Persistence is key.",
     color: "#4ade80",
     size: 20,
+    category: "academic",
     traits: [],
   },
   sophomore: {
@@ -238,6 +243,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Heavy and demotivating. Harder to push through.",
     color: "#60a5fa",
     size: 22,
+    category: "academic",
     traits: ["armored"],
     abilities: [{
       type: "slow",
@@ -258,12 +264,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A significant research obstacle. Requires focus.",
     color: "#c084fc",
     size: 24,
+    category: "academic",
     traits: ["armored"],
     abilities: [{
       type: "tower_weaken",
       name: "Brain Fog",
       desc: "Clouds the minds of nearby towers, reducing damage",
-      chance: 0.1,
+      chance: 1.0,
       duration: 3000,
       intensity: 0.15,
       radius: 100,
@@ -279,6 +286,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The ultimate academic titan. Slow but massive.",
     color: "#f472b6",
     size: 28,
+    category: "academic",
     traits: ["armored", "boss"],
     isBoss: true,
     abilities: [{
@@ -299,6 +307,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "An exhausting, soul-crushing process.",
     color: "#fb923c",
     size: 30,
+    category: "academic",
     traits: ["armored", "boss"],
     isBoss: true,
     abilities: [{
@@ -320,6 +329,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Immutable and deeply entrenched.",
     color: "#ef4444",
     size: 32,
+    category: "academic",
     traits: ["armored", "boss", "tower_debuffer"],
     isBoss: true,
     abilities: [
@@ -327,7 +337,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "tower_slow",
         name: "Bureaucracy",
         desc: "Slows tower attack speed with red tape",
-        chance: 0.2,
+        chance: 1.0,
         duration: 4000,
         intensity: 0.3,
         radius: 120,
@@ -351,6 +361,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A massive administrative wall.",
     color: "#a855f7",
     size: 36,
+    category: "academic",
     traits: ["armored", "boss", "tower_debuffer"],
     isBoss: true,
     abilities: [
@@ -383,6 +394,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The final authority. Practically immovable.",
     color: "#eab308",
     size: 42,
+    category: "boss",
     traits: ["armored", "boss", "tower_debuffer", "aoe_attack"],
     isBoss: true,
     aoeRadius: 80,
@@ -392,7 +404,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "tower_weaken",
         name: "Budget Cuts",
         desc: "Slashes tower effectiveness across the board",
-        chance: 0.15,
+        chance: 1.0,
         duration: 5000,
         intensity: 0.25,
         radius: 150,
@@ -407,6 +419,9 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       }
     ],
   },
+  // =============================================================================
+  // FLYING ENEMIES
+  // =============================================================================
   mascot: {
     name: "Rival Mascot",
     hp: 450,
@@ -417,8 +432,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Flying distraction from other schools.",
     color: "#22d3d3",
     size: 26,
+    category: "flying",
     traits: ["flying", "fast"],
   },
+  // =============================================================================
+  // RANGED ENEMIES
+  // =============================================================================
   archer: {
     name: "P-Rade Marshall",
     hp: 250,
@@ -433,6 +452,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Directs traffic and shoots order-enforcing arrows.",
     color: "#10b981",
     size: 22,
+    category: "ranged",
     traits: ["ranged"],
   },
   mage: {
@@ -449,6 +469,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Throws volatile organic chemistry flasks.",
     color: "#8b5cf6",
     size: 24,
+    category: "ranged",
     traits: ["ranged", "magic_resist"],
     abilities: [{
       type: "burn",
@@ -473,6 +494,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Heavy burdens launched from a distance.",
     color: "#854d0e",
     size: 34,
+    category: "ranged",
     traits: ["ranged", "armored", "aoe_attack"],
     aoeRadius: 60,
     aoeDamage: 50,
@@ -491,13 +513,14 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Promises high salaries while draining your spirit.",
     color: "#4c1d95",
     size: 28,
+    category: "ranged",
     traits: ["ranged", "tower_debuffer"],
     abilities: [
       {
         type: "tower_blind",
         name: "False Promises",
         desc: "Distracts towers, reducing their range",
-        chance: 0.2,
+        chance: 1.0,
         duration: 4000,
         intensity: 0.2,
         radius: 100,
@@ -526,12 +549,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Armored patrol with high-impact bolts.",
     color: "#78350f",
     size: 24,
+    category: "ranged",
     traits: ["ranged", "armored"],
     abilities: [{
       type: "stun",
       name: "Heavy Bolt",
       desc: "Powerful bolts stun targets on impact",
-      chance: 0.2,
+      chance: 1.0,
       duration: 800,
     }],
   },
@@ -549,17 +573,21 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Hypnotic movements that curse your defenders.",
     color: "#be185d",
     size: 22,
+    category: "ranged",
     traits: ["ranged"],
     abilities: [{
       type: "slow",
       name: "Hypnotic Dance",
       desc: "Mesmerizing movements slow all nearby defenders",
-      chance: 0.25,
+      chance: 1.0,
       duration: 2500,
       intensity: 0.35,
       radius: 80,
     }],
   },
+  // =============================================================================
+  // FLYING ENEMIES (Continued)
+  // =============================================================================
   harpy: {
     name: "Late Meal Rush",
     hp: 380,
@@ -570,12 +598,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Swift and chaotic flying hunger.",
     color: "#7c3aed",
     size: 24,
+    category: "flying",
     traits: ["flying", "fast"],
     abilities: [{
       type: "slow",
       name: "Screech",
       desc: "Piercing cries disorient defenders",
-      chance: 0.2,
+      chance: 1.0,
       duration: 1500,
       intensity: 0.3,
     }],
@@ -590,6 +619,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A massive flying dragon that stops for no one.",
     color: "#059669",
     size: 36,
+    category: "flying",
     traits: ["flying", "boss", "aoe_attack"],
     isBoss: true,
     aoeRadius: 70,
@@ -614,17 +644,21 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Faded spirit of an alum. Resistant to physical hits.",
     color: "#94a3b8",
     size: 26,
+    category: "flying",
     traits: ["flying", "magic_resist", "armored"],
     abilities: [{
       type: "tower_slow",
       name: "Haunting Presence",
       desc: "Chilling aura slows nearby tower mechanisms",
-      chance: 0.15,
+      chance: 1.0,
       duration: 3000,
       intensity: 0.25,
       radius: 90,
     }],
   },
+  // =============================================================================
+  // CAMPUS ENEMIES - Campus life and events
+  // =============================================================================
   berserker: {
     name: "Cane Spree Athlete",
     hp: 850,
@@ -635,6 +669,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "High energy ground unit charging forward.",
     color: "#dc2626",
     size: 26,
+    category: "campus",
     traits: ["fast"],
     abilities: [{
       type: "stun",
@@ -644,6 +679,30 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       duration: 1200,
     }],
   },
+  necromancer: {
+    name: "Admissions Officer",
+    hp: 900,
+    speed: 0.18,
+    bounty: 100,
+    armor: 0.2,
+    flying: false,
+    desc: "Raises 'rejected' spirits to haunt the path.",
+    color: "#1e1b4b",
+    size: 30,
+    category: "campus",
+    traits: ["summoner", "magic_resist"],
+    abilities: [{
+      type: "poison",
+      name: "Rejection Letter",
+      desc: "Crushing disappointment deals damage over time",
+      chance: 0.25,
+      duration: 4000,
+      intensity: 12,
+    }],
+  },
+  // =============================================================================
+  // BOSS ENEMIES - Major threats
+  // =============================================================================
   golem: {
     name: "Nassau Lion",
     hp: 14500,
@@ -654,6 +713,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The stone guardian itself. Near-infinite HP.",
     color: "#57534e",
     size: 44,
+    category: "boss",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 100,
@@ -678,26 +738,6 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       }
     ],
   },
-  necromancer: {
-    name: "Admissions Officer",
-    hp: 900,
-    speed: 0.18,
-    bounty: 100,
-    armor: 0.2,
-    flying: false,
-    desc: "Raises 'rejected' spirits to haunt the path.",
-    color: "#1e1b4b",
-    size: 30,
-    traits: ["summoner", "magic_resist"],
-    abilities: [{
-      type: "poison",
-      name: "Rejection Letter",
-      desc: "Crushing disappointment deals damage over time",
-      chance: 0.25,
-      duration: 4000,
-      intensity: 12,
-    }],
-  },
   shadow_knight: {
     name: "Alumni Donor",
     hp: 1800,
@@ -708,6 +748,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A powerful figure backed by immense resources.",
     color: "#18181b",
     size: 32,
+    category: "boss",
     traits: ["armored", "boss"],
     isBoss: true,
     abilities: [
@@ -715,7 +756,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "tower_weaken",
         name: "Endowment Pressure",
         desc: "Financial influence weakens tower effectiveness",
-        chance: 0.2,
+        chance: 1.0,
         duration: 4000,
         intensity: 0.3,
         radius: 100,
@@ -730,7 +771,9 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       }
     ],
   },
-  // ======== NEW ENEMY TYPES ========
+  // =============================================================================
+  // CAMPUS ENEMIES (Continued) - Campus life and events
+  // =============================================================================
   cultist: {
     name: "Finals Week Cultist",
     hp: 280,
@@ -741,6 +784,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Sleep-deprived zealots chanting forbidden study rituals.",
     color: "#7c2d12",
     size: 21,
+    category: "campus",
     traits: [],
     abilities: [{
       type: "slow",
@@ -762,6 +806,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Spreads infectious misery wherever it walks. Keep your distance.",
     color: "#65a30d",
     size: 25,
+    category: "campus",
     traits: ["aoe_attack"],
     abilities: [
       {
@@ -783,49 +828,6 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       }
     ],
   },
-  thornwalker: {
-    name: "Ivy Overgrowth",
-    hp: 680,
-    speed: 0.2,
-    bounty: 55,
-    armor: 0.35,
-    flying: false,
-    desc: "Living vegetation consumed by dark magic. Thorns regenerate.",
-    color: "#166534",
-    size: 28,
-    traits: ["armored", "regenerating"],
-    abilities: [{
-      type: "poison",
-      name: "Thorn Poison",
-      desc: "Venomous thorns inflict poison on contact",
-      chance: 0.35,
-      duration: 4000,
-      intensity: 10,
-    }],
-  },
-  sandworm: {
-    name: "Thesis Devourer",
-    hp: 1600,
-    speed: 0.16,
-    bounty: 95,
-    armor: 0.4,
-    flying: false,
-    desc: "Burrows through the ground, consuming all academic progress.",
-    color: "#a16207",
-    size: 38,
-    traits: ["armored", "boss", "aoe_attack"],
-    isBoss: true,
-    aoeRadius: 90,
-    aoeDamage: 60,
-    abilities: [{
-      type: "stun",
-      name: "Emergence",
-      desc: "Bursting from the ground stuns all nearby",
-      chance: 0.2,
-      duration: 1500,
-      radius: 100,
-    }],
-  },
   frostling: {
     name: "Winter Break Ghost",
     hp: 350,
@@ -836,12 +838,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "The lingering chill of empty campus nights given form.",
     color: "#7dd3fc",
     size: 22,
+    category: "campus",
     traits: ["fast"],
     abilities: [{
       type: "slow",
       name: "Frost Touch",
       desc: "Chilling attacks slow defenders",
-      chance: 0.4,
+      chance: 1.0,
       duration: 2000,
       intensity: 0.35,
     }],
@@ -855,6 +858,8 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     flying: false,
     desc: "Forged from the flames of overwork and impossible deadlines.",
     color: "#dc2626",
+    size: 30,
+    category: "campus",
     traits: ["aoe_attack"],
     abilities: [
       {
@@ -870,44 +875,84 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "tower_weaken",
         name: "Exhaustion Aura",
         desc: "Nearby towers work less effectively",
-        chance: 0.15,
+        chance: 1.0,
         duration: 3000,
         intensity: 0.2,
         radius: 100,
       }
     ],
-    size: 30,
   },
-  banshee: {
-    name: "Grade Wailing Spirit",
-    hp: 480,
-    speed: 0.55,
-    bounty: 50,
-    armor: 0.45,
-    flying: true,
-    desc: "Screams of those who saw their final grades. Haunting and fast.",
-    color: "#e2e8f0",
-    size: 24,
-    traits: ["flying", "fast", "magic_resist"],
-    abilities: [
-      {
-        type: "stun",
-        name: "Wail of Despair",
-        desc: "Piercing scream stuns all nearby defenders",
-        chance: 0.25,
-        duration: 1000,
-        radius: 70,
-      },
-      {
-        type: "tower_slow",
-        name: "Haunting Cry",
-        desc: "Mournful cries disrupt tower targeting",
-        chance: 0.2,
-        duration: 2500,
-        intensity: 0.3,
-        radius: 80,
-      }
-    ],
+  assassin: {
+    name: "Curve Wrecker",
+    hp: 320,
+    speed: 0.7,
+    bounty: 45,
+    armor: 0,
+    flying: false,
+    desc: "Lightning fast, destroys grading curves with precision strikes.",
+    color: "#1e1b4b",
+    size: 20,
+    category: "swarm",
+    traits: ["fast"],
+    abilities: [{
+      type: "poison",
+      name: "Toxic Excellence",
+      desc: "Poison of academic overachievement",
+      chance: 0.4,
+      duration: 3000,
+      intensity: 15,
+    }],
+  },
+  // =============================================================================
+  // NATURE ENEMIES - Environmental/biome creatures
+  // =============================================================================
+  thornwalker: {
+    name: "Ivy Overgrowth",
+    hp: 680,
+    speed: 0.2,
+    bounty: 55,
+    armor: 0.35,
+    flying: false,
+    desc: "Living vegetation consumed by dark magic. Thorns regenerate.",
+    color: "#166534",
+    size: 28,
+    category: "nature",
+    traits: ["armored", "regenerating"],
+    abilities: [{
+      type: "poison",
+      name: "Thorn Poison",
+      desc: "Venomous thorns inflict poison on contact",
+      chance: 0.35,
+      duration: 4000,
+      intensity: 10,
+    }],
+  },
+  // =============================================================================
+  // BOSS ENEMIES (Continued) - Major threats
+  // =============================================================================
+  sandworm: {
+    name: "Thesis Devourer",
+    hp: 1600,
+    speed: 0.16,
+    bounty: 95,
+    armor: 0.4,
+    flying: false,
+    desc: "Burrows through the ground, consuming all academic progress.",
+    color: "#a16207",
+    size: 38,
+    category: "boss",
+    traits: ["armored", "boss", "aoe_attack"],
+    isBoss: true,
+    aoeRadius: 90,
+    aoeDamage: 60,
+    abilities: [{
+      type: "stun",
+      name: "Emergence",
+      desc: "Bursting from the ground stuns all nearby",
+      chance: 0.2,
+      duration: 1500,
+      radius: 100,
+    }],
   },
   juggernaut: {
     name: "Endowed Chair",
@@ -919,6 +964,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Unstoppable academic authority. Backed by millions in funding.",
     color: "#44403c",
     size: 40,
+    category: "boss",
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 85,
@@ -943,25 +989,40 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
       }
     ],
   },
-  assassin: {
-    name: "Curve Wrecker",
-    hp: 320,
-    speed: 0.7,
-    bounty: 45,
-    armor: 0,
-    flying: false,
-    desc: "Lightning fast, destroys grading curves with precision strikes.",
-    color: "#1e1b4b",
-    size: 20,
-    traits: ["fast"],
-    abilities: [{
-      type: "poison",
-      name: "Toxic Excellence",
-      desc: "Poison of academic overachievement",
-      chance: 0.4,
-      duration: 3000,
-      intensity: 15,
-    }],
+  // =============================================================================
+  // FLYING ENEMIES (Continued) - Aerial threats
+  // =============================================================================
+  banshee: {
+    name: "Grade Wailing Spirit",
+    hp: 480,
+    speed: 0.55,
+    bounty: 50,
+    armor: 0.45,
+    flying: true,
+    desc: "Screams of those who saw their final grades. Haunting and fast.",
+    color: "#e2e8f0",
+    size: 24,
+    category: "flying",
+    traits: ["flying", "fast", "magic_resist"],
+    abilities: [
+      {
+        type: "stun",
+        name: "Wail of Despair",
+        desc: "Piercing scream stuns all nearby defenders",
+        chance: 0.25,
+        duration: 1000,
+        radius: 70,
+      },
+      {
+        type: "tower_slow",
+        name: "Haunting Cry",
+        desc: "Mournful cries disrupt tower targeting",
+        chance: 1.0,
+        duration: 2500,
+        intensity: 0.3,
+        radius: 80,
+      }
+    ],
   },
   dragon: {
     name: "Ancient Alumnus",
@@ -973,6 +1034,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "A legendary donor from centuries past, returned to judge the worthy.",
     color: "#9f1239",
     size: 48,
+    category: "boss",
     traits: ["flying", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 120,
@@ -1007,10 +1069,10 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     ],
   },
   // =============================================================================
-  // REGION-SPECIFIC COMMON TROOPS - Grassland
+  // SWARM ENEMIES - Fast, weak, numerous
   // =============================================================================
   freshman: {
-    name: "Lost Freshman",
+    name: "Lost Frosh",
     hp: 120,
     speed: 0.42,
     bounty: 8,
@@ -1019,6 +1081,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Confused and wandering, but numerous. Easy to dispatch individually.",
     color: "#86efac",
     size: 18,
+    category: "swarm",
     traits: [],
   },
   athlete: {
@@ -1031,8 +1094,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Fast and agile, sprinting past defenses. Hard to hit.",
     color: "#f97316",
     size: 20,
+    category: "swarm",
     traits: ["fast"],
   },
+  // =============================================================================
+  // CAMPUS ENEMIES (Regional) - Campus life
+  // =============================================================================
   protestor: {
     name: "Campus Protestor",
     hp: 200,
@@ -1043,6 +1110,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Passionate and determined. Carries a sign that provides minor protection.",
     color: "#ef4444",
     size: 22,
+    category: "campus",
     traits: ["armored"],
     abilities: [{
       type: "slow",
@@ -1055,7 +1123,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     }],
   },
   // =============================================================================
-  // REGION-SPECIFIC COMMON TROOPS - Swamp
+  // NATURE ENEMIES - Swamp Region
   // =============================================================================
   bog_creature: {
     name: "Bog Lurker",
@@ -1067,6 +1135,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Shambling swamp horror covered in toxic muck. Slow but resilient.",
     color: "#365314",
     size: 24,
+    category: "nature",
     traits: ["armored"],
     abilities: [{
       type: "poison",
@@ -1087,12 +1156,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Malevolent spirit light that lures victims to their doom.",
     color: "#84cc16",
     size: 18,
+    category: "flying",
     traits: ["flying", "fast", "magic_resist"],
     abilities: [{
       type: "tower_blind",
       name: "Mesmerizing Light",
       desc: "Distracting glow reduces tower range",
-      chance: 0.2,
+      chance: 1.0,
       duration: 2500,
       intensity: 0.15,
       radius: 60,
@@ -1108,6 +1178,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Massive brute covered in parasitic growths. Regenerates slowly.",
     color: "#4d7c0f",
     size: 30,
+    category: "nature",
     traits: ["armored", "regenerating"],
     abilities: [{
       type: "stun",
@@ -1118,7 +1189,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     }],
   },
   // =============================================================================
-  // REGION-SPECIFIC COMMON TROOPS - Desert
+  // NATURE ENEMIES - Desert Region
   // =============================================================================
   nomad: {
     name: "Desert Nomad",
@@ -1130,6 +1201,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Cursed wanderer of the endless sands, bound by ancient dark pacts.",
     color: "#a16207",
     size: 22,
+    category: "swarm",
     traits: [],
   },
   scorpion: {
@@ -1142,6 +1214,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Armored desert predator with venomous stinger. Heavily protected.",
     color: "#78350f",
     size: 26,
+    category: "nature",
     traits: ["armored"],
     abilities: [{
       type: "poison",
@@ -1162,10 +1235,11 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Cursed beetle infused with pharaonic magic. Small but numerous.",
     color: "#fbbf24",
     size: 16,
+    category: "swarm",
     traits: ["fast"],
   },
   // =============================================================================
-  // REGION-SPECIFIC COMMON TROOPS - Winter
+  // NATURE ENEMIES - Winter Region
   // =============================================================================
   snow_goblin: {
     name: "Frost Goblin",
@@ -1177,12 +1251,13 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Mischievous ice creature with frozen claws. Quick and cunning.",
     color: "#93c5fd",
     size: 20,
+    category: "swarm",
     traits: ["fast"],
     abilities: [{
       type: "slow",
       name: "Frost Claws",
       desc: "Freezing claws slow targets",
-      chance: 0.25,
+      chance: 1.0,
       duration: 1500,
       intensity: 0.25,
     }],
@@ -1197,6 +1272,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Primordial ice titan. Massive, furry, and terrifying.",
     color: "#e0f2fe",
     size: 32,
+    category: "nature",
     traits: ["armored", "aoe_attack"],
     aoeRadius: 60,
     aoeDamage: 40,
@@ -1213,7 +1289,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "slow",
         name: "Chilling Presence",
         desc: "Cold aura slows all nearby",
-        chance: 0.3,
+        chance: 1.0,
         duration: 2000,
         intensity: 0.3,
         radius: 60,
@@ -1234,13 +1310,14 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Ancient cryomancer wielding devastating ice magic.",
     color: "#60a5fa",
     size: 24,
+    category: "ranged",
     traits: ["ranged", "magic_resist"],
     abilities: [
       {
         type: "slow",
         name: "Ice Bolt",
         desc: "Freezing projectiles slow targets significantly",
-        chance: 0.5,
+        chance: 1.0,
         duration: 2500,
         intensity: 0.4,
       },
@@ -1248,7 +1325,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "tower_slow",
         name: "Winter's Grasp",
         desc: "Chilling magic slows tower mechanisms",
-        chance: 0.15,
+        chance: 1.0,
         duration: 3000,
         intensity: 0.25,
         radius: 80,
@@ -1256,7 +1333,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     ],
   },
   // =============================================================================
-  // REGION-SPECIFIC COMMON TROOPS - Volcanic
+  // NATURE ENEMIES - Volcanic Region
   // =============================================================================
   magma_spawn: {
     name: "Magma Spawn",
@@ -1268,6 +1345,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Living lava elemental. Burns anything it touches.",
     color: "#ea580c",
     size: 24,
+    category: "nature",
     traits: ["armored"],
     abilities: [{
       type: "burn",
@@ -1288,6 +1366,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Mischievous demon of infernal flames. Small but fast.",
     color: "#fb923c",
     size: 18,
+    category: "swarm",
     traits: ["fast"],
     abilities: [{
       type: "burn",
@@ -1308,6 +1387,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     desc: "Elite infernal knight forged in volcanic fire. Heavily armored.",
     color: "#c2410c",
     size: 28,
+    category: "nature",
     traits: ["armored"],
     abilities: [
       {
@@ -1322,7 +1402,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         type: "tower_weaken",
         name: "Heat Shimmer",
         desc: "Intense heat disrupts tower accuracy",
-        chance: 0.15,
+        chance: 1.0,
         duration: 2500,
         intensity: 0.15,
         radius: 70,

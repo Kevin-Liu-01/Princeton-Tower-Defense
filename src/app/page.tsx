@@ -87,6 +87,8 @@ import {
   renderTroopMoveRange,
   renderPathTargetIndicator,
   renderEnemyInspectIndicator,
+  renderTowerDebuffEffects,
+  renderUnitStatusEffects,
 } from "./rendering";
 // Decoration rendering
 import { renderDecorationItem } from "./rendering/decorations";
@@ -2501,36 +2503,34 @@ export default function PrincetonTowerDefense() {
             const duration = ability.duration || 2000;
             const intensity = ability.intensity || 0.25;
 
+            // Helper to add or refresh debuff (replace existing of same type)
+            const addOrRefreshDebuff = (debuffType: 'slow' | 'weaken' | 'blind') => {
+              updated.debuffs = updated.debuffs || [];
+              // Remove expired debuffs and existing debuffs of same type
+              updated.debuffs = updated.debuffs.filter(d =>
+                d.until > now && d.type !== debuffType
+              );
+              // Add the new/refreshed debuff
+              updated.debuffs.push({
+                type: debuffType,
+                intensity,
+                until: now + duration,
+                sourceId: enemy.id,
+              });
+            };
+
             switch (ability.type) {
               case 'tower_slow':
                 // Slow tower attack speed
-                updated.debuffs = updated.debuffs || [];
-                updated.debuffs.push({
-                  type: 'slow',
-                  intensity,
-                  until: now + duration,
-                  sourceId: enemy.id,
-                });
+                addOrRefreshDebuff('slow');
                 break;
               case 'tower_weaken':
                 // Reduce tower damage
-                updated.debuffs = updated.debuffs || [];
-                updated.debuffs.push({
-                  type: 'weaken',
-                  intensity,
-                  until: now + duration,
-                  sourceId: enemy.id,
-                });
+                addOrRefreshDebuff('weaken');
                 break;
               case 'tower_blind':
                 // Reduce tower range
-                updated.debuffs = updated.debuffs || [];
-                updated.debuffs.push({
-                  type: 'blind',
-                  intensity,
-                  until: now + duration,
-                  sourceId: enemy.id,
-                });
+                addOrRefreshDebuff('blind');
                 break;
               case 'tower_disable':
                 // Completely disable tower
@@ -5847,6 +5847,24 @@ export default function PrincetonTowerDefense() {
             cameraOffset,
             cameraZoom
           );
+          // Render tower debuff effects if tower has active debuffs
+          {
+            const tower = r.data as Tower;
+            const activeDebuffs = tower.debuffs?.filter(d => d.until > Date.now());
+            if (activeDebuffs && activeDebuffs.length > 0) {
+              const towerPos = gridToWorld(tower.pos.x, tower.pos.y);
+              const towerScreenPos = worldToScreen(
+                towerPos,
+                canvas.width,
+                canvas.height,
+                dpr,
+                cameraOffset,
+                cameraZoom
+              );
+              // Pass tower with only active debuffs for rendering
+              renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom);
+            }
+          }
           break;
         case "enemy":
           renderEnemy(
@@ -5885,6 +5903,21 @@ export default function PrincetonTowerDefense() {
             cameraOffset,
             cameraZoom
           );
+          // Render hero status effects (burning, slowed, poisoned, stunned)
+          {
+            const heroData = r.data as Hero;
+            if (heroData.burning || heroData.slowed || heroData.poisoned || heroData.stunned) {
+              const heroScreenPos = worldToScreen(
+                heroData.pos,
+                canvas.width,
+                canvas.height,
+                dpr,
+                cameraOffset,
+                cameraZoom
+              );
+              renderUnitStatusEffects(ctx, heroData, heroScreenPos, cameraZoom);
+            }
+          }
           break;
         case "troop":
           let targetPos: Position | undefined = undefined;
@@ -5906,6 +5939,21 @@ export default function PrincetonTowerDefense() {
             cameraZoom,
             targetPos
           );
+          // Render troop status effects (burning, slowed, poisoned, stunned)
+          {
+            const troopData = r.data as Troop;
+            if (troopData.burning || troopData.slowed || troopData.poisoned || troopData.stunned) {
+              const troopScreenPos = worldToScreen(
+                troopData.pos,
+                canvas.width,
+                canvas.height,
+                dpr,
+                cameraOffset,
+                cameraZoom
+              );
+              renderUnitStatusEffects(ctx, troopData, troopScreenPos, cameraZoom);
+            }
+          }
           break;
         case "projectile":
           renderProjectile(
@@ -6020,7 +6068,8 @@ export default function PrincetonTowerDefense() {
       const { width, height, dpr } = getCanvasDimensions();
 
       // ========== INSPECTOR MODE - Handle enemy selection ==========
-      if (inspectorActive) {
+      // Only intercept clicks for enemy selection when inspector is active AND game is paused
+      if (inspectorActive && gameSpeed === 0) {
         const worldPos = screenToWorld(
           clickPos,
           width,
@@ -6056,6 +6105,14 @@ export default function PrincetonTowerDefense() {
           // Clicked on empty space - deselect
           setSelectedInspectEnemy(null);
         }
+        return;
+      }
+
+      // ========== PREVENT TOWER PLACEMENT WHEN PAUSED ==========
+      if (gameSpeed === 0 && draggingTower) {
+        // Game is paused - cancel tower placement
+        setDraggingTower(null);
+        setBuildingTower(null);
         return;
       }
 
@@ -6396,13 +6453,28 @@ export default function PrincetonTowerDefense() {
         }
 
         setHoveredInspectEnemy(hoveredEnemy?.id || null);
-        return;
+
+        // If game is paused, only handle inspector hover and return
+        // Otherwise, continue with normal mouse move handling
+        if (gameSpeed === 0) {
+          return;
+        }
       }
 
-      if (buildingTower && !draggingTower) {
-        setDraggingTower({ type: buildingTower, pos: { x, y } });
-      } else if (draggingTower) {
-        setDraggingTower({ type: draggingTower.type, pos: { x, y } });
+      // ========== PREVENT TOWER DRAGGING WHEN PAUSED ==========
+      if (gameSpeed === 0) {
+        // Game is paused - don't allow tower dragging
+        if (draggingTower) {
+          setDraggingTower(null);
+          setBuildingTower(null);
+        }
+      } else {
+        // Game is running - allow normal tower dragging
+        if (buildingTower && !draggingTower) {
+          setDraggingTower({ type: buildingTower, pos: { x, y } });
+        } else if (draggingTower) {
+          setDraggingTower({ type: draggingTower.type, pos: { x, y } });
+        }
       }
       const mouseWorldPos = screenToWorld(
         { x, y },
@@ -7277,6 +7349,10 @@ export default function PrincetonTowerDefense() {
     setTimeSpent(0);
     setLevelStartTime(0);
     setGoldSpellActive(false);
+    // Reset inspector state
+    setInspectorActive(false);
+    setSelectedInspectEnemy(null);
+    setPreviousGameSpeed(1);
     // clear all waves because if u end the level early, they might still be queued
     clearAllTimers();
     if (LEVEL_DATA[selectedMap]?.specialTower?.hp) {
@@ -7346,6 +7422,9 @@ export default function PrincetonTowerDefense() {
         gameSpeed={gameSpeed}
         setGameSpeed={setGameSpeed}
         goldSpellActive={goldSpellActive}
+        inspectorActive={inspectorActive}
+        setInspectorActive={setInspectorActive}
+        setSelectedInspectEnemy={setSelectedInspectEnemy}
         quitLevel={() => {
           resetGame();
           setGameState("setup");
@@ -7374,6 +7453,10 @@ export default function PrincetonTowerDefense() {
           setSpells([]);
           setGameSpeed(1);
           setGoldSpellActive(false);
+          // Reset inspector state
+          setInspectorActive(false);
+          setSelectedInspectEnemy(null);
+          setPreviousGameSpeed(1);
           // clear all waves because if u end the level early, they might still be queued
           setLevelStartTime(Date.now());
           //reset special towers

@@ -10,8 +10,31 @@ import {
   Book,
   Trophy,
   Settings,
+  Heart,
+  Coins,
+  Gauge,
+  Shield,
+  Wind,
+  Crown,
+  Target,
+  Crosshair,
+  Zap,
+  Flame,
+  Snowflake,
+  Timer,
+  TrendingDown,
+  Droplets,
+  Ban,
+  EyeOff,
+  AlertTriangle,
+  Sparkles,
+  Users,
+  Footprints,
+  Info,
+  Flag,
 } from "lucide-react";
-import type { GameState, LevelStars } from "../../types";
+import type { GameState, LevelStars, EnemyType, EnemyTrait, EnemyCategory } from "../../types";
+import { ENEMY_DATA } from "../../constants";
 import {
   TowerSprite,
   HeroSprite,
@@ -499,6 +522,93 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 // CODEX MODAL
 // =============================================================================
 
+// Helper function to get trait icon and info for Codex
+const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string; color: string } => {
+  switch (trait) {
+    case "flying":
+      return { icon: <Wind size={10} />, label: "Flying", color: "text-cyan-400" };
+    case "ranged":
+      return { icon: <Crosshair size={10} />, label: "Ranged", color: "text-green-400" };
+    case "armored":
+      return { icon: <Shield size={10} />, label: "Armored", color: "text-amber-400" };
+    case "fast":
+      return { icon: <Footprints size={10} />, label: "Fast", color: "text-yellow-400" };
+    case "boss":
+      return { icon: <Crown size={10} />, label: "Boss", color: "text-red-400" };
+    case "summoner":
+      return { icon: <Users size={10} />, label: "Summoner", color: "text-purple-400" };
+    case "regenerating":
+      return { icon: <Heart size={10} />, label: "Regen", color: "text-green-400" };
+    case "aoe_attack":
+      return { icon: <Target size={10} />, label: "AoE", color: "text-orange-400" };
+    case "magic_resist":
+      return { icon: <Sparkles size={10} />, label: "Magic Resist", color: "text-blue-400" };
+    case "tower_debuffer":
+      return { icon: <TrendingDown size={10} />, label: "Debuffer", color: "text-rose-400" };
+    default:
+      return { icon: <Info size={10} />, label: trait, color: "text-gray-400" };
+  }
+};
+
+// Helper function to get ability icon and color for Codex
+const getAbilityInfo = (abilityType: string): { icon: React.ReactNode; color: string; bgColor: string } => {
+  switch (abilityType) {
+    case "burn":
+      return { icon: <Flame size={12} />, color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" };
+    case "slow":
+      return { icon: <Snowflake size={12} />, color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" };
+    case "poison":
+      return { icon: <Droplets size={12} />, color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" };
+    case "stun":
+      return { icon: <Zap size={12} />, color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" };
+    case "tower_slow":
+      return { icon: <Timer size={12} />, color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" };
+    case "tower_weaken":
+      return { icon: <TrendingDown size={12} />, color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" };
+    case "tower_blind":
+      return { icon: <EyeOff size={12} />, color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" };
+    case "tower_disable":
+      return { icon: <Ban size={12} />, color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" };
+    default:
+      return { icon: <AlertTriangle size={12} />, color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" };
+  }
+};
+
+// Enemy category display info
+const CATEGORY_INFO: Record<EnemyCategory, { name: string; desc: string; icon: React.ReactNode; color: string; bgColor: string }> = {
+  academic: { name: "Academic", desc: "Academic progression and milestones", icon: <Target size={16} />, color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
+  campus: { name: "Campus Life", desc: "Campus events and activities", icon: <Flag size={16} />, color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
+  ranged: { name: "Ranged", desc: "Attack from a distance", icon: <Crosshair size={16} />, color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
+  flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", icon: <Wind size={16} />, color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
+  boss: { name: "Bosses", desc: "Major threats with devastating power", icon: <Crown size={16} />, color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
+  nature: { name: "Nature", desc: "Environmental and biome creatures", icon: <Sparkles size={16} />, color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
+  swarm: { name: "Swarm", desc: "Fast and numerous, strength in numbers", icon: <Users size={16} />, color: "text-yellow-400", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
+};
+
+// Category display order
+const CATEGORY_ORDER: EnemyCategory[] = ["academic", "campus", "ranged", "flying", "boss", "nature", "swarm"];
+
+// Group enemies by category
+const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> => {
+  const grouped: Record<EnemyCategory, EnemyType[]> = {
+    academic: [],
+    campus: [],
+    ranged: [],
+    flying: [],
+    boss: [],
+    nature: [],
+    swarm: [],
+  };
+  
+  enemyTypes.forEach(type => {
+    const enemy = ENEMY_DATA[type];
+    const category = enemy.category || "campus"; // Default to campus if not specified
+    grouped[category].push(type);
+  });
+  
+  return grouped;
+};
+
 interface CodexModalProps {
   activeTab: "towers" | "heroes" | "enemies" | "spells";
   setActiveTab: (tab: "towers" | "heroes" | "enemies" | "spells") => void;
@@ -576,48 +686,7 @@ const CodexModal: React.FC<CodexModalProps> = ({
     },
   ];
 
-  const enemies = [
-    {
-      type: "frosh" as const,
-      name: "Freshman",
-      desc: "Basic enemy. Slow and weak but comes in large numbers.",
-    },
-    {
-      type: "sophomore" as const,
-      name: "Sophomore",
-      desc: "Slightly stronger with more health. Carries a backpack.",
-    },
-    {
-      type: "junior" as const,
-      name: "Junior",
-      desc: "Coffee-fueled speed makes them harder to hit.",
-    },
-    {
-      type: "senior" as const,
-      name: "Senior",
-      desc: "Experienced and tough. Graduation cap grants bonus armor.",
-    },
-    {
-      type: "grad" as const,
-      name: "Grad Student",
-      desc: "Research-hardened with high health. Wears a lab coat.",
-    },
-    {
-      type: "professor" as const,
-      name: "Professor",
-      desc: "Elite enemy with very high stats. Buffs nearby enemies.",
-    },
-    {
-      type: "dean" as const,
-      name: "Dean",
-      desc: "Mini-boss with crown. Regenerates health over time.",
-    },
-    {
-      type: "trustee" as const,
-      name: "Trustee",
-      desc: "Final boss type. Massive health and spawns minions.",
-    },
-  ];
+  const enemyTypes = Object.keys(ENEMY_DATA) as EnemyType[];
 
   const spells = [
     {
@@ -735,24 +804,209 @@ const CodexModal: React.FC<CodexModalProps> = ({
             </div>
           )}
 
-          {activeTab === "enemies" && (
-            <div className="grid grid-cols-2 gap-4">
-              {enemies.map((e) => (
-                <div
-                  key={e.type}
-                  className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
-                >
-                  <div className="flex-shrink-0">
-                    <EnemySprite type={e.type} size={56} animated />
-                  </div>
-                  <div>
-                    <h3 className="text-red-400 font-bold mb-1">{e.name}</h3>
-                    <p className="text-stone-400 text-sm">{e.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {activeTab === "enemies" && (() => {
+            const groupedEnemies = groupEnemiesByCategory(enemyTypes);
+            
+            return (
+              <div className="space-y-4">
+                {CATEGORY_ORDER.map(category => {
+                  const categoryEnemies = groupedEnemies[category];
+                  if (categoryEnemies.length === 0) return null;
+                  
+                  const catInfo = CATEGORY_INFO[category];
+                  
+                  return (
+                    <div key={category}>
+                      {/* Category Header */}
+                      <div className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${catInfo.bgColor.replace('bg-', 'border-')}`}>
+                        <div className={`p-1.5 rounded ${catInfo.bgColor}`}>
+                          {catInfo.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className={`font-bold text-sm ${catInfo.color}`}>{catInfo.name}</h3>
+                          <p className="text-[9px] text-stone-400">{catInfo.desc}</p>
+                        </div>
+                        <span className="text-[9px] text-stone-500 bg-stone-800/50 px-1.5 py-0.5 rounded">
+                          {categoryEnemies.length}
+                        </span>
+                      </div>
+                      
+                      {/* Category Enemies Grid */}
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                        {categoryEnemies.map((type) => {
+                          const enemy = ENEMY_DATA[type];
+                          const traits = enemy.traits || [];
+                          const abilities = enemy.abilities || [];
+                          const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
+
+                          // Threat level
+                          const getThreatLevel = (hp: number, isBoss?: boolean) => {
+                            if (isBoss || hp >= 1000) return { level: "Boss", color: "purple" };
+                            if (hp >= 500) return { level: "Elite", color: "orange" };
+                            if (hp >= 200) return { level: "Standard", color: "yellow" };
+                            return { level: "Minion", color: "green" };
+                          };
+                          const threat = getThreatLevel(enemy.hp, enemy.isBoss);
+
+                          // Enemy type classification
+                          const getEnemyTypeClass = () => {
+                            if (enemy.flying) return { type: "Flying", icon: <Wind size={10} />, color: "cyan" };
+                            if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={10} />, color: "purple" };
+                            if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
+                            if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
+                            return { type: "Ground", icon: <Flag size={10} />, color: "red" };
+                          };
+                          const enemyTypeClass = getEnemyTypeClass();
+
+                          return (
+                            <div
+                              key={type}
+                              className="bg-gradient-to-br from-stone-800/80 to-stone-900/80 rounded-xl border border-stone-700/50 overflow-hidden hover:border-red-700/50 transition-colors"
+                            >
+                              {/* Header */}
+                              <div className={`px-3 py-1.5 border-b flex items-center justify-between ${
+                                threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
+                                threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                                threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                "bg-green-950/50 border-green-800/30"
+                              }`}>
+                                <div className={`flex items-center gap-1.5 ${
+                                  threat.color === "purple" ? "text-purple-400" :
+                                  threat.color === "orange" ? "text-orange-400" :
+                                  threat.color === "yellow" ? "text-yellow-400" :
+                                  "text-green-400"
+                                }`}>
+                                  {threat.color === "purple" ? <Crown size={10} /> : 
+                                   threat.color === "orange" ? <Star size={10} /> : 
+                                   <Target size={10} />}
+                                  <span className="text-[10px] font-medium uppercase">{threat.level}</span>
+                                </div>
+                                <div className={`flex items-center gap-1 text-[10px] ${
+                                  enemyTypeClass.color === "cyan" ? "text-cyan-400" :
+                                  enemyTypeClass.color === "purple" ? "text-purple-400" :
+                                  enemyTypeClass.color === "stone" ? "text-stone-400" :
+                                  enemyTypeClass.color === "green" ? "text-green-400" :
+                                  "text-red-400"
+                                }`}>
+                                  {enemyTypeClass.icon}
+                                  <span>{enemyTypeClass.type}</span>
+                                </div>
+                              </div>
+
+                              <div className="p-3">
+                                <div className="flex items-start gap-3 mb-2">
+                                  <div className="w-12 h-12 rounded-lg bg-stone-800/80 border border-red-900/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                    <EnemySprite type={type} size={44} animated />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
+                                    <p className="text-[10px] text-stone-400 line-clamp-2 mt-0.5">{enemy.desc}</p>
+                                  </div>
+                                </div>
+
+                                {/* Stats */}
+                                <div className="grid grid-cols-4 gap-1 mb-2">
+                                  <div className="bg-red-950/50 rounded px-1 py-0.5 text-center border border-red-900/40">
+                                    <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
+                                    <div className="text-red-300 font-bold text-[10px]">{enemy.hp}</div>
+                                  </div>
+                                  <div className="bg-amber-950/50 rounded px-1 py-0.5 text-center border border-amber-900/40">
+                                    <Coins size={10} className="mx-auto text-amber-400 mb-0.5" />
+                                    <div className="text-amber-300 font-bold text-[10px]">{enemy.bounty}</div>
+                                  </div>
+                                  <div className="bg-green-950/50 rounded px-1 py-0.5 text-center border border-green-900/40">
+                                    <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
+                                    <div className="text-green-300 font-bold text-[10px]">{enemy.speed}</div>
+                                  </div>
+                                  <div className="bg-stone-800/50 rounded px-1 py-0.5 text-center border border-stone-700/40">
+                                    <Shield size={10} className="mx-auto text-stone-400 mb-0.5" />
+                                    <div className="text-stone-300 font-bold text-[10px]">{Math.round(enemy.armor * 100)}%</div>
+                                  </div>
+                                </div>
+
+                                {/* Ranged Stats */}
+                                {enemy.isRanged && (
+                                  <div className="grid grid-cols-3 gap-1 mb-2">
+                                    <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
+                                      <div className="text-[8px] text-purple-500">Range</div>
+                                      <div className="text-purple-300 font-bold text-[9px]">{enemy.range}</div>
+                                    </div>
+                                    <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
+                                      <div className="text-[8px] text-purple-500">Atk Spd</div>
+                                      <div className="text-purple-300 font-bold text-[9px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
+                                    </div>
+                                    <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
+                                      <div className="text-[8px] text-purple-500">Dmg</div>
+                                      <div className="text-purple-300 font-bold text-[9px]">{enemy.projectileDamage}</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* AoE Stats */}
+                                {hasAoE && (
+                                  <div className="grid grid-cols-2 gap-1 mb-2">
+                                    <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
+                                      <div className="text-[8px] text-orange-500">AoE Radius</div>
+                                      <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeRadius}</div>
+                                    </div>
+                                    <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
+                                      <div className="text-[8px] text-orange-500">AoE Dmg</div>
+                                      <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeDamage}</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Traits */}
+                                {traits.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mb-2">
+                                    {traits.map((trait, i) => {
+                                      const traitInfo = getTraitInfo(trait);
+                                      return (
+                                        <span
+                                          key={i}
+                                          className={`text-[8px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-0.5 ${traitInfo.color}`}
+                                        >
+                                          {traitInfo.icon}
+                                          <span>{traitInfo.label}</span>
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* Abilities */}
+                                {abilities.length > 0 && (
+                                  <div className="space-y-1 max-h-16 overflow-y-auto">
+                                    {abilities.map((ability, i) => {
+                                      const abilityInfo = getAbilityInfo(ability.type);
+                                      return (
+                                        <div
+                                          key={i}
+                                          className={`p-1 rounded border ${abilityInfo.bgColor}`}
+                                        >
+                                          <div className="flex items-center gap-1">
+                                            <span className={abilityInfo.color}>{abilityInfo.icon}</span>
+                                            <span className="text-[9px] font-bold text-white">{ability.name}</span>
+                                            <span className="text-[7px] px-1 bg-black/30 rounded text-white/70 ml-auto">
+                                              {Math.round(ability.chance * 100)}%
+                                            </span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {activeTab === "spells" && (
             <div className="grid grid-cols-2 gap-4">

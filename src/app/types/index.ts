@@ -201,6 +201,16 @@ export type EnemyType =
   | "fire_imp"
   | "ember_guard";
 
+// Enemy categories for organization
+export type EnemyCategory =
+  | "academic"      // Academic progression: writing sem, thesis, grad apps, etc.
+  | "campus"        // Campus life: athletes, protestors, recruiters, etc.
+  | "ranged"        // Ranged attackers
+  | "flying"        // Flying enemies
+  | "boss"          // Major boss enemies
+  | "nature"        // Environmental/biome enemies
+  | "swarm";        // Fast, weak, numerous enemies
+
 // Enemy ability types - special effects enemies can apply
 export type EnemyAbilityType = 
   | "burn"      // Deals damage over time to troops/heroes
@@ -247,6 +257,7 @@ export interface EnemyData {
   desc: string;
   color: string;
   size: number;
+  category?: EnemyCategory; // Enemy category for organization
   isRanged?: boolean;
   range?: number;
   attackSpeed?: number;
@@ -588,7 +599,17 @@ export type EffectType =
   | "tiger_slash"       // Tiger claw attack
   | "knight_cleave"     // Mathey Knight sword swing
   | "scott_quill"       // F Scott pen/quill attack
-  | "sonic_blast";      // Tenor multi-target blast
+  | "sonic_blast"       // Tenor multi-target blast
+  // Tower debuff effects
+  | "tower_debuff_slow"     // Tower attack speed reduced
+  | "tower_debuff_weaken"   // Tower damage reduced
+  | "tower_debuff_blind"    // Tower range reduced
+  | "tower_debuff_disable"  // Tower completely disabled
+  // Unit status effect visuals (troops/heroes)
+  | "status_burning"        // On-fire effect
+  | "status_slowed"         // Slowed/frozen effect
+  | "status_poisoned"       // Poison dripping effect
+  | "status_stunned";       // Stunned/dazed effect
 
 // Visual effect
 export interface Effect {

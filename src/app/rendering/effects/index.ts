@@ -1,7 +1,7 @@
 // Princeton Tower Defense - Effects Rendering Module
 // Renders visual effects, projectiles, and particles
 
-import type { Effect, Projectile, Particle, Position, Tower, Enemy } from "../../types";
+import type { Effect, Projectile, Particle, Position, Tower, Enemy, Troop, Hero } from "../../types";
 import { worldToScreen, gridToWorld, distance } from "../../utils";
 import { drawLightningBolt, drawExplosion, lightenColor, darkenColor } from "../helpers";
 
@@ -1411,6 +1411,272 @@ export function renderEffect(
       }
       break;
 
+    // ========== TOWER DEBUFF EFFECTS ==========
+    case "tower_debuff_slow": {
+      // Blue clock/timer effect - slowed attack speed
+      const towerSlowSize = effect.size * zoom;
+      const towerSlowPulse = Math.sin(Date.now() / 200) * 0.2 + 0.8;
+      
+      // Outer ring
+      ctx.strokeStyle = `rgba(59, 130, 246, ${alpha * 0.6 * towerSlowPulse})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, towerSlowSize * 0.8, towerSlowSize * 0.4, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Clock hands effect
+      const clockAngle = Date.now() / 500;
+      ctx.strokeStyle = `rgba(147, 197, 253, ${alpha * 0.8})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x, screenPos.y - towerSlowSize * 0.2);
+      ctx.lineTo(screenPos.x + Math.cos(clockAngle) * towerSlowSize * 0.4, screenPos.y - towerSlowSize * 0.2 + Math.sin(clockAngle) * towerSlowSize * 0.2);
+      ctx.stroke();
+      
+      // Floating hourglass symbol
+      ctx.fillStyle = `rgba(191, 219, 254, ${alpha * 0.9})`;
+      ctx.font = `bold ${14 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⏳", screenPos.x, screenPos.y - towerSlowSize * 0.6 - Math.sin(Date.now() / 300) * 3 * zoom);
+      break;
+    }
+
+    case "tower_debuff_weaken": {
+      // Red damage down effect
+      const towerWeakenSize = effect.size * zoom;
+      const towerWeakenPulse = Math.sin(Date.now() / 150) * 0.3 + 0.7;
+      
+      // Red aura
+      const towerWeakenGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, towerWeakenSize
+      );
+      towerWeakenGrad.addColorStop(0, `rgba(239, 68, 68, ${alpha * 0.3 * towerWeakenPulse})`);
+      towerWeakenGrad.addColorStop(0.5, `rgba(185, 28, 28, ${alpha * 0.2})`);
+      towerWeakenGrad.addColorStop(1, "rgba(127, 29, 29, 0)");
+      ctx.fillStyle = towerWeakenGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, towerWeakenSize, towerWeakenSize * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Down arrow
+      ctx.fillStyle = `rgba(252, 165, 165, ${alpha * 0.9})`;
+      ctx.font = `bold ${16 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("⬇", screenPos.x, screenPos.y - towerWeakenSize * 0.5 - Math.sin(Date.now() / 200) * 4 * zoom);
+      break;
+    }
+
+    case "tower_debuff_blind": {
+      // Purple eye effect - reduced range
+      const towerBlindSize = effect.size * zoom;
+      const towerBlindPulse = Math.sin(Date.now() / 250) * 0.25 + 0.75;
+      
+      // Purple haze
+      const towerBlindGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, towerBlindSize * 1.2
+      );
+      towerBlindGrad.addColorStop(0, `rgba(168, 85, 247, ${alpha * 0.25 * towerBlindPulse})`);
+      towerBlindGrad.addColorStop(0.6, `rgba(126, 34, 206, ${alpha * 0.15})`);
+      towerBlindGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
+      ctx.fillStyle = towerBlindGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, towerBlindSize * 1.2, towerBlindSize * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Closed eye symbol
+      ctx.fillStyle = `rgba(216, 180, 254, ${alpha * 0.9})`;
+      ctx.font = `bold ${14 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("👁", screenPos.x, screenPos.y - towerBlindSize * 0.5);
+      // Strike through
+      ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.8})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 8 * zoom, screenPos.y - towerBlindSize * 0.5 - 5 * zoom);
+      ctx.lineTo(screenPos.x + 8 * zoom, screenPos.y - towerBlindSize * 0.5 + 5 * zoom);
+      ctx.stroke();
+      break;
+    }
+
+    case "tower_debuff_disable": {
+      // Rose/red full disable effect
+      const towerDisableSize = effect.size * zoom;
+      const towerDisablePulse = Math.sin(Date.now() / 100) * 0.4 + 0.6;
+      
+      // Intense red aura
+      const towerDisableGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, towerDisableSize * 1.3
+      );
+      towerDisableGrad.addColorStop(0, `rgba(225, 29, 72, ${alpha * 0.4 * towerDisablePulse})`);
+      towerDisableGrad.addColorStop(0.4, `rgba(190, 18, 60, ${alpha * 0.3})`);
+      towerDisableGrad.addColorStop(0.7, `rgba(136, 19, 55, ${alpha * 0.15})`);
+      towerDisableGrad.addColorStop(1, "rgba(76, 5, 25, 0)");
+      ctx.fillStyle = towerDisableGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, towerDisableSize * 1.3, towerDisableSize * 0.65, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // X symbol
+      ctx.strokeStyle = `rgba(251, 113, 133, ${alpha * 0.9})`;
+      ctx.lineWidth = 4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 10 * zoom, screenPos.y - towerDisableSize * 0.3 - 10 * zoom);
+      ctx.lineTo(screenPos.x + 10 * zoom, screenPos.y - towerDisableSize * 0.3 + 10 * zoom);
+      ctx.moveTo(screenPos.x + 10 * zoom, screenPos.y - towerDisableSize * 0.3 - 10 * zoom);
+      ctx.lineTo(screenPos.x - 10 * zoom, screenPos.y - towerDisableSize * 0.3 + 10 * zoom);
+      ctx.stroke();
+      
+      // "DISABLED" text
+      ctx.fillStyle = `rgba(254, 205, 211, ${alpha * 0.8})`;
+      ctx.font = `bold ${8 * zoom}px Arial`;
+      ctx.fillText("DISABLED", screenPos.x, screenPos.y - towerDisableSize * 0.7);
+      break;
+    }
+
+    // ========== UNIT STATUS EFFECT VISUALS ==========
+    case "status_burning": {
+      // Fire effect on unit
+      const statusBurnSize = effect.size * zoom;
+      const statusBurnFlicker = Math.random() * 0.3 + 0.7;
+      
+      // Fire particles rising
+      for (let i = 0; i < 5; i++) {
+        const fireX = screenPos.x + (Math.random() - 0.5) * statusBurnSize * 0.6;
+        const fireY = screenPos.y - Math.random() * statusBurnSize * 0.8 - progress * statusBurnSize * 0.5;
+        const fireSize = (3 + Math.random() * 4) * zoom * (1 - progress * 0.5);
+        
+        const fireGradient = ctx.createRadialGradient(fireX, fireY, 0, fireX, fireY, fireSize);
+        fireGradient.addColorStop(0, `rgba(255, 255, 150, ${alpha * statusBurnFlicker})`);
+        fireGradient.addColorStop(0.4, `rgba(255, 150, 50, ${alpha * 0.8 * statusBurnFlicker})`);
+        fireGradient.addColorStop(1, "rgba(255, 50, 0, 0)");
+        ctx.fillStyle = fireGradient;
+        ctx.beginPath();
+        ctx.arc(fireX, fireY, fireSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Base fire glow
+      ctx.fillStyle = `rgba(255, 100, 0, ${alpha * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, statusBurnSize * 0.5, statusBurnSize * 0.25, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "status_slowed": {
+      // Ice/frost effect
+      const statusSlowedSize = effect.size * zoom;
+      const statusFrostPulse = Math.sin(Date.now() / 300) * 0.2 + 0.8;
+      
+      // Frost aura
+      const statusFrostGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, statusSlowedSize * 0.8
+      );
+      statusFrostGrad.addColorStop(0, `rgba(147, 197, 253, ${alpha * 0.4 * statusFrostPulse})`);
+      statusFrostGrad.addColorStop(0.5, `rgba(96, 165, 250, ${alpha * 0.2})`);
+      statusFrostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
+      ctx.fillStyle = statusFrostGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, statusSlowedSize * 0.8, statusSlowedSize * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ice crystals
+      ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.7})`;
+      ctx.lineWidth = 1.5 * zoom;
+      for (let i = 0; i < 4; i++) {
+        const crystalAngle = (i / 4) * Math.PI * 2 + Date.now() / 1000;
+        const crystalDist = statusSlowedSize * 0.4;
+        const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
+        const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * 0.5 - statusSlowedSize * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 4 * zoom);
+        ctx.lineTo(cx + 3 * zoom, cy);
+        ctx.lineTo(cx, cy + 4 * zoom);
+        ctx.lineTo(cx - 3 * zoom, cy);
+        ctx.closePath();
+        ctx.stroke();
+      }
+      break;
+    }
+
+    case "status_poisoned": {
+      // Poison drip effect
+      const statusPoisonSize = effect.size * zoom;
+      const statusPoisonPulse = Math.sin(Date.now() / 250) * 0.25 + 0.75;
+      
+      // Green toxic aura
+      const statusPoisonGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, statusPoisonSize * 0.7
+      );
+      statusPoisonGrad.addColorStop(0, `rgba(34, 197, 94, ${alpha * 0.35 * statusPoisonPulse})`);
+      statusPoisonGrad.addColorStop(0.5, `rgba(22, 163, 74, ${alpha * 0.2})`);
+      statusPoisonGrad.addColorStop(1, "rgba(21, 128, 61, 0)");
+      ctx.fillStyle = statusPoisonGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, statusPoisonSize * 0.7, statusPoisonSize * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Poison bubbles
+      for (let i = 0; i < 3; i++) {
+        const bubbleX = screenPos.x + (Math.sin(Date.now() / 200 + i * 2) * statusPoisonSize * 0.3);
+        const bubbleY = screenPos.y - (Date.now() / 10 + i * 100) % (statusPoisonSize * 0.6);
+        const bubbleSize = (2 + i) * zoom;
+        ctx.fillStyle = `rgba(134, 239, 172, ${alpha * 0.6 * (1 - (bubbleY - screenPos.y + statusPoisonSize * 0.6) / (statusPoisonSize * 0.6))})`;
+        ctx.beginPath();
+        ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Skull symbol
+      ctx.fillStyle = `rgba(187, 247, 208, ${alpha * 0.8})`;
+      ctx.font = `${10 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("☠", screenPos.x, screenPos.y - statusPoisonSize * 0.5);
+      break;
+    }
+
+    case "status_stunned": {
+      // Stars circling effect
+      const statusStunSize = effect.size * zoom;
+      const statusStunRotation = Date.now() / 200;
+      
+      // Dazed spiral
+      ctx.strokeStyle = `rgba(250, 204, 21, ${alpha * 0.5})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      for (let angle = 0; angle < Math.PI * 4; angle += 0.2) {
+        const spiralRadius = (angle / (Math.PI * 4)) * statusStunSize * 0.5;
+        const sx = screenPos.x + Math.cos(angle + statusStunRotation) * spiralRadius;
+        const sy = screenPos.y - statusStunSize * 0.4 + Math.sin(angle + statusStunRotation) * spiralRadius * 0.4;
+        if (angle === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+      
+      // Circling stars
+      ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.9})`;
+      ctx.font = `${10 * zoom}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let i = 0; i < 3; i++) {
+        const starAngle = (i / 3) * Math.PI * 2 + statusStunRotation;
+        const starDist = statusStunSize * 0.4;
+        const starX = screenPos.x + Math.cos(starAngle) * starDist;
+        const starY = screenPos.y - statusStunSize * 0.4 + Math.sin(starAngle) * starDist * 0.4;
+        ctx.fillText("★", starX, starY);
+      }
+      break;
+    }
+
     default:
       // Generic effect
       ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
@@ -1663,5 +1929,318 @@ export function renderParticle(
       ctx.fill();
   }
 
+  ctx.restore();
+}
+
+// ============================================================================
+// TOWER DEBUFF EFFECTS RENDERING
+// ============================================================================
+
+export function renderTowerDebuffEffects(
+  ctx: CanvasRenderingContext2D,
+  tower: Tower,
+  screenPos: Position,
+  zoom: number
+): void {
+  if (!tower.debuffs || tower.debuffs.length === 0) return;
+  
+  // Guard against invalid position or zoom values
+  if (!screenPos || !isFinite(screenPos.x) || !isFinite(screenPos.y) || !isFinite(zoom) || zoom <= 0) {
+    return;
+  }
+  
+  const now = Date.now();
+  const activeDebuffs = tower.debuffs.filter(d => d.until > now);
+  
+  if (activeDebuffs.length === 0) return;
+  
+  ctx.save();
+  
+  const baseSize = 35; // Tower visual radius
+  
+  for (const debuff of activeDebuffs) {
+    const remaining = (debuff.until - now) / 1000;
+    const alpha = Math.min(1, remaining / 2); // Fade out in last 2 seconds
+    
+    switch (debuff.type) {
+      case "slow": {
+        // Blue hourglass/timer effect
+        const slowPulse = Math.sin(now / 200) * 0.3 + 0.7;
+        
+        // Outer ring
+        ctx.strokeStyle = `rgba(59, 130, 246, ${alpha * 0.5 * slowPulse})`;
+        ctx.lineWidth = 2 * zoom;
+        ctx.setLineDash([4 * zoom, 4 * zoom]);
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom, baseSize * zoom * 0.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Clock icon
+        ctx.fillStyle = `rgba(147, 197, 253, ${alpha * 0.9})`;
+        ctx.font = `${12 * zoom}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("⏳", screenPos.x - baseSize * zoom * 0.5, screenPos.y - baseSize * zoom * 0.7);
+        break;
+      }
+        
+      case "weaken": {
+        // Red damage reduction effect
+        const weakPulse = Math.sin(now / 150) * 0.3 + 0.7;
+        
+        // Red haze
+        const weakGrad = ctx.createRadialGradient(
+          screenPos.x, screenPos.y, 0,
+          screenPos.x, screenPos.y, baseSize * zoom * 1.2
+        );
+        weakGrad.addColorStop(0, `rgba(239, 68, 68, ${alpha * 0.2 * weakPulse})`);
+        weakGrad.addColorStop(0.7, `rgba(185, 28, 28, ${alpha * 0.1})`);
+        weakGrad.addColorStop(1, "rgba(127, 29, 29, 0)");
+        ctx.fillStyle = weakGrad;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.2, baseSize * zoom * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Down arrow
+        ctx.fillStyle = `rgba(252, 165, 165, ${alpha * 0.8})`;
+        ctx.font = `bold ${14 * zoom}px Arial`;
+        ctx.fillText("⬇", screenPos.x + baseSize * zoom * 0.5, screenPos.y - baseSize * zoom * 0.7);
+        break;
+      }
+        
+      case "blind": {
+        // Purple fog/mist effect
+        const blindPulse = Math.sin(now / 250) * 0.25 + 0.75;
+        
+        const blindGrad = ctx.createRadialGradient(
+          screenPos.x, screenPos.y, 0,
+          screenPos.x, screenPos.y, baseSize * zoom * 1.5
+        );
+        blindGrad.addColorStop(0, `rgba(168, 85, 247, ${alpha * 0.15 * blindPulse})`);
+        blindGrad.addColorStop(0.5, `rgba(126, 34, 206, ${alpha * 0.1})`);
+        blindGrad.addColorStop(1, "rgba(88, 28, 135, 0)");
+        ctx.fillStyle = blindGrad;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.5, baseSize * zoom * 0.75, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Eye with X
+        ctx.fillStyle = `rgba(216, 180, 254, ${alpha * 0.8})`;
+        ctx.font = `${12 * zoom}px Arial`;
+        ctx.fillText("👁", screenPos.x, screenPos.y - baseSize * zoom * 0.8);
+        ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.7})`;
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 6 * zoom, screenPos.y - baseSize * zoom * 0.8 - 4 * zoom);
+        ctx.lineTo(screenPos.x + 6 * zoom, screenPos.y - baseSize * zoom * 0.8 + 4 * zoom);
+        ctx.stroke();
+        break;
+      }
+        
+      case "disable": {
+        // Heavy red/rose disable effect
+        const disablePulse = Math.sin(now / 100) * 0.4 + 0.6;
+        
+        // Intense red aura
+        const disableGrad = ctx.createRadialGradient(
+          screenPos.x, screenPos.y, 0,
+          screenPos.x, screenPos.y, baseSize * zoom * 1.4
+        );
+        disableGrad.addColorStop(0, `rgba(225, 29, 72, ${alpha * 0.35 * disablePulse})`);
+        disableGrad.addColorStop(0.4, `rgba(190, 18, 60, ${alpha * 0.25})`);
+        disableGrad.addColorStop(0.7, `rgba(136, 19, 55, ${alpha * 0.12})`);
+        disableGrad.addColorStop(1, "rgba(76, 5, 25, 0)");
+        ctx.fillStyle = disableGrad;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 1.4, baseSize * zoom * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // X symbol
+        ctx.strokeStyle = `rgba(251, 113, 133, ${alpha * 0.85})`;
+        ctx.lineWidth = 3 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 12 * zoom, screenPos.y - baseSize * zoom * 0.5 - 8 * zoom);
+        ctx.lineTo(screenPos.x + 12 * zoom, screenPos.y - baseSize * zoom * 0.5 + 8 * zoom);
+        ctx.moveTo(screenPos.x + 12 * zoom, screenPos.y - baseSize * zoom * 0.5 - 8 * zoom);
+        ctx.lineTo(screenPos.x - 12 * zoom, screenPos.y - baseSize * zoom * 0.5 + 8 * zoom);
+        ctx.stroke();
+        
+        // "DISABLED" banner
+        ctx.fillStyle = `rgba(254, 205, 211, ${alpha * 0.9})`;
+        ctx.font = `bold ${7 * zoom}px Arial`;
+        ctx.fillText("DISABLED", screenPos.x, screenPos.y - baseSize * zoom * 0.9);
+        break;
+      }
+    }
+  }
+  
+  ctx.restore();
+}
+
+// ============================================================================
+// TROOP/HERO STATUS EFFECT RENDERING
+// ============================================================================
+
+export function renderUnitStatusEffects(
+  ctx: CanvasRenderingContext2D,
+  unit: Troop | Hero,
+  screenPos: Position,
+  zoom: number
+): void {
+  // Guard against invalid position or zoom values
+  if (!screenPos || !isFinite(screenPos.x) || !isFinite(screenPos.y) || !isFinite(zoom) || zoom <= 0) {
+    return;
+  }
+  
+  const now = Date.now();
+  ctx.save();
+  
+  const baseSize = 15; // Unit visual radius
+  let effectIndex = 0;
+  
+  // Burning effect
+  if (unit.burning && unit.burnUntil && unit.burnUntil > now) {
+    const remaining = (unit.burnUntil - now) / 1000;
+    const alpha = Math.min(1, remaining / 2);
+    const flicker = Math.random() * 0.3 + 0.7;
+    
+    // Fire particles rising
+    for (let i = 0; i < 4; i++) {
+      const fireX = screenPos.x + (Math.random() - 0.5) * baseSize * zoom * 0.8;
+      const fireY = screenPos.y - Math.random() * baseSize * zoom - (now % 500) / 500 * baseSize * zoom * 0.5;
+      const fireSize = (2 + Math.random() * 3) * zoom;
+      
+      const fireGrad = ctx.createRadialGradient(fireX, fireY, 0, fireX, fireY, fireSize);
+      fireGrad.addColorStop(0, `rgba(255, 255, 150, ${alpha * flicker})`);
+      fireGrad.addColorStop(0.4, `rgba(255, 120, 50, ${alpha * 0.8 * flicker})`);
+      fireGrad.addColorStop(1, "rgba(255, 50, 0, 0)");
+      ctx.fillStyle = fireGrad;
+      ctx.beginPath();
+      ctx.arc(fireX, fireY, fireSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Fire icon
+    ctx.fillStyle = `rgba(255, 150, 50, ${alpha * 0.9})`;
+    ctx.font = `${8 * zoom}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("🔥", screenPos.x - baseSize * zoom * 0.8, screenPos.y - baseSize * zoom * 1.2);
+    effectIndex++;
+  }
+  
+  // Slowed/Frozen effect
+  if (unit.slowed && unit.slowUntil && unit.slowUntil > now) {
+    const remaining = (unit.slowUntil - now) / 1000;
+    const alpha = Math.min(1, remaining / 2);
+    const frostPulse = Math.sin(now / 300) * 0.2 + 0.8;
+    
+    // Frost aura
+    const frostGrad = ctx.createRadialGradient(
+      screenPos.x, screenPos.y, 0,
+      screenPos.x, screenPos.y, baseSize * zoom
+    );
+    frostGrad.addColorStop(0, `rgba(147, 197, 253, ${alpha * 0.3 * frostPulse})`);
+    frostGrad.addColorStop(0.6, `rgba(96, 165, 250, ${alpha * 0.15})`);
+    frostGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
+    ctx.fillStyle = frostGrad;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, baseSize * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Ice crystals
+    ctx.strokeStyle = `rgba(191, 219, 254, ${alpha * 0.6})`;
+    ctx.lineWidth = 1 * zoom;
+    for (let i = 0; i < 3; i++) {
+      const crystalAngle = (i / 3) * Math.PI * 2 + now / 800;
+      const crystalDist = baseSize * zoom * 0.7;
+      const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
+      const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * 0.5 - baseSize * zoom * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 3 * zoom);
+      ctx.lineTo(cx + 2 * zoom, cy);
+      ctx.lineTo(cx, cy + 3 * zoom);
+      ctx.lineTo(cx - 2 * zoom, cy);
+      ctx.closePath();
+      ctx.stroke();
+    }
+    
+    // Snowflake icon
+    ctx.fillStyle = `rgba(191, 219, 254, ${alpha * 0.9})`;
+    ctx.font = `${8 * zoom}px Arial`;
+    ctx.fillText("❄", screenPos.x + baseSize * zoom * 0.8 * (effectIndex > 0 ? 1 : 0), screenPos.y - baseSize * zoom * 1.2);
+    effectIndex++;
+  }
+  
+  // Poisoned effect
+  if (unit.poisoned && unit.poisonUntil && unit.poisonUntil > now) {
+    const remaining = (unit.poisonUntil - now) / 1000;
+    const alpha = Math.min(1, remaining / 2);
+    const poisonPulse = Math.sin(now / 250) * 0.25 + 0.75;
+    
+    // Toxic aura
+    const poisonGrad = ctx.createRadialGradient(
+      screenPos.x, screenPos.y, 0,
+      screenPos.x, screenPos.y, baseSize * zoom * 0.9
+    );
+    poisonGrad.addColorStop(0, `rgba(34, 197, 94, ${alpha * 0.25 * poisonPulse})`);
+    poisonGrad.addColorStop(0.5, `rgba(22, 163, 74, ${alpha * 0.15})`);
+    poisonGrad.addColorStop(1, "rgba(21, 128, 61, 0)");
+    ctx.fillStyle = poisonGrad;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, baseSize * zoom * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Poison bubbles
+    for (let i = 0; i < 2; i++) {
+      const bubbleX = screenPos.x + (Math.sin(now / 200 + i * 2) * baseSize * zoom * 0.4);
+      const bubbleY = screenPos.y - (now / 15 + i * 50) % (baseSize * zoom);
+      const bubbleSize = (1.5 + i * 0.5) * zoom;
+      ctx.fillStyle = `rgba(134, 239, 172, ${alpha * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(bubbleX, bubbleY, bubbleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Skull icon
+    ctx.fillStyle = `rgba(187, 247, 208, ${alpha * 0.8})`;
+    ctx.font = `${8 * zoom}px Arial`;
+    const offsetX = effectIndex > 0 ? effectIndex * baseSize * zoom * 0.6 : 0;
+    ctx.fillText("☠", screenPos.x + offsetX, screenPos.y - baseSize * zoom * 1.2);
+    effectIndex++;
+  }
+  
+  // Stunned effect
+  if (unit.stunned && unit.stunUntil && unit.stunUntil > now) {
+    const remaining = (unit.stunUntil - now) / 1000;
+    const alpha = Math.min(1, remaining / 2);
+    const rotation = now / 200;
+    
+    // Daze spiral
+    ctx.strokeStyle = `rgba(250, 204, 21, ${alpha * 0.4})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    for (let angle = 0; angle < Math.PI * 3; angle += 0.3) {
+      const spiralRadius = (angle / (Math.PI * 3)) * baseSize * zoom * 0.6;
+      const sx = screenPos.x + Math.cos(angle + rotation) * spiralRadius;
+      const sy = screenPos.y - baseSize * zoom * 0.7 + Math.sin(angle + rotation) * spiralRadius * 0.4;
+      if (angle === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    
+    // Circling stars
+    ctx.fillStyle = `rgba(253, 224, 71, ${alpha * 0.9})`;
+    ctx.font = `${7 * zoom}px Arial`;
+    for (let i = 0; i < 3; i++) {
+      const starAngle = (i / 3) * Math.PI * 2 + rotation;
+      const starDist = baseSize * zoom * 0.5;
+      const starX = screenPos.x + Math.cos(starAngle) * starDist;
+      const starY = screenPos.y - baseSize * zoom * 0.7 + Math.sin(starAngle) * starDist * 0.3;
+      ctx.fillText("★", starX, starY);
+    }
+  }
+  
   ctx.restore();
 }

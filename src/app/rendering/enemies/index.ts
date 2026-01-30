@@ -14097,9 +14097,10 @@ function drawYetiEnemy(
 
   // Roaring mouth with massive fangs
   ctx.fillStyle = "#0f172a";
-  const mouthOpen = size * (0.06 + roar * 0.8);
+  const mouthOpen = Math.max(0.001, size * (0.06 + roar * 0.8));
+  const mouthWidth = Math.max(0.001, size * 0.1 + roar * size * 0.05);
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.43, size * 0.1 + roar * size * 0.05, mouthOpen, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y - size * 0.43, mouthWidth, mouthOpen, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Massive fangs
