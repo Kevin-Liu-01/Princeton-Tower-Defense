@@ -41,6 +41,7 @@ import {
   EyeOff,
   AlertTriangle,
   Footprints,
+  Lock,
 } from "lucide-react";
 import type { GameState, LevelStars, HeroType, SpellType, EnemyTrait, EnemyCategory, EnemyType } from "../../types";
 import {
@@ -459,9 +460,9 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
       <div className="relative w-full max-w-6xl max-h-[92vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden">
         <img
-          src="/images/gameplay-cropped.png"
+          src="/images/gameplay-latest-zoomed.png"
           alt="Battle Scene"
-          className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.03] pointer-events-none select-none"
+          className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.05] pointer-events-none select-none"
         />
         <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900/90 via-stone-800/90 to-amber-900/90 backdrop-blur px-6 py-4 border-b-2 border-amber-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -6106,9 +6107,16 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
           Click on any unlocked location on the map to view battle details and
           begin your campaign
         </p>
+
         <div className="mt-6 flex items-center gap-3 text-xs text-amber-300">
           <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500/70 to-orange-600/70 border border-amber-400/80 shadow-lg shadow-amber-500/40 animate-pulse" />
           <span className="font-medium tracking-wide">= Unlocked Location</span>
+        </div>
+        <div className="mt-3 flex items-center gap-3 text-xs text-amber-300">
+          <div className="w-4 h-4 flex items-center justify-center rounded-full bg-gradient-to-br from-gray-500/70 to-gray-600/70 border border-gray-400/80 shadow-lg shadow-gray-500/40 animate-pulse" >
+            <Lock size={10} className="text-gray-400" />
+          </div>
+          <span className="font-medium tracking-wide">= Locked Location</span>
         </div>
       </div>
     </div>
