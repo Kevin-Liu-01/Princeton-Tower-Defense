@@ -70,6 +70,14 @@ export interface TowerStats {
   levelDesc: { [key: number]: string };
 }
 
+// Tower debuff state - applied by enemies
+export interface TowerDebuff {
+  type: "slow" | "weaken" | "blind" | "disable";
+  intensity: number;  // Percentage reduction (0-1)
+  until: number;      // Timestamp when debuff expires
+  sourceId?: string;  // Enemy that applied the debuff
+}
+
 // Tower entity - runtime state
 export interface Tower {
   id: string;
@@ -108,6 +116,10 @@ export interface Tower {
   rangeBoost?: number;
   boostEnd?: number;
   isBuffed?: boolean;
+  // Debuff state (from enemy abilities)
+  debuffs?: TowerDebuff[];
+  disabled?: boolean;
+  disabledUntil?: number;
   // Temporary tower (from abilities)
   temporary?: boolean;
   expireTime?: number;
@@ -189,6 +201,41 @@ export type EnemyType =
   | "fire_imp"
   | "ember_guard";
 
+// Enemy ability types - special effects enemies can apply
+export type EnemyAbilityType = 
+  | "burn"      // Deals damage over time to troops/heroes
+  | "slow"      // Reduces movement/attack speed of troops/heroes
+  | "poison"    // Deals damage over time and reduces healing
+  | "stun"      // Temporarily disables troops/heroes
+  | "tower_slow"      // Reduces tower attack speed
+  | "tower_weaken"    // Reduces tower damage
+  | "tower_blind"     // Reduces tower range
+  | "tower_disable";  // Completely disables tower temporarily
+
+export interface EnemyAbility {
+  type: EnemyAbilityType;
+  name: string;
+  desc: string;
+  chance: number;      // Chance to apply on attack (0-1)
+  duration: number;    // Duration in ms
+  intensity?: number;  // For slow: percentage (0-1), for damage: DPS
+  radius?: number;     // For AoE abilities
+  cooldown?: number;   // Cooldown before can apply again
+}
+
+// Enemy special traits for display
+export type EnemyTrait = 
+  | "flying"
+  | "ranged"
+  | "armored"
+  | "fast"
+  | "boss"
+  | "summoner"
+  | "regenerating"
+  | "aoe_attack"
+  | "magic_resist"
+  | "tower_debuffer";
+
 // Enemy data definition
 export interface EnemyData {
   name: string;
@@ -204,6 +251,12 @@ export interface EnemyData {
   range?: number;
   attackSpeed?: number;
   projectileDamage?: number;
+  // New ability system
+  abilities?: EnemyAbility[];
+  traits?: EnemyTrait[];
+  isBoss?: boolean;
+  aoeRadius?: number;
+  aoeDamage?: number;
 }
 
 // Enemy entity - runtime state
@@ -236,6 +289,9 @@ export interface Enemy {
   tauntTarget?: string;
   tauntOffset?: Position; // Offset from path position when moving toward taunt target
   goldAura?: boolean; // Gold Rush spell glowing effect
+  // Ability cooldowns (tracks when enemy can use abilities again)
+  abilityCooldowns?: Record<string, number>;
+  lastAbilityUse?: number;
   // Dual-path support
   pathKey?: string;
   // Mark as dead for cleanup
@@ -271,6 +327,14 @@ export interface HeroData {
   isRanged?: boolean;
 }
 
+// Status effect applied by enemies
+export interface StatusEffect {
+  type: "burn" | "slow" | "poison" | "stun";
+  intensity: number;  // For burn/poison: DPS, for slow: percentage (0-1)
+  until: number;      // Timestamp when effect expires
+  sourceId?: string;  // Enemy that applied the effect
+}
+
 // Hero entity - runtime state
 export interface Hero {
   id: string;
@@ -296,6 +360,19 @@ export interface Hero {
   shieldEnd?: number;
   healFlash?: number; // Visual effect when healed (timestamp when healed)
   lastCombatTime?: number; // Timestamp of last attack given or received (for heal delay)
+  // Status effects from enemies
+  statusEffects?: StatusEffect[];
+  burning?: boolean;
+  burnDamage?: number;
+  burnUntil?: number;
+  slowed?: boolean;
+  slowIntensity?: number;
+  slowUntil?: number;
+  poisoned?: boolean;
+  poisonDamage?: number;
+  poisonUntil?: number;
+  stunned?: boolean;
+  stunUntil?: number;
 }
 
 // ============================================================================
@@ -358,6 +435,19 @@ export interface Troop {
   engaging?: boolean;
   healFlash?: number; // Visual effect when healed (timestamp when healed)
   lastCombatTime?: number; // Timestamp of last attack given or received (for heal delay)
+  // Status effects from enemies
+  statusEffects?: StatusEffect[];
+  burning?: boolean;
+  burnDamage?: number;
+  burnUntil?: number;
+  slowed?: boolean;
+  slowIntensity?: number;
+  slowUntil?: number;
+  poisoned?: boolean;
+  poisonDamage?: number;
+  poisonUntil?: number;
+  stunned?: boolean;
+  stunUntil?: number;
 }
 
 // ============================================================================

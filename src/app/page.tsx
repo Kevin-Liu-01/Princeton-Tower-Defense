@@ -86,6 +86,7 @@ import {
   renderSpecialBuilding,
   renderTroopMoveRange,
   renderPathTargetIndicator,
+  renderEnemyInspectIndicator,
 } from "./rendering";
 // Decoration rendering
 import { renderDecorationItem } from "./rendering/decorations";
@@ -197,6 +198,8 @@ import {
   BuildTowerTooltip,
   PlacingTroopIndicator,
   SpecialBuildingTooltip,
+  EnemyInspector,
+  EnemyDetailTooltip,
 } from "./components/ui/GameUI";
 // Hooks
 import { useGameProgress } from "./useLocalStorage";
@@ -276,6 +279,11 @@ export default function PrincetonTowerDefense() {
   const [placingTroop, setPlacingTroop] = useState(false);
   const [gameSpeed, setGameSpeed] = useState(1);
   const [hoveredSpecial, setHoveredSpecial] = useState<boolean>(false);
+  // Enemy Inspector state
+  const [inspectorActive, setInspectorActive] = useState(false);
+  const [selectedInspectEnemy, setSelectedInspectEnemy] = useState<Enemy | null>(null);
+  const [previousGameSpeed, setPreviousGameSpeed] = useState(1);
+  const [hoveredInspectEnemy, setHoveredInspectEnemy] = useState<string | null>(null);
   // Troop/Hero movement target indicator state
   const [moveTargetPos, setMoveTargetPos] = useState<Position | null>(null);
   const [moveTargetValid, setMoveTargetValid] = useState(false);
@@ -706,6 +714,71 @@ export default function PrincetonTowerDefense() {
     // Track timeout for cleanup
     activeTimeoutsRef.current.push(waveOverTimeout);
   }, [waveInProgress, currentWave, selectedMap]);
+  // Helper to apply enemy abilities to a target (troop or hero)
+  const applyEnemyAbilities = useCallback((
+    enemy: Enemy,
+    targetType: 'troop' | 'hero',
+    now: number
+  ): {
+    burn?: { damage: number; duration: number };
+    slow?: { intensity: number; duration: number };
+    poison?: { damage: number; duration: number };
+    stun?: { duration: number };
+  } | null => {
+    const eData = ENEMY_DATA[enemy.type];
+    if (!eData.abilities || eData.abilities.length === 0) return null;
+
+    // Check if enemy can use ability (cooldown)
+    const abilityCooldown = eData.abilities[0]?.cooldown || 2000;
+    if (enemy.lastAbilityUse && now - enemy.lastAbilityUse < abilityCooldown) {
+      return null;
+    }
+
+    const result: {
+      burn?: { damage: number; duration: number };
+      slow?: { intensity: number; duration: number };
+      poison?: { damage: number; duration: number };
+      stun?: { duration: number };
+    } = {};
+
+    for (const ability of eData.abilities) {
+      // Only apply abilities that affect troops/heroes (not tower abilities)
+      if (ability.type.startsWith('tower_')) continue;
+
+      // Check if ability triggers (based on chance)
+      const chance = ability.chance || 0.3;
+      if (Math.random() > chance) continue;
+
+      switch (ability.type) {
+        case 'burn':
+          result.burn = {
+            damage: ability.intensity || 5,
+            duration: ability.duration || 3000,
+          };
+          break;
+        case 'slow':
+          result.slow = {
+            intensity: ability.intensity || 0.3,
+            duration: ability.duration || 2000,
+          };
+          break;
+        case 'poison':
+          result.poison = {
+            damage: ability.intensity || 3,
+            duration: ability.duration || 4000,
+          };
+          break;
+        case 'stun':
+          result.stun = {
+            duration: ability.duration || 1500,
+          };
+          break;
+      }
+    }
+
+    return Object.keys(result).length > 0 ? result : null;
+  }, []);
+
   // Update game function
   const updateGame = useCallback(
     (deltaTime: number) => {
@@ -1027,15 +1100,44 @@ export default function PrincetonTowerDefense() {
                   if (hero.shieldActive) {
                     addParticles(hero.pos, "spark", 5);
                   } else {
-                    setHero((h) =>
-                      h ? { ...h, hp: Math.max(0, h.hp - 20), lastCombatTime: Date.now() } : null
-                    );
+                    // Apply damage and enemy abilities to hero
+                    const abilities = applyEnemyAbilities(enemy, 'hero', now);
+                    setHero((h) => {
+                      if (!h) return null;
+                      let updated = { ...h, hp: Math.max(0, h.hp - 20), lastCombatTime: Date.now() };
+
+                      // Apply ability effects
+                      if (abilities) {
+                        if (abilities.burn) {
+                          updated.burning = true;
+                          updated.burnDamage = abilities.burn.damage;
+                          updated.burnUntil = now + abilities.burn.duration;
+                        }
+                        if (abilities.slow) {
+                          updated.slowed = true;
+                          updated.slowIntensity = abilities.slow.intensity;
+                          updated.slowUntil = now + abilities.slow.duration;
+                        }
+                        if (abilities.poison) {
+                          updated.poisoned = true;
+                          updated.poisonDamage = abilities.poison.damage;
+                          updated.poisonUntil = now + abilities.poison.duration;
+                        }
+                        if (abilities.stun) {
+                          updated.stunned = true;
+                          updated.stunUntil = now + abilities.stun.duration;
+                        }
+                      }
+
+                      return updated;
+                    });
                   }
                   return {
                     ...enemy,
                     inCombat: true,
                     combatTarget: hero.id,
                     lastHeroAttack: now,
+                    lastAbilityUse: now,
                   };
                 }
                 return { ...enemy, inCombat: true, combatTarget: hero.id };
@@ -1116,9 +1218,37 @@ export default function PrincetonTowerDefense() {
               const effectiveHeroAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
               if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval) {
                 if (!hero.shieldActive) {
-                  setHero((h) =>
-                    h ? { ...h, hp: Math.max(0, h.hp - 20) } : null
-                  );
+                  // Apply damage and enemy abilities to hero
+                  const abilities = applyEnemyAbilities(enemy, 'hero', now);
+                  setHero((h) => {
+                    if (!h) return null;
+                    let updated = { ...h, hp: Math.max(0, h.hp - 20), lastCombatTime: Date.now() };
+
+                    // Apply ability effects
+                    if (abilities) {
+                      if (abilities.burn) {
+                        updated.burning = true;
+                        updated.burnDamage = abilities.burn.damage;
+                        updated.burnUntil = now + abilities.burn.duration;
+                      }
+                      if (abilities.slow) {
+                        updated.slowed = true;
+                        updated.slowIntensity = abilities.slow.intensity;
+                        updated.slowUntil = now + abilities.slow.duration;
+                      }
+                      if (abilities.poison) {
+                        updated.poisoned = true;
+                        updated.poisonDamage = abilities.poison.damage;
+                        updated.poisonUntil = now + abilities.poison.duration;
+                      }
+                      if (abilities.stun) {
+                        updated.stunned = true;
+                        updated.stunUntil = now + abilities.stun.duration;
+                      }
+                    }
+
+                    return updated;
+                  });
                   // Add melee attack visual effect based on enemy type
                   const attackAngle = Math.atan2(
                     hero.pos.y - enemyPos.y,
@@ -1253,6 +1383,14 @@ export default function PrincetonTowerDefense() {
       // First pass: Calculate troop damage from enemies - skip when paused
       const troopDamage: { [id: string]: number } = {};
       const enemiesAttackingTroops: { [enemyId: string]: string } = {};
+      const troopAbilityEffects: {
+        [troopId: string]: {
+          burn?: { damage: number; until: number };
+          slow?: { intensity: number; until: number };
+          poison?: { damage: number; until: number };
+          stun?: { until: number };
+        }
+      } = {};
 
       if (!isPaused) {
         // Scale enemy attack interval with game speed
@@ -1274,6 +1412,28 @@ export default function PrincetonTowerDefense() {
           if (nearbyTroop) {
             troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + 15;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
+
+            // Apply enemy abilities to troop
+            const abilities = applyEnemyAbilities(enemy, 'troop', now);
+            if (abilities) {
+              const existing = troopAbilityEffects[nearbyTroop.id] || {};
+              if (abilities.burn) {
+                existing.burn = { damage: abilities.burn.damage, until: now + abilities.burn.duration };
+              }
+              if (abilities.slow) {
+                existing.slow = { intensity: abilities.slow.intensity, until: now + abilities.slow.duration };
+              }
+              if (abilities.poison) {
+                existing.poison = { damage: abilities.poison.damage, until: now + abilities.poison.duration };
+              }
+              if (abilities.stun) {
+                existing.stun = { until: now + abilities.stun.duration };
+              }
+              troopAbilityEffects[nearbyTroop.id] = existing;
+
+              // Update enemy's last ability time
+              enemy.lastAbilityUse = now;
+            }
           }
         });
       } // End of !isPaused check for enemy attacks on troops
@@ -1305,17 +1465,46 @@ export default function PrincetonTowerDefense() {
         }
       }
 
-      // Apply troop damage and remove dead troops
-      if (Object.keys(troopDamage).length > 0) {
+      // Apply troop damage, status effects, and remove dead troops
+      if (Object.keys(troopDamage).length > 0 || Object.keys(troopAbilityEffects).length > 0) {
         setTroops((prevTroops) => {
           return prevTroops
             .filter((troop) => !troopsThatWillDie.has(troop.id))
             .map((troop) => {
               const damage = troopDamage[troop.id] || 0;
+              const effects = troopAbilityEffects[troop.id];
+
+              let updatedTroop = { ...troop };
+
               if (damage > 0) {
-                return { ...troop, hp: troop.hp - damage, lastCombatTime: Date.now() };
+                updatedTroop.hp = troop.hp - damage;
+                updatedTroop.lastCombatTime = Date.now();
               }
-              return troop;
+
+              // Apply ability effects
+              if (effects) {
+                if (effects.burn) {
+                  updatedTroop.burning = true;
+                  updatedTroop.burnDamage = effects.burn.damage;
+                  updatedTroop.burnUntil = effects.burn.until;
+                }
+                if (effects.slow) {
+                  updatedTroop.slowed = true;
+                  updatedTroop.slowIntensity = effects.slow.intensity;
+                  updatedTroop.slowUntil = effects.slow.until;
+                }
+                if (effects.poison) {
+                  updatedTroop.poisoned = true;
+                  updatedTroop.poisonDamage = effects.poison.damage;
+                  updatedTroop.poisonUntil = effects.poison.until;
+                }
+                if (effects.stun) {
+                  updatedTroop.stunned = true;
+                  updatedTroop.stunUntil = effects.stun.until;
+                }
+              }
+
+              return updatedTroop;
             });
         });
       }
@@ -1951,6 +2140,46 @@ export default function PrincetonTowerDefense() {
           const troopData = TROOP_DATA[troop.type];
           if (!troopData) return updated; // Skip if no troop data
 
+          // ========== PROCESS STATUS EFFECTS ==========
+          const currentTime = Date.now();
+          // Clear expired effects
+          if (updated.burnUntil && currentTime > updated.burnUntil) {
+            updated.burning = false;
+            updated.burnDamage = undefined;
+            updated.burnUntil = undefined;
+          }
+          if (updated.slowUntil && currentTime > updated.slowUntil) {
+            updated.slowed = false;
+            updated.slowIntensity = undefined;
+            updated.slowUntil = undefined;
+          }
+          if (updated.poisonUntil && currentTime > updated.poisonUntil) {
+            updated.poisoned = false;
+            updated.poisonDamage = undefined;
+            updated.poisonUntil = undefined;
+          }
+          if (updated.stunUntil && currentTime > updated.stunUntil) {
+            updated.stunned = false;
+            updated.stunUntil = undefined;
+          }
+
+          // Apply damage-over-time effects (once per second, scaled by deltaTime)
+          const dotTick = deltaTime / 1000; // Normalize to per-second
+          if (updated.burning && updated.burnDamage) {
+            updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
+          }
+          if (updated.poisoned && updated.poisonDamage) {
+            updated.hp = Math.max(0, updated.hp - updated.poisonDamage * dotTick);
+          }
+
+          // If stunned, skip movement/engagement
+          if (updated.stunned && updated.stunUntil && currentTime < updated.stunUntil) {
+            // Stunned - can't move or attack, just stand there
+            updated.engaging = false;
+            updated.moving = false;
+            return updated;
+          }
+
           const isRanged = troopData.isRanged;
           const isStationary = troopData.isStationary || troop.moveRadius === 0; // Turrets can't move
           const attackRange = isRanged ? troopData.range || 150 : MELEE_RANGE;
@@ -2016,7 +2245,10 @@ export default function PrincetonTowerDefense() {
               const moveRatio = Math.min(1, (dist - targetDist) / dist);
 
               if (dist > 0 && moveRatio > 0) {
-                const speed = 2.0; // Slightly faster when engaging
+                // Apply slow effect to movement speed
+                const baseSpeed = 2.0; // Slightly faster when engaging
+                const slowMultiplier = updated.slowed && updated.slowIntensity ? (1 - updated.slowIntensity) : 1;
+                const speed = baseSpeed * slowMultiplier;
                 let newX = troop.pos.x + ((dx / dist) * speed * deltaTime) / 16;
                 let newY = troop.pos.y + ((dy / dist) * speed * deltaTime) / 16;
 
@@ -2070,7 +2302,9 @@ export default function PrincetonTowerDefense() {
 
               if (distToHome > 8) {
                 // Not at home - move back
-                const speed = 1.5;
+                const baseReturnSpeed = 1.5;
+                const slowMult = updated.slowed && updated.slowIntensity ? (1 - updated.slowIntensity) : 1;
+                const speed = baseReturnSpeed * slowMult;
                 const newX =
                   troop.pos.x + ((dx / distToHome) * speed * deltaTime) / 16;
                 const newY =
@@ -2150,6 +2384,46 @@ export default function PrincetonTowerDefense() {
           return updated;
         });
       });
+      // ========== HERO STATUS EFFECTS PROCESSING ==========
+      if (hero && !hero.dead) {
+        setHero((prev) => {
+          if (!prev || prev.dead) return prev;
+          let updated = { ...prev };
+
+          // Clear expired effects
+          if (updated.burnUntil && now > updated.burnUntil) {
+            updated.burning = false;
+            updated.burnDamage = undefined;
+            updated.burnUntil = undefined;
+          }
+          if (updated.slowUntil && now > updated.slowUntil) {
+            updated.slowed = false;
+            updated.slowIntensity = undefined;
+            updated.slowUntil = undefined;
+          }
+          if (updated.poisonUntil && now > updated.poisonUntil) {
+            updated.poisoned = false;
+            updated.poisonDamage = undefined;
+            updated.poisonUntil = undefined;
+          }
+          if (updated.stunUntil && now > updated.stunUntil) {
+            updated.stunned = false;
+            updated.stunUntil = undefined;
+          }
+
+          // Apply damage-over-time effects
+          const dotTick = deltaTime / 1000;
+          if (updated.burning && updated.burnDamage) {
+            updated.hp = Math.max(0, updated.hp - updated.burnDamage * dotTick);
+          }
+          if (updated.poisoned && updated.poisonDamage) {
+            updated.hp = Math.max(0, updated.hp - updated.poisonDamage * dotTick);
+          }
+
+          return updated;
+        });
+      }
+
       // Hero HP regeneration - with combat buffer
       if (hero && !hero.dead && hero.hp < hero.maxHp) {
         const now = Date.now();
@@ -2186,11 +2460,122 @@ export default function PrincetonTowerDefense() {
           }
         }
       }
+      // ========== PROCESS TOWER DEBUFFS FROM ENEMIES ==========
+      // Apply debuffs from enemies with tower-affecting abilities
+      setTowers((prevTowers) => prevTowers.map((tower) => {
+        const towerWorldPos = gridToWorld(tower.pos);
+        let updated = { ...tower };
+
+        // Clear expired debuffs
+        if (updated.debuffs && updated.debuffs.length > 0) {
+          updated.debuffs = updated.debuffs.filter((d) => now < d.until);
+        }
+        if (updated.disabledUntil && now > updated.disabledUntil) {
+          updated.disabled = false;
+          updated.disabledUntil = undefined;
+        }
+
+        // Check for enemies with tower debuff abilities nearby
+        for (const enemy of enemies) {
+          const eData = ENEMY_DATA[enemy.type];
+          if (!eData.abilities) continue;
+
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+          const distToTower = distance(enemyPos, towerWorldPos);
+
+          // Check each ability
+          for (const ability of eData.abilities) {
+            if (!ability.type.startsWith('tower_')) continue;
+
+            const abilityRange = ability.radius || 80;
+            if (distToTower > abilityRange) continue;
+
+            // Check cooldown and chance
+            const abilityCooldown = ability.cooldown || 3000;
+            if (enemy.lastAbilityUse && now - enemy.lastAbilityUse < abilityCooldown) continue;
+
+            const chance = ability.chance || 0.15;
+            if (Math.random() > chance) continue;
+
+            // Apply the debuff
+            const duration = ability.duration || 2000;
+            const intensity = ability.intensity || 0.25;
+
+            switch (ability.type) {
+              case 'tower_slow':
+                // Slow tower attack speed
+                updated.debuffs = updated.debuffs || [];
+                updated.debuffs.push({
+                  type: 'slow',
+                  intensity,
+                  until: now + duration,
+                  sourceId: enemy.id,
+                });
+                break;
+              case 'tower_weaken':
+                // Reduce tower damage
+                updated.debuffs = updated.debuffs || [];
+                updated.debuffs.push({
+                  type: 'weaken',
+                  intensity,
+                  until: now + duration,
+                  sourceId: enemy.id,
+                });
+                break;
+              case 'tower_blind':
+                // Reduce tower range
+                updated.debuffs = updated.debuffs || [];
+                updated.debuffs.push({
+                  type: 'blind',
+                  intensity,
+                  until: now + duration,
+                  sourceId: enemy.id,
+                });
+                break;
+              case 'tower_disable':
+                // Completely disable tower
+                updated.disabled = true;
+                updated.disabledUntil = now + duration;
+                break;
+            }
+          }
+        }
+
+        return updated;
+      }));
+
       // Tower attacks - skip when paused
       if (!isPaused) {
         towers.forEach((tower) => {
+          // Skip disabled towers
+          if (tower.disabled && tower.disabledUntil && now < tower.disabledUntil) {
+            return;
+          }
+
           const tData = TOWER_DATA[tower.type];
           const towerWorldPos = gridToWorld(tower.pos);
+
+          // Calculate debuff modifiers
+          let attackSpeedMod = 1.0;
+          let damageMod = 1.0;
+          let rangeMod = 1.0;
+
+          if (tower.debuffs && tower.debuffs.length > 0) {
+            for (const debuff of tower.debuffs) {
+              if (now >= debuff.until) continue;
+              switch (debuff.type) {
+                case 'slow':
+                  attackSpeedMod *= (1 - debuff.intensity);
+                  break;
+                case 'weaken':
+                  damageMod *= (1 - debuff.intensity);
+                  break;
+                case 'blind':
+                  rangeMod *= (1 - debuff.intensity);
+                  break;
+              }
+            }
+          }
 
           // Final Buffed Stats for this tick - use calculateTowerStats for proper level-based range
           const towerStats = calculateTowerStats(
@@ -2200,8 +2585,8 @@ export default function PrincetonTowerDefense() {
             tower.rangeBoost || 1,
             tower.damageBoost || 1
           );
-          const finalRange = towerStats.range;
-          const finalDamageMult = tower.damageBoost || 1.0;
+          const finalRange = towerStats.range * rangeMod;
+          const finalDamageMult = (tower.damageBoost || 1.0) * damageMod;
 
           if (tower.type === "club") {
             // ENHANCED CLUB TOWER - More useful income generator
@@ -2739,8 +3124,8 @@ export default function PrincetonTowerDefense() {
                 : isHeavyCannon
                   ? 900 // Heavy cannon slightly slower but more damage
                   : tData.attackSpeed;
-            // Scale attack cooldown with game speed
-            const effectiveAttackCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+            // Scale attack cooldown with game speed and debuffs
+            const effectiveAttackCooldown = gameSpeed > 0 ? (attackCooldown / gameSpeed) / attackSpeedMod : attackCooldown;
             if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosWithPath(target, selectedMap);
@@ -2823,8 +3208,8 @@ export default function PrincetonTowerDefense() {
             const isFocusedBeam = tower.level === 4 && tower.upgrade === "A";
             const isChainLightning = tower.level === 4 && tower.upgrade === "B";
             const attackCooldown = isFocusedBeam ? 100 : tData.attackSpeed;
-            // Scale attack cooldown with game speed
-            const effectiveLabCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
+            // Scale attack cooldown with game speed and debuffs (attackSpeedMod)
+            const effectiveLabCooldown = gameSpeed > 0 ? (attackCooldown / gameSpeed) / attackSpeedMod : attackCooldown;
             if (now - tower.lastAttack > effectiveLabCooldown) {
               const validEnemies = enemies
                 .filter(
@@ -5474,6 +5859,21 @@ export default function PrincetonTowerDefense() {
             cameraOffset,
             cameraZoom
           );
+          // Render inspect indicator if inspector is active
+          if (inspectorActive) {
+            renderEnemyInspectIndicator(
+              ctx,
+              r.data as Enemy,
+              canvas.width,
+              canvas.height,
+              dpr,
+              selectedMap,
+              selectedInspectEnemy?.id === (r.data as Enemy).id,
+              hoveredInspectEnemy === (r.data as Enemy).id,
+              cameraOffset,
+              cameraZoom
+            );
+          }
           break;
         case "hero":
           renderHero(
@@ -5618,6 +6018,47 @@ export default function PrincetonTowerDefense() {
       const clickY = e.clientY - rect.top;
       const clickPos = { x: clickX, y: clickY };
       const { width, height, dpr } = getCanvasDimensions();
+
+      // ========== INSPECTOR MODE - Handle enemy selection ==========
+      if (inspectorActive) {
+        const worldPos = screenToWorld(
+          clickPos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+
+        // Find clicked enemy
+        let closestEnemy: Enemy | null = null;
+        let closestDist = Infinity;
+        const clickRadius = 40 / cameraZoom; // Adjust click radius for zoom
+
+        for (const enemy of enemies) {
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+          const eData = ENEMY_DATA[enemy.type];
+          // Adjust hitbox position for flying enemies (they render higher up)
+          const flyingOffset = eData.flying ? 35 : 0;
+          const adjustedEnemyPos = { x: enemyPos.x, y: enemyPos.y - flyingOffset };
+          const dist = distance(worldPos, adjustedEnemyPos);
+          const hitRadius = (eData?.size || 20) * 1.5;
+
+          if (dist < hitRadius + clickRadius && dist < closestDist) {
+            closestDist = dist;
+            closestEnemy = enemy;
+          }
+        }
+
+        if (closestEnemy) {
+          setSelectedInspectEnemy(closestEnemy);
+        } else {
+          // Clicked on empty space - deselect
+          setSelectedInspectEnemy(null);
+        }
+        return;
+      }
+
       if (draggingTower) {
         const gridPos = screenToGrid(
           clickPos,
@@ -5921,12 +6362,48 @@ export default function PrincetonTowerDefense() {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
       setMousePos({ x, y });
+
+      const { width, height, dpr } = getCanvasDimensions();
+
+      // ========== INSPECTOR MODE - Handle enemy hover ==========
+      if (inspectorActive) {
+        const mouseWorldPos = screenToWorld(
+          { x, y },
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+
+        let hoveredEnemy: Enemy | null = null;
+        let closestDist = Infinity;
+        const hoverRadius = 40 / cameraZoom;
+
+        for (const enemy of enemies) {
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+          const eData = ENEMY_DATA[enemy.type];
+          // Adjust hitbox position for flying enemies (they render higher up)
+          const flyingOffset = eData.flying ? 35 : 0;
+          const adjustedEnemyPos = { x: enemyPos.x, y: enemyPos.y - flyingOffset };
+          const dist = distance(mouseWorldPos, adjustedEnemyPos);
+          const hitRadius = (eData?.size || 20) * 1.5;
+
+          if (dist < hitRadius + hoverRadius && dist < closestDist) {
+            closestDist = dist;
+            hoveredEnemy = enemy;
+          }
+        }
+
+        setHoveredInspectEnemy(hoveredEnemy?.id || null);
+        return;
+      }
+
       if (buildingTower && !draggingTower) {
         setDraggingTower({ type: buildingTower, pos: { x, y } });
       } else if (draggingTower) {
         setDraggingTower({ type: draggingTower.type, pos: { x, y } });
       }
-      const { width, height, dpr } = getCanvasDimensions();
       const mouseWorldPos = screenToWorld(
         { x, y },
         width,
@@ -7002,6 +7479,37 @@ export default function PrincetonTowerDefense() {
               position={mousePos}
             />
           )}
+          {/* Enemy Inspector UI */}
+          <EnemyInspector
+            isActive={inspectorActive}
+            setIsActive={setInspectorActive}
+            selectedEnemy={selectedInspectEnemy}
+            setSelectedEnemy={setSelectedInspectEnemy}
+            enemies={enemies}
+            setGameSpeed={setGameSpeed}
+            previousGameSpeed={previousGameSpeed}
+            setPreviousGameSpeed={setPreviousGameSpeed}
+            gameSpeed={gameSpeed}
+          />
+          {/* Enemy Detail Tooltip when enemy is selected in inspect mode */}
+          {inspectorActive && selectedInspectEnemy && (() => {
+            const enemyPos = getEnemyPosWithPath(selectedInspectEnemy, selectedMap);
+            const screenPos = worldToScreen(
+              enemyPos,
+              width,
+              height,
+              dpr,
+              cameraOffset,
+              cameraZoom
+            );
+            return (
+              <EnemyDetailTooltip
+                enemy={selectedInspectEnemy}
+                position={screenPos}
+                onClose={() => setSelectedInspectEnemy(null)}
+              />
+            );
+          })()}
         </div>
       </div>
       <div className="flex flex-col flex-shrink-0">

@@ -892,6 +892,207 @@ export function renderEnemy(
   ctx.restore();
 }
 
+// ============================================================================
+// ENEMY INSPECT MODE INDICATOR
+// ============================================================================
+
+export function renderEnemyInspectIndicator(
+  ctx: CanvasRenderingContext2D,
+  enemy: Enemy,
+  canvasWidth: number,
+  canvasHeight: number,
+  dpr: number,
+  selectedMap: string,
+  isSelected: boolean,
+  isHovered: boolean,
+  cameraOffset?: Position,
+  cameraZoom?: number
+) {
+  const pathKey = enemy.pathKey || selectedMap;
+  const worldPos = getEnemyPosition(enemy, pathKey);
+  const screenPos = worldToScreen(
+    worldPos,
+    canvasWidth,
+    canvasHeight,
+    dpr,
+    cameraOffset,
+    cameraZoom
+  );
+  const zoom = cameraZoom || 1;
+  const eData = ENEMY_DATA[enemy.type];
+  const time = Date.now() / 1000;
+  
+  const size = eData.size * zoom;
+  const isFlying = eData.flying;
+  const floatOffset = isFlying ? Math.sin(time * 3) * 10 * zoom : 0;
+  const bobOffset = Math.sin(time * 5 + enemy.pathIndex) * 2 * zoom;
+  const drawY = screenPos.y - size / 2 - floatOffset - bobOffset - (isFlying ? 35 * zoom : 0);
+
+  ctx.save();
+
+  // Pulsing indicator ring under the enemy
+  const pulsePhase = (Math.sin(time * 4) + 1) / 2; // 0 to 1
+  const baseRadius = size * 0.8;
+  const pulseRadius = baseRadius + pulsePhase * 8 * zoom;
+  
+  // ========== HOVERED STATE - Yellow highlight ==========
+  if (isHovered && !isSelected) {
+    // Outer ground ring - yellow for hover
+    ctx.strokeStyle = "rgba(251, 191, 36, 0.8)";
+    ctx.lineWidth = 4 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y + 5 * zoom, pulseRadius, pulseRadius * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner ground ring - yellow
+    ctx.strokeStyle = "rgba(254, 243, 199, 0.7)";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y + 5 * zoom, baseRadius * 0.9, baseRadius * 0.45, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Small inspection icon above the enemy - yellow
+    const iconY = drawY - size * 0.6;
+    const iconSize = 12 * zoom;
+    
+    // Icon background circle - yellow
+    ctx.fillStyle = "rgba(251, 191, 36, 0.95)";
+    ctx.beginPath();
+    ctx.arc(screenPos.x, iconY, iconSize, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Eye icon (magnifying glass style)
+    ctx.strokeStyle = "#1c1917";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(screenPos.x - iconSize * 0.1, iconY - iconSize * 0.1, iconSize * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + iconSize * 0.15, iconY + iconSize * 0.15);
+    ctx.lineTo(screenPos.x + iconSize * 0.4, iconY + iconSize * 0.4);
+    ctx.stroke();
+
+    // "CLICK" text - yellow
+    ctx.font = `bold ${8 * zoom}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(251, 191, 36, 0.9)";
+    ctx.fillText("CLICK", screenPos.x, screenPos.y + size * 0.6 + 10 * zoom);
+  } 
+  // ========== SELECTED STATE ==========
+  else if (isSelected) {
+    // Outer glow ring - purple for selected
+    ctx.strokeStyle = "rgba(168, 85, 247, 0.7)";
+    ctx.lineWidth = 4 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y + 5 * zoom, pulseRadius, pulseRadius * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner ring
+    ctx.strokeStyle = "rgba(192, 132, 252, 0.8)";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y + 5 * zoom, baseRadius * 0.9, baseRadius * 0.45, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Small inspection icon above the enemy
+    const iconY = drawY - size * 0.6;
+    const iconSize = 12 * zoom;
+    
+    // Icon background circle
+    ctx.fillStyle = "rgba(168, 85, 247, 0.9)";
+    ctx.beginPath();
+    ctx.arc(screenPos.x, iconY, iconSize, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Eye icon (magnifying glass style)
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(screenPos.x - iconSize * 0.1, iconY - iconSize * 0.1, iconSize * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + iconSize * 0.15, iconY + iconSize * 0.15);
+    ctx.lineTo(screenPos.x + iconSize * 0.4, iconY + iconSize * 0.4);
+    ctx.stroke();
+    
+    // Bright selection border
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.lineWidth = 3 * zoom;
+    ctx.setLineDash([6 * zoom, 4 * zoom]);
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, size * 1.1, size * 0.7, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Selection glow
+    const selGlow = ctx.createRadialGradient(
+      screenPos.x, drawY, size * 0.3,
+      screenPos.x, drawY, size * 1.4
+    );
+    selGlow.addColorStop(0, "rgba(168, 85, 247, 0.4)");
+    selGlow.addColorStop(0.6, "rgba(168, 85, 247, 0.15)");
+    selGlow.addColorStop(1, "rgba(168, 85, 247, 0)");
+    ctx.fillStyle = selGlow;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, drawY, size * 1.4, size * 0.9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // "INSPECTING" text
+    ctx.font = `bold ${9 * zoom}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(192, 132, 252, 0.9)";
+    ctx.fillText("INSPECTING", screenPos.x, screenPos.y + size * 0.8 + 14 * zoom);
+  } 
+  // ========== DEFAULT STATE (not hovered, not selected) ==========
+  else {
+    // Subtle outer glow ring
+    ctx.strokeStyle = "rgba(147, 51, 234, 0.35)";
+    ctx.lineWidth = (3 + pulsePhase * 2) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y + 5 * zoom, pulseRadius, pulseRadius * 0.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Inner ring
+    ctx.strokeStyle = "rgba(168, 85, 247, 0.4)";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y + 5 * zoom, baseRadius * 0.9, baseRadius * 0.45, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Small inspection icon above the enemy
+    const iconY = drawY - size * 0.6;
+    const iconSize = 12 * zoom;
+    
+    // Icon background circle
+    ctx.fillStyle = "rgba(107, 33, 168, 0.8)";
+    ctx.beginPath();
+    ctx.arc(screenPos.x, iconY, iconSize, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Eye icon (magnifying glass style)
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(screenPos.x - iconSize * 0.1, iconY - iconSize * 0.1, iconSize * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + iconSize * 0.15, iconY + iconSize * 0.15);
+    ctx.lineTo(screenPos.x + iconSize * 0.4, iconY + iconSize * 0.4);
+    ctx.stroke();
+
+    // "CLICK" text
+    ctx.font = `bold ${8 * zoom}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "rgba(168, 85, 247, 0.7)";
+    ctx.fillText("CLICK", screenPos.x, screenPos.y + size * 0.6 + 10 * zoom);
+  }
+
+  ctx.restore();
+}
+
 function drawEnemySprite(
   ctx: CanvasRenderingContext2D,
   x: number,

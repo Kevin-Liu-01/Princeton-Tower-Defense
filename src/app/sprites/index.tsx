@@ -4816,7 +4816,38 @@ export type EnemyType =
   | "berserker"
   | "golem"
   | "necromancer"
-  | "shadow_knight";
+  | "shadow_knight"
+  // New enemy types
+  | "cultist"
+  | "plaguebearer"
+  | "thornwalker"
+  | "sandworm"
+  | "frostling"
+  | "infernal"
+  | "banshee"
+  | "juggernaut"
+  | "assassin"
+  | "dragon"
+  // Region-specific common troops - Forest
+  | "freshman"
+  | "athlete"
+  | "protestor"
+  // Region-specific common troops - Swamp
+  | "bog_creature"
+  | "will_o_wisp"
+  | "swamp_troll"
+  // Region-specific common troops - Desert
+  | "nomad"
+  | "scorpion"
+  | "scarab"
+  // Region-specific common troops - Winter
+  | "snow_goblin"
+  | "yeti"
+  | "ice_witch"
+  // Region-specific common troops - Volcanic
+  | "magma_spawn"
+  | "fire_imp"
+  | "ember_guard";
 export const ENEMY_COLORS: Record<string, string> = {
   frosh: "#4ade80",
   sophomore: "#3b82f6",
@@ -9711,6 +9742,1909 @@ export const EnemySprite: React.FC<{
         ctx.fillStyle = `rgba(129, 140, 248, ${0.5 + swordGleam * 2})`;
         ctx.fillRect(-0.5 * scale, -10 * scale, 1 * scale, 8 * scale);
         ctx.restore();
+        break;
+      }
+      case "cultist": {
+        // FINALS WEEK CULTIST - Sleep-deprived zealot with dark ritual energy
+        const cultPulse = 0.5 + Math.sin(t * 2.5) * 0.3;
+        const candleFlicker = Math.sin(t * 8) * 0.2;
+
+        // Dark ritual aura
+        const auraGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 14 * scale);
+        auraGrad.addColorStop(0, `rgba(124, 45, 18, ${cultPulse * 0.3})`);
+        auraGrad.addColorStop(0.6, `rgba(100, 30, 10, ${cultPulse * 0.15})`);
+        auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 2 * scale - bounce, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tattered brown robes
+        const robeGrad = ctx.createLinearGradient(cx - 8 * scale, cy, cx + 8 * scale, cy);
+        robeGrad.addColorStop(0, "#3d1a0a");
+        robeGrad.addColorStop(0.5, "#7c2d12");
+        robeGrad.addColorStop(1, "#3d1a0a");
+        ctx.fillStyle = robeGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 14 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy - bounce, cx - 5 * scale, cy - 9 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 9 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy - bounce, cx + 8 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hood
+        ctx.fillStyle = "#2a1508";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 10 * scale - bounce, 7 * scale, 5 * scale, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Shadowed face
+        ctx.fillStyle = "#d4c4b0";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tired dark-circled eyes
+        ctx.fillStyle = "#1a0a05";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 13 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 13 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Red exhausted glow
+        ctx.fillStyle = `rgba(239, 68, 68, ${cultPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 13 * scale - bounce, 0.6 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 13 * scale - bounce, 0.6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Coffee cup/candle in hand
+        ctx.fillStyle = `rgba(251, 191, 36, ${0.7 + candleFlicker})`;
+        ctx.beginPath();
+        ctx.arc(cx + 9 * scale, cy - bounce, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#854d0e";
+        ctx.fillRect(cx + 7 * scale, cy + 2 * scale - bounce, 4 * scale, 6 * scale);
+        break;
+      }
+      case "plaguebearer": {
+        // FLU SEASON CARRIER - Sickly figure spreading disease
+        const sickPulse = 0.5 + Math.sin(t * 2) * 0.3;
+        const coughOffset = animated ? Math.random() * 0.5 : 0;
+
+        // Toxic green aura
+        const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16 * scale);
+        auraGrad.addColorStop(0, `rgba(101, 163, 13, ${sickPulse * 0.25})`);
+        auraGrad.addColorStop(0.7, `rgba(77, 124, 15, ${sickPulse * 0.1})`);
+        auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce, 16 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sickly green particles
+        if (animated) {
+          for (let i = 0; i < 5; i++) {
+            const angle = t * 0.8 + i * Math.PI * 0.4;
+            const dist = 8 * scale + Math.sin(t + i) * 3 * scale;
+            const px = cx + Math.cos(angle) * dist;
+            const py = cy + Math.sin(angle) * dist * 0.5 - bounce;
+            ctx.fillStyle = `rgba(163, 230, 53, ${0.4 + Math.sin(t * 2 + i) * 0.2})`;
+            ctx.beginPath();
+            ctx.arc(px, py, 1.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Hunched body in dirty rags
+        ctx.fillStyle = "#4d7c0f";
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, cy + 13 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy + 2 * scale - bounce, cx - 4 * scale, cy - 6 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 6 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy + 2 * scale - bounce, cx + 9 * scale, cy + 13 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Sickly pale head
+        ctx.fillStyle = "#c4e0a4";
+        ctx.beginPath();
+        ctx.arc(cx + coughOffset * scale, cy - 10 * scale - bounce, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Green spots
+        ctx.fillStyle = "#84cc16";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 8 * scale - bounce, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 12 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tired sick eyes
+        ctx.fillStyle = "#365314";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 11 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 11 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tissue box
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(cx + 7 * scale, cy + 2 * scale - bounce, 5 * scale, 4 * scale);
+        ctx.fillStyle = "#60a5fa";
+        ctx.fillRect(cx + 7.5 * scale, cy + 2.5 * scale - bounce, 4 * scale, 1 * scale);
+        break;
+      }
+      case "thornwalker": {
+        // IVY OVERGROWTH - Living vegetation monster
+        const vineSway = Math.sin(t * 1.5) * 2;
+        const thornPulse = 0.6 + Math.sin(t * 3) * 0.2;
+
+        // Dark green nature aura
+        const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 14 * scale);
+        auraGrad.addColorStop(0, `rgba(22, 101, 52, ${thornPulse * 0.2})`);
+        auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Twisted vine body
+        ctx.fillStyle = "#166534";
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale + vineSway * 0.3 * scale, cy + 14 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 12 * scale, cy - bounce, cx - 5 * scale, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 10 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 12 * scale, cy - bounce, cx + 8 * scale - vineSway * 0.3 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Vine tendrils
+        ctx.strokeStyle = "#15803d";
+        ctx.lineWidth = 2 * scale;
+        for (let i = 0; i < 3; i++) {
+          const angle = -Math.PI / 4 + i * Math.PI / 4;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(angle) * 4 * scale, cy - 5 * scale - bounce);
+          ctx.quadraticCurveTo(
+            cx + Math.cos(angle) * 10 * scale + vineSway * 0.5 * scale,
+            cy - 8 * scale - bounce,
+            cx + Math.cos(angle) * 12 * scale + vineSway * scale,
+            cy - 4 * scale - bounce
+          );
+          ctx.stroke();
+        }
+
+        // Thorns
+        ctx.fillStyle = "#7c2d12";
+        for (let i = 0; i < 6; i++) {
+          const tx = cx - 6 * scale + i * 2.5 * scale;
+          const ty = cy - 2 * scale + Math.sin(i * 1.5) * 3 * scale - bounce;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(tx - 1 * scale, ty + 2 * scale);
+          ctx.lineTo(tx + 1 * scale, ty + 2 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Flower head (corrupted)
+        ctx.fillStyle = "#14532d";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing red eye in center
+        ctx.fillStyle = `rgba(239, 68, 68, ${thornPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fca5a5";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "sandworm": {
+        // THESIS DEVOURER - Massive burrowing creature
+        const wormUndulate = Math.sin(t * 2) * 3;
+        const mawPulse = 0.7 + Math.sin(t * 4) * 0.3;
+
+        // Sandy dust cloud
+        const dustGrad = ctx.createRadialGradient(cx, cy + 8 * scale, 0, cx, cy + 8 * scale, 18 * scale);
+        dustGrad.addColorStop(0, `rgba(161, 98, 7, ${mawPulse * 0.3})`);
+        dustGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = dustGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 8 * scale - bounce, 18 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Segmented worm body emerging
+        for (let i = 3; i >= 0; i--) {
+          const segY = cy + (4 - i) * 6 * scale - bounce + wormUndulate * (i * 0.2);
+          const segSize = (8 - i * 0.8) * scale;
+          ctx.fillStyle = i % 2 === 0 ? "#a16207" : "#854d0e";
+          ctx.beginPath();
+          ctx.ellipse(cx + wormUndulate * (0.3 - i * 0.1) * scale, segY, segSize, segSize * 0.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Head/maw
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 8 * scale - bounce + wormUndulate * 0.5, 10 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Open maw with teeth
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 8 * scale - bounce + wormUndulate * 0.5, 7 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Teeth ring
+        ctx.fillStyle = "#fef3c7";
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const tx = cx + Math.cos(angle) * 5 * scale;
+          const ty = cy - 8 * scale - bounce + wormUndulate * 0.5 + Math.sin(angle) * 3 * scale;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty);
+          ctx.lineTo(tx + Math.cos(angle) * 2 * scale, ty + Math.sin(angle) * 1.5 * scale);
+          ctx.lineTo(tx + Math.cos(angle + 0.3) * 0.5 * scale, ty + Math.sin(angle + 0.3) * 0.5 * scale);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Inner glow
+        ctx.fillStyle = `rgba(239, 68, 68, ${mawPulse * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 8 * scale - bounce + wormUndulate * 0.5, 3 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "frostling": {
+        // WINTER BREAK GHOST - Ethereal ice spirit
+        const frostFloat = Math.sin(t * 2) * 4;
+        const shimmer = 0.6 + Math.sin(t * 5) * 0.3;
+
+        // Icy ethereal glow
+        const frostGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 16 * scale);
+        frostGrad.addColorStop(0, `rgba(125, 211, 252, ${shimmer * 0.4})`);
+        frostGrad.addColorStop(0.5, `rgba(186, 230, 253, ${shimmer * 0.2})`);
+        frostGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = frostGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce - frostFloat, 16 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating ice particles
+        if (animated) {
+          for (let i = 0; i < 6; i++) {
+            const angle = t * 1.2 + i * Math.PI / 3;
+            const dist = 10 * scale + Math.sin(t * 2 + i) * 2 * scale;
+            const px = cx + Math.cos(angle) * dist;
+            const py = cy - 4 * scale + Math.sin(angle) * dist * 0.4 - bounce - frostFloat;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.5 + Math.sin(t * 3 + i) * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(px, py, 1 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Ghostly body
+        const bodyGrad = ctx.createLinearGradient(cx, cy - 15 * scale, cx, cy + 10 * scale);
+        bodyGrad.addColorStop(0, "rgba(186, 230, 253, 0.9)");
+        bodyGrad.addColorStop(0.5, "rgba(125, 211, 252, 0.7)");
+        bodyGrad.addColorStop(1, "rgba(125, 211, 252, 0)");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale, cy + 10 * scale - bounce - frostFloat);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy - bounce - frostFloat, cx - 6 * scale, cy - 12 * scale - bounce - frostFloat);
+        ctx.quadraticCurveTo(cx, cy - 18 * scale - bounce - frostFloat, cx + 6 * scale, cy - 12 * scale - bounce - frostFloat);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy - bounce - frostFloat, cx + 8 * scale, cy + 10 * scale - bounce - frostFloat);
+        ctx.closePath();
+        ctx.fill();
+
+        // Face area
+        ctx.fillStyle = "rgba(240, 249, 255, 0.9)";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 10 * scale - bounce - frostFloat, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing cyan eyes
+        ctx.fillStyle = `rgba(34, 211, 238, ${shimmer})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 11 * scale - bounce - frostFloat, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 11 * scale - bounce - frostFloat, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 11 * scale - bounce - frostFloat, 0.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 11 * scale - bounce - frostFloat, 0.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "infernal": {
+        // BURNOUT DEMON - Fire elemental of overwork
+        const flamePulse = 0.6 + Math.sin(t * 4) * 0.4;
+        const flameWaver = Math.sin(t * 6) * 2;
+
+        // Intense fire aura
+        const fireGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 18 * scale);
+        fireGrad.addColorStop(0, `rgba(220, 38, 38, ${flamePulse * 0.4})`);
+        fireGrad.addColorStop(0.4, `rgba(251, 146, 60, ${flamePulse * 0.25})`);
+        fireGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = fireGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flame particles
+        if (animated) {
+          for (let i = 0; i < 8; i++) {
+            const angle = t * 2 + i * Math.PI / 4;
+            const dist = 6 * scale + Math.sin(t * 3 + i) * 4 * scale;
+            const px = cx + Math.cos(angle) * dist * 0.8;
+            const py = cy - 6 * scale + Math.sin(angle) * dist * 0.3 - bounce - Math.abs(Math.sin(t * 4 + i)) * 4 * scale;
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.5 + Math.sin(t * 5 + i) * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(px, py, 2 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Demonic body (dark core)
+        ctx.fillStyle = "#7f1d1d";
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 11 * scale, cy - bounce, cx - 6 * scale, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 6 * scale, cy - 10 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 11 * scale, cy - bounce, cx + 9 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Flame edges
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx - 9 * scale + flameWaver * 0.5 * scale, cy - 16 * scale - bounce);
+        ctx.lineTo(cx - 4 * scale, cy - 10 * scale - bounce);
+        ctx.lineTo(cx - 2 * scale + flameWaver * 0.3 * scale, cy - 18 * scale - bounce);
+        ctx.lineTo(cx + 2 * scale, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale - flameWaver * 0.4 * scale, cy - 15 * scale - bounce);
+        ctx.lineTo(cx + 7 * scale, cy - 8 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Burning eyes
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.ellipse(cx - 3 * scale, cy - 5 * scale - bounce, 2 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 3 * scale, cy - 5 * scale - bounce, 2 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 5 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 5 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "banshee": {
+        // GRADE WAILING SPIRIT - Ghostly screaming figure
+        const wailFloat = Math.sin(t * 2.5) * 5;
+        const screamPulse = 0.5 + Math.sin(t * 6) * 0.3;
+
+        // Ethereal white glow
+        const spiritGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 18 * scale);
+        spiritGrad.addColorStop(0, `rgba(226, 232, 240, ${screamPulse * 0.5})`);
+        spiritGrad.addColorStop(0.5, `rgba(203, 213, 225, ${screamPulse * 0.25})`);
+        spiritGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = spiritGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce - wailFloat, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sound wave rings
+        if (animated) {
+          for (let i = 0; i < 3; i++) {
+            const ringRadius = (8 + i * 4 + (t * 2 % 4)) * scale;
+            const ringAlpha = 0.3 - i * 0.1 - (t * 0.5 % 1) * 0.1;
+            if (ringAlpha > 0) {
+              ctx.strokeStyle = `rgba(148, 163, 184, ${ringAlpha})`;
+              ctx.lineWidth = 1 * scale;
+              ctx.beginPath();
+              ctx.arc(cx, cy - 8 * scale - bounce - wailFloat, ringRadius, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Flowing ghostly form
+        const ghostGrad = ctx.createLinearGradient(cx, cy - 18 * scale, cx, cy + 12 * scale);
+        ghostGrad.addColorStop(0, "rgba(241, 245, 249, 0.95)");
+        ghostGrad.addColorStop(0.6, "rgba(226, 232, 240, 0.7)");
+        ghostGrad.addColorStop(1, "rgba(226, 232, 240, 0)");
+        ctx.fillStyle = ghostGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy + 12 * scale - bounce - wailFloat);
+        ctx.quadraticCurveTo(cx - 12 * scale, cy - 2 * scale - bounce - wailFloat, cx - 6 * scale, cy - 14 * scale - bounce - wailFloat);
+        ctx.quadraticCurveTo(cx, cy - 20 * scale - bounce - wailFloat, cx + 6 * scale, cy - 14 * scale - bounce - wailFloat);
+        ctx.quadraticCurveTo(cx + 12 * scale, cy - 2 * scale - bounce - wailFloat, cx + 10 * scale, cy + 12 * scale - bounce - wailFloat);
+        ctx.closePath();
+        ctx.fill();
+
+        // Wailing face
+        ctx.fillStyle = "#f1f5f9";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 10 * scale - bounce - wailFloat, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hollow eyes
+        ctx.fillStyle = "#0f172a";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 11 * scale - bounce - wailFloat, 1.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 11 * scale - bounce - wailFloat, 1.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Screaming mouth
+        ctx.fillStyle = "#1e293b";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 7 * scale - bounce - wailFloat, 2.5 * scale, 3.5 * scale + screamPulse * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "juggernaut": {
+        // ENDOWED CHAIR - Massive armored academic authority
+        const heavyStep = Math.sin(t * 1.5) * 1;
+        const powerGlow = 0.5 + Math.sin(t * 2) * 0.3;
+
+        // Authority aura
+        const auraGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 20 * scale);
+        auraGrad.addColorStop(0, `rgba(68, 64, 60, ${powerGlow * 0.3})`);
+        auraGrad.addColorStop(0.5, `rgba(120, 113, 108, ${powerGlow * 0.15})`);
+        auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce + heavyStep, 20 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Massive armored body
+        const armorGrad = ctx.createLinearGradient(cx - 12 * scale, cy, cx + 12 * scale, cy);
+        armorGrad.addColorStop(0, "#1c1917");
+        armorGrad.addColorStop(0.3, "#44403c");
+        armorGrad.addColorStop(0.5, "#57534e");
+        armorGrad.addColorStop(0.7, "#44403c");
+        armorGrad.addColorStop(1, "#1c1917");
+        ctx.fillStyle = armorGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, cy + 14 * scale - bounce + heavyStep);
+        ctx.lineTo(cx - 14 * scale, cy - 2 * scale - bounce + heavyStep);
+        ctx.lineTo(cx - 10 * scale, cy - 12 * scale - bounce + heavyStep);
+        ctx.lineTo(cx + 10 * scale, cy - 12 * scale - bounce + heavyStep);
+        ctx.lineTo(cx + 14 * scale, cy - 2 * scale - bounce + heavyStep);
+        ctx.lineTo(cx + 12 * scale, cy + 14 * scale - bounce + heavyStep);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gold trim
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, cy - bounce + heavyStep);
+        ctx.lineTo(cx + 12 * scale, cy - bounce + heavyStep);
+        ctx.stroke();
+
+        // Massive helmet
+        ctx.fillStyle = "#292524";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce + heavyStep, 8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Golden crown on helmet
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy - 20 * scale - bounce + heavyStep);
+        ctx.lineTo(cx - 4 * scale, cy - 23 * scale - bounce + heavyStep);
+        ctx.lineTo(cx - 2 * scale, cy - 20 * scale - bounce + heavyStep);
+        ctx.lineTo(cx, cy - 24 * scale - bounce + heavyStep);
+        ctx.lineTo(cx + 2 * scale, cy - 20 * scale - bounce + heavyStep);
+        ctx.lineTo(cx + 4 * scale, cy - 23 * scale - bounce + heavyStep);
+        ctx.lineTo(cx + 6 * scale, cy - 20 * scale - bounce + heavyStep);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing visor
+        ctx.fillStyle = "#0f0f0f";
+        ctx.fillRect(cx - 5 * scale, cy - 15 * scale - bounce + heavyStep, 10 * scale, 3 * scale);
+        ctx.fillStyle = `rgba(251, 191, 36, ${powerGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce + heavyStep, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce + heavyStep, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Giant hammer
+        ctx.fillStyle = "#78716c";
+        ctx.fillRect(cx + 10 * scale, cy - 10 * scale - bounce + heavyStep, 3 * scale, 20 * scale);
+        ctx.fillStyle = "#44403c";
+        ctx.fillRect(cx + 6 * scale, cy - 14 * scale - bounce + heavyStep, 10 * scale, 6 * scale);
+        break;
+      }
+      case "assassin": {
+        // CURVE WRECKER - Lightning fast shadowy figure
+        const dashBlur = animated ? Math.sin(t * 8) * 3 : 0;
+        const stealthPulse = 0.4 + Math.sin(t * 4) * 0.2;
+
+        // Speed blur trail
+        if (animated) {
+          for (let i = 1; i <= 3; i++) {
+            ctx.fillStyle = `rgba(30, 27, 75, ${0.15 - i * 0.04})`;
+            ctx.beginPath();
+            ctx.ellipse(cx - i * 4 * scale, cy - bounce, 6 * scale, 10 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Dark shadow aura
+        const shadowGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 12 * scale);
+        shadowGrad.addColorStop(0, `rgba(30, 27, 75, ${stealthPulse * 0.4})`);
+        shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = shadowGrad;
+        ctx.beginPath();
+        ctx.arc(cx + dashBlur * 0.3 * scale, cy - 2 * scale - bounce, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sleek dark body
+        ctx.fillStyle = "#1e1b4b";
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale + dashBlur * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 8 * scale, cy - bounce, cx - 4 * scale, cy - 12 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 8 * scale, cy - bounce, cx + 6 * scale - dashBlur * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hood
+        ctx.fillStyle = "#0f0a1a";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 12 * scale - bounce, 5 * scale, 4 * scale, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Shadowed face
+        ctx.fillStyle = "#1e1b4b";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing purple eyes
+        ctx.fillStyle = `rgba(167, 139, 250, ${0.6 + stealthPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx - 1.5 * scale, cy - 15 * scale - bounce, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 1.5 * scale, cy - 15 * scale - bounce, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dual daggers
+        ctx.fillStyle = "#6366f1";
+        ctx.save();
+        ctx.translate(cx - 8 * scale, cy - bounce);
+        ctx.rotate(-0.5);
+        ctx.fillRect(-1 * scale, -6 * scale, 2 * scale, 8 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 8 * scale, cy - bounce);
+        ctx.rotate(0.5);
+        ctx.fillRect(-1 * scale, -6 * scale, 2 * scale, 8 * scale);
+        ctx.restore();
+        break;
+      }
+      case "dragon": {
+        // ANCIENT ALUMNUS - Massive flying dragon
+        const wingFlap = Math.sin(t * 3) * 8;
+        const fireBreath = 0.6 + Math.sin(t * 4) * 0.4;
+        const dragonFloat = Math.sin(t * 1.5) * 3;
+
+        // Massive fire aura
+        const dragonGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 22 * scale);
+        dragonGrad.addColorStop(0, `rgba(159, 18, 57, ${fireBreath * 0.35})`);
+        dragonGrad.addColorStop(0.5, `rgba(225, 29, 72, ${fireBreath * 0.2})`);
+        dragonGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = dragonGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce - dragonFloat, 22 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wings
+        ctx.fillStyle = "#881337";
+        // Left wing
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy - 4 * scale - bounce - dragonFloat);
+        ctx.quadraticCurveTo(
+          cx - 18 * scale,
+          cy - 12 * scale - bounce - dragonFloat - wingFlap,
+          cx - 20 * scale,
+          cy + 2 * scale - bounce - dragonFloat - wingFlap * 0.5
+        );
+        ctx.quadraticCurveTo(cx - 12 * scale, cy + 4 * scale - bounce - dragonFloat, cx - 6 * scale, cy + 2 * scale - bounce - dragonFloat);
+        ctx.closePath();
+        ctx.fill();
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(cx + 6 * scale, cy - 4 * scale - bounce - dragonFloat);
+        ctx.quadraticCurveTo(
+          cx + 18 * scale,
+          cy - 12 * scale - bounce - dragonFloat - wingFlap,
+          cx + 20 * scale,
+          cy + 2 * scale - bounce - dragonFloat - wingFlap * 0.5
+        );
+        ctx.quadraticCurveTo(cx + 12 * scale, cy + 4 * scale - bounce - dragonFloat, cx + 6 * scale, cy + 2 * scale - bounce - dragonFloat);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dragon body
+        const bodyGrad = ctx.createLinearGradient(cx - 8 * scale, cy, cx + 8 * scale, cy);
+        bodyGrad.addColorStop(0, "#4c0519");
+        bodyGrad.addColorStop(0.5, "#9f1239");
+        bodyGrad.addColorStop(1, "#4c0519");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - bounce - dragonFloat, 8 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Scales pattern
+        ctx.fillStyle = "#be123c";
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.arc(cx, cy - 4 * scale + i * 4 * scale - bounce - dragonFloat, 3 * scale, 0, Math.PI);
+          ctx.fill();
+        }
+
+        // Head
+        ctx.fillStyle = "#9f1239";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 14 * scale - bounce - dragonFloat, 6 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horns
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 16 * scale - bounce - dragonFloat);
+        ctx.lineTo(cx - 7 * scale, cy - 22 * scale - bounce - dragonFloat);
+        ctx.lineTo(cx - 3 * scale, cy - 17 * scale - bounce - dragonFloat);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 4 * scale, cy - 16 * scale - bounce - dragonFloat);
+        ctx.lineTo(cx + 7 * scale, cy - 22 * scale - bounce - dragonFloat);
+        ctx.lineTo(cx + 3 * scale, cy - 17 * scale - bounce - dragonFloat);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = `rgba(251, 191, 36, ${fireBreath})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce - dragonFloat, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce - dragonFloat, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce - dragonFloat, 0.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce - dragonFloat, 0.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fire breath particles
+        if (animated) {
+          for (let i = 0; i < 4; i++) {
+            const fx = cx + (Math.random() - 0.5) * 6 * scale;
+            const fy = cy - 10 * scale - bounce - dragonFloat - i * 2 * scale;
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.6 - i * 0.15})`;
+            ctx.beginPath();
+            ctx.arc(fx, fy, (2 - i * 0.3) * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        break;
+      }
+      case "freshman": {
+        // LOST FRESHMAN - Confused wandering student
+        const confusedSway = Math.sin(t * 2) * 2;
+        const blinkRate = Math.sin(t * 5) > 0.9 ? 0.2 : 1;
+
+        // Slight confusion aura
+        const confuseGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 12 * scale);
+        confuseGrad.addColorStop(0, "rgba(134, 239, 172, 0.15)");
+        confuseGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = confuseGrad;
+        ctx.beginPath();
+        ctx.arc(cx + confusedSway * 0.3 * scale, cy - 2 * scale - bounce, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Simple student body - green shirt
+        ctx.fillStyle = "#86efac";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale + confusedSway * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 8 * scale, cy - bounce, cx - 5 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 8 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 8 * scale, cy - bounce, cx + 7 * scale - confusedSway * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#fcd9b6";
+        ctx.beginPath();
+        ctx.arc(cx + confusedSway * 0.15 * scale, cy - 12 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Messy hair
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 15 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 5 * scale, cy - 19 * scale - bounce, cx - 2 * scale, cy - 18 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 1 * scale, cy - 20 * scale - bounce, cx + 3 * scale, cy - 18 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 5 * scale, cy - 19 * scale - bounce, cx + 4 * scale, cy - 15 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Wide confused eyes
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 13 * scale - bounce, 1.5 * scale, 2 * scale * blinkRate, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 13 * scale - bounce, 1.5 * scale, 2 * scale * blinkRate, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#166534";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 13 * scale - bounce, 0.7 * scale * blinkRate, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 13 * scale - bounce, 0.7 * scale * blinkRate, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Question mark above head
+        ctx.fillStyle = "#22c55e";
+        ctx.font = `bold ${6 * scale}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("?", cx + confusedSway * 0.5 * scale, cy - 20 * scale - bounce);
+
+        // Backpack
+        ctx.fillStyle = "#15803d";
+        ctx.fillRect(cx - 6 * scale, cy - 4 * scale - bounce, 4 * scale, 8 * scale);
+        break;
+      }
+      case "athlete": {
+        // VARSITY RUNNER - Fast athletic figure
+        const runCycle = Math.sin(t * 6) * 3;
+        const armSwing = Math.sin(t * 6) * 15;
+
+        // Speed lines
+        if (animated) {
+          ctx.strokeStyle = "rgba(249, 115, 22, 0.3)";
+          ctx.lineWidth = 1 * scale;
+          for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.moveTo(cx - 10 * scale - i * 4 * scale, cy - 2 * scale + i * 2 * scale - bounce);
+            ctx.lineTo(cx - 14 * scale - i * 4 * scale, cy - 2 * scale + i * 2 * scale - bounce);
+            ctx.stroke();
+          }
+        }
+
+        // Athletic body - orange jersey
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy + 10 * scale - bounce + runCycle * 0.3);
+        ctx.quadraticCurveTo(cx - 7 * scale, cy - bounce, cx - 4 * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 8 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 7 * scale, cy - bounce, cx + 6 * scale, cy + 10 * scale - bounce - runCycle * 0.3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Jersey number
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `bold ${5 * scale}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("1", cx, cy + 2 * scale - bounce);
+
+        // Running legs
+        ctx.fillStyle = "#fcd9b6";
+        ctx.save();
+        ctx.translate(cx - 2 * scale, cy + 10 * scale - bounce);
+        ctx.rotate((runCycle * 0.1));
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 6 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 2 * scale, cy + 10 * scale - bounce);
+        ctx.rotate((-runCycle * 0.1));
+        ctx.fillRect(-1.5 * scale, 0, 3 * scale, 6 * scale);
+        ctx.restore();
+
+        // Head
+        ctx.fillStyle = "#fcd9b6";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Headband
+        ctx.fillStyle = "#ea580c";
+        ctx.fillRect(cx - 5 * scale, cy - 14 * scale - bounce, 10 * scale, 2 * scale);
+
+        // Determined eyes
+        ctx.fillStyle = "#422006";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 12 * scale - bounce, 1 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 12 * scale - bounce, 1 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Swinging arms
+        ctx.fillStyle = "#fcd9b6";
+        ctx.save();
+        ctx.translate(cx - 5 * scale, cy - 6 * scale - bounce);
+        ctx.rotate(armSwing * Math.PI / 180);
+        ctx.fillRect(-1 * scale, 0, 2 * scale, 6 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 5 * scale, cy - 6 * scale - bounce);
+        ctx.rotate(-armSwing * Math.PI / 180);
+        ctx.fillRect(-1 * scale, 0, 2 * scale, 6 * scale);
+        ctx.restore();
+        break;
+      }
+      case "protestor": {
+        // CAMPUS PROTESTOR - Passionate figure with sign
+        const chantBob = Math.sin(t * 3) * 1.5;
+        const signWave = Math.sin(t * 2) * 5;
+
+        // Passion aura
+        const passionGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 12 * scale);
+        passionGrad.addColorStop(0, "rgba(239, 68, 68, 0.15)");
+        passionGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = passionGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 2 * scale - bounce - chantBob, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body - red shirt
+        ctx.fillStyle = "#ef4444";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, cy + 12 * scale - bounce - chantBob);
+        ctx.quadraticCurveTo(cx - 8 * scale, cy - bounce - chantBob, cx - 5 * scale, cy - 8 * scale - bounce - chantBob);
+        ctx.lineTo(cx + 5 * scale, cy - 8 * scale - bounce - chantBob);
+        ctx.quadraticCurveTo(cx + 8 * scale, cy - bounce - chantBob, cx + 7 * scale, cy + 12 * scale - bounce - chantBob);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#fcd9b6";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce - chantBob, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce - chantBob, 4 * scale, Math.PI, 0);
+        ctx.fill();
+
+        // Determined face
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 12 * scale - bounce - chantBob, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 12 * scale - bounce - chantBob, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        // Open mouth (chanting)
+        ctx.fillStyle = "#7f1d1d";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 9 * scale - bounce - chantBob, 1.5 * scale, 1 * scale + Math.abs(chantBob) * 0.3 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Protest sign
+        ctx.save();
+        ctx.translate(cx + 8 * scale, cy - 4 * scale - bounce - chantBob);
+        ctx.rotate(signWave * Math.PI / 180);
+        // Stick
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(-1 * scale, -2 * scale, 2 * scale, 16 * scale);
+        // Sign board
+        ctx.fillStyle = "#fef3c7";
+        ctx.fillRect(-6 * scale, -12 * scale, 12 * scale, 10 * scale);
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 1 * scale;
+        ctx.strokeRect(-6 * scale, -12 * scale, 12 * scale, 10 * scale);
+        // Sign text
+        ctx.fillStyle = "#ef4444";
+        ctx.font = `bold ${3 * scale}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("!!!", 0, -6 * scale);
+        ctx.restore();
+        break;
+      }
+      case "bog_creature": {
+        // BOG LURKER - Shambling swamp horror
+        const sludgeDrip = Math.sin(t * 2) * 2;
+        const shamble = Math.sin(t * 1.5) * 1.5;
+
+        // Toxic aura
+        const bogGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 14 * scale);
+        bogGrad.addColorStop(0, "rgba(54, 83, 20, 0.25)");
+        bogGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = bogGrad;
+        ctx.beginPath();
+        ctx.arc(cx + shamble * 0.3 * scale, cy - bounce, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dripping muck particles
+        if (animated) {
+          for (let i = 0; i < 4; i++) {
+            const dripY = cy + 8 * scale + (t * 3 + i * 2) % 8 * scale;
+            const dripX = cx - 4 * scale + i * 3 * scale + shamble * 0.2 * scale;
+            ctx.fillStyle = `rgba(77, 124, 15, ${0.5 - ((t * 3 + i * 2) % 8) / 16})`;
+            ctx.beginPath();
+            ctx.ellipse(dripX, dripY - bounce, 1 * scale, 1.5 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Lumpy body
+        ctx.fillStyle = "#365314";
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale + shamble * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 11 * scale, cy + 2 * scale - bounce, cx - 8 * scale, cy - 6 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 4 * scale, cy - 10 * scale - bounce, cx, cy - 8 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 4 * scale, cy - 10 * scale - bounce, cx + 8 * scale, cy - 6 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 11 * scale, cy + 2 * scale - bounce, cx + 9 * scale - shamble * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Slime highlights
+        ctx.fillStyle = "#4d7c0f";
+        ctx.beginPath();
+        ctx.ellipse(cx - 3 * scale, cy - 2 * scale - bounce, 3 * scale, 2 * scale, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = "#84cc16";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale + shamble * 0.1 * scale, cy - 4 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale + shamble * 0.1 * scale, cy - 4 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a2e05";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 4 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 4 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dripping tendrils
+        ctx.strokeStyle = "#4d7c0f";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy + 4 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 8 * scale, cy + 10 * scale - bounce + sludgeDrip, cx - 7 * scale, cy + 14 * scale - bounce);
+        ctx.stroke();
+        break;
+      }
+      case "will_o_wisp": {
+        // WILL-O'-WISP - Floating spirit light
+        const wispFloat = Math.sin(t * 3) * 6;
+        const wispPulse = 0.5 + Math.sin(t * 5) * 0.4;
+        const wispDrift = Math.sin(t * 2) * 3;
+
+        // Ethereal glow
+        const wispGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 16 * scale);
+        wispGrad.addColorStop(0, `rgba(132, 204, 22, ${wispPulse * 0.5})`);
+        wispGrad.addColorStop(0.4, `rgba(163, 230, 53, ${wispPulse * 0.3})`);
+        wispGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = wispGrad;
+        ctx.beginPath();
+        ctx.arc(cx + wispDrift * scale, cy - 4 * scale - bounce - wispFloat, 16 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Trailing particles
+        if (animated) {
+          for (let i = 0; i < 5; i++) {
+            const trailX = cx + wispDrift * scale - i * 2 * scale;
+            const trailY = cy - 4 * scale - bounce - wispFloat + i * 1.5 * scale;
+            ctx.fillStyle = `rgba(163, 230, 53, ${0.4 - i * 0.08})`;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, (2 - i * 0.3) * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Core flame body
+        const flameGrad = ctx.createRadialGradient(
+          cx + wispDrift * scale, cy - 4 * scale - bounce - wispFloat, 0,
+          cx + wispDrift * scale, cy - 4 * scale - bounce - wispFloat, 6 * scale
+        );
+        flameGrad.addColorStop(0, "#fef9c3");
+        flameGrad.addColorStop(0.3, "#84cc16");
+        flameGrad.addColorStop(0.7, "#65a30d");
+        flameGrad.addColorStop(1, "rgba(101, 163, 13, 0)");
+        ctx.fillStyle = flameGrad;
+        ctx.beginPath();
+        ctx.arc(cx + wispDrift * scale, cy - 4 * scale - bounce - wispFloat, 6 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner bright core
+        ctx.fillStyle = `rgba(254, 249, 195, ${wispPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx + wispDrift * scale, cy - 4 * scale - bounce - wispFloat, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Face-like features in the glow
+        ctx.fillStyle = `rgba(22, 101, 52, ${0.6 + wispPulse * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(cx - 1.5 * scale + wispDrift * scale, cy - 5 * scale - bounce - wispFloat, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 1.5 * scale + wispDrift * scale, cy - 5 * scale - bounce - wispFloat, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "swamp_troll": {
+        // SWAMP TROLL - Massive regenerating brute
+        const trollStomp = Math.sin(t * 1.2) * 2;
+        const clubSwing = Math.sin(t * 1.5) * 10;
+
+        // Murky aura
+        const trollGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        trollGrad.addColorStop(0, "rgba(77, 124, 15, 0.2)");
+        trollGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = trollGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce + trollStomp, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Massive body
+        ctx.fillStyle = "#4d7c0f";
+        ctx.beginPath();
+        ctx.moveTo(cx - 11 * scale, cy + 14 * scale - bounce + trollStomp);
+        ctx.quadraticCurveTo(cx - 13 * scale, cy - bounce + trollStomp, cx - 8 * scale, cy - 10 * scale - bounce + trollStomp);
+        ctx.lineTo(cx + 8 * scale, cy - 10 * scale - bounce + trollStomp);
+        ctx.quadraticCurveTo(cx + 13 * scale, cy - bounce + trollStomp, cx + 11 * scale, cy + 14 * scale - bounce + trollStomp);
+        ctx.closePath();
+        ctx.fill();
+
+        // Mossy patches
+        ctx.fillStyle = "#365314";
+        ctx.beginPath();
+        ctx.ellipse(cx - 4 * scale, cy - 2 * scale - bounce + trollStomp, 3 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 5 * scale, cy + 4 * scale - bounce + trollStomp, 2.5 * scale, 2 * scale, 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#4d7c0f";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 14 * scale - bounce + trollStomp, 7 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Angry eyes
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 14 * scale - bounce + trollStomp, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 14 * scale - bounce + trollStomp, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1a2e05";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 14 * scale - bounce + trollStomp, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 14 * scale - bounce + trollStomp, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tusks
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 10 * scale - bounce + trollStomp);
+        ctx.lineTo(cx - 6 * scale, cy - 6 * scale - bounce + trollStomp);
+        ctx.lineTo(cx - 3 * scale, cy - 9 * scale - bounce + trollStomp);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 4 * scale, cy - 10 * scale - bounce + trollStomp);
+        ctx.lineTo(cx + 6 * scale, cy - 6 * scale - bounce + trollStomp);
+        ctx.lineTo(cx + 3 * scale, cy - 9 * scale - bounce + trollStomp);
+        ctx.fill();
+
+        // Club
+        ctx.save();
+        ctx.translate(cx + 12 * scale, cy - 4 * scale - bounce + trollStomp);
+        ctx.rotate(clubSwing * Math.PI / 180);
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(-2 * scale, -10 * scale, 4 * scale, 14 * scale);
+        ctx.fillStyle = "#57534e";
+        ctx.beginPath();
+        ctx.arc(0, -10 * scale, 4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "nomad": {
+        // DESERT NOMAD - Robed desert wanderer
+        const sandStep = Math.sin(t * 2) * 1;
+        const cloakWave = Math.sin(t * 1.5) * 2;
+
+        // Desert heat shimmer
+        const heatGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 12 * scale);
+        heatGrad.addColorStop(0, "rgba(161, 98, 7, 0.15)");
+        heatGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = heatGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce + sandStep, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flowing robes
+        const robeGrad = ctx.createLinearGradient(cx - 8 * scale, cy, cx + 8 * scale, cy);
+        robeGrad.addColorStop(0, "#78350f");
+        robeGrad.addColorStop(0.5, "#a16207");
+        robeGrad.addColorStop(1, "#78350f");
+        ctx.fillStyle = robeGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale + cloakWave * 0.3 * scale, cy + 14 * scale - bounce + sandStep);
+        ctx.quadraticCurveTo(cx - 9 * scale, cy - bounce + sandStep, cx - 5 * scale, cy - 10 * scale - bounce + sandStep);
+        ctx.lineTo(cx + 5 * scale, cy - 10 * scale - bounce + sandStep);
+        ctx.quadraticCurveTo(cx + 9 * scale, cy - bounce + sandStep, cx + 8 * scale - cloakWave * 0.3 * scale, cy + 14 * scale - bounce + sandStep);
+        ctx.closePath();
+        ctx.fill();
+
+        // Headwrap
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 13 * scale - bounce + sandStep, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#a16207";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 15 * scale - bounce + sandStep, 5 * scale, 3 * scale, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Face wrap leaving eyes
+        ctx.fillStyle = "#fef3c7";
+        ctx.fillRect(cx - 5 * scale, cy - 15 * scale - bounce + sandStep, 10 * scale, 3 * scale);
+
+        // Dark eyes
+        ctx.fillStyle = "#1c1917";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce + sandStep, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce + sandStep, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Walking staff
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(cx + 8 * scale, cy - 12 * scale - bounce + sandStep, 2 * scale, 26 * scale);
+        break;
+      }
+      case "scorpion": {
+        // GIANT SCORPION - Armored desert predator
+        const clawSnap = Math.sin(t * 3) * 8;
+        const tailCurl = Math.sin(t * 2) * 10;
+
+        // Sand dust
+        ctx.fillStyle = "rgba(120, 53, 15, 0.15)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 10 * scale - bounce, 12 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Segmented body
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 2 * scale - bounce, 8 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 6 * scale - bounce, 6 * scale, 4 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tail segments
+        ctx.strokeStyle = "#78350f";
+        ctx.lineWidth = 4 * scale;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 6 * scale - bounce);
+        ctx.quadraticCurveTo(
+          cx - 4 * scale,
+          cy + 10 * scale - bounce,
+          cx - 6 * scale - tailCurl * 0.3 * scale,
+          cy + 4 * scale - bounce
+        );
+        ctx.quadraticCurveTo(
+          cx - 8 * scale - tailCurl * 0.5 * scale,
+          cy - 4 * scale - bounce,
+          cx - 4 * scale - tailCurl * 0.3 * scale,
+          cy - 12 * scale - bounce
+        );
+        ctx.stroke();
+
+        // Stinger
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale - tailCurl * 0.3 * scale, cy - 12 * scale - bounce);
+        ctx.lineTo(cx - 2 * scale - tailCurl * 0.2 * scale, cy - 16 * scale - bounce);
+        ctx.lineTo(cx - 6 * scale - tailCurl * 0.4 * scale, cy - 13 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Claws
+        ctx.fillStyle = "#92400e";
+        // Left claw
+        ctx.save();
+        ctx.translate(cx - 8 * scale, cy - 4 * scale - bounce);
+        ctx.rotate(-0.3 - clawSnap * Math.PI / 180 * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-6 * scale, -2 * scale);
+        ctx.lineTo(-5 * scale, 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        // Right claw
+        ctx.save();
+        ctx.translate(cx + 8 * scale, cy - 4 * scale - bounce);
+        ctx.rotate(0.3 + clawSnap * Math.PI / 180 * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(6 * scale, -2 * scale);
+        ctx.lineTo(5 * scale, 2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Eyes
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 8 * scale - bounce, 1.5 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 8 * scale - bounce, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "scarab": {
+        // SACRED SCARAB - Golden beetle
+        const scurry = Math.sin(t * 8) * 1;
+        const wingShimmer = 0.6 + Math.sin(t * 4) * 0.3;
+
+        // Golden glow
+        const scarabGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 10 * scale);
+        scarabGrad.addColorStop(0, `rgba(251, 191, 36, ${wingShimmer * 0.3})`);
+        scarabGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = scarabGrad;
+        ctx.beginPath();
+        ctx.arc(cx + scurry * scale, cy - 2 * scale - bounce, 10 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shell
+        const shellGrad = ctx.createLinearGradient(cx - 5 * scale, cy - 6 * scale, cx + 5 * scale, cy + 4 * scale);
+        shellGrad.addColorStop(0, "#fbbf24");
+        shellGrad.addColorStop(0.5, "#f59e0b");
+        shellGrad.addColorStop(1, "#d97706");
+        ctx.fillStyle = shellGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx + scurry * scale, cy - bounce, 6 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shell pattern
+        ctx.strokeStyle = "#92400e";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx + scurry * scale, cy - 8 * scale - bounce);
+        ctx.lineTo(cx + scurry * scale, cy + 6 * scale - bounce);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(cx + scurry * scale, cy - 2 * scale - bounce, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Head
+        ctx.fillStyle = "#78350f";
+        ctx.beginPath();
+        ctx.ellipse(cx + scurry * scale, cy - 10 * scale - bounce, 3 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Antennae
+        ctx.strokeStyle = "#78350f";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale + scurry * scale, cy - 11 * scale - bounce);
+        ctx.lineTo(cx - 4 * scale + scurry * scale, cy - 14 * scale - bounce);
+        ctx.moveTo(cx + 2 * scale + scurry * scale, cy - 11 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale + scurry * scale, cy - 14 * scale - bounce);
+        ctx.stroke();
+
+        // Legs
+        ctx.strokeStyle = "#92400e";
+        for (let i = 0; i < 3; i++) {
+          const legY = cy - 4 * scale + i * 4 * scale - bounce;
+          const legAnim = Math.sin(t * 8 + i) * 2;
+          ctx.beginPath();
+          ctx.moveTo(cx - 5 * scale + scurry * scale, legY);
+          ctx.lineTo(cx - 9 * scale + scurry * scale + legAnim * scale, legY + 2 * scale);
+          ctx.moveTo(cx + 5 * scale + scurry * scale, legY);
+          ctx.lineTo(cx + 9 * scale + scurry * scale - legAnim * scale, legY + 2 * scale);
+          ctx.stroke();
+        }
+        break;
+      }
+      case "snow_goblin": {
+        // FROST GOBLIN - Mischievous ice creature
+        const goblinHop = Math.sin(t * 4) * 2;
+        const frostBreath = 0.5 + Math.sin(t * 3) * 0.3;
+
+        // Cold aura
+        const frostGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 12 * scale);
+        frostGrad.addColorStop(0, `rgba(147, 197, 253, ${frostBreath * 0.25})`);
+        frostGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = frostGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 2 * scale - bounce - goblinHop, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Small hunched body
+        ctx.fillStyle = "#93c5fd";
+        ctx.beginPath();
+        ctx.moveTo(cx - 6 * scale, cy + 10 * scale - bounce - goblinHop);
+        ctx.quadraticCurveTo(cx - 7 * scale, cy - bounce - goblinHop, cx - 4 * scale, cy - 6 * scale - bounce - goblinHop);
+        ctx.lineTo(cx + 4 * scale, cy - 6 * scale - bounce - goblinHop);
+        ctx.quadraticCurveTo(cx + 7 * scale, cy - bounce - goblinHop, cx + 6 * scale, cy + 10 * scale - bounce - goblinHop);
+        ctx.closePath();
+        ctx.fill();
+
+        // Frost patterns on body
+        ctx.strokeStyle = "#bfdbfe";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale, cy - 2 * scale - bounce - goblinHop);
+        ctx.lineTo(cx - 3 * scale, cy + 4 * scale - bounce - goblinHop);
+        ctx.moveTo(cx + 2 * scale, cy - bounce - goblinHop);
+        ctx.lineTo(cx + 1 * scale, cy + 5 * scale - bounce - goblinHop);
+        ctx.stroke();
+
+        // Large head
+        ctx.fillStyle = "#93c5fd";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 10 * scale - bounce - goblinHop, 6 * scale, 5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pointy ears
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy - 10 * scale - bounce - goblinHop);
+        ctx.lineTo(cx - 9 * scale, cy - 14 * scale - bounce - goblinHop);
+        ctx.lineTo(cx - 4 * scale, cy - 8 * scale - bounce - goblinHop);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 5 * scale, cy - 10 * scale - bounce - goblinHop);
+        ctx.lineTo(cx + 9 * scale, cy - 14 * scale - bounce - goblinHop);
+        ctx.lineTo(cx + 4 * scale, cy - 8 * scale - bounce - goblinHop);
+        ctx.fill();
+
+        // Big mischievous eyes
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 10 * scale - bounce - goblinHop, 2 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 10 * scale - bounce - goblinHop, 2 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#1e40af";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 10 * scale - bounce - goblinHop, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 10 * scale - bounce - goblinHop, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sharp-toothed grin
+        ctx.fillStyle = "#1e3a8a";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 6 * scale - bounce - goblinHop, 2 * scale, 0, Math.PI);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 1.5 * scale + i * scale, cy - 6 * scale - bounce - goblinHop);
+          ctx.lineTo(cx - 1 * scale + i * scale, cy - 5 * scale - bounce - goblinHop);
+          ctx.lineTo(cx - 0.5 * scale + i * scale, cy - 6 * scale - bounce - goblinHop);
+          ctx.fill();
+        }
+
+        // Ice claws
+        ctx.fillStyle = "#bfdbfe";
+        ctx.beginPath();
+        ctx.moveTo(cx - 7 * scale, cy + 2 * scale - bounce - goblinHop);
+        ctx.lineTo(cx - 10 * scale, cy + 4 * scale - bounce - goblinHop);
+        ctx.lineTo(cx - 6 * scale, cy + 4 * scale - bounce - goblinHop);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 7 * scale, cy + 2 * scale - bounce - goblinHop);
+        ctx.lineTo(cx + 10 * scale, cy + 4 * scale - bounce - goblinHop);
+        ctx.lineTo(cx + 6 * scale, cy + 4 * scale - bounce - goblinHop);
+        ctx.fill();
+        break;
+      }
+      case "yeti": {
+        // MOUNTAIN YETI - Massive ice titan
+        const yetiStomp = Math.sin(t * 1.2) * 2;
+        const frostBreath = 0.5 + Math.sin(t * 2) * 0.3;
+        const armSwing = Math.sin(t * 1.5) * 8;
+
+        // Blizzard aura
+        const yetiGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 20 * scale);
+        yetiGrad.addColorStop(0, `rgba(224, 242, 254, ${frostBreath * 0.3})`);
+        yetiGrad.addColorStop(0.5, `rgba(186, 230, 253, ${frostBreath * 0.15})`);
+        yetiGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = yetiGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce + yetiStomp, 20 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Snow particles
+        if (animated) {
+          for (let i = 0; i < 6; i++) {
+            const snowX = cx + Math.sin(t * 2 + i * 1.5) * 12 * scale;
+            const snowY = cy - 10 * scale + (t * 2 + i) % 4 * 6 * scale - bounce + yetiStomp;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.6 - ((t * 2 + i) % 4) / 8})`;
+            ctx.beginPath();
+            ctx.arc(snowX, snowY, 1.5 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Massive furry body
+        ctx.fillStyle = "#e0f2fe";
+        ctx.beginPath();
+        ctx.moveTo(cx - 12 * scale, cy + 14 * scale - bounce + yetiStomp);
+        ctx.quadraticCurveTo(cx - 14 * scale, cy - bounce + yetiStomp, cx - 10 * scale, cy - 12 * scale - bounce + yetiStomp);
+        ctx.lineTo(cx + 10 * scale, cy - 12 * scale - bounce + yetiStomp);
+        ctx.quadraticCurveTo(cx + 14 * scale, cy - bounce + yetiStomp, cx + 12 * scale, cy + 14 * scale - bounce + yetiStomp);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fur texture
+        ctx.strokeStyle = "#bae6fd";
+        ctx.lineWidth = 2 * scale;
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(cx - 8 * scale + i * 4 * scale, cy - 4 * scale - bounce + yetiStomp);
+          ctx.lineTo(cx - 8 * scale + i * 4 * scale + Math.sin(i) * 2 * scale, cy + 6 * scale - bounce + yetiStomp);
+          ctx.stroke();
+        }
+
+        // Head
+        ctx.fillStyle = "#e0f2fe";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 16 * scale - bounce + yetiStomp, 8 * scale, 6 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fierce eyes
+        ctx.fillStyle = "#0c4a6e";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 16 * scale - bounce + yetiStomp, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 16 * scale - bounce + yetiStomp, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(56, 189, 248, ${frostBreath})`;
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 16 * scale - bounce + yetiStomp, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 16 * scale - bounce + yetiStomp, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Roaring mouth
+        ctx.fillStyle = "#1e3a8a";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 12 * scale - bounce + yetiStomp, 3 * scale, 0, Math.PI);
+        ctx.fill();
+        // Fangs
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale, cy - 12 * scale - bounce + yetiStomp);
+        ctx.lineTo(cx - 2 * scale, cy - 10 * scale - bounce + yetiStomp);
+        ctx.lineTo(cx - 1 * scale, cy - 12 * scale - bounce + yetiStomp);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 2 * scale, cy - 12 * scale - bounce + yetiStomp);
+        ctx.lineTo(cx + 2 * scale, cy - 10 * scale - bounce + yetiStomp);
+        ctx.lineTo(cx + 1 * scale, cy - 12 * scale - bounce + yetiStomp);
+        ctx.fill();
+
+        // Massive arms
+        ctx.fillStyle = "#e0f2fe";
+        ctx.save();
+        ctx.translate(cx - 12 * scale, cy - 6 * scale - bounce + yetiStomp);
+        ctx.rotate(-0.3 + armSwing * Math.PI / 180);
+        ctx.fillRect(-3 * scale, 0, 6 * scale, 14 * scale);
+        ctx.restore();
+        ctx.save();
+        ctx.translate(cx + 12 * scale, cy - 6 * scale - bounce + yetiStomp);
+        ctx.rotate(0.3 - armSwing * Math.PI / 180);
+        ctx.fillRect(-3 * scale, 0, 6 * scale, 14 * scale);
+        ctx.restore();
+        break;
+      }
+      case "ice_witch": {
+        // FROST SORCERESS - Elegant ice mage
+        const magicPulse = 0.6 + Math.sin(t * 3) * 0.4;
+        const staffGlow = Math.sin(t * 4) * 0.2;
+        const capeFlow = Math.sin(t * 1.5) * 3;
+
+        // Ice magic aura
+        const witchGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 16 * scale);
+        witchGrad.addColorStop(0, `rgba(96, 165, 250, ${magicPulse * 0.35})`);
+        witchGrad.addColorStop(0.5, `rgba(147, 197, 253, ${magicPulse * 0.2})`);
+        witchGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = witchGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce, 16 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating ice crystals
+        if (animated) {
+          for (let i = 0; i < 4; i++) {
+            const angle = t * 1.5 + i * Math.PI * 0.5;
+            const dist = 10 * scale;
+            const ix = cx + Math.cos(angle) * dist;
+            const iy = cy - 4 * scale + Math.sin(angle) * dist * 0.4 - bounce;
+            ctx.fillStyle = `rgba(191, 219, 254, ${0.5 + Math.sin(t * 2 + i) * 0.3})`;
+            ctx.save();
+            ctx.translate(ix, iy);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0, -2 * scale);
+            ctx.lineTo(1.5 * scale, 0);
+            ctx.lineTo(0, 2 * scale);
+            ctx.lineTo(-1.5 * scale, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        // Elegant robes
+        const robeGrad = ctx.createLinearGradient(cx - 8 * scale, cy, cx + 8 * scale, cy);
+        robeGrad.addColorStop(0, "#1e40af");
+        robeGrad.addColorStop(0.5, "#3b82f6");
+        robeGrad.addColorStop(1, "#1e40af");
+        ctx.fillStyle = robeGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 8 * scale + capeFlow * 0.3 * scale, cy + 14 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 9 * scale, cy - bounce, cx - 5 * scale, cy - 10 * scale - bounce);
+        ctx.lineTo(cx + 5 * scale, cy - 10 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 9 * scale, cy - bounce, cx + 8 * scale - capeFlow * 0.3 * scale, cy + 14 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Frost patterns on robes
+        ctx.strokeStyle = "#93c5fd";
+        ctx.lineWidth = 1 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx - 5 * scale, cy + 8 * scale - bounce);
+        ctx.moveTo(cx + 4 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx + 3 * scale, cy + 10 * scale - bounce);
+        ctx.stroke();
+
+        // Pale face
+        ctx.fillStyle = "#e0f2fe";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ice crown/tiara
+        ctx.fillStyle = "#93c5fd";
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 17 * scale - bounce);
+        ctx.lineTo(cx - 3 * scale, cy - 21 * scale - bounce);
+        ctx.lineTo(cx - 1 * scale, cy - 18 * scale - bounce);
+        ctx.lineTo(cx, cy - 23 * scale - bounce);
+        ctx.lineTo(cx + 1 * scale, cy - 18 * scale - bounce);
+        ctx.lineTo(cx + 3 * scale, cy - 21 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy - 17 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing blue eyes
+        ctx.fillStyle = `rgba(56, 189, 248, ${magicPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce, 0.4 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce, 0.4 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ice staff
+        ctx.fillStyle = "#bfdbfe";
+        ctx.fillRect(cx + 8 * scale, cy - 14 * scale - bounce, 2 * scale, 26 * scale);
+        // Staff crystal
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.7 + staffGlow})`;
+        ctx.beginPath();
+        ctx.moveTo(cx + 9 * scale, cy - 14 * scale - bounce);
+        ctx.lineTo(cx + 12 * scale, cy - 18 * scale - bounce);
+        ctx.lineTo(cx + 9 * scale, cy - 22 * scale - bounce);
+        ctx.lineTo(cx + 6 * scale, cy - 18 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case "magma_spawn": {
+        // MAGMA SPAWN - Living lava elemental
+        const lavaPulse = 0.6 + Math.sin(t * 3) * 0.4;
+        const bubblePop = Math.sin(t * 6);
+        const lavaFlow = Math.sin(t * 2) * 2;
+
+        // Intense heat aura
+        const magmaGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 16 * scale);
+        magmaGrad.addColorStop(0, `rgba(234, 88, 12, ${lavaPulse * 0.4})`);
+        magmaGrad.addColorStop(0.5, `rgba(249, 115, 22, ${lavaPulse * 0.25})`);
+        magmaGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = magmaGrad;
+        ctx.beginPath();
+        ctx.arc(cx + lavaFlow * 0.3 * scale, cy - bounce, 16 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Lava drips
+        if (animated) {
+          for (let i = 0; i < 4; i++) {
+            const dripX = cx - 4 * scale + i * 3 * scale;
+            const dripY = cy + 8 * scale + (t * 3 + i * 2) % 6 * scale - bounce;
+            ctx.fillStyle = `rgba(251, 146, 60, ${0.7 - ((t * 3 + i * 2) % 6) / 12})`;
+            ctx.beginPath();
+            ctx.ellipse(dripX, dripY, 1 * scale, 2 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Molten body
+        const bodyGrad = ctx.createRadialGradient(cx, cy - 2 * scale, 2 * scale, cx, cy - 2 * scale, 12 * scale);
+        bodyGrad.addColorStop(0, "#fbbf24");
+        bodyGrad.addColorStop(0.4, "#ea580c");
+        bodyGrad.addColorStop(0.8, "#9a3412");
+        bodyGrad.addColorStop(1, "#7c2d12");
+        ctx.fillStyle = bodyGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * scale + lavaFlow * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.quadraticCurveTo(cx - 10 * scale, cy - bounce, cx - 6 * scale, cy - 10 * scale - bounce);
+        ctx.quadraticCurveTo(cx, cy - 14 * scale - bounce, cx + 6 * scale, cy - 10 * scale - bounce);
+        ctx.quadraticCurveTo(cx + 10 * scale, cy - bounce, cx + 9 * scale - lavaFlow * 0.2 * scale, cy + 12 * scale - bounce);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lava cracks
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 4 * scale - bounce);
+        ctx.lineTo(cx - 3 * scale, cy + 4 * scale - bounce);
+        ctx.moveTo(cx + 3 * scale, cy - 2 * scale - bounce);
+        ctx.lineTo(cx + 4 * scale, cy + 6 * scale - bounce);
+        ctx.stroke();
+
+        // Bubbling surface
+        ctx.fillStyle = `rgba(251, 191, 36, ${0.5 + bubblePop * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 6 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 4 * scale, cy - 3 * scale - bounce, 1.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 8 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 8 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#7c2d12";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 8 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 8 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "fire_imp": {
+        // FIRE IMP - Small mischievous demon
+        const impHop = Math.sin(t * 5) * 3;
+        const flameFlicker = 0.6 + Math.sin(t * 8) * 0.3;
+        const tailWag = Math.sin(t * 4) * 15;
+
+        // Fire aura
+        const impGrad = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 12 * scale);
+        impGrad.addColorStop(0, `rgba(251, 146, 60, ${flameFlicker * 0.3})`);
+        impGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = impGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 4 * scale - bounce - impHop, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spark particles
+        if (animated) {
+          for (let i = 0; i < 4; i++) {
+            const sparkX = cx + Math.sin(t * 4 + i * 2) * 6 * scale;
+            const sparkY = cy - 8 * scale - bounce - impHop - (t * 3 + i) % 4 * 3 * scale;
+            ctx.fillStyle = `rgba(251, 191, 36, ${0.6 - ((t * 3 + i) % 4) / 8})`;
+            ctx.beginPath();
+            ctx.arc(sparkX, sparkY, 1 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Small demonic body
+        ctx.fillStyle = "#fb923c";
+        ctx.beginPath();
+        ctx.moveTo(cx - 5 * scale, cy + 8 * scale - bounce - impHop);
+        ctx.quadraticCurveTo(cx - 6 * scale, cy - bounce - impHop, cx - 4 * scale, cy - 6 * scale - bounce - impHop);
+        ctx.lineTo(cx + 4 * scale, cy - 6 * scale - bounce - impHop);
+        ctx.quadraticCurveTo(cx + 6 * scale, cy - bounce - impHop, cx + 5 * scale, cy + 8 * scale - bounce - impHop);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = "#fb923c";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 10 * scale - bounce - impHop, 5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horns
+        ctx.fillStyle = "#7c2d12";
+        ctx.beginPath();
+        ctx.moveTo(cx - 3 * scale, cy - 13 * scale - bounce - impHop);
+        ctx.lineTo(cx - 5 * scale, cy - 18 * scale - bounce - impHop);
+        ctx.lineTo(cx - 2 * scale, cy - 14 * scale - bounce - impHop);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + 3 * scale, cy - 13 * scale - bounce - impHop);
+        ctx.lineTo(cx + 5 * scale, cy - 18 * scale - bounce - impHop);
+        ctx.lineTo(cx + 2 * scale, cy - 14 * scale - bounce - impHop);
+        ctx.fill();
+
+        // Mischievous eyes
+        ctx.fillStyle = "#fef3c7";
+        ctx.beginPath();
+        ctx.ellipse(cx - 2 * scale, cy - 10 * scale - bounce - impHop, 1.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 2 * scale, cy - 10 * scale - bounce - impHop, 1.5 * scale, 2 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#7c2d12";
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 10 * scale - bounce - impHop, 0.7 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 10 * scale - bounce - impHop, 0.7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Grinning mouth
+        ctx.fillStyle = "#7c2d12";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 7 * scale - bounce - impHop, 2 * scale, 0, Math.PI);
+        ctx.fill();
+
+        // Pointed tail
+        ctx.strokeStyle = "#fb923c";
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + 6 * scale - bounce - impHop);
+        ctx.quadraticCurveTo(
+          cx - 4 * scale + tailWag * 0.1 * scale,
+          cy + 10 * scale - bounce - impHop,
+          cx - 2 * scale + tailWag * 0.2 * scale,
+          cy + 14 * scale - bounce - impHop
+        );
+        ctx.stroke();
+        // Arrow tip
+        ctx.fillStyle = "#ea580c";
+        ctx.beginPath();
+        ctx.moveTo(cx - 2 * scale + tailWag * 0.2 * scale, cy + 14 * scale - bounce - impHop);
+        ctx.lineTo(cx - 4 * scale + tailWag * 0.2 * scale, cy + 12 * scale - bounce - impHop);
+        ctx.lineTo(cx - 1 * scale + tailWag * 0.2 * scale, cy + 16 * scale - bounce - impHop);
+        ctx.lineTo(cx + tailWag * 0.2 * scale, cy + 12 * scale - bounce - impHop);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case "ember_guard": {
+        // EMBER GUARD - Elite infernal knight
+        const guardStomp = Math.sin(t * 1.5) * 1;
+        const emberGlow = 0.5 + Math.sin(t * 3) * 0.3;
+        const swordFlame = Math.sin(t * 5) * 0.2;
+
+        // Infernal aura
+        const guardGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18 * scale);
+        guardGrad.addColorStop(0, `rgba(194, 65, 12, ${emberGlow * 0.35})`);
+        guardGrad.addColorStop(0.5, `rgba(234, 88, 12, ${emberGlow * 0.2})`);
+        guardGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = guardGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy - bounce + guardStomp, 18 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ember particles
+        if (animated) {
+          for (let i = 0; i < 5; i++) {
+            const emberX = cx + Math.sin(t * 2 + i * 1.3) * 10 * scale;
+            const emberY = cy - 6 * scale - (t * 2 + i) % 4 * 4 * scale - bounce + guardStomp;
+            ctx.fillStyle = `rgba(251, 146, 60, ${0.6 - ((t * 2 + i) % 4) / 8})`;
+            ctx.beginPath();
+            ctx.arc(emberX, emberY, 1.2 * scale, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Heavy plate armor body
+        const armorGrad = ctx.createLinearGradient(cx - 10 * scale, cy, cx + 10 * scale, cy);
+        armorGrad.addColorStop(0, "#7c2d12");
+        armorGrad.addColorStop(0.3, "#c2410c");
+        armorGrad.addColorStop(0.5, "#ea580c");
+        armorGrad.addColorStop(0.7, "#c2410c");
+        armorGrad.addColorStop(1, "#7c2d12");
+        ctx.fillStyle = armorGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * scale, cy + 14 * scale - bounce + guardStomp);
+        ctx.lineTo(cx - 11 * scale, cy - 2 * scale - bounce + guardStomp);
+        ctx.lineTo(cx - 8 * scale, cy - 10 * scale - bounce + guardStomp);
+        ctx.lineTo(cx + 8 * scale, cy - 10 * scale - bounce + guardStomp);
+        ctx.lineTo(cx + 11 * scale, cy - 2 * scale - bounce + guardStomp);
+        ctx.lineTo(cx + 10 * scale, cy + 14 * scale - bounce + guardStomp);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing armor cracks
+        ctx.strokeStyle = `rgba(251, 146, 60, ${emberGlow})`;
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(cx - 4 * scale, cy - 4 * scale - bounce + guardStomp);
+        ctx.lineTo(cx - 5 * scale, cy + 6 * scale - bounce + guardStomp);
+        ctx.moveTo(cx + 3 * scale, cy - 2 * scale - bounce + guardStomp);
+        ctx.lineTo(cx + 4 * scale, cy + 8 * scale - bounce + guardStomp);
+        ctx.stroke();
+
+        // Helmet
+        ctx.fillStyle = "#7c2d12";
+        ctx.beginPath();
+        ctx.arc(cx, cy - 14 * scale - bounce + guardStomp, 7 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#9a3412";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - 16 * scale - bounce + guardStomp, 6 * scale, 4 * scale, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Flame plume on helmet
+        ctx.fillStyle = "#fb923c";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 18 * scale - bounce + guardStomp);
+        ctx.quadraticCurveTo(cx - 2 * scale, cy - 22 * scale - bounce + guardStomp, cx, cy - 26 * scale - bounce + guardStomp);
+        ctx.quadraticCurveTo(cx + 2 * scale, cy - 22 * scale - bounce + guardStomp, cx, cy - 18 * scale - bounce + guardStomp);
+        ctx.fill();
+
+        // Visor with glowing eyes
+        ctx.fillStyle = "#1c1917";
+        ctx.fillRect(cx - 5 * scale, cy - 15 * scale - bounce + guardStomp, 10 * scale, 3 * scale);
+        ctx.fillStyle = `rgba(251, 191, 36, ${emberGlow})`;
+        ctx.beginPath();
+        ctx.arc(cx - 2 * scale, cy - 14 * scale - bounce + guardStomp, 1.2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 2 * scale, cy - 14 * scale - bounce + guardStomp, 1.2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flaming sword
+        ctx.save();
+        ctx.translate(cx + 12 * scale, cy - 4 * scale - bounce + guardStomp);
+        ctx.rotate(-0.2);
+        // Blade
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(-1.5 * scale, -14 * scale, 3 * scale, 16 * scale);
+        // Flame effect on blade
+        ctx.fillStyle = `rgba(251, 146, 60, ${0.6 + swordFlame})`;
+        ctx.beginPath();
+        ctx.moveTo(-2 * scale, -14 * scale);
+        ctx.lineTo(0, -18 * scale);
+        ctx.lineTo(2 * scale, -14 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(251, 191, 36, ${0.7 + swordFlame})`;
+        ctx.fillRect(-0.5 * scale, -12 * scale, 1 * scale, 10 * scale);
+        // Guard
+        ctx.fillStyle = "#ea580c";
+        ctx.fillRect(-3 * scale, 0, 6 * scale, 2 * scale);
+        ctx.restore();
+        break;
+      }
+      default: {
+        // Fallback generic enemy - simple skull/creature
+        const genericPulse = 0.5 + Math.sin(t * 2) * 0.3;
+        const color = "#888888";
+
+        // Simple aura
+        ctx.fillStyle = `${color}40`;
+        ctx.beginPath();
+        ctx.arc(cx, cy - 2 * scale - bounce, 12 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - bounce, 8 * scale, 10 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = `rgba(255, 255, 255, ${genericPulse})`;
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 4 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 4 * scale - bounce, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#000000";
+        ctx.beginPath();
+        ctx.arc(cx - 3 * scale, cy - 4 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.arc(cx + 3 * scale, cy - 4 * scale - bounce, 0.8 * scale, 0, Math.PI * 2);
+        ctx.fill();
         break;
       }
     }

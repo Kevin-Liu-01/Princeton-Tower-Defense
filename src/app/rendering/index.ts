@@ -18,7 +18,7 @@ export {
 export { renderSpecialBuilding } from "./towers/specialBuildings";
 
 // Enemy rendering 
-export { renderEnemy } from "./enemies";
+export { renderEnemy, renderEnemyInspectIndicator } from "./enemies";
 
 // Hero rendering 
 export { renderHero } from "./heroes";
