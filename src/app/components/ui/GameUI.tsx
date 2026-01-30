@@ -2308,23 +2308,6 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
       className="absolute bottom-2 right-2 flex flex-col gap-2"
       style={{ zIndex: 60 }}
     >
-      <button
-        onClick={handleToggle}
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg border shadow-lg backdrop-blur-sm transition-all ${isActive
-          ? "bg-gradient-to-br from-purple-900/95 to-purple-950/95 border-purple-400 shadow-purple-500/30"
-          : "bg-gradient-to-br from-amber-900/90 to-stone-900/90 border-amber-700 hover:border-amber-500"
-          }`}
-      >
-        {isActive ? (
-          <EyeOff size={16} className="text-purple-300" />
-        ) : (
-          <Eye size={16} className="text-amber-400" />
-        )}
-        <span className={`text-[10px] font-bold tracking-wider ${isActive ? "text-purple-200" : "text-amber-300"}`}>
-          {isActive ? "EXIT INSPECT" : "INSPECT ENEMIES"}
-        </span>
-      </button>
-
       {isActive && (
         <div className="bg-gradient-to-br from-purple-900/95 to-stone-900/95 p-2 rounded-lg border border-purple-700 shadow-lg backdrop-blur-sm">
           <div className="text-[9px] text-purple-300 mb-2 font-bold text-center tracking-wider flex items-center gap-1 justify-center">
@@ -2343,6 +2326,23 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
           )}
         </div>
       )}
+
+      <button
+        onClick={handleToggle}
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg border shadow-lg backdrop-blur-sm transition-all ${isActive
+          ? "bg-gradient-to-br from-purple-900/95 to-purple-950/95 border-purple-400 shadow-purple-500/30"
+          : "bg-gradient-to-br from-amber-900/90 to-stone-900/90 border-amber-700 hover:border-amber-500"
+          }`}
+      >
+        {isActive ? (
+          <EyeOff size={16} className="text-purple-300" />
+        ) : (
+          <Eye size={16} className="text-amber-400" />
+        )}
+        <span className={`text-[10px] font-bold tracking-wider ${isActive ? "text-purple-200" : "text-amber-300"}`}>
+          {isActive ? "EXIT INSPECT" : "INSPECT ENEMIES"}
+        </span>
+      </button>
     </div>
   );
 };

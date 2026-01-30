@@ -299,6 +299,7 @@ export default function PrincetonTowerDefense() {
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastTouchTimeRef = useRef<number>(0); // Track touch to prevent duplicate click events
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
@@ -6067,6 +6068,12 @@ export default function PrincetonTowerDefense() {
   // Event handlers
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
+      // Skip if this click was triggered by a recent touch (within 300ms)
+      // This prevents double-handling on mobile where both touchend and click fire
+      if (Date.now() - lastTouchTimeRef.current < 300) {
+        return;
+      }
+
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -6605,6 +6612,211 @@ export default function PrincetonTowerDefense() {
     },
     [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops]
   );
+
+  // ========== MOBILE TOUCH HANDLER ==========
+  // On mobile, we use a tap-to-select, tap-to-move system since there's no hover
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      // Only handle single finger taps
+      if (e.changedTouches.length !== 1) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const touch = e.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
+      const touchPos = { x: touchX, y: touchY };
+      const { width, height, dpr } = getCanvasDimensions();
+
+      // Convert to world coordinates
+      const touchWorldPos = screenToWorld(
+        touchPos,
+        width,
+        height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      );
+
+      const selectedTroopUnit = troops.find((t) => t.selected);
+      const heroIsSelected = hero && !hero.dead && hero.selected;
+      const spec = LEVEL_DATA[selectedMap]?.specialTower;
+
+      // Helper to mark touch as handled (prevents click event from firing)
+      const markTouchHandled = () => {
+        lastTouchTimeRef.current = Date.now();
+      };
+
+      // ========== HERO SELECTED - TAP TO MOVE ==========
+      if (heroIsSelected) {
+        markTouchHandled(); // Always handle touch when hero is selected
+
+        const heroScreen = worldToScreen(
+          hero.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+
+        // Check if tapping on hero itself to deselect
+        if (distance(touchPos, heroScreen) < 35) {
+          setHero((prev) => prev ? { ...prev, selected: false } : null);
+          return;
+        }
+
+        // Calculate move target on-the-fly for touch
+        const pathResult = findClosestPathPoint(touchWorldPos, selectedMap);
+        if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2.5) {
+          // Valid path point - move hero there
+          setHero((prev) =>
+            prev ? { ...prev, moving: true, targetPos: pathResult.point } : null
+          );
+          addParticles(pathResult.point, "glow", 5);
+        } else {
+          // Tapped elsewhere - deselect
+          setHero((prev) => prev ? { ...prev, selected: false } : null);
+        }
+        return;
+      }
+
+      // ========== TROOP SELECTED - TAP TO MOVE ==========
+      if (selectedTroopUnit) {
+        markTouchHandled(); // Always handle touch when troop is selected
+
+        const troopScreen = worldToScreen(
+          selectedTroopUnit.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+
+        // Check if tapping on selected troop to deselect
+        if (distance(touchPos, troopScreen) < 30) {
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+          return;
+        }
+
+        // Calculate move target on-the-fly for touch
+        const moveInfo = getTroopMoveInfo(selectedTroopUnit, towers, spec);
+        const pathResult = findClosestPathPointWithinRadius(
+          touchWorldPos,
+          moveInfo.anchorPos,
+          moveInfo.moveRadius,
+          selectedMap
+        );
+
+        if (pathResult) {
+          const pathPoint = findClosestPathPoint(touchWorldPos, selectedMap);
+          const isNearPath = pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2.5;
+
+          if (pathResult.isValid && isNearPath) {
+            // Valid move - move all troops in formation
+            const ownerId = selectedTroopUnit.ownerId;
+            const formationTroops = troops.filter((t) => t.ownerId === ownerId);
+            const formationOffsets = getFormationOffsets(formationTroops.length);
+
+            const troopIdToFormationIndex = new Map<string, number>();
+            formationTroops.forEach((t, idx) => {
+              troopIdToFormationIndex.set(t.id, idx);
+            });
+
+            const station = towers.find((t) => t.id === ownerId && t.type === 'station');
+
+            setTroops((prev) =>
+              prev.map((t) => {
+                if (t.ownerId === ownerId) {
+                  const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
+                  const offset = formationOffsets[formationIndex] || { x: 0, y: 0 };
+                  const newTarget = {
+                    x: pathResult.point.x + offset.x,
+                    y: pathResult.point.y + offset.y,
+                  };
+                  return {
+                    ...t,
+                    moving: true,
+                    targetPos: newTarget,
+                    userTargetPos: newTarget,
+                    spawnPoint: station ? t.spawnPoint : pathResult.point,
+                  };
+                }
+                return t;
+              })
+            );
+            addParticles(pathResult.point, "light", 5);
+            return;
+          }
+        }
+
+        // Invalid move - deselect
+        setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+        return;
+      }
+
+      // ========== NOTHING SELECTED - SELECTION MODE ==========
+      // Check for hero tap
+      if (hero && !hero.dead) {
+        const heroScreen = worldToScreen(
+          hero.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        if (distance(touchPos, heroScreen) < 35) {
+          markTouchHandled();
+          setHero((prev) => prev ? { ...prev, selected: true } : null);
+          setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+          setSelectedTower(null);
+          return;
+        }
+      }
+
+      // Check for troop tap
+      for (const troop of troops) {
+        const troopScreen = worldToScreen(
+          troop.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        if (distance(touchPos, troopScreen) < 30) {
+          markTouchHandled();
+          setTroops((prev) =>
+            prev.map((t) => ({
+              ...t,
+              selected: t.id === troop.id,
+            }))
+          );
+          setHero((prev) => (prev ? { ...prev, selected: false } : null));
+          setSelectedTower(null);
+          return;
+        }
+      }
+
+      // If we didn't tap on a hero/troop, DON'T mark as handled
+      // This lets the click handler deal with towers, deselection, etc.
+    },
+    [
+      getCanvasDimensions,
+      cameraOffset,
+      cameraZoom,
+      selectedMap,
+      hero,
+      troops,
+      towers,
+      addParticles,
+    ]
+  );
+
   // Game actions
   const upgradeTower = useCallback(
     (towerId: string, choice?: "A" | "B") => {
@@ -7489,7 +7701,8 @@ export default function PrincetonTowerDefense() {
             ref={canvasRef}
             onClick={handleCanvasClick}
             onMouseMove={handleMouseMove}
-            className="w-full h-full cursor-crosshair"
+            onTouchEnd={handleTouchEnd}
+            className="w-full h-full cursor-crosshair touch-none"
           />
           <CameraControls
             setCameraOffset={setCameraOffset}
