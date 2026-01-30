@@ -297,6 +297,278 @@ const PrincetonLogo: React.FC = () => {
 };
 
 // =============================================================================
+// ORNATE FRAME COMPONENTS
+// =============================================================================
+
+interface OrnateCornerProps {
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  size?: number;
+  color?: string;
+  glowColor?: string;
+}
+
+const OrnateCorner: React.FC<OrnateCornerProps> = ({
+  position,
+  size = 40,
+  color = "#d97706",
+  glowColor = "#f59e0b",
+}) => {
+  const rotations = {
+    "top-left": "rotate(0)",
+    "top-right": "rotate(90deg)",
+    "bottom-right": "rotate(180deg)",
+    "bottom-left": "rotate(270deg)",
+  };
+
+  const positions = {
+    "top-left": "top-0 left-0",
+    "top-right": "top-0 right-0",
+    "bottom-right": "bottom-0 right-0",
+    "bottom-left": "bottom-0 left-0",
+  };
+
+  return (
+    <div
+      className={`absolute ${positions[position]} pointer-events-none z-30`}
+      style={{
+        width: size,
+        height: size,
+        transform: rotations[position],
+        filter: `drop-shadow(0 0 4px ${glowColor}40)`,
+      }}
+    >
+      <svg
+        viewBox="0 0 60 60"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-full h-full"
+      >
+        {/* Outer decorative flourish */}
+        <path
+          d="M0 0 L0 45 Q5 40 10 38 Q15 36 20 35 L20 20 L35 20 Q36 15 38 10 Q40 5 45 0 Z"
+          fill={`${color}30`}
+          stroke={color}
+          strokeWidth="1.5"
+        />
+        {/* Inner corner bracket */}
+        <path
+          d="M2 2 L2 35 Q6 32 12 30 L12 12 L30 12 Q32 6 35 2 Z"
+          fill="none"
+          stroke={color}
+          strokeWidth="1"
+          opacity="0.7"
+        />
+        {/* Decorative curl */}
+        <path
+          d="M5 25 Q8 22 14 20 Q20 18 25 16"
+          fill="none"
+          stroke={glowColor}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          opacity="0.8"
+        />
+        <path
+          d="M25 5 Q22 8 20 14 Q18 20 16 25"
+          fill="none"
+          stroke={glowColor}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          opacity="0.8"
+        />
+        {/* Corner diamond accent */}
+        <path
+          d="M8 8 L12 4 L16 8 L12 12 Z"
+          fill={glowColor}
+          opacity="0.9"
+        />
+        {/* Small accent dots */}
+        <circle cx="22" cy="8" r="1.5" fill={glowColor} opacity="0.7" />
+        <circle cx="8" cy="22" r="1.5" fill={glowColor} opacity="0.7" />
+        <circle cx="28" cy="12" r="1" fill={color} opacity="0.5" />
+        <circle cx="12" cy="28" r="1" fill={color} opacity="0.5" />
+        {/* Flourish spirals */}
+        <path
+          d="M4 35 Q2 30 6 28 Q10 26 12 30"
+          fill="none"
+          stroke={color}
+          strokeWidth="0.8"
+          opacity="0.6"
+        />
+        <path
+          d="M35 4 Q30 2 28 6 Q26 10 30 12"
+          fill="none"
+          stroke={color}
+          strokeWidth="0.8"
+          opacity="0.6"
+        />
+      </svg>
+    </div>
+  );
+};
+
+interface OrnateBorderProps {
+  position: "top" | "bottom" | "left" | "right";
+  color?: string;
+  glowColor?: string;
+}
+
+const OrnateBorder: React.FC<OrnateBorderProps> = ({
+  position,
+  color = "#d97706",
+  glowColor = "#f59e0b",
+}) => {
+  const isHorizontal = position === "top" || position === "bottom";
+
+  const positionClasses = {
+    top: "top-0 left-1/2 -translate-x-1/2",
+    bottom: "bottom-0 left-1/2 -translate-x-1/2",
+    left: "left-0 top-1/2 -translate-y-1/2",
+    right: "right-0 top-1/2 -translate-y-1/2",
+  };
+
+  if (isHorizontal) {
+    return (
+      <div
+        className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
+        style={{
+          width: "60%",
+          height: 12,
+          filter: `drop-shadow(0 0 3px ${glowColor}30)`,
+        }}
+      >
+        <svg
+          viewBox="0 0 200 12"
+          fill="none"
+          preserveAspectRatio="none"
+          className="w-full h-full"
+          style={{ transform: position === "bottom" ? "scaleY(-1)" : undefined }}
+        >
+          {/* Center medallion */}
+          <path
+            d="M90 0 L95 6 L100 0 L105 6 L110 0"
+            fill="none"
+            stroke={glowColor}
+            strokeWidth="1.5"
+          />
+          <circle cx="100" cy="3" r="2" fill={glowColor} />
+          {/* Left flourish */}
+          <path
+            d="M0 6 Q30 4 60 5 Q75 5.5 85 4"
+            fill="none"
+            stroke={color}
+            strokeWidth="1"
+            opacity="0.7"
+          />
+          <path
+            d="M20 6 Q40 8 60 6 Q70 5 80 5"
+            fill="none"
+            stroke={color}
+            strokeWidth="0.5"
+            opacity="0.5"
+          />
+          {/* Right flourish */}
+          <path
+            d="M200 6 Q170 4 140 5 Q125 5.5 115 4"
+            fill="none"
+            stroke={color}
+            strokeWidth="1"
+            opacity="0.7"
+          />
+          <path
+            d="M180 6 Q160 8 140 6 Q130 5 120 5"
+            fill="none"
+            stroke={color}
+            strokeWidth="0.5"
+            opacity="0.5"
+          />
+          {/* Accent dots */}
+          <circle cx="40" cy="5" r="1" fill={glowColor} opacity="0.6" />
+          <circle cx="70" cy="4" r="0.8" fill={glowColor} opacity="0.5" />
+          <circle cx="130" cy="4" r="0.8" fill={glowColor} opacity="0.5" />
+          <circle cx="160" cy="5" r="1" fill={glowColor} opacity="0.6" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
+      style={{
+        width: 12,
+        height: "40%",
+        filter: `drop-shadow(0 0 3px ${glowColor}30)`,
+      }}
+    >
+      <svg
+        viewBox="0 0 12 100"
+        fill="none"
+        preserveAspectRatio="none"
+        className="w-full h-full"
+        style={{ transform: position === "right" ? "scaleX(-1)" : undefined }}
+      >
+        {/* Vertical decorative line */}
+        <path
+          d="M6 0 Q4 25 6 50 Q8 75 6 100"
+          fill="none"
+          stroke={color}
+          strokeWidth="1"
+          opacity="0.6"
+        />
+        <circle cx="6" cy="20" r="1.5" fill={glowColor} opacity="0.5" />
+        <circle cx="6" cy="50" r="2" fill={glowColor} opacity="0.7" />
+        <circle cx="6" cy="80" r="1.5" fill={glowColor} opacity="0.5" />
+      </svg>
+    </div>
+  );
+};
+
+interface OrnateFrameProps {
+  children: React.ReactNode;
+  className?: string;
+  cornerSize?: number;
+  showBorders?: boolean;
+  color?: string;
+  glowColor?: string;
+}
+
+const OrnateFrame: React.FC<OrnateFrameProps> = ({
+  children,
+  className = "",
+  cornerSize = 36,
+  showBorders = true,
+  color = "#d97706",
+  glowColor = "#f59e0b",
+}) => {
+  return (
+    <div className={`relative ${className}`}>
+      {/* Corner ornaments */}
+      <OrnateCorner position="top-left" size={cornerSize} color={color} glowColor={glowColor} />
+      <OrnateCorner position="top-right" size={cornerSize} color={color} glowColor={glowColor} />
+      <OrnateCorner position="bottom-left" size={cornerSize} color={color} glowColor={glowColor} />
+      <OrnateCorner position="bottom-right" size={cornerSize} color={color} glowColor={glowColor} />
+
+      {/* Border decorations */}
+      {showBorders && (
+        <>
+          <OrnateBorder position="top" color={color} glowColor={glowColor} />
+          <OrnateBorder position="bottom" color={color} glowColor={glowColor} />
+        </>
+      )}
+
+      {/* Inner glow effect */}
+      <div className="absolute inset-0 pointer-events-none rounded-[inherit] z-10"
+        style={{
+          boxShadow: `inset 0 0 20px ${glowColor}10, inset 0 0 40px ${color}05`,
+        }}
+      />
+
+      {children}
+    </div>
+  );
+};
+
+// =============================================================================
 // CODEX HELPER FUNCTIONS
 // =============================================================================
 
@@ -6084,7 +6356,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
   }, [animTime, currentScene]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-center p-3 text-center relative overflow-hidden">
       {/* Canvas Battle Scene */}
       <div className="opacity-40">
         <canvas
@@ -6094,31 +6366,52 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="size-20 sm:size-24 rounded-full bg-gradient-to-br from-amber-800/60 to-orange-900/60 border-2 border-amber-600/70 flex items-center justify-center mb-4 backdrop-blur-sm shadow-lg shadow-amber-500/20">
-          <MapPin size={40} className="text-amber-400 drop-shadow-lg" />
-        </div>
+      {/* Content with ornate frame */}
+      <OrnateFrame
+        className="relative z-10 flex items-center justify-center bg-gradient-to-br from-stone-900/80 via-stone-800/70 to-stone-900/80 backdrop-blur-xs rounded-2xl border-2 border-amber-700/60 p-8 h-full shadow-2xl"
+        cornerSize={40}
+        showBorders={true}
+        color="#b45309"
+        glowColor="#f59e0b"
+      >
+        <div className="flex flex-col items-center relative z-20">
+          {/* Decorative top flourish */}
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-amber-500/80 to-transparent" />
 
-        <h3 className="text-xl font-bold text-amber-200 mb-2 drop-shadow-lg tracking-wide">
-          Select a Battlefield
-        </h3>
-        <p className="text-amber-400/90 text-sm max-w-xs drop-shadow-md leading-relaxed">
-          Click on any unlocked location on the map to view battle details and
-          begin your campaign
-        </p>
-
-        <div className="mt-6 flex items-center gap-3 text-xs text-amber-300">
-          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500/70 to-orange-600/70 border border-amber-400/80 shadow-lg shadow-amber-500/40 animate-pulse" />
-          <span className="font-medium tracking-wide">= Unlocked Location</span>
-        </div>
-        <div className="mt-3 flex items-center gap-3 text-xs text-amber-300">
-          <div className="w-4 h-4 flex items-center justify-center rounded-full bg-gradient-to-br from-gray-500/70 to-gray-600/70 border border-gray-400/80 shadow-lg shadow-gray-500/40 animate-pulse" >
-            <Lock size={10} className="text-gray-400" />
+          <div className="size-20 sm:size-24 rounded-full bg-gradient-to-br from-amber-800/60 to-orange-900/60 border-2 border-amber-600/70 flex items-center justify-center mb-4 backdrop-blur-sm shadow-lg shadow-amber-500/20">
+            <MapPin size={40} className="text-amber-400 drop-shadow-lg" />
           </div>
-          <span className="font-medium tracking-wide">= Locked Location</span>
+
+          <h3 className="text-xl font-bold text-amber-200 mb-2 drop-shadow-lg tracking-wide">
+            Select a Battlefield
+          </h3>
+          <p className="text-amber-400/90 text-sm max-w-xs drop-shadow-md leading-relaxed">
+            Click on any unlocked location on the map to view battle details and
+            begin your campaign
+          </p>
+
+          {/* Decorative divider */}
+          <div className="my-5 flex items-center gap-3 w-full max-w-[200px]">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
+            <div className="w-2 h-2 rotate-45 bg-amber-500/70 border border-amber-400/80" />
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-amber-300">
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500/70 to-orange-600/70 border border-amber-400/80 shadow-lg shadow-amber-500/40 animate-pulse" />
+            <span className="font-medium tracking-wide">= Unlocked Location</span>
+          </div>
+          <div className="mt-3 flex items-center gap-3 text-xs text-amber-300">
+            <div className="w-4 h-4 flex items-center justify-center rounded-full bg-gradient-to-br from-gray-500/70 to-gray-600/70 border border-gray-400/80 shadow-lg shadow-gray-500/40 animate-pulse" >
+              <Lock size={10} className="text-gray-400" />
+            </div>
+            <span className="font-medium tracking-wide">= Locked Location</span>
+          </div>
+
+          {/* Decorative bottom flourish */}
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-amber-500/80 to-transparent" />
         </div>
-      </div>
+      </OrnateFrame>
     </div>
   );
 };
@@ -9658,73 +9951,79 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   return (
     <div className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden">
       {/* TOP BAR */}
-      <div className="flex-shrink-0 overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 px-3 sm:px-5 py-3 flex items-center justify-between border-b-2 border-amber-700/50 shadow-xl">
-        <PrincetonLogo />
+      <OrnateFrame
+        className="flex-shrink-0 overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-b-2 border-amber-700/50 shadow-xl"
+        cornerSize={32}
+        showBorders={true}
+      >
+        <div className="relative z-20 px-3 sm:px-5 py-3 flex items-center justify-between">
+          <PrincetonLogo />
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button
-            onClick={() => setShowCodex(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
-          >
-            <Book size={18} className="text-purple-400" />
-            <span className="hidden sm:inline text-purple-300 font-medium text-lg">
-              Codex
-            </span>
-          </button>
-          <div className="flex items-center  bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 p-1.5">
-            {/* total hearts */}
-            <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-l-lg border border-red-600/60 shadow-lg">
-              <div className="relative">
-                <Heart size={20} className="text-red-400 fill-red-400" />
-                <div className="absolute inset-0 animate-ping opacity-30">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button
+              onClick={() => setShowCodex(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
+            >
+              <Book size={18} className="text-purple-400" />
+              <span className="hidden sm:inline text-purple-300 font-medium text-lg">
+                Codex
+              </span>
+            </button>
+            <div className="flex items-center  bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 p-1.5">
+              {/* total hearts */}
+              <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-l-lg border border-red-600/60 shadow-lg">
+                <div className="relative">
                   <Heart size={20} className="text-red-400 fill-red-400" />
+                  <div className="absolute inset-0 animate-ping opacity-30">
+                    <Heart size={20} className="text-red-400 fill-red-400" />
+                  </div>
                 </div>
+                <span className="font-bold text-sm sm:text-lg text-red-300">
+                  {/* iterate through every level in levelStats and sum up hearts*/}
+                  {levelStats
+                    ? Object.values(levelStats).reduce(
+                      (acc, stats) => acc + (stats.bestHearts || 0),
+                      0
+                    )
+                    : 0}
+                </span>
+                <span className="hidden sm:inline text-red-600 text-sm">/300</span>
               </div>
-              <span className="font-bold text-sm sm:text-lg text-red-300">
-                {/* iterate through every level in levelStats and sum up hearts*/}
-                {levelStats
-                  ? Object.values(levelStats).reduce(
-                    (acc, stats) => acc + (stats.bestHearts || 0),
-                    0
-                  )
-                  : 0}
-              </span>
-              <span className="hidden sm:inline text-red-600 text-sm">/300</span>
-            </div>
-            {/* total stars */}
+              {/* total stars */}
 
-            <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-r-lg border border-amber-600/60 shadow-lg">
-              <div className="relative">
-                <Star size={20} className="text-yellow-400 fill-yellow-400" />
-                <div className="absolute inset-0 animate-ping opacity-30">
+              <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-r-lg border border-amber-600/60 shadow-lg">
+                <div className="relative">
                   <Star size={20} className="text-yellow-400 fill-yellow-400" />
+                  <div className="absolute inset-0 animate-ping opacity-30">
+                    <Star size={20} className="text-yellow-400 fill-yellow-400" />
+                  </div>
                 </div>
+                <span className="font-bold text-sm sm:text-lg text-yellow-300">
+                  {totalStars}
+                </span>
+                <span className="hidden sm:inline text-yellow-600 text-sm">
+                  / {maxStars}
+                </span>
               </div>
-              <span className="font-bold text-sm sm:text-lg text-yellow-300">
-                {totalStars}
-              </span>
-              <span className="hidden sm:inline text-yellow-600 text-sm">
-                / {maxStars}
-              </span>
             </div>
-          </div>
 
-          <div className="hidden sm:flex items-center gap-3 bg-gradient-to-br from-amber-900/70 to-stone-900/80 px-1.5 py-1.5 rounded-xl border border-amber-600/60">
-            <button
-              onClick={() => goToPreviousLevel()}
-              className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
-            >
-              <ChevronLeft size={23} />
-            </button>
-            <button
-              onClick={() => goToNextLevel()}
-              className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
-            >
-              <ChevronRight size={23} />
-            </button>
+            <div className="hidden sm:flex items-center gap-3 bg-gradient-to-br from-amber-900/70 to-stone-900/80 px-1.5 py-1.5 rounded-xl border border-amber-600/60">
+              <button
+                onClick={() => goToPreviousLevel()}
+                className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+              >
+                <ChevronLeft size={23} />
+              </button>
+              <button
+                onClick={() => goToNextLevel()}
+                className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+              >
+                <ChevronRight size={23} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </OrnateFrame>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col sm:flex-row overflow-y-hidden overflow-x-auto min-h-0">
@@ -10030,347 +10329,353 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               <ChevronRight size={18} />
             </button>
           </div>
-          <div
-            ref={containerRef}
-            className="flex-1 relative  bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"
+          <OrnateFrame
+            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"
+            cornerSize={44}
+            showBorders={true}
           >
             <div
-              ref={scrollContainerRef}
-              className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
-              style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
-              onMouseDown={handleDragStart}
-              onMouseMove={handleDragMove}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+              ref={containerRef}
+              className="absolute inset-0"
             >
-              <canvas
-                ref={canvasRef}
-                className="block"
-                style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
-                onMouseMove={handleMouseMove}
-                onClick={handleClick}
-              />
-            </div>
+              <div
+                ref={scrollContainerRef}
+                className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
+                style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
+                onMouseDown={handleDragStart}
+                onMouseMove={handleDragMove}
+                onMouseUp={handleDragEnd}
+                onMouseLeave={handleDragEnd}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <canvas
+                  ref={canvasRef}
+                  className="block"
+                  style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
+                  onMouseMove={handleMouseMove}
+                  onClick={handleClick}
+                />
+              </div>
 
-            {/* HERO & SPELL SELECTION OVERLAY */}
-            <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto z-20">
-              <div className="flex w-full mt-auto gap-3 pointer-events-auto">
-                <div className="hidden sm:inline bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown size={14} className="text-amber-400" />
-                    <span className="text-xs font-bold text-amber-300 tracking-wide">
-                      WAR IS COMING
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-amber-200/80 leading-relaxed space-y-1.5">
-                    <p>
-                      The Kingdom of Princeton stands as the last bastion
-                      against the invading hordes. Ancient towers guard our
-                      halls, powered by arcane knowledge.
-                    </p>
-                    {/* <p className="text-amber-400/70 italic">
+              {/* HERO & SPELL SELECTION OVERLAY */}
+              <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto z-20">
+                <div className="flex w-full mt-auto gap-3 pointer-events-auto">
+                  <div className="hidden sm:inline bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown size={14} className="text-amber-400" />
+                      <span className="text-xs font-bold text-amber-300 tracking-wide">
+                        WAR IS COMING
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-amber-200/80 leading-relaxed space-y-1.5">
+                      <p>
+                        The Kingdom of Princeton stands as the last bastion
+                        against the invading hordes. Ancient towers guard our
+                        halls, powered by arcane knowledge.
+                      </p>
+                      {/* <p className="text-amber-400/70 italic">
                       Select your champion wisely, arm yourself with powerful
                       spells, and lead the Tiger forces to victory!
                     </p> */}
-                  </div>
-                  <div className="mt-2 pt-2 border-t border-amber-800/30 flex items-center gap-2 text-[9px] text-amber-500">
-                    <Swords size={10} />
-                    <span>Defend the realm!</span>
-                  </div>
-                </div>
-                {/* Hero Panel */}
-                <div className="bg-gradient-to-br from-amber-950/95 to-stone-900/98 rounded-xl border border-amber-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield size={14} className="text-amber-400" />
-                    <span className="text-xs text-nowrap font-bold text-amber-300 tracking-wide">
-                      SELECT CHAMPION
-                    </span>
-                  </div>
-                  <div className="grid-cols-4 grid sm:flex gap-1.5 mb-2 w-full">
-                    {heroOptions.map((heroType) => {
-                      const hero = HERO_DATA[heroType];
-                      const isSelected = selectedHero === heroType;
-                      return (
-                        <button
-                          key={heroType}
-                          onClick={() => setSelectedHero(heroType)}
-                          onMouseEnter={() => setHoveredHero(heroType)}
-                          onMouseLeave={() => setHoveredHero(null)}
-                          className={`relative px-4s sm:px-1 pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${isSelected
-                            ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
-                            : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
-                            }`}
-                        >
-                          <HeroSprite
-                            type={heroType}
-                            size={36}
-                            color={hero.color}
-                          />
-                          {isSelected && (
-                            <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-green-300 text-[8px] text-white font-bold">
-                              ✓
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {selectedHero ? (
-                    <div className="hidden sm:block bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-bold text-amber-200">
-                          {HERO_DATA[selectedHero].name}
-                        </span>
-                        <span className="text-lg">
-                          {HERO_DATA[selectedHero].icon}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-5 gap-1 mb-1.5 text-[9px]">
-                        <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-red-500">HP</div>
-                          <div className="text-red-300 font-bold">
-                            {HERO_DATA[selectedHero].hp}
-                          </div>
-                        </div>
-                        <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-orange-500">DMG</div>
-                          <div className="text-orange-300 font-bold">
-                            {HERO_DATA[selectedHero].damage}
-                          </div>
-                        </div>
-                        <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-blue-500">RNG</div>
-                          <div className="text-blue-300 font-bold">
-                            {HERO_DATA[selectedHero].range}
-                          </div>
-                        </div>
-                        <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-green-500">SPD</div>
-                          <div className="text-green-300 font-bold">
-                            {HERO_DATA[selectedHero].speed}
-                          </div>
-                        </div>
-                        <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-purple-500">CD</div>
-                          <div className="text-purple-300 font-bold">
-                            {HERO_ABILITY_COOLDOWNS[selectedHero] / 1000}s
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-[9px] text-purple-300 flex items-center gap-1 bg-purple-900/40 px-2 py-1 rounded">
-                        <Sparkles size={10} className="text-purple-400" />
-                        <span className="font-semibold text-purple-200">
-                          {HERO_DATA[selectedHero].ability}:
-                        </span>
-                        <span className="text-purple-300/80 truncate">
-                          {HERO_DATA[selectedHero].abilityDesc}
-                        </span>
-                      </div>
                     </div>
-                  ) : (
-                    <div className="text-amber-600/60 text-[10px] text-center py-2">
-                      ← Choose your champion
+                    <div className="mt-2 pt-2 border-t border-amber-800/30 flex items-center gap-2 text-[9px] text-amber-500">
+                      <Swords size={10} />
+                      <span>Defend the realm!</span>
                     </div>
-                  )}
-                  {hoveredHero && hoveredHero !== selectedHero && (
-                    <div className="absolute bg-gradient-to-br from-amber-950 to-stone-900 bottom-full left-0 mb-2 w-72 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-amber-200 font-bold">
-                          {HERO_DATA[hoveredHero].name}
-                        </span>
-                        <span>{HERO_DATA[hoveredHero].icon}</span>
-                      </div>
-                      <p className="text-xs text-amber-500/80 mb-2">
-                        {HERO_DATA[hoveredHero].description}
-                      </p>
-                      <div className="grid grid-cols-5 gap-1 text-[9px] mb-2">
-                        <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-red-500">HP</div>
-                          <div className="text-red-300 font-bold">
-                            {HERO_DATA[hoveredHero].hp}
-                          </div>
-                        </div>
-                        <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-orange-500">DMG</div>
-                          <div className="text-orange-300 font-bold">
-                            {HERO_DATA[hoveredHero].damage}
-                          </div>
-                        </div>
-                        <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-blue-500">RNG</div>
-                          <div className="text-blue-300 font-bold">
-                            {HERO_DATA[hoveredHero].range}
-                          </div>
-                        </div>
-                        <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-green-500">SPD</div>
-                          <div className="text-green-300 font-bold">
-                            {HERO_DATA[hoveredHero].speed}
-                          </div>
-                        </div>
-                        <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
-                          <div className="text-purple-500">CD</div>
-                          <div className="text-purple-300 font-bold">
-                            {HERO_ABILITY_COOLDOWNS[hoveredHero] / 1000}s
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-1 rounded">
-                        <span className="font-semibold text-purple-200">
-                          {HERO_DATA[hoveredHero].ability}:
-                        </span>{" "}
-                        {HERO_DATA[hoveredHero].abilityDesc}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Spell Panel */}
-                <div className="bg-gradient-to-br from-purple-950/95 to-stone-900/98 rounded-xl border border-purple-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
-                  <div className="flex items-center justify-between -mt-0.5 mb-2">
-                    <div className="flex items-center gap-2">
-                      <Zap size={14} className="text-purple-400" />
-                      <span className="text-xs font-bold text-amber-300 tracking-wide">
-                        <span className="hidden sm:inline">SELECT</span> SPELLS
+                  </div>
+                  {/* Hero Panel */}
+                  <div className="bg-gradient-to-br from-amber-950/95 to-stone-900/98 rounded-xl border border-amber-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield size={14} className="text-amber-400" />
+                      <span className="text-xs text-nowrap font-bold text-amber-300 tracking-wide">
+                        SELECT CHAMPION
                       </span>
                     </div>
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full ${selectedSpells.length === 3
-                        ? "bg-green-900/60 text-green-300 border border-green-700/50"
-                        : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
-                        }`}
-                    >
-                      {selectedSpells.length}/3{" "}
-                      <span className="hidden sm:inline">Selected</span>
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 sm:flex gap-1.5 mb-2">
-                    {spellOptions.map((spellType) => {
-                      const isSelected = selectedSpells.includes(spellType);
-                      const canSelect = isSelected || selectedSpells.length < 3;
-                      const spellIndex = selectedSpells.indexOf(spellType);
-                      return (
-                        <button
-                          key={spellType}
-                          onClick={() => toggleSpell(spellType)}
-                          onMouseEnter={() => setHoveredSpell(spellType)}
-                          onMouseLeave={() => setHoveredSpell(null)}
-                          disabled={!canSelect && !isSelected}
-                          className={`relative w-full p-1.5 flex justify-center rounded-lg transition-all ${isSelected
-                            ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
-                            : canSelect
-                              ? "bg-stone-800/80 border border-stone-600/50 hover:border-purple-500/60 hover:scale-105"
-                              : "bg-stone-900/60 border border-stone-800/40 opacity-40 cursor-not-allowed"
-                            }`}
-                        >
-                          <SpellSprite type={spellType} size={32} />
-                          {isSelected && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border border-purple-300">
-                              {spellIndex + 1}
+                    <div className="grid-cols-4 grid sm:flex gap-1.5 mb-2 w-full">
+                      {heroOptions.map((heroType) => {
+                        const hero = HERO_DATA[heroType];
+                        const isSelected = selectedHero === heroType;
+                        return (
+                          <button
+                            key={heroType}
+                            onClick={() => setSelectedHero(heroType)}
+                            onMouseEnter={() => setHoveredHero(heroType)}
+                            onMouseLeave={() => setHoveredHero(null)}
+                            className={`relative px-4s sm:px-1 pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${isSelected
+                              ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
+                              : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
+                              }`}
+                          >
+                            <HeroSprite
+                              type={heroType}
+                              size={36}
+                              color={hero.color}
+                            />
+                            {isSelected && (
+                              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-green-300 text-[8px] text-white font-bold">
+                                ✓
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedHero ? (
+                      <div className="hidden sm:block bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-bold text-amber-200">
+                            {HERO_DATA[selectedHero].name}
+                          </span>
+                          <span className="text-lg">
+                            {HERO_DATA[selectedHero].icon}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1 mb-1.5 text-[9px]">
+                          <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-red-500">HP</div>
+                            <div className="text-red-300 font-bold">
+                              {HERO_DATA[selectedHero].hp}
                             </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {selectedSpells.length > 0 ? (
-                    <div className="hidden sm:block bg-stone-900/60 rounded-lg w-full p-2 border border-purple-800/40">
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedSpells.map((sp, i) => {
-                          const spell = SPELL_DATA[sp];
-                          return (
-                            <div
-                              key={sp}
-                              className="flex w-full items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
-                            >
-                              <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
-                                {i + 1}
-                              </span>
-                              <span className="text-purple-200 font-medium">
-                                {spell.name}
-                              </span>
-
-                              <span className="ml-auto text-purple-500">|</span>
-
-                              <span className="text-amber-400 flex items-center gap-0.5">
-                                <Coins size={8} />
-                                {spell.cost > 0 ? spell.cost : "FREE"}
-                              </span>
-                              <span className="text-blue-400 flex items-center gap-0.5">
-                                <Timer size={8} />
-                                {spell.cooldown / 1000}s
-                              </span>
+                          </div>
+                          <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-orange-500">DMG</div>
+                            <div className="text-orange-300 font-bold">
+                              {HERO_DATA[selectedHero].damage}
                             </div>
-                          );
-                        })}
-                      </div>
-                      {selectedSpells.length < 3 && (
-                        <div className="hidden sm:inline text-[8px] text-purple-500/60 mt-1">
-                          Select {3 - selectedSpells.length} more spell
-                          {3 - selectedSpells.length > 1 ? "s" : ""}
+                          </div>
+                          <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-blue-500">RNG</div>
+                            <div className="text-blue-300 font-bold">
+                              {HERO_DATA[selectedHero].range}
+                            </div>
+                          </div>
+                          <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-green-500">SPD</div>
+                            <div className="text-green-300 font-bold">
+                              {HERO_DATA[selectedHero].speed}
+                            </div>
+                          </div>
+                          <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-purple-500">CD</div>
+                            <div className="text-purple-300 font-bold">
+                              {HERO_ABILITY_COOLDOWNS[selectedHero] / 1000}s
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="hidden sm:inline text-purple-600/60 text-[10px] text-center py-2">
-                      ← Select 3 spells for battle
-                    </div>
-                  )}
-                  {hoveredSpell && (
-                    <div className="absolute bottom-full right-0 mb-2 w-80 bg-gradient-to-br from-purple-950 to-stone-900 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-purple-200 font-bold text-lg">
-                          {SPELL_DATA[hoveredSpell].name}
+                        <div className="text-[9px] text-purple-300 flex items-center gap-1 bg-purple-900/40 px-2 py-1 rounded">
+                          <Sparkles size={10} className="text-purple-400" />
+                          <span className="font-semibold text-purple-200">
+                            {HERO_DATA[selectedHero].ability}:
+                          </span>
+                          <span className="text-purple-300/80 truncate">
+                            {HERO_DATA[selectedHero].abilityDesc}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-amber-600/60 text-[10px] text-center py-2">
+                        ← Choose your champion
+                      </div>
+                    )}
+                    {hoveredHero && hoveredHero !== selectedHero && (
+                      <div className="absolute bg-gradient-to-br from-amber-950 to-stone-900 bottom-full left-0 mb-2 w-72 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-amber-200 font-bold">
+                            {HERO_DATA[hoveredHero].name}
+                          </span>
+                          <span>{HERO_DATA[hoveredHero].icon}</span>
+                        </div>
+                        <p className="text-xs text-amber-500/80 mb-2">
+                          {HERO_DATA[hoveredHero].description}
+                        </p>
+                        <div className="grid grid-cols-5 gap-1 text-[9px] mb-2">
+                          <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-red-500">HP</div>
+                            <div className="text-red-300 font-bold">
+                              {HERO_DATA[hoveredHero].hp}
+                            </div>
+                          </div>
+                          <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-orange-500">DMG</div>
+                            <div className="text-orange-300 font-bold">
+                              {HERO_DATA[hoveredHero].damage}
+                            </div>
+                          </div>
+                          <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-blue-500">RNG</div>
+                            <div className="text-blue-300 font-bold">
+                              {HERO_DATA[hoveredHero].range}
+                            </div>
+                          </div>
+                          <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-green-500">SPD</div>
+                            <div className="text-green-300 font-bold">
+                              {HERO_DATA[hoveredHero].speed}
+                            </div>
+                          </div>
+                          <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
+                            <div className="text-purple-500">CD</div>
+                            <div className="text-purple-300 font-bold">
+                              {HERO_ABILITY_COOLDOWNS[hoveredHero] / 1000}s
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-1 rounded">
+                          <span className="font-semibold text-purple-200">
+                            {HERO_DATA[hoveredHero].ability}:
+                          </span>{" "}
+                          {HERO_DATA[hoveredHero].abilityDesc}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Spell Panel */}
+                  <div className="bg-gradient-to-br from-purple-950/95 to-stone-900/98 rounded-xl border border-purple-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
+                    <div className="flex items-center justify-between -mt-0.5 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Zap size={14} className="text-purple-400" />
+                        <span className="text-xs font-bold text-amber-300 tracking-wide">
+                          <span className="hidden sm:inline">SELECT</span> SPELLS
                         </span>
-                        <span className="text-xl">
-                          {SPELL_DATA[hoveredSpell].icon}
-                        </span>
                       </div>
-                      <p className="text-xs text-purple-400/80 mb-3">
-                        {SPELL_DATA[hoveredSpell].desc}
-                      </p>
-                      <div className="flex gap-3 mb-3">
-                        <div className="bg-amber-950/60 rounded px-3 py-1.5 text-center">
-                          <div className="text-[9px] text-amber-500">Cost</div>
-                          <div className="text-amber-300 font-bold">
-                            {SPELL_DATA[hoveredSpell].cost > 0
-                              ? `${SPELL_DATA[hoveredSpell].cost} PP`
-                              : "FREE"}
-                          </div>
-                        </div>
-                        <div className="bg-blue-950/60 rounded px-3 py-1.5 text-center">
-                          <div className="text-[9px] text-blue-500">
-                            Cooldown
-                          </div>
-                          <div className="text-blue-300 font-bold">
-                            {SPELL_DATA[hoveredSpell].cooldown / 1000}s
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-2 rounded border border-purple-800/40">
-                        <div className="text-purple-500 uppercase text-[8px] mb-1">
-                          Effect Details
-                        </div>
-                        {hoveredSpell === "fireball" &&
-                          "Meteor falls from sky (1s delay), 200 AoE damage with falloff, 150 radius"}
-                        {hoveredSpell === "lightning" &&
-                          "Chains to 5 enemies, 600 total damage split, 0.5s stun each"}
-                        {hoveredSpell === "freeze" &&
-                          "Freezes ALL enemies for 3 seconds, expanding ice wave"}
-                        {hoveredSpell === "payday" &&
-                          "80 base + 5 per enemy (max 50 bonus) = up to 130 PP"}
-                        {hoveredSpell === "reinforcements" &&
-                          "Summons 3 knights (500 HP, 30 DMG each), click to place"}
-                      </div>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full ${selectedSpells.length === 3
+                          ? "bg-green-900/60 text-green-300 border border-green-700/50"
+                          : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
+                          }`}
+                      >
+                        {selectedSpells.length}/3{" "}
+                        <span className="hidden sm:inline">Selected</span>
+                      </span>
                     </div>
-                  )}
+                    <div className="grid grid-cols-3 sm:flex gap-1.5 mb-2">
+                      {spellOptions.map((spellType) => {
+                        const isSelected = selectedSpells.includes(spellType);
+                        const canSelect = isSelected || selectedSpells.length < 3;
+                        const spellIndex = selectedSpells.indexOf(spellType);
+                        return (
+                          <button
+                            key={spellType}
+                            onClick={() => toggleSpell(spellType)}
+                            onMouseEnter={() => setHoveredSpell(spellType)}
+                            onMouseLeave={() => setHoveredSpell(null)}
+                            disabled={!canSelect && !isSelected}
+                            className={`relative w-full p-1.5 flex justify-center rounded-lg transition-all ${isSelected
+                              ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
+                              : canSelect
+                                ? "bg-stone-800/80 border border-stone-600/50 hover:border-purple-500/60 hover:scale-105"
+                                : "bg-stone-900/60 border border-stone-800/40 opacity-40 cursor-not-allowed"
+                              }`}
+                          >
+                            <SpellSprite type={spellType} size={32} />
+                            {isSelected && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border border-purple-300">
+                                {spellIndex + 1}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {selectedSpells.length > 0 ? (
+                      <div className="hidden sm:block bg-stone-900/60 rounded-lg w-full p-2 border border-purple-800/40">
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedSpells.map((sp, i) => {
+                            const spell = SPELL_DATA[sp];
+                            return (
+                              <div
+                                key={sp}
+                                className="flex w-full items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
+                              >
+                                <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+                                  {i + 1}
+                                </span>
+                                <span className="text-purple-200 font-medium">
+                                  {spell.name}
+                                </span>
+
+                                <span className="ml-auto text-purple-500">|</span>
+
+                                <span className="text-amber-400 flex items-center gap-0.5">
+                                  <Coins size={8} />
+                                  {spell.cost > 0 ? spell.cost : "FREE"}
+                                </span>
+                                <span className="text-blue-400 flex items-center gap-0.5">
+                                  <Timer size={8} />
+                                  {spell.cooldown / 1000}s
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {selectedSpells.length < 3 && (
+                          <div className="hidden sm:inline text-[8px] text-purple-500/60 mt-1">
+                            Select {3 - selectedSpells.length} more spell
+                            {3 - selectedSpells.length > 1 ? "s" : ""}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="hidden sm:inline text-purple-600/60 text-[10px] text-center py-2">
+                        ← Select 3 spells for battle
+                      </div>
+                    )}
+                    {hoveredSpell && (
+                      <div className="absolute bottom-full right-0 mb-2 w-80 bg-gradient-to-br from-purple-950 to-stone-900 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-purple-200 font-bold text-lg">
+                            {SPELL_DATA[hoveredSpell].name}
+                          </span>
+                          <span className="text-xl">
+                            {SPELL_DATA[hoveredSpell].icon}
+                          </span>
+                        </div>
+                        <p className="text-xs text-purple-400/80 mb-3">
+                          {SPELL_DATA[hoveredSpell].desc}
+                        </p>
+                        <div className="flex gap-3 mb-3">
+                          <div className="bg-amber-950/60 rounded px-3 py-1.5 text-center">
+                            <div className="text-[9px] text-amber-500">Cost</div>
+                            <div className="text-amber-300 font-bold">
+                              {SPELL_DATA[hoveredSpell].cost > 0
+                                ? `${SPELL_DATA[hoveredSpell].cost} PP`
+                                : "FREE"}
+                            </div>
+                          </div>
+                          <div className="bg-blue-950/60 rounded px-3 py-1.5 text-center">
+                            <div className="text-[9px] text-blue-500">
+                              Cooldown
+                            </div>
+                            <div className="text-blue-300 font-bold">
+                              {SPELL_DATA[hoveredSpell].cooldown / 1000}s
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-2 rounded border border-purple-800/40">
+                          <div className="text-purple-500 uppercase text-[8px] mb-1">
+                            Effect Details
+                          </div>
+                          {hoveredSpell === "fireball" &&
+                            "Meteor falls from sky (1s delay), 200 AoE damage with falloff, 150 radius"}
+                          {hoveredSpell === "lightning" &&
+                            "Chains to 5 enemies, 600 total damage split, 0.5s stun each"}
+                          {hoveredSpell === "freeze" &&
+                            "Freezes ALL enemies for 3 seconds, expanding ice wave"}
+                          {hoveredSpell === "payday" &&
+                            "80 base + 5 per enemy (max 50 bonus) = up to 130 PP"}
+                          {hoveredSpell === "reinforcements" &&
+                            "Summons 3 knights (500 HP, 30 DMG each), click to place"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </OrnateFrame>
         </div>
       </div>
 
