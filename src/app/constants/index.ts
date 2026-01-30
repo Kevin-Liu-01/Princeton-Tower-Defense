@@ -1477,9 +1477,9 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   captain: {
     name: "General Mercer",
-    icon: "⚔️",
+    icon: "🐉",
     description:
-      "A legendary military commander who leads troops into battle. Rallies reinforcements with an inspiring battle cry.",
+      "A legendary Dragonlord General wreathed in divine flame. Commands the battlefield with overwhelming presence and summons loyal knights to his banner.",
     hp: 2800,
     damage: 65,
     range: 100,

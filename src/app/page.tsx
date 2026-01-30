@@ -308,6 +308,10 @@ export default function PrincetonTowerDefense() {
   // which cancels the animation frame and causes a noticeable freeze on mobile devices
   const updateGameRef = useRef<(deltaTime: number) => void>(() => { });
   const renderRef = useRef<() => void>(() => { });
+  
+  // PERFORMANCE FIX: Cache decorations to avoid regenerating them every frame
+  // This was causing major performance issues on mobile - generating 500+ decorations per frame
+  const cachedDecorationsRef = useRef<{ mapKey: string; decorations: Decoration[] } | null>(null);
 
   // Wave Management Refs
   const spawnIntervalsRef = useRef<NodeJS.Timeout[]>([]);
@@ -5042,13 +5046,19 @@ export default function PrincetonTowerDefense() {
       drawRoadEndFog(secLastScreenPos, secSecondLastScreenPos, 120);
     }
 
-    // Generate theme-specific decorations
-    // DecorationType and Decoration are imported from ./types
-    seedState = mapSeed + 400;
-    const decorations: Decoration[] = [];
-
-    // Get current theme
-    const currentTheme = mapTheme;
+    // Generate theme-specific decorations (CACHED for performance)
+    // PERFORMANCE FIX: Cache decorations to avoid regenerating 500+ objects every frame
+    // This was a major cause of freezing on mobile devices
+    let decorations: Decoration[];
+    
+    if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === selectedMap) {
+      // Use cached decorations
+      decorations = cachedDecorationsRef.current.decorations;
+    } else {
+      // Generate decorations and cache them
+      decorations = [];
+      seedState = mapSeed + 400;
+      const currentTheme = mapTheme;
 
     // Categorize decorations by type for clustering
     const getDecorationCategories = (theme: string) => {
@@ -5532,6 +5542,11 @@ export default function PrincetonTowerDefense() {
 
     // Sort by Y for depth
     decorations.sort((a, b) => a.y - b.y);
+    
+    // Cache the generated decorations
+    cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
+    } // End of decoration generation (else block)
+    
     const decorTime = Date.now() / 1000;
 
     // =========================================================================
@@ -6227,8 +6242,8 @@ export default function PrincetonTowerDefense() {
   updateGameRef.current = updateGame;
   renderRef.current = render;
 
-  // Game loop - uses refs to avoid restarting when updateGame/render change
-  // This prevents the freeze that occurred when selecting troops/heroes on mobile
+  // Game loop - uses refs to avoid restarting when state changes
+  // This prevents freezes when selecting troops/heroes or toggling inspector
   useEffect(() => {
     if (gameState !== "playing") return;
     const gameLoop = (timestamp: number) => {
@@ -6239,7 +6254,8 @@ export default function PrincetonTowerDefense() {
         ? timestamp - lastTimeRef.current
         : 0;
       const cappedDelta = Math.min(rawDelta, 100); // Max 100ms per frame
-      const deltaTime = cappedDelta * gameSpeed;
+      // Use gameSpeedRef instead of gameSpeed to avoid loop restart when pausing/unpausing
+      const deltaTime = cappedDelta * gameSpeedRef.current;
       lastTimeRef.current = timestamp;
       // Use refs to call latest versions without restarting the loop
       updateGameRef.current(deltaTime);
@@ -6250,7 +6266,7 @@ export default function PrincetonTowerDefense() {
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
-  }, [gameState, gameSpeed]); // Removed updateGame and render - they're accessed via refs now
+  }, [gameState]); // Only restart loop when entering/leaving playing state
   // Event handlers
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -6615,6 +6631,13 @@ export default function PrincetonTowerDefense() {
   );
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
+      // MOBILE FIX: Skip synthetic mouse events that follow touch events
+      // Mobile browsers generate fake mousemove events after touchend which causes
+      // expensive recalculations and freezing
+      if (Date.now() - lastTouchTimeRef.current < 500) {
+        return;
+      }
+      
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -6858,9 +6881,9 @@ export default function PrincetonTowerDefense() {
         // Calculate move target on-the-fly for touch
         const pathResult = findClosestPathPoint(touchWorldPos, selectedMap);
         if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2.5) {
-          // Valid path point - move hero there
+          // Valid path point - move hero there and deselect
           setHero((prev) =>
-            prev ? { ...prev, moving: true, targetPos: pathResult.point } : null
+            prev ? { ...prev, moving: true, targetPos: pathResult.point, selected: false } : null
           );
           addParticles(pathResult.point, "glow", 5);
         } else {
@@ -6931,11 +6954,12 @@ export default function PrincetonTowerDefense() {
                     moving: true,
                     targetPos: newTarget,
                     userTargetPos: newTarget,
+                    selected: false, // Deselect after moving
                     // Update spawn point to rally point for station/barracks troops
                     spawnPoint: (station || isBarracksTroop) ? pathResult.point : t.spawnPoint,
                   };
                 }
-                return t;
+                return { ...t, selected: false }; // Deselect all troops
               })
             );
             addParticles(pathResult.point, "light", 5);
