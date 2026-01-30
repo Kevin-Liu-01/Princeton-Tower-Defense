@@ -349,31 +349,77 @@ export function renderTroop(
     }
   }
 
-  // HP Bar - scaled for larger troops
+  // HP Bar - Modern styled with gradients
   if (troop.hp < troop.maxHp) {
-    const barWidth = 30 * zoom * sizeScale;
-    const barHeight = 4 * zoom;
-    const barY = screenPos.y - size - 8 * zoom;
+    const barWidth = 32 * zoom * sizeScale;
+    const barHeight = 5 * zoom;
+    const barY = screenPos.y - size - 10 * zoom;
+    const barX = screenPos.x - barWidth / 2;
+    const cornerRadius = 2.5 * zoom;
 
-    ctx.fillStyle = "rgba(0,0,0,0.7)";
-    ctx.fillRect(
-      screenPos.x - barWidth / 2 - 1,
-      barY - 1,
-      barWidth + 2,
-      barHeight + 2
-    );
-    ctx.fillStyle = "#333";
-    ctx.fillRect(screenPos.x - barWidth / 2, barY, barWidth, barHeight);
+    // Outer shadow for depth
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+    ctx.shadowBlur = 3 * zoom;
+    ctx.shadowOffsetY = 1 * zoom;
+
+    // Background with rounded corners
+    ctx.fillStyle = "rgba(10, 10, 15, 0.9)";
+    ctx.beginPath();
+    ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Inner dark background
+    ctx.fillStyle = "#18181b";
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius - 1);
+    ctx.fill();
 
     const hpPercent = troop.hp / troop.maxHp;
-    ctx.fillStyle =
-      hpPercent > 0.5 ? "#4ade80" : hpPercent > 0.25 ? "#fbbf24" : "#ef4444";
-    ctx.fillRect(
-      screenPos.x - barWidth / 2,
-      barY,
-      barWidth * hpPercent,
-      barHeight
-    );
+    const hpWidth = barWidth * hpPercent;
+
+    // Health gradient fill
+    if (hpWidth > 0) {
+      const hpGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+      if (hpPercent > 0.5) {
+        // Green - healthy
+        hpGradient.addColorStop(0, "#86efac");
+        hpGradient.addColorStop(0.5, "#4ade80");
+        hpGradient.addColorStop(1, "#22c55e");
+      } else if (hpPercent > 0.25) {
+        // Yellow - caution
+        hpGradient.addColorStop(0, "#fde047");
+        hpGradient.addColorStop(0.5, "#facc15");
+        hpGradient.addColorStop(1, "#eab308");
+      } else {
+        // Red - critical
+        hpGradient.addColorStop(0, "#fca5a5");
+        hpGradient.addColorStop(0.5, "#f87171");
+        hpGradient.addColorStop(1, "#ef4444");
+      }
+      ctx.fillStyle = hpGradient;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, hpWidth, barHeight, [cornerRadius - 1, hpPercent > 0.9 ? cornerRadius - 1 : 0, hpPercent > 0.9 ? cornerRadius - 1 : 0, cornerRadius - 1]);
+      ctx.fill();
+
+      // Shine highlight
+      const shineGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight * 0.45);
+      shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.35)");
+      shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = shineGrad;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, hpWidth, barHeight * 0.45, [cornerRadius - 1, hpPercent > 0.9 ? cornerRadius - 1 : 0, 0, 0]);
+      ctx.fill();
+    }
+
+    // Subtle outer glow based on health
+    const glowColor = hpPercent > 0.5 ? "rgba(74, 222, 128, 0.3)" : hpPercent > 0.25 ? "rgba(250, 204, 21, 0.3)" : "rgba(248, 113, 113, 0.3)";
+    ctx.strokeStyle = glowColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+    ctx.stroke();
   }
 }
 

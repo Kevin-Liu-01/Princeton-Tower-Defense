@@ -303,15 +303,40 @@ export default function PrincetonTowerDefense() {
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
 
+  // PERFORMANCE FIX: Use refs for game loop callbacks to prevent loop restart on state changes
+  // Without this, selecting a troop/hero causes the game loop useEffect to re-run,
+  // which cancels the animation frame and causes a noticeable freeze on mobile devices
+  const updateGameRef = useRef<(deltaTime: number) => void>(() => { });
+  const renderRef = useRef<() => void>(() => { });
+
   // Wave Management Refs
   const spawnIntervalsRef = useRef<NodeJS.Timeout[]>([]);
   const activeTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Pausable timer system - tracks remaining time when paused
+  const gameSpeedRef = useRef(gameSpeed);
+  gameSpeedRef.current = gameSpeed;
+  const pausedAtRef = useRef<number | null>(null);
+  // Track pausable timeouts: { id, callback, remainingTime, startedAt }
+  const pausableTimeoutsRef = useRef<Array<{
+    id: number;
+    callback: () => void;
+    remainingTime: number;
+    startedAt: number;
+    timeoutId: NodeJS.Timeout | null;
+  }>>([]);
+  const pausableTimeoutIdCounter = useRef(0);
 
   // Refs for current state values to avoid stale closures in callbacks
   const towersRef = useRef(towers);
   const pawPointsRef = useRef(pawPoints);
   towersRef.current = towers;
   pawPointsRef.current = pawPoints;
+
+  // Track last spawn time for frontier barracks to prevent double-spawning on restart
+  const lastBarracksSpawnRef = useRef<number>(0);
+  // Track when game was reset to prevent stale state race conditions
+  const gameResetTimeRef = useRef<number>(0);
 
   // Get current level waves - computed from selectedMap
   const currentLevelWaves = getLevelWaves(selectedMap);
@@ -334,6 +359,74 @@ export default function PrincetonTowerDefense() {
     spawnIntervalsRef.current = [];
     activeTimeoutsRef.current.forEach(clearTimeout);
     activeTimeoutsRef.current = [];
+    // Also clear pausable timeouts
+    pausableTimeoutsRef.current.forEach(pt => {
+      if (pt.timeoutId) clearTimeout(pt.timeoutId);
+    });
+    pausableTimeoutsRef.current = [];
+  }, []);
+
+  // Pausable timeout helper - creates a timeout that can be paused/resumed
+  const setPausableTimeout = useCallback((callback: () => void, delay: number) => {
+    const id = ++pausableTimeoutIdCounter.current;
+    const now = Date.now();
+
+    const entry = {
+      id,
+      callback,
+      remainingTime: delay,
+      startedAt: now,
+      timeoutId: null as NodeJS.Timeout | null,
+    };
+
+    // If game is paused, don't start the timeout yet
+    if (gameSpeedRef.current === 0) {
+      pausableTimeoutsRef.current.push(entry);
+      return id;
+    }
+
+    // Start the timeout
+    entry.timeoutId = setTimeout(() => {
+      // Remove from tracking
+      pausableTimeoutsRef.current = pausableTimeoutsRef.current.filter(pt => pt.id !== id);
+      callback();
+    }, delay);
+
+    pausableTimeoutsRef.current.push(entry);
+    return id;
+  }, []);
+
+  // Pause all pausable timeouts
+  const pauseAllTimeouts = useCallback(() => {
+    const now = Date.now();
+    pausedAtRef.current = now;
+
+    pausableTimeoutsRef.current.forEach(pt => {
+      if (pt.timeoutId) {
+        clearTimeout(pt.timeoutId);
+        pt.timeoutId = null;
+        // Calculate remaining time
+        const elapsed = now - pt.startedAt;
+        pt.remainingTime = Math.max(0, pt.remainingTime - elapsed);
+      }
+    });
+    // Note: Spawn intervals are not cleared - they check gameSpeedRef and skip spawning when paused
+  }, []);
+
+  // Resume all pausable timeouts
+  const resumeAllTimeouts = useCallback(() => {
+    const now = Date.now();
+    pausedAtRef.current = null;
+
+    pausableTimeoutsRef.current.forEach(pt => {
+      if (!pt.timeoutId && pt.remainingTime > 0) {
+        pt.startedAt = now;
+        pt.timeoutId = setTimeout(() => {
+          pausableTimeoutsRef.current = pausableTimeoutsRef.current.filter(p => p.id !== pt.id);
+          pt.callback();
+        }, pt.remainingTime);
+      }
+    });
   }, []);
 
   // Performance constants for particles and effects
@@ -471,6 +564,14 @@ export default function PrincetonTowerDefense() {
       } else {
         setSpecialTowerHp(null);
       }
+      // Reset pausable timer system state
+      prevGameSpeedRef.current = 1;
+      pausedAtRef.current = null;
+      pausableTimeoutsRef.current = [];
+      // Reset spawn timing refs
+      lastBarracksSpawnRef.current = 0;
+      // Mark reset time to prevent stale state race conditions
+      gameResetTimeRef.current = Date.now();
     }
   }, [gameState, clearAllTimers, selectedMap]);
 
@@ -545,6 +646,23 @@ export default function PrincetonTowerDefense() {
     window.addEventListener("resize", resizeCanvas);
     return () => window.removeEventListener("resize", resizeCanvas);
   }, [gameState]);
+
+  // Handle pause/resume of spawn timers when gameSpeed changes
+  const prevGameSpeedRef = useRef(gameSpeed);
+  useEffect(() => {
+    const prevSpeed = prevGameSpeedRef.current;
+    prevGameSpeedRef.current = gameSpeed;
+
+    // Only handle transitions to/from paused state
+    if (prevSpeed !== 0 && gameSpeed === 0) {
+      // Just paused - pause all timeouts
+      pauseAllTimeouts();
+    } else if (prevSpeed === 0 && gameSpeed !== 0) {
+      // Just resumed - resume all timeouts
+      resumeAllTimeouts();
+    }
+  }, [gameSpeed, pauseAllTimeouts, resumeAllTimeouts]);
+
   // Start wave function
   const startWave = useCallback(() => {
     const levelWaves = getLevelWaves(selectedMap);
@@ -568,6 +686,10 @@ export default function PrincetonTowerDefense() {
       const startSpawning = () => {
         let spawned = 0;
         const spawnInterval = setInterval(() => {
+          // Skip spawning if game is paused
+          if (gameSpeedRef.current === 0) {
+            return;
+          }
           if (spawned >= group.count) {
             clearInterval(spawnInterval);
             return;
@@ -685,8 +807,8 @@ export default function PrincetonTowerDefense() {
 
       // If delay is specified, wait before starting to spawn this group
       if (startDelay > 0) {
-        const delayTimeout = setTimeout(startSpawning, startDelay);
-        activeTimeoutsRef.current.push(delayTimeout);
+        // Use pausable timeout for delays
+        setPausableTimeout(startSpawning, startDelay);
       } else {
         startSpawning();
       }
@@ -696,7 +818,8 @@ export default function PrincetonTowerDefense() {
     const waveNumberForTimeout = currentWave; // Capture for closure
     console.log(`[Wave] Wave ${currentWave + 1} started, will complete in ${waveDuration}ms`);
 
-    const waveOverTimeout = setTimeout(() => {
+    // Use pausable timeout for wave completion
+    setPausableTimeout(() => {
       // Use functional updates to check current state before modifying
       setCurrentWave((currentW) => {
         // Only process if we're still on the wave this timeout was for
@@ -714,9 +837,7 @@ export default function PrincetonTowerDefense() {
         return currentW + 1;
       });
     }, waveDuration);
-    // Track timeout for cleanup
-    activeTimeoutsRef.current.push(waveOverTimeout);
-  }, [waveInProgress, currentWave, selectedMap]);
+  }, [waveInProgress, currentWave, selectedMap, setPausableTimeout]);
   // Helper to apply enemy abilities to a target (troop or hero)
   const applyEnemyAbilities = useCallback((
     enemy: Enemy,
@@ -795,6 +916,11 @@ export default function PrincetonTowerDefense() {
       if (isPaused) {
         return;
       }
+
+      // Skip spawning logic during game reset transition to prevent race conditions
+      // where stale state might cause double spawns
+      const timeSinceReset = now - gameResetTimeRef.current;
+      const isInResetTransition = timeSinceReset < 100; // 100ms grace period
 
       const levelWaves = getLevelWaves(selectedMap);
       const mapData = LEVEL_DATA[selectedMap];
@@ -973,55 +1099,66 @@ export default function PrincetonTowerDefense() {
           ]);
         }
 
-        // C. BARRACKS: Capped & Spread Deployment
-        const isSpawnTick =
-          Math.floor(now / 12000) > Math.floor((now - deltaTime) / 12000);
-        if (spec.type === "barracks" && isSpawnTick) {
+        // C. BARRACKS: Capped & Spread Deployment (max 3 knights)
+        // Align spawn timing with the visual glow animation (12-second cycle, spawn in first 1.5 seconds)
+        if (spec.type === "barracks" && !isInResetTransition) {
           const barracksTroops = troops.filter(
             (t) => t.ownerId === "special_barracks"
           );
 
-          if (barracksTroops.length < 3) {
-            const slot = barracksTroops.length;
+          // Match the visual cycle from specialBuildings.ts rendering
+          const spawnCycle = now % 12000;
+          const isInSpawnWindow = spawnCycle < 1500;
+          const wasInSpawnWindow = lastBarracksSpawnRef.current > 0 &&
+            (lastBarracksSpawnRef.current % 12000) < 1500;
 
-            // 1. Find the closest path segment to the barracks
-            const path = MAP_PATHS[selectedMap];
-            const secondaryPath = MAP_PATHS[`${selectedMap}_b`] || null;
-            const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
+          // Only spawn at the START of the spawn window (when transitioning into it)
+          // or if this is the first spawn (lastBarracksSpawnRef is 0)
+          const justEnteredSpawnWindow = isInSpawnWindow &&
+            (lastBarracksSpawnRef.current === 0 || !wasInSpawnWindow || (now - lastBarracksSpawnRef.current) > 10500);
 
-            let closestDist = Infinity;
-            let pathAnchor: Position = specWorldPos;
-            let closestSegmentStart: Position = specWorldPos;
-            let closestSegmentEnd: Position = specWorldPos;
+          if (justEnteredSpawnWindow && barracksTroops.length < 3) {
+            // Update last spawn time
+            lastBarracksSpawnRef.current = now;
 
-            for (let i = 0; i < fullPath.length - 1; i++) {
-              const p1 = gridToWorldPath(fullPath[i]);
-              const p2 = gridToWorldPath(fullPath[i + 1]);
-              const candidate = closestPointOnLine(specWorldPos, p1, p2);
-              const dist = distance(specWorldPos, candidate);
-              if (dist < closestDist) {
-                closestDist = dist;
-                pathAnchor = candidate;
-                closestSegmentStart = p1;
-                closestSegmentEnd = p2;
+            // Helper to find closest road point
+            const findBarracksRoadPoint = (pos: Position): Position => {
+              const path = MAP_PATHS[selectedMap];
+              const secondaryPath = MAP_PATHS[`${selectedMap}_b`] || null;
+              const fullPath = secondaryPath ? path.concat(secondaryPath) : path;
+              if (!fullPath || fullPath.length < 2) return pos;
+
+              let closestPoint: Position = pos;
+              let minDist = Infinity;
+              for (let i = 0; i < fullPath.length - 1; i++) {
+                const p1 = gridToWorldPath(fullPath[i]);
+                const p2 = gridToWorldPath(fullPath[i + 1]);
+                const roadPoint = closestPointOnLine(pos, p1, p2);
+                const dist = distance(pos, roadPoint);
+                if (dist < minDist) {
+                  minDist = dist;
+                  closestPoint = roadPoint;
+                }
               }
-            }
+              return closestPoint;
+            };
 
-            // 2. Calculate direction along the path segment
-            const segDx = closestSegmentEnd.x - closestSegmentStart.x;
-            const segDy = closestSegmentEnd.y - closestSegmentStart.y;
-            const segLen = Math.sqrt(segDx * segDx + segDy * segDy);
-            const pathDirX = segLen > 0 ? segDx / segLen : 1;
-            const pathDirY = segLen > 0 ? segDy / segLen : 0;
+            // Find rally point from existing barracks troops (user-selected position) or use road near barracks
+            const existingRallyTroop = barracksTroops.find((t) => t.userTargetPos);
+            const rallyPoint = existingRallyTroop?.userTargetPos || findBarracksRoadPoint(specWorldPos);
 
-            // 3. Position troops along the path at different distances from anchor
-            // Spacing between troops along the path
-            const troopSpacing = 35;
-            const slotOffsets = [-troopSpacing, 0, troopSpacing]; // spread along path
+            // Find available slot
+            const occupiedSlots = new Set(barracksTroops.map((t) => t.spawnSlot ?? 0));
+            const availableSlot = [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? barracksTroops.length;
+
+            // Calculate formation position (like dinky station)
+            const futureCount = barracksTroops.length + 1;
+            const formationOffsets = getFormationOffsets(futureCount);
+            const slotOffset = formationOffsets[availableSlot] || { x: 0, y: 0 };
 
             const targetPos = {
-              x: pathAnchor.x + pathDirX * slotOffsets[slot],
-              y: pathAnchor.y + pathDirY * slotOffsets[slot],
+              x: rallyPoint.x + slotOffset.x,
+              y: rallyPoint.y + slotOffset.y,
             };
 
             const newTroop: Troop = {
@@ -1042,11 +1179,43 @@ export default function PrincetonTowerDefense() {
               ),
               attackAnim: 0,
               selected: false,
-              spawnPoint: pathAnchor, // Anchor move radius to the path spot
+              spawnPoint: rallyPoint, // Anchor move radius to the rally point
               moveRadius: 220, // Increased range for frontier barracks
-              spawnSlot: slot,
+              spawnSlot: availableSlot,
             };
-            setTroops((prev) => [...prev, newTroop]);
+
+            // Also update existing barracks troops to reposition in new formation
+            setTroops((prev) => {
+              const currentBarracksTroops = prev.filter((t) => t.ownerId === "special_barracks");
+              const troopIdToFormationIndex = new Map<string, number>();
+              currentBarracksTroops.forEach((t, idx) => {
+                troopIdToFormationIndex.set(t.id, idx);
+              });
+
+              const updated = prev.map((t) => {
+                if (t.ownerId === "special_barracks") {
+                  const newFormation = getFormationOffsets(futureCount);
+                  const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
+                  const offset = newFormation[formationIndex] || { x: 0, y: 0 };
+                  const newTarget = {
+                    x: rallyPoint.x + offset.x,
+                    y: rallyPoint.y + offset.y,
+                  };
+                  // Only reposition if not engaging enemies
+                  if (!t.engaging) {
+                    return {
+                      ...t,
+                      targetPos: newTarget,
+                      moving: true,
+                      userTargetPos: newTarget,
+                      spawnPoint: rallyPoint,
+                    };
+                  }
+                }
+                return t;
+              });
+              return [...updated, newTroop];
+            });
             addParticles(specWorldPos, "smoke", 12);
           }
         }
@@ -2944,7 +3113,7 @@ export default function PrincetonTowerDefense() {
 
               // Scale station spawn interval with game speed
               const stationSpawnInterval = gameSpeed > 0 ? 8000 / gameSpeed : 8000;
-              if (arrivedAtPlatform && now - tower.lastAttack > stationSpawnInterval) {
+              if (arrivedAtPlatform && now - tower.lastAttack > stationSpawnInterval && !isInResetTransition) {
                 // Spawn troop at station, it will walk to formation position
                 const stationPos = gridToWorld(tower.pos);
 
@@ -5886,21 +6055,7 @@ export default function PrincetonTowerDefense() {
             cameraOffset,
             cameraZoom
           );
-          // Render inspect indicator if inspector is active
-          if (inspectorActive) {
-            renderEnemyInspectIndicator(
-              ctx,
-              r.data as Enemy,
-              canvas.width,
-              canvas.height,
-              dpr,
-              selectedMap,
-              selectedInspectEnemy?.id === (r.data as Enemy).id,
-              hoveredInspectEnemy === (r.data as Enemy).id,
-              cameraOffset,
-              cameraZoom
-            );
-          }
+          // Note: Inspector indicators are now rendered in a separate top-layer pass below
           break;
         case "hero":
           renderHero(
@@ -6018,6 +6173,26 @@ export default function PrincetonTowerDefense() {
       }
     });
 
+    // ========== INSPECTOR INDICATORS - TOP LAYER ==========
+    // Render inspector indicators as a separate pass so they're always on top
+    // and can be easily hovered/clicked
+    if (inspectorActive) {
+      enemies.forEach((enemy) => {
+        renderEnemyInspectIndicator(
+          ctx,
+          enemy,
+          canvas.width,
+          canvas.height,
+          dpr,
+          selectedMap,
+          selectedInspectEnemy?.id === enemy.id,
+          hoveredInspectEnemy === enemy.id,
+          cameraOffset,
+          cameraZoom
+        );
+      });
+    }
+
     // Restore state
     ctx.restore();
 
@@ -6042,8 +6217,18 @@ export default function PrincetonTowerDefense() {
     moveTargetPos,
     moveTargetValid,
     selectedUnitMoveInfo,
+    inspectorActive,
+    selectedInspectEnemy,
+    hoveredInspectEnemy,
   ]);
-  // Game loop
+
+  // PERFORMANCE FIX: Keep refs updated with latest callbacks
+  // This allows the game loop to always use the latest version without restarting
+  updateGameRef.current = updateGame;
+  renderRef.current = render;
+
+  // Game loop - uses refs to avoid restarting when updateGame/render change
+  // This prevents the freeze that occurred when selecting troops/heroes on mobile
   useEffect(() => {
     if (gameState !== "playing") return;
     const gameLoop = (timestamp: number) => {
@@ -6056,15 +6241,16 @@ export default function PrincetonTowerDefense() {
       const cappedDelta = Math.min(rawDelta, 100); // Max 100ms per frame
       const deltaTime = cappedDelta * gameSpeed;
       lastTimeRef.current = timestamp;
-      updateGame(deltaTime);
-      render();
+      // Use refs to call latest versions without restarting the loop
+      updateGameRef.current(deltaTime);
+      renderRef.current();
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
     gameLoopRef.current = requestAnimationFrame(gameLoop);
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
-  }, [gameState, gameSpeed, updateGame, render]);
+  }, [gameState, gameSpeed]); // Removed updateGame and render - they're accessed via refs now
   // Event handlers
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -6293,8 +6479,9 @@ export default function PrincetonTowerDefense() {
             troopIdToFormationIndex.set(t.id, idx);
           });
 
-          // Check if owned by a dinky station
+          // Check if owned by a dinky station or frontier barracks
           const station = towers.find((t) => t.id === ownerId && t.type === 'station');
+          const isBarracksTroop = ownerId === 'special_barracks';
 
           setTroops((prev) =>
             prev.map((t) => {
@@ -6311,8 +6498,8 @@ export default function PrincetonTowerDefense() {
                   moving: true,
                   targetPos: newTarget,
                   userTargetPos: newTarget,
-                  // Update spawn point for spell/hero troops, keep for station troops
-                  spawnPoint: station ? t.spawnPoint : moveTargetPos,
+                  // Update spawn point to rally point for station/barracks troops
+                  spawnPoint: (station || isBarracksTroop) ? moveTargetPos : t.spawnPoint,
                 };
               }
               return t;
@@ -6610,7 +6797,7 @@ export default function PrincetonTowerDefense() {
         setSelectedUnitMoveInfo(null);
       }
     },
-    [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops]
+    [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops, inspectorActive, enemies, gameSpeed]
   );
 
   // ========== MOBILE TOUCH HANDLER ==========
@@ -6726,7 +6913,9 @@ export default function PrincetonTowerDefense() {
               troopIdToFormationIndex.set(t.id, idx);
             });
 
+            // Check if owned by a dinky station or frontier barracks
             const station = towers.find((t) => t.id === ownerId && t.type === 'station');
+            const isBarracksTroop = ownerId === 'special_barracks';
 
             setTroops((prev) =>
               prev.map((t) => {
@@ -6742,7 +6931,8 @@ export default function PrincetonTowerDefense() {
                     moving: true,
                     targetPos: newTarget,
                     userTargetPos: newTarget,
-                    spawnPoint: station ? t.spawnPoint : pathResult.point,
+                    // Update spawn point to rally point for station/barracks troops
+                    spawnPoint: (station || isBarracksTroop) ? pathResult.point : t.spawnPoint,
                   };
                 }
                 return t;
@@ -7549,6 +7739,7 @@ export default function PrincetonTowerDefense() {
     );
   }, [hero, enemies, selectedMap, addParticles, gameSpeed]);
   const resetGame = useCallback(() => {
+    clearAllTimers();
     setGameState("menu");
     setPawPoints(INITIAL_PAW_POINTS);
     setLives(INITIAL_LIVES);
@@ -7569,6 +7760,14 @@ export default function PrincetonTowerDefense() {
     setSpells([]);
     setGameSpeed(1);
     setCameraOffset({ x: -40, y: -60 });
+    // Reset pausable timer system state
+    prevGameSpeedRef.current = 1;
+    pausedAtRef.current = null;
+    pausableTimeoutsRef.current = [];
+    // Reset spawn timing refs
+    lastBarracksSpawnRef.current = 0;
+    // Mark reset time to prevent stale state race conditions
+    gameResetTimeRef.current = Date.now();
     setCameraZoom(1.5);
     setStarsEarned(0);
     setTimeSpent(0);
@@ -7682,6 +7881,14 @@ export default function PrincetonTowerDefense() {
           setInspectorActive(false);
           setSelectedInspectEnemy(null);
           setPreviousGameSpeed(1);
+          // Reset pausable timer system state
+          prevGameSpeedRef.current = 1;
+          pausedAtRef.current = null;
+          pausableTimeoutsRef.current = [];
+          // Reset spawn timing refs
+          lastBarracksSpawnRef.current = 0;
+          // Mark reset time to prevent stale state race conditions
+          gameResetTimeRef.current = Date.now();
           // clear all waves because if u end the level early, they might still be queued
           setLevelStartTime(Date.now());
           //reset special towers

@@ -1071,19 +1071,6 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   // SWARM ENEMIES - Fast, weak, numerous
   // =============================================================================
-  freshman: {
-    name: "Lost Frosh",
-    hp: 120,
-    speed: 0.42,
-    bounty: 8,
-    armor: 0,
-    flying: false,
-    desc: "Confused and wandering, but numerous. Easy to dispatch individually.",
-    color: "#86efac",
-    size: 18,
-    category: "swarm",
-    traits: [],
-  },
   athlete: {
     name: "Varsity Runner",
     hp: 180,
@@ -2749,20 +2736,20 @@ export const REGION_THEMES: Record<
 export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   // GRASSLAND REGION - Tutorial with teeth
-  // Regional troops: freshman, athlete, protestor
+  // Regional troops: frosh, athlete, protestor
   // =====================
   poe: [
     // Wave 1: Basic introduction
     [
-      { type: "freshman", count: 6, interval: 800 }, // Regional fodder
-      { type: "freshman", count: 5, interval: 800, delay: 4000 },
+      { type: "frosh", count: 6, interval: 800 }, // Regional fodder
+      { type: "frosh", count: 5, interval: 800, delay: 4000 },
       { type: "cultist", count: 3, interval: 1000, delay: 8000 }, // Magic variety
       { type: "athlete", count: 4, interval: 700, delay: 12000 }, // Regional speed
     ],
     // Wave 2: Mixed with tanks
     [
       { type: "protestor", count: 4, interval: 900 }, // Regional tank
-      { type: "freshman", count: 8, interval: 700, delay: 3000 },
+      { type: "frosh", count: 8, interval: 700, delay: 3000 },
       { type: "sophomore", count: 4, interval: 1000, delay: 7000 }, // Academic tank
       { type: "athlete", count: 5, interval: 700, delay: 11000 },
       { type: "assassin", count: 2, interval: 1500, delay: 14000 }, // Variety
@@ -2770,7 +2757,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 3: Ranged introduction
     [
       { type: "archer", count: 4, interval: 1100 }, // Ranged variety
-      { type: "freshman", count: 8, interval: 700, delay: 3500 },
+      { type: "frosh", count: 8, interval: 700, delay: 3500 },
       { type: "protestor", count: 5, interval: 900, delay: 7000 },
       { type: "hexer", count: 3, interval: 1200, delay: 11000 }, // Curse magic
       { type: "athlete", count: 4, interval: 700, delay: 14500 },
@@ -2779,7 +2766,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "mascot", count: 4, interval: 1100 }, // Flying!
       { type: "protestor", count: 5, interval: 900, delay: 3000 },
-      { type: "freshman", count: 8, interval: 700, delay: 6500 },
+      { type: "frosh", count: 8, interval: 700, delay: 6500 },
       { type: "junior", count: 3, interval: 1300, delay: 10500 }, // Heavy
       { type: "harpy", count: 3, interval: 1200, delay: 14000 }, // More flying
     ],
@@ -2787,7 +2774,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "senior", count: 2, interval: 2200 }, // Boss tier
       { type: "protestor", count: 5, interval: 900, delay: 2500 },
-      { type: "freshman", count: 8, interval: 700, delay: 6000 },
+      { type: "frosh", count: 8, interval: 700, delay: 6000 },
       { type: "athlete", count: 5, interval: 700, delay: 10000 },
       { type: "cultist", count: 4, interval: 1000, delay: 14000 },
     ],
@@ -2795,7 +2782,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "athlete", count: 6, interval: 650 }, // Regional speed
       { type: "mascot", count: 4, interval: 1000, delay: 3000 }, // Fast flying
-      { type: "freshman", count: 8, interval: 700, delay: 6500 },
+      { type: "frosh", count: 8, interval: 700, delay: 6500 },
       { type: "assassin", count: 3, interval: 1300, delay: 10500 },
       { type: "protestor", count: 4, interval: 900, delay: 14000 },
     ],
@@ -2804,7 +2791,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "senior", count: 3, interval: 1800 }, // Tanks
       { type: "protestor", count: 6, interval: 850, delay: 3000 },
       { type: "archer", count: 5, interval: 1000, delay: 7000 }, // Ranged
-      { type: "freshman", count: 8, interval: 700, delay: 11000 },
+      { type: "frosh", count: 8, interval: 700, delay: 11000 },
       { type: "berserker", count: 3, interval: 1200, delay: 15000 }, // Rage
     ],
     // Wave 8: GRAND FINALE
@@ -2812,7 +2799,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "senior", count: 3, interval: 1600 },
       { type: "protestor", count: 6, interval: 850, delay: 2500 },
       { type: "harpy", count: 4, interval: 1100, delay: 5500 }, // Flying
-      { type: "freshman", count: 10, interval: 600, delay: 9000 },
+      { type: "frosh", count: 10, interval: 600, delay: 9000 },
       { type: "hexer", count: 4, interval: 1100, delay: 13000 }, // Curses
       { type: "athlete", count: 5, interval: 700, delay: 16500 },
     ],
@@ -2822,7 +2809,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 1
     [
       { type: "athlete", count: 6, interval: 700 },
-      { type: "freshman", count: 8, interval: 700, delay: 3500 },
+      { type: "frosh", count: 8, interval: 700, delay: 3500 },
       { type: "cultist", count: 4, interval: 1000, delay: 7500 },
       { type: "protestor", count: 4, interval: 900, delay: 11500 },
     ],
@@ -2830,7 +2817,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "archer", count: 5, interval: 1000 },
       { type: "protestor", count: 5, interval: 900, delay: 3500 },
-      { type: "freshman", count: 8, interval: 700, delay: 7000 },
+      { type: "frosh", count: 8, interval: 700, delay: 7000 },
       { type: "mage", count: 3, interval: 1400, delay: 11000 },
       { type: "athlete", count: 5, interval: 700, delay: 15000 },
     ],
@@ -2838,7 +2825,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "mascot", count: 5, interval: 1100 },
       { type: "harpy", count: 4, interval: 1200, delay: 4000 },
-      { type: "freshman", count: 8, interval: 700, delay: 8000 },
+      { type: "frosh", count: 8, interval: 700, delay: 8000 },
       { type: "protestor", count: 5, interval: 900, delay: 12000 },
       { type: "banshee", count: 2, interval: 1600, delay: 16000 },
     ],
@@ -2847,7 +2834,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "junior", count: 4, interval: 1200 },
       { type: "protestor", count: 6, interval: 850, delay: 3500 },
       { type: "hexer", count: 4, interval: 1100, delay: 7500 },
-      { type: "freshman", count: 8, interval: 700, delay: 11500 },
+      { type: "frosh", count: 8, interval: 700, delay: 11500 },
       { type: "berserker", count: 3, interval: 1200, delay: 15500 },
     ],
     // Wave 5: Mixed assault
@@ -2862,7 +2849,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "mascot", count: 5, interval: 1100 },
       { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "freshman", count: 8, interval: 700, delay: 8000 },
+      { type: "frosh", count: 8, interval: 700, delay: 8000 },
       { type: "wyvern", count: 2, interval: 2000, delay: 12000 },
       { type: "protestor", count: 5, interval: 900, delay: 16000 },
     ],
@@ -2870,7 +2857,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "berserker", count: 5, interval: 1000 },
       { type: "protestor", count: 6, interval: 850, delay: 3500 },
-      { type: "freshman", count: 8, interval: 700, delay: 7500 },
+      { type: "frosh", count: 8, interval: 700, delay: 7500 },
       { type: "hexer", count: 4, interval: 1100, delay: 11500 },
       { type: "senior", count: 3, interval: 1600, delay: 15500 },
     ],
@@ -2880,7 +2867,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "protestor", count: 6, interval: 850, delay: 3500 },
       { type: "athlete", count: 6, interval: 700, delay: 7500 },
       { type: "specter", count: 4, interval: 1200, delay: 11500 },
-      { type: "freshman", count: 8, interval: 700, delay: 15500 },
+      { type: "frosh", count: 8, interval: 700, delay: 15500 },
     ],
     // Wave 9: Gradstudent boss wave
     [
@@ -2888,7 +2875,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "senior", count: 4, interval: 1400, delay: 3000 },
       { type: "protestor", count: 6, interval: 850, delay: 7000 },
       { type: "harpy", count: 4, interval: 1200, delay: 11000 },
-      { type: "freshman", count: 8, interval: 700, delay: 15000 },
+      { type: "frosh", count: 8, interval: 700, delay: 15000 },
     ],
     // Wave 10: FINALE
     [
@@ -2905,7 +2892,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // Wave 1
     [
       { type: "protestor", count: 5, interval: 900 },
-      { type: "freshman", count: 8, interval: 700, delay: 3500 },
+      { type: "frosh", count: 8, interval: 700, delay: 3500 },
       { type: "archer", count: 4, interval: 1100, delay: 7500 },
       { type: "athlete", count: 5, interval: 700, delay: 11500 },
     ],
@@ -2914,7 +2901,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "junior", count: 4, interval: 1200 },
       { type: "protestor", count: 5, interval: 900, delay: 3500 },
       { type: "cultist", count: 4, interval: 1000, delay: 7500 },
-      { type: "freshman", count: 8, interval: 700, delay: 11500 },
+      { type: "frosh", count: 8, interval: 700, delay: 11500 },
       { type: "hexer", count: 3, interval: 1200, delay: 15500 },
     ],
     // Wave 3: Air dominance
@@ -2923,7 +2910,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "banshee", count: 3, interval: 1400, delay: 4000 },
       { type: "harpy", count: 4, interval: 1200, delay: 8000 },
       { type: "protestor", count: 5, interval: 900, delay: 12000 },
-      { type: "freshman", count: 8, interval: 700, delay: 16000 },
+      { type: "frosh", count: 8, interval: 700, delay: 16000 },
     ],
     // Wave 4: Tank siege
     [
@@ -2937,7 +2924,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     [
       { type: "assassin", count: 4, interval: 1200 },
       { type: "athlete", count: 6, interval: 700, delay: 3500 },
-      { type: "freshman", count: 8, interval: 700, delay: 7500 },
+      { type: "frosh", count: 8, interval: 700, delay: 7500 },
       { type: "berserker", count: 4, interval: 1100, delay: 11500 },
       { type: "protestor", count: 5, interval: 900, delay: 15500 },
     ],
@@ -2947,7 +2934,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "archer", count: 6, interval: 1000, delay: 4000 },
       { type: "protestor", count: 5, interval: 900, delay: 8000 },
       { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "freshman", count: 8, interval: 700, delay: 16000 },
+      { type: "frosh", count: 8, interval: 700, delay: 16000 },
     ],
     // Wave 7: Infernal invasion
     [
@@ -2963,7 +2950,7 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
       { type: "protestor", count: 6, interval: 850, delay: 8500 },
       { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "freshman", count: 8, interval: 700, delay: 17500 },
+      { type: "frosh", count: 8, interval: 700, delay: 17500 },
     ],
     // Wave 9: Wyvern terror
     [

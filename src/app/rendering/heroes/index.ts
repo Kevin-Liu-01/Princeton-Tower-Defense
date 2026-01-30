@@ -154,38 +154,105 @@ export function renderHero(
     ctx.stroke();
   }
 
-  // HP Bar
-  const barWidth = 45 * zoom;
-  const barHeight = 6 * zoom;
-  const barY = screenPos.y - size - 18 * zoom;
+  // HP Bar - Premium hero style
+  const barWidth = 48 * zoom;
+  const barHeight = 7 * zoom;
+  const barY = screenPos.y - size - 20 * zoom;
+  const barX = screenPos.x - barWidth / 2;
+  const cornerRadius = 3.5 * zoom;
 
-  ctx.fillStyle = "rgba(0,0,0,0.8)";
-  ctx.fillRect(
-    screenPos.x - barWidth / 2 - 1,
-    barY - 1,
-    barWidth + 2,
-    barHeight + 2
-  );
-  ctx.fillStyle = "#333";
-  ctx.fillRect(screenPos.x - barWidth / 2, barY, barWidth, barHeight);
+  // Outer glow/shadow for premium feel
+  ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+  ctx.shadowBlur = 5 * zoom;
+  ctx.shadowOffsetY = 1.5 * zoom;
+
+  // Background with gold trim effect
+  ctx.fillStyle = "rgba(8, 8, 12, 0.95)";
+  ctx.beginPath();
+  ctx.roundRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4, cornerRadius + 1);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Gold border (hero distinction)
+  const goldGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+  goldGrad.addColorStop(0, "#fbbf24");
+  goldGrad.addColorStop(0.5, "#f59e0b");
+  goldGrad.addColorStop(1, "#d97706");
+  ctx.strokeStyle = goldGrad;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+  ctx.stroke();
+
+  // Inner dark background
+  ctx.fillStyle = "#0f0f12";
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius - 1);
+  ctx.fill();
 
   const hpPercent = hero.hp / hero.maxHp;
-  ctx.fillStyle =
-    hpPercent > 0.5 ? "#4ade80" : hpPercent > 0.25 ? "#fbbf24" : "#ef4444";
-  ctx.fillRect(
-    screenPos.x - barWidth / 2,
-    barY,
-    barWidth * hpPercent,
-    barHeight
-  );
+  const hpWidth = barWidth * hpPercent;
 
-  // Name tag with glow
+  // Health gradient fill with vibrant colors
+  if (hpWidth > 0) {
+    const hpGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+    if (hpPercent > 0.5) {
+      // Bright green - healthy hero
+      hpGradient.addColorStop(0, "#a7f3d0");
+      hpGradient.addColorStop(0.3, "#6ee7b7");
+      hpGradient.addColorStop(0.7, "#34d399");
+      hpGradient.addColorStop(1, "#10b981");
+    } else if (hpPercent > 0.25) {
+      // Amber - hero in danger
+      hpGradient.addColorStop(0, "#fef08a");
+      hpGradient.addColorStop(0.3, "#fde047");
+      hpGradient.addColorStop(0.7, "#facc15");
+      hpGradient.addColorStop(1, "#eab308");
+    } else {
+      // Red - critical hero health
+      hpGradient.addColorStop(0, "#fecaca");
+      hpGradient.addColorStop(0.3, "#fca5a5");
+      hpGradient.addColorStop(0.7, "#f87171");
+      hpGradient.addColorStop(1, "#ef4444");
+    }
+    ctx.fillStyle = hpGradient;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, hpWidth, barHeight, [cornerRadius - 1, hpPercent > 0.92 ? cornerRadius - 1 : 0, hpPercent > 0.92 ? cornerRadius - 1 : 0, cornerRadius - 1]);
+    ctx.fill();
+
+    // Premium shine highlight
+    const shineGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight * 0.5);
+    shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+    shineGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.15)");
+    shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = shineGrad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, hpWidth, barHeight * 0.5, [cornerRadius - 1, hpPercent > 0.92 ? cornerRadius - 1 : 0, 0, 0]);
+    ctx.fill();
+
+    // Pulsing edge glow when low health
+    if (hpPercent <= 0.25) {
+      const pulseAlpha = 0.3 + Math.sin(Date.now() / 200) * 0.2;
+      ctx.shadowColor = `rgba(239, 68, 68, ${pulseAlpha})`;
+      ctx.shadowBlur = 6 * zoom;
+      ctx.strokeStyle = `rgba(239, 68, 68, ${pulseAlpha})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // Name tag with enhanced glow
   ctx.shadowColor = hData.color;
-  ctx.shadowBlur = 4 * zoom;
+  ctx.shadowBlur = 6 * zoom;
   ctx.fillStyle = "#fff";
-  ctx.font = `bold ${10 * zoom}px bc-novatica-cyr`;
+  ctx.font = `bold ${11 * zoom}px bc-novatica-cyr`;
   ctx.textAlign = "center";
-  ctx.fillText(hData.name, screenPos.x, barY - 5 * zoom);
+  ctx.textBaseline = "bottom";
+  ctx.fillText(hData.name, screenPos.x, barY - 4 * zoom);
   ctx.shadowBlur = 0;
 }
 
