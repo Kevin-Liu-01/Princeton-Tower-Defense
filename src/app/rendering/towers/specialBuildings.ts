@@ -8,7 +8,8 @@ export function renderSpecialBuilding(
     specType: string,
     specHp: number | undefined,
     specialTowerHp: number | null,
-    vaultFlash: number
+    vaultFlash: number,
+    boostedTowerCount: number = 0
   ): void {
     const s = zoom;
     const time = Date.now() / 1000;
@@ -18,45 +19,291 @@ export function renderSpecialBuilding(
   
     switch (specType) {
       case "beacon": {
-        const s2 = s * 1.1;
-        const pulse = Math.sin(time * 3) * 0.5 + 0.5;
-  
-        // Isometric Constants
-        const w = 22 * s2;
-        const h = 55 * s2;
+        // =====================================================================
+        // ANCIENT BEACON - EPIC 4-STAGE MYSTICAL TOWER
+        // Stage 0 (Dormant): 0 towers boosted
+        // Stage 1 (Awakening): 1-2 towers boosted  
+        // Stage 2 (Empowered): 3-4 towers boosted
+        // Stage 3 (Ascended): 5+ towers boosted
+        // =====================================================================
+        
+        // Determine power stage based on boosted towers
+        const powerStage = boostedTowerCount === 0 ? 0 : 
+                          boostedTowerCount <= 2 ? 1 : 
+                          boostedTowerCount <= 4 ? 2 : 3;
+        
+        const s2 = s * 1.15;
+        const basePulse = Math.sin(time * 3) * 0.5 + 0.5;
+        const fastPulse = Math.sin(time * 6) * 0.5 + 0.5;
+        
+        // Power-dependent values
+        const powerIntensity = 0.3 + powerStage * 0.23; // 0.3 -> 0.53 -> 0.76 -> 0.99
+        
+        // Color schemes per stage
+        const stageColors = [
+          { primary: "#607D8B", secondary: "#455A64", glow: "#78909C", accent: "#90A4AE" }, // Dormant - grey/dim
+          { primary: "#00BCD4", secondary: "#0097A7", glow: "#00E5FF", accent: "#80DEEA" }, // Awakening - cyan
+          { primary: "#00E5FF", secondary: "#00B8D4", glow: "#40F0FF", accent: "#A7FFEB" }, // Empowered - bright cyan
+          { primary: "#E0F7FA", secondary: "#80FFFF", glow: "#FFFFFF", accent: "#F0FFFF" }, // Ascended - white/blazing
+        ];
+        const colors = stageColors[powerStage];
+        
+        // Elder Futhark Runes for authenticity
+        const elderFuthark = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ", "ᚺ", "ᚾ", "ᛁ", "ᛃ", "ᛇ", "ᛈ", "ᛉ", "ᛊ", "ᛏ", "ᛒ", "ᛖ", "ᛗ", "ᛚ", "ᛜ", "ᛞ", "ᛟ"];
+        
         const tanA = Math.tan(Math.PI / 6);
-  
-        // 1. Ground Shadow
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        
+        // =====================================================
+        // 1. MASSIVE GROUND EFFECT & SHADOW
+        // =====================================================
+        
+        // Outer mystical circle (stage 2+)
+        if (powerStage >= 2) {
+          const circleRadius = 45 * s2 + Math.sin(time * 2) * 3 * s2;
+          ctx.save();
+          ctx.strokeStyle = `rgba(0, 229, 255, ${0.15 + basePulse * 0.15})`;
+          ctx.lineWidth = 2 * s2;
+          ctx.setLineDash([8 * s2, 4 * s2]);
+          ctx.beginPath();
+          ctx.ellipse(0, 5 * s2, circleRadius, circleRadius * 0.5, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+        
+        // Ground rune circle (more elaborate at higher stages) - NO SHADOW for performance
+        const groundRuneCount = 6 + powerStage * 2;
+        ctx.font = `bold ${(7 + powerStage) * s2}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        for (let i = 0; i < groundRuneCount; i++) {
+          const angle = (i / groundRuneCount) * Math.PI * 2 + time * 0.3 * (powerStage > 0 ? 1 : 0);
+          const radius = 35 * s2;
+          const rx = Math.cos(angle) * radius;
+          const ry = Math.sin(angle) * radius * 0.5 + 5 * s2;
+          const runeOpacity = powerStage === 0 ? 0.2 : (0.3 + basePulse * 0.4 + (i % 3 === Math.floor(time * 2) % 3 ? 0.3 : 0));
+          ctx.fillStyle = `rgba(0, 229, 255, ${runeOpacity * powerIntensity})`;
+          ctx.fillText(elderFuthark[i % elderFuthark.length], rx, ry);
+        }
+        
+        // Ground shadow
+        ctx.fillStyle = `rgba(0,0,0,${0.25 + powerStage * 0.05})`;
         ctx.beginPath();
-        ctx.ellipse(0, 0, 32 * s2, 16 * s2, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 3 * s2, 38 * s2, 19 * s2, 0, 0, Math.PI * 2);
         ctx.fill();
-  
-        // 2. Lighter Tiered Granite Pedestal
-        const drawHex = (
+        
+        // Ground glow effect (increases with power)
+        if (powerStage > 0) {
+          const groundGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 40 * s2);
+          groundGlow.addColorStop(0, `rgba(0, 229, 255, ${0.1 * powerStage})`);
+          groundGlow.addColorStop(0.5, `rgba(0, 180, 200, ${0.05 * powerStage})`);
+          groundGlow.addColorStop(1, "transparent");
+          ctx.fillStyle = groundGlow;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 45 * s2, 22 * s2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // =====================================================
+        // MONOLITH DRAWING FUNCTION (used for depth-correct ordering)
+        // =====================================================
+        const stoneCount = 6;
+        const stoneRadius = 30 * s2;
+        
+        const drawMonolith = (i: number, drawEnergyLine: boolean) => {
+          const stoneAngle = (i / stoneCount) * Math.PI * 2 - Math.PI / 2;
+          const sx = Math.cos(stoneAngle) * stoneRadius;
+          const sy = Math.sin(stoneAngle) * stoneRadius * 0.5 + 2 * s2;
+          const stoneHeight = (22 + (i % 3) * 5) * s2;
+          const stoneW = 5 * s2;
+          const stoneD = 3 * s2;
+          
+          const isoX = stoneW;
+          const isoY = stoneW * tanA;
+          const depthX = stoneD;
+          const depthY = stoneD * tanA;
+          
+          ctx.save();
+          
+          // LEFT FACE of monolith (darker)
+          const leftGrad = ctx.createLinearGradient(sx - isoX, sy, sx, sy - stoneHeight);
+          leftGrad.addColorStop(0, "#2D3842");
+          leftGrad.addColorStop(0.5, "#3D4852");
+          leftGrad.addColorStop(1, "#2a3640");
+          ctx.fillStyle = leftGrad;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx - isoX, sy - isoY);
+          ctx.lineTo(sx - isoX, sy - isoY - stoneHeight);
+          ctx.lineTo(sx, sy - stoneHeight);
+          ctx.closePath();
+          ctx.fill();
+          
+          // RIGHT FACE of monolith (lighter)
+          const rightGrad = ctx.createLinearGradient(sx, sy, sx + isoX, sy - stoneHeight);
+          rightGrad.addColorStop(0, "#4A5A68");
+          rightGrad.addColorStop(0.5, "#5A6A78");
+          rightGrad.addColorStop(1, "#4A5A68");
+          ctx.fillStyle = rightGrad;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx + isoX, sy - isoY);
+          ctx.lineTo(sx + isoX, sy - isoY - stoneHeight);
+          ctx.lineTo(sx, sy - stoneHeight);
+          ctx.closePath();
+          ctx.fill();
+          
+          // TOP FACE of monolith (brightest - isometric diamond)
+          ctx.fillStyle = "#607D8B";
+          ctx.beginPath();
+          ctx.moveTo(sx, sy - stoneHeight);
+          ctx.lineTo(sx - isoX, sy - isoY - stoneHeight);
+          ctx.lineTo(sx - isoX + depthX, sy - isoY - depthY - stoneHeight);
+          ctx.lineTo(sx + depthX, sy - depthY - stoneHeight);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Back-left face for depth
+          ctx.fillStyle = "#1a2830";
+          ctx.beginPath();
+          ctx.moveTo(sx - isoX, sy - isoY);
+          ctx.lineTo(sx - isoX + depthX, sy - isoY - depthY);
+          ctx.lineTo(sx - isoX + depthX, sy - isoY - depthY - stoneHeight);
+          ctx.lineTo(sx - isoX, sy - isoY - stoneHeight);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Stone edge highlights
+          ctx.strokeStyle = "#6A7A88";
+          ctx.lineWidth = 0.5 * s2;
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(sx, sy - stoneHeight);
+          ctx.stroke();
+          
+          // Weathering/crack details
+          ctx.strokeStyle = "#2a3640";
+          ctx.lineWidth = 0.5 * s2;
+          ctx.beginPath();
+          ctx.moveTo(sx - isoX * 0.5, sy - stoneHeight * 0.3);
+          ctx.lineTo(sx - isoX * 0.3, sy - stoneHeight * 0.5);
+          ctx.moveTo(sx + isoX * 0.4, sy - isoY * 0.4 - stoneHeight * 0.6);
+          ctx.lineTo(sx + isoX * 0.6, sy - isoY * 0.6 - stoneHeight * 0.4);
+          ctx.stroke();
+          
+          // Carved runes on stones - NO SHADOW for performance
+          const stoneRuneActive = powerStage > 0;
+          const runeY = sy - stoneHeight * 0.5;
+          ctx.font = `bold ${7 * s2}px serif`;
+          ctx.textAlign = "center";
+          
+          if (stoneRuneActive) {
+            const runePulse = Math.sin(time * 3 + i * 0.8) * 0.3 + 0.7;
+            
+            // Brighter colors instead of shadow blur
+            ctx.fillStyle = `rgba(100, 255, 255, ${runePulse * powerIntensity})`;
+            ctx.fillText(elderFuthark[(i * 3) % elderFuthark.length], sx - isoX * 0.5, runeY - isoY * 0.3);
+            
+            ctx.fillStyle = `rgba(80, 240, 255, ${runePulse * powerIntensity * 0.85})`;
+            ctx.fillText(elderFuthark[(i * 3 + 1) % elderFuthark.length], sx + isoX * 0.5, runeY - isoY * 0.3);
+            
+            ctx.fillStyle = `rgba(60, 220, 255, ${runePulse * powerIntensity * 0.6})`;
+            ctx.font = `bold ${5 * s2}px serif`;
+            ctx.fillText(elderFuthark[(i * 3 + 2) % elderFuthark.length], sx - isoX * 0.5, runeY + 8 * s2);
+            
+            // Glowing top edge when active
+            ctx.strokeStyle = `rgba(0, 229, 255, ${runePulse * powerIntensity * 0.5})`;
+            ctx.lineWidth = 1 * s2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - stoneHeight);
+            ctx.lineTo(sx - isoX, sy - isoY - stoneHeight);
+            ctx.lineTo(sx - isoX + depthX, sy - isoY - depthY - stoneHeight);
+            ctx.lineTo(sx + depthX, sy - depthY - stoneHeight);
+            ctx.closePath();
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = `rgba(80, 100, 110, 0.5)`;
+            ctx.fillText(elderFuthark[(i * 3) % elderFuthark.length], sx - isoX * 0.5, runeY - isoY * 0.3);
+            ctx.fillStyle = `rgba(90, 110, 120, 0.4)`;
+            ctx.fillText(elderFuthark[(i * 3 + 1) % elderFuthark.length], sx + isoX * 0.5, runeY - isoY * 0.3);
+          }
+          
+          ctx.restore();
+          
+          // Energy connection lines from stones to center (stage 2+) - NO SHADOW
+          if (drawEnergyLine && powerStage >= 2) {
+            const lineAlpha = 0.3 + fastPulse * 0.4;
+            ctx.strokeStyle = `rgba(0, 229, 255, ${lineAlpha})`;
+            ctx.lineWidth = 1.5 * s2;
+            ctx.setLineDash([4 * s2, 4 * s2]);
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - stoneHeight * 0.5);
+            ctx.lineTo(0, -30 * s2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        };
+        
+        // Determine which monoliths are "back" (should render before spire)
+        // Back monoliths have negative sin(angle), meaning they're at the top of the isometric view
+        const backMonoliths: number[] = [];
+        const frontMonoliths: number[] = [];
+        for (let i = 0; i < stoneCount; i++) {
+          const stoneAngle = (i / stoneCount) * Math.PI * 2 - Math.PI / 2;
+          if (Math.sin(stoneAngle) < 0) {
+            backMonoliths.push(i);
+          } else {
+            frontMonoliths.push(i);
+          }
+        }
+        
+        // =====================================================
+        // 2a. DRAW BACK MONOLITHS (behind the spire)
+        // =====================================================
+        for (const i of backMonoliths) {
+          drawMonolith(i, true);
+        }
+        
+        // =====================================================
+        // 2b. TIERED OBSIDIAN/CRYSTAL BASE PLATFORM
+        // =====================================================
+        const drawHexPlatform = (
           hw: number,
           hh: number,
           y: number,
           c1: string,
           c2: string,
-          c3: string
+          c3: string,
+          glowColor?: string
         ) => {
           ctx.save();
           ctx.translate(0, y + 4 * s2);
-          ctx.fillStyle = c1;
+          
+          // Left face
+          const leftGrad = ctx.createLinearGradient(-hw, 0, 0, 0);
+          leftGrad.addColorStop(0, c1);
+          leftGrad.addColorStop(1, c2);
+          ctx.fillStyle = leftGrad;
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(-hw, -hw * tanA);
           ctx.lineTo(-hw, -hw * tanA - hh);
           ctx.lineTo(0, -hh);
           ctx.fill();
-          ctx.fillStyle = c2;
+          
+          // Right face
+          const rightGrad = ctx.createLinearGradient(0, 0, hw, 0);
+          rightGrad.addColorStop(0, c2);
+          rightGrad.addColorStop(1, c1);
+          ctx.fillStyle = rightGrad;
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(hw, -hw * tanA);
           ctx.lineTo(hw, -hw * tanA - hh);
           ctx.lineTo(0, -hh);
           ctx.fill();
+          
+          // Top face
           ctx.fillStyle = c3;
           ctx.beginPath();
           ctx.moveTo(0, -hh);
@@ -64,137 +311,380 @@ export function renderSpecialBuilding(
           ctx.lineTo(0, -hw * tanA * 2 - hh);
           ctx.lineTo(hw, -hw * tanA - hh);
           ctx.fill();
+          
+          // Edge highlights - no shadow for performance
+          if (glowColor && powerStage > 0) {
+            ctx.strokeStyle = glowColor;
+            ctx.lineWidth = 1.5 * s2;
+            ctx.beginPath();
+            ctx.moveTo(-hw, -hw * tanA - hh);
+            ctx.lineTo(0, -hw * tanA * 2 - hh);
+            ctx.lineTo(hw, -hw * tanA - hh);
+            ctx.stroke();
+          }
+          
           ctx.restore();
         };
-  
-        drawHex(w, 8 * s2, 8 * s2, "#78909C", "#90A4AE", "#B0BEC5");
-        drawHex(w * 0.7, 6 * s2, -4 * s2, "#546E7A", "#78909C", "#CFD8DC");
-  
-        // 3. The Spire
-        const spireW = 11 * s2;
-        const spireH = 55 * s2;
-        const topY = -9 * s2;
-  
-        ctx.fillStyle = "#546E7A";
+        
+        // Bottom tier
+        drawHexPlatform(24 * s2, 8 * s2, 8 * s2, "#37474F", "#455A64", "#546E7A", 
+          powerStage > 0 ? `rgba(0, 229, 255, ${0.3 * powerIntensity})` : undefined);
+        // Middle tier
+        drawHexPlatform(18 * s2, 6 * s2, -4 * s2, "#2C3E50", "#34495E", "#4A5568",
+          powerStage > 0 ? `rgba(0, 229, 255, ${0.4 * powerIntensity})` : undefined);
+        // Top tier (crystal-like)
+        drawHexPlatform(12 * s2, 5 * s2, -14 * s2, "#1a2a3a", "#243447", "#2d3d4d",
+          powerStage > 0 ? `rgba(0, 229, 255, ${0.5 * powerIntensity})` : undefined);
+        
+        // =====================================================
+        // 3. THE CENTRAL OBELISK SPIRE (FLAT SQUARE TOP)
+        // =====================================================
+        const spireW = 8 * s2;
+        const spireH = 65 * s2;
+        const baseY = -20 * s2;
+        const topW = 5 * s2; // Width of flat square top
+        const topY = baseY - spireH;
+        
+        // Spire left face (trapezoid shape - wider at bottom, narrower flat top)
+        const spireGradL = ctx.createLinearGradient(-spireW, baseY, 0, topY);
+        spireGradL.addColorStop(0, "#1a2a3a");
+        spireGradL.addColorStop(0.5, "#243447");
+        spireGradL.addColorStop(1, "#0d1a26");
+        ctx.fillStyle = spireGradL;
+        ctx.beginPath();
+        ctx.moveTo(0, baseY);
+        ctx.lineTo(-spireW, baseY - spireW * tanA);
+        ctx.lineTo(-topW, topY - topW * tanA);
+        ctx.lineTo(0, topY);
+        ctx.fill();
+        
+        // Spire right face
+        const spireGradR = ctx.createLinearGradient(0, baseY, spireW, topY);
+        spireGradR.addColorStop(0, "#2d3d4d");
+        spireGradR.addColorStop(0.5, "#3d4d5d");
+        spireGradR.addColorStop(1, "#1a2a3a");
+        ctx.fillStyle = spireGradR;
+        ctx.beginPath();
+        ctx.moveTo(0, baseY);
+        ctx.lineTo(spireW, baseY - spireW * tanA);
+        ctx.lineTo(topW, topY - topW * tanA);
+        ctx.lineTo(0, topY);
+        ctx.fill();
+        
+        // Flat square top surface (isometric diamond)
+        const topGrad = ctx.createLinearGradient(-topW, topY, topW, topY);
+        topGrad.addColorStop(0, "#3d5060");
+        topGrad.addColorStop(0.5, "#4a6070");
+        topGrad.addColorStop(1, "#3d5060");
+        ctx.fillStyle = topGrad;
         ctx.beginPath();
         ctx.moveTo(0, topY);
-        ctx.lineTo(-spireW, topY - spireW * tanA);
-        ctx.lineTo(-spireW * 0.6, topY - spireW * tanA - spireH);
-        ctx.lineTo(0, topY - spireH);
+        ctx.lineTo(-topW, topY - topW * tanA);
+        ctx.lineTo(0, topY - topW * tanA * 2);
+        ctx.lineTo(topW, topY - topW * tanA);
+        ctx.closePath();
         ctx.fill();
-  
-        ctx.fillStyle = "#78909C";
-        ctx.beginPath();
-        ctx.moveTo(0, topY);
-        ctx.lineTo(spireW, topY - spireW * tanA);
-        ctx.lineTo(spireW * 0.6, topY - spireW * tanA - spireH);
-        ctx.lineTo(0, topY - spireH);
-        ctx.fill();
-  
-        // 4. ADVANCED VARIED RUNES
+        
+        // Top surface glow effect (power dependent)
+        if (powerStage > 0) {
+          const topGlowAlpha = 0.3 + basePulse * 0.4 * powerIntensity;
+          ctx.fillStyle = `rgba(0, 229, 255, ${topGlowAlpha * 0.5})`;
+          ctx.beginPath();
+          ctx.moveTo(0, topY);
+          ctx.lineTo(-topW, topY - topW * tanA);
+          ctx.lineTo(0, topY - topW * tanA * 2);
+          ctx.lineTo(topW, topY - topW * tanA);
+          ctx.closePath();
+          ctx.fill();
+        }
+        
+        // Spire edge highlights (power dependent) - reduced shadow
+        if (powerStage > 0) {
+          ctx.save();
+          ctx.strokeStyle = `rgba(100, 255, 255, ${0.4 + basePulse * 0.4 * powerIntensity})`;
+          ctx.lineWidth = 1.5 * s2;
+          // Only use shadow on stage 3 (ascended)
+          if (powerStage === 3) {
+            ctx.shadowBlur = 8 * s2;
+            ctx.shadowColor = colors.glow;
+          }
+          
+          // Left edge
+          ctx.beginPath();
+          ctx.moveTo(-spireW, baseY - spireW * tanA);
+          ctx.lineTo(-topW, topY - topW * tanA);
+          ctx.stroke();
+          
+          // Right edge  
+          ctx.beginPath();
+          ctx.moveTo(spireW, baseY - spireW * tanA);
+          ctx.lineTo(topW, topY - topW * tanA);
+          ctx.stroke();
+          
+          // Top edges
+          ctx.beginPath();
+          ctx.moveTo(-topW, topY - topW * tanA);
+          ctx.lineTo(0, topY - topW * tanA * 2);
+          ctx.lineTo(topW, topY - topW * tanA);
+          ctx.stroke();
+          
+          ctx.restore();
+        }
+        
+        // =====================================================
+        // 4. CARVED RUNES ON SPIRE (SCROLLING) - NO SHADOW for performance
+        // =====================================================
+        const runeRows = 4 + powerStage;
+        const scrollSpeed = powerStage === 0 ? 0 : 8 + powerStage * 4;
+        const scroll = (time * scrollSpeed) % 60;
+        
         ctx.save();
-        ctx.shadowBlur = 12 * s2;
-        ctx.shadowColor = "#00E5FF";
-        ctx.strokeStyle = `rgba(128, 255, 255, ${0.4 + pulse * 0.6})`;
-        ctx.lineWidth = 1.8 * s2;
-        ctx.lineCap = "round";
-  
-        for (let f = 0; f < 2; f++) {
-          const side = f === 0 ? -1 : 1;
-          const scroll = (time * 12) % 40;
-  
-          for (let r = 0; r < 4; r++) {
-            const rY = topY - 10 * s2 - r * 15 * s2 + scroll;
-            if (rY > topY || rY < topY - spireH + 5 * s2) continue;
-  
-            const xOff = side * (spireW * 0.5);
-            const yOff = rY + Math.abs(xOff) * tanA;
-  
-            ctx.save();
-            ctx.translate(xOff, yOff);
-  
-            ctx.beginPath();
-            if (r % 4 === 0) {
-              ctx.moveTo(0, -4 * s2);
-              ctx.lineTo(2 * s2, -2 * s2);
-              ctx.lineTo(0, 0);
-              ctx.lineTo(-2 * s2, -2 * s2);
-              ctx.closePath();
-            } else if (r % 4 === 1) {
-              ctx.moveTo(-2 * s2, 0);
-              ctx.lineTo(0, -4 * s2);
-              ctx.lineTo(2 * s2, 0);
-              ctx.moveTo(0, -4 * s2);
-              ctx.lineTo(0, -1 * s2);
-            } else if (r % 4 === 2) {
-              ctx.moveTo(-2 * s2, -2 * s2);
-              ctx.lineTo(2 * s2, -2 * s2);
-              ctx.moveTo(0, 0);
-              ctx.lineTo(0, -1 * s2);
-            } else {
-              ctx.arc(0, -2 * s2, 2 * s2, 0, Math.PI * 2);
+        ctx.font = `bold ${(6 + powerStage) * s2}px serif`;
+        ctx.textAlign = "center";
+        for (let face = 0; face < 2; face++) {
+          const side = face === 0 ? -1 : 1;
+          
+          for (let r = 0; r < runeRows; r++) {
+            const baseRuneY = baseY - 15 * s2 - r * 12 * s2 + scroll * s2;
+            if (baseRuneY > baseY - 5 * s2 || baseRuneY < baseY - spireH + 10 * s2) continue;
+            
+            const heightProgress = (baseY - baseRuneY) / spireH;
+            const xOffset = side * (spireW * 0.6 * (1 - heightProgress * 0.7));
+            const yOffset = baseRuneY + Math.abs(xOffset) * tanA * 0.5;
+            
+            // Rune visibility based on stage - brighter colors instead of shadow
+            const runeActive = powerStage > 0;
+            const runeBrightness = runeActive 
+              ? (0.5 + basePulse * 0.4 + (r === Math.floor(time * 3) % runeRows ? 0.2 : 0)) * powerIntensity
+              : 0.15;
+            
+            ctx.fillStyle = runeActive 
+              ? `rgba(80, 255, 255, ${runeBrightness})` 
+              : `rgba(80, 100, 120, ${runeBrightness})`;
+            ctx.fillText(elderFuthark[(r + face * 5) % elderFuthark.length], xOffset, yOffset);
+          }
+        }
+        ctx.restore();
+        
+        // =====================================================
+        // 5. ORBITAL RUNE RINGS (MORE AT HIGHER STAGES)
+        // =====================================================
+        const ringCount = 1 + powerStage;
+        for (let ring = 0; ring < ringCount; ring++) {
+          ctx.save();
+          const ringY = baseY - 25 * s2 - ring * 18 * s2 + Math.sin(time * 1.5 + ring) * 3 * s2;
+          const ringRadius = (16 + ring * 4) * s2;
+          const rotationSpeed = (ring % 2 === 0 ? 1 : -1) * (0.5 + ring * 0.3);
+          const ringRotation = time * rotationSpeed;
+          
+          ctx.translate(0, ringY);
+          ctx.scale(1, 0.45);
+          ctx.rotate(ringRotation);
+          
+          // Ring base (dashed line)
+          const ringAlpha = powerStage === 0 ? 0.15 : 0.25 + basePulse * 0.25;
+          ctx.strokeStyle = `rgba(0, 229, 255, ${ringAlpha * powerIntensity})`;
+          ctx.lineWidth = (1.5 + powerStage * 0.5) * s2;
+          ctx.setLineDash([(6 + powerStage * 2) * s2, (8 - powerStage) * s2]);
+          ctx.beginPath();
+          ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Floating runes on ring (stage 1+) - NO SHADOW for performance
+          if (powerStage > 0) {
+            const runesOnRing = 4 + ring * 2;
+            ctx.font = `bold ${(5 + powerStage) * s2}px serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            for (let i = 0; i < runesOnRing; i++) {
+              const runeAngle = (i / runesOnRing) * Math.PI * 2;
+              const runeX = Math.cos(runeAngle) * ringRadius;
+              const runeY = Math.sin(runeAngle) * ringRadius;
+              const runeAlpha = 0.6 + Math.sin(time * 4 + i + ring) * 0.3;
+              
+              ctx.save();
+              ctx.rotate(-ringRotation);
+              ctx.scale(1, 1 / 0.45);
+              ctx.translate(runeX * 0.45, runeY);
+              
+              ctx.fillStyle = `rgba(80, 255, 255, ${runeAlpha * powerIntensity})`;
+              ctx.fillText(elderFuthark[(i + ring * 4) % elderFuthark.length], 0, 0);
+              ctx.restore();
             }
+          }
+          
+          ctx.restore();
+        }
+
+         // =====================================================
+        // 8. ENERGY BEAMS (STAGE 3 - ASCENDED)
+        // =====================================================
+        const coreY = baseY - spireH - 18 * s2 + Math.sin(time * 2) * 4 * s2;
+        const coreSize = (12 + powerStage * 3) * s2;
+        if (powerStage === 3) {
+          // Vertical beam to sky
+          const beamGrad = ctx.createLinearGradient(0, coreY, 0, coreY - 80 * s2);
+          beamGrad.addColorStop(0, `rgba(0, 229, 255, ${0.6 + fastPulse * 0.3})`);
+          beamGrad.addColorStop(0.5, `rgba(0, 229, 255, ${0.3 + fastPulse * 0.2})`);
+          beamGrad.addColorStop(1, "transparent");
+          
+          ctx.save();
+          ctx.fillStyle = beamGrad;
+          ctx.beginPath();
+          ctx.moveTo(-4 * s2, coreY);
+          ctx.lineTo(-2 * s2, coreY - 80 * s2);
+          ctx.lineTo(2 * s2, coreY - 80 * s2);
+          ctx.lineTo(4 * s2, coreY);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+          
+          // Horizontal energy waves
+          for (let wave = 0; wave < 3; wave++) {
+            const waveY = coreY + wave * 25 * s2;
+            const wavePhase = (time * 2 + wave * 0.5) % 1;
+            const waveRadius = 20 * s2 + wavePhase * 40 * s2;
+            const waveAlpha = (1 - wavePhase) * 0.4;
+            
+            ctx.save();
+            ctx.strokeStyle = `rgba(0, 229, 255, ${waveAlpha})`;
+            ctx.lineWidth = 2 * s2;
+            ctx.beginPath();
+            ctx.ellipse(0, waveY, waveRadius, waveRadius * 0.4, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.restore();
           }
         }
-        ctx.restore();
-  
-        // 5. Orbital Energy Rings
-        for (let r = 0; r < 2; r++) {
-          ctx.save();
-          const ringY =
-            topY - 15 * s2 - r * 22 * s2 + Math.sin(time + r) * 4 * s2;
-          ctx.translate(0, ringY);
-          ctx.scale(1, 0.5);
-          ctx.rotate(time * (r === 0 ? 0.7 : -1.2));
-  
-          ctx.strokeStyle = `rgba(0, 229, 255, ${0.3 + pulse * 0.3})`;
-          ctx.lineWidth = 2.5 * s2;
-          ctx.setLineDash([10 * s2, 20 * s2]);
+        
+        // =====================================================
+        // 6. THE CORE NEXUS SPHERE (TOP OF SPIRE)
+        // =====================================================
+        
+        // Outer energy aura (stage 2+)
+        if (powerStage >= 2) {
+          const auraSize = coreSize * 2.5 + Math.sin(time * 4) * 5 * s2;
+          const auraGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, auraSize);
+          auraGrad.addColorStop(0, `rgba(0, 229, 255, ${0.3 * powerIntensity})`);
+          auraGrad.addColorStop(0.5, `rgba(0, 180, 220, ${0.15 * powerIntensity})`);
+          auraGrad.addColorStop(1, "transparent");
+          ctx.fillStyle = auraGrad;
           ctx.beginPath();
-          ctx.arc(0, 0, 20 * s2, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
+          ctx.arc(0, coreY, auraSize, 0, Math.PI * 2);
+          ctx.fill();
         }
-  
-        // 6. The Core Pulse Sphere
-        const coreY = topY - spireH - 12 * s2 + Math.sin(time * 2.5) * 6 * s2;
-  
-        const coreGlow = ctx.createRadialGradient(
-          0,
-          coreY,
-          0,
-          0,
-          coreY,
-          15 * s2
-        );
-        coreGlow.addColorStop(0, "#FFFFFF");
-        coreGlow.addColorStop(0.2, "#E0F7FA");
-        coreGlow.addColorStop(0.5, "#00E5FF");
-        coreGlow.addColorStop(1, "transparent");
-  
+        
+        // Core glow field - reduced shadow for performance
         ctx.save();
-        ctx.shadowBlur = 30 * s2;
-        ctx.shadowColor = "#00E5FF";
-        ctx.fillStyle = coreGlow;
+        ctx.shadowBlur = powerStage >= 2 ? 15 * s2 : 8 * s2;
+        ctx.shadowColor = colors.glow;
+        
+        const coreGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, coreSize);
+        if (powerStage === 3) {
+          // Ascended - blazing white core
+          coreGrad.addColorStop(0, "#FFFFFF");
+          coreGrad.addColorStop(0.2, "#F0FFFF");
+          coreGrad.addColorStop(0.5, "#80FFFF");
+          coreGrad.addColorStop(0.8, "#00E5FF");
+          coreGrad.addColorStop(1, "transparent");
+        } else if (powerStage === 2) {
+          // Empowered - bright cyan
+          coreGrad.addColorStop(0, "#FFFFFF");
+          coreGrad.addColorStop(0.3, "#B2EBF2");
+          coreGrad.addColorStop(0.6, "#00E5FF");
+          coreGrad.addColorStop(1, "transparent");
+        } else if (powerStage === 1) {
+          // Awakening - soft cyan
+          coreGrad.addColorStop(0, "#E0F7FA");
+          coreGrad.addColorStop(0.4, "#80DEEA");
+          coreGrad.addColorStop(0.7, "#26C6DA");
+          coreGrad.addColorStop(1, "transparent");
+        } else {
+          // Dormant - dim grey
+          coreGrad.addColorStop(0, "#B0BEC5");
+          coreGrad.addColorStop(0.4, "#78909C");
+          coreGrad.addColorStop(0.7, "#546E7A");
+          coreGrad.addColorStop(1, "transparent");
+        }
+        
+        ctx.fillStyle = coreGrad;
         ctx.beginPath();
-        ctx.arc(0, coreY, 15 * s2, 0, Math.PI * 2);
+        ctx.arc(0, coreY, coreSize, 0, Math.PI * 2);
         ctx.fill();
-        ctx.restore();
-  
-        // 7. Occasional Energy "Leaks"
-        if (Math.random() > 0.92) {
-          ctx.strokeStyle = "white";
-          ctx.lineWidth = 1;
+        
+        // Inner core (bright center)
+        if (powerStage > 0) {
+          const innerSize = coreSize * 0.4;
+          ctx.fillStyle = powerStage === 3 ? "#FFFFFF" : `rgba(255, 255, 255, ${0.6 + fastPulse * 0.4})`;
           ctx.beginPath();
-          ctx.moveTo(0, topY - spireH);
-          ctx.lineTo(
-            (Math.random() - 0.5) * 20,
-            coreY + (Math.random() - 0.5) * 20
-          );
+          ctx.arc(0, coreY, innerSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // =====================================================
+        // 7. DRAW FRONT MONOLITHS (in front of the spire)
+        // =====================================================
+        for (const i of frontMonoliths) {
+          drawMonolith(i, true);
+        }
+        
+        // =====================================================
+        // 8. PARTICLE EFFECTS & ENERGY SPARKS - NO SHADOW for performance
+        // =====================================================
+        // Rising energy particles - reduced count and no shadows
+        const particleCount = powerStage * 2; // Reduced from *4
+        for (let i = 0; i < particleCount; i++) {
+          const particlePhase = (time * 0.8 + i * 0.3) % 2;
+          const particleY = baseY - particlePhase * 50 * s2;
+          const particleX = Math.sin(time * 2 + i * 1.5) * 15 * s2;
+          const particleAlpha = (1 - particlePhase / 2) * 0.8;
+          const particleSize = (2 + Math.sin(time * 5 + i) * 1) * s2;
+          
+          if (particlePhase < 1.8) {
+            ctx.fillStyle = `rgba(150, 255, 255, ${particleAlpha})`;
+            ctx.beginPath();
+            ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        
+        // Occasional lightning/energy sparks (stage 2+) - no shadow
+        if (powerStage >= 2 && Math.random() > 0.92) {
+          ctx.strokeStyle = `rgba(200, 255, 255, ${0.6 + Math.random() * 0.4})`;
+          ctx.lineWidth = 1 * s2;
+          ctx.beginPath();
+          const sparkStartY = coreY + 10 * s2;
+          ctx.moveTo(0, sparkStartY);
+          let sparkX = 0, sparkY = sparkStartY;
+          for (let seg = 0; seg < 3; seg++) {
+            sparkX += (Math.random() - 0.5) * 15 * s2;
+            sparkY += (8 + Math.random() * 8) * s2;
+            ctx.lineTo(sparkX, sparkY);
+          }
           ctx.stroke();
         }
+        
+        // =====================================================
+        // 9. AMBIENT RUNE PARTICLES (FLOATING) - NO SHADOW for performance
+        // =====================================================
+        if (powerStage >= 1) {
+          const floatingRuneCount = powerStage; // Reduced from *2
+          ctx.font = `${(6 + powerStage) * s2}px serif`;
+          ctx.textAlign = "center";
+          for (let i = 0; i < floatingRuneCount; i++) {
+            const floatPhase = (time * 0.3 + i * 0.7) % 3;
+            const floatY = 10 * s2 - floatPhase * 40 * s2;
+            const floatX = Math.sin(time * 0.8 + i * 2.1) * (25 + i * 5) * s2;
+            const floatAlpha = Math.sin(floatPhase / 3 * Math.PI) * 0.5;
+            
+            if (floatAlpha > 0.05) {
+              ctx.fillStyle = `rgba(100, 255, 255, ${floatAlpha})`;
+              ctx.fillText(elderFuthark[(i * 7) % elderFuthark.length], floatX, floatY);
+            }
+          }
+        }
+        
         break;
       }
   

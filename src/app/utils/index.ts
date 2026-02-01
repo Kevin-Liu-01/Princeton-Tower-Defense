@@ -214,6 +214,19 @@ export function getEnemyPosition(
   return { x: baseX, y: baseY };
 }
 
+// Landmark decoration types that should block tower placement
+export const LANDMARK_DECORATION_TYPES = new Set([
+  "pyramid",
+  "sphinx",
+  "giant_sphinx",
+  "nassau_hall",
+  "ice_fortress",
+  "obsidian_castle",
+  "witch_cottage",
+  "ruined_temple",
+  "sunken_pillar",
+]);
+
 // Check if position is valid for building
 export function isValidBuildPosition(
   gridPos: GridPosition,
@@ -221,7 +234,8 @@ export function isValidBuildPosition(
   towers: Tower[],
   gridWidth: number,
   gridHeight: number,
-  buffer: number = ROAD_EXCLUSION_BUFFER
+  buffer: number = ROAD_EXCLUSION_BUFFER,
+  blockedPositions?: Set<string>
 ): boolean {
   // Check bounds
   if (
@@ -238,6 +252,11 @@ export function isValidBuildPosition(
     if (tower.pos.x === gridPos.x && tower.pos.y === gridPos.y) {
       return false;
     }
+  }
+
+  // Check blocked positions (landmarks and special towers)
+  if (blockedPositions?.has(`${gridPos.x},${gridPos.y}`)) {
+    return false;
   }
 
   // Check path collision with buffer zone

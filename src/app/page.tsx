@@ -65,6 +65,7 @@ import {
   findClosestPathPointWithinRadius,
   getTroopMoveInfo,
   type TroopMoveInfo,
+  LANDMARK_DECORATION_TYPES,
 } from "./utils";
 // Tower Stats
 import { calculateTowerStats, getUpgradeCost } from "./constants/towerStats";
@@ -99,8 +100,8 @@ import { calculateHazardEffects, applyHazardEffect } from "./game/hazards";
 const MAX_STATION_TROOPS = 3;
 const TROOP_RESPAWN_TIME = 5000; // 5 seconds
 const TROOP_SEPARATION_DIST = 35; // Minimum distance between troops
-const TROOP_SIGHT_RANGE = 120; // Base sight range for melee troops
-const TROOP_RANGED_SIGHT_RANGE = 200; // Extended sight range for ranged troops (centaur, cavalry)
+const TROOP_SIGHT_RANGE = 180; // Base sight range for melee troops (increased)
+const TROOP_RANGED_SIGHT_RANGE = 280; // Extended sight range for ranged troops (centaur, cavalry) (increased)
 const HERO_SIGHT_RANGE = 150; // How far hero can see enemies
 const HERO_RANGED_SIGHT_RANGE = 220; // Extended sight for Rocky (ranged hero)
 const COMBAT_RANGE = 50; // Range at which units stop to fight
@@ -350,6 +351,49 @@ export default function PrincetonTowerDefense() {
   // Get current level waves - computed from selectedMap
   const currentLevelWaves = getLevelWaves(selectedMap);
   const totalWaves = currentLevelWaves.length;
+
+  // Compute blocked positions (landmarks and special towers) - computed from selectedMap
+  // These positions cannot have player towers placed on them
+  const blockedPositions = React.useMemo(() => {
+    const levelData = LEVEL_DATA[selectedMap];
+    const blocked = new Set<string>();
+    
+    // Add landmark decoration positions
+    if (levelData?.decorations) {
+      for (const deco of levelData.decorations) {
+        const decorType = deco.category || deco.type;
+        if (decorType && LANDMARK_DECORATION_TYPES.has(decorType)) {
+          // Block the decoration position and surrounding cells based on size
+          const size = deco.size || 1;
+          const baseX = Math.floor(deco.pos.x);
+          const baseY = Math.floor(deco.pos.y);
+          
+          // Block a grid area around the landmark based on its size
+          const range = Math.ceil(size);
+          for (let dx = -range; dx <= range; dx++) {
+            for (let dy = -range; dy <= range; dy++) {
+              blocked.add(`${baseX + dx},${baseY + dy}`);
+            }
+          }
+        }
+      }
+    }
+    
+    // Add special tower position (beacon, vault, shrine, barracks)
+    if (levelData?.specialTower) {
+      const spec = levelData.specialTower;
+      const baseX = Math.floor(spec.pos.x);
+      const baseY = Math.floor(spec.pos.y);
+      // Block a 3x3 area around special buildings
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          blocked.add(`${baseX + dx},${baseY + dy}`);
+        }
+      }
+    }
+    
+    return blocked;
+  }, [selectedMap]);
 
   // Helper to get canvas dimensions
   const getCanvasDimensions = useCallback(() => {
@@ -5690,9 +5734,21 @@ export default function PrincetonTowerDefense() {
     if (LEVEL_DATA[selectedMap]?.specialTower) {
       const spec = LEVEL_DATA[selectedMap].specialTower;
       const worldPos = gridToWorld(spec.pos);
+      
+      // Calculate how many towers are being boosted by the beacon (for visual stages)
+      let boostedTowerCount = 0;
+      if (spec.type === "beacon") {
+        const beaconBoostRange = 250;
+        boostedTowerCount = towers.filter(t => {
+          if (t.type === "club") return false; // Clubs don't receive beacon buffs
+          const tWorldPos = gridToWorld(t.pos);
+          return distance(tWorldPos, worldPos) < beaconBoostRange;
+        }).length;
+      }
+      
       renderables.push({
         type: "special-building",
-        data: spec,
+        data: { ...spec, boostedTowerCount },
         isoY: (worldPos.x + worldPos.y) * 0.25,
       });
     }
@@ -5977,7 +6033,7 @@ export default function PrincetonTowerDefense() {
     renderables.forEach((r) => {
       switch (r.type) {
         case "special-building": {
-          const spec = r.data as { type: string; pos: Position; hp?: number };
+          const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number };
           const sPos = toScreen(gridToWorld(spec.pos));
           renderSpecialBuilding(
             ctx,
@@ -5987,7 +6043,8 @@ export default function PrincetonTowerDefense() {
             spec.type,
             spec.hp,
             specialTowerHp,
-            vaultFlash
+            vaultFlash,
+            spec.boostedTowerCount || 0
           );
           break;
         }
@@ -6199,7 +6256,8 @@ export default function PrincetonTowerDefense() {
             GRID_WIDTH,
             GRID_HEIGHT,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
+            blockedPositions
           );
           break;
       }
@@ -6377,7 +6435,8 @@ export default function PrincetonTowerDefense() {
             towers,
             GRID_WIDTH,
             GRID_HEIGHT,
-            TOWER_PLACEMENT_BUFFER
+            TOWER_PLACEMENT_BUFFER,
+            blockedPositions
           )
         ) {
           const newTower: Tower = {
