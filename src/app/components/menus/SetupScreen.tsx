@@ -17,6 +17,7 @@ import type {
   EnemyTrait,
   EnemyCategory,
 } from "../../types";
+import { OrnateFrame } from "../ui/OrnateFrame";
 import { HERO_DATA, SPELL_DATA, TOWER_DATA, ENEMY_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
 
 // Import sprite components from GameUI
@@ -794,7 +795,12 @@ export function SetupScreen({
       {/* Codex Modal */}
       {showCodex && (
         <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-6">
-          <div className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
+          <OrnateFrame
+            className="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl"
+            cornerSize={48}
+            color="#d97706"
+            glowColor="#f59e0b"
+          >
             <div className="px-6 py-4 border-b border-amber-800/50 flex items-center justify-between bg-gradient-to-r from-amber-900/30 to-transparent">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
@@ -1334,7 +1340,7 @@ export function SetupScreen({
                 </div>
               )}
             </div>
-          </div>
+          </OrnateFrame>
         </div>
       )}
     </div>

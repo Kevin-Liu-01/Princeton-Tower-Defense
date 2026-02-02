@@ -44,6 +44,7 @@ import {
   Lock,
 } from "lucide-react";
 import type { GameState, LevelStars, HeroType, SpellType, EnemyTrait, EnemyCategory, EnemyType } from "../../types";
+import { OrnateFrame } from "../ui/OrnateFrame";
 import {
   HERO_DATA,
   SPELL_DATA,
@@ -63,7 +64,6 @@ import {
   HeroAbilityIcon,
 } from "../../sprites";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
-import { OrnateFrame } from "../ui/OrnateFrame";
 
 // =============================================================================
 // LEVEL DATA
@@ -462,7 +462,12 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-      <div className="relative w-full max-w-6xl max-h-[92vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden">
+      <OrnateFrame
+        className="relative w-full max-w-6xl max-h-[92vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden"
+        cornerSize={48}
+        color="#d97706"
+        glowColor="#f59e0b"
+      >
         <img
           src="/images/gameplay-latest-zoomed.png"
           alt="Battle Scene"
@@ -2102,7 +2107,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             </div>
           )}
         </div>
-      </div>
+      </OrnateFrame>
     </div>
   );
 };

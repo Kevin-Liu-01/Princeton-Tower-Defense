@@ -8211,8 +8211,8 @@ export default function PrincetonTowerDefense() {
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
             className={`w-full h-full touch-none ${isPanning ? 'cursor-grabbing' :
-                repositioningTower ? 'cursor-move' :
-                  'cursor-crosshair'
+              repositioningTower ? 'cursor-move' :
+                'cursor-crosshair'
               }`}
           />
           <CameraControls
@@ -8238,7 +8238,7 @@ export default function PrincetonTowerDefense() {
 
             return (
               <div
-                className="fixed pointer-events-none bg-gradient-to-b from-stone-900/98 to-stone-950/98 border border-amber-500/70 shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+                className="fixed pointer-events-none bg-gradient-to-r from-amber-900/95 via-yellow-900/95 to-amber-900/95 border border-amber-500/70 shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
                 style={{ left: tooltipX, top: tooltipY, zIndex: 250, width: tooltipWidth }}
               >
                 {/* Header */}
@@ -8330,17 +8330,20 @@ export default function PrincetonTowerDefense() {
               />
             );
           })()}
+          {/* Hero and Spell Bar - overlaid on map at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
+            <HeroSpellBar
+              hero={hero}
+              spells={spells}
+              pawPoints={pawPoints}
+              enemies={enemies}
+              useHeroAbility={useHeroAbility}
+              castSpell={castSpell}
+            />
+          </div>
         </div>
       </div>
       <div className="flex flex-col flex-shrink-0">
-        <HeroSpellBar
-          hero={hero}
-          spells={spells}
-          pawPoints={pawPoints}
-          enemies={enemies}
-          useHeroAbility={useHeroAbility}
-          castSpell={castSpell}
-        />
         <BuildMenu
           pawPoints={pawPoints}
           buildingTower={buildingTower}

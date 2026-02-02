@@ -34,6 +34,7 @@ import {
   Flag,
 } from "lucide-react";
 import type { GameState, LevelStars, EnemyType, EnemyTrait, EnemyCategory } from "../../types";
+import { OrnateFrame } from "../ui/OrnateFrame";
 import { ENEMY_DATA } from "../../constants";
 import {
   TowerSprite,
@@ -728,10 +729,13 @@ const CodexModal: React.FC<CodexModalProps> = ({
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
-      <div
-        className="bg-gradient-to-b from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-600 shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div onClick={(e) => e.stopPropagation()}>
+        <OrnateFrame
+          className="bg-gradient-to-b from-stone-800 to-stone-900 rounded-2xl border-2 border-amber-600 shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+          cornerSize={48}
+          color="#d97706"
+          glowColor="#f59e0b"
+        >
         {/* Header */}
         <div className="bg-amber-900/80 px-6 py-4 flex items-center justify-between border-b border-amber-700">
           <h2 className="text-2xl font-bold text-amber-300 flex items-center gap-3">
@@ -1083,6 +1087,7 @@ const CodexModal: React.FC<CodexModalProps> = ({
             </div>
           )}
         </div>
+        </OrnateFrame>
       </div>
     </div>
   );

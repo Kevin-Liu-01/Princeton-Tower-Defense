@@ -880,261 +880,310 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   };
 
   return (
-    <OrnateFrame
-      className="bg-gradient-to-r from-amber-900/95 via-yellow-900/95 to-amber-900/95 border-t border-amber-600 backdrop-blur-sm"
-      cornerSize={28}
-      showBorders={true}
+    <div
+      className="px-2 sm:px-3 py-2 flex items-center justify-between relative z-20 pointer-events-none"
+      style={{ zIndex: 100 }}
     >
-      <div
-        className="px-2 sm:px-3 py-2 flex items-center justify-between relative z-20"
-        style={{ zIndex: 100 }}
+      {/* Hero Section */}
+      <button
+        className="flex-shrink-0 h-full pointer-events-auto"
+        onClick={() => {
+          if (!hero.selected) {
+            hero.selected = true;
+          } else {
+            hero.selected = false;
+          }
+        }}
       >
-        {/* Hero Section */}
-        <button
-          className="flex-1 h-full"
-          onClick={() => {
-            if (!hero.selected) {
-              hero.selected = true;
-            } else {
-              hero.selected = false;
-            }
-          }}
-        >
-          {hero && (
-            <div className="flex h-full items-center gap-2 sm:gap-3">
-              {hero.dead ? (
-                <div className="h-full bg-stone-900/80 animate-pulse pl-2 sm:pl-4 pr-4 sm:pr-8 p-1.5 sm:p-2 border border-stone-700 shadow-md rounded-lg flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg bg-stone-800 border border-stone-600 flex items-center justify-center opacity-50 overflow-hidden">
-                    <HeroSprite type={hero.type} size={sizes.heroIcon} />
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase text-nowrap tracking-wide flex items-center gap-1">
-                      <Shield size={10} className="sm:w-3 sm:h-3" /> {HERO_DATA[hero.type].name} <span className="hidden sm:inline">- FALLEN</span>
+        {hero && (
+          <div className="flex items-stretch gap-2 sm:gap-3">
+            {hero.dead ? (
+              <>
+                <div className="bg-stone-900/80 relative p-1.5 sm:p-2 border border-stone-700 shadow-md rounded-lg transition-all animate-pulse">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
+                    <div
+                      className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 border-stone-600 bg-stone-800 flex items-center justify-center overflow-hidden opacity-50"
+                    >
+                      <HeroSprite type={hero.type} size={sizes.heroIcon} />
                     </div>
-                    <div className="text-[10px] bg-red-800/30 rounded-lg px-1 mb-0.5 text-red-400 flex items-center mt-0.5">
-                      <Timer size={10} className="mr-0.5" />
-                      <span>
-                        Respawning in{" "}
-                        <span className="font-bold">
-                          {Math.ceil(hero.respawnTimer / 1000)}s
+                    <div>
+                      <div className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-wide flex items-center gap-1 text-left">
+                        <Shield size={10} className="sm:w-3 sm:h-3 inline" /> {HERO_DATA[hero.type].name}
+                      </div>
+                      <div className="text-[8px] text-left text-stone-500">
+                        Hero has fallen
+                      </div>
+                      <div className="hidden sm:flex gap-2 mt-0.5 text-[9px] opacity-50">
+                        <span className="text-stone-500">
+                          <Swords size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].damage} DMG
                         </span>
-                      </span>
+                        <span className="text-stone-500">
+                          <Target size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].range} RNG
+                        </span>
+                        <span className="text-stone-500">
+                          <Gauge size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].speed} SPD
+                        </span>
+                      </div>
                     </div>
-                    <span className="flex items-center text-nowrap text-stone-500 text-[8px] p-0.5 bg-stone-900/80 px-1 rounded-lg">
-                      <Info size={10} className="mr-0.5" />
-                      Heroes respawn in 15s.
+                  </div>
+                  <div className="w-full relative">
+                    <div className="w-full bg-stone-900 h-3 sm:h-3.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
+                      <div className="h-full w-0 rounded-sm bg-stone-700" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center mt-0.5 px-0.5">
+                    <span className="text-[8px] sm:text-[9px] font-bold text-stone-500">
+                      0/{hero.maxHp}
+                    </span>
+                    <span className="text-[7px] sm:text-[8px] text-stone-600 font-medium">
+                      0%
                     </span>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div
-                    className={
-                      hero.selected
-                        ? "bg-amber-950/40 relative p-1.5 sm:p-2 border border-yellow-400 shadow-lg rounded-lg transition-all "
-                        : "bg-amber-950/80 relative p-1.5 sm:p-2 border border-amber-600 shadow-md rounded-lg transition-all "
-                    }
-                  >
-                    {hero.selected ? (
-                      <Grab
-                        size={14}
-                        className="text-amber-400 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
-                      />
-                    ) : (
-                      <Pointer
-                        size={14}
-                        className="text-amber-600 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
-                      />
-                    )}
-
-                    <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
-                      <div
-                        className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden"
-                        style={{
-                          borderColor: HERO_DATA[hero.type].color,
-                          backgroundColor: HERO_DATA[hero.type].color + "30",
-                        }}
-                      >
-                        <HeroSprite type={hero.type} size={sizes.heroIcon} />
-                      </div>
-                      <div>
-                        <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left">
-                          {HERO_DATA[hero.type].name}{" "}
-
-                        </div>
-                        <div className="text-[8px] text-left text-amber-500">
-                          {hero.selected
-                            ? "Click map to move hero"
-                            : "Click hero to select"}
-                        </div>
-                        <div className="hidden sm:flex gap-2 mt-0.5 text-[9px]">
-                          <span className="text-orange-400">
-                            <Swords size={12} className="inline" />{" "}
-                            {HERO_DATA[hero.type].damage} DMG
-                          </span>
-                          <span className="text-blue-400">
-                            <Target size={12} className="inline" />{" "}
-                            {HERO_DATA[hero.type].range} RNG
-                          </span>
-                          <span className="text-green-400">
-                            <Gauge size={12} className="inline" />{" "}
-                            {HERO_DATA[hero.type].speed} SPD
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="w-full bg-stone-800 h-2 sm:h-2.5 border border-stone-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full transition-all rounded-full"
-                        style={{
-                          width: `${(hero.hp / hero.maxHp) * 100}%`,
-                          background:
-                            hero.hp / hero.maxHp > 0.5
-                              ? "#22c55e"
-                              : hero.hp / hero.maxHp > 0.25
-                                ? "#eab308"
-                                : "#ef4444",
-                        }}
-                      />
-                    </div>
-                    <div className="text-[8px] sm:text-[9px] text-center mt-0.5 font-mono text-amber-400">
-                      {Math.floor(hero.hp)}/{hero.maxHp} HP
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent selecting hero when clicking ability
-                      useHeroAbility();
-                    }}
-                    disabled={!hero.abilityReady}
-                    className={`px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 h-full relative transition-all font-bold border rounded-lg flex flex-col items-center ${hero.abilityReady
-                      ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
-                      : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                      }`}
-                  >
-                    {hero.abilityReady ? (
-                      <div className="h-full flex flex-col py-0.5 sm:py-1 justify-center">
-                        <span className="hidden sm:inline text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
-                          {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
-                        </span>
-                        <span className="flex flex-col mx-auto sm:flex-row gap-0.5 sm:gap-1 items-center text-[10px] sm:text-[12px] text-amber-200 font-bold">
-                          {getHeroAbilityIcon(hero.type, 14, "inline mb-0.5")}
-                          {HERO_DATA[hero.type].ability}
-                        </span>
-                        <div className="hidden sm:inline text-[7px] max-w-28 my-0.5">
-                          {HERO_DATA[hero.type].abilityDesc}
-                        </div>
-                        <span className="font-extrabold mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] text-amber-300/80">
-                          READY
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col h-full animate-pulse items-center justify-center sm:px-4">
-                        <Timer size={14} className="text-stone-400 mb-0.5 sm:w-[18px] sm:h-[18px]" />
-                        <span className="text-[9px] sm:text-[11px] text-stone-400">
-                          {Math.ceil(hero.abilityCooldown / 1000)}s
-                        </span>
-                        <span className="text-[7px] sm:text-[8px] text-stone-500">
-                          cooldown
-                        </span>
-                        <div className="flex items-center gap-1 text-[8px] sm:text-[10px] max-w-28 my-0.5 text-center text-stone-400">
-                          {getHeroAbilityIcon(hero.type, 12, "text-stone-500 opacity-60")}
-                          {HERO_DATA[hero.type].ability}
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-        </button>
-
-        {/* Spell Section */}
-        <div className="flex items-center h-full gap-1 sm:gap-2 relative bg-amber-950/70 px-1.5 sm:px-3 py-1.5 sm:py-2 border border-amber-700 rounded-lg shadow-md">
-          <span className="hidden sm:flex items-center flex-col text-[9px] text-amber-500 font-bold tracking-wider mr-1">
-            <ShellIcon size={12} className="inline mb-0.5" />
-            SPELLS <Wind size={12} className="inline ml-0.5 rotate-90" />
-          </span>
-          {spells.map((spell) => {
-            const spellData = SPELL_DATA[spell.type];
-            const canCast =
-              spell.cooldown <= 0 &&
-              pawPoints >= spellData.cost &&
-              !(
-                (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze" || spell.type === "payday") &&
-                enemies.length === 0
-              );
-            const isHovered = hoveredSpell === spell.type;
-            return (
-              <div key={spell.type} className="relative">
-                <button
-                  onClick={() => castSpell(spell.type)}
-                  disabled={!canCast}
-                  onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
-                  onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
-                  className={`relative px-1 sm:px-2.5 py-1 sm:py-2 transition-all border shadow-md rounded-lg overflow-hidden ${canCast
-                    ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
-                    : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
-                    }`}
+                <div className="px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 self-stretch relative font-bold border rounded-lg flex flex-col items-center justify-center bg-stone-800/80 border-stone-600">
+                  <Timer size={18} className="text-red-400 mb-1 sm:w-[22px] sm:h-[22px]" />
+                  <span className="text-[10px] sm:text-[12px] text-red-400 font-bold">
+                    {Math.ceil(hero.respawnTimer / 1000)}s
+                  </span>
+                  <span className="text-[7px] sm:text-[8px] text-stone-500 uppercase tracking-wide">
+                    Respawning
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div
+                  className={
+                    hero.selected
+                      ? "bg-amber-950/90 relative p-1.5 sm:p-2 border border-amber-500 shadow-lg rounded-lg transition-all "
+                      : "bg-amber-950/80 relative p-1.5 sm:p-2 border border-amber-600 shadow-md rounded-lg transition-all "
+                  }
                 >
-                  <div className="flex flex-col items-center min-w-[32px] sm:min-w-[44px]">
-                    <SpellSprite type={spell.type} size={22} />
-                    <div className="font-bold uppercase text-[7px] sm:text-[8px] tracking-wide text-purple-200 mt-0.5">
-                      {spellData.name.split(" ")[0]}
-                    </div>
-                    <div className="text-[8px] sm:text-[9px] font-bold">
-                      {spell.cooldown > 0 ? (
-                        <span className="text-red-400">
-                          {Math.ceil(spell.cooldown / 1000)}s
-                        </span>
-                      ) : (
-                        <span className="text-amber-400">
-                          {spellData.cost > 0 ? `${spellData.cost}PP` : "FREE"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {spell.cooldown > 0 && (
-                    <div
-                      className="absolute inset-0 bg-black/70"
-                      style={{
-                        clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100
-                          }% 0 0 0)`,
-                      }}
+                  {hero.selected ? (
+                    <Grab
+                      size={14}
+                      className="text-amber-400 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
+                    />
+                  ) : (
+                    <Pointer
+                      size={14}
+                      className="text-amber-600 rounded p-0.5 bg-amber-900 absolute top-1 right-1 sm:top-2 sm:right-2 sm:w-[18px] sm:h-[18px]"
                     />
                   )}
-                </button>
-                {isHovered && !isTouchDevice && (
-                  <div className="hidden [@media(hover:hover)]:block absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-purple-200 font-bold">
-                        {spellData.name}
-                      </span>
-                      <span className="text-lg">{spellData.icon}</span>
+
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-1.5">
+                    <div
+                      className="w-8 h-8 sm:w-12 pt-1 sm:h-12 rounded-lg border-2 flex items-center justify-center overflow-hidden"
+                      style={{
+                        borderColor: HERO_DATA[hero.type].color,
+                        backgroundColor: HERO_DATA[hero.type].color + "30",
+                      }}
+                    >
+                      <HeroSprite type={hero.type} size={sizes.heroIcon} />
                     </div>
-                    <p className="text-xs text-purple-400/90 mb-2">
-                      {spellData.desc}
-                    </p>
-                    <div className="flex gap-2 mb-2 text-[10px]">
-                      <span className="px-2 py-0.5 bg-amber-950/60 rounded text-amber-300">
-                        💰 {spellData.cost > 0 ? `${spellData.cost} PP` : "FREE"}
-                      </span>
-                      <span className="px-2 py-0.5 bg-blue-950/60 rounded text-blue-300">
-                        ⏱ {spellData.cooldown / 1000}s
-                      </span>
+                    <div>
+                      <div className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wide flex items-center gap-1 text-left">
+                        {HERO_DATA[hero.type].name}{" "}
+
+                      </div>
+                      <div className="text-[8px] text-left text-amber-500">
+                        {hero.selected
+                          ? "Click map to move hero"
+                          : "Click hero to select"}
+                      </div>
+                      <div className="hidden sm:flex gap-2 mt-0.5 text-[9px]">
+                        <span className="text-orange-400">
+                          <Swords size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].damage} DMG
+                        </span>
+                        <span className="text-blue-400">
+                          <Target size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].range} RNG
+                        </span>
+                        <span className="text-green-400">
+                          <Gauge size={12} className="inline" />{" "}
+                          {HERO_DATA[hero.type].speed} SPD
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-[10px] text-purple-300/80 border-t border-purple-800/50 pt-2">
-                      {spellDetails[spell.type]}
-                    </p>
                   </div>
-                )}
-              </div>
+                  {(() => {
+                    const hpPercent = Math.max(0, Math.min(100, (hero.hp / hero.maxHp) * 100));
+                    const isLow = hpPercent <= 25;
+                    const isMedium = hpPercent > 25 && hpPercent <= 50;
+                    const barColor = isLow
+                      ? "from-red-500 to-red-700"
+                      : isMedium
+                        ? "from-yellow-400 to-yellow-600"
+                        : "from-emerald-400 to-emerald-600";
+                    const glowColor = isLow
+                      ? "shadow-red-500/50"
+                      : isMedium
+                        ? "shadow-yellow-500/40"
+                        : "shadow-emerald-500/40";
+                    const textColor = isLow
+                      ? "text-red-400"
+                      : isMedium
+                        ? "text-yellow-400"
+                        : "text-emerald-400";
+                    return (
+                      <>
+                        <div className="w-full relative">
+                          <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
+                            <div
+                              className={`h-full transition-all duration-300 ease-out rounded-sm bg-gradient-to-r ${barColor} ${isLow ? 'animate-pulse' : ''} shadow-md ${glowColor}`}
+                              style={{ width: `${hpPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-0.5 px-0.5">
+                          <span className={`text-[8px] sm:text-[9px] font-bold ${textColor}`}>
+                            {Math.floor(hero.hp)}/{hero.maxHp}
+                          </span>
+                          <span className="text-[7px] sm:text-[8px] text-amber-500/80 font-medium">
+                            {Math.round(hpPercent)}%
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent selecting hero when clicking ability
+                    useHeroAbility();
+                  }}
+                  disabled={!hero.abilityReady}
+                  className={`px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 self-stretch relative transition-all font-bold border rounded-lg flex flex-col items-center justify-center ${hero.abilityReady
+                    ? "bg-gradient-to-b from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700 border-amber-500"
+                    : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
+                    }`}
+                >
+                  {hero.abilityReady ? (
+                    <div className="flex flex-col py-0.5 sm:py-1 justify-center">
+                      <span className="hidden sm:inline text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
+                        {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
+                      </span>
+                      <span className="flex flex-col mx-auto sm:flex-row gap-0.5 sm:gap-1 items-center text-[10px] sm:text-[12px] text-amber-200 font-bold">
+                        {getHeroAbilityIcon(hero.type, 14, "inline mb-0.5")}
+                        {HERO_DATA[hero.type].ability}
+                      </span>
+                      <div className="hidden sm:inline text-[7px] max-w-28 my-0.5">
+                        {HERO_DATA[hero.type].abilityDesc}
+                      </div>
+                      <span className="font-extrabold mt-0.5 sm:mt-1 text-[8px] sm:text-[10px] text-amber-300/80">
+                        READY
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col animate-pulse items-center justify-center sm:px-4">
+                      <Timer size={14} className="text-stone-400 mb-0.5 sm:w-[18px] sm:h-[18px]" />
+                      <span className="text-[9px] sm:text-[11px] text-stone-400">
+                        {Math.ceil(hero.abilityCooldown / 1000)}s
+                      </span>
+                      <span className="text-[7px] sm:text-[8px] text-stone-500">
+                        cooldown
+                      </span>
+                      <div className="flex items-center gap-1 text-[8px] sm:text-[10px] max-w-28 my-0.5 text-center text-stone-400">
+                        {getHeroAbilityIcon(hero.type, 12, "text-stone-500 opacity-60")}
+                        {HERO_DATA[hero.type].ability}
+                      </div>
+                    </div>
+                  )}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </button>
+
+      {/* Spell Section */}
+      <div className="flex ml-3 items-center self-stretch gap-1 sm:gap-2 relative bg-amber-950/80 px-1.5 sm:px-3 py-1.5 sm:py-2 border border-amber-700 rounded-lg shadow-md pointer-events-auto">
+        <span className="hidden sm:flex items-center flex-col text-[9px] text-amber-500 font-bold tracking-wider mr-1">
+          <ShellIcon size={12} className="inline mb-0.5" />
+          SPELLS <Wind size={12} className="inline ml-0.5 rotate-90" />
+        </span>
+        {spells.map((spell) => {
+          const spellData = SPELL_DATA[spell.type];
+          const canCast =
+            spell.cooldown <= 0 &&
+            pawPoints >= spellData.cost &&
+            !(
+              (spell.type === "fireball" || spell.type === "lightning" || spell.type === "freeze" || spell.type === "payday") &&
+              enemies.length === 0
             );
-          })}
-        </div>
+          const isHovered = hoveredSpell === spell.type;
+          return (
+            <div key={spell.type} className="relative">
+              <button
+                onClick={() => castSpell(spell.type)}
+                disabled={!canCast}
+                onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
+                onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
+                className={`relative px-1 md:px-3.5 py-1 md:py-3 transition-all border shadow-md rounded-lg overflow-hidden ${canCast
+                  ? "bg-gradient-to-b from-purple-700/90 to-purple-900/90 hover:from-purple-600/90 hover:to-purple-800/90 border-purple-500"
+                  : "bg-stone-900/90 border-stone-700 opacity-50 cursor-not-allowed"
+                  }`}
+              >
+                <div className="flex flex-col items-center min-w-[32px] sm:min-w-[44px]">
+                  <SpellSprite type={spell.type} size={22} />
+                  <div className="font-bold uppercase text-[7px] sm:text-[8px] tracking-wide text-purple-200 mt-0.5">
+                    {spellData.name.split(" ")[0]}
+                  </div>
+                  <div className="text-[8px] sm:text-[9px] font-bold">
+                    {spell.cooldown > 0 ? (
+                      <span className="text-red-400">
+                        {Math.ceil(spell.cooldown / 1000)}s
+                      </span>
+                    ) : (
+                      <span className="text-amber-400">
+                        {spellData.cost > 0 ? `${spellData.cost}PP` : "FREE"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {spell.cooldown > 0 && (
+                  <div
+                    className="absolute inset-0 bg-black/70"
+                    style={{
+                      clipPath: `inset(${100 - (spell.cooldown / spell.maxCooldown) * 100
+                        }% 0 0 0)`,
+                    }}
+                  />
+                )}
+              </button>
+              {isHovered && !isTouchDevice && (
+                <div className="hidden [@media(hover:hover)]:block absolute bottom-full left-[100%] -translate-x-[100%] mb-2 w-64 bg-stone-900/90 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50 pointer-events-none">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-purple-200 font-bold">
+                      {spellData.name}
+                    </span>
+                    <span className="text-lg">{spellData.icon}</span>
+                  </div>
+                  <p className="text-xs text-purple-400/90 mb-2">
+                    {spellData.desc}
+                  </p>
+                  <div className="flex gap-2 mb-2 text-[10px]">
+                    <span className="px-2 py-0.5 bg-amber-950/60 rounded text-amber-300">
+                      💰 {spellData.cost > 0 ? `${spellData.cost} PP` : "FREE"}
+                    </span>
+                    <span className="px-2 py-0.5 bg-blue-950/60 rounded text-blue-300">
+                      ⏱ {spellData.cooldown / 1000}s
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-purple-300/80 border-t border-purple-800/50 pt-2">
+                    {spellDetails[spell.type]}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </OrnateFrame>
+    </div>
   );
 };
 
@@ -2526,14 +2575,31 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
 
   return (
     <div
-      className="absolute bottom-2 right-2 flex flex-col gap-2"
+      className="absolute top-2 left-2 flex flex-col gap-2"
       style={{ zIndex: 60 }}
     >
+      <button
+        onClick={handleToggle}
+        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border shadow-lg backdrop-blur-sm transition-all ${isActive
+          ? "bg-gradient-to-br from-purple-900/95 to-purple-950/95 border-purple-400 shadow-purple-500/30"
+          : "bg-gradient-to-br from-amber-900/90 to-stone-900/90 border-amber-700 hover:border-amber-500"
+          }`}
+      >
+        {isActive ? (
+          <EyeOff size={14} className="text-purple-300" />
+        ) : (
+          <Eye size={14} className="text-amber-400" />
+        )}
+        <span className={`text-[9px] font-bold tracking-wider ${isActive ? "text-purple-200" : "text-amber-300"}`}>
+          {isActive ? "EXIT" : "INSPECT"}
+        </span>
+      </button>
+
       {isActive && (
         <div className="bg-gradient-to-br from-purple-900/95 to-stone-900/95 p-2 rounded-lg border border-purple-700 shadow-lg backdrop-blur-sm">
-          <div className="text-[9px] text-purple-300 mb-2 font-bold text-center tracking-wider flex items-center gap-1 justify-center">
+          <div className="text-[9px] text-purple-300 mb-1 font-bold text-center tracking-wider flex items-center gap-1 justify-center">
             <AlertTriangle size={10} />
-            GAME PAUSED - CLICK AN ENEMY
+            PAUSED - CLICK ENEMY
           </div>
           <div className="text-[8px] text-purple-400/80 text-center">
             {enemies.length} enemies on field
@@ -2547,23 +2613,6 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
           )}
         </div>
       )}
-
-      <button
-        onClick={handleToggle}
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg border shadow-lg backdrop-blur-sm transition-all ${isActive
-          ? "bg-gradient-to-br from-purple-900/95 to-purple-950/95 border-purple-400 shadow-purple-500/30"
-          : "bg-gradient-to-br from-amber-900/90 to-stone-900/90 border-amber-700 hover:border-amber-500"
-          }`}
-      >
-        {isActive ? (
-          <EyeOff size={16} className="text-purple-300" />
-        ) : (
-          <Eye size={16} className="text-amber-400" />
-        )}
-        <span className={`text-[10px] font-bold tracking-wider ${isActive ? "text-purple-200" : "text-amber-300"}`}>
-          {isActive ? "EXIT INSPECT" : "INSPECT ENEMIES"}
-        </span>
-      </button>
     </div>
   );
 };
