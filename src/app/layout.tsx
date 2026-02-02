@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "Princeton Tower Defense",
     images: [
       {
-        url: "/images/gameplay-latest2.png",
+        url: "/images/gameplay-latest.png",
         width: 1200,
         height: 630,
         alt: "Princeton Tower Defense gameplay showing towers defending against waves of enemies",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     title: "Princeton Tower Defense",
     description:
       "Defend the campus from manifestations of student stress! Build towers, summon heroes, and protect Nassau Hall.",
-    images: ["/images/gameplay-latest2.png"],
+    images: ["/images/gameplay-latest.png"],
   },
   robots: {
     index: true,
