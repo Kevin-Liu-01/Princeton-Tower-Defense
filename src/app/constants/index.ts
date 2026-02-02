@@ -2079,7 +2079,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    startingPawPoints: 5000, // Hard level with beacon - need more towers
+    startingPawPoints: 500, // Hard level with beacon - need more towers
     specialTower: {
       pos: { x: 16, y: 8.5 },
       type: "beacon",
