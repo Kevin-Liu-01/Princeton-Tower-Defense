@@ -244,7 +244,8 @@ export type EnemyTrait =
   | "regenerating"
   | "aoe_attack"
   | "magic_resist"
-  | "tower_debuffer";
+  | "tower_debuffer"
+  | "breakthrough"; // Fast enemies that bypass troops without stopping
 
 // Enemy data definition
 export interface EnemyData {
@@ -268,6 +269,14 @@ export interface EnemyData {
   isBoss?: boolean;
   aoeRadius?: number;
   aoeDamage?: number;
+  // Flying troop targeting
+  targetsTroops?: boolean;
+  troopDamage?: number;
+  troopAttackSpeed?: number; // ms between attacks on troops
+  // Breakthrough - ground enemies that bypass barracks troops without stopping
+  breakthrough?: boolean;
+  // Lives cost when enemy escapes
+  liveCost?: number; // default 1
 }
 
 // Enemy entity - runtime state

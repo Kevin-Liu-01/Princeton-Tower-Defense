@@ -295,6 +295,13 @@ export default function PrincetonTowerDefense() {
   const [moveTargetPos, setMoveTargetPos] = useState<Position | null>(null);
   const [moveTargetValid, setMoveTargetValid] = useState(false);
   const [selectedUnitMoveInfo, setSelectedUnitMoveInfo] = useState<TroopMoveInfo | null>(null);
+  // Camera panning state
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState<Position | null>(null);
+  const [panStartOffset, setPanStartOffset] = useState<Position | null>(null);
+  // Tower repositioning state (drag existing towers to move them)
+  const [repositioningTower, setRepositioningTower] = useState<string | null>(null);
+  const [repositionPreviewPos, setRepositionPreviewPos] = useState<Position | null>(null);
   // Camera - start more zoomed in and centered
   const [cameraOffset, setCameraOffset] = useState<Position>({
     x: -40,
@@ -357,7 +364,7 @@ export default function PrincetonTowerDefense() {
   const blockedPositions = React.useMemo(() => {
     const levelData = LEVEL_DATA[selectedMap];
     const blocked = new Set<string>();
-    
+
     // Add landmark decoration positions
     if (levelData?.decorations) {
       for (const deco of levelData.decorations) {
@@ -367,7 +374,7 @@ export default function PrincetonTowerDefense() {
           const size = deco.size || 1;
           const baseX = Math.floor(deco.pos.x);
           const baseY = Math.floor(deco.pos.y);
-          
+
           // Block a grid area around the landmark based on its size
           const range = Math.ceil(size);
           for (let dx = -range; dx <= range; dx++) {
@@ -378,7 +385,7 @@ export default function PrincetonTowerDefense() {
         }
       }
     }
-    
+
     // Add special tower position (beacon, vault, shrine, barracks)
     if (levelData?.specialTower) {
       const spec = levelData.specialTower;
@@ -391,7 +398,7 @@ export default function PrincetonTowerDefense() {
         }
       }
     }
-    
+
     return blocked;
   }, [selectedMap]);
 
@@ -1534,11 +1541,12 @@ export default function PrincetonTowerDefense() {
               return { ...enemy, inCombat: true, combatTarget: nearbyHero.id };
             }
 
-            // Troop Combat Check
-            const nearbyTroop = troops.find(
-              (t) =>
-                distance(enemyPos, t.pos) < 60 && !ENEMY_DATA[enemy.type].flying
-            );
+            // Troop Combat Check - skip if enemy has breakthrough or is flying
+            const enemyData = ENEMY_DATA[enemy.type];
+            const canEngageTroops = !enemyData.flying && !enemyData.breakthrough;
+            const nearbyTroop = canEngageTroops ? troops.find(
+              (t) => distance(enemyPos, t.pos) < 60
+            ) : null;
             if (nearbyTroop) {
               return { ...enemy, inCombat: true, combatTarget: nearbyTroop.id };
             }
@@ -1561,7 +1569,9 @@ export default function PrincetonTowerDefense() {
                   progress: 0,
                 };
               } else if (newProgress >= 1) {
-                setLives((l) => l - 1);
+                // Use liveCost from enemy data, default to 1
+                const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
+                setLives((l) => Math.max(0, l - liveCost));
                 return null as any;
               } else {
                 return { ...enemy, progress: newProgress };
@@ -1645,7 +1655,9 @@ export default function PrincetonTowerDefense() {
         const effectiveTroopAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
         enemies.forEach((enemy) => {
           if (enemy.frozen || now < enemy.stunUntil) return;
-          if (ENEMY_DATA[enemy.type].flying) return;
+          const eData = ENEMY_DATA[enemy.type];
+          // Skip flying enemies and breakthrough enemies (they don't stop for troops)
+          if (eData.flying || eData.breakthrough) return;
           if (now - enemy.lastTroopAttack <= effectiveTroopAttackInterval) return;
 
           const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
@@ -1682,6 +1694,33 @@ export default function PrincetonTowerDefense() {
               // Update enemy's last ability time
               enemy.lastAbilityUse = now;
             }
+          }
+        });
+
+        // Flying enemies with targetsTroops can attack troops while passing by (without stopping)
+        enemies.forEach((enemy) => {
+          if (enemy.frozen || now < enemy.stunUntil) return;
+          const flyingData = ENEMY_DATA[enemy.type];
+          // Only process flying enemies that can target troops
+          if (!flyingData.flying || !flyingData.targetsTroops) return;
+
+          const attackSpeed = flyingData.troopAttackSpeed || 2000;
+          const effectiveAttackInterval = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
+          if (now - enemy.lastTroopAttack <= effectiveAttackInterval) return;
+
+          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+
+          // Flying enemies can attack troops within a larger range (swooping attacks)
+          const attackRange = 80;
+          const nearbyTroop = troops.find((t) => distance(enemyPos, t.pos) < attackRange);
+          if (nearbyTroop) {
+            const damage = flyingData.troopDamage || 20;
+            troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
+            enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
+
+            // Flying enemies don't stop - they continue moving
+            // But we track that they attacked
+            enemy.lastTroopAttack = now;
           }
         });
       } // End of !isPaused check for enemy attacks on troops
@@ -1867,11 +1906,11 @@ export default function PrincetonTowerDefense() {
               };
             }
             // Check for nearby troop combat (damage already applied above)
-            const nearbyTroop = troops.find(
-              (t) =>
-                distance(getEnemyPosWithPath(enemy, selectedMap), t.pos) < 60 &&
-                !ENEMY_DATA[enemy.type].flying
-            );
+            // Skip if enemy is flying or has breakthrough
+            const enemyDataCheck = ENEMY_DATA[enemy.type];
+            const nearbyTroop = (!enemyDataCheck.flying && !enemyDataCheck.breakthrough) ? troops.find(
+              (t) => distance(getEnemyPosWithPath(enemy, selectedMap), t.pos) < 60
+            ) : null;
             if (nearbyTroop) {
               // Check if this enemy attacked this frame
               const attackedThisFrame =
@@ -2050,7 +2089,9 @@ export default function PrincetonTowerDefense() {
                 newProgress >= 1 &&
                 enemy.pathIndex >= path.length - 1
               ) {
-                setLives((l) => l - 1);
+                // Use liveCost from enemy data, default to 1
+                const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
+                setLives((l) => Math.max(0, l - liveCost));
                 return null as any;
               } else {
                 return {
@@ -5734,7 +5775,7 @@ export default function PrincetonTowerDefense() {
     if (LEVEL_DATA[selectedMap]?.specialTower) {
       const spec = LEVEL_DATA[selectedMap].specialTower;
       const worldPos = gridToWorld(spec.pos);
-      
+
       // Calculate how many towers are being boosted by the beacon (for visual stages)
       let boostedTowerCount = 0;
       if (spec.type === "beacon") {
@@ -5745,7 +5786,7 @@ export default function PrincetonTowerDefense() {
           return distance(tWorldPos, worldPos) < beaconBoostRange;
         }).length;
       }
-      
+
       renderables.push({
         type: "special-building",
         data: { ...spec, boostedTowerCount },
@@ -5767,6 +5808,44 @@ export default function PrincetonTowerDefense() {
         data: draggingTower,
         isoY: (worldPos.x + worldPos.y) * 0.25,
       });
+    }
+    // Tower repositioning preview - show tower being moved at new position
+    if (repositioningTower && repositionPreviewPos) {
+      const tower = towers.find((t) => t.id === repositioningTower);
+      if (tower) {
+        const gridPos = screenToGrid(
+          repositionPreviewPos,
+          canvas.width,
+          canvas.height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        const worldPos = gridToWorld(gridPos);
+        // Check if position is valid (for visual feedback)
+        const otherTowers = towers.filter((t) => t.id !== repositioningTower);
+        const isValid = isValidBuildPosition(
+          gridPos,
+          selectedMap,
+          otherTowers,
+          GRID_WIDTH,
+          GRID_HEIGHT,
+          TOWER_PLACEMENT_BUFFER,
+          blockedPositions
+        );
+        renderables.push({
+          type: "tower-preview",
+          data: {
+            type: tower.type,
+            pos: repositionPreviewPos,
+            isRepositioning: true,
+            isValid,
+            level: tower.level,
+            upgrade: tower.upgrade,
+          },
+          isoY: (worldPos.x + worldPos.y) * 0.25,
+        });
+      }
     }
     renderables.sort((a, b) => a.isoY - b.isoY);
 
@@ -6245,13 +6324,17 @@ export default function PrincetonTowerDefense() {
           );
           break;
         case "tower-preview":
+          // For repositioning, exclude the tower being moved from validation
+          const previewTowers = r.data.isRepositioning
+            ? towers.filter((t) => t.id !== repositioningTower)
+            : towers;
           renderTowerPreview(
             ctx,
             r.data,
             canvas.width,
             canvas.height,
             dpr,
-            towers,
+            previewTowers,
             selectedMap,
             GRID_WIDTH,
             GRID_HEIGHT,
@@ -6342,6 +6425,107 @@ export default function PrincetonTowerDefense() {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
   }, [gameState]); // Only restart loop when entering/leaving playing state
+
+  // ========== POINTER DOWN HANDLER ==========
+  // Handles starting canvas panning and tower repositioning
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const isTouch = e.pointerType === 'touch';
+
+      // Track device type
+      if (isTouch) {
+        isTouchDeviceRef.current = true;
+        lastTouchTimeRef.current = Date.now();
+      }
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const clickPos = { x, y };
+      const { width, height, dpr } = getCanvasDimensions();
+
+      // Don't start panning if we're placing a new tower or troop
+      if (buildingTower || draggingTower || placingTroop) return;
+
+      // Check if clicking on a tower to start repositioning
+      if (selectedTower) {
+        const tower = towers.find((t) => t.id === selectedTower);
+        if (tower) {
+          const worldPos = gridToWorld(tower.pos);
+          const screenPos = worldToScreen(
+            worldPos,
+            width,
+            height,
+            dpr,
+            cameraOffset,
+            cameraZoom
+          );
+          const hitboxRadius = getTowerHitboxRadius(tower, cameraZoom);
+
+          // If clicking on the selected tower, start repositioning
+          if (distance(clickPos, screenPos) < hitboxRadius) {
+            setRepositioningTower(selectedTower);
+            setRepositionPreviewPos(clickPos);
+            return;
+          }
+        }
+      }
+
+      // Start canvas panning - check we're not clicking on interactive elements
+      // First check if clicking on a tower
+      const clickedTower = towers.find((t) => {
+        const worldPos = gridToWorld(t.pos);
+        const screenPos = worldToScreen(
+          worldPos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        const hitboxRadius = getTowerHitboxRadius(t, cameraZoom);
+        return distance(clickPos, screenPos) < hitboxRadius;
+      });
+
+      // Check if clicking on hero
+      let clickedHero = false;
+      if (hero && !hero.dead) {
+        const heroScreen = worldToScreen(
+          hero.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        clickedHero = distance(clickPos, heroScreen) < 28;
+      }
+
+      // Check if clicking on a troop
+      const clickedTroop = troops.find((t) => {
+        const troopScreen = worldToScreen(
+          t.pos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        return distance(clickPos, troopScreen) < 22;
+      });
+
+      // If not clicking on any interactive element, start panning
+      if (!clickedTower && !clickedHero && !clickedTroop) {
+        setIsPanning(true);
+        setPanStart(clickPos);
+        setPanStartOffset({ ...cameraOffset });
+      }
+    },
+    [buildingTower, draggingTower, placingTroop, selectedTower, towers, hero, troops, cameraOffset, cameraZoom, getCanvasDimensions]
+  );
+
   // Event handlers
   const handleCanvasClick = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -6362,6 +6546,68 @@ export default function PrincetonTowerDefense() {
       const clickY = e.clientY - rect.top;
       const clickPos = { x: clickX, y: clickY };
       const { width, height, dpr } = getCanvasDimensions();
+
+      // ========== STOP PANNING ==========
+      // If we were panning, stop and don't trigger click events
+      if (isPanning) {
+        const wasPanning = panStart && (
+          Math.abs(clickX - panStart.x) > 5 ||
+          Math.abs(clickY - panStart.y) > 5
+        );
+        setIsPanning(false);
+        setPanStart(null);
+        setPanStartOffset(null);
+        // If we actually moved while panning, don't trigger any click logic
+        if (wasPanning) {
+          return;
+        }
+      }
+
+      // ========== TOWER REPOSITIONING - Drop tower at new position ==========
+      if (repositioningTower && repositionPreviewPos) {
+        const tower = towers.find((t) => t.id === repositioningTower);
+        if (tower) {
+          const newGridPos = screenToGrid(
+            repositionPreviewPos,
+            width,
+            height,
+            dpr,
+            cameraOffset,
+            cameraZoom
+          );
+
+          // Check if the new position is valid (not on path, not overlapping other towers, etc.)
+          // Temporarily remove the tower being moved from the towers list for validation
+          const otherTowers = towers.filter((t) => t.id !== repositioningTower);
+          const isValid = isValidBuildPosition(
+            newGridPos,
+            selectedMap,
+            otherTowers,
+            GRID_WIDTH,
+            GRID_HEIGHT,
+            TOWER_PLACEMENT_BUFFER,
+            blockedPositions
+          );
+
+          if (isValid) {
+            // Move the tower to the new position
+            setTowers((prev) =>
+              prev.map((t) => {
+                if (t.id === repositioningTower) {
+                  return { ...t, pos: newGridPos };
+                }
+                return t;
+              })
+            );
+            addParticles(gridToWorld(newGridPos), "spark", 8);
+          }
+        }
+
+        // Clear repositioning state
+        setRepositioningTower(null);
+        setRepositionPreviewPos(null);
+        return;
+      }
 
       // ========== INSPECTOR MODE - Handle enemy selection ==========
       // Only intercept clicks for enemy selection when inspector is active AND game is paused
@@ -6790,6 +7036,11 @@ export default function PrincetonTowerDefense() {
       moveTargetPos,
       moveTargetValid,
       selectedUnitMoveInfo,
+      isPanning,
+      panStart,
+      repositioningTower,
+      repositionPreviewPos,
+      blockedPositions,
     ]
   );
   const handleMouseMove = useCallback(
@@ -6817,8 +7068,42 @@ export default function PrincetonTowerDefense() {
 
       const { width, height, dpr } = getCanvasDimensions();
 
-      // For touch: only handle tower dragging, skip hover effects
+      // ========== CANVAS PANNING ==========
+      if (isPanning && panStart && panStartOffset) {
+        const dx = (x - panStart.x) / cameraZoom;
+        const dy = (y - panStart.y) / cameraZoom;
+        setCameraOffset({
+          x: panStartOffset.x + dx,
+          y: panStartOffset.y + dy,
+        });
+        return; // Don't process other interactions while panning
+      }
+
+      // ========== TOWER REPOSITIONING ==========
+      if (repositioningTower) {
+        setRepositionPreviewPos({ x, y });
+        return; // Don't process other interactions while repositioning
+      }
+
+      // For touch: only handle tower dragging, panning, and repositioning
       if (isTouch) {
+        // ========== TOUCH PANNING ==========
+        if (isPanning && panStart && panStartOffset) {
+          const dx = (x - panStart.x) / cameraZoom;
+          const dy = (y - panStart.y) / cameraZoom;
+          setCameraOffset({
+            x: panStartOffset.x + dx,
+            y: panStartOffset.y + dy,
+          });
+          return;
+        }
+
+        // ========== TOUCH TOWER REPOSITIONING ==========
+        if (repositioningTower) {
+          setRepositionPreviewPos({ x, y });
+          return;
+        }
+
         // ========== TOWER DRAGGING ON TOUCH ==========
         if (gameSpeed === 0) {
           if (draggingTower) {
@@ -7008,7 +7293,7 @@ export default function PrincetonTowerDefense() {
         setSelectedUnitMoveInfo(null);
       }
     },
-    [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops, inspectorActive, enemies, gameSpeed]
+    [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops, inspectorActive, enemies, gameSpeed, isPanning, panStart, panStartOffset, repositioningTower]
   );
 
   // Game actions
@@ -7755,6 +8040,12 @@ export default function PrincetonTowerDefense() {
     setSelectedTower(null);
     setBuildingTower(null);
     setDraggingTower(null);
+    // Reset panning and repositioning state
+    setIsPanning(false);
+    setPanStart(null);
+    setPanStartOffset(null);
+    setRepositioningTower(null);
+    setRepositionPreviewPos(null);
     setWaveInProgress(false);
     setPlacingTroop(false);
     setSpells([]);
@@ -7876,6 +8167,12 @@ export default function PrincetonTowerDefense() {
           setSelectedTower(null);
           setBuildingTower(null);
           setDraggingTower(null);
+          // Reset panning and repositioning state
+          setIsPanning(false);
+          setPanStart(null);
+          setPanStartOffset(null);
+          setRepositioningTower(null);
+          setRepositionPreviewPos(null);
           setWaveInProgress(false);
           setPlacingTroop(false);
           setSpells([]);
@@ -7910,9 +8207,13 @@ export default function PrincetonTowerDefense() {
         >
           <canvas
             ref={canvasRef}
+            onPointerDown={handlePointerDown}
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
-            className="w-full h-full cursor-crosshair touch-none"
+            className={`w-full h-full touch-none ${isPanning ? 'cursor-grabbing' :
+                repositioningTower ? 'cursor-move' :
+                  'cursor-crosshair'
+              }`}
           />
           <CameraControls
             setCameraOffset={setCameraOffset}

@@ -11036,11 +11036,6 @@ function drawDragonEnemy(
   ctx.arc(x, y + hover, size * 1.2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Large shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.7, size * 0.6, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // WINGS (behind body)
   // Left wing

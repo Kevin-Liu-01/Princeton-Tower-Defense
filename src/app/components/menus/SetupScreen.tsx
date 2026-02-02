@@ -20,7 +20,7 @@ import type {
 import { HERO_DATA, SPELL_DATA, TOWER_DATA, ENEMY_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
 
 // Import sprite components from GameUI
-import { TowerSprite, HeroSprite, SpellSprite } from "../ui/GameUI";
+import { TowerSprite, HeroSprite, SpellSprite, HeroAbilityIcon } from "../ui/GameUI";
 
 // Enemy sprite component for codex
 const EnemySprite: React.FC<{ type: EnemyType; size?: number }> = ({
@@ -173,6 +173,8 @@ const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string
       return { icon: <Sparkles size={10} />, label: "Magic Resist", color: "text-blue-400", desc: "Magic defense" };
     case "tower_debuffer":
       return { icon: <TrendingDown size={10} />, label: "Debuffer", color: "text-rose-400", desc: "Weakens towers" };
+    case "breakthrough":
+      return { icon: <Zap size={10} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses troops" };
     default:
       return { icon: <Info size={10} />, label: trait, color: "text-gray-400", desc: "Unknown" };
   }
@@ -613,7 +615,7 @@ export function SetupScreen({
                   {/* Ability */}
                   <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <Sparkles size={14} className="text-purple-400" />
+                      <HeroAbilityIcon type={selectedHero} size={14} />
                       <span className="text-sm font-bold text-purple-300">{HERO_DATA[selectedHero].ability}</span>
                     </div>
                     <p className="text-xs text-purple-200/80">{HERO_DATA[selectedHero].abilityDesc}</p>
@@ -1007,7 +1009,14 @@ export function SetupScreen({
                                         <EnemySprite type={type} size={36} />
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
+                                        <div className="flex items-start justify-between gap-2">
+                                          <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
+                                          {/* Lives Cost Badge */}
+                                          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
+                                            <Heart size={10} className="text-rose-400" />
+                                            <span className="text-rose-300 font-bold text-[9px]">{enemy.liveCost || 1}</span>
+                                          </div>
+                                        </div>
                                         <p className="text-[9px] text-stone-400 line-clamp-2 mt-0.5">{enemy.desc}</p>
                                       </div>
                                     </div>
@@ -1060,6 +1069,50 @@ export function SetupScreen({
                                         <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
                                           <div className="text-[7px] text-orange-500">AoE Dmg</div>
                                           <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeDamage}</div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Flying Troop Attack Stats */}
+                                    {enemy.targetsTroops && enemy.troopDamage && (
+                                      <div className="grid grid-cols-2 gap-1 mb-1.5">
+                                        <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
+                                          <Wind size={10} className="mx-auto text-cyan-400 mb-0.5" />
+                                          <div className="text-[7px] text-cyan-500">Swoop</div>
+                                          <div className="text-cyan-300 font-bold text-[9px]">{enemy.troopDamage}</div>
+                                        </div>
+                                        <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
+                                          <Timer size={10} className="mx-auto text-cyan-400 mb-0.5" />
+                                          <div className="text-[7px] text-cyan-500">Speed</div>
+                                          <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Melee Combat Stats */}
+                                    {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
+                                      <div className="grid grid-cols-2 gap-1 mb-1.5">
+                                        <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
+                                          <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
+                                          <div className="text-[7px] text-red-500">Melee</div>
+                                          <div className="text-red-300 font-bold text-[9px]">15</div>
+                                        </div>
+                                        <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
+                                          <Timer size={10} className="mx-auto text-red-400 mb-0.5" />
+                                          <div className="text-[7px] text-red-500">Speed</div>
+                                          <div className="text-red-300 font-bold text-[9px]">1.0s</div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Breakthrough indicator */}
+                                    {enemy.breakthrough && (
+                                      <div className="mb-1.5">
+                                        <div className="bg-sky-950/40 rounded px-1 py-0.5 text-center border border-sky-900/30">
+                                          <div className="text-sky-300 font-bold text-[9px] flex items-center justify-center gap-1">
+                                            <Zap size={10} className="text-sky-400" />
+                                            Bypasses Troops
+                                          </div>
                                         </div>
                                       </div>
                                     )}

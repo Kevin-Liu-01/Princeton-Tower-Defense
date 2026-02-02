@@ -88,11 +88,11 @@ import {
   getUpgradeCost,
   TOWER_STATS,
 } from "../../constants/towerStats";
-import { TowerSprite, HeroSprite, SpellSprite, EnemySprite } from "../../sprites";
+import { TowerSprite, HeroSprite, SpellSprite, EnemySprite, HeroAbilityIcon, getHeroAbilityIcon } from "../../sprites";
 import PrincetonTDLogo from "./PrincetonTDLogo";
 import { OrnateFrame } from "./OrnateFrame";
 
-export { TowerSprite, HeroSprite, SpellSprite, EnemySprite };
+export { TowerSprite, HeroSprite, SpellSprite, EnemySprite, HeroAbilityIcon, getHeroAbilityIcon };
 
 // =============================================================================
 // TOUCH DEVICE DETECTION HOOK
@@ -1017,11 +1017,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         <span className="hidden sm:inline text-[7px] bg-amber-800/50 px-1 rounded-lg absolute top-1 right-1 text-amber-400">
                           {HERO_ABILITY_COOLDOWNS[hero.type] / 1000}s Cooldown
                         </span>
-                        <span className="flex flex-col sm:flex-row gap-0.5 sm:gap-1 items-center text-[10px] sm:text-[12px] text-amber-200 font-bold">
-                          <Zap
-                            size={14}
-                            className="text-yellow-300 hidden sm:inline mb-0.5"
-                          />
+                        <span className="flex flex-col mx-auto sm:flex-row gap-0.5 sm:gap-1 items-center text-[10px] sm:text-[12px] text-amber-200 font-bold">
+                          {getHeroAbilityIcon(hero.type, 14, "inline mb-0.5")}
                           {HERO_DATA[hero.type].ability}
                         </span>
                         <div className="hidden sm:inline text-[7px] max-w-28 my-0.5">
@@ -1040,11 +1037,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         <span className="text-[7px] sm:text-[8px] text-stone-500">
                           cooldown
                         </span>
-                        <div
-                          className="
-                        text-[8px] sm:text-[10px] max-w-28 my-0.5 text-center text-stone-400
-                      "
-                        >
+                        <div className="flex items-center gap-1 text-[8px] sm:text-[10px] max-w-28 my-0.5 text-center text-stone-400">
+                          {getHeroAbilityIcon(hero.type, 12, "text-stone-500 opacity-60")}
                           {HERO_DATA[hero.type].ability}
                         </div>
                       </div>
@@ -2081,6 +2075,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           <span className="text-amber-400 font-bold">+{sellValue} PP</span>
         </button>
 
+        {/* Drag to move hint */}
+        <div className="flex items-center justify-center gap-1 mt-1 text-[8px] text-stone-500">
+          <Grab size={10} />
+          <span>Drag tower to move</span>
+        </div>
+
         {/* Arrow pointer */}
         <div
           className="absolute left-1/2 -bottom-2 transform -translate-x-1/2"
@@ -2601,6 +2601,8 @@ const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string
       return { icon: <Sparkles size={12} />, label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks" };
     case "tower_debuffer":
       return { icon: <TrendingDown size={12} />, label: "Tower Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers" };
+    case "breakthrough":
+      return { icon: <Zap size={12} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping" };
     default:
       return { icon: <Info size={12} />, label: trait, color: "text-gray-400", desc: "Unknown trait" };
   }
@@ -2689,12 +2691,19 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             </div>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 hover:bg-purple-800/50 rounded-lg transition-colors"
-        >
-          <X size={18} className="text-purple-400" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Lives Cost Badge */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-rose-950/60 rounded border border-rose-800/50">
+            <Heart size={12} className="text-rose-400" />
+            <span className="text-rose-300 font-bold text-xs">{eData.liveCost || 1}</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 hover:bg-purple-800/50 rounded-lg transition-colors"
+          >
+            <X size={18} className="text-purple-400" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
@@ -2768,6 +2777,50 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             <div className="bg-orange-950/40 p-1.5 rounded-lg border border-orange-900/40 text-center">
               <div className="text-[8px] text-orange-500">AoE Damage</div>
               <div className="text-orange-200 font-bold text-xs">{eData.aoeDamage}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Flying Troop Attack Stats (if applicable) */}
+        {eData.targetsTroops && eData.troopDamage && (
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-900/40 text-center">
+              <Wind size={14} className="mx-auto text-cyan-400 mb-1" />
+              <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
+              <div className="text-cyan-200 font-bold text-xs">{eData.troopDamage}</div>
+            </div>
+            <div className="bg-cyan-950/40 p-1.5 rounded-lg border border-cyan-900/40 text-center">
+              <Timer size={14} className="mx-auto text-cyan-400 mb-1" />
+              <div className="text-[8px] text-cyan-500">Atk Speed</div>
+              <div className="text-cyan-200 font-bold text-xs">{((eData.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+            </div>
+          </div>
+        )}
+
+        {/* Melee Combat Stats (for ground enemies that engage troops) */}
+        {!eData.flying && !eData.breakthrough && !eData.isRanged && (
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
+              <Swords size={14} className="mx-auto text-red-400 mb-1" />
+              <div className="text-[8px] text-red-500">Melee Dmg</div>
+              <div className="text-red-200 font-bold text-xs">15</div>
+            </div>
+            <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
+              <Timer size={14} className="mx-auto text-red-400 mb-1" />
+              <div className="text-[8px] text-red-500">Atk Speed</div>
+              <div className="text-red-200 font-bold text-xs">1.0s</div>
+            </div>
+          </div>
+        )}
+
+        {/* Breakthrough indicator */}
+        {eData.breakthrough && (
+          <div className="mb-3">
+            <div className="bg-sky-950/40 p-1.5 rounded-lg border border-sky-900/40 text-center">
+              <div className="text-sky-200 font-bold text-xs flex items-center justify-center gap-1">
+                <Zap size={12} className="text-sky-400" />
+                Bypasses Troops
+              </div>
             </div>
           </div>
         )}

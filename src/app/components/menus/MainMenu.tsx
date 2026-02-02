@@ -545,6 +545,8 @@ const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string
       return { icon: <Sparkles size={10} />, label: "Magic Resist", color: "text-blue-400" };
     case "tower_debuffer":
       return { icon: <TrendingDown size={10} />, label: "Debuffer", color: "text-rose-400" };
+    case "breakthrough":
+      return { icon: <Zap size={10} />, label: "Breakthrough", color: "text-sky-400" };
     default:
       return { icon: <Info size={10} />, label: trait, color: "text-gray-400" };
   }
@@ -899,7 +901,14 @@ const CodexModal: React.FC<CodexModalProps> = ({
                                     <EnemySprite type={type} size={44} animated />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
+                                      {/* Lives Cost Badge */}
+                                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
+                                        <Heart size={10} className="text-rose-400" />
+                                        <span className="text-rose-300 font-bold text-[9px]">{enemy.liveCost || 1}</span>
+                                      </div>
+                                    </div>
                                     <p className="text-[10px] text-stone-400 line-clamp-2 mt-0.5">{enemy.desc}</p>
                                   </div>
                                 </div>
@@ -952,6 +961,50 @@ const CodexModal: React.FC<CodexModalProps> = ({
                                     <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
                                       <div className="text-[8px] text-orange-500">AoE Dmg</div>
                                       <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeDamage}</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Flying Troop Attack Stats */}
+                                {enemy.targetsTroops && enemy.troopDamage && (
+                                  <div className="grid grid-cols-2 gap-1 mb-2">
+                                    <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
+                                      <Wind size={10} className="mx-auto text-cyan-400 mb-0.5" />
+                                      <div className="text-[8px] text-cyan-500">Swoop</div>
+                                      <div className="text-cyan-300 font-bold text-[9px]">{enemy.troopDamage}</div>
+                                    </div>
+                                    <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
+                                      <Timer size={10} className="mx-auto text-cyan-400 mb-0.5" />
+                                      <div className="text-[8px] text-cyan-500">Speed</div>
+                                      <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Melee Combat Stats */}
+                                {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
+                                  <div className="grid grid-cols-2 gap-1 mb-2">
+                                    <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
+                                      <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="text-[8px] text-red-500">Melee</div>
+                                      <div className="text-red-300 font-bold text-[9px]">15</div>
+                                    </div>
+                                    <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
+                                      <Timer size={10} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="text-[8px] text-red-500">Speed</div>
+                                      <div className="text-red-300 font-bold text-[9px]">1.0s</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Breakthrough indicator */}
+                                {enemy.breakthrough && (
+                                  <div className="mb-2">
+                                    <div className="bg-sky-950/40 rounded px-1 py-0.5 text-center border border-sky-900/30">
+                                      <div className="text-sky-300 font-bold text-[9px] flex items-center justify-center gap-1">
+                                        <Zap size={10} className="text-sky-400" />
+                                        Bypasses Troops
+                                      </div>
                                     </div>
                                   </div>
                                 )}

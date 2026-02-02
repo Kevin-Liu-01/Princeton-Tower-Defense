@@ -60,6 +60,7 @@ import {
   HeroSprite,
   EnemySprite,
   SpellSprite,
+  HeroAbilityIcon,
 } from "../../sprites";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
 import { OrnateFrame } from "../ui/OrnateFrame";
@@ -324,6 +325,8 @@ const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string
       return { icon: <Sparkles size={12} />, label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks" };
     case "tower_debuffer":
       return { icon: <TrendingDown size={12} />, label: "Tower Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers" };
+    case "breakthrough":
+      return { icon: <Zap size={12} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping" };
     default:
       return { icon: <Info size={12} />, label: trait, color: "text-gray-400", desc: "Unknown trait" };
   }
@@ -1499,7 +1502,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                     <div className="bg-gradient-to-br from-purple-950/40 to-stone-950 rounded-xl border border-purple-700/50 overflow-hidden">
                       <div className="px-5 py-3 bg-purple-900/30 border-b border-purple-800/40 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Sparkles size={18} className="text-purple-400" />
+                          <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={18} />
                           <span className="text-sm text-purple-400 font-medium uppercase tracking-wider">Special Ability</span>
                         </div>
                         <div className="flex items-center gap-2 bg-purple-950/50 px-3 py-1.5 rounded-lg border border-purple-700/50">
@@ -1508,7 +1511,10 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         </div>
                       </div>
                       <div className="p-5">
-                        <h4 className="text-2xl font-bold text-purple-200 mb-2">{hero.ability}</h4>
+                        <h4 className="text-2xl font-bold text-purple-200 mb-2 flex items-center gap-2">
+                          <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={24} />
+                          {hero.ability}
+                        </h4>
                         <p className="text-purple-300 mb-4">{hero.abilityDesc}</p>
                         <div className="bg-purple-950/40 rounded-lg p-4 border border-purple-800/30">
                           <div className="text-xs text-purple-500 uppercase tracking-wider mb-2 flex items-center gap-1">
@@ -1670,9 +1676,16 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                                     <EnemySprite type={type} size={52} animated />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-lg font-bold text-red-200 truncate">
-                                      {enemy.name}
-                                    </h3>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h3 className="text-lg font-bold text-red-200 truncate">
+                                        {enemy.name}
+                                      </h3>
+                                      {/* Lives Cost Badge - Top Right */}
+                                      <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
+                                        <Heart size={12} className="text-rose-400" />
+                                        <span className="text-rose-300 font-bold text-xs">{enemy.liveCost || 1}</span>
+                                      </div>
+                                    </div>
                                     <p className="text-xs text-stone-400 line-clamp-2 mt-1">
                                       {enemy.desc}
                                     </p>
@@ -1731,6 +1744,50 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                                     <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
                                       <div className="text-[8px] text-orange-500">AoE Damage</div>
                                       <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeDamage}</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Flying Troop Attack Stats (if applicable) */}
+                                {enemy.targetsTroops && enemy.troopDamage && (
+                                  <div className="grid grid-cols-2 gap-1.5 mb-2">
+                                    <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
+                                      <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
+                                      <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
+                                      <div className="text-cyan-300 font-bold text-[10px]">{enemy.troopDamage}</div>
+                                    </div>
+                                    <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
+                                      <Timer size={12} className="mx-auto text-cyan-400 mb-0.5" />
+                                      <div className="text-[8px] text-cyan-500">Atk Speed</div>
+                                      <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Melee Combat Stats (for ground enemies that engage troops) */}
+                                {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
+                                  <div className="grid grid-cols-2 gap-1.5 mb-2">
+                                    <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
+                                      <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="text-[8px] text-red-500">Melee Dmg</div>
+                                      <div className="text-red-300 font-bold text-[10px]">15</div>
+                                    </div>
+                                    <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
+                                      <Timer size={12} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="text-[8px] text-red-500">Atk Speed</div>
+                                      <div className="text-red-300 font-bold text-[10px]">1.0s</div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Breakthrough indicator */}
+                                {enemy.breakthrough && (
+                                  <div className="mb-2">
+                                    <div className="bg-sky-950/40 rounded p-1 text-center border border-sky-900/30">
+                                      <div className="text-sky-300 font-bold text-[10px] flex items-center justify-center gap-1">
+                                        <Zap size={10} className="text-sky-400" />
+                                        Bypasses Troops
+                                      </div>
                                     </div>
                                   </div>
                                 )}
@@ -2054,7 +2111,7 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 // BATTLEFIELD PREVIEW
 // =============================================================================
 
-const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
+const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLevel?: () => void }> = ({ animTime, onSelectFarthestLevel }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [currentScene, setCurrentScene] = useState(0);
 
@@ -6085,7 +6142,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
   }, [animTime, currentScene]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-3 text-center relative overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
       {/* Canvas Battle Scene */}
       <div className="opacity-40">
         <canvas
@@ -6097,7 +6154,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
 
       {/* Content with ornate frame */}
       <OrnateFrame
-        className="relative z-10 flex items-center justify-center bg-gradient-to-br from-stone-900/80 via-stone-800/70 to-stone-900/80 backdrop-blur-xs rounded-2xl border-2 border-amber-700/60 p-8 h-full shadow-2xl overflow-hidden"
+        className="relative z-10 flex w-full items-center justify-center bg-gradient-to-br from-stone-900/80 via-stone-800/70 to-stone-900/80 backdrop-blur-xs rounded-2xl border-2 border-amber-700/60 p-4 sm:p-8 h-full shadow-2xl overflow-hidden"
         cornerSize={40}
         showBorders={true}
         color="#b45309"
@@ -6107,20 +6164,23 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
           {/* Decorative top flourish */}
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-amber-500/80 to-transparent" />
 
-          <div className="size-20 sm:size-24 rounded-full bg-gradient-to-br from-amber-800/60 to-orange-900/60 border-2 border-amber-600/70 flex items-center justify-center mb-4 backdrop-blur-sm shadow-lg shadow-amber-500/20">
-            <MapPin size={40} className="text-amber-400 drop-shadow-lg" />
-          </div>
+          <button
+            onClick={onSelectFarthestLevel}
+            className="size-14 sm:size-24 rounded-full bg-gradient-to-br from-amber-800/60 to-orange-900/60 border-2 border-amber-600/70 flex items-center justify-center mb-2 sm:mb-4 backdrop-blur-sm shadow-lg shadow-amber-500/20 hover:scale-110 hover:border-amber-400 hover:shadow-amber-400/40 transition-all cursor-pointer active:scale-95 group"
+          >
+            <MapPin size={28} className="sm:hidden text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
+            <MapPin size={40} className="hidden sm:block text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
+          </button>
 
-          <h3 className="text-xl font-bold text-amber-200 mb-2 drop-shadow-lg tracking-wide">
+          <h3 className="text-lg sm:text-xl font-bold text-amber-200 mb-1 sm:mb-2 drop-shadow-lg tracking-wide">
             Select a Battlefield
           </h3>
-          <p className="text-amber-400/90 text-sm max-w-xs drop-shadow-md leading-relaxed">
-            Click on any unlocked location on the map to view battle details and
-            begin your campaign
+          <p className="text-amber-400/90 text-xs sm:text-sm max-w-xs drop-shadow-md leading-relaxed">
+            Tap the pin above or any unlocked location on the map to begin your campaign
           </p>
 
           {/* Decorative divider */}
-          <div className="my-5 flex items-center gap-3 w-full max-w-[200px]">
+          <div className="my-3 sm:my-5 flex items-center gap-3 w-full max-w-[200px]">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
             <div className="w-2 h-2 rotate-45 bg-amber-500/70 border border-amber-400/80" />
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
@@ -6130,7 +6190,7 @@ const BattlefieldPreview: React.FC<{ animTime: number }> = ({ animTime }) => {
             <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500/70 to-orange-600/70 border border-amber-400/80 shadow-lg shadow-amber-500/40 animate-pulse" />
             <span className="font-medium tracking-wide">= Unlocked Location</span>
           </div>
-          <div className="mt-3 flex items-center gap-3 text-xs text-amber-300">
+          <div className="mt-2 sm:mt-3 flex items-center gap-3 text-xs text-amber-300">
             <div className="w-4 h-4 flex items-center justify-center rounded-full bg-gradient-to-br from-gray-500/70 to-gray-600/70 border border-gray-400/80 shadow-lg shadow-gray-500/40 animate-pulse" >
               <Lock size={10} className="text-gray-400" />
             </div>
@@ -6222,6 +6282,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     if (isLevelUnlocked(levelId)) {
       setSelectedLevel(levelId);
       setSelectedMap(levelId);
+      setHoveredLevel(null); // Clear hover state to prevent duplicate tooltip on mobile
     }
   };
   const startGame = () => {
@@ -9393,8 +9454,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
     }
 
-    // Tooltip with Preview Image - only show on hover (drawn after enemies so it's on top)
-    if (hoveredLevel) {
+    // Tooltip with Preview Image - only show on hover, not for the already-selected level
+    if (hoveredLevel && hoveredLevel !== selectedLevel) {
       const level = getLevelById(hoveredLevel);
       if (level && isLevelUnlocked(level.id)) {
         const x = level.x;
@@ -9756,8 +9817,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col sm:flex-row overflow-y-hidden overflow-x-auto min-h-0">
-        {/* LEFT SIDEBAR */}
-        <div className="sm:w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col">
+        {/* LEFT SIDEBAR - Fixed height on mobile to prevent map from shifting */}
+        <div className="h-[40vh] sm:h-auto sm:w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col overflow-hidden">
           {selectedLevel && currentLevel ? (
             <div className="flex-1 flex flex-col h-full overflow-auto">
               <div className="flex-shrink-0 relative overflow-hidden">
@@ -9872,16 +9933,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              <div className="hidden sm:inline flex-shrink-0 p-4 border-b border-amber-800/30">
-                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
+              <div className="flex-1 sm:flex-none p-2 sm:p-4 border-b border-amber-800/30 flex flex-col min-h-0">
+                <div className="hidden sm:block text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
                   Battlefield Preview
                 </div>
-                <div className="relative aspect-video bg-stone-900/80 rounded-xl border border-amber-800/40 overflow-hidden">
+                <div className="relative flex-1 sm:flex-none sm:aspect-video bg-stone-900/80 rounded-xl border border-amber-800/40 overflow-hidden">
                   {LEVEL_DATA[currentLevel.id]?.previewImage ? (
                     <img
                       src={LEVEL_DATA[currentLevel.id].previewImage}
                       alt={`${currentLevel.name} preview`}
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : null}
                   <div
@@ -10004,42 +10065,58 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 })()}
               </div>
 
-              <div className="flex-shrink-0 p-4 border-t border-amber-800/50 bg-gradient-to-t from-stone-950 to-transparent">
+              <div className="flex-shrink-0 p-2 sm:p-4 border-t border-amber-800/50 bg-gradient-to-t from-stone-950 to-transparent">
+                {/* Warning messages - show prominently when not ready */}
+                {!canStart && (
+                  <div className="mb-2 p-2 sm:p-3 rounded-xl bg-gradient-to-r from-red-950/60 via-orange-950/50 to-red-950/60 border border-red-800/50">
+                    <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-300">
+                      <AlertTriangle size={16} className="text-orange-400 animate-pulse" />
+                      {!selectedHero && !selectedSpells.length && (
+                        <span>Select a Champion & 3 Spells</span>
+                      )}
+                      {!selectedHero && selectedSpells.length > 0 && (
+                        <span>Select a Champion</span>
+                      )}
+                      {selectedHero && selectedSpells.length < 3 && (
+                        <span>Select {3 - selectedSpells.length} more Spell{3 - selectedSpells.length > 1 ? "s" : ""}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={startGame}
                   disabled={!canStart}
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all relative overflow-hidden group ${canStart
-                    ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02]"
-                    : "bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700"
+                  className={`w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group ${canStart
+                    ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02] animate-pulse"
+                    : "bg-stone-800/80 text-stone-500 cursor-not-allowed border border-stone-700/50"
                     }`}
                 >
                   {canStart && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                      <div className="absolute inset-0 rounded-xl border-2 border-amber-300/50 animate-pulse" />
+                    </>
                   )}
-                  <div className="relative flex items-center justify-center gap-3">
-                    <Swords
-                      size={24}
-                      className={canStart ? "animate-pulse" : ""}
-                    />
-                    <span>{canStart ? "BATTLE" : "Prepare Your Forces"}</span>
-                    {canStart && <Play size={20} />}
+                  <div className="relative flex items-center justify-center gap-2 sm:gap-3">
+                    <Swords size={20} className="sm:w-6 sm:h-6" />
+                    <span>{canStart ? "BATTLE" : "Waiting..."}</span>
+                    {canStart && <Play size={18} className="sm:w-5 sm:h-5" />}
                   </div>
                 </button>
-                {!canStart && (
-                  <div className="mt-2 text-center text-xs text-amber-600">
-                    {!selectedLevel && "Select a battlefield"}
-                    {selectedLevel && !selectedHero && "Choose your champion"}
-                    {selectedLevel &&
-                      selectedHero &&
-                      selectedSpells.length < 3 &&
-                      `Select ${3 - selectedSpells.length} more spell${3 - selectedSpells.length > 1 ? "s" : ""
-                      }`}
-                  </div>
-                )}
               </div>
             </div>
           ) : (
-            <BattlefieldPreview animTime={animTime} />
+            <BattlefieldPreview
+              animTime={animTime}
+              onSelectFarthestLevel={() => {
+                // Find the farthest unlocked level
+                const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
+                if (unlockedLevelsList.length > 0) {
+                  const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                  handleLevelClick(farthestLevel.id);
+                }
+              }}
+            />
           )}
         </div>
         {/* RIGHT: Map */}
@@ -10194,7 +10271,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           </div>
                         </div>
                         <div className="text-[9px] text-purple-300 flex items-center gap-1 bg-purple-900/40 px-2 py-1 rounded">
-                          <Sparkles size={10} className="text-purple-400" />
+                          <HeroAbilityIcon type={selectedHero} size={10} />
                           <span className="font-semibold text-purple-200">
                             {HERO_DATA[selectedHero].ability}:
                           </span>
@@ -10251,7 +10328,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             </div>
                           </div>
                         </div>
-                        <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-1 rounded">
+                        <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-1 rounded flex items-center gap-1">
+                          <HeroAbilityIcon type={hoveredHero} size={12} />
                           <span className="font-semibold text-purple-200">
                             {HERO_DATA[hoveredHero].ability}:
                           </span>{" "}
