@@ -4,6 +4,7 @@
 import type { Effect, Projectile, Particle, Position, Tower, Enemy, Troop, Hero } from "../../types";
 import { worldToScreen, gridToWorld, distance } from "../../utils";
 import { drawLightningBolt, drawExplosion, lightenColor, darkenColor } from "../helpers";
+import { setShadowBlur, clearShadow, getPerformanceSettings } from "../performance";
 
 // Re-export fog effects
 export { renderRoadEndFog } from "./fog";
@@ -1257,26 +1258,25 @@ export function renderEffect(
         const clawLen = tigerSize * (0.4 + clawProgress * 0.6);
         const clawAlpha = tigerAlpha * (1 - clawProgress * 0.3);
         
-        // Claw glow
-        ctx.shadowColor = "#ff8800";
-        ctx.shadowBlur = 8 * zoom;
-        
-        // Claw arc
-        ctx.strokeStyle = `rgba(255, 200, 100, ${clawAlpha})`;
-        ctx.lineWidth = 4 * zoom * (1 - clawProgress * 0.3);
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.arc(0, clawY, clawLen, -0.3, 0.3);
-        ctx.stroke();
-        
-        // Inner bright line
-        ctx.strokeStyle = `rgba(255, 255, 200, ${clawAlpha})`;
-        ctx.lineWidth = 2 * zoom;
-        ctx.beginPath();
-        ctx.arc(0, clawY, clawLen, -0.3, 0.3);
-        ctx.stroke();
-        
-        ctx.shadowBlur = 0;
+      // Claw glow
+      setShadowBlur(ctx, 8 * zoom, "#ff8800");
+      
+      // Claw arc
+      ctx.strokeStyle = `rgba(255, 200, 100, ${clawAlpha})`;
+      ctx.lineWidth = 4 * zoom * (1 - clawProgress * 0.3);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(0, clawY, clawLen, -0.3, 0.3);
+      ctx.stroke();
+      
+      // Inner bright line
+      ctx.strokeStyle = `rgba(255, 255, 200, ${clawAlpha})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.arc(0, clawY, clawLen, -0.3, 0.3);
+      ctx.stroke();
+      
+      clearShadow(ctx);
       }
       
       ctx.restore();
@@ -1293,8 +1293,7 @@ export function renderEffect(
       ctx.rotate(knightAngle);
       
       // Sword trail glow
-      ctx.shadowColor = "#6366f1";
-      ctx.shadowBlur = 15 * zoom;
+      setShadowBlur(ctx, 15 * zoom, "#6366f1");
       
       // Wide sweeping arc
       const arcWidth = Math.PI * 0.8;
@@ -1323,7 +1322,7 @@ export function renderEffect(
       ctx.arc(tipX, tipY, 5 * zoom * (1 - progress), 0, Math.PI * 2);
       ctx.fill();
       
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
       ctx.restore();
       break;
       
@@ -1765,8 +1764,7 @@ export function renderProjectile(
 
   if (proj.type === "flame") {
     // Flame projectile
-    ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = 15 * zoom;
+    setShadowBlur(ctx, 15 * zoom, "#ff4400");
     for (let i = 0; i < 4; i++) {
       const flameOffset = (Math.random() - 0.5) * 6 * zoom;
       const flameSize = (4 + Math.random() * 4) * zoom;
@@ -1781,8 +1779,7 @@ export function renderProjectile(
     }
   } else if (proj.type === "bullet") {
     // Bullet tracer
-    ctx.shadowColor = "#ffcc00";
-    ctx.shadowBlur = 8 * zoom;
+    setShadowBlur(ctx, 8 * zoom, "#ffcc00");
     ctx.fillStyle = "rgba(255, 200, 0, 0.6)";
     ctx.fillRect(-8 * zoom, -1.5 * zoom, 16 * zoom, 3 * zoom);
     ctx.fillStyle = "#ffdd44";
@@ -1791,8 +1788,7 @@ export function renderProjectile(
     ctx.fill();
   } else if (proj.type === "lab" || proj.type === "lightning") {
     // Lightning bolt
-    ctx.shadowColor = "#00ffff";
-    ctx.shadowBlur = 12 * zoom;
+    setShadowBlur(ctx, 12 * zoom, "#00ffff");
     const boltGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 8 * zoom);
     boltGrad.addColorStop(0, "#ffffff");
     boltGrad.addColorStop(0.3, "#ccffff");
@@ -1804,8 +1800,7 @@ export function renderProjectile(
     ctx.fill();
   } else if (proj.type === "arch") {
     // Music note
-    ctx.shadowColor = "#32c864";
-    ctx.shadowBlur = 15 * zoom;
+    setShadowBlur(ctx, 15 * zoom, "#32c864");
     const noteGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 10 * zoom);
     noteGrad.addColorStop(0, "#ffffff");
     noteGrad.addColorStop(0.3, "#aaffaa");
@@ -1817,8 +1812,7 @@ export function renderProjectile(
     ctx.fill();
   } else {
     // Default projectile
-    ctx.shadowColor = proj.type === "cannon" ? "#ff6b35" : "#c9a227";
-    ctx.shadowBlur = 12 * zoom;
+    setShadowBlur(ctx, 12 * zoom, proj.type === "cannon" ? "#ff6b35" : "#c9a227");
     const projGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, projSize * zoom);
     if (proj.type === "cannon") {
       projGrad.addColorStop(0, "#ffff00");
@@ -1870,11 +1864,11 @@ export function renderParticle(
 
   switch (particle.type) {
     case "spark":
-      ctx.shadowColor = particle.color;
-      ctx.shadowBlur = 5 * zoom;
+      setShadowBlur(ctx, 5 * zoom, particle.color);
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
       ctx.fill();
+      clearShadow(ctx);
       break;
 
     case "smoke":
@@ -1907,20 +1901,20 @@ export function renderParticle(
 
     case "gold":
       ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 5 * zoom;
+      setShadowBlur(ctx, 5 * zoom, "#c9a227");
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
       ctx.fill();
+      clearShadow(ctx);
       break;
 
     case "magic":
       ctx.fillStyle = "#8b5cf6";
-      ctx.shadowColor = "#8b5cf6";
-      ctx.shadowBlur = 8 * zoom;
+      setShadowBlur(ctx, 8 * zoom, "#8b5cf6");
       ctx.beginPath();
       ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
       ctx.fill();
+      clearShadow(ctx);
       break;
 
     default:

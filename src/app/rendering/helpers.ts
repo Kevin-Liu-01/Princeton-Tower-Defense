@@ -1,6 +1,8 @@
 // Princeton Tower Defense - Rendering Helper Functions
 // Common utility functions used across rendering modules
 
+import { setShadowBlur, clearShadow } from "./performance";
+
 // ============================================================================
 // COLOR UTILITIES
 // ============================================================================
@@ -304,12 +306,11 @@ export function drawWarningLight(
 
   // Light
   ctx.fillStyle = colorWithAlpha(color, 0.3 + pulse * 0.7);
-  ctx.shadowColor = color;
-  ctx.shadowBlur = radius * 2 * pulse;
+  setShadowBlur(ctx, radius * 2 * pulse, color);
   ctx.beginPath();
   ctx.arc(x, y, radius, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 }
 
 // ============================================================================

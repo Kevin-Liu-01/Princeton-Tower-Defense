@@ -4,6 +4,7 @@
 import type { Enemy, Position } from "../../types";
 import { ENEMY_DATA } from "../../constants";
 import { worldToScreen, getEnemyPosition, lightenColor, darkenColor } from "../../utils";
+import { setShadowBlur, clearShadow, getPerformanceSettings } from "../performance";
 
 // ============================================================================
 // ENEMY RENDERING
@@ -4734,13 +4735,12 @@ function drawDefaultEnemy(
 
   // Glowing eyes
   ctx.fillStyle = "#6366f1";
-  ctx.shadowColor = "#6366f1";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#6366f1");
   ctx.beginPath();
   ctx.arc(x - size * 0.05, y - size * 0.37 + bob, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.05, y - size * 0.37 + bob, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Mysterious smile
   ctx.strokeStyle = "#4338ca";
@@ -5140,26 +5140,23 @@ function drawTrusteeEnemy(
   ctx.fillRect(x - size * 0.18, y - size * 0.82 + float, size * 0.36, size * 0.07);
   // Gems on band - larger and more elaborate
   ctx.fillStyle = "#dc2626";
-  ctx.shadowColor = "#dc2626";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#dc2626");
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y - size * 0.785 + float, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   ctx.fillStyle = "#059669";
-  ctx.shadowColor = "#10b981";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#10b981");
   ctx.beginPath();
   ctx.arc(x, y - size * 0.785 + float, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   ctx.fillStyle = "#2563eb";
-  ctx.shadowColor = "#3b82f6";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#3b82f6");
   ctx.beginPath();
   ctx.arc(x + size * 0.1, y - size * 0.785 + float, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Ornate staff of wealth (scepter) - more elaborate
   ctx.save();
@@ -5199,8 +5196,7 @@ function drawTrusteeEnemy(
   ctx.fill();
   // Legendary gem - soul-capturing
   ctx.fillStyle = "#fbbf24";
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 15 * zoom;
+  setShadowBlur(ctx, 15 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.arc(0, -size * 0.68, size * 0.08, 0, Math.PI * 2);
   ctx.fill();
@@ -5215,7 +5211,7 @@ function drawTrusteeEnemy(
   ctx.beginPath();
   ctx.arc(0, -size * 0.68, size * 0.05, time * 4, time * 4 + Math.PI);
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   ctx.restore();
 }
 
@@ -5349,13 +5345,12 @@ function drawArcherEnemy(
 
   // Glowing death-green eyes (keep ONE shadowBlur for the signature glow)
   ctx.fillStyle = "#10b981";
-  ctx.shadowColor = "#10b981";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#10b981");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.06, y - size * 0.44 + stance, size * 0.035, size * 0.028, -0.1, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.06, y - size * 0.44 + stance, size * 0.035, size * 0.028, 0.1, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Pupil slits
   ctx.fillStyle = "#022c22";
   ctx.beginPath();
@@ -5473,12 +5468,11 @@ function drawMageEnemy(
     ctx.fillStyle = `rgba(167, 139, 250, ${
       0.6 + Math.sin(time * 3 + i) * 0.3
     })`;
-    ctx.shadowColor = "#8b5cf6";
-    ctx.shadowBlur = 8 * zoom;
+    setShadowBlur(ctx, 8 * zoom, "#8b5cf6");
     ctx.beginPath();
     ctx.arc(orbX, orbY, size * 0.06, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    clearShadow(ctx);
   }
 
   // Shadow
@@ -5541,8 +5535,7 @@ function drawMageEnemy(
 
   // Glowing eyes
   ctx.fillStyle = "#8b5cf6";
-  ctx.shadowColor = "#8b5cf6";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#8b5cf6");
   ctx.beginPath();
   ctx.arc(
     x - size * 0.06,
@@ -5559,7 +5552,7 @@ function drawMageEnemy(
     Math.PI * 2
   );
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Wizard hat
   ctx.fillStyle = "#4c1d95";
@@ -5764,8 +5757,7 @@ function drawCatapultEnemy(
   ctx.fill();
   // Soul flames in bucket
   ctx.fillStyle = `rgba(220, 38, 38, ${hellGlow})`;
-  ctx.shadowColor = "#dc2626";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#dc2626");
   ctx.beginPath();
   ctx.arc(0, -size * 0.6, size * 0.1, 0, Math.PI * 2);
   ctx.fill();
@@ -5779,7 +5771,7 @@ function drawCatapultEnemy(
   ctx.arc(-size * 0.02, -size * 0.6, size * 0.015, 0, Math.PI * 2);
   ctx.arc(size * 0.02, -size * 0.6, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   ctx.restore();
 
   // Soul-chain tension ropes
@@ -5828,13 +5820,12 @@ function drawCatapultEnemy(
   ctx.fill();
   // Glowing eyes
   ctx.fillStyle = `rgba(220, 38, 38, ${hellGlow})`;
-  ctx.shadowColor = "#dc2626";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#dc2626");
   ctx.beginPath();
   ctx.arc(x + size * 0.16, y - size * 0.25, size * 0.015, 0, Math.PI * 2);
   ctx.arc(x + size * 0.2, y - size * 0.25, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 }
 
 function drawWarlockEnemy(
@@ -5887,8 +5878,7 @@ function drawWarlockEnemy(
     const sx = x + Math.cos(soulAngle) * soulDist;
     const sy = y + Math.sin(soulAngle) * soulDist * 0.4;
     ctx.fillStyle = `rgba(167, 139, 250, ${0.4 + Math.sin(time * 4 + soul) * 0.25})`;
-    ctx.shadowColor = "#a78bfa";
-    ctx.shadowBlur = 6 * zoom;
+    setShadowBlur(ctx, 6 * zoom, "#a78bfa");
     ctx.beginPath();
     ctx.arc(sx, sy, size * 0.03, 0, Math.PI * 2);
     ctx.fill();
@@ -5899,7 +5889,7 @@ function drawWarlockEnemy(
     ctx.moveTo(sx, sy);
     ctx.lineTo(sx - Math.cos(soulAngle) * size * 0.08, sy - Math.sin(soulAngle) * size * 0.03);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    clearShadow(ctx);
   }
 
   // Shadow tendrils - more elaborate
@@ -5990,13 +5980,12 @@ function drawWarlockEnemy(
   ctx.fill();
   // Void-fire eyes
   ctx.fillStyle = "#9333ea";
-  ctx.shadowColor = "#9333ea";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#9333ea");
   ctx.beginPath();
   ctx.arc(x - size * 0.08, y - size * 0.4 + hover, size * 0.03, 0, Math.PI * 2);
   ctx.arc(x + size * 0.08, y - size * 0.4 + hover, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Skeletal nose hole
   ctx.fillStyle = "#1e0a3c";
   ctx.beginPath();
@@ -6040,8 +6029,7 @@ function drawWarlockEnemy(
 
   // Void orb in hand - more detailed
   ctx.fillStyle = "#4c1d95";
-  ctx.shadowColor = "#9333ea";
-  ctx.shadowBlur = 15 * zoom;
+  setShadowBlur(ctx, 15 * zoom, "#9333ea");
   ctx.beginPath();
   ctx.arc(x - size * 0.35, y + size * 0.02 + hover, size * 0.14, 0, Math.PI * 2);
   ctx.fill();
@@ -6059,7 +6047,7 @@ function drawWarlockEnemy(
   ctx.beginPath();
   ctx.arc(x - size * 0.35, y + hover, size * 0.04, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Skeletal hand holding orb
   ctx.fillStyle = "#a8a29e";
@@ -6216,11 +6204,10 @@ function drawCrossbowmanEnemy(
   ctx.fillRect(x - size * 0.14, y - size * 0.46, size * 0.28, size * 0.08);
   // T-shaped eye slit with red glow
   ctx.fillStyle = `rgba(127, 29, 29, ${curseGlow})`;
-  ctx.shadowColor = "#7f1d1d";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#7f1d1d");
   ctx.fillRect(x - size * 0.12, y - size * 0.44, size * 0.24, size * 0.025);
   ctx.fillRect(x - size * 0.015, y - size * 0.44, size * 0.03, size * 0.05);
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Massive siege crossbow with soul mechanism
   ctx.save();
@@ -6282,14 +6269,13 @@ function drawCrossbowmanEnemy(
   ctx.fillRect(-size * 0.62, -size * 0.018, size * 0.35, size * 0.036);
   // Glowing bolt head
   ctx.fillStyle = `rgba(127, 29, 29, ${boltCharge})`;
-  ctx.shadowColor = "#7f1d1d";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#7f1d1d");
   ctx.beginPath();
   ctx.moveTo(-size * 0.68, 0);
   ctx.lineTo(-size * 0.58, -size * 0.04);
   ctx.lineTo(-size * 0.58, size * 0.04);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Bolt fletching
   ctx.fillStyle = "#44403c";
   ctx.beginPath();
@@ -8561,13 +8547,12 @@ function drawBerserkerEnemy(
   ctx.arc(x + size * 0.08, y - size * 0.4 + rage * 0.3, size * 0.05, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#dc2626";
-  ctx.shadowColor = "#dc2626";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#dc2626");
   ctx.beginPath();
   ctx.arc(x - size * 0.08, y - size * 0.4 + rage * 0.3, size * 0.03, 0, Math.PI * 2);
   ctx.arc(x + size * 0.08, y - size * 0.4 + rage * 0.3, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Pupil slits
   ctx.fillStyle = "#450a0a";
   ctx.beginPath();
@@ -8763,8 +8748,7 @@ function drawGolemEnemy(
 
   // Glowing rune veins across body
   ctx.strokeStyle = `rgba(251, 191, 36, ${crackGlow * 0.6})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.3, y - size * 0.05 + breathe);
@@ -8774,7 +8758,7 @@ function drawGolemEnemy(
   ctx.moveTo(x - size * 0.15, y + size * 0.15 + breathe);
   ctx.lineTo(x + size * 0.2, y + size * 0.2 + breathe);
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Front legs (powerful, lion-like)
   ctx.fillStyle = "#78716c";
@@ -8883,13 +8867,12 @@ function drawGolemEnemy(
   ctx.fill();
   // Glowing irises
   ctx.fillStyle = `rgba(251, 191, 36, ${eyeIntensity})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.arc(x - size * 0.09, y - size * 0.42, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.09, y - size * 0.42, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Slit pupils
   ctx.fillStyle = "#0f0a00";
   ctx.beginPath();
@@ -8935,12 +8918,11 @@ function drawGolemEnemy(
 
   // Ancient Nassau rune on forehead
   ctx.fillStyle = `rgba(251, 191, 36, ${crackGlow})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#fbbf24");
   ctx.font = `bold ${size * 0.1}px serif`;
   ctx.textAlign = "center";
   ctx.fillText("ℜ", x, y - size * 0.5);
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Weathering and moss patches
   ctx.fillStyle = "#4d7c0f";
@@ -9027,13 +9009,12 @@ function drawNecromancerEnemy(
     ctx.fill();
     // Skull eyes
     ctx.fillStyle = `rgba(74, 222, 128, ${soulBurn})`;
-    ctx.shadowColor = "#4ade80";
-    ctx.shadowBlur = 4 * zoom;
+    setShadowBlur(ctx, 4 * zoom, "#4ade80");
     ctx.beginPath();
     ctx.arc(spiritX - size * 0.018, spiritY - size * 0.012, size * 0.014, 0, Math.PI * 2);
     ctx.arc(spiritX + size * 0.018, spiritY - size * 0.012, size * 0.014, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    clearShadow(ctx);
     // Soul trail
     ctx.strokeStyle = `rgba(74, 222, 128, 0.2)`;
     ctx.lineWidth = 1 * zoom;
@@ -9162,13 +9143,12 @@ function drawNecromancerEnemy(
 
   // Soul-fire eyes
   ctx.fillStyle = "#4ade80";
-  ctx.shadowColor = "#4ade80";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#4ade80");
   ctx.beginPath();
   ctx.arc(x - size * 0.07, y - size * 0.47 + hover, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.07, y - size * 0.47 + hover, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Skeletal nose hole
   ctx.fillStyle = "#1e1b4b";
@@ -9207,12 +9187,11 @@ function drawNecromancerEnemy(
   ctx.fill();
   // Soul gem on hood
   ctx.fillStyle = `rgba(74, 222, 128, ${phylacteryGlow})`;
-  ctx.shadowColor = "#4ade80";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#4ade80");
   ctx.beginPath();
   ctx.arc(x, y - size * 0.62 + hover, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Skull-topped staff with phylactery
   ctx.strokeStyle = "#1c1917";
@@ -9233,8 +9212,7 @@ function drawNecromancerEnemy(
   ctx.fill();
   // Skull eyes (glowing intensely)
   ctx.fillStyle = "#4ade80";
-  ctx.shadowColor = "#4ade80";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#4ade80");
   ctx.beginPath();
   ctx.arc(x - size * 0.43, y - size * 0.33 + hover, size * 0.02, 0, Math.PI * 2);
   ctx.arc(x - size * 0.37, y - size * 0.33 + hover, size * 0.02, 0, Math.PI * 2);
@@ -9247,7 +9225,7 @@ function drawNecromancerEnemy(
   ctx.lineTo(x - size * 0.4, y - size * 0.56 + hover + Math.sin(time * 5) * size * 0.02);
   ctx.lineTo(x - size * 0.44, y - size * 0.48 + hover);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 }
 
 function drawShadowKnightEnemy(
@@ -9407,12 +9385,11 @@ function drawShadowKnightEnemy(
   ctx.fill();
   // Void gem on left pauldron
   ctx.fillStyle = `rgba(139, 92, 246, ${voidGlow})`;
-  ctx.shadowColor = "#8b5cf6";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#8b5cf6");
   ctx.beginPath();
   ctx.arc(x - size * 0.35, y - size * 0.18 + stance, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Multiple spikes on pauldrons
   ctx.fillStyle = "#1c1917";
   for (let spike = 0; spike < 2; spike++) {
@@ -9446,13 +9423,12 @@ function drawShadowKnightEnemy(
   ctx.fillRect(x - size * 0.02, y - size * 0.47 + stance, size * 0.04, size * 0.1);
   // Glowing eyes behind visor
   ctx.fillStyle = `rgba(139, 92, 246, ${darkPulse + 0.4})`;
-  ctx.shadowColor = "#8b5cf6";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#8b5cf6");
   ctx.beginPath();
   ctx.arc(x - size * 0.07, y - size * 0.44 + stance, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.07, y - size * 0.44 + stance, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Large horns
   ctx.fillStyle = "#1c1917";
   ctx.beginPath();
@@ -9495,8 +9471,7 @@ function drawShadowKnightEnemy(
   ctx.fill();
   // Void energy flowing on blade
   ctx.strokeStyle = `rgba(139, 92, 246, ${soulDrain})`;
-  ctx.shadowColor = "#8b5cf6";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#8b5cf6");
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.1);
@@ -9506,7 +9481,7 @@ function drawShadowKnightEnemy(
     0, -size * 0.58
   );
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Blade runes
   ctx.fillStyle = `rgba(139, 92, 246, ${voidGlow * 0.6})`;
   ctx.beginPath();
@@ -9527,12 +9502,11 @@ function drawShadowKnightEnemy(
   ctx.fillRect(-size * 0.025, 0, size * 0.05, size * 0.14);
   // Pommel gem
   ctx.fillStyle = `rgba(139, 92, 246, ${voidGlow})`;
-  ctx.shadowColor = "#8b5cf6";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#8b5cf6");
   ctx.beginPath();
   ctx.arc(0, size * 0.16, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   ctx.restore();
 
   // Shield (left arm) with skull emblem
@@ -9559,13 +9533,12 @@ function drawShadowKnightEnemy(
   ctx.arc(x - size * 0.465, y + size * 0.08 + stance, size * 0.06, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = `rgba(139, 92, 246, ${voidGlow})`;
-  ctx.shadowColor = "#8b5cf6";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#8b5cf6");
   ctx.beginPath();
   ctx.arc(x - size * 0.48, y + size * 0.07 + stance, size * 0.015, 0, Math.PI * 2);
   ctx.arc(x - size * 0.45, y + size * 0.07 + stance, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 }
 
 // ============================================================================
@@ -9644,13 +9617,12 @@ function drawCultistEnemy(
 
   // Glowing eyes in hood
   ctx.fillStyle = `rgba(255, 100, 50, ${runeGlow})`;
-  ctx.shadowColor = "#ff6432";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#ff6432");
   ctx.beginPath();
   ctx.arc(x - size * 0.06 + sway * 0.2, y - size * 0.28, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.06 + sway * 0.2, y - size * 0.28, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Floating forbidden book
   ctx.save();
@@ -9794,13 +9766,12 @@ function drawPlaguebearerEnemy(
 
   // Sickly glowing eyes
   ctx.fillStyle = `rgba(200, 255, 100, ${toxicPulse + 0.3})`;
-  ctx.shadowColor = "#c8ff64";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#c8ff64");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.08, y - size * 0.38, size * 0.04, size * 0.025, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.08, y - size * 0.38, size * 0.04, size * 0.025, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Biohazard symbol on chest
   ctx.strokeStyle = `rgba(255, 255, 100, ${toxicPulse * 0.6})`;
@@ -9961,14 +9932,13 @@ function drawThornwalkerEnemy(
   // Face carved into trunk
   ctx.fillStyle = "#0a0a0a";
   // Eyes (glowing)
-  ctx.shadowColor = "#84cc16";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#84cc16");
   ctx.fillStyle = `rgba(132, 204, 22, ${leafPulse + 0.4})`;
   ctx.beginPath();
   ctx.ellipse(x - size * 0.08, y - size * 0.25, size * 0.04, size * 0.06, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.08, y - size * 0.25, size * 0.04, size * 0.06, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Mouth - jagged opening
   ctx.fillStyle = "#0a0505";
   ctx.beginPath();
@@ -10146,12 +10116,11 @@ function drawSandwormEnemy(
 
   // Glowing inner maw
   ctx.fillStyle = `rgba(255, 150, 50, ${0.3 + mouthOpen * 0.5})`;
-  ctx.shadowColor = "#ff9632";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#ff9632");
   ctx.beginPath();
   ctx.arc(x, headY, size * 0.08 * mouthOpen, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Paper scraps being devoured (flying into mouth)
   for (let p = 0; p < 4; p++) {
@@ -10255,13 +10224,12 @@ function drawFrostlingEnemy(
   // Face
   // Eyes - dark hollows with blue glow
   ctx.fillStyle = `rgba(56, 189, 248, ${shimmer})`;
-  ctx.shadowColor = "#38bdf8";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#38bdf8");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.1, y + floatOffset - size * 0.2, size * 0.05, size * 0.07, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.1, y + floatOffset - size * 0.2, size * 0.05, size * 0.07, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Sad/ethereal mouth
   ctx.strokeStyle = `rgba(56, 189, 248, ${shimmer * 0.8})`;
@@ -10351,8 +10319,7 @@ function drawInfernalEnemy(
 
   // Glowing cracks on body
   ctx.strokeStyle = `rgba(251, 146, 60, ${flamePulse + 0.3})`;
-  ctx.shadowColor = "#fb923c";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#fb923c");
   ctx.lineWidth = 2 * zoom;
   // Vertical cracks
   ctx.beginPath();
@@ -10371,7 +10338,7 @@ function drawInfernalEnemy(
   ctx.lineTo(x, y - size * 0.05);
   ctx.lineTo(x + size * 0.25, y - size * 0.12);
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Flaming head
   ctx.fillStyle = bodyColorDark;
@@ -10417,13 +10384,12 @@ function drawInfernalEnemy(
 
   // Glowing eyes
   ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse + 0.5})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.08 + rageShake, y - size * 0.38 + heatWave, size * 0.04, size * 0.05, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.08 + rageShake, y - size * 0.38 + heatWave, size * 0.04, size * 0.05, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Fanged mouth
   ctx.fillStyle = "#0a0503";
@@ -10585,13 +10551,12 @@ function drawBansheeEnemy(
   ctx.fill();
   // Eye glow
   ctx.fillStyle = `rgba(148, 163, 184, ${wailIntensity})`;
-  ctx.shadowColor = "#94a3b8";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#94a3b8");
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y + floatOffset - size * 0.26, size * 0.02, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1, y + floatOffset - size * 0.26, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Screaming mouth
   ctx.fillStyle = "#0f172a";
@@ -10794,13 +10759,12 @@ function drawJuggernautEnemy(
   ctx.fillRect(x - size * 0.15 + groundShake, y - size * 0.42, size * 0.3, size * 0.12);
   // Glowing eyes
   ctx.fillStyle = `rgba(212, 175, 55, ${powerPulse + 0.4})`;
-  ctx.shadowColor = "#d4af37";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#d4af37");
   ctx.beginPath();
   ctx.arc(x - size * 0.07 + groundShake, y - size * 0.37, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.07 + groundShake, y - size * 0.37, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Academic mortarboard on helmet
   ctx.fillStyle = "#1c1917";
@@ -10918,13 +10882,12 @@ function drawAssassinEnemy(
 
   // Glowing eyes (calculating)
   ctx.fillStyle = `rgba(167, 139, 250, ${shadowFlicker + 0.4})`;
-  ctx.shadowColor = "#a78bfa";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#a78bfa");
   ctx.beginPath();
   ctx.ellipse(-size * 0.05, -size * 0.3, size * 0.03, size * 0.015, 0, 0, Math.PI * 2);
   ctx.ellipse(size * 0.05, -size * 0.3, size * 0.03, size * 0.015, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   ctx.restore();
 
@@ -11243,12 +11206,11 @@ function drawDragonEnemy(
 
   // Eyes (ancient and knowing)
   ctx.fillStyle = "#fbbf24";
-  ctx.shadowColor = "#f59e0b";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#f59e0b");
   ctx.beginPath();
   ctx.ellipse(x + size * 0.05, y - size * 0.56 + hover + headBob, size * 0.035, size * 0.025, 0.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Pupil (slit)
   ctx.fillStyle = "#0a0503";
   ctx.beginPath();
@@ -12150,19 +12112,17 @@ function drawBogCreatureEnemy(
 
   // Glowing pustules
   ctx.fillStyle = `rgba(162, 255, 82, ${pulse * 0.8})`;
-  ctx.shadowColor = "#84cc16";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#84cc16");
   ctx.beginPath();
   ctx.arc(x - size * 0.38, y - size * 0.35, size * 0.05, 0, Math.PI * 2);
   ctx.arc(x + size * 0.25, y - size * 0.15, size * 0.04, 0, Math.PI * 2);
   ctx.arc(x - size * 0.15, y, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Multiple glowing eyes in asymmetric positions (eldritch horror style)
   ctx.fillStyle = "#84cc16";
-  ctx.shadowColor = "#84cc16";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#84cc16");
   // Main eyes
   ctx.beginPath();
   ctx.arc(x - size * 0.18, y - size * 0.42, size * 0.08, 0, Math.PI * 2);
@@ -12174,7 +12134,7 @@ function drawBogCreatureEnemy(
   ctx.arc(x - size * 0.08, y - size * 0.52, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.02, y - size * 0.38, size * 0.03, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Slit pupils with vertical orientation
   ctx.fillStyle = "#0a1f05";
@@ -12361,13 +12321,12 @@ function drawWillOWispEnemy(
   
   // Inner eye glow - sinister
   ctx.fillStyle = `rgba(255, 255, 200, ${pulse * flicker})`;
-  ctx.shadowColor = "#fff";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fff");
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y - size * 0.12 + float, size * 0.025, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1, y - size * 0.12 + float, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Nose cavity
   ctx.fillStyle = `rgba(0, 0, 0, ${pulse * 0.4})`;
@@ -12596,13 +12555,12 @@ function drawSwampTrollEnemy(
 
   // Rage-filled glowing eyes
   ctx.fillStyle = "#ef4444";
-  ctx.shadowColor = "#ef4444";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#ef4444");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.1, y - size * 0.58, size * 0.055, size * 0.04, -0.2, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.1, y - size * 0.58, size * 0.055, size * 0.04, 0.2, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   
   // Tiny angry pupils
   ctx.fillStyle = "#1a0505";
@@ -12855,13 +12813,12 @@ function drawNomadEnemy(
 
   // Glowing eyes from the void
   ctx.fillStyle = `rgba(251, 191, 36, ${0.7 + runeGlow * 0.3})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.07, y - size * 0.43, size * 0.035, size * 0.025, -0.1, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.07, y - size * 0.43, size * 0.035, size * 0.025, 0.1, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Faint skull-like features in the darkness
   ctx.strokeStyle = `rgba(50, 40, 30, ${0.4 + Math.sin(time * 2) * 0.2})`;
@@ -12903,13 +12860,12 @@ function drawNomadEnemy(
   ctx.fill();
   // Skull glowing eyes
   ctx.fillStyle = `rgba(251, 191, 36, ${runeGlow})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.arc(x + size * 0.25, y - size * 0.47, size * 0.012, 0, Math.PI * 2);
   ctx.arc(x + size * 0.31, y - size * 0.47, size * 0.012, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   // Skull jaw
   ctx.fillStyle = "#c4b998";
   ctx.beginPath();
@@ -13204,12 +13160,11 @@ function drawScorpionEnemy(
   
   // Venom drip glow
   ctx.fillStyle = `rgba(34, 197, 94, ${0.7 + Math.sin(time * 4) * 0.3})`;
-  ctx.shadowColor = "#22c55e";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#22c55e");
   ctx.beginPath();
   ctx.arc(tailX + size * 0.19, tailY - size * 0.18 + venomDrip * size * 0.05, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   
   // Dripping venom
   if (venomDrip > 0.3) {
@@ -13236,13 +13191,12 @@ function drawScorpionEnemy(
   
   // Eye glow
   ctx.fillStyle = `rgba(220, 38, 38, ${0.6 + Math.sin(time * 3) * 0.3})`;
-  ctx.shadowColor = "#dc2626";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#dc2626");
   ctx.beginPath();
   ctx.arc(x - size * 0.05, y - size * 0.28, size * 0.02, 0, Math.PI * 2);
   ctx.arc(x + size * 0.05, y - size * 0.28, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Attack stance venom spray
   if (isAttacking && attackPhase > 0.5) {
@@ -13466,13 +13420,12 @@ function drawScarabEnemy(
 
   // Eye glow
   ctx.fillStyle = `rgba(251, 191, 36, ${runeGlow})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.arc(x - size * 0.08, y - size * 0.35 + hoverFloat, size * 0.02, 0, Math.PI * 2);
   ctx.arc(x + size * 0.08, y - size * 0.35 + hoverFloat, size * 0.02, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Mandibles
   ctx.fillStyle = "#1a1510";
@@ -13648,8 +13601,7 @@ function drawSnowGoblinEnemy(
 
   // Ice claws on hands
   ctx.fillStyle = `rgba(147, 197, 253, ${0.8 + frostPulse * 0.2})`;
-  ctx.shadowColor = "#93c5fd";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#93c5fd");
   for (let claw = 0; claw < 3; claw++) {
     // Left hand claws
     const leftClawAngle = -0.8 + claw * 0.3 + armWave * 0.2;
@@ -13670,7 +13622,7 @@ function drawSnowGoblinEnemy(
     ctx.lineTo(rightClawX + Math.cos(rightClawAngle - 0.15) * size * 0.06, rightClawY + Math.sin(rightClawAngle - 0.15) * size * 0.05);
     ctx.fill();
   }
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Large cruel head
   const headGrad = ctx.createRadialGradient(x, y - size * 0.38 - hop, 0, x, y - size * 0.38 - hop, size * 0.28);
@@ -13736,13 +13688,12 @@ function drawSnowGoblinEnemy(
   
   // Glowing icy irises
   ctx.fillStyle = `rgba(96, 165, 250, ${0.8 + frostPulse * 0.2})`;
-  ctx.shadowColor = "#60a5fa";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#60a5fa");
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y - size * 0.4 - hop, size * 0.04, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1, y - size * 0.4 - hop, size * 0.04, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   
   // Slit pupils
   ctx.fillStyle = "#0f172a";
@@ -13780,8 +13731,7 @@ function drawSnowGoblinEnemy(
 
   // Swirling ice crystals
   ctx.fillStyle = "#fff";
-  ctx.shadowColor = "#93c5fd";
-  ctx.shadowBlur = 4 * zoom;
+  setShadowBlur(ctx, 4 * zoom, "#93c5fd");
   for (let c = 0; c < 6; c++) {
     const cx = x + Math.sin(time * 2.5 + c * 1.05) * size * 0.5;
     const cy = y - size * 0.35 + Math.cos(time * 2 + c * 1.2) * size * 0.3 - hop;
@@ -13798,7 +13748,7 @@ function drawSnowGoblinEnemy(
     ctx.closePath();
     ctx.fill();
   }
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Attack ice shards
   if (isAttacking) {
@@ -14046,13 +13996,12 @@ function drawYetiEnemy(
   
   // Icy blue glowing irises
   ctx.fillStyle = `rgba(14, 165, 233, ${0.8 + frostPulse * 0.2})`;
-  ctx.shadowColor = "#0ea5e9";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#0ea5e9");
   ctx.beginPath();
   ctx.arc(x - size * 0.1, y - size * 0.58, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.1, y - size * 0.58, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
   
   // Slit pupils
   ctx.fillStyle = "#0f172a";
@@ -14376,12 +14325,11 @@ function drawIceWitchEnemy(
   mainOrbGrad.addColorStop(0.6, `rgba(147, 197, 253, ${orbPulse * 0.9})`);
   mainOrbGrad.addColorStop(1, `rgba(59, 130, 246, ${orbPulse * 0.7})`);
   ctx.fillStyle = mainOrbGrad;
-  ctx.shadowColor = "#60a5fa";
-  ctx.shadowBlur = 15 * zoom * orbPulse;
+  setShadowBlur(ctx, 15 * zoom * orbPulse, "#60a5fa");
   ctx.beginPath();
   ctx.arc(orbX, orbY, orbSize, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Swirling energy inside orb
   ctx.strokeStyle = `rgba(255, 255, 255, ${orbPulse * 0.6})`;
@@ -14442,8 +14390,7 @@ function drawIceWitchEnemy(
 
   // Intensely glowing eyes
   ctx.fillStyle = `rgba(96, 165, 250, ${0.9 + orbPulse * 0.1})`;
-  ctx.shadowColor = "#60a5fa";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#60a5fa");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.06, y - size * 0.44 + float, size * 0.035, size * 0.025, -0.1, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.06, y - size * 0.44 + float, size * 0.035, size * 0.025, 0.1, 0, Math.PI * 2);
@@ -14455,7 +14402,7 @@ function drawIceWitchEnemy(
   ctx.arc(x - size * 0.06, y - size * 0.44 + float, size * 0.015, 0, Math.PI * 2);
   ctx.arc(x + size * 0.06, y - size * 0.44 + float, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Frost breath mist
   ctx.fillStyle = `rgba(191, 219, 254, ${0.3 + breathMist * 0.2})`;
@@ -14469,8 +14416,7 @@ function drawIceWitchEnemy(
 
   // Orbiting ice crystals
   ctx.fillStyle = "#ffffff";
-  ctx.shadowColor = "#93c5fd";
-  ctx.shadowBlur = 6 * zoom;
+  setShadowBlur(ctx, 6 * zoom, "#93c5fd");
   for (let c = 0; c < 6; c++) {
     const angle = time * 2 + c * (Math.PI / 3);
     const orbitRadius = size * (0.4 + Math.sin(time * 1.5 + c) * 0.05);
@@ -14490,20 +14436,19 @@ function drawIceWitchEnemy(
     ctx.closePath();
     ctx.fill();
   }
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Spell casting effect when attacking
   if (isAttacking) {
     // Ice beam from staff
     ctx.strokeStyle = `rgba(147, 197, 253, ${attackPhase * 0.8})`;
     ctx.lineWidth = (3 + attackPhase * 4) * zoom;
-    ctx.shadowColor = "#60a5fa";
-    ctx.shadowBlur = 15 * zoom;
+    setShadowBlur(ctx, 15 * zoom, "#60a5fa");
     ctx.beginPath();
     ctx.moveTo(orbX, orbY);
     ctx.lineTo(orbX + attackPhase * size * 0.8, orbY - attackPhase * size * 0.3);
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    clearShadow(ctx);
 
     // Ice shards projectiles
     ctx.fillStyle = `rgba(191, 219, 254, ${attackPhase * 0.9})`;
@@ -14617,8 +14562,7 @@ function drawMagmaSpawnEnemy(
   // Glowing molten crack network
   ctx.strokeStyle = `rgba(251, 191, 36, ${glow})`;
   ctx.lineWidth = 3 * zoom;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
   // Main crack patterns
   ctx.beginPath();
   ctx.moveTo(x - size * 0.25, y - size * 0.3);
@@ -14643,7 +14587,7 @@ function drawMagmaSpawnEnemy(
   ctx.moveTo(x + size * 0.25, y - size * 0.15);
   ctx.lineTo(x + size * 0.32, y - size * 0.08);
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Intensely bright molten core
   const coreGrad = ctx.createRadialGradient(x, y - size * 0.12, 0, x, y - size * 0.12, size * 0.28);
@@ -14652,12 +14596,11 @@ function drawMagmaSpawnEnemy(
   coreGrad.addColorStop(0.6, `rgba(251, 191, 36, ${glow * 0.5})`);
   coreGrad.addColorStop(1, "rgba(251, 146, 60, 0)");
   ctx.fillStyle = coreGrad;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 15 * zoom;
+  setShadowBlur(ctx, 15 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.arc(x, y - size * 0.12, size * 0.25, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Magma pseudopod arms
   ctx.fillStyle = bodyColor;
@@ -14695,13 +14638,12 @@ function drawMagmaSpawnEnemy(
 
   // Inner eye fire
   ctx.fillStyle = `rgba(255, 255, 200, ${glow})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.12, y - size * 0.22, size * 0.045, size * 0.035, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.12, y - size * 0.22, size * 0.045, size * 0.035, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Burning pupils
   ctx.fillStyle = "#dc2626";
@@ -14712,8 +14654,7 @@ function drawMagmaSpawnEnemy(
 
   // Jagged mouth crack
   ctx.fillStyle = `rgba(255, 255, 200, ${glow * 0.9})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.moveTo(x - size * 0.12, y - size * 0.08);
   ctx.lineTo(x - size * 0.08, y - size * 0.04);
@@ -14727,7 +14668,7 @@ function drawMagmaSpawnEnemy(
   ctx.lineTo(x - size * 0.1, y - size * 0.02);
   ctx.closePath();
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Bubbling lava on surface
   ctx.fillStyle = `rgba(251, 191, 36, ${glow * 0.8})`;
@@ -14932,12 +14873,11 @@ function drawFireImpEnemy(
     fireballGrad.addColorStop(0.5, `rgba(251, 191, 36, ${attackPhase * 0.8})`);
     fireballGrad.addColorStop(1, `rgba(234, 88, 12, ${attackPhase * 0.4})`);
     ctx.fillStyle = fireballGrad;
-    ctx.shadowColor = "#fbbf24";
-    ctx.shadowBlur = 10 * zoom * attackPhase;
+    setShadowBlur(ctx, 10 * zoom * attackPhase, "#fbbf24");
     ctx.beginPath();
     ctx.arc(x - size * 0.32 + armWave * size * 0.1, y - size * 0.42 - hop, size * 0.08 * attackPhase, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    clearShadow(ctx);
   }
 
   // Large impish head
@@ -14998,13 +14938,12 @@ function drawFireImpEnemy(
 
   // Glowing irises
   ctx.fillStyle = `rgba(254, 243, 199, ${flameFlicker})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 8 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.arc(x - size * 0.08 + cackleBounce, y - size * 0.38 - hop, size * 0.035, 0, Math.PI * 2);
   ctx.arc(x + size * 0.08 + cackleBounce, y - size * 0.38 - hop, size * 0.035, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Sinister red pupils
   ctx.fillStyle = "#b91c1c";
@@ -15250,12 +15189,11 @@ function drawEmberGuardEnemy(
   coreGrad.addColorStop(0.6, `rgba(249, 115, 22, ${flamePulse * 0.6})`);
   coreGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
   ctx.fillStyle = coreGrad;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 15 * zoom * flamePulse;
+  setShadowBlur(ctx, 15 * zoom * flamePulse, "#fbbf24");
   ctx.beginPath();
   ctx.arc(x, y - size * 0.2, size * 0.12, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Core rune symbol
   ctx.strokeStyle = `rgba(255, 255, 200, ${flamePulse * 0.8})`;
@@ -15406,13 +15344,12 @@ function drawEmberGuardEnemy(
 
   // Fierce glowing eyes behind visor
   ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 10 * zoom;
+  setShadowBlur(ctx, 10 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.ellipse(x - size * 0.07, y - size * 0.51, size * 0.035, size * 0.025, 0, 0, Math.PI * 2);
   ctx.ellipse(x + size * 0.07, y - size * 0.51, size * 0.035, size * 0.025, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Fire breathing from visor when attacking
   if (isAttacking && attackPhase > 0.5) {
@@ -15470,8 +15407,7 @@ function drawEmberGuardEnemy(
 
   // Blade fire aura
   ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.5})`;
-  ctx.shadowColor = "#fbbf24";
-  ctx.shadowBlur = 12 * zoom;
+  setShadowBlur(ctx, 12 * zoom, "#fbbf24");
   ctx.beginPath();
   ctx.moveTo(x + size * 0.45, y - size * 0.15 - armRaise);
   ctx.quadraticCurveTo(
@@ -15484,7 +15420,7 @@ function drawEmberGuardEnemy(
     x + size * 0.45, y - size * 0.15 - armRaise
   );
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Blade embers
   ctx.fillStyle = `rgba(255, 255, 200, ${flamePulse * 0.8})`;

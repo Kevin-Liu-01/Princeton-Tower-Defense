@@ -91,6 +91,11 @@ import {
 import { TowerSprite, HeroSprite, SpellSprite, EnemySprite, HeroAbilityIcon, getHeroAbilityIcon } from "../../sprites";
 import PrincetonTDLogo from "./PrincetonTDLogo";
 import { OrnateFrame } from "./OrnateFrame";
+import {
+  getPerformanceSettings,
+  setPerformanceSettings,
+  isFirefox
+} from "../../rendering/performance";
 
 export { TowerSprite, HeroSprite, SpellSprite, EnemySprite, HeroAbilityIcon, getHeroAbilityIcon };
 
@@ -294,6 +299,83 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   setInspectorActive,
   setSelectedInspectEnemy,
 }) => {
+  // Performance mode state - starts based on browser detection
+  const [performanceMode, setPerformanceMode] = useState(() => {
+    const settings = getPerformanceSettings();
+    return settings.disableShadows;
+  });
+
+  // FPS tracking for auto-toggle
+  const [currentFps, setCurrentFps] = useState(60);
+  const frameTimesRef = useRef<number[]>([]);
+  const lastFrameTimeRef = useRef(performance.now());
+  const autoToggleCooldownRef = useRef(0);
+
+  // FPS monitoring effect
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const measureFps = () => {
+      const now = performance.now();
+      const delta = now - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = now;
+
+      // Keep last 30 frame times for averaging
+      frameTimesRef.current.push(delta);
+      if (frameTimesRef.current.length > 30) {
+        frameTimesRef.current.shift();
+      }
+
+      // Calculate average FPS every 15 frames
+      if (frameTimesRef.current.length >= 15 && frameTimesRef.current.length % 15 === 0) {
+        const avgFrameTime = frameTimesRef.current.reduce((a, b) => a + b, 0) / frameTimesRef.current.length;
+        const fps = Math.round(1000 / avgFrameTime);
+        setCurrentFps(fps);
+
+        // Auto-toggle performance mode if FPS drops below 45 for sustained period
+        // Use 45 instead of 60 to avoid toggling on brief dips
+        if (fps < 45 && !performanceMode && autoToggleCooldownRef.current <= 0) {
+          setPerformanceMode(true);
+          setPerformanceSettings({
+            disableShadows: true,
+            reducedParticles: true,
+            simplifiedGradients: true,
+            reducedFogQuality: true,
+          });
+          // Set cooldown to prevent rapid toggling (10 seconds)
+          autoToggleCooldownRef.current = 10000;
+        }
+
+        // Decrement cooldown
+        if (autoToggleCooldownRef.current > 0) {
+          autoToggleCooldownRef.current -= avgFrameTime * 15;
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(measureFps);
+    };
+
+    animationFrameId = requestAnimationFrame(measureFps);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [performanceMode]);
+
+  // Toggle performance mode manually
+  const togglePerformanceMode = () => {
+    const newMode = !performanceMode;
+    setPerformanceMode(newMode);
+    setPerformanceSettings({
+      disableShadows: newMode,
+      reducedParticles: newMode,
+      simplifiedGradients: newMode,
+      reducedFogQuality: newMode,
+    });
+    // Reset cooldown when manually toggling
+    autoToggleCooldownRef.current = 5000;
+  };
+
   // Track previous values for animation triggers
   const prevPawPoints = useRef(pawPoints);
   const prevLives = useRef(lives);
@@ -647,11 +729,15 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   }
                 }
               }}
+              title="Decrease game speed (-0.25x)"
               className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
             >
               <Rewind size={16} className="text-white" />
             </button>
-            <span className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md">
+            <span
+              title="Current game speed"
+              className="px-1.5 w-12 text-center text-xs py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md cursor-default"
+            >
               {Number.isInteger(gameSpeed)
                 ? gameSpeed + "x"
                 : gameSpeed % 0.5 === 0
@@ -668,6 +754,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   }
                 }
               }}
+              title="Increase game speed (+0.25x)"
               className="px-1.5 py-1 bg-green-950/80 hover:bg-green-900/80 rounded transition-colors border border-green-700 shadow-md"
             >
               <FastForward size={16} className="text-white" />
@@ -684,6 +771,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     }
                   }
                 }}
+                title={`Set game speed to ${speed}x`}
                 className={`px-2.5 py-1 border transition-all shadow-sm rounded font-bold text-xs ${gameSpeed === speed
                   ? "bg-yellow-600/80 border-yellow-400 text-yellow-100"
                   : "bg-blue-950/60 hover:bg-blue-900/60 border-blue-700 text-blue-300"
@@ -713,6 +801,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   setGameSpeed(0);
                 }
               }}
+              title={gameSpeed === 0 ? "Resume game (Spacebar)" : "Pause game (Spacebar)"}
               className="p-1.5 bg-amber-600/60 rounded-lg hover:bg-amber-600/80 border border-amber-600 shadow-md transition-colors"
             >
               {gameSpeed === 0 ? (
@@ -722,9 +811,34 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               )}
             </button>
             <button
+              onClick={togglePerformanceMode}
+              title={`Performance Mode: ${performanceMode ? "ON" : "OFF"} | FPS: ${currentFps} | ${performanceMode ? "Reduced effects for better FPS" : "Full visual effects"} | Auto-enables below 45 FPS`}
+              className={`p-1.5 hidden sm:inline rounded-lg border shadow-md transition-colors relative ${performanceMode
+                ? "bg-cyan-600/80 hover:bg-cyan-500/80 border-cyan-400"
+                : currentFps < 45
+                  ? "bg-red-700/60 hover:bg-red-600/80 border-red-500 animate-pulse"
+                  : currentFps < 55
+                    ? "bg-yellow-700/60 hover:bg-yellow-600/80 border-yellow-500"
+                    : "bg-purple-700/60 hover:bg-purple-600/80 border-purple-600"
+                }`}
+            >
+              <Activity size={16} className={performanceMode ? "text-cyan-100" : currentFps < 45 ? "text-red-200" : "text-purple-200"} />
+              <span className={`absolute -bottom-1 -right-1 text-[8px] font-bold px-1 rounded ${currentFps >= 55 ? "bg-green-600 text-green-100" :
+                currentFps >= 45 ? "bg-yellow-600 text-yellow-100" :
+                  "bg-red-600 text-red-100"
+                }`}>
+                {currentFps}<span
+                  className="text-[4px]"
+                >
+                  FPS
+                </span>
+              </span>
+            </button>
+            <button
               onClick={() => {
                 retryLevel();
               }}
+              title="Restart current level from the beginning"
               className="p-1.5 bg-green-700/60 hover:bg-green-600/80 rounded-lg border border-green-700 shadow-md transition-colors"
             >
               <RefreshCcw size={16} className="text-white" />
@@ -733,6 +847,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               onClick={() => {
                 quitLevel();
               }}
+              title="Quit to world map (progress will be lost)"
               className="p-1.5 bg-red-700/80 hover:bg-red-600/80 rounded-lg border border-red-600 shadow-md transition-colors"
             >
               <X size={16} className="text-white" />

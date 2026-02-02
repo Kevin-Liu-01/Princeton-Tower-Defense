@@ -7,6 +7,17 @@ import type {
 } from "../types";
 import { worldToScreen, gridToWorld } from "../utils";
 
+// Performance utilities - critical for Firefox
+export {
+  isFirefox,
+  getPerformanceSettings,
+  setPerformanceSettings,
+  setShadowBlur,
+  clearShadow,
+  clearGradientCache,
+  getPerformanceDebugInfo,
+} from "./performance";
+
 // Tower rendering 
 export {
   renderTower,

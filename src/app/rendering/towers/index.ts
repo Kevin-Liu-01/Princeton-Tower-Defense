@@ -3,6 +3,7 @@ import type { Tower, Enemy, DraggingTower, Position } from "../../types";
 import { TILE_SIZE, TOWER_DATA, TOWER_COLORS } from "../../constants";
 import { TOWER_STATS } from "../../constants/towerStats";
 import { gridToWorld, worldToScreen, isValidBuildPosition, lightenColor, darkenColor } from "../../utils";
+import { setShadowBlur, clearShadow } from "../performance";
 
 function drawIsometricPrism(
   ctx: CanvasRenderingContext2D,
@@ -423,8 +424,7 @@ function drawWarningLight(
   const flash = 0.5 + Math.sin(time * flashSpeed) * 0.5;
 
   // Glow
-  ctx.shadowColor = color;
-  ctx.shadowBlur = 10 * zoom * flash;
+  setShadowBlur(ctx, 10 * zoom * flash, color);
 
   // Light body
   ctx.fillStyle = darkenColor(color, 30);
@@ -440,7 +440,7 @@ function drawWarningLight(
   ctx.fill();
   ctx.globalAlpha = 1;
 
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 }
 
 // Draw 3D isometric ammo box that rotates with cannon turret
@@ -1184,12 +1184,11 @@ function drawFuelFeedingTube(
   const blinkSpeed = isAttacking ? 12 : 3;
   const indicatorGlow = 0.5 + Math.sin(time * blinkSpeed) * 0.5;
   ctx.fillStyle = `rgba(255, 200, 0, ${indicatorGlow * (isAttacking ? 1 : 0.5)})`;
-  ctx.shadowColor = "#ffcc00";
-  ctx.shadowBlur = isAttacking ? 6 * zoom : 2 * zoom;
+  setShadowBlur(ctx, isAttacking ? 6 * zoom : 2 * zoom, "#ffcc00");
   ctx.beginPath();
   ctx.arc(tubeEntryX - 3 * zoom, tubeEntryY - 2 * zoom, 1.2 * zoom, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 }
 
 // Draw ammo belt connecting box to turret

@@ -2,6 +2,13 @@
 // Creates living, breathing map atmospheres for each region
 
 import { colorWithAlpha } from "../helpers";
+import { 
+  setShadowBlur, 
+  clearShadow, 
+  getPerformanceSettings,
+  shouldRenderEnvironment,
+  getAdjustedParticleCount
+} from "../performance";
 
 // ============================================================================
 // ENVIRONMENTAL PARTICLE SYSTEMS
@@ -473,11 +480,11 @@ export function renderWinterEnvironment(
       }
     } else if (p.type === "sparkle") {
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.55);
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 4;
+      setShadowBlur(ctx, 4, p.color);
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
+      clearShadow(ctx);
     } else {
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.5);
       ctx.beginPath();
@@ -593,11 +600,11 @@ export function renderVolcanicEnvironment(
     ctx.save();
     if (p.type === "ember") {
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 8;
+      setShadowBlur(ctx, 8, p.color);
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
+      clearShadow(ctx);
     } else {
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
       ctx.beginPath();
@@ -765,11 +772,11 @@ export function renderSwampEnvironment(
     if (p.type === "firefly") {
       if (p.alpha > 0.15) {
         ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.7);
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 10;
+        setShadowBlur(ctx, 10, p.color);
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
+        clearShadow(ctx);
       }
     } else if (p.type === "bubble") {
       ctx.strokeStyle = colorWithAlpha(p.color, p.alpha);
@@ -852,6 +859,11 @@ export function renderEnvironment(
   canvasHeight: number,
   time: number
 ): void {
+  // Skip environment rendering if disabled for performance
+  if (!shouldRenderEnvironment()) {
+    return;
+  }
+  
   ctx.save();
   
   switch (theme) {
