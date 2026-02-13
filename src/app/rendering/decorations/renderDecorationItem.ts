@@ -1323,50 +1323,365 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
       ctx.restore();
       break;
-    case "skeleton":
-      ctx.fillStyle = "#e0e0e0";
+    case "skeleton": {
+      // Lying-down isometric skeleton — rotated along the ground plane
+      // Uses ctx.rotate to orient the body along an isometric ground axis
+      const bL = "#f0ebe3";
+      const bM = "#ddd5c8";
+      const bD = "#b8ad9e";
+      const bS = "#8a7f72";
+      const bSk = "#2d2420";
+      const cx = screenPos.x;
+      const cy = screenPos.y;
+      const sv = variant % 4;
+
+      // Each variant gets a different ground-plane angle + pose
+      const skelAngles = [0.3, -0.35, 0.55, -0.15];
+      const bodyAng = skelAngles[sv];
+
+      // Ground shadow — rotated ellipse matching body orientation
+      const skelShad = ctx.createRadialGradient(cx, cy + 2 * s, 0, cx, cy + 2 * s, 24 * s);
+      skelShad.addColorStop(0, "rgba(0,0,0,0.18)");
+      skelShad.addColorStop(0.6, "rgba(0,0,0,0.06)");
+      skelShad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = skelShad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 8 * s,
-        6 * s,
-        5 * s,
-        0,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(cx, cy + 2 * s, 26 * s, 8 * s, bodyAng, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#424242";
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x - 2 * s,
-        screenPos.y - 9 * s,
-        1.5 * s,
-        0,
-        Math.PI * 2
-      );
-      ctx.arc(
-        screenPos.x + 2 * s,
-        screenPos.y - 9 * s,
-        1.5 * s,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-      ctx.strokeStyle = "#e0e0e0";
-      ctx.lineWidth = 1.5 * s;
-      for (let r = 0; r < 3; r++) {
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(bodyAng);
+
+      // Helpers for 3D bone drawing in local rotated coordinates
+      // drawBone: straight bone segment with shadow + lit dual-stroke
+      const drawBone = (x1: number, y1: number, x2: number, y2: number,
+        w: number, shd: string, lit: string) => {
+        ctx.strokeStyle = shd;
+        ctx.lineWidth = w * s;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.arc(
-          screenPos.x,
-          screenPos.y + r * 4 * s,
-          5 * s,
-          Math.PI * 0.2,
-          Math.PI * 0.8
-        );
+        ctx.moveTo(x1 * s, y1 * s);
+        ctx.lineTo(x2 * s, y2 * s);
+        ctx.stroke();
+        ctx.strokeStyle = lit;
+        ctx.lineWidth = w * 0.55 * s;
+        ctx.beginPath();
+        ctx.moveTo(x1 * s, (y1 - 0.5) * s);
+        ctx.lineTo(x2 * s, (y2 - 0.5) * s);
+        ctx.stroke();
+      };
+      // drawCBone: curved bone with quadratic bezier
+      const drawCBone = (x1: number, y1: number, cpx: number, cpy: number,
+        x2: number, y2: number, w: number, shd: string, lit: string) => {
+        ctx.strokeStyle = shd;
+        ctx.lineWidth = w * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x1 * s, y1 * s);
+        ctx.quadraticCurveTo(cpx * s, cpy * s, x2 * s, y2 * s);
+        ctx.stroke();
+        ctx.strokeStyle = lit;
+        ctx.lineWidth = w * 0.55 * s;
+        ctx.beginPath();
+        ctx.moveTo(x1 * s, (y1 - 0.5) * s);
+        ctx.quadraticCurveTo(cpx * s, (cpy - 0.5) * s, x2 * s, (y2 - 0.5) * s);
+        ctx.stroke();
+      };
+      // drawJoint: small 3D joint circle
+      const drawJoint = (jx: number, jy: number, jr: number) => {
+        ctx.fillStyle = bS;
+        ctx.beginPath();
+        ctx.ellipse(jx * s, jy * s, jr * s, jr * 0.6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = bM;
+        ctx.beginPath();
+        ctx.ellipse((jx + 0.3) * s, (jy - 0.3) * s, jr * 0.6 * s, jr * 0.35 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      // === LOCAL COORDINATES ===
+      // X axis: along the body (negative = head, positive = feet)
+      // Y axis: perpendicular to body (positive = one side)
+      // Y values kept small for isometric ground-plane flatness
+
+      // === LEGS (drawn first — feet end, positive X) ===
+      if (sv === 0) {
+        // Straight legs, slight spread
+        drawBone(9, -2, 19, -3.5, 2.2, bS, bD);
+        drawBone(19, -3.5, 28, -2.5, 1.8, bS, bM);
+        drawBone(9, 2, 19, 3.5, 2.2, bS, bL);
+        drawBone(19, 3.5, 28, 2.5, 1.8, bD, bL);
+        drawJoint(19, -3.5, 1.4);
+        drawJoint(19, 3.5, 1.4);
+        // Feet
+        drawBone(28, -2.5, 30.5, -3.5, 0.8, bS, bD);
+        drawBone(28, -2.5, 30.5, -1.5, 0.8, bS, bM);
+        drawBone(28, 2.5, 30.5, 3.5, 0.8, bD, bL);
+        drawBone(28, 2.5, 30.5, 1.5, 0.8, bD, bL);
+      } else if (sv === 1) {
+        // Legs apart, splayed
+        drawBone(9, -2, 20, -5.5, 2.2, bS, bD);
+        drawBone(20, -5.5, 29, -5, 1.8, bS, bM);
+        drawBone(9, 2, 20, 5.5, 2.2, bS, bL);
+        drawBone(20, 5.5, 29, 5, 1.8, bD, bL);
+        drawJoint(20, -5.5, 1.4);
+        drawJoint(20, 5.5, 1.4);
+        drawBone(29, -5, 31.5, -6, 0.8, bS, bD);
+        drawBone(29, -5, 31.5, -4, 0.8, bS, bM);
+        drawBone(29, 5, 31.5, 6, 0.8, bD, bL);
+        drawBone(29, 5, 31.5, 4, 0.8, bD, bL);
+      } else if (sv === 2) {
+        // One leg bent back
+        drawBone(9, -2, 17, -5, 2.2, bS, bD);
+        drawBone(17, -5, 14, -9, 1.8, bS, bM);
+        drawBone(9, 2, 19, 3.5, 2.2, bS, bL);
+        drawBone(19, 3.5, 28, 2.5, 1.8, bD, bL);
+        drawJoint(17, -5, 1.4);
+        drawJoint(19, 3.5, 1.4);
+        drawBone(28, 2.5, 30.5, 3.5, 0.8, bD, bL);
+        drawBone(28, 2.5, 30.5, 1.5, 0.8, bD, bL);
+      } else {
+        // One leg extended, one shorter (staggered)
+        drawBone(9, -2, 21, -4, 2.2, bS, bD);
+        drawBone(21, -4, 31, -3, 1.8, bS, bM);
+        drawBone(9, 2, 16, 4.5, 2.2, bS, bL);
+        drawBone(16, 4.5, 23, 5.5, 1.8, bD, bL);
+        drawJoint(21, -4, 1.4);
+        drawJoint(16, 4.5, 1.4);
+        drawBone(31, -3, 33.5, -4, 0.8, bS, bD);
+        drawBone(31, -3, 33.5, -2, 0.8, bS, bM);
+        drawBone(23, 5.5, 25.5, 6.5, 0.8, bD, bL);
+        drawBone(23, 5.5, 25.5, 4.5, 0.8, bD, bL);
+      }
+
+      // === PELVIS ===
+      const plG = ctx.createRadialGradient(8 * s, -0.3 * s, 0, 8 * s, 0, 4.5 * s);
+      plG.addColorStop(0, bM);
+      plG.addColorStop(0.5, bD);
+      plG.addColorStop(1, bS);
+      ctx.fillStyle = plG;
+      ctx.beginPath();
+      ctx.ellipse(8 * s, 0, 4.5 * s, 3 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(45,36,32,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(8 * s, 0, 2 * s, 1.2 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = bS;
+      ctx.lineWidth = 0.5 * s;
+      ctx.beginPath();
+      ctx.ellipse(8 * s, 0, 4.5 * s, 3 * s, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // === SPINE ===
+      for (let sp = 0; sp < 7; sp++) {
+        const spx = 6 - sp * 2.5;
+        ctx.fillStyle = bS;
+        ctx.beginPath();
+        ctx.ellipse(spx * s, 0.2 * s, 1.2 * s, 0.8 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = sp % 2 === 0 ? bM : bD;
+        ctx.beginPath();
+        ctx.ellipse((spx + 0.15) * s, 0, 0.9 * s, 0.6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = bL;
+        ctx.beginPath();
+        ctx.ellipse((spx + 0.25) * s, -0.25 * s, 0.5 * s, 0.3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // === RIBS ===
+      for (let r = 0; r < 4; r++) {
+        const rx = 4 - r * 2.5;
+        const ribLen = (5 - r * 0.3);
+        // Top rib
+        ctx.strokeStyle = bS;
+        ctx.lineWidth = 1.5 * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(rx * s, 0);
+        ctx.quadraticCurveTo(rx * s, -ribLen * 0.5 * s, (rx + 1) * s, -ribLen * s);
+        ctx.stroke();
+        ctx.strokeStyle = bD;
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo((rx + 0.2) * s, 0);
+        ctx.quadraticCurveTo((rx + 0.2) * s, (-ribLen * 0.5 - 0.3) * s, (rx + 1.2) * s, (-ribLen - 0.3) * s);
+        ctx.stroke();
+        // Bottom rib
+        ctx.strokeStyle = bS;
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(rx * s, 0);
+        ctx.quadraticCurveTo(rx * s, ribLen * 0.5 * s, (rx + 1) * s, ribLen * s);
+        ctx.stroke();
+        ctx.strokeStyle = bL;
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo((rx + 0.2) * s, 0);
+        ctx.quadraticCurveTo((rx + 0.2) * s, (ribLen * 0.5 + 0.3) * s, (rx + 1.2) * s, (ribLen + 0.3) * s);
         ctx.stroke();
       }
+
+      // === COLLARBONES ===
+      drawCBone(-9, 0, -10, -2.5, -11, -4.5, 1.8, bS, bD);
+      drawCBone(-9, 0, -10, 2.5, -11, 4.5, 1.8, bS, bL);
+
+      // === ARMS — variant poses ===
+      if (sv === 0) {
+        // Arms at sides
+        drawCBone(-11, -4.5, -7, -7, -3, -8.5, 1.8, bS, bD);
+        drawCBone(-3, -8.5, 2, -9, 5, -7.5, 1.4, bS, bM);
+        drawCBone(-11, 4.5, -7, 7, -3, 8.5, 1.8, bS, bL);
+        drawCBone(-3, 8.5, 2, 9, 5, 7.5, 1.4, bD, bL);
+        drawJoint(-3, -8.5, 1.2);
+        drawJoint(-3, 8.5, 1.2);
+        for (let f = -1; f <= 1; f++) {
+          drawBone(5, -7.5 + f, 7, -7.8 + f * 1.3, 0.5, bS, bM);
+          drawBone(5, 7.5 + f, 7, 7.8 + f * 1.3, 0.5, bD, bL);
+        }
+      } else if (sv === 1) {
+        // Left arm above head, right at side
+        drawCBone(-11, -4.5, -14, -7, -18, -5.5, 1.8, bS, bD);
+        drawCBone(-18, -5.5, -22, -3, -24, -1, 1.4, bS, bM);
+        drawCBone(-11, 4.5, -7, 7, -3, 8.5, 1.8, bS, bL);
+        drawCBone(-3, 8.5, 2, 9, 5, 7.5, 1.4, bD, bL);
+        drawJoint(-18, -5.5, 1.2);
+        drawJoint(-3, 8.5, 1.2);
+        for (let f = -1; f <= 1; f++) {
+          drawBone(-24, -1 + f * 0.8, -26, -0.5 + f * 1, 0.5, bS, bM);
+          drawBone(5, 7.5 + f, 7, 7.8 + f * 1.3, 0.5, bD, bL);
+        }
+      } else if (sv === 2) {
+        // Arms crossed on chest
+        drawCBone(-11, -4.5, -7, -2, -4, 2, 1.8, bS, bD);
+        drawCBone(-4, 2, -2, 3.5, -5, 4.5, 1.4, bS, bM);
+        drawCBone(-11, 4.5, -7, 2, -4, -2, 1.8, bS, bL);
+        drawCBone(-4, -2, -2, -3.5, -5, -4.5, 1.4, bD, bL);
+        drawJoint(-4, 2, 1.2);
+        drawJoint(-4, -2, 1.2);
+      } else {
+        // One arm reaching out desperately, one at side
+        drawCBone(-11, -4.5, -16, -8, -22, -7, 1.8, bS, bD);
+        drawCBone(-22, -7, -27, -4, -30, -2, 1.4, bS, bM);
+        drawCBone(-11, 4.5, -7, 7.5, -2, 9, 1.8, bS, bL);
+        drawCBone(-2, 9, 3, 9, 6, 7.5, 1.4, bD, bL);
+        drawJoint(-22, -7, 1.2);
+        drawJoint(-2, 9, 1.2);
+        for (let f = -1; f <= 1; f++) {
+          drawBone(-30, -2 + f * 0.8, -32, -1.5 + f * 1.1, 0.5, bS, bM);
+          drawBone(6, 7.5 + f, 8, 7.8 + f * 1.2, 0.5, bD, bL);
+        }
+      }
+
+      // === SKULL (drawn last — head end, negative X) ===
+      const skx = -15;
+
+      // Skull shadow
+      ctx.fillStyle = bS;
+      ctx.beginPath();
+      ctx.ellipse(skx * s, 0.7 * s, 6 * s, 4 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main cranium with gradient — circle in local coords becomes isometric on screen
+      const skGr = ctx.createRadialGradient(
+        (skx + 1) * s, -1 * s, 0.5 * s,
+        skx * s, 0, 5.5 * s
+      );
+      skGr.addColorStop(0, bL);
+      skGr.addColorStop(0.4, bM);
+      skGr.addColorStop(0.8, bD);
+      skGr.addColorStop(1, bS);
+      ctx.fillStyle = skGr;
+      ctx.beginPath();
+      ctx.ellipse(skx * s, 0, 5.5 * s, 3.8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Skull highlight
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.ellipse((skx + 1.2) * s, -1.3 * s, 2.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Brow ridge
+      ctx.fillStyle = bD;
+      ctx.beginPath();
+      ctx.ellipse(skx * s, 0.3 * s, 4 * s, 0.6 * s, 0, 0, Math.PI);
+      ctx.fill();
+
+      // Eye sockets
+      for (const ey of [{ yo: -1.3, edge: bS }, { yo: 1.3, edge: bD }]) {
+        const eGr = ctx.createRadialGradient(
+          skx * s, ey.yo * s, 0.15 * s,
+          skx * s, ey.yo * s, 1.6 * s
+        );
+        eGr.addColorStop(0, "#0d0a08");
+        eGr.addColorStop(0.5, bSk);
+        eGr.addColorStop(1, ey.edge);
+        ctx.fillStyle = eGr;
+        ctx.beginPath();
+        ctx.ellipse(skx * s, ey.yo * s, 1.6 * s, 1.2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Nasal cavity
+      ctx.fillStyle = bSk;
+      ctx.beginPath();
+      ctx.moveTo((skx + 1.5) * s, 0);
+      ctx.lineTo((skx + 2.8) * s, -0.6 * s);
+      ctx.lineTo((skx + 2.8) * s, 0.5 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Jaw
+      const jawG = ctx.createLinearGradient(skx * s, -3 * s, skx * s, 3 * s);
+      jawG.addColorStop(0, bS);
+      jawG.addColorStop(0.35, bD);
+      jawG.addColorStop(0.65, bM);
+      jawG.addColorStop(1, bS);
+      ctx.fillStyle = jawG;
+      ctx.beginPath();
+      ctx.moveTo((skx + 1.5) * s, -3.2 * s);
+      ctx.quadraticCurveTo((skx + 3.5) * s, -3.5 * s, (skx + 4) * s, -1.5 * s);
+      ctx.lineTo((skx + 4) * s, 1.5 * s);
+      ctx.quadraticCurveTo((skx + 3.5) * s, 3.5 * s, (skx + 1.5) * s, 3.2 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Teeth
+      ctx.fillStyle = bL;
+      ctx.strokeStyle = bS;
+      ctx.lineWidth = 0.2 * s;
+      for (let t = -2; t <= 2; t++) {
+        ctx.beginPath();
+        ctx.rect((skx + 2.8) * s, (t * 0.9 - 0.3) * s, 0.7 * s, 0.6 * s);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Skull outline
+      ctx.strokeStyle = bS;
+      ctx.lineWidth = 0.5 * s;
+      ctx.beginPath();
+      ctx.ellipse(skx * s, 0, 5.5 * s, 3.8 * s, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Suture lines
+      ctx.strokeStyle = "rgba(138,127,114,0.25)";
+      ctx.lineWidth = 0.3 * s;
+      ctx.beginPath();
+      ctx.moveTo((skx - 3) * s, 0);
+      ctx.lineTo((skx - 0.5) * s, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo((skx - 1.5) * s, -2.5 * s);
+      ctx.quadraticCurveTo((skx - 2.5) * s, 0, (skx - 1.5) * s, 2.5 * s);
+      ctx.stroke();
+
+      ctx.restore();
       break;
+    }
     case "barrel":
       ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.beginPath();
@@ -8434,45 +8749,201 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       }
       break;
     }
-    case "bones":
-      ctx.fillStyle = "#e8e0d0";
-      // Skull
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 3 * s, 6 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#1a1a1a";
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x - 2 * s,
-        screenPos.y - 4 * s,
-        1.5 * s,
-        0,
-        Math.PI * 2
+    case "bones": {
+      // Isometric skull-and-crossbones on the ground with 3D shading
+      const bnLit = "#f0ebe3";
+      const bnMid = "#ddd5c8";
+      const bnDrk = "#b8ad9e";
+      const bnShd = "#8a7f72";
+
+      // Ground shadow
+      const bonesShadow = ctx.createRadialGradient(
+        screenPos.x + 1 * s, screenPos.y + 3 * s, 0,
+        screenPos.x + 1 * s, screenPos.y + 3 * s, 14 * s
       );
-      ctx.fill();
+      bonesShadow.addColorStop(0, "rgba(0,0,0,0.2)");
+      bonesShadow.addColorStop(0.7, "rgba(0,0,0,0.06)");
+      bonesShadow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bonesShadow;
       ctx.beginPath();
-      ctx.arc(
-        screenPos.x + 2 * s,
-        screenPos.y - 4 * s,
-        1.5 * s,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(screenPos.x + 1 * s, screenPos.y + 3 * s, 14 * s, 7 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      // Bones
-      ctx.fillStyle = "#d8d0c0";
+
+      // === CROSSBONES — two bones crossed, lying flat ===
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
       ctx.rotate(rotation);
-      ctx.fillRect(-12 * s, 2 * s, 24 * s, 3 * s);
+
+      // Bone 1 (bottom-left to top-right)
+      // Shadow stroke
+      ctx.strokeStyle = bnShd;
+      ctx.lineWidth = 2.8 * s;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.arc(-12 * s, 3.5 * s, 2 * s, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(-10 * s, 5 * s);
+      ctx.lineTo(10 * s, -1 * s);
+      ctx.stroke();
+      // Lit stroke
+      ctx.strokeStyle = bnMid;
+      ctx.lineWidth = 1.8 * s;
       ctx.beginPath();
-      ctx.arc(12 * s, 3.5 * s, 2 * s, 0, Math.PI * 2);
+      ctx.moveTo(-10 * s, 4.5 * s);
+      ctx.lineTo(10 * s, -1.5 * s);
+      ctx.stroke();
+      // Highlight
+      ctx.strokeStyle = bnLit;
+      ctx.lineWidth = 0.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(-9 * s, 4 * s);
+      ctx.lineTo(9 * s, -2 * s);
+      ctx.stroke();
+      // Knobs at ends
+      ctx.fillStyle = bnShd;
+      ctx.beginPath();
+      ctx.ellipse(-10 * s, 5 * s, 2.5 * s, 1.8 * s, 0.3, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = bnMid;
+      ctx.beginPath();
+      ctx.ellipse(-9.5 * s, 4.5 * s, 1.8 * s, 1.3 * s, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bnShd;
+      ctx.beginPath();
+      ctx.ellipse(10 * s, -1 * s, 2.5 * s, 1.8 * s, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bnLit;
+      ctx.beginPath();
+      ctx.ellipse(10.5 * s, -1.5 * s, 1.8 * s, 1.3 * s, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bone 2 (top-left to bottom-right)
+      ctx.strokeStyle = bnShd;
+      ctx.lineWidth = 2.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(-10 * s, -1 * s);
+      ctx.lineTo(10 * s, 5 * s);
+      ctx.stroke();
+      ctx.strokeStyle = bnDrk;
+      ctx.lineWidth = 1.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(-10 * s, -1.5 * s);
+      ctx.lineTo(10 * s, 4.5 * s);
+      ctx.stroke();
+      ctx.strokeStyle = bnLit;
+      ctx.lineWidth = 0.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(-9 * s, -2 * s);
+      ctx.lineTo(9 * s, 4 * s);
+      ctx.stroke();
+      // Knobs at ends
+      ctx.fillStyle = bnShd;
+      ctx.beginPath();
+      ctx.ellipse(-10 * s, -1 * s, 2.5 * s, 1.8 * s, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bnDrk;
+      ctx.beginPath();
+      ctx.ellipse(-9.5 * s, -1.5 * s, 1.8 * s, 1.3 * s, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bnShd;
+      ctx.beginPath();
+      ctx.ellipse(10 * s, 5 * s, 2.5 * s, 1.8 * s, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = bnMid;
+      ctx.beginPath();
+      ctx.ellipse(10.5 * s, 4.5 * s, 1.8 * s, 1.3 * s, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.restore();
+
+      // === SKULL — isometric top-down, sitting on crossbones ===
+      const bSkX = screenPos.x;
+      const bSkY = screenPos.y - 3 * s;
+
+      // Skull shadow volume
+      ctx.fillStyle = bnShd;
+      ctx.beginPath();
+      ctx.ellipse(bSkX, bSkY + 0.8 * s, 6.5 * s, 4.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main skull with radial gradient
+      const bSkGrad = ctx.createRadialGradient(
+        bSkX + 1 * s, bSkY - 1 * s, 0.5 * s,
+        bSkX, bSkY, 6 * s
+      );
+      bSkGrad.addColorStop(0, bnLit);
+      bSkGrad.addColorStop(0.4, bnMid);
+      bSkGrad.addColorStop(0.8, bnDrk);
+      bSkGrad.addColorStop(1, bnShd);
+      ctx.fillStyle = bSkGrad;
+      ctx.beginPath();
+      ctx.ellipse(bSkX, bSkY, 6 * s, 4 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Skull specular highlight
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.ellipse(bSkX + 1.5 * s, bSkY - 1.5 * s, 2.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Brow ridge
+      ctx.fillStyle = bnDrk;
+      ctx.beginPath();
+      ctx.ellipse(bSkX, bSkY + 0.3 * s, 4.5 * s, 0.8 * s, 0, 0, Math.PI);
+      ctx.fill();
+
+      // Eye sockets
+      const bLEye = ctx.createRadialGradient(
+        bSkX - 2 * s, bSkY + 0.5 * s, 0.2 * s,
+        bSkX - 2 * s, bSkY + 0.5 * s, 1.8 * s
+      );
+      bLEye.addColorStop(0, "#0d0a08");
+      bLEye.addColorStop(0.5, "#2d2420");
+      bLEye.addColorStop(1, bnShd);
+      ctx.fillStyle = bLEye;
+      ctx.beginPath();
+      ctx.ellipse(bSkX - 2 * s, bSkY + 0.5 * s, 1.8 * s, 1.3 * s, 0.06, 0, Math.PI * 2);
+      ctx.fill();
+
+      const bREye = ctx.createRadialGradient(
+        bSkX + 2 * s, bSkY + 0.5 * s, 0.2 * s,
+        bSkX + 2 * s, bSkY + 0.5 * s, 1.8 * s
+      );
+      bREye.addColorStop(0, "#0d0a08");
+      bREye.addColorStop(0.5, "#3d3430");
+      bREye.addColorStop(1, bnDrk);
+      ctx.fillStyle = bREye;
+      ctx.beginPath();
+      ctx.ellipse(bSkX + 2 * s, bSkY + 0.5 * s, 1.8 * s, 1.3 * s, -0.06, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Nasal cavity
+      ctx.fillStyle = "#2d2420";
+      ctx.beginPath();
+      ctx.moveTo(bSkX, bSkY + 1.5 * s);
+      ctx.lineTo(bSkX - 0.8 * s, bSkY + 2.8 * s);
+      ctx.lineTo(bSkX + 0.6 * s, bSkY + 2.8 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Teeth
+      ctx.fillStyle = bnLit;
+      ctx.strokeStyle = bnShd;
+      ctx.lineWidth = 0.25 * s;
+      for (let t = -2; t <= 2; t++) {
+        ctx.beginPath();
+        ctx.rect(bSkX + t * 1.1 * s - 0.4 * s, bSkY + 3 * s, 0.8 * s, 0.9 * s);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Skull outline
+      ctx.strokeStyle = bnShd;
+      ctx.lineWidth = 0.5 * s;
+      ctx.beginPath();
+      ctx.ellipse(bSkX, bSkY, 6 * s, 4 * s, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
       break;
+    }
     case "torch":
       // Stand
       ctx.fillStyle = "#4a3a2a";

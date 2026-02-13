@@ -64,6 +64,7 @@ import {
   HeroAbilityIcon,
 } from "../../sprites";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
+import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, PURPLE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
 
 // =============================================================================
 // LEVEL DATA
@@ -256,14 +257,14 @@ const PrincetonLogo: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative flex items-center gap-2 sm:gap-4">
+    <div className="relative flex items-center gap-2 sm:gap-3">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
           className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40"
           style={{ transform: `scale(${1 + Math.sin(pulse * 0.1) * 0.1})` }}
         />
       </div>
-      <PrincetonTDLogo />
+      <PrincetonTDLogo height="h-10" width="w-8" />
       <div className="relative flex flex-col">
         <span
           className="text-base sm:text-2xl font-black tracking-wider"
@@ -461,1072 +462,1722 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-      <OrnateFrame
-        className="relative w-full max-w-6xl max-h-[92vh] bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 rounded-2xl border-2 border-amber-700/60 shadow-2xl overflow-hidden"
-        cornerSize={48}
-        color="#d97706"
-        glowColor="#f59e0b"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" style={{ background: OVERLAY.black60 }}>
+      <div
+        className="relative w-full max-w-6xl max-h-[92vh] rounded-2xl overflow-hidden"
+        style={{
+          background: panelGradient,
+          border: `2px solid ${GOLD.border35}`,
+          boxShadow: `0 0 40px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
+        }}
       >
-        <img
-          src="/images/gameplay-latest-zoomed.png"
-          alt="Battle Scene"
-          className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.05] pointer-events-none select-none"
-        />
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-900/90 via-stone-800/90 to-amber-900/90 backdrop-blur px-6 py-4 border-b-2 border-amber-700/50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Book className="text-amber-400" size={28} />
-            <h2 className="text-3xl font-bold text-amber-300">Codex</h2>
-            <span className="text-xs text-amber-500/70 ml-2">
-              Complete Battle Encyclopedia
-            </span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-amber-800/50 transition-colors text-amber-400 hover:text-amber-200"
-          >
-            <X size={24} />
-          </button>
-        </div>
+        <OrnateFrame
+          className="relative w-full h-full overflow-hidden"
+          cornerSize={48}
+          color="#d97706"
+          glowColor="#f59e0b"
+        >
+          {/* Inner ghost border */}
+          <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+          <img
+            src="/images/gameplay-latest-zoomed.png"
+            alt="Battle Scene"
+            className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.05] pointer-events-none select-none"
+          />
 
-        <div className="flex z-10 overflow-scroll relative border-b border-amber-800/40 bg-stone-900/50">
-          {[
-            {
-              id: "towers",
-              label: "Towers",
-              icon: <Crown size={16} />,
-              count: towerTypes.length,
-            },
-            {
-              id: "heroes",
-              label: "Heroes",
-              icon: <Shield size={16} />,
-              count: heroTypes.length,
-            },
-            {
-              id: "enemies",
-              label: "Enemies",
-              icon: <Skull size={16} />,
-              count: enemyTypes.length,
-            },
-            {
-              id: "spells",
-              label: "Spells",
-              icon: <Zap size={16} />,
-              count: spellTypes.length,
-            },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id as typeof activeTab);
-                setSelectedTower(null);
-                setSelectedHeroDetail(null);
-              }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all font-medium ${activeTab === tab.id
-                ? "bg-amber-900/50 text-amber-300 border-b-2 border-amber-500"
-                : "text-amber-600 hover:text-amber-400 hover:bg-stone-800/50"
-                }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-800/60 text-amber-500">
-                {tab.count}
+          {/* Header */}
+          <div className="sticky top-0 z-10 backdrop-blur px-9 py-4 flex items-center justify-between" style={{
+            background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight}, ${PANEL.bgDark})`,
+            borderBottom: `2px solid ${GOLD.border30}`,
+            boxShadow: `0 2px 12px ${OVERLAY.black40}`
+          }}>
+            <div className="flex items-center gap-3">
+              <Book className="text-amber-400 drop-shadow-lg" size={28} />
+              <h2 className="text-3xl font-bold text-amber-100 drop-shadow-lg tracking-wide">CODEX</h2>
+              <span className="text-xs text-amber-400/60 ml-2 font-medium tracking-wider uppercase">
+                Battle Encyclopedia
               </span>
-            </button>
-          ))}
-        </div>
-
-        <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
-          {activeTab === "towers" && !selectedTower && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {towerTypes.map((type) => {
-                const tower = TOWER_DATA[type];
-                const stats = getDynamicStats(type, 1);
-                const towerDef = TOWER_STATS[type];
-                const cat = towerCategories[type];
-
-                return (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedTower(type)}
-                    className="bg-gradient-to-br from-stone-900/90 to-stone-950/90 rounded-xl border border-stone-700/50 hover:border-amber-500/60 hover:scale-[1.02] text-left group transition-all overflow-hidden"
-                  >
-                    {/* Header with category */}
-                    <div className={`px-4 py-2 border-b flex items-center justify-between ${type === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                      type === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                        type === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                          type === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                            type === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                              type === "club" ? "bg-amber-950/50 border-amber-800/30" :
-                                "bg-stone-950/50 border-stone-800/30"
-                      }`}>
-                      <div className="flex items-center gap-2">
-                        {towerIcons[type]}
-                        <span className={`text-xs font-medium uppercase tracking-wider ${type === "station" ? "text-purple-400" :
-                          type === "cannon" ? "text-red-400" :
-                            type === "library" ? "text-cyan-400" :
-                              type === "lab" ? "text-yellow-400" :
-                                type === "arch" ? "text-blue-400" :
-                                  type === "club" ? "text-amber-400" :
-                                    "text-stone-400"
-                          }`}>
-                          {cat.category}
-                        </span>
-                      </div>
-                      <span className="text-amber-400 flex items-center gap-1 text-xs">
-                        <Coins size={12} /> {tower.cost} PP
-                      </span>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="flex items-start gap-4 mb-3">
-                        <div className="w-16 h-16 rounded-lg bg-stone-800/80 border border-stone-600/50 flex items-center justify-center group-hover:border-amber-500/50 transition-colors">
-                          <TowerSprite type={type} size={52} level={1} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                            {tower.name}
-                          </h3>
-                          <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                            {tower.desc}
-                          </p>
-                        </div>
-                        <ChevronRight
-                          size={20}
-                          className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                        />
-                      </div>
-
-                      {/* Base stats */}
-                      <div className="flex flex-wrap gap-2 mb-3 text-xs">
-                        {stats.damage > 0 && (
-                          <span className="px-2 py-1 bg-red-950/50 rounded border border-red-900/40 text-red-300 flex items-center gap-1">
-                            <Swords size={11} /> {Math.floor(stats.damage)}
-                          </span>
-                        )}
-                        {stats.range > 0 && (
-                          <span className="px-2 py-1 bg-blue-950/50 rounded border border-blue-900/40 text-blue-300 flex items-center gap-1">
-                            <Target size={11} /> {Math.floor(stats.range)}
-                          </span>
-                        )}
-                        {stats.slowAmount && stats.slowAmount > 0 && (
-                          <span className="px-2 py-1 bg-cyan-950/50 rounded border border-cyan-900/40 text-cyan-300 flex items-center gap-1">
-                            <Snowflake size={11} /> {Math.round(stats.slowAmount * 100)}%
-                          </span>
-                        )}
-                        {stats.income && stats.income > 0 && (
-                          <span className="px-2 py-1 bg-amber-950/50 rounded border border-amber-900/40 text-amber-300 flex items-center gap-1">
-                            <Banknote size={11} /> +{stats.income} PP
-                          </span>
-                        )}
-                        {type === "station" && (
-                          <span className="px-2 py-1 bg-purple-950/50 rounded border border-purple-900/40 text-purple-300 flex items-center gap-1">
-                            <Users size={11} /> {TROOP_DATA.footsoldier.hp} HP
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Level 4 upgrade previews */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="px-2 py-1.5 bg-red-950/30 rounded border border-red-900/30">
-                          <div className="text-[9px] text-red-500/70 uppercase mb-0.5">Path A</div>
-                          <div className="text-xs text-red-300 font-medium truncate">{tower.upgrades.A.name}</div>
-                        </div>
-                        <div className="px-2 py-1.5 bg-blue-950/30 rounded border border-blue-900/30">
-                          <div className="text-[9px] text-blue-500/70 uppercase mb-0.5">Path B</div>
-                          <div className="text-xs text-blue-300 font-medium truncate">{tower.upgrades.B.name}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
             </div>
-          )}
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg transition-all hover:scale-110"
+              style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+            >
+              <X size={20} className="text-amber-400" />
+            </button>
+          </div>
 
-          {activeTab === "towers" &&
-            selectedTower &&
-            (() => {
-              const tower = TOWER_DATA[selectedTower as keyof typeof TOWER_DATA];
-              const towerDef = TOWER_STATS[selectedTower]; // Used in renderUniqueFeatures
-              const cat = towerCategories[selectedTower];
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              void towerDef; // Explicitly mark as used in closure
+          {/* Tab bar */}
+          <div className="flex z-10 overflow-scroll relative" style={{
+            background: PANEL.bgDeep,
+            borderBottom: `1px solid ${GOLD.border25}`,
+          }}>
+            {[
+              {
+                id: "towers",
+                label: "Towers",
+                icon: <Crown size={16} />,
+                count: towerTypes.length,
+              },
+              {
+                id: "heroes",
+                label: "Heroes",
+                icon: <Shield size={16} />,
+                count: heroTypes.length,
+              },
+              {
+                id: "enemies",
+                label: "Enemies",
+                icon: <Skull size={16} />,
+                count: enemyTypes.length,
+              },
+              {
+                id: "spells",
+                label: "Spells",
+                icon: <Zap size={16} />,
+                count: spellTypes.length,
+              },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id as typeof activeTab);
+                  setSelectedTower(null);
+                  setSelectedHeroDetail(null);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all font-medium relative"
+                style={activeTab === tab.id ? {
+                  background: `linear-gradient(180deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                  color: "rgb(252,211,77)",
+                  borderBottom: `2px solid ${GOLD.accentBorder50}`,
+                  boxShadow: `inset 0 -4px 12px ${GOLD.accentGlow08}`
+                } : {
+                  color: "rgba(180,140,60,0.5)",
+                }}
+              >
+                {activeTab === tab.id && (
+                  <div className="absolute inset-[2px] rounded-sm pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                )}
+                {tab.icon}
+                <span>{tab.label}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{
+                  background: activeTab === tab.id ? PANEL.bgDeep : PANEL.bgWarmMid,
+                  color: activeTab === tab.id ? "rgb(252,211,77)" : "rgba(180,140,60,0.6)",
+                  border: `1px solid ${activeTab === tab.id ? GOLD.border25 : "transparent"}`
+                }}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
 
-              // Render unique features for a tower upgrade
-              const renderUniqueFeatures = (stats: ReturnType<typeof getDynamicStats>, path: "A" | "B", type: string) => {
-                const features: React.ReactNode[] = [];
-                const upgradeStats = towerDef?.upgrades?.[path]?.stats;
+          {/* Content area */}
+          <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
+            {activeTab === "towers" && !selectedTower && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {towerTypes.map((type) => {
+                  const tower = TOWER_DATA[type];
+                  const stats = getDynamicStats(type, 1);
+                  const towerDef = TOWER_STATS[type];
+                  const cat = towerCategories[type];
 
-                // Combat stats
-                if (stats.damage > 0) {
-                  features.push(
-                    <div key="dmg" className="bg-red-950/50 rounded-lg p-2 text-center border border-red-800/40">
-                      <Swords size={14} className="mx-auto text-red-400 mb-1" />
-                      <div className="text-[9px] text-red-500">Damage</div>
-                      <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
-                    </div>
-                  );
-                }
-
-                if (stats.range > 0 && type !== "club") {
-                  features.push(
-                    <div key="rng" className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-800/40">
-                      <Target size={14} className="mx-auto text-blue-400 mb-1" />
-                      <div className="text-[9px] text-blue-500">Range</div>
-                      <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
-                    </div>
-                  );
-                }
-
-                if (stats.attackSpeed > 0) {
-                  features.push(
-                    <div key="spd" className="bg-green-950/50 rounded-lg p-2 text-center border border-green-800/40">
-                      <Gauge size={14} className="mx-auto text-green-400 mb-1" />
-                      <div className="text-[9px] text-green-500">Speed</div>
-                      <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
-                    </div>
-                  );
-                }
-
-                // Unique features
-                if (stats.chainTargets && stats.chainTargets > 1) {
-                  features.push(
-                    <div key="chain" className="bg-yellow-950/50 rounded-lg p-2 text-center border border-yellow-800/40">
-                      <Users size={14} className="mx-auto text-yellow-400 mb-1" />
-                      <div className="text-[9px] text-yellow-500">Targets</div>
-                      <div className="text-yellow-300 font-bold">{stats.chainTargets}</div>
-                    </div>
-                  );
-                }
-
-                if (stats.splashRadius && stats.splashRadius > 0) {
-                  features.push(
-                    <div key="splash" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                      <Radio size={14} className="mx-auto text-orange-400 mb-1" />
-                      <div className="text-[9px] text-orange-500">Splash</div>
-                      <div className="text-orange-300 font-bold">{stats.splashRadius}</div>
-                    </div>
-                  );
-                }
-
-                if (stats.slowAmount && stats.slowAmount > 0) {
-                  features.push(
-                    <div key="slow" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
-                      <Snowflake size={14} className="mx-auto text-cyan-400 mb-1" />
-                      <div className="text-[9px] text-cyan-500">Slow</div>
-                      <div className="text-cyan-300 font-bold">{Math.round(stats.slowAmount * 100)}%</div>
-                    </div>
-                  );
-                }
-
-                if (stats.stunChance && stats.stunChance > 0) {
-                  features.push(
-                    <div key="stun" className="bg-indigo-950/50 rounded-lg p-2 text-center border border-indigo-800/40">
-                      <CircleOff size={14} className="mx-auto text-indigo-400 mb-1" />
-                      <div className="text-[9px] text-indigo-500">Freeze</div>
-                      <div className="text-indigo-300 font-bold">{Math.round(stats.stunChance * 100)}%</div>
-                    </div>
-                  );
-                }
-
-                if (stats.burnDamage && stats.burnDamage > 0) {
-                  features.push(
-                    <div key="burn" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                      <Flame size={14} className="mx-auto text-orange-400 mb-1" />
-                      <div className="text-[9px] text-orange-500">Burn</div>
-                      <div className="text-orange-300 font-bold">{stats.burnDamage}/s</div>
-                    </div>
-                  );
-                }
-
-                // Economy features
-                if (stats.income && stats.income > 0) {
-                  features.push(
-                    <div key="income" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
-                      <Banknote size={14} className="mx-auto text-amber-400 mb-1" />
-                      <div className="text-[9px] text-amber-500">Income</div>
-                      <div className="text-amber-300 font-bold">+{stats.income} PP</div>
-                    </div>
-                  );
-                }
-
-                if (stats.incomeInterval && stats.incomeInterval > 0) {
-                  features.push(
-                    <div key="interval" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
-                      <Timer size={14} className="mx-auto text-amber-400 mb-1" />
-                      <div className="text-[9px] text-amber-500">Interval</div>
-                      <div className="text-amber-300 font-bold">{stats.incomeInterval / 1000}s</div>
-                    </div>
-                  );
-                }
-
-                // Aura features
-                if (upgradeStats?.rangeBuff) {
-                  features.push(
-                    <div key="rangeAura" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
-                      <TrendingUp size={14} className="mx-auto text-cyan-400 mb-1" />
-                      <div className="text-[9px] text-cyan-500">Range Aura</div>
-                      <div className="text-cyan-300 font-bold">+{Math.round(upgradeStats.rangeBuff * 100)}%</div>
-                    </div>
-                  );
-                }
-
-                if (upgradeStats?.damageBuff) {
-                  features.push(
-                    <div key="dmgAura" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                      <TrendingUp size={14} className="mx-auto text-orange-400 mb-1" />
-                      <div className="text-[9px] text-orange-500">DMG Aura</div>
-                      <div className="text-orange-300 font-bold">+{Math.round(upgradeStats.damageBuff * 100)}%</div>
-                    </div>
-                  );
-                }
-
-                return features;
-              };
-
-              return (
-                <div>
-                  <button
-                    onClick={() => setSelectedTower(null)}
-                    className="flex items-center gap-2 text-amber-400 hover:text-amber-300 mb-4 transition-colors"
-                  >
-                    <ChevronRight size={16} className="rotate-180" />
-                    <span>Back to all towers</span>
-                  </button>
-
-                  <div className="space-y-6">
-                    {/* Header Section */}
-                    <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-xl border border-stone-700/50 overflow-hidden">
-                      <div className={`px-6 py-3 border-b flex items-center gap-3 ${selectedTower === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                        selectedTower === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                          selectedTower === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                            selectedTower === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                              selectedTower === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                                selectedTower === "club" ? "bg-amber-950/50 border-amber-800/30" :
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedTower(type)}
+                      className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
+                      style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1.5px solid ${GOLD.border25}`,
+                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                      }}
+                    >
+                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                      {/* Header with category */}
+                      <div className={`px-4 py-2 border-b flex items-center justify-between relative z-10 ${type === "station" ? "bg-purple-950/50 border-purple-800/30" :
+                        type === "cannon" ? "bg-red-950/50 border-red-800/30" :
+                          type === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
+                            type === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
+                              type === "arch" ? "bg-blue-950/50 border-blue-800/30" :
+                                type === "club" ? "bg-amber-950/50 border-amber-800/30" :
                                   "bg-stone-950/50 border-stone-800/30"
                         }`}>
-                        {towerIcons[selectedTower]}
-                        <span className={`text-sm font-medium uppercase tracking-wider ${selectedTower === "station" ? "text-purple-400" :
-                          selectedTower === "cannon" ? "text-red-400" :
-                            selectedTower === "library" ? "text-cyan-400" :
-                              selectedTower === "lab" ? "text-yellow-400" :
-                                selectedTower === "arch" ? "text-blue-400" :
-                                  selectedTower === "club" ? "text-amber-400" :
-                                    "text-stone-400"
-                          }`}>
-                          {cat.category}
+                        <div className="flex items-center gap-2">
+                          {towerIcons[type]}
+                          <span className={`text-xs font-medium uppercase tracking-wider ${type === "station" ? "text-purple-400" :
+                            type === "cannon" ? "text-red-400" :
+                              type === "library" ? "text-cyan-400" :
+                                type === "lab" ? "text-yellow-400" :
+                                  type === "arch" ? "text-blue-400" :
+                                    type === "club" ? "text-amber-400" :
+                                      "text-stone-400"
+                            }`}>
+                            {cat.category}
+                          </span>
+                        </div>
+                        <span className="text-amber-400 flex items-center gap-1 text-xs">
+                          <Coins size={12} /> {tower.cost} PP
                         </span>
                       </div>
-                      <div className="p-6 flex items-start gap-6">
-                        <div className="w-28 h-28 rounded-xl bg-stone-800/80 border-2 border-amber-600/50 flex items-center justify-center flex-shrink-0">
-                          <TowerSprite
-                            type={selectedTower as keyof typeof TOWER_DATA}
-                            size={96}
-                            level={4}
+
+                      <div className="p-4">
+                        <div className="flex items-start gap-4 mb-3">
+                          <div className="w-16 h-16 rounded-lg flex items-center justify-center group-hover:border-amber-500/50 transition-colors" style={{
+                            background: PANEL.bgDeep,
+                            border: `1.5px solid ${GOLD.border25}`,
+                          }}>
+                            <TowerSprite type={type} size={52} level={1} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
+                              {tower.name}
+                            </h3>
+                            <p className="text-xs text-stone-400 line-clamp-2 mt-1">
+                              {tower.desc}
+                            </p>
+                          </div>
+                          <ChevronRight
+                            size={20}
+                            className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
                           />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="text-3xl font-bold text-amber-200 mb-2">
-                            {tower.name}
-                          </h3>
-                          <p className="text-stone-400 mb-4">{tower.desc}</p>
-                          <div className="flex flex-wrap gap-3">
-                            <div className="px-4 py-2 bg-amber-950/50 rounded-lg border border-amber-800/40">
-                              <div className="text-xs text-amber-500">Base Cost</div>
-                              <div className="text-amber-300 font-bold text-lg">{tower.cost} PP</div>
-                            </div>
-                            {getDynamicStats(selectedTower, 1).damage > 0 && (
-                              <div className="px-4 py-2 bg-red-950/50 rounded-lg border border-red-800/40">
-                                <div className="text-xs text-red-500">Base Damage</div>
-                                <div className="text-red-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).damage)}</div>
-                              </div>
-                            )}
-                            {getDynamicStats(selectedTower, 1).range > 0 && selectedTower !== "club" && (
-                              <div className="px-4 py-2 bg-blue-950/50 rounded-lg border border-blue-800/40">
-                                <div className="text-xs text-blue-500">Base Range</div>
-                                <div className="text-blue-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).range)}</div>
-                              </div>
-                            )}
+
+                        {/* Base stats */}
+                        <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                          {stats.damage > 0 && (
+                            <span className="px-2 py-1 bg-red-950/50 rounded border border-red-900/40 text-red-300 flex items-center gap-1">
+                              <Swords size={11} /> {Math.floor(stats.damage)}
+                            </span>
+                          )}
+                          {stats.range > 0 && (
+                            <span className="px-2 py-1 bg-blue-950/50 rounded border border-blue-900/40 text-blue-300 flex items-center gap-1">
+                              <Target size={11} /> {Math.floor(stats.range)}
+                            </span>
+                          )}
+                          {stats.slowAmount && stats.slowAmount > 0 && (
+                            <span className="px-2 py-1 bg-cyan-950/50 rounded border border-cyan-900/40 text-cyan-300 flex items-center gap-1">
+                              <Snowflake size={11} /> {Math.round(stats.slowAmount * 100)}%
+                            </span>
+                          )}
+                          {stats.income && stats.income > 0 && (
+                            <span className="px-2 py-1 bg-amber-950/50 rounded border border-amber-900/40 text-amber-300 flex items-center gap-1">
+                              <Banknote size={11} /> +{stats.income} PP
+                            </span>
+                          )}
+                          {type === "station" && (
+                            <span className="px-2 py-1 bg-purple-950/50 rounded border border-purple-900/40 text-purple-300 flex items-center gap-1">
+                              <Users size={11} /> {TROOP_DATA.footsoldier.hp} HP
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Level 4 upgrade previews */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="px-2 py-1.5 bg-red-950/30 rounded border border-red-900/30">
+                            <div className="text-[9px] text-red-500/70 uppercase mb-0.5">Path A</div>
+                            <div className="text-xs text-red-300 font-medium truncate">{tower.upgrades.A.name}</div>
+                          </div>
+                          <div className="px-2 py-1.5 bg-blue-950/30 rounded border border-blue-900/30">
+                            <div className="text-[9px] text-blue-500/70 uppercase mb-0.5">Path B</div>
+                            <div className="text-xs text-blue-300 font-medium truncate">{tower.upgrades.B.name}</div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-                    {/* Level Progression */}
-                    <div>
-                      <h4 className="text-lg font-bold text-amber-300 mb-4 flex items-center gap-2">
-                        <ArrowUp size={18} />
-                        Level Progression
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4].map((level) => {
-                          const stats = getDynamicStats(selectedTower, level);
-                          const cost = getUpgradeCost(selectedTower, level);
-                          const isStation = selectedTower === "station";
-                          const troop = isStation ? getTroopForLevel(level) : null;
+            {activeTab === "towers" &&
+              selectedTower &&
+              (() => {
+                const tower = TOWER_DATA[selectedTower as keyof typeof TOWER_DATA];
+                const towerDef = TOWER_STATS[selectedTower]; // Used in renderUniqueFeatures
+                const cat = towerCategories[selectedTower];
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                void towerDef; // Explicitly mark as used in closure
 
-                          return (
-                            <div
-                              key={level}
-                              className={`rounded-xl border overflow-hidden ${level === 4
-                                ? "bg-gradient-to-br from-purple-950/60 to-stone-950 border-purple-700/50"
-                                : "bg-stone-900/80 border-stone-700/40"
-                                }`}
-                            >
-                              <div className={`px-3 py-2 flex items-center justify-between ${level === 4 ? "bg-purple-900/30" : "bg-stone-800/50"}`}>
-                                <div className="flex items-center gap-2">
-                                  <div className="flex">
-                                    {[...Array(level)].map((_, i) => (
-                                      <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
-                                    ))}
+                // Render unique features for a tower upgrade
+                const renderUniqueFeatures = (stats: ReturnType<typeof getDynamicStats>, path: "A" | "B", type: string) => {
+                  const features: React.ReactNode[] = [];
+                  const upgradeStats = towerDef?.upgrades?.[path]?.stats;
+
+                  // Combat stats
+                  if (stats.damage > 0) {
+                    features.push(
+                      <div key="dmg" className="bg-red-950/50 rounded-lg p-2 text-center border border-red-800/40">
+                        <Swords size={14} className="mx-auto text-red-400 mb-1" />
+                        <div className="text-[9px] text-red-500">Damage</div>
+                        <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.range > 0 && type !== "club") {
+                    features.push(
+                      <div key="rng" className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-800/40">
+                        <Target size={14} className="mx-auto text-blue-400 mb-1" />
+                        <div className="text-[9px] text-blue-500">Range</div>
+                        <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.attackSpeed > 0) {
+                    features.push(
+                      <div key="spd" className="bg-green-950/50 rounded-lg p-2 text-center border border-green-800/40">
+                        <Gauge size={14} className="mx-auto text-green-400 mb-1" />
+                        <div className="text-[9px] text-green-500">Speed</div>
+                        <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
+                      </div>
+                    );
+                  }
+
+                  // Unique features
+                  if (stats.chainTargets && stats.chainTargets > 1) {
+                    features.push(
+                      <div key="chain" className="bg-yellow-950/50 rounded-lg p-2 text-center border border-yellow-800/40">
+                        <Users size={14} className="mx-auto text-yellow-400 mb-1" />
+                        <div className="text-[9px] text-yellow-500">Targets</div>
+                        <div className="text-yellow-300 font-bold">{stats.chainTargets}</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.splashRadius && stats.splashRadius > 0) {
+                    features.push(
+                      <div key="splash" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
+                        <Radio size={14} className="mx-auto text-orange-400 mb-1" />
+                        <div className="text-[9px] text-orange-500">Splash</div>
+                        <div className="text-orange-300 font-bold">{stats.splashRadius}</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.slowAmount && stats.slowAmount > 0) {
+                    features.push(
+                      <div key="slow" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
+                        <Snowflake size={14} className="mx-auto text-cyan-400 mb-1" />
+                        <div className="text-[9px] text-cyan-500">Slow</div>
+                        <div className="text-cyan-300 font-bold">{Math.round(stats.slowAmount * 100)}%</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.stunChance && stats.stunChance > 0) {
+                    features.push(
+                      <div key="stun" className="bg-indigo-950/50 rounded-lg p-2 text-center border border-indigo-800/40">
+                        <CircleOff size={14} className="mx-auto text-indigo-400 mb-1" />
+                        <div className="text-[9px] text-indigo-500">Freeze</div>
+                        <div className="text-indigo-300 font-bold">{Math.round(stats.stunChance * 100)}%</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.burnDamage && stats.burnDamage > 0) {
+                    features.push(
+                      <div key="burn" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
+                        <Flame size={14} className="mx-auto text-orange-400 mb-1" />
+                        <div className="text-[9px] text-orange-500">Burn</div>
+                        <div className="text-orange-300 font-bold">{stats.burnDamage}/s</div>
+                      </div>
+                    );
+                  }
+
+                  // Economy features
+                  if (stats.income && stats.income > 0) {
+                    features.push(
+                      <div key="income" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
+                        <Banknote size={14} className="mx-auto text-amber-400 mb-1" />
+                        <div className="text-[9px] text-amber-500">Income</div>
+                        <div className="text-amber-300 font-bold">+{stats.income} PP</div>
+                      </div>
+                    );
+                  }
+
+                  if (stats.incomeInterval && stats.incomeInterval > 0) {
+                    features.push(
+                      <div key="interval" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
+                        <Timer size={14} className="mx-auto text-amber-400 mb-1" />
+                        <div className="text-[9px] text-amber-500">Interval</div>
+                        <div className="text-amber-300 font-bold">{stats.incomeInterval / 1000}s</div>
+                      </div>
+                    );
+                  }
+
+                  // Aura features
+                  if (upgradeStats?.rangeBuff) {
+                    features.push(
+                      <div key="rangeAura" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
+                        <TrendingUp size={14} className="mx-auto text-cyan-400 mb-1" />
+                        <div className="text-[9px] text-cyan-500">Range Aura</div>
+                        <div className="text-cyan-300 font-bold">+{Math.round(upgradeStats.rangeBuff * 100)}%</div>
+                      </div>
+                    );
+                  }
+
+                  if (upgradeStats?.damageBuff) {
+                    features.push(
+                      <div key="dmgAura" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
+                        <TrendingUp size={14} className="mx-auto text-orange-400 mb-1" />
+                        <div className="text-[9px] text-orange-500">DMG Aura</div>
+                        <div className="text-orange-300 font-bold">+{Math.round(upgradeStats.damageBuff * 100)}%</div>
+                      </div>
+                    );
+                  }
+
+                  return features;
+                };
+
+                return (
+                  <div>
+                    <button
+                      onClick={() => setSelectedTower(null)}
+                      className="flex items-center gap-2 text-amber-300 hover:text-amber-100 mb-4 transition-all font-medium px-3 py-1.5 rounded-lg"
+                      style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+                    >
+                      <ChevronRight size={16} className="rotate-180" />
+                      <span>Back to all towers</span>
+                    </button>
+
+                    <div className="space-y-6">
+                      {/* Header Section */}
+                      <div className="rounded-xl overflow-hidden relative" style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1.5px solid ${GOLD.border30}`,
+                        boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        <div className={`px-6 py-3 border-b flex items-center gap-3 ${selectedTower === "station" ? "bg-purple-950/50 border-purple-800/30" :
+                          selectedTower === "cannon" ? "bg-red-950/50 border-red-800/30" :
+                            selectedTower === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
+                              selectedTower === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                selectedTower === "arch" ? "bg-blue-950/50 border-blue-800/30" :
+                                  selectedTower === "club" ? "bg-amber-950/50 border-amber-800/30" :
+                                    "bg-stone-950/50 border-stone-800/30"
+                          }`}>
+                          {towerIcons[selectedTower]}
+                          <span className={`text-sm font-medium uppercase tracking-wider ${selectedTower === "station" ? "text-purple-400" :
+                            selectedTower === "cannon" ? "text-red-400" :
+                              selectedTower === "library" ? "text-cyan-400" :
+                                selectedTower === "lab" ? "text-yellow-400" :
+                                  selectedTower === "arch" ? "text-blue-400" :
+                                    selectedTower === "club" ? "text-amber-400" :
+                                      "text-stone-400"
+                            }`}>
+                            {cat.category}
+                          </span>
+                        </div>
+                        <div className="p-6 flex items-start gap-6">
+                          <div className="w-28 h-28 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+                            background: PANEL.bgDeep,
+                            border: `2px solid ${GOLD.border30}`,
+                            boxShadow: `inset 0 0 15px ${OVERLAY.black40}`,
+                          }}>
+                            <TowerSprite
+                              type={selectedTower as keyof typeof TOWER_DATA}
+                              size={96}
+                              level={4}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-3xl font-bold text-amber-200 mb-2">
+                              {tower.name}
+                            </h3>
+                            <p className="text-stone-400 mb-4">{tower.desc}</p>
+                            <div className="flex flex-wrap gap-3">
+                              <div className="px-4 py-2 bg-amber-950/50 rounded-lg border border-amber-800/40">
+                                <div className="text-xs text-amber-500">Base Cost</div>
+                                <div className="text-amber-300 font-bold text-lg">{tower.cost} PP</div>
+                              </div>
+                              {getDynamicStats(selectedTower, 1).damage > 0 && (
+                                <div className="px-4 py-2 bg-red-950/50 rounded-lg border border-red-800/40">
+                                  <div className="text-xs text-red-500">Base Damage</div>
+                                  <div className="text-red-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).damage)}</div>
+                                </div>
+                              )}
+                              {getDynamicStats(selectedTower, 1).range > 0 && selectedTower !== "club" && (
+                                <div className="px-4 py-2 bg-blue-950/50 rounded-lg border border-blue-800/40">
+                                  <div className="text-xs text-blue-500">Base Range</div>
+                                  <div className="text-blue-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).range)}</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Level Progression */}
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                          <h4 className="text-lg font-bold text-amber-200 flex items-center gap-2">
+                            <ArrowUp size={18} className="text-amber-400" />
+                            Level Progression
+                          </h4>
+                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                          {[1, 2, 3, 4].map((level) => {
+                            const stats = getDynamicStats(selectedTower, level);
+                            const cost = getUpgradeCost(selectedTower, level);
+                            const isStation = selectedTower === "station";
+                            const troop = isStation ? getTroopForLevel(level) : null;
+
+                            return (
+                              <div
+                                key={level}
+                                className={`rounded-xl border overflow-hidden ${level === 4
+                                  ? "bg-gradient-to-br from-purple-950/60 to-stone-950 border-purple-700/50"
+                                  : "bg-stone-900/80 border-stone-700/40"
+                                  }`}
+                              >
+                                <div className={`px-3 py-2 flex items-center justify-between ${level === 4 ? "bg-purple-900/30" : "bg-stone-800/50"}`}>
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex">
+                                      {[...Array(level)].map((_, i) => (
+                                        <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
+                                      ))}
+                                    </div>
+                                    <span className={`font-bold ${level === 4 ? "text-purple-300" : "text-amber-300"}`}>
+                                      Lvl {level}
+                                    </span>
                                   </div>
-                                  <span className={`font-bold ${level === 4 ? "text-purple-300" : "text-amber-300"}`}>
-                                    Lvl {level}
+                                  <span className="text-amber-400 text-xs flex items-center gap-1">
+                                    <Coins size={10} /> {cost} PP
                                   </span>
                                 </div>
-                                <span className="text-amber-400 text-xs flex items-center gap-1">
-                                  <Coins size={10} /> {cost} PP
-                                </span>
-                              </div>
-                              <div className="p-3">
-                                {/* Level 4 shows both upgrade paths */}
-                                {level === 4 ? (
-                                  <div className="space-y-2">
-                                    {(["A", "B"] as const).map((path) => {
-                                      const pathStats = getDynamicStats(selectedTower, 4, path);
-                                      const pathTroop = isStation ? getTroopForLevel(4, path) : null;
+                                <div className="p-3">
+                                  {/* Level 4 shows both upgrade paths */}
+                                  {level === 4 ? (
+                                    <div className="space-y-2">
+                                      {(["A", "B"] as const).map((path) => {
+                                        const pathStats = getDynamicStats(selectedTower, 4, path);
+                                        const pathTroop = isStation ? getTroopForLevel(4, path) : null;
 
-                                      return (
-                                        <div
-                                          key={path}
-                                          className={`rounded-lg border overflow-hidden ${path === "A"
-                                            ? "bg-red-950/30 border-red-800/40"
-                                            : "bg-blue-950/30 border-blue-800/40"
-                                            }`}
-                                        >
-                                          {/* Path header */}
-                                          <div className={`px-2 py-1 text-[10px] font-bold ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"
-                                            }`}>
-                                            {tower.upgrades[path].name}
-                                          </div>
+                                        return (
+                                          <div
+                                            key={path}
+                                            className={`rounded-lg border overflow-hidden ${path === "A"
+                                              ? "bg-red-950/30 border-red-800/40"
+                                              : "bg-blue-950/30 border-blue-800/40"
+                                              }`}
+                                          >
+                                            {/* Path header */}
+                                            <div className={`px-2 py-1 text-[10px] font-bold ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"
+                                              }`}>
+                                              {tower.upgrades[path].name}
+                                            </div>
 
-                                          {/* Path stats */}
-                                          <div className="p-1.5">
-                                            {/* Station shows troop stats for each path */}
-                                            {isStation && pathTroop && (
-                                              <div className="grid grid-cols-3 gap-1 text-[9px]">
-                                                <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
-                                                  <div className="text-red-500 text-[7px]">HP</div>
-                                                  <div className="text-red-300 font-bold">{pathTroop.hp}</div>
-                                                </div>
-                                                <div className="bg-orange-950/50 rounded p-1 text-center border border-orange-900/30">
-                                                  <div className="text-orange-500 text-[7px]">DMG</div>
-                                                  <div className="text-orange-300 font-bold">{pathTroop.damage}</div>
-                                                </div>
-                                                <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
-                                                  <div className="text-green-500 text-[7px]">SPD</div>
-                                                  <div className="text-green-300 font-bold">{(pathTroop.attackSpeed / 1000).toFixed(1)}s</div>
-                                                </div>
-                                              </div>
-                                            )}
-
-                                            {/* Combat towers show damage/range/speed for each path */}
-                                            {!isStation && selectedTower !== "club" && (
-                                              <div className="grid grid-cols-3 gap-1 text-[9px]">
-                                                {pathStats.damage > 0 && (
+                                            {/* Path stats */}
+                                            <div className="p-1.5">
+                                              {/* Station shows troop stats for each path */}
+                                              {isStation && pathTroop && (
+                                                <div className="grid grid-cols-3 gap-1 text-[9px]">
                                                   <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
-                                                    <div className="text-red-500 text-[7px]">DMG</div>
-                                                    <div className="text-red-300 font-bold">{Math.floor(pathStats.damage)}</div>
+                                                    <div className="text-red-500 text-[7px]">HP</div>
+                                                    <div className="text-red-300 font-bold">{pathTroop.hp}</div>
                                                   </div>
-                                                )}
-                                                {pathStats.range > 0 && (
-                                                  <div className="bg-blue-950/50 rounded p-1 text-center border border-blue-900/30">
-                                                    <div className="text-blue-500 text-[7px]">RNG</div>
-                                                    <div className="text-blue-300 font-bold">{Math.floor(pathStats.range)}</div>
+                                                  <div className="bg-orange-950/50 rounded p-1 text-center border border-orange-900/30">
+                                                    <div className="text-orange-500 text-[7px]">DMG</div>
+                                                    <div className="text-orange-300 font-bold">{pathTroop.damage}</div>
                                                   </div>
-                                                )}
-                                                {pathStats.attackSpeed > 0 && (
                                                   <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
                                                     <div className="text-green-500 text-[7px]">SPD</div>
-                                                    <div className="text-green-300 font-bold">{(pathStats.attackSpeed / 1000).toFixed(1)}s</div>
+                                                    <div className="text-green-300 font-bold">{(pathTroop.attackSpeed / 1000).toFixed(1)}s</div>
                                                   </div>
-                                                )}
-                                              </div>
-                                            )}
+                                                </div>
+                                              )}
 
-                                            {/* Club shows income for each path */}
-                                            {selectedTower === "club" && (
-                                              <div className="grid grid-cols-2 gap-1 text-[9px]">
-                                                <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
-                                                  <div className="text-amber-500 text-[7px]">Income</div>
-                                                  <div className="text-amber-300 font-bold">+{pathStats.income} PP</div>
+                                              {/* Combat towers show damage/range/speed for each path */}
+                                              {!isStation && selectedTower !== "club" && (
+                                                <div className="grid grid-cols-3 gap-1 text-[9px]">
+                                                  {pathStats.damage > 0 && (
+                                                    <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
+                                                      <div className="text-red-500 text-[7px]">DMG</div>
+                                                      <div className="text-red-300 font-bold">{Math.floor(pathStats.damage)}</div>
+                                                    </div>
+                                                  )}
+                                                  {pathStats.range > 0 && (
+                                                    <div className="bg-blue-950/50 rounded p-1 text-center border border-blue-900/30">
+                                                      <div className="text-blue-500 text-[7px]">RNG</div>
+                                                      <div className="text-blue-300 font-bold">{Math.floor(pathStats.range)}</div>
+                                                    </div>
+                                                  )}
+                                                  {pathStats.attackSpeed > 0 && (
+                                                    <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
+                                                      <div className="text-green-500 text-[7px]">SPD</div>
+                                                      <div className="text-green-300 font-bold">{(pathStats.attackSpeed / 1000).toFixed(1)}s</div>
+                                                    </div>
+                                                  )}
                                                 </div>
-                                                <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
-                                                  <div className="text-amber-500 text-[7px]">Interval</div>
-                                                  <div className="text-amber-300 font-bold">{(pathStats.incomeInterval || 8000) / 1000}s</div>
+                                              )}
+
+                                              {/* Club shows income for each path */}
+                                              {selectedTower === "club" && (
+                                                <div className="grid grid-cols-2 gap-1 text-[9px]">
+                                                  <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
+                                                    <div className="text-amber-500 text-[7px]">Income</div>
+                                                    <div className="text-amber-300 font-bold">+{pathStats.income} PP</div>
+                                                  </div>
+                                                  <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
+                                                    <div className="text-amber-500 text-[7px]">Interval</div>
+                                                    <div className="text-amber-300 font-bold">{(pathStats.incomeInterval || 8000) / 1000}s</div>
+                                                  </div>
                                                 </div>
-                                              </div>
-                                            )}
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <p className="text-xs text-stone-400 mb-3 line-clamp-2">
+                                        {tower.levelDesc[level as 1 | 2 | 3]}
+                                      </p>
+
+                                      {/* Station shows troop stats */}
+                                      {isStation && troop && (
+                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
+                                            <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
+                                            <div className="text-red-300 font-bold">{troop.hp}</div>
+                                          </div>
+                                          <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
+                                            <Swords size={10} className="mx-auto text-orange-400 mb-0.5" />
+                                            <div className="text-orange-300 font-bold">{troop.damage}</div>
+                                          </div>
+                                          <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
+                                            <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
+                                            <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
                                           </div>
                                         </div>
-                                      );
-                                    })}
-                                  </div>
-                                ) : (
-                                  <>
-                                    <p className="text-xs text-stone-400 mb-3 line-clamp-2">
-                                      {tower.levelDesc[level as 1 | 2 | 3]}
-                                    </p>
+                                      )}
 
-                                    {/* Station shows troop stats */}
-                                    {isStation && troop && (
-                                      <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                      {/* Combat towers show damage/range/speed */}
+                                      {!isStation && selectedTower !== "club" && (
+                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                                          {stats.damage > 0 && (
+                                            <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
+                                              <div className="text-red-500 text-[8px]">DMG</div>
+                                              <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
+                                            </div>
+                                          )}
+                                          {stats.range > 0 && (
+                                            <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
+                                              <div className="text-blue-500 text-[8px]">RNG</div>
+                                              <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
+                                            </div>
+                                          )}
+                                          {stats.attackSpeed > 0 && (
+                                            <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
+                                              <div className="text-green-500 text-[8px]">SPD</div>
+                                              <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Club shows income */}
+                                      {selectedTower === "club" && (
+                                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                                          <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
+                                            <div className="text-amber-500 text-[8px]">Income</div>
+                                            <div className="text-amber-300 font-bold">+{stats.income} PP</div>
+                                          </div>
+                                          <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
+                                            <div className="text-amber-500 text-[8px]">Interval</div>
+                                            <div className="text-amber-300 font-bold">{(stats.incomeInterval || 8000) / 1000}s</div>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Library shows slow */}
+                                      {selectedTower === "library" && (
+                                        <div className="mt-1.5 text-[10px] text-cyan-400 flex items-center justify-center gap-1 bg-cyan-950/30 rounded p-1 border border-cyan-900/30">
+                                          <Snowflake size={10} /> {Math.round((stats.slowAmount || 0) * 100)}% slow
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Evolution Paths */}
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                          <h4 className="text-lg font-bold text-amber-200 flex items-center gap-2">
+                            <Sparkles size={18} className="text-amber-400" />
+                            Evolution Paths (Level 4)
+                          </h4>
+                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+                        </div>
+                        <div className="grid sm:grid-cols-2 gap-6">
+                          {(["A", "B"] as const).map((path) => {
+                            const upgrade = tower.upgrades[path];
+                            const stats = getDynamicStats(selectedTower, 4, path);
+                            const isStation = selectedTower === "station";
+                            const troop = isStation ? getTroopForLevel(4, path) : null;
+                            const pathLabel = path === "A" ? "Offensive" : "Utility";
+
+                            return (
+                              <div
+                                key={path}
+                                className={`rounded-xl border overflow-hidden ${path === "A"
+                                  ? "bg-gradient-to-br from-red-950/40 to-stone-950 border-red-700/50"
+                                  : "bg-gradient-to-br from-blue-950/40 to-stone-950 border-blue-700/50"
+                                  }`}
+                              >
+                                {/* Path header */}
+                                <div className={`px-4 py-3 ${path === "A" ? "bg-red-900/30" : "bg-blue-900/30"} flex items-center gap-4`}>
+                                  <div className={`w-14 h-14 rounded-lg ${path === "A" ? "bg-red-950/60 border-red-700/50" : "bg-blue-950/60 border-blue-700/50"} border flex items-center justify-center`}>
+                                    <TowerSprite
+                                      type={selectedTower as keyof typeof TOWER_DATA}
+                                      size={48}
+                                      level={4}
+                                    />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className={`text-[10px] uppercase tracking-wider ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
+                                      Path {path} • {pathLabel}
+                                    </div>
+                                    <h5 className={`text-xl font-bold ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
+                                      {upgrade.name}
+                                    </h5>
+                                  </div>
+                                </div>
+
+                                <div className="p-4 space-y-4">
+                                  {/* Description */}
+                                  <p className="text-stone-400 text-sm">{upgrade.desc}</p>
+
+                                  {/* Special Effect Box */}
+                                  <div className={`rounded-lg p-3 ${path === "A" ? "bg-red-950/40 border border-red-800/40" : "bg-blue-950/40 border border-blue-800/40"}`}>
+                                    <div className={`text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5 ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
+                                      <Sparkles size={12} />
+                                      Special Effect
+                                    </div>
+                                    <p className={`text-sm ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
+                                      {upgrade.effect}
+                                    </p>
+                                  </div>
+
+                                  {/* Troop info for Station */}
+                                  {isStation && troop && (
+                                    <div className="bg-stone-800/50 rounded-lg p-3 border border-stone-700/40">
+                                      <div className="text-xs text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        <Users size={12} />
+                                        Troop: {troop.name}
+                                      </div>
+                                      <p className="text-xs text-stone-400 mb-2">{troop.desc}</p>
+                                      <div className="grid grid-cols-4 gap-2 text-[10px]">
                                         <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                          <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
+                                          <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
                                           <div className="text-red-300 font-bold">{troop.hp}</div>
                                         </div>
                                         <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                          <Swords size={10} className="mx-auto text-orange-400 mb-0.5" />
+                                          <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
                                           <div className="text-orange-300 font-bold">{troop.damage}</div>
                                         </div>
                                         <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                          <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
+                                          <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
                                           <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
                                         </div>
-                                      </div>
-                                    )}
-
-                                    {/* Combat towers show damage/range/speed */}
-                                    {!isStation && selectedTower !== "club" && (
-                                      <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                                        {stats.damage > 0 && (
-                                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                            <div className="text-red-500 text-[8px]">DMG</div>
-                                            <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
-                                          </div>
-                                        )}
-                                        {stats.range > 0 && (
+                                        {troop.isRanged && (
                                           <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                            <div className="text-blue-500 text-[8px]">RNG</div>
-                                            <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
-                                          </div>
-                                        )}
-                                        {stats.attackSpeed > 0 && (
-                                          <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                            <div className="text-green-500 text-[8px]">SPD</div>
-                                            <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
+                                            <Crosshair size={12} className="mx-auto text-blue-400 mb-0.5" />
+                                            <div className="text-blue-300 font-bold">{troop.range}</div>
                                           </div>
                                         )}
                                       </div>
-                                    )}
-
-                                    {/* Club shows income */}
-                                    {selectedTower === "club" && (
-                                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                                        <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                          <div className="text-amber-500 text-[8px]">Income</div>
-                                          <div className="text-amber-300 font-bold">+{stats.income} PP</div>
-                                        </div>
-                                        <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                          <div className="text-amber-500 text-[8px]">Interval</div>
-                                          <div className="text-amber-300 font-bold">{(stats.incomeInterval || 8000) / 1000}s</div>
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {/* Library shows slow */}
-                                    {selectedTower === "library" && (
-                                      <div className="mt-1.5 text-[10px] text-cyan-400 flex items-center justify-center gap-1 bg-cyan-950/30 rounded p-1 border border-cyan-900/30">
-                                        <Snowflake size={10} /> {Math.round((stats.slowAmount || 0) * 100)}% slow
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Evolution Paths */}
-                    <div>
-                      <h4 className="text-lg font-bold text-amber-300 mb-4 flex items-center gap-2">
-                        <Sparkles size={18} />
-                        Evolution Paths (Level 4)
-                      </h4>
-                      <div className="grid sm:grid-cols-2 gap-6">
-                        {(["A", "B"] as const).map((path) => {
-                          const upgrade = tower.upgrades[path];
-                          const stats = getDynamicStats(selectedTower, 4, path);
-                          const isStation = selectedTower === "station";
-                          const troop = isStation ? getTroopForLevel(4, path) : null;
-                          const pathLabel = path === "A" ? "Offensive" : "Utility";
-
-                          return (
-                            <div
-                              key={path}
-                              className={`rounded-xl border overflow-hidden ${path === "A"
-                                ? "bg-gradient-to-br from-red-950/40 to-stone-950 border-red-700/50"
-                                : "bg-gradient-to-br from-blue-950/40 to-stone-950 border-blue-700/50"
-                                }`}
-                            >
-                              {/* Path header */}
-                              <div className={`px-4 py-3 ${path === "A" ? "bg-red-900/30" : "bg-blue-900/30"} flex items-center gap-4`}>
-                                <div className={`w-14 h-14 rounded-lg ${path === "A" ? "bg-red-950/60 border-red-700/50" : "bg-blue-950/60 border-blue-700/50"} border flex items-center justify-center`}>
-                                  <TowerSprite
-                                    type={selectedTower as keyof typeof TOWER_DATA}
-                                    size={48}
-                                    level={4}
-                                  />
-                                </div>
-                                <div className="flex-1">
-                                  <div className={`text-[10px] uppercase tracking-wider ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
-                                    Path {path} • {pathLabel}
-                                  </div>
-                                  <h5 className={`text-xl font-bold ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
-                                    {upgrade.name}
-                                  </h5>
-                                </div>
-                              </div>
-
-                              <div className="p-4 space-y-4">
-                                {/* Description */}
-                                <p className="text-stone-400 text-sm">{upgrade.desc}</p>
-
-                                {/* Special Effect Box */}
-                                <div className={`rounded-lg p-3 ${path === "A" ? "bg-red-950/40 border border-red-800/40" : "bg-blue-950/40 border border-blue-800/40"}`}>
-                                  <div className={`text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5 ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
-                                    <Sparkles size={12} />
-                                    Special Effect
-                                  </div>
-                                  <p className={`text-sm ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
-                                    {upgrade.effect}
-                                  </p>
-                                </div>
-
-                                {/* Troop info for Station */}
-                                {isStation && troop && (
-                                  <div className="bg-stone-800/50 rounded-lg p-3 border border-stone-700/40">
-                                    <div className="text-xs text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                      <Users size={12} />
-                                      Troop: {troop.name}
-                                    </div>
-                                    <p className="text-xs text-stone-400 mb-2">{troop.desc}</p>
-                                    <div className="grid grid-cols-4 gap-2 text-[10px]">
-                                      <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                        <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                                        <div className="text-red-300 font-bold">{troop.hp}</div>
-                                      </div>
-                                      <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                        <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
-                                        <div className="text-orange-300 font-bold">{troop.damage}</div>
-                                      </div>
-                                      <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                        <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
-                                        <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
-                                      </div>
-                                      {troop.isRanged && (
-                                        <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                          <Crosshair size={12} className="mx-auto text-blue-400 mb-0.5" />
-                                          <div className="text-blue-300 font-bold">{troop.range}</div>
+                                      {(troop.isMounted || troop.isRanged || troop.canTargetFlying) && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                          {troop.isMounted && (
+                                            <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 border border-amber-700/50">
+                                              🐴 Mounted
+                                            </span>
+                                          )}
+                                          {troop.isRanged && (
+                                            <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 border border-blue-700/50">
+                                              🏹 Ranged
+                                            </span>
+                                          )}
+                                          {troop.canTargetFlying && (
+                                            <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-700/50">
+                                              ✈️ Anti-Air
+                                            </span>
+                                          )}
                                         </div>
                                       )}
                                     </div>
-                                    {(troop.isMounted || troop.isRanged || troop.canTargetFlying) && (
-                                      <div className="flex flex-wrap gap-1 mt-2">
-                                        {troop.isMounted && (
-                                          <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 border border-amber-700/50">
-                                            🐴 Mounted
-                                          </span>
-                                        )}
-                                        {troop.isRanged && (
-                                          <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 border border-blue-700/50">
-                                            🏹 Ranged
-                                          </span>
-                                        )}
-                                        {troop.canTargetFlying && (
-                                          <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-700/50">
-                                            ✈️ Anti-Air
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
+                                  )}
 
-                                {/* Stats Grid */}
-                                <div className="grid grid-cols-4 gap-2">
-                                  {renderUniqueFeatures(stats, path, selectedTower)}
+                                  {/* Stats Grid */}
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {renderUniqueFeatures(stats, path, selectedTower)}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
+                );
+              })()}
+
+            {activeTab === "heroes" && !selectedHeroDetail && (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {heroTypes.map((type) => {
+                  const hero = HERO_DATA[type];
+                  const cooldown = HERO_ABILITY_COOLDOWNS[type];
+
+                  // Hero role icons and colors
+                  const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
+                    tiger: { role: "Brawler", icon: <Swords size={12} />, color: "orange" },
+                    tenor: { role: "Support", icon: <Volume2 size={12} />, color: "purple" },
+                    mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
+                    rocky: { role: "Artillery", icon: <Target size={12} />, color: "red" },
+                    scott: { role: "Buffer", icon: <TrendingUp size={12} />, color: "yellow" },
+                    captain: { role: "Summoner", icon: <Users size={12} />, color: "green" },
+                    engineer: { role: "Builder", icon: <CircleDot size={12} />, color: "amber" },
+                  };
+                  const roleInfo = heroRoles[type] || { role: "Hero", icon: <Shield size={12} />, color: "amber" };
+
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedHeroDetail(type)}
+                      className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
+                      style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1.5px solid ${GOLD.border25}`,
+                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                      }}
+                    >
+                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                      {/* Role header */}
+                      <div className={`px-4 py-2 border-b flex items-center justify-between ${roleInfo.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                        roleInfo.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
+                          roleInfo.color === "blue" ? "bg-blue-950/50 border-blue-800/30" :
+                            roleInfo.color === "red" ? "bg-red-950/50 border-red-800/30" :
+                              roleInfo.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                roleInfo.color === "green" ? "bg-green-950/50 border-green-800/30" :
+                                  "bg-amber-950/50 border-amber-800/30"
+                        }`}>
+                        <div className={`flex items-center gap-2 ${roleInfo.color === "orange" ? "text-orange-400" :
+                          roleInfo.color === "purple" ? "text-purple-400" :
+                            roleInfo.color === "blue" ? "text-blue-400" :
+                              roleInfo.color === "red" ? "text-red-400" :
+                                roleInfo.color === "yellow" ? "text-yellow-400" :
+                                  roleInfo.color === "green" ? "text-green-400" :
+                                    "text-amber-400"
+                          }`}>
+                          {roleInfo.icon}
+                          <span className="text-xs font-medium uppercase tracking-wider">
+                            {roleInfo.role}
+                          </span>
+                        </div>
+                        <span className="text-xl">{hero.icon}</span>
+                      </div>
+
+                      <div className="p-4">
+                        <div className="flex items-start gap-4 mb-3">
+                          <div
+                            className="w-16 h-16 rounded-lg border-2 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
+                            style={{
+                              borderColor: hero.color,
+                              backgroundColor: hero.color + "20",
+                              boxShadow: `0 0 20px ${hero.color}30`,
+                            }}
+                          >
+                            <HeroSprite type={type} size={52} color={hero.color} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
+                              {hero.name}
+                            </h3>
+                            <p className="text-xs text-stone-400 line-clamp-2 mt-1">
+                              {hero.description}
+                            </p>
+                          </div>
+                          <ChevronRight
+                            size={20}
+                            className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
+                          />
+                        </div>
+
+                        {/* Stats grid */}
+                        <div className="grid grid-cols-4 gap-1.5 mb-3">
+                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
+                            <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
+                            <div className="text-red-300 font-bold text-xs">{hero.hp}</div>
+                          </div>
+                          <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/40">
+                            <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
+                            <div className="text-orange-300 font-bold text-xs">{hero.damage}</div>
+                          </div>
+                          <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/40">
+                            <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
+                            <div className="text-blue-300 font-bold text-xs">{hero.range}</div>
+                          </div>
+                          <div className="bg-cyan-950/50 rounded p-1.5 text-center border border-cyan-900/40">
+                            <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
+                            <div className="text-cyan-300 font-bold text-xs">{hero.speed}</div>
+                          </div>
+                        </div>
+
+                        {/* Ability preview */}
+                        <div className="bg-purple-950/40 rounded-lg p-2 border border-purple-800/30">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles size={12} className="text-purple-400" />
+                              <span className="text-xs font-medium text-purple-300">{hero.ability}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] text-purple-400">
+                              <Timer size={10} />
+                              <span>{cooldown / 1000}s</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {activeTab === "heroes" &&
+              selectedHeroDetail &&
+              (() => {
+                const hero = HERO_DATA[selectedHeroDetail as HeroType];
+                const cooldown = HERO_ABILITY_COOLDOWNS[selectedHeroDetail as HeroType];
+
+                const heroInfo: Record<string, {
+                  role: string;
+                  roleIcon: React.ReactNode;
+                  roleColor: string;
+                  strengths: string[];
+                  weaknesses: string[];
+                  abilityDetails: string[];
+                  strategy: string;
+                  synergies: string[];
+                }> = {
+                  tiger: {
+                    role: "Frontline Brawler",
+                    roleIcon: <Swords size={16} />,
+                    roleColor: "orange",
+                    strengths: ["High melee damage", "Powerful crowd control", "Good survivability"],
+                    weaknesses: ["Short range", "Vulnerable during cooldowns", "Can get overwhelmed"],
+                    abilityDetails: [
+                      "Stuns ALL enemies within 180 range for 3 seconds",
+                      "Applies 50% slow effect after stun ends",
+                      "Creates orange fear shockwave visual effect",
+                    ],
+                    strategy: "Dive into enemy formations when clustered. Use Mighty Roar to stun groups, then retreat while they're slowed.",
+                    synergies: ["Pairs well with AoE towers", "Use with Freeze spell for extended CC"],
+                  },
+                  tenor: {
+                    role: "AoE Support",
+                    roleIcon: <Volume2 size={16} />,
+                    roleColor: "purple",
+                    strengths: ["Large AoE damage", "Heals allied troops", "Good stun duration"],
+                    weaknesses: ["Lower single-target damage", "Moderate HP", "Needs positioning"],
+                    abilityDetails: [
+                      "Deals 80 damage to all enemies within 250 range",
+                      "Stuns affected enemies for 2 seconds",
+                      "Heals nearby troops for 75 HP",
+                    ],
+                    strategy: "Position near chokepoints to maximize damage. Sonic Boom both damages enemies and heals your troops.",
+                    synergies: ["Great with Dinky Station troops", "Combos with slow towers"],
+                  },
+                  mathey: {
+                    role: "Tank / Protector",
+                    roleIcon: <Shield size={16} />,
+                    roleColor: "blue",
+                    strengths: ["Highest HP in game", "Invincibility ability", "Draws enemy fire"],
+                    weaknesses: ["Low damage output", "Slow movement", "Long ability cooldown"],
+                    abilityDetails: [
+                      "Hero becomes invincible for 5 seconds",
+                      "Taunts all nearby enemies within 150 range",
+                      "Enemies forced to target the hero",
+                    ],
+                    strategy: "Use Fortress Shield when overwhelmed to draw all enemy fire and protect your towers and troops.",
+                    synergies: ["Protects squishy troops", "Pairs with high DPS towers"],
+                  },
+                  rocky: {
+                    role: "Ranged Artillery",
+                    roleIcon: <Target size={16} />,
+                    roleColor: "green",
+                    strengths: ["Massive ranged damage", "Large AoE", "Safe positioning"],
+                    weaknesses: ["Vulnerable in melee", "Slow attack speed", "Ability has delay"],
+                    abilityDetails: [
+                      "Massive AoE damage in target area",
+                      "Damage falls off from center of impact",
+                      "Ground crater with dust cloud effect",
+                    ],
+                    strategy: "Position Rocky behind your front line. Use Boulder Bash on clustered enemies for devastating damage.",
+                    synergies: ["Use with Dinky Station troops", "Combos with Firestone Library"],
+                  },
+                  scott: {
+                    role: "Support Buffer",
+                    roleIcon: <TrendingUp size={16} />,
+                    roleColor: "cyan",
+                    strengths: ["Global tower buff", "Huge DPS increase", "Low risk positioning"],
+                    weaknesses: ["No direct damage ability", "Relies on towers", "Low personal DPS"],
+                    abilityDetails: [
+                      "Boosts ALL tower damage by 50% for 8 seconds",
+                      "Golden light rays emanate from hero",
+                      "Affects every tower on the map",
+                    ],
+                    strategy: "F. Scott is a pure support. Save Inspiration for critical waves or boss enemies to maximize tower damage.",
+                    synergies: ["Best with many towers built", "Combos with high-damage towers"],
+                  },
+                  captain: {
+                    role: "Summoner",
+                    roleIcon: <Users size={16} />,
+                    roleColor: "red",
+                    strengths: ["Extra troops on demand", "Flexible positioning", "Good for blocking"],
+                    weaknesses: ["Knights are temporary", "Moderate personal stats", "Cooldown dependent"],
+                    abilityDetails: [
+                      "Summons 3 knight troops near the hero",
+                      "Knights have 500 HP and 30 damage each",
+                      "Summoning circle with energy pillars effect",
+                    ],
+                    strategy: "Use Rally Knights to plug leaks in your defense or create additional blocking points.",
+                    synergies: ["Works with troop-healing effects", "Pairs with high DPS towers"],
+                  },
+                  engineer: {
+                    role: "Tactical Builder",
+                    roleIcon: <CircleDot size={16} />,
+                    roleColor: "amber",
+                    strengths: ["Free turret placement", "Extends tower coverage", "Good DPS"],
+                    weaknesses: ["Turret is fragile", "Needs good placement", "Moderate stats"],
+                    abilityDetails: [
+                      "Deploys a turret nearby",
+                      "Turret does not self-destruct",
+                      "Can spawn multiple turrets",
+                    ],
+                    strategy: "Place turrets strategically to cover weak points or extend your defensive line.",
+                    synergies: ["Covers areas without towers", "Good for emergency defense"],
+                  },
+                };
+                const info = heroInfo[selectedHeroDetail] || heroInfo.tiger;
+
+                return (
+                  <div>
+                    <button
+                      onClick={() => setSelectedHeroDetail(null)}
+                      className="flex items-center gap-2 text-amber-300 hover:text-amber-100 mb-4 transition-all font-medium px-3 py-1.5 rounded-lg"
+                      style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+                    >
+                      <ChevronRight size={16} className="rotate-180" />
+                      <span>Back to all heroes</span>
+                    </button>
+
+                    <div className="space-y-6">
+                      {/* Hero Header */}
+                      <div className="rounded-xl overflow-hidden relative" style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1.5px solid ${GOLD.border30}`,
+                        boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        <div className={`px-6 py-3 border-b flex items-center gap-3 ${info.roleColor === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                          info.roleColor === "purple" ? "bg-purple-950/50 border-purple-800/30" :
+                            info.roleColor === "blue" ? "bg-blue-950/50 border-blue-800/30" :
+                              info.roleColor === "red" ? "bg-red-950/50 border-red-800/30" :
+                                info.roleColor === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                  info.roleColor === "green" ? "bg-green-950/50 border-green-800/30" :
+                                    "bg-amber-950/50 border-amber-800/30"
+                          }`}>
+                          <span className={`${info.roleColor === "orange" ? "text-orange-400" :
+                            info.roleColor === "purple" ? "text-purple-400" :
+                              info.roleColor === "blue" ? "text-blue-400" :
+                                info.roleColor === "red" ? "text-red-400" :
+                                  info.roleColor === "yellow" ? "text-yellow-400" :
+                                    info.roleColor === "green" ? "text-green-400" :
+                                      "text-amber-400"
+                            }`}>
+                            {info.roleIcon}
+                          </span>
+                          <span className={`text-sm font-medium uppercase tracking-wider ${info.roleColor === "orange" ? "text-orange-400" :
+                            info.roleColor === "purple" ? "text-purple-400" :
+                              info.roleColor === "blue" ? "text-blue-400" :
+                                info.roleColor === "red" ? "text-red-400" :
+                                  info.roleColor === "yellow" ? "text-yellow-400" :
+                                    info.roleColor === "green" ? "text-green-400" :
+                                      "text-amber-400"
+                            }`}>
+                            {info.role}
+                          </span>
+                        </div>
+
+                        <div className="p-6 flex items-start gap-6">
+                          <div
+                            className="w-28 h-28 rounded-xl border-2 flex items-center justify-center flex-shrink-0"
+                            style={{
+                              borderColor: hero.color,
+                              backgroundColor: hero.color + "25",
+                              boxShadow: `0 0 30px ${hero.color}40`,
+                            }}
+                          >
+                            <HeroSprite
+                              type={selectedHeroDetail as HeroType}
+                              size={96}
+                              color={hero.color}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-3xl font-bold text-amber-200">
+                                {hero.name}
+                              </h3>
+                              <span className="text-2xl">{hero.icon}</span>
+                            </div>
+                            <p className="text-stone-400 mb-4">
+                              {hero.description}
+                            </p>
+                            <div className="grid grid-cols-5 gap-3">
+                              <div className="bg-red-950/50 rounded-lg p-2.5 text-center border border-red-800/40">
+                                <Heart size={16} className="mx-auto text-red-400 mb-1" />
+                                <div className="text-[10px] text-red-500">Health</div>
+                                <div className="text-red-300 font-bold text-lg">{hero.hp}</div>
+                              </div>
+                              <div className="bg-orange-950/50 rounded-lg p-2.5 text-center border border-orange-800/40">
+                                <Swords size={16} className="mx-auto text-orange-400 mb-1" />
+                                <div className="text-[10px] text-orange-500">Damage</div>
+                                <div className="text-orange-300 font-bold text-lg">{hero.damage}</div>
+                              </div>
+                              <div className="bg-blue-950/50 rounded-lg p-2.5 text-center border border-blue-800/40">
+                                <Target size={16} className="mx-auto text-blue-400 mb-1" />
+                                <div className="text-[10px] text-blue-500">Range</div>
+                                <div className="text-blue-300 font-bold text-lg">{hero.range}</div>
+                              </div>
+                              <div className="bg-green-950/50 rounded-lg p-2.5 text-center border border-green-800/40">
+                                <Gauge size={16} className="mx-auto text-green-400 mb-1" />
+                                <div className="text-[10px] text-green-500">Atk Speed</div>
+                                <div className="text-green-300 font-bold text-lg">{(hero.attackSpeed / 1000).toFixed(1)}s</div>
+                              </div>
+                              <div className="bg-cyan-950/50 rounded-lg p-2.5 text-center border border-cyan-800/40">
+                                <Wind size={16} className="mx-auto text-cyan-400 mb-1" />
+                                <div className="text-[10px] text-cyan-500">Move</div>
+                                <div className="text-cyan-300 font-bold text-lg">{hero.speed}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Ability Section */}
+                      <div className="bg-gradient-to-br from-purple-950/40 to-stone-950 rounded-xl border border-purple-700/50 overflow-hidden">
+                        <div className="px-5 py-3 bg-purple-900/30 border-b border-purple-800/40 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={18} />
+                            <span className="text-sm text-purple-400 font-medium uppercase tracking-wider">Special Ability</span>
+                          </div>
+                          <div className="flex items-center gap-2 bg-purple-950/50 px-3 py-1.5 rounded-lg border border-purple-700/50">
+                            <Timer size={14} className="text-purple-400" />
+                            <span className="text-purple-300 font-bold text-sm">{cooldown / 1000}s Cooldown</span>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <h4 className="text-2xl font-bold text-purple-200 mb-2 flex items-center gap-2">
+                            <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={24} />
+                            {hero.ability}
+                          </h4>
+                          <p className="text-purple-300 mb-4">{hero.abilityDesc}</p>
+                          <div className="bg-purple-950/40 rounded-lg p-4 border border-purple-800/30">
+                            <div className="text-xs text-purple-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                              <Info size={10} /> Ability Details
+                            </div>
+                            <ul className="text-sm text-purple-300 space-y-1.5">
+                              {info.abilityDetails.map((detail, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <span className="text-purple-400 mt-0.5">•</span>
+                                  <span>{detail}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Strengths & Weaknesses */}
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="bg-green-950/30 rounded-xl border border-green-800/40 p-4">
+                          <h4 className="text-green-300 font-bold mb-3 flex items-center gap-2">
+                            <TrendingUp size={16} /> Strengths
+                          </h4>
+                          <ul className="text-sm text-green-200/80 space-y-1.5">
+                            {info.strengths.map((s, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span className="text-green-400">✓</span> {s}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="bg-red-950/30 rounded-xl border border-red-800/40 p-4">
+                          <h4 className="text-red-300 font-bold mb-3 flex items-center gap-2">
+                            <CircleOff size={16} /> Weaknesses
+                          </h4>
+                          <ul className="text-sm text-red-200/80 space-y-1.5">
+                            {info.weaknesses.map((w, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span className="text-red-400">✗</span> {w}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {/* Strategy & Synergies */}
+                      <div className="rounded-xl p-5 relative" style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1.5px solid ${GOLD.border25}`,
+                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        <h4 className="text-amber-200 font-bold mb-3 flex items-center gap-2 relative z-10">
+                          <Info size={16} className="text-amber-400" /> Combat Strategy
+                        </h4>
+                        <p className="text-stone-300 mb-4">{info.strategy}</p>
+                        <div className="bg-amber-950/30 rounded-lg p-3 border border-amber-800/30">
+                          <div className="text-xs text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <Sparkles size={10} /> Synergies
+                          </div>
+                          <ul className="text-sm text-amber-200/80 space-y-1">
+                            {info.synergies.map((s, i) => (
+                              <li key={i} className="flex items-center gap-2">
+                                <span className="text-amber-400">★</span> {s}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+            {activeTab === "enemies" && (() => {
+              const groupedEnemies = groupEnemiesByCategory(enemyTypes);
+
+              return (
+                <div className="space-y-6">
+                  {CATEGORY_ORDER.map(category => {
+                    const categoryEnemies = groupedEnemies[category];
+                    if (categoryEnemies.length === 0) return null;
+
+                    const catInfo = CATEGORY_INFO[category];
+
+                    return (
+                      <div key={category}>
+                        {/* Category Header */}
+                        <div className="flex items-center gap-3 mb-3 pb-3" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
+                          <div className={`p-2 rounded-lg ${catInfo.bgColor}`} style={{ border: `1px solid ${GOLD.border25}` }}>
+                            {catInfo.icon}
+                          </div>
+                          <div>
+                            <h3 className={`font-bold text-lg ${catInfo.color}`}>{catInfo.name}</h3>
+                            <p className="text-xs text-amber-400/50">{catInfo.desc}</p>
+                          </div>
+                          <div className="ml-auto text-xs font-bold px-2.5 py-1 rounded-md" style={{
+                            background: PANEL.bgWarmMid,
+                            color: "rgb(252,211,77)",
+                            border: `1px solid ${GOLD.border25}`,
+                          }}>
+                            {categoryEnemies.length} {categoryEnemies.length === 1 ? "enemy" : "enemies"}
+                          </div>
+                        </div>
+
+                        {/* Category Enemies Grid */}
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {categoryEnemies.map((type) => {
+                            const enemy = ENEMY_DATA[type];
+                            const traits = enemy.traits || [];
+                            const abilities = enemy.abilities || [];
+                            const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
+
+                            // Determine threat level based on HP and boss status
+                            const getThreatLevel = (hp: number, isBoss?: boolean) => {
+                              if (isBoss || hp >= 1000) return { level: "Boss", color: "purple", icon: <Crown size={12} /> };
+                              if (hp >= 500) return { level: "Elite", color: "orange", icon: <Star size={12} /> };
+                              if (hp >= 200) return { level: "Standard", color: "yellow", icon: <Skull size={12} /> };
+                              return { level: "Minion", color: "green", icon: <Skull size={12} /> };
+                            };
+                            const threat = getThreatLevel(enemy.hp, enemy.isBoss);
+
+                            // Enemy type classification
+                            const getEnemyTypeClassification = () => {
+                              if (enemy.flying) return { type: "Flying", icon: <Wind size={12} />, color: "cyan" };
+                              if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={12} />, color: "purple" };
+                              if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={12} />, color: "stone" };
+                              if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={12} />, color: "green" };
+                              return { type: "Ground", icon: <Flag size={12} />, color: "red" };
+                            };
+                            const enemyTypeClass = getEnemyTypeClassification();
+
+                            return (
+                              <div
+                                key={type}
+                                className="rounded-xl overflow-hidden hover:border-red-700/50 transition-colors relative"
+                                style={{
+                                  background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                                  border: `1.5px solid ${GOLD.border25}`,
+                                  boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                                }}
+                              >
+                                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                                {/* Header with threat level */}
+                                <div className={`px-4 py-2 border-b flex items-center justify-between ${threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
+                                  threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                                    threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                      "bg-green-950/50 border-green-800/30"
+                                  }`}>
+                                  <div className={`flex items-center gap-2 ${threat.color === "purple" ? "text-purple-400" :
+                                    threat.color === "orange" ? "text-orange-400" :
+                                      threat.color === "yellow" ? "text-yellow-400" :
+                                        "text-green-400"
+                                    }`}>
+                                    {threat.icon}
+                                    <span className="text-xs font-medium uppercase tracking-wider">
+                                      {threat.level}
+                                    </span>
+                                  </div>
+                                  <div className={`flex items-center gap-1.5 text-xs ${enemyTypeClass.color === "cyan" ? "text-cyan-400" :
+                                    enemyTypeClass.color === "purple" ? "text-purple-400" :
+                                      enemyTypeClass.color === "stone" ? "text-stone-400" :
+                                        enemyTypeClass.color === "green" ? "text-green-400" :
+                                          "text-red-400"
+                                    }`}>
+                                    {enemyTypeClass.icon}
+                                    <span>{enemyTypeClass.type}</span>
+                                  </div>
+                                </div>
+
+                                <div className="p-4">
+                                  <div className="flex items-start gap-4 mb-3">
+                                    <div className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{
+                                      background: PANEL.bgDeep,
+                                      border: `1.5px solid ${RED_CARD.border25}`,
+                                    }}>
+                                      <EnemySprite type={type} size={52} animated />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h3 className="text-lg font-bold text-red-200 truncate">
+                                          {enemy.name}
+                                        </h3>
+                                        {/* Lives Cost Badge - Top Right */}
+                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
+                                          <Heart size={12} className="text-rose-400" />
+                                          <span className="text-rose-300 font-bold text-xs">{enemy.liveCost || 1}</span>
+                                        </div>
+                                      </div>
+                                      <p className="text-xs text-stone-400 line-clamp-2 mt-1">
+                                        {enemy.desc}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Base Stats grid */}
+                                  <div className="grid grid-cols-4 gap-1.5 mb-2">
+                                    <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
+                                      <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="text-[9px] text-red-500">HP</div>
+                                      <div className="text-red-300 font-bold text-xs">{enemy.hp}</div>
+                                    </div>
+                                    <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/40">
+                                      <Coins size={12} className="mx-auto text-amber-400 mb-0.5" />
+                                      <div className="text-[9px] text-amber-500">Bounty</div>
+                                      <div className="text-amber-300 font-bold text-xs">{enemy.bounty}</div>
+                                    </div>
+                                    <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/40">
+                                      <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
+                                      <div className="text-[9px] text-green-500">Speed</div>
+                                      <div className="text-green-300 font-bold text-xs">{enemy.speed}</div>
+                                    </div>
+                                    <div className="bg-stone-800/50 rounded p-1.5 text-center border border-stone-700/40">
+                                      <Shield size={12} className="mx-auto text-stone-400 mb-0.5" />
+                                      <div className="text-[9px] text-stone-500">Armor</div>
+                                      <div className="text-stone-300 font-bold text-xs">{Math.round(enemy.armor * 100)}%</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Ranged Stats (if applicable) */}
+                                  {enemy.isRanged && (
+                                    <div className="grid grid-cols-3 gap-1.5 mb-2">
+                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
+                                        <div className="text-[8px] text-purple-500">Range</div>
+                                        <div className="text-purple-300 font-bold text-[10px]">{enemy.range}</div>
+                                      </div>
+                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
+                                        <div className="text-[8px] text-purple-500">Atk Speed</div>
+                                        <div className="text-purple-300 font-bold text-[10px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
+                                      </div>
+                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
+                                        <div className="text-[8px] text-purple-500">Proj Dmg</div>
+                                        <div className="text-purple-300 font-bold text-[10px]">{enemy.projectileDamage}</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* AoE Stats (if applicable) */}
+                                  {hasAoE && (
+                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                                      <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
+                                        <div className="text-[8px] text-orange-500">AoE Radius</div>
+                                        <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeRadius}</div>
+                                      </div>
+                                      <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
+                                        <div className="text-[8px] text-orange-500">AoE Damage</div>
+                                        <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeDamage}</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Flying Troop Attack Stats (if applicable) */}
+                                  {enemy.targetsTroops && enemy.troopDamage && (
+                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                                      <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
+                                        <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
+                                        <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
+                                        <div className="text-cyan-300 font-bold text-[10px]">{enemy.troopDamage}</div>
+                                      </div>
+                                      <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
+                                        <Timer size={12} className="mx-auto text-cyan-400 mb-0.5" />
+                                        <div className="text-[8px] text-cyan-500">Atk Speed</div>
+                                        <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Melee Combat Stats (for ground enemies that engage troops) */}
+                                  {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
+                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                                      <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
+                                        <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
+                                        <div className="text-[8px] text-red-500">Melee Dmg</div>
+                                        <div className="text-red-300 font-bold text-[10px]">15</div>
+                                      </div>
+                                      <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
+                                        <Timer size={12} className="mx-auto text-red-400 mb-0.5" />
+                                        <div className="text-[8px] text-red-500">Atk Speed</div>
+                                        <div className="text-red-300 font-bold text-[10px]">1.0s</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Breakthrough indicator */}
+                                  {enemy.breakthrough && (
+                                    <div className="mb-2">
+                                      <div className="bg-sky-950/40 rounded p-1 text-center border border-sky-900/30">
+                                        <div className="text-sky-300 font-bold text-[10px] flex items-center justify-center gap-1">
+                                          <Zap size={10} className="text-sky-400" />
+                                          Bypasses Troops
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Dynamic Traits */}
+                                  {traits.length > 0 && (
+                                    <div className="mb-2">
+                                      <div className="text-[9px] text-stone-500 uppercase font-bold mb-1">Traits</div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {traits.map((trait, i) => {
+                                          const traitInfo = getTraitInfo(trait);
+                                          return (
+                                            <span
+                                              key={i}
+                                              className={`text-[9px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-1 ${traitInfo.color}`}
+                                              title={traitInfo.desc}
+                                            >
+                                              {traitInfo.icon}
+                                              <span>{traitInfo.label}</span>
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Abilities */}
+                                  {abilities.length > 0 && (
+                                    <div>
+                                      <div className="text-[9px] text-stone-500 uppercase font-bold mb-1 flex items-center gap-1">
+                                        <Zap size={10} /> Abilities
+                                      </div>
+                                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                                        {abilities.map((ability, i) => {
+                                          const abilityInfo = getAbilityInfo(ability.type);
+                                          return (
+                                            <div
+                                              key={i}
+                                              className={`p-1.5 rounded border ${abilityInfo.bgColor}`}
+                                            >
+                                              <div className="flex items-center gap-1.5 mb-0.5">
+                                                <span className={abilityInfo.color}>{abilityInfo.icon}</span>
+                                                <span className="text-[10px] font-bold text-white">{ability.name}</span>
+                                                <span className="text-[8px] px-1 py-0.5 bg-black/30 rounded text-white/70 ml-auto">
+                                                  {Math.round(ability.chance * 100)}%
+                                                </span>
+                                              </div>
+                                              <p className="text-[9px] text-white/60 mb-1">{ability.desc}</p>
+                                              <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[8px]">
+                                                <span className="text-white/50">
+                                                  Duration: <span className="text-white/80">{(ability.duration / 1000).toFixed(1)}s</span>
+                                                </span>
+                                                {ability.intensity !== undefined && (
+                                                  <span className="text-white/50">
+                                                    {ability.type === "slow" || ability.type.includes("tower") ? "Effect: " : "DPS: "}
+                                                    <span className="text-white/80">
+                                                      {ability.type === "slow" || ability.type.includes("tower")
+                                                        ? `${Math.round(ability.intensity * 100)}%`
+                                                        : ability.intensity}
+                                                    </span>
+                                                  </span>
+                                                )}
+                                                {ability.radius && (
+                                                  <span className="text-white/50">
+                                                    Radius: <span className="text-white/80">{ability.radius}</span>
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* No abilities/traits message */}
+                                  {abilities.length === 0 && traits.length === 0 && (
+                                    <div className="text-center text-[9px] text-stone-500 py-1">
+                                      Standard enemy - no special abilities
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}
 
-          {activeTab === "heroes" && !selectedHeroDetail && (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {heroTypes.map((type) => {
-                const hero = HERO_DATA[type];
-                const cooldown = HERO_ABILITY_COOLDOWNS[type];
+            {activeTab === "spells" && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {spellTypes.map((type) => {
+                  const spell = SPELL_DATA[type];
 
-                // Hero role icons and colors
-                const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
-                  tiger: { role: "Brawler", icon: <Swords size={12} />, color: "orange" },
-                  tenor: { role: "Support", icon: <Volume2 size={12} />, color: "purple" },
-                  mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
-                  rocky: { role: "Artillery", icon: <Target size={12} />, color: "red" },
-                  scott: { role: "Buffer", icon: <TrendingUp size={12} />, color: "yellow" },
-                  captain: { role: "Summoner", icon: <Users size={12} />, color: "green" },
-                  engineer: { role: "Builder", icon: <CircleDot size={12} />, color: "amber" },
-                };
-                const roleInfo = heroRoles[type] || { role: "Hero", icon: <Shield size={12} />, color: "amber" };
+                  // Spell type info
+                  const spellInfo: Record<string, {
+                    category: string;
+                    color: string;
+                    icon: React.ReactNode;
+                    stats: { label: string; value: string; icon: React.ReactNode }[];
+                    details: string[];
+                    tip: string;
+                  }> = {
+                    fireball: {
+                      category: "Damage",
+                      color: "orange",
+                      icon: <Flame size={14} />,
+                      stats: [
+                        { label: "Damage", value: "200", icon: <Swords size={12} /> },
+                        { label: "Radius", value: "150", icon: <Radio size={12} /> },
+                        { label: "Delay", value: "1s", icon: <Timer size={12} /> },
+                      ],
+                      details: [
+                        "Meteor falls from sky with visual warning",
+                        "Maximum damage at center, 50% at edge",
+                        "Creates fire explosion effect",
+                      ],
+                      tip: "Best against clustered enemies at chokepoints",
+                    },
+                    lightning: {
+                      category: "Chain",
+                      color: "yellow",
+                      icon: <Zap size={14} />,
+                      stats: [
+                        { label: "Total DMG", value: "600", icon: <Swords size={12} /> },
+                        { label: "Targets", value: "5", icon: <Users size={12} /> },
+                        { label: "Stun", value: "0.5s", icon: <CircleOff size={12} /> },
+                      ],
+                      details: [
+                        "Chains between up to 5 enemies",
+                        "Damage split among all targets",
+                        "Each strike stuns briefly",
+                      ],
+                      tip: "Great for picking off multiple weakened enemies",
+                    },
+                    freeze: {
+                      category: "Control",
+                      color: "cyan",
+                      icon: <Snowflake size={14} />,
+                      stats: [
+                        { label: "Duration", value: "3s", icon: <Timer size={12} /> },
+                        { label: "Range", value: "Global", icon: <Radio size={12} /> },
+                        { label: "Targets", value: "All", icon: <Users size={12} /> },
+                      ],
+                      details: [
+                        "Freezes ALL enemies on the map",
+                        "Enemies completely immobilized",
+                        "Expanding ice wave visual effect",
+                      ],
+                      tip: "Emergency button when overwhelmed",
+                    },
+                    payday: {
+                      category: "Economy",
+                      color: "amber",
+                      icon: <Banknote size={14} />,
+                      stats: [
+                        { label: "Base", value: "80 PP", icon: <Coins size={12} /> },
+                        { label: "Per Enemy", value: "+5 PP", icon: <TrendingUp size={12} /> },
+                        { label: "Max Bonus", value: "+50 PP", icon: <Star size={12} /> },
+                      ],
+                      details: [
+                        "Base payout plus bonus per enemy",
+                        "Maximum possible: 130 PP",
+                        "Gold aura effect on all enemies",
+                      ],
+                      tip: "Use when many enemies are on screen for max value",
+                    },
+                    reinforcements: {
+                      category: "Summon",
+                      color: "green",
+                      icon: <Users size={14} />,
+                      stats: [
+                        { label: "Knights", value: "3", icon: <Users size={12} /> },
+                        { label: "Knight HP", value: "500", icon: <Heart size={12} /> },
+                        { label: "Knight DMG", value: "30", icon: <Swords size={12} /> },
+                      ],
+                      details: [
+                        "Summons 3 armored knight troops",
+                        "Click to place anywhere on map",
+                        "Knights fight independently",
+                      ],
+                      tip: "Great for blocking leaks or supporting weak points",
+                    },
+                  };
+                  const info = spellInfo[type] || { category: "Spell", color: "purple", icon: <Sparkles size={14} />, stats: [], details: [], tip: "" };
 
-                return (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedHeroDetail(type)}
-                    className="bg-gradient-to-br from-stone-900/90 to-stone-950/90 rounded-xl border border-stone-700/50 hover:border-amber-500/60 hover:scale-[1.02] text-left group transition-all overflow-hidden"
-                  >
-                    {/* Role header */}
-                    <div className={`px-4 py-2 border-b flex items-center justify-between ${roleInfo.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                      roleInfo.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                        roleInfo.color === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                          roleInfo.color === "red" ? "bg-red-950/50 border-red-800/30" :
-                            roleInfo.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                              roleInfo.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                "bg-amber-950/50 border-amber-800/30"
-                      }`}>
-                      <div className={`flex items-center gap-2 ${roleInfo.color === "orange" ? "text-orange-400" :
-                        roleInfo.color === "purple" ? "text-purple-400" :
-                          roleInfo.color === "blue" ? "text-blue-400" :
-                            roleInfo.color === "red" ? "text-red-400" :
-                              roleInfo.color === "yellow" ? "text-yellow-400" :
-                                roleInfo.color === "green" ? "text-green-400" :
-                                  "text-amber-400"
+                  return (
+                    <div
+                      key={type}
+                      className="rounded-xl overflow-hidden hover:border-purple-700/50 transition-colors relative"
+                      style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1.5px solid ${GOLD.border25}`,
+                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                      }}
+                    >
+                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                      {/* Header */}
+                      <div className={`px-4 py-2.5 border-b flex items-center justify-between ${info.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                        info.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                          info.color === "cyan" ? "bg-cyan-950/50 border-cyan-800/30" :
+                            info.color === "amber" ? "bg-amber-950/50 border-amber-800/30" :
+                              info.color === "green" ? "bg-green-950/50 border-green-800/30" :
+                                "bg-purple-950/50 border-purple-800/30"
                         }`}>
-                        {roleInfo.icon}
-                        <span className="text-xs font-medium uppercase tracking-wider">
-                          {roleInfo.role}
-                        </span>
-                      </div>
-                      <span className="text-xl">{hero.icon}</span>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="flex items-start gap-4 mb-3">
-                        <div
-                          className="w-16 h-16 rounded-lg border-2 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
-                          style={{
-                            borderColor: hero.color,
-                            backgroundColor: hero.color + "20",
-                            boxShadow: `0 0 20px ${hero.color}30`,
-                          }}
-                        >
-                          <HeroSprite type={type} size={52} color={hero.color} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                            {hero.name}
-                          </h3>
-                          <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                            {hero.description}
-                          </p>
-                        </div>
-                        <ChevronRight
-                          size={20}
-                          className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                        />
-                      </div>
-
-                      {/* Stats grid */}
-                      <div className="grid grid-cols-4 gap-1.5 mb-3">
-                        <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                          <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                          <div className="text-red-300 font-bold text-xs">{hero.hp}</div>
-                        </div>
-                        <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/40">
-                          <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
-                          <div className="text-orange-300 font-bold text-xs">{hero.damage}</div>
-                        </div>
-                        <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/40">
-                          <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
-                          <div className="text-blue-300 font-bold text-xs">{hero.range}</div>
-                        </div>
-                        <div className="bg-cyan-950/50 rounded p-1.5 text-center border border-cyan-900/40">
-                          <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                          <div className="text-cyan-300 font-bold text-xs">{hero.speed}</div>
-                        </div>
-                      </div>
-
-                      {/* Ability preview */}
-                      <div className="bg-purple-950/40 rounded-lg p-2 border border-purple-800/30">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <Sparkles size={12} className="text-purple-400" />
-                            <span className="text-xs font-medium text-purple-300">{hero.ability}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-[10px] text-purple-400">
-                            <Timer size={10} />
-                            <span>{cooldown / 1000}s</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {activeTab === "heroes" &&
-            selectedHeroDetail &&
-            (() => {
-              const hero = HERO_DATA[selectedHeroDetail as HeroType];
-              const cooldown = HERO_ABILITY_COOLDOWNS[selectedHeroDetail as HeroType];
-
-              const heroInfo: Record<string, {
-                role: string;
-                roleIcon: React.ReactNode;
-                roleColor: string;
-                strengths: string[];
-                weaknesses: string[];
-                abilityDetails: string[];
-                strategy: string;
-                synergies: string[];
-              }> = {
-                tiger: {
-                  role: "Frontline Brawler",
-                  roleIcon: <Swords size={16} />,
-                  roleColor: "orange",
-                  strengths: ["High melee damage", "Powerful crowd control", "Good survivability"],
-                  weaknesses: ["Short range", "Vulnerable during cooldowns", "Can get overwhelmed"],
-                  abilityDetails: [
-                    "Stuns ALL enemies within 180 range for 3 seconds",
-                    "Applies 50% slow effect after stun ends",
-                    "Creates orange fear shockwave visual effect",
-                  ],
-                  strategy: "Dive into enemy formations when clustered. Use Mighty Roar to stun groups, then retreat while they're slowed.",
-                  synergies: ["Pairs well with AoE towers", "Use with Freeze spell for extended CC"],
-                },
-                tenor: {
-                  role: "AoE Support",
-                  roleIcon: <Volume2 size={16} />,
-                  roleColor: "purple",
-                  strengths: ["Large AoE damage", "Heals allied troops", "Good stun duration"],
-                  weaknesses: ["Lower single-target damage", "Moderate HP", "Needs positioning"],
-                  abilityDetails: [
-                    "Deals 80 damage to all enemies within 250 range",
-                    "Stuns affected enemies for 2 seconds",
-                    "Heals nearby troops for 75 HP",
-                  ],
-                  strategy: "Position near chokepoints to maximize damage. Sonic Boom both damages enemies and heals your troops.",
-                  synergies: ["Great with Dinky Station troops", "Combos with slow towers"],
-                },
-                mathey: {
-                  role: "Tank / Protector",
-                  roleIcon: <Shield size={16} />,
-                  roleColor: "blue",
-                  strengths: ["Highest HP in game", "Invincibility ability", "Draws enemy fire"],
-                  weaknesses: ["Low damage output", "Slow movement", "Long ability cooldown"],
-                  abilityDetails: [
-                    "Hero becomes invincible for 5 seconds",
-                    "Taunts all nearby enemies within 150 range",
-                    "Enemies forced to target the hero",
-                  ],
-                  strategy: "Use Fortress Shield when overwhelmed to draw all enemy fire and protect your towers and troops.",
-                  synergies: ["Protects squishy troops", "Pairs with high DPS towers"],
-                },
-                rocky: {
-                  role: "Ranged Artillery",
-                  roleIcon: <Target size={16} />,
-                  roleColor: "green",
-                  strengths: ["Massive ranged damage", "Large AoE", "Safe positioning"],
-                  weaknesses: ["Vulnerable in melee", "Slow attack speed", "Ability has delay"],
-                  abilityDetails: [
-                    "Massive AoE damage in target area",
-                    "Damage falls off from center of impact",
-                    "Ground crater with dust cloud effect",
-                  ],
-                  strategy: "Position Rocky behind your front line. Use Boulder Bash on clustered enemies for devastating damage.",
-                  synergies: ["Use with Dinky Station troops", "Combos with Firestone Library"],
-                },
-                scott: {
-                  role: "Support Buffer",
-                  roleIcon: <TrendingUp size={16} />,
-                  roleColor: "cyan",
-                  strengths: ["Global tower buff", "Huge DPS increase", "Low risk positioning"],
-                  weaknesses: ["No direct damage ability", "Relies on towers", "Low personal DPS"],
-                  abilityDetails: [
-                    "Boosts ALL tower damage by 50% for 8 seconds",
-                    "Golden light rays emanate from hero",
-                    "Affects every tower on the map",
-                  ],
-                  strategy: "F. Scott is a pure support. Save Inspiration for critical waves or boss enemies to maximize tower damage.",
-                  synergies: ["Best with many towers built", "Combos with high-damage towers"],
-                },
-                captain: {
-                  role: "Summoner",
-                  roleIcon: <Users size={16} />,
-                  roleColor: "red",
-                  strengths: ["Extra troops on demand", "Flexible positioning", "Good for blocking"],
-                  weaknesses: ["Knights are temporary", "Moderate personal stats", "Cooldown dependent"],
-                  abilityDetails: [
-                    "Summons 3 knight troops near the hero",
-                    "Knights have 500 HP and 30 damage each",
-                    "Summoning circle with energy pillars effect",
-                  ],
-                  strategy: "Use Rally Knights to plug leaks in your defense or create additional blocking points.",
-                  synergies: ["Works with troop-healing effects", "Pairs with high DPS towers"],
-                },
-                engineer: {
-                  role: "Tactical Builder",
-                  roleIcon: <CircleDot size={16} />,
-                  roleColor: "amber",
-                  strengths: ["Free turret placement", "Extends tower coverage", "Good DPS"],
-                  weaknesses: ["Turret is fragile", "Needs good placement", "Moderate stats"],
-                  abilityDetails: [
-                    "Deploys a turret nearby",
-                    "Turret does not self-destruct",
-                    "Can spawn multiple turrets",
-                  ],
-                  strategy: "Place turrets strategically to cover weak points or extend your defensive line.",
-                  synergies: ["Covers areas without towers", "Good for emergency defense"],
-                },
-              };
-              const info = heroInfo[selectedHeroDetail] || heroInfo.tiger;
-
-              return (
-                <div>
-                  <button
-                    onClick={() => setSelectedHeroDetail(null)}
-                    className="flex items-center gap-2 text-amber-400 hover:text-amber-300 mb-4 transition-colors"
-                  >
-                    <ChevronRight size={16} className="rotate-180" />
-                    <span>Back to all heroes</span>
-                  </button>
-
-                  <div className="space-y-6">
-                    {/* Hero Header */}
-                    <div className="bg-gradient-to-br from-stone-900 to-stone-950 rounded-xl border border-stone-700/50 overflow-hidden">
-                      <div className={`px-6 py-3 border-b flex items-center gap-3 ${info.roleColor === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                        info.roleColor === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                          info.roleColor === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                            info.roleColor === "red" ? "bg-red-950/50 border-red-800/30" :
-                              info.roleColor === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                info.roleColor === "green" ? "bg-green-950/50 border-green-800/30" :
-                                  "bg-amber-950/50 border-amber-800/30"
-                        }`}>
-                        <span className={`${info.roleColor === "orange" ? "text-orange-400" :
-                          info.roleColor === "purple" ? "text-purple-400" :
-                            info.roleColor === "blue" ? "text-blue-400" :
-                              info.roleColor === "red" ? "text-red-400" :
-                                info.roleColor === "yellow" ? "text-yellow-400" :
-                                  info.roleColor === "green" ? "text-green-400" :
-                                    "text-amber-400"
+                        <div className={`flex items-center gap-2 ${info.color === "orange" ? "text-orange-400" :
+                          info.color === "yellow" ? "text-yellow-400" :
+                            info.color === "cyan" ? "text-cyan-400" :
+                              info.color === "amber" ? "text-amber-400" :
+                                info.color === "green" ? "text-green-400" :
+                                  "text-purple-400"
                           }`}>
-                          {info.roleIcon}
-                        </span>
-                        <span className={`text-sm font-medium uppercase tracking-wider ${info.roleColor === "orange" ? "text-orange-400" :
-                          info.roleColor === "purple" ? "text-purple-400" :
-                            info.roleColor === "blue" ? "text-blue-400" :
-                              info.roleColor === "red" ? "text-red-400" :
-                                info.roleColor === "yellow" ? "text-yellow-400" :
-                                  info.roleColor === "green" ? "text-green-400" :
-                                    "text-amber-400"
-                          }`}>
-                          {info.role}
-                        </span>
-                      </div>
-
-                      <div className="p-6 flex items-start gap-6">
-                        <div
-                          className="w-28 h-28 rounded-xl border-2 flex items-center justify-center flex-shrink-0"
-                          style={{
-                            borderColor: hero.color,
-                            backgroundColor: hero.color + "25",
-                            boxShadow: `0 0 30px ${hero.color}40`,
-                          }}
-                        >
-                          <HeroSprite
-                            type={selectedHeroDetail as HeroType}
-                            size={96}
-                            color={hero.color}
-                          />
+                          {info.icon}
+                          <span className="text-xs font-medium uppercase tracking-wider">
+                            {info.category}
+                          </span>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-3xl font-bold text-amber-200">
-                              {hero.name}
-                            </h3>
-                            <span className="text-2xl">{hero.icon}</span>
-                          </div>
-                          <p className="text-stone-400 mb-4">
-                            {hero.description}
-                          </p>
-                          <div className="grid grid-cols-5 gap-3">
-                            <div className="bg-red-950/50 rounded-lg p-2.5 text-center border border-red-800/40">
-                              <Heart size={16} className="mx-auto text-red-400 mb-1" />
-                              <div className="text-[10px] text-red-500">Health</div>
-                              <div className="text-red-300 font-bold text-lg">{hero.hp}</div>
-                            </div>
-                            <div className="bg-orange-950/50 rounded-lg p-2.5 text-center border border-orange-800/40">
-                              <Swords size={16} className="mx-auto text-orange-400 mb-1" />
-                              <div className="text-[10px] text-orange-500">Damage</div>
-                              <div className="text-orange-300 font-bold text-lg">{hero.damage}</div>
-                            </div>
-                            <div className="bg-blue-950/50 rounded-lg p-2.5 text-center border border-blue-800/40">
-                              <Target size={16} className="mx-auto text-blue-400 mb-1" />
-                              <div className="text-[10px] text-blue-500">Range</div>
-                              <div className="text-blue-300 font-bold text-lg">{hero.range}</div>
-                            </div>
-                            <div className="bg-green-950/50 rounded-lg p-2.5 text-center border border-green-800/40">
-                              <Gauge size={16} className="mx-auto text-green-400 mb-1" />
-                              <div className="text-[10px] text-green-500">Atk Speed</div>
-                              <div className="text-green-300 font-bold text-lg">{(hero.attackSpeed / 1000).toFixed(1)}s</div>
-                            </div>
-                            <div className="bg-cyan-950/50 rounded-lg p-2.5 text-center border border-cyan-800/40">
-                              <Wind size={16} className="mx-auto text-cyan-400 mb-1" />
-                              <div className="text-[10px] text-cyan-500">Move</div>
-                              <div className="text-cyan-300 font-bold text-lg">{hero.speed}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Ability Section */}
-                    <div className="bg-gradient-to-br from-purple-950/40 to-stone-950 rounded-xl border border-purple-700/50 overflow-hidden">
-                      <div className="px-5 py-3 bg-purple-900/30 border-b border-purple-800/40 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={18} />
-                          <span className="text-sm text-purple-400 font-medium uppercase tracking-wider">Special Ability</span>
-                        </div>
-                        <div className="flex items-center gap-2 bg-purple-950/50 px-3 py-1.5 rounded-lg border border-purple-700/50">
-                          <Timer size={14} className="text-purple-400" />
-                          <span className="text-purple-300 font-bold text-sm">{cooldown / 1000}s Cooldown</span>
+                          <span className="text-amber-400 flex items-center gap-1 text-xs">
+                            <Coins size={12} />
+                            {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
+                          </span>
+                          <span className="text-blue-400 flex items-center gap-1 text-xs">
+                            <Timer size={12} />
+                            {spell.cooldown / 1000}s
+                          </span>
                         </div>
                       </div>
-                      <div className="p-5">
-                        <h4 className="text-2xl font-bold text-purple-200 mb-2 flex items-center gap-2">
-                          <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={24} />
-                          {hero.ability}
-                        </h4>
-                        <p className="text-purple-300 mb-4">{hero.abilityDesc}</p>
-                        <div className="bg-purple-950/40 rounded-lg p-4 border border-purple-800/30">
-                          <div className="text-xs text-purple-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                            <Info size={10} /> Ability Details
+
+                      <div className="p-4">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className={`w-18 h-18 rounded-xl border-2 flex items-center justify-center p-2 flex-shrink-0 ${info.color === "orange" ? "bg-orange-950/40 border-orange-700/50" :
+                            info.color === "yellow" ? "bg-yellow-950/40 border-yellow-700/50" :
+                              info.color === "cyan" ? "bg-cyan-950/40 border-cyan-700/50" :
+                                info.color === "amber" ? "bg-amber-950/40 border-amber-700/50" :
+                                  info.color === "green" ? "bg-green-950/40 border-green-700/50" :
+                                    "bg-purple-950/40 border-purple-700/50"
+                            }`}>
+                            <SpellSprite type={type} size={56} />
                           </div>
-                          <ul className="text-sm text-purple-300 space-y-1.5">
-                            {info.abilityDetails.map((detail, i) => (
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-1">
+                              <h3 className="text-xl font-bold text-purple-200">
+                                {spell.name}
+                              </h3>
+                              <span className="text-xl">{spell.icon}</span>
+                            </div>
+                            <p className="text-sm text-stone-400">{spell.desc}</p>
+                          </div>
+                        </div>
+
+                        {/* Stats grid */}
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                          {info.stats.map((stat, i) => (
+                            <div key={i} className={`rounded-lg p-2 text-center border ${info.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
+                              info.color === "yellow" ? "bg-yellow-950/40 border-yellow-800/30" :
+                                info.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
+                                  info.color === "amber" ? "bg-amber-950/40 border-amber-800/30" :
+                                    info.color === "green" ? "bg-green-950/40 border-green-800/30" :
+                                      "bg-purple-950/40 border-purple-800/30"
+                              }`}>
+                              <div className={`flex items-center justify-center mb-1 ${info.color === "orange" ? "text-orange-400" :
+                                info.color === "yellow" ? "text-yellow-400" :
+                                  info.color === "cyan" ? "text-cyan-400" :
+                                    info.color === "amber" ? "text-amber-400" :
+                                      info.color === "green" ? "text-green-400" :
+                                        "text-purple-400"
+                                }`}>
+                                {stat.icon}
+                              </div>
+                              <div className="text-[9px] text-stone-500">{stat.label}</div>
+                              <div className={`font-bold text-sm ${info.color === "orange" ? "text-orange-300" :
+                                info.color === "yellow" ? "text-yellow-300" :
+                                  info.color === "cyan" ? "text-cyan-300" :
+                                    info.color === "amber" ? "text-amber-300" :
+                                      info.color === "green" ? "text-green-300" :
+                                        "text-purple-300"
+                                }`}>{stat.value}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Details */}
+                        <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
+                          <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                            <Info size={10} /> Details
+                          </div>
+                          <ul className="text-xs text-stone-300 space-y-1">
+                            {info.details.map((detail, i) => (
                               <li key={i} className="flex items-start gap-2">
                                 <span className="text-purple-400 mt-0.5">•</span>
                                 <span>{detail}</span>
@@ -1534,580 +2185,28 @@ const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                             ))}
                           </ul>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Strengths & Weaknesses */}
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="bg-green-950/30 rounded-xl border border-green-800/40 p-4">
-                        <h4 className="text-green-300 font-bold mb-3 flex items-center gap-2">
-                          <TrendingUp size={16} /> Strengths
-                        </h4>
-                        <ul className="text-sm text-green-200/80 space-y-1.5">
-                          {info.strengths.map((s, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span className="text-green-400">✓</span> {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="bg-red-950/30 rounded-xl border border-red-800/40 p-4">
-                        <h4 className="text-red-300 font-bold mb-3 flex items-center gap-2">
-                          <CircleOff size={16} /> Weaknesses
-                        </h4>
-                        <ul className="text-sm text-red-200/80 space-y-1.5">
-                          {info.weaknesses.map((w, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span className="text-red-400">✗</span> {w}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Strategy & Synergies */}
-                    <div className="bg-stone-800/50 rounded-xl border border-stone-700/50 p-5">
-                      <h4 className="text-amber-300 font-bold mb-3 flex items-center gap-2">
-                        <Info size={16} /> Combat Strategy
-                      </h4>
-                      <p className="text-stone-300 mb-4">{info.strategy}</p>
-                      <div className="bg-amber-950/30 rounded-lg p-3 border border-amber-800/30">
-                        <div className="text-xs text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                          <Sparkles size={10} /> Synergies
+                        {/* Tip */}
+                        <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${info.color === "orange" ? "bg-orange-950/30 border border-orange-800/30 text-orange-300" :
+                          info.color === "yellow" ? "bg-yellow-950/30 border border-yellow-800/30 text-yellow-300" :
+                            info.color === "cyan" ? "bg-cyan-950/30 border border-cyan-800/30 text-cyan-300" :
+                              info.color === "amber" ? "bg-amber-950/30 border border-amber-800/30 text-amber-300" :
+                                info.color === "green" ? "bg-green-950/30 border border-green-800/30 text-green-300" :
+                                  "bg-purple-950/30 border border-purple-800/30 text-purple-300"
+                          }`}>
+                          <Sparkles size={12} />
+                          <span className="font-medium">Pro Tip:</span>
+                          <span className="text-stone-400">{info.tip}</span>
                         </div>
-                        <ul className="text-sm text-amber-200/80 space-y-1">
-                          {info.synergies.map((s, i) => (
-                            <li key={i} className="flex items-center gap-2">
-                              <span className="text-amber-400">★</span> {s}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-          {activeTab === "enemies" && (() => {
-            const groupedEnemies = groupEnemiesByCategory(enemyTypes);
-
-            return (
-              <div className="space-y-6">
-                {CATEGORY_ORDER.map(category => {
-                  const categoryEnemies = groupedEnemies[category];
-                  if (categoryEnemies.length === 0) return null;
-
-                  const catInfo = CATEGORY_INFO[category];
-
-                  return (
-                    <div key={category}>
-                      {/* Category Header */}
-                      <div className={`flex items-center gap-3 mb-3 pb-2 border-b ${catInfo.bgColor.replace('bg-', 'border-')}`}>
-                        <div className={`p-2 rounded-lg ${catInfo.bgColor}`}>
-                          {catInfo.icon}
-                        </div>
-                        <div>
-                          <h3 className={`font-bold text-lg ${catInfo.color}`}>{catInfo.name}</h3>
-                          <p className="text-xs text-stone-400">{catInfo.desc}</p>
-                        </div>
-                        <div className="ml-auto text-xs text-stone-500 bg-stone-800/50 px-2 py-1 rounded">
-                          {categoryEnemies.length} {categoryEnemies.length === 1 ? "enemy" : "enemies"}
-                        </div>
-                      </div>
-
-                      {/* Category Enemies Grid */}
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {categoryEnemies.map((type) => {
-                          const enemy = ENEMY_DATA[type];
-                          const traits = enemy.traits || [];
-                          const abilities = enemy.abilities || [];
-                          const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
-
-                          // Determine threat level based on HP and boss status
-                          const getThreatLevel = (hp: number, isBoss?: boolean) => {
-                            if (isBoss || hp >= 1000) return { level: "Boss", color: "purple", icon: <Crown size={12} /> };
-                            if (hp >= 500) return { level: "Elite", color: "orange", icon: <Star size={12} /> };
-                            if (hp >= 200) return { level: "Standard", color: "yellow", icon: <Skull size={12} /> };
-                            return { level: "Minion", color: "green", icon: <Skull size={12} /> };
-                          };
-                          const threat = getThreatLevel(enemy.hp, enemy.isBoss);
-
-                          // Enemy type classification
-                          const getEnemyTypeClassification = () => {
-                            if (enemy.flying) return { type: "Flying", icon: <Wind size={12} />, color: "cyan" };
-                            if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={12} />, color: "purple" };
-                            if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={12} />, color: "stone" };
-                            if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={12} />, color: "green" };
-                            return { type: "Ground", icon: <Flag size={12} />, color: "red" };
-                          };
-                          const enemyTypeClass = getEnemyTypeClassification();
-
-                          return (
-                            <div
-                              key={type}
-                              className="bg-gradient-to-br from-stone-900/90 to-stone-950/90 rounded-xl border border-stone-700/50 overflow-hidden hover:border-red-700/50 transition-colors"
-                            >
-                              {/* Header with threat level */}
-                              <div className={`px-4 py-2 border-b flex items-center justify-between ${threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                                threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                                  threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                    "bg-green-950/50 border-green-800/30"
-                                }`}>
-                                <div className={`flex items-center gap-2 ${threat.color === "purple" ? "text-purple-400" :
-                                  threat.color === "orange" ? "text-orange-400" :
-                                    threat.color === "yellow" ? "text-yellow-400" :
-                                      "text-green-400"
-                                  }`}>
-                                  {threat.icon}
-                                  <span className="text-xs font-medium uppercase tracking-wider">
-                                    {threat.level}
-                                  </span>
-                                </div>
-                                <div className={`flex items-center gap-1.5 text-xs ${enemyTypeClass.color === "cyan" ? "text-cyan-400" :
-                                  enemyTypeClass.color === "purple" ? "text-purple-400" :
-                                    enemyTypeClass.color === "stone" ? "text-stone-400" :
-                                      enemyTypeClass.color === "green" ? "text-green-400" :
-                                        "text-red-400"
-                                  }`}>
-                                  {enemyTypeClass.icon}
-                                  <span>{enemyTypeClass.type}</span>
-                                </div>
-                              </div>
-
-                              <div className="p-4">
-                                <div className="flex items-start gap-4 mb-3">
-                                  <div className="w-16 h-16 rounded-lg bg-stone-800/80 border border-red-900/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    <EnemySprite type={type} size={52} animated />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2">
-                                      <h3 className="text-lg font-bold text-red-200 truncate">
-                                        {enemy.name}
-                                      </h3>
-                                      {/* Lives Cost Badge - Top Right */}
-                                      <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
-                                        <Heart size={12} className="text-rose-400" />
-                                        <span className="text-rose-300 font-bold text-xs">{enemy.liveCost || 1}</span>
-                                      </div>
-                                    </div>
-                                    <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                                      {enemy.desc}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Base Stats grid */}
-                                <div className="grid grid-cols-4 gap-1.5 mb-2">
-                                  <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                                    <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                                    <div className="text-[9px] text-red-500">HP</div>
-                                    <div className="text-red-300 font-bold text-xs">{enemy.hp}</div>
-                                  </div>
-                                  <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/40">
-                                    <Coins size={12} className="mx-auto text-amber-400 mb-0.5" />
-                                    <div className="text-[9px] text-amber-500">Bounty</div>
-                                    <div className="text-amber-300 font-bold text-xs">{enemy.bounty}</div>
-                                  </div>
-                                  <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/40">
-                                    <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
-                                    <div className="text-[9px] text-green-500">Speed</div>
-                                    <div className="text-green-300 font-bold text-xs">{enemy.speed}</div>
-                                  </div>
-                                  <div className="bg-stone-800/50 rounded p-1.5 text-center border border-stone-700/40">
-                                    <Shield size={12} className="mx-auto text-stone-400 mb-0.5" />
-                                    <div className="text-[9px] text-stone-500">Armor</div>
-                                    <div className="text-stone-300 font-bold text-xs">{Math.round(enemy.armor * 100)}%</div>
-                                  </div>
-                                </div>
-
-                                {/* Ranged Stats (if applicable) */}
-                                {enemy.isRanged && (
-                                  <div className="grid grid-cols-3 gap-1.5 mb-2">
-                                    <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                      <div className="text-[8px] text-purple-500">Range</div>
-                                      <div className="text-purple-300 font-bold text-[10px]">{enemy.range}</div>
-                                    </div>
-                                    <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                      <div className="text-[8px] text-purple-500">Atk Speed</div>
-                                      <div className="text-purple-300 font-bold text-[10px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
-                                    </div>
-                                    <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                      <div className="text-[8px] text-purple-500">Proj Dmg</div>
-                                      <div className="text-purple-300 font-bold text-[10px]">{enemy.projectileDamage}</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* AoE Stats (if applicable) */}
-                                {hasAoE && (
-                                  <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                    <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
-                                      <div className="text-[8px] text-orange-500">AoE Radius</div>
-                                      <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeRadius}</div>
-                                    </div>
-                                    <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
-                                      <div className="text-[8px] text-orange-500">AoE Damage</div>
-                                      <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeDamage}</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Flying Troop Attack Stats (if applicable) */}
-                                {enemy.targetsTroops && enemy.troopDamage && (
-                                  <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                    <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
-                                      <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                                      <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
-                                      <div className="text-cyan-300 font-bold text-[10px]">{enemy.troopDamage}</div>
-                                    </div>
-                                    <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
-                                      <Timer size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                                      <div className="text-[8px] text-cyan-500">Atk Speed</div>
-                                      <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Melee Combat Stats (for ground enemies that engage troops) */}
-                                {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
-                                  <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                    <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
-                                      <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-[8px] text-red-500">Melee Dmg</div>
-                                      <div className="text-red-300 font-bold text-[10px]">15</div>
-                                    </div>
-                                    <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
-                                      <Timer size={12} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-[8px] text-red-500">Atk Speed</div>
-                                      <div className="text-red-300 font-bold text-[10px]">1.0s</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Breakthrough indicator */}
-                                {enemy.breakthrough && (
-                                  <div className="mb-2">
-                                    <div className="bg-sky-950/40 rounded p-1 text-center border border-sky-900/30">
-                                      <div className="text-sky-300 font-bold text-[10px] flex items-center justify-center gap-1">
-                                        <Zap size={10} className="text-sky-400" />
-                                        Bypasses Troops
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Dynamic Traits */}
-                                {traits.length > 0 && (
-                                  <div className="mb-2">
-                                    <div className="text-[9px] text-stone-500 uppercase font-bold mb-1">Traits</div>
-                                    <div className="flex flex-wrap gap-1">
-                                      {traits.map((trait, i) => {
-                                        const traitInfo = getTraitInfo(trait);
-                                        return (
-                                          <span
-                                            key={i}
-                                            className={`text-[9px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-1 ${traitInfo.color}`}
-                                            title={traitInfo.desc}
-                                          >
-                                            {traitInfo.icon}
-                                            <span>{traitInfo.label}</span>
-                                          </span>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Abilities */}
-                                {abilities.length > 0 && (
-                                  <div>
-                                    <div className="text-[9px] text-stone-500 uppercase font-bold mb-1 flex items-center gap-1">
-                                      <Zap size={10} /> Abilities
-                                    </div>
-                                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                                      {abilities.map((ability, i) => {
-                                        const abilityInfo = getAbilityInfo(ability.type);
-                                        return (
-                                          <div
-                                            key={i}
-                                            className={`p-1.5 rounded border ${abilityInfo.bgColor}`}
-                                          >
-                                            <div className="flex items-center gap-1.5 mb-0.5">
-                                              <span className={abilityInfo.color}>{abilityInfo.icon}</span>
-                                              <span className="text-[10px] font-bold text-white">{ability.name}</span>
-                                              <span className="text-[8px] px-1 py-0.5 bg-black/30 rounded text-white/70 ml-auto">
-                                                {Math.round(ability.chance * 100)}%
-                                              </span>
-                                            </div>
-                                            <p className="text-[9px] text-white/60 mb-1">{ability.desc}</p>
-                                            <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[8px]">
-                                              <span className="text-white/50">
-                                                Duration: <span className="text-white/80">{(ability.duration / 1000).toFixed(1)}s</span>
-                                              </span>
-                                              {ability.intensity !== undefined && (
-                                                <span className="text-white/50">
-                                                  {ability.type === "slow" || ability.type.includes("tower") ? "Effect: " : "DPS: "}
-                                                  <span className="text-white/80">
-                                                    {ability.type === "slow" || ability.type.includes("tower")
-                                                      ? `${Math.round(ability.intensity * 100)}%`
-                                                      : ability.intensity}
-                                                  </span>
-                                                </span>
-                                              )}
-                                              {ability.radius && (
-                                                <span className="text-white/50">
-                                                  Radius: <span className="text-white/80">{ability.radius}</span>
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* No abilities/traits message */}
-                                {abilities.length === 0 && traits.length === 0 && (
-                                  <div className="text-center text-[9px] text-stone-500 py-1">
-                                    Standard enemy - no special abilities
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            );
-          })()}
-
-          {activeTab === "spells" && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {spellTypes.map((type) => {
-                const spell = SPELL_DATA[type];
-
-                // Spell type info
-                const spellInfo: Record<string, {
-                  category: string;
-                  color: string;
-                  icon: React.ReactNode;
-                  stats: { label: string; value: string; icon: React.ReactNode }[];
-                  details: string[];
-                  tip: string;
-                }> = {
-                  fireball: {
-                    category: "Damage",
-                    color: "orange",
-                    icon: <Flame size={14} />,
-                    stats: [
-                      { label: "Damage", value: "200", icon: <Swords size={12} /> },
-                      { label: "Radius", value: "150", icon: <Radio size={12} /> },
-                      { label: "Delay", value: "1s", icon: <Timer size={12} /> },
-                    ],
-                    details: [
-                      "Meteor falls from sky with visual warning",
-                      "Maximum damage at center, 50% at edge",
-                      "Creates fire explosion effect",
-                    ],
-                    tip: "Best against clustered enemies at chokepoints",
-                  },
-                  lightning: {
-                    category: "Chain",
-                    color: "yellow",
-                    icon: <Zap size={14} />,
-                    stats: [
-                      { label: "Total DMG", value: "600", icon: <Swords size={12} /> },
-                      { label: "Targets", value: "5", icon: <Users size={12} /> },
-                      { label: "Stun", value: "0.5s", icon: <CircleOff size={12} /> },
-                    ],
-                    details: [
-                      "Chains between up to 5 enemies",
-                      "Damage split among all targets",
-                      "Each strike stuns briefly",
-                    ],
-                    tip: "Great for picking off multiple weakened enemies",
-                  },
-                  freeze: {
-                    category: "Control",
-                    color: "cyan",
-                    icon: <Snowflake size={14} />,
-                    stats: [
-                      { label: "Duration", value: "3s", icon: <Timer size={12} /> },
-                      { label: "Range", value: "Global", icon: <Radio size={12} /> },
-                      { label: "Targets", value: "All", icon: <Users size={12} /> },
-                    ],
-                    details: [
-                      "Freezes ALL enemies on the map",
-                      "Enemies completely immobilized",
-                      "Expanding ice wave visual effect",
-                    ],
-                    tip: "Emergency button when overwhelmed",
-                  },
-                  payday: {
-                    category: "Economy",
-                    color: "amber",
-                    icon: <Banknote size={14} />,
-                    stats: [
-                      { label: "Base", value: "80 PP", icon: <Coins size={12} /> },
-                      { label: "Per Enemy", value: "+5 PP", icon: <TrendingUp size={12} /> },
-                      { label: "Max Bonus", value: "+50 PP", icon: <Star size={12} /> },
-                    ],
-                    details: [
-                      "Base payout plus bonus per enemy",
-                      "Maximum possible: 130 PP",
-                      "Gold aura effect on all enemies",
-                    ],
-                    tip: "Use when many enemies are on screen for max value",
-                  },
-                  reinforcements: {
-                    category: "Summon",
-                    color: "green",
-                    icon: <Users size={14} />,
-                    stats: [
-                      { label: "Knights", value: "3", icon: <Users size={12} /> },
-                      { label: "Knight HP", value: "500", icon: <Heart size={12} /> },
-                      { label: "Knight DMG", value: "30", icon: <Swords size={12} /> },
-                    ],
-                    details: [
-                      "Summons 3 armored knight troops",
-                      "Click to place anywhere on map",
-                      "Knights fight independently",
-                    ],
-                    tip: "Great for blocking leaks or supporting weak points",
-                  },
-                };
-                const info = spellInfo[type] || { category: "Spell", color: "purple", icon: <Sparkles size={14} />, stats: [], details: [], tip: "" };
-
-                return (
-                  <div
-                    key={type}
-                    className="bg-gradient-to-br from-stone-900/90 to-stone-950/90 rounded-xl border border-stone-700/50 overflow-hidden hover:border-purple-700/50 transition-colors"
-                  >
-                    {/* Header */}
-                    <div className={`px-4 py-2.5 border-b flex items-center justify-between ${info.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                      info.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                        info.color === "cyan" ? "bg-cyan-950/50 border-cyan-800/30" :
-                          info.color === "amber" ? "bg-amber-950/50 border-amber-800/30" :
-                            info.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                              "bg-purple-950/50 border-purple-800/30"
-                      }`}>
-                      <div className={`flex items-center gap-2 ${info.color === "orange" ? "text-orange-400" :
-                        info.color === "yellow" ? "text-yellow-400" :
-                          info.color === "cyan" ? "text-cyan-400" :
-                            info.color === "amber" ? "text-amber-400" :
-                              info.color === "green" ? "text-green-400" :
-                                "text-purple-400"
-                        }`}>
-                        {info.icon}
-                        <span className="text-xs font-medium uppercase tracking-wider">
-                          {info.category}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-amber-400 flex items-center gap-1 text-xs">
-                          <Coins size={12} />
-                          {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
-                        </span>
-                        <span className="text-blue-400 flex items-center gap-1 text-xs">
-                          <Timer size={12} />
-                          {spell.cooldown / 1000}s
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-4">
-                      <div className="flex items-start gap-4 mb-4">
-                        <div className={`w-18 h-18 rounded-xl border-2 flex items-center justify-center p-2 flex-shrink-0 ${info.color === "orange" ? "bg-orange-950/40 border-orange-700/50" :
-                          info.color === "yellow" ? "bg-yellow-950/40 border-yellow-700/50" :
-                            info.color === "cyan" ? "bg-cyan-950/40 border-cyan-700/50" :
-                              info.color === "amber" ? "bg-amber-950/40 border-amber-700/50" :
-                                info.color === "green" ? "bg-green-950/40 border-green-700/50" :
-                                  "bg-purple-950/40 border-purple-700/50"
-                          }`}>
-                          <SpellSprite type={type} size={56} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-xl font-bold text-purple-200">
-                              {spell.name}
-                            </h3>
-                            <span className="text-xl">{spell.icon}</span>
-                          </div>
-                          <p className="text-sm text-stone-400">{spell.desc}</p>
-                        </div>
-                      </div>
-
-                      {/* Stats grid */}
-                      <div className="grid grid-cols-3 gap-2 mb-4">
-                        {info.stats.map((stat, i) => (
-                          <div key={i} className={`rounded-lg p-2 text-center border ${info.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
-                            info.color === "yellow" ? "bg-yellow-950/40 border-yellow-800/30" :
-                              info.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
-                                info.color === "amber" ? "bg-amber-950/40 border-amber-800/30" :
-                                  info.color === "green" ? "bg-green-950/40 border-green-800/30" :
-                                    "bg-purple-950/40 border-purple-800/30"
-                            }`}>
-                            <div className={`flex items-center justify-center mb-1 ${info.color === "orange" ? "text-orange-400" :
-                              info.color === "yellow" ? "text-yellow-400" :
-                                info.color === "cyan" ? "text-cyan-400" :
-                                  info.color === "amber" ? "text-amber-400" :
-                                    info.color === "green" ? "text-green-400" :
-                                      "text-purple-400"
-                              }`}>
-                              {stat.icon}
-                            </div>
-                            <div className="text-[9px] text-stone-500">{stat.label}</div>
-                            <div className={`font-bold text-sm ${info.color === "orange" ? "text-orange-300" :
-                              info.color === "yellow" ? "text-yellow-300" :
-                                info.color === "cyan" ? "text-cyan-300" :
-                                  info.color === "amber" ? "text-amber-300" :
-                                    info.color === "green" ? "text-green-300" :
-                                      "text-purple-300"
-                              }`}>{stat.value}</div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Details */}
-                      <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
-                        <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                          <Info size={10} /> Details
-                        </div>
-                        <ul className="text-xs text-stone-300 space-y-1">
-                          {info.details.map((detail, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-purple-400 mt-0.5">•</span>
-                              <span>{detail}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Tip */}
-                      <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${info.color === "orange" ? "bg-orange-950/30 border border-orange-800/30 text-orange-300" :
-                        info.color === "yellow" ? "bg-yellow-950/30 border border-yellow-800/30 text-yellow-300" :
-                          info.color === "cyan" ? "bg-cyan-950/30 border border-cyan-800/30 text-cyan-300" :
-                            info.color === "amber" ? "bg-amber-950/30 border border-amber-800/30 text-amber-300" :
-                              info.color === "green" ? "bg-green-950/30 border border-green-800/30 text-green-300" :
-                                "bg-purple-950/30 border border-purple-800/30 text-purple-300"
-                        }`}>
-                        <Sparkles size={12} />
-                        <span className="font-medium">Pro Tip:</span>
-                        <span className="text-stone-400">{info.tip}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </OrnateFrame>
+            )}
+          </div>
+        </OrnateFrame>
+      </div>
     </div>
   );
 };
@@ -6148,64 +6247,90 @@ const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLevel?: (
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
-      {/* Canvas Battle Scene */}
-      <div className="opacity-40">
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ width: "100%", height: "100%" }}
-        />
-      </div>
-
       {/* Content with ornate frame */}
-      <OrnateFrame
-        className="relative z-10 flex w-full items-center justify-center bg-gradient-to-br from-stone-900/80 via-stone-800/70 to-stone-900/80 backdrop-blur-xs rounded-2xl border-2 border-amber-700/60 p-4 sm:p-8 h-full shadow-2xl overflow-hidden"
-        cornerSize={40}
-        showBorders={true}
-        color="#b45309"
-        glowColor="#f59e0b"
+      <div
+        className="relative z-10 w-full h-full rounded-2xl overflow-hidden"
+        style={{
+          background: panelGradient,
+          border: `2px solid ${GOLD.border30}`,
+          boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 20px ${GOLD.glow04}`,
+        }}
       >
-        <div className="flex flex-col items-center relative z-20">
-          {/* Decorative top flourish */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-amber-500/80 to-transparent" />
-
-          <button
-            onClick={onSelectFarthestLevel}
-            className="size-14 sm:size-24 rounded-full bg-gradient-to-br from-amber-800/60 to-orange-900/60 border-2 border-amber-600/70 flex items-center justify-center mb-2 sm:mb-4 backdrop-blur-sm shadow-lg shadow-amber-500/20 hover:scale-110 hover:border-amber-400 hover:shadow-amber-400/40 transition-all cursor-pointer active:scale-95 group"
-          >
-            <MapPin size={28} className="sm:hidden text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
-            <MapPin size={40} className="hidden sm:block text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
-          </button>
-
-          <h3 className="text-lg sm:text-xl font-bold text-amber-200 mb-1 sm:mb-2 drop-shadow-lg tracking-wide">
-            Select a Battlefield
-          </h3>
-          <p className="text-amber-400/90 text-xs sm:text-sm max-w-xs drop-shadow-md leading-relaxed">
-            Tap the pin above or any unlocked location on the map to begin your campaign
-          </p>
-
-          {/* Decorative divider */}
-          <div className="my-3 sm:my-5 flex items-center gap-3 w-full max-w-[200px]">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
-            <div className="w-2 h-2 rotate-45 bg-amber-500/70 border border-amber-400/80" />
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-600/60 to-transparent" />
-          </div>
-
-          <div className="flex items-center gap-3 text-xs text-amber-300">
-            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-amber-500/70 to-orange-600/70 border border-amber-400/80 shadow-lg shadow-amber-500/40 animate-pulse" />
-            <span className="font-medium tracking-wide">= Unlocked Location</span>
-          </div>
-          <div className="mt-2 sm:mt-3 flex items-center gap-3 text-xs text-amber-300">
-            <div className="w-4 h-4 flex items-center justify-center rounded-full bg-gradient-to-br from-gray-500/70 to-gray-600/70 border border-gray-400/80 shadow-lg shadow-gray-500/40 animate-pulse" >
-              <Lock size={10} className="text-gray-400" />
-            </div>
-            <span className="font-medium tracking-wide">= Locked Location</span>
-          </div>
-
-          {/* Decorative bottom flourish */}
-          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-amber-500/80 to-transparent" />
+        {/* Canvas Battle Scene */}
+        <div className="opacity-30">
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full"
+            style={{ width: "100%", height: "100%" }}
+          />
         </div>
-      </OrnateFrame>
+        <OrnateFrame
+          className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden"
+          cornerSize={40}
+          showBorders={true}
+          color="#b45309"
+          glowColor="#f59e0b"
+        >
+          {/* Inner ghost border */}
+          <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+
+          <div className="flex flex-col items-center relative z-20">
+            {/* Decorative top flourish */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-px" style={{ background: dividerGradient }} />
+
+            <button
+              onClick={onSelectFarthestLevel}
+              className="size-14 sm:size-24 rounded-full flex items-center justify-center mb-2 sm:mb-4 backdrop-blur-sm hover:scale-110 transition-all cursor-pointer active:scale-95 group relative"
+              style={{
+                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                border: `2px solid ${GOLD.border35}`,
+                boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}`,
+              }}
+            >
+              <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+              <MapPin size={28} className="sm:hidden text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
+              <MapPin size={40} className="hidden sm:block text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
+            </button>
+
+            <h3 className="text-lg sm:text-xl font-bold text-amber-100 mb-1 sm:mb-2 drop-shadow-lg tracking-wide">
+              Select a Battlefield
+            </h3>
+            <p className="text-amber-400/80 text-xs sm:text-sm max-w-xs drop-shadow-md leading-relaxed text-center">
+              Tap the pin above or any unlocked location on the map to begin your campaign
+            </p>
+
+            {/* Decorative divider */}
+            <div className="my-3 sm:my-5 flex items-center gap-3 w-full max-w-[200px]">
+              <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border30})` }} />
+              <div className="w-2 h-2 rotate-45" style={{ background: GOLD.border35, border: `1px solid ${GOLD.accentBorder40}` }} />
+              <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border30}, transparent)` }} />
+            </div>
+
+            {/* Legend items */}
+            <div className="flex items-center gap-3 text-xs text-amber-300">
+              <div className="w-4 h-4 rounded-full animate-pulse" style={{
+                background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
+                border: `1.5px solid ${GOLD.accentBorder40}`,
+                boxShadow: `0 0 8px ${GOLD.accentGlow08}`
+              }} />
+              <span className="font-medium tracking-wide">= Unlocked Location</span>
+            </div>
+            <div className="mt-2 sm:mt-3 flex items-center gap-3 text-xs text-amber-300/70">
+              <div className="w-4 h-4 flex items-center justify-center rounded-full animate-pulse" style={{
+                background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                border: `1.5px solid ${NEUTRAL.border}`,
+                boxShadow: `0 0 6px ${NEUTRAL.glow}`
+              }} >
+                <Lock size={10} className="text-gray-400" />
+              </div>
+              <span className="font-medium tracking-wide">= Locked Location</span>
+            </div>
+
+            {/* Decorative bottom flourish */}
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-px" style={{ background: dividerGradient }} />
+          </div>
+        </OrnateFrame>
+      </div>
     </div>
   );
 };
@@ -9744,37 +9869,39 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   }
 
   return (
-    <div className="w-full h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 flex flex-col text-amber-100 overflow-hidden">
+    <div className="w-full h-screen flex flex-col text-amber-100 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)`, borderRight: `2px solid ${GOLD.border30}` }}
+    >
       {/* TOP BAR */}
       <OrnateFrame
-        className="flex-shrink-0 overflow-hidden bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-b-2 border-amber-700/50 shadow-xl"
-        cornerSize={32}
+        className="flex-shrink-0 overflow-hidden rounded-xl mx-2 sm:mx-3 mt-3 border-2 border-amber-700/50 shadow-xl"
+        cornerSize={25}
         showBorders={true}
-      >
-        <div className="relative z-20 px-3 sm:px-5 py-3 flex items-center justify-between">
-          <PrincetonLogo />
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => setShowCodex(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-purple-900/60 to-stone-900/80 hover:from-purple-800/70 rounded-xl border border-purple-600/50 transition-all hover:scale-105 shadow-lg"
-            >
-              <Book size={18} className="text-purple-400" />
-              <span className="hidden sm:inline text-purple-300 font-medium text-lg">
-                Codex
-              </span>
-            </button>
-            <div className="flex items-center  bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-xl border border-amber-600/60 p-1.5">
-              {/* total hearts */}
-              <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-red-900/70 to-stone-900/80 rounded-l-lg border border-red-600/60 shadow-lg">
-                <div className="relative">
-                  <Heart size={20} className="text-red-400 fill-red-400" />
-                  <div className="absolute inset-0 animate-ping opacity-30">
-                    <Heart size={20} className="text-red-400 fill-red-400" />
-                  </div>
-                </div>
-                <span className="font-bold text-sm sm:text-lg text-red-300">
-                  {/* iterate through every level in levelStats and sum up hearts*/}
+      >
+        <div
+          className="relative sm:px-2 z-20"
+          style={{
+            background: panelGradient,
+          }}
+        >
+          {/* Subtle top highlight */}
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25}, transparent)` }} />
+
+          <div className="px-3 sm:px-5 py-2 flex items-center justify-between gap-2">
+            {/* Left: Logo */}
+            <PrincetonLogo />
+
+            {/* Right: Stats strip */}
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* Hearts stat */}
+              <div className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+                background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
+                border: `1.5px solid ${RED_CARD.border}`,
+                boxShadow: `inset 0 0 12px ${RED_CARD.glow06}`,
+              }}>
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
+                <Heart size={15} className="text-red-400 fill-red-400 shrink-0" />
+                <span className="font-black text-sm text-red-300">
                   {levelStats
                     ? Object.values(levelStats).reduce(
                       (acc, stats) => acc + (stats.bestHearts || 0),
@@ -9782,79 +9909,156 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     )
                     : 0}
                 </span>
-                <span className="hidden sm:inline text-red-600 text-sm">/300</span>
+                <span className="hidden sm:inline text-[9px] text-red-700 font-semibold">/300</span>
               </div>
-              {/* total stars */}
 
-              <div className="flex items-center gap-2 px-4 py-0.5 bg-gradient-to-br from-amber-900/70 to-stone-900/80 rounded-r-lg border border-amber-600/60 shadow-lg">
-                <div className="relative">
-                  <Star size={20} className="text-yellow-400 fill-yellow-400" />
-                  <div className="absolute inset-0 animate-ping opacity-30">
-                    <Star size={20} className="text-yellow-400 fill-yellow-400" />
-                  </div>
-                </div>
-                <span className="font-bold text-sm sm:text-lg text-yellow-300">
-                  {totalStars}
-                </span>
-                <span className="hidden sm:inline text-yellow-600 text-sm">
-                  / {maxStars}
-                </span>
+              {/* Stars stat */}
+              <div className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+                background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                border: `1.5px solid ${AMBER_CARD.border}`,
+                boxShadow: `inset 0 0 12px ${AMBER_CARD.glow}`,
+              }}>
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                <Star size={15} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                <span className="font-black text-sm text-yellow-300">{totalStars}</span>
+                <span className="hidden sm:inline text-[9px] text-yellow-700 font-semibold">/{maxStars}</span>
               </div>
-            </div>
 
-            <div className="hidden sm:flex items-center gap-3 bg-gradient-to-br from-amber-900/70 to-stone-900/80 px-1.5 py-1.5 rounded-xl border border-amber-600/60">
+              {/* Total Battles */}
+              <div className="hidden md:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+                background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
+                border: `1.5px solid ${BLUE_CARD.border}`,
+                boxShadow: `inset 0 0 12px ${BLUE_CARD.glow}`,
+              }}>
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
+                <Swords size={14} className="text-blue-400/70 shrink-0" />
+                <span className="font-black text-sm text-blue-300/80">
+                  {levelStats
+                    ? Object.values(levelStats).reduce(
+                      (acc, stats) => acc + (stats.timesPlayed || 0),
+                      0
+                    )
+                    : 0}
+                </span>
+                <span className="text-[8px] text-blue-500/50 font-bold tracking-wider uppercase">Battles</span>
+              </div>
+
+              {/* Victories */}
+              <div className="hidden lg:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+                background: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`,
+                border: `1.5px solid ${GREEN_CARD.border}`,
+                boxShadow: `inset 0 0 12px ${GREEN_CARD.glow}`,
+              }}>
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GREEN_CARD.innerBorder}` }} />
+                <Trophy size={14} className="text-emerald-400/70 shrink-0" />
+                <span className="font-black text-sm text-emerald-300/80">
+                  {levelStats
+                    ? Object.values(levelStats).reduce(
+                      (acc, stats) => acc + (stats.timesWon || 0),
+                      0
+                    )
+                    : 0}
+                </span>
+                <span className="text-[8px] text-emerald-600/50 font-bold tracking-wider uppercase">Wins</span>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-7" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
+
+              {/* Codex */}
               <button
-                onClick={() => goToPreviousLevel()}
-                className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
+                onClick={() => setShowCodex(true)}
+                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
+                style={{
+                  background: `linear-gradient(135deg, ${PURPLE_CARD.bgLight}, ${PURPLE_CARD.bgDark})`,
+                  border: `1.5px solid ${PURPLE_CARD.border}`,
+                  boxShadow: `inset 0 0 12px ${PURPLE_CARD.glow}`,
+                }}
               >
-                <ChevronLeft size={23} />
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${PURPLE_CARD.innerBorder}` }} />
+                <Book size={15} className="text-purple-400/80 shrink-0" />
+                <span className="hidden sm:inline text-sm text-purple-300/70 font-bold tracking-wider uppercase">Codex</span>
               </button>
-              <button
-                onClick={() => goToNextLevel()}
-                className="p-1 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
-              >
-                <ChevronRight size={23} />
-              </button>
+
+              {/* Nav arrows — grouped pill */}
+              <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
+                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                border: `1.5px solid ${GOLD.border25}`,
+                boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+              }}>
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                <button
+                  onClick={() => goToPreviousLevel()}
+                  className="relative z-10 px-2.5 py-2.5 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
+                >
+                  <ChevronLeft size={16} className="text-amber-500/70" />
+                </button>
+                <div className="w-px h-5" style={{ background: "rgba(180,140,60,0.2)" }} />
+                <button
+                  onClick={() => goToNextLevel()}
+                  className="relative z-10 px-2.5 py-2.5 flex items-center transition-colors duration-150 hover:bg-amber-700/20"
+                >
+                  <ChevronRight size={16} className="text-amber-500/70" />
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Bottom gradient line */}
+          <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
         </div>
       </OrnateFrame>
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col sm:flex-row overflow-y-hidden overflow-x-auto min-h-0">
         {/* LEFT SIDEBAR - Fixed height on mobile to prevent map from shifting */}
-        <div className="h-[40vh] sm:h-auto sm:w-80 flex-shrink-0 bg-gradient-to-b from-stone-900 via-stone-900/95 to-stone-950 border-r-2 border-amber-800/50 flex flex-col overflow-hidden">
+        <div className="h-[40vh] sm:h-auto sm:w-80 flex-shrink-0 flex flex-col overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           {selectedLevel && currentLevel ? (
             <div className="flex-1 flex flex-col h-full overflow-auto">
               <div className="flex-shrink-0 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-transparent to-transparent" />
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent animate-pulse" />
-                <div className="relative p-4 border-b border-amber-800/50">
-                  <div className="flex items-center justify-between mb-2">
+                {/* Top gold divider line */}
+                <div className="h-px" style={{ background: dividerGradient }} />
+                <div className="relative p-4" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
+                  {/* Inner glow border */}
+                  <div className="absolute inset-[2px] rounded-sm pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+
+                  {/* Level name + close button */}
+                  <div className="flex items-center justify-between mb-2 relative z-10">
                     <div className="flex items-center gap-2">
                       <div className="relative">
-                        <MapPin size={20} className="text-amber-400" />
+                        <MapPin size={20} className="text-amber-400 drop-shadow-lg" />
                         <div className="absolute inset-0 animate-ping opacity-30">
                           <MapPin size={20} className="text-amber-400" />
                         </div>
                       </div>
-                      <h2 className="text-xl font-bold text-amber-200">
+                      <h2 className="text-xl font-bold text-amber-100 drop-shadow-lg tracking-wide">
                         {currentLevel.name}
                       </h2>
                     </div>
                     <button
                       onClick={() => setSelectedLevel(null)}
-                      className="p-1.5 hover:bg-amber-900/40 rounded-lg transition-colors text-amber-500 hover:text-amber-300"
+                      className="p-1.5 rounded-lg transition-all hover:scale-110"
+                      style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
                     >
-                      <X size={18} />
+                      <X size={16} className="text-amber-400" />
                     </button>
                   </div>
-                  <p className="hidden sm:block text-amber-500/80 text-sm italic mb-3">
+
+                  {/* Description */}
+                  <p className="hidden sm:block text-amber-400/80 text-sm italic mb-3 relative z-10">
                     &ldquo;{currentLevel.description}&rdquo;
                   </p>
-                  <div className="flex items-center gap-4 sm:mb-3">
-                    <div className="flex items-center gap-2 px-2 py-1 bg-stone-800/60 rounded-lg border border-stone-700/50">
-                      <Skull size={14} className="text-amber-500" />
+
+                  {/* Difficulty + Waves + Stars row */}
+                  <div className="flex items-center gap-2 sm:mb-3 relative z-10 flex-wrap">
+                    {/* Difficulty card */}
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg" style={{
+                      background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                      border: `1.5px solid ${NEUTRAL.border}`,
+                      boxShadow: `inset 0 0 8px ${NEUTRAL.glow}`
+                    }}>
+                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
+                      <Skull size={14} className="text-amber-400" />
                       <div className="flex gap-1">
                         {[1, 2, 3].map((d) => (
                           <div
@@ -9872,20 +10076,33 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-900/40 rounded-lg border border-amber-700/50">
-                      <Flag size={14} className="text-amber-400" />
-                      <span className="text-amber-200 font-bold">
+
+                    {/* Waves card */}
+                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
+                      background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                      border: `1.5px solid ${AMBER_CARD.border}`,
+                      boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
+                    }}>
+                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                      <Flag size={14} className="text-amber-300" />
+                      <span className="text-amber-200 font-bold text-sm">
                         {waveCount} Waves
                       </span>
                     </div>
-                    <div className="flex sm:hidden items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
-                      <Trophy size={18} className="text-yellow-500" />
-                      <span className="text-amber-500 text-sm"></span>
-                      <div className="flex gap-1">
+
+                    {/* Stars (mobile) */}
+                    <div className="flex sm:hidden items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
+                      background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                      border: `1.5px solid ${AMBER_CARD.border}`,
+                      boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
+                    }}>
+                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                      <Trophy size={14} className="text-yellow-500" />
+                      <div className="flex gap-0.5">
                         {[1, 2, 3].map((s) => (
                           <Star
                             key={s}
-                            size={18}
+                            size={16}
                             className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
                               ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
                               : "text-stone-600"
@@ -9895,9 +10112,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="hidden sm:flex items-center gap-3 p-2 bg-stone-800/50 rounded-lg border border-amber-800/40">
+
+                  {/* Best Stars (desktop) */}
+                  <div className="hidden sm:flex items-center gap-3 p-2.5 rounded-lg relative" style={{
+                    background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                    border: `1.5px solid ${AMBER_CARD.border}`,
+                    boxShadow: `inset 0 0 10px ${AMBER_CARD.glow}`
+                  }}>
+                    <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
                     <Trophy size={18} className="text-yellow-500" />
-                    <span className="text-amber-500 text-sm">Best Stars:</span>
+                    <span className="text-amber-400 text-sm font-medium">Best:</span>
                     <div className="flex gap-1">
                       {[1, 2, 3].map((s) => (
                         <Star
@@ -9911,20 +10135,29 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       ))}
                     </div>
                   </div>
+
+                  {/* Stats cards (hearts + time) */}
                   {levelStats[currentLevel.id] && (
-                    <div className=" grid grid-cols-2 gap-3">
-                      <div className="flex items-center gap-3 mt-2 p-2 bg-stone-800/50 rounded-lg border border-red-800/40">
-                        <Heart
-                          size={18}
-                          className="text-red-500 fill-red-500"
-                        />
-                        <div className="text-sm text-red-300 font-mono">
+                    <div className="grid grid-cols-2 gap-2 mt-2 relative z-10">
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
+                        background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
+                        border: `1.5px solid ${RED_CARD.border}`,
+                        boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
+                        <Heart size={16} className="text-red-400 fill-red-400" />
+                        <div className="text-sm text-red-200 font-mono font-bold">
                           {levelStats[currentLevel.id]?.bestHearts}/20
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 mt-2 p-2 bg-stone-800/50 rounded-lg border border-blue-800/40">
-                        <Clock size={18} className="text-blue-400" />
-                        <span className="text-blue-300 text-sm font-mono">
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
+                        background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
+                        border: `1.5px solid ${BLUE_CARD.border}`,
+                        boxShadow: `inset 0 0 10px ${BLUE_CARD.glow}`
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
+                        <Clock size={16} className="text-blue-400" />
+                        <span className="text-blue-200 text-sm font-mono font-bold">
                           {levelStats[currentLevel.id]?.bestTime
                             ? `${Math.floor(
                               levelStats[currentLevel.id]!.bestTime! / 60
@@ -9938,11 +10171,18 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              <div className="flex-1 sm:flex-none p-2 sm:p-4 border-b border-amber-800/30 flex flex-col min-h-0">
-                <div className="hidden sm:block text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">
-                  Battlefield Preview
+              <div className="flex-1 sm:flex-none p-2 sm:p-4 flex flex-col min-h-0" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
+                <div className="hidden sm:flex items-center gap-2 mb-2">
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Battlefield Preview</span>
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
                 </div>
-                <div className="relative flex-1 sm:flex-none sm:aspect-video bg-stone-900/80 rounded-xl border border-amber-800/40 overflow-hidden">
+                <div className="relative flex-1 sm:flex-none sm:aspect-video rounded-2xl overflow-hidden" style={{
+                  background: PANEL.bgDeep,
+                  border: `2px solid ${GOLD.border30}`,
+                  boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${OVERLAY.black40}`
+                }}>
+                  <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
                   {LEVEL_DATA[currentLevel.id]?.previewImage ? (
                     <img
                       src={LEVEL_DATA[currentLevel.id].previewImage}
@@ -9978,21 +10218,29 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                   ? "❄️"
                                   : "🌋"}
                         </div>
-                        <span className="text-amber-400/70 text-xs">
+                        <span className="text-amber-400/60 text-xs font-medium tracking-wide">
                           Preview Coming
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase bg-stone-900/90 text-amber-300 border border-amber-700/60">
+                  <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider" style={{
+                    background: PANEL.bgDark,
+                    color: "rgb(252,211,77)",
+                    border: `1px solid ${GOLD.border30}`,
+                    boxShadow: `0 2px 6px ${OVERLAY.black40}`
+                  }}>
                     {currentLevel.region}
                   </div>
                 </div>
               </div>
 
               <div className="hidden sm:inline flex-1 p-4 overflow-y-auto">
-                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-3">
-                  Region Campaign
+                {/* Section title with decorative lines */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Region Campaign</span>
+                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
                 </div>
                 {(() => {
                   const regionLevels = WORLD_LEVELS.filter(
@@ -10004,20 +10252,33 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   );
                   const maxRegionStars = regionLevels.length * 3;
                   return (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {regionLevels.map((l) => (
                         <div
                           key={l.id}
-                          className={`flex items-center gap-3 p-2.5 rounded-lg transition-all ${l.id === selectedLevel
-                            ? "bg-amber-900/40 border border-amber-600/60"
-                            : "bg-stone-800/40 border border-stone-700/30 hover:bg-stone-800/60"
-                            }`}
+                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative"
+                          style={{
+                            background: l.id === selectedLevel
+                              ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})`
+                              : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                            border: l.id === selectedLevel
+                              ? `1.5px solid ${GOLD.accentBorder40}`
+                              : `1.5px solid ${GOLD.border25}`,
+                            boxShadow: l.id === selectedLevel
+                              ? `inset 0 0 10px ${GOLD.accentGlow08}`
+                              : `inset 0 0 8px ${GOLD.glow04}`
+                          }}
+                          onClick={() => handleLevelClick(l.id)}
                         >
+                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
+                            border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
+                          }} />
                           <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${isLevelUnlocked(l.id)
-                              ? "bg-amber-900/50"
-                              : "bg-stone-800"
-                              }`}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-lg relative"
+                            style={{
+                              background: isLevelUnlocked(l.id) ? PANEL.bgDeep : NEUTRAL.bgDark,
+                              border: `1px solid ${isLevelUnlocked(l.id) ? GOLD.border25 : NEUTRAL.border}`
+                            }}
                           >
                             {isLevelUnlocked(l.id)
                               ? l.region === "grassland"
@@ -10032,7 +10293,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               : "🔒"}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm text-amber-200 font-medium truncate">
+                            <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
                               {l.name}
                             </div>
                           </div>
@@ -10043,7 +10304,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                 size={14}
                                 className={
                                   (levelStars[l.id] || 0) >= s
-                                    ? "text-yellow-400 fill-yellow-400"
+                                    ? "text-yellow-400 fill-yellow-400 drop-shadow"
                                     : "text-stone-600"
                                 }
                               />
@@ -10051,16 +10312,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           </div>
                         </div>
                       ))}
-                      <div className="mt-3 pt-3 border-t border-amber-800/40 flex items-center justify-between">
-                        <span className="text-amber-500 text-sm">
+                      {/* Region Progress footer */}
+                      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+                        <span className="text-amber-400 text-sm font-medium">
                           Region Progress:
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md" style={{
+                          background: PANEL.bgWarmMid,
+                          border: `1px solid ${GOLD.border25}`
+                        }}>
                           <Star
-                            size={16}
+                            size={14}
                             className="text-yellow-400 fill-yellow-400"
                           />
-                          <span className="text-amber-200 font-bold">
+                          <span className="text-amber-200 font-bold text-sm">
                             {regionStars}/{maxRegionStars}
                           </span>
                         </div>
@@ -10070,11 +10335,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 })()}
               </div>
 
-              <div className="flex-shrink-0 p-2 sm:p-4 border-t border-amber-800/50 bg-gradient-to-t from-stone-950 to-transparent">
+              <div className="flex-shrink-0 p-2 sm:p-4" style={{ borderTop: `1px solid ${GOLD.border25}`, background: `linear-gradient(180deg, transparent 0%, ${PANEL.bgDark} 100%)` }}>
                 {/* Warning messages - show prominently when not ready */}
                 {!canStart && (
-                  <div className="mb-2 p-2 sm:p-3 rounded-xl bg-gradient-to-r from-red-950/60 via-orange-950/50 to-red-950/60 border border-red-800/50">
-                    <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-300">
+                  <div className="mb-2 p-2 sm:p-3 rounded-xl relative" style={{
+                    background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
+                    border: `1.5px solid ${RED_CARD.border25}`,
+                    boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
+                  }}>
+                    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
+                    <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-300 relative z-10">
                       <AlertTriangle size={16} className="text-orange-400 animate-pulse" />
                       {!selectedHero && !selectedSpells.length && (
                         <span>Select a Champion & 3 Spells</span>
@@ -10091,20 +10361,28 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <button
                   onClick={startGame}
                   disabled={!canStart}
-                  className={`w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group ${canStart
-                    ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-600 hover:from-orange-500 hover:via-amber-400 hover:to-orange-500 text-stone-900 shadow-xl shadow-amber-500/30 hover:scale-[1.02] animate-pulse"
-                    : "bg-stone-800/80 text-stone-500 cursor-not-allowed border border-stone-700/50"
-                    }`}
+                  className="w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group"
+                  style={canStart ? {
+                    background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
+                    border: `2px solid ${GOLD.accentBorder50}`,
+                    boxShadow: `0 0 20px ${GOLD.accentGlow10}, inset 0 0 15px ${GOLD.accentGlow08}`,
+                    color: "#1a1000",
+                  } : {
+                    background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                    border: `1.5px solid ${NEUTRAL.border}`,
+                    color: "rgb(120,113,108)",
+                    cursor: "not-allowed"
+                  }}
                 >
                   {canStart && (
                     <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                      <div className="absolute inset-0 rounded-xl border-2 border-amber-300/50 animate-pulse" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
                     </>
                   )}
                   <div className="relative flex items-center justify-center gap-2 sm:gap-3">
                     <Swords size={20} className="sm:w-6 sm:h-6" />
-                    <span>{canStart ? "BATTLE" : "Waiting..."}</span>
+                    <span className="tracking-wider">{canStart ? "BATTLE" : "Waiting..."}</span>
                     {canStart && <Play size={18} className="sm:w-5 sm:h-5" />}
                   </div>
                 </button>
@@ -10125,8 +10403,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           )}
         </div>
         {/* RIGHT: Map */}
-        <div className="relative flex-1 flex flex-col min-w-0 p-3 overflow-x-auto">
-          <div className="z-20 sm:hidden absolute flex top-4 right-4  items-center gap-1 px-1.5 py-1.5 rounded-xl">
+        <div className="relative flex-1 flex flex-col min-w-0 pl-3 sm:pl-0 py-3 pr-3 overflow-x-auto" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+          <div className="z-20 sm:hidden absolute flex top-4 right-8  items-center gap-1 px-1.5 py-1.5 rounded-xl">
             <button
               onClick={() => goToPreviousLevel()}
               className="p-0.5 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
@@ -10171,318 +10449,511 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               </div>
 
               {/* HERO & SPELL SELECTION OVERLAY */}
-              <div className="absolute w-full flex bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-stone-950/98 via-stone-900/35 to-transparent pointer-events-none h-full overflow-x-auto z-20">
-                <div className="flex w-full mt-auto gap-3 pointer-events-auto">
-                  <div className="hidden sm:inline bg-gradient-to-br from-stone-900/95 to-stone-950/98 rounded-xl border border-amber-800/50 p-3 shadow-xl backdrop-blur-sm w-40 flex-shrink-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Crown size={14} className="text-amber-400" />
-                      <span className="text-xs font-bold text-amber-300 tracking-wide">
-                        WAR IS COMING
-                      </span>
-                    </div>
-                    <div className="text-[10px] text-amber-200/80 leading-relaxed space-y-1.5">
-                      <p>
-                        The Kingdom of Princeton stands as the last bastion
-                        against the invading hordes. Ancient towers guard our
-                        halls, powered by arcane knowledge.
-                      </p>
-                      {/* <p className="text-amber-400/70 italic">
-                      Select your champion wisely, arm yourself with powerful
-                      spells, and lead the Tiger forces to victory!
-                    </p> */}
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-amber-800/30 flex items-center gap-2 text-[9px] text-amber-500">
-                      <Swords size={10} />
-                      <span>Defend the realm!</span>
-                    </div>
-                  </div>
-                  {/* Hero Panel */}
-                  <div className="bg-gradient-to-br from-amber-950/95 to-stone-900/98 rounded-xl border border-amber-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Shield size={14} className="text-amber-400" />
-                      <span className="text-xs text-nowrap font-bold text-amber-300 tracking-wide">
-                        SELECT CHAMPION
-                      </span>
-                    </div>
-                    <div className="grid-cols-4 grid sm:flex gap-1.5 mb-2 w-full">
-                      {heroOptions.map((heroType) => {
-                        const hero = HERO_DATA[heroType];
-                        const isSelected = selectedHero === heroType;
-                        return (
-                          <button
-                            key={heroType}
-                            onClick={() => setSelectedHero(heroType)}
-                            onMouseEnter={() => setHoveredHero(heroType)}
-                            onMouseLeave={() => setHoveredHero(null)}
-                            className={`relative px-4s sm:px-1 pt-1.5 flex justify-center w-full p-1 pb-0.5 rounded-lg transition-all ${isSelected
-                              ? "bg-gradient-to-br from-amber-600 to-orange-700 border-2 border-amber-300 scale-110 shadow-lg shadow-amber-500/40 z-10"
-                              : "bg-stone-800/80 border border-stone-600/50 hover:border-amber-500/60 hover:scale-105"
-                              }`}
-                          >
-                            <HeroSprite
-                              type={heroType}
-                              size={36}
-                              color={hero.color}
-                            />
-                            {isSelected && (
-                              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border border-green-300 text-[8px] text-white font-bold">
-                                ✓
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {selectedHero ? (
-                      <div className="hidden sm:block bg-stone-900/60 rounded-lg p-2 border border-amber-800/40">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-sm font-bold text-amber-200">
-                            {HERO_DATA[selectedHero].name}
-                          </span>
-                          <span className="text-lg">
-                            {HERO_DATA[selectedHero].icon}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-5 gap-1 mb-1.5 text-[9px]">
-                          <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-red-500">HP</div>
-                            <div className="text-red-300 font-bold">
-                              {HERO_DATA[selectedHero].hp}
-                            </div>
-                          </div>
-                          <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-orange-500">DMG</div>
-                            <div className="text-orange-300 font-bold">
-                              {HERO_DATA[selectedHero].damage}
-                            </div>
-                          </div>
-                          <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-blue-500">RNG</div>
-                            <div className="text-blue-300 font-bold">
-                              {HERO_DATA[selectedHero].range}
-                            </div>
-                          </div>
-                          <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-green-500">SPD</div>
-                            <div className="text-green-300 font-bold">
-                              {HERO_DATA[selectedHero].speed}
-                            </div>
-                          </div>
-                          <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-purple-500">CD</div>
-                            <div className="text-purple-300 font-bold">
-                              {HERO_ABILITY_COOLDOWNS[selectedHero] / 1000}s
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-[9px] text-purple-300 flex items-center gap-1 bg-purple-900/40 px-2 py-1 rounded">
-                          <HeroAbilityIcon type={selectedHero} size={10} />
-                          <span className="font-semibold text-purple-200">
-                            {HERO_DATA[selectedHero].ability}:
-                          </span>
-                          <span className="text-purple-300/80 truncate">
-                            {HERO_DATA[selectedHero].abilityDesc}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-amber-600/60 text-[10px] text-center py-2">
-                        ← Choose your champion
-                      </div>
-                    )}
-                    {hoveredHero && hoveredHero !== selectedHero && (
-                      <div className="absolute bg-gradient-to-br from-amber-950 to-stone-900 bottom-full left-0 mb-2 w-72 rounded-lg border border-amber-700/60 p-3 shadow-xl z-50">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-amber-200 font-bold">
-                            {HERO_DATA[hoveredHero].name}
-                          </span>
-                          <span>{HERO_DATA[hoveredHero].icon}</span>
-                        </div>
-                        <p className="text-xs text-amber-500/80 mb-2">
-                          {HERO_DATA[hoveredHero].description}
-                        </p>
-                        <div className="grid grid-cols-5 gap-1 text-[9px] mb-2">
-                          <div className="bg-red-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-red-500">HP</div>
-                            <div className="text-red-300 font-bold">
-                              {HERO_DATA[hoveredHero].hp}
-                            </div>
-                          </div>
-                          <div className="bg-orange-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-orange-500">DMG</div>
-                            <div className="text-orange-300 font-bold">
-                              {HERO_DATA[hoveredHero].damage}
-                            </div>
-                          </div>
-                          <div className="bg-blue-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-blue-500">RNG</div>
-                            <div className="text-blue-300 font-bold">
-                              {HERO_DATA[hoveredHero].range}
-                            </div>
-                          </div>
-                          <div className="bg-green-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-green-500">SPD</div>
-                            <div className="text-green-300 font-bold">
-                              {HERO_DATA[hoveredHero].speed}
-                            </div>
-                          </div>
-                          <div className="bg-purple-950/60 rounded px-1 py-0.5 text-center">
-                            <div className="text-purple-500">CD</div>
-                            <div className="text-purple-300 font-bold">
-                              {HERO_ABILITY_COOLDOWNS[hoveredHero] / 1000}s
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-1 rounded flex items-center gap-1">
-                          <HeroAbilityIcon type={hoveredHero} size={12} />
-                          <span className="font-semibold text-purple-200">
-                            {HERO_DATA[hoveredHero].ability}:
-                          </span>{" "}
-                          {HERO_DATA[hoveredHero].abilityDesc}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Spell Panel */}
-                  <div className="bg-gradient-to-br from-purple-950/95 to-stone-900/98 rounded-xl border border-purple-700/60 p-3 shadow-xl backdrop-blur-sm flex-1 relative">
-                    <div className="flex items-center justify-between -mt-0.5 mb-2">
+              <div className="absolute w-full flex bottom-0 left-0 right-0 p-1.5 sm:p-3 pointer-events-none h-full overflow-x-auto z-20" style={{
+                background: `linear-gradient(180deg, transparent 0%, transparent 40%, rgba(18,12,6,0.4) 65%, rgba(18,12,6,0.92) 85%, rgba(18,12,6,0.98) 100%)`
+              }}>
+                <div className="flex w-full mt-auto gap-1.5 sm:gap-3 pointer-events-auto items-stretch">
+                  {/* --- War is Coming Panel --- */}
+                  <div className="hidden sm:flex sm:flex-col w-44 flex-shrink-0 relative rounded-xl"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(41,32,20,0.97) 0%, rgba(28,22,15,0.99) 100%)',
+                      border: '1.5px solid rgba(180,140,60,0.45)',
+                      boxShadow: 'inset 0 0 20px rgba(180,140,60,0.06), 0 4px 24px rgba(0,0,0,0.5)',
+                    }}>
+                    {/* Inner border glow */}
+                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.12)' }} />
+                    {/* Header */}
+                    <div className="px-3 py-2 relative"
+                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.2), rgba(120,80,20,0.1), transparent)' }}>
                       <div className="flex items-center gap-2">
-                        <Zap size={14} className="text-purple-400" />
-                        <span className="text-xs font-bold text-amber-300 tracking-wide">
-                          <span className="hidden sm:inline">SELECT</span> SPELLS
+                        <Crown size={13} className="text-amber-500" />
+                        <span className="text-[9px] font-bold text-amber-400/90 tracking-[0.2em] uppercase">
+                          War is Coming
                         </span>
                       </div>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${selectedSpells.length === 3
-                          ? "bg-green-900/60 text-green-300 border border-green-700/50"
-                          : "bg-purple-900/60 text-purple-300 border border-purple-700/50"
-                          }`}
-                      >
-                        {selectedSpells.length}/3{" "}
-                        <span className="hidden sm:inline">Selected</span>
-                      </span>
+                      {/* Ornate divider */}
+                      <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.4) 20%, rgba(255,200,80,0.5) 50%, rgba(180,140,60,0.4) 80%, transparent)' }} />
                     </div>
-                    <div className="grid grid-cols-3 sm:flex gap-1.5 mb-2">
-                      {spellOptions.map((spellType) => {
-                        const isSelected = selectedSpells.includes(spellType);
-                        const canSelect = isSelected || selectedSpells.length < 3;
-                        const spellIndex = selectedSpells.indexOf(spellType);
-                        return (
-                          <button
-                            key={spellType}
-                            onClick={() => toggleSpell(spellType)}
-                            onMouseEnter={() => setHoveredSpell(spellType)}
-                            onMouseLeave={() => setHoveredSpell(null)}
-                            disabled={!canSelect && !isSelected}
-                            className={`relative w-full p-1.5 flex justify-center rounded-lg transition-all ${isSelected
-                              ? "bg-gradient-to-br from-purple-600 to-violet-700 border-2 border-purple-300 shadow-lg shadow-purple-500/40"
-                              : canSelect
-                                ? "bg-stone-800/80 border border-stone-600/50 hover:border-purple-500/60 hover:scale-105"
-                                : "bg-stone-900/60 border border-stone-800/40 opacity-40 cursor-not-allowed"
-                              }`}
-                          >
-                            <SpellSprite type={spellType} size={32} />
-                            {isSelected && (
-                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border border-purple-300">
-                                {spellIndex + 1}
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
+                    <div className="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <p className="text-[9px] text-amber-200/60 leading-relaxed italic">
+                          &ldquo;The shadows gather at the gates. Ancient towers
+                          stand resolute, their arcane fires burning eternal
+                          against the darkness.&rdquo;
+                        </p>
+                        <div className="my-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.25), transparent)' }} />
+                        <p className="text-[8px] text-stone-400/70 leading-relaxed">
+                          Choose your champion and ready your spells. The horde approaches.
+                        </p>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(120,80,20,0.2), rgba(80,50,10,0.15))',
+                          border: '1px solid rgba(180,140,60,0.2)',
+                          boxShadow: 'inset 0 1px 0 rgba(255,200,80,0.05)',
+                        }}>
+                        <Swords size={11} className="text-amber-500/80" />
+                        <span className="text-[9px] font-semibold text-amber-400/80 tracking-wider uppercase">Defend the Realm</span>
+                      </div>
                     </div>
-                    {selectedSpells.length > 0 ? (
-                      <div className="hidden sm:block bg-stone-900/60 rounded-lg w-full p-2 border border-purple-800/40">
-                        <div className="flex flex-wrap gap-1.5">
-                          {selectedSpells.map((sp, i) => {
-                            const spell = SPELL_DATA[sp];
-                            return (
-                              <div
-                                key={sp}
-                                className="flex w-full items-center gap-1.5 text-[9px] bg-purple-950/60 px-2 py-1 rounded border border-purple-800/40"
-                              >
-                                <span className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-[8px] font-bold text-white">
-                                  {i + 1}
-                                </span>
-                                <span className="text-purple-200 font-medium">
-                                  {spell.name}
-                                </span>
-
-                                <span className="ml-auto text-purple-500">|</span>
-
-                                <span className="text-amber-400 flex items-center gap-0.5">
-                                  <Coins size={8} />
-                                  {spell.cost > 0 ? spell.cost : "FREE"}
-                                </span>
-                                <span className="text-blue-400 flex items-center gap-0.5">
-                                  <Timer size={8} />
-                                  {spell.cooldown / 1000}s
-                                </span>
+                  </div>
+                  {/* --- Hero Panel --- */}
+                  <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(38,32,24,0.97) 0%, rgba(24,20,14,0.99) 100%)',
+                      border: '1.5px solid rgba(180,140,60,0.4)',
+                      boxShadow: 'inset 0 0 24px rgba(180,140,60,0.05), 0 4px 24px rgba(0,0,0,0.5)',
+                    }}>
+                    {/* Inner border glow */}
+                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
+                    {/* Header */}
+                    <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative"
+                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Shield size={11} className="text-amber-400 sm:w-[13px] sm:h-[13px]" />
+                        <span className="text-[8px] sm:text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                          Select Champion
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
+                    </div>
+                    <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
+                      <div className="grid-cols-4 grid sm:flex gap-1 sm:gap-1.5 mb-1.5 sm:mb-2 w-full">
+                        {heroOptions.map((heroType) => {
+                          const hero = HERO_DATA[heroType];
+                          const isSelected = selectedHero === heroType;
+                          return (
+                            <button
+                              key={heroType}
+                              onClick={() => setSelectedHero(heroType)}
+                              onMouseEnter={() => setHoveredHero(heroType)}
+                              onMouseLeave={() => setHoveredHero(null)}
+                              className={`relative flex justify-center w-full p-0.5 sm:p-1 pt-1 sm:pt-1.5 pb-0.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
+                                ? "scale-105 sm:scale-110 z-10"
+                                : "hover:scale-105 hover:brightness-110"
+                                }`}
+                              style={{
+                                background: isSelected
+                                  ? `linear-gradient(135deg, ${hero.color}35, ${hero.color}15)`
+                                  : 'linear-gradient(135deg, rgba(38, 34, 30, 0.95), rgba(24, 20, 16, 0.95))',
+                                border: `1.5px solid ${isSelected ? hero.color : 'rgba(100, 90, 70, 0.25)'}`,
+                                boxShadow: isSelected
+                                  ? `0 0 14px ${hero.color}30, inset 0 0 12px ${hero.color}10, inset 0 1px 0 rgba(255,255,255,0.08)`
+                                  : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                                outline: isSelected ? `2px solid ${hero.color}60` : 'none',
+                                outlineOffset: '1px',
+                              }}
+                            >
+                              <div className="scale-75 sm:scale-100">
+                                <HeroSprite
+                                  type={heroType}
+                                  size={36}
+                                  color={hero.color}
+                                />
                               </div>
-                            );
-                          })}
+                              {isSelected && (
+                                <div className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-amber-500 rounded-full flex items-center justify-center border sm:border-2 border-stone-900 text-[6px] sm:text-[8px] text-white font-bold"
+                                  style={{ boxShadow: '0 0 6px rgba(245,158,11,0.5)' }}>
+                                  ✓
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {selectedHero ? (
+                        <div className="hidden sm:block rounded-lg p-1.5 relative"
+                          style={{
+                            background: 'linear-gradient(180deg, rgba(28,24,18,0.8), rgba(20,16,12,0.9))',
+                            border: '1px solid rgba(120,100,60,0.2)',
+                          }}>
+                          {/* Hero name/icon + stats — all on one row */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <span className="text-[11px] font-bold text-amber-200 whitespace-nowrap">
+                                {HERO_DATA[selectedHero].name}
+                              </span>
+                              <span className="text-sm">
+                                {HERO_DATA[selectedHero].icon}
+                              </span>
+                            </div>
+                            {/* Stat strip inline */}
+                            <div className="flex items-center gap-0 rounded-md overflow-hidden flex-1 min-w-0"
+                              style={{ border: '1px solid rgba(100,80,50,0.15)' }}>
+                              {[
+                                { icon: <Heart size={8} className="text-red-400" />, value: HERO_DATA[selectedHero].hp, color: "text-red-300", bg: "rgba(127,29,29,0.2)" },
+                                { icon: <Swords size={8} className="text-orange-400" />, value: HERO_DATA[selectedHero].damage, color: "text-orange-300", bg: "rgba(124,45,18,0.2)" },
+                                { icon: <Target size={8} className="text-blue-400" />, value: HERO_DATA[selectedHero].range, color: "text-blue-300", bg: "rgba(30,58,138,0.2)" },
+                                { icon: <Gauge size={8} className="text-green-400" />, value: HERO_DATA[selectedHero].speed, color: "text-green-300", bg: "rgba(20,83,45,0.2)" },
+                                { icon: <Timer size={8} className="text-purple-400" />, value: `${HERO_ABILITY_COOLDOWNS[selectedHero] / 1000}s`, color: "text-purple-300", bg: "rgba(88,28,135,0.2)" },
+                              ].map((stat, idx) => (
+                                <div key={idx} className="flex-1 flex items-center justify-center gap-1 py-1"
+                                  style={{ background: stat.bg, borderRight: idx < 4 ? '1px solid rgba(100,80,50,0.1)' : 'none' }}>
+                                  {stat.icon}
+                                  <span className={`text-[9px] font-bold ${stat.color}`}>{stat.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Hero description */}
+                          <p className="text-[8px] text-stone-400/70 leading-relaxed mb-1 px-0.5">
+                            {HERO_DATA[selectedHero].description}
+                          </p>
+                          {/* Ability */}
+                          <div className="text-[8px] text-purple-300 flex items-center gap-1 px-1.5 py-1 rounded-md"
+                            style={{ background: 'rgba(88,28,135,0.12)', border: '1px solid rgba(88,28,135,0.15)' }}>
+                            <HeroAbilityIcon type={selectedHero} size={9} />
+                            <span className="font-semibold text-purple-200">
+                              {HERO_DATA[selectedHero].ability}:
+                            </span>
+                            <span className="text-purple-300/80 truncate">
+                              {HERO_DATA[selectedHero].abilityDesc}
+                            </span>
+                          </div>
                         </div>
-                        {selectedSpells.length < 3 && (
-                          <div className="hidden sm:inline text-[8px] text-purple-500/60 mt-1">
-                            Select {3 - selectedSpells.length} more spell
-                            {3 - selectedSpells.length > 1 ? "s" : ""}
+                      ) : (
+                        <div className="flex-1 flex items-center justify-center">
+                          <span className="text-[10px] text-amber-600/50 italic">Choose your champion...</span>
+                        </div>
+                      )}
+                    </div>
+                    {hoveredHero && hoveredHero !== selectedHero && (
+                      <div className="absolute bottom-full left-0 mb-2 w-72 rounded-xl z-50"
+                        style={{
+                          background: 'linear-gradient(180deg, rgba(38,32,24,0.99), rgba(24,20,14,0.99))',
+                          border: '1.5px solid rgba(180,140,60,0.5)',
+                          boxShadow: '0 4px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(180,140,60,0.04)',
+                        }}>
+                        <div className="p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-amber-200 font-bold">
+                              {HERO_DATA[hoveredHero].name}
+                            </span>
+                            <span>{HERO_DATA[hoveredHero].icon}</span>
+                          </div>
+                          <p className="text-[10px] text-stone-400/80 mb-2 leading-relaxed">
+                            {HERO_DATA[hoveredHero].description}
+                          </p>
+                          {/* Compact inline stat strip */}
+                          <div className="flex items-center gap-0 rounded-md overflow-hidden mb-2"
+                            style={{ border: '1px solid rgba(100,80,50,0.2)' }}>
+                            {[
+                              { icon: <Heart size={8} className="text-red-400" />, value: HERO_DATA[hoveredHero].hp, color: "text-red-300", bg: "rgba(127,29,29,0.25)" },
+                              { icon: <Swords size={8} className="text-orange-400" />, value: HERO_DATA[hoveredHero].damage, color: "text-orange-300", bg: "rgba(124,45,18,0.25)" },
+                              { icon: <Target size={8} className="text-blue-400" />, value: HERO_DATA[hoveredHero].range, color: "text-blue-300", bg: "rgba(30,58,138,0.25)" },
+                              { icon: <Gauge size={8} className="text-green-400" />, value: HERO_DATA[hoveredHero].speed, color: "text-green-300", bg: "rgba(20,83,45,0.25)" },
+                              { icon: <Timer size={8} className="text-purple-400" />, value: `${HERO_ABILITY_COOLDOWNS[hoveredHero] / 1000}s`, color: "text-purple-300", bg: "rgba(88,28,135,0.25)" },
+                            ].map((stat, idx) => (
+                              <div key={idx} className="flex-1 flex items-center justify-center gap-1 py-1"
+                                style={{ background: stat.bg, borderRight: idx < 4 ? '1px solid rgba(100,80,50,0.12)' : 'none' }}>
+                                {stat.icon}
+                                <span className={`text-[9px] font-bold ${stat.color}`}>{stat.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-[9px] text-purple-300 flex items-center gap-1 px-2 py-1.5 rounded-md"
+                            style={{ background: 'rgba(88,28,135,0.15)', border: '1px solid rgba(88,28,135,0.15)' }}>
+                            <HeroAbilityIcon type={hoveredHero} size={10} />
+                            <span className="font-semibold text-purple-200">
+                              {HERO_DATA[hoveredHero].ability}:
+                            </span>{" "}
+                            {HERO_DATA[hoveredHero].abilityDesc}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* --- Spell Panel --- */}
+                  <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(30,22,40,0.97) 0%, rgba(20,14,30,0.99) 100%)',
+                      border: '1.5px solid rgba(140,80,200,0.35)',
+                      boxShadow: 'inset 0 0 24px rgba(140,80,200,0.04), 0 4px 24px rgba(0,0,0,0.5)',
+                    }}>
+                    {/* Inner border glow */}
+                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(140,80,200,0.08)' }} />
+                    {/* Header */}
+                    <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
+                      style={{ background: 'linear-gradient(90deg, rgba(120,60,180,0.15), rgba(80,30,140,0.08), transparent)' }}>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Sparkles size={11} className="text-purple-400 sm:w-[13px] sm:h-[13px]" />
+                        <span className="text-[8px] sm:text-[9px] font-bold text-purple-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                          <span className="hidden sm:inline">Select </span>Spells
+                        </span>
+                      </div>
+                      {/* Spell slots indicator */}
+                      <div className="flex items-center gap-0.5 sm:gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <div key={i} className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm transition-all duration-300"
+                            style={{
+                              background: i < selectedSpells.length
+                                ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                                : 'rgba(60,40,80,0.4)',
+                              border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.6)' : 'rgba(100,70,140,0.25)'}`,
+                              boxShadow: i < selectedSpells.length ? '0 0 6px rgba(168,85,247,0.4)' : 'none',
+                            }} />
+                        ))}
+                      </div>
+                      <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
+                    </div>
+                    <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
+                      {(() => {
+                        const spellLabels: Record<string, { name: string; brief: string; nameColor: string; briefColor: string; borderColor: string; cost: number; cooldown: number }> = {
+                          fireball: { name: "Meteor Shower", brief: "Rain fiery meteors, burning all enemies in area", nameColor: "text-orange-300", briefColor: "text-orange-400/50", borderColor: "rgba(234,88,12,0.4)", cost: 50, cooldown: 15 },
+                          lightning: { name: "Chain Lightning", brief: "Chain lightning stuns and shocks five enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)", cost: 40, cooldown: 12 },
+                          freeze: { name: "Arctic Blast", brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)", cost: 60, cooldown: 20 },
+                          payday: { name: "Gold Rush", brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)", cost: 0, cooldown: 30 },
+                          reinforcements: { name: "Knight Squad", brief: "Summon three armored knights to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)", cost: 75, cooldown: 25 },
+                        };
+                        return (
+                          <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-1.5">
+                            {spellOptions.map((spellType) => {
+                              const isSelected = selectedSpells.includes(spellType);
+                              const canSelect = isSelected || selectedSpells.length < 3;
+                              const spellIndex = selectedSpells.indexOf(spellType);
+                              const label = spellLabels[spellType];
+                              return (
+                                <button
+                                  key={spellType}
+                                  onClick={() => toggleSpell(spellType)}
+                                  onMouseEnter={() => setHoveredSpell(spellType)}
+                                  onMouseLeave={() => setHoveredSpell(null)}
+                                  disabled={!canSelect && !isSelected}
+                                  className={`relative w-full p-1 sm:p-1.5 pb-0.5 sm:pb-1 flex flex-col items-center gap-0.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
+                                    ? "z-10"
+                                    : canSelect
+                                      ? "hover:scale-105 hover:brightness-110"
+                                      : "opacity-35 cursor-not-allowed"
+                                    }`}
+                                  style={{
+                                    background: isSelected
+                                      ? 'linear-gradient(135deg, rgba(120,50,200,0.25), rgba(80,20,150,0.15))'
+                                      : !canSelect
+                                        ? 'linear-gradient(135deg, rgba(24,18,30,0.6), rgba(16,12,22,0.6))'
+                                        : 'linear-gradient(135deg, rgba(36,28,44,0.95), rgba(24,18,30,0.95))',
+                                    border: `1.5px solid ${isSelected ? (label?.borderColor || '#a855f7') : 'rgba(80,60,100,0.25)'}`,
+                                    boxShadow: isSelected
+                                      ? `0 0 14px rgba(168,85,247,0.25), inset 0 0 12px rgba(168,85,247,0.08), inset 0 1px 0 rgba(255,255,255,0.06)`
+                                      : 'inset 0 1px 0 rgba(255,255,255,0.03)',
+                                    outline: isSelected ? `2px solid ${label?.borderColor || 'rgba(168,85,247,0.5)'}` : 'none',
+                                    outlineOffset: '1px',
+                                  }}
+                                >
+                                  <div className="scale-75 sm:scale-100">
+                                    <SpellSprite type={spellType} size={32} />
+                                  </div>
+                                  {label && (
+                                    <>
+                                      <span className={`text-[6.5px] sm:text-[8px] font-semibold leading-none ${label.nameColor}`}>{label.name}</span>
+                                      <span className={`text-[6.5px] leading-tight text-center hidden sm:block ${label.briefColor}`}>{label.brief}</span>
+                                      {/* Cost & Cooldown at a glance */}
+                                      <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
+                                        <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
+                                          style={{ background: label.cost > 0 ? 'rgba(120,80,20,0.3)' : 'rgba(20,83,45,0.3)', border: `1px solid ${label.cost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)'}` }}>
+                                          <Coins size={6} className={`sm:w-[7px] sm:h-[7px] ${label.cost > 0 ? "text-amber-400/70" : "text-green-400/70"}`} />
+                                          <span className={label.cost > 0 ? "text-amber-300/80" : "text-green-300/80"}>{label.cost > 0 ? label.cost : "Free"}</span>
+                                        </span>
+                                        <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
+                                          style={{ background: 'rgba(30,58,138,0.25)', border: '1px solid rgba(30,58,138,0.2)' }}>
+                                          <Clock size={6} className="text-blue-400/70 sm:w-[7px] sm:h-[7px]" />
+                                          <span className="text-blue-300/80">{label.cooldown}s</span>
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
+                                  {isSelected && (
+                                    <div className="absolute -top-1 sm:-top-1.5 -right-1 sm:-right-1.5 w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[8px] sm:text-[10px] text-white font-bold border sm:border-2 border-stone-900"
+                                      style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 6px rgba(168,85,247,0.5)' }}>
+                                      {spellIndex + 1}
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                      {/* Spell loadout summary */}
+                      <div className="hidden sm:block mt-auto pt-2">
+                        <div className="h-px mb-2" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.2) 30%, rgba(140,80,200,0.2) 70%, transparent)' }} />
+                        {selectedSpells.length === 3 ? (
+                          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md"
+                            style={{ background: 'rgba(88,28,135,0.12)', border: '1px solid rgba(88,28,135,0.15)' }}>
+                            <Sparkles size={10} className="text-purple-400/70 flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                              {selectedSpells.map((sp, i) => (
+                                <React.Fragment key={sp}>
+                                  <div className="flex items-center gap-1">
+                                    <SpellSprite type={sp} size={14} />
+                                    <span className="text-[8px] text-purple-200/80 font-medium whitespace-nowrap">{SPELL_DATA[sp].name}</span>
+                                  </div>
+                                  {i < 2 && <span className="text-purple-600/40 text-[8px]">·</span>}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                            <span className="text-[7px] text-green-400/70 font-semibold uppercase tracking-wider flex-shrink-0">Ready</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md"
+                            style={{ background: 'rgba(60,40,80,0.12)', border: '1px solid rgba(80,50,120,0.12)' }}>
+                            <Zap size={10} className="text-purple-500/40 flex-shrink-0" />
+                            <div className="flex items-center gap-1 flex-1">
+                              {[0, 1, 2].map((i) => (
+                                <div key={i} className="flex items-center gap-1">
+                                  {i < selectedSpells.length ? (
+                                    <>
+                                      <SpellSprite type={selectedSpells[i]} size={14} />
+                                      <span className="text-[8px] text-purple-200/70 font-medium whitespace-nowrap">{SPELL_DATA[selectedSpells[i]].name}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="w-3.5 h-3.5 rounded border border-dashed flex items-center justify-center"
+                                        style={{ borderColor: 'rgba(140,80,200,0.25)' }}>
+                                        <span className="text-[7px] text-purple-600/40">?</span>
+                                      </div>
+                                      <span className="text-[8px] text-purple-600/30 italic">Empty</span>
+                                    </>
+                                  )}
+                                  {i < 2 && <span className="text-purple-600/30 text-[8px] mx-0.5">·</span>}
+                                </div>
+                              ))}
+                            </div>
+                            <span className="text-[7px] text-purple-500/40 font-medium flex-shrink-0">{3 - selectedSpells.length} left</span>
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div className="hidden sm:inline text-purple-600/60 text-[10px] text-center py-2">
-                        ← Select 3 spells for battle
-                      </div>
-                    )}
-                    {hoveredSpell && (
-                      <div className="absolute bottom-full right-0 mb-2 w-80 bg-gradient-to-br from-purple-950 to-stone-900 rounded-lg border border-purple-700/60 p-3 shadow-xl z-50">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-purple-200 font-bold text-lg">
-                            {SPELL_DATA[hoveredSpell].name}
-                          </span>
-                          <span className="text-xl">
-                            {SPELL_DATA[hoveredSpell].icon}
-                          </span>
-                        </div>
-                        <p className="text-xs text-purple-400/80 mb-3">
-                          {SPELL_DATA[hoveredSpell].desc}
-                        </p>
-                        <div className="flex gap-3 mb-3">
-                          <div className="bg-amber-950/60 rounded px-3 py-1.5 text-center">
-                            <div className="text-[9px] text-amber-500">Cost</div>
-                            <div className="text-amber-300 font-bold">
-                              {SPELL_DATA[hoveredSpell].cost > 0
-                                ? `${SPELL_DATA[hoveredSpell].cost} PP`
-                                : "FREE"}
+                    </div>
+                    {hoveredSpell && (() => {
+                      const spellInfo: Record<string, {
+                        panelBg: string; panelBorder: string; headerBg: string;
+                        icon: React.ReactNode; accentText: string;
+                        stats: Array<{ label: string; value: string; color: string; statBg: string; statBorder: string; icon: React.ReactNode }>;
+                        effectBg: string; effectLabel: string; effectText: string; effect: string;
+                      }> = {
+                        fireball: {
+                          panelBg: "rgba(40,24,10,0.99)", panelBorder: "rgba(234,88,12,0.5)",
+                          headerBg: "linear-gradient(90deg, rgba(180,80,20,0.2), rgba(120,40,10,0.1), transparent)",
+                          icon: <Flame size={16} className="text-orange-400" />, accentText: "text-orange-300",
+                          stats: [
+                            { label: "Damage", value: "50×10", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Swords size={10} className="text-red-400" /> },
+                            { label: "Radius", value: "150", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Target size={10} className="text-orange-400" /> },
+                            { label: "Burn", value: "4s", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Flame size={10} className="text-amber-400" /> },
+                          ],
+                          effectBg: "rgba(124,45,18,0.15)", effectLabel: "text-orange-500/80", effectText: "text-orange-200/90",
+                          effect: "Rains 10 meteors in an area. Each deals 50 AoE damage with falloff and sets enemies ablaze for 4 seconds.",
+                        },
+                        lightning: {
+                          panelBg: "rgba(36,30,10,0.99)", panelBorder: "rgba(234,179,8,0.5)",
+                          headerBg: "linear-gradient(90deg, rgba(180,140,20,0.2), rgba(40,120,140,0.08), transparent)",
+                          icon: <Zap size={16} className="text-yellow-400" />, accentText: "text-yellow-300",
+                          stats: [
+                            { label: "Total DMG", value: "600", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Swords size={10} className="text-yellow-400" /> },
+                            { label: "Chains", value: "5", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Zap size={10} className="text-cyan-400" /> },
+                            { label: "Stun", value: "0.5s", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Timer size={10} className="text-blue-400" /> },
+                          ],
+                          effectBg: "rgba(113,63,18,0.15)", effectLabel: "text-yellow-500/80", effectText: "text-yellow-200/90",
+                          effect: "Lightning bolt chains between up to 5 enemies, splitting 600 total damage. Each hit stuns for 0.5 seconds.",
+                        },
+                        freeze: {
+                          panelBg: "rgba(10,28,40,0.99)", panelBorder: "rgba(6,182,212,0.5)",
+                          headerBg: "linear-gradient(90deg, rgba(20,100,140,0.2), rgba(20,60,120,0.08), transparent)",
+                          icon: <Snowflake size={16} className="text-cyan-400" />, accentText: "text-cyan-300",
+                          stats: [
+                            { label: "Duration", value: "3s", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Timer size={10} className="text-cyan-400" /> },
+                            { label: "Range", value: "Global", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Target size={10} className="text-blue-400" /> },
+                            { label: "Slow", value: "100%", color: "text-indigo-300", statBg: "rgba(49,46,129,0.3)", statBorder: "rgba(49,46,129,0.2)", icon: <Snowflake size={10} className="text-indigo-400" /> },
+                          ],
+                          effectBg: "rgba(22,78,99,0.15)", effectLabel: "text-cyan-500/80", effectText: "text-cyan-200/90",
+                          effect: "Expanding ice wave freezes ALL enemies on the map for 3 full seconds. Great for emergencies.",
+                        },
+                        payday: {
+                          panelBg: "rgba(36,28,10,0.99)", panelBorder: "rgba(245,158,11,0.5)",
+                          headerBg: "linear-gradient(90deg, rgba(160,110,20,0.2), rgba(140,120,10,0.08), transparent)",
+                          icon: <Coins size={16} className="text-amber-400" />, accentText: "text-amber-300",
+                          stats: [
+                            { label: "Base PP", value: "80", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Coins size={10} className="text-amber-400" /> },
+                            { label: "Per Enemy", value: "+5", color: "text-green-300", statBg: "rgba(20,83,45,0.3)", statBorder: "rgba(20,83,45,0.2)", icon: <TrendingUp size={10} className="text-green-400" /> },
+                            { label: "Max Total", value: "130", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Sparkles size={10} className="text-yellow-400" /> },
+                          ],
+                          effectBg: "rgba(120,53,15,0.15)", effectLabel: "text-amber-500/80", effectText: "text-amber-200/90",
+                          effect: "Grants 80 PP plus 5 PP per enemy on the map (max +50 bonus). Use when the field is crowded!",
+                        },
+                        reinforcements: {
+                          panelBg: "rgba(16,30,24,0.99)", panelBorder: "rgba(16,185,129,0.5)",
+                          headerBg: "linear-gradient(90deg, rgba(20,120,80,0.2), rgba(10,80,50,0.08), transparent)",
+                          icon: <Shield size={16} className="text-emerald-400" />, accentText: "text-emerald-300",
+                          stats: [
+                            { label: "Knights", value: "3", color: "text-emerald-300", statBg: "rgba(6,78,59,0.3)", statBorder: "rgba(6,78,59,0.2)", icon: <Users size={10} className="text-emerald-400" /> },
+                            { label: "HP Each", value: "500", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Heart size={10} className="text-red-400" /> },
+                            { label: "DMG Each", value: "30", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Swords size={10} className="text-orange-400" /> },
+                          ],
+                          effectBg: "rgba(6,78,59,0.15)", effectLabel: "text-emerald-500/80", effectText: "text-emerald-200/90",
+                          effect: "Summons 3 armored knights at a chosen location. They block and fight enemies until defeated.",
+                        },
+                      };
+                      const info = spellInfo[hoveredSpell];
+                      if (!info) return null;
+                      const spell = SPELL_DATA[hoveredSpell];
+                      return (
+                        <div className="absolute bottom-full right-0 mb-2 w-72 rounded-xl z-50"
+                          style={{
+                            background: `linear-gradient(180deg, ${info.panelBg}, rgba(18,14,10,0.99))`,
+                            border: `1.5px solid ${info.panelBorder}`,
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02)',
+                          }}>
+                          {/* Inner border glow */}
+                          <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.04)' }} />
+                          {/* Spell-themed header */}
+                          <div className="px-3 py-2 rounded-t-xl relative" style={{ background: info.headerBg }}>
+                            <div className="flex items-center gap-2">
+                              {info.icon}
+                              <span className={`font-bold text-sm ${info.accentText}`}>{spell.name}</span>
+                            </div>
+                            <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent)' }} />
+                          </div>
+                          <div className="px-3 py-2.5">
+                            {/* Cost & Cooldown */}
+                            <div className="flex gap-1.5 mb-2">
+                              <div className="rounded-md px-2 py-1 text-center flex-1"
+                                style={{ background: 'rgba(120,80,20,0.2)', border: '1px solid rgba(120,80,20,0.2)' }}>
+                                <div className="text-[7px] text-amber-500/70 font-medium uppercase">Cost</div>
+                                <div className="text-amber-300 font-bold text-[11px]">
+                                  {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
+                                </div>
+                              </div>
+                              <div className="rounded-md px-2 py-1 text-center flex-1"
+                                style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.2)' }}>
+                                <div className="text-[7px] text-blue-500/70 font-medium uppercase">Cooldown</div>
+                                <div className="text-blue-300 font-bold text-[11px]">{spell.cooldown / 1000}s</div>
+                              </div>
+                            </div>
+                            {/* Spell-specific stats */}
+                            <div className="grid grid-cols-3 gap-1.5 mb-2">
+                              {info.stats.map((stat) => (
+                                <div key={stat.label} className="rounded-md px-1.5 py-1 text-center"
+                                  style={{ background: stat.statBg, border: `1px solid ${stat.statBorder}` }}>
+                                  <div className="flex items-center justify-center mb-0.5">{stat.icon}</div>
+                                  <div className="text-[7px] text-stone-500 font-medium">{stat.label}</div>
+                                  <div className={`font-bold text-[11px] ${stat.color}`}>{stat.value}</div>
+                                </div>
+                              ))}
+                            </div>
+                            {/* Ornate divider */}
+                            <div className="mb-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)' }} />
+                            {/* Effect description */}
+                            <div className="rounded-md px-2.5 py-2"
+                              style={{ background: info.effectBg, border: '1px solid rgba(80,60,50,0.12)' }}>
+                              <div className={`${info.effectLabel} uppercase text-[7px] font-semibold mb-1 tracking-wider flex items-center gap-1`}>
+                                <Sparkles size={8} className="opacity-60" />
+                                How it works
+                              </div>
+                              <p className={`text-[10px] ${info.effectText} leading-relaxed`}>{info.effect}</p>
                             </div>
                           </div>
-                          <div className="bg-blue-950/60 rounded px-3 py-1.5 text-center">
-                            <div className="text-[9px] text-blue-500">
-                              Cooldown
-                            </div>
-                            <div className="text-blue-300 font-bold">
-                              {SPELL_DATA[hoveredSpell].cooldown / 1000}s
-                            </div>
-                          </div>
                         </div>
-                        <div className="text-[10px] text-purple-300 bg-purple-900/40 px-2 py-2 rounded border border-purple-800/40">
-                          <div className="text-purple-500 uppercase text-[8px] mb-1">
-                            Effect Details
-                          </div>
-                          {hoveredSpell === "fireball" &&
-                            "Meteor falls from sky (1s delay), 200 AoE damage with falloff, 150 radius"}
-                          {hoveredSpell === "lightning" &&
-                            "Chains to 5 enemies, 600 total damage split, 0.5s stun each"}
-                          {hoveredSpell === "freeze" &&
-                            "Freezes ALL enemies for 3 seconds, expanding ice wave"}
-                          {hoveredSpell === "payday" &&
-                            "80 base + 5 per enemy (max 50 bonus) = up to 130 PP"}
-                          {hoveredSpell === "reinforcements" &&
-                            "Summons 3 knights (500 HP, 30 DMG each), click to place"}
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

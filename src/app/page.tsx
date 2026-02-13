@@ -201,6 +201,8 @@ import {
   BuildTowerTooltip,
   PlacingTroopIndicator,
   SpecialBuildingTooltip,
+  LandmarkTooltip,
+  HazardTooltip,
   EnemyInspector,
   EnemyDetailTooltip,
 } from "./components/ui/GameUI";
@@ -234,7 +236,7 @@ export default function PrincetonTowerDefense() {
   // Game state
   const [gameState, setGameState] = useState<GameState>("menu");
   const [selectedMap, setSelectedMap] = useState<string>("poe");
-  const [selectedHero, setSelectedHero] = useState<HeroType | null>(null);
+  const [selectedHero, setSelectedHero] = useState<HeroType | null>("tiger");
   const [selectedSpells, setSelectedSpells] = useState<SpellType[]>([]);
 
   // Persistent progress (saved to localStorage)
@@ -286,6 +288,8 @@ export default function PrincetonTowerDefense() {
   const [placingTroop, setPlacingTroop] = useState(false);
   const [gameSpeed, setGameSpeed] = useState(1);
   const [hoveredSpecial, setHoveredSpecial] = useState<boolean>(false);
+  const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
+  const [hoveredHazardType, setHoveredHazardType] = useState<string | null>(null);
   // Enemy Inspector state
   const [inspectorActive, setInspectorActive] = useState(false);
   const [selectedInspectEnemy, setSelectedInspectEnemy] = useState<Enemy | null>(null);
@@ -321,6 +325,8 @@ export default function PrincetonTowerDefense() {
   // which cancels the animation frame and causes a noticeable freeze on mobile devices
   const updateGameRef = useRef<(deltaTime: number) => void>(() => { });
   const renderRef = useRef<() => void>(() => { });
+  // Guard ref to prevent duplicate defeat/victory handling across animation frames
+  const gameEndHandledRef = useRef(false);
 
   // PERFORMANCE FIX: Cache decorations to avoid regenerating them every frame
   // This was causing major performance issues on mobile - generating 500+ decorations per frame
@@ -4353,8 +4359,10 @@ export default function PrincetonTowerDefense() {
           cooldown: Math.max(0, spell.cooldown - deltaTime),
         }))
       );
-      // Check win/lose conditions - only if still playing to prevent duplicate triggers
-      if (lives <= 0 && gameState === "playing") {
+      // Check win/lose conditions - ref guard prevents duplicate triggers across animation frames
+      if (lives <= 0 && gameState === "playing" && !gameEndHandledRef.current) {
+        gameEndHandledRef.current = true;
+
         // Calculate time spent on defeat
         const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
         setTimeSpent(finalTime);
@@ -4373,8 +4381,11 @@ export default function PrincetonTowerDefense() {
         gameState === "playing" &&
         currentWave >= levelWaves.length &&
         enemies.length === 0 &&
-        !waveInProgress
+        !waveInProgress &&
+        !gameEndHandledRef.current
       ) {
+        gameEndHandledRef.current = true;
+
         // Calculate stars based on lives remaining
         const stars = lives >= 18 ? 3 : lives >= 10 ? 2 : 1;
         setStarsEarned(stars);
@@ -7240,6 +7251,50 @@ export default function PrincetonTowerDefense() {
         setHoveredHero(distance({ x, y }, heroScreen) < 28);
       }
 
+      // ========== LANDMARK & HAZARD HOVER DETECTION ==========
+      // Only check when not hovering a tower/troop (lower priority)
+      if (!hoveredT && !hoveredTroopOwnerId) {
+        const levelData = LEVEL_DATA[selectedMap];
+
+        // Check landmarks (decorations that are in LANDMARK_DECORATION_TYPES)
+        let foundLandmark: string | null = null;
+        if (levelData?.decorations) {
+          for (const deco of levelData.decorations) {
+            const decoType = deco.category || deco.type;
+            if (decoType && (LANDMARK_DECORATION_TYPES.has(decoType) || decoType === "statue" || decoType === "demon_statue" || decoType === "obelisk")) {
+              const decoWorldPos = gridToWorld(deco.pos);
+              const decoScreen = worldToScreen(decoWorldPos, width, height, dpr, cameraOffset, cameraZoom);
+              const hitRadius = (deco.size || 1) * 35 * cameraZoom;
+              if (distance({ x, y }, decoScreen) < hitRadius) {
+                foundLandmark = decoType;
+                break;
+              }
+            }
+          }
+        }
+        setHoveredLandmark(foundLandmark);
+
+        // Check hazards
+        let foundHazard: string | null = null;
+        if (levelData?.hazards) {
+          for (const haz of levelData.hazards) {
+            if (haz.pos) {
+              const hazWorldPos = gridToWorld(haz.pos);
+              const hazScreen = worldToScreen(hazWorldPos, width, height, dpr, cameraOffset, cameraZoom);
+              const hitRadius = (haz.radius || 2) * 24 * cameraZoom;
+              if (distance({ x, y }, hazScreen) < hitRadius) {
+                foundHazard = haz.type;
+                break;
+              }
+            }
+          }
+        }
+        setHoveredHazardType(foundHazard);
+      } else {
+        setHoveredLandmark(null);
+        setHoveredHazardType(null);
+      }
+
       // ========== MOVEMENT TARGET INDICATOR CALCULATION ==========
       const selectedTroop = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
@@ -8025,6 +8080,7 @@ export default function PrincetonTowerDefense() {
   }, [hero, enemies, selectedMap, addParticles, gameSpeed]);
   const resetGame = useCallback(() => {
     clearAllTimers();
+    gameEndHandledRef.current = false;
     setGameState("menu");
     setPawPoints(INITIAL_PAW_POINTS);
     setLives(INITIAL_LIVES);
@@ -8150,6 +8206,7 @@ export default function PrincetonTowerDefense() {
         }}
         retryLevel={() => {
           clearAllTimers();
+          gameEndHandledRef.current = false;
           // Use level-specific starting paw points
           const levelData = LEVEL_DATA[selectedMap];
           const levelStartingPawPoints = levelData?.startingPawPoints ?? INITIAL_PAW_POINTS;
@@ -8298,6 +8355,12 @@ export default function PrincetonTowerDefense() {
               maxHp={LEVEL_DATA[selectedMap].specialTower.hp}
               position={mousePos}
             />
+          )}
+          {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !selectedTower && (
+            <LandmarkTooltip landmarkType={hoveredLandmark} position={mousePos} />
+          )}
+          {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !selectedTower && (
+            <HazardTooltip hazardType={hoveredHazardType} position={mousePos} />
           )}
           {/* Enemy Inspector UI */}
           <EnemyInspector

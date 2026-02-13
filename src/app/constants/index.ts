@@ -245,14 +245,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 22,
     category: "academic",
     traits: ["armored"],
-    abilities: [{
-      type: "slow",
-      name: "Demotivation",
-      desc: "Slows troops with crushing despair",
-      chance: 0.15,
-      duration: 2000,
-      intensity: 0.2,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Demotivation",
+        desc: "Slows troops with crushing despair",
+        chance: 0.15,
+        duration: 2000,
+        intensity: 0.2,
+      },
+    ],
   },
   junior: {
     name: "Junior Paper",
@@ -266,15 +268,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
     category: "academic",
     traits: ["armored"],
-    abilities: [{
-      type: "tower_weaken",
-      name: "Brain Fog",
-      desc: "Clouds the minds of nearby towers, reducing damage",
-      chance: 1.0,
-      duration: 3000,
-      intensity: 0.15,
-      radius: 100,
-    }],
+    abilities: [
+      {
+        type: "tower_weaken",
+        name: "Brain Fog",
+        desc: "Clouds the minds of nearby towers, reducing damage",
+        chance: 1.0,
+        duration: 3000,
+        intensity: 0.15,
+        radius: 100,
+      },
+    ],
   },
   senior: {
     name: "Senior Thesis",
@@ -290,13 +294,15 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["armored", "boss"],
     isBoss: true,
     liveCost: 2,
-    abilities: [{
-      type: "stun",
-      name: "Thesis Defense",
-      desc: "Stuns defenders with overwhelming knowledge",
-      chance: 0.2,
-      duration: 1500,
-    }],
+    abilities: [
+      {
+        type: "stun",
+        name: "Thesis Defense",
+        desc: "Stuns defenders with overwhelming knowledge",
+        chance: 0.2,
+        duration: 1500,
+      },
+    ],
   },
   gradstudent: {
     name: "Grad School App",
@@ -312,14 +318,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["armored", "boss"],
     isBoss: true,
     liveCost: 3,
-    abilities: [{
-      type: "poison",
-      name: "Soul Drain",
-      desc: "Inflicts existential dread, dealing damage over time",
-      chance: 0.25,
-      duration: 4000,
-      intensity: 12,
-    }],
+    abilities: [
+      {
+        type: "poison",
+        name: "Soul Drain",
+        desc: "Inflicts existential dread, dealing damage over time",
+        chance: 0.25,
+        duration: 4000,
+        intensity: 12,
+      },
+    ],
   },
   professor: {
     name: "Tenured Professor",
@@ -351,7 +359,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         desc: "Surprises and stuns defenders",
         chance: 0.2,
         duration: 1200,
-      }
+      },
     ],
   },
   dean: {
@@ -385,7 +393,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.25,
         duration: 3500,
         intensity: 0.45,
-      }
+      },
     ],
   },
   trustee: {
@@ -421,7 +429,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.25,
         duration: 4500,
         intensity: 20,
-      }
+      },
     ],
   },
   // =============================================================================
@@ -476,14 +484,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
     category: "ranged",
     traits: ["ranged", "magic_resist"],
-    abilities: [{
-      type: "burn",
-      name: "Chemical Burn",
-      desc: "Volatile chemicals cause burning damage",
-      chance: 0.3,
-      duration: 3000,
-      intensity: 12,
-    }],
+    abilities: [
+      {
+        type: "burn",
+        name: "Chemical Burn",
+        desc: "Volatile chemicals cause burning damage",
+        chance: 0.3,
+        duration: 3000,
+        intensity: 12,
+      },
+    ],
   },
   catapult: {
     name: "Grad School Application",
@@ -538,7 +548,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.15,
         duration: 3000,
         intensity: 10,
-      }
+      },
     ],
   },
   crossbowman: {
@@ -557,13 +567,15 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
     category: "ranged",
     traits: ["ranged", "armored"],
-    abilities: [{
-      type: "stun",
-      name: "Heavy Bolt",
-      desc: "Powerful bolts stun targets on impact",
-      chance: 1.0,
-      duration: 800,
-    }],
+    abilities: [
+      {
+        type: "stun",
+        name: "Heavy Bolt",
+        desc: "Powerful bolts stun targets on impact",
+        chance: 1.0,
+        duration: 800,
+      },
+    ],
   },
   hexer: {
     name: "Dance Group Auditions",
@@ -581,15 +593,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 22,
     category: "ranged",
     traits: ["ranged"],
-    abilities: [{
-      type: "slow",
-      name: "Hypnotic Dance",
-      desc: "Mesmerizing movements slow all nearby defenders",
-      chance: 1.0,
-      duration: 2500,
-      intensity: 0.35,
-      radius: 80,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Hypnotic Dance",
+        desc: "Mesmerizing movements slow all nearby defenders",
+        chance: 1.0,
+        duration: 2500,
+        intensity: 0.35,
+        radius: 80,
+      },
+    ],
   },
   // =============================================================================
   // FLYING ENEMIES (Continued)
@@ -606,14 +620,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
     category: "flying",
     traits: ["flying", "fast", "breakthrough"],
-    abilities: [{
-      type: "slow",
-      name: "Screech",
-      desc: "Piercing cries disorient defenders",
-      chance: 1.0,
-      duration: 1500,
-      intensity: 0.3,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Screech",
+        desc: "Piercing cries disorient defenders",
+        chance: 1.0,
+        duration: 1500,
+        intensity: 0.3,
+      },
+    ],
   },
   wyvern: {
     name: "Tiger Transit Wyvern",
@@ -634,15 +650,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     troopDamage: 45,
     troopAttackSpeed: 1800,
     liveCost: 3,
-    abilities: [{
-      type: "burn",
-      name: "Fire Breath",
-      desc: "Breathes fire that burns all in its path",
-      chance: 0.3,
-      duration: 3500,
-      intensity: 18,
-      radius: 80,
-    }],
+    abilities: [
+      {
+        type: "burn",
+        name: "Fire Breath",
+        desc: "Breathes fire that burns all in its path",
+        chance: 0.3,
+        duration: 3500,
+        intensity: 18,
+        radius: 80,
+      },
+    ],
   },
   specter: {
     name: "Firestone Ghost",
@@ -660,15 +678,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     troopDamage: 30,
     troopAttackSpeed: 2000,
     liveCost: 2,
-    abilities: [{
-      type: "tower_slow",
-      name: "Haunting Presence",
-      desc: "Chilling aura slows nearby tower mechanisms",
-      chance: 1.0,
-      duration: 3000,
-      intensity: 0.25,
-      radius: 90,
-    }],
+    abilities: [
+      {
+        type: "tower_slow",
+        name: "Haunting Presence",
+        desc: "Chilling aura slows nearby tower mechanisms",
+        chance: 1.0,
+        duration: 3000,
+        intensity: 0.25,
+        radius: 90,
+      },
+    ],
   },
   // =============================================================================
   // CAMPUS ENEMIES - Campus life and events
@@ -686,13 +706,15 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "campus",
     traits: ["fast"],
     liveCost: 2,
-    abilities: [{
-      type: "stun",
-      name: "Tackle",
-      desc: "Powerful charges stun defenders on impact",
-      chance: 0.25,
-      duration: 1200,
-    }],
+    abilities: [
+      {
+        type: "stun",
+        name: "Tackle",
+        desc: "Powerful charges stun defenders on impact",
+        chance: 0.25,
+        duration: 1200,
+      },
+    ],
   },
   necromancer: {
     name: "Admissions Officer",
@@ -707,14 +729,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "campus",
     traits: ["summoner", "magic_resist"],
     liveCost: 2,
-    abilities: [{
-      type: "poison",
-      name: "Rejection Letter",
-      desc: "Crushing disappointment deals damage over time",
-      chance: 0.3,
-      duration: 4500,
-      intensity: 15,
-    }],
+    abilities: [
+      {
+        type: "poison",
+        name: "Rejection Letter",
+        desc: "Crushing disappointment deals damage over time",
+        chance: 0.3,
+        duration: 4500,
+        intensity: 15,
+      },
+    ],
   },
   // =============================================================================
   // BOSS ENEMIES - Major threats
@@ -752,7 +776,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.25,
         duration: 2500,
         radius: 110,
-      }
+      },
     ],
   },
   shadow_knight: {
@@ -786,7 +810,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.2,
         duration: 3500,
         intensity: 18,
-      }
+      },
     ],
   },
   // =============================================================================
@@ -804,15 +828,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 21,
     category: "campus",
     traits: [],
-    abilities: [{
-      type: "slow",
-      name: "Sleep Deprivation Aura",
-      desc: "Exhaustion slows nearby defenders",
-      chance: 0.15,
-      duration: 2000,
-      intensity: 0.2,
-      radius: 60,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Sleep Deprivation Aura",
+        desc: "Exhaustion slows nearby defenders",
+        chance: 0.15,
+        duration: 2000,
+        intensity: 0.2,
+        radius: 60,
+      },
+    ],
   },
   plaguebearer: {
     name: "Flu Season Carrier",
@@ -844,7 +870,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.25,
         duration: 3500,
         intensity: 0.3,
-      }
+      },
     ],
   },
   frostling: {
@@ -860,14 +886,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "campus",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
-    abilities: [{
-      type: "slow",
-      name: "Frost Touch",
-      desc: "Chilling attacks slow defenders",
-      chance: 1.0,
-      duration: 2000,
-      intensity: 0.35,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Frost Touch",
+        desc: "Chilling attacks slow defenders",
+        chance: 1.0,
+        duration: 2000,
+        intensity: 0.35,
+      },
+    ],
   },
   infernal: {
     name: "Burnout Demon",
@@ -900,7 +928,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         duration: 3500,
         intensity: 0.25,
         radius: 100,
-      }
+      },
     ],
   },
   assassin: {
@@ -917,14 +945,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["fast", "breakthrough"],
     breakthrough: true,
     liveCost: 2,
-    abilities: [{
-      type: "poison",
-      name: "Toxic Excellence",
-      desc: "Poison of academic overachievement",
-      chance: 0.4,
-      duration: 3000,
-      intensity: 15,
-    }],
+    abilities: [
+      {
+        type: "poison",
+        name: "Toxic Excellence",
+        desc: "Poison of academic overachievement",
+        chance: 0.4,
+        duration: 3000,
+        intensity: 15,
+      },
+    ],
   },
   // =============================================================================
   // NATURE ENEMIES - Environmental/biome creatures
@@ -941,14 +971,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 28,
     category: "nature",
     traits: ["armored", "regenerating"],
-    abilities: [{
-      type: "poison",
-      name: "Thorn Poison",
-      desc: "Venomous thorns inflict poison on contact",
-      chance: 0.35,
-      duration: 4000,
-      intensity: 10,
-    }],
+    abilities: [
+      {
+        type: "poison",
+        name: "Thorn Poison",
+        desc: "Venomous thorns inflict poison on contact",
+        chance: 0.35,
+        duration: 4000,
+        intensity: 10,
+      },
+    ],
   },
   // =============================================================================
   // BOSS ENEMIES (Continued) - Major threats
@@ -969,14 +1001,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     aoeRadius: 100,
     aoeDamage: 90,
     liveCost: 4,
-    abilities: [{
-      type: "stun",
-      name: "Emergence",
-      desc: "Bursting from the ground stuns all nearby",
-      chance: 0.25,
-      duration: 1800,
-      radius: 110,
-    }],
+    abilities: [
+      {
+        type: "stun",
+        name: "Emergence",
+        desc: "Bursting from the ground stuns all nearby",
+        chance: 0.25,
+        duration: 1800,
+        radius: 110,
+      },
+    ],
   },
   juggernaut: {
     name: "Endowed Chair",
@@ -1011,7 +1045,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.25,
         duration: 2000,
         radius: 100,
-      }
+      },
     ],
   },
   // =============================================================================
@@ -1050,7 +1084,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         duration: 2500,
         intensity: 0.3,
         radius: 80,
-      }
+      },
     ],
   },
   dragon: {
@@ -1098,7 +1132,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         chance: 0.2,
         duration: 2500,
         radius: 120,
-      }
+      },
     ],
   },
   // =============================================================================
@@ -1146,15 +1180,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 22,
     category: "campus",
     traits: ["armored"],
-    abilities: [{
-      type: "slow",
-      name: "Rally Cry",
-      desc: "Passionate speeches slow defender morale",
-      chance: 0.15,
-      duration: 1500,
-      intensity: 0.2,
-      radius: 50,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Rally Cry",
+        desc: "Passionate speeches slow defender morale",
+        chance: 0.15,
+        duration: 1500,
+        intensity: 0.2,
+        radius: 50,
+      },
+    ],
   },
   // =============================================================================
   // NATURE ENEMIES - Swamp Region
@@ -1171,14 +1207,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
     category: "nature",
     traits: ["armored"],
-    abilities: [{
-      type: "poison",
-      name: "Toxic Muck",
-      desc: "Toxic slime poisons on contact",
-      chance: 0.25,
-      duration: 3000,
-      intensity: 6,
-    }],
+    abilities: [
+      {
+        type: "poison",
+        name: "Toxic Muck",
+        desc: "Toxic slime poisons on contact",
+        chance: 0.25,
+        duration: 3000,
+        intensity: 6,
+      },
+    ],
   },
   will_o_wisp: {
     name: "Will-o'-Wisp",
@@ -1192,15 +1230,17 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 18,
     category: "flying",
     traits: ["flying", "fast", "magic_resist", "breakthrough"],
-    abilities: [{
-      type: "tower_blind",
-      name: "Mesmerizing Light",
-      desc: "Distracting glow reduces tower range",
-      chance: 1.0,
-      duration: 2500,
-      intensity: 0.15,
-      radius: 60,
-    }],
+    abilities: [
+      {
+        type: "tower_blind",
+        name: "Mesmerizing Light",
+        desc: "Distracting glow reduces tower range",
+        chance: 1.0,
+        duration: 2500,
+        intensity: 0.15,
+        radius: 60,
+      },
+    ],
   },
   swamp_troll: {
     name: "Swamp Troll",
@@ -1215,13 +1255,15 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "nature",
     traits: ["armored", "regenerating"],
     liveCost: 2,
-    abilities: [{
-      type: "stun",
-      name: "Club Smash",
-      desc: "Heavy blows stun defenders",
-      chance: 0.2,
-      duration: 1200,
-    }],
+    abilities: [
+      {
+        type: "stun",
+        name: "Club Smash",
+        desc: "Heavy blows stun defenders",
+        chance: 0.2,
+        duration: 1200,
+      },
+    ],
   },
   // =============================================================================
   // NATURE ENEMIES - Desert Region
@@ -1251,14 +1293,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 26,
     category: "nature",
     traits: ["armored"],
-    abilities: [{
-      type: "poison",
-      name: "Venom Sting",
-      desc: "Venomous stinger poisons targets",
-      chance: 0.35,
-      duration: 4000,
-      intensity: 12,
-    }],
+    abilities: [
+      {
+        type: "poison",
+        name: "Venom Sting",
+        desc: "Venomous stinger poisons targets",
+        chance: 0.35,
+        duration: 4000,
+        intensity: 12,
+      },
+    ],
   },
   scarab: {
     name: "Sacred Scarab",
@@ -1290,14 +1334,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "swarm",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
-    abilities: [{
-      type: "slow",
-      name: "Frost Claws",
-      desc: "Freezing claws slow targets",
-      chance: 1.0,
-      duration: 1500,
-      intensity: 0.25,
-    }],
+    abilities: [
+      {
+        type: "slow",
+        name: "Frost Claws",
+        desc: "Freezing claws slow targets",
+        chance: 1.0,
+        duration: 1500,
+        intensity: 0.25,
+      },
+    ],
   },
   yeti: {
     name: "Mountain Yeti",
@@ -1331,7 +1377,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         duration: 2500,
         intensity: 0.35,
         radius: 70,
-      }
+      },
     ],
   },
   ice_witch: {
@@ -1367,7 +1413,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         duration: 3000,
         intensity: 0.25,
         radius: 80,
-      }
+      },
     ],
   },
   // =============================================================================
@@ -1385,14 +1431,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     size: 24,
     category: "nature",
     traits: ["armored"],
-    abilities: [{
-      type: "burn",
-      name: "Molten Touch",
-      desc: "Contact with magma causes burning",
-      chance: 0.35,
-      duration: 3000,
-      intensity: 12,
-    }],
+    abilities: [
+      {
+        type: "burn",
+        name: "Molten Touch",
+        desc: "Contact with magma causes burning",
+        chance: 0.35,
+        duration: 3000,
+        intensity: 12,
+      },
+    ],
   },
   fire_imp: {
     name: "Fire Imp",
@@ -1407,14 +1455,16 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "swarm",
     traits: ["fast", "breakthrough"],
     breakthrough: true,
-    abilities: [{
-      type: "burn",
-      name: "Imp Fire",
-      desc: "Small but painful flames",
-      chance: 0.25,
-      duration: 2000,
-      intensity: 8,
-    }],
+    abilities: [
+      {
+        type: "burn",
+        name: "Imp Fire",
+        desc: "Small but painful flames",
+        chance: 0.25,
+        duration: 2000,
+        intensity: 8,
+      },
+    ],
   },
   ember_guard: {
     name: "Ember Guard",
@@ -1445,7 +1495,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
         duration: 2500,
         intensity: 0.15,
         radius: 70,
-      }
+      },
     ],
   },
 };
@@ -1456,7 +1506,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     name: "Princeton Tiger",
     icon: "🐯",
     description:
-      "The fearsome Princeton Tiger - an apex predator with devastating claw attacks and a terrifying roar that freezes enemies in fear.",
+      "The fearsome Princeton Tiger, an apex predator with a terrifying roar that freezes enemies in fear.",
     hp: 2500,
     damage: 80,
     range: 120,
@@ -1478,7 +1528,8 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     attackSpeed: 450,
     speed: 2.5,
     ability: "High Note",
-    abilityDesc: "Devastating sonic blast stuns enemies and heals nearby allies",
+    abilityDesc:
+      "Devastating sonic blast stuns enemies and heals nearby allies",
     color: "#8b5cf6",
     isRanged: true,
   },
@@ -1501,7 +1552,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     name: "Rocky Raccoon",
     icon: "🌰",
     description:
-      "A legendary gargoyle awakened from the campus rooftops. Hurls massive boulders that devastate enemy formations.",
+      "A legendary gargoyle awakened from campus rooftops. Hurls massive boulders that devastate enemies.",
     hp: 2200,
     damage: 90,
     range: 180,
@@ -1531,7 +1582,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     name: "General Mercer",
     icon: "🐉",
     description:
-      "A legendary Dragonlord General wreathed in divine flame. Commands the battlefield with overwhelming presence and summons loyal knights to his banner.",
+      "A re-awakened General wreathed in flame. Commands the battlefield and summons loyal knights to his banner.",
     hp: 2800,
     damage: 65,
     range: 100,
@@ -1546,7 +1597,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     name: "BSE Engineer",
     icon: "🔧",
     description:
-      "A brilliant inventor from E-Quad. Deploys automated turrets and uses advanced technology to defend.",
+      "A brilliant inventor who deploys automated turrets designed in the Engineering Library. He needs more coffee.",
     hp: 1600,
     damage: 40,
     range: 150,
@@ -2237,7 +2288,7 @@ export const LEVEL_DATA: Record<
       //tentacles in this deep water
       { type: "deep_water", pos: { x: 18, y: 8 }, variant: 1, size: 4 },
       { type: "tentacle", pos: { x: 17, y: 9 }, variant: 2, size: 1.25 },
-      { type: "tentacle", pos: { x: 18.5, y: 9.25}, variant: 0 },
+      { type: "tentacle", pos: { x: 18.5, y: 9.25 }, variant: 0 },
       { type: "tentacle", pos: { x: 19, y: 8 }, variant: 2, size: 1.5 },
 
       { type: "deep_water", pos: { x: 27, y: 11 }, variant: 1, size: 2.5 },
@@ -4505,7 +4556,14 @@ export const PARTICLE_COLORS: Record<string, string[]> = {
 // Tower colors
 export const TOWER_COLORS: Record<
   TowerType,
-  { base: string; dark: string; accent: string; light: string; primary: string; secondary: string }
+  {
+    base: string;
+    dark: string;
+    accent: string;
+    light: string;
+    primary: string;
+    secondary: string;
+  }
 > = {
   cannon: {
     base: "#4a4a52",

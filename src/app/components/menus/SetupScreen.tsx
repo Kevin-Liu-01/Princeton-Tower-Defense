@@ -1,3 +1,5 @@
+// Setup Screen is not used in the game, but is a placeholder for the future
+
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import {
@@ -230,13 +232,13 @@ const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, 
     nature: [],
     swarm: [],
   };
-  
+
   enemyTypes.forEach(type => {
     const enemy = ENEMY_DATA[type];
     const category = enemy.category || "campus"; // Default to campus if not specified
     grouped[category].push(type);
   });
-  
+
   return grouped;
 };
 
@@ -342,11 +344,12 @@ export function SetupScreen({
   return (
     <div className="w-full h-screen flex flex-col bg-gradient-to-br from-stone-900 via-amber-950 to-stone-900 text-amber-100 overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 text-center py-4 border-b border-amber-900/50 bg-gradient-to-r from-transparent via-amber-950/50 to-transparent">
-        <h1 className="text-3xl font-bold text-amber-400 tracking-widest">
-          QUEST PREPARATION
+      <div className="flex-shrink-0 text-center py-3 border-b border-amber-800/30 bg-gradient-to-r from-transparent via-amber-950/40 to-transparent"
+        style={{ boxShadow: "0 1px 0 rgba(255,200,100,0.05)" }}>
+        <h1 className="text-2xl font-bold text-amber-400/90 tracking-[0.2em] uppercase">
+          Quest Preparation
         </h1>
-        <p className="text-amber-600 text-sm mt-1">
+        <p className="text-amber-700/80 text-xs mt-1 tracking-wide">
           Select your battlefield, champion, and arcane powers
         </p>
       </div>
@@ -356,30 +359,32 @@ export function SetupScreen({
         {/* Left Column - War is Coming + Map */}
         <div className="w-64 flex flex-col gap-4 flex-shrink-0">
           {/* War is Coming Panel */}
-          <div className="bg-gradient-to-br from-stone-800/90 to-stone-900/90 rounded-xl border-2 border-amber-800/60 overflow-hidden">
-            <div className="px-4 py-3 bg-gradient-to-r from-amber-900/50 to-transparent border-b border-amber-800/50">
+          <div className="bg-gradient-to-b from-stone-800/90 via-stone-850/90 to-stone-900/95 rounded-xl border border-amber-700/40 overflow-hidden shadow-lg shadow-black/30"
+            style={{ boxShadow: "inset 0 1px 0 rgba(255,200,100,0.08), 0 4px 20px rgba(0,0,0,0.4)" }}>
+            <div className="px-4 py-2.5 bg-gradient-to-r from-amber-800/40 via-amber-900/30 to-transparent border-b border-amber-700/30">
               <div className="flex items-center gap-2 text-amber-400">
-                <Crown size={18} className="text-amber-500" />
-                <span className="font-bold tracking-wider">WAR IS COMING</span>
+                <Crown size={16} className="text-amber-500" />
+                <span className="text-xs font-bold tracking-widest uppercase">War is Coming</span>
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm text-stone-300 leading-relaxed mb-4">
+              <p className="text-xs text-stone-300/90 leading-relaxed mb-3">
                 The Kingdom of Princeton stands as the last bastion against the invading hordes.
                 Ancient towers guard our halls, powered by arcane knowledge.
               </p>
-              <div className="flex items-center gap-2 text-amber-500 text-sm">
-                <Swords size={16} className="text-amber-400" />
-                <span className="font-medium italic">Defend the realm!</span>
+              <div className="flex items-center gap-2 text-amber-500/80 bg-amber-900/20 rounded-lg px-3 py-2 border border-amber-800/20">
+                <Swords size={14} className="text-amber-400" />
+                <span className="text-xs font-semibold italic">Defend the realm!</span>
               </div>
             </div>
           </div>
 
           {/* Mini Map */}
-          <div className="flex-1 bg-gradient-to-br from-stone-800/80 to-stone-900/80 rounded-xl border-2 border-amber-900/50 overflow-hidden">
-            <div className="px-3 py-2 bg-stone-800/50 border-b border-amber-900/30 flex items-center gap-2">
+          <div className="flex-1 bg-gradient-to-b from-stone-800/80 to-stone-900/90 rounded-xl border border-amber-700/30 overflow-hidden shadow-lg shadow-black/30"
+            style={{ boxShadow: "inset 0 1px 0 rgba(255,200,100,0.06), 0 4px 20px rgba(0,0,0,0.4)" }}>
+            <div className="px-3 py-2 bg-gradient-to-r from-amber-800/30 via-amber-900/20 to-transparent border-b border-amber-700/25 flex items-center gap-2">
               <Mountain size={14} className="text-amber-500" />
-              <span className="text-xs font-bold text-amber-300 tracking-wider">BATTLEFIELD</span>
+              <span className="text-[10px] font-bold text-amber-300/90 tracking-widest uppercase">Battlefield</span>
             </div>
             <svg className="w-full h-full" viewBox="0 0 240 200" preserveAspectRatio="xMidYMid meet">
               <defs>
@@ -486,15 +491,16 @@ export function SetupScreen({
         </div>
 
         {/* Middle Column - Champion Selection */}
-        <div className="flex-1 bg-gradient-to-br from-stone-800/70 to-stone-900/70 rounded-xl border-2 border-amber-800/50 overflow-hidden flex flex-col">
-          <div className="px-5 py-3 bg-gradient-to-r from-amber-900/40 to-transparent border-b border-amber-800/40 flex items-center gap-3">
-            <Shield size={18} className="text-amber-400" />
-            <span className="font-bold text-amber-300 tracking-wider">SELECT CHAMPION</span>
+        <div className="flex-1 bg-gradient-to-b from-stone-800/80 to-stone-900/90 rounded-xl border border-amber-700/40 overflow-hidden flex flex-col shadow-lg shadow-black/30"
+          style={{ boxShadow: "inset 0 1px 0 rgba(255,200,100,0.08), 0 4px 20px rgba(0,0,0,0.4)" }}>
+          <div className="px-5 py-2.5 bg-gradient-to-r from-amber-800/40 via-amber-900/30 to-transparent border-b border-amber-700/30 flex items-center gap-3">
+            <Shield size={16} className="text-amber-400" />
+            <span className="text-xs font-bold text-amber-300 tracking-widest uppercase">Select Champion</span>
           </div>
 
           <div className="p-4 flex-1 flex flex-col">
             {/* Hero Grid */}
-            <div className="flex flex-wrap gap-2 justify-center mb-4">
+            <div className="flex flex-wrap gap-2 justify-center mb-3">
               {heroOptions.map((heroType) => {
                 const hero = HERO_DATA[heroType];
                 const isSelected = selectedHero === heroType;
@@ -503,29 +509,29 @@ export function SetupScreen({
                   <button
                     key={heroType}
                     onClick={() => setSelectedHero(heroType)}
-                    className={`relative w-16 h-16 rounded-xl transition-all duration-200 group ${isSelected
+                    className={`relative w-14 h-14 rounded-lg transition-all duration-200 group ${isSelected
                       ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-stone-900 scale-110 z-10"
-                      : "hover:scale-105"
+                      : "hover:scale-105 hover:brightness-110"
                       }`}
                     style={{
                       background: isSelected
                         ? `linear-gradient(135deg, ${hero.color}40, ${hero.color}20)`
-                        : 'rgba(41, 37, 36, 0.8)',
-                      border: `2px solid ${isSelected ? hero.color : 'rgba(120, 113, 108, 0.5)'}`,
-                      boxShadow: isSelected ? `0 0 20px ${hero.color}50` : 'none',
+                        : 'linear-gradient(135deg, rgba(41, 37, 36, 0.9), rgba(28, 25, 23, 0.9))',
+                      border: `1.5px solid ${isSelected ? hero.color : 'rgba(120, 113, 108, 0.3)'}`,
+                      boxShadow: isSelected ? `0 0 15px ${hero.color}40, inset 0 1px 0 rgba(255,255,255,0.1)` : 'inset 0 1px 0 rgba(255,255,255,0.05)',
                     }}
                   >
                     <div className="w-full h-full flex items-center justify-center">
-                      <HeroSprite type={heroType} size={52} />
+                      <HeroSprite type={heroType} size={46} />
                     </div>
                     {isSelected && (
-                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-stone-900">
-                        <Check size={12} className="text-white" />
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-stone-900">
+                        <Check size={10} className="text-white" />
                       </div>
                     )}
                     {/* Hover tooltip */}
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none">
-                      <div className="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-[10px] text-amber-200 whitespace-nowrap">
+                      <div className="bg-stone-900/95 border border-stone-600/50 rounded px-2 py-1 text-[10px] text-amber-200 whitespace-nowrap backdrop-blur-sm">
                         {hero.name}
                       </div>
                     </div>
@@ -536,15 +542,15 @@ export function SetupScreen({
 
             {/* Selected Hero Details */}
             {selectedHero ? (
-              <div className="flex-1 bg-gradient-to-br from-stone-900/80 to-stone-950/80 rounded-xl border border-stone-700/50 overflow-hidden">
+              <div className="flex-1 bg-gradient-to-b from-stone-900/70 to-stone-950/80 rounded-lg border border-stone-700/30 overflow-hidden">
                 {/* Hero Header with Role */}
-                <div className={`px-4 py-2.5 border-b flex items-center justify-between ${heroRoles[selectedHero]?.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
-                  heroRoles[selectedHero]?.color === "purple" ? "bg-purple-950/40 border-purple-800/30" :
-                    heroRoles[selectedHero]?.color === "blue" ? "bg-blue-950/40 border-blue-800/30" :
-                      heroRoles[selectedHero]?.color === "green" ? "bg-green-950/40 border-green-800/30" :
-                        heroRoles[selectedHero]?.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
-                          heroRoles[selectedHero]?.color === "red" ? "bg-red-950/40 border-red-800/30" :
-                            "bg-amber-950/40 border-amber-800/30"
+                <div className={`px-3 py-2 border-b flex items-center justify-between ${heroRoles[selectedHero]?.color === "orange" ? "bg-orange-950/30 border-orange-800/20" :
+                  heroRoles[selectedHero]?.color === "purple" ? "bg-purple-950/30 border-purple-800/20" :
+                    heroRoles[selectedHero]?.color === "blue" ? "bg-blue-950/30 border-blue-800/20" :
+                      heroRoles[selectedHero]?.color === "green" ? "bg-green-950/30 border-green-800/20" :
+                        heroRoles[selectedHero]?.color === "cyan" ? "bg-cyan-950/30 border-cyan-800/20" :
+                          heroRoles[selectedHero]?.color === "red" ? "bg-red-950/30 border-red-800/20" :
+                            "bg-amber-950/30 border-amber-800/20"
                   }`}>
                   <div className={`flex items-center gap-2 ${heroRoles[selectedHero]?.color === "orange" ? "text-orange-400" :
                     heroRoles[selectedHero]?.color === "purple" ? "text-purple-400" :
@@ -555,79 +561,79 @@ export function SetupScreen({
                               "text-amber-400"
                     }`}>
                     {heroRoles[selectedHero]?.icon}
-                    <span className="text-xs font-medium uppercase tracking-wider">{heroRoles[selectedHero]?.role}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">{heroRoles[selectedHero]?.role}</span>
                   </div>
                   <span className="text-lg">{HERO_DATA[selectedHero].icon}</span>
                 </div>
 
-                <div className="p-4">
+                <div className="p-3">
                   {/* Hero Name and Sprite */}
-                  <div className="flex items-start gap-4 mb-4">
+                  <div className="flex items-start gap-3 mb-3">
                     <div
-                      className="w-20 h-20 rounded-xl border-2 flex items-center justify-center flex-shrink-0"
+                      className="w-16 h-16 rounded-lg border flex items-center justify-center flex-shrink-0"
                       style={{
-                        borderColor: HERO_DATA[selectedHero].color,
-                        backgroundColor: HERO_DATA[selectedHero].color + "20",
-                        boxShadow: `0 0 25px ${HERO_DATA[selectedHero].color}30`,
+                        borderColor: HERO_DATA[selectedHero].color + "60",
+                        backgroundColor: HERO_DATA[selectedHero].color + "15",
+                        boxShadow: `0 0 20px ${HERO_DATA[selectedHero].color}20, inset 0 1px 0 rgba(255,255,255,0.05)`,
                       }}
                     >
-                      <HeroSprite type={selectedHero} size={68} />
+                      <HeroSprite type={selectedHero} size={56} />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-amber-200 mb-1 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-amber-200 mb-0.5 flex items-center gap-2">
                         {HERO_DATA[selectedHero].name}
-                        <Wrench size={14} className="text-stone-500" />
+                        <span className="text-base">{HERO_DATA[selectedHero].icon}</span>
                       </h3>
-                      <p className="text-xs text-stone-400 leading-relaxed">
+                      <p className="text-[10px] text-stone-400/80 leading-relaxed line-clamp-2">
                         {HERO_DATA[selectedHero].description}
                       </p>
                     </div>
                   </div>
 
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-5 gap-2 mb-4">
-                    <div className="bg-red-950/50 rounded-lg p-2 text-center border border-red-900/40">
-                      <Heart size={14} className="mx-auto text-red-400 mb-1" />
-                      <div className="text-[9px] text-red-500">HP</div>
-                      <div className="text-red-300 font-bold">{HERO_DATA[selectedHero].hp}</div>
+                  <div className="grid grid-cols-5 gap-1.5 mb-3">
+                    <div className="bg-red-950/40 rounded-md px-1.5 py-1.5 text-center border border-red-900/25">
+                      <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
+                      <div className="text-[8px] text-red-500/80 font-medium">HP</div>
+                      <div className="text-red-300 font-bold text-xs">{HERO_DATA[selectedHero].hp}</div>
                     </div>
-                    <div className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-900/40">
-                      <Swords size={14} className="mx-auto text-orange-400 mb-1" />
-                      <div className="text-[9px] text-orange-500">DMG</div>
-                      <div className="text-orange-300 font-bold">{HERO_DATA[selectedHero].damage}</div>
+                    <div className="bg-orange-950/40 rounded-md px-1.5 py-1.5 text-center border border-orange-900/25">
+                      <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
+                      <div className="text-[8px] text-orange-500/80 font-medium">DMG</div>
+                      <div className="text-orange-300 font-bold text-xs">{HERO_DATA[selectedHero].damage}</div>
                     </div>
-                    <div className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-900/40">
-                      <Target size={14} className="mx-auto text-blue-400 mb-1" />
-                      <div className="text-[9px] text-blue-500">RNG</div>
-                      <div className="text-blue-300 font-bold">{HERO_DATA[selectedHero].range}</div>
+                    <div className="bg-blue-950/40 rounded-md px-1.5 py-1.5 text-center border border-blue-900/25">
+                      <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
+                      <div className="text-[8px] text-blue-500/80 font-medium">RNG</div>
+                      <div className="text-blue-300 font-bold text-xs">{HERO_DATA[selectedHero].range}</div>
                     </div>
-                    <div className="bg-green-950/50 rounded-lg p-2 text-center border border-green-900/40">
-                      <Gauge size={14} className="mx-auto text-green-400 mb-1" />
-                      <div className="text-[9px] text-green-500">SPD</div>
-                      <div className="text-green-300 font-bold">{HERO_DATA[selectedHero].speed}</div>
+                    <div className="bg-green-950/40 rounded-md px-1.5 py-1.5 text-center border border-green-900/25">
+                      <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
+                      <div className="text-[8px] text-green-500/80 font-medium">SPD</div>
+                      <div className="text-green-300 font-bold text-xs">{HERO_DATA[selectedHero].speed}</div>
                     </div>
-                    <div className="bg-purple-950/50 rounded-lg p-2 text-center border border-purple-900/40">
-                      <Timer size={14} className="mx-auto text-purple-400 mb-1" />
-                      <div className="text-[9px] text-purple-500">CD</div>
-                      <div className="text-purple-300 font-bold">{(HERO_ABILITY_COOLDOWNS[selectedHero] || 30000) / 1000}s</div>
+                    <div className="bg-purple-950/40 rounded-md px-1.5 py-1.5 text-center border border-purple-900/25">
+                      <Timer size={12} className="mx-auto text-purple-400 mb-0.5" />
+                      <div className="text-[8px] text-purple-500/80 font-medium">CD</div>
+                      <div className="text-purple-300 font-bold text-xs">{(HERO_ABILITY_COOLDOWNS[selectedHero] || 30000) / 1000}s</div>
                     </div>
                   </div>
 
                   {/* Ability */}
-                  <div className="bg-purple-950/30 rounded-lg p-3 border border-purple-800/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <HeroAbilityIcon type={selectedHero} size={14} />
-                      <span className="text-sm font-bold text-purple-300">{HERO_DATA[selectedHero].ability}</span>
+                  <div className="bg-purple-950/25 rounded-md px-3 py-2 border border-purple-800/20">
+                    <div className="flex items-center gap-2 mb-1">
+                      <HeroAbilityIcon type={selectedHero} size={12} />
+                      <span className="text-xs font-bold text-purple-300">{HERO_DATA[selectedHero].ability}</span>
                     </div>
-                    <p className="text-xs text-purple-200/80">{HERO_DATA[selectedHero].abilityDesc}</p>
+                    <p className="text-[10px] text-purple-200/70 leading-relaxed">{HERO_DATA[selectedHero].abilityDesc}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-stone-900/30 rounded-xl border border-stone-700/30">
+              <div className="flex-1 flex items-center justify-center bg-stone-900/30 rounded-lg border border-stone-700/20">
                 <div className="text-center text-stone-500">
-                  <Shield size={40} className="mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Select a champion above</p>
+                  <Shield size={32} className="mx-auto mb-2 opacity-20" />
+                  <p className="text-xs">Select a champion above</p>
                 </div>
               </div>
             )}
@@ -637,13 +643,14 @@ export function SetupScreen({
         {/* Right Column - Spells + Start */}
         <div className="w-80 flex flex-col gap-4 flex-shrink-0">
           {/* Spell Selection */}
-          <div className="flex-1 bg-gradient-to-br from-stone-800/70 to-stone-900/70 rounded-xl border-2 border-purple-800/40 overflow-hidden flex flex-col">
-            <div className="px-5 py-3 bg-gradient-to-r from-purple-900/40 to-transparent border-b border-purple-800/40 flex items-center justify-between">
+          <div className="flex-1 bg-gradient-to-b from-stone-800/80 to-stone-900/90 rounded-xl border border-purple-700/40 overflow-hidden flex flex-col shadow-lg shadow-black/30"
+            style={{ boxShadow: "inset 0 1px 0 rgba(180,130,255,0.08), 0 4px 20px rgba(0,0,0,0.4)" }}>
+            <div className="px-5 py-2.5 bg-gradient-to-r from-purple-800/40 via-purple-900/25 to-transparent border-b border-purple-700/30 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Zap size={18} className="text-purple-400" />
-                <span className="font-bold text-purple-300 tracking-wider">SELECT SPELLS</span>
+                <Zap size={16} className="text-purple-400" />
+                <span className="text-xs font-bold text-purple-300 tracking-widest uppercase">Select Spells</span>
               </div>
-              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${selectedSpells.length === 3
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${selectedSpells.length === 3
                 ? "bg-green-500/20 text-green-400 border border-green-500/30"
                 : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
                 }`}>
@@ -653,7 +660,7 @@ export function SetupScreen({
 
             <div className="p-4 flex-1 flex flex-col">
               {/* Spell Icons Row */}
-              <div className="flex justify-center gap-3 mb-4">
+              <div className="flex justify-center gap-2 mb-3">
                 {spellOptions.map((spellType) => {
                   const spell = SPELL_DATA[spellType];
                   const isSelected = selectedSpells.includes(spellType);
@@ -666,31 +673,31 @@ export function SetupScreen({
                       key={spellType}
                       onClick={() => toggleSpell(spellType)}
                       disabled={!canSelect && !isSelected}
-                      className={`relative w-16 h-16 rounded-xl transition-all duration-200 group ${isSelected
+                      className={`relative w-14 h-14 rounded-lg transition-all duration-200 group ${isSelected
                         ? "ring-2 ring-purple-400 ring-offset-2 ring-offset-stone-900 scale-110 z-10"
                         : canSelect
-                          ? "hover:scale-105"
+                          ? "hover:scale-105 hover:brightness-110"
                           : "opacity-40 cursor-not-allowed"
                         }`}
                       style={{
                         background: isSelected
                           ? `linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(88, 28, 135, 0.2))`
-                          : 'rgba(41, 37, 36, 0.8)',
-                        border: `2px solid ${isSelected ? '#a855f7' : 'rgba(120, 113, 108, 0.5)'}`,
-                        boxShadow: isSelected ? '0 0 20px rgba(147, 51, 234, 0.4)' : 'none',
+                          : 'linear-gradient(135deg, rgba(41, 37, 36, 0.9), rgba(28, 25, 23, 0.9))',
+                        border: `1.5px solid ${isSelected ? '#a855f7' : 'rgba(120, 113, 108, 0.3)'}`,
+                        boxShadow: isSelected ? '0 0 15px rgba(147, 51, 234, 0.35), inset 0 1px 0 rgba(255,255,255,0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.05)',
                       }}
                     >
                       <div className="w-full h-full flex items-center justify-center">
-                        <SpellSprite type={spellType} size={48} />
+                        <SpellSprite type={spellType} size={42} />
                       </div>
                       {isSelected && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center border-2 border-stone-900 font-bold text-white text-sm">
+                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center border-2 border-stone-900 font-bold text-white text-[10px]">
                           {selectionIndex + 1}
                         </div>
                       )}
                       {/* Hover tooltip */}
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none">
-                        <div className="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-[10px] text-amber-200 whitespace-nowrap">
+                        <div className="bg-stone-900/95 border border-stone-600/50 rounded px-2 py-1 text-[10px] text-amber-200 whitespace-nowrap backdrop-blur-sm">
                           {spell.name}
                         </div>
                       </div>
@@ -700,7 +707,7 @@ export function SetupScreen({
               </div>
 
               {/* Selected Spells Details */}
-              <div className="flex-1 space-y-2 overflow-y-auto">
+              <div className="flex-1 space-y-1.5 overflow-y-auto">
                 {selectedSpells.length > 0 ? (
                   selectedSpells.map((spellType, i) => {
                     const spell = SPELL_DATA[spellType];
@@ -709,16 +716,16 @@ export function SetupScreen({
                     return (
                       <div
                         key={spellType}
-                        className={`rounded-lg border overflow-hidden ${info?.color === "orange" ? "bg-orange-950/30 border-orange-800/40" :
-                          info?.color === "yellow" ? "bg-yellow-950/30 border-yellow-800/40" :
-                            info?.color === "cyan" ? "bg-cyan-950/30 border-cyan-800/40" :
-                              info?.color === "amber" ? "bg-amber-950/30 border-amber-800/40" :
-                                info?.color === "green" ? "bg-green-950/30 border-green-800/40" :
-                                  "bg-purple-950/30 border-purple-800/40"
+                        className={`rounded-md border overflow-hidden ${info?.color === "orange" ? "bg-orange-950/25 border-orange-800/25" :
+                          info?.color === "yellow" ? "bg-yellow-950/25 border-yellow-800/25" :
+                            info?.color === "cyan" ? "bg-cyan-950/25 border-cyan-800/25" :
+                              info?.color === "amber" ? "bg-amber-950/25 border-amber-800/25" :
+                                info?.color === "green" ? "bg-green-950/25 border-green-800/25" :
+                                  "bg-purple-950/25 border-purple-800/25"
                           }`}
                       >
-                        <div className="p-3 flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg ${info?.color === "orange" ? "bg-orange-500/20 text-orange-400" :
+                        <div className="px-2.5 py-2 flex items-center gap-2.5">
+                          <div className={`w-6 h-6 rounded flex items-center justify-center font-bold text-sm ${info?.color === "orange" ? "bg-orange-500/20 text-orange-400" :
                             info?.color === "yellow" ? "bg-yellow-500/20 text-yellow-400" :
                               info?.color === "cyan" ? "bg-cyan-500/20 text-cyan-400" :
                                 info?.color === "amber" ? "bg-amber-500/20 text-amber-400" :
@@ -727,21 +734,16 @@ export function SetupScreen({
                             }`}>
                             {i + 1}
                           </div>
-                          <SpellSprite type={spellType} size={36} />
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-amber-200">{spell.name}</span>
-                              <span className="text-lg">{spell.icon}</span>
-                            </div>
-                            <p className="text-[10px] text-stone-400 truncate">{spell.desc}</p>
+                            <span className="text-xs font-bold text-amber-200">{spell.name}</span>
                           </div>
-                          <div className="flex flex-col items-end gap-1">
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${spell.cost > 0 ? "bg-amber-500/20 text-amber-400" : "bg-green-500/20 text-green-400"
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${spell.cost > 0 ? "bg-amber-500/15 text-amber-400/90" : "bg-green-500/15 text-green-400/90"
                               }`}>
-                              {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
+                              {spell.cost > 0 ? `${spell.cost}` : "Free"}
                             </span>
-                            <span className="text-[10px] text-stone-500 flex items-center gap-1">
-                              <Timer size={10} /> {spell.cooldown / 1000}s
+                            <span className="text-[10px] text-stone-500 flex items-center gap-0.5">
+                              <Timer size={9} /> {spell.cooldown / 1000}s
                             </span>
                           </div>
                         </div>
@@ -749,10 +751,10 @@ export function SetupScreen({
                     );
                   })
                 ) : (
-                  <div className="flex-1 flex items-center justify-center h-32">
+                  <div className="flex-1 flex items-center justify-center h-24">
                     <div className="text-center text-stone-500">
-                      <Zap size={32} className="mx-auto mb-2 opacity-30" />
-                      <p className="text-xs">Select 3 spells above</p>
+                      <Zap size={24} className="mx-auto mb-1.5 opacity-20" />
+                      <p className="text-[10px]">Select 3 spells above</p>
                     </div>
                   </div>
                 )}
@@ -764,25 +766,27 @@ export function SetupScreen({
           <div className="flex flex-col gap-2">
             <button
               onClick={() => setShowCodex(true)}
-              className="px-4 py-2.5 bg-stone-800/80 border border-amber-700/50 rounded-lg text-amber-400 hover:bg-stone-700/80 hover:border-amber-600/60 transition-all flex items-center justify-center gap-2"
+              className="px-4 py-2 bg-gradient-to-b from-stone-700/80 to-stone-800/80 border border-amber-700/30 rounded-lg text-amber-400/90 hover:from-stone-600/80 hover:to-stone-700/80 hover:border-amber-600/50 hover:text-amber-300 transition-all flex items-center justify-center gap-2 text-sm"
+              style={{ boxShadow: "inset 0 1px 0 rgba(255,200,100,0.06)" }}
             >
-              <Info size={16} />
-              <span className="font-medium">View Codex</span>
+              <Info size={14} />
+              <span className="font-medium tracking-wide">View Codex</span>
             </button>
             <button
               onClick={() => canStart && setGameState("playing")}
               disabled={!canStart}
-              className={`py-4 rounded-xl font-bold text-lg tracking-wider transition-all duration-300 flex items-center justify-center gap-3 ${canStart
-                ? "bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-stone-900 hover:from-amber-500 hover:via-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/40 hover:shadow-amber-500/60"
-                : "bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700"
+              className={`py-3.5 rounded-xl font-bold text-base tracking-widest transition-all duration-300 flex items-center justify-center gap-3 uppercase ${canStart
+                ? "bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-stone-900 hover:from-amber-500 hover:via-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 border border-amber-400/30"
+                : "bg-stone-800/80 text-stone-500 cursor-not-allowed border border-stone-700/50"
                 }`}
+              style={canStart ? { boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 4px 15px rgba(217,119,6,0.3)" } : {}}
             >
-              <Swords size={22} />
-              BEGIN BATTLE
-              <ChevronRight size={22} />
+              <Swords size={20} />
+              Begin Battle
+              <ChevronRight size={20} />
             </button>
             {!canStart && (
-              <p className="text-center text-xs text-stone-500">
+              <p className="text-center text-[10px] text-stone-500 mt-0.5">
                 {!selectedHero && !selectedSpells.length ? "Select a champion and 3 spells" :
                   !selectedHero ? "Select a champion" :
                     `Select ${3 - selectedSpells.length} more spell${3 - selectedSpells.length > 1 ? 's' : ''}`}
@@ -925,15 +929,15 @@ export function SetupScreen({
               {codexTab === "enemies" && (() => {
                 const enemyTypes = Object.keys(ENEMY_DATA) as EnemyType[];
                 const groupedEnemies = groupEnemiesByCategory(enemyTypes);
-                
+
                 return (
                   <div className="space-y-4">
                     {CATEGORY_ORDER.map(category => {
                       const categoryEnemies = groupedEnemies[category];
                       if (categoryEnemies.length === 0) return null;
-                      
+
                       const catInfo = CATEGORY_INFO[category];
-                      
+
                       return (
                         <div key={category}>
                           {/* Category Header */}
@@ -949,7 +953,7 @@ export function SetupScreen({
                               {categoryEnemies.length}
                             </span>
                           </div>
-                          
+
                           {/* Category Enemies Grid */}
                           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                             {categoryEnemies.map((type) => {
