@@ -2,9 +2,6 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import {
   Star,
-  Book,
-  Shield,
-  Zap,
   Swords,
   Play,
   Crown,
@@ -12,238 +9,26 @@ import {
   Skull,
   Flag,
   Heart,
-  Target,
-  Flame,
-  Sparkles,
   MapPin,
   ChevronRight,
   Trophy,
-  Wind,
-  ArrowUp,
-  Info,
-  Timer,
-  Coins,
-  Gauge,
   ChevronLeft,
   Clock,
-  Snowflake,
-  Users,
-  TrendingUp,
-  Crosshair,
-  CircleDot,
-  Banknote,
-  Radio,
-  Volume2,
-  CircleOff,
-  TrendingDown,
-  Droplets,
-  Ban,
-  EyeOff,
+  Book,
   AlertTriangle,
-  Footprints,
-  Lock,
 } from "lucide-react";
-import type { GameState, LevelStars, HeroType, SpellType, EnemyTrait, EnemyCategory, EnemyType } from "../../types";
+import type { GameState, LevelStars, HeroType, SpellType } from "../../types";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import {
-  HERO_DATA,
-  SPELL_DATA,
-  TOWER_DATA,
-  ENEMY_DATA,
-  LEVEL_WAVES,
   LEVEL_DATA,
-  HERO_ABILITY_COOLDOWNS,
-  TROOP_DATA,
 } from "../../constants";
-import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
-import {
-  TowerSprite,
-  HeroSprite,
-  EnemySprite,
-  SpellSprite,
-  HeroAbilityIcon,
-} from "../../sprites";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
 import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, PURPLE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
-
-// =============================================================================
-// LEVEL DATA
-// =============================================================================
-
-interface LevelNode {
-  id: string;
-  name: string;
-  description: string;
-  region: "grassland" | "swamp" | "desert" | "winter" | "volcanic";
-  difficulty: 1 | 2 | 3;
-  x: number;
-  y: number;
-  connectsTo: string[];
-}
-
-const WORLD_LEVELS: LevelNode[] = [
-  {
-    id: "poe",
-    name: "Poe Field",
-    description: LEVEL_DATA["poe"].description,
-    region: "grassland",
-    difficulty: 1,
-    x: 100,
-    y: 70,
-    connectsTo: ["carnegie"],
-  },
-  {
-    id: "carnegie",
-    name: "Carnegie Lake",
-    description: "Strategic waterfront defense",
-    region: "grassland",
-    difficulty: 2,
-    x: 200,
-    y: 35,
-    connectsTo: ["nassau"],
-  },
-  {
-    id: "nassau",
-    name: "Nassau Hall",
-    description: "The heart of campus",
-    region: "grassland",
-    difficulty: 3,
-    x: 310,
-    y: 60,
-    connectsTo: ["bog"],
-  },
-  // Swamp - Murky Marshes
-  {
-    id: "bog",
-    name: "Murky Bog",
-    description: "Treacherous wetlands",
-    region: "swamp",
-    difficulty: 1,
-    x: 440,
-    y: 39,
-    connectsTo: ["witch_hut"],
-  },
-  {
-    id: "witch_hut",
-    name: "Witch's Domain",
-    description: "Dark magic festers here",
-    region: "swamp",
-    difficulty: 2,
-    x: 540,
-    y: 65,
-    connectsTo: ["sunken_temple"],
-  },
-  {
-    id: "sunken_temple",
-    name: "Sunken Temple",
-    description: "Ancient ruins submerged",
-    region: "swamp",
-    difficulty: 3,
-    x: 650,
-    y: 32,
-    connectsTo: ["oasis"],
-  },
-  // Desert
-  {
-    id: "oasis",
-    name: "Desert Oasis",
-    description: "A precious water source",
-    region: "desert",
-    difficulty: 1,
-    x: 780,
-    y: 42,
-    connectsTo: ["pyramid"],
-  },
-  {
-    id: "pyramid",
-    name: "Pyramid Pass",
-    description: "Ancient canyon passage",
-    region: "desert",
-    difficulty: 2,
-    x: 900,
-    y: 41,
-    connectsTo: ["sphinx"],
-  },
-  {
-    id: "sphinx",
-    name: "Sphinx Gate",
-    description: "The guardian's domain",
-    region: "desert",
-    difficulty: 3,
-    x: 1000,
-    y: 60,
-    connectsTo: ["glacier"],
-  },
-  // Winter
-  {
-    id: "glacier",
-    name: "Glacier Path",
-    description: "Ice-covered mountain pass",
-    region: "winter",
-    difficulty: 1,
-    x: 1140,
-    y: 40,
-    connectsTo: ["fortress"],
-  },
-  {
-    id: "fortress",
-    name: "Frost Fortress",
-    description: "An abandoned stronghold",
-    region: "winter",
-    difficulty: 2,
-    x: 1270,
-    y: 36,
-    connectsTo: ["peak"],
-  },
-  {
-    id: "peak",
-    name: "Summit Peak",
-    description: "The highest defense point",
-    region: "winter",
-    difficulty: 3,
-    x: 1360,
-    y: 52,
-    connectsTo: ["lava"],
-  },
-  // Volcanic
-  {
-    id: "lava",
-    name: "Lava Fields",
-    description: "Rivers of molten rock",
-    region: "volcanic",
-    difficulty: 2,
-    x: 1520,
-    y: 60,
-    connectsTo: ["crater"],
-  },
-  {
-    id: "crater",
-    name: "Caldera Basin",
-    description: "Inside the volcano's heart",
-    region: "volcanic",
-    difficulty: 3,
-    x: 1590,
-    y: 35,
-    connectsTo: ["throne"],
-  },
-  {
-    id: "throne",
-    name: "Obsidian Throne",
-    description: "The ultimate challenge",
-    region: "volcanic",
-    difficulty: 3,
-    x: 1700,
-    y: 62,
-    connectsTo: [],
-  },
-];
-
-const MAP_WIDTH = 1800;
-
-const getWaveCount = (levelId: string): number => {
-  const waves = LEVEL_WAVES[levelId];
-  return waves ? waves.length : 0;
-};
+import { WORLD_LEVELS, MAP_WIDTH, getWaveCount } from "./worldMapData";
+import { CodexModal } from "./CodexModal";
+import { BattlefieldPreview } from "./BattlefieldPreview";
+import { HeroSelector } from "./HeroSelector";
+import { SpellSelector } from "./SpellSelector";
 
 // =============================================================================
 // LOGO COMPONENT
@@ -295,6042 +80,6 @@ const PrincetonLogo: React.FC = () => {
         alt="Battle Scene"
         className="w-full h-80 object-bottom object-contain absolute top-[-14rem] right-[-10rem] opacity-10 pointer-events-none select-none"
       />
-    </div>
-  );
-};
-
-// =============================================================================
-// CODEX HELPER FUNCTIONS
-// =============================================================================
-
-// Helper function to get trait icon and info
-const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string; color: string; desc: string } => {
-  switch (trait) {
-    case "flying":
-      return { icon: <Wind size={12} />, label: "Flying", color: "text-cyan-400", desc: "Ignores ground obstacles, only hit by certain towers" };
-    case "ranged":
-      return { icon: <Crosshair size={12} />, label: "Ranged", color: "text-green-400", desc: "Attacks from a distance" };
-    case "armored":
-      return { icon: <Shield size={12} />, label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage" };
-    case "fast":
-      return { icon: <Footprints size={12} />, label: "Fast", color: "text-yellow-400", desc: "Moves faster than normal enemies" };
-    case "boss":
-      return { icon: <Crown size={12} />, label: "Boss", color: "text-red-400", desc: "Powerful elite enemy with high HP" };
-    case "summoner":
-      return { icon: <Users size={12} />, label: "Summoner", color: "text-purple-400", desc: "Can summon additional enemies" };
-    case "regenerating":
-      return { icon: <Heart size={12} />, label: "Regenerating", color: "text-green-400", desc: "Slowly recovers health over time" };
-    case "aoe_attack":
-      return { icon: <Target size={12} />, label: "AoE Attack", color: "text-orange-400", desc: "Attacks hit multiple targets" };
-    case "magic_resist":
-      return { icon: <Sparkles size={12} />, label: "Magic Resist", color: "text-blue-400", desc: "Reduced damage from magic attacks" };
-    case "tower_debuffer":
-      return { icon: <TrendingDown size={12} />, label: "Tower Debuffer", color: "text-rose-400", desc: "Can weaken or disable towers" };
-    case "breakthrough":
-      return { icon: <Zap size={12} />, label: "Breakthrough", color: "text-sky-400", desc: "Bypasses barracks troops without stopping" };
-    default:
-      return { icon: <Info size={12} />, label: trait, color: "text-gray-400", desc: "Unknown trait" };
-  }
-};
-
-// Helper function to get ability icon and color
-const getAbilityInfo = (abilityType: string): { icon: React.ReactNode; color: string; bgColor: string } => {
-  switch (abilityType) {
-    case "burn":
-      return { icon: <Flame size={14} />, color: "text-orange-400", bgColor: "bg-orange-950/60 border-orange-800/50" };
-    case "slow":
-      return { icon: <Snowflake size={14} />, color: "text-cyan-400", bgColor: "bg-cyan-950/60 border-cyan-800/50" };
-    case "poison":
-      return { icon: <Droplets size={14} />, color: "text-green-400", bgColor: "bg-green-950/60 border-green-800/50" };
-    case "stun":
-      return { icon: <Zap size={14} />, color: "text-yellow-400", bgColor: "bg-yellow-950/60 border-yellow-800/50" };
-    case "tower_slow":
-      return { icon: <Timer size={14} />, color: "text-blue-400", bgColor: "bg-blue-950/60 border-blue-800/50" };
-    case "tower_weaken":
-      return { icon: <TrendingDown size={14} />, color: "text-red-400", bgColor: "bg-red-950/60 border-red-800/50" };
-    case "tower_blind":
-      return { icon: <EyeOff size={14} />, color: "text-purple-400", bgColor: "bg-purple-950/60 border-purple-800/50" };
-    case "tower_disable":
-      return { icon: <Ban size={14} />, color: "text-rose-400", bgColor: "bg-rose-950/60 border-rose-800/50" };
-    default:
-      return { icon: <AlertTriangle size={14} />, color: "text-gray-400", bgColor: "bg-gray-950/60 border-gray-800/50" };
-  }
-};
-
-// Enemy category display info
-const CATEGORY_INFO: Record<EnemyCategory, { name: string; desc: string; icon: React.ReactNode; color: string; bgColor: string }> = {
-  academic: { name: "Academic", desc: "Academic progression and milestones", icon: <Book size={16} />, color: "text-purple-400", bgColor: "bg-purple-950/50 border-purple-800/40" },
-  campus: { name: "Campus Life", desc: "Campus events and activities", icon: <Flag size={16} />, color: "text-amber-400", bgColor: "bg-amber-950/50 border-amber-800/40" },
-  ranged: { name: "Ranged", desc: "Attack from a distance", icon: <Crosshair size={16} />, color: "text-green-400", bgColor: "bg-green-950/50 border-green-800/40" },
-  flying: { name: "Flying", desc: "Aerial threats that bypass ground obstacles", icon: <Wind size={16} />, color: "text-cyan-400", bgColor: "bg-cyan-950/50 border-cyan-800/40" },
-  boss: { name: "Bosses", desc: "Major threats with devastating power", icon: <Crown size={16} />, color: "text-red-400", bgColor: "bg-red-950/50 border-red-800/40" },
-  nature: { name: "Nature", desc: "Environmental and biome creatures", icon: <Sparkles size={16} />, color: "text-emerald-400", bgColor: "bg-emerald-950/50 border-emerald-800/40" },
-  swarm: { name: "Swarm", desc: "Fast and numerous, strength in numbers", icon: <Users size={16} />, color: "text-yellow-400", bgColor: "bg-yellow-950/50 border-yellow-800/40" },
-};
-
-// Category display order
-const CATEGORY_ORDER: EnemyCategory[] = ["academic", "campus", "ranged", "flying", "boss", "nature", "swarm"];
-
-// Group enemies by category
-const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, EnemyType[]> => {
-  const grouped: Record<EnemyCategory, EnemyType[]> = {
-    academic: [],
-    campus: [],
-    ranged: [],
-    flying: [],
-    boss: [],
-    nature: [],
-    swarm: [],
-  };
-
-  enemyTypes.forEach(type => {
-    const enemy = ENEMY_DATA[type];
-    const category = enemy.category || "campus"; // Default to campus if not specified
-    grouped[category].push(type);
-  });
-
-  return grouped;
-};
-
-// =============================================================================
-// CODEX MODAL
-// =============================================================================
-
-interface CodexModalProps {
-  onClose: () => void;
-}
-
-const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<
-    "towers" | "heroes" | "enemies" | "spells"
-  >("towers");
-  const [selectedTower, setSelectedTower] = useState<string | null>(null);
-  const [selectedHeroDetail, setSelectedHeroDetail] = useState<string | null>(
-    null
-  );
-  const towerTypes = Object.keys(TOWER_DATA) as (keyof typeof TOWER_DATA)[];
-  const heroTypes = Object.keys(HERO_DATA) as HeroType[];
-  const enemyTypes = Object.keys(ENEMY_DATA) as (keyof typeof ENEMY_DATA)[];
-  const spellTypes = Object.keys(SPELL_DATA) as SpellType[];
-
-  // Get dynamic tower stats using the centralized calculation
-  const getDynamicStats = (type: string, level: number, upgrade?: "A" | "B") => {
-    return calculateTowerStats(type, level, upgrade, 1, 1);
-  };
-
-  // Get tower upgrade costs
-  const getUpgradeCost = (type: string, level: number) => {
-    const towerDef = TOWER_STATS[type];
-    if (!towerDef) return 0;
-    if (level <= 3) {
-      return towerDef.levels[level as 1 | 2 | 3]?.cost || 0;
-    }
-    return towerDef.level4Cost; // Level 4 cost from tower definition
-  };
-
-  // Get troop for station display
-  const getTroopForLevel = (level: number, upgrade?: "A" | "B") => {
-    if (level === 1) return TROOP_DATA.footsoldier;
-    if (level === 2) return TROOP_DATA.armored;
-    if (level === 3) return TROOP_DATA.elite;
-    if (level === 4) {
-      if (upgrade === "A") return TROOP_DATA.centaur;
-      if (upgrade === "B") return TROOP_DATA.cavalry;
-      return TROOP_DATA.knight;
-    }
-    return TROOP_DATA.footsoldier;
-  };
-
-  // Tower type icons
-  const towerIcons: Record<string, React.ReactNode> = {
-    station: <Users size={16} className="text-purple-400" />,
-    cannon: <CircleDot size={16} className="text-red-400" />,
-    library: <Snowflake size={16} className="text-cyan-400" />,
-    lab: <Zap size={16} className="text-yellow-400" />,
-    arch: <Volume2 size={16} className="text-blue-400" />,
-    club: <Banknote size={16} className="text-amber-400" />,
-  };
-
-  // Tower category descriptions
-  const towerCategories: Record<string, { category: string; color: string }> = {
-    station: { category: "Troop Spawner", color: "purple" },
-    cannon: { category: "Heavy Artillery", color: "red" },
-    library: { category: "Crowd Control", color: "cyan" },
-    lab: { category: "Energy Damage", color: "yellow" },
-    arch: { category: "Multi-Target", color: "blue" },
-    club: { category: "Economy", color: "amber" },
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" style={{ background: OVERLAY.black60 }}>
-      <div
-        className="relative w-full max-w-6xl max-h-[92vh] rounded-2xl overflow-hidden"
-        style={{
-          background: panelGradient,
-          border: `2px solid ${GOLD.border35}`,
-          boxShadow: `0 0 40px ${GOLD.glow07}, inset 0 0 30px ${GOLD.glow04}`,
-        }}
-      >
-        <OrnateFrame
-          className="relative w-full h-full overflow-hidden"
-          cornerSize={48}
-          color="#d97706"
-          glowColor="#f59e0b"
-        >
-          {/* Inner ghost border */}
-          <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-          <img
-            src="/images/gameplay-latest-zoomed.png"
-            alt="Battle Scene"
-            className="w-full h-full z-5 object-bottom object-cover absolute top-0 left-0 opacity-[0.05] pointer-events-none select-none"
-          />
-
-          {/* Header */}
-          <div className="sticky top-0 z-10 backdrop-blur px-9 py-4 flex items-center justify-between" style={{
-            background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight}, ${PANEL.bgDark})`,
-            borderBottom: `2px solid ${GOLD.border30}`,
-            boxShadow: `0 2px 12px ${OVERLAY.black40}`
-          }}>
-            <div className="flex items-center gap-3">
-              <Book className="text-amber-400 drop-shadow-lg" size={28} />
-              <h2 className="text-3xl font-bold text-amber-100 drop-shadow-lg tracking-wide">CODEX</h2>
-              <span className="text-xs text-amber-400/60 ml-2 font-medium tracking-wider uppercase">
-                Battle Encyclopedia
-              </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg transition-all hover:scale-110"
-              style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
-            >
-              <X size={20} className="text-amber-400" />
-            </button>
-          </div>
-
-          {/* Tab bar */}
-          <div className="flex z-10 overflow-scroll relative" style={{
-            background: PANEL.bgDeep,
-            borderBottom: `1px solid ${GOLD.border25}`,
-          }}>
-            {[
-              {
-                id: "towers",
-                label: "Towers",
-                icon: <Crown size={16} />,
-                count: towerTypes.length,
-              },
-              {
-                id: "heroes",
-                label: "Heroes",
-                icon: <Shield size={16} />,
-                count: heroTypes.length,
-              },
-              {
-                id: "enemies",
-                label: "Enemies",
-                icon: <Skull size={16} />,
-                count: enemyTypes.length,
-              },
-              {
-                id: "spells",
-                label: "Spells",
-                icon: <Zap size={16} />,
-                count: spellTypes.length,
-              },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as typeof activeTab);
-                  setSelectedTower(null);
-                  setSelectedHeroDetail(null);
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all font-medium relative"
-                style={activeTab === tab.id ? {
-                  background: `linear-gradient(180deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                  color: "rgb(252,211,77)",
-                  borderBottom: `2px solid ${GOLD.accentBorder50}`,
-                  boxShadow: `inset 0 -4px 12px ${GOLD.accentGlow08}`
-                } : {
-                  color: "rgba(180,140,60,0.5)",
-                }}
-              >
-                {activeTab === tab.id && (
-                  <div className="absolute inset-[2px] rounded-sm pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                )}
-                {tab.icon}
-                <span>{tab.label}</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{
-                  background: activeTab === tab.id ? PANEL.bgDeep : PANEL.bgWarmMid,
-                  color: activeTab === tab.id ? "rgb(252,211,77)" : "rgba(180,140,60,0.6)",
-                  border: `1px solid ${activeTab === tab.id ? GOLD.border25 : "transparent"}`
-                }}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Content area */}
-          <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
-            {activeTab === "towers" && !selectedTower && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {towerTypes.map((type) => {
-                  const tower = TOWER_DATA[type];
-                  const stats = getDynamicStats(type, 1);
-                  const towerDef = TOWER_STATS[type];
-                  const cat = towerCategories[type];
-
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedTower(type)}
-                      className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}
-                    >
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                      {/* Header with category */}
-                      <div className={`px-4 py-2 border-b flex items-center justify-between relative z-10 ${type === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                        type === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                          type === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                            type === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                              type === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                                type === "club" ? "bg-amber-950/50 border-amber-800/30" :
-                                  "bg-stone-950/50 border-stone-800/30"
-                        }`}>
-                        <div className="flex items-center gap-2">
-                          {towerIcons[type]}
-                          <span className={`text-xs font-medium uppercase tracking-wider ${type === "station" ? "text-purple-400" :
-                            type === "cannon" ? "text-red-400" :
-                              type === "library" ? "text-cyan-400" :
-                                type === "lab" ? "text-yellow-400" :
-                                  type === "arch" ? "text-blue-400" :
-                                    type === "club" ? "text-amber-400" :
-                                      "text-stone-400"
-                            }`}>
-                            {cat.category}
-                          </span>
-                        </div>
-                        <span className="text-amber-400 flex items-center gap-1 text-xs">
-                          <Coins size={12} /> {tower.cost} PP
-                        </span>
-                      </div>
-
-                      <div className="p-4">
-                        <div className="flex items-start gap-4 mb-3">
-                          <div className="w-16 h-16 rounded-lg flex items-center justify-center group-hover:border-amber-500/50 transition-colors" style={{
-                            background: PANEL.bgDeep,
-                            border: `1.5px solid ${GOLD.border25}`,
-                          }}>
-                            <TowerSprite type={type} size={52} level={1} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                              {tower.name}
-                            </h3>
-                            <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                              {tower.desc}
-                            </p>
-                          </div>
-                          <ChevronRight
-                            size={20}
-                            className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                          />
-                        </div>
-
-                        {/* Base stats */}
-                        <div className="flex flex-wrap gap-2 mb-3 text-xs">
-                          {stats.damage > 0 && (
-                            <span className="px-2 py-1 bg-red-950/50 rounded border border-red-900/40 text-red-300 flex items-center gap-1">
-                              <Swords size={11} /> {Math.floor(stats.damage)}
-                            </span>
-                          )}
-                          {stats.range > 0 && (
-                            <span className="px-2 py-1 bg-blue-950/50 rounded border border-blue-900/40 text-blue-300 flex items-center gap-1">
-                              <Target size={11} /> {Math.floor(stats.range)}
-                            </span>
-                          )}
-                          {stats.slowAmount && stats.slowAmount > 0 && (
-                            <span className="px-2 py-1 bg-cyan-950/50 rounded border border-cyan-900/40 text-cyan-300 flex items-center gap-1">
-                              <Snowflake size={11} /> {Math.round(stats.slowAmount * 100)}%
-                            </span>
-                          )}
-                          {stats.income && stats.income > 0 && (
-                            <span className="px-2 py-1 bg-amber-950/50 rounded border border-amber-900/40 text-amber-300 flex items-center gap-1">
-                              <Banknote size={11} /> +{stats.income} PP
-                            </span>
-                          )}
-                          {type === "station" && (
-                            <span className="px-2 py-1 bg-purple-950/50 rounded border border-purple-900/40 text-purple-300 flex items-center gap-1">
-                              <Users size={11} /> {TROOP_DATA.footsoldier.hp} HP
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Level 4 upgrade previews */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="px-2 py-1.5 bg-red-950/30 rounded border border-red-900/30">
-                            <div className="text-[9px] text-red-500/70 uppercase mb-0.5">Path A</div>
-                            <div className="text-xs text-red-300 font-medium truncate">{tower.upgrades.A.name}</div>
-                          </div>
-                          <div className="px-2 py-1.5 bg-blue-950/30 rounded border border-blue-900/30">
-                            <div className="text-[9px] text-blue-500/70 uppercase mb-0.5">Path B</div>
-                            <div className="text-xs text-blue-300 font-medium truncate">{tower.upgrades.B.name}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {activeTab === "towers" &&
-              selectedTower &&
-              (() => {
-                const tower = TOWER_DATA[selectedTower as keyof typeof TOWER_DATA];
-                const towerDef = TOWER_STATS[selectedTower]; // Used in renderUniqueFeatures
-                const cat = towerCategories[selectedTower];
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                void towerDef; // Explicitly mark as used in closure
-
-                // Render unique features for a tower upgrade
-                const renderUniqueFeatures = (stats: ReturnType<typeof getDynamicStats>, path: "A" | "B", type: string) => {
-                  const features: React.ReactNode[] = [];
-                  const upgradeStats = towerDef?.upgrades?.[path]?.stats;
-
-                  // Combat stats
-                  if (stats.damage > 0) {
-                    features.push(
-                      <div key="dmg" className="bg-red-950/50 rounded-lg p-2 text-center border border-red-800/40">
-                        <Swords size={14} className="mx-auto text-red-400 mb-1" />
-                        <div className="text-[9px] text-red-500">Damage</div>
-                        <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.range > 0 && type !== "club") {
-                    features.push(
-                      <div key="rng" className="bg-blue-950/50 rounded-lg p-2 text-center border border-blue-800/40">
-                        <Target size={14} className="mx-auto text-blue-400 mb-1" />
-                        <div className="text-[9px] text-blue-500">Range</div>
-                        <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.attackSpeed > 0) {
-                    features.push(
-                      <div key="spd" className="bg-green-950/50 rounded-lg p-2 text-center border border-green-800/40">
-                        <Gauge size={14} className="mx-auto text-green-400 mb-1" />
-                        <div className="text-[9px] text-green-500">Speed</div>
-                        <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
-                      </div>
-                    );
-                  }
-
-                  // Unique features
-                  if (stats.chainTargets && stats.chainTargets > 1) {
-                    features.push(
-                      <div key="chain" className="bg-yellow-950/50 rounded-lg p-2 text-center border border-yellow-800/40">
-                        <Users size={14} className="mx-auto text-yellow-400 mb-1" />
-                        <div className="text-[9px] text-yellow-500">Targets</div>
-                        <div className="text-yellow-300 font-bold">{stats.chainTargets}</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.splashRadius && stats.splashRadius > 0) {
-                    features.push(
-                      <div key="splash" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                        <Radio size={14} className="mx-auto text-orange-400 mb-1" />
-                        <div className="text-[9px] text-orange-500">Splash</div>
-                        <div className="text-orange-300 font-bold">{stats.splashRadius}</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.slowAmount && stats.slowAmount > 0) {
-                    features.push(
-                      <div key="slow" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
-                        <Snowflake size={14} className="mx-auto text-cyan-400 mb-1" />
-                        <div className="text-[9px] text-cyan-500">Slow</div>
-                        <div className="text-cyan-300 font-bold">{Math.round(stats.slowAmount * 100)}%</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.stunChance && stats.stunChance > 0) {
-                    features.push(
-                      <div key="stun" className="bg-indigo-950/50 rounded-lg p-2 text-center border border-indigo-800/40">
-                        <CircleOff size={14} className="mx-auto text-indigo-400 mb-1" />
-                        <div className="text-[9px] text-indigo-500">Freeze</div>
-                        <div className="text-indigo-300 font-bold">{Math.round(stats.stunChance * 100)}%</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.burnDamage && stats.burnDamage > 0) {
-                    features.push(
-                      <div key="burn" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                        <Flame size={14} className="mx-auto text-orange-400 mb-1" />
-                        <div className="text-[9px] text-orange-500">Burn</div>
-                        <div className="text-orange-300 font-bold">{stats.burnDamage}/s</div>
-                      </div>
-                    );
-                  }
-
-                  // Economy features
-                  if (stats.income && stats.income > 0) {
-                    features.push(
-                      <div key="income" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
-                        <Banknote size={14} className="mx-auto text-amber-400 mb-1" />
-                        <div className="text-[9px] text-amber-500">Income</div>
-                        <div className="text-amber-300 font-bold">+{stats.income} PP</div>
-                      </div>
-                    );
-                  }
-
-                  if (stats.incomeInterval && stats.incomeInterval > 0) {
-                    features.push(
-                      <div key="interval" className="bg-amber-950/50 rounded-lg p-2 text-center border border-amber-800/40">
-                        <Timer size={14} className="mx-auto text-amber-400 mb-1" />
-                        <div className="text-[9px] text-amber-500">Interval</div>
-                        <div className="text-amber-300 font-bold">{stats.incomeInterval / 1000}s</div>
-                      </div>
-                    );
-                  }
-
-                  // Aura features
-                  if (upgradeStats?.rangeBuff) {
-                    features.push(
-                      <div key="rangeAura" className="bg-cyan-950/50 rounded-lg p-2 text-center border border-cyan-800/40">
-                        <TrendingUp size={14} className="mx-auto text-cyan-400 mb-1" />
-                        <div className="text-[9px] text-cyan-500">Range Aura</div>
-                        <div className="text-cyan-300 font-bold">+{Math.round(upgradeStats.rangeBuff * 100)}%</div>
-                      </div>
-                    );
-                  }
-
-                  if (upgradeStats?.damageBuff) {
-                    features.push(
-                      <div key="dmgAura" className="bg-orange-950/50 rounded-lg p-2 text-center border border-orange-800/40">
-                        <TrendingUp size={14} className="mx-auto text-orange-400 mb-1" />
-                        <div className="text-[9px] text-orange-500">DMG Aura</div>
-                        <div className="text-orange-300 font-bold">+{Math.round(upgradeStats.damageBuff * 100)}%</div>
-                      </div>
-                    );
-                  }
-
-                  return features;
-                };
-
-                return (
-                  <div>
-                    <button
-                      onClick={() => setSelectedTower(null)}
-                      className="flex items-center gap-2 text-amber-300 hover:text-amber-100 mb-4 transition-all font-medium px-3 py-1.5 rounded-lg"
-                      style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
-                    >
-                      <ChevronRight size={16} className="rotate-180" />
-                      <span>Back to all towers</span>
-                    </button>
-
-                    <div className="space-y-6">
-                      {/* Header Section */}
-                      <div className="rounded-xl overflow-hidden relative" style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border30}`,
-                        boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
-                      }}>
-                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        <div className={`px-6 py-3 border-b flex items-center gap-3 ${selectedTower === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                          selectedTower === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                            selectedTower === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                              selectedTower === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                selectedTower === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                                  selectedTower === "club" ? "bg-amber-950/50 border-amber-800/30" :
-                                    "bg-stone-950/50 border-stone-800/30"
-                          }`}>
-                          {towerIcons[selectedTower]}
-                          <span className={`text-sm font-medium uppercase tracking-wider ${selectedTower === "station" ? "text-purple-400" :
-                            selectedTower === "cannon" ? "text-red-400" :
-                              selectedTower === "library" ? "text-cyan-400" :
-                                selectedTower === "lab" ? "text-yellow-400" :
-                                  selectedTower === "arch" ? "text-blue-400" :
-                                    selectedTower === "club" ? "text-amber-400" :
-                                      "text-stone-400"
-                            }`}>
-                            {cat.category}
-                          </span>
-                        </div>
-                        <div className="p-6 flex items-start gap-6">
-                          <div className="w-28 h-28 rounded-xl flex items-center justify-center flex-shrink-0" style={{
-                            background: PANEL.bgDeep,
-                            border: `2px solid ${GOLD.border30}`,
-                            boxShadow: `inset 0 0 15px ${OVERLAY.black40}`,
-                          }}>
-                            <TowerSprite
-                              type={selectedTower as keyof typeof TOWER_DATA}
-                              size={96}
-                              level={4}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-3xl font-bold text-amber-200 mb-2">
-                              {tower.name}
-                            </h3>
-                            <p className="text-stone-400 mb-4">{tower.desc}</p>
-                            <div className="flex flex-wrap gap-3">
-                              <div className="px-4 py-2 bg-amber-950/50 rounded-lg border border-amber-800/40">
-                                <div className="text-xs text-amber-500">Base Cost</div>
-                                <div className="text-amber-300 font-bold text-lg">{tower.cost} PP</div>
-                              </div>
-                              {getDynamicStats(selectedTower, 1).damage > 0 && (
-                                <div className="px-4 py-2 bg-red-950/50 rounded-lg border border-red-800/40">
-                                  <div className="text-xs text-red-500">Base Damage</div>
-                                  <div className="text-red-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).damage)}</div>
-                                </div>
-                              )}
-                              {getDynamicStats(selectedTower, 1).range > 0 && selectedTower !== "club" && (
-                                <div className="px-4 py-2 bg-blue-950/50 rounded-lg border border-blue-800/40">
-                                  <div className="text-xs text-blue-500">Base Range</div>
-                                  <div className="text-blue-300 font-bold text-lg">{Math.floor(getDynamicStats(selectedTower, 1).range)}</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Level Progression */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
-                          <h4 className="text-lg font-bold text-amber-200 flex items-center gap-2">
-                            <ArrowUp size={18} className="text-amber-400" />
-                            Level Progression
-                          </h4>
-                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                          {[1, 2, 3, 4].map((level) => {
-                            const stats = getDynamicStats(selectedTower, level);
-                            const cost = getUpgradeCost(selectedTower, level);
-                            const isStation = selectedTower === "station";
-                            const troop = isStation ? getTroopForLevel(level) : null;
-
-                            return (
-                              <div
-                                key={level}
-                                className={`rounded-xl border overflow-hidden ${level === 4
-                                  ? "bg-gradient-to-br from-purple-950/60 to-stone-950 border-purple-700/50"
-                                  : "bg-stone-900/80 border-stone-700/40"
-                                  }`}
-                              >
-                                <div className={`px-3 py-2 flex items-center justify-between ${level === 4 ? "bg-purple-900/30" : "bg-stone-800/50"}`}>
-                                  <div className="flex items-center gap-2">
-                                    <div className="flex">
-                                      {[...Array(level)].map((_, i) => (
-                                        <Star key={i} size={12} className="text-yellow-400 fill-yellow-400" />
-                                      ))}
-                                    </div>
-                                    <span className={`font-bold ${level === 4 ? "text-purple-300" : "text-amber-300"}`}>
-                                      Lvl {level}
-                                    </span>
-                                  </div>
-                                  <span className="text-amber-400 text-xs flex items-center gap-1">
-                                    <Coins size={10} /> {cost} PP
-                                  </span>
-                                </div>
-                                <div className="p-3">
-                                  {/* Level 4 shows both upgrade paths */}
-                                  {level === 4 ? (
-                                    <div className="space-y-2">
-                                      {(["A", "B"] as const).map((path) => {
-                                        const pathStats = getDynamicStats(selectedTower, 4, path);
-                                        const pathTroop = isStation ? getTroopForLevel(4, path) : null;
-
-                                        return (
-                                          <div
-                                            key={path}
-                                            className={`rounded-lg border overflow-hidden ${path === "A"
-                                              ? "bg-red-950/30 border-red-800/40"
-                                              : "bg-blue-950/30 border-blue-800/40"
-                                              }`}
-                                          >
-                                            {/* Path header */}
-                                            <div className={`px-2 py-1 text-[10px] font-bold ${path === "A" ? "text-red-300 bg-red-900/30" : "text-blue-300 bg-blue-900/30"
-                                              }`}>
-                                              {tower.upgrades[path].name}
-                                            </div>
-
-                                            {/* Path stats */}
-                                            <div className="p-1.5">
-                                              {/* Station shows troop stats for each path */}
-                                              {isStation && pathTroop && (
-                                                <div className="grid grid-cols-3 gap-1 text-[9px]">
-                                                  <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
-                                                    <div className="text-red-500 text-[7px]">HP</div>
-                                                    <div className="text-red-300 font-bold">{pathTroop.hp}</div>
-                                                  </div>
-                                                  <div className="bg-orange-950/50 rounded p-1 text-center border border-orange-900/30">
-                                                    <div className="text-orange-500 text-[7px]">DMG</div>
-                                                    <div className="text-orange-300 font-bold">{pathTroop.damage}</div>
-                                                  </div>
-                                                  <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
-                                                    <div className="text-green-500 text-[7px]">SPD</div>
-                                                    <div className="text-green-300 font-bold">{(pathTroop.attackSpeed / 1000).toFixed(1)}s</div>
-                                                  </div>
-                                                </div>
-                                              )}
-
-                                              {/* Combat towers show damage/range/speed for each path */}
-                                              {!isStation && selectedTower !== "club" && (
-                                                <div className="grid grid-cols-3 gap-1 text-[9px]">
-                                                  {pathStats.damage > 0 && (
-                                                    <div className="bg-red-950/50 rounded p-1 text-center border border-red-900/30">
-                                                      <div className="text-red-500 text-[7px]">DMG</div>
-                                                      <div className="text-red-300 font-bold">{Math.floor(pathStats.damage)}</div>
-                                                    </div>
-                                                  )}
-                                                  {pathStats.range > 0 && (
-                                                    <div className="bg-blue-950/50 rounded p-1 text-center border border-blue-900/30">
-                                                      <div className="text-blue-500 text-[7px]">RNG</div>
-                                                      <div className="text-blue-300 font-bold">{Math.floor(pathStats.range)}</div>
-                                                    </div>
-                                                  )}
-                                                  {pathStats.attackSpeed > 0 && (
-                                                    <div className="bg-green-950/50 rounded p-1 text-center border border-green-900/30">
-                                                      <div className="text-green-500 text-[7px]">SPD</div>
-                                                      <div className="text-green-300 font-bold">{(pathStats.attackSpeed / 1000).toFixed(1)}s</div>
-                                                    </div>
-                                                  )}
-                                                </div>
-                                              )}
-
-                                              {/* Club shows income for each path */}
-                                              {selectedTower === "club" && (
-                                                <div className="grid grid-cols-2 gap-1 text-[9px]">
-                                                  <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
-                                                    <div className="text-amber-500 text-[7px]">Income</div>
-                                                    <div className="text-amber-300 font-bold">+{pathStats.income} PP</div>
-                                                  </div>
-                                                  <div className="bg-amber-950/50 rounded p-1 text-center border border-amber-900/30">
-                                                    <div className="text-amber-500 text-[7px]">Interval</div>
-                                                    <div className="text-amber-300 font-bold">{(pathStats.incomeInterval || 8000) / 1000}s</div>
-                                                  </div>
-                                                </div>
-                                              )}
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <p className="text-xs text-stone-400 mb-3 line-clamp-2">
-                                        {tower.levelDesc[level as 1 | 2 | 3]}
-                                      </p>
-
-                                      {/* Station shows troop stats */}
-                                      {isStation && troop && (
-                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                            <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
-                                            <div className="text-red-300 font-bold">{troop.hp}</div>
-                                          </div>
-                                          <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                            <Swords size={10} className="mx-auto text-orange-400 mb-0.5" />
-                                            <div className="text-orange-300 font-bold">{troop.damage}</div>
-                                          </div>
-                                          <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                            <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
-                                            <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {/* Combat towers show damage/range/speed */}
-                                      {!isStation && selectedTower !== "club" && (
-                                        <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                                          {stats.damage > 0 && (
-                                            <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                              <div className="text-red-500 text-[8px]">DMG</div>
-                                              <div className="text-red-300 font-bold">{Math.floor(stats.damage)}</div>
-                                            </div>
-                                          )}
-                                          {stats.range > 0 && (
-                                            <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                              <div className="text-blue-500 text-[8px]">RNG</div>
-                                              <div className="text-blue-300 font-bold">{Math.floor(stats.range)}</div>
-                                            </div>
-                                          )}
-                                          {stats.attackSpeed > 0 && (
-                                            <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                              <div className="text-green-500 text-[8px]">SPD</div>
-                                              <div className="text-green-300 font-bold">{(stats.attackSpeed / 1000).toFixed(1)}s</div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-
-                                      {/* Club shows income */}
-                                      {selectedTower === "club" && (
-                                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                                          <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                            <div className="text-amber-500 text-[8px]">Income</div>
-                                            <div className="text-amber-300 font-bold">+{stats.income} PP</div>
-                                          </div>
-                                          <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/30">
-                                            <div className="text-amber-500 text-[8px]">Interval</div>
-                                            <div className="text-amber-300 font-bold">{(stats.incomeInterval || 8000) / 1000}s</div>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {/* Library shows slow */}
-                                      {selectedTower === "library" && (
-                                        <div className="mt-1.5 text-[10px] text-cyan-400 flex items-center justify-center gap-1 bg-cyan-950/30 rounded p-1 border border-cyan-900/30">
-                                          <Snowflake size={10} /> {Math.round((stats.slowAmount || 0) * 100)}% slow
-                                        </div>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Evolution Paths */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
-                          <h4 className="text-lg font-bold text-amber-200 flex items-center gap-2">
-                            <Sparkles size={18} className="text-amber-400" />
-                            Evolution Paths (Level 4)
-                          </h4>
-                          <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-                        </div>
-                        <div className="grid sm:grid-cols-2 gap-6">
-                          {(["A", "B"] as const).map((path) => {
-                            const upgrade = tower.upgrades[path];
-                            const stats = getDynamicStats(selectedTower, 4, path);
-                            const isStation = selectedTower === "station";
-                            const troop = isStation ? getTroopForLevel(4, path) : null;
-                            const pathLabel = path === "A" ? "Offensive" : "Utility";
-
-                            return (
-                              <div
-                                key={path}
-                                className={`rounded-xl border overflow-hidden ${path === "A"
-                                  ? "bg-gradient-to-br from-red-950/40 to-stone-950 border-red-700/50"
-                                  : "bg-gradient-to-br from-blue-950/40 to-stone-950 border-blue-700/50"
-                                  }`}
-                              >
-                                {/* Path header */}
-                                <div className={`px-4 py-3 ${path === "A" ? "bg-red-900/30" : "bg-blue-900/30"} flex items-center gap-4`}>
-                                  <div className={`w-14 h-14 rounded-lg ${path === "A" ? "bg-red-950/60 border-red-700/50" : "bg-blue-950/60 border-blue-700/50"} border flex items-center justify-center`}>
-                                    <TowerSprite
-                                      type={selectedTower as keyof typeof TOWER_DATA}
-                                      size={48}
-                                      level={4}
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className={`text-[10px] uppercase tracking-wider ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
-                                      Path {path} • {pathLabel}
-                                    </div>
-                                    <h5 className={`text-xl font-bold ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
-                                      {upgrade.name}
-                                    </h5>
-                                  </div>
-                                </div>
-
-                                <div className="p-4 space-y-4">
-                                  {/* Description */}
-                                  <p className="text-stone-400 text-sm">{upgrade.desc}</p>
-
-                                  {/* Special Effect Box */}
-                                  <div className={`rounded-lg p-3 ${path === "A" ? "bg-red-950/40 border border-red-800/40" : "bg-blue-950/40 border border-blue-800/40"}`}>
-                                    <div className={`text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5 ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
-                                      <Sparkles size={12} />
-                                      Special Effect
-                                    </div>
-                                    <p className={`text-sm ${path === "A" ? "text-red-200" : "text-blue-200"}`}>
-                                      {upgrade.effect}
-                                    </p>
-                                  </div>
-
-                                  {/* Troop info for Station */}
-                                  {isStation && troop && (
-                                    <div className="bg-stone-800/50 rounded-lg p-3 border border-stone-700/40">
-                                      <div className="text-xs text-purple-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                        <Users size={12} />
-                                        Troop: {troop.name}
-                                      </div>
-                                      <p className="text-xs text-stone-400 mb-2">{troop.desc}</p>
-                                      <div className="grid grid-cols-4 gap-2 text-[10px]">
-                                        <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/30">
-                                          <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                                          <div className="text-red-300 font-bold">{troop.hp}</div>
-                                        </div>
-                                        <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/30">
-                                          <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
-                                          <div className="text-orange-300 font-bold">{troop.damage}</div>
-                                        </div>
-                                        <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/30">
-                                          <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
-                                          <div className="text-green-300 font-bold">{(troop.attackSpeed / 1000).toFixed(1)}s</div>
-                                        </div>
-                                        {troop.isRanged && (
-                                          <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/30">
-                                            <Crosshair size={12} className="mx-auto text-blue-400 mb-0.5" />
-                                            <div className="text-blue-300 font-bold">{troop.range}</div>
-                                          </div>
-                                        )}
-                                      </div>
-                                      {(troop.isMounted || troop.isRanged || troop.canTargetFlying) && (
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                          {troop.isMounted && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/50 rounded text-amber-300 border border-amber-700/50">
-                                              🐴 Mounted
-                                            </span>
-                                          )}
-                                          {troop.isRanged && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/50 rounded text-blue-300 border border-blue-700/50">
-                                              🏹 Ranged
-                                            </span>
-                                          )}
-                                          {troop.canTargetFlying && (
-                                            <span className="text-[9px] px-1.5 py-0.5 bg-cyan-900/50 rounded text-cyan-300 border border-cyan-700/50">
-                                              ✈️ Anti-Air
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-
-                                  {/* Stats Grid */}
-                                  <div className="grid grid-cols-4 gap-2">
-                                    {renderUniqueFeatures(stats, path, selectedTower)}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-            {activeTab === "heroes" && !selectedHeroDetail && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {heroTypes.map((type) => {
-                  const hero = HERO_DATA[type];
-                  const cooldown = HERO_ABILITY_COOLDOWNS[type];
-
-                  // Hero role icons and colors
-                  const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
-                    tiger: { role: "Brawler", icon: <Swords size={12} />, color: "orange" },
-                    tenor: { role: "Support", icon: <Volume2 size={12} />, color: "purple" },
-                    mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
-                    rocky: { role: "Artillery", icon: <Target size={12} />, color: "red" },
-                    scott: { role: "Buffer", icon: <TrendingUp size={12} />, color: "yellow" },
-                    captain: { role: "Summoner", icon: <Users size={12} />, color: "green" },
-                    engineer: { role: "Builder", icon: <CircleDot size={12} />, color: "amber" },
-                  };
-                  const roleInfo = heroRoles[type] || { role: "Hero", icon: <Shield size={12} />, color: "amber" };
-
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedHeroDetail(type)}
-                      className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}
-                    >
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                      {/* Role header */}
-                      <div className={`px-4 py-2 border-b flex items-center justify-between ${roleInfo.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                        roleInfo.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                          roleInfo.color === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                            roleInfo.color === "red" ? "bg-red-950/50 border-red-800/30" :
-                              roleInfo.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                roleInfo.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                  "bg-amber-950/50 border-amber-800/30"
-                        }`}>
-                        <div className={`flex items-center gap-2 ${roleInfo.color === "orange" ? "text-orange-400" :
-                          roleInfo.color === "purple" ? "text-purple-400" :
-                            roleInfo.color === "blue" ? "text-blue-400" :
-                              roleInfo.color === "red" ? "text-red-400" :
-                                roleInfo.color === "yellow" ? "text-yellow-400" :
-                                  roleInfo.color === "green" ? "text-green-400" :
-                                    "text-amber-400"
-                          }`}>
-                          {roleInfo.icon}
-                          <span className="text-xs font-medium uppercase tracking-wider">
-                            {roleInfo.role}
-                          </span>
-                        </div>
-                        <span className="text-xl">{hero.icon}</span>
-                      </div>
-
-                      <div className="p-4">
-                        <div className="flex items-start gap-4 mb-3">
-                          <div
-                            className="w-16 h-16 rounded-lg border-2 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
-                            style={{
-                              borderColor: hero.color,
-                              backgroundColor: hero.color + "20",
-                              boxShadow: `0 0 20px ${hero.color}30`,
-                            }}
-                          >
-                            <HeroSprite type={type} size={52} color={hero.color} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                              {hero.name}
-                            </h3>
-                            <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                              {hero.description}
-                            </p>
-                          </div>
-                          <ChevronRight
-                            size={20}
-                            className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                          />
-                        </div>
-
-                        {/* Stats grid */}
-                        <div className="grid grid-cols-4 gap-1.5 mb-3">
-                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                            <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                            <div className="text-red-300 font-bold text-xs">{hero.hp}</div>
-                          </div>
-                          <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/40">
-                            <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
-                            <div className="text-orange-300 font-bold text-xs">{hero.damage}</div>
-                          </div>
-                          <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/40">
-                            <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
-                            <div className="text-blue-300 font-bold text-xs">{hero.range}</div>
-                          </div>
-                          <div className="bg-cyan-950/50 rounded p-1.5 text-center border border-cyan-900/40">
-                            <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                            <div className="text-cyan-300 font-bold text-xs">{hero.speed}</div>
-                          </div>
-                        </div>
-
-                        {/* Ability preview */}
-                        <div className="bg-purple-950/40 rounded-lg p-2 border border-purple-800/30">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <Sparkles size={12} className="text-purple-400" />
-                              <span className="text-xs font-medium text-purple-300">{hero.ability}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[10px] text-purple-400">
-                              <Timer size={10} />
-                              <span>{cooldown / 1000}s</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {activeTab === "heroes" &&
-              selectedHeroDetail &&
-              (() => {
-                const hero = HERO_DATA[selectedHeroDetail as HeroType];
-                const cooldown = HERO_ABILITY_COOLDOWNS[selectedHeroDetail as HeroType];
-
-                const heroInfo: Record<string, {
-                  role: string;
-                  roleIcon: React.ReactNode;
-                  roleColor: string;
-                  strengths: string[];
-                  weaknesses: string[];
-                  abilityDetails: string[];
-                  strategy: string;
-                  synergies: string[];
-                }> = {
-                  tiger: {
-                    role: "Frontline Brawler",
-                    roleIcon: <Swords size={16} />,
-                    roleColor: "orange",
-                    strengths: ["High melee damage", "Powerful crowd control", "Good survivability"],
-                    weaknesses: ["Short range", "Vulnerable during cooldowns", "Can get overwhelmed"],
-                    abilityDetails: [
-                      "Stuns ALL enemies within 180 range for 3 seconds",
-                      "Applies 50% slow effect after stun ends",
-                      "Creates orange fear shockwave visual effect",
-                    ],
-                    strategy: "Dive into enemy formations when clustered. Use Mighty Roar to stun groups, then retreat while they're slowed.",
-                    synergies: ["Pairs well with AoE towers", "Use with Freeze spell for extended CC"],
-                  },
-                  tenor: {
-                    role: "AoE Support",
-                    roleIcon: <Volume2 size={16} />,
-                    roleColor: "purple",
-                    strengths: ["Large AoE damage", "Heals allied troops", "Good stun duration"],
-                    weaknesses: ["Lower single-target damage", "Moderate HP", "Needs positioning"],
-                    abilityDetails: [
-                      "Deals 80 damage to all enemies within 250 range",
-                      "Stuns affected enemies for 2 seconds",
-                      "Heals nearby troops for 75 HP",
-                    ],
-                    strategy: "Position near chokepoints to maximize damage. Sonic Boom both damages enemies and heals your troops.",
-                    synergies: ["Great with Dinky Station troops", "Combos with slow towers"],
-                  },
-                  mathey: {
-                    role: "Tank / Protector",
-                    roleIcon: <Shield size={16} />,
-                    roleColor: "blue",
-                    strengths: ["Highest HP in game", "Invincibility ability", "Draws enemy fire"],
-                    weaknesses: ["Low damage output", "Slow movement", "Long ability cooldown"],
-                    abilityDetails: [
-                      "Hero becomes invincible for 5 seconds",
-                      "Taunts all nearby enemies within 150 range",
-                      "Enemies forced to target the hero",
-                    ],
-                    strategy: "Use Fortress Shield when overwhelmed to draw all enemy fire and protect your towers and troops.",
-                    synergies: ["Protects squishy troops", "Pairs with high DPS towers"],
-                  },
-                  rocky: {
-                    role: "Ranged Artillery",
-                    roleIcon: <Target size={16} />,
-                    roleColor: "green",
-                    strengths: ["Massive ranged damage", "Large AoE", "Safe positioning"],
-                    weaknesses: ["Vulnerable in melee", "Slow attack speed", "Ability has delay"],
-                    abilityDetails: [
-                      "Massive AoE damage in target area",
-                      "Damage falls off from center of impact",
-                      "Ground crater with dust cloud effect",
-                    ],
-                    strategy: "Position Rocky behind your front line. Use Boulder Bash on clustered enemies for devastating damage.",
-                    synergies: ["Use with Dinky Station troops", "Combos with Firestone Library"],
-                  },
-                  scott: {
-                    role: "Support Buffer",
-                    roleIcon: <TrendingUp size={16} />,
-                    roleColor: "cyan",
-                    strengths: ["Global tower buff", "Huge DPS increase", "Low risk positioning"],
-                    weaknesses: ["No direct damage ability", "Relies on towers", "Low personal DPS"],
-                    abilityDetails: [
-                      "Boosts ALL tower damage by 50% for 8 seconds",
-                      "Golden light rays emanate from hero",
-                      "Affects every tower on the map",
-                    ],
-                    strategy: "F. Scott is a pure support. Save Inspiration for critical waves or boss enemies to maximize tower damage.",
-                    synergies: ["Best with many towers built", "Combos with high-damage towers"],
-                  },
-                  captain: {
-                    role: "Summoner",
-                    roleIcon: <Users size={16} />,
-                    roleColor: "red",
-                    strengths: ["Extra troops on demand", "Flexible positioning", "Good for blocking"],
-                    weaknesses: ["Knights are temporary", "Moderate personal stats", "Cooldown dependent"],
-                    abilityDetails: [
-                      "Summons 3 knight troops near the hero",
-                      "Knights have 500 HP and 30 damage each",
-                      "Summoning circle with energy pillars effect",
-                    ],
-                    strategy: "Use Rally Knights to plug leaks in your defense or create additional blocking points.",
-                    synergies: ["Works with troop-healing effects", "Pairs with high DPS towers"],
-                  },
-                  engineer: {
-                    role: "Tactical Builder",
-                    roleIcon: <CircleDot size={16} />,
-                    roleColor: "amber",
-                    strengths: ["Free turret placement", "Extends tower coverage", "Good DPS"],
-                    weaknesses: ["Turret is fragile", "Needs good placement", "Moderate stats"],
-                    abilityDetails: [
-                      "Deploys a turret nearby",
-                      "Turret does not self-destruct",
-                      "Can spawn multiple turrets",
-                    ],
-                    strategy: "Place turrets strategically to cover weak points or extend your defensive line.",
-                    synergies: ["Covers areas without towers", "Good for emergency defense"],
-                  },
-                };
-                const info = heroInfo[selectedHeroDetail] || heroInfo.tiger;
-
-                return (
-                  <div>
-                    <button
-                      onClick={() => setSelectedHeroDetail(null)}
-                      className="flex items-center gap-2 text-amber-300 hover:text-amber-100 mb-4 transition-all font-medium px-3 py-1.5 rounded-lg"
-                      style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
-                    >
-                      <ChevronRight size={16} className="rotate-180" />
-                      <span>Back to all heroes</span>
-                    </button>
-
-                    <div className="space-y-6">
-                      {/* Hero Header */}
-                      <div className="rounded-xl overflow-hidden relative" style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border30}`,
-                        boxShadow: `inset 0 0 12px ${GOLD.glow04}`,
-                      }}>
-                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        <div className={`px-6 py-3 border-b flex items-center gap-3 ${info.roleColor === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                          info.roleColor === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                            info.roleColor === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                              info.roleColor === "red" ? "bg-red-950/50 border-red-800/30" :
-                                info.roleColor === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                  info.roleColor === "green" ? "bg-green-950/50 border-green-800/30" :
-                                    "bg-amber-950/50 border-amber-800/30"
-                          }`}>
-                          <span className={`${info.roleColor === "orange" ? "text-orange-400" :
-                            info.roleColor === "purple" ? "text-purple-400" :
-                              info.roleColor === "blue" ? "text-blue-400" :
-                                info.roleColor === "red" ? "text-red-400" :
-                                  info.roleColor === "yellow" ? "text-yellow-400" :
-                                    info.roleColor === "green" ? "text-green-400" :
-                                      "text-amber-400"
-                            }`}>
-                            {info.roleIcon}
-                          </span>
-                          <span className={`text-sm font-medium uppercase tracking-wider ${info.roleColor === "orange" ? "text-orange-400" :
-                            info.roleColor === "purple" ? "text-purple-400" :
-                              info.roleColor === "blue" ? "text-blue-400" :
-                                info.roleColor === "red" ? "text-red-400" :
-                                  info.roleColor === "yellow" ? "text-yellow-400" :
-                                    info.roleColor === "green" ? "text-green-400" :
-                                      "text-amber-400"
-                            }`}>
-                            {info.role}
-                          </span>
-                        </div>
-
-                        <div className="p-6 flex items-start gap-6">
-                          <div
-                            className="w-28 h-28 rounded-xl border-2 flex items-center justify-center flex-shrink-0"
-                            style={{
-                              borderColor: hero.color,
-                              backgroundColor: hero.color + "25",
-                              boxShadow: `0 0 30px ${hero.color}40`,
-                            }}
-                          >
-                            <HeroSprite
-                              type={selectedHeroDetail as HeroType}
-                              size={96}
-                              color={hero.color}
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-3xl font-bold text-amber-200">
-                                {hero.name}
-                              </h3>
-                              <span className="text-2xl">{hero.icon}</span>
-                            </div>
-                            <p className="text-stone-400 mb-4">
-                              {hero.description}
-                            </p>
-                            <div className="grid grid-cols-5 gap-3">
-                              <div className="bg-red-950/50 rounded-lg p-2.5 text-center border border-red-800/40">
-                                <Heart size={16} className="mx-auto text-red-400 mb-1" />
-                                <div className="text-[10px] text-red-500">Health</div>
-                                <div className="text-red-300 font-bold text-lg">{hero.hp}</div>
-                              </div>
-                              <div className="bg-orange-950/50 rounded-lg p-2.5 text-center border border-orange-800/40">
-                                <Swords size={16} className="mx-auto text-orange-400 mb-1" />
-                                <div className="text-[10px] text-orange-500">Damage</div>
-                                <div className="text-orange-300 font-bold text-lg">{hero.damage}</div>
-                              </div>
-                              <div className="bg-blue-950/50 rounded-lg p-2.5 text-center border border-blue-800/40">
-                                <Target size={16} className="mx-auto text-blue-400 mb-1" />
-                                <div className="text-[10px] text-blue-500">Range</div>
-                                <div className="text-blue-300 font-bold text-lg">{hero.range}</div>
-                              </div>
-                              <div className="bg-green-950/50 rounded-lg p-2.5 text-center border border-green-800/40">
-                                <Gauge size={16} className="mx-auto text-green-400 mb-1" />
-                                <div className="text-[10px] text-green-500">Atk Speed</div>
-                                <div className="text-green-300 font-bold text-lg">{(hero.attackSpeed / 1000).toFixed(1)}s</div>
-                              </div>
-                              <div className="bg-cyan-950/50 rounded-lg p-2.5 text-center border border-cyan-800/40">
-                                <Wind size={16} className="mx-auto text-cyan-400 mb-1" />
-                                <div className="text-[10px] text-cyan-500">Move</div>
-                                <div className="text-cyan-300 font-bold text-lg">{hero.speed}</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Ability Section */}
-                      <div className="bg-gradient-to-br from-purple-950/40 to-stone-950 rounded-xl border border-purple-700/50 overflow-hidden">
-                        <div className="px-5 py-3 bg-purple-900/30 border-b border-purple-800/40 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={18} />
-                            <span className="text-sm text-purple-400 font-medium uppercase tracking-wider">Special Ability</span>
-                          </div>
-                          <div className="flex items-center gap-2 bg-purple-950/50 px-3 py-1.5 rounded-lg border border-purple-700/50">
-                            <Timer size={14} className="text-purple-400" />
-                            <span className="text-purple-300 font-bold text-sm">{cooldown / 1000}s Cooldown</span>
-                          </div>
-                        </div>
-                        <div className="p-5">
-                          <h4 className="text-2xl font-bold text-purple-200 mb-2 flex items-center gap-2">
-                            <HeroAbilityIcon type={selectedHeroDetail as HeroType} size={24} />
-                            {hero.ability}
-                          </h4>
-                          <p className="text-purple-300 mb-4">{hero.abilityDesc}</p>
-                          <div className="bg-purple-950/40 rounded-lg p-4 border border-purple-800/30">
-                            <div className="text-xs text-purple-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                              <Info size={10} /> Ability Details
-                            </div>
-                            <ul className="text-sm text-purple-300 space-y-1.5">
-                              {info.abilityDetails.map((detail, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-purple-400 mt-0.5">•</span>
-                                  <span>{detail}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Strengths & Weaknesses */}
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="bg-green-950/30 rounded-xl border border-green-800/40 p-4">
-                          <h4 className="text-green-300 font-bold mb-3 flex items-center gap-2">
-                            <TrendingUp size={16} /> Strengths
-                          </h4>
-                          <ul className="text-sm text-green-200/80 space-y-1.5">
-                            {info.strengths.map((s, i) => (
-                              <li key={i} className="flex items-center gap-2">
-                                <span className="text-green-400">✓</span> {s}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="bg-red-950/30 rounded-xl border border-red-800/40 p-4">
-                          <h4 className="text-red-300 font-bold mb-3 flex items-center gap-2">
-                            <CircleOff size={16} /> Weaknesses
-                          </h4>
-                          <ul className="text-sm text-red-200/80 space-y-1.5">
-                            {info.weaknesses.map((w, i) => (
-                              <li key={i} className="flex items-center gap-2">
-                                <span className="text-red-400">✗</span> {w}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Strategy & Synergies */}
-                      <div className="rounded-xl p-5 relative" style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}>
-                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                        <h4 className="text-amber-200 font-bold mb-3 flex items-center gap-2 relative z-10">
-                          <Info size={16} className="text-amber-400" /> Combat Strategy
-                        </h4>
-                        <p className="text-stone-300 mb-4">{info.strategy}</p>
-                        <div className="bg-amber-950/30 rounded-lg p-3 border border-amber-800/30">
-                          <div className="text-xs text-amber-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                            <Sparkles size={10} /> Synergies
-                          </div>
-                          <ul className="text-sm text-amber-200/80 space-y-1">
-                            {info.synergies.map((s, i) => (
-                              <li key={i} className="flex items-center gap-2">
-                                <span className="text-amber-400">★</span> {s}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-            {activeTab === "enemies" && (() => {
-              const groupedEnemies = groupEnemiesByCategory(enemyTypes);
-
-              return (
-                <div className="space-y-6">
-                  {CATEGORY_ORDER.map(category => {
-                    const categoryEnemies = groupedEnemies[category];
-                    if (categoryEnemies.length === 0) return null;
-
-                    const catInfo = CATEGORY_INFO[category];
-
-                    return (
-                      <div key={category}>
-                        {/* Category Header */}
-                        <div className="flex items-center gap-3 mb-3 pb-3" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
-                          <div className={`p-2 rounded-lg ${catInfo.bgColor}`} style={{ border: `1px solid ${GOLD.border25}` }}>
-                            {catInfo.icon}
-                          </div>
-                          <div>
-                            <h3 className={`font-bold text-lg ${catInfo.color}`}>{catInfo.name}</h3>
-                            <p className="text-xs text-amber-400/50">{catInfo.desc}</p>
-                          </div>
-                          <div className="ml-auto text-xs font-bold px-2.5 py-1 rounded-md" style={{
-                            background: PANEL.bgWarmMid,
-                            color: "rgb(252,211,77)",
-                            border: `1px solid ${GOLD.border25}`,
-                          }}>
-                            {categoryEnemies.length} {categoryEnemies.length === 1 ? "enemy" : "enemies"}
-                          </div>
-                        </div>
-
-                        {/* Category Enemies Grid */}
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {categoryEnemies.map((type) => {
-                            const enemy = ENEMY_DATA[type];
-                            const traits = enemy.traits || [];
-                            const abilities = enemy.abilities || [];
-                            const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
-
-                            // Determine threat level based on HP and boss status
-                            const getThreatLevel = (hp: number, isBoss?: boolean) => {
-                              if (isBoss || hp >= 1000) return { level: "Boss", color: "purple", icon: <Crown size={12} /> };
-                              if (hp >= 500) return { level: "Elite", color: "orange", icon: <Star size={12} /> };
-                              if (hp >= 200) return { level: "Standard", color: "yellow", icon: <Skull size={12} /> };
-                              return { level: "Minion", color: "green", icon: <Skull size={12} /> };
-                            };
-                            const threat = getThreatLevel(enemy.hp, enemy.isBoss);
-
-                            // Enemy type classification
-                            const getEnemyTypeClassification = () => {
-                              if (enemy.flying) return { type: "Flying", icon: <Wind size={12} />, color: "cyan" };
-                              if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={12} />, color: "purple" };
-                              if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={12} />, color: "stone" };
-                              if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={12} />, color: "green" };
-                              return { type: "Ground", icon: <Flag size={12} />, color: "red" };
-                            };
-                            const enemyTypeClass = getEnemyTypeClassification();
-
-                            return (
-                              <div
-                                key={type}
-                                className="rounded-xl overflow-hidden hover:border-red-700/50 transition-colors relative"
-                                style={{
-                                  background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                                  border: `1.5px solid ${GOLD.border25}`,
-                                  boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                                }}
-                              >
-                                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                                {/* Header with threat level */}
-                                <div className={`px-4 py-2 border-b flex items-center justify-between ${threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                                  threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                                    threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                      "bg-green-950/50 border-green-800/30"
-                                  }`}>
-                                  <div className={`flex items-center gap-2 ${threat.color === "purple" ? "text-purple-400" :
-                                    threat.color === "orange" ? "text-orange-400" :
-                                      threat.color === "yellow" ? "text-yellow-400" :
-                                        "text-green-400"
-                                    }`}>
-                                    {threat.icon}
-                                    <span className="text-xs font-medium uppercase tracking-wider">
-                                      {threat.level}
-                                    </span>
-                                  </div>
-                                  <div className={`flex items-center gap-1.5 text-xs ${enemyTypeClass.color === "cyan" ? "text-cyan-400" :
-                                    enemyTypeClass.color === "purple" ? "text-purple-400" :
-                                      enemyTypeClass.color === "stone" ? "text-stone-400" :
-                                        enemyTypeClass.color === "green" ? "text-green-400" :
-                                          "text-red-400"
-                                    }`}>
-                                    {enemyTypeClass.icon}
-                                    <span>{enemyTypeClass.type}</span>
-                                  </div>
-                                </div>
-
-                                <div className="p-4">
-                                  <div className="flex items-start gap-4 mb-3">
-                                    <div className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{
-                                      background: PANEL.bgDeep,
-                                      border: `1.5px solid ${RED_CARD.border25}`,
-                                    }}>
-                                      <EnemySprite type={type} size={52} animated />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between gap-2">
-                                        <h3 className="text-lg font-bold text-red-200 truncate">
-                                          {enemy.name}
-                                        </h3>
-                                        {/* Lives Cost Badge - Top Right */}
-                                        <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
-                                          <Heart size={12} className="text-rose-400" />
-                                          <span className="text-rose-300 font-bold text-xs">{enemy.liveCost || 1}</span>
-                                        </div>
-                                      </div>
-                                      <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                                        {enemy.desc}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {/* Base Stats grid */}
-                                  <div className="grid grid-cols-4 gap-1.5 mb-2">
-                                    <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                                      <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-[9px] text-red-500">HP</div>
-                                      <div className="text-red-300 font-bold text-xs">{enemy.hp}</div>
-                                    </div>
-                                    <div className="bg-amber-950/50 rounded p-1.5 text-center border border-amber-900/40">
-                                      <Coins size={12} className="mx-auto text-amber-400 mb-0.5" />
-                                      <div className="text-[9px] text-amber-500">Bounty</div>
-                                      <div className="text-amber-300 font-bold text-xs">{enemy.bounty}</div>
-                                    </div>
-                                    <div className="bg-green-950/50 rounded p-1.5 text-center border border-green-900/40">
-                                      <Gauge size={12} className="mx-auto text-green-400 mb-0.5" />
-                                      <div className="text-[9px] text-green-500">Speed</div>
-                                      <div className="text-green-300 font-bold text-xs">{enemy.speed}</div>
-                                    </div>
-                                    <div className="bg-stone-800/50 rounded p-1.5 text-center border border-stone-700/40">
-                                      <Shield size={12} className="mx-auto text-stone-400 mb-0.5" />
-                                      <div className="text-[9px] text-stone-500">Armor</div>
-                                      <div className="text-stone-300 font-bold text-xs">{Math.round(enemy.armor * 100)}%</div>
-                                    </div>
-                                  </div>
-
-                                  {/* Ranged Stats (if applicable) */}
-                                  {enemy.isRanged && (
-                                    <div className="grid grid-cols-3 gap-1.5 mb-2">
-                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                        <div className="text-[8px] text-purple-500">Range</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">{enemy.range}</div>
-                                      </div>
-                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                        <div className="text-[8px] text-purple-500">Atk Speed</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
-                                      </div>
-                                      <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
-                                        <div className="text-[8px] text-purple-500">Proj Dmg</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">{enemy.projectileDamage}</div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* AoE Stats (if applicable) */}
-                                  {hasAoE && (
-                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                      <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
-                                        <div className="text-[8px] text-orange-500">AoE Radius</div>
-                                        <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeRadius}</div>
-                                      </div>
-                                      <div className="bg-orange-950/40 rounded p-1 text-center border border-orange-900/30">
-                                        <div className="text-[8px] text-orange-500">AoE Damage</div>
-                                        <div className="text-orange-300 font-bold text-[10px]">{enemy.aoeDamage}</div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Flying Troop Attack Stats (if applicable) */}
-                                  {enemy.targetsTroops && enemy.troopDamage && (
-                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                      <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
-                                        <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                                        <div className="text-[8px] text-cyan-500">Swoop Dmg</div>
-                                        <div className="text-cyan-300 font-bold text-[10px]">{enemy.troopDamage}</div>
-                                      </div>
-                                      <div className="bg-cyan-950/40 rounded p-1 text-center border border-cyan-900/30">
-                                        <Timer size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                                        <div className="text-[8px] text-cyan-500">Atk Speed</div>
-                                        <div className="text-cyan-300 font-bold text-[10px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Melee Combat Stats (for ground enemies that engage troops) */}
-                                  {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
-                                    <div className="grid grid-cols-2 gap-1.5 mb-2">
-                                      <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
-                                        <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
-                                        <div className="text-[8px] text-red-500">Melee Dmg</div>
-                                        <div className="text-red-300 font-bold text-[10px]">15</div>
-                                      </div>
-                                      <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
-                                        <Timer size={12} className="mx-auto text-red-400 mb-0.5" />
-                                        <div className="text-[8px] text-red-500">Atk Speed</div>
-                                        <div className="text-red-300 font-bold text-[10px]">1.0s</div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Breakthrough indicator */}
-                                  {enemy.breakthrough && (
-                                    <div className="mb-2">
-                                      <div className="bg-sky-950/40 rounded p-1 text-center border border-sky-900/30">
-                                        <div className="text-sky-300 font-bold text-[10px] flex items-center justify-center gap-1">
-                                          <Zap size={10} className="text-sky-400" />
-                                          Bypasses Troops
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Dynamic Traits */}
-                                  {traits.length > 0 && (
-                                    <div className="mb-2">
-                                      <div className="text-[9px] text-stone-500 uppercase font-bold mb-1">Traits</div>
-                                      <div className="flex flex-wrap gap-1">
-                                        {traits.map((trait, i) => {
-                                          const traitInfo = getTraitInfo(trait);
-                                          return (
-                                            <span
-                                              key={i}
-                                              className={`text-[9px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-1 ${traitInfo.color}`}
-                                              title={traitInfo.desc}
-                                            >
-                                              {traitInfo.icon}
-                                              <span>{traitInfo.label}</span>
-                                            </span>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Abilities */}
-                                  {abilities.length > 0 && (
-                                    <div>
-                                      <div className="text-[9px] text-stone-500 uppercase font-bold mb-1 flex items-center gap-1">
-                                        <Zap size={10} /> Abilities
-                                      </div>
-                                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                                        {abilities.map((ability, i) => {
-                                          const abilityInfo = getAbilityInfo(ability.type);
-                                          return (
-                                            <div
-                                              key={i}
-                                              className={`p-1.5 rounded border ${abilityInfo.bgColor}`}
-                                            >
-                                              <div className="flex items-center gap-1.5 mb-0.5">
-                                                <span className={abilityInfo.color}>{abilityInfo.icon}</span>
-                                                <span className="text-[10px] font-bold text-white">{ability.name}</span>
-                                                <span className="text-[8px] px-1 py-0.5 bg-black/30 rounded text-white/70 ml-auto">
-                                                  {Math.round(ability.chance * 100)}%
-                                                </span>
-                                              </div>
-                                              <p className="text-[9px] text-white/60 mb-1">{ability.desc}</p>
-                                              <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[8px]">
-                                                <span className="text-white/50">
-                                                  Duration: <span className="text-white/80">{(ability.duration / 1000).toFixed(1)}s</span>
-                                                </span>
-                                                {ability.intensity !== undefined && (
-                                                  <span className="text-white/50">
-                                                    {ability.type === "slow" || ability.type.includes("tower") ? "Effect: " : "DPS: "}
-                                                    <span className="text-white/80">
-                                                      {ability.type === "slow" || ability.type.includes("tower")
-                                                        ? `${Math.round(ability.intensity * 100)}%`
-                                                        : ability.intensity}
-                                                    </span>
-                                                  </span>
-                                                )}
-                                                {ability.radius && (
-                                                  <span className="text-white/50">
-                                                    Radius: <span className="text-white/80">{ability.radius}</span>
-                                                  </span>
-                                                )}
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* No abilities/traits message */}
-                                  {abilities.length === 0 && traits.length === 0 && (
-                                    <div className="text-center text-[9px] text-stone-500 py-1">
-                                      Standard enemy - no special abilities
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-
-            {activeTab === "spells" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {spellTypes.map((type) => {
-                  const spell = SPELL_DATA[type];
-
-                  // Spell type info
-                  const spellInfo: Record<string, {
-                    category: string;
-                    color: string;
-                    icon: React.ReactNode;
-                    stats: { label: string; value: string; icon: React.ReactNode }[];
-                    details: string[];
-                    tip: string;
-                  }> = {
-                    fireball: {
-                      category: "Damage",
-                      color: "orange",
-                      icon: <Flame size={14} />,
-                      stats: [
-                        { label: "Damage", value: "200", icon: <Swords size={12} /> },
-                        { label: "Radius", value: "150", icon: <Radio size={12} /> },
-                        { label: "Delay", value: "1s", icon: <Timer size={12} /> },
-                      ],
-                      details: [
-                        "Meteor falls from sky with visual warning",
-                        "Maximum damage at center, 50% at edge",
-                        "Creates fire explosion effect",
-                      ],
-                      tip: "Best against clustered enemies at chokepoints",
-                    },
-                    lightning: {
-                      category: "Chain",
-                      color: "yellow",
-                      icon: <Zap size={14} />,
-                      stats: [
-                        { label: "Total DMG", value: "600", icon: <Swords size={12} /> },
-                        { label: "Targets", value: "5", icon: <Users size={12} /> },
-                        { label: "Stun", value: "0.5s", icon: <CircleOff size={12} /> },
-                      ],
-                      details: [
-                        "Chains between up to 5 enemies",
-                        "Damage split among all targets",
-                        "Each strike stuns briefly",
-                      ],
-                      tip: "Great for picking off multiple weakened enemies",
-                    },
-                    freeze: {
-                      category: "Control",
-                      color: "cyan",
-                      icon: <Snowflake size={14} />,
-                      stats: [
-                        { label: "Duration", value: "3s", icon: <Timer size={12} /> },
-                        { label: "Range", value: "Global", icon: <Radio size={12} /> },
-                        { label: "Targets", value: "All", icon: <Users size={12} /> },
-                      ],
-                      details: [
-                        "Freezes ALL enemies on the map",
-                        "Enemies completely immobilized",
-                        "Expanding ice wave visual effect",
-                      ],
-                      tip: "Emergency button when overwhelmed",
-                    },
-                    payday: {
-                      category: "Economy",
-                      color: "amber",
-                      icon: <Banknote size={14} />,
-                      stats: [
-                        { label: "Base", value: "80 PP", icon: <Coins size={12} /> },
-                        { label: "Per Enemy", value: "+5 PP", icon: <TrendingUp size={12} /> },
-                        { label: "Max Bonus", value: "+50 PP", icon: <Star size={12} /> },
-                      ],
-                      details: [
-                        "Base payout plus bonus per enemy",
-                        "Maximum possible: 130 PP",
-                        "Gold aura effect on all enemies",
-                      ],
-                      tip: "Use when many enemies are on screen for max value",
-                    },
-                    reinforcements: {
-                      category: "Summon",
-                      color: "green",
-                      icon: <Users size={14} />,
-                      stats: [
-                        { label: "Knights", value: "3", icon: <Users size={12} /> },
-                        { label: "Knight HP", value: "500", icon: <Heart size={12} /> },
-                        { label: "Knight DMG", value: "30", icon: <Swords size={12} /> },
-                      ],
-                      details: [
-                        "Summons 3 armored knight troops",
-                        "Click to place anywhere on map",
-                        "Knights fight independently",
-                      ],
-                      tip: "Great for blocking leaks or supporting weak points",
-                    },
-                  };
-                  const info = spellInfo[type] || { category: "Spell", color: "purple", icon: <Sparkles size={14} />, stats: [], details: [], tip: "" };
-
-                  return (
-                    <div
-                      key={type}
-                      className="rounded-xl overflow-hidden hover:border-purple-700/50 transition-colors relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}
-                    >
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                      {/* Header */}
-                      <div className={`px-4 py-2.5 border-b flex items-center justify-between ${info.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                        info.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                          info.color === "cyan" ? "bg-cyan-950/50 border-cyan-800/30" :
-                            info.color === "amber" ? "bg-amber-950/50 border-amber-800/30" :
-                              info.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                "bg-purple-950/50 border-purple-800/30"
-                        }`}>
-                        <div className={`flex items-center gap-2 ${info.color === "orange" ? "text-orange-400" :
-                          info.color === "yellow" ? "text-yellow-400" :
-                            info.color === "cyan" ? "text-cyan-400" :
-                              info.color === "amber" ? "text-amber-400" :
-                                info.color === "green" ? "text-green-400" :
-                                  "text-purple-400"
-                          }`}>
-                          {info.icon}
-                          <span className="text-xs font-medium uppercase tracking-wider">
-                            {info.category}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-amber-400 flex items-center gap-1 text-xs">
-                            <Coins size={12} />
-                            {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
-                          </span>
-                          <span className="text-blue-400 flex items-center gap-1 text-xs">
-                            <Timer size={12} />
-                            {spell.cooldown / 1000}s
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="p-4">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className={`w-18 h-18 rounded-xl border-2 flex items-center justify-center p-2 flex-shrink-0 ${info.color === "orange" ? "bg-orange-950/40 border-orange-700/50" :
-                            info.color === "yellow" ? "bg-yellow-950/40 border-yellow-700/50" :
-                              info.color === "cyan" ? "bg-cyan-950/40 border-cyan-700/50" :
-                                info.color === "amber" ? "bg-amber-950/40 border-amber-700/50" :
-                                  info.color === "green" ? "bg-green-950/40 border-green-700/50" :
-                                    "bg-purple-950/40 border-purple-700/50"
-                            }`}>
-                            <SpellSprite type={type} size={56} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <h3 className="text-xl font-bold text-purple-200">
-                                {spell.name}
-                              </h3>
-                              <span className="text-xl">{spell.icon}</span>
-                            </div>
-                            <p className="text-sm text-stone-400">{spell.desc}</p>
-                          </div>
-                        </div>
-
-                        {/* Stats grid */}
-                        <div className="grid grid-cols-3 gap-2 mb-4">
-                          {info.stats.map((stat, i) => (
-                            <div key={i} className={`rounded-lg p-2 text-center border ${info.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
-                              info.color === "yellow" ? "bg-yellow-950/40 border-yellow-800/30" :
-                                info.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
-                                  info.color === "amber" ? "bg-amber-950/40 border-amber-800/30" :
-                                    info.color === "green" ? "bg-green-950/40 border-green-800/30" :
-                                      "bg-purple-950/40 border-purple-800/30"
-                              }`}>
-                              <div className={`flex items-center justify-center mb-1 ${info.color === "orange" ? "text-orange-400" :
-                                info.color === "yellow" ? "text-yellow-400" :
-                                  info.color === "cyan" ? "text-cyan-400" :
-                                    info.color === "amber" ? "text-amber-400" :
-                                      info.color === "green" ? "text-green-400" :
-                                        "text-purple-400"
-                                }`}>
-                                {stat.icon}
-                              </div>
-                              <div className="text-[9px] text-stone-500">{stat.label}</div>
-                              <div className={`font-bold text-sm ${info.color === "orange" ? "text-orange-300" :
-                                info.color === "yellow" ? "text-yellow-300" :
-                                  info.color === "cyan" ? "text-cyan-300" :
-                                    info.color === "amber" ? "text-amber-300" :
-                                      info.color === "green" ? "text-green-300" :
-                                        "text-purple-300"
-                                }`}>{stat.value}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Details */}
-                        <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
-                          <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                            <Info size={10} /> Details
-                          </div>
-                          <ul className="text-xs text-stone-300 space-y-1">
-                            {info.details.map((detail, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="text-purple-400 mt-0.5">•</span>
-                                <span>{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Tip */}
-                        <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${info.color === "orange" ? "bg-orange-950/30 border border-orange-800/30 text-orange-300" :
-                          info.color === "yellow" ? "bg-yellow-950/30 border border-yellow-800/30 text-yellow-300" :
-                            info.color === "cyan" ? "bg-cyan-950/30 border border-cyan-800/30 text-cyan-300" :
-                              info.color === "amber" ? "bg-amber-950/30 border border-amber-800/30 text-amber-300" :
-                                info.color === "green" ? "bg-green-950/30 border border-green-800/30 text-green-300" :
-                                  "bg-purple-950/30 border border-purple-800/30 text-purple-300"
-                          }`}>
-                          <Sparkles size={12} />
-                          <span className="font-medium">Pro Tip:</span>
-                          <span className="text-stone-400">{info.tip}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </OrnateFrame>
-      </div>
-    </div>
-  );
-};
-
-// =============================================================================
-// BATTLEFIELD PREVIEW
-// =============================================================================
-
-const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLevel?: () => void }> = ({ animTime, onSelectFarthestLevel }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [currentScene, setCurrentScene] = useState(0);
-
-  // Cycle through scenes every 6 seconds for more viewing time
-  useEffect(() => {
-    const sceneIndex = Math.floor(animTime / 6) % 6;
-    setCurrentScene(sceneIndex);
-  }, [animTime]);
-
-  // Draw battle scene on canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const t = animTime;
-
-    // Scene configurations inspired by game regions
-    const scenes = [
-      {
-        name: "Nassau Campus",
-        bg1: "#1a2810", bg2: "#0d1408",
-        groundColor: "#2d4a1f",
-        accent: "#f97316", // Princeton orange
-        secondary: "#000000",
-        skyGlow: "#f9731620",
-        particles: "leaves",
-        weather: "clear"
-      },
-      {
-        name: "Volcanic Caldera",
-        bg1: "#3d1a0a", bg2: "#1a0805",
-        groundColor: "#4a1a10",
-        accent: "#ef4444",
-        secondary: "#fbbf24",
-        skyGlow: "#ef444440",
-        particles: "embers",
-        weather: "smoke"
-      },
-      {
-        name: "Frozen Glacier",
-        bg1: "#1a2a3a", bg2: "#0d151d",
-        groundColor: "#3a5a6a",
-        accent: "#60a5fa",
-        secondary: "#e0f2fe",
-        skyGlow: "#60a5fa30",
-        particles: "snow",
-        weather: "blizzard"
-      },
-      {
-        name: "Desert Sphinx",
-        bg1: "#4a3a20", bg2: "#2a2010",
-        groundColor: "#8a7050",
-        accent: "#fbbf24",
-        secondary: "#d97706",
-        skyGlow: "#fbbf2420",
-        particles: "sand",
-        weather: "sandstorm"
-      },
-      {
-        name: "Murky Bog",
-        bg1: "#1a2a1a", bg2: "#0d150d",
-        groundColor: "#2a3a2a",
-        accent: "#4ade80",
-        secondary: "#a855f7",
-        skyGlow: "#4ade8020",
-        particles: "fireflies",
-        weather: "fog"
-      },
-      {
-        name: "Night Siege",
-        bg1: "#15102a", bg2: "#08051a",
-        groundColor: "#2a2a4a",
-        accent: "#a855f7",
-        secondary: "#f97316",
-        skyGlow: "#a855f730",
-        particles: "magic",
-        weather: "starry"
-      },
-    ];
-    const scene = scenes[currentScene];
-
-    // === BACKGROUND LAYERS ===
-
-    // Sky gradient with atmospheric glow
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, scene.bg1);
-    bgGrad.addColorStop(0.4, scene.bg2);
-    bgGrad.addColorStop(1, scene.groundColor);
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Atmospheric glow orbs
-    for (let i = 0; i < 3; i++) {
-      const glowX = width * (0.2 + i * 0.3) + Math.sin(t * 0.3 + i * 2) * 30;
-      const glowY = height * 0.25 + Math.cos(t * 0.2 + i) * 20;
-      const glowGrad = ctx.createRadialGradient(glowX, glowY, 0, glowX, glowY, 80);
-      glowGrad.addColorStop(0, scene.skyGlow);
-      glowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, width, height);
-    }
-
-    // Stars for night scenes
-    if (scene.weather === "starry") {
-      ctx.fillStyle = "#ffffff";
-      for (let i = 0; i < 30; i++) {
-        const starX = (i * 37 + Math.sin(i * 123) * 100) % width;
-        const starY = (i * 23 + Math.cos(i * 87) * 50) % (height * 0.5);
-        const twinkle = 0.3 + Math.sin(t * 3 + i) * 0.7;
-        ctx.globalAlpha = twinkle;
-        ctx.beginPath();
-        ctx.arc(starX, starY, 1 + (i % 2), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // === DISTANT MOUNTAINS / STRUCTURES ===
-
-    // Mountain silhouettes
-    ctx.fillStyle = scene.bg2;
-    ctx.beginPath();
-    ctx.moveTo(0, height * 0.5);
-    for (let x = 0; x <= width; x += 30) {
-      const mountainHeight = Math.sin(x * 0.02) * 30 + Math.sin(x * 0.05) * 20 + Math.sin(x * 0.01) * 40;
-      ctx.lineTo(x, height * 0.45 - mountainHeight);
-    }
-    ctx.lineTo(width, height * 0.7);
-    ctx.lineTo(0, height * 0.7);
-    ctx.closePath();
-    ctx.fill();
-
-    // === GROUND WITH TEXTURE ===
-
-    const groundY = height * 0.65;
-
-    // Main ground with wavy top
-    ctx.fillStyle = scene.groundColor;
-    ctx.beginPath();
-    ctx.moveTo(0, groundY);
-    for (let x = 0; x <= width; x += 10) {
-      ctx.lineTo(x, groundY + Math.sin(x * 0.03 + t * 0.5) * 4);
-    }
-    ctx.lineTo(width, height);
-    ctx.lineTo(0, height);
-    ctx.closePath();
-    ctx.fill();
-
-    // Ground texture pattern
-    ctx.globalAlpha = 0.3;
-    for (let i = 0; i < 20; i++) {
-      const gx = (i * 47 + t * 5) % width;
-      const gy = groundY + 15 + (i % 3) * 25;
-      ctx.fillStyle = i % 2 === 0 ? scene.accent : scene.secondary;
-      ctx.beginPath();
-      ctx.ellipse(gx, gy, 3 + (i % 4), 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-
-    // === PATH / ROAD ===
-
-    // Winding battle path
-    ctx.strokeStyle = "#3a3020";
-    ctx.lineWidth = 25;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(-20, groundY + 40);
-    ctx.bezierCurveTo(
-      width * 0.25, groundY + 50,
-      width * 0.4, groundY + 20,
-      width * 0.6, groundY + 45
-    );
-    ctx.bezierCurveTo(
-      width * 0.8, groundY + 70,
-      width * 0.9, groundY + 30,
-      width + 20, groundY + 40
-    );
-    ctx.stroke();
-
-    // Path highlight
-    ctx.strokeStyle = "#4a4030";
-    ctx.lineWidth = 15;
-    ctx.stroke();
-
-    // === BATTLEFIELD DECORATIONS & ENVIRONMENT ===
-
-    // Distant castle silhouette (background)
-    ctx.fillStyle = "#1a1510";
-    ctx.beginPath();
-    ctx.moveTo(width * 0.85, groundY - 20);
-    ctx.lineTo(width * 0.83, groundY - 60);
-    ctx.lineTo(width * 0.81, groundY - 55);
-    ctx.lineTo(width * 0.81, groundY - 80);
-    ctx.lineTo(width * 0.79, groundY - 75);
-    ctx.lineTo(width * 0.79, groundY - 65);
-    ctx.lineTo(width * 0.77, groundY - 70);
-    ctx.lineTo(width * 0.75, groundY - 50);
-    ctx.lineTo(width * 0.73, groundY - 55);
-    ctx.lineTo(width * 0.71, groundY - 20);
-    ctx.closePath();
-    ctx.fill();
-
-    // War banners on poles
-    const drawBanner = (bx: number, by: number, color1: string, color2: string, waveOffset: number) => {
-      const wave = Math.sin(t * 4 + waveOffset) * 5;
-
-      // Pole
-      ctx.fillStyle = "#4a3a2a";
-      ctx.fillRect(bx - 2, by - 50, 4, 55);
-      ctx.fillStyle = "#c9a227";
-      ctx.beginPath();
-      ctx.arc(bx, by - 52, 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Banner fabric with wave
-      const bannerGrad = ctx.createLinearGradient(bx, by - 48, bx + 20, by - 20);
-      bannerGrad.addColorStop(0, color1);
-      bannerGrad.addColorStop(1, color2);
-      ctx.fillStyle = bannerGrad;
-      ctx.beginPath();
-      ctx.moveTo(bx + 2, by - 48);
-      ctx.quadraticCurveTo(bx + 15 + wave, by - 42, bx + 22, by - 35 + wave * 0.5);
-      ctx.quadraticCurveTo(bx + 15 + wave * 0.5, by - 28, bx + 20, by - 20 + wave * 0.3);
-      ctx.lineTo(bx + 2, by - 25);
-      ctx.closePath();
-      ctx.fill();
-
-      // Banner emblem
-      ctx.fillStyle = "#000000";
-      ctx.beginPath();
-      ctx.arc(bx + 10 + wave * 0.3, by - 36, 4, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    drawBanner(width * 0.08, groundY + 5, "#f97316", "#c2410c", 0);
-    drawBanner(width * 0.92, groundY + 5, "#f97316", "#c2410c", 1.5);
-
-    // Scattered rocks and boulders
-    const drawRock = (rx: number, ry: number, size: number) => {
-      const rockGrad = ctx.createLinearGradient(rx - size, ry - size, rx + size, ry + size);
-      rockGrad.addColorStop(0, "#6b6560");
-      rockGrad.addColorStop(0.5, "#57534e");
-      rockGrad.addColorStop(1, "#3a3530");
-      ctx.fillStyle = rockGrad;
-      ctx.beginPath();
-      ctx.moveTo(rx - size, ry + size * 0.3);
-      ctx.quadraticCurveTo(rx - size * 0.8, ry - size * 0.6, rx - size * 0.2, ry - size * 0.8);
-      ctx.quadraticCurveTo(rx + size * 0.3, ry - size * 0.9, rx + size * 0.7, ry - size * 0.4);
-      ctx.quadraticCurveTo(rx + size, ry + size * 0.2, rx + size * 0.5, ry + size * 0.5);
-      ctx.quadraticCurveTo(rx, ry + size * 0.6, rx - size, ry + size * 0.3);
-      ctx.fill();
-
-      // Rock highlight
-      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-      ctx.beginPath();
-      ctx.ellipse(rx - size * 0.3, ry - size * 0.4, size * 0.3, size * 0.2, -0.3, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    drawRock(width * 0.05, groundY + 35, 12);
-    drawRock(width * 0.18, groundY + 50, 8);
-    drawRock(width * 0.42, groundY + 55, 10);
-    drawRock(width * 0.65, groundY + 48, 7);
-    drawRock(width * 0.88, groundY + 40, 14);
-
-    // Dead trees / burnt stumps
-    const drawDeadTree = (tx: number, ty: number, scale: number) => {
-      ctx.save();
-      ctx.translate(tx, ty);
-      ctx.scale(scale, scale);
-
-      // Trunk
-      ctx.fillStyle = "#2a2520";
-      ctx.beginPath();
-      ctx.moveTo(-6, 0);
-      ctx.lineTo(-4, -35);
-      ctx.lineTo(4, -35);
-      ctx.lineTo(6, 0);
-      ctx.closePath();
-      ctx.fill();
-
-      // Dead branches
-      ctx.strokeStyle = "#2a2520";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-3, -30);
-      ctx.lineTo(-15, -45);
-      ctx.moveTo(2, -28);
-      ctx.lineTo(12, -42);
-      ctx.moveTo(0, -35);
-      ctx.lineTo(-5, -50);
-      ctx.stroke();
-
-      ctx.restore();
-    };
-
-    drawDeadTree(width * 0.02, groundY + 15, 0.6);
-    drawDeadTree(width * 0.95, groundY + 20, 0.7);
-
-    // === BATTLE DAMAGE & DEBRIS ===
-
-    // Bomb craters
-    const drawCrater = (cx: number, cy: number, size: number) => {
-      // Outer dirt ring
-      ctx.fillStyle = "#3a3025";
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, size * 1.5, size * 0.6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Inner crater
-      const craterGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size);
-      craterGrad.addColorStop(0, "#1a1510");
-      craterGrad.addColorStop(0.6, "#2a2520");
-      craterGrad.addColorStop(1, "#3a3530");
-      ctx.fillStyle = craterGrad;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 2, size, size * 0.4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Scorched edge
-      ctx.strokeStyle = "#1a1510";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 1, size * 1.2, size * 0.5, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    };
-
-    drawCrater(width * 0.25, groundY + 55, 15);
-    drawCrater(width * 0.58, groundY + 60, 12);
-    drawCrater(width * 0.82, groundY + 52, 10);
-
-    // Scattered debris and broken weapons
-    const drawDebris = (dx: number, dy: number, type: number) => {
-      ctx.save();
-      ctx.translate(dx, dy);
-      ctx.rotate(type * 0.8);
-
-      if (type % 3 === 0) {
-        // Broken sword
-        ctx.fillStyle = "#8a8a8a";
-        ctx.beginPath();
-        ctx.moveTo(-8, -2);
-        ctx.lineTo(5, -1);
-        ctx.lineTo(6, 1);
-        ctx.lineTo(-8, 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#5a4a3a";
-        ctx.fillRect(-12, -3, 5, 6);
-      } else if (type % 3 === 1) {
-        // Broken shield piece
-        ctx.fillStyle = "#6a5a4a";
-        ctx.beginPath();
-        ctx.arc(0, 0, 6, 0, Math.PI);
-        ctx.fill();
-        ctx.strokeStyle = "#c9a227";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(0, 0, 4, 0.2, Math.PI - 0.2);
-        ctx.stroke();
-      } else {
-        // Arrow
-        ctx.strokeStyle = "#5a4a3a";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-10, 0);
-        ctx.lineTo(8, 0);
-        ctx.stroke();
-        ctx.fillStyle = "#4a4a4a";
-        ctx.beginPath();
-        ctx.moveTo(8, 0);
-        ctx.lineTo(12, -3);
-        ctx.lineTo(12, 3);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      ctx.restore();
-    };
-
-    for (let d = 0; d < 8; d++) {
-      const debrisX = width * (0.1 + d * 0.1 + Math.sin(d * 2.5) * 0.05);
-      const debrisY = groundY + 45 + (d % 3) * 8;
-      drawDebris(debrisX, debrisY, d);
-    }
-
-    // Burn marks / scorch marks on ground
-    for (let burn = 0; burn < 5; burn++) {
-      const bx = width * (0.15 + burn * 0.18);
-      const by = groundY + 35 + (burn % 2) * 20;
-      ctx.fillStyle = "rgba(30, 20, 15, 0.4)";
-      ctx.beginPath();
-      ctx.ellipse(bx, by, 20 + burn * 3, 8 + burn, burn * 0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Smoke columns from damage
-    for (let smoke = 0; smoke < 3; smoke++) {
-      const smokeX = width * (0.2 + smoke * 0.3);
-      for (let puff = 0; puff < 4; puff++) {
-        const puffAge = (t * 0.8 + smoke * 0.5 + puff * 0.3) % 2;
-        const puffY = groundY + 30 - puffAge * 50;
-        const puffSize = 8 + puffAge * 15;
-        const puffAlpha = 0.2 - puffAge * 0.08;
-        if (puffAlpha > 0) {
-          ctx.fillStyle = `rgba(60, 55, 50, ${puffAlpha})`;
-          ctx.beginPath();
-          ctx.arc(smokeX + Math.sin(t * 2 + puff) * 10, puffY, puffSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    // Defensive barricades / wooden barriers
-    const drawBarricade = (bx: number, by: number) => {
-      // Wooden stakes
-      ctx.fillStyle = "#5a4a3a";
-      for (let stake = 0; stake < 4; stake++) {
-        ctx.save();
-        ctx.translate(bx + stake * 8 - 12, by);
-        ctx.rotate(-0.2 + stake * 0.15);
-        ctx.fillRect(-2, -20, 4, 22);
-        // Stake point
-        ctx.beginPath();
-        ctx.moveTo(-2, -20);
-        ctx.lineTo(0, -28);
-        ctx.lineTo(2, -20);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // Crossbar
-      ctx.fillStyle = "#4a3a2a";
-      ctx.save();
-      ctx.translate(bx, by - 10);
-      ctx.rotate(0.1);
-      ctx.fillRect(-18, -2, 36, 4);
-      ctx.restore();
-
-      // Battle damage on barricade
-      ctx.strokeStyle = "#2a2a2a";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(bx - 5, by - 15);
-      ctx.lineTo(bx - 3, by - 8);
-      ctx.stroke();
-    };
-
-    drawBarricade(width * 0.28, groundY + 38);
-    drawBarricade(width * 0.62, groundY + 42);
-
-    // === EPIC TOWERS WITH FULL DETAIL ===
-
-    // Helper: Draw isometric shadow
-    const drawTowerShadow = (x: number, y: number, w: number, h: number) => {
-      const shadowGrad = ctx.createRadialGradient(x, y + h * 0.3, 0, x, y + h * 0.3, w * 1.2);
-      shadowGrad.addColorStop(0, "rgba(0,0,0,0.5)");
-      shadowGrad.addColorStop(0.5, "rgba(0,0,0,0.25)");
-      shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = shadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(x, y + h * 0.3, w * 1.1, h * 0.25, 0, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    // NASSAU CANNON TOWER - Heavy Artillery Platform with mechanical detail
-    const drawCannonTower = (x: number, y: number, scale: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(scale, scale);
-
-      drawTowerShadow(0, 10, 35, 20);
-
-      // Isometric base platform with beveled edges
-      const baseGrad = ctx.createLinearGradient(-30, 0, 30, 15);
-      baseGrad.addColorStop(0, "#5a5a62");
-      baseGrad.addColorStop(0.3, "#4a4a52");
-      baseGrad.addColorStop(0.7, "#3a3a42");
-      baseGrad.addColorStop(1, "#2a2a32");
-      ctx.fillStyle = baseGrad;
-      ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, 12);
-      ctx.lineTo(28, 0);
-      ctx.lineTo(0, -12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Platform edge highlight
-      ctx.strokeStyle = "#6a6a72";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, -12);
-      ctx.lineTo(28, 0);
-      ctx.stroke();
-
-      // Main tower body - mechanical fortress
-      const towerGrad = ctx.createLinearGradient(-22, -70, 22, 0);
-      towerGrad.addColorStop(0, "#5a5a62");
-      towerGrad.addColorStop(0.2, "#4a4a52");
-      towerGrad.addColorStop(0.5, "#3a3a42");
-      towerGrad.addColorStop(0.8, "#4a4a52");
-      towerGrad.addColorStop(1, "#2a2a32");
-      ctx.fillStyle = towerGrad;
-      ctx.beginPath();
-      ctx.moveTo(-22, -5);
-      ctx.lineTo(-22, -55);
-      ctx.lineTo(-18, -60);
-      ctx.lineTo(18, -60);
-      ctx.lineTo(22, -55);
-      ctx.lineTo(22, -5);
-      ctx.closePath();
-      ctx.fill();
-
-      // Armor plates with rivets
-      ctx.strokeStyle = "#2a2a32";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-20, -20);
-      ctx.lineTo(20, -20);
-      ctx.moveTo(-20, -40);
-      ctx.lineTo(20, -40);
-      ctx.stroke();
-
-      // Decorative rivets
-      ctx.fillStyle = "#6a6a72";
-      for (let row = 0; row < 3; row++) {
-        for (let col = -2; col <= 2; col++) {
-          ctx.beginPath();
-          ctx.arc(col * 8, -15 - row * 20, 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Tech glow strips
-      const glowPulse = 0.5 + Math.sin(t * 3) * 0.3;
-      ctx.fillStyle = `rgba(255, 102, 0, ${glowPulse})`;
-      ctx.fillRect(-20, -52, 3, 45);
-      ctx.fillRect(17, -52, 3, 45);
-
-      // Crenellations with shadow
-      for (let i = 0; i < 5; i++) {
-        const crenX = -16 + i * 8;
-        ctx.fillStyle = "#4a4a52";
-        ctx.fillRect(crenX, -72, 6, 14);
-        ctx.fillStyle = "#5a5a62";
-        ctx.fillRect(crenX, -72, 6, 3);
-      }
-
-      // Rotating turret platform
-      ctx.fillStyle = "#3a3a42";
-      ctx.beginPath();
-      ctx.ellipse(0, -60, 18, 9, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Tech ring glow
-      ctx.strokeStyle = `rgba(255, 102, 0, ${glowPulse * 0.8})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(0, -60, 16, 8, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Heavy cannon assembly
-      const cannonAngle = Math.sin(t * 1.5) * 0.2 - 0.15;
-      ctx.save();
-      ctx.translate(0, -65);
-      ctx.rotate(cannonAngle);
-
-      // Cannon housing
-      const cannonGrad = ctx.createLinearGradient(0, -8, 0, 8);
-      cannonGrad.addColorStop(0, "#4a4a52");
-      cannonGrad.addColorStop(0.5, "#3a3a42");
-      cannonGrad.addColorStop(1, "#2a2a32");
-      ctx.fillStyle = cannonGrad;
-      ctx.beginPath();
-      ctx.arc(-5, 0, 10, Math.PI * 0.5, Math.PI * 1.5);
-      ctx.lineTo(35, -6);
-      ctx.lineTo(40, -4);
-      ctx.lineTo(40, 4);
-      ctx.lineTo(35, 6);
-      ctx.lineTo(-5, 6);
-      ctx.closePath();
-      ctx.fill();
-
-      // Barrel detail rings
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
-        ctx.beginPath();
-        ctx.moveTo(8 + i * 8, -5);
-        ctx.lineTo(8 + i * 8, 5);
-        ctx.stroke();
-      }
-
-      // Muzzle
-      ctx.fillStyle = "#1a1a22";
-      ctx.beginPath();
-      ctx.ellipse(40, 0, 4, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-
-      // Muzzle flash & smoke
-      const firePhase = (t * 2) % 3;
-      if (firePhase < 0.3) {
-        const flashSize = 1 - firePhase / 0.3;
-        // Fire flash
-        const flashGrad = ctx.createRadialGradient(35, -70, 0, 35, -70, 25 * flashSize);
-        flashGrad.addColorStop(0, `rgba(255, 255, 200, ${flashSize})`);
-        flashGrad.addColorStop(0.3, `rgba(255, 150, 50, ${flashSize * 0.8})`);
-        flashGrad.addColorStop(0.6, `rgba(255, 80, 0, ${flashSize * 0.5})`);
-        flashGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = flashGrad;
-        ctx.beginPath();
-        ctx.arc(35, -70, 25 * flashSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Smoke particles
-      ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
-      for (let i = 0; i < 5; i++) {
-        const smokeAge = (t * 1.5 + i * 0.4) % 2;
-        if (smokeAge < 1.5) {
-          const sx = 30 + smokeAge * 15 + Math.sin(t * 3 + i) * 5;
-          const sy = -75 - smokeAge * 25;
-          const sr = 4 + smokeAge * 6;
-          ctx.globalAlpha = 0.4 - smokeAge * 0.25;
-          ctx.beginPath();
-          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      ctx.globalAlpha = 1;
-
-      // Glowing windows
-      for (let i = 0; i < 2; i++) {
-        const winGlow = 0.5 + Math.sin(t * 2 + i) * 0.3;
-        ctx.fillStyle = `rgba(255, 180, 100, ${winGlow})`;
-        ctx.fillRect(-8 + i * 10, -35, 6, 10);
-        // Window frame
-        ctx.strokeStyle = "#2a2a32";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(-8 + i * 10, -35, 6, 10);
-      }
-
-      ctx.restore();
-    };
-
-    // E-QUAD LAB TOWER - High-tech Tesla Facility
-    const drawLabTower = (x: number, y: number, scale: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(scale, scale);
-
-      drawTowerShadow(0, 10, 35, 20);
-
-      // Isometric base
-      const baseGrad = ctx.createLinearGradient(-30, 0, 30, 15);
-      baseGrad.addColorStop(0, "#4a5a6a");
-      baseGrad.addColorStop(0.5, "#3a4a5a");
-      baseGrad.addColorStop(1, "#2a3a4a");
-      ctx.fillStyle = baseGrad;
-      ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, 12);
-      ctx.lineTo(28, 0);
-      ctx.lineTo(0, -12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Main lab building - modern angular design
-      const labGrad = ctx.createLinearGradient(-25, -80, 25, 0);
-      labGrad.addColorStop(0, "#5a6a7a");
-      labGrad.addColorStop(0.3, "#4a5a6a");
-      labGrad.addColorStop(0.6, "#3a4a5a");
-      labGrad.addColorStop(1, "#2a3a4a");
-      ctx.fillStyle = labGrad;
-      ctx.beginPath();
-      ctx.moveTo(-24, -5);
-      ctx.lineTo(-24, -60);
-      ctx.lineTo(-20, -68);
-      ctx.lineTo(0, -75);
-      ctx.lineTo(20, -68);
-      ctx.lineTo(24, -60);
-      ctx.lineTo(24, -5);
-      ctx.closePath();
-      ctx.fill();
-
-      // Tech panel lines
-      ctx.strokeStyle = "#2a3a4a";
-      ctx.lineWidth = 1.5;
-      for (let i = 0; i < 4; i++) {
-        ctx.beginPath();
-        ctx.moveTo(-22, -15 - i * 15);
-        ctx.lineTo(22, -15 - i * 15);
-        ctx.stroke();
-      }
-
-      // Vertical accent strips
-      ctx.fillStyle = "#5a6a7a";
-      ctx.fillRect(-22, -60, 3, 55);
-      ctx.fillRect(19, -60, 3, 55);
-
-      // Energy core glow
-      const corePulse = 0.6 + Math.sin(t * 4) * 0.4;
-      const coreGrad = ctx.createRadialGradient(0, -40, 0, 0, -40, 20);
-      coreGrad.addColorStop(0, `rgba(96, 165, 250, ${corePulse})`);
-      coreGrad.addColorStop(0.5, `rgba(59, 130, 246, ${corePulse * 0.5})`);
-      coreGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = coreGrad;
-      ctx.beginPath();
-      ctx.arc(0, -40, 20, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Central viewing window
-      ctx.fillStyle = `rgba(96, 165, 250, ${0.4 + corePulse * 0.3})`;
-      ctx.beginPath();
-      ctx.moveTo(-10, -50);
-      ctx.lineTo(-10, -30);
-      ctx.lineTo(10, -30);
-      ctx.lineTo(10, -50);
-      ctx.lineTo(0, -55);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#3a4a5a";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Tesla coils - dual spires
-      for (let side = -1; side <= 1; side += 2) {
-        const coilX = side * 18;
-
-        // Coil base
-        ctx.fillStyle = "#5a6a7a";
-        ctx.beginPath();
-        ctx.moveTo(coilX - 5, -68);
-        ctx.lineTo(coilX - 4, -95);
-        ctx.lineTo(coilX + 4, -95);
-        ctx.lineTo(coilX + 5, -68);
-        ctx.closePath();
-        ctx.fill();
-
-        // Coil rings
-        ctx.strokeStyle = "#7a8a9a";
-        ctx.lineWidth = 2;
-        for (let ring = 0; ring < 4; ring++) {
-          ctx.beginPath();
-          ctx.ellipse(coilX, -72 - ring * 6, 5 - ring * 0.5, 2, 0, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        // Energy sphere
-        const spherePulse = 0.7 + Math.sin(t * 6 + side * 2) * 0.3;
-        const sphereGrad = ctx.createRadialGradient(coilX, -100, 0, coilX, -100, 10);
-        sphereGrad.addColorStop(0, `rgba(200, 220, 255, ${spherePulse})`);
-        sphereGrad.addColorStop(0.4, `rgba(96, 165, 250, ${spherePulse * 0.8})`);
-        sphereGrad.addColorStop(1, `rgba(59, 130, 246, 0)`);
-        ctx.fillStyle = sphereGrad;
-        ctx.beginPath();
-        ctx.arc(coilX, -100, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Electric arcs
-        const arcPhase = (t * 5 + side * 3) % 1;
-        if (arcPhase < 0.7) {
-          ctx.strokeStyle = `rgba(150, 200, 255, ${0.8 - arcPhase})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(coilX, -100);
-
-          // Jagged lightning path
-          let lx = coilX;
-          let ly = -100;
-          const targetX = side * 45 + Math.sin(t * 8) * 20;
-          const targetY = -70 + Math.cos(t * 6) * 15;
-          for (let seg = 0; seg < 4; seg++) {
-            lx += (targetX - coilX) / 4 + (Math.random() - 0.5) * 15;
-            ly += (targetY + 100) / 4 + (Math.random() - 0.5) * 10;
-            ctx.lineTo(lx, ly);
-          }
-          ctx.stroke();
-
-          // Secondary arc
-          ctx.globalAlpha = 0.4;
-          ctx.beginPath();
-          ctx.moveTo(coilX, -100);
-          ctx.lineTo(coilX + side * 12, -85);
-          ctx.lineTo(coilX + side * 25, -75);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
-
-        // Arc glow at connection point
-        if (arcPhase < 0.5) {
-          const arcGlow = ctx.createRadialGradient(coilX + side * 35, -70, 0, coilX + side * 35, -70, 15);
-          arcGlow.addColorStop(0, `rgba(150, 200, 255, ${0.5 - arcPhase})`);
-          arcGlow.addColorStop(1, "transparent");
-          ctx.fillStyle = arcGlow;
-          ctx.beginPath();
-          ctx.arc(coilX + side * 35, -70, 15, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Floating energy particles
-      for (let p = 0; p < 8; p++) {
-        const pAngle = (t * 2 + p * Math.PI * 0.25) % (Math.PI * 2);
-        const pDist = 25 + Math.sin(t * 3 + p) * 5;
-        const px = Math.cos(pAngle) * pDist;
-        const py = -75 + Math.sin(pAngle) * 8;
-        ctx.fillStyle = `rgba(150, 200, 255, ${0.4 + Math.sin(t * 5 + p) * 0.3})`;
-        ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
-    };
-
-    // BLAIR ARCH TOWER - Gothic Architecture with Sonic Waves
-    const drawArchTower = (x: number, y: number, scale: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(scale, scale);
-
-      drawTowerShadow(0, 10, 35, 20);
-
-      // Isometric base
-      const baseGrad = ctx.createLinearGradient(-30, 0, 30, 15);
-      baseGrad.addColorStop(0, "#7a6a5a");
-      baseGrad.addColorStop(0.5, "#6a5a4a");
-      baseGrad.addColorStop(1, "#5a4a3a");
-      ctx.fillStyle = baseGrad;
-      ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, 12);
-      ctx.lineTo(28, 0);
-      ctx.lineTo(0, -12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Gothic columns with fluting
-      for (let side = -1; side <= 1; side += 2) {
-        const colX = side * 20;
-
-        // Column shaft
-        const colGrad = ctx.createLinearGradient(colX - 6, 0, colX + 6, 0);
-        colGrad.addColorStop(0, "#5a4a3a");
-        colGrad.addColorStop(0.3, "#7a6a5a");
-        colGrad.addColorStop(0.5, "#8a7a6a");
-        colGrad.addColorStop(0.7, "#7a6a5a");
-        colGrad.addColorStop(1, "#5a4a3a");
-        ctx.fillStyle = colGrad;
-        ctx.fillRect(colX - 6, -60, 12, 65);
-
-        // Column fluting (vertical lines)
-        ctx.strokeStyle = "#4a3a2a";
-        ctx.lineWidth = 1;
-        for (let f = -2; f <= 2; f++) {
-          ctx.beginPath();
-          ctx.moveTo(colX + f * 2, -55);
-          ctx.lineTo(colX + f * 2, 0);
-          ctx.stroke();
-        }
-
-        // Capital (top decoration)
-        ctx.fillStyle = "#8a7a6a";
-        ctx.beginPath();
-        ctx.moveTo(colX - 8, -60);
-        ctx.lineTo(colX - 10, -65);
-        ctx.lineTo(colX + 10, -65);
-        ctx.lineTo(colX + 8, -60);
-        ctx.closePath();
-        ctx.fill();
-
-        // Base molding
-        ctx.fillStyle = "#6a5a4a";
-        ctx.beginPath();
-        ctx.moveTo(colX - 8, 0);
-        ctx.lineTo(colX - 10, 5);
-        ctx.lineTo(colX + 10, 5);
-        ctx.lineTo(colX + 8, 0);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Gothic arch with keystone
-      ctx.strokeStyle = "#8a7a6a";
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.arc(0, -55, 26, Math.PI, 0);
-      ctx.stroke();
-
-      // Inner arch
-      ctx.strokeStyle = "#6a5a4a";
-      ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.arc(0, -55, 20, Math.PI, 0);
-      ctx.stroke();
-
-      // Keystone
-      ctx.fillStyle = "#9a8a7a";
-      ctx.beginPath();
-      ctx.moveTo(-6, -82);
-      ctx.lineTo(0, -88);
-      ctx.lineTo(6, -82);
-      ctx.lineTo(4, -75);
-      ctx.lineTo(-4, -75);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ornate spires
-      for (let side = -1; side <= 1; side += 2) {
-        const spireX = side * 24;
-        ctx.fillStyle = "#7a6a5a";
-        ctx.beginPath();
-        ctx.moveTo(spireX - 4, -65);
-        ctx.lineTo(spireX, -95);
-        ctx.lineTo(spireX + 4, -65);
-        ctx.closePath();
-        ctx.fill();
-
-        // Spire orb
-        ctx.fillStyle = "#a855f7";
-        ctx.beginPath();
-        ctx.arc(spireX, -98, 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Central rose window (glowing)
-      const rosePulse = 0.5 + Math.sin(t * 2) * 0.3;
-      const roseGrad = ctx.createRadialGradient(0, -55, 0, 0, -55, 15);
-      roseGrad.addColorStop(0, `rgba(200, 150, 255, ${rosePulse})`);
-      roseGrad.addColorStop(0.5, `rgba(168, 85, 247, ${rosePulse * 0.7})`);
-      roseGrad.addColorStop(1, `rgba(139, 92, 246, ${rosePulse * 0.3})`);
-      ctx.fillStyle = roseGrad;
-      ctx.beginPath();
-      ctx.arc(0, -55, 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Rose window spokes
-      ctx.strokeStyle = "#4a3a2a";
-      ctx.lineWidth = 1.5;
-      for (let spoke = 0; spoke < 8; spoke++) {
-        const angle = spoke * Math.PI / 4;
-        ctx.beginPath();
-        ctx.moveTo(0, -55);
-        ctx.lineTo(Math.cos(angle) * 12, -55 + Math.sin(angle) * 12);
-        ctx.stroke();
-      }
-
-      // Sonic wave emissions - purple concentric rings
-      const waveSpeed = t * 4;
-      for (let wave = 0; wave < 5; wave++) {
-        const wavePhase = ((waveSpeed + wave * 1.2) % 6) / 6;
-        const waveRadius = 15 + wavePhase * 70;
-        const waveAlpha = (1 - wavePhase) * 0.6;
-
-        if (waveAlpha > 0.05) {
-          ctx.strokeStyle = `rgba(168, 85, 247, ${waveAlpha})`;
-          ctx.lineWidth = 3 - wavePhase * 2;
-          ctx.beginPath();
-          ctx.arc(0, -55, waveRadius, Math.PI * 0.15, Math.PI * 0.85);
-          ctx.stroke();
-
-          // Wave distortion effect
-          ctx.strokeStyle = `rgba(200, 150, 255, ${waveAlpha * 0.5})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(0, -55, waveRadius - 3, Math.PI * 0.2, Math.PI * 0.8);
-          ctx.stroke();
-        }
-      }
-
-      ctx.restore();
-    };
-
-    // DINKY STATION - Train depot with animated locomotive
-    const drawDinkyStation = (x: number, y: number, scale: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(scale, scale);
-
-      drawTowerShadow(0, 15, 50, 25);
-
-      // Platform base
-      ctx.fillStyle = "#3a3a3a";
-      ctx.fillRect(-45, 5, 90, 12);
-      ctx.fillStyle = "#4a4a4a";
-      ctx.fillRect(-45, 5, 90, 4);
-
-      // Station building - Victorian style
-      const stationGrad = ctx.createLinearGradient(-35, -55, 35, 0);
-      stationGrad.addColorStop(0, "#6a5a4a");
-      stationGrad.addColorStop(0.3, "#5a4a3a");
-      stationGrad.addColorStop(0.7, "#4a3a2a");
-      stationGrad.addColorStop(1, "#3a2a1a");
-      ctx.fillStyle = stationGrad;
-      ctx.fillRect(-35, -45, 70, 50);
-
-      // Decorative trim
-      ctx.fillStyle = "#7a6a5a";
-      ctx.fillRect(-38, -48, 76, 5);
-      ctx.fillRect(-38, -5, 76, 5);
-
-      // Windows with warm glow
-      const windowGlow = 0.5 + Math.sin(t * 1.5) * 0.2;
-      for (let w = 0; w < 3; w++) {
-        ctx.fillStyle = `rgba(255, 200, 120, ${windowGlow})`;
-        ctx.fillRect(-25 + w * 20, -35, 12, 18);
-        ctx.strokeStyle = "#3a2a1a";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-25 + w * 20, -35, 12, 18);
-        // Window cross
-        ctx.beginPath();
-        ctx.moveTo(-19 + w * 20, -35);
-        ctx.lineTo(-19 + w * 20, -17);
-        ctx.moveTo(-25 + w * 20, -26);
-        ctx.lineTo(-13 + w * 20, -26);
-        ctx.stroke();
-      }
-
-      // Peaked roof
-      ctx.fillStyle = "#4a3a2a";
-      ctx.beginPath();
-      ctx.moveTo(-40, -48);
-      ctx.lineTo(0, -68);
-      ctx.lineTo(40, -48);
-      ctx.closePath();
-      ctx.fill();
-
-      // Roof tiles pattern
-      ctx.strokeStyle = "#3a2a1a";
-      ctx.lineWidth = 1;
-      for (let tile = 0; tile < 6; tile++) {
-        ctx.beginPath();
-        ctx.moveTo(-35 + tile * 14, -48);
-        ctx.lineTo(-28 + tile * 14, -55);
-        ctx.stroke();
-      }
-
-      // Clock tower
-      ctx.fillStyle = "#5a4a3a";
-      ctx.fillRect(-8, -85, 16, 37);
-      ctx.fillStyle = "#4a3a2a";
-      ctx.beginPath();
-      ctx.moveTo(-10, -85);
-      ctx.lineTo(0, -95);
-      ctx.lineTo(10, -85);
-      ctx.closePath();
-      ctx.fill();
-
-      // Clock face
-      ctx.fillStyle = "#f5f5f0";
-      ctx.beginPath();
-      ctx.arc(0, -70, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#2a2a2a";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // Clock hands
-      const hourAngle = t * 0.1;
-      const minAngle = t * 1.2;
-      ctx.strokeStyle = "#1a1a1a";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(0, -70);
-      ctx.lineTo(Math.sin(hourAngle) * 3, -70 - Math.cos(hourAngle) * 3);
-      ctx.stroke();
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, -70);
-      ctx.lineTo(Math.sin(minAngle) * 5, -70 - Math.cos(minAngle) * 5);
-      ctx.stroke();
-
-      // Train tracks
-      ctx.strokeStyle = "#5a5a5a";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-50, 15);
-      ctx.lineTo(50, 15);
-      ctx.stroke();
-      ctx.strokeStyle = "#3a3a3a";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(-50, 13);
-      ctx.lineTo(50, 13);
-      ctx.moveTo(-50, 17);
-      ctx.lineTo(50, 17);
-      ctx.stroke();
-
-      // Track ties
-      ctx.fillStyle = "#4a3a2a";
-      for (let tie = 0; tie < 12; tie++) {
-        ctx.fillRect(-48 + tie * 8, 12, 4, 8);
-      }
-
-      // Animated Princeton Dinky train
-      const trainX = Math.sin(t * 0.6) * 35;
-      const trainBounce = Math.abs(Math.sin(t * 8)) * 1;
-
-      // Train shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(trainX, 18, 18, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Locomotive body
-      const trainGrad = ctx.createLinearGradient(trainX - 15, -5, trainX + 15, 10);
-      trainGrad.addColorStop(0, "#ff8833");
-      trainGrad.addColorStop(0.5, "#f97316");
-      trainGrad.addColorStop(1, "#ea580c");
-      ctx.fillStyle = trainGrad;
-      ctx.fillRect(trainX - 15, -8 - trainBounce, 30, 18);
-
-      // Cabin
-      ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(trainX - 12, -18 - trainBounce, 12, 12);
-
-      // Cabin window
-      ctx.fillStyle = `rgba(255, 200, 120, ${0.6 + Math.sin(t * 2) * 0.2})`;
-      ctx.fillRect(trainX - 10, -16 - trainBounce, 8, 6);
-
-      // Smokestack
-      ctx.fillStyle = "#2a2a2a";
-      ctx.fillRect(trainX + 5, -22 - trainBounce, 6, 14);
-
-      // Wheels with rotation
-      const wheelRot = t * 8;
-      ctx.fillStyle = "#1a1a1a";
-      for (let wheel = 0; wheel < 3; wheel++) {
-        const wx = trainX - 10 + wheel * 10;
-        ctx.beginPath();
-        ctx.arc(wx, 8, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Wheel spokes
-        ctx.strokeStyle = "#3a3a3a";
-        ctx.lineWidth = 1;
-        for (let spoke = 0; spoke < 4; spoke++) {
-          const spokeAngle = wheelRot + spoke * Math.PI / 2;
-          ctx.beginPath();
-          ctx.moveTo(wx, 8);
-          ctx.lineTo(wx + Math.cos(spokeAngle) * 4, 8 + Math.sin(spokeAngle) * 4);
-          ctx.stroke();
-        }
-      }
-
-      // Steam puffs
-      for (let puff = 0; puff < 5; puff++) {
-        const puffAge = (t * 2 + puff * 0.5) % 2.5;
-        if (puffAge < 2) {
-          const px = trainX + 8 + puffAge * 8 + Math.sin(t * 4 + puff) * 4;
-          const py = -25 - trainBounce - puffAge * 15;
-          const pSize = 3 + puffAge * 5;
-          ctx.fillStyle = `rgba(220, 220, 220, ${0.5 - puffAge * 0.2})`;
-          ctx.beginPath();
-          ctx.arc(px, py, pSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Princeton P logo on train
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 10px serif";
-      ctx.textAlign = "center";
-      ctx.fillText("P", trainX, 2 - trainBounce);
-
-      ctx.restore();
-    };
-
-    // === BLAIR ARCH LANDMARK (background decoration) ===
-    const drawBlairArchLandmark = (x: number, y: number, scale: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(scale, scale);
-
-      // Gothic stone base platform
-      ctx.fillStyle = "#3a3530";
-      ctx.beginPath();
-      ctx.moveTo(-50, 10);
-      ctx.lineTo(-45, 0);
-      ctx.lineTo(45, 0);
-      ctx.lineTo(50, 10);
-      ctx.lineTo(-50, 10);
-      ctx.closePath();
-      ctx.fill();
-
-      // Left tower
-      const towerGrad = ctx.createLinearGradient(-45, -120, -25, 0);
-      towerGrad.addColorStop(0, "#5a5048");
-      towerGrad.addColorStop(0.3, "#6a6058");
-      towerGrad.addColorStop(0.7, "#5a5048");
-      towerGrad.addColorStop(1, "#4a4038");
-      ctx.fillStyle = towerGrad;
-      ctx.fillRect(-45, -100, 20, 100);
-
-      // Left tower crenellations
-      ctx.fillStyle = "#5a5048";
-      for (let c = 0; c < 3; c++) {
-        ctx.fillRect(-44 + c * 7, -110, 5, 12);
-      }
-
-      // Left tower spire
-      ctx.fillStyle = "#4a4038";
-      ctx.beginPath();
-      ctx.moveTo(-35, -110);
-      ctx.lineTo(-35, -135);
-      ctx.lineTo(-25, -100);
-      ctx.lineTo(-45, -100);
-      ctx.closePath();
-      ctx.fill();
-
-      // Right tower
-      ctx.fillStyle = towerGrad;
-      ctx.fillRect(25, -100, 20, 100);
-
-      // Right tower crenellations
-      ctx.fillStyle = "#5a5048";
-      for (let c = 0; c < 3; c++) {
-        ctx.fillRect(26 + c * 7, -110, 5, 12);
-      }
-
-      // Right tower spire
-      ctx.fillStyle = "#4a4038";
-      ctx.beginPath();
-      ctx.moveTo(35, -110);
-      ctx.lineTo(35, -135);
-      ctx.lineTo(45, -100);
-      ctx.lineTo(25, -100);
-      ctx.closePath();
-      ctx.fill();
-
-      // Main archway
-      const archGrad = ctx.createLinearGradient(-35, -80, 35, 0);
-      archGrad.addColorStop(0, "#6a6058");
-      archGrad.addColorStop(0.5, "#5a5048");
-      archGrad.addColorStop(1, "#4a4038");
-      ctx.fillStyle = archGrad;
-      ctx.fillRect(-35, -70, 70, 70);
-
-      // Gothic arch opening
-      ctx.fillStyle = "#1a1815";
-      ctx.beginPath();
-      ctx.moveTo(-22, 0);
-      ctx.lineTo(-22, -40);
-      ctx.quadraticCurveTo(-22, -60, 0, -65);
-      ctx.quadraticCurveTo(22, -60, 22, -40);
-      ctx.lineTo(22, 0);
-      ctx.closePath();
-      ctx.fill();
-
-      // Arch detail - stone outline
-      ctx.strokeStyle = "#7a7068";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-22, 0);
-      ctx.lineTo(-22, -40);
-      ctx.quadraticCurveTo(-22, -58, 0, -63);
-      ctx.quadraticCurveTo(22, -58, 22, -40);
-      ctx.lineTo(22, 0);
-      ctx.stroke();
-
-      // Keystone
-      ctx.fillStyle = "#7a7068";
-      ctx.beginPath();
-      ctx.moveTo(-5, -62);
-      ctx.lineTo(0, -70);
-      ctx.lineTo(5, -62);
-      ctx.lineTo(3, -58);
-      ctx.lineTo(-3, -58);
-      ctx.closePath();
-      ctx.fill();
-
-      // Connecting wall section
-      ctx.fillStyle = "#5a5048";
-      ctx.fillRect(-35, -75, 70, 8);
-
-      // Battlements on top
-      for (let b = 0; b < 5; b++) {
-        ctx.fillStyle = "#5a5048";
-        ctx.fillRect(-30 + b * 14, -82, 8, 10);
-      }
-
-      // Window details on towers
-      ctx.fillStyle = `rgba(255, 200, 120, ${0.3 + Math.sin(t * 1.5) * 0.15})`;
-      ctx.fillRect(-40, -80, 8, 12);
-      ctx.fillRect(-40, -55, 8, 12);
-      ctx.fillRect(32, -80, 8, 12);
-      ctx.fillRect(32, -55, 8, 12);
-
-      // Window frames
-      ctx.strokeStyle = "#3a3530";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(-40, -80, 8, 12);
-      ctx.strokeRect(-40, -55, 8, 12);
-      ctx.strokeRect(32, -80, 8, 12);
-      ctx.strokeRect(32, -55, 8, 12);
-
-      // "BLAIR" text suggestion on arch
-      ctx.fillStyle = "#7a7068";
-      ctx.font = "bold 6px serif";
-      ctx.textAlign = "center";
-      ctx.fillText("BLAIR", 0, -72);
-
-      ctx.restore();
-    };
-
-    // Draw Blair Arch in background
-    drawBlairArchLandmark(width * 0.88, groundY - 25, 0.65);
-
-    // Draw towers at different positions with layered depth - TALLER AND MORE PROMINENT
-    drawDinkyStation(width * 0.10, groundY - 15, 0.75);
-    drawCannonTower(width * 0.30, groundY - 5, 1.1);
-    drawLabTower(width * 0.50, groundY - 15, 1.15);
-    drawArchTower(width * 0.70, groundY - 5, 1.0);
-
-    // === EPIC HERO - ARMORED WAR TIGER ===
-
-    const drawHeroTiger = (x: number, y: number) => {
-      const breathe = Math.sin(t * 1.8) * 2;
-      const isAttacking = Math.sin(t * 2) > 0.6;
-      const clawSwipe = isAttacking ? Math.sin(t * 8) * 0.8 : 0;
-      const bodyLean = isAttacking ? Math.sin(t * 4) * 0.1 : 0;
-      const attackIntensity = isAttacking ? Math.abs(Math.sin(t * 4)) : 0;
-
-      ctx.save();
-      ctx.translate(x, y);
-
-      // Multi-layered infernal aura
-      const auraIntensity = isAttacking ? 0.5 : 0.25;
-      const auraPulse = 0.85 + Math.sin(t * 3) * 0.15;
-      for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
-        const layerOffset = auraLayer * 0.08;
-        const auraGrad = ctx.createRadialGradient(0, 0, 5 + layerOffset * 20, 0, 0, 45 + layerOffset * 15);
-        auraGrad.addColorStop(0, `rgba(255, 100, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.08)})`);
-        auraGrad.addColorStop(0.5, `rgba(255, 60, 0, ${auraIntensity * auraPulse * (0.2 - auraLayer * 0.04)})`);
-        auraGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 45 + auraLayer * 8, 30 + auraLayer * 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Floating flame particles
-      for (let p = 0; p < 12; p++) {
-        const pAngle = (t * 1.5 + p * Math.PI * 0.17) % (Math.PI * 2);
-        const pDist = 35 + Math.sin(t * 2 + p * 0.5) * 8;
-        const px = Math.cos(pAngle) * pDist;
-        const py = Math.sin(pAngle) * pDist * 0.6 - Math.abs(Math.sin(t * 4 + p)) * 8;
-        const pAlpha = 0.5 + Math.sin(t * 4 + p * 0.4) * 0.3;
-        ctx.fillStyle = p % 3 === 0 ? `rgba(255, 200, 50, ${pAlpha})` : `rgba(255, 100, 0, ${pAlpha})`;
-        ctx.beginPath();
-        ctx.moveTo(px, py + 3);
-        ctx.quadraticCurveTo(px - 2, py, px, py - 4);
-        ctx.quadraticCurveTo(px + 2, py, px, py + 3);
-        ctx.fill();
-      }
-
-      // Deep shadow
-      const shadowGrad = ctx.createRadialGradient(0, 25, 0, 0, 25, 40);
-      shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-      shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.25)");
-      shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = shadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(0, 25, 40, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.save();
-      ctx.rotate(bodyLean);
-
-      // Massive muscular tiger body
-      const bodyGrad = ctx.createRadialGradient(0, breathe * 0.5, 0, 0, breathe * 0.5, 35);
-      bodyGrad.addColorStop(0, "#ffaa44");
-      bodyGrad.addColorStop(0.3, "#ff8822");
-      bodyGrad.addColorStop(0.6, "#dd5500");
-      bodyGrad.addColorStop(1, "#aa3300");
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.ellipse(0, breathe * 0.5, 28, 22 + breathe * 0.3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Heavy war armor - chest plate
-      const chestArmorGrad = ctx.createLinearGradient(-20, -15, 20, 15);
-      chestArmorGrad.addColorStop(0, "#2a2218");
-      chestArmorGrad.addColorStop(0.3, "#4a3a28");
-      chestArmorGrad.addColorStop(0.5, "#5a4a38");
-      chestArmorGrad.addColorStop(0.7, "#4a3a28");
-      chestArmorGrad.addColorStop(1, "#2a2218");
-      ctx.fillStyle = chestArmorGrad;
-      ctx.beginPath();
-      ctx.moveTo(-18, -12);
-      ctx.quadraticCurveTo(-22, 0, -16, 14);
-      ctx.lineTo(-6, 18);
-      ctx.quadraticCurveTo(0, 20, 6, 18);
-      ctx.lineTo(16, 14);
-      ctx.quadraticCurveTo(22, 0, 18, -12);
-      ctx.quadraticCurveTo(0, -18, -18, -12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Armor border
-      ctx.strokeStyle = "#1a1510";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Gold trim on armor
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-16, -10);
-      ctx.quadraticCurveTo(0, -16, 16, -10);
-      ctx.stroke();
-
-      // Central tiger emblem on armor
-      ctx.fillStyle = "#c9a227";
-      ctx.beginPath();
-      ctx.moveTo(0, -8);
-      ctx.lineTo(-6, 4);
-      ctx.lineTo(0, 10);
-      ctx.lineTo(6, 4);
-      ctx.closePath();
-      ctx.fill();
-
-      // Emblem gem
-      const gemPulse = 0.7 + Math.sin(t * 2.5) * 0.3;
-      ctx.fillStyle = "#ff3300";
-      ctx.beginPath();
-      ctx.arc(0, 2, 3, 0, Math.PI * 2);
-      ctx.fill();
-      // Gem glow
-      const gemGlow = ctx.createRadialGradient(0, 2, 0, 0, 2, 8);
-      gemGlow.addColorStop(0, `rgba(255, 100, 0, ${gemPulse * 0.6})`);
-      gemGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = gemGlow;
-      ctx.beginPath();
-      ctx.arc(0, 2, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Dark tiger stripes (on exposed fur)
-      ctx.strokeStyle = "#050202";
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      for (let i = 0; i < 4; i++) {
-        const stripeY = -8 + i * 7 + breathe * 0.3;
-        // Left side stripes
-        ctx.beginPath();
-        ctx.moveTo(-28, stripeY);
-        ctx.quadraticCurveTo(-24, stripeY - 3, -20, stripeY + 1);
-        ctx.stroke();
-        // Right side stripes
-        ctx.beginPath();
-        ctx.moveTo(28, stripeY);
-        ctx.quadraticCurveTo(24, stripeY - 3, 20, stripeY + 1);
-        ctx.stroke();
-      }
-
-      // Armored shoulders with spikes
-      for (let side = -1; side <= 1; side += 2) {
-        const shoulderX = side * 26;
-        const armOffset = isAttacking ? clawSwipe * 8 * side : 0;
-
-        // Massive arm/shoulder muscle
-        const armGrad = ctx.createRadialGradient(shoulderX + armOffset, -5, 0, shoulderX + armOffset, -5, 18);
-        armGrad.addColorStop(0, "#ff9944");
-        armGrad.addColorStop(0.5, "#dd5500");
-        armGrad.addColorStop(1, "#aa3300");
-        ctx.fillStyle = armGrad;
-        ctx.beginPath();
-        ctx.ellipse(shoulderX + armOffset, -5, 14, 18, side * -0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Arm stripes
-        ctx.strokeStyle = "#050202";
-        ctx.lineWidth = 1.5;
-        for (let stripe = 0; stripe < 4; stripe++) {
-          const stripeOffset = -12 + stripe * 6;
-          ctx.beginPath();
-          ctx.moveTo(shoulderX + armOffset + side * 12, -5 + stripeOffset);
-          ctx.quadraticCurveTo(shoulderX + armOffset + side * 8, -5 + stripeOffset - 2, shoulderX + armOffset + side * 4, -5 + stripeOffset);
-          ctx.stroke();
-        }
-
-        // Heavy shoulder pauldron
-        const pauldronGrad = ctx.createRadialGradient(shoulderX + armOffset, -12, 0, shoulderX + armOffset, -12, 12);
-        pauldronGrad.addColorStop(0, "#5a4a38");
-        pauldronGrad.addColorStop(0.6, "#4a3a28");
-        pauldronGrad.addColorStop(1, "#2a2218");
-        ctx.fillStyle = pauldronGrad;
-        ctx.beginPath();
-        ctx.ellipse(shoulderX + armOffset, -10, 10, 8, side * 0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Pauldron spike
-        ctx.fillStyle = "#3a3028";
-        ctx.beginPath();
-        ctx.moveTo(shoulderX + armOffset - 3, -12);
-        ctx.lineTo(shoulderX + armOffset + side * 8, -25);
-        ctx.lineTo(shoulderX + armOffset + 3, -12);
-        ctx.closePath();
-        ctx.fill();
-
-        // Deadly claws
-        ctx.fillStyle = "#f5f5f0";
-        for (let claw = 0; claw < 3; claw++) {
-          const clawX = shoulderX + armOffset + side * 18;
-          const clawY = 8 + claw * 4;
-          ctx.beginPath();
-          ctx.moveTo(clawX, clawY);
-          ctx.lineTo(clawX + side * 10, clawY - 2);
-          ctx.lineTo(clawX, clawY + 2);
-          ctx.closePath();
-          ctx.fill();
-        }
-      }
-
-      // Powerful tiger head
-      const headGrad = ctx.createRadialGradient(22, -8, 0, 22, -8, 18);
-      headGrad.addColorStop(0, "#ffaa44");
-      headGrad.addColorStop(0.5, "#ff8822");
-      headGrad.addColorStop(1, "#dd5500");
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.ellipse(22, -8, 16, 14, 0.1, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Head stripes
-      ctx.strokeStyle = "#050202";
-      ctx.lineWidth = 2;
-      for (let hs = 0; hs < 3; hs++) {
-        ctx.beginPath();
-        ctx.moveTo(16 + hs * 4, -20);
-        ctx.quadraticCurveTo(18 + hs * 4, -12, 16 + hs * 4, -4);
-        ctx.stroke();
-      }
-
-      // Muzzle
-      ctx.fillStyle = "#fff8e0";
-      ctx.beginPath();
-      ctx.ellipse(30, -4, 8, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Fierce eyes
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(18, -12, 4, 3, -0.2, 0, Math.PI * 2);
-      ctx.ellipse(26, -12, 4, 3, 0.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ff6600";
-      ctx.beginPath();
-      ctx.arc(18, -12, 2, 0, Math.PI * 2);
-      ctx.arc(26, -12, 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#000000";
-      ctx.beginPath();
-      ctx.arc(18, -12, 1, 0, Math.PI * 2);
-      ctx.arc(26, -12, 1, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Nose
-      ctx.fillStyle = "#1a1a1a";
-      ctx.beginPath();
-      ctx.ellipse(32, -6, 3, 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Fierce ears
-      for (let ear = -1; ear <= 1; ear += 2) {
-        ctx.fillStyle = "#ff8822";
-        ctx.beginPath();
-        ctx.moveTo(16 + ear * 6, -18);
-        ctx.lineTo(14 + ear * 10, -30);
-        ctx.lineTo(20 + ear * 4, -20);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#ffccaa";
-        ctx.beginPath();
-        ctx.moveTo(16 + ear * 6, -19);
-        ctx.lineTo(15 + ear * 8, -26);
-        ctx.lineTo(19 + ear * 4, -20);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Animated tail
-      ctx.strokeStyle = "#ff8822";
-      ctx.lineWidth = 6;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(-28, 5);
-      const tailWave = Math.sin(t * 5) * 12;
-      ctx.quadraticCurveTo(-38, -5 + tailWave, -48, 0 + tailWave * 0.5);
-      ctx.stroke();
-      // Tail stripes
-      ctx.strokeStyle = "#050202";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-35, 0 + tailWave * 0.3);
-      ctx.lineTo(-38, -2 + tailWave * 0.4);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-42, 2 + tailWave * 0.6);
-      ctx.lineTo(-46, 0 + tailWave * 0.5);
-      ctx.stroke();
-
-      ctx.restore();
-
-      // Attack effect - Devastating claw swipe arcs
-      if (isAttacking) {
-        for (let arc = 0; arc < 4; arc++) {
-          const arcPhase = (t * 12 + arc * 0.8) % 2;
-          if (arcPhase < 1) {
-            const arcAlpha = (1 - arcPhase) * 0.8 * attackIntensity;
-            ctx.strokeStyle = `rgba(255, 200, 50, ${arcAlpha})`;
-            ctx.lineWidth = 4 - arcPhase * 3;
-            ctx.beginPath();
-            ctx.arc(35, 0, 15 + arcPhase * 30, -Math.PI * 0.4, Math.PI * 0.4);
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Mighty Roar shockwave (periodic)
-      const roarPhase = (t * 0.4) % 4;
-      if (roarPhase < 1.5) {
-        for (let wave = 0; wave < 5; wave++) {
-          const waveTime = roarPhase - wave * 0.2;
-          if (waveTime > 0 && waveTime < 1) {
-            const waveRadius = 25 + waveTime * 80;
-            const waveAlpha = (1 - waveTime) * 0.5;
-            ctx.strokeStyle = `rgba(255, 150, 50, ${waveAlpha})`;
-            ctx.lineWidth = 4 - waveTime * 3;
-            ctx.beginPath();
-            ctx.arc(22, -8, waveRadius, -Math.PI * 0.35, Math.PI * 0.35);
-            ctx.stroke();
-          }
-        }
-      }
-
-      ctx.restore();
-    };
-
-
-    // === EPIC ENEMIES ===
-
-    // Writing Sem - Haunted Academic Tome
-    const drawWritingSem = (x: number, y: number, index: number) => {
-      const float = Math.sin(t * 3 + index) * 6;
-      const wobble = Math.sin(t * 5 + index * 2) * 0.1;
-      ctx.save();
-      ctx.translate(x, y + float);
-      ctx.rotate(wobble);
-
-      // Eerie glow
-      const bookGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
-      bookGlow.addColorStop(0, "rgba(74, 222, 128, 0.3)");
-      bookGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = bookGlow;
-      ctx.beginPath();
-      ctx.arc(0, 0, 20, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 18 - float, 12, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Book cover with gradient
-      const coverGrad = ctx.createLinearGradient(-10, -15, 10, 15);
-      coverGrad.addColorStop(0, "#22c55e");
-      coverGrad.addColorStop(0.5, "#4ade80");
-      coverGrad.addColorStop(1, "#16a34a");
-      ctx.fillStyle = coverGrad;
-      ctx.beginPath();
-      ctx.moveTo(-10, -14);
-      ctx.lineTo(10, -14);
-      ctx.lineTo(12, -12);
-      ctx.lineTo(12, 14);
-      ctx.lineTo(-10, 14);
-      ctx.closePath();
-      ctx.fill();
-
-      // Spine
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(-12, -12, 3, 26);
-
-      // Pages
-      ctx.fillStyle = "#f0fdf4";
-      ctx.fillRect(-8, -12, 18, 24);
-
-      // Page lines (text)
-      ctx.strokeStyle = "#94a3b8";
-      ctx.lineWidth = 0.5;
-      for (let line = 0; line < 6; line++) {
-        ctx.beginPath();
-        ctx.moveTo(-6, -8 + line * 4);
-        ctx.lineTo(8, -8 + line * 4);
-        ctx.stroke();
-      }
-
-      // Evil eyes
-      const eyePulse = 0.7 + Math.sin(t * 6 + index) * 0.3;
-      ctx.fillStyle = `rgba(220, 38, 38, ${eyePulse})`;
-      ctx.beginPath();
-      ctx.arc(-2, -2, 3, 0, Math.PI * 2);
-      ctx.arc(5, -2, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#000000";
-      ctx.beginPath();
-      ctx.arc(-2, -2, 1.5, 0, Math.PI * 2);
-      ctx.arc(5, -2, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Floating letters/symbols
-      ctx.fillStyle = `rgba(74, 222, 128, ${0.3 + Math.sin(t * 4 + index) * 0.2})`;
-      ctx.font = "8px serif";
-      for (let sym = 0; sym < 4; sym++) {
-        const symAngle = t * 2 + sym * Math.PI * 0.5;
-        const symDist = 18 + Math.sin(t * 3 + sym) * 3;
-        ctx.fillText("∑", Math.cos(symAngle) * symDist, -5 + Math.sin(symAngle) * symDist * 0.5);
-      }
-
-      ctx.restore();
-    };
-
-    // Nassau Lion - Legendary Stone Golem Boss
-    const drawNassauLion = (x: number, y: number) => {
-      const stomp = Math.abs(Math.sin(t * 1.5)) * 3;
-      const breathe = Math.sin(t * 1.2) * 2;
-      ctx.save();
-      ctx.translate(x, y + stomp);
-
-      // Massive shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.beginPath();
-      ctx.ellipse(0, 25, 35, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Glowing eye trail effect
-      const eyeGlow = ctx.createRadialGradient(0, -45, 0, 0, -45, 50);
-      eyeGlow.addColorStop(0, `rgba(234, 179, 8, ${0.3 + Math.sin(t * 3) * 0.15})`);
-      eyeGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = eyeGlow;
-      ctx.beginPath();
-      ctx.arc(0, -45, 50, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Massive stone body
-      const bodyGrad = ctx.createLinearGradient(-30, -50, 30, 20);
-      bodyGrad.addColorStop(0, "#78716c");
-      bodyGrad.addColorStop(0.3, "#57534e");
-      bodyGrad.addColorStop(0.6, "#44403c");
-      bodyGrad.addColorStop(1, "#292524");
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.moveTo(-28, -35);
-      ctx.lineTo(-32, 15);
-      ctx.lineTo(32, 15);
-      ctx.lineTo(28, -35);
-      ctx.closePath();
-      ctx.fill();
-
-      // Stone texture cracks
-      ctx.strokeStyle = "#1c1917";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-15, -30);
-      ctx.lineTo(-18, -10);
-      ctx.lineTo(-12, 5);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(10, -25);
-      ctx.lineTo(15, -5);
-      ctx.lineTo(8, 10);
-      ctx.stroke();
-
-      // Massive legs
-      for (let leg = -1; leg <= 1; leg += 2) {
-        ctx.fillStyle = "#44403c";
-        ctx.fillRect(leg * 12 - 8, 10, 16, 15);
-        ctx.fillStyle = "#292524";
-        ctx.fillRect(leg * 12 - 10, 22, 20, 8);
-      }
-
-      // Colossal head
-      const headGrad = ctx.createRadialGradient(0, -50, 0, 0, -50, 28);
-      headGrad.addColorStop(0, "#78716c");
-      headGrad.addColorStop(0.6, "#57534e");
-      headGrad.addColorStop(1, "#44403c");
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.arc(0, -50 + breathe, 24, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Majestic stone mane
-      for (let maneRow = 0; maneRow < 2; maneRow++) {
-        for (let i = 0; i < 10; i++) {
-          const angle = (i / 10) * Math.PI * 2 - Math.PI * 0.5;
-          const maneX = Math.cos(angle) * (28 + maneRow * 8);
-          const maneY = -50 + breathe + Math.sin(angle) * (28 + maneRow * 8);
-          const manePulse = Math.sin(t * 2 + i * 0.5) * 2;
-          ctx.fillStyle = maneRow === 0 ? "#a8a29e" : "#78716c";
-          ctx.beginPath();
-          ctx.ellipse(maneX, maneY + manePulse, 8 - maneRow * 2, 10 - maneRow * 2, angle, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Face details
-      ctx.fillStyle = "#292524";
-      ctx.beginPath();
-      ctx.ellipse(0, -42 + breathe, 10, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Glowing fierce eyes
-      const eyeIntensity = 0.7 + Math.sin(t * 4) * 0.3;
-      for (let eye = -1; eye <= 1; eye += 2) {
-        // Eye glow
-        const singleEyeGlow = ctx.createRadialGradient(eye * 10, -55 + breathe, 0, eye * 10, -55 + breathe, 10);
-        singleEyeGlow.addColorStop(0, `rgba(234, 179, 8, ${eyeIntensity})`);
-        singleEyeGlow.addColorStop(0.5, `rgba(251, 191, 36, ${eyeIntensity * 0.5})`);
-        singleEyeGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = singleEyeGlow;
-        ctx.beginPath();
-        ctx.arc(eye * 10, -55 + breathe, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Eye core
-        ctx.fillStyle = "#fbbf24";
-        ctx.beginPath();
-        ctx.ellipse(eye * 10, -55 + breathe, 4, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#000000";
-        ctx.beginPath();
-        ctx.ellipse(eye * 10, -55 + breathe, 2, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Crown/horn decorations
-      ctx.fillStyle = "#c9a227";
-      for (let horn = -1; horn <= 1; horn += 2) {
-        ctx.beginPath();
-        ctx.moveTo(horn * 15, -72 + breathe);
-        ctx.lineTo(horn * 20, -85 + breathe);
-        ctx.lineTo(horn * 12, -70 + breathe);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Ground crack effect when stomping
-      if (stomp > 2) {
-        ctx.strokeStyle = "#44403c";
-        ctx.lineWidth = 2;
-        for (let crack = 0; crack < 6; crack++) {
-          const crackAngle = crack * Math.PI / 3;
-          ctx.beginPath();
-          ctx.moveTo(0, 28);
-          ctx.lineTo(Math.cos(crackAngle) * 25, 28 + Math.sin(crackAngle) * 8);
-          ctx.stroke();
-        }
-      }
-
-      ctx.restore();
-    };
-
-    // Tiger Transit Wyvern - MASSIVE TERRIFYING DRAGON
-    const drawWyvern = (x: number, y: number, index: number, scale: number = 0.75) => {
-      const wingFlap = Math.sin(t * 5 + index) * 0.6;
-      const bodyWave = Math.sin(t * 3 + index) * 4;
-      const breathPulse = Math.sin(t * 6 + index) * 2;
-      const aggressiveTilt = Math.sin(t * 2 + index) * 0.08;
-      ctx.save();
-      ctx.translate(x, y + bodyWave);
-      ctx.scale(scale, scale);
-      ctx.rotate(aggressiveTilt);
-
-      // MASSIVE DARK AURA - ominous presence
-      for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
-        const auraGrad = ctx.createRadialGradient(0, 0, 10 + auraLayer * 15, 0, 0, 90 + auraLayer * 20);
-        auraGrad.addColorStop(0, `rgba(180, 60, 30, ${0.25 - auraLayer * 0.05})`);
-        auraGrad.addColorStop(0.5, `rgba(100, 30, 20, ${0.15 - auraLayer * 0.03})`);
-        auraGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 90 + auraLayer * 20, 60 + auraLayer * 15, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-
-      // Deadly spiked tail
-      ctx.strokeStyle = "#4a2020";
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.moveTo(-22, 15);
-      ctx.quadraticCurveTo(-55, 22 + Math.sin(t * 5) * 12, -85, 8 + Math.sin(t * 4) * 15);
-      ctx.stroke();
-      ctx.strokeStyle = "#3a1515";
-      ctx.lineWidth = 5;
-      ctx.stroke();
-      // Deadly tail spikes
-      ctx.fillStyle = "#2a1010";
-      for (let spike = 0; spike < 6; spike++) {
-        const sx = -30 - spike * 10;
-        const sy = 18 + Math.sin(t * 5 + spike) * 8;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx - 5, sy - 14);
-        ctx.lineTo(sx + 5, sy);
-        ctx.closePath();
-        ctx.fill();
-      }
-      // Tail blade at end
-      ctx.fillStyle = "#5a3030";
-      ctx.beginPath();
-      ctx.moveTo(-82, 8);
-      ctx.lineTo(-100, -5);
-      ctx.lineTo(-95, 8);
-      ctx.lineTo(-100, 20);
-      ctx.closePath();
-      ctx.fill();
-
-      // COLOSSAL wings
-      for (let side = -1; side <= 1; side += 2) {
-        ctx.save();
-        ctx.scale(side, 1);
-        ctx.rotate(wingFlap * side * 1.3);
-
-        // Wing membrane - dark and leathery
-        const wingGrad = ctx.createLinearGradient(0, 0, 70, -50);
-        wingGrad.addColorStop(0, "#5a2020");
-        wingGrad.addColorStop(0.3, "#4a1818");
-        wingGrad.addColorStop(0.7, "#3a1010");
-        wingGrad.addColorStop(1, "#2a0808");
-        ctx.fillStyle = wingGrad;
-        ctx.beginPath();
-        ctx.moveTo(18, -8);
-        ctx.quadraticCurveTo(45, -60, 80, -50);
-        ctx.lineTo(90, -35);
-        ctx.quadraticCurveTo(85, -15, 75, 0);
-        ctx.quadraticCurveTo(55, 12, 22, 10);
-        ctx.closePath();
-        ctx.fill();
-
-        // Wing bone structure
-        ctx.strokeStyle = "#6a3030";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(18, -8);
-        ctx.lineTo(75, -45);
-        ctx.stroke();
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(20, 0);
-        ctx.lineTo(78, -30);
-        ctx.moveTo(22, 6);
-        ctx.lineTo(72, -15);
-        ctx.moveTo(22, 10);
-        ctx.lineTo(65, 0);
-        ctx.stroke();
-
-        // Wing claws - razor sharp
-        ctx.fillStyle = "#e0d8c0";
-        ctx.beginPath();
-        ctx.moveTo(80, -50);
-        ctx.lineTo(95, -60);
-        ctx.lineTo(85, -48);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(90, -35);
-        ctx.lineTo(105, -42);
-        ctx.lineTo(92, -32);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(75, 0);
-        ctx.lineTo(88, -5);
-        ctx.lineTo(78, 3);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
-      }
-
-      // Massive muscular body
-      const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 30);
-      bodyGrad.addColorStop(0, "#6a3030");
-      bodyGrad.addColorStop(0.4, "#5a2525");
-      bodyGrad.addColorStop(0.8, "#4a1818");
-      bodyGrad.addColorStop(1, "#3a1010");
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.ellipse(0, 0 + breathPulse * 0.3, 28, 22 + breathPulse * 0.2, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Armored scales pattern
-      ctx.fillStyle = "#4a1818";
-      for (let scale = 0; scale < 8; scale++) {
-        ctx.beginPath();
-        ctx.arc(-14 + scale * 5, 6, 5, 0, Math.PI);
-        ctx.fill();
-      }
-      // Belly scales
-      ctx.fillStyle = "#5a3030";
-      ctx.beginPath();
-      ctx.ellipse(0, 8, 15, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Massive dragon head
-      ctx.fillStyle = "#5a2525";
-      ctx.beginPath();
-      ctx.ellipse(28, -8, 18, 15, 0.25, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Long snout
-      ctx.fillStyle = "#4a1818";
-      ctx.beginPath();
-      ctx.ellipse(45, -5, 12, 9, 0.15, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Nostrils with smoke
-      ctx.fillStyle = "#2a0a0a";
-      ctx.beginPath();
-      ctx.ellipse(52, -3, 2, 1.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(52, -7, 2, 1.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Nostril smoke
-      for (let smoke = 0; smoke < 3; smoke++) {
-        const smokeX = 55 + smoke * 4 + Math.sin(t * 8 + smoke) * 3;
-        const smokeY = -5 - smoke * 3;
-        ctx.fillStyle = `rgba(80, 80, 80, ${0.3 - smoke * 0.08})`;
-        ctx.beginPath();
-        ctx.arc(smokeX, smokeY, 3 - smoke * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // TERRIFYING GLOWING EYES
-      const eyePulse = 0.85 + Math.sin(t * 7 + index) * 0.15;
-      // Eye glow effect
-      const eyeGlow = ctx.createRadialGradient(32, -14, 0, 32, -14, 20);
-      eyeGlow.addColorStop(0, `rgba(255, 200, 50, ${eyePulse})`);
-      eyeGlow.addColorStop(0.5, `rgba(255, 100, 0, ${eyePulse * 0.5})`);
-      eyeGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = eyeGlow;
-      ctx.beginPath();
-      ctx.arc(32, -14, 20, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Eye - large and menacing
-      ctx.fillStyle = "#ffc020";
-      ctx.beginPath();
-      ctx.ellipse(32, -14, 7, 6, 0.1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ff6600";
-      ctx.beginPath();
-      ctx.ellipse(33, -14, 4, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.ellipse(34, -14, 1.5, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // MASSIVE horns - crown of terror
-      ctx.fillStyle = "#3a1515";
-      // Main horns
-      ctx.beginPath();
-      ctx.moveTo(22, -18);
-      ctx.quadraticCurveTo(15, -35, 5, -48);
-      ctx.lineTo(12, -45);
-      ctx.quadraticCurveTo(18, -32, 26, -20);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(35, -22);
-      ctx.quadraticCurveTo(42, -38, 48, -52);
-      ctx.lineTo(52, -48);
-      ctx.quadraticCurveTo(44, -35, 38, -22);
-      ctx.closePath();
-      ctx.fill();
-      // Secondary horns
-      ctx.fillStyle = "#2a1010";
-      ctx.beginPath();
-      ctx.moveTo(28, -20);
-      ctx.lineTo(30, -38);
-      ctx.lineTo(34, -20);
-      ctx.closePath();
-      ctx.fill();
-
-      // Jaw spikes
-      ctx.fillStyle = "#3a1515";
-      for (let jaw = 0; jaw < 3; jaw++) {
-        ctx.beginPath();
-        ctx.moveTo(40 + jaw * 6, 2);
-        ctx.lineTo(42 + jaw * 6, 12);
-        ctx.lineTo(44 + jaw * 6, 2);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Sharp teeth visible
-      ctx.fillStyle = "#f0e8d0";
-      ctx.beginPath();
-      ctx.moveTo(50, -1);
-      ctx.lineTo(52, 5);
-      ctx.lineTo(54, -1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(54, 0);
-      ctx.lineTo(56, 6);
-      ctx.lineTo(58, 0);
-      ctx.closePath();
-      ctx.fill();
-
-      // DEVASTATING fire breath effect (more frequent and bigger)
-      if (Math.sin(t * 2.5 + index) > 0.3) {
-        // Fire core
-        for (let flame = 0; flame < 8; flame++) {
-          const flameX = 58 + flame * 12;
-          const flameY = -2 + Math.sin(t * 12 + flame * 0.5) * 6;
-          const flameSize = 12 - flame * 1.2;
-          const flameAlpha = 0.85 - flame * 0.1;
-
-          // Flame glow
-          const flameGlow = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize * 1.5);
-          flameGlow.addColorStop(0, `rgba(255, 255, 150, ${flameAlpha})`);
-          flameGlow.addColorStop(0.3, `rgba(255, 200, 50, ${flameAlpha * 0.8})`);
-          flameGlow.addColorStop(0.6, `rgba(255, 100, 0, ${flameAlpha * 0.5})`);
-          flameGlow.addColorStop(1, "transparent");
-          ctx.fillStyle = flameGlow;
-          ctx.beginPath();
-          ctx.arc(flameX, flameY, flameSize * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Flame core
-          ctx.fillStyle = `rgba(255, 200, 100, ${flameAlpha})`;
-          ctx.beginPath();
-          ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Ember particles
-        for (let ember = 0; ember < 10; ember++) {
-          const emberAge = (t * 3 + ember * 0.4) % 2;
-          const emberX = 60 + emberAge * 50 + Math.sin(t * 10 + ember * 2) * 15;
-          const emberY = -2 + Math.sin(emberAge * Math.PI) * 20 - emberAge * 10;
-          ctx.fillStyle = `rgba(255, 150, 50, ${0.8 - emberAge * 0.4})`;
-          ctx.beginPath();
-          ctx.arc(emberX, emberY, 2 - emberAge * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Clawed feet hanging below
-      for (let foot = -1; foot <= 1; foot += 2) {
-        ctx.fillStyle = "#4a1818";
-        ctx.beginPath();
-        ctx.ellipse(foot * 12, 20, 6, 8, foot * 0.2, 0, Math.PI * 2);
-        ctx.fill();
-        // Talons
-        ctx.fillStyle = "#e0d8c0";
-        for (let talon = 0; talon < 3; talon++) {
-          ctx.beginPath();
-          ctx.moveTo(foot * 12 - 4 + talon * 4, 26);
-          ctx.lineTo(foot * 12 - 5 + talon * 4, 38);
-          ctx.lineTo(foot * 12 - 2 + talon * 4, 26);
-          ctx.closePath();
-          ctx.fill();
-        }
-      }
-
-      ctx.restore();
-    };
-
-    // Sophomore Slump - Heavy armored enemy
-    const drawSophomoreEnemy = (x: number, y: number, index: number) => {
-      const walk = Math.sin(t * 3 + index) * 2;
-      ctx.save();
-      ctx.translate(x, y + Math.abs(walk));
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 12, 14, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Heavy body
-      const bodyGrad = ctx.createLinearGradient(-12, -20, 12, 10);
-      bodyGrad.addColorStop(0, "#93c5fd");
-      bodyGrad.addColorStop(0.5, "#60a5fa");
-      bodyGrad.addColorStop(1, "#3b82f6");
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.moveTo(-14, 10);
-      ctx.lineTo(-16, -10);
-      ctx.quadraticCurveTo(-14, -22, 0, -25);
-      ctx.quadraticCurveTo(14, -22, 16, -10);
-      ctx.lineTo(14, 10);
-      ctx.closePath();
-      ctx.fill();
-
-      // Armor plates
-      ctx.strokeStyle = "#2563eb";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-12, -5);
-      ctx.lineTo(12, -5);
-      ctx.moveTo(-10, 5);
-      ctx.lineTo(10, 5);
-      ctx.stroke();
-
-      // Helmet
-      ctx.fillStyle = "#1e40af";
-      ctx.beginPath();
-      ctx.arc(0, -22, 10, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(-10, -22, 20, 5);
-
-      // Visor slit (glowing eyes)
-      ctx.fillStyle = `rgba(239, 68, 68, ${0.6 + Math.sin(t * 5) * 0.3})`;
-      ctx.fillRect(-6, -20, 12, 3);
-
-      // Heavy mace weapon
-      ctx.save();
-      ctx.translate(14, -5);
-      ctx.rotate(walk * 0.1);
-      ctx.fillStyle = "#4a4a4a";
-      ctx.fillRect(0, -25, 4, 30);
-      // Mace head
-      ctx.fillStyle = "#3a3a3a";
-      ctx.beginPath();
-      ctx.arc(2, -28, 8, 0, Math.PI * 2);
-      ctx.fill();
-      // Spikes
-      for (let spike = 0; spike < 6; spike++) {
-        const sAngle = spike * Math.PI / 3;
-        ctx.fillStyle = "#2a2a2a";
-        ctx.beginPath();
-        ctx.moveTo(2 + Math.cos(sAngle) * 6, -28 + Math.sin(sAngle) * 6);
-        ctx.lineTo(2 + Math.cos(sAngle) * 12, -28 + Math.sin(sAngle) * 12);
-        ctx.lineTo(2 + Math.cos(sAngle + 0.3) * 6, -28 + Math.sin(sAngle + 0.3) * 6);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      ctx.restore();
-    };
-
-    // Flying Rival Mascot - MENACING DEMONIC HARPY
-    const drawFlyingMascot = (x: number, y: number, index: number, scale: number = 0.7) => {
-      const wingFlap = Math.sin(t * 10 + index) * 0.7;
-      const hover = Math.sin(t * 4 + index) * 8;
-      const aggressiveTilt = Math.sin(t * 6 + index) * 0.15;
-      const breathPulse = Math.sin(t * 8 + index) * 2;
-      ctx.save();
-      ctx.translate(x, y + hover);
-      ctx.scale(scale, scale);
-      ctx.rotate(aggressiveTilt);
-
-      // MASSIVE threatening dark aura with pulsing energy
-      const auraIntensity = 0.4 + Math.sin(t * 5 + index) * 0.2;
-      for (let layer = 0; layer < 3; layer++) {
-        const auraGrad = ctx.createRadialGradient(0, 0, 5 + layer * 8, 0, 0, 55 + layer * 10);
-        auraGrad.addColorStop(0, `rgba(180, 50, 50, ${auraIntensity * (0.3 - layer * 0.08)})`);
-        auraGrad.addColorStop(0.5, `rgba(100, 20, 60, ${auraIntensity * (0.2 - layer * 0.05)})`);
-        auraGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 55 + layer * 10, 40 + layer * 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-
-      // Electric crackling particles around body
-      for (let p = 0; p < 6; p++) {
-        const pAngle = (t * 3 + p * Math.PI / 3 + index) % (Math.PI * 2);
-        const pDist = 30 + Math.sin(t * 8 + p) * 8;
-        const px = Math.cos(pAngle) * pDist;
-        const py = Math.sin(pAngle) * pDist * 0.6;
-        ctx.fillStyle = `rgba(255, 100, 100, ${0.6 + Math.sin(t * 12 + p) * 0.4})`;
-        ctx.beginPath();
-        ctx.arc(px, py, 2 + Math.sin(t * 10 + p) * 1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // MASSIVE razor-sharp wings
-      for (let side = -1; side <= 1; side += 2) {
-        ctx.save();
-        ctx.scale(side, 1);
-        ctx.rotate(wingFlap * side * 1.2);
-
-        // Outer wing membrane - darker, more sinister
-        const wingGrad = ctx.createLinearGradient(0, 0, 50, -30);
-        wingGrad.addColorStop(0, "#1a4a4a");
-        wingGrad.addColorStop(0.5, "#0d3535");
-        wingGrad.addColorStop(1, "#062020");
-        ctx.fillStyle = wingGrad;
-        ctx.beginPath();
-        ctx.moveTo(12, 0);
-        ctx.quadraticCurveTo(30, -35, 55, -25);
-        ctx.lineTo(60, -15);
-        ctx.quadraticCurveTo(45, 5, 15, 10);
-        ctx.closePath();
-        ctx.fill();
-
-        // Wing bone structure - sharp and angular
-        ctx.strokeStyle = "#2a6a6a";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(12, 0);
-        ctx.lineTo(50, -22);
-        ctx.stroke();
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(15, 3);
-        ctx.lineTo(55, -12);
-        ctx.moveTo(15, 6);
-        ctx.lineTo(52, -3);
-        ctx.stroke();
-
-        // Sharp wing claws at tips
-        ctx.fillStyle = "#f5f0e0";
-        ctx.beginPath();
-        ctx.moveTo(55, -25);
-        ctx.lineTo(65, -30);
-        ctx.lineTo(58, -22);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(60, -15);
-        ctx.lineTo(70, -18);
-        ctx.lineTo(62, -12);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.restore();
-      }
-
-      // Muscular armored body
-      const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 18);
-      bodyGrad.addColorStop(0, "#2a5858");
-      bodyGrad.addColorStop(0.5, "#1a4040");
-      bodyGrad.addColorStop(1, "#0d2525");
-      ctx.fillStyle = bodyGrad;
-      ctx.beginPath();
-      ctx.ellipse(0, 0 + breathPulse * 0.5, 14, 20 + breathPulse * 0.3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Armored chest plate markings
-      ctx.strokeStyle = "#3a7070";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-8, -8);
-      ctx.quadraticCurveTo(0, -12, 8, -8);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-6, 0);
-      ctx.lineTo(6, 0);
-      ctx.stroke();
-
-      // Fierce head with angular features
-      const headGrad = ctx.createRadialGradient(0, -18, 0, 0, -18, 14);
-      headGrad.addColorStop(0, "#2a5858");
-      headGrad.addColorStop(0.7, "#1a3a3a");
-      headGrad.addColorStop(1, "#0d2020");
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.arc(0, -18, 12, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Sharp deadly beak
-      ctx.fillStyle = "#fbbf24";
-      ctx.beginPath();
-      ctx.moveTo(6, -18);
-      ctx.lineTo(22, -16);
-      ctx.lineTo(6, -14);
-      ctx.closePath();
-      ctx.fill();
-      // Beak highlight
-      ctx.fillStyle = "#fcd34d";
-      ctx.beginPath();
-      ctx.moveTo(6, -18);
-      ctx.lineTo(18, -17);
-      ctx.lineTo(6, -16);
-      ctx.closePath();
-      ctx.fill();
-
-      // MASSIVE GLOWING DEMONIC EYES
-      const eyePulse = 0.8 + Math.sin(t * 8 + index) * 0.2;
-      // Eye glow
-      for (let eye = -1; eye <= 1; eye += 2) {
-        const eyeGlow = ctx.createRadialGradient(eye * 4, -20, 0, eye * 4, -20, 12);
-        eyeGlow.addColorStop(0, `rgba(255, 50, 50, ${eyePulse * 0.8})`);
-        eyeGlow.addColorStop(0.5, `rgba(255, 0, 0, ${eyePulse * 0.4})`);
-        eyeGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = eyeGlow;
-        ctx.beginPath();
-        ctx.arc(eye * 4, -20, 12, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // Eye whites (yellowed)
-      ctx.fillStyle = "#fff0c0";
-      ctx.beginPath();
-      ctx.ellipse(-4, -20, 5, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(4, -20, 5, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Fierce red irises
-      ctx.fillStyle = `rgba(220, 30, 30, ${eyePulse})`;
-      ctx.beginPath();
-      ctx.arc(-4, -20, 3, 0, Math.PI * 2);
-      ctx.arc(4, -20, 3, 0, Math.PI * 2);
-      ctx.fill();
-      // Slit pupils
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.ellipse(-4, -20, 1, 2.5, 0, 0, Math.PI * 2);
-      ctx.ellipse(4, -20, 1, 2.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Menacing head crests/horns
-      ctx.fillStyle = "#1a3535";
-      ctx.beginPath();
-      ctx.moveTo(-5, -28);
-      ctx.lineTo(-8, -42);
-      ctx.lineTo(-2, -30);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(5, -28);
-      ctx.lineTo(8, -42);
-      ctx.lineTo(2, -30);
-      ctx.closePath();
-      ctx.fill();
-      // Center crest
-      ctx.beginPath();
-      ctx.moveTo(-2, -28);
-      ctx.lineTo(0, -48);
-      ctx.lineTo(2, -28);
-      ctx.closePath();
-      ctx.fill();
-
-      // Sharp talons hanging below
-      for (let talon = -1; talon <= 1; talon += 2) {
-        ctx.fillStyle = "#f5f0e0";
-        ctx.beginPath();
-        ctx.moveTo(talon * 6, 18);
-        ctx.lineTo(talon * 4, 30);
-        ctx.lineTo(talon * 8, 28);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(talon * 8, 20);
-        ctx.lineTo(talon * 6, 32);
-        ctx.lineTo(talon * 10, 30);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Tail feathers - longer and more threatening
-      ctx.fillStyle = "#0d2525";
-      for (let tf = 0; tf < 5; tf++) {
-        ctx.beginPath();
-        ctx.moveTo(-6 + tf * 3, 18);
-        ctx.quadraticCurveTo(-10 + tf * 4, 38 + Math.sin(t * 5 + tf) * 5, -4 + tf * 3, 45);
-        ctx.quadraticCurveTo(-2 + tf * 3, 38, 0 + tf * 3, 18);
-        ctx.fill();
-      }
-
-      ctx.restore();
-    };
-
-    // Draw enemies marching - varied types
-    for (let i = 0; i < 4; i++) {
-      const enemyX = ((width * 0.3 + t * 22 + i * 80) % (width * 0.85)) + width * 0.08;
-      drawWritingSem(enemyX, groundY + 40, i);
-    }
-
-    // Sophomore enemies (heavier)
-    for (let i = 0; i < 2; i++) {
-      const sophX = ((width * 0.15 + t * 18 + i * 120) % (width * 0.8)) + width * 0.1;
-      drawSophomoreEnemy(sophX, groundY + 35, i);
-    }
-
-    // Nassau Lion (boss) - moved to better position
-    drawNassauLion(width * 0.72, groundY + 20);
-
-    // Flying mascots with targeting effects
-    for (let i = 0; i < 4; i++) {
-      const mascotX = ((width * 0.05 + t * 32 + i * 110) % (width * 1.4)) - width * 0.2;
-      const mascotY = height * (0.22 + i * 0.08) + Math.sin(t * 2.5 + i * 2.5) * 20;
-
-      // Check if this mascot is being hit (periodic)
-      const hitPhase = (t * 1.2 + i * 1.5) % 4;
-      const isBeingHit = hitPhase < 0.5;
-
-      if (!isBeingHit || hitPhase > 0.3) {
-        drawFlyingMascot(mascotX, mascotY, i);
-      }
-
-      // Targeting laser from tower
-      if (hitPhase > 3 && hitPhase < 4) {
-        const targetAlpha = (hitPhase - 3);
-        ctx.strokeStyle = `rgba(255, 100, 100, ${targetAlpha * 0.5})`;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.moveTo(width * 0.55, groundY - 80);
-        ctx.lineTo(mascotX, mascotY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Target reticle
-        ctx.strokeStyle = `rgba(255, 50, 50, ${targetAlpha})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(mascotX, mascotY, 20 + (1 - targetAlpha) * 10, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(mascotX - 25, mascotY);
-        ctx.lineTo(mascotX - 12, mascotY);
-        ctx.moveTo(mascotX + 12, mascotY);
-        ctx.lineTo(mascotX + 25, mascotY);
-        ctx.moveTo(mascotX, mascotY - 25);
-        ctx.lineTo(mascotX, mascotY - 12);
-        ctx.moveTo(mascotX, mascotY + 12);
-        ctx.lineTo(mascotX, mascotY + 25);
-        ctx.stroke();
-      }
-
-      // Explosion when hit
-      if (isBeingHit) {
-        const explosionProgress = hitPhase / 0.5;
-        const explosionSize = explosionProgress * 40;
-        const explosionAlpha = 1 - explosionProgress;
-
-        // Multi-layer explosion
-        for (let layer = 0; layer < 3; layer++) {
-          const layerSize = explosionSize * (1 - layer * 0.2);
-          const expGrad = ctx.createRadialGradient(mascotX, mascotY, 0, mascotX, mascotY, layerSize);
-          expGrad.addColorStop(0, `rgba(255, 255, 200, ${explosionAlpha * (1 - layer * 0.3)})`);
-          expGrad.addColorStop(0.4, `rgba(255, 150, 50, ${explosionAlpha * 0.7 * (1 - layer * 0.3)})`);
-          expGrad.addColorStop(0.7, `rgba(255, 80, 0, ${explosionAlpha * 0.4 * (1 - layer * 0.3)})`);
-          expGrad.addColorStop(1, "transparent");
-          ctx.fillStyle = expGrad;
-          ctx.beginPath();
-          ctx.arc(mascotX, mascotY, layerSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Feather debris
-        for (let debris = 0; debris < 8; debris++) {
-          const debrisAngle = debris * Math.PI / 4 + explosionProgress * 3;
-          const debrisDist = explosionProgress * 35;
-          const dx = mascotX + Math.cos(debrisAngle) * debrisDist;
-          const dy = mascotY + Math.sin(debrisAngle) * debrisDist - explosionProgress * 20;
-          ctx.fillStyle = `rgba(34, 211, 211, ${explosionAlpha})`;
-          ctx.save();
-          ctx.translate(dx, dy);
-          ctx.rotate(debrisAngle + explosionProgress * 5);
-          ctx.beginPath();
-          ctx.ellipse(0, 0, 4, 2, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-
-      // Arrows targeting mascots
-      const arrowHitPhase = (t * 1.5 + i * 2) % 2.5;
-      if (arrowHitPhase < 1.5) {
-        const arrowProgress = arrowHitPhase / 1.5;
-        const startX = width * 0.15;
-        const startY = groundY + 25;
-        const arrowX = startX + (mascotX - startX) * arrowProgress;
-        const arrowY = startY + (mascotY - startY) * arrowProgress - Math.sin(arrowProgress * Math.PI) * 30;
-
-        ctx.save();
-        ctx.translate(arrowX, arrowY);
-        const angle = Math.atan2(mascotY - startY, mascotX - startX);
-        ctx.rotate(angle);
-        ctx.strokeStyle = "#78350f";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-12, 0);
-        ctx.lineTo(4, 0);
-        ctx.stroke();
-        ctx.fillStyle = "#6b7280";
-        ctx.beginPath();
-        ctx.moveTo(4, 0);
-        ctx.lineTo(8, -2);
-        ctx.lineTo(8, 2);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    // Wyvern (large flying enemy) with attack effects
-    const wyvernX = ((width * 0.4 + t * 20) % (width * 1.5)) - width * 0.25;
-    const wyvernY = height * 0.18 + Math.sin(t * 1.5) * 20;
-
-    // Wyvern hit check
-    const wyvernHitPhase = (t * 0.8) % 5;
-    const wyvernIsHit = wyvernHitPhase > 4 && wyvernHitPhase < 4.6;
-
-    if (!wyvernIsHit || wyvernHitPhase < 4.3) {
-      drawWyvern(wyvernX, wyvernY, 0);
-    }
-
-    // Lightning strike targeting wyvern
-    if (wyvernHitPhase > 3.5 && wyvernHitPhase < 4) {
-      const strikeAlpha = (wyvernHitPhase - 3.5) * 2;
-      ctx.strokeStyle = `rgba(150, 200, 255, ${strikeAlpha})`;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(width * 0.52, groundY - 85);
-      let lx = width * 0.52;
-      let ly = groundY - 85;
-      const segments = 6;
-      for (let seg = 0; seg < segments; seg++) {
-        lx += (wyvernX - width * 0.52) / segments + (Math.random() - 0.5) * 20;
-        ly += (wyvernY - groundY + 85) / segments + (Math.random() - 0.5) * 15;
-        ctx.lineTo(lx, ly);
-      }
-      ctx.stroke();
-
-      // Pre-hit glow on wyvern
-      const glowGrad = ctx.createRadialGradient(wyvernX, wyvernY, 0, wyvernX, wyvernY, 50);
-      glowGrad.addColorStop(0, `rgba(150, 200, 255, ${strikeAlpha * 0.5})`);
-      glowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = glowGrad;
-      ctx.beginPath();
-      ctx.arc(wyvernX, wyvernY, 50, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Wyvern explosion
-    if (wyvernIsHit) {
-      const wyvernExpProgress = (wyvernHitPhase - 4) / 0.6;
-      const wyvernExpSize = wyvernExpProgress * 70;
-      const wyvernExpAlpha = 1 - wyvernExpProgress;
-
-      // Large explosion
-      for (let layer = 0; layer < 4; layer++) {
-        const layerSize = wyvernExpSize * (1 - layer * 0.15);
-        const expGrad = ctx.createRadialGradient(wyvernX, wyvernY, 0, wyvernX, wyvernY, layerSize);
-        expGrad.addColorStop(0, `rgba(255, 255, 220, ${wyvernExpAlpha * (1 - layer * 0.2)})`);
-        expGrad.addColorStop(0.3, `rgba(100, 200, 255, ${wyvernExpAlpha * 0.8 * (1 - layer * 0.2)})`);
-        expGrad.addColorStop(0.6, `rgba(50, 150, 255, ${wyvernExpAlpha * 0.5 * (1 - layer * 0.2)})`);
-        expGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = expGrad;
-        ctx.beginPath();
-        ctx.arc(wyvernX, wyvernY, layerSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Electric arcs
-      ctx.strokeStyle = `rgba(150, 200, 255, ${wyvernExpAlpha})`;
-      ctx.lineWidth = 2;
-      for (let arc = 0; arc < 8; arc++) {
-        const arcAngle = arc * Math.PI / 4 + wyvernExpProgress * 2;
-        const arcDist = wyvernExpProgress * 50;
-        ctx.beginPath();
-        ctx.moveTo(wyvernX, wyvernY);
-        ctx.lineTo(
-          wyvernX + Math.cos(arcAngle) * arcDist + (Math.random() - 0.5) * 10,
-          wyvernY + Math.sin(arcAngle) * arcDist + (Math.random() - 0.5) * 10
-        );
-        ctx.stroke();
-      }
-
-      // Scale debris
-      for (let scale = 0; scale < 12; scale++) {
-        const scaleAngle = scale * Math.PI / 6 + wyvernExpProgress * 2;
-        const scaleDist = wyvernExpProgress * 60;
-        const scaleX = wyvernX + Math.cos(scaleAngle) * scaleDist;
-        const scaleY = wyvernY + Math.sin(scaleAngle) * scaleDist - wyvernExpProgress * 30;
-        ctx.fillStyle = `rgba(16, 185, 129, ${wyvernExpAlpha})`;
-        ctx.beginPath();
-        ctx.arc(scaleX, scaleY, 4 - wyvernExpProgress * 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Cannon ball targeting wyvern
-    const cannonToWyvernPhase = (t * 0.6 + 1) % 4;
-    if (cannonToWyvernPhase < 2) {
-      const cannonProgress = cannonToWyvernPhase / 2;
-      const startX = width * 0.32;
-      const startY = groundY - 40;
-      const cbX = startX + (wyvernX - startX) * cannonProgress;
-      const cbY = startY + (wyvernY - startY) * cannonProgress - Math.sin(cannonProgress * Math.PI) * 80;
-
-      // Cannon ball
-      const ballGrad = ctx.createRadialGradient(cbX - 2, cbY - 2, 0, cbX, cbY, 8);
-      ballGrad.addColorStop(0, "#5a5a5a");
-      ballGrad.addColorStop(0.5, "#3a3a3a");
-      ballGrad.addColorStop(1, "#1a1a1a");
-      ctx.fillStyle = ballGrad;
-      ctx.beginPath();
-      ctx.arc(cbX, cbY, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Trail
-      ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
-      for (let trail = 1; trail <= 4; trail++) {
-        ctx.beginPath();
-        ctx.arc(cbX - trail * 8, cbY + trail * 4, 3 + trail, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // === ENHANCED SKY BATTLE EFFECTS ===
-
-    // Multiple cannon shots at flying enemies
-    for (let shot = 0; shot < 3; shot++) {
-      const shotPhase = (t * 0.9 + shot * 1.3) % 3;
-      if (shotPhase < 1.8) {
-        const shotProgress = shotPhase / 1.8;
-        const cannonX = width * 0.30;
-        const cannonY = groundY - 60;
-        const targetX = width * (0.3 + shot * 0.2) + Math.sin(t + shot) * 50;
-        const targetY = height * (0.15 + shot * 0.1);
-
-        const projX = cannonX + (targetX - cannonX) * shotProgress;
-        const projY = cannonY + (targetY - cannonY) * shotProgress - Math.sin(shotProgress * Math.PI) * 60;
-
-        // Flaming cannon ball
-        const fireGrad = ctx.createRadialGradient(projX, projY, 0, projX, projY, 10);
-        fireGrad.addColorStop(0, "#ffff80");
-        fireGrad.addColorStop(0.3, "#ff8800");
-        fireGrad.addColorStop(0.6, "#ff4400");
-        fireGrad.addColorStop(1, "rgba(100, 50, 0, 0.5)");
-        ctx.fillStyle = fireGrad;
-        ctx.beginPath();
-        ctx.arc(projX, projY, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Fire trail
-        for (let ft = 1; ft <= 6; ft++) {
-          const trailX = projX - ft * 6 * (targetX - cannonX > 0 ? 1 : -1);
-          const trailY = projY + ft * 3;
-          ctx.fillStyle = `rgba(255, ${150 - ft * 20}, 0, ${0.6 - ft * 0.08})`;
-          ctx.beginPath();
-          ctx.arc(trailX + Math.sin(t * 15 + ft) * 3, trailY, 5 - ft * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    // Lab tower lightning bolts at flying targets
-    for (let bolt = 0; bolt < 4; bolt++) {
-      const boltPhase = (t * 1.2 + bolt * 0.8) % 2;
-      if (boltPhase < 0.4) {
-        const boltAlpha = 1 - boltPhase / 0.4;
-        const labX = width * 0.50;
-        const labY = groundY - 100;
-        const targetX = width * (0.2 + bolt * 0.2);
-        const targetY = height * (0.18 + Math.sin(bolt) * 0.1);
-
-        // Main lightning bolt
-        ctx.strokeStyle = `rgba(100, 200, 255, ${boltAlpha})`;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(labX, labY);
-        let lx = labX, ly = labY;
-        for (let seg = 0; seg < 8; seg++) {
-          lx += (targetX - labX) / 8 + (Math.random() - 0.5) * 25;
-          ly += (targetY - labY) / 8 + (Math.random() - 0.5) * 15;
-          ctx.lineTo(lx, ly);
-        }
-        ctx.stroke();
-
-        // Secondary branch
-        ctx.strokeStyle = `rgba(150, 220, 255, ${boltAlpha * 0.6})`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(labX + (targetX - labX) * 0.4, labY + (targetY - labY) * 0.4);
-        for (let seg = 0; seg < 4; seg++) {
-          ctx.lineTo(
-            labX + (targetX - labX) * (0.4 + seg * 0.15) + (Math.random() - 0.5) * 30,
-            labY + (targetY - labY) * (0.4 + seg * 0.15) - 20 + (Math.random() - 0.5) * 20
-          );
-        }
-        ctx.stroke();
-
-        // Impact flash
-        const flashGrad = ctx.createRadialGradient(targetX, targetY, 0, targetX, targetY, 30);
-        flashGrad.addColorStop(0, `rgba(200, 230, 255, ${boltAlpha * 0.8})`);
-        flashGrad.addColorStop(0.5, `rgba(100, 180, 255, ${boltAlpha * 0.4})`);
-        flashGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = flashGrad;
-        ctx.beginPath();
-        ctx.arc(targetX, targetY, 30, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Arch tower sonic waves targeting sky
-    for (let wave = 0; wave < 3; wave++) {
-      const wavePhase = (t * 2 + wave * 1.5) % 4;
-      if (wavePhase < 3) {
-        const archX = width * 0.70;
-        const archY = groundY - 55;
-        const waveRadius = wavePhase * 80;
-        const waveAlpha = (1 - wavePhase / 3) * 0.5;
-
-        // Expanding sonic ring toward sky
-        ctx.strokeStyle = `rgba(168, 85, 247, ${waveAlpha})`;
-        ctx.lineWidth = 4 - wavePhase;
-        ctx.beginPath();
-        ctx.arc(archX, archY - wavePhase * 30, waveRadius, Math.PI * 1.2, Math.PI * 1.8);
-        ctx.stroke();
-
-        // Secondary ring
-        ctx.strokeStyle = `rgba(200, 150, 255, ${waveAlpha * 0.5})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(archX, archY - wavePhase * 35, waveRadius * 0.8, Math.PI * 1.25, Math.PI * 1.75);
-        ctx.stroke();
-      }
-    }
-
-    // Sky environmental effects - wind streaks
-    ctx.strokeStyle = "rgba(200, 220, 255, 0.15)";
-    ctx.lineWidth = 1;
-    for (let streak = 0; streak < 15; streak++) {
-      const streakX = ((t * 80 + streak * 60) % (width * 1.2)) - width * 0.1;
-      const streakY = height * (0.08 + (streak % 5) * 0.08);
-      const streakLen = 30 + (streak % 3) * 20;
-      ctx.beginPath();
-      ctx.moveTo(streakX, streakY);
-      ctx.lineTo(streakX + streakLen, streakY + 2);
-      ctx.stroke();
-    }
-
-    // Floating embers and sparks rising from battle
-    for (let ember = 0; ember < 20; ember++) {
-      const emberAge = (t * 0.8 + ember * 0.3) % 3;
-      const emberX = width * (0.1 + (ember % 10) * 0.08) + Math.sin(t * 2 + ember) * 15;
-      const emberY = groundY - emberAge * 80 - ember * 5;
-      const emberAlpha = 0.7 - emberAge * 0.2;
-
-      if (emberY > height * 0.05 && emberAlpha > 0) {
-        ctx.fillStyle = ember % 3 === 0
-          ? `rgba(255, 200, 50, ${emberAlpha})`
-          : `rgba(255, 100, 50, ${emberAlpha})`;
-        ctx.beginPath();
-        ctx.arc(emberX, emberY, 2 + Math.sin(t * 8 + ember) * 1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Drifting smoke clouds in upper atmosphere
-    for (let cloud = 0; cloud < 6; cloud++) {
-      const cloudX = ((t * 15 + cloud * 100) % (width * 1.3)) - width * 0.15;
-      const cloudY = height * (0.08 + (cloud % 3) * 0.06);
-      const cloudAlpha = 0.12 + Math.sin(t + cloud) * 0.05;
-
-      ctx.fillStyle = `rgba(80, 80, 90, ${cloudAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(cloudX, cloudY, 40 + cloud * 5, 15 + cloud * 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cloudX + 25, cloudY - 5, 30, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cloudX - 20, cloudY + 3, 25, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Magic missiles from Dinky station
-    for (let missile = 0; missile < 3; missile++) {
-      const missilePhase = (t * 1.5 + missile * 1.2) % 2.5;
-      if (missilePhase < 2) {
-        const missileProgress = missilePhase / 2;
-        const startX = width * 0.10;
-        const startY = groundY - 30;
-        const targetX = width * (0.4 + missile * 0.15);
-        const targetY = height * (0.20 + missile * 0.05);
-
-        const mx = startX + (targetX - startX) * missileProgress;
-        const my = startY + (targetY - startY) * missileProgress - Math.sin(missileProgress * Math.PI) * 40;
-
-        // Orange magic orb
-        const orbGrad = ctx.createRadialGradient(mx, my, 0, mx, my, 8);
-        orbGrad.addColorStop(0, "#fff8e0");
-        orbGrad.addColorStop(0.3, "#f97316");
-        orbGrad.addColorStop(0.7, "#c2410c");
-        orbGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = orbGrad;
-        ctx.beginPath();
-        ctx.arc(mx, my, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Sparkle trail
-        for (let sparkle = 1; sparkle <= 5; sparkle++) {
-          const sx = mx - sparkle * 8;
-          const sy = my + sparkle * 4;
-          ctx.fillStyle = `rgba(249, 115, 22, ${0.5 - sparkle * 0.08})`;
-          ctx.beginPath();
-          ctx.arc(sx + Math.sin(t * 12 + sparkle) * 3, sy, 3 - sparkle * 0.4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    // Anti-air tracer rounds
-    for (let tracer = 0; tracer < 8; tracer++) {
-      const tracerPhase = (t * 3 + tracer * 0.4) % 1.5;
-      if (tracerPhase < 1) {
-        const tracerProgress = tracerPhase / 1;
-        const startX = width * (0.2 + (tracer % 4) * 0.15);
-        const startY = groundY + 20;
-        const targetX = startX + (tracer % 2 === 0 ? 50 : -30);
-        const targetY = height * 0.1;
-
-        const tx = startX + (targetX - startX) * tracerProgress;
-        const ty = startY + (targetY - startY) * tracerProgress;
-
-        // Tracer bullet
-        ctx.fillStyle = `rgba(255, 255, 150, ${1 - tracerProgress})`;
-        ctx.beginPath();
-        ctx.arc(tx, ty, 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Tracer line
-        ctx.strokeStyle = `rgba(255, 200, 100, ${0.4 - tracerProgress * 0.3})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(tx, ty);
-        ctx.lineTo(tx - (targetX - startX) * 0.1, ty - (targetY - startY) * 0.1);
-        ctx.stroke();
-      }
-    }
-
-    // Explosions in the sky (from missed shots)
-    for (let skyExp = 0; skyExp < 2; skyExp++) {
-      const expPhase = (t * 0.7 + skyExp * 2) % 3;
-      if (expPhase < 0.8) {
-        const expProgress = expPhase / 0.8;
-        const expX = width * (0.3 + skyExp * 0.35) + Math.sin(skyExp * 5) * 30;
-        const expY = height * (0.12 + skyExp * 0.08);
-        const expSize = expProgress * 50;
-        const expAlpha = 1 - expProgress;
-
-        // Explosion flash
-        const skyExpGrad = ctx.createRadialGradient(expX, expY, 0, expX, expY, expSize);
-        skyExpGrad.addColorStop(0, `rgba(255, 255, 200, ${expAlpha})`);
-        skyExpGrad.addColorStop(0.3, `rgba(255, 180, 80, ${expAlpha * 0.8})`);
-        skyExpGrad.addColorStop(0.6, `rgba(255, 100, 30, ${expAlpha * 0.5})`);
-        skyExpGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = skyExpGrad;
-        ctx.beginPath();
-        ctx.arc(expX, expY, expSize, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Shrapnel
-        for (let shrap = 0; shrap < 6; shrap++) {
-          const shrapAngle = shrap * Math.PI / 3 + expProgress * 2;
-          const shrapDist = expProgress * 40;
-          ctx.fillStyle = `rgba(150, 150, 150, ${expAlpha})`;
-          ctx.beginPath();
-          ctx.arc(
-            expX + Math.cos(shrapAngle) * shrapDist,
-            expY + Math.sin(shrapAngle) * shrapDist,
-            2,
-            0, Math.PI * 2
-          );
-          ctx.fill();
-        }
-      }
-    }
-
-    // Energy beams from towers
-    const beamPhase = (t * 0.5) % 2;
-    if (beamPhase < 0.3) {
-      const beamAlpha = 1 - beamPhase / 0.3;
-
-      // Lab tower energy beam
-      ctx.strokeStyle = `rgba(100, 180, 255, ${beamAlpha * 0.8})`;
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(width * 0.50, groundY - 100);
-      ctx.lineTo(width * 0.50, height * 0.05);
-      ctx.stroke();
-
-      ctx.strokeStyle = `rgba(200, 230, 255, ${beamAlpha})`;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Beam glow
-      const beamGlow = ctx.createLinearGradient(width * 0.50 - 30, 0, width * 0.50 + 30, 0);
-      beamGlow.addColorStop(0, "transparent");
-      beamGlow.addColorStop(0.5, `rgba(100, 180, 255, ${beamAlpha * 0.3})`);
-      beamGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = beamGlow;
-      ctx.fillRect(width * 0.50 - 30, height * 0.05, 60, groundY - 100 - height * 0.05);
-    }
-
-    // === DETAILED TROOPS (Defenders) ===
-
-    // Elite Knight - Heavy armored defender
-    const drawKnight = (x: number, y: number, index: number, facing: number) => {
-      const stance = Math.sin(t * 4 + index) * 2;
-      const swordSwing = Math.sin(t * 6 + index) * 0.6;
-
-      ctx.save();
-      ctx.translate(x, y + Math.abs(stance * 0.5));
-      ctx.scale(facing, 1);
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(0, 15, 12, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cape
-      ctx.fillStyle = "#f97316";
-      ctx.beginPath();
-      ctx.moveTo(-6, -15);
-      ctx.quadraticCurveTo(-15, 5 + stance, -12, 18);
-      ctx.lineTo(-4, 12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Legs with armor
-      ctx.fillStyle = "#6b7280";
-      ctx.fillRect(-5, 5, 4, 12);
-      ctx.fillRect(1, 5, 4, 12);
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(-5, 10, 4, 3);
-      ctx.fillRect(1, 10, 4, 3);
-
-      // Body armor
-      const armorGrad = ctx.createLinearGradient(-8, -15, 8, 8);
-      armorGrad.addColorStop(0, "#d1d5db");
-      armorGrad.addColorStop(0.3, "#9ca3af");
-      armorGrad.addColorStop(0.6, "#6b7280");
-      armorGrad.addColorStop(1, "#4b5563");
-      ctx.fillStyle = armorGrad;
-      ctx.beginPath();
-      ctx.moveTo(-8, 8);
-      ctx.lineTo(-10, -5);
-      ctx.lineTo(-8, -15);
-      ctx.lineTo(8, -15);
-      ctx.lineTo(10, -5);
-      ctx.lineTo(8, 8);
-      ctx.closePath();
-      ctx.fill();
-
-      // Armor detail lines
-      ctx.strokeStyle = "#374151";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(-6, -10);
-      ctx.lineTo(6, -10);
-      ctx.moveTo(-5, -3);
-      ctx.lineTo(5, -3);
-      ctx.stroke();
-
-      // Princeton emblem on chest
-      ctx.fillStyle = "#f97316";
-      ctx.beginPath();
-      ctx.moveTo(0, -12);
-      ctx.lineTo(-4, -5);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(4, -5);
-      ctx.closePath();
-      ctx.fill();
-
-      // Helmet
-      ctx.fillStyle = "#9ca3af";
-      ctx.beginPath();
-      ctx.arc(0, -20, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#6b7280";
-      ctx.beginPath();
-      ctx.arc(0, -20, 8, Math.PI * 0.8, Math.PI * 0.2, true);
-      ctx.fill();
-
-      // Helmet plume
-      ctx.fillStyle = "#ea580c";
-      ctx.beginPath();
-      ctx.moveTo(-2, -26);
-      ctx.quadraticCurveTo(0, -35 + stance * 0.5, 5, -32);
-      ctx.quadraticCurveTo(2, -28, 0, -26);
-      ctx.fill();
-
-      // Visor
-      ctx.fillStyle = "#1f2937";
-      ctx.fillRect(-5, -22, 10, 4);
-
-      // Sword arm
-      ctx.save();
-      ctx.translate(10, -8);
-      ctx.rotate(swordSwing);
-
-      // Arm
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(0, -2, 12, 5);
-
-      // Sword
-      ctx.fillStyle = "#e5e7eb";
-      ctx.fillRect(10, -1, 20, 3);
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(10, 0, 20, 1);
-      // Hilt
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(6, -3, 5, 7);
-      // Crossguard
-      ctx.fillStyle = "#c9a227";
-      ctx.fillRect(5, -1, 2, 3);
-      ctx.fillRect(11, -1, 2, 3);
-
-      ctx.restore();
-
-      // Shield arm
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(-12, -10, 5, 12);
-
-      // Shield
-      const shieldGrad = ctx.createLinearGradient(-18, -15, -12, 5);
-      shieldGrad.addColorStop(0, "#f97316");
-      shieldGrad.addColorStop(0.5, "#ea580c");
-      shieldGrad.addColorStop(1, "#c2410c");
-      ctx.fillStyle = shieldGrad;
-      ctx.beginPath();
-      ctx.moveTo(-14, -18);
-      ctx.lineTo(-22, -12);
-      ctx.lineTo(-22, 2);
-      ctx.lineTo(-18, 8);
-      ctx.lineTo(-14, 2);
-      ctx.lineTo(-14, -18);
-      ctx.fill();
-
-      // Shield emblem
-      ctx.strokeStyle = "#000";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-18, -10);
-      ctx.lineTo(-18, -2);
-      ctx.moveTo(-20, -6);
-      ctx.lineTo(-16, -6);
-      ctx.stroke();
-
-      ctx.restore();
-    };
-
-    // Archer troop
-    const drawArcher = (x: number, y: number, index: number) => {
-      const drawPhase = (t * 2 + index) % 3;
-      const pullBack = drawPhase < 1.5 ? drawPhase / 1.5 : 0;
-
-      ctx.save();
-      ctx.translate(x, y);
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 12, 8, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cloak
-      ctx.fillStyle = "#166534";
-      ctx.beginPath();
-      ctx.moveTo(-5, -10);
-      ctx.quadraticCurveTo(-10, 5, -8, 12);
-      ctx.lineTo(8, 12);
-      ctx.quadraticCurveTo(10, 5, 5, -10);
-      ctx.closePath();
-      ctx.fill();
-
-      // Body
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(-4, -8, 8, 15);
-
-      // Head
-      ctx.fillStyle = "#d6d3d1";
-      ctx.beginPath();
-      ctx.arc(0, -14, 6, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Hood
-      ctx.fillStyle = "#166534";
-      ctx.beginPath();
-      ctx.arc(0, -14, 7, Math.PI, 0);
-      ctx.fill();
-
-      // Bow
-      ctx.strokeStyle = "#78350f";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(-10, -5, 15, -Math.PI * 0.4, Math.PI * 0.4);
-      ctx.stroke();
-
-      // Bowstring
-      ctx.strokeStyle = "#a8a29e";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(-10 + Math.cos(-Math.PI * 0.4) * 15, -5 + Math.sin(-Math.PI * 0.4) * 15);
-      ctx.lineTo(-10 - pullBack * 8, -5);
-      ctx.lineTo(-10 + Math.cos(Math.PI * 0.4) * 15, -5 + Math.sin(Math.PI * 0.4) * 15);
-      ctx.stroke();
-
-      // Arrow
-      if (pullBack > 0.3) {
-        ctx.strokeStyle = "#78350f";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-10 - pullBack * 8, -5);
-        ctx.lineTo(5, -5);
-        ctx.stroke();
-        ctx.fillStyle = "#6b7280";
-        ctx.beginPath();
-        ctx.moveTo(5, -5);
-        ctx.lineTo(10, -7);
-        ctx.lineTo(10, -3);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // Quiver
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(5, -12, 5, 15);
-      ctx.strokeStyle = "#a8a29e";
-      ctx.lineWidth = 1;
-      for (let arrow = 0; arrow < 4; arrow++) {
-        ctx.beginPath();
-        ctx.moveTo(6 + arrow, -12);
-        ctx.lineTo(6 + arrow, -18);
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    };
-
-    // Draw detailed troop battles - spread MASSIVELY across entire battlefield
-    const knightPositions = [
-      { x: 0.12, y: 20, facing: 1 },
-      { x: 0.22, y: 85, facing: -1 },
-      { x: 0.35, y: 28, facing: 1 },
-      { x: 0.48, y: 105, facing: -1 },
-      { x: 0.58, y: 35, facing: 1 },
-      { x: 0.68, y: 95, facing: -1 },
-      { x: 0.78, y: 22, facing: 1 },
-      { x: 0.40, y: 65, facing: -1 },
-      { x: 0.28, y: 50, facing: 1 },
-      { x: 0.52, y: 78, facing: -1 },
-      { x: 0.85, y: 110, facing: 1 },
-    ];
-
-    for (let i = 0; i < knightPositions.length; i++) {
-      const pos = knightPositions[i];
-      const kx = width * pos.x;
-      const ky = groundY + pos.y;
-      drawKnight(kx, ky, i, pos.facing);
-
-      // Combat clash effects
-      if (Math.sin(t * 5 + i * 1.5) > 0.7) {
-        // Metal clash sparks
-        for (let spark = 0; spark < 8; spark++) {
-          const sparkAngle = Math.random() * Math.PI * 2;
-          const sparkDist = Math.random() * 18;
-          ctx.fillStyle = `rgba(255, 215, 0, ${0.9 - spark * 0.1})`;
-          ctx.beginPath();
-          ctx.arc(
-            kx + pos.facing * 15 + Math.cos(sparkAngle) * sparkDist,
-            ky - 10 + Math.sin(sparkAngle) * sparkDist,
-            2.5 - spark * 0.2,
-            0, Math.PI * 2
-          );
-          ctx.fill();
-        }
-
-        // Impact shockwave
-        const shockPhase = (t * 8 + i) % 1;
-        ctx.strokeStyle = `rgba(255, 200, 100, ${0.5 - shockPhase * 0.5})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(kx + pos.facing * 12, ky - 8, 5 + shockPhase * 20, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-
-    drawHeroTiger(width * 0.22, groundY + 30);
-
-
-    // Archers spread across back lines at different heights - MAXIMUM SPREAD
-    const archerPositions = [
-      { x: 0.04, y: 20 },
-      { x: 0.08, y: 75 },
-      { x: 0.14, y: 35 },
-      { x: 0.06, y: 95 },
-      { x: 0.18, y: 55 },
-      { x: 0.75, y: 25 },
-      { x: 0.82, y: 85 },
-      { x: 0.88, y: 45 },
-      { x: 0.92, y: 110 },
-    ];
-
-    for (let i = 0; i < archerPositions.length; i++) {
-      const pos = archerPositions[i];
-      const ax = width * pos.x;
-      const ay = groundY + pos.y;
-      drawArcher(ax, ay, i);
-
-      // Flying arrows at different targets
-      const arrowPhase = (t * 1.8 + i * 0.6) % 2.5;
-      if (arrowPhase > 0.5 && arrowPhase < 2) {
-        const arrowProgress = (arrowPhase - 0.5) / 1.5;
-        // Target varies - some at ground enemies, some at flying
-        const targetIsFlying = i % 2 === 0;
-        const targetX = ax + 120 + i * 30;
-        const targetY = targetIsFlying ? height * 0.35 : groundY + 40;
-
-        const arrowX = ax + (targetX - ax) * arrowProgress;
-        const arrowY = ay - 10 + (targetY - ay + 10) * arrowProgress - Math.sin(arrowProgress * Math.PI) * (targetIsFlying ? 60 : 35);
-
-        ctx.save();
-        ctx.translate(arrowX, arrowY);
-        const arrowAngle = Math.atan2(
-          targetY - ay + Math.cos(arrowProgress * Math.PI) * (targetIsFlying ? 60 : 35),
-          targetX - ax
-        );
-        ctx.rotate(arrowAngle);
-        ctx.strokeStyle = "#78350f";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-15, 0);
-        ctx.lineTo(5, 0);
-        ctx.stroke();
-        ctx.fillStyle = "#6b7280";
-        ctx.beginPath();
-        ctx.moveTo(5, 0);
-        ctx.lineTo(10, -2);
-        ctx.lineTo(10, 2);
-        ctx.closePath();
-        ctx.fill();
-        // Arrow trail glow
-        ctx.strokeStyle = "rgba(255, 200, 100, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(-15, 0);
-        ctx.lineTo(-25, 0);
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-
-    // Additional foot soldiers scattered around - EVERYWHERE ON BATTLEFIELD
-    const soldierPositions = [
-      { x: 0.55, y: 100 },
-      { x: 0.62, y: 30 },
-      { x: 0.72, y: 90 },
-      { x: 0.24, y: 105 },
-      { x: 0.38, y: 40 },
-      { x: 0.82, y: 35 },
-      { x: 0.10, y: 110 },
-      { x: 0.46, y: 95 },
-      { x: 0.32, y: 60 },
-      { x: 0.65, y: 50 },
-      { x: 0.90, y: 85 },
-      { x: 0.18, y: 70 },
-    ];
-
-    for (let i = 0; i < soldierPositions.length; i++) {
-      const pos = soldierPositions[i];
-      const sx = width * pos.x;
-      const sy = groundY + pos.y;
-      const bounce = Math.sin(t * 5 + i * 1.5) * 2;
-      const swing = Math.sin(t * 6 + i * 2) * 0.5;
-
-      ctx.save();
-      ctx.translate(sx, sy + bounce);
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 10, 8, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Body
-      ctx.fillStyle = "#6b8e23";
-      ctx.fillRect(-4, -12, 8, 14);
-
-      // Armor vest
-      ctx.fillStyle = "#4a5a2a";
-      ctx.fillRect(-5, -10, 10, 10);
-
-      // Head with helmet
-      ctx.fillStyle = "#708090";
-      ctx.beginPath();
-      ctx.arc(0, -16, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#5a6a80";
-      ctx.beginPath();
-      ctx.arc(0, -16, 5, Math.PI, 0);
-      ctx.fill();
-
-      // Sword
-      ctx.save();
-      ctx.rotate(swing);
-      ctx.strokeStyle = "#c0c0c0";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(4, -8);
-      ctx.lineTo(18, -10);
-      ctx.stroke();
-      ctx.fillStyle = "#5a4a3a";
-      ctx.fillRect(3, -10, 3, 5);
-      ctx.restore();
-
-      // Shield
-      const shieldGrad = ctx.createLinearGradient(-10, -10, -4, 0);
-      shieldGrad.addColorStop(0, "#f97316");
-      shieldGrad.addColorStop(1, "#c2410c");
-      ctx.fillStyle = shieldGrad;
-      ctx.beginPath();
-      ctx.arc(-7, -5, 6, Math.PI * 0.4, Math.PI * 1.6);
-      ctx.fill();
-
-      ctx.restore();
-    }
-
-    // === EPIC PROJECTILES & COMBAT EFFECTS ===
-
-    // Heavy Artillery - Cannon balls with explosive impact
-    for (let i = 0; i < 3; i++) {
-      const projPhase = (t * 1.8 + i * 1.2) % 3.5;
-      if (projPhase < 2.5) {
-        const startX = width * 0.35;
-        const startY = groundY - 50;
-        const endX = width * 0.68;
-        const endY = groundY + 25;
-
-        const progress = projPhase / 2.5;
-        const px = startX + (endX - startX) * progress;
-        const py = startY + (endY - startY) * progress - Math.sin(progress * Math.PI) * 60;
-
-        // Cannon ball with metallic sheen
-        const ballGrad = ctx.createRadialGradient(px - 2, py - 2, 0, px, py, 8);
-        ballGrad.addColorStop(0, "#5a5a5a");
-        ballGrad.addColorStop(0.3, "#3a3a3a");
-        ballGrad.addColorStop(1, "#1a1a1a");
-        ctx.fillStyle = ballGrad;
-        ctx.beginPath();
-        ctx.arc(px, py, 7, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Glowing heat effect
-        ctx.fillStyle = `rgba(255, 150, 50, ${0.4 + Math.sin(t * 10) * 0.2})`;
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Smoke trail with gradient
-        for (let trail = 1; trail <= 6; trail++) {
-          const trailAlpha = 0.4 - trail * 0.06;
-          const trailX = px - trail * 10 * (1 - progress * 0.3);
-          const trailY = py + trail * 4;
-          ctx.fillStyle = `rgba(80, 80, 80, ${trailAlpha})`;
-          ctx.beginPath();
-          ctx.arc(trailX + Math.sin(t * 5 + trail) * 3, trailY, 4 + trail * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Impact prediction ring
-        if (progress > 0.7) {
-          const ringAlpha = (progress - 0.7) / 0.3;
-          ctx.strokeStyle = `rgba(255, 100, 0, ${ringAlpha * 0.4})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.ellipse(endX, endY + 5, 15, 8, 0, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      }
-
-      // Explosion on impact
-      const impactPhase = (projPhase - 2.5);
-      if (impactPhase > 0 && impactPhase < 0.8) {
-        const endX = width * 0.68;
-        const endY = groundY + 25;
-        const explosionSize = impactPhase * 60;
-        const explosionAlpha = 1 - impactPhase / 0.8;
-
-        // Multi-layer explosion
-        for (let layer = 0; layer < 3; layer++) {
-          const layerSize = explosionSize * (1 - layer * 0.2);
-          const layerAlpha = explosionAlpha * (1 - layer * 0.25);
-          const expGrad = ctx.createRadialGradient(endX, endY, 0, endX, endY, layerSize);
-          expGrad.addColorStop(0, `rgba(255, 255, 200, ${layerAlpha})`);
-          expGrad.addColorStop(0.3, `rgba(255, 150, 50, ${layerAlpha * 0.8})`);
-          expGrad.addColorStop(0.6, `rgba(255, 80, 0, ${layerAlpha * 0.5})`);
-          expGrad.addColorStop(1, "transparent");
-          ctx.fillStyle = expGrad;
-          ctx.beginPath();
-          ctx.arc(endX, endY, layerSize, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Debris particles
-        for (let debris = 0; debris < 8; debris++) {
-          const debrisAngle = debris * Math.PI / 4 + impactPhase * 2;
-          const debrisDist = impactPhase * 50;
-          const dx = endX + Math.cos(debrisAngle) * debrisDist;
-          const dy = endY + Math.sin(debrisAngle) * debrisDist * 0.6 - impactPhase * 30;
-          ctx.fillStyle = `rgba(100, 80, 60, ${explosionAlpha})`;
-          ctx.beginPath();
-          ctx.arc(dx, dy, 3, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-
-    // Chain Lightning from Lab Tower - Multi-target electric arcs
-    const lightningPhase = (t * 1.5) % 2;
-    if (lightningPhase < 0.8) {
-      const lightningAlpha = lightningPhase < 0.4 ? 1 : 1 - (lightningPhase - 0.4) / 0.4;
-
-      // Main bolt
-      ctx.strokeStyle = `rgba(150, 200, 255, ${lightningAlpha})`;
-      ctx.lineWidth = 4;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      const startX = width * 0.54;
-      const startY = groundY - 85;
-
-      // Primary target
-      const target1X = width * 0.62;
-      const target1Y = groundY + 35;
-
-      // Draw jagged lightning
-      ctx.beginPath();
-      ctx.moveTo(startX, startY);
-      let lx = startX;
-      let ly = startY;
-      const segments = 8;
-      for (let seg = 0; seg < segments; seg++) {
-        const progress = (seg + 1) / segments;
-        const targetX = startX + (target1X - startX) * progress;
-        const targetY = startY + (target1Y - startY) * progress;
-        const jitter = (1 - progress) * 20;
-        lx = targetX + (Math.random() - 0.5) * jitter;
-        ly = targetY + (Math.random() - 0.5) * jitter * 0.5;
-        ctx.lineTo(lx, ly);
-      }
-      ctx.stroke();
-
-      // Secondary branches
-      ctx.strokeStyle = `rgba(100, 180, 255, ${lightningAlpha * 0.7})`;
-      ctx.lineWidth = 2;
-      for (let branch = 0; branch < 3; branch++) {
-        const branchStart = 3 + branch;
-        const branchProgress = branchStart / segments;
-        const bx = startX + (target1X - startX) * branchProgress;
-        const by = startY + (target1Y - startY) * branchProgress;
-        ctx.beginPath();
-        ctx.moveTo(bx, by);
-        ctx.lineTo(bx + (Math.random() - 0.5) * 40, by + Math.random() * 30);
-        ctx.stroke();
-      }
-
-      // Impact glow at target
-      const impactGlow = ctx.createRadialGradient(target1X, target1Y, 0, target1X, target1Y, 25);
-      impactGlow.addColorStop(0, `rgba(150, 200, 255, ${lightningAlpha * 0.8})`);
-      impactGlow.addColorStop(0.5, `rgba(100, 150, 255, ${lightningAlpha * 0.4})`);
-      impactGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = impactGlow;
-      ctx.beginPath();
-      ctx.arc(target1X, target1Y, 25, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Electric sparks
-      for (let spark = 0; spark < 6; spark++) {
-        const sparkAngle = spark * Math.PI / 3 + t * 10;
-        const sparkDist = 15 + Math.sin(t * 20 + spark) * 8;
-        ctx.fillStyle = `rgba(200, 230, 255, ${lightningAlpha})`;
-        ctx.beginPath();
-        ctx.arc(
-          target1X + Math.cos(sparkAngle) * sparkDist,
-          target1Y + Math.sin(sparkAngle) * sparkDist * 0.6,
-          2, 0, Math.PI * 2
-        );
-        ctx.fill();
-      }
-    }
-
-    // Sonic Shockwaves from Blair Arch - Expanding purple rings
-    for (let wave = 0; wave < 5; wave++) {
-      const wavePhase = (t * 3 + wave * 0.8) % 4;
-      if (wavePhase < 3) {
-        const waveProgress = wavePhase / 3;
-        const waveX = width * 0.75;
-        const waveY = groundY - 10;
-        const waveRadius = 20 + waveProgress * 100;
-        const waveAlpha = (1 - waveProgress) * 0.5;
-
-        // Main wave ring
-        ctx.strokeStyle = `rgba(168, 85, 247, ${waveAlpha})`;
-        ctx.lineWidth = 4 - waveProgress * 3;
-        ctx.beginPath();
-        ctx.arc(waveX, waveY, waveRadius, -Math.PI * 0.4, Math.PI * 0.4);
-        ctx.stroke();
-
-        // Inner resonance ring
-        ctx.strokeStyle = `rgba(200, 150, 255, ${waveAlpha * 0.6})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(waveX, waveY, waveRadius * 0.85, -Math.PI * 0.35, Math.PI * 0.35);
-        ctx.stroke();
-
-        // Distortion ripples
-        ctx.strokeStyle = `rgba(139, 92, 246, ${waveAlpha * 0.3})`;
-        ctx.lineWidth = 1;
-        for (let ripple = 0; ripple < 3; ripple++) {
-          ctx.beginPath();
-          ctx.arc(waveX, waveY, waveRadius + ripple * 5, -Math.PI * 0.3, Math.PI * 0.3);
-          ctx.stroke();
-        }
-      }
-    }
-
-    // === EPIC SPELL EFFECTS ===
-
-    // Devastating Meteor Strike
-    const meteorCycle = (t * 0.25) % 5;
-    const meteorX = width * 0.58;
-
-    if (meteorCycle < 1.5) {
-      // Meteor descent
-      const meteorProgress = meteorCycle / 1.5;
-      const meteorStartY = -50;
-      const meteorEndY = groundY + 20;
-      const meteorY = meteorStartY + (meteorEndY - meteorStartY) * meteorProgress;
-
-      // Meteor body with rocky texture
-      const meteorSize = 18 + Math.sin(t * 10) * 2;
-      const meteorGrad = ctx.createRadialGradient(meteorX - 3, meteorY - 3, 0, meteorX, meteorY, meteorSize);
-      meteorGrad.addColorStop(0, "#fbbf24");
-      meteorGrad.addColorStop(0.3, "#f97316");
-      meteorGrad.addColorStop(0.6, "#dc2626");
-      meteorGrad.addColorStop(1, "#7f1d1d");
-      ctx.fillStyle = meteorGrad;
-      ctx.beginPath();
-      ctx.arc(meteorX, meteorY, meteorSize, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Rocky surface detail
-      ctx.fillStyle = "#991b1b";
-      for (let rock = 0; rock < 5; rock++) {
-        const rockAngle = rock * Math.PI * 0.4 + t * 2;
-        ctx.beginPath();
-        ctx.arc(
-          meteorX + Math.cos(rockAngle) * meteorSize * 0.5,
-          meteorY + Math.sin(rockAngle) * meteorSize * 0.5,
-          4, 0, Math.PI * 2
-        );
-        ctx.fill();
-      }
-
-      // Massive fire trail
-      for (let flame = 0; flame < 8; flame++) {
-        const flameProgress = flame / 8;
-        const flameY = meteorY - 15 - flame * 15;
-        const flameX = meteorX + Math.sin(t * 15 + flame * 2) * (5 + flame * 2);
-        const flameSize = meteorSize * (1 - flameProgress * 0.7);
-        const flameAlpha = 0.8 - flameProgress * 0.6;
-
-        const flameGrad = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize);
-        flameGrad.addColorStop(0, `rgba(255, 255, 150, ${flameAlpha})`);
-        flameGrad.addColorStop(0.4, `rgba(255, 150, 50, ${flameAlpha * 0.7})`);
-        flameGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = flameGrad;
-        ctx.beginPath();
-        ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Trailing sparks
-      for (let spark = 0; spark < 12; spark++) {
-        const sparkAge = (t * 8 + spark * 0.5) % 1;
-        const sparkX = meteorX + (Math.random() - 0.5) * 30;
-        const sparkY = meteorY - 20 - sparkAge * 80;
-        ctx.fillStyle = `rgba(255, 200, 100, ${1 - sparkAge})`;
-        ctx.beginPath();
-        ctx.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Warning indicator on ground
-      const warningAlpha = 0.3 + Math.sin(t * 10) * 0.2;
-      ctx.strokeStyle = `rgba(255, 50, 50, ${warningAlpha})`;
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.ellipse(meteorX, meteorEndY + 10, 35, 15, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-    } else if (meteorCycle < 2.5) {
-      // Catastrophic impact explosion
-      const impactProgress = (meteorCycle - 1.5);
-      const impactAlpha = 1 - impactProgress;
-      const impactY = groundY + 20;
-
-      // Multi-layer explosion dome
-      for (let layer = 0; layer < 4; layer++) {
-        const layerDelay = layer * 0.1;
-        const layerProgress = Math.max(0, impactProgress - layerDelay);
-        const layerSize = layerProgress * 120 * (1 - layer * 0.15);
-        const layerAlpha = impactAlpha * (1 - layer * 0.2);
-
-        const expGrad = ctx.createRadialGradient(meteorX, impactY, 0, meteorX, impactY, layerSize);
-        expGrad.addColorStop(0, `rgba(255, 255, 220, ${layerAlpha})`);
-        expGrad.addColorStop(0.2, `rgba(255, 200, 50, ${layerAlpha * 0.9})`);
-        expGrad.addColorStop(0.5, `rgba(255, 100, 0, ${layerAlpha * 0.6})`);
-        expGrad.addColorStop(0.8, `rgba(200, 50, 0, ${layerAlpha * 0.3})`);
-        expGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = expGrad;
-        ctx.beginPath();
-        ctx.arc(meteorX, impactY, layerSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Shockwave ring
-      const shockSize = impactProgress * 150;
-      ctx.strokeStyle = `rgba(255, 150, 50, ${impactAlpha * 0.6})`;
-      ctx.lineWidth = 5 - impactProgress * 4;
-      ctx.beginPath();
-      ctx.ellipse(meteorX, impactY + 10, shockSize, shockSize * 0.4, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Flying debris and rocks
-      for (let debris = 0; debris < 15; debris++) {
-        const debrisAngle = debris * Math.PI * 2 / 15;
-        const debrisDist = impactProgress * 80 + Math.sin(debris * 3) * 20;
-        const debrisHeight = Math.sin(impactProgress * Math.PI) * 60 * (1 + Math.sin(debris) * 0.3);
-        const dx = meteorX + Math.cos(debrisAngle) * debrisDist;
-        const dy = impactY - debrisHeight + Math.sin(debrisAngle) * debrisDist * 0.3;
-
-        ctx.fillStyle = `rgba(80, 60, 40, ${impactAlpha})`;
-        ctx.beginPath();
-        ctx.arc(dx, dy, 3 + (debris % 3), 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Ground crack marks
-      ctx.strokeStyle = `rgba(50, 30, 20, ${impactAlpha})`;
-      ctx.lineWidth = 2;
-      for (let crack = 0; crack < 8; crack++) {
-        const crackAngle = crack * Math.PI / 4;
-        const crackLen = 30 + Math.sin(crack * 2) * 15;
-        ctx.beginPath();
-        ctx.moveTo(meteorX, impactY + 10);
-        ctx.lineTo(
-          meteorX + Math.cos(crackAngle) * crackLen,
-          impactY + 10 + Math.sin(crackAngle) * crackLen * 0.4
-        );
-        ctx.stroke();
-      }
-    }
-
-    // Arctic Freeze Spell (periodic)
-    const freezePhase = (t * 0.2 + 2) % 5;
-    if (freezePhase < 1.5) {
-      const freezeX = width * 0.4;
-      const freezeY = groundY + 30;
-      const freezeProgress = freezePhase / 1.5;
-      const freezeRadius = freezeProgress * 80;
-      const freezeAlpha = 1 - freezeProgress * 0.5;
-
-      // Ice expansion
-      const iceGrad = ctx.createRadialGradient(freezeX, freezeY, 0, freezeX, freezeY, freezeRadius);
-      iceGrad.addColorStop(0, `rgba(200, 230, 255, ${freezeAlpha * 0.6})`);
-      iceGrad.addColorStop(0.5, `rgba(150, 200, 255, ${freezeAlpha * 0.4})`);
-      iceGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = iceGrad;
-      ctx.beginPath();
-      ctx.arc(freezeX, freezeY, freezeRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Ice crystals
-      ctx.strokeStyle = `rgba(200, 240, 255, ${freezeAlpha})`;
-      ctx.lineWidth = 2;
-      for (let crystal = 0; crystal < 8; crystal++) {
-        const crystalAngle = crystal * Math.PI / 4 + freezeProgress * 2;
-        const crystalLen = freezeRadius * 0.7;
-        ctx.beginPath();
-        ctx.moveTo(freezeX, freezeY);
-        ctx.lineTo(
-          freezeX + Math.cos(crystalAngle) * crystalLen,
-          freezeY + Math.sin(crystalAngle) * crystalLen * 0.5
-        );
-        ctx.stroke();
-
-        // Crystal branches
-        const branchX = freezeX + Math.cos(crystalAngle) * crystalLen * 0.6;
-        const branchY = freezeY + Math.sin(crystalAngle) * crystalLen * 0.3;
-        ctx.beginPath();
-        ctx.moveTo(branchX, branchY);
-        ctx.lineTo(branchX + Math.cos(crystalAngle + 0.5) * 15, branchY + Math.sin(crystalAngle + 0.5) * 8);
-        ctx.moveTo(branchX, branchY);
-        ctx.lineTo(branchX + Math.cos(crystalAngle - 0.5) * 15, branchY + Math.sin(crystalAngle - 0.5) * 8);
-        ctx.stroke();
-      }
-
-      // Floating ice particles
-      for (let ice = 0; ice < 20; ice++) {
-        const iceAngle = ice * Math.PI / 10 + t * 2;
-        const iceDist = freezeRadius * (0.3 + Math.sin(ice) * 0.5);
-        const iceSize = 2 + Math.sin(t * 5 + ice) * 1;
-        ctx.fillStyle = `rgba(200, 240, 255, ${freezeAlpha * 0.8})`;
-        ctx.beginPath();
-        ctx.arc(
-          freezeX + Math.cos(iceAngle) * iceDist,
-          freezeY + Math.sin(iceAngle) * iceDist * 0.5 - Math.sin(t * 4 + ice) * 10,
-          iceSize, 0, Math.PI * 2
-        );
-        ctx.fill();
-      }
-    }
-
-    // === ENHANCED WEATHER PARTICLES ===
-
-    if (scene.particles === "leaves") {
-      // Autumn leaves with rotation and varied colors
-      const leafColors = ["#4ade80", "#22c55e", "#84cc16", "#eab308"];
-      for (let i = 0; i < 25; i++) {
-        const lx = ((t * 35 + i * 50) % (width + 150)) - 75;
-        const ly = ((t * 25 + i * 35 + Math.sin(t + i) * 30) % (height * 0.85));
-        const leafColor = leafColors[i % leafColors.length];
-        const leafAlpha = 0.4 + Math.sin(t * 2 + i) * 0.2;
-        ctx.save();
-        ctx.translate(lx, ly);
-        ctx.rotate(t * 3 + i * 0.5);
-        ctx.fillStyle = leafColor + Math.floor(leafAlpha * 255).toString(16).padStart(2, '0');
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Leaf vein
-        ctx.strokeStyle = leafColor;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(-4, 0);
-        ctx.lineTo(4, 0);
-        ctx.stroke();
-        ctx.restore();
-      }
-    } else if (scene.particles === "embers") {
-      // Volcanic embers with glow trails
-      for (let i = 0; i < 35; i++) {
-        const ex = (i * 37 + Math.sin(t * 0.8 + i) * 40) % width;
-        const ey = height - ((t * 50 + i * 25) % (height * 0.9));
-        const emberPulse = 0.5 + Math.sin(t * 8 + i * 2) * 0.5;
-
-        // Glow
-        const emberGlow = ctx.createRadialGradient(ex, ey, 0, ex, ey, 8);
-        emberGlow.addColorStop(0, `rgba(255, 200, 50, ${emberPulse * 0.6})`);
-        emberGlow.addColorStop(0.5, `rgba(255, 100, 0, ${emberPulse * 0.3})`);
-        emberGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = emberGlow;
-        ctx.beginPath();
-        ctx.arc(ex, ey, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Core
-        ctx.fillStyle = `rgba(255, 220, 100, ${emberPulse})`;
-        ctx.beginPath();
-        ctx.arc(ex, ey, 2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    } else if (scene.particles === "snow") {
-      // Detailed snowflakes with drift
-      for (let i = 0; i < 50; i++) {
-        const drift = Math.sin(t * 0.5 + i * 0.3) * 30;
-        const sx = (i * 31 + drift + t * 10) % (width + 60) - 30;
-        const sy = ((t * 30 + i * 20) % (height + 30)) - 15;
-        const snowSize = 1.5 + (i % 3);
-        const snowAlpha = 0.5 + Math.sin(i) * 0.3;
-
-        ctx.fillStyle = `rgba(255, 255, 255, ${snowAlpha})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, snowSize, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Snowflake sparkle
-        if (i % 5 === 0) {
-          ctx.fillStyle = `rgba(200, 230, 255, ${snowAlpha * 0.5})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy, snowSize * 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    } else if (scene.particles === "sand") {
-      // Sandstorm with wind streaks
-      for (let i = 0; i < 40; i++) {
-        const sx = ((t * 80 + i * 35) % (width + 120)) - 60;
-        const sy = height * 0.3 + (i % 12) * 25 + Math.sin(t * 2 + i) * 15;
-        const sandAlpha = 0.2 + Math.sin(t + i * 0.5) * 0.15;
-
-        // Sand particle
-        ctx.fillStyle = `rgba(251, 191, 36, ${sandAlpha})`;
-        ctx.beginPath();
-        ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Wind streak
-        ctx.strokeStyle = `rgba(251, 191, 36, ${sandAlpha * 0.3})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx - 20, sy + 2);
-        ctx.stroke();
-      }
-    } else if (scene.particles === "fireflies") {
-      // Bioluminescent fireflies with pulsing glow
-      for (let i = 0; i < 20; i++) {
-        const fx = (i * 57 + Math.sin(t * 0.6 + i) * 50) % width;
-        const fy = height * 0.35 + (i % 6) * 35 + Math.cos(t * 0.4 + i) * 25;
-        const glowPhase = (t * 2 + i * 0.7) % 2;
-        const glow = glowPhase < 1 ? Math.sin(glowPhase * Math.PI) : 0;
-
-        if (glow > 0.1) {
-          // Glow aura
-          const fireflyGlow = ctx.createRadialGradient(fx, fy, 0, fx, fy, 12);
-          fireflyGlow.addColorStop(0, `rgba(150, 255, 150, ${glow * 0.8})`);
-          fireflyGlow.addColorStop(0.5, `rgba(100, 220, 100, ${glow * 0.4})`);
-          fireflyGlow.addColorStop(1, "transparent");
-          ctx.fillStyle = fireflyGlow;
-          ctx.beginPath();
-          ctx.arc(fx, fy, 12, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Core
-          ctx.fillStyle = `rgba(200, 255, 200, ${glow})`;
-          ctx.beginPath();
-          ctx.arc(fx, fy, 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    } else if (scene.particles === "magic") {
-      // Mystical arcane particles with trails
-      for (let i = 0; i < 30; i++) {
-        const mx = (i * 43 + Math.sin(t * 1.2 + i) * 35) % width;
-        const my = ((height - t * 40 - i * 30) % (height + 80)) + 40;
-        const magicHue = (t * 60 + i * 25) % 360;
-        const magicAlpha = 0.6 + Math.sin(t * 3 + i) * 0.3;
-
-        // Magic glow
-        const magicGlow = ctx.createRadialGradient(mx, my, 0, mx, my, 8);
-        magicGlow.addColorStop(0, `hsla(${magicHue}, 90%, 70%, ${magicAlpha})`);
-        magicGlow.addColorStop(0.5, `hsla(${magicHue}, 80%, 50%, ${magicAlpha * 0.5})`);
-        magicGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = magicGlow;
-        ctx.beginPath();
-        ctx.arc(mx, my, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Trail
-        ctx.strokeStyle = `hsla(${magicHue}, 80%, 60%, ${magicAlpha * 0.3})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(mx, my);
-        ctx.lineTo(mx - Math.sin(t + i) * 15, my + 20);
-        ctx.stroke();
-      }
-    }
-
-    // === CINEMATIC FOG / ATMOSPHERE ===
-
-    // Layered atmospheric fog
-    const fogGrad = ctx.createLinearGradient(0, 0, 0, height);
-    fogGrad.addColorStop(0, "rgba(28, 25, 23, 0.45)");
-    fogGrad.addColorStop(0.3, "rgba(28, 25, 23, 0.15)");
-    fogGrad.addColorStop(0.6, "rgba(28, 25, 23, 0.1)");
-    fogGrad.addColorStop(0.85, "rgba(28, 25, 23, 0.25)");
-    fogGrad.addColorStop(1, "rgba(28, 25, 23, 0.65)");
-    ctx.fillStyle = fogGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Volumetric fog wisps
-    for (let layer = 0; layer < 3; layer++) {
-      const layerAlpha = 0.08 - layer * 0.02;
-      ctx.fillStyle = `rgba(100, 90, 80, ${layerAlpha})`;
-      for (let wisp = 0; wisp < 3; wisp++) {
-        const wx = ((t * (12 - layer * 3) + wisp * 200 + layer * 100) % (width + 400)) - 200;
-        const wy = height * (0.2 + layer * 0.15 + wisp * 0.1);
-        const ww = 150 + layer * 30;
-        const wh = 40 + layer * 10;
-        ctx.beginPath();
-        ctx.ellipse(wx, wy, ww, wh, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Dramatic vignette
-    const vignetteGrad = ctx.createRadialGradient(
-      width / 2,
-      height / 2,
-      width * 0.15,
-      width / 2,
-      height / 2,
-      width * 0.8
-    );
-    vignetteGrad.addColorStop(0, "transparent");
-    vignetteGrad.addColorStop(0.5, "rgba(28, 25, 23, 0.45)");
-    vignetteGrad.addColorStop(0.75, "rgba(28, 25, 23, 0.5)");
-    vignetteGrad.addColorStop(1, "rgba(20, 18, 16, 0.9)");
-    ctx.fillStyle = vignetteGrad;
-    ctx.fillRect(0, 0, width, height);
-  }, [animTime, currentScene]);
-
-  return (
-    <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
-      {/* Content with ornate frame */}
-      <div
-        className="relative z-10 w-full h-full rounded-2xl overflow-hidden"
-        style={{
-          background: panelGradient,
-          border: `2px solid ${GOLD.border30}`,
-          boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 20px ${GOLD.glow04}`,
-        }}
-      >
-        {/* Canvas Battle Scene */}
-        <div className="opacity-30">
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full"
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
-        <OrnateFrame
-          className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden"
-          cornerSize={40}
-          showBorders={true}
-          color="#b45309"
-          glowColor="#f59e0b"
-        >
-          {/* Inner ghost border */}
-          <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-
-          <div className="flex flex-col items-center relative z-20">
-            {/* Decorative top flourish */}
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-px" style={{ background: dividerGradient }} />
-
-            <button
-              onClick={onSelectFarthestLevel}
-              className="size-14 sm:size-24 rounded-full flex items-center justify-center mb-2 sm:mb-4 backdrop-blur-sm hover:scale-110 transition-all cursor-pointer active:scale-95 group relative"
-              style={{
-                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                border: `2px solid ${GOLD.border35}`,
-                boxShadow: `0 0 20px ${GOLD.glow07}, inset 0 0 12px ${GOLD.glow04}`,
-              }}
-            >
-              <div className="absolute inset-[3px] rounded-full pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
-              <MapPin size={28} className="sm:hidden text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
-              <MapPin size={40} className="hidden sm:block text-amber-400 drop-shadow-lg group-hover:text-amber-200 transition-colors" />
-            </button>
-
-            <h3 className="text-lg sm:text-xl font-bold text-amber-100 mb-1 sm:mb-2 drop-shadow-lg tracking-wide">
-              Select a Battlefield
-            </h3>
-            <p className="text-amber-400/80 text-xs sm:text-sm max-w-xs drop-shadow-md leading-relaxed text-center">
-              Tap the pin above or any unlocked location on the map to begin your campaign
-            </p>
-
-            {/* Decorative divider */}
-            <div className="my-3 sm:my-5 flex items-center gap-3 w-full max-w-[200px]">
-              <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border30})` }} />
-              <div className="w-2 h-2 rotate-45" style={{ background: GOLD.border35, border: `1px solid ${GOLD.accentBorder40}` }} />
-              <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border30}, transparent)` }} />
-            </div>
-
-            {/* Legend items */}
-            <div className="flex items-center gap-3 text-xs text-amber-300">
-              <div className="w-4 h-4 rounded-full animate-pulse" style={{
-                background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
-                border: `1.5px solid ${GOLD.accentBorder40}`,
-                boxShadow: `0 0 8px ${GOLD.accentGlow08}`
-              }} />
-              <span className="font-medium tracking-wide">= Unlocked Location</span>
-            </div>
-            <div className="mt-2 sm:mt-3 flex items-center gap-3 text-xs text-amber-300/70">
-              <div className="w-4 h-4 flex items-center justify-center rounded-full animate-pulse" style={{
-                background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                border: `1.5px solid ${NEUTRAL.border}`,
-                boxShadow: `0 0 6px ${NEUTRAL.glow}`
-              }} >
-                <Lock size={10} className="text-gray-400" />
-              </div>
-              <span className="font-medium tracking-wide">= Locked Location</span>
-            </div>
-
-            {/* Decorative bottom flourish */}
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-px" style={{ background: dividerGradient }} />
-          </div>
-        </OrnateFrame>
-      </div>
     </div>
   );
 };
@@ -6449,36 +198,61 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
     const time = animTime;
 
-    // Background with war atmosphere - enhanced with richer gradient
-    const bgGrad = ctx.createRadialGradient(
-      width / 2,
-      height / 2,
-      0,
-      width / 2,
-      height / 2,
-      width
-    );
-    bgGrad.addColorStop(0, "#4a3a2a");
-    bgGrad.addColorStop(0.3, "#3d2d1d");
-    bgGrad.addColorStop(0.6, "#3a2a1a");
-    bgGrad.addColorStop(1, "#2a1a0a");
+    // Background with rich war atmosphere - deep layered gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, width, 0);
+    bgGrad.addColorStop(0, "#2d3a1f");    // greenish for grassland
+    bgGrad.addColorStop(0.21, "#1f2a18"); // transition
+    bgGrad.addColorStop(0.22, "#1a2a1a"); // swamp
+    bgGrad.addColorStop(0.39, "#2a2818"); // transition
+    bgGrad.addColorStop(0.41, "#4a3a22"); // desert
+    bgGrad.addColorStop(0.59, "#3a3020"); // transition
+    bgGrad.addColorStop(0.61, "#2a3848"); // winter
+    bgGrad.addColorStop(0.78, "#1a2838"); // transition
+    bgGrad.addColorStop(0.80, "#3a1a1a"); // volcanic
+    bgGrad.addColorStop(1, "#2a0a0a");
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
+    // Vertical atmosphere gradient (darker at edges, lighter in middle)
+    const vGrad = ctx.createLinearGradient(0, 0, 0, height);
+    vGrad.addColorStop(0, "rgba(0,0,0,0.35)");
+    vGrad.addColorStop(0.3, "rgba(0,0,0,0.05)");
+    vGrad.addColorStop(0.5, "rgba(0,0,0,0)");
+    vGrad.addColorStop(0.7, "rgba(0,0,0,0.05)");
+    vGrad.addColorStop(1, "rgba(0,0,0,0.4)");
+    ctx.fillStyle = vGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle radial warm vignette
+    const vigGrad = ctx.createRadialGradient(width / 2, height / 2, height * 0.3, width / 2, height / 2, width);
+    vigGrad.addColorStop(0, "rgba(60,40,20,0)");
+    vigGrad.addColorStop(0.7, "rgba(20,10,5,0.15)");
+    vigGrad.addColorStop(1, "rgba(10,5,2,0.45)");
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, width, height);
+
     // === ENHANCED GROUND TEXTURES ===
-    // Layer 1: Large terrain patches for depth
-    ctx.globalAlpha = 0.12;
-    for (let i = 0; i < 80; i++) {
+    // Layer 1: Large region-aware terrain patches for depth
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < 100; i++) {
       const px = seededRandom(i * 7) * width;
       const py = seededRandom(i * 7 + 1) * height;
-      const psize = 30 + seededRandom(i * 7 + 2) * 60;
-      const hue = seededRandom(i * 7 + 3) > 0.5 ? "#5a4a3a" : "#3a2a1a";
-      ctx.fillStyle = hue;
+      const psize = 30 + seededRandom(i * 7 + 2) * 70;
+
+      // Region-specific terrain colors
+      let hue1 = "#5a4a3a"; let hue2 = "#3a2a1a";
+      if (px > 1440) { hue1 = "#4a2020"; hue2 = "#2a0a0a"; }
+      else if (px > 1080) { hue1 = "#5a6a7a"; hue2 = "#3a4a5a"; }
+      else if (px > 720) { hue1 = "#8a7a5a"; hue2 = "#6a5a3a"; }
+      else if (px > 380) { hue1 = "#2a4a2a"; hue2 = "#1a3a1a"; }
+      else { hue1 = "#3a5a2a"; hue2 = "#2a4a1a"; }
+
+      ctx.fillStyle = seededRandom(i * 7 + 3) > 0.5 ? hue1 : hue2;
       ctx.beginPath();
       // Organic blob shape
       ctx.moveTo(px + psize * 0.5, py);
-      for (let a = 0; a < Math.PI * 2; a += 0.3) {
-        const r = psize * (0.4 + seededRandom(i + a * 100) * 0.3);
+      for (let a = 0; a < Math.PI * 2; a += 0.25) {
+        const r = psize * (0.35 + seededRandom(i + a * 100) * 0.35);
         ctx.lineTo(px + Math.cos(a) * r, py + Math.sin(a) * r * 0.5);
       }
       ctx.closePath();
@@ -6486,29 +260,43 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     }
     ctx.globalAlpha = 1;
 
-    // Layer 2: Dirt/soil texture with isometric perspective
-    ctx.globalAlpha = 0.08;
-    for (let i = 0; i < 500; i++) {
+    // Layer 2: Region-aware dirt/soil texture with isometric perspective
+    ctx.globalAlpha = 0.1;
+    for (let i = 0; i < 600; i++) {
       const dx = seededRandom(i * 11) * width;
       const dy = seededRandom(i * 11 + 1) * height;
-      const dw = 3 + seededRandom(i * 11 + 2) * 10;
-      const dh = dw * 0.4; // Isometric flattening
-      ctx.fillStyle = seededRandom(i * 11 + 3) > 0.6 ? "#6a5a4a" : "#2a1a0a";
+      const dw = 3 + seededRandom(i * 11 + 2) * 12;
+      const dh = dw * 0.4;
+
+      let soilLight = "#6a5a4a"; let soilDark = "#2a1a0a";
+      if (dx > 1440) { soilLight = "#5a2a1a"; soilDark = "#1a0505"; }
+      else if (dx > 1080) { soilLight = "#8a9aaa"; soilDark = "#4a5a6a"; }
+      else if (dx > 720) { soilLight = "#b8a080"; soilDark = "#6a5a40"; }
+      else if (dx > 380) { soilLight = "#3a5a3a"; soilDark = "#1a2a1a"; }
+      else { soilLight = "#5a6a3a"; soilDark = "#2a3a1a"; }
+
+      ctx.fillStyle = seededRandom(i * 11 + 3) > 0.6 ? soilLight : soilDark;
       ctx.beginPath();
       ctx.ellipse(dx, dy, dw, dh, seededRandom(i) * 0.5, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // Layer 3: Small pebbles and debris
-    ctx.globalAlpha = 0.15;
-    for (let i = 0; i < 400; i++) {
+    // Layer 3: Region-aware small pebbles and debris
+    ctx.globalAlpha = 0.18;
+    for (let i = 0; i < 500; i++) {
       const sx = seededRandom(i * 13) * width;
       const sy = seededRandom(i * 13 + 1) * height;
-      const ss = 1 + seededRandom(i * 13 + 2) * 3;
-      ctx.fillStyle = ["#5a4a3a", "#7a6a5a", "#3a2a1a", "#4a3a2a"][
-        Math.floor(seededRandom(i * 13 + 3) * 4)
-      ];
+      const ss = 1 + seededRandom(i * 13 + 2) * 3.5;
+
+      let pebbleColors = ["#5a4a3a", "#7a6a5a", "#3a2a1a", "#4a3a2a"];
+      if (sx > 1440) pebbleColors = ["#4a2020", "#3a1010", "#5a2a1a", "#2a0a0a"];
+      else if (sx > 1080) pebbleColors = ["#8a9aa8", "#b0c0d0", "#6a7a88", "#a0b0c0"];
+      else if (sx > 720) pebbleColors = ["#a0905a", "#c0b080", "#8a7a4a", "#b0a070"];
+      else if (sx > 380) pebbleColors = ["#2a4a2a", "#3a5a3a", "#1a3a1a", "#2a5a2a"];
+      else pebbleColors = ["#4a5a2a", "#5a6a3a", "#3a4a1a", "#4a5a2a"];
+
+      ctx.fillStyle = pebbleColors[Math.floor(seededRandom(i * 13 + 3) * 4)];
       ctx.beginPath();
       ctx.ellipse(sx, sy, ss, ss * 0.4, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -6545,135 +333,356 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     }
     ctx.globalAlpha = 1;
 
-    // Layer 5: Cracks and weathering lines
-    ctx.globalAlpha = 0.06;
-    ctx.strokeStyle = "#1a0a00";
+    // Layer 5: Cracks and weathering lines (region-aware)
+    ctx.globalAlpha = 0.08;
     ctx.lineWidth = 1;
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 120; i++) {
       const cx = seededRandom(i * 19) * width;
       const cy = seededRandom(i * 19 + 1) * height;
-      const clen = 15 + seededRandom(i * 19 + 2) * 40;
+      const clen = 15 + seededRandom(i * 19 + 2) * 50;
+
+      // Region-aware crack color
+      if (cx > 1440) ctx.strokeStyle = "#2a0500";
+      else if (cx > 1080) ctx.strokeStyle = "#2a3a4a";
+      else if (cx > 720) ctx.strokeStyle = "#3a2a10";
+      else if (cx > 380) ctx.strokeStyle = "#0a1a0a";
+      else ctx.strokeStyle = "#1a2a00";
+
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      let px = cx, py = cy;
-      for (let j = 0; j < 4; j++) {
-        const nx = px + (seededRandom(i * 19 + j * 3) - 0.5) * clen * 0.5;
-        const ny = py + seededRandom(i * 19 + j * 3 + 1) * clen * 0.3;
+      let cpx = cx, cpy = cy;
+      for (let j = 0; j < 5; j++) {
+        const nx = cpx + (seededRandom(i * 19 + j * 3) - 0.5) * clen * 0.5;
+        const ny = cpy + seededRandom(i * 19 + j * 3 + 1) * clen * 0.3;
         ctx.lineTo(nx, ny);
-        px = nx; py = ny;
+        cpx = nx; cpy = ny;
       }
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
 
-    // Layer 6: Enhanced parchment texture overlay
-    ctx.globalAlpha = 0.04;
-    for (let i = 0; i < 400; i++) {
-      const x = seededRandom(i * 3) * width;
-      const y = seededRandom(i * 3 + 1) * height;
-      const size = 2 + seededRandom(i * 3 + 2) * 10;
-      ctx.fillStyle = seededRandom(i) > 0.5 ? "#6a5a4a" : "#2a1a0a";
+    // Layer 6: Enhanced parchment/texture overlay (region-aware)
+    ctx.globalAlpha = 0.05;
+    for (let i = 0; i < 500; i++) {
+      const ptx = seededRandom(i * 3) * width;
+      const pty = seededRandom(i * 3 + 1) * height;
+      const ptSize = 2 + seededRandom(i * 3 + 2) * 12;
+
+      let ptColor1 = "#6a5a4a"; let ptColor2 = "#2a1a0a";
+      if (ptx > 1440) { ptColor1 = "#5a2020"; ptColor2 = "#1a0505"; }
+      else if (ptx > 1080) { ptColor1 = "#8a9ab0"; ptColor2 = "#4a5a70"; }
+      else if (ptx > 720) { ptColor1 = "#a09060"; ptColor2 = "#5a4a30"; }
+      else if (ptx > 380) { ptColor1 = "#3a5a3a"; ptColor2 = "#1a3a1a"; }
+      else { ptColor1 = "#5a6a3a"; ptColor2 = "#2a3a1a"; }
+
+      ctx.fillStyle = seededRandom(i) > 0.5 ? ptColor1 : ptColor2;
       ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.arc(ptx, pty, ptSize, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // --- RUGGED REGION BORDERS ---
+    // --- NATURAL FADING REGION TRANSITIONS (jagged but smooth) ---
     const drawRuggedBorder = (
       x: number,
       region1Color: string,
       region2Color: string
     ) => {
       ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      for (let y = 0; y <= height; y += 8) {
-        const offset =
-          Math.sin(y * 0.15 + x * 0.01) * 15 +
-          Math.sin(y * 0.08) * 10 +
-          seededRandom(y + x) * 12 -
-          6;
-        ctx.lineTo(x + offset, y);
-      }
-      ctx.lineTo(x + 30, height);
-      ctx.lineTo(x - 30, height);
-      ctx.lineTo(x - 30, 0);
-      ctx.closePath();
 
-      const borderGrad = ctx.createLinearGradient(x - 30, 0, x + 30, 0);
-      borderGrad.addColorStop(0, region1Color + "00");
-      borderGrad.addColorStop(0.3, region1Color + "80");
-      borderGrad.addColorStop(0.5, "#2a1a0a");
-      borderGrad.addColorStop(0.7, region2Color + "80");
-      borderGrad.addColorStop(1, region2Color + "00");
-      ctx.fillStyle = borderGrad;
-      ctx.fill();
+      // Build jagged path points
+      const pathPoints: { x: number; y: number }[] = [];
+      for (let y = 0; y <= height; y += 4) {
+        const offset =
+          Math.sin(y * 0.12 + x * 0.008) * 20 +
+          Math.sin(y * 0.06 + x * 0.02) * 14 +
+          Math.sin(y * 0.25 + x * 0.04) * 8 +
+          seededRandom(y + x) * 16 - 8;
+        pathPoints.push({ x: x + offset, y });
+      }
+
+      // Multiple soft fade layers from wide to narrow for a natural blended transition
+      // Each layer uses a clipping region on one side of the jagged edge
+
+      const fadeWidths = [90, 65, 45, 28, 16];
+      const fadeAlphas = [0.06, 0.09, 0.12, 0.16, 0.2];
+
+      // LEFT SIDE: region1 color fading into region2
+      for (let layer = 0; layer < fadeWidths.length; layer++) {
+        const fw = fadeWidths[layer];
+        const alpha = fadeAlphas[layer];
+
+        ctx.save();
+        // Clip to the left side of the jagged border
+        ctx.beginPath();
+        ctx.moveTo(x - fw - 10, 0);
+        pathPoints.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(x - fw - 10, height);
+        ctx.closePath();
+        ctx.clip();
+
+        // Horizontal gradient fading region1 color from left toward the border
+        const leftGrad = ctx.createLinearGradient(x - fw, 0, x + 5, 0);
+        leftGrad.addColorStop(0, region1Color + "00");
+        leftGrad.addColorStop(0.4, region1Color + Math.round(alpha * 255).toString(16).padStart(2, "0"));
+        leftGrad.addColorStop(1, region1Color + "00");
+        ctx.fillStyle = leftGrad;
+        ctx.fillRect(x - fw - 10, 0, fw + 20, height);
+        ctx.restore();
+      }
+
+      // RIGHT SIDE: region2 color fading into region1
+      for (let layer = 0; layer < fadeWidths.length; layer++) {
+        const fw = fadeWidths[layer];
+        const alpha = fadeAlphas[layer];
+
+        ctx.save();
+        // Clip to the right side of the jagged border
+        ctx.beginPath();
+        pathPoints.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.lineTo(x + fw + 10, height);
+        ctx.lineTo(x + fw + 10, 0);
+        ctx.closePath();
+        ctx.clip();
+
+        // Horizontal gradient fading region2 color from right toward the border
+        const rightGrad = ctx.createLinearGradient(x - 5, 0, x + fw, 0);
+        rightGrad.addColorStop(0, region2Color + "00");
+        rightGrad.addColorStop(0.6, region2Color + Math.round(alpha * 255).toString(16).padStart(2, "0"));
+        rightGrad.addColorStop(1, region2Color + "00");
+        ctx.fillStyle = rightGrad;
+        ctx.fillRect(x - 10, 0, fw + 20, height);
+        ctx.restore();
+      }
+
+      // Very subtle dark seam at the exact border edge (thin, low opacity)
+      ctx.beginPath();
+      ctx.moveTo(pathPoints[0].x, 0);
+      pathPoints.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = "rgba(0,0,0,0.12)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Even subtler lighter edge on top for depth
+      ctx.beginPath();
+      ctx.moveTo(pathPoints[0].x, 0);
+      pathPoints.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
       ctx.restore();
     };
 
-    // Region backgrounds with gradient fills
+    // Region backgrounds with rich multi-layered fills
     const regions = [
       {
         name: "PRINCETON GROUNDS",
         x: 0,
         w: 380,
-        colors: ["#3d5a2f", "#2d4a1f"],
-        labelColor: "#6abe30",
+        colors: ["#3d5a2f", "#2d4a1f", "#1a3010"],
+        labelColor: "#8ade50",
+        labelGlow: "#4a8020",
+        accentTop: "rgba(100,180,60,0.12)",
+        accentBot: "rgba(40,80,20,0.15)",
       },
       {
         name: "MATHEY MARSHES",
         x: 380,
         w: 340,
-        colors: ["#2a3a2a", "#1a2a1a"],
-        labelColor: "#4a8a4a",
+        colors: ["#2a3a2a", "#1a2a1a", "#0a1a0a"],
+        labelColor: "#6aaa6a",
+        labelGlow: "#2a5a2a",
+        accentTop: "rgba(60,120,80,0.1)",
+        accentBot: "rgba(20,60,30,0.15)",
       },
       {
         name: "STADIUM SANDS",
         x: 720,
         w: 360,
-        colors: ["#d4a574", "#b8956a"],
-        labelColor: "#ffd700",
+        colors: ["#c49a6c", "#a88050", "#7a6040"],
+        labelColor: "#ffe060",
+        labelGlow: "#aa8020",
+        accentTop: "rgba(220,180,120,0.15)",
+        accentBot: "rgba(120,90,50,0.12)",
       },
       {
-
         name: "FRIST FRONTIER",
         x: 1080,
         w: 360,
-        colors: ["#a8c8e8", "#7aa8d8"],
-        labelColor: "#e0f4ff",
+        colors: ["#8ab0d0", "#6a90b8", "#4a6888"],
+        labelColor: "#d0f0ff",
+        labelGlow: "#5090c0",
+        accentTop: "rgba(150,200,240,0.12)",
+        accentBot: "rgba(60,100,150,0.15)",
       },
       {
         name: "DORMITORY DEPTHS",
         x: 1440,
         w: 380,
-        colors: ["#4a1a1a", "#2a0808"],
-        labelColor: "#ff6644",
+        colors: ["#5a2020", "#3a1010", "#1a0505"],
+        labelColor: "#ff8855",
+        labelGlow: "#aa3010",
+        accentTop: "rgba(200,60,30,0.12)",
+        accentBot: "rgba(80,20,10,0.15)",
       },
     ];
 
-    regions.forEach((r, idx) => {
+    regions.forEach((r) => {
+      // Multi-layered region fill
       const grad = ctx.createLinearGradient(r.x, 0, r.x + r.w, height);
       grad.addColorStop(0, r.colors[0]);
-      grad.addColorStop(1, r.colors[1]);
-      ctx.globalAlpha = 0.3;
+      grad.addColorStop(0.5, r.colors[1]);
+      grad.addColorStop(1, r.colors[2]);
+      ctx.globalAlpha = 0.35;
       ctx.fillStyle = grad;
       ctx.fillRect(r.x, 0, r.w, height);
+
+      // Top atmospheric glow
+      const topGlow = ctx.createLinearGradient(r.x, 0, r.x, height * 0.4);
+      topGlow.addColorStop(0, r.accentTop);
+      topGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = topGlow;
+      ctx.fillRect(r.x, 0, r.w, height * 0.4);
+
+      // Bottom atmospheric depth
+      const botGlow = ctx.createLinearGradient(r.x, height * 0.6, r.x, height);
+      botGlow.addColorStop(0, "rgba(0,0,0,0)");
+      botGlow.addColorStop(1, r.accentBot);
+      ctx.fillStyle = botGlow;
+      ctx.fillRect(r.x, height * 0.6, r.w, height * 0.4);
+
+      // Soft inner radial atmosphere
+      const regionCx = r.x + r.w / 2;
+      const regionCy = height / 2;
+      const innerGlow = ctx.createRadialGradient(regionCx, regionCy, 0, regionCx, regionCy, r.w * 0.6);
+      innerGlow.addColorStop(0, r.accentTop);
+      innerGlow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = innerGlow;
+      ctx.beginPath();
+      ctx.ellipse(regionCx, regionCy, r.w * 0.55, height * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.globalAlpha = 1;
 
-      // Region label with shadow
+      // --- Ornate Region Label Banner (auto-sized) ---
+      const labelX = r.x + r.w / 2;
+      const labelY = 22;
+
       ctx.save();
-      ctx.font = "bold 13px 'bc-novatica-cyr', serif";
+      ctx.font = "bold 11px 'bc-novatica-cyr', serif";
       ctx.textAlign = "center";
-      ctx.letterSpacing = "3px";
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillText(r.name, r.x + r.w / 2 + 1, 24);
+      (ctx as unknown as Record<string, string>).letterSpacing = "3px";
+
+      // Measure text to auto-size banner
+      const textMetrics = ctx.measureText(r.name);
+      const bannerW = textMetrics.width + 30;
+      const bannerH = 20;
+      const bx = labelX - bannerW / 2;
+      const by = labelY - bannerH / 2 - 1;
+
+      // Banner shadow
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.moveTo(bx - 12, by + 2);
+      ctx.lineTo(bx + 4, by + 2);
+      ctx.lineTo(bx + 4, by + bannerH + 2);
+      ctx.lineTo(bx - 12, by + bannerH * 0.65 + 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(bx + bannerW - 4 + 12, by + 2);
+      ctx.lineTo(bx + bannerW - 4, by + 2);
+      ctx.lineTo(bx + bannerW - 4, by + bannerH + 2);
+      ctx.lineTo(bx + bannerW - 4 + 12, by + bannerH * 0.65 + 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Left ribbon tail
+      const ribbonGrad1 = ctx.createLinearGradient(bx - 10, by, bx + 5, by);
+      ribbonGrad1.addColorStop(0, r.colors[2]);
+      ribbonGrad1.addColorStop(1, r.colors[1]);
+      ctx.fillStyle = ribbonGrad1;
+      ctx.beginPath();
+      ctx.moveTo(bx - 10, by + 1);
+      ctx.lineTo(bx + 5, by + 1);
+      ctx.lineTo(bx + 5, by + bannerH - 1);
+      ctx.lineTo(bx - 10, by + bannerH * 0.6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right ribbon tail
+      const ribbonGrad2 = ctx.createLinearGradient(bx + bannerW - 5, by, bx + bannerW + 10, by);
+      ribbonGrad2.addColorStop(0, r.colors[1]);
+      ribbonGrad2.addColorStop(1, r.colors[2]);
+      ctx.fillStyle = ribbonGrad2;
+      ctx.beginPath();
+      ctx.moveTo(bx + bannerW - 5, by + 1);
+      ctx.lineTo(bx + bannerW + 10, by + 1);
+      ctx.lineTo(bx + bannerW + 10, by + bannerH * 0.6);
+      ctx.lineTo(bx + bannerW - 5, by + bannerH - 1);
+      ctx.closePath();
+      ctx.fill();
+
+      // Main banner body
+      const bannerGrad = ctx.createLinearGradient(bx, by, bx, by + bannerH);
+      bannerGrad.addColorStop(0, r.colors[0]);
+      bannerGrad.addColorStop(0.3, r.colors[1]);
+      bannerGrad.addColorStop(0.7, r.colors[1]);
+      bannerGrad.addColorStop(1, r.colors[2]);
+      ctx.fillStyle = bannerGrad;
+      ctx.fillRect(bx + 2, by, bannerW - 4, bannerH);
+
+      // Banner top highlight edge
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.fillRect(bx + 2, by, bannerW - 4, 2);
+
+      // Banner bottom shadow edge
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.fillRect(bx + 2, by + bannerH - 2, bannerW - 4, 2);
+
+      // Gold trim lines
+      ctx.strokeStyle = r.labelGlow + "80";
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(bx + 4, by + 2, bannerW - 8, bannerH - 4);
+
+      // Decorative diamond studs at corners
+      const drawDiamond = (dx: number, dy: number, ds: number) => {
+        ctx.fillStyle = r.labelColor + "90";
+        ctx.beginPath();
+        ctx.moveTo(dx, dy - ds);
+        ctx.lineTo(dx + ds, dy);
+        ctx.lineTo(dx, dy + ds);
+        ctx.lineTo(dx - ds, dy);
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawDiamond(bx + 8, labelY, 2.5);
+      drawDiamond(bx + bannerW - 8, labelY, 2.5);
+
+      // Text glow
+      ctx.shadowColor = r.labelGlow;
+      ctx.shadowBlur = 8;
       ctx.fillStyle = r.labelColor;
-      ctx.fillText(r.name, r.x + r.w / 2, 23);
+      ctx.fillText(r.name, labelX, labelY + 4);
+      ctx.shadowBlur = 0;
+
+      // Text shadow for depth
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillText(r.name, labelX + 0.5, labelY + 4.5);
+
+      // Main text
+      ctx.fillStyle = r.labelColor;
+      ctx.fillText(r.name, labelX, labelY + 4);
+
       ctx.restore();
     });
 
-    // Draw rugged borders between regions
+    // Draw natural fading borders between regions
     drawRuggedBorder(380, "#3d5a2f", "#2a3a2a");
     drawRuggedBorder(720, "#2a3a2a", "#9a8060");
     drawRuggedBorder(1080, "#9a8060", "#5a6a7a");
@@ -7293,14 +1302,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       );
     }
 
-    // Low Mist
-    ctx.fillStyle = "rgba(180, 220, 200, 0.05)";
-    for (let i = 0; i < 5; i++) {
-      const mx = 380 + Math.sin(time * 0.2 + i) * 50 + i * 60;
-      const my = getY(60 + Math.cos(time * 0.3 + i) * 10);
-      ctx.beginPath();
-      ctx.ellipse(mx, my, 60, 20, 0, 0, Math.PI * 2);
-      ctx.fill();
+    // Low Mist - dense swamp fog with layers
+    for (let layer = 0; layer < 3; layer++) {
+      const mistAlpha = 0.04 + layer * 0.02;
+      const mistColor = layer === 0 ? "rgba(120, 180, 140," : layer === 1 ? "rgba(150, 200, 160," : "rgba(180, 220, 200,";
+      for (let i = 0; i < 6; i++) {
+        const mx = 370 + Math.sin(time * (0.15 + layer * 0.05) + i * 1.2 + layer * 0.7) * (40 + layer * 15) + i * 50;
+        const my = getY(55 + layer * 8 + Math.cos(time * (0.2 + layer * 0.08) + i * 0.8) * 8);
+        const mw = 50 + layer * 20 + seededRandom(i + layer * 20) * 30;
+        const mh = 15 + layer * 5 + seededRandom(i + layer * 20 + 1) * 8;
+        ctx.fillStyle = mistColor + mistAlpha + ")";
+        ctx.beginPath();
+        ctx.ellipse(mx, my, mw, mh, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // === SAHARA SANDS DETAILS === (Enhanced Desert Environment)
@@ -8648,39 +2663,108 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
     // === ENVIRONMENTAL DETAILS - ROADS, BRIDGES, DEBRIS ===
 
-    // Isometric wooden bridges between regions
+    // Isometric wooden bridges between regions - ornate with rope & stone
     const drawBridge = (bx: number, byPct: number, length: number, angle: number) => {
       const by = getY(byPct);
       ctx.save();
       ctx.translate(bx, by);
       ctx.rotate(angle);
 
-      // Bridge shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      // Bridge shadow (deeper, wider)
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
       ctx.beginPath();
-      ctx.ellipse(length / 2, 6, length / 2 + 5, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(length / 2, 8, length / 2 + 8, 10, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bridge planks
-      const plankWidth = 8;
+      // Stone anchor blocks at each end
+      const drawAnchor = (ax: number) => {
+        const anchorGrad = ctx.createLinearGradient(ax - 8, -8, ax + 8, 8);
+        anchorGrad.addColorStop(0, "#6a5a4a");
+        anchorGrad.addColorStop(0.5, "#4a3a2a");
+        anchorGrad.addColorStop(1, "#3a2a1a");
+        ctx.fillStyle = anchorGrad;
+        ctx.fillRect(ax - 7, -7, 14, 14);
+        // Stone lines
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(ax - 7, -1); ctx.lineTo(ax + 7, -1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ax - 7, 4); ctx.lineTo(ax + 7, 4); ctx.stroke();
+        // Top cap
+        ctx.fillStyle = "#5a4a3a";
+        ctx.fillRect(ax - 8, -9, 16, 3);
+      };
+      drawAnchor(0);
+      drawAnchor(length);
+
+      // Bridge planks with wood grain
+      const plankWidth = 7;
       for (let p = 0; p < length / plankWidth; p++) {
-        const px = p * plankWidth;
-        const plankY = Math.sin(p * 0.3) * 1; // Slight wave
-        ctx.fillStyle = p % 2 === 0 ? "#5a4030" : "#4a3020";
-        ctx.fillRect(px, plankY - 3, plankWidth - 1, 6);
-        // Plank edge highlight
-        ctx.fillStyle = "#6a5040";
-        ctx.fillRect(px, plankY - 3, plankWidth - 1, 1);
+        const px = p * plankWidth + 2;
+        const plankY = Math.sin(p * 0.3) * 1.5;
+        // Plank shadow
+        ctx.fillStyle = "#2a1a0a";
+        ctx.fillRect(px, plankY - 3 + 1, plankWidth - 1.5, 7);
+        // Main plank with gradient
+        const plankGrad = ctx.createLinearGradient(px, plankY - 3, px, plankY + 4);
+        plankGrad.addColorStop(0, p % 2 === 0 ? "#7a6040" : "#6a5030");
+        plankGrad.addColorStop(0.3, p % 2 === 0 ? "#6a5030" : "#5a4020");
+        plankGrad.addColorStop(1, p % 2 === 0 ? "#5a4020" : "#4a3010");
+        ctx.fillStyle = plankGrad;
+        ctx.fillRect(px, plankY - 3, plankWidth - 1.5, 6);
+        // Highlight edge
+        ctx.fillStyle = "rgba(255,220,160,0.12)";
+        ctx.fillRect(px, plankY - 3, plankWidth - 1.5, 1);
+        // Wood grain line
+        ctx.strokeStyle = "rgba(0,0,0,0.08)";
+        ctx.lineWidth = 0.3;
+        ctx.beginPath();
+        ctx.moveTo(px + 1, plankY - 2);
+        ctx.lineTo(px + plankWidth - 3, plankY - 2);
+        ctx.stroke();
       }
 
-      // Bridge railings
-      ctx.fillStyle = "#3a2510";
-      ctx.fillRect(0, -6, length, 2);
-      ctx.fillRect(0, 4, length, 2);
-      // Railing posts
-      for (let post = 0; post <= length; post += 15) {
-        ctx.fillRect(post - 1, -8, 2, 4);
-        ctx.fillRect(post - 1, 4, 2, 4);
+      // Rope railings
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      // Top rope with sag
+      ctx.strokeStyle = "#6a5a40";
+      ctx.beginPath();
+      ctx.moveTo(3, -7);
+      for (let rx = 0; rx <= length; rx += 3) {
+        const sag = Math.sin((rx / length) * Math.PI) * 3;
+        ctx.lineTo(rx, -7 + sag);
+      }
+      ctx.stroke();
+      // Bottom rope
+      ctx.beginPath();
+      ctx.moveTo(3, 7);
+      for (let rx = 0; rx <= length; rx += 3) {
+        const sag = Math.sin((rx / length) * Math.PI) * 3;
+        ctx.lineTo(rx, 7 + sag);
+      }
+      ctx.stroke();
+
+      // Rope highlight
+      ctx.strokeStyle = "rgba(160,140,100,0.25)";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(3, -8);
+      for (let rx = 0; rx <= length; rx += 3) {
+        const sag = Math.sin((rx / length) * Math.PI) * 3;
+        ctx.lineTo(rx, -8 + sag);
+      }
+      ctx.stroke();
+
+      // Railing posts (vertical ropes/supports)
+      ctx.strokeStyle = "#5a4a30";
+      ctx.lineWidth = 1.5;
+      for (let post = 8; post < length; post += 12) {
+        const topSag = Math.sin((post / length) * Math.PI) * 3;
+        const botSag = Math.sin((post / length) * Math.PI) * 3;
+        ctx.beginPath();
+        ctx.moveTo(post, -7 + topSag);
+        ctx.lineTo(post, 7 + botSag);
+        ctx.stroke();
       }
 
       ctx.restore();
@@ -8692,15 +2776,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawBridge(1075, 55, 50, 0.08);
     drawBridge(1445, 52, 48, -0.05);
 
-    // Dirt road paths (worn into the ground)
+    // Dirt road paths (worn into the ground) - enhanced with edges
     const drawRoadSegment = (points: [number, number][]) => {
       if (points.length < 2) return;
 
-      // Road shadow/depth
-      ctx.strokeStyle = "rgba(30, 20, 10, 0.3)";
-      ctx.lineWidth = 18;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+
+      // Road trench shadow (deep)
+      ctx.strokeStyle = "rgba(15, 10, 5, 0.35)";
+      ctx.lineWidth = 20;
       ctx.beginPath();
       ctx.moveTo(points[0][0], getY(points[0][1]));
       for (let i = 1; i < points.length; i++) {
@@ -8708,15 +2793,43 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
       ctx.stroke();
 
-      // Main road surface
-      ctx.strokeStyle = "rgba(80, 60, 40, 0.25)";
-      ctx.lineWidth = 14;
+      // Road bed (darker edges)
+      ctx.strokeStyle = "rgba(50, 35, 20, 0.3)";
+      ctx.lineWidth = 16;
       ctx.stroke();
 
-      // Road wear (center line)
-      ctx.strokeStyle = "rgba(60, 45, 30, 0.2)";
+      // Main road surface
+      ctx.strokeStyle = "rgba(90, 70, 45, 0.28)";
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Road wear (lighter center)
+      ctx.strokeStyle = "rgba(110, 85, 55, 0.2)";
       ctx.lineWidth = 6;
       ctx.stroke();
+
+      // Subtle center highlight
+      ctx.strokeStyle = "rgba(140, 110, 70, 0.1)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Wheel ruts (dashed lines)
+      ctx.setLineDash([3, 8]);
+      ctx.strokeStyle = "rgba(40, 25, 12, 0.15)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(points[0][0] - 3, getY(points[0][1]));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i][0] - 3, getY(points[i][1]));
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(points[0][0] + 3, getY(points[0][1]));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i][0] + 3, getY(points[i][1]));
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
     };
 
     // Main travel routes
@@ -9289,17 +3402,41 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.fill();
       }
 
-      // Castle name label with shadow
-      ctx.font = "bold 11px 'bc-novatica-cyr', serif";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
-      ctx.fillText(
-        isEnemy ? "ENEMY STRONGHOLD" : "YOUR KINGDOM",
-        x + 1,
-        y + 32
-      );
-      ctx.fillStyle = accent;
-      ctx.fillText(isEnemy ? "ENEMY STRONGHOLD" : "YOUR KINGDOM", x, y + 31);
+      // Ambient castle glow aura
+      const castleAura = ctx.createRadialGradient(x, y - 40, 10, x, y - 40, 80);
+      castleAura.addColorStop(0, `${accentGlow}${isEnemy ? "18" : "15"}`);
+      castleAura.addColorStop(0.5, `${accentGlow}08`);
+      castleAura.addColorStop(1, `${accentGlow}00`);
+      ctx.fillStyle = castleAura;
+      ctx.beginPath();
+      ctx.arc(x, y - 40, 80, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Torch flames on gate sides
+      for (let t = 0; t < 2; t++) {
+        const torchX = x + (t === 0 ? -18 : 18);
+        const torchY = y - 5;
+        // Torch bracket
+        ctx.fillStyle = "#3a2a1a";
+        ctx.fillRect(torchX - 1, torchY - 2, 2, 8);
+        // Flame
+        const flameH = 6 + Math.sin(time * 8 + t * 2 + x) * 3;
+        ctx.fillStyle = `rgba(255, 200, 80, ${0.8 + Math.sin(time * 6 + t) * 0.2})`;
+        ctx.beginPath();
+        ctx.moveTo(torchX - 2, torchY - 2);
+        ctx.quadraticCurveTo(torchX, torchY - 2 - flameH, torchX + 2, torchY - 2);
+        ctx.fill();
+        // Flame glow
+        const torchGlow = ctx.createRadialGradient(torchX, torchY - 4, 0, torchX, torchY - 4, 10);
+        torchGlow.addColorStop(0, `rgba(255, 180, 50, ${0.25 + Math.sin(time * 7 + t) * 0.1})`);
+        torchGlow.addColorStop(1, "rgba(255, 150, 30, 0)");
+        ctx.fillStyle = torchGlow;
+        ctx.beginPath();
+        ctx.arc(torchX, torchY - 4, 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // (castle labels removed for cleaner look)
     };
 
     drawKingdomCastle(70, 50, false);
@@ -9319,41 +3456,78 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
 
         const midX = (fromX + toX) / 2;
-        const midY = (fromY + toY) / 2 - 12;
+        const midY = (fromY + toY) / 2 - 15;
 
         // Shadow
-        ctx.strokeStyle = "rgba(0,0,0,0.3)";
-        ctx.lineWidth = 9;
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.lineWidth = 12;
         ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(fromX + 2, fromY + 2);
-        ctx.quadraticCurveTo(midX + 2, midY + 2, toX + 2, toY + 2);
+        ctx.moveTo(fromX + 2, fromY + 3);
+        ctx.quadraticCurveTo(midX + 2, midY + 3, toX + 2, toY + 3);
         ctx.stroke();
 
-        // Path
-        ctx.strokeStyle = isUnlocked
-          ? "#c9a227"
-          : isPartial
-            ? "#6a5a4a"
-            : "#3a3020";
-        ctx.lineWidth = isUnlocked ? 7 : 5;
-        ctx.setLineDash(isUnlocked ? [] : [7, 5]);
-        ctx.beginPath();
-        ctx.moveTo(fromX, fromY);
-        ctx.quadraticCurveTo(midX, midY, toX, toY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Marching dots
         if (isUnlocked) {
-          const dotPos = (time * 0.5) % 1;
-          const dx = fromX + (toX - fromX) * dotPos;
-          const dy =
-            fromY + (toY - fromY) * dotPos - Math.sin(dotPos * Math.PI) * 12;
-          ctx.fillStyle = "#f59e0b";
+          // Outer border (dark golden)
+          ctx.strokeStyle = "#8B6914";
+          ctx.lineWidth = 10;
           ctx.beginPath();
-          ctx.arc(dx, dy, 3, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(fromX, fromY);
+          ctx.quadraticCurveTo(midX, midY, toX, toY);
+          ctx.stroke();
+          // Main road (bright gold)
+          ctx.strokeStyle = "#D4A828";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(fromX, fromY);
+          ctx.quadraticCurveTo(midX, midY, toX, toY);
+          ctx.stroke();
+          // Center highlight
+          ctx.strokeStyle = "#F0C840";
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(fromX, fromY);
+          ctx.quadraticCurveTo(midX, midY, toX, toY);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Animated marching orbs (3 orbs spaced apart)
+          for (let orb = 0; orb < 3; orb++) {
+            const dotPos = ((time * 0.4) + orb * 0.33) % 1;
+            const t = dotPos;
+            const mt = 1 - t;
+            // Quadratic bezier interpolation
+            const dx = mt * mt * fromX + 2 * mt * t * midX + t * t * toX;
+            const dy = mt * mt * fromY + 2 * mt * t * midY + t * t * toY;
+            // Glow
+            ctx.fillStyle = "#ffd700";
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 6, 0, Math.PI * 2);
+            ctx.fill();
+            // Orb
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = "#FFE060";
+            ctx.beginPath();
+            ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#FFFAC0";
+            ctx.beginPath();
+            ctx.arc(dx - 0.5, dy - 0.5, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+        } else {
+          // Locked/partial path
+          ctx.strokeStyle = isPartial ? "#6a5a4a" : "#3a3020";
+          ctx.lineWidth = isPartial ? 6 : 4;
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath();
+          ctx.moveTo(fromX, fromY);
+          ctx.quadraticCurveTo(midX, midY, toX, toY);
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
       });
     });
@@ -9371,173 +3545,640 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       // Glow
       if (isSelected) {
         ctx.shadowColor = "#ffd700";
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 30;
       } else if (isHovered && isUnlocked) {
         ctx.shadowColor = "#ffaa00";
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
       }
 
-      // Victory flag
+      // Victory flag (upgraded: ornate pole with waving banner)
       if (stars > 0) {
-        ctx.fillStyle = "#8b4513";
-        ctx.fillRect(x - 2, y - 42, 4, 22);
-        const flagColor =
-          level.region === "grassland"
-            ? "#228b22"
-            : level.region === "swamp"
-              ? "#5f9ea0"
-              : level.region === "desert"
-                ? "#daa520"
-                : level.region === "winter"
-                  ? "#4682b4"
-                  : "#8b0000";
-        ctx.fillStyle = flagColor;
+        const flagPoleX = x + 1;
+        const flagPoleTop = y - size - 22;
+        const flagPoleBot = y - size + 4;
+        // Pole shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(flagPoleX - 1, flagPoleTop + 2, 4, flagPoleBot - flagPoleTop);
+        // Pole
+        const poleGrad = ctx.createLinearGradient(flagPoleX - 1.5, 0, flagPoleX + 1.5, 0);
+        poleGrad.addColorStop(0, "#6B4520");
+        poleGrad.addColorStop(0.4, "#C89050");
+        poleGrad.addColorStop(0.6, "#A87040");
+        poleGrad.addColorStop(1, "#5A3818");
+        ctx.fillStyle = poleGrad;
+        ctx.fillRect(flagPoleX - 1.5, flagPoleTop, 3, flagPoleBot - flagPoleTop);
+        // Finial (gold ornament on top)
+        ctx.fillStyle = "#FFD700";
         ctx.beginPath();
-        ctx.moveTo(x + 2, y - 40);
-        ctx.lineTo(x + 16, y - 34);
-        ctx.lineTo(x + 2, y - 26);
+        ctx.arc(flagPoleX, flagPoleTop - 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#FFF0A0";
+        ctx.beginPath();
+        ctx.arc(flagPoleX - 0.5, flagPoleTop - 2.5, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#B8960A";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.arc(flagPoleX, flagPoleTop - 2, 3, 0, Math.PI * 2);
+        ctx.stroke();
+        // Flag colors per region
+        const flagPrimary =
+          level.region === "grassland" ? "#30A830"
+            : level.region === "swamp" ? "#6ABCB0"
+              : level.region === "desert" ? "#E8B020"
+                : level.region === "winter" ? "#5090C8"
+                  : "#C83030";
+        const flagSecondary =
+          level.region === "grassland" ? "#50D050"
+            : level.region === "swamp" ? "#90E0D0"
+              : level.region === "desert" ? "#FFD850"
+                : level.region === "winter" ? "#80C0F0"
+                  : "#FF5050";
+        // Waving flag shape
+        const wave = Math.sin(time * 3 + x * 0.05) * 2;
+        const wave2 = Math.sin(time * 3 + x * 0.05 + 1) * 1.5;
+        ctx.fillStyle = flagPrimary;
+        ctx.beginPath();
+        ctx.moveTo(flagPoleX + 1.5, flagPoleTop);
+        ctx.quadraticCurveTo(flagPoleX + 10, flagPoleTop + 3 + wave, flagPoleX + 18, flagPoleTop + 2 + wave2);
+        ctx.lineTo(flagPoleX + 17, flagPoleTop + 7 + wave2);
+        ctx.quadraticCurveTo(flagPoleX + 9, flagPoleTop + 8 + wave, flagPoleX + 1.5, flagPoleTop + 14);
         ctx.closePath();
         ctx.fill();
+        // Flag highlight stripe
+        ctx.fillStyle = flagSecondary;
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(flagPoleX + 1.5, flagPoleTop + 2);
+        ctx.quadraticCurveTo(flagPoleX + 8, flagPoleTop + 4 + wave * 0.7, flagPoleX + 14, flagPoleTop + 3.5 + wave2 * 0.7);
+        ctx.lineTo(flagPoleX + 13, flagPoleTop + 5.5 + wave2 * 0.7);
+        ctx.quadraticCurveTo(flagPoleX + 7, flagPoleTop + 6 + wave * 0.7, flagPoleX + 1.5, flagPoleTop + 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        // Flag outline
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(flagPoleX + 1.5, flagPoleTop);
+        ctx.quadraticCurveTo(flagPoleX + 10, flagPoleTop + 3 + wave, flagPoleX + 18, flagPoleTop + 2 + wave2);
+        ctx.lineTo(flagPoleX + 17, flagPoleTop + 7 + wave2);
+        ctx.quadraticCurveTo(flagPoleX + 9, flagPoleTop + 8 + wave, flagPoleX + 1.5, flagPoleTop + 14);
+        ctx.closePath();
+        ctx.stroke();
+        // Small star emblem on flag
+        ctx.fillStyle = "#FFE870";
+        ctx.globalAlpha = 0.8;
+        const embX = flagPoleX + 8;
+        const embY = flagPoleTop + 5.5 + wave * 0.5;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const a = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+          const px = embX + Math.cos(a) * 2.5;
+          const py = embY + Math.sin(a) * 2.5;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
       }
 
-      // Node shadow
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      // Node shadow (deeper, offset)
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
       ctx.beginPath();
-      ctx.arc(x + 2, y + 2, size + 2, 0, Math.PI * 2);
+      ctx.arc(x + 2, y + 3, size + 2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ring
-      const ringGrad = ctx.createRadialGradient(x, y, size - 4, x, y, size + 1);
+      // Outer decorative ring (metallic beveled)
+      const outerRing = ctx.createRadialGradient(x - 3, y - 3, size - 6, x, y, size + 2);
       if (isUnlocked) {
-        ringGrad.addColorStop(0, stars > 0 ? "#5a7040" : "#6a5a4a");
-        ringGrad.addColorStop(1, stars > 0 ? "#3a5020" : "#4a3a2a");
+        if (stars > 0) {
+          outerRing.addColorStop(0, "#8AA858");
+          outerRing.addColorStop(0.5, "#5A7838");
+          outerRing.addColorStop(1, "#3A5020");
+        } else {
+          outerRing.addColorStop(0, "#8A7A60");
+          outerRing.addColorStop(0.5, "#6A5A48");
+          outerRing.addColorStop(1, "#4A3A28");
+        }
       } else {
-        ringGrad.addColorStop(0, "#3a3a3a");
-        ringGrad.addColorStop(1, "#2a2a2a");
+        outerRing.addColorStop(0, "#4A4A4A");
+        outerRing.addColorStop(0.5, "#3A3A3A");
+        outerRing.addColorStop(1, "#2A2A2A");
       }
       ctx.beginPath();
       ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fillStyle = ringGrad;
+      ctx.fillStyle = outerRing;
       ctx.fill();
+
+      // Metallic border strokes (double ring for bevel effect)
       ctx.strokeStyle = isSelected
-        ? "#ffd700"
+        ? "#FFE060"
         : isHovered
-          ? "#ffcc00"
+          ? "#FFD040"
           : isUnlocked
-            ? "#8b7355"
-            : "#4a4a4a";
-      ctx.lineWidth = isSelected ? 4 : 2;
+            ? stars > 0 ? "#A0B868" : "#9A8A68"
+            : "#505050";
+      ctx.lineWidth = isSelected ? 3.5 : 2.5;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.stroke();
+      // Inner bright edge (bevel highlight)
+      ctx.strokeStyle = isUnlocked
+        ? stars > 0 ? "rgba(180,220,120,0.3)" : "rgba(180,160,120,0.25)"
+        : "rgba(100,100,100,0.15)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, size - 2, 0, Math.PI * 2);
+      ctx.stroke();
+      // Outer dark edge (bevel shadow)
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, size + 0.5, 0, Math.PI * 2);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Inner circle
+      // Ornamental notches (8 evenly spaced around ring)
+      if (isUnlocked) {
+        ctx.fillStyle = isSelected ? "#FFE060" : stars > 0 ? "#90A850" : "#807058";
+        for (let n = 0; n < 8; n++) {
+          const na = (n * Math.PI) / 4;
+          const nx = x + Math.cos(na) * (size - 0.5);
+          const ny = y + Math.sin(na) * (size - 0.5);
+          ctx.beginPath();
+          ctx.arc(nx, ny, isSelected ? 2.5 : 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Inner circle (recessed)
+      const innerGrad = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, size - 5);
+      if (isUnlocked) {
+        if (stars > 0) {
+          innerGrad.addColorStop(0, "#5A7838");
+          innerGrad.addColorStop(1, "#3A5020");
+        } else {
+          innerGrad.addColorStop(0, "#6A5A48");
+          innerGrad.addColorStop(1, "#4A3A28");
+        }
+      } else {
+        innerGrad.addColorStop(0, "#333028");
+        innerGrad.addColorStop(1, "#201D18");
+      }
       ctx.beginPath();
       ctx.arc(x, y, size - 6, 0, Math.PI * 2);
-      ctx.fillStyle = isUnlocked
-        ? stars > 0
-          ? "#4a6030"
-          : "#5a4a3a"
-        : "#2a2520";
+      ctx.fillStyle = innerGrad;
       ctx.fill();
+      // Inner recess shadow ring
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, size - 6, 0, Math.PI * 2);
+      ctx.stroke();
 
       // Region icon
       if (isUnlocked) {
-        ctx.fillStyle =
-          level.region === "grassland"
-            ? "#6abe30"
-            : level.region === "swamp"
-              ? "#5f9ea0"
-              : level.region === "desert"
-                ? "#e8a838"
-                : level.region === "winter"
-                  ? "#88c8e8"
-                  : level.region === "volcanic"
-                    ? "#e84848"
-                    : "#e84848";
-        ctx.globalAlpha = 0.8;
-        if (level.region === "grassland") {
-          ctx.beginPath();
-          ctx.moveTo(x, y - 8);
-          ctx.lineTo(x + 7, y + 5);
-          ctx.lineTo(x - 7, y + 5);
-          ctx.closePath();
-          ctx.fill();
-        } else if (level.region === "swamp") {
-          ctx.beginPath();
-          ctx.ellipse(x, y, 6, 8, 0, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (level.region === "desert") {
-          ctx.beginPath();
-          ctx.moveTo(x, y - 7);
-          ctx.lineTo(x + 8, y + 5);
-          ctx.lineTo(x - 8, y + 5);
-          ctx.closePath();
-          ctx.fill();
-        } else if (level.region === "winter") {
-          for (let i = 0; i < 6; i++) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate((i * Math.PI) / 3);
-            ctx.fillRect(-1.5, -8, 3, 16);
-            ctx.restore();
-          }
-        } else if (level.region === "volcanic") {
-          ctx.beginPath();
-          ctx.moveTo(x, y - 8);
-          ctx.lineTo(x + 5, y + 5);
-          ctx.lineTo(x - 5, y + 5);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          ctx.beginPath();
-          ctx.moveTo(x, y - 8);
-          ctx.quadraticCurveTo(x + 7, y - 2, x + 5, y + 5);
-          ctx.quadraticCurveTo(x, y + 2, x - 5, y + 5);
-          ctx.quadraticCurveTo(x - 7, y - 2, x, y - 8);
-          ctx.fill();
-        }
+        // Dark vignette behind icon for consistent contrast
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath();
+        ctx.arc(x, y, size - 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // All icons drawn centered at origin via translate
+        ctx.save();
+        ctx.translate(x, y);
         ctx.globalAlpha = 1;
 
-        // Difficulty dots
-        for (let d = 0; d < 3; d++) {
+        if (level.region === "grassland") {
+          // --- Centered Oak Tree ---
+          // Trunk
+          ctx.fillStyle = "#A07040";
           ctx.beginPath();
-          ctx.arc(x - 6 + d * 6, y + size + 6, 2.5, 0, Math.PI * 2);
-          ctx.fillStyle =
-            d < level.difficulty
-              ? level.difficulty === 1
-                ? "#4ade80"
-                : level.difficulty === 2
-                  ? "#fbbf24"
-                  : "#ef4444"
-              : "#4a4a4a";
+          ctx.moveTo(-2, 2); ctx.lineTo(-1.5, 10); ctx.lineTo(1.5, 10); ctx.lineTo(2, 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#C89858";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+          // Trunk highlight
+          ctx.fillStyle = "#C89050";
+          ctx.fillRect(-0.3, 2.5, 1.2, 6);
+          // Canopy - layered bright circles
+          ctx.fillStyle = "#38A838";
+          ctx.beginPath(); ctx.arc(0, -1, 9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#48C848";
+          ctx.beginPath(); ctx.arc(-3, -3, 6.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(3.5, -1, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#60E060";
+          ctx.beginPath(); ctx.arc(-1, -4.5, 5.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(2, -3.5, 4.5, 0, Math.PI * 2); ctx.fill();
+          // Bright highlight spots
+          ctx.fillStyle = "#90FF80";
+          ctx.beginPath(); ctx.arc(-2, -6, 2.8, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#80FF70";
+          ctx.beginPath(); ctx.arc(3, -5, 2, 0, Math.PI * 2); ctx.fill();
+          // Canopy edge glow
+          ctx.strokeStyle = "#80FF68";
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath(); ctx.arc(0, -1, 9, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = 1;
+
+        } else if (level.region === "swamp") {
+          // --- Centered Poison Mushroom ---
+          // Murky water puddle
+          ctx.fillStyle = "#2a6858";
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath(); ctx.ellipse(0, 8, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          // Stem
+          ctx.fillStyle = "#D8C8B0";
+          ctx.beginPath();
+          ctx.moveTo(-2.5, 3); ctx.lineTo(-2, -2); ctx.lineTo(2, -2); ctx.lineTo(2.5, 3);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#E8D8C0";
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+          // Stem highlight
+          ctx.fillStyle = "#F0E0D0";
+          ctx.fillRect(-0.5, -1, 1, 4);
+          // Cap - large centered dome
+          ctx.fillStyle = "#C040E8";
+          ctx.beginPath(); ctx.ellipse(0, -2.6, 10, 8, 0, Math.PI, 0); ctx.fill();
+          // Cap shading - darker underside
+          ctx.fillStyle = "#A030C8";
+          ctx.beginPath(); ctx.ellipse(0, -2.5, 9, 2.5, 0, 0, Math.PI); ctx.fill();
+          // Cap bright spots
+          ctx.fillStyle = "#E8A0FF";
+          ctx.beginPath(); ctx.arc(-4, -6, 1.8, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(2, -7, 1.3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(5, -4.5, 1, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#F0C8FF";
+          ctx.beginPath(); ctx.arc(-1, -8, 1, 0, Math.PI * 2); ctx.fill();
+          // Cap outline for pop
+          ctx.strokeStyle = "#D868FF";
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.ellipse(0, -3.5, 10, 7, 0, Math.PI, 0); ctx.stroke();
+          // Glowing bubbles
+          ctx.fillStyle = "#80FFD0";
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath(); ctx.arc(-6, 5, 1.6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#70FFBB";
+          ctx.beginPath(); ctx.arc(5, 6, 1.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#90FFE0";
+          ctx.beginPath(); ctx.arc(-2, 7, 0.8, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          // Toxic drip from cap
+          ctx.fillStyle = "#B050E0";
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath(); ctx.ellipse(-5, -0.5, 1, 2, 0.2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(6, 0, 0.8, 1.5, -0.2, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+
+        } else if (level.region === "desert") {
+          // --- Centered Sun Icon ---
+          // Outer glow
+          ctx.fillStyle = "#FFD700";
+          ctx.globalAlpha = 0.2;
+          ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          // Sun rays (8 bold rays)
+          ctx.strokeStyle = "#FFB800";
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = "round";
+          for (let r = 0; r < 8; r++) {
+            const a = (r * Math.PI) / 4 + Math.PI / 8;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
+            ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
+            ctx.stroke();
+          }
+          // Ray tips (bright flare)
+          ctx.strokeStyle = "#FFD860";
+          ctx.lineWidth = 1.2;
+          for (let r = 0; r < 8; r++) {
+            const a = (r * Math.PI) / 4 + Math.PI / 8;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
+            ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+            ctx.stroke();
+          }
+          // Sun body
+          ctx.fillStyle = "#FFAA00";
+          ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.fill();
+          // Sun body gradient ring
+          ctx.fillStyle = "#FFC830";
+          ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+          // Bright core
+          ctx.fillStyle = "#FFE870";
+          ctx.beginPath(); ctx.arc(0, -0.5, 3.5, 0, Math.PI * 2); ctx.fill();
+          // White-hot center
+          ctx.fillStyle = "#FFF8D0";
+          ctx.beginPath(); ctx.arc(0, -1, 2, 0, Math.PI * 2); ctx.fill();
+          // Subtle face-like warmth (two small eye dots for character)
+          ctx.fillStyle = "#CC8800";
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath(); ctx.arc(-1.5, -0.5, 0.6, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(1.5, -0.5, 0.6, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+
+        } else if (level.region === "winter") {
+          // --- Centered Crystal Snowflake ---
+          // Outer glow
+          ctx.fillStyle = "#88d0ff";
+          ctx.globalAlpha = 0.25;
+          ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          // Six main branches
+          for (let i = 0; i < 6; i++) {
+            ctx.save();
+            ctx.rotate((i * Math.PI) / 3);
+            // Main branch - white
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(-1.2, 0); ctx.lineTo(-0.5, -9.5); ctx.lineTo(0.5, -9.5); ctx.lineTo(1.2, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#a0d8ff";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            // Diamond tip
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(0, -12); ctx.lineTo(-2, -9.5); ctx.lineTo(0, -8); ctx.lineTo(2, -9.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#b0e0ff";
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            // Lower sub-branches
+            ctx.fillStyle = "#d0f0ff";
+            ctx.beginPath();
+            ctx.moveTo(0, -4); ctx.lineTo(-4.5, -7); ctx.lineTo(-3.5, -5.5); ctx.lineTo(0, -3.2);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(0, -4); ctx.lineTo(4.5, -7); ctx.lineTo(3.5, -5.5); ctx.lineTo(0, -3.2);
+            ctx.closePath(); ctx.fill();
+            // Upper sub-branches
+            ctx.fillStyle = "#e0f4ff";
+            ctx.beginPath();
+            ctx.moveTo(0, -6.5); ctx.lineTo(-3, -8.5); ctx.lineTo(-2.2, -7.5); ctx.lineTo(0, -6);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(0, -6.5); ctx.lineTo(3, -8.5); ctx.lineTo(2.2, -7.5); ctx.lineTo(0, -6);
+            ctx.closePath(); ctx.fill();
+            ctx.restore();
+          }
+          // Center crystal
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#d8f0ff";
+          ctx.beginPath(); ctx.arc(0, 0, 1.8, 0, Math.PI * 2); ctx.fill();
+
+        } else if (level.region === "volcanic") {
+          // --- Centered Flame Icon ---
+          // Outer fire glow
+          ctx.fillStyle = "#ff4400";
+          ctx.globalAlpha = 0.25;
+          ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+          // Main flame body (outer - dark red)
+          ctx.fillStyle = "#DD2200";
+          ctx.beginPath();
+          ctx.moveTo(0, -12);
+          ctx.quadraticCurveTo(5, -8, 7, -3);
+          ctx.quadraticCurveTo(9, 2, 6, 6);
+          ctx.quadraticCurveTo(3, 10, 0, 10);
+          ctx.quadraticCurveTo(-3, 10, -6, 6);
+          ctx.quadraticCurveTo(-9, 2, -7, -3);
+          ctx.quadraticCurveTo(-5, -8, 0, -12);
+          ctx.fill();
+          // Flame left tendril
+          ctx.fillStyle = "#EE4400";
+          ctx.beginPath();
+          ctx.moveTo(-3, -5);
+          ctx.quadraticCurveTo(-7, -9, -4, -11);
+          ctx.quadraticCurveTo(-2, -8, -1, -6);
+          ctx.closePath();
+          ctx.fill();
+          // Flame right tendril
+          ctx.beginPath();
+          ctx.moveTo(3, -4);
+          ctx.quadraticCurveTo(6, -7, 5, -10);
+          ctx.quadraticCurveTo(3, -7, 2, -5);
+          ctx.closePath();
+          ctx.fill();
+          // Middle layer (orange)
+          ctx.fillStyle = "#FF6600";
+          ctx.beginPath();
+          ctx.moveTo(0, -9);
+          ctx.quadraticCurveTo(3.5, -5, 5, -1);
+          ctx.quadraticCurveTo(6, 3, 4, 6);
+          ctx.quadraticCurveTo(2, 9, 0, 9);
+          ctx.quadraticCurveTo(-2, 9, -4, 6);
+          ctx.quadraticCurveTo(-6, 3, -5, -1);
+          ctx.quadraticCurveTo(-3.5, -5, 0, -9);
+          ctx.fill();
+          // Inner layer (bright orange-yellow)
+          ctx.fillStyle = "#FFAA00";
+          ctx.beginPath();
+          ctx.moveTo(0, -6);
+          ctx.quadraticCurveTo(2.5, -3, 3, 1);
+          ctx.quadraticCurveTo(3.5, 5, 0, 7);
+          ctx.quadraticCurveTo(-3.5, 5, -3, 1);
+          ctx.quadraticCurveTo(-2.5, -3, 0, -6);
+          ctx.fill();
+          // Core (bright yellow)
+          ctx.fillStyle = "#FFD800";
+          ctx.beginPath();
+          ctx.moveTo(0, -3);
+          ctx.quadraticCurveTo(1.5, -1, 1.8, 2);
+          ctx.quadraticCurveTo(2, 5, 0, 6);
+          ctx.quadraticCurveTo(-2, 5, -1.8, 2);
+          ctx.quadraticCurveTo(-1.5, -1, 0, -3);
+          ctx.fill();
+          // White-hot center
+          ctx.fillStyle = "#FFF4B0";
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(0.8, 1, 0.8, 3);
+          ctx.quadraticCurveTo(0.5, 5, 0, 5);
+          ctx.quadraticCurveTo(-0.5, 5, -0.8, 3);
+          ctx.quadraticCurveTo(-0.8, 1, 0, 0);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          // Animated spark particles
+          const bob = Math.sin(time * 4) * 1.5;
+          ctx.fillStyle = "#FFDD00";
+          ctx.beginPath(); ctx.arc(-3, -10 + bob, 1.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#FF8800";
+          ctx.beginPath(); ctx.arc(3.5, -9 - bob * 0.6, 0.9, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = "#FFCC00";
+          ctx.beginPath(); ctx.arc(0.5, -12 + bob * 0.4, 0.7, 0, Math.PI * 2); ctx.fill();
+
+        } else {
+          // Fallback - bright gem
+          ctx.fillStyle = "#FFB840";
+          ctx.beginPath();
+          ctx.moveTo(0, -8); ctx.lineTo(6, 0); ctx.lineTo(0, 8); ctx.lineTo(-6, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#FFD870";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = "#FFE880";
+          ctx.beginPath();
+          ctx.moveTo(0, -5); ctx.lineTo(3, 0); ctx.lineTo(0, 5); ctx.lineTo(-3, 0);
+          ctx.closePath();
           ctx.fill();
         }
 
-        // Stars
+        ctx.restore();
+        ctx.globalAlpha = 1;
+
+        // Difficulty skulls/pips
+        const diffColors = level.difficulty === 1 ? ["#50E080", "#30A858"] : level.difficulty === 2 ? ["#FFD040", "#D0A020"] : ["#FF5050", "#C83030"];
+        for (let d = 0; d < 3; d++) {
+          const dx = x - 7 + d * 7;
+          const dy = y + size + 7;
+          if (d < level.difficulty) {
+            // Glow
+            ctx.fillStyle = diffColors[0];
+            ctx.globalAlpha = 0.25;
+            ctx.beginPath(); ctx.arc(dx, dy, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Filled pip
+            ctx.fillStyle = diffColors[0];
+            ctx.beginPath(); ctx.arc(dx, dy, 3, 0, Math.PI * 2); ctx.fill();
+            // Highlight
+            ctx.fillStyle = "#ffffff";
+            ctx.globalAlpha = 0.4;
+            ctx.beginPath(); ctx.arc(dx - 0.5, dy - 0.8, 1.2, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Ring
+            ctx.strokeStyle = diffColors[1];
+            ctx.lineWidth = 0.8;
+            ctx.beginPath(); ctx.arc(dx, dy, 3, 0, Math.PI * 2); ctx.stroke();
+          } else {
+            // Empty pip
+            ctx.fillStyle = "#2A2520";
+            ctx.beginPath(); ctx.arc(dx, dy, 2.5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = "#4a4540";
+            ctx.lineWidth = 0.6;
+            ctx.beginPath(); ctx.arc(dx, dy, 2.5, 0, Math.PI * 2); ctx.stroke();
+          }
+        }
+
+        // Stars (proper 10-point stars with inner/outer radius)
         for (let s = 0; s < 3; s++) {
-          const sx = x - 10 + s * 10;
-          const sy = y + size + 16;
+          const sx = x - 11 + s * 11;
+          const sy = y + size + 18;
+          const earned = stars > s;
+          const outerR = 5.5;
+          const innerR = 2.2;
+
+          // Star glow for earned
+          if (earned) {
+            ctx.fillStyle = "#ffd700";
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath(); ctx.arc(sx, sy, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+          }
+          // Star shape (10 points: alternating outer/inner)
           ctx.beginPath();
-          for (let i = 0; i < 5; i++) {
-            const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
-            const px = sx + Math.cos(angle) * 4.5;
-            const py = sy + Math.sin(angle) * 4.5;
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
+          for (let i = 0; i < 10; i++) {
+            const angle = (i * Math.PI) / 5 - Math.PI / 2;
+            const r = i % 2 === 0 ? outerR : innerR;
+            const px = sx + Math.cos(angle) * r;
+            const py = sy + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
           }
           ctx.closePath();
-          ctx.fillStyle = stars > s ? "#ffd700" : "#3a3020";
-          ctx.fill();
+          if (earned) {
+            ctx.fillStyle = "#FFD700";
+            ctx.fill();
+            // Star highlight
+            ctx.fillStyle = "#FFF0A0";
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            for (let i = 0; i < 10; i++) {
+              const angle = (i * Math.PI) / 5 - Math.PI / 2;
+              const r = (i % 2 === 0 ? outerR : innerR) * 0.55;
+              const px = sx - 0.5 + Math.cos(angle) * r;
+              const py = sy - 0.5 + Math.sin(angle) * r;
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Gold outline
+            ctx.strokeStyle = "#B89A10";
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            for (let i = 0; i < 10; i++) {
+              const angle = (i * Math.PI) / 5 - Math.PI / 2;
+              const r = i % 2 === 0 ? outerR : innerR;
+              const px = sx + Math.cos(angle) * r;
+              const py = sy + Math.sin(angle) * r;
+              if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.stroke();
+          } else {
+            // Unearned: dark with subtle outline
+            ctx.fillStyle = "#2A2520";
+            ctx.fill();
+            ctx.strokeStyle = "#4a4030";
+            ctx.lineWidth = 0.6;
+            ctx.stroke();
+          }
         }
       } else {
-        // Lock icon
-        ctx.fillStyle = "#5a5a5a";
-        ctx.fillRect(x - 5, y, 10, 8);
-        ctx.strokeStyle = "#5a5a5a";
-        ctx.lineWidth = 2.5;
+        // Lock icon (detailed padlock)
+        ctx.save();
+        ctx.translate(x, y);
+        // Lock body shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.beginPath(); ctx.roundRect(-6, 0.5, 12, 10, 2); ctx.fill();
+        // Lock body
+        const lockGrad = ctx.createLinearGradient(-6, 0, 6, 0);
+        lockGrad.addColorStop(0, "#5A5858");
+        lockGrad.addColorStop(0.4, "#787878");
+        lockGrad.addColorStop(0.6, "#686868");
+        lockGrad.addColorStop(1, "#4A4848");
+        ctx.fillStyle = lockGrad;
+        ctx.beginPath(); ctx.roundRect(-6, -1, 12, 10, 2); ctx.fill();
+        // Lock body border
+        ctx.strokeStyle = "#888888";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.roundRect(-6, -1, 12, 10, 2); ctx.stroke();
+        // Lock body highlight
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.beginPath(); ctx.roundRect(-5, -0.5, 10, 3, [2, 2, 0, 0]); ctx.fill();
+        // Shackle
+        ctx.strokeStyle = "#808080";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.arc(x, y - 2, 4, Math.PI, 0);
+        ctx.arc(0, -2, 5, Math.PI, 0);
         ctx.stroke();
+        // Shackle highlight
+        ctx.strokeStyle = "#A0A0A0";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, -2, 4, Math.PI + 0.3, -0.3);
+        ctx.stroke();
+        // Keyhole
+        ctx.fillStyle = "#2A2828";
+        ctx.beginPath(); ctx.arc(0, 3, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(-1, 3.5, 2, 3);
+        // Keyhole highlight
+        ctx.fillStyle = "#404040";
+        ctx.beginPath(); ctx.arc(0, 2.5, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
       }
 
     });
@@ -9657,24 +4298,183 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       }
     }
 
-    // Fog edges
-    const leftFog = ctx.createLinearGradient(0, 0, 50, 0);
-    leftFog.addColorStop(0, "rgba(25, 15, 5, 0.95)");
-    leftFog.addColorStop(1, "rgba(25, 15, 5, 0)");
+    // === ATMOSPHERIC CLOUD LAYER ===
+    ctx.save();
+    for (let c = 0; c < 12; c++) {
+      const cloudBaseX = seededRandom(c * 37) * width + Math.sin(time * 0.15 + c * 2) * 40;
+      const cloudBaseY = 30 + seededRandom(c * 37 + 1) * (height * 0.25);
+      const cloudW = 60 + seededRandom(c * 37 + 2) * 80;
+      const cloudH = 12 + seededRandom(c * 37 + 3) * 15;
+
+      // Determine cloud color based on region position
+      let cloudTint = "rgba(80,70,60,";
+      if (cloudBaseX > 1440) cloudTint = "rgba(60,30,20,";
+      else if (cloudBaseX > 1080) cloudTint = "rgba(140,160,180,";
+      else if (cloudBaseX > 720) cloudTint = "rgba(160,140,100,";
+      else if (cloudBaseX > 380) cloudTint = "rgba(80,100,80,";
+
+      ctx.globalAlpha = 0.06 + seededRandom(c * 37 + 4) * 0.06;
+      ctx.fillStyle = cloudTint + "1)";
+
+      // Cloud is several overlapping ellipses
+      for (let blob = 0; blob < 4; blob++) {
+        const blobX = cloudBaseX + (blob - 1.5) * cloudW * 0.25;
+        const blobY = cloudBaseY + Math.sin(blob * 1.5) * cloudH * 0.3;
+        const blobW = cloudW * (0.3 + seededRandom(c + blob * 7) * 0.25);
+        const blobH = cloudH * (0.6 + seededRandom(c + blob * 11) * 0.4);
+        ctx.beginPath();
+        ctx.ellipse(blobX, blobY, blobW, blobH, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // === GOD RAYS / LIGHT BEAMS ===
+    ctx.save();
+    for (let ray = 0; ray < 5; ray++) {
+      const rayX = 120 + ray * (width / 5) + Math.sin(time * 0.3 + ray * 1.5) * 30;
+      const rayW = 20 + seededRandom(ray * 41) * 40;
+      const rayAlpha = 0.02 + Math.sin(time * 0.5 + ray * 0.9) * 0.015;
+
+      // Determine ray color based on region
+      let rayColor = "255,240,200";
+      if (rayX > 1440) rayColor = "255,120,60";
+      else if (rayX > 1080) rayColor = "180,210,255";
+      else if (rayX > 720) rayColor = "255,220,150";
+      else if (rayX > 380) rayColor = "150,220,130";
+
+      const rayGrad = ctx.createLinearGradient(rayX, 0, rayX + rayW * 1.5, height);
+      rayGrad.addColorStop(0, `rgba(${rayColor},${rayAlpha + 0.03})`);
+      rayGrad.addColorStop(0.3, `rgba(${rayColor},${rayAlpha})`);
+      rayGrad.addColorStop(0.7, `rgba(${rayColor},${rayAlpha * 0.5})`);
+      rayGrad.addColorStop(1, `rgba(${rayColor},0)`);
+      ctx.fillStyle = rayGrad;
+      ctx.beginPath();
+      ctx.moveTo(rayX, 0);
+      ctx.lineTo(rayX + rayW, 0);
+      ctx.lineTo(rayX + rayW * 2, height);
+      ctx.lineTo(rayX + rayW * 0.5, height);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // === FLYING CREATURES ===
+    // Birds in grassland/swamp, bats in volcanic
+    ctx.save();
+    for (let b = 0; b < 8; b++) {
+      const birdBaseX = seededRandom(b * 53) * width;
+      const birdBaseY = 15 + seededRandom(b * 53 + 1) * 35;
+      const birdX = birdBaseX + Math.sin(time * 0.8 + b * 2.3) * 60 + time * (4 + seededRandom(b) * 3);
+      const birdY = getY(birdBaseY) + Math.sin(time * 1.5 + b * 1.7) * 8;
+      const wrappedX = ((birdX % (width + 100)) + width + 100) % (width + 100) - 50;
+
+      const wingFlap = Math.sin(time * 8 + b * 3) * 0.6;
+      const wingSpan = 4 + seededRandom(b * 53 + 2) * 3;
+
+      // Color based on region
+      let birdColor = "#2a2a20";
+      if (wrappedX > 1440) birdColor = "#1a0808"; // bats
+      else if (wrappedX > 1080) birdColor = "#4a5a6a";
+      else if (wrappedX > 720) birdColor = "#5a4a30";
+
+      ctx.strokeStyle = birdColor;
+      ctx.lineWidth = 1.2;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(wrappedX - wingSpan, birdY + wingFlap * wingSpan);
+      ctx.quadraticCurveTo(wrappedX - wingSpan * 0.3, birdY - Math.abs(wingFlap) * 2, wrappedX, birdY);
+      ctx.quadraticCurveTo(wrappedX + wingSpan * 0.3, birdY - Math.abs(wingFlap) * 2, wrappedX + wingSpan, birdY + wingFlap * wingSpan);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // === ANIMATED DUST MOTES / PARTICLES ===
+    ctx.save();
+    for (let d = 0; d < 30; d++) {
+      const dustX = seededRandom(d * 67) * width + Math.sin(time * 0.4 + d * 1.3) * 20;
+      const dustY = seededRandom(d * 67 + 1) * height + Math.cos(time * 0.3 + d * 0.9) * 15;
+      const dustSize = 0.8 + seededRandom(d * 67 + 2) * 1.5;
+      const dustAlpha = 0.15 + Math.sin(time * 2 + d * 0.7) * 0.1;
+
+      // Color by region
+      let dustColor = "200,180,140";
+      if (dustX > 1440) dustColor = "255,120,50";
+      else if (dustX > 1080) dustColor = "200,220,240";
+      else if (dustX > 720) dustColor = "220,200,150";
+      else if (dustX > 380) dustColor = "120,200,120";
+
+      ctx.fillStyle = `rgba(${dustColor},${dustAlpha})`;
+      ctx.beginPath();
+      ctx.arc(dustX, dustY, dustSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // === ENHANCED FOG EDGES ===
+    // Left fog - deep green tint for grassland
+    const leftFog = ctx.createLinearGradient(0, 0, 70, 0);
+    leftFog.addColorStop(0, "rgba(15, 20, 8, 0.98)");
+    leftFog.addColorStop(0.4, "rgba(20, 25, 10, 0.6)");
+    leftFog.addColorStop(0.7, "rgba(25, 30, 12, 0.25)");
+    leftFog.addColorStop(1, "rgba(25, 30, 12, 0)");
     ctx.fillStyle = leftFog;
-    ctx.fillRect(0, 0, 50, height);
+    ctx.fillRect(0, 0, 70, height);
 
-    const rightFog = ctx.createLinearGradient(width - 50, 0, width, 0);
-    rightFog.addColorStop(0, "rgba(25, 15, 5, 0)");
-    rightFog.addColorStop(1, "rgba(25, 15, 5, 0.95)");
+    // Right fog - red/volcanic tint
+    const rightFog = ctx.createLinearGradient(width - 70, 0, width, 0);
+    rightFog.addColorStop(0, "rgba(30, 10, 5, 0)");
+    rightFog.addColorStop(0.3, "rgba(35, 12, 5, 0.25)");
+    rightFog.addColorStop(0.6, "rgba(40, 15, 8, 0.6)");
+    rightFog.addColorStop(1, "rgba(30, 8, 3, 0.98)");
     ctx.fillStyle = rightFog;
-    ctx.fillRect(width - 50, 0, 50, height);
+    ctx.fillRect(width - 70, 0, 70, height);
 
-    const bottomFog = ctx.createLinearGradient(0, height - 35, 0, height);
-    bottomFog.addColorStop(0, "rgba(25, 15, 5, 0)");
-    bottomFog.addColorStop(1, "rgba(25, 15, 5, 0.9)");
+    // Top fog - dark atmospheric
+    const topFog = ctx.createLinearGradient(0, 0, 0, 45);
+    topFog.addColorStop(0, "rgba(10, 5, 2, 0.85)");
+    topFog.addColorStop(0.5, "rgba(15, 8, 4, 0.35)");
+    topFog.addColorStop(1, "rgba(20, 10, 5, 0)");
+    ctx.fillStyle = topFog;
+    ctx.fillRect(0, 0, width, 45);
+
+    // Bottom fog - deep ground shadow
+    const bottomFog = ctx.createLinearGradient(0, height - 50, 0, height);
+    bottomFog.addColorStop(0, "rgba(15, 8, 3, 0)");
+    bottomFog.addColorStop(0.3, "rgba(15, 8, 3, 0.2)");
+    bottomFog.addColorStop(0.6, "rgba(12, 6, 2, 0.55)");
+    bottomFog.addColorStop(1, "rgba(10, 5, 2, 0.95)");
     ctx.fillStyle = bottomFog;
-    ctx.fillRect(0, height - 35, width, 35);
+    ctx.fillRect(0, height - 50, width, 50);
+
+    // Corner darkening for frame effect
+    const cornerSize = 120;
+    // Top-left
+    const tlGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, cornerSize);
+    tlGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+    tlGrad.addColorStop(1, "rgba(5,3,1,0)");
+    ctx.fillStyle = tlGrad;
+    ctx.fillRect(0, 0, cornerSize, cornerSize);
+    // Top-right
+    const trGrad = ctx.createRadialGradient(width, 0, 0, width, 0, cornerSize);
+    trGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+    trGrad.addColorStop(1, "rgba(5,3,1,0)");
+    ctx.fillStyle = trGrad;
+    ctx.fillRect(width - cornerSize, 0, cornerSize, cornerSize);
+    // Bottom-left
+    const blGrad = ctx.createRadialGradient(0, height, 0, 0, height, cornerSize);
+    blGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+    blGrad.addColorStop(1, "rgba(5,3,1,0)");
+    ctx.fillStyle = blGrad;
+    ctx.fillRect(0, height - cornerSize, cornerSize, cornerSize);
+    // Bottom-right
+    const brGrad = ctx.createRadialGradient(width, height, 0, width, height, cornerSize);
+    brGrad.addColorStop(0, "rgba(5,3,1,0.5)");
+    brGrad.addColorStop(1, "rgba(5,3,1,0)");
+    ctx.fillStyle = brGrad;
+    ctx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
   }, [
     mapHeight,
     hoveredLevel,
@@ -9804,22 +4604,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     setTimeout(() => setHasDragged(false), 50);
   };
 
-  const heroOptions: HeroType[] = [
-    "tiger",
-    "tenor",
-    "mathey",
-    "rocky",
-    "scott",
-    "captain",
-    "engineer",
-  ];
-  const spellOptions: SpellType[] = [
-    "fireball",
-    "lightning",
-    "freeze",
-    "payday",
-    "reinforcements",
-  ];
   const canStart = selectedLevel && selectedHero && selectedSpells.length === 3;
   const currentLevel = selectedLevel ? getLevelById(selectedLevel) : null;
   const waveCount = selectedLevel ? getWaveCount(selectedLevel) : 0;
@@ -10498,463 +5282,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     </div>
                   </div>
                   {/* --- Hero Panel --- */}
-                  <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(38,32,24,0.97) 0%, rgba(24,20,14,0.99) 100%)',
-                      border: '1.5px solid rgba(180,140,60,0.4)',
-                      boxShadow: 'inset 0 0 24px rgba(180,140,60,0.05), 0 4px 24px rgba(0,0,0,0.5)',
-                    }}>
-                    {/* Inner border glow */}
-                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
-                    {/* Header */}
-                    <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative"
-                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Shield size={11} className="text-amber-400 sm:w-[13px] sm:h-[13px]" />
-                        <span className="text-[8px] sm:text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                          Select Champion
-                        </span>
-                      </div>
-                      <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
-                    </div>
-                    <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
-                      <div className="grid-cols-4 grid sm:flex gap-1 sm:gap-1.5 mb-1.5 sm:mb-2 w-full">
-                        {heroOptions.map((heroType) => {
-                          const hero = HERO_DATA[heroType];
-                          const isSelected = selectedHero === heroType;
-                          return (
-                            <button
-                              key={heroType}
-                              onClick={() => setSelectedHero(heroType)}
-                              onMouseEnter={() => setHoveredHero(heroType)}
-                              onMouseLeave={() => setHoveredHero(null)}
-                              className={`relative flex justify-center w-full p-0.5 sm:p-1 pt-1 sm:pt-1.5 pb-0.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
-                                ? "scale-105 sm:scale-110 z-10"
-                                : "hover:scale-105 hover:brightness-110"
-                                }`}
-                              style={{
-                                background: isSelected
-                                  ? `linear-gradient(135deg, ${hero.color}35, ${hero.color}15)`
-                                  : 'linear-gradient(135deg, rgba(38, 34, 30, 0.95), rgba(24, 20, 16, 0.95))',
-                                border: `1.5px solid ${isSelected ? hero.color : 'rgba(100, 90, 70, 0.25)'}`,
-                                boxShadow: isSelected
-                                  ? `0 0 14px ${hero.color}30, inset 0 0 12px ${hero.color}10, inset 0 1px 0 rgba(255,255,255,0.08)`
-                                  : 'inset 0 1px 0 rgba(255,255,255,0.04)',
-                                outline: isSelected ? `2px solid ${hero.color}60` : 'none',
-                                outlineOffset: '1px',
-                              }}
-                            >
-                              <div className="scale-75 sm:scale-100">
-                                <HeroSprite
-                                  type={heroType}
-                                  size={36}
-                                  color={hero.color}
-                                />
-                              </div>
-                              {isSelected && (
-                                <div className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-amber-500 rounded-full flex items-center justify-center border sm:border-2 border-stone-900 text-[6px] sm:text-[8px] text-white font-bold"
-                                  style={{ boxShadow: '0 0 6px rgba(245,158,11,0.5)' }}>
-                                  ✓
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {selectedHero ? (
-                        <div className="hidden sm:block rounded-lg p-1.5 relative"
-                          style={{
-                            background: 'linear-gradient(180deg, rgba(28,24,18,0.8), rgba(20,16,12,0.9))',
-                            border: '1px solid rgba(120,100,60,0.2)',
-                          }}>
-                          {/* Hero name/icon + stats — all on one row */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-[11px] font-bold text-amber-200 whitespace-nowrap">
-                                {HERO_DATA[selectedHero].name}
-                              </span>
-                              <span className="text-sm">
-                                {HERO_DATA[selectedHero].icon}
-                              </span>
-                            </div>
-                            {/* Stat strip inline */}
-                            <div className="flex items-center gap-0 rounded-md overflow-hidden flex-1 min-w-0"
-                              style={{ border: '1px solid rgba(100,80,50,0.15)' }}>
-                              {[
-                                { icon: <Heart size={8} className="text-red-400" />, value: HERO_DATA[selectedHero].hp, color: "text-red-300", bg: "rgba(127,29,29,0.2)" },
-                                { icon: <Swords size={8} className="text-orange-400" />, value: HERO_DATA[selectedHero].damage, color: "text-orange-300", bg: "rgba(124,45,18,0.2)" },
-                                { icon: <Target size={8} className="text-blue-400" />, value: HERO_DATA[selectedHero].range, color: "text-blue-300", bg: "rgba(30,58,138,0.2)" },
-                                { icon: <Gauge size={8} className="text-green-400" />, value: HERO_DATA[selectedHero].speed, color: "text-green-300", bg: "rgba(20,83,45,0.2)" },
-                                { icon: <Timer size={8} className="text-purple-400" />, value: `${HERO_ABILITY_COOLDOWNS[selectedHero] / 1000}s`, color: "text-purple-300", bg: "rgba(88,28,135,0.2)" },
-                              ].map((stat, idx) => (
-                                <div key={idx} className="flex-1 flex items-center justify-center gap-1 py-1"
-                                  style={{ background: stat.bg, borderRight: idx < 4 ? '1px solid rgba(100,80,50,0.1)' : 'none' }}>
-                                  {stat.icon}
-                                  <span className={`text-[9px] font-bold ${stat.color}`}>{stat.value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Hero description */}
-                          <p className="text-[8px] text-stone-400/70 leading-relaxed mb-1 px-0.5">
-                            {HERO_DATA[selectedHero].description}
-                          </p>
-                          {/* Ability */}
-                          <div className="text-[8px] text-purple-300 flex items-center gap-1 px-1.5 py-1 rounded-md"
-                            style={{ background: 'rgba(88,28,135,0.12)', border: '1px solid rgba(88,28,135,0.15)' }}>
-                            <HeroAbilityIcon type={selectedHero} size={9} />
-                            <span className="font-semibold text-purple-200">
-                              {HERO_DATA[selectedHero].ability}:
-                            </span>
-                            <span className="text-purple-300/80 truncate">
-                              {HERO_DATA[selectedHero].abilityDesc}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex-1 flex items-center justify-center">
-                          <span className="text-[10px] text-amber-600/50 italic">Choose your champion...</span>
-                        </div>
-                      )}
-                    </div>
-                    {hoveredHero && hoveredHero !== selectedHero && (
-                      <div className="absolute bottom-full left-0 mb-2 w-72 rounded-xl z-50"
-                        style={{
-                          background: 'linear-gradient(180deg, rgba(38,32,24,0.99), rgba(24,20,14,0.99))',
-                          border: '1.5px solid rgba(180,140,60,0.5)',
-                          boxShadow: '0 4px 24px rgba(0,0,0,0.6), inset 0 0 20px rgba(180,140,60,0.04)',
-                        }}>
-                        <div className="p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-amber-200 font-bold">
-                              {HERO_DATA[hoveredHero].name}
-                            </span>
-                            <span>{HERO_DATA[hoveredHero].icon}</span>
-                          </div>
-                          <p className="text-[10px] text-stone-400/80 mb-2 leading-relaxed">
-                            {HERO_DATA[hoveredHero].description}
-                          </p>
-                          {/* Compact inline stat strip */}
-                          <div className="flex items-center gap-0 rounded-md overflow-hidden mb-2"
-                            style={{ border: '1px solid rgba(100,80,50,0.2)' }}>
-                            {[
-                              { icon: <Heart size={8} className="text-red-400" />, value: HERO_DATA[hoveredHero].hp, color: "text-red-300", bg: "rgba(127,29,29,0.25)" },
-                              { icon: <Swords size={8} className="text-orange-400" />, value: HERO_DATA[hoveredHero].damage, color: "text-orange-300", bg: "rgba(124,45,18,0.25)" },
-                              { icon: <Target size={8} className="text-blue-400" />, value: HERO_DATA[hoveredHero].range, color: "text-blue-300", bg: "rgba(30,58,138,0.25)" },
-                              { icon: <Gauge size={8} className="text-green-400" />, value: HERO_DATA[hoveredHero].speed, color: "text-green-300", bg: "rgba(20,83,45,0.25)" },
-                              { icon: <Timer size={8} className="text-purple-400" />, value: `${HERO_ABILITY_COOLDOWNS[hoveredHero] / 1000}s`, color: "text-purple-300", bg: "rgba(88,28,135,0.25)" },
-                            ].map((stat, idx) => (
-                              <div key={idx} className="flex-1 flex items-center justify-center gap-1 py-1"
-                                style={{ background: stat.bg, borderRight: idx < 4 ? '1px solid rgba(100,80,50,0.12)' : 'none' }}>
-                                {stat.icon}
-                                <span className={`text-[9px] font-bold ${stat.color}`}>{stat.value}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="text-[9px] text-purple-300 flex items-center gap-1 px-2 py-1.5 rounded-md"
-                            style={{ background: 'rgba(88,28,135,0.15)', border: '1px solid rgba(88,28,135,0.15)' }}>
-                            <HeroAbilityIcon type={hoveredHero} size={10} />
-                            <span className="font-semibold text-purple-200">
-                              {HERO_DATA[hoveredHero].ability}:
-                            </span>{" "}
-                            {HERO_DATA[hoveredHero].abilityDesc}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <HeroSelector
+                    selectedHero={selectedHero}
+                    setSelectedHero={setSelectedHero}
+                    hoveredHero={hoveredHero}
+                    setHoveredHero={setHoveredHero}
+                  />
 
                   {/* --- Spell Panel --- */}
-                  <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(30,22,40,0.97) 0%, rgba(20,14,30,0.99) 100%)',
-                      border: '1.5px solid rgba(140,80,200,0.35)',
-                      boxShadow: 'inset 0 0 24px rgba(140,80,200,0.04), 0 4px 24px rgba(0,0,0,0.5)',
-                    }}>
-                    {/* Inner border glow */}
-                    <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(140,80,200,0.08)' }} />
-                    {/* Header */}
-                    <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
-                      style={{ background: 'linear-gradient(90deg, rgba(120,60,180,0.15), rgba(80,30,140,0.08), transparent)' }}>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Sparkles size={11} className="text-purple-400 sm:w-[13px] sm:h-[13px]" />
-                        <span className="text-[8px] sm:text-[9px] font-bold text-purple-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                          <span className="hidden sm:inline">Select </span>Spells
-                        </span>
-                      </div>
-                      {/* Spell slots indicator */}
-                      <div className="flex items-center gap-0.5 sm:gap-1">
-                        {[0, 1, 2].map((i) => (
-                          <div key={i} className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm transition-all duration-300"
-                            style={{
-                              background: i < selectedSpells.length
-                                ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
-                                : 'rgba(60,40,80,0.4)',
-                              border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.6)' : 'rgba(100,70,140,0.25)'}`,
-                              boxShadow: i < selectedSpells.length ? '0 0 6px rgba(168,85,247,0.4)' : 'none',
-                            }} />
-                        ))}
-                      </div>
-                      <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
-                    </div>
-                    <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
-                      {(() => {
-                        const spellLabels: Record<string, { name: string; brief: string; nameColor: string; briefColor: string; borderColor: string; cost: number; cooldown: number }> = {
-                          fireball: { name: "Meteor Shower", brief: "Rain fiery meteors, burning all enemies in area", nameColor: "text-orange-300", briefColor: "text-orange-400/50", borderColor: "rgba(234,88,12,0.4)", cost: 50, cooldown: 15 },
-                          lightning: { name: "Chain Lightning", brief: "Chain lightning stuns and shocks five enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)", cost: 40, cooldown: 12 },
-                          freeze: { name: "Arctic Blast", brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)", cost: 60, cooldown: 20 },
-                          payday: { name: "Gold Rush", brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)", cost: 0, cooldown: 30 },
-                          reinforcements: { name: "Knight Squad", brief: "Summon three armored knights to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)", cost: 75, cooldown: 25 },
-                        };
-                        return (
-                          <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-1.5">
-                            {spellOptions.map((spellType) => {
-                              const isSelected = selectedSpells.includes(spellType);
-                              const canSelect = isSelected || selectedSpells.length < 3;
-                              const spellIndex = selectedSpells.indexOf(spellType);
-                              const label = spellLabels[spellType];
-                              return (
-                                <button
-                                  key={spellType}
-                                  onClick={() => toggleSpell(spellType)}
-                                  onMouseEnter={() => setHoveredSpell(spellType)}
-                                  onMouseLeave={() => setHoveredSpell(null)}
-                                  disabled={!canSelect && !isSelected}
-                                  className={`relative w-full p-1 sm:p-1.5 pb-0.5 sm:pb-1 flex flex-col items-center gap-0.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
-                                    ? "z-10"
-                                    : canSelect
-                                      ? "hover:scale-105 hover:brightness-110"
-                                      : "opacity-35 cursor-not-allowed"
-                                    }`}
-                                  style={{
-                                    background: isSelected
-                                      ? 'linear-gradient(135deg, rgba(120,50,200,0.25), rgba(80,20,150,0.15))'
-                                      : !canSelect
-                                        ? 'linear-gradient(135deg, rgba(24,18,30,0.6), rgba(16,12,22,0.6))'
-                                        : 'linear-gradient(135deg, rgba(36,28,44,0.95), rgba(24,18,30,0.95))',
-                                    border: `1.5px solid ${isSelected ? (label?.borderColor || '#a855f7') : 'rgba(80,60,100,0.25)'}`,
-                                    boxShadow: isSelected
-                                      ? `0 0 14px rgba(168,85,247,0.25), inset 0 0 12px rgba(168,85,247,0.08), inset 0 1px 0 rgba(255,255,255,0.06)`
-                                      : 'inset 0 1px 0 rgba(255,255,255,0.03)',
-                                    outline: isSelected ? `2px solid ${label?.borderColor || 'rgba(168,85,247,0.5)'}` : 'none',
-                                    outlineOffset: '1px',
-                                  }}
-                                >
-                                  <div className="scale-75 sm:scale-100">
-                                    <SpellSprite type={spellType} size={32} />
-                                  </div>
-                                  {label && (
-                                    <>
-                                      <span className={`text-[6.5px] sm:text-[8px] font-semibold leading-none ${label.nameColor}`}>{label.name}</span>
-                                      <span className={`text-[6.5px] leading-tight text-center hidden sm:block ${label.briefColor}`}>{label.brief}</span>
-                                      {/* Cost & Cooldown at a glance */}
-                                      <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
-                                        <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
-                                          style={{ background: label.cost > 0 ? 'rgba(120,80,20,0.3)' : 'rgba(20,83,45,0.3)', border: `1px solid ${label.cost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)'}` }}>
-                                          <Coins size={6} className={`sm:w-[7px] sm:h-[7px] ${label.cost > 0 ? "text-amber-400/70" : "text-green-400/70"}`} />
-                                          <span className={label.cost > 0 ? "text-amber-300/80" : "text-green-300/80"}>{label.cost > 0 ? label.cost : "Free"}</span>
-                                        </span>
-                                        <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
-                                          style={{ background: 'rgba(30,58,138,0.25)', border: '1px solid rgba(30,58,138,0.2)' }}>
-                                          <Clock size={6} className="text-blue-400/70 sm:w-[7px] sm:h-[7px]" />
-                                          <span className="text-blue-300/80">{label.cooldown}s</span>
-                                        </span>
-                                      </div>
-                                    </>
-                                  )}
-                                  {isSelected && (
-                                    <div className="absolute -top-1 sm:-top-1.5 -right-1 sm:-right-1.5 w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[8px] sm:text-[10px] text-white font-bold border sm:border-2 border-stone-900"
-                                      style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', boxShadow: '0 0 6px rgba(168,85,247,0.5)' }}>
-                                      {spellIndex + 1}
-                                    </div>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                      {/* Spell loadout summary */}
-                      <div className="hidden sm:block mt-auto pt-2">
-                        <div className="h-px mb-2" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.2) 30%, rgba(140,80,200,0.2) 70%, transparent)' }} />
-                        {selectedSpells.length === 3 ? (
-                          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md"
-                            style={{ background: 'rgba(88,28,135,0.12)', border: '1px solid rgba(88,28,135,0.15)' }}>
-                            <Sparkles size={10} className="text-purple-400/70 flex-shrink-0" />
-                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              {selectedSpells.map((sp, i) => (
-                                <React.Fragment key={sp}>
-                                  <div className="flex items-center gap-1">
-                                    <SpellSprite type={sp} size={14} />
-                                    <span className="text-[8px] text-purple-200/80 font-medium whitespace-nowrap">{SPELL_DATA[sp].name}</span>
-                                  </div>
-                                  {i < 2 && <span className="text-purple-600/40 text-[8px]">·</span>}
-                                </React.Fragment>
-                              ))}
-                            </div>
-                            <span className="text-[7px] text-green-400/70 font-semibold uppercase tracking-wider flex-shrink-0">Ready</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md"
-                            style={{ background: 'rgba(60,40,80,0.12)', border: '1px solid rgba(80,50,120,0.12)' }}>
-                            <Zap size={10} className="text-purple-500/40 flex-shrink-0" />
-                            <div className="flex items-center gap-1 flex-1">
-                              {[0, 1, 2].map((i) => (
-                                <div key={i} className="flex items-center gap-1">
-                                  {i < selectedSpells.length ? (
-                                    <>
-                                      <SpellSprite type={selectedSpells[i]} size={14} />
-                                      <span className="text-[8px] text-purple-200/70 font-medium whitespace-nowrap">{SPELL_DATA[selectedSpells[i]].name}</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-3.5 h-3.5 rounded border border-dashed flex items-center justify-center"
-                                        style={{ borderColor: 'rgba(140,80,200,0.25)' }}>
-                                        <span className="text-[7px] text-purple-600/40">?</span>
-                                      </div>
-                                      <span className="text-[8px] text-purple-600/30 italic">Empty</span>
-                                    </>
-                                  )}
-                                  {i < 2 && <span className="text-purple-600/30 text-[8px] mx-0.5">·</span>}
-                                </div>
-                              ))}
-                            </div>
-                            <span className="text-[7px] text-purple-500/40 font-medium flex-shrink-0">{3 - selectedSpells.length} left</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {hoveredSpell && (() => {
-                      const spellInfo: Record<string, {
-                        panelBg: string; panelBorder: string; headerBg: string;
-                        icon: React.ReactNode; accentText: string;
-                        stats: Array<{ label: string; value: string; color: string; statBg: string; statBorder: string; icon: React.ReactNode }>;
-                        effectBg: string; effectLabel: string; effectText: string; effect: string;
-                      }> = {
-                        fireball: {
-                          panelBg: "rgba(40,24,10,0.99)", panelBorder: "rgba(234,88,12,0.5)",
-                          headerBg: "linear-gradient(90deg, rgba(180,80,20,0.2), rgba(120,40,10,0.1), transparent)",
-                          icon: <Flame size={16} className="text-orange-400" />, accentText: "text-orange-300",
-                          stats: [
-                            { label: "Damage", value: "50×10", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Swords size={10} className="text-red-400" /> },
-                            { label: "Radius", value: "150", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Target size={10} className="text-orange-400" /> },
-                            { label: "Burn", value: "4s", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Flame size={10} className="text-amber-400" /> },
-                          ],
-                          effectBg: "rgba(124,45,18,0.15)", effectLabel: "text-orange-500/80", effectText: "text-orange-200/90",
-                          effect: "Rains 10 meteors in an area. Each deals 50 AoE damage with falloff and sets enemies ablaze for 4 seconds.",
-                        },
-                        lightning: {
-                          panelBg: "rgba(36,30,10,0.99)", panelBorder: "rgba(234,179,8,0.5)",
-                          headerBg: "linear-gradient(90deg, rgba(180,140,20,0.2), rgba(40,120,140,0.08), transparent)",
-                          icon: <Zap size={16} className="text-yellow-400" />, accentText: "text-yellow-300",
-                          stats: [
-                            { label: "Total DMG", value: "600", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Swords size={10} className="text-yellow-400" /> },
-                            { label: "Chains", value: "5", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Zap size={10} className="text-cyan-400" /> },
-                            { label: "Stun", value: "0.5s", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Timer size={10} className="text-blue-400" /> },
-                          ],
-                          effectBg: "rgba(113,63,18,0.15)", effectLabel: "text-yellow-500/80", effectText: "text-yellow-200/90",
-                          effect: "Lightning bolt chains between up to 5 enemies, splitting 600 total damage. Each hit stuns for 0.5 seconds.",
-                        },
-                        freeze: {
-                          panelBg: "rgba(10,28,40,0.99)", panelBorder: "rgba(6,182,212,0.5)",
-                          headerBg: "linear-gradient(90deg, rgba(20,100,140,0.2), rgba(20,60,120,0.08), transparent)",
-                          icon: <Snowflake size={16} className="text-cyan-400" />, accentText: "text-cyan-300",
-                          stats: [
-                            { label: "Duration", value: "3s", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Timer size={10} className="text-cyan-400" /> },
-                            { label: "Range", value: "Global", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Target size={10} className="text-blue-400" /> },
-                            { label: "Slow", value: "100%", color: "text-indigo-300", statBg: "rgba(49,46,129,0.3)", statBorder: "rgba(49,46,129,0.2)", icon: <Snowflake size={10} className="text-indigo-400" /> },
-                          ],
-                          effectBg: "rgba(22,78,99,0.15)", effectLabel: "text-cyan-500/80", effectText: "text-cyan-200/90",
-                          effect: "Expanding ice wave freezes ALL enemies on the map for 3 full seconds. Great for emergencies.",
-                        },
-                        payday: {
-                          panelBg: "rgba(36,28,10,0.99)", panelBorder: "rgba(245,158,11,0.5)",
-                          headerBg: "linear-gradient(90deg, rgba(160,110,20,0.2), rgba(140,120,10,0.08), transparent)",
-                          icon: <Coins size={16} className="text-amber-400" />, accentText: "text-amber-300",
-                          stats: [
-                            { label: "Base PP", value: "80", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Coins size={10} className="text-amber-400" /> },
-                            { label: "Per Enemy", value: "+5", color: "text-green-300", statBg: "rgba(20,83,45,0.3)", statBorder: "rgba(20,83,45,0.2)", icon: <TrendingUp size={10} className="text-green-400" /> },
-                            { label: "Max Total", value: "130", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Sparkles size={10} className="text-yellow-400" /> },
-                          ],
-                          effectBg: "rgba(120,53,15,0.15)", effectLabel: "text-amber-500/80", effectText: "text-amber-200/90",
-                          effect: "Grants 80 PP plus 5 PP per enemy on the map (max +50 bonus). Use when the field is crowded!",
-                        },
-                        reinforcements: {
-                          panelBg: "rgba(16,30,24,0.99)", panelBorder: "rgba(16,185,129,0.5)",
-                          headerBg: "linear-gradient(90deg, rgba(20,120,80,0.2), rgba(10,80,50,0.08), transparent)",
-                          icon: <Shield size={16} className="text-emerald-400" />, accentText: "text-emerald-300",
-                          stats: [
-                            { label: "Knights", value: "3", color: "text-emerald-300", statBg: "rgba(6,78,59,0.3)", statBorder: "rgba(6,78,59,0.2)", icon: <Users size={10} className="text-emerald-400" /> },
-                            { label: "HP Each", value: "500", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Heart size={10} className="text-red-400" /> },
-                            { label: "DMG Each", value: "30", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Swords size={10} className="text-orange-400" /> },
-                          ],
-                          effectBg: "rgba(6,78,59,0.15)", effectLabel: "text-emerald-500/80", effectText: "text-emerald-200/90",
-                          effect: "Summons 3 armored knights at a chosen location. They block and fight enemies until defeated.",
-                        },
-                      };
-                      const info = spellInfo[hoveredSpell];
-                      if (!info) return null;
-                      const spell = SPELL_DATA[hoveredSpell];
-                      return (
-                        <div className="absolute bottom-full right-0 mb-2 w-72 rounded-xl z-50"
-                          style={{
-                            background: `linear-gradient(180deg, ${info.panelBg}, rgba(18,14,10,0.99))`,
-                            border: `1.5px solid ${info.panelBorder}`,
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02)',
-                          }}>
-                          {/* Inner border glow */}
-                          <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.04)' }} />
-                          {/* Spell-themed header */}
-                          <div className="px-3 py-2 rounded-t-xl relative" style={{ background: info.headerBg }}>
-                            <div className="flex items-center gap-2">
-                              {info.icon}
-                              <span className={`font-bold text-sm ${info.accentText}`}>{spell.name}</span>
-                            </div>
-                            <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent)' }} />
-                          </div>
-                          <div className="px-3 py-2.5">
-                            {/* Cost & Cooldown */}
-                            <div className="flex gap-1.5 mb-2">
-                              <div className="rounded-md px-2 py-1 text-center flex-1"
-                                style={{ background: 'rgba(120,80,20,0.2)', border: '1px solid rgba(120,80,20,0.2)' }}>
-                                <div className="text-[7px] text-amber-500/70 font-medium uppercase">Cost</div>
-                                <div className="text-amber-300 font-bold text-[11px]">
-                                  {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
-                                </div>
-                              </div>
-                              <div className="rounded-md px-2 py-1 text-center flex-1"
-                                style={{ background: 'rgba(30,58,138,0.2)', border: '1px solid rgba(30,58,138,0.2)' }}>
-                                <div className="text-[7px] text-blue-500/70 font-medium uppercase">Cooldown</div>
-                                <div className="text-blue-300 font-bold text-[11px]">{spell.cooldown / 1000}s</div>
-                              </div>
-                            </div>
-                            {/* Spell-specific stats */}
-                            <div className="grid grid-cols-3 gap-1.5 mb-2">
-                              {info.stats.map((stat) => (
-                                <div key={stat.label} className="rounded-md px-1.5 py-1 text-center"
-                                  style={{ background: stat.statBg, border: `1px solid ${stat.statBorder}` }}>
-                                  <div className="flex items-center justify-center mb-0.5">{stat.icon}</div>
-                                  <div className="text-[7px] text-stone-500 font-medium">{stat.label}</div>
-                                  <div className={`font-bold text-[11px] ${stat.color}`}>{stat.value}</div>
-                                </div>
-                              ))}
-                            </div>
-                            {/* Ornate divider */}
-                            <div className="mb-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)' }} />
-                            {/* Effect description */}
-                            <div className="rounded-md px-2.5 py-2"
-                              style={{ background: info.effectBg, border: '1px solid rgba(80,60,50,0.12)' }}>
-                              <div className={`${info.effectLabel} uppercase text-[7px] font-semibold mb-1 tracking-wider flex items-center gap-1`}>
-                                <Sparkles size={8} className="opacity-60" />
-                                How it works
-                              </div>
-                              <p className={`text-[10px] ${info.effectText} leading-relaxed`}>{info.effect}</p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
+                  <SpellSelector
+                    selectedSpells={selectedSpells}
+                    toggleSpell={toggleSpell}
+                    hoveredSpell={hoveredSpell}
+                    setHoveredSpell={setHoveredSpell}
+                  />
                 </div>
               </div>
             </div>
