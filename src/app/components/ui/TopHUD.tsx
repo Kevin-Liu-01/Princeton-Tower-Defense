@@ -270,6 +270,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
       className="border-b-2 border-amber-700/50 shadow-xl relative flex-shrink-0"
       cornerSize={28}
       showBorders={true}
+      showTopBottomBorders={false}
     >
       <div
         className="relative z-20"

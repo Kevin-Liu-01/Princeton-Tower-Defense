@@ -688,6 +688,153 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawRuggedBorder(1080, "#9a8060", "#5a6a7a");
     drawRuggedBorder(1450, "#5a6a7a", "#5a3030");
 
+    // === ROADS (drawn early so region details layer on top) ===
+    const drawRoadSegment = (points: [number, number][]) => {
+      if (points.length < 2) return;
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      // Smooth bezier path helper
+      const tracePath = (ox: number, oy: number) => {
+        ctx.beginPath();
+        const pts = points.map((p) => [p[0] + ox, getY(p[1]) + oy]);
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        if (pts.length === 2) {
+          ctx.lineTo(pts[1][0], pts[1][1]);
+        } else {
+          for (let i = 1; i < pts.length - 1; i++) {
+            const cpx = (pts[i][0] + pts[i + 1][0]) / 2;
+            const cpy = (pts[i][1] + pts[i + 1][1]) / 2;
+            ctx.quadraticCurveTo(pts[i][0], pts[i][1], cpx, cpy);
+          }
+          ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+        }
+      };
+
+      // Region-aware dirt colors
+      const avgX = points.reduce((s, p) => s + p[0], 0) / points.length;
+      let dirtLight: string, dirtMid: string, dirtDark: string, dirtEdge: string;
+      if (avgX < 380) {
+        dirtLight = "rgba(105, 85, 55, 0.28)"; dirtMid = "rgba(85, 70, 40, 0.32)";
+        dirtDark = "rgba(55, 45, 25, 0.35)"; dirtEdge = "rgba(70, 90, 50, 0.15)";
+      } else if (avgX < 720) {
+        dirtLight = "rgba(80, 70, 50, 0.3)"; dirtMid = "rgba(60, 55, 38, 0.35)";
+        dirtDark = "rgba(40, 35, 22, 0.38)"; dirtEdge = "rgba(50, 65, 45, 0.12)";
+      } else if (avgX < 1080) {
+        dirtLight = "rgba(130, 105, 65, 0.3)"; dirtMid = "rgba(110, 85, 50, 0.32)";
+        dirtDark = "rgba(80, 60, 30, 0.35)"; dirtEdge = "rgba(140, 110, 60, 0.12)";
+      } else if (avgX < 1440) {
+        dirtLight = "rgba(90, 85, 80, 0.28)"; dirtMid = "rgba(70, 65, 60, 0.32)";
+        dirtDark = "rgba(45, 42, 38, 0.35)"; dirtEdge = "rgba(100, 110, 120, 0.1)";
+      } else {
+        dirtLight = "rgba(70, 45, 35, 0.3)"; dirtMid = "rgba(55, 30, 22, 0.35)";
+        dirtDark = "rgba(35, 18, 12, 0.38)"; dirtEdge = "rgba(90, 40, 20, 0.12)";
+      }
+
+      // Ground shadow
+      tracePath(2, 3);
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+      ctx.lineWidth = 18;
+      ctx.stroke();
+
+      // Road trench
+      tracePath(0, 0);
+      ctx.strokeStyle = dirtDark;
+      ctx.lineWidth = 16;
+      ctx.stroke();
+
+      // Road bed
+      tracePath(0, 0);
+      ctx.strokeStyle = dirtMid;
+      ctx.lineWidth = 13;
+      ctx.stroke();
+
+      // Main surface with gradient
+      tracePath(0, 0);
+      const roadGrad = ctx.createLinearGradient(
+        points[0][0], getY(points[0][1]),
+        points[points.length - 1][0], getY(points[points.length - 1][1])
+      );
+      roadGrad.addColorStop(0, dirtLight);
+      roadGrad.addColorStop(0.5, dirtMid);
+      roadGrad.addColorStop(1, dirtLight);
+      ctx.strokeStyle = roadGrad;
+      ctx.lineWidth = 10;
+      ctx.stroke();
+
+      // Worn center
+      tracePath(0, 0);
+      ctx.strokeStyle = "rgba(140, 115, 75, 0.12)";
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // Edge vegetation
+      tracePath(-5, 0);
+      ctx.strokeStyle = dirtEdge;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      tracePath(5, 0);
+      ctx.strokeStyle = dirtEdge;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Wheel ruts
+      ctx.setLineDash([4, 10]);
+      tracePath(-2.5, 0);
+      ctx.strokeStyle = "rgba(30, 20, 10, 0.12)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      tracePath(2.5, 0);
+      ctx.strokeStyle = "rgba(30, 20, 10, 0.12)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Pebbles at waypoints
+      for (let p = 0; p < points.length; p++) {
+        const px = points[p][0];
+        const py = getY(points[p][1]);
+        for (let pb = 0; pb < 3; pb++) {
+          const pebX = px + (seededRandom(p * 7 + pb * 13 + avgX) - 0.5) * 14;
+          const pebY = py + (seededRandom(p * 11 + pb * 17 + avgX) - 0.5) * 6;
+          const pebR = 0.6 + seededRandom(p * 3 + pb * 19 + avgX) * 1;
+          ctx.fillStyle = `rgba(60, 50, 35, ${0.15 + seededRandom(p + pb + avgX) * 0.1})`;
+          ctx.beginPath();
+          ctx.arc(pebX, pebY, pebR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    };
+
+    // Winding roads with interesting shapes — S-curves, switchbacks, terrain-following
+    // Grassland: gentle rolling curves from castle to bridge 1
+    drawRoadSegment([
+      [70, 50], [95, 47], [125, 42], [160, 38], [195, 40],
+      [230, 46], [260, 53], [285, 58], [310, 62], [340, 60], [375, 58],
+    ]);
+    // Swamp: winding path through marshland, bridge1 end to bridge2
+    drawRoadSegment([
+      [425, 57], [450, 60], [475, 65], [500, 62], [525, 55],
+      [555, 48], [580, 42], [610, 40], [640, 44], [670, 48], [715, 48],
+    ]);
+    // Desert: sweeping dune-hugging curves, bridge2 end to bridge3
+    drawRoadSegment([
+      [760, 49], [790, 45], [815, 40], [845, 38], [875, 42],
+      [910, 50], [940, 58], [965, 62], [995, 58], [1030, 52], [1075, 55],
+    ]);
+    // Winter: switchback through mountain pass, bridge3 end to bridge4
+    drawRoadSegment([
+      [1125, 55], [1155, 50], [1180, 44], [1210, 40], [1240, 44],
+      [1270, 52], [1300, 58], [1330, 62], [1360, 58], [1395, 52], [1445, 52],
+    ]);
+    // Volcanic: treacherous path through lava fields, bridge4 end to enemy castle
+    drawRoadSegment([
+      [1493, 52], [1515, 48], [1540, 42], [1565, 38], [1590, 42],
+      [1620, 50], [1650, 55], [1680, 52], [1710, 46], [1740, 48], [MAP_WIDTH - 70, 50],
+    ]);
+
     // === GRASSLAND DETAILS ===
     // Lush volumetric trees with radial gradient canopies and animated details
     const drawTree = (x: number, yPct: number, scale: number) => {
@@ -4863,66 +5010,140 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawLavaPool(1700, 55, 35, 0.4);
     drawLavaPool(1760, 75, 28, 0.35);
 
-    // Lava rivers with flowing animation, cooled rock rafts, branching tributaries
+    // Lava rivers — organic bezier paths with layered glow, crusted banks, embers
     const drawLavaRiver = (points: number[][]) => {
       ctx.save();
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      // Outer glow
-      ctx.strokeStyle = `rgba(255, 80, 20, ${0.18 + Math.sin(time * 2) * 0.08})`;
-      ctx.lineWidth = 22;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], getY(points[0][1]));
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], getY(points[i][1]));
-      }
+      // Helper: draw smooth bezier through points
+      const tracePath = (offsetX: number, offsetY: number) => {
+        const pts = points.map((p) => [p[0] + offsetX, getY(p[1]) + offsetY]);
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        if (pts.length === 2) {
+          ctx.lineTo(pts[1][0], pts[1][1]);
+        } else {
+          for (let i = 1; i < pts.length - 1; i++) {
+            const cpx = (pts[i][0] + pts[i + 1][0]) / 2;
+            const cpy = (pts[i][1] + pts[i + 1][1]) / 2;
+            ctx.quadraticCurveTo(pts[i][0], pts[i][1], cpx, cpy);
+          }
+          ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+        }
+      };
+
+      const pulse = 0.5 + Math.sin(time * 2) * 0.5;
+      const pulse2 = 0.5 + Math.sin(time * 3.3 + 1) * 0.5;
+
+      // Wide ambient ground glow
+      tracePath(0, 0);
+      ctx.strokeStyle = `rgba(255, 50, 0, ${0.06 + pulse * 0.04})`;
+      ctx.lineWidth = 36;
       ctx.stroke();
 
-      // Main lava flow
-      ctx.strokeStyle = `rgba(255, 80, 0, ${0.7 + Math.sin(time * 3) * 0.2})`;
-      ctx.lineWidth = 9;
+      // Radiant heat haze
+      tracePath(0, 0);
+      ctx.strokeStyle = `rgba(255, 80, 10, ${0.1 + pulse * 0.06})`;
+      ctx.lineWidth = 24;
       ctx.stroke();
 
-      // Hot bright center
-      ctx.strokeStyle = `rgba(255, 200, 100, ${0.6 + Math.sin(time * 4) * 0.2})`;
-      ctx.lineWidth = 4;
+      // Cooled rock bank edges (dark crust)
+      tracePath(0, 0);
+      ctx.strokeStyle = "rgba(30, 15, 8, 0.85)";
+      ctx.lineWidth = 14;
+      ctx.stroke();
+
+      // Cracked crust texture on banks
+      tracePath(0, 0);
+      ctx.strokeStyle = "rgba(60, 30, 15, 0.5)";
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Inner glow bleeding through crust
+      tracePath(0, 0);
+      ctx.strokeStyle = `rgba(200, 60, 10, ${0.4 + pulse * 0.2})`;
+      ctx.lineWidth = 10;
+      ctx.stroke();
+
+      // Main molten lava body
+      tracePath(0, 0);
+      const lavaGrad = ctx.createLinearGradient(
+        points[0][0], getY(points[0][1]),
+        points[points.length - 1][0], getY(points[points.length - 1][1])
+      );
+      lavaGrad.addColorStop(0, `rgba(255, 100, 10, ${0.85 + pulse2 * 0.15})`);
+      lavaGrad.addColorStop(0.3, `rgba(255, 140, 30, ${0.9 + pulse * 0.1})`);
+      lavaGrad.addColorStop(0.6, `rgba(255, 80, 0, ${0.85 + pulse2 * 0.15})`);
+      lavaGrad.addColorStop(1, `rgba(255, 120, 20, ${0.9 + pulse * 0.1})`);
+      ctx.strokeStyle = lavaGrad;
+      ctx.lineWidth = 7;
+      ctx.stroke();
+
+      // Bright hot vein
+      tracePath(0, 0);
+      ctx.strokeStyle = `rgba(255, 200, 80, ${0.55 + pulse2 * 0.25})`;
+      ctx.lineWidth = 3.5;
       ctx.stroke();
 
       // White-hot core
-      ctx.strokeStyle = `rgba(255, 240, 180, ${0.3 + Math.sin(time * 5) * 0.15})`;
+      tracePath(0, 0);
+      ctx.strokeStyle = `rgba(255, 240, 180, ${0.25 + pulse * 0.2})`;
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Steam where lava meets rock (along edges)
-      for (let i = 0; i < points.length; i++) {
-        const steamPhase = (time * 8 + i * 5) % 20;
-        if (steamPhase < 12) {
-          const steamX = points[i][0] + Math.sin(time * 2 + i) * 8;
-          const steamY = getY(points[i][1]) - 5 - steamPhase;
-          const steamSize = 3 + steamPhase * 0.3;
-          const steamAlpha = Math.max(0, 0.25 - steamPhase / 30);
-          ctx.fillStyle = `rgba(180, 180, 180, ${steamAlpha})`;
-          ctx.beginPath();
-          ctx.arc(steamX, steamY, steamSize, 0, Math.PI * 2);
-          ctx.fill();
+      // Surface texture — dark cooled patches drifting along
+      for (let r = 0; r < 5; r++) {
+        const speed = 6 + seededRandom(r + points[0][0] * 0.01) * 4;
+        const raftProgress = ((time * speed + r * 20 + points[0][0] * 0.1) % 100) / 100;
+        const segIdx = Math.min(Math.floor(raftProgress * (points.length - 1)), points.length - 2);
+        const segT = (raftProgress * (points.length - 1)) - segIdx;
+        const raftX = points[segIdx][0] + (points[segIdx + 1][0] - points[segIdx][0]) * segT;
+        const raftYPct = points[segIdx][1] + (points[segIdx + 1][1] - points[segIdx][1]) * segT;
+        const raftY = getY(raftYPct);
+        const raftSize = 1.5 + seededRandom(points[0][0] + r * 11) * 2.5;
+        // Dark crust chunk
+        ctx.fillStyle = `rgba(35, 18, 10, ${0.5 + seededRandom(r * 7) * 0.3})`;
+        ctx.beginPath();
+        ctx.ellipse(raftX, raftY, raftSize, raftSize * 0.5, seededRandom(r + points[0][0]) * 2, 0, Math.PI * 2);
+        ctx.fill();
+        // Hot edge on chunk
+        ctx.strokeStyle = `rgba(255, 120, 30, ${0.2 + pulse * 0.15})`;
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+      }
+
+      // Rising embers along the river
+      for (let e = 0; e < 4; e++) {
+        const eAge = (time * 12 + e * 18 + points[0][0] * 0.3) % 35;
+        const eIdx = Math.floor(e * (points.length - 1) / 4);
+        const ex = points[eIdx][0] + Math.sin(time * 2 + e * 3) * 6;
+        const ey = getY(points[eIdx][1]) - eAge * 1.5;
+        const eAlpha = Math.max(0, 0.7 - eAge / 25);
+        if (eAlpha > 0) {
+          const eSize = 1.2 - eAge * 0.025;
+          if (eSize > 0.3) {
+            ctx.fillStyle = `rgba(255, ${180 - eAge * 4}, ${50 - eAge}, ${eAlpha})`;
+            ctx.beginPath();
+            ctx.arc(ex, ey, eSize, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
       }
 
-      // Cooled rock rafts floating (dark chunks on the flow)
-      for (let r = 0; r < 3; r++) {
-        const raftProgress = ((time * 8 + r * 30 + points[0][0] * 0.1) % 100) / 100;
-        if (raftProgress < 1) {
-          const segIdx = Math.min(Math.floor(raftProgress * (points.length - 1)), points.length - 2);
-          const segT = (raftProgress * (points.length - 1)) - segIdx;
-          const raftX = points[segIdx][0] + (points[segIdx + 1][0] - points[segIdx][0]) * segT;
-          const raftYPct = points[segIdx][1] + (points[segIdx + 1][1] - points[segIdx][1]) * segT;
-          const raftY = getY(raftYPct);
-          ctx.fillStyle = "rgba(40, 25, 20, 0.7)";
-          ctx.beginPath();
-          const raftSize = 2 + seededRandom(points[0][0] + r * 11) * 3;
-          ctx.ellipse(raftX, raftY, raftSize, raftSize * 0.5, seededRandom(r + points[0][0]) * 1.5, 0, Math.PI * 2);
-          ctx.fill();
+      // Steam wisps at junction points
+      for (let i = 1; i < points.length - 1; i++) {
+        for (let s = 0; s < 2; s++) {
+          const sAge = (time * 6 + s * 12 + i * 8) % 20;
+          const sx = points[i][0] + Math.sin(time * 1.5 + s + i) * 5 + (s === 0 ? -6 : 6);
+          const sy = getY(points[i][1]) - 4 - sAge * 1.2;
+          const sAlpha = Math.max(0, 0.15 - sAge / 30);
+          if (sAlpha > 0) {
+            ctx.fillStyle = `rgba(200, 190, 180, ${sAlpha})`;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2 + sAge * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+          }
         }
       }
 
@@ -5614,69 +5835,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawBridge(1075, 55, 50, 0.08);
     drawBridge(1445, 52, 48, -0.05);
 
-    // Dirt road paths (worn into the ground) - enhanced with edges
-    const drawRoadSegment = (points: [number, number][]) => {
-      if (points.length < 2) return;
-
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      // Road trench shadow (deep)
-      ctx.strokeStyle = "rgba(15, 10, 5, 0.35)";
-      ctx.lineWidth = 20;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0], getY(points[0][1]));
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0], getY(points[i][1]));
-      }
-      ctx.stroke();
-
-      // Road bed (darker edges)
-      ctx.strokeStyle = "rgba(50, 35, 20, 0.3)";
-      ctx.lineWidth = 16;
-      ctx.stroke();
-
-      // Main road surface
-      ctx.strokeStyle = "rgba(90, 70, 45, 0.28)";
-      ctx.lineWidth = 12;
-      ctx.stroke();
-
-      // Road wear (lighter center)
-      ctx.strokeStyle = "rgba(110, 85, 55, 0.2)";
-      ctx.lineWidth = 6;
-      ctx.stroke();
-
-      // Subtle center highlight
-      ctx.strokeStyle = "rgba(140, 110, 70, 0.1)";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Wheel ruts (dashed lines)
-      ctx.setLineDash([3, 8]);
-      ctx.strokeStyle = "rgba(40, 25, 12, 0.15)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(points[0][0] - 3, getY(points[0][1]));
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0] - 3, getY(points[i][1]));
-      }
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(points[0][0] + 3, getY(points[0][1]));
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i][0] + 3, getY(points[i][1]));
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-    };
-
-    // Main travel routes
-    drawRoadSegment([[50, 50], [100, 50], [150, 45], [200, 48]]);
-    drawRoadSegment([[200, 48], [250, 52], [310, 55]]);
-    drawRoadSegment([[440, 50], [500, 55], [560, 52], [620, 48]]);
-    drawRoadSegment([[780, 50], [850, 55], [920, 52], [980, 50]]);
-    drawRoadSegment([[1140, 50], [1200, 48], [1270, 52], [1340, 55]]);
-    drawRoadSegment([[1520, 55], [1580, 52], [1650, 55], [1720, 50]]);
+    // (Roads drawn earlier, before region details)
 
     // Scattered rocks and boulders
     const drawBoulder = (bx: number, byPct: number, size: number) => {
@@ -7773,7 +7932,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         className="flex-shrink-0 overflow-hidden rounded-xl mx-2 sm:mx-3 mt-3 border-2 border-amber-700/50 shadow-xl"
         cornerSize={25}
         showBorders={true}
-
       >
         <div
           className="relative sm:px-2 z-20"
@@ -8327,7 +8485,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               <div
                 ref={scrollContainerRef}
                 className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
-                style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'pan-y', background: '#0a0806' }}
                 onMouseDown={handleDragStart}
                 onMouseMove={handleDragMove}
                 onMouseUp={handleDragEnd}
@@ -8338,7 +8496,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               >
                 <canvas
                   ref={canvasRef}
-                  className="block"
+                  className="block mx-auto"
                   style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
                   onMouseMove={handleMouseMove}
                   onClick={handleClick}

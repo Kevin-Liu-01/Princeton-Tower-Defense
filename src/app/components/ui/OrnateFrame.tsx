@@ -348,6 +348,8 @@ export interface OrnateFrameProps {
   className?: string;
   cornerSize?: number;
   showBorders?: boolean;
+  showSideBorders?: boolean;
+  showTopBottomBorders?: boolean;
   color?: string;
   glowColor?: string;
 }
@@ -357,6 +359,8 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   className = "",
   cornerSize = 36,
   showBorders = true,
+  showSideBorders = true,
+  showTopBottomBorders = true,
   color = "#d97706",
   glowColor = "#f59e0b",
 }) => {
@@ -368,13 +372,21 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
       <OrnateCorner position="bottom-left" size={cornerSize} color={color} glowColor={glowColor} />
       <OrnateCorner position="bottom-right" size={cornerSize} color={color} glowColor={glowColor} />
 
-      {/* Border decorations - all four sides */}
+      {/* Border decorations */}
       {showBorders && (
         <>
-          <OrnateBorder position="top" color={color} glowColor={glowColor} />
-          <OrnateBorder position="bottom" color={color} glowColor={glowColor} />
-          <OrnateBorder position="left" color={color} glowColor={glowColor} />
-          <OrnateBorder position="right" color={color} glowColor={glowColor} />
+          {showTopBottomBorders && (
+            <>
+              <OrnateBorder position="top" color={color} glowColor={glowColor} />
+              <OrnateBorder position="bottom" color={color} glowColor={glowColor} />
+            </>
+          )}
+          {showSideBorders && (
+            <>
+              <OrnateBorder position="left" color={color} glowColor={glowColor} />
+              <OrnateBorder position="right" color={color} glowColor={glowColor} />
+            </>
+          )}
         </>
       )}
 

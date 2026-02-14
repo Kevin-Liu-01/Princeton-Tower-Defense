@@ -469,19 +469,15 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // === EPIC TOWERS WITH FULL DETAIL ===
 
-    // Helper: Draw isometric shadow
+    // Helper: Draw isometric shadow (flat fill, no gradient for perf)
     const drawTowerShadow = (x: number, y: number, w: number, h: number) => {
-      const shadowGrad = ctx.createRadialGradient(x, y + h * 0.3, 0, x, y + h * 0.3, w * 1.2);
-      shadowGrad.addColorStop(0, "rgba(0,0,0,0.5)");
-      shadowGrad.addColorStop(0.5, "rgba(0,0,0,0.25)");
-      shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = shadowGrad;
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
       ctx.beginPath();
       ctx.ellipse(x, y + h * 0.3, w * 1.1, h * 0.25, 0, 0, Math.PI * 2);
       ctx.fill();
     };
 
-    // NASSAU CANNON TOWER - Heavy Artillery Platform with mechanical detail
+    // NASSAU CANNON TOWER - Formidable Medieval Artillery Platform
     const drawCannonTower = (x: number, y: number, scale: number) => {
       ctx.save();
       ctx.translate(x, y);
@@ -489,161 +485,227 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
       drawTowerShadow(0, 10, 35, 20);
 
-      // Isometric base platform with beveled edges
-      const baseGrad = ctx.createLinearGradient(-30, 0, 30, 15);
-      baseGrad.addColorStop(0, "#5a5a62");
-      baseGrad.addColorStop(0.3, "#4a4a52");
-      baseGrad.addColorStop(0.7, "#3a3a42");
-      baseGrad.addColorStop(1, "#2a2a32");
-      ctx.fillStyle = baseGrad;
+      // Cache trig values
+      const sinT3 = Math.sin(t * 3);
+      const sinT15 = Math.sin(t * 1.5);
+      const sinT2 = Math.sin(t * 2);
+      const glowPulse = 0.5 + sinT3 * 0.3;
+
+      // Isometric base platform - heavy stone
+      ctx.fillStyle = "#4a4a4e";
       ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, 12);
-      ctx.lineTo(28, 0);
-      ctx.lineTo(0, -12);
+      ctx.moveTo(-30, 0);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(30, 0);
+      ctx.lineTo(0, -14);
+      ctx.closePath();
+      ctx.fill();
+      // Base top face highlight
+      ctx.fillStyle = "#58585e";
+      ctx.beginPath();
+      ctx.moveTo(-30, 0);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(30, 0);
+      ctx.lineTo(0, -3);
       ctx.closePath();
       ctx.fill();
 
-      // Platform edge highlight
-      ctx.strokeStyle = "#6a6a72";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, -12);
-      ctx.lineTo(28, 0);
-      ctx.stroke();
+      // Ammunition crates at base
+      ctx.fillStyle = "#5a4a2a";
+      ctx.fillRect(-27, -8, 11, 8);
+      ctx.fillStyle = "#4a3a1a";
+      ctx.fillRect(-27, -8, 11, 2);
+      ctx.strokeStyle = "#3a2a0a";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-27, -8, 11, 8);
+      // Stacked crate
+      ctx.fillStyle = "#5e4e2e";
+      ctx.fillRect(-25, -13, 8, 5);
+      ctx.fillStyle = "#6a5a3a";
+      ctx.fillRect(-25, -13, 8, 1.5);
 
-      // Main tower body - mechanical fortress
-      const towerGrad = ctx.createLinearGradient(-22, -70, 22, 0);
-      towerGrad.addColorStop(0, "#5a5a62");
-      towerGrad.addColorStop(0.2, "#4a4a52");
-      towerGrad.addColorStop(0.5, "#3a3a42");
-      towerGrad.addColorStop(0.8, "#4a4a52");
-      towerGrad.addColorStop(1, "#2a2a32");
+      // Main tower body - stone masonry
+      const towerGrad = ctx.createLinearGradient(-24, -65, 24, 0);
+      towerGrad.addColorStop(0, "#5a5a60");
+      towerGrad.addColorStop(0.5, "#48484e");
+      towerGrad.addColorStop(1, "#38383e");
       ctx.fillStyle = towerGrad;
       ctx.beginPath();
-      ctx.moveTo(-22, -5);
-      ctx.lineTo(-22, -55);
-      ctx.lineTo(-18, -60);
-      ctx.lineTo(18, -60);
-      ctx.lineTo(22, -55);
-      ctx.lineTo(22, -5);
+      ctx.moveTo(-24, -5);
+      ctx.lineTo(-24, -56);
+      ctx.lineTo(-20, -63);
+      ctx.lineTo(20, -63);
+      ctx.lineTo(24, -56);
+      ctx.lineTo(24, -5);
       ctx.closePath();
       ctx.fill();
 
-      // Armor plates with rivets
-      ctx.strokeStyle = "#2a2a32";
-      ctx.lineWidth = 2;
+      // Stone masonry mortar lines (batched horizontal)
+      ctx.strokeStyle = "#2e2e34";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(-20, -20);
-      ctx.lineTo(20, -20);
-      ctx.moveTo(-20, -40);
-      ctx.lineTo(20, -40);
+      for (let row = 0; row < 6; row++) {
+        const my = -8 - row * 9;
+        ctx.moveTo(-23, my);
+        ctx.lineTo(23, my);
+      }
       ctx.stroke();
 
-      // Decorative rivets
-      ctx.fillStyle = "#6a6a72";
-      for (let row = 0; row < 3; row++) {
-        for (let col = -2; col <= 2; col++) {
-          ctx.beginPath();
-          ctx.arc(col * 8, -15 - row * 20, 2, 0, Math.PI * 2);
-          ctx.fill();
+      // Vertical mortar joints (alternating per row, batched)
+      ctx.beginPath();
+      for (let row = 0; row < 6; row++) {
+        const my = -8 - row * 9;
+        const offset = (row % 2) * 7;
+        for (let col = 0; col < 4; col++) {
+          const mx = -17 + col * 12 + offset;
+          if (mx > -23 && mx < 23) {
+            ctx.moveTo(mx, my);
+            ctx.lineTo(mx, my - 9);
+          }
         }
       }
+      ctx.stroke();
 
-      // Tech glow strips
-      const glowPulse = 0.5 + Math.sin(t * 3) * 0.3;
-      ctx.fillStyle = `rgba(255, 102, 0, ${glowPulse})`;
-      ctx.fillRect(-20, -52, 3, 45);
-      ctx.fillRect(17, -52, 3, 45);
-
-      // Crenellations with shadow
-      for (let i = 0; i < 5; i++) {
-        const crenX = -16 + i * 8;
-        ctx.fillStyle = "#4a4a52";
-        ctx.fillRect(crenX, -72, 6, 14);
-        ctx.fillStyle = "#5a5a62";
-        ctx.fillRect(crenX, -72, 6, 3);
-      }
-
-      // Rotating turret platform
+      // Iron reinforcement bands
       ctx.fillStyle = "#3a3a42";
+      ctx.fillRect(-24, -21, 48, 3);
+      ctx.fillRect(-24, -43, 48, 3);
+
+      // Battle damage - cracks (batched)
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.ellipse(0, -60, 18, 9, 0, 0, Math.PI * 2);
+      ctx.moveTo(-10, -28);
+      ctx.lineTo(-6, -34);
+      ctx.lineTo(-8, -37);
+      ctx.moveTo(12, -12);
+      ctx.lineTo(16, -18);
+      ctx.lineTo(14, -21);
+      ctx.stroke();
+
+      // Scorch mark
+      ctx.fillStyle = "rgba(30,20,10,0.4)";
+      ctx.beginPath();
+      ctx.ellipse(8, -30, 6, 4, 0.3, 0, Math.PI * 2);
       ctx.fill();
 
-      // Tech ring glow
-      ctx.strokeStyle = `rgba(255, 102, 0, ${glowPulse * 0.8})`;
+      // Key rivets (batched - 4 total, down from 15)
+      ctx.fillStyle = "#6a6a72";
+      ctx.beginPath();
+      ctx.arc(-21, -21, 2, 0, Math.PI * 2);
+      ctx.arc(21, -21, 2, 0, Math.PI * 2);
+      ctx.arc(-21, -43, 2, 0, Math.PI * 2);
+      ctx.arc(21, -43, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glow strips on sides
+      ctx.fillStyle = `rgba(255, 102, 0, ${glowPulse})`;
+      ctx.fillRect(-23, -55, 3, 47);
+      ctx.fillRect(20, -55, 3, 47);
+
+      // Crenellations (batched rects)
+      ctx.fillStyle = "#4a4a52";
+      for (let i = 0; i < 5; i++) {
+        ctx.fillRect(-16 + i * 8, -75, 6, 14);
+      }
+      ctx.fillStyle = "#5a5a62";
+      for (let i = 0; i < 5; i++) {
+        ctx.fillRect(-16 + i * 8, -75, 6, 3);
+      }
+
+      // Turret platform
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.ellipse(0, -63, 20, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Turret ring glow
+      ctx.strokeStyle = `rgba(255, 102, 0, ${glowPulse * 0.7})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.ellipse(0, -60, 16, 8, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, -63, 18, 9, 0, 0, Math.PI * 2);
       ctx.stroke();
 
       // Heavy cannon assembly
-      const cannonAngle = Math.sin(t * 1.5) * 0.2 - 0.15;
+      const cannonAngle = sinT15 * 0.2 - 0.15;
       ctx.save();
-      ctx.translate(0, -65);
+      ctx.translate(0, -68);
       ctx.rotate(cannonAngle);
 
-      // Cannon housing
-      const cannonGrad = ctx.createLinearGradient(0, -8, 0, 8);
-      cannonGrad.addColorStop(0, "#4a4a52");
-      cannonGrad.addColorStop(0.5, "#3a3a42");
-      cannonGrad.addColorStop(1, "#2a2a32");
-      ctx.fillStyle = cannonGrad;
+      // Cannon housing - thick imposing barrel
+      ctx.fillStyle = "#3a3a42";
       ctx.beginPath();
-      ctx.arc(-5, 0, 10, Math.PI * 0.5, Math.PI * 1.5);
-      ctx.lineTo(35, -6);
-      ctx.lineTo(40, -4);
-      ctx.lineTo(40, 4);
-      ctx.lineTo(35, 6);
-      ctx.lineTo(-5, 6);
+      ctx.arc(-6, 0, 12, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.lineTo(38, -8);
+      ctx.lineTo(44, -5);
+      ctx.lineTo(44, 5);
+      ctx.lineTo(38, 8);
+      ctx.lineTo(-6, 8);
       ctx.closePath();
       ctx.fill();
+      // Cannon top highlight
+      ctx.fillStyle = "#4a4a54";
+      ctx.fillRect(-6, -8, 50, 4);
 
-      // Barrel detail rings
+      // Barrel reinforcement rings (batched stroke)
       ctx.strokeStyle = "#5a5a62";
       ctx.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
-        ctx.beginPath();
-        ctx.moveTo(8 + i * 8, -5);
-        ctx.lineTo(8 + i * 8, 5);
-        ctx.stroke();
-      }
+      ctx.beginPath();
+      ctx.moveTo(10, -8);
+      ctx.lineTo(10, 8);
+      ctx.moveTo(22, -8);
+      ctx.lineTo(22, 8);
+      ctx.moveTo(34, -7);
+      ctx.lineTo(34, 7);
+      ctx.stroke();
 
-      // Muzzle
+      // Mechanical gear on cannon breech
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(-6, 0, 8, 0, Math.PI * 2);
+      ctx.stroke();
+      // Gear cross (rotates)
+      const grCos = Math.cos(t * 2);
+      const grSin = Math.sin(t * 2);
+      ctx.beginPath();
+      ctx.moveTo(-6 + grCos * 7, grSin * 7);
+      ctx.lineTo(-6 - grCos * 7, -grSin * 7);
+      ctx.moveTo(-6 + grSin * 7, -grCos * 7);
+      ctx.lineTo(-6 - grSin * 7, grCos * 7);
+      ctx.stroke();
+
+      // Muzzle bore
       ctx.fillStyle = "#1a1a22";
       ctx.beginPath();
-      ctx.ellipse(40, 0, 4, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(44, 0, 5, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.restore();
 
-      // Muzzle flash & smoke
+      // Muzzle flash (flat fills, no gradient)
       const firePhase = (t * 2) % 3;
       if (firePhase < 0.3) {
         const flashSize = 1 - firePhase / 0.3;
-        // Fire flash
-        const flashGrad = ctx.createRadialGradient(35, -70, 0, 35, -70, 25 * flashSize);
-        flashGrad.addColorStop(0, `rgba(255, 255, 200, ${flashSize})`);
-        flashGrad.addColorStop(0.3, `rgba(255, 150, 50, ${flashSize * 0.8})`);
-        flashGrad.addColorStop(0.6, `rgba(255, 80, 0, ${flashSize * 0.5})`);
-        flashGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = flashGrad;
+        ctx.fillStyle = `rgba(255, 200, 80, ${flashSize * 0.8})`;
         ctx.beginPath();
-        ctx.arc(35, -70, 25 * flashSize, 0, Math.PI * 2);
+        ctx.arc(38, -73, 18 * flashSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 120, 20, ${flashSize * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(38, -73, 28 * flashSize, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Smoke particles
-      ctx.fillStyle = "rgba(100, 100, 100, 0.3)";
-      for (let i = 0; i < 5; i++) {
-        const smokeAge = (t * 1.5 + i * 0.4) % 2;
+      // Smoke particles (reduced from 5 to 3)
+      for (let i = 0; i < 3; i++) {
+        const smokeAge = (t * 1.5 + i * 0.6) % 2;
         if (smokeAge < 1.5) {
-          const sx = 30 + smokeAge * 15 + Math.sin(t * 3 + i) * 5;
-          const sy = -75 - smokeAge * 25;
-          const sr = 4 + smokeAge * 6;
-          ctx.globalAlpha = 0.4 - smokeAge * 0.25;
+          const sx = 32 + smokeAge * 15 + Math.sin(t * 3 + i * 2.1) * 5;
+          const sy = -78 - smokeAge * 25;
+          const sr = 4 + smokeAge * 7;
+          ctx.globalAlpha = 0.35 - smokeAge * 0.2;
+          ctx.fillStyle = "#888";
           ctx.beginPath();
           ctx.arc(sx, sy, sr, 0, Math.PI * 2);
           ctx.fill();
@@ -651,21 +713,20 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
       ctx.globalAlpha = 1;
 
-      // Glowing windows
-      for (let i = 0; i < 2; i++) {
-        const winGlow = 0.5 + Math.sin(t * 2 + i) * 0.3;
-        ctx.fillStyle = `rgba(255, 180, 100, ${winGlow})`;
-        ctx.fillRect(-8 + i * 10, -35, 6, 10);
-        // Window frame
-        ctx.strokeStyle = "#2a2a32";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(-8 + i * 10, -35, 6, 10);
-      }
+      // Glowing windows (unrolled, no loop)
+      const winGlow = 0.5 + sinT2 * 0.3;
+      ctx.fillStyle = `rgba(255, 180, 100, ${winGlow})`;
+      ctx.fillRect(-8, -35, 6, 10);
+      ctx.fillRect(2, -35, 6, 10);
+      ctx.strokeStyle = "#2a2a32";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-8, -35, 6, 10);
+      ctx.strokeRect(2, -35, 6, 10);
 
       ctx.restore();
     };
 
-    // E-QUAD LAB TOWER - High-tech Tesla Facility
+    // E-QUAD LAB TOWER - High-tech Energy Facility with Tesla Coils
     const drawLabTower = (x: number, y: number, scale: number) => {
       ctx.save();
       ctx.translate(x, y);
@@ -673,12 +734,12 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
       drawTowerShadow(0, 10, 35, 20);
 
-      // Isometric base
-      const baseGrad = ctx.createLinearGradient(-30, 0, 30, 15);
-      baseGrad.addColorStop(0, "#4a5a6a");
-      baseGrad.addColorStop(0.5, "#3a4a5a");
-      baseGrad.addColorStop(1, "#2a3a4a");
-      ctx.fillStyle = baseGrad;
+      // Cache trig values
+      const sinT4 = Math.sin(t * 4);
+      const sinT6 = Math.sin(t * 6);
+
+      // Isometric base (flat colors, no gradient)
+      ctx.fillStyle = "#3a4a5a";
       ctx.beginPath();
       ctx.moveTo(-28, 0);
       ctx.lineTo(0, 12);
@@ -686,157 +747,203 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineTo(0, -12);
       ctx.closePath();
       ctx.fill();
+      // Base top highlight
+      ctx.fillStyle = "#4a5a6a";
+      ctx.beginPath();
+      ctx.moveTo(-28, 0);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(28, 0);
+      ctx.lineTo(0, -2);
+      ctx.closePath();
+      ctx.fill();
 
-      // Main lab building - modern angular design
+      // Main lab building - angular modern design
       const labGrad = ctx.createLinearGradient(-25, -80, 25, 0);
       labGrad.addColorStop(0, "#5a6a7a");
-      labGrad.addColorStop(0.3, "#4a5a6a");
-      labGrad.addColorStop(0.6, "#3a4a5a");
+      labGrad.addColorStop(0.5, "#3e4e5e");
       labGrad.addColorStop(1, "#2a3a4a");
       ctx.fillStyle = labGrad;
       ctx.beginPath();
       ctx.moveTo(-24, -5);
-      ctx.lineTo(-24, -60);
-      ctx.lineTo(-20, -68);
-      ctx.lineTo(0, -75);
-      ctx.lineTo(20, -68);
-      ctx.lineTo(24, -60);
+      ctx.lineTo(-24, -62);
+      ctx.lineTo(-20, -72);
+      ctx.lineTo(0, -80);
+      ctx.lineTo(20, -72);
+      ctx.lineTo(24, -62);
       ctx.lineTo(24, -5);
       ctx.closePath();
       ctx.fill();
 
-      // Tech panel lines
+      // Tech panel lines (batched single stroke)
       ctx.strokeStyle = "#2a3a4a";
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
       for (let i = 0; i < 4; i++) {
-        ctx.beginPath();
         ctx.moveTo(-22, -15 - i * 15);
         ctx.lineTo(22, -15 - i * 15);
+      }
+      ctx.stroke();
+
+      // Glowing conduit pipes running up building sides
+      const conduitGlow = 0.5 + sinT4 * 0.3;
+      ctx.strokeStyle = `rgba(96, 165, 250, ${conduitGlow})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      // Left conduit
+      ctx.moveTo(-19, -5);
+      ctx.lineTo(-19, -35);
+      ctx.lineTo(-15, -52);
+      ctx.lineTo(-15, -68);
+      // Right conduit
+      ctx.moveTo(19, -5);
+      ctx.lineTo(19, -35);
+      ctx.lineTo(15, -52);
+      ctx.lineTo(15, -68);
+      ctx.stroke();
+
+      // Conduit junction nodes (batched)
+      ctx.fillStyle = `rgba(140, 200, 255, ${conduitGlow * 1.3})`;
+      ctx.beginPath();
+      ctx.arc(-19, -20, 2.5, 0, Math.PI * 2);
+      ctx.arc(-15, -52, 2.5, 0, Math.PI * 2);
+      ctx.arc(19, -20, 2.5, 0, Math.PI * 2);
+      ctx.arc(15, -52, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Central energy core with concentric rings
+      const corePulse = 0.6 + sinT4 * 0.4;
+      const coreGrad = ctx.createRadialGradient(0, -44, 0, 0, -44, 18);
+      coreGrad.addColorStop(0, `rgba(160, 210, 255, ${corePulse})`);
+      coreGrad.addColorStop(0.4, `rgba(96, 165, 250, ${corePulse * 0.6})`);
+      coreGrad.addColorStop(1, "rgba(59, 130, 246, 0)");
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, -44, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Concentric rotating ring arcs around core
+      for (let ring = 0; ring < 3; ring++) {
+        const ringR = 8 + ring * 5;
+        const ringRot = t * (3 - ring) + ring * 1.5;
+        ctx.strokeStyle = `rgba(120, 180, 255, ${0.6 - ring * 0.15})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, -44, ringR, ringRot, ringRot + Math.PI * 1.2);
         ctx.stroke();
       }
 
-      // Vertical accent strips
-      ctx.fillStyle = "#5a6a7a";
-      ctx.fillRect(-22, -60, 3, 55);
-      ctx.fillRect(19, -60, 3, 55);
-
-      // Energy core glow
-      const corePulse = 0.6 + Math.sin(t * 4) * 0.4;
-      const coreGrad = ctx.createRadialGradient(0, -40, 0, 0, -40, 20);
-      coreGrad.addColorStop(0, `rgba(96, 165, 250, ${corePulse})`);
-      coreGrad.addColorStop(0.5, `rgba(59, 130, 246, ${corePulse * 0.5})`);
-      coreGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = coreGrad;
+      // Viewing window behind core
+      ctx.fillStyle = `rgba(96, 165, 250, ${0.3 + corePulse * 0.2})`;
       ctx.beginPath();
-      ctx.arc(0, -40, 20, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Central viewing window
-      ctx.fillStyle = `rgba(96, 165, 250, ${0.4 + corePulse * 0.3})`;
-      ctx.beginPath();
-      ctx.moveTo(-10, -50);
-      ctx.lineTo(-10, -30);
-      ctx.lineTo(10, -30);
-      ctx.lineTo(10, -50);
-      ctx.lineTo(0, -55);
+      ctx.moveTo(-10, -54);
+      ctx.lineTo(-10, -34);
+      ctx.lineTo(10, -34);
+      ctx.lineTo(10, -54);
+      ctx.lineTo(0, -59);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "#3a4a5a";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Antenna array at top (3 antennas, batched strokes)
+      ctx.strokeStyle = "#7a8a9a";
       ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -80);
+      ctx.lineTo(0, -105);
+      ctx.moveTo(-10, -74);
+      ctx.lineTo(-12, -96);
+      ctx.moveTo(10, -74);
+      ctx.lineTo(12, -96);
+      ctx.stroke();
+      // Antenna tips (batched fill)
+      const antGlow = 0.6 + sinT6 * 0.4;
+      ctx.fillStyle = `rgba(150, 200, 255, ${antGlow})`;
+      ctx.beginPath();
+      ctx.arc(0, -107, 3, 0, Math.PI * 2);
+      ctx.arc(-12, -98, 2.5, 0, Math.PI * 2);
+      ctx.arc(12, -98, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Cross-bars between antennas
+      ctx.strokeStyle = "#5a6a7a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-11, -90);
+      ctx.lineTo(11, -90);
+      ctx.moveTo(-10.5, -84);
+      ctx.lineTo(10.5, -84);
       ctx.stroke();
 
       // Tesla coils - dual spires
       for (let side = -1; side <= 1; side += 2) {
-        const coilX = side * 18;
+        const coilX = side * 20;
 
-        // Coil base
+        // Coil body
         ctx.fillStyle = "#5a6a7a";
         ctx.beginPath();
-        ctx.moveTo(coilX - 5, -68);
-        ctx.lineTo(coilX - 4, -95);
-        ctx.lineTo(coilX + 4, -95);
-        ctx.lineTo(coilX + 5, -68);
+        ctx.moveTo(coilX - 4, -72);
+        ctx.lineTo(coilX - 3, -93);
+        ctx.lineTo(coilX + 3, -93);
+        ctx.lineTo(coilX + 4, -72);
         ctx.closePath();
         ctx.fill();
 
-        // Coil rings
+        // Coil rings (batched horizontal strokes)
         ctx.strokeStyle = "#7a8a9a";
-        ctx.lineWidth = 2;
-        for (let ring = 0; ring < 4; ring++) {
-          ctx.beginPath();
-          ctx.ellipse(coilX, -72 - ring * 6, 5 - ring * 0.5, 2, 0, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        // Energy sphere
-        const spherePulse = 0.7 + Math.sin(t * 6 + side * 2) * 0.3;
-        const sphereGrad = ctx.createRadialGradient(coilX, -100, 0, coilX, -100, 10);
-        sphereGrad.addColorStop(0, `rgba(200, 220, 255, ${spherePulse})`);
-        sphereGrad.addColorStop(0.4, `rgba(96, 165, 250, ${spherePulse * 0.8})`);
-        sphereGrad.addColorStop(1, `rgba(59, 130, 246, 0)`);
-        ctx.fillStyle = sphereGrad;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(coilX, -100, 10, 0, Math.PI * 2);
+        for (let ring = 0; ring < 3; ring++) {
+          const ry = -76 - ring * 6;
+          ctx.moveTo(coilX - 4 + ring * 0.3, ry);
+          ctx.lineTo(coilX + 4 - ring * 0.3, ry);
+        }
+        ctx.stroke();
+
+        // Energy sphere at tip (flat fills, no gradient)
+        const spherePulse = 0.7 + Math.sin(t * 6 + side * 2) * 0.3;
+        ctx.fillStyle = `rgba(170, 210, 255, ${spherePulse})`;
+        ctx.beginPath();
+        ctx.arc(coilX, -97, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(220, 240, 255, ${spherePulse})`;
+        ctx.beginPath();
+        ctx.arc(coilX, -97, 3, 0, Math.PI * 2);
         ctx.fill();
 
-        // Electric arcs
+        // Electric arcs (deterministic 2-segment, Math.sin not Math.random)
         const arcPhase = (t * 5 + side * 3) % 1;
         if (arcPhase < 0.7) {
-          ctx.strokeStyle = `rgba(150, 200, 255, ${0.8 - arcPhase})`;
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = `rgba(150, 200, 255, ${0.7 - arcPhase})`;
+          ctx.lineWidth = 1.5;
+          const midX = coilX + side * 18 + Math.sin(t * 4 + side) * 8;
+          const midY = -87 + Math.sin(t * 5 + side * 2) * 6;
+          const endX = coilX + side * 30 + Math.sin(t * 3 + side) * 10;
+          const endY = -77 + Math.sin(t * 6 + side * 3) * 8;
           ctx.beginPath();
-          ctx.moveTo(coilX, -100);
-
-          // Jagged lightning path
-          let lx = coilX;
-          let ly = -100;
-          const targetX = side * 45 + Math.sin(t * 8) * 20;
-          const targetY = -70 + Math.cos(t * 6) * 15;
-          for (let seg = 0; seg < 4; seg++) {
-            lx += (targetX - coilX) / 4 + (Math.random() - 0.5) * 15;
-            ly += (targetY + 100) / 4 + (Math.random() - 0.5) * 10;
-            ctx.lineTo(lx, ly);
-          }
+          ctx.moveTo(coilX, -97);
+          ctx.lineTo(midX, midY);
+          ctx.lineTo(endX, endY);
           ctx.stroke();
-
-          // Secondary arc
-          ctx.globalAlpha = 0.4;
-          ctx.beginPath();
-          ctx.moveTo(coilX, -100);
-          ctx.lineTo(coilX + side * 12, -85);
-          ctx.lineTo(coilX + side * 25, -75);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-        }
-
-        // Arc glow at connection point
-        if (arcPhase < 0.5) {
-          const arcGlow = ctx.createRadialGradient(coilX + side * 35, -70, 0, coilX + side * 35, -70, 15);
-          arcGlow.addColorStop(0, `rgba(150, 200, 255, ${0.5 - arcPhase})`);
-          arcGlow.addColorStop(1, "transparent");
-          ctx.fillStyle = arcGlow;
-          ctx.beginPath();
-          ctx.arc(coilX + side * 35, -70, 15, 0, Math.PI * 2);
-          ctx.fill();
         }
       }
 
-      // Floating energy particles
-      for (let p = 0; p < 8; p++) {
-        const pAngle = (t * 2 + p * Math.PI * 0.25) % (Math.PI * 2);
+      // Floating energy particles (reduced from 8 to 4)
+      for (let p = 0; p < 4; p++) {
+        const pAngle = (t * 2 + p * Math.PI * 0.5) % (Math.PI * 2);
+        const pCos = Math.cos(pAngle);
+        const pSin = Math.sin(pAngle);
         const pDist = 25 + Math.sin(t * 3 + p) * 5;
-        const px = Math.cos(pAngle) * pDist;
-        const py = -75 + Math.sin(pAngle) * 8;
-        ctx.fillStyle = `rgba(150, 200, 255, ${0.4 + Math.sin(t * 5 + p) * 0.3})`;
+        ctx.fillStyle = `rgba(150, 200, 255, ${0.5 + Math.sin(t * 5 + p) * 0.3})`;
         ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
+        ctx.arc(pCos * pDist, -80 + pSin * 8, 2.5, 0, Math.PI * 2);
         ctx.fill();
       }
 
       ctx.restore();
     };
 
-    // BLAIR ARCH TOWER - Gothic Architecture with Sonic Waves
+    // BLAIR ARCH TOWER - Imposing Gothic Cathedral with Sonic Waves
     const drawArchTower = (x: number, y: number, scale: number) => {
       ctx.save();
       ctx.translate(x, y);
@@ -844,51 +951,80 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
       drawTowerShadow(0, 10, 35, 20);
 
-      // Isometric base
-      const baseGrad = ctx.createLinearGradient(-30, 0, 30, 15);
-      baseGrad.addColorStop(0, "#7a6a5a");
-      baseGrad.addColorStop(0.5, "#6a5a4a");
-      baseGrad.addColorStop(1, "#5a4a3a");
-      ctx.fillStyle = baseGrad;
+      // Cache trig
+      const sinT2 = Math.sin(t * 2);
+      const sinT3 = Math.sin(t * 3);
+
+      // Isometric base (flat colors, no gradient)
+      ctx.fillStyle = "#5a4a3a";
       ctx.beginPath();
-      ctx.moveTo(-28, 0);
-      ctx.lineTo(0, 12);
-      ctx.lineTo(28, 0);
-      ctx.lineTo(0, -12);
+      ctx.moveTo(-30, 0);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(30, 0);
+      ctx.lineTo(0, -14);
       ctx.closePath();
       ctx.fill();
+      ctx.fillStyle = "#6a5a4a";
+      ctx.beginPath();
+      ctx.moveTo(-30, 0);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(30, 0);
+      ctx.lineTo(0, -4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Flying buttresses on both sides
+      for (let side = -1; side <= 1; side += 2) {
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.moveTo(side * 26, -10);
+        ctx.lineTo(side * 36, 2);
+        ctx.lineTo(side * 34, 2);
+        ctx.lineTo(side * 24, -15);
+        ctx.lineTo(side * 24, -42);
+        ctx.lineTo(side * 26, -40);
+        ctx.closePath();
+        ctx.fill();
+        // Buttress pinnacle cap
+        ctx.fillStyle = "#6a5a4a";
+        ctx.beginPath();
+        ctx.moveTo(side * 24, -42);
+        ctx.lineTo(side * 25, -47);
+        ctx.lineTo(side * 27, -40);
+        ctx.lineTo(side * 26, -40);
+        ctx.closePath();
+        ctx.fill();
+      }
 
       // Gothic columns with fluting
       for (let side = -1; side <= 1; side += 2) {
         const colX = side * 20;
-
-        // Column shaft
+        // Column shaft (single gradient per column)
         const colGrad = ctx.createLinearGradient(colX - 6, 0, colX + 6, 0);
-        colGrad.addColorStop(0, "#5a4a3a");
-        colGrad.addColorStop(0.3, "#7a6a5a");
-        colGrad.addColorStop(0.5, "#8a7a6a");
-        colGrad.addColorStop(0.7, "#7a6a5a");
-        colGrad.addColorStop(1, "#5a4a3a");
+        colGrad.addColorStop(0, "#4a3a2a");
+        colGrad.addColorStop(0.4, "#7a6a5a");
+        colGrad.addColorStop(0.6, "#7a6a5a");
+        colGrad.addColorStop(1, "#4a3a2a");
         ctx.fillStyle = colGrad;
-        ctx.fillRect(colX - 6, -60, 12, 65);
+        ctx.fillRect(colX - 6, -62, 12, 67);
 
-        // Column fluting (vertical lines)
-        ctx.strokeStyle = "#4a3a2a";
+        // Fluting lines (batched)
+        ctx.strokeStyle = "#3a2a1a";
         ctx.lineWidth = 1;
+        ctx.beginPath();
         for (let f = -2; f <= 2; f++) {
-          ctx.beginPath();
-          ctx.moveTo(colX + f * 2, -55);
+          ctx.moveTo(colX + f * 2, -57);
           ctx.lineTo(colX + f * 2, 0);
-          ctx.stroke();
         }
+        ctx.stroke();
 
-        // Capital (top decoration)
+        // Capital
         ctx.fillStyle = "#8a7a6a";
         ctx.beginPath();
-        ctx.moveTo(colX - 8, -60);
-        ctx.lineTo(colX - 10, -65);
-        ctx.lineTo(colX + 10, -65);
-        ctx.lineTo(colX + 8, -60);
+        ctx.moveTo(colX - 9, -62);
+        ctx.lineTo(colX - 11, -67);
+        ctx.lineTo(colX + 11, -67);
+        ctx.lineTo(colX + 9, -62);
         ctx.closePath();
         ctx.fill();
 
@@ -903,90 +1039,164 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Gothic arch with keystone
+      // Gargoyle perched on right side
+      ctx.fillStyle = "#555";
+      ctx.beginPath();
+      ctx.moveTo(27, -56);
+      ctx.lineTo(34, -51);
+      ctx.lineTo(37, -53);
+      ctx.lineTo(36, -59);
+      ctx.lineTo(31, -63);
+      ctx.lineTo(27, -59);
+      ctx.closePath();
+      ctx.fill();
+      // Gargoyle head
+      ctx.fillStyle = "#4a4a4a";
+      ctx.beginPath();
+      ctx.arc(37, -57, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Gargoyle wing
+      ctx.fillStyle = "#505050";
+      ctx.beginPath();
+      ctx.moveTo(29, -59);
+      ctx.lineTo(25, -69);
+      ctx.lineTo(33, -63);
+      ctx.closePath();
+      ctx.fill();
+
+      // Gothic arch - outer
       ctx.strokeStyle = "#8a7a6a";
       ctx.lineWidth = 10;
       ctx.beginPath();
       ctx.arc(0, -55, 26, Math.PI, 0);
       ctx.stroke();
 
-      // Inner arch
+      // Gothic arch - inner
       ctx.strokeStyle = "#6a5a4a";
       ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.arc(0, -55, 20, Math.PI, 0);
       ctx.stroke();
 
+      // Dark arch interior
+      ctx.fillStyle = "#1a1510";
+      ctx.beginPath();
+      ctx.arc(0, -55, 17, Math.PI, 0);
+      ctx.lineTo(17, -5);
+      ctx.lineTo(-17, -5);
+      ctx.lineTo(-17, -55);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bell hanging in the arch
+      ctx.fillStyle = "#b8a040";
+      ctx.beginPath();
+      ctx.moveTo(-5, -61);
+      ctx.lineTo(-7, -51);
+      ctx.quadraticCurveTo(-8, -48, 0, -46);
+      ctx.quadraticCurveTo(8, -48, 7, -51);
+      ctx.lineTo(5, -61);
+      ctx.closePath();
+      ctx.fill();
+      // Bell highlight
+      ctx.fillStyle = "#d0c060";
+      ctx.beginPath();
+      ctx.moveTo(-3, -59);
+      ctx.lineTo(-4, -52);
+      ctx.quadraticCurveTo(-2, -49, 0, -49);
+      ctx.lineTo(0, -59);
+      ctx.closePath();
+      ctx.fill();
+      // Bell clapper (swings)
+      const clapperSwing = sinT3 * 2;
+      ctx.fillStyle = "#806020";
+      ctx.beginPath();
+      ctx.arc(clapperSwing, -45, 2, 0, Math.PI * 2);
+      ctx.fill();
+      // Bell mount bar
+      ctx.strokeStyle = "#806020";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-5, -63);
+      ctx.lineTo(5, -63);
+      ctx.stroke();
+
       // Keystone
       ctx.fillStyle = "#9a8a7a";
       ctx.beginPath();
       ctx.moveTo(-6, -82);
-      ctx.lineTo(0, -88);
+      ctx.lineTo(0, -90);
       ctx.lineTo(6, -82);
-      ctx.lineTo(4, -75);
-      ctx.lineTo(-4, -75);
+      ctx.lineTo(4, -76);
+      ctx.lineTo(-4, -76);
       ctx.closePath();
       ctx.fill();
 
-      // Ornate spires
+      // Ornate spires with orbs
       for (let side = -1; side <= 1; side += 2) {
         const spireX = side * 24;
         ctx.fillStyle = "#7a6a5a";
         ctx.beginPath();
-        ctx.moveTo(spireX - 4, -65);
-        ctx.lineTo(spireX, -95);
-        ctx.lineTo(spireX + 4, -65);
+        ctx.moveTo(spireX - 4, -67);
+        ctx.lineTo(spireX, -100);
+        ctx.lineTo(spireX + 4, -67);
         ctx.closePath();
         ctx.fill();
-
         // Spire orb
         ctx.fillStyle = "#a855f7";
         ctx.beginPath();
-        ctx.arc(spireX, -98, 4, 0, Math.PI * 2);
+        ctx.arc(spireX, -103, 4, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Central rose window (glowing)
-      const rosePulse = 0.5 + Math.sin(t * 2) * 0.3;
-      const roseGrad = ctx.createRadialGradient(0, -55, 0, 0, -55, 15);
-      roseGrad.addColorStop(0, `rgba(200, 150, 255, ${rosePulse})`);
-      roseGrad.addColorStop(0.5, `rgba(168, 85, 247, ${rosePulse * 0.7})`);
-      roseGrad.addColorStop(1, `rgba(139, 92, 246, ${rosePulse * 0.3})`);
-      ctx.fillStyle = roseGrad;
+      // Stained glass rose window (multi-colored segments)
+      const rosePulse = 0.5 + sinT2 * 0.3;
+      // Outer warm glow ring
+      ctx.fillStyle = `rgba(200, 170, 80, ${rosePulse * 0.5})`;
       ctx.beginPath();
-      ctx.arc(0, -55, 14, 0, Math.PI * 2);
+      ctx.arc(0, -55, 15, 0, Math.PI * 2);
       ctx.fill();
-
-      // Rose window spokes
-      ctx.strokeStyle = "#4a3a2a";
-      ctx.lineWidth = 1.5;
-      for (let spoke = 0; spoke < 8; spoke++) {
-        const angle = spoke * Math.PI / 4;
+      // 6 colored stained glass wedges
+      const glassR = [220, 60, 60, 200, 160, 60];
+      const glassG = [60, 120, 180, 160, 60, 180];
+      const glassB = [60, 220, 80, 60, 200, 200];
+      for (let seg = 0; seg < 6; seg++) {
+        const a1 = seg * Math.PI / 3;
+        const a2 = a1 + Math.PI / 3;
+        ctx.fillStyle = `rgba(${glassR[seg]}, ${glassG[seg]}, ${glassB[seg]}, ${rosePulse * 0.45})`;
         ctx.beginPath();
         ctx.moveTo(0, -55);
-        ctx.lineTo(Math.cos(angle) * 12, -55 + Math.sin(angle) * 12);
-        ctx.stroke();
+        ctx.arc(0, -55, 12, a1, a2);
+        ctx.closePath();
+        ctx.fill();
       }
+      // Rose window spokes (batched)
+      ctx.strokeStyle = "#3a2a1a";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let spoke = 0; spoke < 6; spoke++) {
+        const angle = spoke * Math.PI / 3;
+        ctx.moveTo(0, -55);
+        ctx.lineTo(Math.cos(angle) * 14, -55 + Math.sin(angle) * 14);
+      }
+      ctx.stroke();
+      // Center jewel
+      ctx.fillStyle = `rgba(255, 220, 180, ${rosePulse})`;
+      ctx.beginPath();
+      ctx.arc(0, -55, 3, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Sonic wave emissions - purple concentric rings
+      // Sonic wave emissions (reduced from 5 to 3, no distortion double-stroke)
       const waveSpeed = t * 4;
-      for (let wave = 0; wave < 5; wave++) {
-        const wavePhase = ((waveSpeed + wave * 1.2) % 6) / 6;
+      for (let wave = 0; wave < 3; wave++) {
+        const wavePhase = ((waveSpeed + wave * 1.8) % 6) / 6;
         const waveRadius = 15 + wavePhase * 70;
-        const waveAlpha = (1 - wavePhase) * 0.6;
-
+        const waveAlpha = (1 - wavePhase) * 0.5;
         if (waveAlpha > 0.05) {
           ctx.strokeStyle = `rgba(168, 85, 247, ${waveAlpha})`;
           ctx.lineWidth = 3 - wavePhase * 2;
           ctx.beginPath();
           ctx.arc(0, -55, waveRadius, Math.PI * 0.15, Math.PI * 0.85);
-          ctx.stroke();
-
-          // Wave distortion effect
-          ctx.strokeStyle = `rgba(200, 150, 255, ${waveAlpha * 0.5})`;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(0, -55, waveRadius - 3, Math.PI * 0.2, Math.PI * 0.8);
           ctx.stroke();
         }
       }
@@ -994,7 +1204,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.restore();
     };
 
-    // DINKY STATION - Train depot with animated locomotive
+    // DINKY STATION - Charming Victorian Train Depot
     const drawDinkyStation = (x: number, y: number, scale: number) => {
       ctx.save();
       ctx.translate(x, y);
@@ -1002,35 +1212,44 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
       drawTowerShadow(0, 15, 50, 25);
 
-      // Platform base
+      // Cache trig values
+      const sinT15 = Math.sin(t * 1.5);
+      const sinT2 = Math.sin(t * 2);
+      const sinT06 = Math.sin(t * 0.6);
+
+      // Platform base with edge detail
       ctx.fillStyle = "#3a3a3a";
-      ctx.fillRect(-45, 5, 90, 12);
+      ctx.fillRect(-48, 5, 96, 12);
       ctx.fillStyle = "#4a4a4a";
-      ctx.fillRect(-45, 5, 90, 4);
+      ctx.fillRect(-48, 5, 96, 4);
+      ctx.fillStyle = "#555";
+      ctx.fillRect(-48, 5, 96, 1.5);
 
       // Station building - Victorian style
       const stationGrad = ctx.createLinearGradient(-35, -55, 35, 0);
       stationGrad.addColorStop(0, "#6a5a4a");
-      stationGrad.addColorStop(0.3, "#5a4a3a");
-      stationGrad.addColorStop(0.7, "#4a3a2a");
+      stationGrad.addColorStop(0.5, "#4a3a2a");
       stationGrad.addColorStop(1, "#3a2a1a");
       ctx.fillStyle = stationGrad;
       ctx.fillRect(-35, -45, 70, 50);
 
-      // Decorative trim
+      // Decorative Victorian trim bands
       ctx.fillStyle = "#7a6a5a";
       ctx.fillRect(-38, -48, 76, 5);
       ctx.fillRect(-38, -5, 76, 5);
+      // Mid-band decorative molding
+      ctx.fillStyle = "#6a5a4a";
+      ctx.fillRect(-36, -22, 72, 2);
 
       // Windows with warm glow
-      const windowGlow = 0.5 + Math.sin(t * 1.5) * 0.2;
+      const windowGlow = 0.5 + sinT15 * 0.2;
       for (let w = 0; w < 3; w++) {
         ctx.fillStyle = `rgba(255, 200, 120, ${windowGlow})`;
         ctx.fillRect(-25 + w * 20, -35, 12, 18);
         ctx.strokeStyle = "#3a2a1a";
         ctx.lineWidth = 2;
         ctx.strokeRect(-25 + w * 20, -35, 12, 18);
-        // Window cross
+        // Window cross (batched per window)
         ctx.beginPath();
         ctx.moveTo(-19 + w * 20, -35);
         ctx.lineTo(-19 + w * 20, -17);
@@ -1048,15 +1267,61 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Roof tiles pattern
+      // Roof tiles pattern (batched)
       ctx.strokeStyle = "#3a2a1a";
       ctx.lineWidth = 1;
+      ctx.beginPath();
       for (let tile = 0; tile < 6; tile++) {
-        ctx.beginPath();
         ctx.moveTo(-35 + tile * 14, -48);
         ctx.lineTo(-28 + tile * 14, -55);
-        ctx.stroke();
       }
+      ctx.stroke();
+
+      // Platform canopy extending over tracks
+      ctx.fillStyle = "#3a2a1a";
+      ctx.fillRect(-40, -10, 80, 4);
+      // Canopy front edge
+      ctx.fillStyle = "#5a4a3a";
+      ctx.fillRect(-40, -6, 80, 2);
+      // Support pillars (thin iron columns)
+      ctx.fillStyle = "#5a5a5a";
+      ctx.fillRect(-37, -10, 2, 15);
+      ctx.fillRect(-12, -10, 2, 15);
+      ctx.fillRect(10, -10, 2, 15);
+      ctx.fillRect(35, -10, 2, 15);
+
+      // Luggage/cargo on platform
+      // Trunk
+      ctx.fillStyle = "#6a4a2a";
+      ctx.fillRect(20, -2, 10, 7);
+      ctx.fillStyle = "#5a3a1a";
+      ctx.fillRect(20, -2, 10, 2);
+      // Barrel
+      ctx.fillStyle = "#5a4a3a";
+      ctx.beginPath();
+      ctx.ellipse(-30, 1, 4, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#3a2a1a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-34, -1);
+      ctx.lineTo(-26, -1);
+      ctx.moveTo(-34, 3);
+      ctx.lineTo(-26, 3);
+      ctx.stroke();
+
+      // Signal light on post (right side)
+      ctx.fillStyle = "#4a4a4a";
+      ctx.fillRect(42, -30, 2, 35);
+      // Signal housing
+      ctx.fillStyle = "#3a3a3a";
+      ctx.fillRect(40, -34, 6, 6);
+      // Signal light (alternating red/green)
+      const signalPhase = Math.sin(t * 1.5) > 0;
+      ctx.fillStyle = signalPhase ? "#44cc44" : "#cc4444";
+      ctx.beginPath();
+      ctx.arc(43, -31, 2, 0, Math.PI * 2);
+      ctx.fill();
 
       // Clock tower
       ctx.fillStyle = "#5a4a3a";
@@ -1077,19 +1342,23 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.strokeStyle = "#2a2a2a";
       ctx.lineWidth = 1;
       ctx.stroke();
-      // Clock hands
+      // Clock hands (cache trig)
       const hourAngle = t * 0.1;
       const minAngle = t * 1.2;
+      const hourSin = Math.sin(hourAngle);
+      const hourCos = Math.cos(hourAngle);
+      const minSin = Math.sin(minAngle);
+      const minCos = Math.cos(minAngle);
       ctx.strokeStyle = "#1a1a1a";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, -70);
-      ctx.lineTo(Math.sin(hourAngle) * 3, -70 - Math.cos(hourAngle) * 3);
+      ctx.lineTo(hourSin * 3, -70 - hourCos * 3);
       ctx.stroke();
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(0, -70);
-      ctx.lineTo(Math.sin(minAngle) * 5, -70 - Math.cos(minAngle) * 5);
+      ctx.lineTo(minSin * 5, -70 - minCos * 5);
       ctx.stroke();
 
       // Train tracks
@@ -1115,8 +1384,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
 
       // Animated Princeton Dinky train
-      const trainX = Math.sin(t * 0.6) * 35;
+      const trainX = sinT06 * 35;
       const trainBounce = Math.abs(Math.sin(t * 8)) * 1;
+      const tb = trainBounce;
 
       // Train shadow
       ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
@@ -1124,53 +1394,76 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(trainX, 18, 18, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Locomotive body
-      const trainGrad = ctx.createLinearGradient(trainX - 15, -5, trainX + 15, 10);
-      trainGrad.addColorStop(0, "#ff8833");
-      trainGrad.addColorStop(0.5, "#f97316");
-      trainGrad.addColorStop(1, "#ea580c");
-      ctx.fillStyle = trainGrad;
-      ctx.fillRect(trainX - 15, -8 - trainBounce, 30, 18);
+      // Locomotive body (flat color, no gradient for moving object)
+      ctx.fillStyle = "#f97316";
+      ctx.fillRect(trainX - 15, -8 - tb, 30, 18);
+      // Body highlight
+      ctx.fillStyle = "#ff8833";
+      ctx.fillRect(trainX - 15, -8 - tb, 30, 4);
+
+      // Cowcatcher at front
+      ctx.fillStyle = "#3a3a3a";
+      ctx.beginPath();
+      ctx.moveTo(trainX + 15, 4 - tb);
+      ctx.lineTo(trainX + 20, 10 - tb);
+      ctx.lineTo(trainX + 15, 10 - tb);
+      ctx.closePath();
+      ctx.fill();
+      // Cowcatcher bars
+      ctx.strokeStyle = "#4a4a4a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(trainX + 15, 2 - tb);
+      ctx.lineTo(trainX + 19, 9 - tb);
+      ctx.moveTo(trainX + 15, 6 - tb);
+      ctx.lineTo(trainX + 18, 10 - tb);
+      ctx.stroke();
 
       // Cabin
       ctx.fillStyle = "#1a1a1a";
-      ctx.fillRect(trainX - 12, -18 - trainBounce, 12, 12);
+      ctx.fillRect(trainX - 12, -18 - tb, 12, 12);
 
       // Cabin window
-      ctx.fillStyle = `rgba(255, 200, 120, ${0.6 + Math.sin(t * 2) * 0.2})`;
-      ctx.fillRect(trainX - 10, -16 - trainBounce, 8, 6);
+      ctx.fillStyle = `rgba(255, 200, 120, ${0.6 + sinT2 * 0.2})`;
+      ctx.fillRect(trainX - 10, -16 - tb, 8, 6);
 
       // Smokestack
       ctx.fillStyle = "#2a2a2a";
-      ctx.fillRect(trainX + 5, -22 - trainBounce, 6, 14);
+      ctx.fillRect(trainX + 5, -22 - tb, 6, 14);
+      // Smokestack cap
+      ctx.fillStyle = "#3a3a3a";
+      ctx.fillRect(trainX + 4, -23 - tb, 8, 3);
 
-      // Wheels with rotation
+      // Wheels (batched fills, then batched cross spokes)
       const wheelRot = t * 8;
+      const wrCos = Math.cos(wheelRot);
+      const wrSin = Math.sin(wheelRot);
       ctx.fillStyle = "#1a1a1a";
+      ctx.beginPath();
+      ctx.arc(trainX - 10, 8, 5, 0, Math.PI * 2);
+      ctx.arc(trainX, 8, 5, 0, Math.PI * 2);
+      ctx.arc(trainX + 10, 8, 5, 0, Math.PI * 2);
+      ctx.fill();
+      // Simplified cross spokes for all 3 wheels (batched)
+      ctx.strokeStyle = "#3a3a3a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
       for (let wheel = 0; wheel < 3; wheel++) {
         const wx = trainX - 10 + wheel * 10;
-        ctx.beginPath();
-        ctx.arc(wx, 8, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Wheel spokes
-        ctx.strokeStyle = "#3a3a3a";
-        ctx.lineWidth = 1;
-        for (let spoke = 0; spoke < 4; spoke++) {
-          const spokeAngle = wheelRot + spoke * Math.PI / 2;
-          ctx.beginPath();
-          ctx.moveTo(wx, 8);
-          ctx.lineTo(wx + Math.cos(spokeAngle) * 4, 8 + Math.sin(spokeAngle) * 4);
-          ctx.stroke();
-        }
+        ctx.moveTo(wx + wrCos * 4, 8 + wrSin * 4);
+        ctx.lineTo(wx - wrCos * 4, 8 - wrSin * 4);
+        ctx.moveTo(wx + wrSin * 4, 8 - wrCos * 4);
+        ctx.lineTo(wx - wrSin * 4, 8 + wrCos * 4);
       }
+      ctx.stroke();
 
-      // Steam puffs
-      for (let puff = 0; puff < 5; puff++) {
-        const puffAge = (t * 2 + puff * 0.5) % 2.5;
+      // Steam puffs (reduced from 5 to 3)
+      for (let puff = 0; puff < 3; puff++) {
+        const puffAge = (t * 2 + puff * 0.7) % 2.5;
         if (puffAge < 2) {
-          const px = trainX + 8 + puffAge * 8 + Math.sin(t * 4 + puff) * 4;
-          const py = -25 - trainBounce - puffAge * 15;
-          const pSize = 3 + puffAge * 5;
+          const px = trainX + 8 + puffAge * 8 + Math.sin(t * 4 + puff * 2.1) * 4;
+          const py = -26 - tb - puffAge * 15;
+          const pSize = 3 + puffAge * 6;
           ctx.fillStyle = `rgba(220, 220, 220, ${0.5 - puffAge * 0.2})`;
           ctx.beginPath();
           ctx.arc(px, py, pSize, 0, Math.PI * 2);
@@ -1182,7 +1475,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.fillStyle = "#000000";
       ctx.font = "bold 10px serif";
       ctx.textAlign = "center";
-      ctx.fillText("P", trainX, 2 - trainBounce);
+      ctx.fillText("P", trainX, 2 - tb);
 
       ctx.restore();
     };
@@ -1669,14 +1962,21 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.translate(x, y + float);
       ctx.rotate(wobble);
 
-      // Eerie glow
-      const bookGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
-      bookGlow.addColorStop(0, "rgba(74, 222, 128, 0.3)");
-      bookGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = bookGlow;
+      // Dark aura dripping effect
+      const sinT2i = Math.sin(t * 2 + index);
+      const dripAlpha = 0.15 + sinT2i * 0.05;
+      ctx.fillStyle = `rgba(20, 60, 20, ${dripAlpha})`;
       ctx.beginPath();
-      ctx.arc(0, 0, 20, 0, Math.PI * 2);
+      ctx.ellipse(0, 8, 16, 22, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Drip tendrils
+      for (let d = 0; d < 3; d++) {
+        const dripLen = 4 + Math.sin(t * 3 + d) * 2;
+        ctx.fillStyle = `rgba(10, 40, 10, ${0.2 - d * 0.05})`;
+        ctx.beginPath();
+        ctx.ellipse(-6 + d * 6, 18 + Math.sin(t * 2.5 + d * 2.1 + index) * 6, 2, dripLen, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // Shadow
       ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
@@ -1684,12 +1984,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(0, 18 - float, 12, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Book cover with gradient
-      const coverGrad = ctx.createLinearGradient(-10, -15, 10, 15);
-      coverGrad.addColorStop(0, "#22c55e");
-      coverGrad.addColorStop(0.5, "#4ade80");
-      coverGrad.addColorStop(1, "#16a34a");
-      ctx.fillStyle = coverGrad;
+      // Book cover - flat menacing dark green
+      ctx.fillStyle = "#1a6b35";
       ctx.beginPath();
       ctx.moveTo(-10, -14);
       ctx.lineTo(10, -14);
@@ -1699,44 +1995,102 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Spine
-      ctx.fillStyle = "#15803d";
+      // Spine - darker
+      ctx.fillStyle = "#0d4020";
       ctx.fillRect(-12, -12, 3, 26);
 
-      // Pages
-      ctx.fillStyle = "#f0fdf4";
-      ctx.fillRect(-8, -12, 18, 24);
+      // Mystical chain binding the book
+      ctx.strokeStyle = "#8b7355";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-12, -2);
+      ctx.lineTo(12, -2);
+      ctx.stroke();
+      // Chain links
+      ctx.strokeStyle = "#a08860";
+      ctx.lineWidth = 1;
+      for (let c = 0; c < 4; c++) {
+        ctx.beginPath();
+        ctx.ellipse(-8 + c * 6, -2, 2.5, 1.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // Padlock
+      ctx.fillStyle = "#8b7355";
+      ctx.fillRect(-2, -5, 4, 4);
+      ctx.strokeStyle = "#a08860";
+      ctx.beginPath();
+      ctx.arc(0, -6, 2, Math.PI, 0);
+      ctx.stroke();
 
-      // Page lines (text)
-      ctx.strokeStyle = "#94a3b8";
+      // Pages with torn/ragged edges
+      ctx.fillStyle = "#e0d8c0";
+      ctx.beginPath();
+      ctx.moveTo(-8, -12);
+      ctx.lineTo(8, -12);
+      ctx.lineTo(9, -8);
+      ctx.lineTo(7, -4);
+      ctx.lineTo(9, 0);
+      ctx.lineTo(7, 4);
+      ctx.lineTo(9, 8);
+      ctx.lineTo(7, 12);
+      ctx.lineTo(-8, 12);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stained page marks
+      ctx.fillStyle = "rgba(80, 40, 20, 0.15)";
+      ctx.beginPath();
+      ctx.arc(2, 4, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Mystical text lines
+      ctx.strokeStyle = "#6b5b4b";
       ctx.lineWidth = 0.5;
-      for (let line = 0; line < 6; line++) {
+      for (let line = 0; line < 5; line++) {
         ctx.beginPath();
         ctx.moveTo(-6, -8 + line * 4);
-        ctx.lineTo(8, -8 + line * 4);
+        ctx.lineTo(5 + Math.sin(line * 1.7) * 2, -8 + line * 4);
         ctx.stroke();
       }
 
-      // Evil eyes
-      const eyePulse = 0.7 + Math.sin(t * 6 + index) * 0.3;
+      // Evil eyes - more expressive
+      const sinT6i = Math.sin(t * 6 + index);
+      const eyePulse = 0.7 + sinT6i * 0.3;
       ctx.fillStyle = `rgba(220, 38, 38, ${eyePulse})`;
       ctx.beginPath();
       ctx.arc(-2, -2, 3, 0, Math.PI * 2);
       ctx.arc(5, -2, 3, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#000000";
+      // Pupils
+      ctx.fillStyle = "#000";
       ctx.beginPath();
       ctx.arc(-2, -2, 1.5, 0, Math.PI * 2);
       ctx.arc(5, -2, 1.5, 0, Math.PI * 2);
       ctx.fill();
+      // Angry brow lines
+      ctx.strokeStyle = "#660000";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, -6);
+      ctx.lineTo(-1, -4.5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(8, -6);
+      ctx.lineTo(4, -4.5);
+      ctx.stroke();
 
-      // Floating letters/symbols
-      ctx.fillStyle = `rgba(74, 222, 128, ${0.3 + Math.sin(t * 4 + index) * 0.2})`;
+      // Floating varied symbols - reduced to 3
+      const symbols = ["\u03A3", "\u222B", "\u03C0"];
+      const sinT4i = Math.sin(t * 4 + index);
+      const symAlpha = 0.3 + sinT4i * 0.2;
+      ctx.fillStyle = `rgba(74, 222, 128, ${symAlpha})`;
       ctx.font = "8px serif";
-      for (let sym = 0; sym < 4; sym++) {
-        const symAngle = t * 2 + sym * Math.PI * 0.5;
+      for (let sym = 0; sym < 3; sym++) {
+        const symAngle = t * 2 + sym * 2.094;
+        const symCos = Math.cos(symAngle);
+        const symSin = Math.sin(symAngle);
         const symDist = 18 + Math.sin(t * 3 + sym) * 3;
-        ctx.fillText("∑", Math.cos(symAngle) * symDist, -5 + Math.sin(symAngle) * symDist * 0.5);
+        ctx.fillText(symbols[sym], symCos * symDist, -5 + symSin * symDist * 0.5);
       }
 
       ctx.restore();
@@ -1745,7 +2099,11 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     // Nassau Lion - Legendary Stone Golem Boss
     const drawNassauLion = (x: number, y: number) => {
       const stomp = Math.abs(Math.sin(t * 1.5)) * 3;
-      const breathe = Math.sin(t * 1.2) * 2;
+      const sinT12 = Math.sin(t * 1.2);
+      const breathe = sinT12 * 2;
+      const sinT2 = Math.sin(t * 2);
+      const sinT3 = Math.sin(t * 3);
+      const sinT4 = Math.sin(t * 4);
       ctx.save();
       ctx.translate(x, y + stomp);
 
@@ -1755,14 +2113,16 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(0, 25, 35, 12, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glowing eye trail effect
-      const eyeGlow = ctx.createRadialGradient(0, -45, 0, 0, -45, 50);
-      eyeGlow.addColorStop(0, `rgba(234, 179, 8, ${0.3 + Math.sin(t * 3) * 0.15})`);
-      eyeGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = eyeGlow;
-      ctx.beginPath();
-      ctx.arc(0, -45, 50, 0, Math.PI * 2);
-      ctx.fill();
+      // Dust particles at feet (only 3)
+      for (let d = 0; d < 3; d++) {
+        const dustX = -15 + d * 15 + Math.sin(t * 2 + d * 3.7) * 5;
+        const dustY = 22 + Math.sin(t * 1.5 + d * 2.1) * 3;
+        const dustAlpha = 0.15 + Math.sin(t * 3 + d * 1.3) * 0.1;
+        ctx.fillStyle = `rgba(120, 113, 108, ${dustAlpha})`;
+        ctx.beginPath();
+        ctx.arc(dustX, dustY, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // Massive stone body
       const bodyGrad = ctx.createLinearGradient(-30, -50, 30, 20);
@@ -1779,8 +2139,35 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Stone texture cracks
-      ctx.strokeStyle = "#1c1917";
+      // Shoulder armor plates
+      ctx.fillStyle = "#57534e";
+      ctx.beginPath();
+      ctx.moveTo(-28, -32);
+      ctx.lineTo(-38, -25);
+      ctx.lineTo(-36, -18);
+      ctx.lineTo(-28, -20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(28, -32);
+      ctx.lineTo(38, -25);
+      ctx.lineTo(36, -18);
+      ctx.lineTo(28, -20);
+      ctx.closePath();
+      ctx.fill();
+      // Armor edge highlights
+      ctx.strokeStyle = "#78716c";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-38, -25);
+      ctx.lineTo(-36, -18);
+      ctx.moveTo(38, -25);
+      ctx.lineTo(36, -18);
+      ctx.stroke();
+
+      // Cracked glowing veins (lava-like)
+      const veinGlow = 0.5 + sinT3 * 0.3;
+      ctx.strokeStyle = `rgba(239, 68, 68, ${veinGlow})`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(-15, -30);
@@ -1791,6 +2178,19 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.moveTo(10, -25);
       ctx.lineTo(15, -5);
       ctx.lineTo(8, 10);
+      ctx.stroke();
+      // Additional lava veins
+      ctx.strokeStyle = `rgba(251, 146, 60, ${veinGlow * 0.7})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-5, -28);
+      ctx.lineTo(-8, -15);
+      ctx.lineTo(-2, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(20, -20);
+      ctx.lineTo(22, -8);
+      ctx.lineTo(18, 5);
       ctx.stroke();
 
       // Massive legs
@@ -1811,16 +2211,25 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.arc(0, -50 + breathe, 24, 0, Math.PI * 2);
       ctx.fill();
 
-      // Majestic stone mane
+      // Majestic stone mane with pointed shards - reduced to 8 per row
       for (let maneRow = 0; maneRow < 2; maneRow++) {
-        for (let i = 0; i < 10; i++) {
-          const angle = (i / 10) * Math.PI * 2 - Math.PI * 0.5;
-          const maneX = Math.cos(angle) * (28 + maneRow * 8);
-          const maneY = -50 + breathe + Math.sin(angle) * (28 + maneRow * 8);
+        const r = 28 + maneRow * 8;
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2 - Math.PI * 0.5;
+          const cosA = Math.cos(angle);
+          const sinA = Math.sin(angle);
+          const maneX = cosA * r;
+          const maneY = -50 + breathe + sinA * r;
           const manePulse = Math.sin(t * 2 + i * 0.5) * 2;
+          const shardLen = 12 - maneRow * 3;
           ctx.fillStyle = maneRow === 0 ? "#a8a29e" : "#78716c";
           ctx.beginPath();
-          ctx.ellipse(maneX, maneY + manePulse, 8 - maneRow * 2, 10 - maneRow * 2, angle, 0, Math.PI * 2);
+          // Pointed shard tip
+          ctx.moveTo(maneX + cosA * shardLen, maneY + sinA * shardLen + manePulse);
+          // Base
+          ctx.lineTo(maneX + Math.cos(angle + 1.2) * 4, maneY + Math.sin(angle + 1.2) * 4 + manePulse);
+          ctx.lineTo(maneX + Math.cos(angle - 1.2) * 4, maneY + Math.sin(angle - 1.2) * 4 + manePulse);
+          ctx.closePath();
           ctx.fill();
         }
       }
@@ -1831,40 +2240,55 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(0, -42 + breathe, 10, 8, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Glowing fierce eyes
-      const eyeIntensity = 0.7 + Math.sin(t * 4) * 0.3;
+      // Glowing fierce eyes - flat colors for performance
+      const eyeIntensity = 0.7 + sinT4 * 0.3;
       for (let eye = -1; eye <= 1; eye += 2) {
-        // Eye glow
-        const singleEyeGlow = ctx.createRadialGradient(eye * 10, -55 + breathe, 0, eye * 10, -55 + breathe, 10);
-        singleEyeGlow.addColorStop(0, `rgba(234, 179, 8, ${eyeIntensity})`);
-        singleEyeGlow.addColorStop(0.5, `rgba(251, 191, 36, ${eyeIntensity * 0.5})`);
-        singleEyeGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = singleEyeGlow;
+        // Eye glow - flat
+        ctx.fillStyle = `rgba(234, 179, 8, ${eyeIntensity * 0.3})`;
         ctx.beginPath();
-        ctx.arc(eye * 10, -55 + breathe, 10, 0, Math.PI * 2);
+        ctx.arc(eye * 10, -55 + breathe, 8, 0, Math.PI * 2);
         ctx.fill();
-
         // Eye core
         ctx.fillStyle = "#fbbf24";
         ctx.beginPath();
         ctx.ellipse(eye * 10, -55 + breathe, 4, 5, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#000000";
+        ctx.fillStyle = "#000";
         ctx.beginPath();
         ctx.ellipse(eye * 10, -55 + breathe, 2, 3, 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Crown/horn decorations
+      // Elaborate crown/horns with gem
       ctx.fillStyle = "#c9a227";
       for (let horn = -1; horn <= 1; horn += 2) {
+        // Main horn - larger
         ctx.beginPath();
         ctx.moveTo(horn * 15, -72 + breathe);
-        ctx.lineTo(horn * 20, -85 + breathe);
+        ctx.lineTo(horn * 22, -92 + breathe);
         ctx.lineTo(horn * 12, -70 + breathe);
         ctx.closePath();
         ctx.fill();
+        // Secondary horn prong
+        ctx.fillStyle = "#b8941e";
+        ctx.beginPath();
+        ctx.moveTo(horn * 18, -80 + breathe);
+        ctx.lineTo(horn * 28, -88 + breathe);
+        ctx.lineTo(horn * 16, -78 + breathe);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#c9a227";
       }
+      // Crown gem (center)
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(0, -74 + breathe, 3, 0, Math.PI * 2);
+      ctx.fill();
+      // Gem highlight
+      ctx.fillStyle = "#fca5a5";
+      ctx.beginPath();
+      ctx.arc(-1, -75 + breathe, 1, 0, Math.PI * 2);
+      ctx.fill();
 
       // Ground crack effect when stomping
       if (stomp > 2) {
@@ -1884,20 +2308,25 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // Tiger Transit Wyvern - MASSIVE TERRIFYING DRAGON
     const drawWyvern = (x: number, y: number, index: number, scale: number = 0.75) => {
-      const wingFlap = Math.sin(t * 5 + index) * 0.6;
-      const bodyWave = Math.sin(t * 3 + index) * 4;
-      const breathPulse = Math.sin(t * 6 + index) * 2;
-      const aggressiveTilt = Math.sin(t * 2 + index) * 0.08;
+      const sinT5i = Math.sin(t * 5 + index);
+      const sinT3i = Math.sin(t * 3 + index);
+      const sinT6i = Math.sin(t * 6 + index);
+      const sinT2i = Math.sin(t * 2 + index);
+      const sinT7i = Math.sin(t * 7 + index);
+      const wingFlap = sinT5i * 0.6;
+      const bodyWave = sinT3i * 4;
+      const breathPulse = sinT6i * 2;
+      const aggressiveTilt = sinT2i * 0.08;
       ctx.save();
       ctx.translate(x, y + bodyWave);
       ctx.scale(scale, scale);
       ctx.rotate(aggressiveTilt);
 
-      // MASSIVE DARK AURA - ominous presence
-      for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
-        const auraGrad = ctx.createRadialGradient(0, 0, 10 + auraLayer * 15, 0, 0, 90 + auraLayer * 20);
-        auraGrad.addColorStop(0, `rgba(180, 60, 30, ${0.25 - auraLayer * 0.05})`);
-        auraGrad.addColorStop(0.5, `rgba(100, 30, 20, ${0.15 - auraLayer * 0.03})`);
+      // DARK AURA - reduced to 2 layers
+      for (let auraLayer = 0; auraLayer < 2; auraLayer++) {
+        const auraGrad = ctx.createRadialGradient(0, 0, 10 + auraLayer * 20, 0, 0, 90 + auraLayer * 20);
+        auraGrad.addColorStop(0, `rgba(180, 60, 30, ${0.2 - auraLayer * 0.08})`);
+        auraGrad.addColorStop(0.5, `rgba(100, 30, 20, ${0.12 - auraLayer * 0.04})`);
         auraGrad.addColorStop(1, "transparent");
         ctx.fillStyle = auraGrad;
         ctx.beginPath();
@@ -1907,20 +2336,22 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
 
       // Deadly spiked tail
+      const sinT5 = Math.sin(t * 5);
+      const sinT4 = Math.sin(t * 4);
       ctx.strokeStyle = "#4a2020";
       ctx.lineWidth = 10;
       ctx.beginPath();
       ctx.moveTo(-22, 15);
-      ctx.quadraticCurveTo(-55, 22 + Math.sin(t * 5) * 12, -85, 8 + Math.sin(t * 4) * 15);
+      ctx.quadraticCurveTo(-55, 22 + sinT5 * 12, -85, 8 + sinT4 * 15);
       ctx.stroke();
       ctx.strokeStyle = "#3a1515";
       ctx.lineWidth = 5;
       ctx.stroke();
-      // Deadly tail spikes
+      // 3 pre-positioned tail spikes
       ctx.fillStyle = "#2a1010";
-      for (let spike = 0; spike < 6; spike++) {
-        const sx = -30 - spike * 10;
-        const sy = 18 + Math.sin(t * 5 + spike) * 8;
+      const tailSpikes = [[-35, 0], [-55, 2], [-75, 4]];
+      for (const [sx, seedOff] of tailSpikes) {
+        const sy = 18 + Math.sin(t * 5 + seedOff) * 8;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.lineTo(sx - 5, sy - 14);
@@ -1960,6 +2391,18 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.closePath();
         ctx.fill();
 
+        // Wing vein patterns
+        ctx.strokeStyle = "rgba(120, 50, 50, 0.6)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(30, -20);
+        ctx.quadraticCurveTo(50, -35, 70, -40);
+        ctx.moveTo(35, -10);
+        ctx.quadraticCurveTo(55, -20, 75, -25);
+        ctx.moveTo(30, 0);
+        ctx.quadraticCurveTo(50, -5, 68, -10);
+        ctx.stroke();
+
         // Wing bone structure
         ctx.strokeStyle = "#6a3030";
         ctx.lineWidth = 4;
@@ -1977,7 +2420,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.lineTo(65, 0);
         ctx.stroke();
 
-        // Wing claws - razor sharp
+        // Wing claws
         ctx.fillStyle = "#e0d8c0";
         ctx.beginPath();
         ctx.moveTo(80, -50);
@@ -2012,13 +2455,55 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(0, 0 + breathPulse * 0.3, 28, 22 + breathPulse * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Armored scales pattern
+      // Armored chest plates
       ctx.fillStyle = "#4a1818";
-      for (let scale = 0; scale < 8; scale++) {
-        ctx.beginPath();
-        ctx.arc(-14 + scale * 5, 6, 5, 0, Math.PI);
-        ctx.fill();
-      }
+      ctx.beginPath();
+      ctx.moveTo(-12, -8);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(12, -8);
+      ctx.lineTo(8, 4);
+      ctx.lineTo(-8, 4);
+      ctx.closePath();
+      ctx.fill();
+      // Chest plate edge
+      ctx.strokeStyle = "#6a3030";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-12, -8);
+      ctx.lineTo(0, -14);
+      ctx.lineTo(12, -8);
+      ctx.stroke();
+      // Embedded gem on chest
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.arc(0, -4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#fca5a5";
+      ctx.beginPath();
+      ctx.arc(-1, -5, 1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glowing rune markings on body
+      const runeGlow = 0.4 + sinT3i * 0.3;
+      ctx.strokeStyle = `rgba(255, 100, 0, ${runeGlow})`;
+      ctx.lineWidth = 1;
+      // Rune 1 - left side
+      ctx.beginPath();
+      ctx.moveTo(-18, -4);
+      ctx.lineTo(-22, 4);
+      ctx.lineTo(-16, 8);
+      ctx.moveTo(-22, 4);
+      ctx.lineTo(-26, 2);
+      ctx.stroke();
+      // Rune 2 - right side
+      ctx.beginPath();
+      ctx.moveTo(18, -4);
+      ctx.lineTo(22, 4);
+      ctx.lineTo(16, 8);
+      ctx.moveTo(22, 4);
+      ctx.lineTo(26, 2);
+      ctx.stroke();
+
       // Belly scales
       ctx.fillStyle = "#5a3030";
       ctx.beginPath();
@@ -2055,16 +2540,11 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // TERRIFYING GLOWING EYES
-      const eyePulse = 0.85 + Math.sin(t * 7 + index) * 0.15;
-      // Eye glow effect
-      const eyeGlow = ctx.createRadialGradient(32, -14, 0, 32, -14, 20);
-      eyeGlow.addColorStop(0, `rgba(255, 200, 50, ${eyePulse})`);
-      eyeGlow.addColorStop(0.5, `rgba(255, 100, 0, ${eyePulse * 0.5})`);
-      eyeGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = eyeGlow;
+      // TERRIFYING GLOWING EYE - flat glow for performance
+      const eyePulse = 0.85 + sinT7i * 0.15;
+      ctx.fillStyle = `rgba(255, 200, 50, ${eyePulse * 0.3})`;
       ctx.beginPath();
-      ctx.arc(32, -14, 20, 0, Math.PI * 2);
+      ctx.arc(32, -14, 14, 0, Math.PI * 2);
       ctx.fill();
 
       // Eye - large and menacing
@@ -2081,28 +2561,31 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(34, -14, 1.5, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // MASSIVE horns - crown of terror
+      // MASSIVE curved horns - more menacing
       ctx.fillStyle = "#3a1515";
-      // Main horns
+      // Left horn - curved backward
       ctx.beginPath();
       ctx.moveTo(22, -18);
-      ctx.quadraticCurveTo(15, -35, 5, -48);
-      ctx.lineTo(12, -45);
-      ctx.quadraticCurveTo(18, -32, 26, -20);
+      ctx.quadraticCurveTo(10, -40, 0, -52);
+      ctx.quadraticCurveTo(-5, -55, -8, -50);
+      ctx.lineTo(8, -42);
+      ctx.quadraticCurveTo(16, -32, 26, -20);
       ctx.closePath();
       ctx.fill();
+      // Right horn - curved backward
       ctx.beginPath();
       ctx.moveTo(35, -22);
-      ctx.quadraticCurveTo(42, -38, 48, -52);
-      ctx.lineTo(52, -48);
-      ctx.quadraticCurveTo(44, -35, 38, -22);
+      ctx.quadraticCurveTo(45, -42, 52, -56);
+      ctx.quadraticCurveTo(56, -58, 58, -52);
+      ctx.lineTo(48, -44);
+      ctx.quadraticCurveTo(42, -34, 38, -22);
       ctx.closePath();
       ctx.fill();
-      // Secondary horns
+      // Center horn
       ctx.fillStyle = "#2a1010";
       ctx.beginPath();
       ctx.moveTo(28, -20);
-      ctx.lineTo(30, -38);
+      ctx.lineTo(30, -42);
       ctx.lineTo(34, -20);
       ctx.closePath();
       ctx.fill();
@@ -2133,37 +2616,29 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // DEVASTATING fire breath effect (more frequent and bigger)
-      if (Math.sin(t * 2.5 + index) > 0.3) {
-        // Fire core
-        for (let flame = 0; flame < 8; flame++) {
-          const flameX = 58 + flame * 12;
+      // Fire breath - reduced flames with flat colors
+      if (sinT2i > -0.2) {
+        for (let flame = 0; flame < 5; flame++) {
+          const flameX = 58 + flame * 15;
           const flameY = -2 + Math.sin(t * 12 + flame * 0.5) * 6;
-          const flameSize = 12 - flame * 1.2;
-          const flameAlpha = 0.85 - flame * 0.1;
-
-          // Flame glow
-          const flameGlow = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize * 1.5);
-          flameGlow.addColorStop(0, `rgba(255, 255, 150, ${flameAlpha})`);
-          flameGlow.addColorStop(0.3, `rgba(255, 200, 50, ${flameAlpha * 0.8})`);
-          flameGlow.addColorStop(0.6, `rgba(255, 100, 0, ${flameAlpha * 0.5})`);
-          flameGlow.addColorStop(1, "transparent");
-          ctx.fillStyle = flameGlow;
+          const flameSize = 12 - flame * 2;
+          const flameAlpha = 0.85 - flame * 0.15;
+          // Outer flame - flat color
+          ctx.fillStyle = `rgba(255, 100, 0, ${flameAlpha * 0.5})`;
           ctx.beginPath();
-          ctx.arc(flameX, flameY, flameSize * 1.5, 0, Math.PI * 2);
+          ctx.arc(flameX, flameY, flameSize * 1.3, 0, Math.PI * 2);
           ctx.fill();
-
-          // Flame core
-          ctx.fillStyle = `rgba(255, 200, 100, ${flameAlpha})`;
+          // Inner flame core - flat
+          ctx.fillStyle = `rgba(255, 220, 100, ${flameAlpha})`;
           ctx.beginPath();
           ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        // Ember particles
-        for (let ember = 0; ember < 10; ember++) {
-          const emberAge = (t * 3 + ember * 0.4) % 2;
-          const emberX = 60 + emberAge * 50 + Math.sin(t * 10 + ember * 2) * 15;
+        // Ember particles - reduced to 5
+        for (let ember = 0; ember < 5; ember++) {
+          const emberAge = (t * 3 + ember * 0.7) % 2;
+          const emberX = 60 + emberAge * 50 + Math.sin(t * 10 + ember * 3) * 15;
           const emberY = -2 + Math.sin(emberAge * Math.PI) * 20 - emberAge * 10;
           ctx.fillStyle = `rgba(255, 150, 50, ${0.8 - emberAge * 0.4})`;
           ctx.beginPath();
@@ -2196,6 +2671,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     // Sophomore Slump - Heavy armored enemy
     const drawSophomoreEnemy = (x: number, y: number, index: number) => {
       const walk = Math.sin(t * 3 + index) * 2;
+      const sinT5 = Math.sin(t * 5);
       ctx.save();
       ctx.translate(x, y + Math.abs(walk));
 
@@ -2205,7 +2681,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(0, 12, 14, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Heavy body
+      // Heavy armored body
       const bodyGrad = ctx.createLinearGradient(-12, -20, 12, 10);
       bodyGrad.addColorStop(0, "#93c5fd");
       bodyGrad.addColorStop(0.5, "#60a5fa");
@@ -2220,7 +2696,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Armor plates
+      // Armor plate lines
       ctx.strokeStyle = "#2563eb";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -2230,18 +2706,139 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineTo(10, 5);
       ctx.stroke();
 
-      // Helmet
+      // Battle scars on armor
+      ctx.strokeStyle = "#1e3a8a";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-8, -15);
+      ctx.lineTo(-5, -8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(6, -12);
+      ctx.lineTo(9, -6);
+      ctx.lineTo(7, -2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-3, 0);
+      ctx.lineTo(0, 5);
+      ctx.stroke();
+
+      // Chainmail visible at joints (neck and waist)
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillRect(-8, -18, 16, 3);
+      ctx.strokeStyle = "#64748b";
+      ctx.lineWidth = 0.5;
+      for (let cm = 0; cm < 5; cm++) {
+        ctx.beginPath();
+        ctx.arc(-6 + cm * 3, -16.5, 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // Waist chainmail
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillRect(-12, 7, 24, 3);
+      for (let cm = 0; cm < 7; cm++) {
+        ctx.beginPath();
+        ctx.arc(-10 + cm * 3.3, 8.5, 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Shoulder pauldrons
+      ctx.fillStyle = "#3b82f6";
+      // Left pauldron
+      ctx.beginPath();
+      ctx.moveTo(-14, -18);
+      ctx.lineTo(-22, -14);
+      ctx.lineTo(-22, -8);
+      ctx.lineTo(-14, -10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#1e40af";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      // Right pauldron
+      ctx.fillStyle = "#3b82f6";
+      ctx.beginPath();
+      ctx.moveTo(14, -18);
+      ctx.lineTo(22, -14);
+      ctx.lineTo(22, -8);
+      ctx.lineTo(14, -10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#1e40af";
+      ctx.stroke();
+      // Pauldron rivets
+      ctx.fillStyle = "#93c5fd";
+      ctx.beginPath();
+      ctx.arc(-18, -12, 1, 0, Math.PI * 2);
+      ctx.arc(18, -12, 1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Imposing helmet with face guard
       ctx.fillStyle = "#1e40af";
       ctx.beginPath();
       ctx.arc(0, -22, 10, Math.PI, 0);
       ctx.fill();
       ctx.fillRect(-10, -22, 20, 5);
+      // Helmet crest ridge
+      ctx.fillStyle = "#1e3a8a";
+      ctx.beginPath();
+      ctx.moveTo(-2, -32);
+      ctx.lineTo(0, -35);
+      ctx.lineTo(2, -32);
+      ctx.lineTo(2, -22);
+      ctx.lineTo(-2, -22);
+      ctx.closePath();
+      ctx.fill();
+      // Face guard (vertical bars)
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-4, -20);
+      ctx.lineTo(-4, -14);
+      ctx.moveTo(0, -20);
+      ctx.lineTo(0, -14);
+      ctx.moveTo(4, -20);
+      ctx.lineTo(4, -14);
+      ctx.stroke();
+      // Visor slit (glowing eyes behind guard)
+      ctx.fillStyle = `rgba(239, 68, 68, ${0.6 + sinT5 * 0.3})`;
+      ctx.fillRect(-6, -19, 12, 2);
 
-      // Visor slit (glowing eyes)
-      ctx.fillStyle = `rgba(239, 68, 68, ${0.6 + Math.sin(t * 5) * 0.3})`;
-      ctx.fillRect(-6, -20, 12, 3);
+      // Shield on left arm
+      ctx.save();
+      ctx.translate(-16, -2);
+      ctx.rotate(-0.15);
+      ctx.fillStyle = "#2563eb";
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(8, -6);
+      ctx.lineTo(8, 8);
+      ctx.lineTo(0, 12);
+      ctx.lineTo(-8, 8);
+      ctx.lineTo(-8, -6);
+      ctx.closePath();
+      ctx.fill();
+      // Shield border
+      ctx.strokeStyle = "#1e40af";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Shield emblem (cross)
+      ctx.strokeStyle = "#93c5fd";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -6);
+      ctx.lineTo(0, 8);
+      ctx.moveTo(-5, 1);
+      ctx.lineTo(5, 1);
+      ctx.stroke();
+      // Shield boss
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(0, 1, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
-      // Heavy mace weapon
+      // Heavy mace weapon (right arm)
       ctx.save();
       ctx.translate(14, -5);
       ctx.rotate(walk * 0.1);
@@ -2252,13 +2849,15 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.beginPath();
       ctx.arc(2, -28, 8, 0, Math.PI * 2);
       ctx.fill();
-      // Spikes
-      for (let spike = 0; spike < 6; spike++) {
-        const sAngle = spike * Math.PI / 3;
+      // Spikes - reduced to 4
+      for (let spike = 0; spike < 4; spike++) {
+        const sAngle = spike * Math.PI / 2;
+        const sCos = Math.cos(sAngle);
+        const sSin = Math.sin(sAngle);
         ctx.fillStyle = "#2a2a2a";
         ctx.beginPath();
-        ctx.moveTo(2 + Math.cos(sAngle) * 6, -28 + Math.sin(sAngle) * 6);
-        ctx.lineTo(2 + Math.cos(sAngle) * 12, -28 + Math.sin(sAngle) * 12);
+        ctx.moveTo(2 + sCos * 6, -28 + sSin * 6);
+        ctx.lineTo(2 + sCos * 12, -28 + sSin * 12);
         ctx.lineTo(2 + Math.cos(sAngle + 0.3) * 6, -28 + Math.sin(sAngle + 0.3) * 6);
         ctx.fill();
       }
@@ -2269,21 +2868,26 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // Flying Rival Mascot - MENACING DEMONIC HARPY
     const drawFlyingMascot = (x: number, y: number, index: number, scale: number = 0.7) => {
-      const wingFlap = Math.sin(t * 10 + index) * 0.7;
-      const hover = Math.sin(t * 4 + index) * 8;
-      const aggressiveTilt = Math.sin(t * 6 + index) * 0.15;
-      const breathPulse = Math.sin(t * 8 + index) * 2;
+      const sinT10i = Math.sin(t * 10 + index);
+      const sinT4i = Math.sin(t * 4 + index);
+      const sinT6i = Math.sin(t * 6 + index);
+      const sinT8i = Math.sin(t * 8 + index);
+      const sinT3i = Math.sin(t * 3 + index);
+      const wingFlap = sinT10i * 0.7;
+      const hover = sinT4i * 8;
+      const aggressiveTilt = sinT6i * 0.15;
+      const breathPulse = sinT8i * 2;
       ctx.save();
       ctx.translate(x, y + hover);
       ctx.scale(scale, scale);
       ctx.rotate(aggressiveTilt);
 
-      // MASSIVE threatening dark aura with pulsing energy
+      // Threatening dark aura - reduced to 2 layers
       const auraIntensity = 0.4 + Math.sin(t * 5 + index) * 0.2;
-      for (let layer = 0; layer < 3; layer++) {
-        const auraGrad = ctx.createRadialGradient(0, 0, 5 + layer * 8, 0, 0, 55 + layer * 10);
-        auraGrad.addColorStop(0, `rgba(180, 50, 50, ${auraIntensity * (0.3 - layer * 0.08)})`);
-        auraGrad.addColorStop(0.5, `rgba(100, 20, 60, ${auraIntensity * (0.2 - layer * 0.05)})`);
+      for (let layer = 0; layer < 2; layer++) {
+        const auraGrad = ctx.createRadialGradient(0, 0, 5 + layer * 12, 0, 0, 55 + layer * 10);
+        auraGrad.addColorStop(0, `rgba(180, 50, 50, ${auraIntensity * (0.3 - layer * 0.12)})`);
+        auraGrad.addColorStop(0.5, `rgba(100, 20, 60, ${auraIntensity * (0.2 - layer * 0.08)})`);
         auraGrad.addColorStop(1, "transparent");
         ctx.fillStyle = auraGrad;
         ctx.beginPath();
@@ -2291,26 +2895,49 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-
-      // Electric crackling particles around body
-      for (let p = 0; p < 6; p++) {
-        const pAngle = (t * 3 + p * Math.PI / 3 + index) % (Math.PI * 2);
-        const pDist = 30 + Math.sin(t * 8 + p) * 8;
-        const px = Math.cos(pAngle) * pDist;
-        const py = Math.sin(pAngle) * pDist * 0.6;
-        ctx.fillStyle = `rgba(255, 100, 100, ${0.6 + Math.sin(t * 12 + p) * 0.4})`;
+      // Electric crackling particles - reduced to 3
+      for (let p = 0; p < 3; p++) {
+        const pAngle = (t * 3 + p * 2.094 + index) % (Math.PI * 2);
+        const pDist = 30 + Math.sin(t * 8 + p * 2.5) * 8;
+        const pCos = Math.cos(pAngle);
+        const pSin = Math.sin(pAngle);
+        ctx.fillStyle = `rgba(255, 100, 100, ${0.6 + Math.sin(t * 12 + p * 3) * 0.4})`;
         ctx.beginPath();
-        ctx.arc(px, py, 2 + Math.sin(t * 10 + p) * 1, 0, Math.PI * 2);
+        ctx.arc(pCos * pDist, pSin * pDist * 0.6, 2, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // MASSIVE razor-sharp wings
+      // Forked demon tail
+      const tailWave = Math.sin(t * 4 + index) * 3;
+      ctx.strokeStyle = "#1a3535";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0, 16);
+      ctx.quadraticCurveTo(-5, 30 + tailWave, -3, 42);
+      ctx.stroke();
+      // Fork prongs
+      ctx.fillStyle = "#1a3535";
+      ctx.beginPath();
+      ctx.moveTo(-3, 40);
+      ctx.lineTo(-9, 50);
+      ctx.lineTo(-4, 44);
+      ctx.lineTo(3, 50);
+      ctx.lineTo(-2, 40);
+      ctx.closePath();
+      ctx.fill();
+      // Tail tip glow - flat
+      ctx.fillStyle = `rgba(255, 80, 80, ${0.3 + sinT6i * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(-3, 45, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // RAZOR-SHARP angular wings
       for (let side = -1; side <= 1; side += 2) {
         ctx.save();
         ctx.scale(side, 1);
         ctx.rotate(wingFlap * side * 1.2);
 
-        // Outer wing membrane - darker, more sinister
+        // Outer wing membrane - angular bat-like shape
         const wingGrad = ctx.createLinearGradient(0, 0, 50, -30);
         wingGrad.addColorStop(0, "#1a4a4a");
         wingGrad.addColorStop(0.5, "#0d3535");
@@ -2318,39 +2945,49 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fillStyle = wingGrad;
         ctx.beginPath();
         ctx.moveTo(12, 0);
-        ctx.quadraticCurveTo(30, -35, 55, -25);
-        ctx.lineTo(60, -15);
-        ctx.quadraticCurveTo(45, 5, 15, 10);
+        ctx.lineTo(28, -36);
+        ctx.lineTo(45, -32);
+        ctx.lineTo(58, -26);
+        ctx.lineTo(64, -14);
+        ctx.lineTo(56, -4);
+        ctx.lineTo(46, 6);
+        ctx.lineTo(15, 10);
         ctx.closePath();
         ctx.fill();
 
-        // Wing bone structure - sharp and angular
+        // Wing bone structure - sharp angular
         ctx.strokeStyle = "#2a6a6a";
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(12, 0);
-        ctx.lineTo(50, -22);
+        ctx.lineTo(52, -28);
         ctx.stroke();
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(15, 3);
-        ctx.lineTo(55, -12);
+        ctx.lineTo(58, -14);
         ctx.moveTo(15, 6);
-        ctx.lineTo(52, -3);
+        ctx.lineTo(50, -2);
         ctx.stroke();
 
-        // Sharp wing claws at tips
+        // Serrated wing edge spikes
         ctx.fillStyle = "#f5f0e0";
         ctx.beginPath();
-        ctx.moveTo(55, -25);
-        ctx.lineTo(65, -30);
-        ctx.lineTo(58, -22);
+        ctx.moveTo(45, -32);
+        ctx.lineTo(50, -42);
+        ctx.lineTo(48, -30);
         ctx.closePath();
         ctx.fill();
         ctx.beginPath();
-        ctx.moveTo(60, -15);
-        ctx.lineTo(70, -18);
-        ctx.lineTo(62, -12);
+        ctx.moveTo(58, -26);
+        ctx.lineTo(68, -32);
+        ctx.lineTo(60, -22);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(64, -14);
+        ctx.lineTo(74, -16);
+        ctx.lineTo(65, -10);
         ctx.closePath();
         ctx.fill();
 
@@ -2364,8 +3001,36 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       bodyGrad.addColorStop(1, "#0d2525");
       ctx.fillStyle = bodyGrad;
       ctx.beginPath();
-      ctx.ellipse(0, 0 + breathPulse * 0.5, 14, 20 + breathPulse * 0.3, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, breathPulse * 0.5, 14, 20 + breathPulse * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      // Glowing rune tattoos on body
+      const runeAlpha = 0.3 + sinT3i * 0.2;
+      ctx.strokeStyle = `rgba(255, 80, 80, ${runeAlpha})`;
+      ctx.lineWidth = 1;
+      // Left rune
+      ctx.beginPath();
+      ctx.moveTo(-8, -6);
+      ctx.lineTo(-10, 0);
+      ctx.lineTo(-6, 4);
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(-13, -2);
+      ctx.stroke();
+      // Right rune
+      ctx.beginPath();
+      ctx.moveTo(8, -6);
+      ctx.lineTo(10, 0);
+      ctx.lineTo(6, 4);
+      ctx.moveTo(10, 0);
+      ctx.lineTo(13, -2);
+      ctx.stroke();
+      // Center rune
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(0, -4);
+      ctx.moveTo(-3, -7);
+      ctx.lineTo(3, -7);
+      ctx.stroke();
 
       // Armored chest plate markings
       ctx.strokeStyle = "#3a7070";
@@ -2379,14 +3044,35 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineTo(6, 0);
       ctx.stroke();
 
-      // Fierce head with angular features
-      const headGrad = ctx.createRadialGradient(0, -18, 0, 0, -18, 14);
-      headGrad.addColorStop(0, "#2a5858");
-      headGrad.addColorStop(0.7, "#1a3a3a");
-      headGrad.addColorStop(1, "#0d2020");
-      ctx.fillStyle = headGrad;
+      // Fierce head
+      ctx.fillStyle = "#1a3a3a";
       ctx.beginPath();
       ctx.arc(0, -18, 12, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Curved demon horns
+      ctx.fillStyle = "#2a1515";
+      // Left horn - curving outward
+      ctx.beginPath();
+      ctx.moveTo(-6, -28);
+      ctx.quadraticCurveTo(-14, -40, -18, -46);
+      ctx.quadraticCurveTo(-20, -44, -16, -38);
+      ctx.quadraticCurveTo(-10, -30, -4, -26);
+      ctx.closePath();
+      ctx.fill();
+      // Right horn
+      ctx.beginPath();
+      ctx.moveTo(6, -28);
+      ctx.quadraticCurveTo(14, -40, 18, -46);
+      ctx.quadraticCurveTo(20, -44, 16, -38);
+      ctx.quadraticCurveTo(10, -30, 4, -26);
+      ctx.closePath();
+      ctx.fill();
+      // Horn tips glow - flat
+      ctx.fillStyle = `rgba(255, 60, 60, ${0.3 + sinT4i * 0.15})`;
+      ctx.beginPath();
+      ctx.arc(-18, -46, 2, 0, Math.PI * 2);
+      ctx.arc(18, -46, 2, 0, Math.PI * 2);
       ctx.fill();
 
       // Sharp deadly beak
@@ -2406,25 +3092,18 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // MASSIVE GLOWING DEMONIC EYES
-      const eyePulse = 0.8 + Math.sin(t * 8 + index) * 0.2;
-      // Eye glow
+      // DEMONIC GLOWING EYES - flat glow for performance
+      const eyePulse = 0.8 + sinT8i * 0.2;
       for (let eye = -1; eye <= 1; eye += 2) {
-        const eyeGlow = ctx.createRadialGradient(eye * 4, -20, 0, eye * 4, -20, 12);
-        eyeGlow.addColorStop(0, `rgba(255, 50, 50, ${eyePulse * 0.8})`);
-        eyeGlow.addColorStop(0.5, `rgba(255, 0, 0, ${eyePulse * 0.4})`);
-        eyeGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = eyeGlow;
+        ctx.fillStyle = `rgba(255, 50, 50, ${eyePulse * 0.35})`;
         ctx.beginPath();
-        ctx.arc(eye * 4, -20, 12, 0, Math.PI * 2);
+        ctx.arc(eye * 4, -20, 8, 0, Math.PI * 2);
         ctx.fill();
       }
       // Eye whites (yellowed)
       ctx.fillStyle = "#fff0c0";
       ctx.beginPath();
       ctx.ellipse(-4, -20, 5, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
       ctx.ellipse(4, -20, 5, 4, 0, 0, Math.PI * 2);
       ctx.fill();
       // Fierce red irises
@@ -2438,28 +3117,6 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.beginPath();
       ctx.ellipse(-4, -20, 1, 2.5, 0, 0, Math.PI * 2);
       ctx.ellipse(4, -20, 1, 2.5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Menacing head crests/horns
-      ctx.fillStyle = "#1a3535";
-      ctx.beginPath();
-      ctx.moveTo(-5, -28);
-      ctx.lineTo(-8, -42);
-      ctx.lineTo(-2, -30);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(5, -28);
-      ctx.lineTo(8, -42);
-      ctx.lineTo(2, -30);
-      ctx.closePath();
-      ctx.fill();
-      // Center crest
-      ctx.beginPath();
-      ctx.moveTo(-2, -28);
-      ctx.lineTo(0, -48);
-      ctx.lineTo(2, -28);
-      ctx.closePath();
       ctx.fill();
 
       // Sharp talons hanging below
@@ -2476,16 +3133,6 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.lineTo(talon * 6, 32);
         ctx.lineTo(talon * 10, 30);
         ctx.closePath();
-        ctx.fill();
-      }
-
-      // Tail feathers - longer and more threatening
-      ctx.fillStyle = "#0d2525";
-      for (let tf = 0; tf < 5; tf++) {
-        ctx.beginPath();
-        ctx.moveTo(-6 + tf * 3, 18);
-        ctx.quadraticCurveTo(-10 + tf * 4, 38 + Math.sin(t * 5 + tf) * 5, -4 + tf * 3, 45);
-        ctx.quadraticCurveTo(-2 + tf * 3, 38, 0 + tf * 3, 18);
         ctx.fill();
       }
 
@@ -3024,234 +3671,1881 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // Elite Knight - Heavy armored defender
     const drawKnight = (x: number, y: number, index: number, facing: number) => {
-      const stance = Math.sin(t * 4 + index) * 2;
+      // Cache trig values
+      const phaseA = t * 4 + index;
+      const sinStance = Math.sin(phaseA);
+      const cosStance = Math.cos(phaseA);
+      const stance = sinStance * 2;
       const swordSwing = Math.sin(t * 6 + index) * 0.6;
+      const breathe = Math.sin(t * 3 + index) * 0.5;
 
       ctx.save();
       ctx.translate(x, y + Math.abs(stance * 0.5));
       ctx.scale(facing, 1);
 
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+      // Ground shadow (dynamic size with stance)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
       ctx.beginPath();
-      ctx.ellipse(0, 15, 12, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 20, 16 + Math.abs(stance), 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cape
+      // === CAPE (behind body, multi-layered) ===
+      // Main cape body
       ctx.fillStyle = "#f97316";
       ctx.beginPath();
-      ctx.moveTo(-6, -15);
-      ctx.quadraticCurveTo(-15, 5 + stance, -12, 18);
-      ctx.lineTo(-4, 12);
+      ctx.moveTo(-6, -18);
+      ctx.quadraticCurveTo(-14 + stance * 0.4, -6, -20 + stance * 0.9, 10);
+      ctx.quadraticCurveTo(-18 + cosStance * 1.8, 24 + stance * 1.2, -12 + stance * 0.4, 20);
+      ctx.quadraticCurveTo(-10, 16, -8 + cosStance * 0.3, 12);
+      ctx.quadraticCurveTo(-6, 4, -4, -6);
       ctx.closePath();
       ctx.fill();
+      // Cape inner fold
+      ctx.fillStyle = "#ea580c";
+      ctx.beginPath();
+      ctx.moveTo(-6, -16);
+      ctx.quadraticCurveTo(-12, -4, -16 + stance * 0.6, 8);
+      ctx.quadraticCurveTo(-14 + cosStance, 16, -10, 14);
+      ctx.quadraticCurveTo(-8, 6, -5, -4);
+      ctx.closePath();
+      ctx.fill();
+      // Cape highlight fold
+      ctx.fillStyle = "#fb923c";
+      ctx.beginPath();
+      ctx.moveTo(-5, -14);
+      ctx.quadraticCurveTo(-10, -2, -14 + stance * 0.5, 6);
+      ctx.quadraticCurveTo(-10, 2, -6, -4);
+      ctx.closePath();
+      ctx.fill();
+      // Cape bottom gold fringe
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-20 + stance * 0.9, 10);
+      ctx.quadraticCurveTo(-18 + cosStance * 1.8, 24 + stance * 1.2, -12 + stance * 0.4, 20);
+      ctx.stroke();
+      // Cape black trim
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-20 + stance * 0.9, 10.8);
+      ctx.quadraticCurveTo(-18 + cosStance * 1.8, 24.8 + stance * 1.2, -12 + stance * 0.4, 20.8);
+      ctx.stroke();
+      // Cape clasp at shoulder
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(-6, -17, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#a07d2e";
+      ctx.beginPath();
+      ctx.arc(-6, -17, 1.2, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Legs with armor
+      // === ARMORED SABATONS (foot armor) ===
+      // Left sabaton
       ctx.fillStyle = "#6b7280";
-      ctx.fillRect(-5, 5, 4, 12);
-      ctx.fillRect(1, 5, 4, 12);
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(-5, 10, 4, 3);
-      ctx.fillRect(1, 10, 4, 3);
+      ctx.beginPath();
+      ctx.moveTo(-7, 14);
+      ctx.lineTo(-8, 18);
+      ctx.lineTo(-9, 19);
+      ctx.lineTo(-2, 19);
+      ctx.lineTo(-1, 18);
+      ctx.lineTo(0, 14);
+      ctx.closePath();
+      ctx.fill();
+      // Sabaton plate lines
+      ctx.strokeStyle = "#4b5563";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-7, 15.5);
+      ctx.lineTo(-1, 15.5);
+      ctx.moveTo(-7.5, 17);
+      ctx.lineTo(-1, 17);
+      ctx.stroke();
+      // Sole
+      ctx.fillStyle = "#374151";
+      ctx.fillRect(-9, 18.5, 8, 1.5);
+      // Spur
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.moveTo(-8, 17);
+      ctx.lineTo(-11, 18.5);
+      ctx.lineTo(-8, 19);
+      ctx.closePath();
+      ctx.fill();
+      // Spur rowel
+      ctx.fillStyle = "#d4a72c";
+      ctx.beginPath();
+      ctx.arc(-11, 18.5, 1, 0, Math.PI * 2);
+      ctx.fill();
+      // Right sabaton
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.moveTo(0, 14);
+      ctx.lineTo(-1, 18);
+      ctx.lineTo(-1, 19);
+      ctx.lineTo(6, 19);
+      ctx.lineTo(7, 18);
+      ctx.lineTo(7, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#4b5563";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(0, 15.5);
+      ctx.lineTo(6, 15.5);
+      ctx.moveTo(-0.5, 17);
+      ctx.lineTo(6.5, 17);
+      ctx.stroke();
+      ctx.fillStyle = "#374151";
+      ctx.fillRect(-1, 18.5, 8, 1.5);
+      // Spur
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.moveTo(-1, 17);
+      ctx.lineTo(-4, 18.5);
+      ctx.lineTo(-1, 19);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#d4a72c";
+      ctx.beginPath();
+      ctx.arc(-4, 18.5, 1, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Body armor
-      const armorGrad = ctx.createLinearGradient(-8, -15, 8, 8);
-      armorGrad.addColorStop(0, "#d1d5db");
-      armorGrad.addColorStop(0.3, "#9ca3af");
-      armorGrad.addColorStop(0.6, "#6b7280");
+      // === GREAVES (leg armor with knee cops) ===
+      const greaveGrad = ctx.createLinearGradient(-7, 3, 1, 15);
+      greaveGrad.addColorStop(0, "#b0b5bc");
+      greaveGrad.addColorStop(0.3, "#9ca3af");
+      greaveGrad.addColorStop(0.7, "#6b7280");
+      greaveGrad.addColorStop(1, "#4b5563");
+      // Left greave
+      ctx.fillStyle = greaveGrad;
+      ctx.beginPath();
+      ctx.moveTo(-6, 3);
+      ctx.lineTo(-8, 8);
+      ctx.lineTo(-7, 15);
+      ctx.lineTo(-1, 15);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-1, 3);
+      ctx.closePath();
+      ctx.fill();
+      // Greave fluted edge
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-7, 5);
+      ctx.lineTo(-8, 9);
+      ctx.lineTo(-7, 14);
+      ctx.stroke();
+      // Greave rivet line
+      ctx.fillStyle = "#4b5563";
+      for (let gr = 6; gr <= 13; gr += 3.5) {
+        ctx.fillRect(-7.5, gr, 1, 1);
+      }
+      // Knee cop - left (pointed, articulated)
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(-3, 0.5);
+      ctx.lineTo(-7, 3.5);
+      ctx.lineTo(-3, 6);
+      ctx.lineTo(0, 3.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4b5563";
+      ctx.beginPath();
+      ctx.arc(-3, 3.5, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.arc(-3, 3.5, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Gold rivet on knee cop
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(-3, 3.5, 0.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Right greave
+      ctx.fillStyle = greaveGrad;
+      ctx.beginPath();
+      ctx.moveTo(1, 3);
+      ctx.lineTo(-1, 8);
+      ctx.lineTo(0, 15);
+      ctx.lineTo(6, 15);
+      ctx.lineTo(7, 8);
+      ctx.lineTo(6, 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(0, 5);
+      ctx.lineTo(-1, 9);
+      ctx.lineTo(0, 14);
+      ctx.stroke();
+      ctx.fillStyle = "#4b5563";
+      for (let gr = 6; gr <= 13; gr += 3.5) {
+        ctx.fillRect(6.5, gr, 1, 1);
+      }
+      // Knee cop - right
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(4, 0.5);
+      ctx.lineTo(0, 3.5);
+      ctx.lineTo(4, 6);
+      ctx.lineTo(7, 3.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4b5563";
+      ctx.beginPath();
+      ctx.arc(4, 3.5, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.arc(4, 3.5, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(4, 3.5, 0.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === FAULDS (segmented skirt armor) ===
+      for (let f = 0; f < 4; f++) {
+        const fy = -2 + f * 2.5;
+        const fx = -8 + f * 0.5;
+        const fw = 16 - f;
+        ctx.fillStyle = f % 2 === 0 ? "#8a9099" : "#7a8290";
+        ctx.fillRect(fx, fy, fw, 2.8);
+        ctx.strokeStyle = "#4b5563";
+        ctx.lineWidth = 0.4;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy + 2.8);
+        ctx.lineTo(fx + fw, fy + 2.8);
+        ctx.stroke();
+      }
+
+      // === TABARD (Princeton orange with black trim) ===
+      ctx.fillStyle = "#f97316";
+      ctx.beginPath();
+      ctx.moveTo(-6, -4);
+      ctx.lineTo(-7, 6);
+      ctx.lineTo(-4, 11);
+      ctx.lineTo(4, 11);
+      ctx.lineTo(7, 6);
+      ctx.lineTo(6, -4);
+      ctx.closePath();
+      ctx.fill();
+      // Tabard black border
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-7, 6);
+      ctx.lineTo(-4, 11);
+      ctx.lineTo(4, 11);
+      ctx.lineTo(7, 6);
+      ctx.stroke();
+      // Tabard center stripe
+      ctx.fillStyle = "#1c1917";
+      ctx.fillRect(-1, -2, 2, 13);
+      // Tabard inner gold border
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, -3);
+      ctx.lineTo(-6, 6);
+      ctx.lineTo(-3.5, 10);
+      ctx.moveTo(5, -3);
+      ctx.lineTo(6, 6);
+      ctx.lineTo(3.5, 10);
+      ctx.stroke();
+
+      // === BREASTPLATE ===
+      const armorGrad = ctx.createLinearGradient(-11, -18, 11, 4);
+      armorGrad.addColorStop(0, "#e5e7eb");
+      armorGrad.addColorStop(0.15, "#d1d5db");
+      armorGrad.addColorStop(0.35, "#b0b5bc");
+      armorGrad.addColorStop(0.55, "#9ca3af");
+      armorGrad.addColorStop(0.8, "#6b7280");
       armorGrad.addColorStop(1, "#4b5563");
       ctx.fillStyle = armorGrad;
       ctx.beginPath();
-      ctx.moveTo(-8, 8);
-      ctx.lineTo(-10, -5);
-      ctx.lineTo(-8, -15);
-      ctx.lineTo(8, -15);
-      ctx.lineTo(10, -5);
-      ctx.lineTo(8, 8);
+      ctx.moveTo(-10, 4);
+      ctx.lineTo(-12, -4);
+      ctx.lineTo(-11, -11);
+      ctx.lineTo(-9, -18);
+      ctx.lineTo(9, -18);
+      ctx.lineTo(11, -11);
+      ctx.lineTo(12, -4);
+      ctx.lineTo(10, 4);
       ctx.closePath();
       ctx.fill();
-
-      // Armor detail lines
-      ctx.strokeStyle = "#374151";
-      ctx.lineWidth = 1;
+      // Center ridge (raised look)
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(-6, -10);
-      ctx.lineTo(6, -10);
-      ctx.moveTo(-5, -3);
-      ctx.lineTo(5, -3);
+      ctx.moveTo(0, -18);
+      ctx.lineTo(0, 4);
+      ctx.stroke();
+      // Plate section lines
+      ctx.strokeStyle = "#4b5563";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-9, -14);
+      ctx.lineTo(9, -14);
+      ctx.moveTo(-8, -8);
+      ctx.lineTo(8, -8);
+      ctx.moveTo(-7, -1);
+      ctx.lineTo(7, -1);
+      ctx.stroke();
+      // Ornamental scroll etchings
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-4, -16.5);
+      ctx.quadraticCurveTo(-6, -15.5, -4, -14.8);
+      ctx.moveTo(4, -16.5);
+      ctx.quadraticCurveTo(6, -15.5, 4, -14.8);
+      ctx.stroke();
+      // Edge highlight (left side)
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-9, -18);
+      ctx.lineTo(-12, -4);
+      ctx.lineTo(-10, 4);
       ctx.stroke();
 
-      // Princeton emblem on chest
-      ctx.fillStyle = "#f97316";
-      ctx.beginPath();
-      ctx.moveTo(0, -12);
-      ctx.lineTo(-4, -5);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(4, -5);
-      ctx.closePath();
-      ctx.fill();
-
-      // Helmet
+      // === GORGET (neck armor) ===
       ctx.fillStyle = "#9ca3af";
       ctx.beginPath();
-      ctx.arc(0, -20, 8, 0, Math.PI * 2);
+      ctx.moveTo(-7, -18);
+      ctx.lineTo(-6, -20);
+      ctx.lineTo(6, -20);
+      ctx.lineTo(7, -18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#6b7280";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-6, -19);
+      ctx.lineTo(6, -19);
+      ctx.stroke();
+      // Gold trim on gorget
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(-5.5, -20);
+      ctx.lineTo(5.5, -20);
+      ctx.stroke();
+
+      // === CHAINMAIL at neck ===
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.moveTo(-5, -18);
+      ctx.lineTo(-4, -20.5);
+      ctx.lineTo(4, -20.5);
+      ctx.lineTo(5, -18);
+      ctx.closePath();
+      ctx.fill();
+      // Chainmail ring pattern
+      ctx.fillStyle = "#9ca3af";
+      for (let cx = -3; cx <= 3; cx += 1.5) {
+        ctx.fillRect(cx, -20, 0.8, 0.8);
+        ctx.fillRect(cx + 0.75, -19.2, 0.8, 0.8);
+      }
+
+      // === PAULDRONS (articulated, 3-plate) - Left ===
+      ctx.save();
+      ctx.translate(-12, -14);
+      const pauldronGrad = ctx.createLinearGradient(-6, -5, 6, 5);
+      pauldronGrad.addColorStop(0, "#d1d5db");
+      pauldronGrad.addColorStop(0.35, "#b0b5bc");
+      pauldronGrad.addColorStop(0.7, "#9ca3af");
+      pauldronGrad.addColorStop(1, "#6b7280");
+      // Top plate
+      ctx.fillStyle = pauldronGrad;
+      ctx.beginPath();
+      ctx.moveTo(3, -5);
+      ctx.quadraticCurveTo(-3, -8, -7, -3);
+      ctx.quadraticCurveTo(-7, 0, -5, 2);
+      ctx.lineTo(3, 1);
+      ctx.closePath();
+      ctx.fill();
+      // Second plate (overlapping)
+      ctx.fillStyle = "#8a9099";
+      ctx.beginPath();
+      ctx.moveTo(3, 0);
+      ctx.quadraticCurveTo(-2, -1, -5, 1);
+      ctx.quadraticCurveTo(-5, 4, -3, 6);
+      ctx.lineTo(3, 5);
+      ctx.closePath();
+      ctx.fill();
+      // Third plate
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(3, 4);
+      ctx.quadraticCurveTo(-1, 3, -3, 5);
+      ctx.lineTo(-2, 8);
+      ctx.lineTo(3, 7);
+      ctx.closePath();
+      ctx.fill();
+      // Plate edge outlines
+      ctx.strokeStyle = "#4b5563";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(3, -5);
+      ctx.quadraticCurveTo(-3, -8, -7, -3);
+      ctx.quadraticCurveTo(-7, 0, -5, 2);
+      ctx.moveTo(-5, 1);
+      ctx.quadraticCurveTo(-5, 4, -3, 6);
+      ctx.stroke();
+      // Gold trim on top edge
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(3, -5);
+      ctx.quadraticCurveTo(-3, -8, -7, -3);
+      ctx.stroke();
+      // Rivets (gold)
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(-4, -3, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-3, 2, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(-2, 5.5, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Pauldron - Right (mirrored)
+      ctx.save();
+      ctx.translate(12, -14);
+      // Top plate
+      ctx.fillStyle = pauldronGrad;
+      ctx.beginPath();
+      ctx.moveTo(-3, -5);
+      ctx.quadraticCurveTo(3, -8, 7, -3);
+      ctx.quadraticCurveTo(7, 0, 5, 2);
+      ctx.lineTo(-3, 1);
+      ctx.closePath();
+      ctx.fill();
+      // Second plate
+      ctx.fillStyle = "#8a9099";
+      ctx.beginPath();
+      ctx.moveTo(-3, 0);
+      ctx.quadraticCurveTo(2, -1, 5, 1);
+      ctx.quadraticCurveTo(5, 4, 3, 6);
+      ctx.lineTo(-3, 5);
+      ctx.closePath();
+      ctx.fill();
+      // Third plate
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(-3, 4);
+      ctx.quadraticCurveTo(1, 3, 3, 5);
+      ctx.lineTo(2, 8);
+      ctx.lineTo(-3, 7);
+      ctx.closePath();
+      ctx.fill();
+      // Plate edges
+      ctx.strokeStyle = "#4b5563";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-3, -5);
+      ctx.quadraticCurveTo(3, -8, 7, -3);
+      ctx.quadraticCurveTo(7, 0, 5, 2);
+      ctx.moveTo(5, 1);
+      ctx.quadraticCurveTo(5, 4, 3, 6);
+      ctx.stroke();
+      // Gold trim
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-3, -5);
+      ctx.quadraticCurveTo(3, -8, 7, -3);
+      ctx.stroke();
+      // Rivets
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(4, -3, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(3, 2, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(2, 5.5, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // === PRINCETON TIGER EMBLEM ON CHEST ===
+      // Diamond background
+      ctx.fillStyle = "#f97316";
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.lineTo(-5, -9);
+      ctx.lineTo(0, -2);
+      ctx.lineTo(5, -9);
+      ctx.closePath();
+      ctx.fill();
+      // Gold diamond border
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.lineTo(-5, -9);
+      ctx.lineTo(0, -2);
+      ctx.lineTo(5, -9);
+      ctx.closePath();
+      ctx.stroke();
+      // Tiger face circle
+      ctx.fillStyle = "#fb923c";
+      ctx.beginPath();
+      ctx.arc(0, -10.5, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Tiger ears
+      ctx.fillStyle = "#1c1917";
+      ctx.beginPath();
+      ctx.moveTo(-3, -13);
+      ctx.lineTo(-4, -15.5);
+      ctx.lineTo(-1.5, -13.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(3, -13);
+      ctx.lineTo(4, -15.5);
+      ctx.lineTo(1.5, -13.5);
+      ctx.closePath();
+      ctx.fill();
+      // Inner ears
+      ctx.fillStyle = "#ea580c";
+      ctx.beginPath();
+      ctx.moveTo(-2.8, -13.2);
+      ctx.lineTo(-3.5, -14.8);
+      ctx.lineTo(-1.8, -13.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(2.8, -13.2);
+      ctx.lineTo(3.5, -14.8);
+      ctx.lineTo(1.8, -13.5);
+      ctx.closePath();
+      ctx.fill();
+      // Eyes
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(-2.2, -11.8, 1.8, 1.2);
+      ctx.fillRect(0.4, -11.8, 1.8, 1.2);
+      // Pupils
+      ctx.fillStyle = "#1c1917";
+      ctx.fillRect(-1.6, -11.5, 0.8, 0.8);
+      ctx.fillRect(0.8, -11.5, 0.8, 0.8);
+      // Nose
+      ctx.fillStyle = "#1c1917";
+      ctx.beginPath();
+      ctx.moveTo(-0.5, -9.8);
+      ctx.lineTo(0.5, -9.8);
+      ctx.lineTo(0, -9.3);
+      ctx.closePath();
+      ctx.fill();
+      // Mouth
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -9.3);
+      ctx.lineTo(-0.8, -8.6);
+      ctx.moveTo(0, -9.3);
+      ctx.lineTo(0.8, -8.6);
+      ctx.stroke();
+      // Tiger stripes
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-3.5, -11);
+      ctx.lineTo(-2, -10.2);
+      ctx.moveTo(3.5, -11);
+      ctx.lineTo(2, -10.2);
+      ctx.moveTo(-3, -9.5);
+      ctx.lineTo(-1.8, -9);
+      ctx.moveTo(3, -9.5);
+      ctx.lineTo(1.8, -9);
+      ctx.stroke();
+
+      // === HELMET (ornate great helm) ===
+      const helmetGrad = ctx.createLinearGradient(-10, -34, 10, -18);
+      helmetGrad.addColorStop(0, "#e5e7eb");
+      helmetGrad.addColorStop(0.25, "#d1d5db");
+      helmetGrad.addColorStop(0.5, "#9ca3af");
+      helmetGrad.addColorStop(0.8, "#6b7280");
+      helmetGrad.addColorStop(1, "#4b5563");
+      ctx.fillStyle = helmetGrad;
+      // Main dome (larger, imposing)
+      ctx.beginPath();
+      ctx.arc(0, -24, 10, Math.PI * 1.05, -0.05);
+      ctx.lineTo(10, -19);
+      ctx.lineTo(-10, -19);
+      ctx.closePath();
+      ctx.fill();
+      // Visor / face plate
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(-9, -19);
+      ctx.lineTo(-10, -14);
+      ctx.lineTo(-7, -11);
+      ctx.lineTo(7, -11);
+      ctx.lineTo(10, -14);
+      ctx.lineTo(9, -19);
+      ctx.closePath();
+      ctx.fill();
+      // Cheek guards (angled)
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.moveTo(-10, -19);
+      ctx.lineTo(-11, -15);
+      ctx.lineTo(-9, -11);
+      ctx.lineTo(-7, -11);
+      ctx.lineTo(-8, -19);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(10, -19);
+      ctx.lineTo(11, -15);
+      ctx.lineTo(9, -11);
+      ctx.lineTo(7, -11);
+      ctx.lineTo(8, -19);
+      ctx.closePath();
+      ctx.fill();
+      // Aventail (chainmail curtain from helmet)
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.moveTo(-9, -11);
+      ctx.lineTo(-10, -9);
+      ctx.lineTo(10, -9);
+      ctx.lineTo(9, -11);
+      ctx.closePath();
+      ctx.fill();
+      // Aventail ring pattern
+      ctx.fillStyle = "#9ca3af";
+      for (let ax = -8; ax <= 8; ax += 2) {
+        ctx.fillRect(ax, -11, 1, 1);
+        ctx.fillRect(ax + 1, -10, 1, 1);
+      }
+      // T-shaped visor slit
+      ctx.fillStyle = "#111827";
+      // Horizontal slit
+      ctx.fillRect(-6, -18, 12, 2);
+      // Vertical slit
+      ctx.fillRect(-1.2, -18, 2.4, 6);
+      // Visor breathing holes
+      ctx.fillStyle = "#111827";
+      for (let h = 0; h < 3; h++) {
+        ctx.fillRect(-5 + h * 1.5, -15.2, 0.8, 0.8);
+        ctx.fillRect(3 + h * 1.5, -15.2, 0.8, 0.8);
+      }
+      // Helmet crest ridge (gold, ornate)
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -34);
+      ctx.lineTo(0, -19);
+      ctx.stroke();
+      ctx.strokeStyle = "#d1d5db";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(0.8, -33);
+      ctx.lineTo(0.8, -20);
+      ctx.stroke();
+      // Brow band (gold circlet)
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(0, -24, 10, Math.PI * 0.85, Math.PI * 0.15, true);
+      ctx.stroke();
+      // Helmet edge highlight
+      ctx.strokeStyle = "#e5e7eb";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.arc(0, -24, 10, Math.PI * 1.05, Math.PI * 0.7);
+      ctx.stroke();
+
+      // Plume (large, flowing, multi-layered)
+      ctx.fillStyle = "#ea580c";
+      ctx.beginPath();
+      ctx.moveTo(-1, -33);
+      ctx.quadraticCurveTo(-4, -42 + stance * 0.5, 3, -40 + cosStance * 0.6);
+      ctx.quadraticCurveTo(10, -38 + stance * 0.4, 12, -32 + cosStance * 0.5);
+      ctx.quadraticCurveTo(8, -34, 4, -32);
+      ctx.quadraticCurveTo(2, -33, -1, -33);
+      ctx.closePath();
+      ctx.fill();
+      // Plume mid layer
+      ctx.fillStyle = "#f97316";
+      ctx.beginPath();
+      ctx.moveTo(0, -34);
+      ctx.quadraticCurveTo(2, -40 + stance * 0.4, 6, -38 + cosStance * 0.4);
+      ctx.quadraticCurveTo(9, -36 + stance * 0.3, 10, -33);
+      ctx.quadraticCurveTo(6, -35, 2, -33);
+      ctx.closePath();
+      ctx.fill();
+      // Plume dark accent
+      ctx.fillStyle = "#dc2626";
+      ctx.beginPath();
+      ctx.moveTo(1, -34);
+      ctx.quadraticCurveTo(5, -39 + stance * 0.3, 9, -35 + cosStance * 0.3);
+      ctx.quadraticCurveTo(7, -34, 3, -32);
+      ctx.closePath();
+      ctx.fill();
+      // Plume wisp highlights
+      ctx.strokeStyle = "#fbbf24";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(2, -38 + stance * 0.3);
+      ctx.quadraticCurveTo(6, -37, 8, -34);
+      ctx.stroke();
+
+      // === SWORD ARM ===
+      ctx.save();
+      ctx.translate(12, -11);
+      ctx.rotate(swordSwing);
+
+      // Chainmail under arm
+      ctx.fillStyle = "#6b7280";
+      ctx.fillRect(-2, -2, 3, 5);
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillRect(-1.5, -1.5, 1, 1);
+      ctx.fillRect(-1.5, 0.5, 1, 1);
+      ctx.fillRect(0, -0.5, 1, 1);
+      ctx.fillRect(0, 1.5, 1, 1);
+      // Upper arm plate
+      ctx.fillStyle = "#8a9099";
+      ctx.fillRect(0, -3, 7, 6);
+      ctx.strokeStyle = "#b0b5bc";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -3);
+      ctx.lineTo(0, 3);
+      ctx.stroke();
+      // Couter (elbow guard, pointed)
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(5, -4);
+      ctx.lineTo(9, 0);
+      ctx.lineTo(5, 4);
+      ctx.lineTo(3, 1);
+      ctx.lineTo(3, -1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4b5563";
+      ctx.beginPath();
+      ctx.arc(6, 0, 2.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#6b7280";
       ctx.beginPath();
-      ctx.arc(0, -20, 8, Math.PI * 0.8, Math.PI * 0.2, true);
+      ctx.arc(6, 0, 1.8, 0, Math.PI * 2);
       ctx.fill();
-
-      // Helmet plume
-      ctx.fillStyle = "#ea580c";
-      ctx.beginPath();
-      ctx.moveTo(-2, -26);
-      ctx.quadraticCurveTo(0, -35 + stance * 0.5, 5, -32);
-      ctx.quadraticCurveTo(2, -28, 0, -26);
-      ctx.fill();
-
-      // Visor
-      ctx.fillStyle = "#1f2937";
-      ctx.fillRect(-5, -22, 10, 4);
-
-      // Sword arm
-      ctx.save();
-      ctx.translate(10, -8);
-      ctx.rotate(swordSwing);
-
-      // Arm
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(0, -2, 12, 5);
-
-      // Sword
-      ctx.fillStyle = "#e5e7eb";
-      ctx.fillRect(10, -1, 20, 3);
-      ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(10, 0, 20, 1);
-      // Hilt
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(6, -3, 5, 7);
-      // Crossguard
       ctx.fillStyle = "#c9a227";
-      ctx.fillRect(5, -1, 2, 3);
-      ctx.fillRect(11, -1, 2, 3);
+      ctx.beginPath();
+      ctx.arc(6, 0, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Vambrace (forearm)
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillRect(7, -2.5, 6, 5.5);
+      ctx.strokeStyle = "#6b7280";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(8.5, -2.5);
+      ctx.lineTo(8.5, 3);
+      ctx.moveTo(11, -2.5);
+      ctx.lineTo(11, 3);
+      ctx.stroke();
+      // Gauntlet (articulated)
+      ctx.fillStyle = "#8a9099";
+      ctx.beginPath();
+      ctx.moveTo(12, -3.5);
+      ctx.lineTo(16, -2.5);
+      ctx.lineTo(17, 1);
+      ctx.lineTo(16, 4);
+      ctx.lineTo(12, 4);
+      ctx.closePath();
+      ctx.fill();
+      // Finger plate lines
+      ctx.strokeStyle = "#6b7280";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(13, -2);
+      ctx.lineTo(16, -1.5);
+      ctx.moveTo(13, 0);
+      ctx.lineTo(16.5, 0.5);
+      ctx.moveTo(13, 2);
+      ctx.lineTo(16, 2.5);
+      ctx.stroke();
+      // Gauntlet cuff
+      ctx.fillStyle = "#6b7280";
+      ctx.fillRect(12, -4, 1.5, 8.5);
+
+      // === SWORD (impressive longsword) ===
+      // Pommel (ornate sphere)
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(10, 1, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#a07d2e";
+      ctx.beginPath();
+      ctx.arc(10, 1, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Pommel gem (faceted ruby)
+      ctx.fillStyle = "#dc2626";
+      ctx.beginPath();
+      ctx.moveTo(10, -0.5);
+      ctx.lineTo(8.5, 1);
+      ctx.lineTo(10, 2.5);
+      ctx.lineTo(11.5, 1);
+      ctx.closePath();
+      ctx.fill();
+      // Gem glint
+      ctx.fillStyle = "#fca5a5";
+      ctx.fillRect(9.5, 0, 0.8, 0.8);
+      // Grip (leather wrapped)
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(11.5, -1, 5, 3);
+      // Grip wrap lines
+      ctx.strokeStyle = "#8b6f47";
+      ctx.lineWidth = 0.6;
+      for (let w = 0; w < 5; w++) {
+        ctx.beginPath();
+        ctx.moveTo(12 + w, -1);
+        ctx.lineTo(12.5 + w, 2);
+        ctx.stroke();
+      }
+      // Crossguard (ornate, curved)
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.moveTo(15.5, -5);
+      ctx.quadraticCurveTo(16.5, -4, 17, -2.5);
+      ctx.lineTo(17, 3.5);
+      ctx.quadraticCurveTo(16.5, 5, 15.5, 6);
+      ctx.lineTo(15, 4);
+      ctx.lineTo(15, -3);
+      ctx.closePath();
+      ctx.fill();
+      // Crossguard finials (decorative ends)
+      ctx.fillStyle = "#d4a72c";
+      ctx.beginPath();
+      ctx.arc(16.5, -4.5, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(16.5, 5.5, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Rain guard
+      ctx.fillStyle = "#9ca3af";
+      ctx.beginPath();
+      ctx.moveTo(17, -1.5);
+      ctx.lineTo(19, -1);
+      ctx.lineTo(19, 2);
+      ctx.lineTo(17, 2.5);
+      ctx.closePath();
+      ctx.fill();
+      // Blade (larger, tapered)
+      ctx.fillStyle = "#e5e7eb";
+      ctx.beginPath();
+      ctx.moveTo(18, -2);
+      ctx.lineTo(43, -0.8);
+      ctx.lineTo(46, 0.5);
+      ctx.lineTo(43, 2);
+      ctx.lineTo(18, 3);
+      ctx.closePath();
+      ctx.fill();
+      // Fuller (blood groove)
+      ctx.fillStyle = "#b0b5bc";
+      ctx.fillRect(20, -0.2, 21, 1.4);
+      // Fuller inner shade
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillRect(20, 0.1, 21, 0.8);
+      // Blade edge highlight (top)
+      ctx.strokeStyle = "#f9fafb";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(18, -2);
+      ctx.lineTo(43, -0.8);
+      ctx.lineTo(46, 0.5);
+      ctx.stroke();
+      // Gold etchings near blade base
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(20, -1);
+      ctx.lineTo(22, -0.5);
+      ctx.lineTo(20, 0);
+      ctx.moveTo(23, -0.8);
+      ctx.lineTo(25, -0.3);
+      ctx.lineTo(23, 0.2);
+      ctx.stroke();
 
       ctx.restore();
 
-      // Shield arm
+      // === SHIELD ARM ===
+      // Chainmail under arm area
+      ctx.fillStyle = "#6b7280";
+      ctx.fillRect(-11, -12, 3, 7);
       ctx.fillStyle = "#9ca3af";
-      ctx.fillRect(-12, -10, 5, 12);
+      for (let my = -11; my < -5; my += 2) {
+        for (let mx = -11; mx < -8; mx += 2) {
+          ctx.fillRect(mx, my, 1, 1);
+        }
+      }
+      // Upper arm armor plate
+      ctx.fillStyle = "#8a9099";
+      ctx.fillRect(-16, -14, 6, 7);
+      ctx.strokeStyle = "#6b7280";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-14, -14);
+      ctx.lineTo(-14, -7);
+      ctx.stroke();
+      // Couter (elbow guard)
+      ctx.fillStyle = "#7a8290";
+      ctx.beginPath();
+      ctx.moveTo(-14, -9);
+      ctx.lineTo(-16, -7);
+      ctx.lineTo(-14, -4);
+      ctx.lineTo(-11, -7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4b5563";
+      ctx.beginPath();
+      ctx.arc(-13, -7, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#6b7280";
+      ctx.beginPath();
+      ctx.arc(-13, -7, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(-13, -7, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Forearm (vambrace)
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillRect(-16, -7, 5, 6);
+      // Gauntlet
+      ctx.fillStyle = "#8a9099";
+      ctx.beginPath();
+      ctx.moveTo(-16, -2);
+      ctx.lineTo(-18, -1);
+      ctx.lineTo(-18, 2.5);
+      ctx.lineTo(-16, 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#6b7280";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(-16, 0);
+      ctx.moveTo(-18, 1.5);
+      ctx.lineTo(-16, 1.5);
+      ctx.stroke();
 
-      // Shield
-      const shieldGrad = ctx.createLinearGradient(-18, -15, -12, 5);
-      shieldGrad.addColorStop(0, "#f97316");
-      shieldGrad.addColorStop(0.5, "#ea580c");
+      // === KITE SHIELD (ornate) ===
+      const shieldGrad = ctx.createLinearGradient(-28, -22, -16, 14);
+      shieldGrad.addColorStop(0, "#fb923c");
+      shieldGrad.addColorStop(0.25, "#f97316");
+      shieldGrad.addColorStop(0.6, "#ea580c");
       shieldGrad.addColorStop(1, "#c2410c");
       ctx.fillStyle = shieldGrad;
       ctx.beginPath();
-      ctx.moveTo(-14, -18);
-      ctx.lineTo(-22, -12);
-      ctx.lineTo(-22, 2);
-      ctx.lineTo(-18, 8);
-      ctx.lineTo(-14, 2);
-      ctx.lineTo(-14, -18);
+      ctx.moveTo(-17, -22);
+      ctx.lineTo(-28, -16);
+      ctx.lineTo(-28, 0);
+      ctx.quadraticCurveTo(-28, 8, -22, 14);
+      ctx.quadraticCurveTo(-19, 8, -17, 0);
+      ctx.lineTo(-17, -22);
+      ctx.closePath();
       ctx.fill();
-
-      // Shield emblem
-      ctx.strokeStyle = "#000";
+      // Shield border (thick)
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-17, -22);
+      ctx.lineTo(-28, -16);
+      ctx.lineTo(-28, 0);
+      ctx.quadraticCurveTo(-28, 8, -22, 14);
+      ctx.quadraticCurveTo(-19, 8, -17, 0);
+      ctx.lineTo(-17, -22);
+      ctx.closePath();
+      ctx.stroke();
+      // Inner gold border
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-18, -20);
+      ctx.lineTo(-27, -15);
+      ctx.lineTo(-27, 0);
+      ctx.quadraticCurveTo(-27, 7, -22, 12);
+      ctx.quadraticCurveTo(-19.5, 7, -18, 0);
+      ctx.lineTo(-18, -20);
+      ctx.closePath();
+      ctx.stroke();
+      // Shield boss (center raised circle)
+      ctx.fillStyle = "#9ca3af";
+      ctx.beginPath();
+      ctx.arc(-22, -4, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(-22, -4, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Shield cross bars
+      ctx.strokeStyle = "#1c1917";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(-18, -10);
-      ctx.lineTo(-18, -2);
-      ctx.moveTo(-20, -6);
-      ctx.lineTo(-16, -6);
+      ctx.moveTo(-22, -20);
+      ctx.lineTo(-22, 12);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-28, -6);
+      ctx.lineTo(-17, -6);
+      ctx.stroke();
+
+      // Tiger emblem on shield (geometric tiger head, larger)
+      // Tiger face background
+      ctx.fillStyle = "#fb923c";
+      ctx.beginPath();
+      ctx.arc(-22, -13, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Ears
+      ctx.fillStyle = "#1c1917";
+      ctx.beginPath();
+      ctx.moveTo(-25, -15);
+      ctx.lineTo(-26, -17.5);
+      ctx.lineTo(-23.5, -16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-19, -15);
+      ctx.lineTo(-18, -17.5);
+      ctx.lineTo(-20.5, -16);
+      ctx.closePath();
+      ctx.fill();
+      // Inner ears
+      ctx.fillStyle = "#ea580c";
+      ctx.beginPath();
+      ctx.moveTo(-24.8, -15.2);
+      ctx.lineTo(-25.5, -16.5);
+      ctx.lineTo(-23.8, -15.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-19.2, -15.2);
+      ctx.lineTo(-18.5, -16.5);
+      ctx.lineTo(-20.2, -15.5);
+      ctx.closePath();
+      ctx.fill();
+      // Tiger eyes
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(-24.5, -14, 2, 1.2);
+      ctx.fillRect(-21.5, -14, 2, 1.2);
+      ctx.fillStyle = "#1c1917";
+      ctx.fillRect(-23.8, -13.8, 0.8, 0.8);
+      ctx.fillRect(-21, -13.8, 0.8, 0.8);
+      // Nose
+      ctx.fillStyle = "#1c1917";
+      ctx.beginPath();
+      ctx.moveTo(-22.5, -12);
+      ctx.lineTo(-21.5, -12);
+      ctx.lineTo(-22, -11.5);
+      ctx.closePath();
+      ctx.fill();
+      // Mouth
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-22, -11.5);
+      ctx.lineTo(-22.5, -11);
+      ctx.moveTo(-22, -11.5);
+      ctx.lineTo(-21.5, -11);
+      ctx.stroke();
+      // Stripes
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 0.7;
+      ctx.beginPath();
+      ctx.moveTo(-25.5, -13);
+      ctx.lineTo(-24, -12);
+      ctx.moveTo(-18.5, -13);
+      ctx.lineTo(-20, -12);
+      ctx.moveTo(-25, -11.5);
+      ctx.lineTo(-23.5, -11);
+      ctx.moveTo(-19, -11.5);
+      ctx.lineTo(-20.5, -11);
+      ctx.moveTo(-22, -15.5);
+      ctx.lineTo(-22, -14.5);
+      ctx.stroke();
+
+      // Decorative "P" on lower shield (geometric)
+      ctx.strokeStyle = "#1c1917";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-23, 7);
+      ctx.lineTo(-23, 2);
+      ctx.lineTo(-20.5, 2);
+      ctx.quadraticCurveTo(-19, 2.5, -19, 4);
+      ctx.quadraticCurveTo(-19, 5.5, -20.5, 5.5);
+      ctx.lineTo(-23, 5.5);
       ctx.stroke();
 
       ctx.restore();
     };
 
-    // Archer troop
+    // Archer troop - Ranger with longbow
     const drawArcher = (x: number, y: number, index: number) => {
-      const drawPhase = (t * 2 + index) % 3;
-      const pullBack = drawPhase < 1.5 ? drawPhase / 1.5 : 0;
+      // Cache trig values
+      const phaseD = t * 2 + index;
+      const drawPhase = phaseD % 3;
+      const pullBack = drawPhase < 1.5 ? drawPhase / 1.5 : (drawPhase < 2.0 ? 1.0 : 0);
+      const breathe = Math.sin(t * 3 + index) * 0.5;
+      const phaseF = t * 2.5 + index;
+      const sinSway = Math.sin(phaseF);
+      const cosSway = Math.cos(phaseF);
+      const eyePulse = Math.sin(t * 5 + index) * 0.15 + 0.85;
 
       ctx.save();
       ctx.translate(x, y);
 
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      // Ground shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
       ctx.beginPath();
-      ctx.ellipse(0, 12, 8, 3, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 16, 12, 4, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Cloak
+      // === CLOAK (behind body, draped over right shoulder) ===
+      ctx.fillStyle = "#14532d";
+      ctx.beginPath();
+      ctx.moveTo(2, -18);
+      ctx.quadraticCurveTo(14, -12 + sinSway, 16, 0);
+      ctx.quadraticCurveTo(15 + cosSway * 0.6, 16 + sinSway * 1.2, 12 + sinSway * 0.6, 18);
+      ctx.quadraticCurveTo(8, 16, 6, 8);
+      ctx.quadraticCurveTo(5, -2, 4, -14);
+      ctx.closePath();
+      ctx.fill();
+      // Cloak mid fold
       ctx.fillStyle = "#166534";
       ctx.beginPath();
-      ctx.moveTo(-5, -10);
-      ctx.quadraticCurveTo(-10, 5, -8, 12);
-      ctx.lineTo(8, 12);
-      ctx.quadraticCurveTo(10, 5, 5, -10);
+      ctx.moveTo(4, -16);
+      ctx.quadraticCurveTo(12, -8, 14, 2);
+      ctx.quadraticCurveTo(12, 10, 10, 14);
+      ctx.quadraticCurveTo(8, 10, 7, 2);
+      ctx.quadraticCurveTo(6, -6, 5, -14);
+      ctx.closePath();
+      ctx.fill();
+      // Cloak highlight fold
+      ctx.fillStyle = "#1a7a42";
+      ctx.beginPath();
+      ctx.moveTo(5, -14);
+      ctx.quadraticCurveTo(10, -4, 12, 4);
+      ctx.quadraticCurveTo(10, 0, 7, -4);
+      ctx.quadraticCurveTo(6, -8, 5, -14);
+      ctx.closePath();
+      ctx.fill();
+      // Cloak bottom trim
+      ctx.strokeStyle = "#0a3d1e";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(16, 0);
+      ctx.quadraticCurveTo(15 + cosSway * 0.6, 16 + sinSway * 1.2, 12 + sinSway * 0.6, 18);
+      ctx.stroke();
+      // Cloak clasp (leaf-shaped, on shoulder)
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.moveTo(3, -16);
+      ctx.quadraticCurveTo(5, -18, 6, -16);
+      ctx.quadraticCurveTo(5, -14, 3, -16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#d4a72c";
+      ctx.fillRect(3.8, -16.5, 1.8, 1.5);
+
+      // === KNEE-HIGH BOOTS (left) ===
+      ctx.fillStyle = "#5c3a1e";
+      ctx.beginPath();
+      ctx.moveTo(-6, 3);
+      ctx.lineTo(-7, 8);
+      ctx.lineTo(-8, 14);
+      ctx.lineTo(-2, 14);
+      ctx.lineTo(-1, 8);
+      ctx.lineTo(-1, 3);
+      ctx.closePath();
+      ctx.fill();
+      // Boot cuff fold
+      ctx.fillStyle = "#4b3018";
+      ctx.fillRect(-7, 3, 6, 2);
+      // Boot sole
+      ctx.fillStyle = "#3a2515";
+      ctx.fillRect(-8, 13.5, 7, 2.5);
+      // Boot toe cap
+      ctx.fillStyle = "#4b3018";
+      ctx.beginPath();
+      ctx.moveTo(-8, 14);
+      ctx.lineTo(-8.5, 15);
+      ctx.lineTo(-6, 15.5);
+      ctx.lineTo(-5, 14);
+      ctx.closePath();
+      ctx.fill();
+      // Boot straps
+      ctx.strokeStyle = "#8b6f47";
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(-7, 5.5);
+      ctx.lineTo(-1, 5.5);
+      ctx.moveTo(-7, 8);
+      ctx.lineTo(-2, 8);
+      ctx.moveTo(-7.5, 11);
+      ctx.lineTo(-2, 11);
+      ctx.stroke();
+      // Buckles (brass)
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(-5, 5, 2, 1.5);
+      ctx.fillRect(-4.5, 7.5, 2, 1.5);
+      // Buckle prongs
+      ctx.fillStyle = "#a07d2e";
+      ctx.fillRect(-4.2, 5.3, 0.6, 1);
+      ctx.fillRect(-3.7, 7.8, 0.6, 1);
+
+      // Boot - right
+      ctx.fillStyle = "#5c3a1e";
+      ctx.beginPath();
+      ctx.moveTo(1, 3);
+      ctx.lineTo(0, 8);
+      ctx.lineTo(-1, 14);
+      ctx.lineTo(5, 14);
+      ctx.lineTo(6, 8);
+      ctx.lineTo(6, 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4b3018";
+      ctx.fillRect(0, 3, 6, 2);
+      ctx.fillStyle = "#3a2515";
+      ctx.fillRect(-1, 13.5, 7, 2.5);
+      ctx.fillStyle = "#4b3018";
+      ctx.beginPath();
+      ctx.moveTo(-1, 14);
+      ctx.lineTo(-1.5, 15);
+      ctx.lineTo(1, 15.5);
+      ctx.lineTo(2, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#8b6f47";
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(0, 5.5);
+      ctx.lineTo(6, 5.5);
+      ctx.moveTo(0, 8);
+      ctx.lineTo(5, 8);
+      ctx.moveTo(-0.5, 11);
+      ctx.lineTo(5, 11);
+      ctx.stroke();
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(2, 5, 2, 1.5);
+      ctx.fillRect(2.5, 7.5, 2, 1.5);
+
+      // === LEGS (trousers with knee pads) ===
+      ctx.fillStyle = "#4b3621";
+      ctx.fillRect(-6, 0, 5, 5);
+      ctx.fillRect(1, 0, 5, 5);
+      // Hardened leather knee pads
+      ctx.fillStyle = "#6b4c30";
+      ctx.beginPath();
+      ctx.arc(-3.5, 2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(3.5, 2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#7c5c3c";
+      ctx.beginPath();
+      ctx.arc(-3.5, 2, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(3.5, 2, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === LEATHER ARMOR VEST (layered, detailed) ===
+      const vestGrad = ctx.createLinearGradient(-7, -16, 7, 4);
+      vestGrad.addColorStop(0, "#8b6f4f");
+      vestGrad.addColorStop(0.25, "#7c5c3c");
+      vestGrad.addColorStop(0.55, "#6b4c30");
+      vestGrad.addColorStop(1, "#5c3a1e");
+      ctx.fillStyle = vestGrad;
+      ctx.beginPath();
+      ctx.moveTo(-7, 3);
+      ctx.lineTo(-8, -4);
+      ctx.lineTo(-7, -11);
+      ctx.lineTo(-5, -16);
+      ctx.lineTo(5, -16);
+      ctx.lineTo(7, -11);
+      ctx.lineTo(8, -4);
+      ctx.lineTo(7, 3);
+      ctx.closePath();
+      ctx.fill();
+      // Panel seam lines
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-6, -12);
+      ctx.lineTo(6, -12);
+      ctx.moveTo(-6, -6);
+      ctx.lineTo(6, -6);
+      ctx.moveTo(-5, 0);
+      ctx.lineTo(5, 0);
+      ctx.stroke();
+      // Center seam with cross stitching
+      ctx.strokeStyle = "#8b6f47";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(0, 2);
+      ctx.stroke();
+      for (let sy = -14; sy < 1; sy += 2.5) {
+        ctx.beginPath();
+        ctx.moveTo(-1.2, sy);
+        ctx.lineTo(1.2, sy + 1.5);
+        ctx.moveTo(1.2, sy);
+        ctx.lineTo(-1.2, sy + 1.5);
+        ctx.stroke();
+      }
+      // Hardened leather chest plate overlay
+      ctx.fillStyle = "rgba(75, 48, 24, 0.4)";
+      ctx.beginPath();
+      ctx.moveTo(-4, -14);
+      ctx.lineTo(-5, -8);
+      ctx.lineTo(-4, -4);
+      ctx.lineTo(4, -4);
+      ctx.lineTo(5, -8);
+      ctx.lineTo(4, -14);
+      ctx.closePath();
+      ctx.fill();
+      // Chest plate corner rivets
+      ctx.fillStyle = "#8b6f47";
+      ctx.beginPath(); ctx.arc(-4, -12, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4, -12, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(-4, -6, 0.8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4, -6, 0.8, 0, Math.PI * 2); ctx.fill();
+      // Side buckles (detailed)
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(-8, -9, 2, 2.5);
+      ctx.fillRect(-8, -4, 2, 2.5);
+      ctx.fillStyle = "#a07d2e";
+      ctx.fillRect(-7.5, -8.5, 1, 1.5);
+      ctx.fillRect(-7.5, -3.5, 1, 1.5);
+      // Leather straps from buckles
+      ctx.strokeStyle = "#5c3a1e";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-8, -8);
+      ctx.lineTo(-9.5, -8);
+      ctx.moveTo(-8, -3);
+      ctx.lineTo(-9.5, -3);
+      ctx.stroke();
+
+      // Shoulder guard (spaulder on left shoulder)
+      ctx.fillStyle = "#6b4c30";
+      ctx.beginPath();
+      ctx.moveTo(-5, -16);
+      ctx.quadraticCurveTo(-9, -18, -10, -14);
+      ctx.quadraticCurveTo(-9, -10, -7, -9);
+      ctx.lineTo(-5, -11);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, -14);
+      ctx.quadraticCurveTo(-8, -15, -9, -13);
+      ctx.moveTo(-5, -12);
+      ctx.quadraticCurveTo(-8, -12.5, -9, -11);
+      ctx.stroke();
+      // Rivet
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(-8, -14, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === BELT (wider, with pouches and dagger) ===
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(-8, 0, 16, 3.5);
+      // Belt texture
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(-7, 1);
+      ctx.lineTo(7, 1);
+      ctx.moveTo(-7, 2.5);
+      ctx.lineTo(7, 2.5);
+      ctx.stroke();
+      // Belt buckle (ornate)
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(-1.5, 0, 3.5, 3.5);
+      ctx.fillStyle = "#a07d2e";
+      ctx.fillRect(-0.8, 0.5, 2, 2.5);
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(-0.3, 1, 1, 1.5);
+      // Small pouch (left hip)
+      ctx.fillStyle = "#6b4c30";
+      ctx.fillRect(-7, 2.5, 3.5, 3);
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(-6.5, 3);
+      ctx.lineTo(-6.5, 5);
+      ctx.moveTo(-4.5, 3);
+      ctx.lineTo(-4.5, 5);
+      ctx.stroke();
+      ctx.fillStyle = "#8b6f47";
+      ctx.fillRect(-7, 2.5, 3.5, 0.8);
+      // Dagger on belt (right hip)
+      ctx.fillStyle = "#4b3621";
+      ctx.beginPath();
+      ctx.moveTo(5, 0.5);
+      ctx.lineTo(4.5, 6);
+      ctx.lineTo(6.5, 6);
+      ctx.lineTo(7, 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // Dagger hilt
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(5, -2, 2, 3);
+      // Dagger crossguard
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(4.5, -2, 3, 0.8);
+      // Dagger pommel
+      ctx.fillStyle = "#9ca3af";
+      ctx.beginPath();
+      ctx.arc(6, -2.5, 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Blade peek from sheath
+      ctx.fillStyle = "#d1d5db";
+      ctx.beginPath();
+      ctx.moveTo(5.2, 5.5);
+      ctx.lineTo(6, 8);
+      ctx.lineTo(6.8, 5.5);
       ctx.closePath();
       ctx.fill();
 
-      // Body
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(-4, -8, 8, 15);
-
-      // Head
-      ctx.fillStyle = "#d6d3d1";
+      // Baldric (diagonal strap for quiver)
+      ctx.strokeStyle = "#5c3a1e";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(0, -14, 6, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(8, -14);
+      ctx.quadraticCurveTo(3, -12, -2, -6);
+      ctx.quadraticCurveTo(-5, -2, -6, 1);
+      ctx.stroke();
+      ctx.strokeStyle = "#6b4c30";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(7.5, -13.5);
+      ctx.quadraticCurveTo(2.5, -11.5, -1.5, -5.5);
+      ctx.stroke();
 
-      // Hood
+      // === HOOD (deep, dramatic) ===
+      ctx.fillStyle = "#14532d";
+      ctx.beginPath();
+      ctx.moveTo(-9, -17);
+      ctx.quadraticCurveTo(-10, -26, 0, -28);
+      ctx.quadraticCurveTo(10, -26, 9, -17);
+      ctx.lineTo(7, -13);
+      ctx.lineTo(-7, -13);
+      ctx.closePath();
+      ctx.fill();
+      // Hood peak
+      ctx.fillStyle = "#0f4024";
+      ctx.beginPath();
+      ctx.moveTo(-2, -28);
+      ctx.lineTo(0, -30);
+      ctx.lineTo(2, -28);
+      ctx.closePath();
+      ctx.fill();
+      // Hood side folds
       ctx.fillStyle = "#166534";
       ctx.beginPath();
-      ctx.arc(0, -14, 7, Math.PI, 0);
+      ctx.moveTo(-8, -18);
+      ctx.quadraticCurveTo(-9, -22, -4, -25);
+      ctx.quadraticCurveTo(-7, -22, -7, -18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(8, -18);
+      ctx.quadraticCurveTo(9, -22, 4, -25);
+      ctx.quadraticCurveTo(7, -22, 7, -18);
+      ctx.closePath();
+      ctx.fill();
+      // Hood back drape (longer, flowing)
+      ctx.fillStyle = "#166534";
+      ctx.beginPath();
+      ctx.moveTo(-7, -15);
+      ctx.quadraticCurveTo(-9, -10 + sinSway * 0.4, -8, -4);
+      ctx.quadraticCurveTo(-7, -2, -6, -4);
+      ctx.quadraticCurveTo(-6, -8, -6, -15);
+      ctx.closePath();
+      ctx.fill();
+      // Hood shadow overhang
+      ctx.fillStyle = "#0a3d1e";
+      ctx.beginPath();
+      ctx.moveTo(-7, -16);
+      ctx.quadraticCurveTo(0, -14, 7, -16);
+      ctx.lineTo(6, -14);
+      ctx.lineTo(-6, -14);
+      ctx.closePath();
       ctx.fill();
 
-      // Bow
-      ctx.strokeStyle = "#78350f";
-      ctx.lineWidth = 3;
+      // === FACE IN DEEP SHADOW ===
+      ctx.fillStyle = "#0d0d1a";
       ctx.beginPath();
-      ctx.arc(-10, -5, 15, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.arc(0, -18, 6, 0, Math.PI * 2);
+      ctx.fill();
+      // Face scarf / mask
+      ctx.fillStyle = "#111827";
+      ctx.beginPath();
+      ctx.moveTo(-5, -16);
+      ctx.lineTo(-4, -13);
+      ctx.lineTo(4, -13);
+      ctx.lineTo(5, -16);
+      ctx.closePath();
+      ctx.fill();
+
+      // === GLOWING EYES (pulsing) ===
+      const glowA = 0.2 * eyePulse;
+      const glowB = 0.35 * eyePulse;
+      // Outer glow aura
+      ctx.fillStyle = "rgba(74, 222, 128, " + glowA.toFixed(3) + ")";
+      ctx.fillRect(-4.5, -20, 4, 3.5);
+      ctx.fillRect(0.5, -20, 4, 3.5);
+      // Mid glow
+      ctx.fillStyle = "rgba(74, 222, 128, " + glowB.toFixed(3) + ")";
+      ctx.fillRect(-4, -19.5, 3, 2.5);
+      ctx.fillRect(1, -19.5, 3, 2.5);
+      // Eyes (bright core)
+      ctx.fillStyle = "#4ade80";
+      ctx.fillRect(-3.5, -19, 2.5, 1.8);
+      ctx.fillRect(1, -19, 2.5, 1.8);
+      // Bright center
+      ctx.fillStyle = "#86efac";
+      ctx.fillRect(-2.8, -18.8, 1, 1.2);
+      ctx.fillRect(1.8, -18.8, 1, 1.2);
+      // Pupil slits
+      ctx.fillStyle = "#14532d";
+      ctx.fillRect(-2.5, -19, 0.5, 1.8);
+      ctx.fillRect(2, -19, 0.5, 1.8);
+
+      // === BOW ARM (left arm with bracer) ===
+      ctx.save();
+      ctx.translate(-9, -9);
+
+      // Upper arm (leather sleeve)
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(-2, -2, 4, 5);
+      // Bracer (detailed armguard)
+      ctx.fillStyle = "#6b4c30";
+      ctx.beginPath();
+      ctx.moveTo(-3, -1);
+      ctx.lineTo(-3, 4);
+      ctx.lineTo(3, 4);
+      ctx.lineTo(3, -1);
+      ctx.closePath();
+      ctx.fill();
+      // Bracer reinforcement strips
+      ctx.strokeStyle = "#8b6f47";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(-2.5, -0.5);
+      ctx.lineTo(2.5, -0.5);
+      ctx.moveTo(-2.5, 1);
+      ctx.lineTo(2.5, 1);
+      ctx.moveTo(-2.5, 2.5);
+      ctx.lineTo(2.5, 2.5);
+      ctx.stroke();
+      // Metal studs on bracer
+      ctx.fillStyle = "#9ca3af";
+      ctx.beginPath(); ctx.arc(-1.5, 0.3, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(1.5, 0.3, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 1.8, 0.6, 0, Math.PI * 2); ctx.fill();
+      // Hand gripping bow
+      ctx.fillStyle = "#c4a882";
+      ctx.beginPath();
+      ctx.arc(0, 5, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === LONGBOW (detailed with carvings) ===
+      // Main stave
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(-4, 2, 20, -Math.PI * 0.43, Math.PI * 0.43);
+      ctx.stroke();
+      // Inner highlight
+      ctx.strokeStyle = "#7c5c3c";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(-4, 2, 20, -Math.PI * 0.35, Math.PI * 0.15);
+      ctx.stroke();
+      // Belly edge
+      ctx.strokeStyle = "#8b6f47";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.arc(-4, 2, 18.5, -Math.PI * 0.3, Math.PI * 0.3);
       ctx.stroke();
 
-      // Bowstring
-      ctx.strokeStyle = "#a8a29e";
+      // Recurve tips (horn nocks)
+      const cosTop = Math.cos(-Math.PI * 0.43);
+      const sinTop = Math.sin(-Math.PI * 0.43);
+      const cosBot = Math.cos(Math.PI * 0.43);
+      const sinBot = Math.sin(Math.PI * 0.43);
+      const bowTopX = -4 + cosTop * 20;
+      const bowTopY = 2 + sinTop * 20;
+      const bowBotX = -4 + cosBot * 20;
+      const bowBotY = 2 + sinBot * 20;
+      // Top nock
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(bowTopX, bowTopY);
+      ctx.quadraticCurveTo(bowTopX - 3, bowTopY - 4, bowTopX - 6, bowTopY - 1);
+      ctx.stroke();
+      // Nock tip cap (horn)
+      ctx.fillStyle = "#d1c4a9";
+      ctx.beginPath();
+      ctx.arc(bowTopX - 5, bowTopY - 2, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Bottom nock
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(bowBotX, bowBotY);
+      ctx.quadraticCurveTo(bowBotX - 3, bowBotY + 4, bowBotX - 6, bowBotY + 1);
+      ctx.stroke();
+      ctx.fillStyle = "#d1c4a9";
+      ctx.beginPath();
+      ctx.arc(bowBotX - 5, bowBotY + 2, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wrapped grip (detailed)
+      const gX = -4 + 20;
+      ctx.fillStyle = "#8b6f47";
+      ctx.beginPath();
+      ctx.arc(gX, 2, 3.5, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.fill();
+      ctx.fillStyle = "#6b4c30";
+      ctx.beginPath();
+      ctx.arc(gX, 2, 2.5, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.fill();
+      // Grip wrapping lines
+      ctx.strokeStyle = "#5c3a1e";
+      ctx.lineWidth = 0.6;
+      for (let w = -3; w <= 3; w += 1) {
+        ctx.beginPath();
+        ctx.moveTo(gX - 1, 2 + w);
+        ctx.lineTo(gX + 1.5, 2 + w + 0.6);
+        ctx.stroke();
+      }
+      // Arrow rest notch
+      ctx.fillStyle = "#5c3a1e";
+      ctx.fillRect(gX - 2, 1, 1.5, 2);
+
+      // === BOWSTRING ===
+      ctx.strokeStyle = "#e7e5e4";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(-10 + Math.cos(-Math.PI * 0.4) * 15, -5 + Math.sin(-Math.PI * 0.4) * 15);
-      ctx.lineTo(-10 - pullBack * 8, -5);
-      ctx.lineTo(-10 + Math.cos(Math.PI * 0.4) * 15, -5 + Math.sin(Math.PI * 0.4) * 15);
+      ctx.moveTo(bowTopX - 4, bowTopY - 2);
+      if (pullBack > 0.1) {
+        ctx.lineTo(-4 - pullBack * 12, 2);
+      } else {
+        ctx.lineTo(gX - 3, 2);
+      }
+      ctx.lineTo(bowBotX - 4, bowBotY + 2);
       ctx.stroke();
 
-      // Arrow
-      if (pullBack > 0.3) {
-        ctx.strokeStyle = "#78350f";
-        ctx.lineWidth = 2;
+      // Draw hand pulling string
+      if (pullBack > 0.1) {
+        const pullX = -4 - pullBack * 12;
+        // Hand gripping string
+        ctx.fillStyle = "#c4a882";
         ctx.beginPath();
-        ctx.moveTo(-10 - pullBack * 8, -5);
-        ctx.lineTo(5, -5);
+        ctx.arc(pullX + 1, 2, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        // Fingers on string
+        ctx.fillStyle = "#b8976e";
+        ctx.fillRect(pullX - 0.5, 0.5, 1.5, 3);
+        ctx.fillRect(pullX + 0.5, -0.5, 1, 1.5);
+        // Forearm with bracer
+        ctx.fillStyle = "#6b4c30";
+        ctx.fillRect(pullX + 2, -1, 5, 4);
+        ctx.strokeStyle = "#8b6f47";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(pullX + 2.5, 0);
+        ctx.lineTo(pullX + 6.5, 0);
+        ctx.moveTo(pullX + 2.5, 2);
+        ctx.lineTo(pullX + 6.5, 2);
         ctx.stroke();
-        ctx.fillStyle = "#6b7280";
+      }
+
+      // Arrow being drawn
+      if (pullBack > 0.2) {
+        const arrowStartX = -4 - pullBack * 12;
+        // Arrow shaft
+        ctx.strokeStyle = "#a8967a";
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(5, -5);
-        ctx.lineTo(10, -7);
-        ctx.lineTo(10, -3);
+        ctx.moveTo(arrowStartX, 2);
+        ctx.lineTo(arrowStartX + 26 + pullBack * 8, 2);
+        ctx.stroke();
+        // Broadhead arrowhead
+        const headX = arrowStartX + 26 + pullBack * 8;
+        ctx.fillStyle = "#d1d5db";
+        ctx.beginPath();
+        ctx.moveTo(headX, 2);
+        ctx.lineTo(headX + 3, -1);
+        ctx.lineTo(headX + 5, 2);
+        ctx.lineTo(headX + 3, 5);
         ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#9ca3af";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(headX + 1, 2);
+        ctx.lineTo(headX + 5, 2);
+        ctx.stroke();
+        // Fletching (3 vanes)
+        ctx.fillStyle = "#dc2626";
+        ctx.beginPath();
+        ctx.moveTo(arrowStartX, 2);
+        ctx.lineTo(arrowStartX + 4, -1);
+        ctx.lineTo(arrowStartX + 5, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.moveTo(arrowStartX, 2);
+        ctx.lineTo(arrowStartX + 4, 5);
+        ctx.lineTo(arrowStartX + 5, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#4ade80";
+        ctx.beginPath();
+        ctx.moveTo(arrowStartX + 1, 2);
+        ctx.lineTo(arrowStartX + 4, 0.5);
+        ctx.lineTo(arrowStartX + 5, 2);
+        ctx.closePath();
+        ctx.fill();
+        // Nock
+        ctx.fillStyle = "#d1c4a9";
+        ctx.fillRect(arrowStartX - 1, 1, 2, 2);
+      }
+
+      ctx.restore();
+
+      // Right arm bracer (visible when not pulling)
+      if (pullBack <= 0.1) {
+        ctx.fillStyle = "#6b4c30";
+        ctx.fillRect(4, -9, 5, 4);
+        ctx.strokeStyle = "#8b6f47";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(4.5, -8);
+        ctx.lineTo(8.5, -8);
+        ctx.moveTo(4.5, -6);
+        ctx.lineTo(8.5, -6);
+        ctx.stroke();
+        // Hand at rest
+        ctx.fillStyle = "#c4a882";
+        ctx.beginPath();
+        ctx.arc(7, -4.5, 2, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Quiver
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(5, -12, 5, 15);
-      ctx.strokeStyle = "#a8a29e";
-      ctx.lineWidth = 1;
-      for (let arrow = 0; arrow < 4; arrow++) {
+      // === QUIVER (large, tooled leather, on back) ===
+      ctx.fillStyle = "#5c3a1e";
+      ctx.beginPath();
+      ctx.moveTo(7, -16);
+      ctx.lineTo(6, 5);
+      ctx.quadraticCurveTo(6, 7, 8, 7);
+      ctx.lineTo(12, 7);
+      ctx.quadraticCurveTo(14, 7, 14, 5);
+      ctx.lineTo(14, -16);
+      ctx.closePath();
+      ctx.fill();
+      // Tooling pattern (vertical lines)
+      ctx.strokeStyle = "#7c5c3c";
+      ctx.lineWidth = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(8, -12);
+      ctx.lineTo(8, 4);
+      ctx.moveTo(10, -14);
+      ctx.lineTo(10, 5);
+      ctx.moveTo(12, -12);
+      ctx.lineTo(12, 4);
+      ctx.stroke();
+      // Diamond tooling pattern
+      for (let qy = -10; qy < 2; qy += 4) {
+        ctx.strokeStyle = "#7c5c3c";
+        ctx.lineWidth = 0.4;
         ctx.beginPath();
-        ctx.moveTo(6 + arrow, -12);
-        ctx.lineTo(6 + arrow, -18);
+        ctx.moveTo(9, qy);
+        ctx.lineTo(10, qy - 1.5);
+        ctx.lineTo(11, qy);
+        ctx.lineTo(10, qy + 1.5);
+        ctx.closePath();
         ctx.stroke();
+      }
+      // Quiver rim (reinforced)
+      ctx.fillStyle = "#7c5c3c";
+      ctx.fillRect(6, -17, 9, 2.5);
+      ctx.strokeStyle = "#4b3018";
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(6, -17);
+      ctx.lineTo(15, -17);
+      ctx.moveTo(6, -14.5);
+      ctx.lineTo(15, -14.5);
+      ctx.stroke();
+      // Metal studs on rim
+      ctx.fillStyle = "#9ca3af";
+      ctx.beginPath(); ctx.arc(8, -15.8, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(10.5, -15.8, 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(13, -15.8, 0.6, 0, Math.PI * 2); ctx.fill();
+      // Quiver strap
+      ctx.strokeStyle = "#6b4c30";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(9, -15);
+      ctx.quadraticCurveTo(4, -17, 2, -14);
+      ctx.stroke();
+
+      // === ARROWS IN QUIVER (varied fletching) ===
+      const fletchColors = ["#dc2626", "#fbbf24", "#16a34a", "#dc2626", "#3b82f6", "#f97316", "#8b5cf6"];
+      for (let a = 0; a < 7; a++) {
+        const ax = 7.5 + a * 0.95;
+        const aLen = 7 + (a % 3) * 1.5;
+        // Arrow shaft
+        ctx.strokeStyle = "#a8a29e";
+        ctx.lineWidth = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(ax, -17);
+        ctx.lineTo(ax, -17 - aLen);
+        ctx.stroke();
+        // Fletching (2 vanes)
+        const fy = -19 - (a % 3);
+        ctx.fillStyle = fletchColors[a];
+        ctx.beginPath();
+        ctx.moveTo(ax, fy);
+        ctx.lineTo(ax - 1.3, fy - 2);
+        ctx.lineTo(ax, fy - 1.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(ax, fy);
+        ctx.lineTo(ax + 1.3, fy - 2);
+        ctx.lineTo(ax, fy - 1.5);
+        ctx.closePath();
+        ctx.fill();
+        // Nock
+        ctx.fillStyle = "#d1c4a9";
+        ctx.fillRect(ax - 0.3, -17 - aLen - 0.5, 0.6, 1);
       }
 
       ctx.restore();
