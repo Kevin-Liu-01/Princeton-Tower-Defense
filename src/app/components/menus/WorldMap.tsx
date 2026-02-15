@@ -119,10 +119,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [showCodex, setShowCodex] = useState(false);
   const [animTime, setAnimTime] = useState(0);
+  const animTimeRef = useRef(0);
   const [mapHeight, setMapHeight] = useState(500);
   const [hoveredHero, setHoveredHero] = useState<HeroType | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<SpellType | null>(null);
   const imageCache = useRef<Record<string, HTMLImageElement>>({});
+  const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
 
   // Drag-to-scroll state
   const [isDragging, setIsDragging] = useState(false);
@@ -189,14 +191,22 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const width = MAP_WIDTH;
     const height = mapHeight;
 
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    canvas.style.minHeight = `${height}px`;
-    ctx.scale(dpr, dpr);
+    // Only resize canvas when dimensions actually change (expensive operation)
+    const needsResize = lastCanvasSizeRef.current.w !== width || lastCanvasSizeRef.current.h !== height;
+    if (needsResize) {
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      canvas.style.minHeight = `${height}px`;
+      lastCanvasSizeRef.current = { w: width, h: height };
+    }
 
-    const time = animTime;
+    // Use ref-based time to avoid React re-renders on every frame
+    const time = animTimeRef.current;
+
+    // Clear canvas (cheaper than resizing)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     // Background with rich war atmosphere - deep layered gradient
     const bgGrad = ctx.createLinearGradient(0, 0, width, 0);
@@ -664,16 +674,22 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       drawDiamond(bx + 8, labelY, 2.5);
       drawDiamond(bx + bannerW - 8, labelY, 2.5);
 
-      // Text glow
-      ctx.shadowColor = r.labelGlow;
-      ctx.shadowBlur = 8;
-      ctx.fillStyle = r.labelColor;
-      ctx.fillText(r.name, labelX, labelY + 4);
-      ctx.shadowBlur = 0;
+      // Text glow (use multiple draws instead of expensive shadowBlur)
+      ctx.fillStyle = r.labelGlow;
+      ctx.globalAlpha = 0.3;
+      ctx.fillText(r.name, labelX - 1, labelY + 4);
+      ctx.fillText(r.name, labelX + 1, labelY + 4);
+      ctx.fillText(r.name, labelX, labelY + 3);
+      ctx.fillText(r.name, labelX, labelY + 5);
+      ctx.globalAlpha = 1;
 
       // Text shadow for depth
       ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fillText(r.name, labelX + 0.5, labelY + 4.5);
+
+      // Main text
+      ctx.fillStyle = r.labelColor;
+      ctx.fillText(r.name, labelX, labelY + 4);
 
       // Main text
       ctx.fillStyle = r.labelColor;
@@ -714,97 +730,48 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
       // Region-aware dirt colors
       const avgX = points.reduce((s, p) => s + p[0], 0) / points.length;
-      let dirtLight: string, dirtMid: string, dirtDark: string, dirtEdge: string;
+      let dirtLight: string, dirtMid: string, dirtDark: string;
       if (avgX < 380) {
         dirtLight = "rgba(105, 85, 55, 0.28)"; dirtMid = "rgba(85, 70, 40, 0.32)";
-        dirtDark = "rgba(55, 45, 25, 0.35)"; dirtEdge = "rgba(70, 90, 50, 0.15)";
+        dirtDark = "rgba(55, 45, 25, 0.35)";
       } else if (avgX < 720) {
         dirtLight = "rgba(80, 70, 50, 0.3)"; dirtMid = "rgba(60, 55, 38, 0.35)";
-        dirtDark = "rgba(40, 35, 22, 0.38)"; dirtEdge = "rgba(50, 65, 45, 0.12)";
+        dirtDark = "rgba(40, 35, 22, 0.38)";
       } else if (avgX < 1080) {
         dirtLight = "rgba(130, 105, 65, 0.3)"; dirtMid = "rgba(110, 85, 50, 0.32)";
-        dirtDark = "rgba(80, 60, 30, 0.35)"; dirtEdge = "rgba(140, 110, 60, 0.12)";
+        dirtDark = "rgba(80, 60, 30, 0.35)";
       } else if (avgX < 1440) {
         dirtLight = "rgba(90, 85, 80, 0.28)"; dirtMid = "rgba(70, 65, 60, 0.32)";
-        dirtDark = "rgba(45, 42, 38, 0.35)"; dirtEdge = "rgba(100, 110, 120, 0.1)";
+        dirtDark = "rgba(45, 42, 38, 0.35)";
       } else {
         dirtLight = "rgba(70, 45, 35, 0.3)"; dirtMid = "rgba(55, 30, 22, 0.35)";
-        dirtDark = "rgba(35, 18, 12, 0.38)"; dirtEdge = "rgba(90, 40, 20, 0.12)";
+        dirtDark = "rgba(35, 18, 12, 0.38)";
       }
 
       // Ground shadow
       tracePath(2, 3);
       ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
-      ctx.lineWidth = 18;
-      ctx.stroke();
-
-      // Road trench
-      tracePath(0, 0);
-      ctx.strokeStyle = dirtDark;
       ctx.lineWidth = 16;
       ctx.stroke();
 
-      // Road bed
+      // Road bed (dark border)
       tracePath(0, 0);
-      ctx.strokeStyle = dirtMid;
+      ctx.strokeStyle = dirtDark;
       ctx.lineWidth = 13;
       ctx.stroke();
 
-      // Main surface with gradient
+      // Main surface (flat color instead of gradient)
       tracePath(0, 0);
-      const roadGrad = ctx.createLinearGradient(
-        points[0][0], getY(points[0][1]),
-        points[points.length - 1][0], getY(points[points.length - 1][1])
-      );
-      roadGrad.addColorStop(0, dirtLight);
-      roadGrad.addColorStop(0.5, dirtMid);
-      roadGrad.addColorStop(1, dirtLight);
-      ctx.strokeStyle = roadGrad;
+      ctx.strokeStyle = dirtMid;
       ctx.lineWidth = 10;
       ctx.stroke();
 
-      // Worn center
+      // Worn center highlight
       tracePath(0, 0);
-      ctx.strokeStyle = "rgba(140, 115, 75, 0.12)";
+      ctx.strokeStyle = dirtLight;
       ctx.lineWidth = 5;
       ctx.stroke();
 
-      // Edge vegetation
-      tracePath(-5, 0);
-      ctx.strokeStyle = dirtEdge;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      tracePath(5, 0);
-      ctx.strokeStyle = dirtEdge;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Wheel ruts
-      ctx.setLineDash([4, 10]);
-      tracePath(-2.5, 0);
-      ctx.strokeStyle = "rgba(30, 20, 10, 0.12)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      tracePath(2.5, 0);
-      ctx.strokeStyle = "rgba(30, 20, 10, 0.12)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Pebbles at waypoints
-      for (let p = 0; p < points.length; p++) {
-        const px = points[p][0];
-        const py = getY(points[p][1]);
-        for (let pb = 0; pb < 3; pb++) {
-          const pebX = px + (seededRandom(p * 7 + pb * 13 + avgX) - 0.5) * 14;
-          const pebY = py + (seededRandom(p * 11 + pb * 17 + avgX) - 0.5) * 6;
-          const pebR = 0.6 + seededRandom(p * 3 + pb * 19 + avgX) * 1;
-          ctx.fillStyle = `rgba(60, 50, 35, ${0.15 + seededRandom(p + pb + avgX) * 0.1})`;
-          ctx.beginPath();
-          ctx.arc(pebX, pebY, pebR, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
       ctx.restore();
     };
 
@@ -1799,18 +1766,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       drawKnot(x + 2 * scale, y - 22 * scale, 1.5, -0.2);
       drawKnot(x - 2 * scale, y - 6 * scale, 1.2, 0.5);
 
-      // --- Bioluminescent mushroom clusters on trunk (animated glow) ---
+      // --- Bioluminescent mushroom clusters on trunk (simplified, no per-mushroom gradients) ---
       const drawMushroom = (mx: number, my: number, mScale: number, seed: number) => {
         const glowPhase = Math.sin(time * 2.2 + seed * 3.1) * 0.5 + 0.5;
-        const glowAlpha = 0.15 + glowPhase * 0.25;
-        // Outer glow halo
-        const glowGrad = ctx.createRadialGradient(mx, my, 0, mx, my, 6 * mScale * scale);
-        glowGrad.addColorStop(0, `rgba(80, 220, 120, ${glowAlpha})`);
-        glowGrad.addColorStop(0.5, `rgba(60, 180, 100, ${glowAlpha * 0.4})`);
-        glowGrad.addColorStop(1, "rgba(40, 150, 80, 0)");
-        ctx.fillStyle = glowGrad;
+        // Glow halo (flat color)
+        ctx.fillStyle = `rgba(80, 220, 120, ${0.08 + glowPhase * 0.1})`;
         ctx.beginPath();
-        ctx.arc(mx, my, 6 * mScale * scale, 0, Math.PI * 2);
+        ctx.arc(mx, my, 5 * mScale * scale, 0, Math.PI * 2);
         ctx.fill();
         // Mushroom stem
         ctx.fillStyle = `rgba(180, 200, 170, ${0.5 + glowPhase * 0.2})`;
@@ -1819,11 +1781,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         ctx.fillStyle = `rgba(100, 230, 130, ${0.5 + glowPhase * 0.35})`;
         ctx.beginPath();
         ctx.ellipse(mx, my, 2.5 * mScale * scale, 1.5 * mScale * scale, 0, Math.PI, Math.PI * 2);
-        ctx.fill();
-        // Cap highlight
-        ctx.fillStyle = `rgba(160, 255, 180, ${0.2 + glowPhase * 0.3})`;
-        ctx.beginPath();
-        ctx.ellipse(mx, my - 0.5 * mScale * scale, 1.2 * mScale * scale, 0.6 * mScale * scale, 0, Math.PI, Math.PI * 2);
         ctx.fill();
       };
       // Cluster of mushrooms at various heights on trunk
@@ -1936,12 +1893,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         const len = 22 * scale + Math.sin(time * 1.5 + i + x) * 5 + seededRandom(x + i) * 14;
         const sway = Math.sin(time * 1.0 + i * 0.6 + x * 0.01) * (3 + i * 0.3);
 
-        // Vine with gradient (darker at bottom)
-        const vineGrad = ctx.createLinearGradient(vx, vy, vx, vy + len);
-        vineGrad.addColorStop(0, "#2a3a2a");
-        vineGrad.addColorStop(0.5, "#1e2e1e");
-        vineGrad.addColorStop(1, "#141e14");
-        ctx.strokeStyle = vineGrad;
+        // Vine with flat color (was per-vine gradient)
+        ctx.strokeStyle = "#1e2e1e";
         ctx.lineWidth = (1.2 - i * 0.04) * scale;
 
         ctx.beginPath();
@@ -3928,12 +3881,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       branchTiers.forEach((tier, ti) => {
         const baseY = y + tier.y * scale;
         for (let side = -1; side <= 1; side += 2) {
-          // Main branch with foliage
-          const branchGrad = ctx.createLinearGradient(x, baseY, x + side * tier.spread * scale, baseY + tier.droop * scale);
-          branchGrad.addColorStop(0, "#1a4a2a");
-          branchGrad.addColorStop(0.5, "#1a5a3a");
-          branchGrad.addColorStop(1, "#0a3a1a");
-          ctx.fillStyle = branchGrad;
+          // Main branch with foliage (flat color instead of per-branch gradient)
+          ctx.fillStyle = ti < 3 ? "#1a5a3a" : "#1a4a2a";
           ctx.beginPath();
           ctx.moveTo(x, baseY - 1.5 * scale);
           ctx.quadraticCurveTo(x + side * tier.spread * 0.6 * scale, baseY - 1 * scale, x + side * tier.spread * scale, baseY + tier.droop * scale);
@@ -5034,18 +4983,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       };
 
       const pulse = 0.5 + Math.sin(time * 2) * 0.5;
-      const pulse2 = 0.5 + Math.sin(time * 3.3 + 1) * 0.5;
 
-      // Wide ambient ground glow
+      // Ambient glow (combined outer layers)
       tracePath(0, 0);
-      ctx.strokeStyle = `rgba(255, 50, 0, ${0.06 + pulse * 0.04})`;
-      ctx.lineWidth = 36;
-      ctx.stroke();
-
-      // Radiant heat haze
-      tracePath(0, 0);
-      ctx.strokeStyle = `rgba(255, 80, 10, ${0.1 + pulse * 0.06})`;
-      ctx.lineWidth = 24;
+      ctx.strokeStyle = `rgba(255, 60, 0, ${0.08 + pulse * 0.04})`;
+      ctx.lineWidth = 28;
       ctx.stroke();
 
       // Cooled rock bank edges (dark crust)
@@ -5054,35 +4996,15 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.lineWidth = 14;
       ctx.stroke();
 
-      // Cracked crust texture on banks
+      // Main molten lava body (flat animated color instead of gradient)
       tracePath(0, 0);
-      ctx.strokeStyle = "rgba(60, 30, 15, 0.5)";
-      ctx.lineWidth = 12;
-      ctx.stroke();
-
-      // Inner glow bleeding through crust
-      tracePath(0, 0);
-      ctx.strokeStyle = `rgba(200, 60, 10, ${0.4 + pulse * 0.2})`;
-      ctx.lineWidth = 10;
-      ctx.stroke();
-
-      // Main molten lava body
-      tracePath(0, 0);
-      const lavaGrad = ctx.createLinearGradient(
-        points[0][0], getY(points[0][1]),
-        points[points.length - 1][0], getY(points[points.length - 1][1])
-      );
-      lavaGrad.addColorStop(0, `rgba(255, 100, 10, ${0.85 + pulse2 * 0.15})`);
-      lavaGrad.addColorStop(0.3, `rgba(255, 140, 30, ${0.9 + pulse * 0.1})`);
-      lavaGrad.addColorStop(0.6, `rgba(255, 80, 0, ${0.85 + pulse2 * 0.15})`);
-      lavaGrad.addColorStop(1, `rgba(255, 120, 20, ${0.9 + pulse * 0.1})`);
-      ctx.strokeStyle = lavaGrad;
+      ctx.strokeStyle = `rgba(255, ${100 + pulse * 40}, ${10 + pulse * 20}, 0.9)`;
       ctx.lineWidth = 7;
       ctx.stroke();
 
       // Bright hot vein
       tracePath(0, 0);
-      ctx.strokeStyle = `rgba(255, 200, 80, ${0.55 + pulse2 * 0.25})`;
+      ctx.strokeStyle = `rgba(255, 200, 80, ${0.55 + pulse * 0.25})`;
       ctx.lineWidth = 3.5;
       ctx.stroke();
 
@@ -5755,7 +5677,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       drawAnchor(0);
       drawAnchor(length);
 
-      // Bridge planks with wood grain
+      // Bridge planks with wood grain (use flat colors instead of per-plank gradients)
       const plankWidth = 7;
       for (let p = 0; p < length / plankWidth; p++) {
         const px = p * plankWidth + 2;
@@ -5763,23 +5685,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         // Plank shadow
         ctx.fillStyle = "#2a1a0a";
         ctx.fillRect(px, plankY - 3 + 1, plankWidth - 1.5, 7);
-        // Main plank with gradient
-        const plankGrad = ctx.createLinearGradient(px, plankY - 3, px, plankY + 4);
-        plankGrad.addColorStop(0, p % 2 === 0 ? "#7a6040" : "#6a5030");
-        plankGrad.addColorStop(0.3, p % 2 === 0 ? "#6a5030" : "#5a4020");
-        plankGrad.addColorStop(1, p % 2 === 0 ? "#5a4020" : "#4a3010");
-        ctx.fillStyle = plankGrad;
+        // Main plank (flat color, alternating for variation)
+        ctx.fillStyle = p % 2 === 0 ? "#6a5030" : "#5a4020";
         ctx.fillRect(px, plankY - 3, plankWidth - 1.5, 6);
         // Highlight edge
         ctx.fillStyle = "rgba(255,220,160,0.12)";
         ctx.fillRect(px, plankY - 3, plankWidth - 1.5, 1);
-        // Wood grain line
-        ctx.strokeStyle = "rgba(0,0,0,0.08)";
-        ctx.lineWidth = 0.3;
-        ctx.beginPath();
-        ctx.moveTo(px + 1, plankY - 2);
-        ctx.lineTo(px + plankWidth - 3, plankY - 2);
-        ctx.stroke();
       }
 
       // Rope railings
@@ -6844,13 +6755,18 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       const stars = levelStars[level.id] || 0;
       const size = isHovered || isSelected ? 28 : 24;
 
-      // Glow
-      if (isSelected) {
-        ctx.shadowColor = "#ffd700";
-        ctx.shadowBlur = 30;
-      } else if (isHovered && isUnlocked) {
-        ctx.shadowColor = "#ffaa00";
-        ctx.shadowBlur = 20;
+      // Glow (use radial gradient instead of expensive shadowBlur)
+      if (isSelected || (isHovered && isUnlocked)) {
+        const glowRadius = isSelected ? 40 : 32;
+        const glowColor = isSelected ? "rgba(255,215,0," : "rgba(255,170,0,";
+        const glow = ctx.createRadialGradient(x, y, size * 0.5, x, y, glowRadius);
+        glow.addColorStop(0, glowColor + "0.4)");
+        glow.addColorStop(0.5, glowColor + "0.15)");
+        glow.addColorStop(1, glowColor + "0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // Victory flag (upgraded: ornate pole with waving banner)
@@ -6999,7 +6915,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       ctx.beginPath();
       ctx.arc(x, y, size + 0.5, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.shadowBlur = 0;
 
       // Ornamental notches (8 evenly spaced around ring)
       if (isUnlocked) {
@@ -7752,7 +7667,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     hoveredLevel,
     selectedLevel,
     levelStars,
-    animTime,
     seededRandom,
     getY,
     isLevelUnlocked,
@@ -7761,13 +7675,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
   useEffect(() => {
     let animationId: number;
-    let lastTime = 0;
+    let lastDrawTime = 0;
+    let lastStateTime = 0;
     const animate = (timestamp: number) => {
-      if (timestamp - lastTime > 35) {
-        setAnimTime(timestamp / 1000);
-        lastTime = timestamp;
+      // Canvas drawing throttled to ~20fps (50ms)
+      if (timestamp - lastDrawTime > 50) {
+        animTimeRef.current = timestamp / 1000;
+        lastDrawTime = timestamp;
+        drawMap();
       }
-      drawMap();
+      // React state update throttled further (~10fps) for BattlefieldPreview
+      if (timestamp - lastStateTime > 100) {
+        setAnimTime(timestamp / 1000);
+        lastStateTime = timestamp;
+      }
       animationId = requestAnimationFrame(animate);
     };
     animate(0);

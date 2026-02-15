@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { MapPin, Lock } from "lucide-react";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { PANEL, GOLD, NEUTRAL, SELECTED, panelGradient, dividerGradient } from "../ui/theme";
@@ -7,15 +7,24 @@ import { PANEL, GOLD, NEUTRAL, SELECTED, panelGradient, dividerGradient } from "
 export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLevel?: () => void }> = ({ animTime, onSelectFarthestLevel }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [currentScene, setCurrentScene] = useState(0);
+  const timeRef = useRef(0);
+  const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
 
-  // Cycle through scenes every 6 seconds for more viewing time
+  // Keep time ref in sync with prop
+  useEffect(() => { timeRef.current = animTime; }, [animTime]);
+
+  // Cycle through scenes every 6 seconds (only update state when scene actually changes)
+  const prevSceneRef = useRef(0);
   useEffect(() => {
     const sceneIndex = Math.floor(animTime / 6) % 6;
-    setCurrentScene(sceneIndex);
+    if (sceneIndex !== prevSceneRef.current) {
+      prevSceneRef.current = sceneIndex;
+      setCurrentScene(sceneIndex);
+    }
   }, [animTime]);
 
-  // Draw battle scene on canvas
-  useEffect(() => {
+  // Draw battle scene on canvas — own rAF loop decoupled from React renders
+  const drawScene = useCallback((currentSceneIdx: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -24,11 +33,16 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     const dpr = window.devicePixelRatio || 1;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
 
-    const t = animTime;
+    // Only resize canvas when dimensions actually change
+    if (lastCanvasSizeRef.current.w !== width || lastCanvasSizeRef.current.h !== height) {
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      lastCanvasSizeRef.current = { w: width, h: height };
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const t = timeRef.current;
 
     // Scene configurations inspired by game regions
     const scenes = [
@@ -93,7 +107,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         weather: "starry"
       },
     ];
-    const scene = scenes[currentScene];
+    const scene = scenes[currentSceneIdx];
 
     // === BACKGROUND LAYERS ===
 
@@ -105,15 +119,14 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Atmospheric glow orbs
+    // Atmospheric glow orbs (flat circles instead of full-screen radial gradient fills)
     for (let i = 0; i < 3; i++) {
       const glowX = width * (0.2 + i * 0.3) + Math.sin(t * 0.3 + i * 2) * 30;
       const glowY = height * 0.25 + Math.cos(t * 0.2 + i) * 20;
-      const glowGrad = ctx.createRadialGradient(glowX, glowY, 0, glowX, glowY, 80);
-      glowGrad.addColorStop(0, scene.skyGlow);
-      glowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = glowGrad;
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = scene.skyGlow;
+      ctx.beginPath();
+      ctx.arc(glowX, glowY, 80, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     // Stars for night scenes
@@ -254,11 +267,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // Scattered rocks and boulders
     const drawRock = (rx: number, ry: number, size: number) => {
-      const rockGrad = ctx.createLinearGradient(rx - size, ry - size, rx + size, ry + size);
-      rockGrad.addColorStop(0, "#6b6560");
-      rockGrad.addColorStop(0.5, "#57534e");
-      rockGrad.addColorStop(1, "#3a3530");
-      ctx.fillStyle = rockGrad;
+      ctx.fillStyle = "#57534e";
       ctx.beginPath();
       ctx.moveTo(rx - size, ry + size * 0.3);
       ctx.quadraticCurveTo(rx - size * 0.8, ry - size * 0.6, rx - size * 0.2, ry - size * 0.8);
@@ -324,12 +333,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(cx, cy, size * 1.5, size * 0.6, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Inner crater
-      const craterGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, size);
-      craterGrad.addColorStop(0, "#1a1510");
-      craterGrad.addColorStop(0.6, "#2a2520");
-      craterGrad.addColorStop(1, "#3a3530");
-      ctx.fillStyle = craterGrad;
+      // Inner crater (flat)
+      ctx.fillStyle = "#2a2520";
       ctx.beginPath();
       ctx.ellipse(cx, cy + 2, size, size * 0.4, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -996,16 +1001,10 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Gothic columns with fluting
+      // Gothic columns with fluting (flat color - 12px width too small for gradient detail)
       for (let side = -1; side <= 1; side += 2) {
         const colX = side * 20;
-        // Column shaft (single gradient per column)
-        const colGrad = ctx.createLinearGradient(colX - 6, 0, colX + 6, 0);
-        colGrad.addColorStop(0, "#4a3a2a");
-        colGrad.addColorStop(0.4, "#7a6a5a");
-        colGrad.addColorStop(0.6, "#7a6a5a");
-        colGrad.addColorStop(1, "#4a3a2a");
-        ctx.fillStyle = colGrad;
+        ctx.fillStyle = "#7a6a5a";
         ctx.fillRect(colX - 6, -62, 12, 67);
 
         // Fluting lines (batched)
@@ -2681,12 +2680,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.ellipse(0, 12, 14, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Heavy armored body
-      const bodyGrad = ctx.createLinearGradient(-12, -20, 12, 10);
-      bodyGrad.addColorStop(0, "#93c5fd");
-      bodyGrad.addColorStop(0.5, "#60a5fa");
-      bodyGrad.addColorStop(1, "#3b82f6");
-      ctx.fillStyle = bodyGrad;
+      // Heavy armored body (flat for small sprite performance)
+      ctx.fillStyle = "#60a5fa";
       ctx.beginPath();
       ctx.moveTo(-14, 10);
       ctx.lineTo(-16, -10);
@@ -2937,12 +2932,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.scale(side, 1);
         ctx.rotate(wingFlap * side * 1.2);
 
-        // Outer wing membrane - angular bat-like shape
-        const wingGrad = ctx.createLinearGradient(0, 0, 50, -30);
-        wingGrad.addColorStop(0, "#1a4a4a");
-        wingGrad.addColorStop(0.5, "#0d3535");
-        wingGrad.addColorStop(1, "#062020");
-        ctx.fillStyle = wingGrad;
+        // Outer wing membrane - angular bat-like shape (flat for small sprite)
+        ctx.fillStyle = "#0d3535";
         ctx.beginPath();
         ctx.moveTo(12, 0);
         ctx.lineTo(28, -36);
@@ -2994,12 +2985,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.restore();
       }
 
-      // Muscular armored body
-      const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 18);
-      bodyGrad.addColorStop(0, "#2a5858");
-      bodyGrad.addColorStop(0.5, "#1a4040");
-      bodyGrad.addColorStop(1, "#0d2525");
-      ctx.fillStyle = bodyGrad;
+      // Muscular armored body (flat for small sprite)
+      ctx.fillStyle = "#1a4040";
       ctx.beginPath();
       ctx.ellipse(0, breathPulse * 0.5, 14, 20 + breathPulse * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -3203,15 +3190,11 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const explosionSize = explosionProgress * 40;
         const explosionAlpha = 1 - explosionProgress;
 
-        // Multi-layer explosion
+        // Multi-layer explosion (flat colors)
+        const mascotExpColors = [`rgba(255, 80, 0, ${explosionAlpha * 0.3})`, `rgba(255, 150, 50, ${explosionAlpha * 0.4})`, `rgba(255, 255, 200, ${explosionAlpha * 0.5})`];
         for (let layer = 0; layer < 3; layer++) {
           const layerSize = explosionSize * (1 - layer * 0.2);
-          const expGrad = ctx.createRadialGradient(mascotX, mascotY, 0, mascotX, mascotY, layerSize);
-          expGrad.addColorStop(0, `rgba(255, 255, 200, ${explosionAlpha * (1 - layer * 0.3)})`);
-          expGrad.addColorStop(0.4, `rgba(255, 150, 50, ${explosionAlpha * 0.7 * (1 - layer * 0.3)})`);
-          expGrad.addColorStop(0.7, `rgba(255, 80, 0, ${explosionAlpha * 0.4 * (1 - layer * 0.3)})`);
-          expGrad.addColorStop(1, "transparent");
-          ctx.fillStyle = expGrad;
+          ctx.fillStyle = mascotExpColors[layer];
           ctx.beginPath();
           ctx.arc(mascotX, mascotY, layerSize, 0, Math.PI * 2);
           ctx.fill();
@@ -3293,11 +3276,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
       ctx.stroke();
 
-      // Pre-hit glow on wyvern
-      const glowGrad = ctx.createRadialGradient(wyvernX, wyvernY, 0, wyvernX, wyvernY, 50);
-      glowGrad.addColorStop(0, `rgba(150, 200, 255, ${strikeAlpha * 0.5})`);
-      glowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = glowGrad;
+      // Pre-hit glow on wyvern (flat color)
+      ctx.fillStyle = `rgba(150, 200, 255, ${strikeAlpha * 0.2})`;
       ctx.beginPath();
       ctx.arc(wyvernX, wyvernY, 50, 0, Math.PI * 2);
       ctx.fill();
@@ -3310,14 +3290,11 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const wyvernExpAlpha = 1 - wyvernExpProgress;
 
       // Large explosion
+      const wyvernExpColors = ["rgba(50, 150, 255,", "rgba(100, 200, 255,", "rgba(200, 230, 255,", "rgba(30, 100, 200,"];
       for (let layer = 0; layer < 4; layer++) {
         const layerSize = wyvernExpSize * (1 - layer * 0.15);
-        const expGrad = ctx.createRadialGradient(wyvernX, wyvernY, 0, wyvernX, wyvernY, layerSize);
-        expGrad.addColorStop(0, `rgba(255, 255, 220, ${wyvernExpAlpha * (1 - layer * 0.2)})`);
-        expGrad.addColorStop(0.3, `rgba(100, 200, 255, ${wyvernExpAlpha * 0.8 * (1 - layer * 0.2)})`);
-        expGrad.addColorStop(0.6, `rgba(50, 150, 255, ${wyvernExpAlpha * 0.5 * (1 - layer * 0.2)})`);
-        expGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = expGrad;
+        const layerAlpha = wyvernExpAlpha * (1 - layer * 0.2) * 0.5;
+        ctx.fillStyle = wyvernExpColors[layer] + `${layerAlpha})`;
         ctx.beginPath();
         ctx.arc(wyvernX, wyvernY, layerSize, 0, Math.PI * 2);
         ctx.fill();
@@ -3360,12 +3337,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const cbX = startX + (wyvernX - startX) * cannonProgress;
       const cbY = startY + (wyvernY - startY) * cannonProgress - Math.sin(cannonProgress * Math.PI) * 80;
 
-      // Cannon ball
-      const ballGrad = ctx.createRadialGradient(cbX - 2, cbY - 2, 0, cbX, cbY, 8);
-      ballGrad.addColorStop(0, "#5a5a5a");
-      ballGrad.addColorStop(0.5, "#3a3a3a");
-      ballGrad.addColorStop(1, "#1a1a1a");
-      ctx.fillStyle = ballGrad;
+      // Cannon ball (flat color)
+      ctx.fillStyle = "#3a3a3a";
       ctx.beginPath();
       ctx.arc(cbX, cbY, 6, 0, Math.PI * 2);
       ctx.fill();
@@ -3394,13 +3367,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const projX = cannonX + (targetX - cannonX) * shotProgress;
         const projY = cannonY + (targetY - cannonY) * shotProgress - Math.sin(shotProgress * Math.PI) * 60;
 
-        // Flaming cannon ball
-        const fireGrad = ctx.createRadialGradient(projX, projY, 0, projX, projY, 10);
-        fireGrad.addColorStop(0, "#ffff80");
-        fireGrad.addColorStop(0.3, "#ff8800");
-        fireGrad.addColorStop(0.6, "#ff4400");
-        fireGrad.addColorStop(1, "rgba(100, 50, 0, 0.5)");
-        ctx.fillStyle = fireGrad;
+        // Flaming cannon ball (flat color)
+        ctx.fillStyle = "#ff8800";
         ctx.beginPath();
         ctx.arc(projX, projY, 8, 0, Math.PI * 2);
         ctx.fill();
@@ -3453,14 +3421,10 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         }
         ctx.stroke();
 
-        // Impact flash
-        const flashGrad = ctx.createRadialGradient(targetX, targetY, 0, targetX, targetY, 30);
-        flashGrad.addColorStop(0, `rgba(200, 230, 255, ${boltAlpha * 0.8})`);
-        flashGrad.addColorStop(0.5, `rgba(100, 180, 255, ${boltAlpha * 0.4})`);
-        flashGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = flashGrad;
+        // Impact flash (flat color)
+        ctx.fillStyle = `rgba(150, 200, 255, ${boltAlpha * 0.3})`;
         ctx.beginPath();
-        ctx.arc(targetX, targetY, 30, 0, Math.PI * 2);
+        ctx.arc(targetX, targetY, 25, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -3551,13 +3515,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const mx = startX + (targetX - startX) * missileProgress;
         const my = startY + (targetY - startY) * missileProgress - Math.sin(missileProgress * Math.PI) * 40;
 
-        // Orange magic orb
-        const orbGrad = ctx.createRadialGradient(mx, my, 0, mx, my, 8);
-        orbGrad.addColorStop(0, "#fff8e0");
-        orbGrad.addColorStop(0.3, "#f97316");
-        orbGrad.addColorStop(0.7, "#c2410c");
-        orbGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = orbGrad;
+        // Orange magic orb (flat color)
+        ctx.fillStyle = "#f97316";
         ctx.beginPath();
         ctx.arc(mx, my, 8, 0, Math.PI * 2);
         ctx.fill();
@@ -3613,13 +3572,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const expSize = expProgress * 50;
         const expAlpha = 1 - expProgress;
 
-        // Explosion flash
-        const skyExpGrad = ctx.createRadialGradient(expX, expY, 0, expX, expY, expSize);
-        skyExpGrad.addColorStop(0, `rgba(255, 255, 200, ${expAlpha})`);
-        skyExpGrad.addColorStop(0.3, `rgba(255, 180, 80, ${expAlpha * 0.8})`);
-        skyExpGrad.addColorStop(0.6, `rgba(255, 100, 30, ${expAlpha * 0.5})`);
-        skyExpGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = skyExpGrad;
+        // Explosion flash (flat color)
+        ctx.fillStyle = `rgba(255, 180, 80, ${expAlpha * 0.5})`;
         ctx.beginPath();
         ctx.arc(expX, expY, expSize, 0, Math.PI * 2);
         ctx.fill();
@@ -3658,13 +3612,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Beam glow
-      const beamGlow = ctx.createLinearGradient(width * 0.50 - 30, 0, width * 0.50 + 30, 0);
-      beamGlow.addColorStop(0, "transparent");
-      beamGlow.addColorStop(0.5, `rgba(100, 180, 255, ${beamAlpha * 0.3})`);
-      beamGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = beamGlow;
-      ctx.fillRect(width * 0.50 - 30, height * 0.05, 60, groundY - 100 - height * 0.05);
+      // Beam glow (flat)
+      ctx.fillStyle = `rgba(100, 180, 255, ${beamAlpha * 0.15})`;
+      ctx.fillRect(width * 0.50 - 15, height * 0.05, 30, groundY - 100 - height * 0.05);
     }
 
     // === DETAILED TROOPS (Defenders) ===
@@ -3812,14 +3762,10 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.arc(-4, 18.5, 1, 0, Math.PI * 2);
       ctx.fill();
 
-      // === GREAVES (leg armor with knee cops) ===
-      const greaveGrad = ctx.createLinearGradient(-7, 3, 1, 15);
-      greaveGrad.addColorStop(0, "#b0b5bc");
-      greaveGrad.addColorStop(0.3, "#9ca3af");
-      greaveGrad.addColorStop(0.7, "#6b7280");
-      greaveGrad.addColorStop(1, "#4b5563");
+      // === GREAVES (leg armor with knee cops) - flat for small sprite ===
+      const greaveFill = "#6b7280";
       // Left greave
-      ctx.fillStyle = greaveGrad;
+      ctx.fillStyle = greaveFill;
       ctx.beginPath();
       ctx.moveTo(-6, 3);
       ctx.lineTo(-8, 8);
@@ -3866,7 +3812,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.fill();
 
       // Right greave
-      ctx.fillStyle = greaveGrad;
+      ctx.fillStyle = greaveFill;
       ctx.beginPath();
       ctx.moveTo(1, 3);
       ctx.lineTo(-1, 8);
@@ -3959,15 +3905,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineTo(3.5, 10);
       ctx.stroke();
 
-      // === BREASTPLATE ===
-      const armorGrad = ctx.createLinearGradient(-11, -18, 11, 4);
-      armorGrad.addColorStop(0, "#e5e7eb");
-      armorGrad.addColorStop(0.15, "#d1d5db");
-      armorGrad.addColorStop(0.35, "#b0b5bc");
-      armorGrad.addColorStop(0.55, "#9ca3af");
-      armorGrad.addColorStop(0.8, "#6b7280");
-      armorGrad.addColorStop(1, "#4b5563");
-      ctx.fillStyle = armorGrad;
+      // === BREASTPLATE (flat for small sprite) ===
+      ctx.fillStyle = "#9ca3af";
       ctx.beginPath();
       ctx.moveTo(-10, 4);
       ctx.lineTo(-12, -4);
@@ -4054,16 +3993,12 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fillRect(cx + 0.75, -19.2, 0.8, 0.8);
       }
 
-      // === PAULDRONS (articulated, 3-plate) - Left ===
+      // === PAULDRONS (articulated, 3-plate) - Left (flat for small sprite) ===
       ctx.save();
       ctx.translate(-12, -14);
-      const pauldronGrad = ctx.createLinearGradient(-6, -5, 6, 5);
-      pauldronGrad.addColorStop(0, "#d1d5db");
-      pauldronGrad.addColorStop(0.35, "#b0b5bc");
-      pauldronGrad.addColorStop(0.7, "#9ca3af");
-      pauldronGrad.addColorStop(1, "#6b7280");
+      const pauldronFill = "#9ca3af";
       // Top plate
-      ctx.fillStyle = pauldronGrad;
+      ctx.fillStyle = pauldronFill;
       ctx.beginPath();
       ctx.moveTo(3, -5);
       ctx.quadraticCurveTo(-3, -8, -7, -3);
@@ -4123,7 +4058,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.save();
       ctx.translate(12, -14);
       // Top plate
-      ctx.fillStyle = pauldronGrad;
+      ctx.fillStyle = pauldronFill;
       ctx.beginPath();
       ctx.moveTo(-3, -5);
       ctx.quadraticCurveTo(3, -8, 7, -3);
@@ -4271,14 +4206,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineTo(1.8, -9);
       ctx.stroke();
 
-      // === HELMET (ornate great helm) ===
-      const helmetGrad = ctx.createLinearGradient(-10, -34, 10, -18);
-      helmetGrad.addColorStop(0, "#e5e7eb");
-      helmetGrad.addColorStop(0.25, "#d1d5db");
-      helmetGrad.addColorStop(0.5, "#9ca3af");
-      helmetGrad.addColorStop(0.8, "#6b7280");
-      helmetGrad.addColorStop(1, "#4b5563");
-      ctx.fillStyle = helmetGrad;
+      // === HELMET (ornate great helm) - flat for small sprite ===
+      ctx.fillStyle = "#9ca3af";
       // Main dome (larger, imposing)
       ctx.beginPath();
       ctx.arc(0, -24, 10, Math.PI * 1.05, -0.05);
@@ -4644,13 +4573,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.lineTo(-16, 1.5);
       ctx.stroke();
 
-      // === KITE SHIELD (ornate) ===
-      const shieldGrad = ctx.createLinearGradient(-28, -22, -16, 14);
-      shieldGrad.addColorStop(0, "#fb923c");
-      shieldGrad.addColorStop(0.25, "#f97316");
-      shieldGrad.addColorStop(0.6, "#ea580c");
-      shieldGrad.addColorStop(1, "#c2410c");
-      ctx.fillStyle = shieldGrad;
+      // === KITE SHIELD (ornate) - flat for small sprite ===
+      ctx.fillStyle = "#ea580c";
       ctx.beginPath();
       ctx.moveTo(-17, -22);
       ctx.lineTo(-28, -16);
@@ -4965,13 +4889,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.arc(3.5, 2, 1.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // === LEATHER ARMOR VEST (layered, detailed) ===
-      const vestGrad = ctx.createLinearGradient(-7, -16, 7, 4);
-      vestGrad.addColorStop(0, "#8b6f4f");
-      vestGrad.addColorStop(0.25, "#7c5c3c");
-      vestGrad.addColorStop(0.55, "#6b4c30");
-      vestGrad.addColorStop(1, "#5c3a1e");
-      ctx.fillStyle = vestGrad;
+      // === LEATHER ARMOR VEST (layered, detailed) - flat for small sprite ===
+      ctx.fillStyle = "#6b4c30";
       ctx.beginPath();
       ctx.moveTo(-7, 3);
       ctx.lineTo(-8, -4);
@@ -5727,11 +5646,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.fillRect(3, -10, 3, 5);
       ctx.restore();
 
-      // Shield
-      const shieldGrad = ctx.createLinearGradient(-10, -10, -4, 0);
-      shieldGrad.addColorStop(0, "#f97316");
-      shieldGrad.addColorStop(1, "#c2410c");
-      ctx.fillStyle = shieldGrad;
+      // Shield (flat color)
+      ctx.fillStyle = "#ea580c";
       ctx.beginPath();
       ctx.arc(-7, -5, 6, Math.PI * 0.4, Math.PI * 1.6);
       ctx.fill();
@@ -5754,12 +5670,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const px = startX + (endX - startX) * progress;
         const py = startY + (endY - startY) * progress - Math.sin(progress * Math.PI) * 60;
 
-        // Cannon ball with metallic sheen
-        const ballGrad = ctx.createRadialGradient(px - 2, py - 2, 0, px, py, 8);
-        ballGrad.addColorStop(0, "#5a5a5a");
-        ballGrad.addColorStop(0.3, "#3a3a3a");
-        ballGrad.addColorStop(1, "#1a1a1a");
-        ctx.fillStyle = ballGrad;
+        // Cannon ball (flat color)
+        ctx.fillStyle = "#3a3a3a";
         ctx.beginPath();
         ctx.arc(px, py, 7, 0, Math.PI * 2);
         ctx.fill();
@@ -5800,16 +5712,12 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const explosionSize = impactPhase * 60;
         const explosionAlpha = 1 - impactPhase / 0.8;
 
-        // Multi-layer explosion
+        // Multi-layer explosion (flat colors instead of per-layer gradients)
         for (let layer = 0; layer < 3; layer++) {
           const layerSize = explosionSize * (1 - layer * 0.2);
           const layerAlpha = explosionAlpha * (1 - layer * 0.25);
-          const expGrad = ctx.createRadialGradient(endX, endY, 0, endX, endY, layerSize);
-          expGrad.addColorStop(0, `rgba(255, 255, 200, ${layerAlpha})`);
-          expGrad.addColorStop(0.3, `rgba(255, 150, 50, ${layerAlpha * 0.8})`);
-          expGrad.addColorStop(0.6, `rgba(255, 80, 0, ${layerAlpha * 0.5})`);
-          expGrad.addColorStop(1, "transparent");
-          ctx.fillStyle = expGrad;
+          const colors = [`rgba(255, 80, 0, ${layerAlpha * 0.4})`, `rgba(255, 150, 50, ${layerAlpha * 0.6})`, `rgba(255, 255, 200, ${layerAlpha * 0.8})`];
+          ctx.fillStyle = colors[layer];
           ctx.beginPath();
           ctx.arc(endX, endY, layerSize, 0, Math.PI * 2);
           ctx.fill();
@@ -5878,12 +5786,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.stroke();
       }
 
-      // Impact glow at target
-      const impactGlow = ctx.createRadialGradient(target1X, target1Y, 0, target1X, target1Y, 25);
-      impactGlow.addColorStop(0, `rgba(150, 200, 255, ${lightningAlpha * 0.8})`);
-      impactGlow.addColorStop(0.5, `rgba(100, 150, 255, ${lightningAlpha * 0.4})`);
-      impactGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = impactGlow;
+      // Impact glow at target (flat color)
+      ctx.fillStyle = `rgba(130, 180, 255, ${lightningAlpha * 0.35})`;
       ctx.beginPath();
       ctx.arc(target1X, target1Y, 25, 0, Math.PI * 2);
       ctx.fill();
@@ -5976,7 +5880,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Massive fire trail
+      // Massive fire trail (flat colors instead of per-flame gradients)
       for (let flame = 0; flame < 8; flame++) {
         const flameProgress = flame / 8;
         const flameY = meteorY - 15 - flame * 15;
@@ -5984,11 +5888,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const flameSize = meteorSize * (1 - flameProgress * 0.7);
         const flameAlpha = 0.8 - flameProgress * 0.6;
 
-        const flameGrad = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameSize);
-        flameGrad.addColorStop(0, `rgba(255, 255, 150, ${flameAlpha})`);
-        flameGrad.addColorStop(0.4, `rgba(255, 150, 50, ${flameAlpha * 0.7})`);
-        flameGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = flameGrad;
+        ctx.fillStyle = `rgba(255, ${180 - flame * 15}, ${50 + flame * 5}, ${flameAlpha * 0.5})`;
         ctx.beginPath();
         ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
         ctx.fill();
@@ -6021,20 +5921,15 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const impactAlpha = 1 - impactProgress;
       const impactY = groundY + 20;
 
-      // Multi-layer explosion dome
+      // Multi-layer explosion dome (flat colors instead of per-layer gradients)
+      const expColors = ["rgba(255, 100, 0,", "rgba(255, 200, 50,", "rgba(255, 255, 220,", "rgba(200, 50, 0,"];
       for (let layer = 0; layer < 4; layer++) {
         const layerDelay = layer * 0.1;
         const layerProgress = Math.max(0, impactProgress - layerDelay);
         const layerSize = layerProgress * 120 * (1 - layer * 0.15);
-        const layerAlpha = impactAlpha * (1 - layer * 0.2);
+        const layerAlpha = impactAlpha * (1 - layer * 0.2) * 0.5;
 
-        const expGrad = ctx.createRadialGradient(meteorX, impactY, 0, meteorX, impactY, layerSize);
-        expGrad.addColorStop(0, `rgba(255, 255, 220, ${layerAlpha})`);
-        expGrad.addColorStop(0.2, `rgba(255, 200, 50, ${layerAlpha * 0.9})`);
-        expGrad.addColorStop(0.5, `rgba(255, 100, 0, ${layerAlpha * 0.6})`);
-        expGrad.addColorStop(0.8, `rgba(200, 50, 0, ${layerAlpha * 0.3})`);
-        expGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = expGrad;
+        ctx.fillStyle = expColors[layer] + `${layerAlpha})`;
         ctx.beginPath();
         ctx.arc(meteorX, impactY, layerSize, 0, Math.PI * 2);
         ctx.fill();
@@ -6087,12 +5982,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const freezeRadius = freezeProgress * 80;
       const freezeAlpha = 1 - freezeProgress * 0.5;
 
-      // Ice expansion
-      const iceGrad = ctx.createRadialGradient(freezeX, freezeY, 0, freezeX, freezeY, freezeRadius);
-      iceGrad.addColorStop(0, `rgba(200, 230, 255, ${freezeAlpha * 0.6})`);
-      iceGrad.addColorStop(0.5, `rgba(150, 200, 255, ${freezeAlpha * 0.4})`);
-      iceGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = iceGrad;
+      // Ice expansion (flat color)
+      ctx.fillStyle = `rgba(180, 215, 255, ${freezeAlpha * 0.3})`;
       ctx.beginPath();
       ctx.arc(freezeX, freezeY, freezeRadius, 0, Math.PI * 2);
       ctx.fill();
@@ -6165,20 +6056,16 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.restore();
       }
     } else if (scene.particles === "embers") {
-      // Volcanic embers with glow trails
+      // Volcanic embers (flat colors instead of per-particle gradients)
       for (let i = 0; i < 35; i++) {
         const ex = (i * 37 + Math.sin(t * 0.8 + i) * 40) % width;
         const ey = height - ((t * 50 + i * 25) % (height * 0.9));
         const emberPulse = 0.5 + Math.sin(t * 8 + i * 2) * 0.5;
 
-        // Glow
-        const emberGlow = ctx.createRadialGradient(ex, ey, 0, ex, ey, 8);
-        emberGlow.addColorStop(0, `rgba(255, 200, 50, ${emberPulse * 0.6})`);
-        emberGlow.addColorStop(0.5, `rgba(255, 100, 0, ${emberPulse * 0.3})`);
-        emberGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = emberGlow;
+        // Glow halo (flat)
+        ctx.fillStyle = `rgba(255, 150, 30, ${emberPulse * 0.15})`;
         ctx.beginPath();
-        ctx.arc(ex, ey, 8, 0, Math.PI * 2);
+        ctx.arc(ex, ey, 6, 0, Math.PI * 2);
         ctx.fill();
 
         // Core
@@ -6231,7 +6118,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.stroke();
       }
     } else if (scene.particles === "fireflies") {
-      // Bioluminescent fireflies with pulsing glow
+      // Bioluminescent fireflies (flat colors instead of per-firefly gradients)
       for (let i = 0; i < 20; i++) {
         const fx = (i * 57 + Math.sin(t * 0.6 + i) * 50) % width;
         const fy = height * 0.35 + (i % 6) * 35 + Math.cos(t * 0.4 + i) * 25;
@@ -6239,14 +6126,10 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const glow = glowPhase < 1 ? Math.sin(glowPhase * Math.PI) : 0;
 
         if (glow > 0.1) {
-          // Glow aura
-          const fireflyGlow = ctx.createRadialGradient(fx, fy, 0, fx, fy, 12);
-          fireflyGlow.addColorStop(0, `rgba(150, 255, 150, ${glow * 0.8})`);
-          fireflyGlow.addColorStop(0.5, `rgba(100, 220, 100, ${glow * 0.4})`);
-          fireflyGlow.addColorStop(1, "transparent");
-          ctx.fillStyle = fireflyGlow;
+          // Glow aura (flat)
+          ctx.fillStyle = `rgba(120, 240, 120, ${glow * 0.2})`;
           ctx.beginPath();
-          ctx.arc(fx, fy, 12, 0, Math.PI * 2);
+          ctx.arc(fx, fy, 10, 0, Math.PI * 2);
           ctx.fill();
 
           // Core
@@ -6257,30 +6140,24 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         }
       }
     } else if (scene.particles === "magic") {
-      // Mystical arcane particles with trails
+      // Mystical arcane particles (flat colors instead of per-particle gradients)
       for (let i = 0; i < 30; i++) {
         const mx = (i * 43 + Math.sin(t * 1.2 + i) * 35) % width;
         const my = ((height - t * 40 - i * 30) % (height + 80)) + 40;
         const magicHue = (t * 60 + i * 25) % 360;
         const magicAlpha = 0.6 + Math.sin(t * 3 + i) * 0.3;
 
-        // Magic glow
-        const magicGlow = ctx.createRadialGradient(mx, my, 0, mx, my, 8);
-        magicGlow.addColorStop(0, `hsla(${magicHue}, 90%, 70%, ${magicAlpha})`);
-        magicGlow.addColorStop(0.5, `hsla(${magicHue}, 80%, 50%, ${magicAlpha * 0.5})`);
-        magicGlow.addColorStop(1, "transparent");
-        ctx.fillStyle = magicGlow;
+        // Glow (flat)
+        ctx.fillStyle = `hsla(${magicHue}, 80%, 60%, ${magicAlpha * 0.3})`;
         ctx.beginPath();
-        ctx.arc(mx, my, 8, 0, Math.PI * 2);
+        ctx.arc(mx, my, 6, 0, Math.PI * 2);
         ctx.fill();
 
-        // Trail
-        ctx.strokeStyle = `hsla(${magicHue}, 80%, 60%, ${magicAlpha * 0.3})`;
-        ctx.lineWidth = 1;
+        // Core
+        ctx.fillStyle = `hsla(${magicHue}, 90%, 70%, ${magicAlpha})`;
         ctx.beginPath();
-        ctx.moveTo(mx, my);
-        ctx.lineTo(mx - Math.sin(t + i) * 15, my + 20);
-        ctx.stroke();
+        ctx.arc(mx, my, 2.5, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -6326,7 +6203,23 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     vignetteGrad.addColorStop(1, "rgba(20, 18, 16, 0.9)");
     ctx.fillStyle = vignetteGrad;
     ctx.fillRect(0, 0, width, height);
-  }, [animTime, currentScene]);
+  }, []);
+
+  // Own animation loop — throttled to ~15fps, decoupled from React renders
+  useEffect(() => {
+    let animationId: number;
+    let lastDrawTime = 0;
+    const animate = (timestamp: number) => {
+      // Throttle to ~15fps (67ms) for a preview that doesn't need to be butter smooth
+      if (timestamp - lastDrawTime > 67) {
+        lastDrawTime = timestamp;
+        drawScene(currentScene);
+      }
+      animationId = requestAnimationFrame(animate);
+    };
+    animate(0);
+    return () => cancelAnimationFrame(animationId);
+  }, [drawScene, currentScene]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
