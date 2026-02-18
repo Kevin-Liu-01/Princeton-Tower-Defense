@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Theme } from "@radix-ui/themes";
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: "Princeton Tower Defense",
@@ -54,6 +55,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased" style={{ fontFamily: '"bc-novatica-cyr", "inter", sans-serif' }}>
         <Theme>{children}</Theme>
+        <Analytics />
       </body>
     </html>
   );
