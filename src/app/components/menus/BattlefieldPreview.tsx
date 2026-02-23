@@ -6,9 +6,30 @@ import { PANEL, GOLD, NEUTRAL, SELECTED, panelGradient, dividerGradient } from "
 
 export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLevel?: () => void }> = ({ animTime, onSelectFarthestLevel }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [currentScene, setCurrentScene] = useState(0);
   const timeRef = useRef(0);
   const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
+  const isVisibleRef = useRef(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { isVisibleRef.current = entry.isIntersecting; },
+      { threshold: 0.05 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Keep time ref in sync with prop
   useEffect(() => { timeRef.current = animTime; }, [animTime]);
@@ -16,12 +37,13 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
   // Cycle through scenes every 6 seconds (only update state when scene actually changes)
   const prevSceneRef = useRef(0);
   useEffect(() => {
+    if (isMobile) return;
     const sceneIndex = Math.floor(animTime / 6) % 6;
     if (sceneIndex !== prevSceneRef.current) {
       prevSceneRef.current = sceneIndex;
       setCurrentScene(sceneIndex);
     }
-  }, [animTime]);
+  }, [animTime, isMobile]);
 
   // Draw battle scene on canvas — own rAF loop decoupled from React renders
   const drawScene = useCallback((currentSceneIdx: number) => {
@@ -242,11 +264,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.arc(bx, by - 52, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Banner fabric with wave
-      const bannerGrad = ctx.createLinearGradient(bx, by - 48, bx + 20, by - 20);
-      bannerGrad.addColorStop(0, color1);
-      bannerGrad.addColorStop(1, color2);
-      ctx.fillStyle = bannerGrad;
+      // Banner fabric with wave (flat fill)
+      ctx.fillStyle = color1;
       ctx.beginPath();
       ctx.moveTo(bx + 2, by - 48);
       ctx.quadraticCurveTo(bx + 15 + wave, by - 42, bx + 22, by - 35 + wave * 0.5);
@@ -529,12 +548,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.fillStyle = "#6a5a3a";
       ctx.fillRect(-25, -13, 8, 1.5);
 
-      // Main tower body - stone masonry
-      const towerGrad = ctx.createLinearGradient(-24, -65, 24, 0);
-      towerGrad.addColorStop(0, "#5a5a60");
-      towerGrad.addColorStop(0.5, "#48484e");
-      towerGrad.addColorStop(1, "#38383e");
-      ctx.fillStyle = towerGrad;
+      // Main tower body - stone masonry (flat fill)
+      ctx.fillStyle = "#48484e";
       ctx.beginPath();
       ctx.moveTo(-24, -5);
       ctx.lineTo(-24, -56);
@@ -762,12 +777,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Main lab building - angular modern design
-      const labGrad = ctx.createLinearGradient(-25, -80, 25, 0);
-      labGrad.addColorStop(0, "#5a6a7a");
-      labGrad.addColorStop(0.5, "#3e4e5e");
-      labGrad.addColorStop(1, "#2a3a4a");
-      ctx.fillStyle = labGrad;
+      // Main lab building - angular modern design (flat fill)
+      ctx.fillStyle = "#3e4e5e";
       ctx.beginPath();
       ctx.moveTo(-24, -5);
       ctx.lineTo(-24, -62);
@@ -1224,12 +1235,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.fillStyle = "#555";
       ctx.fillRect(-48, 5, 96, 1.5);
 
-      // Station building - Victorian style
-      const stationGrad = ctx.createLinearGradient(-35, -55, 35, 0);
-      stationGrad.addColorStop(0, "#6a5a4a");
-      stationGrad.addColorStop(0.5, "#4a3a2a");
-      stationGrad.addColorStop(1, "#3a2a1a");
-      ctx.fillStyle = stationGrad;
+      // Station building - Victorian style (flat fill)
+      ctx.fillStyle = "#4a3a2a";
       ctx.fillRect(-35, -45, 70, 50);
 
       // Decorative Victorian trim bands
@@ -1496,13 +1503,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Left tower
-      const towerGrad = ctx.createLinearGradient(-45, -120, -25, 0);
-      towerGrad.addColorStop(0, "#5a5048");
-      towerGrad.addColorStop(0.3, "#6a6058");
-      towerGrad.addColorStop(0.7, "#5a5048");
-      towerGrad.addColorStop(1, "#4a4038");
-      ctx.fillStyle = towerGrad;
+      // Left tower (flat fill)
+      ctx.fillStyle = "#5a5048";
       ctx.fillRect(-45, -100, 20, 100);
 
       // Left tower crenellations
@@ -1521,8 +1523,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Right tower
-      ctx.fillStyle = towerGrad;
+      // Right tower (flat fill)
+      ctx.fillStyle = "#5a5048";
       ctx.fillRect(25, -100, 20, 100);
 
       // Right tower crenellations
@@ -1541,12 +1543,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.closePath();
       ctx.fill();
 
-      // Main archway
-      const archGrad = ctx.createLinearGradient(-35, -80, 35, 0);
-      archGrad.addColorStop(0, "#6a6058");
-      archGrad.addColorStop(0.5, "#5a5048");
-      archGrad.addColorStop(1, "#4a4038");
-      ctx.fillStyle = archGrad;
+      // Main archway (flat fill)
+      ctx.fillStyle = "#5a5048";
       ctx.fillRect(-35, -70, 70, 70);
 
       // Gothic arch opening
@@ -1637,24 +1635,21 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.save();
       ctx.translate(x, y);
 
-      // Multi-layered infernal aura
+      // Simplified infernal aura (flat fills instead of 4 radial gradients)
       const auraIntensity = isAttacking ? 0.5 : 0.25;
       const auraPulse = 0.85 + Math.sin(t * 3) * 0.15;
-      for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
-        const layerOffset = auraLayer * 0.08;
-        const auraGrad = ctx.createRadialGradient(0, 0, 5 + layerOffset * 20, 0, 0, 45 + layerOffset * 15);
-        auraGrad.addColorStop(0, `rgba(255, 100, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.08)})`);
-        auraGrad.addColorStop(0.5, `rgba(255, 60, 0, ${auraIntensity * auraPulse * (0.2 - auraLayer * 0.04)})`);
-        auraGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 45 + auraLayer * 8, 30 + auraLayer * 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.fillStyle = `rgba(255, 80, 0, ${auraIntensity * auraPulse * 0.12})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 60, 42, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255, 100, 0, ${auraIntensity * auraPulse * 0.25})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 45, 30, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Floating flame particles
-      for (let p = 0; p < 12; p++) {
-        const pAngle = (t * 1.5 + p * Math.PI * 0.17) % (Math.PI * 2);
+      // Floating flame particles (reduced from 12 to 6)
+      for (let p = 0; p < 6; p++) {
+        const pAngle = (t * 1.5 + p * Math.PI * 0.34) % (Math.PI * 2);
         const pDist = 35 + Math.sin(t * 2 + p * 0.5) * 8;
         const px = Math.cos(pAngle) * pDist;
         const py = Math.sin(pAngle) * pDist * 0.6 - Math.abs(Math.sin(t * 4 + p)) * 8;
@@ -1667,12 +1662,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Deep shadow
-      const shadowGrad = ctx.createRadialGradient(0, 25, 0, 0, 25, 40);
-      shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-      shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.25)");
-      shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = shadowGrad;
+      // Deep shadow (flat fill instead of radial gradient)
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
       ctx.beginPath();
       ctx.ellipse(0, 25, 40, 12, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -1680,25 +1671,14 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.save();
       ctx.rotate(bodyLean);
 
-      // Massive muscular tiger body
-      const bodyGrad = ctx.createRadialGradient(0, breathe * 0.5, 0, 0, breathe * 0.5, 35);
-      bodyGrad.addColorStop(0, "#ffaa44");
-      bodyGrad.addColorStop(0.3, "#ff8822");
-      bodyGrad.addColorStop(0.6, "#dd5500");
-      bodyGrad.addColorStop(1, "#aa3300");
-      ctx.fillStyle = bodyGrad;
+      // Massive muscular tiger body (flat fill)
+      ctx.fillStyle = "#dd6611";
       ctx.beginPath();
       ctx.ellipse(0, breathe * 0.5, 28, 22 + breathe * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Heavy war armor - chest plate
-      const chestArmorGrad = ctx.createLinearGradient(-20, -15, 20, 15);
-      chestArmorGrad.addColorStop(0, "#2a2218");
-      chestArmorGrad.addColorStop(0.3, "#4a3a28");
-      chestArmorGrad.addColorStop(0.5, "#5a4a38");
-      chestArmorGrad.addColorStop(0.7, "#4a3a28");
-      chestArmorGrad.addColorStop(1, "#2a2218");
-      ctx.fillStyle = chestArmorGrad;
+      // Heavy war armor - chest plate (flat fill)
+      ctx.fillStyle = "#4a3a28";
       ctx.beginPath();
       ctx.moveTo(-18, -12);
       ctx.quadraticCurveTo(-22, 0, -16, 14);
@@ -1735,17 +1715,13 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
       // Emblem gem
       const gemPulse = 0.7 + Math.sin(t * 2.5) * 0.3;
+      ctx.fillStyle = `rgba(255, 100, 0, ${gemPulse * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(0, 2, 8, 0, Math.PI * 2);
+      ctx.fill();
       ctx.fillStyle = "#ff3300";
       ctx.beginPath();
       ctx.arc(0, 2, 3, 0, Math.PI * 2);
-      ctx.fill();
-      // Gem glow
-      const gemGlow = ctx.createRadialGradient(0, 2, 0, 0, 2, 8);
-      gemGlow.addColorStop(0, `rgba(255, 100, 0, ${gemPulse * 0.6})`);
-      gemGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = gemGlow;
-      ctx.beginPath();
-      ctx.arc(0, 2, 8, 0, Math.PI * 2);
       ctx.fill();
 
       // Dark tiger stripes (on exposed fur)
@@ -1771,12 +1747,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         const shoulderX = side * 26;
         const armOffset = isAttacking ? clawSwipe * 8 * side : 0;
 
-        // Massive arm/shoulder muscle
-        const armGrad = ctx.createRadialGradient(shoulderX + armOffset, -5, 0, shoulderX + armOffset, -5, 18);
-        armGrad.addColorStop(0, "#ff9944");
-        armGrad.addColorStop(0.5, "#dd5500");
-        armGrad.addColorStop(1, "#aa3300");
-        ctx.fillStyle = armGrad;
+        // Massive arm/shoulder muscle (flat fill)
+        ctx.fillStyle = "#dd5500";
         ctx.beginPath();
         ctx.ellipse(shoulderX + armOffset, -5, 14, 18, side * -0.3, 0, Math.PI * 2);
         ctx.fill();
@@ -1792,12 +1764,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
           ctx.stroke();
         }
 
-        // Heavy shoulder pauldron
-        const pauldronGrad = ctx.createRadialGradient(shoulderX + armOffset, -12, 0, shoulderX + armOffset, -12, 12);
-        pauldronGrad.addColorStop(0, "#5a4a38");
-        pauldronGrad.addColorStop(0.6, "#4a3a28");
-        pauldronGrad.addColorStop(1, "#2a2218");
-        ctx.fillStyle = pauldronGrad;
+        // Heavy shoulder pauldron (flat fill)
+        ctx.fillStyle = "#4a3a28";
         ctx.beginPath();
         ctx.ellipse(shoulderX + armOffset, -10, 10, 8, side * 0.3, 0, Math.PI * 2);
         ctx.fill();
@@ -1825,12 +1793,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         }
       }
 
-      // Powerful tiger head
-      const headGrad = ctx.createRadialGradient(22, -8, 0, 22, -8, 18);
-      headGrad.addColorStop(0, "#ffaa44");
-      headGrad.addColorStop(0.5, "#ff8822");
-      headGrad.addColorStop(1, "#dd5500");
-      ctx.fillStyle = headGrad;
+      // Powerful tiger head (flat fill)
+      ctx.fillStyle = "#ff8822";
       ctx.beginPath();
       ctx.ellipse(22, -8, 16, 14, 0.1, 0, Math.PI * 2);
       ctx.fill();
@@ -1953,154 +1917,11 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // === EPIC ENEMIES ===
 
-    // Writing Sem - Haunted Academic Tome
-    const drawWritingSem = (x: number, y: number, index: number) => {
-      const float = Math.sin(t * 3 + index) * 6;
-      const wobble = Math.sin(t * 5 + index * 2) * 0.1;
-      ctx.save();
-      ctx.translate(x, y + float);
-      ctx.rotate(wobble);
-
-      // Dark aura dripping effect
-      const sinT2i = Math.sin(t * 2 + index);
-      const dripAlpha = 0.15 + sinT2i * 0.05;
-      ctx.fillStyle = `rgba(20, 60, 20, ${dripAlpha})`;
-      ctx.beginPath();
-      ctx.ellipse(0, 8, 16, 22, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Drip tendrils
-      for (let d = 0; d < 3; d++) {
-        const dripLen = 4 + Math.sin(t * 3 + d) * 2;
-        ctx.fillStyle = `rgba(10, 40, 10, ${0.2 - d * 0.05})`;
-        ctx.beginPath();
-        ctx.ellipse(-6 + d * 6, 18 + Math.sin(t * 2.5 + d * 2.1 + index) * 6, 2, dripLen, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 18 - float, 12, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Book cover - flat menacing dark green
-      ctx.fillStyle = "#1a6b35";
-      ctx.beginPath();
-      ctx.moveTo(-10, -14);
-      ctx.lineTo(10, -14);
-      ctx.lineTo(12, -12);
-      ctx.lineTo(12, 14);
-      ctx.lineTo(-10, 14);
-      ctx.closePath();
-      ctx.fill();
-
-      // Spine - darker
-      ctx.fillStyle = "#0d4020";
-      ctx.fillRect(-12, -12, 3, 26);
-
-      // Mystical chain binding the book
-      ctx.strokeStyle = "#8b7355";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-12, -2);
-      ctx.lineTo(12, -2);
-      ctx.stroke();
-      // Chain links
-      ctx.strokeStyle = "#a08860";
-      ctx.lineWidth = 1;
-      for (let c = 0; c < 4; c++) {
-        ctx.beginPath();
-        ctx.ellipse(-8 + c * 6, -2, 2.5, 1.5, 0, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      // Padlock
-      ctx.fillStyle = "#8b7355";
-      ctx.fillRect(-2, -5, 4, 4);
-      ctx.strokeStyle = "#a08860";
-      ctx.beginPath();
-      ctx.arc(0, -6, 2, Math.PI, 0);
-      ctx.stroke();
-
-      // Pages with torn/ragged edges
-      ctx.fillStyle = "#e0d8c0";
-      ctx.beginPath();
-      ctx.moveTo(-8, -12);
-      ctx.lineTo(8, -12);
-      ctx.lineTo(9, -8);
-      ctx.lineTo(7, -4);
-      ctx.lineTo(9, 0);
-      ctx.lineTo(7, 4);
-      ctx.lineTo(9, 8);
-      ctx.lineTo(7, 12);
-      ctx.lineTo(-8, 12);
-      ctx.closePath();
-      ctx.fill();
-
-      // Stained page marks
-      ctx.fillStyle = "rgba(80, 40, 20, 0.15)";
-      ctx.beginPath();
-      ctx.arc(2, 4, 5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Mystical text lines
-      ctx.strokeStyle = "#6b5b4b";
-      ctx.lineWidth = 0.5;
-      for (let line = 0; line < 5; line++) {
-        ctx.beginPath();
-        ctx.moveTo(-6, -8 + line * 4);
-        ctx.lineTo(5 + Math.sin(line * 1.7) * 2, -8 + line * 4);
-        ctx.stroke();
-      }
-
-      // Evil eyes - more expressive
-      const sinT6i = Math.sin(t * 6 + index);
-      const eyePulse = 0.7 + sinT6i * 0.3;
-      ctx.fillStyle = `rgba(220, 38, 38, ${eyePulse})`;
-      ctx.beginPath();
-      ctx.arc(-2, -2, 3, 0, Math.PI * 2);
-      ctx.arc(5, -2, 3, 0, Math.PI * 2);
-      ctx.fill();
-      // Pupils
-      ctx.fillStyle = "#000";
-      ctx.beginPath();
-      ctx.arc(-2, -2, 1.5, 0, Math.PI * 2);
-      ctx.arc(5, -2, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-      // Angry brow lines
-      ctx.strokeStyle = "#660000";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-5, -6);
-      ctx.lineTo(-1, -4.5);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(8, -6);
-      ctx.lineTo(4, -4.5);
-      ctx.stroke();
-
-      // Floating varied symbols - reduced to 3
-      const symbols = ["\u03A3", "\u222B", "\u03C0"];
-      const sinT4i = Math.sin(t * 4 + index);
-      const symAlpha = 0.3 + sinT4i * 0.2;
-      ctx.fillStyle = `rgba(74, 222, 128, ${symAlpha})`;
-      ctx.font = "8px serif";
-      for (let sym = 0; sym < 3; sym++) {
-        const symAngle = t * 2 + sym * 2.094;
-        const symCos = Math.cos(symAngle);
-        const symSin = Math.sin(symAngle);
-        const symDist = 18 + Math.sin(t * 3 + sym) * 3;
-        ctx.fillText(symbols[sym], symCos * symDist, -5 + symSin * symDist * 0.5);
-      }
-
-      ctx.restore();
-    };
-
     // Nassau Lion - Legendary Stone Golem Boss
     const drawNassauLion = (x: number, y: number) => {
       const stomp = Math.abs(Math.sin(t * 1.5)) * 3;
       const sinT12 = Math.sin(t * 1.2);
       const breathe = sinT12 * 2;
-      const sinT2 = Math.sin(t * 2);
       const sinT3 = Math.sin(t * 3);
       const sinT4 = Math.sin(t * 4);
       ctx.save();
@@ -2123,13 +1944,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Massive stone body
-      const bodyGrad = ctx.createLinearGradient(-30, -50, 30, 20);
-      bodyGrad.addColorStop(0, "#78716c");
-      bodyGrad.addColorStop(0.3, "#57534e");
-      bodyGrad.addColorStop(0.6, "#44403c");
-      bodyGrad.addColorStop(1, "#292524");
-      ctx.fillStyle = bodyGrad;
+      // Massive stone body (flat fill)
+      ctx.fillStyle = "#57534e";
       ctx.beginPath();
       ctx.moveTo(-28, -35);
       ctx.lineTo(-32, 15);
@@ -2200,12 +2016,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fillRect(leg * 12 - 10, 22, 20, 8);
       }
 
-      // Colossal head
-      const headGrad = ctx.createRadialGradient(0, -50, 0, 0, -50, 28);
-      headGrad.addColorStop(0, "#78716c");
-      headGrad.addColorStop(0.6, "#57534e");
-      headGrad.addColorStop(1, "#44403c");
-      ctx.fillStyle = headGrad;
+      // Colossal head (flat fill)
+      ctx.fillStyle = "#57534e";
       ctx.beginPath();
       ctx.arc(0, -50 + breathe, 24, 0, Math.PI * 2);
       ctx.fill();
@@ -2321,17 +2133,15 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.scale(scale, scale);
       ctx.rotate(aggressiveTilt);
 
-      // DARK AURA - reduced to 2 layers
-      for (let auraLayer = 0; auraLayer < 2; auraLayer++) {
-        const auraGrad = ctx.createRadialGradient(0, 0, 10 + auraLayer * 20, 0, 0, 90 + auraLayer * 20);
-        auraGrad.addColorStop(0, `rgba(180, 60, 30, ${0.2 - auraLayer * 0.08})`);
-        auraGrad.addColorStop(0.5, `rgba(100, 30, 20, ${0.12 - auraLayer * 0.04})`);
-        auraGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 90 + auraLayer * 20, 60 + auraLayer * 15, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // DARK AURA - flat fills instead of radial gradients
+      ctx.fillStyle = "rgba(100, 30, 20, 0.08)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 110, 75, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(180, 60, 30, 0.14)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 90, 60, 0, 0, Math.PI * 2);
+      ctx.fill();
 
 
       // Deadly spiked tail
@@ -2374,13 +2184,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.scale(side, 1);
         ctx.rotate(wingFlap * side * 1.3);
 
-        // Wing membrane - dark and leathery
-        const wingGrad = ctx.createLinearGradient(0, 0, 70, -50);
-        wingGrad.addColorStop(0, "#5a2020");
-        wingGrad.addColorStop(0.3, "#4a1818");
-        wingGrad.addColorStop(0.7, "#3a1010");
-        wingGrad.addColorStop(1, "#2a0808");
-        ctx.fillStyle = wingGrad;
+        // Wing membrane (flat fill)
+        ctx.fillStyle = "#3a1010";
         ctx.beginPath();
         ctx.moveTo(18, -8);
         ctx.quadraticCurveTo(45, -60, 80, -50);
@@ -2443,13 +2248,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.restore();
       }
 
-      // Massive muscular body
-      const bodyGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 30);
-      bodyGrad.addColorStop(0, "#6a3030");
-      bodyGrad.addColorStop(0.4, "#5a2525");
-      bodyGrad.addColorStop(0.8, "#4a1818");
-      bodyGrad.addColorStop(1, "#3a1010");
-      ctx.fillStyle = bodyGrad;
+      // Massive muscular body (flat fill)
+      ctx.fillStyle = "#5a2525";
       ctx.beginPath();
       ctx.ellipse(0, 0 + breathPulse * 0.3, 28, 22 + breathPulse * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
@@ -2667,199 +2467,6 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.restore();
     };
 
-    // Sophomore Slump - Heavy armored enemy
-    const drawSophomoreEnemy = (x: number, y: number, index: number) => {
-      const walk = Math.sin(t * 3 + index) * 2;
-      const sinT5 = Math.sin(t * 5);
-      ctx.save();
-      ctx.translate(x, y + Math.abs(walk));
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 12, 14, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Heavy armored body (flat for small sprite performance)
-      ctx.fillStyle = "#60a5fa";
-      ctx.beginPath();
-      ctx.moveTo(-14, 10);
-      ctx.lineTo(-16, -10);
-      ctx.quadraticCurveTo(-14, -22, 0, -25);
-      ctx.quadraticCurveTo(14, -22, 16, -10);
-      ctx.lineTo(14, 10);
-      ctx.closePath();
-      ctx.fill();
-
-      // Armor plate lines
-      ctx.strokeStyle = "#2563eb";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-12, -5);
-      ctx.lineTo(12, -5);
-      ctx.moveTo(-10, 5);
-      ctx.lineTo(10, 5);
-      ctx.stroke();
-
-      // Battle scars on armor
-      ctx.strokeStyle = "#1e3a8a";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(-8, -15);
-      ctx.lineTo(-5, -8);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(6, -12);
-      ctx.lineTo(9, -6);
-      ctx.lineTo(7, -2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-3, 0);
-      ctx.lineTo(0, 5);
-      ctx.stroke();
-
-      // Chainmail visible at joints (neck and waist)
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(-8, -18, 16, 3);
-      ctx.strokeStyle = "#64748b";
-      ctx.lineWidth = 0.5;
-      for (let cm = 0; cm < 5; cm++) {
-        ctx.beginPath();
-        ctx.arc(-6 + cm * 3, -16.5, 1.5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      // Waist chainmail
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(-12, 7, 24, 3);
-      for (let cm = 0; cm < 7; cm++) {
-        ctx.beginPath();
-        ctx.arc(-10 + cm * 3.3, 8.5, 1.5, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // Shoulder pauldrons
-      ctx.fillStyle = "#3b82f6";
-      // Left pauldron
-      ctx.beginPath();
-      ctx.moveTo(-14, -18);
-      ctx.lineTo(-22, -14);
-      ctx.lineTo(-22, -8);
-      ctx.lineTo(-14, -10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#1e40af";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      // Right pauldron
-      ctx.fillStyle = "#3b82f6";
-      ctx.beginPath();
-      ctx.moveTo(14, -18);
-      ctx.lineTo(22, -14);
-      ctx.lineTo(22, -8);
-      ctx.lineTo(14, -10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#1e40af";
-      ctx.stroke();
-      // Pauldron rivets
-      ctx.fillStyle = "#93c5fd";
-      ctx.beginPath();
-      ctx.arc(-18, -12, 1, 0, Math.PI * 2);
-      ctx.arc(18, -12, 1, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Imposing helmet with face guard
-      ctx.fillStyle = "#1e40af";
-      ctx.beginPath();
-      ctx.arc(0, -22, 10, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(-10, -22, 20, 5);
-      // Helmet crest ridge
-      ctx.fillStyle = "#1e3a8a";
-      ctx.beginPath();
-      ctx.moveTo(-2, -32);
-      ctx.lineTo(0, -35);
-      ctx.lineTo(2, -32);
-      ctx.lineTo(2, -22);
-      ctx.lineTo(-2, -22);
-      ctx.closePath();
-      ctx.fill();
-      // Face guard (vertical bars)
-      ctx.strokeStyle = "#334155";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-4, -20);
-      ctx.lineTo(-4, -14);
-      ctx.moveTo(0, -20);
-      ctx.lineTo(0, -14);
-      ctx.moveTo(4, -20);
-      ctx.lineTo(4, -14);
-      ctx.stroke();
-      // Visor slit (glowing eyes behind guard)
-      ctx.fillStyle = `rgba(239, 68, 68, ${0.6 + sinT5 * 0.3})`;
-      ctx.fillRect(-6, -19, 12, 2);
-
-      // Shield on left arm
-      ctx.save();
-      ctx.translate(-16, -2);
-      ctx.rotate(-0.15);
-      ctx.fillStyle = "#2563eb";
-      ctx.beginPath();
-      ctx.moveTo(0, -10);
-      ctx.lineTo(8, -6);
-      ctx.lineTo(8, 8);
-      ctx.lineTo(0, 12);
-      ctx.lineTo(-8, 8);
-      ctx.lineTo(-8, -6);
-      ctx.closePath();
-      ctx.fill();
-      // Shield border
-      ctx.strokeStyle = "#1e40af";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      // Shield emblem (cross)
-      ctx.strokeStyle = "#93c5fd";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(0, -6);
-      ctx.lineTo(0, 8);
-      ctx.moveTo(-5, 1);
-      ctx.lineTo(5, 1);
-      ctx.stroke();
-      // Shield boss
-      ctx.fillStyle = "#fbbf24";
-      ctx.beginPath();
-      ctx.arc(0, 1, 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-
-      // Heavy mace weapon (right arm)
-      ctx.save();
-      ctx.translate(14, -5);
-      ctx.rotate(walk * 0.1);
-      ctx.fillStyle = "#4a4a4a";
-      ctx.fillRect(0, -25, 4, 30);
-      // Mace head
-      ctx.fillStyle = "#3a3a3a";
-      ctx.beginPath();
-      ctx.arc(2, -28, 8, 0, Math.PI * 2);
-      ctx.fill();
-      // Spikes - reduced to 4
-      for (let spike = 0; spike < 4; spike++) {
-        const sAngle = spike * Math.PI / 2;
-        const sCos = Math.cos(sAngle);
-        const sSin = Math.sin(sAngle);
-        ctx.fillStyle = "#2a2a2a";
-        ctx.beginPath();
-        ctx.moveTo(2 + sCos * 6, -28 + sSin * 6);
-        ctx.lineTo(2 + sCos * 12, -28 + sSin * 12);
-        ctx.lineTo(2 + Math.cos(sAngle + 0.3) * 6, -28 + Math.sin(sAngle + 0.3) * 6);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      ctx.restore();
-    };
 
     // Flying Rival Mascot - MENACING DEMONIC HARPY
     const drawFlyingMascot = (x: number, y: number, index: number, scale: number = 0.7) => {
@@ -2877,18 +2484,16 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.scale(scale, scale);
       ctx.rotate(aggressiveTilt);
 
-      // Threatening dark aura - reduced to 2 layers
+      // Threatening dark aura - flat fills instead of radial gradients
       const auraIntensity = 0.4 + Math.sin(t * 5 + index) * 0.2;
-      for (let layer = 0; layer < 2; layer++) {
-        const auraGrad = ctx.createRadialGradient(0, 0, 5 + layer * 12, 0, 0, 55 + layer * 10);
-        auraGrad.addColorStop(0, `rgba(180, 50, 50, ${auraIntensity * (0.3 - layer * 0.12)})`);
-        auraGrad.addColorStop(0.5, `rgba(100, 20, 60, ${auraIntensity * (0.2 - layer * 0.08)})`);
-        auraGrad.addColorStop(1, "transparent");
-        ctx.fillStyle = auraGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 55 + layer * 10, 40 + layer * 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.fillStyle = `rgba(100, 20, 60, ${auraIntensity * 0.06})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 65, 48, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(180, 50, 50, ${auraIntensity * 0.15})`;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 55, 40, 0, 0, Math.PI * 2);
+      ctx.fill();
 
       // Electric crackling particles - reduced to 3
       for (let p = 0; p < 3; p++) {
@@ -3126,17 +2731,6 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       ctx.restore();
     };
 
-    // Draw enemies marching - varied types
-    for (let i = 0; i < 4; i++) {
-      const enemyX = ((width * 0.3 + t * 22 + i * 80) % (width * 0.85)) + width * 0.08;
-      drawWritingSem(enemyX, groundY + 40, i);
-    }
-
-    // Sophomore enemies (heavier)
-    for (let i = 0; i < 2; i++) {
-      const sophX = ((width * 0.15 + t * 18 + i * 120) % (width * 0.8)) + width * 0.1;
-      drawSophomoreEnemy(sophX, groundY + 35, i);
-    }
 
     // Nassau Lion (boss) - moved to better position
     drawNassauLion(width * 0.72, groundY + 20);
@@ -3627,7 +3221,6 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const cosStance = Math.cos(phaseA);
       const stance = sinStance * 2;
       const swordSwing = Math.sin(t * 6 + index) * 0.6;
-      const breathe = Math.sin(t * 3 + index) * 0.5;
 
       ctx.save();
       ctx.translate(x, y + Math.abs(stance * 0.5));
@@ -4218,58 +3811,58 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       // Visor / face plate
       ctx.fillStyle = "#7a8290";
       ctx.beginPath();
-      ctx.moveTo(-9, -19);
-      ctx.lineTo(-10, -14);
-      ctx.lineTo(-7, -11);
-      ctx.lineTo(7, -11);
-      ctx.lineTo(10, -14);
-      ctx.lineTo(9, -19);
+      ctx.moveTo(-9, -27);
+      ctx.lineTo(-10, -22);
+      ctx.lineTo(-7, -19);
+      ctx.lineTo(7, -19);
+      ctx.lineTo(10, -22);
+      ctx.lineTo(9, -27);
       ctx.closePath();
       ctx.fill();
       // Cheek guards (angled)
       ctx.fillStyle = "#6b7280";
       ctx.beginPath();
-      ctx.moveTo(-10, -19);
-      ctx.lineTo(-11, -15);
-      ctx.lineTo(-9, -11);
-      ctx.lineTo(-7, -11);
-      ctx.lineTo(-8, -19);
+      ctx.moveTo(-10, -27);
+      ctx.lineTo(-11, -23);
+      ctx.lineTo(-9, -19);
+      ctx.lineTo(-7, -19);
+      ctx.lineTo(-8, -27);
       ctx.closePath();
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(10, -19);
-      ctx.lineTo(11, -15);
-      ctx.lineTo(9, -11);
-      ctx.lineTo(7, -11);
-      ctx.lineTo(8, -19);
+      ctx.moveTo(10, -27);
+      ctx.lineTo(11, -23);
+      ctx.lineTo(9, -19);
+      ctx.lineTo(7, -19);
+      ctx.lineTo(8, -27);
       ctx.closePath();
       ctx.fill();
       // Aventail (chainmail curtain from helmet)
       ctx.fillStyle = "#6b7280";
       ctx.beginPath();
-      ctx.moveTo(-9, -11);
-      ctx.lineTo(-10, -9);
-      ctx.lineTo(10, -9);
-      ctx.lineTo(9, -11);
+      ctx.moveTo(-9, -19);
+      ctx.lineTo(-10, -17);
+      ctx.lineTo(10, -17);
+      ctx.lineTo(9, -19);
       ctx.closePath();
       ctx.fill();
       // Aventail ring pattern
       ctx.fillStyle = "#9ca3af";
       for (let ax = -8; ax <= 8; ax += 2) {
-        ctx.fillRect(ax, -11, 1, 1);
-        ctx.fillRect(ax + 1, -10, 1, 1);
+        ctx.fillRect(ax, -19, 1, 1);
+        ctx.fillRect(ax + 1, -18, 1, 1);
       }
       // T-shaped visor slit
       ctx.fillStyle = "#111827";
       // Horizontal slit
-      ctx.fillRect(-6, -18, 12, 2);
+      ctx.fillRect(-6, -26, 12, 2);
       // Vertical slit
-      ctx.fillRect(-1.2, -18, 2.4, 6);
+      ctx.fillRect(-1.2, -26, 2.4, 6);
       // Visor breathing holes
       ctx.fillStyle = "#111827";
       for (let h = 0; h < 3; h++) {
-        ctx.fillRect(-5 + h * 1.5, -15.2, 0.8, 0.8);
-        ctx.fillRect(3 + h * 1.5, -15.2, 0.8, 0.8);
+        ctx.fillRect(-5 + h * 1.5, -23.2, 0.8, 0.8);
+        ctx.fillRect(3 + h * 1.5, -23.2, 0.8, 0.8);
       }
       // Helmet crest ridge (gold, ornate)
       ctx.strokeStyle = "#c9a227";
@@ -4724,7 +4317,6 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const phaseD = t * 2 + index;
       const drawPhase = phaseD % 3;
       const pullBack = drawPhase < 1.5 ? drawPhase / 1.5 : (drawPhase < 2.0 ? 1.0 : 0);
-      const breathe = Math.sin(t * 3 + index) * 0.5;
       const phaseF = t * 2.5 + index;
       const sinSway = Math.sin(phaseF);
       const cosSway = Math.cos(phaseF);
@@ -5474,14 +5066,14 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     const knightPositions = [
       { x: 0.12, y: 20, facing: 1 },
       { x: 0.22, y: 85, facing: -1 },
+      { x: 0.45, y: 78, facing: -1 },
+
       { x: 0.35, y: 28, facing: 1 },
       { x: 0.48, y: 105, facing: -1 },
       { x: 0.58, y: 35, facing: 1 },
       { x: 0.68, y: 95, facing: -1 },
       { x: 0.78, y: 22, facing: 1 },
-      { x: 0.40, y: 65, facing: -1 },
       { x: 0.28, y: 50, facing: 1 },
-      { x: 0.52, y: 78, facing: -1 },
       { x: 0.85, y: 110, facing: 1 },
     ];
 
@@ -5523,15 +5115,13 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
 
     // Archers spread across back lines at different heights - MAXIMUM SPREAD
     const archerPositions = [
-      { x: 0.04, y: 20 },
-      { x: 0.08, y: 75 },
+      { x: 0.10, y: 75 },
       { x: 0.14, y: 35 },
       { x: 0.06, y: 95 },
-      { x: 0.18, y: 55 },
+      { x: 0.22, y: 55 },
       { x: 0.75, y: 25 },
       { x: 0.82, y: 85 },
       { x: 0.88, y: 45 },
-      { x: 0.92, y: 110 },
     ];
 
     for (let i = 0; i < archerPositions.length; i++) {
@@ -5583,77 +5173,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
     }
 
-    // Additional foot soldiers scattered around - EVERYWHERE ON BATTLEFIELD
-    const soldierPositions = [
-      { x: 0.55, y: 100 },
-      { x: 0.62, y: 30 },
-      { x: 0.72, y: 90 },
-      { x: 0.24, y: 105 },
-      { x: 0.38, y: 40 },
-      { x: 0.82, y: 35 },
-      { x: 0.10, y: 110 },
-      { x: 0.46, y: 95 },
-      { x: 0.32, y: 60 },
-      { x: 0.65, y: 50 },
-      { x: 0.90, y: 85 },
-      { x: 0.18, y: 70 },
-    ];
 
-    for (let i = 0; i < soldierPositions.length; i++) {
-      const pos = soldierPositions[i];
-      const sx = width * pos.x;
-      const sy = groundY + pos.y;
-      const bounce = Math.sin(t * 5 + i * 1.5) * 2;
-      const swing = Math.sin(t * 6 + i * 2) * 0.5;
-
-      ctx.save();
-      ctx.translate(sx, sy + bounce);
-
-      // Shadow
-      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.beginPath();
-      ctx.ellipse(0, 10, 8, 3, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Body
-      ctx.fillStyle = "#6b8e23";
-      ctx.fillRect(-4, -12, 8, 14);
-
-      // Armor vest
-      ctx.fillStyle = "#4a5a2a";
-      ctx.fillRect(-5, -10, 10, 10);
-
-      // Head with helmet
-      ctx.fillStyle = "#708090";
-      ctx.beginPath();
-      ctx.arc(0, -16, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#5a6a80";
-      ctx.beginPath();
-      ctx.arc(0, -16, 5, Math.PI, 0);
-      ctx.fill();
-
-      // Sword
-      ctx.save();
-      ctx.rotate(swing);
-      ctx.strokeStyle = "#c0c0c0";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(4, -8);
-      ctx.lineTo(18, -10);
-      ctx.stroke();
-      ctx.fillStyle = "#5a4a3a";
-      ctx.fillRect(3, -10, 3, 5);
-      ctx.restore();
-
-      // Shield (flat color)
-      ctx.fillStyle = "#ea580c";
-      ctx.beginPath();
-      ctx.arc(-7, -5, 6, Math.PI * 0.4, Math.PI * 1.6);
-      ctx.fill();
-
-      ctx.restore();
-    }
 
     // === EPIC PROJECTILES & COMBAT EFFECTS ===
 
@@ -5682,8 +5202,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.arc(px, py, 5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Smoke trail with gradient
-        for (let trail = 1; trail <= 6; trail++) {
+        // Smoke trail (reduced)
+        for (let trail = 1; trail <= 3; trail++) {
           const trailAlpha = 0.4 - trail * 0.06;
           const trailX = px - trail * 10 * (1 - progress * 0.3);
           const trailY = py + trail * 4;
@@ -5855,14 +5375,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       const meteorEndY = groundY + 20;
       const meteorY = meteorStartY + (meteorEndY - meteorStartY) * meteorProgress;
 
-      // Meteor body with rocky texture
+      // Meteor body (flat fill)
       const meteorSize = 18 + Math.sin(t * 10) * 2;
-      const meteorGrad = ctx.createRadialGradient(meteorX - 3, meteorY - 3, 0, meteorX, meteorY, meteorSize);
-      meteorGrad.addColorStop(0, "#fbbf24");
-      meteorGrad.addColorStop(0.3, "#f97316");
-      meteorGrad.addColorStop(0.6, "#dc2626");
-      meteorGrad.addColorStop(1, "#7f1d1d");
-      ctx.fillStyle = meteorGrad;
+      ctx.fillStyle = "#dc2626";
       ctx.beginPath();
       ctx.arc(meteorX, meteorY, meteorSize, 0, Math.PI * 2);
       ctx.fill();
@@ -5880,8 +5395,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Massive fire trail (flat colors instead of per-flame gradients)
-      for (let flame = 0; flame < 8; flame++) {
+      // Fire trail (reduced)
+      for (let flame = 0; flame < 4; flame++) {
         const flameProgress = flame / 8;
         const flameY = meteorY - 15 - flame * 15;
         const flameX = meteorX + Math.sin(t * 15 + flame * 2) * (5 + flame * 2);
@@ -5894,8 +5409,8 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.fill();
       }
 
-      // Trailing sparks
-      for (let spark = 0; spark < 12; spark++) {
+      // Trailing sparks (reduced)
+      for (let spark = 0; spark < 5; spark++) {
         const sparkAge = (t * 8 + spark * 0.5) % 1;
         const sparkX = meteorX + (Math.random() - 0.5) * 30;
         const sparkY = meteorY - 20 - sparkAge * 80;
@@ -6034,9 +5549,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     if (scene.particles === "leaves") {
       // Autumn leaves with rotation and varied colors
       const leafColors = ["#4ade80", "#22c55e", "#84cc16", "#eab308"];
-      for (let i = 0; i < 25; i++) {
-        const lx = ((t * 35 + i * 50) % (width + 150)) - 75;
-        const ly = ((t * 25 + i * 35 + Math.sin(t + i) * 30) % (height * 0.85));
+      for (let i = 0; i < 12; i++) {
+        const lx = ((t * 35 + i * 105) % (width + 150)) - 75;
+        const ly = ((t * 25 + i * 70 + Math.sin(t + i) * 30) % (height * 0.85));
         const leafColor = leafColors[i % leafColors.length];
         const leafAlpha = 0.4 + Math.sin(t * 2 + i) * 0.2;
         ctx.save();
@@ -6046,29 +5561,20 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.beginPath();
         ctx.ellipse(0, 0, 5, 3, 0, 0, Math.PI * 2);
         ctx.fill();
-        // Leaf vein
-        ctx.strokeStyle = leafColor;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(-4, 0);
-        ctx.lineTo(4, 0);
-        ctx.stroke();
         ctx.restore();
       }
     } else if (scene.particles === "embers") {
       // Volcanic embers (flat colors instead of per-particle gradients)
-      for (let i = 0; i < 35; i++) {
-        const ex = (i * 37 + Math.sin(t * 0.8 + i) * 40) % width;
-        const ey = height - ((t * 50 + i * 25) % (height * 0.9));
+      for (let i = 0; i < 15; i++) {
+        const ex = (i * 87 + Math.sin(t * 0.8 + i) * 40) % width;
+        const ey = height - ((t * 50 + i * 55) % (height * 0.9));
         const emberPulse = 0.5 + Math.sin(t * 8 + i * 2) * 0.5;
 
-        // Glow halo (flat)
         ctx.fillStyle = `rgba(255, 150, 30, ${emberPulse * 0.15})`;
         ctx.beginPath();
         ctx.arc(ex, ey, 6, 0, Math.PI * 2);
         ctx.fill();
 
-        // Core
         ctx.fillStyle = `rgba(255, 220, 100, ${emberPulse})`;
         ctx.beginPath();
         ctx.arc(ex, ey, 2, 0, Math.PI * 2);
@@ -6076,10 +5582,10 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
     } else if (scene.particles === "snow") {
       // Detailed snowflakes with drift
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 25; i++) {
         const drift = Math.sin(t * 0.5 + i * 0.3) * 30;
-        const sx = (i * 31 + drift + t * 10) % (width + 60) - 30;
-        const sy = ((t * 30 + i * 20) % (height + 30)) - 15;
+        const sx = (i * 62 + drift + t * 10) % (width + 60) - 30;
+        const sy = ((t * 30 + i * 40) % (height + 30)) - 15;
         const snowSize = 1.5 + (i % 3);
         const snowAlpha = 0.5 + Math.sin(i) * 0.3;
 
@@ -6087,29 +5593,19 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         ctx.beginPath();
         ctx.arc(sx, sy, snowSize, 0, Math.PI * 2);
         ctx.fill();
-
-        // Snowflake sparkle
-        if (i % 5 === 0) {
-          ctx.fillStyle = `rgba(200, 230, 255, ${snowAlpha * 0.5})`;
-          ctx.beginPath();
-          ctx.arc(sx, sy, snowSize * 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
       }
     } else if (scene.particles === "sand") {
       // Sandstorm with wind streaks
-      for (let i = 0; i < 40; i++) {
-        const sx = ((t * 80 + i * 35) % (width + 120)) - 60;
-        const sy = height * 0.3 + (i % 12) * 25 + Math.sin(t * 2 + i) * 15;
+      for (let i = 0; i < 18; i++) {
+        const sx = ((t * 80 + i * 75) % (width + 120)) - 60;
+        const sy = height * 0.3 + (i % 8) * 38 + Math.sin(t * 2 + i) * 15;
         const sandAlpha = 0.2 + Math.sin(t + i * 0.5) * 0.15;
 
-        // Sand particle
         ctx.fillStyle = `rgba(251, 191, 36, ${sandAlpha})`;
         ctx.beginPath();
         ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // Wind streak
         ctx.strokeStyle = `rgba(251, 191, 36, ${sandAlpha * 0.3})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -6119,9 +5615,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
     } else if (scene.particles === "fireflies") {
       // Bioluminescent fireflies (flat colors instead of per-firefly gradients)
-      for (let i = 0; i < 20; i++) {
-        const fx = (i * 57 + Math.sin(t * 0.6 + i) * 50) % width;
-        const fy = height * 0.35 + (i % 6) * 35 + Math.cos(t * 0.4 + i) * 25;
+      for (let i = 0; i < 10; i++) {
+        const fx = (i * 114 + Math.sin(t * 0.6 + i) * 50) % width;
+        const fy = height * 0.35 + (i % 4) * 55 + Math.cos(t * 0.4 + i) * 25;
         const glowPhase = (t * 2 + i * 0.7) % 2;
         const glow = glowPhase < 1 ? Math.sin(glowPhase * Math.PI) : 0;
 
@@ -6141,9 +5637,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
       }
     } else if (scene.particles === "magic") {
       // Mystical arcane particles (flat colors instead of per-particle gradients)
-      for (let i = 0; i < 30; i++) {
-        const mx = (i * 43 + Math.sin(t * 1.2 + i) * 35) % width;
-        const my = ((height - t * 40 - i * 30) % (height + 80)) + 40;
+      for (let i = 0; i < 14; i++) {
+        const mx = (i * 92 + Math.sin(t * 1.2 + i) * 35) % width;
+        const my = ((height - t * 40 - i * 65) % (height + 80)) + 40;
         const magicHue = (t * 60 + i * 25) % 360;
         const magicAlpha = 0.6 + Math.sin(t * 3 + i) * 0.3;
 
@@ -6173,17 +5669,15 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     ctx.fillStyle = fogGrad;
     ctx.fillRect(0, 0, width, height);
 
-    // Volumetric fog wisps
-    for (let layer = 0; layer < 3; layer++) {
-      const layerAlpha = 0.08 - layer * 0.02;
+    // Volumetric fog wisps (reduced)
+    for (let layer = 0; layer < 2; layer++) {
+      const layerAlpha = 0.07 - layer * 0.02;
       ctx.fillStyle = `rgba(100, 90, 80, ${layerAlpha})`;
-      for (let wisp = 0; wisp < 3; wisp++) {
-        const wx = ((t * (12 - layer * 3) + wisp * 200 + layer * 100) % (width + 400)) - 200;
-        const wy = height * (0.2 + layer * 0.15 + wisp * 0.1);
-        const ww = 150 + layer * 30;
-        const wh = 40 + layer * 10;
+      for (let wisp = 0; wisp < 2; wisp++) {
+        const wx = ((t * (12 - layer * 3) + wisp * 300 + layer * 100) % (width + 400)) - 200;
+        const wy = height * (0.2 + layer * 0.2 + wisp * 0.15);
         ctx.beginPath();
-        ctx.ellipse(wx, wy, ww, wh, 0, 0, Math.PI * 2);
+        ctx.ellipse(wx, wy, 160 + layer * 30, 45 + layer * 10, 0, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -6205,13 +5699,13 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     ctx.fillRect(0, 0, width, height);
   }, []);
 
-  // Own animation loop — throttled to ~15fps, decoupled from React renders
+  // Own animation loop — throttled to ~50fps, skipped on mobile / when off-screen
   useEffect(() => {
+    if (isMobile) return;
     let animationId: number;
     let lastDrawTime = 0;
     const animate = (timestamp: number) => {
-      // Throttle to ~15fps (67ms) for a preview that doesn't need to be butter smooth
-      if (timestamp - lastDrawTime > 67) {
+      if (isVisibleRef.current && timestamp - lastDrawTime > 20) {
         lastDrawTime = timestamp;
         drawScene(currentScene);
       }
@@ -6219,10 +5713,10 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     };
     animate(0);
     return () => cancelAnimationFrame(animationId);
-  }, [drawScene, currentScene]);
+  }, [drawScene, currentScene, isMobile]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
+    <div ref={containerRef} className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
       {/* Content with ornate frame */}
       <div
         className="relative z-10 w-full h-full rounded-2xl overflow-hidden"
@@ -6232,14 +5726,16 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
           boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 20px ${GOLD.glow04}`,
         }}
       >
-        {/* Canvas Battle Scene */}
-        <div className="opacity-30">
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 w-full h-full"
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
+        {/* Canvas Battle Scene — hidden on mobile for performance */}
+        {!isMobile && (
+          <div className="opacity-30">
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full"
+              style={{ width: "100%", height: "100%" }}
+            />
+          </div>
+        )}
         <OrnateFrame
           className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden"
           cornerSize={40}
@@ -6310,4 +5806,3 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     </div>
   );
 };
-

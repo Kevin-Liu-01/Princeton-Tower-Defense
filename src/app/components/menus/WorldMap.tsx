@@ -7678,8 +7678,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     let lastDrawTime = 0;
     let lastStateTime = 0;
     const animate = (timestamp: number) => {
-      // Canvas drawing throttled to ~20fps (50ms)
-      if (timestamp - lastDrawTime > 50) {
+      // Canvas drawing throttled to ~50fps (20ms)
+      if (timestamp - lastDrawTime > 20) {
         animTimeRef.current = timestamp / 1000;
         lastDrawTime = timestamp;
         drawMap();

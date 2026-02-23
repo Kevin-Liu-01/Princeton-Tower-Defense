@@ -1712,7 +1712,7 @@ export const HeroSprite: React.FC<{
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
-    const cy = size / 2;
+    let cy = size / 2;
     const scale = size / 62;
     const t = time * 0.08;
     const bounce = animated ? Math.sin(t) * 1.5 : 0;
@@ -2089,6 +2089,7 @@ export const HeroSprite: React.FC<{
         break;
       }
       case "mathey": {
+        cy += 8 * scale;
         // MATHEY KNIGHT - Silver/Blue Armored Knight with M Shield and Hammer
         const auraPulse = 0.5 + Math.sin(t * 2) * 0.3;
         const eyeGlow = 0.7 + Math.sin(t * 3) * 0.3;
@@ -2103,44 +2104,9 @@ export const HeroSprite: React.FC<{
         ctx.arc(cx, cy, 24 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // === HAMMER (behind body) ===
-        ctx.save();
-        ctx.translate(cx + 16 * scale, cy - 8 * scale + bounce);
-        ctx.rotate(0.4);
-
-        // Long wooden handle
-        ctx.fillStyle = "#8b6914";
-        ctx.beginPath();
-        ctx.roundRect(-2 * scale, -8 * scale, 4 * scale, 32 * scale, 1 * scale);
-        ctx.fill();
-        ctx.strokeStyle = "#6b4904";
-        ctx.lineWidth = 0.5 * scale;
-        ctx.stroke();
-
-        // Hammer head - dark blue metal
-        const hammerGrad = ctx.createLinearGradient(-8 * scale, -14 * scale, 8 * scale, -8 * scale);
-        hammerGrad.addColorStop(0, "#2a3a5a");
-        hammerGrad.addColorStop(0.3, "#4a5a7a");
-        hammerGrad.addColorStop(0.5, "#6070a0");
-        hammerGrad.addColorStop(0.7, "#4a5a7a");
-        hammerGrad.addColorStop(1, "#2a3a5a");
-        ctx.fillStyle = hammerGrad;
-        ctx.beginPath();
-        ctx.roundRect(-8 * scale, -16 * scale, 16 * scale, 10 * scale, 2 * scale);
-        ctx.fill();
-        ctx.strokeStyle = "#1a2a4a";
-        ctx.lineWidth = 1 * scale;
-        ctx.stroke();
-
-        // Hammer face details
-        ctx.fillStyle = "#3a4a6a";
-        ctx.fillRect(-6 * scale, -14 * scale, 2 * scale, 6 * scale);
-        ctx.fillRect(4 * scale, -14 * scale, 2 * scale, 6 * scale);
-        ctx.restore();
-
         // === LEFT ARM WITH SHIELD ===
         ctx.save();
-        ctx.translate(cx - 14 * scale, cy - 2 * scale + bounce);
+        ctx.translate(cx - 14 * scale, cy - 8 * scale + bounce);
         ctx.rotate(-0.3);
 
         // Pauldron (shoulder armor) - dark blue
@@ -2171,71 +2137,6 @@ export const HeroSprite: React.FC<{
         ctx.fill();
         ctx.strokeStyle = "#2a3a6a";
         ctx.stroke();
-        ctx.restore();
-
-        // M-SHIELD (prominent, in front)
-        ctx.save();
-        ctx.translate(cx - 18 * scale, cy + 2 * scale + bounce);
-
-        // Shield main body - cyan/teal with silver border
-        const shieldGrad = ctx.createLinearGradient(-8 * scale, -10 * scale, 8 * scale, 12 * scale);
-        shieldGrad.addColorStop(0, "#4a7a8a");
-        shieldGrad.addColorStop(0.3, "#5a9aaa");
-        shieldGrad.addColorStop(0.6, "#4a8a9a");
-        shieldGrad.addColorStop(1, "#3a6a7a");
-        ctx.fillStyle = shieldGrad;
-        ctx.beginPath();
-        ctx.moveTo(0, -12 * scale);
-        ctx.lineTo(-10 * scale, -8 * scale);
-        ctx.lineTo(-10 * scale, 6 * scale);
-        ctx.lineTo(0, 14 * scale);
-        ctx.lineTo(10 * scale, 6 * scale);
-        ctx.lineTo(10 * scale, -8 * scale);
-        ctx.closePath();
-        ctx.fill();
-
-        // Silver border
-        ctx.strokeStyle = "#b0c0d0";
-        ctx.lineWidth = 2 * scale;
-        ctx.stroke();
-
-        // M emblem - stylized cyan M
-        ctx.fillStyle = "#7acce0";
-        ctx.shadowColor = "#7acce0";
-        ctx.shadowBlur = 4 * scale;
-        ctx.beginPath();
-        ctx.moveTo(-6 * scale, 6 * scale);
-        ctx.lineTo(-6 * scale, -4 * scale);
-        ctx.lineTo(-3 * scale, -4 * scale);
-        ctx.lineTo(0, 2 * scale);
-        ctx.lineTo(3 * scale, -4 * scale);
-        ctx.lineTo(6 * scale, -4 * scale);
-        ctx.lineTo(6 * scale, 6 * scale);
-        ctx.lineTo(4 * scale, 6 * scale);
-        ctx.lineTo(4 * scale, 0);
-        ctx.lineTo(0, 6 * scale);
-        ctx.lineTo(-4 * scale, 0);
-        ctx.lineTo(-4 * scale, 6 * scale);
-        ctx.closePath();
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Small shields on sides of main shield
-        ctx.fillStyle = "#5a8a9a";
-        ctx.beginPath();
-        ctx.moveTo(-12 * scale, -4 * scale);
-        ctx.lineTo(-14 * scale, 0);
-        ctx.lineTo(-12 * scale, 4 * scale);
-        ctx.lineTo(-10 * scale, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(12 * scale, -4 * scale);
-        ctx.lineTo(14 * scale, 0);
-        ctx.lineTo(12 * scale, 4 * scale);
-        ctx.lineTo(10 * scale, 0);
-        ctx.closePath();
-        ctx.fill();
         ctx.restore();
 
         // === MAIN ARMOR BODY - Dark Blue ===
@@ -2294,7 +2195,7 @@ export const HeroSprite: React.FC<{
 
         // === RIGHT ARM ===
         ctx.save();
-        ctx.translate(cx + 14 * scale, cy - 2 * scale + bounce);
+        ctx.translate(cx + 14 * scale, cy - 8 * scale + bounce);
         ctx.rotate(0.35);
 
         // Pauldron - dark blue
@@ -2397,9 +2298,110 @@ export const HeroSprite: React.FC<{
         ctx.fill();
         ctx.strokeStyle = "#5a6a7a";
         ctx.stroke();
+
+        // === M-SHIELD (held by left arm, overlapping body edge) ===
+        ctx.save();
+        ctx.translate(cx - 14 * scale, cy - 2 * scale + bounce);
+        ctx.rotate(-0.15);
+
+        const shieldGrad = ctx.createLinearGradient(-7 * scale, -9 * scale, 7 * scale, 10 * scale);
+        shieldGrad.addColorStop(0, "#4a7a8a");
+        shieldGrad.addColorStop(0.3, "#5a9aaa");
+        shieldGrad.addColorStop(0.6, "#4a8a9a");
+        shieldGrad.addColorStop(1, "#3a6a7a");
+        ctx.fillStyle = shieldGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, -10 * scale);
+        ctx.lineTo(-8 * scale, -6 * scale);
+        ctx.lineTo(-8 * scale, 5 * scale);
+        ctx.lineTo(0, 12 * scale);
+        ctx.lineTo(8 * scale, 5 * scale);
+        ctx.lineTo(8 * scale, -6 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#b0c0d0";
+        ctx.lineWidth = 1.5 * scale;
+        ctx.stroke();
+
+        // M emblem
+        ctx.fillStyle = "#7acce0";
+        ctx.shadowColor = "#7acce0";
+        ctx.shadowBlur = 3 * scale;
+        ctx.beginPath();
+        ctx.moveTo(-5 * scale, 5 * scale);
+        ctx.lineTo(-5 * scale, -3 * scale);
+        ctx.lineTo(-2.5 * scale, -3 * scale);
+        ctx.lineTo(0, 1.5 * scale);
+        ctx.lineTo(2.5 * scale, -3 * scale);
+        ctx.lineTo(5 * scale, -3 * scale);
+        ctx.lineTo(5 * scale, 5 * scale);
+        ctx.lineTo(3 * scale, 5 * scale);
+        ctx.lineTo(3 * scale, 0);
+        ctx.lineTo(0, 5 * scale);
+        ctx.lineTo(-3 * scale, 0);
+        ctx.lineTo(-3 * scale, 5 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Gauntlet gripping shield top
+        ctx.fillStyle = "#4a5a8a";
+        ctx.beginPath();
+        ctx.ellipse(0, -8 * scale, 4 * scale, 3.5 * scale, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#2a3a6a";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.stroke();
+        ctx.restore();
+
+        // === HAMMER (held by right arm, angled over shoulder) ===
+        ctx.save();
+        ctx.translate(cx + 13 * scale, cy + 2 * scale + bounce);
+        ctx.rotate(0.25);
+
+        // Wooden handle running through gauntlet
+        ctx.fillStyle = "#8b6914";
+        ctx.beginPath();
+        ctx.roundRect(-1.8 * scale, -28 * scale, 3.6 * scale, 32 * scale, 1 * scale);
+        ctx.fill();
+        ctx.strokeStyle = "#6b4904";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Gauntlet gripping the handle (mid-shaft)
+        ctx.fillStyle = "#4a5a8a";
+        ctx.beginPath();
+        ctx.ellipse(0, -2 * scale, 4.5 * scale, 4 * scale, 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#2a3a6a";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.stroke();
+
+        // Hammer head
+        const hammerGrad = ctx.createLinearGradient(-7 * scale, -34 * scale, 7 * scale, -28 * scale);
+        hammerGrad.addColorStop(0, "#2a3a5a");
+        hammerGrad.addColorStop(0.3, "#4a5a7a");
+        hammerGrad.addColorStop(0.5, "#6070a0");
+        hammerGrad.addColorStop(0.7, "#4a5a7a");
+        hammerGrad.addColorStop(1, "#2a3a5a");
+        ctx.fillStyle = hammerGrad;
+        ctx.beginPath();
+        ctx.roundRect(-7 * scale, -36 * scale, 14 * scale, 10 * scale, 2 * scale);
+        ctx.fill();
+        ctx.strokeStyle = "#1a2a4a";
+        ctx.lineWidth = 1 * scale;
+        ctx.stroke();
+
+        // Hammer face details
+        ctx.fillStyle = "#3a4a6a";
+        ctx.fillRect(-5 * scale, -34 * scale, 2 * scale, 6 * scale);
+        ctx.fillRect(3 * scale, -34 * scale, 2 * scale, 6 * scale);
+        ctx.restore();
+
         break;
       }
       case "rocky": {
+        cy += 4 * scale;
         // ROCKY THE SQUIRREL - Natural brown squirrel mascot holding glowing acorn
         const auraPulse = 0.5 + Math.sin(t * 2) * 0.3;
         const acornGlow = 0.6 + Math.sin(t * 3) * 0.4;
@@ -2651,6 +2653,7 @@ export const HeroSprite: React.FC<{
         break;
       }
       case "tenor": {
+        cy += 8 * scale;
         // TENOR - Bard with striped outfit, hat, singing with music notes
         const auraPulse = 0.5 + Math.sin(t * 2) * 0.3;
         const mouthVibrato = animated ? Math.sin(t * 5) * 0.5 : 0;
@@ -2989,6 +2992,7 @@ export const HeroSprite: React.FC<{
         break;
       }
       case "scott": {
+        cy += 4 * scale;
         // F. SCOTT FITZGERALD - Writer with brown wavy hair, glasses, teal sweater, holding gold book
         const auraPulse = 0.5 + Math.sin(t * 2) * 0.3;
         const letterFloat = animated ? t * 0.5 : 0;
@@ -3218,6 +3222,7 @@ export const HeroSprite: React.FC<{
         break;
       }
       case "captain": {
+        cy += 4 * scale;
         // CAPTAIN - Ornate Red/Grey Knight with Sword, Red Plume, Gold Accents
         const auraPulse = 0.5 + Math.sin(t * 2) * 0.3;
         const plumeWave = animated ? Math.sin(t * 3) * 0.1 : 0;
@@ -3231,61 +3236,6 @@ export const HeroSprite: React.FC<{
         ctx.beginPath();
         ctx.arc(cx, cy, 26 * scale, 0, Math.PI * 2);
         ctx.fill();
-
-        // === SWORD (behind body) ===
-        ctx.save();
-        ctx.translate(cx + 18 * scale, cy - 4 * scale + bounce);
-        ctx.rotate(0.5);
-
-        // Blade - silver with shine
-        const bladeGrad = ctx.createLinearGradient(-2 * scale, 0, 2 * scale, 0);
-        bladeGrad.addColorStop(0, "#8a9aaa");
-        bladeGrad.addColorStop(0.5, "#d0e0f0");
-        bladeGrad.addColorStop(1, "#8a9aaa");
-        ctx.fillStyle = bladeGrad;
-        ctx.beginPath();
-        ctx.moveTo(-1.5 * scale, -20 * scale);
-        ctx.lineTo(0, -26 * scale);
-        ctx.lineTo(1.5 * scale, -20 * scale);
-        ctx.lineTo(1.5 * scale, 4 * scale);
-        ctx.lineTo(-1.5 * scale, 4 * scale);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#6a7a8a";
-        ctx.lineWidth = 0.5 * scale;
-        ctx.stroke();
-
-        // Ornate crossguard - silver with red gems
-        ctx.fillStyle = "#a0a8b0";
-        ctx.beginPath();
-        ctx.roundRect(-6 * scale, 2 * scale, 12 * scale, 4 * scale, 1 * scale);
-        ctx.fill();
-        ctx.strokeStyle = "#c0c8d0";
-        ctx.lineWidth = 0.8 * scale;
-        ctx.stroke();
-
-        // Red gems on crossguard
-        ctx.fillStyle = "#cc3333";
-        ctx.shadowColor = "#ff4444";
-        ctx.shadowBlur = 3 * scale;
-        ctx.beginPath();
-        ctx.arc(-4 * scale, 4 * scale, 1.2 * scale, 0, Math.PI * 2);
-        ctx.arc(4 * scale, 4 * scale, 1.2 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Handle - dark red leather
-        ctx.fillStyle = "#6a2a1a";
-        ctx.beginPath();
-        ctx.roundRect(-2 * scale, 6 * scale, 4 * scale, 10 * scale, 1 * scale);
-        ctx.fill();
-
-        // Pommel - silver ball
-        ctx.fillStyle = "#a0a8b0";
-        ctx.beginPath();
-        ctx.arc(0, 18 * scale, 2.5 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
 
         // === FLOWING RED CAPE (behind body) ===
         const capeWave = animated ? Math.sin(t * 2) * 0.08 : 0;
@@ -3579,20 +3529,116 @@ export const HeroSprite: React.FC<{
         ctx.strokeStyle = "#5a5a5a";
         ctx.stroke();
 
-        // Small flag/banner behind (optional decorative)
+        // === SWORD (held by right arm) ===
+        ctx.save();
+        ctx.translate(cx + 14 * scale, cy + 10 * scale + bounce);
+        ctx.rotate(0.45);
+
+        // Blade - silver with shine
+        const bladeGrad = ctx.createLinearGradient(-1.5 * scale, 0, 1.5 * scale, 0);
+        bladeGrad.addColorStop(0, "#8a9aaa");
+        bladeGrad.addColorStop(0.5, "#d0e0f0");
+        bladeGrad.addColorStop(1, "#8a9aaa");
+        ctx.fillStyle = bladeGrad;
+        ctx.beginPath();
+        ctx.moveTo(-1.5 * scale, -24 * scale);
+        ctx.lineTo(0, -30 * scale);
+        ctx.lineTo(1.5 * scale, -24 * scale);
+        ctx.lineTo(1.5 * scale, -2 * scale);
+        ctx.lineTo(-1.5 * scale, -2 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#6a7a8a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Crossguard
+        ctx.fillStyle = "#a0a8b0";
+        ctx.beginPath();
+        ctx.roundRect(-5 * scale, -3 * scale, 10 * scale, 3 * scale, 1 * scale);
+        ctx.fill();
+        ctx.strokeStyle = "#c0c8d0";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.stroke();
+
+        // Red gems on crossguard
+        ctx.fillStyle = "#cc3333";
+        ctx.shadowColor = "#ff4444";
+        ctx.shadowBlur = 2 * scale;
+        ctx.beginPath();
+        ctx.arc(-3.5 * scale, -1.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.arc(3.5 * scale, -1.5 * scale, 1 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Handle grip
+        ctx.fillStyle = "#6a2a1a";
+        ctx.beginPath();
+        ctx.roundRect(-1.8 * scale, 0, 3.6 * scale, 8 * scale, 1 * scale);
+        ctx.fill();
+
+        // Pommel
+        ctx.fillStyle = "#a0a8b0";
+        ctx.beginPath();
+        ctx.arc(0, 10 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gauntlet gripping the handle
+        ctx.fillStyle = "#7a7a7a";
+        ctx.beginPath();
+        ctx.ellipse(0, 3 * scale, 4 * scale, 3.5 * scale, 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#a0a8b0";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.stroke();
+        ctx.restore();
+
+        // === FLAG (held by left hand, pole upright) ===
+        ctx.save();
+        ctx.translate(cx - 12 * scale, cy + 14 * scale + bounce);
+        ctx.rotate(-0.1);
+
+        // Flag pole
+        ctx.fillStyle = "#c0c8d0";
+        ctx.fillRect(-1 * scale, -38 * scale, 2 * scale, 40 * scale);
+        ctx.strokeStyle = "#888";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.strokeRect(-1 * scale, -38 * scale, 2 * scale, 40 * scale);
+
+        // Pennant triangle pointing left
         ctx.fillStyle = "#cc2222";
         ctx.beginPath();
-        ctx.moveTo(cx - 8 * scale, cy - 10 * scale + bounce);
-        ctx.lineTo(cx - 16 * scale, cy - 14 * scale + bounce);
-        ctx.lineTo(cx - 16 * scale, cy - 6 * scale + bounce);
+        ctx.moveTo(-1 * scale, -36 * scale);
+        ctx.lineTo(-14 * scale, -30 * scale);
+        ctx.lineTo(-1 * scale, -24 * scale);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = "#990000";
         ctx.lineWidth = 0.5 * scale;
         ctx.stroke();
+
+        // Gold finial on top
+        ctx.fillStyle = "#d4aa00";
+        ctx.beginPath();
+        ctx.arc(0, -39 * scale, 2 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#aa8800";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Gauntlet gripping the pole
+        ctx.fillStyle = "#7a7a7a";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 4 * scale, 3.5 * scale, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#a0a8b0";
+        ctx.lineWidth = 0.8 * scale;
+        ctx.stroke();
+        ctx.restore();
         break;
       }
       case "engineer": {
+        cy += 4 * scale;
         // ENGINEER - Tech Specialist with Goggles/Visor, Yellow Hard Hat, Green Fatigues, Electric Sparks
         const auraPulse = 0.5 + Math.sin(t * 2) * 0.3;
         const sparkFlash = animated ? Math.random() > 0.7 : false;
@@ -3726,10 +3772,10 @@ export const HeroSprite: React.FC<{
         // === ARMS WITH ELECTRICAL TOOLS ===
         const workMotion = animated ? Math.sin(t * 2.5) * 0.1 : 0;
 
-        // Left arm - holding some kind of device
+        // Left arm - holding multimeter/device
         ctx.save();
         ctx.translate(cx - 13 * scale, cy - 2 * scale + bounce);
-        ctx.rotate(-0.5 + workMotion);
+        ctx.rotate(-0.4 + workMotion);
 
         // Green fatigue sleeve
         ctx.fillStyle = "#4a6a4a";
@@ -3743,32 +3789,59 @@ export const HeroSprite: React.FC<{
         ctx.ellipse(0, 12 * scale, 4.5 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Work glove
-        ctx.fillStyle = "#5a4a3a";
+        // Device body (drawn before glove so glove overlaps it)
+        ctx.fillStyle = "#2a2a3a";
         ctx.beginPath();
-        ctx.ellipse(0, 16 * scale, 4 * scale, 5 * scale, 0.2, 0, Math.PI * 2);
+        ctx.roundRect(-3 * scale, 12 * scale, 6 * scale, 10 * scale, 1.5 * scale);
+        ctx.fill();
+        ctx.strokeStyle = "#1a1a2a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Device screen
+        ctx.fillStyle = `rgba(50, 200, 150, ${0.6 + electricPulse * 0.4})`;
+        ctx.shadowColor = "#32c896";
+        ctx.shadowBlur = 3 * scale;
+        ctx.fillRect(-2 * scale, 13 * scale, 4 * scale, 4 * scale);
+        ctx.shadowBlur = 0;
+
+        // Device antenna
+        ctx.fillStyle = "#6a6a7a";
+        ctx.fillRect(-0.5 * scale, 8 * scale, 1 * scale, 5 * scale);
+        ctx.fillStyle = "#ff4444";
+        ctx.beginPath();
+        ctx.arc(0, 7.5 * scale, 1 * scale, 0, Math.PI * 2);
         ctx.fill();
 
-        // Electric spark from hand
+        // Work glove gripping device (on top)
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 4.5 * scale, 4 * scale, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a3a2a";
+        ctx.lineWidth = 0.6 * scale;
+        ctx.stroke();
+
+        // Electric spark from device
         if (sparkFlash) {
           ctx.strokeStyle = "#66ccff";
           ctx.shadowColor = "#66ccff";
           ctx.shadowBlur = 4 * scale;
           ctx.lineWidth = 1.5 * scale;
           ctx.beginPath();
-          ctx.moveTo(-2 * scale, 20 * scale);
-          ctx.lineTo(-4 * scale, 24 * scale);
-          ctx.lineTo(-1 * scale, 22 * scale);
+          ctx.moveTo(-2 * scale, 22 * scale);
+          ctx.lineTo(-4 * scale, 26 * scale);
+          ctx.lineTo(-1 * scale, 24 * scale);
           ctx.lineTo(-3 * scale, 28 * scale);
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
         ctx.restore();
 
-        // Right arm - with tool/wrench
+        // Right arm - holding wrench
         ctx.save();
         ctx.translate(cx + 13 * scale, cy - 2 * scale + bounce);
-        ctx.rotate(0.5 - workMotion);
+        ctx.rotate(0.15 - workMotion);
 
         // Green fatigue sleeve
         ctx.fillStyle = "#4a6a4a";
@@ -3782,33 +3855,53 @@ export const HeroSprite: React.FC<{
         ctx.ellipse(0, 12 * scale, 4.5 * scale, 2.5 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Work glove gripping tool
-        ctx.fillStyle = "#5a4a3a";
-        ctx.beginPath();
-        ctx.ellipse(0, 16 * scale, 4 * scale, 5 * scale, -0.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Wrench/tool in hand
+        // Wrench handle (drawn before glove, extends up from hand)
         ctx.fillStyle = "#6a6a7a";
         ctx.beginPath();
-        ctx.roundRect(-1.5 * scale, 18 * scale, 3 * scale, 12 * scale, 1 * scale);
+        ctx.roundRect(-1.5 * scale, 6 * scale, 3 * scale, 14 * scale, 1 * scale);
         ctx.fill();
-        // Wrench head
-        ctx.beginPath();
-        ctx.roundRect(-3 * scale, 28 * scale, 6 * scale, 3 * scale, 1 * scale);
-        ctx.fill();
+        ctx.strokeStyle = "#5a5a6a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
 
-        // Electric spark from tool
+        // Wrench jaw (open-end at bottom)
+        ctx.fillStyle = "#7a7a8a";
+        ctx.beginPath();
+        ctx.moveTo(-3 * scale, 18 * scale);
+        ctx.lineTo(-3 * scale, 22 * scale);
+        ctx.lineTo(-0.5 * scale, 20 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(3 * scale, 18 * scale);
+        ctx.lineTo(3 * scale, 22 * scale);
+        ctx.lineTo(0.5 * scale, 20 * scale);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#5a5a6a";
+        ctx.lineWidth = 0.5 * scale;
+        ctx.stroke();
+
+        // Work glove gripping wrench (on top, at mid-handle)
+        ctx.fillStyle = "#5a4a3a";
+        ctx.beginPath();
+        ctx.ellipse(0, 16 * scale, 4.5 * scale, 4 * scale, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#4a3a2a";
+        ctx.lineWidth = 0.6 * scale;
+        ctx.stroke();
+
+        // Electric spark from wrench
         if (sparkFlash) {
           ctx.strokeStyle = "#66ccff";
           ctx.shadowColor = "#66ccff";
           ctx.shadowBlur = 4 * scale;
           ctx.lineWidth = 1.5 * scale;
           ctx.beginPath();
-          ctx.moveTo(2 * scale, 30 * scale);
-          ctx.lineTo(5 * scale, 32 * scale);
-          ctx.lineTo(3 * scale, 34 * scale);
-          ctx.lineTo(6 * scale, 38 * scale);
+          ctx.moveTo(2 * scale, 28 * scale);
+          ctx.lineTo(5 * scale, 30 * scale);
+          ctx.lineTo(3 * scale, 32 * scale);
+          ctx.lineTo(6 * scale, 36 * scale);
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
@@ -4905,7 +4998,7 @@ export const EnemySprite: React.FC<{
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
-    const cy = size / 2;
+    let cy = size / 2;
     const scale = size / 45;
     const t = time * 0.1;
     const bounce = animated ? Math.sin(t * 1.5) * 2 : 0;
@@ -6773,6 +6866,7 @@ export const EnemySprite: React.FC<{
         break;
       }
       case "archer": {
+        cy += 4 * scale;
         // SHADOW HUNTER - Dark elven ranger with spectral bow
         const drawPull = Math.sin(t * 2) * 0.15;
         const glowPulse = 0.6 + Math.sin(t * 2.5) * 0.4;
@@ -6950,6 +7044,7 @@ export const EnemySprite: React.FC<{
         break;
       }
       case "mage": {
+        cy += 4 * scale;
         // MAGE PROFESSOR - Powerful spellcaster with arcane staff
         const magicPulse = 0.6 + Math.sin(t * 3) * 0.4;
         const orbFloat = Math.sin(t * 2) * 2 * scale;
@@ -12004,11 +12099,11 @@ export const HeroAbilityIcon: React.FC<{
   const IconComponent = HERO_ABILITY_ICONS[type];
   const defaultColor = HERO_ABILITY_ICON_COLORS[type];
   const finalClassName = className || (useDefaultColor ? defaultColor : "");
-  
+
   if (!IconComponent) {
     return <Zap size={size} className={finalClassName || "text-yellow-300"} />;
   }
-  
+
   return <IconComponent size={size} className={finalClassName} />;
 };
 
