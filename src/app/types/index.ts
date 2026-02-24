@@ -731,6 +731,7 @@ export type DecorationCategory =
   | "skull"
   | "pottery"
   | "oasis_pool"
+  | "carnegie_lake"
   | "pyramid"
   | "obelisk"
   | "sphinx"
@@ -761,6 +762,7 @@ export type DecorationCategory =
   | "frozen_waterfall"
   | "aurora_crystal"
   | "snow_drift"
+  | "snow_lantern"
   // Volcanic
   | "lava_pool"
   | "obsidian_spike"
@@ -1002,8 +1004,15 @@ export type DecorationType =
   | "giant_sphinx"
   | "sphinx"
   | "oasis_pool"
+  | "carnegie_lake"
   | "ice_fortress"
   | "ice_throne"
+  | "frozen_waterfall"
+  | "aurora_crystal"
+  | "snow_lantern"
+  | "ice_bridge"
+  | "mountain_peak"
+  | "snow_drift"
   | "obsidian_castle"
   | "dark_throne"
   | "dark_barracks"
@@ -1025,7 +1034,32 @@ export type DecorationType =
   | "skeleton_pile"
   | "tombstone"
   | "broken_bridge"
-  | "frog";
+  | "frog"
+  // Desert additions
+  | "sarcophagus"
+  | "cobra_statue"
+  | "hieroglyph_wall"
+  | "pottery"
+  | "sand_pile"
+  | "treasure_chest"
+  // Volcanic additions
+  | "lava_fall"
+  | "obsidian_pillar"
+  | "fire_crystal"
+  | "skull_throne"
+  | "ember_rock"
+  | "volcano_rim"
+  // Swamp additions
+  | "glowing_runes"
+  | "hanging_cage"
+  | "poison_pool"
+  // Grassland additions
+  | "hedge"
+  | "campfire"
+  | "dock"
+  | "gate"
+  | "reeds"
+  | "fishing_spot";
 
 export interface Decoration {
   type: DecorationType;

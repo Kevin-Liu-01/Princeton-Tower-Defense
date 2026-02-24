@@ -222,11 +222,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   frosh: {
     name: "Writing Sem",
-    hp: 160,
-    speed: 0.35,
+    hp: 185,
+    speed: 0.38,
     bounty: 12,
     armor: 0,
     flying: false,
+    troopDamage: 22,
     desc: "The first hurdle. Persistence is key.",
     color: "#4ade80",
     size: 20,
@@ -235,11 +236,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   sophomore: {
     name: "Sophomore Slump",
-    hp: 300,
-    speed: 0.3,
+    hp: 345,
+    speed: 0.32,
     bounty: 18,
     armor: 0.1,
     flying: false,
+    troopDamage: 32,
     desc: "Heavy and demotivating. Harder to push through.",
     color: "#60a5fa",
     size: 22,
@@ -258,11 +260,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   junior: {
     name: "Junior Paper",
-    hp: 550,
-    speed: 0.28,
+    hp: 630,
+    speed: 0.3,
     bounty: 30,
     armor: 0.2,
     flying: false,
+    troopDamage: 48,
     desc: "A significant research obstacle. Requires focus.",
     color: "#c084fc",
     size: 24,
@@ -282,18 +285,19 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   senior: {
     name: "Senior Thesis",
-    hp: 950,
-    speed: 0.22,
+    hp: 1050,
+    speed: 0.24,
     bounty: 50,
     armor: 0.3,
     flying: false,
+    troopDamage: 65,
     desc: "The ultimate academic titan. Slow but massive.",
     color: "#f472b6",
     size: 28,
     category: "academic",
     traits: ["armored", "boss"],
     isBoss: true,
-    liveCost: 2,
+    liveCost: 3,
     abilities: [
       {
         type: "stun",
@@ -306,18 +310,19 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   gradstudent: {
     name: "Grad School App",
-    hp: 1400,
-    speed: 0.18,
+    hp: 1540,
+    speed: 0.2,
     bounty: 75,
     armor: 0.3,
     flying: false,
+    troopDamage: 85,
     desc: "An exhausting, soul-crushing process.",
     color: "#fb923c",
     size: 30,
     category: "academic",
     traits: ["armored", "boss"],
     isBoss: true,
-    liveCost: 3,
+    liveCost: 4,
     abilities: [
       {
         type: "poison",
@@ -331,18 +336,19 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   professor: {
     name: "Tenured Professor",
-    hp: 2200,
-    speed: 0.15,
+    hp: 2420,
+    speed: 0.16,
     bounty: 100,
     armor: 0.4,
     flying: false,
+    troopDamage: 110,
     desc: "Immutable and deeply entrenched.",
     color: "#ef4444",
     size: 32,
     category: "academic",
     traits: ["armored", "boss", "tower_debuffer"],
     isBoss: true,
-    liveCost: 4,
+    liveCost: 5,
     abilities: [
       {
         type: "tower_slow",
@@ -364,18 +370,19 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   dean: {
     name: "Dean of College",
-    hp: 3500,
-    speed: 0.14,
+    hp: 3850,
+    speed: 0.15,
     bounty: 150,
     armor: 0.45,
     flying: false,
+    troopDamage: 140,
     desc: "A massive administrative wall.",
     color: "#a855f7",
     size: 36,
     category: "academic",
     traits: ["armored", "boss", "tower_debuffer"],
     isBoss: true,
-    liveCost: 5,
+    liveCost: 6,
     abilities: [
       {
         type: "tower_disable",
@@ -398,11 +405,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   trustee: {
     name: "Board of Trustees",
-    hp: 7500,
-    speed: 0.11,
+    hp: 8250,
+    speed: 0.12,
     bounty: 300,
     armor: 0.55,
     flying: false,
+    troopDamage: 180,
     desc: "The final authority. Practically immovable.",
     color: "#eab308",
     size: 42,
@@ -410,8 +418,8 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["armored", "boss", "tower_debuffer", "aoe_attack"],
     isBoss: true,
     aoeRadius: 90,
-    aoeDamage: 75,
-    liveCost: 8,
+    aoeDamage: 110,
+    liveCost: 10,
     abilities: [
       {
         type: "tower_weaken",
@@ -437,8 +445,8 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   mascot: {
     name: "Rival Mascot",
-    hp: 450,
-    speed: 0.5,
+    hp: 520,
+    speed: 0.53,
     bounty: 60,
     armor: 0,
     flying: true,
@@ -453,15 +461,15 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   archer: {
     name: "P-Rade Marshall",
-    hp: 250,
-    speed: 0.28,
+    hp: 290,
+    speed: 0.3,
     bounty: 25,
     armor: 0.1,
     flying: false,
     isRanged: true,
     range: 220,
     attackSpeed: 2200,
-    projectileDamage: 30,
+    projectileDamage: 45,
     desc: "Directs traffic and shoots order-enforcing arrows.",
     color: "#10b981",
     size: 22,
@@ -478,7 +486,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     isRanged: true,
     range: 180,
     attackSpeed: 2800,
-    projectileDamage: 55,
+    projectileDamage: 80,
     desc: "Throws volatile organic chemistry flasks.",
     color: "#8b5cf6",
     size: 24,
@@ -505,14 +513,14 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     isRanged: true,
     range: 240,
     attackSpeed: 4500,
-    projectileDamage: 120,
+    projectileDamage: 175,
     desc: "Heavy burdens launched from a distance.",
     color: "#854d0e",
     size: 34,
     category: "ranged",
     traits: ["ranged", "armored", "aoe_attack"],
     aoeRadius: 70,
-    aoeDamage: 70,
+    aoeDamage: 150,
     liveCost: 2,
   },
   warlock: {
@@ -525,7 +533,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     isRanged: true,
     range: 180,
     attackSpeed: 2400,
-    projectileDamage: 70,
+    projectileDamage: 100,
     desc: "Promises high salaries while draining your spirit.",
     color: "#4c1d95",
     size: 28,
@@ -561,7 +569,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     isRanged: true,
     range: 200,
     attackSpeed: 3500,
-    projectileDamage: 65,
+    projectileDamage: 95,
     desc: "Armored patrol with high-impact bolts.",
     color: "#78350f",
     size: 24,
@@ -587,7 +595,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     isRanged: true,
     range: 160,
     attackSpeed: 2000,
-    projectileDamage: 40,
+    projectileDamage: 60,
     desc: "Hypnotic movements that curse your defenders.",
     color: "#be185d",
     size: 22,
@@ -645,9 +653,9 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["flying", "boss", "aoe_attack"],
     isBoss: true,
     aoeRadius: 70,
-    aoeDamage: 60,
+    aoeDamage: 95,
     targetsTroops: true,
-    troopDamage: 45,
+    troopDamage: 70,
     troopAttackSpeed: 1800,
     liveCost: 3,
     abilities: [
@@ -675,7 +683,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "flying",
     traits: ["flying", "magic_resist", "armored"],
     targetsTroops: true,
-    troopDamage: 30,
+    troopDamage: 48,
     troopAttackSpeed: 2000,
     liveCost: 2,
     abilities: [
@@ -700,6 +708,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 65,
     armor: 0,
     flying: false,
+    troopDamage: 72,
     desc: "High energy ground unit charging forward.",
     color: "#dc2626",
     size: 26,
@@ -723,6 +732,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 100,
     armor: 0.2,
     flying: false,
+    troopDamage: 88,
     desc: "Raises 'rejected' spirits to haunt the path.",
     color: "#1e1b4b",
     size: 30,
@@ -750,6 +760,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 450,
     armor: 0.65,
     flying: false,
+    troopDamage: 160,
     desc: "The stone guardian itself. Near-infinite HP.",
     color: "#57534e",
     size: 44,
@@ -757,7 +768,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 110,
-    aoeDamage: 120,
+    aoeDamage: 180,
     liveCost: 10,
     abilities: [
       {
@@ -786,6 +797,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 120,
     armor: 0.5,
     flying: false,
+    troopDamage: 115,
     desc: "A powerful figure backed by immense resources.",
     color: "#18181b",
     size: 32,
@@ -818,11 +830,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   cultist: {
     name: "Finals Week Cultist",
-    hp: 280,
-    speed: 0.38,
+    hp: 320,
+    speed: 0.4,
     bounty: 22,
     armor: 0.05,
     flying: false,
+    troopDamage: 38,
     desc: "Sleep-deprived zealots chanting forbidden study rituals.",
     color: "#7c2d12",
     size: 21,
@@ -847,6 +860,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 40,
     armor: 0.15,
     flying: false,
+    troopDamage: 58,
     desc: "Spreads infectious misery wherever it walks. Keep your distance.",
     color: "#65a30d",
     size: 25,
@@ -904,6 +918,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 85,
     armor: 0.25,
     flying: false,
+    troopDamage: 95,
     desc: "Forged from the flames of overwork and impossible deadlines.",
     color: "#dc2626",
     size: 30,
@@ -938,6 +953,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 45,
     armor: 0,
     flying: false,
+    troopDamage: 52,
     desc: "Lightning fast, sprints past defenders without stopping.",
     color: "#1e1b4b",
     size: 20,
@@ -999,7 +1015,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["armored", "boss", "aoe_attack"],
     isBoss: true,
     aoeRadius: 100,
-    aoeDamage: 90,
+    aoeDamage: 135,
     liveCost: 4,
     abilities: [
       {
@@ -1026,7 +1042,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["armored", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 95,
-    aoeDamage: 100,
+    aoeDamage: 150,
     liveCost: 6,
     abilities: [
       {
@@ -1064,7 +1080,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     category: "flying",
     traits: ["flying", "fast", "magic_resist"],
     targetsTroops: true,
-    troopDamage: 35,
+    troopDamage: 55,
     troopAttackSpeed: 1500,
     liveCost: 2,
     abilities: [
@@ -1101,9 +1117,9 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     traits: ["flying", "boss", "aoe_attack", "tower_debuffer"],
     isBoss: true,
     aoeRadius: 120,
-    aoeDamage: 150,
+    aoeDamage: 220,
     targetsTroops: true,
-    troopDamage: 80,
+    troopDamage: 120,
     troopAttackSpeed: 2200,
     liveCost: 10,
     abilities: [
@@ -1153,11 +1169,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   },
   athlete: {
     name: "Varsity Runner",
-    hp: 180,
-    speed: 0.55,
+    hp: 210,
+    speed: 0.58,
     bounty: 10,
     armor: 0,
     flying: false,
+    troopDamage: 28,
     desc: "Fast and agile, sprinting past troops without stopping.",
     color: "#f97316",
     size: 20,
@@ -1170,11 +1187,12 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
   // =============================================================================
   protestor: {
     name: "Campus Protestor",
-    hp: 200,
-    speed: 0.32,
+    hp: 230,
+    speed: 0.34,
     bounty: 12,
     armor: 0.15,
     flying: false,
+    troopDamage: 35,
     desc: "Passionate and determined. Carries a sign that provides minor protection.",
     color: "#ef4444",
     size: 22,
@@ -1202,6 +1220,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 14,
     armor: 0.2,
     flying: false,
+    troopDamage: 28,
     desc: "Shambling swamp horror covered in toxic muck. Slow but resilient.",
     color: "#365314",
     size: 24,
@@ -1249,6 +1268,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 25,
     armor: 0.25,
     flying: false,
+    troopDamage: 55,
     desc: "Massive brute covered in parasitic growths. Regenerates slowly.",
     color: "#4d7c0f",
     size: 30,
@@ -1275,6 +1295,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 11,
     armor: 0.1,
     flying: false,
+    troopDamage: 24,
     desc: "Cursed wanderer of the endless sands, bound by ancient dark pacts.",
     color: "#a16207",
     size: 22,
@@ -1288,6 +1309,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 18,
     armor: 0.3,
     flying: false,
+    troopDamage: 42,
     desc: "Armored desert predator with venomous stinger. Heavily protected.",
     color: "#78350f",
     size: 26,
@@ -1311,6 +1333,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 9,
     armor: 0.15,
     flying: false,
+    troopDamage: 26,
     desc: "Cursed beetle that scurries past defenders too quickly to catch.",
     color: "#fbbf24",
     size: 16,
@@ -1352,13 +1375,14 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 30,
     armor: 0.35,
     flying: false,
+    troopDamage: 62,
     desc: "Primordial ice titan. Massive, furry, and terrifying.",
     color: "#e0f2fe",
     size: 32,
     category: "nature",
     traits: ["armored", "aoe_attack"],
     aoeRadius: 70,
-    aoeDamage: 55,
+    aoeDamage: 85,
     liveCost: 2,
     abilities: [
       {
@@ -1390,7 +1414,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     isRanged: true,
     range: 200,
     attackSpeed: 2000,
-    projectileDamage: 25,
+    projectileDamage: 40,
     desc: "Ancient cryomancer wielding devastating ice magic.",
     color: "#60a5fa",
     size: 24,
@@ -1788,10 +1812,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 12, y: 20 },
     { x: 12, y: 12 },
     { x: 18, y: 12 },
-    { x: 18, y: 20 },
-    { x: 24, y: 20 },
-    { x: 24, y: 12 },
-    { x: 32, y: 12 },
+    { x: 18, y: 22 },
+    { x: 24, y: 22 },
+    { x: 24, y: 6 },
+    { x: 32, y: 6 },
   ],
   witch_hut: [
     { x: 15, y: -2 },
@@ -1833,13 +1857,19 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
   // =====================
   oasis: [
     { x: -2, y: 10 },
-    { x: 6, y: 10 },
+    { x: 2, y: 10 },
+    { x: 2, y: 18 },
     { x: 6, y: 18 },
-    { x: 12, y: 18 },
-    { x: 18, y: 18 },
-    { x: 18, y: 10 },
-    { x: 24, y: 10 },
-    { x: 30, y: 10 },
+    { x: 6, y: 11 },
+    { x: 10, y: 11 },
+    { x: 10, y: 20 },
+    { x: 20, y: 20 },
+    { x: 20, y: 11 },
+    { x: 15, y: 11 },
+    { x: 15, y: 4 },
+    { x: 24, y: 4 },
+    { x: 24, y: 9 },
+    { x: 30, y: 9 },
     { x: 30, y: 17 },
     { x: 32, y: 18 },
     { x: 36, y: 18 },
@@ -2069,6 +2099,8 @@ export const LEVEL_DATA: Record<
       { type: "cart", pos: { x: 2, y: 20 }, variant: 0 },
       { type: "tent", pos: { x: 18, y: 18 }, variant: 0 },
       { type: "campfire", pos: { x: 10, y: 16 }, variant: 0 },
+      { type: "hedge", pos: { x: 22, y: 6 }, variant: 0 },
+      { type: "reeds", pos: { x: 28, y: 14 }, variant: 0 },
     ],
   },
   carnegie: {
@@ -2084,10 +2116,10 @@ export const LEVEL_DATA: Record<
     decorations: [
       // Lake feature near path center (path: x:9-26, y:-2 to 32)
       { type: "deep_water", pos: { x: 9, y: 17 }, variant: 0, size: 2 },
-      { type: "deep_water", pos: { x: 11, y: 24 }, variant: 0, size: 4 },
+      // { type: "deep_water", pos: { x: 11, y: 24 }, variant: 0, size: 4 },
 
-      { type: "oasis_pool", pos: { x: 10, y: 23 }, variant: 0, size: 4 },
-      { type: "deep_water", pos: { x: 9, y: 23 }, variant: 0, size: 3 },
+      { type: "carnegie_lake", pos: { x: 10, y: 23 }, variant: 0, size: 2.5 },
+      // { type: "deep_water", pos: { x: 9, y: 23 }, variant: 0, size: 3 },
 
       // Trees around the map
       { type: "tree", pos: { x: 4, y: 4 }, variant: 2 },
@@ -2118,6 +2150,8 @@ export const LEVEL_DATA: Record<
       { type: "flowers", pos: { x: 22, y: 8 }, variant: 1 },
       { type: "rock", pos: { x: 2, y: 8 }, variant: 0 },
       { type: "rock", pos: { x: 28, y: 16 }, variant: 1 },
+      { type: "dock", pos: { x: 14, y: 22 }, variant: 0 },
+      { type: "campfire", pos: { x: 26, y: 20 }, variant: 0 },
     ],
     previewImage: "/images/previews/carnegie.png",
   },
@@ -2209,6 +2243,9 @@ export const LEVEL_DATA: Record<
       { type: "tentacle", pos: { x: 14, y: 6 }, variant: 1, size: 1.25 },
       { type: "skeleton", pos: { x: 10, y: 24 }, variant: 0 },
       { type: "bones", pos: { x: 18, y: 8 }, variant: 0 },
+      { type: "poison_pool", pos: { x: 26, y: 20 }, variant: 0 },
+      { type: "glowing_runes", pos: { x: 18, y: 24 }, variant: 0 },
+      { type: "hanging_cage", pos: { x: 8, y: 10 }, variant: 0 },
     ],
     previewImage: "/images/previews/murky_bog.png",
   },
@@ -2256,6 +2293,12 @@ export const LEVEL_DATA: Record<
       { type: "bones", pos: { x: 28, y: 14 }, variant: 1 },
       { type: "candles", pos: { x: 16, y: 6 }, variant: 0 },
       { type: "ritual_circle", pos: { x: 24, y: 26 }, variant: 0 },
+      { type: "hanging_cage", pos: { x: 2, y: 10 }, variant: 0 },
+      { type: "hanging_cage", pos: { x: 28, y: 22 }, variant: 1 },
+      { type: "poison_pool", pos: { x: 12, y: 26 }, variant: 0 },
+      { type: "glowing_runes", pos: { x: 8, y: 14 }, variant: 0 },
+      { type: "idol_statue", pos: { x: 26, y: 4 }, variant: 0 },
+      { type: "skeleton_pile", pos: { x: 14, y: 24 }, variant: 0 },
     ],
     hazards: [{ type: "poison_fog", pos: { x: 18, y: 15.5 }, radius: 2 }],
     previewImage: "/images/previews/witch_hut.png",
@@ -2306,6 +2349,10 @@ export const LEVEL_DATA: Record<
       { type: "bones", pos: { x: 14, y: 12 }, variant: 0 },
       { type: "lily_pads", pos: { x: 6, y: 22 }, variant: 0 },
       { type: "fog_patch", pos: { x: 16, y: 14 }, variant: 0 },
+      { type: "glowing_runes", pos: { x: 12, y: 26 }, variant: 0 },
+      { type: "glowing_runes", pos: { x: 24, y: 22 }, variant: 1 },
+      { type: "hanging_cage", pos: { x: 20, y: 4 }, variant: 0 },
+      { type: "poison_pool", pos: { x: 8, y: 24 }, variant: 0 },
     ],
     hazards: [{ type: "poison_fog", pos: { x: 10, y: 23 }, radius: 2.5 }],
     previewImage: "/images/previews/sunken_temple.png",
@@ -2324,14 +2371,15 @@ export const LEVEL_DATA: Record<
     difficulty: 1,
     startingPawPoints: 425, // Beacon boost helps - ranged enemies require planning
     specialTower: {
-      pos: { x: 19, y: 10.5 },
+      pos: { x: 22, y: 9.5 },
       type: "beacon",
     },
     decorations: [
       // Desert features near path (path: x:-2 to 32, y:10 to 18)
       { type: "pyramid", pos: { x: 16, y: 4 }, variant: 0, size: 2 },
       { type: "sphinx", pos: { x: 4, y: 4 }, variant: 0 },
-      { type: "oasis_pool", pos: { x: 12, y: 14 }, variant: 0, size: 2 },
+      { type: "oasis_pool", pos: { x: 16, y: 17 }, variant: 0, size: 2 },
+
       // Palm trees around
       { type: "palm", pos: { x: 2, y: 8 }, variant: 0 },
       { type: "palm", pos: { x: 8, y: 6 }, variant: 1 },
@@ -2355,6 +2403,9 @@ export const LEVEL_DATA: Record<
       { type: "bones", pos: { x: 24, y: 4 }, variant: 0 },
       { type: "tent", pos: { x: 2, y: 20 }, variant: 0 },
       { type: "campfire", pos: { x: 28, y: 20 }, variant: 0 },
+      { type: "cobra_statue", pos: { x: 20, y: 4 }, variant: 0 },
+      { type: "sand_pile", pos: { x: 18, y: 24 }, variant: 0 },
+      { type: "treasure_chest", pos: { x: 24, y: 18 }, variant: 0 },
     ],
     previewImage: "/images/previews/oasis.png",
   },
@@ -2406,6 +2457,11 @@ export const LEVEL_DATA: Record<
       { type: "skull", pos: { x: 10, y: 16 }, variant: 0 },
       { type: "bones", pos: { x: 22, y: 6 }, variant: 0 },
       { type: "pottery", pos: { x: 18, y: 24 }, variant: 1 },
+      { type: "hieroglyph_wall", pos: { x: 4, y: 16 }, variant: 0 },
+      { type: "hieroglyph_wall", pos: { x: 28, y: 18 }, variant: 1 },
+      { type: "cobra_statue", pos: { x: 16, y: 8 }, variant: 0 },
+      { type: "treasure_chest", pos: { x: 20, y: 22 }, variant: 0 },
+      { type: "sand_pile", pos: { x: 14, y: 26 }, variant: 0 },
     ],
     previewImage: "/images/previews/pyramid.png",
   },
@@ -2452,6 +2508,12 @@ export const LEVEL_DATA: Record<
       { type: "bones", pos: { x: 18, y: 6 }, variant: 0 },
       { type: "torch", pos: { x: 12, y: 8 }, variant: 0 },
       { type: "torch", pos: { x: 20, y: 10 }, variant: 1 },
+      { type: "hieroglyph_wall", pos: { x: 4, y: 10 }, variant: 0 },
+      { type: "hieroglyph_wall", pos: { x: 28, y: 16 }, variant: 1 },
+      { type: "cobra_statue", pos: { x: 18, y: 22 }, variant: 0 },
+      { type: "cobra_statue", pos: { x: 10, y: 22 }, variant: 1 },
+      { type: "treasure_chest", pos: { x: 6, y: 18 }, variant: 0 },
+      { type: "pottery", pos: { x: 26, y: 20 }, variant: 0 },
     ],
     hazards: [{ type: "quicksand", pos: { x: 13, y: 14 }, radius: 1.5 }],
     previewImage: "/images/previews/sphinx.png",
@@ -2474,40 +2536,46 @@ export const LEVEL_DATA: Record<
       type: "beacon",
     },
     decorations: [
-      // Pine trees around expanded path (path: x:-2 to 32, y:8 to 18)
+      // Pine trees scattered around the glacier path
       { type: "pine_tree", pos: { x: 4, y: 4 }, variant: 0 },
       { type: "pine_tree", pos: { x: 14, y: 4 }, variant: 1 },
       { type: "pine_tree", pos: { x: 24, y: 4 }, variant: 2 },
       { type: "pine_tree", pos: { x: 4, y: 22 }, variant: 0 },
       { type: "pine_tree", pos: { x: 16, y: 24 }, variant: 1 },
       { type: "pine_tree", pos: { x: 28, y: 22 }, variant: 2 },
-      // Ice crystals - scattered throughout with varied sizes
-      { type: "ice_fortress", pos: { x: 8, y: 6 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 20, y: 6 }, variant: 1, size: 2 },
-      { type: "ice_fortress", pos: { x: 4, y: 18 }, variant: 2, size: 1 },
-      { type: "ice_fortress", pos: { x: 2, y: 4 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 28, y: 4 }, variant: 1, size: 1 },
-      { type: "ice_fortress", pos: { x: 12, y: 2 }, variant: 2, size: 1 },
-      { type: "ice_fortress", pos: { x: 24, y: 16 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 8, y: 24 }, variant: 1, size: 1 },
-      { type: "ice_fortress", pos: { x: 30, y: 16 }, variant: 2, size: 1 },
-      // Ice thrones - majestic focal points
+      // Ice crystal formations
+      { type: "ice_crystal", pos: { x: 8, y: 6 }, variant: 0, size: 1 },
+      { type: "ice_crystal", pos: { x: 28, y: 4 }, variant: 1, size: 1 },
+      { type: "ice_crystal", pos: { x: 12, y: 2 }, variant: 2, size: 1 },
+      // Ice fortress as major landmark
+      { type: "ice_fortress", pos: { x: 20, y: 6 }, variant: 0, size: 2 },
+      { type: "ice_fortress", pos: { x: 4, y: 18 }, variant: 1, size: 1 },
+      // Frozen waterfall - dramatic centerpiece
+      { type: "frozen_waterfall", pos: { x: 30, y: 8 }, variant: 0, size: 2 },
+      // Aurora crystal - magical glow
+      { type: "aurora_crystal", pos: { x: 2, y: 4 }, variant: 0, size: 1 },
+      { type: "aurora_crystal", pos: { x: 24, y: 16 }, variant: 1, size: 1 },
+      // Ice throne focal point
       { type: "ice_throne", pos: { x: 10, y: 4 }, variant: 0, size: 2 },
-      { type: "ice_throne", pos: { x: 26, y: 6 }, variant: 1, size: 2 },
-      { type: "ice_throne", pos: { x: 2, y: 20 }, variant: 2, size: 1 },
-      { type: "ice_throne", pos: { x: 15, y: 4 }, variant: 0, size: 2 },
       // Frozen ponds
       { type: "frozen_pond", pos: { x: 14, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 26, y: 12 }, variant: 1, size: 2 },
+      // Snow lanterns along path edges
+      { type: "snow_lantern", pos: { x: 6, y: 8 }, variant: 0, size: 1 },
+      { type: "snow_lantern", pos: { x: 22, y: 8 }, variant: 1, size: 1 },
+      { type: "snow_lantern", pos: { x: 14, y: 20 }, variant: 0, size: 1 },
+      // Icicle formations
+      { type: "icicles", pos: { x: 18, y: 4 }, variant: 0 },
+      { type: "icicles", pos: { x: 12, y: 22 }, variant: 1 },
+      { type: "icicles", pos: { x: 30, y: 16 }, variant: 0 },
       // Snow decorations
       { type: "snow_pile", pos: { x: 2, y: 12 }, variant: 0 },
       { type: "snow_pile", pos: { x: 22, y: 20 }, variant: 1 },
       { type: "snowman", pos: { x: 10, y: 20 }, variant: 0 },
       { type: "snowman", pos: { x: 28, y: 10 }, variant: 1 },
-      { type: "icicles", pos: { x: 18, y: 4 }, variant: 0 },
-      { type: "icicles", pos: { x: 12, y: 22 }, variant: 1 },
-      // Other decorations
+      // Frozen soldier and battlefield remnants
       { type: "frozen_soldier", pos: { x: 2, y: 16 }, variant: 0 },
+      { type: "broken_wall", pos: { x: 8, y: 24 }, variant: 0 },
       { type: "bones", pos: { x: 26, y: 18 }, variant: 1 },
     ],
     previewImage: "/images/previews/glacier.png",
@@ -2527,45 +2595,54 @@ export const LEVEL_DATA: Record<
       type: "barracks",
     },
     decorations: [
-      // Ice fortresses and ruins (path: x:10-26, y:-2 to 32)
+      // Grand frozen gate - fortress entrance
+      { type: "frozen_gate", pos: { x: 14, y: 4 }, variant: 0, size: 2 },
+      // Ice fortresses flanking the entrance
       { type: "ice_fortress", pos: { x: 6, y: 4 }, variant: 0, size: 2 },
       { type: "ice_fortress", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
+      // Ruined temple in the courtyard
       { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 0, size: 2 },
-      { type: "frozen_gate", pos: { x: 12, y: 12 }, variant: 0 },
-      // Ice thrones - commanding positions among the ruins
+      // Ice thrones - commanding positions
       { type: "ice_throne", pos: { x: 4, y: 8 }, variant: 0, size: 3 },
       { type: "ice_throne", pos: { x: 26, y: 8 }, variant: 1, size: 2 },
-      { type: "ice_throne", pos: { x: 8, y: 24 }, variant: 2, size: 2 },
-      { type: "ice_throne", pos: { x: 24, y: 26 }, variant: 0, size: 1 },
-      { type: "ice_throne", pos: { x: 16, y: 26 }, variant: 1, size: 2 },
-      // Ice crystals - scattered throughout fortress ruins
-      { type: "ice_fortress", pos: { x: 12, y: 2 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 20, y: 6 }, variant: 1, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 2, y: 6 }, variant: 2, size: 0.5 },
-      { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 6, y: 14 }, variant: 1, size: 1 },
-      { type: "ice_fortress", pos: { x: 26, y: 18 }, variant: 2, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 2, y: 22 }, variant: 0, size: 0.5 },
-      { type: "ice_fortress", pos: { x: 9, y: 15 }, variant: 1, size: 1 },
-      { type: "ice_fortress", pos: { x: 30, y: 12 }, variant: 2, size: 1 },
-      { type: "ice_fortress", pos: { x: 14, y: 2 }, variant: 0, size: 0.5 },
-      // Broken walls along path
-      { type: "broken_wall", pos: { x: 6, y: 10 }, variant: 0 },
-      { type: "broken_wall", pos: { x: 20, y: 14 }, variant: 1 },
-      { type: "broken_wall", pos: { x: 24, y: 22 }, variant: 2 },
-      // Frozen soldiers
-      { type: "frozen_soldier", pos: { x: 8, y: 16 }, variant: 0 },
-      { type: "frozen_soldier", pos: { x: 22, y: 10 }, variant: 1 },
+      // Aurora crystals illuminating the fortress ruins
+      { type: "aurora_crystal", pos: { x: 8, y: 24 }, variant: 0, size: 2 },
+      { type: "aurora_crystal", pos: { x: 24, y: 26 }, variant: 1, size: 1 },
+      { type: "aurora_crystal", pos: { x: 2, y: 6 }, variant: 2, size: 1 },
+      // Ice crystals scattered in the ruins
+      { type: "ice_crystal", pos: { x: 12, y: 2 }, variant: 0, size: 1 },
+      { type: "ice_crystal", pos: { x: 28, y: 6 }, variant: 1, size: 1 },
+      { type: "ice_crystal", pos: { x: 6, y: 14 }, variant: 2, size: 1 },
+      { type: "ice_crystal", pos: { x: 30, y: 12 }, variant: 0, size: 1 },
+      // Frozen waterfall on fortress wall
+      { type: "frozen_waterfall", pos: { x: 2, y: 22 }, variant: 0, size: 1 },
+      // Snow lanterns along fortress corridors
+      { type: "snow_lantern", pos: { x: 9, y: 15 }, variant: 0, size: 1 },
+      { type: "snow_lantern", pos: { x: 20, y: 6 }, variant: 1, size: 1 },
+      { type: "snow_lantern", pos: { x: 16, y: 26 }, variant: 0, size: 1 },
+      // Broken walls along path - fortress damage
+      { type: "broken_wall", pos: { x: 6, y: 10 }, variant: 0, size: 1 },
+      { type: "broken_wall", pos: { x: 20, y: 14 }, variant: 1, size: 1 },
+      { type: "broken_wall", pos: { x: 24, y: 22 }, variant: 2, size: 1 },
+      // Frozen soldiers and battle remnants
+      { type: "frozen_soldier", pos: { x: 8, y: 16 }, variant: 0, size: 1 },
+      { type: "frozen_soldier", pos: { x: 22, y: 10 }, variant: 1, size: 1 },
+      { type: "frozen_soldier", pos: { x: 26, y: 18 }, variant: 0, size: 1 },
       { type: "battle_crater", pos: { x: 14, y: 18 }, variant: 0 },
       { type: "battle_crater", pos: { x: 24, y: 16 }, variant: 1 },
-      // Pine trees around
+      // Frozen pond in fortress courtyard
+      { type: "frozen_pond", pos: { x: 14, y: 2 }, variant: 0, size: 1 },
+      // Icicle formations on fortress ruins
+      { type: "icicles", pos: { x: 18, y: 8 }, variant: 0, size: 1 },
+      { type: "icicles", pos: { x: 10, y: 20 }, variant: 1, size: 1 },
+      // Pine trees around fortress perimeter
       { type: "pine_tree", pos: { x: 4, y: 18 }, variant: 0 },
       { type: "pine_tree", pos: { x: 4, y: 26 }, variant: 1 },
       { type: "pine_tree", pos: { x: 28, y: 14 }, variant: 2 },
       { type: "pine_tree", pos: { x: 28, y: 24 }, variant: 0 },
       // Snow features
       { type: "snow_pile", pos: { x: 6, y: 24 }, variant: 0 },
-      { type: "icicles", pos: { x: 18, y: 8 }, variant: 0 },
+      { type: "snowman", pos: { x: 30, y: 20 }, variant: 0 },
     ],
     hazards: [{ type: "ice_sheet", pos: { x: 18, y: 16 }, radius: 2 }],
     previewImage: "/images/previews/fortress.png",
@@ -2587,48 +2664,55 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
-      // Grand ice throne centerpiece (paths: x:-2 to 35, y:10 to 22)
+      // Grand ice throne centerpiece - the summit crown
       { type: "ice_throne", pos: { x: 10, y: 7 }, variant: 0, size: 3 },
-      // Ice fortresses at corners
-      { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 0 },
-      { type: "ice_fortress", pos: { x: 27, y: 6 }, variant: 1, size: 2 },
-      { type: "ice_fortress", pos: { x: 4, y: 22 }, variant: 2 },
-      { type: "ice_fortress", pos: { x: 26, y: 22 }, variant: 0 },
-      // Frozen ponds central
+      // Frozen waterfall - dramatic cliff cascade
+      { type: "frozen_waterfall", pos: { x: 4, y: 6 }, variant: 0, size: 2 },
+      { type: "frozen_waterfall", pos: { x: 27, y: 6 }, variant: 1, size: 2 },
+      // Aurora crystals at the peak - magical energy source
+      { type: "aurora_crystal", pos: { x: 16, y: 10 }, variant: 0, size: 2 },
+      { type: "aurora_crystal", pos: { x: 8, y: 24 }, variant: 1, size: 2 },
+      { type: "aurora_crystal", pos: { x: 32, y: 10 }, variant: 2, size: 1 },
+      // Frozen gate at mountain pass
+      { type: "frozen_gate", pos: { x: 28, y: 3 }, variant: 0, size: 2 },
+      // Ice fortresses guarding the peak
+      { type: "ice_fortress", pos: { x: 4, y: 22 }, variant: 0, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 26, y: 22 }, variant: 1, size: 1.5 },
+      // Frozen ponds - mountain lakes
       { type: "frozen_pond", pos: { x: 10, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 22, y: 14 }, variant: 1, size: 2 },
-      // Multiple ice thrones - the summit is crowned with frozen majesty
-      { type: "ice_throne", pos: { x: 8, y: 8 }, variant: 0, size: 2 },
-      { type: "ice_throne", pos: { x: 16, y: 10 }, variant: 1, size: 2 },
-      { type: "ice_throne", pos: { x: 2, y: 4 }, variant: 2, size: 1 },
-      { type: "ice_throne", pos: { x: 28, y: 3 }, variant: 0, size: 2 },
-      { type: "ice_throne", pos: { x: 8, y: 24 }, variant: 1, size: 2 },
-      { type: "ice_throne", pos: { x: 32, y: 10 }, variant: 2, size: 1 },
-      // Ice crystals - abundant across the frozen peak
-      { type: "ice_fortress", pos: { x: 6, y: 14 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 12, y: 9 }, variant: 1, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 26, y: 16 }, variant: 2, size: 1 },
-      { type: "ice_fortress", pos: { x: 4, y: 2 }, variant: 0, size: 0.5 },
-      { type: "ice_fortress", pos: { x: 24, y: 2 }, variant: 1, size: 1 },
-      { type: "ice_fortress", pos: { x: 10, y: 2 }, variant: 2, size: 1 },
-      { type: "ice_fortress", pos: { x: 32, y: 6 }, variant: 0, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 2, y: 16 }, variant: 1, size: 0.5 },
-      { type: "ice_fortress", pos: { x: 30, y: 14 }, variant: 2, size: 1 },
-      { type: "ice_fortress", pos: { x: 16, y: 24 }, variant: 0, size: 1 },
-      { type: "ice_fortress", pos: { x: 30, y: 24 }, variant: 1, size: 0.5 },
-      { type: "ice_fortress", pos: { x: 6, y: 8 }, variant: 2, size: 0.5 },
-      // Pine trees
+      // Ice crystal formations
+      { type: "ice_crystal", pos: { x: 6, y: 14 }, variant: 0, size: 1 },
+      { type: "ice_crystal", pos: { x: 12, y: 9 }, variant: 1, size: 1.5 },
+      { type: "ice_crystal", pos: { x: 26, y: 16 }, variant: 2, size: 1 },
+      { type: "ice_crystal", pos: { x: 4, y: 2 }, variant: 0, size: 1 },
+      { type: "ice_crystal", pos: { x: 24, y: 2 }, variant: 1, size: 1 },
+      { type: "ice_crystal", pos: { x: 30, y: 14 }, variant: 2, size: 1 },
+      // Snow lanterns marking the summit path
+      { type: "snow_lantern", pos: { x: 10, y: 2 }, variant: 0, size: 1 },
+      { type: "snow_lantern", pos: { x: 2, y: 16 }, variant: 1, size: 1 },
+      { type: "snow_lantern", pos: { x: 16, y: 24 }, variant: 0, size: 1 },
+      { type: "snow_lantern", pos: { x: 30, y: 24 }, variant: 1, size: 1 },
+      // Icicle formations on mountain rocks
+      { type: "icicles", pos: { x: 10, y: 6 }, variant: 0, size: 1 },
+      { type: "icicles", pos: { x: 20, y: 4 }, variant: 1, size: 1 },
+      { type: "icicles", pos: { x: 32, y: 6 }, variant: 0, size: 1 },
+      // Broken walls - ancient defenses
+      { type: "broken_wall", pos: { x: 6, y: 8 }, variant: 0, size: 1 },
+      { type: "broken_wall", pos: { x: 8, y: 8 }, variant: 1, size: 1 },
+      // Pine trees at summit edges
       { type: "pine_tree", pos: { x: 2, y: 12 }, variant: 0 },
       { type: "pine_tree", pos: { x: 2, y: 20 }, variant: 1 },
       { type: "pine_tree", pos: { x: 28, y: 10 }, variant: 2 },
       { type: "pine_tree", pos: { x: 28, y: 18 }, variant: 0 },
-      // Snow and icicles
+      // Snow drifts and features
       { type: "snow_pile", pos: { x: 12, y: 20 }, variant: 0 },
       { type: "snow_pile", pos: { x: 20, y: 20 }, variant: 1 },
-      { type: "icicles", pos: { x: 10, y: 6 }, variant: 0 },
-      { type: "icicles", pos: { x: 20, y: 4 }, variant: 1 },
-      { type: "frozen_soldier", pos: { x: 4, y: 16 }, variant: 0 },
-      { type: "bones", pos: { x: 26, y: 12 }, variant: 1 },
+      { type: "snowman", pos: { x: 2, y: 4 }, variant: 0 },
+      // Battle remnants
+      { type: "frozen_soldier", pos: { x: 4, y: 16 }, variant: 0, size: 1 },
+      { type: "frozen_soldier", pos: { x: 26, y: 12 }, variant: 1, size: 1 },
+      { type: "bones", pos: { x: 22, y: 8 }, variant: 1 },
     ],
     hazards: [{ type: "ice_sheet", pos: { x: 20, y: 7 }, radius: 2 }],
     previewImage: "/images/previews/peak.png",
@@ -2670,6 +2754,12 @@ export const LEVEL_DATA: Record<
       // Bones and skulls
       { type: "bones", pos: { x: 2, y: 10 }, variant: 0 },
       { type: "skull", pos: { x: 28, y: 18 }, variant: 1 },
+      { type: "lava_fall", pos: { x: 14, y: 4 }, variant: 0 },
+      { type: "ember_rock", pos: { x: 22, y: 8 }, variant: 0 },
+      { type: "ember_rock", pos: { x: 10, y: 20 }, variant: 1 },
+      { type: "fire_crystal", pos: { x: 16, y: 18 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 30, y: 12 }, variant: 0 },
+      { type: "volcano_rim", pos: { x: 20, y: 24 }, variant: 0 },
     ],
     hazards: [{ type: "lava_geyser", pos: { x: 14, y: 14 }, radius: 2.5 }],
     previewImage: "/images/previews/lava_fields.png",
@@ -2718,6 +2808,13 @@ export const LEVEL_DATA: Record<
       { type: "ember", pos: { x: 12, y: 20 }, variant: 1 },
       { type: "bones", pos: { x: 2, y: 12 }, variant: 0 },
       { type: "skull", pos: { x: 28, y: 16 }, variant: 1 },
+      { type: "lava_fall", pos: { x: 10, y: 4 }, variant: 0 },
+      { type: "skull_throne", pos: { x: 14, y: 24 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 2, y: 18 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 28, y: 10 }, variant: 1 },
+      { type: "fire_crystal", pos: { x: 18, y: 18 }, variant: 0 },
+      { type: "ember_rock", pos: { x: 8, y: 22 }, variant: 0 },
+      { type: "volcano_rim", pos: { x: 18, y: 2 }, variant: 0 },
     ],
     hazards: [{ type: "lava_geyser", pos: { x: 18, y: 17 }, radius: 2 }],
     previewImage: "/images/previews/caldera.png",
@@ -2775,6 +2872,15 @@ export const LEVEL_DATA: Record<
       { type: "ember", pos: { x: 20, y: 12 }, variant: 1 },
       { type: "bones", pos: { x: 6, y: 20 }, variant: 0 },
       { type: "skull", pos: { x: 24, y: 6 }, variant: 1 },
+      { type: "lava_fall", pos: { x: 2, y: 4 }, variant: 0 },
+      { type: "lava_fall", pos: { x: 28, y: 4 }, variant: 1 },
+      { type: "skull_throne", pos: { x: 14, y: 26 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 6, y: 14 }, variant: 0 },
+      { type: "obsidian_pillar", pos: { x: 24, y: 14 }, variant: 1 },
+      { type: "fire_crystal", pos: { x: 16, y: 14 }, variant: 0 },
+      { type: "fire_crystal", pos: { x: 12, y: 24 }, variant: 1 },
+      { type: "ember_rock", pos: { x: 14, y: 8 }, variant: 0 },
+      { type: "volcano_rim", pos: { x: 8, y: 26 }, variant: 0 },
     ],
     previewImage: "/images/previews/throne.png",
   },
@@ -2836,6 +2942,7 @@ export const REGION_THEMES: Record<
 // - Early waves are challenging but fair - force players to build defenses immediately
 // - Mix new enemy types for variety
 // - Tighter intervals create pressure, larger groups create spectacle
+// CHALLENGE TUNING: Reduced intervals (faster spawns), increased counts, shorter delays for overlapping pressure
 export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   // =====================
   // GRASSLAND REGION - Tutorial with teeth
@@ -2844,249 +2951,249 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   poe: [
     // Wave 1: Basic introduction
     [
-      { type: "frosh", count: 6, interval: 800 }, // Regional fodder
-      { type: "frosh", count: 5, interval: 800, delay: 4000 },
-      { type: "cultist", count: 3, interval: 1000, delay: 8000 }, // Magic variety
-      { type: "athlete", count: 4, interval: 700, delay: 12000 }, // Regional speed
+      { type: "frosh", count: 8, interval: 500 }, // Regional fodder
+      { type: "frosh", count: 6, interval: 500, delay: 2200 },
+      { type: "cultist", count: 4, interval: 650, delay: 2000 }, // Magic variety
+      { type: "athlete", count: 5, interval: 450, delay: 2200 }, // Regional speed
     ],
     // Wave 2: Mixed with tanks
     [
-      { type: "protestor", count: 4, interval: 900 }, // Regional tank
-      { type: "frosh", count: 8, interval: 700, delay: 3000 },
-      { type: "sophomore", count: 4, interval: 1000, delay: 7000 }, // Academic tank
-      { type: "athlete", count: 5, interval: 700, delay: 11000 },
-      { type: "assassin", count: 2, interval: 1500, delay: 14000 }, // Variety
+      { type: "protestor", count: 5, interval: 580 }, // Regional tank
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "sophomore", count: 5, interval: 650, delay: 2200 }, // Academic tank
+      { type: "athlete", count: 6, interval: 450, delay: 2200 },
+      { type: "assassin", count: 3, interval: 950, delay: 2000 }, // Variety
     ],
     // Wave 3: Ranged introduction
     [
-      { type: "archer", count: 4, interval: 1100 }, // Ranged variety
-      { type: "frosh", count: 8, interval: 700, delay: 3500 },
-      { type: "protestor", count: 5, interval: 900, delay: 7000 },
-      { type: "hexer", count: 3, interval: 1200, delay: 11000 }, // Curse magic
-      { type: "athlete", count: 4, interval: 700, delay: 14500 },
+      { type: "archer", count: 5, interval: 700 }, // Ranged variety
+      { type: "frosh", count: 10, interval: 450, delay: 2000 },
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 }, // Curse magic
+      { type: "athlete", count: 5, interval: 450, delay: 2200 },
     ],
     // Wave 4: Flying introduction
     [
-      { type: "mascot", count: 4, interval: 1100 }, // Flying!
-      { type: "protestor", count: 5, interval: 900, delay: 3000 },
-      { type: "frosh", count: 8, interval: 700, delay: 6500 },
-      { type: "junior", count: 3, interval: 1300, delay: 10500 }, // Heavy
-      { type: "harpy", count: 3, interval: 1200, delay: 14000 }, // More flying
+      { type: "mascot", count: 5, interval: 700 }, // Flying!
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "junior", count: 4, interval: 850, delay: 2000 }, // Heavy
+      { type: "harpy", count: 4, interval: 750, delay: 2000 }, // More flying
     ],
     // Wave 5: Senior arrives
     [
-      { type: "senior", count: 2, interval: 2200 }, // Boss tier
-      { type: "protestor", count: 5, interval: 900, delay: 2500 },
-      { type: "frosh", count: 8, interval: 700, delay: 6000 },
-      { type: "athlete", count: 5, interval: 700, delay: 10000 },
-      { type: "cultist", count: 4, interval: 1000, delay: 14000 },
+      { type: "senior", count: 3, interval: 1400 }, // Boss tier
+      { type: "protestor", count: 6, interval: 580, delay: 2000 },
+      { type: "frosh", count: 10, interval: 450, delay: 2000 },
+      { type: "athlete", count: 6, interval: 450, delay: 2200 },
+      { type: "cultist", count: 5, interval: 650, delay: 2000 },
     ],
     // Wave 6: Speed wave
     [
-      { type: "athlete", count: 6, interval: 650 }, // Regional speed
-      { type: "mascot", count: 4, interval: 1000, delay: 3000 }, // Fast flying
-      { type: "frosh", count: 8, interval: 700, delay: 6500 },
-      { type: "assassin", count: 3, interval: 1300, delay: 10500 },
-      { type: "protestor", count: 4, interval: 900, delay: 14000 },
+      { type: "athlete", count: 8, interval: 420 }, // Regional speed
+      { type: "mascot", count: 5, interval: 650, delay: 2200 }, // Fast flying
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "assassin", count: 4, interval: 850, delay: 2000 },
+      { type: "protestor", count: 5, interval: 580, delay: 2000 },
     ],
     // Wave 7: Tank wall
     [
-      { type: "senior", count: 3, interval: 1800 }, // Tanks
-      { type: "protestor", count: 6, interval: 850, delay: 3000 },
-      { type: "archer", count: 5, interval: 1000, delay: 7000 }, // Ranged
-      { type: "frosh", count: 8, interval: 700, delay: 11000 },
-      { type: "berserker", count: 3, interval: 1200, delay: 15000 }, // Rage
+      { type: "senior", count: 4, interval: 1150 }, // Tanks
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "archer", count: 6, interval: 650, delay: 2200 }, // Ranged
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "berserker", count: 4, interval: 750, delay: 2200 }, // Rage
     ],
     // Wave 8: GRAND FINALE
     [
-      { type: "senior", count: 3, interval: 1600 },
-      { type: "protestor", count: 6, interval: 850, delay: 2500 },
-      { type: "harpy", count: 4, interval: 1100, delay: 5500 }, // Flying
-      { type: "frosh", count: 10, interval: 600, delay: 9000 },
-      { type: "hexer", count: 4, interval: 1100, delay: 13000 }, // Curses
-      { type: "athlete", count: 5, interval: 700, delay: 16500 },
+      { type: "senior", count: 4, interval: 1050 },
+      { type: "protestor", count: 8, interval: 550, delay: 2000 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 }, // Flying
+      { type: "frosh", count: 13, interval: 400, delay: 2200 },
+      { type: "hexer", count: 5, interval: 700, delay: 2200 }, // Curses
+      { type: "athlete", count: 6, interval: 450, delay: 2200 },
     ],
   ],
 
   carnegie: [
     // Wave 1
     [
-      { type: "athlete", count: 6, interval: 700 },
-      { type: "frosh", count: 8, interval: 700, delay: 3500 },
-      { type: "cultist", count: 4, interval: 1000, delay: 7500 },
-      { type: "protestor", count: 4, interval: 900, delay: 11500 },
+      { type: "athlete", count: 8, interval: 450 },
+      { type: "frosh", count: 10, interval: 450, delay: 2000 },
+      { type: "cultist", count: 5, interval: 650, delay: 2200 },
+      { type: "protestor", count: 5, interval: 580, delay: 2200 },
     ],
     // Wave 2: Ranged focus
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "protestor", count: 5, interval: 900, delay: 3500 },
-      { type: "frosh", count: 8, interval: 700, delay: 7000 },
-      { type: "mage", count: 3, interval: 1400, delay: 11000 },
-      { type: "athlete", count: 5, interval: 700, delay: 15000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "protestor", count: 6, interval: 580, delay: 2000 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "mage", count: 4, interval: 900, delay: 2200 },
+      { type: "athlete", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 3: Flying wave
     [
-      { type: "mascot", count: 5, interval: 1100 },
-      { type: "harpy", count: 4, interval: 1200, delay: 4000 },
-      { type: "frosh", count: 8, interval: 700, delay: 8000 },
-      { type: "protestor", count: 5, interval: 900, delay: 12000 },
-      { type: "banshee", count: 2, interval: 1600, delay: 16000 },
+      { type: "mascot", count: 6, interval: 700 },
+      { type: "harpy", count: 5, interval: 750, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2000 },
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
+      { type: "banshee", count: 3, interval: 1050, delay: 2200 },
     ],
     // Wave 4: Tank push
     [
-      { type: "junior", count: 4, interval: 1200 },
-      { type: "protestor", count: 6, interval: 850, delay: 3500 },
-      { type: "hexer", count: 4, interval: 1100, delay: 7500 },
-      { type: "frosh", count: 8, interval: 700, delay: 11500 },
-      { type: "berserker", count: 3, interval: 1200, delay: 15500 },
+      { type: "junior", count: 5, interval: 750 },
+      { type: "protestor", count: 8, interval: 550, delay: 2000 },
+      { type: "hexer", count: 5, interval: 700, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "berserker", count: 4, interval: 750, delay: 2200 },
     ],
     // Wave 5: Mixed assault
     [
-      { type: "senior", count: 3, interval: 1700 },
-      { type: "archer", count: 5, interval: 1000, delay: 3500 },
-      { type: "athlete", count: 6, interval: 700, delay: 7500 },
-      { type: "specter", count: 3, interval: 1300, delay: 11500 },
-      { type: "protestor", count: 5, interval: 900, delay: 15000 },
+      { type: "senior", count: 4, interval: 1100 },
+      { type: "archer", count: 6, interval: 650, delay: 2000 },
+      { type: "athlete", count: 8, interval: 450, delay: 2200 },
+      { type: "specter", count: 4, interval: 850, delay: 2200 },
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
     ],
     // Wave 6: Dual air assault
     [
-      { type: "mascot", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "frosh", count: 8, interval: 700, delay: 8000 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 12000 },
-      { type: "protestor", count: 5, interval: 900, delay: 16000 },
+      { type: "mascot", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2000 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
     ],
     // Wave 7: Berserker charge
     [
-      { type: "berserker", count: 5, interval: 1000 },
-      { type: "protestor", count: 6, interval: 850, delay: 3500 },
-      { type: "frosh", count: 8, interval: 700, delay: 7500 },
-      { type: "hexer", count: 4, interval: 1100, delay: 11500 },
-      { type: "senior", count: 3, interval: 1600, delay: 15500 },
+      { type: "berserker", count: 6, interval: 650 },
+      { type: "protestor", count: 8, interval: 550, delay: 2000 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "hexer", count: 5, interval: 700, delay: 2200 },
+      { type: "senior", count: 4, interval: 1050, delay: 2200 },
     ],
     // Wave 8: Plaguebearer siege
     [
-      { type: "plaguebearer", count: 3, interval: 1500 },
-      { type: "protestor", count: 6, interval: 850, delay: 3500 },
-      { type: "athlete", count: 6, interval: 700, delay: 7500 },
-      { type: "specter", count: 4, interval: 1200, delay: 11500 },
-      { type: "frosh", count: 8, interval: 700, delay: 15500 },
+      { type: "plaguebearer", count: 4, interval: 950 },
+      { type: "protestor", count: 8, interval: 550, delay: 2000 },
+      { type: "athlete", count: 8, interval: 450, delay: 2200 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
     ],
     // Wave 9: Gradstudent boss wave
     [
-      { type: "gradstudent", count: 2, interval: 3000 },
-      { type: "senior", count: 4, interval: 1400, delay: 3000 },
-      { type: "protestor", count: 6, interval: 850, delay: 7000 },
-      { type: "harpy", count: 4, interval: 1200, delay: 11000 },
-      { type: "frosh", count: 8, interval: 700, delay: 15000 },
+      { type: "gradstudent", count: 3, interval: 2000 },
+      { type: "senior", count: 5, interval: 900, delay: 2200 },
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "harpy", count: 5, interval: 750, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
     ],
     // Wave 10: FINALE
     [
-      { type: "gradstudent", count: 3, interval: 2500 },
-      { type: "infernal", count: 3, interval: 1600, delay: 3500 },
-      { type: "protestor", count: 6, interval: 850, delay: 7500 },
-      { type: "banshee", count: 4, interval: 1300, delay: 11500 },
-      { type: "athlete", count: 6, interval: 700, delay: 15500 },
-      { type: "assassin", count: 3, interval: 1400, delay: 19000 },
+      { type: "gradstudent", count: 4, interval: 1600 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2000 },
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "athlete", count: 8, interval: 450, delay: 2200 },
+      { type: "assassin", count: 4, interval: 900, delay: 2200 },
     ],
   ],
 
   nassau: [
     // Wave 1
     [
-      { type: "protestor", count: 5, interval: 900 },
-      { type: "frosh", count: 8, interval: 700, delay: 3500 },
-      { type: "archer", count: 4, interval: 1100, delay: 7500 },
-      { type: "athlete", count: 5, interval: 700, delay: 11500 },
+      { type: "protestor", count: 6, interval: 580 },
+      { type: "frosh", count: 10, interval: 450, delay: 2000 },
+      { type: "archer", count: 5, interval: 700, delay: 2200 },
+      { type: "athlete", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 2
     [
-      { type: "junior", count: 4, interval: 1200 },
-      { type: "protestor", count: 5, interval: 900, delay: 3500 },
-      { type: "cultist", count: 4, interval: 1000, delay: 7500 },
-      { type: "frosh", count: 8, interval: 700, delay: 11500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 15500 },
+      { type: "junior", count: 5, interval: 750 },
+      { type: "protestor", count: 6, interval: 580, delay: 2000 },
+      { type: "cultist", count: 5, interval: 650, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
     ],
     // Wave 3: Air dominance
     [
-      { type: "mascot", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "harpy", count: 4, interval: 1200, delay: 8000 },
-      { type: "protestor", count: 5, interval: 900, delay: 12000 },
-      { type: "frosh", count: 8, interval: 700, delay: 16000 },
+      { type: "mascot", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "harpy", count: 5, interval: 750, delay: 2000 },
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
     ],
     // Wave 4: Tank siege
     [
-      { type: "senior", count: 4, interval: 1500 },
-      { type: "protestor", count: 6, interval: 850, delay: 4000 },
-      { type: "archer", count: 5, interval: 1000, delay: 8000 },
-      { type: "athlete", count: 6, interval: 700, delay: 12000 },
-      { type: "specter", count: 3, interval: 1300, delay: 16000 },
+      { type: "senior", count: 5, interval: 950 },
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "archer", count: 6, interval: 650, delay: 2000 },
+      { type: "athlete", count: 8, interval: 450, delay: 2200 },
+      { type: "specter", count: 4, interval: 850, delay: 2200 },
     ],
     // Wave 5: Assassin strike
     [
-      { type: "assassin", count: 4, interval: 1200 },
-      { type: "athlete", count: 6, interval: 700, delay: 3500 },
-      { type: "frosh", count: 8, interval: 700, delay: 7500 },
-      { type: "berserker", count: 4, interval: 1100, delay: 11500 },
-      { type: "protestor", count: 5, interval: 900, delay: 15500 },
+      { type: "assassin", count: 5, interval: 750 },
+      { type: "athlete", count: 8, interval: 450, delay: 2000 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "protestor", count: 6, interval: 580, delay: 2200 },
     ],
     // Wave 6: Mage barrage
     [
-      { type: "mage", count: 4, interval: 1300 },
-      { type: "archer", count: 6, interval: 1000, delay: 4000 },
-      { type: "protestor", count: 5, interval: 900, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "frosh", count: 8, interval: 700, delay: 16000 },
+      { type: "mage", count: 5, interval: 850 },
+      { type: "archer", count: 8, interval: 650, delay: 2200 },
+      { type: "protestor", count: 6, interval: 580, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
     ],
     // Wave 7: Infernal invasion
     [
-      { type: "infernal", count: 3, interval: 1700 },
-      { type: "plaguebearer", count: 3, interval: 1500, delay: 4000 },
-      { type: "protestor", count: 6, interval: 850, delay: 8000 },
-      { type: "hexer", count: 4, interval: 1100, delay: 12000 },
-      { type: "athlete", count: 6, interval: 700, delay: 16000 },
+      { type: "infernal", count: 4, interval: 1100 },
+      { type: "plaguebearer", count: 4, interval: 950, delay: 2200 },
+      { type: "protestor", count: 8, interval: 550, delay: 2000 },
+      { type: "hexer", count: 5, interval: 700, delay: 2200 },
+      { type: "athlete", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 8: Professor arrives
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "protestor", count: 6, interval: 850, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "frosh", count: 8, interval: 700, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "frosh", count: 10, interval: 450, delay: 2200 },
     ],
     // Wave 9: Wyvern terror
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1200, delay: 4500 },
-      { type: "senior", count: 4, interval: 1400, delay: 9000 },
-      { type: "protestor", count: 6, interval: 850, delay: 13500 },
-      { type: "berserker", count: 4, interval: 1100, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 750, delay: 2000 },
+      { type: "senior", count: 5, interval: 900, delay: 2200 },
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
     ],
     // Wave 10: Juggernaut siege
     [
-      { type: "juggernaut", count: 1, interval: 5000 },
-      { type: "professor", count: 2, interval: 3000, delay: 3500 },
-      { type: "protestor", count: 6, interval: 850, delay: 8000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 12500 },
-      { type: "athlete", count: 6, interval: 700, delay: 17000 },
+      { type: "juggernaut", count: 1, interval: 3200 },
+      { type: "professor", count: 3, interval: 2000, delay: 2000 },
+      { type: "protestor", count: 8, interval: 550, delay: 2000 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "athlete", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 11: Dean's arrival
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "professor", count: 3, interval: 2500, delay: 4000 },
-      { type: "shadow_knight", count: 3, interval: 2000, delay: 8500 },
-      { type: "protestor", count: 6, interval: 850, delay: 13000 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2200 },
+      { type: "shadow_knight", count: 4, interval: 1300, delay: 2200 },
+      { type: "protestor", count: 8, interval: 550, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
     ],
     // Wave 12: NASSAU FINALE
     [
-      { type: "dean", count: 2, interval: 4000 }, // Double Dean!
-      { type: "professor", count: 4, interval: 2200, delay: 3500 }, // Prof squad
-      { type: "juggernaut", count: 1, interval: 8000, delay: 8000 }, // MEGA
-      { type: "infernal", count: 5, interval: 1500, delay: 12000 }, // Fire army
-      { type: "banshee", count: 6, interval: 1100, delay: 16000 }, // Screaming death
-      { type: "assassin", count: 5, interval: 1300, delay: 20500 }, // Kill squad
+      { type: "dean", count: 3, interval: 2600 }, // Double Dean!
+      { type: "professor", count: 5, interval: 1400, delay: 2000 }, // Prof squad
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2000 }, // MEGA
+      { type: "infernal", count: 6, interval: 950, delay: 2200 }, // Fire army
+      { type: "banshee", count: 8, interval: 700, delay: 2200 }, // Screaming death
+      { type: "assassin", count: 6, interval: 850, delay: 2200 }, // Kill squad
     ],
   ],
 
@@ -3097,198 +3204,198 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   bog: [
     // Wave 1: Basic swamp introduction
     [
-      { type: "bog_creature", count: 6, interval: 800 }, // Regional fodder
-      { type: "bog_creature", count: 5, interval: 800, delay: 4000 },
-      { type: "cultist", count: 3, interval: 1000, delay: 8000 }, // Dark magic
-      { type: "will_o_wisp", count: 4, interval: 700, delay: 12000 }, // Regional speed
+      { type: "bog_creature", count: 8, interval: 500 }, // Regional fodder
+      { type: "bog_creature", count: 6, interval: 500, delay: 2200 },
+      { type: "cultist", count: 4, interval: 650, delay: 2000 }, // Dark magic
+      { type: "will_o_wisp", count: 5, interval: 450, delay: 2200 }, // Regional speed
     ],
     // Wave 2: Mixed with tanks
     [
-      { type: "swamp_troll", count: 2, interval: 1800 }, // Regional tank
-      { type: "bog_creature", count: 8, interval: 750, delay: 3000 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7000 }, // Curse magic
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 11000 },
-      { type: "specter", count: 3, interval: 1300, delay: 14500 }, // Ghostly variety
+      { type: "swamp_troll", count: 3, interval: 1150 }, // Regional tank
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 }, // Curse magic
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
+      { type: "specter", count: 4, interval: 850, delay: 2200 }, // Ghostly variety
     ],
     // Wave 3: Flying introduction
     [
-      { type: "harpy", count: 4, interval: 1100 }, // Flying variety
-      { type: "bog_creature", count: 8, interval: 750, delay: 3500 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 7000 },
-      { type: "banshee", count: 3, interval: 1400, delay: 11000 }, // Flying screamers
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 15000 },
+      { type: "harpy", count: 5, interval: 700 }, // Flying variety
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 }, // Flying screamers
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 4: Ranged threat
     [
-      { type: "archer", count: 4, interval: 1100 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 3500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 7000 },
-      { type: "mage", count: 3, interval: 1400, delay: 11000 },
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 15000 },
+      { type: "archer", count: 5, interval: 700 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "mage", count: 4, interval: 900, delay: 2200 },
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 5: Senior tanks
     [
-      { type: "senior", count: 3, interval: 1800 }, // Boss tier
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 3000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 7000 },
-      { type: "plaguebearer", count: 3, interval: 1400, delay: 11000 }, // Disease
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 15000 },
+      { type: "senior", count: 4, interval: 1150 }, // Boss tier
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "plaguebearer", count: 4, interval: 900, delay: 2200 }, // Disease
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 6: Speed assault
     [
-      { type: "will_o_wisp", count: 8, interval: 600 }, // Fast regional
-      { type: "assassin", count: 3, interval: 1300, delay: 3500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 7000 },
-      { type: "harpy", count: 4, interval: 1100, delay: 11000 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 15000 },
+      { type: "will_o_wisp", count: 10, interval: 400 }, // Fast regional
+      { type: "assassin", count: 4, interval: 850, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 7: Necromancer rises
     [
-      { type: "necromancer", count: 2, interval: 2500 }, // Dark magic
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 3500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 8000 },
-      { type: "specter", count: 4, interval: 1200, delay: 12000 },
-      { type: "berserker", count: 3, interval: 1200, delay: 16000 },
+      { type: "necromancer", count: 3, interval: 1600 }, // Dark magic
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "berserker", count: 4, interval: 750, delay: 2200 },
     ],
     // Wave 8: Tank wall
     [
-      { type: "swamp_troll", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 8000 },
-      { type: "shadow_knight", count: 2, interval: 2800, delay: 12000 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 16000 },
+      { type: "swamp_troll", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "shadow_knight", count: 3, interval: 1800, delay: 2200 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "banshee", count: 4, interval: 1300 },
-      { type: "wyvern", count: 2, interval: 2200, delay: 3500 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 7500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 12000 },
-      { type: "harpy", count: 4, interval: 1100, delay: 16000 },
+      { type: "banshee", count: 5, interval: 850 },
+      { type: "wyvern", count: 3, interval: 1400, delay: 2000 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
     ],
     // Wave 10: FINALE
     [
-      { type: "gradstudent", count: 2, interval: 2800 },
-      { type: "swamp_troll", count: 4, interval: 1500, delay: 3500 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 7500 },
-      { type: "bog_creature", count: 10, interval: 700, delay: 12000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 16500 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 20500 },
+      { type: "gradstudent", count: 3, interval: 1800 },
+      { type: "swamp_troll", count: 5, interval: 950, delay: 2000 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2200 },
+      { type: "bog_creature", count: 13, interval: 450, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
     ],
   ],
 
   witch_hut: [
     // Wave 1
     [
-      { type: "bog_creature", count: 6, interval: 800 },
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 3500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7500 },
-      { type: "swamp_troll", count: 2, interval: 1800, delay: 11500 },
+      { type: "bog_creature", count: 8, interval: 500 },
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2000 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
+      { type: "swamp_troll", count: 3, interval: 1150, delay: 2200 },
     ],
     // Wave 2: Flying introduction
     [
-      { type: "harpy", count: 4, interval: 1100 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 3500 },
-      { type: "banshee", count: 3, interval: 1400, delay: 7500 },
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 11500 },
-      { type: "specter", count: 3, interval: 1300, delay: 15000 },
+      { type: "harpy", count: 5, interval: 700 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
+      { type: "specter", count: 4, interval: 850, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "swamp_troll", count: 4, interval: 1600 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 8000 },
-      { type: "mage", count: 3, interval: 1400, delay: 12000 },
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 16000 },
+      { type: "swamp_troll", count: 5, interval: 1050 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "mage", count: 4, interval: 900, delay: 2200 },
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 4: Assassin strike
     [
-      { type: "assassin", count: 4, interval: 1200 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 3500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 7500 },
-      { type: "berserker", count: 4, interval: 1100, delay: 11500 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 15500 },
+      { type: "assassin", count: 5, interval: 750 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 5: Ranged wave
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 8000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 12000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
     ],
     // Wave 6: Flying assault
     [
-      { type: "mascot", count: 5, interval: 1100 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 4000 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 8000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 12000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 16000 },
+      { type: "mascot", count: 6, interval: 700 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2000 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 7: Necromancer arrives
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 4000 },
-      { type: "specter", count: 4, interval: 1200, delay: 8000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 12000 },
-      { type: "shadow_knight", count: 2, interval: 2800, delay: 16000 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "specter", count: 5, interval: 750, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "shadow_knight", count: 3, interval: 1800, delay: 2200 },
     ],
     // Wave 8: Plaguebearer siege
     [
-      { type: "plaguebearer", count: 4, interval: 1400 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 4000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 8000 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 12000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 16000 },
+      { type: "plaguebearer", count: 5, interval: 900 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2000 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 9: Professor boss wave
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8500 },
-      { type: "harpy", count: 4, interval: 1100, delay: 12500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 16500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 10: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 4, interval: 1400, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 5, interval: 900, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 11: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 9000 },
-      { type: "bog_creature", count: 10, interval: 700, delay: 13500 },
-      { type: "banshee", count: 4, interval: 1300, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "bog_creature", count: 13, interval: 450, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 12: Infernal invasion
     [
-      { type: "infernal", count: 4, interval: 1500 },
-      { type: "professor", count: 2, interval: 3000, delay: 4500 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "will_o_wisp", count: 8, interval: 650, delay: 18000 },
+      { type: "infernal", count: 5, interval: 950 },
+      { type: "professor", count: 3, interval: 2000, delay: 2000 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "will_o_wisp", count: 10, interval: 420, delay: 2200 },
     ],
     // Wave 13: Juggernaut push
     [
-      { type: "juggernaut", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4000 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "bog_creature", count: 10, interval: 700, delay: 17500 },
+      { type: "juggernaut", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "bog_creature", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 14: FINALE
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "professor", count: 3, interval: 2500, delay: 4000 },
-      { type: "shadow_knight", count: 4, interval: 1800, delay: 8500 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 13000 },
-      { type: "banshee", count: 5, interval: 1200, delay: 17500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 22000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2200 },
+      { type: "shadow_knight", count: 5, interval: 1150, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "banshee", count: 6, interval: 750, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
     ],
   ],
 
@@ -3296,147 +3403,147 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 18 waves - Ancient swamp horrors
     // Wave 1
     [
-      { type: "bog_creature", count: 6, interval: 800 },
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 3500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7500 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 11500 },
+      { type: "bog_creature", count: 8, interval: 500 },
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2000 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "harpy", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 8000 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 12000 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 16000 },
+      { type: "harpy", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "swamp_troll", count: 4, interval: 1600 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 8000 },
-      { type: "plaguebearer", count: 3, interval: 1400, delay: 12000 },
-      { type: "will_o_wisp", count: 5, interval: 700, delay: 16000 },
+      { type: "swamp_troll", count: 5, interval: 1050 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2000 },
+      { type: "plaguebearer", count: 4, interval: 900, delay: 2200 },
+      { type: "will_o_wisp", count: 6, interval: 450, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Speed assault
     [
-      { type: "will_o_wisp", count: 8, interval: 600 },
-      { type: "assassin", count: 4, interval: 1200, delay: 3500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 7500 },
-      { type: "harpy", count: 4, interval: 1100, delay: 11500 },
-      { type: "swamp_troll", count: 3, interval: 1700, delay: 15500 },
+      { type: "will_o_wisp", count: 10, interval: 400 },
+      { type: "assassin", count: 5, interval: 750, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
+      { type: "swamp_troll", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 12000 },
-      { type: "shadow_knight", count: 2, interval: 2800, delay: 16000 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2000 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
+      { type: "shadow_knight", count: 3, interval: 1800, delay: 2200 },
     ],
     // Wave 7: Berserker charge
     [
-      { type: "berserker", count: 5, interval: 1000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 4000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 8000 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 12000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 16000 },
+      { type: "berserker", count: 6, interval: 650 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2000 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 8: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 9: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 4, interval: 1400, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8500 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13000 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 5, interval: 900, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 10: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 11: Air superiority
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "will_o_wisp", count: 6, interval: 700, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "will_o_wisp", count: 8, interval: 450, delay: 2200 },
     ],
     // Wave 12: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "professor", count: 2, interval: 3000, delay: 4000 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 8500 },
-      { type: "infernal", count: 3, interval: 1600, delay: 13000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 17500 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "professor", count: 3, interval: 2000, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 13: Juggernaut push
     [
-      { type: "juggernaut", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4000 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 8500 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 13000 },
-      { type: "will_o_wisp", count: 8, interval: 650, delay: 17500 },
+      { type: "juggernaut", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "will_o_wisp", count: 10, interval: 420, delay: 2200 },
     ],
     // Wave 14: Magic barrage
     [
-      { type: "warlock", count: 4, interval: 1400 },
-      { type: "mage", count: 5, interval: 1200, delay: 4000 },
-      { type: "swamp_troll", count: 4, interval: 1600, delay: 8000 },
-      { type: "hexer", count: 4, interval: 1100, delay: 12000 },
-      { type: "bog_creature", count: 8, interval: 750, delay: 16000 },
+      { type: "warlock", count: 5, interval: 900 },
+      { type: "mage", count: 6, interval: 750, delay: 2200 },
+      { type: "swamp_troll", count: 5, interval: 1050, delay: 2000 },
+      { type: "hexer", count: 5, interval: 700, delay: 2200 },
+      { type: "bog_creature", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 15: Dean council
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "professor", count: 3, interval: 2500, delay: 4500 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 9000 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 14000 },
-      { type: "will_o_wisp", count: 8, interval: 650, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2000 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2000 },
+      { type: "will_o_wisp", count: 10, interval: 420, delay: 2200 },
     ],
     // Wave 16: Trustee power
     [
-      { type: "trustee", count: 1, interval: 4500 },
-      { type: "dean", count: 1, interval: 4000, delay: 4000 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 8500 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 13000 },
-      { type: "bog_creature", count: 10, interval: 700, delay: 18000 },
+      { type: "trustee", count: 1, interval: 2900 },
+      { type: "dean", count: 1, interval: 2600, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2200 },
+      { type: "bog_creature", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 17: Double Trustee
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 5000 },
-      { type: "swamp_troll", count: 5, interval: 1500, delay: 10000 },
-      { type: "infernal", count: 4, interval: 1500, delay: 15000 },
-      { type: "banshee", count: 5, interval: 1200, delay: 20000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2200 },
+      { type: "swamp_troll", count: 6, interval: 950, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "banshee", count: 6, interval: 750, delay: 2200 },
     ],
     // Wave 18: FINALE
     [
-      { type: "trustee", count: 2, interval: 3500 },
-      { type: "dean", count: 2, interval: 3500, delay: 4000 },
-      { type: "swamp_troll", count: 6, interval: 1400, delay: 8500 },
-      { type: "shadow_knight", count: 4, interval: 1800, delay: 13000 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 17500 },
-      { type: "professor", count: 3, interval: 2500, delay: 22000 },
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "swamp_troll", count: 8, interval: 900, delay: 2200 },
+      { type: "shadow_knight", count: 5, interval: 1150, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2200 },
     ],
   ],
 
@@ -3447,83 +3554,83 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   oasis: [
     // Wave 1: Basic introduction
     [
-      { type: "nomad", count: 6, interval: 800 }, // Regional fodder
-      { type: "nomad", count: 5, interval: 800, delay: 4000 },
-      { type: "archer", count: 3, interval: 1100, delay: 8000 }, // Ranged variety
-      { type: "scarab", count: 5, interval: 650, delay: 12000 }, // Regional swarm
+      { type: "nomad", count: 8, interval: 500 }, // Regional fodder
+      { type: "nomad", count: 6, interval: 500, delay: 2200 },
+      { type: "archer", count: 4, interval: 700, delay: 2000 }, // Ranged variety
+      { type: "scarab", count: 6, interval: 420, delay: 2200 }, // Regional swarm
     ],
     // Wave 2: Tank introduction
     [
-      { type: "scorpion", count: 3, interval: 1600 }, // Regional tank
-      { type: "nomad", count: 8, interval: 750, delay: 3500 },
-      { type: "cultist", count: 3, interval: 1000, delay: 7500 },
-      { type: "scarab", count: 6, interval: 650, delay: 11500 },
-      { type: "hexer", count: 2, interval: 1200, delay: 15000 },
+      { type: "scorpion", count: 4, interval: 1050 }, // Regional tank
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "cultist", count: 4, interval: 650, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
+      { type: "hexer", count: 3, interval: 750, delay: 2200 },
     ],
     // Wave 3: Flying introduction
     [
-      { type: "mascot", count: 4, interval: 1100 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 3500 },
-      { type: "nomad", count: 8, interval: 750, delay: 7000 },
-      { type: "harpy", count: 3, interval: 1200, delay: 11000 },
-      { type: "scarab", count: 5, interval: 650, delay: 15000 },
+      { type: "mascot", count: 5, interval: 700 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2000 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
+      { type: "harpy", count: 4, interval: 750, delay: 2200 },
+      { type: "scarab", count: 6, interval: 420, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 3, interval: 1400, delay: 4000 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 8000 },
-      { type: "nomad", count: 8, interval: 750, delay: 12000 },
-      { type: "specter", count: 3, interval: 1300, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 4, interval: 900, delay: 2200 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2000 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
+      { type: "specter", count: 4, interval: 850, delay: 2200 },
     ],
     // Wave 5: Senior boss
     [
-      { type: "senior", count: 3, interval: 1800 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 3500 },
-      { type: "nomad", count: 8, interval: 750, delay: 7500 },
-      { type: "berserker", count: 3, interval: 1200, delay: 11500 },
-      { type: "scarab", count: 6, interval: 650, delay: 15500 },
+      { type: "senior", count: 4, interval: 1150 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2000 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
+      { type: "berserker", count: 4, interval: 750, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
     ],
     // Wave 6: Speed wave
     [
-      { type: "scarab", count: 10, interval: 550 }, // Fast swarm
-      { type: "assassin", count: 3, interval: 1300, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "harpy", count: 4, interval: 1100, delay: 12000 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 16000 },
+      { type: "scarab", count: 13, interval: 550 }, // Fast swarm
+      { type: "assassin", count: 4, interval: 850, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2200 },
     ],
     // Wave 7: Tank wall
     [
-      { type: "scorpion", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "plaguebearer", count: 3, interval: 1400, delay: 12000 },
-      { type: "scarab", count: 6, interval: 650, delay: 16000 },
+      { type: "scorpion", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "plaguebearer", count: 4, interval: 900, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
     ],
     // Wave 8: Sandworm terror
     [
-      { type: "sandworm", count: 3, interval: 1800 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 12000 },
-      { type: "scarab", count: 6, interval: 650, delay: 16000 },
+      { type: "sandworm", count: 4, interval: 1150 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
     ],
     // Wave 9: Gradstudent boss
     [
-      { type: "gradstudent", count: 2, interval: 2800 },
-      { type: "senior", count: 4, interval: 1400, delay: 3500 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 7500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 12000 },
-      { type: "nomad", count: 8, interval: 750, delay: 16500 },
+      { type: "gradstudent", count: 3, interval: 1800 },
+      { type: "senior", count: 5, interval: 900, delay: 2000 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 10: FINALE
     [
-      { type: "gradstudent", count: 3, interval: 2500 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 4000 },
-      { type: "sandworm", count: 3, interval: 1800, delay: 8500 },
-      { type: "nomad", count: 10, interval: 700, delay: 13000 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 17500 },
-      { type: "scarab", count: 8, interval: 600, delay: 22000 },
+      { type: "gradstudent", count: 4, interval: 1600 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "sandworm", count: 4, interval: 1150, delay: 2200 },
+      { type: "nomad", count: 13, interval: 450, delay: 2200 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "scarab", count: 10, interval: 400, delay: 2200 },
     ],
   ],
 
@@ -3531,99 +3638,99 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 12 waves - Pyramid assault
     // Wave 1
     [
-      { type: "nomad", count: 6, interval: 800 },
-      { type: "scarab", count: 6, interval: 650, delay: 3500 },
-      { type: "archer", count: 4, interval: 1100, delay: 7500 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 11500 },
+      { type: "nomad", count: 8, interval: 500 },
+      { type: "scarab", count: 8, interval: 420, delay: 2000 },
+      { type: "archer", count: 5, interval: 700, delay: 2200 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "mascot", count: 5, interval: 1100 },
-      { type: "harpy", count: 4, interval: 1200, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 12000 },
-      { type: "banshee", count: 3, interval: 1400, delay: 16000 },
+      { type: "mascot", count: 6, interval: 700 },
+      { type: "harpy", count: 5, interval: 750, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2200 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "scorpion", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "plaguebearer", count: 3, interval: 1400, delay: 12000 },
-      { type: "scarab", count: 6, interval: 650, delay: 16000 },
+      { type: "scorpion", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "plaguebearer", count: 4, interval: 900, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
     ],
     // Wave 4: Ranged barrage
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "nomad", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Sandworm terror
     [
-      { type: "sandworm", count: 3, interval: 1800 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "berserker", count: 4, interval: 1100, delay: 12000 },
-      { type: "scarab", count: 6, interval: 650, delay: 16000 },
+      { type: "sandworm", count: 4, interval: 1150 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8000 },
-      { type: "nomad", count: 8, interval: 750, delay: 12000 },
-      { type: "shadow_knight", count: 2, interval: 2800, delay: 16000 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2000 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
+      { type: "shadow_knight", count: 3, interval: 1800, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "nomad", count: 8, interval: 750, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 4, interval: 1400, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8500 },
-      { type: "infernal", count: 3, interval: 1600, delay: 13000 },
-      { type: "scarab", count: 8, interval: 600, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 5, interval: 900, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "scarab", count: 10, interval: 400, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "nomad", count: 8, interval: 750, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 10: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "scarab", count: 8, interval: 600, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "scarab", count: 10, interval: 400, delay: 2200 },
     ],
     // Wave 11: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "professor", count: 3, interval: 2500, delay: 4500 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 9000 },
-      { type: "sandworm", count: 3, interval: 1800, delay: 14000 },
-      { type: "nomad", count: 10, interval: 700, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2000 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "sandworm", count: 4, interval: 1150, delay: 2000 },
+      { type: "nomad", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 12: FINALE
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 4000 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 8500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 13000 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 17500 },
-      { type: "catapult", count: 3, interval: 2200, delay: 22000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2200 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2200 },
+      { type: "catapult", count: 4, interval: 1400, delay: 2200 },
     ],
   ],
 
@@ -3631,115 +3738,115 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 14 waves - Sphinx gauntlet
     // Wave 1
     [
-      { type: "nomad", count: 6, interval: 800 },
-      { type: "scarab", count: 6, interval: 650, delay: 3500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7500 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 11500 },
+      { type: "nomad", count: 8, interval: 500 },
+      { type: "scarab", count: 8, interval: 420, delay: 2000 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "harpy", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "scorpion", count: 3, interval: 1600, delay: 12000 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 16000 },
+      { type: "harpy", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "scorpion", count: 4, interval: 1050, delay: 2200 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "scorpion", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 12000 },
-      { type: "scarab", count: 6, interval: 650, delay: 16000 },
+      { type: "scorpion", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "scarab", count: 8, interval: 420, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "nomad", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Sandworm terror
     [
-      { type: "sandworm", count: 4, interval: 1600 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 4000 },
-      { type: "nomad", count: 8, interval: 750, delay: 8000 },
-      { type: "berserker", count: 4, interval: 1100, delay: 12000 },
-      { type: "scarab", count: 8, interval: 600, delay: 16000 },
+      { type: "sandworm", count: 5, interval: 1050 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2000 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "scarab", count: 10, interval: 400, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8000 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 12000 },
-      { type: "nomad", count: 8, interval: 750, delay: 16500 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2000 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "nomad", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "scarab", count: 8, interval: 600, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "scarab", count: 10, interval: 400, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 5, interval: 1300, delay: 4000 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 8500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 13000 },
-      { type: "nomad", count: 10, interval: 700, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 6, interval: 850, delay: 2200 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "nomad", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "scorpion", count: 4, interval: 1500, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "scarab", count: 8, interval: 600, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "scorpion", count: 5, interval: 950, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "scarab", count: 10, interval: 400, delay: 2200 },
     ],
     // Wave 10: Dragon awakens
     [
-      { type: "dragon", count: 1, interval: 5000 },
-      { type: "professor", count: 2, interval: 3000, delay: 4500 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 9000 },
-      { type: "sandworm", count: 4, interval: 1600, delay: 14000 },
-      { type: "nomad", count: 10, interval: 700, delay: 19000 },
+      { type: "dragon", count: 1, interval: 3200 },
+      { type: "professor", count: 3, interval: 2000, delay: 2000 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "sandworm", count: 5, interval: 1050, delay: 2000 },
+      { type: "nomad", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 11: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4500 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 9000 },
-      { type: "shadow_knight", count: 4, interval: 1800, delay: 14000 },
-      { type: "scarab", count: 10, interval: 600, delay: 19000 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2000 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "shadow_knight", count: 5, interval: 1150, delay: 2000 },
+      { type: "scarab", count: 13, interval: 400, delay: 2200 },
     ],
     // Wave 12: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 4500 },
-      { type: "scorpion", count: 5, interval: 1400, delay: 9000 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 14000 },
-      { type: "nomad", count: 10, interval: 700, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2000 },
+      { type: "scorpion", count: 6, interval: 900, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2000 },
+      { type: "nomad", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 13: Double Trustee
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 5000 },
-      { type: "scorpion", count: 6, interval: 1300, delay: 10000 },
-      { type: "infernal", count: 4, interval: 1500, delay: 15000 },
-      { type: "sandworm", count: 4, interval: 1600, delay: 20000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2200 },
+      { type: "scorpion", count: 8, interval: 850, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "sandworm", count: 5, interval: 1050, delay: 2200 },
     ],
     // Wave 14: FINALE
     [
-      { type: "trustee", count: 2, interval: 3500 },
-      { type: "dragon", count: 2, interval: 3500, delay: 4500 },
-      { type: "scorpion", count: 6, interval: 1300, delay: 9000 },
-      { type: "dean", count: 2, interval: 3500, delay: 13500 },
-      { type: "necromancer", count: 4, interval: 2000, delay: 18000 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 23000 },
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2000 },
+      { type: "scorpion", count: 8, interval: 850, delay: 2200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "necromancer", count: 5, interval: 1300, delay: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 23000 },
     ],
   ],
 
@@ -3750,99 +3857,99 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   glacier: [
     // Wave 1: Basic introduction
     [
-      { type: "snow_goblin", count: 6, interval: 800 }, // Regional fodder
-      { type: "snow_goblin", count: 5, interval: 800, delay: 4000 },
-      { type: "hexer", count: 3, interval: 1200, delay: 8000 }, // Curse magic
-      { type: "yeti", count: 2, interval: 1800, delay: 12000 }, // Regional tank
+      { type: "snow_goblin", count: 8, interval: 500 }, // Regional fodder
+      { type: "snow_goblin", count: 6, interval: 500, delay: 2200 },
+      { type: "hexer", count: 4, interval: 750, delay: 2000 }, // Curse magic
+      { type: "yeti", count: 3, interval: 1150, delay: 2200 }, // Regional tank
     ],
     // Wave 2: Tank introduction
     [
-      { type: "yeti", count: 3, interval: 1700 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 3500 },
-      { type: "cultist", count: 3, interval: 1000, delay: 7500 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 11500 },
-      { type: "specter", count: 2, interval: 1300, delay: 15000 },
+      { type: "yeti", count: 4, interval: 1100 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2000 },
+      { type: "cultist", count: 4, interval: 650, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
+      { type: "specter", count: 3, interval: 850, delay: 2200 },
     ],
     // Wave 3: Flying introduction
     [
-      { type: "mascot", count: 4, interval: 1100 },
-      { type: "yeti", count: 3, interval: 1700, delay: 3500 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 7000 },
-      { type: "harpy", count: 3, interval: 1200, delay: 11000 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 15000 },
+      { type: "mascot", count: 5, interval: 700 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "harpy", count: 4, interval: 750, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 3, interval: 1400, delay: 4000 },
-      { type: "yeti", count: 3, interval: 1700, delay: 8000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 12000 },
-      { type: "warlock", count: 2, interval: 1500, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 4, interval: 900, delay: 2200 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "warlock", count: 3, interval: 950, delay: 2200 },
     ],
     // Wave 5: Senior boss
     [
-      { type: "senior", count: 3, interval: 1800 },
-      { type: "yeti", count: 4, interval: 1600, delay: 3500 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 7500 },
-      { type: "berserker", count: 3, interval: 1200, delay: 11500 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 15500 },
+      { type: "senior", count: 4, interval: 1150 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "berserker", count: 4, interval: 750, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 6: Speed wave
     [
-      { type: "ice_witch", count: 4, interval: 1300 }, // Fast magic
-      { type: "assassin", count: 3, interval: 1300, delay: 3500 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 7500 },
-      { type: "harpy", count: 4, interval: 1100, delay: 11500 },
-      { type: "yeti", count: 3, interval: 1700, delay: 15500 },
+      { type: "ice_witch", count: 5, interval: 850 }, // Fast magic
+      { type: "assassin", count: 4, interval: 850, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 7: Tank wall
     [
-      { type: "yeti", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 8000 },
-      { type: "plaguebearer", count: 3, interval: 1400, delay: 12000 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 16000 },
+      { type: "yeti", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2000 },
+      { type: "plaguebearer", count: 4, interval: 900, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 8: Necromancer rises
     [
-      { type: "necromancer", count: 2, interval: 2500 },
-      { type: "yeti", count: 4, interval: 1600, delay: 3500 },
-      { type: "specter", count: 4, interval: 1200, delay: 8000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 12000 },
-      { type: "shadow_knight", count: 2, interval: 2800, delay: 16000 },
+      { type: "necromancer", count: 3, interval: 1600 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "specter", count: 5, interval: 750, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "shadow_knight", count: 3, interval: 1800, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 3, interval: 1800 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8000 },
-      { type: "harpy", count: 4, interval: 1100, delay: 12000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 16000 },
+      { type: "wyvern", count: 4, interval: 1150 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "harpy", count: 5, interval: 700, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 10: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8500 },
-      { type: "infernal", count: 3, interval: 1600, delay: 13000 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 11: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 4, interval: 1400, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 5, interval: 900, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 12: FINALE
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 4000 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 8500 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 13000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 17500 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 22000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
   ],
 
@@ -3850,115 +3957,115 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 14 waves - Fortress winter siege
     // Wave 1
     [
-      { type: "snow_goblin", count: 6, interval: 800 },
-      { type: "yeti", count: 2, interval: 1800, delay: 3500 },
-      { type: "archer", count: 4, interval: 1100, delay: 7500 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 11500 },
+      { type: "snow_goblin", count: 8, interval: 500 },
+      { type: "yeti", count: 3, interval: 1150, delay: 2000 },
+      { type: "archer", count: 5, interval: 700, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "harpy", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 8000 },
-      { type: "yeti", count: 3, interval: 1700, delay: 12000 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 16000 },
+      { type: "harpy", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2000 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2200 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "yeti", count: 4, interval: 1600 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 8000 },
-      { type: "plaguebearer", count: 3, interval: 1400, delay: 12000 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 16000 },
+      { type: "yeti", count: 5, interval: 1050 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2000 },
+      { type: "plaguebearer", count: 4, interval: 900, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 4: Ranged barrage
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Assassin strike
     [
-      { type: "assassin", count: 4, interval: 1200 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 3500 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 7500 },
-      { type: "berserker", count: 4, interval: 1100, delay: 11500 },
-      { type: "yeti", count: 3, interval: 1700, delay: 15500 },
+      { type: "assassin", count: 5, interval: 750 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 12000 },
-      { type: "shadow_knight", count: 2, interval: 2800, delay: 16000 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "shadow_knight", count: 3, interval: 1800, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 5, interval: 1300, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8500 },
-      { type: "infernal", count: 3, interval: 1600, delay: 13000 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 6, interval: 850, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "yeti", count: 4, interval: 1600, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 10: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 11: Juggernaut push
     [
-      { type: "juggernaut", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4000 },
-      { type: "yeti", count: 5, interval: 1500, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 17500 },
+      { type: "juggernaut", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2200 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 12: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "professor", count: 3, interval: 2500, delay: 4500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 9000 },
-      { type: "infernal", count: 4, interval: 1500, delay: 14000 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2000 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2000 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 13: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 9000 },
-      { type: "shadow_knight", count: 4, interval: 1800, delay: 14000 },
-      { type: "ice_witch", count: 5, interval: 1200, delay: 19000 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2000 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "shadow_knight", count: 5, interval: 1150, delay: 2000 },
+      { type: "ice_witch", count: 6, interval: 750, delay: 2200 },
     ],
     // Wave 14: FINALE
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "dean", count: 2, interval: 3500, delay: 5000 },
-      { type: "yeti", count: 6, interval: 1400, delay: 10000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 15000 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 20000 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 25000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "yeti", count: 8, interval: 900, delay: 2200 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2200 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 20000 },
     ],
   ],
 
@@ -3966,131 +4073,131 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 16 waves - Summit challenge
     // Wave 1
     [
-      { type: "snow_goblin", count: 6, interval: 800 },
-      { type: "yeti", count: 2, interval: 1800, delay: 3500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7500 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 11500 },
+      { type: "snow_goblin", count: 8, interval: 500 },
+      { type: "yeti", count: 3, interval: 1150, delay: 2000 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "harpy", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 8000 },
-      { type: "yeti", count: 3, interval: 1700, delay: 12000 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 16000 },
+      { type: "harpy", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2000 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2200 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "yeti", count: 4, interval: 1600 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 8000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 12000 },
-      { type: "ice_witch", count: 3, interval: 1400, delay: 16000 },
+      { type: "yeti", count: 5, interval: 1050 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2000 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "ice_witch", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Assassin strike
     [
-      { type: "assassin", count: 4, interval: 1200 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 3500 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 7500 },
-      { type: "berserker", count: 4, interval: 1100, delay: 11500 },
-      { type: "yeti", count: 3, interval: 1700, delay: 15500 },
+      { type: "assassin", count: 5, interval: 750 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2000 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "yeti", count: 4, interval: 1100, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8000 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 12000 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 16500 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2000 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "yeti", count: 4, interval: 1600, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "snow_goblin", count: 8, interval: 750, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "snow_goblin", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 5, interval: 1300, delay: 4000 },
-      { type: "yeti", count: 5, interval: 1500, delay: 8500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 13000 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 6, interval: 850, delay: 2200 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "yeti", count: 4, interval: 1600, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "yeti", count: 5, interval: 1050, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 10: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "ice_witch", count: 4, interval: 1300, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "ice_witch", count: 5, interval: 850, delay: 2200 },
     ],
     // Wave 11: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 9000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 14000 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 19000 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2000 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2000 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 12: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 4500 },
-      { type: "yeti", count: 5, interval: 1500, delay: 9000 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 14000 },
-      { type: "ice_witch", count: 5, interval: 1200, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2000 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2000 },
+      { type: "ice_witch", count: 6, interval: 750, delay: 2200 },
     ],
     // Wave 13: Golem awakens
     [
-      { type: "golem", count: 1, interval: 4000 },
-      { type: "professor", count: 2, interval: 3000, delay: 4000 },
-      { type: "yeti", count: 5, interval: 1500, delay: 8500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 13000 },
-      { type: "snow_goblin", count: 10, interval: 700, delay: 17500 },
+      { type: "golem", count: 1, interval: 2600 },
+      { type: "professor", count: 3, interval: 2000, delay: 2200 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "snow_goblin", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 14: Double Trustee
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "dean", count: 1, interval: 4000, delay: 5000 },
-      { type: "yeti", count: 5, interval: 1500, delay: 10000 },
-      { type: "shadow_knight", count: 4, interval: 1800, delay: 15000 },
-      { type: "ice_witch", count: 5, interval: 1200, delay: 20000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "dean", count: 1, interval: 2600, delay: 2200 },
+      { type: "yeti", count: 6, interval: 950, delay: 2200 },
+      { type: "shadow_knight", count: 5, interval: 1150, delay: 2200 },
+      { type: "ice_witch", count: 6, interval: 750, delay: 2200 },
     ],
     // Wave 15: Dragon flight
     [
-      { type: "dragon", count: 2, interval: 3500 },
-      { type: "trustee", count: 1, interval: 4500, delay: 5000 },
-      { type: "yeti", count: 6, interval: 1400, delay: 10000 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 15000 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 20000 },
+      { type: "dragon", count: 3, interval: 2200 },
+      { type: "trustee", count: 1, interval: 2900, delay: 2200 },
+      { type: "yeti", count: 8, interval: 900, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2200 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2200 },
     ],
     // Wave 16: FINALE
     [
-      { type: "golem", count: 2, interval: 3200 },
-      { type: "trustee", count: 2, interval: 3500, delay: 5000 },
-      { type: "yeti", count: 6, interval: 1400, delay: 10000 },
-      { type: "dragon", count: 2, interval: 3500, delay: 15000 },
-      { type: "dean", count: 2, interval: 3500, delay: 20000 },
-      { type: "juggernaut", count: 2, interval: 4000, delay: 25000 },
+      { type: "golem", count: 3, interval: 3200 },
+      { type: "trustee", count: 3, interval: 2200, delay: 2200 },
+      { type: "yeti", count: 8, interval: 900, delay: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "juggernaut", count: 3, interval: 2600, delay: 20000 },
     ],
   ],
 
@@ -4101,115 +4208,115 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
   lava: [
     // Wave 1: Basic introduction
     [
-      { type: "fire_imp", count: 6, interval: 800 }, // Regional fodder
-      { type: "fire_imp", count: 5, interval: 800, delay: 4000 },
-      { type: "cultist", count: 3, interval: 1000, delay: 8000 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 12000 }, // Regional tank
+      { type: "fire_imp", count: 8, interval: 500 }, // Regional fodder
+      { type: "fire_imp", count: 6, interval: 500, delay: 2200 },
+      { type: "cultist", count: 4, interval: 650, delay: 2000 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2200 }, // Regional tank
     ],
     // Wave 2: Flying introduction
     [
-      { type: "harpy", count: 4, interval: 1100 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 3500 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 7500 },
-      { type: "banshee", count: 3, interval: 1400, delay: 11500 },
-      { type: "ember_guard", count: 2, interval: 1600, delay: 15500 },
+      { type: "harpy", count: 5, interval: 700 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2000 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2200 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "ember_guard", count: 3, interval: 1050, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "ember_guard", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 8000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 12000 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 16000 },
+      { type: "ember_guard", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2000 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 4: Ranged barrage
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Berserker charge
     [
-      { type: "berserker", count: 5, interval: 1000 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 3500 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 7500 },
-      { type: "assassin", count: 3, interval: 1300, delay: 11500 },
-      { type: "ember_guard", count: 3, interval: 1500, delay: 15500 },
+      { type: "berserker", count: 6, interval: 650 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2000 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2200 },
+      { type: "assassin", count: 4, interval: 850, delay: 2200 },
+      { type: "ember_guard", count: 4, interval: 950, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8000 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 12000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 16500 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2000 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 5, interval: 1300, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 13000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 6, interval: 850, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2200 },
     ],
     // Wave 10: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 14000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 19000 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2000 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 11: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 12: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 14000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2000 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 13: Double Trustee
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 5000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 10000 },
-      { type: "infernal", count: 4, interval: 1500, delay: 15000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 20000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 14: FINALE
     [
-      { type: "trustee", count: 2, interval: 3500 },
-      { type: "dragon", count: 2, interval: 3500, delay: 4500 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 9000 },
-      { type: "dean", count: 2, interval: 3500, delay: 13500 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 18000 },
-      { type: "golem", count: 1, interval: 4000, delay: 23000 },
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2200 },
+      { type: "golem", count: 1, interval: 2600, delay: 23000 },
     ],
   ],
 
@@ -4217,131 +4324,131 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 16 waves - Caldera challenge
     // Wave 1
     [
-      { type: "fire_imp", count: 6, interval: 800 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 3500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7500 },
-      { type: "ember_guard", count: 3, interval: 1500, delay: 11500 },
+      { type: "fire_imp", count: 8, interval: 500 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2000 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
+      { type: "ember_guard", count: 4, interval: 950, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "harpy", count: 5, interval: 1100 },
-      { type: "banshee", count: 3, interval: 1400, delay: 4000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 8000 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 12000 },
-      { type: "wyvern", count: 2, interval: 2000, delay: 16000 },
+      { type: "harpy", count: 6, interval: 700 },
+      { type: "banshee", count: 4, interval: 900, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2000 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2200 },
+      { type: "wyvern", count: 3, interval: 1300, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "ember_guard", count: 4, interval: 1500 },
-      { type: "junior", count: 4, interval: 1200, delay: 4000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 8000 },
-      { type: "infernal", count: 3, interval: 1600, delay: 12000 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 16000 },
+      { type: "ember_guard", count: 5, interval: 950 },
+      { type: "junior", count: 5, interval: 750, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2000 },
+      { type: "infernal", count: 4, interval: 1050, delay: 2200 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 5, interval: 1000 },
-      { type: "mage", count: 4, interval: 1300, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8000 },
-      { type: "warlock", count: 3, interval: 1500, delay: 12000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 16000 },
+      { type: "archer", count: 6, interval: 650 },
+      { type: "mage", count: 5, interval: 850, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2000 },
+      { type: "warlock", count: 4, interval: 950, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2200 },
     ],
     // Wave 5: Assassin strike
     [
-      { type: "assassin", count: 4, interval: 1200 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 3500 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 7500 },
-      { type: "berserker", count: 4, interval: 1100, delay: 11500 },
-      { type: "ember_guard", count: 3, interval: 1500, delay: 15500 },
+      { type: "assassin", count: 5, interval: 750 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2000 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2200 },
+      { type: "berserker", count: 5, interval: 700, delay: 2200 },
+      { type: "ember_guard", count: 4, interval: 950, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 3, interval: 2200 },
-      { type: "specter", count: 4, interval: 1200, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8000 },
-      { type: "shadow_knight", count: 3, interval: 2500, delay: 12000 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 16500 },
+      { type: "necromancer", count: 4, interval: 1400 },
+      { type: "specter", count: 5, interval: 750, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2000 },
+      { type: "shadow_knight", count: 4, interval: 1600, delay: 2200 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 2, interval: 3500 },
-      { type: "gradstudent", count: 3, interval: 2000, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8500 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 13000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 17500 },
+      { type: "professor", count: 3, interval: 2200 },
+      { type: "gradstudent", count: 4, interval: 1300, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2200 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 1, interval: 5000 },
-      { type: "senior", count: 5, interval: 1300, delay: 4000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 8500 },
-      { type: "infernal", count: 4, interval: 1500, delay: 13000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 17500 },
+      { type: "dean", count: 1, interval: 3200 },
+      { type: "senior", count: 6, interval: 850, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 4, interval: 1600 },
-      { type: "harpy", count: 5, interval: 1100, delay: 4500 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 9000 },
-      { type: "banshee", count: 4, interval: 1300, delay: 13500 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 18000 },
+      { type: "wyvern", count: 5, interval: 1050 },
+      { type: "harpy", count: 6, interval: 700, delay: 2000 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2200 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 10: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 14000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 19000 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2000 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 11: Shadow convergence
     [
-      { type: "shadow_knight", count: 4, interval: 1800 },
-      { type: "necromancer", count: 3, interval: 2200, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "specter", count: 5, interval: 1100, delay: 13500 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 18000 },
+      { type: "shadow_knight", count: 5, interval: 1150 },
+      { type: "necromancer", count: 4, interval: 1400, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 12: Juggernaut push
     [
-      { type: "juggernaut", count: 1, interval: 5000 },
-      { type: "dean", count: 1, interval: 4000, delay: 4000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 8500 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 13000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 17500 },
+      { type: "juggernaut", count: 1, interval: 3200 },
+      { type: "dean", count: 1, interval: 2600, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 13: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "professor", count: 3, interval: 2500, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "infernal", count: 4, interval: 1500, delay: 14000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 19000 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "infernal", count: 5, interval: 950, delay: 2000 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 14: Golem awakens
     [
-      { type: "golem", count: 1, interval: 4000 },
-      { type: "trustee", count: 1, interval: 4500, delay: 4000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 8500 },
-      { type: "dragon", count: 1, interval: 4500, delay: 13000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 17500 },
+      { type: "golem", count: 1, interval: 2600 },
+      { type: "trustee", count: 1, interval: 2900, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 15: Double Trustee
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "dean", count: 2, interval: 3500, delay: 5000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 10000 },
-      { type: "dragon", count: 2, interval: 3500, delay: 15000 },
-      { type: "magma_spawn", count: 6, interval: 1300, delay: 20000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2200 },
+      { type: "magma_spawn", count: 8, interval: 850, delay: 2200 },
     ],
     // Wave 16: FINALE
     [
-      { type: "trustee", count: 2, interval: 3500 },
-      { type: "dragon", count: 2, interval: 3500, delay: 4500 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 9000 },
-      { type: "golem", count: 2, interval: 3200, delay: 13500 },
-      { type: "dean", count: 2, interval: 3500, delay: 18000 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 23000 },
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "golem", count: 3, interval: 3200, delay: 2200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 23000 },
     ],
   ],
 
@@ -4349,147 +4456,147 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
     // 18 waves - Ultimate challenge
     // Wave 1
     [
-      { type: "fire_imp", count: 6, interval: 800 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 3500 },
-      { type: "hexer", count: 3, interval: 1200, delay: 7500 },
-      { type: "ember_guard", count: 3, interval: 1500, delay: 11500 },
+      { type: "fire_imp", count: 8, interval: 500 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2000 },
+      { type: "hexer", count: 4, interval: 750, delay: 2200 },
+      { type: "ember_guard", count: 4, interval: 950, delay: 2200 },
     ],
     // Wave 2: Flying wave
     [
-      { type: "harpy", count: 5, interval: 1100 },
-      { type: "banshee", count: 4, interval: 1300, delay: 4000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 8000 },
-      { type: "wyvern", count: 3, interval: 1800, delay: 12000 },
-      { type: "magma_spawn", count: 3, interval: 1400, delay: 16000 },
+      { type: "harpy", count: 6, interval: 700 },
+      { type: "banshee", count: 5, interval: 850, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2000 },
+      { type: "wyvern", count: 4, interval: 1150, delay: 2200 },
+      { type: "magma_spawn", count: 4, interval: 900, delay: 2200 },
     ],
     // Wave 3: Tank push
     [
-      { type: "ember_guard", count: 4, interval: 1500 },
-      { type: "senior", count: 5, interval: 1300, delay: 4000 },
-      { type: "fire_imp", count: 8, interval: 750, delay: 8000 },
-      { type: "infernal", count: 4, interval: 1500, delay: 12000 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 16000 },
+      { type: "ember_guard", count: 5, interval: 950 },
+      { type: "senior", count: 6, interval: 850, delay: 2200 },
+      { type: "fire_imp", count: 10, interval: 480, delay: 2000 },
+      { type: "infernal", count: 5, interval: 950, delay: 2200 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2200 },
     ],
     // Wave 4: Ranged assault
     [
-      { type: "archer", count: 6, interval: 1000 },
-      { type: "mage", count: 5, interval: 1200, delay: 4000 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 8000 },
-      { type: "warlock", count: 4, interval: 1400, delay: 12000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 16000 },
+      { type: "archer", count: 8, interval: 650 },
+      { type: "mage", count: 6, interval: 750, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2000 },
+      { type: "warlock", count: 5, interval: 900, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 5: Speed assault
     [
-      { type: "assassin", count: 5, interval: 1100 },
-      { type: "magma_spawn", count: 4, interval: 1400, delay: 3500 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 7500 },
-      { type: "berserker", count: 5, interval: 1000, delay: 11500 },
-      { type: "ember_guard", count: 4, interval: 1500, delay: 15500 },
+      { type: "assassin", count: 6, interval: 700 },
+      { type: "magma_spawn", count: 5, interval: 900, delay: 2000 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
+      { type: "berserker", count: 6, interval: 650, delay: 2200 },
+      { type: "ember_guard", count: 5, interval: 950, delay: 2200 },
     ],
     // Wave 6: Necromancer ritual
     [
-      { type: "necromancer", count: 4, interval: 2000 },
-      { type: "specter", count: 5, interval: 1100, delay: 4000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 8000 },
-      { type: "shadow_knight", count: 4, interval: 1800, delay: 12000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 16500 },
+      { type: "necromancer", count: 5, interval: 1300 },
+      { type: "specter", count: 6, interval: 700, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2000 },
+      { type: "shadow_knight", count: 5, interval: 1150, delay: 2200 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 7: Professor boss
     [
-      { type: "professor", count: 3, interval: 3000 },
-      { type: "gradstudent", count: 4, interval: 1800, delay: 4000 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 8500 },
-      { type: "wyvern", count: 4, interval: 1600, delay: 13000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 17500 },
+      { type: "professor", count: 4, interval: 2000 },
+      { type: "gradstudent", count: 5, interval: 1150, delay: 2200 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "wyvern", count: 5, interval: 1050, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 8: Dean arrives
     [
-      { type: "dean", count: 2, interval: 4000 },
-      { type: "senior", count: 5, interval: 1300, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "dragon", count: 1, interval: 4500, delay: 14000 },
-      { type: "magma_spawn", count: 5, interval: 1300, delay: 19000 },
+      { type: "dean", count: 3, interval: 2600 },
+      { type: "senior", count: 6, interval: 850, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "dragon", count: 1, interval: 2900, delay: 2000 },
+      { type: "magma_spawn", count: 6, interval: 850, delay: 2200 },
     ],
     // Wave 9: Air dominance
     [
-      { type: "wyvern", count: 5, interval: 1500 },
-      { type: "harpy", count: 6, interval: 1000, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "banshee", count: 5, interval: 1200, delay: 13500 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 18000 },
+      { type: "wyvern", count: 6, interval: 950 },
+      { type: "harpy", count: 8, interval: 650, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "banshee", count: 6, interval: 750, delay: 2200 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 2200 },
     ],
     // Wave 10: Trustee arrival
     [
-      { type: "trustee", count: 1, interval: 5000 },
-      { type: "dean", count: 2, interval: 3500, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9500 },
-      { type: "dragon", count: 2, interval: 3500, delay: 14500 },
-      { type: "magma_spawn", count: 6, interval: 1300, delay: 19500 },
+      { type: "trustee", count: 1, interval: 3200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2200 },
+      { type: "magma_spawn", count: 8, interval: 850, delay: 19500 },
     ],
     // Wave 11: Shadow convergence
     [
-      { type: "shadow_knight", count: 5, interval: 1700 },
-      { type: "necromancer", count: 4, interval: 2000, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9500 },
-      { type: "specter", count: 6, interval: 1000, delay: 14000 },
-      { type: "fire_imp", count: 10, interval: 700, delay: 18500 },
+      { type: "shadow_knight", count: 6, interval: 1100 },
+      { type: "necromancer", count: 5, interval: 1300, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "specter", count: 8, interval: 650, delay: 2000 },
+      { type: "fire_imp", count: 13, interval: 450, delay: 18500 },
     ],
     // Wave 12: Golem awakens
     [
-      { type: "golem", count: 2, interval: 3200 },
-      { type: "juggernaut", count: 1, interval: 5000, delay: 4500 },
-      { type: "ember_guard", count: 5, interval: 1400, delay: 9000 },
-      { type: "infernal", count: 5, interval: 1400, delay: 14000 },
-      { type: "magma_spawn", count: 6, interval: 1300, delay: 19000 },
+      { type: "golem", count: 3, interval: 3200 },
+      { type: "juggernaut", count: 1, interval: 3200, delay: 2000 },
+      { type: "ember_guard", count: 6, interval: 900, delay: 2200 },
+      { type: "infernal", count: 6, interval: 900, delay: 2000 },
+      { type: "magma_spawn", count: 8, interval: 850, delay: 2200 },
     ],
     // Wave 13: Double Dean
     [
-      { type: "dean", count: 2, interval: 3500 },
-      { type: "professor", count: 3, interval: 2500, delay: 4500 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 9500 },
-      { type: "wyvern", count: 5, interval: 1500, delay: 14500 },
-      { type: "fire_imp", count: 12, interval: 650, delay: 19500 },
+      { type: "dean", count: 3, interval: 2200 },
+      { type: "professor", count: 4, interval: 1600, delay: 2000 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "wyvern", count: 6, interval: 950, delay: 2200 },
+      { type: "fire_imp", count: 12, interval: 420, delay: 19500 },
     ],
     // Wave 14: Double Trustee
     [
-      { type: "trustee", count: 2, interval: 4000 },
-      { type: "dragon", count: 2, interval: 3500, delay: 5000 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 10000 },
-      { type: "shadow_knight", count: 5, interval: 1700, delay: 15000 },
-      { type: "magma_spawn", count: 6, interval: 1300, delay: 20000 },
+      { type: "trustee", count: 3, interval: 2600 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2200 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "shadow_knight", count: 6, interval: 1100, delay: 2200 },
+      { type: "magma_spawn", count: 8, interval: 850, delay: 2200 },
     ],
     // Wave 15: Dragon flight
     [
-      { type: "dragon", count: 3, interval: 3000 },
-      { type: "trustee", count: 1, interval: 4500, delay: 5000 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 10000 },
-      { type: "wyvern", count: 5, interval: 1500, delay: 15000 },
-      { type: "necromancer", count: 4, interval: 2000, delay: 20000 },
+      { type: "dragon", count: 4, interval: 2000 },
+      { type: "trustee", count: 1, interval: 2900, delay: 2200 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "wyvern", count: 6, interval: 950, delay: 2200 },
+      { type: "necromancer", count: 5, interval: 1300, delay: 2200 },
     ],
     // Wave 16: Triple Trustee
     [
-      { type: "trustee", count: 3, interval: 3500 },
-      { type: "golem", count: 2, interval: 3200, delay: 5500 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 11000 },
-      { type: "dragon", count: 2, interval: 3500, delay: 16000 },
-      { type: "fire_imp", count: 12, interval: 650, delay: 21000 },
+      { type: "trustee", count: 4, interval: 2200 },
+      { type: "golem", count: 3, interval: 3200, delay: 2200 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 2200 },
+      { type: "fire_imp", count: 12, interval: 420, delay: 21000 },
     ],
     // Wave 17: Ultimate assault
     [
-      { type: "trustee", count: 3, interval: 3500 },
-      { type: "dean", count: 2, interval: 3500, delay: 5500 },
-      { type: "ember_guard", count: 6, interval: 1300, delay: 11000 },
-      { type: "juggernaut", count: 2, interval: 4000, delay: 16000 },
-      { type: "dragon", count: 2, interval: 3500, delay: 21000 },
+      { type: "trustee", count: 4, interval: 2200 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "ember_guard", count: 8, interval: 850, delay: 2200 },
+      { type: "juggernaut", count: 3, interval: 2600, delay: 2200 },
+      { type: "dragon", count: 3, interval: 2200, delay: 21000 },
     ],
     // Wave 18: THE ULTIMATE FINALE
     [
-      { type: "trustee", count: 4, interval: 3000 },
-      { type: "golem", count: 3, interval: 3000, delay: 6000 },
-      { type: "dean", count: 2, interval: 3500, delay: 12000 },
-      { type: "dragon", count: 3, interval: 3000, delay: 17000 },
-      { type: "juggernaut", count: 2, interval: 4000, delay: 22000 },
-      { type: "ember_guard", count: 8, interval: 1200, delay: 27000 },
+      { type: "trustee", count: 5, interval: 2000 },
+      { type: "golem", count: 4, interval: 2000, delay: 2000 },
+      { type: "dean", count: 3, interval: 2200, delay: 2200 },
+      { type: "dragon", count: 4, interval: 2000, delay: 2200 },
+      { type: "juggernaut", count: 3, interval: 2600, delay: 2200 },
+      { type: "ember_guard", count: 10, interval: 750, delay: 2200 },
     ],
   ],
 };

@@ -225,6 +225,19 @@ export const LANDMARK_DECORATION_TYPES = new Set([
   "witch_cottage",
   "ruined_temple",
   "sunken_pillar",
+  "carnegie_lake",
+  "frozen_waterfall",
+  "frozen_gate",
+  "aurora_crystal",
+  "cobra_statue",
+  "hieroglyph_wall",
+  "sarcophagus",
+  "lava_fall",
+  "obsidian_pillar",
+  "skull_throne",
+  "volcano_rim",
+  "idol_statue",
+  "gate",
 ]);
 
 // Check if position is valid for building

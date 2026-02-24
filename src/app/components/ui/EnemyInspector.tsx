@@ -384,7 +384,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
               <Swords size={14} className="mx-auto text-red-400 mb-1" />
               <div className="text-[8px] text-red-500">Melee Dmg</div>
-              <div className="text-red-200 font-bold text-xs">15</div>
+              <div className="text-red-200 font-bold text-xs">{eData.troopDamage ?? 22}</div>
             </div>
             <div className="bg-red-950/40 p-1.5 rounded-lg border border-red-900/40 text-center">
               <Timer size={14} className="mx-auto text-red-400 mb-1" />
@@ -394,7 +394,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
           </div>
         )}
 
-        {/* Breakthrough indicator */}
+        {/* Breakthrough indicator + contact damage */}
         {eData.breakthrough && (
           <div className="mb-3">
             <div className="bg-sky-950/40 p-1.5 rounded-lg border border-sky-900/40 text-center">
@@ -402,6 +402,11 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
                 <Zap size={12} className="text-sky-400" />
                 Bypasses Troops
               </div>
+              {eData.troopDamage != null && (
+                <div className="text-[9px] text-sky-300/90 mt-1">
+                  Hero Dmg: <span className="font-bold text-sky-200">{eData.troopDamage}</span>
+                </div>
+              )}
             </div>
           </div>
         )}

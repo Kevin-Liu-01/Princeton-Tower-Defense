@@ -1626,7 +1626,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                                       <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
                                         <Swords size={12} className="mx-auto text-red-400 mb-0.5" />
                                         <div className="text-[8px] text-red-500">Melee Dmg</div>
-                                        <div className="text-red-300 font-bold text-[10px]">15</div>
+                                        <div className="text-red-300 font-bold text-[10px]">{enemy.troopDamage ?? 22}</div>
                                       </div>
                                       <div className="bg-red-950/40 rounded p-1 text-center border border-red-900/30">
                                         <Timer size={12} className="mx-auto text-red-400 mb-0.5" />
@@ -1644,6 +1644,11 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                                           <Zap size={10} className="text-sky-400" />
                                           Bypasses Troops
                                         </div>
+                                        {enemy.troopDamage != null && (
+                                          <div className="text-[9px] text-sky-300/90 mt-0.5">
+                                            Hero Dmg: <span className="font-bold text-sky-200">{enemy.troopDamage}</span>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}

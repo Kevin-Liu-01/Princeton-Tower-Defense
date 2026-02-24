@@ -1676,7 +1676,8 @@ export default function PrincetonTowerDefense() {
           // Check for nearby troop
           const nearbyTroop = troops.find((t) => distance(enemyPos, t.pos) < 60);
           if (nearbyTroop) {
-            troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + 15;
+            const damage = eData.troopDamage ?? 22;
+            troopDamage[nearbyTroop.id] = (troopDamage[nearbyTroop.id] || 0) + damage;
             enemiesAttackingTroops[enemy.id] = nearbyTroop.id;
 
             // Apply enemy abilities to troop
@@ -1884,7 +1885,8 @@ export default function PrincetonTowerDefense() {
               if (!isPaused && now - enemy.lastHeroAttack > effectiveHeroAttackInterval2) {
                 setHero((prevHero) => {
                   if (!prevHero || prevHero.dead) return prevHero;
-                  const newHp = prevHero.hp - 20;
+                  const heroDamage = ENEMY_DATA[enemy.type].troopDamage ?? 28;
+                  const newHp = prevHero.hp - heroDamage;
                   if (newHp <= 0) {
                     addParticles(prevHero.pos, "explosion", 12);
                     return {
@@ -5239,68 +5241,86 @@ export default function PrincetonTowerDefense() {
       };
 
       // Create deterministic zones for different decoration types
-      // Divide the expanded grid into zones, each zone gets a primary decoration category
-      const zoneSize = 6; // Grid units per zone
-      const minX = -9, maxX = GRID_WIDTH + 9;
-      const minY = -9, maxY = GRID_HEIGHT + 9;
+      const zoneSize = 4;
+      const minX = -12, maxX = GRID_WIDTH + 12;
+      const minY = -12, maxY = GRID_HEIGHT + 12;
       const zonesX = Math.ceil((maxX - minX) / zoneSize);
       const zonesY = Math.ceil((maxY - minY) / zoneSize);
 
-      // Generate zone assignments deterministically based on seed
+      // Helper: distance from nearest path point (in grid coords)
+      const distFromPath = (gx: number, gy: number): number => {
+        const wp = gridToWorld({ x: gx, y: gy });
+        let minDist = Infinity;
+        for (let j = 0; j < path.length - 1; j++) {
+          const p1 = gridToWorldPath(path[j]);
+          const p2 = gridToWorldPath(path[j + 1]);
+          const d = distanceToLineSegment(wp, p1, p2);
+          if (d < minDist) minDist = d;
+        }
+        if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
+          const secPath = MAP_PATHS[levelData.secondaryPath];
+          for (let j = 0; j < secPath.length - 1; j++) {
+            const p1 = gridToWorldPath(secPath[j]);
+            const p2 = gridToWorldPath(secPath[j + 1]);
+            const d = distanceToLineSegment(wp, p1, p2);
+            if (d < minDist) minDist = d;
+          }
+        }
+        return minDist;
+      };
+
+      // Helper: distance from map edge (0 at edge, higher toward center)
+      const distFromEdge = (gx: number, gy: number): number => {
+        return Math.min(gx - minX, maxX - gx, gy - minY, maxY - gy);
+      };
+
+      // Zone assignments with smaller zones for tighter clustering
       const zoneAssignments: (keyof typeof categories)[][] = [];
       for (let zx = 0; zx < zonesX; zx++) {
         zoneAssignments[zx] = [];
         for (let zy = 0; zy < zonesY; zy++) {
-          // Use a deterministic hash based on zone position and seed
           const zoneHash = (mapSeed * 31 + zx * 17 + zy * 13) % 100;
-          // Weight towards trees (40%), terrain (30%), structures (20%), scattered (10%)
           let cat: keyof typeof categories;
-          if (zoneHash < 40) cat = "trees";
+          if (zoneHash < 45) cat = "trees";
           else if (zoneHash < 70) cat = "terrain";
-          else if (zoneHash < 90) cat = "structures";
+          else if (zoneHash < 88) cat = "structures";
           else cat = "scattered";
           zoneAssignments[zx][zy] = cat;
         }
       }
 
-      // Environment decorations - clustered by zone with variation
-      for (let i = 0; i < 400; i++) {
-        // Pick a zone first, then place within that zone with some jitter
+      // Main environment decorations — increased density
+      for (let i = 0; i < 700; i++) {
         const zoneX = Math.floor(seededRandom() * zonesX);
         const zoneY = Math.floor(seededRandom() * zonesY);
         const category = zoneAssignments[zoneX][zoneY];
         const categoryDecors = categories[category];
-
         if (!categoryDecors || categoryDecors.length === 0) continue;
 
-        // Position within zone with clustering (bias towards zone center)
         const zoneCenterX = minX + (zoneX + 0.5) * zoneSize;
         const zoneCenterY = minY + (zoneY + 0.5) * zoneSize;
-        // Gaussian-like distribution towards center
-        const offsetX = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
-        const offsetY = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.8;
+        const offsetX = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.65;
+        const offsetY = (seededRandom() - 0.5 + seededRandom() - 0.5) * zoneSize * 0.65;
         const gridX = zoneCenterX + offsetX;
         const gridY = zoneCenterY + offsetY;
 
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         if (isOnPath(worldPos)) continue;
 
-        // Pick decoration from category (slight bias towards first items for consistency)
         const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
         const type = categoryDecors[typeIndex] as DecorationType;
 
-        // Scale varies by category
         let baseScale = 0.7;
-        let scaleVar = 0.4;
+        let scaleVar = 0.5;
         if (category === "trees") {
-          baseScale = 0.8;
-          scaleVar = 0.5;
+          baseScale = 0.75;
+          scaleVar = 0.6;
         } else if (category === "structures") {
-          baseScale = 0.9;
-          scaleVar = 0.3;
-        } else if (category === "scattered") {
-          baseScale = 0.5;
+          baseScale = 0.85;
           scaleVar = 0.4;
+        } else if (category === "scattered") {
+          baseScale = 0.45;
+          scaleVar = 0.45;
         }
 
         decorations.push({
@@ -5313,31 +5333,29 @@ export default function PrincetonTowerDefense() {
         });
       }
 
-      // Add extra tree clusters at edges (forests feel)
-      for (let cluster = 0; cluster < 16; cluster++) {
-        // Pick cluster center at map edges
+      // Dense tree clusters at map edges — thick forest borders
+      for (let cluster = 0; cluster < 40; cluster++) {
         const edgeSide = Math.floor(seededRandom() * 4);
         let clusterX: number, clusterY: number;
-        if (edgeSide === 0) { // Left edge
-          clusterX = minX + seededRandom() * 4;
+        if (edgeSide === 0) {
+          clusterX = minX + seededRandom() * 5;
           clusterY = minY + seededRandom() * (maxY - minY);
-        } else if (edgeSide === 1) { // Right edge
-          clusterX = maxX - seededRandom() * 4;
+        } else if (edgeSide === 1) {
+          clusterX = maxX - seededRandom() * 5;
           clusterY = minY + seededRandom() * (maxY - minY);
-        } else if (edgeSide === 2) { // Top edge
+        } else if (edgeSide === 2) {
           clusterX = minX + seededRandom() * (maxX - minX);
-          clusterY = minY + seededRandom() * 4;
-        } else { // Bottom edge
+          clusterY = minY + seededRandom() * 5;
+        } else {
           clusterX = minX + seededRandom() * (maxX - minX);
-          clusterY = maxY - seededRandom() * 4;
+          clusterY = maxY - seededRandom() * 5;
         }
 
-        // Add 4-8 trees in this cluster
-        const treesInCluster = 4 + Math.floor(seededRandom() * 5);
+        const treesInCluster = 8 + Math.floor(seededRandom() * 10);
         const treeTypes = categories.trees;
         for (let t = 0; t < treesInCluster; t++) {
-          const treeX = clusterX + (seededRandom() - 0.5) * 3;
-          const treeY = clusterY + (seededRandom() - 0.5) * 3;
+          const treeX = clusterX + (seededRandom() - 0.5) * 2.5;
+          const treeY = clusterY + (seededRandom() - 0.5) * 2.5;
           const worldPos = gridToWorld({ x: treeX, y: treeY });
           if (isOnPath(worldPos)) continue;
 
@@ -5345,27 +5363,55 @@ export default function PrincetonTowerDefense() {
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.7 + seededRandom() * 0.6,
+            scale: 0.6 + seededRandom() * 0.7,
             rotation: seededRandom() * Math.PI * 2,
             variant: Math.floor(seededRandom() * 4),
           });
         }
       }
 
-      // Add structure clusters (small villages/camps)
-      for (let village = 0; village < 6; village++) {
-        const villageX = minX + 4 + seededRandom() * (maxX - minX - 8);
-        const villageY = minY + 4 + seededRandom() * (maxY - minY - 8);
+      // Interior tree groves — dense pockets away from paths
+      for (let grove = 0; grove < 12; grove++) {
+        const groveX = minX + 3 + seededRandom() * (maxX - minX - 6);
+        const groveY = minY + 3 + seededRandom() * (maxY - minY - 6);
+        const groveDist = distFromPath(groveX, groveY);
+        if (groveDist < TOWER_PLACEMENT_BUFFER + 40) continue;
 
-        // Check if village center is on path
+        const groveSize = 6 + Math.floor(seededRandom() * 8);
+        const treeTypes = categories.trees;
+        for (let t = 0; t < groveSize; t++) {
+          const tx = groveX + (seededRandom() - 0.5) * 2.2;
+          const ty = groveY + (seededRandom() - 0.5) * 2.2;
+          const worldPos = gridToWorld({ x: tx, y: ty });
+          if (isOnPath(worldPos)) continue;
+
+          decorations.push({
+            type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.65 + seededRandom() * 0.65,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
+      }
+
+      // Lively village clusters — tighter spacing with surrounding decorations
+      for (let village = 0; village < 12; village++) {
+        const villageX = minX + 5 + seededRandom() * (maxX - minX - 10);
+        const villageY = minY + 5 + seededRandom() * (maxY - minY - 10);
         const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
         if (isOnPath(villageCenterWorld)) continue;
+        if (distFromPath(villageX, villageY) < TOWER_PLACEMENT_BUFFER + 25) continue;
 
         const structureTypes = categories.structures;
-        const structuresInVillage = 3 + Math.floor(seededRandom() * 4);
-        for (let s = 0; s < structuresInVillage; s++) {
-          const structX = villageX + (seededRandom() - 0.5) * 4;
-          const structY = villageY + (seededRandom() - 0.5) * 4;
+        const scatteredTypes = categories.scattered;
+        const structCount = 6 + Math.floor(seededRandom() * 7);
+
+        // Core structures — tight cluster
+        for (let si = 0; si < structCount; si++) {
+          const structX = villageX + (seededRandom() - 0.5) * 2.8;
+          const structY = villageY + (seededRandom() - 0.5) * 2.8;
           const worldPos = gridToWorld({ x: structX, y: structY });
           if (isOnPath(worldPos)) continue;
 
@@ -5373,11 +5419,84 @@ export default function PrincetonTowerDefense() {
             type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.8 + seededRandom() * 0.4,
-            rotation: seededRandom() * Math.PI * 0.3 - Math.PI * 0.15, // Slight rotation only
-            variant: Math.floor(seededRandom() * 5),
+            scale: 0.7 + seededRandom() * 0.5,
+            rotation: seededRandom() * Math.PI * 0.3 - Math.PI * 0.15,
+            variant: Math.floor(seededRandom() * 4),
           });
         }
+
+        // Surrounding scatter (lampposts, barrels, signs around village)
+        const surroundCount = 4 + Math.floor(seededRandom() * 5);
+        for (let si = 0; si < surroundCount; si++) {
+          const angle = seededRandom() * Math.PI * 2;
+          const dist = 1.8 + seededRandom() * 1.5;
+          const sx = villageX + Math.cos(angle) * dist;
+          const sy = villageY + Math.sin(angle) * dist;
+          const worldPos = gridToWorld({ x: sx, y: sy });
+          if (isOnPath(worldPos)) continue;
+
+          const scType = scatteredTypes.length > 0
+            ? scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)]
+            : structureTypes[Math.floor(seededRandom() * structureTypes.length)];
+          decorations.push({
+            type: scType as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.5 + seededRandom() * 0.4,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
+
+        // Trees around village perimeter
+        const perimeterTrees = 3 + Math.floor(seededRandom() * 4);
+        const treeTypes = categories.trees;
+        for (let ti = 0; ti < perimeterTrees; ti++) {
+          const angle = seededRandom() * Math.PI * 2;
+          const dist = 2.5 + seededRandom() * 2;
+          const tx = villageX + Math.cos(angle) * dist;
+          const ty = villageY + Math.sin(angle) * dist;
+          const worldPos = gridToWorld({ x: tx, y: ty });
+          if (isOnPath(worldPos)) continue;
+
+          decorations.push({
+            type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.6 + seededRandom() * 0.5,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
+      }
+
+      // Edge density fill — progressively denser toward map borders
+      for (let i = 0; i < 350; i++) {
+        const gx = minX + seededRandom() * (maxX - minX);
+        const gy = minY + seededRandom() * (maxY - minY);
+        const edgeDist = distFromEdge(gx, gy);
+        const pathDist = distFromPath(gx, gy);
+
+        // Higher chance of placing when close to edge AND far from path
+        const edgeFactor = Math.max(0, 1 - edgeDist / 8);
+        const pathFactor = Math.min(1, pathDist / 120);
+        const placementChance = edgeFactor * pathFactor;
+        if (seededRandom() > placementChance) continue;
+
+        const worldPos = gridToWorld({ x: gx, y: gy });
+        if (isOnPath(worldPos)) continue;
+
+        const allDecorTypes = [...categories.trees, ...categories.terrain];
+        const fillType = allDecorTypes[Math.floor(seededRandom() * allDecorTypes.length)] as DecorationType;
+
+        decorations.push({
+          type: fillType,
+          x: worldPos.x,
+          y: worldPos.y,
+          scale: 0.5 + seededRandom() * 0.6,
+          rotation: seededRandom() * Math.PI * 2,
+          variant: Math.floor(seededRandom() * 4),
+        });
       }
 
       // Battle damage (theme-appropriate)
@@ -5392,10 +5511,9 @@ export default function PrincetonTowerDefense() {
               : currentTheme === "swamp"
                 ? ["crater", "skeleton", "bones", "debris"]
                 : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
-      // Battle damage - expanded +10 in every direction isometrically
-      for (let i = 0; i < 240; i++) {
-        const gridX = seededRandom() * (GRID_WIDTH + 19) - 9.5;
-        const gridY = seededRandom() * (GRID_HEIGHT + 19) - 9.5;
+      for (let i = 0; i < 280; i++) {
+        const gridX = seededRandom() * (GRID_WIDTH + 23) - 11.5;
+        const gridY = seededRandom() * (GRID_HEIGHT + 23) - 11.5;
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         const type =
           battleDecors[Math.floor(seededRandom() * battleDecors.length)];
@@ -5403,7 +5521,7 @@ export default function PrincetonTowerDefense() {
           type,
           x: worldPos.x,
           y: worldPos.y,
-          scale: 0.5 + seededRandom() * 0.5,
+          scale: 0.4 + seededRandom() * 0.55,
           rotation: seededRandom() * Math.PI * 2,
           variant: Math.floor(seededRandom() * 4),
         });
@@ -5595,6 +5713,15 @@ export default function PrincetonTowerDefense() {
               rotation: 0,
               variant: dec.variant,
             });
+          } else if (dec.type === "carnegie_lake") {
+            decorations.push({
+              type: "carnegie_lake",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
           } else if (dec.type === "ice_fortress") {
             decorations.push({
               type: "ice_fortress",
@@ -5610,6 +5737,78 @@ export default function PrincetonTowerDefense() {
               x: worldPos.x,
               y: worldPos.y,
               scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "frozen_waterfall") {
+            decorations.push({
+              type: "frozen_waterfall",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.3,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "aurora_crystal") {
+            decorations.push({
+              type: "aurora_crystal",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.1,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "snow_lantern") {
+            decorations.push({
+              type: "snow_lantern",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 0.9,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "frozen_pond") {
+            decorations.push({
+              type: "frozen_pond",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "frozen_soldier") {
+            decorations.push({
+              type: "frozen_soldier",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.0,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "frozen_gate") {
+            decorations.push({
+              type: "frozen_gate",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.2,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "broken_wall") {
+            decorations.push({
+              type: "broken_wall",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.1,
+              rotation: 0,
+              variant: dec.variant,
+            });
+          } else if (dec.type === "icicles") {
+            decorations.push({
+              type: "icicles",
+              x: worldPos.x,
+              y: worldPos.y,
+              scale: size * 1.0,
               rotation: 0,
               variant: dec.variant,
             });
@@ -5649,6 +5848,58 @@ export default function PrincetonTowerDefense() {
               rotation: 0,
               variant: dec.variant,
             });
+          // Desert
+          } else if (dec.type === "sarcophagus") {
+            decorations.push({ type: "sarcophagus", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "cobra_statue") {
+            decorations.push({ type: "cobra_statue", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "hieroglyph_wall") {
+            decorations.push({ type: "hieroglyph_wall", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "pottery") {
+            decorations.push({ type: "pottery", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "sand_pile") {
+            decorations.push({ type: "sand_pile", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "treasure_chest") {
+            decorations.push({ type: "treasure_chest", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
+          // Volcanic
+          } else if (dec.type === "lava_fall") {
+            decorations.push({ type: "lava_fall", x: worldPos.x, y: worldPos.y, scale: size * 1.3, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "obsidian_pillar") {
+            decorations.push({ type: "obsidian_pillar", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "fire_crystal") {
+            decorations.push({ type: "fire_crystal", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "skull_throne") {
+            decorations.push({ type: "skull_throne", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "ember_rock") {
+            decorations.push({ type: "ember_rock", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "volcano_rim") {
+            decorations.push({ type: "volcano_rim", x: worldPos.x, y: worldPos.y, scale: size * 1.3, rotation: 0, variant: dec.variant });
+          // Swamp
+          } else if (dec.type === "sunken_pillar") {
+            decorations.push({ type: "sunken_pillar", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "idol_statue") {
+            decorations.push({ type: "idol_statue", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "glowing_runes") {
+            decorations.push({ type: "glowing_runes", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "hanging_cage") {
+            decorations.push({ type: "hanging_cage", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "poison_pool") {
+            decorations.push({ type: "poison_pool", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "skeleton_pile") {
+            decorations.push({ type: "skeleton_pile", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
+          // Grassland
+          } else if (dec.type === "hedge") {
+            decorations.push({ type: "hedge", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "campfire") {
+            decorations.push({ type: "campfire", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "dock") {
+            decorations.push({ type: "dock", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "gate") {
+            decorations.push({ type: "gate", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "reeds") {
+            decorations.push({ type: "reeds", x: worldPos.x, y: worldPos.y, scale: size * 0.8, rotation: 0, variant: dec.variant });
+          } else if (dec.type === "fishing_spot") {
+            decorations.push({ type: "fishing_spot", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
           }
         }
       }

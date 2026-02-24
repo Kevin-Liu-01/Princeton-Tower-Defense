@@ -1105,7 +1105,7 @@ export function SetupScreen({
                                         <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
                                           <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
                                           <div className="text-[7px] text-red-500">Melee</div>
-                                          <div className="text-red-300 font-bold text-[9px]">15</div>
+                                          <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? 22}</div>
                                         </div>
                                         <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
                                           <Timer size={10} className="mx-auto text-red-400 mb-0.5" />
@@ -1123,6 +1123,9 @@ export function SetupScreen({
                                             <Zap size={10} className="text-sky-400" />
                                             Bypasses Troops
                                           </div>
+                                          {enemy.troopDamage != null && (
+                                            <div className="text-[8px] text-sky-300/90">Hero: {enemy.troopDamage}</div>
+                                          )}
                                         </div>
                                       </div>
                                     )}

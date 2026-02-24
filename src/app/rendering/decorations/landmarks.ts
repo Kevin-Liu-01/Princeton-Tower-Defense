@@ -120,94 +120,348 @@ export function drawSphinx(
   time: number
 ): void {
   const s = scale * (isGiant ? 1.5 : 1);
-  const stoneColor = "#c4a574";
-  const stoneDark = "#a48554";
-  const stoneLight = "#d4b584";
+  const lit = "#d4b584";
+  const base = "#c4a574";
+  const mid = "#b49564";
+  const dark = "#9a7a4a";
+  const shadow = "#7a5a30";
+  const accent = "#d4a840";
+  const stripe = "#8a6a3a";
 
-  // Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+  // Isometric body dimensions
+  const bodyW = 44 * s;  // full width along isometric X
+  const bodyD = 22 * s;  // depth (iso Y)
+  const bodyH = 18 * s;  // height
+  const iso = 0.5;
+
+  // Body anchor = front-bottom-center of the body block
+  const bx = x;
+  const by = y;
+
+  // Key isometric offsets
+  const hw = bodyW * 0.5 * 0.866; // half-width projected
+  const hd = bodyD * 0.5 * iso;   // half-depth projected
+
+  // === GROUND SHADOW (flat) ===
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
   ctx.beginPath();
-  ctx.ellipse(x + 10 * s, y + 5 * s, 50 * s, 15 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(bx + 4 * s, by + 6 * s, 42 * s, 16 * s, 0.08, 0, Math.PI * 2);
   ctx.fill();
 
-  // Body (lion shape - isometric)
-  const bodyGrad = ctx.createLinearGradient(x - 40 * s, y, x + 40 * s, y - 30 * s);
-  bodyGrad.addColorStop(0, stoneDark);
-  bodyGrad.addColorStop(0.5, stoneColor);
-  bodyGrad.addColorStop(1, stoneLight);
-  ctx.fillStyle = bodyGrad;
+  // === PEDESTAL (single isometric prism) ===
+  const pdW = 36 * s, pdH = 8 * s;
+  const pdIso = pdW * 0.866 * 0.5;
+  const pdD = pdW * iso * 0.5;
+  // Top
+  ctx.fillStyle = mid;
   ctx.beginPath();
-  ctx.ellipse(x, y - 10 * s, 45 * s, 20 * s, 0, 0, Math.PI * 2);
+  ctx.moveTo(bx, by - pdH - pdD);
+  ctx.lineTo(bx + pdIso, by - pdH);
+  ctx.lineTo(bx, by - pdH + pdD);
+  ctx.lineTo(bx - pdIso, by - pdH);
+  ctx.closePath();
+  ctx.fill();
+  // Left face
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(bx - pdIso, by - pdH);
+  ctx.lineTo(bx, by - pdH + pdD);
+  ctx.lineTo(bx, by + pdD);
+  ctx.lineTo(bx - pdIso, by);
+  ctx.closePath();
+  ctx.fill();
+  // Right face
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.moveTo(bx + pdIso, by - pdH);
+  ctx.lineTo(bx, by - pdH + pdD);
+  ctx.lineTo(bx, by + pdD);
+  ctx.lineTo(bx + pdIso, by);
+  ctx.closePath();
+  ctx.fill();
+  // Accent trim on top edges
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 1.2 * s;
+  ctx.beginPath();
+  ctx.moveTo(bx - pdIso, by - pdH);
+  ctx.lineTo(bx, by - pdH - pdD);
+  ctx.lineTo(bx + pdIso, by - pdH);
+  ctx.stroke();
+
+  const bt = by - pdH; // body sits on top of pedestal
+
+  // === TAIL (behind body) ===
+  ctx.strokeStyle = mid;
+  ctx.lineWidth = 3 * s;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(bx - hw + 4 * s, bt - bodyH * 0.5);
+  ctx.bezierCurveTo(bx - hw - 10 * s, bt - bodyH * 0.7, bx - hw - 12 * s, bt - bodyH * 1.3, bx - hw - 6 * s, bt - bodyH * 1.5);
+  ctx.stroke();
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(bx - hw - 6 * s, bt - bodyH * 1.5, 2.5 * s, 0, Math.PI * 2);
   ctx.fill();
 
-  // Front paws
-  ctx.fillStyle = stoneColor;
+  // === LION BODY (isometric box with rounded back) ===
+  // Back haunch (raised hump)
+  ctx.fillStyle = dark;
   ctx.beginPath();
-  ctx.ellipse(x + 35 * s, y + 5 * s, 15 * s, 8 * s, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(x + 25 * s, y + 8 * s, 15 * s, 8 * s, 0.3, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Human head
-  ctx.fillStyle = stoneLight;
-  ctx.beginPath();
-  ctx.arc(x - 25 * s, y - 35 * s, 18 * s, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Headdress
-  ctx.fillStyle = stoneColor;
-  ctx.beginPath();
-  ctx.moveTo(x - 25 * s, y - 55 * s);
-  ctx.lineTo(x - 45 * s, y - 20 * s);
-  ctx.lineTo(x - 5 * s, y - 20 * s);
+  ctx.moveTo(bx - hw, bt);
+  ctx.lineTo(bx - hw, bt - bodyH * 0.8);
+  ctx.bezierCurveTo(bx - hw + 6 * s, bt - bodyH * 1.4, bx - 4 * s, bt - bodyH * 1.4, bx, bt - bodyH);
+  ctx.lineTo(bx, bt);
   ctx.closePath();
   ctx.fill();
 
-  // Face details
-  ctx.fillStyle = stoneDark;
-  // Eyes
+  // Body left face (shadow side)
+  ctx.fillStyle = shadow;
   ctx.beginPath();
-  ctx.ellipse(x - 30 * s, y - 38 * s, 3 * s, 2 * s, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(x - 20 * s, y - 38 * s, 3 * s, 2 * s, 0, 0, Math.PI * 2);
+  ctx.moveTo(bx - hw, bt);
+  ctx.lineTo(bx - hw, bt - bodyH * 0.8);
+  ctx.bezierCurveTo(bx - hw + 6 * s, bt - bodyH * 1.4, bx - 4 * s, bt - bodyH * 1.4, bx, bt - bodyH);
+  ctx.lineTo(bx + hw, bt - bodyH);
+  ctx.lineTo(bx + hw, bt);
+  ctx.lineTo(bx, bt + hd);
+  ctx.lineTo(bx - hw, bt);
+  ctx.closePath();
   ctx.fill();
 
-  // Nose (broken for realism)
-  ctx.strokeStyle = stoneDark;
-  ctx.lineWidth = 1.5 * s;
+  // Body right face (lit side)
+  ctx.fillStyle = lit;
   ctx.beginPath();
-  ctx.moveTo(x - 25 * s, y - 35 * s);
-  ctx.lineTo(x - 23 * s, y - 30 * s);
+  ctx.moveTo(bx + hw, bt);
+  ctx.lineTo(bx + hw, bt - bodyH);
+  ctx.lineTo(bx, bt - bodyH - hd);
+  ctx.bezierCurveTo(bx - 4 * s, bt - bodyH * 1.4 - hd, bx - hw + 6 * s, bt - bodyH * 1.4 - hd, bx - hw, bt - bodyH * 0.8 - hd);
+  ctx.lineTo(bx - hw, bt - hd);
+  ctx.lineTo(bx, bt + hd);
+  ctx.lineTo(bx + hw, bt);
+  ctx.closePath();
+  ctx.fill();
+
+  // Body top face
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.moveTo(bx - hw, bt - bodyH * 0.8);
+  ctx.bezierCurveTo(bx - hw + 6 * s, bt - bodyH * 1.4, bx - 4 * s, bt - bodyH * 1.4, bx, bt - bodyH);
+  ctx.lineTo(bx + hw, bt - bodyH);
+  ctx.lineTo(bx + hw - hw, bt - bodyH - hd);
+  ctx.bezierCurveTo(bx - 4 * s, bt - bodyH * 1.4 - hd, bx - hw + 6 * s, bt - bodyH * 1.4 - hd, bx - hw, bt - bodyH * 0.8 - hd);
+  ctx.closePath();
+  ctx.fill();
+
+  // Front face of body (between paws)
+  ctx.fillStyle = mid;
+  ctx.beginPath();
+  ctx.moveTo(bx + hw, bt);
+  ctx.lineTo(bx + hw, bt - bodyH);
+  ctx.lineTo(bx, bt - bodyH - hd);
+  ctx.lineTo(bx, bt + hd);
+  ctx.closePath();
+  ctx.fill();
+
+  // === FRONT PAWS (two isometric blocks extending forward) ===
+  const pawL = 18 * s;
+  const pawW = 6 * s;
+  const pawH = 5 * s;
+  const pawFrontX = bx + hw;
+  const pawIso = pawW * 0.866 * 0.5;
+
+  // Left paw (lower, shadow side)
+  const lpY = bt - 2 * s;
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(pawFrontX, lpY);
+  ctx.lineTo(pawFrontX + pawL * 0.5, lpY + pawL * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5, lpY + pawL * 0.25 + pawH);
+  ctx.lineTo(pawFrontX, lpY + pawH);
+  ctx.closePath();
+  ctx.fill();
+  // Top
+  ctx.fillStyle = mid;
+  ctx.beginPath();
+  ctx.moveTo(pawFrontX, lpY);
+  ctx.lineTo(pawFrontX + pawL * 0.5, lpY + pawL * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5 - pawIso, lpY + pawL * 0.25 - pawW * 0.25);
+  ctx.lineTo(pawFrontX - pawIso, lpY - pawW * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  // Outer side
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.moveTo(pawFrontX + pawL * 0.5, lpY + pawL * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5 - pawIso, lpY + pawL * 0.25 - pawW * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5 - pawIso, lpY + pawL * 0.25 - pawW * 0.25 + pawH);
+  ctx.lineTo(pawFrontX + pawL * 0.5, lpY + pawL * 0.25 + pawH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Right paw (upper, lit side)
+  const rpY = bt - bodyH + 2 * s;
+  ctx.fillStyle = shadow;
+  ctx.beginPath();
+  ctx.moveTo(pawFrontX, rpY);
+  ctx.lineTo(pawFrontX + pawL * 0.5, rpY + pawL * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5, rpY + pawL * 0.25 + pawH);
+  ctx.lineTo(pawFrontX, rpY + pawH);
+  ctx.closePath();
+  ctx.fill();
+  // Top
+  ctx.fillStyle = lit;
+  ctx.beginPath();
+  ctx.moveTo(pawFrontX, rpY);
+  ctx.lineTo(pawFrontX + pawL * 0.5, rpY + pawL * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5 + pawIso, rpY + pawL * 0.25 - pawW * 0.25);
+  ctx.lineTo(pawFrontX + pawIso, rpY - pawW * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  // Outer side
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.moveTo(pawFrontX + pawL * 0.5, rpY + pawL * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5 + pawIso, rpY + pawL * 0.25 - pawW * 0.25);
+  ctx.lineTo(pawFrontX + pawL * 0.5 + pawIso, rpY + pawL * 0.25 - pawW * 0.25 + pawH);
+  ctx.lineTo(pawFrontX + pawL * 0.5, rpY + pawL * 0.25 + pawH);
+  ctx.closePath();
+  ctx.fill();
+
+  // === HEAD (isometric block with tapered chin) ===
+  const hx2 = bx + hw - 4 * s;
+  const hy2 = bt - bodyH - 6 * s;
+  const headW = 14 * s;
+  const headH = 20 * s;
+  const headD = 12 * s;
+  const hdIso = headW * 0.866 * 0.5;
+  const hdDep = headD * iso * 0.5;
+
+  // Nemes lappets (drape down behind head on both sides)
+  ctx.fillStyle = mid;
+  ctx.beginPath();
+  ctx.moveTo(hx2 - hdIso - 2 * s, hy2);
+  ctx.lineTo(hx2 - hdIso - 4 * s, hy2 + headH + 8 * s);
+  ctx.lineTo(hx2 - hdIso, hy2 + headH + 8 * s);
+  ctx.lineTo(hx2 - hdIso + 2 * s, hy2 + 2 * s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = lit;
+  ctx.beginPath();
+  ctx.moveTo(hx2 + hdIso + 2 * s, hy2);
+  ctx.lineTo(hx2 + hdIso + 4 * s, hy2 + headH + 8 * s);
+  ctx.lineTo(hx2 + hdIso, hy2 + headH + 8 * s);
+  ctx.lineTo(hx2 + hdIso - 2 * s, hy2 + 2 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Head left face
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(hx2 - hdIso, hy2);
+  ctx.lineTo(hx2, hy2 + hdDep);
+  ctx.lineTo(hx2, hy2 + headH + hdDep - 4 * s);
+  ctx.lineTo(hx2 - hdIso + 2 * s, hy2 + headH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Head right face
+  ctx.fillStyle = lit;
+  ctx.beginPath();
+  ctx.moveTo(hx2 + hdIso, hy2);
+  ctx.lineTo(hx2, hy2 + hdDep);
+  ctx.lineTo(hx2, hy2 + headH + hdDep - 4 * s);
+  ctx.lineTo(hx2 + hdIso - 2 * s, hy2 + headH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Head front face (where face features go)
+  ctx.fillStyle = base;
+  ctx.beginPath();
+  ctx.moveTo(hx2 - hdIso, hy2);
+  ctx.lineTo(hx2 + hdIso, hy2);
+  ctx.lineTo(hx2 + hdIso - 2 * s, hy2 + headH);
+  ctx.lineTo(hx2 - hdIso + 2 * s, hy2 + headH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Nemes top dome
+  ctx.fillStyle = lit;
+  ctx.beginPath();
+  ctx.moveTo(hx2 - hdIso - 2 * s, hy2);
+  ctx.bezierCurveTo(hx2 - hdIso - 3 * s, hy2 - 10 * s, hx2 - 4 * s, hy2 - 16 * s, hx2, hy2 - 18 * s);
+  ctx.bezierCurveTo(hx2 + 4 * s, hy2 - 16 * s, hx2 + hdIso + 3 * s, hy2 - 10 * s, hx2 + hdIso + 2 * s, hy2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Nemes stripes
+  ctx.strokeStyle = stripe;
+  ctx.lineWidth = 1.5 * s;
+  for (let ns = 0; ns < 4; ns++) {
+    const nsFrac = (ns + 1) / 5;
+    const nsY = hy2 - 18 * s + nsFrac * 18 * s;
+    const nsSpread = (hdIso + 2 * s) * Math.sin(nsFrac * Math.PI * 0.9);
+    ctx.beginPath();
+    ctx.moveTo(hx2 - nsSpread, nsY + nsFrac * 2 * s);
+    ctx.quadraticCurveTo(hx2, nsY - 1.5 * s, hx2 + nsSpread, nsY + nsFrac * 2 * s);
+    ctx.stroke();
+  }
+
+  // Face features
+  // Eyes
+  ctx.fillStyle = shadow;
+  ctx.beginPath();
+  ctx.ellipse(hx2 - 4 * s, hy2 + 4 * s, 2.5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(hx2 + 4 * s, hy2 + 4 * s, 2.5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = lit;
+  ctx.beginPath();
+  ctx.ellipse(hx2 - 4 * s, hy2 + 3.8 * s, 1.4 * s, 0.8 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(hx2 + 4 * s, hy2 + 3.8 * s, 1.4 * s, 0.8 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Nose
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(hx2, hy2 + 7 * s);
+  ctx.lineTo(hx2 - 1.5 * s, hy2 + 10 * s);
+  ctx.lineTo(hx2 + 1.5 * s, hy2 + 10 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Mouth
+  ctx.strokeStyle = dark;
+  ctx.lineWidth = 1 * s;
+  ctx.beginPath();
+  ctx.moveTo(hx2 - 4 * s, hy2 + 13 * s);
+  ctx.quadraticCurveTo(hx2, hy2 + 14.5 * s, hx2 + 4 * s, hy2 + 13 * s);
   ctx.stroke();
 
+  // Uraeus (cobra ornament)
+  ctx.fillStyle = accent;
+  ctx.beginPath();
+  ctx.moveTo(hx2, hy2 - 14 * s);
+  ctx.bezierCurveTo(hx2 - 2 * s, hy2 - 18 * s, hx2 + 2 * s, hy2 - 23 * s, hx2, hy2 - 25 * s);
+  ctx.bezierCurveTo(hx2 + 3 * s, hy2 - 22 * s, hx2 + 3 * s, hy2 - 17 * s, hx2 + 1 * s, hy2 - 14 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Giant sphinx glowing eyes
   if (isGiant) {
-    // Glowing eyes for giant sphinx
     const eyeGlow = 0.5 + Math.sin(time * 2) * 0.3;
-    ctx.fillStyle = `rgba(255, 200, 50, ${eyeGlow})`;
+    ctx.fillStyle = `rgba(255,200,50,${eyeGlow})`;
     ctx.shadowColor = "#ffcc00";
-    ctx.shadowBlur = 10 * s;
+    ctx.shadowBlur = 12 * s;
     ctx.beginPath();
-    ctx.ellipse(x - 30 * s, y - 38 * s, 2 * s, 1.5 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(hx2 - 4 * s, hy2 + 4 * s, 2 * s, 1.2 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(x - 20 * s, y - 38 * s, 2 * s, 1.5 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(hx2 + 4 * s, hy2 + 4 * s, 2 * s, 1.2 * s, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
   }
-
-  // Weathering cracks
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-  ctx.lineWidth = 0.5 * s;
-  ctx.beginPath();
-  ctx.moveTo(x - 10 * s, y - 15 * s);
-  ctx.lineTo(x + 5 * s, y - 5 * s);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x + 20 * s, y - 8 * s);
-  ctx.lineTo(x + 30 * s, y - 2 * s);
-  ctx.stroke();
 }
 
 // ============================================================================
