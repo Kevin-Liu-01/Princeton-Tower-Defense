@@ -16,6 +16,36 @@ export interface DecorationRenderParams {
 }
 
 /**
+ * Draws an organic blob shape instead of a perfect ellipse.
+ * Uses multi-frequency sine wave noise (matching hazard drawOrganicBlob pattern)
+ * to create natural-looking edges for water features.
+ */
+function drawOrganicWaterShape(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  seed: number,
+  bumpiness: number = 0.12
+): void {
+  ctx.beginPath();
+  const pts = 24;
+  for (let i = 0; i <= pts; i++) {
+    const ang = (i / pts) * Math.PI * 2;
+    const n1 = Math.sin(ang * 3 + seed) * bumpiness;
+    const n2 = Math.sin(ang * 5 + seed * 2.3) * bumpiness * 0.5;
+    const n3 = Math.sin(ang * 7 + seed * 4.1) * bumpiness * 0.25;
+    const variation = 1 + n1 + n2 + n3;
+    const x = cx + Math.cos(ang) * rx * variation;
+    const y = cy + Math.sin(ang) * ry * variation;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+/**
  * Renders a single decoration item based on its type.
  * This function contains all the rendering logic for every decoration type in the game.
  */
@@ -1466,13 +1496,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Stone mortar on lower right
         drawStoneLines(cx, cy + iD - wH * 0.4, cx + iW, cy - wH * 0.4, 4);
 
-        // Timber frame on upper right wall
+        // Timber frame on upper right wall (above stone junction at 40% height)
         ctx.strokeStyle = woodDark; ctx.lineWidth = 2 * s;
-        const halfLine = cy - wH * 0.4;
         ctx.beginPath();
-        ctx.moveTo(cx + 2 * s, cy + iD - halfLine + halfLine); ctx.lineTo(cx + 2 * s, cy + iD - wH);
-        ctx.moveTo(cx + iW - 2 * s, cy - halfLine + halfLine - iD * 0.5); ctx.lineTo(cx + iW - 2 * s, cy - wH);
-        ctx.moveTo(cx + iW * 0.5, cy + iD * 0.5 - (wH - halfLine) + halfLine - halfLine + halfLine * 0.6); ctx.lineTo(cx + iW * 0.5, cy + iD * 0.5 - wH);
+        ctx.moveTo(cx + 2 * s, cy + iD - wH * 0.4); ctx.lineTo(cx + 2 * s, cy + iD - wH);
+        ctx.moveTo(cx + iW - 2 * s, cy - wH * 0.4); ctx.lineTo(cx + iW - 2 * s, cy - wH);
+        ctx.moveTo(cx + iW * 0.5, cy + iD * 0.5 - wH * 0.4); ctx.lineTo(cx + iW * 0.5, cy + iD * 0.5 - wH);
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(cx + 1 * s, cy + iD - wH * 0.65); ctx.lineTo(cx + iW - 1 * s, cy - wH * 0.65);
@@ -4109,6 +4138,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const py = screenPos.y;
       const palmVariant = variant || 0;
       const pSway = Math.sin(decorTime * 1.5 + dec.x * 0.01) * 2 * s;
+      const pSeed = dec.x || 0;
+      const pAOff = ((pSeed * 7.3 + 13) % 100) / 100 * 0.6 - 0.3;
 
       const pb0x = px, pb0y = py + 3 * s;
       const pb1x = px + 4 * s + pSway * 0.15, pb1y = py - 16 * s;
@@ -4116,15 +4147,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const pb3x = px + 5 * s + pSway, pb3y = py - 56 * s;
       const pCrownX = pb3x, pCrownY = pb3y;
 
+      // Ground shadow
       ctx.fillStyle = "rgba(0,0,0,0.15)";
       ctx.beginPath();
       ctx.ellipse(px + 8 * s, py + 4 * s, 14 * s, 6 * s, 0.15, 0, Math.PI * 2);
       ctx.fill();
 
-      // Trunk: 5 segments, 2 faces each
+      // Trunk: 6 segments, 3 faces each
       const pWBase = 12 * s, pWTop = 7 * s;
-      for (let i = 4; i >= 0; i--) {
-        const t0 = i / 5, t1 = (i + 1) / 5;
+      for (let i = 5; i >= 0; i--) {
+        const t0 = i / 6, t1 = (i + 1) / 6;
         const mt0 = 1 - t0, mt1 = 1 - t1;
         const cx0 = mt0*mt0*mt0*pb0x + 3*mt0*mt0*t0*pb1x + 3*mt0*t0*t0*pb2x + t0*t0*t0*pb3x;
         const cy0 = mt0*mt0*mt0*pb0y + 3*mt0*mt0*t0*pb1y + 3*mt0*t0*t0*pb2y + t0*t0*t0*pb3y;
@@ -4132,20 +4164,31 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const cy1 = mt1*mt1*mt1*pb0y + 3*mt1*mt1*t1*pb1y + 3*mt1*t1*t1*pb2y + t1*t1*t1*pb3y;
         const w0 = pWBase + (pWTop - pWBase) * t0;
         const w1 = pWBase + (pWTop - pWBase) * t1;
-        ctx.fillStyle = i % 2 === 0 ? "#5a4510" : "#4a3808";
+        const lip0 = w0 * 0.22;
+        // Left (shadow) face
+        ctx.fillStyle = i % 2 === 0 ? "#5a4510" : "#4e3c0e";
         ctx.beginPath();
         ctx.moveTo(cx0 - w0 * 0.5, cy0);
         ctx.lineTo(cx1 - w1 * 0.5, cy1);
         ctx.lineTo(cx1, cy1 + w1 * 0.2);
-        ctx.lineTo(cx0, cy0 + w0 * 0.22);
+        ctx.lineTo(cx0, cy0 + lip0);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = i % 2 === 0 ? "#9b7518" : "#8a6814";
+        // Right (lit) face
+        ctx.fillStyle = i % 2 === 0 ? "#b8891e" : "#a07a18";
         ctx.beginPath();
         ctx.moveTo(cx0 + w0 * 0.5, cy0);
         ctx.lineTo(cx1 + w1 * 0.5, cy1);
         ctx.lineTo(cx1, cy1 + w1 * 0.2);
-        ctx.lineTo(cx0, cy0 + w0 * 0.22);
+        ctx.lineTo(cx0, cy0 + lip0);
+        ctx.closePath();
+        ctx.fill();
+        // Front lip
+        ctx.fillStyle = i % 2 === 0 ? "#6b5012" : "#5a4210";
+        ctx.beginPath();
+        ctx.moveTo(cx0 - w0 * 0.5, cy0);
+        ctx.lineTo(cx0 + w0 * 0.5, cy0);
+        ctx.lineTo(cx0, cy0 + lip0);
         ctx.closePath();
         ctx.fill();
       }
@@ -4156,25 +4199,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.ellipse(pCrownX, pCrownY + 2 * s, 8 * s, 4 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pre-baked frond palettes
+      // Pre-baked frond palettes (4 back + 6 front entries)
       const _FP = [
-        { back: [{ rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" }, { rib: "#226422", lit: "#306e30", dark: "#104e10" }, { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" }], front: [{ rib: "#2e972e", lit: "#38a138", dark: "#228b22" }, { rib: "#3a9763", lit: "#44a16d", dark: "#2e8b57" }, { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" }, { rib: "#3aa753", lit: "#44b15d", dark: "#2e9b47" }] },
-        { back: [{ rib: "#226c3c", lit: "#2c763e", dark: "#105626" }, { rib: "#206434", lit: "#2a6e36", dark: "#0e4e1e" }, { rib: "#226c3c", lit: "#2c763e", dark: "#105626" }], front: [{ rib: "#369c4c", lit: "#40a656", dark: "#2a9040" }, { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" }, { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" }, { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" }] },
-        { back: [{ rib: "#16562c", lit: "#20602e", dark: "#004016" }, { rib: "#1a5e34", lit: "#246836", dark: "#04481e" }, { rib: "#16562c", lit: "#20602e", dark: "#004016" }], front: [{ rib: "#268434", lit: "#308e3e", dark: "#1a7828" }, { rib: "#2e974c", lit: "#38a156", dark: "#228b40" }, { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" }, { rib: "#2e974c", lit: "#38a156", dark: "#228b40" }] },
+        { back: [{ rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" }, { rib: "#226422", lit: "#306e30", dark: "#104e10" }, { rib: "#1a5218", lit: "#266226", dark: "#0a3e0a" }, { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" }], front: [{ rib: "#2e972e", lit: "#38a138", dark: "#228b22" }, { rib: "#3a9763", lit: "#44a16d", dark: "#2e8b57" }, { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" }, { rib: "#3aa753", lit: "#44b15d", dark: "#2e9b47" }, { rib: "#2e972e", lit: "#38a138", dark: "#228b22" }, { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" }] },
+        { back: [{ rib: "#226c3c", lit: "#2c763e", dark: "#105626" }, { rib: "#206434", lit: "#2a6e36", dark: "#0e4e1e" }, { rib: "#1e5c30", lit: "#28663a", dark: "#0c4c1c" }, { rib: "#226c3c", lit: "#2c763e", dark: "#105626" }], front: [{ rib: "#369c4c", lit: "#40a656", dark: "#2a9040" }, { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" }, { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" }, { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" }, { rib: "#369c4c", lit: "#40a656", dark: "#2a9040" }, { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" }] },
+        { back: [{ rib: "#16562c", lit: "#20602e", dark: "#004016" }, { rib: "#1a5e34", lit: "#246836", dark: "#04481e" }, { rib: "#145028", lit: "#1e5a2c", dark: "#003a12" }, { rib: "#16562c", lit: "#20602e", dark: "#004016" }], front: [{ rib: "#268434", lit: "#308e3e", dark: "#1a7828" }, { rib: "#2e974c", lit: "#38a156", dark: "#228b40" }, { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" }, { rib: "#2e974c", lit: "#38a156", dark: "#228b40" }, { rib: "#268434", lit: "#308e3e", dark: "#1a7828" }, { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" }] },
       ];
       const fPal = _FP[palmVariant % 3];
 
-      // Back fronds (3, only odd sway)
-      const _bkL = [{ a: -2.4, l: 40, p: 0 }, { a: -0.3, l: 36, p: 2.5 }, { a: 1.8, l: 34, p: 5.0 }];
-      for (let fi = 0; fi < 3; fi++) {
-        const f = _bkL[fi];
-        _drawPalmFrondItem(ctx, pCrownX, pCrownY, f.a, f.l * s, fPal.back[fi], s, fi % 2 === 1 ? Math.sin(decorTime * 1.6 + f.p) * 2 * s : 0);
-      }
-      // Front fronds (4, only odd sway)
-      const _ftL = [{ a: -2.1, l: 48, p: 0.5 }, { a: -0.6, l: 50, p: 2.2 }, { a: 0.5, l: 48, p: 4.2 }, { a: 1.8, l: 42, p: 0.8 }];
+      // Back fronds (4, half sway)
+      const _bkL = [{ a: -2.5, l: 36, p: 0 }, { a: -1.2, l: 33, p: 1.5 }, { a: 0.4, l: 31, p: 3.2 }, { a: 1.9, l: 35, p: 5.0 }];
       for (let fi = 0; fi < 4; fi++) {
+        const f = _bkL[fi];
+        _drawPalmFrondItem(ctx, pCrownX, pCrownY, f.a + pAOff, f.l * s, fPal.back[fi], s, fi % 2 === 1 ? Math.sin(decorTime * 1.6 + f.p) * 2 * s : 0);
+      }
+      // Front fronds (6, half sway)
+      const _ftL = [{ a: -2.3, l: 42, p: 0.5 }, { a: -1.3, l: 40, p: 1.8 }, { a: -0.2, l: 44, p: 3.0 }, { a: 0.7, l: 42, p: 4.2 }, { a: 1.6, l: 39, p: 5.5 }, { a: 2.5, l: 36, p: 0.8 }];
+      for (let fi = 0; fi < 6; fi++) {
         const f = _ftL[fi];
-        _drawPalmFrondItem(ctx, pCrownX, pCrownY, f.a, f.l * s, fPal.front[fi], s, fi % 2 === 1 ? Math.sin(decorTime * 2 + f.p) * 3 * s : 0);
+        _drawPalmFrondItem(ctx, pCrownX, pCrownY, f.a + pAOff, f.l * s, fPal.front[fi], s, fi % 2 === 1 ? Math.sin(decorTime * 2 + f.p) * 3 * s : 0);
       }
 
       // Coconuts (variant 0 and 2)
@@ -4697,8 +4740,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Pre-baked palettes with derived colors
       const obelPals = [
         { left: "#8a7a58", right: "#a89870", front: "#b0a068", top: "#c8b888", cap: "#d4a840", capDk: "#be9428", capFr: "#ca9e3b", capHi: "#f0d060", glyph: "#5a4a38", pedTop: "#b8a878", pedLeft: "#807048", pedRight: "#988860" },
-        { left: "#4a4a50", right: "#606068", front: "#585860", top: "#7a7a80", cap: "#c0c0d0", capDk: "#aeaebe", capFr: "#bbbbc8", capHi: "#e0e0f0", glyph: "#333340", pedTop: "#6b6b71", pedLeft: "#404046", pedRight: "#56565e" },
-        { left: "#1a1a20", right: "#2a2a30", front: "#222228", top: "#3a3a40", cap: "#8060c0", capDk: "#724eae", capFr: "#7b58bb", capHi: "#a080e0", glyph: "#4a3060", pedTop: "#2b2b31", pedLeft: "#101016", pedRight: "#202026" },
+        { left: "#58544a", right: "#706c5e", front: "#666258", top: "#8a8678", cap: "#c4c0b0", capDk: "#b2aea0", capFr: "#bdb9ab", capHi: "#e4e0d4", glyph: "#3a3830", pedTop: "#7a766a", pedLeft: "#4a4840", pedRight: "#605e54" },
+        { left: "#28241e", right: "#38342a", front: "#302c24", top: "#48443a", cap: "#8868b8", capDk: "#7a56a6", capFr: "#8260b0", capHi: "#a888d8", glyph: "#4a3858", pedTop: "#383428", pedLeft: "#1a1810", pedRight: "#2a2820" },
       ];
       const op = obelPals[variant % obelPals.length];
 
@@ -5948,6 +5991,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
     case "oasis_pool": {
       const time = Date.now() / 1000;
+      const oasisSeed = (dec.x || 0) * 14.7;
 
       // Color palette
       const sandLight = "#E8D4A8";
@@ -5969,8 +6013,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       lakeShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
       lakeShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = lakeShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 8 * s, 45 * s, 20 * s, 0.05, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x + 3 * s, screenPos.y + 8 * s, 45 * s, 20 * s, oasisSeed - 10, 0.1);
       ctx.fill();
 
       // ========== OUTER SAND BANK (BEACH) ==========
@@ -6046,8 +6089,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       waterGrad.addColorStop(1, "#90CAF9");
 
       ctx.fillStyle = waterGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 30 * s, 13 * s, 0.08, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y + 2 * s, 30 * s, 13 * s, oasisSeed, 0.14);
       ctx.fill();
 
       // ========== UNDERWATER CAUSTICS ==========
@@ -6230,8 +6272,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // ========== EDGE FOAM/SHORE LINE ==========
       ctx.strokeStyle = "rgba(227, 242, 253, 0.5)";
       ctx.lineWidth = 2 * s;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 29 * s, 12.5 * s, 0.08, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y + 2 * s, 29 * s, 12.5 * s, oasisSeed + 5, 0.14);
       ctx.stroke();
 
       // Subtle animated foam at edges
@@ -6275,6 +6316,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const cx = screenPos.x;
       const cy = screenPos.y;
       const ISO = 0.866;
+      const lakeSeed = (dec.x || 0) * 17.3;
 
       // === GROUND SHADOW ===
       const clShadow = ctx.createRadialGradient(cx + 3 * s, cy + 10 * s, 0, cx + 3 * s, cy + 10 * s, 70 * s);
@@ -6282,8 +6324,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       clShadow.addColorStop(0.5, "rgba(10,30,60,0.12)");
       clShadow.addColorStop(1, "transparent");
       ctx.fillStyle = clShadow;
-      ctx.beginPath();
-      ctx.ellipse(cx + 3 * s, cy + 10 * s, 70 * s, 30 * s, 0.04, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, cx + 3 * s, cy + 10 * s, 70 * s, 30 * s, lakeSeed - 10, 0.1);
       ctx.fill();
 
       // === STONE EMBANKMENT (3D raised shore) ===
@@ -6356,8 +6397,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       wGrad.addColorStop(0.92, "#26c6da");
       wGrad.addColorStop(1, "#4dd0e1");
       ctx.fillStyle = wGrad;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 3 * s, 40 * s, 17 * s, 0.05, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, cx, cy + 3 * s, 40 * s, 17 * s, lakeSeed, 0.13);
       ctx.fill();
 
       // Magical glow under water surface
@@ -6367,8 +6407,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       wGlow.addColorStop(0.5, `rgba(80,220,200,${glowPulse * 0.5})`);
       wGlow.addColorStop(1, "transparent");
       ctx.fillStyle = wGlow;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 2 * s, 30 * s, 13 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, cx, cy + 2 * s, 30 * s, 13 * s, lakeSeed + 20, 0.13);
       ctx.fill();
 
       // Underwater caustics (animated light network)
@@ -6424,13 +6463,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const shoreGlow = 0.35 + Math.sin(time * 1.8) * 0.1;
       ctx.strokeStyle = `rgba(100,255,220,${shoreGlow})`;
       ctx.lineWidth = 2.5 * s;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 3 * s, 39 * s, 16.5 * s, 0.05, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, cx, cy + 3 * s, 39 * s, 16.5 * s, lakeSeed + 5, 0.13);
       ctx.stroke();
       ctx.strokeStyle = "rgba(255,255,255,0.25)";
       ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy + 3 * s, 38.5 * s, 16.2 * s, 0.05, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, cx, cy + 3 * s, 38.5 * s, 16.2 * s, lakeSeed + 5, 0.13);
       ctx.stroke();
 
       // === BOATHOUSE (right side) - Tudor style ===
@@ -8502,6 +8539,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const pondIceDark = "#81d4fa";
       const pondDeep = "#4fc3f7";
       const snowEdge = "#f5f9fc";
+      const pondSeed = (dec.x || 0) * 19.3;
 
       const pondW = 38 * s;
       const pondD = 18 * s;
@@ -8515,18 +8553,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       pondGlow.addColorStop(0.6, "rgba(100,180,240,0.08)");
       pondGlow.addColorStop(1, "transparent");
       ctx.fillStyle = pondGlow;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, pondW * 1.3, pondD * 1.3, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, pondW * 1.3, pondD * 1.3, pondSeed - 10, 0.1);
       ctx.fill();
 
       // Snow bank around pond
       ctx.fillStyle = snowEdge;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, pondW + 6 * s, pondD + 4 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, pondW + 6 * s, pondD + 4 * s, pondSeed + 30, 0.16);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x - 2 * s, screenPos.y - 1 * s, pondW + 4 * s, pondD + 2 * s, -0.1, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x - 2 * s, screenPos.y - 1 * s, pondW + 4 * s, pondD + 2 * s, pondSeed + 30, 0.16);
       ctx.fill();
 
       // Ice surface - main gradient
@@ -8539,8 +8574,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       iceGrad.addColorStop(0.7, pondIceDark);
       iceGrad.addColorStop(1, pondDeep);
       ctx.fillStyle = iceGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, pondW, pondD, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, pondW, pondD, pondSeed, 0.15);
       ctx.fill();
 
       // Dark depth beneath ice
@@ -9582,6 +9616,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const lavaDark = "#bf360c";
       const rockDark = "#1a1210";
       const rockMid = "#2a1a10";
+      const lavaSeed = (dec.x || 0) * 23.1;
 
       // Ambient heat glow
       const heatGlow = ctx.createRadialGradient(
@@ -9593,27 +9628,23 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       heatGlow.addColorStop(0.4, `rgba(255,60,0,${heatPulse * 0.5})`);
       heatGlow.addColorStop(1, "rgba(255,60,0,0)");
       ctx.fillStyle = heatGlow;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 45 * s, 25 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, 45 * s, 25 * s, lavaSeed - 10, 0.1);
       ctx.fill();
 
       // Outer rock rim with 3D depth
       // Rock rim back
       ctx.fillStyle = rockDark;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y - 3 * s, 32 * s, 16 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y - 3 * s, 32 * s, 16 * s, lavaSeed + 50, 0.18);
       ctx.fill();
 
       // Rock rim front edge
       ctx.fillStyle = rockMid;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 32 * s, 16 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, 32 * s, 16 * s, lavaSeed + 50, 0.18);
       ctx.fill();
 
       // Inner dark crater
       ctx.fillStyle = "#0a0505";
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y - 1 * s, 26 * s, 13 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y - 1 * s, 26 * s, 13 * s, lavaSeed + 70, 0.15);
       ctx.fill();
 
       // Lava surface with animated gradient
@@ -9631,8 +9662,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       lavaGrad.addColorStop(0.8, lavaDark);
       lavaGrad.addColorStop(1, "#1a0a00");
       ctx.fillStyle = lavaGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y - 1 * s, 24 * s, 12 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y - 1 * s, 24 * s, 12 * s, lavaSeed, 0.14);
       ctx.fill();
 
       // Cooling crust patterns (darker streaks)
@@ -12836,35 +12866,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const waterSeed = (dec.x || 0) * 11.3 + (dec.y || 0) * 23.7;
       const isoRatioWater = 0.5;
 
-      // Helper for organic blob edges (water-specific)
-      const drawWaterBlob = (cx: number, cy: number, rx: number, ry: number, seed: number, bumpy: number = 0.12) => {
-        ctx.beginPath();
-        const pts = 20;
-        for (let i = 0; i <= pts; i++) {
-          const ang = (i / pts) * Math.PI * 2;
-          const n1 = Math.sin(ang * 3 + seed) * bumpy;
-          const n2 = Math.sin(ang * 5 + seed * 2.1) * bumpy * 0.5;
-          const variation = 1 + n1 + n2;
-          const x = cx + Math.cos(ang) * rx * variation;
-          const y = cy + Math.sin(ang) * ry * variation;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-      };
-
       // 1. Outer wet ground ring (organic edges)
       const wetGrad = ctx.createRadialGradient(screenPos.x, screenPos.y, 20 * s, screenPos.x, screenPos.y, 38 * s);
       wetGrad.addColorStop(0, "transparent");
       wetGrad.addColorStop(0.5, "rgba(20, 50, 80, 0.4)");
       wetGrad.addColorStop(1, "rgba(30, 60, 90, 0.15)");
       ctx.fillStyle = wetGrad;
-      drawWaterBlob(screenPos.x, screenPos.y, 38 * s, 19 * s * isoRatioWater, waterSeed, 0.18);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, 38 * s, 19 * s * isoRatioWater, waterSeed, 0.18);
       ctx.fill();
 
       // 2. Stone/dirt rim around water (organic)
       ctx.fillStyle = "rgba(60, 55, 50, 0.85)";
-      drawWaterBlob(screenPos.x, screenPos.y, 32 * s, 16 * s * isoRatioWater, waterSeed + 10, 0.15);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, 32 * s, 16 * s * isoRatioWater, waterSeed + 10, 0.15);
       ctx.fill();
 
       // 3. Deep water abyss layer (organic shape)
@@ -12874,7 +12887,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       deepGradW.addColorStop(0.7, "rgba(20, 50, 90, 0.9)");
       deepGradW.addColorStop(1, "rgba(30, 70, 120, 0.85)");
       ctx.fillStyle = deepGradW;
-      drawWaterBlob(screenPos.x, screenPos.y, 28 * s, 14 * s * isoRatioWater, waterSeed + 20, 0.12);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y, 28 * s, 14 * s * isoRatioWater, waterSeed + 20, 0.12);
       ctx.fill();
 
       // 4. Surface water layer with slight offset (organic)
@@ -12883,7 +12896,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       surfGradW.addColorStop(0.4, "rgba(50, 120, 180, 0.5)");
       surfGradW.addColorStop(1, "rgba(30, 80, 140, 0.3)");
       ctx.fillStyle = surfGradW;
-      drawWaterBlob(screenPos.x, screenPos.y - 2 * s, 25 * s, 12.5 * s * isoRatioWater, waterSeed + 30, 0.1);
+      drawOrganicWaterShape(ctx, screenPos.x, screenPos.y - 2 * s, 25 * s, 12.5 * s * isoRatioWater, waterSeed + 30, 0.1);
       ctx.fill();
 
       // 5. Animated ripples (concentric, moving outward)
@@ -14700,16 +14713,16 @@ function _drawPalmFrondItem(
   const ctrlY = baseY - 4 * s + sinA * 5 * s;
 
   ctx.strokeStyle = colors.rib;
-  ctx.lineWidth = 4.5 * s;
+  ctx.lineWidth = 3.5 * s;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(baseX, baseY);
   ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
   ctx.stroke();
 
-  const bladeMaxLen = 16 * s;
-  for (let b = 0; b < 4; b++) {
-    const t = 0.1 + b * 0.22;
+  const bladeMaxLen = 14 * s;
+  for (let b = 0; b < 6; b++) {
+    const t = 0.06 + b * 0.155;
     const mt = 1 - t;
     const px = mt * mt * baseX + 2 * mt * t * ctrlX + t * t * tipX;
     const py = mt * mt * baseY + 2 * mt * t * ctrlY + t * t * tipY;
@@ -14718,8 +14731,8 @@ function _drawPalmFrondItem(
     const tangentAngle = Math.atan2(ty2, tx);
     const cosT = Math.cos(tangentAngle);
     const sinT = Math.sin(tangentAngle);
-    const bladeLen = bladeMaxLen * (1 - t * 0.45);
-    const spread = 1.3 + t * 0.5;
+    const bladeLen = bladeMaxLen * (1 - t * 0.4);
+    const spread = 1.4 + t * 0.5;
 
     for (let side = -1; side <= 1; side += 2) {
       const ba = tangentAngle + side * spread;
@@ -14727,9 +14740,9 @@ function _drawPalmFrondItem(
       const sinB = Math.sin(ba);
       ctx.fillStyle = side === 1 ? colors.lit : colors.dark;
       ctx.beginPath();
-      ctx.moveTo(px - cosT * 1.5 * s, py - sinT * 0.8 * s);
-      ctx.quadraticCurveTo(px + cosB * bladeLen * 0.5, py + sinB * bladeLen * 0.3, px + cosB * bladeLen, py + sinB * bladeLen * 0.6);
-      ctx.lineTo(px + cosT * 2 * s, py + sinT * s);
+      ctx.moveTo(px - cosT * 1 * s, py - sinT * 0.5 * s);
+      ctx.lineTo(px + cosB * bladeLen, py + sinB * bladeLen * 0.6);
+      ctx.lineTo(px + cosT * 1 * s, py + sinT * 0.5 * s);
       ctx.closePath();
       ctx.fill();
     }

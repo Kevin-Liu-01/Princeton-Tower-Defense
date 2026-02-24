@@ -107,7 +107,7 @@ const THEME_DECORATION_CATEGORIES: Record<string, {
     trees: ["pine_tree"],
     structures: ["ruins", "fence", "broken_wall"],
     terrain: ["rock", "snow_pile", "ice_crystal", "icicles"],
-    scattered: ["snowman", "frozen_soldier"],
+    scattered: ["aurora_crystal", "frozen_soldier", "snowman"],
   },
   volcanic: {
     trees: ["charred_tree"],

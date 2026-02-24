@@ -55,7 +55,7 @@ export function renderDecoration(
       drawTree(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
     case "palm":
-      drawPalmTree(ctx, screenPos.x, screenPos.y, scale, Math.sin(time * 1.5 + screenPos.x * 0.01) * 2 * scale, time, variantNum);
+      drawPalmTree(ctx, screenPos.x, screenPos.y, scale, Math.sin(time * 1.5 + screenPos.x * 0.01) * 2 * scale, time, variantNum, screenPos.x);
       break;
     case "obelisk":
       drawObelisk(ctx, screenPos.x, screenPos.y, scale, variantNum, time);
@@ -217,11 +217,12 @@ function sampleBezier(
   return mt * mt * mt * p0 + 3 * mt * mt * t * p1 + 3 * mt * t * t * p2 + t * t * t * p3;
 }
 
-// Pre-baked frond color sets: [ribColor, litShade, darkShade] - avoids all runtime color parsing
+// Pre-baked frond color sets - 4 back + 6 front entries per variant
 const FROND_COLORS_V0 = {
   back: [
     { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" },
     { rib: "#226422", lit: "#306e30", dark: "#104e10" },
+    { rib: "#1a5218", lit: "#266226", dark: "#0a3e0a" },
     { rib: "#1e5a1e", lit: "#2a6a2a", dark: "#0c460c" },
   ],
   front: [
@@ -229,12 +230,15 @@ const FROND_COLORS_V0 = {
     { rib: "#3a9763", lit: "#44a16d", dark: "#2e8b57" },
     { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" },
     { rib: "#3aa753", lit: "#44b15d", dark: "#2e9b47" },
+    { rib: "#2e972e", lit: "#38a138", dark: "#228b22" },
+    { rib: "#3eb45e", lit: "#48be68", dark: "#32a852" },
   ],
 };
 const FROND_COLORS_V1 = {
   back: [
     { rib: "#226c3c", lit: "#2c763e", dark: "#105626" },
     { rib: "#206434", lit: "#2a6e36", dark: "#0e4e1e" },
+    { rib: "#1e5c30", lit: "#28663a", dark: "#0c4c1c" },
     { rib: "#226c3c", lit: "#2c763e", dark: "#105626" },
   ],
   front: [
@@ -242,12 +246,15 @@ const FROND_COLORS_V1 = {
     { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" },
     { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" },
     { rib: "#3ca466", lit: "#46ae70", dark: "#30985a" },
+    { rib: "#369c4c", lit: "#40a656", dark: "#2a9040" },
+    { rib: "#42b464", lit: "#4cbe6e", dark: "#36a858" },
   ],
 };
 const FROND_COLORS_V2 = {
   back: [
     { rib: "#16562c", lit: "#20602e", dark: "#004016" },
     { rib: "#1a5e34", lit: "#246836", dark: "#04481e" },
+    { rib: "#145028", lit: "#1e5a2c", dark: "#003a12" },
     { rib: "#16562c", lit: "#20602e", dark: "#004016" },
   ],
   front: [
@@ -255,21 +262,26 @@ const FROND_COLORS_V2 = {
     { rib: "#2e974c", lit: "#38a156", dark: "#228b40" },
     { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" },
     { rib: "#2e974c", lit: "#38a156", dark: "#228b40" },
+    { rib: "#268434", lit: "#308e3e", dark: "#1a7828" },
+    { rib: "#34ac56", lit: "#3eb660", dark: "#28a04a" },
   ],
 };
 const FROND_PALETTES = [FROND_COLORS_V0, FROND_COLORS_V1, FROND_COLORS_V2];
 
-// Static frond layout data (shared across all trees)
+// Base frond layouts - offset by seed for per-tree variation (shorter lengths)
 const BACK_FROND_LAYOUT = [
-  { angle: -2.4, len: 40, phase: 0 },
-  { angle: -0.3, len: 36, phase: 2.5 },
-  { angle: 1.8, len: 34, phase: 5.0 },
+  { angle: -2.5, len: 36, phase: 0 },
+  { angle: -1.2, len: 33, phase: 1.5 },
+  { angle: 0.4, len: 31, phase: 3.2 },
+  { angle: 1.9, len: 35, phase: 5.0 },
 ];
 const FRONT_FROND_LAYOUT = [
-  { angle: -2.1, len: 48, phase: 0.5 },
-  { angle: -0.6, len: 50, phase: 2.2 },
-  { angle: 0.5, len: 48, phase: 4.2 },
-  { angle: 1.8, len: 42, phase: 0.8 },
+  { angle: -2.3, len: 42, phase: 0.5 },
+  { angle: -1.3, len: 40, phase: 1.8 },
+  { angle: -0.2, len: 44, phase: 3.0 },
+  { angle: 0.7, len: 42, phase: 4.2 },
+  { angle: 1.6, len: 39, phase: 5.5 },
+  { angle: 2.5, len: 36, phase: 0.8 },
 ];
 
 function drawPalmTree(
@@ -279,10 +291,13 @@ function drawPalmTree(
   scale: number,
   sway: number,
   time: number,
-  variant: number = 0
+  variant: number = 0,
+  seed: number = 0
 ): void {
   const s = scale;
   const pal = FROND_PALETTES[variant % 3];
+  // Per-tree angle offset from seed for variation (range ±0.3 rad)
+  const aOff = ((seed * 7.3 + 13) % 100) / 100 * 0.6 - 0.3;
 
   const bx0 = x, by0 = y + 3 * s;
   const bx1 = x + 4 * s + sway * 0.15, by1 = y - 16 * s;
@@ -297,30 +312,41 @@ function drawPalmTree(
   ctx.ellipse(x + 8 * s, y + 4 * s, 14 * s, 6 * s, 0.15, 0, Math.PI * 2);
   ctx.fill();
 
-  // Trunk: 5 segments, 2 faces each (left + right only, no front lip)
+  // Trunk: 6 segments, 3 faces each (left dark, right lit, front lip)
   const wBase = 12 * s, wTop = 7 * s;
-  for (let i = 4; i >= 0; i--) {
-    const t0 = i / 5, t1 = (i + 1) / 5;
+  for (let i = 5; i >= 0; i--) {
+    const t0 = i / 6, t1 = (i + 1) / 6;
     const x0 = sampleBezier(bx0, bx1, bx2, bx3, t0);
     const y0 = sampleBezier(by0, by1, by2, by3, t0);
     const x1 = sampleBezier(bx0, bx1, bx2, bx3, t1);
     const y1 = sampleBezier(by0, by1, by2, by3, t1);
     const w0 = wBase + (wTop - wBase) * t0;
     const w1 = wBase + (wTop - wBase) * t1;
-    ctx.fillStyle = i % 2 === 0 ? "#5a4510" : "#4a3808";
+    const lip0 = w0 * 0.22;
+    // Left (shadow) face
+    ctx.fillStyle = i % 2 === 0 ? "#5a4510" : "#4e3c0e";
     ctx.beginPath();
     ctx.moveTo(x0 - w0 * 0.5, y0);
     ctx.lineTo(x1 - w1 * 0.5, y1);
     ctx.lineTo(x1, y1 + w1 * 0.2);
-    ctx.lineTo(x0, y0 + w0 * 0.22);
+    ctx.lineTo(x0, y0 + lip0);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = i % 2 === 0 ? "#9b7518" : "#8a6814";
+    // Right (lit) face
+    ctx.fillStyle = i % 2 === 0 ? "#b8891e" : "#a07a18";
     ctx.beginPath();
     ctx.moveTo(x0 + w0 * 0.5, y0);
     ctx.lineTo(x1 + w1 * 0.5, y1);
     ctx.lineTo(x1, y1 + w1 * 0.2);
-    ctx.lineTo(x0, y0 + w0 * 0.22);
+    ctx.lineTo(x0, y0 + lip0);
+    ctx.closePath();
+    ctx.fill();
+    // Front lip
+    ctx.fillStyle = i % 2 === 0 ? "#6b5012" : "#5a4210";
+    ctx.beginPath();
+    ctx.moveTo(x0 - w0 * 0.5, y0);
+    ctx.lineTo(x0 + w0 * 0.5, y0);
+    ctx.lineTo(x0, y0 + lip0);
     ctx.closePath();
     ctx.fill();
   }
@@ -331,17 +357,17 @@ function drawPalmTree(
   ctx.ellipse(crownX, crownY + 2 * s, 8 * s, 4 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Back fronds (3, only odd ones sway)
-  for (let i = 0; i < 3; i++) {
+  // Back fronds (4, half sway)
+  for (let i = 0; i < 4; i++) {
     const f = BACK_FROND_LAYOUT[i];
     const sw = i % 2 === 1 ? Math.sin(time * 1.6 + f.phase) * 2 * s : 0;
-    drawPalmFrond(ctx, crownX, crownY, f.angle, f.len * s, pal.back[i], s, sw);
+    drawPalmFrond(ctx, crownX, crownY, f.angle + aOff, f.len * s, pal.back[i], s, sw);
   }
-  // Front fronds (4, only odd ones sway)
-  for (let i = 0; i < 4; i++) {
+  // Front fronds (6, half sway)
+  for (let i = 0; i < 6; i++) {
     const f = FRONT_FROND_LAYOUT[i];
     const sw = i % 2 === 1 ? Math.sin(time * 2 + f.phase) * 3 * s : 0;
-    drawPalmFrond(ctx, crownX, crownY, f.angle, f.len * s, pal.front[i], s, sw);
+    drawPalmFrond(ctx, crownX, crownY, f.angle + aOff, f.len * s, pal.front[i], s, sw);
   }
 
   // Coconuts (variant 0 and 2)
@@ -415,17 +441,17 @@ function drawPalmFrond(
 
   // Rib stroke
   ctx.strokeStyle = colors.rib;
-  ctx.lineWidth = 4.5 * s;
+  ctx.lineWidth = 3.5 * s;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(baseX, baseY);
   ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY);
   ctx.stroke();
 
-  // 4 blades, 2 sides each = 8 fills per frond
-  const bladeMaxLen = 16 * s;
-  for (let b = 0; b < 4; b++) {
-    const t = 0.1 + b * 0.22;
+  // 6 spiky blades, 2 sides each = 12 fills per frond
+  const bladeMaxLen = 14 * s;
+  for (let b = 0; b < 6; b++) {
+    const t = 0.06 + b * 0.155;
     const mt = 1 - t;
     const px = mt * mt * baseX + 2 * mt * t * ctrlX + t * t * tipX;
     const py = mt * mt * baseY + 2 * mt * t * ctrlY + t * t * tipY;
@@ -434,8 +460,8 @@ function drawPalmFrond(
     const tangentAngle = Math.atan2(ty2, tx);
     const cosT = Math.cos(tangentAngle);
     const sinT = Math.sin(tangentAngle);
-    const bladeLen = bladeMaxLen * (1 - t * 0.45);
-    const spread = 1.3 + t * 0.5;
+    const bladeLen = bladeMaxLen * (1 - t * 0.4);
+    const spread = 1.4 + t * 0.5;
 
     for (let side = -1; side <= 1; side += 2) {
       const ba = tangentAngle + side * spread;
@@ -443,9 +469,9 @@ function drawPalmFrond(
       const sinB = Math.sin(ba);
       ctx.fillStyle = side === 1 ? colors.lit : colors.dark;
       ctx.beginPath();
-      ctx.moveTo(px - cosT * 1.5 * s, py - sinT * 0.8 * s);
-      ctx.quadraticCurveTo(px + cosB * bladeLen * 0.5, py + sinB * bladeLen * 0.3, px + cosB * bladeLen, py + sinB * bladeLen * 0.6);
-      ctx.lineTo(px + cosT * 2 * s, py + sinT * s);
+      ctx.moveTo(px - cosT * 1 * s, py - sinT * 0.5 * s);
+      ctx.lineTo(px + cosB * bladeLen, py + sinB * bladeLen * 0.6);
+      ctx.lineTo(px + cosT * 1 * s, py + sinT * 0.5 * s);
       ctx.closePath();
       ctx.fill();
     }
@@ -470,8 +496,8 @@ function drawObelisk(
   // Pre-baked palettes with all derived colors computed once
   const palettes = [
     { left: "#8a7a58", right: "#a89870", front: "#b0a068", top: "#c8b888", cap: "#d4a840", capDk: "#be9428", capFr: "#ca9e3b", capHi: "#f0d060", glyph: "#5a4a38", pedTop: "#b8a878", pedLeft: "#807048", pedRight: "#988860", ped2Left: "#857553", ped2Right: "#a39365" },
-    { left: "#4a4a50", right: "#606068", front: "#585860", top: "#7a7a80", cap: "#c0c0d0", capDk: "#aeaebe", capFr: "#bbbbc8", capHi: "#e0e0f0", glyph: "#333340", pedTop: "#6b6b71", pedLeft: "#404046", pedRight: "#56565e", ped2Left: "#45454b", ped2Right: "#5b5b63" },
-    { left: "#1a1a20", right: "#2a2a30", front: "#222228", top: "#3a3a40", cap: "#8060c0", capDk: "#724eae", capFr: "#7b58bb", capHi: "#a080e0", glyph: "#4a3060", pedTop: "#2b2b31", pedLeft: "#101016", pedRight: "#202026", ped2Left: "#15151b", ped2Right: "#25252b" },
+    { left: "#58544a", right: "#706c5e", front: "#666258", top: "#8a8678", cap: "#c4c0b0", capDk: "#b2aea0", capFr: "#bdb9ab", capHi: "#e4e0d4", glyph: "#3a3830", pedTop: "#7a766a", pedLeft: "#4a4840", pedRight: "#605e54", ped2Left: "#504e46", ped2Right: "#666458" },
+    { left: "#28241e", right: "#38342a", front: "#302c24", top: "#48443a", cap: "#8868b8", capDk: "#7a56a6", capFr: "#8260b0", capHi: "#a888d8", glyph: "#4a3858", pedTop: "#383428", pedLeft: "#1a1810", pedRight: "#2a2820", ped2Left: "#201e16", ped2Right: "#302e24" },
   ];
   const p = palettes[variant % palettes.length];
 
