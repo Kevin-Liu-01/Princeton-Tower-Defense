@@ -29,6 +29,8 @@ import {
   GRID_WIDTH,
   GRID_HEIGHT,
   GROUP_SPACING_MULTIPLIER,
+  WAVE_INTERVAL_MULTIPLIER,
+  WAVE_DELAY_MULTIPLIER,
   TOWER_DATA,
   ENEMY_DATA,
   HERO_DATA,
@@ -764,7 +766,7 @@ export default function PrincetonTowerDefense() {
     const wave = levelWaves[currentWave];
     let cumulativeDelay = 0;
     wave.forEach((group) => {
-      cumulativeDelay += (group.delay || 0) * GROUP_SPACING_MULTIPLIER;
+      cumulativeDelay += (group.delay || 0) * WAVE_DELAY_MULTIPLIER * GROUP_SPACING_MULTIPLIER;
       const startDelay = cumulativeDelay;
 
       const startSpawning = () => {
@@ -884,7 +886,7 @@ export default function PrincetonTowerDefense() {
           };
           setEnemies((prev) => [...prev, enemy]);
           spawned++;
-        }, group.interval);
+        }, group.interval * WAVE_INTERVAL_MULTIPLIER);
         // Track interval for cleanup
         spawnIntervalsRef.current.push(spawnInterval);
       };
@@ -900,8 +902,8 @@ export default function PrincetonTowerDefense() {
     // Calculate wave duration including cumulative delays
     let accDelay = 0;
     const waveDuration = Math.max(...wave.map((g) => {
-      accDelay += (g.delay || 0) * GROUP_SPACING_MULTIPLIER;
-      return accDelay + g.count * g.interval;
+      accDelay += (g.delay || 0) * WAVE_DELAY_MULTIPLIER * GROUP_SPACING_MULTIPLIER;
+      return accDelay + g.count * g.interval * WAVE_INTERVAL_MULTIPLIER;
     })) + 5000;
     const waveNumberForTimeout = currentWave; // Capture for closure
     console.log(`[Wave] Wave ${currentWave + 1} started, will complete in ${waveDuration}ms`);

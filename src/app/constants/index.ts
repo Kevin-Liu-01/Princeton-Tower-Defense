@@ -1534,7 +1534,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🐯",
     description:
       "The fearsome Princeton Tiger, an apex predator with a terrifying roar that freezes enemies in fear.",
-    hp: 2500,
+    hp: 5000,
     damage: 80,
     range: 120,
     attackSpeed: 600,
@@ -1549,7 +1549,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🎵",
     description:
       "A virtuoso vocalist whose voice is a weapon. The Tenor's sonic attacks pierce through even the toughest armor.",
-    hp: 1800,
+    hp: 3600,
     damage: 60,
     range: 250,
     attackSpeed: 450,
@@ -1565,7 +1565,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🛡️",
     description:
       "An elite defender from Mathey College, clad in enchanted armor. Draws enemy aggression and protects allies.",
-    hp: 3500,
+    hp: 7000,
     damage: 70,
     range: 80,
     attackSpeed: 800,
@@ -1580,7 +1580,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🌰",
     description:
       "A legendary gargoyle awakened from campus rooftops. Hurls massive boulders that devastate enemies.",
-    hp: 2200,
+    hp: 4400,
     damage: 90,
     range: 180,
     attackSpeed: 700,
@@ -1595,7 +1595,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "📖",
     description:
       "The ghost of F. Scott Fitzgerald inspires defenders with literary brilliance, boosting their combat effectiveness.",
-    hp: 1500,
+    hp: 3000,
     damage: 50,
     range: 200,
     attackSpeed: 400,
@@ -1610,7 +1610,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🐉",
     description:
       "A re-awakened General wreathed in flame. Commands the battlefield and summons loyal knights to his banner.",
-    hp: 2800,
+    hp: 5600,
     damage: 65,
     range: 100,
     attackSpeed: 650,
@@ -1625,7 +1625,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🔧",
     description:
       "A brilliant inventor who deploys automated turrets designed in the Engineering Library. He needs more coffee.",
-    hp: 1600,
+    hp: 3200,
     damage: 40,
     range: 150,
     attackSpeed: 500,
@@ -1680,7 +1680,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
 export const TROOP_DATA: Record<TroopType, TroopData> = {
   footsoldier: {
     name: "Foot Soldier",
-    hp: 350,
+    hp: 700,
     damage: 20,
     attackSpeed: 1100,
     desc: "Basic infantry unit",
@@ -1688,7 +1688,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   armored: {
     name: "Armored Soldier",
-    hp: 550,
+    hp: 1100,
     damage: 25,
     attackSpeed: 1000,
     desc: "Protected infantry",
@@ -1696,7 +1696,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   elite: {
     name: "Elite Guard",
-    hp: 700,
+    hp: 1400,
     damage: 35,
     attackSpeed: 900,
     desc: "Royal guard with halberd",
@@ -1704,7 +1704,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   knight: {
     name: "Knight",
-    hp: 500,
+    hp: 1000,
     damage: 30,
     attackSpeed: 1000,
     desc: "Elite warrior",
@@ -1712,7 +1712,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   centaur: {
     name: "Centaur",
-    hp: 600,
+    hp: 1200,
     damage: 45,
     attackSpeed: 700,
     desc: "Elite archer that can target flying enemies",
@@ -1724,7 +1724,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   cavalry: {
     name: "Cavalry",
-    hp: 900,
+    hp: 1800,
     damage: 55,
     attackSpeed: 1100,
     desc: "Heavy mounted knight",
@@ -1733,7 +1733,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   thesis: {
     name: "Thesis Defender",
-    hp: 700,
+    hp: 1400,
     damage: 55,
     attackSpeed: 750,
     desc: "Elite defender with high damage",
@@ -1741,7 +1741,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   rowing: {
     name: "Rowing Crew",
-    hp: 850,
+    hp: 1700,
     damage: 45,
     attackSpeed: 1000,
     desc: "Tanky unit that can take hits",
@@ -1749,7 +1749,7 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
   },
   turret: {
     name: "Defense Turret",
-    hp: 400,
+    hp: 800,
     damage: 35,
     attackSpeed: 800,
     desc: "Stationary defense emplacement",
@@ -4716,7 +4716,9 @@ export const SPELL_OPTIONS: SpellType[] = [
 ];
 
 // Game constants
-export const GROUP_SPACING_MULTIPLIER = 2.75; // Gap between enemy groups within a wave (higher = more breathing room)
+export const GROUP_SPACING_MULTIPLIER = 1.25; // Gap between enemy groups within a wave (higher = more breathing room)
+export const WAVE_INTERVAL_MULTIPLIER = 1.05; // Time between each enemy spawn within a group (higher = slower spawns)
+export const WAVE_DELAY_MULTIPLIER = 1.25; // Gap between groups (higher = more spacing)
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
 export const INITIAL_PAW_POINTS = 300;
