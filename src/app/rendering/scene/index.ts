@@ -161,6 +161,10 @@ export function generateDecorations(
   const zonesX = Math.ceil((maxX - minX) / zoneSize);
   const zonesY = Math.ceil((maxY - minY) / zoneSize);
 
+  const isBeyondGrid = (gx: number, gy: number): boolean =>
+    gx < 0 || gx > GRID_WIDTH || gy < 0 || gy > GRID_HEIGHT;
+  const BEYOND_GRID_REDUCE = 0.4;
+
   // Generate deterministic zone assignments
   type CategoryKey = keyof typeof categories;
   const zoneAssignments: CategoryKey[][] = [];
@@ -193,6 +197,8 @@ export function generateDecorations(
     const gridX = zoneCenterX + offsetX;
     const gridY = zoneCenterY + offsetY;
 
+    if (isBeyondGrid(gridX, gridY) && random() > BEYOND_GRID_REDUCE) continue;
+
     const worldPos = gridToWorld({ x: gridX, y: gridY });
     if (isOnPath(worldPos, 20)) continue;
 
@@ -222,14 +228,12 @@ export function generateDecorations(
     });
   }
 
-  // Add edge tree clusters
+  // Tree clusters — uniformly distributed, reduced beyond grid
   for (let cluster = 0; cluster < 12; cluster++) {
-    const edgeSide = Math.floor(random() * 4);
-    let clusterX: number, clusterY: number;
-    if (edgeSide === 0) { clusterX = minX + random() * 4; clusterY = minY + random() * (maxY - minY); }
-    else if (edgeSide === 1) { clusterX = maxX - random() * 4; clusterY = minY + random() * (maxY - minY); }
-    else if (edgeSide === 2) { clusterX = minX + random() * (maxX - minX); clusterY = minY + random() * 4; }
-    else { clusterX = minX + random() * (maxX - minX); clusterY = maxY - random() * 4; }
+    const clusterX = minX + random() * (maxX - minX);
+    const clusterY = minY + random() * (maxY - minY);
+
+    if (isBeyondGrid(clusterX, clusterY) && random() > BEYOND_GRID_REDUCE) continue;
 
     const treesInCluster = 4 + Math.floor(random() * 5);
     const treeTypes = categories.trees;
@@ -239,7 +243,6 @@ export function generateDecorations(
       const worldPos = gridToWorld({ x: treeX, y: treeY });
       if (isOnPath(worldPos, 20)) continue;
 
-      // Natural tree scale variation
       const treeScaleBase = 0.65 + random() * 0.25;
       const treeScaleVar = (random() + random()) / 2 * 0.5;
 
@@ -289,9 +292,11 @@ export function generateDecorations(
   for (let i = 0; i < 240; i++) {
     const gridX = battleRandom() * (GRID_WIDTH + 19) - 9.5;
     const gridY = battleRandom() * (GRID_HEIGHT + 19) - 9.5;
+
+    if (isBeyondGrid(gridX, gridY) && battleRandom() > BEYOND_GRID_REDUCE) continue;
+
     const worldPos = gridToWorld({ x: gridX, y: gridY });
 
-    // Battle debris scale variation
     const battleScaleBase = 0.4 + battleRandom() * 0.25;
     const battleScaleVar = (battleRandom() + battleRandom() + battleRandom()) / 3 * 0.5;
 

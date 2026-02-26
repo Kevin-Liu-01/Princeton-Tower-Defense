@@ -5269,10 +5269,9 @@ export default function PrincetonTowerDefense() {
         return minDist;
       };
 
-      // Helper: distance from map edge (0 at edge, higher toward center)
-      const distFromEdge = (gx: number, gy: number): number => {
-        return Math.min(gx - minX, maxX - gx, gy - minY, maxY - gy);
-      };
+      const isBeyondGrid = (gx: number, gy: number): boolean =>
+        gx < 0 || gx > GRID_WIDTH || gy < 0 || gy > GRID_HEIGHT;
+      const BEYOND_GRID_REDUCE = 0.3;
 
       // Zone assignments with smaller zones for tighter clustering
       const zoneAssignments: (keyof typeof categories)[][] = [];
@@ -5304,6 +5303,8 @@ export default function PrincetonTowerDefense() {
         const gridX = zoneCenterX + offsetX;
         const gridY = zoneCenterY + offsetY;
 
+        if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         if (isOnPath(worldPos)) continue;
 
@@ -5333,23 +5334,12 @@ export default function PrincetonTowerDefense() {
         });
       }
 
-      // Dense tree clusters at map edges — thick forest borders
+      // Tree clusters — uniformly distributed, reduced beyond grid
       for (let cluster = 0; cluster < 40; cluster++) {
-        const edgeSide = Math.floor(seededRandom() * 4);
-        let clusterX: number, clusterY: number;
-        if (edgeSide === 0) {
-          clusterX = minX + seededRandom() * 5;
-          clusterY = minY + seededRandom() * (maxY - minY);
-        } else if (edgeSide === 1) {
-          clusterX = maxX - seededRandom() * 5;
-          clusterY = minY + seededRandom() * (maxY - minY);
-        } else if (edgeSide === 2) {
-          clusterX = minX + seededRandom() * (maxX - minX);
-          clusterY = minY + seededRandom() * 5;
-        } else {
-          clusterX = minX + seededRandom() * (maxX - minX);
-          clusterY = maxY - seededRandom() * 5;
-        }
+        const clusterX = minX + seededRandom() * (maxX - minX);
+        const clusterY = minY + seededRandom() * (maxY - minY);
+
+        if (isBeyondGrid(clusterX, clusterY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
 
         const treesInCluster = 8 + Math.floor(seededRandom() * 10);
         const treeTypes = categories.trees;
@@ -5470,18 +5460,16 @@ export default function PrincetonTowerDefense() {
         }
       }
 
-      // Edge density fill — progressively denser toward map borders
+      // Uniform density fill, reduced beyond grid
       for (let i = 0; i < 350; i++) {
         const gx = minX + seededRandom() * (maxX - minX);
         const gy = minY + seededRandom() * (maxY - minY);
-        const edgeDist = distFromEdge(gx, gy);
         const pathDist = distFromPath(gx, gy);
 
-        // Higher chance of placing when close to edge AND far from path
-        const edgeFactor = Math.max(0, 1 - edgeDist / 8);
         const pathFactor = Math.min(1, pathDist / 120);
-        const placementChance = edgeFactor * pathFactor;
-        if (seededRandom() > placementChance) continue;
+        if (seededRandom() > pathFactor) continue;
+
+        if (isBeyondGrid(gx, gy) && seededRandom() > BEYOND_GRID_REDUCE) continue;
 
         const worldPos = gridToWorld({ x: gx, y: gy });
         if (isOnPath(worldPos)) continue;
@@ -5514,6 +5502,9 @@ export default function PrincetonTowerDefense() {
       for (let i = 0; i < 280; i++) {
         const gridX = seededRandom() * (GRID_WIDTH + 23) - 11.5;
         const gridY = seededRandom() * (GRID_HEIGHT + 23) - 11.5;
+
+        if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         const type =
           battleDecors[Math.floor(seededRandom() * battleDecors.length)];
@@ -5848,7 +5839,7 @@ export default function PrincetonTowerDefense() {
               rotation: 0,
               variant: dec.variant,
             });
-          // Desert
+            // Desert
           } else if (dec.type === "sarcophagus") {
             decorations.push({ type: "sarcophagus", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
           } else if (dec.type === "cobra_statue") {
@@ -5861,7 +5852,7 @@ export default function PrincetonTowerDefense() {
             decorations.push({ type: "sand_pile", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
           } else if (dec.type === "treasure_chest") {
             decorations.push({ type: "treasure_chest", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
-          // Volcanic
+            // Volcanic
           } else if (dec.type === "lava_fall") {
             decorations.push({ type: "lava_fall", x: worldPos.x, y: worldPos.y, scale: size * 1.3, rotation: 0, variant: dec.variant });
           } else if (dec.type === "obsidian_pillar") {
@@ -5874,7 +5865,7 @@ export default function PrincetonTowerDefense() {
             decorations.push({ type: "ember_rock", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
           } else if (dec.type === "volcano_rim") {
             decorations.push({ type: "volcano_rim", x: worldPos.x, y: worldPos.y, scale: size * 1.3, rotation: 0, variant: dec.variant });
-          // Swamp
+            // Swamp
           } else if (dec.type === "sunken_pillar") {
             decorations.push({ type: "sunken_pillar", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
           } else if (dec.type === "idol_statue") {
@@ -5887,7 +5878,7 @@ export default function PrincetonTowerDefense() {
             decorations.push({ type: "poison_pool", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: dec.variant });
           } else if (dec.type === "skeleton_pile") {
             decorations.push({ type: "skeleton_pile", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: dec.variant });
-          // Grassland
+            // Grassland
           } else if (dec.type === "hedge") {
             decorations.push({ type: "hedge", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: dec.variant });
           } else if (dec.type === "campfire") {
