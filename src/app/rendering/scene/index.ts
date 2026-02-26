@@ -2,9 +2,19 @@
 // High-level scene rendering that combines maps, decorations, and environment
 
 import type { Position, MapDecoration, DecorationCategory } from "../../types";
-import { LEVEL_DATA, GRID_WIDTH, GRID_HEIGHT, MAP_PATHS } from "../../constants";
+import {
+  LEVEL_DATA,
+  GRID_WIDTH,
+  GRID_HEIGHT,
+  MAP_PATHS,
+} from "../../constants";
 import { worldToScreen, gridToWorld } from "../../utils";
-import { renderMapBackground, MAP_THEMES, renderEnvironment, renderAmbientVisuals } from "../maps";
+import {
+  renderMapBackground,
+  MAP_THEMES,
+  renderEnvironment,
+  renderAmbientVisuals,
+} from "../maps";
 import { renderDecoration } from "../decorations";
 import { renderHazard } from "../hazards";
 
@@ -85,12 +95,15 @@ interface GeneratedDecoration {
 }
 
 // Decoration categories for deterministic clustering
-const THEME_DECORATION_CATEGORIES: Record<string, {
-  trees: string[];
-  structures: string[];
-  terrain: string[];
-  scattered: string[];
-}> = {
+const THEME_DECORATION_CATEGORIES: Record<
+  string,
+  {
+    trees: string[];
+    structures: string[];
+    terrain: string[];
+    scattered: string[];
+  }
+> = {
   grassland: {
     trees: ["tree", "bush"],
     structures: ["fence", "bench", "hut", "tent", "barrel"],
@@ -133,15 +146,17 @@ const THEME_BATTLE_DECORATIONS: Record<string, string[]> = {
 
 export function generateDecorations(
   mapId: string,
-  pathPoints: Position[]
+  pathPoints: Position[],
 ): GeneratedDecoration[] {
   const decorations: GeneratedDecoration[] = [];
   const theme = getMapTheme(mapId);
   const seed = getMapSeed(mapId);
   const random = createSeededRandom(seed);
 
-  const categories = THEME_DECORATION_CATEGORIES[theme] || THEME_DECORATION_CATEGORIES.grassland;
-  const battleDecors = THEME_BATTLE_DECORATIONS[theme] || THEME_BATTLE_DECORATIONS.grassland;
+  const categories =
+    THEME_DECORATION_CATEGORIES[theme] || THEME_DECORATION_CATEGORIES.grassland;
+  const battleDecors =
+    THEME_BATTLE_DECORATIONS[theme] || THEME_BATTLE_DECORATIONS.grassland;
 
   // Helper to check if position is too close to path
   const isOnPath = (pos: Position, buffer: number = 20): boolean => {
@@ -156,8 +171,10 @@ export function generateDecorations(
 
   // Zone-based decoration placement for clustering
   const zoneSize = 6;
-  const minX = -9, maxX = GRID_WIDTH + 9;
-  const minY = -9, maxY = GRID_HEIGHT + 9;
+  const minX = -9,
+    maxX = GRID_WIDTH + 9;
+  const minY = -9,
+    maxY = GRID_HEIGHT + 9;
   const zonesX = Math.ceil((maxX - minX) / zoneSize);
   const zonesY = Math.ceil((maxY - minY) / zoneSize);
 
@@ -206,17 +223,28 @@ export function generateDecorations(
     const type = categoryDecors[typeIndex];
 
     // Scale varies by category with natural multi-factor variation
-    let baseScale = 0.7, scaleVar = 0.4;
-    if (category === "trees") { baseScale = 0.75; scaleVar = 0.55; }
-    else if (category === "structures") { baseScale = 0.85; scaleVar = 0.35; }
-    else if (category === "scattered") { baseScale = 0.45; scaleVar = 0.45; }
-    else { baseScale = 0.6; scaleVar = 0.5; } // terrain
+    let baseScale = 0.7,
+      scaleVar = 0.4;
+    if (category === "trees") {
+      baseScale = 0.75;
+      scaleVar = 0.55;
+    } else if (category === "structures") {
+      baseScale = 0.85;
+      scaleVar = 0.35;
+    } else if (category === "scattered") {
+      baseScale = 0.45;
+      scaleVar = 0.45;
+    } else {
+      baseScale = 0.6;
+      scaleVar = 0.5;
+    } // terrain
 
     // Multi-factor scale variation for more natural look
     const scaleFactor1 = random();
     const scaleFactor2 = random();
     const combinedScale = (scaleFactor1 + scaleFactor2) / 2;
-    const finalScale = baseScale + combinedScale * scaleVar * (0.8 + random() * 0.4);
+    const finalScale =
+      baseScale + combinedScale * scaleVar * (0.8 + random() * 0.4);
 
     decorations.push({
       type,
@@ -233,7 +261,8 @@ export function generateDecorations(
     const clusterX = minX + random() * (maxX - minX);
     const clusterY = minY + random() * (maxY - minY);
 
-    if (isBeyondGrid(clusterX, clusterY) && random() > BEYOND_GRID_REDUCE) continue;
+    if (isBeyondGrid(clusterX, clusterY) && random() > BEYOND_GRID_REDUCE)
+      continue;
 
     const treesInCluster = 4 + Math.floor(random() * 5);
     const treeTypes = categories.trees;
@@ -244,7 +273,7 @@ export function generateDecorations(
       if (isOnPath(worldPos, 20)) continue;
 
       const treeScaleBase = 0.65 + random() * 0.25;
-      const treeScaleVar = (random() + random()) / 2 * 0.5;
+      const treeScaleVar = ((random() + random()) / 2) * 0.5;
 
       decorations.push({
         type: treeTypes[Math.floor(random() * treeTypes.length)],
@@ -274,7 +303,7 @@ export function generateDecorations(
 
       // Structure scale variation
       const structScaleBase = 0.75 + random() * 0.2;
-      const structScaleVar = (random() + random()) / 2 * 0.35;
+      const structScaleVar = ((random() + random()) / 2) * 0.35;
 
       decorations.push({
         type: structureTypes[Math.floor(random() * structureTypes.length)],
@@ -293,12 +322,14 @@ export function generateDecorations(
     const gridX = battleRandom() * (GRID_WIDTH + 19) - 9.5;
     const gridY = battleRandom() * (GRID_HEIGHT + 19) - 9.5;
 
-    if (isBeyondGrid(gridX, gridY) && battleRandom() > BEYOND_GRID_REDUCE) continue;
+    if (isBeyondGrid(gridX, gridY) && battleRandom() > BEYOND_GRID_REDUCE)
+      continue;
 
     const worldPos = gridToWorld({ x: gridX, y: gridY });
 
     const battleScaleBase = 0.4 + battleRandom() * 0.25;
-    const battleScaleVar = (battleRandom() + battleRandom() + battleRandom()) / 3 * 0.5;
+    const battleScaleVar =
+      ((battleRandom() + battleRandom() + battleRandom()) / 3) * 0.5;
 
     decorations.push({
       type: battleDecors[Math.floor(battleRandom() * battleDecors.length)],
@@ -308,6 +339,182 @@ export function generateDecorations(
       rotation: battleRandom() * Math.PI * 2,
       variant: Math.floor(battleRandom() * 4),
     });
+  }
+
+  // Grid edge border decorations — line the perimeter with trees and terrain
+  const edgeRandom = createSeededRandom(seed + 800);
+  const edgeTreeTypes = categories.trees;
+  const edgeTerrainTypes = categories.terrain;
+
+  const edgeSegments: {
+    startX: number;
+    startY: number;
+    dx: number;
+    dy: number;
+    length: number;
+  }[] = [
+    { startX: -3, startY: -2, dx: 1, dy: 0, length: GRID_WIDTH + 6 },
+    {
+      startX: -3,
+      startY: GRID_HEIGHT + 2,
+      dx: 1,
+      dy: 0,
+      length: GRID_WIDTH + 6,
+    },
+    { startX: -2, startY: -3, dx: 0, dy: 1, length: GRID_HEIGHT + 6 },
+    {
+      startX: GRID_WIDTH + 2,
+      startY: -3,
+      dx: 0,
+      dy: 1,
+      length: GRID_HEIGHT + 6,
+    },
+  ];
+
+  for (const seg of edgeSegments) {
+    let travelled = 0;
+    while (travelled < seg.length) {
+      const step = 1.2 + edgeRandom() * 1.3;
+      travelled += step;
+      if (travelled > seg.length) break;
+
+      const baseX = seg.startX + seg.dx * travelled;
+      const baseY = seg.startY + seg.dy * travelled;
+      const perpX = seg.dy;
+      const perpY = seg.dx;
+      const offsetPerp = (edgeRandom() - 0.5) * 3;
+      const offsetAlong = (edgeRandom() - 0.5) * 0.5;
+      const gx = baseX + perpX * offsetPerp + seg.dx * offsetAlong;
+      const gy = baseY + perpY * offsetPerp + seg.dy * offsetAlong;
+
+      const worldPos = gridToWorld({ x: gx, y: gy });
+      if (isOnPath(worldPos, 20)) continue;
+
+      const isTree = edgeRandom() > 0.3;
+      const type = isTree
+        ? edgeTreeTypes[Math.floor(edgeRandom() * edgeTreeTypes.length)]
+        : edgeTerrainTypes[Math.floor(edgeRandom() * edgeTerrainTypes.length)];
+
+      decorations.push({
+        type,
+        x: worldPos.x,
+        y: worldPos.y,
+        scale: isTree ? 0.7 + edgeRandom() * 0.6 : 0.5 + edgeRandom() * 0.5,
+        rotation: edgeRandom() * Math.PI * 2,
+        variant: Math.floor(edgeRandom() * 4),
+      });
+    }
+  }
+
+  // Dense decorations around path spawns and exits
+  const endpointRandom = createSeededRandom(seed + 700);
+  const pathEndpoints: Position[] = [];
+
+  if (pathPoints.length >= 2) {
+    pathEndpoints.push(pathPoints[0], pathPoints[pathPoints.length - 1]);
+  }
+
+  const levelDataForEndpoints = LEVEL_DATA[mapId];
+  if (
+    levelDataForEndpoints?.secondaryPath &&
+    MAP_PATHS[levelDataForEndpoints.secondaryPath]
+  ) {
+    const secPath = MAP_PATHS[levelDataForEndpoints.secondaryPath];
+    if (secPath.length >= 2) {
+      pathEndpoints.push(
+        gridToWorld(secPath[0]),
+        gridToWorld(secPath[secPath.length - 1]),
+      );
+    }
+  }
+
+  const endpointTreeTypes = categories.trees;
+  const endpointTerrainTypes = categories.terrain;
+
+  for (const ep of pathEndpoints) {
+    const epGrid = { x: ep.x / 40, y: ep.y / 40 };
+
+    // Inner dense wall of large trees/terrain right at the endpoint (0.3-2 tiles)
+    const innerCount = 10 + Math.floor(endpointRandom() * 5);
+    for (let i = 0; i < innerCount; i++) {
+      const angle = endpointRandom() * Math.PI * 2;
+      const dist = 0.3 + endpointRandom() * 1.7;
+      const gx = epGrid.x + Math.cos(angle) * dist;
+      const gy = epGrid.y + Math.sin(angle) * dist;
+      const worldPos = gridToWorld({ x: gx, y: gy });
+      if (isOnPath(worldPos, 20)) continue;
+
+      const type =
+        endpointRandom() > 0.3
+          ? endpointTreeTypes[
+              Math.floor(endpointRandom() * endpointTreeTypes.length)
+            ]
+          : endpointTerrainTypes[
+              Math.floor(endpointRandom() * endpointTerrainTypes.length)
+            ];
+
+      decorations.push({
+        type,
+        x: worldPos.x,
+        y: worldPos.y,
+        scale: 0.8 + endpointRandom() * 0.7,
+        rotation: endpointRandom() * Math.PI * 2,
+        variant: Math.floor(endpointRandom() * 4),
+      });
+    }
+
+    // Mid-ring trees (1.5-4.5 tiles)
+    const treeCount = 18 + Math.floor(endpointRandom() * 8);
+    for (let t = 0; t < treeCount; t++) {
+      const angle = endpointRandom() * Math.PI * 2;
+      const dist = 1.5 + endpointRandom() * 3;
+      const gx = epGrid.x + Math.cos(angle) * dist;
+      const gy = epGrid.y + Math.sin(angle) * dist;
+      const worldPos = gridToWorld({ x: gx, y: gy });
+      if (isOnPath(worldPos, 20)) continue;
+
+      const type =
+        endpointRandom() > 0.25
+          ? endpointTreeTypes[
+              Math.floor(endpointRandom() * endpointTreeTypes.length)
+            ]
+          : endpointTerrainTypes[
+              Math.floor(endpointRandom() * endpointTerrainTypes.length)
+            ];
+
+      decorations.push({
+        type,
+        x: worldPos.x,
+        y: worldPos.y,
+        scale: 0.65 + endpointRandom() * 0.65,
+        rotation: endpointRandom() * Math.PI * 2,
+        variant: Math.floor(endpointRandom() * 4),
+      });
+    }
+
+    // Outer scattered ring (2.5-6.5 tiles)
+    const scatterCount = 12 + Math.floor(endpointRandom() * 7);
+    for (let s = 0; s < scatterCount; s++) {
+      const angle = endpointRandom() * Math.PI * 2;
+      const dist = 2.5 + endpointRandom() * 4;
+      const gx = epGrid.x + Math.cos(angle) * dist;
+      const gy = epGrid.y + Math.sin(angle) * dist;
+      const worldPos = gridToWorld({ x: gx, y: gy });
+      if (isOnPath(worldPos, 20)) continue;
+
+      const scatteredTypes = [...categories.scattered, ...endpointTerrainTypes];
+      const type =
+        scatteredTypes[Math.floor(endpointRandom() * scatteredTypes.length)];
+
+      decorations.push({
+        type,
+        x: worldPos.x,
+        y: worldPos.y,
+        scale: 0.4 + endpointRandom() * 0.5,
+        rotation: endpointRandom() * Math.PI * 2,
+        variant: Math.floor(endpointRandom() * 4),
+      });
+    }
   }
 
   // Add level-specific decorations
@@ -321,7 +528,7 @@ export function generateDecorations(
         y: worldPos.y,
         scale: (dec.size || 1) * 1.2,
         rotation: 0,
-        variant: (typeof dec.variant === "number" ? dec.variant : 0),
+        variant: typeof dec.variant === "number" ? dec.variant : 0,
       });
     }
   }
@@ -351,7 +558,7 @@ export interface SceneRenderOptions {
 
 export function renderScene(
   ctx: CanvasRenderingContext2D,
-  options: SceneRenderOptions
+  options: SceneRenderOptions,
 ): void {
   const {
     mapId,
@@ -369,7 +576,15 @@ export function renderScene(
   const theme = getMapTheme(mapId);
 
   // 1. Render map background
-  renderMapBackground(ctx, mapId, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+  renderMapBackground(
+    ctx,
+    mapId,
+    canvasWidth,
+    canvasHeight,
+    dpr,
+    cameraOffset,
+    cameraZoom,
+  );
 
   // 2. Render path (uses maps module renderPath for backward compatibility)
 
@@ -378,7 +593,15 @@ export function renderScene(
     const levelData = LEVEL_DATA[mapId];
     if (levelData?.hazards) {
       for (const hazard of levelData.hazards) {
-        renderHazard(ctx, hazard, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+        renderHazard(
+          ctx,
+          hazard,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom,
+        );
       }
     }
   }
@@ -395,14 +618,28 @@ export function renderScene(
         variant: dec.variant,
         scale: dec.scale,
       };
-      renderDecoration(ctx, mapDecoration, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+      renderDecoration(
+        ctx,
+        mapDecoration,
+        canvasWidth,
+        canvasHeight,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
     }
   }
 
   // 5. Render environmental effects (on top)
   if (shouldRenderEnvironment) {
     renderEnvironment(ctx, theme, canvasWidth / dpr, canvasHeight / dpr, time);
-    renderAmbientVisuals(ctx, theme, canvasWidth / dpr, canvasHeight / dpr, time);
+    renderAmbientVisuals(
+      ctx,
+      theme,
+      canvasWidth / dpr,
+      canvasHeight / dpr,
+      time,
+    );
   }
 }
 
@@ -410,7 +647,11 @@ export function renderScene(
 // HELPER FUNCTIONS
 // ============================================================================
 
-function distanceToLineSegment(point: Position, lineStart: Position, lineEnd: Position): number {
+function distanceToLineSegment(
+  point: Position,
+  lineStart: Position,
+  lineEnd: Position,
+): number {
   const dx = lineEnd.x - lineStart.x;
   const dy = lineEnd.y - lineStart.y;
   const lengthSq = dx * dx + dy * dy;
@@ -421,7 +662,8 @@ function distanceToLineSegment(point: Position, lineStart: Position, lineEnd: Po
     return Math.sqrt(ddx * ddx + ddy * ddy);
   }
 
-  let t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lengthSq;
+  let t =
+    ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lengthSq;
   t = Math.max(0, Math.min(1, t));
 
   const closestX = lineStart.x + t * dx;
@@ -445,13 +687,27 @@ export function renderPathEndpointFog(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ): void {
   const zoom = cameraZoom || 1;
   const themeColors = MAP_THEMES[theme] || MAP_THEMES.nassau;
 
-  const startScreen = worldToScreen(startPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
-  const endScreen = worldToScreen(endPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+  const startScreen = worldToScreen(
+    startPos,
+    canvasWidth,
+    canvasHeight,
+    dpr,
+    cameraOffset,
+    cameraZoom,
+  );
+  const endScreen = worldToScreen(
+    endPos,
+    canvasWidth,
+    canvasHeight,
+    dpr,
+    cameraOffset,
+    cameraZoom,
+  );
 
   // Calculate direction
   const dx = endScreen.x - startScreen.x;
@@ -472,7 +728,7 @@ export function renderPathEndpointFog(
       0,
       startScreen.x - dirX * layerOffset,
       startScreen.y - dirY * layerOffset,
-      fogRadius
+      fogRadius,
     );
 
     const baseColor = themeColors.ground;
@@ -487,7 +743,7 @@ export function renderPathEndpointFog(
       startScreen.y - dirY * layerOffset,
       fogRadius,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
   }

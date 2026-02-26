@@ -227,7 +227,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 12,
     armor: 0,
     flying: false,
-    troopDamage: 22,
+    troopDamage: 15,
     desc: "The first hurdle. Persistence is key.",
     color: "#4ade80",
     size: 20,
@@ -835,7 +835,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 22,
     armor: 0.05,
     flying: false,
-    troopDamage: 38,
+    troopDamage: 27,
     desc: "Sleep-deprived zealots chanting forbidden study rituals.",
     color: "#7c2d12",
     size: 21,
@@ -953,7 +953,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 45,
     armor: 0,
     flying: false,
-    troopDamage: 52,
+    troopDamage: 36,
     desc: "Lightning fast, sprints past defenders without stopping.",
     color: "#1e1b4b",
     size: 20,
@@ -1174,7 +1174,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 10,
     armor: 0,
     flying: false,
-    troopDamage: 28,
+    troopDamage: 10,
     desc: "Fast and agile, sprinting past troops without stopping.",
     color: "#f97316",
     size: 20,
@@ -1192,7 +1192,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 12,
     armor: 0.15,
     flying: false,
-    troopDamage: 35,
+    troopDamage: 25,
     desc: "Passionate and determined. Carries a sign that provides minor protection.",
     color: "#ef4444",
     size: 22,
@@ -1220,7 +1220,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 14,
     armor: 0.2,
     flying: false,
-    troopDamage: 28,
+    troopDamage: 20,
     desc: "Shambling swamp horror covered in toxic muck. Slow but resilient.",
     color: "#365314",
     size: 24,
@@ -1244,6 +1244,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 10,
     armor: 0.4,
     flying: true,
+    troopDamage: 16,
     desc: "Malevolent spirit light that phases through defenses.",
     color: "#84cc16",
     size: 18,
@@ -1295,7 +1296,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 11,
     armor: 0.1,
     flying: false,
-    troopDamage: 24,
+    troopDamage: 17,
     desc: "Cursed wanderer of the endless sands, bound by ancient dark pacts.",
     color: "#a16207",
     size: 22,
@@ -1333,7 +1334,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 9,
     armor: 0.15,
     flying: false,
-    troopDamage: 26,
+    troopDamage: 18,
     desc: "Cursed beetle that scurries past defenders too quickly to catch.",
     color: "#fbbf24",
     size: 16,
@@ -1351,6 +1352,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 9,
     armor: 0.05,
     flying: false,
+    troopDamage: 18,
     desc: "Mischievous ice creature that dashes past defenders.",
     color: "#93c5fd",
     size: 20,
@@ -1473,6 +1475,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     bounty: 8,
     armor: 0,
     flying: false,
+    troopDamage: 18,
     desc: "Mischievous demon that darts past defenders in a flash of flame.",
     color: "#fb923c",
     size: 18,
@@ -1766,7 +1769,7 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
   // All paths expanded and centered for 30x30 grid
   // =====================
   poe: [
-    { x: -2, y: 15 },
+    { x: -5, y: 15 },
     { x: 4, y: 15 },
     { x: 10, y: 15 },
     { x: 10, y: 8 },
@@ -1775,10 +1778,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 22, y: 18 },
     { x: 22, y: 12 },
     { x: 28, y: 12 },
-    { x: 34, y: 12 },
+    { x: 37, y: 12 },
   ],
   carnegie: [
-    { x: 15, y: -4 },
+    { x: 15, y: -7 },
     { x: 15, y: 6 },
     { x: 9, y: 6 },
     { x: 9, y: 14 },
@@ -1789,10 +1792,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 26, y: 10 },
     { x: 26, y: 20 },
     { x: 26, y: 28 },
-    { x: 26, y: 32 },
+    { x: 26, y: 35 },
   ],
   nassau: [
-    { x: -2, y: 15 },
+    { x: -5, y: 15 },
     { x: 5, y: 15 },
     { x: 5, y: 23 },
     { x: 12, y: 23 },
@@ -1807,13 +1810,13 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 21, y: 13 },
     { x: 26, y: 13 },
     { x: 26, y: 5 },
-    { x: 32, y: 5 },
+    { x: 35, y: 5 },
   ],
   // =====================
   // SWAMP REGION (Murky Marshes)
   // =====================
   bog: [
-    { x: -2, y: 8 },
+    { x: -5, y: 8 },
     { x: 6, y: 8 },
     { x: 6, y: 20 },
     { x: 12, y: 20 },
@@ -1822,10 +1825,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 18, y: 19 },
     { x: 24, y: 19 },
     { x: 24, y: 6 },
-    { x: 32, y: 6 },
+    { x: 35, y: 6 },
   ],
   witch_hut: [
-    { x: 12, y: -4 },
+    { x: 12, y: -7 },
     { x: 12, y: 1 },
     { x: 19, y: 1 },
     { x: 19, y: 4.5 },
@@ -1840,10 +1843,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 27, y: 16 },
     { x: 27, y: 21 },
     { x: 18, y: 21 },
-    { x: 18, y: 34 },
+    { x: 18, y: 37 },
   ],
   sunken_temple: [
-    { x: -2, y: 8 },
+    { x: -5, y: 8 },
     { x: 4, y: 8 },
     { x: 4, y: 14 },
     { x: 7, y: 14 },
@@ -1860,11 +1863,11 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 30, y: 24 },
     { x: 30, y: 21 },
     { x: 32, y: 21 },
-    { x: 38, y: 21 },
+    { x: 41, y: 21 },
   ],
   // Secondary path for sunken temple
   sunken_temple_b: [
-    { x: -2, y: 25 },
+    { x: -5, y: 25 },
     { x: 5, y: 25 },
     { x: 5, y: 20 },
     { x: 10, y: 20 },
@@ -1878,15 +1881,15 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 28, y: 4 },
     { x: 28, y: 8 },
     { x: 32, y: 8 },
-    { x: 32, y: 6 },
-    { x: 36, y: 6 },
-    { x: 38, y: 8 },
+    { x: 32, y: 8 },
+    { x: 36, y: 8 },
+    { x: 41, y: 8 },
   ],
   // =====================
   // DESERT REGION (Sahara Sands)
   // =====================
   oasis: [
-    { x: -2, y: 10 },
+    { x: -8, y: 10 },
     { x: 2, y: 10 },
     { x: 2, y: 18 },
     { x: 6, y: 18 },
@@ -1902,10 +1905,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 30, y: 9 },
     { x: 30, y: 17 },
     { x: 32, y: 18 },
-    { x: 36, y: 18 },
+    { x: 39, y: 18 },
   ],
   pyramid: [
-    { x: 15, y: -4 },
+    { x: 15, y: -7 },
     { x: 15, y: 4 },
     { x: 6, y: 4 },
     { x: 6, y: 8 },
@@ -1919,11 +1922,11 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 9, y: 24 },
     { x: 15, y: 24 },
     { x: 15, y: 30 },
-    { x: 15, y: 34 },
+    { x: 15, y: 37 },
   ],
   // Secondary path for pyramid
   pyramid_b: [
-    { x: 34, y: 16 },
+    { x: 37, y: 16 },
     { x: 27, y: 16 },
     { x: 27, y: 8 },
     { x: 23, y: 8 },
@@ -1936,10 +1939,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 22, y: 24 },
     { x: 15, y: 24 },
     { x: 15, y: 30 },
-    { x: 15, y: 34 },
+    { x: 15, y: 37 },
   ],
   sphinx: [
-    { x: -6, y: 16 },
+    { x: -9, y: 16 },
     { x: 2, y: 16 },
     { x: 2, y: 8 },
     { x: 8, y: 8 },
@@ -1955,13 +1958,13 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 26, y: 16.5 },
     { x: 26, y: 5.5 },
     { x: 30, y: 5 },
-    { x: 34, y: 5 },
+    { x: 37, y: 5 },
   ],
   // =====================
   // WINTER REGION (Frozen Frontier)
   // =====================
   glacier: [
-    { x: -2, y: 12 },
+    { x: -5, y: 12 },
     { x: 6, y: 12 },
     { x: 6, y: 20 },
     { x: 12, y: 20 },
@@ -1973,10 +1976,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 24, y: 20 },
     { x: 30, y: 20 },
     { x: 30, y: 12 },
-    { x: 36, y: 12 },
+    { x: 39, y: 12 },
   ],
   fortress: [
-    { x: 15, y: -7 },
+    { x: 15, y: -10 },
     { x: 15, y: -2 },
     { x: 12, y: -2 },
     { x: 12, y: 4 },
@@ -1994,10 +1997,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 18, y: 24 },
     { x: 14, y: 24 },
     { x: 14, y: 30 },
-    { x: 14, y: 34 },
+    { x: 14, y: 37 },
   ],
   peak: [
-    { x: -2, y: 20 },
+    { x: -5, y: 20 },
     { x: 2, y: 20 },
     { x: 2, y: 12 },
     { x: 8, y: 12 },
@@ -2005,23 +2008,23 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 14, y: 20 },
     { x: 20, y: 20 },
     { x: 26, y: 20 },
-    { x: 35, y: 20 },
+    { x: 38, y: 20 },
   ],
   // Secondary path for peak
   peak_b: [
-    { x: 12, y: -2 },
+    { x: 12, y: -5 },
     { x: 12, y: 6 },
     { x: 22, y: 6 },
     { x: 22, y: 12 },
     { x: 28, y: 12 },
     { x: 28, y: 19 },
-    { x: 35, y: 20 },
+    { x: 38, y: 20 },
   ],
   // =====================
   // VOLCANIC REGION (Inferno Depths)
   // =====================
   lava: [
-    { x: -4, y: 14 },
+    { x: -7, y: 14 },
     { x: 6, y: 14 },
     { x: 6, y: 6 },
     { x: 21, y: 6 },
@@ -2034,10 +2037,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 10, y: 25 },
     { x: 24, y: 25 },
     { x: 24, y: 14 },
-    { x: 36, y: 14 },
+    { x: 39, y: 14 },
   ],
   crater: [
-    { x: 15, y: -6 },
+    { x: 15, y: -9 },
     { x: 15, y: 4 },
     { x: 9, y: 4 },
     { x: 3, y: 4 },
@@ -2051,10 +2054,10 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 8, y: 18 },
     { x: 8, y: 24 },
     { x: 21, y: 24 },
-    { x: 21, y: 36 },
+    { x: 21, y: 39 },
   ],
   throne: [
-    { x: -4, y: 7 },
+    { x: -7, y: 7 },
     { x: 2, y: 7 },
     { x: 2, y: 11 },
     { x: 6, y: 11 },
@@ -2067,11 +2070,11 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 20, y: 10 },
     { x: 26, y: 10 },
     { x: 26, y: 14 },
-    { x: 36, y: 14 }, // MERGE POINT
+    { x: 39, y: 14 }, // MERGE POINT
   ],
   // Secondary path for throne
   throne_b: [
-    { x: -4, y: 24 },
+    { x: -7, y: 24 },
     { x: 0, y: 24 },
     { x: 0, y: 20 },
     { x: 6, y: 20 },
@@ -2084,7 +2087,7 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 24, y: 18 },
     { x: 30, y: 18 },
     { x: 30, y: 14 }, // Merge point with primary path
-    { x: 36, y: 14 },
+    { x: 39, y: 14 },
   ],
 };
 
@@ -2126,9 +2129,8 @@ export const LEVEL_DATA: Record<
   poe: {
     name: "Poe Field",
     position: { x: 120, y: 200 },
-    description:
-      "Training grounds for new defenders. A peaceful meadow where recruits learn the basics.",
-    camera: { offset: { x: -180, y: -390 }, zoom: 1.05 },
+    description: "Training grounds for new defenders.",
+    camera: { offset: { x: -100, y: -390 }, zoom: 1.05 },
     region: "grassland",
     theme: "grassland",
     difficulty: 1,
@@ -2178,7 +2180,7 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "Strategic lakeside defense. The gleaming waters hide ancient secrets.",
-    camera: { offset: { x: -120, y: -340 }, zoom: 1.05 },
+    camera: { offset: { x: -120, y: -380 }, zoom: 0.95 },
     region: "grassland",
     theme: "grassland",
     difficulty: 2,
@@ -2454,6 +2456,8 @@ export const LEVEL_DATA: Record<
       { type: "pyramid", pos: { x: 16, y: 4 }, variant: 0, size: 2 },
       { type: "sphinx", pos: { x: 4, y: 4 }, variant: 0 },
       { type: "oasis_pool", pos: { x: 16, y: 17 }, variant: 0, size: 2 },
+      { type: "sphinx", pos: { x: 13, y: 14 }, variant: 0 },
+      { type: "sphinx", pos: { x: 13, y: 12 }, variant: 1 },
 
       // Palm trees around
       { type: "palm", pos: { x: 2, y: 8 }, variant: 0 },
@@ -2489,7 +2493,7 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "Navigate the ancient canyon beneath the great pyramid. Beware of ambushes!",
-    camera: { offset: { x: -190, y: -310 }, zoom: 0.85 },
+    camera: { offset: { x: -140, y: -340 }, zoom: 0.85 },
     region: "desert",
     theme: "desert",
     difficulty: 2,
@@ -2515,7 +2519,7 @@ export const LEVEL_DATA: Record<
       { type: "sphinx", pos: { x: 13.5, y: 17 }, variant: 1 },
 
       // Obelisks and torches along path
-      { type: "obelisk", pos: { x: 6, y: 14 }, variant: 0 },
+      { type: "obelisk", pos: { x: 6, y: 16 }, variant: 0 },
       { type: "obelisk", pos: { x: 16, y: 16 }, variant: 1 },
       { type: "obelisk", pos: { x: 14, y: 22 }, variant: 2 },
       { type: "torch", pos: { x: 12, y: 10 }, variant: 0 },
@@ -2559,11 +2563,13 @@ export const LEVEL_DATA: Record<
     },
     decorations: [
       // Giant sphinx and guardians (path: x:-2 to 32, y:10 to 22)
-      { type: "giant_sphinx", pos: { x: 11, y: 2.5 }, variant: 0, size: 1.5 },
+      { type: "giant_sphinx", pos: { x: 13, y: 2 }, variant: 0, size: 1.5 },
       { type: "sphinx", pos: { x: 10, y: 23.5 }, variant: 1 },
       { type: "sphinx", pos: { x: 10, y: 5.5 }, variant: 0 },
       { type: "sphinx", pos: { x: 15, y: 5.5 }, variant: 0 },
-      { type: "sphinx", pos: { x: 22, y: 6 }, variant: 1 },
+      { type: "sphinx", pos: { x: 11, y: 14 }, variant: 1 },
+      { type: "sphinx", pos: { x: 11, y: 13 }, variant: 1 },
+      { type: "sphinx", pos: { x: 22, y: 6 }, variant: 0 },
       // Obelisks along path
       { type: "obelisk", pos: { x: 4, y: 14 }, variant: 0 },
       { type: "obelisk", pos: { x: 10, y: 18 }, variant: 1 },
@@ -2572,6 +2578,9 @@ export const LEVEL_DATA: Record<
       // Pyramids and decorations
       { type: "pyramid", pos: { x: 15, y: 26 }, variant: 0, size: 1.5 },
       { type: "pyramid", pos: { x: 26, y: 2 }, variant: 1, size: 2 },
+      { type: "pyramid", pos: { x: 8, y: 2 }, variant: 0 },
+      { type: "pyramid", pos: { x: 10, y: 6.5 }, variant: 2, size: 1.5 },
+
       { type: "sarcophagus", pos: { x: 2, y: 18 }, variant: 0 },
       { type: "sarcophagus", pos: { x: 28, y: 10 }, variant: 1 },
       { type: "sand_pile", pos: { x: 16, y: 20 }, variant: 0 },
@@ -2665,7 +2674,7 @@ export const LEVEL_DATA: Record<
     position: { x: 300, y: 120 },
     description:
       "An abandoned stronghold of ice and stone. What dark forces drove out its defenders?",
-    camera: { offset: { x: -250, y: -335 }, zoom: 0.85 },
+    camera: { offset: { x: -150, y: -335 }, zoom: 0.85 },
     region: "winter",
     theme: "winter",
     difficulty: 2,
@@ -4707,6 +4716,7 @@ export const SPELL_OPTIONS: SpellType[] = [
 ];
 
 // Game constants
+export const GROUP_SPACING_MULTIPLIER = 2.75; // Gap between enemy groups within a wave (higher = more breathing room)
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
 export const INITIAL_PAW_POINTS = 300;

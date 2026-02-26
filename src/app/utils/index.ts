@@ -240,6 +240,22 @@ export const LANDMARK_DECORATION_TYPES = new Set([
   "gate",
 ]);
 
+// Vertical offset for landmark hitboxes (in scale units). Tall structures like pyramids
+// draw upward from their base—the hitbox center is shifted up so hovering the visible
+// body triggers the tooltip instead of requiring a hover near the ground.
+export const LANDMARK_HITBOX_Y_OFFSET: Record<string, number> = {
+  pyramid: 55,
+  sphinx: 45,
+  giant_sphinx: 60,
+  nassau_hall: 50,
+  ice_fortress: 55,
+  obsidian_castle: 55,
+  witch_cottage: 30,
+  statue: 22,
+  demon_statue: 22,
+  obelisk: 35,
+};
+
 // Check if position is valid for building
 export function isValidBuildPosition(
   gridPos: GridPosition,

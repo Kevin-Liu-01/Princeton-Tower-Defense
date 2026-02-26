@@ -28,6 +28,7 @@ import {
   TILE_SIZE,
   GRID_WIDTH,
   GRID_HEIGHT,
+  GROUP_SPACING_MULTIPLIER,
   TOWER_DATA,
   ENEMY_DATA,
   HERO_DATA,
@@ -66,6 +67,7 @@ import {
   getTroopMoveInfo,
   type TroopMoveInfo,
   LANDMARK_DECORATION_TYPES,
+  LANDMARK_HITBOX_Y_OFFSET,
 } from "./utils";
 // Tower Stats
 import { calculateTowerStats, getUpgradeCost } from "./constants/towerStats";
@@ -760,9 +762,10 @@ export default function PrincetonTowerDefense() {
     console.log(`[Wave] Starting wave ${currentWave + 1} of ${levelWaves.length}`);
     setWaveInProgress(true);
     const wave = levelWaves[currentWave];
+    let cumulativeDelay = 0;
     wave.forEach((group) => {
-      // Use delay if specified, otherwise start immediately
-      const startDelay = group.delay || 0;
+      cumulativeDelay += (group.delay || 0) * GROUP_SPACING_MULTIPLIER;
+      const startDelay = cumulativeDelay;
 
       const startSpawning = () => {
         let spawned = 0;
@@ -894,8 +897,12 @@ export default function PrincetonTowerDefense() {
         startSpawning();
       }
     });
-    // Calculate wave duration including delays
-    const waveDuration = Math.max(...wave.map((g) => (g.delay || 0) + g.count * g.interval)) + 5000;
+    // Calculate wave duration including cumulative delays
+    let accDelay = 0;
+    const waveDuration = Math.max(...wave.map((g) => {
+      accDelay += (g.delay || 0) * GROUP_SPACING_MULTIPLIER;
+      return accDelay + g.count * g.interval;
+    })) + 5000;
     const waveNumberForTimeout = currentWave; // Capture for closure
     console.log(`[Wave] Wave ${currentWave + 1} started, will complete in ${waveDuration}ms`);
 
@@ -4987,155 +4994,126 @@ export default function PrincetonTowerDefense() {
     const secondScreenPos = screenCenter[Math.min(directionOffset, screenCenter.length - 1)];
     const lastScreenPos = screenCenter[screenCenter.length - 1];
     const secondLastScreenPos = screenCenter[Math.max(0, screenCenter.length - 1 - directionOffset)];
-    // Helper function to draw fog that gradually obscures road end
-    // Helper function to draw fog that gradually obscures road end - themed
-    const fogBaseRgb = hexToRgb(theme.ground[2]);
+    // Dark fog at path entrances/exits — scattered circles for irregular edges
+    const fogGroundRgb = hexToRgb(theme.ground[2]);
+    const fogAccentRgb = hexToRgb(theme.accent);
+    const fogPathRgb = hexToRgb(theme.path[2]);
     const drawRoadEndFog = (
       endPos: Position,
       towardsPos: Position,
       size: number
     ) => {
       const time = Date.now() / 4000;
-      // Calculate direction from endPos outward (away from the visible path)
       const dx = endPos.x - towardsPos.x;
       const dy = endPos.y - towardsPos.y;
       const len = Math.sqrt(dx * dx + dy * dy);
       const dirX = len > 0 ? dx / len : 1;
       const dirY = len > 0 ? dy / len : 0;
-      // Draw graduated fog layers CENTERED at endPos, spreading outward
-      for (let layer = 0; layer < 8; layer++) {
-        const layerDist = (layer - 4) * size * 0.15; // Center at endPos, spread both directions
-        const layerX = endPos.x + dirX * layerDist;
-        const layerY = endPos.y + dirY * layerDist * 0.5; // Isometric Y compression
-        const layerSize = size * (0.8 + layer * 0.1);
-        const layerAlpha = Math.min(0.9, layer * 0.12); // Gradually increase opacity
-        // Animated offset for cloud-like movement
-        const animX = Math.sin(time + layer * 0.5) * 4 * cameraZoom;
-        const animY = Math.cos(time * 0.7 + layer * 0.3) * 2 * cameraZoom;
-        // Fog gradient - themed
-        const fogGradient = ctx.createRadialGradient(
-          layerX + animX,
-          layerY + animY,
-          0,
-          layerX + animX,
-          layerY + animY,
-          layerSize * cameraZoom
+      const perpX = -dirY;
+      const perpY = dirX;
+      const z = cameraZoom;
+
+      // Region-tinted dark fog: blend ground + accent + path for unique look
+      const mixR = Math.round(fogGroundRgb.r * 0.5 + fogAccentRgb.r * 0.25 + fogPathRgb.r * 0.25);
+      const mixG = Math.round(fogGroundRgb.g * 0.5 + fogAccentRgb.g * 0.25 + fogPathRgb.g * 0.25);
+      const mixB = Math.round(fogGroundRgb.b * 0.5 + fogAccentRgb.b * 0.25 + fogPathRgb.b * 0.25);
+      const coreR = Math.round(mixR * 0.25);
+      const coreG = Math.round(mixG * 0.25);
+      const coreB = Math.round(mixB * 0.25);
+      const edgeR = Math.round(mixR * 0.55);
+      const edgeG = Math.round(mixG * 0.55);
+      const edgeB = Math.round(mixB * 0.55);
+
+      const hash = (n: number) => {
+        const x = Math.sin(n * 127.1 + n * 311.7) * 43758.5453;
+        return x - Math.floor(x);
+      };
+
+      // Irregular shape via deterministic "arms" extending in random directions
+      const armCount = 7;
+      const armAngles: number[] = [];
+      const armLengths: number[] = [];
+      for (let a = 0; a < armCount; a++) {
+        armAngles.push(hash(a * 99.1 + 42.7) * Math.PI * 2);
+        armLengths.push(0.8 + hash(a * 77.3 + 13.1) * 0.7);
+      }
+
+      const getMaxReach = (angle: number): number => {
+        let reach = 0.75;
+        for (let a = 0; a < armCount; a++) {
+          const diff = Math.abs(angle - armAngles[a]);
+          const wrapped = Math.min(diff, Math.PI * 2 - diff);
+          const influence = Math.max(0, 1 - wrapped / 0.6);
+          reach = Math.max(reach, 0.75 + influence * armLengths[a] * 0.6);
+        }
+        return reach;
+      };
+
+      // Scattered dark blobs — circles only, no ellipses = no flat sides
+      for (let i = 0; i < 85; i++) {
+        const h1 = hash(i * 13.37);
+        const h2 = hash(i * 7.91 + 0.5);
+        const h3 = hash(i * 3.14 + 1.0);
+        const h4 = hash(i * 11.23 + 2.0);
+
+        const angle = h1 * Math.PI * 2;
+        const maxR = getMaxReach(angle);
+        const rawDist = (h2 * 0.5 + h3 * 0.5) * maxR;
+
+        const alongDist = Math.cos(angle) * rawDist * size;
+        const perpDist = Math.sin(angle) * rawDist * size;
+
+        const bx = endPos.x + dirX * alongDist * z + perpX * perpDist * 0.65 * z;
+        const by = endPos.y + dirY * alongDist * 0.5 * z + perpY * perpDist * 0.32 * z;
+
+        const animX = Math.sin(time * 0.25 + i * 0.68) * 4 * z;
+        const animY = Math.cos(time * 0.2 + i * 0.52) * 2.5 * z;
+
+        const blobSize = size * (0.22 + h4 * 0.3) * z;
+        const distNorm = rawDist / maxR;
+        const alpha = Math.max(0, 0.45 * (1 - distNorm * distNorm));
+        if (alpha <= 0.01) continue;
+
+        const blend = distNorm;
+        const cr = coreR + (edgeR - coreR) * blend;
+        const cg = coreG + (edgeG - coreG) * blend;
+        const cb = coreB + (edgeB - coreB) * blend;
+
+        const grad = ctx.createRadialGradient(
+          bx + animX, by + animY, 0,
+          bx + animX, by + animY, blobSize
         );
-        fogGradient.addColorStop(
-          0,
-          `rgba(${fogBaseRgb.r}, ${fogBaseRgb.g}, ${fogBaseRgb.b}, ${layerAlpha})`
-        );
-        fogGradient.addColorStop(
-          0.3,
-          `rgba(${fogBaseRgb.r + 4}, ${fogBaseRgb.g + 4}, ${fogBaseRgb.b + 4
-          }, ${layerAlpha * 0.75})`
-        );
-        fogGradient.addColorStop(
-          0.6,
-          `rgba(${fogBaseRgb.r + 8}, ${fogBaseRgb.g + 8}, ${fogBaseRgb.b + 8
-          }, ${layerAlpha * 0.4})`
-        );
-        fogGradient.addColorStop(
-          1,
-          `rgba(${fogBaseRgb.r + 12}, ${fogBaseRgb.g + 12}, ${fogBaseRgb.b + 12
-          }, 0)`
-        );
-        ctx.fillStyle = fogGradient;
+        grad.addColorStop(0, `rgba(${Math.round(cr)},${Math.round(cg)},${Math.round(cb)},${alpha.toFixed(3)})`);
+        grad.addColorStop(0.5, `rgba(${edgeR},${edgeG},${edgeB},${(alpha * 0.45).toFixed(3)})`);
+        grad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.ellipse(
-          layerX + animX,
-          layerY + animY,
-          layerSize * cameraZoom,
-          layerSize * 0.5 * cameraZoom,
-          0,
-          0,
-          Math.PI * 2
-        );
+        ctx.arc(bx + animX, by + animY, blobSize, 0, Math.PI * 2);
         ctx.fill();
       }
-      // Add wispy cloud puffs around the fog area - themed
-      for (let i = 0; i < 5; i++) {
-        const angle = (i / 5) * Math.PI * 2 + time * 0.15;
-        const dist = size * 0.5 + Math.sin(time + i) * size * 0.1;
-        const puffX = endPos.x + Math.cos(angle) * dist * cameraZoom * 0.6;
-        const puffY = endPos.y + Math.sin(angle) * dist * 0.3 * cameraZoom;
-        const puffSize =
-          (size * 0.35 + Math.sin(time * 1.5 + i * 1.2) * size * 0.1) *
-          cameraZoom;
-        const puffGradient = ctx.createRadialGradient(
-          puffX,
-          puffY,
-          0,
-          puffX,
-          puffY,
-          puffSize
-        );
-        puffGradient.addColorStop(
-          0,
-          `rgba(${fogBaseRgb.r + 20}, ${fogBaseRgb.g + 18}, ${fogBaseRgb.b + 14
-          }, 0.5)`
-        );
-        puffGradient.addColorStop(
-          0.5,
-          `rgba(${fogBaseRgb.r + 15}, ${fogBaseRgb.g + 14}, ${fogBaseRgb.b + 10
-          }, 0.25)`
-        );
-        puffGradient.addColorStop(
-          1,
-          `rgba(${fogBaseRgb.r + 10}, ${fogBaseRgb.g + 10}, ${fogBaseRgb.b + 8
-          }, 0)`
-        );
-        ctx.fillStyle = puffGradient;
+
+      // Drifting wisps — slowly orbiting dark puffs for animation
+      for (let i = 0; i < 12; i++) {
+        const wAngle = time * (0.07 + hash(i + 100) * 0.05) + i * 0.52;
+        const wAlongDist = Math.sin(wAngle) * size * 0.65;
+        const wPerpDist = Math.cos(wAngle * 0.7 + i) * size * 0.45;
+        const wx = endPos.x + dirX * wAlongDist * z + perpX * wPerpDist * 0.65 * z;
+        const wy = endPos.y + dirY * wAlongDist * 0.5 * z + perpY * wPerpDist * 0.32 * z;
+        const wSize = size * (0.18 + hash(i + 200) * 0.2) * z;
+        const wa = 0.14 + 0.07 * Math.sin(time * 0.4 + i);
+
+        const wGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, wSize);
+        wGrad.addColorStop(0, `rgba(${coreR},${coreG},${coreB},${wa.toFixed(3)})`);
+        wGrad.addColorStop(0.45, `rgba(${edgeR},${edgeG},${edgeB},${(wa * 0.4).toFixed(3)})`);
+        wGrad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
+        ctx.fillStyle = wGrad;
         ctx.beginPath();
-        ctx.ellipse(puffX, puffY, puffSize, puffSize * 0.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // Subtle lighter mist highlights for depth - themed
-      for (let i = 0; i < 3; i++) {
-        const angle = (i / 3) * Math.PI * 2 + time * 0.1 + 0.5;
-        const dist = size * 0.4 + Math.cos(time * 0.6 + i) * size * 0.12;
-        const mistX = endPos.x + Math.cos(angle) * dist * 0.5 * cameraZoom;
-        const mistY = endPos.y + Math.sin(angle) * dist * 0.25 * cameraZoom;
-        const mistSize = size * 0.2 * cameraZoom;
-        const mistGradient = ctx.createRadialGradient(
-          mistX,
-          mistY - mistSize * 0.15,
-          0,
-          mistX,
-          mistY,
-          mistSize
-        );
-        mistGradient.addColorStop(
-          0,
-          `rgba(${Math.min(255, fogBaseRgb.r + 100)}, ${Math.min(
-            255,
-            fogBaseRgb.g + 90
-          )}, ${Math.min(255, fogBaseRgb.b + 75)}, 0.15)`
-        );
-        mistGradient.addColorStop(
-          0.5,
-          `rgba(${Math.min(255, fogBaseRgb.r + 80)}, ${Math.min(
-            255,
-            fogBaseRgb.g + 70
-          )}, ${Math.min(255, fogBaseRgb.b + 60)}, 0.08)`
-        );
-        mistGradient.addColorStop(
-          1,
-          `rgba(${Math.min(255, fogBaseRgb.r + 60)}, ${Math.min(
-            255,
-            fogBaseRgb.g + 52
-          )}, ${Math.min(255, fogBaseRgb.b + 42)}, 0)`
-        );
-        ctx.fillStyle = mistGradient;
-        ctx.beginPath();
-        ctx.ellipse(mistX, mistY, mistSize, mistSize * 0.5, 0, 0, Math.PI * 2);
+        ctx.arc(wx, wy, wSize, 0, Math.PI * 2);
         ctx.fill();
       }
     };
-    // Draw fog at path start (enemy entrance) - large to fully obscure road exit
-    drawRoadEndFog(firstScreenPos, secondScreenPos, 120);
-    // Draw fog at path end (enemy exit)
-    drawRoadEndFog(lastScreenPos, secondLastScreenPos, 120);
+    drawRoadEndFog(firstScreenPos, secondScreenPos, 300);
+    drawRoadEndFog(lastScreenPos, secondLastScreenPos, 300);
 
     // Draw fog for secondary path endpoints (dual-path levels)
     if (
@@ -5153,12 +5131,12 @@ export default function PrincetonTowerDefense() {
       // Secondary path START (entrance) fog
       const secFirstScreenPos = secSmoothScreenPath[0];
       const secSecondScreenPos = secSmoothScreenPath[Math.min(secDirOffset, secSmoothScreenPath.length - 1)];
-      drawRoadEndFog(secFirstScreenPos, secSecondScreenPos, 120);
+      drawRoadEndFog(secFirstScreenPos, secSecondScreenPos, 300);
 
       // Secondary path END (exit) fog
       const secLastScreenPos = secSmoothScreenPath[secSmoothScreenPath.length - 1];
       const secSecondLastScreenPos = secSmoothScreenPath[Math.max(0, secSmoothScreenPath.length - 1 - secDirOffset)];
-      drawRoadEndFog(secLastScreenPos, secSecondLastScreenPos, 120);
+      drawRoadEndFog(secLastScreenPos, secSecondLastScreenPos, 300);
     }
 
     // Generate theme-specific decorations (CACHED for performance)
@@ -5289,7 +5267,7 @@ export default function PrincetonTowerDefense() {
       }
 
       // Main environment decorations — increased density
-      for (let i = 0; i < 700; i++) {
+      for (let i = 0; i < 300; i++) {
         const zoneX = Math.floor(seededRandom() * zonesX);
         const zoneY = Math.floor(seededRandom() * zonesY);
         const category = zoneAssignments[zoneX][zoneY];
@@ -5516,6 +5494,144 @@ export default function PrincetonTowerDefense() {
           rotation: seededRandom() * Math.PI * 2,
           variant: Math.floor(seededRandom() * 4),
         });
+      }
+
+      // Grid edge border decorations — line the perimeter with trees and terrain
+      seedState = mapSeed + 800;
+      const edgeTreeTypes = categories.trees;
+      const edgeTerrainTypes = categories.terrain;
+
+      const edgeSegments = [
+        { startX: -3, startY: -2, dx: 1, dy: 0, length: GRID_WIDTH + 6 },
+        { startX: -3, startY: GRID_HEIGHT + 2, dx: 1, dy: 0, length: GRID_WIDTH + 6 },
+        { startX: -2, startY: -3, dx: 0, dy: 1, length: GRID_HEIGHT + 6 },
+        { startX: GRID_WIDTH + 2, startY: -3, dx: 0, dy: 1, length: GRID_HEIGHT + 6 },
+      ];
+
+      for (const seg of edgeSegments) {
+        let travelled = 0;
+        while (travelled < seg.length) {
+          const step = 1.2 + seededRandom() * 1.3;
+          travelled += step;
+          if (travelled > seg.length) break;
+
+          const baseX = seg.startX + seg.dx * travelled;
+          const baseY = seg.startY + seg.dy * travelled;
+          const perpX = seg.dy;
+          const perpY = seg.dx;
+          const offsetPerp = (seededRandom() - 0.5) * 3;
+          const offsetAlong = (seededRandom() - 0.5) * 0.5;
+          const gx = baseX + perpX * offsetPerp + seg.dx * offsetAlong;
+          const gy = baseY + perpY * offsetPerp + seg.dy * offsetAlong;
+
+          const worldPos = gridToWorld({ x: gx, y: gy });
+          if (isOnPath(worldPos)) continue;
+
+          const isTree = seededRandom() > 0.3;
+          const type = isTree
+            ? edgeTreeTypes[Math.floor(seededRandom() * edgeTreeTypes.length)]
+            : edgeTerrainTypes[Math.floor(seededRandom() * edgeTerrainTypes.length)];
+
+          decorations.push({
+            type: type as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: isTree ? 0.7 + seededRandom() * 0.6 : 0.5 + seededRandom() * 0.5,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
+      }
+
+      // Dense decorations around path spawns and exits
+      seedState = mapSeed + 700;
+      const pathEndpoints: { x: number; y: number }[] = [];
+
+      if (path.length >= 2) {
+        pathEndpoints.push(path[0], path[path.length - 1]);
+      }
+
+      if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
+        const secPath = MAP_PATHS[levelData.secondaryPath];
+        if (secPath.length >= 2) {
+          pathEndpoints.push(secPath[0], secPath[secPath.length - 1]);
+        }
+      }
+
+      const endpointTreeTypes = categories.trees;
+      const endpointTerrainTypes = categories.terrain;
+
+      for (const endpoint of pathEndpoints) {
+        // Inner dense wall of large trees/terrain right at the endpoint (0.3-2 tiles)
+        const innerCount = 10 + Math.floor(seededRandom() * 5);
+        for (let i = 0; i < innerCount; i++) {
+          const angle = seededRandom() * Math.PI * 2;
+          const dist = 0.3 + seededRandom() * 1.7;
+          const gx = endpoint.x + Math.cos(angle) * dist;
+          const gy = endpoint.y + Math.sin(angle) * dist;
+          const worldPos = gridToWorld({ x: gx, y: gy });
+          if (isOnPath(worldPos)) continue;
+
+          const type = seededRandom() > 0.3
+            ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
+            : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)];
+
+          decorations.push({
+            type: type as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.8 + seededRandom() * 0.7,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
+
+        // Mid-ring trees (1.5-4.5 tiles)
+        const treeCount = 18 + Math.floor(seededRandom() * 8);
+        for (let t = 0; t < treeCount; t++) {
+          const angle = seededRandom() * Math.PI * 2;
+          const dist = 1.5 + seededRandom() * 3;
+          const gx = endpoint.x + Math.cos(angle) * dist;
+          const gy = endpoint.y + Math.sin(angle) * dist;
+          const worldPos = gridToWorld({ x: gx, y: gy });
+          if (isOnPath(worldPos)) continue;
+
+          const type = seededRandom() > 0.25
+            ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
+            : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)];
+
+          decorations.push({
+            type: type as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.65 + seededRandom() * 0.65,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
+
+        // Outer scattered ring (2.5-6.5 tiles)
+        const scatterCount = 12 + Math.floor(seededRandom() * 7);
+        for (let s = 0; s < scatterCount; s++) {
+          const angle = seededRandom() * Math.PI * 2;
+          const dist = 2.5 + seededRandom() * 4;
+          const gx = endpoint.x + Math.cos(angle) * dist;
+          const gy = endpoint.y + Math.sin(angle) * dist;
+          const worldPos = gridToWorld({ x: gx, y: gy });
+          if (isOnPath(worldPos)) continue;
+
+          const scatteredTypes = [...categories.scattered, ...endpointTerrainTypes];
+          const type = scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)];
+
+          decorations.push({
+            type: type as DecorationType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: 0.4 + seededRandom() * 0.5,
+            rotation: seededRandom() * Math.PI * 2,
+            variant: Math.floor(seededRandom() * 4),
+          });
+        }
       }
 
       // Add major landmarks from LEVEL_DATA if defined
@@ -7506,8 +7622,11 @@ export default function PrincetonTowerDefense() {
             if (decoType && (LANDMARK_DECORATION_TYPES.has(decoType) || decoType === "statue" || decoType === "demon_statue" || decoType === "obelisk")) {
               const decoWorldPos = gridToWorld(deco.pos);
               const decoScreen = worldToScreen(decoWorldPos, width, height, dpr, cameraOffset, cameraZoom);
-              const hitRadius = (deco.size || 1) * 35 * cameraZoom;
-              if (distance({ x, y }, decoScreen) < hitRadius) {
+              const scale = (deco.size || 1) * cameraZoom;
+              const hitRadius = scale * 35;
+              const yOffset = (LANDMARK_HITBOX_Y_OFFSET[decoType] ?? 0) * scale;
+              const hitCenter = { x: decoScreen.x, y: decoScreen.y - yOffset };
+              if (distance({ x, y }, hitCenter) < hitRadius) {
                 foundLandmark = decoType;
                 break;
               }
