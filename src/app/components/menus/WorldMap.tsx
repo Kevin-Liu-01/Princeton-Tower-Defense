@@ -80,6 +80,10 @@ const PrincetonLogo: React.FC = () => {
           src="/images/gameplay-latest-zoomed.png"
           alt="Battle Scene"
           className="w-full h-full opacity-20 scale-125"
+          style={{
+            maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
+          }}
         />
       </div>
 
