@@ -1534,7 +1534,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🐯",
     description:
       "The fearsome Princeton Tiger, an apex predator with a terrifying roar that freezes enemies in fear.",
-    hp: 5000,
+    hp: 4250,
     damage: 80,
     range: 120,
     attackSpeed: 600,
@@ -1548,8 +1548,8 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     name: "Acapella Tenor",
     icon: "🎵",
     description:
-      "A virtuoso vocalist whose voice is a weapon. The Tenor's sonic attacks pierce through even the toughest armor.",
-    hp: 3600,
+      "A virtuoso vocalist whose voice is a weapon. His sonic attacks pierce through even the toughest armor.",
+    hp: 3200,
     damage: 60,
     range: 250,
     attackSpeed: 450,
@@ -1565,7 +1565,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🛡️",
     description:
       "An elite defender from Mathey College, clad in enchanted armor. Draws enemy aggression and protects allies.",
-    hp: 7000,
+    hp: 5600,
     damage: 70,
     range: 80,
     attackSpeed: 800,
@@ -1580,7 +1580,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🌰",
     description:
       "A legendary gargoyle awakened from campus rooftops. Hurls massive boulders that devastate enemies.",
-    hp: 4400,
+    hp: 2750,
     damage: 90,
     range: 180,
     attackSpeed: 700,
@@ -1609,8 +1609,8 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     name: "General Mercer",
     icon: "🐉",
     description:
-      "A re-awakened General wreathed in flame. Commands the battlefield and summons loyal knights to his banner.",
-    hp: 5600,
+      "A legendary commander wreathed in flame. Summons loyal knights to his banner.",
+    hp: 4650,
     damage: 65,
     range: 100,
     attackSpeed: 650,
@@ -1625,7 +1625,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     icon: "🔧",
     description:
       "A brilliant inventor who deploys automated turrets designed in the Engineering Library. He needs more coffee.",
-    hp: 3200,
+    hp: 2500,
     damage: 40,
     range: 150,
     attackSpeed: 500,
@@ -2243,9 +2243,9 @@ export const LEVEL_DATA: Record<
     },
     decorations: [
       // Nassau Hall near path center (path: x:-2 to 32, y:8 to 20)
-      { type: "nassau_hall", pos: { x: 14, y: 0 }, variant: 0, size: 3 },
+      { type: "nassau_hall", pos: { x: 15, y: -3 }, variant: 0, size: 3 },
       { type: "statue", pos: { x: 7, y: 7.5 }, variant: 1 },
-      { type: "statue", pos: { x: 19, y: 0 }, variant: 0 },
+      { type: "statue", pos: { x: 21, y: 2 }, variant: 0 },
       { type: "statue", pos: { x: 17, y: 17 }, variant: 0 },
       { type: "fountain", pos: { x: 22.75, y: 7 }, variant: 0 },
       // Trees around the expanded area
@@ -2385,7 +2385,7 @@ export const LEVEL_DATA: Record<
     position: { x: 480, y: 200 },
     description:
       "Ancient ruins half-submerged in fetid waters. Something stirs in the depths below.",
-    camera: { offset: { x: -120, y: -420 }, zoom: 0.85 },
+    camera: { offset: { x: -20, y: -420 }, zoom: 0.85 },
     region: "swamp",
     theme: "swamp",
     difficulty: 3,

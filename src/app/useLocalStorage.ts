@@ -1,97 +1,98 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
+function readAndMergeLocalStorage<T>(
+  key: string,
+  initialValue: T
+): T {
+  try {
+    const item = window.localStorage.getItem(key);
+    if (!item) return initialValue;
+
+    const parsed = JSON.parse(item);
+
+    if (
+      key === "princeton-td-progress" &&
+      typeof initialValue === "object" &&
+      initialValue !== null
+    ) {
+      return mergeGameProgress(initialValue as GameProgress, parsed as GameProgress) as T;
+    }
+
+    return parsed;
+  } catch (error) {
+    console.warn(`Error reading localStorage key "${key}":`, error);
+    return initialValue;
+  }
+}
+
+function mergeGameProgress(
+  defaults: GameProgress,
+  loaded: GameProgress
+): GameProgress {
+  const loadedStars =
+    loaded &&
+    typeof loaded.levelStars === "object" &&
+    loaded.levelStars !== null
+      ? loaded.levelStars
+      : {};
+
+  const mergedLevelStars: Record<string, number> = {
+    ...defaults.levelStars,
+  };
+  for (const [levelId, stars] of Object.entries(loadedStars)) {
+    if (typeof stars === "number" && stars >= 0) {
+      mergedLevelStars[levelId] = stars;
+    }
+  }
+
+  const loadedMaps = Array.isArray(loaded?.unlockedMaps)
+    ? loaded.unlockedMaps
+    : [];
+  const mergedMaps = [
+    ...new Set([...defaults.unlockedMaps, ...loadedMaps]),
+  ];
+
+  const loadedStats =
+    loaded &&
+    typeof loaded.levelStats === "object" &&
+    loaded.levelStats !== null
+      ? loaded.levelStats
+      : {};
+
+  return {
+    ...defaults,
+    ...loaded,
+    unlockedMaps: mergedMaps,
+    levelStars: mergedLevelStars,
+    levelStats: loadedStats,
+    totalStarsEarned: Object.values(mergedLevelStars).reduce(
+      (a, b) => a + b,
+      0
+    ),
+  };
+}
 
 /**
- * A hook that syncs state with localStorage
- * @param key - The localStorage key to use
- * @param initialValue - The initial value if no localStorage value exists
- * @returns [value, setValue] - The current value and a setter function
+ * A hook that syncs state with localStorage.
+ * Always initializes with `initialValue` to avoid SSR hydration mismatches,
+ * then loads from localStorage in an effect after mount.
  */
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | ((prev: T) => T)) => void] {
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === "undefined") {
-      return initialValue;
-    }
-    try {
-      const item = window.localStorage.getItem(key);
-      if (!item) return initialValue;
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
+  const initialValueRef = useRef(initialValue);
 
-      const parsed = JSON.parse(item);
+  // Load from localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    setStoredValue(readAndMergeLocalStorage(key, initialValueRef.current));
+  }, [key]);
 
-      // For game progress, merge with defaults to ensure all keys exist
-      if (
-        key === "princeton-td-progress" &&
-        typeof initialValue === "object" &&
-        initialValue !== null
-      ) {
-        const defaults = initialValue as GameProgress;
-        const loaded = parsed as GameProgress;
-
-        // Ensure loaded.levelStars is an object
-        const loadedStars =
-          loaded &&
-          typeof loaded.levelStars === "object" &&
-          loaded.levelStars !== null
-            ? loaded.levelStars
-            : {};
-
-        // Merge levelStars with defaults, preferring loaded values when they're numbers > 0
-        const mergedLevelStars: Record<string, number> = {
-          ...defaults.levelStars,
-        };
-        for (const [levelId, stars] of Object.entries(loadedStars)) {
-          if (typeof stars === "number" && stars >= 0) {
-            mergedLevelStars[levelId] = stars;
-          }
-        }
-
-        // Ensure unlockedMaps is an array
-        const loadedMaps = Array.isArray(loaded?.unlockedMaps)
-          ? loaded.unlockedMaps
-          : [];
-        const mergedMaps = [
-          ...new Set([...defaults.unlockedMaps, ...loadedMaps]),
-        ];
-
-        // Ensure levelStats is an object
-        const loadedStats =
-          loaded &&
-          typeof loaded.levelStats === "object" &&
-          loaded.levelStats !== null
-            ? loaded.levelStats
-            : {};
-
-        return {
-          ...defaults,
-          ...loaded,
-          unlockedMaps: mergedMaps,
-          levelStars: mergedLevelStars,
-          levelStats: loadedStats,
-          totalStarsEarned: Object.values(mergedLevelStars).reduce(
-            (a, b) => a + b,
-            0
-          ),
-        } as T;
-      }
-
-      return parsed;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
-
-  // Return a wrapped version of useState's setter function that
-  // persists the new value to localStorage
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
       try {
-        // Use functional update to avoid stale closure issues
         setStoredValue((prev) => {
           const valueToStore = value instanceof Function ? value(prev) : value;
           if (typeof window !== "undefined") {
@@ -106,7 +107,6 @@ export function useLocalStorage<T>(
     [key]
   );
 
-  // Listen for changes to this key in other tabs/windows
   useEffect(() => {
     if (typeof window === "undefined") return;
 

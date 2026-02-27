@@ -163,6 +163,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   // Process new eating club income events
   useEffect(() => {
+    const currentIds = new Set(eatingClubIncomeEvents.map(e => e.id));
+    Array.from(processedEatingClubEventsRef.current).forEach(id => {
+      if (!currentIds.has(id)) processedEatingClubEventsRef.current.delete(id);
+    });
+
     const newEvents = eatingClubIncomeEvents.filter(e => !processedEatingClubEventsRef.current.has(e.id));
 
     if (newEvents.length > 0) {
@@ -193,7 +198,6 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
       return setTimeout(() => {
         setActiveEatingClubFloaters(prev => prev.filter(f => f.id !== floater.id));
-        processedEatingClubEventsRef.current.delete(floater.id);
         onEatingClubEventComplete?.(floater.id);
       }, remaining);
     });
@@ -203,6 +207,11 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   // Process new bounty income events
   useEffect(() => {
+    const currentIds = new Set(bountyIncomeEvents.map(e => e.id));
+    Array.from(processedBountyEventsRef.current).forEach(id => {
+      if (!currentIds.has(id)) processedBountyEventsRef.current.delete(id);
+    });
+
     const newEvents = bountyIncomeEvents.filter(e => !processedBountyEventsRef.current.has(e.id));
 
     if (newEvents.length > 0) {
@@ -234,7 +243,6 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
       return setTimeout(() => {
         setActiveBountyFloaters(prev => prev.filter(f => f.id !== floater.id));
-        processedBountyEventsRef.current.delete(floater.id);
         onBountyEventComplete?.(floater.id);
       }, remaining);
     });
@@ -287,7 +295,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         >
           <div className="flex items-center gap-2 sm:gap-2.5">
             <div className="hidden sm:flex items-center">
-              <PrincetonTDLogo height="h-10" width="w-8" />
+              <PrincetonTDLogo height="h-10" width="w-10" />
               <div className="w-px h-7 ml-2 sm:ml-3" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
             </div>
 
@@ -525,7 +533,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           animation: shimmer 2s infinite;
         }
       `}</style>
-          <div className="mt-2 sm:mt-0 flex ml-auto gap-2 sm:gap-2.5">
+          <div className="mt-2 sm:mt-0 flex sm:ml-auto gap-2 sm:gap-2.5">
             {/* Speed controls */}
             <div className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-xl" style={{
               background: "linear-gradient(135deg, rgba(35,40,20,0.7), rgba(25,30,12,0.5))",

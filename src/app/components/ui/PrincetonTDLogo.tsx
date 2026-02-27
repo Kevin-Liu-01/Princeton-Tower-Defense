@@ -170,21 +170,7 @@ export default function PrincetonTDLogo({
         <circle cx="25" cy="42" r="0.8" fill="#fcd34d" opacity="0.4" />
         <circle cx="47" cy="42" r="0.8" fill="#fcd34d" opacity="0.4" />
 
-        {/* === Top crown/crest accent === */}
-        <path
-          d="M30 5 L33 1 L36 4 L39 1 L42 5"
-          fill="none"
-          stroke="#fcd34d"
-          strokeWidth="1.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.7"
-          filter="url(#softGlow)"
-        />
-        {/* Crown dots */}
-        <circle cx="33" cy="1.5" r="1" fill="#fcd34d" opacity="0.6" />
-        <circle cx="36" cy="3.5" r="0.8" fill="#fbbf24" opacity="0.5" />
-        <circle cx="39" cy="1.5" r="1" fill="#fcd34d" opacity="0.6" />
+
 
         {/* === Bottom point accent === */}
         <path
@@ -197,41 +183,7 @@ export default function PrincetonTDLogo({
         />
         <circle cx="36" cy="78" r="1" fill="#fbbf24" opacity="0.5" />
 
-        {/* === Side wing filigrees === */}
-        {/* Left wing */}
-        <path
-          d="M8 30 Q4 28 2 24 Q4 26 8 26"
-          fill="none"
-          stroke="#d97706"
-          strokeWidth="1"
-          strokeLinecap="round"
-          opacity="0.45"
-        />
-        <path
-          d="M8 34 Q3 33 1 30 Q3 31 8 31"
-          fill="none"
-          stroke="#d97706"
-          strokeWidth="0.8"
-          strokeLinecap="round"
-          opacity="0.3"
-        />
-        {/* Right wing */}
-        <path
-          d="M64 30 Q68 28 70 24 Q68 26 64 26"
-          fill="none"
-          stroke="#d97706"
-          strokeWidth="1"
-          strokeLinecap="round"
-          opacity="0.45"
-        />
-        <path
-          d="M64 34 Q69 33 71 30 Q69 31 64 31"
-          fill="none"
-          stroke="#d97706"
-          strokeWidth="0.8"
-          strokeLinecap="round"
-          opacity="0.3"
-        />
+
       </svg>
     </div>
   );

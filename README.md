@@ -6,7 +6,7 @@ Battle through hordes of academic enemies across beautifully rendered isometric 
 
 **[➡️ Play the Game Here\!](http://princeton-tower-defense.vercel.app/)**
 
-![Gameplay Screenshot](/public/images/gameplay-latest2.png)
+![Gameplay Screenshot](/public/images/gameplay-latest-2.png)
 
 ## ✨ Features
 

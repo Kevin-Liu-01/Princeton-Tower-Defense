@@ -128,13 +128,17 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       style={{ zIndex: 100 }}
     >
       {/* Hero Section */}
-      <button
-        className="flex-shrink-0 h-full pointer-events-auto"
+      <div
+        role="button"
+        tabIndex={0}
+        className="flex-shrink-0 h-full pointer-events-auto cursor-pointer"
         onClick={() => {
-          if (!hero.selected) {
-            hero.selected = true;
-          } else {
-            hero.selected = false;
+          if (hero) hero.selected = !hero.selected;
+        }}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && hero) {
+            e.preventDefault();
+            hero.selected = !hero.selected;
           }
         }}
       >
@@ -376,7 +380,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
             )}
           </div>
         )}
-      </button>
+      </div>
 
       {/* Spell Section */}
       <div className="flex ml-1.5 sm:ml-3 items-center self-stretch gap-1 sm:gap-2.5 relative px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl pointer-events-auto" style={{

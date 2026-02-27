@@ -366,13 +366,14 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
 }) => {
   return (
     <div className={`relative ${className}`}>
-      {/* Corner ornaments */}
+      {children}
+
+      {/* Decorative overlays rendered after children to stay on top */}
       <OrnateCorner position="top-left" size={cornerSize} color={color} glowColor={glowColor} />
       <OrnateCorner position="top-right" size={cornerSize} color={color} glowColor={glowColor} />
       <OrnateCorner position="bottom-left" size={cornerSize} color={color} glowColor={glowColor} />
       <OrnateCorner position="bottom-right" size={cornerSize} color={color} glowColor={glowColor} />
 
-      {/* Border decorations */}
       {showBorders && (
         <>
           {showTopBottomBorders && (
@@ -390,14 +391,11 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
         </>
       )}
 
-      {/* Inner glow effect */}
       <div className="absolute inset-0 pointer-events-none rounded-[inherit] z-10"
         style={{
           boxShadow: `inset 0 0 25px ${glowColor}12, inset 0 0 50px ${color}08`,
         }}
       />
-
-      {children}
     </div>
   );
 };

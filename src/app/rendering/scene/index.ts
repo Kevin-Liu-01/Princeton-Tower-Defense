@@ -8,7 +8,11 @@ import {
   GRID_HEIGHT,
   MAP_PATHS,
 } from "../../constants";
-import { worldToScreen, gridToWorld } from "../../utils";
+import {
+  worldToScreen,
+  gridToWorld,
+  LANDMARK_DECORATION_TYPES,
+} from "../../utils";
 import {
   renderMapBackground,
   MAP_THEMES,
@@ -182,6 +186,43 @@ export function generateDecorations(
     gx < 0 || gx > GRID_WIDTH || gy < 0 || gy > GRID_HEIGHT;
   const BEYOND_GRID_REDUCE = 0.4;
 
+  const landmarkZones: Array<{
+    cx: number;
+    cy: number;
+    coreR: number;
+    fullR: number;
+  }> = [];
+  const mapLevelData = LEVEL_DATA[mapId];
+  if (mapLevelData?.decorations) {
+    for (const deco of mapLevelData.decorations) {
+      const decoType = deco.category || deco.type;
+      if (decoType && LANDMARK_DECORATION_TYPES.has(decoType)) {
+        const size = deco.size || 1;
+        const coreR = size * 0.5;
+        const fullR = coreR + 0.6;
+        landmarkZones.push({ cx: deco.pos.x, cy: deco.pos.y, coreR, fullR });
+      }
+    }
+  }
+
+  const isInLandmarkCore = (gx: number, gy: number): boolean => {
+    for (const zone of landmarkZones) {
+      const dx = gx - zone.cx;
+      const dy = gy - zone.cy;
+      if (dx * dx + dy * dy < zone.coreR * zone.coreR) return true;
+    }
+    return false;
+  };
+
+  const isInLandmarkFull = (gx: number, gy: number): boolean => {
+    for (const zone of landmarkZones) {
+      const dx = gx - zone.cx;
+      const dy = gy - zone.cy;
+      if (dx * dx + dy * dy < zone.fullR * zone.fullR) return true;
+    }
+    return false;
+  };
+
   // Generate deterministic zone assignments
   type CategoryKey = keyof typeof categories;
   const zoneAssignments: CategoryKey[][] = [];
@@ -218,6 +259,10 @@ export function generateDecorations(
 
     const worldPos = gridToWorld({ x: gridX, y: gridY });
     if (isOnPath(worldPos, 20)) continue;
+
+    const isLargeCategory = category === "trees" || category === "structures";
+    if (isLargeCategory && isInLandmarkCore(gridX, gridY)) continue;
+    if (!isLargeCategory && isInLandmarkFull(gridX, gridY)) continue;
 
     const typeIndex = Math.floor(random() * random() * categoryDecors.length);
     const type = categoryDecors[typeIndex];
@@ -271,6 +316,7 @@ export function generateDecorations(
       const treeY = clusterY + (random() - 0.5) * 3;
       const worldPos = gridToWorld({ x: treeX, y: treeY });
       if (isOnPath(worldPos, 20)) continue;
+      if (isInLandmarkCore(treeX, treeY)) continue;
 
       const treeScaleBase = 0.65 + random() * 0.25;
       const treeScaleVar = ((random() + random()) / 2) * 0.5;
@@ -300,6 +346,7 @@ export function generateDecorations(
       const structY = villageY + (random() - 0.5) * 4;
       const worldPos = gridToWorld({ x: structX, y: structY });
       if (isOnPath(worldPos, 20)) continue;
+      if (isInLandmarkCore(structX, structY)) continue;
 
       // Structure scale variation
       const structScaleBase = 0.75 + random() * 0.2;
@@ -324,6 +371,7 @@ export function generateDecorations(
 
     if (isBeyondGrid(gridX, gridY) && battleRandom() > BEYOND_GRID_REDUCE)
       continue;
+    if (isInLandmarkFull(gridX, gridY)) continue;
 
     const worldPos = gridToWorld({ x: gridX, y: gridY });
 
@@ -389,6 +437,7 @@ export function generateDecorations(
 
       const worldPos = gridToWorld({ x: gx, y: gy });
       if (isOnPath(worldPos, 20)) continue;
+      if (isInLandmarkCore(gx, gy)) continue;
 
       const isTree = edgeRandom() > 0.3;
       const type = isTree
@@ -443,6 +492,7 @@ export function generateDecorations(
       const gy = epGrid.y + Math.sin(angle) * dist;
       const worldPos = gridToWorld({ x: gx, y: gy });
       if (isOnPath(worldPos, 20)) continue;
+      if (isInLandmarkCore(gx, gy)) continue;
 
       const type =
         endpointRandom() > 0.3
@@ -472,6 +522,7 @@ export function generateDecorations(
       const gy = epGrid.y + Math.sin(angle) * dist;
       const worldPos = gridToWorld({ x: gx, y: gy });
       if (isOnPath(worldPos, 20)) continue;
+      if (isInLandmarkCore(gx, gy)) continue;
 
       const type =
         endpointRandom() > 0.25
@@ -501,6 +552,7 @@ export function generateDecorations(
       const gy = epGrid.y + Math.sin(angle) * dist;
       const worldPos = gridToWorld({ x: gx, y: gy });
       if (isOnPath(worldPos, 20)) continue;
+      if (isInLandmarkFull(gx, gy)) continue;
 
       const scatteredTypes = [...categories.scattered, ...endpointTerrainTypes];
       const type =

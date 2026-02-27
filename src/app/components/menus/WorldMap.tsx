@@ -49,7 +49,7 @@ const PrincetonLogo: React.FC = () => {
           style={{ transform: `scale(${1 + Math.sin(pulse * 0.1) * 0.1})` }}
         />
       </div>
-      <PrincetonTDLogo height="h-10" width="w-8" />
+      <PrincetonTDLogo height="h-10" width="w-10" />
       <div className="relative flex flex-col">
         <span
           className="text-base sm:text-2xl font-black tracking-wider"
@@ -75,11 +75,14 @@ const PrincetonLogo: React.FC = () => {
         </div>
       </div>
 
-      <img
-        src="/images/gameplay-cropped.png"
-        alt="Battle Scene"
-        className="w-full h-80 object-bottom object-contain absolute top-[-14rem] right-[-10rem] opacity-10 pointer-events-none select-none"
-      />
+      <div className="z-[-1] object-bottom object-contain absolute top-[-4.1rem] right-[-26rem] pointer-events-none select-none">
+        <img
+          src="/images/gameplay-latest-zoomed.png"
+          alt="Battle Scene"
+          className="w-full h-full opacity-20 scale-125"
+        />
+      </div>
+
     </div>
   );
 };
@@ -7853,15 +7856,17 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         className="flex-shrink-0 overflow-hidden rounded-xl mx-2 sm:mx-3 mt-3 border-2 border-amber-700/50 shadow-xl"
         cornerSize={25}
         showBorders={true}
+        showSideBorders={true}
+        showTopBottomBorders={false}
       >
         <div
-          className="relative sm:px-2 z-20"
+          className="relative sm:px-1 z-20"
           style={{
             background: panelGradient,
           }}
         >
           {/* Subtle top highlight */}
-          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25}, transparent)` }} />
+          <div className="absolute top-0 left-0 right-0 h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
 
           <div className="px-3 sm:px-5 py-2 flex items-center justify-between gap-2">
             {/* Left: Logo */}
@@ -7981,7 +7986,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           </div>
 
           {/* Bottom gradient line */}
-          <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
+          <div className="h-px opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
         </div>
       </OrnateFrame>
 
@@ -8395,8 +8400,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             </button>
           </div>
           <OrnateFrame
-            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-800/50 sm:overflow-hidden shadow-2xl min-h-0"
-            cornerSize={44}
+            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 sm:overflow-hidden shadow-2xl min-h-0"
+            cornerSize={28}
             showBorders={true}
           >
             <div
@@ -8496,7 +8501,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       </div>
 
       {showCodex && <CodexModal onClose={() => setShowCodex(false)} />}
-    </div>
+    </div >
   );
 };
 

@@ -560,15 +560,19 @@ export default function PrincetonTowerDefense() {
     []
   );
 
-  // Helper to award bounty and track for HUD animation
+  // Helper to award bounty and track for HUD animation.
+  // Uses functional setState dedup because this can be called inside setEnemies
+  // updaters which React strict mode may double-invoke.
   const awardBounty = useCallback(
     (baseBounty: number, hasGoldAura: boolean, sourceId?: string) => {
       const goldBonus = hasGoldAura ? Math.floor(baseBounty * 0.5) : 0;
       const totalBounty = baseBounty + goldBonus;
-      setPawPoints((pp) => pp + totalBounty);
-      // Track bounty event for HUD floater
       const eventId = `bounty-${Date.now()}-${sourceId || Math.random().toString(36).slice(2)}`;
-      setBountyIncomeEvents((prev) => [...prev, { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura }]);
+      setBountyIncomeEvents((prev) => {
+        if (prev.some(e => e.id === eventId)) return prev;
+        return [...prev, { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura }];
+      });
+      setPawPoints((pp) => pp + totalBounty);
       return totalBounty;
     },
     []
@@ -5253,6 +5257,40 @@ export default function PrincetonTowerDefense() {
         gx < 0 || gx > GRID_WIDTH || gy < 0 || gy > GRID_HEIGHT;
       const BEYOND_GRID_REDUCE = 0.3;
 
+      // Build landmark exclusion zones from map-defined decorations.
+      // Each zone has a core radius (no decorations) and a full radius
+      // (small ground-level decorations allowed but trees/structures blocked).
+      const landmarkZones: Array<{ cx: number; cy: number; coreR: number; fullR: number }> = [];
+      if (levelData?.decorations) {
+        for (const deco of levelData.decorations) {
+          const decoType = deco.category || deco.type;
+          if (decoType && LANDMARK_DECORATION_TYPES.has(decoType)) {
+            const size = deco.size || 1;
+            const coreR = size * 0.9;
+            const fullR = coreR + 0.6;
+            landmarkZones.push({ cx: deco.pos.x, cy: deco.pos.y, coreR, fullR });
+          }
+        }
+      }
+
+      const isInLandmarkCore = (gx: number, gy: number): boolean => {
+        for (const zone of landmarkZones) {
+          const dx = gx - zone.cx;
+          const dy = gy - zone.cy;
+          if (dx * dx + dy * dy < zone.coreR * zone.coreR) return true;
+        }
+        return false;
+      };
+
+      const isInLandmarkFull = (gx: number, gy: number): boolean => {
+        for (const zone of landmarkZones) {
+          const dx = gx - zone.cx;
+          const dy = gy - zone.cy;
+          if (dx * dx + dy * dy < zone.fullR * zone.fullR) return true;
+        }
+        return false;
+      };
+
       // Zone assignments with smaller zones for tighter clustering
       const zoneAssignments: (keyof typeof categories)[][] = [];
       for (let zx = 0; zx < zonesX; zx++) {
@@ -5287,6 +5325,10 @@ export default function PrincetonTowerDefense() {
 
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         if (isOnPath(worldPos)) continue;
+
+        const isLargeCategory = category === "trees" || category === "structures";
+        if (isLargeCategory && isInLandmarkCore(gridX, gridY)) continue;
+        if (!isLargeCategory && isInLandmarkFull(gridX, gridY)) continue;
 
         const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
         const type = categoryDecors[typeIndex] as DecorationType;
@@ -5328,6 +5370,7 @@ export default function PrincetonTowerDefense() {
           const treeY = clusterY + (seededRandom() - 0.5) * 2.5;
           const worldPos = gridToWorld({ x: treeX, y: treeY });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(treeX, treeY)) continue;
 
           decorations.push({
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
@@ -5354,6 +5397,7 @@ export default function PrincetonTowerDefense() {
           const ty = groveY + (seededRandom() - 0.5) * 2.2;
           const worldPos = gridToWorld({ x: tx, y: ty });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(tx, ty)) continue;
 
           decorations.push({
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
@@ -5384,6 +5428,7 @@ export default function PrincetonTowerDefense() {
           const structY = villageY + (seededRandom() - 0.5) * 2.8;
           const worldPos = gridToWorld({ x: structX, y: structY });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(structX, structY)) continue;
 
           decorations.push({
             type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
@@ -5404,6 +5449,7 @@ export default function PrincetonTowerDefense() {
           const sy = villageY + Math.sin(angle) * dist;
           const worldPos = gridToWorld({ x: sx, y: sy });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkFull(sx, sy)) continue;
 
           const scType = scatteredTypes.length > 0
             ? scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)]
@@ -5428,6 +5474,7 @@ export default function PrincetonTowerDefense() {
           const ty = villageY + Math.sin(angle) * dist;
           const worldPos = gridToWorld({ x: tx, y: ty });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(tx, ty)) continue;
 
           decorations.push({
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
@@ -5453,6 +5500,7 @@ export default function PrincetonTowerDefense() {
 
         const worldPos = gridToWorld({ x: gx, y: gy });
         if (isOnPath(worldPos)) continue;
+        if (isInLandmarkCore(gx, gy)) continue;
 
         const allDecorTypes = [...categories.trees, ...categories.terrain];
         const fillType = allDecorTypes[Math.floor(seededRandom() * allDecorTypes.length)] as DecorationType;
@@ -5484,6 +5532,7 @@ export default function PrincetonTowerDefense() {
         const gridY = seededRandom() * (GRID_HEIGHT + 23) - 11.5;
 
         if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
+        if (isInLandmarkFull(gridX, gridY)) continue;
 
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         const type =
@@ -5528,6 +5577,7 @@ export default function PrincetonTowerDefense() {
 
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(gx, gy)) continue;
 
           const isTree = seededRandom() > 0.3;
           const type = isTree
@@ -5573,6 +5623,7 @@ export default function PrincetonTowerDefense() {
           const gy = endpoint.y + Math.sin(angle) * dist;
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(gx, gy)) continue;
 
           const type = seededRandom() > 0.3
             ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
@@ -5597,6 +5648,7 @@ export default function PrincetonTowerDefense() {
           const gy = endpoint.y + Math.sin(angle) * dist;
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkCore(gx, gy)) continue;
 
           const type = seededRandom() > 0.25
             ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
@@ -5621,6 +5673,7 @@ export default function PrincetonTowerDefense() {
           const gy = endpoint.y + Math.sin(angle) * dist;
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
+          if (isInLandmarkFull(gx, gy)) continue;
 
           const scatteredTypes = [...categories.scattered, ...endpointTerrainTypes];
           const type = scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)];
@@ -7711,7 +7764,7 @@ export default function PrincetonTowerDefense() {
         setSelectedUnitMoveInfo(null);
       }
     },
-    [buildingTower, draggingTower, getCanvasDimensions, mousePos, cameraOffset, cameraZoom, towers, selectedMap, hero, troops, inspectorActive, enemies, gameSpeed, isPanning, panStart, panStartOffset, repositioningTower]
+    [buildingTower, draggingTower, getCanvasDimensions, cameraOffset, cameraZoom, towers, selectedMap, hero, troops, inspectorActive, enemies, gameSpeed, isPanning, panStart, panStartOffset, repositioningTower]
   );
 
   // Game actions

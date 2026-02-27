@@ -5719,10 +5719,9 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
     <div ref={containerRef} className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 text-center relative overflow-hidden">
       {/* Content with ornate frame */}
       <div
-        className="relative z-10 w-full h-full rounded-2xl overflow-hidden"
+        className="relative z-10 w-full h-full rounded-2xl overflow-hidden border-2 border-amber-600/50"
         style={{
           background: panelGradient,
-          border: `2px solid ${GOLD.border30}`,
           boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 20px ${GOLD.glow04}`,
         }}
       >
@@ -5738,7 +5737,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
         )}
         <OrnateFrame
           className="relative flex w-full items-center justify-center backdrop-blur-xs p-4 sm:p-8 h-full overflow-hidden"
-          cornerSize={40}
+          cornerSize={28}
           showBorders={true}
           color="#b45309"
           glowColor="#f59e0b"
