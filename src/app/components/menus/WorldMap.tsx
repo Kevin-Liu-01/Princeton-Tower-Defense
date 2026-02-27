@@ -42,14 +42,14 @@ const PrincetonLogo: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative flex items-center gap-2 sm:gap-3">
+    <div className="relative flex items-center gap-2">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
           className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40"
           style={{ transform: `scale(${1 + Math.sin(pulse * 0.1) * 0.1})` }}
         />
       </div>
-      <PrincetonTDLogo height="h-10" width="w-10" />
+      <PrincetonTDLogo size="h-11 w-11" />
       <div className="relative flex flex-col">
         <span
           className="text-base sm:text-2xl font-black tracking-wider"

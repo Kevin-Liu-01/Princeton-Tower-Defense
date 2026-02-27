@@ -295,7 +295,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         >
           <div className="flex items-center gap-2 sm:gap-2.5">
             <div className="hidden sm:flex items-center">
-              <PrincetonTDLogo height="h-10" width="w-10" />
+              <PrincetonTDLogo size="h-11 w-11" />
               <div className="w-px h-7 ml-2 sm:ml-3" style={{ background: `linear-gradient(180deg, transparent, ${GOLD.border35}, transparent)` }} />
             </div>
 
