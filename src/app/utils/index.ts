@@ -496,12 +496,27 @@ export function normalizeAngle(angle: number): number {
   return angle;
 }
 
-// Convert hex to rgba
-export function hexToRgba(hex: string, alpha: number): string {
+// Convert hex to rgb
+export function hexToRgb(hex: string): { r: number; g: number; b: number } {
   const cleanHex = hex.replace("#", "");
+  if (cleanHex.length !== 6) {
+    return { r: 0, g: 0, b: 0 };
+  }
+
   const r = parseInt(cleanHex.substring(0, 2), 16);
   const g = parseInt(cleanHex.substring(2, 4), 16);
   const b = parseInt(cleanHex.substring(4, 6), 16);
+
+  if ([r, g, b].some((value) => Number.isNaN(value))) {
+    return { r: 0, g: 0, b: 0 };
+  }
+
+  return { r, g, b };
+}
+
+// Convert hex to rgba
+export function hexToRgba(hex: string, alpha: number): string {
+  const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 

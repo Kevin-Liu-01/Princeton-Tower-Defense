@@ -1,7 +1,7 @@
 // Princeton Tower Defense - Game State Hook
 // Manages core game state with React hooks
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import type {
   Tower,
   Enemy,
@@ -16,14 +16,94 @@ import type {
   GridPosition,
   GameState,
 } from "../types";
-import {
-  initializeWaveState,
-  createTower,
-  createHero,
-  getTowerBuildCost,
-  canBuildTower,
-  type WaveState,
-} from "../game";
+import { HERO_ABILITY_COOLDOWNS, HERO_DATA, TOWER_DATA } from "../constants";
+import { getUpgradeCost } from "../constants/towerStats";
+import { getLevelWaves } from "../game/pageHelpers";
+import { isValidBuildPosition } from "../utils";
+
+// ============================================================================
+// WAVE STATE
+// ============================================================================
+
+export interface WaveState {
+  currentWave: number;
+  totalWaves: number;
+  waveInProgress: boolean;
+  nextWaveTimer: number;
+  lastWaveStartedAt: number | null;
+}
+
+const DEFAULT_MAP = "nassau";
+const DEFAULT_LIVES = 20;
+
+const initializeWaveState = (mapId: string): WaveState => ({
+  currentWave: 0,
+  totalWaves: getLevelWaves(mapId).length,
+  waveInProgress: false,
+  nextWaveTimer: 0,
+  lastWaveStartedAt: null,
+});
+
+const createTowerEntity = (
+  type: TowerType,
+  pos: GridPosition,
+  id: string
+): Tower => ({
+  id,
+  type,
+  pos,
+  level: 1,
+  lastAttack: 0,
+  rotation: 0,
+  spawnRange: type === "station" ? TOWER_DATA.station.spawnRange : undefined,
+  occupiedSpawnSlots: type === "station" ? [false, false, false] : undefined,
+  pendingRespawns: type === "station" ? [] : undefined,
+});
+
+const createHeroEntity = (type: HeroType, pos: Position, id: string): Hero => {
+  const heroData = HERO_DATA[type];
+  return {
+    id,
+    type,
+    pos,
+    homePos: pos,
+    hp: heroData.hp,
+    maxHp: heroData.hp,
+    moving: false,
+    lastAttack: 0,
+    abilityReady: true,
+    abilityCooldown: 0,
+    revived: false,
+    rotation: 0,
+    attackAnim: 0,
+    selected: false,
+    dead: false,
+    respawnTimer: 0,
+  };
+};
+
+const getTowerBuildCost = (type: TowerType): number => TOWER_DATA[type]?.cost ?? 0;
+
+const getTowerUpgradeCost = (tower: Tower): number =>
+  getUpgradeCost(tower.type, tower.level, tower.upgrade);
+
+const getTowerSellValue = (tower: Tower): number => {
+  let totalInvested = getTowerBuildCost(tower.type);
+  for (let level = 1; level < tower.level; level++) {
+    totalInvested += getUpgradeCost(tower.type, level, tower.upgrade);
+  }
+  return Math.floor(totalInvested * 0.6);
+};
+
+const HERO_ABILITY_EFFECT_TYPE: Record<HeroType, Effect["type"]> = {
+  tiger: "roar_wave",
+  tenor: "sonic_blast",
+  mathey: "fortress_shield",
+  rocky: "boulder_strike",
+  scott: "inspiration",
+  captain: "knight_summon",
+  engineer: "turret_deploy",
+};
 
 // ============================================================================
 // GAME STATE INTERFACE
@@ -119,14 +199,14 @@ export function useGameState(
 ): [GameStateData, GameStateActions] {
   // Core state
   const [gameState, setGameState] = useState<GameState>("menu");
-  const [selectedMap, setSelectedMap] = useState<string>("nassau");
+  const [selectedMap, setSelectedMap] = useState<string>(DEFAULT_MAP);
   const [pawPoints, setPawPoints] = useState<number>(0);
-  const [lives, setLives] = useState<number>(20);
+  const [lives, setLives] = useState<number>(DEFAULT_LIVES);
   const [score, setScore] = useState<number>(0);
 
   // Wave state
   const [waveState, setWaveState] = useState<WaveState>(() =>
-    initializeWaveState("nassau")
+    initializeWaveState(DEFAULT_MAP)
   );
 
   // Entities
@@ -149,34 +229,34 @@ export function useGameState(
 
   // ID counter for entity creation
   const idCounter = useRef<number>(0);
-  const generateId = useCallback(() => {
-    idCounter.current++;
-    return `entity-${Date.now()}-${idCounter.current}`;
+  const generateEntityId = useCallback((prefix: string) => {
+    idCounter.current += 1;
+    return `${prefix}-${Date.now()}-${idCounter.current}`;
   }, []);
 
   // ============================================================================
   // GAME FLOW ACTIONS
   // ============================================================================
 
-  const startGame = useCallback(
-    (mapId: string, startingGold: number) => {
-      setSelectedMap(mapId);
-      setPawPoints(startingGold);
-      setLives(20);
-      setScore(0);
-      setTowers([]);
-      setEnemies([]);
-      setTroops([]);
-      setProjectiles([]);
-      setEffects([]);
-      setParticles([]);
-      setWaveState(initializeWaveState(mapId));
-      setSelectedTower(null);
-      setSelectedHero(null);
-      setGameState("setup");
-    },
-    []
-  );
+  const startGame = useCallback((mapId: string, startingGold: number) => {
+    setSelectedMap(mapId);
+    setPawPoints(startingGold);
+    setLives(DEFAULT_LIVES);
+    setScore(0);
+    setTowers([]);
+    setEnemies([]);
+    setHeroes([]);
+    setTroops([]);
+    setProjectiles([]);
+    setEffects([]);
+    setParticles([]);
+    setWaveState(initializeWaveState(mapId));
+    setSelectedTower(null);
+    setSelectedHero(null);
+    setGameState("setup");
+    setIsPaused(false);
+    setGameSpeedState(1);
+  }, []);
 
   const pauseGame = useCallback(() => {
     setIsPaused(true);
@@ -201,17 +281,16 @@ export function useGameState(
       const cost = getTowerBuildCost(type);
       if (pawPoints < cost) return false;
 
-      if (!canBuildTower(pos, selectedMap, towers, gridWidth, gridHeight)) {
+      if (!isValidBuildPosition(pos, selectedMap, towers, gridWidth, gridHeight)) {
         return false;
       }
 
-      const newTower = createTower(type, pos, generateId());
+      const newTower = createTowerEntity(type, pos, generateEntityId("tower"));
       setTowers((prev) => [...prev, newTower]);
       setPawPoints((prev) => prev - cost);
-
       return true;
     },
-    [pawPoints, selectedMap, towers, gridWidth, gridHeight, generateId]
+    [pawPoints, selectedMap, towers, gridWidth, gridHeight, generateEntityId]
   );
 
   const sellTowerAction = useCallback(
@@ -219,10 +298,7 @@ export function useGameState(
       const tower = towers.find((t) => t.id === towerId);
       if (!tower) return 0;
 
-      // Calculate sell value (60% of investment)
-      const { getTowerSellValue } = require("../game/towers");
       const sellValue = getTowerSellValue(tower);
-
       setTowers((prev) => prev.filter((t) => t.id !== towerId));
       setPawPoints((prev) => prev + sellValue);
 
@@ -230,7 +306,6 @@ export function useGameState(
         setSelectedTower(null);
       }
 
-      // Remove associated troops for stations
       if (tower.type === "station") {
         setTroops((prev) => prev.filter((t) => t.ownerId !== towerId));
       }
@@ -245,22 +320,21 @@ export function useGameState(
       const tower = towers.find((t) => t.id === towerId);
       if (!tower || tower.level >= 4) return false;
 
-      const { getTowerUpgradeCost, upgradeTower: doUpgrade } = require("../game/towers");
       const cost = getTowerUpgradeCost(tower);
-
       if (pawPoints < cost) return false;
 
       setTowers((prev) =>
         prev.map((t) => {
-          if (t.id === towerId) {
-            doUpgrade(t);
-            return { ...t };
-          }
-          return t;
+          if (t.id !== towerId) return t;
+          const nextLevel = (t.level + 1) as 2 | 3 | 4;
+          return {
+            ...t,
+            level: nextLevel,
+            upgrade: t.level === 3 ? (t.upgrade ?? "A") : t.upgrade,
+          };
         })
       );
       setPawPoints((prev) => prev - cost);
-
       return true;
     },
     [towers, pawPoints]
@@ -284,38 +358,31 @@ export function useGameState(
 
   const placeHero = useCallback(
     (type: HeroType, pos: Position): string | null => {
-      // Check if hero already exists
       const existingHero = heroes.find((h) => h.type === type);
       if (existingHero) return null;
 
-      const newHero = createHero(type, pos, generateId());
+      const newHero = createHeroEntity(type, pos, generateEntityId("hero"));
       setHeroes((prev) => [...prev, newHero]);
-
       return newHero.id;
     },
-    [heroes, generateId]
+    [heroes, generateEntityId]
   );
 
-  const moveHeroAction = useCallback(
-    (heroId: string, pos: Position) => {
-      setHeroes((prev) =>
-        prev.map((h) => {
-          if (h.id === heroId && !h.dead) {
-            return { ...h, targetPos: pos, moving: true };
-          }
-          return h;
-        })
-      );
-    },
-    []
-  );
+  const moveHeroAction = useCallback((heroId: string, pos: Position) => {
+    setHeroes((prev) =>
+      prev.map((h) => {
+        if (h.id === heroId && !h.dead) {
+          return { ...h, targetPos: pos, moving: true };
+        }
+        return h;
+      })
+    );
+  }, []);
 
   const selectHero = useCallback((heroId: string | null) => {
     setSelectedHero(heroId);
     setSelectedTower(null);
-    setHeroes((prev) =>
-      prev.map((h) => ({ ...h, selected: h.id === heroId }))
-    );
+    setHeroes((prev) => prev.map((h) => ({ ...h, selected: h.id === heroId })));
   }, []);
 
   const useHeroAbility = useCallback(
@@ -323,20 +390,32 @@ export function useGameState(
       const hero = heroes.find((h) => h.id === heroId);
       if (!hero || !hero.abilityReady || hero.dead) return;
 
-      const { executeHeroAbility } = require("../game/heroes");
-      const result = executeHeroAbility(hero, enemies, towers, selectedMap);
-
-      // Update hero state
+      const abilityCooldown = HERO_ABILITY_COOLDOWNS[hero.type] ?? 10000;
       setHeroes((prev) =>
-        prev.map((h) => (h.id === heroId ? { ...hero } : h))
+        prev.map((h) =>
+          h.id === heroId
+            ? {
+                ...h,
+                abilityReady: false,
+                abilityCooldown: abilityCooldown,
+              }
+            : h
+        )
       );
 
-      // Add effects
-      if (result.effects.length > 0) {
-        setEffects((prev) => [...prev, ...result.effects]);
-      }
+      setEffects((prev) => [
+        ...prev,
+        {
+          id: generateEntityId("effect"),
+          pos: hero.pos,
+          type: HERO_ABILITY_EFFECT_TYPE[hero.type],
+          progress: 0,
+          size: hero.type === "tiger" ? 180 : 100,
+          duration: 1000,
+        },
+      ]);
     },
-    [heroes, enemies, towers, selectedMap]
+    [heroes, generateEntityId]
   );
 
   // ============================================================================
@@ -348,7 +427,10 @@ export function useGameState(
   }, []);
 
   const removeEnemy = useCallback((enemyId: string) => {
-    setEnemies((prev) => prev.filter((e) => e.id !== enemyId));
+    setEnemies((prev) => {
+      if (!prev.some((e) => e.id === enemyId)) return prev;
+      return prev.filter((e) => e.id !== enemyId);
+    });
   }, []);
 
   const addProjectile = useCallback((projectile: Projectile) => {
@@ -356,7 +438,10 @@ export function useGameState(
   }, []);
 
   const removeProjectile = useCallback((projectileId: string) => {
-    setProjectiles((prev) => prev.filter((p) => p.id !== projectileId));
+    setProjectiles((prev) => {
+      if (!prev.some((p) => p.id === projectileId)) return prev;
+      return prev.filter((p) => p.id !== projectileId);
+    });
   }, []);
 
   const addEffect = useCallback((effect: Effect) => {
@@ -364,7 +449,10 @@ export function useGameState(
   }, []);
 
   const removeEffect = useCallback((effectId: string) => {
-    setEffects((prev) => prev.filter((e) => e.id !== effectId));
+    setEffects((prev) => {
+      if (!prev.some((e) => e.id === effectId)) return prev;
+      return prev.filter((e) => e.id !== effectId);
+    });
   }, []);
 
   const addParticle = useCallback((particle: Particle) => {
@@ -391,11 +479,11 @@ export function useGameState(
 
   const loseLife = useCallback(() => {
     setLives((prev) => {
-      const newLives = prev - 1;
-      if (newLives <= 0) {
+      const nextLives = prev - 1;
+      if (nextLives <= 0) {
         setGameState("defeat");
       }
-      return Math.max(0, newLives);
+      return Math.max(0, nextLives);
     });
   }, []);
 
@@ -404,77 +492,142 @@ export function useGameState(
   // ============================================================================
 
   const startNextWaveAction = useCallback((): boolean => {
-    const { startNextWave: doStartWave } = require("../game/waves");
-
-    const success = doStartWave(waveState, selectedMap);
-    if (success) {
-      setWaveState({ ...waveState });
-      setGameState("playing");
+    if (waveState.waveInProgress || waveState.currentWave >= waveState.totalWaves) {
+      return false;
     }
-    return success;
-  }, [waveState, selectedMap]);
+
+    setWaveState((prev) => ({
+      ...prev,
+      currentWave: prev.currentWave + 1,
+      waveInProgress: true,
+      nextWaveTimer: 0,
+      lastWaveStartedAt: Date.now(),
+    }));
+    setGameState("playing");
+    return true;
+  }, [waveState]);
 
   // ============================================================================
   // RETURN STATE AND ACTIONS
   // ============================================================================
 
-  const state: GameStateData = {
-    gameState,
-    selectedMap,
-    pawPoints,
-    lives,
-    score,
-    waveState,
-    towers,
-    enemies,
-    heroes,
-    troops,
-    projectiles,
-    effects,
-    particles,
-    selectedTower,
-    selectedHero,
-    hoveredTower,
-    isPaused,
-    gameSpeed,
-  };
+  const state = useMemo<GameStateData>(
+    () => ({
+      gameState,
+      selectedMap,
+      pawPoints,
+      lives,
+      score,
+      waveState,
+      towers,
+      enemies,
+      heroes,
+      troops,
+      projectiles,
+      effects,
+      particles,
+      selectedTower,
+      selectedHero,
+      hoveredTower,
+      isPaused,
+      gameSpeed,
+    }),
+    [
+      gameState,
+      selectedMap,
+      pawPoints,
+      lives,
+      score,
+      waveState,
+      towers,
+      enemies,
+      heroes,
+      troops,
+      projectiles,
+      effects,
+      particles,
+      selectedTower,
+      selectedHero,
+      hoveredTower,
+      isPaused,
+      gameSpeed,
+    ]
+  );
 
-  const actions: GameStateActions = {
-    startGame,
-    pauseGame,
-    resumeGame,
-    setGameSpeed,
-    buildTower,
-    sellTower: sellTowerAction,
-    upgradeTower: upgradeTowerAction,
-    selectTower,
-    hoverTower,
-    placeHero,
-    moveHero: moveHeroAction,
-    selectHero,
-    useHeroAbility,
-    addEnemy,
-    removeEnemy,
-    addProjectile,
-    removeProjectile,
-    addEffect,
-    removeEffect,
-    addParticle,
-    addPawPoints,
-    spendPawPoints,
-    loseLife,
-    startNextWave: startNextWaveAction,
-    setTowers,
-    setEnemies,
-    setHeroes,
-    setTroops,
-    setProjectiles,
-    setEffects,
-    setParticles,
-    setWaveState,
-    setPawPoints,
-    setLives,
-  };
+  const actions = useMemo<GameStateActions>(
+    () => ({
+      startGame,
+      pauseGame,
+      resumeGame,
+      setGameSpeed,
+      buildTower,
+      sellTower: sellTowerAction,
+      upgradeTower: upgradeTowerAction,
+      selectTower,
+      hoverTower,
+      placeHero,
+      moveHero: moveHeroAction,
+      selectHero,
+      useHeroAbility,
+      addEnemy,
+      removeEnemy,
+      addProjectile,
+      removeProjectile,
+      addEffect,
+      removeEffect,
+      addParticle,
+      addPawPoints,
+      spendPawPoints,
+      loseLife,
+      startNextWave: startNextWaveAction,
+      setTowers,
+      setEnemies,
+      setHeroes,
+      setTroops,
+      setProjectiles,
+      setEffects,
+      setParticles,
+      setWaveState,
+      setPawPoints,
+      setLives,
+    }),
+    [
+      startGame,
+      pauseGame,
+      resumeGame,
+      setGameSpeed,
+      buildTower,
+      sellTowerAction,
+      upgradeTowerAction,
+      selectTower,
+      hoverTower,
+      placeHero,
+      moveHeroAction,
+      selectHero,
+      useHeroAbility,
+      addEnemy,
+      removeEnemy,
+      addProjectile,
+      removeProjectile,
+      addEffect,
+      removeEffect,
+      addParticle,
+      addPawPoints,
+      spendPawPoints,
+      loseLife,
+      startNextWaveAction,
+      setTowers,
+      setEnemies,
+      setHeroes,
+      setTroops,
+      setProjectiles,
+      setEffects,
+      setParticles,
+      setWaveState,
+      setPawPoints,
+      setLives,
+    ]
+  );
 
   return [state, actions];
 }

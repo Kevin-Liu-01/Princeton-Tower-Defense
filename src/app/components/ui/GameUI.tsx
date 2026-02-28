@@ -28,3 +28,4 @@ export {
   HazardTooltip,
 } from "./Tooltips";
 export { EnemyInspector, EnemyDetailTooltip } from "./EnemyInspector";
+export { HeroHoverTooltip } from "./HeroHoverTooltip";
