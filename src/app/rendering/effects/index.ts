@@ -2,9 +2,9 @@
 // Renders visual effects, projectiles, and particles
 
 import type { Effect, Projectile, Particle, Position, Tower, Enemy, Troop, Hero } from "../../types";
-import { worldToScreen, gridToWorld, distance } from "../../utils";
-import { drawLightningBolt, drawExplosion, lightenColor, darkenColor } from "../helpers";
-import { setShadowBlur, clearShadow, getPerformanceSettings } from "../performance";
+import { worldToScreen } from "../../utils";
+import { drawLightningBolt, drawExplosion } from "../helpers";
+import { setShadowBlur, clearShadow } from "../performance";
 
 // Re-export fog effects
 export { renderRoadEndFog } from "./fog";
@@ -655,7 +655,6 @@ export function renderEffect(
       }
       
       // Slash tip sparkles
-      const tipAngle1 = -slashWidth / 2;
       const tipAngle2 = slashWidth / 2;
       const sparkleSize = 4 * zoom * (1 - progress);
       
@@ -1703,8 +1702,8 @@ export function renderProjectile(
   const zoom = cameraZoom || 1;
   const t = proj.progress;
 
-  let currentX = proj.from.x + (proj.to.x - proj.from.x) * t;
-  let currentY = proj.from.y + (proj.to.y - proj.from.y) * t;
+  const currentX = proj.from.x + (proj.to.x - proj.from.x) * t;
+  const currentY = proj.from.y + (proj.to.y - proj.from.y) * t;
 
   let arcOffset = 0;
   if (proj.arcHeight) {

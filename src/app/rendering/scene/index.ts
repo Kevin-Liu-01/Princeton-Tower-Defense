@@ -22,19 +22,6 @@ import {
 import { renderDecoration } from "../decorations";
 import { renderHazard } from "../hazards";
 
-// Re-export path rendering functions
-export {
-  renderPath,
-  renderSecondaryPath,
-  gridToWorldPath,
-  generateSmoothPath,
-  addPathWobble,
-  createSeededRandom,
-  catmullRom,
-  hexToRgba,
-  type PathRenderContext,
-} from "./path";
-
 // Re-export fog effects
 export { renderRoadEndFog } from "../effects/fog";
 

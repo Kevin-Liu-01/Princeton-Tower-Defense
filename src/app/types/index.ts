@@ -73,9 +73,9 @@ export interface TowerStats {
 // Tower debuff state - applied by enemies
 export interface TowerDebuff {
   type: "slow" | "weaken" | "blind" | "disable";
-  intensity: number;  // Percentage reduction (0-1)
-  until: number;      // Timestamp when debuff expires
-  sourceId?: string;  // Enemy that applied the debuff
+  intensity: number; // Percentage reduction (0-1)
+  until: number; // Timestamp when debuff expires
+  sourceId?: string; // Enemy that applied the debuff
 }
 
 // Tower entity - runtime state
@@ -123,6 +123,9 @@ export interface Tower {
   // Temporary tower (from abilities)
   temporary?: boolean;
   expireTime?: number;
+  // Rendering-only transient fields
+  _orbScreenY?: number;
+  spawnEffect?: number;
   // UI state
   selected?: boolean;
   showSpawnMarkers?: boolean;
@@ -169,7 +172,6 @@ export type EnemyType =
   | "golem"
   | "necromancer"
   | "shadow_knight"
-  // New enemy types
   | "cultist"
   | "plaguebearer"
   | "thornwalker"
@@ -203,38 +205,38 @@ export type EnemyType =
 
 // Enemy categories for organization
 export type EnemyCategory =
-  | "academic"      // Academic progression: writing sem, thesis, grad apps, etc.
-  | "campus"        // Campus life: athletes, protestors, recruiters, etc.
-  | "ranged"        // Ranged attackers
-  | "flying"        // Flying enemies
-  | "boss"          // Major boss enemies
-  | "nature"        // Environmental/biome enemies
-  | "swarm";        // Fast, weak, numerous enemies
+  | "academic" // Academic progression: writing sem, thesis, grad apps, etc.
+  | "campus" // Campus life: athletes, protestors, recruiters, etc.
+  | "ranged" // Ranged attackers
+  | "flying" // Flying enemies
+  | "boss" // Major boss enemies
+  | "nature" // Environmental/biome enemies
+  | "swarm"; // Fast, weak, numerous enemies
 
 // Enemy ability types - special effects enemies can apply
-export type EnemyAbilityType = 
-  | "burn"      // Deals damage over time to troops/heroes
-  | "slow"      // Reduces movement/attack speed of troops/heroes
-  | "poison"    // Deals damage over time and reduces healing
-  | "stun"      // Temporarily disables troops/heroes
-  | "tower_slow"      // Reduces tower attack speed
-  | "tower_weaken"    // Reduces tower damage
-  | "tower_blind"     // Reduces tower range
-  | "tower_disable";  // Completely disables tower temporarily
+export type EnemyAbilityType =
+  | "burn" // Deals damage over time to troops/heroes
+  | "slow" // Reduces movement/attack speed of troops/heroes
+  | "poison" // Deals damage over time and reduces healing
+  | "stun" // Temporarily disables troops/heroes
+  | "tower_slow" // Reduces tower attack speed
+  | "tower_weaken" // Reduces tower damage
+  | "tower_blind" // Reduces tower range
+  | "tower_disable"; // Completely disables tower temporarily
 
 export interface EnemyAbility {
   type: EnemyAbilityType;
   name: string;
   desc: string;
-  chance: number;      // Chance to apply on attack (0-1)
-  duration: number;    // Duration in ms
-  intensity?: number;  // For slow: percentage (0-1), for damage: DPS
-  radius?: number;     // For AoE abilities
-  cooldown?: number;   // Cooldown before can apply again
+  chance: number; // Chance to apply on attack (0-1)
+  duration: number; // Duration in ms
+  intensity?: number; // For slow: percentage (0-1), for damage: DPS
+  radius?: number; // For AoE abilities
+  cooldown?: number; // Cooldown before can apply again
 }
 
 // Enemy special traits for display
-export type EnemyTrait = 
+export type EnemyTrait =
   | "flying"
   | "ranged"
   | "armored"
@@ -350,9 +352,9 @@ export interface HeroData {
 // Status effect applied by enemies
 export interface StatusEffect {
   type: "burn" | "slow" | "poison" | "stun";
-  intensity: number;  // For burn/poison: DPS, for slow: percentage (0-1)
-  until: number;      // Timestamp when effect expires
-  sourceId?: string;  // Enemy that applied the effect
+  intensity: number; // For burn/poison: DPS, for slow: percentage (0-1)
+  until: number; // Timestamp when effect expires
+  sourceId?: string; // Enemy that applied the effect
 }
 
 // Hero entity - runtime state
@@ -426,7 +428,12 @@ export interface TroopData {
 }
 
 // Owner type for determining troop visual theme
-export type TroopOwnerType = 'station' | 'barracks' | 'hero_summon' | 'spell' | 'default';
+export type TroopOwnerType =
+  | "station"
+  | "barracks"
+  | "hero_summon"
+  | "spell"
+  | "default";
 
 // Troop entity - runtime state
 export interface Troop {
@@ -503,28 +510,28 @@ export interface Spell {
 
 // Projectile types for visual variety
 export type ProjectileType =
-  | "arrow"          // Basic arrow (archers, crossbowmen)
-  | "bolt"           // Crossbow bolt
-  | "spear"          // Centaur spear/javelin
-  | "rock"           // Catapult boulder
-  | "fireball"       // Mage fire attack
-  | "magicBolt"      // Generic magic projectile (warlocks, hexers)
-  | "darkBolt"       // Dark magic (necromancers, shadow knights)
-  | "frostBolt"      // Ice projectile (frostlings)
-  | "poisonBolt"     // Poison magic (plaguebearers)
-  | "energyBlast"    // Generic energy (lab towers)
-  | "sonicWave"      // Sound wave (tenor, arch tower)
-  | "lightningOrb"   // Lightning projectile
-  | "flame"          // Flamethrower
-  | "bullet"         // Modern bullets (station turrets)
-  | "cannon"         // Cannonball
-  | "hero"           // Hero ranged attack
-  | "lab"            // Lab tower projectile
-  | "lightning"      // Lightning bolt
-  | "arch"           // Arch tower music note
-  | "infernalFire"   // Infernal demon fire
-  | "bansheeScream"  // Banshee wail
-  | "dragonBreath";  // Dragon fire
+  | "arrow" // Basic arrow (archers, crossbowmen)
+  | "bolt" // Crossbow bolt
+  | "spear" // Centaur spear/javelin
+  | "rock" // Catapult boulder
+  | "fireball" // Mage fire attack
+  | "magicBolt" // Generic magic projectile (warlocks, hexers)
+  | "darkBolt" // Dark magic (necromancers, shadow knights)
+  | "frostBolt" // Ice projectile (frostlings)
+  | "poisonBolt" // Poison magic (plaguebearers)
+  | "energyBlast" // Generic energy (lab towers)
+  | "sonicWave" // Sound wave (tenor, arch tower)
+  | "lightningOrb" // Lightning projectile
+  | "flame" // Flamethrower
+  | "bullet" // Modern bullets (station turrets)
+  | "cannon" // Cannonball
+  | "hero" // Hero ranged attack
+  | "lab" // Lab tower projectile
+  | "lightning" // Lightning bolt
+  | "arch" // Arch tower music note
+  | "infernalFire" // Infernal demon fire
+  | "bansheeScream" // Banshee wail
+  | "dragonBreath"; // Dragon fire
 
 // Projectile
 export interface Projectile {
@@ -584,41 +591,41 @@ export type EffectType =
   | "lightning_bolt"
   | "freeze_wave"
   // Physical attack effects
-  | "melee_slash"       // Sword/claw slash arc
-  | "melee_smash"       // Heavy ground pound
-  | "melee_swipe"       // Quick claw swipe
-  | "impact_hit"        // Generic hit impact
-  | "ground_crack"      // Ground crack from heavy attack
-  | "dust_cloud"        // Dust from ground impact
-  // AoE attack effects  
-  | "aoe_ring"          // Expanding damage ring
-  | "shockwave"         // Ground shockwave
-  | "magic_burst"       // Magic AoE burst
-  | "fire_nova"         // Fire explosion ring
-  | "ice_nova"          // Ice explosion ring
-  | "dark_nova"         // Dark magic burst
+  | "melee_slash" // Sword/claw slash arc
+  | "melee_smash" // Heavy ground pound
+  | "melee_swipe" // Quick claw swipe
+  | "impact_hit" // Generic hit impact
+  | "ground_crack" // Ground crack from heavy attack
+  | "dust_cloud" // Dust from ground impact
+  // AoE attack effects
+  | "aoe_ring" // Expanding damage ring
+  | "shockwave" // Ground shockwave
+  | "magic_burst" // Magic AoE burst
+  | "fire_nova" // Fire explosion ring
+  | "ice_nova" // Ice explosion ring
+  | "dark_nova" // Dark magic burst
   // Projectile impact effects
-  | "arrow_hit"         // Arrow stuck in ground
-  | "magic_impact"      // Magic projectile impact
-  | "fire_impact"       // Fireball explosion
-  | "rock_impact"       // Boulder crash
-  | "poison_splash"     // Poison splatter
-  | "frost_impact"      // Ice shatter
+  | "arrow_hit" // Arrow stuck in ground
+  | "magic_impact" // Magic projectile impact
+  | "fire_impact" // Fireball explosion
+  | "rock_impact" // Boulder crash
+  | "poison_splash" // Poison splatter
+  | "frost_impact" // Ice shatter
   // Hero special effects
-  | "tiger_slash"       // Tiger claw attack
-  | "knight_cleave"     // Mathey Knight sword swing
-  | "scott_quill"       // F Scott pen/quill attack
-  | "sonic_blast"       // Tenor multi-target blast
+  | "tiger_slash" // Tiger claw attack
+  | "knight_cleave" // Mathey Knight sword swing
+  | "scott_quill" // F Scott pen/quill attack
+  | "sonic_blast" // Tenor multi-target blast
   // Tower debuff effects
-  | "tower_debuff_slow"     // Tower attack speed reduced
-  | "tower_debuff_weaken"   // Tower damage reduced
-  | "tower_debuff_blind"    // Tower range reduced
-  | "tower_debuff_disable"  // Tower completely disabled
+  | "tower_debuff_slow" // Tower attack speed reduced
+  | "tower_debuff_weaken" // Tower damage reduced
+  | "tower_debuff_blind" // Tower range reduced
+  | "tower_debuff_disable" // Tower completely disabled
   // Unit status effect visuals (troops/heroes)
-  | "status_burning"        // On-fire effect
-  | "status_slowed"         // Slowed/frozen effect
-  | "status_poisoned"       // Poison dripping effect
-  | "status_stunned";       // Stunned/dazed effect
+  | "status_burning" // On-fire effect
+  | "status_slowed" // Slowed/frozen effect
+  | "status_poisoned" // Poison dripping effect
+  | "status_stunned"; // Stunned/dazed effect
 
 // Visual effect
 export interface Effect {
@@ -639,13 +646,13 @@ export interface Effect {
   meteorIndex?: number;
   // Combat effect properties
   color?: string;
-  sourceId?: string;         // Who caused this effect
-  damageDealt?: number;      // Visual damage number
-  isCritical?: boolean;      // Critical hit indicator
+  sourceId?: string; // Who caused this effect
+  damageDealt?: number; // Visual damage number
+  isCritical?: boolean; // Critical hit indicator
   attackerType?: "enemy" | "hero" | "troop" | "tower";
   // Slash/melee effect properties
-  slashAngle?: number;       // Direction of slash
-  slashWidth?: number;       // Arc width of slash
+  slashAngle?: number; // Direction of slash
+  slashWidth?: number; // Arc width of slash
 }
 
 // Particle types

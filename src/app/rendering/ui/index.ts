@@ -3,7 +3,7 @@
 
 import type { Position, Tower, Hero } from "../../types";
 import { worldToScreen, gridToWorld } from "../../utils";
-import { drawHealthBar, drawOutlinedText, drawFloatingText, colorWithAlpha } from "../helpers";
+import { drawFloatingText, colorWithAlpha } from "../helpers";
 import { HERO_DATA } from "../../constants";
 
 // ============================================================================

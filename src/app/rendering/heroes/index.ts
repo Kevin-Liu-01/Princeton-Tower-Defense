@@ -1470,7 +1470,6 @@ function drawTenorHero(
   }
 
   // === ORNATE PURPLE BOW TIE ===
-  const bowGlow = isAttacking ? 0.6 + attackIntensity * 0.4 : 0.3;
   ctx.shadowColor = "#b080e0";
   ctx.shadowBlur = (isAttacking ? 12 * attackIntensity : 4) * zoom;
   // Left bow
@@ -5413,7 +5412,6 @@ function drawEngineerHero(
 
   // Display content (scrolling data)
   ctx.fillStyle = `rgba(0, 255, 200, ${0.6 + dataPulse * 0.3})`;
-  const dataOffset = (time * 50) % (size * 0.2);
   for (let line = 0; line < 3; line++) {
     const lineY = y - size * 0.13 + line * size * 0.035;
     ctx.fillRect(x - size * 0.1, lineY, size * 0.08 + Math.sin(time * 3 + line) * size * 0.04, size * 0.015);
@@ -5875,6 +5873,8 @@ function drawDefaultHero(
   zoom: number,
   attackPhase: number = 0
 ) {
+  void attackPhase;
+
   // Default hero fallback
   const bodyGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.6);
   bodyGrad.addColorStop(0, lightenColor(color, 30));

@@ -244,9 +244,6 @@ export function drawEnergyTube(
   ctx.stroke();
 
   // Energy flow
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const length = Math.sqrt(dx * dx + dy * dy);
   const flowOffset = (time * 100) % 20;
 
   ctx.strokeStyle = color;

@@ -5,9 +5,7 @@ import { colorWithAlpha } from "../helpers";
 import { 
   setShadowBlur, 
   clearShadow, 
-  getPerformanceSettings,
-  shouldRenderEnvironment,
-  getAdjustedParticleCount
+  shouldRenderEnvironment
 } from "../performance";
 
 // ============================================================================

@@ -1,10 +1,10 @@
 // Princeton Tower Defense - Maps Rendering Module
 // Renders map backgrounds, paths, and environment effects
 
-import type { Position, GridPosition } from "../../types";
-import { TILE_SIZE, GRID_WIDTH, GRID_HEIGHT, MAP_PATHS, LEVEL_DATA } from "../../constants";
+import type { Position } from "../../types";
+import { TILE_SIZE, GRID_WIDTH, GRID_HEIGHT, MAP_PATHS } from "../../constants";
 import { worldToScreen, gridToWorld } from "../../utils";
-import { lightenColor, darkenColor, colorWithAlpha } from "../helpers";
+import { colorWithAlpha } from "../helpers";
 
 // Re-export environment effects
 export {
@@ -195,7 +195,7 @@ export function renderMapBackground(
         cameraZoom
       );
 
-      drawGroundTile(ctx, screenPos.x, screenPos.y, theme, zoom, gx, gy, time);
+      drawGroundTile(ctx, screenPos.x, screenPos.y, theme, zoom, gx, gy);
     }
   }
 
@@ -216,8 +216,7 @@ function drawGroundTile(
   theme: typeof MAP_THEMES[string],
   zoom: number,
   gx: number,
-  gy: number,
-  time: number
+  gy: number
 ): void {
   const tileWidth = TILE_SIZE * 0.866 * zoom;
   const tileHeight = TILE_SIZE * 0.5 * zoom;
@@ -265,8 +264,8 @@ export function renderPath(
 
   // Handle both single path and multiple paths
   const pathArrays = Array.isArray(paths[0]) && Array.isArray(paths[0][0])
-    ? paths as Position[][]
-    : [paths as Position[]];
+    ? (paths as unknown as Position[][])
+    : ([paths] as unknown as Position[][]);
 
   for (const path of pathArrays) {
     if (path.length < 2) continue;
@@ -370,7 +369,7 @@ function renderEnvironmentalEffects(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  time: number
+  time: number = 0
 ): void {
   const theme = MAP_THEMES[selectedMap] || MAP_THEMES.nassau;
 

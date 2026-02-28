@@ -26,7 +26,6 @@ function drawIsometricPrism(
   const h = height * zoom;
 
   // Calculate vertices for isometric box
-  const topCenter = { x, y: y - h };
   const topFront = { x, y: y - h + d };
   const topBack = { x, y: y - h - d };
   const topLeft = { x: x - w, y: y - h };
@@ -318,7 +317,6 @@ function drawEnergyTube(
 ) {
   const dx = endX - startX;
   const dy = endY - startY;
-  const length = Math.sqrt(dx * dx + dy * dy);
 
   // Tube body
   ctx.strokeStyle = "#2a2a32";
@@ -1295,50 +1293,6 @@ function drawCannonAmmoBelt(
   ctx.stroke();
 }
 
-function drawTowerBase(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  baseWidth: number,
-  baseHeight: number,
-  colors: { base: string; dark: string; light: string; accent: string },
-  zoom: number
-) {
-  drawIsometricPrism(
-    ctx,
-    x,
-    y + 8 * zoom,
-    baseWidth + 8,
-    baseWidth + 8,
-    6,
-    {
-      top: darkenColor(colors.base, 30),
-      left: darkenColor(colors.base, 50),
-      right: darkenColor(colors.base, 40),
-      leftBack: darkenColor(colors.base, 20),
-      rightBack: darkenColor(colors.base, 25),
-    },
-    zoom
-  );
-
-  drawIsometricPrism(
-    ctx,
-    x,
-    y,
-    baseWidth,
-    baseWidth,
-    baseHeight,
-    {
-      top: colors.light,
-      left: colors.base,
-      right: colors.dark,
-      leftBack: lightenColor(colors.base, 15),
-      rightBack: lightenColor(colors.dark, 10),
-    },
-    zoom
-  );
-}
-
 // ============================================================================
 // TOWER PASSIVE EFFECTS HELPER
 // ============================================================================
@@ -1633,6 +1587,15 @@ function renderCannonTower(
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
+  void colors;
+  void enemies;
+  void selectedMap;
+  void canvasWidth;
+  void canvasHeight;
+  void dpr;
+  void cameraOffset;
+  void cameraZoom;
+
   ctx.save();
   const level = tower.level;
   const baseWidth = 36 + level * 5;
@@ -2173,7 +2136,6 @@ function drawMechanicalTowerBase(
     ctx.fillStyle = "#cd853f";
     for (let i = 0; i < chainLinks; i++) {
       const t = i / chainLinks;
-      const t2 = t * t;
       const linkX = chainStartX + (chainEndX - chainStartX) * t;
       const linkY = chainStartY + (chainEndY - chainStartY) * t + Math.sin(t * Math.PI) * 10 * zoom;
       
@@ -5612,12 +5574,13 @@ function renderLibraryTower(
   time: number,
   colors: { base: string; dark: string; light: string; accent: string }
 ) {
+  void colors;
+
   ctx.save();
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 30 + tower.level * 10;
   const w = baseWidth * zoom * 0.5;
   const d = baseWidth * zoom * 0.25;
-  const h = baseHeight * zoom;
 
   let mainColor = "rgba(180, 100, 255,";
   const glowColor = "180, 100, 255";
@@ -6459,9 +6422,6 @@ function renderLibraryTower(
 
   // Ground-crushing shockwave effect during attack
   if (groundShockwave > 0 && groundShockwave < 1) {
-    const shockRadius = 40 + groundShockwave * 80;
-    const shockAlpha = (1 - groundShockwave) * 0.8;
-
     // Multiple expanding rings
     for (let ring = 0; ring < 3; ring++) {
       const ringDelay = ring * 0.15;
@@ -6646,7 +6606,7 @@ function renderLabTower(
 
   // Corner reinforcement struts
   ctx.fillStyle = "#3a6a8a";
-  for (let side of [-1, 1]) {
+  for (const side of [-1, 1]) {
     ctx.beginPath();
     ctx.moveTo(screenPos.x + side * w * 0.95, screenPos.y + d * 0.4);
     ctx.lineTo(screenPos.x + side * w * 1.05, screenPos.y + d * 0.5);
@@ -6788,7 +6748,7 @@ function renderLabTower(
 
     // Capacitor banks on scaffolding
     const capColors = ["#3a5a7a", "#4a7a9a"];
-    for (let side of [-1, 1]) {
+    for (const side of [-1, 1]) {
       for (let i = 0; i < 2; i++) {
         const capX = screenPos.x + side * w * 1.0;
         const capY = screenPos.y - h * (0.15 + i * 0.2);
@@ -7297,6 +7257,14 @@ function renderTeslaCoil(
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
+  void enemies;
+  void selectedMap;
+  void canvasWidth;
+  void canvasHeight;
+  void dpr;
+  void cameraOffset;
+  void cameraZoom;
+
   const coilHeight = (35 + tower.level * 8) * zoom;
 
   // Coil base platform
@@ -7594,8 +7562,6 @@ function renderTeslaCoil(
     ctx.beginPath();
     ctx.moveTo(screenPos.x, orbY);
     const segments = 4 + Math.floor(Math.random() * 3);
-    let px = screenPos.x,
-      py = orbY;
     for (let s = 1; s <= segments; s++) {
       const t = s / segments;
       const targetX = screenPos.x + (arcEndX - screenPos.x) * t;
@@ -7604,8 +7570,6 @@ function renderTeslaCoil(
       const sx = targetX + (Math.random() - 0.5) * jitter;
       const sy = targetY + (Math.random() - 0.5) * jitter * 0.5;
       ctx.lineTo(sx, sy);
-      px = sx;
-      py = sy;
     }
     ctx.stroke();
 
@@ -7666,6 +7630,14 @@ function renderFocusedBeam(
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
+  void enemies;
+  void selectedMap;
+  void canvasWidth;
+  void canvasHeight;
+  void dpr;
+  void cameraOffset;
+  void cameraZoom;
+
   const coilHeight = 65 * zoom;
   const timeSinceFire = Date.now() - tower.lastAttack;
   const isAttacking = timeSinceFire < 400;
@@ -7820,8 +7792,6 @@ function renderFocusedBeam(
     ctx.beginPath();
     ctx.moveTo(coilX, coilY - 6 * zoom);
     const segments = 5 + Math.floor(Math.random() * 3);
-    let px = coilX,
-      py = coilY - 6 * zoom;
     for (let s = 1; s <= segments; s++) {
       const t = s / segments;
       const targetX = screenPos.x + (coilX - screenPos.x) * (1 - t) * 0.3;
@@ -8477,6 +8447,8 @@ function renderArchTower(
   time: number,
   colors: { base: string; dark: string; light: string; accent: string }
 ) {
+  void colors;
+
   ctx.save();
   // Shift the entire building up slightly
   screenPos = { x: screenPos.x, y: screenPos.y - 8 * zoom };
@@ -8786,7 +8758,7 @@ function renderArchTower(
   ctx.stroke();
   
   // Platform corner rune stones
-  for (let corner of [-1, 1]) {
+  for (const corner of [-1, 1]) {
     const stoneX = screenPos.x + corner * (baseWidth + 8) * zoom * 0.4;
     const stoneY = screenPos.y - 20 * zoom;
     
@@ -9655,6 +9627,8 @@ function renderClubTower(
   time: number,
   colors: { base: string; dark: string; light: string; accent: string }
 ) {
+  void colors;
+
   ctx.save();
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 25 + tower.level * 8;
@@ -9688,7 +9662,7 @@ function renderClubTower(
   // Foundation support struts
   ctx.strokeStyle = "#3a4a3a";
   ctx.lineWidth = 2 * zoom;
-  for (let side of [-1, 1]) {
+  for (const side of [-1, 1]) {
     // Diagonal support beams
     ctx.beginPath();
     ctx.moveTo(screenPos.x + side * (baseWidth + 16) * zoom * 0.45, screenPos.y + 8 * zoom);
@@ -9749,7 +9723,7 @@ function renderClubTower(
   
   // Corner tech nodes on foundation
   ctx.fillStyle = "#4a5a4a";
-  for (let side of [-1, 1]) {
+  for (const side of [-1, 1]) {
     const nodeX = screenPos.x + side * (baseWidth + 10) * zoom * 0.45;
     ctx.beginPath();
     ctx.arc(nodeX, screenPos.y + 4 * zoom, 3 * zoom, 0, Math.PI * 2);
@@ -9856,7 +9830,7 @@ function renderClubTower(
 
   // Gold corner accents
   ctx.fillStyle = "#c9a227";
-  for (let side of [-1, 1]) {
+  for (const side of [-1, 1]) {
     ctx.beginPath();
     ctx.moveTo(screenPos.x + side * w * 0.95, screenPos.y);
     ctx.lineTo(screenPos.x + side * w * 1.0, screenPos.y - 2 * zoom);
@@ -10392,7 +10366,7 @@ function renderClubTower(
   // ========== LEVEL 2 UNIQUE FEATURES ==========
   if (tower.level >= 2) {
     // Data banks on sides
-    for (let side of [-1, 1]) {
+    for (const side of [-1, 1]) {
       const bankX = screenPos.x + side * w * 0.75;
       const bankY = screenPos.y - h * 0.15;
       
@@ -10534,6 +10508,8 @@ function renderStationTower(
   time: number,
   colors: { base: string; dark: string; light: string; accent: string }
 ) {
+  void colors;
+
   ctx.save();
   // Shift the entire building up slightly
   screenPos = { x: screenPos.x, y: screenPos.y - 10 * zoom };
@@ -12451,6 +12427,21 @@ function renderStationTower(
         Math.PI * 2
       );
       ctx.fill();
+    }
+
+    if (showNumerals) {
+      ctx.font = `${Math.max(8 * zoom, radius * 0.25)}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let i = 1; i <= 12; i++) {
+        const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+        const numeralR = radius * 0.68;
+        ctx.fillText(
+          String(i),
+          cx + Math.cos(angle) * numeralR,
+          cy + Math.sin(angle) * numeralR
+        );
+      }
     }
 
     // Animated hands

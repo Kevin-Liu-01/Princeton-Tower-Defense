@@ -3566,7 +3566,6 @@ function drawEliteTroop(
   const halberdSwing = isAttacking
     ? Math.sin(attackPhase * Math.PI * 1.5) * 1.8
     : 0;
-  const bodyLean = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.15 : 0;
 
   // === ELITE AURA (always present, stronger during attack) ===
   const auraIntensity = isAttacking ? 0.6 : 0.3;
@@ -5080,12 +5079,8 @@ function drawTurretTroop(
 
   // Calculate rotation toward target with smooth tracking
   let rotation = 0;
-  let targetDistance = 0;
   if (targetPos) {
     rotation = Math.atan2(targetPos.y - y, targetPos.x - x);
-    targetDistance = Math.sqrt(
-      Math.pow(targetPos.x - x, 2) + Math.pow(targetPos.y - y, 2)
-    );
   } else {
     // Idle scanning - sweeping motion
     rotation = Math.sin(time * 0.8) * 1.2 + Math.sin(time * 0.3) * 0.5;
@@ -5117,17 +5112,6 @@ function drawTurretTroop(
     // Heat builds up over time
     heatGlow = Math.min(1, attackPhase * 1.5 + Math.sin(time * 8) * 0.15);
   }
-
-  // Pitch calculation for aiming
-  const towerElevation = s * 0.3;
-  const barrelBaseLength = s * 0.55;
-  let pitch = Math.atan2(towerElevation, barrelBaseLength * 2);
-  // Adjust pitch based on target distance
-  if (targetPos && targetDistance > 0) {
-    pitch = Math.max(0.05, Math.min(0.4, 50 / targetDistance));
-  }
-  const pitchCos = Math.cos(pitch);
-  const pitchSin = Math.sin(pitch);
 
   // Apply shake
   const shakeX = turretShake * cosR;
@@ -5958,4 +5942,3 @@ function drawTurretTroop(
 
   ctx.restore();
 }
-

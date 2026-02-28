@@ -1,8 +1,6 @@
 // Princeton Tower Defense - Major Landmark Decorations
 // Renders large, detailed decorations like pyramids, castles, etc.
 
-import { lightenColor, darkenColor, colorWithAlpha } from "../helpers";
-
 // ============================================================================
 // PYRAMID
 // ============================================================================

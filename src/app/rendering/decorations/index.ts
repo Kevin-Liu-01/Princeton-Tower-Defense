@@ -46,7 +46,7 @@ export function renderDecoration(
   ctx.save();
 
   // Get type from category or type field
-  const decorType = decoration.category || decoration.type || "tree";
+  const decorType = String(decoration.category || decoration.type || "tree");
   const variantStr = typeof decoration.variant === "string" ? decoration.variant : undefined;
   const variantNum = typeof decoration.variant === "number" ? decoration.variant : 0;
 

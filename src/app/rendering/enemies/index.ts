@@ -4,7 +4,7 @@
 import type { Enemy, Position } from "../../types";
 import { ENEMY_DATA } from "../../constants";
 import { worldToScreen, getEnemyPosition, lightenColor, darkenColor } from "../../utils";
-import { setShadowBlur, clearShadow, getPerformanceSettings } from "../performance";
+import { setShadowBlur, clearShadow } from "../performance";
 
 // ============================================================================
 // ENEMY RENDERING
@@ -2062,7 +2062,6 @@ function drawSophomoreEnemy(
   // Storm vortex aura
   ctx.save();
   for (let ring = 0; ring < 5; ring++) {
-    const ringPhase = (time * 1.5 + ring * 0.3) % 2;
     const ringSize = size * 0.3 + ring * size * 0.12;
     ctx.strokeStyle = `rgba(96, 165, 250, ${(0.3 - ring * 0.05) * magicPulse})`;
     ctx.lineWidth = 2 * zoom;
@@ -2679,7 +2678,6 @@ function drawSeniorEnemy(
   const strut = Math.sin(time * 3) * 2 * zoom;
   const cloakWave = Math.sin(time * 2.5) * 0.12;
   const powerPulse = 0.5 + Math.sin(time * 3) * 0.3;
-  const breathe = Math.sin(time * 2) * size * 0.02;
   const floatHeight = Math.sin(time * 1.5) * size * 0.03;
   
   // Attack animation variables
@@ -2690,7 +2688,6 @@ function drawSeniorEnemy(
   // === LAYER 1: COSMIC VOID AURA (Background) ===
   // Outer void distortion field
   for (let ring = 0; ring < 3; ring++) {
-    const ringPhase = (time * 0.5 + ring * 0.3) % 1;
     const ringSize = size * (0.9 + ring * 0.25) * auraExpand;
     const ringAlpha = (0.15 - ring * 0.04) * (1 + powerSurge);
     ctx.strokeStyle = `rgba(219, 39, 119, ${ringAlpha})`;
@@ -4566,7 +4563,7 @@ function drawMascotEnemy(
   ctx.fill();
 
   // Powerful talons with golden claws
-  for (let side of [-1, 1]) {
+  for (const side of [-1, 1]) {
     ctx.save();
     ctx.translate(x + side * size * 0.22, y + size * 0.44 + swoop * 0.1);
     // Feathered leg
@@ -7287,7 +7284,6 @@ function drawWyvernEnemy(
   // === LAYER 1: TOXIC MIASMA AURA ===
   // Outer poison cloud
   for (let ring = 0; ring < 4; ring++) {
-    const ringPhase = (time * 0.4 + ring * 0.4) % 1;
     const ringSize = size * (0.7 + ring * 0.2) * (1 + venomIntensity * 0.2);
     const ringAlpha = (0.12 - ring * 0.025) * (0.8 + venomIntensity * 0.4);
     ctx.fillStyle = `rgba(74, 222, 128, ${ringAlpha})`;
@@ -9816,10 +9812,9 @@ function drawThornwalkerEnemy(
   zoom: number,
   attackPhase: number = 0
 ) {
+  void attackPhase;
+
   // IVY OVERGROWTH - Living plant creature with thorns and vines
-  const isAttacking = attackPhase > 0;
-  const rustlePhase = Math.sin(time * 4) * 0.03 + (isAttacking ? attackPhase * 0.1 : 0);
-  const vineWave = Math.sin(time * 2);
   const leafPulse = 0.5 + Math.sin(time * 3) * 0.3;
 
   // Root shadow

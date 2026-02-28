@@ -53,7 +53,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
   const { ctx, screenPos, scale: s, type, rotation, variant, decorTime, decorX, selectedMap } = params;
 
   // Create a local reference to avoid repetitive params access
-  const dec = { x: decorX }; // Used for seeding animations
+  const dec = { x: decorX, y: 0 }; // Used for seeding animations
 
   switch (type) {
     // === GRASSLAND DECORATIONS ===
@@ -165,7 +165,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         { x: -8, y: -28, r: 6 }, { x: 10, y: -30, r: 6 },
         { x: 0, y: -38, r: 5 }, { x: -12, y: -32, r: 5 },
       ];
-      leafClusters.forEach((lc, i) => {
+      leafClusters.forEach((lc) => {
         const clusterGrad = ctx.createRadialGradient(
           screenPos.x + lc.x * s, screenPos.y + lc.y * s, 0,
           screenPos.x + lc.x * s, screenPos.y + lc.y * s, lc.r * s
@@ -7766,7 +7766,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Base - isometric box
-      const bw = 12 * s, bd = 20 * s, bh = 8 * s;
+      const bw = 12 * s, bh = 8 * s;
       // Top face
       ctx.fillStyle = sarcStone;
       ctx.beginPath();
@@ -8606,7 +8606,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Sort by y position for proper layering (back to front)
       spires.sort((a, b) => a.y - b.y);
 
-      spires.forEach((spire, idx) => {
+      spires.forEach((spire) => {
         const sx = screenPos.x + spire.x * s;
         const sy = screenPos.y + spire.y * s;
         const sh = spire.h * s;
@@ -11633,8 +11633,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const sy = screenPos.y;
         const sh = sp.h * s;
         const sw = sp.w * s;
-        const hue = (decorTime * 30 + idx * 20) % 60;
-
         // Left face
         const fcLGrad = ctx.createLinearGradient(sx - sw, sy, sx, sy - sh);
         fcLGrad.addColorStop(0, fcDark);
@@ -11775,7 +11773,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "ember_rock": {
       const erDark = "#2a1810";
       const erMid = "#3a2818";
-      const erLight = "#4a3828";
 
       // Shadow
       ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -11853,7 +11850,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const rimDark = "#1a1210";
       const rimMid = "#3a2818";
       const rimLight = "#5a4028";
-      const rimLava = "#ff6b00";
 
       // Outer shadow
       ctx.fillStyle = "rgba(0,0,0,0.25)";
@@ -12441,7 +12437,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const woodDark = "#1a1210";
       const woodMid = "#2d1f1a";
       const woodLight = "#3d2a22";
-      const woodHighlight = "#4a3328";
       const roofDark = "#1f1a15";
       const roofMid = "#2a2018";
       const roofMoss = "#1a2a1a";
@@ -12494,7 +12489,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // ========== BONE FENCE POSTS ==========
       // Scattered bone/stick fence
       for (let i = 0; i < 5; i++) {
-        const fenceAngle = -0.6 + i * 0.3;
         const fenceX = screenPos.x - 40 * s + i * 18 * s;
         const fenceY = screenPos.y + 8 * s - Math.abs(i - 2) * 3 * s;
         const lean = Math.sin(i * 1.5) * 0.15;
@@ -15484,23 +15478,4 @@ function _drawPalmFrondItem(
       ctx.fill();
     }
   }
-}
-
-function _obelHexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-    : null;
-}
-
-function _obelDarken(color: string, amount: number): string {
-  const rgb = _obelHexToRgb(color);
-  if (!rgb) return color;
-  return `rgb(${Math.max(0, rgb.r - amount)}, ${Math.max(0, rgb.g - amount)}, ${Math.max(0, rgb.b - amount)})`;
-}
-
-function _obelLighten(color: string, amount: number): string {
-  const rgb = _obelHexToRgb(color);
-  if (!rgb) return color;
-  return `rgb(${Math.min(255, rgb.r + amount)}, ${Math.min(255, rgb.g + amount)}, ${Math.min(255, rgb.b + amount)})`;
 }

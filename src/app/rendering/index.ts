@@ -1061,8 +1061,6 @@ export function renderEffect(
       // Main bolt
       ctx.beginPath();
       ctx.moveTo(targetScreen.x, startY);
-      let lastX = targetScreen.x;
-      let lastY = startY;
 
       for (let i = 1; i <= segments; i++) {
         const t = i / segments;
@@ -1082,8 +1080,6 @@ export function renderEffect(
           );
           ctx.moveTo(x, baseY);
         }
-        lastX = x;
-        lastY = baseY;
       }
       ctx.lineTo(targetScreen.x, targetScreen.y);
       ctx.stroke();
@@ -1769,7 +1765,6 @@ export function renderEffect(
     case "knight_summon": {
       // Captain's knight summoning effect
       const summonRadius = effect.size * zoom;
-      const time = Date.now() / 1000;
 
       ctx.save();
       ctx.shadowColor = "#ffaa00";
@@ -1929,18 +1924,9 @@ export function renderParticle(
 // Re-export environment effects
 export { renderEnvironment, renderAmbientVisuals } from "./maps/environment";
 
-// Re-export path rendering functions
-export {
-  renderPath,
-  renderSecondaryPath,
-  gridToWorldPath,
-  generateSmoothPath,
-  addPathWobble,
-  createSeededRandom,
-  catmullRom,
-  hexToRgba,
-  type PathRenderContext,
-} from "./scene/path";
+// Re-export path utilities used by the current rendering pipeline
+export { renderPath } from "./maps";
+export { gridToWorldPath, hexToRgba } from "../utils";
 
 // Re-export fog effects
 export { renderRoadEndFog } from "./effects/fog";
