@@ -42,6 +42,117 @@ function drawOrganicBlob(
   ctx.closePath();
 }
 
+function seededNoise(seed: number): number {
+  const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453123;
+  return value - Math.floor(value);
+}
+
+interface IceSpikeProfile {
+  angle: number;
+  dist: number;
+  width: number;
+  height: number;
+  lean: number;
+  phase: number;
+}
+
+interface IceRimShardProfile {
+  angle: number;
+  dist: number;
+  width: number;
+  height: number;
+}
+
+interface IceSpikesLayout {
+  spikes: IceSpikeProfile[];
+  rimShards: IceRimShardProfile[];
+  crackAngles: number[];
+}
+
+interface IceSpikesCycleState {
+  extend: number;
+  active: boolean;
+  burst: boolean;
+}
+
+const iceSpikesLayoutCache = new Map<string, IceSpikesLayout>();
+
+function getIceSpikesLayout(pos: Position): IceSpikesLayout {
+  const cacheKey = `${(pos.x || 0).toFixed(2)}:${(pos.y || 0).toFixed(2)}`;
+  const cached = iceSpikesLayoutCache.get(cacheKey);
+  if (cached) return cached;
+
+  const seed = (pos.x || 0) * 47.3 + (pos.y || 0) * 21.9;
+
+  const spikes: IceSpikeProfile[] = [];
+  const spikeCount = 18;
+  for (let i = 0; i < spikeCount; i++) {
+    spikes.push({
+      angle: seededNoise(seed + i * 4.13) * Math.PI * 2,
+      dist: 0.08 + seededNoise(seed + i * 7.41 + 1.4) * 0.78,
+      width: seededNoise(seed + i * 9.87 + 2.9),
+      height: seededNoise(seed + i * 12.31 + 0.7),
+      lean: seededNoise(seed + i * 15.73 + 3.6),
+      phase: seededNoise(seed + i * 5.21 + 0.4),
+    });
+  }
+
+  const rimShards: IceRimShardProfile[] = [];
+  for (let i = 0; i < 22; i++) {
+    rimShards.push({
+      angle: (i / 22) * Math.PI * 2 + (seededNoise(seed + i * 17.3) - 0.5) * 0.45,
+      dist: 0.78 + seededNoise(seed + i * 6.6) * 0.32,
+      width: seededNoise(seed + i * 2.7),
+      height: seededNoise(seed + i * 3.9),
+    });
+  }
+
+  const crackAngles: number[] = [];
+  for (let i = 0; i < 12; i++) {
+    crackAngles.push((i / 12) * Math.PI * 2 + (seededNoise(seed + i * 4.2) - 0.5) * 0.45);
+  }
+
+  const layout: IceSpikesLayout = { spikes, rimShards, crackAngles };
+  iceSpikesLayoutCache.set(cacheKey, layout);
+
+  // Keep cache bounded for long sessions with many custom levels.
+  if (iceSpikesLayoutCache.size > 160) {
+    const oldestKey = iceSpikesLayoutCache.keys().next().value;
+    if (oldestKey) iceSpikesLayoutCache.delete(oldestKey);
+  }
+
+  return layout;
+}
+
+function getIceSpikesCycleState(seed: number, timeSeconds: number): IceSpikesCycleState {
+  const cycleDuration = 2.6;
+  const phaseOffset = ((seed * 0.071) % cycleDuration + cycleDuration) % cycleDuration;
+  const phase = (timeSeconds + phaseOffset) % cycleDuration;
+
+  // Telegraph -> shoot-up -> active -> retract -> dormant
+  if (phase < 0.45) {
+    const wobble = 0.08 + Math.sin((phase / 0.45) * Math.PI * 2) * 0.03;
+    return { extend: Math.max(0.04, wobble), active: false, burst: false };
+  }
+  if (phase < 0.68) {
+    const p = (phase - 0.45) / 0.23;
+    return { extend: 0.14 + p * 0.86, active: true, burst: true };
+  }
+  if (phase < 1.25) {
+    const p = (phase - 0.68) / 0.57;
+    return {
+      extend: 0.94 + Math.sin(p * Math.PI * 2) * 0.06,
+      active: true,
+      burst: false,
+    };
+  }
+  if (phase < 1.55) {
+    const p = (phase - 1.25) / 0.3;
+    return { extend: 1 - p * 0.92, active: true, burst: false };
+  }
+  return { extend: 0.05, active: false, burst: false };
+}
+
 // ============================================================================
 // MAIN HAZARD RENDER FUNCTION
 // ============================================================================
@@ -78,6 +189,7 @@ export function renderHazard(
       drawPoisonFogHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     case "lava_geyser":
+    // Legacy alias: kept for old custom level data.
     case "eruption_zone":
       drawLavaGeyserHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
@@ -109,8 +221,9 @@ export function renderHazard(
     case "void":
       drawSimpleVoidHazard(ctx, sRad, time, zoom);
       break;
+    case "ice_spikes":
     case "spikes":
-      drawSimpleSpikesHazard(ctx, sRad, time, zoom);
+      drawIceSpikesHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
     default:
       drawGenericHazard(ctx, sRad, time, zoom);
@@ -615,6 +728,217 @@ function drawIceSheetHazard(
 }
 
 // ============================================================================
+// ICE SPIKES HAZARD
+// ============================================================================
+
+function drawIceSpikesHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 47.3 + (pos.y || 0) * 21.9;
+  const cycle = getIceSpikesCycleState(hazSeed, time);
+  const layout = getIceSpikesLayout(pos);
+  const spikeIsoRatio = isoRatio * 0.95;
+
+  // 1. Frostbite field and displaced snow
+  const frostHalo = ctx.createRadialGradient(0, 0, sRad * 0.35, 0, 0, sRad * 1.5);
+  const burstBoost = cycle.burst ? 0.16 : cycle.active ? 0.08 : 0;
+  frostHalo.addColorStop(0, `rgba(185, 225, 255, ${0.28 + burstBoost})`);
+  frostHalo.addColorStop(0.5, `rgba(145, 195, 255, ${0.24 + burstBoost * 0.8})`);
+  frostHalo.addColorStop(0.85, `rgba(215, 240, 255, ${0.12 + burstBoost * 0.5})`);
+  frostHalo.addColorStop(1, "transparent");
+  ctx.fillStyle = frostHalo;
+  drawOrganicBlob(ctx, sRad * 1.35, sRad * 1.2 * spikeIsoRatio, hazSeed, 0.24);
+  ctx.fill();
+
+  // Chilled plate below spikes
+  const plateShadow = ctx.createRadialGradient(0, 8 * cameraZoom, 0, 0, 8 * cameraZoom, sRad * 1.05);
+  plateShadow.addColorStop(0, "rgba(45, 82, 124, 0.65)");
+  plateShadow.addColorStop(0.5, "rgba(35, 64, 102, 0.55)");
+  plateShadow.addColorStop(1, "rgba(20, 38, 62, 0.2)");
+  ctx.fillStyle = plateShadow;
+  ctx.save();
+  ctx.translate(0, 8 * cameraZoom);
+  drawOrganicBlob(ctx, sRad, sRad * 0.74 * spikeIsoRatio, hazSeed + 13, 0.18);
+  ctx.fill();
+  ctx.restore();
+
+  const plateTop = ctx.createRadialGradient(
+    -sRad * 0.25,
+    -sRad * 0.25 * spikeIsoRatio,
+    0,
+    0,
+    0,
+    sRad * 1.05
+  );
+  plateTop.addColorStop(0, `rgba(230, 248, 255, ${0.9 + cycle.extend * 0.08})`);
+  plateTop.addColorStop(0.35, `rgba(170, 214, 248, ${0.76 + cycle.extend * 0.1})`);
+  plateTop.addColorStop(0.7, "rgba(110, 170, 230, 0.68)");
+  plateTop.addColorStop(1, "rgba(75, 130, 195, 0.46)");
+  ctx.fillStyle = plateTop;
+  drawOrganicBlob(ctx, sRad * 0.92, sRad * 0.68 * spikeIsoRatio, hazSeed + 31, 0.16);
+  ctx.fill();
+
+  // Fracture network around spike roots
+  ctx.strokeStyle = "rgba(222, 245, 255, 0.58)";
+  ctx.lineWidth = 1.2 * cameraZoom;
+  for (let crack = 0; crack < layout.crackAngles.length; crack++) {
+    const crackAngle = layout.crackAngles[crack];
+    const crackLen = sRad * (0.22 + seededNoise(hazSeed + crack * 7.9) * 0.55);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    for (let segment = 1; segment <= 4; segment++) {
+      const progress = segment / 4;
+      const baseX = Math.cos(crackAngle) * crackLen * progress;
+      const baseY = Math.sin(crackAngle) * crackLen * progress * spikeIsoRatio;
+      const jag = (seededNoise(hazSeed + crack * 11.3 + segment * 3.1) - 0.5) * 10 * cameraZoom;
+      ctx.lineTo(
+        baseX + Math.cos(crackAngle + Math.PI / 2) * jag,
+        baseY + Math.sin(crackAngle + Math.PI / 2) * jag * spikeIsoRatio
+      );
+    }
+    ctx.stroke();
+  }
+
+  // 2. Chaotic spike field with depth sorting for stronger 3D read.
+  // Dynamic detail level keeps cost stable on lower zooms.
+  const detailScalar = cameraZoom >= 0.95 ? 1 : cameraZoom >= 0.7 ? 0.8 : 0.62;
+  const spikeCount = Math.max(10, Math.floor(layout.spikes.length * detailScalar));
+  const spikes = layout.spikes.slice(0, spikeCount);
+  spikes.sort((a, b) => Math.sin(a.angle) * a.dist - Math.sin(b.angle) * b.dist);
+  const extensionMultiplier = 0.14 + cycle.extend * 0.86;
+  const drawFacetLines = cameraZoom > 0.72 && cycle.extend > 0.2;
+
+  for (let i = 0; i < spikes.length; i++) {
+    const spike = spikes[i];
+    const dist = sRad * spike.dist;
+    const x = Math.cos(spike.angle) * dist;
+    const y = Math.sin(spike.angle) * dist * spikeIsoRatio;
+    const radialFalloff = 1 - Math.min(0.75, dist / (sRad * 1.05)) * 0.55;
+    const width = (5 + spike.width * 9) * cameraZoom;
+    const baseHeight = (28 + spike.height * 72) * cameraZoom * radialFalloff;
+    const height = baseHeight * extensionMultiplier;
+    const lean = (spike.lean - 0.5) * 14 * cameraZoom * (0.55 + cycle.extend * 0.45);
+    const shimmer = 0.94 + Math.sin(time * 1.9 + spike.phase * Math.PI * 2 + hazSeed * 0.1) * 0.08;
+
+    const tipX = x + lean;
+    const tipY = y - height;
+    const baseBackX = x + lean * 0.25;
+    const baseBackY = y - width * 0.75;
+
+    // Ground shadow for depth anchoring
+    ctx.fillStyle = "rgba(24, 44, 72, 0.3)";
+    ctx.beginPath();
+    ctx.ellipse(
+      x + lean * 0.4,
+      y + 8 * cameraZoom,
+      width * 1.3,
+      width * 0.5,
+      lean * 0.01,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    // Rear face
+    ctx.fillStyle = `rgba(95, 150, 215, ${0.7 * shimmer})`;
+    ctx.beginPath();
+    ctx.moveTo(baseBackX, baseBackY);
+    ctx.lineTo(x - width, y);
+    ctx.lineTo(tipX, tipY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Left/front darker face
+    ctx.fillStyle = `rgba(120, 178, 235, ${0.78 * shimmer})`;
+    ctx.beginPath();
+    ctx.moveTo(x - width, y);
+    ctx.lineTo(x - width * 0.45, y + width * 0.24);
+    ctx.lineTo(tipX, tipY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Right/front brighter face
+    ctx.fillStyle = `rgba(220, 246, 255, ${0.84 * shimmer})`;
+    ctx.beginPath();
+    ctx.moveTo(x + width, y);
+    ctx.lineTo(x + width * 0.4, y + width * 0.28);
+    ctx.lineTo(tipX, tipY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Base cap ties spike into plate
+    ctx.fillStyle = "rgba(170, 220, 248, 0.65)";
+    ctx.beginPath();
+    ctx.ellipse(x, y + 1.5 * cameraZoom, width * 0.95, width * 0.34, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (drawFacetLines) {
+      // Internal facet and edge shimmer
+      ctx.strokeStyle = "rgba(235, 250, 255, 0.55)";
+      ctx.lineWidth = 1.05 * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(x + width * 0.15, y - width * 0.08);
+      ctx.lineTo(tipX - lean * 0.12, tipY + height * 0.2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(120, 170, 225, 0.35)";
+      ctx.lineWidth = 0.9 * cameraZoom;
+      ctx.beginPath();
+      ctx.moveTo(x - width * 0.2, y);
+      ctx.lineTo(tipX - width * 0.12, tipY + height * 0.34);
+      ctx.stroke();
+    }
+  }
+
+  // 3. Jagged perimeter shards (lower profile, chaotic rim)
+  const shardCount = Math.max(10, Math.floor(layout.rimShards.length * detailScalar));
+  for (let i = 0; i < shardCount; i++) {
+    const shard = layout.rimShards[i];
+    const shardDist = sRad * shard.dist;
+    const sx = Math.cos(shard.angle) * shardDist;
+    const sy = Math.sin(shard.angle) * shardDist * spikeIsoRatio;
+    const sw = (2.8 + shard.width * 3.2) * cameraZoom;
+    const sh = (8 + shard.height * 11) * cameraZoom * (0.25 + cycle.extend * 0.75);
+    const tipX = sx + Math.cos(shard.angle) * sw * 0.8;
+    const tipY = sy - sh;
+
+    ctx.fillStyle = "rgba(190, 235, 255, 0.72)";
+    ctx.beginPath();
+    ctx.moveTo(sx - sw, sy);
+    ctx.lineTo(tipX, tipY);
+    ctx.lineTo(sx + sw, sy);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 4. Frost motes and glints for ambient motion
+  const moteCount = cameraZoom >= 0.95 ? 12 : cameraZoom >= 0.7 ? 8 : 5;
+  for (let mote = 0; mote < moteCount; mote++) {
+    const life = (time * 0.8 + mote * 0.37) % 2.2;
+    const phase = life / 2.2;
+    const angle = mote * 1.31 + hazSeed * 0.02;
+    const dist = sRad * (0.12 + (mote % 5) * 0.16) + Math.sin(time + mote) * sRad * 0.05;
+    const mx = Math.cos(angle + time * 0.26) * dist;
+    const my = Math.sin(angle + time * 0.26) * dist * spikeIsoRatio - phase * 22 * cameraZoom;
+    const size = (1.5 + (mote % 3)) * cameraZoom * (1 - phase * 0.65);
+
+    ctx.save();
+    ctx.shadowColor = "rgba(220, 245, 255, 0.9)";
+    ctx.shadowBlur = 8 * cameraZoom;
+    ctx.fillStyle = `rgba(225, 246, 255, ${0.72 * (1 - phase)})`;
+    ctx.beginPath();
+    ctx.arc(mx, my, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ============================================================================
 // QUICKSAND HAZARD
 // ============================================================================
 
@@ -1018,33 +1342,6 @@ function drawSimpleVoidHazard(ctx: CanvasRenderingContext2D, size: number, time:
     ctx.fill();
   }
   ctx.globalAlpha = 1;
-}
-
-function drawSimpleSpikesHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {
-  // Base platform
-  ctx.fillStyle = "#4a4a4a";
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Spikes
-  const spikeExtend = (Math.sin(time * 3) + 1) * 0.5;
-  const spikeHeight = 15 * zoom * spikeExtend;
-
-  ctx.fillStyle = "#808080";
-  for (let i = 0; i < 7; i++) {
-    const spikeX = (i - 3) * size * 0.25;
-    const spikeY = -spikeHeight;
-
-    if (spikeExtend > 0.1) {
-      ctx.beginPath();
-      ctx.moveTo(spikeX - 3 * zoom, 0);
-      ctx.lineTo(spikeX, spikeY);
-      ctx.lineTo(spikeX + 3 * zoom, 0);
-      ctx.closePath();
-      ctx.fill();
-    }
-  }
 }
 
 function drawGenericHazard(ctx: CanvasRenderingContext2D, size: number, time: number, zoom: number): void {

@@ -1,6 +1,7 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import type { TowerType, HeroType, SpellType } from "../types";
+import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
 import {
   Volume2,
   Music2,
@@ -32,9 +33,7 @@ export function lightenColor(color: string, amount: number): string {
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
-// =============================================================================
-// TOWER SPRITES - Matches actual game rendering
-// =============================================================================
+
 // =============================================================================
 // TOWER SPRITES - Matches actual game rendering
 // =============================================================================
@@ -45,22 +44,11 @@ export const TowerSprite: React.FC<{
   animated?: boolean;
 }> = ({ type, size = 48, level = 1, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    if (!animated) return;
-    const interval = setInterval(() => setTime((t) => t + 1), 50);
-    return () => clearInterval(interval);
-  }, [animated]);
-  useEffect(() => {
+  const renderTower = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     const cy = size / 2;
     // Unified scale - all towers fit in a consistent box
@@ -1656,7 +1644,10 @@ export const TowerSprite: React.FC<{
         break;
       }
     }
-  }, [type, size, level, time, animated]);
+  }, [type, size, level, animated]);
+
+  useSpriteTicker(animated, 50, renderTower);
+
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 function drawStar(
@@ -1695,22 +1686,11 @@ export const HeroSprite: React.FC<{
   animated?: boolean;
 }> = ({ type, size = 48, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    if (!animated) return;
-    const interval = setInterval(() => setTime((t) => t + 1), 50);
-    return () => clearInterval(interval);
-  }, [animated]);
-  useEffect(() => {
+  const renderHero = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     let cy = size / 2;
     const scale = size / 62;
@@ -4098,7 +4078,10 @@ export const HeroSprite: React.FC<{
         break;
       }
     }
-  }, [type, size, time, animated]);
+  }, [type, size, animated]);
+
+  useSpriteTicker(animated, 50, renderHero);
+
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 // =============================================================================
@@ -4110,22 +4093,11 @@ export const SpellSprite: React.FC<{
   animated?: boolean;
 }> = ({ type, size = 36, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    if (!animated) return;
-    const interval = setInterval(() => setTime((t) => t + 1), 30);
-    return () => clearInterval(interval);
-  }, [animated]);
-  useEffect(() => {
+  const renderSpell = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 40;
@@ -4891,7 +4863,10 @@ export const SpellSprite: React.FC<{
         break;
       }
     }
-  }, [type, size, time, animated]);
+  }, [type, size, animated]);
+
+  useSpriteTicker(animated, 30, renderSpell);
+
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 // =============================================================================
@@ -4981,22 +4956,11 @@ export const EnemySprite: React.FC<{
   animated?: boolean;
 }> = ({ type, size = 40, animated = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    if (!animated) return;
-    const interval = setInterval(() => setTime((t) => t + 1), 60);
-    return () => clearInterval(interval);
-  }, [animated]);
-  useEffect(() => {
+  const renderEnemy = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     let cy = size / 2;
     const scale = size / 45;
@@ -11753,7 +11717,10 @@ export const EnemySprite: React.FC<{
         break;
       }
     }
-  }, [type, size, time, animated]);
+  }, [type, size, animated]);
+
+  useSpriteTicker(animated, 60, renderEnemy);
+
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 // =============================================================================
@@ -11769,13 +11736,8 @@ export const RegionIcon: React.FC<{
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     const cy = size / 2;
     const scale = size / 60;
@@ -11892,21 +11854,11 @@ export const RegionIcon: React.FC<{
 // =============================================================================
 export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setTime((t) => t + 1), 50);
-    return () => clearInterval(interval);
-  }, []);
-  useEffect(() => {
+  const renderCastle = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, size);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     const cy = size / 2 + 20;
     const scale = size / 200;
@@ -12005,28 +11957,21 @@ export const AnimatedCastle: React.FC<{ size?: number }> = ({ size = 200 }) => {
     drawFlagFn(cx - 55 * scale, cy - 95 * scale, scale, "#ff6b35");
     drawFlagFn(cx + 55 * scale, cy - 95 * scale, scale, "#ff6b35");
     drawFlagFn(cx, cy - 145 * scale, scale * 1.3, "#ffd700");
-  }, [size, time]);
+  }, [size]);
+
+  useSpriteTicker(true, 50, renderCastle);
+
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 export const MarchingEnemies: React.FC<{ size?: number }> = ({
   size = 300,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setTime((t) => t + 1), 80);
-    return () => clearInterval(interval);
-  }, []);
-  useEffect(() => {
+  const renderMarchingEnemies = useCallback((time: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const ctx = setupSpriteCanvas(canvas, size, 60);
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = 60 * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, size, 60);
     const t = time * 0.15;
     const colors = ["#ff6600", "#4a90d9", "#f5f5dc", "#2a2a4e", "#f0f0f0"];
     for (let i = 0; i < 8; i++) {
@@ -12059,7 +12004,10 @@ export const MarchingEnemies: React.FC<{ size?: number }> = ({
       ctx.arc(x + 3, 17 - bounce, 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [size, time]);
+  }, [size]);
+
+  useSpriteTicker(true, 80, renderMarchingEnemies);
+
   return <canvas ref={canvasRef} style={{ width: size, height: 60 }} />;
 };
 

@@ -2111,6 +2111,7 @@ export const LEVEL_DATA: Record<
     difficulty: 1 | 2 | 3;
     startingPawPoints: number; // Starting resources for this level
     previewImage?: string;
+    heroSpawn?: { x: number; y: number };
     dualPath?: boolean; // Has two enemy spawn paths
     secondaryPath?: string; // Key for second path in MAP_PATHS
     specialTower?: {
@@ -2667,6 +2668,7 @@ export const LEVEL_DATA: Record<
       { type: "broken_wall", pos: { x: 8, y: 24 }, variant: 0 },
       { type: "bones", pos: { x: 26, y: 18 }, variant: 1 },
     ],
+    hazards: [{ type: "ice_spikes", pos: { x: 17.5, y: 18 }, radius: 1.5 }],
     previewImage: "/images/previews/glacier.png",
   },
   fortress: {
@@ -2803,7 +2805,10 @@ export const LEVEL_DATA: Record<
       { type: "frozen_soldier", pos: { x: 26, y: 12 }, variant: 1, size: 1 },
       { type: "bones", pos: { x: 22, y: 8 }, variant: 1 },
     ],
-    hazards: [{ type: "ice_sheet", pos: { x: 20, y: 7 }, radius: 2 }],
+    hazards: [
+      { type: "ice_sheet", pos: { x: 20, y: 7 }, radius: 2 },
+      { type: "ice_spikes", pos: { x: 28, y: 19 }, radius: 1.5 },
+    ],
     previewImage: "/images/previews/peak.png",
   },
   // =====================

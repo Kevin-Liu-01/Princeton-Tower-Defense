@@ -588,8 +588,29 @@ const HAZARD_INFO: Record<string, { name: string; icon: React.ReactNode; desc: s
     effect: "Enemies move 60% FASTER through this zone",
     effectColor: "text-cyan-400",
   },
+  ice_spikes: {
+    name: "Ice Spikes",
+    icon: <Mountain className="text-cyan-300" size={16} />,
+    desc: "Razor-sharp crystal growths burst from the frozen ground.",
+    effect: "Shoots up in cycles, damaging and slowing enemies",
+    effectColor: "text-cyan-300",
+  },
+  spikes: {
+    name: "Ice Spikes",
+    icon: <Mountain className="text-cyan-300" size={16} />,
+    desc: "Razor-sharp crystal growths burst from the frozen ground.",
+    effect: "Shoots up in cycles, damaging and slowing enemies",
+    effectColor: "text-cyan-300",
+  },
 
   lava_geyser: {
+    name: "Lava Geyser",
+    icon: <Flame className="text-orange-400" size={16} />,
+    desc: "Periodic eruptions of molten rock from deep underground.",
+    effect: "Random eruptions deal 5 fire damage to enemies (and troops!) nearby",
+    effectColor: "text-orange-400",
+  },
+  eruption_zone: {
     name: "Lava Geyser",
     icon: <Flame className="text-orange-400" size={16} />,
     desc: "Periodic eruptions of molten rock from deep underground.",

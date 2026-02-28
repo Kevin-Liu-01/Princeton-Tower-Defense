@@ -838,7 +838,9 @@ export interface MapDecoration {
 export type HazardType =
   | "quicksand"
   | "ice_sheet"
+  | "ice_spikes"
   | "lava_geyser"
+  // Deprecated alias kept for backwards compatibility with custom levels.
   | "eruption_zone"
   | "poison_fog"
   | "deep_water"
@@ -850,6 +852,7 @@ export type HazardType =
   | "fire"
   | "lightning"
   | "void"
+  // Legacy alias for ice_spikes.
   | "spikes";
 
 export interface MapHazard {
@@ -883,6 +886,7 @@ export interface LevelData {
   difficulty: 1 | 2 | 3;
   startingPawPoints: number;
   previewImage?: string;
+  heroSpawn?: GridPosition;
   dualPath?: boolean;
   secondaryPath?: string;
   specialTower?: SpecialTower;

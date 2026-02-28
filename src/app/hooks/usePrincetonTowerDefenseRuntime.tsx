@@ -144,6 +144,7 @@ import {
 } from "../components/ui/GameUI";
 // Hooks
 import { useGameProgress } from "../useLocalStorage";
+import { useCustomLevels } from "./useCustomLevels";
 
 export function usePrincetonTowerDefenseRuntime() {
   const isDefined = <T,>(value: T | null | undefined): value is T =>
@@ -158,6 +159,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Persistent progress (saved to localStorage)
   const { progress, updateLevelStars, updateLevelStats, unlockLevel } =
     useGameProgress();
+  const { customLevels, upsertCustomLevel, deleteCustomLevel } = useCustomLevels();
   const unlockedMaps = progress.unlockedMaps;
   const levelStars = progress.levelStars as LevelStars;
   const levelStats = progress.levelStats;
@@ -540,12 +542,15 @@ export function usePrincetonTowerDefenseRuntime() {
   useEffect(() => {
     if (gameState === "playing" && selectedHero && !hero) {
       const heroData = HERO_DATA[selectedHero];
+      const levelSettings = LEVEL_DATA[selectedMap];
       const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
       if (path.length === 0) return;
       // Spawn hero at the END of the path (where they defend)
-      // Use path.length - 3 to get a visible position near the exit
-      const endIndex = Math.max(0, path.length - 4);
-      const startPos = gridToWorldPath(path[endIndex]);
+      // Use map-specific hero spawn when available, otherwise default near the path exit.
+      const defaultRespawnNode = path[Math.max(0, path.length - 4)] ?? path[path.length - 1];
+      const heroSpawnNode = levelSettings?.heroSpawn ?? defaultRespawnNode;
+      if (!heroSpawnNode) return;
+      const startPos = gridToWorldPath(heroSpawnNode);
       setHero({
         id: "hero",
         type: selectedHero,
@@ -575,7 +580,6 @@ export function usePrincetonTowerDefenseRuntime() {
       setLevelStartTime(Date.now());
       setTimeSpent(0);
       // Set camera to level-specific settings
-      const levelSettings = LEVEL_DATA[selectedMap];
       if (levelSettings?.camera) {
         setCameraOffset(levelSettings.camera.offset);
         setCameraZoom(levelSettings.camera.zoom);
@@ -1527,11 +1531,12 @@ export function usePrincetonTowerDefenseRuntime() {
           if (!prev) return null;
           const newTimer = prev.respawnTimer - deltaTime;
           if (newTimer <= 0) {
+            const levelSettings = LEVEL_DATA[selectedMap];
             const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
             if (path.length === 0) return { ...prev, respawnTimer: 0 };
             // Respawn at end of path (same as initial spawn)
-            const endIndex = Math.max(0, path.length - 4);
-            const respawnNode = path[endIndex] ?? path[path.length - 1];
+            const defaultRespawnNode = path[Math.max(0, path.length - 4)] ?? path[path.length - 1];
+            const respawnNode = levelSettings?.heroSpawn ?? defaultRespawnNode;
             if (!respawnNode) return { ...prev, respawnTimer: 0 };
             const startPos = gridToWorldPath(respawnNode);
             return {
@@ -8547,6 +8552,9 @@ export function usePrincetonTowerDefenseRuntime() {
         unlockedMaps={unlockedMaps}
         levelStars={levelStars}
         levelStats={levelStats}
+        customLevels={customLevels}
+        onSaveCustomLevel={upsertCustomLevel}
+        onDeleteCustomLevel={deleteCustomLevel}
         gameState={gameState}
       />
     );
