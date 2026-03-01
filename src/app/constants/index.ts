@@ -1643,14 +1643,14 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
     name: "Meteor Shower",
     cost: 50,
     cooldown: 15000,
-    desc: "Rains 10 meteors dealing 50 AoE damage each, burning enemies for 4s",
+    desc: "Rains 10 meteors dealing 80 AoE damage each, burning enemies for 4s",
     icon: "☄️",
   },
   lightning: {
     name: "Chain Lightning",
     cost: 40,
     cooldown: 12000,
-    desc: "Chains to 5 enemies, 600 total damage with stun",
+    desc: "Chains to 8 enemies, 900 total damage with stun",
     icon: "⚡",
   },
   freeze: {
@@ -2237,7 +2237,7 @@ export const LEVEL_DATA: Record<
     region: "grassland",
     theme: "grassland",
     difficulty: 3,
-    startingPawPoints: 500, // Hard level with beacon - need more towers
+    startingPawPoints: 5000, // Hard level with beacon - need more towers
     specialTower: {
       pos: { x: 16, y: 8.5 },
       type: "beacon",

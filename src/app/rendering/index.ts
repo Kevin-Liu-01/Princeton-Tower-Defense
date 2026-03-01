@@ -1108,7 +1108,7 @@ export function renderEffect(
     }
 
     case "lightning_bolt": {
-      // Lightning strike from sky
+      // Lightning strike from sky - dramatic and grand
       const strikeProgress = progress;
       const targetScreen = effect.targetPos
         ? worldToScreen(
@@ -1121,67 +1121,116 @@ export function renderEffect(
           )
         : screenPos;
 
-      // Sky flash
-      if (strikeProgress < 0.3) {
-        ctx.fillStyle = `rgba(200, 220, 255, ${(0.3 - strikeProgress) * 0.3})`;
+      // Sky flash - brighter and longer
+      if (strikeProgress < 0.4) {
+        const flashAlpha = (0.4 - strikeProgress) * 0.5;
+        ctx.fillStyle = `rgba(180, 200, 255, ${flashAlpha})`;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
       }
 
-      // Lightning bolt with branching
       ctx.save();
-      ctx.strokeStyle = `rgba(200, 220, 255, ${alpha})`;
-      ctx.lineWidth = 4 * zoom;
-      ctx.shadowColor = "#88aaff";
-      ctx.shadowBlur = 25 * zoom;
       ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
-      const startY = targetScreen.y - 400 * zoom;
-      const segments = 12;
+      const startY = targetScreen.y - 700 * zoom;
+      const segments = 20;
 
-      // Main bolt
-      ctx.beginPath();
-      ctx.moveTo(targetScreen.x, startY);
-
+      // Build main bolt path with stored jitter points
+      const boltPoints: { x: number; y: number }[] = [{ x: targetScreen.x, y: startY }];
       for (let i = 1; i <= segments; i++) {
         const t = i / segments;
         const baseY = startY + (targetScreen.y - startY) * t;
-        const jitter = (1 - t) * 30 * zoom * (Math.random() - 0.5);
-        const x = targetScreen.x + jitter;
-        ctx.lineTo(x, baseY);
-
-        // Branch lightning
-        if (i > 2 && i < segments - 2 && Math.random() > 0.6) {
-          ctx.moveTo(x, baseY);
-          const branchAngle = (Math.random() - 0.5) * Math.PI * 0.5;
-          const branchLen = 40 * zoom * Math.random();
-          ctx.lineTo(
-            x + Math.cos(branchAngle) * branchLen,
-            baseY + Math.sin(branchAngle) * branchLen * 0.3,
-          );
-          ctx.moveTo(x, baseY);
-        }
+        const jitterScale = (1 - t * 0.7) * 45 * zoom;
+        const x = targetScreen.x + (Math.random() - 0.5) * jitterScale;
+        boltPoints.push({ x, y: baseY });
       }
-      ctx.lineTo(targetScreen.x, targetScreen.y);
+      boltPoints.push({ x: targetScreen.x, y: targetScreen.y });
+
+      // Outer glow layer (wide, soft)
+      ctx.strokeStyle = `rgba(80, 120, 255, ${alpha * 0.25})`;
+      ctx.lineWidth = 16 * zoom;
+      ctx.shadowColor = "#6688ff";
+      ctx.shadowBlur = 60 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
+      for (let i = 1; i < boltPoints.length; i++) {
+        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
+      }
       ctx.stroke();
 
-      // Impact glow
+      // Mid glow layer
+      ctx.strokeStyle = `rgba(150, 190, 255, ${alpha * 0.6})`;
+      ctx.lineWidth = 8 * zoom;
+      ctx.shadowColor = "#aaccff";
+      ctx.shadowBlur = 35 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
+      for (let i = 1; i < boltPoints.length; i++) {
+        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
+      }
+      ctx.stroke();
+
+      // Bright core
+      ctx.strokeStyle = `rgba(220, 240, 255, ${alpha})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 15 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
+      for (let i = 1; i < boltPoints.length; i++) {
+        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
+      }
+      ctx.stroke();
+
+      // Branch lightning - more frequent and longer
+      ctx.strokeStyle = `rgba(170, 200, 255, ${alpha * 0.7})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.shadowColor = "#88aaff";
+      ctx.shadowBlur = 20 * zoom;
+      for (let i = 3; i < boltPoints.length - 3; i++) {
+        if (Math.random() > 0.35) {
+          const bp = boltPoints[i];
+          ctx.beginPath();
+          ctx.moveTo(bp.x, bp.y);
+          const branchAngle = (Math.random() - 0.5) * Math.PI * 0.6;
+          const branchLen = (50 + Math.random() * 60) * zoom;
+          const bx = bp.x + Math.cos(branchAngle) * branchLen;
+          const by = bp.y + Math.abs(Math.sin(branchAngle)) * branchLen * 0.4;
+          ctx.lineTo(bx, by);
+
+          // Sub-branches for extra detail
+          if (Math.random() > 0.5) {
+            const subAngle = branchAngle + (Math.random() - 0.5) * 0.8;
+            const subLen = branchLen * 0.5;
+            ctx.moveTo(bx, by);
+            ctx.lineTo(
+              bx + Math.cos(subAngle) * subLen,
+              by + Math.abs(Math.sin(subAngle)) * subLen * 0.3,
+            );
+          }
+          ctx.stroke();
+        }
+      }
+
+      // Impact glow - larger and more dramatic
       const impactGrad = ctx.createRadialGradient(
         targetScreen.x,
         targetScreen.y,
         0,
         targetScreen.x,
         targetScreen.y,
-        50 * zoom,
+        90 * zoom,
       );
-      impactGrad.addColorStop(0, `rgba(200, 220, 255, ${alpha})`);
-      impactGrad.addColorStop(0.3, `rgba(100, 150, 255, ${alpha * 0.6})`);
+      impactGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+      impactGrad.addColorStop(0.15, `rgba(200, 220, 255, ${alpha * 0.9})`);
+      impactGrad.addColorStop(0.4, `rgba(100, 150, 255, ${alpha * 0.5})`);
       impactGrad.addColorStop(1, `rgba(50, 80, 200, 0)`);
+      ctx.shadowBlur = 0;
       ctx.fillStyle = impactGrad;
       ctx.beginPath();
-      ctx.arc(targetScreen.x, targetScreen.y, 40 * zoom, 0, Math.PI * 2);
+      ctx.arc(targetScreen.x, targetScreen.y, 80 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.shadowBlur = 0;
       ctx.restore();
       break;
     }

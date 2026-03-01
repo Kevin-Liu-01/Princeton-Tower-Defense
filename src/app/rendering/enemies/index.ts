@@ -9222,13 +9222,13 @@ function drawHarpyEnemy(
 
   // === LAYER 1: WIND CURRENTS / AERIAL AURA ===
   // Swirling wind trails
-  ctx.strokeStyle = `rgba(251, 146, 60, ${windIntensity * 0.3})`;
+  ctx.strokeStyle = `rgba(167, 139, 250, ${windIntensity * 0.3})`;
   ctx.lineWidth = 2 * zoom;
   for (let w = 0; w < 4; w++) {
     const windPhase = (time * 1.5 + w * 0.5) % 2;
     const windY = y + size * 0.3 - windPhase * size * 0.6;
     const windAlpha = windPhase < 1 ? windPhase : 2 - windPhase;
-    ctx.strokeStyle = `rgba(251, 146, 60, ${windAlpha * 0.25})`;
+    ctx.strokeStyle = `rgba(167, 139, 250, ${windAlpha * 0.25})`;
     ctx.beginPath();
     ctx.moveTo(x - size * 0.6 + Math.sin(time * 3 + w) * size * 0.2, windY);
     ctx.quadraticCurveTo(
@@ -9251,7 +9251,7 @@ function drawHarpyEnemy(
     ctx.save();
     ctx.translate(featherX, featherY);
     ctx.rotate(featherRot);
-    ctx.fillStyle = `rgba(249, 115, 22, ${featherAlpha})`;
+    ctx.fillStyle = `rgba(139, 92, 246, ${featherAlpha})`;
     ctx.beginPath();
     ctx.ellipse(0, 0, size * 0.015, size * 0.04, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -9265,10 +9265,10 @@ function drawHarpyEnemy(
 
   // Wing base gradient
   const leftWingGrad = ctx.createLinearGradient(0, 0, -size * 0.9, -size * 0.2);
-  leftWingGrad.addColorStop(0, "#f97316");
-  leftWingGrad.addColorStop(0.3, "#ea580c");
-  leftWingGrad.addColorStop(0.6, "#c2410c");
-  leftWingGrad.addColorStop(1, "#7c2d12");
+  leftWingGrad.addColorStop(0, "#8b5cf6");
+  leftWingGrad.addColorStop(0.3, "#7c3aed");
+  leftWingGrad.addColorStop(0.6, "#6d28d9");
+  leftWingGrad.addColorStop(1, "#4c1d95");
   ctx.fillStyle = leftWingGrad;
 
   // Detailed wing shape with multiple feather sections
@@ -9299,7 +9299,7 @@ function drawHarpyEnemy(
   ctx.fill();
 
   // Wing bone structure
-  ctx.strokeStyle = "#9a3412";
+  ctx.strokeStyle = "#5b21b6";
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -9319,7 +9319,7 @@ function drawHarpyEnemy(
   ctx.stroke();
 
   // Feather detail lines
-  ctx.strokeStyle = "rgba(234, 88, 12, 0.5)";
+  ctx.strokeStyle = "rgba(124, 58, 237, 0.5)";
   ctx.lineWidth = 1 * zoom;
   for (let i = 0; i < 8; i++) {
     ctx.beginPath();
@@ -9329,7 +9329,7 @@ function drawHarpyEnemy(
   }
 
   // Iridescent highlights on feathers
-  ctx.fillStyle = `rgba(254, 215, 170, ${0.3 + featherRuffle * 0.2})`;
+  ctx.fillStyle = `rgba(196, 181, 253, ${0.3 + featherRuffle * 0.2})`;
   ctx.beginPath();
   ctx.ellipse(
     -size * 0.5,
@@ -9362,10 +9362,10 @@ function drawHarpyEnemy(
 
   // Wing gradient (mirrored)
   const rightWingGrad = ctx.createLinearGradient(0, 0, size * 0.9, -size * 0.2);
-  rightWingGrad.addColorStop(0, "#f97316");
-  rightWingGrad.addColorStop(0.3, "#ea580c");
-  rightWingGrad.addColorStop(0.6, "#c2410c");
-  rightWingGrad.addColorStop(1, "#7c2d12");
+  rightWingGrad.addColorStop(0, "#8b5cf6");
+  rightWingGrad.addColorStop(0.3, "#7c3aed");
+  rightWingGrad.addColorStop(0.6, "#6d28d9");
+  rightWingGrad.addColorStop(1, "#4c1d95");
   ctx.fillStyle = rightWingGrad;
 
   ctx.beginPath();
@@ -9392,7 +9392,7 @@ function drawHarpyEnemy(
   ctx.fill();
 
   // Wing bones
-  ctx.strokeStyle = "#9a3412";
+  ctx.strokeStyle = "#5b21b6";
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -9411,7 +9411,7 @@ function drawHarpyEnemy(
   ctx.stroke();
 
   // Feather details
-  ctx.strokeStyle = "rgba(234, 88, 12, 0.5)";
+  ctx.strokeStyle = "rgba(124, 58, 237, 0.5)";
   ctx.lineWidth = 1 * zoom;
   for (let i = 0; i < 8; i++) {
     ctx.beginPath();
@@ -9421,7 +9421,7 @@ function drawHarpyEnemy(
   }
 
   // Iridescent highlights
-  ctx.fillStyle = `rgba(254, 215, 170, ${0.3 + featherRuffle * 0.2})`;
+  ctx.fillStyle = `rgba(196, 181, 253, ${0.3 + featherRuffle * 0.2})`;
   ctx.beginPath();
   ctx.ellipse(
     size * 0.5,
@@ -9446,10 +9446,10 @@ function drawHarpyEnemy(
     y + size * 0.1 + swoop,
     size * 0.35,
   );
-  bodyGrad.addColorStop(0, "#fb923c");
-  bodyGrad.addColorStop(0.4, "#f97316");
-  bodyGrad.addColorStop(0.7, "#ea580c");
-  bodyGrad.addColorStop(1, "#c2410c");
+  bodyGrad.addColorStop(0, "#a78bfa");
+  bodyGrad.addColorStop(0.4, "#8b5cf6");
+  bodyGrad.addColorStop(0.7, "#7c3aed");
+  bodyGrad.addColorStop(1, "#6d28d9");
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(
@@ -9464,7 +9464,7 @@ function drawHarpyEnemy(
   ctx.fill();
 
   // Body feather texture
-  ctx.strokeStyle = "rgba(154, 52, 18, 0.4)";
+  ctx.strokeStyle = "rgba(91, 33, 182, 0.4)";
   ctx.lineWidth = 1 * zoom;
   for (let row = 0; row < 4; row++) {
     for (let col = 0; col < 3; col++) {
@@ -9485,9 +9485,9 @@ function drawHarpyEnemy(
     y + size * 0.05 + swoop,
     size * 0.18,
   );
-  chestGrad.addColorStop(0, "#fff7ed");
-  chestGrad.addColorStop(0.5, "#ffedd5");
-  chestGrad.addColorStop(1, "#fed7aa");
+  chestGrad.addColorStop(0, "#f5f3ff");
+  chestGrad.addColorStop(0.5, "#ede9fe");
+  chestGrad.addColorStop(1, "#ddd6fe");
   ctx.fillStyle = chestGrad;
   ctx.beginPath();
   ctx.ellipse(
@@ -9502,7 +9502,7 @@ function drawHarpyEnemy(
   ctx.fill();
 
   // Chest feather details
-  ctx.strokeStyle = "rgba(249, 115, 22, 0.25)";
+  ctx.strokeStyle = "rgba(139, 92, 246, 0.25)";
   ctx.lineWidth = 1 * zoom;
   for (let cf = 0; cf < 5; cf++) {
     ctx.beginPath();
@@ -9519,7 +9519,7 @@ function drawHarpyEnemy(
 
   // === LAYER 6: FIERCE HEAD AND FACE ===
   // Neck feathers
-  ctx.fillStyle = "#f97316";
+  ctx.fillStyle = "#8b5cf6";
   ctx.beginPath();
   ctx.ellipse(
     x,
@@ -9561,7 +9561,7 @@ function drawHarpyEnemy(
   ctx.stroke();
 
   // Crown feathers (elaborate crest)
-  const crownColors = ["#ea580c", "#f97316", "#fb923c", "#ea580c", "#c2410c"];
+  const crownColors = ["#7c3aed", "#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9"];
   for (let c = 0; c < 5; c++) {
     const crownAngle = -Math.PI * 0.7 + c * Math.PI * 0.1;
     const crownLen =
@@ -9860,7 +9860,7 @@ function drawHarpyEnemy(
   // === LAYER 8: ATTACK DIVE EFFECT ===
   if (isAttacking) {
     // Speed lines
-    ctx.strokeStyle = `rgba(249, 115, 22, ${attackIntensity * 0.5})`;
+    ctx.strokeStyle = `rgba(139, 92, 246, ${attackIntensity * 0.5})`;
     ctx.lineWidth = 2 * zoom;
     for (let sl = 0; sl < 5; sl++) {
       const slX = x - size * 0.3 + sl * size * 0.15;

@@ -415,10 +415,10 @@ function drawPalmTree(
       sw,
     );
   }
-  // Front fronds (6, half sway)
+  // Front fronds (6, static)
   for (let i = 0; i < 6; i++) {
     const f = FRONT_FROND_LAYOUT[i];
-    const sw = i % 2 === 1 ? Math.sin(time * 2 + f.phase) * 3 * s : 0;
+    const sw = 0;
     drawPalmFrond(
       ctx,
       crownX,

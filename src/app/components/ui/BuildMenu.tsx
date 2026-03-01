@@ -62,7 +62,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
     <OrnateFrame
       className="border-t-2 border-amber-700/50 shadow-xl backdrop-blur-sm"
       cornerSize={28}
-      showBorders={true}
+      showTopBottomBorders={false}
     >
       <div
         className="relative z-20"

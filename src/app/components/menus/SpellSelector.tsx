@@ -77,7 +77,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
     {(() => {
       const spellLabels: Record<string, { name: string; brief: string; nameColor: string; briefColor: string; borderColor: string; cost: number; cooldown: number }> = {
         fireball: { name: "Meteor Shower", brief: "Rain fiery meteors, burning all enemies in area", nameColor: "text-orange-300", briefColor: "text-orange-400/50", borderColor: "rgba(234,88,12,0.4)", cost: 50, cooldown: 15 },
-        lightning: { name: "Chain Lightning", brief: "Chain lightning stuns and shocks five enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)", cost: 40, cooldown: 12 },
+        lightning: { name: "Chain Lightning", brief: "Chain lightning stuns and shocks eight enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)", cost: 40, cooldown: 12 },
         freeze: { name: "Arctic Blast", brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)", cost: 60, cooldown: 20 },
         payday: { name: "Gold Rush", brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)", cost: 0, cooldown: 30 },
         reinforcements: { name: "Knight Squad", brief: "Summon three armored knights to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)", cost: 75, cooldown: 25 },
@@ -212,24 +212,24 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
         headerBg: "linear-gradient(90deg, rgba(180,80,20,0.2), rgba(120,40,10,0.1), transparent)",
         icon: <Flame size={16} className="text-orange-400" />, accentText: "text-orange-300",
         stats: [
-          { label: "Damage", value: "50×10", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Swords size={10} className="text-red-400" /> },
+          { label: "Damage", value: "80×10", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Swords size={10} className="text-red-400" /> },
           { label: "Radius", value: "150", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Target size={10} className="text-orange-400" /> },
           { label: "Burn", value: "4s", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Flame size={10} className="text-amber-400" /> },
         ],
         effectBg: "rgba(124,45,18,0.15)", effectLabel: "text-orange-500/80", effectText: "text-orange-200/90",
-        effect: "Rains 10 meteors in an area. Each deals 50 AoE damage with falloff and sets enemies ablaze for 4 seconds.",
+        effect: "Rains 10 meteors in an area. Each deals 80 AoE damage with falloff and sets enemies ablaze for 4 seconds.",
       },
       lightning: {
         panelBg: "rgba(36,30,10,0.99)", panelBorder: "rgba(234,179,8,0.5)",
         headerBg: "linear-gradient(90deg, rgba(180,140,20,0.2), rgba(40,120,140,0.08), transparent)",
         icon: <Zap size={16} className="text-yellow-400" />, accentText: "text-yellow-300",
         stats: [
-          { label: "Total DMG", value: "600", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Swords size={10} className="text-yellow-400" /> },
-          { label: "Chains", value: "5", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Zap size={10} className="text-cyan-400" /> },
+          { label: "Total DMG", value: "900", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Swords size={10} className="text-yellow-400" /> },
+          { label: "Chains", value: "8", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Zap size={10} className="text-cyan-400" /> },
           { label: "Stun", value: "0.5s", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Timer size={10} className="text-blue-400" /> },
         ],
         effectBg: "rgba(113,63,18,0.15)", effectLabel: "text-yellow-500/80", effectText: "text-yellow-200/90",
-        effect: "Lightning bolt chains between up to 5 enemies, splitting 600 total damage. Each hit stuns for 0.5 seconds.",
+        effect: "Lightning bolt chains between up to 8 enemies, splitting 900 total damage. Each hit stuns for 0.5 seconds.",
       },
       freeze: {
         panelBg: "rgba(10,28,40,0.99)", panelBorder: "rgba(6,182,212,0.5)",

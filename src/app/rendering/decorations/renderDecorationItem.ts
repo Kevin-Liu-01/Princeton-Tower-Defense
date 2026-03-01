@@ -6702,7 +6702,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const px = screenPos.x;
       const py = screenPos.y;
       const palmVariant = variant || 0;
-      const pSway = Math.sin(decorTime * 1.5 + dec.x * 0.01) * 2 * s;
+      const pSway = 0;
       const pSeed = dec.x || 0;
       const pAOff = (((pSeed * 7.3 + 13) % 100) / 100) * 0.6 - 0.3;
 
@@ -6858,10 +6858,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           f.l * s,
           fPal.back[fi],
           s,
-          fi % 2 === 1 ? Math.sin(decorTime * 1.6 + f.p) * 2 * s : 0,
+          0,
         );
       }
-      // Front fronds (6, half sway)
+      // Front fronds (6, static)
       const _ftL = [
         { a: -2.3, l: 42, p: 0.5 },
         { a: -1.3, l: 40, p: 1.8 },
@@ -6880,7 +6880,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           f.l * s,
           fPal.front[fi],
           s,
-          fi % 2 === 1 ? Math.sin(decorTime * 2 + f.p) * 3 * s : 0,
+          0,
         );
       }
 

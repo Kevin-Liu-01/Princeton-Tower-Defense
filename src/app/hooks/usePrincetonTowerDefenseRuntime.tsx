@@ -7216,13 +7216,14 @@ export function usePrincetonTowerDefenseRuntime() {
             blockedPositions
           )
         ) {
+          const defaultRotation = towerToPlace.type === "cannon" ? Math.PI * 0.75 : 0;
           const newTower: Tower = {
             id: generateId("tower"),
             type: towerToPlace.type,
             pos: gridPos,
             level: 1,
             lastAttack: 0,
-            rotation: 0,
+            rotation: defaultRotation,
             spawnRange:
               towerToPlace.type === "station"
                 ? TOWER_DATA.station.spawnRange
@@ -7990,10 +7991,10 @@ export function usePrincetonTowerDefenseRuntime() {
           // METEOR SHOWER - Rains down 10 meteors in random locations, burning enemies
           if (enemies.length > 0) {
             const meteorCount = 10;
-            const damagePerMeteor = 50;
+            const damagePerMeteor = 80;
             const impactRadius = 100;
             const burnDuration = 4000; // 4 seconds burn
-            const burnDamage = 20; // damage per second while burning
+            const burnDamage = 30; // damage per second while burning
             const fallDuration = 1200; // How long meteor takes to fall (ms) - longer for dramatic effect
 
             // Generate random target positions around enemies
@@ -8089,10 +8090,10 @@ export function usePrincetonTowerDefenseRuntime() {
         }
 
         case "lightning": {
-          // ENHANCED LIGHTNING - Strikes 5 enemies one by one with chain effect
+          // ENHANCED LIGHTNING - Strikes 8 enemies one by one with chain effect
           if (enemies.length > 0) {
-            const totalDamage = 600;
-            const targetCount = Math.min(5, enemies.length);
+            const totalDamage = 900;
+            const targetCount = Math.min(8, enemies.length);
             const damagePerTarget = Math.floor(totalDamage / targetCount);
             const shuffled = [...enemies].sort(() => Math.random() - 0.5);
             const targets = shuffled.slice(0, targetCount);
@@ -8107,11 +8108,11 @@ export function usePrincetonTowerDefenseRuntime() {
                   ...ef,
                   {
                     id: generateId("lightning_bolt"),
-                    pos: { x: targetPos.x, y: targetPos.y - 400 },
+                    pos: { x: targetPos.x, y: targetPos.y - 700 },
                     targetPos: targetPos,
                     type: "lightning_bolt",
                     progress: 0,
-                    size: 80,
+                    size: 120,
                     strikeIndex: index,
                   },
                 ]);
@@ -8147,8 +8148,11 @@ export function usePrincetonTowerDefenseRuntime() {
           break;
         }
 
-        case "freeze":
-          setEnemies((prev) => prev.map((e) => ({ ...e, frozen: true })));
+        case "freeze": {
+          const freezeUntil = Date.now() + 3000;
+          setEnemies((prev) =>
+            prev.map((e) => ({ ...e, frozen: true, stunUntil: freezeUntil }))
+          );
           // Create freeze wave effect
           if (enemies.length > 0) {
             const centerEnemy = enemies[Math.floor(enemies.length / 2)];
@@ -8168,10 +8172,8 @@ export function usePrincetonTowerDefenseRuntime() {
             const pos = getEnemyPosWithPath(e, selectedMap);
             addParticles(pos, "ice", 8);
           });
-          setTimeout(() => {
-            setEnemies((prev) => prev.map((e) => ({ ...e, frozen: false })));
-          }, 3000);
           break;
+        }
 
         case "payday": {
           // ENHANCED PAYDAY - Creates money aura around all enemies for duration

@@ -4942,7 +4942,7 @@ export const ENEMY_COLORS: Record<string, string> = {
   warlock: "#7c3aed",
   crossbowman: "#57534e",
   hexer: "#ec4899",
-  harpy: "#ea580c",
+  harpy: "#7c3aed",
   wyvern: "#22c55e",
   specter: "#06b6d4",
   berserker: "#b91c1c",
@@ -8051,7 +8051,7 @@ export const EnemySprite: React.FC<{
         break;
       }
       case "harpy": {
-        // STORM PHOENIX HARPY - Majestic terror of the skies with ember feathers
+        // STORM HARPY - Majestic terror of the skies with iridescent plumage
         const wingFlap = Math.sin(t * 8) * 0.5;
         const flamePulse = 0.6 + Math.sin(t * 4) * 0.4;
         const screechPulse = Math.sin(t * 5) * 0.15;
@@ -8069,11 +8069,11 @@ export const EnemySprite: React.FC<{
             const emberAlpha = Math.max(0, 0.8 - emberAge * 0.3);
             const emberSize = (1.5 - emberAge * 0.4) * scale;
             if (emberAlpha > 0) {
-              ctx.fillStyle = `rgba(251, 191, 36, ${emberAlpha * 0.5})`;
+              ctx.fillStyle = `rgba(167, 139, 250, ${emberAlpha * 0.5})`;
               ctx.beginPath();
               ctx.arc(emberX, emberY, emberSize * 2, 0, Math.PI * 2);
               ctx.fill();
-              ctx.fillStyle = `rgba(251, 191, 36, ${emberAlpha})`;
+              ctx.fillStyle = `rgba(167, 139, 250, ${emberAlpha})`;
               ctx.beginPath();
               ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
               ctx.fill();
@@ -8083,8 +8083,8 @@ export const EnemySprite: React.FC<{
 
         // Multi-layer flame aura
         const outerAura = ctx.createRadialGradient(cx, cy - 2 * scale, 0, cx, cy - 2 * scale, 22 * scale);
-        outerAura.addColorStop(0, `rgba(251, 146, 60, ${flamePulse * 0.15})`);
-        outerAura.addColorStop(0.5, `rgba(234, 88, 12, ${flamePulse * 0.08})`);
+        outerAura.addColorStop(0, `rgba(167, 139, 250, ${flamePulse * 0.15})`);
+        outerAura.addColorStop(0.5, `rgba(124, 58, 237, ${flamePulse * 0.08})`);
         outerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.fillStyle = outerAura;
         ctx.beginPath();
@@ -8092,8 +8092,8 @@ export const EnemySprite: React.FC<{
         ctx.fill();
 
         const innerAura = ctx.createRadialGradient(cx, cy - 4 * scale, 0, cx, cy - 4 * scale, 14 * scale);
-        innerAura.addColorStop(0, `rgba(249, 115, 22, ${flamePulse * 0.3})`);
-        innerAura.addColorStop(0.6, `rgba(234, 88, 12, ${flamePulse * 0.12})`);
+        innerAura.addColorStop(0, `rgba(139, 92, 246, ${flamePulse * 0.3})`);
+        innerAura.addColorStop(0.6, `rgba(124, 58, 237, ${flamePulse * 0.12})`);
         innerAura.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.fillStyle = innerAura;
         ctx.beginPath();
@@ -8111,10 +8111,10 @@ export const EnemySprite: React.FC<{
           ctx.rotate(tailAngle);
           // Feather base
           const tailGrad = ctx.createLinearGradient(0, 0, 0, tailLen);
-          tailGrad.addColorStop(0, "#c2410c");
-          tailGrad.addColorStop(0.4, "#ea580c");
-          tailGrad.addColorStop(0.7, "#f97316");
-          tailGrad.addColorStop(1, "#fbbf24");
+          tailGrad.addColorStop(0, "#6d28d9");
+          tailGrad.addColorStop(0.4, "#7c3aed");
+          tailGrad.addColorStop(0.7, "#8b5cf6");
+          tailGrad.addColorStop(1, "#a78bfa");
           ctx.fillStyle = tailGrad;
           ctx.beginPath();
           ctx.moveTo(-1.5 * scale, 0);
@@ -8123,14 +8123,14 @@ export const EnemySprite: React.FC<{
           ctx.quadraticCurveTo(2 * scale, tailLen * 0.5, 1.5 * scale, 0);
           ctx.fill();
           // Feather center line
-          ctx.strokeStyle = "#7c2d12";
+          ctx.strokeStyle = "#4c1d95";
           ctx.lineWidth = 0.5 * scale;
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(0, tailLen * 0.9);
           ctx.stroke();
-          // Flame tip
-          ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.8})`;
+          // Energy tip
+          ctx.fillStyle = `rgba(196, 181, 253, ${flamePulse * 0.8})`;
           ctx.beginPath();
           ctx.moveTo(-1 * scale, tailLen - 2 * scale);
           ctx.lineTo(0, tailLen + 3 * scale + Math.sin(t * 6 + i) * scale);
@@ -8145,7 +8145,7 @@ export const EnemySprite: React.FC<{
         ctx.translate(cx - 6 * scale, cy - 4 * scale - bounce);
         ctx.rotate(-0.65 - wingFlap);
         // Wing arm/bone structure
-        ctx.fillStyle = "#9a3412";
+        ctx.fillStyle = "#5b21b6";
         ctx.beginPath();
         ctx.moveTo(0, -1 * scale);
         ctx.lineTo(-5 * scale, -3 * scale);
@@ -8163,10 +8163,10 @@ export const EnemySprite: React.FC<{
           ctx.translate(featherStart, 0);
           ctx.rotate(featherAngle);
           const featherGrad = ctx.createLinearGradient(0, 0, 0, featherLen);
-          featherGrad.addColorStop(0, "#c2410c");
-          featherGrad.addColorStop(0.5, "#ea580c");
-          featherGrad.addColorStop(0.8, "#f97316");
-          featherGrad.addColorStop(1, "#fbbf24");
+          featherGrad.addColorStop(0, "#6d28d9");
+          featherGrad.addColorStop(0.5, "#7c3aed");
+          featherGrad.addColorStop(0.8, "#8b5cf6");
+          featherGrad.addColorStop(1, "#a78bfa");
           ctx.fillStyle = featherGrad;
           ctx.beginPath();
           ctx.moveTo(-1.2 * scale, 0);
@@ -8174,14 +8174,14 @@ export const EnemySprite: React.FC<{
           ctx.quadraticCurveTo(1.5 * scale, featherLen * 0.6, 1.2 * scale, 0);
           ctx.fill();
           // Feather barbs
-          ctx.strokeStyle = "#7c2d12";
+          ctx.strokeStyle = "#4c1d95";
           ctx.lineWidth = 0.3 * scale;
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(0, featherLen * 0.85);
           ctx.stroke();
-          // Flame tip on feather
-          ctx.fillStyle = `rgba(253, 224, 71, ${flamePulse * 0.9})`;
+          // Feather tip glow
+          ctx.fillStyle = `rgba(196, 181, 253, ${flamePulse * 0.9})`;
           ctx.beginPath();
           ctx.moveTo(-0.8 * scale, featherLen - scale);
           ctx.lineTo(0, featherLen + 2 * scale + Math.sin(t * 8 + i) * scale);
@@ -8196,7 +8196,7 @@ export const EnemySprite: React.FC<{
           ctx.save();
           ctx.translate(featherStart, 2 * scale);
           ctx.rotate(-0.2 - i * 0.08);
-          ctx.fillStyle = "#ea580c";
+          ctx.fillStyle = "#7c3aed";
           ctx.beginPath();
           ctx.ellipse(0, featherLen * 0.5, 1 * scale, featherLen * 0.5, 0, 0, Math.PI * 2);
           ctx.fill();
@@ -8209,7 +8209,7 @@ export const EnemySprite: React.FC<{
         ctx.translate(cx + 6 * scale, cy - 4 * scale - bounce);
         ctx.rotate(0.65 + wingFlap);
         // Wing arm/bone
-        ctx.fillStyle = "#9a3412";
+        ctx.fillStyle = "#5b21b6";
         ctx.beginPath();
         ctx.moveTo(0, -1 * scale);
         ctx.lineTo(5 * scale, -3 * scale);
@@ -8227,23 +8227,23 @@ export const EnemySprite: React.FC<{
           ctx.translate(featherStart, 0);
           ctx.rotate(featherAngle);
           const featherGrad = ctx.createLinearGradient(0, 0, 0, featherLen);
-          featherGrad.addColorStop(0, "#c2410c");
-          featherGrad.addColorStop(0.5, "#ea580c");
-          featherGrad.addColorStop(0.8, "#f97316");
-          featherGrad.addColorStop(1, "#fbbf24");
+          featherGrad.addColorStop(0, "#6d28d9");
+          featherGrad.addColorStop(0.5, "#7c3aed");
+          featherGrad.addColorStop(0.8, "#8b5cf6");
+          featherGrad.addColorStop(1, "#a78bfa");
           ctx.fillStyle = featherGrad;
           ctx.beginPath();
           ctx.moveTo(-1.2 * scale, 0);
           ctx.quadraticCurveTo(-1.5 * scale, featherLen * 0.6, 0, featherLen);
           ctx.quadraticCurveTo(1.5 * scale, featherLen * 0.6, 1.2 * scale, 0);
           ctx.fill();
-          ctx.strokeStyle = "#7c2d12";
+          ctx.strokeStyle = "#4c1d95";
           ctx.lineWidth = 0.3 * scale;
           ctx.beginPath();
           ctx.moveTo(0, 0);
           ctx.lineTo(0, featherLen * 0.85);
           ctx.stroke();
-          ctx.fillStyle = `rgba(253, 224, 71, ${flamePulse * 0.9})`;
+          ctx.fillStyle = `rgba(196, 181, 253, ${flamePulse * 0.9})`;
           ctx.beginPath();
           ctx.moveTo(-0.8 * scale, featherLen - scale);
           ctx.lineTo(0, featherLen + 2 * scale + Math.sin(t * 8 + i) * scale);
@@ -8257,7 +8257,7 @@ export const EnemySprite: React.FC<{
           ctx.save();
           ctx.translate(featherStart, 2 * scale);
           ctx.rotate(0.2 + i * 0.08);
-          ctx.fillStyle = "#ea580c";
+          ctx.fillStyle = "#7c3aed";
           ctx.beginPath();
           ctx.ellipse(0, featherLen * 0.5, 1 * scale, featherLen * 0.5, 0, 0, Math.PI * 2);
           ctx.fill();
@@ -8267,11 +8267,11 @@ export const EnemySprite: React.FC<{
 
         // Scaled demonic body with detailed texture
         const bodyGrad = ctx.createLinearGradient(cx - 6 * scale, cy - 8 * scale, cx + 6 * scale, cy + 10 * scale);
-        bodyGrad.addColorStop(0, "#7c2d12");
-        bodyGrad.addColorStop(0.2, "#9a3412");
-        bodyGrad.addColorStop(0.5, "#c2410c");
-        bodyGrad.addColorStop(0.8, "#9a3412");
-        bodyGrad.addColorStop(1, "#7c2d12");
+        bodyGrad.addColorStop(0, "#4c1d95");
+        bodyGrad.addColorStop(0.2, "#5b21b6");
+        bodyGrad.addColorStop(0.5, "#6d28d9");
+        bodyGrad.addColorStop(0.8, "#5b21b6");
+        bodyGrad.addColorStop(1, "#4c1d95");
         ctx.fillStyle = bodyGrad;
         ctx.beginPath();
         ctx.ellipse(cx, cy + 2 * scale - bounce + breathe, 6 * scale, 10 * scale, 0, 0, Math.PI * 2);
@@ -8279,16 +8279,16 @@ export const EnemySprite: React.FC<{
 
         // Chest plumage
         const chestGrad = ctx.createRadialGradient(cx, cy - 2 * scale - bounce, 0, cx, cy - 2 * scale - bounce, 5 * scale);
-        chestGrad.addColorStop(0, "#fcd34d");
-        chestGrad.addColorStop(0.5, "#fbbf24");
-        chestGrad.addColorStop(1, "#f59e0b");
+        chestGrad.addColorStop(0, "#f5f3ff");
+        chestGrad.addColorStop(0.5, "#ede9fe");
+        chestGrad.addColorStop(1, "#ddd6fe");
         ctx.fillStyle = chestGrad;
         ctx.beginPath();
         ctx.ellipse(cx, cy - 2 * scale - bounce + breathe, 4 * scale, 5 * scale, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Detailed scale pattern
-        ctx.strokeStyle = "#7c2d12";
+        ctx.strokeStyle = "#4c1d95";
         ctx.lineWidth = 0.5 * scale;
         for (let row = 0; row < 4; row++) {
           for (let col = -2; col <= 2; col++) {
@@ -8301,7 +8301,7 @@ export const EnemySprite: React.FC<{
         }
 
         // Powerful legs with armor-like scales
-        ctx.fillStyle = "#9a3412";
+        ctx.fillStyle = "#5b21b6";
         // Left leg
         ctx.beginPath();
         ctx.moveTo(cx - 3 * scale, cy + 8 * scale - bounce);
@@ -8317,7 +8317,7 @@ export const EnemySprite: React.FC<{
         ctx.lineTo(cx + 2 * scale, cy + 8 * scale - bounce);
         ctx.fill();
         // Leg scales
-        ctx.strokeStyle = "#7c2d12";
+        ctx.strokeStyle = "#4c1d95";
         ctx.lineWidth = 0.4 * scale;
         for (let i = 0; i < 3; i++) {
           ctx.beginPath();
@@ -8361,17 +8361,17 @@ export const EnemySprite: React.FC<{
           ctx.save();
           ctx.rotate(crestAngle);
           const crestGrad = ctx.createLinearGradient(0, 0, 0, -crestLen);
-          crestGrad.addColorStop(0, "#ea580c");
-          crestGrad.addColorStop(0.6, "#f97316");
-          crestGrad.addColorStop(1, "#fbbf24");
+          crestGrad.addColorStop(0, "#7c3aed");
+          crestGrad.addColorStop(0.6, "#8b5cf6");
+          crestGrad.addColorStop(1, "#a78bfa");
           ctx.fillStyle = crestGrad;
           ctx.beginPath();
           ctx.moveTo(-0.8 * scale, 0);
           ctx.quadraticCurveTo(-1 * scale, -crestLen * 0.5, 0, -crestLen);
           ctx.quadraticCurveTo(1 * scale, -crestLen * 0.5, 0.8 * scale, 0);
           ctx.fill();
-          // Flame tip
-          ctx.fillStyle = `rgba(253, 224, 71, ${flamePulse})`;
+          // Energy tip
+          ctx.fillStyle = `rgba(196, 181, 253, ${flamePulse})`;
           ctx.beginPath();
           ctx.arc(0, -crestLen, 1 * scale, 0, Math.PI * 2);
           ctx.fill();
@@ -8393,7 +8393,7 @@ export const EnemySprite: React.FC<{
         ctx.fill();
 
         // Facial markings
-        ctx.strokeStyle = "#c2410c";
+        ctx.strokeStyle = "#92400e";
         ctx.lineWidth = 0.6 * scale;
         ctx.beginPath();
         ctx.moveTo(-4 * scale, -1 * scale);
@@ -8418,13 +8418,13 @@ export const EnemySprite: React.FC<{
         ctx.ellipse(2.2 * scale, -1 * scale, 1.6 * scale, 2 * scale, 0.2, 0, Math.PI * 2);
         ctx.fill();
         // Iris glow
-        ctx.fillStyle = `rgba(249, 115, 22, ${0.4 + flamePulse * 0.3})`;
+        ctx.fillStyle = `rgba(251, 191, 36, ${0.4 + flamePulse * 0.3})`;
         ctx.beginPath();
         ctx.ellipse(-2.2 * scale, -1 * scale, 2.2 * scale, 2.8 * scale, -0.2, 0, Math.PI * 2);
         ctx.ellipse(2.2 * scale, -1 * scale, 2.2 * scale, 2.8 * scale, 0.2, 0, Math.PI * 2);
         ctx.fill();
         // Iris
-        ctx.fillStyle = "#f97316";
+        ctx.fillStyle = "#f59e0b";
         ctx.beginPath();
         ctx.ellipse(-2.2 * scale, -1 * scale, 1.2 * scale, 1.6 * scale, -0.2, 0, Math.PI * 2);
         ctx.ellipse(2.2 * scale, -1 * scale, 1.2 * scale, 1.6 * scale, 0.2, 0, Math.PI * 2);
