@@ -11076,10 +11076,6 @@ function renderTeslaCoil(
     ringPositions.push({ y: ry, size: rs, progress: rp });
   }
 
-  const conductorRadiusFactor = 0.85;
-  const backConductorAngles = [Math.PI * 0.7, Math.PI * 1.3];
-  const frontConductorAngles = [Math.PI * 0.3, Math.PI * 1.7];
-
   // Coil base platform
   ctx.fillStyle = "#1a3a4f";
   ctx.beginPath();
@@ -11156,184 +11152,80 @@ function renderTeslaCoil(
     }
   }
 
-  // === BACK-SIDE CONDUCTORS (behind column for depth) ===
-  for (const cAngle of backConductorAngles) {
+  // === BASE-LEVEL MECHANICAL SUBSYSTEMS (compact, tucked below coils) ===
+  const baseY = topY;
+  const baseR = 16 * zoom;
+
+  // Small conductor stubs around the base (4 copper posts)
+  for (let ci = 0; ci < 4; ci++) {
+    const cAngle = (ci / 4) * Math.PI * 2 + Math.PI * 0.25;
     const cpx = Math.cos(cAngle);
     const cpy = Math.sin(cAngle) * 0.5;
-    for (let ri = 0; ri < ringPositions.length - 1; ri++) {
-      const rBot = ringPositions[ri];
-      const rTop = ringPositions[ri + 1];
-      const vibrate = isAttacking
-        ? Math.sin(time * 25 + ri * 2 + cAngle) * 1.2 * attackIntensity * zoom
-        : 0;
-      const cx1 = screenPos.x + cpx * rBot.size * conductorRadiusFactor * zoom + vibrate;
-      const cy1 = rBot.y + cpy * rBot.size * conductorRadiusFactor * zoom;
-      const cx2 = screenPos.x + cpx * rTop.size * conductorRadiusFactor * zoom + vibrate;
-      const cy2 = rTop.y + cpy * rTop.size * conductorRadiusFactor * zoom;
-      const shimmer = Math.sin(time * 3 + ri + cAngle) * 20;
+    const stubX = screenPos.x + cpx * baseR;
+    const stubY = baseY + cpy * baseR;
+    const stubH = 8 * zoom;
+    const vibrate = isAttacking
+      ? Math.sin(time * 25 + ci * 2) * 1 * attackIntensity * zoom : 0;
+    const shimmer = Math.sin(time * 3 + ci) * 20;
 
-      ctx.strokeStyle = `rgb(${100 + shimmer}, ${65 + shimmer * 0.5}, 30)`;
-      ctx.lineWidth = 3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx1 + zoom, cy1 + zoom);
-      ctx.lineTo(cx2 + zoom, cy2 + zoom);
-      ctx.stroke();
+    ctx.strokeStyle = `rgb(${100 + shimmer}, ${65 + shimmer * 0.5}, 30)`;
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(stubX + vibrate + 0.5 * zoom, stubY + 0.5 * zoom);
+    ctx.lineTo(stubX + vibrate + 0.5 * zoom, stubY - stubH + 0.5 * zoom);
+    ctx.stroke();
 
-      ctx.strokeStyle = `rgb(${170 + shimmer}, ${115 + shimmer * 0.5}, 55)`;
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx1, cy1);
-      ctx.lineTo(cx2, cy2);
-      ctx.stroke();
+    ctx.strokeStyle = `rgb(${170 + shimmer}, ${115 + shimmer * 0.5}, 55)`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(stubX + vibrate, stubY);
+    ctx.lineTo(stubX + vibrate, stubY - stubH);
+    ctx.stroke();
 
-      ctx.strokeStyle = "rgba(255, 210, 140, 0.25)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx1 - 0.5 * zoom, cy1);
-      ctx.lineTo(cx2 - 0.5 * zoom, cy2);
-      ctx.stroke();
+    // Top rivet
+    ctx.fillStyle = "#ccaa77";
+    ctx.beginPath();
+    ctx.arc(stubX + vibrate, stubY - stubH, 1.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
 
-      // Rivet details at conductor connection points
-      ctx.fillStyle = "#aa8855";
+    if (isAttacking) {
+      ctx.shadowColor = "#00aaff";
+      ctx.shadowBlur = 4 * zoom * attackIntensity;
+      ctx.fillStyle = `rgba(100, 200, 255, ${0.3 * attackIntensity})`;
       ctx.beginPath();
-      ctx.arc(cx1, cy1, 1.6 * zoom, 0, Math.PI * 2);
+      ctx.arc(stubX + vibrate, stubY - stubH, 2.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2, cy2, 1.6 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ccaa77";
-      ctx.beginPath();
-      ctx.arc(cx1 - 0.3 * zoom, cy1 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2 - 0.3 * zoom, cy2 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (isAttacking) {
-        ctx.shadowColor = "#00aaff";
-        ctx.shadowBlur = 5 * zoom * attackIntensity;
-        ctx.strokeStyle = `rgba(0, 150, 255, ${0.25 * attackIntensity})`;
-        ctx.lineWidth = 4 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(cx1, cy1);
-        ctx.lineTo(cx2, cy2);
-        ctx.stroke();
-
-        // Corona glow at connection points
-        const coronaR = (2.5 + Math.sin(time * 8 + ri) * 0.8) * zoom * attackIntensity;
-        ctx.fillStyle = `rgba(100, 200, 255, ${0.2 * attackIntensity})`;
-        ctx.beginPath();
-        ctx.arc(cx1, cy1, coronaR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx2, cy2, coronaR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-
-      // Conductor-ring junction rivet (always visible)
-      const jnPulse =
-        0.5 +
-        Math.sin(time * 3 + ri + cAngle) * 0.2 +
-        (isAttacking ? attackIntensity * 0.3 : 0);
-      ctx.fillStyle = `rgba(200, 160, 80, ${jnPulse})`;
-      ctx.beginPath();
-      ctx.arc(cx1, cy1, 1.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2, cy2, 1.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      // Rivet highlight
-      ctx.fillStyle = `rgba(255, 220, 160, ${jnPulse * 0.4})`;
-      ctx.beginPath();
-      ctx.arc(cx1 - 0.4 * zoom, cy1 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2 - 0.4 * zoom, cy2 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.shadowBlur = 0;
     }
   }
 
-  // === BACK-SIDE SUSPENSION INSULATORS ===
-  const backInsulatorAngles = [Math.PI * 0.85, Math.PI * 1.15];
-  for (const iAngle of backInsulatorAngles) {
+  // 2 small suspension insulators hanging from base bracket (back-side)
+  for (const iAngle of [Math.PI * 0.85, Math.PI * 1.15]) {
     const ipx = Math.cos(iAngle);
     const ipy = Math.sin(iAngle) * 0.5;
-    for (let ri = 2; ri < ringPositions.length - 1; ri += 3) {
-      const ring = ringPositions[ri];
-      const armLen = ring.size * 1.4;
-      const armBaseX = screenPos.x + ipx * ring.size * 0.5 * zoom;
-      const armBaseY = ring.y + ipy * ring.size * 0.5 * zoom;
-      const armEndX = screenPos.x + ipx * armLen * zoom;
-      const armEndY = ring.y + ipy * armLen * zoom;
+    const armEndX = screenPos.x + ipx * (baseR + 4 * zoom);
+    const armEndY = baseY + ipy * (baseR + 4 * zoom);
 
-      ctx.strokeStyle = "#667788";
-      ctx.lineWidth = 1.8 * zoom;
+    ctx.strokeStyle = "#667788";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + ipx * 8 * zoom, baseY + ipy * 8 * zoom);
+    ctx.lineTo(armEndX, armEndY);
+    ctx.stroke();
+
+    const sway = Math.sin(time * 1.5 + iAngle) * (isAttacking ? 0.15 + attackIntensity * 0.2 : 0.04);
+    for (let d = 0; d < 2; d++) {
+      const discY = armEndY + (d + 1) * 2.5 * zoom;
+      const discX = armEndX + Math.sin(sway) * (d + 1) * 1.5 * zoom;
+      const discR = (2.8 - d * 0.4) * zoom;
+      const dg = ctx.createLinearGradient(discX - discR, discY, discX + discR, discY);
+      dg.addColorStop(0, "#8B7355");
+      dg.addColorStop(0.5, "#D8C098");
+      dg.addColorStop(1, "#8B7355");
+      ctx.fillStyle = dg;
       ctx.beginPath();
-      ctx.moveTo(armBaseX, armBaseY);
-      ctx.lineTo(armEndX, armEndY);
-      ctx.stroke();
-
-      const sway = Math.sin(time * 1.5 + ri + iAngle)
-        * (isAttacking ? 0.15 + attackIntensity * 0.2 : 0.04);
-      for (let d = 0; d < 3; d++) {
-        const discY = armEndY + (d + 1) * 2.8 * zoom;
-        const discX = armEndX + Math.sin(sway) * (d + 1) * 1.8 * zoom;
-        const discR = (3.2 - d * 0.4) * zoom;
-
-        ctx.fillStyle = "#6B5B45";
-        ctx.beginPath();
-        ctx.ellipse(discX, discY + 0.5 * zoom, discR, discR * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        const dg = ctx.createLinearGradient(discX - discR, discY, discX + discR, discY);
-        dg.addColorStop(0, "#8B7355");
-        dg.addColorStop(0.35, "#C4A882");
-        dg.addColorStop(0.5, "#D8C098");
-        dg.addColorStop(0.65, "#C4A882");
-        dg.addColorStop(1, "#8B7355");
-        ctx.fillStyle = dg;
-        ctx.beginPath();
-        ctx.ellipse(discX, discY, discR, discR * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Glazed ceramic sheen
-        ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-        ctx.beginPath();
-        ctx.ellipse(discX - discR * 0.2, discY - discR * 0.08, discR * 0.4, discR * 0.12, -0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Disc rim highlight
-        ctx.strokeStyle = "rgba(255, 240, 220, 0.2)";
-        ctx.lineWidth = 0.4 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(discX, discY, discR * 0.92, discR * 0.28, 0, Math.PI * 1.1, Math.PI * 1.9);
-        ctx.stroke();
-
-        if (d < 2) {
-          ctx.strokeStyle = "#888";
-          ctx.lineWidth = 0.8 * zoom;
-          const nextDX = armEndX + Math.sin(sway) * (d + 2) * 1.8 * zoom;
-          ctx.beginPath();
-          ctx.moveTo(discX, discY + discR * 0.3);
-          ctx.lineTo(nextDX, discY + 2.8 * zoom - discR * 0.3);
-          ctx.stroke();
-
-          // Blue crackle spark along chain when attacking
-          if (isAttacking && Math.sin(time * 18 + d * 4 + ri + iAngle) > 0.5) {
-            const crackAlpha = attackIntensity * 0.55;
-            ctx.shadowColor = "#00ccff";
-            ctx.shadowBlur = 3 * zoom;
-            ctx.strokeStyle = `rgba(100, 220, 255, ${crackAlpha})`;
-            ctx.lineWidth = 0.6 * zoom;
-            ctx.beginPath();
-            ctx.moveTo(discX + (Math.sin(time * 35) * 0.6) * zoom, discY + discR * 0.3);
-            ctx.lineTo(nextDX + (Math.sin(time * 28) * 0.6) * zoom, discY + 2.8 * zoom - discR * 0.3);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-          }
-        }
-      }
+      ctx.ellipse(discX, discY, discR, discR * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -11439,205 +11331,33 @@ function renderTeslaCoil(
     ctx.shadowBlur = 0;
   }
 
-  // === FRONT-SIDE CONDUCTORS (in front of column) ===
-  for (const cAngle of frontConductorAngles) {
-    const cpx = Math.cos(cAngle);
-    const cpy = Math.sin(cAngle) * 0.5;
-    for (let ri = 0; ri < ringPositions.length - 1; ri++) {
-      const rBot = ringPositions[ri];
-      const rTop = ringPositions[ri + 1];
-      const vibrate = isAttacking
-        ? Math.sin(time * 25 + ri * 2 + cAngle) * 1.2 * attackIntensity * zoom
-        : 0;
-      const cx1 =
-        screenPos.x +
-        cpx * rBot.size * conductorRadiusFactor * zoom +
-        vibrate;
-      const cy1 = rBot.y + cpy * rBot.size * conductorRadiusFactor * zoom;
-      const cx2 =
-        screenPos.x +
-        cpx * rTop.size * conductorRadiusFactor * zoom +
-        vibrate;
-      const cy2 = rTop.y + cpy * rTop.size * conductorRadiusFactor * zoom;
-      const shimmer = Math.sin(time * 3 + ri + cAngle) * 20;
-
-      ctx.strokeStyle = `rgb(${100 + shimmer}, ${65 + shimmer * 0.5}, 30)`;
-      ctx.lineWidth = 3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx1 + zoom, cy1 + zoom);
-      ctx.lineTo(cx2 + zoom, cy2 + zoom);
-      ctx.stroke();
-
-      ctx.strokeStyle = `rgb(${170 + shimmer}, ${115 + shimmer * 0.5}, 55)`;
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx1, cy1);
-      ctx.lineTo(cx2, cy2);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(255, 210, 140, 0.25)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cx1 - 0.5 * zoom, cy1);
-      ctx.lineTo(cx2 - 0.5 * zoom, cy2);
-      ctx.stroke();
-
-      // Rivet details at front conductor connection points
-      ctx.fillStyle = "#aa8855";
-      ctx.beginPath();
-      ctx.arc(cx1, cy1, 1.6 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2, cy2, 1.6 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ccaa77";
-      ctx.beginPath();
-      ctx.arc(cx1 - 0.3 * zoom, cy1 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2 - 0.3 * zoom, cy2 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (isAttacking) {
-        ctx.shadowColor = "#00aaff";
-        ctx.shadowBlur = 5 * zoom * attackIntensity;
-        ctx.strokeStyle = `rgba(0, 150, 255, ${0.25 * attackIntensity})`;
-        ctx.lineWidth = 4 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(cx1, cy1);
-        ctx.lineTo(cx2, cy2);
-        ctx.stroke();
-
-        // Corona glow at front connection points
-        const fCoronaR = (2.5 + Math.sin(time * 8 + ri) * 0.8) * zoom * attackIntensity;
-        ctx.fillStyle = `rgba(100, 200, 255, ${0.2 * attackIntensity})`;
-        ctx.beginPath();
-        ctx.arc(cx1, cy1, fCoronaR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(cx2, cy2, fCoronaR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-
-      // Conductor-ring junction rivet (always visible)
-      const fJnPulse =
-        0.5 +
-        Math.sin(time * 3 + ri + cAngle) * 0.2 +
-        (isAttacking ? attackIntensity * 0.3 : 0);
-      ctx.fillStyle = `rgba(200, 160, 80, ${fJnPulse})`;
-      ctx.beginPath();
-      ctx.arc(cx1, cy1, 1.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2, cy2, 1.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      // Rivet highlight
-      ctx.fillStyle = `rgba(255, 220, 160, ${fJnPulse * 0.4})`;
-      ctx.beginPath();
-      ctx.arc(cx1 - 0.4 * zoom, cy1 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx2 - 0.4 * zoom, cy2 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // === FRONT-SIDE SUSPENSION INSULATORS ===
-  const frontInsulatorAngles = [Math.PI * 0.15, Math.PI * 1.85];
-  for (const iAngle of frontInsulatorAngles) {
+  // === FRONT-SIDE BASE INSULATORS (compact, at base level) ===
+  for (const iAngle of [Math.PI * 0.15, Math.PI * 1.85]) {
     const ipx = Math.cos(iAngle);
     const ipy = Math.sin(iAngle) * 0.5;
-    for (let ri = 2; ri < ringPositions.length - 1; ri += 3) {
-      const ring = ringPositions[ri];
-      const armLen = ring.size * 1.4;
-      const armBaseX = screenPos.x + ipx * ring.size * 0.5 * zoom;
-      const armBaseY = ring.y + ipy * ring.size * 0.5 * zoom;
-      const armEndX = screenPos.x + ipx * armLen * zoom;
-      const armEndY = ring.y + ipy * armLen * zoom;
+    const armEndX = screenPos.x + ipx * (baseR + 4 * zoom);
+    const armEndY = baseY + ipy * (baseR + 4 * zoom);
 
-      ctx.strokeStyle = "#667788";
-      ctx.lineWidth = 1.8 * zoom;
+    ctx.strokeStyle = "#667788";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + ipx * 8 * zoom, baseY + ipy * 8 * zoom);
+    ctx.lineTo(armEndX, armEndY);
+    ctx.stroke();
+
+    const sway = Math.sin(time * 1.5 + iAngle) * (isAttacking ? 0.15 + attackIntensity * 0.2 : 0.04);
+    for (let d = 0; d < 2; d++) {
+      const discY = armEndY + (d + 1) * 2.5 * zoom;
+      const discX = armEndX + Math.sin(sway) * (d + 1) * 1.5 * zoom;
+      const discR = (2.8 - d * 0.4) * zoom;
+      const dg = ctx.createLinearGradient(discX - discR, discY, discX + discR, discY);
+      dg.addColorStop(0, "#8B7355");
+      dg.addColorStop(0.5, "#D8C098");
+      dg.addColorStop(1, "#8B7355");
+      ctx.fillStyle = dg;
       ctx.beginPath();
-      ctx.moveTo(armBaseX, armBaseY);
-      ctx.lineTo(armEndX, armEndY);
-      ctx.stroke();
-
-      const sway =
-        Math.sin(time * 1.5 + ri + iAngle) *
-        (isAttacking ? 0.15 + attackIntensity * 0.2 : 0.04);
-      for (let d = 0; d < 3; d++) {
-        const discY = armEndY + (d + 1) * 2.8 * zoom;
-        const discX = armEndX + Math.sin(sway) * (d + 1) * 1.8 * zoom;
-        const discR = (3.2 - d * 0.4) * zoom;
-
-        ctx.fillStyle = "#6B5B45";
-        ctx.beginPath();
-        ctx.ellipse(
-          discX,
-          discY + 0.5 * zoom,
-          discR,
-          discR * 0.3,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        const dg = ctx.createLinearGradient(
-          discX - discR,
-          discY,
-          discX + discR,
-          discY,
-        );
-        dg.addColorStop(0, "#8B7355");
-        dg.addColorStop(0.35, "#C4A882");
-        dg.addColorStop(0.5, "#D8C098");
-        dg.addColorStop(0.65, "#C4A882");
-        dg.addColorStop(1, "#8B7355");
-        ctx.fillStyle = dg;
-        ctx.beginPath();
-        ctx.ellipse(discX, discY, discR, discR * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Front insulator glazed ceramic sheen
-        ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-        ctx.beginPath();
-        ctx.ellipse(discX - discR * 0.2, discY - discR * 0.08, discR * 0.4, discR * 0.12, -0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Disc rim highlight
-        ctx.strokeStyle = "rgba(255, 240, 220, 0.2)";
-        ctx.lineWidth = 0.4 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(discX, discY, discR * 0.92, discR * 0.28, 0, Math.PI * 1.1, Math.PI * 1.9);
-        ctx.stroke();
-
-        if (d < 2) {
-          ctx.strokeStyle = "#888";
-          ctx.lineWidth = 0.8 * zoom;
-          const nextDX =
-            armEndX + Math.sin(sway) * (d + 2) * 1.8 * zoom;
-          ctx.beginPath();
-          ctx.moveTo(discX, discY + discR * 0.3);
-          ctx.lineTo(nextDX, discY + 2.8 * zoom - discR * 0.3);
-          ctx.stroke();
-
-          // Front insulator crackle spark when attacking
-          if (isAttacking && Math.sin(time * 18 + d * 4 + ri + iAngle) > 0.5) {
-            const fCrackAlpha = attackIntensity * 0.55;
-            ctx.shadowColor = "#00ccff";
-            ctx.shadowBlur = 3 * zoom;
-            ctx.strokeStyle = `rgba(100, 220, 255, ${fCrackAlpha})`;
-            ctx.lineWidth = 0.6 * zoom;
-            ctx.beginPath();
-            ctx.moveTo(discX + Math.sin(time * 35) * 0.6 * zoom, discY + discR * 0.3);
-            ctx.lineTo(nextDX + Math.sin(time * 28) * 0.6 * zoom, discY + 2.8 * zoom - discR * 0.3);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-          }
-        }
-      }
+      ctx.ellipse(discX, discY, discR, discR * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -11901,606 +11621,115 @@ function renderTeslaCoil(
 
 
 
-  // === PISTONS - Mechanical pistons pumping between ring sections ===
-  const pistonAngles = [
-    Math.PI * 0.25,
-    Math.PI * 0.75,
-    Math.PI * 1.25,
-    Math.PI * 1.75,
-  ];
-  for (const pAngle of pistonAngles) {
-    const ppx = Math.cos(pAngle);
-    const ppy = Math.sin(pAngle) * 0.5;
-    for (let ri = 0; ri < ringPositions.length - 1; ri += 2) {
-      const rBot = ringPositions[ri];
-      const rTop = ringPositions[ri + 1];
-      const midSize = (rBot.size + rTop.size) / 2;
-      const px = screenPos.x + ppx * midSize * 0.7 * zoom;
-      const baseY = (rBot.y + rTop.y) / 2 + ppy * midSize * 0.7 * zoom;
+  // === BASE-LEVEL MECHANICAL DETAILS (pistons, dampers, jumpers at base) ===
+  {
+    // Small pistons around the base platform
+    const basePistonAngles = [Math.PI * 0.25, Math.PI * 0.75, Math.PI * 1.25, Math.PI * 1.75];
+    for (const pAngle of basePistonAngles) {
+      const ppx = Math.cos(pAngle);
+      const ppy = Math.sin(pAngle) * 0.5;
+      const pistonBaseX = screenPos.x + ppx * 14 * zoom;
+      const pistonBaseY = topY + 2 * zoom + ppy * 14 * zoom;
+      const pistonExt = isAttacking
+        ? 3 * zoom + Math.sin(time * 18 + pAngle * 3) * 3 * zoom * attackIntensity
+        : 3 * zoom + Math.sin(time * 2 + pAngle) * 0.5 * zoom;
 
-      const phase = time * 4 + ri * 1.5 + pAngle * 2;
-      const pistonTravel = isAttacking
-        ? Math.sin(phase) * 3.5 * zoom * (1 + attackIntensity)
-        : Math.sin(phase * 0.3) * 1.2 * zoom;
-
-      const cylH = Math.abs(rBot.y - rTop.y) * 0.3;
-      const cylW = 2.2 * zoom;
-
-      ctx.fillStyle = "#3a4a5a";
-      ctx.fillRect(
-        px - cylW / 2 + 0.5 * zoom,
-        baseY - cylH / 2 + 0.5 * zoom,
-        cylW,
-        cylH,
-      );
-
-      const cylGrad = ctx.createLinearGradient(
-        px - cylW / 2,
-        0,
-        px + cylW / 2,
-        0,
-      );
-      cylGrad.addColorStop(0, "#556677");
-      cylGrad.addColorStop(0.4, "#8899aa");
-      cylGrad.addColorStop(0.6, "#8899aa");
-      cylGrad.addColorStop(1, "#556677");
-      ctx.fillStyle = cylGrad;
-      ctx.fillRect(px - cylW / 2, baseY - cylH / 2, cylW, cylH);
-
-      ctx.fillStyle = "rgba(150, 180, 210, 0.4)";
-      ctx.fillRect(px - cylW / 2, baseY - cylH / 2, cylW * 0.3, cylH);
-
-      const rodW = 1.3 * zoom;
-      const rodLen = cylH * 0.55;
-      const rodY = baseY - cylH / 2 + pistonTravel - rodLen * 0.3;
-
-      const rodGrad = ctx.createLinearGradient(
-        px - rodW / 2,
-        0,
-        px + rodW / 2,
-        0,
-      );
-      rodGrad.addColorStop(0, "#99aabb");
-      rodGrad.addColorStop(0.5, "#ddeeff");
-      rodGrad.addColorStop(1, "#99aabb");
-      ctx.fillStyle = rodGrad;
-      ctx.fillRect(px - rodW / 2, rodY, rodW, rodLen);
-
-      ctx.fillStyle = "rgba(220, 235, 250, 0.5)";
-      ctx.fillRect(px - rodW * 0.3, rodY, rodW * 0.25, rodLen);
-
-      ctx.fillStyle = "#8899aa";
+      // Cylinder housing
+      ctx.fillStyle = "#4a5a6a";
       ctx.beginPath();
-      ctx.ellipse(
-        px,
-        rodY,
-        cylW * 0.65,
-        cylW * 0.2,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(pistonBaseX, pistonBaseY, 2.5 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // 3D cylinder end caps
-      ctx.fillStyle = "#6a7a8a";
+      // Piston rod
+      ctx.strokeStyle = "#8a9aaa";
+      ctx.lineWidth = 1.8 * zoom;
       ctx.beginPath();
-      ctx.ellipse(px, baseY - cylH / 2, cylW * 0.55, cylW * 0.16, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#7a8a9a";
-      ctx.beginPath();
-      ctx.ellipse(px, baseY + cylH / 2, cylW * 0.55, cylW * 0.16, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Piston gasket ring on rod
-      const gasketY = rodY + rodLen * 0.18;
-      ctx.strokeStyle = "#cc8844";
-      ctx.lineWidth = 1.1 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(px, gasketY, rodW * 0.85, rodW * 0.22, 0, 0, Math.PI * 2);
+      ctx.moveTo(pistonBaseX, pistonBaseY);
+      ctx.lineTo(pistonBaseX, pistonBaseY - pistonExt);
       ctx.stroke();
 
-      // Hydraulic fluid shimmer line
-      const fluidShimmer = Math.sin(time * 5 + ri + pAngle) * 0.3 + 0.5;
-      ctx.strokeStyle = `rgba(100, 200, 255, ${fluidShimmer * 0.3})`;
-      ctx.lineWidth = 0.5 * zoom;
+      // Rod tip
+      ctx.fillStyle = "#aabbcc";
       ctx.beginPath();
-      ctx.moveTo(px + cylW / 2 - 0.3 * zoom, baseY - cylH / 2 + zoom);
-      ctx.lineTo(px + cylW / 2 - 0.3 * zoom, baseY + cylH / 2 - zoom);
-      ctx.stroke();
+      ctx.arc(pistonBaseX, pistonBaseY - pistonExt, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Cylinder riveted band
-      const bandY1 = baseY - cylH / 2 + cylH * 0.15;
-      const bandY2 = baseY + cylH / 2 - cylH * 0.15;
-      ctx.strokeStyle = "#7a8a9a";
+      // Pressure glow when attacking
+      if (isAttacking) {
+        ctx.fillStyle = `rgba(0, 180, 255, ${0.3 * attackIntensity})`;
+        ctx.beginPath();
+        ctx.arc(pistonBaseX, pistonBaseY - pistonExt, 3 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Vibration damper springs at base sides
+    for (const dAngle of [0, Math.PI]) {
+      const dpx = Math.cos(dAngle);
+      const dpy = Math.sin(dAngle) * 0.5;
+      const damperX = screenPos.x + dpx * 16 * zoom;
+      const damperY = topY + 3 * zoom + dpy * 8 * zoom;
+      const compress = isAttacking
+        ? Math.sin(time * 15 + dAngle) * 2 * zoom * attackIntensity : 0;
+
+      // Spring zigzag
+      ctx.strokeStyle = "#7a8a7a";
       ctx.lineWidth = 1.2 * zoom;
-      for (const bY of [bandY1, bandY2]) {
-        ctx.beginPath();
-        ctx.moveTo(px - cylW / 2, bY);
-        ctx.lineTo(px + cylW / 2, bY);
-        ctx.stroke();
-      }
-
-      if (isAttacking) {
-        ctx.shadowColor = "#00aaff";
-        ctx.shadowBlur = 4 * zoom * attackIntensity;
-        ctx.strokeStyle = `rgba(0, 180, 255, ${0.3 * attackIntensity})`;
-        ctx.lineWidth = 1.5 * zoom;
-        ctx.strokeRect(
-          px - cylW / 2 - zoom,
-          baseY - cylH / 2 - zoom,
-          cylW + 2 * zoom,
-          cylH + 2 * zoom,
-        );
-        ctx.shadowBlur = 0;
-
-        // Steam/gas puffs from piston top
-        for (let puff = 0; puff < 2; puff++) {
-          const puffAge = ((time * 7 + ri * 2.3 + puff * 2.8 + pAngle) % 1.8);
-          if (puffAge < 1.0) {
-            const puffAlpha = (1 - puffAge) * 0.35 * attackIntensity;
-            const puffR = (0.8 + puffAge * 2.8) * zoom;
-            const puffDx = Math.sin(time * 2.5 + puff * 1.7) * 1.5 * zoom;
-            ctx.fillStyle = `rgba(200, 230, 255, ${puffAlpha})`;
-            ctx.beginPath();
-            ctx.arc(px + puffDx, baseY - cylH / 2 - puffAge * 5 * zoom, puffR, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-
-      // Piston pressure indicator light (green→amber→red when attacking)
-      const prPhase = Math.sin(time * 4 + ri * 1.5 + pAngle * 2);
-      const prR = isAttacking ? 1 : Math.max(0, prPhase * 0.5 + 0.3);
-      const prG = isAttacking ? Math.max(0, 1 - attackIntensity) : 0.8;
-      ctx.fillStyle = `rgba(${Math.round(prR * 255)}, ${Math.round(prG * 255)}, 0, 0.85)`;
       ctx.beginPath();
-      ctx.arc(px, baseY - cylH / 2 - 2 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      if (isAttacking) {
-        ctx.shadowColor = `rgb(${Math.round(prR * 255)}, ${Math.round(prG * 255)}, 0)`;
-        ctx.shadowBlur = 4 * zoom * attackIntensity;
-        ctx.beginPath();
-        ctx.arc(
-          px,
-          baseY - cylH / 2 - 2 * zoom,
-          1.8 * zoom,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        ctx.shadowBlur = 0;
+      const springH = 6 * zoom + compress;
+      for (let s = 0; s <= 4; s++) {
+        const sy = damperY - (s / 4) * springH;
+        const sx = damperX + (s % 2 === 0 ? -1.5 : 1.5) * zoom;
+        if (s === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
       }
+      ctx.stroke();
+
+      // Mass block at top
+      ctx.fillStyle = "#5a6a7a";
+      ctx.fillRect(damperX - 2.5 * zoom, damperY - springH - 2 * zoom, 5 * zoom, 2 * zoom);
     }
-  }
 
-  // === VIBRATION DAMPERS - Jiggling spring mechanisms ===
-  const damperAngles = [0, Math.PI];
-  for (const dAngle of damperAngles) {
-    const dpx = Math.cos(dAngle);
-    const dpy = Math.sin(dAngle) * 0.5;
-    for (let ri = 1; ri < ringPositions.length - 1; ri += 3) {
-      const ring = ringPositions[ri];
-      const nextRing = ringPositions[Math.min(ri + 1, ringPositions.length - 1)];
-      const anchorX = screenPos.x + dpx * ring.size * 0.85 * zoom;
-      const anchorTopY = ring.y + dpy * ring.size * 0.85 * zoom;
-      const anchorBotY = nextRing.y + dpy * nextRing.size * 0.85 * zoom;
+    // Jumper wires between base conductors
+    for (const pair of [{ from: Math.PI * 0.25, to: Math.PI * 0.75 }, { from: Math.PI * 1.25, to: Math.PI * 1.75 }]) {
+      const fx = screenPos.x + Math.cos(pair.from) * 14 * zoom;
+      const fy = topY + Math.sin(pair.from) * 0.5 * 7 * zoom;
+      const tx = screenPos.x + Math.cos(pair.to) * 14 * zoom;
+      const ty = topY + Math.sin(pair.to) * 0.5 * 7 * zoom;
+      const ctrlY = Math.min(fy, ty) + 6 * zoom;
 
-      const jiggleX = isAttacking
-        ? Math.sin(time * 18 + ri * 3 + dAngle) * 2 * zoom * attackIntensity
-        : Math.sin(time * 2 + ri * 1.5 + dAngle) * 0.5 * zoom;
-      const jiggleY = isAttacking
-        ? Math.cos(time * 15 + ri * 2.5) * 1.5 * zoom * attackIntensity
-        : Math.cos(time * 1.8 + ri) * 0.3 * zoom;
-
-      const springLen = Math.abs(anchorTopY - anchorBotY) * 0.6;
-      const midY = (anchorTopY + anchorBotY) / 2;
-      const zigCount = 7;
-      const zigH = springLen / zigCount;
-      const zigW = 2.8 * zoom;
-      const dampCompress = isAttacking ? 1 - attackIntensity * 0.25 : 1;
-
-      // Mounting bracket at top anchor
-      ctx.fillStyle = "#556677";
-      const bracketX = anchorX + jiggleX;
-      const bracketTopY = midY - springLen / 2 + jiggleY;
-      ctx.fillRect(bracketX - 3 * zoom, bracketTopY - 1.5 * zoom, 6 * zoom, 3 * zoom);
-      ctx.strokeStyle = "#7788aa";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.strokeRect(bracketX - 3 * zoom, bracketTopY - 1.5 * zoom, 6 * zoom, 3 * zoom);
-      ctx.fillStyle = "#8899aa";
-      ctx.beginPath();
-      ctx.arc(bracketX - 1.8 * zoom, bracketTopY, 0.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(bracketX + 1.8 * zoom, bracketTopY, 0.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Spring coil with back-face shadow for 3D effect
-      ctx.strokeStyle = "rgba(60, 70, 80, 0.4)";
-      ctx.lineWidth = 1.6 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bracketX + 0.5 * zoom, bracketTopY + 0.5 * zoom);
-      for (let z = 0; z < zigCount; z++) {
-        const zy = bracketTopY + (z + 0.5) * zigH * dampCompress + jiggleY * (1 - z / zigCount) + 0.5 * zoom;
-        const zOff = z % 2 === 0 ? zigW : -zigW;
-        ctx.lineTo(bracketX + zOff + 0.5 * zoom, zy);
-      }
-      ctx.lineTo(bracketX + 0.5 * zoom, midY + springLen / 2 * dampCompress + jiggleY * 0.2 + 0.5 * zoom);
-      ctx.stroke();
-
-      // Spring coil main pass
-      const springStress = isAttacking ? attackIntensity : 0;
-      ctx.strokeStyle = `rgb(${153 + Math.round(springStress * 60)}, ${170 + Math.round(springStress * 30)}, ${187})`;
-      ctx.lineWidth = 1.3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bracketX, bracketTopY);
-      for (let z = 0; z < zigCount; z++) {
-        const zy = bracketTopY + (z + 0.5) * zigH * dampCompress + jiggleY * (1 - z / zigCount);
-        const zOff = z % 2 === 0 ? zigW : -zigW;
-        ctx.lineTo(bracketX + zOff, zy);
-      }
-      const massTopY = midY + springLen / 2 * dampCompress + jiggleY * 0.2;
-      ctx.lineTo(bracketX, massTopY);
-      ctx.stroke();
-
-      // Spring highlight pass
-      ctx.strokeStyle = "rgba(200, 220, 240, 0.3)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bracketX - 0.4 * zoom, bracketTopY);
-      for (let z = 0; z < zigCount; z++) {
-        const zy = bracketTopY + (z + 0.5) * zigH * dampCompress + jiggleY * (1 - z / zigCount);
-        const zOff = z % 2 === 0 ? zigW - 0.4 * zoom : -zigW - 0.4 * zoom;
-        ctx.lineTo(bracketX + zOff, zy);
-      }
-      ctx.stroke();
-
-      // Mass block with metallic gradient
-      const massW = 4.5 * zoom;
-      const massH = 3.5 * zoom;
-      const massGrad = ctx.createLinearGradient(
-        bracketX - massW / 2, 0,
-        bracketX + massW / 2, 0,
-      );
-      massGrad.addColorStop(0, "#4a5a6a");
-      massGrad.addColorStop(0.25, "#7a8a9a");
-      massGrad.addColorStop(0.5, "#8899aa");
-      massGrad.addColorStop(0.75, "#7a8a9a");
-      massGrad.addColorStop(1, "#4a5a6a");
-      ctx.fillStyle = massGrad;
-      ctx.fillRect(bracketX - massW / 2, massTopY - massH / 2, massW, massH);
-      ctx.strokeStyle = "#9aaabb";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.strokeRect(bracketX - massW / 2, massTopY - massH / 2, massW, massH);
-      ctx.fillStyle = "rgba(180, 200, 220, 0.3)";
-      ctx.fillRect(bracketX - massW / 2, massTopY - massH / 2, massW * 0.3, massH);
-
-      if (isAttacking) {
-        ctx.shadowColor = "#00ccff";
-        ctx.shadowBlur = 3 * zoom * attackIntensity;
-        ctx.strokeStyle = `rgba(0, 200, 255, ${0.2 * attackIntensity})`;
-        ctx.lineWidth = 2.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(bracketX, bracketTopY);
-        ctx.lineTo(bracketX, massTopY);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Impact splash particles when mass oscillates
-        if (Math.abs(jiggleY) > 0.6 * zoom) {
-          for (let sp = 0; sp < 3; sp++) {
-            const spAng = time * 12 + sp * 2.1 + ri;
-            const spDist = (1.5 + sp * 0.8) * zoom;
-            const spAlpha = attackIntensity * 0.4 * (1 - sp * 0.25);
-            ctx.fillStyle = `rgba(150, 220, 255, ${spAlpha})`;
-            ctx.beginPath();
-            ctx.arc(
-              bracketX + Math.cos(spAng) * spDist,
-              massTopY + Math.sin(spAng) * spDist * 0.4,
-              (1.2 - sp * 0.2) * zoom, 0, Math.PI * 2,
-            );
-            ctx.fill();
-          }
-        }
-      }
-    }
-  }
-
-  // === TENSION/STRAIN ASSEMBLIES - Springs that stretch when attacking ===
-  const tensionAngles = [
-    Math.PI * 0.4,
-    Math.PI * 0.6,
-    Math.PI * 1.4,
-    Math.PI * 1.6,
-  ];
-  for (const tAngle of tensionAngles) {
-    const tpx = Math.cos(tAngle);
-    const tpy = Math.sin(tAngle) * 0.5;
-    for (let ri = 0; ri < ringPositions.length - 2; ri += 3) {
-      const rBot = ringPositions[ri];
-      const rTop = ringPositions[ri + 2];
-      const avgSize = (rBot.size + rTop.size) / 2;
-      const tx = screenPos.x + tpx * avgSize * 0.6 * zoom;
-      const ty1 = rBot.y + tpy * rBot.size * 0.6 * zoom;
-      const ty2 = rTop.y + tpy * rTop.size * 0.6 * zoom;
-
-      const stretchFactor = isAttacking ? 1 + attackIntensity * 0.35 : 1;
-      const breathe = Math.sin(time * 1.2 + ri + tAngle) * 0.5 * zoom;
-
-      const coilCount = 8;
-      const coilW = 2.2 * zoom;
-
-      // Spring shadow for 3D depth
-      ctx.strokeStyle = "rgba(40, 50, 60, 0.35)";
-      ctx.lineWidth = 1.6 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(tx + breathe + 0.5 * zoom, ty1 + 0.5 * zoom);
-      for (let c = 0; c < coilCount; c++) {
-        const frac1 = (c + 0.25) / coilCount;
-        const frac2 = (c + 0.75) / coilCount;
-        const sCy1 = ty1 + (ty2 - ty1) * frac1 * stretchFactor + 0.5 * zoom;
-        const sCy2 = ty1 + (ty2 - ty1) * frac2 * stretchFactor + 0.5 * zoom;
-        const xOff = c % 2 === 0 ? coilW : -coilW;
-        ctx.lineTo(tx + xOff + breathe + 0.5 * zoom, sCy1);
-        ctx.lineTo(tx - xOff + breathe + 0.5 * zoom, sCy2);
-      }
-      ctx.lineTo(tx + breathe + 0.5 * zoom, ty2 + 0.5 * zoom);
-      ctx.stroke();
-
-      // Spring main pass with heat coloring when strained
-      const heatR = isAttacking ? 140 + Math.round(attackIntensity * 80) : 136;
-      const heatG = isAttacking ? 160 + Math.round(attackIntensity * 20) : 153;
-      const heatB = isAttacking ? 180 - Math.round(attackIntensity * 40) : 170;
-      ctx.strokeStyle = `rgb(${heatR}, ${heatG}, ${heatB})`;
-      ctx.lineWidth = 1.3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(tx + breathe, ty1);
-      for (let c = 0; c < coilCount; c++) {
-        const frac1 = (c + 0.25) / coilCount;
-        const frac2 = (c + 0.75) / coilCount;
-        const ccy1 = ty1 + (ty2 - ty1) * frac1 * stretchFactor;
-        const ccy2 = ty1 + (ty2 - ty1) * frac2 * stretchFactor;
-        const xOff = c % 2 === 0 ? coilW : -coilW;
-        ctx.lineTo(tx + xOff + breathe, ccy1);
-        ctx.lineTo(tx - xOff + breathe, ccy2);
-      }
-      ctx.lineTo(tx + breathe, ty2);
-      ctx.stroke();
-
-      // Spring highlight pass
-      ctx.strokeStyle = "rgba(200, 215, 230, 0.25)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(tx + breathe - 0.4 * zoom, ty1);
-      for (let c = 0; c < coilCount; c++) {
-        const frac1 = (c + 0.25) / coilCount;
-        const frac2 = (c + 0.75) / coilCount;
-        const hCy1 = ty1 + (ty2 - ty1) * frac1 * stretchFactor;
-        const hCy2 = ty1 + (ty2 - ty1) * frac2 * stretchFactor;
-        const xOff = c % 2 === 0 ? coilW - 0.4 * zoom : -coilW - 0.4 * zoom;
-        ctx.lineTo(tx + xOff + breathe, hCy1);
-        ctx.lineTo(tx - xOff + breathe, hCy2);
-      }
-      ctx.stroke();
-
-      // Mounting plates with gradient
-      const plateGrad = ctx.createLinearGradient(
-        tx + breathe - 3 * zoom, 0, tx + breathe + 3 * zoom, 0,
-      );
-      plateGrad.addColorStop(0, "#556677");
-      plateGrad.addColorStop(0.4, "#778899");
-      plateGrad.addColorStop(0.6, "#778899");
-      plateGrad.addColorStop(1, "#556677");
-      ctx.fillStyle = plateGrad;
-      ctx.fillRect(tx + breathe - 3 * zoom, ty1 - 1.2 * zoom, 6 * zoom, 2.4 * zoom);
-      ctx.fillRect(tx + breathe - 3 * zoom, ty2 - 1.2 * zoom, 6 * zoom, 2.4 * zoom);
-
-      // Bolt dots on mounting plates
-      ctx.fillStyle = "#9aaabb";
-      for (const bOff of [-1.5, 1.5]) {
-        ctx.beginPath();
-        ctx.arc(tx + breathe + bOff * zoom, ty1, 0.6 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(tx + breathe + bOff * zoom, ty2, 0.6 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (isAttacking) {
-        // Strain heat glow along spring axis
-        ctx.shadowColor = "#ff8844";
-        ctx.shadowBlur = (3 + attackIntensity * 4) * zoom;
-        ctx.strokeStyle = `rgba(255, 150, 80, ${0.2 + attackIntensity * 0.25})`;
-        ctx.lineWidth = 2.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(tx + breathe, ty1);
-        ctx.lineTo(tx + breathe, ty2);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Strain creak flash
-        if (stretchFactor > 1.2 && Math.sin(time * 30 + ri + tAngle) > 0.7) {
-          ctx.fillStyle = `rgba(255, 200, 100, ${attackIntensity * 0.4})`;
-          const flashY = ty1 + (ty2 - ty1) * (0.3 + Math.sin(time * 8) * 0.2);
-          ctx.beginPath();
-          ctx.arc(tx + breathe, flashY, 2 * zoom, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    }
-  }
-
-  // === JUMPERS - Electrical jumper wires arcing between conductor points ===
-  const jumperPairs = [
-    { from: Math.PI * 0.3, to: Math.PI * 0.7 },
-    { from: Math.PI * 1.3, to: Math.PI * 1.7 },
-  ];
-  for (const pair of jumperPairs) {
-    for (let ri = 1; ri < ringPositions.length; ri += 2) {
-      const ring = ringPositions[ri];
-      const fromPx = Math.cos(pair.from);
-      const fromPy = Math.sin(pair.from) * 0.5;
-      const toPx = Math.cos(pair.to);
-      const toPy = Math.sin(pair.to) * 0.5;
-
-      const jx1 =
-        screenPos.x + fromPx * ring.size * conductorRadiusFactor * zoom;
-      const jy1 = ring.y + fromPy * ring.size * conductorRadiusFactor * zoom;
-      const jx2 =
-        screenPos.x + toPx * ring.size * conductorRadiusFactor * zoom;
-      const jy2 = ring.y + toPy * ring.size * conductorRadiusFactor * zoom;
-
-      const midAngle = (pair.from + pair.to) / 2;
-      const bulge = ring.size * 1.2 * zoom;
-      const ctrlX =
-        screenPos.x +
-        Math.cos(midAngle) * bulge +
-        Math.sin(time * 1.5 + ri) * 0.8 * zoom;
-      const ctrlY =
-        ring.y +
-        Math.sin(midAngle) * 0.5 * bulge +
-        (isAttacking
-          ? Math.sin(time * 8 + ri) * 1.5 * zoom * attackIntensity
-          : 0);
-
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(jx1, jy1 + zoom);
-      ctx.quadraticCurveTo(ctrlX, ctrlY + zoom, jx2, jy2 + zoom);
-      ctx.stroke();
-
-      ctx.strokeStyle = isAttacking
-        ? `rgb(${180 + Math.round(attackIntensity * 40)}, ${130 + Math.round(attackIntensity * 30)}, 60)`
-        : "#b08040";
+      // Wire
+      ctx.strokeStyle = "#aa4444";
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(jx1, jy1);
-      ctx.quadraticCurveTo(ctrlX, ctrlY, jx2, jy2);
+      ctx.moveTo(fx, fy);
+      ctx.quadraticCurveTo((fx + tx) / 2, ctrlY, tx, ty);
       ctx.stroke();
 
-      // Secondary thinner wire strand with slight offset
-      const secCtrlX =
-        ctrlX + Math.sin(time * 2 + ri * 0.7) * 1.5 * zoom;
-      const secCtrlY = ctrlY + 1.5 * zoom;
-      ctx.strokeStyle = isAttacking
-        ? `rgba(160, 120, 50, ${0.5 + attackIntensity * 0.3})`
-        : "rgba(140, 100, 40, 0.35)";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(jx1 + 0.5 * zoom, jy1 + 0.5 * zoom);
-      ctx.quadraticCurveTo(secCtrlX, secCtrlY, jx2 + 0.5 * zoom, jy2 + 0.5 * zoom);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(255, 220, 160, 0.3)";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(jx1, jy1 - 0.5 * zoom);
-      ctx.quadraticCurveTo(ctrlX, ctrlY - 0.5 * zoom, jx2, jy2 - 0.5 * zoom);
-      ctx.stroke();
-
-      // Insulation color bands along the wire
-      for (let band = 0; band < 4; band++) {
-        const bandT = (band + 1) * 0.2;
-        const bOmT = 1 - bandT;
-        const bandX = bOmT * bOmT * jx1 + 2 * bOmT * bandT * ctrlX + bandT * bandT * jx2;
-        const bandY = bOmT * bOmT * jy1 + 2 * bOmT * bandT * ctrlY + bandT * bandT * jy2;
-        ctx.fillStyle = band % 2 === 0 ? "#cc3333" : "#222222";
+      // Insulation bands
+      ctx.strokeStyle = "#222";
+      ctx.lineWidth = 2 * zoom;
+      for (let b = 0.2; b <= 0.8; b += 0.3) {
+        const bx = (1 - b) * (1 - b) * fx + 2 * (1 - b) * b * ((fx + tx) / 2) + b * b * tx;
+        const by = (1 - b) * (1 - b) * fy + 2 * (1 - b) * b * ctrlY + b * b * ty;
         ctx.beginPath();
-        ctx.arc(bandX, bandY, 1.6 * zoom, 0, Math.PI * 2);
+        ctx.arc(bx, by, 1 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Enhanced connection terminals with metallic gradient
-      for (const [jtx, jty] of [[jx1, jy1], [jx2, jy2]] as const) {
-        ctx.fillStyle = "#aa7744";
-        ctx.beginPath();
-        ctx.arc(jtx, jty, 2 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#ddaa66";
-        ctx.beginPath();
-        ctx.arc(jtx - 0.4 * zoom, jty - 0.4 * zoom, 1 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#886633";
-        ctx.lineWidth = 0.5 * zoom;
-        ctx.beginPath();
-        ctx.arc(jtx, jty, 2 * zoom, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // Multiple traveling sparks along wire
+      // Spark when attacking
       if (isAttacking) {
-        for (let tsp = 0; tsp < 4; tsp++) {
-          const tspT = ((time * (5 + tsp * 1.5) + ri * 0.7 + tsp * 0.8) % 1);
-          const tspOmT = 1 - tspT;
-          const tspX = tspOmT * tspOmT * jx1 + 2 * tspOmT * tspT * ctrlX + tspT * tspT * jx2;
-          const tspY = tspOmT * tspOmT * jy1 + 2 * tspOmT * tspT * ctrlY + tspT * tspT * jy2;
-          const tspAlpha = Math.sin(tspT * Math.PI) * attackIntensity * 0.8;
-
-          ctx.shadowColor = "#00ffff";
-          ctx.shadowBlur = 4 * zoom;
-          ctx.fillStyle = `rgba(180, 255, 255, ${tspAlpha})`;
-          ctx.beginPath();
-          ctx.arc(tspX, tspY, (1 + tspAlpha * 0.5) * zoom, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        }
-      }
-
-      // Main spark with radiating lightning bolts
-      if (isAttacking && Math.sin(time * 15 + ri * 5) > 0.3) {
-        const sparkT = (Math.sin(time * 12 + ri) + 1) / 2;
-        const oneMinT = 1 - sparkT;
-        const sparkX =
-          oneMinT * oneMinT * jx1 +
-          2 * oneMinT * sparkT * ctrlX +
-          sparkT * sparkT * jx2;
-        const sparkY =
-          oneMinT * oneMinT * jy1 +
-          2 * oneMinT * sparkT * ctrlY +
-          sparkT * sparkT * jy2;
-
-        ctx.shadowColor = "#ffcc00";
-        ctx.shadowBlur = 8 * zoom * attackIntensity;
-        ctx.fillStyle = `rgba(255, 240, 180, ${0.8 * attackIntensity})`;
+        const sparkT = (time * 6 + pair.from) % 1;
+        const omt = 1 - sparkT;
+        const sx = omt * omt * fx + 2 * omt * sparkT * ((fx + tx) / 2) + sparkT * sparkT * tx;
+        const sy = omt * omt * fy + 2 * omt * sparkT * ctrlY + sparkT * sparkT * ty;
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 4 * zoom;
+        ctx.fillStyle = `rgba(200, 255, 255, ${0.7 * attackIntensity})`;
         ctx.beginPath();
-        ctx.arc(sparkX, sparkY, 2.5 * zoom, 0, Math.PI * 2);
+        ctx.arc(sx, sy, 2 * zoom, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = `rgba(255, 255, 240, ${attackIntensity})`;
-        ctx.beginPath();
-        ctx.arc(sparkX, sparkY, 1.2 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let s = 0; s < 4; s++) {
-          const sAngle = time * 20 + s * 1.6 + ri;
-          const sLen = (3.5 + Math.sin(time * 25 + s) * 2.5) * zoom;
-          ctx.strokeStyle = `rgba(255, 255, 200, ${0.5 * attackIntensity})`;
-          ctx.lineWidth = 0.8 * zoom;
-          ctx.beginPath();
-          ctx.moveTo(sparkX, sparkY);
-          const sMidX = sparkX + Math.cos(sAngle) * sLen * 0.5 + Math.sin(time * 30 + s) * zoom;
-          const sMidY = sparkY + Math.sin(sAngle) * sLen * 0.25;
-          ctx.lineTo(sMidX, sMidY);
-          ctx.lineTo(
-            sparkX + Math.cos(sAngle) * sLen,
-            sparkY + Math.sin(sAngle) * sLen * 0.4,
-          );
-          ctx.stroke();
-        }
         ctx.shadowBlur = 0;
-      }
-
-      // Passive occasional spark (even when not attacking)
-      if (!isAttacking && Math.sin(time * 6 + ri * 7.3) > 0.92) {
-        const idleT = (Math.sin(time * 4 + ri * 2) + 1) / 2;
-        const idleOmT = 1 - idleT;
-        const idleSX = idleOmT * idleOmT * jx1 + 2 * idleOmT * idleT * ctrlX + idleT * idleT * jx2;
-        const idleSY = idleOmT * idleOmT * jy1 + 2 * idleOmT * idleT * ctrlY + idleT * idleT * jy2;
-        ctx.fillStyle = "rgba(255, 240, 200, 0.5)";
-        ctx.beginPath();
-        ctx.arc(idleSX, idleSY, 1 * zoom, 0, Math.PI * 2);
-        ctx.fill();
       }
     }
   }
