@@ -8165,20 +8165,61 @@ function renderLibraryTower(
     zoom,
   );
 
-  // Stone block pattern on lower body
+  // Stone block pattern on lower body with mortar joints
   ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 1 * zoom;
   for (let row = 0; row < 5; row++) {
     const blockY = screenPos.y - row * lowerBodyHeight * zoom * 0.18;
+
+    // Horizontal mortar lines (left face)
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
     ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
     ctx.stroke();
+
+    // Horizontal mortar lines (right face)
     ctx.beginPath();
     ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
     ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
     ctx.stroke();
+
+    // Vertical mortar joints (staggered per row for brick pattern)
+    const stagger = row % 2 === 0 ? 0 : 0.15;
+    for (let col = 0; col < 3; col++) {
+      const t = 0.25 + col * 0.25 + stagger;
+      if (t > 0.95) continue;
+      const nextBlockY =
+        screenPos.y - (row + 1) * lowerBodyHeight * zoom * 0.18;
+
+      // Left face vertical joints
+      const ljX = screenPos.x - w * (0.1 + t * 0.75);
+      const ljY1 = blockY + d * (0.15 - t * 0.7);
+      const ljY2 = nextBlockY + d * (0.15 - t * 0.7);
+      ctx.beginPath();
+      ctx.moveTo(ljX, ljY1);
+      ctx.lineTo(ljX, ljY2);
+      ctx.stroke();
+
+      // Right face vertical joints
+      const rjX = screenPos.x + w * (0.1 + t * 0.75);
+      ctx.beginPath();
+      ctx.moveTo(rjX, ljY1);
+      ctx.lineTo(rjX, ljY2);
+      ctx.stroke();
+    }
   }
+
+  // Weathered stone texture highlights
+  ctx.globalAlpha = 0.08;
+  for (let i = 0; i < 12; i++) {
+    const stoneX =
+      screenPos.x + ((((i * 7 + 3) % 11) / 11) * 2 - 1) * w * 0.7;
+    const stoneY =
+      screenPos.y - ((i * 13 + 5) % 9) * lowerBodyHeight * zoom * 0.1;
+    ctx.fillStyle = i % 2 === 0 ? "#8a7a6a" : "#4a3a2a";
+    ctx.fillRect(stoneX - 2 * zoom, stoneY - 1.5 * zoom, 4 * zoom, 3 * zoom);
+  }
+  ctx.globalAlpha = 1.0;
 
   // Mystical wall runes on lower body
   const wallRuneGlow = 0.4 + Math.sin(time * 2.5) * 0.2 + attackPulse * 0.4;
@@ -8194,43 +8235,355 @@ function renderLibraryTower(
   }
   ctx.shadowBlur = 0;
 
-  // Flying buttresses (Gothic supports)
-  for (const side of [-1, 1]) {
-    // Main buttress
+  // Wall sconces with mystical light chains
+  const sconcePosns: { x: number; y: number }[] = [];
+  for (let i = 0; i < 4; i++) {
+    const side = i < 2 ? -1 : 1;
+    const idx = i % 2;
+    const scX = screenPos.x + side * w * (0.45 + idx * 0.3);
+    const scY = screenPos.y - lowerBodyHeight * zoom * (0.2 + idx * 0.35);
+    sconcePosns.push({ x: scX, y: scY });
+
+    // Sconce bracket
     ctx.fillStyle = "#5a4a3a";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + side * w * 0.85, screenPos.y + d * 0.35);
-    ctx.lineTo(screenPos.x + side * w * 1.15, screenPos.y + d * 0.45);
-    ctx.lineTo(
-      screenPos.x + side * w * 1.15,
-      screenPos.y - lowerBodyHeight * zoom + d * 0.25,
+    ctx.moveTo(scX, scY);
+    ctx.lineTo(scX + side * 4 * zoom, scY - 2 * zoom);
+    ctx.lineTo(scX + side * 4 * zoom, scY + 3 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sconce cup
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.ellipse(
+      scX + side * 4 * zoom,
+      scY,
+      2.5 * zoom,
+      1.5 * zoom,
+      0,
+      0,
+      Math.PI * 2,
     );
+    ctx.fill();
+
+    // Flame glow on sconce
+    const flameFlicker = 0.5 + Math.sin(time * 8 + i * 2.3) * 0.2 + Math.sin(time * 12.7 + i * 1.1) * 0.1;
+    ctx.fillStyle = `rgba(255, 200, 100, ${flameFlicker})`;
+    ctx.shadowColor = "rgba(255, 180, 80, 0.6)";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      scX + side * 4 * zoom,
+      scY - 3 * zoom,
+      2 * zoom,
+      3 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Mystical chains of light connecting sconces on each side
+  for (let side = 0; side < 2; side++) {
+    const s0 = sconcePosns[side * 2];
+    const s1 = sconcePosns[side * 2 + 1];
+    const chainGlow = 0.25 + Math.sin(time * 3 + side) * 0.15 + attackPulse * 0.3;
+    ctx.strokeStyle = `rgba(${glowColor}, ${chainGlow})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.setLineDash([3 * zoom, 3 * zoom]);
+    ctx.beginPath();
+    ctx.moveTo(s0.x + (side === 0 ? -1 : 1) * 4 * zoom, s0.y);
+    const midX = (s0.x + s1.x) / 2 + (side === 0 ? -1 : 1) * 6 * zoom;
+    const midY = (s0.y + s1.y) / 2 + 8 * zoom + Math.sin(time * 2 + side) * 2 * zoom;
+    ctx.quadraticCurveTo(
+      midX,
+      midY,
+      s1.x + (side === 0 ? -1 : 1) * 4 * zoom,
+      s1.y,
+    );
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Travelling spark along chain
+    const sparkT = ((time * 1.5 + side * 0.5) % 1);
+    const sparkX = s0.x * (1 - sparkT) * (1 - sparkT) + midX * 2 * sparkT * (1 - sparkT) + s1.x * sparkT * sparkT;
+    const sparkY = s0.y * (1 - sparkT) * (1 - sparkT) + midY * 2 * sparkT * (1 - sparkT) + s1.y * sparkT * sparkT;
+    ctx.fillStyle = `rgba(${glowColor}, ${0.7 + Math.sin(time * 10) * 0.3})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(sparkX, sparkY, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Rose window (circular stained glass) on front face
+  const roseY = screenPos.y - lowerBodyHeight * zoom * 0.65;
+  const roseRadius = 7 * zoom;
+  const roseGlow = 0.5 + Math.sin(time * 1.8) * 0.2 + attackPulse * 0.3;
+
+  // Rose window stone frame
+  ctx.strokeStyle = "#3a2a1a";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, roseY, roseRadius + 1.5 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Rose window glass background
+  ctx.fillStyle = `rgba(${glowColor}, ${roseGlow * 0.6})`;
+  ctx.shadowColor = `rgb(${glowColor})`;
+  ctx.shadowBlur = 8 * zoom;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, roseY, roseRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Rose window tracery (Gothic pattern)
+  ctx.strokeStyle = "#3a2a1a";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let petal = 0; petal < 8; petal++) {
+    const petalAngle = (petal / 8) * Math.PI * 2;
+
+    // Radial spoke
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, roseY);
     ctx.lineTo(
-      screenPos.x + side * w * 0.85,
-      screenPos.y - lowerBodyHeight * zoom + d * 0.15,
+      screenPos.x + Math.cos(petalAngle) * roseRadius,
+      roseY + Math.sin(petalAngle) * roseRadius,
+    );
+    ctx.stroke();
+
+    // Inner trefoil arcs
+    const midAngle = petalAngle + Math.PI / 8;
+    const innerR = roseRadius * 0.55;
+    ctx.beginPath();
+    ctx.arc(
+      screenPos.x + Math.cos(midAngle) * innerR * 0.5,
+      roseY + Math.sin(midAngle) * innerR * 0.5,
+      innerR * 0.4,
+      midAngle - Math.PI * 0.5,
+      midAngle + Math.PI * 0.5,
+    );
+    ctx.stroke();
+  }
+
+  // Rose window inner ring
+  ctx.strokeStyle = "#3a2a1a";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, roseY, roseRadius * 0.5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Rose window center gem
+  ctx.fillStyle = `rgba(255, 220, 255, ${roseGlow})`;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, roseY, 2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Sequentially appearing/fading arcane glyphs on walls
+  const glyphSymbols = ["⊕", "⊗", "⊙", "◈", "◇", "△"];
+  ctx.font = `${6 * zoom}px serif`;
+  ctx.textAlign = "center";
+  for (let i = 0; i < 6; i++) {
+    const glyphCycle = (time * 0.4 + i * 0.6) % (glyphSymbols.length * 0.6);
+    const glyphFade =
+      Math.max(0, 1 - Math.abs(glyphCycle - i * 0.6) * 2.5) *
+      (0.6 + attackPulse * 0.4);
+    if (glyphFade <= 0) continue;
+
+    const side = i < 3 ? -1 : 1;
+    const idx = i % 3;
+    const gx =
+      screenPos.x + side * (w * 0.3 + idx * w * 0.2);
+    const gy =
+      screenPos.y - lowerBodyHeight * zoom * (0.15 + idx * 0.22);
+
+    ctx.fillStyle = `rgba(${glowColor}, ${glyphFade})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 4 * zoom * glyphFade;
+    ctx.fillText(glyphSymbols[i], gx, gy);
+  }
+  ctx.shadowBlur = 0;
+
+  // Entrance doorway with flickering torches
+  const entranceX = screenPos.x;
+  const entranceY = screenPos.y - 2 * zoom;
+  const doorW = 6 * zoom;
+  const doorH = 12 * zoom;
+
+  // Door frame (Gothic pointed arch)
+  ctx.fillStyle = "#3a2a1a";
+  ctx.beginPath();
+  ctx.moveTo(entranceX - doorW, entranceY);
+  ctx.lineTo(entranceX - doorW, entranceY - doorH * 0.6);
+  ctx.quadraticCurveTo(
+    entranceX,
+    entranceY - doorH * 1.2,
+    entranceX + doorW,
+    entranceY - doorH * 0.6,
+  );
+  ctx.lineTo(entranceX + doorW, entranceY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Warm interior glow through door
+  const doorGlow = 0.4 + Math.sin(time * 6) * 0.1 + Math.sin(time * 9.3) * 0.08;
+  const doorGrad = ctx.createRadialGradient(
+    entranceX,
+    entranceY - doorH * 0.4,
+    0,
+    entranceX,
+    entranceY - doorH * 0.4,
+    doorW * 1.2,
+  );
+  doorGrad.addColorStop(0, `rgba(255, 200, 120, ${doorGlow})`);
+  doorGrad.addColorStop(0.6, `rgba(255, 160, 60, ${doorGlow * 0.5})`);
+  doorGrad.addColorStop(1, `rgba(200, 100, 30, 0)`);
+  ctx.fillStyle = doorGrad;
+  ctx.beginPath();
+  ctx.moveTo(entranceX - doorW + 1.5 * zoom, entranceY);
+  ctx.lineTo(entranceX - doorW + 1.5 * zoom, entranceY - doorH * 0.55);
+  ctx.quadraticCurveTo(
+    entranceX,
+    entranceY - doorH * 1.1,
+    entranceX + doorW - 1.5 * zoom,
+    entranceY - doorH * 0.55,
+  );
+  ctx.lineTo(entranceX + doorW - 1.5 * zoom, entranceY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Torch brackets on each side of entrance
+  for (const tSide of [-1, 1]) {
+    const torchX = entranceX + tSide * (doorW + 3 * zoom);
+    const torchY = entranceY - doorH * 0.5;
+
+    // Bracket
+    ctx.fillStyle = "#4a3a2a";
+    ctx.fillRect(torchX - 1 * zoom, torchY, 2 * zoom, 6 * zoom);
+
+    // Torch cup
+    ctx.fillStyle = "#6a5a3a";
+    ctx.beginPath();
+    ctx.moveTo(torchX - 2 * zoom, torchY);
+    ctx.lineTo(torchX + 2 * zoom, torchY);
+    ctx.lineTo(torchX + 1.5 * zoom, torchY - 2 * zoom);
+    ctx.lineTo(torchX - 1.5 * zoom, torchY - 2 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Animated flame
+    const fl1 = Math.sin(time * 10 + tSide * 3) * 0.15;
+    const fl2 = Math.sin(time * 14 + tSide * 5) * 0.1;
+    const flameH = (5 + Math.sin(time * 8 + tSide) * 1.5) * zoom;
+
+    ctx.fillStyle = `rgba(255, 220, 100, ${0.8 + fl1})`;
+    ctx.shadowColor = "rgba(255, 180, 50, 0.7)";
+    ctx.shadowBlur = 8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(torchX - 2 * zoom, torchY - 2 * zoom);
+    ctx.quadraticCurveTo(
+      torchX + fl2 * zoom * 4,
+      torchY - flameH,
+      torchX,
+      torchY - flameH - 2 * zoom,
+    );
+    ctx.quadraticCurveTo(
+      torchX - fl2 * zoom * 3,
+      torchY - flameH,
+      torchX + 2 * zoom,
+      torchY - 2 * zoom,
     );
     ctx.closePath();
     ctx.fill();
 
-    // Buttress cap
+    // Inner flame (hotter core)
+    ctx.fillStyle = `rgba(255, 255, 200, ${0.6 + fl2})`;
+    ctx.beginPath();
+    ctx.moveTo(torchX - 1 * zoom, torchY - 2.5 * zoom);
+    ctx.quadraticCurveTo(
+      torchX,
+      torchY - flameH * 0.6,
+      torchX,
+      torchY - flameH * 0.7,
+    );
+    ctx.quadraticCurveTo(
+      torchX,
+      torchY - flameH * 0.6,
+      torchX + 1 * zoom,
+      torchY - 2.5 * zoom,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Flying buttresses (Gothic supports) with 3D isometric depth
+  for (const side of [-1, 1]) {
+    const bx = screenPos.x + side * w * 0.85;
+    const bxOuter = screenPos.x + side * w * 1.15;
+    const bTop = screenPos.y - lowerBodyHeight * zoom;
+
+    // Buttress side face (3D depth)
+    ctx.fillStyle = "#4a3a2a";
+    ctx.beginPath();
+    ctx.moveTo(bxOuter, screenPos.y + d * 0.45);
+    ctx.lineTo(bxOuter + side * 3 * zoom, screenPos.y + d * 0.5);
+    ctx.lineTo(bxOuter + side * 3 * zoom, bTop + d * 0.3);
+    ctx.lineTo(bxOuter, bTop + d * 0.25);
+    ctx.closePath();
+    ctx.fill();
+
+    // Buttress front face
+    ctx.fillStyle = "#5a4a3a";
+    ctx.beginPath();
+    ctx.moveTo(bx, screenPos.y + d * 0.35);
+    ctx.lineTo(bxOuter, screenPos.y + d * 0.45);
+    ctx.lineTo(bxOuter, bTop + d * 0.25);
+    ctx.lineTo(bx, bTop + d * 0.15);
+    ctx.closePath();
+    ctx.fill();
+
+    // Buttress stone course lines
+    ctx.strokeStyle = "#3a2a1a";
+    ctx.lineWidth = 0.7 * zoom;
+    for (let row = 0; row < 4; row++) {
+      const rowFrac = row / 4;
+      const rowY =
+        screenPos.y + d * 0.35 -
+        rowFrac * (screenPos.y + d * 0.35 - bTop - d * 0.15);
+      ctx.beginPath();
+      ctx.moveTo(bx, rowY);
+      ctx.lineTo(bxOuter, rowY + d * 0.1);
+      ctx.stroke();
+    }
+
+    // Buttress pinnacle cap (3D pointed)
     ctx.fillStyle = "#6a5a4a";
     ctx.beginPath();
     ctx.moveTo(
       screenPos.x + side * w * 1.0,
-      screenPos.y - lowerBodyHeight * zoom - 4 * zoom,
+      bTop - 6 * zoom,
     );
-    ctx.lineTo(
-      screenPos.x + side * w * 0.8,
-      screenPos.y - lowerBodyHeight * zoom + d * 0.1,
-    );
-    ctx.lineTo(
-      screenPos.x + side * w * 1.2,
-      screenPos.y - lowerBodyHeight * zoom + d * 0.2,
-    );
+    ctx.lineTo(bx, bTop + d * 0.1);
+    ctx.lineTo(bxOuter, bTop + d * 0.2);
+    ctx.lineTo(bxOuter + side * 3 * zoom, bTop + d * 0.25);
     ctx.closePath();
     ctx.fill();
 
-    // Flying arch support
+    // Pinnacle finial on buttress
+    ctx.fillStyle = "#7a6a5a";
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + side * w * 1.0, bTop - 10 * zoom);
+    ctx.lineTo(screenPos.x + side * w * 0.95, bTop - 5 * zoom);
+    ctx.lineTo(screenPos.x + side * w * 1.05, bTop - 5 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Flying arch support (double arch for Gothic feel)
     ctx.strokeStyle = "#4a3a2a";
     ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
@@ -8242,22 +8595,201 @@ function renderLibraryTower(
       screenPos.x + side * w * 1.3,
       screenPos.y - lowerBodyHeight * zoom * 0.8,
       screenPos.x + side * w * 0.9,
-      screenPos.y - lowerBodyHeight * zoom - 2 * zoom,
+      bTop - 2 * zoom,
     );
     ctx.stroke();
 
-    // Buttress rune
-    const buttressGlow = 0.5 + Math.sin(time * 3 + side * 2) * 0.25;
+    // Secondary lower arch
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(
+      screenPos.x + side * w * 1.1,
+      screenPos.y - lowerBodyHeight * zoom * 0.2,
+    );
+    ctx.quadraticCurveTo(
+      screenPos.x + side * w * 1.25,
+      screenPos.y - lowerBodyHeight * zoom * 0.45,
+      screenPos.x + side * w * 0.95,
+      screenPos.y - lowerBodyHeight * zoom * 0.6,
+    );
+    ctx.stroke();
+
+    // Buttress rune orb
+    const buttressGlow =
+      0.5 + Math.sin(time * 3 + side * 2) * 0.25 + attackPulse * 0.4;
     ctx.fillStyle = `rgba(${glowColor}, ${buttressGlow})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 4 * zoom * buttressGlow;
     ctx.beginPath();
     ctx.arc(
       screenPos.x + side * w * 1.0,
       screenPos.y - lowerBodyHeight * zoom * 0.6,
-      2 * zoom,
+      2.5 * zoom,
       0,
       Math.PI * 2,
     );
     ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Energy pulse through buttresses during attack
+    if (attackPulse > 0.05) {
+      const pulseT = (time * 6) % 1;
+      const pulseY =
+        screenPos.y -
+        lowerBodyHeight * zoom * pulseT;
+      const pulseAlpha = attackPulse * (1 - Math.abs(pulseT - 0.5) * 2) * 0.8;
+      ctx.fillStyle = `rgba(${glowColor}, ${pulseAlpha})`;
+      ctx.shadowColor = `rgb(${glowColor})`;
+      ctx.shadowBlur = 6 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x + side * w * 1.0,
+        pulseY,
+        4 * zoom,
+        2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Gargoyle sculpture at buttress top
+    const gargoyleX = screenPos.x + side * w * 1.15;
+    const gargoyleY = bTop + 2 * zoom;
+
+    // Gargoyle body
+    ctx.fillStyle = "#5a5a5a";
+    ctx.beginPath();
+    ctx.ellipse(
+      gargoyleX + side * 2 * zoom,
+      gargoyleY,
+      4 * zoom,
+      2.5 * zoom,
+      side * 0.3,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Gargoyle head
+    ctx.fillStyle = "#6a6a6a";
+    ctx.beginPath();
+    ctx.arc(
+      gargoyleX + side * 5 * zoom,
+      gargoyleY - 1.5 * zoom,
+      2.5 * zoom,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+
+    // Gargoyle horns
+    ctx.strokeStyle = "#4a4a4a";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(gargoyleX + side * 4 * zoom, gargoyleY - 3 * zoom);
+    ctx.lineTo(gargoyleX + side * 3 * zoom, gargoyleY - 6 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(gargoyleX + side * 6 * zoom, gargoyleY - 3 * zoom);
+    ctx.lineTo(gargoyleX + side * 7 * zoom, gargoyleY - 6 * zoom);
+    ctx.stroke();
+
+    // Gargoyle wings (folded)
+    ctx.fillStyle = "#4a4a4a";
+    ctx.beginPath();
+    ctx.moveTo(gargoyleX + side * 1 * zoom, gargoyleY - 1 * zoom);
+    ctx.quadraticCurveTo(
+      gargoyleX - side * 1 * zoom,
+      gargoyleY - 5 * zoom,
+      gargoyleX + side * 3 * zoom,
+      gargoyleY - 3 * zoom,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Gargoyle eyes glow during attack
+    const gargoyleEyeGlow = attackPulse * 1.5;
+    if (gargoyleEyeGlow > 0.05) {
+      ctx.fillStyle = `rgba(255, 50, 50, ${Math.min(1, gargoyleEyeGlow)})`;
+      ctx.shadowColor = "rgba(255, 50, 50, 0.8)";
+      ctx.shadowBlur = 4 * zoom;
+      ctx.beginPath();
+      ctx.arc(
+        gargoyleX + side * 4.5 * zoom,
+        gargoyleY - 2 * zoom,
+        1 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(
+        gargoyleX + side * 6 * zoom,
+        gargoyleY - 2 * zoom,
+        1 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // Gothic pinnacles on roof corners
+  for (const corner of [0, 1, 2, 3]) {
+    const pSide = corner < 2 ? -1 : 1;
+    const pDepth = corner % 2 === 0 ? -1 : 1;
+    const pinnX = screenPos.x + pSide * w * 0.75;
+    const pinnBaseY =
+      screenPos.y - lowerBodyHeight * zoom + pDepth * d * 0.3;
+
+    // Pinnacle shaft
+    ctx.fillStyle = "#6a5a4a";
+    ctx.beginPath();
+    ctx.moveTo(pinnX - 2 * zoom, pinnBaseY);
+    ctx.lineTo(pinnX + 2 * zoom, pinnBaseY);
+    ctx.lineTo(pinnX + 1.5 * zoom, pinnBaseY - 10 * zoom);
+    ctx.lineTo(pinnX - 1.5 * zoom, pinnBaseY - 10 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pinnacle pointed tip
+    ctx.fillStyle = "#7a6a5a";
+    ctx.beginPath();
+    ctx.moveTo(pinnX, pinnBaseY - 16 * zoom);
+    ctx.lineTo(pinnX - 2.5 * zoom, pinnBaseY - 9 * zoom);
+    ctx.lineTo(pinnX + 2.5 * zoom, pinnBaseY - 9 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crocket (decorative knob) on pinnacle
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.arc(pinnX, pinnBaseY - 16.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Small side crockets
+    ctx.fillStyle = "#b89020";
+    ctx.beginPath();
+    ctx.arc(pinnX - 1.8 * zoom, pinnBaseY - 12 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(pinnX + 1.8 * zoom, pinnBaseY - 12 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pinnacle glow during attack
+    if (attackPulse > 0.05) {
+      ctx.fillStyle = `rgba(${glowColor}, ${attackPulse * 0.6})`;
+      ctx.shadowColor = `rgb(${glowColor})`;
+      ctx.shadowBlur = 4 * zoom;
+      ctx.beginPath();
+      ctx.arc(pinnX, pinnBaseY - 14 * zoom, 2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
   }
 
   // Piston plate/anvil
@@ -8439,6 +8971,75 @@ function renderLibraryTower(
   const topY = pistonTopY - baseHeight * 0.4 * zoom;
   const sX = screenPos.x;
 
+  // Clock face on upper tower (front face)
+  const clockCenterY = pistonTopY - baseHeight * 0.2 * zoom;
+  const clockR = 6 * zoom;
+
+  // Clock face background
+  ctx.fillStyle = "rgba(240, 230, 210, 0.85)";
+  ctx.strokeStyle = "#3a2a1a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.arc(sX, clockCenterY, clockR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Clock hour markers
+  ctx.fillStyle = "#3a2a1a";
+  for (let h = 0; h < 12; h++) {
+    const hAngle = (h / 12) * Math.PI * 2 - Math.PI / 2;
+    const markerLen = h % 3 === 0 ? 1.5 * zoom : 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(
+      sX + Math.cos(hAngle) * (clockR - markerLen),
+      clockCenterY + Math.sin(hAngle) * (clockR - markerLen),
+    );
+    ctx.lineTo(
+      sX + Math.cos(hAngle) * (clockR - 1 * zoom),
+      clockCenterY + Math.sin(hAngle) * (clockR - 1 * zoom),
+    );
+    ctx.lineWidth = h % 3 === 0 ? 1 * zoom : 0.5 * zoom;
+    ctx.stroke();
+  }
+
+  // Clock hands (animated slowly)
+  const hourAngle = (time * 0.02) % (Math.PI * 2) - Math.PI / 2;
+  const minuteAngle = (time * 0.24) % (Math.PI * 2) - Math.PI / 2;
+  ctx.strokeStyle = "#2a1a0a";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(sX, clockCenterY);
+  ctx.lineTo(
+    sX + Math.cos(hourAngle) * clockR * 0.5,
+    clockCenterY + Math.sin(hourAngle) * clockR * 0.5,
+  );
+  ctx.stroke();
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(sX, clockCenterY);
+  ctx.lineTo(
+    sX + Math.cos(minuteAngle) * clockR * 0.7,
+    clockCenterY + Math.sin(minuteAngle) * clockR * 0.7,
+  );
+  ctx.stroke();
+
+  // Clock center pin
+  ctx.fillStyle = "#c9a227";
+  ctx.beginPath();
+  ctx.arc(sX, clockCenterY, 1 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mystical glow behind clock during attack
+  if (attackPulse > 0.05) {
+    ctx.fillStyle = `rgba(${glowColor}, ${attackPulse * 0.3})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 8 * zoom;
+    ctx.beginPath();
+    ctx.arc(sX, clockCenterY, clockR + 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
   // Accent panel lines
   const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse;
   ctx.strokeStyle = `${mainColor} ${panelGlow})`;
@@ -8489,6 +9090,101 @@ function renderLibraryTower(
     ctx.fill();
     ctx.shadowBlur = 0;
   }
+
+  // ========== GOTHIC PINNACLES ON ROOF CORNERS ==========
+  for (const corner of [
+    { dx: -1, dy: -0.4 },
+    { dx: 1, dy: -0.4 },
+    { dx: -0.8, dy: 0.25 },
+    { dx: 0.8, dy: 0.25 },
+  ]) {
+    const pinnX = sX + corner.dx * (baseWidth - 4) * zoom * 0.45;
+    const pinnY = topY + corner.dy * (baseWidth - 4) * zoom * 0.2;
+    const pinnH = 10 * zoom;
+
+    // Pinnacle base
+    ctx.fillStyle = "#5a4a3a";
+    ctx.fillRect(pinnX - 2 * zoom, pinnY - 2 * zoom, 4 * zoom, 4 * zoom);
+
+    // Pinnacle spire
+    ctx.fillStyle = "#6a5a4a";
+    ctx.beginPath();
+    ctx.moveTo(pinnX, pinnY - pinnH);
+    ctx.lineTo(pinnX - 2.5 * zoom, pinnY - 2 * zoom);
+    ctx.lineTo(pinnX + 2.5 * zoom, pinnY - 2 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pinnacle crocket (decorative bumps)
+    ctx.fillStyle = "#7a6a5a";
+    for (let c = 0; c < 3; c++) {
+      const crocketFrac = 0.3 + c * 0.25;
+      const crocketX = pinnX + (c % 2 === 0 ? -1 : 1) * 2 * zoom * (1 - crocketFrac);
+      const crocketY = pinnY - pinnH * crocketFrac;
+      ctx.beginPath();
+      ctx.arc(crocketX, crocketY, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Pinnacle finial (tiny orb at top)
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.arc(pinnX, pinnY - pinnH - 1.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ========== OBSERVATION BALCONY ==========
+  const balconyY = topY + 4 * zoom;
+  const balconyW = baseWidth * zoom * 0.48;
+  const balconyD = baseWidth * zoom * 0.24;
+
+  // Balcony floor (isometric slab)
+  ctx.fillStyle = "#6a5a4a";
+  ctx.beginPath();
+  ctx.moveTo(sX - balconyW, balconyY);
+  ctx.lineTo(sX, balconyY - balconyD);
+  ctx.lineTo(sX + balconyW, balconyY);
+  ctx.lineTo(sX, balconyY + balconyD);
+  ctx.closePath();
+  ctx.fill();
+
+  // Balcony edge trim
+  ctx.strokeStyle = "#4a3a2a";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(sX - balconyW, balconyY);
+  ctx.lineTo(sX, balconyY + balconyD);
+  ctx.lineTo(sX + balconyW, balconyY);
+  ctx.stroke();
+
+  // Railing posts
+  const railH = 6 * zoom;
+  const railPosts = [
+    { x: sX - balconyW * 0.8, y: balconyY + balconyD * 0.2 },
+    { x: sX - balconyW * 0.4, y: balconyY + balconyD * 0.6 },
+    { x: sX, y: balconyY + balconyD },
+    { x: sX + balconyW * 0.4, y: balconyY + balconyD * 0.6 },
+    { x: sX + balconyW * 0.8, y: balconyY + balconyD * 0.2 },
+  ];
+  for (const post of railPosts) {
+    ctx.fillStyle = "#5a4a3a";
+    ctx.fillRect(post.x - 0.8 * zoom, post.y - railH, 1.6 * zoom, railH);
+    // Post cap
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.arc(post.x, post.y - railH, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Railing bar connecting posts
+  ctx.strokeStyle = "#5a4a3a";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(railPosts[0].x, railPosts[0].y - railH);
+  for (let i = 1; i < railPosts.length; i++) {
+    ctx.lineTo(railPosts[i].x, railPosts[i].y - railH);
+  }
+  ctx.stroke();
 
   // ========== ENHANCED GOTHIC SPIRE ==========
   const spireHeight = (28 + tower.level * 6) * zoom;
@@ -8579,11 +9275,123 @@ function renderLibraryTower(
   ctx.closePath();
   ctx.fill();
 
-  // Finial orb
-  ctx.fillStyle = "#daa520";
+  // Faceted crystal at top (diamond shape with multiple facets)
+  const crystalCenterY = topY - spireHeight - 10 * zoom;
+  const crystalSize = (3 + tower.level * 0.5) * zoom;
+  const crystalGlow = 0.7 + Math.sin(time * 4) * 0.2 + attackPulse * 0.5;
+
+  // Crystal outer glow
+  ctx.fillStyle = `rgba(${glowColor}, ${crystalGlow * 0.2})`;
+  ctx.shadowColor = `rgb(${glowColor})`;
+  ctx.shadowBlur = 10 * zoom;
   ctx.beginPath();
-  ctx.arc(sX, topY - spireHeight - 8 * zoom, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(sX, crystalCenterY, crystalSize * 2, 0, Math.PI * 2);
   ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Crystal facets (hexagonal shape with visible faces)
+  const facetAngles = 6;
+  for (let f = 0; f < facetAngles; f++) {
+    const fAngle1 = (f / facetAngles) * Math.PI * 2 - Math.PI / 2;
+    const fAngle2 = ((f + 1) / facetAngles) * Math.PI * 2 - Math.PI / 2;
+
+    // Upper facet (lighter)
+    const facetBright = 0.5 + (f % 2) * 0.2;
+    ctx.fillStyle = `rgba(${glowColor}, ${crystalGlow * facetBright})`;
+    ctx.beginPath();
+    ctx.moveTo(sX, crystalCenterY - crystalSize * 1.2);
+    ctx.lineTo(
+      sX + Math.cos(fAngle1) * crystalSize,
+      crystalCenterY + Math.sin(fAngle1) * crystalSize * 0.5,
+    );
+    ctx.lineTo(
+      sX + Math.cos(fAngle2) * crystalSize,
+      crystalCenterY + Math.sin(fAngle2) * crystalSize * 0.5,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Lower facet (darker)
+    ctx.fillStyle = `rgba(${glowColor}, ${crystalGlow * facetBright * 0.6})`;
+    ctx.beginPath();
+    ctx.moveTo(sX, crystalCenterY + crystalSize * 1.2);
+    ctx.lineTo(
+      sX + Math.cos(fAngle1) * crystalSize,
+      crystalCenterY + Math.sin(fAngle1) * crystalSize * 0.5,
+    );
+    ctx.lineTo(
+      sX + Math.cos(fAngle2) * crystalSize,
+      crystalCenterY + Math.sin(fAngle2) * crystalSize * 0.5,
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Crystal highlight (specular)
+  ctx.fillStyle = `rgba(255, 255, 255, ${crystalGlow * 0.6})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    sX - crystalSize * 0.25,
+    crystalCenterY - crystalSize * 0.4,
+    crystalSize * 0.3,
+    crystalSize * 0.2,
+    -0.4,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Lightning rod / magical antenna extending from crystal
+  const antennaBaseY = crystalCenterY - crystalSize * 1.2;
+  const antennaH = 8 * zoom;
+
+  // Main antenna shaft
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(sX, antennaBaseY);
+  ctx.lineTo(sX, antennaBaseY - antennaH);
+  ctx.stroke();
+
+  // Antenna crossbars
+  ctx.lineWidth = 0.8 * zoom;
+  for (let ab = 0; ab < 3; ab++) {
+    const abY = antennaBaseY - antennaH * (0.3 + ab * 0.25);
+    const abW = (3 - ab) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sX - abW, abY);
+    ctx.lineTo(sX + abW, abY);
+    ctx.stroke();
+  }
+
+  // Antenna tip spark
+  const sparkAlpha = 0.4 + Math.sin(time * 8) * 0.3 + attackPulse * 0.5;
+  ctx.fillStyle = `rgba(${glowColor}, ${sparkAlpha})`;
+  ctx.shadowColor = `rgb(${glowColor})`;
+  ctx.shadowBlur = 6 * zoom;
+  ctx.beginPath();
+  ctx.arc(sX, antennaBaseY - antennaH, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Lightning crackle from antenna during attack
+  if (attackPulse > 0.15) {
+    ctx.strokeStyle = `rgba(${glowColor}, ${attackPulse})`;
+    ctx.lineWidth = 1 * zoom;
+    for (let bolt = 0; bolt < 3; bolt++) {
+      const boltAngle = time * 12 + bolt * 2.1;
+      ctx.beginPath();
+      ctx.moveTo(sX, antennaBaseY - antennaH);
+      let bx = sX;
+      let by = antennaBaseY - antennaH;
+      for (let seg = 0; seg < 4; seg++) {
+        bx += Math.cos(boltAngle + seg * 1.5) * 4 * zoom;
+        by += Math.sin(boltAngle + seg * 0.8) * 3 * zoom - 1 * zoom;
+        ctx.lineTo(bx, by);
+      }
+      ctx.stroke();
+    }
+  }
 
   // Floating arcane rings
   const ringGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse * 0.5;
@@ -8692,14 +9500,15 @@ function renderLibraryTower(
     }
   }
 
-  // Gothic windows
+  // Gothic windows with interior details
   const windowY = screenPos.y - lowerBodyHeight * zoom * 0.5;
   const glowIntensity = 0.5 + Math.sin(time * 2) * 0.3 + attackPulse;
+  const candleFlicker = 0.15 * Math.sin(time * 8) + 0.1 * Math.sin(time * 13);
 
   for (const dx of [-1, 1]) {
     const wx = sX + dx * 11 * zoom;
 
-    // Window frame
+    // Window frame (outer)
     ctx.fillStyle = "#3a2a1a";
     ctx.beginPath();
     ctx.moveTo(wx - 5 * zoom, windowY + 10 * zoom);
@@ -8718,10 +9527,20 @@ function renderLibraryTower(
     ctx.lineWidth = 1 * zoom;
     ctx.stroke();
 
-    // Glowing interior
-    ctx.fillStyle = `${mainColor} ${glowIntensity})`;
-    ctx.shadowColor = "#b466ff";
-    ctx.shadowBlur = 10 * zoom;
+    // Warm candlelight interior glow gradient
+    const windowGrad = ctx.createLinearGradient(
+      wx,
+      windowY + 8 * zoom,
+      wx,
+      windowY - 6 * zoom,
+    );
+    windowGrad.addColorStop(0, `rgba(255, 200, 100, ${(glowIntensity * 0.4 + candleFlicker)})`);
+    windowGrad.addColorStop(0.4, `rgba(${glowColor}, ${glowIntensity * 0.7})`);
+    windowGrad.addColorStop(1, `rgba(${glowColor}, ${glowIntensity})`);
+
+    ctx.fillStyle = windowGrad;
+    ctx.shadowColor = `rgba(255, 200, 120, 0.5)`;
+    ctx.shadowBlur = 8 * zoom;
     ctx.beginPath();
     ctx.moveTo(wx - 3.5 * zoom, windowY + 8 * zoom);
     ctx.lineTo(wx - 3.5 * zoom, windowY - 2 * zoom);
@@ -8736,17 +9555,62 @@ function renderLibraryTower(
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Window mullion
+    // Visible bookshelves through window (dark horizontal lines)
+    ctx.strokeStyle = `rgba(60, 40, 20, ${0.3 + candleFlicker * 0.2})`;
+    ctx.lineWidth = 0.8 * zoom;
+    for (let shelf = 0; shelf < 3; shelf++) {
+      const shelfY = windowY + (2 + shelf * 3) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wx - 3 * zoom, shelfY);
+      ctx.lineTo(wx + 3 * zoom, shelfY);
+      ctx.stroke();
+
+      // Tiny book spines on shelves
+      for (let b = 0; b < 4; b++) {
+        const bookX = wx + (b - 1.5) * 1.5 * zoom;
+        const bookH = (1.5 + ((b * 3 + shelf * 7) % 3) * 0.5) * zoom;
+        const bookHue = (b * 60 + shelf * 120 + dx * 30) % 360;
+        ctx.fillStyle = `hsla(${bookHue}, 40%, 35%, ${0.4 + candleFlicker * 0.15})`;
+        ctx.fillRect(bookX - 0.5 * zoom, shelfY - bookH, 1 * zoom, bookH);
+      }
+    }
+
+    // Window mullion (center vertical)
     ctx.strokeStyle = "#3a2a1a";
-    ctx.lineWidth = 1 * zoom;
+    ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
     ctx.moveTo(wx, windowY - 5 * zoom);
     ctx.lineTo(wx, windowY + 8 * zoom);
     ctx.stroke();
+
+    // Window transom (horizontal)
     ctx.beginPath();
     ctx.moveTo(wx - 3 * zoom, windowY + 2 * zoom);
     ctx.lineTo(wx + 3 * zoom, windowY + 2 * zoom);
     ctx.stroke();
+
+    // Gothic arch tracery at top of window
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.arc(wx - 1.5 * zoom, windowY - 2 * zoom, 2 * zoom, Math.PI, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(wx + 1.5 * zoom, windowY - 2 * zoom, 2 * zoom, Math.PI, 0);
+    ctx.stroke();
+
+    // Candlelight warm glow spill outside window
+    ctx.fillStyle = `rgba(255, 200, 100, ${0.08 + candleFlicker * 0.04})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      wx,
+      windowY + 12 * zoom,
+      6 * zoom,
+      3 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
 
   // Central arcane core display
@@ -8790,13 +9654,14 @@ function renderLibraryTower(
 
   // ========== LEVEL 2 UNIQUE FEATURES ==========
   if (tower.level >= 2) {
-    // Floating ancient tomes
+    // Floating ancient tomes with page flutter
     for (let i = 0; i < tower.level; i++) {
       const bookAngle = time * 1.0 + i * ((Math.PI * 2) / tower.level);
       const bookRadius = 30 * zoom;
       const bookX = sX + Math.cos(bookAngle) * bookRadius;
       const bookY = topY - 20 * zoom + Math.sin(bookAngle * 2) * 8 * zoom;
       const bookFloat = Math.sin(time * 3 + i) * 3 * zoom;
+      const pageFlutter = Math.sin(time * 6 + i * 1.7) * 0.3;
 
       // Book shadow
       ctx.fillStyle = `${mainColor} 0.25)`;
@@ -8812,43 +9677,117 @@ function renderLibraryTower(
       );
       ctx.fill();
 
-      // Book cover
-      ctx.fillStyle =
+      // Book cover (slightly tilted based on movement)
+      ctx.save();
+      ctx.translate(bookX, bookY + bookFloat);
+      ctx.rotate(pageFlutter * 0.15);
+
+      const bookCoverColor =
         i % 3 === 0 ? "#6a4a3a" : i % 3 === 1 ? "#4a5a6a" : "#5a4a6a";
-      ctx.fillRect(
-        bookX - 8 * zoom,
-        bookY + bookFloat - 6 * zoom,
-        16 * zoom,
-        12 * zoom,
-      );
+      ctx.fillStyle = bookCoverColor;
+      ctx.fillRect(-8 * zoom, -6 * zoom, 16 * zoom, 12 * zoom);
 
-      // Book spine
+      // Book spine with embossed detail
       ctx.fillStyle = "#3a2a1a";
-      ctx.fillRect(
-        bookX - 8 * zoom,
-        bookY + bookFloat - 6 * zoom,
-        2 * zoom,
-        12 * zoom,
-      );
+      ctx.fillRect(-8 * zoom, -6 * zoom, 2 * zoom, 12 * zoom);
 
-      // Book pages glow
-      ctx.fillStyle = `rgba(${glowColor}, ${0.6 + Math.sin(time * 5 + i) * 0.2})`;
+      // Spine gold detail
+      ctx.fillStyle = "#c9a227";
+      ctx.fillRect(-7.5 * zoom, -4 * zoom, 1 * zoom, 8 * zoom);
+
+      // Book pages (visible edge with flutter effect)
+      ctx.fillStyle = "#e8dcc8";
+      const pageOffset = Math.sin(time * 8 + i * 2) * 1 * zoom;
       ctx.fillRect(
-        bookX - 5 * zoom,
-        bookY + bookFloat - 5 * zoom,
-        12 * zoom,
+        8 * zoom - 1 * zoom,
+        -5 * zoom + pageOffset,
+        1 * zoom,
         10 * zoom,
       );
+
+      // Glowing pages
+      ctx.fillStyle = `rgba(${glowColor}, ${0.6 + Math.sin(time * 5 + i) * 0.2})`;
+      ctx.fillRect(-5 * zoom, -5 * zoom, 12 * zoom, 10 * zoom);
 
       // Book rune
       ctx.fillStyle = "#3a2a1a";
       ctx.font = `${6 * zoom}px serif`;
       ctx.textAlign = "center";
-      ctx.fillText(
-        ["ᚠ", "ᚢ", "ᚦ"][i % 3],
-        bookX + 1 * zoom,
-        bookY + bookFloat + 2 * zoom,
-      );
+      ctx.fillText(["ᚠ", "ᚢ", "ᚦ"][i % 3], 1 * zoom, 2 * zoom);
+
+      // Fluttering pages lifting off the book
+      for (let p = 0; p < 2; p++) {
+        const pagePhase = (time * 2 + i * 0.7 + p * 0.5) % 2;
+        if (pagePhase < 1) {
+          const pageLift = pagePhase * 12 * zoom;
+          const pageDrift = Math.sin(pagePhase * Math.PI) * 6 * zoom;
+          const pageAlpha = 1 - pagePhase;
+          ctx.fillStyle = `rgba(230, 220, 200, ${pageAlpha * 0.7})`;
+          ctx.save();
+          ctx.translate(pageDrift, -pageLift);
+          ctx.rotate(pagePhase * 1.5 + p);
+          ctx.fillRect(-3 * zoom, -2 * zoom, 6 * zoom, 4 * zoom);
+          ctx.restore();
+        }
+      }
+
+      ctx.restore();
+
+      // Magical particle trail behind book
+      ctx.fillStyle = `rgba(${glowColor}, ${0.3 + Math.sin(time * 4 + i) * 0.15})`;
+      for (let trail = 0; trail < 3; trail++) {
+        const trailAngle =
+          bookAngle - (trail + 1) * 0.15;
+        const trailX = sX + Math.cos(trailAngle) * bookRadius;
+        const trailY =
+          topY - 20 * zoom + Math.sin(trailAngle * 2) * 8 * zoom;
+        const trailSize = (2 - trail * 0.5) * zoom;
+        ctx.globalAlpha = 0.3 - trail * 0.08;
+        ctx.beginPath();
+        ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Knowledge orbs / wisps drifting around the building
+    for (let orb = 0; orb < 5; orb++) {
+      const orbAngle = time * 0.6 + orb * (Math.PI * 2) / 5;
+      const orbVertical = Math.sin(time * 1.5 + orb * 1.2) * 20 * zoom;
+      const orbRadius = (25 + Math.sin(time * 0.8 + orb) * 10) * zoom;
+      const orbX = sX + Math.cos(orbAngle) * orbRadius;
+      const orbY =
+        screenPos.y - lowerBodyHeight * zoom * 0.4 + orbVertical;
+      const orbAlpha = 0.3 + Math.sin(time * 3 + orb * 0.8) * 0.15;
+
+      // Wisp glow
+      ctx.fillStyle = `rgba(${glowColor}, ${orbAlpha * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(orbX, orbY, 4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wisp core
+      ctx.fillStyle = `rgba(${glowColor}, ${orbAlpha})`;
+      ctx.shadowColor = `rgb(${glowColor})`;
+      ctx.shadowBlur = 4 * zoom;
+      ctx.beginPath();
+      ctx.arc(orbX, orbY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Wisp trail (fading dots)
+      for (let wt = 1; wt <= 3; wt++) {
+        const wtAngle = orbAngle - wt * 0.08;
+        const wtX = sX + Math.cos(wtAngle) * orbRadius;
+        const wtY =
+          screenPos.y -
+          lowerBodyHeight * zoom * 0.4 +
+          Math.sin(time * 1.5 + orb * 1.2 - wt * 0.05) * 20 * zoom;
+        ctx.fillStyle = `rgba(${glowColor}, ${orbAlpha * (1 - wt * 0.3)})`;
+        ctx.beginPath();
+        ctx.arc(wtX, wtY, (1.5 - wt * 0.3) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // Mystical scroll unfurling
@@ -8856,6 +9795,16 @@ function renderLibraryTower(
     const scrollGlow = 0.4 + Math.sin(time * 2) * 0.2;
     ctx.fillStyle = "#e8dcc8";
     ctx.fillRect(sX - 6 * zoom, scrollY - 4 * zoom, 12 * zoom, 8 * zoom);
+
+    // Scroll roll details
+    ctx.fillStyle = "#d4c8b0";
+    ctx.beginPath();
+    ctx.ellipse(sX - 6 * zoom, scrollY, 1.5 * zoom, 4 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(sX + 6 * zoom, scrollY, 1.5 * zoom, 4 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.fillStyle = `rgba(${glowColor}, ${scrollGlow})`;
     ctx.font = `${5 * zoom}px serif`;
     ctx.fillText("ᛗᛚᛝ", sX, scrollY + 2 * zoom);
@@ -9068,16 +10017,45 @@ function renderLibraryTower(
 
   // Ground-crushing shockwave effect during attack
   if (groundShockwave > 0 && groundShockwave < 1) {
-    // Multiple expanding rings
-    for (let ring = 0; ring < 3; ring++) {
-      const ringDelay = ring * 0.15;
+    // Ground distortion flash at impact center
+    if (groundShockwave < 0.3) {
+      const flashAlpha = (1 - groundShockwave / 0.3) * 0.5;
+      const flashGrad = ctx.createRadialGradient(
+        sX,
+        screenPos.y + 5 * zoom,
+        0,
+        sX,
+        screenPos.y + 5 * zoom,
+        25 * zoom,
+      );
+      flashGrad.addColorStop(0, `${mainColor} ${flashAlpha})`);
+      flashGrad.addColorStop(0.5, `rgba(${glowColor}, ${flashAlpha * 0.3})`);
+      flashGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+      ctx.fillStyle = flashGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        sX,
+        screenPos.y + 5 * zoom,
+        25 * zoom,
+        12 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    // Multiple expanding rings (enhanced with varying thickness)
+    for (let ring = 0; ring < 4; ring++) {
+      const ringDelay = ring * 0.12;
       const ringPhase = Math.max(0, groundShockwave - ringDelay);
       if (ringPhase > 0 && ringPhase < 1) {
-        const ringRadius = 30 + ringPhase * 70;
+        const ringRadius = 25 + ringPhase * 80;
         const ringAlpha = (1 - ringPhase) * 0.6;
+        const ringWidth = (5 - ring) * (1 - ringPhase * 0.5);
 
         ctx.strokeStyle = `${mainColor} ${ringAlpha})`;
-        ctx.lineWidth = (4 - ring) * zoom;
+        ctx.lineWidth = ringWidth * zoom;
         ctx.beginPath();
         ctx.ellipse(
           sX,
@@ -9092,54 +10070,162 @@ function renderLibraryTower(
       }
     }
 
-    // Ground crack lines radiating outward
+    // Radial crack pattern with branching
     if (groundCrackPhase > 0) {
-      ctx.strokeStyle = `${mainColor} ${(1 - groundCrackPhase) * 0.7})`;
       ctx.lineWidth = 2 * zoom;
-      for (let i = 0; i < 8; i++) {
-        const crackAngle = (i / 8) * Math.PI * 2 + Math.PI / 16;
-        const crackLength = 25 + groundCrackPhase * 50;
-        const wobble1 = Math.sin(i * 3 + time * 5) * 5;
-        const wobble2 = Math.cos(i * 2 + time * 3) * 8;
+      for (let i = 0; i < 12; i++) {
+        const crackAngle = (i / 12) * Math.PI * 2 + Math.PI / 24;
+        const crackLength = 25 + groundCrackPhase * 60;
+        const crackAlpha = (1 - groundCrackPhase) * 0.7;
+
+        // Main crack
+        ctx.strokeStyle = `${mainColor} ${crackAlpha})`;
+        const seg1X =
+          sX + Math.cos(crackAngle) * crackLength * 0.35 * zoom +
+          Math.sin(i * 3 + time * 5) * 3 * zoom;
+        const seg1Y =
+          screenPos.y + 5 * zoom +
+          Math.sin(crackAngle) * crackLength * 0.18 * zoom;
+        const seg2X =
+          sX + Math.cos(crackAngle) * crackLength * 0.7 * zoom +
+          Math.cos(i * 2 + time * 3) * 5 * zoom;
+        const seg2Y =
+          screenPos.y + 5 * zoom +
+          Math.sin(crackAngle) * crackLength * 0.35 * zoom;
+        const endX =
+          sX + Math.cos(crackAngle) * crackLength * zoom +
+          Math.cos(i * 2 + time * 3) * 8 * zoom;
+        const endY =
+          screenPos.y + 5 * zoom +
+          Math.sin(crackAngle) * crackLength * 0.5 * zoom;
 
         ctx.beginPath();
         ctx.moveTo(sX, screenPos.y + 5 * zoom);
-        // Jagged crack line
-        ctx.lineTo(
-          sX + Math.cos(crackAngle) * crackLength * 0.4 * zoom + wobble1 * zoom,
-          screenPos.y +
-            5 * zoom +
-            Math.sin(crackAngle) * crackLength * 0.2 * zoom,
-        );
-        ctx.lineTo(
-          sX + Math.cos(crackAngle) * crackLength * zoom + wobble2 * zoom,
-          screenPos.y +
-            5 * zoom +
-            Math.sin(crackAngle) * crackLength * 0.5 * zoom,
-        );
+        ctx.lineTo(seg1X, seg1Y);
+        ctx.lineTo(seg2X, seg2Y);
+        ctx.lineTo(endX, endY);
         ctx.stroke();
+
+        // Branching sub-cracks
+        if (i % 2 === 0 && groundCrackPhase > 0.3) {
+          const branchAlpha = crackAlpha * 0.5;
+          ctx.strokeStyle = `${mainColor} ${branchAlpha})`;
+          ctx.lineWidth = 1 * zoom;
+          const branchAngle = crackAngle + (i % 3 === 0 ? 0.3 : -0.3);
+          ctx.beginPath();
+          ctx.moveTo(seg1X, seg1Y);
+          ctx.lineTo(
+            seg1X + Math.cos(branchAngle) * crackLength * 0.25 * zoom,
+            seg1Y + Math.sin(branchAngle) * crackLength * 0.12 * zoom,
+          );
+          ctx.stroke();
+          ctx.lineWidth = 2 * zoom;
+        }
+      }
+
+      // Glowing rune marks at crack intersections
+      ctx.fillStyle = `rgba(${glowColor}, ${(1 - groundCrackPhase) * 0.5})`;
+      for (let i = 0; i < 6; i++) {
+        const markAngle = (i / 6) * Math.PI * 2;
+        const markR = (15 + groundCrackPhase * 30) * zoom;
+        ctx.beginPath();
+        ctx.arc(
+          sX + Math.cos(markAngle) * markR,
+          screenPos.y + 5 * zoom + Math.sin(markAngle) * markR * 0.5,
+          2 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
       }
     }
 
-    // Debris particles flying up
-    for (let i = 0; i < 6; i++) {
-      const debrisAngle = (i / 6) * Math.PI * 2 + time * 0.5;
-      const debrisPhase = (groundShockwave + i * 0.1) % 1;
-      const debrisRadius = 20 + debrisPhase * 40;
-      const debrisHeight = Math.sin(debrisPhase * Math.PI) * 30;
+    // Mystical dust/debris particles rising during slam
+    for (let i = 0; i < 10; i++) {
+      const debrisAngle = (i / 10) * Math.PI * 2 + time * 0.5;
+      const debrisPhase = (groundShockwave + i * 0.08) % 1;
+      const debrisRadius = 15 + debrisPhase * 50;
+      const debrisHeight = Math.sin(debrisPhase * Math.PI) * 35;
       const debrisAlpha = (1 - debrisPhase) * 0.8;
 
-      const dx = sX + Math.cos(debrisAngle) * debrisRadius * zoom;
-      const dy =
+      const dxPos = sX + Math.cos(debrisAngle) * debrisRadius * zoom;
+      const dyPos =
         screenPos.y +
         5 * zoom +
         Math.sin(debrisAngle) * debrisRadius * 0.5 * zoom -
         debrisHeight * zoom;
 
+      // Stone debris
       ctx.fillStyle = `rgba(100, 80, 60, ${debrisAlpha})`;
       ctx.beginPath();
-      ctx.arc(dx, dy, (2 + Math.random()) * zoom, 0, Math.PI * 2);
+      ctx.arc(dxPos, dyPos, (2 + (i % 3)) * zoom, 0, Math.PI * 2);
       ctx.fill();
+
+      // Magical sparkle on some debris
+      if (i % 2 === 0) {
+        ctx.fillStyle = `rgba(${glowColor}, ${debrisAlpha * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(dxPos + 1 * zoom, dyPos - 1 * zoom, 1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Rising dust columns at impact point
+    for (let dc = 0; dc < 4; dc++) {
+      const dustAngle = (dc / 4) * Math.PI * 2 + 0.4;
+      const dustPhase = Math.max(0, groundShockwave - dc * 0.05);
+      if (dustPhase > 0) {
+        const dustH = dustPhase * 25 * zoom;
+        const dustAlpha = (1 - dustPhase) * 0.25;
+        const dustX = sX + Math.cos(dustAngle) * 12 * zoom;
+        const dustBaseY = screenPos.y + 5 * zoom + Math.sin(dustAngle) * 6 * zoom;
+
+        const dustGrad = ctx.createLinearGradient(
+          dustX,
+          dustBaseY,
+          dustX,
+          dustBaseY - dustH,
+        );
+        dustGrad.addColorStop(0, `rgba(140, 120, 100, ${dustAlpha})`);
+        dustGrad.addColorStop(1, `rgba(140, 120, 100, 0)`);
+        ctx.fillStyle = dustGrad;
+        ctx.fillRect(
+          dustX - 3 * zoom,
+          dustBaseY - dustH,
+          6 * zoom,
+          dustH,
+        );
+      }
+    }
+
+    // Enchanted book pages scattering during attack
+    for (let pg = 0; pg < 8; pg++) {
+      const pagePhase = (groundShockwave + pg * 0.1) % 1;
+      if (pagePhase < 0.9) {
+        const pageAngle = (pg / 8) * Math.PI * 2 + time * 2;
+        const pageRadius = 10 + pagePhase * 45;
+        const pageHeight = Math.sin(pagePhase * Math.PI) * 40;
+        const pageAlpha = (1 - pagePhase) * 0.7;
+        const pageSpin = time * 5 + pg * 1.3;
+
+        const pgX = sX + Math.cos(pageAngle) * pageRadius * zoom;
+        const pgY =
+          screenPos.y + 5 * zoom +
+          Math.sin(pageAngle) * pageRadius * 0.4 * zoom -
+          pageHeight * zoom;
+
+        ctx.save();
+        ctx.translate(pgX, pgY);
+        ctx.rotate(pageSpin);
+        ctx.fillStyle = `rgba(230, 220, 200, ${pageAlpha})`;
+        ctx.fillRect(-3 * zoom, -2 * zoom, 6 * zoom, 4 * zoom);
+
+        // Text lines on page
+        ctx.fillStyle = `rgba(60, 40, 20, ${pageAlpha * 0.5})`;
+        ctx.fillRect(-2 * zoom, -1 * zoom, 4 * zoom, 0.5 * zoom);
+        ctx.fillRect(-2 * zoom, 0.5 * zoom, 3 * zoom, 0.5 * zoom);
+        ctx.restore();
+      }
     }
   }
 
