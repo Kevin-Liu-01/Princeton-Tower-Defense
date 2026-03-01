@@ -15766,6 +15766,128 @@ function renderClubTower(
     zoom,
   );
 
+  // ========== ENTRANCE PORTICO WITH GREEK REVIVAL COLUMNS ==========
+  const porticoFrontY = screenPos.y + d * 0.45;
+  const porticoH = h * 0.32;
+  const colPositions = [-0.32, -0.11, 0.11, 0.32];
+  for (const colOff of colPositions) {
+    const colX = screenPos.x + w * colOff;
+    const colBase = porticoFrontY + d * Math.abs(colOff) * 0.6;
+    ctx.fillStyle = "#d4c9a8";
+    ctx.beginPath();
+    ctx.moveTo(colX - 2.5 * zoom, colBase);
+    ctx.lineTo(colX - 2 * zoom, colBase - porticoH);
+    ctx.lineTo(colX + 2 * zoom, colBase - porticoH);
+    ctx.lineTo(colX + 2.5 * zoom, colBase);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(180,160,120,0.4)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(colX, colBase);
+    ctx.lineTo(colX, colBase - porticoH);
+    ctx.stroke();
+    ctx.fillStyle = "#c9a227";
+    ctx.fillRect(colX - 3.5 * zoom, colBase - porticoH - 2 * zoom, 7 * zoom, 3 * zoom);
+    ctx.fillStyle = "#b8a888";
+    ctx.fillRect(colX - 3 * zoom, colBase - 1 * zoom, 6 * zoom, 2 * zoom);
+  }
+  ctx.fillStyle = "#3a6a4a";
+  const entabY = porticoFrontY - porticoH + d * 0.08;
+  ctx.fillRect(screenPos.x - w * 0.38, entabY, w * 0.76, 3 * zoom);
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1 * zoom;
+  ctx.strokeRect(screenPos.x - w * 0.38, entabY, w * 0.76, 3 * zoom);
+  ctx.fillStyle = "#2a5a3a";
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x - w * 0.4, entabY);
+  ctx.lineTo(screenPos.x, entabY - 8 * zoom);
+  ctx.lineTo(screenPos.x + w * 0.4, entabY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  // ========== CLUB CREST ON FRONT FACE ==========
+  const crestX = screenPos.x;
+  const crestY = screenPos.y - h * 0.58;
+  const crestR = 6 * zoom;
+  ctx.fillStyle = "#1a3a2a";
+  ctx.beginPath();
+  ctx.moveTo(crestX, crestY - crestR);
+  ctx.lineTo(crestX + crestR * 0.8, crestY - crestR * 0.4);
+  ctx.lineTo(crestX + crestR * 0.8, crestY + crestR * 0.3);
+  ctx.lineTo(crestX, crestY + crestR);
+  ctx.lineTo(crestX - crestR * 0.8, crestY + crestR * 0.3);
+  ctx.lineTo(crestX - crestR * 0.8, crestY - crestR * 0.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+  const crestGlow = 0.7 + Math.sin(time * 2) * 0.2 + flashIntensity * 0.3;
+  ctx.fillStyle = `rgba(201, 162, 39, ${crestGlow})`;
+  ctx.font = `bold ${7 * zoom}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("P", crestX, crestY + zoom);
+
+  // ========== DORMER WINDOWS WITH TREASURY GLOW ==========
+  for (let wi = 0; wi < 3; wi++) {
+    const winOff = (wi - 1) * w * 0.5;
+    const winX = screenPos.x + winOff;
+    const winY = screenPos.y - h * 0.42 - Math.abs(wi - 1) * 2 * zoom;
+    const winW = 5 * zoom;
+    const winH = 7 * zoom;
+    ctx.fillStyle = "#0a1a0a";
+    ctx.fillRect(winX - winW * 0.5, winY - winH, winW, winH);
+    const treasGlow = 0.25 + Math.sin(time * 2.5 + wi) * 0.15 + flashIntensity * 0.5;
+    const winGrad = ctx.createRadialGradient(winX, winY - winH * 0.5, 0, winX, winY - winH * 0.5, winW);
+    winGrad.addColorStop(0, `rgba(255, 200, 50, ${treasGlow})`);
+    winGrad.addColorStop(1, `rgba(100, 80, 20, ${treasGlow * 0.2})`);
+    ctx.fillStyle = winGrad;
+    ctx.fillRect(winX - winW * 0.5, winY - winH, winW, winH);
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1 * zoom;
+    ctx.strokeRect(winX - winW * 0.5, winY - winH, winW, winH);
+    ctx.beginPath();
+    ctx.moveTo(winX, winY - winH);
+    ctx.lineTo(winX, winY);
+    ctx.moveTo(winX - winW * 0.5, winY - winH * 0.5);
+    ctx.lineTo(winX + winW * 0.5, winY - winH * 0.5);
+    ctx.stroke();
+    ctx.fillStyle = "#1a3a2a";
+    ctx.beginPath();
+    ctx.moveTo(winX - winW * 0.7, winY - winH);
+    ctx.lineTo(winX, winY - winH - 3.5 * zoom);
+    ctx.lineTo(winX + winW * 0.7, winY - winH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // ========== WINDOW BOXES WITH VEGETATION ==========
+  for (let wi = 0; wi < 2; wi++) {
+    const boxX = screenPos.x + (wi === 0 ? -1 : 1) * w * 0.5;
+    const boxY = screenPos.y - h * 0.35;
+    ctx.fillStyle = "#5a3a2a";
+    ctx.fillRect(boxX - 4.5 * zoom, boxY, 9 * zoom, 2.5 * zoom);
+    for (let p = 0; p < 4; p++) {
+      const plantX = boxX - 3 * zoom + p * 2 * zoom;
+      const sway = Math.sin(time * 1.5 + p * 0.9 + wi) * 1.2 * zoom;
+      ctx.fillStyle = `rgba(${40 + p * 15}, ${120 + p * 20}, ${50 + p * 10}, 0.85)`;
+      ctx.beginPath();
+      ctx.arc(plantX + sway, boxY - 1.5 * zoom, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (tower.level >= 2) {
+      ctx.fillStyle = "#ffaa44";
+      ctx.beginPath();
+      ctx.arc(boxX + Math.sin(time + wi) * zoom, boxY - 3 * zoom, 0.9 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   // ========== EXTERNAL SCAFFOLDING AND TECH INFRASTRUCTURE ==========
   // Left face scaffolding (follows left isometric edge)
   ctx.strokeStyle = "#5a6a5a";
@@ -16422,6 +16544,115 @@ function renderClubTower(
   ctx.fill();
   ctx.shadowBlur = 0;
 
+  // ========== CHIMNEY WITH ANIMATED SMOKE ==========
+  const chimneyX = screenPos.x + w * 0.3;
+  const chimneyBaseY = topY - 5 * zoom;
+  ctx.fillStyle = "#3a2a2a";
+  ctx.fillRect(chimneyX - 3 * zoom, chimneyBaseY - 18 * zoom, 6 * zoom, 18 * zoom);
+  ctx.fillStyle = "#4a3a3a";
+  ctx.fillRect(chimneyX - 4 * zoom, chimneyBaseY - 20 * zoom, 8 * zoom, 3 * zoom);
+  ctx.strokeStyle = "#2a1a1a";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.strokeRect(chimneyX - 3 * zoom, chimneyBaseY - 18 * zoom, 6 * zoom, 18 * zoom);
+  for (let s = 0; s < 4; s++) {
+    const smokeAge = (time * 0.8 + s * 0.25) % 1;
+    const smokeY = chimneyBaseY - 20 * zoom - smokeAge * 25 * zoom;
+    const smokeX = chimneyX + Math.sin(time * 2 + s * 1.7) * 4 * zoom * smokeAge;
+    const smokeAlpha = (1 - smokeAge) * 0.35;
+    const smokeSize = (2 + smokeAge * 5) * zoom;
+    ctx.fillStyle = `rgba(180, 180, 190, ${smokeAlpha})`;
+    ctx.beginPath();
+    ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ========== ROOF BALUSTRADE / RAILING ==========
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1 * zoom;
+  const balLeftX = screenPos.x - baseWidth * zoom * 0.4;
+  const balRightX = screenPos.x + baseWidth * zoom * 0.4;
+  const balY = topY + 1 * zoom;
+  const balTopY = balY - 5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(balLeftX, balTopY);
+  ctx.lineTo(balRightX, balTopY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(balLeftX, balY);
+  ctx.lineTo(balRightX, balY);
+  ctx.stroke();
+  const balPosts = 8;
+  for (let bp = 0; bp <= balPosts; bp++) {
+    const postX = balLeftX + (balRightX - balLeftX) * (bp / balPosts);
+    ctx.beginPath();
+    ctx.moveTo(postX, balY);
+    ctx.lineTo(postX, balTopY);
+    ctx.stroke();
+  }
+
+  // ========== WAVING CLUB BANNER ==========
+  const flagPoleX = screenPos.x - w * 0.35;
+  const flagPoleTopY = topY - 28 * zoom;
+  ctx.strokeStyle = "#5a5a5a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, topY - 2 * zoom);
+  ctx.lineTo(flagPoleX, flagPoleTopY);
+  ctx.stroke();
+  ctx.fillStyle = "#4a4a4a";
+  ctx.beginPath();
+  ctx.arc(flagPoleX, flagPoleTopY, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  const flagW = 14 * zoom;
+  const flagH = 8 * zoom;
+  const flagTopY2 = flagPoleTopY + 1 * zoom;
+  ctx.fillStyle = "#2a5a3a";
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, flagTopY2);
+  ctx.lineTo(flagPoleX + flagW + Math.sin(time * 3) * 2 * zoom, flagTopY2 + Math.sin(time * 2.5) * zoom);
+  ctx.lineTo(flagPoleX + flagW + Math.sin(time * 3 + 0.5) * 2.5 * zoom, flagTopY2 + flagH + Math.sin(time * 2.8) * zoom);
+  ctx.lineTo(flagPoleX, flagTopY2 + flagH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+  const flagCenterX = flagPoleX + flagW * 0.45 + Math.sin(time * 3) * zoom;
+  const flagCenterY = flagTopY2 + flagH * 0.5;
+  ctx.fillStyle = `rgba(201, 162, 39, ${0.8 + Math.sin(time * 2) * 0.15})`;
+  ctx.font = `bold ${5 * zoom}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("EC", flagCenterX, flagCenterY);
+
+  // ========== STRING LIGHTS WITH WARM GLOW ==========
+  const lightCount = 7;
+  for (let li = 0; li < lightCount; li++) {
+    const lt = li / (lightCount - 1);
+    const lx = screenPos.x - w * 0.9 + lt * w * 1.8;
+    const sag = Math.sin(lt * Math.PI) * 6 * zoom;
+    const ly = screenPos.y - h * 0.05 + sag;
+    const lightFlicker = 0.5 + Math.sin(time * 5 + li * 1.3) * 0.2 + flashIntensity * 0.2;
+    ctx.fillStyle = `rgba(255, 220, 100, ${lightFlicker})`;
+    ctx.shadowColor = "rgba(255, 200, 60, 0.6)";
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(lx, ly, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    if (li < lightCount - 1) {
+      const nlx = screenPos.x - w * 0.9 + (li + 1) / (lightCount - 1) * w * 1.8;
+      const nsag = Math.sin((li + 1) / (lightCount - 1) * Math.PI) * 6 * zoom;
+      const nly = screenPos.y - h * 0.05 + nsag;
+      ctx.strokeStyle = "rgba(80, 70, 50, 0.5)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(lx, ly);
+      ctx.lineTo(nlx, nly);
+      ctx.stroke();
+    }
+  }
+
   // ========== WARNING LIGHTS ==========
   drawWarningLight(
     ctx,
@@ -16524,6 +16755,45 @@ function renderClubTower(
   ctx.fillText("$", 0, 0);
   ctx.restore();
 
+  // ========== OUTDOOR DINING AREA ==========
+  const diningBaseY = screenPos.y + 10 * zoom;
+  const diningX = screenPos.x + w * 0.9;
+  ctx.fillStyle = "#5a4a3a";
+  ctx.beginPath();
+  ctx.ellipse(diningX, diningBaseY - 4 * zoom, 5 * zoom, 2.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#4a3a2a";
+  ctx.fillRect(diningX - 0.8 * zoom, diningBaseY - 4 * zoom, 1.6 * zoom, 6 * zoom);
+  for (const cSide of [-1, 1]) {
+    const chairX = diningX + cSide * 6 * zoom;
+    ctx.fillStyle = "#4a3a2a";
+    ctx.fillRect(chairX - 1.5 * zoom, diningBaseY - 2 * zoom, 3 * zoom, 4 * zoom);
+    ctx.fillRect(chairX - 1.5 * zoom, diningBaseY - 5 * zoom, 3 * zoom, 1.5 * zoom);
+  }
+  const plateGlow = 0.4 + Math.sin(time * 2) * 0.15;
+  ctx.fillStyle = `rgba(255, 215, 0, ${plateGlow})`;
+  ctx.beginPath();
+  ctx.ellipse(diningX, diningBaseY - 5 * zoom, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ========== GOLD SHIMMER ON BUILDING ==========
+  for (let sp = 0; sp < 6 + tower.level * 2; sp++) {
+    const sparklePhase = (time * 1.5 + sp * 0.37) % 1;
+    const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * (0.4 + flashIntensity * 0.4);
+    if (sparkleAlpha > 0.05) {
+      const spX = screenPos.x + Math.sin(sp * 2.7) * w * 0.8;
+      const spY = screenPos.y - h * sp / (6 + tower.level * 2);
+      ctx.fillStyle = `rgba(255, 230, 120, ${sparkleAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(spX, spY - 2 * zoom);
+      ctx.lineTo(spX + 1 * zoom, spY);
+      ctx.lineTo(spX, spY + 2 * zoom);
+      ctx.lineTo(spX - 1 * zoom, spY);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
   // ========== GOLD PARTICLE FOUNTAIN ==========
   const particleCount = tower.level + 3 + (flashIntensity > 0 ? 4 : 0);
   for (let i = 0; i < particleCount; i++) {
@@ -16540,6 +16810,63 @@ function renderClubTower(
     ctx.arc(pX, pY, pSize * zoom, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
+  }
+
+  // ========== KA-CHING GENERATION EFFECTS ==========
+  if (flashIntensity > 0) {
+    // Dramatic expanding gold burst ring
+    const burstRadius = (1 - flashIntensity) * 40 * zoom;
+    const burstAlpha = flashIntensity * 0.7;
+    ctx.strokeStyle = `rgba(255, 215, 0, ${burstAlpha})`;
+    ctx.lineWidth = (3 + flashIntensity * 2) * zoom;
+    ctx.shadowColor = "#ffd700";
+    ctx.shadowBlur = 12 * zoom * flashIntensity;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, topY - 15 * zoom, burstRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Second inner ring
+    const innerBurst = (1 - flashIntensity) * 25 * zoom;
+    ctx.strokeStyle = `rgba(255, 240, 150, ${burstAlpha * 0.6})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.arc(screenPos.x, topY - 15 * zoom, innerBurst, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Flying coins shooting outward
+    for (let fc = 0; fc < 8; fc++) {
+      const coinAngle = (fc / 8) * Math.PI * 2 + time * 2;
+      const coinDist = (1 - flashIntensity) * 35 * zoom;
+      const fcX = screenPos.x + Math.cos(coinAngle) * coinDist;
+      const fcY = topY - 15 * zoom + Math.sin(coinAngle) * coinDist * 0.5 - (1 - flashIntensity) * 15 * zoom;
+      const fcAlpha = flashIntensity * 0.8;
+      const fcSize = (2 + flashIntensity * 2) * zoom;
+      ctx.fillStyle = `rgba(255, 215, 0, ${fcAlpha})`;
+      ctx.shadowColor = "#ffaa00";
+      ctx.shadowBlur = 6 * zoom * flashIntensity;
+      ctx.beginPath();
+      ctx.ellipse(fcX, fcY, fcSize, fcSize * 0.6, coinAngle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Ka-ching "$" text floating up
+    const kachingY = topY - 40 * zoom - (1 - flashIntensity) * 20 * zoom;
+    ctx.fillStyle = `rgba(255, 230, 100, ${flashIntensity})`;
+    ctx.shadowColor = "#ffd700";
+    ctx.shadowBlur = 8 * zoom * flashIntensity;
+    ctx.font = `bold ${(10 + flashIntensity * 6) * zoom}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("+$", screenPos.x, kachingY);
+    ctx.shadowBlur = 0;
+
+    // Treasury pulse glow on building
+    ctx.fillStyle = `rgba(255, 200, 50, ${flashIntensity * 0.15})`;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, screenPos.y - h * 0.3, w * 0.9, h * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // ========== LEVEL 2 UNIQUE FEATURES ==========
