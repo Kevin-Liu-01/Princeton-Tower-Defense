@@ -21714,6 +21714,1479 @@ function renderStationTower(
     ctx.shadowBlur = 0;
   }
 
+  // ========== ENHANCED ANIMATED OVERLAYS ==========
+  const isSpawning = tower.spawnEffect != null && tower.spawnEffect > 0;
+  const spawnIntensity = isSpawning
+    ? Math.max(0, tower.spawnEffect! / 500)
+    : 0;
+  const isStationAttacking =
+    tower.lastAttack != null && Date.now() - tower.lastAttack < 500;
+  const stationAttackPulse = isStationAttacking
+    ? Math.max(0, 1 - (Date.now() - tower.lastAttack) / 500)
+    : 0;
+  const stationActive = isSpawning || isStationAttacking;
+  const stationIntensity = Math.max(spawnIntensity, stationAttackPulse);
+  const levelScale = 0.8 + tower.level * 0.15;
+
+  // ---- ROTATING RADAR DISH ----
+  const radarX = screenPos.x + 18 * zoom;
+  const radarY = screenPos.y - (28 + tower.level * 6) * zoom;
+  const radarSpeed = stationActive
+    ? 8 + stationIntensity * 12
+    : 1.2;
+  const radarAngle = time * radarSpeed;
+
+  // Radar mast (tapered, with detail bands)
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#5a4a3a";
+  ctx.beginPath();
+  ctx.moveTo(radarX - 2 * zoom, radarY + 10 * zoom);
+  ctx.lineTo(radarX + 2 * zoom, radarY + 10 * zoom);
+  ctx.lineTo(radarX + 1.2 * zoom, radarY);
+  ctx.lineTo(radarX - 1.2 * zoom, radarY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  // Mast reinforcement rings
+  ctx.strokeStyle = tower.level >= 4 ? "#e8c847" : "#8a8a92";
+  ctx.lineWidth = 1.2 * zoom;
+  for (let mr = 0; mr < 2; mr++) {
+    const mrY = radarY + (3 + mr * 4) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(radarX - 1.6 * zoom + mr * 0.2 * zoom, mrY);
+    ctx.lineTo(radarX + 1.6 * zoom - mr * 0.2 * zoom, mrY);
+    ctx.stroke();
+  }
+
+  // Rotating dish assembly
+  ctx.save();
+  ctx.translate(radarX, radarY);
+  const dishWidth = (7 + tower.level * 1.5) * zoom * levelScale;
+  const dishArc = Math.cos(radarAngle) * dishWidth;
+  const dishDepth = 3.5 * zoom;
+
+  // Dish support arm (strut connecting mast to dish)
+  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, 1.5 * zoom);
+  ctx.lineTo(dishArc * 0.25, -dishDepth * 0.3);
+  ctx.stroke();
+
+  // Dish body (parabolic cross-section)
+  ctx.fillStyle = tower.level >= 4 ? "#daa520" : "#8a8a92";
+  ctx.beginPath();
+  ctx.ellipse(
+    dishArc * 0.15,
+    -dishDepth * 0.15,
+    Math.abs(dishArc) + 1 * zoom,
+    dishDepth,
+    0, 0, Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // Dish concave face (brighter when facing camera)
+  if (dishArc > 0) {
+    ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#b0b0b8";
+    ctx.beginPath();
+    ctx.ellipse(
+      dishArc * 0.2,
+      -dishDepth * 0.1,
+      dishArc * 0.65,
+      dishDepth * 0.55,
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Receiver element at dish focus
+  ctx.fillStyle = stationActive ? "#ff6633" : (tower.level >= 4 ? "#c9a227" : "#5a5a62");
+  ctx.beginPath();
+  ctx.arc(dishArc * 0.1, -dishDepth * 0.1, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Radar sweep pulse (visible during any active state)
+  if (stationActive) {
+    const sweepAlpha = 0.3 + stationIntensity * 0.5;
+    ctx.strokeStyle = `rgba(255, 108, 0, ${sweepAlpha})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.arc(0, 0, (10 + tower.level * 2) * zoom, radarAngle, radarAngle + 0.8);
+    ctx.stroke();
+
+    // Radar ping particles
+    for (let rp = 0; rp < 3; rp++) {
+      const rpPhase = ((time * 4 + rp * 1.1) % 2);
+      if (rpPhase < 1) {
+        const rpDist = rpPhase * (12 + tower.level * 3) * zoom;
+        const rpA = radarAngle + rp * 0.3;
+        const rpAlpha = (1 - rpPhase) * stationIntensity * 0.6;
+        ctx.fillStyle = `rgba(255, 200, 100, ${rpAlpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          Math.cos(rpA) * rpDist,
+          Math.sin(rpA) * rpDist * 0.4,
+          (1.5 - rpPhase) * zoom,
+          0, Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+
+  // ---- SIGNAL LIGHTS (cycling red/green/amber) ----
+  const signalBaseX = screenPos.x - 30 * zoom;
+  const signalBaseY = screenPos.y - (18 + tower.level * 3) * zoom;
+
+  // Signal post
+  ctx.fillStyle = "#2a2a32";
+  ctx.fillRect(signalBaseX - 1.5 * zoom, signalBaseY, 3 * zoom, 16 * zoom);
+
+  // Signal housing
+  ctx.fillStyle = "#1a1a22";
+  ctx.fillRect(signalBaseX - 4 * zoom, signalBaseY - 12 * zoom, 8 * zoom, 14 * zoom);
+  ctx.strokeStyle = "#3a3a42";
+  ctx.lineWidth = 1 * zoom;
+  ctx.strokeRect(signalBaseX - 4 * zoom, signalBaseY - 12 * zoom, 8 * zoom, 14 * zoom);
+
+  const signalCycle = (time * 0.5) % 3;
+  const signalColors = [
+    { color: "#ff3333", glowColor: "#ff0000", label: "red" },
+    { color: "#ffaa00", glowColor: "#ff8800", label: "amber" },
+    { color: "#33ff33", glowColor: "#00ff00", label: "green" },
+  ];
+
+  for (let si = 0; si < 3; si++) {
+    const lightY = signalBaseY - 10 * zoom + si * 4.5 * zoom;
+    const isActive = Math.floor(signalCycle) === si;
+    const brightness = isActive ? 0.8 + Math.sin(time * 6) * 0.2 : 0.15;
+    const sc = signalColors[si];
+
+    if (isActive) {
+      ctx.shadowColor = sc.glowColor;
+      ctx.shadowBlur = 8 * zoom;
+    }
+    ctx.fillStyle = isActive ? sc.color : `rgba(40, 40, 40, 0.8)`;
+    ctx.globalAlpha = isActive ? brightness : 0.5;
+    ctx.beginPath();
+    ctx.arc(signalBaseX, lightY, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // During active state (spawn or attack), all lights flash
+  if (stationActive) {
+    const alertRate = isStationAttacking ? 20 : 15;
+    const alertFlash = Math.sin(time * alertRate) > 0 ? 0.9 : 0.2;
+    const alertColor = isStationAttacking
+      ? `rgba(255, 50, 30, ${alertFlash})`
+      : `rgba(255, 108, 0, ${alertFlash})`;
+    ctx.fillStyle = alertColor;
+    ctx.shadowColor = isStationAttacking ? "#ff3220" : "#ff6c00";
+    ctx.shadowBlur = 10 * zoom;
+    for (let si = 0; si < 3; si++) {
+      const lightY = signalBaseY - 10 * zoom + si * 4.5 * zoom;
+      ctx.beginPath();
+      ctx.arc(signalBaseX, lightY, 2.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // ---- CONVEYOR BELT / TRANSPORT TRACK ----
+  const conveyorCX = screenPos.x + 8 * zoom;
+  const conveyorCY = screenPos.y + 6 * zoom;
+  const conveyorLen = 20 * zoom;
+  const conveyorW = 3 * zoom;
+  const beltSpeed = stationActive ? time * 6 : time * 1.5;
+
+  // Belt side rails (3D frame)
+  const beltRailColor = tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+  ctx.strokeStyle = beltRailColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(conveyorCX - conveyorLen * 0.5, conveyorCY - conveyorW);
+  ctx.lineTo(conveyorCX + conveyorLen * 0.5, conveyorCY - conveyorW - conveyorLen * 0.25);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(conveyorCX - conveyorLen * 0.5, conveyorCY);
+  ctx.lineTo(conveyorCX + conveyorLen * 0.5, conveyorCY - conveyorLen * 0.25 + conveyorW);
+  ctx.stroke();
+
+  // Belt surface
+  ctx.fillStyle = tower.level >= 3 ? "#3a3a42" : "#4a3a2a";
+  ctx.beginPath();
+  ctx.moveTo(conveyorCX - conveyorLen * 0.5, conveyorCY - conveyorW);
+  ctx.lineTo(conveyorCX + conveyorLen * 0.5, conveyorCY - conveyorW - conveyorLen * 0.25);
+  ctx.lineTo(conveyorCX + conveyorLen * 0.5, conveyorCY - conveyorLen * 0.25 + conveyorW);
+  ctx.lineTo(conveyorCX - conveyorLen * 0.5, conveyorCY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+
+  // Roller drums at each end
+  const rollerColor = tower.level >= 4 ? "#c9a227" : "#6a6a72";
+  for (const rEnd of [-0.5, 0.5]) {
+    const rx = conveyorCX + conveyorLen * rEnd;
+    const ry = conveyorCY - (rEnd + 0.5) * conveyorLen * 0.25;
+    ctx.fillStyle = rollerColor;
+    ctx.beginPath();
+    ctx.ellipse(rx, ry - conveyorW * 0.5, conveyorW * 0.8, conveyorW * 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.4)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+    const rollerSpin = time * (stationActive ? 8 : 2);
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.lineWidth = 0.5 * zoom;
+    for (let rs = 0; rs < 4; rs++) {
+      const rsAngle = rollerSpin + rs * Math.PI * 0.5;
+      const rsx = Math.cos(rsAngle) * conveyorW * 0.5;
+      const rsy = Math.sin(rsAngle) * conveyorW * 0.25;
+      ctx.beginPath();
+      ctx.moveTo(rx + rsx, ry - conveyorW * 0.5 + rsy);
+      ctx.lineTo(rx - rsx, ry - conveyorW * 0.5 - rsy);
+      ctx.stroke();
+    }
+  }
+
+  // Moving belt chevron segments
+  ctx.lineWidth = 1.5 * zoom;
+  const numSegments = 8;
+  for (let seg = 0; seg < numSegments; seg++) {
+    const segT = ((seg / numSegments + beltSpeed * 0.1) % 1);
+    const sx = conveyorCX - conveyorLen * 0.5 + segT * conveyorLen;
+    const sy = conveyorCY - segT * conveyorLen * 0.25;
+    ctx.strokeStyle = tower.level >= 4 ? `rgba(201, 162, 39, 0.6)` : `rgba(120, 120, 130, 0.6)`;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - conveyorW);
+    ctx.lineTo(sx + 1.5 * zoom, sy - conveyorW * 0.5);
+    ctx.lineTo(sx, sy);
+    ctx.stroke();
+  }
+
+  // Belt glow during active state
+  if (stationActive) {
+    const beltGlow = 0.1 + stationIntensity * 0.15;
+    ctx.fillStyle = isStationAttacking
+      ? `rgba(255, 60, 30, ${beltGlow})`
+      : `rgba(255, 180, 80, ${beltGlow})`;
+    ctx.beginPath();
+    ctx.moveTo(conveyorCX - conveyorLen * 0.5, conveyorCY - conveyorW);
+    ctx.lineTo(conveyorCX + conveyorLen * 0.5, conveyorCY - conveyorW - conveyorLen * 0.25);
+    ctx.lineTo(conveyorCX + conveyorLen * 0.5, conveyorCY - conveyorLen * 0.25 + conveyorW);
+    ctx.lineTo(conveyorCX - conveyorLen * 0.5, conveyorCY);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Multiple cargo crates on belt at staggered positions
+  const crateColors = [
+    tower.level >= 4 ? "#b89227" : "#8b6914",
+    tower.level >= 4 ? "#a08020" : "#7a5810",
+    tower.level >= 4 ? "#c9a230" : "#9a7920",
+  ];
+  for (let ci = 0; ci < 3; ci++) {
+    const crateT = ((beltSpeed * 0.08 + ci * 0.33) % 1);
+    const crateX = conveyorCX - conveyorLen * 0.4 + crateT * conveyorLen * 0.8;
+    const crateY = conveyorCY - crateT * conveyorLen * 0.2 - conveyorW - 2 * zoom;
+    const crateSize = (2.5 - ci * 0.3) * zoom;
+
+    ctx.fillStyle = crateColors[ci];
+    ctx.fillRect(crateX - crateSize, crateY - crateSize, crateSize * 2, crateSize * 2);
+    ctx.strokeStyle = "#3a2a1a";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.strokeRect(crateX - crateSize, crateY - crateSize, crateSize * 2, crateSize * 2);
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(crateX - crateSize, crateY - crateSize);
+    ctx.lineTo(crateX + crateSize, crateY + crateSize);
+    ctx.moveTo(crateX + crateSize, crateY - crateSize);
+    ctx.lineTo(crateX - crateSize, crateY + crateSize);
+    ctx.stroke();
+  }
+
+  // ---- OSCILLATING COMM ANTENNA WITH SIGNAL WAVES ----
+  const antennaX = screenPos.x - 8 * zoom;
+  const antennaY = screenPos.y - (32 + tower.level * 5) * zoom;
+  const antennaHeight = (12 + tower.level * 2) * zoom;
+  const antOscillation = Math.sin(time * 3) * 2 * zoom;
+
+  // Antenna mast
+  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(antennaX, antennaY + antennaHeight);
+  ctx.lineTo(antennaX + antOscillation * 0.3, antennaY);
+  ctx.stroke();
+
+  // Antenna tip node
+  const antTipX = antennaX + antOscillation * 0.3;
+  const antTipY = antennaY;
+  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#aaaaaa";
+  ctx.beginPath();
+  ctx.arc(antTipX, antTipY, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Blinking LED on tip
+  const ledRate = stationActive ? 16 : 8;
+  const ledBlink = Math.sin(time * ledRate) > 0.3;
+  if (ledBlink) {
+    ctx.fillStyle = stationActive ? "#ff3333" : "#33ff33";
+    ctx.shadowColor = stationActive ? "#ff0000" : "#00ff00";
+    ctx.shadowBlur = (stationActive ? 10 : 6) * zoom;
+    ctx.beginPath();
+    ctx.arc(antTipX, antTipY - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Cross-bar elements on antenna mast
+  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.lineWidth = 1 * zoom;
+  for (let cb = 0; cb < 3; cb++) {
+    const cbY = antennaY + antennaHeight * (0.25 + cb * 0.25);
+    const cbW = (3.5 - cb * 0.8) * zoom;
+    const cbSway = antOscillation * (1 - cb * 0.2) * 0.3;
+    ctx.beginPath();
+    ctx.moveTo(antennaX + cbSway - cbW, cbY);
+    ctx.lineTo(antennaX + cbSway + cbW, cbY);
+    ctx.stroke();
+  }
+
+  // Signal wave arcs emanating from antenna
+  const numWaves = stationActive ? 5 : 2;
+  const waveSpeedMul = stationActive ? 3.5 : 2;
+  for (let w = 0; w < numWaves; w++) {
+    const wavePhase = ((time * waveSpeedMul + w * 0.5) % 2);
+    if (wavePhase < 1.5) {
+      const waveR = (5 + wavePhase * 14) * zoom;
+      const waveAlpha = (1 - wavePhase / 1.5) * (stationActive ? 0.6 : 0.3);
+      ctx.strokeStyle = isStationAttacking
+        ? `rgba(255, 60, 30, ${waveAlpha})`
+        : isSpawning
+          ? `rgba(255, 108, 0, ${waveAlpha})`
+          : `rgba(100, 200, 255, ${waveAlpha})`;
+      ctx.lineWidth = (stationActive ? 2 : 1.5) * zoom;
+      ctx.beginPath();
+      ctx.arc(antTipX, antTipY, waveR, -Math.PI * 0.7, -Math.PI * 0.05);
+      ctx.stroke();
+    }
+  }
+
+  // Signal wave particles
+  const sigParticleCount = stationActive ? 6 : 2;
+  for (let p = 0; p < sigParticleCount; p++) {
+    const pPhase = ((time * (stationActive ? 4 : 3) + p * 1.2) % 2);
+    if (pPhase < 1.2) {
+      const pDist = pPhase * 18 * zoom;
+      const pAngle = -Math.PI * 0.35 + Math.sin(time * 2 + p) * 0.3;
+      const pAlpha = (1 - pPhase / 1.2) * 0.7;
+      ctx.fillStyle = isStationAttacking
+        ? `rgba(255, 100, 40, ${pAlpha})`
+        : isSpawning
+          ? `rgba(255, 150, 50, ${pAlpha})`
+          : `rgba(120, 200, 255, ${pAlpha})`;
+      ctx.beginPath();
+      ctx.arc(
+        antTipX + Math.cos(pAngle) * pDist,
+        antTipY + Math.sin(pAngle) * pDist,
+        (1.8 - pPhase * 0.6) * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
+
+  // ---- WINDOW REFLECTIONS (shimmer effect on building face) ----
+  const reflLightAngle = time * 0.3;
+  const numReflections = 2 + tower.level;
+  const reflBaseX = screenPos.x - 12 * zoom;
+  const reflBaseY = screenPos.y - 18 * zoom;
+
+  for (let ri = 0; ri < numReflections; ri++) {
+    const wx = reflBaseX + (ri % 2) * 8 * zoom;
+    const wy = reflBaseY + Math.floor(ri / 2) * 7 * zoom;
+
+    // Window frame recess with depth shadow (darker inner edge)
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.fillRect(wx - 4 * zoom, wy - 4 * zoom, 8 * zoom, 7 * zoom);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.fillRect(wx - 3.5 * zoom, wy - 3.5 * zoom, 7 * zoom, 6.5 * zoom);
+
+    // Window glass with gradient
+    const glassGrad = ctx.createLinearGradient(
+      wx - 3 * zoom, wy - 3 * zoom,
+      wx + 3 * zoom, wy + 2 * zoom,
+    );
+    glassGrad.addColorStop(0, tower.level >= 4 ? "rgba(20, 25, 45, 0.9)" : "rgba(30, 40, 55, 0.9)");
+    glassGrad.addColorStop(1, tower.level >= 4 ? "rgba(40, 40, 60, 0.8)" : "rgba(50, 60, 70, 0.8)");
+    ctx.fillStyle = glassGrad;
+    ctx.fillRect(wx - 3 * zoom, wy - 3 * zoom, 6 * zoom, 5 * zoom);
+
+    // Warm interior glow (always visible, subtle)
+    const baseGlow = 0.06 + Math.sin(time * 1.5 + ri * 2.5) * 0.03;
+    ctx.fillStyle = `rgba(255, 200, 120, ${baseGlow})`;
+    ctx.fillRect(wx - 2.5 * zoom, wy - 2.5 * zoom, 5 * zoom, 4 * zoom);
+
+    // Reflection sweep (light angle response)
+    const reflPhase = Math.sin(reflLightAngle + ri * 1.5);
+    const reflAlpha = Math.max(0, reflPhase) * 0.45;
+    const reflGrad = ctx.createLinearGradient(
+      wx - 3 * zoom, wy - 3 * zoom,
+      wx + 3 * zoom, wy + 2 * zoom,
+    );
+    reflGrad.addColorStop(0, `rgba(200, 220, 255, 0)`);
+    reflGrad.addColorStop(Math.max(0.1, 0.3 + reflPhase * 0.2), `rgba(200, 220, 255, ${reflAlpha})`);
+    reflGrad.addColorStop(1, `rgba(200, 220, 255, 0)`);
+    ctx.fillStyle = reflGrad;
+    ctx.fillRect(wx - 3 * zoom, wy - 3 * zoom, 6 * zoom, 5 * zoom);
+
+    // Window frame (raised border)
+    const frameColor = tower.level >= 4 ? "#b89227" : tower.level >= 3 ? "#5a5a62" : "#5a4a3a";
+    ctx.strokeStyle = frameColor;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.strokeRect(wx - 3 * zoom, wy - 3 * zoom, 6 * zoom, 5 * zoom);
+
+    // Window mullion (cross divider)
+    ctx.strokeStyle = frameColor;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(wx, wy - 3 * zoom);
+    ctx.lineTo(wx, wy + 2 * zoom);
+    ctx.moveTo(wx - 3 * zoom, wy - 0.5 * zoom);
+    ctx.lineTo(wx + 3 * zoom, wy - 0.5 * zoom);
+    ctx.stroke();
+
+    // Window sill (small ledge below window)
+    ctx.fillStyle = tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#6a6a72" : "#6a5a4a";
+    ctx.fillRect(wx - 3.5 * zoom, wy + 2 * zoom, 7 * zoom, 1.5 * zoom);
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.fillRect(wx - 3.5 * zoom, wy + 3.2 * zoom, 7 * zoom, 0.5 * zoom);
+
+    // Interior glow during active state (more intense)
+    if (stationActive) {
+      const winGlow = 0.2 + stationIntensity * 0.3 + Math.sin(time * 6 + ri * 1.8) * 0.1;
+      ctx.fillStyle = isStationAttacking
+        ? `rgba(255, 80, 40, ${winGlow})`
+        : `rgba(255, 180, 80, ${winGlow})`;
+      ctx.fillRect(wx - 2.5 * zoom, wy - 2.5 * zoom, 5 * zoom, 4 * zoom);
+    }
+  }
+
+  // ---- DOOR / ENTRANCE WITH 3D DEPTH ----
+  const doorX = screenPos.x - 16 * zoom;
+  const doorY = screenPos.y + 2 * zoom;
+
+  // Door step/stoop (small platform in front)
+  const stepColor = tower.level >= 4 ? "#7a6a5a" : tower.level >= 3 ? "#5a5a62" : "#5a4a3a";
+  ctx.fillStyle = stepColor;
+  ctx.beginPath();
+  ctx.moveTo(doorX - 5 * zoom, doorY + 2 * zoom);
+  ctx.lineTo(doorX, doorY + 4 * zoom);
+  ctx.lineTo(doorX + 5 * zoom, doorY + 2 * zoom);
+  ctx.lineTo(doorX, doorY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.stroke();
+
+  // Door recess shadow (deeper)
+  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+  ctx.fillRect(doorX - 4 * zoom, doorY - 8.5 * zoom, 8 * zoom, 10.5 * zoom);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.fillRect(doorX - 3.5 * zoom, doorY - 8 * zoom, 7 * zoom, 10 * zoom);
+
+  // Door frame
+  const doorFrameColor = tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#5a5a62" : "#5a4020";
+  ctx.fillStyle = doorFrameColor;
+  ctx.fillRect(doorX - 4 * zoom, doorY - 8.5 * zoom, 1.5 * zoom, 10.5 * zoom);
+  ctx.fillRect(doorX + 2.5 * zoom, doorY - 8.5 * zoom, 1.5 * zoom, 10.5 * zoom);
+  ctx.fillRect(doorX - 4 * zoom, doorY - 9 * zoom, 8 * zoom, 1.5 * zoom);
+
+  // Arch/lintel detail above door
+  ctx.strokeStyle = doorFrameColor;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.arc(doorX, doorY - 8 * zoom, 4 * zoom, Math.PI, 0);
+  ctx.stroke();
+
+  // Door panels with raised detail
+  ctx.fillStyle = tower.level >= 4 ? "#3a2a1a" : tower.level >= 3 ? "#3a3a42" : "#4a3010";
+  ctx.fillRect(doorX - 2.5 * zoom, doorY - 7 * zoom, 2 * zoom, 8 * zoom);
+  ctx.fillRect(doorX + 0.5 * zoom, doorY - 7 * zoom, 2 * zoom, 8 * zoom);
+  // Panel inset lines
+  ctx.strokeStyle = "rgba(0,0,0,0.15)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.strokeRect(doorX - 2.2 * zoom, doorY - 6.5 * zoom, 1.4 * zoom, 3 * zoom);
+  ctx.strokeRect(doorX + 0.8 * zoom, doorY - 6.5 * zoom, 1.4 * zoom, 3 * zoom);
+
+  // Door handle
+  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#8a8a8a";
+  ctx.beginPath();
+  ctx.arc(doorX + 2 * zoom, doorY - 3 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#6a6a6a";
+  ctx.beginPath();
+  ctx.arc(doorX - 1.5 * zoom, doorY - 3 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Overhead door light
+  const doorLightGlow = 0.5 + Math.sin(time * 2) * 0.15;
+  ctx.fillStyle = `rgba(255, 220, 150, ${doorLightGlow})`;
+  ctx.shadowColor = "#ffdd99";
+  ctx.shadowBlur = 6 * zoom;
+  ctx.beginPath();
+  ctx.arc(doorX, doorY - 10 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Light cone on step
+  ctx.fillStyle = `rgba(255, 220, 150, ${doorLightGlow * 0.1})`;
+  ctx.beginPath();
+  ctx.moveTo(doorX - 1.5 * zoom, doorY - 10 * zoom);
+  ctx.lineTo(doorX - 4 * zoom, doorY + 1 * zoom);
+  ctx.lineTo(doorX + 4 * zoom, doorY + 1 * zoom);
+  ctx.lineTo(doorX + 1.5 * zoom, doorY - 10 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // ---- STRUCTURAL BEAMS / TRUSSES (industrial feel) ----
+  const beamColor = tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#5a5a62" : "#5a4a3a";
+  const beamHighlight = tower.level >= 4 ? "#a08828" : tower.level >= 3 ? "#6a6a72" : "#6a5a4a";
+  const rivetColor = tower.level >= 4 ? "#c9a227" : "#8a8a8a";
+
+  // Right wall cross brace with I-beam profile
+  const braceRX = screenPos.x + 6 * zoom;
+  const braceRY = screenPos.y - 6 * zoom;
+
+  // Vertical I-beam columns (right wall)
+  for (const colOff of [0, 10]) {
+    const colX = braceRX + colOff * zoom;
+    // Flange top
+    ctx.fillStyle = beamHighlight;
+    ctx.fillRect(colX - 1.8 * zoom, braceRY - 12 * zoom, 3.6 * zoom, 1 * zoom);
+    // Web
+    ctx.fillStyle = beamColor;
+    ctx.fillRect(colX - 0.8 * zoom, braceRY - 11 * zoom, 1.6 * zoom, 11 * zoom);
+    // Flange bottom
+    ctx.fillStyle = beamHighlight;
+    ctx.fillRect(colX - 1.8 * zoom, braceRY, 3.6 * zoom, 1 * zoom);
+  }
+
+  // Cross brace X pattern
+  ctx.strokeStyle = beamColor;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(braceRX, braceRY - 11.5 * zoom);
+  ctx.lineTo(braceRX + 10 * zoom, braceRY - 0.5 * zoom);
+  ctx.moveTo(braceRX + 10 * zoom, braceRY - 11.5 * zoom);
+  ctx.lineTo(braceRX, braceRY - 0.5 * zoom);
+  ctx.stroke();
+
+  // Horizontal tie beam with I-beam profile
+  ctx.fillStyle = beamHighlight;
+  ctx.fillRect(braceRX, braceRY - 6.5 * zoom, 10 * zoom, 1 * zoom);
+  ctx.fillStyle = beamColor;
+  ctx.fillRect(braceRX, braceRY - 5.8 * zoom, 10 * zoom, 0.6 * zoom);
+  ctx.fillStyle = beamHighlight;
+  ctx.fillRect(braceRX, braceRY - 5.5 * zoom, 10 * zoom, 1 * zoom);
+
+  // Gusset plates at brace intersections
+  ctx.fillStyle = beamHighlight;
+  for (const gp of [
+    { x: braceRX + 5 * zoom, y: braceRY - 6 * zoom },
+    { x: braceRX, y: braceRY - 11.5 * zoom },
+    { x: braceRX + 10 * zoom, y: braceRY - 11.5 * zoom },
+  ]) {
+    ctx.beginPath();
+    ctx.moveTo(gp.x, gp.y - 2 * zoom);
+    ctx.lineTo(gp.x + 2 * zoom, gp.y);
+    ctx.lineTo(gp.x, gp.y + 2 * zoom);
+    ctx.lineTo(gp.x - 2 * zoom, gp.y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Rivets along tie beam and at joints
+  ctx.fillStyle = rivetColor;
+  const rivetPositions = [
+    { x: braceRX + 1 * zoom, y: braceRY - 6 * zoom },
+    { x: braceRX + 5 * zoom, y: braceRY - 6 * zoom },
+    { x: braceRX + 9 * zoom, y: braceRY - 6 * zoom },
+    { x: braceRX + 0.5 * zoom, y: braceRY - 12 * zoom },
+    { x: braceRX + 9.5 * zoom, y: braceRY - 12 * zoom },
+    { x: braceRX + 0.5 * zoom, y: braceRY },
+    { x: braceRX + 9.5 * zoom, y: braceRY },
+  ];
+  for (const riv of rivetPositions) {
+    ctx.beginPath();
+    ctx.arc(riv.x, riv.y, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Left wall diagonal brace (less prominent)
+  const braceLX = screenPos.x - 20 * zoom;
+  const braceLY = screenPos.y - 6 * zoom;
+  ctx.strokeStyle = beamColor;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(braceLX, braceLY - 10 * zoom);
+  ctx.lineTo(braceLX - 8 * zoom, braceLY + 2 * zoom);
+  ctx.moveTo(braceLX - 8 * zoom, braceLY - 10 * zoom);
+  ctx.lineTo(braceLX, braceLY + 2 * zoom);
+  ctx.stroke();
+  // Left brace rivets
+  ctx.fillStyle = rivetColor;
+  ctx.beginPath();
+  ctx.arc(braceLX - 4 * zoom, braceLY - 4 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- ROOF RIDGE LINE AND EAVES ----
+  const roofRidgeY = screenPos.y - (26 + tower.level * 4) * zoom;
+  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#7a6040";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x - 22 * zoom, roofRidgeY + 8 * zoom);
+  ctx.lineTo(screenPos.x - 12 * zoom, roofRidgeY);
+  ctx.lineTo(screenPos.x + 2 * zoom, roofRidgeY + 4 * zoom);
+  ctx.stroke();
+
+  // Eave overhang shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x - 24 * zoom, roofRidgeY + 9 * zoom);
+  ctx.lineTo(screenPos.x - 12 * zoom, roofRidgeY + 1 * zoom);
+  ctx.lineTo(screenPos.x + 4 * zoom, roofRidgeY + 5 * zoom);
+  ctx.lineTo(screenPos.x + 4 * zoom, roofRidgeY + 7 * zoom);
+  ctx.lineTo(screenPos.x - 12 * zoom, roofRidgeY + 3 * zoom);
+  ctx.lineTo(screenPos.x - 24 * zoom, roofRidgeY + 11 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // ---- LOADING DOCK WITH CRANE ARM ----
+  const dockX = screenPos.x + 26 * zoom;
+  const dockY = screenPos.y + 2 * zoom;
+
+  // Dock platform
+  drawIsoDiamond(
+    dockX,
+    dockY + 4 * zoom,
+    14,
+    10,
+    3,
+    tower.level >= 4 ? "#7a6a5a" : "#5a5a62",
+    tower.level >= 4 ? "#6a5a4a" : "#4a4a52",
+    tower.level >= 4 ? "#5a4a3a" : "#3a3a42",
+  );
+
+  // Dock bumper rails (safety yellow/orange)
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#cc8800";
+  ctx.fillRect(dockX - 5 * zoom, dockY + 2 * zoom, 1.5 * zoom, 3 * zoom);
+  ctx.fillRect(dockX + 4 * zoom, dockY + 0.5 * zoom, 1.5 * zoom, 3 * zoom);
+  ctx.strokeStyle = "#1a1a1a";
+  ctx.lineWidth = 0.5 * zoom;
+  for (let hs = 0; hs < 2; hs++) {
+    const hsx = dockX + (hs === 0 ? -5 : 4) * zoom;
+    const hsy = dockY + (hs === 0 ? 2 : 0.5) * zoom;
+    ctx.beginPath();
+    ctx.moveTo(hsx, hsy + 1 * zoom);
+    ctx.lineTo(hsx + 1.5 * zoom, hsy + 2 * zoom);
+    ctx.stroke();
+  }
+
+  // Stacked crates on dock platform
+  const dockCrateSize = 2 * zoom;
+  const stackedCrates = [
+    { ox: -2, oy: 0, color: tower.level >= 4 ? "#a08020" : "#7a5810" },
+    { ox: 1, oy: -0.5, color: tower.level >= 4 ? "#b89227" : "#8b6914" },
+    { ox: -0.5, oy: -2.5, color: tower.level >= 4 ? "#c9a230" : "#9a7920" },
+  ];
+  for (const scr of stackedCrates) {
+    const scrx = dockX + scr.ox * zoom;
+    const scry = dockY + scr.oy * zoom;
+    ctx.fillStyle = scr.color;
+    ctx.fillRect(scrx - dockCrateSize * 0.5, scry - dockCrateSize, dockCrateSize, dockCrateSize);
+    ctx.strokeStyle = "#3a2a1a";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeRect(scrx - dockCrateSize * 0.5, scry - dockCrateSize, dockCrateSize, dockCrateSize);
+  }
+
+  // Crane mast (lattice structure)
+  const crMastColor = tower.level >= 4 ? "#b89227" : "#6a6a72";
+  ctx.fillStyle = crMastColor;
+  ctx.fillRect(dockX + 4 * zoom, dockY - 20 * zoom, 2.5 * zoom, 22 * zoom);
+  ctx.strokeStyle = tower.level >= 4 ? "#a08020" : "#5a5a62";
+  ctx.lineWidth = 0.6 * zoom;
+  for (let li = 0; li < 4; li++) {
+    const ly = dockY - 18 * zoom + li * 5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(dockX + 4 * zoom, ly);
+    ctx.lineTo(dockX + 6.5 * zoom, ly + 2.5 * zoom);
+    ctx.moveTo(dockX + 6.5 * zoom, ly);
+    ctx.lineTo(dockX + 4 * zoom, ly + 2.5 * zoom);
+    ctx.stroke();
+  }
+
+  // Pulley wheel at mast top
+  ctx.fillStyle = crMastColor;
+  ctx.beginPath();
+  ctx.arc(dockX + 5.2 * zoom, dockY - 20 * zoom, 2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+  const pulleySpin = time * (stationActive ? 3 : 0.5);
+  for (let ps = 0; ps < 4; ps++) {
+    const psA = pulleySpin + (ps / 4) * Math.PI * 2;
+    ctx.strokeStyle = "rgba(0,0,0,0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(dockX + 5.2 * zoom, dockY - 20 * zoom);
+    ctx.lineTo(
+      dockX + 5.2 * zoom + Math.cos(psA) * 1.5 * zoom,
+      dockY - 20 * zoom + Math.sin(psA) * 1.5 * zoom,
+    );
+    ctx.stroke();
+  }
+
+  // Crane arm (rotates, faster during active state)
+  const craneSpeed = stationActive ? 2 + stationIntensity : 0.3;
+  const craneAngle = time * craneSpeed;
+  const craneArmLen = 14 * zoom;
+  const craneArmX = dockX + 5 * zoom + Math.cos(craneAngle) * craneArmLen;
+  const craneArmY = dockY - 20 * zoom + Math.sin(craneAngle) * craneArmLen * 0.3;
+
+  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(dockX + 5 * zoom, dockY - 20 * zoom);
+  ctx.lineTo(craneArmX, craneArmY);
+  ctx.stroke();
+
+  // Truss V patterns along crane arm
+  ctx.lineWidth = 0.7 * zoom;
+  for (let tv = 0; tv < 3; tv++) {
+    const tvT = (tv + 1) / 4;
+    const tvx = dockX + 5 * zoom + (craneArmX - dockX - 5 * zoom) * tvT;
+    const tvy = dockY - 20 * zoom + (craneArmY - dockY + 20 * zoom) * tvT;
+    ctx.beginPath();
+    ctx.moveTo(tvx, tvy - 1.5 * zoom);
+    ctx.lineTo(tvx + 1.5 * zoom, tvy);
+    ctx.lineTo(tvx, tvy + 1.5 * zoom);
+    ctx.stroke();
+  }
+
+  // Crane cable with catenary sag
+  ctx.strokeStyle = "#3a3a3a";
+  ctx.lineWidth = 1 * zoom;
+  const cableSwing = Math.sin(time * 2 + 0.5) * 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(craneArmX, craneArmY);
+  ctx.quadraticCurveTo(
+    craneArmX + cableSwing * 0.5,
+    craneArmY + 6 * zoom,
+    craneArmX + cableSwing,
+    craneArmY + 10 * zoom,
+  );
+  ctx.stroke();
+
+  // Hanging cargo (3D isometric crate)
+  const hangCrateSize = 2.5 * zoom;
+  const hangCrateX = craneArmX + cableSwing;
+  const hangCrateY = craneArmY + 10 * zoom;
+  ctx.fillStyle = tower.level >= 4 ? "#c9a230" : "#9a7920";
+  ctx.beginPath();
+  ctx.moveTo(hangCrateX, hangCrateY - hangCrateSize * 0.3);
+  ctx.lineTo(hangCrateX + hangCrateSize, hangCrateY);
+  ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 0.3);
+  ctx.lineTo(hangCrateX - hangCrateSize, hangCrateY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = tower.level >= 4 ? "#a08020" : "#7a5810";
+  ctx.beginPath();
+  ctx.moveTo(hangCrateX - hangCrateSize, hangCrateY);
+  ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 0.3);
+  ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 1.5);
+  ctx.lineTo(hangCrateX - hangCrateSize, hangCrateY + hangCrateSize * 1.2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = tower.level >= 4 ? "#b89227" : "#8b6914";
+  ctx.beginPath();
+  ctx.moveTo(hangCrateX + hangCrateSize, hangCrateY);
+  ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 0.3);
+  ctx.lineTo(hangCrateX, hangCrateY + hangCrateSize * 1.5);
+  ctx.lineTo(hangCrateX + hangCrateSize, hangCrateY + hangCrateSize * 1.2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a2a1a";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.stroke();
+
+  // ---- LANDING PAD WITH PULSING GUIDE LIGHTS ----
+  const padCX = screenPos.x + 20 * zoom;
+  const padCY = screenPos.y + 18 * zoom;
+  const padR = 8 * zoom;
+  const padLightCount = 8;
+
+  // Pad surface (subtle fill)
+  ctx.fillStyle = tower.level >= 4
+    ? `rgba(80, 70, 50, 0.15)`
+    : `rgba(60, 60, 70, 0.15)`;
+  ctx.beginPath();
+  ctx.ellipse(padCX, padCY, padR, padR * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer pad ring
+  ctx.strokeStyle = tower.level >= 4
+    ? `rgba(201, 162, 39, 0.5)`
+    : `rgba(255, 108, 0, 0.4)`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.setLineDash([3 * zoom, 2 * zoom]);
+  ctx.beginPath();
+  ctx.ellipse(padCX, padCY, padR, padR * 0.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Inner concentric ring
+  ctx.strokeStyle = tower.level >= 4
+    ? `rgba(201, 162, 39, 0.3)`
+    : `rgba(255, 200, 100, 0.25)`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(padCX, padCY, padR * 0.55, padR * 0.55 * 0.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Sequential approach lights (chase pattern around perimeter)
+  const chasePhase = time * (stationActive ? 6 : 2);
+  for (let pl = 0; pl < padLightCount; pl++) {
+    const plAngle = (pl / padLightCount) * Math.PI * 2;
+    const plx = padCX + Math.cos(plAngle) * padR;
+    const ply = padCY + Math.sin(plAngle) * padR * 0.5;
+    const chaseDist = ((chasePhase / padLightCount - pl / padLightCount) % 1 + 1) % 1;
+    const chaseBright = chaseDist < 0.3 ? (1 - chaseDist / 0.3) : 0;
+    const basePulse = 0.2 + Math.sin(time * 4 - pl * 0.8) * 0.15;
+    const plAlpha = Math.max(basePulse, chaseBright * 0.8);
+
+    ctx.fillStyle = stationActive
+      ? isStationAttacking
+        ? `rgba(255, 60, 30, ${plAlpha + stationIntensity * 0.4})`
+        : `rgba(255, 108, 0, ${plAlpha + stationIntensity * 0.3})`
+      : tower.level >= 4
+        ? `rgba(201, 162, 39, ${plAlpha})`
+        : `rgba(255, 200, 100, ${plAlpha})`;
+    ctx.shadowColor = isStationAttacking ? "#ff3c1e" : stationActive ? "#ff6c00" : "#ffcc66";
+    ctx.shadowBlur = (stationActive ? 6 : 4) * zoom;
+    ctx.beginPath();
+    ctx.arc(plx, ply, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // Landing pad "H" marker with pulse
+  const hAlpha = 0.4 + Math.sin(time * 2) * 0.1;
+  ctx.strokeStyle = tower.level >= 4
+    ? `rgba(201, 162, 39, ${hAlpha + 0.2})`
+    : `rgba(255, 200, 100, ${hAlpha})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(padCX - 3 * zoom, padCY - 2 * zoom);
+  ctx.lineTo(padCX - 3 * zoom, padCY + 2 * zoom);
+  ctx.moveTo(padCX + 3 * zoom, padCY - 2 * zoom);
+  ctx.lineTo(padCX + 3 * zoom, padCY + 2 * zoom);
+  ctx.moveTo(padCX - 3 * zoom, padCY);
+  ctx.lineTo(padCX + 3 * zoom, padCY);
+  ctx.stroke();
+
+  // Directional arrow (rotating slowly)
+  const padArrowAngle = time * 0.4;
+  const padArrowR = padR * 0.35;
+  const padArrowTipX = padCX + Math.cos(padArrowAngle) * padArrowR;
+  const padArrowTipY = padCY + Math.sin(padArrowAngle) * padArrowR * 0.5;
+  ctx.strokeStyle = tower.level >= 4
+    ? `rgba(201, 162, 39, 0.4)`
+    : `rgba(255, 200, 100, 0.3)`;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(padCX - Math.cos(padArrowAngle) * padArrowR, padCY - Math.sin(padArrowAngle) * padArrowR * 0.5);
+  ctx.lineTo(padArrowTipX, padArrowTipY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(padArrowTipX, padArrowTipY);
+  ctx.lineTo(
+    padArrowTipX - Math.cos(padArrowAngle - 0.5) * 3 * zoom,
+    padArrowTipY - Math.sin(padArrowAngle - 0.5) * 1.5 * zoom,
+  );
+  ctx.moveTo(padArrowTipX, padArrowTipY);
+  ctx.lineTo(
+    padArrowTipX - Math.cos(padArrowAngle + 0.5) * 3 * zoom,
+    padArrowTipY - Math.sin(padArrowAngle + 0.5) * 1.5 * zoom,
+  );
+  ctx.stroke();
+
+  // ---- TRACK SWITCHING MECHANISM ----
+  const switchX = screenPos.x - 6 * zoom;
+  const switchY = screenPos.y + 14 * zoom;
+  const switchAngle = Math.sin(time * 0.8) * 0.4;
+
+  // Track ties (wooden cross-beams beneath switch)
+  const tieColor = tower.level >= 4 ? "#5a4a3a" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+  ctx.fillStyle = tieColor;
+  for (let ti = 0; ti < 3; ti++) {
+    const tix = switchX + (ti - 1) * 4 * zoom;
+    const tiy = switchY + (ti - 1) * 2 * zoom;
+    ctx.fillRect(tix - 3 * zoom, tiy - 0.5 * zoom, 6 * zoom, 1.2 * zoom);
+  }
+
+  // Guard rails (fixed outer rails)
+  const guardColor = tower.level >= 4 ? "#a08020" : "#6a6a72";
+  ctx.strokeStyle = guardColor;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(switchX - 6 * zoom, switchY + 3 * zoom);
+  ctx.lineTo(switchX + 6 * zoom, switchY - 3 * zoom);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(switchX - 6 * zoom, switchY + 5 * zoom);
+  ctx.lineTo(switchX + 6 * zoom, switchY - 1 * zoom);
+  ctx.stroke();
+
+  // Switch rail pivot point (enhanced)
+  ctx.fillStyle = tower.level >= 4 ? "#8a7020" : "#3a3a42";
+  ctx.beginPath();
+  ctx.arc(switchX, switchY, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+  // Pivot center bolt
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+  ctx.beginPath();
+  ctx.arc(switchX, switchY, 1 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Switch lever rail
+  ctx.save();
+  ctx.translate(switchX, switchY);
+  ctx.strokeStyle = tower.level >= 4 ? "#b89227" : "#7a7a82";
+  ctx.lineWidth = 2.5 * zoom;
+  const swLeverX = Math.cos(-0.5 + switchAngle) * 10 * zoom;
+  const swLeverY = Math.sin(-0.5 + switchAngle) * 5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(swLeverX, swLeverY);
+  ctx.stroke();
+
+  // Switch lever handle (grip at end)
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#5a5a62";
+  ctx.beginPath();
+  ctx.arc(swLeverX, swLeverY, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#8a8a92";
+  ctx.beginPath();
+  ctx.arc(swLeverX, swLeverY, 1.2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Switch indicator light housing
+  ctx.fillStyle = "#1a1a22";
+  ctx.fillRect(-2.5 * zoom, -6 * zoom, 5 * zoom, 5 * zoom);
+  const switchLit = switchAngle > 0;
+  ctx.fillStyle = switchLit ? "#33ff33" : "#ff3333";
+  ctx.shadowColor = switchLit ? "#00ff00" : "#ff0000";
+  ctx.shadowBlur = (stationActive ? 8 : 4) * zoom;
+  ctx.beginPath();
+  ctx.arc(0, -3.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // ---- ACTIVE-STATE ENERGY BUILDUP (spawn and attack) ----
+  if (stationActive) {
+    // Energy rings expanding from the station
+    const energyPhase = (time * (isStationAttacking ? 6 : 4)) % 2;
+    const ringCount = isStationAttacking ? 4 : 3;
+    for (let er = 0; er < ringCount; er++) {
+      const erPhase = (energyPhase + er * 0.5) % 2;
+      if (erPhase < 1.5) {
+        const erR = (15 + erPhase * 28) * zoom;
+        const erAlpha = (1 - erPhase / 1.5) * stationIntensity * 0.5;
+        ctx.strokeStyle = isStationAttacking
+          ? `rgba(255, 60, 30, ${erAlpha})`
+          : `rgba(255, 108, 0, ${erAlpha})`;
+        ctx.lineWidth = (2 + stationIntensity) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y - 5 * zoom,
+          erR,
+          erR * 0.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+    }
+
+    // Chimney sparks (shooting upward during active state)
+    const sparkChimneyX = screenPos.x - 18 * zoom;
+    const sparkChimneyY = screenPos.y - (24 + tower.level * 4) * zoom;
+    const sparkCount = isStationAttacking ? 8 : 6;
+    for (let sp = 0; sp < sparkCount; sp++) {
+      const spPhase = ((time * (isStationAttacking ? 7 : 5) + sp * 0.7) % 1.5);
+      if (spPhase < 1) {
+        const spAlpha = (1 - spPhase) * 0.9;
+        const spDriftX = Math.sin(time * 8 + sp * 3) * (isStationAttacking ? 5 : 3) * zoom;
+        const spY = sparkChimneyY - spPhase * (isStationAttacking ? 20 : 15) * zoom;
+        ctx.fillStyle = isStationAttacking
+          ? `rgba(255, ${100 + Math.floor(spPhase * 80)}, 30, ${spAlpha})`
+          : `rgba(255, ${150 + Math.floor(spPhase * 100)}, 50, ${spAlpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          sparkChimneyX + spDriftX,
+          spY,
+          (1.8 - spPhase * 0.8) * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+    }
+
+    // Dual alert beacons on top of building (flashing)
+    const beaconPositions = [
+      { x: screenPos.x - 14 * zoom, y: screenPos.y - (30 + tower.level * 5) * zoom },
+      { x: screenPos.x + 10 * zoom, y: screenPos.y - (28 + tower.level * 5) * zoom },
+    ];
+    for (let bi = 0; bi < beaconPositions.length; bi++) {
+      const bPos = beaconPositions[bi];
+      const bFlash = Math.sin(time * (isStationAttacking ? 16 : 12) + bi * Math.PI) > 0;
+      const bColor1 = isStationAttacking ? "#ff2200" : "#ff3300";
+      const bColor2 = isStationAttacking ? "#ff5500" : "#ff6600";
+      ctx.fillStyle = bFlash ? bColor1 : bColor2;
+      ctx.shadowColor = bFlash ? bColor1 : bColor2;
+      ctx.shadowBlur = (isStationAttacking ? 16 : 12) * zoom;
+      ctx.beginPath();
+      ctx.arc(bPos.x, bPos.y, (isStationAttacking ? 3 : 2.5) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Rotating beacon light cone
+      const bRayAngle = time * (isStationAttacking ? 14 : 10) + bi * Math.PI;
+      const bRayLen = (isStationAttacking ? 25 : 20) * zoom;
+      ctx.fillStyle = isStationAttacking
+        ? `rgba(255, 40, 0, ${0.12 + stationIntensity * 0.15})`
+        : `rgba(255, 60, 0, ${0.1 + stationIntensity * 0.15})`;
+      ctx.beginPath();
+      ctx.moveTo(bPos.x, bPos.y);
+      ctx.arc(bPos.x, bPos.y, bRayLen, bRayAngle - 0.3, bRayAngle + 0.3);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Track energy sparks running along rails
+    const trackSparkCount = isStationAttacking ? 8 : 4;
+    for (let ts = 0; ts < trackSparkCount; ts++) {
+      const tsT = ((time * (isStationAttacking ? 5 : 3) + ts * 0.7) % 2);
+      if (tsT < 1.5) {
+        const tsDist = (tsT / 1.5 - 0.5) * baseW * 0.9 * zoom;
+        const tsx = screenPos.x + tsDist;
+        const tsy = screenPos.y - tsDist * 0.5 - 4 * zoom;
+        const tsAlpha = (1 - tsT / 1.5) * stationIntensity * 0.8;
+        ctx.fillStyle = isStationAttacking
+          ? `rgba(255, 120, 40, ${tsAlpha})`
+          : `rgba(255, 180, 80, ${tsAlpha})`;
+        ctx.shadowColor = isStationAttacking ? "#ff7828" : "#ffb450";
+        ctx.shadowBlur = 4 * zoom;
+        ctx.beginPath();
+        ctx.arc(tsx, tsy, (1.5 - tsT * 0.5) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.shadowBlur = 0;
+
+    // Building outline pulse
+    ctx.strokeStyle = isStationAttacking
+      ? `rgba(255, 60, 30, ${0.2 + stationAttackPulse * 0.3})`
+      : `rgba(255, 108, 0, ${0.15 + spawnIntensity * 0.25})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.shadowColor = isStationAttacking ? "#ff3c1e" : "#ff6c00";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x - 8 * zoom,
+      screenPos.y - 12 * zoom,
+      isoW * 0.6,
+      isoD * 2,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // ---- CHIMNEY SMOKE / STEAM (passive, all levels, denser during active) ----
+  const smokeX = screenPos.x - 18 * zoom;
+  const smokeBaseY = screenPos.y - (22 + tower.level * 4) * zoom;
+  const numSmokePuffs = stationActive ? 6 + tower.level : 3 + Math.min(tower.level, 2);
+  const smokeSpeedMul = stationActive ? 1.6 : 0.8;
+
+  for (let sm = 0; sm < numSmokePuffs; sm++) {
+    const smPhase = ((time * smokeSpeedMul + sm * 0.7) % 3);
+    if (smPhase < 2.5) {
+      const smDrift = Math.sin(time * 0.5 + sm * 2.3) * (stationActive ? 6 : 4) * zoom;
+      const smY = smokeBaseY - smPhase * (stationActive ? 12 : 8) * zoom;
+      const smR = (2 + smPhase * (stationActive ? 2.2 : 1.5)) * zoom;
+      const smAlpha = Math.max(0, (1 - smPhase / 2.5) * (stationActive ? 0.35 : 0.25));
+
+      // Layered puff - darker core, lighter outer
+      ctx.fillStyle = stationActive
+        ? `rgba(140, 120, 100, ${smAlpha * 0.6})`
+        : `rgba(160, 160, 160, ${smAlpha * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(smokeX + smDrift, smY, smR * 1.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = stationActive
+        ? `rgba(200, 180, 160, ${smAlpha})`
+        : `rgba(190, 190, 200, ${smAlpha})`;
+      ctx.beginPath();
+      ctx.arc(smokeX + smDrift, smY, smR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Secondary steam vent (right side of building)
+  const vent2X = screenPos.x + 4 * zoom;
+  const vent2Y = screenPos.y - (20 + tower.level * 3) * zoom;
+  const steamPuffs = stationActive ? 4 : 2;
+  for (let sv = 0; sv < steamPuffs; sv++) {
+    const svPhase = ((time * 1.2 + sv * 1.1) % 2.5);
+    if (svPhase < 1.8) {
+      const svDrift = Math.sin(time * 0.7 + sv * 1.7) * 3 * zoom;
+      const svY = vent2Y - svPhase * 7 * zoom;
+      const svR = (1.5 + svPhase * 1.2) * zoom;
+      const svAlpha = Math.max(0, (1 - svPhase / 1.8) * 0.2);
+      ctx.fillStyle = `rgba(200, 210, 220, ${svAlpha})`;
+      ctx.beginPath();
+      ctx.arc(vent2X + svDrift, svY, svR, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ---- VENT GRATING (industrial detail on building face) ----
+  const ventGrateX = screenPos.x - 22 * zoom;
+  const ventGrateY = screenPos.y - 6 * zoom;
+  ctx.fillStyle = "rgba(30, 30, 35, 0.6)";
+  ctx.fillRect(ventGrateX, ventGrateY, 6 * zoom, 4 * zoom);
+  ctx.strokeStyle = tower.level >= 4 ? "#8a7020" : "#5a5a62";
+  ctx.lineWidth = 0.6 * zoom;
+  for (let vl = 0; vl < 4; vl++) {
+    const vlx = ventGrateX + (vl + 0.5) * 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(vlx, ventGrateY);
+    ctx.lineTo(vlx, ventGrateY + 4 * zoom);
+    ctx.stroke();
+  }
+  // Vent glow when active
+  if (stationActive) {
+    const ventGlow = 0.1 + stationIntensity * 0.2;
+    ctx.fillStyle = isStationAttacking
+      ? `rgba(255, 80, 30, ${ventGlow})`
+      : `rgba(255, 150, 50, ${ventGlow})`;
+    ctx.fillRect(ventGrateX, ventGrateY, 6 * zoom, 4 * zoom);
+  }
+
+  // ---- PLATFORM EDGE RUNNING LIGHTS ----
+  const edgeLightCount = 4 + tower.level;
+  for (let el = 0; el < edgeLightCount; el++) {
+    const elT = el / (edgeLightCount - 1);
+    const elx = screenPos.x - isoW + elT * isoW * 2;
+    const ely = screenPos.y + isoD * (1 - Math.abs(elT - 0.5) * 2) + 2 * zoom;
+    const elPulse = 0.2 + Math.sin(time * 3 + el * 1.2) * 0.3;
+    const elAlpha = stationActive
+      ? elPulse + stationIntensity * 0.3
+      : elPulse;
+
+    ctx.fillStyle = tower.level >= 4
+      ? `rgba(201, 162, 39, ${elAlpha})`
+      : `rgba(255, 200, 100, ${elAlpha})`;
+    ctx.beginPath();
+    ctx.arc(elx, ely, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ---- ROTATING WEATHERVANE (transport compass on roof peak) ----
+  const vaneX = screenPos.x - 12 * zoom;
+  const vaneY = screenPos.y - (30 + tower.level * 5) * zoom;
+  const vaneAngle = Math.sin(time * 0.6) * 0.8 + Math.sin(time * 1.7) * 0.3;
+  const vanePoleColor = tower.level >= 4 ? "#c9a227" : tower.level >= 3 ? "#6a6a72" : "#5a4a3a";
+
+  // Vane pole
+  ctx.strokeStyle = vanePoleColor;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(vaneX, vaneY + 6 * zoom);
+  ctx.lineTo(vaneX, vaneY);
+  ctx.stroke();
+
+  // Vane finial (ornamental ball on top)
+  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#8a8a92";
+  ctx.beginPath();
+  ctx.arc(vaneX, vaneY, 1.2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Vane arrow (rotates with wind)
+  ctx.save();
+  ctx.translate(vaneX, vaneY + 2 * zoom);
+  const vaneDirX = Math.cos(vaneAngle);
+  const vaneDirY = Math.sin(vaneAngle) * 0.4;
+  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-vaneDirX * 5 * zoom, -vaneDirY * 5 * zoom);
+  ctx.lineTo(vaneDirX * 5 * zoom, vaneDirY * 5 * zoom);
+  ctx.stroke();
+  // Arrow head
+  ctx.fillStyle = tower.level >= 4 ? "#c9a227" : "#7a7a82";
+  ctx.beginPath();
+  ctx.moveTo(vaneDirX * 5 * zoom, vaneDirY * 5 * zoom);
+  ctx.lineTo(vaneDirX * 3 * zoom - vaneDirY * 2 * zoom, vaneDirY * 3 * zoom + vaneDirX * 1 * zoom);
+  ctx.lineTo(vaneDirX * 3 * zoom + vaneDirY * 2 * zoom, vaneDirY * 3 * zoom - vaneDirX * 1 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  // Tail fin
+  ctx.fillStyle = tower.level >= 4 ? "#e8c847" : "#9a9aa2";
+  ctx.beginPath();
+  ctx.moveTo(-vaneDirX * 5 * zoom, -vaneDirY * 5 * zoom);
+  ctx.lineTo(-vaneDirX * 4 * zoom - vaneDirY * 3 * zoom, -vaneDirY * 4 * zoom + vaneDirX * 1.5 * zoom);
+  ctx.lineTo(-vaneDirX * 4 * zoom + vaneDirY * 3 * zoom, -vaneDirY * 4 * zoom - vaneDirX * 1.5 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // ---- ANIMATED GROUND-LEVEL CARGO TROLLEY ----
+  const trolleyTrackLen = 18 * zoom;
+  const trolleyCX = screenPos.x - 32 * zoom;
+  const trolleyCY = screenPos.y + 10 * zoom;
+  const trolleySpeed = stationActive ? time * 2 : time * 0.5;
+  const trolleyT = Math.sin(trolleySpeed) * 0.5 + 0.5;
+  const trolleyX = trolleyCX + trolleyT * trolleyTrackLen;
+  const trolleyY = trolleyCY - trolleyT * trolleyTrackLen * 0.5;
+
+  // Trolley track (pair of thin rails)
+  ctx.strokeStyle = tower.level >= 4 ? "#a08020" : "#5a5a62";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(trolleyCX, trolleyCY);
+  ctx.lineTo(trolleyCX + trolleyTrackLen, trolleyCY - trolleyTrackLen * 0.5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(trolleyCX, trolleyCY + 2 * zoom);
+  ctx.lineTo(trolleyCX + trolleyTrackLen, trolleyCY - trolleyTrackLen * 0.5 + 2 * zoom);
+  ctx.stroke();
+
+  // Track ties
+  ctx.strokeStyle = tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+  ctx.lineWidth = 1.2 * zoom;
+  for (let tt = 0; tt < 5; tt++) {
+    const ttT = tt / 4;
+    const ttx = trolleyCX + ttT * trolleyTrackLen;
+    const tty = trolleyCY - ttT * trolleyTrackLen * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(ttx - 1 * zoom, tty - 1 * zoom);
+    ctx.lineTo(ttx + 1 * zoom, tty + 3 * zoom);
+    ctx.stroke();
+  }
+
+  // Trolley body (small isometric cart)
+  const trolleyW = 4 * zoom;
+  const trolleyH = 3 * zoom;
+  // Cart platform
+  ctx.fillStyle = tower.level >= 4 ? "#b89227" : tower.level >= 3 ? "#5a5a62" : "#6a5a4a";
+  ctx.beginPath();
+  ctx.moveTo(trolleyX - trolleyW, trolleyY + 1 * zoom);
+  ctx.lineTo(trolleyX, trolleyY - trolleyW * 0.3 + 1 * zoom);
+  ctx.lineTo(trolleyX + trolleyW, trolleyY + 1 * zoom);
+  ctx.lineTo(trolleyX, trolleyY + trolleyW * 0.3 + 1 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  // Cart sides
+  ctx.fillStyle = tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
+  ctx.beginPath();
+  ctx.moveTo(trolleyX, trolleyY + trolleyW * 0.3 + 1 * zoom);
+  ctx.lineTo(trolleyX - trolleyW, trolleyY + 1 * zoom);
+  ctx.lineTo(trolleyX - trolleyW, trolleyY + trolleyH);
+  ctx.lineTo(trolleyX, trolleyY + trolleyW * 0.3 + trolleyH);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#3a3a42" : "#4a3a2a";
+  ctx.beginPath();
+  ctx.moveTo(trolleyX, trolleyY + trolleyW * 0.3 + 1 * zoom);
+  ctx.lineTo(trolleyX + trolleyW, trolleyY + 1 * zoom);
+  ctx.lineTo(trolleyX + trolleyW, trolleyY + trolleyH);
+  ctx.lineTo(trolleyX, trolleyY + trolleyW * 0.3 + trolleyH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tiny cargo on trolley
+  ctx.fillStyle = tower.level >= 4 ? "#c9a230" : "#8b6914";
+  ctx.fillRect(trolleyX - 2 * zoom, trolleyY - 1.5 * zoom, 3 * zoom, 2 * zoom);
+
+  // Trolley wheels
+  ctx.fillStyle = "#2a2a2a";
+  ctx.beginPath();
+  ctx.ellipse(trolleyX - 2 * zoom, trolleyY + trolleyH + 0.5 * zoom, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(trolleyX + 2 * zoom, trolleyY + trolleyH + 0.5 * zoom, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ---- STATUS DISPLAY BOARD ----
+  const boardX = screenPos.x + 12 * zoom;
+  const boardY = screenPos.y - (22 + tower.level * 2) * zoom;
+  const boardW = 12 * zoom;
+  const boardH = 7 * zoom;
+
+  // Board frame
+  ctx.fillStyle = tower.level >= 4 ? "#3a2a1a" : "#1a1a22";
+  ctx.fillRect(boardX - boardW * 0.5, boardY - boardH * 0.5, boardW, boardH);
+  ctx.strokeStyle = tower.level >= 4 ? "#c9a227" : "#5a5a62";
+  ctx.lineWidth = 1 * zoom;
+  ctx.strokeRect(boardX - boardW * 0.5, boardY - boardH * 0.5, boardW, boardH);
+
+  // Board screen (dark green/amber depending on level)
+  const screenColor = tower.level >= 4 ? "rgba(40, 35, 10, 0.9)" : "rgba(10, 25, 15, 0.9)";
+  ctx.fillStyle = screenColor;
+  ctx.fillRect(boardX - boardW * 0.5 + 1 * zoom, boardY - boardH * 0.5 + 1 * zoom, boardW - 2 * zoom, boardH - 2 * zoom);
+
+  // Animated text ticker (scrolling dots/dashes simulating a train schedule)
+  const tickerSpeed = stationActive ? time * 4 : time * 1.5;
+  const dotColor = tower.level >= 4 ? "#c9a227" : "#33cc33";
+  const dotAlertColor = stationActive
+    ? (isStationAttacking ? "#ff4422" : "#ff6c00")
+    : dotColor;
+  ctx.fillStyle = dotAlertColor;
+  const tickerDots = 5;
+  for (let td = 0; td < tickerDots; td++) {
+    const tdX = boardX - boardW * 0.4 + ((td * 2.5 + tickerSpeed * 2) % (boardW * 0.8)) * zoom / zoom;
+    const tdAlpha = 0.4 + Math.sin(time * 3 + td * 1.5) * 0.3;
+    ctx.globalAlpha = tdAlpha;
+    ctx.fillRect(tdX, boardY - 1 * zoom, 1.5 * zoom, 1 * zoom);
+  }
+  ctx.globalAlpha = 1;
+
+  // Status indicator dots (bottom of board)
+  const statusDots = [
+    { color: stationActive ? "#ff3333" : "#33cc33", x: -3 },
+    { color: stationActive ? "#ffaa00" : "#33cc33", x: 0 },
+    { color: "#33cc33", x: 3 },
+  ];
+  for (const sd of statusDots) {
+    const sdBlink = 0.5 + Math.sin(time * 4 + sd.x) * 0.3;
+    ctx.fillStyle = sd.color;
+    ctx.globalAlpha = sdBlink;
+    ctx.beginPath();
+    ctx.arc(boardX + sd.x * zoom, boardY + boardH * 0.3, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // Board mounting bracket
+  ctx.fillStyle = tower.level >= 4 ? "#8a7020" : "#4a4a52";
+  ctx.fillRect(boardX - 1 * zoom, boardY + boardH * 0.5, 2 * zoom, 4 * zoom);
+
+  // ---- HEAT SHIMMER ABOVE CHIMNEY ----
+  const shimmerX = screenPos.x - 18 * zoom;
+  const shimmerBaseY = screenPos.y - (26 + tower.level * 4) * zoom;
+  const shimmerCount = stationActive ? 5 : 3;
+  for (let sh = 0; sh < shimmerCount; sh++) {
+    const shPhase = ((time * 0.6 + sh * 0.8) % 2);
+    if (shPhase < 1.5) {
+      const shY = shimmerBaseY - shPhase * 12 * zoom;
+      const shWobble = Math.sin(time * 4 + sh * 2.3) * 3 * zoom;
+      const shAlpha = (1 - shPhase / 1.5) * (stationActive ? 0.08 : 0.04);
+      const shW = (4 + shPhase * 2) * zoom;
+
+      ctx.strokeStyle = `rgba(255, 220, 180, ${shAlpha})`;
+      ctx.lineWidth = shW;
+      ctx.beginPath();
+      ctx.moveTo(shimmerX + shWobble - shW, shY);
+      ctx.quadraticCurveTo(
+        shimmerX + shWobble, shY - 2 * zoom,
+        shimmerX + shWobble + shW, shY,
+      );
+      ctx.stroke();
+    }
+  }
+
+  // ---- EMBER PARTICLES FROM CHIMNEY (during active state) ----
+  if (stationActive) {
+    const emberCount = isStationAttacking ? 6 : 3;
+    for (let em = 0; em < emberCount; em++) {
+      const emPhase = ((time * 3 + em * 1.3) % 2.5);
+      if (emPhase < 2) {
+        const emDriftX = Math.sin(time * 5 + em * 4.1) * 5 * zoom;
+        const emDriftY = Math.cos(time * 3 + em * 2.7) * 2 * zoom;
+        const emY = shimmerBaseY - emPhase * 14 * zoom + emDriftY;
+        const emAlpha = (1 - emPhase / 2) * 0.8;
+        const emSize = (1.2 - emPhase * 0.3) * zoom;
+
+        ctx.fillStyle = `rgba(255, ${140 + Math.floor(emPhase * 60)}, 40, ${emAlpha})`;
+        ctx.shadowColor = "#ff8828";
+        ctx.shadowBlur = 3 * zoom;
+        ctx.beginPath();
+        ctx.arc(shimmerX + emDriftX, emY, emSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // ---- WIRE/CABLE CONNECTIONS (antenna to building) ----
+  const wireStartX = antennaX;
+  const wireStartY = antennaY + antennaHeight * 0.7;
+  const wireEndX = screenPos.x - 4 * zoom;
+  const wireEndY = screenPos.y - 18 * zoom;
+  ctx.strokeStyle = tower.level >= 4 ? "rgba(184, 146, 39, 0.3)" : "rgba(100, 100, 110, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(wireStartX, wireStartY);
+  ctx.quadraticCurveTo(
+    (wireStartX + wireEndX) * 0.5,
+    Math.max(wireStartY, wireEndY) + 4 * zoom,
+    wireEndX,
+    wireEndY,
+  );
+  ctx.stroke();
+
+  // Second wire (from radar to building)
+  const wire2StartX = radarX;
+  const wire2StartY = radarY + 8 * zoom;
+  const wire2EndX = screenPos.x + 4 * zoom;
+  const wire2EndY = screenPos.y - 16 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(wire2StartX, wire2StartY);
+  ctx.quadraticCurveTo(
+    (wire2StartX + wire2EndX) * 0.5,
+    Math.max(wire2StartY, wire2EndY) + 3 * zoom,
+    wire2EndX,
+    wire2EndY,
+  );
+  ctx.stroke();
+
   ctx.restore();
 }
 
