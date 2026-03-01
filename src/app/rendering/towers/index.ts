@@ -9976,6 +9976,23 @@ function renderTeslaCoil(
   void cameraZoom;
 
   const coilHeight = (35 + tower.level * 8) * zoom;
+  const isAttacking = Date.now() - tower.lastAttack < 300;
+  const attackIntensity = isAttacking
+    ? Math.max(0, 1 - (Date.now() - tower.lastAttack) / 300)
+    : 0;
+  const ringCount = 6 + tower.level * 2;
+
+  const ringPositions: { y: number; size: number; progress: number }[] = [];
+  for (let ri = 0; ri < ringCount; ri++) {
+    const rp = (ri + 1) / (ringCount + 1);
+    const ry = topY - rp * (coilHeight - 18 * zoom) * 1.15;
+    const rs = 14 - rp * 8;
+    ringPositions.push({ y: ry, size: rs, progress: rp });
+  }
+
+  const conductorRadiusFactor = 0.85;
+  const backConductorAngles = [Math.PI * 0.7, Math.PI * 1.3];
+  const frontConductorAngles = [Math.PI * 0.3, Math.PI * 1.7];
 
   // Coil base platform
   ctx.fillStyle = "#1a3a4f";
@@ -10003,6 +10020,236 @@ function renderTeslaCoil(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Base energy pulse - ground-level glow intensifying when attacking
+  const basePulseAlpha =
+    0.04 +
+    Math.sin(time * 2) * 0.02 +
+    (isAttacking ? attackIntensity * 0.35 : 0);
+  if (basePulseAlpha > 0.03) {
+    const basePulseSize = 20 * zoom * (1 + Math.sin(time * 8) * 0.08);
+    if (isAttacking) {
+      ctx.shadowColor = "#00aaff";
+      ctx.shadowBlur = 15 * zoom * attackIntensity;
+    }
+    ctx.fillStyle = `rgba(0, 150, 255, ${basePulseAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      topY + 3 * zoom,
+      basePulseSize,
+      basePulseSize * 0.4,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Radial pulse ring
+    if (isAttacking) {
+      const pulseExpand =
+        ((Date.now() - tower.lastAttack) / 300) * 22 * zoom;
+      const pulseRingAlpha =
+        attackIntensity * 0.4 * (1 - pulseExpand / (22 * zoom));
+      if (pulseRingAlpha > 0) {
+        ctx.strokeStyle = `rgba(0, 200, 255, ${pulseRingAlpha})`;
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          topY + 3 * zoom,
+          pulseExpand,
+          pulseExpand * 0.4,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+    }
+  }
+
+  // === BACK-SIDE CONDUCTORS (behind column for depth) ===
+  for (const cAngle of backConductorAngles) {
+    const cpx = Math.cos(cAngle);
+    const cpy = Math.sin(cAngle) * 0.5;
+    for (let ri = 0; ri < ringPositions.length - 1; ri++) {
+      const rBot = ringPositions[ri];
+      const rTop = ringPositions[ri + 1];
+      const vibrate = isAttacking
+        ? Math.sin(time * 25 + ri * 2 + cAngle) * 1.2 * attackIntensity * zoom
+        : 0;
+      const cx1 = screenPos.x + cpx * rBot.size * conductorRadiusFactor * zoom + vibrate;
+      const cy1 = rBot.y + cpy * rBot.size * conductorRadiusFactor * zoom;
+      const cx2 = screenPos.x + cpx * rTop.size * conductorRadiusFactor * zoom + vibrate;
+      const cy2 = rTop.y + cpy * rTop.size * conductorRadiusFactor * zoom;
+      const shimmer = Math.sin(time * 3 + ri + cAngle) * 20;
+
+      ctx.strokeStyle = `rgb(${100 + shimmer}, ${65 + shimmer * 0.5}, 30)`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cx1 + zoom, cy1 + zoom);
+      ctx.lineTo(cx2 + zoom, cy2 + zoom);
+      ctx.stroke();
+
+      ctx.strokeStyle = `rgb(${170 + shimmer}, ${115 + shimmer * 0.5}, 55)`;
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cx1, cy1);
+      ctx.lineTo(cx2, cy2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255, 210, 140, 0.25)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cx1 - 0.5 * zoom, cy1);
+      ctx.lineTo(cx2 - 0.5 * zoom, cy2);
+      ctx.stroke();
+
+      // Rivet details at conductor connection points
+      ctx.fillStyle = "#aa8855";
+      ctx.beginPath();
+      ctx.arc(cx1, cy1, 1.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2, cy2, 1.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ccaa77";
+      ctx.beginPath();
+      ctx.arc(cx1 - 0.3 * zoom, cy1 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2 - 0.3 * zoom, cy2 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (isAttacking) {
+        ctx.shadowColor = "#00aaff";
+        ctx.shadowBlur = 5 * zoom * attackIntensity;
+        ctx.strokeStyle = `rgba(0, 150, 255, ${0.25 * attackIntensity})`;
+        ctx.lineWidth = 4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(cx1, cy1);
+        ctx.lineTo(cx2, cy2);
+        ctx.stroke();
+
+        // Corona glow at connection points
+        const coronaR = (2.5 + Math.sin(time * 8 + ri) * 0.8) * zoom * attackIntensity;
+        ctx.fillStyle = `rgba(100, 200, 255, ${0.2 * attackIntensity})`;
+        ctx.beginPath();
+        ctx.arc(cx1, cy1, coronaR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx2, cy2, coronaR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Conductor-ring junction rivet (always visible)
+      const jnPulse =
+        0.5 +
+        Math.sin(time * 3 + ri + cAngle) * 0.2 +
+        (isAttacking ? attackIntensity * 0.3 : 0);
+      ctx.fillStyle = `rgba(200, 160, 80, ${jnPulse})`;
+      ctx.beginPath();
+      ctx.arc(cx1, cy1, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2, cy2, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Rivet highlight
+      ctx.fillStyle = `rgba(255, 220, 160, ${jnPulse * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(cx1 - 0.4 * zoom, cy1 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2 - 0.4 * zoom, cy2 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === BACK-SIDE SUSPENSION INSULATORS ===
+  const backInsulatorAngles = [Math.PI * 0.85, Math.PI * 1.15];
+  for (const iAngle of backInsulatorAngles) {
+    const ipx = Math.cos(iAngle);
+    const ipy = Math.sin(iAngle) * 0.5;
+    for (let ri = 2; ri < ringPositions.length - 1; ri += 3) {
+      const ring = ringPositions[ri];
+      const armLen = ring.size * 1.4;
+      const armBaseX = screenPos.x + ipx * ring.size * 0.5 * zoom;
+      const armBaseY = ring.y + ipy * ring.size * 0.5 * zoom;
+      const armEndX = screenPos.x + ipx * armLen * zoom;
+      const armEndY = ring.y + ipy * armLen * zoom;
+
+      ctx.strokeStyle = "#667788";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(armBaseX, armBaseY);
+      ctx.lineTo(armEndX, armEndY);
+      ctx.stroke();
+
+      const sway = Math.sin(time * 1.5 + ri + iAngle)
+        * (isAttacking ? 0.15 + attackIntensity * 0.2 : 0.04);
+      for (let d = 0; d < 3; d++) {
+        const discY = armEndY + (d + 1) * 2.8 * zoom;
+        const discX = armEndX + Math.sin(sway) * (d + 1) * 1.8 * zoom;
+        const discR = (3.2 - d * 0.4) * zoom;
+
+        ctx.fillStyle = "#6B5B45";
+        ctx.beginPath();
+        ctx.ellipse(discX, discY + 0.5 * zoom, discR, discR * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const dg = ctx.createLinearGradient(discX - discR, discY, discX + discR, discY);
+        dg.addColorStop(0, "#8B7355");
+        dg.addColorStop(0.35, "#C4A882");
+        dg.addColorStop(0.5, "#D8C098");
+        dg.addColorStop(0.65, "#C4A882");
+        dg.addColorStop(1, "#8B7355");
+        ctx.fillStyle = dg;
+        ctx.beginPath();
+        ctx.ellipse(discX, discY, discR, discR * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glazed ceramic sheen
+        ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+        ctx.beginPath();
+        ctx.ellipse(discX - discR * 0.2, discY - discR * 0.08, discR * 0.4, discR * 0.12, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Disc rim highlight
+        ctx.strokeStyle = "rgba(255, 240, 220, 0.2)";
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(discX, discY, discR * 0.92, discR * 0.28, 0, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.stroke();
+
+        if (d < 2) {
+          ctx.strokeStyle = "#888";
+          ctx.lineWidth = 0.8 * zoom;
+          const nextDX = armEndX + Math.sin(sway) * (d + 2) * 1.8 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(discX, discY + discR * 0.3);
+          ctx.lineTo(nextDX, discY + 2.8 * zoom - discR * 0.3);
+          ctx.stroke();
+
+          // Blue crackle spark along chain when attacking
+          if (isAttacking && Math.sin(time * 18 + d * 4 + ri + iAngle) > 0.5) {
+            const crackAlpha = attackIntensity * 0.55;
+            ctx.shadowColor = "#00ccff";
+            ctx.shadowBlur = 3 * zoom;
+            ctx.strokeStyle = `rgba(100, 220, 255, ${crackAlpha})`;
+            ctx.lineWidth = 0.6 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(discX + (Math.sin(time * 35) * 0.6) * zoom, discY + discR * 0.3);
+            ctx.lineTo(nextDX + (Math.sin(time * 28) * 0.6) * zoom, discY + 2.8 * zoom - discR * 0.3);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
+        }
+      }
+    }
+  }
 
   // Central coil column - Enhanced 3D cylindrical structure
   const columnGrad = ctx.createLinearGradient(
@@ -10037,19 +10284,300 @@ function renderTeslaCoil(
     ctx.stroke();
   }
 
-  // Tesla coil rings (copper) - Enhanced with better 3D shading and glow
-  const ringCount = 6 + tower.level * 2;
-  const isAttacking = Date.now() - tower.lastAttack < 300;
-  const attackIntensity = isAttacking
-    ? Math.max(0, 1 - (Date.now() - tower.lastAttack) / 300)
-    : 0;
+  // Column energy veins - pulsing blue lines along the column surface
+  for (let v = 0; v < 3; v++) {
+    const vAngle = (v / 3) * Math.PI + time * 0.3;
+    const vx = Math.cos(vAngle) * 0.3;
+    const baseVeinX = screenPos.x + vx * 8 * zoom;
+    const topVeinX = screenPos.x + vx * 5 * zoom;
+    const vAlpha =
+      0.12 +
+      Math.sin(time * 4 + v * 2.1) * 0.08 +
+      (isAttacking ? attackIntensity * 0.35 : 0);
+    ctx.strokeStyle = `rgba(0, 180, 255, ${vAlpha})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(baseVeinX, topY);
+    ctx.lineTo(topVeinX, topY - coilHeight + 12 * zoom);
+    ctx.stroke();
+    if (isAttacking) {
+      ctx.shadowColor = "#00ccff";
+      ctx.shadowBlur = 4 * zoom * attackIntensity;
+      ctx.strokeStyle = `rgba(0, 220, 255, ${0.25 * attackIntensity})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(baseVeinX, topY);
+      ctx.lineTo(topVeinX, topY - coilHeight + 12 * zoom);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
 
+  // Dual counter-rotating energy helix spiraling up the column
+  const helixTurns = 3 + tower.level;
+  const helixPts = helixTurns * 10;
+  const helixSpeed =
+    time * (1.5 + (isAttacking ? 3 * attackIntensity : 0));
+  for (let strand = 0; strand < 2; strand++) {
+    const strandDir = strand === 0 ? 1 : -1;
+    const strandAlpha =
+      strand === 0
+        ? isAttacking
+          ? 0.25 + attackIntensity * 0.35
+          : 0.12
+        : isAttacking
+          ? 0.15 + attackIntensity * 0.2
+          : 0.08;
+    ctx.strokeStyle = `rgba(${strand === 0 ? "0, 220, 255" : "100, 200, 255"}, ${strandAlpha})`;
+    ctx.lineWidth = (strand === 0 ? 1.5 : 1) * zoom;
+    if (isAttacking && strand === 0) {
+      ctx.shadowColor = "#00ffff";
+      ctx.shadowBlur = 5 * zoom * attackIntensity;
+    }
+    ctx.beginPath();
+    for (let h = 0; h <= helixPts; h++) {
+      const ht = h / helixPts;
+      const hAngle =
+        strandDir * ht * helixTurns * Math.PI * 2 +
+        helixSpeed * (strand === 0 ? 1 : 0.7);
+      const hRadius = (10 - strand) * zoom * (1 - ht * 0.35);
+      const hx = screenPos.x + Math.cos(hAngle) * hRadius;
+      const hy =
+        topY -
+        ht * (coilHeight - 12 * zoom) +
+        Math.sin(hAngle) * hRadius * 0.3;
+      if (h === 0) ctx.moveTo(hx, hy);
+      else ctx.lineTo(hx, hy);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // === FRONT-SIDE CONDUCTORS (in front of column) ===
+  for (const cAngle of frontConductorAngles) {
+    const cpx = Math.cos(cAngle);
+    const cpy = Math.sin(cAngle) * 0.5;
+    for (let ri = 0; ri < ringPositions.length - 1; ri++) {
+      const rBot = ringPositions[ri];
+      const rTop = ringPositions[ri + 1];
+      const vibrate = isAttacking
+        ? Math.sin(time * 25 + ri * 2 + cAngle) * 1.2 * attackIntensity * zoom
+        : 0;
+      const cx1 =
+        screenPos.x +
+        cpx * rBot.size * conductorRadiusFactor * zoom +
+        vibrate;
+      const cy1 = rBot.y + cpy * rBot.size * conductorRadiusFactor * zoom;
+      const cx2 =
+        screenPos.x +
+        cpx * rTop.size * conductorRadiusFactor * zoom +
+        vibrate;
+      const cy2 = rTop.y + cpy * rTop.size * conductorRadiusFactor * zoom;
+      const shimmer = Math.sin(time * 3 + ri + cAngle) * 20;
+
+      ctx.strokeStyle = `rgb(${100 + shimmer}, ${65 + shimmer * 0.5}, 30)`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cx1 + zoom, cy1 + zoom);
+      ctx.lineTo(cx2 + zoom, cy2 + zoom);
+      ctx.stroke();
+
+      ctx.strokeStyle = `rgb(${170 + shimmer}, ${115 + shimmer * 0.5}, 55)`;
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cx1, cy1);
+      ctx.lineTo(cx2, cy2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255, 210, 140, 0.25)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cx1 - 0.5 * zoom, cy1);
+      ctx.lineTo(cx2 - 0.5 * zoom, cy2);
+      ctx.stroke();
+
+      // Rivet details at front conductor connection points
+      ctx.fillStyle = "#aa8855";
+      ctx.beginPath();
+      ctx.arc(cx1, cy1, 1.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2, cy2, 1.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ccaa77";
+      ctx.beginPath();
+      ctx.arc(cx1 - 0.3 * zoom, cy1 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2 - 0.3 * zoom, cy2 - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (isAttacking) {
+        ctx.shadowColor = "#00aaff";
+        ctx.shadowBlur = 5 * zoom * attackIntensity;
+        ctx.strokeStyle = `rgba(0, 150, 255, ${0.25 * attackIntensity})`;
+        ctx.lineWidth = 4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(cx1, cy1);
+        ctx.lineTo(cx2, cy2);
+        ctx.stroke();
+
+        // Corona glow at front connection points
+        const fCoronaR = (2.5 + Math.sin(time * 8 + ri) * 0.8) * zoom * attackIntensity;
+        ctx.fillStyle = `rgba(100, 200, 255, ${0.2 * attackIntensity})`;
+        ctx.beginPath();
+        ctx.arc(cx1, cy1, fCoronaR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx2, cy2, fCoronaR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Conductor-ring junction rivet (always visible)
+      const fJnPulse =
+        0.5 +
+        Math.sin(time * 3 + ri + cAngle) * 0.2 +
+        (isAttacking ? attackIntensity * 0.3 : 0);
+      ctx.fillStyle = `rgba(200, 160, 80, ${fJnPulse})`;
+      ctx.beginPath();
+      ctx.arc(cx1, cy1, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2, cy2, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Rivet highlight
+      ctx.fillStyle = `rgba(255, 220, 160, ${fJnPulse * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(cx1 - 0.4 * zoom, cy1 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx2 - 0.4 * zoom, cy2 - 0.4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === FRONT-SIDE SUSPENSION INSULATORS ===
+  const frontInsulatorAngles = [Math.PI * 0.15, Math.PI * 1.85];
+  for (const iAngle of frontInsulatorAngles) {
+    const ipx = Math.cos(iAngle);
+    const ipy = Math.sin(iAngle) * 0.5;
+    for (let ri = 2; ri < ringPositions.length - 1; ri += 3) {
+      const ring = ringPositions[ri];
+      const armLen = ring.size * 1.4;
+      const armBaseX = screenPos.x + ipx * ring.size * 0.5 * zoom;
+      const armBaseY = ring.y + ipy * ring.size * 0.5 * zoom;
+      const armEndX = screenPos.x + ipx * armLen * zoom;
+      const armEndY = ring.y + ipy * armLen * zoom;
+
+      ctx.strokeStyle = "#667788";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(armBaseX, armBaseY);
+      ctx.lineTo(armEndX, armEndY);
+      ctx.stroke();
+
+      const sway =
+        Math.sin(time * 1.5 + ri + iAngle) *
+        (isAttacking ? 0.15 + attackIntensity * 0.2 : 0.04);
+      for (let d = 0; d < 3; d++) {
+        const discY = armEndY + (d + 1) * 2.8 * zoom;
+        const discX = armEndX + Math.sin(sway) * (d + 1) * 1.8 * zoom;
+        const discR = (3.2 - d * 0.4) * zoom;
+
+        ctx.fillStyle = "#6B5B45";
+        ctx.beginPath();
+        ctx.ellipse(
+          discX,
+          discY + 0.5 * zoom,
+          discR,
+          discR * 0.3,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        const dg = ctx.createLinearGradient(
+          discX - discR,
+          discY,
+          discX + discR,
+          discY,
+        );
+        dg.addColorStop(0, "#8B7355");
+        dg.addColorStop(0.35, "#C4A882");
+        dg.addColorStop(0.5, "#D8C098");
+        dg.addColorStop(0.65, "#C4A882");
+        dg.addColorStop(1, "#8B7355");
+        ctx.fillStyle = dg;
+        ctx.beginPath();
+        ctx.ellipse(discX, discY, discR, discR * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Front insulator glazed ceramic sheen
+        ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+        ctx.beginPath();
+        ctx.ellipse(discX - discR * 0.2, discY - discR * 0.08, discR * 0.4, discR * 0.12, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Disc rim highlight
+        ctx.strokeStyle = "rgba(255, 240, 220, 0.2)";
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(discX, discY, discR * 0.92, discR * 0.28, 0, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.stroke();
+
+        if (d < 2) {
+          ctx.strokeStyle = "#888";
+          ctx.lineWidth = 0.8 * zoom;
+          const nextDX =
+            armEndX + Math.sin(sway) * (d + 2) * 1.8 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(discX, discY + discR * 0.3);
+          ctx.lineTo(nextDX, discY + 2.8 * zoom - discR * 0.3);
+          ctx.stroke();
+
+          // Front insulator crackle spark when attacking
+          if (isAttacking && Math.sin(time * 18 + d * 4 + ri + iAngle) > 0.5) {
+            const fCrackAlpha = attackIntensity * 0.55;
+            ctx.shadowColor = "#00ccff";
+            ctx.shadowBlur = 3 * zoom;
+            ctx.strokeStyle = `rgba(100, 220, 255, ${fCrackAlpha})`;
+            ctx.lineWidth = 0.6 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(discX + Math.sin(time * 35) * 0.6 * zoom, discY + discR * 0.3);
+            ctx.lineTo(nextDX + Math.sin(time * 28) * 0.6 * zoom, discY + 2.8 * zoom - discR * 0.3);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
+        }
+      }
+    }
+  }
+
+  // Tesla coil rings with mechanical components
   for (let i = 0; i < ringCount; i++) {
-    const ringProgress = (i + 1) / (ringCount + 1);
-    // Added more spacing between rings (increased multiplier from 1.0 to 1.15)
-    const ringY = topY - ringProgress * (coilHeight - 18 * zoom) * 1.15;
-    const ringSize = 14 - ringProgress * 8;
-    const energyPulse = Math.sin(time * 6 - i * 0.5) * 0.4;
+    const ringBob =
+      Math.sin(time * 3 + i * 0.8) * 0.6 * zoom +
+      (isAttacking
+        ? Math.sin(time * 12 + i * 1.5) * 1.5 * zoom * attackIntensity
+        : 0);
+    const ringY = ringPositions[i].y + ringBob;
+    const ringSizeBase = ringPositions[i].size;
+    const sizePulse =
+      1 +
+      Math.sin(time * 4 + i * 0.6) * 0.03 +
+      (isAttacking
+        ? Math.sin(time * 10 + i) * 0.08 * attackIntensity
+        : 0);
+    const ringSize = ringSizeBase * sizePulse;
+    const energyPulse =
+      Math.sin(time * 6 - i * 0.5) * 0.4 +
+      (isAttacking
+        ? Math.sin(time * 15 + i) * 0.3 * attackIntensity
+        : 0);
+    const ringRotation =
+      time * (0.8 + (isAttacking ? 2.5 * attackIntensity : 0)) + i * 0.4;
 
     // Blue glow effect when firing
     if (isAttacking) {
@@ -10084,11 +10612,15 @@ function renderTeslaCoil(
     );
     ctx.fill();
 
-    // Main ring body - copper with 3D effect (add blue tint when attacking)
+    // Main ring body - copper with 3D effect and rotation animation
+    const rotOffset =
+      Math.sin(ringRotation) *
+      (1.5 + (isAttacking ? 2.5 * attackIntensity : 0)) *
+      zoom;
     const ringGrad = ctx.createLinearGradient(
-      screenPos.x - ringSize * zoom,
+      screenPos.x - ringSize * zoom + rotOffset,
       ringY,
-      screenPos.x + ringSize * zoom,
+      screenPos.x + ringSize * zoom + rotOffset,
       ringY,
     );
     const blueShift = isAttacking ? attackIntensity * 60 : 0;
@@ -10126,15 +10658,47 @@ function renderTeslaCoil(
     );
     ctx.fill();
 
-    // Ring highlight - now fully enclosed ellipse (not just a half circle)
+    // Ring highlight with rotation shift
     ctx.strokeStyle = `rgba(255, ${200 + energyPulse * 55}, ${120 + energyPulse * 30 + blueShift}, ${0.6 + energyPulse * 0.2})`;
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x,
+      screenPos.x + rotOffset * 0.3,
       ringY - 1 * zoom,
       ringSize * zoom * 0.85,
       ringSize * zoom * 0.35,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+
+    // Rotating tick marks around ring (gauge-like dial marks)
+    for (let t = 0; t < 8; t++) {
+      const tAngle = ringRotation + (t / 8) * Math.PI * 2;
+      const tInR = ringSize * 0.6 * zoom;
+      const tOutR = ringSize * 0.82 * zoom;
+      const tx1 = screenPos.x + Math.cos(tAngle) * tInR;
+      const ty1 = ringY + Math.sin(tAngle) * tInR * 0.4;
+      const tx2 = screenPos.x + Math.cos(tAngle) * tOutR;
+      const ty2 = ringY + Math.sin(tAngle) * tOutR * 0.4;
+      ctx.strokeStyle = `rgba(255, 200, 120, ${0.2 + energyPulse * 0.1 + (isAttacking ? attackIntensity * 0.25 : 0)})`;
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tx1, ty1);
+      ctx.lineTo(tx2, ty2);
+      ctx.stroke();
+    }
+
+    // Inner ring detail ellipse
+    ctx.strokeStyle = `rgba(200, 150, 80, ${0.18 + energyPulse * 0.08})`;
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      ringY,
+      ringSize * zoom * 0.55,
+      ringSize * zoom * 0.22,
       0,
       0,
       Math.PI * 2,
@@ -10189,7 +10753,710 @@ function renderTeslaCoil(
       ctx.fill();
       ctx.shadowBlur = 0;
     }
+
+    // Electromagnetic field lines between adjacent rings
+    if (i > 0) {
+      const prevRingData = ringPositions[i - 1];
+      const prevRY = prevRingData.y + Math.sin(time * 3 + (i - 1) * 0.8) * 0.6 * zoom;
+      const fieldAlpha = isAttacking ? 0.25 + attackIntensity * 0.45 : 0.08;
+      for (let fl = 0; fl < 4; fl++) {
+        const fAngle = time * (1.8 + (isAttacking ? 3 * attackIntensity : 0)) + i * 0.7 + fl * (Math.PI * 0.5);
+        const fAmpBase = (2.5 + Math.sin(time * 3.5 + fl * 1.2) * 1.2) * zoom;
+        const fAmp = fAmpBase * (1 + (isAttacking ? attackIntensity * 0.8 : 0));
+        const fMidY = (ringY + prevRY) * 0.5;
+        const fStartX = screenPos.x + Math.cos(fAngle) * ringSize * zoom * 0.35;
+        const fEndX = screenPos.x + Math.cos(fAngle) * prevRingData.size * sizePulse * zoom * 0.35;
+        const fCtrlX = screenPos.x + Math.cos(fAngle + Math.sin(time * 2) * 0.3) * fAmp;
+
+        ctx.strokeStyle = `rgba(80, 200, 255, ${fieldAlpha * (0.4 + Math.sin(time * 5 + fl * 1.5) * 0.3)})`;
+        ctx.lineWidth = (0.6 + (isAttacking ? attackIntensity * 0.6 : 0)) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(fStartX, ringY);
+        ctx.quadraticCurveTo(fCtrlX, fMidY, fEndX, prevRY);
+        ctx.stroke();
+      }
+    }
+
+    // Ring edge sparking
+    if (isAttacking || Math.sin(time * 8 + i * 3.7) > 0.82) {
+      const numEdgeSparks = isAttacking ? 2 : 1;
+      for (let es = 0; es < numEdgeSparks; es++) {
+        const spkAngle = time * (12 + es * 7) + i * 2.3 + es * Math.PI;
+        const spkEdgeX = screenPos.x + Math.cos(spkAngle) * ringSize * zoom;
+        const spkEdgeY = ringY + Math.sin(spkAngle) * ringSize * zoom * 0.4;
+        const spkAlpha = 0.5 + attackIntensity * 0.5;
+
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 5 * zoom;
+        ctx.fillStyle = `rgba(200, 255, 255, ${spkAlpha})`;
+        ctx.beginPath();
+        ctx.arc(spkEdgeX, spkEdgeY, (1 + attackIntensity * 0.8) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        const boltLen = (3.5 + Math.sin(time * 18 + es) * 2) * zoom * (1 + attackIntensity);
+        const boltAng = spkAngle + Math.sin(time * 10 + es * 3) * 0.6;
+        ctx.strokeStyle = `rgba(150, 255, 255, ${spkAlpha * 0.8})`;
+        ctx.lineWidth = 0.7 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(spkEdgeX, spkEdgeY);
+        const midBX = spkEdgeX + Math.cos(boltAng) * boltLen * 0.5 + Math.sin(time * 25 + es) * zoom;
+        const midBY = spkEdgeY + Math.sin(boltAng) * boltLen * 0.2;
+        ctx.lineTo(midBX, midBY);
+        ctx.lineTo(
+          spkEdgeX + Math.cos(boltAng) * boltLen,
+          spkEdgeY + Math.sin(boltAng) * boltLen * 0.3,
+        );
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+    }
   }
+
+
+
+
+  // === PISTONS - Mechanical pistons pumping between ring sections ===
+  const pistonAngles = [
+    Math.PI * 0.25,
+    Math.PI * 0.75,
+    Math.PI * 1.25,
+    Math.PI * 1.75,
+  ];
+  for (const pAngle of pistonAngles) {
+    const ppx = Math.cos(pAngle);
+    const ppy = Math.sin(pAngle) * 0.5;
+    for (let ri = 0; ri < ringPositions.length - 1; ri += 2) {
+      const rBot = ringPositions[ri];
+      const rTop = ringPositions[ri + 1];
+      const midSize = (rBot.size + rTop.size) / 2;
+      const px = screenPos.x + ppx * midSize * 0.7 * zoom;
+      const baseY = (rBot.y + rTop.y) / 2 + ppy * midSize * 0.7 * zoom;
+
+      const phase = time * 4 + ri * 1.5 + pAngle * 2;
+      const pistonTravel = isAttacking
+        ? Math.sin(phase) * 3.5 * zoom * (1 + attackIntensity)
+        : Math.sin(phase * 0.3) * 1.2 * zoom;
+
+      const cylH = Math.abs(rBot.y - rTop.y) * 0.3;
+      const cylW = 2.2 * zoom;
+
+      ctx.fillStyle = "#3a4a5a";
+      ctx.fillRect(
+        px - cylW / 2 + 0.5 * zoom,
+        baseY - cylH / 2 + 0.5 * zoom,
+        cylW,
+        cylH,
+      );
+
+      const cylGrad = ctx.createLinearGradient(
+        px - cylW / 2,
+        0,
+        px + cylW / 2,
+        0,
+      );
+      cylGrad.addColorStop(0, "#556677");
+      cylGrad.addColorStop(0.4, "#8899aa");
+      cylGrad.addColorStop(0.6, "#8899aa");
+      cylGrad.addColorStop(1, "#556677");
+      ctx.fillStyle = cylGrad;
+      ctx.fillRect(px - cylW / 2, baseY - cylH / 2, cylW, cylH);
+
+      ctx.fillStyle = "rgba(150, 180, 210, 0.4)";
+      ctx.fillRect(px - cylW / 2, baseY - cylH / 2, cylW * 0.3, cylH);
+
+      const rodW = 1.3 * zoom;
+      const rodLen = cylH * 0.55;
+      const rodY = baseY - cylH / 2 + pistonTravel - rodLen * 0.3;
+
+      const rodGrad = ctx.createLinearGradient(
+        px - rodW / 2,
+        0,
+        px + rodW / 2,
+        0,
+      );
+      rodGrad.addColorStop(0, "#99aabb");
+      rodGrad.addColorStop(0.5, "#ddeeff");
+      rodGrad.addColorStop(1, "#99aabb");
+      ctx.fillStyle = rodGrad;
+      ctx.fillRect(px - rodW / 2, rodY, rodW, rodLen);
+
+      ctx.fillStyle = "rgba(220, 235, 250, 0.5)";
+      ctx.fillRect(px - rodW * 0.3, rodY, rodW * 0.25, rodLen);
+
+      ctx.fillStyle = "#8899aa";
+      ctx.beginPath();
+      ctx.ellipse(
+        px,
+        rodY,
+        cylW * 0.65,
+        cylW * 0.2,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // 3D cylinder end caps
+      ctx.fillStyle = "#6a7a8a";
+      ctx.beginPath();
+      ctx.ellipse(px, baseY - cylH / 2, cylW * 0.55, cylW * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#7a8a9a";
+      ctx.beginPath();
+      ctx.ellipse(px, baseY + cylH / 2, cylW * 0.55, cylW * 0.16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Piston gasket ring on rod
+      const gasketY = rodY + rodLen * 0.18;
+      ctx.strokeStyle = "#cc8844";
+      ctx.lineWidth = 1.1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(px, gasketY, rodW * 0.85, rodW * 0.22, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Hydraulic fluid shimmer line
+      const fluidShimmer = Math.sin(time * 5 + ri + pAngle) * 0.3 + 0.5;
+      ctx.strokeStyle = `rgba(100, 200, 255, ${fluidShimmer * 0.3})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(px + cylW / 2 - 0.3 * zoom, baseY - cylH / 2 + zoom);
+      ctx.lineTo(px + cylW / 2 - 0.3 * zoom, baseY + cylH / 2 - zoom);
+      ctx.stroke();
+
+      // Cylinder riveted band
+      const bandY1 = baseY - cylH / 2 + cylH * 0.15;
+      const bandY2 = baseY + cylH / 2 - cylH * 0.15;
+      ctx.strokeStyle = "#7a8a9a";
+      ctx.lineWidth = 1.2 * zoom;
+      for (const bY of [bandY1, bandY2]) {
+        ctx.beginPath();
+        ctx.moveTo(px - cylW / 2, bY);
+        ctx.lineTo(px + cylW / 2, bY);
+        ctx.stroke();
+      }
+
+      if (isAttacking) {
+        ctx.shadowColor = "#00aaff";
+        ctx.shadowBlur = 4 * zoom * attackIntensity;
+        ctx.strokeStyle = `rgba(0, 180, 255, ${0.3 * attackIntensity})`;
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.strokeRect(
+          px - cylW / 2 - zoom,
+          baseY - cylH / 2 - zoom,
+          cylW + 2 * zoom,
+          cylH + 2 * zoom,
+        );
+        ctx.shadowBlur = 0;
+
+        // Steam/gas puffs from piston top
+        for (let puff = 0; puff < 2; puff++) {
+          const puffAge = ((time * 7 + ri * 2.3 + puff * 2.8 + pAngle) % 1.8);
+          if (puffAge < 1.0) {
+            const puffAlpha = (1 - puffAge) * 0.35 * attackIntensity;
+            const puffR = (0.8 + puffAge * 2.8) * zoom;
+            const puffDx = Math.sin(time * 2.5 + puff * 1.7) * 1.5 * zoom;
+            ctx.fillStyle = `rgba(200, 230, 255, ${puffAlpha})`;
+            ctx.beginPath();
+            ctx.arc(px + puffDx, baseY - cylH / 2 - puffAge * 5 * zoom, puffR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // Piston pressure indicator light (green→amber→red when attacking)
+      const prPhase = Math.sin(time * 4 + ri * 1.5 + pAngle * 2);
+      const prR = isAttacking ? 1 : Math.max(0, prPhase * 0.5 + 0.3);
+      const prG = isAttacking ? Math.max(0, 1 - attackIntensity) : 0.8;
+      ctx.fillStyle = `rgba(${Math.round(prR * 255)}, ${Math.round(prG * 255)}, 0, 0.85)`;
+      ctx.beginPath();
+      ctx.arc(px, baseY - cylH / 2 - 2 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      if (isAttacking) {
+        ctx.shadowColor = `rgb(${Math.round(prR * 255)}, ${Math.round(prG * 255)}, 0)`;
+        ctx.shadowBlur = 4 * zoom * attackIntensity;
+        ctx.beginPath();
+        ctx.arc(
+          px,
+          baseY - cylH / 2 - 2 * zoom,
+          1.8 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+  }
+
+  // === VIBRATION DAMPERS - Jiggling spring mechanisms ===
+  const damperAngles = [0, Math.PI];
+  for (const dAngle of damperAngles) {
+    const dpx = Math.cos(dAngle);
+    const dpy = Math.sin(dAngle) * 0.5;
+    for (let ri = 1; ri < ringPositions.length - 1; ri += 3) {
+      const ring = ringPositions[ri];
+      const nextRing = ringPositions[Math.min(ri + 1, ringPositions.length - 1)];
+      const anchorX = screenPos.x + dpx * ring.size * 0.85 * zoom;
+      const anchorTopY = ring.y + dpy * ring.size * 0.85 * zoom;
+      const anchorBotY = nextRing.y + dpy * nextRing.size * 0.85 * zoom;
+
+      const jiggleX = isAttacking
+        ? Math.sin(time * 18 + ri * 3 + dAngle) * 2 * zoom * attackIntensity
+        : Math.sin(time * 2 + ri * 1.5 + dAngle) * 0.5 * zoom;
+      const jiggleY = isAttacking
+        ? Math.cos(time * 15 + ri * 2.5) * 1.5 * zoom * attackIntensity
+        : Math.cos(time * 1.8 + ri) * 0.3 * zoom;
+
+      const springLen = Math.abs(anchorTopY - anchorBotY) * 0.6;
+      const midY = (anchorTopY + anchorBotY) / 2;
+      const zigCount = 7;
+      const zigH = springLen / zigCount;
+      const zigW = 2.8 * zoom;
+      const dampCompress = isAttacking ? 1 - attackIntensity * 0.25 : 1;
+
+      // Mounting bracket at top anchor
+      ctx.fillStyle = "#556677";
+      const bracketX = anchorX + jiggleX;
+      const bracketTopY = midY - springLen / 2 + jiggleY;
+      ctx.fillRect(bracketX - 3 * zoom, bracketTopY - 1.5 * zoom, 6 * zoom, 3 * zoom);
+      ctx.strokeStyle = "#7788aa";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.strokeRect(bracketX - 3 * zoom, bracketTopY - 1.5 * zoom, 6 * zoom, 3 * zoom);
+      ctx.fillStyle = "#8899aa";
+      ctx.beginPath();
+      ctx.arc(bracketX - 1.8 * zoom, bracketTopY, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(bracketX + 1.8 * zoom, bracketTopY, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Spring coil with back-face shadow for 3D effect
+      ctx.strokeStyle = "rgba(60, 70, 80, 0.4)";
+      ctx.lineWidth = 1.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bracketX + 0.5 * zoom, bracketTopY + 0.5 * zoom);
+      for (let z = 0; z < zigCount; z++) {
+        const zy = bracketTopY + (z + 0.5) * zigH * dampCompress + jiggleY * (1 - z / zigCount) + 0.5 * zoom;
+        const zOff = z % 2 === 0 ? zigW : -zigW;
+        ctx.lineTo(bracketX + zOff + 0.5 * zoom, zy);
+      }
+      ctx.lineTo(bracketX + 0.5 * zoom, midY + springLen / 2 * dampCompress + jiggleY * 0.2 + 0.5 * zoom);
+      ctx.stroke();
+
+      // Spring coil main pass
+      const springStress = isAttacking ? attackIntensity : 0;
+      ctx.strokeStyle = `rgb(${153 + Math.round(springStress * 60)}, ${170 + Math.round(springStress * 30)}, ${187})`;
+      ctx.lineWidth = 1.3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bracketX, bracketTopY);
+      for (let z = 0; z < zigCount; z++) {
+        const zy = bracketTopY + (z + 0.5) * zigH * dampCompress + jiggleY * (1 - z / zigCount);
+        const zOff = z % 2 === 0 ? zigW : -zigW;
+        ctx.lineTo(bracketX + zOff, zy);
+      }
+      const massTopY = midY + springLen / 2 * dampCompress + jiggleY * 0.2;
+      ctx.lineTo(bracketX, massTopY);
+      ctx.stroke();
+
+      // Spring highlight pass
+      ctx.strokeStyle = "rgba(200, 220, 240, 0.3)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bracketX - 0.4 * zoom, bracketTopY);
+      for (let z = 0; z < zigCount; z++) {
+        const zy = bracketTopY + (z + 0.5) * zigH * dampCompress + jiggleY * (1 - z / zigCount);
+        const zOff = z % 2 === 0 ? zigW - 0.4 * zoom : -zigW - 0.4 * zoom;
+        ctx.lineTo(bracketX + zOff, zy);
+      }
+      ctx.stroke();
+
+      // Mass block with metallic gradient
+      const massW = 4.5 * zoom;
+      const massH = 3.5 * zoom;
+      const massGrad = ctx.createLinearGradient(
+        bracketX - massW / 2, 0,
+        bracketX + massW / 2, 0,
+      );
+      massGrad.addColorStop(0, "#4a5a6a");
+      massGrad.addColorStop(0.25, "#7a8a9a");
+      massGrad.addColorStop(0.5, "#8899aa");
+      massGrad.addColorStop(0.75, "#7a8a9a");
+      massGrad.addColorStop(1, "#4a5a6a");
+      ctx.fillStyle = massGrad;
+      ctx.fillRect(bracketX - massW / 2, massTopY - massH / 2, massW, massH);
+      ctx.strokeStyle = "#9aaabb";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.strokeRect(bracketX - massW / 2, massTopY - massH / 2, massW, massH);
+      ctx.fillStyle = "rgba(180, 200, 220, 0.3)";
+      ctx.fillRect(bracketX - massW / 2, massTopY - massH / 2, massW * 0.3, massH);
+
+      if (isAttacking) {
+        ctx.shadowColor = "#00ccff";
+        ctx.shadowBlur = 3 * zoom * attackIntensity;
+        ctx.strokeStyle = `rgba(0, 200, 255, ${0.2 * attackIntensity})`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(bracketX, bracketTopY);
+        ctx.lineTo(bracketX, massTopY);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Impact splash particles when mass oscillates
+        if (Math.abs(jiggleY) > 0.6 * zoom) {
+          for (let sp = 0; sp < 3; sp++) {
+            const spAng = time * 12 + sp * 2.1 + ri;
+            const spDist = (1.5 + sp * 0.8) * zoom;
+            const spAlpha = attackIntensity * 0.4 * (1 - sp * 0.25);
+            ctx.fillStyle = `rgba(150, 220, 255, ${spAlpha})`;
+            ctx.beginPath();
+            ctx.arc(
+              bracketX + Math.cos(spAng) * spDist,
+              massTopY + Math.sin(spAng) * spDist * 0.4,
+              (1.2 - sp * 0.2) * zoom, 0, Math.PI * 2,
+            );
+            ctx.fill();
+          }
+        }
+      }
+    }
+  }
+
+  // === TENSION/STRAIN ASSEMBLIES - Springs that stretch when attacking ===
+  const tensionAngles = [
+    Math.PI * 0.4,
+    Math.PI * 0.6,
+    Math.PI * 1.4,
+    Math.PI * 1.6,
+  ];
+  for (const tAngle of tensionAngles) {
+    const tpx = Math.cos(tAngle);
+    const tpy = Math.sin(tAngle) * 0.5;
+    for (let ri = 0; ri < ringPositions.length - 2; ri += 3) {
+      const rBot = ringPositions[ri];
+      const rTop = ringPositions[ri + 2];
+      const avgSize = (rBot.size + rTop.size) / 2;
+      const tx = screenPos.x + tpx * avgSize * 0.6 * zoom;
+      const ty1 = rBot.y + tpy * rBot.size * 0.6 * zoom;
+      const ty2 = rTop.y + tpy * rTop.size * 0.6 * zoom;
+
+      const stretchFactor = isAttacking ? 1 + attackIntensity * 0.35 : 1;
+      const breathe = Math.sin(time * 1.2 + ri + tAngle) * 0.5 * zoom;
+
+      const coilCount = 8;
+      const coilW = 2.2 * zoom;
+
+      // Spring shadow for 3D depth
+      ctx.strokeStyle = "rgba(40, 50, 60, 0.35)";
+      ctx.lineWidth = 1.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tx + breathe + 0.5 * zoom, ty1 + 0.5 * zoom);
+      for (let c = 0; c < coilCount; c++) {
+        const frac1 = (c + 0.25) / coilCount;
+        const frac2 = (c + 0.75) / coilCount;
+        const sCy1 = ty1 + (ty2 - ty1) * frac1 * stretchFactor + 0.5 * zoom;
+        const sCy2 = ty1 + (ty2 - ty1) * frac2 * stretchFactor + 0.5 * zoom;
+        const xOff = c % 2 === 0 ? coilW : -coilW;
+        ctx.lineTo(tx + xOff + breathe + 0.5 * zoom, sCy1);
+        ctx.lineTo(tx - xOff + breathe + 0.5 * zoom, sCy2);
+      }
+      ctx.lineTo(tx + breathe + 0.5 * zoom, ty2 + 0.5 * zoom);
+      ctx.stroke();
+
+      // Spring main pass with heat coloring when strained
+      const heatR = isAttacking ? 140 + Math.round(attackIntensity * 80) : 136;
+      const heatG = isAttacking ? 160 + Math.round(attackIntensity * 20) : 153;
+      const heatB = isAttacking ? 180 - Math.round(attackIntensity * 40) : 170;
+      ctx.strokeStyle = `rgb(${heatR}, ${heatG}, ${heatB})`;
+      ctx.lineWidth = 1.3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tx + breathe, ty1);
+      for (let c = 0; c < coilCount; c++) {
+        const frac1 = (c + 0.25) / coilCount;
+        const frac2 = (c + 0.75) / coilCount;
+        const ccy1 = ty1 + (ty2 - ty1) * frac1 * stretchFactor;
+        const ccy2 = ty1 + (ty2 - ty1) * frac2 * stretchFactor;
+        const xOff = c % 2 === 0 ? coilW : -coilW;
+        ctx.lineTo(tx + xOff + breathe, ccy1);
+        ctx.lineTo(tx - xOff + breathe, ccy2);
+      }
+      ctx.lineTo(tx + breathe, ty2);
+      ctx.stroke();
+
+      // Spring highlight pass
+      ctx.strokeStyle = "rgba(200, 215, 230, 0.25)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tx + breathe - 0.4 * zoom, ty1);
+      for (let c = 0; c < coilCount; c++) {
+        const frac1 = (c + 0.25) / coilCount;
+        const frac2 = (c + 0.75) / coilCount;
+        const hCy1 = ty1 + (ty2 - ty1) * frac1 * stretchFactor;
+        const hCy2 = ty1 + (ty2 - ty1) * frac2 * stretchFactor;
+        const xOff = c % 2 === 0 ? coilW - 0.4 * zoom : -coilW - 0.4 * zoom;
+        ctx.lineTo(tx + xOff + breathe, hCy1);
+        ctx.lineTo(tx - xOff + breathe, hCy2);
+      }
+      ctx.stroke();
+
+      // Mounting plates with gradient
+      const plateGrad = ctx.createLinearGradient(
+        tx + breathe - 3 * zoom, 0, tx + breathe + 3 * zoom, 0,
+      );
+      plateGrad.addColorStop(0, "#556677");
+      plateGrad.addColorStop(0.4, "#778899");
+      plateGrad.addColorStop(0.6, "#778899");
+      plateGrad.addColorStop(1, "#556677");
+      ctx.fillStyle = plateGrad;
+      ctx.fillRect(tx + breathe - 3 * zoom, ty1 - 1.2 * zoom, 6 * zoom, 2.4 * zoom);
+      ctx.fillRect(tx + breathe - 3 * zoom, ty2 - 1.2 * zoom, 6 * zoom, 2.4 * zoom);
+
+      // Bolt dots on mounting plates
+      ctx.fillStyle = "#9aaabb";
+      for (const bOff of [-1.5, 1.5]) {
+        ctx.beginPath();
+        ctx.arc(tx + breathe + bOff * zoom, ty1, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(tx + breathe + bOff * zoom, ty2, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      if (isAttacking) {
+        // Strain heat glow along spring axis
+        ctx.shadowColor = "#ff8844";
+        ctx.shadowBlur = (3 + attackIntensity * 4) * zoom;
+        ctx.strokeStyle = `rgba(255, 150, 80, ${0.2 + attackIntensity * 0.25})`;
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(tx + breathe, ty1);
+        ctx.lineTo(tx + breathe, ty2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Strain creak flash
+        if (stretchFactor > 1.2 && Math.sin(time * 30 + ri + tAngle) > 0.7) {
+          ctx.fillStyle = `rgba(255, 200, 100, ${attackIntensity * 0.4})`;
+          const flashY = ty1 + (ty2 - ty1) * (0.3 + Math.sin(time * 8) * 0.2);
+          ctx.beginPath();
+          ctx.arc(tx + breathe, flashY, 2 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  // === JUMPERS - Electrical jumper wires arcing between conductor points ===
+  const jumperPairs = [
+    { from: Math.PI * 0.3, to: Math.PI * 0.7 },
+    { from: Math.PI * 1.3, to: Math.PI * 1.7 },
+  ];
+  for (const pair of jumperPairs) {
+    for (let ri = 1; ri < ringPositions.length; ri += 2) {
+      const ring = ringPositions[ri];
+      const fromPx = Math.cos(pair.from);
+      const fromPy = Math.sin(pair.from) * 0.5;
+      const toPx = Math.cos(pair.to);
+      const toPy = Math.sin(pair.to) * 0.5;
+
+      const jx1 =
+        screenPos.x + fromPx * ring.size * conductorRadiusFactor * zoom;
+      const jy1 = ring.y + fromPy * ring.size * conductorRadiusFactor * zoom;
+      const jx2 =
+        screenPos.x + toPx * ring.size * conductorRadiusFactor * zoom;
+      const jy2 = ring.y + toPy * ring.size * conductorRadiusFactor * zoom;
+
+      const midAngle = (pair.from + pair.to) / 2;
+      const bulge = ring.size * 1.2 * zoom;
+      const ctrlX =
+        screenPos.x +
+        Math.cos(midAngle) * bulge +
+        Math.sin(time * 1.5 + ri) * 0.8 * zoom;
+      const ctrlY =
+        ring.y +
+        Math.sin(midAngle) * 0.5 * bulge +
+        (isAttacking
+          ? Math.sin(time * 8 + ri) * 1.5 * zoom * attackIntensity
+          : 0);
+
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(jx1, jy1 + zoom);
+      ctx.quadraticCurveTo(ctrlX, ctrlY + zoom, jx2, jy2 + zoom);
+      ctx.stroke();
+
+      ctx.strokeStyle = isAttacking
+        ? `rgb(${180 + Math.round(attackIntensity * 40)}, ${130 + Math.round(attackIntensity * 30)}, 60)`
+        : "#b08040";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(jx1, jy1);
+      ctx.quadraticCurveTo(ctrlX, ctrlY, jx2, jy2);
+      ctx.stroke();
+
+      // Secondary thinner wire strand with slight offset
+      const secCtrlX =
+        ctrlX + Math.sin(time * 2 + ri * 0.7) * 1.5 * zoom;
+      const secCtrlY = ctrlY + 1.5 * zoom;
+      ctx.strokeStyle = isAttacking
+        ? `rgba(160, 120, 50, ${0.5 + attackIntensity * 0.3})`
+        : "rgba(140, 100, 40, 0.35)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(jx1 + 0.5 * zoom, jy1 + 0.5 * zoom);
+      ctx.quadraticCurveTo(secCtrlX, secCtrlY, jx2 + 0.5 * zoom, jy2 + 0.5 * zoom);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255, 220, 160, 0.3)";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(jx1, jy1 - 0.5 * zoom);
+      ctx.quadraticCurveTo(ctrlX, ctrlY - 0.5 * zoom, jx2, jy2 - 0.5 * zoom);
+      ctx.stroke();
+
+      // Insulation color bands along the wire
+      for (let band = 0; band < 4; band++) {
+        const bandT = (band + 1) * 0.2;
+        const bOmT = 1 - bandT;
+        const bandX = bOmT * bOmT * jx1 + 2 * bOmT * bandT * ctrlX + bandT * bandT * jx2;
+        const bandY = bOmT * bOmT * jy1 + 2 * bOmT * bandT * ctrlY + bandT * bandT * jy2;
+        ctx.fillStyle = band % 2 === 0 ? "#cc3333" : "#222222";
+        ctx.beginPath();
+        ctx.arc(bandX, bandY, 1.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Enhanced connection terminals with metallic gradient
+      for (const [jtx, jty] of [[jx1, jy1], [jx2, jy2]] as const) {
+        ctx.fillStyle = "#aa7744";
+        ctx.beginPath();
+        ctx.arc(jtx, jty, 2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ddaa66";
+        ctx.beginPath();
+        ctx.arc(jtx - 0.4 * zoom, jty - 0.4 * zoom, 1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#886633";
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.arc(jtx, jty, 2 * zoom, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Multiple traveling sparks along wire
+      if (isAttacking) {
+        for (let tsp = 0; tsp < 4; tsp++) {
+          const tspT = ((time * (5 + tsp * 1.5) + ri * 0.7 + tsp * 0.8) % 1);
+          const tspOmT = 1 - tspT;
+          const tspX = tspOmT * tspOmT * jx1 + 2 * tspOmT * tspT * ctrlX + tspT * tspT * jx2;
+          const tspY = tspOmT * tspOmT * jy1 + 2 * tspOmT * tspT * ctrlY + tspT * tspT * jy2;
+          const tspAlpha = Math.sin(tspT * Math.PI) * attackIntensity * 0.8;
+
+          ctx.shadowColor = "#00ffff";
+          ctx.shadowBlur = 4 * zoom;
+          ctx.fillStyle = `rgba(180, 255, 255, ${tspAlpha})`;
+          ctx.beginPath();
+          ctx.arc(tspX, tspY, (1 + tspAlpha * 0.5) * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // Main spark with radiating lightning bolts
+      if (isAttacking && Math.sin(time * 15 + ri * 5) > 0.3) {
+        const sparkT = (Math.sin(time * 12 + ri) + 1) / 2;
+        const oneMinT = 1 - sparkT;
+        const sparkX =
+          oneMinT * oneMinT * jx1 +
+          2 * oneMinT * sparkT * ctrlX +
+          sparkT * sparkT * jx2;
+        const sparkY =
+          oneMinT * oneMinT * jy1 +
+          2 * oneMinT * sparkT * ctrlY +
+          sparkT * sparkT * jy2;
+
+        ctx.shadowColor = "#ffcc00";
+        ctx.shadowBlur = 8 * zoom * attackIntensity;
+        ctx.fillStyle = `rgba(255, 240, 180, ${0.8 * attackIntensity})`;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, 2.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 255, 240, ${attackIntensity})`;
+        ctx.beginPath();
+        ctx.arc(sparkX, sparkY, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let s = 0; s < 4; s++) {
+          const sAngle = time * 20 + s * 1.6 + ri;
+          const sLen = (3.5 + Math.sin(time * 25 + s) * 2.5) * zoom;
+          ctx.strokeStyle = `rgba(255, 255, 200, ${0.5 * attackIntensity})`;
+          ctx.lineWidth = 0.8 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(sparkX, sparkY);
+          const sMidX = sparkX + Math.cos(sAngle) * sLen * 0.5 + Math.sin(time * 30 + s) * zoom;
+          const sMidY = sparkY + Math.sin(sAngle) * sLen * 0.25;
+          ctx.lineTo(sMidX, sMidY);
+          ctx.lineTo(
+            sparkX + Math.cos(sAngle) * sLen,
+            sparkY + Math.sin(sAngle) * sLen * 0.4,
+          );
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+      }
+
+      // Passive occasional spark (even when not attacking)
+      if (!isAttacking && Math.sin(time * 6 + ri * 7.3) > 0.92) {
+        const idleT = (Math.sin(time * 4 + ri * 2) + 1) / 2;
+        const idleOmT = 1 - idleT;
+        const idleSX = idleOmT * idleOmT * jx1 + 2 * idleOmT * idleT * ctrlX + idleT * idleT * jx2;
+        const idleSY = idleOmT * idleOmT * jy1 + 2 * idleOmT * idleT * ctrlY + idleT * idleT * jy2;
+        ctx.fillStyle = "rgba(255, 240, 200, 0.5)";
+        ctx.beginPath();
+        ctx.arc(idleSX, idleSY, 1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // === RESONANCE PULSE RINGS (expanding during attacks) ===
+  if (isAttacking || attackIntensity > 0) {
+    const pulseCount = 3;
+    for (let pr = 0; pr < pulseCount; pr++) {
+      const pulseAge = ((time * 2 + pr * 1.2) % 2.0);
+      if (pulseAge < 1.5) {
+        const pulseFrac = pulseAge / 1.5;
+        const pulseAlpha = (1 - pulseFrac) * 0.3 * attackIntensity;
+        const pulseRadius = (8 + pulseFrac * 25) * zoom;
+        const pulseY = topY - coilHeight * 0.5;
+
+        ctx.strokeStyle = `rgba(80, 200, 255, ${pulseAlpha})`;
+        ctx.lineWidth = (1.5 - pulseFrac * 0.8) * zoom;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, pulseY, pulseRadius, pulseRadius * 0.35, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        if (pulseAlpha > 0.1) {
+          ctx.strokeStyle = `rgba(180, 240, 255, ${pulseAlpha * 0.5})`;
+          ctx.lineWidth = 0.5 * zoom;
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x, pulseY, pulseRadius * 0.95, pulseRadius * 0.33, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // === AMBIENT EM HUM (passive vertical energy column) ===
+  const humAlpha = 0.04 + Math.sin(time * 2) * 0.02 + (isAttacking ? attackIntensity * 0.12 : 0);
+  const humGrad = ctx.createLinearGradient(screenPos.x, topY, screenPos.x, topY - coilHeight);
+  humGrad.addColorStop(0, "rgba(0, 150, 255, 0)");
+  humGrad.addColorStop(0.3, `rgba(0, 180, 255, ${humAlpha})`);
+  humGrad.addColorStop(0.7, `rgba(0, 200, 255, ${humAlpha * 1.5})`);
+  humGrad.addColorStop(1, "rgba(100, 220, 255, 0)");
+  ctx.fillStyle = humGrad;
+  const humWidth = (4 + Math.sin(time * 3) * 1 + (isAttacking ? attackIntensity * 3 : 0)) * zoom;
+  ctx.fillRect(screenPos.x - humWidth / 2, topY - coilHeight, humWidth, coilHeight);
 
   // Energy orb at top - THIS IS WHERE LIGHTNING ORIGINATES
   const orbY = topY - coilHeight + 5 * zoom;
