@@ -65,6 +65,8 @@ export function renderRoadEndFog(
   cameraZoom: number,
   theme: string = "grassland"
 ): void {
+  // Clamp zoom so fog never shrinks below a visible threshold
+  cameraZoom = Math.max(cameraZoom, 0.55);
   const time = Date.now() / 1000;
   const slowTime = time * 0.25;
 

@@ -70,12 +70,17 @@ export interface TowerStats {
   levelDesc: { [key: number]: string };
 }
 
+// Flavor of tower disable - determines visual treatment
+export type TowerDisableFlavor = "freeze" | "petrify" | "hold" | "stun";
+
 // Tower debuff state - applied by enemies
 export interface TowerDebuff {
   type: "slow" | "weaken" | "blind" | "disable";
   intensity: number; // Percentage reduction (0-1)
   until: number; // Timestamp when debuff expires
   sourceId?: string; // Enemy that applied the debuff
+  disableFlavor?: TowerDisableFlavor; // Visual flavor for disable-type debuffs
+  abilityName?: string; // Source ability name for display
 }
 
 // Tower entity - runtime state

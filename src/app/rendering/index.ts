@@ -1,10 +1,4 @@
-import type {
-  Tower,
-  Enemy,
-  Effect,
-  Particle,
-  Position,
-} from "../types";
+import type { Tower, Enemy, Effect, Particle, Position } from "../types";
 import { worldToScreen, gridToWorld } from "../utils";
 
 // Performance utilities - critical for Firefox
@@ -18,7 +12,7 @@ export {
   getPerformanceDebugInfo,
 } from "./performance";
 
-// Tower rendering 
+// Tower rendering
 export {
   renderTower,
   renderTowerRange,
@@ -28,13 +22,13 @@ export {
 
 export { renderSpecialBuilding } from "./towers/specialBuildings";
 
-// Enemy rendering 
+// Enemy rendering
 export { renderEnemy, renderEnemyInspectIndicator } from "./enemies";
 
-// Hero rendering 
+// Hero rendering
 export { renderHero } from "./heroes";
 
-// Troop rendering 
+// Troop rendering
 export { renderTroop } from "./troops";
 
 // Hazard rendering
@@ -56,7 +50,7 @@ export function renderEffect(
   towers: Tower[],
   selectedMap: string,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ) {
   const screenPos = worldToScreen(
     effect.pos,
@@ -64,7 +58,7 @@ export function renderEffect(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   const zoom = cameraZoom || 1;
   const progress = effect.progress;
@@ -79,7 +73,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        expRadius
+        expRadius,
       );
       expGradient.addColorStop(0, `rgba(255, 200, 50, ${alpha})`);
       expGradient.addColorStop(0.4, `rgba(200, 80, 0, ${alpha * 0.8})`);
@@ -94,7 +88,7 @@ export function renderEffect(
         expRadius * 0.5,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
       break;
@@ -110,7 +104,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom
+          cameraZoom,
         );
         const intensity = effect.intensity || 1;
 
@@ -131,7 +125,7 @@ export function renderEffect(
               const towerWorld = gridToWorld(tower.pos);
               const distToEffect = Math.sqrt(
                 Math.pow(towerWorld.x - effect.pos.x, 2) +
-                  Math.pow(towerWorld.y - effect.pos.y, 2)
+                  Math.pow(towerWorld.y - effect.pos.y, 2),
               );
               // Use larger threshold since effect pos might be offset
               if (distToEffect < 150) {
@@ -150,7 +144,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
           );
 
           // Calculate orb position based on tower level and upgrade
@@ -211,7 +205,7 @@ export function renderEffect(
           targetScreen.y,
           8 * zoom * intensity,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.fill();
 
@@ -227,7 +221,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom
+          cameraZoom,
         );
         const intensity = effect.intensity || 1;
         const noteIndex = effect.noteIndex || 0;
@@ -249,7 +243,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
           );
 
           // Calculate portal position (arch center)
@@ -266,8 +260,8 @@ export function renderEffect(
           effect.towerUpgrade === "A"
             ? "255, 100, 100"
             : effect.towerUpgrade === "B"
-            ? "100, 200, 255"
-            : "50, 200, 100";
+              ? "100, 200, 255"
+              : "50, 200, 100";
 
         ctx.save();
 
@@ -346,7 +340,7 @@ export function renderEffect(
           canvasHeight,
           dpr,
           cameraOffset,
-          cameraZoom
+          cameraZoom,
         );
 
         // Find the source cannon tower
@@ -366,7 +360,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
           );
 
           // Calculate turret position
@@ -416,7 +410,7 @@ export function renderEffect(
             0,
             projX,
             projY,
-            8 * zoom
+            8 * zoom,
           );
           projGrad.addColorStop(0, `rgba(255, 255, 150, ${alpha})`);
           projGrad.addColorStop(0.4, `rgba(255, 150, 50, ${alpha})`);
@@ -459,7 +453,7 @@ export function renderEffect(
           const bulletDx = targetScreen.x - bulletSourceX;
           const bulletDy = targetScreen.y - bulletSourceY;
           const bulletDist = Math.sqrt(
-            bulletDx * bulletDx + bulletDy * bulletDy
+            bulletDx * bulletDx + bulletDy * bulletDy,
           );
 
           // Multiple spinning barrels = multiple bullet streams
@@ -477,7 +471,7 @@ export function renderEffect(
             for (let b = 0; b < 2; b++) {
               const bulletT = Math.min(
                 1,
-                progress * 1.8 + barrel * 0.08 + b * 0.12
+                progress * 1.8 + barrel * 0.08 + b * 0.12,
               );
               if (bulletT > 0 && bulletT < 1) {
                 const bulletX = thisSourceX + bulletDx * bulletT;
@@ -500,14 +494,14 @@ export function renderEffect(
                 const tracerLen = 18 * zoom;
                 const tracerStartT = Math.max(
                   0,
-                  bulletT - tracerLen / bulletDist
+                  bulletT - tracerLen / bulletDist,
                 );
                 ctx.strokeStyle = `rgba(255, 180, 50, ${alpha * 0.6})`;
                 ctx.lineWidth = 2.5 * zoom;
                 ctx.beginPath();
                 ctx.moveTo(
                   thisSourceX + bulletDx * tracerStartT,
-                  thisSourceY + bulletDy * tracerStartT
+                  thisSourceY + bulletDy * tracerStartT,
                 );
                 ctx.lineTo(bulletX, bulletY);
                 ctx.stroke();
@@ -537,19 +531,19 @@ export function renderEffect(
                 0,
                 flameX,
                 flameY,
-                flameSize
+                flameSize,
               );
               flameGrad.addColorStop(
                 0,
-                `rgba(255, 255, 150, ${alpha * (1 - flameT * 0.5)})`
+                `rgba(255, 255, 150, ${alpha * (1 - flameT * 0.5)})`,
               );
               flameGrad.addColorStop(
                 0.3,
-                `rgba(255, 180, 50, ${alpha * (1 - flameT * 0.5)})`
+                `rgba(255, 180, 50, ${alpha * (1 - flameT * 0.5)})`,
               );
               flameGrad.addColorStop(
                 0.7,
-                `rgba(255, 80, 0, ${alpha * (1 - flameT * 0.7)})`
+                `rgba(255, 80, 0, ${alpha * (1 - flameT * 0.7)})`,
               );
               flameGrad.addColorStop(1, `rgba(200, 30, 0, 0)`);
 
@@ -583,7 +577,7 @@ export function renderEffect(
           ringRadius * 0.5,
           0,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.stroke();
       }
@@ -594,62 +588,99 @@ export function renderEffect(
     case "meteor_falling": {
       // DETAILED Falling meteor animation - comes from TOP RIGHT
       if (!effect.targetPos) break;
-      
+
       const targetScreen = worldToScreen(
         effect.targetPos,
         canvasWidth,
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom
+        cameraZoom,
       );
-      
+
       // Calculate meteor position along fall path (top right to target)
       const meteorX = screenPos.x + (targetScreen.x - screenPos.x) * progress;
       const meteorY = screenPos.y + (targetScreen.y - screenPos.y) * progress;
       const meteorIdx = effect.meteorIndex || 0;
-      
+
       // ========== GROUND EFFECTS ==========
       // Pulsing danger zone indicator
       const pulseSpeed = 60;
       const warningAlpha = 0.4 + Math.sin(Date.now() / pulseSpeed) * 0.25;
       const warningSize = 55 * zoom * (0.4 + progress * 0.6);
-      
+
       // Outer warning ring
       ctx.strokeStyle = `rgba(255, 50, 20, ${warningAlpha * 0.6})`;
       ctx.lineWidth = 3 * zoom;
       ctx.setLineDash([8, 4]);
       ctx.beginPath();
-      ctx.ellipse(targetScreen.x, targetScreen.y, warningSize * 1.2, warningSize * 0.6, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        targetScreen.x,
+        targetScreen.y,
+        warningSize * 1.2,
+        warningSize * 0.6,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       ctx.setLineDash([]);
-      
+
       // Inner warning ring
       ctx.strokeStyle = `rgba(255, 100, 30, ${warningAlpha})`;
       ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
-      ctx.ellipse(targetScreen.x, targetScreen.y, warningSize, warningSize * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        targetScreen.x,
+        targetScreen.y,
+        warningSize,
+        warningSize * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
-      
+
       // Ground glow intensifies as meteor approaches
       const groundGlowAlpha = progress * progress * 0.6;
       const groundGlowRadius = 70 * zoom;
       const groundGlow = ctx.createRadialGradient(
-        targetScreen.x, targetScreen.y, 0,
-        targetScreen.x, targetScreen.y, groundGlowRadius
+        targetScreen.x,
+        targetScreen.y,
+        0,
+        targetScreen.x,
+        targetScreen.y,
+        groundGlowRadius,
       );
       groundGlow.addColorStop(0, `rgba(255, 200, 100, ${groundGlowAlpha})`);
-      groundGlow.addColorStop(0.3, `rgba(255, 120, 30, ${groundGlowAlpha * 0.7})`);
-      groundGlow.addColorStop(0.6, `rgba(255, 60, 0, ${groundGlowAlpha * 0.4})`);
+      groundGlow.addColorStop(
+        0.3,
+        `rgba(255, 120, 30, ${groundGlowAlpha * 0.7})`,
+      );
+      groundGlow.addColorStop(
+        0.6,
+        `rgba(255, 60, 0, ${groundGlowAlpha * 0.4})`,
+      );
       groundGlow.addColorStop(1, "rgba(200, 30, 0, 0)");
       ctx.fillStyle = groundGlow;
       ctx.beginPath();
-      ctx.ellipse(targetScreen.x, targetScreen.y, groundGlowRadius, groundGlowRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        targetScreen.x,
+        targetScreen.y,
+        groundGlowRadius,
+        groundGlowRadius * 0.5,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
-      
+
       // ========== METEOR TRAIL ==========
-      const trailAngle = Math.atan2(targetScreen.y - screenPos.y, targetScreen.x - screenPos.x);
-      
+      const trailAngle = Math.atan2(
+        targetScreen.y - screenPos.y,
+        targetScreen.x - screenPos.x,
+      );
+
       // Outermost smoke/heat trail
       const smokeTrailLength = 120 * zoom;
       const smokeStartX = meteorX - Math.cos(trailAngle) * smokeTrailLength;
@@ -661,12 +692,17 @@ export function renderEffect(
       ctx.moveTo(smokeStartX, smokeStartY);
       ctx.lineTo(meteorX, meteorY);
       ctx.stroke();
-      
+
       // Outer fire trail (orange glow)
       const outerTrailLength = 100 * zoom;
       const outerStartX = meteorX - Math.cos(trailAngle) * outerTrailLength;
       const outerStartY = meteorY - Math.sin(trailAngle) * outerTrailLength;
-      const outerTrailGrad = ctx.createLinearGradient(outerStartX, outerStartY, meteorX, meteorY);
+      const outerTrailGrad = ctx.createLinearGradient(
+        outerStartX,
+        outerStartY,
+        meteorX,
+        meteorY,
+      );
       outerTrailGrad.addColorStop(0, "rgba(255, 80, 0, 0)");
       outerTrailGrad.addColorStop(0.4, `rgba(255, 100, 20, ${alpha * 0.3})`);
       outerTrailGrad.addColorStop(0.8, `rgba(255, 150, 50, ${alpha * 0.5})`);
@@ -677,12 +713,17 @@ export function renderEffect(
       ctx.moveTo(outerStartX, outerStartY);
       ctx.lineTo(meteorX, meteorY);
       ctx.stroke();
-      
+
       // Core fire trail (bright yellow-white)
       const coreTrailLength = 80 * zoom;
       const coreStartX = meteorX - Math.cos(trailAngle) * coreTrailLength;
       const coreStartY = meteorY - Math.sin(trailAngle) * coreTrailLength;
-      const coreTrailGrad = ctx.createLinearGradient(coreStartX, coreStartY, meteorX, meteorY);
+      const coreTrailGrad = ctx.createLinearGradient(
+        coreStartX,
+        coreStartY,
+        meteorX,
+        meteorY,
+      );
       coreTrailGrad.addColorStop(0, "rgba(255, 150, 50, 0)");
       coreTrailGrad.addColorStop(0.3, `rgba(255, 200, 100, ${alpha * 0.5})`);
       coreTrailGrad.addColorStop(0.7, `rgba(255, 230, 150, ${alpha * 0.8})`);
@@ -693,12 +734,17 @@ export function renderEffect(
       ctx.moveTo(coreStartX, coreStartY);
       ctx.lineTo(meteorX, meteorY);
       ctx.stroke();
-      
+
       // Inner white-hot trail
       const innerTrailLength = 50 * zoom;
       const innerStartX = meteorX - Math.cos(trailAngle) * innerTrailLength;
       const innerStartY = meteorY - Math.sin(trailAngle) * innerTrailLength;
-      const innerTrailGrad = ctx.createLinearGradient(innerStartX, innerStartY, meteorX, meteorY);
+      const innerTrailGrad = ctx.createLinearGradient(
+        innerStartX,
+        innerStartY,
+        meteorX,
+        meteorY,
+      );
       innerTrailGrad.addColorStop(0, "rgba(255, 255, 200, 0)");
       innerTrailGrad.addColorStop(0.5, `rgba(255, 255, 230, ${alpha * 0.6})`);
       innerTrailGrad.addColorStop(1, `rgba(255, 255, 255, ${alpha})`);
@@ -708,32 +754,39 @@ export function renderEffect(
       ctx.moveTo(innerStartX, innerStartY);
       ctx.lineTo(meteorX, meteorY);
       ctx.stroke();
-      
+
       // ========== SCATTERED EMBER PARTICLES IN TRAIL ==========
       for (let i = 0; i < 8; i++) {
         const emberProgress = (i / 8) * 0.7;
-        const emberBaseX = meteorX - Math.cos(trailAngle) * outerTrailLength * emberProgress;
-        const emberBaseY = meteorY - Math.sin(trailAngle) * outerTrailLength * emberProgress;
+        const emberBaseX =
+          meteorX - Math.cos(trailAngle) * outerTrailLength * emberProgress;
+        const emberBaseY =
+          meteorY - Math.sin(trailAngle) * outerTrailLength * emberProgress;
         const perpAngle = trailAngle + Math.PI / 2;
-        const scatter = Math.sin(Date.now() / 80 + i * 2 + meteorIdx) * 15 * zoom;
+        const scatter =
+          Math.sin(Date.now() / 80 + i * 2 + meteorIdx) * 15 * zoom;
         const emberX = emberBaseX + Math.cos(perpAngle) * scatter;
         const emberY = emberBaseY + Math.sin(perpAngle) * scatter;
         const emberAlpha = alpha * (1 - emberProgress) * 0.8;
         const emberSize = (2 + Math.random() * 2) * zoom;
-        
+
         ctx.fillStyle = `rgba(255, ${180 + Math.floor(Math.random() * 75)}, ${50 + Math.floor(Math.random() * 50)}, ${emberAlpha})`;
         ctx.beginPath();
         ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
         ctx.fill();
       }
-      
+
       // ========== METEOR BODY ==========
       const meteorSize = effect.size * zoom * 0.5;
-      
+
       // Huge outer glow
       const hugeGlow = ctx.createRadialGradient(
-        meteorX, meteorY, 0,
-        meteorX, meteorY, meteorSize * 3
+        meteorX,
+        meteorY,
+        0,
+        meteorX,
+        meteorY,
+        meteorSize * 3,
       );
       hugeGlow.addColorStop(0, `rgba(255, 200, 100, ${alpha * 0.4})`);
       hugeGlow.addColorStop(0.4, `rgba(255, 100, 30, ${alpha * 0.2})`);
@@ -742,11 +795,15 @@ export function renderEffect(
       ctx.beginPath();
       ctx.arc(meteorX, meteorY, meteorSize * 3, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Main fire glow around meteor
       const meteorGlow = ctx.createRadialGradient(
-        meteorX, meteorY, 0,
-        meteorX, meteorY, meteorSize * 2
+        meteorX,
+        meteorY,
+        0,
+        meteorX,
+        meteorY,
+        meteorSize * 2,
       );
       meteorGlow.addColorStop(0, `rgba(255, 255, 230, ${alpha})`);
       meteorGlow.addColorStop(0.2, `rgba(255, 230, 150, ${alpha})`);
@@ -757,22 +814,26 @@ export function renderEffect(
       ctx.beginPath();
       ctx.arc(meteorX, meteorY, meteorSize * 2, 0, Math.PI * 2);
       ctx.fill();
-      
+
       // Jagged rocky meteor shape
       ctx.save();
       ctx.translate(meteorX, meteorY);
       ctx.rotate(Date.now() / 500 + meteorIdx);
-      
+
       const rockGrad = ctx.createRadialGradient(
-        -meteorSize * 0.3, -meteorSize * 0.3, 0,
-        0, 0, meteorSize * 1.2
+        -meteorSize * 0.3,
+        -meteorSize * 0.3,
+        0,
+        0,
+        0,
+        meteorSize * 1.2,
       );
       rockGrad.addColorStop(0, `rgba(180, 140, 100, ${alpha})`);
       rockGrad.addColorStop(0.3, `rgba(120, 80, 50, ${alpha})`);
       rockGrad.addColorStop(0.6, `rgba(80, 50, 30, ${alpha})`);
       rockGrad.addColorStop(1, `rgba(50, 30, 20, ${alpha * 0.9})`);
       ctx.fillStyle = rockGrad;
-      
+
       // Draw jagged rock shape
       ctx.beginPath();
       const points = 8;
@@ -788,7 +849,7 @@ export function renderEffect(
       }
       ctx.closePath();
       ctx.fill();
-      
+
       // Rocky texture - cracks
       ctx.strokeStyle = `rgba(40, 25, 15, ${alpha * 0.6})`;
       ctx.lineWidth = 1.5 * zoom;
@@ -796,12 +857,15 @@ export function renderEffect(
         const crackAngle = (i / 4) * Math.PI * 2 + 0.3;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(crackAngle) * meteorSize * 0.6, Math.sin(crackAngle) * meteorSize * 0.6);
+        ctx.lineTo(
+          Math.cos(crackAngle) * meteorSize * 0.6,
+          Math.sin(crackAngle) * meteorSize * 0.6,
+        );
         ctx.stroke();
       }
-      
+
       ctx.restore();
-      
+
       // Hot molten spots on meteor
       const hotSpots = [
         { x: -0.3, y: -0.4, size: 0.3 },
@@ -811,7 +875,14 @@ export function renderEffect(
       for (const spot of hotSpots) {
         const spotX = meteorX + spot.x * meteorSize;
         const spotY = meteorY + spot.y * meteorSize;
-        const spotGrad = ctx.createRadialGradient(spotX, spotY, 0, spotX, spotY, spot.size * meteorSize);
+        const spotGrad = ctx.createRadialGradient(
+          spotX,
+          spotY,
+          0,
+          spotX,
+          spotY,
+          spot.size * meteorSize,
+        );
         spotGrad.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
         spotGrad.addColorStop(0.5, `rgba(255, 200, 100, ${alpha * 0.7})`);
         spotGrad.addColorStop(1, "rgba(255, 150, 50, 0)");
@@ -820,15 +891,24 @@ export function renderEffect(
         ctx.arc(spotX, spotY, spot.size * meteorSize, 0, Math.PI * 2);
         ctx.fill();
       }
-      
+
       // ========== ORBITING EMBER PARTICLES ==========
       for (let i = 0; i < 6; i++) {
-        const orbitAngle = (Date.now() / 60 + i * (Math.PI * 2 / 6)) + meteorIdx;
-        const orbitDist = meteorSize * (1.3 + Math.sin(Date.now() / 100 + i) * 0.2);
+        const orbitAngle =
+          Date.now() / 60 + i * ((Math.PI * 2) / 6) + meteorIdx;
+        const orbitDist =
+          meteorSize * (1.3 + Math.sin(Date.now() / 100 + i) * 0.2);
         const emberX = meteorX + Math.cos(orbitAngle) * orbitDist;
         const emberY = meteorY + Math.sin(orbitAngle) * orbitDist * 0.7;
-        
-        const emberGlow = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, 5 * zoom);
+
+        const emberGlow = ctx.createRadialGradient(
+          emberX,
+          emberY,
+          0,
+          emberX,
+          emberY,
+          5 * zoom,
+        );
         emberGlow.addColorStop(0, `rgba(255, 255, 200, ${alpha * 0.9})`);
         emberGlow.addColorStop(0.5, `rgba(255, 180, 50, ${alpha * 0.5})`);
         emberGlow.addColorStop(1, "rgba(255, 100, 0, 0)");
@@ -836,7 +916,7 @@ export function renderEffect(
         ctx.beginPath();
         ctx.arc(emberX, emberY, 5 * zoom, 0, Math.PI * 2);
         ctx.fill();
-        
+
         ctx.fillStyle = `rgba(255, ${200 + Math.floor(Math.random() * 55)}, ${100 + Math.floor(Math.random() * 100)}, ${alpha})`;
         ctx.beginPath();
         ctx.arc(emberX, emberY, 2 * zoom, 0, Math.PI * 2);
@@ -855,7 +935,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
           )
         : screenPos;
 
@@ -872,7 +952,7 @@ export function renderEffect(
         effect.size * zoom * 0.3,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -893,7 +973,7 @@ export function renderEffect(
           0,
           meteorX,
           trailY,
-          trailSize
+          trailSize,
         );
         trailGrad.addColorStop(0, `rgba(255, 200, 50, ${trailAlpha})`);
         trailGrad.addColorStop(0.5, `rgba(200, 80, 0, ${trailAlpha * 0.6})`);
@@ -905,7 +985,7 @@ export function renderEffect(
           trailY,
           trailSize,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.fill();
       }
@@ -919,7 +999,7 @@ export function renderEffect(
         0,
         meteorX,
         meteorY,
-        25 * zoom
+        25 * zoom,
       );
       meteorGrad.addColorStop(0, "#ffffff");
       meteorGrad.addColorStop(0.3, "#ffcc00");
@@ -947,7 +1027,7 @@ export function renderEffect(
         effect.size * zoom * 0.2,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
 
@@ -962,7 +1042,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        expSize
+        expSize,
       );
       expGrad.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
       expGrad.addColorStop(0.2, `rgba(255, 200, 50, ${alpha * 0.9})`);
@@ -978,7 +1058,7 @@ export function renderEffect(
         expSize * 0.6,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
 
@@ -998,7 +1078,7 @@ export function renderEffect(
           ringRadius * 0.5,
           0,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.stroke();
       }
@@ -1037,7 +1117,7 @@ export function renderEffect(
             canvasHeight,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
           )
         : screenPos;
 
@@ -1076,7 +1156,7 @@ export function renderEffect(
           const branchLen = 40 * zoom * Math.random();
           ctx.lineTo(
             x + Math.cos(branchAngle) * branchLen,
-            baseY + Math.sin(branchAngle) * branchLen * 0.3
+            baseY + Math.sin(branchAngle) * branchLen * 0.3,
           );
           ctx.moveTo(x, baseY);
         }
@@ -1091,7 +1171,7 @@ export function renderEffect(
         0,
         targetScreen.x,
         targetScreen.y,
-        50 * zoom
+        50 * zoom,
       );
       impactGrad.addColorStop(0, `rgba(200, 220, 255, ${alpha})`);
       impactGrad.addColorStop(0.3, `rgba(100, 150, 255, ${alpha * 0.6})`);
@@ -1125,7 +1205,7 @@ export function renderEffect(
         freezeRadius * 0.5,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
       ctx.stroke();
@@ -1145,7 +1225,7 @@ export function renderEffect(
           ctx.moveTo(cx, cy);
           ctx.lineTo(
             cx + Math.cos(armAngle) * 8 * zoom,
-            cy + Math.sin(armAngle) * 4 * zoom
+            cy + Math.sin(armAngle) * 4 * zoom,
           );
           ctx.stroke();
         }
@@ -1170,7 +1250,7 @@ export function renderEffect(
         auraRadius * 0.5,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1205,7 +1285,7 @@ export function renderEffect(
           ringRadius * 0.5,
           0,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.stroke();
       }
@@ -1219,11 +1299,11 @@ export function renderEffect(
         ctx.beginPath();
         ctx.moveTo(
           screenPos.x + Math.cos(angle) * 20 * zoom,
-          screenPos.y + Math.sin(angle) * 10 * zoom
+          screenPos.y + Math.sin(angle) * 10 * zoom,
         );
         ctx.lineTo(
           screenPos.x + Math.cos(angle) * roarRadius * 0.8,
-          screenPos.y + Math.sin(angle) * roarRadius * 0.4
+          screenPos.y + Math.sin(angle) * roarRadius * 0.4,
         );
         ctx.stroke();
       }
@@ -1256,7 +1336,7 @@ export function renderEffect(
           waveRadius * 0.5,
           0,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.stroke();
       }
@@ -1292,14 +1372,22 @@ export function renderEffect(
 
       // === OUTER DEFENSIVE RIPPLES (expanding waves) ===
       for (let wave = 0; wave < 4; wave++) {
-        const wavePhase = ((time * 0.6 + wave * 0.25) % 1);
+        const wavePhase = (time * 0.6 + wave * 0.25) % 1;
         const waveRadius = shieldRadius * (0.6 + wavePhase * 0.5);
         const waveAlpha = alpha * 0.35 * (1 - wavePhase);
-        
+
         ctx.strokeStyle = `rgba(59, 130, 246, ${waveAlpha})`;
         ctx.lineWidth = (2.5 - wave * 0.5) * zoom;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, waveRadius, waveRadius * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          waveRadius,
+          waveRadius * 0.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       }
 
@@ -1307,14 +1395,16 @@ export function renderEffect(
       const hexPoints = 6;
       for (let layer = 0; layer < 3; layer++) {
         const layerRadius = shieldRadius * (0.6 + layer * 0.15);
-        const layerRotation = time * (layer % 2 === 0 ? 0.5 : -0.3) + layer * 0.2;
+        const layerRotation =
+          time * (layer % 2 === 0 ? 0.5 : -0.3) + layer * 0.2;
         const layerAlpha = alpha * (0.5 - layer * 0.1);
-        
+
         ctx.strokeStyle = `rgba(96, 165, 250, ${layerAlpha})`;
         ctx.lineWidth = (3 - layer * 0.5) * zoom;
         ctx.beginPath();
         for (let i = 0; i <= hexPoints; i++) {
-          const angle = (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRotation;
+          const angle =
+            (i / hexPoints) * Math.PI * 2 - Math.PI / 2 + layerRotation;
           const x = screenPos.x + Math.cos(angle) * layerRadius;
           const y = screenPos.y + Math.sin(angle) * layerRadius * 0.5;
           if (i === 0) ctx.moveTo(x, y);
@@ -1326,29 +1416,56 @@ export function renderEffect(
       // === INNER ENERGY FIELD (layered blue gradients) ===
       // Outer azure glow
       const outerShield = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, shieldRadius * 0.85
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        shieldRadius * 0.85,
       );
       outerShield.addColorStop(0, `rgba(59, 130, 246, ${alpha * 0.1})`);
-      outerShield.addColorStop(0.5, `rgba(59, 130, 246, ${alpha * 0.15 * pulsePhase})`);
+      outerShield.addColorStop(
+        0.5,
+        `rgba(59, 130, 246, ${alpha * 0.15 * pulsePhase})`,
+      );
       outerShield.addColorStop(0.8, `rgba(37, 99, 235, ${alpha * 0.1})`);
       outerShield.addColorStop(1, "rgba(37, 99, 235, 0)");
       ctx.fillStyle = outerShield;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, shieldRadius * 0.85, shieldRadius * 0.42, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        shieldRadius * 0.85,
+        shieldRadius * 0.42,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Inner bright core
       const coreShield = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, shieldRadius * 0.35
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        shieldRadius * 0.35,
       );
       coreShield.addColorStop(0, `rgba(191, 219, 254, ${alpha * 0.4})`);
       coreShield.addColorStop(0.5, `rgba(147, 197, 253, ${alpha * 0.25})`);
       coreShield.addColorStop(1, "rgba(96, 165, 250, 0)");
       ctx.fillStyle = coreShield;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, shieldRadius * 0.35, shieldRadius * 0.17, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        shieldRadius * 0.35,
+        shieldRadius * 0.17,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // === DEFENSIVE RUNE CIRCLE ===
@@ -1357,7 +1474,15 @@ export function renderEffect(
       ctx.setLineDash([8 * zoom, 4 * zoom]);
       ctx.lineDashOffset = -time * 30;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, shieldRadius * 0.5, shieldRadius * 0.25, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        shieldRadius * 0.5,
+        shieldRadius * 0.25,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.stroke();
       ctx.setLineDash([]);
 
@@ -1368,14 +1493,14 @@ export function renderEffect(
       ctx.font = `${10 * zoom}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      
+
       for (let r = 0; r < 6; r++) {
         const runeAngle = time * 1.2 + (r / 6) * Math.PI * 2;
         const runeRadius = shieldRadius * 0.65;
         const runeX = screenPos.x + Math.cos(runeAngle) * runeRadius;
         const runeY = screenPos.y + Math.sin(runeAngle) * runeRadius * 0.5;
         const runeAlpha = 0.6 + Math.sin(time * 2.5 + r * 1.2) * 0.25;
-        
+
         ctx.globalAlpha = alpha * runeAlpha;
         ctx.fillStyle = `rgba(191, 219, 254, ${runeAlpha})`;
         ctx.fillText(runeSymbols[r], runeX, runeY);
@@ -1392,7 +1517,7 @@ export function renderEffect(
         const sparkY = screenPos.y + Math.sin(sparkAngle) * sparkDist * 0.5;
         const sparkAlpha = alpha * (0.4 + Math.sin(time * 5 + spark) * 0.3);
         const sparkSize = (2 + Math.sin(time * 6 + spark * 0.9) * 1) * zoom;
-        
+
         ctx.fillStyle = `rgba(147, 197, 253, ${sparkAlpha})`;
         ctx.shadowColor = "#93c5fd";
         ctx.shadowBlur = 5 * zoom;
@@ -1435,7 +1560,7 @@ export function renderEffect(
         strikeRadius * 0.3,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
 
@@ -1446,7 +1571,7 @@ export function renderEffect(
         0,
         screenPos.x,
         screenPos.y,
-        strikeRadius
+        strikeRadius,
       );
       dustGrad.addColorStop(0, `rgba(150, 120, 80, ${alpha * 0.7})`);
       dustGrad.addColorStop(0.5, `rgba(120, 90, 60, ${alpha * 0.4})`);
@@ -1460,7 +1585,7 @@ export function renderEffect(
         strikeRadius * 0.6,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
 
@@ -1487,7 +1612,7 @@ export function renderEffect(
     case "boulder_strike": {
       // Rocky's boulder throw ability - boulder flies from pos to targetPos
       ctx.save();
-      
+
       const targetPos = effect.targetPos || effect.pos;
       const targetScreenPos = worldToScreen(
         targetPos,
@@ -1495,25 +1620,25 @@ export function renderEffect(
         canvasHeight,
         dpr,
         cameraOffset,
-        cameraZoom
+        cameraZoom,
       );
-      
+
       // Calculate current boulder position along the arc
       const startX = screenPos.x;
       const startY = screenPos.y;
       const endX = targetScreenPos.x;
       const endY = targetScreenPos.y;
-      
+
       // Boulder travels in an arc
       const travelProgress = Math.min(progress * 1.5, 1); // Boulder reaches target at 66% of effect duration
       const currentX = startX + (endX - startX) * travelProgress;
       const arcHeight = 80 * zoom; // Height of the arc
       const arcY = -Math.sin(travelProgress * Math.PI) * arcHeight;
       const currentY = startY + (endY - startY) * travelProgress + arcY;
-      
+
       const boulderSize = effect.size * zoom * 0.4;
       const rotation = travelProgress * Math.PI * 4; // Boulder rotates as it flies
-      
+
       if (travelProgress < 1) {
         // Draw shadow on ground
         const shadowX = currentX;
@@ -1521,32 +1646,47 @@ export function renderEffect(
         const shadowScale = 1 - Math.abs(arcY) / (arcHeight * 2);
         ctx.fillStyle = `rgba(0, 0, 0, ${0.3 * alpha * shadowScale})`;
         ctx.beginPath();
-        ctx.ellipse(shadowX, shadowY + 5 * zoom, boulderSize * 0.8, boulderSize * 0.3, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          shadowX,
+          shadowY + 5 * zoom,
+          boulderSize * 0.8,
+          boulderSize * 0.3,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
-        
+
         // Draw the flying boulder
         ctx.save();
         ctx.translate(currentX, currentY);
         ctx.rotate(rotation);
-        
+
         // Boulder shadow/depth
         ctx.shadowColor = "#4a3a2a";
         ctx.shadowBlur = 8 * zoom;
         ctx.shadowOffsetY = 3 * zoom;
-        
+
         // Main boulder body - irregular rock shape
-        const bGrad = ctx.createRadialGradient(-boulderSize * 0.3, -boulderSize * 0.3, 0, 0, 0, boulderSize);
+        const bGrad = ctx.createRadialGradient(
+          -boulderSize * 0.3,
+          -boulderSize * 0.3,
+          0,
+          0,
+          0,
+          boulderSize,
+        );
         bGrad.addColorStop(0, "#a08060");
         bGrad.addColorStop(0.4, "#7a6040");
         bGrad.addColorStop(0.8, "#5a4030");
         bGrad.addColorStop(1, "#3a2820");
         ctx.fillStyle = bGrad;
-        
+
         // Draw irregular rock shape
         ctx.beginPath();
         for (let i = 0; i < 8; i++) {
           const angle = (i / 8) * Math.PI * 2;
-          const variance = 0.7 + (Math.sin(i * 2.7 + rotation * 0.1) * 0.3);
+          const variance = 0.7 + Math.sin(i * 2.7 + rotation * 0.1) * 0.3;
           const r = boulderSize * variance;
           if (i === 0) {
             ctx.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
@@ -1556,7 +1696,7 @@ export function renderEffect(
         }
         ctx.closePath();
         ctx.fill();
-        
+
         // Rock texture/cracks
         ctx.strokeStyle = `rgba(40, 30, 20, 0.5)`;
         ctx.lineWidth = 1.5 * zoom;
@@ -1566,15 +1706,23 @@ export function renderEffect(
         ctx.moveTo(boulderSize * 0.1, -boulderSize * 0.4);
         ctx.lineTo(-boulderSize * 0.1, boulderSize * 0.1);
         ctx.stroke();
-        
+
         // Highlight
         ctx.fillStyle = `rgba(180, 150, 120, 0.4)`;
         ctx.beginPath();
-        ctx.ellipse(-boulderSize * 0.25, -boulderSize * 0.25, boulderSize * 0.3, boulderSize * 0.2, -0.5, 0, Math.PI * 2);
+        ctx.ellipse(
+          -boulderSize * 0.25,
+          -boulderSize * 0.25,
+          boulderSize * 0.3,
+          boulderSize * 0.2,
+          -0.5,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
-        
+
         ctx.restore();
-        
+
         // Trailing dust particles
         for (let i = 0; i < 3; i++) {
           const trailProgress = Math.max(0, travelProgress - i * 0.1);
@@ -1583,33 +1731,45 @@ export function renderEffect(
           const trailY = startY + (endY - startY) * trailProgress + trailArcY;
           const dustAlpha = alpha * 0.3 * (1 - i * 0.3);
           const dustSize = boulderSize * 0.2 * (1 - i * 0.2);
-          
+
           ctx.fillStyle = `rgba(150, 130, 100, ${dustAlpha})`;
           ctx.beginPath();
           ctx.arc(trailX, trailY, dustSize, 0, Math.PI * 2);
           ctx.fill();
         }
       }
-      
+
       // Impact effect (when boulder lands)
       if (travelProgress >= 0.9) {
         const impactProgress = (travelProgress - 0.9) / 0.1;
         const impactAlpha = alpha * (1 - impactProgress);
         const impactRadius = boulderSize * (1 + impactProgress * 2);
-        
+
         // Dust cloud
         const dustGrad = ctx.createRadialGradient(
-          endX, endY, 0,
-          endX, endY, impactRadius * 2
+          endX,
+          endY,
+          0,
+          endX,
+          endY,
+          impactRadius * 2,
         );
         dustGrad.addColorStop(0, `rgba(140, 110, 70, ${impactAlpha * 0.8})`);
         dustGrad.addColorStop(0.5, `rgba(110, 85, 50, ${impactAlpha * 0.5})`);
         dustGrad.addColorStop(1, `rgba(80, 60, 35, 0)`);
         ctx.fillStyle = dustGrad;
         ctx.beginPath();
-        ctx.ellipse(endX, endY, impactRadius * 2, impactRadius, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          endX,
+          endY,
+          impactRadius * 2,
+          impactRadius,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
-        
+
         // Ground crack/crater
         ctx.strokeStyle = `rgba(60, 45, 30, ${impactAlpha})`;
         ctx.lineWidth = 2 * zoom;
@@ -1620,25 +1780,34 @@ export function renderEffect(
           ctx.moveTo(endX, endY);
           ctx.lineTo(
             endX + Math.cos(crackAngle) * crackLen,
-            endY + Math.sin(crackAngle) * crackLen * 0.5
+            endY + Math.sin(crackAngle) * crackLen * 0.5,
           );
           ctx.stroke();
         }
-        
+
         // Flying debris
         for (let d = 0; d < 5; d++) {
           const debrisAngle = (d / 5) * Math.PI * 2 + impactProgress;
           const debrisDist = impactRadius * impactProgress * 1.5;
           const debrisX = endX + Math.cos(debrisAngle) * debrisDist;
-          const debrisY = endY + Math.sin(debrisAngle) * debrisDist * 0.5 - impactProgress * 20 * zoom;
-          
+          const debrisY =
+            endY +
+            Math.sin(debrisAngle) * debrisDist * 0.5 -
+            impactProgress * 20 * zoom;
+
           ctx.fillStyle = `rgba(90, 70, 45, ${impactAlpha})`;
           ctx.beginPath();
-          ctx.arc(debrisX, debrisY, (3 - impactProgress * 2) * zoom, 0, Math.PI * 2);
+          ctx.arc(
+            debrisX,
+            debrisY,
+            (3 - impactProgress * 2) * zoom,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
       }
-      
+
       ctx.restore();
       break;
     }
@@ -1653,14 +1822,22 @@ export function renderEffect(
 
       // === OUTER TEAL ENERGY RING (expanding waves) ===
       for (let ring = 0; ring < 3; ring++) {
-        const ringPhase = ((time * 0.8 + ring * 0.33) % 1);
+        const ringPhase = (time * 0.8 + ring * 0.33) % 1;
         const ringRadius = auraRadius * (0.5 + ringPhase * 0.5);
         const ringAlpha = alpha * 0.4 * (1 - ringPhase);
-        
+
         ctx.strokeStyle = `rgba(20, 184, 166, ${ringAlpha})`;
         ctx.lineWidth = (3 - ring) * zoom;
         ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y,
+          ringRadius,
+          ringRadius * 0.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       }
 
@@ -1671,7 +1848,8 @@ export function renderEffect(
         ctx.beginPath();
         for (let i = 0; i < 30; i++) {
           const t = i / 30;
-          const spiralAngle = time * 1.5 + arm * Math.PI * 0.5 + t * Math.PI * 1.5;
+          const spiralAngle =
+            time * 1.5 + arm * Math.PI * 0.5 + t * Math.PI * 1.5;
           const spiralDist = auraRadius * (0.15 + t * 0.65);
           const x = screenPos.x + Math.cos(spiralAngle) * spiralDist;
           const y = screenPos.y + Math.sin(spiralAngle) * spiralDist * 0.5;
@@ -1684,12 +1862,13 @@ export function renderEffect(
       // === FLOATING GOLDEN QUILL SPARKS ===
       for (let spark = 0; spark < 16; spark++) {
         const sparkAngle = (spark / 16) * Math.PI * 2 + time * 0.7;
-        const sparkDist = auraRadius * (0.3 + Math.sin(time * 3 + spark * 0.8) * 0.15);
+        const sparkDist =
+          auraRadius * (0.3 + Math.sin(time * 3 + spark * 0.8) * 0.15);
         const sparkX = screenPos.x + Math.cos(sparkAngle) * sparkDist;
         const sparkY = screenPos.y + Math.sin(sparkAngle) * sparkDist * 0.5;
         const sparkAlpha = alpha * (0.5 + Math.sin(time * 4 + spark) * 0.3);
         const sparkSize = (2 + Math.sin(time * 5 + spark * 1.3) * 1) * zoom;
-        
+
         ctx.fillStyle = `rgba(255, 215, 0, ${sparkAlpha})`;
         ctx.shadowColor = "#ffd700";
         ctx.shadowBlur = 8 * zoom;
@@ -1702,28 +1881,55 @@ export function renderEffect(
       // === CENTRAL INSPIRATION GLOW (teal + gold layered) ===
       // Outer teal aura
       const outerGlow = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, auraRadius * 0.5
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        auraRadius * 0.5,
       );
-      outerGlow.addColorStop(0, `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`);
+      outerGlow.addColorStop(
+        0,
+        `rgba(20, 184, 166, ${alpha * 0.25 + pulsePhase * 0.1})`,
+      );
       outerGlow.addColorStop(0.5, `rgba(20, 184, 166, ${alpha * 0.1})`);
       outerGlow.addColorStop(1, "rgba(20, 184, 166, 0)");
       ctx.fillStyle = outerGlow;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, auraRadius * 0.5, auraRadius * 0.25, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        auraRadius * 0.5,
+        auraRadius * 0.25,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Inner golden core
       const coreGlow = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, auraRadius * 0.2
+        screenPos.x,
+        screenPos.y,
+        0,
+        screenPos.x,
+        screenPos.y,
+        auraRadius * 0.2,
       );
       coreGlow.addColorStop(0, `rgba(255, 230, 150, ${alpha * 0.6})`);
       coreGlow.addColorStop(0.6, `rgba(255, 215, 0, ${alpha * 0.3})`);
       coreGlow.addColorStop(1, "rgba(255, 215, 0, 0)");
       ctx.fillStyle = coreGlow;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, auraRadius * 0.2, auraRadius * 0.1, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        screenPos.x,
+        screenPos.y,
+        auraRadius * 0.2,
+        auraRadius * 0.1,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // === ORBITING BOOK SYMBOLS ===
@@ -1735,9 +1941,10 @@ export function renderEffect(
         const symAngle = time * 0.8 + (sym / 4) * Math.PI * 2;
         const symDist = auraRadius * 0.55;
         const symX = screenPos.x + Math.cos(symAngle) * symDist;
-        const symY = screenPos.y + Math.sin(symAngle) * symDist * 0.5 - 5 * zoom;
+        const symY =
+          screenPos.y + Math.sin(symAngle) * symDist * 0.5 - 5 * zoom;
         const symAlpha = 0.6 + Math.sin(time * 2.5 + sym) * 0.2;
-        
+
         ctx.globalAlpha = alpha * symAlpha;
         ctx.fillText(symbols[sym], symX, symY);
       }
@@ -1745,13 +1952,17 @@ export function renderEffect(
 
       // === RISING INSPIRATION PARTICLES ===
       for (let p = 0; p < 8; p++) {
-        const pPhase = ((time * 0.5 + p * 0.125) % 1);
+        const pPhase = (time * 0.5 + p * 0.125) % 1;
         const pAngle = (p / 8) * Math.PI * 2;
         const pDist = auraRadius * 0.3;
-        const pX = screenPos.x + Math.cos(pAngle) * pDist + Math.sin(time * 2 + p) * 5 * zoom;
-        const pY = screenPos.y + Math.sin(pAngle) * pDist * 0.5 - pPhase * 40 * zoom;
+        const pX =
+          screenPos.x +
+          Math.cos(pAngle) * pDist +
+          Math.sin(time * 2 + p) * 5 * zoom;
+        const pY =
+          screenPos.y + Math.sin(pAngle) * pDist * 0.5 - pPhase * 40 * zoom;
         const pAlpha = alpha * (1 - pPhase) * 0.7;
-        
+
         ctx.fillStyle = `rgba(255, 248, 220, ${pAlpha})`;
         ctx.beginPath();
         ctx.arc(pX, pY, (2 + (1 - pPhase) * 2) * zoom, 0, Math.PI * 2);
@@ -1781,7 +1992,7 @@ export function renderEffect(
         summonRadius * 0.5,
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.stroke();
 
@@ -1798,7 +2009,7 @@ export function renderEffect(
           pillarX,
           pillarY,
           pillarX,
-          pillarY - pillarHeight
+          pillarY - pillarHeight,
         );
         pillarGrad.addColorStop(0, `rgba(255, 200, 100, ${alpha})`);
         pillarGrad.addColorStop(1, `rgba(255, 200, 100, 0)`);
@@ -1807,7 +2018,7 @@ export function renderEffect(
           pillarX - 4 * zoom,
           pillarY - pillarHeight,
           8 * zoom,
-          pillarHeight
+          pillarHeight,
         );
       }
       ctx.shadowBlur = 0;
@@ -1851,7 +2062,7 @@ export function renderEffect(
         deployRadius * 0.5 * (1 - progress * 0.5),
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.stroke();
       ctx.setLineDash([]);
@@ -1873,7 +2084,7 @@ export function renderParticle(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ) {
   const screenPos = worldToScreen(
     particle.pos,
@@ -1881,7 +2092,7 @@ export function renderParticle(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   const zoom = cameraZoom || 1;
   const lifeRatio = particle.life / particle.maxLife;
@@ -1902,7 +2113,7 @@ export function renderParticle(
       0,
       screenPos.x,
       screenPos.y,
-      size * 2
+      size * 2,
     );
     glowGradient.addColorStop(0, particle.color);
     glowGradient.addColorStop(1, "transparent");
@@ -1919,7 +2130,6 @@ export function renderParticle(
 
   ctx.restore();
 }
-
 
 // Re-export environment effects
 export { renderEnvironment, renderAmbientVisuals } from "./maps/environment";

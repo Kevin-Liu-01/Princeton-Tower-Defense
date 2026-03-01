@@ -2902,7 +2902,7 @@ export const LEVEL_DATA: Record<
       { type: "ember", pos: { x: 12, y: 20 }, variant: 1 },
       { type: "bones", pos: { x: 2, y: 12 }, variant: 0 },
       { type: "skull", pos: { x: 28, y: 16 }, variant: 1 },
-      { type: "lava_fall", pos: { x: 10, y: 4 }, variant: 0 },
+      { type: "lava_fall", pos: { x: 10, y: 0 }, variant: 0 },
       { type: "skull_throne", pos: { x: 14, y: 26 }, variant: 0 },
       { type: "obsidian_pillar", pos: { x: 2, y: 18 }, variant: 0 },
       { type: "obsidian_pillar", pos: { x: 28, y: 10 }, variant: 1 },

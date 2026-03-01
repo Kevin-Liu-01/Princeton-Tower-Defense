@@ -52,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased" style={{ fontFamily: '"bc-novatica-cyr", "inter", sans-serif' }}>
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning style={{ fontFamily: '"bc-novatica-cyr", "inter", sans-serif' }}>
         <Theme>{children}</Theme>
         <Analytics />
       </body>

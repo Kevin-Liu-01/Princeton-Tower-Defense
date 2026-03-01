@@ -16,7 +16,10 @@ import {
 } from "./landmarks";
 
 // Export the decoration item renderer for use in page.tsx
-export { renderDecorationItem, type DecorationRenderParams } from "./renderDecorationItem";
+export {
+  renderDecorationItem,
+  type DecorationRenderParams,
+} from "./renderDecorationItem";
 
 // ============================================================================
 // MAIN DECORATION RENDER FUNCTION
@@ -29,7 +32,7 @@ export function renderDecoration(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ): void {
   const screenPos = worldToScreen(
     decoration.pos,
@@ -37,7 +40,7 @@ export function renderDecoration(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
@@ -47,15 +50,26 @@ export function renderDecoration(
 
   // Get type from category or type field
   const decorType = String(decoration.category || decoration.type || "tree");
-  const variantStr = typeof decoration.variant === "string" ? decoration.variant : undefined;
-  const variantNum = typeof decoration.variant === "number" ? decoration.variant : 0;
+  const variantStr =
+    typeof decoration.variant === "string" ? decoration.variant : undefined;
+  const variantNum =
+    typeof decoration.variant === "number" ? decoration.variant : 0;
 
   switch (decorType) {
     case "tree":
       drawTree(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
     case "palm":
-      drawPalmTree(ctx, screenPos.x, screenPos.y, scale, Math.sin(time * 1.5 + screenPos.x * 0.01) * 2 * scale, time, variantNum, screenPos.x);
+      drawPalmTree(
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        scale,
+        Math.sin(time * 1.5 + screenPos.x * 0.01) * 2 * scale,
+        time,
+        variantNum,
+        screenPos.x,
+      );
       break;
     case "obelisk":
       drawObelisk(ctx, screenPos.x, screenPos.y, scale, variantNum, time);
@@ -73,7 +87,15 @@ export function renderDecoration(
       drawFlower(ctx, screenPos.x, screenPos.y, scale, variantStr, time);
       break;
     case "building":
-      drawBuilding(ctx, screenPos.x, screenPos.y, scale, variantStr, variantNum, time);
+      drawBuilding(
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        scale,
+        variantStr,
+        variantNum,
+        time,
+      );
       break;
     case "statue":
       drawStatue(ctx, screenPos.x, screenPos.y, scale, variantStr);
@@ -150,7 +172,7 @@ function drawTree(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0
+  time: number = 0,
 ): void {
   const sway = Math.sin(time * 1.5 + x * 0.01) * 2 * scale;
 
@@ -171,10 +193,16 @@ function drawTree(
   ctx.fill();
 
   // Foliage based on variant
-  const foliageColor = variant === "pine" ? "#1a5f1a" :
-                       variant === "autumn" ? "#d4763b" :
-                       variant === "dead" ? "#8b7355" :
-                       variant === "palm" ? "#2e8b2e" : "#228b22";
+  const foliageColor =
+    variant === "pine"
+      ? "#1a5f1a"
+      : variant === "autumn"
+        ? "#d4763b"
+        : variant === "dead"
+          ? "#8b7355"
+          : variant === "palm"
+            ? "#2e8b2e"
+            : "#228b22";
 
   if (variant === "pine") {
     // Pine tree layers
@@ -190,7 +218,7 @@ function drawTree(
       ctx.fill();
     }
   } else if (variant === "palm") {
-    drawPalmTree(ctx, x, y, scale, sway, time);
+    drawPalmTree(ctx, x, y, scale, 0, time);
   } else {
     // Standard round tree
     ctx.fillStyle = foliageColor;
@@ -211,10 +239,19 @@ function drawTree(
 // ============================================================================
 
 function sampleBezier(
-  p0: number, p1: number, p2: number, p3: number, t: number
+  p0: number,
+  p1: number,
+  p2: number,
+  p3: number,
+  t: number,
 ): number {
   const mt = 1 - t;
-  return mt * mt * mt * p0 + 3 * mt * mt * t * p1 + 3 * mt * t * t * p2 + t * t * t * p3;
+  return (
+    mt * mt * mt * p0 +
+    3 * mt * mt * t * p1 +
+    3 * mt * t * t * p2 +
+    t * t * t * p3
+  );
 }
 
 // Pre-baked frond color sets - 4 back + 6 front entries per variant
@@ -292,17 +329,21 @@ function drawPalmTree(
   sway: number,
   time: number,
   variant: number = 0,
-  seed: number = 0
+  seed: number = 0,
 ): void {
   const s = scale;
   const pal = FROND_PALETTES[variant % 3];
   // Per-tree angle offset from seed for variation (range ±0.3 rad)
-  const aOff = ((seed * 7.3 + 13) % 100) / 100 * 0.6 - 0.3;
+  const aOff = (((seed * 7.3 + 13) % 100) / 100) * 0.6 - 0.3;
 
-  const bx0 = x, by0 = y + 3 * s;
-  const bx1 = x + 4 * s + sway * 0.15, by1 = y - 16 * s;
-  const bx2 = x + 8 * s + sway * 0.35, by2 = y - 36 * s;
-  const bx3 = x + 5 * s + sway, by3 = y - 56 * s;
+  const bx0 = x,
+    by0 = y + 3 * s;
+  const bx1 = x + 4 * s + sway * 0.15,
+    by1 = y - 16 * s;
+  const bx2 = x + 8 * s + sway * 0.35,
+    by2 = y - 36 * s;
+  const bx3 = x + 5 * s + sway,
+    by3 = y - 56 * s;
   const crownX = bx3;
   const crownY = by3;
 
@@ -313,9 +354,11 @@ function drawPalmTree(
   ctx.fill();
 
   // Trunk: 6 segments, 3 faces each (left dark, right lit, front lip)
-  const wBase = 12 * s, wTop = 7 * s;
+  const wBase = 12 * s,
+    wTop = 7 * s;
   for (let i = 5; i >= 0; i--) {
-    const t0 = i / 6, t1 = (i + 1) / 6;
+    const t0 = i / 6,
+      t1 = (i + 1) / 6;
     const x0 = sampleBezier(bx0, bx1, bx2, bx3, t0);
     const y0 = sampleBezier(by0, by1, by2, by3, t0);
     const x1 = sampleBezier(bx0, bx1, bx2, bx3, t1);
@@ -357,17 +400,35 @@ function drawPalmTree(
   ctx.ellipse(crownX, crownY + 2 * s, 8 * s, 4 * s, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Back fronds (4, half sway)
+  // Back fronds (4, static)
   for (let i = 0; i < 4; i++) {
     const f = BACK_FROND_LAYOUT[i];
-    const sw = i % 2 === 1 ? Math.sin(time * 1.6 + f.phase) * 2 * s : 0;
-    drawPalmFrond(ctx, crownX, crownY, f.angle + aOff, f.len * s, pal.back[i], s, sw);
+    const sw = 0;
+    drawPalmFrond(
+      ctx,
+      crownX,
+      crownY,
+      f.angle + aOff,
+      f.len * s,
+      pal.back[i],
+      s,
+      sw,
+    );
   }
   // Front fronds (6, half sway)
   for (let i = 0; i < 6; i++) {
     const f = FRONT_FROND_LAYOUT[i];
     const sw = i % 2 === 1 ? Math.sin(time * 2 + f.phase) * 3 * s : 0;
-    drawPalmFrond(ctx, crownX, crownY, f.angle + aOff, f.len * s, pal.front[i], s, sw);
+    drawPalmFrond(
+      ctx,
+      crownX,
+      crownY,
+      f.angle + aOff,
+      f.len * s,
+      pal.front[i],
+      s,
+      sw,
+    );
   }
 
   // Coconuts (variant 0 and 2)
@@ -406,7 +467,15 @@ function drawPalmTree(
       for (let p = 0; p < 3; p++) {
         const pa = (p / 3) * Math.PI * 2 + bi;
         ctx.beginPath();
-        ctx.ellipse(bx + Math.cos(pa) * 3 * s, by + Math.sin(pa) * 1.5 * s, 2.5 * s, 1.3 * s, pa, 0, Math.PI * 2);
+        ctx.ellipse(
+          bx + Math.cos(pa) * 3 * s,
+          by + Math.sin(pa) * 1.5 * s,
+          2.5 * s,
+          1.3 * s,
+          pa,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
     }
@@ -428,7 +497,7 @@ function drawPalmFrond(
   length: number,
   colors: { rib: string; lit: string; dark: string },
   scale: number,
-  sway: number
+  sway: number,
 ): void {
   const s = scale;
   const cosA = Math.cos(angle);
@@ -488,16 +557,61 @@ function drawObelisk(
   y: number,
   scale: number,
   variant: number = 0,
-  time: number = 0
+  time: number = 0,
 ): void {
   const s = scale;
   const height = 55 * s;
 
   // Pre-baked palettes with all derived colors computed once
   const palettes = [
-    { left: "#8a7a58", right: "#a89870", front: "#b0a068", top: "#c8b888", cap: "#d4a840", capDk: "#be9428", capFr: "#ca9e3b", capHi: "#f0d060", glyph: "#5a4a38", pedTop: "#b8a878", pedLeft: "#807048", pedRight: "#988860", ped2Left: "#857553", ped2Right: "#a39365" },
-    { left: "#58544a", right: "#706c5e", front: "#666258", top: "#8a8678", cap: "#c4c0b0", capDk: "#b2aea0", capFr: "#bdb9ab", capHi: "#e4e0d4", glyph: "#3a3830", pedTop: "#7a766a", pedLeft: "#4a4840", pedRight: "#605e54", ped2Left: "#504e46", ped2Right: "#666458" },
-    { left: "#28241e", right: "#38342a", front: "#302c24", top: "#48443a", cap: "#8868b8", capDk: "#7a56a6", capFr: "#8260b0", capHi: "#a888d8", glyph: "#4a3858", pedTop: "#383428", pedLeft: "#1a1810", pedRight: "#2a2820", ped2Left: "#201e16", ped2Right: "#302e24" },
+    {
+      left: "#8a7a58",
+      right: "#a89870",
+      front: "#b0a068",
+      top: "#c8b888",
+      cap: "#d4a840",
+      capDk: "#be9428",
+      capFr: "#ca9e3b",
+      capHi: "#f0d060",
+      glyph: "#5a4a38",
+      pedTop: "#b8a878",
+      pedLeft: "#807048",
+      pedRight: "#988860",
+      ped2Left: "#857553",
+      ped2Right: "#a39365",
+    },
+    {
+      left: "#58544a",
+      right: "#706c5e",
+      front: "#666258",
+      top: "#8a8678",
+      cap: "#c4c0b0",
+      capDk: "#b2aea0",
+      capFr: "#bdb9ab",
+      capHi: "#e4e0d4",
+      glyph: "#3a3830",
+      pedTop: "#7a766a",
+      pedLeft: "#4a4840",
+      pedRight: "#605e54",
+      ped2Left: "#504e46",
+      ped2Right: "#666458",
+    },
+    {
+      left: "#28241e",
+      right: "#38342a",
+      front: "#302c24",
+      top: "#48443a",
+      cap: "#8868b8",
+      capDk: "#7a56a6",
+      capFr: "#8260b0",
+      capHi: "#a888d8",
+      glyph: "#4a3858",
+      pedTop: "#383428",
+      pedLeft: "#1a1810",
+      pedRight: "#2a2820",
+      ped2Left: "#201e16",
+      ped2Right: "#302e24",
+    },
   ];
   const p = palettes[variant % palettes.length];
 
@@ -513,7 +627,17 @@ function drawObelisk(
   // --- Single pedestal (merged two tiers into one prism) ---
   const pedW = 13 * s;
   const pedH = 8 * s;
-  drawIsometricPrism(ctx, x, y, pedW, pedW, pedH, p.pedTop, p.pedLeft, p.pedRight);
+  drawIsometricPrism(
+    ctx,
+    x,
+    y,
+    pedW,
+    pedW,
+    pedH,
+    p.pedTop,
+    p.pedLeft,
+    p.pedRight,
+  );
 
   const shaftBase = y - pedH;
   const shaftTop = shaftBase - height;
@@ -641,11 +765,16 @@ function drawRock(
   x: number,
   y: number,
   scale: number,
-  variant?: string
+  variant?: string,
 ): void {
-  const rockColor = variant === "dark" ? "#4a4a4a" :
-                    variant === "red" ? "#8b4513" :
-                    variant === "crystal" ? "#87ceeb" : "#808080";
+  const rockColor =
+    variant === "dark"
+      ? "#4a4a4a"
+      : variant === "red"
+        ? "#8b4513"
+        : variant === "crystal"
+          ? "#87ceeb"
+          : "#808080";
 
   // Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
@@ -717,10 +846,14 @@ function drawBush(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0
+  time: number = 0,
 ): void {
-  const bushColor = variant === "berry" ? "#2d5a2d" :
-                    variant === "flower" ? "#3d7a3d" : "#3a7a3a";
+  const bushColor =
+    variant === "berry"
+      ? "#2d5a2d"
+      : variant === "flower"
+        ? "#3d7a3d"
+        : "#3a7a3a";
   const sway = Math.sin(time * 2 + x * 0.02) * scale;
 
   // Shadow
@@ -772,25 +905,43 @@ function drawFlower(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0
+  time: number = 0,
 ): void {
   const sway = Math.sin(time * 3 + x * 0.05) * 2 * scale;
-  const petalColor = variant === "red" ? "#ff4444" :
-                     variant === "yellow" ? "#ffdd44" :
-                     variant === "purple" ? "#9944ff" : "#ff88cc";
+  const petalColor =
+    variant === "red"
+      ? "#ff4444"
+      : variant === "yellow"
+        ? "#ffdd44"
+        : variant === "purple"
+          ? "#9944ff"
+          : "#ff88cc";
 
   // Stem
   ctx.strokeStyle = "#228b22";
   ctx.lineWidth = 2 * scale;
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.quadraticCurveTo(x + sway * 0.5, y - 10 * scale, x + sway, y - 20 * scale);
+  ctx.quadraticCurveTo(
+    x + sway * 0.5,
+    y - 10 * scale,
+    x + sway,
+    y - 20 * scale,
+  );
   ctx.stroke();
 
   // Leaf
   ctx.fillStyle = "#32cd32";
   ctx.beginPath();
-  ctx.ellipse(x + 3 * scale + sway * 0.3, y - 8 * scale, 4 * scale, 2 * scale, 0.5, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + 3 * scale + sway * 0.3,
+    y - 8 * scale,
+    4 * scale,
+    2 * scale,
+    0.5,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Petals
@@ -820,12 +971,13 @@ function drawBldgStoneWall(
   corners: [number, number][],
   baseColor: string,
   rows: number,
-  s: number
+  s: number,
 ): void {
   ctx.fillStyle = baseColor;
   ctx.beginPath();
   ctx.moveTo(corners[0][0], corners[0][1]);
-  for (let i = 1; i < corners.length; i++) ctx.lineTo(corners[i][0], corners[i][1]);
+  for (let i = 1; i < corners.length; i++)
+    ctx.lineTo(corners[i][0], corners[i][1]);
   ctx.closePath();
   ctx.fill();
 
@@ -855,7 +1007,10 @@ function drawBldgStoneWall(
       const ny = bl[1] + (tl[1] - bl[1]) * nextT;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + (tl[0] - bl[0]) / rows * 0.8, ny - (bl[1] + (tl[1] - bl[1]) * ((r + 1.5) / rows) - cy) * 0.05);
+      ctx.lineTo(
+        cx + ((tl[0] - bl[0]) / rows) * 0.8,
+        ny - (bl[1] + (tl[1] - bl[1]) * ((r + 1.5) / rows) - cy) * 0.05,
+      );
       ctx.stroke();
     }
   }
@@ -868,7 +1023,7 @@ function drawBldgArchWin(
   ww: number,
   wh: number,
   s: number,
-  hasShutters: boolean = false
+  hasShutters: boolean = false,
 ): void {
   const glowG = ctx.createRadialGradient(wx, wy, 0, wx, wy, wh * 0.8);
   glowG.addColorStop(0, "rgba(255,200,100,0.55)");
@@ -877,7 +1032,12 @@ function drawBldgArchWin(
 
   if (hasShutters) {
     ctx.fillStyle = "#3A2A1A";
-    ctx.fillRect(wx - ww - 1.5 * s, wy - wh * 0.3, 1.5 * s, wh * 0.8 + ww * 0.5);
+    ctx.fillRect(
+      wx - ww - 1.5 * s,
+      wy - wh * 0.3,
+      1.5 * s,
+      wh * 0.8 + ww * 0.5,
+    );
     ctx.fillStyle = "#4A3828";
     ctx.fillRect(wx + ww, wy - wh * 0.3, 1.5 * s, wh * 0.8 + ww * 0.5);
   }
@@ -925,7 +1085,7 @@ function drawBldgDoor(
   dw: number,
   dh: number,
   s: number,
-  hasStep: boolean = true
+  hasStep: boolean = true,
 ): void {
   if (hasStep) {
     ctx.fillStyle = "#5A4A38";
@@ -997,7 +1157,7 @@ function drawBldgChimney(
   chimneyH: number,
   s: number,
   time: number,
-  seed: number
+  seed: number,
 ): void {
   ctx.fillStyle = "#5A4A3A";
   ctx.beginPath();
@@ -1028,7 +1188,7 @@ function drawBldgChimney(
   ctx.strokeStyle = "rgba(30,20,10,0.2)";
   ctx.lineWidth = 0.4 * s;
   for (let r = 0; r < 3; r++) {
-    const ry = topY + 3 * s + r * (chimneyH - 3 * s) / 3;
+    const ry = topY + 3 * s + (r * (chimneyH - 3 * s)) / 3;
     ctx.beginPath();
     ctx.moveTo(cx - 3 * s, ry);
     ctx.lineTo(cx + 3 * s, ry);
@@ -1039,15 +1199,39 @@ function drawBldgChimney(
   const rise = Math.sin(time * 1.5 + seed * 0.7) * 1 * s;
   ctx.fillStyle = "rgba(170,160,150,0.2)";
   ctx.beginPath();
-  ctx.ellipse(cx + drift * 0.5, topY - 3 * s + rise, 3 * s, 2 * s, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx + drift * 0.5,
+    topY - 3 * s + rise,
+    3 * s,
+    2 * s,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "rgba(150,145,140,0.14)";
   ctx.beginPath();
-  ctx.ellipse(cx + drift, topY - 8 * s + rise, 4.5 * s, 2.5 * s, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx + drift,
+    topY - 8 * s + rise,
+    4.5 * s,
+    2.5 * s,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "rgba(140,135,130,0.08)";
   ctx.beginPath();
-  ctx.ellipse(cx + drift * 1.6, topY - 14 * s + rise * 1.5, 6 * s, 3 * s, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx + drift * 1.6,
+    topY - 14 * s + rise * 1.5,
+    6 * s,
+    3 * s,
+    0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 }
 
@@ -1062,7 +1246,7 @@ function drawBldgRoof(
   s: number,
   darkCol: string,
   midCol: string,
-  litCol: string
+  litCol: string,
 ): void {
   const ov = overhang;
 
@@ -1141,15 +1325,19 @@ function drawBuilding(
   scale: number,
   variant?: string,
   variantNum: number = 0,
-  time: number = 0
+  time: number = 0,
 ): void {
   const s = scale;
   const v = variant === "stone" ? 1 : variant === "brick" ? 2 : variantNum % 4;
 
   // Ground shadow
   const shadGrad = ctx.createRadialGradient(
-    x + 6 * s, y + 8 * s, 0,
-    x + 6 * s, y + 8 * s, 42 * s
+    x + 6 * s,
+    y + 8 * s,
+    0,
+    x + 6 * s,
+    y + 8 * s,
+    42 * s,
   );
   shadGrad.addColorStop(0, "rgba(0,0,0,0.38)");
   shadGrad.addColorStop(0.5, "rgba(0,0,0,0.15)");
@@ -1161,8 +1349,12 @@ function drawBuilding(
 
   if (v === 0) {
     // === COZY STONE COTTAGE — hip roof, chimney, warm window glow, flower box ===
-    const wW = 24 * s, wD = 15 * s, wH = 24 * s, rH = 16 * s;
-    const iW = wW * 0.866, iD = wD * 0.5;
+    const wW = 24 * s,
+      wD = 15 * s,
+      wH = 24 * s,
+      rH = 16 * s;
+    const iW = wW * 0.866,
+      iD = wD * 0.5;
 
     // Stone foundation
     ctx.fillStyle = "#3E3028";
@@ -1175,9 +1367,17 @@ function drawBuilding(
     ctx.fill();
 
     // Left wall with stone texture
-    drawBldgStoneWall(ctx,
-      [[x - iW, y], [x, y + iD], [x, y + iD - wH], [x - iW, y - wH]],
-      "#5A4A3A", 7, s
+    drawBldgStoneWall(
+      ctx,
+      [
+        [x - iW, y],
+        [x, y + iD],
+        [x, y + iD - wH],
+        [x - iW, y - wH],
+      ],
+      "#5A4A3A",
+      7,
+      s,
     );
 
     // Right wall with gradient + stone texture
@@ -1192,24 +1392,44 @@ function drawBuilding(
     ctx.lineTo(x + iW, y - wH);
     ctx.closePath();
     ctx.fill();
-    drawBldgStoneWall(ctx,
-      [[x, y + iD], [x + iW, y], [x + iW, y - wH], [x, y + iD - wH]],
-      "rgba(0,0,0,0)", 7, s
+    drawBldgStoneWall(
+      ctx,
+      [
+        [x, y + iD],
+        [x + iW, y],
+        [x + iW, y - wH],
+        [x, y + iD - wH],
+      ],
+      "rgba(0,0,0,0)",
+      7,
+      s,
     );
 
     // Door
     drawBldgDoor(ctx, x + iW * 0.35, y + iD * 0.35, 7 * s, 14 * s, s);
 
     // Right wall windows with shutters
-    drawBldgArchWin(ctx, x + iW * 0.72, y - wH * 0.4 + iD * 0.15, 3.5 * s, 6 * s, s, true);
+    drawBldgArchWin(
+      ctx,
+      x + iW * 0.72,
+      y - wH * 0.4 + iD * 0.15,
+      3.5 * s,
+      6 * s,
+      s,
+      true,
+    );
 
     // Left wall window
     drawBldgArchWin(ctx, x - iW * 0.5, y - wH * 0.45, 3 * s, 5.5 * s, s, true);
 
     // Window glow cast on ground
     const glowR = ctx.createRadialGradient(
-      x + iW * 0.72, y + iD * 0.15, 0,
-      x + iW * 0.72, y + iD * 0.15, 12 * s
+      x + iW * 0.72,
+      y + iD * 0.15,
+      0,
+      x + iW * 0.72,
+      y + iD * 0.15,
+      12 * s,
     );
     glowR.addColorStop(0, "rgba(255,200,100,0.08)");
     glowR.addColorStop(1, "rgba(255,200,100,0)");
@@ -1220,7 +1440,12 @@ function drawBuilding(
 
     // Flower box under right wall window
     ctx.fillStyle = "#5A3A28";
-    ctx.fillRect(x + iW * 0.72 - 4 * s, y - wH * 0.4 + iD * 0.15 + 4.5 * s, 8 * s, 2.5 * s);
+    ctx.fillRect(
+      x + iW * 0.72 - 4 * s,
+      y - wH * 0.4 + iD * 0.15 + 4.5 * s,
+      8 * s,
+      2.5 * s,
+    );
     ctx.fillStyle = "#4A8A3A";
     for (let f = 0; f < 4; f++) {
       const fx = x + iW * 0.72 - 3 * s + f * 2 * s;
@@ -1231,24 +1456,58 @@ function drawBuilding(
     }
     ctx.fillStyle = "#E85050";
     ctx.beginPath();
-    ctx.arc(x + iW * 0.72 - 1.5 * s, y - wH * 0.4 + iD * 0.15 + 3.5 * s, 1 * s, 0, Math.PI * 2);
+    ctx.arc(
+      x + iW * 0.72 - 1.5 * s,
+      y - wH * 0.4 + iD * 0.15 + 3.5 * s,
+      1 * s,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "#E8D050";
     ctx.beginPath();
-    ctx.arc(x + iW * 0.72 + 2 * s, y - wH * 0.4 + iD * 0.15 + 3.2 * s, 1 * s, 0, Math.PI * 2);
+    ctx.arc(
+      x + iW * 0.72 + 2 * s,
+      y - wH * 0.4 + iD * 0.15 + 3.2 * s,
+      1 * s,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Hip roof
-    drawBldgRoof(ctx, x, y - wH - rH, y - wH, iW, iD, 5 * s, s,
-      "#3A2A1A", "#5A4030", "#6A5040");
+    drawBldgRoof(
+      ctx,
+      x,
+      y - wH - rH,
+      y - wH,
+      iW,
+      iD,
+      5 * s,
+      s,
+      "#3A2A1A",
+      "#5A4030",
+      "#6A5040",
+    );
 
     // Chimney
-    drawBldgChimney(ctx, x + iW * 0.35, y - wH - rH - 5 * s, rH * 0.6, s, time, x);
-
+    drawBldgChimney(
+      ctx,
+      x + iW * 0.35,
+      y - wH - rH - 5 * s,
+      rH * 0.6,
+      s,
+      time,
+      x,
+    );
   } else if (v === 1) {
     // === STONE WATCHTOWER — tall with battlements, conical roof, flag ===
-    const tW = 16 * s, tD = 12 * s, tH = 38 * s, batH = 5 * s;
-    const tiW = tW * 0.866, tiD = tD * 0.5;
+    const tW = 16 * s,
+      tD = 12 * s,
+      tH = 38 * s,
+      batH = 5 * s;
+    const tiW = tW * 0.866,
+      tiD = tD * 0.5;
 
     // Stone platform
     ctx.fillStyle = "#3E3028";
@@ -1261,9 +1520,17 @@ function drawBuilding(
     ctx.fill();
 
     // Left wall with stone blocks
-    drawBldgStoneWall(ctx,
-      [[x - tiW, y], [x, y + tiD], [x, y + tiD - tH], [x - tiW, y - tH]],
-      "#504840", 10, s
+    drawBldgStoneWall(
+      ctx,
+      [
+        [x - tiW, y],
+        [x, y + tiD],
+        [x, y + tiD - tH],
+        [x - tiW, y - tH],
+      ],
+      "#504840",
+      10,
+      s,
     );
 
     // Right wall with gradient + blocks
@@ -1278,9 +1545,17 @@ function drawBuilding(
     ctx.lineTo(x + tiW, y - tH);
     ctx.closePath();
     ctx.fill();
-    drawBldgStoneWall(ctx,
-      [[x, y + tiD], [x + tiW, y], [x + tiW, y - tH], [x, y + tiD - tH]],
-      "rgba(0,0,0,0)", 10, s
+    drawBldgStoneWall(
+      ctx,
+      [
+        [x, y + tiD],
+        [x + tiW, y],
+        [x + tiW, y - tH],
+        [x, y + tiD - tH],
+      ],
+      "rgba(0,0,0,0)",
+      10,
+      s,
     );
 
     // Stone band dividers at 1/3 and 2/3 height
@@ -1411,9 +1686,19 @@ function drawBuilding(
     ctx.fillStyle = "#B03030";
     ctx.beginPath();
     ctx.moveTo(x + 1 * s, pk - 10 * s);
-    ctx.quadraticCurveTo(x + 4 * s + flagWave, pk - 8 * s, x + 7 * s, pk - 7 * s + flagWave * 0.5);
+    ctx.quadraticCurveTo(
+      x + 4 * s + flagWave,
+      pk - 8 * s,
+      x + 7 * s,
+      pk - 7 * s + flagWave * 0.5,
+    );
     ctx.lineTo(x + 7 * s, pk - 4 * s + flagWave * 0.5);
-    ctx.quadraticCurveTo(x + 4 * s + flagWave * 0.5, pk - 5 * s, x + 1 * s, pk - 7 * s);
+    ctx.quadraticCurveTo(
+      x + 4 * s + flagWave * 0.5,
+      pk - 5 * s,
+      x + 1 * s,
+      pk - 7 * s,
+    );
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "#D8A838";
@@ -1423,18 +1708,28 @@ function drawBuilding(
 
     // Warm lantern glow at top
     const orbPulse = 0.5 + Math.sin(time * 2) * 0.15;
-    const orbGlow = ctx.createRadialGradient(x - tiW * 0.5, y - tH * 0.55, 0, x - tiW * 0.5, y - tH * 0.55, 8 * s);
+    const orbGlow = ctx.createRadialGradient(
+      x - tiW * 0.5,
+      y - tH * 0.55,
+      0,
+      x - tiW * 0.5,
+      y - tH * 0.55,
+      8 * s,
+    );
     orbGlow.addColorStop(0, `rgba(255,200,100,${orbPulse * 0.15})`);
     orbGlow.addColorStop(1, "rgba(255,200,100,0)");
     ctx.fillStyle = orbGlow;
     ctx.beginPath();
     ctx.ellipse(x - tiW * 0.5, y - tH * 0.55, 8 * s, 5 * s, 0, 0, Math.PI * 2);
     ctx.fill();
-
   } else if (v === 2) {
     // === HALF-TIMBER MANOR — lower stone, upper plaster with beams, steep roof ===
-    const wW = 28 * s, wD = 18 * s, wH = 28 * s, rH = 20 * s;
-    const iW = wW * 0.866, iD = wD * 0.5;
+    const wW = 28 * s,
+      wD = 18 * s,
+      wH = 28 * s,
+      rH = 20 * s;
+    const iW = wW * 0.866,
+      iD = wD * 0.5;
     const stoneH = wH * 0.4;
 
     // Foundation
@@ -1448,9 +1743,17 @@ function drawBuilding(
     ctx.fill();
 
     // Lower left wall — stone
-    drawBldgStoneWall(ctx,
-      [[x - iW, y], [x, y + iD], [x, y + iD - stoneH], [x - iW, y - stoneH]],
-      "#5A4A3A", 5, s
+    drawBldgStoneWall(
+      ctx,
+      [
+        [x - iW, y],
+        [x, y + iD],
+        [x, y + iD - stoneH],
+        [x - iW, y - stoneH],
+      ],
+      "#5A4A3A",
+      5,
+      s,
     );
 
     // Lower right wall — stone with gradient
@@ -1465,9 +1768,17 @@ function drawBuilding(
     ctx.lineTo(x + iW, y - stoneH);
     ctx.closePath();
     ctx.fill();
-    drawBldgStoneWall(ctx,
-      [[x, y + iD], [x + iW, y], [x + iW, y - stoneH], [x, y + iD - stoneH]],
-      "rgba(0,0,0,0)", 5, s
+    drawBldgStoneWall(
+      ctx,
+      [
+        [x, y + iD],
+        [x + iW, y],
+        [x + iW, y - stoneH],
+        [x, y + iD - stoneH],
+      ],
+      "rgba(0,0,0,0)",
+      5,
+      s,
     );
 
     // Overhang ledge between stone/plaster
@@ -1562,8 +1873,19 @@ function drawBuilding(
     drawBldgArchWin(ctx, x - iW * 0.55, y - wH * 0.6, 3.5 * s, 6 * s, s, true);
 
     // Steep roof
-    drawBldgRoof(ctx, x, y - wH - rH, y - wH, iW, iD, 6 * s, s,
-      "#3A2A1A", "#5A4030", "#6A5040");
+    drawBldgRoof(
+      ctx,
+      x,
+      y - wH - rH,
+      y - wH,
+      iW,
+      iD,
+      6 * s,
+      s,
+      "#3A2A1A",
+      "#5A4030",
+      "#6A5040",
+    );
 
     // Dormer window
     const dwX = x + iW * 0.35;
@@ -1585,7 +1907,14 @@ function drawBuilding(
     ctx.fill();
     ctx.fillStyle = "#1A1008";
     ctx.fillRect(dwX - 3 * s, dwY + 2 * s, 6 * s, 5 * s);
-    const dwGlow = ctx.createRadialGradient(dwX, dwY + 4.5 * s, 0, dwX, dwY + 4.5 * s, 3.5 * s);
+    const dwGlow = ctx.createRadialGradient(
+      dwX,
+      dwY + 4.5 * s,
+      0,
+      dwX,
+      dwY + 4.5 * s,
+      3.5 * s,
+    );
     dwGlow.addColorStop(0, "rgba(255,200,100,0.45)");
     dwGlow.addColorStop(1, "rgba(220,160,60,0.1)");
     ctx.fillStyle = dwGlow;
@@ -1601,11 +1930,20 @@ function drawBuilding(
     ctx.stroke();
 
     // Chimney
-    drawBldgChimney(ctx, x - iW * 0.3, y - wH - rH - 5 * s, rH * 0.5, s, time, x);
-
+    drawBldgChimney(
+      ctx,
+      x - iW * 0.3,
+      y - wH - rH - 5 * s,
+      rH * 0.5,
+      s,
+      time,
+      x,
+    );
   } else {
     // === ROUND STONE HUT — cylindrical walls, thatched conical roof ===
-    const hR = 16 * s, hH = 18 * s, thatchH = 20 * s;
+    const hR = 16 * s,
+      hH = 18 * s,
+      thatchH = 20 * s;
 
     // Cylindrical stone wall
     const cwG = ctx.createLinearGradient(x - hR, y, x + hR, y);
@@ -1632,7 +1970,8 @@ function drawBuilding(
       // Vertical joints
       const cols = 4 + (r % 2);
       for (let c = 0; c < cols; c++) {
-        const ang = 0.3 + (c / cols) * (Math.PI - 0.6) + (r % 2 === 0 ? 0.15 : 0);
+        const ang =
+          0.3 + (c / cols) * (Math.PI - 0.6) + (r % 2 === 0 ? 0.15 : 0);
         const jx = x + Math.cos(ang) * hR;
         const jy = ry + Math.sin(ang) * hR * 0.45 * 0.2;
         const nextRy = y - hH + (r + 1.5) * (hH / 6);
@@ -1661,7 +2000,14 @@ function drawBuilding(
 
     // Windows
     drawBldgArchWin(ctx, x - hR * 0.62, y - hH * 0.45, 3 * s, 5 * s, s);
-    drawBldgArchWin(ctx, x + hR * 0.12, y - hH * 0.5 + hR * 0.1, 2.5 * s, 4.5 * s, s);
+    drawBldgArchWin(
+      ctx,
+      x + hR * 0.12,
+      y - hH * 0.5 + hR * 0.1,
+      2.5 * s,
+      4.5 * s,
+      s,
+    );
 
     // Thatched conical roof
     const roofBase = y - hH;
@@ -1729,7 +2075,16 @@ function drawBuilding(
     ctx.beginPath();
     ctx.ellipse(x, roofBase + 3 * s, hR + 6 * s, hR * 0.48, 0, 0, Math.PI);
     ctx.lineTo(x - hR - 6 * s, roofBase + 5 * s);
-    ctx.ellipse(x, roofBase + 5 * s, hR + 6 * s, hR * 0.48, 0, Math.PI, 0, true);
+    ctx.ellipse(
+      x,
+      roofBase + 5 * s,
+      hR + 6 * s,
+      hR * 0.48,
+      0,
+      Math.PI,
+      0,
+      true,
+    );
     ctx.closePath();
     ctx.fill();
 
@@ -1741,7 +2096,15 @@ function drawBuilding(
     const smDrift = Math.sin(time * 2.2 + x * 0.1) * 2.5 * s;
     ctx.fillStyle = "rgba(170,160,150,0.18)";
     ctx.beginPath();
-    ctx.ellipse(x + smDrift * 0.5, pk - 3 * s, 3 * s, 1.8 * s, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x + smDrift * 0.5,
+      pk - 3 * s,
+      3 * s,
+      1.8 * s,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "rgba(150,145,140,0.12)";
     ctx.beginPath();
@@ -1749,7 +2112,15 @@ function drawBuilding(
     ctx.fill();
     ctx.fillStyle = "rgba(140,135,130,0.06)";
     ctx.beginPath();
-    ctx.ellipse(x + smDrift * 1.5, pk - 14 * s, 6 * s, 3 * s, 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      x + smDrift * 1.5,
+      pk - 14 * s,
+      6 * s,
+      3 * s,
+      0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 }
@@ -1763,10 +2134,14 @@ function drawStatue(
   x: number,
   y: number,
   scale: number,
-  variant?: string
+  variant?: string,
 ): void {
-  const stoneColor = variant === "bronze" ? "#cd7f32" :
-                     variant === "gold" ? "#ffd700" : "#a0a0a0";
+  const stoneColor =
+    variant === "bronze"
+      ? "#cd7f32"
+      : variant === "gold"
+        ? "#ffd700"
+        : "#a0a0a0";
 
   // Pedestal
   ctx.fillStyle = "#808080";
@@ -1801,7 +2176,7 @@ function drawLamp(
   x: number,
   y: number,
   scale: number,
-  time: number
+  time: number,
 ): void {
   const glowIntensity = 0.5 + Math.sin(time * 3) * 0.2;
 
@@ -1848,7 +2223,7 @@ function drawFence(
   x: number,
   y: number,
   scale: number,
-  variant?: string
+  variant?: string,
 ): void {
   const fenceColor = variant === "iron" ? "#4a4a4a" : "#8b7355";
   const postCount = 3;
@@ -1891,7 +2266,7 @@ function drawWaterFeature(
   y: number,
   scale: number,
   variant?: string,
-  time: number = 0
+  time: number = 0,
 ): void {
   if (variant === "fountain") {
     // Fountain base
@@ -1914,7 +2289,8 @@ function drawWaterFeature(
     ctx.fillStyle = `rgba(150, 200, 255, ${0.5 + Math.sin(time * 5) * 0.2})`;
     for (let i = 0; i < 5; i++) {
       const angle = (i / 5) * Math.PI * 2 + time;
-      const dropY = y - 20 * scale - Math.abs(Math.sin(time * 3 + i)) * 15 * scale;
+      const dropY =
+        y - 20 * scale - Math.abs(Math.sin(time * 3 + i)) * 15 * scale;
       const dropX = x + Math.cos(angle) * 5 * scale;
       ctx.beginPath();
       ctx.ellipse(dropX, dropY, 2 * scale, 3 * scale, 0, 0, Math.PI * 2);
@@ -1932,7 +2308,15 @@ function drawWaterFeature(
     ctx.lineWidth = 1.5 * scale;
     const rippleProgress = (time % 2) / 2;
     ctx.beginPath();
-    ctx.ellipse(x, y, 10 * scale * rippleProgress, 5 * scale * rippleProgress, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      10 * scale * rippleProgress,
+      5 * scale * rippleProgress,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.stroke();
   }
 }
@@ -1947,7 +2331,7 @@ function drawRuins(
   y: number,
   scale: number,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  variant?: string
+  variant?: string,
 ): void {
   const stoneColor = "#a0a090";
 
@@ -1990,66 +2374,81 @@ function drawCrater(
   y: number,
   scale: number,
   variant: number = 0,
-  time: number = 0
+  time: number = 0,
 ): void {
   // Variant determines crater style:
   // 0: Standard crater - round impact hole
   // 1: Elongated crater - stretched impact
   // 2: Deep pit - darker, more dramatic
   // 3: Shallow depression - subtle ground damage
-  
+
   const craterStyles = [
     { widthMult: 1.0, depthMult: 1.0, rimHeight: 0.3, name: "standard" },
     { widthMult: 1.4, depthMult: 0.7, rimHeight: 0.2, name: "elongated" },
     { widthMult: 0.85, depthMult: 1.3, rimHeight: 0.4, name: "deep" },
     { widthMult: 1.2, depthMult: 0.5, rimHeight: 0.15, name: "shallow" },
   ];
-  
+
   const style = craterStyles[variant % craterStyles.length];
-  
+
   // Base dimensions - isometric ratio (2:1 for proper perspective)
   const baseWidth = 18 * scale * style.widthMult;
   const baseDepth = baseWidth * 0.5; // Isometric foreshortening
   const craterDepth = 8 * scale * style.depthMult;
   const rimThickness = 4 * scale * style.rimHeight;
-  
+
   // Slight rotation based on position for variety
   const rotationOffset = Math.sin(x * 0.01 + y * 0.02) * 0.15;
-  
+
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotationOffset);
-  
+
   // === OUTER RIM / DISPLACED EARTH ===
   // Dirt pushed up around crater edges
-  const rimGradient = ctx.createRadialGradient(0, 0, baseWidth * 0.6, 0, 0, baseWidth * 1.2);
+  const rimGradient = ctx.createRadialGradient(
+    0,
+    0,
+    baseWidth * 0.6,
+    0,
+    0,
+    baseWidth * 1.2,
+  );
   rimGradient.addColorStop(0, "rgba(90, 75, 55, 0)");
   rimGradient.addColorStop(0.5, "rgba(100, 85, 65, 0.4)");
   rimGradient.addColorStop(0.8, "rgba(80, 65, 45, 0.2)");
   rimGradient.addColorStop(1, "rgba(70, 55, 35, 0)");
-  
+
   ctx.fillStyle = rimGradient;
   ctx.beginPath();
   ctx.ellipse(0, 0, baseWidth * 1.3, baseDepth * 1.3, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // === CRATER RIM HIGHLIGHT ===
   // Lit edge on the upper rim
   ctx.strokeStyle = `rgba(140, 125, 100, ${0.3 + style.rimHeight * 0.5})`;
   ctx.lineWidth = rimThickness;
   ctx.beginPath();
-  ctx.ellipse(0, -rimThickness * 0.3, baseWidth, baseDepth, 0, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.ellipse(
+    0,
+    -rimThickness * 0.3,
+    baseWidth,
+    baseDepth,
+    0,
+    Math.PI * 1.1,
+    Math.PI * 1.9,
+  );
   ctx.stroke();
-  
+
   // === MAIN CRATER HOLE ===
   // Dark interior with layered depth
-  
+
   // Outer edge (lighter brown/earth)
   ctx.fillStyle = "#4a3d2e";
   ctx.beginPath();
   ctx.ellipse(0, 0, baseWidth, baseDepth, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Mid layer (darker)
   const midWidth = baseWidth * 0.75;
   const midDepth = baseDepth * 0.75;
@@ -2057,56 +2456,82 @@ function drawCrater(
   ctx.beginPath();
   ctx.ellipse(0, craterDepth * 0.15, midWidth, midDepth, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Inner shadow / deep hole
   const innerWidth = baseWidth * 0.5;
   const innerDepth = baseDepth * 0.5;
   const innerGradient = ctx.createRadialGradient(
-    0, craterDepth * 0.25,
     0,
-    0, craterDepth * 0.25,
-    innerWidth
+    craterDepth * 0.25,
+    0,
+    0,
+    craterDepth * 0.25,
+    innerWidth,
   );
   innerGradient.addColorStop(0, "#1a1510");
   innerGradient.addColorStop(0.6, "#2a2015");
   innerGradient.addColorStop(1, "#3a2d1e");
-  
+
   ctx.fillStyle = innerGradient;
   ctx.beginPath();
   ctx.ellipse(0, craterDepth * 0.25, innerWidth, innerDepth, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // === 3D DEPTH ILLUSION - Inner wall visible on far side ===
   // The "back wall" of the crater should be slightly visible
   ctx.fillStyle = "#4d3f30";
   ctx.beginPath();
-  ctx.ellipse(0, -craterDepth * 0.1, baseWidth * 0.85, baseDepth * 0.4, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(
+    0,
+    -craterDepth * 0.1,
+    baseWidth * 0.85,
+    baseDepth * 0.4,
+    0,
+    Math.PI,
+    Math.PI * 2,
+  );
   ctx.fill();
-  
+
   // === SHADOW INSIDE (bottom of crater) ===
   ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
   ctx.beginPath();
-  ctx.ellipse(innerWidth * 0.15, craterDepth * 0.3, innerWidth * 0.7, innerDepth * 0.6, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    innerWidth * 0.15,
+    craterDepth * 0.3,
+    innerWidth * 0.7,
+    innerDepth * 0.6,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
-  
+
   // === SCATTERED DEBRIS / RUBBLE around edges ===
   const debrisCount = 4 + Math.floor(variant * 1.5);
   const seed = x * 73 + y * 137; // Deterministic randomness
-  
+
   for (let i = 0; i < debrisCount; i++) {
     const angle = (i / debrisCount) * Math.PI * 2 + seed * 0.01;
     const dist = baseWidth * (0.9 + Math.sin(seed + i * 47) * 0.3);
     const debrisX = Math.cos(angle) * dist;
     const debrisY = Math.sin(angle) * dist * 0.5; // Isometric
     const debrisSize = (2 + Math.abs(Math.sin(seed + i * 31)) * 3) * scale;
-    
+
     // Small rocks/dirt chunks
     ctx.fillStyle = `rgb(${85 + Math.floor(Math.sin(seed + i) * 20)}, ${70 + Math.floor(Math.cos(seed + i) * 15)}, ${50 + Math.floor(Math.sin(seed + i * 2) * 15)})`;
     ctx.beginPath();
-    ctx.ellipse(debrisX, debrisY, debrisSize, debrisSize * 0.6, angle * 0.5, 0, Math.PI * 2);
+    ctx.ellipse(
+      debrisX,
+      debrisY,
+      debrisSize,
+      debrisSize * 0.6,
+      angle * 0.5,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
-  
+
   // === SUBTLE SMOKE/DUST for fresh craters (variant 2) ===
   if (variant === 2) {
     const smokeAlpha = 0.15 + Math.sin(time * 0.5) * 0.05;
@@ -2117,11 +2542,13 @@ function drawCrater(
       -craterDepth * 0.5 + Math.cos(time * 0.7) * scale,
       baseWidth * 0.6,
       baseDepth * 0.4,
-      0, 0, Math.PI * 2
+      0,
+      0,
+      Math.PI * 2,
     );
     ctx.fill();
   }
-  
+
   ctx.restore();
 }
 
@@ -2134,10 +2561,10 @@ function drawDebris(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0
+  variant: number = 0,
 ): void {
   const seed = x * 73 + y * 137;
-  
+
   // Debris types: 0=wood splinters, 1=stone chunks, 2=metal scraps, 3=mixed
   const colors = [
     ["#6b5344", "#8b7355", "#5d4037"], // Wood
@@ -2146,16 +2573,16 @@ function drawDebris(
     ["#7a6a5a", "#8a8070", "#5a4a3a"], // Mixed
   ];
   const palette = colors[variant % colors.length];
-  
+
   ctx.save();
   ctx.translate(x, y);
-  
+
   // Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
   ctx.beginPath();
   ctx.ellipse(0, 3 * scale, 12 * scale, 6 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Scattered pieces
   const pieceCount = 5 + (variant % 3);
   for (let i = 0; i < pieceCount; i++) {
@@ -2165,12 +2592,12 @@ function drawDebris(
     const py = Math.sin(angle) * dist * 0.5;
     const size = (3 + ((seed + i * 23) % 5)) * scale;
     const rotation = (seed + i * 41) % (Math.PI * 2);
-    
+
     ctx.fillStyle = palette[i % palette.length];
     ctx.save();
     ctx.translate(px, py);
     ctx.rotate(rotation);
-    
+
     if (variant === 0) {
       // Wood splinters - elongated
       ctx.fillRect(-size, -size * 0.2, size * 2, size * 0.4);
@@ -2191,7 +2618,7 @@ function drawDebris(
     }
     ctx.restore();
   }
-  
+
   ctx.restore();
 }
 
@@ -2204,31 +2631,31 @@ function drawSkeleton(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0
+  variant: number = 0,
 ): void {
   const boneColor = "#e8e0d0";
   const boneShade = "#c8c0b0";
   const seed = x * 73 + y * 137;
-  
+
   ctx.save();
   ctx.translate(x, y);
-  
+
   // Pose variants: 0=lying flat, 1=reaching, 2=curled, 3=scattered
-  const rotation = (variant === 3) ? 0 : ((seed % 4) - 2) * 0.3;
+  const rotation = variant === 3 ? 0 : ((seed % 4) - 2) * 0.3;
   ctx.rotate(rotation);
-  
+
   // Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
   ctx.beginPath();
   ctx.ellipse(0, 2 * scale, 15 * scale, 7 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   if (variant === 3) {
     // Scattered bones
     for (let i = 0; i < 6; i++) {
-      const bx = ((seed + i * 47) % 20 - 10) * scale;
-      const by = ((seed + i * 31) % 10 - 5) * scale * 0.5;
-      const boneRot = (seed + i * 23) % (Math.PI);
+      const bx = (((seed + i * 47) % 20) - 10) * scale;
+      const by = (((seed + i * 31) % 10) - 5) * scale * 0.5;
+      const boneRot = (seed + i * 23) % Math.PI;
       ctx.save();
       ctx.translate(bx, by);
       ctx.rotate(boneRot);
@@ -2247,35 +2674,59 @@ function drawSkeleton(
     ctx.beginPath();
     ctx.ellipse(0, -2 * scale, 6 * scale, 4 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Ribs
     ctx.strokeStyle = boneColor;
     ctx.lineWidth = 1.5 * scale;
     for (let i = 0; i < 4; i++) {
       const ribY = -4 * scale + i * 2 * scale;
       ctx.beginPath();
-      ctx.ellipse(0, ribY, 5 * scale, 1.5 * scale, 0, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.ellipse(
+        0,
+        ribY,
+        5 * scale,
+        1.5 * scale,
+        0,
+        Math.PI * 0.2,
+        Math.PI * 0.8,
+      );
       ctx.stroke();
     }
-    
+
     // Skull
     ctx.fillStyle = boneColor;
     const skullY = -8 * scale;
     ctx.beginPath();
     ctx.ellipse(0, skullY, 4 * scale, 3 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Eye sockets
     ctx.fillStyle = "#2a2520";
     ctx.beginPath();
-    ctx.ellipse(-1.5 * scale, skullY - 0.5 * scale, 1 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
-    ctx.ellipse(1.5 * scale, skullY - 0.5 * scale, 1 * scale, 0.8 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      -1.5 * scale,
+      skullY - 0.5 * scale,
+      1 * scale,
+      0.8 * scale,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.ellipse(
+      1.5 * scale,
+      skullY - 0.5 * scale,
+      1 * scale,
+      0.8 * scale,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
-    
+
     // Limbs
     ctx.strokeStyle = boneColor;
     ctx.lineWidth = 2 * scale;
-    
+
     // Arms
     if (variant === 1) {
       // Reaching pose
@@ -2295,7 +2746,7 @@ function drawSkeleton(
       ctx.lineTo(10 * scale, 3 * scale);
       ctx.stroke();
     }
-    
+
     // Legs
     ctx.beginPath();
     ctx.moveTo(-2 * scale, 2 * scale);
@@ -2304,7 +2755,7 @@ function drawSkeleton(
     ctx.lineTo(5 * scale, 10 * scale);
     ctx.stroke();
   }
-  
+
   ctx.restore();
 }
 
@@ -2317,45 +2768,45 @@ function drawBones(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0
+  variant: number = 0,
 ): void {
   const boneColor = "#e8e0d0";
   const boneShade = "#d0c8b8";
   const seed = x * 73 + y * 137;
-  
+
   ctx.save();
   ctx.translate(x, y);
-  
+
   // Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
   ctx.beginPath();
   ctx.ellipse(0, 2 * scale, 10 * scale, 5 * scale, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   const boneCount = 3 + (variant % 3);
   for (let i = 0; i < boneCount; i++) {
-    const bx = ((seed + i * 47) % 16 - 8) * scale;
-    const by = ((seed + i * 31) % 8 - 4) * scale * 0.5;
-    const boneLen = (4 + (seed + i * 13) % 4) * scale;
-    const boneRot = ((seed + i * 23) % 180) * Math.PI / 180;
-    
+    const bx = (((seed + i * 47) % 16) - 8) * scale;
+    const by = (((seed + i * 31) % 8) - 4) * scale * 0.5;
+    const boneLen = (4 + ((seed + i * 13) % 4)) * scale;
+    const boneRot = (((seed + i * 23) % 180) * Math.PI) / 180;
+
     ctx.save();
     ctx.translate(bx, by);
     ctx.rotate(boneRot);
-    
+
     // Bone shaft
     ctx.fillStyle = i % 2 === 0 ? boneColor : boneShade;
     ctx.fillRect(-boneLen, -0.8 * scale, boneLen * 2, 1.6 * scale);
-    
+
     // Bone ends (knobby)
     ctx.beginPath();
     ctx.arc(-boneLen, 0, 1.8 * scale, 0, Math.PI * 2);
     ctx.arc(boneLen, 0, 1.8 * scale, 0, Math.PI * 2);
     ctx.fill();
-    
+
     ctx.restore();
   }
-  
+
   ctx.restore();
 }
 
@@ -2368,27 +2819,27 @@ function drawSword(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0
+  variant: number = 0,
 ): void {
   const seed = x * 73 + y * 137;
-  const rotation = ((seed % 360) - 180) * Math.PI / 180;
-  
+  const rotation = (((seed % 360) - 180) * Math.PI) / 180;
+
   // Variant: 0=steel, 1=bronze, 2=rusted, 3=broken
   const bladeColors = ["#c0c0c0", "#cd7f32", "#8b6914", "#a0a0a0"];
   const bladeColor = bladeColors[variant % bladeColors.length];
-  
+
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(rotation);
-  
+
   // Shadow
   ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
   ctx.beginPath();
   ctx.ellipse(0, 2 * scale, 12 * scale, 4 * scale, rotation, 0, Math.PI * 2);
   ctx.fill();
-  
+
   const bladeLen = variant === 3 ? 8 * scale : 14 * scale;
-  
+
   // Blade
   ctx.fillStyle = bladeColor;
   ctx.beginPath();
@@ -2400,7 +2851,7 @@ function drawSword(
   ctx.lineTo(-bladeLen + 3 * scale, 1.5 * scale);
   ctx.closePath();
   ctx.fill();
-  
+
   // Blade highlight
   ctx.fillStyle = lightenColor(bladeColor, 30);
   ctx.beginPath();
@@ -2410,15 +2861,15 @@ function drawSword(
   ctx.lineTo(-bladeLen + 3 * scale, 0);
   ctx.closePath();
   ctx.fill();
-  
+
   // Guard
   ctx.fillStyle = "#8b7355";
   ctx.fillRect(-bladeLen - 1 * scale, -3 * scale, 2 * scale, 6 * scale);
-  
+
   // Handle
   ctx.fillStyle = "#5d4037";
   ctx.fillRect(-bladeLen - 6 * scale, -1.5 * scale, 5 * scale, 3 * scale);
-  
+
   // Handle wrap
   ctx.strokeStyle = "#3d2017";
   ctx.lineWidth = 0.5 * scale;
@@ -2429,25 +2880,25 @@ function drawSword(
     ctx.lineTo(hx, 1.5 * scale);
     ctx.stroke();
   }
-  
+
   // Pommel
   ctx.fillStyle = "#cd853f";
   ctx.beginPath();
   ctx.arc(-bladeLen - 7 * scale, 0, 2 * scale, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Rust spots for variant 2
   if (variant === 2) {
     ctx.fillStyle = "rgba(139, 69, 19, 0.5)";
     for (let i = 0; i < 5; i++) {
       const rx = -bladeLen + 5 * scale + ((seed + i * 37) % 15) * scale * 0.8;
-      const ry = ((seed + i * 23) % 3 - 1.5) * scale * 0.5;
+      const ry = (((seed + i * 23) % 3) - 1.5) * scale * 0.5;
       ctx.beginPath();
-      ctx.arc(rx, ry, (1 + (seed + i) % 2) * scale, 0, Math.PI * 2);
+      ctx.arc(rx, ry, (1 + ((seed + i) % 2)) * scale, 0, Math.PI * 2);
       ctx.fill();
     }
   }
-  
+
   ctx.restore();
 }
 
@@ -2460,31 +2911,32 @@ function drawArrow(
   x: number,
   y: number,
   scale: number,
-  variant: number = 0
+  variant: number = 0,
 ): void {
   const seed = x * 73 + y * 137;
-  const rotation = ((seed % 360) - 180) * Math.PI / 180;
+  const rotation = (((seed % 360) - 180) * Math.PI) / 180;
   const stuck = variant % 2 === 0; // Stuck in ground or lying flat
-  
+
   ctx.save();
   ctx.translate(x, y);
-  
+
   if (stuck) {
     // Arrow stuck in ground at angle
     ctx.rotate(-0.3 + rotation * 0.3);
-    
+
     // Shadow
     ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
     ctx.beginPath();
     ctx.ellipse(3 * scale, 4 * scale, 6 * scale, 2 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Shaft (angled up)
     ctx.fillStyle = "#8b7355";
     ctx.fillRect(-2 * scale, -12 * scale, 1.5 * scale, 14 * scale);
-    
+
     // Fletching
-    ctx.fillStyle = variant === 1 ? "#dc143c" : variant === 3 ? "#228b22" : "#f5f5dc";
+    ctx.fillStyle =
+      variant === 1 ? "#dc143c" : variant === 3 ? "#228b22" : "#f5f5dc";
     ctx.beginPath();
     ctx.moveTo(-2 * scale, -12 * scale);
     ctx.lineTo(-5 * scale, -10 * scale);
@@ -2498,17 +2950,17 @@ function drawArrow(
   } else {
     // Arrow lying flat
     ctx.rotate(rotation);
-    
+
     // Shadow
     ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
     ctx.beginPath();
     ctx.ellipse(0, 2 * scale, 10 * scale, 3 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Shaft
     ctx.fillStyle = "#8b7355";
     ctx.fillRect(-8 * scale, -0.5 * scale, 16 * scale, 1 * scale);
-    
+
     // Arrowhead
     ctx.fillStyle = "#808080";
     ctx.beginPath();
@@ -2517,9 +2969,10 @@ function drawArrow(
     ctx.lineTo(8 * scale, 1.5 * scale);
     ctx.closePath();
     ctx.fill();
-    
+
     // Fletching
-    ctx.fillStyle = variant === 1 ? "#dc143c" : variant === 3 ? "#228b22" : "#f5f5dc";
+    ctx.fillStyle =
+      variant === 1 ? "#dc143c" : variant === 3 ? "#228b22" : "#f5f5dc";
     ctx.beginPath();
     ctx.moveTo(-8 * scale, 0);
     ctx.lineTo(-6 * scale, -2.5 * scale);
@@ -2531,7 +2984,7 @@ function drawArrow(
     ctx.lineTo(-4 * scale, 0);
     ctx.fill();
   }
-  
+
   ctx.restore();
 }
 
@@ -2543,7 +2996,7 @@ function drawGenericDecoration(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  scale: number
+  scale: number,
 ): void {
   ctx.fillStyle = "#888888";
   ctx.beginPath();

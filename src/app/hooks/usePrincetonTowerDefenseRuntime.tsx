@@ -146,6 +146,26 @@ import {
 import { useGameProgress } from "../useLocalStorage";
 import { useCustomLevels } from "./useCustomLevels";
 
+type RenderQuality = "high" | "medium" | "low";
+
+const QUALITY_DPR_CAP: Record<RenderQuality, number> = {
+  high: 4,
+  medium: 4,
+  low: 4,
+};
+
+const QUALITY_DECORATION_MARGIN_PX: Record<RenderQuality, number> = {
+  high: 260,
+  medium: 190,
+  low: 140,
+};
+
+// Fixed fog counts — immune to quality transitions to prevent visible flickering
+const FOG_BLOB_COUNT = 60;
+const FOG_WISP_COUNT = 10;
+
+const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
+
 export function usePrincetonTowerDefenseRuntime() {
   const isDefined = <T,>(value: T | null | undefined): value is T =>
     value !== null && value !== undefined;
@@ -225,6 +245,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Camera - start more zoomed in and centered
   const [cameraOffset, setCameraOffset] = useState<Position>(DEFAULT_CAMERA_OFFSET);
   const [cameraZoom, setCameraZoom] = useState(DEFAULT_CAMERA_ZOOM);
+  const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -232,6 +253,10 @@ export function usePrincetonTowerDefenseRuntime() {
   const isTouchDeviceRef = useRef<boolean>(false); // Track if user is using touch input
   const gameLoopRef = useRef<number>();
   const lastTimeRef = useRef<number>(0);
+  const renderQualityRef = useRef<RenderQuality>("high");
+  const rollingFrameMsRef = useRef<number>(16.7);
+  const qualityLastChangedAtRef = useRef<number>(0);
+  const renderFrameIndexRef = useRef<number>(0);
 
   // PERFORMANCE FIX: Use refs for game loop callbacks to prevent loop restart on state changes
   // Without this, selecting a troop/hero causes the game loop useEffect to re-run,
@@ -277,16 +302,21 @@ export function usePrincetonTowerDefenseRuntime() {
     [selectedMap]
   );
 
+  const getRenderDpr = useCallback(() => {
+    if (typeof window === "undefined") return 1;
+    return Math.min(window.devicePixelRatio || 1, renderDprCap);
+  }, [renderDprCap]);
+
   // Helper to get canvas dimensions
   const getCanvasDimensions = useCallback(() => {
     const canvas = canvasRef.current;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getRenderDpr();
     return {
       width: canvas ? canvas.width : 1000,
       height: canvas ? canvas.height : 600,
       dpr,
     };
-  }, []);
+  }, [getRenderDpr]);
 
   // Timer Cleanup Helper
   const clearAllTimers = useCallback(() => {
@@ -592,7 +622,7 @@ export function usePrincetonTowerDefenseRuntime() {
       const canvas = canvasRef.current;
       const container = containerRef.current;
       if (canvas && container) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = getRenderDpr();
         const rect = container.getBoundingClientRect();
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
@@ -604,7 +634,7 @@ export function usePrincetonTowerDefenseRuntime() {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
     return () => window.removeEventListener("resize", resizeCanvas);
-  }, [gameState]);
+  }, [gameState, getRenderDpr]);
 
   // Handle pause/resume of spawn timers when gameSpeed changes
   const prevGameSpeedRef = useRef(gameSpeed);
@@ -2731,23 +2761,40 @@ export function usePrincetonTowerDefenseRuntime() {
 
             switch (ability.type) {
               case 'tower_slow':
-                // Slow tower attack speed
                 addOrRefreshDebuff('slow');
                 break;
               case 'tower_weaken':
-                // Reduce tower damage
                 addOrRefreshDebuff('weaken');
                 break;
               case 'tower_blind':
-                // Reduce tower range
                 addOrRefreshDebuff('blind');
                 break;
-              case 'tower_disable':
-                // Completely disable tower
+              case 'tower_disable': {
                 updated.disabled = true;
                 updated.disabledUntil = now + duration;
+                // Also add to debuffs array for UI/rendering visibility
+                updated.debuffs = updated.debuffs || [];
+                updated.debuffs = updated.debuffs.filter(d =>
+                  d.until > now && d.type !== 'disable'
+                );
+                const flavor = ability.name.toLowerCase().includes('freeze') ? 'freeze' as const
+                  : ability.name.toLowerCase().includes('gaze') || ability.name.toLowerCase().includes('stone') ? 'petrify' as const
+                  : ability.name.toLowerCase().includes('hold') || ability.name.toLowerCase().includes('admin') ? 'hold' as const
+                  : 'stun' as const;
+                updated.debuffs.push({
+                  type: 'disable',
+                  intensity: 1,
+                  until: now + duration,
+                  sourceId: enemy.id,
+                  disableFlavor: flavor,
+                  abilityName: ability.name,
+                });
                 break;
+              }
             }
+
+            // Track cooldown so this enemy can't re-apply immediately
+            enemy.lastAbilityUse = now;
           }
         }
 
@@ -4378,9 +4425,13 @@ export function usePrincetonTowerDefenseRuntime() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getRenderDpr();
     const width = canvas.width / dpr;
     const height = canvas.height / dpr;
+    const frameNowMs = performance.now();
+    const nowSeconds = frameNowMs / 1000;
+    const renderQuality = renderQualityRef.current;
+    renderFrameIndexRef.current += 1;
     // CRITICAL: Reset transform to identity matrix at start of each frame
     // This prevents transform accumulation that causes the recursive rendering bug
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -4924,12 +4975,14 @@ export function usePrincetonTowerDefenseRuntime() {
     const fogGroundRgb = hexToRgb(theme.ground[2]);
     const fogAccentRgb = hexToRgb(theme.accent);
     const fogPathRgb = hexToRgb(theme.path[2]);
+    const fogBlobCount = FOG_BLOB_COUNT;
+    const fogWispCount = FOG_WISP_COUNT;
     const drawRoadEndFog = (
       endPos: Position,
       towardsPos: Position,
       size: number
     ) => {
-      const time = Date.now() / 4000;
+      const time = nowSeconds / 4;
       const dx = endPos.x - towardsPos.x;
       const dy = endPos.y - towardsPos.y;
       const len = Math.sqrt(dx * dx + dy * dy);
@@ -4937,25 +4990,59 @@ export function usePrincetonTowerDefenseRuntime() {
       const dirY = len > 0 ? dy / len : 0;
       const perpX = -dirY;
       const perpY = dirX;
-      const z = cameraZoom;
+      const z = Math.max(cameraZoom, 0.55);
 
-      // Region-tinted dark fog: blend ground + accent + path for unique look
-      const mixR = Math.round(fogGroundRgb.r * 0.5 + fogAccentRgb.r * 0.25 + fogPathRgb.r * 0.25);
-      const mixG = Math.round(fogGroundRgb.g * 0.5 + fogAccentRgb.g * 0.25 + fogPathRgb.g * 0.25);
-      const mixB = Math.round(fogGroundRgb.b * 0.5 + fogAccentRgb.b * 0.25 + fogPathRgb.b * 0.25);
-      const coreR = Math.round(mixR * 0.25);
-      const coreG = Math.round(mixG * 0.25);
-      const coreB = Math.round(mixB * 0.25);
-      const edgeR = Math.round(mixR * 0.55);
-      const edgeG = Math.round(mixG * 0.55);
-      const edgeB = Math.round(mixB * 0.55);
+      // Use the actual ground color for a solid, opaque core that hides the road
+      const gr = fogGroundRgb.r;
+      const gg = fogGroundRgb.g;
+      const gb = fogGroundRgb.b;
+
+      // Darker tint for the outer fog blobs
+      const mixR = Math.round(gr * 0.5 + fogAccentRgb.r * 0.25 + fogPathRgb.r * 0.25);
+      const mixG = Math.round(gg * 0.5 + fogAccentRgb.g * 0.25 + fogPathRgb.g * 0.25);
+      const mixB = Math.round(gb * 0.5 + fogAccentRgb.b * 0.25 + fogPathRgb.b * 0.25);
+      const edgeR = Math.round(mixR * 0.65);
+      const edgeG = Math.round(mixG * 0.65);
+      const edgeB = Math.round(mixB * 0.65);
 
       const hash = (n: number) => {
         const x = Math.sin(n * 127.1 + n * 311.7) * 43758.5453;
         return x - Math.floor(x);
       };
 
-      // Irregular shape via deterministic "arms" extending in random directions
+      // === SOLID CORE: opaque ground-colored ellipse that fully hides the road end ===
+      const coreSize = size * 0.55 * z;
+      const coreGrad = ctx.createRadialGradient(
+        endPos.x, endPos.y, 0,
+        endPos.x, endPos.y, coreSize
+      );
+      coreGrad.addColorStop(0, `rgba(${gr},${gg},${gb},1)`);
+      coreGrad.addColorStop(0.5, `rgba(${gr},${gg},${gb},0.95)`);
+      coreGrad.addColorStop(0.75, `rgba(${gr},${gg},${gb},0.7)`);
+      coreGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.ellipse(endPos.x, endPos.y, coreSize, coreSize * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === MID LAYER: slightly offset opaque fills to widen the solid coverage ===
+      for (let m = 0; m < 4; m++) {
+        const mAngle = (m / 4) * Math.PI * 2 + 0.3;
+        const mDist = size * 0.18 * z;
+        const mx = endPos.x + Math.cos(mAngle) * mDist * 0.7;
+        const my = endPos.y + Math.sin(mAngle) * mDist * 0.35;
+        const mSize = size * 0.4 * z;
+        const mGrad = ctx.createRadialGradient(mx, my, 0, mx, my, mSize);
+        mGrad.addColorStop(0, `rgba(${gr},${gg},${gb},0.9)`);
+        mGrad.addColorStop(0.55, `rgba(${gr},${gg},${gb},0.6)`);
+        mGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
+        ctx.fillStyle = mGrad;
+        ctx.beginPath();
+        ctx.ellipse(mx, my, mSize, mSize * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // === OUTER BLOBS: organic edge with higher opacity than before ===
       const armCount = 7;
       const armAngles: number[] = [];
       const armLengths: number[] = [];
@@ -4975,8 +5062,7 @@ export function usePrincetonTowerDefenseRuntime() {
         return reach;
       };
 
-      // Scattered dark blobs — circles only, no ellipses = no flat sides
-      for (let i = 0; i < 85; i++) {
+      for (let i = 0; i < fogBlobCount; i++) {
         const h1 = hash(i * 13.37);
         const h2 = hash(i * 7.91 + 0.5);
         const h3 = hash(i * 3.14 + 1.0);
@@ -4997,20 +5083,20 @@ export function usePrincetonTowerDefenseRuntime() {
 
         const blobSize = size * (0.22 + h4 * 0.3) * z;
         const distNorm = rawDist / maxR;
-        const alpha = Math.max(0, 0.45 * (1 - distNorm * distNorm));
+        const alpha = Math.max(0, 0.7 * (1 - distNorm * distNorm));
         if (alpha <= 0.01) continue;
 
         const blend = distNorm;
-        const cr = coreR + (edgeR - coreR) * blend;
-        const cg = coreG + (edgeG - coreG) * blend;
-        const cb = coreB + (edgeB - coreB) * blend;
+        const cr = gr + (edgeR - gr) * blend;
+        const cg2 = gg + (edgeG - gg) * blend;
+        const cb = gb + (edgeB - gb) * blend;
 
         const grad = ctx.createRadialGradient(
           bx + animX, by + animY, 0,
           bx + animX, by + animY, blobSize
         );
-        grad.addColorStop(0, `rgba(${Math.round(cr)},${Math.round(cg)},${Math.round(cb)},${alpha.toFixed(3)})`);
-        grad.addColorStop(0.5, `rgba(${edgeR},${edgeG},${edgeB},${(alpha * 0.45).toFixed(3)})`);
+        grad.addColorStop(0, `rgba(${Math.round(cr)},${Math.round(cg2)},${Math.round(cb)},${alpha.toFixed(3)})`);
+        grad.addColorStop(0.5, `rgba(${edgeR},${edgeG},${edgeB},${(alpha * 0.5).toFixed(3)})`);
         grad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -5018,19 +5104,19 @@ export function usePrincetonTowerDefenseRuntime() {
         ctx.fill();
       }
 
-      // Drifting wisps — slowly orbiting dark puffs for animation
-      for (let i = 0; i < 12; i++) {
+      // Drifting wisps with higher opacity
+      for (let i = 0; i < fogWispCount; i++) {
         const wAngle = time * (0.07 + hash(i + 100) * 0.05) + i * 0.52;
         const wAlongDist = Math.sin(wAngle) * size * 0.65;
         const wPerpDist = Math.cos(wAngle * 0.7 + i) * size * 0.45;
         const wx = endPos.x + dirX * wAlongDist * z + perpX * wPerpDist * 0.65 * z;
         const wy = endPos.y + dirY * wAlongDist * 0.5 * z + perpY * wPerpDist * 0.32 * z;
         const wSize = size * (0.18 + hash(i + 200) * 0.2) * z;
-        const wa = 0.14 + 0.07 * Math.sin(time * 0.4 + i);
+        const wa = 0.22 + 0.08 * Math.sin(time * 0.4 + i);
 
         const wGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, wSize);
-        wGrad.addColorStop(0, `rgba(${coreR},${coreG},${coreB},${wa.toFixed(3)})`);
-        wGrad.addColorStop(0.45, `rgba(${edgeR},${edgeG},${edgeB},${(wa * 0.4).toFixed(3)})`);
+        wGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${wa.toFixed(3)})`);
+        wGrad.addColorStop(0.45, `rgba(${edgeR},${edgeG},${edgeB},${(wa * 0.45).toFixed(3)})`);
         wGrad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
         ctx.fillStyle = wGrad;
         ctx.beginPath();
@@ -5038,31 +5124,27 @@ export function usePrincetonTowerDefenseRuntime() {
         ctx.fill();
       }
     };
+
+    // Draw fog immediately after road, before decorations
     drawRoadEndFog(firstScreenPos, secondScreenPos, 300);
     drawRoadEndFog(lastScreenPos, secondLastScreenPos, 300);
-
-    // Draw fog for secondary path endpoints (dual-path levels)
     if (
       levelData?.dualPath &&
       levelData?.secondaryPath &&
       MAP_PATHS[levelData.secondaryPath]
     ) {
       const secPath = MAP_PATHS[levelData.secondaryPath];
-      // Generate smooth path for accurate fog placement
       const secPathWorldPoints = secPath.map((p) => gridToWorldPath(p));
       const secSmoothPath = generateSmoothPath(secPathWorldPoints);
       const secSmoothScreenPath = secSmoothPath.map(toScreen);
       const secDirOffset = Math.min(30, Math.floor(secSmoothScreenPath.length / 4));
 
-      // Secondary path START (entrance) fog
-      const secFirstScreenPos = secSmoothScreenPath[0];
-      const secSecondScreenPos = secSmoothScreenPath[Math.min(secDirOffset, secSmoothScreenPath.length - 1)];
-      drawRoadEndFog(secFirstScreenPos, secSecondScreenPos, 300);
-
-      // Secondary path END (exit) fog
-      const secLastScreenPos = secSmoothScreenPath[secSmoothScreenPath.length - 1];
-      const secSecondLastScreenPos = secSmoothScreenPath[Math.max(0, secSmoothScreenPath.length - 1 - secDirOffset)];
-      drawRoadEndFog(secLastScreenPos, secSecondLastScreenPos, 300);
+      drawRoadEndFog(secSmoothScreenPath[0], secSmoothScreenPath[Math.min(secDirOffset, secSmoothScreenPath.length - 1)], 300);
+      drawRoadEndFog(
+        secSmoothScreenPath[secSmoothScreenPath.length - 1],
+        secSmoothScreenPath[Math.max(0, secSmoothScreenPath.length - 1 - secDirOffset)],
+        300
+      );
     }
 
     // Generate theme-specific decorations (CACHED for performance)
@@ -5999,7 +6081,7 @@ export function usePrincetonTowerDefenseRuntime() {
       cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
     } // End of decoration generation (else block)
 
-    const decorTime = Date.now() / 1000;
+    const decorTime = nowSeconds;
 
     // =========================================================================
     // HAZARD RENDERING - Using imported renderHazard function
@@ -6021,11 +6103,68 @@ export function usePrincetonTowerDefenseRuntime() {
 
     // Collect renderables
     const renderables: Renderable[] = [];
+    const decorationMarginPx = QUALITY_DECORATION_MARGIN_PX[renderQuality];
+    const worldCorners = [
+      screenToWorld(
+        { x: -decorationMarginPx, y: -decorationMarginPx },
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      ),
+      screenToWorld(
+        { x: width + decorationMarginPx, y: -decorationMarginPx },
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      ),
+      screenToWorld(
+        { x: -decorationMarginPx, y: height + decorationMarginPx },
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      ),
+      screenToWorld(
+        { x: width + decorationMarginPx, y: height + decorationMarginPx },
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      ),
+    ];
+    const minVisibleWorldX = Math.min(...worldCorners.map((p) => p.x));
+    const maxVisibleWorldX = Math.max(...worldCorners.map((p) => p.x));
+    const minVisibleWorldY = Math.min(...worldCorners.map((p) => p.y));
+    const maxVisibleWorldY = Math.max(...worldCorners.map((p) => p.y));
+
     // Add decorations to renderables for proper depth sorting
     decorations.forEach((dec) => {
+      if (
+        dec.x < minVisibleWorldX ||
+        dec.x > maxVisibleWorldX ||
+        dec.y < minVisibleWorldY ||
+        dec.y > maxVisibleWorldY
+      ) {
+        return;
+      }
+      const decScreenPos = toScreen({ x: dec.x, y: dec.y });
+      if (
+        decScreenPos.x < -decorationMarginPx ||
+        decScreenPos.x > width + decorationMarginPx ||
+        decScreenPos.y < -decorationMarginPx ||
+        decScreenPos.y > height + decorationMarginPx
+      ) {
+        return;
+      }
       renderables.push({
         type: "decoration",
-        data: { ...dec, decorTime, selectedMap },
+        data: { ...dec, decorTime, selectedMap, screenPos: decScreenPos },
         isoY: (dec.x + dec.y) * 0.25,
       });
     });
@@ -6237,7 +6376,7 @@ export function usePrincetonTowerDefenseRuntime() {
             icon: "◎",
           };
 
-      const time = Date.now() / 1000;
+      const time = nowSeconds;
       const sPos = toScreen(gridToWorld(t.pos));
       const s = cameraZoom;
 
@@ -6384,7 +6523,7 @@ export function usePrincetonTowerDefenseRuntime() {
     // =========================================================================
     const levelSpecialTower = LEVEL_DATA[selectedMap]?.specialTower;
     if (hoveredSpecial && levelSpecialTower) {
-      const time = Date.now() / 1000;
+      const time = nowSeconds;
       const spec = levelSpecialTower;
       const sPos = toScreen(gridToWorld(spec.pos));
       const range =
@@ -6514,8 +6653,9 @@ export function usePrincetonTowerDefenseRuntime() {
             variant: number;
             decorTime: number;
             selectedMap: string;
+            screenPos?: Position;
           };
-          const decScreenPos = toScreen({ x: decData.x, y: decData.y });
+          const decScreenPos = decData.screenPos ?? toScreen({ x: decData.x, y: decData.y });
           const decScale = cameraZoom * decData.scale;
           ctx.save();
           renderDecorationItem({
@@ -6549,7 +6689,7 @@ export function usePrincetonTowerDefenseRuntime() {
           // Render tower debuff effects if tower has active debuffs
           {
             const tower = r.data as Tower;
-            const activeDebuffs = tower.debuffs?.filter(d => d.until > Date.now());
+            const activeDebuffs = tower.debuffs?.filter(d => d.until > frameNowMs);
             if (activeDebuffs && activeDebuffs.length > 0) {
               const towerPos = gridToWorld(tower.pos);
               const towerScreenPos = worldToScreen(
@@ -6726,11 +6866,12 @@ export function usePrincetonTowerDefenseRuntime() {
     // Restore state
     ctx.restore();
 
-    // Draw environmental effects (particles, atmosphere) based on theme
-    const time = Date.now() / 1000;
-    renderEnvironment(ctx, mapTheme, width, height, time);
-    renderAmbientVisuals(ctx, mapTheme, width, height, time);
+    // Draw environmental effects every frame to avoid visual flicker.
+    renderEnvironment(ctx, mapTheme, width, height, nowSeconds);
+    renderAmbientVisuals(ctx, mapTheme, width, height, nowSeconds);
+
   }, [
+    getRenderDpr,
     cameraOffset,
     cameraZoom,
     selectedMap,
@@ -6775,6 +6916,33 @@ export function usePrincetonTowerDefenseRuntime() {
         ? timestamp - lastTimeRef.current
         : 0;
       const cappedDelta = Math.min(rawDelta, 100); // Max 100ms per frame
+      const sampleMs = Math.max(8, cappedDelta || 16.7);
+      rollingFrameMsRef.current = rollingFrameMsRef.current * 0.92 + sampleMs * 0.08;
+
+      if (timestamp - qualityLastChangedAtRef.current > QUALITY_TRANSITION_COOLDOWN_MS) {
+        const avgFrameMs = rollingFrameMsRef.current;
+        const currentQuality = renderQualityRef.current;
+        let nextQuality = currentQuality;
+
+        if (currentQuality === "high") {
+          if (avgFrameMs > 18) nextQuality = "medium";
+        } else if (currentQuality === "medium") {
+          if (avgFrameMs > 23) nextQuality = "low";
+          else if (avgFrameMs < 16.2) nextQuality = "high";
+        } else if (avgFrameMs < 20) {
+          nextQuality = "medium";
+        }
+
+        if (nextQuality !== currentQuality) {
+          renderQualityRef.current = nextQuality;
+          qualityLastChangedAtRef.current = timestamp;
+          const nextDprCap = QUALITY_DPR_CAP[nextQuality];
+          setRenderDprCap((prev) =>
+            Math.abs(prev - nextDprCap) > 0.001 ? nextDprCap : prev
+          );
+        }
+      }
+
       // Use gameSpeedRef instead of gameSpeed to avoid loop restart when pausing/unpausing
       const deltaTime = cappedDelta * gameSpeedRef.current;
       lastTimeRef.current = timestamp;

@@ -2,7 +2,6 @@
 
 import React from "react";
 import {
-  Heart,
   Timer,
   Zap,
   Users,
@@ -28,12 +27,14 @@ import {
   AlertTriangle,
   Wind,
   Ban,
+  Diamond,
+  Fence,
+  Skull,
 } from "lucide-react";
 import type { Tower, TowerType, Position } from "../../types";
 import { TOWER_DATA } from "../../constants";
 import { calculateTowerStats } from "../../constants/towerStats";
-import { TowerSprite } from "../../sprites";
-import { PANEL, GOLD, OVERLAY, RED_CARD, panelGradient } from "./theme";
+import { PANEL, GOLD, RED_CARD, panelGradient } from "./theme";
 
 // =============================================================================
 // TOOLTIP COMPONENT
@@ -116,41 +117,86 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
       <div className="px-3 py-2">
         {/* Debuff indicator - show active debuffs from enemies */}
         {tower.debuffs && tower.debuffs.filter(d => d.until > Date.now()).length > 0 && (() => {
-          // Consolidate debuffs by type (take highest intensity for each type)
           const activeDebuffs = tower.debuffs.filter(d => d.until > Date.now());
+          const disableDebuff = activeDebuffs.find(d => d.type === 'disable');
+          const otherDebuffs = activeDebuffs.filter(d => d.type !== 'disable');
+
+          // Consolidate non-disable debuffs by type
           const consolidatedDebuffs = new Map<string, { type: string; intensity: number; until: number }>();
-          for (const d of activeDebuffs) {
+          for (const d of otherDebuffs) {
             const existing = consolidatedDebuffs.get(d.type);
             if (!existing || d.intensity > existing.intensity) {
               consolidatedDebuffs.set(d.type, d);
             }
           }
+
+          const disableThemes = {
+            freeze: { icon: <Snowflake size={12} />, label: "FROZEN", bgClass: "bg-gradient-to-r from-cyan-950/80 to-blue-950/80", borderClass: "border-cyan-500/60", headerColor: "text-cyan-300", tagClass: "bg-cyan-900/60 text-cyan-200 border-cyan-600/40", desc: "Tower frozen solid" },
+            petrify: { icon: <Mountain size={12} />, label: "PETRIFIED", bgClass: "bg-gradient-to-r from-stone-900/80 to-gray-900/80", borderClass: "border-stone-500/60", headerColor: "text-stone-300", tagClass: "bg-stone-800/60 text-stone-200 border-stone-600/40", desc: "Turned to stone" },
+            hold: { icon: <Lock size={12} />, label: "ON HOLD", bgClass: "bg-gradient-to-r from-amber-950/80 to-red-950/80", borderClass: "border-amber-600/60", headerColor: "text-amber-300", tagClass: "bg-amber-900/60 text-amber-200 border-amber-600/40", desc: "Administratively held" },
+            stun: { icon: <Zap size={12} />, label: "STUNNED", bgClass: "bg-gradient-to-r from-yellow-950/80 to-orange-950/80", borderClass: "border-yellow-500/60", headerColor: "text-yellow-300", tagClass: "bg-yellow-900/60 text-yellow-200 border-yellow-600/40", desc: "Stunned into inaction" },
+          };
+
           return (
-            <div className="mb-2 p-1.5 bg-red-950/60 rounded border border-red-800/50">
-              <div className="flex items-center gap-1 mb-1">
-                <AlertTriangle size={10} className="text-red-400" />
-                <span className="text-[9px] font-bold text-red-300">DEBUFFED</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {Array.from(consolidatedDebuffs.values()).map((debuff, i) => {
-                  const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
-                  const debuffInfo: Record<string, { icon: React.ReactNode; label: string; color: string; desc: string }> = {
-                    slow: { icon: <Timer size={10} />, label: "Slowed", color: "text-blue-400", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
-                    weaken: { icon: <TrendingDown size={10} />, label: "Weakened", color: "text-red-400", desc: `-${Math.round(debuff.intensity * 100)}% DMG` },
-                    blind: { icon: <EyeOff size={10} />, label: "Blinded", color: "text-purple-400", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
-                    disable: { icon: <Ban size={10} />, label: "Disabled", color: "text-rose-400", desc: "Cannot attack" },
-                  };
-                  const info = debuffInfo[debuff.type];
-                  return (
-                    <div key={i} className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 ${info.color}`}>
-                      {info.icon}
-                      <span>{info.desc}</span>
-                      <span className="text-white/50">({remaining}s)</span>
+            <>
+              {/* Full-width disable banner when tower is disabled */}
+              {disableDebuff && (() => {
+                const flavor = (disableDebuff as typeof disableDebuff & { disableFlavor?: string }).disableFlavor as keyof typeof disableThemes || 'stun';
+                const theme = disableThemes[flavor] || disableThemes.stun;
+                const remaining = Math.max(0, (disableDebuff.until - Date.now()) / 1000);
+                const abilityName = (disableDebuff as typeof disableDebuff & { abilityName?: string }).abilityName;
+                return (
+                  <div className={`mb-2 p-2 rounded-lg border ${theme.bgClass} ${theme.borderClass}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className={`flex items-center gap-1.5 ${theme.headerColor}`}>
+                        {theme.icon}
+                        <span className="text-[10px] font-black tracking-wider">{theme.label}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-white/80 font-mono">
+                        <Timer size={10} className="opacity-70" />
+                        <span>{remaining.toFixed(1)}s</span>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                    {abilityName && (
+                      <div className="text-[8px] text-white/50 mb-1">{abilityName}</div>
+                    )}
+                    <div className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded border w-fit ${theme.tagClass}`}>
+                      <Ban size={9} />
+                      <span>Cannot attack</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Other debuffs (slow/weaken/blind) */}
+              {consolidatedDebuffs.size > 0 && (
+                <div className="mb-2 p-1.5 bg-red-950/60 rounded border border-red-800/50">
+                  <div className="flex items-center gap-1 mb-1">
+                    <AlertTriangle size={10} className="text-red-400" />
+                    <span className="text-[9px] font-bold text-red-300">DEBUFFED</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {Array.from(consolidatedDebuffs.values()).map((debuff, i) => {
+                      const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
+                      const debuffInfo: Record<string, { icon: React.ReactNode; label: string; color: string; desc: string }> = {
+                        slow: { icon: <Timer size={10} />, label: "Slowed", color: "text-blue-400", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
+                        weaken: { icon: <TrendingDown size={10} />, label: "Weakened", color: "text-red-400", desc: `-${Math.round(debuff.intensity * 100)}% DMG` },
+                        blind: { icon: <EyeOff size={10} />, label: "Blinded", color: "text-purple-400", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
+                      };
+                      const info = debuffInfo[debuff.type];
+                      if (!info) return null;
+                      return (
+                        <div key={i} className={`flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 ${info.color}`}>
+                          {info.icon}
+                          <span>{info.desc}</span>
+                          <span className="text-white/50">({remaining}s)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
           );
         })()}
 
@@ -509,6 +555,67 @@ const LANDMARK_INFO: Record<string, { name: string; icon: React.ReactNode; desc:
     icon: <TrendingUp className="text-amber-400" size={16} />,
     desc: "A tall monolith inscribed with arcane symbols.",
     lore: "The inscriptions are a pizza recipe in a dead language. Scholars are still debating the toppings.",
+  },
+  cobra_statue: {
+    name: "Cobra Statue",
+    icon: <Diamond className="text-green-400" size={16} />,
+    desc: "A menacing effigy radiating dark energy.",
+    lore: "Carved by a mad sculptor who claimed the stone 'told him what shape it wanted to be.'",
+  },
+  frozen_waterfall: {
+
+    name: "Frozen Waterfall",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    desc: "A frozen waterfall that flows through the battlefield.",
+    lore: "The waterfall is frozen solid and cannot be passed through.",
+  },
+  frozen_gate: {
+    name: "Frozen Gate",
+    icon: <Fence className="text-cyan-400" size={16} />,
+    desc: "A frozen gate that defends the battlefield.",
+    lore: "The gate doesn't seem to be very sturdy.",
+  },
+  aurora_crystal: {
+    name: "Aurora Crystal",
+    icon: <Sparkles className="text-purple-400" size={16} />,
+    desc: "A crystal that emits a radiant energy.",
+    lore: "The crystal is said to be the source of the aurora borealis.",
+  },
+  lava_fall: {
+    name: "Lava Fall",
+    icon: <Flame className="text-orange-400" size={16} />,
+    desc: "A lava fall that flows through the battlefield.",
+    lore: "The lava is hot and cannot be passed through.",
+  },
+  obsidian_pillar: {
+    name: "Obsidian Pillar",
+    icon: <Shield className="text-purple-400" size={16} />,
+    desc: "A pillar of obsidian that stands in the battlefield.",
+    lore: "Combined with a crystal, it could heal a dragon.",
+  },
+  skull_throne: {
+    name: "Skull Throne",
+    icon: <Skull className="text-red-400" size={16} />,
+    desc: "A throne made of skulls that stands in the battlefield.",
+    lore: "How many souls does it take to get some seating?",
+  },
+  volcano_rim: {
+    name: "Volcano Rim",
+    icon: <Flame className="text-orange-400" size={16} />,
+    desc: "A rim of lava that surrounds the battlefield.",
+    lore: "The precipice of eternal fire.",
+  },
+  idol_statue: {
+    name: "Idol Statue",
+    icon: <Landmark className="text-amber-400" size={16} />,
+    desc: "A statue of an idol that stands in the battlefield.",
+    lore: "A less impressive statue of a less impressive idol.",
+  },
+  gate: {
+    name: "Gate",
+    icon: <Fence className="text-cyan-400" size={16} />,
+    desc: "A gate that defends the battlefield.",
+    lore: "The gate doesn't seem to be very sturdy.",
   },
 };
 

@@ -34,6 +34,7 @@ import {
   EyeOff,
   AlertTriangle,
   Ban,
+  Lock,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
 import { TOWER_DATA, TROOP_DATA } from "../../constants";
@@ -373,41 +374,95 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 
         {/* Debuff Banner - show active debuffs from enemies */}
         {tower.debuffs && tower.debuffs.filter(d => d.until > Date.now()).length > 0 && (() => {
-          // Consolidate debuffs by type (take highest intensity for each type)
           const activeDebuffs = tower.debuffs!.filter(d => d.until > Date.now());
+          const disableDebuff = activeDebuffs.find(d => d.type === 'disable');
+          const otherDebuffs = activeDebuffs.filter(d => d.type !== 'disable');
+
           const consolidatedDebuffs = new Map<string, { type: string; intensity: number; until: number }>();
-          for (const d of activeDebuffs) {
+          for (const d of otherDebuffs) {
             const existing = consolidatedDebuffs.get(d.type);
             if (!existing || d.intensity > existing.intensity) {
               consolidatedDebuffs.set(d.type, d);
             }
           }
+
+          const disableThemes = {
+            freeze: { icon: <Snowflake size={14} />, label: "FROZEN", bgClass: "bg-gradient-to-r from-cyan-950/80 to-blue-950/80", borderClass: "border-cyan-500/60", headerColor: "text-cyan-300", barGradient: "linear-gradient(90deg, #22d3ee, #3b82f6)", tagClass: "bg-cyan-900/60 text-cyan-200 border-cyan-600/40" },
+            petrify: { icon: <Mountain size={14} />, label: "PETRIFIED", bgClass: "bg-gradient-to-r from-stone-900/80 to-gray-900/80", borderClass: "border-stone-400/60", headerColor: "text-stone-300", barGradient: "linear-gradient(90deg, #a8a29e, #78716c)", tagClass: "bg-stone-800/60 text-stone-200 border-stone-600/40" },
+            hold: { icon: <Lock size={14} />, label: "ON HOLD", bgClass: "bg-gradient-to-r from-amber-950/80 to-red-950/80", borderClass: "border-amber-500/60", headerColor: "text-amber-300", barGradient: "linear-gradient(90deg, #fbbf24, #f59e0b)", tagClass: "bg-amber-900/60 text-amber-200 border-amber-600/40" },
+            stun: { icon: <Zap size={14} />, label: "STUNNED", bgClass: "bg-gradient-to-r from-yellow-950/80 to-orange-950/80", borderClass: "border-yellow-500/60", headerColor: "text-yellow-300", barGradient: "linear-gradient(90deg, #facc15, #f97316)", tagClass: "bg-yellow-900/60 text-yellow-200 border-yellow-600/40" },
+          };
+
           return (
-            <div className="mb-2 p-1.5 bg-gradient-to-r from-red-950/70 to-rose-950/70 rounded-lg border border-red-600/50">
-              <div className="flex items-center justify-center gap-2 mb-1.5">
-                <AlertTriangle size={12} className="text-red-400 animate-pulse" />
-                <span className="text-[9px] text-red-300 font-bold">UNDER ATTACK</span>
-              </div>
-              <div className="flex flex-wrap justify-center gap-1">
-                {Array.from(consolidatedDebuffs.values()).map((debuff, i) => {
-                  const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
-                  const debuffInfo: Record<string, { icon: React.ReactNode; label: string; color: string; desc: string }> = {
-                    slow: { icon: <Timer size={10} />, label: "Slowed", color: "bg-blue-900/60 text-blue-300 border-blue-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
-                    weaken: { icon: <TrendingDown size={10} />, label: "Weakened", color: "bg-red-900/60 text-red-300 border-red-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Damage` },
-                    blind: { icon: <EyeOff size={10} />, label: "Blinded", color: "bg-purple-900/60 text-purple-300 border-purple-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
-                    disable: { icon: <Ban size={10} />, label: "Disabled", color: "bg-rose-900/60 text-rose-300 border-rose-700/50", desc: "Cannot Attack" },
-                  };
-                  const info = debuffInfo[debuff.type];
-                  return (
-                    <div key={i} className={`flex items-center gap-1 px-2 py-1 rounded border text-[9px] ${info.color}`}>
-                      {info.icon}
-                      <span className="font-medium">{info.desc}</span>
-                      <span className="opacity-60">({remaining}s)</span>
+            <>
+              {/* Prominent disable banner */}
+              {disableDebuff && (() => {
+                const flavor = ((disableDebuff as typeof disableDebuff & { disableFlavor?: string }).disableFlavor || 'stun') as keyof typeof disableThemes;
+                const theme = disableThemes[flavor] || disableThemes.stun;
+                const remaining = Math.max(0, (disableDebuff.until - Date.now()) / 1000);
+                const abilityName = (disableDebuff as typeof disableDebuff & { abilityName?: string }).abilityName;
+                return (
+                  <div className={`mb-2 p-2.5 rounded-lg border-2 ${theme.bgClass} ${theme.borderClass}`}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className={`flex items-center gap-2 ${theme.headerColor}`}>
+                        <div className="animate-pulse">{theme.icon}</div>
+                        <div>
+                          <div className="text-[11px] font-black tracking-wider">{theme.label}</div>
+                          {abilityName && <div className="text-[8px] opacity-60">{abilityName}</div>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-white/90 font-mono font-bold tabular-nums">
+                        <Timer size={12} className="opacity-70" />
+                        <span>{remaining.toFixed(1)}s</span>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                    <div className="w-full h-1.5 rounded-full bg-black/50 overflow-hidden mb-1.5">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(100, remaining / 5 * 100)}%`,
+                          background: theme.barGradient,
+                          transition: 'width 0.15s linear',
+                        }}
+                      />
+                    </div>
+                    <div className={`flex items-center justify-center gap-1 text-[9px] px-2 py-1 rounded border ${theme.tagClass}`}>
+                      <Ban size={9} />
+                      <span className="font-medium">Tower cannot attack or function</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Other debuffs */}
+              {consolidatedDebuffs.size > 0 && (
+                <div className="mb-2 p-1.5 bg-gradient-to-r from-red-950/70 to-rose-950/70 rounded-lg border border-red-600/50">
+                  <div className="flex items-center justify-center gap-2 mb-1.5">
+                    <AlertTriangle size={12} className="text-red-400 animate-pulse" />
+                    <span className="text-[9px] text-red-300 font-bold">DEBUFFED</span>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-1">
+                    {Array.from(consolidatedDebuffs.values()).map((debuff, i) => {
+                      const remaining = Math.ceil((debuff.until - Date.now()) / 1000);
+                      const debuffInfo: Record<string, { icon: React.ReactNode; label: string; color: string; desc: string }> = {
+                        slow: { icon: <Timer size={10} />, label: "Slowed", color: "bg-blue-900/60 text-blue-300 border-blue-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Atk Spd` },
+                        weaken: { icon: <TrendingDown size={10} />, label: "Weakened", color: "bg-red-900/60 text-red-300 border-red-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Damage` },
+                        blind: { icon: <EyeOff size={10} />, label: "Blinded", color: "bg-purple-900/60 text-purple-300 border-purple-700/50", desc: `-${Math.round(debuff.intensity * 100)}% Range` },
+                      };
+                      const info = debuffInfo[debuff.type];
+                      if (!info) return null;
+                      return (
+                        <div key={i} className={`flex items-center gap-1 px-2 py-1 rounded border text-[9px] ${info.color}`}>
+                          {info.icon}
+                          <span className="font-medium">{info.desc}</span>
+                          <span className="opacity-60">({remaining}s)</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
           );
         })()}
 
