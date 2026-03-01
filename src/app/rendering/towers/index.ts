@@ -12729,6 +12729,60 @@ function renderArchTower(
     zoom,
   );
 
+  // 3D stone block details with glowing mortar on sub-building faces
+  const mortarGlow =
+    0.12 + Math.sin(time * 1.5) * 0.06 + attackPulse * 0.15;
+  ctx.strokeStyle = `rgba(${glowColor}, ${mortarGlow})`;
+  ctx.lineWidth = 0.8 * zoom;
+  const sbHalfW = (subBuildingWidth - 6) * zoom * 0.45;
+  const sbDepthOff = (baseDepth + 22) * zoom * 0.12;
+  const sbBaseY = screenPos.y + 2 * zoom + subBounce;
+  const sbBaseX = screenPos.x + foundationShift * 0.4 + subShift;
+  for (let row = 0; row < 3; row++) {
+    const my = sbBaseY + row * 5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sbBaseX - sbHalfW, my);
+    ctx.lineTo(sbBaseX, my + sbDepthOff);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(sbBaseX, my + sbDepthOff);
+    ctx.lineTo(sbBaseX + sbHalfW, my);
+    ctx.stroke();
+  }
+  // Staggered vertical mortar joints
+  for (let row = 0; row < 3; row++) {
+    const my = sbBaseY + row * 5 * zoom;
+    const stagger = row % 2 === 0 ? 0 : 0.5;
+    for (let col = 1; col < 4; col++) {
+      const t = (col + stagger) / 5;
+      const jx = sbBaseX - sbHalfW + t * sbHalfW;
+      const jy = my + t * sbDepthOff;
+      ctx.beginPath();
+      ctx.moveTo(jx, jy);
+      ctx.lineTo(jx, jy + 5 * zoom);
+      ctx.stroke();
+    }
+  }
+
+  // Moss/weathering patches on foundation
+  ctx.fillStyle = `rgba(55, 110, 45, ${0.1 + Math.sin(time * 0.4) * 0.03})`;
+  for (let i = 0; i < 4; i++) {
+    const mx =
+      sbBaseX + (i - 1.5) * 16 * zoom + Math.sin(i * 2.7) * 4 * zoom;
+    const my = sbBaseY + 8 * zoom + Math.cos(i * 1.9) * 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      mx,
+      my,
+      (2.5 + Math.sin(i * 3.1)) * zoom,
+      (1.2 + Math.cos(i * 2.3) * 0.5) * zoom,
+      i * 0.5,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
   // Mystical wall runes on sub-building
   const wallRunes = ["ᛟ", "ᛞ", "ᛒ", "ᛖ"];
   const wallRuneGlow = 0.4 + Math.sin(time * 2.5) * 0.2 + attackPulse * 0.5;
@@ -12972,6 +13026,52 @@ function renderArchTower(
     ctx.stroke();
   }
 
+  // Vertical fluting grooves on left pillar
+  const leftPX = pillarX + pillarBounce * 0.5;
+  for (let f = 0; f < 4; f++) {
+    const fluteX = leftPX - pw * 0.6 + f * pw * 0.4;
+    const fluteTop = screenPos.y - 30 * zoom - pillarBounce;
+    const fluteBot =
+      screenPos.y - 30 * zoom - pillarBounce - pillarHeight * zoom * 0.85;
+    ctx.strokeStyle = "rgba(100, 85, 70, 0.45)";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(fluteX, fluteTop);
+    ctx.lineTo(fluteX, fluteBot);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(200, 185, 165, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(fluteX + 1 * zoom, fluteTop);
+    ctx.lineTo(fluteX + 1 * zoom, fluteBot);
+    ctx.stroke();
+  }
+
+  // Chamfered edge highlights on left pillar
+  ctx.strokeStyle = "rgba(220, 208, 190, 0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(leftPX - pw * 0.9, screenPos.y - 30 * zoom - pillarBounce);
+  ctx.lineTo(
+    leftPX - pw * 0.9,
+    screenPos.y -
+      30 * zoom -
+      pillarBounce -
+      pillarHeight * zoom * 0.9,
+  );
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(80, 65, 50, 0.3)";
+  ctx.beginPath();
+  ctx.moveTo(leftPX + pw * 0.9, screenPos.y - 30 * zoom - pillarBounce);
+  ctx.lineTo(
+    leftPX + pw * 0.9,
+    screenPos.y -
+      30 * zoom -
+      pillarBounce -
+      pillarHeight * zoom * 0.9,
+  );
+  ctx.stroke();
+
   // Left pillar glowing runes
   const pillarRunes = ["ᚦ", "ᚨ", "ᚾ", "ᛊ"];
   const pillarRuneGlow = 0.5 + Math.sin(time * 3) * 0.25 + attackPulse * 0.6;
@@ -12987,36 +13087,70 @@ function renderArchTower(
   }
   ctx.shadowBlur = 0;
 
-  // Pillar capital on left pillar (smaller, properly scaled)
+  // Pillar capital on left pillar - ornate Ionic style with 3D depth
   const capitalY = screenPos.y - 24 * zoom - pillarHeight * zoom - pillarBounce;
-  const capW = 8 * zoom; // Capital half-width
+  const capW = 8 * zoom;
+  const lcX = pillarX + pillarBounce * 0.5;
+
+  // Abacus (top slab) front face
   ctx.fillStyle = "#d8c8b0";
   ctx.beginPath();
-  ctx.moveTo(pillarX + pillarBounce * 0.5 - capW * 1.1, capitalY + 4 * zoom);
-  ctx.lineTo(pillarX + pillarBounce * 0.5 - capW * 0.8, capitalY - 2 * zoom);
-  ctx.lineTo(pillarX + pillarBounce * 0.5 + capW * 0.8, capitalY - 2 * zoom);
-  ctx.lineTo(pillarX + pillarBounce * 0.5 + capW * 1.1, capitalY + 4 * zoom);
+  ctx.moveTo(lcX - capW * 1.2, capitalY - 1 * zoom);
+  ctx.lineTo(lcX - capW * 1.0, capitalY - 4 * zoom);
+  ctx.lineTo(lcX + capW * 1.0, capitalY - 4 * zoom);
+  ctx.lineTo(lcX + capW * 1.2, capitalY - 1 * zoom);
   ctx.closePath();
   ctx.fill();
 
-  // Capital decorative scrollwork
-  ctx.strokeStyle = "#a89878";
-  ctx.lineWidth = 1 * zoom;
+  // Abacus right side face (3D depth)
+  ctx.fillStyle = "#c0b098";
   ctx.beginPath();
-  ctx.moveTo(pillarX + pillarBounce * 0.5 - capW * 0.9, capitalY + 1 * zoom);
-  ctx.quadraticCurveTo(
-    pillarX + pillarBounce * 0.5 - capW * 0.45,
-    capitalY - 1 * zoom,
-    pillarX + pillarBounce * 0.5,
-    capitalY + 1 * zoom,
-  );
-  ctx.quadraticCurveTo(
-    pillarX + pillarBounce * 0.5 + capW * 0.45,
-    capitalY - 1 * zoom,
-    pillarX + pillarBounce * 0.5 + capW * 0.9,
-    capitalY + 1 * zoom,
-  );
-  ctx.stroke();
+  ctx.moveTo(lcX + capW * 1.0, capitalY - 4 * zoom);
+  ctx.lineTo(lcX + capW * 1.2, capitalY - 1 * zoom);
+  ctx.lineTo(lcX + capW * 1.2, capitalY + 1 * zoom);
+  ctx.lineTo(lcX + capW * 1.0, capitalY - 2 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Echinus curved molding beneath abacus
+  ctx.fillStyle = "#d0c0a8";
+  ctx.beginPath();
+  ctx.moveTo(lcX - capW * 1.1, capitalY + 1 * zoom);
+  ctx.quadraticCurveTo(lcX - capW * 0.5, capitalY + 4 * zoom, lcX, capitalY + 1.5 * zoom);
+  ctx.quadraticCurveTo(lcX + capW * 0.5, capitalY + 4 * zoom, lcX + capW * 1.1, capitalY + 1 * zoom);
+  ctx.lineTo(lcX + capW * 1.0, capitalY - 1 * zoom);
+  ctx.lineTo(lcX - capW * 1.0, capitalY - 1 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Volute scrolls (spiral ornaments on sides)
+  for (const vSide of [-1, 1]) {
+    const vx = lcX + vSide * capW * 1.0;
+    const vy = capitalY + 1.5 * zoom;
+    ctx.strokeStyle = "#a89878";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    for (let s = 0; s <= 12; s++) {
+      const spiralA = (s / 12) * Math.PI * 2.5 + (vSide > 0 ? 0 : Math.PI);
+      const spiralRad = (3 - s * 0.2) * zoom;
+      const sx = vx + Math.cos(spiralA) * spiralRad * vSide;
+      const sy = vy + Math.sin(spiralA) * spiralRad * 0.6;
+      if (s === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+  }
+
+  // Egg-and-dart molding detail
+  ctx.strokeStyle = "#a89878";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let e = 0; e < 5; e++) {
+    const ex = lcX + (e - 2) * capW * 0.38;
+    const ey = capitalY;
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, 1.2 * zoom, 1.8 * zoom, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 
   // Right pillar
   drawIsometricPrism(
@@ -13056,6 +13190,52 @@ function renderArchTower(
     ctx.stroke();
   }
 
+  // Vertical fluting grooves on right pillar
+  const rightPX = pillarXR - pillarBounce * 0.5;
+  for (let f = 0; f < 4; f++) {
+    const fluteX = rightPX - pw * 0.6 + f * pw * 0.4;
+    const fluteTop = screenPos.y - 30 * zoom - pillarBounce;
+    const fluteBot =
+      screenPos.y - 30 * zoom - pillarBounce - pillarHeight * zoom * 0.85;
+    ctx.strokeStyle = "rgba(100, 85, 70, 0.45)";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(fluteX, fluteTop);
+    ctx.lineTo(fluteX, fluteBot);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(200, 185, 165, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(fluteX + 1 * zoom, fluteTop);
+    ctx.lineTo(fluteX + 1 * zoom, fluteBot);
+    ctx.stroke();
+  }
+
+  // Chamfered edge highlights on right pillar
+  ctx.strokeStyle = "rgba(220, 208, 190, 0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(rightPX - pw * 0.9, screenPos.y - 30 * zoom - pillarBounce);
+  ctx.lineTo(
+    rightPX - pw * 0.9,
+    screenPos.y -
+      30 * zoom -
+      pillarBounce -
+      pillarHeight * zoom * 0.9,
+  );
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(80, 65, 50, 0.3)";
+  ctx.beginPath();
+  ctx.moveTo(rightPX + pw * 0.9, screenPos.y - 30 * zoom - pillarBounce);
+  ctx.lineTo(
+    rightPX + pw * 0.9,
+    screenPos.y -
+      30 * zoom -
+      pillarBounce -
+      pillarHeight * zoom * 0.9,
+  );
+  ctx.stroke();
+
   // Right pillar glowing runes
   ctx.fillStyle = `rgba(${glowColor}, ${pillarRuneGlow})`;
   ctx.shadowColor = `rgb(${glowColor})`;
@@ -13071,33 +13251,68 @@ function renderArchTower(
   }
   ctx.shadowBlur = 0;
 
-  // Pillar capital on right pillar (matches left pillar)
+  // Pillar capital on right pillar - ornate Ionic style with 3D depth
+  const rcX = pillarXR - pillarBounce * 0.5;
+
+  // Abacus front face
   ctx.fillStyle = "#d8c8b0";
   ctx.beginPath();
-  ctx.moveTo(pillarXR - pillarBounce * 0.5 - capW * 1.1, capitalY + 4 * zoom);
-  ctx.lineTo(pillarXR - pillarBounce * 0.5 - capW * 0.9, capitalY - 2 * zoom);
-  ctx.lineTo(pillarXR - pillarBounce * 0.5 + capW * 0.9, capitalY - 2 * zoom);
-  ctx.lineTo(pillarXR - pillarBounce * 0.5 + capW * 1.1, capitalY + 4 * zoom);
+  ctx.moveTo(rcX - capW * 1.2, capitalY - 1 * zoom);
+  ctx.lineTo(rcX - capW * 1.0, capitalY - 4 * zoom);
+  ctx.lineTo(rcX + capW * 1.0, capitalY - 4 * zoom);
+  ctx.lineTo(rcX + capW * 1.2, capitalY - 1 * zoom);
   ctx.closePath();
   ctx.fill();
 
-  // Capital decorative scrollwork
-  ctx.strokeStyle = "#a89878";
+  // Abacus right side face
+  ctx.fillStyle = "#c0b098";
   ctx.beginPath();
-  ctx.moveTo(pillarXR - pillarBounce * 0.5 - capW * 0.9, capitalY + 1 * zoom);
-  ctx.quadraticCurveTo(
-    pillarXR - pillarBounce * 0.5 - capW * 0.45,
-    capitalY - 1 * zoom,
-    pillarXR - pillarBounce * 0.5,
-    capitalY + 1 * zoom,
-  );
-  ctx.quadraticCurveTo(
-    pillarXR - pillarBounce * 0.5 + capW * 0.45,
-    capitalY - 1 * zoom,
-    pillarXR - pillarBounce * 0.5 + capW * 0.9,
-    capitalY + 1 * zoom,
-  );
-  ctx.stroke();
+  ctx.moveTo(rcX + capW * 1.0, capitalY - 4 * zoom);
+  ctx.lineTo(rcX + capW * 1.2, capitalY - 1 * zoom);
+  ctx.lineTo(rcX + capW * 1.2, capitalY + 1 * zoom);
+  ctx.lineTo(rcX + capW * 1.0, capitalY - 2 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Echinus curved molding
+  ctx.fillStyle = "#d0c0a8";
+  ctx.beginPath();
+  ctx.moveTo(rcX - capW * 1.1, capitalY + 1 * zoom);
+  ctx.quadraticCurveTo(rcX - capW * 0.5, capitalY + 4 * zoom, rcX, capitalY + 1.5 * zoom);
+  ctx.quadraticCurveTo(rcX + capW * 0.5, capitalY + 4 * zoom, rcX + capW * 1.1, capitalY + 1 * zoom);
+  ctx.lineTo(rcX + capW * 1.0, capitalY - 1 * zoom);
+  ctx.lineTo(rcX - capW * 1.0, capitalY - 1 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Volute scrolls
+  for (const vSide of [-1, 1]) {
+    const vx = rcX + vSide * capW * 1.0;
+    const vy = capitalY + 1.5 * zoom;
+    ctx.strokeStyle = "#a89878";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    for (let s = 0; s <= 12; s++) {
+      const spiralA = (s / 12) * Math.PI * 2.5 + (vSide > 0 ? 0 : Math.PI);
+      const spiralRad = (3 - s * 0.2) * zoom;
+      const sx = vx + Math.cos(spiralA) * spiralRad * vSide;
+      const sy = vy + Math.sin(spiralA) * spiralRad * 0.6;
+      if (s === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+  }
+
+  // Egg-and-dart molding detail
+  ctx.strokeStyle = "#a89878";
+  ctx.lineWidth = 0.8 * zoom;
+  for (let e = 0; e < 5; e++) {
+    const ex = rcX + (e - 2) * capW * 0.38;
+    const ey = capitalY;
+    ctx.beginPath();
+    ctx.ellipse(ex, ey, 1.2 * zoom, 1.8 * zoom, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
 
   // Glowing energy strips on pillars
   for (const p of [
@@ -13313,7 +13528,7 @@ function renderArchTower(
     }
   }
 
-  // === ARCH STRUCTURE ===
+  // === ARCH STRUCTURE WITH 3D VAULT ===
   const archTopY =
     screenPos.y -
     24 * zoom -
@@ -13323,64 +13538,218 @@ function renderArchTower(
     archLift -
     pillarBounce;
   const archCenterY = archTopY + 8 * zoom;
+  const archLeftX = pillarX + pillarBounce * 0.5;
+  const archRightX = pillarXR - pillarBounce * 0.5;
+  const archMidX = (archLeftX + archRightX) / 2;
+  const archSpan = archRightX - archLeftX;
+  const archDepth = 6 * zoom;
+  const archCurveSteps = 24;
+  const outerR = archSpan * 0.52;
+  const innerR = archSpan * 0.42;
 
-  // Outer arch structure
-  ctx.strokeStyle = "#a89880";
-  ctx.lineWidth = (14 + attackPulse * 4) * zoom;
-  ctx.lineCap = "round";
+  // Inner vault surface (dark recessed tunnel visible through arch)
+  ctx.fillStyle = "#4a3a2a";
   ctx.beginPath();
-  ctx.moveTo(pillarX + pillarBounce * 0.5, archTopY + 8 * zoom);
-  ctx.quadraticCurveTo(
-    screenPos.x + archVibrate,
-    archTopY - 28 * zoom - archLift,
-    pillarXR - pillarBounce * 0.5,
-    archTopY + 8 * zoom,
-  );
-  ctx.stroke();
+  for (let i = 0; i <= archCurveSteps; i++) {
+    const t = i / archCurveSteps;
+    const angle = Math.PI * (1 - t);
+    const ix = archMidX + archVibrate + Math.cos(angle) * innerR;
+    const iy =
+      archTopY -
+      archLift +
+      6 * zoom -
+      Math.sin(angle) * innerR * 0.7 +
+      archDepth;
+    if (i === 0) ctx.moveTo(ix, iy);
+    else ctx.lineTo(ix, iy);
+  }
+  ctx.lineTo(archLeftX, archTopY + 6 * zoom + archDepth);
+  ctx.closePath();
+  ctx.fill();
 
-  // Inner arch
-  ctx.strokeStyle = "#c8b8a0";
-  ctx.lineWidth = (10 + attackPulse * 2) * zoom;
+  // Vault depth gradient (darker deeper into tunnel)
+  const vaultGrad = ctx.createLinearGradient(
+    archMidX,
+    archTopY - archLift - innerR * 0.6,
+    archMidX,
+    archTopY + 6 * zoom + archDepth,
+  );
+  vaultGrad.addColorStop(0, "rgba(20, 12, 6, 0.7)");
+  vaultGrad.addColorStop(0.6, "rgba(40, 30, 20, 0.35)");
+  vaultGrad.addColorStop(1, "rgba(60, 50, 40, 0.1)");
+  ctx.fillStyle = vaultGrad;
   ctx.beginPath();
-  ctx.moveTo(pillarX + pillarBounce * 0.5, archTopY + 6 * zoom);
-  ctx.quadraticCurveTo(
-    screenPos.x + archVibrate,
-    archTopY - 18 * zoom - archLift,
-    pillarXR - pillarBounce * 0.5,
-    archTopY + 6 * zoom,
-  );
-  ctx.stroke();
+  for (let i = 0; i <= archCurveSteps; i++) {
+    const t = i / archCurveSteps;
+    const angle = Math.PI * (1 - t);
+    const ix = archMidX + archVibrate + Math.cos(angle) * innerR;
+    const iy =
+      archTopY -
+      archLift +
+      6 * zoom -
+      Math.sin(angle) * innerR * 0.7 +
+      archDepth;
+    if (i === 0) ctx.moveTo(ix, iy);
+    else ctx.lineTo(ix, iy);
+  }
+  ctx.lineTo(archLeftX, archTopY + 6 * zoom + archDepth);
+  ctx.closePath();
+  ctx.fill();
 
-  // Arch rune carvings
+  // Front face of arch (filled stone band between outer and inner curves)
+  ctx.fillStyle = "#a89880";
+  ctx.beginPath();
+  for (let i = 0; i <= archCurveSteps; i++) {
+    const t = i / archCurveSteps;
+    const angle = Math.PI * (1 - t);
+    const ox = archMidX + archVibrate + Math.cos(angle) * outerR;
+    const oy =
+      archTopY - archLift + 6 * zoom - Math.sin(angle) * outerR * 0.7;
+    if (i === 0) ctx.moveTo(ox, oy);
+    else ctx.lineTo(ox, oy);
+  }
+  for (let i = archCurveSteps; i >= 0; i--) {
+    const t = i / archCurveSteps;
+    const angle = Math.PI * (1 - t);
+    const ix = archMidX + archVibrate + Math.cos(angle) * innerR;
+    const iy =
+      archTopY - archLift + 6 * zoom - Math.sin(angle) * innerR * 0.7;
+    ctx.lineTo(ix, iy);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Voussoir stones with alternating shade and glowing mortar joints
+  const voussoirCount = 9;
+  for (let v = 0; v < voussoirCount; v++) {
+    const t0 = v / voussoirCount;
+    const t1 = (v + 1) / voussoirCount;
+    const a0 = Math.PI * (1 - t0);
+    const a1 = Math.PI * (1 - t1);
+    const shade = v % 2 === 0 ? 0 : 15;
+
+    ctx.fillStyle = `rgb(${168 + shade}, ${152 + shade}, ${128 + shade})`;
+    ctx.beginPath();
+    ctx.moveTo(
+      archMidX + archVibrate + Math.cos(a0) * outerR,
+      archTopY - archLift + 6 * zoom - Math.sin(a0) * outerR * 0.7,
+    );
+    ctx.lineTo(
+      archMidX + archVibrate + Math.cos(a1) * outerR,
+      archTopY - archLift + 6 * zoom - Math.sin(a1) * outerR * 0.7,
+    );
+    ctx.lineTo(
+      archMidX + archVibrate + Math.cos(a1) * innerR,
+      archTopY - archLift + 6 * zoom - Math.sin(a1) * innerR * 0.7,
+    );
+    ctx.lineTo(
+      archMidX + archVibrate + Math.cos(a0) * innerR,
+      archTopY - archLift + 6 * zoom - Math.sin(a0) * innerR * 0.7,
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing mortar joint between voussoirs
+    const mortarAlpha =
+      0.12 + Math.sin(time * 2 + v * 0.7) * 0.08 + attackPulse * 0.25;
+    ctx.strokeStyle = `rgba(${glowColor}, ${mortarAlpha})`;
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(
+      archMidX + archVibrate + Math.cos(a0) * outerR,
+      archTopY - archLift + 6 * zoom - Math.sin(a0) * outerR * 0.7,
+    );
+    ctx.lineTo(
+      archMidX + archVibrate + Math.cos(a0) * innerR,
+      archTopY - archLift + 6 * zoom - Math.sin(a0) * innerR * 0.7,
+    );
+    ctx.stroke();
+
+    // 3D soffit face (visible underside depth of each voussoir)
+    const midA = (a0 + a1) / 2;
+    if (Math.sin(midA) > 0.2) {
+      const depthFactor = 0.3 + Math.sin(midA) * 0.6;
+      ctx.fillStyle = `rgb(${138 + shade}, ${122 + shade}, ${98 + shade})`;
+      ctx.beginPath();
+      ctx.moveTo(
+        archMidX + archVibrate + Math.cos(a0) * innerR,
+        archTopY - archLift + 6 * zoom - Math.sin(a0) * innerR * 0.7,
+      );
+      ctx.lineTo(
+        archMidX + archVibrate + Math.cos(a1) * innerR,
+        archTopY - archLift + 6 * zoom - Math.sin(a1) * innerR * 0.7,
+      );
+      ctx.lineTo(
+        archMidX + archVibrate + Math.cos(a1) * innerR,
+        archTopY -
+          archLift +
+          6 * zoom -
+          Math.sin(a1) * innerR * 0.7 +
+          archDepth * depthFactor,
+      );
+      ctx.lineTo(
+        archMidX + archVibrate + Math.cos(a0) * innerR,
+        archTopY -
+          archLift +
+          6 * zoom -
+          Math.sin(a0) * innerR * 0.7 +
+          archDepth * depthFactor,
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Arch rune carvings on voussoir faces
   const archRuneGlow = 0.5 + Math.sin(time * 3) * 0.2 + attackPulse * 0.5;
   ctx.fillStyle = `rgba(${glowColor}, ${archRuneGlow})`;
   ctx.shadowColor = `rgb(${glowColor})`;
   ctx.shadowBlur = 4 * zoom;
   ctx.font = `${7 * zoom}px serif`;
+  ctx.textAlign = "center";
   const archRunes = ["ᚡ", "ᚢ", "ᚣ", "ᚤ", "ᚥ"];
   for (let i = 0; i < 5; i++) {
     const runeT = (i + 0.5) / 5;
     const runeAngle = Math.PI * (1 - runeT);
-    const runeX = screenPos.x + archVibrate + Math.cos(runeAngle) * 28 * zoom;
+    const midRad = (outerR + innerR) / 2;
+    const runeX = archMidX + archVibrate + Math.cos(runeAngle) * midRad;
     const runeY =
-      archTopY - 8 * zoom - archLift + Math.sin(runeAngle) * 14 * zoom;
+      archTopY - archLift + 6 * zoom - Math.sin(runeAngle) * midRad * 0.7;
     ctx.fillText(archRunes[i], runeX, runeY);
   }
   ctx.shadowBlur = 0;
 
-  // Energy conduit along arch
+  // Energy conduit along inner arch curve
   const conduitGlow = 0.5 + Math.sin(time * 5) * 0.3 + attackPulse * 1.5;
   ctx.strokeStyle = `rgba(${glowColor}, ${conduitGlow})`;
   ctx.lineWidth = (2 + attackPulse * 3) * zoom;
   ctx.beginPath();
-  ctx.moveTo(pillarX + pillarBounce * 0.5, archTopY + 4 * zoom);
-  ctx.quadraticCurveTo(
-    screenPos.x + archVibrate,
-    archTopY - 16 * zoom - archLift,
-    pillarXR - pillarBounce * 0.5,
-    archTopY + 4 * zoom,
-  );
+  for (let i = 0; i <= archCurveSteps; i++) {
+    const t = i / archCurveSteps;
+    const angle = Math.PI * (1 - t);
+    const ix = archMidX + archVibrate + Math.cos(angle) * innerR;
+    const iy =
+      archTopY - archLift + 6 * zoom - Math.sin(angle) * innerR * 0.7;
+    if (i === 0) ctx.moveTo(ix, iy);
+    else ctx.lineTo(ix, iy);
+  }
   ctx.stroke();
+
+  // Flowing energy particles along arch conduit
+  for (let p = 0; p < 5; p++) {
+    const pPhase = (time * 1.5 + p * 0.2) % 1;
+    const pAngle = Math.PI * (1 - pPhase);
+    const px = archMidX + archVibrate + Math.cos(pAngle) * innerR;
+    const py =
+      archTopY - archLift + 6 * zoom - Math.sin(pAngle) * innerR * 0.7;
+    ctx.fillStyle = `rgba(${glowColor}, ${0.6 + Math.sin(time * 8 + p) * 0.3})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(px, py, (2 + attackPulse * 2) * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
 
   // Keystone with mystical core
   const keystoneY = archTopY - archLift;
@@ -13436,6 +13805,196 @@ function renderArchTower(
   ctx.fillText("ᛉ", screenPos.x + archVibrate, keystoneY - 12 * zoom);
   ctx.shadowBlur = 0;
 
+  // === ANIMATED MYSTICAL ELEMENTS ===
+
+  // Oscillating runic rings around the arch opening
+  for (let ring = 0; ring < 3; ring++) {
+    const ringPhaseOff = ring * ((Math.PI * 2) / 3);
+    const ringTilt = Math.sin(time * 1.2 + ringPhaseOff) * 0.4;
+    const ringRadius = (16 + ring * 6) * zoom + portalExpand * 0.3;
+    const ringAlpha =
+      0.25 + Math.sin(time * 2.5 + ring) * 0.12 + attackPulse * 0.3;
+
+    ctx.strokeStyle = `rgba(${glowColor}, ${ringAlpha})`;
+    ctx.lineWidth = (1.5 - ring * 0.3) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      archMidX + archVibrate,
+      archCenterY,
+      ringRadius,
+      ringRadius * (0.35 + ringTilt * 0.15),
+      time * (0.8 + ring * 0.3) + ringPhaseOff,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+
+    // Small rune symbols orbiting on each ring
+    const ringRuneSymbols = ["ᛏ", "ᛒ", "ᛖ", "ᛗ"];
+    for (let r = 0; r < 4; r++) {
+      const symAngle =
+        time * (0.8 + ring * 0.3) + ringPhaseOff + (r / 4) * Math.PI * 2;
+      const symX = archMidX + archVibrate + Math.cos(symAngle) * ringRadius;
+      const symY =
+        archCenterY +
+        Math.sin(symAngle) * ringRadius * (0.35 + ringTilt * 0.15);
+      ctx.fillStyle = `rgba(${glowColor}, ${ringAlpha + 0.1})`;
+      ctx.font = `${(4 + ring) * zoom}px serif`;
+      ctx.textAlign = "center";
+      ctx.fillText(ringRuneSymbols[r], symX, symY);
+    }
+  }
+
+  // Arcane clockwork gears visible in archway
+  for (let gear = 0; gear < 2; gear++) {
+    const gearSide = gear === 0 ? -1 : 1;
+    const gearX = archMidX + archVibrate + gearSide * 14 * zoom;
+    const gearY = archCenterY - 12 * zoom;
+    const gearRadius = (6 + gear * 2) * zoom;
+    const gearRotation = time * (2 + gear) * gearSide;
+    const gearAlpha =
+      0.25 + Math.sin(time * 3 + gear * 2) * 0.1 + attackPulse * 0.2;
+    const gearTeeth = 8;
+
+    ctx.strokeStyle = `rgba(${glowColor}, ${gearAlpha})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    for (let t = 0; t <= gearTeeth * 2; t++) {
+      const toothAngle =
+        gearRotation + (t / (gearTeeth * 2)) * Math.PI * 2;
+      const toothR = t % 2 === 0 ? gearRadius : gearRadius * 0.75;
+      const tx = gearX + Math.cos(toothAngle) * toothR;
+      const ty = gearY + Math.sin(toothAngle) * toothR * 0.5;
+      if (t === 0) ctx.moveTo(tx, ty);
+      else ctx.lineTo(tx, ty);
+    }
+    ctx.closePath();
+    ctx.stroke();
+
+    // Gear center hub
+    ctx.fillStyle = `rgba(${glowColor}, ${gearAlpha + 0.1})`;
+    ctx.beginPath();
+    ctx.ellipse(gearX, gearY, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Gear spokes
+    for (let s = 0; s < 4; s++) {
+      const spokeAngle = gearRotation + (s / 4) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(gearX, gearY);
+      ctx.lineTo(
+        gearX + Math.cos(spokeAngle) * gearRadius * 0.7,
+        gearY + Math.sin(spokeAngle) * gearRadius * 0.35,
+      );
+      ctx.stroke();
+    }
+  }
+
+  // Pendulum swinging in center of archway
+  const pendulumAngle = Math.sin(time * 2.5) * 0.4;
+  const pendulumLen = 18 * zoom;
+  const pendulumPivotY = archTopY - archLift + 2 * zoom;
+  const pendulumBobX =
+    archMidX + archVibrate + Math.sin(pendulumAngle) * pendulumLen;
+  const pendulumBobY =
+    pendulumPivotY + Math.cos(pendulumAngle) * pendulumLen;
+  const pendulumAlpha = 0.35 + attackPulse * 0.25;
+
+  ctx.strokeStyle = `rgba(${glowColor}, ${pendulumAlpha})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(archMidX + archVibrate, pendulumPivotY);
+  ctx.lineTo(pendulumBobX, pendulumBobY);
+  ctx.stroke();
+
+  ctx.fillStyle = `rgba(${glowColor}, ${pendulumAlpha + 0.15})`;
+  ctx.shadowColor = `rgb(${glowColor})`;
+  ctx.shadowBlur = 6 * zoom;
+  ctx.beginPath();
+  ctx.arc(pendulumBobX, pendulumBobY, 3 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Floating stone fragments orbiting during attacks
+  if (attackPulse > 0.05) {
+    for (let frag = 0; frag < 6; frag++) {
+      const fragAngle = time * 4 + (frag / 6) * Math.PI * 2;
+      const fragRad = (20 + Math.sin(time * 3 + frag) * 8) * zoom;
+      const fragX = archMidX + Math.cos(fragAngle) * fragRad;
+      const fragY =
+        archCenterY +
+        Math.sin(fragAngle) * fragRad * 0.4 -
+        attackPulse * 10 * zoom;
+      const fragSize = (2 + Math.sin(frag * 1.7) * 1) * zoom;
+      const fragAlpha = attackPulse * 0.7;
+      const fragRotation = time * 6 + frag * 1.2;
+
+      ctx.save();
+      ctx.translate(fragX, fragY);
+      ctx.rotate(fragRotation);
+      ctx.fillStyle = `rgba(180, 165, 140, ${fragAlpha})`;
+      ctx.fillRect(
+        -fragSize,
+        -fragSize * 0.6,
+        fragSize * 2,
+        fragSize * 1.2,
+      );
+      ctx.fillStyle = `rgba(140, 125, 100, ${fragAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(fragSize, -fragSize * 0.6);
+      ctx.lineTo(fragSize + fragSize * 0.4, -fragSize * 0.3);
+      ctx.lineTo(fragSize + fragSize * 0.4, fragSize * 0.9);
+      ctx.lineTo(fragSize, fragSize * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // Resonance crystals that vibrate and rotate at arch springers
+  for (let cSide = -1; cSide <= 1; cSide += 2) {
+    const crystalBaseX = archMidX + archVibrate + cSide * innerR * 0.7;
+    const crystalBaseY = archTopY + 2 * zoom;
+    const crystalVibrate =
+      Math.sin(time * 12 + cSide * 3) * (1 + attackPulse * 3) * zoom;
+    const crystalAlpha =
+      0.5 + Math.sin(time * 4 + cSide) * 0.2 + attackPulse * 0.3;
+
+    ctx.save();
+    ctx.translate(crystalBaseX + crystalVibrate, crystalBaseY);
+    ctx.rotate(time * 1.5 * cSide * 0.1);
+
+    ctx.fillStyle = `rgba(${glowColor}, ${crystalAlpha * 0.6})`;
+    ctx.beginPath();
+    ctx.moveTo(0, -8 * zoom);
+    ctx.lineTo(-3 * zoom, -2 * zoom);
+    ctx.lineTo(-2 * zoom, 4 * zoom);
+    ctx.lineTo(2 * zoom, 4 * zoom);
+    ctx.lineTo(3 * zoom, -2 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crystal highlight face
+    ctx.fillStyle = `rgba(255, 255, 255, ${crystalAlpha * 0.3})`;
+    ctx.beginPath();
+    ctx.moveTo(0, -8 * zoom);
+    ctx.lineTo(3 * zoom, -2 * zoom);
+    ctx.lineTo(1 * zoom, -1 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crystal core glow
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = (8 + attackPulse * 10) * zoom;
+    ctx.fillStyle = `rgba(${glowColor}, ${crystalAlpha})`;
+    ctx.beginPath();
+    ctx.arc(0, -2 * zoom, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
   // === PORTAL EFFECT ===
   const glowIntensity = 0.5 + Math.sin(time * 3) * 0.3 + attackPulse;
   const portalSizeX = 22 * zoom + portalExpand;
@@ -13464,6 +14023,49 @@ function renderArchTower(
     Math.PI * 2,
   );
   ctx.fill();
+
+  // Dimensional depth rings (concentric ellipses receding into portal)
+  for (let dRing = 0; dRing < 5; dRing++) {
+    const depthFade = dRing / 5;
+    const depthAlpha = glowIntensity * (0.15 - depthFade * 0.025);
+    const depthScale = 1 - depthFade * 0.15;
+    const depthY = archCenterY + dRing * 1.5 * zoom;
+    ctx.strokeStyle = `rgba(${glowColor}, ${depthAlpha})`;
+    ctx.lineWidth = (1.5 - dRing * 0.2) * zoom;
+    ctx.beginPath();
+    ctx.ellipse(
+      screenPos.x,
+      depthY,
+      portalSizeX * depthScale,
+      portalSizeY * depthScale * 0.8,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+
+  // Dimensional ripple distortion waves
+  for (let ripple = 0; ripple < 3; ripple++) {
+    const ripplePhase = (time * 1.5 + ripple * 0.8) % 2;
+    const rippleScale = 0.3 + ripplePhase * 0.6;
+    const rippleAlpha = (1 - ripplePhase / 2) * 0.2 * glowIntensity;
+    if (rippleAlpha > 0.02) {
+      ctx.strokeStyle = `rgba(${glowColor}, ${rippleAlpha})`;
+      ctx.lineWidth = (2 - ripplePhase * 0.8) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        screenPos.x,
+        archCenterY,
+        portalSizeX * rippleScale,
+        portalSizeY * rippleScale,
+        ripple * 0.3,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
 
   // Swirling vortex
   const vortexSpeed = time * 3;
