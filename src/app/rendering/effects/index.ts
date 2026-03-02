@@ -209,28 +209,57 @@ export function renderEffect(
         );
 
         if (effect.type === "flame_burst") {
-          // Flame effect
-          const flameGrad = ctx.createRadialGradient(
-            screenPos.x,
-            screenPos.y,
-            0,
-            screenPos.x,
-            screenPos.y,
-            30 * zoom,
-          );
-          flameGrad.addColorStop(0, `rgba(255, 200, 50, ${alpha})`);
-          flameGrad.addColorStop(0.5, `rgba(255, 100, 0, ${alpha * 0.7})`);
-          flameGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
-          ctx.fillStyle = flameGrad;
-          ctx.beginPath();
-          ctx.arc(
-            screenPos.x,
-            screenPos.y,
-            30 * zoom * (1 - progress * 0.5),
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
+          const fNow = Date.now();
+          const fDir = {
+            x: targetScreen.x - screenPos.x,
+            y: targetScreen.y - screenPos.y,
+          };
+          const fDist = Math.sqrt(fDir.x * fDir.x + fDir.y * fDir.y) || 1;
+          const fDirN = { x: fDir.x / fDist, y: fDir.y / fDist };
+          const fPerpN = { x: -fDirN.y, y: fDirN.x };
+
+          // Outer flame blobs
+          ctx.shadowColor = "#ff4400";
+          ctx.shadowBlur = 18 * zoom;
+          for (let fi = 0; fi < 8; fi++) {
+            const ft = Math.min(1, progress * 1.2 + fi * 0.04);
+            if (ft <= 0 || ft >= 1) continue;
+            const wobble =
+              Math.sin(fNow / 45 + fi * 1.5) * 6 * zoom * (0.3 + ft * 0.7);
+            const spread = 1 + ft * 1.5;
+            const fx = screenPos.x + fDir.x * ft + fPerpN.x * wobble * spread;
+            const fy = screenPos.y + fDir.y * ft + fPerpN.y * wobble * spread * 0.5;
+            const fr = (7 + ft * 5) * zoom * spread * 0.5;
+            const fg = Math.floor(255 - ft * 170);
+            const fb = Math.floor(80 - ft * 70);
+            const fa = alpha * (1 - ft * 0.6);
+            const fGr = ctx.createRadialGradient(fx, fy, 0, fx, fy, fr);
+            fGr.addColorStop(0, `rgba(255, ${fg}, ${fb}, ${fa})`);
+            fGr.addColorStop(0.5, `rgba(255, ${Math.max(0, fg - 80)}, 0, ${fa * 0.5})`);
+            fGr.addColorStop(1, `rgba(180, 20, 0, 0)`);
+            ctx.fillStyle = fGr;
+            ctx.beginPath();
+            ctx.arc(fx, fy, fr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Hot core
+          ctx.shadowColor = "#ffcc00";
+          ctx.shadowBlur = 10 * zoom;
+          for (let ci = 0; ci < 5; ci++) {
+            const ct = Math.min(1, progress * 1.2 + ci * 0.05);
+            if (ct <= 0 || ct >= 0.6) continue;
+            const cWob = Math.sin(fNow / 35 + ci * 2) * 2 * zoom * ct;
+            const cx = screenPos.x + fDir.x * ct + fPerpN.x * cWob;
+            const cy = screenPos.y + fDir.y * ct + fPerpN.y * cWob * 0.5;
+            const cr = (3 - ct * 3.5) * zoom;
+            const ca = alpha * (1 - ct / 0.6) * 0.85;
+            ctx.fillStyle = `rgba(255, 255, 230, ${ca})`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
         } else {
           // Tracer line
           ctx.strokeStyle =

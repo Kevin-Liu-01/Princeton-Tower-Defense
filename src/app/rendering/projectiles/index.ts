@@ -332,7 +332,7 @@ function renderSonicWave(
 }
 
 // ============================================================================
-// LIGHTNING ORB - Electric sphere
+// LIGHTNING ORB - Electric sphere with 3D layered lightning
 // ============================================================================
 function renderLightningOrb(
   ctx: CanvasRenderingContext2D,
@@ -341,48 +341,144 @@ function renderLightningOrb(
   baseColor: { r: number; g: number; b: number }
 ) {
   const coreSize = 5 * zoom;
-  
-  // Outer electric glow
+  const arcCount = 8;
+  const segCount = 4;
+
+  // Wide ambient corona
+  const coronaGrad = ctx.createRadialGradient(0, 0, coreSize * 0.5, 0, 0, coreSize * 3.5);
+  coronaGrad.addColorStop(0, colorWithAlpha(baseColor, 0.35));
+  coronaGrad.addColorStop(0.4, colorWithAlpha(baseColor, 0.12));
+  coronaGrad.addColorStop(0.7, colorWithAlpha(baseColor, 0.04));
+  coronaGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
+  ctx.fillStyle = coronaGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, coreSize * 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner glow halo
   const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreSize * 2);
-  glowGrad.addColorStop(0, colorWithAlpha(baseColor, 0.6));
-  glowGrad.addColorStop(0.6, colorWithAlpha(baseColor, 0.2));
+  glowGrad.addColorStop(0, colorWithAlpha(baseColor, 0.7));
+  glowGrad.addColorStop(0.5, colorWithAlpha(baseColor, 0.3));
   glowGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
   ctx.arc(0, 0, coreSize * 2, 0, Math.PI * 2);
   ctx.fill();
-  
-  // Electric arcs (simplified - no Math.random for consistent visuals)
-  ctx.strokeStyle = lightenColor(baseColor, 80);
-  ctx.lineWidth = 1.2 * zoom;
-  for (let i = 0; i < 4; i++) {
-    const arcAngle = (i / 4) * Math.PI * 2 + time * 8;
-    const arcLen = 7 * zoom;
-    
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    
-    // Zigzag path (deterministic based on i and time)
-    let x = 0, y = 0;
-    for (let j = 0; j < 2; j++) {
-      const jitter = Math.sin(time * 20 + i * 3 + j * 7) * 2 * zoom;
-      x += Math.cos(arcAngle) * (arcLen / 2) + jitter;
-      y += Math.sin(arcAngle) * (arcLen / 2) + jitter * 0.5;
-      ctx.lineTo(x, y);
+
+  // Multi-layered lightning arcs with branching
+  for (let i = 0; i < arcCount; i++) {
+    const baseAngle = (i / arcCount) * Math.PI * 2 + time * 8;
+    const arcLen = (8 + Math.sin(time * 15 + i * 5.3) * 3) * zoom;
+
+    const pts: { x: number; y: number }[] = [{ x: 0, y: 0 }];
+    for (let s = 1; s <= segCount; s++) {
+      const t = s / segCount;
+      const jAmp = (1 - t * 0.4) * 3 * zoom;
+      const jx = Math.sin(time * 22 + i * 4.1 + s * 6.7) * jAmp;
+      const jy = Math.cos(time * 18 + i * 3.3 + s * 8.1) * jAmp * 0.6;
+      pts.push({
+        x: Math.cos(baseAngle) * arcLen * t + jx,
+        y: Math.sin(baseAngle) * arcLen * t + jy,
+      });
     }
+
+    // Layer 1: wide blurry glow stroke
+    ctx.save();
+    ctx.shadowColor = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
+    ctx.shadowBlur = 8 * zoom;
+    ctx.strokeStyle = colorWithAlpha(baseColor, 0.25);
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    drawBoltPath(ctx, pts);
     ctx.stroke();
+    ctx.restore();
+
+    // Layer 2: bright core stroke
+    ctx.strokeStyle = lightenColor(baseColor, 60);
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    drawBoltPath(ctx, pts);
+    ctx.stroke();
+
+    // Layer 3: thin white-hot center
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 0.8 * zoom;
+    drawBoltPath(ctx, pts);
+    ctx.stroke();
+
+    // Bright node at bolt tip
+    const tip = pts[pts.length - 1];
+    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.beginPath();
+    ctx.arc(tip.x, tip.y, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sub-branch from middle of longer arcs
+    if (i % 2 === 0) {
+      const bIdx = Math.floor(segCount * 0.5);
+      const bp = pts[bIdx];
+      const bAngle = baseAngle + Math.sin(time * 12 + i * 2.7) * 1.0;
+      const bLen = arcLen * 0.4;
+      const bend = {
+        x: bp.x + Math.cos(bAngle) * bLen + Math.sin(time * 25 + i) * zoom,
+        y: bp.y + Math.sin(bAngle) * bLen * 0.7,
+      };
+      ctx.strokeStyle = colorWithAlpha(baseColor, 0.35);
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bp.x, bp.y);
+      ctx.lineTo(bend.x, bend.y);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bp.x, bp.y);
+      ctx.lineTo(bend.x, bend.y);
+      ctx.stroke();
+    }
   }
-  
-  // Core
-  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreSize);
+
+  // Plasma core with 3D highlight
+  ctx.save();
+  ctx.shadowColor = lightenColor(baseColor, 80);
+  ctx.shadowBlur = 12 * zoom;
+  const coreGrad = ctx.createRadialGradient(
+    -coreSize * 0.25, -coreSize * 0.25, 0,
+    0, 0, coreSize
+  );
   coreGrad.addColorStop(0, "#ffffff");
-  coreGrad.addColorStop(0.3, lightenColor(baseColor, 100));
-  coreGrad.addColorStop(0.7, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
-  coreGrad.addColorStop(1, darkenColor(baseColor, 30));
+  coreGrad.addColorStop(0.2, lightenColor(baseColor, 120));
+  coreGrad.addColorStop(0.55, lightenColor(baseColor, 60));
+  coreGrad.addColorStop(0.8, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(1, darkenColor(baseColor, 40));
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
   ctx.arc(0, 0, coreSize, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+
+  // Specular highlight for 3D depth
+  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.beginPath();
+  ctx.ellipse(
+    -coreSize * 0.25, -coreSize * 0.3,
+    coreSize * 0.35, coreSize * 0.2,
+    -0.4, 0, Math.PI * 2
+  );
+  ctx.fill();
+}
+
+function drawBoltPath(
+  ctx: CanvasRenderingContext2D,
+  pts: { x: number; y: number }[],
+) {
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) {
+    ctx.lineTo(pts[i].x, pts[i].y);
+  }
 }
 
 // ============================================================================

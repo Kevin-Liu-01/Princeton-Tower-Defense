@@ -381,10 +381,16 @@ export function renderEffect(
           const baseBarrelLength = (30 + towerLevel * 12) * zoom;
           const barrelLength = baseBarrelLength * (0.4 + foreshorten * 0.6);
 
+          // Barrel pitch — towers are elevated, barrels aim down at enemies
+          const towerElev = (towerLevel >= 3 ? 35 : 25) * zoom;
+          const barrelPitch = Math.atan2(towerElev, barrelLength * 2.5);
+          const pitchRate = Math.sin(barrelPitch) * 0.5;
+
           // Projectile spawns from barrel end (turret radius + barrel length)
           const totalLength = turretRadius + barrelLength;
           sourceX = towerScreen.x + cosR * totalLength;
-          sourceY = turretY + sinR * totalLength * 0.5;
+          sourceY =
+            turretY + sinR * totalLength * 0.5 + totalLength * pitchRate;
         }
 
         ctx.save();
@@ -394,73 +400,201 @@ export function renderEffect(
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (effect.type === "cannon_shot") {
-          // Cannon ball projectile
           const projT = progress;
+          const arcHeight = 15 * zoom;
           const projX = sourceX + dx * projT;
           const projY =
-            sourceY + dy * projT - Math.sin(projT * Math.PI) * 20 * zoom; // Arc
+            sourceY + dy * projT - Math.sin(projT * Math.PI) * arcHeight;
 
-          // Projectile glow
-          ctx.shadowColor = "#ff6600";
-          ctx.shadowBlur = 15 * zoom;
+          const flightAngle = Math.atan2(
+            dy - Math.cos(projT * Math.PI) * Math.PI * arcHeight,
+            dx,
+          );
+          const now = Date.now();
+          const pulse = 0.85 + Math.sin(now / 40) * 0.15;
 
-          const projGrad = ctx.createRadialGradient(
+          // Energy trail — tapered gradient streaks along flight path
+          const trailSegments = 10;
+          for (let t = trailSegments - 1; t >= 0; t--) {
+            const tFrac = t / trailSegments;
+            const trailT = Math.max(0, projT - tFrac * 0.2);
+            const trailX = sourceX + dx * trailT;
+            const trailY =
+              sourceY +
+              dy * trailT -
+              Math.sin(trailT * Math.PI) * arcHeight;
+            const trailFade = (1 - tFrac) * alpha;
+            const trailR = (5 - tFrac * 4) * zoom;
+
+            const trailGrad = ctx.createRadialGradient(
+              trailX,
+              trailY,
+              0,
+              trailX,
+              trailY,
+              trailR,
+            );
+            trailGrad.addColorStop(
+              0,
+              `rgba(255, 200, 80, ${trailFade * 0.5 * (1 - tFrac)})`,
+            );
+            trailGrad.addColorStop(
+              0.5,
+              `rgba(255, 140, 30, ${trailFade * 0.25 * (1 - tFrac)})`,
+            );
+            trailGrad.addColorStop(1, `rgba(255, 80, 0, 0)`);
+            ctx.fillStyle = trailGrad;
+            ctx.beginPath();
+            ctx.arc(trailX, trailY, trailR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Elongated energy streak (connects trail to orb)
+          if (projT > 0.05) {
+            const streakT = Math.max(0, projT - 0.12);
+            const streakX = sourceX + dx * streakT;
+            const streakY =
+              sourceY +
+              dy * streakT -
+              Math.sin(streakT * Math.PI) * arcHeight;
+            const streakGrad = ctx.createLinearGradient(
+              streakX,
+              streakY,
+              projX,
+              projY,
+            );
+            streakGrad.addColorStop(0, `rgba(255, 160, 40, 0)`);
+            streakGrad.addColorStop(0.4, `rgba(255, 190, 60, ${alpha * 0.3})`);
+            streakGrad.addColorStop(1, `rgba(255, 230, 140, ${alpha * 0.6})`);
+            ctx.strokeStyle = streakGrad;
+            ctx.lineWidth = 3 * zoom;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(streakX, streakY);
+            ctx.lineTo(projX, projY);
+            ctx.stroke();
+
+            // Thinner hot inner streak
+            const innerGrad = ctx.createLinearGradient(
+              streakX,
+              streakY,
+              projX,
+              projY,
+            );
+            innerGrad.addColorStop(0, `rgba(255, 240, 200, 0)`);
+            innerGrad.addColorStop(0.6, `rgba(255, 255, 220, ${alpha * 0.35})`);
+            innerGrad.addColorStop(1, `rgba(255, 255, 245, ${alpha * 0.7})`);
+            ctx.strokeStyle = innerGrad;
+            ctx.lineWidth = 1.2 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(streakX, streakY);
+            ctx.lineTo(projX, projY);
+            ctx.stroke();
+          }
+
+          // Crackling energy wisps radiating from the orb
+          for (let w = 0; w < 4; w++) {
+            const wispAngle =
+              flightAngle + Math.PI + ((w * Math.PI) / 2 + now / 60);
+            const wispLen = (6 + Math.sin(now / 30 + w * 2.1) * 3) * zoom;
+            const wispEndX = projX + Math.cos(wispAngle) * wispLen;
+            const wispEndY = projY + Math.sin(wispAngle) * wispLen;
+            ctx.strokeStyle = `rgba(255, 220, 100, ${alpha * 0.4})`;
+            ctx.lineWidth = 0.8 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(projX, projY);
+            ctx.quadraticCurveTo(
+              projX + Math.cos(wispAngle + 0.3) * wispLen * 0.6,
+              projY + Math.sin(wispAngle + 0.3) * wispLen * 0.6,
+              wispEndX,
+              wispEndY,
+            );
+            ctx.stroke();
+          }
+
+          // Outer ambient glow
+          ctx.shadowColor = "#ffaa00";
+          ctx.shadowBlur = 22 * zoom * pulse;
+          const ambientR = 16 * zoom * pulse;
+          const ambientGrad = ctx.createRadialGradient(
             projX,
             projY,
             0,
             projX,
             projY,
-            8 * zoom,
+            ambientR,
           );
-          projGrad.addColorStop(0, `rgba(255, 255, 150, ${alpha})`);
-          projGrad.addColorStop(0.4, `rgba(255, 150, 50, ${alpha})`);
-          projGrad.addColorStop(1, `rgba(200, 80, 0, ${alpha * 0.5})`);
-
-          ctx.fillStyle = projGrad;
+          ambientGrad.addColorStop(0, `rgba(255, 220, 100, ${alpha * 0.5})`);
+          ambientGrad.addColorStop(0.3, `rgba(255, 170, 40, ${alpha * 0.3})`);
+          ambientGrad.addColorStop(0.6, `rgba(255, 120, 10, ${alpha * 0.12})`);
+          ambientGrad.addColorStop(1, `rgba(200, 60, 0, 0)`);
+          ctx.fillStyle = ambientGrad;
           ctx.beginPath();
-          ctx.arc(projX, projY, 7 * zoom, 0, Math.PI * 2);
+          ctx.arc(projX, projY, ambientR, 0, Math.PI * 2);
           ctx.fill();
 
-          // Smoke trail
-          for (let t = 0; t < 4; t++) {
-            const trailT = Math.max(0, projT - t * 0.08);
-            const trailX = sourceX + dx * trailT;
-            const trailY =
-              sourceY + dy * trailT - Math.sin(trailT * Math.PI) * 20 * zoom;
-            ctx.fillStyle = `rgba(100, 100, 100, ${
-              alpha * (1 - t * 0.25) * 0.5
-            })`;
-            ctx.beginPath();
-            ctx.arc(trailX, trailY, (4 - t) * zoom, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          // Energy distortion ring
+          const ringR = (8 + Math.sin(now / 25) * 1.5) * zoom;
+          ctx.strokeStyle = `rgba(255, 200, 80, ${alpha * 0.35})`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.beginPath();
+          ctx.ellipse(
+            projX,
+            projY,
+            ringR,
+            ringR * 0.55,
+            flightAngle,
+            0,
+            Math.PI * 2,
+          );
+          ctx.stroke();
+
+          // Energy orb core — bright pulsating sphere
+          const orbR = 5 * zoom * pulse;
+          const orbGrad = ctx.createRadialGradient(
+            projX - 1 * zoom,
+            projY - 1 * zoom,
+            0,
+            projX,
+            projY,
+            orbR,
+          );
+          orbGrad.addColorStop(0, `rgba(255, 255, 245, ${alpha})`);
+          orbGrad.addColorStop(0.3, `rgba(255, 240, 180, ${alpha * 0.95})`);
+          orbGrad.addColorStop(0.6, `rgba(255, 190, 60, ${alpha * 0.8})`);
+          orbGrad.addColorStop(1, `rgba(255, 130, 10, ${alpha * 0.4})`);
+          ctx.fillStyle = orbGrad;
+          ctx.beginPath();
+          ctx.arc(projX, projY, orbR, 0, Math.PI * 2);
+          ctx.fill();
+
+          // White-hot center
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9 * pulse})`;
+          ctx.beginPath();
+          ctx.arc(projX, projY, 2 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.shadowBlur = 0;
         } else if (effect.type === "bullet_stream") {
-          // Gatling bullets - spawn from barrel end, not center
-          // Calculate barrel end position based on rotation
           const rotation = effect.rotation || 0;
           const cosR = Math.cos(rotation);
           const sinR = Math.sin(rotation);
           const foreshorten = Math.abs(cosR);
 
-          // Barrel length adjusted for foreshortening
           const barrelOffset = -42 * zoom * (0.5 + foreshorten * 0.5);
-
-          // Actual bullet source is at the end of the barrel
           const bulletSourceX = sourceX + cosR * barrelOffset;
           const bulletSourceY = sourceY + sinR * barrelOffset * 0.5;
 
-          // Recalculate distance from new source
           const bulletDx = targetScreen.x - bulletSourceX;
           const bulletDy = targetScreen.y - bulletSourceY;
           const bulletDist = Math.sqrt(
             bulletDx * bulletDx + bulletDy * bulletDy,
           );
+          const now = Date.now();
 
-          // Multiple spinning barrels = multiple bullet streams
-          for (let barrel = 0; barrel < 3; barrel++) {
-            // Slight perpendicular offset for each barrel
+          for (let barrel = 0; barrel < 4; barrel++) {
             const barrelAngle =
-              (Date.now() / 50 + (barrel * Math.PI * 2) / 8) % (Math.PI * 2);
+              (now / 50 + (barrel * Math.PI * 2) / 8) % (Math.PI * 2);
             const perpOffset = Math.sin(barrelAngle) * 3 * zoom;
             const perpX = -sinR * perpOffset;
             const perpY = cosR * perpOffset * 0.5;
@@ -468,90 +602,348 @@ export function renderEffect(
             const thisSourceX = bulletSourceX + perpX;
             const thisSourceY = bulletSourceY + perpY;
 
-            for (let b = 0; b < 2; b++) {
+            for (let b = 0; b < 3; b++) {
               const bulletT = Math.min(
                 1,
-                progress * 1.8 + barrel * 0.08 + b * 0.12,
+                progress * 2.0 + barrel * 0.06 + b * 0.1,
               );
-              if (bulletT > 0 && bulletT < 1) {
-                const bulletX = thisSourceX + bulletDx * bulletT;
-                const bulletY = thisSourceY + bulletDy * bulletT;
+              if (bulletT <= 0 || bulletT >= 1) continue;
 
-                ctx.fillStyle = `rgba(255, 220, 100, ${alpha})`;
-                ctx.shadowColor = "#ffcc00";
-                ctx.shadowBlur = 10 * zoom;
+              const bulletX = thisSourceX + bulletDx * bulletT;
+              const bulletY = thisSourceY + bulletDy * bulletT;
+              const fadeAlpha = alpha * (1 - bulletT * 0.3);
+
+              // Tapered tracer trail with gradient
+              const tracerLen = 28 * zoom;
+              const tracerStartT = Math.max(
+                0,
+                bulletT - tracerLen / bulletDist,
+              );
+              const trailStartX = thisSourceX + bulletDx * tracerStartT;
+              const trailStartY = thisSourceY + bulletDy * tracerStartT;
+
+              // Outer glow trail
+              const trailGrad = ctx.createLinearGradient(
+                trailStartX,
+                trailStartY,
+                bulletX,
+                bulletY,
+              );
+              trailGrad.addColorStop(0, `rgba(255, 120, 20, 0)`);
+              trailGrad.addColorStop(0.3, `rgba(255, 160, 40, ${fadeAlpha * 0.25})`);
+              trailGrad.addColorStop(0.7, `rgba(255, 200, 60, ${fadeAlpha * 0.5})`);
+              trailGrad.addColorStop(1, `rgba(255, 230, 100, ${fadeAlpha * 0.7})`);
+              ctx.strokeStyle = trailGrad;
+              ctx.lineWidth = 4 * zoom;
+              ctx.lineCap = "round";
+              ctx.beginPath();
+              ctx.moveTo(trailStartX, trailStartY);
+              ctx.lineTo(bulletX, bulletY);
+              ctx.stroke();
+
+              // Hot inner trail
+              const innerGrad = ctx.createLinearGradient(
+                trailStartX,
+                trailStartY,
+                bulletX,
+                bulletY,
+              );
+              innerGrad.addColorStop(0, `rgba(255, 220, 120, 0)`);
+              innerGrad.addColorStop(0.5, `rgba(255, 240, 180, ${fadeAlpha * 0.4})`);
+              innerGrad.addColorStop(1, `rgba(255, 255, 220, ${fadeAlpha * 0.8})`);
+              ctx.strokeStyle = innerGrad;
+              ctx.lineWidth = 1.8 * zoom;
+              ctx.beginPath();
+              ctx.moveTo(trailStartX, trailStartY);
+              ctx.lineTo(bulletX, bulletY);
+              ctx.stroke();
+
+              // Bullet head glow
+              ctx.shadowColor = "#ffaa00";
+              ctx.shadowBlur = 14 * zoom;
+
+              const headGrad = ctx.createRadialGradient(
+                bulletX,
+                bulletY,
+                0,
+                bulletX,
+                bulletY,
+                5 * zoom,
+              );
+              headGrad.addColorStop(0, `rgba(255, 255, 230, ${fadeAlpha})`);
+              headGrad.addColorStop(0.35, `rgba(255, 220, 100, ${fadeAlpha * 0.9})`);
+              headGrad.addColorStop(0.7, `rgba(255, 160, 40, ${fadeAlpha * 0.5})`);
+              headGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
+              ctx.fillStyle = headGrad;
+              ctx.beginPath();
+              ctx.arc(bulletX, bulletY, 5 * zoom, 0, Math.PI * 2);
+              ctx.fill();
+
+              // White-hot core (elongated along flight path)
+              ctx.shadowBlur = 0;
+              ctx.fillStyle = `rgba(255, 255, 245, ${fadeAlpha * 0.95})`;
+              ctx.beginPath();
+              ctx.ellipse(
+                bulletX,
+                bulletY,
+                3 * zoom,
+                1.2 * zoom,
+                Math.atan2(bulletDy, bulletDx),
+                0,
+                Math.PI * 2,
+              );
+              ctx.fill();
+
+              // Micro-spark near bullet (only for leading bullets)
+              if (b === 0 && bulletT > 0.15) {
+                const sparkSeed = barrel * 7 + Math.floor(now / 30);
+                const sparkAngle =
+                  ((sparkSeed * 2654435761) % 628) / 100;
+                const sparkDist = (2 + ((sparkSeed * 1103515245) % 4)) * zoom;
+                const sparkX = bulletX + Math.cos(sparkAngle) * sparkDist;
+                const sparkY = bulletY + Math.sin(sparkAngle) * sparkDist;
+                ctx.fillStyle = `rgba(255, 240, 180, ${fadeAlpha * 0.6})`;
                 ctx.beginPath();
-                ctx.arc(bulletX, bulletY, 3.5 * zoom, 0, Math.PI * 2);
+                ctx.arc(sparkX, sparkY, 0.8 * zoom, 0, Math.PI * 2);
                 ctx.fill();
-
-                // Hot core
-                ctx.fillStyle = `rgba(255, 255, 200, ${alpha * 0.8})`;
-                ctx.beginPath();
-                ctx.arc(bulletX, bulletY, 1.5 * zoom, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Tracer line
-                const tracerLen = 18 * zoom;
-                const tracerStartT = Math.max(
-                  0,
-                  bulletT - tracerLen / bulletDist,
-                );
-                ctx.strokeStyle = `rgba(255, 180, 50, ${alpha * 0.6})`;
-                ctx.lineWidth = 2.5 * zoom;
-                ctx.beginPath();
-                ctx.moveTo(
-                  thisSourceX + bulletDx * tracerStartT,
-                  thisSourceY + bulletDy * tracerStartT,
-                );
-                ctx.lineTo(bulletX, bulletY);
-                ctx.stroke();
               }
             }
           }
+
+          // Muzzle heat haze at source
+          if (progress < 0.3) {
+            const hazeAlpha = alpha * (1 - progress / 0.3) * 0.3;
+            const hazeGrad = ctx.createRadialGradient(
+              bulletSourceX,
+              bulletSourceY,
+              0,
+              bulletSourceX,
+              bulletSourceY,
+              8 * zoom,
+            );
+            hazeGrad.addColorStop(0, `rgba(255, 200, 100, ${hazeAlpha})`);
+            hazeGrad.addColorStop(0.5, `rgba(255, 150, 50, ${hazeAlpha * 0.5})`);
+            hazeGrad.addColorStop(1, `rgba(255, 100, 0, 0)`);
+            ctx.fillStyle = hazeGrad;
+            ctx.beginPath();
+            ctx.arc(bulletSourceX, bulletSourceY, 8 * zoom, 0, Math.PI * 2);
+            ctx.fill();
+          }
         } else if (effect.type === "flame_burst") {
-          // Flamethrower stream
+          const now = Date.now();
+
+          // Use source-to-target vector directly for flame direction.
+          // Source position already includes pitch so this naturally
+          // angles the stream from nozzle tip down to the enemy.
+          const flameDirX = dx / dist;
+          const flameDirY = dy / dist;
+          const flamePerpX = -flameDirY;
+          const flamePerpY = flameDirX;
+
+          // Flame stream length = actual distance to target
+          const flameLen = dist;
+
+          // Ambient heat glow cast on surroundings
+          const headT = Math.min(1, progress * 1.3);
+          const headX = sourceX + flameDirX * flameLen * headT * 0.5;
+          const headY = sourceY + flameDirY * flameLen * headT * 0.5;
+          const heatR = 30 * zoom;
+          const heatGrad = ctx.createRadialGradient(
+            headX,
+            headY,
+            0,
+            headX,
+            headY,
+            heatR,
+          );
+          heatGrad.addColorStop(0, `rgba(255, 120, 20, ${alpha * 0.12})`);
+          heatGrad.addColorStop(0.5, `rgba(255, 60, 0, ${alpha * 0.06})`);
+          heatGrad.addColorStop(1, `rgba(200, 30, 0, 0)`);
+          ctx.fillStyle = heatGrad;
+          ctx.beginPath();
+          ctx.arc(headX, headY, heatR, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Smoke layer (drawn first, behind flame)
+          for (let s = 0; s < 5; s++) {
+            const smokeT = Math.min(
+              1,
+              progress * 1.1 + s * 0.06 + 0.15,
+            );
+            if (smokeT <= 0.2 || smokeT >= 1) continue;
+            const smokeFrac = (smokeT - 0.2) / 0.8;
+            const smokeWobble =
+              Math.sin(now / 70 + s * 1.7) * 10 * zoom * smokeFrac;
+            const smokeRise = -smokeFrac * 8 * zoom;
+            const smokeX =
+              sourceX +
+              flameDirX * flameLen * smokeT +
+              flamePerpX * smokeWobble;
+            const smokeY =
+              sourceY +
+              flameDirY * flameLen * smokeT +
+              flamePerpY * smokeWobble +
+              smokeRise;
+            const smokeR = (4 + smokeFrac * 10) * zoom;
+            const smokeAlpha = alpha * (1 - smokeFrac) * 0.25;
+            ctx.fillStyle = `rgba(50, 45, 40, ${smokeAlpha})`;
+            ctx.beginPath();
+            ctx.arc(smokeX, smokeY, smokeR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
           ctx.shadowColor = "#ff4400";
-          ctx.shadowBlur = 20 * zoom;
+          ctx.shadowBlur = 25 * zoom;
 
-          for (let f = 0; f < 8; f++) {
-            const flameT = Math.min(1, progress * 1.2 + f * 0.05);
-            if (flameT > 0 && flameT < 1) {
-              const wobble =
-                Math.sin(Date.now() / 50 + f) * 8 * zoom * (1 - flameT);
-              const perpX = -dy / dist;
-              const perpY = dx / dist;
+          // Outer flame body — continuous stream along barrel direction
+          for (let f = 0; f < 12; f++) {
+            const flameT = Math.min(1, progress * 1.3 + f * 0.035);
+            if (flameT <= 0 || flameT >= 1) continue;
 
-              const flameX = sourceX + dx * flameT + perpX * wobble;
-              const flameY = sourceY + dy * flameT + perpY * wobble * 0.5;
-              const flameSize = (12 - f * 0.8 - flameT * 6) * zoom;
+            // Multi-frequency turbulence for organic movement
+            const turb1 = Math.sin(now / 45 + f * 1.3) * 6;
+            const turb2 = Math.sin(now / 28 + f * 2.7) * 3;
+            const wobble = (turb1 + turb2) * zoom * (0.3 + flameT * 0.7);
 
-              const flameGrad = ctx.createRadialGradient(
-                flameX,
-                flameY,
-                0,
-                flameX,
-                flameY,
-                flameSize,
-              );
-              flameGrad.addColorStop(
-                0,
-                `rgba(255, 255, 150, ${alpha * (1 - flameT * 0.5)})`,
-              );
-              flameGrad.addColorStop(
-                0.3,
-                `rgba(255, 180, 50, ${alpha * (1 - flameT * 0.5)})`,
-              );
-              flameGrad.addColorStop(
-                0.7,
-                `rgba(255, 80, 0, ${alpha * (1 - flameT * 0.7)})`,
-              );
-              flameGrad.addColorStop(1, `rgba(200, 30, 0, 0)`);
+            // Flame expands as it travels
+            const spread = 1 + flameT * 1.8;
+            const flameX =
+              sourceX +
+              flameDirX * flameLen * flameT +
+              flamePerpX * wobble * spread;
+            const flameY =
+              sourceY +
+              flameDirY * flameLen * flameT +
+              flamePerpY * wobble * spread;
+            const flameR = (8 + flameT * 6 - f * 0.2) * zoom * spread * 0.6;
 
-              ctx.fillStyle = flameGrad;
-              ctx.beginPath();
-              ctx.arc(flameX, flameY, flameSize, 0, Math.PI * 2);
-              ctx.fill();
-            }
+            // Color shifts from bright yellow near nozzle to deep red/orange at end
+            const r = 255;
+            const g = Math.floor(255 - flameT * 180);
+            const b = Math.floor(100 - flameT * 90);
+            const fadeA = alpha * (1 - flameT * 0.6) * (1 - f * 0.02);
+
+            const fGrad = ctx.createRadialGradient(
+              flameX,
+              flameY,
+              0,
+              flameX,
+              flameY,
+              flameR,
+            );
+            fGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${fadeA})`);
+            fGrad.addColorStop(
+              0.4,
+              `rgba(${r}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 40)}, ${fadeA * 0.7})`,
+            );
+            fGrad.addColorStop(
+              0.75,
+              `rgba(${Math.floor(r * 0.8)}, ${Math.max(0, g - 120)}, 0, ${fadeA * 0.3})`,
+            );
+            fGrad.addColorStop(1, `rgba(180, 20, 0, 0)`);
+            ctx.fillStyle = fGrad;
+            ctx.beginPath();
+            ctx.arc(flameX, flameY, flameR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Hot inner core — bright white/yellow center line
+          ctx.shadowBlur = 15 * zoom;
+          ctx.shadowColor = "#ffcc00";
+          for (let c = 0; c < 8; c++) {
+            const coreT = Math.min(1, progress * 1.3 + c * 0.04);
+            if (coreT <= 0 || coreT >= 0.7) continue;
+
+            const coreTurb =
+              Math.sin(now / 35 + c * 1.9) * 2.5 * zoom * coreT;
+            const coreX =
+              sourceX +
+              flameDirX * flameLen * coreT +
+              flamePerpX * coreTurb;
+            const coreY =
+              sourceY +
+              flameDirY * flameLen * coreT +
+              flamePerpY * coreTurb;
+            const coreR = (3.5 - coreT * 3) * zoom;
+            const coreAlpha = alpha * (1 - coreT / 0.7) * 0.9;
+
+            const coreGrad = ctx.createRadialGradient(
+              coreX,
+              coreY,
+              0,
+              coreX,
+              coreY,
+              coreR,
+            );
+            coreGrad.addColorStop(
+              0,
+              `rgba(255, 255, 240, ${coreAlpha})`,
+            );
+            coreGrad.addColorStop(
+              0.5,
+              `rgba(255, 240, 160, ${coreAlpha * 0.7})`,
+            );
+            coreGrad.addColorStop(1, `rgba(255, 200, 80, 0)`);
+            ctx.fillStyle = coreGrad;
+            ctx.beginPath();
+            ctx.arc(coreX, coreY, coreR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Bright embers/sparks within the stream
+          ctx.shadowBlur = 0;
+          for (let e = 0; e < 6; e++) {
+            const emberSeed = Math.floor(now / 40) + e * 31;
+            const emberT = Math.min(
+              1,
+              progress * 1.2 + ((emberSeed * 2654435761) % 100) / 250,
+            );
+            if (emberT <= 0.05 || emberT >= 0.95) continue;
+
+            const emberWobble =
+              Math.sin(emberSeed * 0.7) * 12 * zoom * emberT;
+            const emberDrift = -emberT * 4 * zoom;
+            const emberX =
+              sourceX +
+              flameDirX * flameLen * emberT +
+              flamePerpX * emberWobble;
+            const emberY =
+              sourceY +
+              flameDirY * flameLen * emberT +
+              flamePerpY * emberWobble +
+              emberDrift;
+            const emberAlpha = alpha * (1 - emberT) * 0.8;
+            ctx.fillStyle = `rgba(255, 240, 150, ${emberAlpha})`;
+            ctx.beginPath();
+            ctx.arc(emberX, emberY, 1.2 * zoom, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Nozzle flare at the source
+          if (progress < 0.4) {
+            const nozzleAlpha = alpha * (1 - progress / 0.4) * 0.7;
+            const nozzleR = 6 * zoom;
+            const nozzleGrad = ctx.createRadialGradient(
+              sourceX,
+              sourceY,
+              0,
+              sourceX,
+              sourceY,
+              nozzleR,
+            );
+            nozzleGrad.addColorStop(
+              0,
+              `rgba(255, 255, 220, ${nozzleAlpha})`,
+            );
+            nozzleGrad.addColorStop(
+              0.4,
+              `rgba(255, 200, 80, ${nozzleAlpha * 0.6})`,
+            );
+            nozzleGrad.addColorStop(1, `rgba(255, 120, 20, 0)`);
+            ctx.fillStyle = nozzleGrad;
+            ctx.beginPath();
+            ctx.arc(sourceX, sourceY, nozzleR, 0, Math.PI * 2);
+            ctx.fill();
           }
         }
 
