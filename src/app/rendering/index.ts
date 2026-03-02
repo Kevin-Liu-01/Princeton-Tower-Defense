@@ -169,44 +169,204 @@ export function renderEffect(
         }
 
         ctx.save();
-        ctx.strokeStyle = `rgba(0, 255, 255, ${alpha * intensity})`;
-        ctx.lineWidth = 3 * zoom * intensity;
-        ctx.lineCap = "round";
-        ctx.shadowColor = "#00ffff";
-        ctx.shadowBlur = 15 * zoom * intensity;
-
-        ctx.beginPath();
-        ctx.moveTo(sourceX, sourceY);
 
         const dx = targetScreen.x - sourceX;
         const dy = targetScreen.y - sourceY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const segments = Math.max(5, Math.floor(dist / 30));
-        const jitter = 20 * zoom * intensity;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const perpX = -dy / dist;
+        const perpY = dx / dist;
+        const now = Date.now();
 
+        // Time-based deterministic noise (smooth animation, no flicker)
+        const boltSeed = Math.floor(now / 50);
+        const noise = (seed: number) => {
+          const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+          return x - Math.floor(x);
+        };
+
+        // Generate bolt path points with temporal coherence
+        const segments = Math.max(6, Math.floor(dist / 22));
+        const jitter = 22 * zoom * intensity;
+        const mainPts: { x: number; y: number }[] = [
+          { x: sourceX, y: sourceY },
+        ];
         for (let i = 1; i < segments; i++) {
           const t = i / segments;
           const baseX = sourceX + dx * t;
           const baseY = sourceY + dy * t;
-          const perpX = -dy / dist;
-          const perpY = dx / dist;
-          const offset =
-            (Math.random() - 0.5) * jitter * (1 - Math.abs(t - 0.5) * 2);
-          ctx.lineTo(baseX + perpX * offset, baseY + perpY * offset);
+          const taper = 1 - Math.abs(t - 0.5) * 1.6;
+          const n = (noise(boltSeed + i * 17) - 0.5) * 2;
+          const offset = n * jitter * Math.max(0, taper);
+          mainPts.push({
+            x: baseX + perpX * offset,
+            y: baseY + perpY * offset,
+          });
         }
-        ctx.lineTo(targetScreen.x, targetScreen.y);
+        mainPts.push({ x: targetScreen.x, y: targetScreen.y });
+
+        // Draw bolt in 3 layers: outer glow → mid glow → bright core
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // Layer 1: wide outer glow (deep blue)
+        ctx.shadowColor = "#0088ff";
+        ctx.shadowBlur = 20 * zoom * intensity;
+        ctx.strokeStyle = `rgba(30, 100, 255, ${alpha * 0.25 * intensity})`;
+        ctx.lineWidth = 10 * zoom * intensity;
+        ctx.beginPath();
+        ctx.moveTo(mainPts[0].x, mainPts[0].y);
+        for (let i = 1; i < mainPts.length; i++) {
+          ctx.lineTo(mainPts[i].x, mainPts[i].y);
+        }
         ctx.stroke();
 
-        // Impact spark
-        ctx.fillStyle = `rgba(150, 255, 255, ${alpha * intensity})`;
+        // Layer 2: mid glow (cyan)
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 12 * zoom * intensity;
+        ctx.strokeStyle = `rgba(0, 220, 255, ${alpha * 0.6 * intensity})`;
+        ctx.lineWidth = 4 * zoom * intensity;
+        ctx.beginPath();
+        ctx.moveTo(mainPts[0].x, mainPts[0].y);
+        for (let i = 1; i < mainPts.length; i++) {
+          ctx.lineTo(mainPts[i].x, mainPts[i].y);
+        }
+        ctx.stroke();
+
+        // Layer 3: white-hot core
+        ctx.shadowBlur = 6 * zoom * intensity;
+        ctx.strokeStyle = `rgba(220, 255, 255, ${alpha * 0.9 * intensity})`;
+        ctx.lineWidth = 1.5 * zoom * intensity;
+        ctx.beginPath();
+        ctx.moveTo(mainPts[0].x, mainPts[0].y);
+        for (let i = 1; i < mainPts.length; i++) {
+          ctx.lineTo(mainPts[i].x, mainPts[i].y);
+        }
+        ctx.stroke();
+
+        // Branch lightning forks (2-3 forks off the main bolt)
+        ctx.shadowBlur = 8 * zoom * intensity;
+        const branchCount = 2 + Math.floor(noise(boltSeed + 99) * 2);
+        for (let b = 0; b < branchCount; b++) {
+          const branchIdx =
+            1 + Math.floor(noise(boltSeed + b * 41) * (segments - 2));
+          const branchPt = mainPts[branchIdx];
+          const branchAngle =
+            Math.atan2(dy, dx) +
+            (noise(boltSeed + b * 73) - 0.5) * Math.PI * 0.8;
+          const branchLen = (15 + noise(boltSeed + b * 53) * 25) * zoom * intensity;
+          const branchSegs = 3;
+          const brPts = [{ x: branchPt.x, y: branchPt.y }];
+
+          for (let s = 1; s <= branchSegs; s++) {
+            const bt = s / branchSegs;
+            const bn = (noise(boltSeed + b * 31 + s * 19) - 0.5) * 8 * zoom;
+            brPts.push({
+              x:
+                branchPt.x +
+                Math.cos(branchAngle) * branchLen * bt +
+                Math.cos(branchAngle + Math.PI / 2) * bn,
+              y:
+                branchPt.y +
+                Math.sin(branchAngle) * branchLen * bt +
+                Math.sin(branchAngle + Math.PI / 2) * bn,
+            });
+          }
+
+          // Branch glow
+          ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.35 * intensity})`;
+          ctx.lineWidth = 3 * zoom * intensity;
+          ctx.beginPath();
+          ctx.moveTo(brPts[0].x, brPts[0].y);
+          for (let s = 1; s < brPts.length; s++) {
+            ctx.lineTo(brPts[s].x, brPts[s].y);
+          }
+          ctx.stroke();
+
+          // Branch core
+          ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * 0.6 * intensity})`;
+          ctx.lineWidth = 1 * zoom * intensity;
+          ctx.beginPath();
+          ctx.moveTo(brPts[0].x, brPts[0].y);
+          for (let s = 1; s < brPts.length; s++) {
+            ctx.lineTo(brPts[s].x, brPts[s].y);
+          }
+          ctx.stroke();
+        }
+
+        // Source crackle (small arcs at origin)
+        ctx.shadowColor = "#00ffff";
+        ctx.shadowBlur = 10 * zoom;
+        for (let a = 0; a < 3; a++) {
+          const arcAngle = noise(boltSeed + a * 67) * Math.PI * 2;
+          const arcLen = (4 + noise(boltSeed + a * 37) * 6) * zoom;
+          ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.5 * intensity})`;
+          ctx.lineWidth = 1 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(sourceX, sourceY);
+          ctx.lineTo(
+            sourceX + Math.cos(arcAngle) * arcLen,
+            sourceY + Math.sin(arcAngle) * arcLen,
+          );
+          ctx.stroke();
+        }
+
+        // Impact effect — electric sparks + glow ring
+        ctx.shadowBlur = 0;
+        const impactPulse = 0.7 + Math.sin(now / 30) * 0.3;
+
+        // Glow halo at impact
+        const impGrad = ctx.createRadialGradient(
+          targetScreen.x,
+          targetScreen.y,
+          0,
+          targetScreen.x,
+          targetScreen.y,
+          14 * zoom * intensity,
+        );
+        impGrad.addColorStop(
+          0,
+          `rgba(200, 255, 255, ${alpha * 0.6 * intensity * impactPulse})`,
+        );
+        impGrad.addColorStop(
+          0.4,
+          `rgba(0, 200, 255, ${alpha * 0.3 * intensity})`,
+        );
+        impGrad.addColorStop(1, `rgba(0, 100, 255, 0)`);
+        ctx.fillStyle = impGrad;
         ctx.beginPath();
         ctx.arc(
           targetScreen.x,
           targetScreen.y,
-          8 * zoom * intensity,
+          14 * zoom * intensity,
           0,
           Math.PI * 2,
         );
+        ctx.fill();
+
+        // Electric spark lines at impact
+        for (let s = 0; s < 5; s++) {
+          const sparkAngle = noise(boltSeed + s * 23) * Math.PI * 2;
+          const sparkLen = (5 + noise(boltSeed + s * 47) * 10) * zoom * intensity;
+          ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.6 * intensity})`;
+          ctx.lineWidth = 0.8 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(targetScreen.x, targetScreen.y);
+          const midAngle = sparkAngle + (noise(boltSeed + s * 89) - 0.5) * 0.6;
+          ctx.lineTo(
+            targetScreen.x + Math.cos(midAngle) * sparkLen * 0.5,
+            targetScreen.y + Math.sin(midAngle) * sparkLen * 0.5,
+          );
+          ctx.lineTo(
+            targetScreen.x + Math.cos(sparkAngle) * sparkLen,
+            targetScreen.y + Math.sin(sparkAngle) * sparkLen,
+          );
+          ctx.stroke();
+        }
+
+        // White-hot impact dot
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8 * intensity * impactPulse})`;
+        ctx.beginPath();
+        ctx.arc(targetScreen.x, targetScreen.y, 3 * zoom * intensity, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
@@ -732,21 +892,53 @@ export function renderEffect(
         } else if (effect.type === "flame_burst") {
           const now = Date.now();
 
-          // Use source-to-target vector directly for flame direction.
-          // Source position already includes pitch so this naturally
-          // angles the stream from nozzle tip down to the enemy.
-          const flameDirX = dx / dist;
-          const flameDirY = dy / dist;
-          const flamePerpX = -flameDirY;
-          const flamePerpY = flameDirX;
+          // Bezier arc: flame leaves nozzle along barrel direction,
+          // then curves smoothly toward the target — no sharp angle break.
+          const flameRotation = effect.rotation || 0;
+          const barrelCos = Math.cos(flameRotation);
+          const barrelSin = Math.sin(flameRotation);
+          const barrelDirX = barrelCos;
+          const barrelDirY = barrelSin * 0.5;
 
-          // Flame stream length = actual distance to target
-          const flameLen = dist;
+          // P0 = source (nozzle tip), P2 = target
+          const p0x = sourceX;
+          const p0y = sourceY;
+          const p2x = targetScreen.x;
+          const p2y = targetScreen.y;
 
-          // Ambient heat glow cast on surroundings
-          const headT = Math.min(1, progress * 1.3);
-          const headX = sourceX + flameDirX * flameLen * headT * 0.5;
-          const headY = sourceY + flameDirY * flameLen * headT * 0.5;
+          // P1 = control point along barrel direction, ~45% of the way out
+          const ctrlDist = dist * 0.45;
+          const p1x = p0x + barrelDirX * ctrlDist;
+          const p1y = p0y + barrelDirY * ctrlDist;
+
+          // Evaluate quadratic bezier at parameter t
+          const bezX = (t: number) => {
+            const u = 1 - t;
+            return u * u * p0x + 2 * u * t * p1x + t * t * p2x;
+          };
+          const bezY = (t: number) => {
+            const u = 1 - t;
+            return u * u * p0y + 2 * u * t * p1y + t * t * p2y;
+          };
+
+          // Tangent direction at t (for perpendicular wobble)
+          const bezTanX = (t: number) => {
+            return 2 * (1 - t) * (p1x - p0x) + 2 * t * (p2x - p1x);
+          };
+          const bezTanY = (t: number) => {
+            return 2 * (1 - t) * (p1y - p0y) + 2 * t * (p2y - p1y);
+          };
+          const bezPerp = (t: number) => {
+            const tx = bezTanX(t);
+            const ty = bezTanY(t);
+            const tLen = Math.sqrt(tx * tx + ty * ty) || 1;
+            return { x: -ty / tLen, y: tx / tLen };
+          };
+
+          // Ambient heat glow
+          const headT = Math.min(1, progress * 1.3) * 0.5;
+          const headX = bezX(headT);
+          const headY = bezY(headT);
           const heatR = 30 * zoom;
           const heatGrad = ctx.createRadialGradient(
             headX,
@@ -764,7 +956,7 @@ export function renderEffect(
           ctx.arc(headX, headY, heatR, 0, Math.PI * 2);
           ctx.fill();
 
-          // Smoke layer (drawn first, behind flame)
+          // Smoke layer (drawn behind flame)
           for (let s = 0; s < 5; s++) {
             const smokeT = Math.min(
               1,
@@ -772,18 +964,12 @@ export function renderEffect(
             );
             if (smokeT <= 0.2 || smokeT >= 1) continue;
             const smokeFrac = (smokeT - 0.2) / 0.8;
+            const sp = bezPerp(smokeT);
             const smokeWobble =
               Math.sin(now / 70 + s * 1.7) * 10 * zoom * smokeFrac;
             const smokeRise = -smokeFrac * 8 * zoom;
-            const smokeX =
-              sourceX +
-              flameDirX * flameLen * smokeT +
-              flamePerpX * smokeWobble;
-            const smokeY =
-              sourceY +
-              flameDirY * flameLen * smokeT +
-              flamePerpY * smokeWobble +
-              smokeRise;
+            const smokeX = bezX(smokeT) + sp.x * smokeWobble;
+            const smokeY = bezY(smokeT) + sp.y * smokeWobble + smokeRise;
             const smokeR = (4 + smokeFrac * 10) * zoom;
             const smokeAlpha = alpha * (1 - smokeFrac) * 0.25;
             ctx.fillStyle = `rgba(50, 45, 40, ${smokeAlpha})`;
@@ -795,29 +981,21 @@ export function renderEffect(
           ctx.shadowColor = "#ff4400";
           ctx.shadowBlur = 25 * zoom;
 
-          // Outer flame body — continuous stream along barrel direction
+          // Outer flame body — blobs along bezier arc
           for (let f = 0; f < 12; f++) {
             const flameT = Math.min(1, progress * 1.3 + f * 0.035);
             if (flameT <= 0 || flameT >= 1) continue;
 
-            // Multi-frequency turbulence for organic movement
             const turb1 = Math.sin(now / 45 + f * 1.3) * 6;
             const turb2 = Math.sin(now / 28 + f * 2.7) * 3;
             const wobble = (turb1 + turb2) * zoom * (0.3 + flameT * 0.7);
+            const fp = bezPerp(flameT);
 
-            // Flame expands as it travels
             const spread = 1 + flameT * 1.8;
-            const flameX =
-              sourceX +
-              flameDirX * flameLen * flameT +
-              flamePerpX * wobble * spread;
-            const flameY =
-              sourceY +
-              flameDirY * flameLen * flameT +
-              flamePerpY * wobble * spread;
+            const flameX = bezX(flameT) + fp.x * wobble * spread;
+            const flameY = bezY(flameT) + fp.y * wobble * spread;
             const flameR = (8 + flameT * 6 - f * 0.2) * zoom * spread * 0.6;
 
-            // Color shifts from bright yellow near nozzle to deep red/orange at end
             const r = 255;
             const g = Math.floor(255 - flameT * 180);
             const b = Math.floor(100 - flameT * 90);
@@ -847,23 +1025,18 @@ export function renderEffect(
             ctx.fill();
           }
 
-          // Hot inner core — bright white/yellow center line
+          // Hot inner core along bezier arc
           ctx.shadowBlur = 15 * zoom;
           ctx.shadowColor = "#ffcc00";
           for (let c = 0; c < 8; c++) {
             const coreT = Math.min(1, progress * 1.3 + c * 0.04);
             if (coreT <= 0 || coreT >= 0.7) continue;
 
+            const cp = bezPerp(coreT);
             const coreTurb =
               Math.sin(now / 35 + c * 1.9) * 2.5 * zoom * coreT;
-            const coreX =
-              sourceX +
-              flameDirX * flameLen * coreT +
-              flamePerpX * coreTurb;
-            const coreY =
-              sourceY +
-              flameDirY * flameLen * coreT +
-              flamePerpY * coreTurb;
+            const coreX = bezX(coreT) + cp.x * coreTurb;
+            const coreY = bezY(coreT) + cp.y * coreTurb;
             const coreR = (3.5 - coreT * 3) * zoom;
             const coreAlpha = alpha * (1 - coreT / 0.7) * 0.9;
 
@@ -890,7 +1063,7 @@ export function renderEffect(
             ctx.fill();
           }
 
-          // Bright embers/sparks within the stream
+          // Bright embers along the arc
           ctx.shadowBlur = 0;
           for (let e = 0; e < 6; e++) {
             const emberSeed = Math.floor(now / 40) + e * 31;
@@ -900,18 +1073,12 @@ export function renderEffect(
             );
             if (emberT <= 0.05 || emberT >= 0.95) continue;
 
+            const ep = bezPerp(emberT);
             const emberWobble =
               Math.sin(emberSeed * 0.7) * 12 * zoom * emberT;
             const emberDrift = -emberT * 4 * zoom;
-            const emberX =
-              sourceX +
-              flameDirX * flameLen * emberT +
-              flamePerpX * emberWobble;
-            const emberY =
-              sourceY +
-              flameDirY * flameLen * emberT +
-              flamePerpY * emberWobble +
-              emberDrift;
+            const emberX = bezX(emberT) + ep.x * emberWobble;
+            const emberY = bezY(emberT) + ep.y * emberWobble + emberDrift;
             const emberAlpha = alpha * (1 - emberT) * 0.8;
             ctx.fillStyle = `rgba(255, 240, 150, ${emberAlpha})`;
             ctx.beginPath();
@@ -924,11 +1091,11 @@ export function renderEffect(
             const nozzleAlpha = alpha * (1 - progress / 0.4) * 0.7;
             const nozzleR = 6 * zoom;
             const nozzleGrad = ctx.createRadialGradient(
-              sourceX,
-              sourceY,
+              p0x,
+              p0y,
               0,
-              sourceX,
-              sourceY,
+              p0x,
+              p0y,
               nozzleR,
             );
             nozzleGrad.addColorStop(
@@ -942,7 +1109,7 @@ export function renderEffect(
             nozzleGrad.addColorStop(1, `rgba(255, 120, 20, 0)`);
             ctx.fillStyle = nozzleGrad;
             ctx.beginPath();
-            ctx.arc(sourceX, sourceY, nozzleR, 0, Math.PI * 2);
+            ctx.arc(p0x, p0y, nozzleR, 0, Math.PI * 2);
             ctx.fill();
           }
         }

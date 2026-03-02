@@ -4726,6 +4726,17 @@ export const WAVE_INTERVAL_MULTIPLIER = 1.05; // Time between each enemy spawn w
 export const WAVE_DELAY_MULTIPLIER = 1.25; // Gap between groups (higher = more spacing)
 export const HERO_PATH_HITBOX_SIZE = 50;
 export const TOWER_PLACEMENT_BUFFER = 40;
+
+// Tower footprint sizes (in grid cells, centered on tower position)
+// Stations are bigger than normal towers
+export const TOWER_FOOTPRINTS: Record<TowerType, { width: number; height: number }> = {
+  cannon: { width: 1, height: 1 },
+  library: { width: 1, height: 1 },
+  lab: { width: 1, height: 1 },
+  arch: { width: 1, height: 1 },
+  club: { width: 1, height: 1 },
+  station: { width: 1.5, height: 1.5 },
+};
 export const INITIAL_PAW_POINTS = 300;
 export const INITIAL_LIVES = 20;
 export const WAVE_TIMER_BASE = 15000;

@@ -13,6 +13,7 @@ import {
   TOWER_COLORS,
   TROOP_SPREAD_RADIUS,
   ROAD_EXCLUSION_BUFFER,
+  TOWER_FOOTPRINTS,
 } from "../constants";
 
 // Grid to world coordinates (isometric) - centers on tile
@@ -256,6 +257,26 @@ export const LANDMARK_HITBOX_Y_OFFSET: Record<string, number> = {
   obelisk: 35,
 };
 
+// Get the core grid cells a tower occupies (for bounds/path/blocked checks).
+// This always returns the anchor cell; the extended exclusion zone from larger
+// footprints (e.g. station 1.5x1.5) is handled by doFootprintsOverlap.
+export function getTowerFootprint(_type: TowerType, pos: GridPosition): GridPosition[] {
+  return [{ x: pos.x, y: pos.y }];
+}
+
+// Check if two towers' centered footprints overlap (rectangle-rectangle test).
+export function doFootprintsOverlap(
+  type1: TowerType, pos1: GridPosition,
+  type2: TowerType, pos2: GridPosition,
+): boolean {
+  const fp1 = TOWER_FOOTPRINTS[type1];
+  const fp2 = TOWER_FOOTPRINTS[type2];
+  return (
+    Math.abs(pos1.x - pos2.x) < (fp1.width + fp2.width) / 2 &&
+    Math.abs(pos1.y - pos2.y) < (fp1.height + fp2.height) / 2
+  );
+}
+
 // Check if position is valid for building
 export function isValidBuildPosition(
   gridPos: GridPosition,
@@ -264,9 +285,12 @@ export function isValidBuildPosition(
   gridWidth: number,
   gridHeight: number,
   buffer: number = ROAD_EXCLUSION_BUFFER,
-  blockedPositions?: Set<string>
+  blockedPositions?: Set<string>,
+  towerType?: TowerType,
 ): boolean {
-  // Check bounds
+  const type = towerType || "cannon";
+
+  // Bounds check on anchor cell
   if (
     gridPos.x < 0 ||
     gridPos.x >= gridWidth ||
@@ -276,23 +300,14 @@ export function isValidBuildPosition(
     return false;
   }
 
-  // Check existing towers
-  for (const tower of towers) {
-    if (tower.pos.x === gridPos.x && tower.pos.y === gridPos.y) {
-      return false;
-    }
-  }
-
-  // Check blocked positions (landmarks and special towers)
+  // Blocked positions (landmarks and special towers)
   if (blockedPositions?.has(`${gridPos.x},${gridPos.y}`)) {
     return false;
   }
 
-  // Check path collision with buffer zone
+  // Path collision with buffer zone
   const path = MAP_PATHS[mapKey];
-  // check secondary paths as well
   const secondaryPaths = MAP_PATHS[`${mapKey}_b`];
-
   const worldPos = gridToWorld(gridPos);
 
   if (secondaryPaths) {
@@ -306,10 +321,16 @@ export function isValidBuildPosition(
   }
 
   for (let i = 0; i < path.length - 1; i++) {
-    // Use gridToWorldPath for path waypoints (corners/intersections)
     const p1 = gridToWorldPath(path[i]);
     const p2 = gridToWorldPath(path[i + 1]);
     if (distanceToLineSegment(worldPos, p1, p2) < buffer) {
+      return false;
+    }
+  }
+
+  // Tower-tower collision using centered rectangle overlap
+  for (const tower of towers) {
+    if (doFootprintsOverlap(type, gridPos, tower.type, tower.pos)) {
       return false;
     }
   }

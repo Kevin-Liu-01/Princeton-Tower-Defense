@@ -6322,7 +6322,8 @@ export function usePrincetonTowerDefenseRuntime() {
           GRID_WIDTH,
           GRID_HEIGHT,
           TOWER_PLACEMENT_BUFFER,
-          blockedPositions
+          blockedPositions,
+          tower.type
         );
         renderables.push({
           type: "tower-preview",
@@ -7117,7 +7118,8 @@ export function usePrincetonTowerDefenseRuntime() {
             GRID_WIDTH,
             GRID_HEIGHT,
             TOWER_PLACEMENT_BUFFER,
-            blockedPositions
+            blockedPositions,
+            tower.type
           );
 
           if (isValid) {
@@ -7213,7 +7215,8 @@ export function usePrincetonTowerDefenseRuntime() {
             GRID_WIDTH,
             GRID_HEIGHT,
             TOWER_PLACEMENT_BUFFER,
-            blockedPositions
+            blockedPositions,
+            towerToPlace.type
           )
         ) {
           const defaultRotation = towerToPlace.type === "cannon" ? Math.PI * 0.75 : 0;

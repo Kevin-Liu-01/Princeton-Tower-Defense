@@ -405,45 +405,107 @@ export function drawLightningBolt(
   y2: number,
   intensity: number = 1,
   zoom: number = 1,
-  alpha: number = 1
+  alpha: number = 1,
 ): void {
-  const segments = 6;
-  const points: { x: number; y: number }[] = [{ x: x1, y: y1 }];
-
   const dx = x2 - x1;
   const dy = y2 - y1;
+  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+  const perpX = -dy / dist;
+  const perpY = dx / dist;
+
+  const boltSeed = Math.floor(Date.now() / 50);
+  const noise = (seed: number) => {
+    const v = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+    return v - Math.floor(v);
+  };
+
+  const segments = Math.max(5, Math.floor(dist / 25));
+  const jitter = 18 * zoom * intensity;
+  const pts: { x: number; y: number }[] = [{ x: x1, y: y1 }];
 
   for (let i = 1; i < segments; i++) {
     const t = i / segments;
-    const jitter = (1 - t) * 15 * zoom * intensity;
-    points.push({
-      x: x1 + dx * t + (Math.random() - 0.5) * jitter,
-      y: y1 + dy * t + (Math.random() - 0.5) * jitter * 0.5,
+    const taper = 1 - Math.abs(t - 0.5) * 1.6;
+    const n = (noise(boltSeed + i * 17) - 0.5) * 2;
+    const offset = n * jitter * Math.max(0, taper);
+    pts.push({
+      x: x1 + dx * t + perpX * offset,
+      y: y1 + dy * t + perpY * offset,
     });
   }
-  points.push({ x: x2, y: y2 });
+  pts.push({ x: x2, y: y2 });
 
-  // Glow
-  ctx.strokeStyle = `rgba(100, 200, 255, ${alpha * 0.3 * intensity})`;
-  ctx.lineWidth = 8 * zoom * intensity;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+
+  // Layer 1: outer glow
+  ctx.shadowColor = "#0088ff";
+  ctx.shadowBlur = 16 * zoom * intensity;
+  ctx.strokeStyle = `rgba(30, 100, 255, ${alpha * 0.25 * intensity})`;
+  ctx.lineWidth = 9 * zoom * intensity;
   ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y);
-  }
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
   ctx.stroke();
 
-  // Core
-  ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * intensity})`;
-  ctx.lineWidth = 2 * zoom * intensity;
+  // Layer 2: mid glow
+  ctx.shadowColor = "#00ffff";
+  ctx.shadowBlur = 10 * zoom * intensity;
+  ctx.strokeStyle = `rgba(0, 220, 255, ${alpha * 0.55 * intensity})`;
+  ctx.lineWidth = 3.5 * zoom * intensity;
   ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y);
-  }
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
   ctx.stroke();
+
+  // Layer 3: bright core
+  ctx.shadowBlur = 4 * zoom;
+  ctx.strokeStyle = `rgba(220, 255, 255, ${alpha * 0.85 * intensity})`;
+  ctx.lineWidth = 1.2 * zoom * intensity;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
+
+  // One branch fork
+  const branchIdx = 1 + Math.floor(noise(boltSeed + 41) * (segments - 2));
+  if (branchIdx < pts.length) {
+    const bp = pts[branchIdx];
+    const brAngle =
+      Math.atan2(dy, dx) + (noise(boltSeed + 73) - 0.5) * Math.PI * 0.7;
+    const brLen = (12 + noise(boltSeed + 53) * 18) * zoom * intensity;
+    ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.35 * intensity})`;
+    ctx.lineWidth = 2.5 * zoom * intensity;
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bp.x, bp.y);
+    const midN = (noise(boltSeed + 91) - 0.5) * 5 * zoom;
+    ctx.lineTo(
+      bp.x + Math.cos(brAngle) * brLen * 0.5 + Math.cos(brAngle + 1.5) * midN,
+      bp.y + Math.sin(brAngle) * brLen * 0.5 + Math.sin(brAngle + 1.5) * midN,
+    );
+    ctx.lineTo(
+      bp.x + Math.cos(brAngle) * brLen,
+      bp.y + Math.sin(brAngle) * brLen,
+    );
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * 0.5 * intensity})`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bp.x, bp.y);
+    ctx.lineTo(
+      bp.x + Math.cos(brAngle) * brLen * 0.5 + Math.cos(brAngle + 1.5) * midN,
+      bp.y + Math.sin(brAngle) * brLen * 0.5 + Math.sin(brAngle + 1.5) * midN,
+    );
+    ctx.lineTo(
+      bp.x + Math.cos(brAngle) * brLen,
+      bp.y + Math.sin(brAngle) * brLen,
+    );
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
 }
 
 export function drawExplosion(
