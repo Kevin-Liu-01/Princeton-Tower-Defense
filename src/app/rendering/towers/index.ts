@@ -2246,6 +2246,55 @@ function renderCannonTower(
   const baseWidth = 36 + level * 5;
   const baseHeight = 24 + level * 10;
 
+  // ========== BASE RAILING SETUP & BACK HALF (behind building body) ==========
+  const canBalW = baseWidth * zoom * 0.5;
+  const canBalD = baseWidth * zoom * 0.25;
+  const canBalY = screenPos.y + 2 * zoom;
+  const canBalRX = canBalW * 1.05;
+  const canBalRY = canBalD * 1.05;
+  const canBalH = 5 * zoom;
+  const canBalSegs = 32;
+  const canBalPosts = 16;
+
+  ctx.strokeStyle = "#3a3a42";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, canBalY, canBalRX, canBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#5a5a62";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, canBalY - canBalH, canBalRX, canBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#5a5a62";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < canBalPosts; bp++) {
+    const pa = (bp / canBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) > 0) continue;
+    const px = screenPos.x + Math.cos(pa) * canBalRX;
+    const py = canBalY + Math.sin(pa) * canBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - canBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < canBalSegs; i++) {
+    const a0 = (i / canBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / canBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) > 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * canBalRX;
+    const y0b = canBalY + Math.sin(a0) * canBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * canBalRX;
+    const y1b = canBalY + Math.sin(a1) * canBalRY;
+    ctx.fillStyle = `rgba(74, 74, 82, 0.35)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - canBalH);
+    ctx.lineTo(x0, y0b - canBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // Enhanced mechanical base with tech panels
   drawMechanicalTowerBase(
     ctx,
@@ -2265,6 +2314,46 @@ function renderCannonTower(
   );
 
   const topY = screenPos.y - baseHeight * zoom;
+
+  // ========== BASE RAILING FRONT HALF (in front of building body) ==========
+  ctx.strokeStyle = "#3a3a42";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, canBalY, canBalRX, canBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#5a5a62";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, canBalY - canBalH, canBalRX, canBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#5a5a62";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < canBalPosts; bp++) {
+    const pa = (bp / canBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) <= 0) continue;
+    const px = screenPos.x + Math.cos(pa) * canBalRX;
+    const py = canBalY + Math.sin(pa) * canBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - canBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < canBalSegs; i++) {
+    const a0 = (i / canBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / canBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * canBalRX;
+    const y0b = canBalY + Math.sin(a0) * canBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * canBalRX;
+    const y1b = canBalY + Math.sin(a1) * canBalRY;
+    ctx.fillStyle = `rgba(74, 74, 82, 0.25)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - canBalH);
+    ctx.lineTo(x0, y0b - canBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   // ========== ENHANCED TURRET MOUNTING PLATFORM ==========
 
@@ -8777,6 +8866,91 @@ function renderLibraryTower(
     zoom,
   );
 
+  // ========== BASE RAILING (3D isometric ring) ==========
+  const libBalY = screenPos.y + 2 * zoom;
+  const libBalRX = w * 1.05;
+  const libBalRY = d * 1.05;
+  const libBalH = 5 * zoom;
+  const libBalSegs = 32;
+  const libBalPosts = 16;
+
+  ctx.strokeStyle = "#4a3a2a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, libBalY, libBalRX, libBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#6a5a4a";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, libBalY - libBalH, libBalRX, libBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#6a5a4a";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < libBalPosts; bp++) {
+    const pa = (bp / libBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) > 0) continue;
+    const px = screenPos.x + Math.cos(pa) * libBalRX;
+    const py = libBalY + Math.sin(pa) * libBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - libBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < libBalSegs; i++) {
+    const a0 = (i / libBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / libBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) > 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * libBalRX;
+    const y0b = libBalY + Math.sin(a0) * libBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * libBalRX;
+    const y1b = libBalY + Math.sin(a1) * libBalRY;
+    ctx.fillStyle = `rgba(90, 74, 58, 0.35)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - libBalH);
+    ctx.lineTo(x0, y0b - libBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#4a3a2a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, libBalY, libBalRX, libBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#6a5a4a";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, libBalY - libBalH, libBalRX, libBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#6a5a4a";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < libBalPosts; bp++) {
+    const pa = (bp / libBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) <= 0) continue;
+    const px = screenPos.x + Math.cos(pa) * libBalRX;
+    const py = libBalY + Math.sin(pa) * libBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - libBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < libBalSegs; i++) {
+    const a0 = (i / libBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / libBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * libBalRX;
+    const y0b = libBalY + Math.sin(a0) * libBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * libBalRX;
+    const y1b = libBalY + Math.sin(a1) * libBalRY;
+    ctx.fillStyle = `rgba(90, 74, 58, 0.25)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - libBalH);
+    ctx.lineTo(x0, y0b - libBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // Stone block pattern on lower body with mortar joints
   ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 1 * zoom;
@@ -10949,6 +11123,91 @@ function renderLabTower(
     zoom,
   );
 
+  // ========== BASE RAILING (3D isometric ring wrapping the base) ==========
+  const labBalY = screenPos.y + 4 * zoom;
+  const labBalRX = w * 1.05;
+  const labBalRY = d * 1.05;
+  const labBalH = 5 * zoom;
+  const labBalSegs = 32;
+  const labBalPosts = 16;
+
+  ctx.strokeStyle = "#2a6a8a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labBalY, labBalRX, labBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labBalY - labBalH, labBalRX, labBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < labBalPosts; bp++) {
+    const pa = (bp / labBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) > 0) continue;
+    const px = screenPos.x + Math.cos(pa) * labBalRX;
+    const py = labBalY + Math.sin(pa) * labBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - labBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < labBalSegs; i++) {
+    const a0 = (i / labBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / labBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) > 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * labBalRX;
+    const y0b = labBalY + Math.sin(a0) * labBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * labBalRX;
+    const y1b = labBalY + Math.sin(a1) * labBalRY;
+    ctx.fillStyle = `rgba(45, 90, 123, 0.35)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - labBalH);
+    ctx.lineTo(x0, y0b - labBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#2a6a8a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labBalY, labBalRX, labBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labBalY - labBalH, labBalRX, labBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < labBalPosts; bp++) {
+    const pa = (bp / labBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) <= 0) continue;
+    const px = screenPos.x + Math.cos(pa) * labBalRX;
+    const py = labBalY + Math.sin(pa) * labBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - labBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < labBalSegs; i++) {
+    const a0 = (i / labBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / labBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * labBalRX;
+    const y0b = labBalY + Math.sin(a0) * labBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * labBalRX;
+    const y1b = labBalY + Math.sin(a1) * labBalRY;
+    ctx.fillStyle = `rgba(45, 90, 123, 0.25)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - labBalH);
+    ctx.lineTo(x0, y0b - labBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // Structural panel lines for better 3D effect
   ctx.strokeStyle = "#2a5a75";
   ctx.lineWidth = 1 * zoom;
@@ -11654,6 +11913,53 @@ function renderLabTower(
 
   const topY = screenPos.y - baseHeight * zoom;
 
+  // ========== TOP RAILING BACK HALF (behind coil/beam) ==========
+  const labTopRailY = topY + 4 * zoom;
+  const labTopRailRX = w * 0.88;
+  const labTopRailRY = d * 0.88;
+  const labTopRailH = 5 * zoom;
+  const labTopRailSegs = 32;
+  const labTopRailPosts = 16;
+
+  ctx.strokeStyle = "#2a6a8a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labTopRailY, labTopRailRX, labTopRailRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labTopRailY - labTopRailH, labTopRailRX, labTopRailRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < labTopRailPosts; bp++) {
+    const pa = (bp / labTopRailPosts) * Math.PI * 2;
+    if (Math.sin(pa) > 0) continue;
+    const px = screenPos.x + Math.cos(pa) * labTopRailRX;
+    const py = labTopRailY + Math.sin(pa) * labTopRailRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - labTopRailH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < labTopRailSegs; i++) {
+    const a0 = (i / labTopRailSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / labTopRailSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) > 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * labTopRailRX;
+    const y0b = labTopRailY + Math.sin(a0) * labTopRailRY;
+    const x1 = screenPos.x + Math.cos(a1) * labTopRailRX;
+    const y1b = labTopRailY + Math.sin(a1) * labTopRailRY;
+    ctx.fillStyle = `rgba(45, 90, 123, 0.35)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - labTopRailH);
+    ctx.lineTo(x0, y0b - labTopRailH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   if (tower.level === 4 && tower.upgrade === "A") {
     renderFocusedBeam(
       ctx,
@@ -11688,6 +11994,46 @@ function renderLabTower(
       cameraOffset,
       cameraZoom,
     );
+  }
+
+  // ========== TOP RAILING FRONT HALF (in front of coil/beam) ==========
+  ctx.strokeStyle = "#2a6a8a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labTopRailY, labTopRailRX, labTopRailRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, labTopRailY - labTopRailH, labTopRailRX, labTopRailRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#3a8aaa";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < labTopRailPosts; bp++) {
+    const pa = (bp / labTopRailPosts) * Math.PI * 2;
+    if (Math.sin(pa) <= 0) continue;
+    const px = screenPos.x + Math.cos(pa) * labTopRailRX;
+    const py = labTopRailY + Math.sin(pa) * labTopRailRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - labTopRailH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < labTopRailSegs; i++) {
+    const a0 = (i / labTopRailSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / labTopRailSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * labTopRailRX;
+    const y0b = labTopRailY + Math.sin(a0) * labTopRailRY;
+    const x1 = screenPos.x + Math.cos(a1) * labTopRailRX;
+    const y1b = labTopRailY + Math.sin(a1) * labTopRailRY;
+    ctx.fillStyle = `rgba(45, 90, 123, 0.25)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - labTopRailH);
+    ctx.lineTo(x0, y0b - labTopRailH);
+    ctx.closePath();
+    ctx.fill();
   }
 
   ctx.restore();
@@ -13782,6 +14128,91 @@ function renderArchTower(
     },
     zoom,
   );
+
+  // ========== BASE RAILING (3D isometric ring) ==========
+  const archBalY = screenPos.y + 4 * zoom + subBounce;
+  const archBalRX = (subBuildingWidth - 4) * zoom * 0.5;
+  const archBalRY = (baseDepth + 24) * zoom * 0.25;
+  const archBalH = 5 * zoom;
+  const archBalSegs = 32;
+  const archBalPosts = 16;
+
+  ctx.strokeStyle = "#786858";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, archBalY, archBalRX, archBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#a89878";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, archBalY - archBalH, archBalRX, archBalRY, 0, Math.PI, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = "#a89878";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < archBalPosts; bp++) {
+    const pa = (bp / archBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) > 0) continue;
+    const px = screenPos.x + Math.cos(pa) * archBalRX;
+    const py = archBalY + Math.sin(pa) * archBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - archBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < archBalSegs; i++) {
+    const a0 = (i / archBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / archBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) > 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * archBalRX;
+    const y0b = archBalY + Math.sin(a0) * archBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * archBalRX;
+    const y1b = archBalY + Math.sin(a1) * archBalRY;
+    ctx.fillStyle = `rgba(152, 136, 104, 0.35)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - archBalH);
+    ctx.lineTo(x0, y0b - archBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.strokeStyle = "#786858";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, archBalY, archBalRX, archBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#a89878";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, archBalY - archBalH, archBalRX, archBalRY, 0, 0, Math.PI);
+  ctx.stroke();
+  ctx.strokeStyle = "#a89878";
+  ctx.lineWidth = 1 * zoom;
+  for (let bp = 0; bp < archBalPosts; bp++) {
+    const pa = (bp / archBalPosts) * Math.PI * 2;
+    if (Math.sin(pa) <= 0) continue;
+    const px = screenPos.x + Math.cos(pa) * archBalRX;
+    const py = archBalY + Math.sin(pa) * archBalRY;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, py - archBalH);
+    ctx.stroke();
+  }
+  for (let i = 0; i < archBalSegs; i++) {
+    const a0 = (i / archBalSegs) * Math.PI * 2;
+    const a1 = ((i + 1) / archBalSegs) * Math.PI * 2;
+    if (Math.sin((a0 + a1) / 2) <= 0) continue;
+    const x0 = screenPos.x + Math.cos(a0) * archBalRX;
+    const y0b = archBalY + Math.sin(a0) * archBalRY;
+    const x1 = screenPos.x + Math.cos(a1) * archBalRX;
+    const y1b = archBalY + Math.sin(a1) * archBalRY;
+    ctx.fillStyle = `rgba(152, 136, 104, 0.25)`;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0b);
+    ctx.lineTo(x1, y1b);
+    ctx.lineTo(x1, y1b - archBalH);
+    ctx.lineTo(x0, y0b - archBalH);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   // 3D stone block details with glowing mortar on sub-building faces
   const mortarGlow = 0.12 + Math.sin(time * 1.5) * 0.06 + attackPulse * 0.15;
