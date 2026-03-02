@@ -208,10 +208,16 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
               <span className="text-[9px] font-bold text-emerald-300">BUFFED</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {hasRangeBuff && (
+              {hasRangeBuff && tower.type !== "station" && (
                 <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-cyan-400">
                   <Target size={10} />
                   <span>+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Range</span>
+                </div>
+              )}
+              {hasRangeBuff && tower.type === "station" && (
+                <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-cyan-400">
+                  <Fence size={10} />
+                  <span>+{Math.round(((tower.rangeBoost || 1) - 1) * 100)}% Deploy</span>
                 </div>
               )}
               {hasDamageBuff && (
@@ -262,6 +268,20 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
               <span className="text-amber-300 font-medium">+{stats.income} PP/{(stats.incomeInterval || 8000) / 1000}s</span>
             </div>
           )}
+          {tower.type === "station" && (() => {
+            const baseDeployRange = TOWER_DATA.station.spawnRange || 180;
+            const boostedDeployRange = Math.floor(baseDeployRange * (tower.rangeBoost || 1));
+            const isDeployBoosted = (tower.rangeBoost || 1) > 1;
+            return (
+              <div className="flex items-center gap-1">
+                <Fence size={11} className={isDeployBoosted ? "text-cyan-400" : "text-orange-400"} />
+                <span className={isDeployBoosted ? "text-cyan-300 font-medium" : "text-orange-300 font-medium"}>
+                  {isDeployBoosted ? boostedDeployRange : baseDeployRange}
+                </span>
+                <span className="text-stone-500 text-[9px]">deploy</span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Level 4 Eating Club Aura Buffs */}
@@ -407,8 +427,8 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
     beacon: {
       name: "Ancient Beacon",
       icon: <Zap className="text-cyan-400" size={18} />,
-      desc: "Energy Spire. Emits a resonance field that boosts the range of all nearby towers by 20%.",
-      stat: "+20% Range Buff",
+      desc: "Energy Spire. Emits a resonance field that boosts the range of all nearby towers and troop deployment range by 20%.",
+      stat: "+20% Range & Deploy Buff",
       color: "from-cyan-900/90 to-slate-950/90",
       borderColor: "border-cyan-500",
     },

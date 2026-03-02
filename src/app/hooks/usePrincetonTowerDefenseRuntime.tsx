@@ -3159,7 +3159,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   attackAnim: 0,
                   selected: false,
                   spawnPoint: rallyPoint,
-                  moveRadius: TOWER_DATA.station.spawnRange || 180,
+                  moveRadius: (TOWER_DATA.station.spawnRange || 180) * (tower.rangeBoost || 1),
                   spawnSlot: r.slot,
                   userTargetPos: targetPos,
                 });
@@ -3257,7 +3257,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   attackAnim: 0,
                   selected: false,
                   spawnPoint: rallyPoint,
-                  moveRadius: TOWER_DATA.station.spawnRange || 180,
+                  moveRadius: (TOWER_DATA.station.spawnRange || 180) * (tower.rangeBoost || 1),
                   spawnSlot: availableSlot,
                   userTargetPos: targetPos,
                 };

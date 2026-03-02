@@ -775,15 +775,16 @@ const HERO_SUMMON_RANGE = 180; // Captain's rally range
 
 export function getTroopMoveInfo(
   troop: Troop,
-  towers: { id: string; type: string; pos: { x: number; y: number } }[],
+  towers: { id: string; type: string; pos: { x: number; y: number }; rangeBoost?: number }[],
   specialTower?: { type: string; pos: { x: number; y: number } }
 ): TroopMoveInfo {
   // Check if owned by a dinky station
   const station = towers.find((t) => t.id === troop.ownerId && t.type === 'station');
   if (station) {
+    const boostedRange = STATION_TROOP_RANGE * (station.rangeBoost || 1);
     return {
       anchorPos: gridToWorld(station.pos),
-      moveRadius: STATION_TROOP_RANGE,
+      moveRadius: boostedRange,
       canMoveAnywhere: false,
       ownerType: 'station',
       ownerId: station.id,

@@ -35,6 +35,7 @@ import {
   AlertTriangle,
   Ban,
   Lock,
+  Fence,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
 import { TOWER_DATA, TROOP_DATA } from "../../constants";
@@ -126,6 +127,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     isDebuffed?: boolean;
     boostAmount?: number;
     debuffAmount?: number;
+    colSpan?: number;
     colorClass: string;
     buffColorClass: string;
     debuffColorClass: string;
@@ -261,6 +263,25 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
+  // Deploy Range (Station only)
+  if (tower.type === "station") {
+    const baseDeployRange = TOWER_DATA.station.spawnRange || 180;
+    const boostedDeployRange = Math.floor(baseDeployRange * rangeBoost);
+    statsToShow.push({
+      key: "deployRange",
+      label: "Deploy",
+      icon: <Fence size={14} />,
+      value: baseDeployRange,
+      buffedValue: hasRangeBuff ? boostedDeployRange : undefined,
+      isBoosted: hasRangeBuff,
+      boostAmount: hasRangeBuff ? Math.round((rangeBoost - 1) * 100) : undefined,
+      colSpan: 2,
+      colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
+      buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
+      debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
+    });
+  }
+
   // Support tower buffs - Check the active upgrade path for buffs
   const activeUpgradeStats = tower.level === 4 && tower.upgrade ? towerStatsDef?.upgrades?.[tower.upgrade]?.stats : null;
 
@@ -359,9 +380,14 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/70 to-orange-950/70 rounded-lg border border-yellow-600/40 flex items-center justify-center gap-2">
             <Sparkles size={12} className="text-yellow-400" />
             <span className="text-[9px] text-yellow-300 font-bold">BUFFED</span>
-            {hasRangeBuff && (
+            {hasRangeBuff && tower.type !== "station" && (
               <span className="flex items-center gap-1 px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 text-[9px]">
                 <Target size={10} /> +{Math.round((rangeBoost - 1) * 100)}% Range
+              </span>
+            )}
+            {hasRangeBuff && tower.type === "station" && (
+              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 text-[9px]">
+                <Fence size={10} /> +{Math.round((rangeBoost - 1) * 100)}% Deploy
               </span>
             )}
             {hasDamageBuff && (
@@ -479,6 +505,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 <div
                   key={stat.key}
                   className={`p-1.5 rounded-lg border text-center ${colorClass}`}
+                  style={stat.colSpan ? { gridColumn: `span ${stat.colSpan}` } : undefined}
                 >
                   <div className="flex items-center justify-center gap-1 mb-0.5">
                     {stat.icon}

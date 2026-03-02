@@ -20079,6 +20079,204 @@ function renderClubTower(
     ctx.fill();
   }
 
+  // ========== WAVING CLUB BANNER (behind roof, on right side) ==========
+  const flagPoleX = screenPos.x + w * 0.35;
+  const flagPoleTopY = topY - 28 * zoom;
+
+  // Pole shadow
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX + zoom, topY - 1 * zoom);
+  ctx.lineTo(flagPoleX + zoom, flagPoleTopY + zoom);
+  ctx.stroke();
+
+  // Pole shaft with metallic gradient
+  ctx.strokeStyle = "#6a6a72";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, topY - 2 * zoom);
+  ctx.lineTo(flagPoleX, flagPoleTopY);
+  ctx.stroke();
+  ctx.strokeStyle = "#9a9aa2";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX - 0.5 * zoom, topY - 2 * zoom);
+  ctx.lineTo(flagPoleX - 0.5 * zoom, flagPoleTopY);
+  ctx.stroke();
+
+  // Gold ornamental ball on top
+  ctx.fillStyle = "#c9a227";
+  ctx.beginPath();
+  ctx.arc(flagPoleX, flagPoleTopY, 2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffe88a";
+  ctx.beginPath();
+  ctx.arc(flagPoleX - 0.5 * zoom, flagPoleTopY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flag with wave segments for cloth-like ripple
+  const flagW = 14 * zoom;
+  const flagH = 9 * zoom;
+  const flagTopY2 = flagPoleTopY + 2 * zoom;
+  const waveSegs = 6;
+
+  // Flag body with wave
+  ctx.fillStyle = "#2a5a3a";
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, flagTopY2);
+  for (let seg = 1; seg <= waveSegs; seg++) {
+    const t = seg / waveSegs;
+    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
+    const sy = flagTopY2 + Math.sin(time * 2.5 + t * 2) * 1.5 * zoom * t;
+    ctx.lineTo(sx, sy);
+  }
+  for (let seg = waveSegs; seg >= 0; seg--) {
+    const t = seg / waveSegs;
+    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.5) * 2.5 * zoom * t;
+    const sy = flagTopY2 + flagH + Math.sin(time * 2.8 + t * 2) * 1.5 * zoom * t;
+    ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Darker stripe across middle of flag
+  ctx.fillStyle = "rgba(26, 58, 38, 0.6)";
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, flagTopY2 + flagH * 0.35);
+  for (let seg = 1; seg <= waveSegs; seg++) {
+    const t = seg / waveSegs;
+    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
+    const sy = flagTopY2 + flagH * 0.35 + Math.sin(time * 2.6 + t * 2) * 1.2 * zoom * t;
+    ctx.lineTo(sx, sy);
+  }
+  for (let seg = waveSegs; seg >= 0; seg--) {
+    const t = seg / waveSegs;
+    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.3) * 2.2 * zoom * t;
+    const sy = flagTopY2 + flagH * 0.65 + Math.sin(time * 2.7 + t * 2) * 1.2 * zoom * t;
+    ctx.lineTo(sx, sy);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Gold border trim
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, flagTopY2);
+  for (let seg = 1; seg <= waveSegs; seg++) {
+    const t = seg / waveSegs;
+    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
+    const sy = flagTopY2 + Math.sin(time * 2.5 + t * 2) * 1.5 * zoom * t;
+    ctx.lineTo(sx, sy);
+  }
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(flagPoleX, flagTopY2 + flagH);
+  for (let seg = 1; seg <= waveSegs; seg++) {
+    const t = seg / waveSegs;
+    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.5) * 2.5 * zoom * t;
+    const sy = flagTopY2 + flagH + Math.sin(time * 2.8 + t * 2) * 1.5 * zoom * t;
+    ctx.lineTo(sx, sy);
+  }
+  ctx.stroke();
+
+  // "EC" text with shadow
+  const flagCenterX = flagPoleX + flagW * 0.45 + Math.sin(time * 3 + 1.5) * zoom;
+  const flagCenterY = flagTopY2 + flagH * 0.5;
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.font = `bold ${6 * zoom}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("EC", flagCenterX + 0.5 * zoom, flagCenterY + 0.5 * zoom);
+  ctx.fillStyle = `rgba(201, 162, 39, ${0.9 + Math.sin(time * 2) * 0.1})`;
+  ctx.fillText("EC", flagCenterX, flagCenterY);
+
+  // ========== CHIMNEY WITH ANIMATED SMOKE (3D isometric, left side) ==========
+  const chimneyX = screenPos.x - w * 0.3;
+  const chimneyBaseY = topY + 2 * zoom;
+  const chimneyH = 18 * zoom;
+  const chimneyW = 5;
+  const chimneyD = 5;
+
+  // Chimney shaft (isometric prism)
+  drawIsometricPrism(
+    ctx,
+    chimneyX,
+    chimneyBaseY,
+    chimneyW,
+    chimneyD,
+    chimneyH / zoom,
+    {
+      top: "#5a4a4a",
+      left: "#4a3a3a",
+      right: "#3a2a2a",
+      leftBack: "#5a4a4a",
+      rightBack: "#4a3a3a",
+    },
+    zoom,
+  );
+
+  // Chimney cap (wider crown)
+  drawIsometricPrism(
+    ctx,
+    chimneyX,
+    chimneyBaseY - chimneyH + zoom,
+    chimneyW + 2,
+    chimneyD + 2,
+    2,
+    {
+      top: "#6a5a5a",
+      left: "#5a4a4a",
+      right: "#4a3a3a",
+      leftBack: "#6a5a5a",
+      rightBack: "#5a4a4a",
+    },
+    zoom,
+  );
+
+  // Brick lines on chimney faces
+  ctx.strokeStyle = "rgba(80, 60, 50, 0.3)";
+  ctx.lineWidth = 0.5 * zoom;
+  const chHW = chimneyW * zoom * 0.5;
+  const chDO = chimneyD * zoom * 0.25;
+  for (let br = 1; br < 6; br++) {
+    const bry = chimneyBaseY - chimneyH * (br / 6);
+    ctx.beginPath();
+    ctx.moveTo(chimneyX - chHW, bry);
+    ctx.lineTo(chimneyX, bry + chDO);
+    ctx.lineTo(chimneyX + chHW, bry);
+    ctx.stroke();
+  }
+
+  // Dark chimney opening
+  ctx.fillStyle = "#1a0a0a";
+  ctx.beginPath();
+  ctx.ellipse(
+    chimneyX,
+    chimneyBaseY - chimneyH - zoom,
+    chHW * 0.6,
+    chDO * 0.5,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Animated smoke puffs
+  for (let s = 0; s < 5; s++) {
+    const smokeAge = (time * 0.7 + s * 0.2) % 1;
+    const smokeY = chimneyBaseY - chimneyH - 2 * zoom - smokeAge * 28 * zoom;
+    const smokeX =
+      chimneyX + Math.sin(time * 1.8 + s * 1.7) * 5 * zoom * smokeAge;
+    const smokeAlpha = (1 - smokeAge) * 0.3;
+    const smokeSize = (1.5 + smokeAge * 6) * zoom;
+    ctx.fillStyle = `rgba(180, 180, 195, ${smokeAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(smokeX, smokeY, smokeSize, smokeSize * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   // ========== ENHANCED ROOF WITH GOLD DOME ==========
   // Antenna array on roof (level 2+)
   if (tower.level >= 2) {
@@ -20105,181 +20303,328 @@ function renderClubTower(
     }
   }
 
-  // Base roof structure
-  ctx.fillStyle = "#1a3a2a";
+  // ========== DETAILED ISOMETRIC ROOF WITH TILES ==========
+  const roofPeakX = screenPos.x;
+  const roofPeakY = topY - 18 * zoom;
+  const roofLeftX = screenPos.x - baseWidth * zoom * 0.45;
+  const roofLeftY = topY + 2 * zoom;
+  const roofRightX = screenPos.x + baseWidth * zoom * 0.45;
+  const roofRightY = topY + 2 * zoom;
+  const roofFrontX = screenPos.x;
+  const roofFrontY = topY + baseWidth * zoom * 0.22;
+  const roofEaveThick = 4 * zoom;
+
+  // Left face base fill (gradient)
+  const leftRoofGrad = ctx.createLinearGradient(
+    roofPeakX, roofPeakY, roofLeftX, roofFrontY,
+  );
+  leftRoofGrad.addColorStop(0, "#2a5040");
+  leftRoofGrad.addColorStop(0.5, "#1e3e30");
+  leftRoofGrad.addColorStop(1, "#152e24");
+  ctx.fillStyle = leftRoofGrad;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x, topY - 18 * zoom);
-  ctx.lineTo(screenPos.x - baseWidth * zoom * 0.45, topY + 2 * zoom);
-  ctx.lineTo(screenPos.x, topY + baseWidth * zoom * 0.22);
-  ctx.lineTo(screenPos.x + baseWidth * zoom * 0.45, topY + 2 * zoom);
+  ctx.moveTo(roofPeakX, roofPeakY);
+  ctx.lineTo(roofLeftX, roofLeftY);
+  ctx.lineTo(roofFrontX, roofFrontY);
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#2a4a3a";
+  // Right face base fill (gradient, lighter for sunlit side)
+  const rightRoofGrad = ctx.createLinearGradient(
+    roofPeakX, roofPeakY, roofRightX, roofFrontY,
+  );
+  rightRoofGrad.addColorStop(0, "#366050");
+  rightRoofGrad.addColorStop(0.5, "#2a4a3a");
+  rightRoofGrad.addColorStop(1, "#1e3e2e");
+  ctx.fillStyle = rightRoofGrad;
   ctx.beginPath();
-  ctx.moveTo(screenPos.x, topY - 18 * zoom);
-  ctx.lineTo(screenPos.x + baseWidth * zoom * 0.45, topY + 2 * zoom);
-  ctx.lineTo(screenPos.x + baseWidth * zoom * 0.45, topY + 6 * zoom);
-  ctx.lineTo(screenPos.x, topY + baseWidth * zoom * 0.22 + 4 * zoom);
+  ctx.moveTo(roofPeakX, roofPeakY);
+  ctx.lineTo(roofRightX, roofRightY);
+  ctx.lineTo(roofFrontX, roofFrontY);
   ctx.closePath();
   ctx.fill();
 
-  // Roof tech patterns
-  ctx.strokeStyle = "#0a2a1a";
-  ctx.lineWidth = 1 * zoom;
-  for (let tile = 0; tile < 6; tile++) {
-    const tileY = topY - 14 * zoom + (tile / 6) * 16 * zoom;
+  // Right side depth face
+  ctx.fillStyle = "#1a3828";
+  ctx.beginPath();
+  ctx.moveTo(roofPeakX, roofPeakY);
+  ctx.lineTo(roofRightX, roofRightY);
+  ctx.lineTo(roofRightX, roofRightY + roofEaveThick);
+  ctx.lineTo(roofFrontX, roofFrontY + roofEaveThick);
+  ctx.closePath();
+  ctx.fill();
+
+  // Tile rows on left face (staggered shingle pattern)
+  const tileRows = 7;
+  for (let row = 0; row < tileRows; row++) {
+    const t0 = row / tileRows;
+    const t1 = (row + 1) / tileRows;
+    // Row edges on left face: peak->leftBase and peak->frontBase
+    const l0x = roofPeakX + (roofLeftX - roofPeakX) * t0;
+    const l0y = roofPeakY + (roofLeftY - roofPeakY) * t0;
+    const r0x = roofPeakX + (roofFrontX - roofPeakX) * t0;
+    const r0y = roofPeakY + (roofFrontY - roofPeakY) * t0;
+    const l1x = roofPeakX + (roofLeftX - roofPeakX) * t1;
+    const l1y = roofPeakY + (roofLeftY - roofPeakY) * t1;
+    const r1x = roofPeakX + (roofFrontX - roofPeakX) * t1;
+    const r1y = roofPeakY + (roofFrontY - roofPeakY) * t1;
+
+    // Alternating row shading
+    const rowShade = row % 2 === 0 ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.03)";
+    ctx.fillStyle = rowShade;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - (baseWidth * 0.4 - tile * 2.5) * zoom, tileY);
-    ctx.lineTo(screenPos.x, tileY + (tile * 2 * zoom) / 3);
-    ctx.lineTo(screenPos.x + (baseWidth * 0.4 - tile * 2.5) * zoom, tileY);
+    ctx.moveTo(l0x, l0y);
+    ctx.lineTo(r0x, r0y);
+    ctx.lineTo(r1x, r1y);
+    ctx.lineTo(l1x, l1y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Horizontal row line
+    ctx.strokeStyle = "rgba(10, 30, 18, 0.5)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(l1x, l1y);
+    ctx.lineTo(r1x, r1y);
     ctx.stroke();
+
+    // Vertical shingle separators (staggered)
+    const tileCols = 3 + Math.floor(row * 0.8);
+    const staggerOff = row % 2 === 0 ? 0 : 0.5 / tileCols;
+    ctx.strokeStyle = "rgba(10, 30, 18, 0.3)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let col = 1; col < tileCols; col++) {
+      const ct = col / tileCols + staggerOff;
+      if (ct >= 1) break;
+      const sx = l0x + (r0x - l0x) * ct;
+      const sy = l0y + (r0y - l0y) * ct;
+      const ex = l1x + (r1x - l1x) * ct;
+      const ey = l1y + (r1y - l1y) * ct;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
   }
 
-  // Gold dome with enhanced flash effect
+  // Tile rows on right face (staggered shingle pattern)
+  for (let row = 0; row < tileRows; row++) {
+    const t0 = row / tileRows;
+    const t1 = (row + 1) / tileRows;
+    const l0x = roofPeakX + (roofFrontX - roofPeakX) * t0;
+    const l0y = roofPeakY + (roofFrontY - roofPeakY) * t0;
+    const r0x = roofPeakX + (roofRightX - roofPeakX) * t0;
+    const r0y = roofPeakY + (roofRightY - roofPeakY) * t0;
+    const l1x = roofPeakX + (roofFrontX - roofPeakX) * t1;
+    const l1y = roofPeakY + (roofFrontY - roofPeakY) * t1;
+    const r1x = roofPeakX + (roofRightX - roofPeakX) * t1;
+    const r1y = roofPeakY + (roofRightY - roofPeakY) * t1;
+
+    const rowShade = row % 2 === 0 ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.05)";
+    ctx.fillStyle = rowShade;
+    ctx.beginPath();
+    ctx.moveTo(l0x, l0y);
+    ctx.lineTo(r0x, r0y);
+    ctx.lineTo(r1x, r1y);
+    ctx.lineTo(l1x, l1y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(10, 40, 22, 0.45)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(l1x, l1y);
+    ctx.lineTo(r1x, r1y);
+    ctx.stroke();
+
+    const tileCols = 3 + Math.floor(row * 0.8);
+    const staggerOff = row % 2 === 0 ? 0 : 0.5 / tileCols;
+    ctx.strokeStyle = "rgba(10, 40, 22, 0.25)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let col = 1; col < tileCols; col++) {
+      const ct = col / tileCols + staggerOff;
+      if (ct >= 1) break;
+      const sx = l0x + (r0x - l0x) * ct;
+      const sy = l0y + (r0y - l0y) * ct;
+      const ex = l1x + (r1x - l1x) * ct;
+      const ey = l1y + (r1y - l1y) * ct;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+  }
+
+  // Ridge cap along the peak (left edge)
+  ctx.strokeStyle = "#3a6a50";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(roofPeakX, roofPeakY);
+  ctx.lineTo(roofLeftX, roofLeftY);
+  ctx.stroke();
+  // Ridge cap along the peak (right edge)
+  ctx.beginPath();
+  ctx.moveTo(roofPeakX, roofPeakY);
+  ctx.lineTo(roofRightX, roofRightY);
+  ctx.stroke();
+  // Ridge highlight
+  ctx.strokeStyle = "rgba(80, 140, 100, 0.4)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(roofPeakX, roofPeakY + 0.5 * zoom);
+  ctx.lineTo(roofRightX - 1 * zoom, roofRightY + 0.5 * zoom);
+  ctx.stroke();
+
+  // Front ridge (peak to front)
+  ctx.strokeStyle = "#2a5a40";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(roofPeakX, roofPeakY);
+  ctx.lineTo(roofFrontX, roofFrontY);
+  ctx.stroke();
+
+  // Eave trim (bottom edges with thickness)
+  ctx.strokeStyle = "#4a3a2a";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(roofLeftX, roofLeftY);
+  ctx.lineTo(roofFrontX, roofFrontY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(roofFrontX, roofFrontY);
+  ctx.lineTo(roofRightX, roofRightY);
+  ctx.stroke();
+  // Eave underside highlight
+  ctx.strokeStyle = "rgba(100, 80, 50, 0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(roofFrontX, roofFrontY + 1.5 * zoom);
+  ctx.lineTo(roofRightX, roofRightY + 1.5 * zoom);
+  ctx.stroke();
+
+  // Gold dome with enhanced 3D shading
+  const domeX = screenPos.x;
+  const domeY = topY - 15 * zoom;
+  const domeRX = 12 * zoom;
+  const domeRY = 7 * zoom;
+
+  // Dome shadow underneath
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.beginPath();
+  ctx.ellipse(domeX, domeY + 2 * zoom, domeRX + zoom, domeRY + zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Main dome body gradient
   const domeGrad = ctx.createRadialGradient(
-    screenPos.x - 3 * zoom,
-    topY - 22 * zoom,
-    0,
-    screenPos.x,
-    topY - 15 * zoom,
-    14 * zoom,
+    domeX - 4 * zoom, domeY - 3 * zoom, 0,
+    domeX, domeY, domeRX,
   );
   domeGrad.addColorStop(0, flashIntensity > 0 ? "#ffffee" : "#fffadc");
-  domeGrad.addColorStop(0.2, flashIntensity > 0 ? "#fff066" : "#ffe44d");
-  domeGrad.addColorStop(0.5, "#c9a227");
-  domeGrad.addColorStop(0.8, "#b8860b");
-  domeGrad.addColorStop(1, "#8b6914");
+  domeGrad.addColorStop(0.15, flashIntensity > 0 ? "#fff066" : "#ffe44d");
+  domeGrad.addColorStop(0.4, "#dab540");
+  domeGrad.addColorStop(0.65, "#c9a227");
+  domeGrad.addColorStop(0.85, "#a8860b");
+  domeGrad.addColorStop(1, "#7a5a08");
   ctx.fillStyle = domeGrad;
   if (flashIntensity > 0) {
     ctx.shadowColor = "#ffd700";
     ctx.shadowBlur = 15 * zoom * flashIntensity;
   }
   ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topY - 15 * zoom,
-    12 * zoom,
-    7 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.ellipse(domeX, domeY, domeRX, domeRY, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Dome highlight arc
-  ctx.strokeStyle = "#ffe88a";
+  // Dome rim ring (3D base ring)
+  ctx.strokeStyle = "#8b6914";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topY - 15 * zoom,
-    10 * zoom,
-    5 * zoom,
-    0,
-    Math.PI * 1.2,
-    Math.PI * 1.8,
-  );
+  ctx.ellipse(domeX, domeY + domeRY * 0.7, domeRX * 0.95, domeRY * 0.35, 0, 0, Math.PI);
   ctx.stroke();
 
-  // Dome finial (gold spike on top)
+  // Specular highlight arc (bright)
+  ctx.strokeStyle = "rgba(255, 250, 220, 0.6)";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(domeX, domeY, domeRX * 0.7, domeRY * 0.65, 0, Math.PI * 1.15, Math.PI * 1.75);
+  ctx.stroke();
+
+  // Secondary subtle highlight
+  ctx.strokeStyle = "rgba(255, 240, 180, 0.3)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(domeX, domeY - domeRY * 0.15, domeRX * 0.5, domeRY * 0.4, 0, Math.PI * 1.0, Math.PI * 1.9);
+  ctx.stroke();
+
+  // Meridian lines on dome (longitudinal)
+  ctx.strokeStyle = "rgba(138, 105, 20, 0.25)";
+  ctx.lineWidth = 0.6 * zoom;
+  for (let m = 0; m < 6; m++) {
+    const mAngle = (m / 6) * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(
+      domeX + Math.cos(mAngle) * domeRX * 0.95,
+      domeY + Math.sin(mAngle) * domeRY * 0.7,
+    );
+    ctx.quadraticCurveTo(
+      domeX + Math.cos(mAngle) * domeRX * 0.3,
+      domeY - domeRY * 0.9,
+      domeX - Math.cos(mAngle) * domeRX * 0.95,
+      domeY + Math.sin(Math.PI - mAngle) * domeRY * 0.7,
+    );
+    ctx.stroke();
+  }
+
+  // ========== ORNATE FINIAL (spire on top of dome) ==========
+  const finialBaseY = domeY - domeRY * 0.6;
+
+  // Finial neck/base collar
+  ctx.fillStyle = "#b89020";
+  ctx.beginPath();
+  ctx.ellipse(domeX, finialBaseY + 2 * zoom, 3 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Finial shaft with taper
+  const finialTipY = topY - 34 * zoom;
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
-  ctx.moveTo(screenPos.x, topY - 32 * zoom);
-  ctx.lineTo(screenPos.x - 3 * zoom, topY - 20 * zoom);
-  ctx.lineTo(screenPos.x + 3 * zoom, topY - 20 * zoom);
+  ctx.moveTo(domeX - 2.5 * zoom, finialBaseY);
+  ctx.lineTo(domeX - 1.2 * zoom, finialBaseY - 8 * zoom);
+  ctx.lineTo(domeX - 0.6 * zoom, finialTipY + 4 * zoom);
+  ctx.lineTo(domeX, finialTipY);
+  ctx.lineTo(domeX + 0.6 * zoom, finialTipY + 4 * zoom);
+  ctx.lineTo(domeX + 1.2 * zoom, finialBaseY - 8 * zoom);
+  ctx.lineTo(domeX + 2.5 * zoom, finialBaseY);
   ctx.closePath();
   ctx.fill();
 
-  // Finial glow with flash
+  // Shaft highlight
+  ctx.strokeStyle = "rgba(255, 250, 220, 0.5)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(domeX - 0.8 * zoom, finialBaseY);
+  ctx.lineTo(domeX - 0.4 * zoom, finialTipY + 3 * zoom);
+  ctx.stroke();
+
+  // Decorative knob midway
+  ctx.fillStyle = "#dab540";
+  ctx.beginPath();
+  ctx.arc(domeX, finialBaseY - 5 * zoom, 1.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffe88a";
+  ctx.beginPath();
+  ctx.arc(domeX - 0.4 * zoom, finialBaseY - 5.5 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Finial tip glow
   const finialGlow = 0.6 + Math.sin(time * 4) * 0.3 + flashIntensity * 0.4;
   ctx.fillStyle = `rgba(255, 215, 0, ${finialGlow})`;
   ctx.shadowColor = "#ffd700";
   ctx.shadowBlur = (8 + flashIntensity * 10) * zoom;
   ctx.beginPath();
-  ctx.arc(screenPos.x, topY - 32 * zoom, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(domeX, finialTipY, 2 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-
-  // ========== CHIMNEY WITH ANIMATED SMOKE ==========
-  const chimneyX = screenPos.x + w * 0.3;
-  const chimneyBaseY = topY - 5 * zoom;
-  ctx.fillStyle = "#3a2a2a";
-  ctx.fillRect(
-    chimneyX - 3 * zoom,
-    chimneyBaseY - 18 * zoom,
-    6 * zoom,
-    18 * zoom,
-  );
-  ctx.fillStyle = "#4a3a3a";
-  ctx.fillRect(
-    chimneyX - 4 * zoom,
-    chimneyBaseY - 20 * zoom,
-    8 * zoom,
-    3 * zoom,
-  );
-  ctx.strokeStyle = "#2a1a1a";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.strokeRect(
-    chimneyX - 3 * zoom,
-    chimneyBaseY - 18 * zoom,
-    6 * zoom,
-    18 * zoom,
-  );
-  for (let s = 0; s < 4; s++) {
-    const smokeAge = (time * 0.8 + s * 0.25) % 1;
-    const smokeY = chimneyBaseY - 20 * zoom - smokeAge * 25 * zoom;
-    const smokeX =
-      chimneyX + Math.sin(time * 2 + s * 1.7) * 4 * zoom * smokeAge;
-    const smokeAlpha = (1 - smokeAge) * 0.35;
-    const smokeSize = (2 + smokeAge * 5) * zoom;
-    ctx.fillStyle = `rgba(180, 180, 190, ${smokeAlpha})`;
-    ctx.beginPath();
-    ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // ========== WAVING CLUB BANNER ==========
-  const flagPoleX = screenPos.x - w * 0.35;
-  const flagPoleTopY = topY - 28 * zoom;
-  ctx.strokeStyle = "#5a5a5a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(flagPoleX, topY - 2 * zoom);
-  ctx.lineTo(flagPoleX, flagPoleTopY);
-  ctx.stroke();
-  ctx.fillStyle = "#4a4a4a";
-  ctx.beginPath();
-  ctx.arc(flagPoleX, flagPoleTopY, 1.5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-  const flagW = 14 * zoom;
-  const flagH = 8 * zoom;
-  const flagTopY2 = flagPoleTopY + 1 * zoom;
-  ctx.fillStyle = "#2a5a3a";
-  ctx.beginPath();
-  ctx.moveTo(flagPoleX, flagTopY2);
-  ctx.lineTo(
-    flagPoleX + flagW + Math.sin(time * 3) * 2 * zoom,
-    flagTopY2 + Math.sin(time * 2.5) * zoom,
-  );
-  ctx.lineTo(
-    flagPoleX + flagW + Math.sin(time * 3 + 0.5) * 2.5 * zoom,
-    flagTopY2 + flagH + Math.sin(time * 2.8) * zoom,
-  );
-  ctx.lineTo(flagPoleX, flagTopY2 + flagH);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1 * zoom;
-  ctx.stroke();
-  const flagCenterX = flagPoleX + flagW * 0.45 + Math.sin(time * 3) * zoom;
-  const flagCenterY = flagTopY2 + flagH * 0.5;
-  ctx.fillStyle = `rgba(201, 162, 39, ${0.8 + Math.sin(time * 2) * 0.15})`;
-  ctx.font = `bold ${5 * zoom}px serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("EC", flagCenterX, flagCenterY);
 
   // ========== STRING LIGHTS WITH WARM GLOW ==========
   const lightCount = 7;
@@ -20358,60 +20703,171 @@ function renderClubTower(
   }
 
   // ========== HOLOGRAPHIC CREDIT DISPLAY ==========
-  const coinY = topY - 35 * zoom + Math.sin(time * 3) * 4 * zoom;
+  const coinY = topY - 38 * zoom + Math.sin(time * 3) * 3 * zoom;
+  const coinR = 8 * zoom;
 
-  // Multiple rotating rings with flash
-  for (let ring = 0; ring < 2 + tower.level; ring++) {
-    const ringAlpha = 0.3 - ring * 0.06 + flashIntensity * 0.2;
-    const ringSize = 16 + ring * 3;
-    ctx.strokeStyle = `rgba(255, 215, 0, ${ringAlpha + Math.sin(time * 4 + ring) * 0.1})`;
-    ctx.lineWidth = (2 + flashIntensity) * zoom;
+  // Ring orbit parameters
+  const orbitRings = [
+    { size: 14, tilt: 0.35, speed: 1.8, phase: 0 },
+    { size: 17, tilt: -0.25, speed: -1.3, phase: Math.PI * 0.6 },
+    { size: 20, tilt: 0.15, speed: 1.0, phase: Math.PI * 1.2 },
+  ];
+
+  // --- BACK halves of orbiting rings (drawn behind coin/dome) ---
+  for (let ri = 0; ri < orbitRings.length; ri++) {
+    const orb = orbitRings[ri];
+    const orbAngle = time * orb.speed + orb.phase;
+    const orbRX = orb.size * zoom;
+    const orbRY = orb.size * 0.38 * zoom;
+    const ringAlpha = 0.3 + Math.sin(time * 3.5 + ri * 1.4) * 0.12 + flashIntensity * 0.2;
+    ctx.save();
+    ctx.translate(screenPos.x, coinY);
+    ctx.rotate(orb.tilt);
+    // Outer glow (back half)
+    ctx.strokeStyle = `rgba(0, 255, 180, ${ringAlpha * 0.25})`;
+    ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      coinY,
-      ringSize * zoom,
-      ringSize * 0.5 * zoom,
-      time * 0.5 + ring * 0.3,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(0, 0, orbRX + zoom, orbRY + 0.5 * zoom, 0, Math.PI, Math.PI * 2);
     ctx.stroke();
+    // Main ring (back half — upper arc is behind)
+    ctx.strokeStyle = `rgba(0, 230, 160, ${ringAlpha})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, orbRX, orbRY, 0, Math.PI, Math.PI * 2);
+    ctx.stroke();
+    // Orbiting particle on back half
+    const pAngle = orbAngle;
+    const px = Math.cos(pAngle) * orbRX;
+    const py = Math.sin(pAngle) * orbRY;
+    if (Math.sin(pAngle) < 0) {
+      ctx.fillStyle = `rgba(255, 255, 200, ${0.6 + Math.sin(time * 6 + ri) * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(px, py, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
-  // Holographic credit symbol
-  const coinRotation = time * 4;
+  // 3D rotating coin
+  const coinRotation = time * 3;
+  const coinScale = Math.cos(coinRotation);
+  const coinThickness = 2 * zoom;
+
   ctx.save();
   ctx.translate(screenPos.x, coinY);
-  ctx.scale(Math.cos(coinRotation), 1);
 
-  // Outer glow
-  const creditGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 14 * zoom);
-  creditGrad.addColorStop(
-    0,
-    `rgba(255, 255, 200, ${0.9 + flashIntensity * 0.1})`,
+  // Coin edge (visible when turned)
+  if (Math.abs(coinScale) < 0.95) {
+    const edgeDir = coinScale > 0 ? 1 : -1;
+    ctx.fillStyle = "#8b6914";
+    ctx.beginPath();
+    ctx.ellipse(edgeDir * coinThickness * 0.5, 0, coinThickness * 0.5, coinR, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Edge ridges
+    ctx.strokeStyle = "rgba(139, 105, 20, 0.4)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let r = -3; r <= 3; r++) {
+      const ry = r * coinR * 0.25;
+      ctx.beginPath();
+      ctx.moveTo(0, ry);
+      ctx.lineTo(edgeDir * coinThickness, ry);
+      ctx.stroke();
+    }
+  }
+
+  // Main coin face
+  ctx.scale(coinScale, 1);
+
+  // Coin body gradient
+  const creditGrad = ctx.createRadialGradient(
+    -2 * zoom, -2 * zoom, 0,
+    0, 0, coinR,
   );
-  creditGrad.addColorStop(
-    0.3,
-    `rgba(255, 215, 0, ${0.7 + flashIntensity * 0.2})`,
-  );
-  creditGrad.addColorStop(0.6, `rgba(218, 165, 32, 0.4)`);
-  creditGrad.addColorStop(1, `rgba(184, 134, 11, 0)`);
+  creditGrad.addColorStop(0, flashIntensity > 0 ? "#ffffe8" : "#ffe88a");
+  creditGrad.addColorStop(0.3, "#dab540");
+  creditGrad.addColorStop(0.7, "#c9a227");
+  creditGrad.addColorStop(1, "#8b6914");
   ctx.fillStyle = creditGrad;
-  ctx.shadowColor = "#c9a227";
-  ctx.shadowBlur = (20 + flashIntensity * 15) * zoom;
+  if (flashIntensity > 0) {
+    ctx.shadowColor = "#ffd700";
+    ctx.shadowBlur = 12 * zoom * flashIntensity;
+  }
   ctx.beginPath();
-  ctx.arc(0, 0, 14 * zoom, 0, Math.PI * 2);
+  ctx.arc(0, 0, coinR, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Credit symbol
-  ctx.fillStyle = "#4a3a1a";
-  ctx.font = `bold ${16 * zoom}px Arial`;
+  // Coin rim
+  ctx.strokeStyle = "#a88520";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.arc(0, 0, coinR - 0.5 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner ring
+  ctx.strokeStyle = "rgba(160, 130, 30, 0.5)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.arc(0, 0, coinR * 0.72, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Dollar sign with embossed look
+  ctx.fillStyle = "rgba(90, 70, 20, 0.3)";
+  ctx.font = `bold ${12 * zoom}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.fillText("$", 0.4 * zoom, 0.4 * zoom);
+  ctx.fillStyle = "#ffe88a";
   ctx.fillText("$", 0, 0);
+
+  // Specular highlight
+  ctx.fillStyle = "rgba(255, 255, 230, 0.3)";
+  ctx.beginPath();
+  ctx.ellipse(
+    -coinR * 0.25, -coinR * 0.25,
+    coinR * 0.4, coinR * 0.3,
+    -0.5,
+    0, Math.PI * 2,
+  );
+  ctx.fill();
+
   ctx.restore();
+
+  // --- FRONT halves of orbiting rings (drawn in front of coin/dome) ---
+  for (let ri = 0; ri < orbitRings.length; ri++) {
+    const orb = orbitRings[ri];
+    const orbAngle = time * orb.speed + orb.phase;
+    const orbRX = orb.size * zoom;
+    const orbRY = orb.size * 0.38 * zoom;
+    const ringAlpha = 0.3 + Math.sin(time * 3.5 + ri * 1.4) * 0.12 + flashIntensity * 0.2;
+    ctx.save();
+    ctx.translate(screenPos.x, coinY);
+    ctx.rotate(orb.tilt);
+    // Outer glow (front half)
+    ctx.strokeStyle = `rgba(0, 255, 180, ${ringAlpha * 0.25})`;
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, orbRX + zoom, orbRY + 0.5 * zoom, 0, 0, Math.PI);
+    ctx.stroke();
+    // Main ring (front half — lower arc is in front)
+    ctx.strokeStyle = `rgba(0, 230, 160, ${ringAlpha})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, orbRX, orbRY, 0, 0, Math.PI);
+    ctx.stroke();
+    // Orbiting particle on front half
+    const pAngle = orbAngle;
+    const px = Math.cos(pAngle) * orbRX;
+    const py = Math.sin(pAngle) * orbRY;
+    if (Math.sin(pAngle) >= 0) {
+      ctx.fillStyle = `rgba(255, 255, 200, ${0.6 + Math.sin(time * 6 + ri) * 0.2})`;
+      ctx.beginPath();
+      ctx.arc(px, py, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   // ========== OUTDOOR DINING AREA ==========
   const diningBaseY = screenPos.y + 10 * zoom;
@@ -35361,7 +35817,10 @@ export function renderStationRange(
   // Only show spawn range when station is hovered or selected
   if (!tower.isHovered && !tower.selected) return;
 
-  const range = tower.spawnRange || 180;
+  const baseRange = tower.spawnRange || 180;
+  const rangeBoost = tower.rangeBoost || 1;
+  const range = baseRange * rangeBoost;
+  const isBoosted = rangeBoost > 1;
   const worldPos = gridToWorld(tower.pos);
   const screenPos = worldToScreen(
     worldPos,
@@ -35373,13 +35832,13 @@ export function renderStationRange(
   );
   const zoom = cameraZoom || 1;
 
-  // Use orange color for spawn range
-  ctx.strokeStyle = tower.isHovered
-    ? "rgba(255, 180, 100, 0.4)"
-    : "rgba(255, 180, 100, 0.6)";
-  ctx.fillStyle = tower.isHovered
-    ? "rgba(255, 180, 100, 0.08)"
-    : "rgba(255, 180, 100, 0.15)";
+  // Use cyan tint when boosted by beacon, otherwise orange
+  ctx.strokeStyle = isBoosted
+    ? (tower.isHovered ? "rgba(0, 229, 255, 0.5)" : "rgba(0, 229, 255, 0.7)")
+    : (tower.isHovered ? "rgba(255, 180, 100, 0.4)" : "rgba(255, 180, 100, 0.6)");
+  ctx.fillStyle = isBoosted
+    ? (tower.isHovered ? "rgba(0, 229, 255, 0.08)" : "rgba(0, 229, 255, 0.15)")
+    : (tower.isHovered ? "rgba(255, 180, 100, 0.08)" : "rgba(255, 180, 100, 0.15)");
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 4]);
   ctx.beginPath();
