@@ -19,6 +19,8 @@ import type {
 import { HERO_ABILITY_COOLDOWNS, HERO_DATA, TOWER_DATA } from "../constants";
 import { getUpgradeCost } from "../constants/towerStats";
 import { getLevelWaves } from "../game/pageHelpers";
+import { useEntityCollection } from "./useEntityCollection";
+import { usePawPoints } from "./usePawPoints";
 import { isValidBuildPosition } from "../utils";
 
 // ============================================================================
@@ -200,7 +202,14 @@ export function useGameState(
   // Core state
   const [gameState, setGameState] = useState<GameState>("menu");
   const [selectedMap, setSelectedMap] = useState<string>(DEFAULT_MAP);
-  const [pawPoints, setPawPoints] = useState<number>(0);
+  const {
+    pawPoints,
+    setPawPoints,
+    addPawPoints: addPawPointsValue,
+    spendPawPoints: spendPawPointsValue,
+    resetPawPoints,
+    canAfford,
+  } = usePawPoints(0);
   const [lives, setLives] = useState<number>(DEFAULT_LIVES);
   const [score, setScore] = useState<number>(0);
 
@@ -210,13 +219,52 @@ export function useGameState(
   );
 
   // Entities
-  const [towers, setTowers] = useState<Tower[]>([]);
-  const [enemies, setEnemies] = useState<Enemy[]>([]);
-  const [heroes, setHeroes] = useState<Hero[]>([]);
-  const [troops, setTroops] = useState<Troop[]>([]);
-  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-  const [effects, setEffects] = useState<Effect[]>([]);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const {
+    items: towers,
+    setItems: setTowers,
+    addItem: addTowerEntity,
+    removeById: removeTowerEntity,
+    clearItems: clearTowers,
+  } = useEntityCollection<Tower>([]);
+  const {
+    items: enemies,
+    setItems: setEnemies,
+    addItem: addEnemyEntity,
+    removeById: removeEnemyEntity,
+    clearItems: clearEnemies,
+  } = useEntityCollection<Enemy>([]);
+  const {
+    items: heroes,
+    setItems: setHeroes,
+    addItem: addHeroEntity,
+    clearItems: clearHeroes,
+  } = useEntityCollection<Hero>([]);
+  const {
+    items: troops,
+    setItems: setTroops,
+    removeWhere: removeTroopsWhere,
+    clearItems: clearTroops,
+  } = useEntityCollection<Troop>([]);
+  const {
+    items: projectiles,
+    setItems: setProjectiles,
+    addItem: addProjectileEntity,
+    removeById: removeProjectileEntity,
+    clearItems: clearProjectiles,
+  } = useEntityCollection<Projectile>([]);
+  const {
+    items: effects,
+    setItems: setEffects,
+    addItem: addEffectEntity,
+    removeById: removeEffectEntity,
+    clearItems: clearEffects,
+  } = useEntityCollection<Effect>([]);
+  const {
+    items: particles,
+    setItems: setParticles,
+    addItem: addParticleEntity,
+    clearItems: clearParticles,
+  } = useEntityCollection<Particle>([]);
 
   // Selection state
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
@@ -240,23 +288,32 @@ export function useGameState(
 
   const startGame = useCallback((mapId: string, startingGold: number) => {
     setSelectedMap(mapId);
-    setPawPoints(startingGold);
+    resetPawPoints(startingGold);
     setLives(DEFAULT_LIVES);
     setScore(0);
-    setTowers([]);
-    setEnemies([]);
-    setHeroes([]);
-    setTroops([]);
-    setProjectiles([]);
-    setEffects([]);
-    setParticles([]);
+    clearTowers();
+    clearEnemies();
+    clearHeroes();
+    clearTroops();
+    clearProjectiles();
+    clearEffects();
+    clearParticles();
     setWaveState(initializeWaveState(mapId));
     setSelectedTower(null);
     setSelectedHero(null);
     setGameState("setup");
     setIsPaused(false);
     setGameSpeedState(1);
-  }, []);
+  }, [
+    resetPawPoints,
+    clearTowers,
+    clearEnemies,
+    clearHeroes,
+    clearTroops,
+    clearProjectiles,
+    clearEffects,
+    clearParticles,
+  ]);
 
   const pauseGame = useCallback(() => {
     setIsPaused(true);
@@ -279,18 +336,28 @@ export function useGameState(
   const buildTower = useCallback(
     (type: TowerType, pos: GridPosition): boolean => {
       const cost = getTowerBuildCost(type);
-      if (pawPoints < cost) return false;
+      if (!canAfford(cost)) return false;
 
       if (!isValidBuildPosition(pos, selectedMap, towers, gridWidth, gridHeight)) {
         return false;
       }
 
+      if (!spendPawPointsValue(cost)) return false;
+
       const newTower = createTowerEntity(type, pos, generateEntityId("tower"));
-      setTowers((prev) => [...prev, newTower]);
-      setPawPoints((prev) => prev - cost);
+      addTowerEntity(newTower);
       return true;
     },
-    [pawPoints, selectedMap, towers, gridWidth, gridHeight, generateEntityId]
+    [
+      canAfford,
+      selectedMap,
+      towers,
+      gridWidth,
+      gridHeight,
+      generateEntityId,
+      spendPawPointsValue,
+      addTowerEntity,
+    ]
   );
 
   const sellTowerAction = useCallback(
@@ -299,20 +366,20 @@ export function useGameState(
       if (!tower) return 0;
 
       const sellValue = getTowerSellValue(tower);
-      setTowers((prev) => prev.filter((t) => t.id !== towerId));
-      setPawPoints((prev) => prev + sellValue);
+      removeTowerEntity(towerId);
+      addPawPointsValue(sellValue);
 
       if (selectedTower === towerId) {
         setSelectedTower(null);
       }
 
       if (tower.type === "station") {
-        setTroops((prev) => prev.filter((t) => t.ownerId !== towerId));
+        removeTroopsWhere((troop) => troop.ownerId === towerId);
       }
 
       return sellValue;
     },
-    [towers, selectedTower]
+    [towers, selectedTower, addPawPointsValue, removeTowerEntity, removeTroopsWhere]
   );
 
   const upgradeTowerAction = useCallback(
@@ -321,7 +388,8 @@ export function useGameState(
       if (!tower || tower.level >= 4) return false;
 
       const cost = getTowerUpgradeCost(tower);
-      if (pawPoints < cost) return false;
+      if (!canAfford(cost)) return false;
+      if (!spendPawPointsValue(cost)) return false;
 
       setTowers((prev) =>
         prev.map((t) => {
@@ -334,10 +402,9 @@ export function useGameState(
           };
         })
       );
-      setPawPoints((prev) => prev - cost);
       return true;
     },
-    [towers, pawPoints]
+    [towers, canAfford, spendPawPointsValue, setTowers]
   );
 
   const selectTower = useCallback((towerId: string | null) => {
@@ -346,7 +413,7 @@ export function useGameState(
     setTowers((prev) =>
       prev.map((t) => ({ ...t, selected: t.id === towerId }))
     );
-  }, []);
+  }, [setTowers]);
 
   const hoverTower = useCallback((towerId: string | null) => {
     setHoveredTower(towerId);
@@ -362,10 +429,10 @@ export function useGameState(
       if (existingHero) return null;
 
       const newHero = createHeroEntity(type, pos, generateEntityId("hero"));
-      setHeroes((prev) => [...prev, newHero]);
+      addHeroEntity(newHero);
       return newHero.id;
     },
-    [heroes, generateEntityId]
+    [heroes, generateEntityId, addHeroEntity]
   );
 
   const moveHeroAction = useCallback((heroId: string, pos: Position) => {
@@ -377,13 +444,13 @@ export function useGameState(
         return h;
       })
     );
-  }, []);
+  }, [setHeroes]);
 
   const selectHero = useCallback((heroId: string | null) => {
     setSelectedHero(heroId);
     setSelectedTower(null);
     setHeroes((prev) => prev.map((h) => ({ ...h, selected: h.id === heroId })));
-  }, []);
+  }, [setHeroes]);
 
   const useHeroAbility = useCallback(
     (heroId: string) => {
@@ -415,7 +482,7 @@ export function useGameState(
         },
       ]);
     },
-    [heroes, generateEntityId]
+    [heroes, generateEntityId, setHeroes, setEffects]
   );
 
   // ============================================================================
@@ -423,59 +490,43 @@ export function useGameState(
   // ============================================================================
 
   const addEnemy = useCallback((enemy: Enemy) => {
-    setEnemies((prev) => [...prev, enemy]);
-  }, []);
+    addEnemyEntity(enemy);
+  }, [addEnemyEntity]);
 
   const removeEnemy = useCallback((enemyId: string) => {
-    setEnemies((prev) => {
-      if (!prev.some((e) => e.id === enemyId)) return prev;
-      return prev.filter((e) => e.id !== enemyId);
-    });
-  }, []);
+    removeEnemyEntity(enemyId);
+  }, [removeEnemyEntity]);
 
   const addProjectile = useCallback((projectile: Projectile) => {
-    setProjectiles((prev) => [...prev, projectile]);
-  }, []);
+    addProjectileEntity(projectile);
+  }, [addProjectileEntity]);
 
   const removeProjectile = useCallback((projectileId: string) => {
-    setProjectiles((prev) => {
-      if (!prev.some((p) => p.id === projectileId)) return prev;
-      return prev.filter((p) => p.id !== projectileId);
-    });
-  }, []);
+    removeProjectileEntity(projectileId);
+  }, [removeProjectileEntity]);
 
   const addEffect = useCallback((effect: Effect) => {
-    setEffects((prev) => [...prev, effect]);
-  }, []);
+    addEffectEntity(effect);
+  }, [addEffectEntity]);
 
   const removeEffect = useCallback((effectId: string) => {
-    setEffects((prev) => {
-      if (!prev.some((e) => e.id === effectId)) return prev;
-      return prev.filter((e) => e.id !== effectId);
-    });
-  }, []);
+    removeEffectEntity(effectId);
+  }, [removeEffectEntity]);
 
   const addParticle = useCallback((particle: Particle) => {
-    setParticles((prev) => [...prev, particle]);
-  }, []);
+    addParticleEntity(particle);
+  }, [addParticleEntity]);
 
   // ============================================================================
   // RESOURCE MANAGEMENT
   // ============================================================================
 
   const addPawPoints = useCallback((amount: number) => {
-    setPawPoints((prev) => prev + amount);
+    addPawPointsValue(amount);
     setScore((prev) => prev + amount);
-  }, []);
+  }, [addPawPointsValue]);
 
-  const spendPawPoints = useCallback(
-    (amount: number): boolean => {
-      if (pawPoints < amount) return false;
-      setPawPoints((prev) => prev - amount);
-      return true;
-    },
-    [pawPoints]
-  );
+  const spendPawPoints = spendPawPointsValue;
 
   const loseLife = useCallback(() => {
     setLives((prev) => {

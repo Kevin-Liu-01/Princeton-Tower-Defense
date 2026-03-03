@@ -5,6 +5,7 @@ import type {
   Position,
   Tower,
   Enemy,
+  EnemyType,
   Hero,
   Troop,
   Spell,
@@ -22,6 +23,8 @@ import type {
   Renderable,
   DecorationType,
   Decoration,
+  DecorationHeightTag,
+  SpecialTower,
 } from "../types";
 // Constants
 import {
@@ -61,6 +64,8 @@ import {
   isValidBuildPosition,
   generateId,
   getPathSegmentLength,
+  getEnemyLaneOffsets,
+  ENEMY_LANE_OFFSET_LIMIT,
   findClosestPathPoint,
   findClosestPathPointWithinRadius,
   getTroopMoveInfo,
@@ -68,6 +73,10 @@ import {
   type TroopMoveInfo,
   LANDMARK_DECORATION_TYPES,
   LANDMARK_HITBOX_Y_OFFSET,
+  getMapDecorationWorldPos,
+  getDecorationVolumeSpec,
+  getLandmarkSpawnExclusion,
+  resolveMapDecorationRuntimePlacement,
 } from "../utils";
 // Tower Stats
 import { calculateTowerStats, getUpgradeCost } from "../constants/towerStats";
@@ -120,6 +129,7 @@ import {
   getBlockedPositionsForMap,
   getLevelStartingPawPoints,
   getLevelSpecialTowerHp,
+  getLevelSpecialTowers,
 } from "../game/pageHelpers";
 import {
   resetBattleState,
@@ -148,6 +158,8 @@ import {
 // Hooks
 import { useGameProgress } from "../useLocalStorage";
 import { useCustomLevels } from "./useCustomLevels";
+import { useEntityCollection } from "./useEntityCollection";
+import { usePawPoints } from "./usePawPoints";
 
 type RenderQuality = "high" | "medium" | "low";
 
@@ -206,6 +218,31 @@ interface ParticleBurstRequest {
   count: number;
 }
 
+interface WaveStartConfirmState {
+  mapId: string;
+  waveIndex: number;
+  pathKey: string;
+  openedAt: number;
+}
+
+interface WavePreviewEnemyEntry {
+  type: EnemyType;
+  name: string;
+  color: string;
+  count: number;
+}
+
+interface WaveStartBubbleScreenData {
+  pathKey: string;
+  pathLabel: string;
+  screenPos: Position;
+  spawnScreenPos: Position;
+  worldPos: Position;
+  radius: number;
+  progress: number;
+  remainingMs: number;
+}
+
 type DraggingUnitState =
   | {
       kind: "hero";
@@ -245,10 +282,137 @@ const CAMERA_ZOOM_MIN = 0.5;
 const CAMERA_ZOOM_MAX = 2.5;
 const WHEEL_ZOOM_SENSITIVITY = 0.0014;
 const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.0022;
-// Expand enemy travel lane space by +0.25 on each side without changing road visuals.
-const ENEMY_PATH_EXTRA_LANE_MARGIN = 0.25;
-const ENEMY_SPAWN_LANE_LIMIT = 1.5 + ENEMY_PATH_EXTRA_LANE_MARGIN;
-const ENEMY_RUNTIME_LANE_LIMIT = 2.0 + ENEMY_PATH_EXTRA_LANE_MARGIN;
+const ENEMY_LANE_OFFSETS = getEnemyLaneOffsets(5);
+const ENEMY_CENTER_LANE_INDEX = Math.floor((ENEMY_LANE_OFFSETS.length - 1) / 2);
+const ENEMY_SPAWN_LANE_JITTER = 0.08;
+const ENEMY_LANE_SWITCH_LOOKAHEAD = 0.55;
+const ENEMY_LANE_FRONT_CLEARANCE = 0.42;
+const ENEMY_LANE_BACK_CLEARANCE = 0.28;
+const ENEMY_LANE_STALL_GAP = 0.16;
+const ENEMY_LANE_STALL_PUSHBACK = 0.025;
+const ENEMY_LANE_SHIFT_MS = 180;
+
+type EnemyFormationPattern = "echelon" | "line" | "file" | "wedge" | "vee";
+
+const HEAVY_WEDGE_TYPES = new Set<EnemyType>([
+  "trustee",
+  "dean",
+  "golem",
+  "necromancer",
+  "shadow_knight",
+  "juggernaut",
+  "dragon",
+  "sandworm",
+]);
+
+const FAST_VEE_TYPES = new Set<EnemyType>([
+  "harpy",
+  "mascot",
+  "wyvern",
+  "specter",
+  "berserker",
+  "assassin",
+  "frostling",
+  "banshee",
+]);
+
+const SWARM_FILE_TYPES = new Set<EnemyType>([
+  "cultist",
+  "frosh",
+  "plaguebearer",
+  "thornwalker",
+  "infernal",
+]);
+
+const clampLaneOffset = (laneOffset: number): number =>
+  Math.max(-ENEMY_LANE_OFFSET_LIMIT, Math.min(ENEMY_LANE_OFFSET_LIMIT, laneOffset));
+
+const clampLaneIndex = (laneIndex: number): number =>
+  Math.max(0, Math.min(ENEMY_LANE_OFFSETS.length - 1, laneIndex));
+
+const getNearestLaneIndex = (laneOffset: number): number => {
+  let bestIndex = ENEMY_CENTER_LANE_INDEX;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  ENEMY_LANE_OFFSETS.forEach((laneCenter, idx) => {
+    const dist = Math.abs(laneOffset - laneCenter);
+    if (dist < bestDistance) {
+      bestDistance = dist;
+      bestIndex = idx;
+    }
+  });
+  return bestIndex;
+};
+
+const pickFormationPattern = (
+  enemyType: EnemyType,
+  groupCount: number
+): EnemyFormationPattern => {
+  if (HEAVY_WEDGE_TYPES.has(enemyType)) return "wedge";
+  if (FAST_VEE_TYPES.has(enemyType)) return "vee";
+  if (SWARM_FILE_TYPES.has(enemyType)) return "file";
+  if (groupCount >= 10) return "line";
+  if (groupCount >= 6) return "echelon";
+  return "wedge";
+};
+
+const getFormationLaneIndex = (
+  pattern: EnemyFormationPattern,
+  spawnIndex: number,
+  groupCount: number,
+  mirror: boolean
+): number => {
+  const laneCount = ENEMY_LANE_OFFSETS.length;
+  const center = ENEMY_CENTER_LANE_INDEX;
+  const maxSpread = Math.max(1, Math.floor((laneCount - 1) / 2));
+  const mirrorLane = (lane: number) => laneCount - 1 - lane;
+
+  if (laneCount <= 1) return 0;
+
+  let lane = center;
+  switch (pattern) {
+    case "file":
+      lane = center;
+      break;
+    case "line": {
+      const t = groupCount <= 1 ? 0.5 : spawnIndex / (groupCount - 1);
+      lane = Math.round(t * (laneCount - 1));
+      break;
+    }
+    case "echelon": {
+      const step = groupCount <= 1
+        ? 0
+        : Math.round((spawnIndex / Math.max(1, groupCount - 1)) * (laneCount - 1));
+      lane = step;
+      break;
+    }
+    case "vee": {
+      const arm = Math.floor(spawnIndex / 2) + 1;
+      const dir = spawnIndex % 2 === 0 ? -1 : 1;
+      lane = center + dir * Math.min(maxSpread, arm);
+      break;
+    }
+    case "wedge":
+    default: {
+      if (spawnIndex === 0) {
+        lane = center;
+      } else {
+        const arm = Math.floor((spawnIndex + 1) / 2);
+        const dir = spawnIndex % 2 === 1 ? -1 : 1;
+        lane = center + dir * Math.min(maxSpread, arm);
+      }
+      break;
+    }
+  }
+
+  const clamped = clampLaneIndex(lane);
+  return mirror ? mirrorLane(clamped) : clamped;
+};
+const WAVE_START_BUBBLE_BASE_RADIUS = 22;
+const WAVE_START_BUBBLE_HIT_RADIUS = 1.2;
+const WAVE_START_BUBBLE_SIDE_OFFSET = 98;
+const WAVE_START_BUBBLE_BACK_OFFSET = 20;
+const WAVE_START_BUBBLE_VIEW_MARGIN = 56;
+const WAVE_START_BUBBLE_CORNER_MARGIN = 34;
 
 // Only keep high-value effects live; everything else is baked into static decoration layer.
 const RUNTIME_ANIMATED_DECORATION_TYPES = new Set<string>([
@@ -285,6 +449,8 @@ const getDecorationRenderLayer = (
 const DECORATION_ISO_Y_OFFSETS: Partial<Record<DecorationType, number>> = {
   // Massive sprite whose visual base sits well below its anchor.
   nassau_hall: 34,
+  // Pyramid base is rendered well below anchor (~25 * scale in decoration renderer).
+  pyramid: 25,
 };
 
 const getDecorationIsoY = (
@@ -292,6 +458,11 @@ const getDecorationIsoY = (
 ): number =>
   (decoration.x + decoration.y) * 0.25 +
   (DECORATION_ISO_Y_OFFSETS[decoration.type] ?? 0) * decoration.scale;
+
+const getRuntimeDecorationHeightTag = (
+  decoration: Pick<RuntimeDecoration, "type" | "heightTag">
+): DecorationHeightTag =>
+  getDecorationVolumeSpec(decoration.type, decoration.heightTag).heightTag;
 
 // Landmark/hero decorations that should never pop in and out due stride throttling.
 const NON_THROTTLED_ANIMATED_DECORATION_TYPES = new Set<string>([
@@ -354,6 +525,51 @@ const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
 const IS_LOCAL_DEV = process.env.NODE_ENV === "development";
 const DEV_PERF_STORAGE_KEY = "ptd:dev-perf-overlay-enabled";
 
+const CAMPAIGN_LEVEL_UNLOCKS: Record<string, string> = {
+  poe: "carnegie",
+  carnegie: "nassau",
+  nassau: "bog",
+  bog: "witch_hut",
+  witch_hut: "sunken_temple",
+  sunken_temple: "oasis",
+  oasis: "pyramid",
+  pyramid: "sphinx",
+  sphinx: "glacier",
+  glacier: "fortress",
+  fortress: "peak",
+  peak: "lava",
+  lava: "crater",
+  crater: "throne",
+};
+
+const REGION_CAMPAIGN_LEVELS: Record<
+  "grassland" | "swamp" | "desert" | "winter" | "volcanic",
+  string[]
+> = {
+  grassland: ["poe", "carnegie", "nassau"],
+  swamp: ["bog", "witch_hut", "sunken_temple"],
+  desert: ["oasis", "pyramid", "sphinx"],
+  winter: ["glacier", "fortress", "peak"],
+  volcanic: ["lava", "crater", "throne"],
+};
+
+const REGION_CHALLENGE_UNLOCKS: Record<
+  keyof typeof REGION_CAMPAIGN_LEVELS,
+  string
+> = {
+  grassland: "ivy_crossroads",
+  swamp: "blight_basin",
+  desert: "sunscorch_labyrinth",
+  winter: "whiteout_pass",
+  volcanic: "ashen_spiral",
+};
+
+const isRegionCleared = (
+  region: keyof typeof REGION_CAMPAIGN_LEVELS,
+  starsByLevel: Record<string, number>
+): boolean =>
+  REGION_CAMPAIGN_LEVELS[region].every((levelId) => (starsByLevel[levelId] || 0) > 0);
+
 export function usePrincetonTowerDefenseRuntime() {
   const isDefined = <T,>(value: T | null | undefined): value is T =>
     value !== null && value !== undefined;
@@ -372,24 +588,83 @@ export function usePrincetonTowerDefenseRuntime() {
   const levelStars = progress.levelStars as LevelStars;
   const levelStats = progress.levelStats;
 
+  useEffect(() => {
+    const pendingUnlocks: string[] = [];
+    (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
+      keyof typeof REGION_CAMPAIGN_LEVELS
+    >).forEach((regionKey) => {
+      if (!isRegionCleared(regionKey, levelStars)) return;
+      const challengeLevel = REGION_CHALLENGE_UNLOCKS[regionKey];
+      if (!unlockedMaps.includes(challengeLevel)) {
+        pendingUnlocks.push(challengeLevel);
+      }
+    });
+
+    if (pendingUnlocks.length === 0) return;
+    pendingUnlocks.forEach((levelId) => unlockLevel(levelId));
+  }, [levelStars, unlockedMaps, unlockLevel]);
+
   const [starsEarned, setStarsEarned] = useState(0);
   const [levelStartTime, setLevelStartTime] = useState<number>(0);
   const [timeSpent, setTimeSpent] = useState<number>(0);
   // Game resources
-  const [pawPoints, setPawPoints] = useState(INITIAL_PAW_POINTS);
+  const {
+    pawPoints,
+    setPawPoints,
+    canAfford: canAffordPawPoints,
+    addPawPoints,
+    removePawPoints,
+    spendPawPoints,
+    resetPawPoints,
+  } = usePawPoints(INITIAL_PAW_POINTS);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [currentWave, setCurrentWave] = useState(0);
   const [nextWaveTimer, setNextWaveTimer] = useState(WAVE_TIMER_BASE);
   const [waveInProgress, setWaveInProgress] = useState(false);
+  const [waveStartConfirm, setWaveStartConfirm] =
+    useState<WaveStartConfirmState | null>(null);
   // Game entities
-  const [towers, setTowers] = useState<Tower[]>([]);
-  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const {
+    items: towers,
+    setItems: setTowers,
+    addItem: addTowerEntity,
+    clearItems: clearTowers,
+    removeById: removeTowerEntity,
+  } = useEntityCollection<Tower>([]);
+  const {
+    items: enemies,
+    setItems: setEnemies,
+    addItem: addEnemyEntity,
+    clearItems: clearEnemies,
+  } = useEntityCollection<Enemy>([]);
   const [hero, setHero] = useState<Hero | null>(null);
-  const [troops, setTroops] = useState<Troop[]>([]);
+  const {
+    items: troops,
+    setItems: setTroops,
+    addItem: addTroopEntity,
+    addItems: addTroopEntities,
+    clearItems: clearTroops,
+    removeWhere: removeTroopsWhere,
+  } = useEntityCollection<Troop>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
-  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-  const [effects, setEffects] = useState<Effect[]>([]);
-  const [particles, setParticles] = useState<Particle[]>([]);
+  const {
+    items: projectiles,
+    setItems: setProjectiles,
+    addItems: addProjectileEntities,
+    clearItems: clearProjectiles,
+  } = useEntityCollection<Projectile>([]);
+  const {
+    items: effects,
+    setItems: setEffects,
+    addItem: addEffectEntity,
+    addItems: addEffectEntities,
+    clearItems: clearEffects,
+  } = useEntityCollection<Effect>([]);
+  const {
+    items: particles,
+    setItems: setParticles,
+    clearItems: clearParticles,
+  } = useEntityCollection<Particle>([]);
   // Special Objectives State
   const [specialTowerHp, setSpecialTowerHp] = useState<number | null>(null);
   const [vaultFlash, setVaultFlash] = useState(0);
@@ -411,7 +686,7 @@ export function usePrincetonTowerDefenseRuntime() {
   );
   const [placingTroop, setPlacingTroop] = useState(false);
   const [gameSpeed, setGameSpeed] = useState(1);
-  const [hoveredSpecial, setHoveredSpecial] = useState<boolean>(false);
+  const [hoveredSpecialTower, setHoveredSpecialTower] = useState<SpecialTower | null>(null);
   const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
   const [hoveredHazardType, setHoveredHazardType] = useState<string | null>(null);
   // Enemy Inspector state
@@ -533,6 +808,76 @@ export function usePrincetonTowerDefenseRuntime() {
   // Get current level waves - computed from selectedMap
   const currentLevelWaves = getLevelWaves(selectedMap);
   const totalWaves = currentLevelWaves.length;
+  const activeWaveSpawnPaths = React.useMemo<string[]>(() => {
+    const levelData = LEVEL_DATA[selectedMap];
+    const secondaryPathKey = levelData?.secondaryPath;
+    const hasSecondaryPath = Boolean(
+      levelData?.dualPath &&
+      secondaryPathKey &&
+      MAP_PATHS[secondaryPathKey]
+    );
+    return hasSecondaryPath && secondaryPathKey
+      ? [selectedMap, secondaryPathKey]
+      : [selectedMap];
+  }, [selectedMap]);
+
+  const incomingWavePreviewByPath = React.useMemo<Map<string, WavePreviewEnemyEntry[]>>(() => {
+    const nextWave = currentLevelWaves[currentWave];
+    const groupedCounts = new Map<string, Map<EnemyType, number>>();
+    for (const pathKey of activeWaveSpawnPaths) {
+      groupedCounts.set(pathKey, new Map<EnemyType, number>());
+    }
+    if (!nextWave) {
+      return new Map<string, WavePreviewEnemyEntry[]>();
+    }
+
+    const primaryPathKey = selectedMap;
+    const secondaryPathKey =
+      activeWaveSpawnPaths.length > 1 ? activeWaveSpawnPaths[1] : null;
+
+    const addEnemyCount = (pathKey: string, enemyType: EnemyType, count: number) => {
+      if (count <= 0) return;
+      const pathMap = groupedCounts.get(pathKey);
+      if (!pathMap) return;
+      pathMap.set(enemyType, (pathMap.get(enemyType) ?? 0) + count);
+    };
+
+    for (const group of nextWave) {
+      if (!secondaryPathKey) {
+        addEnemyCount(primaryPathKey, group.type, group.count);
+        continue;
+      }
+
+      // Must mirror spawn logic: per-group alternating spawns (0->primary, 1->secondary, ...)
+      const primaryCount = Math.ceil(group.count / 2);
+      const secondaryCount = Math.floor(group.count / 2);
+      addEnemyCount(primaryPathKey, group.type, primaryCount);
+      addEnemyCount(secondaryPathKey, group.type, secondaryCount);
+    }
+
+    const previewByPath = new Map<string, WavePreviewEnemyEntry[]>();
+    for (const pathKey of activeWaveSpawnPaths) {
+      const countByType = groupedCounts.get(pathKey) ?? new Map<EnemyType, number>();
+      const entries = Array.from(countByType.entries())
+        .map(([type, count]) => {
+          const enemyData = ENEMY_DATA[type];
+          return {
+            type,
+            count,
+            name: enemyData?.name ?? type,
+            color: enemyData?.color ?? "#f87171",
+          };
+        })
+        .sort((a, b) => {
+          const aBoss = ENEMY_DATA[a.type]?.isBoss ? 1 : 0;
+          const bBoss = ENEMY_DATA[b.type]?.isBoss ? 1 : 0;
+          return bBoss - aBoss || b.count - a.count || a.name.localeCompare(b.name);
+        });
+      previewByPath.set(pathKey, entries);
+    }
+
+    return previewByPath;
+  }, [currentLevelWaves, currentWave, activeWaveSpawnPaths, selectedMap]);
 
   const blockedPositions = React.useMemo(
     () => getBlockedPositionsForMap(selectedMap),
@@ -889,7 +1234,7 @@ export function usePrincetonTowerDefenseRuntime() {
       }
       return combined;
     });
-  }, []);
+  }, [setParticles]);
 
   // Helper to award bounty and track for HUD animation.
   // Uses functional setState dedup because this can be called inside setEnemies
@@ -903,10 +1248,10 @@ export function usePrincetonTowerDefenseRuntime() {
         if (prev.some(e => e.id === eventId)) return prev;
         return [...prev, { id: eventId, amount: totalBounty, isGoldBoosted: hasGoldAura }];
       });
-      setPawPoints((pp) => pp + totalBounty);
+      addPawPoints(totalBounty);
       return totalBounty;
     },
-    []
+    [addPawPoints]
   );
 
   // Centralized enemy death handler - awards bounty, particles, and death animation effect
@@ -917,23 +1262,20 @@ export function usePrincetonTowerDefenseRuntime() {
       awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
       addParticles(pos, "explosion", particleCount);
       if (enemy.goldAura) addParticles(pos, "gold", 6);
-      setEffects((prev) => [
-        ...prev,
-        {
-          id: generateId("fx"),
-          pos,
-          type: "enemy_death" as const,
-          progress: 0,
-          size: eData.size,
-          duration: 600,
-          color: eData.color,
-          enemyType: enemy.type,
-          enemySize: eData.size,
-          isFlying: eData.flying,
-        },
-      ]);
+      addEffectEntity({
+        id: generateId("fx"),
+        pos,
+        type: "enemy_death" as const,
+        progress: 0,
+        size: eData.size,
+        duration: 600,
+        color: eData.color,
+        enemyType: enemy.type,
+        enemySize: eData.size,
+        isFlying: eData.flying,
+      });
     },
-    [awardBounty, addParticles]
+    [awardBounty, addParticles, addEffectEntity]
   );
 
   // Keyboard controls for camera
@@ -976,7 +1318,7 @@ export function usePrincetonTowerDefenseRuntime() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameState]);
+  }, [gameState, setTroops]);
 
   useEffect(() => {
     if (!IS_LOCAL_DEV || typeof window === "undefined") return;
@@ -1023,18 +1365,18 @@ export function usePrincetonTowerDefenseRuntime() {
       const levelStartingPawPoints = levelData?.startingPawPoints ?? INITIAL_PAW_POINTS;
 
       // Reset all game state for a fresh start
-      setPawPoints(levelStartingPawPoints);
+      resetPawPoints(levelStartingPawPoints);
       setLives(INITIAL_LIVES);
       setCurrentWave(0);
       setNextWaveTimer(WAVE_TIMER_BASE);
       setWaveInProgress(false);
-      setTowers([]);
-      setEnemies([]);
+      clearTowers();
+      clearEnemies();
       setHero(null); // Will be re-initialized by the hero effect
-      setTroops([]);
-      setProjectiles([]);
-      setEffects([]);
-      setParticles([]);
+      clearTroops();
+      clearProjectiles();
+      clearEffects();
+      clearParticles();
       setSelectedTower(null);
       setBuildingTower(null);
       setDraggingTower(null);
@@ -1042,11 +1384,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setSpells([]);
       setGameSpeed(1);
       setGoldSpellActive(false);
-      if (levelData?.specialTower?.hp) {
-        setSpecialTowerHp(levelData.specialTower.hp);
-      } else {
-        setSpecialTowerHp(null);
-      }
+      setSpecialTowerHp(getLevelSpecialTowerHp(selectedMap));
       // Reset pausable timer system state
       prevGameSpeedRef.current = 1;
       pausedAtRef.current = null;
@@ -1056,7 +1394,18 @@ export function usePrincetonTowerDefenseRuntime() {
       // Mark reset time to prevent stale state race conditions
       gameResetTimeRef.current = Date.now();
     }
-  }, [gameState, clearAllTimers, selectedMap]);
+  }, [
+    gameState,
+    clearAllTimers,
+    selectedMap,
+    resetPawPoints,
+    clearTowers,
+    clearEnemies,
+    clearTroops,
+    clearProjectiles,
+    clearEffects,
+    clearParticles,
+  ]);
 
   // Clear all timers when leaving the playing state (defeat, victory, quit)
   useEffect(() => {
@@ -1065,6 +1414,17 @@ export function usePrincetonTowerDefenseRuntime() {
       pendingParticleBurstsRef.current = [];
     }
   }, [gameState, clearAllTimers]);
+
+  useEffect(() => {
+    setWaveStartConfirm((prev) => {
+      if (!prev) return prev;
+      if (gameState !== "playing" || waveInProgress) return null;
+      if (prev.mapId !== selectedMap) return null;
+      if (prev.waveIndex !== currentWave) return null;
+      if (!activeWaveSpawnPaths.includes(prev.pathKey)) return null;
+      return prev;
+    });
+  }, [gameState, waveInProgress, selectedMap, currentWave, activeWaveSpawnPaths]);
 
   // Initialize hero and spells when game starts
   useEffect(() => {
@@ -1186,79 +1546,17 @@ export function usePrincetonTowerDefenseRuntime() {
             clearInterval(spawnInterval);
             return;
           }
-          // Complex marching formations based on enemy type and group size
-          // Creates wedge, line, staggered, and diamond patterns
-          const formationPatterns = {
-            // V-formation (wedge) - good for bosses and elites
-            wedge: (i: number, total: number) => {
-              const mid = Math.floor(total / 2);
-              const offset = i - mid;
-              return Math.abs(offset) * 0.15 * Math.sign(offset);
-            },
-            // Staggered lines - for regular troops
-            staggered: (i: number) => {
-              const row = Math.floor(i / 3);
-              const col = i % 3;
-              return (col - 1) * 0.4 + (row % 2 === 0 ? 0.1 : -0.1);
-            },
-            // Diamond formation
-            diamond: (i: number, total: number) => {
-              const phase = (i / total) * Math.PI * 2;
-              return Math.sin(phase) * 0.6;
-            },
-            // Tight cluster for swarms
-            cluster: () => {
-              return (Math.random() - 0.5) * 0.8;
-            },
-          };
-
-          // Select formation based on enemy type
-          let laneOffset: number;
-          if (
-            group.type === "trustee" ||
-            group.type === "dean" ||
-            group.type === "golem" ||
-            group.type === "necromancer" ||
-            group.type === "shadow_knight" ||
-            group.type === "juggernaut" ||
-            group.type === "dragon" ||
-            group.type === "sandworm"
-          ) {
-            // Bosses and tanks use wedge formation - they lead the charge
-            laneOffset = formationPatterns.wedge(spawned, group.count);
-          } else if (
-            group.type === "harpy" ||
-            group.type === "mascot" ||
-            group.type === "wyvern" ||
-            group.type === "specter" ||
-            group.type === "berserker" ||
-            group.type === "assassin" ||
-            group.type === "frostling" ||
-            group.type === "banshee"
-          ) {
-            // Fast/flying enemies use diamond formation - scattered chaos
-            laneOffset = formationPatterns.diamond(spawned, group.count);
-          } else if (
-            group.type === "cultist" ||
-            group.type === "frosh" ||
-            group.type === "plaguebearer" ||
-            group.type === "thornwalker" ||
-            group.type === "infernal"
-          ) {
-            // Swarm enemies use cluster formation - tight groups
-            laneOffset = formationPatterns.cluster();
-          } else if (group.count > 5) {
-            // Large groups use staggered lines - organized march
-            laneOffset = formationPatterns.staggered(spawned);
-          } else {
-            // Default wedge
-            laneOffset = formationPatterns.wedge(spawned, group.count);
-          }
-
-          laneOffset += (Math.random() - 0.5) * 0.5;
-          laneOffset = Math.max(
-            -ENEMY_SPAWN_LANE_LIMIT,
-            Math.min(ENEMY_SPAWN_LANE_LIMIT, laneOffset)
+          const formationPattern = pickFormationPattern(group.type, group.count);
+          const mirrorFormation = (group.type.charCodeAt(0) + group.count) % 2 === 0;
+          const spawnLaneIndex = getFormationLaneIndex(
+            formationPattern,
+            spawned,
+            group.count,
+            mirrorFormation
+          );
+          const baseLaneOffset = ENEMY_LANE_OFFSETS[spawnLaneIndex] ?? 0;
+          const laneOffset = clampLaneOffset(
+            baseLaneOffset + (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER
           );
 
           // Check for dual-path levels
@@ -1288,11 +1586,12 @@ export function usePrincetonTowerDefenseRuntime() {
             lastRangedAttack: 0,
             spawnProgress: 1, // Start fully visible
             laneOffset: laneOffset,
+            formationLane: spawnLaneIndex,
             slowed: false,
             slowIntensity: 0,
             pathKey: pathKey, // Track which path this enemy uses
           };
-          setEnemies((prev) => [...prev, enemy]);
+          addEnemyEntity(enemy);
           spawned++;
         }, group.interval);
         // Track interval for cleanup
@@ -1335,7 +1634,7 @@ export function usePrincetonTowerDefenseRuntime() {
         return currentW + 1;
       });
     }, waveDuration);
-  }, [waveInProgress, currentWave, selectedMap, setPausableTimeout]);
+  }, [waveInProgress, currentWave, selectedMap, setPausableTimeout, addEnemyEntity]);
   // Helper to apply enemy abilities to a target (troop or hero)
   const applyEnemyAbilities = useCallback((
     enemy: Enemy,
@@ -1421,9 +1720,17 @@ export function usePrincetonTowerDefenseRuntime() {
       const isInResetTransition = timeSinceReset < 100; // 100ms grace period
 
       const levelWaves = getLevelWaves(selectedMap);
-      const mapData = LEVEL_DATA[selectedMap];
-      const spec = mapData?.specialTower;
-      const specWorldPos = spec ? gridToWorld(spec.pos) : null;
+      const specialTowers = getLevelSpecialTowers(selectedMap);
+      const beacons = specialTowers.filter((tower) => tower.type === "beacon");
+      const shrines = specialTowers.filter((tower) => tower.type === "shrine");
+      const barracksTower =
+        specialTowers.find((tower) => tower.type === "barracks") ?? null;
+      const vaultTower =
+        specialTowers.find((tower) => tower.type === "vault") ?? null;
+      const barracksWorldPos = barracksTower
+        ? gridToWorld(barracksTower.pos)
+        : null;
+      const vaultWorldPos = vaultTower ? gridToWorld(vaultTower.pos) : null;
 
       // Wave timer - check outside setState to avoid race conditions
       if (!waveInProgress && currentWave < levelWaves.length) {
@@ -1570,12 +1877,11 @@ export function usePrincetonTowerDefenseRuntime() {
           }
 
           // Beacon range buff (+20%)
-          const isBeaconNearby =
-            spec?.type === "beacon" &&
-            specWorldPos !== null &&
-            distance(tWorldPos, specWorldPos) < 250;
-          if (isBeaconNearby) {
-            rangeMultiplier *= 1.2;
+          for (const beacon of beacons) {
+            const beaconPos = gridToWorld(beacon.pos);
+            if (distance(tWorldPos, beaconPos) < 250) {
+              rangeMultiplier *= 1.2;
+            }
           }
 
           // Investment Bank range buff (+15% each, from nearby level 4A clubs)
@@ -1665,220 +1971,213 @@ export function usePrincetonTowerDefenseRuntime() {
       // =========================================================================
       // SPECIAL TOWER LOGIC
       // =========================================================================
-      const levelDataForSpecialTower = LEVEL_DATA[selectedMap];
-      const specialTower = levelDataForSpecialTower?.specialTower;
-      if (specialTower) {
-        const specWorldPos = gridToWorld(specialTower.pos);
+      // A. BEACON: Range buff is handled in dynamic tower buff registration above.
 
-        // A. BEACON: Range buff is now handled in DYNAMIC BUFF REGISTRATION above
-        // which properly stacks with Investment Bank range buffs
+      // B. SHRINE: Periodic HP pulse for hero and troops.
+      if (shrines.length > 0 && now % 5000 < deltaTime) {
+        const healRadius = 200;
+        const healAmount = 50;
+        const shrineWorldPositions = shrines.map((tower) => gridToWorld(tower.pos));
 
-        // B. SHRINE: Periodic HP Pulse for Hero and Troops
-        if (specialTower.type === "shrine" && now % 5000 < deltaTime) {
-          const healRadius = 200;
-          const healAmount = 50;
-
-          // Heal Hero
-          if (
-            hero &&
-            !hero.dead &&
-            distance(hero.pos, specWorldPos) < healRadius
-          ) {
+        if (hero && !hero.dead) {
+          const isHeroInShrineRange = shrineWorldPositions.some(
+            (pos) => distance(hero.pos, pos) < healRadius
+          );
+          if (isHeroInShrineRange) {
             setHero((prev) =>
               prev
-                ? { ...prev, hp: Math.min(prev.maxHp, prev.hp + healAmount), healFlash: Date.now() }
+                ? {
+                    ...prev,
+                    hp: Math.min(prev.maxHp, prev.hp + healAmount),
+                    healFlash: Date.now(),
+                  }
                 : null
             );
             addParticles(hero.pos, "magic", 10);
           }
-          // Heal Troops - uses heal aura effect instead of magic particles
-          setTroops((prev) =>
-            prev.map((t) => {
-              if (distance(t.pos, specWorldPos) < healRadius) {
-                return { ...t, hp: Math.min(t.maxHp, t.hp + healAmount), healFlash: Date.now() };
-              }
-              return t;
-            })
-          );
-          // Visual pulse effect
+        }
+
+        setTroops((prev) =>
+          prev.map((troop) => {
+            const isInShrineRange = shrineWorldPositions.some(
+              (pos) => distance(troop.pos, pos) < healRadius
+            );
+            if (!isInShrineRange) return troop;
+            return {
+              ...troop,
+              hp: Math.min(troop.maxHp, troop.hp + healAmount),
+              healFlash: Date.now(),
+            };
+          })
+        );
+
+        shrineWorldPositions.forEach((pos) => {
           setEffects((ef) => [
             ...ef,
             {
               id: generateId("shrine"),
-              pos: specWorldPos,
+              pos,
               type: "arcaneField",
               progress: 0,
               size: healRadius,
             },
           ]);
-        }
+        });
+      }
 
-        // C. BARRACKS: Capped & Spread Deployment (max 3 knights)
-        // Align spawn timing with the visual glow animation (12-second cycle, spawn in first 1.5 seconds)
-        if (specialTower.type === "barracks" && !isInResetTransition) {
-          const barracksTroops = troops.filter(
-            (t) => t.ownerId === "special_barracks"
-          );
+      // C. BARRACKS: Capped & spread deployment (max 3 knights).
+      if (barracksTower && barracksWorldPos && !isInResetTransition) {
+        const barracksTroops = troops.filter((t) => t.ownerId === "special_barracks");
 
-          // Match the visual cycle from specialBuildings.ts rendering
-          const spawnCycle = now % 12000;
-          const isInSpawnWindow = spawnCycle < 1500;
-          const wasInSpawnWindow = lastBarracksSpawnRef.current > 0 &&
-            (lastBarracksSpawnRef.current % 12000) < 1500;
+        const spawnCycle = now % 12000;
+        const isInSpawnWindow = spawnCycle < 1500;
+        const wasInSpawnWindow =
+          lastBarracksSpawnRef.current > 0 &&
+          (lastBarracksSpawnRef.current % 12000) < 1500;
 
-          // Only spawn at the START of the spawn window (when transitioning into it)
-          // or if this is the first spawn (lastBarracksSpawnRef is 0)
-          const justEnteredSpawnWindow = isInSpawnWindow &&
-            (lastBarracksSpawnRef.current === 0 || !wasInSpawnWindow || (now - lastBarracksSpawnRef.current) > 10500);
+        const justEnteredSpawnWindow =
+          isInSpawnWindow &&
+          (lastBarracksSpawnRef.current === 0 ||
+            !wasInSpawnWindow ||
+            now - lastBarracksSpawnRef.current > 10500);
 
-          if (justEnteredSpawnWindow && barracksTroops.length < 3) {
-            // Update last spawn time
-            lastBarracksSpawnRef.current = now;
+        if (justEnteredSpawnWindow && barracksTroops.length < 3) {
+          lastBarracksSpawnRef.current = now;
 
-            // Helper to find closest road point
-            const findBarracksRoadPoint = (pos: Position): Position => {
-              const primaryPath = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
-              const secondaryPath = MAP_PATHS[`${selectedMap}_b`] ?? [];
-              const fullPath =
-                secondaryPath.length > 0
-                  ? primaryPath.concat(secondaryPath)
-                  : primaryPath;
-              if (fullPath.length < 2) return pos;
+          const findBarracksRoadPoint = (pos: Position): Position => {
+            const primaryPath = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
+            const secondaryPath = MAP_PATHS[`${selectedMap}_b`] ?? [];
+            const fullPath =
+              secondaryPath.length > 0
+                ? primaryPath.concat(secondaryPath)
+                : primaryPath;
+            if (fullPath.length < 2) return pos;
 
-              let closestPoint: Position = pos;
-              let minDist = Infinity;
-              for (let i = 0; i < fullPath.length - 1; i++) {
-                const p1Grid = fullPath[i];
-                const p2Grid = fullPath[i + 1];
-                if (!p1Grid || !p2Grid) continue;
-                const p1 = gridToWorldPath(p1Grid);
-                const p2 = gridToWorldPath(p2Grid);
-                const roadPoint = closestPointOnLine(pos, p1, p2);
-                const dist = distance(pos, roadPoint);
-                if (dist < minDist) {
-                  minDist = dist;
-                  closestPoint = roadPoint;
-                }
-              }
-              return closestPoint;
-            };
-
-            // Find rally point from existing barracks troops (user-selected position) or use road near barracks
-            const existingRallyTroop = barracksTroops.find((t) => t.userTargetPos);
-            const rallyPoint = existingRallyTroop?.userTargetPos || findBarracksRoadPoint(specWorldPos);
-
-            // Find available slot
-            const occupiedSlots = new Set(barracksTroops.map((t) => t.spawnSlot ?? 0));
-            const availableSlot = [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? barracksTroops.length;
-
-            // Calculate formation position (like dinky station)
-            const futureCount = barracksTroops.length + 1;
-            const formationOffsets = getFormationOffsets(futureCount);
-            const slotOffset = formationOffsets[availableSlot] || { x: 0, y: 0 };
-
-            const targetPos = {
-              x: rallyPoint.x + slotOffset.x,
-              y: rallyPoint.y + slotOffset.y,
-            };
-
-            const newTroop: Troop = {
-              id: generateId("barracks_unit"),
-              ownerId: "special_barracks",
-              ownerType: "barracks", // Blue themed knight
-              type: "knight",
-              pos: { ...specWorldPos }, // START at building center
-              hp: TROOP_DATA.knight.hp,
-              maxHp: TROOP_DATA.knight.hp,
-              moving: true, // Movement engine will walk them to the path
-              targetPos: targetPos,
-              userTargetPos: targetPos,
-              lastAttack: 0,
-              rotation: Math.atan2(
-                targetPos.y - specWorldPos.y,
-                targetPos.x - specWorldPos.x
-              ),
-              attackAnim: 0,
-              selected: false,
-              spawnPoint: rallyPoint, // Anchor move radius to the rally point
-              moveRadius: 220, // Increased range for frontier barracks
-              spawnSlot: availableSlot,
-            };
-
-            // Also update existing barracks troops to reposition in new formation
-            setTroops((prev) => {
-              const currentBarracksTroops = prev.filter((t) => t.ownerId === "special_barracks");
-              const troopIdToFormationIndex = new Map<string, number>();
-              currentBarracksTroops.forEach((t, idx) => {
-                troopIdToFormationIndex.set(t.id, idx);
-              });
-
-              const updated = prev.map((t) => {
-                if (t.ownerId === "special_barracks") {
-                  const newFormation = getFormationOffsets(futureCount);
-                  const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
-                  const offset = newFormation[formationIndex] || { x: 0, y: 0 };
-                  const newTarget = {
-                    x: rallyPoint.x + offset.x,
-                    y: rallyPoint.y + offset.y,
-                  };
-                  // Only reposition if not engaging enemies
-                  if (!t.engaging) {
-                    return {
-                      ...t,
-                      targetPos: newTarget,
-                      moving: true,
-                      userTargetPos: newTarget,
-                      spawnPoint: rallyPoint,
-                    };
-                  }
-                }
-                return t;
-              });
-              return [...updated, newTroop];
-            });
-            addParticles(specWorldPos, "smoke", 12);
-          }
-        }
-
-        // D. VAULT: Immobile Troop Logic (Targetable by Enemies)
-        if (
-          specialTower.type === "vault" &&
-          specialTowerHp !== null &&
-          specialTowerHp > 0
-        ) {
-          // Enemies find the vault as a combat target - skip attacks when paused
-          enemies.forEach((e) => {
-            const ePos = getEnemyPosCached(e);
-            if (distance(ePos, specWorldPos) < 60) {
-              // Enemy stops to "attack" the vault - skip when paused
-              const effectiveEnemyAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
-              if (!isPaused && now - (e.lastTroopAttack || 0) > effectiveEnemyAttackInterval) {
-                const dmg = 20;
-                setSpecialTowerHp((prev) => {
-                  // Skip if vault already destroyed
-                  if (prev === null || prev <= 0) return prev;
-                  const newVal = prev - dmg;
-                  if (newVal <= 0) {
-                    // Only subtract lives once when transitioning to destroyed
-                    setLives((l) => Math.max(0, l - 5));
-                    addParticles(specWorldPos, "explosion", 40);
-                    return 0;
-                  }
-                  return newVal;
-                });
-                setEnemies((prev) =>
-                  prev.map((en) =>
-                    en.id === e.id
-                      ? { ...en, inCombat: true, lastTroopAttack: now }
-                      : en
-                  )
-                );
+            let closestPoint: Position = pos;
+            let minDist = Infinity;
+            for (let i = 0; i < fullPath.length - 1; i++) {
+              const p1Grid = fullPath[i];
+              const p2Grid = fullPath[i + 1];
+              if (!p1Grid || !p2Grid) continue;
+              const p1 = gridToWorldPath(p1Grid);
+              const p2 = gridToWorldPath(p2Grid);
+              const roadPoint = closestPointOnLine(pos, p1, p2);
+              const dist = distance(pos, roadPoint);
+              if (dist < minDist) {
+                minDist = dist;
+                closestPoint = roadPoint;
               }
             }
+            return closestPoint;
+          };
+
+          const existingRallyTroop = barracksTroops.find((t) => t.userTargetPos);
+          const rallyPoint =
+            existingRallyTroop?.userTargetPos || findBarracksRoadPoint(barracksWorldPos);
+
+          const occupiedSlots = new Set(barracksTroops.map((t) => t.spawnSlot ?? 0));
+          const availableSlot =
+            [0, 1, 2].find((slot) => !occupiedSlots.has(slot)) ?? barracksTroops.length;
+
+          const futureCount = barracksTroops.length + 1;
+          const formationOffsets = getFormationOffsets(futureCount);
+          const slotOffset = formationOffsets[availableSlot] || { x: 0, y: 0 };
+          const targetPos = {
+            x: rallyPoint.x + slotOffset.x,
+            y: rallyPoint.y + slotOffset.y,
+          };
+
+          const newTroop: Troop = {
+            id: generateId("barracks_unit"),
+            ownerId: "special_barracks",
+            ownerType: "barracks",
+            type: "knight",
+            pos: { ...barracksWorldPos },
+            hp: TROOP_DATA.knight.hp,
+            maxHp: TROOP_DATA.knight.hp,
+            moving: true,
+            targetPos,
+            userTargetPos: targetPos,
+            lastAttack: 0,
+            rotation: Math.atan2(
+              targetPos.y - barracksWorldPos.y,
+              targetPos.x - barracksWorldPos.x
+            ),
+            attackAnim: 0,
+            selected: false,
+            spawnPoint: rallyPoint,
+            moveRadius: 220,
+            spawnSlot: availableSlot,
+          };
+
+          setTroops((prev) => {
+            const currentBarracksTroops = prev.filter(
+              (troop) => troop.ownerId === "special_barracks"
+            );
+            const troopIdToFormationIndex = new Map<string, number>();
+            currentBarracksTroops.forEach((troop, idx) => {
+              troopIdToFormationIndex.set(troop.id, idx);
+            });
+
+            const updated = prev.map((troop) => {
+              if (troop.ownerId !== "special_barracks") return troop;
+              const newFormation = getFormationOffsets(futureCount);
+              const formationIndex = troopIdToFormationIndex.get(troop.id) ?? 0;
+              const offset = newFormation[formationIndex] || { x: 0, y: 0 };
+              const newTarget = {
+                x: rallyPoint.x + offset.x,
+                y: rallyPoint.y + offset.y,
+              };
+              if (troop.engaging) return troop;
+              return {
+                ...troop,
+                targetPos: newTarget,
+                moving: true,
+                userTargetPos: newTarget,
+                spawnPoint: rallyPoint,
+              };
+            });
+            return [...updated, newTroop];
           });
-          // If HP hit 0, objective failed
-          if (specialTowerHp <= 0) setSpecialTowerHp(null);
+          addParticles(barracksWorldPos, "smoke", 12);
         }
+      }
+
+      // D. VAULT: targetable objective.
+      if (vaultTower && vaultWorldPos && specialTowerHp !== null && specialTowerHp > 0) {
+        enemies.forEach((enemy) => {
+          const enemyPos = getEnemyPosCached(enemy);
+          if (distance(enemyPos, vaultWorldPos) >= 60) return;
+          const effectiveEnemyAttackInterval =
+            gameSpeed > 0 ? 1000 / gameSpeed : 1000;
+          if (
+            isPaused ||
+            now - (enemy.lastTroopAttack || 0) <= effectiveEnemyAttackInterval
+          ) {
+            return;
+          }
+
+          const dmg = 20;
+          setSpecialTowerHp((prev) => {
+            if (prev === null || prev <= 0) return prev;
+            const newVal = prev - dmg;
+            if (newVal <= 0) {
+              setLives((life) => Math.max(0, life - 5));
+              addParticles(vaultWorldPos, "explosion", 40);
+              return 0;
+            }
+            return newVal;
+          });
+          setEnemies((prev) =>
+            prev.map((entry) =>
+              entry.id === enemy.id
+                ? { ...entry, inCombat: true, lastTroopAttack: now }
+                : entry
+            )
+          );
+        });
+
+        if (specialTowerHp <= 0) setSpecialTowerHp(null);
       }
 
       // =========================================================================
@@ -1972,12 +2271,12 @@ export function usePrincetonTowerDefenseRuntime() {
 
             // 2. CHECK FOR VAULT LOGIC (Second Priority)
             if (
-              spec?.type === "vault" &&
+              vaultTower &&
               specialTowerHp !== null &&
               specialTowerHp > 0 &&
-              specWorldPos
+              vaultWorldPos
             ) {
-              if (distance(enemyPos, specWorldPos) < 70) {
+              if (distance(enemyPos, vaultWorldPos) < 70) {
                 // Scale enemy attack interval with game speed - skip when paused
                 const effectiveVaultAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
                 if (!isPaused && now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval) {
@@ -1988,13 +2287,13 @@ export function usePrincetonTowerDefenseRuntime() {
                     if (newVal <= 0) {
                       // Only subtract lives once when transitioning to destroyed
                       setLives((l) => Math.max(0, l - 5));
-                      addParticles(specWorldPos, "explosion", 40);
+                      addParticles(vaultWorldPos, "explosion", 40);
                       return 0;
                     }
                     return newVal;
                   });
                   setVaultFlash(150);
-                  addParticles(specWorldPos, "smoke", 3);
+                  addParticles(vaultWorldPos, "smoke", 3);
                   return {
                     ...enemy,
                     inCombat: true,
@@ -2107,27 +2406,42 @@ export function usePrincetonTowerDefenseRuntime() {
             if (!enemy.inCombat) {
               const pathKey = enemy.pathKey || selectedMap;
               const path = MAP_PATHS[pathKey];
+              if (!path || path.length < 2) return { ...enemy, inCombat: false };
               const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
-              // Get segment length to normalize movement speed
               const segmentLength = getPathSegmentLength(enemy.pathIndex, pathKey);
-              // Scale speed by TILE_SIZE to convert from old progress-based system to pixel-based
-              // Then divide by actual segment length for consistent world-space speed
-              const progressIncrement = (enemy.speed * speedMult * deltaTime * TILE_SIZE) / 200 / segmentLength;
-              const newProgress = enemy.progress + progressIncrement;
-              if (newProgress >= 1 && enemy.pathIndex < path.length - 1) {
-                return {
-                  ...enemy,
-                  pathIndex: enemy.pathIndex + 1,
-                  progress: 0,
-                };
-              } else if (newProgress >= 1) {
-                // Use liveCost from enemy data, default to 1
+              const worldAdvance =
+                (enemy.speed * speedMult * deltaTime * TILE_SIZE) / 200;
+              let nextPathIndex = enemy.pathIndex;
+              let currentSegmentLength = Math.max(1, segmentLength);
+              let segmentDistance =
+                enemy.progress * currentSegmentLength + worldAdvance;
+
+              while (
+                segmentDistance >= currentSegmentLength &&
+                nextPathIndex < path.length - 1
+              ) {
+                segmentDistance -= currentSegmentLength;
+                nextPathIndex += 1;
+                currentSegmentLength = Math.max(
+                  1,
+                  getPathSegmentLength(nextPathIndex, pathKey)
+                );
+              }
+
+              if (nextPathIndex >= path.length - 1) {
                 const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
                 setLives((l) => Math.max(0, l - liveCost));
                 return null;
-              } else {
-                return { ...enemy, progress: newProgress };
               }
+
+              return {
+                ...enemy,
+                pathIndex: nextPathIndex,
+                progress: Math.max(
+                  0,
+                  Math.min(0.999, segmentDistance / currentSegmentLength)
+                ),
+              };
             }
             return { ...enemy, inCombat: false };
           })
@@ -2636,48 +2950,61 @@ export function usePrincetonTowerDefenseRuntime() {
               // Use enemy's pathKey for dual-path support
               const pathKey = enemy.pathKey || selectedMap;
               const path = MAP_PATHS[pathKey];
+              if (!path || path.length < 2) {
+                return {
+                  ...enemy,
+                  slowEffect: Math.max(0, enemy.slowEffect - deltaTime / 5000),
+                  slowed: slowedVisual,
+                  slowIntensity: slowIntensity,
+                  damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                };
+              }
               const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
-              // Get segment length to normalize movement speed
               const segmentLength = getPathSegmentLength(enemy.pathIndex, pathKey);
-              // Scale speed by TILE_SIZE to convert from old progress-based system to pixel-based
-              // Then divide by actual segment length for consistent world-space speed
-              const progressIncrement = (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime * TILE_SIZE) / 1000 / segmentLength;
-              const newProgress = enemy.progress + progressIncrement;
-              // Compute facing direction from current path segment
-              const segIdx = Math.min(enemy.pathIndex, path.length - 2);
+              const worldAdvance =
+                (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime * TILE_SIZE) / 1000;
+              let nextPathIndex = enemy.pathIndex;
+              let currentSegmentLength = Math.max(1, segmentLength);
+              let segmentDistance =
+                enemy.progress * currentSegmentLength + worldAdvance;
+
+              while (
+                segmentDistance >= currentSegmentLength &&
+                nextPathIndex < path.length - 1
+              ) {
+                segmentDistance -= currentSegmentLength;
+                nextPathIndex += 1;
+                currentSegmentLength = Math.max(
+                  1,
+                  getPathSegmentLength(nextPathIndex, pathKey)
+                );
+              }
+
+              // Compute facing direction from destination segment
+              const segIdx = Math.min(nextPathIndex, path.length - 2);
               const segStart = path[segIdx];
               const segEnd = path[segIdx + 1] || segStart;
               const facingRight = segEnd.x > segStart.x;
-              if (newProgress >= 1 && enemy.pathIndex < path.length - 1) {
-                return {
-                  ...enemy,
-                  pathIndex: enemy.pathIndex + 1,
-                  progress: 0,
-                  slowEffect: Math.max(0, enemy.slowEffect - deltaTime / 5000),
-                  slowed: slowedVisual,
-                  slowIntensity: slowIntensity,
-                  damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
-                  facingRight,
-                };
-              } else if (
-                newProgress >= 1 &&
-                enemy.pathIndex >= path.length - 1
-              ) {
-                // Use liveCost from enemy data, default to 1
+
+              if (nextPathIndex >= path.length - 1) {
                 const liveCost = ENEMY_DATA[enemy.type].liveCost || 1;
                 setLives((l) => Math.max(0, l - liveCost));
                 return null;
-              } else {
-                return {
-                  ...enemy,
-                  progress: newProgress,
-                  slowEffect: Math.max(0, enemy.slowEffect - deltaTime / 5000),
-                  slowed: slowedVisual,
-                  slowIntensity: slowIntensity,
-                  damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
-                  facingRight,
-                };
               }
+
+              return {
+                ...enemy,
+                pathIndex: nextPathIndex,
+                progress: Math.max(
+                  0,
+                  Math.min(0.999, segmentDistance / currentSegmentLength)
+                ),
+                slowEffect: Math.max(0, enemy.slowEffect - deltaTime / 5000),
+                slowed: slowedVisual,
+                slowIntensity: slowIntensity,
+                damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                facingRight,
+              };
             }
             return {
               ...enemy,
@@ -2688,151 +3015,208 @@ export function usePrincetonTowerDefenseRuntime() {
           })
           .filter(isDefined)
       );
-      // Enemy separation - soft collision avoidance with smart exceptions
+      // Lane-aware movement: keep enemies in discrete lanes and let faster units overtake.
       setEnemies((prev) => {
-        if (prev.length <= 1) return prev;
+        if (prev.length <= 1 || ENEMY_LANE_OFFSETS.length <= 1) return prev;
 
-        // Much gentler separation - enemies can overlap when needed
-        const BASE_SEPARATION_DISTANCE = 35;
-        const SEPARATION_FORCE = 0.4;
-        const PROGRESS_SEPARATION = 0.02;
-        const cellSize = 80;
+        type LaneOccupant = {
+          id: string;
+          pathKey: string;
+          laneIndex: number;
+          progressMetric: number;
+          enemy: Enemy;
+        };
 
-        const enemyPosById = new Map<string, Position>();
-        const cellBuckets = new Map<string, number[]>();
-        prev.forEach((enemy, index) => {
-          const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
-          enemyPosById.set(enemy.id, enemyPos);
-          const cellKey = `${Math.floor(enemyPos.x / cellSize)}:${Math.floor(
-            enemyPos.y / cellSize
-          )}`;
-          const bucket = cellBuckets.get(cellKey);
+        const laneBuckets = new Map<string, LaneOccupant[]>();
+        const occupantById = new Map<string, LaneOccupant>();
+        const laneKeyFor = (pathKey: string, laneIndex: number) =>
+          `${pathKey}:${laneIndex}`;
+
+        prev.forEach((enemy) => {
+          const pathKey = enemy.pathKey || selectedMap;
+          const laneIndex = clampLaneIndex(getNearestLaneIndex(enemy.laneOffset));
+          const occupant: LaneOccupant = {
+            id: enemy.id,
+            pathKey,
+            laneIndex,
+            progressMetric: enemy.pathIndex + enemy.progress,
+            enemy,
+          };
+          occupantById.set(enemy.id, occupant);
+          const laneKey = laneKeyFor(pathKey, laneIndex);
+          const bucket = laneBuckets.get(laneKey);
           if (bucket) {
-            bucket.push(index);
+            bucket.push(occupant);
           } else {
-            cellBuckets.set(cellKey, [index]);
+            laneBuckets.set(laneKey, [occupant]);
           }
         });
 
-        let hasSeparationChanges = false;
-        const separated = prev.map((enemy, enemyIndex) => {
-          const enemyPos = enemyPosById.get(enemy.id);
-          if (!enemyPos) return enemy;
-          const eData = ENEMY_DATA[enemy.type];
-          const enemySize = eData?.size || 20;
-          const enemyFlying = eData?.flying || false;
+        laneBuckets.forEach((bucket) => {
+          bucket.sort((a, b) => a.progressMetric - b.progressMetric);
+        });
 
-          // Enemies in combat have MUCH reduced separation - they're allowed to crowd targets
-          const inCombatMultiplier = enemy.inCombat ? 0.3 : 1.0;
+        const findFrontOccupant = (
+          pathKey: string,
+          laneIndex: number,
+          progressMetric: number,
+          enemyId: string
+        ): LaneOccupant | undefined => {
+          const bucket = laneBuckets.get(laneKeyFor(pathKey, laneIndex));
+          if (!bucket) return undefined;
+          for (const occupant of bucket) {
+            if (occupant.id === enemyId) continue;
+            if (occupant.progressMetric > progressMetric) return occupant;
+          }
+          return undefined;
+        };
 
-          // Flying enemies have very minimal separation from ground enemies
-          // and reduced separation from other flying enemies
-          const flyingReduction = enemyFlying ? 0.3 : 1.0;
+        const isLaneClear = (
+          pathKey: string,
+          laneIndex: number,
+          progressMetric: number,
+          enemyId: string,
+          frontClearance: number = ENEMY_LANE_FRONT_CLEARANCE,
+          backClearance: number = ENEMY_LANE_BACK_CLEARANCE
+        ): boolean => {
+          const bucket = laneBuckets.get(laneKeyFor(pathKey, laneIndex));
+          if (!bucket) return true;
+          for (const occupant of bucket) {
+            if (occupant.id === enemyId) continue;
+            const diff = occupant.progressMetric - progressMetric;
+            if (diff >= 0 && diff < frontClearance) return false;
+            if (diff < 0 && Math.abs(diff) < backClearance) return false;
+          }
+          return true;
+        };
 
-          let separationX = 0;
-          let separationY = 0;
-          let progressPush = 0;
-          let overlappingCount = 0;
+        const buildLaneCandidates = (
+          currentLane: number,
+          preferredLane: number
+        ): number[] => {
+          const ordered: number[] = [];
+          const addLane = (laneIndex: number) => {
+            if (laneIndex < 0 || laneIndex >= ENEMY_LANE_OFFSETS.length) return;
+            if (!ordered.includes(laneIndex)) ordered.push(laneIndex);
+          };
 
-          const baseCellX = Math.floor(enemyPos.x / cellSize);
-          const baseCellY = Math.floor(enemyPos.y / cellSize);
-          for (let cy = baseCellY - 1; cy <= baseCellY + 1; cy++) {
-            for (let cx = baseCellX - 1; cx <= baseCellX + 1; cx++) {
-              const bucket = cellBuckets.get(`${cx}:${cy}`);
-              if (!bucket) continue;
+          addLane(preferredLane);
+          for (let step = 1; step < ENEMY_LANE_OFFSETS.length; step++) {
+            addLane(currentLane - step);
+            addLane(currentLane + step);
+          }
+          addLane(currentLane);
+          return ordered;
+        };
 
-              for (const otherIndex of bucket) {
-                if (otherIndex === enemyIndex) continue;
-                const other = prev[otherIndex];
-                // Only separate enemies on the same path
-                if (enemy.pathKey !== other.pathKey) continue;
+        let hasLaneChanges = false;
+        const updated = prev.map((enemy) => {
+          const occupant = occupantById.get(enemy.id);
+          if (!occupant) return enemy;
 
-                const oData = ENEMY_DATA[other.type];
-                const otherFlying = oData?.flying || false;
+          const currentLane = occupant.laneIndex;
+          const preferredLane = clampLaneIndex(
+            typeof enemy.formationLane === "number"
+              ? enemy.formationLane
+              : currentLane
+          );
+          const pathKey = occupant.pathKey;
+          const ownSpeed = ENEMY_DATA[enemy.type].speed;
+          const frontInCurrent = findFrontOccupant(
+            pathKey,
+            currentLane,
+            occupant.progressMetric,
+            enemy.id
+          );
+          const frontGap =
+            frontInCurrent?.progressMetric != null
+              ? frontInCurrent.progressMetric - occupant.progressMetric
+              : Number.POSITIVE_INFINITY;
 
-                // Flying vs ground enemies: no separation at all
-                // They exist on different "layers"
-                if (enemyFlying !== otherFlying) continue;
+          const canReposition =
+            !enemy.inCombat &&
+            !enemy.taunted &&
+            !enemy.frozen &&
+            now >= enemy.stunUntil;
 
-                const otherPos = enemyPosById.get(other.id);
-                if (!otherPos) continue;
-                const otherSize = oData?.size || 20;
+          const shouldOvertake =
+            canReposition &&
+            Number.isFinite(frontGap) &&
+            frontGap < ENEMY_LANE_SWITCH_LOOKAHEAD &&
+            !!frontInCurrent &&
+            (frontInCurrent.enemy.inCombat ||
+              ENEMY_DATA[frontInCurrent.enemy.type].speed <= ownSpeed * 0.96 ||
+              frontGap < ENEMY_LANE_STALL_GAP * 1.4);
 
-                // Both in combat with same target? Minimal separation
-                const bothInCombat = enemy.inCombat && other.inCombat;
-                const sameTarget =
-                  enemy.combatTarget && enemy.combatTarget === other.combatTarget;
-                const combatOverlapAllowed = bothInCombat && sameTarget;
-
-                // Dynamic separation distance - smaller when in combat together
-                const baseDist = combatOverlapAllowed ? 10 : BASE_SEPARATION_DISTANCE;
-                const combinedSize = (enemySize + otherSize) * 0.4;
-                const dynamicSepDist = Math.max(baseDist, combinedSize);
-
-                const dx = enemyPos.x - otherPos.x;
-                const dy = enemyPos.y - otherPos.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                // Only apply separation if very close
-                if (dist < dynamicSepDist && dist > 0.1) {
-                  overlappingCount++;
-
-                  // Linear falloff instead of quadratic - gentler push
-                  const forceMult = (dynamicSepDist - dist) / dynamicSepDist;
-                  const force =
-                    forceMult *
-                    SEPARATION_FORCE *
-                    inCombatMultiplier *
-                    flyingReduction;
-
-                  // If combat overlap allowed, almost no push
-                  if (!combatOverlapAllowed) {
-                    separationX += (dx / dist) * force;
-                    separationY += (dy / dist) * force;
-                  }
-
-                  // Path progress spreading - only when NOT in combat
-                  if (!enemy.inCombat && !combatOverlapAllowed) {
-                    const progressDiff = enemy.progress - other.progress;
-                    const pathIndexDiff = enemy.pathIndex - other.pathIndex;
-                    const isBehind =
-                      pathIndexDiff < 0 ||
-                      (pathIndexDiff === 0 && progressDiff < 0);
-
-                    if (dist < dynamicSepDist * 0.5) {
-                      progressPush += isBehind
-                        ? -PROGRESS_SEPARATION * forceMult
-                        : PROGRESS_SEPARATION * forceMult * 0.5;
-                    }
-                  }
+          let desiredLane = currentLane;
+          if (canReposition) {
+            if (shouldOvertake) {
+              const candidates = buildLaneCandidates(currentLane, preferredLane);
+              for (const laneIndex of candidates) {
+                if (laneIndex === currentLane) continue;
+                if (
+                  isLaneClear(
+                    pathKey,
+                    laneIndex,
+                    occupant.progressMetric,
+                    enemy.id
+                  )
+                ) {
+                  desiredLane = laneIndex;
+                  break;
                 }
               }
+            } else if (
+              preferredLane !== currentLane &&
+              isLaneClear(
+                pathKey,
+                preferredLane,
+                occupant.progressMetric,
+                enemy.id,
+                ENEMY_LANE_FRONT_CLEARANCE * 0.8,
+                ENEMY_LANE_BACK_CLEARANCE * 0.8
+              )
+            ) {
+              desiredLane = preferredLane;
             }
           }
 
-          // Only apply changes if significant overlap with non-combat enemies
-          if (overlappingCount > 0 && (Math.abs(separationX) > 0.005 || Math.abs(separationY) > 0.005 || Math.abs(progressPush) > 0.001)) {
-            // Apply separation as lane offset adjustment (perpendicular to path)
-            // Gentler application rate
-            const newLaneOffset = Math.max(
-              -ENEMY_RUNTIME_LANE_LIMIT,
-              Math.min(ENEMY_RUNTIME_LANE_LIMIT, enemy.laneOffset + separationX * 0.06)
-            );
+          const targetLaneOffset =
+            ENEMY_LANE_OFFSETS[desiredLane] ?? enemy.laneOffset;
+          const laneBlend = Math.min(1, deltaTime / ENEMY_LANE_SHIFT_MS);
+          const nextLaneOffset = clampLaneOffset(
+            enemy.laneOffset + (targetLaneOffset - enemy.laneOffset) * laneBlend
+          );
 
-            // Apply progress adjustment (along path)
-            let newProgress = enemy.progress + progressPush;
-            newProgress = Math.max(0, Math.min(1, newProgress));
+          let nextProgress = enemy.progress;
+          if (
+            canReposition &&
+            desiredLane === currentLane &&
+            Number.isFinite(frontGap) &&
+            frontGap < ENEMY_LANE_STALL_GAP
+          ) {
+            const pushbackStrength =
+              ((ENEMY_LANE_STALL_GAP - frontGap) / ENEMY_LANE_STALL_GAP) *
+              ENEMY_LANE_STALL_PUSHBACK;
+            nextProgress = Math.max(0, Math.min(1, enemy.progress - pushbackStrength));
+          }
 
-            hasSeparationChanges = true;
+          if (
+            Math.abs(nextLaneOffset - enemy.laneOffset) > 0.0005 ||
+            Math.abs(nextProgress - enemy.progress) > 0.0005 ||
+            enemy.formationLane !== preferredLane
+          ) {
+            hasLaneChanges = true;
             return {
               ...enemy,
-              laneOffset: newLaneOffset,
-              progress: newProgress,
+              laneOffset: nextLaneOffset,
+              progress: nextProgress,
+              formationLane: preferredLane,
             };
           }
           return enemy;
         });
-        return hasSeparationChanges ? separated : prev;
+        return hasLaneChanges ? updated : prev;
       });
       // Summoner enemies spawn minions periodically
       setEnemies((prev) => {
@@ -2861,13 +3245,13 @@ export function usePrincetonTowerDefenseRuntime() {
             lastHeroAttack: 0,
             lastRangedAttack: 0,
             spawnProgress: 0.1,
-            laneOffset: Math.max(
-              -ENEMY_RUNTIME_LANE_LIMIT,
-              Math.min(
-                ENEMY_RUNTIME_LANE_LIMIT,
-                enemy.laneOffset + (Math.random() - 0.5) * 1.5
-              )
+            laneOffset: clampLaneOffset(
+              enemy.laneOffset + (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER
             ),
+            formationLane:
+              typeof enemy.formationLane === "number"
+                ? clampLaneIndex(enemy.formationLane)
+                : getNearestLaneIndex(enemy.laneOffset),
             slowed: false,
             slowIntensity: 0,
             pathKey: enemy.pathKey,
@@ -3609,7 +3993,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 amount = Math.floor(amount * 1.1);
               }
 
-              setPawPoints((pp) => pp + amount);
+              addPawPoints(amount);
               // Add eating club income event for HUD animation
               setEatingClubIncomeEvents((prev) => [...prev, { id: `${tower.id}-${now}`, amount }]);
               addParticles(gridToWorld(tower.pos), "gold", 20);
@@ -3895,7 +4279,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
             // Spawn any respawning troops
             if (troopsToSpawn.length > 0) {
-              setTroops((prev) => [...prev, ...troopsToSpawn]);
+              addTroopEntities(troopsToSpawn);
             }
 
             // Total occupied = living troops + pending respawns
@@ -4441,10 +4825,10 @@ export function usePrincetonTowerDefenseRuntime() {
         );
       }
       if (queuedTowerEffects.length > 0) {
-        setEffects((prev) => [...prev, ...queuedTowerEffects]);
+        addEffectEntities(queuedTowerEffects);
       }
       if (queuedTowerProjectiles.length > 0) {
-        setProjectiles((prev) => [...prev, ...queuedTowerProjectiles]);
+        addProjectileEntities(queuedTowerProjectiles);
       }
 
       // Hero attacks - skip when paused
@@ -4492,7 +4876,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     if (newHp <= 0) {
                       killedEnemyIds.push(e.id);
                       onEnemyKill(e, attackTargetPos, 10);
-                      if (hero.type === "scott") setPawPoints((pp) => pp + 1);
+                      if (hero.type === "scott") addPawPoints(1);
                       return null;
                     }
                     return { ...e, hp: newHp, damageFlash: 200 };
@@ -4754,10 +5138,10 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
       if (queuedTroopEffects.length > 0) {
-        setEffects((prev) => [...prev, ...queuedTroopEffects]);
+        addEffectEntities(queuedTroopEffects);
       }
       if (queuedTroopProjectiles.length > 0) {
-        setProjectiles((prev) => [...prev, ...queuedTroopProjectiles]);
+        addProjectileEntities(queuedTroopProjectiles);
       }
       if (queuedTroopPatches.size > 0) {
         setTroops((prev) =>
@@ -5100,32 +5484,289 @@ export function usePrincetonTowerDefenseRuntime() {
         // Save stats for victory (won = true)
         updateLevelStats(mapToSave, finalTime, lives, true);
 
-        // Level unlock progression
-        const unlockMap: Record<string, string> = {
-          poe: "carnegie",
-          carnegie: "nassau",
-          nassau: "bog",
-          bog: "witch_hut",
-          witch_hut: "sunken_temple",
-          sunken_temple: "oasis",
-          oasis: "pyramid",
-          pyramid: "sphinx",
-          sphinx: "glacier",
-          glacier: "fortress",
-          fortress: "peak",
-          peak: "lava",
-          lava: "crater",
-          crater: "throne",
-        };
-        const nextLevel = unlockMap[mapToSave];
+        // Campaign progression unlocks.
+        const nextLevel = CAMPAIGN_LEVEL_UNLOCKS[mapToSave];
         if (nextLevel && !unlockedMaps.includes(nextLevel)) {
           unlockLevel(nextLevel);
         }
+
+        // Challenge progression unlocks when all campaign stages in a region
+        // have at least one star.
+        const projectedLevelStars = {
+          ...levelStars,
+          [mapToSave]: Math.max(levelStars[mapToSave] || 0, stars),
+        };
+        (Object.keys(REGION_CAMPAIGN_LEVELS) as Array<
+          keyof typeof REGION_CAMPAIGN_LEVELS
+        >).forEach((regionKey) => {
+          if (!isRegionCleared(regionKey, projectedLevelStars)) return;
+          const challengeLevel = REGION_CHALLENGE_UNLOCKS[regionKey];
+          if (!unlockedMaps.includes(challengeLevel)) {
+            unlockLevel(challengeLevel);
+          }
+        });
       }
     },
-    [gameSpeed, selectedMap, waveInProgress, currentWave, vaultFlash, hero, lives, gameState, enemies, nextWaveTimer, startWave, addParticles, specialTowerHp, troops, towers, levelStartTime, clearAllTimers, updateLevelStats, updateLevelStars, unlockedMaps, unlockLevel, applyEnemyAbilities, awardBounty, onEnemyKill]
+    [
+      gameSpeed,
+      selectedMap,
+      waveInProgress,
+      currentWave,
+      vaultFlash,
+      hero,
+      lives,
+      gameState,
+      enemies,
+      nextWaveTimer,
+      startWave,
+      addParticles,
+      specialTowerHp,
+      troops,
+      towers,
+      levelStartTime,
+      clearAllTimers,
+      levelStars,
+      updateLevelStats,
+      updateLevelStars,
+      unlockedMaps,
+      unlockLevel,
+      applyEnemyAbilities,
+      awardBounty,
+      onEnemyKill,
+      addPawPoints,
+      addEffectEntities,
+      addProjectileEntities,
+      addTroopEntities,
+      setEffects,
+      setEnemies,
+      setParticles,
+      setProjectiles,
+      setTowers,
+      setTroops,
+    ]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation
+  const getWaveStartBubblesScreenData = useCallback(
+    (
+      canvasWidth: number,
+      canvasHeight: number,
+      dpr: number
+    ): WaveStartBubbleScreenData[] => {
+      const canShowBubble =
+        gameState === "playing" &&
+        gameSpeed > 0 &&
+        !waveInProgress &&
+        currentWave < totalWaves &&
+        nextWaveTimer > 0;
+
+      if (!canShowBubble) return [];
+
+      const viewportWidth = canvasWidth / dpr;
+      const viewportHeight = canvasHeight / dpr;
+      const pathCount = activeWaveSpawnPaths.length;
+      const bubbles: WaveStartBubbleScreenData[] = [];
+
+      for (let pathIndex = 0; pathIndex < pathCount; pathIndex++) {
+        const pathKey = activeWaveSpawnPaths[pathIndex];
+        if (!pathKey) continue;
+        const pathPoints = MAP_PATHS[pathKey] ?? [];
+        if (pathPoints.length === 0) continue;
+
+        const spawnNode = pathPoints[0];
+        const nextNode = pathPoints[1] ?? spawnNode;
+        if (!spawnNode || !nextNode) continue;
+
+        const spawnWorld = gridToWorldPath(spawnNode);
+        const nextWorld = gridToWorldPath(nextNode);
+        const pathDx = nextWorld.x - spawnWorld.x;
+        const pathDy = nextWorld.y - spawnWorld.y;
+        const pathLen = Math.hypot(pathDx, pathDy) || 1;
+        const dirX = pathDx / pathLen;
+        const dirY = pathDy / pathLen;
+        const perpX = -dirY;
+        const perpY = dirX;
+        const longitudinalOffset = (pathIndex - (pathCount - 1) / 2) * 44;
+        const radius =
+          WAVE_START_BUBBLE_BASE_RADIUS *
+          Math.max(0.85, Math.min(1.35, cameraZoom * 0.95));
+
+        // Keep bubble anchors camera-independent to prevent edge "dragging".
+        const sideSign = pathCount > 1 ? (pathIndex % 2 === 0 ? 1 : -1) : 1;
+        const preferredWorldPos: Position = {
+          x:
+            spawnWorld.x +
+            perpX * WAVE_START_BUBBLE_SIDE_OFFSET * sideSign -
+            dirX * WAVE_START_BUBBLE_BACK_OFFSET +
+            dirX * longitudinalOffset,
+          y:
+            spawnWorld.y +
+            perpY * WAVE_START_BUBBLE_SIDE_OFFSET * sideSign -
+            dirY * WAVE_START_BUBBLE_BACK_OFFSET +
+            dirY * longitudinalOffset,
+        };
+        const spawnScreenPos = worldToScreen(
+          spawnWorld,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        const preferredScreenPos = worldToScreen(
+          preferredWorldPos,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+
+        const minX = WAVE_START_BUBBLE_VIEW_MARGIN + radius;
+        const maxX = viewportWidth - (WAVE_START_BUBBLE_VIEW_MARGIN + radius);
+        const minY = WAVE_START_BUBBLE_VIEW_MARGIN + radius;
+        const maxY = viewportHeight - (WAVE_START_BUBBLE_VIEW_MARGIN + radius);
+
+        const clampToBounds = (point: Position): Position => ({
+          x: Math.max(minX, Math.min(maxX, point.x)),
+          y: Math.max(minY, Math.min(maxY, point.y)),
+        });
+        const isInsideBounds = (point: Position): boolean =>
+          point.x >= minX &&
+          point.x <= maxX &&
+          point.y >= minY &&
+          point.y <= maxY;
+        const avoidCorners = (
+          point: Position,
+          axisDx: number,
+          axisDy: number
+        ): Position => {
+          const cornerPad = WAVE_START_BUBBLE_CORNER_MARGIN + radius * 0.35;
+          const nearLeft = point.x <= minX + cornerPad;
+          const nearRight = point.x >= maxX - cornerPad;
+          const nearTop = point.y <= minY + cornerPad;
+          const nearBottom = point.y >= maxY - cornerPad;
+          const nearCorner = (nearLeft || nearRight) && (nearTop || nearBottom);
+          if (!nearCorner) return point;
+
+          const adjusted = { ...point };
+          if (Math.abs(axisDx) >= Math.abs(axisDy)) {
+            adjusted.y = nearTop
+              ? minY + cornerPad
+              : nearBottom
+                ? maxY - cornerPad
+                : adjusted.y;
+          } else {
+            adjusted.x = nearLeft
+              ? minX + cornerPad
+              : nearRight
+                ? maxX - cornerPad
+                : adjusted.x;
+          }
+          return adjusted;
+        };
+
+        let screenPos = preferredScreenPos;
+        if (!isInsideBounds(preferredScreenPos)) {
+          const dx = preferredScreenPos.x - spawnScreenPos.x;
+          const dy = preferredScreenPos.y - spawnScreenPos.y;
+          const EPSILON = 0.0001;
+          let usedLineClip = false;
+
+          if (Math.abs(dx) > EPSILON || Math.abs(dy) > EPSILON) {
+            let tEnter = -Infinity;
+            let tExit = Infinity;
+            const updateAxis = (
+              start: number,
+              delta: number,
+              axisMin: number,
+              axisMax: number
+            ): boolean => {
+              if (Math.abs(delta) < EPSILON) {
+                return start >= axisMin && start <= axisMax;
+              }
+              const t1 = (axisMin - start) / delta;
+              const t2 = (axisMax - start) / delta;
+              const axisEnter = Math.min(t1, t2);
+              const axisExit = Math.max(t1, t2);
+              tEnter = Math.max(tEnter, axisEnter);
+              tExit = Math.min(tExit, axisExit);
+              return tEnter <= tExit;
+            };
+
+            if (
+              updateAxis(spawnScreenPos.x, dx, minX, maxX) &&
+              updateAxis(spawnScreenPos.y, dy, minY, maxY) &&
+              tExit >= 0
+            ) {
+              const segStart = Math.max(tEnter, 0);
+              const segEnd = Math.min(tExit, 1);
+              if (segStart <= segEnd) {
+                // Keep bubble near preferred position while remaining inside safe bounds.
+                const t = Math.min(segEnd, Math.max(segStart, 0.96 * segEnd));
+                screenPos = {
+                  x: spawnScreenPos.x + dx * t,
+                  y: spawnScreenPos.y + dy * t,
+                };
+                usedLineClip = true;
+              }
+            }
+          }
+
+          if (!usedLineClip) {
+            screenPos = clampToBounds(preferredScreenPos);
+          }
+          screenPos = avoidCorners(
+            clampToBounds(screenPos),
+            preferredScreenPos.x - spawnScreenPos.x,
+            preferredScreenPos.y - spawnScreenPos.y
+          );
+        }
+
+        const worldPos = screenToWorld(
+          screenPos,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+
+        const progress = Math.max(
+          0,
+          Math.min(1, (WAVE_TIMER_BASE - nextWaveTimer) / WAVE_TIMER_BASE)
+        );
+        const pathLabel =
+          pathCount > 1
+            ? `Path ${String.fromCharCode(65 + Math.min(25, pathIndex))}`
+            : "Path";
+
+        bubbles.push({
+          pathKey,
+          pathLabel,
+          screenPos,
+          spawnScreenPos,
+          worldPos,
+          radius,
+          progress,
+          remainingMs: nextWaveTimer,
+        });
+      }
+
+      return bubbles;
+    },
+    [
+      gameState,
+      gameSpeed,
+      waveInProgress,
+      currentWave,
+      totalWaves,
+      nextWaveTimer,
+      activeWaveSpawnPaths,
+      cameraOffset,
+      cameraZoom,
+    ]
+  );
+
   const render = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -5509,6 +6150,22 @@ export function usePrincetonTowerDefenseRuntime() {
       const isBeyondGrid = (gx: number, gy: number): boolean =>
         gx < 0 || gx > GRID_WIDTH || gy < 0 || gy > GRID_HEIGHT;
       const BEYOND_GRID_REDUCE = 0.3;
+      const specialTowerZones = getLevelSpecialTowers(selectedMap).map((tower) => ({
+        cx: tower.pos.x,
+        cy: tower.pos.y,
+      }));
+      const isInSpecialTowerZone = (
+        gx: number,
+        gy: number,
+        radius: number
+      ): boolean => {
+        if (specialTowerZones.length === 0) return false;
+        return specialTowerZones.some((zone) => {
+          const dx = gx - zone.cx;
+          const dy = gy - zone.cy;
+          return dx * dx + dy * dy < radius * radius;
+        });
+      };
 
       // Build landmark exclusion zones from map-defined decorations.
       // Each zone has a core radius (no decorations) and a full radius
@@ -5517,12 +6174,23 @@ export function usePrincetonTowerDefenseRuntime() {
       if (levelData?.decorations) {
         for (const deco of levelData.decorations) {
           const decoType = deco.category || deco.type;
-          if (decoType && LANDMARK_DECORATION_TYPES.has(decoType)) {
-            const size = deco.size || 1;
-            const coreR = size * 0.9;
-            const fullR = coreR + 0.6;
-            landmarkZones.push({ cx: deco.pos.x, cy: deco.pos.y, coreR, fullR });
-          }
+          if (!decoType || !LANDMARK_DECORATION_TYPES.has(decoType)) continue;
+          const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
+          const decoWorldPos = getMapDecorationWorldPos(deco);
+          const decoGridX = decoWorldPos.x / TILE_SIZE - 0.5;
+          const decoGridY = decoWorldPos.y / TILE_SIZE - 0.5;
+          const exclusion = getLandmarkSpawnExclusion(
+            decoType,
+            resolvedPlacement?.scale ?? (deco.size || 1),
+            deco.heightTag
+          );
+          if (!exclusion) continue;
+          landmarkZones.push({
+            cx: decoGridX,
+            cy: decoGridY,
+            coreR: exclusion.coreR,
+            fullR: exclusion.fullR,
+          });
         }
       }
 
@@ -5582,6 +6250,8 @@ export function usePrincetonTowerDefenseRuntime() {
         const isLargeCategory = category === "trees" || category === "structures";
         if (isLargeCategory && isInLandmarkCore(gridX, gridY)) continue;
         if (!isLargeCategory && isInLandmarkFull(gridX, gridY)) continue;
+        if (isLargeCategory && isInSpecialTowerZone(gridX, gridY, 1.9)) continue;
+        if (!isLargeCategory && isInSpecialTowerZone(gridX, gridY, 1.15)) continue;
 
         const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
         const type = categoryDecors[typeIndex] as DecorationType;
@@ -5624,6 +6294,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: treeX, y: treeY });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(treeX, treeY)) continue;
+          if (isInSpecialTowerZone(treeX, treeY, 1.9)) continue;
 
           decorations.push({
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
@@ -5651,6 +6322,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: tx, y: ty });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(tx, ty)) continue;
+          if (isInSpecialTowerZone(tx, ty, 1.9)) continue;
 
           decorations.push({
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
@@ -5670,6 +6342,7 @@ export function usePrincetonTowerDefenseRuntime() {
         const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
         if (isOnPath(villageCenterWorld)) continue;
         if (distFromPath(villageX, villageY) < TOWER_PLACEMENT_BUFFER + 25) continue;
+        if (isInSpecialTowerZone(villageX, villageY, 2.3)) continue;
 
         const structureTypes = categories.structures;
         const scatteredTypes = categories.scattered;
@@ -5682,6 +6355,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: structX, y: structY });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(structX, structY)) continue;
+          if (isInSpecialTowerZone(structX, structY, 1.9)) continue;
 
           decorations.push({
             type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
@@ -5703,6 +6377,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: sx, y: sy });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkFull(sx, sy)) continue;
+          if (isInSpecialTowerZone(sx, sy, 1.15)) continue;
 
           const scType = scatteredTypes.length > 0
             ? scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)]
@@ -5728,6 +6403,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: tx, y: ty });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(tx, ty)) continue;
+          if (isInSpecialTowerZone(tx, ty, 1.9)) continue;
 
           decorations.push({
             type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
@@ -5754,6 +6430,7 @@ export function usePrincetonTowerDefenseRuntime() {
         const worldPos = gridToWorld({ x: gx, y: gy });
         if (isOnPath(worldPos)) continue;
         if (isInLandmarkCore(gx, gy)) continue;
+        if (isInSpecialTowerZone(gx, gy, 1.15)) continue;
 
         const allDecorTypes = [...categories.trees, ...categories.terrain];
         const fillType = allDecorTypes[Math.floor(seededRandom() * allDecorTypes.length)] as DecorationType;
@@ -5786,6 +6463,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
         if (isBeyondGrid(gridX, gridY) && seededRandom() > BEYOND_GRID_REDUCE) continue;
         if (isInLandmarkFull(gridX, gridY)) continue;
+        if (isInSpecialTowerZone(gridX, gridY, 1.15)) continue;
 
         const worldPos = gridToWorld({ x: gridX, y: gridY });
         const type =
@@ -5831,6 +6509,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(gx, gy)) continue;
+          if (isInSpecialTowerZone(gx, gy, 1.9)) continue;
 
           const isTree = seededRandom() > 0.3;
           const type = isTree
@@ -5877,6 +6556,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(gx, gy)) continue;
+          if (isInSpecialTowerZone(gx, gy, 1.9)) continue;
 
           const type = seededRandom() > 0.3
             ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
@@ -5902,6 +6582,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(gx, gy)) continue;
+          if (isInSpecialTowerZone(gx, gy, 1.9)) continue;
 
           const type = seededRandom() > 0.25
             ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
@@ -5927,6 +6608,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const worldPos = gridToWorld({ x: gx, y: gy });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkFull(gx, gy)) continue;
+          if (isInSpecialTowerZone(gx, gy, 1.15)) continue;
 
           const scatteredTypes = [...categories.scattered, ...endpointTerrainTypes];
           const type = scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)];
@@ -5945,394 +6627,55 @@ export function usePrincetonTowerDefenseRuntime() {
       // Add major landmarks from LEVEL_DATA if defined
       const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
       if (levelDecorations) {
-        const manualDecorationStartIndex = decorations.length;
+        const specialTowerWorldPositions = getLevelSpecialTowers(selectedMap).map((tower) =>
+          gridToWorld(tower.pos)
+        );
+        let manualDecorationCount = 0;
         for (const dec of levelDecorations) {
-          const worldPos = gridToWorld(dec.pos);
-          const size = dec.size || 1;
+          const resolvedPlacement = resolveMapDecorationRuntimePlacement(dec);
+          if (!resolvedPlacement) continue;
+
+          const worldPos = getMapDecorationWorldPos(dec);
+          if (specialTowerWorldPositions.length > 0) {
+            const clearRadius =
+              Math.max(TILE_SIZE * 0.8, resolvedPlacement.scale * 18);
+            const overlapsSpecialTower = specialTowerWorldPositions.some(
+              (specPos) => distance(worldPos, specPos) < clearRadius
+            );
+            if (overlapsSpecialTower) {
+              continue;
+            }
+          }
           const decorationVariant =
             typeof dec.variant === "number"
               ? dec.variant
               : typeof dec.variant === "string"
                 ? Number.parseInt(dec.variant, 10) || 0
                 : 0;
-          // Add major landmark based on type
-          if (dec.type === "pyramid") {
-            decorations.push({
-              type: "pyramid",
-              x: worldPos.x - 300,
-              y: worldPos.y - 320,
-              scale: size * 1.5,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "obelisk") {
-            decorations.push({
-              type: "obelisk",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "nassau_hall") {
-            decorations.push({
-              type: "nassau_hall",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "statue" || dec.type === "demon_statue") {
-            decorations.push({
-              type: "statue",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.3,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "ruined_temple") {
-            decorations.push({
-              type: "ruins",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.5,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (
-            dec.type === "lava_pool" ||
-            dec.type === "lake" ||
-            dec.type === "algae_pool"
-          ) {
-            decorations.push({
-              type: "lava_pool",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (
-            dec.type === "torch" ||
-            dec.type === "fire_pit" ||
-            dec.type === "magma_vent"
-          ) {
-            decorations.push({
-              type: "torch",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "flowers") {
-            decorations.push({
-              type: "flowers",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 0.6,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "signpost") {
-            decorations.push({
-              type: "signpost",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 0.8,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "fountain") {
-            decorations.push({
-              type: "fountain",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "bench") {
-            decorations.push({
-              type: "bench",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 0.7,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "lamppost") {
-            decorations.push({
-              type: "lamppost",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "witch_cottage") {
-            decorations.push({
-              type: "witch_cottage",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.1,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "cauldron") {
-            decorations.push({
-              type: "cauldron",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 0.8,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "tentacle") {
-            decorations.push({
-              type: "tentacle",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "deep_water") {
-            decorations.push({
-              type: "deep_water",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.3,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "giant_sphinx") {
-            decorations.push({
-              type: "giant_sphinx",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.4,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "sphinx") {
-            decorations.push({
-              type: "sphinx",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.4,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "oasis_pool") {
-            decorations.push({
-              type: "oasis_pool",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.1,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "carnegie_lake") {
-            decorations.push({
-              type: "carnegie_lake",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "ice_fortress") {
-            decorations.push({
-              type: "ice_fortress",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.3,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "ice_throne") {
-            decorations.push({
-              type: "ice_throne",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "frozen_waterfall") {
-            decorations.push({
-              type: "frozen_waterfall",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.3,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "aurora_crystal") {
-            decorations.push({
-              type: "aurora_crystal",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.1,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "snow_lantern") {
-            decorations.push({
-              type: "snow_lantern",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 0.9,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "frozen_pond") {
-            decorations.push({
-              type: "frozen_pond",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "frozen_soldier") {
-            decorations.push({
-              type: "frozen_soldier",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.0,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "frozen_gate") {
-            decorations.push({
-              type: "frozen_gate",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "broken_wall") {
-            decorations.push({
-              type: "broken_wall",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.1,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "icicles") {
-            decorations.push({
-              type: "icicles",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.0,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "obsidian_castle") {
-            decorations.push({
-              type: "obsidian_castle",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.5,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "dark_throne") {
-            decorations.push({
-              type: "dark_throne",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "dark_barracks") {
-            decorations.push({
-              type: "dark_barracks",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-          } else if (dec.type === "dark_spire") {
-            decorations.push({
-              type: "dark_spire",
-              x: worldPos.x,
-              y: worldPos.y,
-              scale: size * 1.2,
-              rotation: 0,
-              variant: decorationVariant,
-            });
-            // Desert
-          } else if (dec.type === "sarcophagus") {
-            decorations.push({ type: "sarcophagus", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "cobra_statue") {
-            decorations.push({ type: "cobra_statue", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "hieroglyph_wall") {
-            decorations.push({ type: "hieroglyph_wall", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "pottery") {
-            decorations.push({ type: "pottery", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "sand_pile") {
-            decorations.push({ type: "sand_pile", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "treasure_chest") {
-            decorations.push({ type: "treasure_chest", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: decorationVariant });
-            // Volcanic
-          } else if (dec.type === "lava_fall") {
-            decorations.push({ type: "lava_fall", x: worldPos.x, y: worldPos.y, scale: size * 1.3, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "obsidian_pillar") {
-            decorations.push({ type: "obsidian_pillar", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "fire_crystal") {
-            decorations.push({ type: "fire_crystal", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "skull_throne") {
-            decorations.push({ type: "skull_throne", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "ember_rock") {
-            decorations.push({ type: "ember_rock", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "volcano_rim") {
-            decorations.push({ type: "volcano_rim", x: worldPos.x, y: worldPos.y, scale: size * 1.3, rotation: 0, variant: decorationVariant });
-            // Swamp
-          } else if (dec.type === "sunken_pillar") {
-            decorations.push({ type: "sunken_pillar", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "idol_statue") {
-            decorations.push({ type: "idol_statue", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "glowing_runes") {
-            decorations.push({ type: "glowing_runes", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "hanging_cage") {
-            decorations.push({ type: "hanging_cage", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "poison_pool") {
-            decorations.push({ type: "poison_pool", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "skeleton_pile") {
-            decorations.push({ type: "skeleton_pile", x: worldPos.x, y: worldPos.y, scale: size * 1.0, rotation: 0, variant: decorationVariant });
-            // Grassland
-          } else if (dec.type === "hedge") {
-            decorations.push({ type: "hedge", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "campfire") {
-            decorations.push({ type: "campfire", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "dock") {
-            decorations.push({ type: "dock", x: worldPos.x, y: worldPos.y, scale: size * 1.1, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "gate") {
-            decorations.push({ type: "gate", x: worldPos.x, y: worldPos.y, scale: size * 1.2, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "reeds") {
-            decorations.push({ type: "reeds", x: worldPos.x, y: worldPos.y, scale: size * 0.8, rotation: 0, variant: decorationVariant });
-          } else if (dec.type === "fishing_spot") {
-            decorations.push({ type: "fishing_spot", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: decorationVariant });
-          }
-        }
+          const manualDecoration: RuntimeDecoration = {
+            type: resolvedPlacement.runtimeType,
+            x: worldPos.x,
+            y: worldPos.y,
+            scale: resolvedPlacement.scale,
+            rotation: 0,
+            variant: decorationVariant,
+            source: "manual",
+            manualOrder: manualDecorationCount,
+          };
+          manualDecorationCount += 1;
 
-        for (let i = manualDecorationStartIndex; i < decorations.length; i++) {
-          const manualDecoration = decorations[i];
-          manualDecoration.source = "manual";
-          manualDecoration.manualOrder = i - manualDecorationStartIndex;
+          if (dec.heightTag) {
+            manualDecoration.heightTag = dec.heightTag;
+          }
           if (getDecorationRenderLayer(manualDecoration) === "background") {
             manualDecoration.renderLayer = "background";
           }
+          decorations.push(manualDecoration);
         }
+      }
+
+      for (const decoration of decorations) {
+        decoration.heightTag = getRuntimeDecorationHeightTag(decoration);
       }
 
       const getLayerPriority = (decoration: RuntimeDecoration): number =>
@@ -6429,7 +6772,8 @@ export function usePrincetonTowerDefenseRuntime() {
     ) => {
       for (const entry of entries) {
         const dec = entry.decoration;
-        const isNassauHall = dec.type === "nassau_hall";
+        const decVolume = getDecorationVolumeSpec(dec.type, dec.heightTag);
+        const hasBackgroundShadowPass = decVolume.backgroundShadowOnly;
         ctx.save();
         renderDecorationItem({
           ctx,
@@ -6442,7 +6786,7 @@ export function usePrincetonTowerDefenseRuntime() {
           decorX: dec.x,
           selectedMap,
           shadowOnly: !!entry.shadowOnly,
-          skipShadow: isNassauHall && !entry.shadowOnly,
+          skipShadow: hasBackgroundShadowPass && !entry.shadowOnly,
         });
         ctx.restore();
       }
@@ -6492,27 +6836,72 @@ export function usePrincetonTowerDefenseRuntime() {
       const staticDecorations: CachedVisibleDecoration[] = [];
       const animatedDecorations: CachedVisibleDecoration[] = [];
       const depthSensitiveDecorations: CachedVisibleDecoration[] = [];
-      const nassauInterleaveAnchors = visibleDecorations
-        .filter((entry) => entry.decoration.type === "nassau_hall")
-        .map((entry) => ({
-          x: entry.screenPos.x,
-          y: entry.screenPos.y,
-          scale: cameraZoom * entry.decoration.scale,
-        }));
-      const isNearNassauInterleaveZone = (
-        entry: CachedVisibleDecoration
-      ): boolean => {
-        if (entry.decoration.type === "nassau_hall") return false;
-        for (const anchor of nassauInterleaveAnchors) {
-          // Elliptical screen-space zone that matches Nassau Hall's visual footprint.
-          const rx = 110 * anchor.scale;
-          const ry = 105 * anchor.scale;
-          const dx = entry.screenPos.x - anchor.x;
-          const dy = entry.screenPos.y - anchor.y;
-          const norm = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
-          if (norm <= 1) return true;
+      type DecorationOcclusionAnchor = {
+        source: CachedVisibleDecoration;
+        heightTag: "landmark";
+        centerX: number;
+        centerY: number;
+        radiusX: number;
+        radiusY: number;
+        isoY: number;
+        frontDepthPadding: number;
+      };
+      const occlusionAnchors: DecorationOcclusionAnchor[] = visibleDecorations.reduce<
+        DecorationOcclusionAnchor[]
+      >((anchors, entry) => {
+        const volume = getDecorationVolumeSpec(
+          entry.decoration.type,
+          entry.decoration.heightTag
+        );
+        if (volume.heightTag !== "landmark") {
+          return anchors;
         }
-        return false;
+        const screenScale = cameraZoom * entry.decoration.scale;
+        anchors.push({
+          source: entry,
+            heightTag: volume.heightTag,
+            centerX: entry.screenPos.x,
+            centerY: entry.screenPos.y + volume.anchorOffsetY * screenScale,
+            radiusX: (volume.width * 0.5) * screenScale,
+            radiusY: (volume.length * 0.5) * screenScale,
+            isoY: entry.isoY,
+            frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
+          });
+          return anchors;
+        }, []);
+
+      const getOcclusionState = (
+        entry: CachedVisibleDecoration
+      ): { isInsideOccluder: boolean; clampIsoY?: number } => {
+        let isInsideOccluder = false;
+        let clampIsoY: number | undefined;
+        for (const anchor of occlusionAnchors) {
+          if (anchor.source === entry) continue;
+          const dx = entry.screenPos.x - anchor.centerX;
+          const dy = entry.screenPos.y - anchor.centerY;
+          const norm =
+            (dx * dx) / (anchor.radiusX * anchor.radiusX) +
+            (dy * dy) / (anchor.radiusY * anchor.radiusY);
+          if (norm > 1) continue;
+
+          isInsideOccluder = true;
+          // Landmark bodies should occlude decorations that are not sufficiently in front.
+          const isClearlyInFrontByScreenY =
+            entry.screenPos.y >
+            anchor.centerY + anchor.radiusY * 0.22;
+          const isClearlyInFrontByDepth =
+            entry.isoY - anchor.isoY > anchor.frontDepthPadding;
+          const isClearlyInFront =
+            isClearlyInFrontByScreenY || isClearlyInFrontByDepth;
+          if (!isClearlyInFront) {
+            const occludedIsoY = anchor.isoY - 0.02;
+            clampIsoY =
+              clampIsoY === undefined
+                ? occludedIsoY
+                : Math.min(clampIsoY, occludedIsoY);
+          }
+        }
+        return { isInsideOccluder, clampIsoY };
       };
       const pathSegments: Array<{ start: Position; end: Position }> = [];
       const appendPathSegments = (pathPoints: { x: number; y: number }[]) => {
@@ -6538,26 +6927,46 @@ export function usePrincetonTowerDefenseRuntime() {
       for (const entry of visibleDecorations) {
         const type = entry.decoration.type;
         const renderLayer = getDecorationRenderLayer(entry.decoration);
-        if (type === "nassau_hall") {
-          backgroundDecorations.push({ ...entry, shadowOnly: true });
+        const volume = getDecorationVolumeSpec(
+          entry.decoration.type,
+          entry.decoration.heightTag
+        );
+        const heightTag = volume.heightTag;
+        const isLargeByHeight = heightTag === "tall" || heightTag === "landmark";
+        const occlusionState = getOcclusionState(entry);
+        const resolvedEntry =
+          occlusionState.clampIsoY === undefined
+            ? entry
+            : {
+                ...entry,
+                isoY: Math.min(entry.isoY, occlusionState.clampIsoY),
+              };
+        if (volume.backgroundShadowOnly) {
+          backgroundDecorations.push({ ...resolvedEntry, shadowOnly: true });
         }
         if (renderLayer === "background") {
-          backgroundDecorations.push(entry);
+          backgroundDecorations.push(resolvedEntry);
+        } else if (occlusionState.isInsideOccluder) {
+          // Decorations inside/around landmark volumes must interleave by depth.
+          depthSensitiveDecorations.push(resolvedEntry);
         } else if (RUNTIME_ANIMATED_DECORATION_TYPES.has(type)) {
-          animatedDecorations.push(entry);
+          if (heightTag === "landmark") {
+            depthSensitiveDecorations.push(resolvedEntry);
+          } else {
+            animatedDecorations.push(resolvedEntry);
+          }
         } else if (
           ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES.has(type) ||
-          (DEPTH_SENSITIVE_DECORATION_TYPES.has(type) &&
+          heightTag === "landmark" ||
+          ((DEPTH_SENSITIVE_DECORATION_TYPES.has(type) || isLargeByHeight) &&
             distanceToNearestPath({
-              x: entry.decoration.x,
-              y: entry.decoration.y,
-            }) <= DEPTH_SENSITIVE_PATH_DISTANCE) ||
-          (DEPTH_SENSITIVE_DECORATION_TYPES.has(type) &&
-            isNearNassauInterleaveZone(entry))
+              x: resolvedEntry.decoration.x,
+              y: resolvedEntry.decoration.y,
+            }) <= DEPTH_SENSITIVE_PATH_DISTANCE)
         ) {
-          depthSensitiveDecorations.push(entry);
+          depthSensitiveDecorations.push(resolvedEntry);
         } else {
-          staticDecorations.push(entry);
+          staticDecorations.push(resolvedEntry);
         }
       }
 
@@ -6583,7 +6992,8 @@ export function usePrincetonTowerDefenseRuntime() {
               decorTime: 0,
               decorX: dec.x,
               selectedMap,
-              skipShadow: dec.type === "nassau_hall",
+              skipShadow: getDecorationVolumeSpec(dec.type, dec.heightTag)
+                .backgroundShadowOnly,
             });
             layerCtx.restore();
           }
@@ -6806,28 +7216,25 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     });
     // Add special building to renderables for proper depth sorting
-    const levelSpecialTowerForRenderable = LEVEL_DATA[selectedMap]?.specialTower;
-    if (levelSpecialTowerForRenderable) {
-      const spec = levelSpecialTowerForRenderable;
+    const levelSpecialTowersForRenderable = getLevelSpecialTowers(selectedMap);
+    levelSpecialTowersForRenderable.forEach((spec, index) => {
       const worldPos = gridToWorld(spec.pos);
-
-      // Calculate how many towers are being boosted by the beacon (for visual stages)
       let boostedTowerCount = 0;
       if (spec.type === "beacon") {
         const beaconBoostRange = 250;
-        boostedTowerCount = towers.filter(t => {
-          if (t.type === "club") return false; // Clubs don't receive beacon buffs
-          const tWorldPos = gridToWorld(t.pos);
-          return distance(tWorldPos, worldPos) < beaconBoostRange;
+        boostedTowerCount = towers.filter((tower) => {
+          if (tower.type === "club") return false;
+          const towerWorldPos = gridToWorld(tower.pos);
+          return distance(towerWorldPos, worldPos) < beaconBoostRange;
         }).length;
       }
 
       renderables.push({
         type: "special-building",
-        data: { ...spec, boostedTowerCount },
+        data: { ...spec, boostedTowerCount, __towerIndex: index },
         isoY: (worldPos.x + worldPos.y) * 0.25,
       });
-    }
+    });
     if (draggingTower) {
       const gridPos = screenToGrid(
         draggingTower.pos,
@@ -7066,10 +7473,9 @@ export function usePrincetonTowerDefenseRuntime() {
     // =========================================================================
     // SPECIAL BUILDING RANGE RINGS (On Hover)
     // =========================================================================
-    const levelSpecialTower = LEVEL_DATA[selectedMap]?.specialTower;
-    if (hoveredSpecial && levelSpecialTower) {
+    if (hoveredSpecialTower) {
       const time = nowSeconds;
-      const spec = levelSpecialTower;
+      const spec = hoveredSpecialTower;
       const sPos = toScreen(gridToWorld(spec.pos));
       const range =
         spec.type === "beacon" ? 150 : spec.type === "shrine" ? 200 : 0;
@@ -7220,6 +7626,7 @@ export function usePrincetonTowerDefenseRuntime() {
             decorTime: number;
             selectedMap: string;
             screenPos?: Position;
+            heightTag?: DecorationHeightTag;
           };
           const decScreenPos = decData.screenPos ?? toScreen({ x: decData.x, y: decData.y });
           const decScale = cameraZoom * decData.scale;
@@ -7234,7 +7641,10 @@ export function usePrincetonTowerDefenseRuntime() {
             decorTime: decData.decorTime,
             decorX: decData.x,
             selectedMap: decData.selectedMap,
-            skipShadow: decData.type === "nassau_hall",
+            skipShadow: getDecorationVolumeSpec(
+              decData.type,
+              decData.heightTag
+            ).backgroundShadowOnly,
           });
           ctx.restore();
           break;
@@ -7434,6 +7844,144 @@ export function usePrincetonTowerDefenseRuntime() {
     // Restore state
     ctx.restore();
 
+    const waveStartBubbles = getWaveStartBubblesScreenData(
+      canvas.width,
+      canvas.height,
+      dpr
+    );
+    const primedWaveBubble = waveStartConfirm
+      ? waveStartBubbles.find(
+        (bubble) =>
+          bubble.pathKey === waveStartConfirm.pathKey &&
+          waveStartConfirm.mapId === selectedMap &&
+          waveStartConfirm.waveIndex === currentWave
+      )
+      : null;
+
+    // Draw bubble BEFORE ambient/vignette overlay so fog can naturally sit on top.
+    for (const waveStartBubble of waveStartBubbles) {
+      const { screenPos, spawnScreenPos, radius, progress } = waveStartBubble;
+      const isWaveStartPrimed = primedWaveBubble?.pathKey === waveStartBubble.pathKey;
+      const ringRadius = radius * 1.22;
+      const pulseTime = frameNowMs * 0.001;
+      const pulse = 0.5 + 0.5 * Math.sin(pulseTime * 5.6);
+      const heartbeat = 0.5 + 0.5 * Math.sin(pulseTime * 8.4);
+      const nearLaunchBoost = progress > 0.75 ? (progress - 0.75) / 0.25 : 0;
+      const bobOffset = Math.sin(pulseTime * 3.2 + waveStartBubble.pathKey.length) * 2.2;
+      const animatedBubbleCenter = { x: screenPos.x, y: screenPos.y + bobOffset };
+      const bubbleScale = 1 + (0.04 + nearLaunchBoost * 0.06) * pulse;
+      const ringColor = isWaveStartPrimed
+        ? "rgba(255, 165, 96, 0.98)"
+        : "rgba(255, 76, 76, 0.98)";
+      const ringTrackColor = isWaveStartPrimed
+        ? "rgba(240, 120, 64, 0.35)"
+        : "rgba(170, 30, 30, 0.3)";
+
+      const linkDx = animatedBubbleCenter.x - spawnScreenPos.x;
+      const linkDy = animatedBubbleCenter.y - spawnScreenPos.y;
+      const linkDistance = Math.hypot(linkDx, linkDy);
+      if (linkDistance > radius * 1.8) {
+        const linkUx = linkDx / linkDistance;
+        const linkUy = linkDy / linkDistance;
+        const linkStart = {
+          x: spawnScreenPos.x + linkUx * 8,
+          y: spawnScreenPos.y + linkUy * 8,
+        };
+        const linkEnd = {
+          x: animatedBubbleCenter.x - linkUx * (radius * 1.1),
+          y: animatedBubbleCenter.y - linkUy * (radius * 1.1),
+        };
+        ctx.save();
+        ctx.strokeStyle = isWaveStartPrimed
+          ? "rgba(255, 176, 120, 0.48)"
+          : "rgba(248, 110, 110, 0.42)";
+        ctx.lineWidth = 2;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(linkStart.x, linkStart.y);
+        ctx.lineTo(linkEnd.x, linkEnd.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.translate(animatedBubbleCenter.x, animatedBubbleCenter.y);
+      ctx.scale(bubbleScale, bubbleScale);
+
+      // Ground shadow for depth.
+      ctx.fillStyle = `rgba(0, 0, 0, ${(0.26 + 0.16 * pulse).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.ellipse(0, radius * 1.18, radius * 0.9, radius * 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main circular bubble body.
+      const bodyGradient = ctx.createRadialGradient(
+        -radius * 0.38,
+        -radius * 0.48,
+        radius * 0.2,
+        0,
+        0,
+        radius * 1.04
+      );
+      bodyGradient.addColorStop(0, "rgba(214, 214, 224, 0.98)");
+      bodyGradient.addColorStop(0.18, "rgba(122, 122, 136, 0.98)");
+      bodyGradient.addColorStop(0.55, "rgba(50, 50, 58, 0.98)");
+      bodyGradient.addColorStop(1, "rgba(18, 18, 24, 0.98)");
+      ctx.fillStyle = bodyGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner emblem disc.
+      const emblemGradient = ctx.createLinearGradient(0, -radius * 0.65, 0, radius * 0.65);
+      emblemGradient.addColorStop(0, "rgba(30, 30, 36, 1)");
+      emblemGradient.addColorStop(1, "rgba(8, 8, 10, 1)");
+      ctx.fillStyle = emblemGradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.62, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Stylized skull emblem.
+      ctx.fillStyle = "rgba(236, 236, 240, 0.96)";
+      ctx.beginPath();
+      ctx.arc(0, -radius * 0.03, radius * 0.21, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.rect(-radius * 0.115, radius * 0.03, radius * 0.23, radius * 0.09);
+      ctx.fill();
+      ctx.fillStyle = "rgba(16, 16, 20, 0.95)";
+      ctx.beginPath();
+      ctx.arc(-radius * 0.072, -radius * 0.05, radius * 0.055, 0, Math.PI * 2);
+      ctx.arc(radius * 0.072, -radius * 0.05, radius * 0.055, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Countdown ring track.
+      ctx.lineWidth = Math.max(2, radius * 0.18);
+      ctx.strokeStyle = ringTrackColor;
+      ctx.beginPath();
+      ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Countdown ring progress.
+      ctx.strokeStyle = ringColor;
+      ctx.shadowColor = isWaveStartPrimed
+        ? `rgba(255, 160, 92, ${(0.45 + heartbeat * 0.25).toFixed(3)})`
+        : `rgba(255, 76, 76, ${(0.35 + nearLaunchBoost * 0.4).toFixed(3)})`;
+      ctx.shadowBlur = 10 + 16 * nearLaunchBoost + heartbeat * 4;
+      ctx.beginPath();
+      ctx.arc(
+        0,
+        0,
+        ringRadius,
+        -Math.PI / 2,
+        -Math.PI / 2 + Math.PI * 2 * progress
+      );
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.restore();
+    }
+
     const ambientPressure =
       entityCountsRef.current.enemies +
       entityCountsRef.current.projectiles * 0.8 +
@@ -7492,6 +8040,108 @@ export function usePrincetonTowerDefenseRuntime() {
       }
     }
 
+    if (primedWaveBubble) {
+      const { screenPos, radius, pathKey, pathLabel } = primedWaveBubble;
+      const pathEntries = incomingWavePreviewByPath.get(pathKey) ?? [];
+      const listRows = pathEntries.slice(0, 4);
+      const hiddenRows = Math.max(0, pathEntries.length - listRows.length);
+      const hasNoPathEnemies = pathEntries.length === 0;
+      const panelWidth = 230;
+      const panelHeight =
+        68 +
+        (hasNoPathEnemies ? 20 : listRows.length * 22) +
+        (hiddenRows > 0 ? 16 : 0);
+      const panelMargin = 12;
+      const preferredX = screenPos.x + radius * 2.2;
+      const fallbackX = screenPos.x - panelWidth - radius * 2.2;
+      const maxX = width - panelWidth - panelMargin;
+      const minX = panelMargin;
+      let panelX = preferredX > maxX ? fallbackX : preferredX;
+      panelX = Math.max(minX, Math.min(maxX, panelX));
+      const maxY = height - panelHeight - panelMargin;
+      const panelY = Math.max(
+        panelMargin,
+        Math.min(maxY, screenPos.y - radius * 2.25)
+      );
+
+      const drawRoundedRect = (x: number, y: number, w: number, h: number, r: number) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+      };
+
+      const panelPulse = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(frameNowMs * 0.008));
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.45)";
+      ctx.shadowBlur = 16;
+      drawRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
+      const panelGradient = ctx.createLinearGradient(
+        panelX,
+        panelY,
+        panelX,
+        panelY + panelHeight
+      );
+      panelGradient.addColorStop(0, "rgba(36, 18, 18, 0.95)");
+      panelGradient.addColorStop(1, "rgba(14, 10, 12, 0.95)");
+      ctx.fillStyle = panelGradient;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = `rgba(255, 106, 84, ${(0.45 + panelPulse * 0.3).toFixed(3)})`;
+      ctx.lineWidth = 1.6;
+      drawRoundedRect(panelX, panelY, panelWidth, panelHeight, 12);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 224, 198, 0.96)";
+      ctx.font = '700 12px "bc-novatica-cyr", "inter", sans-serif';
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`${pathLabel} - Wave ${currentWave + 1}`, panelX + 12, panelY + 16);
+
+      ctx.fillStyle = "rgba(255, 170, 150, 0.92)";
+      ctx.font = '600 10px "bc-novatica-cyr", "inter", sans-serif';
+      ctx.fillText(
+        "Click same bubble again to launch",
+        panelX + 12,
+        panelY + 34
+      );
+
+      let rowY = panelY + 54;
+      if (hasNoPathEnemies) {
+        ctx.fillStyle = "rgba(225, 175, 160, 0.85)";
+        ctx.font = '600 11px "bc-novatica-cyr", "inter", sans-serif';
+        ctx.fillText("No enemies this lane this wave", panelX + 12, rowY);
+        rowY += 20;
+      } else {
+        for (const row of listRows) {
+          ctx.fillStyle = row.color;
+          ctx.beginPath();
+          ctx.arc(panelX + 16, rowY, 4.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = "rgba(248, 234, 220, 0.95)";
+          ctx.font = '600 11px "bc-novatica-cyr", "inter", sans-serif';
+          ctx.fillText(`${row.name} x${row.count}`, panelX + 27, rowY);
+          rowY += 22;
+        }
+      }
+
+      if (hiddenRows > 0) {
+        ctx.fillStyle = "rgba(225, 175, 160, 0.82)";
+        ctx.font = '500 10px "bc-novatica-cyr", "inter", sans-serif';
+        ctx.fillText(`+${hiddenRows} more enemy types`, panelX + 12, rowY + 2);
+      }
+      ctx.restore();
+    }
+
   }, [
     getRenderDpr,
     cameraOffset,
@@ -7511,7 +8161,7 @@ export function usePrincetonTowerDefenseRuntime() {
     moveTargetValid,
     selectedUnitMoveInfo,
     draggingUnit,
-    hoveredSpecial,
+    hoveredSpecialTower,
     specialTowerHp,
     vaultFlash,
     repositioningTower,
@@ -7520,6 +8170,10 @@ export function usePrincetonTowerDefenseRuntime() {
     inspectorActive,
     selectedInspectEnemy,
     hoveredInspectEnemy,
+    getWaveStartBubblesScreenData,
+    waveStartConfirm,
+    incomingWavePreviewByPath,
+    currentWave,
   ]);
 
   // PERFORMANCE FIX: Keep refs updated with latest callbacks
@@ -7657,6 +8311,16 @@ export function usePrincetonTowerDefenseRuntime() {
       // Don't start panning while a troop spell placement is armed.
       if (placingTroop) return;
 
+      const waveStartBubbles = getWaveStartBubblesScreenData(width, height, dpr);
+      const clickedWaveBubble = waveStartBubbles.find(
+        (bubble) =>
+          distance(clickPos, bubble.screenPos) <=
+          bubble.radius * WAVE_START_BUBBLE_HIT_RADIUS
+      );
+      if (clickedWaveBubble) {
+        return;
+      }
+
       // Check if clicking on a tower to start repositioning
       if (selectedTower) {
         const tower = towers.find((t) => t.id === selectedTower);
@@ -7762,6 +8426,7 @@ export function usePrincetonTowerDefenseRuntime() {
       cameraZoom,
       getCanvasDimensions,
       gameSpeed,
+      getWaveStartBubblesScreenData,
     ]
   );
 
@@ -7822,7 +8487,10 @@ export function usePrincetonTowerDefenseRuntime() {
             cameraOffset,
             cameraZoom
           );
-          const spec = LEVEL_DATA[selectedMap]?.specialTower;
+          const spec =
+            getLevelSpecialTowers(selectedMap).find(
+              (tower) => tower.type === "barracks"
+            ) ?? undefined;
 
           if (
             draggingUnit.kind === "hero" &&
@@ -7924,6 +8592,47 @@ export function usePrincetonTowerDefenseRuntime() {
         setDraggingUnit(null);
         setUnitDragStart(null);
         setUnitDragMoved(false);
+      }
+
+      const waveStartBubbles = getWaveStartBubblesScreenData(width, height, dpr);
+      let clickedWaveBubble: WaveStartBubbleScreenData | null = null;
+      let bestBubbleDist = Number.POSITIVE_INFINITY;
+      for (const bubble of waveStartBubbles) {
+        const bubbleDist = distance(clickPos, bubble.screenPos);
+        if (
+          bubbleDist <= bubble.radius * WAVE_START_BUBBLE_HIT_RADIUS &&
+          bubbleDist < bestBubbleDist
+        ) {
+          clickedWaveBubble = bubble;
+          bestBubbleDist = bubbleDist;
+        }
+      }
+
+      if (clickedWaveBubble) {
+        const isSecondClickConfirm =
+          waveStartConfirm?.mapId === selectedMap &&
+          waveStartConfirm.waveIndex === currentWave &&
+          waveStartConfirm.pathKey === clickedWaveBubble.pathKey;
+
+        if (isSecondClickConfirm) {
+          startWave();
+          setNextWaveTimer(WAVE_TIMER_BASE);
+          setWaveStartConfirm(null);
+          addParticles(clickedWaveBubble.worldPos, "spark", 14);
+          addParticles(clickedWaveBubble.worldPos, "glow", 8);
+        } else {
+          setWaveStartConfirm({
+            mapId: selectedMap,
+            waveIndex: currentWave,
+            pathKey: clickedWaveBubble.pathKey,
+            openedAt: Date.now(),
+          });
+          addParticles(clickedWaveBubble.worldPos, "glow", 7);
+        }
+        return;
+      }
+      if (waveStartConfirm) {
+        setWaveStartConfirm(null);
       }
 
       // ========== TOWER REPOSITIONING - Drop tower at new position ==========
@@ -8041,7 +8750,7 @@ export function usePrincetonTowerDefenseRuntime() {
         );
         const towerCost = TOWER_DATA[towerToPlace.type].cost;
         if (
-          pawPoints >= towerCost &&
+          canAffordPawPoints(towerCost) &&
           isValidBuildPosition(
             gridPos,
             selectedMap,
@@ -8071,8 +8780,13 @@ export function usePrincetonTowerDefenseRuntime() {
                 : undefined,
             pendingRespawns: towerToPlace.type === "station" ? [] : undefined,
           };
-          setTowers((prev) => [...prev, newTower]);
-          setPawPoints((pp) => pp - towerCost);
+          if (!spendPawPoints(towerCost)) {
+            setDraggingTower(null);
+            setBuildingTower(null);
+            setIsBuildDragging(false);
+            return;
+          }
+          addTowerEntity(newTower);
           addParticles(gridToWorld(gridPos), "spark", 12);
         }
         setDraggingTower(null);
@@ -8119,7 +8833,7 @@ export function usePrincetonTowerDefenseRuntime() {
             userTargetPos: troopPos, // Set home position to their starting position
           };
         });
-        setTroops((prev) => [...prev, ...newTroops]);
+        addTroopEntities(newTroops);
         addParticles(worldPos, "glow", 20);
         addParticles({ x: worldPos.x - 20, y: worldPos.y + 15 }, "spark", 8);
         addParticles({ x: worldPos.x + 20, y: worldPos.y + 15 }, "spark", 8);
@@ -8135,7 +8849,10 @@ export function usePrincetonTowerDefenseRuntime() {
 
       const selectedTroopUnit = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
-      const spec = LEVEL_DATA[selectedMap]?.specialTower;
+      const spec =
+        getLevelSpecialTowers(selectedMap).find(
+          (tower) => tower.type === "barracks"
+        ) ?? undefined;
 
       // Convert to world coordinates for touch-based path calculation
       const clickWorldPos = screenToWorld(
@@ -8400,7 +9117,7 @@ export function usePrincetonTowerDefenseRuntime() {
       enemies,
       selectedTower,
       selectedMap,
-      pawPoints,
+      canAffordPawPoints,
       gameSpeed,
       inspectorActive,
       getCanvasDimensions,
@@ -8419,6 +9136,16 @@ export function usePrincetonTowerDefenseRuntime() {
       repositioningTower,
       repositionPreviewPos,
       blockedPositions,
+      spendPawPoints,
+      addTowerEntity,
+      addTroopEntities,
+      getWaveStartBubblesScreenData,
+      startWave,
+      setNextWaveTimer,
+      setTowers,
+      setTroops,
+      waveStartConfirm,
+      currentWave,
     ]
   );
   const handleMouseMove = useCallback(
@@ -8506,7 +9233,10 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraOffset,
           cameraZoom
         );
-        const spec = LEVEL_DATA[selectedMap]?.specialTower;
+        const spec =
+          getLevelSpecialTowers(selectedMap).find(
+            (tower) => tower.type === "barracks"
+          ) ?? undefined;
 
         if (draggingUnit.kind === "hero") {
           setSelectedUnitMoveInfo({
@@ -8674,15 +9404,19 @@ export function usePrincetonTowerDefenseRuntime() {
         return distance({ x, y }, screenPos) < hitboxRadius;
       });
 
-      // Check if hovering near the special building
-      const spec = LEVEL_DATA[selectedMap]?.specialTower;
-      if (spec) {
-        const specWorldPos = gridToWorld(spec.pos);
-        const isHoveringSpec = distance(mouseWorldPos, specWorldPos) < 60;
-        setHoveredSpecial(isHoveringSpec);
-      } else {
-        setHoveredSpecial(false);
+      // Check if hovering near any special building
+      const specialTowers = getLevelSpecialTowers(selectedMap);
+      let hoveredSpecial: SpecialTower | null = null;
+      let nearestSpecialDist = Infinity;
+      for (const tower of specialTowers) {
+        const towerWorldPos = gridToWorld(tower.pos);
+        const dist = distance(mouseWorldPos, towerWorldPos);
+        if (dist < 60 && dist < nearestSpecialDist) {
+          hoveredSpecial = tower;
+          nearestSpecialDist = dist;
+        }
       }
+      setHoveredSpecialTower(hoveredSpecial);
 
       // Check for troop hover (to show station range)
       let hoveredTroopOwnerId: string | null = null;
@@ -8728,9 +9462,11 @@ export function usePrincetonTowerDefenseRuntime() {
           for (const deco of levelData.decorations) {
             const decoType = deco.category || deco.type;
             if (decoType && (LANDMARK_DECORATION_TYPES.has(decoType) || decoType === "statue" || decoType === "demon_statue" || decoType === "obelisk")) {
-              const decoWorldPos = gridToWorld(deco.pos);
+              const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
+              const decoWorldPos = getMapDecorationWorldPos(deco);
               const decoScreen = worldToScreen(decoWorldPos, width, height, dpr, cameraOffset, cameraZoom);
-              const scale = (deco.size || 1) * cameraZoom;
+              const scale =
+                (resolvedPlacement?.scale ?? (deco.size || 1)) * cameraZoom;
               const hitRadius = scale * 35;
               const yOffset = (LANDMARK_HITBOX_Y_OFFSET[decoType] ?? 0) * scale;
               const hitCenter = { x: decoScreen.x, y: decoScreen.y - yOffset };
@@ -8767,6 +9503,10 @@ export function usePrincetonTowerDefenseRuntime() {
       // ========== MOVEMENT TARGET INDICATOR CALCULATION ==========
       const selectedTroop = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
+      const spec =
+        getLevelSpecialTowers(selectedMap).find(
+          (tower) => tower.type === "barracks"
+        ) ?? undefined;
 
       if (selectedTroop) {
         // Get move info for this troop
@@ -8902,11 +9642,11 @@ export function usePrincetonTowerDefenseRuntime() {
         );
       }
 
-      setPawPoints((pp) => pp - cost);
+      removePawPoints(cost);
       addParticles(gridToWorld(tower.pos), "glow", 20);
       setSelectedTower(null);
     },
-    [addParticles]
+    [addParticles, removePawPoints, setTowers, setTroops]
   );
   const sellTower = useCallback(
     (towerId: string) => {
@@ -8922,14 +9662,14 @@ export function usePrincetonTowerDefenseRuntime() {
             : tower.level === 4
               ? 350 * 0.7
               : 0);
-      setPawPoints((pp) => pp + refund);
+      addPawPoints(refund);
       addParticles(gridToWorld(tower.pos), "smoke", 15);
-      setTowers((prev) => prev.filter((t) => t.id !== towerId));
+      removeTowerEntity(towerId);
       // Remove all troops belonging to this station
-      setTroops((prev) => prev.filter((t) => t.ownerId !== towerId));
+      removeTroopsWhere((troop) => troop.ownerId === towerId);
       setSelectedTower(null);
     },
-    [towers, addParticles]
+    [towers, addParticles, addPawPoints, removeTowerEntity, removeTroopsWhere]
   );
   const castSpell = useCallback(
     (spellType: SpellType) => {
@@ -8939,14 +9679,14 @@ export function usePrincetonTowerDefenseRuntime() {
       const spell = spells.find((s) => s.type === spellType);
       if (!spell || spell.cooldown > 0) return;
       const cost = SPELL_DATA[spellType]?.cost ?? 0;
-      if (pawPoints < cost) return;
+      if (!canAffordPawPoints(cost)) return;
       if (
         (spellType === "fireball" || spellType === "lightning" || spellType === "freeze" || spellType === "payday") &&
         enemies.length === 0
       ) {
         return;
       }
-      setPawPoints((pp) => pp - cost);
+      if (!spendPawPoints(cost)) return;
 
       switch (spellType) {
         case "fireball": {
@@ -9141,7 +9881,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const enemyBonus = Math.min(enemies.length * bonusPerEnemy, 50);
           const totalPayout = basePayout + enemyBonus;
 
-          setPawPoints((pp) => pp + totalPayout);
+          addPawPoints(totalPayout);
 
           // Apply gold aura effect to all enemies and activate HUD animation
           setEnemies((prev) => prev.map((e) => ({ ...e, goldAura: true })));
@@ -9185,7 +9925,19 @@ export function usePrincetonTowerDefenseRuntime() {
         )
       );
     },
-    [spells, pawPoints, enemies, selectedMap, addParticles, gameSpeed, awardBounty, onEnemyKill]
+    [
+      spells,
+      enemies,
+      selectedMap,
+      addParticles,
+      gameSpeed,
+      onEnemyKill,
+      canAffordPawPoints,
+      spendPawPoints,
+      addPawPoints,
+      setEnemies,
+      setEffects,
+    ]
   );
   const toggleHeroSelection = useCallback(() => {
     setHero((prev) =>
@@ -9490,7 +10242,7 @@ export function usePrincetonTowerDefenseRuntime() {
             userTargetPos: knightPos, // Set home position to their starting position
           };
         });
-        setTroops((prev) => [...prev, ...newTroops]);
+        addTroopEntities(newTroops);
         // Create summon effect
         setEffects((ef) => [
           ...ef,
@@ -9530,7 +10282,7 @@ export function usePrincetonTowerDefenseRuntime() {
           spawnPoint: turretPos, // Fixed position
           moveRadius: 0, // Cannot move at all
         };
-        setTroops((prev) => [...prev, newTurret]);
+        addTroopEntity(newTurret);
         // Create deploy effect
         setEffects((ef) => [
           ...ef,
@@ -9557,7 +10309,20 @@ export function usePrincetonTowerDefenseRuntime() {
         }
         : null
     );
-  }, [hero, enemies, selectedMap, addParticles, gameSpeed, awardBounty, onEnemyKill]);
+  }, [
+    hero,
+    enemies,
+    selectedMap,
+    addParticles,
+    gameSpeed,
+    onEnemyKill,
+    addTroopEntities,
+    addTroopEntity,
+    setEffects,
+    setEnemies,
+    setTowers,
+    setTroops,
+  ]);
   const performBattleReset = useCallback(
     ({
       targetGameState,
@@ -9630,7 +10395,16 @@ export function usePrincetonTowerDefenseRuntime() {
         },
       });
     },
-    [clearAllTimers]
+    [
+      clearAllTimers,
+      setPawPoints,
+      setEffects,
+      setEnemies,
+      setParticles,
+      setProjectiles,
+      setTowers,
+      setTroops,
+    ]
   );
 
   const resetGame = useCallback(() => {
@@ -9729,7 +10503,6 @@ export function usePrincetonTowerDefenseRuntime() {
   // Main game view
   const { width, height, dpr } = getCanvasDimensions();
   const selectedLevelData = LEVEL_DATA[selectedMap];
-  const selectedSpecialTower = selectedLevelData?.specialTower;
   return (
     <div className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden">
       <TopHUD
@@ -9840,11 +10613,11 @@ export function usePrincetonTowerDefenseRuntime() {
               );
             })()}
           {placingTroop && <PlacingTroopIndicator />}
-          {!isTouchDeviceRef.current && hoveredSpecial && selectedSpecialTower && (
+          {!isTouchDeviceRef.current && hoveredSpecialTower && (
             <SpecialBuildingTooltip
-              type={selectedSpecialTower.type}
-              hp={specialTowerHp}
-              maxHp={selectedSpecialTower.hp}
+              type={hoveredSpecialTower.type}
+              hp={hoveredSpecialTower.type === "vault" ? specialTowerHp : null}
+              maxHp={hoveredSpecialTower.hp}
               position={mousePos}
             />
           )}

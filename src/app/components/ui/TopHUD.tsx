@@ -377,7 +377,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 className={`font-black text-sm sm:text-lg transition-colors duration-200 ${goldSpellActive ? 'text-yellow-200' : eatingClubFlash ? 'text-emerald-200' : 'text-amber-300'
                   }`}
               >
-                {pawPoints}
+                {Math.round(pawPoints)}
               </span>
               <span className={`text-[9px] font-semibold transition-colors duration-200 ${goldSpellActive ? 'text-yellow-500' : eatingClubFlash ? 'text-emerald-500' : 'text-amber-600'}`}>PP</span>
 

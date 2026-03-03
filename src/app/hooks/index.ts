@@ -14,3 +14,9 @@ export {
   type GameLoopCallbacks,
   type GameUpdateContext,
 } from "./useGameLoop";
+
+export { usePawPoints, type PawPointsState } from "./usePawPoints";
+export {
+  useEntityCollection,
+  type EntityCollectionState,
+} from "./useEntityCollection";

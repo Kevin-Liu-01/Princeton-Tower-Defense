@@ -2,6 +2,7 @@
 // Contains all decoration rendering switch cases for various decoration types
 
 import type { DecorationType, Position } from "../../types";
+import { drawIsometricPrism } from "../helpers";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -14894,7 +14895,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
     case "obsidian_castle": {
-      // Ornate dark volcanic glass fortress with full detail
       const ox = screenPos.x;
       const oy = screenPos.y;
       const obsDark = "#0D0D0D";
@@ -14905,49 +14905,34 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const lavaCore = "#FFAB00";
       const tanA = Math.tan(Math.PI / 6);
 
-      // Ground shadow with lava glow
       const groundGlow = ctx.createRadialGradient(
-        ox,
-        oy + 5 * s,
-        0,
-        ox,
-        oy + 5 * s,
-        50 * s,
+        ox, oy + 5 * s, 0, ox, oy + 5 * s, 55 * s,
       );
-      groundGlow.addColorStop(0, "rgba(255, 61, 0, 0.25)");
-      groundGlow.addColorStop(0.5, "rgba(0,0,0,0.45)");
+      groundGlow.addColorStop(0, "rgba(255, 61, 0, 0.28)");
+      groundGlow.addColorStop(0.4, "rgba(0,0,0,0.45)");
       groundGlow.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = groundGlow;
       ctx.beginPath();
-      ctx.ellipse(ox, oy + 5 * s, 50 * s, 25 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(ox + 4 * s, oy + 6 * s, 55 * s, 26 * s, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Stone foundation with carved details
+      drawIsometricPrism(
+        ctx, ox, oy + 5 * s, 35 * s, 35 * s, 10 * s,
+        "#1a1a1a", "#0a0a0a", "#151515",
+      );
       const foundH = 10 * s;
-      ctx.fillStyle = "#0a0a0a";
-      ctx.beginPath();
-      ctx.moveTo(ox, oy + 5 * s);
-      ctx.lineTo(ox - 35 * s, oy + 5 * s - 17 * s * tanA);
-      ctx.lineTo(ox - 35 * s, oy + 5 * s - 17 * s * tanA - foundH);
-      ctx.lineTo(ox, oy + 5 * s - foundH);
-      ctx.fill();
-      ctx.fillStyle = "#151515";
-      ctx.beginPath();
-      ctx.moveTo(ox, oy + 5 * s);
-      ctx.lineTo(ox + 35 * s, oy + 5 * s - 17 * s * tanA);
-      ctx.lineTo(ox + 35 * s, oy + 5 * s - 17 * s * tanA - foundH);
-      ctx.lineTo(ox, oy + 5 * s - foundH);
-      ctx.fill();
 
-      // Foundation carved runes (glowing)
+      ctx.shadowColor = lavaGlow;
+      ctx.shadowBlur = 6 * s;
       ctx.strokeStyle = "rgba(255, 61, 0, 0.3)";
       ctx.lineWidth = 1 * s;
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.moveTo(ox - 28 * s + i * 12 * s, oy - foundH * 0.3);
-        ctx.lineTo(ox - 24 * s + i * 12 * s, oy - foundH * 0.7);
+        ctx.moveTo(ox - 28 * s + i * 12 * s, oy - foundH * 0.3 + 5 * s);
+        ctx.lineTo(ox - 24 * s + i * 12 * s, oy - foundH * 0.7 + 5 * s);
         ctx.stroke();
       }
+      ctx.shadowBlur = 0;
 
       // Back tower (drawn first - behind)
       const backTowerX = ox;
@@ -15164,17 +15149,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ox + mainW, mainY - mainW * tanA - mainH);
       ctx.stroke();
 
-      // Ambient lava particles
-      const time = Date.now() / 1000;
-      for (let p = 0; p < 5; p++) {
-        const pTime = time + p * 0.6;
+      for (let p = 0; p < 6; p++) {
+        const pTime = decorTime + p * 0.6;
         const pLife = (pTime * 0.4) % 1;
-        const px = ox + Math.sin(pTime * 2 + p) * 10 * s;
-        const py = mainY - 12 * s - pLife * 55 * s;
+        const ppx = ox + Math.sin(pTime * 2 + p) * 12 * s;
+        const ppy = mainY - 12 * s - pLife * 55 * s;
         const pAlpha = Math.sin(pLife * Math.PI) * 0.85;
         ctx.fillStyle = `rgba(255, 100, 0, ${pAlpha})`;
         ctx.beginPath();
-        ctx.arc(px, py, (1.8 - pLife) * s, 0, Math.PI * 2);
+        ctx.arc(ppx, ppy, (1.8 - pLife) * s, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -15182,627 +15165,1002 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "dark_barracks": {
-      // Simpler dark volcanic structure (previous obsidian_castle)
-      const obsDarkB = "#1A1A1A";
-      const obsMidB = "#333333";
-      const obsLightB = "#555555";
-      const lavaGlowB = "#FF3D00";
+      const bx = screenPos.x;
+      const by = screenPos.y;
+      const obsBlack = "#0c0c12";
+      const obsDark = "#161620";
+      const obsMid = "#222234";
+      const obsLight = "#383852";
+      const obsHi = "#505072";
+      const lavaCore = "#ff5a1f";
+      const lavaGlow = "#ff8a2a";
+      const pulse =
+        0.55 + Math.sin(decorTime * 2 + variant * 0.8) * 0.25;
+
+      const kH = [50, 44, 58][variant % 3] * s;
+      const kW = [22, 26, 20][variant % 3] * s;
+      const tH2 = [62, 52, 72][variant % 3] * s;
+      const peaked = variant === 2;
+      const hasFlag = variant === 2;
 
       ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 35 * s, 15 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        bx + 4 * s, by + 7 * s, 40 * s, 16 * s, 0.15, 0, Math.PI * 2,
+      );
       ctx.fill();
 
-      ctx.fillStyle = obsDarkB;
+      drawIsometricPrism(
+        ctx, bx, by, 36 * s, 36 * s, 7 * s,
+        obsMid, obsBlack, obsDark,
+      );
+
+      drawIsometricPrism(
+        ctx, bx, by - 7 * s, kW, kW, kH,
+        obsLight, obsBlack, obsDark,
+      );
+
+      const kI = kW * 0.866;
+      const kD = kW * 0.5;
+      const kBase = by - 7 * s;
+      const kTop = kBase - kH;
+
+      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 0.5 * s;
+      const nRows = Math.floor(kH / (7 * s));
+      for (let row = 1; row < nRows; row++) {
+        const ry = kBase - row * 7 * s;
+        if (ry < kTop) break;
+        ctx.beginPath();
+        ctx.moveTo(bx - kI, ry + kD);
+        ctx.lineTo(bx + kI, ry + kD);
+        ctx.stroke();
+      }
+
+      const gW2 = variant === 1 ? 10 * s : 7 * s;
+      const gH2 = variant === 1 ? 24 * s : 20 * s;
+      const gateY = kBase + kD * 2;
+      ctx.fillStyle = "#050508";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y + 10 * s);
-      ctx.lineTo(screenPos.x + 25 * s, screenPos.y);
-      ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
+      ctx.moveTo(bx - gW2 * 0.5, gateY);
+      ctx.lineTo(bx - gW2 * 0.5, gateY - gH2 + 6 * s);
+      ctx.quadraticCurveTo(bx, gateY - gH2 - 2 * s, bx + gW2 * 0.5, gateY - gH2 + 6 * s);
+      ctx.lineTo(bx + gW2 * 0.5, gateY);
+      ctx.closePath();
+      ctx.fill();
+      const gGl = ctx.createLinearGradient(bx, gateY - gH2, bx, gateY);
+      gGl.addColorStop(0, `rgba(255,138,42,${0.65 * pulse})`);
+      gGl.addColorStop(1, "rgba(140,40,20,0.12)");
+      ctx.fillStyle = gGl;
+      ctx.beginPath();
+      ctx.moveTo(bx - gW2 * 0.35, gateY - 1 * s);
+      ctx.lineTo(bx - gW2 * 0.35, gateY - gH2 + 8 * s);
+      ctx.quadraticCurveTo(bx, gateY - gH2 + 1 * s, bx + gW2 * 0.35, gateY - gH2 + 8 * s);
+      ctx.lineTo(bx + gW2 * 0.35, gateY - 1 * s);
+      ctx.closePath();
       ctx.fill();
 
-      ctx.fillStyle = obsMidB;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y + 10 * s);
-      ctx.lineTo(screenPos.x - 25 * s, screenPos.y);
-      ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
-      ctx.fill();
+      const slitY = kBase + kD - kH * 0.55;
+      [-1, 1].forEach((side) => {
+        const wx = bx + side * kI * 0.5;
+        const wy = slitY + side * kD * 0.5;
+        ctx.fillStyle = "#050508";
+        ctx.fillRect(wx - 1.2 * s, wy - 4 * s, 2.4 * s, 8 * s);
+        ctx.shadowColor = lavaCore;
+        ctx.shadowBlur = 6 * s;
+        ctx.fillStyle = `rgba(255,120,40,${0.35 + pulse * 0.3})`;
+        ctx.fillRect(wx - 0.6 * s, wy - 3 * s, 1.2 * s, 6 * s);
+        ctx.shadowBlur = 0;
+      });
 
-      ctx.fillStyle = obsLightB;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 60 * s);
-      ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
-      ctx.fill();
+      if (!peaked) {
+        drawIsometricPrism(
+          ctx, bx, kTop - 1 * s, kW + 3 * s, kW + 3 * s, 4 * s,
+          obsHi, obsMid, obsLight,
+        );
+      } else {
+        const peakH = 16 * s;
+        const pkI = (kW + 2 * s) * 0.866;
+        const pkD = (kW + 2 * s) * 0.5;
+        ctx.fillStyle = obsBlack;
+        ctx.beginPath();
+        ctx.moveTo(bx, kTop - peakH);
+        ctx.lineTo(bx - pkI, kTop + pkD);
+        ctx.lineTo(bx, kTop + pkD * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsMid;
+        ctx.beginPath();
+        ctx.moveTo(bx, kTop - peakH);
+        ctx.lineTo(bx + pkI, kTop + pkD);
+        ctx.lineTo(bx, kTop + pkD * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsLight;
+        ctx.beginPath();
+        ctx.moveTo(bx, kTop - peakH);
+        ctx.lineTo(bx - pkI, kTop + pkD);
+        ctx.lineTo(bx + pkI, kTop + pkD);
+        ctx.closePath();
+        ctx.fill();
+      }
 
-      ctx.fillStyle = obsMidB;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 60 * s);
-      ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 65 * s);
-      ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x + 23 * s, screenPos.y - 60 * s);
-      ctx.lineTo(screenPos.x + 23 * s, screenPos.y - 50 * s);
-      ctx.fill();
+      [-1, 1].forEach((side) => {
+        const tW2 = 7 * s;
+        const ttx = bx + side * (kI + tW2 * 0.866 + 2 * s);
+        const tty = by - 5 * s + side * (kD * 0.3);
+        const tTW = 3 * s;
+        const tBase2 = tty;
+        const tTop2 = tBase2 - tH2;
+        const tbI = tW2 * 0.866;
+        const tbD = tW2 * 0.5;
+        const ttI = tTW * 0.866;
+        const ttD = tTW * 0.5;
 
-      ctx.shadowColor = lavaGlowB;
-      ctx.shadowBlur = 15 * s;
-      ctx.fillStyle = lavaGlowB;
+        ctx.fillStyle = obsBlack;
+        ctx.beginPath();
+        ctx.moveTo(ttx - tbI, tBase2 + tbD);
+        ctx.lineTo(ttx, tBase2 + tbD * 2);
+        ctx.lineTo(ttx, tTop2 + ttD * 2);
+        ctx.lineTo(ttx - ttI, tTop2 + ttD);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsDark;
+        ctx.beginPath();
+        ctx.moveTo(ttx + tbI, tBase2 + tbD);
+        ctx.lineTo(ttx, tBase2 + tbD * 2);
+        ctx.lineTo(ttx, tTop2 + ttD * 2);
+        ctx.lineTo(ttx + ttI, tTop2 + ttD);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsMid;
+        ctx.beginPath();
+        ctx.moveTo(ttx - tbI, tBase2 + tbD);
+        ctx.lineTo(ttx + tbI, tBase2 + tbD);
+        ctx.lineTo(ttx + ttI, tTop2 + ttD);
+        ctx.lineTo(ttx - ttI, tTop2 + ttD);
+        ctx.closePath();
+        ctx.fill();
+
+        const spireH = 14 * s;
+        ctx.fillStyle = obsBlack;
+        ctx.beginPath();
+        ctx.moveTo(ttx, tTop2 - spireH);
+        ctx.lineTo(ttx - ttI * 1.3, tTop2 + ttD);
+        ctx.lineTo(ttx, tTop2 + ttD * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsMid;
+        ctx.beginPath();
+        ctx.moveTo(ttx, tTop2 - spireH);
+        ctx.lineTo(ttx + ttI * 1.3, tTop2 + ttD);
+        ctx.lineTo(ttx, tTop2 + ttD * 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsLight;
+        ctx.beginPath();
+        ctx.moveTo(ttx, tTop2 - spireH);
+        ctx.lineTo(ttx - ttI * 1.3, tTop2 + ttD);
+        ctx.lineTo(ttx + ttI * 1.3, tTop2 + ttD);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.shadowColor = lavaCore;
+        ctx.shadowBlur = 7 * s;
+        const twY = tBase2 + tbD - tH2 * 0.4;
+        ctx.fillStyle = `rgba(255,110,40,${0.4 + pulse * 0.3})`;
+        ctx.fillRect(ttx - 1 * s, twY - 4 * s, 2 * s, 8 * s);
+        ctx.shadowBlur = 0;
+      });
+
+      if (hasFlag) {
+        const fpB = peaked ? kTop - 16 * s : kTop - 4 * s;
+        const fpT = fpB - 18 * s;
+        ctx.strokeStyle = "#444";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(bx, fpB);
+        ctx.lineTo(bx, fpT);
+        ctx.stroke();
+        ctx.fillStyle = "#6a1020";
+        ctx.beginPath();
+        ctx.moveTo(bx, fpT);
+        ctx.lineTo(bx + 10 * s, fpT + 3 * s + Math.sin(decorTime * 3) * 1.5 * s);
+        ctx.lineTo(bx + 8 * s, fpT + 8 * s + Math.sin(decorTime * 3 + 0.5) * s);
+        ctx.lineTo(bx, fpT + 6 * s);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      ctx.shadowColor = lavaGlow;
+      ctx.shadowBlur = 10 * s;
+      ctx.strokeStyle = `rgba(255,110,20,${0.5 + pulse * 0.2})`;
+      ctx.lineWidth = 1.3 * s;
+      const chevY = kBase + kD - kH * 0.75;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 30 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 20 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 10 * s);
-      ctx.fill();
+      ctx.moveTo(bx - kI * 0.3, chevY + kD * 0.3);
+      ctx.lineTo(bx, chevY - 3 * s);
+      ctx.lineTo(bx + kI * 0.3, chevY + kD * 0.3);
+      ctx.stroke();
       ctx.shadowBlur = 0;
 
-      ctx.strokeStyle = obsLightB;
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y + 10 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 40 * s);
-      ctx.moveTo(screenPos.x - 25 * s, screenPos.y - 30 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 45 * s);
-      ctx.stroke();
+      for (let i = 0; i < 5; i++) {
+        const t =
+          (decorTime * 0.75 + i * 0.35 + variant * 0.11) % 1.2;
+        const ex =
+          bx + (i - 2) * 8 * s + Math.sin(decorTime * 2 + i) * 3 * s;
+        const ey = kBase + kD - 14 * s - t * 35 * s;
+        const ea = Math.max(0, (1 - t / 1.2) * 0.55);
+        ctx.fillStyle = `rgba(255,130,40,${ea})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey, (1.8 - t) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       break;
     }
 
     case "dark_throne": {
-      // Ornate evil throne with detailed craftsmanship
       const tx = screenPos.x;
       const ty = screenPos.y;
-      const metalDark = "#1a1a1a";
-      const metalMid = "#2D2D2D";
-      const metalLight = "#404040";
-      const metalHighlight = "#606060";
-      const velvetDark = "#4A0A1A";
-      const velvetMid = "#6B1020";
-      const velvetLight = "#8B1530";
-      const goldAccent = "#8B7355";
-      const goldLight = "#A08060";
-      const evilGlow = "#6B0000";
+      const obsBlack = "#0c0c14";
+      const obsDark = "#181826";
+      const obsMid = "#282840";
+      const obsLight = "#454568";
+      const obsHi = "#5c5c88";
+      const velvetDk = "#3a0815";
+      const velvetMd = "#641024";
+      const velvetLt = "#901838";
+      const brass = "#a8854a";
+      const brassHi = "#c8a55a";
+      const rPulse =
+        0.5 + Math.sin(decorTime * 2.2 + variant * 0.7) * 0.25;
 
-      // Ground shadow
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
       ctx.beginPath();
-      ctx.ellipse(tx, ty + 5 * s, 30 * s, 14 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Stone base platform
-      const baseH = 8 * s;
-      ctx.fillStyle = "#1a1a1a";
-      ctx.beginPath();
-      ctx.moveTo(tx - 22 * s, ty + 2 * s);
-      ctx.lineTo(tx + 22 * s, ty + 2 * s);
-      ctx.lineTo(tx + 26 * s, ty - 2 * s);
-      ctx.lineTo(tx + 26 * s, ty - 2 * s - baseH);
-      ctx.lineTo(tx - 26 * s, ty - 2 * s - baseH);
-      ctx.lineTo(tx - 26 * s, ty - 2 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "#252525";
-      ctx.fillRect(tx - 24 * s, ty - 2 * s, 48 * s, 4 * s);
-      ctx.fillStyle = "#2D2D2D";
-      ctx.fillRect(tx - 22 * s, ty - 6 * s, 44 * s, 4 * s);
-
-      // Main throne back
-      const backGrad = ctx.createLinearGradient(
-        tx - 20 * s,
-        ty - 65 * s,
-        tx + 20 * s,
-        ty - 65 * s,
+      ctx.ellipse(
+        tx + 4 * s, ty + 8 * s, 36 * s, 16 * s, 0.15, 0, Math.PI * 2,
       );
-      backGrad.addColorStop(0, metalDark);
-      backGrad.addColorStop(0.3, metalMid);
-      backGrad.addColorStop(0.5, metalLight);
-      backGrad.addColorStop(0.7, metalMid);
-      backGrad.addColorStop(1, metalDark);
-      ctx.fillStyle = backGrad;
-      ctx.beginPath();
-      ctx.moveTo(tx - 20 * s, ty - 14 * s);
-      ctx.lineTo(tx - 24 * s, ty - 38 * s);
-      ctx.lineTo(tx - 20 * s, ty - 55 * s);
-      ctx.lineTo(tx - 14 * s, ty - 64 * s);
-      ctx.lineTo(tx - 8 * s, ty - 58 * s);
-      ctx.lineTo(tx, ty - 78 * s);
-      ctx.lineTo(tx + 8 * s, ty - 58 * s);
-      ctx.lineTo(tx + 14 * s, ty - 64 * s);
-      ctx.lineTo(tx + 20 * s, ty - 55 * s);
-      ctx.lineTo(tx + 24 * s, ty - 38 * s);
-      ctx.lineTo(tx + 20 * s, ty - 14 * s);
-      ctx.closePath();
       ctx.fill();
 
-      // Inner velvet panel
-      const velvetGrad = ctx.createLinearGradient(
-        tx,
-        ty - 55 * s,
-        tx,
-        ty - 16 * s,
+      drawIsometricPrism(
+        ctx, tx, ty, 32 * s, 32 * s, 6 * s,
+        obsMid, obsBlack, obsDark,
       );
-      velvetGrad.addColorStop(0, velvetDark);
-      velvetGrad.addColorStop(0.5, velvetMid);
-      velvetGrad.addColorStop(1, velvetDark);
-      ctx.fillStyle = velvetGrad;
+      drawIsometricPrism(
+        ctx, tx, ty - 6 * s, 26 * s, 26 * s, 5 * s,
+        obsLight, obsDark, obsMid,
+      );
+      ctx.strokeStyle = brass;
+      ctx.lineWidth = 0.8 * s;
+      const d1I = 26 * s * 0.866;
+      const d1D = 26 * s * 0.5;
       ctx.beginPath();
-      ctx.moveTo(tx - 16 * s, ty - 16 * s);
-      ctx.lineTo(tx - 18 * s, ty - 35 * s);
-      ctx.lineTo(tx - 14 * s, ty - 50 * s);
-      ctx.lineTo(tx - 8 * s, ty - 54 * s);
-      ctx.lineTo(tx, ty - 62 * s);
-      ctx.lineTo(tx + 8 * s, ty - 54 * s);
-      ctx.lineTo(tx + 14 * s, ty - 50 * s);
-      ctx.lineTo(tx + 18 * s, ty - 35 * s);
-      ctx.lineTo(tx + 16 * s, ty - 16 * s);
+      ctx.moveTo(tx - d1I, ty - 6 * s + d1D);
+      ctx.lineTo(tx, ty - 6 * s + d1D * 2);
+      ctx.lineTo(tx + d1I, ty - 6 * s + d1D);
+      ctx.stroke();
+
+      const sW = 16 * s;
+      const sH = 14 * s;
+      const sBase = ty - 11 * s;
+      drawIsometricPrism(
+        ctx, tx, sBase, sW, sW, sH,
+        obsMid, obsBlack, obsDark,
+      );
+
+      const sI = sW * 0.866;
+      const sD2 = sW * 0.5;
+      const cushTop = sBase - sH;
+      const cG = ctx.createLinearGradient(tx, cushTop, tx, cushTop + 4 * s);
+      cG.addColorStop(0, velvetLt);
+      cG.addColorStop(0.5, velvetMd);
+      cG.addColorStop(1, velvetDk);
+      ctx.fillStyle = cG;
+      ctx.beginPath();
+      ctx.moveTo(tx, cushTop + 1 * s);
+      ctx.lineTo(tx + sI * 0.85, cushTop + sD2 * 0.85 + 1 * s);
+      ctx.lineTo(tx, cushTop + sD2 * 1.7 + 1 * s);
+      ctx.lineTo(tx - sI * 0.85, cushTop + sD2 * 0.85 + 1 * s);
       ctx.closePath();
       ctx.fill();
 
-      // Skull at center top
-      ctx.fillStyle = "#4A4A4A";
+      [-1, 1].forEach((side) => {
+        const ax = tx + side * sI * 1.1;
+        const ay = cushTop + sD2 + 2 * s;
+        ctx.fillStyle = obsMid;
+        ctx.beginPath();
+        ctx.moveTo(tx + side * sI * 0.8, cushTop + sD2 * 0.8);
+        ctx.lineTo(ax, ay - 3 * s);
+        ctx.lineTo(ax, ay - 9 * s);
+        ctx.lineTo(tx + side * sI * 0.8, cushTop + sD2 * 0.8 - 5 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsHi;
+        ctx.beginPath();
+        ctx.arc(ax, ay - 6 * s, 2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = "#c03030";
+        ctx.shadowBlur = 5 * s;
+        ctx.fillStyle = `rgba(200,50,50,${0.5 + rPulse * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(ax, ay - 6 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      const bkW = 18 * s;
+      const bkTW = 10 * s;
+      const bkH = 62 * s;
+      const bkBase = cushTop;
+      const bkTop = bkBase - bkH;
+      const bI = bkW * 0.866;
+      const bD2 = bkW * 0.5;
+      const btI = bkTW * 0.866;
+      const btD = bkTW * 0.5;
+
+      ctx.fillStyle = obsBlack;
       ctx.beginPath();
-      ctx.arc(tx, ty - 64 * s, 6 * s, 0, Math.PI * 2);
+      ctx.moveTo(tx - bI, bkBase + bD2);
+      ctx.lineTo(tx, bkBase + bD2 * 2);
+      ctx.lineTo(tx, bkTop + btD * 2);
+      ctx.lineTo(tx - btI, bkTop + btD);
+      ctx.closePath();
       ctx.fill();
-      ctx.shadowColor = evilGlow;
+      ctx.fillStyle = obsDark;
+      ctx.beginPath();
+      ctx.moveTo(tx + bI, bkBase + bD2);
+      ctx.lineTo(tx, bkBase + bD2 * 2);
+      ctx.lineTo(tx, bkTop + btD * 2);
+      ctx.lineTo(tx + btI, bkTop + btD);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = obsMid;
+      ctx.beginPath();
+      ctx.moveTo(tx - bI, bkBase + bD2);
+      ctx.lineTo(tx + bI, bkBase + bD2);
+      ctx.lineTo(tx + btI, bkTop + btD);
+      ctx.lineTo(tx, bkTop);
+      ctx.lineTo(tx - btI, bkTop + btD);
+      ctx.closePath();
+      ctx.fill();
+
+      [-1, 1].forEach((side) => {
+        const wx = tx + side * bI * 0.9;
+        const wy = bkBase + bD2 * 0.9 - 5 * s;
+        const wTy = bkTop + 20 * s;
+        ctx.fillStyle = side < 0 ? obsBlack : obsDark;
+        ctx.beginPath();
+        ctx.moveTo(wx, wy);
+        ctx.lineTo(wx + side * 14 * s, wy - 8 * s);
+        ctx.lineTo(wx + side * 16 * s, (wy + wTy) * 0.5 - 5 * s);
+        ctx.lineTo(wx + side * 10 * s, wTy);
+        ctx.lineTo(wx, wTy + 5 * s);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      const bnG = ctx.createLinearGradient(tx, bkTop + 14 * s, tx, bkBase - 8 * s);
+      bnG.addColorStop(0, velvetDk);
+      bnG.addColorStop(0.4, velvetMd);
+      bnG.addColorStop(0.7, velvetLt);
+      bnG.addColorStop(1, velvetDk);
+      ctx.fillStyle = bnG;
+      ctx.beginPath();
+      ctx.moveTo(tx - btI * 0.8, bkBase + bD2 * 0.4);
+      ctx.lineTo(tx - btI * 0.85, bkTop + btD + 10 * s);
+      ctx.lineTo(tx, bkTop + 5 * s);
+      ctx.lineTo(tx + btI * 0.85, bkTop + btD + 10 * s);
+      ctx.lineTo(tx + btI * 0.8, bkBase + bD2 * 0.4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = brassHi;
+      ctx.lineWidth = 1 * s;
+      ctx.stroke();
+
+      ctx.fillStyle = obsHi;
+      [-12, -6, 0, 6, 12].forEach((off, idx) => {
+        const sH2 = idx === 2 ? 14 * s : 9 * s;
+        const sy = bkTop + btD + (idx === 2 ? -2 * s : 4 * s);
+        ctx.beginPath();
+        ctx.moveTo(tx + off * s - 2.2 * s, sy);
+        ctx.lineTo(tx + off * s, sy - sH2);
+        ctx.lineTo(tx + off * s + 2.2 * s, sy);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      ctx.fillStyle = "#505060";
+      ctx.beginPath();
+      ctx.ellipse(tx, bkTop + btD + 8 * s, 5 * s, 4.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowColor = "#c03030";
       ctx.shadowBlur = 10 * s;
-      ctx.fillStyle = "#8B0000";
+      ctx.fillStyle = `rgba(255,60,60,${0.55 + rPulse * 0.3})`;
       ctx.beginPath();
-      ctx.arc(tx - 2 * s, ty - 65 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.arc(tx + 2 * s, ty - 65 * s, 1.5 * s, 0, Math.PI * 2);
+      ctx.arc(tx - 1.8 * s, bkTop + btD + 7 * s, 1.2 * s, 0, Math.PI * 2);
+      ctx.arc(tx + 1.8 * s, bkTop + btD + 7 * s, 1.2 * s, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.fillStyle = "#3D3D3D";
-      ctx.beginPath();
-      ctx.moveTo(tx - 3.5 * s, ty - 60 * s);
-      ctx.lineTo(tx, ty - 58 * s);
-      ctx.lineTo(tx + 3.5 * s, ty - 60 * s);
-      ctx.fill();
 
-      // Bat wing decorations
-      [-1, 1].forEach((side) => {
-        ctx.fillStyle = metalMid;
-        ctx.beginPath();
-        ctx.moveTo(tx + side * 20 * s, ty - 38 * s);
-        ctx.quadraticCurveTo(
-          tx + side * 32 * s,
-          ty - 50 * s,
-          tx + side * 28 * s,
-          ty - 62 * s,
-        );
-        ctx.lineTo(tx + side * 25 * s, ty - 54 * s);
-        ctx.quadraticCurveTo(
-          tx + side * 30 * s,
-          ty - 44 * s,
-          tx + side * 25 * s,
-          ty - 38 * s,
-        );
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.strokeStyle = metalHighlight;
-        ctx.lineWidth = 1 * s;
-        ctx.beginPath();
-        ctx.moveTo(tx + side * 20 * s, ty - 38 * s);
-        ctx.quadraticCurveTo(
-          tx + side * 28 * s,
-          ty - 46 * s,
-          tx + side * 26 * s,
-          ty - 56 * s,
-        );
-        ctx.stroke();
-      });
-
-      // Armrests with dragon heads
-      [-1, 1].forEach((side) => {
-        ctx.fillStyle = metalDark;
-        ctx.beginPath();
-        ctx.moveTo(tx + side * 16 * s, ty - 14 * s);
-        ctx.lineTo(tx + side * 20 * s, ty - 17 * s);
-        ctx.lineTo(tx + side * 24 * s, ty - 20 * s);
-        ctx.lineTo(tx + side * 24 * s, ty - 24 * s);
-        ctx.lineTo(tx + side * 16 * s, ty - 20 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = metalMid;
-        ctx.beginPath();
-        ctx.moveTo(tx + side * 16 * s, ty - 20 * s);
-        ctx.lineTo(tx + side * 24 * s, ty - 24 * s);
-        ctx.lineTo(tx + side * 26 * s, ty - 22 * s);
-        ctx.lineTo(tx + side * 18 * s, ty - 18 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = metalLight;
-        ctx.beginPath();
-        ctx.arc(tx + side * 25 * s, ty - 23 * s, 3.5 * s, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#8B0000";
-        ctx.beginPath();
-        ctx.arc(tx + side * 24 * s, ty - 24 * s, 1 * s, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Seat cushion
-      const seatGrad = ctx.createLinearGradient(
-        tx,
-        ty - 16 * s,
-        tx,
-        ty - 6 * s,
-      );
-      seatGrad.addColorStop(0, velvetLight);
-      seatGrad.addColorStop(0.3, velvetMid);
-      seatGrad.addColorStop(1, velvetDark);
-      ctx.fillStyle = seatGrad;
-      ctx.beginPath();
-      ctx.moveTo(tx - 15 * s, ty - 6 * s);
-      ctx.lineTo(tx - 16 * s, ty - 16 * s);
-      ctx.lineTo(tx + 16 * s, ty - 16 * s);
-      ctx.lineTo(tx + 15 * s, ty - 6 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = velvetMid;
-      ctx.beginPath();
-      ctx.moveTo(tx - 16 * s, ty - 16 * s);
-      ctx.lineTo(tx - 14 * s, ty - 20 * s);
-      ctx.lineTo(tx + 14 * s, ty - 20 * s);
-      ctx.lineTo(tx + 16 * s, ty - 16 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Tufting buttons
-      ctx.fillStyle = goldAccent;
-      for (let row = 0; row < 2; row++) {
-        for (let col = -1; col <= 1; col++) {
-          ctx.beginPath();
-          ctx.arc(
-            tx + col * 7 * s,
-            ty - 18 * s + row * 5 * s,
-            1.2 * s,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-        }
-      }
-
-      // Gold trim
-      ctx.strokeStyle = goldLight;
+      ctx.shadowColor = "#8a1010";
+      ctx.shadowBlur = 8 * s;
+      ctx.strokeStyle = `rgba(220,40,40,${0.5 + rPulse * 0.3})`;
       ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
-      ctx.moveTo(tx - 16 * s, ty - 16 * s);
-      ctx.lineTo(tx + 16 * s, ty - 16 * s);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(tx - 16 * s, ty - 16 * s);
-      ctx.lineTo(tx - 18 * s, ty - 35 * s);
-      ctx.lineTo(tx - 14 * s, ty - 50 * s);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(tx + 16 * s, ty - 16 * s);
-      ctx.lineTo(tx + 18 * s, ty - 35 * s);
-      ctx.lineTo(tx + 14 * s, ty - 50 * s);
-      ctx.stroke();
-
-      // Decorative spikes
-      ctx.fillStyle = metalLight;
-      [-14, -8, 8, 14].forEach((xOff) => {
-        const spikeH = Math.abs(xOff) === 14 ? 10 * s : 7 * s;
-        const baseY = Math.abs(xOff) === 14 ? ty - 64 * s : ty - 58 * s;
-        ctx.beginPath();
-        ctx.moveTo(tx + xOff * s - 2.5 * s, baseY);
-        ctx.lineTo(tx + xOff * s, baseY - spikeH);
-        ctx.lineTo(tx + xOff * s + 2.5 * s, baseY);
-        ctx.closePath();
-        ctx.fill();
-      });
-
-      // Evil rune glow
-      ctx.shadowColor = evilGlow;
-      ctx.shadowBlur = 12 * s;
-      ctx.strokeStyle = "#6B0000";
-      ctx.lineWidth = 2 * s;
-      ctx.beginPath();
-      ctx.moveTo(tx, ty - 28 * s);
-      ctx.lineTo(tx - 5 * s, ty - 36 * s);
-      ctx.lineTo(tx, ty - 45 * s);
-      ctx.lineTo(tx + 5 * s, ty - 36 * s);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(tx, ty - 32 * s);
-      ctx.lineTo(tx, ty - 42 * s);
+      ctx.moveTo(tx, bkBase + bD2 * 0.3);
+      ctx.lineTo(tx, bkTop + btD + 16 * s);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Edge highlights
-      ctx.strokeStyle = metalHighlight;
-      ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.moveTo(tx, ty - 78 * s);
-      ctx.lineTo(tx - 8 * s, ty - 58 * s);
-      ctx.moveTo(tx, ty - 78 * s);
-      ctx.lineTo(tx + 8 * s, ty - 58 * s);
-      ctx.stroke();
+      for (let i = 0; i < 6; i++) {
+        const t = (decorTime * 0.6 + i * 0.45) % 2;
+        const ang = (i / 6) * Math.PI * 2 + decorTime * 0.3;
+        const dr = 18 * s + Math.sin(t * Math.PI) * 8 * s;
+        const ex = tx + Math.cos(ang) * dr;
+        const ey = bkTop + 5 * s - t * 12 * s;
+        const ea = Math.max(0, (1 - t / 2) * 0.35);
+        ctx.fillStyle = `rgba(100,20,20,${ea})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey, (2 - t * 0.6) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       break;
     }
 
     case "dark_spire": {
-      // Simpler dark throne (previous dark_throne)
+      const dx = screenPos.x;
+      const dy = screenPos.y;
+      const dsBlack = "#0a0a14";
+      const dsDark = "#141422";
+      const dsMid = "#222238";
+      const dsLight = "#3a3a58";
+      const dsHi = "#505078";
+      const dsRune = "#cc3030";
+      const dsPulse =
+        0.5 + Math.sin(decorTime * 2.8 + variant * 1.1) * 0.25;
+      const dsHM = [1.0, 0.85, 1.15][variant % 3];
+      const dsWM = [1.0, 1.1, 0.9][variant % 3];
+
       ctx.fillStyle = "rgba(0,0,0,0.4)";
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 10 * s,
-        18 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
+        dx + 4 * s, dy + 5 * s,
+        18 * s * dsWM, 8 * s, 0.15, 0, Math.PI * 2,
       );
       ctx.fill();
 
-      const metalS = "#263238";
-      const metalHighS = "#546E7A";
-      const cushionS = "#B71C1c";
+      drawIsometricPrism(
+        ctx, dx, dy, 14 * s * dsWM, 14 * s * dsWM, 6 * s,
+        dsMid, dsBlack, dsDark,
+      );
 
-      ctx.fillStyle = metalS;
+      const spH = 55 * s * dsHM;
+      const spBW = 7 * s * dsWM;
+      const spTW = 2.5 * s * dsWM;
+      const spBase = dy - 6 * s;
+      const spTop = spBase - spH;
+      const spBI = spBW * 0.866;
+      const spBD = spBW * 0.5;
+      const spTI = spTW * 0.866;
+      const spTD = spTW * 0.5;
+
+      ctx.fillStyle = dsBlack;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
-      ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 40 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 25 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 55 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 25 * s);
-      ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 40 * s);
-      ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 10 * s);
+      ctx.moveTo(dx - spBI, spBase + spBD);
+      ctx.lineTo(dx, spBase + spBD * 2);
+      ctx.lineTo(dx, spTop + spTD * 2);
+      ctx.lineTo(dx - spTI, spTop + spTD);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = dsDark;
+      ctx.beginPath();
+      ctx.moveTo(dx + spBI, spBase + spBD);
+      ctx.lineTo(dx, spBase + spBD * 2);
+      ctx.lineTo(dx, spTop + spTD * 2);
+      ctx.lineTo(dx + spTI, spTop + spTD);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = dsMid;
+      ctx.beginPath();
+      ctx.moveTo(dx - spBI, spBase + spBD);
+      ctx.lineTo(dx + spBI, spBase + spBD);
+      ctx.lineTo(dx + spTI, spTop + spTD);
+      ctx.lineTo(dx - spTI, spTop + spTD);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = dsLight;
+      ctx.beginPath();
+      ctx.moveTo(dx, spTop);
+      ctx.lineTo(dx + spTI, spTop + spTD);
+      ctx.lineTo(dx, spTop + spTD * 2);
+      ctx.lineTo(dx - spTI, spTop + spTD);
+      ctx.closePath();
       ctx.fill();
 
-      const cushionGradS = ctx.createLinearGradient(
-        screenPos.x,
-        screenPos.y - 20 * s,
-        screenPos.x,
-        screenPos.y,
-      );
-      cushionGradS.addColorStop(0, cushionS);
-      cushionGradS.addColorStop(1, "#880E4F");
-      ctx.fillStyle = cushionGradS;
-      ctx.fillRect(screenPos.x - 12 * s, screenPos.y - 20 * s, 24 * s, 12 * s);
-
-      ctx.fillStyle = "#FF5252";
-      ctx.fillRect(screenPos.x - 12 * s, screenPos.y - 20 * s, 24 * s, 2 * s);
-
-      ctx.strokeStyle = metalHighS;
-      ctx.lineWidth = 1 * s;
+      const spireH = 16 * s * dsHM;
+      const spireTip = spTop - spireH;
+      ctx.fillStyle = dsBlack;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
-      ctx.lineTo(screenPos.x - 25 * s, screenPos.y - 40 * s);
-      ctx.moveTo(screenPos.x, screenPos.y - 20 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 55 * s);
-      ctx.stroke();
+      ctx.moveTo(dx, spireTip);
+      ctx.lineTo(dx - spTI, spTop + spTD);
+      ctx.lineTo(dx, spTop + spTD * 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = dsMid;
+      ctx.beginPath();
+      ctx.moveTo(dx, spireTip);
+      ctx.lineTo(dx + spTI, spTop + spTD);
+      ctx.lineTo(dx, spTop + spTD * 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = dsHi;
+      ctx.beginPath();
+      ctx.moveTo(dx, spireTip);
+      ctx.lineTo(dx - spTI, spTop + spTD);
+      ctx.lineTo(dx + spTI, spTop + spTD);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowColor = dsRune;
+      ctx.shadowBlur = 8 * s;
+      ctx.strokeStyle = `rgba(200,50,50,${0.3 + dsPulse * 0.4})`;
+      ctx.lineWidth = 1.2 * s;
+      for (let i = 0; i < 3; i++) {
+        const rt = 0.2 + (i / 3) * 0.55;
+        const ry = spBase + (spTop - spBase) * rt;
+        const gI = spBI + (spTI - spBI) * rt;
+        const gDy = spBD + (spTD - spBD) * rt;
+        ctx.beginPath();
+        ctx.moveTo(dx - gI * 0.4, ry + gDy);
+        ctx.lineTo(dx, ry + gDy - 2.5 * s);
+        ctx.lineTo(dx + gI * 0.4, ry + gDy);
+        ctx.lineTo(dx, ry + gDy + 2.5 * s);
+        ctx.closePath();
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+
+      const winY = spBase + (spTop - spBase) * 0.4;
+      const winGI = spBI + (spTI - spBI) * 0.4;
+      ctx.shadowColor = dsRune;
+      ctx.shadowBlur = 8 * s;
+      ctx.fillStyle = `rgba(220,60,60,${0.4 + dsPulse * 0.3})`;
+      ctx.fillRect(dx - winGI * 0.15, winY - 4 * s, winGI * 0.3, 8 * s);
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = "rgba(100,100,180,0.08)";
+      ctx.beginPath();
+      ctx.moveTo(dx + spBI * 0.2, spBase + spBD * 0.7);
+      ctx.lineTo(dx + spBI * 0.8, spBase + spBD * 0.85);
+      ctx.lineTo(dx + spTI * 0.8, spTop + spTD * 0.85);
+      ctx.lineTo(dx + spTI * 0.2, spTop + spTD * 0.7);
+      ctx.closePath();
+      ctx.fill();
+
+      for (let i = 0; i < 3; i++) {
+        const t =
+          (decorTime * 0.7 + i * 0.6 + variant * 0.4) % 1.5;
+        const ex = dx + Math.sin(decorTime * 1.3 + i * 2) * 6 * s;
+        const ey = spTop - 5 * s - t * 15 * s;
+        const ea = Math.max(0, (1 - t / 1.5) * 0.5);
+        ctx.fillStyle = `rgba(200,60,60,${ea})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey, (1.3 - t * 0.7) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       break;
     }
 
     case "lava_fall": {
-      const magmaYellow = "#ffeb3b";
-      const magmaOrange = "#ff9800";
-      const magmaRed = "#f44336";
-      const magmaDark = "#bf360c";
-      const cliffDark = "#1a1210";
-      const cliffMid = "#2a1a10";
+      const lx = screenPos.x;
+      const ly = screenPos.y;
+      const rockDk = "#1a120c";
+      const rockMd = "#2d1e14";
+      const rockLt = "#3e2a1a";
+      const rockHi = "#54382a";
+      const rockTop = "#6a4a38";
+      const magYel = "#ffeb3b";
+      const magOrg = "#ff9800";
+      const magRed = "#f44336";
+      const magDk = "#bf360c";
+      const poolP =
+        0.7 + Math.sin(decorTime * 3 + variant) * 0.15;
+      const wide = variant === 0;
+      const cliffW = wide ? 26 * s : 16 * s;
+      const cliffH = wide ? 58 * s : 68 * s;
+      const cascW = wide ? 12 * s : 7 * s;
+      const poolRx = wide ? 20 * s : 14 * s;
+      const poolRy = wide ? 9 * s : 6 * s;
 
-      // Heat glow
-      const heatGlow = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        40 * s,
-      );
-      const hp = 0.2 + Math.sin(decorTime * 2) * 0.08;
-      heatGlow.addColorStop(0, `rgba(255,100,0,${hp})`);
-      heatGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = heatGlow;
+      const hG = ctx.createRadialGradient(lx, ly, 0, lx, ly, 42 * s);
+      const hp = 0.18 + Math.sin(decorTime * 2 + variant) * 0.07;
+      hG.addColorStop(0, `rgba(255,100,0,${hp})`);
+      hG.addColorStop(1, "transparent");
+      ctx.fillStyle = hG;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 40 * s, 20 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(lx, ly, 42 * s, 20 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Lava pool at base
-      const poolPulse = 0.7 + Math.sin(decorTime * 3) * 0.15;
-      const poolGrad = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y + 4 * s,
-        0,
-        screenPos.x,
-        screenPos.y + 4 * s,
-        20 * s,
-      );
-      poolGrad.addColorStop(0, magmaYellow);
-      poolGrad.addColorStop(0.4, magmaOrange);
-      poolGrad.addColorStop(0.7, magmaRed);
-      poolGrad.addColorStop(1, magmaDark);
-      ctx.fillStyle = poolGrad;
+      ctx.fillStyle = "#2a1008";
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 4 * s,
-        20 * s,
-        9 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(lx, ly + 4 * s, poolRx + 5 * s, poolRy + 3 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Rock cliff sides
-      ctx.fillStyle = cliffDark;
+      const pG = ctx.createRadialGradient(lx, ly + 4 * s, 0, lx, ly + 4 * s, poolRx);
+      pG.addColorStop(0, magYel);
+      pG.addColorStop(0.35, magOrg);
+      pG.addColorStop(0.65, magRed);
+      pG.addColorStop(1, magDk);
+      ctx.fillStyle = pG;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 22 * s, screenPos.y);
-      ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 60 * s);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 58 * s);
-      ctx.lineTo(screenPos.x - 6 * s, screenPos.y);
-      ctx.closePath();
+      ctx.ellipse(lx, ly + 4 * s, poolRx, poolRy, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = cliffMid;
+
+      const cTop = ly - cliffH;
+      const rW = cliffW + 4 * s;
+
+      ctx.fillStyle = rockDk;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + 6 * s, screenPos.y);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 58 * s);
-      ctx.lineTo(screenPos.x + 24 * s, screenPos.y - 60 * s);
-      ctx.lineTo(screenPos.x + 22 * s, screenPos.y);
+      ctx.moveTo(lx - rW, ly);
+      ctx.lineTo(lx - rW + 2 * s, cTop + 8 * s);
+      ctx.quadraticCurveTo(lx - rW + 6 * s, cTop, lx - cascW - 2 * s, cTop + 4 * s);
+      ctx.lineTo(lx - cascW, ly);
       ctx.closePath();
       ctx.fill();
 
-      // Lava cascade
-      const cascadeGrad = ctx.createLinearGradient(
-        screenPos.x,
-        screenPos.y - 55 * s,
-        screenPos.x,
-        screenPos.y,
-      );
-      cascadeGrad.addColorStop(0, magmaYellow);
-      cascadeGrad.addColorStop(0.3, magmaOrange);
-      cascadeGrad.addColorStop(0.6, magmaRed);
-      cascadeGrad.addColorStop(1, magmaDark);
-      ctx.fillStyle = cascadeGrad;
+      ctx.fillStyle = rockMd;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 6 * s, screenPos.y - 55 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 8 * s,
-        screenPos.y - 30 * s,
-        screenPos.x - 10 * s,
-        screenPos.y,
-      );
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y);
-      ctx.quadraticCurveTo(
-        screenPos.x + 8 * s,
-        screenPos.y - 30 * s,
-        screenPos.x + 6 * s,
-        screenPos.y - 55 * s,
-      );
+      ctx.moveTo(lx + cascW, ly);
+      ctx.lineTo(lx + cascW + 2 * s, cTop + 4 * s);
+      ctx.quadraticCurveTo(lx + rW - 6 * s, cTop, lx + rW - 2 * s, cTop + 8 * s);
+      ctx.lineTo(lx + rW, ly);
       ctx.closePath();
       ctx.fill();
 
-      // Bright center streak
-      ctx.fillStyle = `rgba(255,235,59,${poolPulse * 0.6})`;
+      ctx.fillStyle = rockTop;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 50 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 3 * s,
-        screenPos.y - 25 * s,
-        screenPos.x - 2 * s,
-        screenPos.y,
-      );
-      ctx.lineTo(screenPos.x + 2 * s, screenPos.y);
-      ctx.quadraticCurveTo(
-        screenPos.x + 3 * s,
-        screenPos.y - 25 * s,
-        screenPos.x + 2 * s,
-        screenPos.y - 50 * s,
-      );
+      ctx.moveTo(lx - rW + 2 * s, cTop + 8 * s);
+      ctx.quadraticCurveTo(lx - rW + 6 * s, cTop, lx - cascW - 2 * s, cTop + 4 * s);
+      ctx.lineTo(lx - cascW - 2 * s, cTop + 2 * s);
+      ctx.lineTo(lx - rW, cTop + 6 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(lx + cascW + 2 * s, cTop + 4 * s);
+      ctx.quadraticCurveTo(lx + rW - 6 * s, cTop, lx + rW - 2 * s, cTop + 8 * s);
+      ctx.lineTo(lx + rW, cTop + 6 * s);
+      ctx.lineTo(lx + cascW + 2 * s, cTop + 2 * s);
       ctx.closePath();
       ctx.fill();
 
-      // Ember particles
-      for (let e = 0; e < 6; e++) {
-        const ePhase = (decorTime * 1.5 + e * 0.8) % 2;
-        const ex = screenPos.x + Math.sin(decorTime + e * 1.5) * 12 * s;
-        const ey = screenPos.y - ePhase * 30 * s;
-        const ea = (1 - ePhase / 2) * 0.8;
-        ctx.fillStyle = `rgba(255,200,50,${ea})`;
+      ctx.strokeStyle = rockLt;
+      ctx.lineWidth = 0.7 * s;
+      const nStrata = wide ? 6 : 8;
+      for (let i = 1; i < nStrata; i++) {
+        const sy = ly - 4 * s - ((cliffH - 8 * s) * i) / nStrata;
+        const j = Math.sin(i * 3.7 + variant * 2) * 2.5 * s;
         ctx.beginPath();
-        ctx.arc(ex, ey, (1 + Math.sin(ePhase * 3)) * s, 0, Math.PI * 2);
+        ctx.moveTo(lx - rW + 3 * s, sy + j);
+        ctx.lineTo(lx - cascW - 1 * s, sy - j * 0.5);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(lx + cascW + 1 * s, sy + j * 0.7);
+        ctx.lineTo(lx + rW - 3 * s, sy - j * 0.3);
+        ctx.stroke();
+      }
+
+      if (wide) {
+        ctx.fillStyle = rockLt;
+        ctx.beginPath();
+        ctx.moveTo(lx - rW * 0.5, ly - cliffH * 0.35);
+        ctx.lineTo(lx - rW * 0.55, ly - cliffH * 0.5);
+        ctx.lineTo(lx - cascW - 1 * s, ly - cliffH * 0.47);
+        ctx.lineTo(lx - cascW, ly - cliffH * 0.33);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = rockHi;
+        ctx.beginPath();
+        ctx.moveTo(lx + cascW, ly - cliffH * 0.33);
+        ctx.lineTo(lx + cascW + 1 * s, ly - cliffH * 0.47);
+        ctx.lineTo(lx + rW * 0.55, ly - cliffH * 0.5);
+        ctx.lineTo(lx + rW * 0.5, ly - cliffH * 0.35);
+        ctx.closePath();
         ctx.fill();
       }
+
+      const cG = ctx.createLinearGradient(lx, cTop + 6 * s, lx, ly);
+      cG.addColorStop(0, magYel);
+      cG.addColorStop(0.25, magOrg);
+      cG.addColorStop(0.55, magRed);
+      cG.addColorStop(1, magDk);
+      ctx.fillStyle = cG;
+      ctx.beginPath();
+      ctx.moveTo(lx - cascW, cTop + 6 * s);
+      ctx.quadraticCurveTo(lx - cascW - 2 * s, ly - cliffH * 0.45, lx - cascW - 1 * s, ly);
+      ctx.lineTo(lx + cascW + 1 * s, ly);
+      ctx.quadraticCurveTo(lx + cascW + 2 * s, ly - cliffH * 0.45, lx + cascW, cTop + 6 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(255,235,59,${poolP * 0.5})`;
+      ctx.beginPath();
+      ctx.moveTo(lx - 2 * s, cTop + 10 * s);
+      ctx.quadraticCurveTo(lx - 3 * s, ly - cliffH * 0.4, lx - 1.5 * s, ly);
+      ctx.lineTo(lx + 1.5 * s, ly);
+      ctx.quadraticCurveTo(lx + 3 * s, ly - cliffH * 0.4, lx + 2 * s, cTop + 10 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      if (!wide) {
+        const s2x = lx + 5 * s;
+        const s2G = ctx.createLinearGradient(s2x, ly - cliffH * 0.55, s2x, ly);
+        s2G.addColorStop(0, magOrg);
+        s2G.addColorStop(0.5, magRed);
+        s2G.addColorStop(1, magDk);
+        ctx.fillStyle = s2G;
+        ctx.beginPath();
+        ctx.moveTo(s2x - 2.5 * s, ly - cliffH * 0.55);
+        ctx.quadraticCurveTo(s2x - 3 * s, ly - cliffH * 0.28, s2x - 1.5 * s, ly - 2 * s);
+        ctx.lineTo(s2x + 1.5 * s, ly - 2 * s);
+        ctx.quadraticCurveTo(s2x + 3 * s, ly - cliffH * 0.28, s2x + 2.5 * s, ly - cliffH * 0.55);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      for (let e = 0; e < 7; e++) {
+        const ePh = (decorTime * 1.5 + e * 0.75) % 2;
+        const ex = lx + Math.sin(decorTime + e * 1.7 + variant) * 14 * s;
+        const ey = ly - ePh * 35 * s;
+        const ea = Math.max(0, (1 - ePh / 2) * 0.7);
+        ctx.fillStyle = `rgba(255,200,50,${ea})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey, (1.2 + Math.sin(ePh * 3)) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (let m = 0; m < 4; m++) {
+        const mPh = (decorTime * 0.4 + m * 0.6 + variant * 0.3) % 1.5;
+        const mx = lx + (m - 1.5) * 8 * s + Math.sin(decorTime * 0.8 + m) * 4 * s;
+        const my = ly + 2 * s - mPh * 18 * s;
+        const ma = Math.max(0, (1 - mPh / 1.5) * 0.22);
+        ctx.fillStyle = `rgba(200,180,160,${ma})`;
+        ctx.beginPath();
+        ctx.ellipse(mx, my, (3 + mPh * 2) * s, (2 + mPh) * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       break;
     }
 
     case "obsidian_pillar": {
-      const obsBlack = "#1a1a20";
-      const obsDark = "#2a2a35";
-      const obsMid = "#3a3a48";
-      const obsShine = "#5a5a70";
+      const px = screenPos.x;
+      const py = screenPos.y;
+      const obsBlack = "#0a0a14";
+      const obsDark = "#151524";
+      const obsMid = "#252540";
+      const obsLight = "#404068";
+      const obsHi = "#5a5a90";
+      const runeCol = "#ff6a3a";
+      const pulse =
+        0.45 + Math.sin(decorTime * 2.6 + variant * 0.9) * 0.22;
+      const hM = variant === 0 ? 1.0 : 0.82;
+      const wM = variant === 0 ? 1.0 : 1.18;
 
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x + 4 * s,
-        screenPos.y + 6 * s,
-        16 * s,
-        8 * s,
-        0,
+        px + 4 * s,
+        py + 6 * s,
+        22 * s * wM,
+        10 * s,
+        0.15,
         0,
         Math.PI * 2,
       );
       ctx.fill();
 
-      const pillarH = 55 * s;
-      const pillarW = 8 * s;
+      drawIsometricPrism(
+        ctx, px, py, 16 * s * wM, 16 * s * wM, 5 * s,
+        obsMid, obsBlack, obsDark,
+      );
+      drawIsometricPrism(
+        ctx, px, py - 5 * s, 12 * s * wM, 12 * s * wM, 4 * s,
+        obsLight, obsDark, obsMid,
+      );
 
-      // Left face
+      const shH = 60 * s * hM;
+      const bW = 9 * s * wM;
+      const tW = 4.5 * s * wM;
+      const shBase = py - 9 * s;
+      const shTop = shBase - shH;
+      const bI = bW * 0.866;
+      const bD = bW * 0.5;
+      const tI = tW * 0.866;
+      const tD = tW * 0.5;
+
       ctx.fillStyle = obsBlack;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - pillarW, screenPos.y + 3 * s);
-      ctx.lineTo(screenPos.x - pillarW * 0.8, screenPos.y - pillarH);
-      ctx.lineTo(screenPos.x, screenPos.y - pillarH - 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 3 * s);
+      ctx.moveTo(px - bI, shBase + bD);
+      ctx.lineTo(px, shBase + bD * 2);
+      ctx.lineTo(px, shTop + tD * 2);
+      ctx.lineTo(px - tI, shTop + tD);
       ctx.closePath();
       ctx.fill();
 
-      // Right face
       ctx.fillStyle = obsDark;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + pillarW, screenPos.y + 3 * s);
-      ctx.lineTo(screenPos.x + pillarW * 0.8, screenPos.y - pillarH);
-      ctx.lineTo(screenPos.x, screenPos.y - pillarH - 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 3 * s);
+      ctx.moveTo(px + bI, shBase + bD);
+      ctx.lineTo(px, shBase + bD * 2);
+      ctx.lineTo(px, shTop + tD * 2);
+      ctx.lineTo(px + tI, shTop + tD);
       ctx.closePath();
       ctx.fill();
 
-      // Front face
       ctx.fillStyle = obsMid;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - pillarW, screenPos.y + 3 * s);
-      ctx.lineTo(screenPos.x + pillarW, screenPos.y + 3 * s);
-      ctx.lineTo(screenPos.x + pillarW * 0.8, screenPos.y - pillarH);
-      ctx.lineTo(screenPos.x - pillarW * 0.8, screenPos.y - pillarH);
+      ctx.moveTo(px - bI, shBase + bD);
+      ctx.lineTo(px + bI, shBase + bD);
+      ctx.lineTo(px + tI, shTop + tD);
+      ctx.lineTo(px - tI, shTop + tD);
       ctx.closePath();
       ctx.fill();
 
-      // Reflective highlight
-      ctx.fillStyle = obsShine;
+      ctx.fillStyle = obsLight;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + pillarW * 0.3, screenPos.y - pillarH * 0.1);
-      ctx.lineTo(screenPos.x + pillarW * 0.5, screenPos.y - pillarH * 0.8);
-      ctx.lineTo(screenPos.x + pillarW * 0.7, screenPos.y - pillarH * 0.7);
-      ctx.lineTo(screenPos.x + pillarW * 0.6, screenPos.y - pillarH * 0.15);
+      ctx.moveTo(px, shTop);
+      ctx.lineTo(px + tI, shTop + tD);
+      ctx.lineTo(px, shTop + tD * 2);
+      ctx.lineTo(px - tI, shTop + tD);
       ctx.closePath();
       ctx.fill();
 
-      // Glowing rune near top
-      const runeGlow = 0.5 + Math.sin(decorTime * 2.5) * 0.3;
-      ctx.fillStyle = `rgba(200,50,50,${runeGlow})`;
+      ctx.strokeStyle = obsBlack;
+      ctx.lineWidth = 0.6 * s;
+      for (let i = 1; i <= 5; i++) {
+        const t = i / 6;
+        const gy = shBase + (shTop - shBase) * t;
+        const gI = bI + (tI - bI) * t;
+        const gD = bD + (tD - bD) * t;
+        ctx.beginPath();
+        ctx.moveTo(px - gI, gy + gD);
+        ctx.lineTo(px + gI, gy + gD);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = "rgba(120,120,200,0.1)";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - pillarH * 0.7);
-      ctx.lineTo(screenPos.x - 3 * s, screenPos.y - pillarH * 0.6);
-      ctx.lineTo(screenPos.x, screenPos.y - pillarH * 0.5);
-      ctx.lineTo(screenPos.x + 3 * s, screenPos.y - pillarH * 0.6);
+      ctx.moveTo(px + bI * 0.2, shBase + bD * 0.7);
+      ctx.lineTo(px + bI * 0.85, shBase + bD * 0.85);
+      ctx.lineTo(px + tI * 0.85, shTop + tD * 0.85);
+      ctx.lineTo(px + tI * 0.2, shTop + tD * 0.7);
       ctx.closePath();
       ctx.fill();
 
-      // Top facet
-      ctx.fillStyle = obsShine;
+      const capY = shTop - 12 * s * hM;
+      const cW = 6 * s * wM;
+      const cI = cW * 0.866;
+      const cD2 = cW * 0.5;
+      const capTip = capY - 9 * s;
+
+      ctx.shadowColor = runeCol;
+      ctx.shadowBlur = 8 * s;
+      ctx.strokeStyle = `rgba(255,120,70,${0.25 + pulse * 0.4})`;
+      ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - pillarH - 2 * s);
-      ctx.lineTo(screenPos.x - pillarW * 0.8, screenPos.y - pillarH);
-      ctx.lineTo(screenPos.x, screenPos.y - pillarH + 2 * s);
-      ctx.lineTo(screenPos.x + pillarW * 0.8, screenPos.y - pillarH);
+      ctx.moveTo(px, shTop + tD);
+      ctx.lineTo(px, capY + cD2 * 2 + 2 * s);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = obsBlack;
+      ctx.beginPath();
+      ctx.moveTo(px, capTip);
+      ctx.lineTo(px - cI, capY + cD2);
+      ctx.lineTo(px, capY + cD2 * 2);
       ctx.closePath();
       ctx.fill();
+      ctx.fillStyle = obsMid;
+      ctx.beginPath();
+      ctx.moveTo(px, capTip);
+      ctx.lineTo(px + cI, capY + cD2);
+      ctx.lineTo(px, capY + cD2 * 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = obsHi;
+      ctx.beginPath();
+      ctx.moveTo(px, capTip);
+      ctx.lineTo(px - cI, capY + cD2);
+      ctx.lineTo(px + cI, capY + cD2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(255,130,80,${0.25 + pulse * 0.3})`;
+      ctx.beginPath();
+      ctx.moveTo(px, capTip + 3 * s);
+      ctx.lineTo(px - cI * 0.5, capY + cD2);
+      ctx.lineTo(px + cI * 0.5, capY + cD2);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowColor = `rgba(255,100,50,${pulse})`;
+      ctx.shadowBlur = 14 * s;
+      ctx.fillStyle = `rgba(255,140,80,${0.1 + pulse * 0.12})`;
+      ctx.beginPath();
+      ctx.arc(px, capY, cW * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      [-1, 1].forEach((side) => {
+        const sx = px + side * 14 * s * wM;
+        const sy = py + 3 * s;
+        const shH2 = (variant === 0 ? 20 : 15) * s;
+        ctx.fillStyle = side < 0 ? obsBlack : obsDark;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + side * 3.5 * s, sy + side * 1.5 * s);
+        ctx.lineTo(sx + side * 1.5 * s, sy - shH2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = obsLight;
+        ctx.beginPath();
+        ctx.moveTo(sx + side * 1.5 * s, sy - shH2);
+        ctx.lineTo(sx + side * 3.5 * s, sy + side * 1.5 * s);
+        ctx.lineTo(sx + side * 4.5 * s, sy + side * 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      ctx.shadowColor = runeCol;
+      ctx.shadowBlur = 10 * s;
+      ctx.strokeStyle = `rgba(255,120,70,${0.3 + pulse * 0.45})`;
+      ctx.lineWidth = 1.3 * s;
+      const nR = variant === 0 ? 4 : 3;
+      for (let i = 0; i < nR; i++) {
+        const rt = 0.2 + (i / nR) * 0.6;
+        const ry = shBase + (shTop - shBase) * rt;
+        const gI = bI + (tI - bI) * rt;
+        const gDy = bD + (tD - bD) * rt;
+        const rw = gI * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(px - rw, ry + gDy);
+        ctx.lineTo(px, ry + gDy - 3.5 * s);
+        ctx.lineTo(px + rw, ry + gDy);
+        ctx.lineTo(px, ry + gDy + 3.5 * s);
+        ctx.closePath();
+        ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+
+      if (variant === 1) {
+        ctx.strokeStyle = `rgba(255,80,40,${0.2 + pulse * 0.15})`;
+        ctx.lineWidth = 0.7 * s;
+        ctx.beginPath();
+        ctx.moveTo(px - bI * 0.6, shBase + bD * 0.7);
+        ctx.quadraticCurveTo(
+          px - (bI + tI) * 0.2,
+          shBase + (shTop - shBase) * 0.4,
+          px - tI * 0.4,
+          shTop + tD * 1.2,
+        );
+        ctx.stroke();
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const t =
+          (decorTime * 0.8 + i * 0.5 + variant * 0.3) % 1.5;
+        const ex =
+          px + Math.sin(decorTime * 1.5 + i * 2.2) * 10 * s;
+        const ey = shTop - 5 * s - t * 20 * s;
+        const ea = Math.max(0, (1 - t / 1.5) * 0.65);
+        ctx.fillStyle = `rgba(255,140,60,${ea})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey, (1.5 - t * 0.8) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       break;
     }
 

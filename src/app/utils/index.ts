@@ -6,15 +6,49 @@ import type {
   EnemyType,
   HeroType,
   Troop,
+  DecorationType,
+  DecorationHeightTag,
+  MapDecoration,
 } from "../types";
 import {
   TILE_SIZE,
   MAP_PATHS,
   TOWER_COLORS,
   TROOP_SPREAD_RADIUS,
+  HERO_PATH_HITBOX_SIZE,
   ROAD_EXCLUSION_BUFFER,
   TOWER_FOOTPRINTS,
 } from "../constants";
+
+// Enemy lane model: lanes are normalized to [-1, 1] and projected onto path
+// perpendiculars in world-space.
+export const ENEMY_MAX_LANES = 5;
+export const ENEMY_LANE_OFFSET_LIMIT = 1;
+export const ENEMY_LANE_MIN_WORLD_SPACING = 18;
+export const ENEMY_LANE_HALF_SPAN_WORLD = Math.max(
+  24,
+  Math.min(HERO_PATH_HITBOX_SIZE - 8, 42)
+);
+
+export function getEnemyLaneCount(maxLanes: number = ENEMY_MAX_LANES): number {
+  const derivedCount =
+    Math.floor(
+      (ENEMY_LANE_HALF_SPAN_WORLD * 2) / ENEMY_LANE_MIN_WORLD_SPACING
+    ) + 1;
+  return Math.max(1, Math.min(maxLanes, derivedCount));
+}
+
+export function getEnemyLaneOffsets(
+  laneCount: number = getEnemyLaneCount()
+): number[] {
+  if (laneCount <= 1) return [0];
+  const clampedCount = Math.max(1, laneCount);
+  const step = (ENEMY_LANE_OFFSET_LIMIT * 2) / (clampedCount - 1);
+  return Array.from({ length: clampedCount }, (_, idx) => {
+    const value = -ENEMY_LANE_OFFSET_LIMIT + idx * step;
+    return Number(value.toFixed(4));
+  });
+}
 
 // Grid to world coordinates (isometric) - centers on tile
 export function gridToWorld(pos: GridPosition): Position {
@@ -209,53 +243,516 @@ export function getEnemyPosition(
   const baseY = current.y + (next.y - current.y) * enemy.progress;
 
   // Calculate perpendicular offset for lane spreading
-  const laneOffset = enemy.laneOffset || 0;
-  const roadWidth = 40;
+  const laneOffset = Math.max(
+    -ENEMY_LANE_OFFSET_LIMIT,
+    Math.min(ENEMY_LANE_OFFSET_LIMIT, enemy.laneOffset || 0)
+  );
+  const laneHalfSpan = ENEMY_LANE_HALF_SPAN_WORLD;
 
   // Get direction of current path segment
   const dx = next.x - current.x;
   const dy = next.y - current.y;
   const len = Math.sqrt(dx * dx + dy * dy);
 
-  if (len > 0) {
+  if (len > 0 && Math.abs(laneOffset) > 0.0001) {
+    const safeNormalize = (vx: number, vy: number): Position => {
+      const mag = Math.sqrt(vx * vx + vy * vy);
+      if (mag <= 0.00001) return { x: 0, y: 0 };
+      return { x: vx / mag, y: vy / mag };
+    };
+
+    const smoothStep = (t: number): number => {
+      const clamped = Math.max(0, Math.min(1, t));
+      return clamped * clamped * (3 - 2 * clamped);
+    };
+
+    const laneProgress = Math.max(0, Math.min(1, enemy.progress));
+    const blendWindow = 0.24;
+
+    const currentDir = safeNormalize(dx, dy);
+    let tangent = currentDir;
+
+    if (laneProgress < blendWindow && currentIndex > 0) {
+      const prevNode = gridToWorldPath(path[currentIndex - 1]);
+      const prevDir = safeNormalize(current.x - prevNode.x, current.y - prevNode.y);
+      const cornerStart = safeNormalize(
+        prevDir.x + currentDir.x,
+        prevDir.y + currentDir.y
+      );
+      const startBlend = smoothStep(laneProgress / blendWindow);
+      tangent = safeNormalize(
+        cornerStart.x * (1 - startBlend) + currentDir.x * startBlend,
+        cornerStart.y * (1 - startBlend) + currentDir.y * startBlend
+      );
+    } else if (laneProgress > 1 - blendWindow && currentIndex < path.length - 2) {
+      const afterNode = gridToWorldPath(path[currentIndex + 2]);
+      const nextDir = safeNormalize(afterNode.x - next.x, afterNode.y - next.y);
+      const cornerEnd = safeNormalize(
+        currentDir.x + nextDir.x,
+        currentDir.y + nextDir.y
+      );
+      const endBlend = smoothStep((laneProgress - (1 - blendWindow)) / blendWindow);
+      tangent = safeNormalize(
+        currentDir.x * (1 - endBlend) + cornerEnd.x * endBlend,
+        currentDir.y * (1 - endBlend) + cornerEnd.y * endBlend
+      );
+    }
+
     // Perpendicular vector (rotated 90 degrees)
-    const perpX = -dy / len;
-    const perpY = dx / len;
+    const perpX = -tangent.y;
+    const perpY = tangent.x;
 
     return {
-      x: baseX + perpX * laneOffset * roadWidth,
-      y: baseY + perpY * laneOffset * roadWidth,
+      x: baseX + perpX * laneOffset * laneHalfSpan,
+      y: baseY + perpY * laneOffset * laneHalfSpan,
     };
   }
 
   return { x: baseX, y: baseY };
 }
 
+// Height metadata used by rendering and interactions.
+// Tags are assigned for all landmarks and large decorative props.
+export const DECORATION_HEIGHT_TAG_BY_TYPE: Partial<
+  Record<DecorationType, DecorationHeightTag>
+> = {
+  // Tall structures
+  tree: "tall",
+  pine: "tall",
+  palm: "tall",
+  swamp_tree: "tall",
+  charred_tree: "tall",
+  hut: "tall",
+  ruins: "tall",
+  broken_wall: "tall",
+  broken_bridge: "tall",
+  statue: "tall",
+  obelisk: "tall",
+  dock: "tall",
+  hanging_cage: "tall",
+  mushroom: "tall",
+  mushroom_cluster: "tall",
+
+  // Landmarks and major set pieces
+  pyramid: "landmark",
+  sphinx: "landmark",
+  giant_sphinx: "landmark",
+  nassau_hall: "landmark",
+  ice_fortress: "landmark",
+  obsidian_castle: "landmark",
+  witch_cottage: "landmark",
+  ruined_temple: "landmark",
+  sunken_pillar: "landmark",
+  carnegie_lake: "landmark",
+  frozen_waterfall: "landmark",
+  frozen_gate: "landmark",
+  aurora_crystal: "landmark",
+  cobra_statue: "landmark",
+  hieroglyph_wall: "landmark",
+  sarcophagus: "landmark",
+  lava_fall: "landmark",
+  obsidian_pillar: "landmark",
+  skull_throne: "landmark",
+  volcano_rim: "landmark",
+  idol_statue: "landmark",
+  gate: "landmark",
+  dark_throne: "landmark",
+  dark_barracks: "landmark",
+  dark_spire: "landmark",
+  mountain_peak: "landmark",
+  ice_bridge: "landmark",
+  demon_statue: "landmark",
+};
+
+export const DEFAULT_DECORATION_HEIGHT_TAG: DecorationHeightTag = "short";
+
+export function getDecorationHeightTag(
+  type: DecorationType,
+  explicitHeightTag?: DecorationHeightTag
+): DecorationHeightTag {
+  return (
+    explicitHeightTag ??
+    DECORATION_HEIGHT_TAG_BY_TYPE[type] ??
+    DEFAULT_DECORATION_HEIGHT_TAG
+  );
+}
+
+export interface DecorationVolumeSpec {
+  heightTag: DecorationHeightTag;
+  // Screen-space dimensions at scale=1 used for layered occlusion footprints.
+  width: number;
+  length: number;
+  height: number;
+  // Vertical anchor adjustment in screen-space scale units.
+  anchorOffsetY: number;
+  // Minimum iso-depth needed to count as "in front" of this object.
+  frontDepthPadding: number;
+  // Landmark generation exclusion radii in grid units (size multiplier applied).
+  landmarkCoreRadius: number;
+  landmarkFullPadding: number;
+  // Draw a shadow pass below the environment before normal rendering.
+  backgroundShadowOnly: boolean;
+  // Optional world-space anchor offset for sprites whose draw origin differs from
+  // gameplay/world anchor. Interpreted at `offsetBaseScale`.
+  worldOffsetX: number;
+  worldOffsetY: number;
+  offsetBaseScale: number;
+}
+
+const DECORATION_VOLUME_DEFAULTS_BY_TAG: Record<
+  DecorationHeightTag,
+  Omit<DecorationVolumeSpec, "heightTag">
+> = {
+  ground: {
+    width: 18,
+    length: 12,
+    height: 6,
+    anchorOffsetY: 0,
+    frontDepthPadding: 6,
+    landmarkCoreRadius: 0.65,
+    landmarkFullPadding: 0.45,
+    backgroundShadowOnly: false,
+    worldOffsetX: 0,
+    worldOffsetY: 0,
+    offsetBaseScale: 1,
+  },
+  short: {
+    width: 24,
+    length: 18,
+    height: 16,
+    anchorOffsetY: -2,
+    frontDepthPadding: 8,
+    landmarkCoreRadius: 0.8,
+    landmarkFullPadding: 0.5,
+    backgroundShadowOnly: false,
+    worldOffsetX: 0,
+    worldOffsetY: 0,
+    offsetBaseScale: 1,
+  },
+  medium: {
+    width: 34,
+    length: 24,
+    height: 28,
+    anchorOffsetY: -4,
+    frontDepthPadding: 10,
+    landmarkCoreRadius: 0.9,
+    landmarkFullPadding: 0.6,
+    backgroundShadowOnly: false,
+    worldOffsetX: 0,
+    worldOffsetY: 0,
+    offsetBaseScale: 1,
+  },
+  tall: {
+    width: 46,
+    length: 34,
+    height: 60,
+    anchorOffsetY: -6,
+    frontDepthPadding: 12,
+    landmarkCoreRadius: 1.0,
+    landmarkFullPadding: 0.7,
+    backgroundShadowOnly: false,
+    worldOffsetX: 0,
+    worldOffsetY: 0,
+    offsetBaseScale: 1,
+  },
+  landmark: {
+    width: 72,
+    length: 56,
+    height: 90,
+    anchorOffsetY: -8,
+    frontDepthPadding: 14,
+    landmarkCoreRadius: 1.0,
+    landmarkFullPadding: 0.75,
+    backgroundShadowOnly: false,
+    worldOffsetX: 0,
+    worldOffsetY: 0,
+    offsetBaseScale: 1,
+  },
+};
+
+const DECORATION_VOLUME_OVERRIDES: Partial<
+  Record<DecorationType, Partial<Omit<DecorationVolumeSpec, "heightTag">>>
+> = {
+  pyramid: {
+    width: 168,
+    length: 156,
+    height: 200,
+    anchorOffsetY: 10,
+    frontDepthPadding: 10,
+    landmarkCoreRadius: 1.25,
+    landmarkFullPadding: 0.75,
+  },
+  nassau_hall: {
+    width: 220,
+    length: 210,
+    height: 220,
+    anchorOffsetY: 0,
+    frontDepthPadding: 18,
+    landmarkCoreRadius: 1.45,
+    landmarkFullPadding: 0.9,
+    backgroundShadowOnly: true,
+  },
+  giant_sphinx: {
+    width: 180,
+    length: 130,
+    height: 150,
+    anchorOffsetY: -6,
+    frontDepthPadding: 12,
+    landmarkCoreRadius: 1.2,
+    landmarkFullPadding: 0.8,
+  },
+  sphinx: {
+    width: 96,
+    length: 70,
+    height: 80,
+    anchorOffsetY: -4,
+    frontDepthPadding: 10,
+  },
+  obsidian_castle: {
+    width: 136,
+    length: 112,
+    height: 165,
+    anchorOffsetY: -8,
+    frontDepthPadding: 13,
+  },
+  dark_barracks: {
+    width: 90,
+    length: 74,
+    height: 110,
+    anchorOffsetY: -6,
+    frontDepthPadding: 10,
+  },
+  dark_throne: {
+    width: 82,
+    length: 62,
+    height: 106,
+    anchorOffsetY: -5,
+    frontDepthPadding: 10,
+  },
+  dark_spire: {
+    width: 76,
+    length: 58,
+    height: 120,
+    anchorOffsetY: -5,
+    frontDepthPadding: 11,
+  },
+  obsidian_pillar: {
+    width: 62,
+    length: 48,
+    height: 116,
+    anchorOffsetY: -4,
+    frontDepthPadding: 10,
+  },
+  lava_fall: {
+    width: 84,
+    length: 66,
+    height: 130,
+    anchorOffsetY: -4,
+    frontDepthPadding: 11,
+  },
+  ice_fortress: {
+    width: 140,
+    length: 114,
+    height: 170,
+    anchorOffsetY: -8,
+    frontDepthPadding: 14,
+  },
+  frozen_waterfall: {
+    width: 116,
+    length: 92,
+    height: 148,
+    anchorOffsetY: -6,
+    frontDepthPadding: 12,
+  },
+  witch_cottage: {
+    width: 102,
+    length: 84,
+    height: 94,
+    anchorOffsetY: -5,
+    frontDepthPadding: 11,
+  },
+};
+
+export function getDecorationVolumeSpec(
+  type: string,
+  explicitHeightTag?: DecorationHeightTag
+): DecorationVolumeSpec {
+  const typedType = type as DecorationType;
+  const heightTag = getDecorationHeightTag(typedType, explicitHeightTag);
+  const defaults = DECORATION_VOLUME_DEFAULTS_BY_TAG[heightTag];
+  const overrides = (DECORATION_VOLUME_OVERRIDES as Record<
+    string,
+    Partial<Omit<DecorationVolumeSpec, "heightTag">>
+  >)[type];
+
+  return {
+    heightTag,
+    width: overrides?.width ?? defaults.width,
+    length: overrides?.length ?? defaults.length,
+    height: overrides?.height ?? defaults.height,
+    anchorOffsetY: overrides?.anchorOffsetY ?? defaults.anchorOffsetY,
+    frontDepthPadding: overrides?.frontDepthPadding ?? defaults.frontDepthPadding,
+    landmarkCoreRadius:
+      overrides?.landmarkCoreRadius ?? defaults.landmarkCoreRadius,
+    landmarkFullPadding:
+      overrides?.landmarkFullPadding ?? defaults.landmarkFullPadding,
+    backgroundShadowOnly:
+      overrides?.backgroundShadowOnly ?? defaults.backgroundShadowOnly,
+    worldOffsetX: overrides?.worldOffsetX ?? defaults.worldOffsetX,
+    worldOffsetY: overrides?.worldOffsetY ?? defaults.worldOffsetY,
+    offsetBaseScale: overrides?.offsetBaseScale ?? defaults.offsetBaseScale,
+  };
+}
+
+export function getDecorationWorldOffset(
+  type: string,
+  scale: number,
+  explicitHeightTag?: DecorationHeightTag
+): Position {
+  const volume = getDecorationVolumeSpec(type, explicitHeightTag);
+  const safeBaseScale = Math.max(0.0001, volume.offsetBaseScale);
+  const ratio = scale / safeBaseScale;
+  return {
+    x: volume.worldOffsetX * ratio,
+    y: volume.worldOffsetY * ratio,
+  };
+}
+
+interface MapDecorationRuntimeRule {
+  runtimeType: DecorationType;
+  scaleMultiplier: number;
+}
+
+const MAP_DECORATION_RUNTIME_RULES: Record<string, MapDecorationRuntimeRule> = {
+  pyramid: { runtimeType: "pyramid", scaleMultiplier: 1.5 },
+  obelisk: { runtimeType: "obelisk", scaleMultiplier: 1.2 },
+  nassau_hall: { runtimeType: "nassau_hall", scaleMultiplier: 1 },
+  statue: { runtimeType: "statue", scaleMultiplier: 1.3 },
+  demon_statue: { runtimeType: "statue", scaleMultiplier: 1.3 },
+  ruined_temple: { runtimeType: "ruins", scaleMultiplier: 1.5 },
+  lava_pool: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
+  lake: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
+  algae_pool: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
+  torch: { runtimeType: "torch", scaleMultiplier: 1 },
+  fire_pit: { runtimeType: "torch", scaleMultiplier: 1 },
+  magma_vent: { runtimeType: "torch", scaleMultiplier: 1 },
+  flowers: { runtimeType: "flowers", scaleMultiplier: 0.6 },
+  signpost: { runtimeType: "signpost", scaleMultiplier: 0.8 },
+  fountain: { runtimeType: "fountain", scaleMultiplier: 1.2 },
+  bench: { runtimeType: "bench", scaleMultiplier: 0.7 },
+  lamppost: { runtimeType: "lamppost", scaleMultiplier: 1 },
+  witch_cottage: { runtimeType: "witch_cottage", scaleMultiplier: 1.1 },
+  cauldron: { runtimeType: "cauldron", scaleMultiplier: 0.8 },
+  tentacle: { runtimeType: "tentacle", scaleMultiplier: 1.2 },
+  deep_water: { runtimeType: "deep_water", scaleMultiplier: 1.3 },
+  giant_sphinx: { runtimeType: "giant_sphinx", scaleMultiplier: 1.4 },
+  sphinx: { runtimeType: "sphinx", scaleMultiplier: 1.4 },
+  oasis_pool: { runtimeType: "oasis_pool", scaleMultiplier: 1.1 },
+  carnegie_lake: { runtimeType: "carnegie_lake", scaleMultiplier: 1.2 },
+  ice_fortress: { runtimeType: "ice_fortress", scaleMultiplier: 1.3 },
+  ice_throne: { runtimeType: "ice_throne", scaleMultiplier: 1.2 },
+  frozen_waterfall: { runtimeType: "frozen_waterfall", scaleMultiplier: 1.3 },
+  aurora_crystal: { runtimeType: "aurora_crystal", scaleMultiplier: 1.1 },
+  snow_lantern: { runtimeType: "snow_lantern", scaleMultiplier: 0.9 },
+  frozen_pond: { runtimeType: "frozen_pond", scaleMultiplier: 1.2 },
+  frozen_soldier: { runtimeType: "frozen_soldier", scaleMultiplier: 1 },
+  frozen_gate: { runtimeType: "frozen_gate", scaleMultiplier: 1.2 },
+  broken_wall: { runtimeType: "broken_wall", scaleMultiplier: 1.1 },
+  icicles: { runtimeType: "icicles", scaleMultiplier: 1 },
+  obsidian_castle: { runtimeType: "obsidian_castle", scaleMultiplier: 1.5 },
+  dark_throne: { runtimeType: "dark_throne", scaleMultiplier: 1.2 },
+  dark_barracks: { runtimeType: "dark_barracks", scaleMultiplier: 1.2 },
+  dark_spire: { runtimeType: "dark_spire", scaleMultiplier: 1.2 },
+  sarcophagus: { runtimeType: "sarcophagus", scaleMultiplier: 1.1 },
+  cobra_statue: { runtimeType: "cobra_statue", scaleMultiplier: 1.2 },
+  hieroglyph_wall: { runtimeType: "hieroglyph_wall", scaleMultiplier: 1.1 },
+  pottery: { runtimeType: "pottery", scaleMultiplier: 0.9 },
+  sand_pile: { runtimeType: "sand_pile", scaleMultiplier: 1 },
+  treasure_chest: { runtimeType: "treasure_chest", scaleMultiplier: 0.9 },
+  lava_fall: { runtimeType: "lava_fall", scaleMultiplier: 1.3 },
+  obsidian_pillar: { runtimeType: "obsidian_pillar", scaleMultiplier: 1.2 },
+  fire_crystal: { runtimeType: "fire_crystal", scaleMultiplier: 1.1 },
+  skull_throne: { runtimeType: "skull_throne", scaleMultiplier: 1.2 },
+  ember_rock: { runtimeType: "ember_rock", scaleMultiplier: 1 },
+  volcano_rim: { runtimeType: "volcano_rim", scaleMultiplier: 1.3 },
+  sunken_pillar: { runtimeType: "sunken_pillar", scaleMultiplier: 1.1 },
+  idol_statue: { runtimeType: "idol_statue", scaleMultiplier: 1.1 },
+  glowing_runes: { runtimeType: "glowing_runes", scaleMultiplier: 1 },
+  hanging_cage: { runtimeType: "hanging_cage", scaleMultiplier: 1 },
+  poison_pool: { runtimeType: "poison_pool", scaleMultiplier: 1.1 },
+  skeleton_pile: { runtimeType: "skeleton_pile", scaleMultiplier: 1 },
+  hedge: { runtimeType: "hedge", scaleMultiplier: 0.9 },
+  campfire: { runtimeType: "campfire", scaleMultiplier: 0.9 },
+  dock: { runtimeType: "dock", scaleMultiplier: 1.1 },
+  gate: { runtimeType: "gate", scaleMultiplier: 1.2 },
+  reeds: { runtimeType: "reeds", scaleMultiplier: 0.8 },
+  fishing_spot: { runtimeType: "fishing_spot", scaleMultiplier: 0.9 },
+};
+
+export interface MapDecorationRuntimePlacement {
+  sourceType: string;
+  runtimeType: DecorationType;
+  scale: number;
+}
+
+export function resolveMapDecorationRuntimePlacement(
+  decoration: Pick<MapDecoration, "type" | "category" | "size">
+): MapDecorationRuntimePlacement | null {
+  const sourceType = decoration.category ?? decoration.type;
+  if (!sourceType) return null;
+  const rule = MAP_DECORATION_RUNTIME_RULES[sourceType];
+  if (!rule) return null;
+
+  const size = decoration.size || 1;
+  return {
+    sourceType,
+    runtimeType: rule.runtimeType,
+    scale: size * rule.scaleMultiplier,
+  };
+}
+
+export function getMapDecorationWorldPos(decoration: MapDecoration): Position {
+  const basePos = gridToWorld(decoration.pos);
+  const resolvedPlacement = resolveMapDecorationRuntimePlacement(decoration);
+  if (!resolvedPlacement) return basePos;
+  const offset = getDecorationWorldOffset(
+    resolvedPlacement.runtimeType,
+    resolvedPlacement.scale,
+    decoration.heightTag
+  );
+  return {
+    x: basePos.x + offset.x,
+    y: basePos.y + offset.y,
+  };
+}
+
+export function getLandmarkSpawnExclusion(
+  type: string,
+  size: number,
+  explicitHeightTag?: DecorationHeightTag
+): { coreR: number; fullR: number } | null {
+  const volume = getDecorationVolumeSpec(type, explicitHeightTag);
+  if (volume.heightTag !== "landmark") return null;
+  const coreR = volume.landmarkCoreRadius * size;
+  const fullR = coreR + volume.landmarkFullPadding;
+  return { coreR, fullR };
+}
+
+export const LARGE_DECORATION_TYPES = new Set<DecorationType>(
+  (Object.keys(DECORATION_HEIGHT_TAG_BY_TYPE) as DecorationType[]).filter(
+    (type) => {
+      const tag = DECORATION_HEIGHT_TAG_BY_TYPE[type];
+      return tag === "tall" || tag === "landmark";
+    }
+  )
+);
+
 // Landmark decoration types that should block tower placement
-export const LANDMARK_DECORATION_TYPES = new Set([
-  "pyramid",
-  "sphinx",
-  "giant_sphinx",
-  "nassau_hall",
-  "ice_fortress",
-  "obsidian_castle",
-  "witch_cottage",
-  "ruined_temple",
-  "sunken_pillar",
-  "carnegie_lake",
-  "frozen_waterfall",
-  "frozen_gate",
-  "aurora_crystal",
-  "cobra_statue",
-  "hieroglyph_wall",
-  "sarcophagus",
-  "lava_fall",
-  "obsidian_pillar",
-  "skull_throne",
-  "volcano_rim",
-  "idol_statue",
-  "gate",
-]);
+export const LANDMARK_DECORATION_TYPES = new Set<string>(
+  (Object.keys(DECORATION_HEIGHT_TAG_BY_TYPE) as DecorationType[]).filter(
+    (type) => DECORATION_HEIGHT_TAG_BY_TYPE[type] === "landmark"
+  )
+);
 
 // Vertical offset for landmark hitboxes (in scale units). Tall structures like pyramids
 // draw upward from their base—the hitbox center is shifted up so hovering the visible

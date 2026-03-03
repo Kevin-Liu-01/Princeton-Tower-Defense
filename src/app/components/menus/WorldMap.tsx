@@ -133,6 +133,7 @@ type SelectableLevel = {
   description: string;
   region: (typeof WORLD_LEVELS)[number]["region"];
   difficulty: 1 | 2 | 3;
+  kind?: "campaign" | "challenge" | "custom";
   isCustom?: boolean;
 };
 
@@ -229,6 +230,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         description: customLevel.description,
         region: customLevel.theme,
         difficulty: customLevel.difficulty,
+        kind: "custom",
         isCustom: true,
       };
     },
@@ -437,6 +439,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const canStart = selectedLevel && selectedHero && selectedSpells.length === 3;
   const currentLevel = selectedLevel ? getLevelById(selectedLevel) : null;
   const isCurrentCustomLevel = Boolean(currentLevel?.isCustom);
+  const isCurrentChallengeLevel =
+    Boolean(currentLevel?.kind === "challenge") && !isCurrentCustomLevel;
   const waveCount = selectedLevel ? getWaveCount(selectedLevel) : 0;
   const currentLevelPreviewImage = currentLevel
     ? LEVEL_DATA[currentLevel.id]?.previewImage
@@ -668,6 +672,18 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <h2 className="text-xl font-bold text-amber-100 drop-shadow-lg tracking-wide">
                         {currentLevel.name}
                       </h2>
+                      {isCurrentChallengeLevel && (
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase"
+                          style={{
+                            background: "linear-gradient(135deg, rgba(145,38,20,0.9), rgba(90,18,10,0.95))",
+                            border: "1px solid rgba(255,170,90,0.55)",
+                            color: "rgb(255,225,170)",
+                          }}
+                        >
+                          Challenge
+                        </span>
+                      )}
                     </div>
                     <button
                       onClick={() => setSelectedLevel(null)}
@@ -846,7 +862,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     >
                       <div className="text-center">
                         <div className="text-4xl mb-2">
-                          {currentLevel.region === "grassland"
+                          {isCurrentChallengeLevel
+                            ? "⚔️"
+                            : currentLevel.region === "grassland"
                             ? "🌲"
                             : currentLevel.region === "swamp"
                               ? "🦆"
@@ -957,7 +975,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             }}
                           >
                             {isLevelUnlocked(l.id)
-                              ? l.region === "grassland"
+                              ? l.kind === "challenge"
+                                ? "⚔️"
+                                : l.region === "grassland"
                                 ? "🌲"
                                 : l.region === "swamp"
                                   ? "🦆"
@@ -971,6 +991,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           <div className="flex-1 min-w-0">
                             <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
                               {l.name}
+                              {l.kind === "challenge" ? " • Challenge" : ""}
                             </div>
                           </div>
                           <div className="flex gap-0.5">

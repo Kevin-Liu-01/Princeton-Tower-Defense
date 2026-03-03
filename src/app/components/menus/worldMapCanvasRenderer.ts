@@ -6522,8 +6522,33 @@ export const drawWorldMapCanvas = ({
         const isUnlocked = isLevelUnlocked(level.id) && isLevelUnlocked(toId);
         const isPartial = isLevelUnlocked(level.id) || isLevelUnlocked(toId);
 
-        const midX = (fromX + toX) / 2;
-        const midY = (fromY + toY) / 2 - 15;
+        const connectionSeed = `${level.id}->${toId}`
+          .split("")
+          .reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7);
+        const segmentLength = Math.hypot(toX - fromX, toY - fromY);
+        const baseMidX = (fromX + toX) / 2;
+        const controlXJitter =
+          (seededRandom(connectionSeed + 17) - 0.5) *
+          Math.min(40, segmentLength * 0.22);
+        const midX = baseMidX + controlXJitter;
+        const baseArcLift = Math.min(52, Math.max(30, segmentLength * 0.16));
+        const liftVariance = 0.75 + seededRandom(connectionSeed + 29) * 0.85;
+        const arcLift = Math.min(74, Math.max(24, baseArcLift * liftVariance));
+        const avgY = (fromY + toY) / 2;
+        const dy = toY - fromY;
+        // In canvas space, +Y is downward.
+        // Keep a geometry-driven bend, then add deterministic per-link variation.
+        const baseDirection =
+          Math.sign(dy) || (seededRandom(connectionSeed + 41) > 0.5 ? 1 : -1);
+        const flipChance = Math.abs(dy) < 12 ? 0.45 : Math.abs(dy) < 32 ? 0.25 : 0.1;
+        const shouldFlip = seededRandom(connectionSeed + 53) < flipChance;
+        let arcDirection = shouldFlip ? -baseDirection : baseDirection;
+        if (Math.abs(dy) < 8) {
+          const edgeBias = avgY < height * 0.5 ? 1 : -1;
+          arcDirection =
+            seededRandom(connectionSeed + 67) < 0.65 ? edgeBias : -edgeBias;
+        }
+        const midY = avgY + arcDirection * arcLift;
 
         // Shadow
         ctx.strokeStyle = "rgba(0,0,0,0.35)";
@@ -6603,16 +6628,23 @@ export const drawWorldMapCanvas = ({
     WORLD_LEVELS.forEach((level) => {
       const x = level.x;
       const y = getY(level.y);
+      const isChallenge = level.kind === "challenge";
       const isUnlocked = isLevelUnlocked(level.id);
       const isHovered = hoveredLevel === level.id;
       const isSelected = selectedLevel === level.id;
       const stars = levelStars[level.id] || 0;
-      const size = isHovered || isSelected ? 28 : 24;
+      const size = isHovered || isSelected ? (isChallenge ? 30 : 28) : (isChallenge ? 26 : 24);
 
       // Glow (use radial gradient instead of expensive shadowBlur)
       if (isSelected || (isHovered && isUnlocked)) {
         const glowRadius = isSelected ? 40 : 32;
-        const glowColor = isSelected ? "rgba(255,215,0," : "rgba(255,170,0,";
+        const glowColor = isChallenge
+          ? isSelected
+            ? "rgba(255,120,60,"
+            : "rgba(255,90,40,"
+          : isSelected
+            ? "rgba(255,215,0,"
+            : "rgba(255,170,0,";
         const glow = ctx.createRadialGradient(x, y, size * 0.5, x, y, glowRadius);
         glow.addColorStop(0, glowColor + "0.4)");
         glow.addColorStop(0.5, glowColor + "0.15)");
@@ -6724,7 +6756,11 @@ export const drawWorldMapCanvas = ({
       // Outer decorative ring (metallic beveled)
       const outerRing = ctx.createRadialGradient(x - 3, y - 3, size - 6, x, y, size + 2);
       if (isUnlocked) {
-        if (stars > 0) {
+        if (isChallenge) {
+          outerRing.addColorStop(0, "#A4361A");
+          outerRing.addColorStop(0.5, "#7B1F0F");
+          outerRing.addColorStop(1, "#3D0C07");
+        } else if (stars > 0) {
           outerRing.addColorStop(0, "#8AA858");
           outerRing.addColorStop(0.5, "#5A7838");
           outerRing.addColorStop(1, "#3A5020");
@@ -6749,7 +6785,11 @@ export const drawWorldMapCanvas = ({
         : isHovered
           ? "#FFD040"
           : isUnlocked
-            ? stars > 0 ? "#A0B868" : "#9A8A68"
+            ? isChallenge
+              ? "#D24A24"
+              : stars > 0
+                ? "#A0B868"
+                : "#9A8A68"
             : "#505050";
       ctx.lineWidth = isSelected ? 3.5 : 2.5;
       ctx.beginPath();
@@ -6757,7 +6797,11 @@ export const drawWorldMapCanvas = ({
       ctx.stroke();
       // Inner bright edge (bevel highlight)
       ctx.strokeStyle = isUnlocked
-        ? stars > 0 ? "rgba(180,220,120,0.3)" : "rgba(180,160,120,0.25)"
+        ? isChallenge
+          ? "rgba(240,120,80,0.3)"
+          : stars > 0
+            ? "rgba(180,220,120,0.3)"
+            : "rgba(180,160,120,0.25)"
         : "rgba(100,100,100,0.15)";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -6772,7 +6816,13 @@ export const drawWorldMapCanvas = ({
 
       // Ornamental notches (8 evenly spaced around ring)
       if (isUnlocked) {
-        ctx.fillStyle = isSelected ? "#FFE060" : stars > 0 ? "#90A850" : "#807058";
+        ctx.fillStyle = isSelected
+          ? "#FFE060"
+          : isChallenge
+            ? "#C63B1C"
+            : stars > 0
+              ? "#90A850"
+              : "#807058";
         for (let n = 0; n < 8; n++) {
           const na = (n * Math.PI) / 4;
           const nx = x + Math.cos(na) * (size - 0.5);
@@ -6786,7 +6836,10 @@ export const drawWorldMapCanvas = ({
       // Inner circle (recessed)
       const innerGrad = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, size - 5);
       if (isUnlocked) {
-        if (stars > 0) {
+        if (isChallenge) {
+          innerGrad.addColorStop(0, "#5A1E16");
+          innerGrad.addColorStop(1, "#2A0E08");
+        } else if (stars > 0) {
           innerGrad.addColorStop(0, "#5A7838");
           innerGrad.addColorStop(1, "#3A5020");
         } else {
@@ -6821,7 +6874,37 @@ export const drawWorldMapCanvas = ({
         ctx.translate(x, y);
         ctx.globalAlpha = 1;
 
-        if (level.region === "grassland") {
+        if (isChallenge) {
+          // Challenge marker icon: molten sigil with crossed blades
+          const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;
+          ctx.fillStyle = `rgba(255,90,40,${challengeGlow})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 11, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = "#A32014";
+          ctx.beginPath();
+          ctx.moveTo(0, -11);
+          ctx.lineTo(9, 0);
+          ctx.lineTo(0, 11);
+          ctx.lineTo(-9, 0);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = "#FFD060";
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.moveTo(-6.5, 6);
+          ctx.lineTo(6.5, -6);
+          ctx.moveTo(-6.5, -6);
+          ctx.lineTo(6.5, 6);
+          ctx.stroke();
+
+          ctx.fillStyle = "#FFF3B0";
+          ctx.beginPath();
+          ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (level.region === "grassland") {
           // --- Centered Oak Tree ---
           // Trunk
           ctx.fillStyle = "#A07040";
@@ -7206,6 +7289,25 @@ export const drawWorldMapCanvas = ({
             ctx.lineWidth = 0.6;
             ctx.stroke();
           }
+        }
+
+        if (isChallenge) {
+          const tagY = y - size - 8;
+          ctx.fillStyle = "rgba(120,20,10,0.9)";
+          ctx.beginPath();
+          ctx.moveTo(x - 10, tagY + 2);
+          ctx.lineTo(x, tagY - 6);
+          ctx.lineTo(x + 10, tagY + 2);
+          ctx.lineTo(x, tagY + 10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#FFD060";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = "#FFF3B0";
+          ctx.font = "bold 8px serif";
+          ctx.textAlign = "center";
+          ctx.fillText("!", x, tagY + 4);
         }
       } else {
         // Lock icon (detailed padlock)

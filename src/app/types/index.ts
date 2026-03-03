@@ -305,6 +305,7 @@ export interface Enemy {
   lastRangedAttack: number;
   spawnProgress: number;
   laneOffset: number;
+  formationLane?: number;
   // Status effects
   burning?: boolean;
   burnDamage?: number;
@@ -724,6 +725,14 @@ export interface CompletedLevels {
 
 export type MapTheme = "grassland" | "desert" | "winter" | "volcanic" | "swamp";
 
+// Relative vertical class for depth sorting/occlusion behavior.
+export type DecorationHeightTag =
+  | "ground"
+  | "short"
+  | "medium"
+  | "tall"
+  | "landmark";
+
 // Map decoration categories
 export type DecorationCategory =
   // Grassland
@@ -849,6 +858,7 @@ export interface MapDecoration {
   variant?: number | string;
   size?: number;
   scale?: number;
+  heightTag?: DecorationHeightTag;
 }
 
 // Hazard types
@@ -889,6 +899,8 @@ export interface SpecialTower {
   hp?: number;
 }
 
+export type LevelKind = "campaign" | "challenge" | "custom";
+
 // Level data definition
 export interface LevelData {
   name: string;
@@ -906,7 +918,9 @@ export interface LevelData {
   heroSpawn?: GridPosition;
   dualPath?: boolean;
   secondaryPath?: string;
+  levelKind?: LevelKind;
   specialTower?: SpecialTower;
+  specialTowers?: SpecialTower[];
   decorations?: MapDecoration[];
   hazards?: MapHazard[];
 }
@@ -1096,6 +1110,7 @@ export interface Decoration {
   scale: number;
   rotation: number;
   variant: number;
+  heightTag?: DecorationHeightTag;
 }
 
 // ============================================================================

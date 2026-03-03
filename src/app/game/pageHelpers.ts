@@ -1,11 +1,17 @@
-import type { Enemy, Position, Tower } from "../types";
+import type { Enemy, Position, SpecialTower, Tower } from "../types";
 import {
   LEVEL_DATA,
   LEVEL_WAVES,
   WAVES,
   INITIAL_PAW_POINTS,
+  TILE_SIZE,
 } from "../constants";
-import { getEnemyPosition, LANDMARK_DECORATION_TYPES } from "../utils";
+import {
+  getEnemyPosition,
+  LANDMARK_DECORATION_TYPES,
+  getMapDecorationWorldPos,
+  resolveMapDecorationRuntimePlacement,
+} from "../utils";
 
 // Dinky Station spawn management constants
 export const TROOP_RESPAWN_TIME = 5000; // 5 seconds
@@ -113,8 +119,19 @@ export const getLevelWaves = (levelId: string) => LEVEL_WAVES[levelId] || WAVES;
 export const getLevelStartingPawPoints = (levelId: string): number =>
   LEVEL_DATA[levelId]?.startingPawPoints ?? INITIAL_PAW_POINTS;
 
+export const getLevelSpecialTowers = (levelId: string): SpecialTower[] => {
+  const level = LEVEL_DATA[levelId];
+  if (!level) return [];
+  if (level.specialTowers && level.specialTowers.length > 0) {
+    return level.specialTowers;
+  }
+  return level.specialTower ? [level.specialTower] : [];
+};
+
 export const getLevelSpecialTowerHp = (levelId: string): number | null =>
-  LEVEL_DATA[levelId]?.specialTower?.hp ?? null;
+  getLevelSpecialTowers(levelId).find(
+    (tower) => tower.type === "vault" && typeof tower.hp === "number"
+  )?.hp ?? null;
 
 // Compute blocked positions (landmarks and special towers)
 // These positions cannot have player towers placed on them
@@ -128,9 +145,11 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
       const decorType = deco.category || deco.type;
       if (decorType && LANDMARK_DECORATION_TYPES.has(decorType)) {
         // Block the decoration position and surrounding cells based on size
-        const size = deco.size || 1;
-        const baseX = Math.floor(deco.pos.x);
-        const baseY = Math.floor(deco.pos.y);
+        const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
+        const size = resolvedPlacement?.scale ?? (deco.size || 1);
+        const worldPos = getMapDecorationWorldPos(deco);
+        const baseX = Math.floor(worldPos.x / TILE_SIZE - 0.5);
+        const baseY = Math.floor(worldPos.y / TILE_SIZE - 0.5);
 
         // Block a grid area around the landmark based on its size
         const range = Math.ceil(size);
@@ -143,9 +162,9 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
     }
   }
 
-  // Add special tower position (beacon, vault, shrine, barracks)
-  if (levelData?.specialTower) {
-    const spec = levelData.specialTower;
+  // Add special tower positions (beacon, vault, shrine, barracks)
+  const levelSpecialTowers = getLevelSpecialTowers(mapKey);
+  for (const spec of levelSpecialTowers) {
     const baseX = Math.floor(spec.pos.x);
     const baseY = Math.floor(spec.pos.y);
 

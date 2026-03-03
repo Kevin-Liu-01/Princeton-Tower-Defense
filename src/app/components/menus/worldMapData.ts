@@ -7,6 +7,7 @@ export interface LevelNode {
   description: string;
   region: "grassland" | "swamp" | "desert" | "winter" | "volcanic";
   difficulty: 1 | 2 | 3;
+  kind?: "campaign" | "challenge";
   x: number;
   y: number;
   connectsTo: string[];
@@ -20,7 +21,7 @@ export const WORLD_LEVELS: LevelNode[] = [
     region: "grassland",
     difficulty: 1,
     x: 100,
-    y: 70,
+    y: 66,
     connectsTo: ["carnegie"],
   },
   {
@@ -29,9 +30,9 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "Strategic waterfront defense",
     region: "grassland",
     difficulty: 2,
-    x: 200,
-    y: 35,
-    connectsTo: ["nassau"],
+    x: 205,
+    y: 40,
+    connectsTo: ["nassau", "ivy_crossroads"],
   },
   {
     id: "nassau",
@@ -39,9 +40,20 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "The heart of campus",
     region: "grassland",
     difficulty: 3,
-    x: 310,
-    y: 60,
+    x: 320,
+    y: 58,
     connectsTo: ["bog"],
+  },
+  {
+    id: "ivy_crossroads",
+    name: "Ivy Crossroads",
+    description: LEVEL_DATA["ivy_crossroads"].description,
+    region: "grassland",
+    difficulty: 3,
+    kind: "challenge",
+    x: 370,
+    y: 30,
+    connectsTo: [],
   },
   // Swamp - Murky Marshes
   {
@@ -50,8 +62,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "Treacherous wetlands",
     region: "swamp",
     difficulty: 1,
-    x: 440,
-    y: 39,
+    x: 430,
+    y: 56,
     connectsTo: ["witch_hut"],
   },
   {
@@ -60,8 +72,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "Dark magic festers here",
     region: "swamp",
     difficulty: 2,
-    x: 540,
-    y: 65,
+    x: 535,
+    y: 33,
     connectsTo: ["sunken_temple"],
   },
   {
@@ -71,8 +83,19 @@ export const WORLD_LEVELS: LevelNode[] = [
     region: "swamp",
     difficulty: 3,
     x: 650,
-    y: 32,
-    connectsTo: ["oasis"],
+    y: 56,
+    connectsTo: ["oasis", "blight_basin"],
+  },
+  {
+    id: "blight_basin",
+    name: "Blight Basin",
+    description: LEVEL_DATA["blight_basin"].description,
+    region: "swamp",
+    difficulty: 3,
+    kind: "challenge",
+    x: 540,
+    y: 70,
+    connectsTo: [],
   },
   // Desert
   {
@@ -81,8 +104,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "A precious water source",
     region: "desert",
     difficulty: 1,
-    x: 780,
-    y: 42,
+    x: 785,
+    y: 62,
     connectsTo: ["pyramid"],
   },
   {
@@ -92,7 +115,7 @@ export const WORLD_LEVELS: LevelNode[] = [
     region: "desert",
     difficulty: 2,
     x: 900,
-    y: 41,
+    y: 36,
     connectsTo: ["sphinx"],
   },
   {
@@ -101,9 +124,20 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "The guardian's domain",
     region: "desert",
     difficulty: 3,
-    x: 1000,
-    y: 60,
-    connectsTo: ["glacier"],
+    x: 1008,
+    y: 58,
+    connectsTo: ["glacier", "sunscorch_labyrinth"],
+  },
+  {
+    id: "sunscorch_labyrinth",
+    name: "Sunscorch Labyrinth",
+    description: LEVEL_DATA["sunscorch_labyrinth"].description,
+    region: "desert",
+    difficulty: 3,
+    kind: "challenge",
+    x: 975,
+    y: 70,
+    connectsTo: [],
   },
   // Winter
   {
@@ -112,8 +146,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "Ice-covered mountain pass",
     region: "winter",
     difficulty: 1,
-    x: 1140,
-    y: 40,
+    x: 1142,
+    y: 48,
     connectsTo: ["fortress"],
   },
   {
@@ -122,8 +156,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "An abandoned stronghold",
     region: "winter",
     difficulty: 2,
-    x: 1270,
-    y: 36,
+    x: 1268,
+    y: 67,
     connectsTo: ["peak"],
   },
   {
@@ -132,9 +166,20 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "The highest defense point",
     region: "winter",
     difficulty: 3,
-    x: 1360,
-    y: 52,
-    connectsTo: ["lava"],
+    x: 1365,
+    y: 48,
+    connectsTo: ["lava", "whiteout_pass"],
+  },
+  {
+    id: "whiteout_pass",
+    name: "Whiteout Pass",
+    description: LEVEL_DATA["whiteout_pass"].description,
+    region: "winter",
+    difficulty: 3,
+    kind: "challenge",
+    x: 1238,
+    y: 30,
+    connectsTo: [],
   },
   // Volcanic
   {
@@ -143,8 +188,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "Rivers of molten rock",
     region: "volcanic",
     difficulty: 2,
-    x: 1520,
-    y: 60,
+    x: 1522,
+    y: 61,
     connectsTo: ["crater"],
   },
   {
@@ -153,8 +198,8 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "Inside the volcano's heart",
     region: "volcanic",
     difficulty: 3,
-    x: 1590,
-    y: 35,
+    x: 1592,
+    y: 37,
     connectsTo: ["throne"],
   },
   {
@@ -163,8 +208,19 @@ export const WORLD_LEVELS: LevelNode[] = [
     description: "The ultimate challenge",
     region: "volcanic",
     difficulty: 3,
-    x: 1700,
-    y: 62,
+    x: 1702,
+    y: 59,
+    connectsTo: ["ashen_spiral"],
+  },
+  {
+    id: "ashen_spiral",
+    name: "Ashen Spiral",
+    description: LEVEL_DATA["ashen_spiral"].description,
+    region: "volcanic",
+    difficulty: 3,
+    kind: "challenge",
+    x: 1612,
+    y: 72,
     connectsTo: [],
   },
 ];
