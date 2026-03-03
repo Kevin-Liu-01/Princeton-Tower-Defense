@@ -188,7 +188,6 @@ export type EnemyType =
   | "assassin"
   | "dragon"
   // Region-specific common troops - Forest
-  | "freshman"
   | "athlete"
   | "protestor"
   // Region-specific common troops - Swamp
@@ -323,6 +322,13 @@ export interface Enemy {
   pathKey?: string;
   // Mark as dead for cleanup
   dead?: boolean;
+  // Directional facing (true = moving right on screen)
+  facingRight?: boolean;
+  // Summoner cooldown tracking
+  lastSummon?: number;
+  // Death animation
+  dying?: boolean;
+  deathTime?: number;
 }
 
 // ============================================================================
@@ -630,7 +636,8 @@ export type EffectType =
   | "status_burning" // On-fire effect
   | "status_slowed" // Slowed/frozen effect
   | "status_poisoned" // Poison dripping effect
-  | "status_stunned"; // Stunned/dazed effect
+  | "status_stunned" // Stunned/dazed effect
+  | "enemy_death"; // Enemy death dissolve/shatter
 
 // Visual effect
 export interface Effect {
@@ -658,6 +665,10 @@ export interface Effect {
   // Slash/melee effect properties
   slashAngle?: number; // Direction of slash
   slashWidth?: number; // Arc width of slash
+  // Enemy death effect properties
+  enemyType?: EnemyType;
+  enemySize?: number;
+  isFlying?: boolean;
 }
 
 // Particle types

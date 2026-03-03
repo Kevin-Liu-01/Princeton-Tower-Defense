@@ -194,7 +194,7 @@ export function getEnemyPosition(
 
   // Calculate perpendicular offset for lane spreading
   const laneOffset = enemy.laneOffset || 0;
-  const roadWidth = 25; // How far enemies can spread from center
+  const roadWidth = 40;
 
   // Get direction of current path segment
   const dx = next.x - current.x;

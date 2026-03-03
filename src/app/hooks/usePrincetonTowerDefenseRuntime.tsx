@@ -28,9 +28,6 @@ import {
   TILE_SIZE,
   GRID_WIDTH,
   GRID_HEIGHT,
-  GROUP_SPACING_MULTIPLIER,
-  WAVE_INTERVAL_MULTIPLIER,
-  WAVE_DELAY_MULTIPLIER,
   TOWER_DATA,
   ENEMY_DATA,
   HERO_DATA,
@@ -475,6 +472,33 @@ export function usePrincetonTowerDefenseRuntime() {
     []
   );
 
+  // Centralized enemy death handler - awards bounty, particles, and death animation effect
+  const onEnemyKill = useCallback(
+    (enemy: Enemy, pos: Position, particleCount: number = 8) => {
+      const eData = ENEMY_DATA[enemy.type];
+      const baseBounty = eData.bounty;
+      awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
+      addParticles(pos, "explosion", particleCount);
+      if (enemy.goldAura) addParticles(pos, "gold", 6);
+      setEffects((prev) => [
+        ...prev,
+        {
+          id: generateId("fx"),
+          pos,
+          type: "enemy_death" as const,
+          progress: 0,
+          size: eData.size,
+          duration: 600,
+          color: eData.color,
+          enemyType: enemy.type,
+          enemySize: eData.size,
+          isFlying: eData.flying,
+        },
+      ]);
+    },
+    [awardBounty, addParticles]
+  );
+
   // Keyboard controls for camera
   useEffect(() => {
     if (gameState !== "playing") return;
@@ -674,7 +698,7 @@ export function usePrincetonTowerDefenseRuntime() {
     }
     let cumulativeDelay = 0;
     wave.forEach((group) => {
-      cumulativeDelay += (group.delay || 0) * WAVE_DELAY_MULTIPLIER * GROUP_SPACING_MULTIPLIER;
+      cumulativeDelay += (group.delay || 0);
       const startDelay = cumulativeDelay;
 
       const startSpawning = () => {
@@ -757,9 +781,8 @@ export function usePrincetonTowerDefenseRuntime() {
             laneOffset = formationPatterns.wedge(spawned, group.count);
           }
 
-          // Add slight randomness to prevent perfect alignment
-          laneOffset += (Math.random() - 0.5) * 0.35;
-          laneOffset = Math.max(-0.9, Math.min(0.9, laneOffset));
+          laneOffset += (Math.random() - 0.5) * 0.5;
+          laneOffset = Math.max(-1.5, Math.min(1.5, laneOffset));
 
           // Check for dual-path levels
           const levelData = LEVEL_DATA[selectedMap];
@@ -794,7 +817,7 @@ export function usePrincetonTowerDefenseRuntime() {
           };
           setEnemies((prev) => [...prev, enemy]);
           spawned++;
-        }, group.interval * WAVE_INTERVAL_MULTIPLIER);
+        }, group.interval);
         // Track interval for cleanup
         spawnIntervalsRef.current.push(spawnInterval);
       };
@@ -810,9 +833,9 @@ export function usePrincetonTowerDefenseRuntime() {
     // Calculate wave duration including cumulative delays
     let accDelay = 0;
     const waveDuration = Math.max(...wave.map((g) => {
-      accDelay += (g.delay || 0) * WAVE_DELAY_MULTIPLIER * GROUP_SPACING_MULTIPLIER;
-      return accDelay + g.count * g.interval * WAVE_INTERVAL_MULTIPLIER;
-    })) + 5000;
+      accDelay += (g.delay || 0);
+      return accDelay + g.count * g.interval;
+    })) + 3000;
     const waveNumberForTimeout = currentWave; // Capture for closure
     console.log(`[Wave] Wave ${currentWave + 1} started, will complete in ${waveDuration}ms`);
 
@@ -1790,14 +1813,7 @@ export function usePrincetonTowerDefenseRuntime() {
               const burnDmg = ((enemy.burnDamage || 10) * deltaTime) / 1000;
               const newHp = enemy.hp - burnDmg;
               if (newHp <= 0) {
-                const baseBounty = ENEMY_DATA[enemy.type].bounty;
-                awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
-                addParticles(
-                  getEnemyPosWithPath(enemy, selectedMap),
-                  "explosion",
-                  8
-                );
-                if (enemy.goldAura) addParticles(getEnemyPosWithPath(enemy, selectedMap), "gold", 6);
+                onEnemyKill(enemy, getEnemyPosWithPath(enemy, selectedMap));
                 return null;
               }
               enemy = { ...enemy, hp: newHp };
@@ -1807,6 +1823,12 @@ export function usePrincetonTowerDefenseRuntime() {
               now >= enemy.burnUntil
             ) {
               enemy = { ...enemy, burning: false, burnDamage: 0, burnUntil: 0 };
+            }
+            // Regenerating enemies heal 1.5% max HP/sec when not in combat
+            const eTraits = ENEMY_DATA[enemy.type].traits;
+            if (eTraits?.includes("regenerating") && !enemy.inCombat && enemy.hp < enemy.maxHp) {
+              const regenAmount = (enemy.maxHp * 0.015 * deltaTime) / 1000;
+              enemy = { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + regenAmount) };
             }
             // Clear frozen state when stun duration expires
             if (enemy.frozen && enemy.stunUntil && now >= enemy.stunUntil) {
@@ -2029,6 +2051,11 @@ export function usePrincetonTowerDefenseRuntime() {
               // Then divide by actual segment length for consistent world-space speed
               const progressIncrement = (ENEMY_DATA[enemy.type].speed * speedMult * deltaTime * TILE_SIZE) / 1000 / segmentLength;
               const newProgress = enemy.progress + progressIncrement;
+              // Compute facing direction from current path segment
+              const segIdx = Math.min(enemy.pathIndex, path.length - 2);
+              const segStart = path[segIdx];
+              const segEnd = path[segIdx + 1] || segStart;
+              const facingRight = segEnd.x > segStart.x;
               if (newProgress >= 1 && enemy.pathIndex < path.length - 1) {
                 return {
                   ...enemy,
@@ -2038,6 +2065,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   slowed: slowedVisual,
                   slowIntensity: slowIntensity,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                  facingRight,
                 };
               } else if (
                 newProgress >= 1 &&
@@ -2055,6 +2083,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   slowed: slowedVisual,
                   slowIntensity: slowIntensity,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                  facingRight,
                 };
               }
             }
@@ -2070,9 +2099,9 @@ export function usePrincetonTowerDefenseRuntime() {
       // Enemy separation - soft collision avoidance with smart exceptions
       setEnemies((prev) => {
         // Much gentler separation - enemies can overlap when needed
-        const BASE_SEPARATION_DISTANCE = 20;
-        const SEPARATION_FORCE = 0.15; // Gentler push
-        const PROGRESS_SEPARATION = 0.008; // Subtle path spreading
+        const BASE_SEPARATION_DISTANCE = 35;
+        const SEPARATION_FORCE = 0.4;
+        const PROGRESS_SEPARATION = 0.02;
 
         return prev.map((enemy) => {
           const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
@@ -2081,7 +2110,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const enemyFlying = eData?.flying || false;
 
           // Enemies in combat have MUCH reduced separation - they're allowed to crowd targets
-          const inCombatMultiplier = enemy.inCombat ? 0.1 : 1.0;
+          const inCombatMultiplier = enemy.inCombat ? 0.3 : 1.0;
 
           // Flying enemies have very minimal separation from ground enemies
           // and reduced separation from other flying enemies
@@ -2153,8 +2182,8 @@ export function usePrincetonTowerDefenseRuntime() {
             // Apply separation as lane offset adjustment (perpendicular to path)
             // Gentler application rate
             const newLaneOffset = Math.max(
-              -1.5, // Allow wider spread
-              Math.min(1.5, enemy.laneOffset + separationX * 0.02)
+              -2.0,
+              Math.min(2.0, enemy.laneOffset + separationX * 0.06)
             );
 
             // Apply progress adjustment (along path)
@@ -2170,6 +2199,44 @@ export function usePrincetonTowerDefenseRuntime() {
           return enemy;
         });
       });
+      // Summoner enemies spawn minions periodically
+      setEnemies((prev) => {
+        const summoned: Enemy[] = [];
+        const updated = prev.map((enemy) => {
+          const eData = ENEMY_DATA[enemy.type];
+          if (!eData.traits?.includes("summoner")) return enemy;
+          const SUMMON_COOLDOWN = 8000;
+          if (enemy.lastSummon && now - enemy.lastSummon < SUMMON_COOLDOWN) return enemy;
+          if (enemy.inCombat || enemy.frozen || now < enemy.stunUntil) return enemy;
+          const minion: Enemy = {
+            id: generateId("minion"),
+            type: "cultist",
+            pathIndex: Math.max(0, enemy.pathIndex - 1),
+            progress: enemy.progress,
+            hp: ENEMY_DATA["cultist"].hp,
+            maxHp: ENEMY_DATA["cultist"].hp,
+            speed: ENEMY_DATA["cultist"].speed,
+            slowEffect: 0,
+            stunUntil: 0,
+            frozen: false,
+            damageFlash: 0,
+            inCombat: false,
+            lastTroopAttack: 0,
+            lastHeroAttack: 0,
+            lastRangedAttack: 0,
+            spawnProgress: 0.1,
+            laneOffset: enemy.laneOffset + (Math.random() - 0.5) * 1.5,
+            slowed: false,
+            slowIntensity: 0,
+            pathKey: enemy.pathKey,
+          };
+          summoned.push(minion);
+          addParticles(getEnemyPosWithPath(enemy, selectedMap), "magic", 6);
+          return { ...enemy, lastSummon: now };
+        });
+        return summoned.length > 0 ? [...updated, ...summoned] : updated;
+      });
+
       // Update hero movement - with sight-based engagement
       if (hero && !hero.dead) {
         setHero((prev) => {
@@ -2989,6 +3056,8 @@ export function usePrincetonTowerDefenseRuntime() {
                         bountyEarned += baseBounty + goldBonus;
                         bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         sparkPositions.push(info.pos);
+                        const eDeathData = ENEMY_DATA[enemy.type];
+                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData.size, duration: 600, color: eDeathData.color, enemyType: enemy.type, enemySize: eDeathData.size, isFlying: eDeathData.flying }]);
                         return null;
                       }
                     }
@@ -3005,6 +3074,8 @@ export function usePrincetonTowerDefenseRuntime() {
                         bountyEarned += baseBounty + goldBonus;
                         bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         particlePositions.push(info.pos);
+                        const eDeathData2 = ENEMY_DATA[enemy.type];
+                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData2.size, duration: 600, color: eDeathData2.color, enemyType: enemy.type, enemySize: eDeathData2.size, isFlying: eDeathData2.flying }]);
                         return null;
                       }
                     }
@@ -3418,10 +3489,7 @@ export function usePrincetonTowerDefenseRuntime() {
                         updates.burnUntil = now + 3000;
                       }
                       if (newHp <= 0) {
-                        const baseBounty = ENEMY_DATA[e.type].bounty;
-                        awardBounty(baseBounty, e.goldAura || false, e.id);
-                        addParticles(targetPos, "explosion", 12);
-                        if (e.goldAura) addParticles(targetPos, "gold", 6);
+                        onEnemyKill(e, targetPos, 12);
                         return null;
                       }
                       return { ...e, ...updates };
@@ -3520,14 +3588,7 @@ export function usePrincetonTowerDefenseRuntime() {
                         const newHp =
                           e.hp - chainDamage * (1 - ENEMY_DATA[e.type].armor);
                         if (newHp <= 0) {
-                          const baseBounty = ENEMY_DATA[e.type].bounty;
-                          awardBounty(baseBounty, e.goldAura || false, e.id);
-                          addParticles(
-                            getEnemyPosWithPath(e, selectedMap),
-                            "explosion",
-                            8
-                          );
-                          if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
+                          onEnemyKill(e, getEnemyPosWithPath(e, selectedMap));
                           return null;
                         }
                         return { ...e, hp: newHp, damageFlash: 150 };
@@ -3653,10 +3714,7 @@ export function usePrincetonTowerDefenseRuntime() {
                           updates.stunUntil = now + 1000;
                         }
                         if (newHp <= 0) {
-                          const baseBounty = ENEMY_DATA[e.type].bounty;
-                          awardBounty(baseBounty, e.goldAura || false, e.id);
-                          addParticles(targetPos, "explosion", 10);
-                          if (e.goldAura) addParticles(targetPos, "gold", 6);
+                          onEnemyKill(e, targetPos, 10);
                           return null;
                         }
                         return { ...e, ...updates };
@@ -3739,20 +3797,7 @@ export function usePrincetonTowerDefenseRuntime() {
                       const newHp =
                         e.hp - damage * (1 - ENEMY_DATA[e.type].armor);
                       if (newHp <= 0) {
-                        const baseBounty = ENEMY_DATA[e.type].bounty;
-                        awardBounty(baseBounty, e.goldAura || false, e.id);
-                        addParticles(targetPos, "explosion", 12);
-                        if (e.goldAura) addParticles(targetPos, "gold", 6);
-                        setEffects((ef) => [
-                          ...ef,
-                          {
-                            id: generateId("eff"),
-                            pos: targetPos,
-                            type: "explosion",
-                            progress: 0,
-                            size: 30,
-                          },
-                        ]);
+                        onEnemyKill(e, targetPos, 12);
                         return null;
                       }
                       return { ...e, hp: newHp, damageFlash: 200 };
@@ -3835,11 +3880,8 @@ export function usePrincetonTowerDefenseRuntime() {
                     const newHp = e.hp - heroData.damage;
                     if (newHp <= 0) {
                       killedEnemyIds.push(e.id);
-                      const baseBounty = ENEMY_DATA[e.type].bounty;
-                      awardBounty(baseBounty, e.goldAura || false, e.id);
+                      onEnemyKill(e, attackTargetPos, 10);
                       if (hero.type === "scott") setPawPoints((pp) => pp + 1);
-                      addParticles(attackTargetPos, "explosion", 10);
-                      if (e.goldAura) addParticles(attackTargetPos, "gold", 6);
                       return null;
                     }
                     return { ...e, hp: newHp, damageFlash: 200 };
@@ -3861,10 +3903,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   if (distToTarget <= aoeDamageRadius) {
                     const newHp = e.hp - aoeDamage;
                     if (newHp <= 0) {
-                      const baseBounty = ENEMY_DATA[e.type].bounty;
-                      awardBounty(baseBounty, e.goldAura || false, e.id);
-                      addParticles(enemyPos, "explosion", 8);
-                      if (e.goldAura) addParticles(enemyPos, "gold", 4);
+                      onEnemyKill(e, enemyPos);
                       return null;
                     }
                     return { ...e, hp: newHp, damageFlash: 150 };
@@ -4018,20 +4057,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     if (e.id === target.id) {
                       const newHp = e.hp - troopDamage;
                       if (newHp <= 0) {
-                        const baseBounty = ENEMY_DATA[e.type].bounty;
-                        awardBounty(baseBounty, e.goldAura || false, e.id);
-                        addParticles(targetPos, "explosion", 8);
-                        if (e.goldAura) addParticles(targetPos, "gold", 6);
-                        setEffects((ef) => [
-                          ...ef,
-                          {
-                            id: generateId("eff"),
-                            pos: targetPos,
-                            type: "explosion",
-                            progress: 0,
-                            size: 20,
-                          },
-                        ]);
+                        onEnemyKill(e, targetPos);
                         return null;
                       }
                       return { ...e, hp: newHp, damageFlash: 200 };
@@ -4417,7 +4443,7 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
     },
-    [gameSpeed, selectedMap, waveInProgress, currentWave, vaultFlash, hero, lives, gameState, enemies, nextWaveTimer, startWave, addParticles, specialTowerHp, troops, towers, levelStartTime, clearAllTimers, updateLevelStats, updateLevelStars, unlockedMaps, unlockLevel, applyEnemyAbilities, awardBounty]
+    [gameSpeed, selectedMap, waveInProgress, currentWave, vaultFlash, hero, lives, gameState, enemies, nextWaveTimer, startWave, addParticles, specialTowerHp, troops, towers, levelStartTime, clearAllTimers, updateLevelStats, updateLevelStars, unlockedMaps, unlockLevel, applyEnemyAbilities, awardBounty, onEnemyKill]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation
   const render = useCallback(() => {
@@ -8049,11 +8075,8 @@ export function usePrincetonTowerDefenseRuntime() {
                           const damage = Math.floor(damagePerMeteor * damageMultiplier);
                           const newHp = e.hp - damage;
                           if (newHp <= 0) {
-                            const baseBounty = ENEMY_DATA[e.type].bounty;
-                            awardBounty(baseBounty, e.goldAura || false, e.id);
-                            addParticles(pos, "explosion", 20);
+                            onEnemyKill(e, pos, 20);
                             addParticles(pos, "fire", 15);
-                            if (e.goldAura) addParticles(pos, "gold", 6);
                             return null;
                           }
                           // Apply burn effect
@@ -8126,11 +8149,9 @@ export function usePrincetonTowerDefenseRuntime() {
                       if (e.id === target.id) {
                         const newHp = e.hp - damagePerTarget;
                         if (newHp <= 0) {
-                          const baseBounty = ENEMY_DATA[e.type].bounty;
-                          awardBounty(baseBounty, e.goldAura || false, e.id);
+                          onEnemyKill(e, targetPos, 12);
                           addParticles(targetPos, "spark", 25);
                           addParticles(targetPos, "glow", 15);
-                          if (e.goldAura) addParticles(targetPos, "gold", 6);
                           return null;
                         }
                         return {
@@ -8230,7 +8251,7 @@ export function usePrincetonTowerDefenseRuntime() {
         )
       );
     },
-    [spells, pawPoints, enemies, selectedMap, addParticles, gameSpeed, awardBounty]
+    [spells, pawPoints, enemies, selectedMap, addParticles, gameSpeed, awardBounty, onEnemyKill]
   );
   const useHeroAbility = useCallback(() => {
     // Prevent hero ability usage when game is paused
@@ -8288,14 +8309,7 @@ export function usePrincetonTowerDefenseRuntime() {
               if (isTarget) {
                 const newHp = e.hp - 80;
                 if (newHp <= 0) {
-                  addParticles(
-                    getEnemyPosWithPath(e, selectedMap),
-                    "explosion",
-                    8
-                  );
-                  const baseBounty = ENEMY_DATA[e.type].bounty;
-                  awardBounty(baseBounty, e.goldAura || false, e.id);
-                  if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
+                  onEnemyKill(e, getEnemyPosWithPath(e, selectedMap));
                   return null;
                 }
                 return {
@@ -8444,14 +8458,7 @@ export function usePrincetonTowerDefenseRuntime() {
               if (isTarget) {
                 const newHp = e.hp - boulderDamage;
                 if (newHp <= 0) {
-                  addParticles(
-                    getEnemyPosWithPath(e, selectedMap),
-                    "explosion",
-                    12
-                  );
-                  const baseBounty = ENEMY_DATA[e.type].bounty;
-                  awardBounty(baseBounty, e.goldAura || false, e.id);
-                  if (e.goldAura) addParticles(getEnemyPosWithPath(e, selectedMap), "gold", 6);
+                  onEnemyKill(e, getEnemyPosWithPath(e, selectedMap), 12);
                   return null;
                 }
                 return {
@@ -8609,7 +8616,7 @@ export function usePrincetonTowerDefenseRuntime() {
         }
         : null
     );
-  }, [hero, enemies, selectedMap, addParticles, gameSpeed, awardBounty]);
+  }, [hero, enemies, selectedMap, addParticles, gameSpeed, awardBounty, onEnemyKill]);
   const performBattleReset = useCallback(
     ({
       targetGameState,

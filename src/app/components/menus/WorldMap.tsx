@@ -92,6 +92,7 @@ const PrincetonLogo: React.FC = () => {
           alt="Battle Scene"
           width={1200}
           height={700}
+          priority
           className="w-full h-full opacity-20 scale-125"
           style={{
             maskImage: "linear-gradient(to right, transparent 0%, black 15%, black 70%, transparent 100%)",
