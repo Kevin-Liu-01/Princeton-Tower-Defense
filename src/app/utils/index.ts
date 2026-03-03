@@ -57,6 +57,22 @@ export function worldToScreen(
   };
 }
 
+/**
+ * World to screen with rounded pixel coordinates.
+ * Use in hot drawing paths to avoid sub-pixel rendering (better canvas performance).
+ */
+export function worldToScreenRounded(
+  pos: Position,
+  canvasWidth: number,
+  canvasHeight: number,
+  dpr: number,
+  cameraOffset?: Position,
+  cameraZoom?: number
+): { x: number; y: number } {
+  const p = worldToScreen(pos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+  return { x: Math.round(p.x), y: Math.round(p.y) };
+}
+
 // Screen to world coordinates (inverse of worldToScreen) - FIXED for camera
 export function screenToWorld(
   screenPos: Position,

@@ -5,6 +5,7 @@ import { TOWER_STATS } from "../../constants/towerStats";
 import {
   gridToWorld,
   worldToScreen,
+  worldToScreenRounded,
   isValidBuildPosition,
   lightenColor,
   darkenColor,
@@ -2075,7 +2076,7 @@ export function renderTower(
   cameraZoom?: number,
 ) {
   const worldPos = gridToWorld(tower.pos);
-  const screenPos = worldToScreen(
+  const screenPos = worldToScreenRounded(
     worldPos,
     canvasWidth,
     canvasHeight,

@@ -3,7 +3,7 @@
 
 import type { Hero, Position } from "../../types";
 import { HERO_DATA } from "../../constants";
-import { worldToScreen, lightenColor, darkenColor } from "../../utils";
+import { worldToScreenRounded, lightenColor, darkenColor } from "../../utils";
 
 export function renderHero(
   ctx: CanvasRenderingContext2D,
@@ -14,7 +14,7 @@ export function renderHero(
   cameraOffset?: Position,
   cameraZoom?: number
 ) {
-  const screenPos = worldToScreen(
+  const screenPos = worldToScreenRounded(
     hero.pos,
     canvasWidth,
     canvasHeight,

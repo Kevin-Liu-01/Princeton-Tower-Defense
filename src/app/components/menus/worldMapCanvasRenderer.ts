@@ -7296,9 +7296,15 @@ export const drawWorldMapCanvas = ({
       }
     }
 
-    // Tooltip with Preview Image - only show on hover, not for the already-selected level
-    if (hoveredLevel && hoveredLevel !== selectedLevel) {
-      const level = getLevelById(hoveredLevel);
+    // Tooltip with Preview Image - show on hover, or sticky above level when clicked (selectedLevel)
+    const tooltipLevelId =
+      hoveredLevel && hoveredLevel !== selectedLevel
+        ? hoveredLevel
+        : selectedLevel && getWorldLevelById(selectedLevel)
+          ? selectedLevel
+          : null;
+    if (tooltipLevelId) {
+      const level = getLevelById(tooltipLevelId);
       if (level && isLevelUnlocked(level.id)) {
         const x = level.x;
         const y = getY(level.y);

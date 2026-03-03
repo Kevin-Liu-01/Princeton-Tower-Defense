@@ -5,6 +5,7 @@ import type { Enemy, Position } from "../../types";
 import { ENEMY_DATA } from "../../constants";
 import {
   worldToScreen,
+  worldToScreenRounded,
   getEnemyPosition,
   lightenColor,
   darkenColor,
@@ -212,7 +213,7 @@ export function renderEnemy(
   // Use enemy's pathKey for dual-path support
   const pathKey = enemy.pathKey || selectedMap;
   const worldPos = getEnemyPosition(enemy, pathKey);
-  const screenPos = worldToScreen(
+  const screenPos = worldToScreenRounded(
     worldPos,
     canvasWidth,
     canvasHeight,

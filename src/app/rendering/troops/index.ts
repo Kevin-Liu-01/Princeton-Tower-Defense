@@ -3,7 +3,7 @@
 
 import type { Troop, Position, TroopOwnerType } from "../../types";
 import { TROOP_DATA } from "../../constants";
-import { worldToScreen } from "../../utils";
+import { worldToScreen, worldToScreenRounded } from "../../utils";
 
 // ============================================================================
 // KNIGHT COLOR THEMES - Distinct visual styles based on owner type
@@ -179,7 +179,7 @@ export function renderTroop(
   cameraZoom?: number,
   targetPos?: Position
 ) {
-  const screenPos = worldToScreen(
+  const screenPos = worldToScreenRounded(
     troop.pos,
     canvasWidth,
     canvasHeight,

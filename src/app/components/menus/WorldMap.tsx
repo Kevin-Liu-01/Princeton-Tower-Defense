@@ -123,6 +123,8 @@ interface WorldMapProps {
   selectedSpells: SpellType[];
   setSelectedSpells: (spells: SpellType[]) => void;
   gameState: GameState;
+  /** When Battle is clicked without hero/spells selected, run this to pick random loadout and start */
+  onStartWithRandomLoadout?: () => void;
 }
 
 type SelectableLevel = {
@@ -147,12 +149,15 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   setSelectedHero,
   selectedSpells,
   setSelectedSpells,
+  onStartWithRandomLoadout,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredLevel, setHoveredLevel] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
+  const [canvasDisplaySize, setCanvasDisplaySize] = useState<{ w: number; h: number } | null>(null);
   const [showCodex, setShowCodex] = useState(false);
   const [showCreator, setShowCreator] = useState(false);
   const [animTime, setAnimTime] = useState(0);
@@ -180,6 +185,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     updateHeight();
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
+  useEffect(() => {
+    const wrapper = canvasWrapperRef.current;
+    if (!wrapper) return;
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      setCanvasDisplaySize({ w: width, h: height });
+    });
+    ro.observe(wrapper);
+    setCanvasDisplaySize({ w: wrapper.offsetWidth, h: wrapper.offsetHeight });
+    return () => ro.disconnect();
   }, []);
 
   const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
@@ -1096,13 +1115,77 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
               >
-                <canvas
-                  ref={canvasRef}
-                  className="block mx-auto"
-                  style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
-                  onMouseMove={handleMouseMove}
-                  onClick={handleClick}
-                />
+                <div
+                  ref={canvasWrapperRef}
+                  className="relative inline-block min-h-full"
+                  style={{ minWidth: `${MAP_WIDTH}px`, height: "100%" }}
+                >
+                  <canvas
+                    ref={canvasRef}
+                    className="block mx-auto"
+                    style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
+                    onMouseMove={handleMouseMove}
+                    onClick={handleClick}
+                  />
+                  {selectedLevel && canvasDisplaySize && (() => {
+                    const worldLevel = WORLD_LEVELS.find((l) => l.id === selectedLevel);
+                    if (!worldLevel) return null;
+                    const scaleX = canvasDisplaySize.w / MAP_WIDTH;
+                    const scaleY = canvasDisplaySize.h / mapHeight;
+                    const levelCenterX = worldLevel.x * scaleX;
+                    const yMap = getY(worldLevel.y);
+                    const size = 28;
+                    const cardHeight = 110;
+                    const showBelow = worldLevel.y < 50;
+                    const cardYMap = showBelow ? yMap + size + 12 : yMap - size - cardHeight - 12;
+                    const cardBottomPx = (cardYMap + cardHeight) * scaleY;
+                    const gap = 8;
+                    const buttonW = 150;
+                    const buttonH = 44;
+                    const left = Math.max(8, Math.min(canvasDisplaySize.w - buttonW - 8, levelCenterX - buttonW / 2));
+                    const top = cardBottomPx + gap;
+                    const handleBattleClick = (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (canStart) startGame();
+                      else onStartWithRandomLoadout?.();
+                    };
+                    return (
+                      <button
+                        type="button"
+                        onClick={handleBattleClick}
+                        className="absolute z-30 pointer-events-auto py-2 rounded-lg font-bold text-sm transition-all overflow-hidden group"
+                        style={{
+                          left: `${left}px`,
+                          top: `${top}px`,
+                          width: `${buttonW}px`,
+                          height: `${buttonH}px`,
+                          ...(canStart
+                            ? {
+                              background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
+                              border: `2px solid ${GOLD.accentBorder50}`,
+                              boxShadow: `0 0 12px ${GOLD.accentGlow10}`,
+                              color: "#1a1000",
+                            }
+                            : {
+                              background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                              border: `1.5px solid ${GOLD.border35}`,
+                              boxShadow: `inset 0 0 8px ${GOLD.glow04}`,
+                              color: "rgb(252,211,77)",
+                            }),
+                        }}
+                      >
+                        {canStart && (
+                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
+                        )}
+                        <span className="flex items-center text-xs justify-center gap-1.5 relative z-10">
+                          <Swords size={16} />
+                          {canStart ? "BATTLE" : "Random Loadout"}
+                          {canStart && <Play size={14} />}
+                        </span>
+                      </button>
+                    );
+                  })()}
+                </div>
               </div>
 
               {/* HERO & SPELL SELECTION OVERLAY */}
