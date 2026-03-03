@@ -2408,11 +2408,11 @@ export const LEVEL_DATA: Record<
       { type: "sunken_pillar", pos: { x: 26, y: 12 }, variant: 2 },
       { type: "sunken_pillar", pos: { x: 28, y: 20 }, variant: 0 },
       // Water and creatures
-      //tentacles in this deep water
+      // Main abyss pool: three emergent tentacles
       { type: "deep_water", pos: { x: 18, y: 8 }, variant: 1, size: 4 },
-      { type: "tentacle", pos: { x: 17, y: 9 }, variant: 2, size: 1.25 },
-      { type: "tentacle", pos: { x: 18.5, y: 9.25 }, variant: 0 },
-      { type: "tentacle", pos: { x: 19, y: 8 }, variant: 2, size: 1.5 },
+      { type: "tentacle", pos: { x: 16.9, y: 9.1 }, variant: 2, size: 1.3 },
+      { type: "tentacle", pos: { x: 18.2, y: 9.35 }, variant: 0, size: 1.0 },
+      { type: "tentacle", pos: { x: 19.3, y: 8.15 }, variant: 2, size: 1.55 },
 
       { type: "deep_water", pos: { x: 27, y: 11 }, variant: 1, size: 2.5 },
       { type: "deep_water", pos: { x: 2, y: 18 }, variant: 0, size: 2 },

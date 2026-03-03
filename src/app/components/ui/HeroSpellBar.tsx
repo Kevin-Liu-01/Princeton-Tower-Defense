@@ -35,7 +35,8 @@ interface HeroSpellBarProps {
   spells: Spell[];
   pawPoints: number;
   enemies: Enemy[];
-  useHeroAbility: () => void;
+  toggleHeroSelection: () => void;
+  onUseHeroAbility: () => void;
   castSpell: (spellType: SpellType) => void;
 }
 
@@ -44,7 +45,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   spells,
   pawPoints,
   enemies,
-  useHeroAbility,
+  toggleHeroSelection,
+  onUseHeroAbility,
   castSpell,
 }) => {
   const [hoveredSpell, setHoveredSpell] = React.useState<SpellType | null>(
@@ -132,13 +134,11 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         role="button"
         tabIndex={0}
         className="flex-shrink-0 h-full pointer-events-auto cursor-pointer"
-        onClick={() => {
-          if (hero) hero.selected = !hero.selected;
-        }}
+        onClick={toggleHeroSelection}
         onKeyDown={(e) => {
           if ((e.key === "Enter" || e.key === " ") && hero) {
             e.preventDefault();
-            hero.selected = !hero.selected;
+            toggleHeroSelection();
           }
         }}
       >
@@ -302,7 +302,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                         <div className="w-full relative">
                           <div className="w-full bg-stone-900 h-2.5 border border-stone-600 rounded-md overflow-hidden shadow-inner">
                             <div
-                              className={`h-full transition-all duration-300 ease-out rounded-sm bg-gradient-to-r ${barColor} ${isLow ? 'animate-pulse' : ''} shadow-md ${glowColor}`}
+                              className={`h-full rounded-sm bg-gradient-to-r ${barColor} ${isLow ? 'animate-pulse' : ''} shadow-md ${glowColor}`}
                               style={{ width: `${hpPercent}%` }}
                             />
                           </div>
@@ -322,7 +322,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent selecting hero when clicking ability
-                    useHeroAbility();
+                    onUseHeroAbility();
                   }}
                   disabled={!hero.abilityReady}
                   className="px-2 sm:px-3 mr-1 sm:mr-auto py-1.5 sm:py-2.5 self-stretch relative transition-all font-bold rounded-xl flex flex-col items-center justify-center"

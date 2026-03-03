@@ -13,6 +13,9 @@ export interface DecorationRenderParams {
   decorTime: number;
   decorX: number; // Original decoration x position for seeding
   selectedMap: string;
+  // Optional split-pass controls used for large landmarks with ground shadows.
+  shadowOnly?: boolean;
+  skipShadow?: boolean;
 }
 
 /**
@@ -60,6 +63,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     decorTime,
     decorX,
     selectedMap,
+    shadowOnly = false,
+    skipShadow = false,
   } = params;
 
   // Create a local reference to avoid repetitive params access
@@ -513,10 +518,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ny = screenPos.y;
 
       // 1. Ground Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
-      ctx.beginPath();
-      ctx.ellipse(nx, ny + 12 * s, 70 * s, 28 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      if (!skipShadow) {
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(nx, ny + 12 * s, 70 * s, 28 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (shadowOnly) break;
 
       // Define key measurements
       const foundY = ny + 8 * s;

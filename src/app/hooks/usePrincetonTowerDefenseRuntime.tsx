@@ -151,6 +151,14 @@ import { useCustomLevels } from "./useCustomLevels";
 
 type RenderQuality = "high" | "medium" | "low";
 
+type DecorationRenderLayer = "background" | "default";
+
+interface RuntimeDecoration extends Decoration {
+  source?: "generated" | "manual";
+  manualOrder?: number;
+  renderLayer?: DecorationRenderLayer;
+}
+
 interface StaticMapLayerCache {
   key: string;
   canvas: HTMLCanvasElement;
@@ -158,14 +166,16 @@ interface StaticMapLayerCache {
 }
 
 interface CachedVisibleDecoration {
-  decoration: Decoration;
+  decoration: RuntimeDecoration;
   screenPos: Position;
   isoY: number;
+  shadowOnly?: boolean;
 }
 
 interface StaticDecorationLayerCache {
   key: string;
   canvas: HTMLCanvasElement | null;
+  backgroundDecorations: CachedVisibleDecoration[];
   animatedDecorations: CachedVisibleDecoration[];
   depthSensitiveDecorations: CachedVisibleDecoration[];
 }
@@ -258,9 +268,36 @@ const RUNTIME_ANIMATED_DECORATION_TYPES = new Set<string>([
   "fishing_spot",
 ]);
 
+// Decorations in this layer are always rendered beneath all other map content.
+const BACKGROUND_DECORATION_TYPES = new Set<DecorationType>([
+  "deep_water",
+  "lava_pool",
+]);
+
+const getDecorationRenderLayer = (
+  decoration: Pick<RuntimeDecoration, "type" | "renderLayer">
+): DecorationRenderLayer =>
+  decoration.renderLayer ??
+  (BACKGROUND_DECORATION_TYPES.has(decoration.type)
+    ? "background"
+    : "default");
+
+const DECORATION_ISO_Y_OFFSETS: Partial<Record<DecorationType, number>> = {
+  // Massive sprite whose visual base sits well below its anchor.
+  nassau_hall: 34,
+};
+
+const getDecorationIsoY = (
+  decoration: Pick<RuntimeDecoration, "type" | "x" | "y" | "scale">
+): number =>
+  (decoration.x + decoration.y) * 0.25 +
+  (DECORATION_ISO_Y_OFFSETS[decoration.type] ?? 0) * decoration.scale;
+
 // Landmark/hero decorations that should never pop in and out due stride throttling.
 const NON_THROTTLED_ANIMATED_DECORATION_TYPES = new Set<string>([
   "fountain",
+  "lava_fall",
+  "tentacle",
 ]);
 
 // Tall/occluding decorations that need proper depth interleave with units near the path.
@@ -294,6 +331,14 @@ const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
   "obsidian_pillar",
   "hanging_cage",
   "idol_statue",
+]);
+
+// Some oversized landmarks should always interleave by depth, regardless of path proximity.
+const ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES = new Set<DecorationType>([
+  "nassau_hall",
+  // Sunken temple set pieces should depth-interleave with animated tentacles.
+  "ruins",
+  "sunken_pillar",
 ]);
 const DEPTH_SENSITIVE_PATH_DISTANCE = 180;
 
@@ -446,7 +491,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // PERFORMANCE FIX: Cache decorations to avoid regenerating them every frame
   // This was causing major performance issues on mobile - generating 500+ decorations per frame
-  const cachedDecorationsRef = useRef<{ mapKey: string; decorations: Decoration[] } | null>(null);
+  const cachedDecorationsRef = useRef<{ mapKey: string; decorations: RuntimeDecoration[] } | null>(null);
   const cachedStaticMapLayerRef = useRef<StaticMapLayerCache | null>(null);
   const cachedStaticDecorationLayerRef =
     useRef<StaticDecorationLayerCache | null>(null);
@@ -1394,12 +1439,32 @@ export function usePrincetonTowerDefenseRuntime() {
       // Cache enemy positions for this tick. Many systems query the same positions
       // repeatedly (movement, targeting, debuffs, rendering-related combat effects).
       const enemyPosById = new Map<string, Position>();
+      // Flying enemies are rendered 35px higher in screen-space; convert that to world-space
+      // for aim-only visuals so projectiles/beam angles line up with their rendered center.
+      const FLYING_AIM_WORLD_OFFSET = 70;
       const getEnemyPosCached = (enemy: Enemy): Position => {
         const cached = enemyPosById.get(enemy.id);
         if (cached) return cached;
         const pos = getEnemyPosWithPath(enemy, selectedMap);
         enemyPosById.set(enemy.id, pos);
         return pos;
+      };
+      const enemyAimPosById = new Map<string, Position>();
+      const getEnemyAimPosCached = (enemy: Enemy): Position => {
+        const cached = enemyAimPosById.get(enemy.id);
+        if (cached) return cached;
+        const basePos = getEnemyPosCached(enemy);
+        const enemyData = ENEMY_DATA[enemy.type];
+        if (!enemyData?.flying) {
+          enemyAimPosById.set(enemy.id, basePos);
+          return basePos;
+        }
+        const aimPos = {
+          x: basePos.x - FLYING_AIM_WORLD_OFFSET,
+          y: basePos.y - FLYING_AIM_WORLD_OFFSET,
+        };
+        enemyAimPosById.set(enemy.id, aimPos);
+        return aimPos;
       };
 
       const enemiesByProgress = [...enemies].sort(
@@ -3993,7 +4058,7 @@ export function usePrincetonTowerDefenseRuntime() {
             // Continuously track target even when not firing
             if (validEnemies.length > 0) {
               const trackTarget = validEnemies[0];
-              const trackTargetPos = getEnemyPosCached(trackTarget);
+              const trackTargetPos = getEnemyAimPosCached(trackTarget);
               const trackDx = trackTargetPos.x - towerWorldPos.x;
               const trackDy = trackTargetPos.y - towerWorldPos.y;
               // Account for isometric projection: isoX = (x-y)*0.5, isoY = (x+y)*0.25
@@ -4019,6 +4084,7 @@ export function usePrincetonTowerDefenseRuntime() {
             if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
+              const targetAimPos = getEnemyAimPosCached(target);
               let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
               if (isHeavyCannon) damage *= 2.2; // Heavy cannon big damage
@@ -4042,8 +4108,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 return { ...enemy, ...updates };
               });
               // Update lastAttack timestamp (rotation already tracked continuously above)
-              const dx = targetPos.x - towerWorldPos.x;
-              const dy = targetPos.y - towerWorldPos.y;
+              const dx = targetAimPos.x - towerWorldPos.x;
+              const dy = targetAimPos.y - towerWorldPos.y;
               // Account for isometric projection: isoX = (x-y)*0.5, isoY = (x+y)*0.25
               const rotation = Math.atan2(dx + dy, dx - dy);
               queueTowerPatch(tower.id, { lastAttack: now });
@@ -4058,8 +4124,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 pos: towerWorldPos, // Use tower base, renderer adjusts to turret
                 type: effectType,
                 progress: 0,
-                size: distance(towerWorldPos, targetPos),
-                targetPos,
+                size: distance(towerWorldPos, targetAimPos),
+                targetPos: targetAimPos,
                 towerId: tower.id,
                 towerLevel: tower.level,
                 towerUpgrade: tower.upgrade,
@@ -4087,7 +4153,7 @@ export function usePrincetonTowerDefenseRuntime() {
               );
               if (validEnemies.length > 0) {
                 const target = validEnemies[0];
-                const targetPos = getEnemyPosCached(target);
+                const targetAimPos = getEnemyAimPosCached(target);
                 let damage = tData.damage * finalDamageMult;
                 if (tower.level === 2) damage *= 1.5;
                 if (tower.level >= 3) damage *= 2; // Level 3 and 4 get 2x base damage
@@ -4116,8 +4182,8 @@ export function usePrincetonTowerDefenseRuntime() {
                     return { ...enemy, hp: newHp, damageFlash: 150 };
                   });
                 });
-                const dx = targetPos.x - towerWorldPos.x;
-                const dy = targetPos.y - towerWorldPos.y;
+                const dx = targetAimPos.x - towerWorldPos.x;
+                const dy = targetAimPos.y - towerWorldPos.y;
                 const rotation = Math.atan2(dy, dx);
                 queueTowerPatch(tower.id, {
                   lastAttack: now,
@@ -4161,11 +4227,11 @@ export function usePrincetonTowerDefenseRuntime() {
                 if (isTeslaCoil || isChainLightning) {
                   // Draw chain lightning between all targets
                   visualChainTargets.forEach((chainTarget, i) => {
-                    const chainPos = getEnemyPosCached(chainTarget);
+                    const chainPos = getEnemyAimPosCached(chainTarget);
                     const fromPos =
                       i === 0
                         ? towerWorldPos // Use tower base position, renderer will adjust to orb
-                        : getEnemyPosCached(visualChainTargets[i - 1]);
+                        : getEnemyAimPosCached(visualChainTargets[i - 1]);
                     queuedTowerEffects.push({
                       id: generateId("chain"),
                       pos: fromPos,
@@ -4186,8 +4252,8 @@ export function usePrincetonTowerDefenseRuntime() {
                     pos: towerWorldPos, // Use tower base position, renderer will adjust to orb
                     type: isFocusedBeam ? "beam" : "lightning",
                     progress: 0,
-                    size: distance(towerWorldPos, targetPos),
-                    targetPos,
+                    size: distance(towerWorldPos, targetAimPos),
+                    targetPos: targetAimPos,
                     intensity:
                       (isFocusedBeam ? 0.8 : 1) * lightningIntensityScale,
                     duration: lightningFxDuration,
@@ -4261,9 +4327,9 @@ export function usePrincetonTowerDefenseRuntime() {
                   });
                 });
                 const target = targets[0];
-                const targetPos = getEnemyPosCached(target);
-                const dx = targetPos.x - towerWorldPos.x;
-                const dy = targetPos.y - towerWorldPos.y;
+                const targetAimPos = getEnemyAimPosCached(target);
+                const dx = targetAimPos.x - towerWorldPos.x;
+                const dy = targetAimPos.y - towerWorldPos.y;
                 const rotation = Math.atan2(dy, dx);
                 queueTowerPatch(tower.id, {
                   lastAttack: now,
@@ -4279,7 +4345,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 });
                 // Create music note cluster effects to each target
                 targets.forEach((target, i) => {
-                  const targetPos = getEnemyPosCached(target);
+                  const targetPos = getEnemyAimPosCached(target);
                   // Create multiple note projectiles per target
                   for (let n = 0; n < 3 + tower.level; n++) {
                     queuedTowerEffects.push({
@@ -4311,6 +4377,7 @@ export function usePrincetonTowerDefenseRuntime() {
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
+              const targetAimPos = getEnemyAimPosCached(target);
               let damage = tData.damage * finalDamageMult;
               if (tower.level === 2) damage *= 1.5;
               if (tower.level === 3) damage *= 2;
@@ -4322,8 +4389,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 }
                 return { ...enemy, hp: newHp, damageFlash: 200 };
               });
-              const dx = targetPos.x - towerWorldPos.x;
-              const dy = targetPos.y - towerWorldPos.y;
+              const dx = targetAimPos.x - towerWorldPos.x;
+              const dy = targetAimPos.y - towerWorldPos.y;
               const rotation = Math.atan2(dy, dx);
               queueTowerPatch(tower.id, {
                 lastAttack: now,
@@ -4333,7 +4400,7 @@ export function usePrincetonTowerDefenseRuntime() {
               queuedTowerProjectiles.push({
                 id: generateId("proj"),
                 from: towerWorldPos,
-                to: targetPos,
+                to: targetAimPos,
                 progress: 0,
                 type: tower.type,
                 rotation,
@@ -4393,8 +4460,9 @@ export function usePrincetonTowerDefenseRuntime() {
           if (validEnemies.length > 0) {
             const target = validEnemies[0];
             const targetPos = getEnemyPosCached(target);
-            const dx = targetPos.x - hero.pos.x;
-            const dy = targetPos.y - hero.pos.y;
+            const targetAimPos = getEnemyAimPosCached(target);
+            const dx = targetAimPos.x - hero.pos.x;
+            const dy = targetAimPos.y - hero.pos.y;
             const rotation = Math.atan2(dy, dx);
 
             // Determine attack type based on hero
@@ -4488,12 +4556,12 @@ export function usePrincetonTowerDefenseRuntime() {
             // For multi-target Tenor, add effects to each target
             if (isMultiTargetHero && attackTargets.length > 1) {
               attackTargets.slice(1).forEach((extraTarget) => {
-                const extraPos = getEnemyPosCached(extraTarget);
+                const extraAimPos = getEnemyAimPosCached(extraTarget);
                 setEffects((ef) => [
                   ...ef,
                   {
                     id: generateId("eff"),
-                    pos: extraPos,
+                    pos: extraAimPos,
                     type: "impact_hit",
                     progress: 0,
                     size: 30,
@@ -4506,10 +4574,13 @@ export function usePrincetonTowerDefenseRuntime() {
                   {
                     id: generateId("proj"),
                     from: hero.pos,
-                    to: extraPos,
+                    to: extraAimPos,
                     progress: 0,
                     type: "sonicWave",
-                    rotation: Math.atan2(extraPos.y - hero.pos.y, extraPos.x - hero.pos.x),
+                    rotation: Math.atan2(
+                      extraAimPos.y - hero.pos.y,
+                      extraAimPos.x - hero.pos.x
+                    ),
                   },
                 ]);
               });
@@ -4546,7 +4617,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 {
                   id: generateId("proj"),
                   from: hero.pos,
-                  to: targetPos,
+                  to: targetAimPos,
                   progress: 0,
                   type: projType,
                   rotation,
@@ -4601,9 +4672,10 @@ export function usePrincetonTowerDefenseRuntime() {
             if (validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
+              const targetAimPos = getEnemyAimPosCached(target);
               const troopDamage = troopData.damage || 20;
-              const dx = targetPos.x - troop.pos.x;
-              const dy = targetPos.y - troop.pos.y;
+              const dx = targetAimPos.x - troop.pos.x;
+              const dy = targetAimPos.y - troop.pos.y;
               const rotation = Math.atan2(dy, dx);
               // Apply damage immediately (projectile is just visual)
               queueTroopEnemyMutation(target.id, (enemy) => {
@@ -4643,7 +4715,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     x: troop.pos.x + spawnOffset.x,
                     y: troop.pos.y + spawnOffset.y,
                   },
-                  to: targetPos,
+                  to: targetAimPos,
                   progress: 0,
                   type: projType,
                   rotation,
@@ -5342,7 +5414,7 @@ export function usePrincetonTowerDefenseRuntime() {
     // Generate theme-specific decorations (CACHED for performance)
     // PERFORMANCE FIX: Cache decorations to avoid regenerating 500+ objects every frame
     // This was a major cause of freezing on mobile devices
-    let decorations: Decoration[];
+    let decorations: RuntimeDecoration[];
 
     if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === selectedMap) {
       // Use cached decorations
@@ -5873,6 +5945,7 @@ export function usePrincetonTowerDefenseRuntime() {
       // Add major landmarks from LEVEL_DATA if defined
       const levelDecorations = LEVEL_DATA[selectedMap]?.decorations;
       if (levelDecorations) {
+        const manualDecorationStartIndex = decorations.length;
         for (const dec of levelDecorations) {
           const worldPos = gridToWorld(dec.pos);
           const size = dec.size || 1;
@@ -6251,34 +6324,41 @@ export function usePrincetonTowerDefenseRuntime() {
             decorations.push({ type: "fishing_spot", x: worldPos.x, y: worldPos.y, scale: size * 0.9, rotation: 0, variant: decorationVariant });
           }
         }
+
+        for (let i = manualDecorationStartIndex; i < decorations.length; i++) {
+          const manualDecoration = decorations[i];
+          manualDecoration.source = "manual";
+          manualDecoration.manualOrder = i - manualDecorationStartIndex;
+          if (getDecorationRenderLayer(manualDecoration) === "background") {
+            manualDecoration.renderLayer = "background";
+          }
+        }
       }
 
-      // Sort by Y for depth
-      decorations.sort((a, b) => a.y - b.y);
+      const getLayerPriority = (decoration: RuntimeDecoration): number =>
+        getDecorationRenderLayer(decoration) === "background" ? 0 : 1;
+      const getSourcePriority = (decoration: RuntimeDecoration): number =>
+        decoration.source === "manual" ? 1 : 0;
+
+      // Stable decoration order: background layer -> depth -> manual tie-breakers.
+      decorations.sort((a, b) => {
+        const layerDiff = getLayerPriority(a) - getLayerPriority(b);
+        if (layerDiff !== 0) return layerDiff;
+
+        const depthDiff = getDecorationIsoY(a) - getDecorationIsoY(b);
+        if (Math.abs(depthDiff) > 0.001) return depthDiff;
+
+        const sourceDiff = getSourcePriority(a) - getSourcePriority(b);
+        if (sourceDiff !== 0) return sourceDiff;
+
+        return (a.manualOrder ?? 0) - (b.manualOrder ?? 0);
+      });
 
       // Cache the generated decorations
       cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
     } // End of decoration generation (else block)
 
     const decorTime = nowSeconds;
-
-    // =========================================================================
-    // HAZARD RENDERING - Using imported renderHazard function
-    // =========================================================================
-    const levelHazards = LEVEL_DATA[selectedMap]?.hazards;
-    if (levelHazards && levelHazards.length > 0) {
-      levelHazards.forEach((haz) => {
-        renderHazard(
-          ctx,
-          haz,
-          canvas.width,
-          canvas.height,
-          dpr,
-          cameraOffset,
-          cameraZoom
-        );
-      });
-    }
 
     // Collect renderables
     const renderables: Renderable[] = [];
@@ -6344,6 +6424,29 @@ export function usePrincetonTowerDefenseRuntime() {
       cameraOffset.x.toFixed(2),
       cameraOffset.y.toFixed(2),
     ].join("|");
+    const drawBackgroundDecorations = (
+      entries: CachedVisibleDecoration[]
+    ) => {
+      for (const entry of entries) {
+        const dec = entry.decoration;
+        const isNassauHall = dec.type === "nassau_hall";
+        ctx.save();
+        renderDecorationItem({
+          ctx,
+          screenPos: entry.screenPos,
+          scale: cameraZoom * dec.scale,
+          type: dec.type,
+          rotation: dec.rotation,
+          variant: dec.variant,
+          decorTime,
+          decorX: dec.x,
+          selectedMap,
+          shadowOnly: !!entry.shadowOnly,
+          skipShadow: isNassauHall && !entry.shadowOnly,
+        });
+        ctx.restore();
+      }
+    };
     let animatedVisibleDecorations: CachedVisibleDecoration[] = [];
     let depthSensitiveVisibleDecorations: CachedVisibleDecoration[] = [];
     const cachedStaticDecorationLayer = cachedStaticDecorationLayerRef.current;
@@ -6351,6 +6454,7 @@ export function usePrincetonTowerDefenseRuntime() {
       cachedStaticDecorationLayer &&
       cachedStaticDecorationLayer.key === decorationLayerKey
     ) {
+      drawBackgroundDecorations(cachedStaticDecorationLayer.backgroundDecorations);
       if (cachedStaticDecorationLayer.canvas) {
         ctx.drawImage(cachedStaticDecorationLayer.canvas, 0, 0, width, height);
       }
@@ -6380,13 +6484,36 @@ export function usePrincetonTowerDefenseRuntime() {
         visibleDecorations.push({
           decoration: dec,
           screenPos: decScreenPos,
-          isoY: (dec.x + dec.y) * 0.25,
+          isoY: getDecorationIsoY(dec),
         });
       }
 
+      const backgroundDecorations: CachedVisibleDecoration[] = [];
       const staticDecorations: CachedVisibleDecoration[] = [];
       const animatedDecorations: CachedVisibleDecoration[] = [];
       const depthSensitiveDecorations: CachedVisibleDecoration[] = [];
+      const nassauInterleaveAnchors = visibleDecorations
+        .filter((entry) => entry.decoration.type === "nassau_hall")
+        .map((entry) => ({
+          x: entry.screenPos.x,
+          y: entry.screenPos.y,
+          scale: cameraZoom * entry.decoration.scale,
+        }));
+      const isNearNassauInterleaveZone = (
+        entry: CachedVisibleDecoration
+      ): boolean => {
+        if (entry.decoration.type === "nassau_hall") return false;
+        for (const anchor of nassauInterleaveAnchors) {
+          // Elliptical screen-space zone that matches Nassau Hall's visual footprint.
+          const rx = 110 * anchor.scale;
+          const ry = 105 * anchor.scale;
+          const dx = entry.screenPos.x - anchor.x;
+          const dy = entry.screenPos.y - anchor.y;
+          const norm = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+          if (norm <= 1) return true;
+        }
+        return false;
+      };
       const pathSegments: Array<{ start: Position; end: Position }> = [];
       const appendPathSegments = (pathPoints: { x: number; y: number }[]) => {
         for (let i = 0; i < pathPoints.length - 1; i++) {
@@ -6410,14 +6537,23 @@ export function usePrincetonTowerDefenseRuntime() {
       };
       for (const entry of visibleDecorations) {
         const type = entry.decoration.type;
-        if (RUNTIME_ANIMATED_DECORATION_TYPES.has(type)) {
+        const renderLayer = getDecorationRenderLayer(entry.decoration);
+        if (type === "nassau_hall") {
+          backgroundDecorations.push({ ...entry, shadowOnly: true });
+        }
+        if (renderLayer === "background") {
+          backgroundDecorations.push(entry);
+        } else if (RUNTIME_ANIMATED_DECORATION_TYPES.has(type)) {
           animatedDecorations.push(entry);
         } else if (
-          DEPTH_SENSITIVE_DECORATION_TYPES.has(type) &&
-          distanceToNearestPath({
-            x: entry.decoration.x,
-            y: entry.decoration.y,
-          }) <= DEPTH_SENSITIVE_PATH_DISTANCE
+          ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES.has(type) ||
+          (DEPTH_SENSITIVE_DECORATION_TYPES.has(type) &&
+            distanceToNearestPath({
+              x: entry.decoration.x,
+              y: entry.decoration.y,
+            }) <= DEPTH_SENSITIVE_PATH_DISTANCE) ||
+          (DEPTH_SENSITIVE_DECORATION_TYPES.has(type) &&
+            isNearNassauInterleaveZone(entry))
         ) {
           depthSensitiveDecorations.push(entry);
         } else {
@@ -6447,6 +6583,7 @@ export function usePrincetonTowerDefenseRuntime() {
               decorTime: 0,
               decorX: dec.x,
               selectedMap,
+              skipShadow: dec.type === "nassau_hall",
             });
             layerCtx.restore();
           }
@@ -6454,6 +6591,7 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
+      drawBackgroundDecorations(backgroundDecorations);
       if (staticDecorationCanvas) {
         ctx.drawImage(staticDecorationCanvas, 0, 0, width, height);
       } else {
@@ -6463,11 +6601,30 @@ export function usePrincetonTowerDefenseRuntime() {
       cachedStaticDecorationLayerRef.current = {
         key: decorationLayerKey,
         canvas: staticDecorationCanvas,
+        backgroundDecorations,
         animatedDecorations,
         depthSensitiveDecorations,
       };
       animatedVisibleDecorations = animatedDecorations;
       depthSensitiveVisibleDecorations = depthSensitiveDecorations;
+    }
+
+    // =========================================================================
+    // HAZARD RENDERING - overlay above terrain/background, below entities
+    // =========================================================================
+    const levelHazards = LEVEL_DATA[selectedMap]?.hazards;
+    if (levelHazards && levelHazards.length > 0) {
+      levelHazards.forEach((haz) => {
+        renderHazard(
+          ctx,
+          haz,
+          canvas.width,
+          canvas.height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+      });
     }
 
     const decorationPressure =
@@ -7077,6 +7234,7 @@ export function usePrincetonTowerDefenseRuntime() {
             decorTime: decData.decorTime,
             decorX: decData.x,
             selectedMap: decData.selectedMap,
+            skipShadow: decData.type === "nassau_hall",
           });
           ctx.restore();
           break;
@@ -7574,7 +7732,7 @@ export function usePrincetonTowerDefenseRuntime() {
         return;
       }
 
-      if (clickedTroop) {
+      if (clickedTroop && !isTouch) {
         setDraggingUnit({
           kind: "troop",
           troopId: clickedTroop.id,
@@ -8304,6 +8462,16 @@ export function usePrincetonTowerDefenseRuntime() {
 
       const { width, height, dpr } = getCanvasDimensions();
 
+      // Mobile performance: troop drag-relocation is disabled on touch input.
+      if (isTouch && draggingUnit?.kind === "troop") {
+        setDraggingUnit(null);
+        setUnitDragStart(null);
+        setUnitDragMoved(false);
+        setMoveTargetPos(null);
+        setMoveTargetValid(false);
+        setSelectedUnitMoveInfo(null);
+      }
+
       // ========== CANVAS PANNING ==========
       if (isPanning && panStart && panStartOffset) {
         const dx = (x - panStart.x) / cameraZoom;
@@ -9019,7 +9187,14 @@ export function usePrincetonTowerDefenseRuntime() {
     },
     [spells, pawPoints, enemies, selectedMap, addParticles, gameSpeed, awardBounty, onEnemyKill]
   );
-  const useHeroAbility = useCallback(() => {
+  const toggleHeroSelection = useCallback(() => {
+    setHero((prev) =>
+      prev && !prev.dead
+        ? { ...prev, selected: !prev.selected }
+        : prev
+    );
+  }, []);
+  const triggerHeroAbility = useCallback(() => {
     // Prevent hero ability usage when game is paused
     if (gameSpeed === 0) return;
     if (!hero || !hero.abilityReady || hero.dead) return;
@@ -9717,7 +9892,8 @@ export function usePrincetonTowerDefenseRuntime() {
               spells={spells}
               pawPoints={pawPoints}
               enemies={enemies}
-              useHeroAbility={useHeroAbility}
+              toggleHeroSelection={toggleHeroSelection}
+              onUseHeroAbility={triggerHeroAbility}
               castSpell={castSpell}
             />
           </div>

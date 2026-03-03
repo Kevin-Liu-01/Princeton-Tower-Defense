@@ -3,7 +3,6 @@
 
 import type { Enemy, Position } from "../../types";
 import { ENEMY_DATA } from "../../constants";
-import { getEnemyArmor } from "../../game/combat";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -1162,15 +1161,16 @@ export function renderEnemy(
     ctx.fill();
   }
 
-  // HP Bar with Armor Mitigation Display
-  // Armor is persistent damage reduction, not a separate HP segment.
-  const armor = getEnemyArmor(enemy.type);
-  if (enemy.hp < enemy.maxHp || armor > 0) {
+  // HP Bar with Armor Display
+  // Armor is shown as a white portion on the RIGHT side of the healthbar
+  // It depletes first as health drops - once health falls below (1-armor), armor is gone
+  if (enemy.hp < enemy.maxHp || eData.armor > 0) {
     const barWidth = size * 1.4;
     const barHeight = 6 * zoom;
     const barY = drawY - size * 0.95;
     const barX = screenPos.x - barWidth / 2;
     const cornerRadius = 3 * zoom;
+    const armor = eData.armor || 0;
 
     // Background with rounded corners (removed shadowBlur for performance)
     ctx.fillStyle = "rgba(10, 10, 15, 0.98)";
@@ -1201,11 +1201,22 @@ export function renderEnemy(
     ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius - 1);
     ctx.fill();
 
-    const hpPercent = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
-    const hpWidth = barWidth * hpPercent;
+    const hpPercent = enemy.hp / enemy.maxHp;
 
-    // Health portion
-    if (hpWidth > 0) {
+    // Armor takes up the rightmost portion of max health
+    // healthThreshold is where armor ends and pure health begins
+    const healthThreshold = 1 - armor; // e.g., 0.7 if armor is 0.3
+
+    // Calculate how much red health to show (capped at healthThreshold of bar)
+    const redHealthPercent = Math.min(hpPercent, healthThreshold);
+    const redWidth = barWidth * redHealthPercent;
+
+    // Calculate how much white armor to show (only if health > healthThreshold)
+    const armorPercent = Math.max(0, hpPercent - healthThreshold);
+    const whiteWidth = barWidth * armorPercent;
+
+    // Red health portion (left side)
+    if (redWidth > 0) {
       const hpGradient = ctx.createLinearGradient(
         barX,
         barY,
@@ -1228,8 +1239,9 @@ export function renderEnemy(
       ctx.fillStyle = hpGradient;
       ctx.beginPath();
       const leftRadius = cornerRadius - 1;
-      const rightRadius = hpPercent > 0.95 ? cornerRadius - 1 : 0;
-      ctx.roundRect(barX, barY, hpWidth, barHeight, [
+      const rightRadius =
+        whiteWidth > 0 ? 0 : hpPercent > 0.95 ? cornerRadius - 1 : 0;
+      ctx.roundRect(barX, barY, redWidth, barHeight, [
         leftRadius,
         rightRadius,
         rightRadius,
@@ -1248,7 +1260,7 @@ export function renderEnemy(
       shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = shineGrad;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, hpWidth, barHeight * 0.4, [
+      ctx.roundRect(barX, barY, redWidth, barHeight * 0.4, [
         leftRadius,
         0,
         0,
@@ -1257,83 +1269,56 @@ export function renderEnemy(
       ctx.fill();
     }
 
-    // Armor overlay on current HP fill to communicate persistent mitigation.
-    if (armor > 0 && hpWidth > 0) {
-      const armorOverlayAlpha = 0.12 + armor * 0.28;
-      const armorOverlay = ctx.createLinearGradient(
-        barX,
+    // White armor portion (right side) - only shows when health > healthThreshold
+    if (whiteWidth > 0) {
+      const armorStartX = barX + redWidth;
+      const armorGrad = ctx.createLinearGradient(
+        armorStartX,
         barY,
-        barX,
+        armorStartX,
         barY + barHeight,
       );
-      armorOverlay.addColorStop(0, `rgba(245, 245, 244, ${armorOverlayAlpha})`);
-      armorOverlay.addColorStop(
-        0.45,
-        `rgba(214, 211, 209, ${armorOverlayAlpha * 0.8})`
-      );
-      armorOverlay.addColorStop(
-        1,
-        `rgba(120, 113, 108, ${armorOverlayAlpha * 0.75})`
-      );
-      ctx.fillStyle = armorOverlay;
+      armorGrad.addColorStop(0, "#f5f5f4"); // Light silver
+      armorGrad.addColorStop(0.3, "#e7e5e4");
+      armorGrad.addColorStop(0.5, "#d6d3d1"); // Silver
+      armorGrad.addColorStop(0.7, "#a8a29e");
+      armorGrad.addColorStop(1, "#78716c"); // Dark silver
+      ctx.fillStyle = armorGrad;
       ctx.beginPath();
-      const leftRadius = cornerRadius - 1;
       const rightRadius = hpPercent > 0.95 ? cornerRadius - 1 : 0;
-      ctx.roundRect(barX, barY, hpWidth, barHeight, [
-        leftRadius,
+      ctx.roundRect(armorStartX, barY, whiteWidth, barHeight, [
+        0,
         rightRadius,
         rightRadius,
-        leftRadius,
+        0,
       ]);
       ctx.fill();
-    }
 
-    // Persistent armor strip (top-right) and divider marker.
-    if (armor > 0) {
-      const armorStripWidth = Math.max(4 * zoom, barWidth * armor);
-      const armorStripX = barX + barWidth - armorStripWidth;
-      const armorStripY = barY - 2.2 * zoom;
-      const armorStripHeight = Math.max(1.4 * zoom, 2 * zoom);
-      const armorStripRadius = Math.min(armorStripHeight / 2, 1.2 * zoom);
-
-      const armorStrip = ctx.createLinearGradient(
-        armorStripX,
-        armorStripY,
-        armorStripX,
-        armorStripY + armorStripHeight
+      // Metallic shine on armor
+      const armorShine = ctx.createLinearGradient(
+        armorStartX,
+        barY,
+        armorStartX,
+        barY + barHeight * 0.4,
       );
-      armorStrip.addColorStop(0, "rgba(245, 245, 244, 0.95)");
-      armorStrip.addColorStop(0.5, "rgba(214, 211, 209, 0.9)");
-      armorStrip.addColorStop(1, "rgba(120, 113, 108, 0.95)");
-      ctx.fillStyle = armorStrip;
+      armorShine.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+      armorShine.addColorStop(1, "rgba(255, 255, 255, 0.1)");
+      ctx.fillStyle = armorShine;
       ctx.beginPath();
-      ctx.roundRect(
-        armorStripX,
-        armorStripY,
-        armorStripWidth,
-        armorStripHeight,
-        armorStripRadius
-      );
+      ctx.roundRect(armorStartX, barY, whiteWidth, barHeight * 0.4, [
+        0,
+        rightRadius,
+        0,
+        0,
+      ]);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-      ctx.lineWidth = Math.max(0.8, 0.8 * zoom);
+      // Subtle divider line between health and armor
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.roundRect(
-        armorStripX,
-        armorStripY,
-        armorStripWidth,
-        armorStripHeight,
-        armorStripRadius
-      );
-      ctx.stroke();
-
-      const armorMarkerX = armorStripX;
-      ctx.strokeStyle = "rgba(245, 245, 244, 0.85)";
-      ctx.lineWidth = Math.max(0.9, 0.9 * zoom);
-      ctx.beginPath();
-      ctx.moveTo(armorMarkerX, barY - 3 * zoom);
-      ctx.lineTo(armorMarkerX, barY + barHeight + zoom);
+      ctx.moveTo(armorStartX, barY);
+      ctx.lineTo(armorStartX, barY + barHeight);
       ctx.stroke();
     }
 
