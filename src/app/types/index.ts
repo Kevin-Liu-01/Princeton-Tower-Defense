@@ -502,6 +502,7 @@ export type SpellType =
 // Spell data definition
 export interface SpellData {
   name: string;
+  shortName: string;
   cost: number;
   cooldown: number;
   desc: string;

@@ -3,6 +3,7 @@
 
 import type { Enemy, Position } from "../../types";
 import { ENEMY_DATA } from "../../constants";
+import { getEnemyArmor } from "../../game/combat";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -209,6 +210,7 @@ export function renderEnemy(
   selectedMap: string,
   cameraOffset?: Position,
   cameraZoom?: number,
+  enemyDensityHint: number = 0,
 ) {
   // Use enemy's pathKey for dual-path support
   const pathKey = enemy.pathKey || selectedMap;
@@ -259,31 +261,13 @@ export function renderEnemy(
   // PERFORMANCE OPTIMIZED: Removed expensive shadowBlur for status effects
   // Instead, we use colored outlines/overlays which are much cheaper
 
-  const damageFlashIntensity =
-    enemy.damageFlash > 0 ? enemy.damageFlash / 200 : 0;
+  const lowDetailFx = enemyDensityHint > 90;
+  const minimalDetailFx = enemyDensityHint > 160;
   const flashProfile = getEnemyFlashProfile(enemy.type, eData.category);
-
-  // Natural always-on shimmer for all enemies (unsynced, organic, non-strobe)
-  const idFirstCode = enemy.id.charCodeAt(0) || 0;
-  const idLastCode = enemy.id.charCodeAt(enemy.id.length - 1) || 0;
-  const flashSeed =
-    enemy.pathIndex * 0.73 +
-    enemy.progress * 11.17 +
-    enemy.laneOffset * 3.41 +
-    enemy.id.length * 0.97 +
-    idFirstCode * 0.011 +
-    idLastCode * 0.017;
-  const flashWaveA =
-    0.5 +
-    0.5 *
-      Math.sin(time * (1.25 + stableNoise(flashSeed) * 1.1) + flashSeed * 4.1);
-  const flashWaveB =
-    0.5 +
-    0.5 *
-      Math.sin(
-        time * (2.35 + stableNoise(flashSeed + 1.3) * 1.2) + flashSeed * 2.3,
-      );
-  const ambientFlashIntensity = 0.06 + flashWaveA * 0.11 + flashWaveB * 0.05;
+  const damageFlashIntensity =
+    enemy.damageFlash > 0
+      ? Math.min(1, enemy.damageFlash / (minimalDetailFx ? 340 : 260))
+      : 0;
 
   // Calculate attack phase for animation (smooth 1-0 based on attack timing)
   // Check BOTH lastTroopAttack AND lastHeroAttack - use whichever is more recent
@@ -296,11 +280,6 @@ export function renderEnemy(
   // attackPhase goes from 1.0 (just attacked) down to 0 (animation done)
   const attackPhase =
     timeSinceAttack < attackDuration ? 1 - timeSinceAttack / attackDuration : 0;
-  const naturalFlashIntensity = Math.min(
-    0.28,
-    (ambientFlashIntensity + attackPhase * flashProfile.attackBoost) *
-      flashProfile.intensityScale,
-  );
 
   // ATTACK RESIZE EFFECT - Subtle scale pulse during attack
   const attackScalePulse =
@@ -311,7 +290,7 @@ export function renderEnemy(
   // ENHANCED DAMAGE FLASH EFFECT - Better hurt visuals
   const hurtScalePulse =
     damageFlashIntensity > 0
-      ? 1 - Math.sin(damageFlashIntensity * Math.PI) * 0.08 // Slight shrink when hit
+      ? 1 - Math.sin(damageFlashIntensity * Math.PI) * (minimalDetailFx ? 0.015 : 0.03)
       : 1;
 
   // Apply scale transform for the enemy sprite (includes directional facing)
@@ -338,159 +317,31 @@ export function renderEnemy(
     attackPhase,
   );
 
-  // Always-on natural flash overlay
-  ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = naturalFlashIntensity * 0.45;
-  ctx.fillStyle = flashProfile.outerColor;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, drawY, size * 0.62, size * 0.4, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.globalAlpha = naturalFlashIntensity * 0.65;
-  ctx.fillStyle = flashProfile.innerColor;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    drawY - size * 0.12,
-    size * 0.32,
-    size * 0.2,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  ctx.globalAlpha = naturalFlashIntensity * 0.52;
-  ctx.strokeStyle = flashProfile.rimColor;
-  ctx.lineWidth = 1.2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, drawY, size * 0.58, size * 0.34, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
-
-  // ========================================================================
-  // ENHANCED DAMAGE/HURT EFFECTS - Soft impact explosion effect
-  // ========================================================================
+  // Keep hit feedback stable and cheap: no ambient shimmer or particle-heavy flash.
   if (damageFlashIntensity > 0) {
-    const hurtPulse = Math.sin(damageFlashIntensity * Math.PI);
-    const expandPhase = 1 - damageFlashIntensity; // Expands outward as flash fades
-
-    // Soft white impact flash at center (brief, at start of hit)
-    if (damageFlashIntensity > 0.7) {
-      const whiteFlash = (damageFlashIntensity - 0.7) / 0.3;
-      const flashGrad = ctx.createRadialGradient(
-        screenPos.x,
-        drawY - size * 0.05,
-        0,
-        screenPos.x,
-        drawY - size * 0.05,
-        size * 0.35 * whiteFlash,
-      );
-      flashGrad.addColorStop(0, `rgba(255, 255, 255, ${whiteFlash * 0.7})`);
-      flashGrad.addColorStop(0.4, `rgba(255, 240, 220, ${whiteFlash * 0.4})`);
-      flashGrad.addColorStop(1, "rgba(255, 200, 150, 0)");
-      ctx.fillStyle = flashGrad;
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x,
-        drawY - size * 0.05,
-        size * 0.35 * whiteFlash,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-
-    // Soft expanding impact ring
-    const ringRadius = size * (0.35 + expandPhase * 0.4);
-    const ringAlpha = hurtPulse * 0.5;
-    ctx.strokeStyle = `rgba(255, 200, 150, ${ringAlpha})`;
-    ctx.lineWidth = (2.5 - expandPhase * 1.5) * zoom;
+    const hurtAlpha = damageFlashIntensity * (minimalDetailFx ? 0.16 : 0.24);
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    const hurtTint = flashProfile.innerColor.match(/\d+/g) || ["255", "210", "190"];
+    ctx.fillStyle = `rgba(${hurtTint[0]}, ${hurtTint[1]}, ${hurtTint[2]}, ${hurtAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      ringRadius,
-      ringRadius * 0.6,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
-
-    // Soft inner glow (orange/yellow tones)
-    const glowGrad = ctx.createRadialGradient(
-      screenPos.x,
-      drawY - size * 0.08,
-      0,
-      screenPos.x,
-      drawY,
-      size * 0.45,
-    );
-    glowGrad.addColorStop(0, `rgba(255, 220, 180, ${hurtPulse * 0.35})`);
-    glowGrad.addColorStop(0.5, `rgba(255, 180, 120, ${hurtPulse * 0.2})`);
-    glowGrad.addColorStop(1, "rgba(255, 150, 100, 0)");
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      drawY,
-      size * 0.45,
-      size * 0.35,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(screenPos.x, drawY, size * 0.52, size * 0.34, 0, 0, Math.PI * 2);
     ctx.fill();
-
-    // Soft particles drifting outward
-    const particleCount = 5;
-    for (let i = 0; i < particleCount; i++) {
-      const pAngle = (i / particleCount) * Math.PI * 2 + time * 0.5;
-      const pDist = size * (0.25 + expandPhase * 0.35);
-      const pAlpha = hurtPulse * 0.5 * (1 - expandPhase * 0.5);
-      const pSize = size * 0.03 * (1 - expandPhase * 0.4);
-
-      // Warm colored particles
-      ctx.fillStyle = `rgba(255, ${200 - i * 15}, ${150 - i * 20}, ${pAlpha})`;
+    if (!lowDetailFx) {
+      ctx.strokeStyle = `rgba(255, 185, 150, ${hurtAlpha * 0.8})`;
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
-      ctx.arc(
-        screenPos.x + Math.cos(pAngle) * pDist,
-        drawY + Math.sin(pAngle) * pDist * 0.5 - expandPhase * 8 * zoom,
-        pSize,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-
-    // Second softer expanding ring (delayed)
-    if (damageFlashIntensity < 0.7) {
-      const ring2Phase = (0.7 - damageFlashIntensity) / 0.7;
-      const ring2Radius = size * (0.4 + ring2Phase * 0.5);
-      const ring2Alpha = (1 - ring2Phase) * 0.3;
-      ctx.strokeStyle = `rgba(255, 180, 130, ${ring2Alpha})`;
-      ctx.lineWidth = (1.5 - ring2Phase) * zoom;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        drawY,
-        ring2Radius,
-        ring2Radius * 0.55,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(screenPos.x, drawY, size * 0.58, size * 0.38, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.restore();
   }
 
   // ========================================================================
   // REGENERATION VISUAL - Green healing glow for regenerating enemies
   // ========================================================================
   const hasRegenTrait = eData.traits?.includes("regenerating");
-  if (hasRegenTrait && !enemy.inCombat && enemy.hp < enemy.maxHp) {
+  if (!minimalDetailFx && hasRegenTrait && !enemy.inCombat && enemy.hp < enemy.maxHp) {
     const regenPulse = 0.3 + 0.2 * Math.sin(time * 3);
     const regenGrad = ctx.createRadialGradient(
       screenPos.x, drawY, 0,
@@ -522,7 +373,7 @@ export function renderEnemy(
   // ========================================================================
   // ATTACK ANIMATION EFFECTS - Type-specific physical impacts
   // ========================================================================
-  if (attackPhase > 0) {
+  if (!minimalDetailFx && attackPhase > 0) {
     const attackPulse = Math.sin(attackPhase * Math.PI); // Peaks in middle
     const attackEase = 1 - Math.pow(1 - attackPhase, 2); // Ease out curve
 
@@ -1311,16 +1162,15 @@ export function renderEnemy(
     ctx.fill();
   }
 
-  // HP Bar with Armor Display
-  // Armor is shown as a white portion on the RIGHT side of the healthbar
-  // It depletes first as health drops - once health falls below (1-armor), armor is gone
-  if (enemy.hp < enemy.maxHp || eData.armor > 0) {
+  // HP Bar with Armor Mitigation Display
+  // Armor is persistent damage reduction, not a separate HP segment.
+  const armor = getEnemyArmor(enemy.type);
+  if (enemy.hp < enemy.maxHp || armor > 0) {
     const barWidth = size * 1.4;
     const barHeight = 6 * zoom;
     const barY = drawY - size * 0.95;
     const barX = screenPos.x - barWidth / 2;
     const cornerRadius = 3 * zoom;
-    const armor = eData.armor || 0;
 
     // Background with rounded corners (removed shadowBlur for performance)
     ctx.fillStyle = "rgba(10, 10, 15, 0.98)";
@@ -1351,22 +1201,11 @@ export function renderEnemy(
     ctx.roundRect(barX, barY, barWidth, barHeight, cornerRadius - 1);
     ctx.fill();
 
-    const hpPercent = enemy.hp / enemy.maxHp;
+    const hpPercent = Math.max(0, Math.min(1, enemy.hp / enemy.maxHp));
+    const hpWidth = barWidth * hpPercent;
 
-    // Armor takes up the rightmost portion of max health
-    // healthThreshold is where armor ends and pure health begins
-    const healthThreshold = 1 - armor; // e.g., 0.7 if armor is 0.3
-
-    // Calculate how much red health to show (capped at healthThreshold of bar)
-    const redHealthPercent = Math.min(hpPercent, healthThreshold);
-    const redWidth = barWidth * redHealthPercent;
-
-    // Calculate how much white armor to show (only if health > healthThreshold)
-    const armorPercent = Math.max(0, hpPercent - healthThreshold);
-    const whiteWidth = barWidth * armorPercent;
-
-    // Red health portion (left side)
-    if (redWidth > 0) {
+    // Health portion
+    if (hpWidth > 0) {
       const hpGradient = ctx.createLinearGradient(
         barX,
         barY,
@@ -1389,9 +1228,8 @@ export function renderEnemy(
       ctx.fillStyle = hpGradient;
       ctx.beginPath();
       const leftRadius = cornerRadius - 1;
-      const rightRadius =
-        whiteWidth > 0 ? 0 : hpPercent > 0.95 ? cornerRadius - 1 : 0;
-      ctx.roundRect(barX, barY, redWidth, barHeight, [
+      const rightRadius = hpPercent > 0.95 ? cornerRadius - 1 : 0;
+      ctx.roundRect(barX, barY, hpWidth, barHeight, [
         leftRadius,
         rightRadius,
         rightRadius,
@@ -1410,7 +1248,7 @@ export function renderEnemy(
       shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = shineGrad;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, redWidth, barHeight * 0.4, [
+      ctx.roundRect(barX, barY, hpWidth, barHeight * 0.4, [
         leftRadius,
         0,
         0,
@@ -1419,56 +1257,83 @@ export function renderEnemy(
       ctx.fill();
     }
 
-    // White armor portion (right side) - only shows when health > healthThreshold
-    if (whiteWidth > 0) {
-      const armorStartX = barX + redWidth;
-      const armorGrad = ctx.createLinearGradient(
-        armorStartX,
+    // Armor overlay on current HP fill to communicate persistent mitigation.
+    if (armor > 0 && hpWidth > 0) {
+      const armorOverlayAlpha = 0.12 + armor * 0.28;
+      const armorOverlay = ctx.createLinearGradient(
+        barX,
         barY,
-        armorStartX,
+        barX,
         barY + barHeight,
       );
-      armorGrad.addColorStop(0, "#f5f5f4"); // Light silver
-      armorGrad.addColorStop(0.3, "#e7e5e4");
-      armorGrad.addColorStop(0.5, "#d6d3d1"); // Silver
-      armorGrad.addColorStop(0.7, "#a8a29e");
-      armorGrad.addColorStop(1, "#78716c"); // Dark silver
-      ctx.fillStyle = armorGrad;
-      ctx.beginPath();
-      const rightRadius = hpPercent > 0.95 ? cornerRadius - 1 : 0;
-      ctx.roundRect(armorStartX, barY, whiteWidth, barHeight, [
-        0,
-        rightRadius,
-        rightRadius,
-        0,
-      ]);
-      ctx.fill();
-
-      // Metallic shine on armor
-      const armorShine = ctx.createLinearGradient(
-        armorStartX,
-        barY,
-        armorStartX,
-        barY + barHeight * 0.4,
+      armorOverlay.addColorStop(0, `rgba(245, 245, 244, ${armorOverlayAlpha})`);
+      armorOverlay.addColorStop(
+        0.45,
+        `rgba(214, 211, 209, ${armorOverlayAlpha * 0.8})`
       );
-      armorShine.addColorStop(0, "rgba(255, 255, 255, 0.6)");
-      armorShine.addColorStop(1, "rgba(255, 255, 255, 0.1)");
-      ctx.fillStyle = armorShine;
+      armorOverlay.addColorStop(
+        1,
+        `rgba(120, 113, 108, ${armorOverlayAlpha * 0.75})`
+      );
+      ctx.fillStyle = armorOverlay;
       ctx.beginPath();
-      ctx.roundRect(armorStartX, barY, whiteWidth, barHeight * 0.4, [
-        0,
+      const leftRadius = cornerRadius - 1;
+      const rightRadius = hpPercent > 0.95 ? cornerRadius - 1 : 0;
+      ctx.roundRect(barX, barY, hpWidth, barHeight, [
+        leftRadius,
         rightRadius,
-        0,
-        0,
+        rightRadius,
+        leftRadius,
       ]);
       ctx.fill();
+    }
 
-      // Subtle divider line between health and armor
-      ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
-      ctx.lineWidth = 1;
+    // Persistent armor strip (top-right) and divider marker.
+    if (armor > 0) {
+      const armorStripWidth = Math.max(4 * zoom, barWidth * armor);
+      const armorStripX = barX + barWidth - armorStripWidth;
+      const armorStripY = barY - 2.2 * zoom;
+      const armorStripHeight = Math.max(1.4 * zoom, 2 * zoom);
+      const armorStripRadius = Math.min(armorStripHeight / 2, 1.2 * zoom);
+
+      const armorStrip = ctx.createLinearGradient(
+        armorStripX,
+        armorStripY,
+        armorStripX,
+        armorStripY + armorStripHeight
+      );
+      armorStrip.addColorStop(0, "rgba(245, 245, 244, 0.95)");
+      armorStrip.addColorStop(0.5, "rgba(214, 211, 209, 0.9)");
+      armorStrip.addColorStop(1, "rgba(120, 113, 108, 0.95)");
+      ctx.fillStyle = armorStrip;
       ctx.beginPath();
-      ctx.moveTo(armorStartX, barY);
-      ctx.lineTo(armorStartX, barY + barHeight);
+      ctx.roundRect(
+        armorStripX,
+        armorStripY,
+        armorStripWidth,
+        armorStripHeight,
+        armorStripRadius
+      );
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.lineWidth = Math.max(0.8, 0.8 * zoom);
+      ctx.beginPath();
+      ctx.roundRect(
+        armorStripX,
+        armorStripY,
+        armorStripWidth,
+        armorStripHeight,
+        armorStripRadius
+      );
+      ctx.stroke();
+
+      const armorMarkerX = armorStripX;
+      ctx.strokeStyle = "rgba(245, 245, 244, 0.85)";
+      ctx.lineWidth = Math.max(0.9, 0.9 * zoom);
+      ctx.beginPath();
+      ctx.moveTo(armorMarkerX, barY - 3 * zoom);
+      ctx.lineTo(armorMarkerX, barY + barHeight + zoom);
       ctx.stroke();
     }
 

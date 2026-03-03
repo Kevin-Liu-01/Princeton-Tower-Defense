@@ -6,28 +6,38 @@ import { worldToScreen } from "../../utils";
 // ============================================================================
 
 // Helper: Parse color string to RGB components
+const parsedColorCache = new Map<string, { r: number; g: number; b: number }>();
 function parseColor(color: string): { r: number; g: number; b: number } {
+  const cached = parsedColorCache.get(color);
+  if (cached) return cached;
+
+  let parsed: { r: number; g: number; b: number };
   if (color.startsWith("#")) {
     const hex = color.slice(1);
     if (hex.length === 3) {
-      return {
+      parsed = {
         r: parseInt(hex[0] + hex[0], 16),
         g: parseInt(hex[1] + hex[1], 16),
         b: parseInt(hex[2] + hex[2], 16),
       };
+    } else {
+      parsed = {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16),
+      };
     }
-    return {
-      r: parseInt(hex.slice(0, 2), 16),
-      g: parseInt(hex.slice(2, 4), 16),
-      b: parseInt(hex.slice(4, 6), 16),
-    };
+  } else {
+    // Handle rgb/rgba
+    const match = color.match(/\d+/g);
+    parsed = match
+      ? { r: +match[0], g: +match[1], b: +match[2] }
+      : { r: 255, g: 255, b: 255 };
   }
-  // Handle rgb/rgba
-  const match = color.match(/\d+/g);
-  if (match) {
-    return { r: +match[0], g: +match[1], b: +match[2] };
-  }
-  return { r: 255, g: 255, b: 255 };
+
+  if (parsedColorCache.size > 256) parsedColorCache.clear();
+  parsedColorCache.set(color, parsed);
+  return parsed;
 }
 
 // Helper: Lighten a color
@@ -61,16 +71,44 @@ function drawTrail(
   trailSize: number = 4
 ) {
   const t = proj.progress;
-  
-  // Draw trail as single path for performance
+
+  const hasVerticalArc = Boolean(proj.arcHeight || proj.elevation);
+  if (!hasVerticalArc) {
+    const fromScreen = worldToScreen(
+      proj.from,
+      canvasWidth,
+      canvasHeight,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
+    const toScreen = worldToScreen(
+      proj.to,
+      canvasWidth,
+      canvasHeight,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
+    for (let i = 1; i <= trailLength; i++) {
+      const trailT = Math.max(0, t - i * 0.05);
+      const alpha = 0.35 * (1 - i / (trailLength + 1));
+      const size = Math.max(1, (trailSize - i * 0.6) * cameraZoom);
+      const x = fromScreen.x + (toScreen.x - fromScreen.x) * trailT;
+      const y = fromScreen.y + (toScreen.y - fromScreen.y) * trailT;
+      ctx.fillStyle = colorWithAlpha(trailColor, alpha);
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    return;
+  }
+
   for (let i = 1; i <= trailLength; i++) {
     const trailT = Math.max(0, t - i * 0.05);
     const trailX = proj.from.x + (proj.to.x - proj.from.x) * trailT;
     const trailY = proj.from.y + (proj.to.y - proj.from.y) * trailT;
-    let trailArc = 0;
-    if (proj.arcHeight) {
-      trailArc = Math.sin(trailT * Math.PI) * proj.arcHeight;
-    }
+    const trailArc = proj.arcHeight ? Math.sin(trailT * Math.PI) * proj.arcHeight : 0;
     const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) : 0;
     const trailPos = worldToScreen(
       { x: trailX, y: trailY - trailArc - trailElevation },
@@ -78,7 +116,7 @@ function drawTrail(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom
+      cameraZoom,
     );
     const alpha = 0.35 * (1 - i / (trailLength + 1));
     const size = Math.max(1, (trailSize - i * 0.6) * cameraZoom);
@@ -338,134 +376,121 @@ function renderLightningOrb(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   time: number,
-  baseColor: { r: number; g: number; b: number }
+  baseColor: { r: number; g: number; b: number },
+  lowDetail: boolean,
+  minimalDetail: boolean
 ) {
   const coreSize = 5 * zoom;
-  const arcCount = 8;
-  const segCount = 4;
+  const arcCount = minimalDetail ? 2 : lowDetail ? 4 : 7;
+  const segCount = minimalDetail ? 2 : lowDetail ? 3 : 4;
 
-  // Wide ambient corona
-  const coronaGrad = ctx.createRadialGradient(0, 0, coreSize * 0.5, 0, 0, coreSize * 3.5);
-  coronaGrad.addColorStop(0, colorWithAlpha(baseColor, 0.35));
-  coronaGrad.addColorStop(0.4, colorWithAlpha(baseColor, 0.12));
-  coronaGrad.addColorStop(0.7, colorWithAlpha(baseColor, 0.04));
+  if (minimalDetail) {
+    const auraSize = coreSize * 2.1;
+    ctx.fillStyle = colorWithAlpha(baseColor, 0.2);
+    ctx.beginPath();
+    ctx.arc(0, 0, auraSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = colorWithAlpha(baseColor, 0.55);
+    ctx.lineWidth = 1.2 * zoom;
+    for (let i = 0; i < arcCount; i++) {
+      const angle = (i / arcCount) * Math.PI * 2 + time * 8;
+      const len = (5 + Math.sin(time * 10 + i * 2.5) * 1.5) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(Math.cos(angle) * len, Math.sin(angle) * len);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, coreSize * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  // Ambient corona
+  const coronaGrad = ctx.createRadialGradient(0, 0, coreSize * 0.4, 0, 0, coreSize * 3.2);
+  coronaGrad.addColorStop(0, colorWithAlpha(baseColor, 0.32));
+  coronaGrad.addColorStop(0.45, colorWithAlpha(baseColor, lowDetail ? 0.1 : 0.14));
   coronaGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
   ctx.fillStyle = coronaGrad;
   ctx.beginPath();
-  ctx.arc(0, 0, coreSize * 3.5, 0, Math.PI * 2);
+  ctx.arc(0, 0, coreSize * 3.2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Inner glow halo
-  const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreSize * 2);
-  glowGrad.addColorStop(0, colorWithAlpha(baseColor, 0.7));
-  glowGrad.addColorStop(0.5, colorWithAlpha(baseColor, 0.3));
-  glowGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
-  ctx.fillStyle = glowGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, coreSize * 2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Multi-layered lightning arcs with branching
+  // Lightning arcs
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
   for (let i = 0; i < arcCount; i++) {
     const baseAngle = (i / arcCount) * Math.PI * 2 + time * 8;
-    const arcLen = (8 + Math.sin(time * 15 + i * 5.3) * 3) * zoom;
+    const arcLen = (7 + Math.sin(time * 14 + i * 4.3) * 2.4) * zoom;
 
     const pts: { x: number; y: number }[] = [{ x: 0, y: 0 }];
     for (let s = 1; s <= segCount; s++) {
       const t = s / segCount;
-      const jAmp = (1 - t * 0.4) * 3 * zoom;
-      const jx = Math.sin(time * 22 + i * 4.1 + s * 6.7) * jAmp;
-      const jy = Math.cos(time * 18 + i * 3.3 + s * 8.1) * jAmp * 0.6;
+      const jAmp = (1 - t * 0.45) * (lowDetail ? 1.8 : 2.8) * zoom;
+      const jx = Math.sin(time * 20 + i * 3.8 + s * 6.1) * jAmp;
+      const jy = Math.cos(time * 17 + i * 2.9 + s * 7.4) * jAmp * 0.6;
       pts.push({
         x: Math.cos(baseAngle) * arcLen * t + jx,
         y: Math.sin(baseAngle) * arcLen * t + jy,
       });
     }
 
-    // Layer 1: wide blurry glow stroke
-    ctx.save();
-    ctx.shadowColor = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
-    ctx.shadowBlur = 8 * zoom;
-    ctx.strokeStyle = colorWithAlpha(baseColor, 0.25);
-    ctx.lineWidth = 3.5 * zoom;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    drawBoltPath(ctx, pts);
-    ctx.stroke();
-    ctx.restore();
-
-    // Layer 2: bright core stroke
-    ctx.strokeStyle = lightenColor(baseColor, 60);
-    ctx.lineWidth = 1.8 * zoom;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    drawBoltPath(ctx, pts);
-    ctx.stroke();
-
-    // Layer 3: thin white-hot center
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-    ctx.lineWidth = 0.8 * zoom;
-    drawBoltPath(ctx, pts);
-    ctx.stroke();
-
-    // Bright node at bolt tip
-    const tip = pts[pts.length - 1];
-    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.beginPath();
-    ctx.arc(tip.x, tip.y, 1.2 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Sub-branch from middle of longer arcs
-    if (i % 2 === 0) {
-      const bIdx = Math.floor(segCount * 0.5);
-      const bp = pts[bIdx];
-      const bAngle = baseAngle + Math.sin(time * 12 + i * 2.7) * 1.0;
-      const bLen = arcLen * 0.4;
-      const bend = {
-        x: bp.x + Math.cos(bAngle) * bLen + Math.sin(time * 25 + i) * zoom,
-        y: bp.y + Math.sin(bAngle) * bLen * 0.7,
-      };
-      ctx.strokeStyle = colorWithAlpha(baseColor, 0.35);
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bp.x, bp.y);
-      ctx.lineTo(bend.x, bend.y);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bp.x, bp.y);
-      ctx.lineTo(bend.x, bend.y);
+    if (!lowDetail) {
+      ctx.shadowColor = `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`;
+      ctx.shadowBlur = 6 * zoom;
+      ctx.strokeStyle = colorWithAlpha(baseColor, 0.24);
+      ctx.lineWidth = 3 * zoom;
+      drawBoltPath(ctx, pts);
       ctx.stroke();
     }
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = lightenColor(baseColor, 55);
+    ctx.lineWidth = lowDetail ? 1.2 * zoom : 1.7 * zoom;
+    drawBoltPath(ctx, pts);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.lineWidth = 0.7 * zoom;
+    drawBoltPath(ctx, pts);
+    ctx.stroke();
+
+    const tip = pts[pts.length - 1];
+    ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+    ctx.beginPath();
+    ctx.arc(tip.x, tip.y, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  // Plasma core with 3D highlight
-  ctx.save();
-  ctx.shadowColor = lightenColor(baseColor, 80);
-  ctx.shadowBlur = 12 * zoom;
-  const coreGrad = ctx.createRadialGradient(
-    -coreSize * 0.25, -coreSize * 0.25, 0,
-    0, 0, coreSize
-  );
+  // Plasma core
+  if (!lowDetail) {
+    ctx.shadowColor = lightenColor(baseColor, 80);
+    ctx.shadowBlur = 10 * zoom;
+  }
+  const coreGrad = ctx.createRadialGradient(-coreSize * 0.2, -coreSize * 0.2, 0, 0, 0, coreSize);
   coreGrad.addColorStop(0, "#ffffff");
-  coreGrad.addColorStop(0.2, lightenColor(baseColor, 120));
-  coreGrad.addColorStop(0.55, lightenColor(baseColor, 60));
-  coreGrad.addColorStop(0.8, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
-  coreGrad.addColorStop(1, darkenColor(baseColor, 40));
+  coreGrad.addColorStop(0.3, lightenColor(baseColor, 85));
+  coreGrad.addColorStop(0.75, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(1, darkenColor(baseColor, 35));
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
   ctx.arc(0, 0, coreSize, 0, Math.PI * 2);
   ctx.fill();
-  ctx.restore();
+  ctx.shadowBlur = 0;
 
-  // Specular highlight for 3D depth
-  ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.beginPath();
   ctx.ellipse(
-    -coreSize * 0.25, -coreSize * 0.3,
-    coreSize * 0.35, coreSize * 0.2,
-    -0.4, 0, Math.PI * 2
+    -coreSize * 0.24,
+    -coreSize * 0.28,
+    coreSize * 0.3,
+    coreSize * 0.18,
+    -0.4,
+    0,
+    Math.PI * 2
   );
   ctx.fill();
 }
@@ -795,11 +820,14 @@ export function renderProjectile(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
+  projectileDensityHint: number = 0
 ) {
   const zoom = cameraZoom || 1;
   const t = proj.progress;
   const time = Date.now() / 1000;
+  const lowDetail = projectileDensityHint > 140;
+  const minimalDetail = projectileDensityHint > 220;
 
   // Calculate position
   const currentX = proj.from.x + (proj.to.x - proj.from.x) * t;
@@ -849,9 +877,27 @@ export function renderProjectile(
 
   // Draw trail (skip for certain types)
   if (!["rock", "sonicWave", "bansheeScream", "arch"].includes(proj.type)) {
-    const trailLength = proj.type === "flame" ? 2 : 4;
+    const baseTrailLength = proj.type === "flame" ? 2 : 4;
+    const trailLength = minimalDetail
+      ? 0
+      : lowDetail
+        ? Math.max(1, baseTrailLength - 2)
+        : baseTrailLength;
     const trailSize = proj.type === "dragonBreath" ? 6 : 4;
-    drawTrail(ctx, proj, canvasWidth, canvasHeight, dpr, cameraOffset, zoom, trailColor, trailLength, trailSize);
+    if (trailLength > 0) {
+      drawTrail(
+        ctx,
+        proj,
+        canvasWidth,
+        canvasHeight,
+        dpr,
+        cameraOffset,
+        zoom,
+        trailColor,
+        trailLength,
+        trailSize
+      );
+    }
   }
 
   ctx.save();
@@ -866,6 +912,16 @@ export function renderProjectile(
   const scale = proj.scale || 1;
   if (scale !== 1) {
     ctx.scale(scale, scale);
+  }
+
+  // Under heavy density, prefer a cheap projectile sprite for expensive VFX types.
+  if (
+    minimalDetail &&
+    !["arrow", "bolt", "spear", "bullet", "rock", "cannon"].includes(proj.type)
+  ) {
+    renderBullet(ctx, zoom, baseColor);
+    ctx.restore();
+    return;
   }
 
   // Render based on type
@@ -905,7 +961,7 @@ export function renderProjectile(
     case "energyBlast":
     case "lab":
     case "lightning":
-      renderLightningOrb(ctx, zoom, time, baseColor);
+      renderLightningOrb(ctx, zoom, time, baseColor, lowDetail, minimalDetail);
       break;
       
     case "sonicWave":

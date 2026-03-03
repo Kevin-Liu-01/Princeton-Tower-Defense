@@ -40,6 +40,31 @@ export { renderProjectile } from "./projectiles";
 // ============================================================================
 // EFFECT RENDERING
 // ============================================================================
+function hashString32(input: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function seededNoise(seed: number): number {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function tracePolyline(
+  ctx: CanvasRenderingContext2D,
+  points: Array<{ x: number; y: number }>
+): void {
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 1; i < points.length; i++) {
+    ctx.lineTo(points[i].x, points[i].y);
+  }
+}
+
 export function renderEffect(
   ctx: CanvasRenderingContext2D,
   effect: Effect,
@@ -51,6 +76,7 @@ export function renderEffect(
   selectedMap: string,
   cameraOffset?: Position,
   cameraZoom?: number,
+  effectDensityHint: number = 0,
 ) {
   const screenPos = worldToScreen(
     effect.pos,
@@ -107,6 +133,9 @@ export function renderEffect(
           cameraZoom,
         );
         const intensity = effect.intensity || 1;
+        const lightningPressure = effectDensityHint + enemies.length * 0.25;
+        const lowDetail = lightningPressure > 60;
+        const minimalDetail = lightningPressure > 90;
 
         // Find the source lab tower to get correct orb position
         let sourceX = screenPos.x;
@@ -118,15 +147,14 @@ export function renderEffect(
           sourceTower = towers.find((t) => t.id === effect.towerId);
         }
 
-        // If no towerId or tower not found, search for nearby lab tower
-        if (!sourceTower) {
+        // Fallback lookup is only useful for direct bolts. Chain hops are enemy-to-enemy links.
+        if (!sourceTower && effect.type !== "chain") {
           for (const tower of towers) {
             if (tower.type === "lab") {
               const towerWorld = gridToWorld(tower.pos);
-              const distToEffect = Math.sqrt(
-                Math.pow(towerWorld.x - effect.pos.x, 2) +
-                  Math.pow(towerWorld.y - effect.pos.y, 2),
-              );
+              const diffX = towerWorld.x - effect.pos.x;
+              const diffY = towerWorld.y - effect.pos.y;
+              const distToEffect = Math.sqrt(diffX * diffX + diffY * diffY);
               // Use larger threshold since effect pos might be offset
               if (distToEffect < 150) {
                 sourceTower = tower;
@@ -175,18 +203,20 @@ export function renderEffect(
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
         const perpX = -dy / dist;
         const perpY = dx / dist;
-        const now = Date.now();
-
-        // Time-based deterministic noise (smooth animation, no flicker)
-        const boltSeed = Math.floor(now / 50);
-        const noise = (seed: number) => {
-          const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
-          return x - Math.floor(x);
-        };
+        const angle = Math.atan2(dy, dx);
+        const timeBucket = Math.floor(
+          Date.now() / (minimalDetail ? 90 : lowDetail ? 70 : 50)
+        );
+        const seedBase = (hashString32(effect.id) ^ timeBucket) >>> 0;
+        const noise = (seed: number) => seededNoise(seedBase + seed);
 
         // Generate bolt path points with temporal coherence
-        const segments = Math.max(6, Math.floor(dist / 22));
-        const jitter = 22 * zoom * intensity;
+        const segments = minimalDetail
+          ? Math.max(3, Math.floor(dist / 42))
+          : lowDetail
+            ? Math.max(4, Math.floor(dist / 30))
+            : Math.max(6, Math.floor(dist / 22));
+        const jitter = (minimalDetail ? 8 : lowDetail ? 14 : 22) * zoom * intensity;
         const mainPts: { x: number; y: number }[] = [
           { x: sourceX, y: sourceY },
         ];
@@ -195,7 +225,7 @@ export function renderEffect(
           const baseX = sourceX + dx * t;
           const baseY = sourceY + dy * t;
           const taper = 1 - Math.abs(t - 0.5) * 1.6;
-          const n = (noise(boltSeed + i * 17) - 0.5) * 2;
+          const n = (noise(17 + i * 17) - 0.5) * 2;
           const offset = n * jitter * Math.max(0, taper);
           mainPts.push({
             x: baseX + perpX * offset,
@@ -210,163 +240,144 @@ export function renderEffect(
 
         // Layer 1: wide outer glow (deep blue)
         ctx.shadowColor = "#0088ff";
-        ctx.shadowBlur = 20 * zoom * intensity;
+        ctx.shadowBlur = lowDetail ? 0 : 20 * zoom * intensity;
         ctx.strokeStyle = `rgba(30, 100, 255, ${alpha * 0.25 * intensity})`;
-        ctx.lineWidth = 10 * zoom * intensity;
-        ctx.beginPath();
-        ctx.moveTo(mainPts[0].x, mainPts[0].y);
-        for (let i = 1; i < mainPts.length; i++) {
-          ctx.lineTo(mainPts[i].x, mainPts[i].y);
-        }
+        ctx.lineWidth = (minimalDetail ? 4 : lowDetail ? 7 : 10) * zoom * intensity;
+        tracePolyline(ctx, mainPts);
         ctx.stroke();
 
         // Layer 2: mid glow (cyan)
         ctx.shadowColor = "#00ffff";
-        ctx.shadowBlur = 12 * zoom * intensity;
+        ctx.shadowBlur = lowDetail ? 0 : 12 * zoom * intensity;
         ctx.strokeStyle = `rgba(0, 220, 255, ${alpha * 0.6 * intensity})`;
-        ctx.lineWidth = 4 * zoom * intensity;
-        ctx.beginPath();
-        ctx.moveTo(mainPts[0].x, mainPts[0].y);
-        for (let i = 1; i < mainPts.length; i++) {
-          ctx.lineTo(mainPts[i].x, mainPts[i].y);
-        }
+        ctx.lineWidth = (minimalDetail ? 2 : lowDetail ? 3 : 4) * zoom * intensity;
+        tracePolyline(ctx, mainPts);
         ctx.stroke();
 
-        // Layer 3: white-hot core
-        ctx.shadowBlur = 6 * zoom * intensity;
-        ctx.strokeStyle = `rgba(220, 255, 255, ${alpha * 0.9 * intensity})`;
-        ctx.lineWidth = 1.5 * zoom * intensity;
-        ctx.beginPath();
-        ctx.moveTo(mainPts[0].x, mainPts[0].y);
-        for (let i = 1; i < mainPts.length; i++) {
-          ctx.lineTo(mainPts[i].x, mainPts[i].y);
-        }
-        ctx.stroke();
-
-        // Branch lightning forks (2-3 forks off the main bolt)
-        ctx.shadowBlur = 8 * zoom * intensity;
-        const branchCount = 2 + Math.floor(noise(boltSeed + 99) * 2);
-        for (let b = 0; b < branchCount; b++) {
-          const branchIdx =
-            1 + Math.floor(noise(boltSeed + b * 41) * (segments - 2));
-          const branchPt = mainPts[branchIdx];
-          const branchAngle =
-            Math.atan2(dy, dx) +
-            (noise(boltSeed + b * 73) - 0.5) * Math.PI * 0.8;
-          const branchLen = (15 + noise(boltSeed + b * 53) * 25) * zoom * intensity;
-          const branchSegs = 3;
-          const brPts = [{ x: branchPt.x, y: branchPt.y }];
-
-          for (let s = 1; s <= branchSegs; s++) {
-            const bt = s / branchSegs;
-            const bn = (noise(boltSeed + b * 31 + s * 19) - 0.5) * 8 * zoom;
-            brPts.push({
-              x:
-                branchPt.x +
-                Math.cos(branchAngle) * branchLen * bt +
-                Math.cos(branchAngle + Math.PI / 2) * bn,
-              y:
-                branchPt.y +
-                Math.sin(branchAngle) * branchLen * bt +
-                Math.sin(branchAngle + Math.PI / 2) * bn,
-            });
-          }
-
-          // Branch glow
-          ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.35 * intensity})`;
-          ctx.lineWidth = 3 * zoom * intensity;
-          ctx.beginPath();
-          ctx.moveTo(brPts[0].x, brPts[0].y);
-          for (let s = 1; s < brPts.length; s++) {
-            ctx.lineTo(brPts[s].x, brPts[s].y);
-          }
+        if (!minimalDetail) {
+          // Layer 3: white-hot core
+          ctx.shadowBlur = lowDetail ? 0 : 6 * zoom * intensity;
+          ctx.strokeStyle = `rgba(220, 255, 255, ${alpha * 0.9 * intensity})`;
+          ctx.lineWidth = (lowDetail ? 1.1 : 1.5) * zoom * intensity;
+          tracePolyline(ctx, mainPts);
           ctx.stroke();
 
-          // Branch core
-          ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * 0.6 * intensity})`;
-          ctx.lineWidth = 1 * zoom * intensity;
-          ctx.beginPath();
-          ctx.moveTo(brPts[0].x, brPts[0].y);
-          for (let s = 1; s < brPts.length; s++) {
-            ctx.lineTo(brPts[s].x, brPts[s].y);
-          }
-          ctx.stroke();
-        }
+          if (!lowDetail) {
+            // Branch lightning forks
+            ctx.shadowBlur = 8 * zoom * intensity;
+            const branchCount = 1 + Math.floor(noise(99) * 2);
+            for (let b = 0; b < branchCount; b++) {
+              const branchIdx = 1 + Math.floor(noise(41 + b * 41) * (segments - 2));
+              const branchPt = mainPts[branchIdx];
+              const branchAngle = angle + (noise(73 + b * 73) - 0.5) * Math.PI * 0.8;
+              const branchLen = (12 + noise(53 + b * 53) * 20) * zoom * intensity;
+              const branchSegs = 2;
+              const brPts = [{ x: branchPt.x, y: branchPt.y }];
 
-        // Source crackle (small arcs at origin)
-        ctx.shadowColor = "#00ffff";
-        ctx.shadowBlur = 10 * zoom;
-        for (let a = 0; a < 3; a++) {
-          const arcAngle = noise(boltSeed + a * 67) * Math.PI * 2;
-          const arcLen = (4 + noise(boltSeed + a * 37) * 6) * zoom;
-          ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.5 * intensity})`;
-          ctx.lineWidth = 1 * zoom;
-          ctx.beginPath();
-          ctx.moveTo(sourceX, sourceY);
-          ctx.lineTo(
-            sourceX + Math.cos(arcAngle) * arcLen,
-            sourceY + Math.sin(arcAngle) * arcLen,
-          );
-          ctx.stroke();
+              for (let s = 1; s <= branchSegs; s++) {
+                const bt = s / branchSegs;
+                const bn = (noise(31 + b * 31 + s * 19) - 0.5) * 7 * zoom;
+                brPts.push({
+                  x:
+                    branchPt.x +
+                    Math.cos(branchAngle) * branchLen * bt +
+                    Math.cos(branchAngle + Math.PI / 2) * bn,
+                  y:
+                    branchPt.y +
+                    Math.sin(branchAngle) * branchLen * bt +
+                    Math.sin(branchAngle + Math.PI / 2) * bn,
+                });
+              }
+
+              ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.35 * intensity})`;
+              ctx.lineWidth = 2.4 * zoom * intensity;
+              tracePolyline(ctx, brPts);
+              ctx.stroke();
+
+              ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * 0.6 * intensity})`;
+              ctx.lineWidth = 0.9 * zoom * intensity;
+              tracePolyline(ctx, brPts);
+              ctx.stroke();
+            }
+
+            // Source crackle (small arcs at origin)
+            ctx.shadowColor = "#00ffff";
+            ctx.shadowBlur = 9 * zoom;
+            for (let a = 0; a < 2; a++) {
+              const arcAngle = noise(67 + a * 67) * Math.PI * 2;
+              const arcLen = (4 + noise(37 + a * 37) * 5) * zoom;
+              ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.5 * intensity})`;
+              ctx.lineWidth = 1 * zoom;
+              ctx.beginPath();
+              ctx.moveTo(sourceX, sourceY);
+              ctx.lineTo(
+                sourceX + Math.cos(arcAngle) * arcLen,
+                sourceY + Math.sin(arcAngle) * arcLen,
+              );
+              ctx.stroke();
+            }
+          }
         }
 
         // Impact effect — electric sparks + glow ring
         ctx.shadowBlur = 0;
-        const impactPulse = 0.7 + Math.sin(now / 30) * 0.3;
-
-        // Glow halo at impact
-        const impGrad = ctx.createRadialGradient(
-          targetScreen.x,
-          targetScreen.y,
-          0,
-          targetScreen.x,
-          targetScreen.y,
-          14 * zoom * intensity,
-        );
-        impGrad.addColorStop(
-          0,
-          `rgba(200, 255, 255, ${alpha * 0.6 * intensity * impactPulse})`,
-        );
-        impGrad.addColorStop(
-          0.4,
-          `rgba(0, 200, 255, ${alpha * 0.3 * intensity})`,
-        );
-        impGrad.addColorStop(1, `rgba(0, 100, 255, 0)`);
-        ctx.fillStyle = impGrad;
-        ctx.beginPath();
-        ctx.arc(
-          targetScreen.x,
-          targetScreen.y,
-          14 * zoom * intensity,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Electric spark lines at impact
-        for (let s = 0; s < 5; s++) {
-          const sparkAngle = noise(boltSeed + s * 23) * Math.PI * 2;
-          const sparkLen = (5 + noise(boltSeed + s * 47) * 10) * zoom * intensity;
-          ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.6 * intensity})`;
-          ctx.lineWidth = 0.8 * zoom;
+        const impactPulse = 0.7 + noise(913) * 0.3;
+        if (!minimalDetail) {
+          // Glow halo at impact
+          const impactRadius = (lowDetail ? 9 : 14) * zoom * intensity;
+          const impGrad = ctx.createRadialGradient(
+            targetScreen.x,
+            targetScreen.y,
+            0,
+            targetScreen.x,
+            targetScreen.y,
+            impactRadius,
+          );
+          impGrad.addColorStop(
+            0,
+            `rgba(200, 255, 255, ${alpha * 0.6 * intensity * impactPulse})`,
+          );
+          impGrad.addColorStop(
+            0.4,
+            `rgba(0, 200, 255, ${alpha * 0.3 * intensity})`,
+          );
+          impGrad.addColorStop(1, `rgba(0, 100, 255, 0)`);
+          ctx.fillStyle = impGrad;
           ctx.beginPath();
-          ctx.moveTo(targetScreen.x, targetScreen.y);
-          const midAngle = sparkAngle + (noise(boltSeed + s * 89) - 0.5) * 0.6;
-          ctx.lineTo(
-            targetScreen.x + Math.cos(midAngle) * sparkLen * 0.5,
-            targetScreen.y + Math.sin(midAngle) * sparkLen * 0.5,
-          );
-          ctx.lineTo(
-            targetScreen.x + Math.cos(sparkAngle) * sparkLen,
-            targetScreen.y + Math.sin(sparkAngle) * sparkLen,
-          );
-          ctx.stroke();
+          ctx.arc(targetScreen.x, targetScreen.y, impactRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          const sparkLines = lowDetail ? 2 : 4;
+          for (let s = 0; s < sparkLines; s++) {
+            const sparkAngle = noise(23 + s * 23) * Math.PI * 2;
+            const sparkLen = (4 + noise(47 + s * 47) * 7) * zoom * intensity;
+            ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.6 * intensity})`;
+            ctx.lineWidth = 0.8 * zoom;
+            ctx.beginPath();
+            ctx.moveTo(targetScreen.x, targetScreen.y);
+            const midAngle = sparkAngle + (noise(89 + s * 89) - 0.5) * 0.6;
+            ctx.lineTo(
+              targetScreen.x + Math.cos(midAngle) * sparkLen * 0.5,
+              targetScreen.y + Math.sin(midAngle) * sparkLen * 0.5,
+            );
+            ctx.lineTo(
+              targetScreen.x + Math.cos(sparkAngle) * sparkLen,
+              targetScreen.y + Math.sin(sparkAngle) * sparkLen,
+            );
+            ctx.stroke();
+          }
         }
 
         // White-hot impact dot
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8 * intensity * impactPulse})`;
         ctx.beginPath();
-        ctx.arc(targetScreen.x, targetScreen.y, 3 * zoom * intensity, 0, Math.PI * 2);
+        ctx.arc(
+          targetScreen.x,
+          targetScreen.y,
+          (minimalDetail ? 2.2 : 3) * zoom * intensity,
+          0,
+          Math.PI * 2
+        );
         ctx.fill();
 
         ctx.restore();

@@ -430,7 +430,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 <div className="flex flex-col items-center justify-center h-full min-w-[28px] sm:min-w-[48px]">
                   <SpellSprite type={spell.type} size={sizes.heroIcon > 36 ? 28 : 20} />
                   <div className={`font-bold uppercase text-[7px] sm:text-[9px] tracking-wide mt-0.5 ${canCast ? (theme?.nameColor || "text-purple-200") : "text-stone-400"}`}>
-                    {spellData.name.split(" ")[0]}
+                    {spellData.shortName}
                   </div>
                   {/* Cost + Cooldown */}
                   <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">

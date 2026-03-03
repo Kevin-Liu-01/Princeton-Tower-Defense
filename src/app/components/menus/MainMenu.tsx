@@ -295,11 +295,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           <button
             onClick={prevRegion}
             disabled={currentRegion === 0}
-            className={`p-3 rounded-full transition-all ${
-              currentRegion === 0
+            className={`p-3 rounded-full transition-all ${currentRegion === 0
                 ? "bg-stone-800/50 text-stone-600 cursor-not-allowed"
                 : "bg-amber-900/80 hover:bg-amber-800 text-amber-300 border border-amber-600"
-            }`}
+              }`}
           >
             <ChevronLeft size={28} />
           </button>
@@ -319,13 +318,12 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                 <button
                   key={r.id}
                   onClick={() => setCurrentRegion(i)}
-                  className={`relative p-3 rounded-xl transition-all duration-300 ${
-                    isActive
+                  className={`relative p-3 rounded-xl transition-all duration-300 ${isActive
                       ? "bg-amber-800/80 border-2 border-amber-400 scale-110 shadow-xl"
                       : unlocked
-                      ? "bg-stone-800/80 border border-stone-600 hover:border-amber-600"
-                      : "bg-stone-900/80 border border-stone-700 opacity-60"
-                  }`}
+                        ? "bg-stone-800/80 border border-stone-600 hover:border-amber-600"
+                        : "bg-stone-900/80 border border-stone-700 opacity-60"
+                    }`}
                 >
                   <RegionIcon type={r.type} size={50} locked={!unlocked} />
                   {unlocked && (
@@ -356,11 +354,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           <button
             onClick={nextRegion}
             disabled={currentRegion === REGIONS.length - 1}
-            className={`p-3 rounded-full transition-all ${
-              currentRegion === REGIONS.length - 1
+            className={`p-3 rounded-full transition-all ${currentRegion === REGIONS.length - 1
                 ? "bg-stone-800/50 text-stone-600 cursor-not-allowed"
                 : "bg-amber-900/80 hover:bg-amber-800 text-amber-300 border border-amber-600"
-            }`}
+              }`}
           >
             <ChevronRight size={28} />
           </button>
@@ -400,21 +397,19 @@ export const MainMenu: React.FC<MainMenuProps> = ({
               <div
                 key={level.id}
                 onClick={() => (unlocked || canUnlock) && selectLevel(level.id)}
-                className={`relative w-48 p-4 rounded-xl transition-all duration-300 cursor-pointer ${
-                  unlocked
+                className={`relative w-48 p-4 rounded-xl transition-all duration-300 cursor-pointer ${unlocked
                     ? "bg-gradient-to-b from-amber-800/90 to-amber-900/90 border-2 border-amber-500 hover:scale-105 hover:shadow-xl"
                     : canUnlock
-                    ? "bg-gradient-to-b from-stone-700/90 to-stone-800/90 border-2 border-stone-500 hover:border-amber-600"
-                    : "bg-stone-900/80 border border-stone-700 opacity-50 cursor-not-allowed"
-                }`}
+                      ? "bg-gradient-to-b from-stone-700/90 to-stone-800/90 border-2 border-stone-500 hover:border-amber-600"
+                      : "bg-stone-900/80 border border-stone-700 opacity-50 cursor-not-allowed"
+                  }`}
               >
                 {/* Level number */}
                 <div
-                  className={`absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
-                    unlocked
+                  className={`absolute -top-3 -left-3 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${unlocked
                       ? "bg-amber-600 text-amber-100"
                       : "bg-stone-700 text-stone-400"
-                  }`}
+                    }`}
                 >
                   {i + 1}
                 </div>
@@ -436,18 +431,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 
                 {/* Level name */}
                 <h3
-                  className={`text-lg font-bold text-center mb-2 ${
-                    unlocked ? "text-amber-200" : "text-stone-400"
-                  }`}
+                  className={`text-lg font-bold text-center mb-2 ${unlocked ? "text-amber-200" : "text-stone-400"
+                    }`}
                 >
                   {level.name}
                 </h3>
 
                 {/* Description */}
                 <p
-                  className={`text-xs text-center mb-3 ${
-                    unlocked ? "text-amber-400" : "text-stone-500"
-                  }`}
+                  className={`text-xs text-center mb-3 ${unlocked ? "text-amber-400" : "text-stone-500"
+                    }`}
                 >
                   {level.description}
                 </p>
@@ -457,24 +450,22 @@ export const MainMenu: React.FC<MainMenuProps> = ({
                   {[1, 2, 3].map((d) => (
                     <div
                       key={d}
-                      className={`w-3 h-3 rounded-full ${
-                        d <= level.difficulty
+                      className={`w-3 h-3 rounded-full ${d <= level.difficulty
                           ? level.difficulty === 1
                             ? "bg-green-500"
                             : level.difficulty === 2
-                            ? "bg-yellow-500"
-                            : "bg-red-500"
+                              ? "bg-yellow-500"
+                              : "bg-red-500"
                           : "bg-stone-700"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
 
                 {/* Waves */}
                 <p
-                  className={`text-xs text-center ${
-                    unlocked ? "text-amber-500" : "text-stone-500"
-                  }`}
+                  className={`text-xs text-center ${unlocked ? "text-amber-500" : "text-stone-500"
+                    }`}
                 >
                   {level.waves} Waves
                 </p>
@@ -602,13 +593,13 @@ const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, 
     nature: [],
     swarm: [],
   };
-  
+
   enemyTypes.forEach(type => {
     const enemy = ENEMY_DATA[type];
     const category = enemy.category || "campus"; // Default to campus if not specified
     grouped[category].push(type);
   });
-  
+
   return grouped;
 };
 
@@ -694,7 +685,7 @@ const CodexModal: React.FC<CodexModalProps> = ({
   const spells = [
     {
       type: "fireball" as const,
-      name: "Fireball",
+      name: "Fireballs",
       desc: "Launches a fireball that explodes on impact, dealing area damage.",
       cost: 50,
     },
@@ -736,360 +727,356 @@ const CodexModal: React.FC<CodexModalProps> = ({
           color="#d97706"
           glowColor="#f59e0b"
         >
-        {/* Header */}
-        <div className="bg-amber-900/80 px-6 py-4 flex items-center justify-between border-b border-amber-700">
-          <h2 className="text-2xl font-bold text-amber-300 flex items-center gap-3">
-            <Book size={28} />
-            Codex
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-amber-400 hover:text-amber-200 transition-colors text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-stone-700">
-          {(["towers", "heroes", "enemies", "spells"] as const).map((tab) => (
+          {/* Header */}
+          <div className="bg-amber-900/80 px-6 py-4 flex items-center justify-between border-b border-amber-700">
+            <h2 className="text-2xl font-bold text-amber-300 flex items-center gap-3">
+              <Book size={28} />
+              Codex
+            </h2>
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors ${
-                activeTab === tab
-                  ? "bg-amber-900/60 text-amber-300 border-b-2 border-amber-400"
-                  : "text-stone-400 hover:text-amber-300 hover:bg-stone-800/50"
-              }`}
+              onClick={onClose}
+              className="text-amber-400 hover:text-amber-200 transition-colors text-2xl"
             >
-              {tab}
+              ×
             </button>
-          ))}
-        </div>
+          </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
-          {activeTab === "towers" && (
-            <div className="grid grid-cols-2 gap-4">
-              {towers.map((t) => (
-                <div
-                  key={t.type}
-                  className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
-                >
-                  <div className="flex-shrink-0">
-                    <TowerSprite type={t.type} size={64} animated />
-                  </div>
-                  <div>
-                    <h3 className="text-amber-300 font-bold mb-1">{t.name}</h3>
-                    <p className="text-stone-400 text-sm">{t.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Tabs */}
+          <div className="flex border-b border-stone-700">
+            {(["towers", "heroes", "enemies", "spells"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === tab
+                    ? "bg-amber-900/60 text-amber-300 border-b-2 border-amber-400"
+                    : "text-stone-400 hover:text-amber-300 hover:bg-stone-800/50"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
 
-          {activeTab === "heroes" && (
-            <div className="grid grid-cols-2 gap-4">
-              {heroes.map((h) => (
-                <div
-                  key={h.type}
-                  className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
-                >
-                  <div className="flex-shrink-0">
-                    <HeroSprite type={h.type} size={64} animated />
-                  </div>
-                  <div>
-                    <h3 className="text-amber-300 font-bold mb-1">{h.name}</h3>
-                    <p className="text-stone-400 text-sm mb-2">{h.desc}</p>
-                    <span className="text-purple-400 text-xs bg-purple-900/40 px-2 py-1 rounded">
-                      Ability: {h.ability}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "enemies" && (() => {
-            const groupedEnemies = groupEnemiesByCategory(enemyTypes);
-            
-            return (
-              <div className="space-y-4">
-                {CATEGORY_ORDER.map(category => {
-                  const categoryEnemies = groupedEnemies[category];
-                  if (categoryEnemies.length === 0) return null;
-                  
-                  const catInfo = CATEGORY_INFO[category];
-                  
-                  return (
-                    <div key={category}>
-                      {/* Category Header */}
-                      <div className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${catInfo.bgColor.replace('bg-', 'border-')}`}>
-                        <div className={`p-1.5 rounded ${catInfo.bgColor}`}>
-                          {catInfo.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className={`font-bold text-sm ${catInfo.color}`}>{catInfo.name}</h3>
-                          <p className="text-[9px] text-stone-400">{catInfo.desc}</p>
-                        </div>
-                        <span className="text-[9px] text-stone-500 bg-stone-800/50 px-1.5 py-0.5 rounded">
-                          {categoryEnemies.length}
-                        </span>
-                      </div>
-                      
-                      {/* Category Enemies Grid */}
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                        {categoryEnemies.map((type) => {
-                          const enemy = ENEMY_DATA[type];
-                          const traits = enemy.traits || [];
-                          const abilities = enemy.abilities || [];
-                          const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
-
-                          // Threat level
-                          const getThreatLevel = (hp: number, isBoss?: boolean) => {
-                            if (isBoss || hp >= 1000) return { level: "Boss", color: "purple" };
-                            if (hp >= 500) return { level: "Elite", color: "orange" };
-                            if (hp >= 200) return { level: "Standard", color: "yellow" };
-                            return { level: "Minion", color: "green" };
-                          };
-                          const threat = getThreatLevel(enemy.hp, enemy.isBoss);
-
-                          // Enemy type classification
-                          const getEnemyTypeClass = () => {
-                            if (enemy.flying) return { type: "Flying", icon: <Wind size={10} />, color: "cyan" };
-                            if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={10} />, color: "purple" };
-                            if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
-                            if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
-                            return { type: "Ground", icon: <Flag size={10} />, color: "red" };
-                          };
-                          const enemyTypeClass = getEnemyTypeClass();
-
-                          return (
-                            <div
-                              key={type}
-                              className="bg-gradient-to-br from-stone-800/80 to-stone-900/80 rounded-xl border border-stone-700/50 overflow-hidden hover:border-red-700/50 transition-colors"
-                            >
-                              {/* Header */}
-                              <div className={`px-3 py-1.5 border-b flex items-center justify-between ${
-                                threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                                threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                                threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                "bg-green-950/50 border-green-800/30"
-                              }`}>
-                                <div className={`flex items-center gap-1.5 ${
-                                  threat.color === "purple" ? "text-purple-400" :
-                                  threat.color === "orange" ? "text-orange-400" :
-                                  threat.color === "yellow" ? "text-yellow-400" :
-                                  "text-green-400"
-                                }`}>
-                                  {threat.color === "purple" ? <Crown size={10} /> : 
-                                   threat.color === "orange" ? <Star size={10} /> : 
-                                   <Target size={10} />}
-                                  <span className="text-[10px] font-medium uppercase">{threat.level}</span>
-                                </div>
-                                <div className={`flex items-center gap-1 text-[10px] ${
-                                  enemyTypeClass.color === "cyan" ? "text-cyan-400" :
-                                  enemyTypeClass.color === "purple" ? "text-purple-400" :
-                                  enemyTypeClass.color === "stone" ? "text-stone-400" :
-                                  enemyTypeClass.color === "green" ? "text-green-400" :
-                                  "text-red-400"
-                                }`}>
-                                  {enemyTypeClass.icon}
-                                  <span>{enemyTypeClass.type}</span>
-                                </div>
-                              </div>
-
-                              <div className="p-3">
-                                <div className="flex items-start gap-3 mb-2">
-                                  <div className="w-12 h-12 rounded-lg bg-stone-800/80 border border-red-900/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                    <EnemySprite type={type} size={44} animated />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between gap-2">
-                                      <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
-                                      {/* Lives Cost Badge */}
-                                      <div className="flex items-center gap-1 px-1.5 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
-                                        <Heart size={10} className="text-rose-400" />
-                                        <span className="text-rose-300 font-bold text-[9px]">{enemy.liveCost || 1}</span>
-                                      </div>
-                                    </div>
-                                    <p className="text-[10px] text-stone-400 line-clamp-2 mt-0.5">{enemy.desc}</p>
-                                  </div>
-                                </div>
-
-                                {/* Stats */}
-                                <div className="grid grid-cols-4 gap-1 mb-2">
-                                  <div className="bg-red-950/50 rounded px-1 py-0.5 text-center border border-red-900/40">
-                                    <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
-                                    <div className="text-red-300 font-bold text-[10px]">{enemy.hp}</div>
-                                  </div>
-                                  <div className="bg-amber-950/50 rounded px-1 py-0.5 text-center border border-amber-900/40">
-                                    <Coins size={10} className="mx-auto text-amber-400 mb-0.5" />
-                                    <div className="text-amber-300 font-bold text-[10px]">{enemy.bounty}</div>
-                                  </div>
-                                  <div className="bg-green-950/50 rounded px-1 py-0.5 text-center border border-green-900/40">
-                                    <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
-                                    <div className="text-green-300 font-bold text-[10px]">{enemy.speed}</div>
-                                  </div>
-                                  <div className="bg-stone-800/50 rounded px-1 py-0.5 text-center border border-stone-700/40">
-                                    <Shield size={10} className="mx-auto text-stone-400 mb-0.5" />
-                                    <div className="text-stone-300 font-bold text-[10px]">{Math.round(enemy.armor * 100)}%</div>
-                                  </div>
-                                </div>
-
-                                {/* Ranged Stats */}
-                                {enemy.isRanged && (
-                                  <div className="grid grid-cols-3 gap-1 mb-2">
-                                    <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
-                                      <div className="text-[8px] text-purple-500">Range</div>
-                                      <div className="text-purple-300 font-bold text-[9px]">{enemy.range}</div>
-                                    </div>
-                                    <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
-                                      <div className="text-[8px] text-purple-500">Atk Spd</div>
-                                      <div className="text-purple-300 font-bold text-[9px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
-                                    </div>
-                                    <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
-                                      <div className="text-[8px] text-purple-500">Dmg</div>
-                                      <div className="text-purple-300 font-bold text-[9px]">{enemy.projectileDamage}</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* AoE Stats */}
-                                {hasAoE && (
-                                  <div className="grid grid-cols-2 gap-1 mb-2">
-                                    <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
-                                      <div className="text-[8px] text-orange-500">AoE Radius</div>
-                                      <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeRadius}</div>
-                                    </div>
-                                    <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
-                                      <div className="text-[8px] text-orange-500">AoE Dmg</div>
-                                      <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeDamage}</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Flying Troop Attack Stats */}
-                                {enemy.targetsTroops && enemy.troopDamage && (
-                                  <div className="grid grid-cols-2 gap-1 mb-2">
-                                    <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
-                                      <Wind size={10} className="mx-auto text-cyan-400 mb-0.5" />
-                                      <div className="text-[8px] text-cyan-500">Swoop</div>
-                                      <div className="text-cyan-300 font-bold text-[9px]">{enemy.troopDamage}</div>
-                                    </div>
-                                    <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
-                                      <Timer size={10} className="mx-auto text-cyan-400 mb-0.5" />
-                                      <div className="text-[8px] text-cyan-500">Speed</div>
-                                      <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Melee Combat Stats */}
-                                {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
-                                  <div className="grid grid-cols-2 gap-1 mb-2">
-                                    <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
-                                      <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-[8px] text-red-500">Melee</div>
-                                      <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? 22}</div>
-                                    </div>
-                                    <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
-                                      <Timer size={10} className="mx-auto text-red-400 mb-0.5" />
-                                      <div className="text-[8px] text-red-500">Speed</div>
-                                      <div className="text-red-300 font-bold text-[9px]">1.0s</div>
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Breakthrough indicator */}
-                                {enemy.breakthrough && (
-                                  <div className="mb-2">
-                                    <div className="bg-sky-950/40 rounded px-1 py-0.5 text-center border border-sky-900/30">
-                                      <div className="text-sky-300 font-bold text-[9px] flex items-center justify-center gap-1">
-                                        <Zap size={10} className="text-sky-400" />
-                                        Bypasses Troops
-                                      </div>
-                                      {enemy.troopDamage != null && (
-                                        <div className="text-[8px] text-sky-300/90">Hero: {enemy.troopDamage}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Traits */}
-                                {traits.length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mb-2">
-                                    {traits.map((trait, i) => {
-                                      const traitInfo = getTraitInfo(trait);
-                                      return (
-                                        <span
-                                          key={i}
-                                          className={`text-[8px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-0.5 ${traitInfo.color}`}
-                                        >
-                                          {traitInfo.icon}
-                                          <span>{traitInfo.label}</span>
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-
-                                {/* Abilities */}
-                                {abilities.length > 0 && (
-                                  <div className="space-y-1 max-h-16 overflow-y-auto">
-                                    {abilities.map((ability, i) => {
-                                      const abilityInfo = getAbilityInfo(ability.type);
-                                      return (
-                                        <div
-                                          key={i}
-                                          className={`p-1 rounded border ${abilityInfo.bgColor}`}
-                                        >
-                                          <div className="flex items-center gap-1">
-                                            <span className={abilityInfo.color}>{abilityInfo.icon}</span>
-                                            <span className="text-[9px] font-bold text-white">{ability.name}</span>
-                                            <span className="text-[7px] px-1 bg-black/30 rounded text-white/70 ml-auto">
-                                              {Math.round(ability.chance * 100)}%
-                                            </span>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+          {/* Content */}
+          <div className="p-6 overflow-y-auto max-h-[calc(80vh-140px)]">
+            {activeTab === "towers" && (
+              <div className="grid grid-cols-2 gap-4">
+                {towers.map((t) => (
+                  <div
+                    key={t.type}
+                    className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
+                  >
+                    <div className="flex-shrink-0">
+                      <TowerSprite type={t.type} size={64} animated />
                     </div>
-                  );
-                })}
+                    <div>
+                      <h3 className="text-amber-300 font-bold mb-1">{t.name}</h3>
+                      <p className="text-stone-400 text-sm">{t.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            );
-          })()}
+            )}
 
-          {activeTab === "spells" && (
-            <div className="grid grid-cols-2 gap-4">
-              {spells.map((s) => (
-                <div
-                  key={s.type}
-                  className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
-                >
-                  <div className="flex-shrink-0">
-                    <SpellSprite type={s.type} size={56} animated />
+            {activeTab === "heroes" && (
+              <div className="grid grid-cols-2 gap-4">
+                {heroes.map((h) => (
+                  <div
+                    key={h.type}
+                    className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
+                  >
+                    <div className="flex-shrink-0">
+                      <HeroSprite type={h.type} size={64} animated />
+                    </div>
+                    <div>
+                      <h3 className="text-amber-300 font-bold mb-1">{h.name}</h3>
+                      <p className="text-stone-400 text-sm mb-2">{h.desc}</p>
+                      <span className="text-purple-400 text-xs bg-purple-900/40 px-2 py-1 rounded">
+                        Ability: {h.ability}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-purple-300 font-bold mb-1">{s.name}</h3>
-                    <p className="text-stone-400 text-sm mb-2">{s.desc}</p>
-                    <span className="text-amber-400 text-xs">
-                      Cost: {s.cost > 0 ? `${s.cost} PP` : "Free"}
-                    </span>
-                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "enemies" && (() => {
+              const groupedEnemies = groupEnemiesByCategory(enemyTypes);
+
+              return (
+                <div className="space-y-4">
+                  {CATEGORY_ORDER.map(category => {
+                    const categoryEnemies = groupedEnemies[category];
+                    if (categoryEnemies.length === 0) return null;
+
+                    const catInfo = CATEGORY_INFO[category];
+
+                    return (
+                      <div key={category}>
+                        {/* Category Header */}
+                        <div className={`flex items-center gap-2 mb-2 pb-1.5 border-b ${catInfo.bgColor.replace('bg-', 'border-')}`}>
+                          <div className={`p-1.5 rounded ${catInfo.bgColor}`}>
+                            {catInfo.icon}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className={`font-bold text-sm ${catInfo.color}`}>{catInfo.name}</h3>
+                            <p className="text-[9px] text-stone-400">{catInfo.desc}</p>
+                          </div>
+                          <span className="text-[9px] text-stone-500 bg-stone-800/50 px-1.5 py-0.5 rounded">
+                            {categoryEnemies.length}
+                          </span>
+                        </div>
+
+                        {/* Category Enemies Grid */}
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                          {categoryEnemies.map((type) => {
+                            const enemy = ENEMY_DATA[type];
+                            const traits = enemy.traits || [];
+                            const abilities = enemy.abilities || [];
+                            const hasAoE = enemy.aoeRadius && enemy.aoeDamage;
+
+                            // Threat level
+                            const getThreatLevel = (hp: number, isBoss?: boolean) => {
+                              if (isBoss || hp >= 1000) return { level: "Boss", color: "purple" };
+                              if (hp >= 500) return { level: "Elite", color: "orange" };
+                              if (hp >= 200) return { level: "Standard", color: "yellow" };
+                              return { level: "Minion", color: "green" };
+                            };
+                            const threat = getThreatLevel(enemy.hp, enemy.isBoss);
+
+                            // Enemy type classification
+                            const getEnemyTypeClass = () => {
+                              if (enemy.flying) return { type: "Flying", icon: <Wind size={10} />, color: "cyan" };
+                              if (enemy.isRanged) return { type: "Ranged", icon: <Crosshair size={10} />, color: "purple" };
+                              if (enemy.armor > 0.2) return { type: "Armored", icon: <Shield size={10} />, color: "stone" };
+                              if (enemy.speed > 0.4) return { type: "Fast", icon: <Gauge size={10} />, color: "green" };
+                              return { type: "Ground", icon: <Flag size={10} />, color: "red" };
+                            };
+                            const enemyTypeClass = getEnemyTypeClass();
+
+                            return (
+                              <div
+                                key={type}
+                                className="bg-gradient-to-br from-stone-800/80 to-stone-900/80 rounded-xl border border-stone-700/50 overflow-hidden hover:border-red-700/50 transition-colors"
+                              >
+                                {/* Header */}
+                                <div className={`px-3 py-1.5 border-b flex items-center justify-between ${threat.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
+                                    threat.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                                      threat.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                        "bg-green-950/50 border-green-800/30"
+                                  }`}>
+                                  <div className={`flex items-center gap-1.5 ${threat.color === "purple" ? "text-purple-400" :
+                                      threat.color === "orange" ? "text-orange-400" :
+                                        threat.color === "yellow" ? "text-yellow-400" :
+                                          "text-green-400"
+                                    }`}>
+                                    {threat.color === "purple" ? <Crown size={10} /> :
+                                      threat.color === "orange" ? <Star size={10} /> :
+                                        <Target size={10} />}
+                                    <span className="text-[10px] font-medium uppercase">{threat.level}</span>
+                                  </div>
+                                  <div className={`flex items-center gap-1 text-[10px] ${enemyTypeClass.color === "cyan" ? "text-cyan-400" :
+                                      enemyTypeClass.color === "purple" ? "text-purple-400" :
+                                        enemyTypeClass.color === "stone" ? "text-stone-400" :
+                                          enemyTypeClass.color === "green" ? "text-green-400" :
+                                            "text-red-400"
+                                    }`}>
+                                    {enemyTypeClass.icon}
+                                    <span>{enemyTypeClass.type}</span>
+                                  </div>
+                                </div>
+
+                                <div className="p-3">
+                                  <div className="flex items-start gap-3 mb-2">
+                                    <div className="w-12 h-12 rounded-lg bg-stone-800/80 border border-red-900/40 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                      <EnemySprite type={type} size={44} animated />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <h3 className="font-bold text-red-200 text-sm truncate">{enemy.name}</h3>
+                                        {/* Lives Cost Badge */}
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-rose-950/60 rounded border border-rose-800/50 flex-shrink-0">
+                                          <Heart size={10} className="text-rose-400" />
+                                          <span className="text-rose-300 font-bold text-[9px]">{enemy.liveCost || 1}</span>
+                                        </div>
+                                      </div>
+                                      <p className="text-[10px] text-stone-400 line-clamp-2 mt-0.5">{enemy.desc}</p>
+                                    </div>
+                                  </div>
+
+                                  {/* Stats */}
+                                  <div className="grid grid-cols-4 gap-1 mb-2">
+                                    <div className="bg-red-950/50 rounded px-1 py-0.5 text-center border border-red-900/40">
+                                      <Heart size={10} className="mx-auto text-red-400 mb-0.5" />
+                                      <div className="text-red-300 font-bold text-[10px]">{enemy.hp}</div>
+                                    </div>
+                                    <div className="bg-amber-950/50 rounded px-1 py-0.5 text-center border border-amber-900/40">
+                                      <Coins size={10} className="mx-auto text-amber-400 mb-0.5" />
+                                      <div className="text-amber-300 font-bold text-[10px]">{enemy.bounty}</div>
+                                    </div>
+                                    <div className="bg-green-950/50 rounded px-1 py-0.5 text-center border border-green-900/40">
+                                      <Gauge size={10} className="mx-auto text-green-400 mb-0.5" />
+                                      <div className="text-green-300 font-bold text-[10px]">{enemy.speed}</div>
+                                    </div>
+                                    <div className="bg-stone-800/50 rounded px-1 py-0.5 text-center border border-stone-700/40">
+                                      <Shield size={10} className="mx-auto text-stone-400 mb-0.5" />
+                                      <div className="text-stone-300 font-bold text-[10px]">{Math.round(enemy.armor * 100)}%</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Ranged Stats */}
+                                  {enemy.isRanged && (
+                                    <div className="grid grid-cols-3 gap-1 mb-2">
+                                      <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
+                                        <div className="text-[8px] text-purple-500">Range</div>
+                                        <div className="text-purple-300 font-bold text-[9px]">{enemy.range}</div>
+                                      </div>
+                                      <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
+                                        <div className="text-[8px] text-purple-500">Atk Spd</div>
+                                        <div className="text-purple-300 font-bold text-[9px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
+                                      </div>
+                                      <div className="bg-purple-950/40 rounded px-1 py-0.5 text-center border border-purple-900/30">
+                                        <div className="text-[8px] text-purple-500">Dmg</div>
+                                        <div className="text-purple-300 font-bold text-[9px]">{enemy.projectileDamage}</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* AoE Stats */}
+                                  {hasAoE && (
+                                    <div className="grid grid-cols-2 gap-1 mb-2">
+                                      <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
+                                        <div className="text-[8px] text-orange-500">AoE Radius</div>
+                                        <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeRadius}</div>
+                                      </div>
+                                      <div className="bg-orange-950/40 rounded px-1 py-0.5 text-center border border-orange-900/30">
+                                        <div className="text-[8px] text-orange-500">AoE Dmg</div>
+                                        <div className="text-orange-300 font-bold text-[9px]">{enemy.aoeDamage}</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Flying Troop Attack Stats */}
+                                  {enemy.targetsTroops && enemy.troopDamage && (
+                                    <div className="grid grid-cols-2 gap-1 mb-2">
+                                      <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
+                                        <Wind size={10} className="mx-auto text-cyan-400 mb-0.5" />
+                                        <div className="text-[8px] text-cyan-500">Swoop</div>
+                                        <div className="text-cyan-300 font-bold text-[9px]">{enemy.troopDamage}</div>
+                                      </div>
+                                      <div className="bg-cyan-950/40 rounded px-1 py-0.5 text-center border border-cyan-900/30">
+                                        <Timer size={10} className="mx-auto text-cyan-400 mb-0.5" />
+                                        <div className="text-[8px] text-cyan-500">Speed</div>
+                                        <div className="text-cyan-300 font-bold text-[9px]">{((enemy.troopAttackSpeed || 2000) / 1000).toFixed(1)}s</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Melee Combat Stats */}
+                                  {!enemy.flying && !enemy.breakthrough && !enemy.isRanged && (
+                                    <div className="grid grid-cols-2 gap-1 mb-2">
+                                      <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
+                                        <Swords size={10} className="mx-auto text-red-400 mb-0.5" />
+                                        <div className="text-[8px] text-red-500">Melee</div>
+                                        <div className="text-red-300 font-bold text-[9px]">{enemy.troopDamage ?? 22}</div>
+                                      </div>
+                                      <div className="bg-red-950/40 rounded px-1 py-0.5 text-center border border-red-900/30">
+                                        <Timer size={10} className="mx-auto text-red-400 mb-0.5" />
+                                        <div className="text-[8px] text-red-500">Speed</div>
+                                        <div className="text-red-300 font-bold text-[9px]">1.0s</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Breakthrough indicator */}
+                                  {enemy.breakthrough && (
+                                    <div className="mb-2">
+                                      <div className="bg-sky-950/40 rounded px-1 py-0.5 text-center border border-sky-900/30">
+                                        <div className="text-sky-300 font-bold text-[9px] flex items-center justify-center gap-1">
+                                          <Zap size={10} className="text-sky-400" />
+                                          Bypasses Troops
+                                        </div>
+                                        {enemy.troopDamage != null && (
+                                          <div className="text-[8px] text-sky-300/90">Hero: {enemy.troopDamage}</div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Traits */}
+                                  {traits.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mb-2">
+                                      {traits.map((trait, i) => {
+                                        const traitInfo = getTraitInfo(trait);
+                                        return (
+                                          <span
+                                            key={i}
+                                            className={`text-[8px] px-1.5 py-0.5 bg-stone-800/60 rounded border border-stone-700/50 flex items-center gap-0.5 ${traitInfo.color}`}
+                                          >
+                                            {traitInfo.icon}
+                                            <span>{traitInfo.label}</span>
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+
+                                  {/* Abilities */}
+                                  {abilities.length > 0 && (
+                                    <div className="space-y-1 max-h-16 overflow-y-auto">
+                                      {abilities.map((ability, i) => {
+                                        const abilityInfo = getAbilityInfo(ability.type);
+                                        return (
+                                          <div
+                                            key={i}
+                                            className={`p-1 rounded border ${abilityInfo.bgColor}`}
+                                          >
+                                            <div className="flex items-center gap-1">
+                                              <span className={abilityInfo.color}>{abilityInfo.icon}</span>
+                                              <span className="text-[9px] font-bold text-white">{ability.name}</span>
+                                              <span className="text-[7px] px-1 bg-black/30 rounded text-white/70 ml-auto">
+                                                {Math.round(ability.chance * 100)}%
+                                              </span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              );
+            })()}
+
+            {activeTab === "spells" && (
+              <div className="grid grid-cols-2 gap-4">
+                {spells.map((s) => (
+                  <div
+                    key={s.type}
+                    className="bg-stone-800/60 rounded-xl p-4 border border-stone-700 flex gap-4"
+                  >
+                    <div className="flex-shrink-0">
+                      <SpellSprite type={s.type} size={56} animated />
+                    </div>
+                    <div>
+                      <h3 className="text-purple-300 font-bold mb-1">{s.name}</h3>
+                      <p className="text-stone-400 text-sm mb-2">{s.desc}</p>
+                      <span className="text-amber-400 text-xs">
+                        Cost: {s.cost > 0 ? `${s.cost} PP` : "Free"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </OrnateFrame>
       </div>
     </div>

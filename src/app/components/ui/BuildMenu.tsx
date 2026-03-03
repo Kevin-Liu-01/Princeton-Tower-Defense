@@ -25,6 +25,7 @@ interface BuildMenuProps {
   pawPoints: number;
   buildingTower: TowerType | null;
   setBuildingTower: (tower: TowerType | null) => void;
+  setIsBuildDragging: (dragging: boolean) => void;
   setHoveredBuildTower: (tower: TowerType | null) => void;
   hoveredTower: string | null;
   setHoveredTower: (tower: string | null) => void;
@@ -36,6 +37,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   pawPoints,
   buildingTower,
   setBuildingTower,
+  setIsBuildDragging,
   setHoveredBuildTower,
   hoveredTower,
   setHoveredTower,
@@ -44,6 +46,10 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
 }) => {
   const isTouchDevice = useIsTouchDevice();
   const sizes = useResponsiveSizes();
+  const pointerDownTowerRef = React.useRef<{
+    tower: TowerType;
+    wasSelected: boolean;
+  } | null>(null);
 
   const towerStrategies: Record<string, string> = {
     cannon:
@@ -83,7 +89,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                 <Construction size={14} /> <div>BUILD TOWERS</div>
               </div>
               <div className="text-[8px] text-amber-600 font-normal">
-                (Click to Select / Deselect)
+                (Select, move+click, or drag-release)
               </div>
             </h3>
             {Object.entries(TOWER_DATA).map(([type, data]) => {
@@ -94,18 +100,57 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
               return (
                 <div key={type} className="relative w-full">
                   <button
+                    onPointerDown={(e) => {
+                      if (!canAfford) return;
+                      if (e.pointerType === "mouse" && e.button !== 0) return;
+                      pointerDownTowerRef.current = {
+                        tower: towerType,
+                        wasSelected: isSelected,
+                      };
+                      if (!isSelected) {
+                        setBuildingTower(towerType);
+                        setHoveredBuildTower(towerType);
+                        setHoveredTower(towerType);
+                        setDraggingTower(null);
+                      }
+                      setIsBuildDragging(true);
+                    }}
+                    onPointerUp={() => {
+                      setIsBuildDragging(false);
+                    }}
+                    onPointerCancel={() => {
+                      setIsBuildDragging(false);
+                      pointerDownTowerRef.current = null;
+                    }}
                     onClick={() => {
+                      const pointerDownMeta = pointerDownTowerRef.current;
+                      if (pointerDownMeta?.tower === towerType) {
+                        pointerDownTowerRef.current = null;
+                        // Pointer click on already-selected tower should deselect.
+                        if (pointerDownMeta.wasSelected) {
+                          setBuildingTower(null);
+                          setHoveredBuildTower(null);
+                          setHoveredTower(null);
+                          setDraggingTower(null);
+                          setIsBuildDragging(false);
+                        }
+                        // Pointer click on unselected tower should stay selected.
+                        return;
+                      }
+
                       // if we have a tower selected, deselect it
                       if (isSelected) {
                         setBuildingTower(null);
                         setHoveredBuildTower(null);
                         setHoveredTower(null);
                         setDraggingTower(null);
+                        setIsBuildDragging(false);
                       } else {
                         setBuildingTower(towerType);
                         setHoveredBuildTower(towerType);
                         setHoveredTower(towerType);
                         setDraggingTower(null);
+                        setIsBuildDragging(false);
                       }
                     }}
                     onMouseEnter={() => {

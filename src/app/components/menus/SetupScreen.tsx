@@ -698,7 +698,7 @@ export function SetupScreen({
                       {/* Hover tooltip */}
                       <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none">
                         <div className="bg-stone-900/95 border border-stone-600/50 rounded px-2 py-1 text-[10px] text-amber-200 whitespace-nowrap backdrop-blur-sm">
-                          {spell.name}
+                          {spell.shortName}
                         </div>
                       </div>
                     </button>
@@ -735,7 +735,7 @@ export function SetupScreen({
                             {i + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs font-bold text-amber-200">{spell.name}</span>
+                            <span className="text-xs font-bold text-amber-200">{spell.shortName}</span>
                           </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
                             <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${spell.cost > 0 ? "bg-amber-500/15 text-amber-400/90" : "bg-green-500/15 text-green-400/90"

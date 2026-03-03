@@ -408,7 +408,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     hp: 8250,
     speed: 0.12,
     bounty: 300,
-    armor: 0.55,
+    armor: 0.4,
     flying: false,
     troopDamage: 180,
     desc: "The final authority. Practically immovable.",
@@ -758,7 +758,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     hp: 14500,
     speed: 0.09,
     bounty: 450,
-    armor: 0.65,
+    armor: 0.35,
     flying: false,
     troopDamage: 160,
     desc: "The stone guardian itself. Near-infinite HP.",
@@ -1108,7 +1108,7 @@ export const ENEMY_DATA: Record<EnemyType, EnemyData> = {
     hp: 12000,
     speed: 0.12,
     bounty: 500,
-    armor: 0.55,
+    armor: 0.38,
     flying: true,
     desc: "A legendary donor from centuries past, returned to judge the worthy.",
     color: "#9f1239",
@@ -1638,6 +1638,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
 export const SPELL_DATA: Record<SpellType, SpellData> = {
   fireball: {
     name: "Meteor Shower",
+    shortName: "Fireball",
     cost: 50,
     cooldown: 15000,
     desc: "Rains 10 meteors dealing 80 AoE damage each, burning enemies for 4s",
@@ -1645,6 +1646,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
   },
   lightning: {
     name: "Chain Lightning",
+    shortName: "Lightning",
     cost: 40,
     cooldown: 12000,
     desc: "Chains to 8 enemies, 900 total damage with stun",
@@ -1652,6 +1654,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
   },
   freeze: {
     name: "Arctic Blast",
+    shortName: "Freeze",
     cost: 60,
     cooldown: 20000,
     desc: "Freezes ALL enemies for 3 seconds",
@@ -1659,6 +1662,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
   },
   payday: {
     name: "Gold Rush",
+    shortName: "Payday",
     cost: 0,
     cooldown: 30000,
     desc: "Grants 80+ Paw Points (bonus per enemy)",
@@ -1666,6 +1670,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
   },
   reinforcements: {
     name: "Knight Squad",
+    shortName: "Reinforcements",
     cost: 75,
     cooldown: 25000,
     desc: "Summons 3 armored knights to the battlefield",

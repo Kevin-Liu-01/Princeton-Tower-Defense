@@ -75,12 +75,12 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   </div>
   <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">
     {(() => {
-      const spellLabels: Record<string, { name: string; brief: string; nameColor: string; briefColor: string; borderColor: string; cost: number; cooldown: number }> = {
-        fireball: { name: "Meteor Shower", brief: "Rain fiery meteors, burning all enemies in area", nameColor: "text-orange-300", briefColor: "text-orange-400/50", borderColor: "rgba(234,88,12,0.4)", cost: 50, cooldown: 15 },
-        lightning: { name: "Chain Lightning", brief: "Chain lightning stuns and shocks eight enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)", cost: 40, cooldown: 12 },
-        freeze: { name: "Arctic Blast", brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)", cost: 60, cooldown: 20 },
-        payday: { name: "Gold Rush", brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)", cost: 0, cooldown: 30 },
-        reinforcements: { name: "Knight Squad", brief: "Summon three armored knights to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)", cost: 75, cooldown: 25 },
+      const spellLabels: Record<SpellType, { brief: string; nameColor: string; briefColor: string; borderColor: string }> = {
+        fireball: { brief: "Rain fiery meteors, burning all enemies in area", nameColor: "text-orange-300", briefColor: "text-orange-400/50", borderColor: "rgba(234,88,12,0.4)" },
+        lightning: { brief: "Chain lightning stuns and shocks eight enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)" },
+        freeze: { brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)" },
+        payday: { brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)" },
+        reinforcements: { brief: "Summon three armored knights to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)" },
       };
       return (
         <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-1.5">
@@ -89,6 +89,9 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             const canSelect = isSelected || selectedSpells.length < 3;
             const spellIndex = selectedSpells.indexOf(spellType);
             const label = spellLabels[spellType];
+            const spellData = SPELL_DATA[spellType];
+            const spellCost = spellData?.cost ?? 0;
+            const spellCooldownSeconds = (spellData?.cooldown ?? 0) / 1000;
             return (
               <button
                 key={spellType}
@@ -121,19 +124,19 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 </div>
                 {label && (
                   <>
-                    <span className={`text-[6.5px] sm:text-[8px] font-semibold leading-none ${label.nameColor}`}>{label.name}</span>
+                    <span className={`text-[6.5px] sm:text-[8px] font-semibold leading-none ${label.nameColor}`}>{spellData?.shortName ?? spellType}</span>
                     <span className={`text-[6.5px] leading-tight text-center hidden sm:block ${label.briefColor}`}>{label.brief}</span>
                     {/* Cost & Cooldown at a glance */}
                     <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
                       <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
-                        style={{ background: label.cost > 0 ? 'rgba(120,80,20,0.3)' : 'rgba(20,83,45,0.3)', border: `1px solid ${label.cost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)'}` }}>
-                        <Coins size={6} className={`sm:w-[7px] sm:h-[7px] ${label.cost > 0 ? "text-amber-400/70" : "text-green-400/70"}`} />
-                        <span className={label.cost > 0 ? "text-amber-300/80" : "text-green-300/80"}>{label.cost > 0 ? label.cost : "Free"}</span>
+                        style={{ background: spellCost > 0 ? 'rgba(120,80,20,0.3)' : 'rgba(20,83,45,0.3)', border: `1px solid ${spellCost > 0 ? 'rgba(120,80,20,0.2)' : 'rgba(20,83,45,0.2)'}` }}>
+                        <Coins size={6} className={`sm:w-[7px] sm:h-[7px] ${spellCost > 0 ? "text-amber-400/70" : "text-green-400/70"}`} />
+                        <span className={spellCost > 0 ? "text-amber-300/80" : "text-green-300/80"}>{spellCost > 0 ? spellCost : "Free"}</span>
                       </span>
                       <span className="text-[6px] sm:text-[7px] font-medium px-0.5 sm:px-1 py-px rounded flex items-center gap-0.5"
                         style={{ background: 'rgba(30,58,138,0.25)', border: '1px solid rgba(30,58,138,0.2)' }}>
                         <Clock size={6} className="text-blue-400/70 sm:w-[7px] sm:h-[7px]" />
-                        <span className="text-blue-300/80">{label.cooldown}s</span>
+                        <span className="text-blue-300/80">{spellCooldownSeconds}s</span>
                       </span>
                     </div>
                   </>
@@ -162,7 +165,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               <React.Fragment key={sp}>
                 <div className="flex items-center gap-1">
                   <SpellSprite type={sp} size={14} />
-                  <span className="text-[8px] text-purple-200/80 font-medium whitespace-nowrap">{SPELL_DATA[sp].name}</span>
+                  <span className="text-[8px] text-purple-200/80 font-medium whitespace-nowrap">{SPELL_DATA[sp].shortName}</span>
                 </div>
                 {i < 2 && <span className="text-purple-600/40 text-[8px]">·</span>}
               </React.Fragment>
@@ -180,7 +183,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 {i < selectedSpells.length ? (
                   <>
                     <SpellSprite type={selectedSpells[i]} size={14} />
-                    <span className="text-[8px] text-purple-200/70 font-medium whitespace-nowrap">{SPELL_DATA[selectedSpells[i]].name}</span>
+                    <span className="text-[8px] text-purple-200/70 font-medium whitespace-nowrap">{SPELL_DATA[selectedSpells[i]].shortName}</span>
                   </>
                 ) : (
                   <>
