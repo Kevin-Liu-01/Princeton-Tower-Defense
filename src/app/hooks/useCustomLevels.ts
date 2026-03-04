@@ -305,6 +305,10 @@ const registerCustomLevels = (levels: CustomLevelDefinition[]): void => {
         level.secondaryPath && level.secondaryPath.length >= 2
           ? `${level.id}_b`
           : undefined,
+      pathKeys:
+        level.secondaryPath && level.secondaryPath.length >= 2
+          ? [`${level.id}_b`]
+          : undefined,
       heroSpawn: level.heroSpawn,
       specialTower: level.specialTower
         ? {

@@ -17,7 +17,6 @@ import {
   Crosshair,
   CoinsIcon,
   Snowflake,
-  Grab,
   Sparkles,
   Flame,
   TrendingUp,
@@ -42,7 +41,7 @@ import { TOWER_DATA, TROOP_DATA } from "../../constants";
 import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constants/towerStats";
 import { TowerSprite } from "../../sprites";
 import { useResponsiveSizes } from "./hooks";
-import { PANEL, GOLD, OVERLAY, panelGradient } from "./theme";
+import { PANEL, GOLD, panelGradient } from "./theme";
 
 interface TowerUpgradePanelProps {
   tower: Tower;
@@ -82,6 +81,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   // Apply tower's current buffs for buffed display
   const rangeBoost = tower.rangeBoost || 1;
   const damageBoost = tower.damageBoost || 1;
+  const attackSpeedBoost = tower.attackSpeedBoost || 1;
   const buffedStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, rangeBoost, damageBoost);
 
   // Get next level stats for comparison
@@ -96,6 +96,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   // Determine if stats are being buffed
   const hasRangeBuff = rangeBoost > 1;
   const hasDamageBuff = damageBoost > 1;
+  const hasAttackSpeedBuff = attackSpeedBoost > 1;
 
   // Calculate debuff modifiers from active debuffs
   const now = Date.now();
@@ -177,19 +178,32 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 
   // Attack Speed (debuff makes it SLOWER, so increase the time value)
   if (baseStats.attackSpeed > 0) {
-    const debuffedSpeed = hasSpeedDebuff ? Math.floor(baseStats.attackSpeed / (1 - attackSpeedDebuff)) : undefined;
+    const buffedAttackSpeedMs = hasAttackSpeedBuff
+      ? Math.max(60, Math.floor(baseStats.attackSpeed / attackSpeedBoost))
+      : undefined;
+    const speedBaseForDebuff = buffedAttackSpeedMs ?? baseStats.attackSpeed;
+    const debuffedSpeed = hasSpeedDebuff
+      ? Math.floor(speedBaseForDebuff / (1 - attackSpeedDebuff))
+      : undefined;
     statsToShow.push({
       key: "speed",
       label: "Speed",
       icon: <Gauge size={14} />,
       value: `${(baseStats.attackSpeed / 1000).toFixed(1)}s`,
+      buffedValue: buffedAttackSpeedMs
+        ? `${(buffedAttackSpeedMs / 1000).toFixed(2)}s`
+        : undefined,
       debuffedValue: debuffedSpeed ? `${(debuffedSpeed / 1000).toFixed(1)}s` : undefined,
       nextValue: nextStats && nextStats.attackSpeed !== baseStats.attackSpeed && nextStats.attackSpeed > 0
         ? `${(nextStats.attackSpeed / 1000).toFixed(1)}s` : undefined,
+      isBoosted: hasAttackSpeedBuff,
       isDebuffed: hasSpeedDebuff,
+      boostAmount: hasAttackSpeedBuff
+        ? Math.round((attackSpeedBoost - 1) * 100)
+        : undefined,
       debuffAmount: hasSpeedDebuff ? Math.round(attackSpeedDebuff * 100) : undefined,
       colorClass: "bg-green-950/60 border-green-800/50 text-green-400",
-      buffColorClass: "bg-green-950/60 border-green-500/70 text-green-400",
+      buffColorClass: "bg-indigo-950/60 border-indigo-500/70 text-indigo-300",
       debuffColorClass: "bg-blue-950/60 border-blue-500/70 text-blue-400",
     });
   }
@@ -376,7 +390,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         </div>
 
         {/* Buff Banner with icons */}
-        {(hasRangeBuff || hasDamageBuff) && (
+        {(hasRangeBuff || hasDamageBuff || hasAttackSpeedBuff) && (
           <div className="mb-2 p-1.5 bg-gradient-to-r from-cyan-950/70 to-orange-950/70 rounded-lg border border-yellow-600/40 flex items-center justify-center gap-2">
             <Sparkles size={12} className="text-yellow-400" />
             <span className="text-[9px] text-yellow-300 font-bold">BUFFED</span>
@@ -393,6 +407,11 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             {hasDamageBuff && (
               <span className="flex items-center gap-1 px-1.5 py-0.5 bg-orange-900/60 rounded text-orange-300 text-[9px]">
                 <Swords size={10} /> +{Math.round((damageBoost - 1) * 100)}% Damage
+              </span>
+            )}
+            {hasAttackSpeedBuff && (
+              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-indigo-900/60 rounded text-indigo-300 text-[9px]">
+                <Timer size={10} /> +{Math.round((attackSpeedBoost - 1) * 100)}% Atk Spd
               </span>
             )}
           </div>

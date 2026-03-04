@@ -568,15 +568,30 @@ export const LEVEL_DATA: Record<
     heroSpawn?: { x: number; y: number };
     dualPath?: boolean; // Has two enemy spawn paths
     secondaryPath?: string; // Key for second path in MAP_PATHS
+    pathKeys?: string[]; // Optional explicit list of additional path keys
     specialTower?: {
       // Special interactive structure
       pos: { x: number; y: number };
-      type: "vault" | "beacon" | "shrine" | "barracks";
+      type:
+        | "vault"
+        | "beacon"
+        | "shrine"
+        | "barracks"
+        | "chrono_relay"
+        | "sentinel_nexus"
+        | "sunforge_orrery";
       hp?: number; // For destructible objectives
     };
     specialTowers?: Array<{
       pos: { x: number; y: number };
-      type: "vault" | "beacon" | "shrine" | "barracks";
+      type:
+        | "vault"
+        | "beacon"
+        | "shrine"
+        | "barracks"
+        | "chrono_relay"
+        | "sentinel_nexus"
+        | "sunforge_orrery";
       hp?: number;
     }>;
     decorations?: MapDecoration[]; // Map-specific decorations
@@ -1503,7 +1518,7 @@ export const LEVEL_DATA: Record<
     ],
     hazards: [
       { type: "poison_fog", pos: { x: 13, y: 14 }, radius: 2.2 },
-      { type: "poison_fog", pos: { x: 24, y: 18 }, radius: 2.3 },
+      { type: "maelstrom", pos: { x: 24, y: 18 }, radius: 2.1 },
       { type: "deep_water", pos: { x: 17, y: 10 }, radius: 1.8 },
     ],
     decorations: [
@@ -1539,6 +1554,7 @@ export const LEVEL_DATA: Record<
       { pos: { x: 8, y: 14 }, type: "vault", hp: 420 },
       { pos: { x: 25, y: 16 }, type: "vault", hp: 420 },
       { pos: { x: 16, y: 21 }, type: "beacon" },
+      { pos: { x: 16, y: 9 }, type: "chrono_relay" },
     ],
     hazards: [
       { type: "quicksand", pos: { x: 14, y: 15 }, radius: 2.4 },
@@ -1604,7 +1620,7 @@ export const LEVEL_DATA: Record<
     name: "Ashen Spiral",
     position: { x: 1740, y: 260 },
     description:
-      "Converging inferno lanes crush weak lines.\nEndure stacked geysers and relentless elites.",
+      "Converging inferno lanes crush weak lines.\nEndure stacked geysers while the Sunforge Orrery incinerates clustered elites.",
     camera: { offset: { x: -150, y: -330 }, zoom: 0.82 },
     region: "volcanic",
     theme: "volcanic",
@@ -1617,11 +1633,14 @@ export const LEVEL_DATA: Record<
       { pos: { x: 14, y: 10 }, type: "beacon" },
       { pos: { x: 24, y: 22 }, type: "barracks" },
       { pos: { x: 18, y: 16 }, type: "vault", hp: 900 },
+      { pos: { x: 8, y: 20 }, type: "sentinel_nexus" },
+      { pos: { x: 22, y: 6 }, type: "sunforge_orrery" },
     ],
     hazards: [
       { type: "lava_geyser", pos: { x: 12, y: 16 }, radius: 2.2 },
       { type: "lava_geyser", pos: { x: 23, y: 20 }, radius: 2.2 },
       { type: "lava_geyser", pos: { x: 28, y: 12 }, radius: 1.8 },
+      { type: "storm_field", pos: { x: 19, y: 11 }, radius: 1.7 },
     ],
     decorations: [
       { type: "obsidian_castle", pos: { x: 16, y: 2 }, variant: 0, size: 2.8 },
@@ -1734,6 +1753,7 @@ export const LEVEL_DATA: Record<
       { pos: { x: 9, y: 14 }, type: "barracks" },
       { pos: { x: 24, y: 13 }, type: "barracks" },
       { pos: { x: 17, y: 19 }, type: "beacon" },
+      { pos: { x: 17, y: 8 }, type: "sentinel_nexus" },
     ],
     hazards: [
       { type: "ice_sheet", pos: { x: 13, y: 9 }, radius: 2.1 },

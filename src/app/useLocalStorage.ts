@@ -1,5 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { SpellUpgradeLevels } from "./types";
+import {
+  DEFAULT_SPELL_UPGRADES,
+  normalizeSpellUpgradeLevels,
+} from "./constants";
 
 function isGameProgressLike(value: unknown): value is GameProgress {
   if (!value || typeof value !== "object") return false;
@@ -73,12 +78,22 @@ function mergeGameProgress(
       ? loaded.levelStats
       : {};
 
+  const loadedSpellUpgrades =
+    loaded &&
+    typeof loaded.spellUpgrades === "object" &&
+    loaded.spellUpgrades !== null
+      ? (loaded.spellUpgrades as Partial<SpellUpgradeLevels>)
+      : defaults.spellUpgrades;
+
+  const mergedSpellUpgrades = normalizeSpellUpgradeLevels(loadedSpellUpgrades);
+
   return {
     ...defaults,
     ...loaded,
     unlockedMaps: mergedMaps,
     levelStars: mergedLevelStars,
     levelStats: loadedStats,
+    spellUpgrades: mergedSpellUpgrades,
     totalStarsEarned: Object.values(mergedLevelStars).reduce(
       (a, b) => a + b,
       0
@@ -159,6 +174,7 @@ export interface GameProgress {
   unlockedMaps: string[];
   levelStars: Record<string, number>;
   levelStats: Record<string, LevelStats>; // Track time and hearts per level
+  spellUpgrades: SpellUpgradeLevels;
   lastPlayedLevel?: string;
   totalStarsEarned?: number;
 }
@@ -194,6 +210,7 @@ export const DEFAULT_GAME_PROGRESS: GameProgress = {
     ashen_spiral: 0,
   },
   levelStats: {},
+  spellUpgrades: { ...DEFAULT_SPELL_UPGRADES },
   lastPlayedLevel: undefined,
   totalStarsEarned: 0,
 };

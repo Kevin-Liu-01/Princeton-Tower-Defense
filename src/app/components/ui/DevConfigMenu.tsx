@@ -37,11 +37,14 @@ interface DevConfigMenuProps {
   setDevPerfEnabled: (enabled: boolean) => void;
   devPerfSnapshot: DevPerfSnapshot;
   onUnlockLevel: (levelId: string) => void;
+  onLockLevel: (levelId: string) => void;
   onUnlockAllLevels: () => void;
   onSetLevelStars: (levelId: string, stars: number) => void;
   onReplaceProgress: (candidate: unknown) => DevActionResult;
   onGrantPawPoints: (amount: number) => void;
   onAdjustLives: (delta: number) => void;
+  onInstantVictory: () => void;
+  onInstantLose: () => void;
 }
 
 const clampStars = (value: number): number =>
@@ -55,11 +58,14 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   setDevPerfEnabled,
   devPerfSnapshot,
   onUnlockLevel,
+  onLockLevel,
   onUnlockAllLevels,
   onSetLevelStars,
   onReplaceProgress,
   onGrantPawPoints,
   onAdjustLives,
+  onInstantVictory,
+  onInstantLose,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLevelId, setSelectedLevelId] = useState<string>(
@@ -141,7 +147,7 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
   };
 
   return (
-    <div className="pointer-events-none fixed right-3 top-3 z-[220]">
+    <div className="pointer-events-none fixed right-3 top-1/2 z-[220] -translate-y-1/2">
       <div className="pointer-events-auto flex justify-end">
         {!isOpen ? (
           <button
@@ -214,7 +220,7 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   Progress Controls
                 </div>
 
-                <div className="mb-2 grid grid-cols-[1fr_auto] gap-2">
+                <div className="mb-2 grid grid-cols-[1fr_auto_auto] gap-2">
                   <select
                     value={selectedLevelId}
                     onChange={(event) => setSelectedLevelId(event.target.value)}
@@ -236,6 +242,17 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                     className="rounded border border-amber-300/40 bg-amber-900/40 px-2 py-1 font-semibold hover:bg-amber-800/50"
                   >
                     Unlock
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!selectedLevelId) return;
+                      onLockLevel(selectedLevelId);
+                      setFeedback({ message: `Locked ${selectedLevelId}.`, isError: false });
+                    }}
+                    className="rounded border border-red-300/40 bg-red-900/35 px-2 py-1 font-semibold text-red-200 hover:bg-red-800/45"
+                  >
+                    Lock
                   </button>
                 </div>
 
@@ -307,6 +324,28 @@ export const DevConfigMenu: React.FC<DevConfigMenuProps> = ({
                   <div className="mb-2 font-semibold uppercase tracking-wide text-blue-200">
                     In-Game Cheats
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onInstantVictory();
+                      setFeedback({ message: "Triggered instant victory.", isError: false });
+                    }}
+                    className="mb-2 w-full rounded border border-blue-300/40 bg-blue-900/40 px-2 py-1 font-semibold hover:bg-blue-800/50"
+                  >
+                    Instant Victory
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onInstantLose();
+                      setFeedback({ message: "Triggered instant lose.", isError: false });
+                    }}
+                    className="mb-2 w-full rounded border border-red-300/40 bg-red-900/40 px-2 py-1 font-semibold text-red-200 hover:bg-red-800/50"
+                  >
+                    Instant Lose
+                  </button>
 
                   <div className="mb-2 grid grid-cols-[90px_auto] gap-2">
                     <input

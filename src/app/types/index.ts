@@ -119,6 +119,7 @@ export interface Tower {
   // Buff state
   damageBoost?: number;
   rangeBoost?: number;
+  attackSpeedBoost?: number;
   boostEnd?: number;
   isBuffed?: boolean;
   // Debuff state (from enemy abilities)
@@ -452,6 +453,15 @@ export interface Troop {
   id: string;
   ownerId: string;
   ownerType?: TroopOwnerType; // For determining visual theme (blue barracks, red mercer, purple spell)
+  // Runtime overrides used by upgraded spell reinforcements and special summons.
+  // When unset, troop values come from TROOP_DATA[troop.type].
+  overrideDamage?: number;
+  overrideAttackSpeed?: number;
+  overrideIsRanged?: boolean;
+  overrideRange?: number;
+  overrideCanTargetFlying?: boolean;
+  overrideHybridMelee?: boolean;
+  visualTier?: number;
   type?: TroopType;
   pos: Position;
   targetPos?: Position;
@@ -516,6 +526,8 @@ export interface Spell {
   cooldown: number;
   maxCooldown: number;
 }
+
+export type SpellUpgradeLevels = Record<SpellType, number>;
 
 // ============================================================================
 // PROJECTILE & EFFECT TYPES
@@ -634,6 +646,10 @@ export type EffectType =
   | "tower_debuff_weaken" // Tower damage reduced
   | "tower_debuff_blind" // Tower range reduced
   | "tower_debuff_disable" // Tower completely disabled
+  | "sentinel_lockon" // Sentinel target acquisition marker
+  | "sentinel_impact" // Sentinel lightning impact burst
+  | "sunforge_beam" // Sunforge focused plasma beam
+  | "sunforge_impact" // Sunforge impact eruption
   // Unit status effect visuals (troops/heroes)
   | "status_burning" // On-fire effect
   | "status_slowed" // Slowed/frozen effect
@@ -871,6 +887,8 @@ export type HazardType =
   | "eruption_zone"
   | "poison_fog"
   | "deep_water"
+  | "maelstrom"
+  | "storm_field"
   | "slippery_ice"
   | "lava"
   | "swamp"
@@ -891,7 +909,14 @@ export interface MapHazard {
 }
 
 // Special tower types for map objectives
-export type SpecialTowerType = "vault" | "beacon" | "shrine" | "barracks";
+export type SpecialTowerType =
+  | "vault"
+  | "beacon"
+  | "shrine"
+  | "barracks"
+  | "chrono_relay"
+  | "sentinel_nexus"
+  | "sunforge_orrery";
 
 export interface SpecialTower {
   pos: { x: number; y: number };
@@ -918,6 +943,7 @@ export interface LevelData {
   heroSpawn?: GridPosition;
   dualPath?: boolean;
   secondaryPath?: string;
+  pathKeys?: string[];
   levelKind?: LevelKind;
   allowedTowers?: TowerType[];
   specialTower?: SpecialTower;

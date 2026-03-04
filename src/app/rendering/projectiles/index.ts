@@ -511,26 +511,31 @@ function drawBoltPath(
 // ============================================================================
 function renderSpear(
   ctx: CanvasRenderingContext2D,
-  zoom: number
+  zoom: number,
+  baseColor: { r: number; g: number; b: number }
 ) {
   const s = 0.55 * zoom;
+  const metal = lightenColor(baseColor, 35);
+  const metalShade = darkenColor(baseColor, 35);
+  const shaftWood = darkenColor(baseColor, 70);
+  const accent = lightenColor(baseColor, 10);
   
   // Subtle glow trail
-  ctx.fillStyle = "rgba(255, 200, 50, 0.2)";
+  ctx.fillStyle = colorWithAlpha(baseColor, 0.18);
   ctx.beginPath();
   ctx.ellipse(0, 0, 10 * s, 3 * s, 0, 0, Math.PI * 2);
   ctx.fill();
   
   // Shaft
-  ctx.fillStyle = "#5a4020";
+  ctx.fillStyle = shaftWood;
   ctx.fillRect(-9 * s, -1.3 * s, 18 * s, 2.6 * s);
   
   // Gold band
-  ctx.fillStyle = "#c9a227";
+  ctx.fillStyle = accent;
   ctx.fillRect(-1.5 * s, -1.8 * s, 3 * s, 3.6 * s);
   
   // Fletching
-  ctx.fillStyle = "#d05000";
+  ctx.fillStyle = darkenColor(baseColor, 20);
   ctx.beginPath();
   ctx.moveTo(-7 * s, 0);
   ctx.lineTo(-12 * s, -3.5 * s);
@@ -540,7 +545,7 @@ function renderSpear(
   ctx.fill();
   
   // Spearhead
-  ctx.fillStyle = "#d0d0d0";
+  ctx.fillStyle = metal;
   ctx.beginPath();
   ctx.moveTo(14 * s, 0);
   ctx.lineTo(7 * s, -3.5 * s);
@@ -549,6 +554,15 @@ function renderSpear(
   ctx.closePath();
   ctx.fill();
   
+  // Spearhead edge shadow
+  ctx.strokeStyle = metalShade;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(8.5 * s, -2.2 * s);
+  ctx.lineTo(13.4 * s, 0);
+  ctx.lineTo(8.5 * s, 2.2 * s);
+  ctx.stroke();
+
   // Shine
   ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
   ctx.beginPath();
@@ -856,6 +870,7 @@ export function renderProjectile(
     switch (proj.type) {
       case "arrow": baseColor = COLORS.arrow; break;
       case "bolt": baseColor = COLORS.bolt; break;
+      case "spear": baseColor = COLORS.arrow; break;
       case "fireball": baseColor = COLORS.fire; break;
       case "infernalFire": baseColor = COLORS.infernal; break;
       case "dragonBreath": baseColor = COLORS.dragon; break;
@@ -935,7 +950,7 @@ export function renderProjectile(
       break;
       
     case "spear":
-      renderSpear(ctx, zoom);
+      renderSpear(ctx, zoom, baseColor);
       break;
       
     case "rock":

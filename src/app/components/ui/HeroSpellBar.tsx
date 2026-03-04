@@ -20,8 +20,24 @@ import {
   Users,
   TrendingUp,
 } from "lucide-react";
-import type { Hero, Spell, SpellType, Enemy } from "../../types";
-import { HERO_DATA, SPELL_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
+import type {
+  Hero,
+  Spell,
+  SpellType,
+  Enemy,
+  SpellUpgradeLevels,
+} from "../../types";
+import {
+  HERO_DATA,
+  SPELL_DATA,
+  HERO_ABILITY_COOLDOWNS,
+  MAX_SPELL_UPGRADE_LEVEL,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getPaydaySpellStats,
+  getReinforcementSpellStats,
+} from "../../constants";
 import { HeroSprite, SpellSprite, getHeroAbilityIcon } from "../../sprites";
 import { useIsTouchDevice, useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, NEUTRAL, RED_CARD, SELECTED, OVERLAY, SPELL_THEME } from "./theme";
@@ -35,6 +51,7 @@ interface HeroSpellBarProps {
   spells: Spell[];
   pawPoints: number;
   enemies: Enemy[];
+  spellUpgradeLevels: SpellUpgradeLevels;
   toggleHeroSelection: () => void;
   onUseHeroAbility: () => void;
   castSpell: (spellType: SpellType) => void;
@@ -45,6 +62,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   spells,
   pawPoints,
   enemies,
+  spellUpgradeLevels,
   toggleHeroSelection,
   onUseHeroAbility,
   castSpell,
@@ -54,6 +72,13 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   );
   const isTouchDevice = useIsTouchDevice();
   const sizes = useResponsiveSizes();
+  const fireballStats = getFireballSpellStats(spellUpgradeLevels.fireball);
+  const lightningStats = getLightningSpellStats(spellUpgradeLevels.lightning);
+  const freezeStats = getFreezeSpellStats(spellUpgradeLevels.freeze);
+  const paydayStats = getPaydaySpellStats(spellUpgradeLevels.payday);
+  const reinforcementStats = getReinforcementSpellStats(
+    spellUpgradeLevels.reinforcements
+  );
 
   const spellThemes: Record<string, {
     border: string; bg: string; activeBg: string; glow: string;
@@ -67,60 +92,62 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       nameColor: "text-orange-200", icon: <Flame size={10} className="text-orange-400" />, accentColor: "text-orange-300",
       panelBg: SPELL_THEME.fire.panelBg, panelBorder: "rgba(234,88,12,0.5)", headerBg: "linear-gradient(90deg, rgba(180,80,20,0.25), transparent)",
       stats: [
-        { label: "Damage", value: "80×10", color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)", icon: <Swords size={9} className="text-red-400" /> },
-        { label: "Radius", value: "150", color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)", icon: <Target size={9} className="text-orange-400" /> },
-        { label: "Burn", value: "4s", color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)", icon: <Flame size={9} className="text-amber-400" /> },
+        { label: "Damage", value: `${fireballStats.damagePerMeteor}×${fireballStats.meteorCount}`, color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)", icon: <Swords size={9} className="text-red-400" /> },
+        { label: "Radius", value: `${fireballStats.impactRadius}`, color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)", icon: <Target size={9} className="text-orange-400" /> },
+        { label: "Burn", value: `${(fireballStats.burnDurationMs / 1000).toFixed(1)}s`, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)", icon: <Flame size={9} className="text-amber-400" /> },
       ],
       effectBg: "rgba(124,45,18,0.15)", effectLabel: "text-orange-500/80", effectText: "text-orange-200/90",
-      effect: "Rains 10 meteors in an area. Each deals 80 AoE damage with falloff and sets enemies ablaze for 4 seconds.",
+      effect: `Rains ${fireballStats.meteorCount} meteors in an area. Each deals ${fireballStats.damagePerMeteor} AoE damage with falloff and sets enemies ablaze for ${(fireballStats.burnDurationMs / 1000).toFixed(1)} seconds.`,
     },
     lightning: {
       border: "border-yellow-600", bg: "from-yellow-800/90 to-yellow-950/90", activeBg: "from-yellow-700/90 to-yellow-900/90", glow: "shadow-yellow-500/30",
       nameColor: "text-yellow-200", icon: <Zap size={10} className="text-yellow-400" />, accentColor: "text-yellow-300",
       panelBg: SPELL_THEME.lightning.panelBg, panelBorder: "rgba(234,179,8,0.5)", headerBg: "linear-gradient(90deg, rgba(180,140,20,0.25), transparent)",
       stats: [
-        { label: "Total DMG", value: "900", color: "text-yellow-300", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)", icon: <Swords size={9} className="text-yellow-400" /> },
-        { label: "Chains", value: "8", color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)", icon: <Zap size={9} className="text-cyan-400" /> },
-        { label: "Stun", value: "0.5s", color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)", icon: <Timer size={9} className="text-blue-400" /> },
+        { label: "Total DMG", value: `${lightningStats.totalDamage}`, color: "text-yellow-300", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)", icon: <Swords size={9} className="text-yellow-400" /> },
+        { label: "Chains", value: `${lightningStats.chainCount}`, color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)", icon: <Zap size={9} className="text-cyan-400" /> },
+        { label: "Stun", value: `${(lightningStats.stunDurationMs / 1000).toFixed(2)}s`, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)", icon: <Timer size={9} className="text-blue-400" /> },
       ],
       effectBg: "rgba(113,63,18,0.15)", effectLabel: "text-yellow-500/80", effectText: "text-yellow-200/90",
-      effect: "Lightning bolt chains between up to 8 enemies, splitting 900 total damage. Each hit stuns for 0.5 seconds.",
+      effect: `Lightning chains between up to ${lightningStats.chainCount} enemies, splitting ${lightningStats.totalDamage} total damage. Each hit stuns for ${(lightningStats.stunDurationMs / 1000).toFixed(2)} seconds.`,
     },
     freeze: {
       border: "border-cyan-600", bg: "from-cyan-800/90 to-cyan-950/90", activeBg: "from-cyan-700/90 to-cyan-900/90", glow: "shadow-cyan-500/30",
       nameColor: "text-cyan-200", icon: <Snowflake size={10} className="text-cyan-400" />, accentColor: "text-cyan-300",
       panelBg: SPELL_THEME.ice.panelBg, panelBorder: "rgba(6,182,212,0.5)", headerBg: "linear-gradient(90deg, rgba(20,100,140,0.25), transparent)",
       stats: [
-        { label: "Duration", value: "3s", color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)", icon: <Timer size={9} className="text-cyan-400" /> },
+        { label: "Duration", value: `${(freezeStats.freezeDurationMs / 1000).toFixed(1)}s`, color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)", icon: <Timer size={9} className="text-cyan-400" /> },
         { label: "Range", value: "Global", color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)", icon: <Target size={9} className="text-blue-400" /> },
         { label: "Slow", value: "100%", color: "text-indigo-300", bg: "rgba(49,46,129,0.3)", border: "rgba(49,46,129,0.2)", icon: <Snowflake size={9} className="text-indigo-400" /> },
       ],
       effectBg: "rgba(22,78,99,0.15)", effectLabel: "text-cyan-500/80", effectText: "text-cyan-200/90",
-      effect: "Expanding ice wave freezes ALL enemies on the map for 3 full seconds. Great for emergencies.",
+      effect: `Expanding ice wave freezes ALL enemies on the map for ${(freezeStats.freezeDurationMs / 1000).toFixed(1)} seconds. Great for emergencies.`,
     },
     payday: {
       border: "border-amber-600", bg: "from-amber-800/90 to-amber-950/90", activeBg: "from-amber-700/90 to-amber-900/90", glow: "shadow-amber-500/30",
       nameColor: "text-amber-200", icon: <Coins size={10} className="text-amber-400" />, accentColor: "text-amber-300",
       panelBg: SPELL_THEME.gold.panelBg, panelBorder: "rgba(245,158,11,0.5)", headerBg: "linear-gradient(90deg, rgba(160,110,20,0.25), transparent)",
       stats: [
-        { label: "Base PP", value: "80", color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)", icon: <Coins size={9} className="text-amber-400" /> },
-        { label: "Per Enemy", value: "+5", color: "text-green-300", bg: "rgba(20,83,45,0.3)", border: "rgba(20,83,45,0.2)", icon: <TrendingUp size={9} className="text-green-400" /> },
-        { label: "Max Total", value: "130", color: "text-yellow-300", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)", icon: <Sparkles size={9} className="text-yellow-400" /> },
+        { label: "Base PP", value: `${paydayStats.basePayout}`, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)", icon: <Coins size={9} className="text-amber-400" /> },
+        { label: "Per Enemy", value: `+${paydayStats.bonusPerEnemy}`, color: "text-green-300", bg: "rgba(20,83,45,0.3)", border: "rgba(20,83,45,0.2)", icon: <TrendingUp size={9} className="text-green-400" /> },
+        { label: "Max Total", value: `${paydayStats.basePayout + paydayStats.maxBonus}`, color: "text-yellow-300", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)", icon: <Sparkles size={9} className="text-yellow-400" /> },
       ],
       effectBg: "rgba(120,53,15,0.15)", effectLabel: "text-amber-500/80", effectText: "text-amber-200/90",
-      effect: "Grants 80 PP plus 5 PP per enemy on the map (max +50 bonus). Use when the field is crowded!",
+      effect: `Grants ${paydayStats.basePayout} PP plus ${paydayStats.bonusPerEnemy} PP per enemy on the map (max +${paydayStats.maxBonus} bonus). Aura lasts ${(paydayStats.auraDurationMs / 1000).toFixed(0)} seconds.`,
     },
     reinforcements: {
       border: "border-emerald-600", bg: "from-emerald-800/90 to-emerald-950/90", activeBg: "from-emerald-700/90 to-emerald-900/90", glow: "shadow-emerald-500/30",
       nameColor: "text-emerald-200", icon: <Shield size={10} className="text-emerald-400" />, accentColor: "text-emerald-300",
       panelBg: SPELL_THEME.nature.panelBg, panelBorder: "rgba(16,185,129,0.5)", headerBg: "linear-gradient(90deg, rgba(20,120,80,0.25), transparent)",
       stats: [
-        { label: "Knights", value: "3", color: "text-emerald-300", bg: "rgba(6,78,59,0.3)", border: "rgba(6,78,59,0.2)", icon: <Users size={9} className="text-emerald-400" /> },
-        { label: "HP Each", value: "500", color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)", icon: <Heart size={9} className="text-red-400" /> },
-        { label: "DMG Each", value: "30", color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)", icon: <Swords size={9} className="text-orange-400" /> },
+        { label: "Knights", value: `${reinforcementStats.knightCount}`, color: "text-emerald-300", bg: "rgba(6,78,59,0.3)", border: "rgba(6,78,59,0.2)", icon: <Users size={9} className="text-emerald-400" /> },
+        { label: "HP Each", value: `${reinforcementStats.knightHp}`, color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)", icon: <Heart size={9} className="text-red-400" /> },
+        { label: "DMG Each", value: `${reinforcementStats.knightDamage}`, color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)", icon: <Swords size={9} className="text-orange-400" /> },
       ],
       effectBg: "rgba(6,78,59,0.15)", effectLabel: "text-emerald-500/80", effectText: "text-emerald-200/90",
-      effect: "Summons 3 armored knights at a chosen location. They block and fight enemies until defeated.",
+      effect: reinforcementStats.rangedUnlocked
+        ? `Summons ${reinforcementStats.knightCount} veteran knights with tier-${reinforcementStats.visualTier} armor. They fight in melee and fire ranged volleys.`
+        : `Summons ${reinforcementStats.knightCount} armored knights at a chosen location. They block and fight enemies until defeated.`,
     },
   };
 
@@ -396,6 +423,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         </span>
         {spells.map((spell) => {
           const spellData = SPELL_DATA[spell.type];
+          const spellLevel = spellUpgradeLevels[spell.type] ?? 0;
           const theme = spellThemes[spell.type];
           const canCast =
             spell.cooldown <= 0 &&
@@ -427,6 +455,19 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                   cursor: canCast ? "pointer" : "not-allowed",
                 }}
               >
+                <div
+                  className={`absolute top-1 right-1 px-1 py-px rounded text-[8px] font-bold ${
+                    canCast ? "text-yellow-200" : "text-stone-300"
+                  }`}
+                  style={{
+                    background: canCast
+                      ? "rgba(120,90,20,0.5)"
+                      : "rgba(50,50,50,0.5)",
+                    border: "1px solid rgba(250,204,21,0.18)",
+                  }}
+                >
+                  Lv {spellLevel}
+                </div>
                 <div className="flex flex-col items-center justify-center h-full min-w-[28px] sm:min-w-[48px]">
                   <SpellSprite type={spell.type} size={sizes.heroIcon > 36 ? 28 : 20} />
                   <div className={`font-bold uppercase text-[7px] sm:text-[9px] tracking-wide mt-0.5 ${canCast ? (theme?.nameColor || "text-purple-200") : "text-stone-400"}`}>
@@ -480,6 +521,9 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     <div className="flex items-center gap-2">
                       {theme.icon}
                       <span className={`font-bold text-sm ${theme.accentColor}`}>{spellData.name}</span>
+                      <span className="ml-auto text-[10px] font-bold px-1.5 py-px rounded border border-yellow-500/20 bg-yellow-800/20 text-yellow-200">
+                        LV {spellLevel}/{MAX_SPELL_UPGRADE_LEVEL}
+                      </span>
                     </div>
                     <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: `linear-gradient(90deg, transparent, ${OVERLAY.white10} 50%, transparent)` }} />
                   </div>

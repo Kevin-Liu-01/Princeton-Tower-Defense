@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import {
+  ArrowLeft,
   Clock,
   RefreshCw,
   Skull,
@@ -21,12 +22,14 @@ const formatTime = (seconds: number): string => {
 
 interface DefeatScreenProps {
   resetGame: () => void;
+  onBackToMap?: () => void;
   timeSpent: number;
   waveReached: number;
   totalWaves: number;
   levelName: string;
   bestTime?: number;
   timesPlayed: number;
+  overlay?: boolean;
 }
 
 // Animated broken shield/skull sprite
@@ -399,12 +402,14 @@ const DefeatSprite: React.FC<{ size?: number }> = ({ size = 150 }) => {
 
 export function DefeatScreen({
   resetGame,
+  onBackToMap,
   timeSpent,
   waveReached,
   totalWaves,
   levelName,
   bestTime,
   timesPlayed,
+  overlay = false,
 }: DefeatScreenProps) {
   const waveProgress = Math.round((waveReached / totalWaves) * 100);
   const [showContent, setShowContent] = useState(false);
@@ -434,34 +439,49 @@ export function DefeatScreen({
 
   return (
     <div
-      className="w-full h-screen flex flex-col items-center justify-center relative overflow-auto"
+      className={`${overlay
+        ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
+        : "w-full h-screen flex flex-col items-center justify-center relative overflow-auto"
+        } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
       style={{
-        background: "linear-gradient(180deg, #0d0808 0%, #1a0c0c 40%, #0d0808 100%)",
+        background: overlay
+          ? "rgba(10, 4, 4, 0.36)"
+          : "linear-gradient(180deg, #0d0808 0%, #1a0c0c 40%, #0d0808 100%)",
+        backdropFilter: overlay ? "blur(1.5px) saturate(0.88)" : undefined,
+        WebkitBackdropFilter: overlay ? "blur(1.5px) saturate(0.88)" : undefined,
       }}
     >
-      {/* Background radial glow */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(139,0,0,0.06), transparent)",
-      }} />
-
-      {/* Drifting ember particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(18)].map((_, i) => (
+      {!overlay && (
+        <>
+          {/* Background radial glow */}
           <div
-            key={i}
-            className="absolute rounded-full animate-pulse"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              width: `${1 + (i % 2)}px`,
-              height: `${1 + (i % 2)}px`,
-              left: `${(i * 5.7) % 100}%`,
-              top: `${(i * 6.3) % 100}%`,
-              background: `rgba(200, ${40 + (i % 3) * 20}, 0, ${0.12 + (i % 4) * 0.06})`,
-              animationDelay: `${i * 0.4}s`,
-              animationDuration: `${2 + (i % 3)}s`,
+              background:
+                "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(139,0,0,0.06), transparent)",
             }}
           />
-        ))}
-      </div>
+
+          {/* Drifting ember particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(18)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-pulse"
+                style={{
+                  width: `${1 + (i % 2)}px`,
+                  height: `${1 + (i % 2)}px`,
+                  left: `${(i * 5.7) % 100}%`,
+                  top: `${(i * 6.3) % 100}%`,
+                  background: `rgba(200, ${40 + (i % 3) * 20}, 0, ${0.12 + (i % 4) * 0.06})`,
+                  animationDelay: `${i * 0.4}s`,
+                  animationDuration: `${2 + (i % 3)}s`,
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Main panel */}
       <div className={`relative z-10 max-w-xl w-full mx-4 transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
@@ -623,8 +643,8 @@ export function DefeatScreen({
               <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DEFEAT.border30} 20%, ${DEFEAT.accent40} 50%, ${DEFEAT.border30} 80%, transparent)` }} />
             </div>
 
-            {/* ===== Retry Button ===== */}
-            <div className="px-6 py-5 flex justify-center">
+            {/* ===== Footer Actions ===== */}
+            <div className="px-6 py-5 flex justify-center gap-3">
               <button
                 onClick={resetGame}
                 className="group relative px-10 py-3 rounded-xl font-bold tracking-[0.2em] uppercase text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
@@ -642,6 +662,26 @@ export function DefeatScreen({
                   <Swords size={15} />
                 </span>
               </button>
+              {onBackToMap && (
+                <button
+                  onClick={onBackToMap}
+                  className="group relative px-7 py-3 rounded-xl font-bold tracking-[0.15em] uppercase text-sm transition-all duration-200 hover:scale-105 hover:brightness-110"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(70,56,40,0.95) 0%, rgba(52,38,28,0.96) 100%)",
+                    border: "1.5px solid rgba(180,140,60,0.35)",
+                    color: "rgba(245, 216, 168, 0.9)",
+                    textShadow: "0 2px 4px rgba(0,0,0,0.45)",
+                    boxShadow:
+                      "inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.35)",
+                  }}
+                >
+                  <span className="flex items-center gap-2">
+                    <ArrowLeft size={14} />
+                    Back to Map
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </OrnateFrame>

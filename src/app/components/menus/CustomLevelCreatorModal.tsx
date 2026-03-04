@@ -126,6 +126,9 @@ const SPECIAL_TOWER_TYPES: SpecialTowerType[] = [
   "shrine",
   "vault",
   "barracks",
+  "chrono_relay",
+  "sentinel_nexus",
+  "sunforge_orrery",
 ];
 
 const OBJECTIVE_TYPE_STATS: Record<
@@ -151,6 +154,21 @@ const OBJECTIVE_TYPE_STATS: Record<
     title: "Barracks",
     effect: "Spawns allied troops over time.",
     risk: "Losing it cuts reinforcement pressure.",
+  },
+  chrono_relay: {
+    title: "Arcane Time Crystal",
+    effect: "Boosts nearby tower attack speed.",
+    risk: "Losing it slows your local DPS cadence.",
+  },
+  sentinel_nexus: {
+    title: "Imperial Red Sentinel",
+    effect: "Lightning strikes locked target every 10s.",
+    risk: "Losing it removes controllable map pressure.",
+  },
+  sunforge_orrery: {
+    title: "Sunforge Orrery",
+    effect: "Tri-plasma barrage hits dense enemy clusters.",
+    risk: "Long cadence rewards careful timing windows.",
   },
 };
 
@@ -187,6 +205,9 @@ const LANDMARK_OPTIONS = Array.from(
 
 const HAZARD_OPTIONS: HazardType[] = [
   "poison_fog",
+  "deep_water",
+  "maelstrom",
+  "storm_field",
   "quicksand",
   "ice_sheet",
   "ice_spikes",

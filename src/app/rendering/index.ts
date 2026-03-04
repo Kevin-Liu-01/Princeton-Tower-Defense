@@ -384,6 +384,212 @@ export function renderEffect(
       }
       break;
 
+    case "sentinel_lockon": {
+      const pulse = 0.55 + Math.sin(Date.now() / 60) * 0.45;
+      const radius = (effect.size || 70) * zoom * (0.5 + progress * 0.3);
+
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.scale(1, 0.5);
+      ctx.strokeStyle = `rgba(255, 228, 230, ${alpha * (0.6 + pulse * 0.28)})`;
+      ctx.fillStyle = `rgba(190, 24, 93, ${alpha * (0.14 + pulse * 0.1)})`;
+      ctx.lineWidth = 2.8 * zoom;
+      ctx.setLineDash([10 * zoom, 8 * zoom]);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      const cross = radius * 0.2;
+      ctx.strokeStyle = `rgba(255, 237, 213, ${alpha * (0.75 + pulse * 0.18)})`;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - cross, screenPos.y);
+      ctx.lineTo(screenPos.x + cross, screenPos.y);
+      ctx.moveTo(screenPos.x, screenPos.y - cross * 0.65);
+      ctx.lineTo(screenPos.x, screenPos.y + cross * 0.65);
+      ctx.stroke();
+      break;
+    }
+
+    case "sentinel_impact": {
+      const impactRadius = Math.max(24, effect.size * zoom * progress);
+      const coreRadius = Math.max(5, impactRadius * 0.16);
+      const ringAlpha = alpha * 0.7;
+
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.scale(1, 0.5);
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius);
+      glow.addColorStop(0, `rgba(255, 228, 230, ${alpha * 0.46})`);
+      glow.addColorStop(0.45, `rgba(251, 113, 133, ${alpha * 0.31})`);
+      glow.addColorStop(1, "rgba(136, 19, 55, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, impactRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = `rgba(251, 113, 133, ${ringAlpha})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.arc(0, 0, impactRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.strokeStyle = `rgba(255, 237, 213, ${alpha * 0.82})`;
+      ctx.lineWidth = 2.2 * zoom;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + progress * 0.3;
+        const start = impactRadius * 0.18;
+        const end = impactRadius * (0.45 + (i % 2) * 0.14);
+        ctx.beginPath();
+        ctx.moveTo(
+          screenPos.x + Math.cos(angle) * start,
+          screenPos.y + Math.sin(angle) * start * 0.6
+        );
+        ctx.lineTo(
+          screenPos.x + Math.cos(angle) * end,
+          screenPos.y + Math.sin(angle) * end * 0.6
+        );
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.92})`;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, coreRadius, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
+    case "sunforge_beam": {
+      if (effect.targetPos) {
+        const targetScreen = worldToScreen(
+          effect.targetPos,
+          canvasWidth,
+          canvasHeight,
+          dpr,
+          cameraOffset,
+          cameraZoom,
+        );
+        const intensity = effect.intensity || 1;
+        const dx = targetScreen.x - screenPos.x;
+        const dy = targetScreen.y - screenPos.y;
+        const distanceLen = Math.hypot(dx, dy) || 1;
+        const nx = dx / distanceLen;
+        const ny = dy / distanceLen;
+        const px = -ny;
+        const py = nx;
+        const wobble = Math.sin(Date.now() / 80 + hashString32(effect.id) * 0.002) * 6 * zoom;
+
+        const sourceX = screenPos.x + px * wobble * 0.35;
+        const sourceY = screenPos.y + py * wobble * 0.35;
+        const targetX = targetScreen.x + px * wobble;
+        const targetY = targetScreen.y + py * wobble;
+
+        const beamGrad = ctx.createLinearGradient(sourceX, sourceY, targetX, targetY);
+        beamGrad.addColorStop(0, `rgba(255, 244, 214, ${alpha * 0.92 * intensity})`);
+        beamGrad.addColorStop(0.35, `rgba(251, 146, 60, ${alpha * 0.72 * intensity})`);
+        beamGrad.addColorStop(1, `rgba(249, 115, 22, ${alpha * 0.22 * intensity})`);
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.shadowColor = "rgba(251, 146, 60, 0.85)";
+        ctx.shadowBlur = 18 * zoom * intensity;
+
+        ctx.strokeStyle = beamGrad;
+        ctx.lineWidth = 7 * zoom * intensity;
+        ctx.beginPath();
+        ctx.moveTo(sourceX, sourceY);
+        ctx.quadraticCurveTo(
+          sourceX + dx * 0.42 + px * 12 * zoom,
+          sourceY + dy * 0.42 + py * 12 * zoom,
+          targetX,
+          targetY
+        );
+        ctx.stroke();
+
+        ctx.shadowBlur = 10 * zoom * intensity;
+        ctx.strokeStyle = `rgba(255, 255, 240, ${alpha * 0.82 * intensity})`;
+        ctx.lineWidth = 2.4 * zoom * intensity;
+        ctx.beginPath();
+        ctx.moveTo(sourceX, sourceY);
+        ctx.lineTo(targetX, targetY);
+        ctx.stroke();
+
+        for (let i = 0; i < 3; i++) {
+          const arcAngle = (Date.now() / 260 + i * 2.1) % (Math.PI * 2);
+          const arcLen = (8 + i * 3) * zoom;
+          ctx.strokeStyle = `rgba(255, 222, 173, ${alpha * (0.45 - i * 0.1)})`;
+          ctx.lineWidth = (1.6 - i * 0.3) * zoom;
+          ctx.beginPath();
+          ctx.moveTo(sourceX, sourceY);
+          ctx.lineTo(
+            sourceX + Math.cos(arcAngle) * arcLen,
+            sourceY + Math.sin(arcAngle) * arcLen * 0.6
+          );
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+      break;
+    }
+
+    case "sunforge_impact": {
+      const pulse = 0.55 + Math.sin(Date.now() / 65) * 0.45;
+      const impactRadius = Math.max(20, effect.size * zoom * (0.38 + progress * 0.9));
+      const shockRadius = impactRadius * (0.62 + pulse * 0.2);
+
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.scale(1, 0.5);
+      const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius);
+      glow.addColorStop(0, `rgba(255, 237, 213, ${alpha * 0.66})`);
+      glow.addColorStop(0.38, `rgba(251, 146, 60, ${alpha * 0.44})`);
+      glow.addColorStop(0.75, `rgba(249, 115, 22, ${alpha * 0.22})`);
+      glow.addColorStop(1, "rgba(124, 45, 18, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, impactRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(255, 210, 140, ${alpha * (0.62 + pulse * 0.2)})`;
+      ctx.lineWidth = 3.2 * zoom;
+      ctx.setLineDash([9 * zoom, 7 * zoom]);
+      ctx.beginPath();
+      ctx.arc(0, 0, shockRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      const rayCount = 7;
+      ctx.strokeStyle = `rgba(255, 237, 213, ${alpha * 0.86})`;
+      ctx.lineWidth = 2.3 * zoom;
+      for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2 + progress * 0.45;
+        const inner = impactRadius * 0.18;
+        const outer = impactRadius * (0.52 + (i % 2) * 0.16);
+        ctx.beginPath();
+        ctx.moveTo(
+          screenPos.x + Math.cos(angle) * inner,
+          screenPos.y + Math.sin(angle) * inner * 0.6
+        );
+        ctx.lineTo(
+          screenPos.x + Math.cos(angle) * outer,
+          screenPos.y + Math.sin(angle) * outer * 0.6
+        );
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = `rgba(255, 255, 245, ${alpha * 0.95})`;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y, Math.max(3, impactRadius * 0.12), 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+
     case "music_notes":
       if (effect.targetPos) {
         const targetScreen = worldToScreen(

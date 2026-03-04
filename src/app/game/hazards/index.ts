@@ -121,6 +121,33 @@ function calculateSingleHazardEffect(
         particles.push({ pos: hazard.worldPos, type: "magic", count: 3 });
       }
       break;
+    case "deep_water": {
+      const distFactor = 1 - dist / hazard.radius;
+      const drownDps = 4 + distFactor * 5;
+      effect.poisonDamage += (drownDps * deltaTime) / 1000;
+      effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.38);
+      if (Math.random() < 0.08) {
+        particles.push({ pos: hazard.worldPos, type: "ice", count: 2 });
+      }
+      break;
+    }
+    case "maelstrom": {
+      const distFactor = 1 - dist / hazard.radius;
+      const crushDps = 8 + distFactor * 12;
+      effect.poisonDamage += (crushDps * deltaTime) / 1000;
+      effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.55);
+      if (Math.random() < 0.12) {
+        particles.push({ pos: hazard.worldPos, type: "ice", count: 3 });
+      }
+      break;
+    }
+    case "storm_field":
+      effect.environmentalSpeed = Math.max(effect.environmentalSpeed, 1.15);
+      effect.lavaDamage += (6 * deltaTime) / 1000;
+      if (Math.random() < 0.14) {
+        particles.push({ pos: hazard.worldPos, type: "spark", count: 3 });
+      }
+      break;
     case "quicksand":
       effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.5);
       if (Math.random() < 0.1) {

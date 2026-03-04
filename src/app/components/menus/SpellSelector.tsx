@@ -14,10 +14,20 @@ import {
   Users,
   Shield,
   TrendingUp,
+  Star,
 } from "lucide-react";
-import type { SpellType } from "../../types";
-import { SPELL_DATA } from "../../constants";
+import type { SpellType, SpellUpgradeLevels } from "../../types";
+import {
+  SPELL_DATA,
+  MAX_SPELL_UPGRADE_LEVEL,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getPaydaySpellStats,
+  getReinforcementSpellStats,
+} from "../../constants";
 import { SpellSprite } from "../../sprites";
+import { SpellUpgradeModal } from "../ui/SpellUpgradeModal";
 
 const spellOptions: SpellType[] = [
   "fireball",
@@ -32,6 +42,11 @@ interface SpellSelectorProps {
   toggleSpell: (spell: SpellType) => void;
   hoveredSpell: SpellType | null;
   setHoveredSpell: (spell: SpellType | null) => void;
+  availableSpellStars: number;
+  totalSpellStarsEarned: number;
+  spentSpellStars: number;
+  spellUpgradeLevels: SpellUpgradeLevels;
+  upgradeSpell: (spellType: SpellType) => void;
 }
 
 export const SpellSelector: React.FC<SpellSelectorProps> = ({
@@ -39,7 +54,21 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   toggleSpell,
   hoveredSpell,
   setHoveredSpell,
+  availableSpellStars,
+  totalSpellStarsEarned,
+  spentSpellStars,
+  spellUpgradeLevels,
+  upgradeSpell,
 }) => {
+  const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
+  const fireballStats = getFireballSpellStats(spellUpgradeLevels.fireball);
+  const lightningStats = getLightningSpellStats(spellUpgradeLevels.lightning);
+  const freezeStats = getFreezeSpellStats(spellUpgradeLevels.freeze);
+  const paydayStats = getPaydaySpellStats(spellUpgradeLevels.payday);
+  const reinforcementStats = getReinforcementSpellStats(
+    spellUpgradeLevels.reinforcements
+  );
+
   return (
     <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
   style={{
@@ -58,18 +87,39 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
         <span className="hidden sm:inline">Select </span>Spells
       </span>
     </div>
-    {/* Spell slots indicator */}
-    <div className="flex items-center gap-0.5 sm:gap-1">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm transition-all duration-300"
-          style={{
-            background: i < selectedSpells.length
-              ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
-              : 'rgba(60,40,80,0.4)',
-            border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.6)' : 'rgba(100,70,140,0.25)'}`,
-            boxShadow: i < selectedSpells.length ? '0 0 6px rgba(168,85,247,0.4)' : 'none',
-          }} />
-      ))}
+    <div className="flex items-center gap-1 sm:gap-2">
+      <button
+        type="button"
+        onClick={() => setShowUpgradeModal(true)}
+        className="inline-flex items-center gap-1 rounded-md border px-1.5 py-1 sm:px-2 sm:py-1.5 transition-all hover:brightness-110"
+        style={{
+          background: "linear-gradient(180deg, rgba(98,72,18,0.82), rgba(72,52,12,0.78))",
+          borderColor: "rgba(250,204,21,0.45)",
+          boxShadow: "inset 0 0 10px rgba(250,204,21,0.15)",
+        }}
+      >
+        <Sparkles size={10} className="text-yellow-300 sm:w-3 sm:h-3" />
+        <span className="hidden sm:inline text-[8px] font-bold uppercase tracking-wide text-yellow-200">
+          Upgrades
+        </span>
+        <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[8px] font-semibold text-yellow-100 bg-yellow-950/45 border border-yellow-500/25">
+          <Star size={8} className="fill-yellow-300 text-yellow-300" />
+          {availableSpellStars}
+        </span>
+      </button>
+      {/* Spell slots indicator */}
+      <div className="flex items-center gap-0.5 sm:gap-1">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-sm transition-all duration-300"
+            style={{
+              background: i < selectedSpells.length
+                ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                : 'rgba(60,40,80,0.4)',
+              border: `1px solid ${i < selectedSpells.length ? 'rgba(168,85,247,0.6)' : 'rgba(100,70,140,0.25)'}`,
+              boxShadow: i < selectedSpells.length ? '0 0 6px rgba(168,85,247,0.4)' : 'none',
+            }} />
+        ))}
+      </div>
     </div>
     <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
   </div>
@@ -92,6 +142,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             const spellData = SPELL_DATA[spellType];
             const spellCost = spellData?.cost ?? 0;
             const spellCooldownSeconds = (spellData?.cooldown ?? 0) / 1000;
+            const spellLevel = spellUpgradeLevels[spellType] ?? 0;
             return (
               <button
                 key={spellType}
@@ -119,6 +170,9 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   outlineOffset: '1px',
                 }}
               >
+                <div className="absolute top-0.5 left-0.5 rounded border border-yellow-500/35 bg-yellow-900/45 px-1 py-px text-[7px] font-bold text-yellow-200">
+                  Lv {spellLevel}
+                </div>
                 <div className="scale-75 sm:scale-100">
                   <SpellSprite type={spellType} size={32} />
                 </div>
@@ -204,7 +258,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
     </div>
   </div>
   {hoveredSpell && (() => {
-    const spellInfo: Record<string, {
+    const spellInfo: Record<SpellType, {
       panelBg: string; panelBorder: string; headerBg: string;
       icon: React.ReactNode; accentText: string;
       stats: Array<{ label: string; value: string; color: string; statBg: string; statBorder: string; icon: React.ReactNode }>;
@@ -215,65 +269,68 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
         headerBg: "linear-gradient(90deg, rgba(180,80,20,0.2), rgba(120,40,10,0.1), transparent)",
         icon: <Flame size={16} className="text-orange-400" />, accentText: "text-orange-300",
         stats: [
-          { label: "Damage", value: "80×10", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Swords size={10} className="text-red-400" /> },
-          { label: "Radius", value: "150", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Target size={10} className="text-orange-400" /> },
-          { label: "Burn", value: "4s", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Flame size={10} className="text-amber-400" /> },
+          { label: "Damage", value: `${fireballStats.damagePerMeteor}×${fireballStats.meteorCount}`, color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Swords size={10} className="text-red-400" /> },
+          { label: "Radius", value: `${fireballStats.impactRadius}`, color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Target size={10} className="text-orange-400" /> },
+          { label: "Burn", value: `${(fireballStats.burnDurationMs / 1000).toFixed(1)}s`, color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Flame size={10} className="text-amber-400" /> },
         ],
         effectBg: "rgba(124,45,18,0.15)", effectLabel: "text-orange-500/80", effectText: "text-orange-200/90",
-        effect: "Rains 10 meteors in an area. Each deals 80 AoE damage with falloff and sets enemies ablaze for 4 seconds.",
+        effect: `Rains ${fireballStats.meteorCount} meteors in an area. Each deals ${fireballStats.damagePerMeteor} AoE damage with falloff and sets enemies ablaze for ${(fireballStats.burnDurationMs / 1000).toFixed(1)} seconds.`,
       },
       lightning: {
         panelBg: "rgba(36,30,10,0.99)", panelBorder: "rgba(234,179,8,0.5)",
         headerBg: "linear-gradient(90deg, rgba(180,140,20,0.2), rgba(40,120,140,0.08), transparent)",
         icon: <Zap size={16} className="text-yellow-400" />, accentText: "text-yellow-300",
         stats: [
-          { label: "Total DMG", value: "900", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Swords size={10} className="text-yellow-400" /> },
-          { label: "Chains", value: "8", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Zap size={10} className="text-cyan-400" /> },
-          { label: "Stun", value: "0.5s", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Timer size={10} className="text-blue-400" /> },
+          { label: "Total DMG", value: `${lightningStats.totalDamage}`, color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Swords size={10} className="text-yellow-400" /> },
+          { label: "Chains", value: `${lightningStats.chainCount}`, color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Zap size={10} className="text-cyan-400" /> },
+          { label: "Stun", value: `${(lightningStats.stunDurationMs / 1000).toFixed(2)}s`, color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Timer size={10} className="text-blue-400" /> },
         ],
         effectBg: "rgba(113,63,18,0.15)", effectLabel: "text-yellow-500/80", effectText: "text-yellow-200/90",
-        effect: "Lightning bolt chains between up to 8 enemies, splitting 900 total damage. Each hit stuns for 0.5 seconds.",
+        effect: `Lightning chains between up to ${lightningStats.chainCount} enemies, splitting ${lightningStats.totalDamage} total damage. Each hit stuns for ${(lightningStats.stunDurationMs / 1000).toFixed(2)} seconds.`,
       },
       freeze: {
         panelBg: "rgba(10,28,40,0.99)", panelBorder: "rgba(6,182,212,0.5)",
         headerBg: "linear-gradient(90deg, rgba(20,100,140,0.2), rgba(20,60,120,0.08), transparent)",
         icon: <Snowflake size={16} className="text-cyan-400" />, accentText: "text-cyan-300",
         stats: [
-          { label: "Duration", value: "3s", color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Timer size={10} className="text-cyan-400" /> },
+          { label: "Duration", value: `${(freezeStats.freezeDurationMs / 1000).toFixed(1)}s`, color: "text-cyan-300", statBg: "rgba(22,78,99,0.3)", statBorder: "rgba(22,78,99,0.2)", icon: <Timer size={10} className="text-cyan-400" /> },
           { label: "Range", value: "Global", color: "text-blue-300", statBg: "rgba(30,58,138,0.3)", statBorder: "rgba(30,58,138,0.2)", icon: <Target size={10} className="text-blue-400" /> },
           { label: "Slow", value: "100%", color: "text-indigo-300", statBg: "rgba(49,46,129,0.3)", statBorder: "rgba(49,46,129,0.2)", icon: <Snowflake size={10} className="text-indigo-400" /> },
         ],
         effectBg: "rgba(22,78,99,0.15)", effectLabel: "text-cyan-500/80", effectText: "text-cyan-200/90",
-        effect: "Expanding ice wave freezes ALL enemies on the map for 3 full seconds. Great for emergencies.",
+        effect: `Expanding ice wave freezes ALL enemies on the map for ${(freezeStats.freezeDurationMs / 1000).toFixed(1)} seconds.`,
       },
       payday: {
         panelBg: "rgba(36,28,10,0.99)", panelBorder: "rgba(245,158,11,0.5)",
         headerBg: "linear-gradient(90deg, rgba(160,110,20,0.2), rgba(140,120,10,0.08), transparent)",
         icon: <Coins size={16} className="text-amber-400" />, accentText: "text-amber-300",
         stats: [
-          { label: "Base PP", value: "80", color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Coins size={10} className="text-amber-400" /> },
-          { label: "Per Enemy", value: "+5", color: "text-green-300", statBg: "rgba(20,83,45,0.3)", statBorder: "rgba(20,83,45,0.2)", icon: <TrendingUp size={10} className="text-green-400" /> },
-          { label: "Max Total", value: "130", color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Sparkles size={10} className="text-yellow-400" /> },
+          { label: "Base PP", value: `${paydayStats.basePayout}`, color: "text-amber-300", statBg: "rgba(120,53,15,0.3)", statBorder: "rgba(120,53,15,0.2)", icon: <Coins size={10} className="text-amber-400" /> },
+          { label: "Per Enemy", value: `+${paydayStats.bonusPerEnemy}`, color: "text-green-300", statBg: "rgba(20,83,45,0.3)", statBorder: "rgba(20,83,45,0.2)", icon: <TrendingUp size={10} className="text-green-400" /> },
+          { label: "Max Total", value: `${paydayStats.basePayout + paydayStats.maxBonus}`, color: "text-yellow-300", statBg: "rgba(113,63,18,0.3)", statBorder: "rgba(113,63,18,0.2)", icon: <Sparkles size={10} className="text-yellow-400" /> },
         ],
         effectBg: "rgba(120,53,15,0.15)", effectLabel: "text-amber-500/80", effectText: "text-amber-200/90",
-        effect: "Grants 80 PP plus 5 PP per enemy on the map (max +50 bonus). Use when the field is crowded!",
+        effect: `Grants ${paydayStats.basePayout} PP plus ${paydayStats.bonusPerEnemy} PP per enemy on the map (max +${paydayStats.maxBonus} bonus). Aura lasts ${(paydayStats.auraDurationMs / 1000).toFixed(0)} seconds.`,
       },
       reinforcements: {
         panelBg: "rgba(16,30,24,0.99)", panelBorder: "rgba(16,185,129,0.5)",
         headerBg: "linear-gradient(90deg, rgba(20,120,80,0.2), rgba(10,80,50,0.08), transparent)",
         icon: <Shield size={16} className="text-emerald-400" />, accentText: "text-emerald-300",
         stats: [
-          { label: "Knights", value: "3", color: "text-emerald-300", statBg: "rgba(6,78,59,0.3)", statBorder: "rgba(6,78,59,0.2)", icon: <Users size={10} className="text-emerald-400" /> },
-          { label: "HP Each", value: "500", color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Heart size={10} className="text-red-400" /> },
-          { label: "DMG Each", value: "30", color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Swords size={10} className="text-orange-400" /> },
+          { label: "Knights", value: `${reinforcementStats.knightCount}`, color: "text-emerald-300", statBg: "rgba(6,78,59,0.3)", statBorder: "rgba(6,78,59,0.2)", icon: <Users size={10} className="text-emerald-400" /> },
+          { label: "HP Each", value: `${reinforcementStats.knightHp}`, color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Heart size={10} className="text-red-400" /> },
+          { label: "DMG Each", value: `${reinforcementStats.knightDamage}`, color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Swords size={10} className="text-orange-400" /> },
         ],
         effectBg: "rgba(6,78,59,0.15)", effectLabel: "text-emerald-500/80", effectText: "text-emerald-200/90",
-        effect: "Summons 3 armored knights at a chosen location. They block and fight enemies until defeated.",
+        effect: reinforcementStats.rangedUnlocked
+          ? `Summons ${reinforcementStats.knightCount} veteran knights with tier-${reinforcementStats.visualTier} armor. They fight in melee and fire ranged volleys.`
+          : `Summons ${reinforcementStats.knightCount} armored knights at a chosen location. They block and fight enemies until defeated.`,
       },
     };
     const info = spellInfo[hoveredSpell];
     if (!info) return null;
     const spell = SPELL_DATA[hoveredSpell];
+    const spellLevel = spellUpgradeLevels[hoveredSpell] ?? 0;
     return (
       <div className="absolute bottom-full right-0 mb-2 w-72 rounded-xl z-50"
         style={{
@@ -281,18 +338,18 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           border: `1.5px solid ${info.panelBorder}`,
           boxShadow: '0 8px 32px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.02)',
         }}>
-        {/* Inner border glow */}
         <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(255,255,255,0.04)' }} />
-        {/* Spell-themed header */}
         <div className="px-3 py-2 rounded-t-xl relative" style={{ background: info.headerBg }}>
           <div className="flex items-center gap-2">
             {info.icon}
             <span className={`font-bold text-sm ${info.accentText}`}>{spell.name}</span>
+            <span className="ml-auto text-[10px] font-bold px-1.5 py-px rounded border border-yellow-500/20 bg-yellow-800/20 text-yellow-200">
+              LV {spellLevel}/{MAX_SPELL_UPGRADE_LEVEL}
+            </span>
           </div>
           <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 50%, transparent)' }} />
         </div>
         <div className="px-3 py-2.5">
-          {/* Cost & Cooldown */}
           <div className="flex gap-1.5 mb-2">
             <div className="rounded-md px-2 py-1 text-center flex-1"
               style={{ background: 'rgba(120,80,20,0.2)', border: '1px solid rgba(120,80,20,0.2)' }}>
@@ -307,7 +364,6 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               <div className="text-blue-300 font-bold text-[11px]">{spell.cooldown / 1000}s</div>
             </div>
           </div>
-          {/* Spell-specific stats */}
           <div className="grid grid-cols-3 gap-1.5 mb-2">
             {info.stats.map((stat) => (
               <div key={stat.label} className="rounded-md px-1.5 py-1 text-center"
@@ -318,9 +374,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               </div>
             ))}
           </div>
-          {/* Ornate divider */}
           <div className="mb-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 50%, transparent)' }} />
-          {/* Effect description */}
           <div className="rounded-md px-2.5 py-2"
             style={{ background: info.effectBg, border: '1px solid rgba(80,60,50,0.12)' }}>
             <div className={`${info.effectLabel} uppercase text-[7px] font-semibold mb-1 tracking-wider flex items-center gap-1`}>
@@ -333,6 +387,15 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
       </div>
     );
   })()}
+  <SpellUpgradeModal
+    isOpen={showUpgradeModal}
+    onClose={() => setShowUpgradeModal(false)}
+    availableStars={availableSpellStars}
+    totalStarsEarned={totalSpellStarsEarned}
+    spentStars={spentSpellStars}
+    spellUpgradeLevels={spellUpgradeLevels}
+    onUpgradeSpell={upgradeSpell}
+  />
     </div>
   );
 };

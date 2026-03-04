@@ -1,9 +1,8 @@
 import {
   GRID_HEIGHT,
   GRID_WIDTH,
-  LEVEL_DATA,
-  MAP_PATHS,
   TILE_SIZE,
+  getLevelUniquePathSegments,
 } from "../../constants";
 import type { Position } from "../../types";
 import { distanceToLineSegment, gridToWorld, gridToWorldPath } from "../../utils";
@@ -43,30 +42,11 @@ const CHALLENGE_BOUNDS_GRID_MARGIN_TILES = 6;
 const CHALLENGE_BOUNDS_PATH_MARGIN_TILES = 6;
 const CHALLENGE_BOUNDS_CLAMP_MARGIN_TILES = 18;
 
-const toPathSegments = (path: Array<{ x: number; y: number }>): ChallengePathSegment[] => {
-  const segments: ChallengePathSegment[] = [];
-  for (let i = 0; i < path.length - 1; i++) {
-    const startNode = path[i];
-    const endNode = path[i + 1];
-    if (!startNode || !endNode) continue;
-    segments.push({
-      start: gridToWorldPath(startNode),
-      end: gridToWorldPath(endNode),
-    });
-  }
-  return segments;
-};
-
 export function getChallengePathSegments(mapId: string): ChallengePathSegment[] {
-  const primaryPath = MAP_PATHS[mapId] ?? [];
-  const segments = toPathSegments(primaryPath);
-
-  const secondaryPathKey = LEVEL_DATA[mapId]?.secondaryPath;
-  if (LEVEL_DATA[mapId]?.dualPath && secondaryPathKey && MAP_PATHS[secondaryPathKey]) {
-    segments.push(...toPathSegments(MAP_PATHS[secondaryPathKey]));
-  }
-
-  return segments;
+  return getLevelUniquePathSegments(mapId).map((segment) => ({
+    start: gridToWorldPath(segment.start),
+    end: gridToWorldPath(segment.end),
+  }));
 }
 
 export function getDistanceToChallengePath(

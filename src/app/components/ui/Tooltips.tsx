@@ -84,6 +84,7 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
 
   const hasRangeBuff = (tower.rangeBoost || 1) > 1;
   const hasDamageBuff = (tower.damageBoost || 1) > 1;
+  const hasAttackSpeedBuff = (tower.attackSpeedBoost || 1) > 1;
 
   const tooltipWidth = 220;
   let tooltipX = position.x + 20;
@@ -201,7 +202,7 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
         })()}
 
         {/* Buff indicator - styled similar to debuff box but with positive colors */}
-        {(hasRangeBuff || hasDamageBuff) && (
+        {(hasRangeBuff || hasDamageBuff || hasAttackSpeedBuff) && (
           <div className="mb-2 p-1.5 bg-emerald-950/60 rounded border border-emerald-700/50">
             <div className="flex items-center gap-1 mb-1">
               <Sparkles size={10} className="text-emerald-400" />
@@ -224,6 +225,12 @@ export const TowerHoverTooltip: React.FC<TowerHoverTooltipProps> = ({ tower, pos
                 <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-orange-400">
                   <Swords size={10} />
                   <span>+{Math.round(((tower.damageBoost || 1) - 1) * 100)}% DMG</span>
+                </div>
+              )}
+              {hasAttackSpeedBuff && (
+                <div className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-black/30 text-indigo-300">
+                  <Timer size={10} />
+                  <span>+{Math.round(((tower.attackSpeedBoost || 1) - 1) * 100)}% Atk Spd</span>
                 </div>
               )}
             </div>
@@ -403,10 +410,19 @@ export const PlacingTroopIndicator: React.FC = () => {
 // =============================================================================
 
 interface SpecialBuildingTooltipProps {
-  type: "vault" | "beacon" | "shrine" | "barracks";
+  type:
+    | "vault"
+    | "beacon"
+    | "shrine"
+    | "barracks"
+    | "chrono_relay"
+    | "sentinel_nexus"
+    | "sunforge_orrery";
   hp: number | null;
   maxHp?: number;
   position: Position;
+  sentinelTarget?: Position | null;
+  sentinelTargeting?: boolean;
 }
 
 export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
@@ -414,6 +430,8 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
   hp,
   maxHp,
   position,
+  sentinelTarget,
+  sentinelTargeting,
 }) => {
   const info = {
     vault: {
@@ -448,6 +466,30 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
       color: "from-red-900/90 to-stone-950/90",
       borderColor: "border-red-500",
     },
+    chrono_relay: {
+      name: "Arcane Time Crystal",
+      icon: <Timer className="text-indigo-300" size={18} />,
+      desc: "Temporal crystal lattice. Nearby towers lock to its cadence and fire faster.",
+      stat: "+Attack Speed Aura",
+      color: "from-indigo-900/90 to-slate-950/90",
+      borderColor: "border-indigo-400",
+    },
+    sentinel_nexus: {
+      name: "Imperial Red Sentinel",
+      icon: <Activity className="text-rose-300" size={18} />,
+      desc: "Ancient laser-guided strike core. Every 10s it calls lightning at a locked map coordinate.",
+      stat: "Retargetable Strike Beacon",
+      color: "from-rose-900/90 to-red-950/90",
+      borderColor: "border-rose-400",
+    },
+    sunforge_orrery: {
+      name: "Sunforge Orrery",
+      icon: <Flame className="text-orange-300" size={18} />,
+      desc: "Offensive astral furnace. Periodically computes enemy density and launches tri-plasma barrages.",
+      stat: "Cluster Erasure Barrage",
+      color: "from-orange-900/90 to-amber-950/90",
+      borderColor: "border-orange-400",
+    },
   }[type];
 
   return (
@@ -466,6 +508,22 @@ export const SpecialBuildingTooltip: React.FC<SpecialBuildingTooltipProps> = ({
       <p className="text-[11px] text-amber-200/80 leading-relaxed mb-3">
         {info.desc}
       </p>
+
+      {type === "sentinel_nexus" && (
+        <div className="mb-2 rounded-md border border-rose-700/40 bg-rose-950/30 px-2 py-1.5">
+          <div className="text-[9px] text-rose-300/80 uppercase tracking-wider mb-1">Target</div>
+          <div className="text-[10px] text-rose-100">
+            {sentinelTarget
+              ? `(${Math.round(sentinelTarget.x)}, ${Math.round(sentinelTarget.y)})`
+              : "Acquiring random target..."}
+          </div>
+          <div className="text-[9px] text-rose-200/70 mt-1">
+            {sentinelTargeting
+              ? "Click map to set strike target."
+              : "Click nexus, then click map to retarget."}
+          </div>
+        </div>
+      )}
 
       {hp !== null && maxHp && (
         <div className="mb-3">
@@ -700,6 +758,27 @@ const HAZARD_INFO: Record<string, { name: string; icon: React.ReactNode; desc: s
     desc: "A thick, noxious cloud of toxic gas lingers over this area.",
     effect: "Deals damage to ENEMY troops passing through",
     effectColor: "text-green-400",
+  },
+  deep_water: {
+    name: "Deep Water",
+    icon: <Activity className="text-blue-400" size={16} />,
+    desc: "Dark water with strong undertow and almost no footing.",
+    effect: "Slows enemies and deals steady drown damage",
+    effectColor: "text-blue-300",
+  },
+  maelstrom: {
+    name: "Maelstrom",
+    icon: <Wind className="text-cyan-300" size={16} />,
+    desc: "A rotating vortex that drags everything toward its crushing center.",
+    effect: "Heavy slow and high damage over time",
+    effectColor: "text-cyan-300",
+  },
+  storm_field: {
+    name: "Storm Field",
+    icon: <Zap className="text-sky-300" size={16} />,
+    desc: "Ionized storm air that supercharges movement but shreds armor.",
+    effect: "Enemies move faster but take constant lightning damage",
+    effectColor: "text-sky-300",
   },
   quicksand: {
     name: "Quicksand",

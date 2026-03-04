@@ -200,6 +200,15 @@ export function renderHazard(
     case "quicksand":
       drawQuicksandHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
+    case "deep_water":
+      drawDeepWaterHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
+      break;
+    case "maelstrom":
+      drawMaelstromHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
+      break;
+    case "storm_field":
+      drawStormFieldHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
+      break;
     case "lava":
       drawSimpleLavaHazard(ctx, sRad, time, zoom);
       break;
@@ -1123,6 +1132,263 @@ function drawQuicksandHazard(
   ctx.textAlign = "center";
   ctx.fillText("!", 0, -23 * cameraZoom);
   ctx.restore();
+}
+
+// ============================================================================
+// DEEP WATER HAZARD
+// ============================================================================
+
+function drawDeepWaterHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 31.7 + (pos.y || 0) * 43.1;
+  const tide = Math.sin(time * 0.85 + hazSeed * 0.03) * 0.5 + 0.5;
+
+  // 1. Damp shoreline footprint
+  const wetGrad = ctx.createRadialGradient(0, 0, sRad * 0.45, 0, 0, sRad * 1.35);
+  wetGrad.addColorStop(0, "rgba(10, 40, 70, 0.25)");
+  wetGrad.addColorStop(0.55, "rgba(25, 60, 85, 0.2)");
+  wetGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = wetGrad;
+  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.25 * isoRatio, hazSeed, 0.24);
+  ctx.fill();
+
+  // 2. Water body with depth gradient
+  const waterGrad = ctx.createRadialGradient(
+    -sRad * 0.25,
+    -sRad * 0.16 * isoRatio,
+    0,
+    0,
+    0,
+    sRad
+  );
+  waterGrad.addColorStop(0, "rgba(82, 164, 202, 0.92)");
+  waterGrad.addColorStop(0.33, "rgba(44, 116, 162, 0.9)");
+  waterGrad.addColorStop(0.7, "rgba(20, 72, 118, 0.92)");
+  waterGrad.addColorStop(1, "rgba(8, 30, 64, 0.96)");
+  ctx.fillStyle = waterGrad;
+  drawOrganicBlob(ctx, sRad, sRad * isoRatio, hazSeed + 70, 0.18);
+  ctx.fill();
+
+  // 3. Deeper center
+  const depthGrad = ctx.createRadialGradient(0, 3 * cameraZoom, 0, 0, 3 * cameraZoom, sRad * 0.52);
+  depthGrad.addColorStop(0, "rgba(4, 18, 48, 0.95)");
+  depthGrad.addColorStop(1, "rgba(8, 34, 64, 0.15)");
+  ctx.fillStyle = depthGrad;
+  drawOrganicBlob(ctx, sRad * 0.48, sRad * 0.4 * isoRatio, hazSeed + 120, 0.12);
+  ctx.fill();
+
+  // 4. Surface caustics and moving wave bands
+  for (let band = 0; band < 5; band++) {
+    const phase = time * 0.9 + band * 0.95 + hazSeed * 0.02;
+    const r = sRad * (0.2 + band * 0.13) * (0.95 + tide * 0.05);
+    const wobble = 1 + Math.sin(phase) * 0.06;
+    ctx.strokeStyle = `rgba(170, 230, 255, ${0.14 + (4 - band) * 0.03})`;
+    ctx.lineWidth = (2.2 - band * 0.22) * cameraZoom;
+    drawOrganicBlob(ctx, r * wobble, r * isoRatio * wobble, hazSeed + band * 31, 0.09);
+    ctx.stroke();
+  }
+
+  // 5. Edge foam
+  const foamCount = 16;
+  for (let i = 0; i < foamCount; i++) {
+    const angle = (i / foamCount) * Math.PI * 2 + Math.sin(hazSeed + i) * 0.18;
+    const edgeR = sRad * (0.8 + Math.sin(time * 0.8 + i) * 0.08);
+    const fx = Math.cos(angle) * edgeR;
+    const fy = Math.sin(angle) * edgeR * isoRatio;
+    const pulse = 0.35 + (Math.sin(time * 2 + i * 1.8) * 0.5 + 0.5) * 0.65;
+    const bubbleSize = (2.2 + (i % 3)) * cameraZoom * pulse;
+
+    ctx.fillStyle = `rgba(225, 245, 255, ${0.35 + pulse * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(fx, fy, bubbleSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 6. Specular reflection
+  const glintGrad = ctx.createRadialGradient(
+    -sRad * 0.32,
+    -sRad * 0.2 * isoRatio,
+    0,
+    -sRad * 0.32,
+    -sRad * 0.2 * isoRatio,
+    sRad * 0.42
+  );
+  glintGrad.addColorStop(0, `rgba(230, 248, 255, ${0.25 + tide * 0.18})`);
+  glintGrad.addColorStop(0.5, "rgba(190, 235, 255, 0.08)");
+  glintGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = glintGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    -sRad * 0.25,
+    -sRad * 0.18 * isoRatio,
+    sRad * 0.45,
+    sRad * 0.23 * isoRatio,
+    -0.35,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+}
+
+// ============================================================================
+// MAELSTROM HAZARD
+// ============================================================================
+
+function drawMaelstromHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 59.9 + (pos.y || 0) * 19.7;
+  const spin = time * 1.8;
+
+  // 1. Turbulent water bed
+  const basinGrad = ctx.createRadialGradient(0, 0, sRad * 0.2, 0, 0, sRad * 1.2);
+  basinGrad.addColorStop(0, "rgba(12, 32, 58, 0.95)");
+  basinGrad.addColorStop(0.5, "rgba(18, 64, 98, 0.82)");
+  basinGrad.addColorStop(1, "rgba(6, 18, 36, 0.86)");
+  ctx.fillStyle = basinGrad;
+  drawOrganicBlob(ctx, sRad * 1.05, sRad * 0.95 * isoRatio, hazSeed, 0.22);
+  ctx.fill();
+
+  // 2. Rotating spiral currents
+  for (let arm = 0; arm < 7; arm++) {
+    ctx.strokeStyle = `rgba(130, 220, 255, ${0.24 - arm * 0.02})`;
+    ctx.lineWidth = (2.8 - arm * 0.22) * cameraZoom;
+    ctx.beginPath();
+    for (let t = 0; t <= 1; t += 0.035) {
+      const radius = sRad * (0.12 + t * 0.82);
+      const theta = spin + arm * 0.9 + t * 8.8 + Math.sin(hazSeed + arm) * 0.2;
+      const x = Math.cos(theta) * radius;
+      const y = Math.sin(theta) * radius * isoRatio;
+      if (t === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // 3. Foam vortex ring
+  const foamR = sRad * (0.62 + Math.sin(time * 1.3 + hazSeed * 0.02) * 0.04);
+  ctx.strokeStyle = "rgba(225, 245, 255, 0.58)";
+  ctx.lineWidth = 3 * cameraZoom;
+  drawOrganicBlob(ctx, foamR, foamR * isoRatio, hazSeed + 90, 0.14);
+  ctx.stroke();
+
+  // 4. Vortex eye
+  const eyeGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, sRad * 0.22);
+  eyeGrad.addColorStop(0, "rgba(2, 8, 18, 0.98)");
+  eyeGrad.addColorStop(1, "rgba(8, 22, 44, 0.24)");
+  ctx.fillStyle = eyeGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, sRad * 0.2, sRad * 0.12 * isoRatio, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5. Flung spray particles
+  for (let spray = 0; spray < 20; spray++) {
+    const phase = (time * 0.9 + spray * 0.17) % 1;
+    const angle = spin * 1.25 + spray * 0.55 + hazSeed * 0.02;
+    const radius = sRad * (0.25 + phase * 0.85);
+    const px = Math.cos(angle) * radius;
+    const py = Math.sin(angle) * radius * isoRatio - phase * 16 * cameraZoom;
+    const size = (1.3 + (spray % 4) * 0.65) * cameraZoom * (1 - phase * 0.6);
+
+    ctx.fillStyle = `rgba(210, 245, 255, ${0.35 + (1 - phase) * 0.45})`;
+    ctx.beginPath();
+    ctx.arc(px, py, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ============================================================================
+// STORM FIELD HAZARD
+// ============================================================================
+
+function drawStormFieldHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 27.1 + (pos.y || 0) * 61.3;
+  const pulse = Math.sin(time * 3.4 + hazSeed * 0.03) * 0.5 + 0.5;
+
+  // 1. Ionized ground
+  const fieldGrad = ctx.createRadialGradient(0, 0, sRad * 0.25, 0, 0, sRad * 1.15);
+  fieldGrad.addColorStop(0, "rgba(36, 56, 112, 0.78)");
+  fieldGrad.addColorStop(0.5, "rgba(26, 34, 72, 0.65)");
+  fieldGrad.addColorStop(1, "rgba(10, 12, 24, 0.45)");
+  ctx.fillStyle = fieldGrad;
+  drawOrganicBlob(ctx, sRad * 1.08, sRad * 0.98 * isoRatio, hazSeed, 0.2);
+  ctx.fill();
+
+  // 2. Rolling storm deck
+  for (let layer = 0; layer < 3; layer++) {
+    const drift = Math.sin(time * (0.6 + layer * 0.2) + layer + hazSeed) * 13 * cameraZoom;
+    const layerAlpha = 0.2 - layer * 0.05 + pulse * 0.07;
+    const r = sRad * (1 - layer * 0.12);
+    ctx.save();
+    ctx.translate(drift, -layer * 6 * cameraZoom);
+    const cloudGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+    cloudGrad.addColorStop(0, `rgba(120, 150, 255, ${layerAlpha})`);
+    cloudGrad.addColorStop(0.55, `rgba(75, 96, 190, ${layerAlpha * 0.65})`);
+    cloudGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = cloudGrad;
+    drawOrganicBlob(ctx, r, r * 0.72 * isoRatio, hazSeed + layer * 23, 0.16);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 3. Crackling arcs
+  ctx.strokeStyle = `rgba(175, 220, 255, ${0.45 + pulse * 0.35})`;
+  ctx.lineWidth = 2.4 * cameraZoom;
+  for (let arc = 0; arc < 5; arc++) {
+    const angle = (arc / 5) * Math.PI * 2 + time * 0.9;
+    const startR = sRad * (0.2 + (arc % 2) * 0.1);
+    const endR = sRad * (0.65 + (arc % 3) * 0.1);
+    let x = Math.cos(angle) * startR;
+    let y = Math.sin(angle) * startR * isoRatio;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let seg = 0; seg < 4; seg++) {
+      const t = (seg + 1) / 4;
+      const segR = startR + (endR - startR) * t;
+      const segA = angle + t * 0.6 + Math.sin(time * 5 + seg + arc) * 0.2;
+      x = Math.cos(segA) * segR;
+      y = Math.sin(segA) * segR * isoRatio - t * 6 * cameraZoom;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  // 4. Charged motes
+  for (let mote = 0; mote < 16; mote++) {
+    const phase = (time * 0.8 + mote * 0.21) % 1;
+    const angle = mote * 0.73 + hazSeed * 0.01;
+    const radius = sRad * (0.18 + (mote % 5) * 0.15);
+    const px = Math.cos(angle + time * 0.4) * radius;
+    const py = Math.sin(angle + time * 0.4) * radius * isoRatio - phase * 24 * cameraZoom;
+    const size = (1.5 + (mote % 3)) * cameraZoom * (1 - phase * 0.55);
+
+    ctx.save();
+    ctx.shadowColor = "rgba(145, 210, 255, 0.8)";
+    ctx.shadowBlur = 10 * cameraZoom;
+    ctx.fillStyle = `rgba(195, 235, 255, ${0.4 + (1 - phase) * 0.4})`;
+    ctx.beginPath();
+    ctx.arc(px, py, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 // ============================================================================

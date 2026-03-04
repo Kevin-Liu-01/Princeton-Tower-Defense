@@ -7548,7 +7548,9 @@ export const drawWorldMapCanvas = ({
       }
     }
 
-    // Tooltip with Preview Image - show on hover, or sticky above level when clicked (selectedLevel)
+    // Tooltip with preview image:
+    // - show hovered level when hovering a different node
+    // - otherwise show selected level
     const tooltipLevelId =
       hoveredLevel && hoveredLevel !== selectedLevel
         ? hoveredLevel

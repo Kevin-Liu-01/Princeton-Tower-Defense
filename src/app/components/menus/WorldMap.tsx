@@ -19,7 +19,13 @@ import {
   AlertTriangle,
   Hammer,
 } from "lucide-react";
-import type { GameState, LevelStars, HeroType, SpellType } from "../../types";
+import type {
+  GameState,
+  LevelStars,
+  HeroType,
+  SpellType,
+  SpellUpgradeLevels,
+} from "../../types";
 import type { LevelStats } from "../../useLocalStorage";
 import type {
   CustomLevelDefinition,
@@ -122,6 +128,11 @@ interface WorldMapProps {
   setSelectedHero: (hero: HeroType | null) => void;
   selectedSpells: SpellType[];
   setSelectedSpells: (spells: SpellType[]) => void;
+  availableSpellStars: number;
+  totalSpellStarsEarned: number;
+  spentSpellStars: number;
+  spellUpgradeLevels: SpellUpgradeLevels;
+  upgradeSpell: (spellType: SpellType) => void;
   gameState: GameState;
   /** When Battle is clicked without hero/spells selected, run this to pick random loadout and start */
   onStartWithRandomLoadout?: () => void;
@@ -150,6 +161,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   setSelectedHero,
   selectedSpells,
   setSelectedSpells,
+  availableSpellStars,
+  totalSpellStarsEarned,
+  spentSpellStars,
+  spellUpgradeLevels,
+  upgradeSpell,
   onStartWithRandomLoadout,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -437,6 +453,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   };
 
   const canStart = selectedLevel && selectedHero && selectedSpells.length === 3;
+  const hasAlternateTooltipOpen = Boolean(
+    hoveredLevel && hoveredLevel !== selectedLevel
+  );
   const currentLevel = selectedLevel ? getLevelById(selectedLevel) : null;
   const isCurrentCustomLevel = Boolean(currentLevel?.isCustom);
   const isCurrentChallengeLevel =
@@ -1177,9 +1196,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     className="block mx-auto"
                     style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
                     onMouseMove={handleMouseMove}
+                    onMouseLeave={() => setHoveredLevel(null)}
                     onClick={handleClick}
                   />
-                  {selectedLevel && canvasDisplaySize && (() => {
+                  {selectedLevel && canvasDisplaySize && !hasAlternateTooltipOpen && (() => {
                     const worldLevel = WORLD_LEVELS.find((l) => l.id === selectedLevel);
                     if (!worldLevel) return null;
                     const scaleX = canvasDisplaySize.w / MAP_WIDTH;
@@ -1303,6 +1323,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     toggleSpell={toggleSpell}
                     hoveredSpell={hoveredSpell}
                     setHoveredSpell={setHoveredSpell}
+                    availableSpellStars={availableSpellStars}
+                    totalSpellStarsEarned={totalSpellStarsEarned}
+                    spentSpellStars={spentSpellStars}
+                    spellUpgradeLevels={spellUpgradeLevels}
+                    upgradeSpell={upgradeSpell}
                   />
                 </div>
               </div>

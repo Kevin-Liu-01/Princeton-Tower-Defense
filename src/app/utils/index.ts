@@ -18,6 +18,8 @@ import {
   HERO_PATH_HITBOX_SIZE,
   ROAD_EXCLUSION_BUFFER,
   TOWER_FOOTPRINTS,
+  getLevelPaths,
+  getLevelUniquePathSegments,
 } from "../constants";
 
 // Enemy lane model: lanes are normalized to [-1, 1] and projected onto path
@@ -822,23 +824,11 @@ export function isValidBuildPosition(
   }
 
   // Path collision with buffer zone
-  const path = MAP_PATHS[mapKey];
-  const secondaryPaths = MAP_PATHS[`${mapKey}_b`];
   const worldPos = gridToWorld(gridPos);
-
-  if (secondaryPaths) {
-    for (let i = 0; i < secondaryPaths.length - 1; i++) {
-      const p1 = gridToWorldPath(secondaryPaths[i]);
-      const p2 = gridToWorldPath(secondaryPaths[i + 1]);
-      if (distanceToLineSegment(worldPos, p1, p2) < buffer) {
-        return false;
-      }
-    }
-  }
-
-  for (let i = 0; i < path.length - 1; i++) {
-    const p1 = gridToWorldPath(path[i]);
-    const p2 = gridToWorldPath(path[i + 1]);
+  const pathSegments = getLevelUniquePathSegments(mapKey);
+  for (const segment of pathSegments) {
+    const p1 = gridToWorldPath(segment.start);
+    const p2 = gridToWorldPath(segment.end);
     if (distanceToLineSegment(worldPos, p1, p2) < buffer) {
       return false;
     }
@@ -1124,29 +1114,26 @@ export function findClosestPathPoint(
   worldPos: Position,
   mapKey: string
 ): { point: Position; distance: number; segmentIndex: number } | null {
-  const path = MAP_PATHS[mapKey];
-  const secondaryPath = MAP_PATHS[`${mapKey}_b`];
-  
-  let fullPath = path ? [...path] : [];
-  if (secondaryPath) {
-    fullPath = fullPath.concat(secondaryPath);
-  }
-  
-  if (fullPath.length < 2) return null;
+  const paths = getLevelPaths(mapKey);
+  if (paths.length === 0) return null;
 
   let closestPoint = worldPos;
   let minDist = Infinity;
   let closestSegmentIndex = 0;
+  let runningSegmentIndex = 0;
 
-  for (let i = 0; i < fullPath.length - 1; i++) {
-    const p1 = gridToWorldPath(fullPath[i]);
-    const p2 = gridToWorldPath(fullPath[i + 1]);
-    const point = closestPointOnLine(worldPos, p1, p2);
-    const dist = distance(worldPos, point);
-    if (dist < minDist) {
-      minDist = dist;
-      closestPoint = point;
-      closestSegmentIndex = i;
+  for (const path of paths) {
+    for (let i = 0; i < path.points.length - 1; i++) {
+      const p1 = gridToWorldPath(path.points[i]);
+      const p2 = gridToWorldPath(path.points[i + 1]);
+      const point = closestPointOnLine(worldPos, p1, p2);
+      const dist = distance(worldPos, point);
+      if (dist < minDist) {
+        minDist = dist;
+        closestPoint = point;
+        closestSegmentIndex = runningSegmentIndex;
+      }
+      runningSegmentIndex += 1;
     }
   }
 
@@ -1175,46 +1162,40 @@ export function findClosestPathPointWithinRadius(
 
   // Otherwise, we need to find the closest point on path that IS within the radius
   // Walk along the path and find the intersection with the radius circle
-  const path = MAP_PATHS[mapKey];
-  const secondaryPath = MAP_PATHS[`${mapKey}_b`];
-  
-  let fullPath = path ? [...path] : [];
-  if (secondaryPath) {
-    fullPath = fullPath.concat(secondaryPath);
-  }
-
   let bestPoint: Position | null = null;
   let bestDist = Infinity;
 
-  for (let i = 0; i < fullPath.length - 1; i++) {
-    const p1 = gridToWorldPath(fullPath[i]);
-    const p2 = gridToWorldPath(fullPath[i + 1]);
-    
-    // Find intersections of this segment with the radius circle
-    const intersections = lineCircleIntersection(p1, p2, anchorPos, radius);
-    
-    for (const intersection of intersections) {
-      // Check if this intersection is closer to our target position
-      const distToTarget = distance(intersection, worldPos);
-      if (distToTarget < bestDist) {
-        bestDist = distToTarget;
-        bestPoint = intersection;
+  for (const path of getLevelPaths(mapKey)) {
+    for (let i = 0; i < path.points.length - 1; i++) {
+      const p1 = gridToWorldPath(path.points[i]);
+      const p2 = gridToWorldPath(path.points[i + 1]);
+
+      // Find intersections of this segment with the radius circle
+      const intersections = lineCircleIntersection(p1, p2, anchorPos, radius);
+
+      for (const intersection of intersections) {
+        // Check if this intersection is closer to our target position
+        const distToTarget = distance(intersection, worldPos);
+        if (distToTarget < bestDist) {
+          bestDist = distToTarget;
+          bestPoint = intersection;
+        }
       }
-    }
-    
-    // Also check if the segment endpoints are within radius
-    if (distance(p1, anchorPos) <= radius) {
-      const distToTarget = distance(p1, worldPos);
-      if (distToTarget < bestDist) {
-        bestDist = distToTarget;
-        bestPoint = p1;
+
+      // Also check if the segment endpoints are within radius
+      if (distance(p1, anchorPos) <= radius) {
+        const distToTarget = distance(p1, worldPos);
+        if (distToTarget < bestDist) {
+          bestDist = distToTarget;
+          bestPoint = p1;
+        }
       }
-    }
-    if (distance(p2, anchorPos) <= radius) {
-      const distToTarget = distance(p2, worldPos);
-      if (distToTarget < bestDist) {
-        bestDist = distToTarget;
-        bestPoint = p2;
+      if (distance(p2, anchorPos) <= radius) {
+        const distToTarget = distance(p2, worldPos);
+        if (distToTarget < bestDist) {
+          bestDist = distToTarget;
+          bestPoint = p2;
+        }
       }
     }
   }

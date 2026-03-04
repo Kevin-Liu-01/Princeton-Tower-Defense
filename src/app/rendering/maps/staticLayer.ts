@@ -3,7 +3,9 @@ import {
   GRID_WIDTH,
   LEVEL_DATA,
   MAP_PATHS,
+  ROAD_EXCLUSION_BUFFER,
   TILE_SIZE,
+  getLevelPathKeys,
 } from "../../constants";
 import type { GridPosition, Position } from "../../types";
 import {
@@ -74,7 +76,8 @@ interface ChallengeBackdropPalette {
 
 const PATH_TENSION = 0.25;
 const PATH_SUBDIVISIONS = 8;
-const ROAD_BASE_WIDTH = 48;
+// Slightly thicker visual roads while keeping gameplay hitboxes unchanged.
+const ROAD_BASE_WIDTH = Math.round(ROAD_EXCLUSION_BUFFER * 1.3);
 const ROAD_WOBBLE = 10;
 const ROAD_TRACK_OFFSET = 18;
 const FOG_DIRECTION_OFFSET = 30;
@@ -1629,28 +1632,26 @@ export function renderStaticMapLayer({
   }
 
   const fogEndpoints: StaticMapFogEndpoint[] = [];
-  const primaryPath = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
-  const primaryRoad = buildRoadGeometry(primaryPath, mapSeed, toScreen);
-  if (primaryRoad) {
-    drawRoad(ctx, primaryRoad, theme, cameraZoom, mapSeed, 0.72, true, toScreen);
-    fogEndpoints.push(...getFogEndpoints(primaryRoad));
-  }
+  const pathKeys = getLevelPathKeys(selectedMap);
+  for (let i = 0; i < pathKeys.length; i++) {
+    const pathKey = pathKeys[i];
+    const pathPoints = MAP_PATHS[pathKey];
+    if (!pathPoints || pathPoints.length < 2) continue;
 
-  const secondaryPathKey = LEVEL_DATA[selectedMap]?.secondaryPath;
-  if (
-    LEVEL_DATA[selectedMap]?.dualPath &&
-    secondaryPathKey &&
-    MAP_PATHS[secondaryPathKey]
-  ) {
-    const secondaryRoad = buildRoadGeometry(
-      MAP_PATHS[secondaryPathKey],
+    const road = buildRoadGeometry(pathPoints, mapSeed, toScreen);
+    if (!road) continue;
+
+    drawRoad(
+      ctx,
+      road,
+      theme,
+      cameraZoom,
       mapSeed,
+      0.72,
+      true,
       toScreen,
     );
-    if (secondaryRoad) {
-      drawRoad(ctx, secondaryRoad, theme, cameraZoom, mapSeed, 0.92, false, toScreen);
-      fogEndpoints.push(...getFogEndpoints(secondaryRoad));
-    }
+    fogEndpoints.push(...getFogEndpoints(road));
   }
 
   return { fogEndpoints };

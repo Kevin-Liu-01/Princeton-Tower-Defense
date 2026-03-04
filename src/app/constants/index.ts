@@ -5,5 +5,6 @@ export * from "./heroes";
 export * from "./spells";
 export * from "./troops";
 export * from "./maps";
+export * from "./pathing";
 export * from "./waves";
 export * from "./particles";

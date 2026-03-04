@@ -28,6 +28,7 @@ interface VictoryScreenProps {
   bestHearts?: number;
   levelName: string;
   resetGame: () => void;
+  overlay?: boolean;
 }
 
 // Animated trophy with sparkles
@@ -449,6 +450,7 @@ export function VictoryScreen({
   bestHearts,
   levelName,
   resetGame,
+  overlay = false,
 }: VictoryScreenProps) {
   const isNewBestTime = !bestTime || timeSpent < bestTime;
   const isNewBestHearts = !bestHearts || lives > bestHearts;
@@ -468,34 +470,49 @@ export function VictoryScreen({
 
   return (
     <div
-      className="w-full h-screen flex flex-col items-center justify-center relative overflow-auto"
+      className={`${overlay
+        ? "absolute inset-0 z-[400] flex flex-col items-center justify-center overflow-auto pointer-events-auto"
+        : "w-full h-screen flex flex-col items-center justify-center relative overflow-auto"
+        } ${overlay ? `transition-opacity duration-500 ${showContent ? "opacity-100" : "opacity-0"}` : ""}`}
       style={{
-        background: "linear-gradient(180deg, #1c1610 0%, #2a1f10 40%, #1c1610 100%)",
+        background: overlay
+          ? "rgba(12, 9, 5, 0.38)"
+          : "linear-gradient(180deg, #1c1610 0%, #2a1f10 40%, #1c1610 100%)",
+        backdropFilter: overlay ? "blur(1.5px) saturate(0.9)" : undefined,
+        WebkitBackdropFilter: overlay ? "blur(1.5px) saturate(0.9)" : undefined,
       }}
     >
-      {/* Background radial glow */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(180,140,60,0.08), transparent)",
-      }} />
-
-      {/* Floating golden particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(24)].map((_, i) => (
+      {!overlay && (
+        <>
+          {/* Background radial glow */}
           <div
-            key={i}
-            className="absolute rounded-full animate-pulse"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              width: `${1 + (i % 3)}px`,
-              height: `${1 + (i % 3)}px`,
-              left: `${(i * 4.3) % 100}%`,
-              top: `${(i * 7.1) % 100}%`,
-              background: `rgba(255, 200, 80, ${0.15 + (i % 4) * 0.08})`,
-              animationDelay: `${i * 0.3}s`,
-              animationDuration: `${2 + (i % 3)}s`,
+              background:
+                "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(180,140,60,0.08), transparent)",
             }}
           />
-        ))}
-      </div>
+
+          {/* Floating golden particles */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {[...Array(24)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-pulse"
+                style={{
+                  width: `${1 + (i % 3)}px`,
+                  height: `${1 + (i % 3)}px`,
+                  left: `${(i * 4.3) % 100}%`,
+                  top: `${(i * 7.1) % 100}%`,
+                  background: `rgba(255, 200, 80, ${0.15 + (i % 4) * 0.08})`,
+                  animationDelay: `${i * 0.3}s`,
+                  animationDuration: `${2 + (i % 3)}s`,
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Main panel */}
       <div className={`relative z-10 max-w-xl w-full mx-4 transition-all duration-500 ${showContent ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>

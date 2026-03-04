@@ -25,6 +25,7 @@ import type {
   Decoration,
   DecorationHeightTag,
   SpecialTower,
+  SpellUpgradeLevels,
 } from "../types";
 // Constants
 import {
@@ -35,6 +36,7 @@ import {
   ENEMY_DATA,
   HERO_DATA,
   SPELL_DATA,
+  DEFAULT_SPELL_UPGRADES,
   MAP_PATHS,
   HERO_PATH_HITBOX_SIZE,
   TOWER_PLACEMENT_BUFFER,
@@ -50,6 +52,16 @@ import {
   MAX_STATION_TROOPS,
   HERO_OPTIONS,
   SPELL_OPTIONS,
+  MAX_SPELL_UPGRADE_LEVEL,
+  normalizeSpellUpgradeLevels,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getPaydaySpellStats,
+  getReinforcementSpellStats,
+  getNextSpellUpgradeCost,
+  getSpentSpellUpgradeStars,
+  getLevelPathKeys,
 } from "../constants";
 // Utils
 import {
@@ -252,6 +264,8 @@ interface WaveStartBubbleScreenData {
   progress: number;
   remainingMs: number;
 }
+
+type BattleOutcome = "victory" | "defeat";
 
 type DraggingUnitState =
   | {
@@ -534,7 +548,10 @@ function getFogWispCount(quality: RenderQuality): number {
 }
 
 const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
-const DEV_CONFIG_MENU_ENABLED = process.env.NEXT_PUBLIC_TD_DEV_PERF === "1";
+const DEV_CONFIG_ENV_VALUE = process.env.NEXT_PUBLIC_TD_DEV_PERF;
+const DEV_CONFIG_MENU_ENABLED =
+  typeof DEV_CONFIG_ENV_VALUE === "string" &&
+  DEV_CONFIG_ENV_VALUE.trim() === "1";
 const DEV_PERF_STORAGE_KEY = "ptd:dev-perf-overlay-enabled";
 
 const CAMPAIGN_LEVEL_UNLOCKS: Record<string, string> = {
@@ -609,6 +626,15 @@ export function usePrincetonTowerDefenseRuntime() {
   const unlockedMaps = progress.unlockedMaps;
   const levelStars = progress.levelStars as LevelStars;
   const levelStats = progress.levelStats;
+  const spellUpgradeLevels = useMemo(
+    () => normalizeSpellUpgradeLevels(progress.spellUpgrades),
+    [progress.spellUpgrades]
+  );
+  const totalStarsEarned =
+    progress.totalStarsEarned ??
+    Object.values(levelStars).reduce((sum, stars) => sum + stars, 0);
+  const spentSpellStars = getSpentSpellUpgradeStars(spellUpgradeLevels);
+  const availableSpellStars = Math.max(0, totalStarsEarned - spentSpellStars);
 
   useEffect(() => {
     const pendingUnlocks: string[] = [];
@@ -638,6 +664,9 @@ export function usePrincetonTowerDefenseRuntime() {
   const [starsEarned, setStarsEarned] = useState(0);
   const [levelStartTime, setLevelStartTime] = useState<number>(0);
   const [timeSpent, setTimeSpent] = useState<number>(0);
+  const [battleOutcome, setBattleOutcome] = useState<BattleOutcome | null>(
+    null
+  );
   // Game resources
   const {
     pawPoints,
@@ -680,6 +709,55 @@ export function usePrincetonTowerDefenseRuntime() {
     removeWhere: removeTroopsWhere,
   } = useEntityCollection<Troop>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
+  useEffect(() => {
+    const reinforcementStats = getReinforcementSpellStats(
+      spellUpgradeLevels.reinforcements
+    );
+    setTroops((prev) => {
+      let changed = false;
+      const next = prev.map((troop) => {
+        if (troop.ownerId !== "spell" || troop.type !== "knight") return troop;
+        const hpPercent = troop.maxHp > 0 ? troop.hp / troop.maxHp : 1;
+        const nextMaxHp = reinforcementStats.knightHp;
+        const nextHp = Math.max(
+          1,
+          Math.min(nextMaxHp, Math.round(nextMaxHp * hpPercent))
+        );
+        const shouldUpdate =
+          troop.overrideDamage !== reinforcementStats.knightDamage ||
+          troop.overrideAttackSpeed !== reinforcementStats.knightAttackSpeedMs ||
+          troop.overrideIsRanged !== reinforcementStats.rangedUnlocked ||
+          (troop.overrideRange ?? 0) !==
+            (reinforcementStats.rangedUnlocked
+              ? reinforcementStats.rangedRange
+              : 0) ||
+          troop.overrideCanTargetFlying !== reinforcementStats.rangedUnlocked ||
+          troop.overrideHybridMelee !== reinforcementStats.rangedUnlocked ||
+          troop.visualTier !== reinforcementStats.visualTier ||
+          troop.maxHp !== nextMaxHp ||
+          troop.moveRadius !== reinforcementStats.moveRadius;
+
+        if (!shouldUpdate) return troop;
+        changed = true;
+        return {
+          ...troop,
+          hp: nextHp,
+          maxHp: nextMaxHp,
+          moveRadius: reinforcementStats.moveRadius,
+          overrideDamage: reinforcementStats.knightDamage,
+          overrideAttackSpeed: reinforcementStats.knightAttackSpeedMs,
+          overrideIsRanged: reinforcementStats.rangedUnlocked,
+          overrideRange: reinforcementStats.rangedUnlocked
+            ? reinforcementStats.rangedRange
+            : undefined,
+          overrideCanTargetFlying: reinforcementStats.rangedUnlocked,
+          overrideHybridMelee: reinforcementStats.rangedUnlocked,
+          visualTier: reinforcementStats.visualTier,
+        };
+      });
+      return changed ? next : prev;
+    });
+  }, [spellUpgradeLevels.reinforcements, setTroops]);
   const {
     items: projectiles,
     setItems: setProjectiles,
@@ -722,6 +800,12 @@ export function usePrincetonTowerDefenseRuntime() {
   const [hoveredSpecialTower, setHoveredSpecialTower] = useState<SpecialTower | null>(null);
   const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
   const [hoveredHazardType, setHoveredHazardType] = useState<string | null>(null);
+  const [activeSentinelTargetKey, setActiveSentinelTargetKey] = useState<
+    string | null
+  >(null);
+  const [sentinelTargets, setSentinelTargets] = useState<
+    Record<string, Position>
+  >({});
   // Enemy Inspector state
   const [inspectorActive, setInspectorActive] = useState(false);
   const [selectedInspectEnemy, setSelectedInspectEnemy] = useState<Enemy | null>(null);
@@ -835,23 +919,48 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // Track last spawn time for frontier barracks to prevent double-spawning on restart
   const lastBarracksSpawnRef = useRef<number>(0);
+  // Track per-structure strike cooldowns for sentinel nexus challenge towers
+  const lastSentinelStrikeRef = useRef<Map<string, number>>(new Map());
+  // Track per-structure cadence for orange sunforge offensive barrages.
+  const lastSunforgeBarrageRef = useRef<Map<string, number>>(new Map());
+  const sentinelTargetsRef = useRef<Record<string, Position>>({});
   // Track when game was reset to prevent stale state race conditions
   const gameResetTimeRef = useRef<number>(0);
+  sentinelTargetsRef.current = sentinelTargets;
+
+  const getSpecialTowerKey = useCallback(
+    (tower: Pick<SpecialTower, "type" | "pos">): string =>
+      `${selectedMap}:${tower.type}:${tower.pos.x.toFixed(2)}:${tower.pos.y.toFixed(2)}`,
+    [selectedMap]
+  );
+
+  const clampWorldToMapBounds = useCallback((worldPos: Position): Position => {
+    const min = TILE_SIZE * 0.5;
+    const maxX = GRID_WIDTH * TILE_SIZE - TILE_SIZE * 0.5;
+    const maxY = GRID_HEIGHT * TILE_SIZE - TILE_SIZE * 0.5;
+    return {
+      x: Math.max(min, Math.min(maxX, worldPos.x)),
+      y: Math.max(min, Math.min(maxY, worldPos.y)),
+    };
+  }, []);
+
+  const getRandomMapTarget = useCallback((): Position => {
+    const margin = TILE_SIZE;
+    const minX = margin;
+    const minY = margin;
+    const maxX = GRID_WIDTH * TILE_SIZE - margin;
+    const maxY = GRID_HEIGHT * TILE_SIZE - margin;
+    return {
+      x: minX + Math.random() * Math.max(1, maxX - minX),
+      y: minY + Math.random() * Math.max(1, maxY - minY),
+    };
+  }, []);
 
   // Get current level waves - computed from selectedMap
   const currentLevelWaves = getLevelWaves(selectedMap);
   const totalWaves = currentLevelWaves.length;
   const activeWaveSpawnPaths = React.useMemo<string[]>(() => {
-    const levelData = LEVEL_DATA[selectedMap];
-    const secondaryPathKey = levelData?.secondaryPath;
-    const hasSecondaryPath = Boolean(
-      levelData?.dualPath &&
-      secondaryPathKey &&
-      MAP_PATHS[secondaryPathKey]
-    );
-    return hasSecondaryPath && secondaryPathKey
-      ? [selectedMap, secondaryPathKey]
-      : [selectedMap];
+    return getLevelPathKeys(selectedMap);
   }, [selectedMap]);
 
   const incomingWavePreviewByPath = React.useMemo<Map<string, WavePreviewEnemyEntry[]>>(() => {
@@ -864,10 +973,6 @@ export function usePrincetonTowerDefenseRuntime() {
       return new Map<string, WavePreviewEnemyEntry[]>();
     }
 
-    const primaryPathKey = selectedMap;
-    const secondaryPathKey =
-      activeWaveSpawnPaths.length > 1 ? activeWaveSpawnPaths[1] : null;
-
     const addEnemyCount = (pathKey: string, enemyType: EnemyType, count: number) => {
       if (count <= 0) return;
       const pathMap = groupedCounts.get(pathKey);
@@ -876,16 +981,15 @@ export function usePrincetonTowerDefenseRuntime() {
     };
 
     for (const group of nextWave) {
-      if (!secondaryPathKey) {
-        addEnemyCount(primaryPathKey, group.type, group.count);
-        continue;
+      const pathCount = Math.max(1, activeWaveSpawnPaths.length);
+      const baseCount = Math.floor(group.count / pathCount);
+      const remainder = group.count % pathCount;
+      for (let i = 0; i < pathCount; i++) {
+        const pathKey = activeWaveSpawnPaths[i];
+        if (!pathKey) continue;
+        const count = baseCount + (i < remainder ? 1 : 0);
+        addEnemyCount(pathKey, group.type, count);
       }
-
-      // Must mirror spawn logic: per-group alternating spawns (0->primary, 1->secondary, ...)
-      const primaryCount = Math.ceil(group.count / 2);
-      const secondaryCount = Math.floor(group.count / 2);
-      addEnemyCount(primaryPathKey, group.type, primaryCount);
-      addEnemyCount(secondaryPathKey, group.type, secondaryCount);
     }
 
     const previewByPath = new Map<string, WavePreviewEnemyEntry[]>();
@@ -910,7 +1014,7 @@ export function usePrincetonTowerDefenseRuntime() {
     }
 
     return previewByPath;
-  }, [currentLevelWaves, currentWave, activeWaveSpawnPaths, selectedMap]);
+  }, [currentLevelWaves, currentWave, activeWaveSpawnPaths]);
 
   const blockedPositions = React.useMemo(
     () => getBlockedPositionsForMap(selectedMap),
@@ -973,7 +1077,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   const handleCanvasWheel = useCallback(
     (e: React.WheelEvent<HTMLCanvasElement>) => {
-      if (gameState !== "playing") return;
+      if (gameState !== "playing" || battleOutcome) return;
       e.preventDefault();
 
       let delta = e.deltaY;
@@ -991,11 +1095,11 @@ export function usePrincetonTowerDefenseRuntime() {
 
       zoomCameraAtClientPoint(e.clientX, e.clientY, zoomFactor);
     },
-    [gameState, zoomCameraAtClientPoint]
+    [gameState, battleOutcome, zoomCameraAtClientPoint]
   );
 
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing" || battleOutcome) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -1062,7 +1166,7 @@ export function usePrincetonTowerDefenseRuntime() {
       canvas.removeEventListener("gestureend", handleGestureEnd as EventListener);
       lastGestureScaleRef.current = null;
     };
-  }, [gameState, zoomCameraAtClientPoint]);
+  }, [gameState, battleOutcome, zoomCameraAtClientPoint]);
 
   useEffect(() => {
     cachedStaticDecorationLayerRef.current = null;
@@ -1313,7 +1417,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // Keyboard controls for camera
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing" || battleOutcome) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const panSpeed = 20;
       switch (e.key.toLowerCase()) {
@@ -1344,6 +1448,7 @@ export function usePrincetonTowerDefenseRuntime() {
         case "escape":
           // Unselect all towers, heroes, and troops
           setSelectedTower(null);
+          setActiveSentinelTargetKey(null);
           setHero((prev) => (prev ? { ...prev, selected: false } : null));
           setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
           break;
@@ -1351,7 +1456,7 @@ export function usePrincetonTowerDefenseRuntime() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameState, setTroops]);
+  }, [gameState, battleOutcome, setTroops]);
 
   useEffect(() => {
     if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
@@ -1389,10 +1494,18 @@ export function usePrincetonTowerDefenseRuntime() {
     return () => window.removeEventListener("keydown", handlePerfToggleKey);
   }, [gameState]);
 
+  // Hard lock pause while end-of-battle overlay is visible.
+  useEffect(() => {
+    if (!battleOutcome) return;
+    if (gameSpeed === 0) return;
+    setGameSpeed(0);
+  }, [battleOutcome, gameSpeed]);
+
   // Reset game state when starting a new game (entering "playing" state)
   useEffect(() => {
     if (gameState === "playing") {
       clearAllTimers();
+      setBattleOutcome(null);
       // Get level-specific starting resources
       const levelData = LEVEL_DATA[selectedMap];
       const levelStartingPawPoints = levelData?.startingPawPoints ?? INITIAL_PAW_POINTS;
@@ -1415,6 +1528,8 @@ export function usePrincetonTowerDefenseRuntime() {
       setBuildingTower(null);
       setDraggingTower(null);
       setPlacingTroop(false);
+      setActiveSentinelTargetKey(null);
+      setSentinelTargets({});
       setSpells([]);
       setGameSpeed(1);
       setGoldSpellActive(false);
@@ -1425,6 +1540,8 @@ export function usePrincetonTowerDefenseRuntime() {
       pausableTimeoutsRef.current = [];
       // Reset spawn timing refs
       lastBarracksSpawnRef.current = 0;
+      lastSentinelStrikeRef.current.clear();
+      lastSunforgeBarrageRef.current.clear();
       // Mark reset time to prevent stale state race conditions
       gameResetTimeRef.current = Date.now();
     }
@@ -1490,7 +1607,8 @@ export function usePrincetonTowerDefenseRuntime() {
     if (gameState === "playing" && selectedHero && !hero) {
       const heroData = HERO_DATA[selectedHero];
       const levelSettings = LEVEL_DATA[selectedMap];
-      const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
+      const defaultPathKey = activeWaveSpawnPaths[0] ?? selectedMap;
+      const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS.poe ?? [];
       if (path.length === 0) return;
       // Spawn hero at the END of the path (where they defend)
       // Use map-specific hero spawn when available, otherwise default near the path exit.
@@ -1536,7 +1654,14 @@ export function usePrincetonTowerDefenseRuntime() {
         setCameraZoom(targetZoom);
       }
     }
-  }, [gameState, selectedHero, hero, selectedSpells, selectedMap]);
+  }, [
+    gameState,
+    selectedHero,
+    hero,
+    selectedSpells,
+    selectedMap,
+    activeWaveSpawnPaths,
+  ]);
   // Resize canvas - NO ctx.scale here, we handle DPR in render
   useEffect(() => {
     const resizeCanvas = () => {
@@ -1622,14 +1747,9 @@ export function usePrincetonTowerDefenseRuntime() {
             baseLaneOffset + (Math.random() - 0.5) * ENEMY_SPAWN_LANE_JITTER
           );
 
-          // Check for dual-path levels
-          const levelData = LEVEL_DATA[selectedMap];
-          const isDualPath = levelData?.dualPath && levelData?.secondaryPath;
-          // Alternate between paths for dual-path levels
-          const useSecondaryPath = isDualPath && spawned % 2 === 1;
-          const pathKey = useSecondaryPath
-            ? levelData.secondaryPath
-            : selectedMap;
+          const spawnPathCount = Math.max(1, activeWaveSpawnPaths.length);
+          const pathKey =
+            activeWaveSpawnPaths[spawned % spawnPathCount] ?? selectedMap;
 
           const enemy: Enemy = {
             id: generateId("enemy"),
@@ -1697,7 +1817,14 @@ export function usePrincetonTowerDefenseRuntime() {
         return currentW + 1;
       });
     }, waveDuration);
-  }, [waveInProgress, currentWave, selectedMap, setPausableTimeout, addEnemyEntity]);
+  }, [
+    waveInProgress,
+    currentWave,
+    selectedMap,
+    setPausableTimeout,
+    addEnemyEntity,
+    activeWaveSpawnPaths,
+  ]);
   // Helper to apply enemy abilities to a target (troop or hero)
   const applyEnemyAbilities = useCallback((
     enemy: Enemy,
@@ -1785,7 +1912,16 @@ export function usePrincetonTowerDefenseRuntime() {
       const levelWaves = getLevelWaves(selectedMap);
       const specialTowers = getLevelSpecialTowers(selectedMap);
       const beacons = specialTowers.filter((tower) => tower.type === "beacon");
+      const chronoRelays = specialTowers.filter(
+        (tower) => tower.type === "chrono_relay"
+      );
       const shrines = specialTowers.filter((tower) => tower.type === "shrine");
+      const sentinelNexuses = specialTowers.filter(
+        (tower) => tower.type === "sentinel_nexus"
+      );
+      const sunforgeOrreries = specialTowers.filter(
+        (tower) => tower.type === "sunforge_orrery"
+      );
       const barracksTower =
         specialTowers.find((tower) => tower.type === "barracks") ?? null;
       const barracksWorldPos = barracksTower
@@ -1996,12 +2132,26 @@ export function usePrincetonTowerDefenseRuntime() {
           // Cap damage boost at 3.0x
           damageMultiplier = Math.min(damageMultiplier, 3.0);
 
-          const hasAnyBuff = rangeMultiplier > 1.0 || damageMultiplier > 1.0;
+          // Calculate ATTACK SPEED buffs (multiplicative stacking)
+          let attackSpeedMultiplier = 1.0;
+          for (const relay of chronoRelays) {
+            const relayPos = gridToWorld(relay.pos);
+            if (distance(tWorldPos, relayPos) < 220) {
+              attackSpeedMultiplier *= 1.25;
+            }
+          }
+          attackSpeedMultiplier = Math.min(attackSpeedMultiplier, 2.4);
+
+          const hasAnyBuff =
+            rangeMultiplier > 1.0 ||
+            damageMultiplier > 1.0 ||
+            attackSpeedMultiplier > 1.0;
 
           return {
             ...t,
             rangeBoost: rangeMultiplier,
             damageBoost: damageMultiplier,
+            attackSpeedBoost: attackSpeedMultiplier,
             isBuffed: hasAnyBuff,
             // Clear boostEnd if Scott's buff expired
             boostEnd: isScottActive ? t.boostEnd : undefined,
@@ -2103,6 +2253,297 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
 
+      // B2. SENTINEL NEXUS: Locked-coordinate lightning strike every 10 seconds.
+      if (sentinelNexuses.length > 0) {
+        const strikeIntervalMs = 10000;
+        const strikeRadius = 140;
+        const strikeDamage = 240;
+        const sentinelKeys = new Set<string>();
+        const nextTargets = { ...sentinelTargetsRef.current };
+        let targetsChanged = false;
+        const pendingDamage = new Map<string, number>();
+        const strikeEffects: Effect[] = [];
+
+        for (const nexus of sentinelNexuses) {
+          const strikeKey = getSpecialTowerKey(nexus);
+          sentinelKeys.add(strikeKey);
+          if (!nextTargets[strikeKey]) {
+            nextTargets[strikeKey] = getRandomMapTarget();
+            targetsChanged = true;
+          }
+        }
+
+        Object.keys(nextTargets).forEach((key) => {
+          if (!sentinelKeys.has(key)) {
+            delete nextTargets[key];
+            targetsChanged = true;
+          }
+        });
+
+        if (targetsChanged) {
+          setSentinelTargets(nextTargets);
+          sentinelTargetsRef.current = nextTargets;
+        }
+
+        for (const nexus of sentinelNexuses) {
+          const strikeKey = getSpecialTowerKey(nexus);
+          const lastStrike = lastSentinelStrikeRef.current.get(strikeKey) ?? 0;
+          if (now - lastStrike < strikeIntervalMs) continue;
+
+          const targetPos = nextTargets[strikeKey];
+          if (!targetPos) continue;
+
+          lastSentinelStrikeRef.current.set(strikeKey, now);
+          const nexusWorldPos = gridToWorld(nexus.pos);
+          strikeEffects.push({
+            id: generateId("sentinel_strike"),
+            pos: nexusWorldPos,
+            type: "lightning",
+            progress: 0,
+            size: distance(nexusWorldPos, targetPos),
+            targetPos,
+            intensity: 1.55,
+            duration: 240,
+          });
+          strikeEffects.push({
+            id: generateId("sentinel_impact"),
+            pos: targetPos,
+            type: "sentinel_impact",
+            progress: 0,
+            size: strikeRadius,
+            duration: 560,
+          });
+          addParticles(targetPos, "spark", 18);
+          addParticles(targetPos, "light", 8);
+          addParticles(nexusWorldPos, "light", 6);
+
+          for (const enemy of enemies) {
+            if (enemy.dead || enemy.hp <= 0) continue;
+            const enemyPos = getEnemyPosCached(enemy);
+            const distToStrike = distance(enemyPos, targetPos);
+            if (distToStrike > strikeRadius) continue;
+            const falloff = Math.max(0.45, 1 - distToStrike / strikeRadius);
+            const damage = strikeDamage * falloff;
+            pendingDamage.set(enemy.id, (pendingDamage.get(enemy.id) ?? 0) + damage);
+          }
+        }
+
+        if (pendingDamage.size > 0) {
+          setEnemies((prev) =>
+            prev
+              .map((enemy) => {
+                const incoming = pendingDamage.get(enemy.id);
+                if (!incoming) return enemy;
+                const enemyPos = getEnemyPosCached(enemy);
+                const hp = enemy.hp - getEnemyDamageTaken(enemy, incoming);
+                if (hp <= 0) {
+                  onEnemyKill(enemy, enemyPos, 14);
+                  return null;
+                }
+                return {
+                  ...enemy,
+                  hp,
+                  damageFlash: 240,
+                  stunUntil: Math.max(enemy.stunUntil || 0, now + 450),
+                };
+              })
+              .filter(isDefined)
+          );
+        }
+
+        if (strikeEffects.length > 0) {
+          setEffects((prev) => {
+            const combined = [...prev, ...strikeEffects];
+            return combined.length > MAX_EFFECTS
+              ? combined.slice(combined.length - MAX_EFFECTS)
+              : combined;
+          });
+        }
+
+        if (lastSentinelStrikeRef.current.size > 96) {
+          lastSentinelStrikeRef.current.forEach((_value, key) => {
+            if (!sentinelKeys.has(key)) {
+              lastSentinelStrikeRef.current.delete(key);
+            }
+          });
+        }
+      }
+
+      // B3. SUNFORGE ORRERY: Offensive tri-plasma barrage on dense enemy clusters.
+      if (sunforgeOrreries.length > 0 && enemies.length > 0) {
+        const barrageIntervalMs = 9000;
+        const clusterScanRadius = 190;
+        const strikeRadius = 115;
+        const directDamage = 185;
+        const burnDps = 28;
+        const burnDurationMs = 2600;
+        const sunforgeKeys = new Set<string>();
+        const pendingDamage = new Map<
+          string,
+          { damage: number; burnDamage: number; burnUntil: number; stunUntil: number }
+        >();
+        const strikeEffects: Effect[] = [];
+
+        for (const orrery of sunforgeOrreries) {
+          const key = getSpecialTowerKey(orrery);
+          sunforgeKeys.add(key);
+          const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
+          if (now - lastBarrage < barrageIntervalMs) continue;
+
+          let bestTarget: Position | null = null;
+          let bestScore = -Infinity;
+          for (const pivotEnemy of enemiesByProgress) {
+            if (pivotEnemy.dead || pivotEnemy.hp <= 0) continue;
+            const pivotPos = getEnemyPosCached(pivotEnemy);
+            let score = 0;
+            for (const candidate of enemies) {
+              if (candidate.dead || candidate.hp <= 0) continue;
+              const candidatePos = getEnemyPosCached(candidate);
+              const dist = distance(pivotPos, candidatePos);
+              if (dist > clusterScanRadius) continue;
+              const proximityWeight = 1 - dist / clusterScanRadius;
+              const progressWeight = 1 + (candidate.pathIndex + candidate.progress) * 0.06;
+              score += 1 + proximityWeight * 1.35 + progressWeight * 0.22;
+            }
+            if (score > bestScore) {
+              bestScore = score;
+              bestTarget = pivotPos;
+            }
+          }
+
+          if (!bestTarget) continue;
+          lastSunforgeBarrageRef.current.set(key, now);
+
+          const orreryWorldPos = gridToWorld(orrery.pos);
+          const spinPhase = now * 0.0012 + orrery.pos.x * 0.17 + orrery.pos.y * 0.09;
+          const volleyOffsets = [
+            { x: 0, y: 0, multiplier: 1.0, radiusScale: 1.0 },
+            {
+              x: Math.cos(spinPhase) * 70,
+              y: Math.sin(spinPhase * 1.2) * 42,
+              multiplier: 0.76,
+              radiusScale: 0.92,
+            },
+            {
+              x: Math.cos(spinPhase + Math.PI * 0.78) * 68,
+              y: Math.sin(spinPhase * 1.28 + Math.PI * 0.52) * 40,
+              multiplier: 0.72,
+              radiusScale: 0.9,
+            },
+          ];
+
+          volleyOffsets.forEach((offset, volleyIndex) => {
+            const targetPos = {
+              x: Math.max(
+                TILE_SIZE,
+                Math.min(
+                  GRID_WIDTH * TILE_SIZE - TILE_SIZE,
+                  bestTarget.x + offset.x
+                )
+              ),
+              y: Math.max(
+                TILE_SIZE,
+                Math.min(
+                  GRID_HEIGHT * TILE_SIZE - TILE_SIZE,
+                  bestTarget.y + offset.y
+                )
+              ),
+            };
+            const volleyRadius = strikeRadius * offset.radiusScale;
+            const volleyDamage = directDamage * offset.multiplier;
+
+            strikeEffects.push({
+              id: generateId("sunforge_beam"),
+              pos: orreryWorldPos,
+              type: "sunforge_beam",
+              progress: 0,
+              size: distance(orreryWorldPos, targetPos),
+              targetPos,
+              intensity: 1.25 + volleyIndex * 0.12,
+              duration: 260,
+            });
+            strikeEffects.push({
+              id: generateId("sunforge_impact"),
+              pos: targetPos,
+              type: "sunforge_impact",
+              progress: 0,
+              size: volleyRadius,
+              intensity: 1.0 + volleyIndex * 0.08,
+              duration: 640,
+            });
+            addParticles(targetPos, "fire", 16 - volleyIndex * 2);
+            addParticles(targetPos, "spark", 12 - volleyIndex);
+            addParticles(targetPos, "light", 6);
+
+            for (const enemy of enemies) {
+              if (enemy.dead || enemy.hp <= 0) continue;
+              const enemyPos = getEnemyPosCached(enemy);
+              const distToBlast = distance(enemyPos, targetPos);
+              if (distToBlast > volleyRadius) continue;
+              const falloff = Math.max(0.35, 1 - distToBlast / volleyRadius);
+              const hitDamage = volleyDamage * falloff;
+              const burnDamage = burnDps * Math.max(0.25, falloff * 0.8);
+              const existing = pendingDamage.get(enemy.id);
+              const update = existing ?? {
+                damage: 0,
+                burnDamage: 0,
+                burnUntil: now + burnDurationMs,
+                stunUntil: now + 320,
+              };
+              update.damage += hitDamage;
+              update.burnDamage = Math.max(update.burnDamage, burnDamage);
+              update.burnUntil = Math.max(update.burnUntil, now + burnDurationMs);
+              update.stunUntil = Math.max(update.stunUntil, now + 320);
+              pendingDamage.set(enemy.id, update);
+            }
+          });
+          addParticles(orreryWorldPos, "light", 9);
+        }
+
+        if (pendingDamage.size > 0) {
+          setEnemies((prev) =>
+            prev
+              .map((enemy) => {
+                const incoming = pendingDamage.get(enemy.id);
+                if (!incoming) return enemy;
+                const enemyPos = getEnemyPosCached(enemy);
+                const hp = enemy.hp - getEnemyDamageTaken(enemy, incoming.damage);
+                if (hp <= 0) {
+                  onEnemyKill(enemy, enemyPos, 12);
+                  return null;
+                }
+                return {
+                  ...enemy,
+                  hp,
+                  damageFlash: 280,
+                  burning: true,
+                  burnDamage: Math.max(enemy.burnDamage || 0, incoming.burnDamage),
+                  burnUntil: Math.max(enemy.burnUntil || 0, incoming.burnUntil),
+                  stunUntil: Math.max(enemy.stunUntil || 0, incoming.stunUntil),
+                };
+              })
+              .filter(isDefined)
+          );
+        }
+
+        if (strikeEffects.length > 0) {
+          setEffects((prev) => {
+            const combined = [...prev, ...strikeEffects];
+            return combined.length > MAX_EFFECTS
+              ? combined.slice(combined.length - MAX_EFFECTS)
+              : combined;
+          });
+        }
+
+        if (lastSunforgeBarrageRef.current.size > 96) {
+          lastSunforgeBarrageRef.current.forEach((_value, key) => {
+            if (!sunforgeKeys.has(key)) {
+              lastSunforgeBarrageRef.current.delete(key);
+            }
+          });
+        }
+      }
+
       // C. BARRACKS: Capped & spread deployment (max 3 knights).
       if (barracksTower && barracksWorldPos && !isInResetTransition) {
         const barracksTroops = troops.filter((t) => t.ownerId === "special_barracks");
@@ -2123,27 +2564,28 @@ export function usePrincetonTowerDefenseRuntime() {
           lastBarracksSpawnRef.current = now;
 
           const findBarracksRoadPoint = (pos: Position): Position => {
-            const primaryPath = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
-            const secondaryPath = MAP_PATHS[`${selectedMap}_b`] ?? [];
-            const fullPath =
-              secondaryPath.length > 0
-                ? primaryPath.concat(secondaryPath)
-                : primaryPath;
-            if (fullPath.length < 2) return pos;
+            const pathKeys =
+              activeWaveSpawnPaths.length > 0
+                ? activeWaveSpawnPaths
+                : getLevelPathKeys(selectedMap);
+            if (pathKeys.length === 0) return pos;
 
             let closestPoint: Position = pos;
             let minDist = Infinity;
-            for (let i = 0; i < fullPath.length - 1; i++) {
-              const p1Grid = fullPath[i];
-              const p2Grid = fullPath[i + 1];
-              if (!p1Grid || !p2Grid) continue;
-              const p1 = gridToWorldPath(p1Grid);
-              const p2 = gridToWorldPath(p2Grid);
-              const roadPoint = closestPointOnLine(pos, p1, p2);
-              const dist = distance(pos, roadPoint);
-              if (dist < minDist) {
-                minDist = dist;
-                closestPoint = roadPoint;
+            for (const pathKey of pathKeys) {
+              const pathPoints = MAP_PATHS[pathKey] ?? [];
+              for (let i = 0; i < pathPoints.length - 1; i++) {
+                const p1Grid = pathPoints[i];
+                const p2Grid = pathPoints[i + 1];
+                if (!p1Grid || !p2Grid) continue;
+                const p1 = gridToWorldPath(p1Grid);
+                const p2 = gridToWorldPath(p2Grid);
+                const roadPoint = closestPointOnLine(pos, p1, p2);
+                const dist = distance(pos, roadPoint);
+                if (dist < minDist) {
+                  minDist = dist;
+                  closestPoint = roadPoint;
+                }
               }
             }
             return closestPoint;
@@ -2571,7 +3013,8 @@ export function usePrincetonTowerDefenseRuntime() {
           const newTimer = prev.respawnTimer - deltaTime;
           if (newTimer <= 0) {
             const levelSettings = LEVEL_DATA[selectedMap];
-            const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
+            const defaultPathKey = activeWaveSpawnPaths[0] ?? selectedMap;
+            const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS.poe ?? [];
             if (path.length === 0) return { ...prev, respawnTimer: 0 };
             // Respawn at end of path (same as initial spawn)
             const defaultRespawnNode = path[Math.max(0, path.length - 4)] ?? path[path.length - 1];
@@ -3592,14 +4035,17 @@ export function usePrincetonTowerDefenseRuntime() {
             return updated;
           }
 
-          const isRanged = troopData.isRanged;
+          const isRanged = troop.overrideIsRanged ?? troopData.isRanged;
           const isStationary = troopData.isStationary || troop.moveRadius === 0; // Turrets can't move
-          const attackRange = isRanged ? troopData.range || 150 : MELEE_RANGE;
+          const attackRange = isRanged
+            ? troop.overrideRange ?? troopData.range ?? 150
+            : MELEE_RANGE;
           const sightRange = isRanged
             ? TROOP_RANGED_SIGHT_RANGE
             : TROOP_SIGHT_RANGE;
 
-          const canHitFlying = troopData.canTargetFlying || false;
+          const canHitFlying =
+            troop.overrideCanTargetFlying ?? troopData.canTargetFlying ?? false;
           let enemiesInSightCount = 0;
           let closestEnemy: Enemy | null = null;
           let closestDist = Infinity;
@@ -4023,6 +4469,10 @@ export function usePrincetonTowerDefenseRuntime() {
               }
             }
           }
+          const attackSpeedMultiplier = Math.max(
+            0.12,
+            attackSpeedMod * (tower.attackSpeedBoost || 1)
+          );
 
           // Final Buffed Stats for this tick - use calculateTowerStats for proper level-based range
           const towerStats = calculateTowerStats(
@@ -4278,27 +4728,28 @@ export function usePrincetonTowerDefenseRuntime() {
 
             // Helper to find closest road point within station range
             const findRoadPoint = (pos: Position): Position => {
-              const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
-              const secondaryPath = MAP_PATHS[selectedMap + "_b"] ?? [];
-              if (path.length < 2) return pos;
-
-              // Combine primary and secondary paths if available
-              const fullPath =
-                secondaryPath.length > 0 ? path.concat(secondaryPath) : path;
+              const pathKeys =
+                activeWaveSpawnPaths.length > 0
+                  ? activeWaveSpawnPaths
+                  : getLevelPathKeys(selectedMap);
+              if (pathKeys.length === 0) return pos;
 
               let closestPoint: Position = pos;
               let minDist = Infinity;
-              for (let i = 0; i < fullPath.length - 1; i++) {
-                const p1Grid = fullPath[i];
-                const p2Grid = fullPath[i + 1];
-                if (!p1Grid || !p2Grid) continue;
-                const p1 = gridToWorldPath(p1Grid);
-                const p2 = gridToWorldPath(p2Grid);
-                const roadPoint = closestPointOnLine(pos, p1, p2);
-                const dist = distance(pos, roadPoint);
-                if (dist < minDist) {
-                  minDist = dist;
-                  closestPoint = roadPoint;
+              for (const pathKey of pathKeys) {
+                const pathPoints = MAP_PATHS[pathKey] ?? [];
+                for (let i = 0; i < pathPoints.length - 1; i++) {
+                  const p1Grid = pathPoints[i];
+                  const p2Grid = pathPoints[i + 1];
+                  if (!p1Grid || !p2Grid) continue;
+                  const p1 = gridToWorldPath(p1Grid);
+                  const p2 = gridToWorldPath(p2Grid);
+                  const roadPoint = closestPointOnLine(pos, p1, p2);
+                  const dist = distance(pos, roadPoint);
+                  if (dist < minDist) {
+                    minDist = dist;
+                    closestPoint = roadPoint;
+                  }
                 }
               }
               return closestPoint;
@@ -4547,7 +4998,10 @@ export function usePrincetonTowerDefenseRuntime() {
                   ? 900 // Heavy cannon slightly slower but more damage
                   : tData.attackSpeed;
             // Scale attack cooldown with game speed and debuffs
-            const effectiveAttackCooldown = gameSpeed > 0 ? (attackCooldown / gameSpeed) / attackSpeedMod : attackCooldown;
+            const effectiveAttackCooldown =
+              gameSpeed > 0
+                ? attackCooldown / gameSpeed / attackSpeedMultiplier
+                : attackCooldown;
             if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
@@ -4612,7 +5066,10 @@ export function usePrincetonTowerDefenseRuntime() {
             const isChainLightning = tower.level === 4 && tower.upgrade === "B";
             const attackCooldown = isFocusedBeam ? 100 : tData.attackSpeed;
             // Scale attack cooldown with game speed and debuffs (attackSpeedMod)
-            const effectiveLabCooldown = gameSpeed > 0 ? (attackCooldown / gameSpeed) / attackSpeedMod : attackCooldown;
+            const effectiveLabCooldown =
+              gameSpeed > 0
+                ? attackCooldown / gameSpeed / attackSpeedMultiplier
+                : attackCooldown;
             if (now - tower.lastAttack > effectiveLabCooldown) {
               const validEnemies = getPrioritizedEnemiesInRange(
                 towerWorldPos,
@@ -4755,7 +5212,10 @@ export function usePrincetonTowerDefenseRuntime() {
               ? tData.attackSpeed * 0.7
               : tData.attackSpeed;
             // Scale attack cooldown with game speed
-            const effectiveArcherSpeed = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
+            const effectiveArcherSpeed =
+              gameSpeed > 0
+                ? attackSpeed / gameSpeed / attackSpeedMultiplier
+                : attackSpeed;
             if (now - tower.lastAttack > effectiveArcherSpeed) {
               const validEnemies = getPrioritizedEnemiesInRange(
                 towerWorldPos,
@@ -4834,7 +5294,10 @@ export function usePrincetonTowerDefenseRuntime() {
             }
           } else if (
             tData.attackSpeed > 0 &&
-            now - tower.lastAttack > (gameSpeed > 0 ? tData.attackSpeed / gameSpeed : tData.attackSpeed)
+            now - tower.lastAttack >
+              (gameSpeed > 0
+                ? tData.attackSpeed / gameSpeed / attackSpeedMultiplier
+                : tData.attackSpeed)
           ) {
             // Generic tower attack (fallback)
             const validEnemies = getPrioritizedEnemiesInRange(
@@ -5120,8 +5583,12 @@ export function usePrincetonTowerDefenseRuntime() {
           if (!troop.type) return; // Skip troops without a type
           const troopData = TROOP_DATA[troop.type];
           if (!troopData) return; // Skip if troop data not found
-          const attackRange = troopData.isRanged ? troopData.range || 150 : 65;
-          const attackCooldown = troopData.attackSpeed || 1000;
+          const isRanged = troop.overrideIsRanged ?? troopData.isRanged ?? false;
+          const attackRange = isRanged
+            ? troop.overrideRange ?? troopData.range ?? 150
+            : 65;
+          const attackCooldown =
+            troop.overrideAttackSpeed ?? troopData.attackSpeed ?? 1000;
           // Scale troop attack cooldown with game speed
           const effectiveTroopCooldown = gameSpeed > 0 ? attackCooldown / gameSpeed : attackCooldown;
           const lastAttack = troop.lastAttack ?? 0; // Default to 0 if undefined
@@ -5129,7 +5596,8 @@ export function usePrincetonTowerDefenseRuntime() {
             (troop.attackAnim ?? 0) === 0 &&
             now - lastAttack > effectiveTroopCooldown
           ) {
-            const canHitFlying = troopData.canTargetFlying || false;
+            const canHitFlying =
+              troop.overrideCanTargetFlying ?? troopData.canTargetFlying ?? false;
             const validEnemies = getPrioritizedEnemiesInRange(
               troop.pos,
               attackRange,
@@ -5140,10 +5608,19 @@ export function usePrincetonTowerDefenseRuntime() {
               const target = validEnemies[0];
               const targetPos = getEnemyPosCached(target);
               const targetAimPos = getEnemyAimPosCached(target);
-              const troopDamage = troopData.damage || 20;
+              const troopDamage = troop.overrideDamage ?? troopData.damage ?? 20;
               const dx = targetAimPos.x - troop.pos.x;
               const dy = targetAimPos.y - troop.pos.y;
               const rotation = Math.atan2(dy, dx);
+              const targetDistance = distance(troop.pos, targetPos);
+              const useRangedAttack =
+                isRanged &&
+                (!(troop.overrideHybridMelee ?? false) ||
+                  targetDistance > MELEE_RANGE * 1.05);
+              const isReinforcementLancer =
+                troop.type === "knight" &&
+                troop.ownerType === "spell" &&
+                (troop.visualTier ?? 0) >= 5;
               // Apply damage immediately (projectile is just visual)
               queueTroopEnemyMutation(target.id, (enemy) => {
                 const newHp = enemy.hp - getEnemyDamageTaken(enemy, troopDamage);
@@ -5155,9 +5632,11 @@ export function usePrincetonTowerDefenseRuntime() {
               });
 
               // Add melee attack visual effect for non-ranged troops
-              if (!troopData.isRanged) {
+              if (!useRangedAttack) {
                 const troopEffectType: EffectType =
-                  troop.type === "knight" || troop.type === "cavalry"
+                  isReinforcementLancer
+                    ? "impact_hit"
+                    : troop.type === "knight" || troop.type === "cavalry"
                     ? "melee_slash"
                     : troop.type === "armored" || troop.type === "elite"
                       ? "melee_swipe"
@@ -5172,10 +5651,23 @@ export function usePrincetonTowerDefenseRuntime() {
                   attackerType: "troop",
                 });
               }
-              if (troopData.isRanged) {
-                const projType = troop.type === "turret" ? "bullet" : "spear";
+              if (useRangedAttack) {
+                const projType =
+                  troop.type === "turret"
+                    ? "bullet"
+                    : troop.type === "knight"
+                      ? isReinforcementLancer
+                        ? "spear"
+                        : "bolt"
+                      : "spear";
                 const spawnOffset =
-                  troop.type === "centaur" ? { x: 0, y: -20 } : { x: 0, y: 0 };
+                  troop.type === "centaur"
+                    ? { x: 0, y: -20 }
+                    : troop.type === "knight"
+                      ? isReinforcementLancer
+                        ? { x: 0, y: -16 }
+                        : { x: 0, y: -12 }
+                      : { x: 0, y: 0 };
                 queuedTroopProjectiles.push({
                   id: generateId("proj"),
                   from: {
@@ -5186,12 +5678,15 @@ export function usePrincetonTowerDefenseRuntime() {
                   progress: 0,
                   type: projType,
                   rotation,
+                  scale: isReinforcementLancer ? 1.1 : undefined,
+                  color: isReinforcementLancer ? "#d6c07f" : undefined,
+                  trailColor: isReinforcementLancer ? "#f4e3aa" : undefined,
                 });
               }
               queuedTroopPatches.set(troop.id, {
                 lastAttack: now,
                 lastCombatTime: now,
-                attackAnim: troopData.isRanged ? 400 : 300,
+                attackAnim: useRangedAttack ? 400 : 300,
                 rotation,
                 targetEnemy: target.id,
               });
@@ -5519,25 +6014,32 @@ export function usePrincetonTowerDefenseRuntime() {
         }))
       );
       // Check win/lose conditions - ref guard prevents duplicate triggers across animation frames
-      if (lives <= 0 && gameState === "playing" && !gameEndHandledRef.current) {
+      if (
+        lives <= 0 &&
+        gameState === "playing" &&
+        !battleOutcome &&
+        !gameEndHandledRef.current
+      ) {
         gameEndHandledRef.current = true;
 
         // Calculate time spent on defeat
         const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
         setTimeSpent(finalTime);
 
-        // Clear all timers to stop wave spawning
+        // Freeze battle in-place and show overlay without leaving the battle screen.
         clearAllTimers();
-
-        // Reset wave tracking
         setWaveInProgress(false);
+        setHoveredWaveBubblePathKey(null);
+        setNextWaveTimer(0);
+        setGameSpeed(0);
 
         // Save stats for defeat (won = false)
         updateLevelStats(selectedMap, finalTime, lives, false);
-        setGameState("defeat");
+        setBattleOutcome("defeat");
       }
       if (
         gameState === "playing" &&
+        !battleOutcome &&
         currentWave >= levelWaves.length &&
         enemies.length === 0 &&
         !waveInProgress &&
@@ -5553,11 +6055,13 @@ export function usePrincetonTowerDefenseRuntime() {
         const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
         setTimeSpent(finalTime);
 
-        // Clear all timers to ensure clean state
+        // Freeze battle in-place and show overlay without leaving the battle screen.
         clearAllTimers();
-
-        // IMPORTANT: Set game state first to prevent duplicate triggers
-        setGameState("victory");
+        setWaveInProgress(false);
+        setHoveredWaveBubblePathKey(null);
+        setNextWaveTimer(0);
+        setGameSpeed(0);
+        setBattleOutcome("victory");
 
         // Save progress to localStorage immediately (no setTimeout to avoid stale closure issues)
         // Using the captured selectedMap value directly
@@ -5609,6 +6113,7 @@ export function usePrincetonTowerDefenseRuntime() {
       hero,
       lives,
       gameState,
+      battleOutcome,
       enemies,
       nextWaveTimer,
       startWave,
@@ -5630,12 +6135,16 @@ export function usePrincetonTowerDefenseRuntime() {
       addEffectEntities,
       addProjectileEntities,
       addTroopEntities,
+      getSpecialTowerKey,
+      getRandomMapTarget,
       setEffects,
       setEnemies,
       setParticles,
       setProjectiles,
+      setSentinelTargets,
       setTowers,
       setTroops,
+      activeWaveSpawnPaths,
     ]
   );
   // Render function - FIXED: Reset transform each frame to prevent accumulation
@@ -5647,6 +6156,7 @@ export function usePrincetonTowerDefenseRuntime() {
     ): WaveStartBubbleScreenData[] => {
       const canShowBubble =
         gameState === "playing" &&
+        !battleOutcome &&
         gameSpeed > 0 &&
         !waveInProgress &&
         currentWave < totalWaves &&
@@ -5849,6 +6359,7 @@ export function usePrincetonTowerDefenseRuntime() {
     },
     [
       gameState,
+      battleOutcome,
       gameSpeed,
       waveInProgress,
       currentWave,
@@ -5885,7 +6396,6 @@ export function usePrincetonTowerDefenseRuntime() {
     const theme = REGION_THEMES[mapTheme];
 
     const levelData = LEVEL_DATA[selectedMap];
-    const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
     const isChallengeTerrainLevel = levelData?.levelKind === "challenge";
     const challengePathSegments = isChallengeTerrainLevel
       ? getChallengePathSegments(selectedMap)
@@ -6213,9 +6723,13 @@ export function usePrincetonTowerDefenseRuntime() {
       };
 
       const categories = getDecorationCategories(currentTheme);
+      const levelPathKeys =
+        activeWaveSpawnPaths.length > 0
+          ? activeWaveSpawnPaths
+          : getLevelPathKeys(selectedMap);
 
       const allPathSegments: Array<{ start: Position; end: Position }> = [];
-      const pushPathSegments = (pathPoints: typeof path) => {
+      const pushPathSegments = (pathPoints: Array<{ x: number; y: number }>) => {
         for (let j = 0; j < pathPoints.length - 1; j++) {
           allPathSegments.push({
             start: gridToWorldPath(pathPoints[j]),
@@ -6223,9 +6737,11 @@ export function usePrincetonTowerDefenseRuntime() {
           });
         }
       };
-      pushPathSegments(path);
-      if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
-        pushPathSegments(MAP_PATHS[levelData.secondaryPath]);
+      for (const pathKey of levelPathKeys) {
+        const pathPoints = MAP_PATHS[pathKey];
+        if (pathPoints && pathPoints.length >= 2) {
+          pushPathSegments(pathPoints);
+        }
       }
 
       const minDistanceToPath = (worldPos: Position): number => {
@@ -6635,16 +7151,10 @@ export function usePrincetonTowerDefenseRuntime() {
       // Dense decorations around path spawns and exits
       seedState = mapSeed + 700;
       const pathEndpoints: { x: number; y: number }[] = [];
-
-      if (path.length >= 2) {
-        pathEndpoints.push(path[0], path[path.length - 1]);
-      }
-
-      if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
-        const secPath = MAP_PATHS[levelData.secondaryPath];
-        if (secPath.length >= 2) {
-          pathEndpoints.push(secPath[0], secPath[secPath.length - 1]);
-        }
+      for (const pathKey of levelPathKeys) {
+        const pathPoints = MAP_PATHS[pathKey];
+        if (!pathPoints || pathPoints.length < 2) continue;
+        pathEndpoints.push(pathPoints[0], pathPoints[pathPoints.length - 1]);
       }
 
       const endpointTreeTypes = categories.trees;
@@ -7046,9 +7556,15 @@ export function usePrincetonTowerDefenseRuntime() {
           });
         }
       };
-      appendPathSegments(path);
-      if (levelData?.secondaryPath && MAP_PATHS[levelData.secondaryPath]) {
-        appendPathSegments(MAP_PATHS[levelData.secondaryPath]);
+      const pathKeysForOcclusion =
+        activeWaveSpawnPaths.length > 0
+          ? activeWaveSpawnPaths
+          : getLevelPathKeys(selectedMap);
+      for (const pathKey of pathKeysForOcclusion) {
+        const pathPoints = MAP_PATHS[pathKey];
+        if (pathPoints && pathPoints.length >= 2) {
+          appendPathSegments(pathPoints);
+        }
       }
       const distanceToNearestPath = (worldPos: Position): number => {
         let minDist = Number.POSITIVE_INFINITY;
@@ -7336,12 +7852,18 @@ export function usePrincetonTowerDefenseRuntime() {
     levelSpecialTowersForRenderable.forEach((spec, index) => {
       const worldPos = gridToWorld(spec.pos);
       let boostedTowerCount = 0;
-      if (spec.type === "beacon") {
-        const beaconBoostRange = 250;
+      if (spec.type === "beacon" || spec.type === "chrono_relay") {
+        const boostRange = spec.type === "beacon" ? 250 : 220;
         boostedTowerCount = towers.filter((tower) => {
           if (tower.type === "club") return false;
           const towerWorldPos = gridToWorld(tower.pos);
-          return distance(towerWorldPos, worldPos) < beaconBoostRange;
+          return distance(towerWorldPos, worldPos) < boostRange;
+        }).length;
+      } else if (spec.type === "sunforge_orrery") {
+        const heatRange = 260;
+        boostedTowerCount = enemies.filter((enemy) => {
+          if (enemy.dead || enemy.hp <= 0) return false;
+          return distance(getEnemyWorldPos(enemy), worldPos) < heatRange;
         }).length;
       }
 
@@ -7409,40 +7931,52 @@ export function usePrincetonTowerDefenseRuntime() {
     renderables.sort((a, b) => a.isoY - b.isoY);
 
     // =========================================================================
-    // EPIC ISOMETRIC BUFF AURA (Dynamic Color: Red for Damage, Blue for Range, Gold for Both)
+    // EPIC ISOMETRIC BUFF AURA
     // =========================================================================
     towers.forEach((t) => {
       const hasDamageBuff = t.damageBoost && t.damageBoost > 1;
       const hasRangeBuff = t.rangeBoost && t.rangeBoost > 1;
+      const hasAttackSpeedBuff =
+        t.attackSpeedBoost && t.attackSpeedBoost > 1;
 
       // If no buff is active, don't render the aura
-      if (!hasDamageBuff && !hasRangeBuff && !t.isBuffed) return;
+      if (!hasDamageBuff && !hasRangeBuff && !hasAttackSpeedBuff && !t.isBuffed)
+        return;
 
-      // Color Configuration logic - Gold for both, Red for damage, Blue for range
-      const hasBothBuffs = hasDamageBuff && hasRangeBuff;
-      const theme = hasBothBuffs
-        ? {
-          base: "255, 215, 0", // Gold
-          accent: "255, 180, 0",
-          glow: "#ffd700",
-          fill: "rgba(255, 215, 0, 0.08)",
-          icon: "⚡",
-        }
-        : hasDamageBuff
+      const activeBuffCount =
+        Number(hasDamageBuff) + Number(hasRangeBuff) + Number(hasAttackSpeedBuff);
+      const theme =
+        activeBuffCount >= 2
           ? {
-            base: "255, 100, 100", // Red/Orange
-            accent: "255, 150, 50",
-            glow: "#ff6464",
-            fill: "rgba(255, 100, 100, 0.06)",
-            icon: "🗡",
+            base: "255, 220, 140",
+            accent: "255, 200, 90",
+            glow: "#ffe08c",
+            fill: "rgba(255, 220, 140, 0.08)",
+            icon: "✦",
           }
-          : {
-            base: "100, 200, 255", // Blue
-            accent: "50, 150, 255",
-            glow: "#64c8ff",
-            fill: "rgba(100, 200, 255, 0.06)",
-            icon: "◎",
-          };
+          : hasAttackSpeedBuff
+            ? {
+              base: "165, 180, 255",
+              accent: "129, 140, 248",
+              glow: "#a5b4fc",
+              fill: "rgba(165, 180, 255, 0.08)",
+              icon: "⌁",
+            }
+            : hasDamageBuff
+              ? {
+                base: "255, 100, 100",
+                accent: "255, 150, 50",
+                glow: "#ff6464",
+                fill: "rgba(255, 100, 100, 0.06)",
+                icon: "◆",
+              }
+              : {
+                base: "100, 200, 255",
+                accent: "50, 150, 255",
+                glow: "#64c8ff",
+                fill: "rgba(100, 200, 255, 0.06)",
+                icon: "◎",
+              };
 
       const time = nowSeconds;
       const sPos = toScreen(gridToWorld(t.pos));
@@ -7484,7 +8018,7 @@ export function usePrincetonTowerDefenseRuntime() {
       ctx.stroke();
 
       // Add glowing dots on the outer ring
-      const dotCount = hasBothBuffs ? 6 : 4;
+      const dotCount = activeBuffCount >= 2 ? 6 : 4;
       for (let i = 0; i < dotCount; i++) {
         ctx.rotate((Math.PI * 2) / dotCount);
         ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + Math.sin(time * 5 + i) * 0.2})`;
@@ -7527,7 +8061,7 @@ export function usePrincetonTowerDefenseRuntime() {
       // --- 4. Inner Orbitals (Floating Particles) - More particles for combined buff ---
       ctx.save();
       ctx.rotate(time * 1.5);
-      const orbitalCount = hasBothBuffs ? 5 : 3;
+      const orbitalCount = activeBuffCount >= 2 ? 5 : 3;
       for (let i = 0; i < orbitalCount; i++) {
         ctx.rotate((Math.PI * 2) / orbitalCount);
         const orbitDist = 20 * s + Math.sin(time * 3 + i) * 6 * s;
@@ -7594,34 +8128,158 @@ export function usePrincetonTowerDefenseRuntime() {
       const spec = hoveredSpecialTower;
       const sPos = toScreen(gridToWorld(spec.pos));
       const range =
-        spec.type === "beacon" ? 150 : spec.type === "shrine" ? 200 : 0;
+        spec.type === "beacon"
+          ? 150
+          : spec.type === "shrine"
+            ? 200
+            : spec.type === "chrono_relay"
+              ? 220
+              : spec.type === "sentinel_nexus"
+                ? 140
+                : spec.type === "sunforge_orrery"
+                  ? 260
+              : 0;
+      const ringStroke =
+        spec.type === "beacon"
+          ? "rgba(0, 229, 255, 0.5)"
+          : spec.type === "shrine"
+            ? "rgba(118, 255, 3, 0.5)"
+            : spec.type === "chrono_relay"
+              ? "rgba(129, 140, 248, 0.55)"
+              : spec.type === "sentinel_nexus"
+                ? "rgba(251, 113, 133, 0.62)"
+                : "rgba(251, 146, 60, 0.65)";
+      const ringFill =
+        spec.type === "beacon"
+          ? "rgba(0, 229, 255, 0.05)"
+          : spec.type === "shrine"
+            ? "rgba(118, 255, 3, 0.05)"
+            : spec.type === "chrono_relay"
+              ? "rgba(129, 140, 248, 0.06)"
+              : spec.type === "sentinel_nexus"
+                ? "rgba(251, 113, 133, 0.09)"
+                : "rgba(251, 146, 60, 0.1)";
 
       if (range > 0) {
         ctx.save();
         ctx.translate(sPos.x, sPos.y);
         ctx.scale(1, 0.5); // Perspective lock
 
-        // Animated spinning ring
-        ctx.rotate(time * 0.5);
-        ctx.strokeStyle =
-          spec.type === "beacon"
-            ? "rgba(0, 229, 255, 0.5)"
-            : "rgba(118, 255, 3, 0.5)";
-        ctx.lineWidth = 3;
-        ctx.setLineDash([10 * cameraZoom, 10 * cameraZoom]);
-        ctx.beginPath();
-        ctx.arc(0, 0, range * cameraZoom, 0, Math.PI * 2);
-        ctx.stroke();
+        if (spec.type === "sunforge_orrery") {
+          const outerR = range * cameraZoom;
+          const midR = outerR * 0.84;
+          const innerR = outerR * 0.64;
 
-        // Inner soft fill
-        ctx.fillStyle =
-          spec.type === "beacon"
-            ? "rgba(0, 229, 255, 0.05)"
-            : "rgba(118, 255, 3, 0.05)";
-        ctx.fill();
+          ctx.rotate(time * 0.36);
+          ctx.strokeStyle = "rgba(251, 146, 60, 0.72)";
+          ctx.lineWidth = 3.2;
+          ctx.setLineDash([12 * cameraZoom, 9 * cameraZoom]);
+          ctx.beginPath();
+          ctx.arc(0, 0, outerR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.rotate(-time * 0.58);
+          ctx.strokeStyle = "rgba(255, 216, 170, 0.56)";
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8 * cameraZoom, 6 * cameraZoom]);
+          ctx.beginPath();
+          ctx.arc(0, 0, midR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.setLineDash([]);
+          ctx.strokeStyle = "rgba(255, 237, 213, 0.42)";
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+          ctx.stroke();
+
+          const markerCount = 12;
+          for (let i = 0; i < markerCount; i++) {
+            const a = (i / markerCount) * Math.PI * 2 + time * 0.35;
+            const iX = Math.cos(a) * (midR + outerR) * 0.5;
+            const iY = Math.sin(a) * (midR + outerR) * 0.5;
+            const oX = Math.cos(a) * (outerR - 4 * cameraZoom);
+            const oY = Math.sin(a) * (outerR - 4 * cameraZoom);
+            ctx.strokeStyle = `rgba(255, 228, 188, ${0.38 + Math.sin(time * 2 + i) * 0.12})`;
+            ctx.lineWidth = (i % 3 === 0 ? 2.1 : 1.2) * cameraZoom;
+            ctx.beginPath();
+            ctx.moveTo(iX, iY);
+            ctx.lineTo(oX, oY);
+            ctx.stroke();
+          }
+
+          ctx.fillStyle = "rgba(251, 146, 60, 0.08)";
+          ctx.beginPath();
+          ctx.arc(0, 0, outerR, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Animated spinning ring
+          ctx.rotate(time * 0.5);
+          ctx.strokeStyle = ringStroke;
+          ctx.lineWidth = 3;
+          ctx.setLineDash([10 * cameraZoom, 10 * cameraZoom]);
+          ctx.beginPath();
+          ctx.arc(0, 0, range * cameraZoom, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Inner soft fill
+          ctx.fillStyle = ringFill;
+          ctx.fill();
+        }
         ctx.restore();
       }
     }
+
+    // Sentinel nexus targeting overlays (persistent lock lines + strike zone marker).
+    const sentinelStrikeRadiusWorld = 140;
+    levelSpecialTowersForRenderable.forEach((spec) => {
+      if (spec.type !== "sentinel_nexus") return;
+      const key = getSpecialTowerKey(spec);
+      const targetPos = sentinelTargets[key];
+      if (!targetPos) return;
+      const sourceScreenPos = toScreen(gridToWorld(spec.pos));
+      const targetScreenPos = toScreen(targetPos);
+      const isActiveTargeting = activeSentinelTargetKey === key;
+      const pulse = 0.5 + Math.sin(nowSeconds * 6 + spec.pos.x * 0.2) * 0.5;
+
+      ctx.save();
+      ctx.strokeStyle = isActiveTargeting
+        ? `rgba(254, 205, 211, ${0.72 + pulse * 0.2})`
+        : `rgba(251, 113, 133, ${0.42 + pulse * 0.18})`;
+      ctx.lineWidth = (isActiveTargeting ? 3.2 : 2.1) * cameraZoom;
+      ctx.setLineDash([
+        (8 + (isActiveTargeting ? 2 : 0)) * cameraZoom,
+        6 * cameraZoom,
+      ]);
+      ctx.beginPath();
+      ctx.moveTo(sourceScreenPos.x, sourceScreenPos.y - 30 * cameraZoom);
+      ctx.lineTo(targetScreenPos.x, targetScreenPos.y);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(targetScreenPos.x, targetScreenPos.y);
+      ctx.scale(1, 0.5);
+      const markerRadius = sentinelStrikeRadiusWorld * cameraZoom;
+      const markerAlpha = isActiveTargeting ? 0.24 + pulse * 0.15 : 0.14 + pulse * 0.1;
+      ctx.fillStyle = `rgba(190, 24, 93, ${markerAlpha})`;
+      ctx.strokeStyle = isActiveTargeting
+        ? `rgba(255, 228, 230, ${0.84 + pulse * 0.12})`
+        : `rgba(251, 113, 133, ${0.62 + pulse * 0.1})`;
+      ctx.lineWidth = (isActiveTargeting ? 3 : 2) * cameraZoom;
+      ctx.setLineDash([10 * cameraZoom, 8 * cameraZoom]);
+      ctx.beginPath();
+      ctx.arc(0, 0, markerRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = `rgba(255, 237, 213, ${0.85 + pulse * 0.1})`;
+      ctx.lineWidth = 1.8 * cameraZoom;
+      ctx.beginPath();
+      ctx.arc(0, 0, markerRadius * 0.22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
 
     // ========== RENDER TROOP/HERO MOVEMENT INDICATORS (UNDER ENTITIES) ==========
     // Draw movement range circle when a troop is selected (renders UNDER towers/decorations)
@@ -8161,6 +8819,10 @@ export function usePrincetonTowerDefenseRuntime() {
       cachedAmbientLayer.key === ambientLayerKey &&
       cachedAmbientLayer.canvas &&
       frameNowMs - cachedAmbientLayer.renderedAtMs < ambientIntervalMs;
+    const renderAmbientOverlay = (targetCtx: CanvasRenderingContext2D) => {
+      renderEnvironment(targetCtx, mapTheme, width, height, nowSeconds);
+      renderAmbientVisuals(targetCtx, mapTheme, width, height, nowSeconds);
+    };
 
     if (canReuseAmbientLayer && cachedAmbientLayer?.canvas) {
       ctx.drawImage(cachedAmbientLayer.canvas, 0, 0, width, height);
@@ -8174,15 +8836,7 @@ export function usePrincetonTowerDefenseRuntime() {
         if (layerCtx) {
           layerCtx.setTransform(1, 0, 0, 1, 0, 0);
           layerCtx.scale(dpr, dpr);
-          if (isChallengeTerrainLevel) {
-            layerCtx.save();
-            layerCtx.globalAlpha = 0.26;
-            renderEnvironment(layerCtx, mapTheme, width, height, nowSeconds);
-            layerCtx.restore();
-          } else {
-            renderEnvironment(layerCtx, mapTheme, width, height, nowSeconds);
-            renderAmbientVisuals(layerCtx, mapTheme, width, height, nowSeconds);
-          }
+          renderAmbientOverlay(layerCtx);
           ambientCanvas = layerCanvas;
         }
       }
@@ -8196,15 +8850,7 @@ export function usePrincetonTowerDefenseRuntime() {
       if (ambientCanvas) {
         ctx.drawImage(ambientCanvas, 0, 0, width, height);
       } else {
-        if (isChallengeTerrainLevel) {
-          ctx.save();
-          ctx.globalAlpha = 0.26;
-          renderEnvironment(ctx, mapTheme, width, height, nowSeconds);
-          ctx.restore();
-        } else {
-          renderEnvironment(ctx, mapTheme, width, height, nowSeconds);
-          renderAmbientVisuals(ctx, mapTheme, width, height, nowSeconds);
-        }
+        renderAmbientOverlay(ctx);
       }
     }
 
@@ -8330,6 +8976,8 @@ export function usePrincetonTowerDefenseRuntime() {
     selectedUnitMoveInfo,
     draggingUnit,
     hoveredSpecialTower,
+    sentinelTargets,
+    activeSentinelTargetKey,
     specialTowerHp,
     vaultFlash,
     repositioningTower,
@@ -8343,6 +8991,8 @@ export function usePrincetonTowerDefenseRuntime() {
     waveStartConfirm,
     incomingWavePreviewByPath,
     currentWave,
+    activeWaveSpawnPaths,
+    getSpecialTowerKey,
   ]);
 
   // PERFORMANCE FIX: Keep refs updated with latest callbacks
@@ -8354,7 +9004,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Game loop - uses refs to avoid restarting when state changes
   // This prevents freezes when selecting troops/heroes or toggling inspector
   useEffect(() => {
-    if (gameState !== "playing") return;
+    if (gameState !== "playing" || battleOutcome) return;
     const gameLoop = (timestamp: number) => {
       // Calculate delta time, but cap it to prevent issues when tab is inactive
       // When user leaves tab and returns, deltaTime could be huge (seconds/minutes)
@@ -8440,7 +9090,7 @@ export function usePrincetonTowerDefenseRuntime() {
     return () => {
       if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     };
-  }, [gameState]); // Only restart loop when entering/leaving playing state
+  }, [gameState, battleOutcome]); // Stop loop while battle-end overlay is active
 
   // ========== POINTER DOWN HANDLER ==========
   // Handles starting canvas panning and tower repositioning
@@ -8488,6 +9138,10 @@ export function usePrincetonTowerDefenseRuntime() {
           bubble.radius * WAVE_START_BUBBLE_HIT_RADIUS
       );
       if (clickedWaveBubble) {
+        return;
+      }
+
+      if (activeSentinelTargetKey) {
         return;
       }
 
@@ -8588,6 +9242,7 @@ export function usePrincetonTowerDefenseRuntime() {
       buildingTower,
       draggingTower,
       placingTroop,
+      activeSentinelTargetKey,
       selectedTower,
       towers,
       hero,
@@ -8984,14 +9639,17 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraOffset,
           cameraZoom
         );
-        // Spawn 3 troops in a triangle formation
-        // Offsets are larger than TROOP_SEPARATION_DIST (35) to prevent immediate overlap
+        const reinforcementStats = getReinforcementSpellStats(
+          spellUpgradeLevels.reinforcements
+        );
+        // Spawn troops in a compact formation around the cast point.
         const troopOffsets = [
-          { x: 0, y: -25 }, // Top
-          { x: -25, y: 20 }, // Bottom left
-          { x: 25, y: 20 }, // Bottom right
-        ];
-        const knightHP = TROOP_DATA.knight.hp;
+          { x: 0, y: -25 },
+          { x: -25, y: 20 },
+          { x: 25, y: 20 },
+          { x: -48, y: -4 },
+          { x: 48, y: -4 },
+        ].slice(0, reinforcementStats.knightCount);
         const newTroops: Troop[] = troopOffsets.map((offset, i) => {
           // Each troop gets their own individual home position to prevent bundling/vibration
           const troopPos = { x: worldPos.x + offset.x, y: worldPos.y + offset.y };
@@ -9000,16 +9658,25 @@ export function usePrincetonTowerDefenseRuntime() {
             ownerId: "spell",
             ownerType: "spell" as const, // Purple themed knight
             pos: troopPos,
-            hp: knightHP,
-            maxHp: knightHP,
+            hp: reinforcementStats.knightHp,
+            maxHp: reinforcementStats.knightHp,
             moving: false,
             lastAttack: 0,
             type: "knight" as const,
+            overrideDamage: reinforcementStats.knightDamage,
+            overrideAttackSpeed: reinforcementStats.knightAttackSpeedMs,
+            overrideIsRanged: reinforcementStats.rangedUnlocked,
+            overrideRange: reinforcementStats.rangedUnlocked
+              ? reinforcementStats.rangedRange
+              : undefined,
+            overrideCanTargetFlying: reinforcementStats.rangedUnlocked,
+            overrideHybridMelee: reinforcementStats.rangedUnlocked,
+            visualTier: reinforcementStats.visualTier,
             rotation: 0,
             attackAnim: 0,
             selected: false,
             spawnPoint: troopPos, // Individual spawn point, not shared center
-            moveRadius: 200,
+            moveRadius: reinforcementStats.moveRadius,
             spawnSlot: i,
             userTargetPos: troopPos, // Set home position to their starting position
           };
@@ -9030,8 +9697,9 @@ export function usePrincetonTowerDefenseRuntime() {
 
       const selectedTroopUnit = troops.find((t) => t.selected);
       const heroIsSelected = hero && !hero.dead && hero.selected;
+      const levelSpecialTowers = getLevelSpecialTowers(selectedMap);
       const spec =
-        getLevelSpecialTowers(selectedMap).find(
+        levelSpecialTowers.find(
           (tower) => tower.type === "barracks"
         ) ?? undefined;
 
@@ -9044,6 +9712,76 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraOffset,
         cameraZoom
       );
+      const clickedSpecialTower =
+        levelSpecialTowers.find(
+          (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 65
+        ) ?? null;
+      const clickedSentinelNexus =
+        clickedSpecialTower?.type === "sentinel_nexus"
+          ? clickedSpecialTower
+          : null;
+
+      if (activeSentinelTargetKey) {
+        if (clickedSentinelNexus) {
+          setActiveSentinelTargetKey(getSpecialTowerKey(clickedSentinelNexus));
+          addParticles(gridToWorld(clickedSentinelNexus.pos), "spark", 6);
+          return;
+        }
+        const lockedTarget = clampWorldToMapBounds(clickWorldPos);
+        setSentinelTargets((prev) => ({
+          ...prev,
+          [activeSentinelTargetKey]: lockedTarget,
+        }));
+        setActiveSentinelTargetKey(null);
+        setEffects((prev) => {
+          const next = [
+            ...prev,
+              {
+                id: generateId("sentinel_lockon"),
+                pos: lockedTarget,
+                type: "sentinel_lockon" as const,
+                progress: 0,
+                size: 72,
+                duration: 460,
+            },
+          ];
+          return next.length > MAX_EFFECTS
+            ? next.slice(next.length - MAX_EFFECTS)
+            : next;
+        });
+        addParticles(lockedTarget, "light", 12);
+        addParticles(lockedTarget, "spark", 8);
+        return;
+      }
+
+      if (clickedSentinelNexus) {
+        const sentinelKey = getSpecialTowerKey(clickedSentinelNexus);
+        setActiveSentinelTargetKey(sentinelKey);
+        setSelectedTower(null);
+        setHero((prev) => (prev ? { ...prev, selected: false } : null));
+        setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
+        const existingTarget = sentinelTargetsRef.current[sentinelKey];
+        if (existingTarget) {
+          setEffects((prev) => {
+            const next = [
+              ...prev,
+              {
+                id: generateId("sentinel_lockon"),
+                pos: existingTarget,
+                type: "sentinel_lockon" as const,
+                progress: 0,
+                size: 72,
+                duration: 460,
+              },
+            ];
+            return next.length > MAX_EFFECTS
+              ? next.slice(next.length - MAX_EFFECTS)
+              : next;
+          });
+        }
+        addParticles(gridToWorld(clickedSentinelNexus.pos), "spark", 10);
+        return;
+      }
 
       // ---------- HERO SELECTED MODE ----------
       if (heroIsSelected) {
@@ -9297,6 +10035,7 @@ export function usePrincetonTowerDefenseRuntime() {
       troops,
       enemies,
       selectedTower,
+      activeSentinelTargetKey,
       selectedMap,
       canAffordPawPoints,
       gameSpeed,
@@ -9327,6 +10066,11 @@ export function usePrincetonTowerDefenseRuntime() {
       setTroops,
       waveStartConfirm,
       currentWave,
+      spellUpgradeLevels,
+      clampWorldToMapBounds,
+      getSpecialTowerKey,
+      setEffects,
+      setSentinelTargets,
     ]
   );
   const handleMouseMove = useCallback(
@@ -9900,12 +10644,15 @@ export function usePrincetonTowerDefenseRuntime() {
         case "fireball": {
           // METEOR SHOWER - Rains down 10 meteors in random locations, burning enemies
           if (enemies.length > 0) {
-            const meteorCount = 10;
-            const damagePerMeteor = 80;
-            const impactRadius = 100;
-            const burnDuration = 4000; // 4 seconds burn
-            const burnDamage = 30; // damage per second while burning
-            const fallDuration = 1200; // How long meteor takes to fall (ms) - longer for dramatic effect
+            const fireballStats = getFireballSpellStats(
+              spellUpgradeLevels.fireball
+            );
+            const meteorCount = fireballStats.meteorCount;
+            const damagePerMeteor = fireballStats.damagePerMeteor;
+            const impactRadius = fireballStats.impactRadius;
+            const burnDuration = fireballStats.burnDurationMs;
+            const burnDamage = fireballStats.burnDamagePerSecond;
+            const fallDuration = fireballStats.fallDurationMs;
 
             // Generate random target positions around enemies
             const meteorTargets: Position[] = [];
@@ -9999,8 +10746,11 @@ export function usePrincetonTowerDefenseRuntime() {
         case "lightning": {
           // ENHANCED LIGHTNING - Strikes 8 enemies one by one with chain effect
           if (enemies.length > 0) {
-            const totalDamage = 900;
-            const targetCount = Math.min(8, enemies.length);
+            const lightningStats = getLightningSpellStats(
+              spellUpgradeLevels.lightning
+            );
+            const totalDamage = lightningStats.totalDamage;
+            const targetCount = Math.min(lightningStats.chainCount, enemies.length);
             const damagePerTarget = Math.floor(totalDamage / targetCount);
             const shuffled = [...enemies].sort(() => Math.random() - 0.5);
             const targets = shuffled.slice(0, targetCount);
@@ -10040,7 +10790,7 @@ export function usePrincetonTowerDefenseRuntime() {
                           ...e,
                           hp: newHp,
                           damageFlash: 250,
-                          stunUntil: Date.now() + 500,
+                          stunUntil: Date.now() + lightningStats.stunDurationMs,
                         };
                       }
                       return e;
@@ -10055,7 +10805,8 @@ export function usePrincetonTowerDefenseRuntime() {
         }
 
         case "freeze": {
-          const freezeUntil = Date.now() + 3000;
+          const freezeStats = getFreezeSpellStats(spellUpgradeLevels.freeze);
+          const freezeUntil = Date.now() + freezeStats.freezeDurationMs;
           setEnemies((prev) =>
             prev.map((e) => ({ ...e, frozen: true, stunUntil: freezeUntil }))
           );
@@ -10084,9 +10835,13 @@ export function usePrincetonTowerDefenseRuntime() {
         case "payday": {
           // ENHANCED PAYDAY - Creates money aura around all enemies for duration
           // Enemies killed while gold aura active give +50% bounty
-          const bonusPerEnemy = 5;
-          const basePayout = 80;
-          const enemyBonus = Math.min(enemies.length * bonusPerEnemy, 50);
+          const paydayStats = getPaydaySpellStats(spellUpgradeLevels.payday);
+          const bonusPerEnemy = paydayStats.bonusPerEnemy;
+          const basePayout = paydayStats.basePayout;
+          const enemyBonus = Math.min(
+            enemies.length * bonusPerEnemy,
+            paydayStats.maxBonus
+          );
           const totalPayout = basePayout + enemyBonus;
 
           addPawPoints(totalPayout);
@@ -10104,7 +10859,7 @@ export function usePrincetonTowerDefenseRuntime() {
               type: "payday_aura",
               progress: 0,
               size: 0,
-              duration: 10000,
+              duration: paydayStats.auraDurationMs,
               enemies: enemies.map((e) => e.id),
             },
           ]);
@@ -10119,7 +10874,7 @@ export function usePrincetonTowerDefenseRuntime() {
           setTimeout(() => {
             setEnemies((prev) => prev.map((e) => ({ ...e, goldAura: false })));
             setGoldSpellActive(false);
-          }, 10000);
+          }, paydayStats.auraDurationMs);
           break;
         }
 
@@ -10145,7 +10900,41 @@ export function usePrincetonTowerDefenseRuntime() {
       addPawPoints,
       setEnemies,
       setEffects,
+      spellUpgradeLevels,
     ]
+  );
+  const upgradeSpell = useCallback(
+    (spellType: SpellType) => {
+      setProgress((prev) => {
+        const normalizedUpgrades = normalizeSpellUpgradeLevels(
+          prev.spellUpgrades ?? DEFAULT_SPELL_UPGRADES
+        );
+        const currentLevel = normalizedUpgrades[spellType] ?? 0;
+        if (currentLevel >= MAX_SPELL_UPGRADE_LEVEL) return prev;
+
+        const nextUpgradeCost = getNextSpellUpgradeCost(spellType, currentLevel);
+        if (nextUpgradeCost <= 0) return prev;
+
+        const totalEarned =
+          prev.totalStarsEarned ??
+          Object.values(prev.levelStars || {}).reduce(
+            (sum, stars) => sum + (Number.isFinite(stars) ? stars : 0),
+            0
+          );
+        const spent = getSpentSpellUpgradeStars(normalizedUpgrades);
+        const available = Math.max(0, totalEarned - spent);
+        if (available < nextUpgradeCost) return prev;
+
+        return {
+          ...prev,
+          spellUpgrades: {
+            ...normalizedUpgrades,
+            [spellType]: currentLevel + 1,
+          },
+        };
+      });
+    },
+    [setProgress]
   );
   const toggleHeroSelection = useCallback(() => {
     setHero((prev) =>
@@ -10602,6 +11391,11 @@ export function usePrincetonTowerDefenseRuntime() {
           specialTowerHp: specialTowerHpValue,
         },
       });
+      setBattleOutcome(null);
+      setActiveSentinelTargetKey(null);
+      setSentinelTargets({});
+      lastSentinelStrikeRef.current.clear();
+      lastSunforgeBarrageRef.current.clear();
     },
     [
       clearAllTimers,
@@ -10610,6 +11404,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setEnemies,
       setParticles,
       setProjectiles,
+      setBattleOutcome,
       setTowers,
       setTroops,
     ]
@@ -10661,6 +11456,17 @@ export function usePrincetonTowerDefenseRuntime() {
       ),
     }));
   }, [setProgress]);
+
+  const lockLevelFromDevMenu = useCallback(
+    (levelId: string) => {
+      if (!levelId) return;
+      setProgress((prev) => ({
+        ...prev,
+        unlockedMaps: prev.unlockedMaps.filter((id) => id !== levelId),
+      }));
+    },
+    [setProgress]
+  );
 
   const setLevelStarsFromDevMenu = useCallback(
     (levelId: string, stars: number) => {
@@ -10729,6 +11535,9 @@ export function usePrincetonTowerDefenseRuntime() {
           ([, value]) => value && typeof value === "object"
         )
       ) as GameProgress["levelStats"];
+      const normalizedSpellUpgrades = normalizeSpellUpgradeLevels(
+        next.spellUpgrades as Partial<SpellUpgradeLevels> | undefined
+      );
 
       const normalizedProgress: GameProgress = {
         ...DEFAULT_GAME_PROGRESS,
@@ -10746,6 +11555,7 @@ export function usePrincetonTowerDefenseRuntime() {
         ),
         levelStars: normalizedStars,
         levelStats: normalizedLevelStats,
+        spellUpgrades: normalizedSpellUpgrades,
         lastPlayedLevel:
           typeof next.lastPlayedLevel === "string"
             ? next.lastPlayedLevel
@@ -10777,6 +11587,25 @@ export function usePrincetonTowerDefenseRuntime() {
     setLives((previousLives) => Math.max(0, previousLives + normalizedDelta));
   }, []);
 
+  const instantVictoryFromDevMenu = useCallback(() => {
+    if (gameState !== "playing" || battleOutcome) return;
+    clearAllTimers();
+    setHoveredWaveBubblePathKey(null);
+    setWaveInProgress(false);
+    setNextWaveTimer(0);
+    setCurrentWave(totalWaves);
+    clearEnemies();
+  }, [gameState, battleOutcome, clearAllTimers, clearEnemies, totalWaves]);
+
+  const instantLoseFromDevMenu = useCallback(() => {
+    if (gameState !== "playing" || battleOutcome) return;
+    clearAllTimers();
+    setHoveredWaveBubblePathKey(null);
+    setWaveInProgress(false);
+    setNextWaveTimer(0);
+    setLives(0);
+  }, [gameState, battleOutcome, clearAllTimers]);
+
   const devConfigMenu = DEV_CONFIG_MENU_ENABLED ? (
     <DevConfigMenu
       gameState={gameState}
@@ -10786,11 +11615,14 @@ export function usePrincetonTowerDefenseRuntime() {
       setDevPerfEnabled={setDevPerfEnabled}
       devPerfSnapshot={devPerfSnapshot}
       onUnlockLevel={unlockLevel}
+      onLockLevel={lockLevelFromDevMenu}
       onUnlockAllLevels={unlockAllLevels}
       onSetLevelStars={setLevelStarsFromDevMenu}
       onReplaceProgress={replaceProgressFromDevMenu}
       onGrantPawPoints={grantPawPointsFromDevMenu}
       onAdjustLives={adjustLivesFromDevMenu}
+      onInstantVictory={instantVictoryFromDevMenu}
+      onInstantLose={instantLoseFromDevMenu}
     />
   ) : null;
 
@@ -10822,6 +11654,11 @@ export function usePrincetonTowerDefenseRuntime() {
           setSelectedHero={setSelectedHero}
           selectedSpells={selectedSpells}
           setSelectedSpells={setSelectedSpells}
+          availableSpellStars={availableSpellStars}
+          totalSpellStarsEarned={totalStarsEarned}
+          spentSpellStars={spentSpellStars}
+          spellUpgradeLevels={spellUpgradeLevels}
+          upgradeSpell={upgradeSpell}
           unlockedMaps={unlockedMaps}
           levelStars={levelStars}
           levelStats={levelStats}
@@ -10835,46 +11672,15 @@ export function usePrincetonTowerDefenseRuntime() {
       </>
     );
   }
-  if (gameState === "victory") {
-    const currentLevelStats = levelStats?.[selectedMap] || {};
-    return (
-      <>
-        <VictoryScreen
-          starsEarned={starsEarned}
-          lives={lives}
-          timeSpent={timeSpent}
-          bestTime={currentLevelStats.bestTime}
-          bestHearts={currentLevelStats.bestHearts}
-          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
-          resetGame={resetGame}
-        />
-        {devConfigMenu}
-      </>
-    );
-  }
-  if (gameState === "defeat") {
-    const currentLevelStats = levelStats?.[selectedMap] || {};
-    return (
-      <>
-        <DefeatScreen
-          resetGame={resetGame}
-          timeSpent={timeSpent}
-          waveReached={Math.min(currentWave + 1, totalWaves)}
-          totalWaves={totalWaves}
-          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
-          bestTime={currentLevelStats.bestTime}
-          timesPlayed={currentLevelStats.timesPlayed || 1}
-        />
-        {devConfigMenu}
-      </>
-    );
-  }
-  // Main game view
+  // Main game view (battle overlay stays on top without leaving this view)
   const { width, height, dpr } = getCanvasDimensions();
   const selectedLevelData = LEVEL_DATA[selectedMap];
   const levelAllowedTowers = selectedLevelData?.allowedTowers ?? null;
+  const currentLevelStats = levelStats?.[selectedMap] || {};
+  const isVictory = battleOutcome === "victory";
+  const isDefeat = battleOutcome === "defeat";
   return (
-    <div className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden">
+    <div className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden relative">
       <TopHUD
         pawPoints={pawPoints}
         lives={lives}
@@ -10882,7 +11688,10 @@ export function usePrincetonTowerDefenseRuntime() {
         totalWaves={totalWaves}
         nextWaveTimer={nextWaveTimer}
         gameSpeed={gameSpeed}
-        setGameSpeed={setGameSpeed}
+        setGameSpeed={(nextSpeed) => {
+          if (battleOutcome) return;
+          setGameSpeed(nextSpeed);
+        }}
         goldSpellActive={goldSpellActive}
         eatingClubIncomeEvents={eatingClubIncomeEvents}
         onEatingClubEventComplete={(id) => setEatingClubIncomeEvents((prev) => prev.filter((e) => e.id !== id))}
@@ -10953,6 +11762,20 @@ export function usePrincetonTowerDefenseRuntime() {
               );
             })()}
           {placingTroop && <PlacingTroopIndicator />}
+          {activeSentinelTargetKey && (
+            <div
+              className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
+              style={{
+                zIndex: 180,
+                background: "rgba(69, 10, 10, 0.86)",
+                border: "1px solid rgba(251, 113, 133, 0.58)",
+                color: "#ffe4e6",
+                boxShadow: "0 0 18px rgba(244, 63, 94, 0.35)",
+              }}
+            >
+              Imperial Sentinel targeting mode: click any map location.
+            </div>
+          )}
           {!isTouchDeviceRef.current && hoveredSpecialTower && (
             <SpecialBuildingTooltip
               type={hoveredSpecialTower.type}
@@ -10963,6 +11786,18 @@ export function usePrincetonTowerDefenseRuntime() {
                   : hoveredSpecialTower.hp
               }
               position={mousePos}
+              sentinelTarget={
+                hoveredSpecialTower.type === "sentinel_nexus"
+                  ? sentinelTargets[
+                    getSpecialTowerKey(hoveredSpecialTower)
+                  ] ?? null
+                  : undefined
+              }
+              sentinelTargeting={
+                hoveredSpecialTower.type === "sentinel_nexus" &&
+                activeSentinelTargetKey ===
+                  getSpecialTowerKey(hoveredSpecialTower)
+              }
             />
           )}
           {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !selectedTower && (
@@ -10978,7 +11813,10 @@ export function usePrincetonTowerDefenseRuntime() {
             selectedEnemy={selectedInspectEnemy}
             setSelectedEnemy={setSelectedInspectEnemy}
             enemies={enemies}
-            setGameSpeed={setGameSpeed}
+            setGameSpeed={(nextSpeed) => {
+              if (battleOutcome) return;
+              setGameSpeed(nextSpeed);
+            }}
             previousGameSpeed={previousGameSpeed}
             setPreviousGameSpeed={setPreviousGameSpeed}
             gameSpeed={gameSpeed}
@@ -11009,6 +11847,7 @@ export function usePrincetonTowerDefenseRuntime() {
               spells={spells}
               pawPoints={pawPoints}
               enemies={enemies}
+              spellUpgradeLevels={spellUpgradeLevels}
               toggleHeroSelection={toggleHeroSelection}
               onUseHeroAbility={triggerHeroAbility}
               castSpell={castSpell}
@@ -11033,6 +11872,31 @@ export function usePrincetonTowerDefenseRuntime() {
           allowedTowers={levelAllowedTowers}
         />
       </div>{" "}
+      {isVictory && (
+        <VictoryScreen
+          starsEarned={starsEarned}
+          lives={lives}
+          timeSpent={timeSpent}
+          bestTime={currentLevelStats.bestTime}
+          bestHearts={currentLevelStats.bestHearts}
+          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
+          resetGame={resetGame}
+          overlay
+        />
+      )}
+      {isDefeat && (
+        <DefeatScreen
+          resetGame={retryLevel}
+          onBackToMap={quitLevel}
+          timeSpent={timeSpent}
+          waveReached={Math.min(currentWave + 1, totalWaves)}
+          totalWaves={totalWaves}
+          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
+          bestTime={currentLevelStats.bestTime}
+          timesPlayed={currentLevelStats.timesPlayed || 1}
+          overlay
+        />
+      )}
     </div>
   );
 }
