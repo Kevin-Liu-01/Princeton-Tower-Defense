@@ -1931,6 +1931,177 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "fire_imp", count: 28, interval: 200, delay: 1450 },
     ],
   ],
+
+  cannon_crest: [
+    [
+      { type: "athlete", count: 8, interval: 620 },
+      { type: "protestor", count: 7, interval: 580, delay: 2600 },
+      { type: "crossbowman", count: 5, interval: 720, delay: 2400 },
+    ],
+    [
+      { type: "berserker", count: 6, interval: 620 },
+      { type: "frosh", count: 12, interval: 420, delay: 2400 },
+      { type: "cultist", count: 6, interval: 700, delay: 2200 },
+    ],
+    [
+      { type: "junior", count: 6, interval: 860 },
+      { type: "assassin", count: 7, interval: 560, delay: 2300 },
+      { type: "athlete", count: 12, interval: 400, delay: 2100 },
+    ],
+    [
+      { type: "plaguebearer", count: 6, interval: 760 },
+      { type: "hexer", count: 7, interval: 640, delay: 2200 },
+      { type: "protestor", count: 14, interval: 360, delay: 2000 },
+    ],
+    [
+      { type: "senior", count: 4, interval: 980 },
+      { type: "mage", count: 8, interval: 660, delay: 2100 },
+      { type: "berserker", count: 9, interval: 520, delay: 1900 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 1500 },
+      { type: "assassin", count: 9, interval: 520, delay: 2100 },
+      { type: "crossbowman", count: 9, interval: 620, delay: 1900 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 1650 },
+      { type: "shadow_knight", count: 6, interval: 780, delay: 2000 },
+      { type: "athlete", count: 18, interval: 320, delay: 1800 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 2300 },
+      { type: "golem", count: 2, interval: 2500, delay: 1900 },
+      { type: "protestor", count: 18, interval: 300, delay: 1700 },
+      { type: "assassin", count: 10, interval: 480, delay: 1600 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 2500 },
+      { type: "juggernaut", count: 1, interval: 3000, delay: 1900 },
+      { type: "shadow_knight", count: 7, interval: 760, delay: 1700 },
+      { type: "frosh", count: 24, interval: 260, delay: 1600 },
+    ],
+    [
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dean", count: 2, interval: 2100, delay: 1700 },
+      { type: "golem", count: 2, interval: 2400, delay: 1600 },
+      { type: "athlete", count: 24, interval: 250, delay: 1500 },
+      { type: "berserker", count: 12, interval: 460, delay: 1450 },
+    ],
+  ],
+
+  triad_keep: [
+    [
+      { type: "bog_creature", count: 9, interval: 640 },
+      { type: "thornwalker", count: 6, interval: 700, delay: 2600 },
+      { type: "cultist", count: 5, interval: 760, delay: 2400 },
+    ],
+    [
+      { type: "swamp_troll", count: 6, interval: 920 },
+      { type: "bog_creature", count: 12, interval: 430, delay: 2400 },
+      { type: "hexer", count: 6, interval: 700, delay: 2200 },
+    ],
+    [
+      { type: "plaguebearer", count: 6, interval: 800 },
+      { type: "thornwalker", count: 8, interval: 660, delay: 2300 },
+      { type: "assassin", count: 6, interval: 560, delay: 2100 },
+    ],
+    [
+      { type: "junior", count: 7, interval: 860 },
+      { type: "mage", count: 7, interval: 700, delay: 2200 },
+      { type: "bog_creature", count: 16, interval: 360, delay: 2000 },
+    ],
+    [
+      { type: "shadow_knight", count: 5, interval: 900 },
+      { type: "swamp_troll", count: 7, interval: 820, delay: 2100 },
+      { type: "plaguebearer", count: 7, interval: 700, delay: 1900 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 1500 },
+      { type: "thornwalker", count: 10, interval: 600, delay: 2100 },
+      { type: "assassin", count: 8, interval: 500, delay: 1900 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 1650 },
+      { type: "necromancer", count: 5, interval: 980, delay: 1900 },
+      { type: "bog_creature", count: 18, interval: 320, delay: 1800 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 2300 },
+      { type: "golem", count: 2, interval: 2500, delay: 1800 },
+      { type: "shadow_knight", count: 7, interval: 760, delay: 1700 },
+      { type: "thornwalker", count: 12, interval: 480, delay: 1600 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 2500 },
+      { type: "juggernaut", count: 1, interval: 3000, delay: 1800 },
+      { type: "swamp_troll", count: 10, interval: 700, delay: 1700 },
+      { type: "plaguebearer", count: 10, interval: 560, delay: 1600 },
+    ],
+    [
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dean", count: 2, interval: 2100, delay: 1700 },
+      { type: "golem", count: 2, interval: 2400, delay: 1600 },
+      { type: "bog_creature", count: 26, interval: 250, delay: 1500 },
+      { type: "shadow_knight", count: 9, interval: 680, delay: 1450 },
+    ],
+  ],
+
+  frontier_outpost: [
+    [
+      { type: "snow_goblin", count: 10, interval: 600 },
+      { type: "frostling", count: 8, interval: 580, delay: 2600 },
+      { type: "ice_witch", count: 5, interval: 760, delay: 2400 },
+    ],
+    [
+      { type: "yeti", count: 6, interval: 900 },
+      { type: "snow_goblin", count: 14, interval: 400, delay: 2400 },
+      { type: "crossbowman", count: 6, interval: 700, delay: 2200 },
+    ],
+    [
+      { type: "ice_witch", count: 7, interval: 700 },
+      { type: "frostling", count: 12, interval: 400, delay: 2300 },
+      { type: "assassin", count: 7, interval: 540, delay: 2100 },
+    ],
+    [
+      { type: "swamp_troll", count: 7, interval: 820 },
+      { type: "snow_goblin", count: 18, interval: 340, delay: 2200 },
+      { type: "plaguebearer", count: 7, interval: 680, delay: 2000 },
+    ],
+    [
+      { type: "shadow_knight", count: 5, interval: 900 },
+      { type: "yeti", count: 8, interval: 760, delay: 2100 },
+      { type: "ice_witch", count: 8, interval: 620, delay: 1900 },
+    ],
+    [
+      { type: "gradstudent", count: 3, interval: 1500 },
+      { type: "frostling", count: 16, interval: 320, delay: 2100 },
+      { type: "assassin", count: 9, interval: 500, delay: 1900 },
+    ],
+    [
+      { type: "professor", count: 3, interval: 1600 },
+      { type: "necromancer", count: 5, interval: 980, delay: 1900 },
+      { type: "snow_goblin", count: 20, interval: 300, delay: 1800 },
+    ],
+    [
+      { type: "dean", count: 2, interval: 2300 },
+      { type: "golem", count: 2, interval: 2500, delay: 1800 },
+      { type: "shadow_knight", count: 7, interval: 760, delay: 1700 },
+      { type: "yeti", count: 11, interval: 680, delay: 1600 },
+    ],
+    [
+      { type: "trustee", count: 2, interval: 2500 },
+      { type: "juggernaut", count: 1, interval: 3000, delay: 1800 },
+      { type: "ice_witch", count: 11, interval: 560, delay: 1700 },
+      { type: "frostling", count: 20, interval: 280, delay: 1600 },
+    ],
+    [
+      { type: "trustee", count: 3, interval: 2200 },
+      { type: "dean", count: 2, interval: 2100, delay: 1700 },
+      { type: "golem", count: 2, interval: 2400, delay: 1600 },
+      { type: "snow_goblin", count: 28, interval: 240, delay: 1500 },
+      { type: "shadow_knight", count: 10, interval: 660, delay: 1450 },
+    ],
+  ],
 };
 
 export const WAVES: WaveGroup[][] = LEVEL_WAVES.poe;

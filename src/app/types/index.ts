@@ -919,6 +919,7 @@ export interface LevelData {
   dualPath?: boolean;
   secondaryPath?: string;
   levelKind?: LevelKind;
+  allowedTowers?: TowerType[];
   specialTower?: SpecialTower;
   specialTowers?: SpecialTower[];
   decorations?: MapDecoration[];

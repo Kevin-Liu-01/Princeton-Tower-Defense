@@ -1,4 +1,4 @@
-import { LEVEL_DATA, LEVEL_WAVES } from "../../constants";
+import { LEVEL_WAVES } from "../../constants";
 import type { HeroType, SpellType } from "../../types";
 
 export interface LevelNode {
@@ -17,7 +17,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "poe",
     name: "Poe Field",
-    description: LEVEL_DATA["poe"].description,
+    description:
+      "Train new defenders on open grass.\nHold the first road at dusk.",
     region: "grassland",
     difficulty: 1,
     x: 100,
@@ -27,39 +28,55 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "carnegie",
     name: "Carnegie Lake",
-    description: "Strategic waterfront defense",
+    description:
+      "Protect the lakefront causeway line.\nPunish split pushes from both banks.",
     region: "grassland",
     difficulty: 2,
     x: 205,
     y: 40,
-    connectsTo: ["nassau", "ivy_crossroads"],
+    connectsTo: ["nassau"],
   },
   {
     id: "nassau",
     name: "Nassau Hall",
-    description: "The heart of campus",
+    description:
+      "Defend the campus stone courtyard.\nAbsorb pressure near the main gate.",
     region: "grassland",
     difficulty: 3,
     x: 320,
     y: 58,
-    connectsTo: ["bog"],
+    connectsTo: ["bog", "ivy_crossroads"],
   },
   {
     id: "ivy_crossroads",
     name: "Ivy Crossroads",
-    description: LEVEL_DATA["ivy_crossroads"].description,
+    description:
+      "Crossed lanes demand split focus.\nChain buffs and lock both chokepoints.",
     region: "grassland",
     difficulty: 3,
     kind: "challenge",
     x: 370,
     y: 30,
+    connectsTo: ["cannon_crest"],
+  },
+  {
+    id: "cannon_crest",
+    name: "Cannon Crest",
+    description:
+      "Only Nassau Cannons are allowed.\nAnchor lanes with brutal firing lines.",
+    region: "grassland",
+    difficulty: 3,
+    kind: "challenge",
+    x: 175,
+    y: 26,
     connectsTo: [],
   },
   // Swamp - Murky Marshes
   {
     id: "bog",
     name: "Murky Bog",
-    description: "Treacherous wetlands",
+    description:
+      "Foggy marsh trails hide threats.\nControl vision and hold wet chokepoints.",
     region: "swamp",
     difficulty: 1,
     x: 430,
@@ -69,7 +86,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "witch_hut",
     name: "Witch's Domain",
-    description: "Dark magic festers here",
+    description:
+      "Dark wards empower swamp raiders.\nBreak curses before waves stack.",
     region: "swamp",
     difficulty: 2,
     x: 535,
@@ -79,17 +97,19 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "sunken_temple",
     name: "Sunken Temple",
-    description: "Ancient ruins submerged",
+    description:
+      "Ruins collapse into flooded paths.\nAnchor towers around broken arches.",
     region: "swamp",
     difficulty: 3,
     x: 650,
     y: 56,
-    connectsTo: ["oasis", "blight_basin"],
+    connectsTo: ["oasis", "blight_basin", "triad_keep"],
   },
   {
     id: "blight_basin",
     name: "Blight Basin",
-    description: LEVEL_DATA["blight_basin"].description,
+    description:
+      "Poison basins corrode both lanes.\nRotate quickly through toxic crossfire.",
     region: "swamp",
     difficulty: 3,
     kind: "challenge",
@@ -97,11 +117,24 @@ export const WORLD_LEVELS: LevelNode[] = [
     y: 70,
     connectsTo: [],
   },
+  {
+    id: "triad_keep",
+    name: "Triad Keep",
+    description:
+      "Only Dinky, Library, and Club build.\nOutlast swarms with control and economy.",
+    region: "swamp",
+    difficulty: 3,
+    kind: "challenge",
+    x: 640,
+    y: 28,
+    connectsTo: [],
+  },
   // Desert
   {
     id: "oasis",
     name: "Desert Oasis",
-    description: "A precious water source",
+    description:
+      "Guard the wells in open sand.\nPunish fast flanks around dunes.",
     region: "desert",
     difficulty: 1,
     x: 785,
@@ -111,39 +144,43 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "pyramid",
     name: "Pyramid Pass",
-    description: "Ancient canyon passage",
+    description:
+      "Ancient ramps split your defenses.\nHold high ground and lane pivots.",
     region: "desert",
     difficulty: 2,
-    x: 900,
-    y: 36,
+    x: 910,
+    y: 38,
     connectsTo: ["sphinx"],
   },
   {
     id: "sphinx",
     name: "Sphinx Gate",
-    description: "The guardian's domain",
+    description:
+      "The guardian tests every formation.\nSurvive bursts from mirrored fronts.",
     region: "desert",
     difficulty: 3,
-    x: 1008,
-    y: 58,
+    x: 968,
+    y: 53,
     connectsTo: ["glacier", "sunscorch_labyrinth"],
   },
   {
     id: "sunscorch_labyrinth",
     name: "Sunscorch Labyrinth",
-    description: LEVEL_DATA["sunscorch_labyrinth"].description,
+    description:
+      "Twin mazes force split responses.\nHandle hazards while lanes converge.",
     region: "desert",
     difficulty: 3,
     kind: "challenge",
-    x: 975,
-    y: 70,
+    x: 1000,
+    y: 67,
     connectsTo: [],
   },
   // Winter
   {
     id: "glacier",
     name: "Glacier Path",
-    description: "Ice-covered mountain pass",
+    description:
+      "Ice winds slow every advance.\nUse spacing to survive freezes.",
     region: "winter",
     difficulty: 1,
     x: 1142,
@@ -153,7 +190,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "fortress",
     name: "Frost Fortress",
-    description: "An abandoned stronghold",
+    description:
+      "Frost walls funnel heavy assaults.\nStabilize lanes before they collapse.",
     region: "winter",
     difficulty: 2,
     x: 1268,
@@ -163,7 +201,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "peak",
     name: "Summit Peak",
-    description: "The highest defense point",
+    description:
+      "Storms crash across summit roads.\nDefend cliffs against relentless elites.",
     region: "winter",
     difficulty: 3,
     x: 1365,
@@ -173,19 +212,33 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "whiteout_pass",
     name: "Whiteout Pass",
-    description: LEVEL_DATA["whiteout_pass"].description,
+    description:
+      "Whiteout drifts hide both lanes.\nRecover fast after chained freezes.",
     region: "winter",
     difficulty: 3,
     kind: "challenge",
-    x: 1238,
-    y: 30,
+    x: 1210,
+    y: 32,
+    connectsTo: ["frontier_outpost"],
+  },
+  {
+    id: "frontier_outpost",
+    name: "Frontier Outpost",
+    description:
+      "Only Dinky Station can be built.\nFrontier Barracks hold the front.",
+    region: "winter",
+    difficulty: 3,
+    kind: "challenge",
+    x: 1332,
+    y: 28,
     connectsTo: [],
   },
   // Volcanic
   {
     id: "lava",
     name: "Lava Fields",
-    description: "Rivers of molten rock",
+    description:
+      "Molten channels burn deployment zones.\nTime reinforcements through heat bursts.",
     region: "volcanic",
     difficulty: 2,
     x: 1522,
@@ -195,7 +248,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "crater",
     name: "Caldera Basin",
-    description: "Inside the volcano's heart",
+    description:
+      "Caldera vents split your anchor.\nHold center while flanks erupt.",
     region: "volcanic",
     difficulty: 3,
     x: 1592,
@@ -205,7 +259,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "throne",
     name: "Obsidian Throne",
-    description: "The ultimate challenge",
+    description:
+      "Obsidian gates unleash brutal waves.\nEndure until the throne falls.",
     region: "volcanic",
     difficulty: 3,
     x: 1702,
@@ -215,7 +270,8 @@ export const WORLD_LEVELS: LevelNode[] = [
   {
     id: "ashen_spiral",
     name: "Ashen Spiral",
-    description: LEVEL_DATA["ashen_spiral"].description,
+    description:
+      "Inferno lanes spiral into killzones.\nCounter stacked geysers and rush elites.",
     region: "volcanic",
     difficulty: 3,
     kind: "challenge",

@@ -93,7 +93,7 @@ export const TOWER_DATA: Record<
     },
     upgrades: {
       A: {
-        name: "Earthquake Smasher",
+        name: "EQ Smasher",
         desc: "Seismic waves damage and slow",
         effect: "Deals 35 AoE damage + 50% slow",
         range: 330,
@@ -151,7 +151,7 @@ export const TOWER_DATA: Record<
     },
     upgrades: {
       A: {
-        name: "Shockwave Emitter",
+        name: "Shockwave Siren",
         desc: "Powerful stunning sound waves",
         effect: "30% chance to stun enemies for 1s",
         range: 390,

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 // Types
 import type {
   Position,
@@ -108,6 +108,10 @@ import {
   renderStaticMapLayer,
   type StaticMapFogEndpoint,
 } from "../rendering/maps/staticLayer";
+import {
+  getChallengePathSegments,
+  isWorldPosInChallengeDecorationFootprint,
+} from "../rendering/maps/challengeTerrain";
 // Hazard game logic
 import { calculateHazardEffects, applyHazardEffect } from "../game/hazards";
 import { getEnemyDamageTaken } from "../game/combat";
@@ -130,6 +134,7 @@ import {
   getLevelStartingPawPoints,
   getLevelSpecialTowerHp,
   getLevelSpecialTowers,
+  getLevelAllowedTowers,
 } from "../game/pageHelpers";
 import {
   resetBattleState,
@@ -142,6 +147,7 @@ import { VictoryScreen } from "../components/menus/VictoryScreen";
 import { DefeatScreen } from "../components/menus/DefeatScreen";
 import {
   TopHUD,
+  DevConfigMenu,
   CameraControls,
   HeroSpellBar,
   BuildMenu,
@@ -156,7 +162,11 @@ import {
   EnemyDetailTooltip,
 } from "../components/ui/GameUI";
 // Hooks
-import { useGameProgress } from "../useLocalStorage";
+import {
+  useGameProgress,
+  DEFAULT_GAME_PROGRESS,
+  type GameProgress,
+} from "../useLocalStorage";
 import { useCustomLevels } from "./useCustomLevels";
 import { useEntityCollection } from "./useEntityCollection";
 import { usePawPoints } from "./usePawPoints";
@@ -245,14 +255,14 @@ interface WaveStartBubbleScreenData {
 
 type DraggingUnitState =
   | {
-      kind: "hero";
-      heroId: string;
-    }
+    kind: "hero";
+    heroId: string;
+  }
   | {
-      kind: "troop";
-      troopId: string;
-      ownerId: string;
-    };
+    kind: "troop";
+    troopId: string;
+    ownerId: string;
+  };
 
 const QUALITY_DPR_CAP: Record<RenderQuality, number> = {
   high: 4,
@@ -448,9 +458,11 @@ const getDecorationRenderLayer = (
 
 const DECORATION_ISO_Y_OFFSETS: Partial<Record<DecorationType, number>> = {
   // Massive sprite whose visual base sits well below its anchor.
-  nassau_hall: 34,
-  // Pyramid base is rendered well below anchor (~25 * scale in decoration renderer).
-  pyramid: 25,
+  nassau_hall: 12,
+  // Pyramid geometry has a narrow front tip at +25s, but most of the footprint sits
+  // closer to +8..+15s; using full +25 over-pulls depth and causes bad interleaving.
+  pyramid: 6,
+  carnegie_lake: 80,
 };
 
 const getDecorationIsoY = (
@@ -522,7 +534,7 @@ function getFogWispCount(quality: RenderQuality): number {
 }
 
 const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
-const IS_LOCAL_DEV = process.env.NODE_ENV === "development";
+const DEV_CONFIG_MENU_ENABLED = process.env.NEXT_PUBLIC_TD_DEV_PERF === "1";
 const DEV_PERF_STORAGE_KEY = "ptd:dev-perf-overlay-enabled";
 
 const CAMPAIGN_LEVEL_UNLOCKS: Record<string, string> = {
@@ -555,13 +567,18 @@ const REGION_CAMPAIGN_LEVELS: Record<
 
 const REGION_CHALLENGE_UNLOCKS: Record<
   keyof typeof REGION_CAMPAIGN_LEVELS,
-  string
+  string[]
 > = {
-  grassland: "ivy_crossroads",
-  swamp: "blight_basin",
-  desert: "sunscorch_labyrinth",
-  winter: "whiteout_pass",
-  volcanic: "ashen_spiral",
+  grassland: ["ivy_crossroads"],
+  swamp: ["blight_basin", "triad_keep"],
+  desert: ["sunscorch_labyrinth"],
+  winter: ["whiteout_pass"],
+  volcanic: ["ashen_spiral"],
+};
+
+const CHALLENGE_LEVEL_UNLOCKS: Record<string, string> = {
+  ivy_crossroads: "cannon_crest",
+  whiteout_pass: "frontier_outpost",
 };
 
 const isRegionCleared = (
@@ -581,8 +598,13 @@ export function usePrincetonTowerDefenseRuntime() {
   const [selectedSpells, setSelectedSpells] = useState<SpellType[]>([]);
 
   // Persistent progress (saved to localStorage)
-  const { progress, updateLevelStars, updateLevelStats, unlockLevel } =
-    useGameProgress();
+  const {
+    progress,
+    setProgress,
+    updateLevelStars,
+    updateLevelStats,
+    unlockLevel,
+  } = useGameProgress();
   const { customLevels, upsertCustomLevel, deleteCustomLevel } = useCustomLevels();
   const unlockedMaps = progress.unlockedMaps;
   const levelStars = progress.levelStars as LevelStars;
@@ -594,11 +616,20 @@ export function usePrincetonTowerDefenseRuntime() {
       keyof typeof REGION_CAMPAIGN_LEVELS
     >).forEach((regionKey) => {
       if (!isRegionCleared(regionKey, levelStars)) return;
-      const challengeLevel = REGION_CHALLENGE_UNLOCKS[regionKey];
-      if (!unlockedMaps.includes(challengeLevel)) {
+      REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
+        if (unlockedMaps.includes(challengeLevel)) return;
+        if (pendingUnlocks.includes(challengeLevel)) return;
         pendingUnlocks.push(challengeLevel);
-      }
+      });
     });
+
+    Object.entries(CHALLENGE_LEVEL_UNLOCKS).forEach(
+      ([completedChallengeId, unlockedChallengeId]) => {
+        if ((levelStars[completedChallengeId] || 0) <= 0) return;
+        if (unlockedMaps.includes(unlockedChallengeId)) return;
+        pendingUnlocks.push(unlockedChallengeId);
+      }
+    );
 
     if (pendingUnlocks.length === 0) return;
     pendingUnlocks.forEach((levelId) => unlockLevel(levelId));
@@ -623,6 +654,8 @@ export function usePrincetonTowerDefenseRuntime() {
   const [waveInProgress, setWaveInProgress] = useState(false);
   const [waveStartConfirm, setWaveStartConfirm] =
     useState<WaveStartConfirmState | null>(null);
+  const [hoveredWaveBubblePathKey, setHoveredWaveBubblePathKey] =
+    useState<string | null>(null);
   // Game entities
   const {
     items: towers,
@@ -714,7 +747,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const [cameraZoom, setCameraZoom] = useState(DEFAULT_CAMERA_ZOOM);
   const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
   const [devPerfEnabled, setDevPerfEnabled] = useState<boolean>(
-    () => IS_LOCAL_DEV && process.env.NEXT_PUBLIC_TD_DEV_PERF === "1"
+    () => DEV_CONFIG_MENU_ENABLED
   );
   const [devPerfSnapshot, setDevPerfSnapshot] = useState<DevPerfSnapshot>({
     fps: 0,
@@ -1321,7 +1354,7 @@ export function usePrincetonTowerDefenseRuntime() {
   }, [gameState, setTroops]);
 
   useEffect(() => {
-    if (!IS_LOCAL_DEV || typeof window === "undefined") return;
+    if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
     try {
       const saved = window.localStorage.getItem(DEV_PERF_STORAGE_KEY);
       if (saved === "1" || saved === "0") {
@@ -1333,7 +1366,7 @@ export function usePrincetonTowerDefenseRuntime() {
   }, []);
 
   useEffect(() => {
-    if (!IS_LOCAL_DEV || typeof window === "undefined") return;
+    if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
         DEV_PERF_STORAGE_KEY,
@@ -1345,7 +1378,7 @@ export function usePrincetonTowerDefenseRuntime() {
   }, [devPerfEnabled]);
 
   useEffect(() => {
-    if (!IS_LOCAL_DEV || gameState !== "playing") return;
+    if (!DEV_CONFIG_MENU_ENABLED || gameState !== "playing") return;
     const handlePerfToggleKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || !e.shiftKey) return;
       if (e.key.toLowerCase() !== "p") return;
@@ -1370,6 +1403,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setCurrentWave(0);
       setNextWaveTimer(WAVE_TIMER_BASE);
       setWaveInProgress(false);
+      setHoveredWaveBubblePathKey(null);
       clearTowers();
       clearEnemies();
       setHero(null); // Will be re-initialized by the hero effect
@@ -1412,6 +1446,7 @@ export function usePrincetonTowerDefenseRuntime() {
     if (gameState !== "playing") {
       clearAllTimers();
       pendingParticleBurstsRef.current = [];
+      setHoveredWaveBubblePathKey(null);
     }
   }, [gameState, clearAllTimers]);
 
@@ -1425,6 +1460,30 @@ export function usePrincetonTowerDefenseRuntime() {
       return prev;
     });
   }, [gameState, waveInProgress, selectedMap, currentWave, activeWaveSpawnPaths]);
+
+  useEffect(() => {
+    if (!hoveredWaveBubblePathKey) return;
+    if (gameState !== "playing" || waveInProgress || gameSpeed <= 0) {
+      setHoveredWaveBubblePathKey(null);
+      return;
+    }
+    if (currentWave >= totalWaves || nextWaveTimer <= 0) {
+      setHoveredWaveBubblePathKey(null);
+      return;
+    }
+    if (!activeWaveSpawnPaths.includes(hoveredWaveBubblePathKey)) {
+      setHoveredWaveBubblePathKey(null);
+    }
+  }, [
+    hoveredWaveBubblePathKey,
+    gameState,
+    waveInProgress,
+    gameSpeed,
+    currentWave,
+    totalWaves,
+    nextWaveTimer,
+    activeWaveSpawnPaths,
+  ]);
 
   // Initialize hero and spells when game starts
   useEffect(() => {
@@ -1470,7 +1529,11 @@ export function usePrincetonTowerDefenseRuntime() {
       // Set camera to level-specific settings
       if (levelSettings?.camera) {
         setCameraOffset(levelSettings.camera.offset);
-        setCameraZoom(levelSettings.camera.zoom);
+        const targetZoom =
+          levelSettings.levelKind === "challenge"
+            ? Math.min(levelSettings.camera.zoom, 0.72)
+            : levelSettings.camera.zoom;
+        setCameraZoom(targetZoom);
       }
     }
   }, [gameState, selectedHero, hero, selectedSpells, selectedMap]);
@@ -1725,12 +1788,27 @@ export function usePrincetonTowerDefenseRuntime() {
       const shrines = specialTowers.filter((tower) => tower.type === "shrine");
       const barracksTower =
         specialTowers.find((tower) => tower.type === "barracks") ?? null;
-      const vaultTower =
-        specialTowers.find((tower) => tower.type === "vault") ?? null;
       const barracksWorldPos = barracksTower
         ? gridToWorld(barracksTower.pos)
         : null;
-      const vaultWorldPos = vaultTower ? gridToWorld(vaultTower.pos) : null;
+      const vaultWorldPositions = specialTowers
+        .filter((tower) => tower.type === "vault")
+        .map((tower) => gridToWorld(tower.pos));
+      const getVaultImpactPos = (
+        enemyPos: Position,
+        maxDistance: number
+      ): Position | null => {
+        let closest: Position | null = null;
+        let closestDist = maxDistance;
+        for (const pos of vaultWorldPositions) {
+          const distToVault = distance(enemyPos, pos);
+          if (distToVault <= closestDist) {
+            closestDist = distToVault;
+            closest = pos;
+          }
+        }
+        return closest;
+      };
 
       // Wave timer - check outside setState to avoid race conditions
       if (!waveInProgress && currentWave < levelWaves.length) {
@@ -1987,10 +2065,10 @@ export function usePrincetonTowerDefenseRuntime() {
             setHero((prev) =>
               prev
                 ? {
-                    ...prev,
-                    hp: Math.min(prev.maxHp, prev.hp + healAmount),
-                    healFlash: Date.now(),
-                  }
+                  ...prev,
+                  hp: Math.min(prev.maxHp, prev.hp + healAmount),
+                  healFlash: Date.now(),
+                }
                 : null
             );
             addParticles(hero.pos, "magic", 10);
@@ -2144,10 +2222,15 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       // D. VAULT: targetable objective.
-      if (vaultTower && vaultWorldPos && specialTowerHp !== null && specialTowerHp > 0) {
+      if (
+        vaultWorldPositions.length > 0 &&
+        specialTowerHp !== null &&
+        specialTowerHp > 0
+      ) {
         enemies.forEach((enemy) => {
           const enemyPos = getEnemyPosCached(enemy);
-          if (distance(enemyPos, vaultWorldPos) >= 60) return;
+          const vaultImpactPos = getVaultImpactPos(enemyPos, 60);
+          if (!vaultImpactPos) return;
           const effectiveEnemyAttackInterval =
             gameSpeed > 0 ? 1000 / gameSpeed : 1000;
           if (
@@ -2163,7 +2246,7 @@ export function usePrincetonTowerDefenseRuntime() {
             const newVal = prev - dmg;
             if (newVal <= 0) {
               setLives((life) => Math.max(0, life - 5));
-              addParticles(vaultWorldPos, "explosion", 40);
+              addParticles(vaultImpactPos, "explosion", 40);
               return 0;
             }
             return newVal;
@@ -2271,12 +2354,12 @@ export function usePrincetonTowerDefenseRuntime() {
 
             // 2. CHECK FOR VAULT LOGIC (Second Priority)
             if (
-              vaultTower &&
+              vaultWorldPositions.length > 0 &&
               specialTowerHp !== null &&
-              specialTowerHp > 0 &&
-              vaultWorldPos
+              specialTowerHp > 0
             ) {
-              if (distance(enemyPos, vaultWorldPos) < 70) {
+              const vaultImpactPos = getVaultImpactPos(enemyPos, 70);
+              if (vaultImpactPos) {
                 // Scale enemy attack interval with game speed - skip when paused
                 const effectiveVaultAttackInterval = gameSpeed > 0 ? 1000 / gameSpeed : 1000;
                 if (!isPaused && now - (enemy.lastTroopAttack || 0) > effectiveVaultAttackInterval) {
@@ -2287,13 +2370,13 @@ export function usePrincetonTowerDefenseRuntime() {
                     if (newVal <= 0) {
                       // Only subtract lives once when transitioning to destroyed
                       setLives((l) => Math.max(0, l - 5));
-                      addParticles(vaultWorldPos, "explosion", 40);
+                      addParticles(vaultImpactPos, "explosion", 40);
                       return 0;
                     }
                     return newVal;
                   });
                   setVaultFlash(150);
-                  addParticles(vaultWorldPos, "smoke", 3);
+                  addParticles(vaultImpactPos, "smoke", 3);
                   return {
                     ...enemy,
                     inCombat: true,
@@ -3862,8 +3945,8 @@ export function usePrincetonTowerDefenseRuntime() {
                 );
                 const flavor = ability.name.toLowerCase().includes('freeze') ? 'freeze' as const
                   : ability.name.toLowerCase().includes('gaze') || ability.name.toLowerCase().includes('stone') ? 'petrify' as const
-                  : ability.name.toLowerCase().includes('hold') || ability.name.toLowerCase().includes('admin') ? 'hold' as const
-                  : 'stun' as const;
+                    : ability.name.toLowerCase().includes('hold') || ability.name.toLowerCase().includes('admin') ? 'hold' as const
+                      : 'stun' as const;
                 updated.debuffs.push({
                   type: 'disable',
                   intensity: 1,
@@ -4592,13 +4675,13 @@ export function usePrincetonTowerDefenseRuntime() {
                 );
                 const lightningFxDuration = isFocusedBeam
                   ? Math.max(
-                      70,
-                      Math.min(120, Math.round(effectiveLabCooldown * 1.1))
-                    )
+                    70,
+                    Math.min(120, Math.round(effectiveLabCooldown * 1.1))
+                  )
                   : Math.max(
-                      90,
-                      Math.min(170, Math.round(effectiveLabCooldown * 0.9))
-                    );
+                    90,
+                    Math.min(170, Math.round(effectiveLabCooldown * 0.9))
+                  );
                 const lightningIntensityScale =
                   lightningVisualPressure > 240
                     ? 0.7
@@ -5500,11 +5583,21 @@ export function usePrincetonTowerDefenseRuntime() {
           keyof typeof REGION_CAMPAIGN_LEVELS
         >).forEach((regionKey) => {
           if (!isRegionCleared(regionKey, projectedLevelStars)) return;
-          const challengeLevel = REGION_CHALLENGE_UNLOCKS[regionKey];
-          if (!unlockedMaps.includes(challengeLevel)) {
-            unlockLevel(challengeLevel);
-          }
+          REGION_CHALLENGE_UNLOCKS[regionKey].forEach((challengeLevel) => {
+            if (!unlockedMaps.includes(challengeLevel)) {
+              unlockLevel(challengeLevel);
+            }
+          });
         });
+
+        const nextChallengeLevel = CHALLENGE_LEVEL_UNLOCKS[mapToSave];
+        if (
+          nextChallengeLevel &&
+          (projectedLevelStars[mapToSave] || 0) > 0 &&
+          !unlockedMaps.includes(nextChallengeLevel)
+        ) {
+          unlockLevel(nextChallengeLevel);
+        }
       }
     },
     [
@@ -5793,6 +5886,10 @@ export function usePrincetonTowerDefenseRuntime() {
 
     const levelData = LEVEL_DATA[selectedMap];
     const path = MAP_PATHS[selectedMap] ?? MAP_PATHS.poe ?? [];
+    const isChallengeTerrainLevel = levelData?.levelKind === "challenge";
+    const challengePathSegments = isChallengeTerrainLevel
+      ? getChallengePathSegments(selectedMap)
+      : [];
     const mapSeed = selectedMap
       .split("")
       .reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -5891,13 +5988,14 @@ export function usePrincetonTowerDefenseRuntime() {
       entityCountsRef.current.effects * 0.5;
     const fogDensityScale =
       fogPressure > 260 ? 0.5 : fogPressure > 190 ? 0.65 : fogPressure > 130 ? 0.8 : 1;
+    const challengeFogCountScale = isChallengeTerrainLevel ? 0.58 : 1;
     const fogBlobCount = Math.max(
-      12,
-      Math.floor(getFogBlobCount(renderQuality) * fogDensityScale)
+      isChallengeTerrainLevel ? 7 : 12,
+      Math.floor(getFogBlobCount(renderQuality) * fogDensityScale * challengeFogCountScale)
     );
     const fogWispCount = Math.max(
-      2,
-      Math.floor(getFogWispCount(renderQuality) * fogDensityScale)
+      isChallengeTerrainLevel ? 1 : 2,
+      Math.floor(getFogWispCount(renderQuality) * fogDensityScale * challengeFogCountScale)
     );
     const drawRoadEndFog = (
       endPos: Position,
@@ -5913,6 +6011,9 @@ export function usePrincetonTowerDefenseRuntime() {
       const perpX = -dirY;
       const perpY = dirX;
       const z = Math.max(cameraZoom, 0.55);
+      const challengeFogSizeScale = isChallengeTerrainLevel ? 0.72 : 1;
+      const challengeFogOpacityScale = isChallengeTerrainLevel ? 0.52 : 1;
+      const fogSize = size * challengeFogSizeScale;
 
       // Use the actual ground color for a solid, opaque core that hides the road
       const gr = fogGroundRgb.r;
@@ -5933,14 +6034,14 @@ export function usePrincetonTowerDefenseRuntime() {
       };
 
       // === SOLID CORE: opaque ground-colored ellipse that fully hides the road end ===
-      const coreSize = size * 0.55 * z;
+      const coreSize = fogSize * 0.55 * z;
       const coreGrad = ctx.createRadialGradient(
         endPos.x, endPos.y, 0,
         endPos.x, endPos.y, coreSize
       );
-      coreGrad.addColorStop(0, `rgba(${gr},${gg},${gb},1)`);
-      coreGrad.addColorStop(0.5, `rgba(${gr},${gg},${gb},0.95)`);
-      coreGrad.addColorStop(0.75, `rgba(${gr},${gg},${gb},0.7)`);
+      coreGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${(1 * challengeFogOpacityScale).toFixed(3)})`);
+      coreGrad.addColorStop(0.5, `rgba(${gr},${gg},${gb},${(0.95 * challengeFogOpacityScale).toFixed(3)})`);
+      coreGrad.addColorStop(0.75, `rgba(${gr},${gg},${gb},${(0.7 * challengeFogOpacityScale).toFixed(3)})`);
       coreGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
@@ -5950,13 +6051,13 @@ export function usePrincetonTowerDefenseRuntime() {
       // === MID LAYER: slightly offset opaque fills to widen the solid coverage ===
       for (let m = 0; m < 4; m++) {
         const mAngle = (m / 4) * Math.PI * 2 + 0.3;
-        const mDist = size * 0.18 * z;
+        const mDist = fogSize * 0.18 * z;
         const mx = endPos.x + Math.cos(mAngle) * mDist * 0.7;
         const my = endPos.y + Math.sin(mAngle) * mDist * 0.35;
-        const mSize = size * 0.4 * z;
+        const mSize = fogSize * 0.4 * z;
         const mGrad = ctx.createRadialGradient(mx, my, 0, mx, my, mSize);
-        mGrad.addColorStop(0, `rgba(${gr},${gg},${gb},0.9)`);
-        mGrad.addColorStop(0.55, `rgba(${gr},${gg},${gb},0.6)`);
+        mGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${(0.9 * challengeFogOpacityScale).toFixed(3)})`);
+        mGrad.addColorStop(0.55, `rgba(${gr},${gg},${gb},${(0.6 * challengeFogOpacityScale).toFixed(3)})`);
         mGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
         ctx.fillStyle = mGrad;
         ctx.beginPath();
@@ -5994,8 +6095,8 @@ export function usePrincetonTowerDefenseRuntime() {
         const maxR = getMaxReach(angle);
         const rawDist = (h2 * 0.5 + h3 * 0.5) * maxR;
 
-        const alongDist = Math.cos(angle) * rawDist * size;
-        const perpDist = Math.sin(angle) * rawDist * size;
+        const alongDist = Math.cos(angle) * rawDist * fogSize;
+        const perpDist = Math.sin(angle) * rawDist * fogSize;
 
         const bx = endPos.x + dirX * alongDist * z + perpX * perpDist * 0.65 * z;
         const by = endPos.y + dirY * alongDist * 0.5 * z + perpY * perpDist * 0.32 * z;
@@ -6003,9 +6104,12 @@ export function usePrincetonTowerDefenseRuntime() {
         const animX = Math.sin(time * 0.25 + i * 0.68) * 4 * z;
         const animY = Math.cos(time * 0.2 + i * 0.52) * 2.5 * z;
 
-        const blobSize = size * (0.22 + h4 * 0.3) * z;
+        const blobSize = fogSize * (0.22 + h4 * 0.3) * z;
         const distNorm = rawDist / maxR;
-        const alpha = Math.max(0, 0.7 * (1 - distNorm * distNorm));
+        const alpha = Math.max(
+          0,
+          0.7 * (1 - distNorm * distNorm) * challengeFogOpacityScale
+        );
         if (alpha <= 0.01) continue;
 
         const blend = distNorm;
@@ -6029,12 +6133,12 @@ export function usePrincetonTowerDefenseRuntime() {
       // Drifting wisps with higher opacity
       for (let i = 0; i < fogWispCount; i++) {
         const wAngle = time * (0.07 + hash(i + 100) * 0.05) + i * 0.52;
-        const wAlongDist = Math.sin(wAngle) * size * 0.65;
-        const wPerpDist = Math.cos(wAngle * 0.7 + i) * size * 0.45;
+        const wAlongDist = Math.sin(wAngle) * fogSize * 0.65;
+        const wPerpDist = Math.cos(wAngle * 0.7 + i) * fogSize * 0.45;
         const wx = endPos.x + dirX * wAlongDist * z + perpX * wPerpDist * 0.65 * z;
         const wy = endPos.y + dirY * wAlongDist * 0.5 * z + perpY * wPerpDist * 0.32 * z;
-        const wSize = size * (0.18 + hash(i + 200) * 0.2) * z;
-        const wa = 0.22 + 0.08 * Math.sin(time * 0.4 + i);
+        const wSize = fogSize * (0.18 + hash(i + 200) * 0.2) * z;
+        const wa = (0.22 + 0.08 * Math.sin(time * 0.4 + i)) * challengeFogOpacityScale;
 
         const wGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, wSize);
         wGrad.addColorStop(0, `rgba(${gr},${gg},${gb},${wa.toFixed(3)})`);
@@ -6048,8 +6152,9 @@ export function usePrincetonTowerDefenseRuntime() {
     };
 
     // Draw fog immediately after roads, before decorations.
+    const roadEndFogSize = isChallengeTerrainLevel ? 215 : 300;
     for (const endpoint of fogEndpoints) {
-      drawRoadEndFog(endpoint.endPos, endpoint.towardsPos, 300);
+      drawRoadEndFog(endpoint.endPos, endpoint.towardsPos, roadEndFogSize);
     }
 
     // Generate theme-specific decorations (CACHED for performance)
@@ -6791,6 +6896,26 @@ export function usePrincetonTowerDefenseRuntime() {
         ctx.restore();
       }
     };
+    const drawLevelHazards = () => {
+      const levelHazards = LEVEL_DATA[selectedMap]?.hazards;
+      if (!levelHazards || levelHazards.length === 0) return;
+
+      for (const hazard of levelHazards) {
+        renderHazard(
+          ctx,
+          hazard,
+          canvas.width,
+          canvas.height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+      }
+    };
+
+    // Hazards must render beneath all decoration passes.
+    drawLevelHazards();
+
     let animatedVisibleDecorations: CachedVisibleDecoration[] = [];
     let depthSensitiveVisibleDecorations: CachedVisibleDecoration[] = [];
     const cachedStaticDecorationLayer = cachedStaticDecorationLayerRef.current;
@@ -6808,6 +6933,15 @@ export function usePrincetonTowerDefenseRuntime() {
     } else {
       const visibleDecorations: CachedVisibleDecoration[] = [];
       for (const dec of decorations) {
+        if (
+          isChallengeTerrainLevel &&
+          !isWorldPosInChallengeDecorationFootprint(
+            { x: dec.x, y: dec.y },
+            challengePathSegments
+          )
+        ) {
+          continue;
+        }
         if (
           dec.x < minVisibleWorldX ||
           dec.x > maxVisibleWorldX ||
@@ -6859,16 +6993,16 @@ export function usePrincetonTowerDefenseRuntime() {
         const screenScale = cameraZoom * entry.decoration.scale;
         anchors.push({
           source: entry,
-            heightTag: volume.heightTag,
-            centerX: entry.screenPos.x,
-            centerY: entry.screenPos.y + volume.anchorOffsetY * screenScale,
-            radiusX: (volume.width * 0.5) * screenScale,
-            radiusY: (volume.length * 0.5) * screenScale,
-            isoY: entry.isoY,
-            frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
-          });
-          return anchors;
-        }, []);
+          heightTag: volume.heightTag,
+          centerX: entry.screenPos.x,
+          centerY: entry.screenPos.y + volume.anchorOffsetY * screenScale,
+          radiusX: (volume.width * 0.5) * screenScale,
+          radiusY: (volume.length * 0.5) * screenScale,
+          isoY: entry.isoY,
+          frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
+        });
+        return anchors;
+      }, []);
 
       const getOcclusionState = (
         entry: CachedVisibleDecoration
@@ -6938,9 +7072,9 @@ export function usePrincetonTowerDefenseRuntime() {
           occlusionState.clampIsoY === undefined
             ? entry
             : {
-                ...entry,
-                isoY: Math.min(entry.isoY, occlusionState.clampIsoY),
-              };
+              ...entry,
+              isoY: Math.min(entry.isoY, occlusionState.clampIsoY),
+            };
         if (volume.backgroundShadowOnly) {
           backgroundDecorations.push({ ...resolvedEntry, shadowOnly: true });
         }
@@ -7017,24 +7151,6 @@ export function usePrincetonTowerDefenseRuntime() {
       };
       animatedVisibleDecorations = animatedDecorations;
       depthSensitiveVisibleDecorations = depthSensitiveDecorations;
-    }
-
-    // =========================================================================
-    // HAZARD RENDERING - overlay above terrain/background, below entities
-    // =========================================================================
-    const levelHazards = LEVEL_DATA[selectedMap]?.hazards;
-    if (levelHazards && levelHazards.length > 0) {
-      levelHazards.forEach((haz) => {
-        renderHazard(
-          ctx,
-          haz,
-          canvas.width,
-          canvas.height,
-          dpr,
-          cameraOffset,
-          cameraZoom
-        );
-      });
     }
 
     const decorationPressure =
@@ -7862,20 +7978,33 @@ export function usePrincetonTowerDefenseRuntime() {
     for (const waveStartBubble of waveStartBubbles) {
       const { screenPos, spawnScreenPos, radius, progress } = waveStartBubble;
       const isWaveStartPrimed = primedWaveBubble?.pathKey === waveStartBubble.pathKey;
-      const ringRadius = radius * 1.22;
+      const isWaveStartHovered =
+        hoveredWaveBubblePathKey === waveStartBubble.pathKey;
       const pulseTime = frameNowMs * 0.001;
       const pulse = 0.5 + 0.5 * Math.sin(pulseTime * 5.6);
       const heartbeat = 0.5 + 0.5 * Math.sin(pulseTime * 8.4);
+      const hoverPulse = 0.5 + 0.5 * Math.sin(pulseTime * 11.2);
+      const hoverBoost = isWaveStartHovered ? 0.55 + hoverPulse * 0.45 : 0;
       const nearLaunchBoost = progress > 0.75 ? (progress - 0.75) / 0.25 : 0;
-      const bobOffset = Math.sin(pulseTime * 3.2 + waveStartBubble.pathKey.length) * 2.2;
+      const ringRadius = radius * (1.22 + hoverBoost * 0.06);
+      const bobOffset =
+        Math.sin(pulseTime * 3.2 + waveStartBubble.pathKey.length) *
+        (2.2 + hoverBoost * 1.4);
       const animatedBubbleCenter = { x: screenPos.x, y: screenPos.y + bobOffset };
-      const bubbleScale = 1 + (0.04 + nearLaunchBoost * 0.06) * pulse;
+      const bubbleScale =
+        1 +
+        (0.04 + nearLaunchBoost * 0.06) * pulse +
+        hoverBoost * (0.03 + hoverPulse * 0.035);
       const ringColor = isWaveStartPrimed
         ? "rgba(255, 165, 96, 0.98)"
         : "rgba(255, 76, 76, 0.98)";
-      const ringTrackColor = isWaveStartPrimed
-        ? "rgba(240, 120, 64, 0.35)"
-        : "rgba(170, 30, 30, 0.3)";
+      const ringTrackColor = isWaveStartHovered
+        ? isWaveStartPrimed
+          ? "rgba(255, 175, 128, 0.44)"
+          : "rgba(255, 110, 110, 0.46)"
+        : isWaveStartPrimed
+          ? "rgba(240, 120, 64, 0.35)"
+          : "rgba(170, 30, 30, 0.3)";
 
       const linkDx = animatedBubbleCenter.x - spawnScreenPos.x;
       const linkDy = animatedBubbleCenter.y - spawnScreenPos.y;
@@ -7893,9 +8022,13 @@ export function usePrincetonTowerDefenseRuntime() {
         };
         ctx.save();
         ctx.strokeStyle = isWaveStartPrimed
-          ? "rgba(255, 176, 120, 0.48)"
-          : "rgba(248, 110, 110, 0.42)";
-        ctx.lineWidth = 2;
+          ? isWaveStartHovered
+            ? "rgba(255, 198, 148, 0.62)"
+            : "rgba(255, 176, 120, 0.48)"
+          : isWaveStartHovered
+            ? "rgba(255, 132, 132, 0.62)"
+            : "rgba(248, 110, 110, 0.42)";
+        ctx.lineWidth = 2 + hoverBoost * 1.2;
         ctx.lineCap = "round";
         ctx.beginPath();
         ctx.moveTo(linkStart.x, linkStart.y);
@@ -7924,7 +8057,12 @@ export function usePrincetonTowerDefenseRuntime() {
         radius * 1.04
       );
       bodyGradient.addColorStop(0, "rgba(214, 214, 224, 0.98)");
-      bodyGradient.addColorStop(0.18, "rgba(122, 122, 136, 0.98)");
+      bodyGradient.addColorStop(
+        0.18,
+        isWaveStartHovered
+          ? "rgba(138, 138, 152, 0.99)"
+          : "rgba(122, 122, 136, 0.98)"
+      );
       bodyGradient.addColorStop(0.55, "rgba(50, 50, 58, 0.98)");
       bodyGradient.addColorStop(1, "rgba(18, 18, 24, 0.98)");
       ctx.fillStyle = bodyGradient;
@@ -7956,18 +8094,34 @@ export function usePrincetonTowerDefenseRuntime() {
       ctx.fill();
 
       // Countdown ring track.
-      ctx.lineWidth = Math.max(2, radius * 0.18);
+      ctx.lineWidth = Math.max(2, radius * (0.18 + hoverBoost * 0.05));
       ctx.strokeStyle = ringTrackColor;
       ctx.beginPath();
       ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
       ctx.stroke();
 
+      if (isWaveStartHovered) {
+        ctx.strokeStyle = isWaveStartPrimed
+          ? `rgba(255, 214, 184, ${(0.34 + hoverPulse * 0.28).toFixed(3)})`
+          : `rgba(255, 150, 150, ${(0.28 + hoverPulse * 0.32).toFixed(3)})`;
+        ctx.lineWidth = Math.max(1.6, radius * 0.11);
+        ctx.beginPath();
+        ctx.arc(
+          0,
+          0,
+          ringRadius + radius * (0.22 + hoverPulse * 0.08),
+          0,
+          Math.PI * 2
+        );
+        ctx.stroke();
+      }
+
       // Countdown ring progress.
       ctx.strokeStyle = ringColor;
       ctx.shadowColor = isWaveStartPrimed
-        ? `rgba(255, 160, 92, ${(0.45 + heartbeat * 0.25).toFixed(3)})`
-        : `rgba(255, 76, 76, ${(0.35 + nearLaunchBoost * 0.4).toFixed(3)})`;
-      ctx.shadowBlur = 10 + 16 * nearLaunchBoost + heartbeat * 4;
+        ? `rgba(255, 160, 92, ${(0.45 + heartbeat * 0.25 + hoverBoost * 0.18).toFixed(3)})`
+        : `rgba(255, 76, 76, ${(0.35 + nearLaunchBoost * 0.4 + hoverBoost * 0.22).toFixed(3)})`;
+      ctx.shadowBlur = 10 + 16 * nearLaunchBoost + heartbeat * 4 + hoverBoost * 10;
       ctx.beginPath();
       ctx.arc(
         0,
@@ -8020,8 +8174,15 @@ export function usePrincetonTowerDefenseRuntime() {
         if (layerCtx) {
           layerCtx.setTransform(1, 0, 0, 1, 0, 0);
           layerCtx.scale(dpr, dpr);
-          renderEnvironment(layerCtx, mapTheme, width, height, nowSeconds);
-          renderAmbientVisuals(layerCtx, mapTheme, width, height, nowSeconds);
+          if (isChallengeTerrainLevel) {
+            layerCtx.save();
+            layerCtx.globalAlpha = 0.26;
+            renderEnvironment(layerCtx, mapTheme, width, height, nowSeconds);
+            layerCtx.restore();
+          } else {
+            renderEnvironment(layerCtx, mapTheme, width, height, nowSeconds);
+            renderAmbientVisuals(layerCtx, mapTheme, width, height, nowSeconds);
+          }
           ambientCanvas = layerCanvas;
         }
       }
@@ -8035,8 +8196,15 @@ export function usePrincetonTowerDefenseRuntime() {
       if (ambientCanvas) {
         ctx.drawImage(ambientCanvas, 0, 0, width, height);
       } else {
-        renderEnvironment(ctx, mapTheme, width, height, nowSeconds);
-        renderAmbientVisuals(ctx, mapTheme, width, height, nowSeconds);
+        if (isChallengeTerrainLevel) {
+          ctx.save();
+          ctx.globalAlpha = 0.26;
+          renderEnvironment(ctx, mapTheme, width, height, nowSeconds);
+          ctx.restore();
+        } else {
+          renderEnvironment(ctx, mapTheme, width, height, nowSeconds);
+          renderAmbientVisuals(ctx, mapTheme, width, height, nowSeconds);
+        }
       }
     }
 
@@ -8171,6 +8339,7 @@ export function usePrincetonTowerDefenseRuntime() {
     selectedInspectEnemy,
     hoveredInspectEnemy,
     getWaveStartBubblesScreenData,
+    hoveredWaveBubblePathKey,
     waveStartConfirm,
     incomingWavePreviewByPath,
     currentWave,
@@ -8224,7 +8393,8 @@ export function usePrincetonTowerDefenseRuntime() {
       // Use gameSpeedRef instead of gameSpeed to avoid loop restart when pausing/unpausing
       const deltaTime = cappedDelta * gameSpeedRef.current;
       lastTimeRef.current = timestamp;
-      const shouldSampleDevPerf = IS_LOCAL_DEV && devPerfEnabledRef.current;
+      const shouldSampleDevPerf =
+        DEV_CONFIG_MENU_ENABLED && devPerfEnabledRef.current;
       if (shouldSampleDevPerf) {
         const updateStart = performance.now();
         updateGameRef.current(deltaTime);
@@ -8740,6 +8910,17 @@ export function usePrincetonTowerDefenseRuntime() {
         (buildingTower ? { type: buildingTower, pos: clickPos } : null);
 
       if (towerToPlace) {
+        const allowedTowersForLevel = getLevelAllowedTowers(selectedMap);
+        if (
+          allowedTowersForLevel &&
+          !allowedTowersForLevel.includes(towerToPlace.type)
+        ) {
+          setDraggingTower(null);
+          setBuildingTower(null);
+          setIsBuildDragging(false);
+          return;
+        }
+
         const gridPos = screenToGrid(
           clickPos,
           width,
@@ -9155,6 +9336,7 @@ export function usePrincetonTowerDefenseRuntime() {
       // Track device type
       if (isTouch) {
         isTouchDeviceRef.current = true;
+        setHoveredWaveBubblePathKey(null);
       }
 
       // MOBILE FIX: Skip synthetic mouse events that follow touch events
@@ -9188,6 +9370,28 @@ export function usePrincetonTowerDefenseRuntime() {
       }
 
       const { width, height, dpr } = getCanvasDimensions();
+      let hoveredWaveBubblePath: string | null = null;
+      if (
+        !isTouch &&
+        !isPanning &&
+        !repositioningTower &&
+        !draggingUnit &&
+        (e.buttons & 1) === 0
+      ) {
+        const waveStartBubbles = getWaveStartBubblesScreenData(width, height, dpr);
+        let bestBubbleDist = Number.POSITIVE_INFINITY;
+        for (const bubble of waveStartBubbles) {
+          const bubbleDist = distance({ x, y }, bubble.screenPos);
+          if (
+            bubbleDist <= bubble.radius * WAVE_START_BUBBLE_HIT_RADIUS &&
+            bubbleDist < bestBubbleDist
+          ) {
+            hoveredWaveBubblePath = bubble.pathKey;
+            bestBubbleDist = bubbleDist;
+          }
+        }
+      }
+      setHoveredWaveBubblePathKey(hoveredWaveBubblePath);
 
       // Mobile performance: troop drag-relocation is disabled on touch input.
       if (isTouch && draggingUnit?.kind === "troop") {
@@ -9578,8 +9782,12 @@ export function usePrincetonTowerDefenseRuntime() {
       unitDragStart,
       unitDragMoved,
       isBuildDragging,
+      getWaveStartBubblesScreenData,
     ]
   );
+  const handleCanvasPointerLeave = useCallback(() => {
+    setHoveredWaveBubblePathKey(null);
+  }, []);
 
   // Game actions
   const upgradeTower = useCallback(
@@ -10434,6 +10642,158 @@ export function usePrincetonTowerDefenseRuntime() {
     setGameState("setup");
   }, [resetGame]);
 
+  const devLevelOptions = useMemo(
+    () =>
+      Object.entries(LEVEL_DATA)
+        .map(([id, levelData]) => ({
+          id,
+          name: levelData?.name ?? id,
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    []
+  );
+
+  const unlockAllLevels = useCallback(() => {
+    setProgress((prev) => ({
+      ...prev,
+      unlockedMaps: Array.from(
+        new Set([...prev.unlockedMaps, ...Object.keys(LEVEL_DATA)])
+      ),
+    }));
+  }, [setProgress]);
+
+  const setLevelStarsFromDevMenu = useCallback(
+    (levelId: string, stars: number) => {
+      if (!levelId) return;
+      if (!Number.isFinite(stars)) return;
+
+      const normalizedStars = Math.max(0, Math.min(3, Math.round(stars)));
+
+      setProgress((prev) => {
+        const nextLevelStars = {
+          ...prev.levelStars,
+          [levelId]: normalizedStars,
+        };
+
+        return {
+          ...prev,
+          levelStars: nextLevelStars,
+          totalStarsEarned: Object.values(nextLevelStars).reduce(
+            (sum, value) => sum + (Number.isFinite(value) ? value : 0),
+            0
+          ),
+        };
+      });
+    },
+    [setProgress]
+  );
+
+  const replaceProgressFromDevMenu = useCallback(
+    (
+      candidate: unknown
+    ): {
+      ok: boolean;
+      message: string;
+    } => {
+      if (!candidate || typeof candidate !== "object") {
+        return { ok: false, message: "Progress payload must be an object." };
+      }
+
+      const next = candidate as Partial<GameProgress>;
+      if (
+        !Array.isArray(next.unlockedMaps) ||
+        typeof next.levelStars !== "object" ||
+        next.levelStars === null ||
+        typeof next.levelStats !== "object" ||
+        next.levelStats === null
+      ) {
+        return {
+          ok: false,
+          message:
+            "Missing required keys: unlockedMaps[], levelStars{}, levelStats{}.",
+        };
+      }
+
+      const normalizedStars: Record<string, number> = {
+        ...DEFAULT_GAME_PROGRESS.levelStars,
+      };
+      Object.entries(next.levelStars as Record<string, unknown>).forEach(
+        ([levelId, stars]) => {
+          if (typeof stars !== "number" || !Number.isFinite(stars)) return;
+          normalizedStars[levelId] = Math.max(0, Math.min(3, Math.round(stars)));
+        }
+      );
+
+      const normalizedLevelStats = Object.fromEntries(
+        Object.entries(next.levelStats as Record<string, unknown>).filter(
+          ([, value]) => value && typeof value === "object"
+        )
+      ) as GameProgress["levelStats"];
+
+      const normalizedProgress: GameProgress = {
+        ...DEFAULT_GAME_PROGRESS,
+        ...next,
+        unlockedMaps: Array.from(
+          new Set(
+            [
+              ...DEFAULT_GAME_PROGRESS.unlockedMaps,
+              ...next.unlockedMaps.filter(
+                (levelId): levelId is string =>
+                  typeof levelId === "string" && levelId.length > 0
+              ),
+            ].filter(Boolean)
+          )
+        ),
+        levelStars: normalizedStars,
+        levelStats: normalizedLevelStats,
+        lastPlayedLevel:
+          typeof next.lastPlayedLevel === "string"
+            ? next.lastPlayedLevel
+            : undefined,
+        totalStarsEarned: Object.values(normalizedStars).reduce(
+          (sum, stars) => sum + stars,
+          0
+        ),
+      };
+
+      setProgress(normalizedProgress);
+      return { ok: true, message: "Progress data updated." };
+    },
+    [setProgress]
+  );
+
+  const grantPawPointsFromDevMenu = useCallback(
+    (amount: number) => {
+      const normalizedAmount = Math.max(0, Math.round(amount));
+      if (normalizedAmount <= 0) return;
+      addPawPoints(normalizedAmount);
+    },
+    [addPawPoints]
+  );
+
+  const adjustLivesFromDevMenu = useCallback((delta: number) => {
+    const normalizedDelta = Math.trunc(delta);
+    if (!Number.isFinite(normalizedDelta) || normalizedDelta === 0) return;
+    setLives((previousLives) => Math.max(0, previousLives + normalizedDelta));
+  }, []);
+
+  const devConfigMenu = DEV_CONFIG_MENU_ENABLED ? (
+    <DevConfigMenu
+      gameState={gameState}
+      levelOptions={devLevelOptions}
+      progress={progress}
+      devPerfEnabled={devPerfEnabled}
+      setDevPerfEnabled={setDevPerfEnabled}
+      devPerfSnapshot={devPerfSnapshot}
+      onUnlockLevel={unlockLevel}
+      onUnlockAllLevels={unlockAllLevels}
+      onSetLevelStars={setLevelStarsFromDevMenu}
+      onReplaceProgress={replaceProgressFromDevMenu}
+      onGrantPawPoints={grantPawPointsFromDevMenu}
+      onAdjustLives={adjustLivesFromDevMenu}
+    />
+  ) : null;
+
   const pendingStartWithRandomRef = useRef(false);
   const startWithRandomLoadout = useCallback(() => {
     const hero = HERO_OPTIONS[Math.floor(Math.random() * HERO_OPTIONS.length)];
@@ -10454,55 +10814,65 @@ export function usePrincetonTowerDefenseRuntime() {
   // Show WorldMap for both menu and setup (combined into one screen)
   if (gameState === "menu" || gameState === "setup") {
     return (
-      <WorldMap
-        setGameState={setGameState}
-        setSelectedMap={setSelectedMap}
-        selectedHero={selectedHero}
-        setSelectedHero={setSelectedHero}
-        selectedSpells={selectedSpells}
-        setSelectedSpells={setSelectedSpells}
-        unlockedMaps={unlockedMaps}
-        levelStars={levelStars}
-        levelStats={levelStats}
-        customLevels={customLevels}
-        onSaveCustomLevel={upsertCustomLevel}
-        onDeleteCustomLevel={deleteCustomLevel}
-        gameState={gameState}
-        onStartWithRandomLoadout={startWithRandomLoadout}
-      />
+      <>
+        <WorldMap
+          setGameState={setGameState}
+          setSelectedMap={setSelectedMap}
+          selectedHero={selectedHero}
+          setSelectedHero={setSelectedHero}
+          selectedSpells={selectedSpells}
+          setSelectedSpells={setSelectedSpells}
+          unlockedMaps={unlockedMaps}
+          levelStars={levelStars}
+          levelStats={levelStats}
+          customLevels={customLevels}
+          onSaveCustomLevel={upsertCustomLevel}
+          onDeleteCustomLevel={deleteCustomLevel}
+          gameState={gameState}
+          onStartWithRandomLoadout={startWithRandomLoadout}
+        />
+        {devConfigMenu}
+      </>
     );
   }
   if (gameState === "victory") {
     const currentLevelStats = levelStats?.[selectedMap] || {};
     return (
-      <VictoryScreen
-        starsEarned={starsEarned}
-        lives={lives}
-        timeSpent={timeSpent}
-        bestTime={currentLevelStats.bestTime}
-        bestHearts={currentLevelStats.bestHearts}
-        levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
-        resetGame={resetGame}
-      />
+      <>
+        <VictoryScreen
+          starsEarned={starsEarned}
+          lives={lives}
+          timeSpent={timeSpent}
+          bestTime={currentLevelStats.bestTime}
+          bestHearts={currentLevelStats.bestHearts}
+          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
+          resetGame={resetGame}
+        />
+        {devConfigMenu}
+      </>
     );
   }
   if (gameState === "defeat") {
     const currentLevelStats = levelStats?.[selectedMap] || {};
     return (
-      <DefeatScreen
-        resetGame={resetGame}
-        timeSpent={timeSpent}
-        waveReached={Math.min(currentWave + 1, totalWaves)}
-        totalWaves={totalWaves}
-        levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
-        bestTime={currentLevelStats.bestTime}
-        timesPlayed={currentLevelStats.timesPlayed || 1}
-      />
+      <>
+        <DefeatScreen
+          resetGame={resetGame}
+          timeSpent={timeSpent}
+          waveReached={Math.min(currentWave + 1, totalWaves)}
+          totalWaves={totalWaves}
+          levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
+          bestTime={currentLevelStats.bestTime}
+          timesPlayed={currentLevelStats.timesPlayed || 1}
+        />
+        {devConfigMenu}
+      </>
     );
   }
   // Main game view
   const { width, height, dpr } = getCanvasDimensions();
   const selectedLevelData = LEVEL_DATA[selectedMap];
+  const levelAllowedTowers = selectedLevelData?.allowedTowers ?? null;
   return (
     <div className="w-full h-screen bg-black flex flex-col text-amber-100 overflow-hidden">
       <TopHUD
@@ -10524,6 +10894,7 @@ export function usePrincetonTowerDefenseRuntime() {
         quitLevel={quitLevel}
         retryLevel={retryLevel}
       />
+      {devConfigMenu}
       <div className="flex-1 relative overflow-hidden">
         <div
           ref={containerRef}
@@ -10534,10 +10905,11 @@ export function usePrincetonTowerDefenseRuntime() {
             onPointerDown={handlePointerDown}
             onPointerUp={handleCanvasClick}
             onPointerMove={handleMouseMove}
+            onPointerLeave={handleCanvasPointerLeave}
             onWheel={handleCanvasWheel}
             className={`w-full h-full touch-none ${isPanning ? 'cursor-grabbing' :
               repositioningTower ? 'cursor-move' :
-                'cursor-crosshair'
+                hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}
           />
           <CameraControls
@@ -10545,38 +10917,6 @@ export function usePrincetonTowerDefenseRuntime() {
             setCameraZoom={setCameraZoom}
             defaultOffset={selectedLevelData?.camera?.offset}
           />
-          {IS_LOCAL_DEV && (
-            <div className="absolute top-3 right-3 z-[120] pointer-events-auto select-none">
-              <button
-                type="button"
-                onClick={() => setDevPerfEnabled((prev) => !prev)}
-                className={`rounded-md border px-2 py-1 text-[11px] font-mono tracking-wide ${devPerfEnabled
-                  ? "border-emerald-400/70 bg-emerald-900/60 text-emerald-100"
-                  : "border-zinc-400/60 bg-zinc-900/60 text-zinc-200"
-                  }`}
-                title="Toggle local perf HUD (Ctrl/Cmd+Shift+P)"
-              >
-                PERF HUD: {devPerfEnabled ? "ON" : "OFF"}
-              </button>
-              {devPerfEnabled && (
-                <div className="mt-2 rounded-md border border-emerald-400/40 bg-black/75 px-3 py-2 font-mono text-[11px] text-emerald-100 shadow-lg backdrop-blur-sm">
-                  <div>
-                    fps {devPerfSnapshot.fps} | frame {devPerfSnapshot.frameMs}ms
-                  </div>
-                  <div>
-                    update {devPerfSnapshot.updateMs}ms | render {devPerfSnapshot.renderMs}ms
-                  </div>
-                  <div>quality {devPerfSnapshot.quality}</div>
-                  <div>
-                    towers {devPerfSnapshot.towers} | enemies {devPerfSnapshot.enemies} | troops {devPerfSnapshot.troops}
-                  </div>
-                  <div>
-                    proj {devPerfSnapshot.projectiles} | fx {devPerfSnapshot.effects} | particles {devPerfSnapshot.particles}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
           {/* Tooltips - hide on touch devices (too cluttered) and when upgrade panel is open */}
           {!isTouchDeviceRef.current && hoveredTower && !selectedTower &&
             (() => {
@@ -10617,7 +10957,11 @@ export function usePrincetonTowerDefenseRuntime() {
             <SpecialBuildingTooltip
               type={hoveredSpecialTower.type}
               hp={hoveredSpecialTower.type === "vault" ? specialTowerHp : null}
-              maxHp={hoveredSpecialTower.hp}
+              maxHp={
+                hoveredSpecialTower.type === "vault"
+                  ? getLevelSpecialTowerHp(selectedMap) ?? hoveredSpecialTower.hp
+                  : hoveredSpecialTower.hp
+              }
               position={mousePos}
             />
           )}
@@ -10686,6 +11030,7 @@ export function usePrincetonTowerDefenseRuntime() {
             acc[t.type] = (acc[t.type] || 0) + 1;
             return acc;
           }, {} as Record<TowerType, number>)}
+          allowedTowers={levelAllowedTowers}
         />
       </div>{" "}
     </div>

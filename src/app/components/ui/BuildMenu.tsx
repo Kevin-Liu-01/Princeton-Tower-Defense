@@ -31,6 +31,7 @@ interface BuildMenuProps {
   setHoveredTower: (tower: string | null) => void;
   setDraggingTower: (dragging: DraggingTower | null) => void;
   placedTowers: Record<TowerType, number>;
+  allowedTowers?: TowerType[] | null;
 }
 
 export const BuildMenu: React.FC<BuildMenuProps> = ({
@@ -43,6 +44,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
   setHoveredTower,
   setDraggingTower,
   placedTowers,
+  allowedTowers,
 }) => {
   const isTouchDevice = useIsTouchDevice();
   const sizes = useResponsiveSizes();
@@ -94,14 +96,19 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
             </h3>
             {Object.entries(TOWER_DATA).map(([type, data]) => {
               const towerType = type as TowerType;
+              const isRestricted =
+                !!allowedTowers && allowedTowers.length > 0
+                  ? !allowedTowers.includes(towerType)
+                  : false;
               const canAfford = pawPoints >= data.cost;
+              const canUse = canAfford && !isRestricted;
               const isSelected = buildingTower === towerType;
               const isHovered = hoveredTower === towerType;
               return (
                 <div key={type} className="relative w-full">
                   <button
                     onPointerDown={(e) => {
-                      if (!canAfford) return;
+                      if (!canUse) return;
                       if (e.pointerType === "mouse" && e.button !== 0) return;
                       pointerDownTowerRef.current = {
                         tower: towerType,
@@ -165,22 +172,22 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                         setHoveredTower(null);
                       }
                     }}
-                    disabled={!canAfford}
+                    disabled={!canUse}
                     className={`relative px-2 sm:px-3 py-1.5 sm:py-2 w-full transition-all flex items-center gap-1.5 sm:gap-2.5 whitespace-nowrap rounded-xl ${isSelected
                       ? "scale-105"
-                      : canAfford
+                      : canUse
                         ? "hover:brightness-110 hover:scale-[1.02]"
                         : "opacity-40 cursor-not-allowed"
                       }`}
                     style={{
                       background: isSelected
                         ? `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
-                        : canAfford
+                        : canUse
                           ? `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`
                           : "linear-gradient(135deg, rgba(30,30,30,0.5), rgba(20,20,20,0.3))",
                       border: isSelected
                         ? `1.5px solid ${GOLD.accentBorder50}`
-                        : canAfford
+                        : canUse
                           ? `1.5px solid ${GOLD.border30}`
                           : `1.5px solid ${NEUTRAL.border}`,
                       boxShadow: isSelected
@@ -190,8 +197,13 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                   >
                     {/* Inner border */}
                     <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{
-                      border: isSelected ? `1px solid ${GOLD.accentBorder15}` : canAfford ? `1px solid ${GOLD.innerBorder10}` : "none",
+                      border: isSelected ? `1px solid ${GOLD.accentBorder15}` : canUse ? `1px solid ${GOLD.innerBorder10}` : "none",
                     }} />
+                    {isRestricted && (
+                      <span className="absolute top-1 sm:top-1.5 left-1 sm:left-1.5 bg-red-950/75 border border-red-500/40 text-red-200 text-[7px] sm:text-[8px] px-1 py-[1px] rounded">
+                        Locked
+                      </span>
+                    )}
                     <span className="absolute top-1 sm:top-1.5 bg-amber-900/80 p-0.5 px-1 rounded-md right-1 sm:right-1.5 text-[7px] sm:text-[9px] font-bold text-amber-400 z-10">
                       {placedTowers[towerType] > 0
                         ? `x${placedTowers[towerType]}`
@@ -271,6 +283,12 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                           <p className="text-[10px] text-amber-500">{data.desc}</p>
                         </div>
                       </div>
+
+                      {isRestricted && (
+                        <div className="mb-2 rounded-md border border-red-700/50 bg-red-950/40 px-2 py-1 text-[10px] text-red-200">
+                          Restricted in this challenge.
+                        </div>
+                      )}
 
                       {/* Stats Grid - Tower Type Specific */}
                       <div className="grid grid-cols-4 gap-1.5 mb-2 text-[10px]">

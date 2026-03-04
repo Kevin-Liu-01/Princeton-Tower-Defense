@@ -474,8 +474,9 @@ const DECORATION_VOLUME_OVERRIDES: Partial<
   Record<DecorationType, Partial<Omit<DecorationVolumeSpec, "heightTag">>>
 > = {
   pyramid: {
-    width: 168,
-    length: 156,
+    // Slightly tighter occlusion footprint so nearby props don't get swallowed.
+    width: 154,
+    length: 142,
     height: 200,
     anchorOffsetY: 10,
     frontDepthPadding: 10,
@@ -758,7 +759,9 @@ export const LANDMARK_DECORATION_TYPES = new Set<string>(
 // draw upward from their base—the hitbox center is shifted up so hovering the visible
 // body triggers the tooltip instead of requiring a hover near the ground.
 export const LANDMARK_HITBOX_Y_OFFSET: Record<string, number> = {
-  pyramid: 55,
+  // Pyramid body spans from ~-60s (tip) to +25s (base), so center should be only
+  // modestly above anchor. A larger value drifts the tooltip hitbox far above.
+  pyramid: 20,
   sphinx: 45,
   giant_sphinx: 60,
   nassau_hall: 50,

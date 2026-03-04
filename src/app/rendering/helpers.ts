@@ -85,6 +85,57 @@ export function drawIsometricPrism(
   ctx.fill();
 }
 
+export function drawIsometricPyramid(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  baseWidth: number,
+  height: number,
+  topColor: string,
+  leftColor: string,
+  rightColor: string,
+): void {
+  const iW = baseWidth * 0.866;
+  const iD = baseWidth * 0.5;
+  const back = { x: x, y: y };
+  const left = { x: x - iW, y: y + iD };
+  const front = { x: x, y: y + iD * 2 };
+  const right = { x: x + iW, y: y + iD };
+  const tip = { x: x, y: y + iD - height };
+
+  ctx.fillStyle = leftColor;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(left.x, left.y);
+  ctx.lineTo(front.x, front.y);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = rightColor;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(front.x, front.y);
+  ctx.lineTo(right.x, right.y);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = topColor;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(back.x, back.y);
+  ctx.lineTo(left.x, left.y);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = topColor;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(right.x, right.y);
+  ctx.lineTo(back.x, back.y);
+  ctx.closePath();
+  ctx.fill();
+}
+
 export function drawGear(
   ctx: CanvasRenderingContext2D,
   x: number,

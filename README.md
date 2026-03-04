@@ -1,115 +1,130 @@
 # Princeton Tower Defense
 
-This is a fantasy tower defense game inspired by Princeton locations and Kingdom Rush!
+A fantasy tower defense game inspired by Princeton locations and Kingdom Rush.
 
-Battle through hordes of academic enemies across beautifully rendered isometric battlefields! Princeton Tower Defense combines classic tower defense strategy with Princeton University-themed towers, heroes, and enemies. Build your defenses, command your hero, and protect the realm from waves of increasingly powerful foes.
+Defend iconic Princeton-inspired battlefields with a full hero roster, branching tower upgrades, and chaotic dual-lane pressure. It is classic lane-defense strategy with an isometric style, custom map flavor, and way more personality than your average TD clone.
 
-**[➡️ Play the Game Here\!](http://princeton-tower-defense.vercel.app/)**
+**[Play the game](http://princeton-tower-defense.vercel.app/)**
 
-![Gameplay Screenshot](/public/images/gameplay-latest-2.png)
+![Gameplay Screenshot](public/images/gameplay-latest-2.png)
 
-## ✨ Features
+## Why It Hits
 
-- 🗼 **6 Unique Tower Types** - Each with 4 upgrade levels and branching upgrade paths
-- 🦁 **7 Princeton Mascot Heroes** - Each with unique abilities and playstyles
-- 👾 **Multiple Enemy Types** - From Freshmen to Trustees, each with unique behaviors
-- 🗺️ **15 Campaign Levels** - Across 5 themed regions with increasing difficulty
-- 🛤️ **Dual-Path Levels** - Strategic complexity with multiple enemy routes
-- ⭐ **Star Rating System** - Earn up to 3 stars based on performance
-- 🎨 **Isometric Graphics** - Hand-crafted HTML art with smooth animations. Not the usual top down tower defense game!
-- 🎵 **Dynamic Spell System** - Cast powerful spells to turn the tide of battle
+- **23 total levels** across campaign and challenge progression.
+- **6 distinct towers** with upgrade paths tuned for damage, control, economy, and summons.
+- **7 playable heroes** with different combat identities and active abilities.
+- **Dual-path pressure maps** that force split-defense planning.
+- **Hazards + special objectives** that change how each level is solved.
+- **Star-based progression** with challenge unlock milestones.
+- **Hand-crafted isometric visuals** with heavy canvas rendering polish.
+- **Spell support + troop interactions** for comeback potential in bad waves.
 
-## 🎯 Gameplay
+## New Features
+
+- Added **3 new challenge maps**: Cannon Crest, Triad Keep, and Frontier Outpost.
+- Expanded the game to **23 playable maps** total (`15 campaign + 8 challenge`).
+- Added **tower-restricted challenge rules** with in-game Locked states in the build menu.
+- Added a **challenge-chain unlock flow** (`ivy_crossroads -> cannon_crest`, `blight_basin -> triad_keep`, `whiteout_pass -> frontier_outpost`).
+- Added full **wave definitions** for the new challenge maps with dual-lane pressure patterns.
+- Upgraded challenge objective logic with **multi-vault HP aggregation** and richer special-building interactions.
+- Reworked world-map presentation with **region-specific challenge styling**, updated node metadata, and cleaner level descriptions.
+- Added new **challenge map art direction** with themed mountain backdrops and stronger visual identity per region.
+- Improved pre-wave readability with **hover-reactive spawn/wave bubble feedback**.
+- Updated progression tracking so all new challenge maps slot cleanly into existing save progress.
+
+## Core Gameplay
 
 ### Objective
 
-Prevent enemies from reaching the end of the path by strategically placing towers and commanding your hero. Each enemy that escapes costs you a life - lose all lives and it's game over!
+Stop enemies from reaching the end of each path. Every escape costs a life. Hit zero lives and the run ends.
 
 ### Controls
 
-| Action            | Control                            |
-| ----------------- | ---------------------------------- |
-| Place Tower       | Click & drag from build menu       |
-| Select Tower/Hero | Click on unit                      |
-| Move Hero         | Click on path (when hero selected) |
-| Pan Camera        | Built-in console                   |
-| Zoom              | Built-in console                   |
-| Cast Spell        | Click spell icon in bottom bar     |
+| Action | Control |
+| --- | --- |
+| Place Tower | Click + drag from build menu |
+| Select Tower/Hero | Click unit |
+| Move Hero | Click destination while hero is selected |
+| Cast Spell | Click spell icon in bottom bar |
 
-### Strategy Tips
+### Strategy Notes
 
-- 💡 Place **slow towers** at the start of paths to maximize damage time
-- 💡 Use **Dinky Station** troops to block enemies and buy time
-- 💡 Position your **hero** at chokepoints for maximum impact
-- 💡 Save **spells** for emergency situations or boss waves
-- 💡 Upgrade towers strategically - sometimes quantity beats quality!
+- Open with lane control and slow effects before pure DPS.
+- Use Dinky troops and hero placement to stabilize split-lane spikes.
+- Save spells for elite rushes or objective-defense emergencies.
+- In restriction challenges, optimize around permitted tower synergies, not universal builds.
 
-## 🗼 Towers
+## Content Overview
 
-| Tower                    | Description             | Special Ability                               |
-| ------------------------ | ----------------------- | --------------------------------------------- |
-| **🏛️ Nassau Cannon**     | Heavy artillery tower   | Gatling Gun / Flamethrower upgrades           |
-| **📚 Firestone Library** | Slows enemies in range  | Earthquake / Blizzard upgrades                |
-| **⚡ E-Quad Lab**        | Chain lightning attacks | Focused Beam / Chain Lightning upgrades       |
-| **🎵 Blair Arch**        | Sonic wave attacks      | Shockwave / Symphony upgrades                 |
-| **🍽️ Eating Club**       | Generates Paw Points    | Investment Bank / Recruitment Center upgrades |
-| **🚂 Dinky Station**     | Spawns defensive troops | Centaur Archers / Heavy Cavalry upgrades      |
+### Towers (6)
 
-### Upgrade Paths
+| Tower | Role | Signature Upgrades |
+| --- | --- | --- |
+| **Nassau Cannon** | Heavy artillery | Gatling / Flamethrower |
+| **Firestone Library** | Slow + control | EQ Smasher / Blizzard |
+| **E-Quad Lab** | Chain magic DPS | Focused Beam / Chain Lightning |
+| **Blair Arch** | Sonic AoE control | Shockwave Siren / Symphony |
+| **Eating Club** | Economy support | Investment Bank / Recruitment Center |
+| **Dinky Station** | Troop deployment | Centaur Archers / Heavy Cavalry |
 
-Each tower can be upgraded through 4 levels, with the final upgrade offering a choice between two specializations:
+### Heroes (7)
 
-- **Path A**: Focuses on raw damage output
-- **Path B**: Emphasizes crowd control and utility
+Tiger, Tenor, Mathey, Rocky, Scott, Captain, and Engineer each ship with distinct kits (tank, support, summon, ranged DPS, utility hybrids).
 
-![Upgraded Gameplay Screenshot](/public/images/gameplay-latest.png)
+### Regions and Levels
 
-## 🦁 Heroes
+- **Grassland**: Poe Field, Carnegie Lake, Nassau Hall, Ivy Crossroads, Cannon Crest
+- **Swamp**: Murky Bog, Witch's Domain, Sunken Temple, Blight Basin, Triad Keep
+- **Desert**: Desert Oasis, Pyramid Pass, Sphinx Gate, Sunscorch Labyrinth
+- **Winter**: Glacier Path, Frost Fortress, Summit Peak, Whiteout Pass, Frontier Outpost
+- **Volcanic**: Lava Fields, Caldera Basin, Obsidian Throne, Ashen Spiral
 
-| Hero         | Type          | Special Ability                            |
-| ------------ | ------------- | ------------------------------------------ |
-| **Tiger**    | Melee Tank    | Mighty Roar - Stuns all nearby enemies     |
-| **Tenor**    | Melee Support | High Note - Devastating sonic blast        |
-| **Mathey**   | Melee Tank    | Fortress Shield - Invincibility + Taunt    |
-| **Rocky**    | Ranged DPS    | Meteor Strike - Massive AoE damage         |
-| **Scott**    | Support       | Inspiration - Boosts all tower damage      |
-| **Captain**  | Summoner      | Rally Knights - Summons reinforcements     |
-| **Engineer** | Utility       | Deploy Turret - Places a stationary turret |
+## Technical Details
 
-## 🌍 Regions & Levels
+### Runtime Architecture
 
-### 🌿 Grassland (Starter Region)
+- Main game loop is in `src/app/hooks/usePrincetonTowerDefenseRuntime.tsx` and runs simulation + render via `requestAnimationFrame`.
+- Progression is data-driven with explicit unlock graphs:
+  - `CAMPAIGN_LEVEL_UNLOCKS`
+  - `REGION_CHALLENGE_UNLOCKS`
+  - `CHALLENGE_LEVEL_UNLOCKS`
+- Objective logic supports multiple special-building interactions (`vault`, `barracks`, `shrine`, `beacon`) and per-map objective HP behavior.
 
-- Poe Field
-- Carnegie Lake
-- Nassau Hall
+### Data-Driven Level Design
 
-### 🦆 Swamplands
+- `src/app/constants/maps.ts` defines:
+  - path geometry (primary + optional secondary path)
+  - map metadata (theme, camera, difficulty, level kind)
+  - hazards and special structures
+  - tower restrictions via `allowedTowers`
+- `src/app/constants/waves.ts` defines per-level wave schedules and enemy composition.
 
-- Murky Bog
-- Witch's Domain
-- Sunken Temple
+### Challenge Terrain Pipeline
 
-### 🏜️ Desert
+- `src/app/rendering/maps/challengeTerrain.ts` computes challenge path segments and mountain bounds.
+- `src/app/rendering/maps/staticLayer.ts` builds region-specific challenge backdrops and isometric mountain terraces around path footprints.
+- Decoration visibility for challenge levels is filtered by terrain footprint to keep scene composition coherent and performant.
 
-- Desert Oasis
-- Pyramid Pass
-- Sphinx Gate
+### Rendering and Performance
 
-### ❄️ Frozen Wastes
+- Static map, decoration, and ambient layers are cached to reduce per-frame draw cost.
+- Quality-aware rendering adjusts fog complexity and other visual load based on runtime pressure.
+- Additional optimization notes live in `docs/CANVAS_OPTIMIZATION.md`.
 
-- Glacier Path
-- Frost Fortress
-- Summit Peak
+### Persistence Model
 
-### 🌋 Volcanic
+- `src/app/useLocalStorage.ts` now type-guards and merges game progress structures to avoid destructive schema drift.
+- New maps can be introduced without invalidating older local saves.
 
-- Lava Fields
-- Caldera Basin
-- Obsidian Throne
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Then open [http://localhost:3000](http://localhost:3000).
 
 ## Deploy on Vercel
 
-The easiest way to deploy this Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The easiest deployment path is the [Vercel platform](https://vercel.com/new).

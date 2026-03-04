@@ -6624,6 +6624,188 @@ export const drawWorldMapCanvas = ({
       });
     });
 
+    type NodePalette = {
+      glowSelected: string;
+      glowHover: string;
+      ringLight: string;
+      ringMid: string;
+      ringDark: string;
+      border: string;
+      edge: string;
+      notch: string;
+      innerLight: string;
+      innerDark: string;
+    };
+    type ChallengePalette = NodePalette & {
+      sigilGlow: string;
+      sigilFill: string;
+      sigilStroke: string;
+      badgeFill: string;
+      badgeStroke: string;
+      badgeText: string;
+    };
+    const campaignPalettes: Record<
+      "grassland" | "swamp" | "desert" | "winter" | "volcanic",
+      NodePalette
+    > = {
+      // Keep Princeton grounds on the familiar green identity.
+      grassland: {
+        glowSelected: "rgba(140,210,110,",
+        glowHover: "rgba(110,188,88,",
+        ringLight: "#8AA858",
+        ringMid: "#5A7838",
+        ringDark: "#3A5020",
+        border: "#A0B868",
+        edge: "rgba(180,220,120,0.3)",
+        notch: "#90A850",
+        innerLight: "#5A7838",
+        innerDark: "#3A5020",
+      },
+      swamp: {
+        glowSelected: "rgba(108,184,169,",
+        glowHover: "rgba(86,161,146,",
+        ringLight: "#6FAFA1",
+        ringMid: "#3D7467",
+        ringDark: "#21443D",
+        border: "#92CDBF",
+        edge: "rgba(176,236,222,0.33)",
+        notch: "#79B7AA",
+        innerLight: "#446F66",
+        innerDark: "#24443D",
+      },
+      desert: {
+        glowSelected: "rgba(214,180,106,",
+        glowHover: "rgba(194,156,83,",
+        ringLight: "#BE9B5C",
+        ringMid: "#82622F",
+        ringDark: "#4D351A",
+        border: "#DDBA73",
+        edge: "rgba(240,218,160,0.32)",
+        notch: "#C9A666",
+        innerLight: "#876431",
+        innerDark: "#50381B",
+      },
+      winter: {
+        glowSelected: "rgba(127,176,214,",
+        glowHover: "rgba(103,154,194,",
+        ringLight: "#78A4C8",
+        ringMid: "#43688A",
+        ringDark: "#233E57",
+        border: "#A2C9E8",
+        edge: "rgba(186,218,244,0.33)",
+        notch: "#88B1D3",
+        innerLight: "#486C8C",
+        innerDark: "#274158",
+      },
+      volcanic: {
+        glowSelected: "rgba(214,114,76,",
+        glowHover: "rgba(186,84,53,",
+        ringLight: "#AA5238",
+        ringMid: "#742C1C",
+        ringDark: "#401409",
+        border: "#CF7658",
+        edge: "rgba(233,154,126,0.3)",
+        notch: "#B85F42",
+        innerLight: "#6C2C20",
+        innerDark: "#36140C",
+      },
+    };
+    const challengePalettes: Record<
+      "grassland" | "swamp" | "desert" | "winter" | "volcanic",
+      ChallengePalette
+    > = {
+      grassland: {
+        glowSelected: "rgba(110,215,120,",
+        glowHover: "rgba(86,190,103,",
+        ringLight: "#63B86F",
+        ringMid: "#2E6B3A",
+        ringDark: "#193622",
+        border: "#90E3A0",
+        edge: "rgba(180,255,190,0.35)",
+        notch: "#6CC77A",
+        innerLight: "#2E6A39",
+        innerDark: "#183620",
+        sigilGlow: "rgba(108,212,118,",
+        sigilFill: "#2E7F42",
+        sigilStroke: "#D2F7B0",
+        badgeFill: "rgba(33,95,48,0.9)",
+        badgeStroke: "#A6F0AF",
+        badgeText: "#E7FFD6",
+      },
+      swamp: {
+        glowSelected: "rgba(90,196,178,",
+        glowHover: "rgba(72,170,152,",
+        ringLight: "#59AFA6",
+        ringMid: "#27635C",
+        ringDark: "#143833",
+        border: "#7FD9CC",
+        edge: "rgba(165,248,236,0.33)",
+        notch: "#5AC7B8",
+        innerLight: "#2A655D",
+        innerDark: "#163A35",
+        sigilGlow: "rgba(88,198,178,",
+        sigilFill: "#2D7268",
+        sigilStroke: "#C8FFF1",
+        badgeFill: "rgba(22,89,80,0.9)",
+        badgeStroke: "#8FE5D8",
+        badgeText: "#DBFFF8",
+      },
+      desert: {
+        glowSelected: "rgba(234,193,96,",
+        glowHover: "rgba(219,172,68,",
+        ringLight: "#D9AA52",
+        ringMid: "#87622A",
+        ringDark: "#4A3316",
+        border: "#FFD07A",
+        edge: "rgba(255,228,165,0.35)",
+        notch: "#E2B35A",
+        innerLight: "#8B642D",
+        innerDark: "#4A3418",
+        sigilGlow: "rgba(229,185,86,",
+        sigilFill: "#A9782D",
+        sigilStroke: "#FFE8AE",
+        badgeFill: "rgba(132,93,32,0.9)",
+        badgeStroke: "#FFD27A",
+        badgeText: "#FFF1CA",
+      },
+      winter: {
+        glowSelected: "rgba(112,184,235,",
+        glowHover: "rgba(89,160,214,",
+        ringLight: "#71A8CF",
+        ringMid: "#355E86",
+        ringDark: "#1A334D",
+        border: "#A8D8FF",
+        edge: "rgba(201,231,255,0.35)",
+        notch: "#7EBBE6",
+        innerLight: "#3A6389",
+        innerDark: "#1C3850",
+        sigilGlow: "rgba(112,184,235,",
+        sigilFill: "#3A79A9",
+        sigilStroke: "#D5EEFF",
+        badgeFill: "rgba(44,85,121,0.9)",
+        badgeStroke: "#AAD9FF",
+        badgeText: "#E8F6FF",
+      },
+      volcanic: {
+        glowSelected: "rgba(255,120,60,",
+        glowHover: "rgba(255,90,40,",
+        ringLight: "#B74A2E",
+        ringMid: "#7E2716",
+        ringDark: "#3D0C07",
+        border: "#E0744B",
+        edge: "rgba(255,164,124,0.3)",
+        notch: "#C8552B",
+        innerLight: "#6A251A",
+        innerDark: "#32110C",
+        sigilGlow: "rgba(255,108,48,",
+        sigilFill: "#9D2D19",
+        sigilStroke: "#FFD8A6",
+        badgeFill: "rgba(120,20,10,0.9)",
+        badgeStroke: "#FFB27B",
+        badgeText: "#FFF3CC",
+      },
+    };
+
     // --- LEVEL NODES ---
     WORLD_LEVELS.forEach((level) => {
       const x = level.x;
@@ -6634,17 +6816,17 @@ export const drawWorldMapCanvas = ({
       const isSelected = selectedLevel === level.id;
       const stars = levelStars[level.id] || 0;
       const size = isHovered || isSelected ? (isChallenge ? 30 : 28) : (isChallenge ? 26 : 24);
+      const challengePalette = challengePalettes[level.region];
+      const nodePalette = isChallenge
+        ? challengePalette
+        : campaignPalettes[level.region];
 
       // Glow (use radial gradient instead of expensive shadowBlur)
       if (isSelected || (isHovered && isUnlocked)) {
         const glowRadius = isSelected ? 40 : 32;
-        const glowColor = isChallenge
-          ? isSelected
-            ? "rgba(255,120,60,"
-            : "rgba(255,90,40,"
-          : isSelected
-            ? "rgba(255,215,0,"
-            : "rgba(255,170,0,";
+        const glowColor = isSelected
+          ? nodePalette.glowSelected
+          : nodePalette.glowHover;
         const glow = ctx.createRadialGradient(x, y, size * 0.5, x, y, glowRadius);
         glow.addColorStop(0, glowColor + "0.4)");
         glow.addColorStop(0.5, glowColor + "0.15)");
@@ -6756,19 +6938,9 @@ export const drawWorldMapCanvas = ({
       // Outer decorative ring (metallic beveled)
       const outerRing = ctx.createRadialGradient(x - 3, y - 3, size - 6, x, y, size + 2);
       if (isUnlocked) {
-        if (isChallenge) {
-          outerRing.addColorStop(0, "#A4361A");
-          outerRing.addColorStop(0.5, "#7B1F0F");
-          outerRing.addColorStop(1, "#3D0C07");
-        } else if (stars > 0) {
-          outerRing.addColorStop(0, "#8AA858");
-          outerRing.addColorStop(0.5, "#5A7838");
-          outerRing.addColorStop(1, "#3A5020");
-        } else {
-          outerRing.addColorStop(0, "#8A7A60");
-          outerRing.addColorStop(0.5, "#6A5A48");
-          outerRing.addColorStop(1, "#4A3A28");
-        }
+        outerRing.addColorStop(0, nodePalette.ringLight);
+        outerRing.addColorStop(0.5, nodePalette.ringMid);
+        outerRing.addColorStop(1, nodePalette.ringDark);
       } else {
         outerRing.addColorStop(0, "#4A4A4A");
         outerRing.addColorStop(0.5, "#3A3A3A");
@@ -6781,15 +6953,11 @@ export const drawWorldMapCanvas = ({
 
       // Metallic border strokes (double ring for bevel effect)
       ctx.strokeStyle = isSelected
-        ? "#FFE060"
+        ? nodePalette.border
         : isHovered
-          ? "#FFD040"
-          : isUnlocked
-            ? isChallenge
-              ? "#D24A24"
-              : stars > 0
-                ? "#A0B868"
-                : "#9A8A68"
+          ? nodePalette.border
+        : isUnlocked
+            ? nodePalette.border
             : "#505050";
       ctx.lineWidth = isSelected ? 3.5 : 2.5;
       ctx.beginPath();
@@ -6797,11 +6965,7 @@ export const drawWorldMapCanvas = ({
       ctx.stroke();
       // Inner bright edge (bevel highlight)
       ctx.strokeStyle = isUnlocked
-        ? isChallenge
-          ? "rgba(240,120,80,0.3)"
-          : stars > 0
-            ? "rgba(180,220,120,0.3)"
-            : "rgba(180,160,120,0.25)"
+        ? nodePalette.edge
         : "rgba(100,100,100,0.15)";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -6816,13 +6980,7 @@ export const drawWorldMapCanvas = ({
 
       // Ornamental notches (8 evenly spaced around ring)
       if (isUnlocked) {
-        ctx.fillStyle = isSelected
-          ? "#FFE060"
-          : isChallenge
-            ? "#C63B1C"
-            : stars > 0
-              ? "#90A850"
-              : "#807058";
+        ctx.fillStyle = nodePalette.notch;
         for (let n = 0; n < 8; n++) {
           const na = (n * Math.PI) / 4;
           const nx = x + Math.cos(na) * (size - 0.5);
@@ -6836,16 +6994,8 @@ export const drawWorldMapCanvas = ({
       // Inner circle (recessed)
       const innerGrad = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, size - 5);
       if (isUnlocked) {
-        if (isChallenge) {
-          innerGrad.addColorStop(0, "#5A1E16");
-          innerGrad.addColorStop(1, "#2A0E08");
-        } else if (stars > 0) {
-          innerGrad.addColorStop(0, "#5A7838");
-          innerGrad.addColorStop(1, "#3A5020");
-        } else {
-          innerGrad.addColorStop(0, "#6A5A48");
-          innerGrad.addColorStop(1, "#4A3A28");
-        }
+        innerGrad.addColorStop(0, nodePalette.innerLight);
+        innerGrad.addColorStop(1, nodePalette.innerDark);
       } else {
         innerGrad.addColorStop(0, "#333028");
         innerGrad.addColorStop(1, "#201D18");
@@ -6875,14 +7025,14 @@ export const drawWorldMapCanvas = ({
         ctx.globalAlpha = 1;
 
         if (isChallenge) {
-          // Challenge marker icon: molten sigil with crossed blades
+          // Challenge marker icon: regional sigil with crossed blades
           const challengeGlow = 0.35 + Math.sin(time * 4 + x * 0.03) * 0.08;
-          ctx.fillStyle = `rgba(255,90,40,${challengeGlow})`;
+          ctx.fillStyle = `${challengePalette.sigilGlow}${challengeGlow})`;
           ctx.beginPath();
           ctx.arc(0, 0, 11, 0, Math.PI * 2);
           ctx.fill();
 
-          ctx.fillStyle = "#A32014";
+          ctx.fillStyle = challengePalette.sigilFill;
           ctx.beginPath();
           ctx.moveTo(0, -11);
           ctx.lineTo(9, 0);
@@ -6891,7 +7041,7 @@ export const drawWorldMapCanvas = ({
           ctx.closePath();
           ctx.fill();
 
-          ctx.strokeStyle = "#FFD060";
+          ctx.strokeStyle = challengePalette.sigilStroke;
           ctx.lineWidth = 1.1;
           ctx.beginPath();
           ctx.moveTo(-6.5, 6);
@@ -6900,7 +7050,7 @@ export const drawWorldMapCanvas = ({
           ctx.lineTo(6.5, 6);
           ctx.stroke();
 
-          ctx.fillStyle = "#FFF3B0";
+          ctx.fillStyle = challengePalette.badgeText;
           ctx.beginPath();
           ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
           ctx.fill();
@@ -7293,7 +7443,7 @@ export const drawWorldMapCanvas = ({
 
         if (isChallenge) {
           const tagY = y - size - 8;
-          ctx.fillStyle = "rgba(120,20,10,0.9)";
+          ctx.fillStyle = challengePalette.badgeFill;
           ctx.beginPath();
           ctx.moveTo(x - 10, tagY + 2);
           ctx.lineTo(x, tagY - 6);
@@ -7301,10 +7451,10 @@ export const drawWorldMapCanvas = ({
           ctx.lineTo(x, tagY + 10);
           ctx.closePath();
           ctx.fill();
-          ctx.strokeStyle = "#FFD060";
+          ctx.strokeStyle = challengePalette.badgeStroke;
           ctx.lineWidth = 1;
           ctx.stroke();
-          ctx.fillStyle = "#FFF3B0";
+          ctx.fillStyle = challengePalette.badgeText;
           ctx.font = "bold 8px serif";
           ctx.textAlign = "center";
           ctx.fillText("!", x, tagY + 4);

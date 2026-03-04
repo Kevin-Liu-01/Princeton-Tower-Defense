@@ -1,6 +1,19 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 
+function isGameProgressLike(value: unknown): value is GameProgress {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<GameProgress>;
+  return (
+    Array.isArray(candidate.unlockedMaps) &&
+    typeof candidate.levelStars === "object" &&
+    candidate.levelStars !== null &&
+    typeof candidate.levelStats === "object" &&
+    candidate.levelStats !== null
+  );
+}
+
 function readAndMergeLocalStorage<T>(
   key: string,
   initialValue: T
@@ -13,10 +26,10 @@ function readAndMergeLocalStorage<T>(
 
     if (
       key === "princeton-td-progress" &&
-      typeof initialValue === "object" &&
-      initialValue !== null
+      isGameProgressLike(initialValue) &&
+      isGameProgressLike(parsed)
     ) {
-      return mergeGameProgress(initialValue as GameProgress, parsed as GameProgress) as T;
+      return mergeGameProgress(initialValue, parsed) as T;
     }
 
     return parsed;
@@ -49,9 +62,9 @@ function mergeGameProgress(
   const loadedMaps = Array.isArray(loaded?.unlockedMaps)
     ? loaded.unlockedMaps
     : [];
-  const mergedMaps = [
-    ...new Set([...defaults.unlockedMaps, ...loadedMaps]),
-  ];
+  const mergedMaps = Array.from(
+    new Set([...defaults.unlockedMaps, ...loadedMaps])
+  );
 
   const loadedStats =
     loaded &&
@@ -160,10 +173,12 @@ export const DEFAULT_GAME_PROGRESS: GameProgress = {
     carnegie: 0,
     nassau: 0,
     ivy_crossroads: 0,
+    cannon_crest: 0,
     bog: 0,
     witch_hut: 0,
     sunken_temple: 0,
     blight_basin: 0,
+    triad_keep: 0,
     oasis: 0,
     pyramid: 0,
     sphinx: 0,
@@ -172,6 +187,7 @@ export const DEFAULT_GAME_PROGRESS: GameProgress = {
     fortress: 0,
     peak: 0,
     whiteout_pass: 0,
+    frontier_outpost: 0,
     lava: 0,
     crater: 0,
     throne: 0,

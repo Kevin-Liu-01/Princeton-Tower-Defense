@@ -1,4 +1,4 @@
-import type { MapDecoration, MapHazard } from "../types";
+import type { MapDecoration, MapHazard, TowerType } from "../types";
 
 // =============================================================================
 // MAP PATHS - All regions including secondary paths for dual-path levels
@@ -464,6 +464,83 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 30, y: 18 },
     { x: 39, y: 18 },
   ],
+  cannon_crest: [
+    { x: -6, y: 11 },
+    { x: 5, y: 11 },
+    { x: 5, y: 6 },
+    { x: 11, y: 6 },
+    { x: 11, y: 14 },
+    { x: 17, y: 14 },
+    { x: 17, y: 9 },
+    { x: 24, y: 9 },
+    { x: 24, y: 15 },
+    { x: 31, y: 15 },
+    { x: 39, y: 15 },
+  ],
+  cannon_crest_b: [
+    { x: -6, y: 23 },
+    { x: 7, y: 23 },
+    { x: 7, y: 18 },
+    { x: 13, y: 18 },
+    { x: 13, y: 25 },
+    { x: 20, y: 25 },
+    { x: 20, y: 16 },
+    { x: 27, y: 16 },
+    { x: 27, y: 15 },
+    { x: 39, y: 15 },
+  ],
+  triad_keep: [
+    { x: -6, y: 9 },
+    { x: 4, y: 9 },
+    { x: 4, y: 4 },
+    { x: 12, y: 4 },
+    { x: 12, y: 12 },
+    { x: 18, y: 12 },
+    { x: 18, y: 7 },
+    { x: 24, y: 7 },
+    { x: 24, y: 16 },
+    { x: 30, y: 16 },
+    { x: 39, y: 16 },
+  ],
+  triad_keep_b: [
+    { x: -6, y: 22 },
+    { x: 6, y: 22 },
+    { x: 6, y: 17 },
+    { x: 14, y: 17 },
+    { x: 14, y: 25 },
+    { x: 21, y: 25 },
+    { x: 21, y: 14 },
+    { x: 28, y: 14 },
+    { x: 28, y: 16 },
+    { x: 39, y: 16 },
+  ],
+  frontier_outpost: [
+    { x: -6, y: 10 },
+    { x: 5, y: 10 },
+    { x: 5, y: 5 },
+    { x: 11, y: 5 },
+    { x: 11, y: 13 },
+    { x: 18, y: 13 },
+    { x: 18, y: 8 },
+    { x: 24, y: 8 },
+    { x: 24, y: 14 },
+    { x: 31, y: 14 },
+    { x: 39, y: 14 },
+  ],
+  frontier_outpost_b: [
+    { x: -6, y: 24 },
+    { x: 6, y: 24 },
+    { x: 6, y: 19 },
+    { x: 12, y: 19 },
+    { x: 12, y: 26 },
+    { x: 19, y: 26 },
+    { x: 19, y: 14 },
+    { x: 25, y: 14 },
+    { x: 25, y: 20 },
+    { x: 31, y: 20 },
+    { x: 31, y: 14 },
+    { x: 39, y: 14 },
+  ],
 };
 
 // =============================================================================
@@ -486,6 +563,7 @@ export const LEVEL_DATA: Record<
     difficulty: 1 | 2 | 3;
     levelKind?: "campaign" | "challenge" | "custom";
     startingPawPoints: number; // Starting resources for this level
+    allowedTowers?: TowerType[];
     previewImage?: string;
     heroSpawn?: { x: number; y: number };
     dualPath?: boolean; // Has two enemy spawn paths
@@ -898,8 +976,8 @@ export const LEVEL_DATA: Record<
       },
       { type: "pyramid", pos: { x: 2.3125, y: 15 }, variant: 0, size: 1 },
 
-      { type: "pyramid", pos: { x: 15.625, y: -4 }, variant: 1, size: 2 },
-      { type: "pyramid", pos: { x: 24.28125, y: -2.5 }, variant: 1, size: 2.5 },
+      { type: "pyramid", pos: { x: 20.625, y: 1 }, variant: 1, size: 2 },
+      { type: "pyramid", pos: { x: 29.28125, y: 2.5 }, variant: 1, size: 2.5 },
 
       { type: "sphinx", pos: { x: 14, y: 6 }, variant: 0 },
       { type: "sphinx", pos: { x: 9, y: 10 }, variant: 0 },
@@ -949,6 +1027,12 @@ export const LEVEL_DATA: Record<
       type: "shrine",
     },
     decorations: [
+      // Pyramids and decorations
+      { type: "pyramid", pos: { x: 10.4, y: 20.5 }, variant: 0, size: 1.5 },
+      { type: "pyramid", pos: { x: 16.625, y: -2 }, variant: 1, size: 2 },
+      { type: "pyramid", pos: { x: 3.3125, y: -2 }, variant: 0 },
+      { type: "pyramid", pos: { x: 2.96875, y: 2 }, variant: 2, size: 1.5 },
+
       // Giant sphinx and guardians (path: x:-2 to 32, y:10 to 22)
       { type: "giant_sphinx", pos: { x: 13, y: 2 }, variant: 0, size: 1.5 },
       { type: "sphinx", pos: { x: 10, y: 23.5 }, variant: 1 },
@@ -962,11 +1046,6 @@ export const LEVEL_DATA: Record<
       { type: "obelisk", pos: { x: 10, y: 18 }, variant: 1 },
       { type: "obelisk", pos: { x: 22, y: 14 }, variant: 2 },
       { type: "obelisk", pos: { x: 28, y: 18 }, variant: 0 },
-      // Pyramids and decorations
-      { type: "pyramid", pos: { x: 7.96875, y: 18.5 }, variant: 0, size: 1.5 },
-      { type: "pyramid", pos: { x: 16.625, y: -8 }, variant: 1, size: 2 },
-      { type: "pyramid", pos: { x: 3.3125, y: -3 }, variant: 0 },
-      { type: "pyramid", pos: { x: 2.96875, y: -1 }, variant: 2, size: 1.5 },
 
       { type: "sarcophagus", pos: { x: 2, y: 18 }, variant: 0 },
       { type: "sarcophagus", pos: { x: 28, y: 10 }, variant: 1 },
@@ -1370,7 +1449,7 @@ export const LEVEL_DATA: Record<
     name: "Ivy Crossroads",
     position: { x: 360, y: 260 },
     description:
-      "Challenge level: dual-lane pressure with crossing chokepoints and stacked objective buffs.",
+      "Dual lanes cross through ivy chokepoints.\nStack buffs and split your defense.",
     camera: { offset: { x: -140, y: -320 }, zoom: 0.85 },
     region: "grassland",
     theme: "grassland",
@@ -1381,7 +1460,8 @@ export const LEVEL_DATA: Record<
     secondaryPath: "ivy_crossroads_b",
     specialTowers: [
       { pos: { x: 11, y: 12 }, type: "beacon" },
-      { pos: { x: 23, y: 18 }, type: "shrine" },
+      { pos: { x: 23, y: 18 }, type: "beacon" },
+      { pos: { x: 17, y: 16 }, type: "vault", hp: 850 },
     ],
     hazards: [
       { type: "poison_fog", pos: { x: 16, y: 14 }, radius: 1.8 },
@@ -1407,7 +1487,7 @@ export const LEVEL_DATA: Record<
     name: "Blight Basin",
     position: { x: 720, y: 260 },
     description:
-      "Challenge level: layered poison zones and synchronized side-lane swarms.",
+      "Layered poison zones punish slow setups.\nAnswer synchronized side-lane swarms.",
     camera: { offset: { x: -150, y: -330 }, zoom: 0.84 },
     region: "swamp",
     theme: "swamp",
@@ -1418,7 +1498,8 @@ export const LEVEL_DATA: Record<
     secondaryPath: "blight_basin_b",
     specialTowers: [
       { pos: { x: 9, y: 15 }, type: "shrine" },
-      { pos: { x: 24, y: 13 }, type: "beacon" },
+      { pos: { x: 24, y: 13 }, type: "vault", hp: 700 },
+      { pos: { x: 17, y: 20 }, type: "barracks" },
     ],
     hazards: [
       { type: "poison_fog", pos: { x: 13, y: 14 }, radius: 2.2 },
@@ -1445,7 +1526,7 @@ export const LEVEL_DATA: Record<
     name: "Sunscorch Labyrinth",
     position: { x: 1040, y: 260 },
     description:
-      "Challenge level: mirrored mazes force split defenses under overlapping hazard rings.",
+      "Mirrored mazes split your formation.\nSurvive overlapping hazard rings.",
     camera: { offset: { x: -130, y: -320 }, zoom: 0.83 },
     region: "desert",
     theme: "desert",
@@ -1455,8 +1536,9 @@ export const LEVEL_DATA: Record<
     dualPath: true,
     secondaryPath: "sunscorch_labyrinth_b",
     specialTowers: [
-      { pos: { x: 8, y: 14 }, type: "beacon" },
-      { pos: { x: 25, y: 16 }, type: "shrine" },
+      { pos: { x: 8, y: 14 }, type: "vault", hp: 420 },
+      { pos: { x: 25, y: 16 }, type: "vault", hp: 420 },
+      { pos: { x: 16, y: 21 }, type: "beacon" },
     ],
     hazards: [
       { type: "quicksand", pos: { x: 14, y: 15 }, radius: 2.4 },
@@ -1483,7 +1565,7 @@ export const LEVEL_DATA: Record<
     name: "Whiteout Pass",
     position: { x: 1420, y: 260 },
     description:
-      "Challenge level: blinding ice lanes with chained slows and burst freeze traps.",
+      "Blinding ice lanes chain heavy slows.\nOutlast burst freeze traps.",
     camera: { offset: { x: -145, y: -345 }, zoom: 0.83 },
     region: "winter",
     theme: "winter",
@@ -1495,6 +1577,7 @@ export const LEVEL_DATA: Record<
     specialTowers: [
       { pos: { x: 16, y: 20 }, type: "shrine" },
       { pos: { x: 26, y: 11 }, type: "beacon" },
+      { pos: { x: 8, y: 11 }, type: "beacon" },
     ],
     hazards: [
       { type: "ice_sheet", pos: { x: 14, y: 10 }, radius: 2.1 },
@@ -1521,7 +1604,7 @@ export const LEVEL_DATA: Record<
     name: "Ashen Spiral",
     position: { x: 1740, y: 260 },
     description:
-      "Challenge level: converging inferno lanes with stacked geysers and relentless elites.",
+      "Converging inferno lanes crush weak lines.\nEndure stacked geysers and relentless elites.",
     camera: { offset: { x: -150, y: -330 }, zoom: 0.82 },
     region: "volcanic",
     theme: "volcanic",
@@ -1532,7 +1615,8 @@ export const LEVEL_DATA: Record<
     secondaryPath: "ashen_spiral_b",
     specialTowers: [
       { pos: { x: 14, y: 10 }, type: "beacon" },
-      { pos: { x: 24, y: 22 }, type: "shrine" },
+      { pos: { x: 24, y: 22 }, type: "barracks" },
+      { pos: { x: 18, y: 16 }, type: "vault", hp: 900 },
     ],
     hazards: [
       { type: "lava_geyser", pos: { x: 12, y: 16 }, radius: 2.2 },
@@ -1556,6 +1640,124 @@ export const LEVEL_DATA: Record<
       { type: "charred_tree", pos: { x: 30, y: 4 }, variant: 1 },
     ],
     previewImage: "/images/previews/throne.png",
+  },
+  cannon_crest: {
+    name: "Cannon Crest",
+    position: { x: 470, y: 250 },
+    description:
+      "Only Nassau Cannons can be built.\nLock both lanes and fire with precision.",
+    camera: { offset: { x: -145, y: -328 }, zoom: 0.84 },
+    region: "grassland",
+    theme: "grassland",
+    difficulty: 3,
+    levelKind: "challenge",
+    startingPawPoints: 980,
+    allowedTowers: ["cannon"],
+    dualPath: true,
+    secondaryPath: "cannon_crest_b",
+    specialTowers: [
+      { pos: { x: 10, y: 11 }, type: "beacon" },
+      { pos: { x: 23, y: 18 }, type: "beacon" },
+      { pos: { x: 17, y: 15 }, type: "vault", hp: 1000 },
+    ],
+    hazards: [
+      { type: "quicksand", pos: { x: 14, y: 13 }, radius: 1.9 },
+      { type: "poison_fog", pos: { x: 25, y: 14 }, radius: 1.6 },
+    ],
+    decorations: [
+      { type: "nassau_hall", pos: { x: 16, y: 3 }, variant: 0, size: 2.1 },
+      { type: "building", pos: { x: 5, y: 8 }, variant: 0 },
+      { type: "building", pos: { x: 27, y: 9 }, variant: 1 },
+      { type: "tree", pos: { x: 3, y: 4 }, variant: 0 },
+      { type: "tree", pos: { x: 28, y: 4 }, variant: 2 },
+      { type: "tree", pos: { x: 4, y: 26 }, variant: 1 },
+      { type: "tree", pos: { x: 29, y: 26 }, variant: 2 },
+      { type: "hedge", pos: { x: 10, y: 22 }, variant: 0 },
+      { type: "flowers", pos: { x: 22, y: 6 }, variant: 0 },
+      { type: "campfire", pos: { x: 30, y: 16 }, variant: 0 },
+    ],
+    previewImage: "/images/previews/nassau.png",
+  },
+  triad_keep: {
+    name: "Triad Keep",
+    position: { x: 760, y: 270 },
+    description:
+      "Build only Dinky, Library, and Club.\nStall, support, and out-economy the waves.",
+    camera: { offset: { x: -148, y: -334 }, zoom: 0.84 },
+    region: "swamp",
+    theme: "swamp",
+    difficulty: 3,
+    levelKind: "challenge",
+    startingPawPoints: 920,
+    allowedTowers: ["station", "library", "club"],
+    dualPath: true,
+    secondaryPath: "triad_keep_b",
+    specialTowers: [
+      { pos: { x: 11, y: 13 }, type: "vault", hp: 430 },
+      { pos: { x: 24, y: 16 }, type: "vault", hp: 430 },
+      { pos: { x: 17, y: 20 }, type: "shrine" },
+    ],
+    hazards: [
+      { type: "poison_fog", pos: { x: 13, y: 14 }, radius: 2.2 },
+      { type: "deep_water", pos: { x: 20, y: 12 }, radius: 1.8 },
+      { type: "poison_fog", pos: { x: 26, y: 18 }, radius: 1.7 },
+    ],
+    decorations: [
+      { type: "ruined_temple", pos: { x: 16, y: 4 }, variant: 0, size: 2.2 },
+      { type: "sunken_pillar", pos: { x: 7, y: 10 }, variant: 1 },
+      { type: "sunken_pillar", pos: { x: 25, y: 23 }, variant: 0 },
+      { type: "swamp_tree", pos: { x: 3, y: 5 }, variant: 0 },
+      { type: "swamp_tree", pos: { x: 29, y: 6 }, variant: 2 },
+      { type: "swamp_tree", pos: { x: 5, y: 27 }, variant: 1 },
+      { type: "swamp_tree", pos: { x: 28, y: 27 }, variant: 0 },
+      { type: "mushroom_cluster", pos: { x: 11, y: 23 }, variant: 1 },
+      { type: "fog_patch", pos: { x: 23, y: 8 }, variant: 0 },
+      { type: "glowing_runes", pos: { x: 26, y: 14 }, variant: 0 },
+    ],
+    previewImage: "/images/previews/sunken_temple.png",
+  },
+  frontier_outpost: {
+    name: "Frontier Outpost",
+    position: { x: 1460, y: 250 },
+    description:
+      "Only Dinky Station can be built.\nFrontier Barracks must hold the line.",
+    camera: { offset: { x: -152, y: -346 }, zoom: 0.83 },
+    region: "winter",
+    theme: "winter",
+    difficulty: 3,
+    levelKind: "challenge",
+    startingPawPoints: 880,
+    allowedTowers: ["station"],
+    dualPath: true,
+    secondaryPath: "frontier_outpost_b",
+    specialTowers: [
+      { pos: { x: 9, y: 14 }, type: "barracks" },
+      { pos: { x: 24, y: 13 }, type: "barracks" },
+      { pos: { x: 17, y: 19 }, type: "beacon" },
+    ],
+    hazards: [
+      { type: "ice_sheet", pos: { x: 13, y: 9 }, radius: 2.1 },
+      { type: "ice_spikes", pos: { x: 23, y: 18 }, radius: 1.9 },
+      { type: "ice_sheet", pos: { x: 28, y: 10 }, radius: 1.5 },
+    ],
+    decorations: [
+      { type: "ice_fortress", pos: { x: 6, y: 8 }, variant: 0, size: 1.6 },
+      { type: "ice_fortress", pos: { x: 27, y: 8 }, variant: 1, size: 1.6 },
+      { type: "frozen_waterfall", pos: { x: 2, y: 10 }, variant: 0, size: 1.2 },
+      {
+        type: "frozen_waterfall",
+        pos: { x: 30, y: 10 },
+        variant: 1,
+        size: 1.2,
+      },
+      { type: "aurora_crystal", pos: { x: 10, y: 23 }, variant: 0, size: 1.2 },
+      { type: "aurora_crystal", pos: { x: 24, y: 23 }, variant: 1, size: 1.2 },
+      { type: "pine_tree", pos: { x: 3, y: 4 }, variant: 0 },
+      { type: "pine_tree", pos: { x: 28, y: 4 }, variant: 1 },
+      { type: "snow_lantern", pos: { x: 13, y: 17 }, variant: 0, size: 1 },
+      { type: "snow_lantern", pos: { x: 22, y: 12 }, variant: 1, size: 1 },
+    ],
+    previewImage: "/images/previews/peak.png",
   },
 };
 

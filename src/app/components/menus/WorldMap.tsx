@@ -441,6 +441,41 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const isCurrentCustomLevel = Boolean(currentLevel?.isCustom);
   const isCurrentChallengeLevel =
     Boolean(currentLevel?.kind === "challenge") && !isCurrentCustomLevel;
+  const challengeBadgeStyle: React.CSSProperties =
+    currentLevel?.region === "grassland"
+      ? {
+        background:
+          "linear-gradient(135deg, rgba(41,110,59,0.9), rgba(22,68,36,0.95))",
+        border: "1px solid rgba(160,242,168,0.55)",
+        color: "rgb(230,255,218)",
+      }
+      : currentLevel?.region === "swamp"
+        ? {
+          background:
+            "linear-gradient(135deg, rgba(28,98,94,0.9), rgba(12,60,58,0.95))",
+          border: "1px solid rgba(146,232,217,0.55)",
+          color: "rgb(224,255,248)",
+        }
+        : currentLevel?.region === "desert"
+          ? {
+            background:
+              "linear-gradient(135deg, rgba(133,99,41,0.9), rgba(84,56,21,0.95))",
+            border: "1px solid rgba(255,216,132,0.55)",
+            color: "rgb(255,242,206)",
+          }
+          : currentLevel?.region === "winter"
+            ? {
+              background:
+                "linear-gradient(135deg, rgba(47,87,129,0.9), rgba(28,56,92,0.95))",
+              border: "1px solid rgba(169,213,255,0.55)",
+              color: "rgb(231,246,255)",
+            }
+            : {
+              background:
+                "linear-gradient(135deg, rgba(145,38,20,0.9), rgba(90,18,10,0.95))",
+              border: "1px solid rgba(255,170,90,0.55)",
+              color: "rgb(255,225,170)",
+            };
   const waveCount = selectedLevel ? getWaveCount(selectedLevel) : 0;
   const currentLevelPreviewImage = currentLevel
     ? LEVEL_DATA[currentLevel.id]?.previewImage
@@ -675,11 +710,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       {isCurrentChallengeLevel && (
                         <span
                           className="text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase"
-                          style={{
-                            background: "linear-gradient(135deg, rgba(145,38,20,0.9), rgba(90,18,10,0.95))",
-                            border: "1px solid rgba(255,170,90,0.55)",
-                            color: "rgb(255,225,170)",
-                          }}
+                          style={challengeBadgeStyle}
                         >
                           Challenge
                         </span>
@@ -695,7 +726,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   </div>
 
                   {/* Description */}
-                  <p className="hidden sm:block text-amber-400/80 text-sm italic mb-3 relative z-10">
+                  <p className="hidden sm:block whitespace-pre-line text-amber-400/80 text-sm italic mb-3 relative z-10">
                     &ldquo;{currentLevel.description}&rdquo;
                   </p>
 

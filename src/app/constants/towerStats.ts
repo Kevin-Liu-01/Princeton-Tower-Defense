@@ -204,18 +204,18 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       2: {
         cost: 175,
         description: "Enhanced Slowing - 30% slow field",
-        overrides: { slowAmount: 0.30 },
+        overrides: { slowAmount: 0.3 },
       },
       3: {
         cost: 275,
         description: "Arcane Library - 40% slow + magic damage",
-        overrides: { slowAmount: 0.40, damage: 30, attackSpeed: 500 },
+        overrides: { slowAmount: 0.4, damage: 30, attackSpeed: 500 },
       },
     },
     level4Cost: 600,
     upgrades: {
       A: {
-        name: "Earthquake Smasher",
+        name: "EQ Smasher",
         description: "Seismic waves damage and slow",
         effect: "Deals 35 AoE damage + 45% slow",
         stats: {
@@ -328,7 +328,7 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
     level4Cost: 500,
     upgrades: {
       A: {
-        name: "Shockwave Emitter",
+        name: "Shockwave Siren",
         description: "Powerful stunning sound waves",
         effect: "30% chance to stun enemies for 1s",
         stats: {
@@ -427,7 +427,7 @@ export function calculateTowerStats(
   level: number,
   upgrade?: "A" | "B",
   rangeBoost: number = 1,
-  damageBoost: number = 1
+  damageBoost: number = 1,
 ): TowerBaseStats {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) {
@@ -440,7 +440,7 @@ export function calculateTowerStats(
   // Apply level multipliers and overrides for levels 1-3
   for (let l = 1; l <= Math.min(level, 3); l++) {
     const levelData = towerDef.levels[l as 1 | 2 | 3];
-    
+
     if (levelData.multipliers) {
       if (levelData.multipliers.damage !== undefined) {
         stats.damage = towerDef.baseStats.damage * levelData.multipliers.damage;
@@ -449,25 +449,34 @@ export function calculateTowerStats(
         stats.range = towerDef.baseStats.range * levelData.multipliers.range;
       }
       if (levelData.multipliers.attackSpeed !== undefined) {
-        stats.attackSpeed = towerDef.baseStats.attackSpeed * levelData.multipliers.attackSpeed;
+        stats.attackSpeed =
+          towerDef.baseStats.attackSpeed * levelData.multipliers.attackSpeed;
       }
       if (levelData.multipliers.splashRadius !== undefined) {
-        stats.splashRadius = (towerDef.baseStats.splashRadius || 0) * levelData.multipliers.splashRadius;
+        stats.splashRadius =
+          (towerDef.baseStats.splashRadius || 0) *
+          levelData.multipliers.splashRadius;
       }
       if (levelData.multipliers.chainTargets !== undefined) {
-        stats.chainTargets = (towerDef.baseStats.chainTargets || 1) * levelData.multipliers.chainTargets;
+        stats.chainTargets =
+          (towerDef.baseStats.chainTargets || 1) *
+          levelData.multipliers.chainTargets;
       }
       if (levelData.multipliers.income !== undefined) {
-        stats.income = (towerDef.baseStats.income || 0) * levelData.multipliers.income;
+        stats.income =
+          (towerDef.baseStats.income || 0) * levelData.multipliers.income;
       }
       if (levelData.multipliers.slowAmount !== undefined) {
-        stats.slowAmount = (towerDef.baseStats.slowAmount || 0) * levelData.multipliers.slowAmount;
+        stats.slowAmount =
+          (towerDef.baseStats.slowAmount || 0) *
+          levelData.multipliers.slowAmount;
       }
       if (levelData.multipliers.maxTroops !== undefined) {
-        stats.maxTroops = (towerDef.baseStats.maxTroops || 1) * levelData.multipliers.maxTroops;
+        stats.maxTroops =
+          (towerDef.baseStats.maxTroops || 1) * levelData.multipliers.maxTroops;
       }
     }
-    
+
     if (levelData.overrides) {
       stats = { ...stats, ...levelData.overrides };
     }
@@ -507,7 +516,7 @@ export function calculateTowerStats(
 export function getUpgradeCost(
   towerType: string,
   currentLevel: number,
-  _upgrade?: "A" | "B"
+  _upgrade?: "A" | "B",
 ): number {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) return 0;
@@ -536,7 +545,7 @@ export function getLevel4Cost(towerType: string): number {
 export function getLevelDescription(
   towerType: string,
   level: number,
-  upgrade?: "A" | "B"
+  upgrade?: "A" | "B",
 ): string {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) return "";
@@ -557,7 +566,7 @@ export function getLevelDescription(
  */
 export function getUpgradePath(
   towerType: string,
-  path: "A" | "B"
+  path: "A" | "B",
 ): TowerUpgradePath | null {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) return null;
@@ -572,7 +581,7 @@ export function getTowerRange(
   towerType: string,
   level: number,
   upgrade?: "A" | "B",
-  rangeBoost: number = 1
+  rangeBoost: number = 1,
 ): number {
   const towerDef = TOWER_STATS[towerType];
   if (!towerDef) return 0;

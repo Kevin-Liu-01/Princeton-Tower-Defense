@@ -1,4 +1,4 @@
-import type { Enemy, Position, SpecialTower, Tower } from "../types";
+import type { Enemy, Position, SpecialTower, Tower, TowerType } from "../types";
 import {
   LEVEL_DATA,
   LEVEL_WAVES,
@@ -129,9 +129,17 @@ export const getLevelSpecialTowers = (levelId: string): SpecialTower[] => {
 };
 
 export const getLevelSpecialTowerHp = (levelId: string): number | null =>
-  getLevelSpecialTowers(levelId).find(
-    (tower) => tower.type === "vault" && typeof tower.hp === "number"
-  )?.hp ?? null;
+  (() => {
+    const totalVaultHp = getLevelSpecialTowers(levelId)
+      .filter((tower) => tower.type === "vault" && typeof tower.hp === "number")
+      .reduce((sum, tower) => sum + (tower.hp || 0), 0);
+    return totalVaultHp > 0 ? totalVaultHp : null;
+  })();
+
+export const getLevelAllowedTowers = (levelId: string): TowerType[] | null => {
+  const allowed = LEVEL_DATA[levelId]?.allowedTowers;
+  return allowed && allowed.length > 0 ? [...allowed] : null;
+};
 
 // Compute blocked positions (landmarks and special towers)
 // These positions cannot have player towers placed on them

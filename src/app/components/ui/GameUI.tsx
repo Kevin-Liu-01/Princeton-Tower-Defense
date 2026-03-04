@@ -14,6 +14,7 @@ export type { ResponsiveSizes } from "./hooks";
 
 // Components
 export { TopHUD } from "./TopHUD";
+export { DevConfigMenu } from "./DevConfigMenu";
 export { CameraControls } from "./CameraControls";
 export { HeroSpellBar } from "./HeroSpellBar";
 export { BuildMenu } from "./BuildMenu";
