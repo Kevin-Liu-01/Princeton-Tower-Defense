@@ -149,6 +149,13 @@ import {
   getLevelAllowedTowers,
 } from "../game/pageHelpers";
 import {
+  clampPositionToRadius,
+  computeRepulsionFromNeighbors,
+  computeSeparationForces,
+  getFacingRightFromDelta,
+  stepTowardTarget,
+} from "../game/unitMovement";
+import {
   resetBattleState,
   type PausableTimeoutEntry,
 } from "../game/resetBattleState";
@@ -435,7 +442,9 @@ const WAVE_START_BUBBLE_BASE_RADIUS = 22;
 const WAVE_START_BUBBLE_HIT_RADIUS = 1.2;
 const WAVE_START_BUBBLE_SIDE_OFFSET = 98;
 const WAVE_START_BUBBLE_BACK_OFFSET = 20;
-const WAVE_START_BUBBLE_VIEW_MARGIN = 56;
+const WAVE_START_BUBBLE_VIEW_MARGIN_X = 92;
+const WAVE_START_BUBBLE_VIEW_MARGIN_Y = 68;
+const WAVE_START_BUBBLE_TOP_SAFE_Y = 108;
 const WAVE_START_BUBBLE_CORNER_MARGIN = 34;
 
 // Only keep high-value effects live; everything else is baked into static decoration layer.
@@ -1629,6 +1638,7 @@ export function usePrincetonTowerDefenseRuntime() {
         abilityCooldown: 0,
         revived: false,
         rotation: Math.PI, // Face back towards enemies
+        facingRight: false,
         attackAnim: 0,
         selected: false,
         dead: false,
@@ -1957,34 +1967,35 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // Cache enemy positions for this tick. Many systems query the same positions
-      // repeatedly (movement, targeting, debuffs, rendering-related combat effects).
-      const enemyPosById = new Map<string, Position>();
+      // Cache enemy positions for this tick. Key by object reference, not id:
+      // enemy objects can be replaced several times in a single tick via setEnemies,
+      // and id-based caching can return stale lane/path positions for later combat.
+      const enemyPosCache = new WeakMap<Enemy, Position>();
       // Flying enemies are rendered 35px higher in screen-space; convert that to world-space
       // for aim-only visuals so projectiles/beam angles line up with their rendered center.
       const FLYING_AIM_WORLD_OFFSET = 70;
       const getEnemyPosCached = (enemy: Enemy): Position => {
-        const cached = enemyPosById.get(enemy.id);
+        const cached = enemyPosCache.get(enemy);
         if (cached) return cached;
         const pos = getEnemyPosWithPath(enemy, selectedMap);
-        enemyPosById.set(enemy.id, pos);
+        enemyPosCache.set(enemy, pos);
         return pos;
       };
-      const enemyAimPosById = new Map<string, Position>();
+      const enemyAimPosCache = new WeakMap<Enemy, Position>();
       const getEnemyAimPosCached = (enemy: Enemy): Position => {
-        const cached = enemyAimPosById.get(enemy.id);
+        const cached = enemyAimPosCache.get(enemy);
         if (cached) return cached;
         const basePos = getEnemyPosCached(enemy);
         const enemyData = ENEMY_DATA[enemy.type];
         if (!enemyData?.flying) {
-          enemyAimPosById.set(enemy.id, basePos);
+          enemyAimPosCache.set(enemy, basePos);
           return basePos;
         }
         const aimPos = {
           x: basePos.x - FLYING_AIM_WORLD_OFFSET,
           y: basePos.y - FLYING_AIM_WORLD_OFFSET,
         };
-        enemyAimPosById.set(enemy.id, aimPos);
+        enemyAimPosCache.set(enemy, aimPos);
         return aimPos;
       };
 
@@ -2623,6 +2634,7 @@ export function usePrincetonTowerDefenseRuntime() {
               targetPos.y - barracksWorldPos.y,
               targetPos.x - barracksWorldPos.x
             ),
+            facingRight: targetPos.x >= barracksWorldPos.x,
             attackAnim: 0,
             selected: false,
             spawnPoint: rallyPoint,
@@ -2655,6 +2667,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 moving: true,
                 userTargetPos: newTarget,
                 spawnPoint: rallyPoint,
+                facingRight: newTarget.x >= troop.pos.x,
               };
             });
             return [...updated, newTroop];
@@ -3028,6 +3041,7 @@ export function usePrincetonTowerDefenseRuntime() {
               hp: prev.maxHp,
               pos: startPos,
               rotation: Math.PI, // Face towards enemies
+              facingRight: false,
             };
           }
           return { ...prev, respawnTimer: newTimer };
@@ -3799,12 +3813,32 @@ export function usePrincetonTowerDefenseRuntime() {
           if (!prev || prev.dead) return prev;
 
           const heroData = HERO_DATA[prev.type];
-          const speed = heroData.speed;
+          const slowMultiplier =
+            prev.slowed && prev.slowIntensity ? 1 - prev.slowIntensity : 1;
+          const speed = heroData.speed * slowMultiplier;
           const isRanged = heroData.isRanged || false; // Use isRanged from hero data
           const attackRange = heroData.range; // Use the hero's actual range
           const sightRange = isRanged
             ? HERO_RANGED_SIGHT_RANGE
             : HERO_SIGHT_RANGE;
+          const nearbyTroops = troops
+            .filter((troop) => !troop.dead)
+            .map((troop) => ({ id: troop.id, pos: troop.pos }));
+          const applyTroopAvoidance = (candidatePos: Position): Position => {
+            const repulsion = computeRepulsionFromNeighbors(
+              candidatePos,
+              nearbyTroops,
+              TROOP_SEPARATION_DIST * 0.82,
+              0.95
+            );
+            if (Math.abs(repulsion.x) <= 0.0001 && Math.abs(repulsion.y) <= 0.0001) {
+              return candidatePos;
+            }
+            return {
+              x: candidatePos.x + repulsion.x * deltaTime * 0.1,
+              y: candidatePos.y + repulsion.y * deltaTime * 0.1,
+            };
+          };
 
           const closestEnemy = getClosestEnemyInRange(
             prev.pos,
@@ -3820,11 +3854,15 @@ export function usePrincetonTowerDefenseRuntime() {
 
           // If player is commanding movement, prioritize that
           if (prev.moving && prev.targetPos) {
-            const dx = prev.targetPos.x - prev.pos.x;
-            const dy = prev.targetPos.y - prev.pos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const step = stepTowardTarget({
+              current: prev.pos,
+              target: prev.targetPos,
+              speed,
+              deltaTime,
+              stopDistance: 5,
+            });
 
-            if (dist < 5) {
+            if (step.reached) {
               return {
                 ...prev,
                 pos: prev.targetPos,
@@ -3833,16 +3871,19 @@ export function usePrincetonTowerDefenseRuntime() {
                 homePos: prev.targetPos, // Update home position when reaching destination
                 aggroTarget: undefined,
                 returning: false,
+                rotation: step.rotation,
+                facingRight: getFacingRightFromDelta(
+                  prev.targetPos.x - prev.pos.x,
+                  prev.facingRight ?? true
+                ),
               };
             }
-
-            const newX = prev.pos.x + ((dx / dist) * speed * deltaTime) / 16;
-            const newY = prev.pos.y + ((dy / dist) * speed * deltaTime) / 16;
-            const rotation = Math.atan2(dy, dx);
+            const nextPos = applyTroopAvoidance(step.pos);
             return {
               ...prev,
-              pos: { x: newX, y: newY },
-              rotation,
+              pos: nextPos,
+              rotation: step.rotation,
+              facingRight: step.facingRight,
               homePos: prev.targetPos, // Set home to destination
               aggroTarget: undefined,
               returning: false,
@@ -3869,27 +3910,26 @@ export function usePrincetonTowerDefenseRuntime() {
               const shouldMove = !isRanged || closestDist > attackRange;
 
               if (shouldMove) {
-                const dx = enemyPos.x - prev.pos.x;
-                const dy = enemyPos.y - prev.pos.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
                 // For ranged heroes, stop at attack range - 20 (safe distance)
                 // For melee heroes, get as close as possible
-                const targetDist = isRanged ? attackRange - 20 : MELEE_RANGE;
-                const moveRatio = Math.min(1, (dist - targetDist) / dist);
+                const targetDist = isRanged
+                  ? Math.max(MELEE_RANGE, attackRange - 20)
+                  : MELEE_RANGE;
+                const step = stepTowardTarget({
+                  current: prev.pos,
+                  target: enemyPos,
+                  speed,
+                  deltaTime,
+                  stopDistance: targetDist,
+                });
 
-                if (dist > 0 && moveRatio > 0) {
-                  const newX =
-                    prev.pos.x +
-                    ((dx / dist) * speed * deltaTime * moveRatio) / 16;
-                  const newY =
-                    prev.pos.y +
-                    ((dy / dist) * speed * deltaTime * moveRatio) / 16;
-                  const rotation = Math.atan2(dy, dx);
+                if (!step.reached) {
+                  const nextPos = applyTroopAvoidance(step.pos);
                   return {
                     ...prev,
-                    pos: { x: newX, y: newY },
-                    rotation,
+                    pos: nextPos,
+                    rotation: step.rotation,
+                    facingRight: step.facingRight,
                     aggroTarget: closestEnemy.id,
                     returning: false,
                   };
@@ -3902,6 +3942,7 @@ export function usePrincetonTowerDefenseRuntime() {
               return {
                 ...prev,
                 rotation: Math.atan2(dy, dx),
+                facingRight: getFacingRightFromDelta(dx, prev.facingRight ?? true),
                 aggroTarget: closestEnemy.id,
                 returning: false,
               };
@@ -3912,27 +3953,28 @@ export function usePrincetonTowerDefenseRuntime() {
               return {
                 ...prev,
                 rotation: Math.atan2(dy, dx),
+                facingRight: getFacingRightFromDelta(dx, prev.facingRight ?? true),
                 aggroTarget: closestEnemy.id,
                 returning: false,
               };
             }
           } else if (homePos) {
             // No enemy in sight but was in combat - return home
-            const dx = homePos.x - prev.pos.x;
-            const dy = homePos.y - prev.pos.y;
-            const distToHome = Math.sqrt(dx * dx + dy * dy);
+            const step = stepTowardTarget({
+              current: prev.pos,
+              target: homePos,
+              speed,
+              deltaTime,
+              stopDistance: 8,
+            });
 
-            if (distToHome > 8) {
-              // Not at home - move back
-              const newX =
-                prev.pos.x + ((dx / distToHome) * speed * deltaTime) / 16;
-              const newY =
-                prev.pos.y + ((dy / distToHome) * speed * deltaTime) / 16;
-              const rotation = Math.atan2(dy, dx);
+            if (!step.reached) {
+              const nextPos = applyTroopAvoidance(step.pos);
               return {
                 ...prev,
-                pos: { x: newX, y: newY },
-                rotation,
+                pos: nextPos,
+                rotation: step.rotation,
+                facingRight: step.facingRight,
                 aggroTarget: undefined,
                 returning: true,
               };
@@ -3942,6 +3984,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 ...prev,
                 aggroTarget: undefined,
                 returning: false,
+                moving: false,
               };
             }
           }
@@ -3951,42 +3994,19 @@ export function usePrincetonTowerDefenseRuntime() {
       }
       // Update troop movement - with sight-based engagement
       setTroops((prev) => {
-        // First pass: calculate separation forces
-        const separationForces: Map<string, Position> = new Map();
-
-        for (let i = 0; i < prev.length; i++) {
-          const troop = prev[i];
-          let forceX = 0;
-          let forceY = 0;
-
-          for (let j = 0; j < prev.length; j++) {
-            if (i === j) continue;
-            const other = prev[j];
-            const dx = troop.pos.x - other.pos.x;
-            const dy = troop.pos.y - other.pos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < TROOP_SEPARATION_DIST) {
-              // Handle near-zero distance to prevent direction instability (causes vibration)
-              if (dist < 1) {
-                // Troops almost exactly overlapping - push in a consistent direction based on id
-                const angle = (i * 0.618 + j * 0.382) * Math.PI * 2; // Golden ratio for distribution
-                forceX += Math.cos(angle) * 1.0;
-                forceY += Math.sin(angle) * 1.0;
-              } else {
-                // Push away from other troop with stronger force when closer
-                const pushStrength =
-                  (TROOP_SEPARATION_DIST - dist) / TROOP_SEPARATION_DIST;
-                forceX += (dx / dist) * pushStrength * 0.8;
-                forceY += (dy / dist) * pushStrength * 0.8;
-              }
-            }
-          }
-
-          if (forceX !== 0 || forceY !== 0) {
-            separationForces.set(troop.id, { x: forceX, y: forceY });
-          }
+        // First pass: calculate shared separation forces for troops and hero.
+        const separationUnits = prev.map((troop) => ({
+          id: troop.id,
+          pos: troop.pos,
+        }));
+        if (hero && !hero.dead) {
+          separationUnits.push({ id: hero.id, pos: hero.pos });
         }
+        const separationForces = computeSeparationForces(
+          separationUnits,
+          TROOP_SEPARATION_DIST,
+          1.35
+        );
 
         // Second pass: update positions with sight-based engagement
         return prev.map((troop) => {
@@ -4087,48 +4107,36 @@ export function usePrincetonTowerDefenseRuntime() {
               const dx = enemyPos.x - troop.pos.x;
               const dy = enemyPos.y - troop.pos.y;
               updated.rotation = Math.atan2(dy, dx);
+              updated.facingRight = getFacingRightFromDelta(
+                dx,
+                troop.facingRight ?? true
+              );
               updated.engaging = closestDist <= attackRange;
             } else if (closestDist > effectiveAttackRange && !wouldBeTooFar) {
               // Enemy in sight but out of attack range - move toward it
-              const dx = enemyPos.x - troop.pos.x;
-              const dy = enemyPos.y - troop.pos.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-
               // Move toward enemy, but stop at attack range
               const targetDist = effectiveAttackRange - 10; // Stop a bit before attack range
-              const moveRatio = Math.min(1, (dist - targetDist) / dist);
+              const baseSpeed = 2.0; // Slightly faster when engaging
+              const slowMult =
+                updated.slowed && updated.slowIntensity
+                  ? 1 - updated.slowIntensity
+                  : 1;
+              const moveStep = stepTowardTarget({
+                current: troop.pos,
+                target: enemyPos,
+                speed: baseSpeed * slowMult,
+                deltaTime,
+                stopDistance: targetDist,
+              });
 
-              if (dist > 0 && moveRatio > 0) {
-                // Apply slow effect to movement speed
-                const baseSpeed = 2.0; // Slightly faster when engaging
-                const slowMultiplier = updated.slowed && updated.slowIntensity ? (1 - updated.slowIntensity) : 1;
-                const speed = baseSpeed * slowMultiplier;
-                let newX = troop.pos.x + ((dx / dist) * speed * deltaTime) / 16;
-                let newY = troop.pos.y + ((dy / dist) * speed * deltaTime) / 16;
-
-                // Clamp to move radius from home
-                if (homePos) {
-                  const newDistFromHome = distance(
-                    { x: newX, y: newY },
-                    homePos
-                  );
-                  if (newDistFromHome > maxChaseRange) {
-                    // Pull back toward the edge of the allowed range
-                    const dxHome = newX - homePos.x;
-                    const dyHome = newY - homePos.y;
-                    const homeDist = Math.sqrt(
-                      dxHome * dxHome + dyHome * dyHome
-                    );
-                    if (homeDist > 0) {
-                      newX = homePos.x + (dxHome / homeDist) * maxChaseRange;
-                      newY = homePos.y + (dyHome / homeDist) * maxChaseRange;
-                    }
-                  }
-                }
-
-                const rotation = Math.atan2(dy, dx);
-                updated.pos = { x: newX, y: newY };
-                updated.rotation = rotation;
+              if (!moveStep.reached) {
+                updated.pos = clampPositionToRadius(
+                  moveStep.pos,
+                  homePos,
+                  maxChaseRange
+                );
+                updated.rotation = moveStep.rotation;
+                updated.facingRight = moveStep.facingRight;
                 updated.engaging = true;
               }
             } else if (closestDist <= effectiveAttackRange) {
@@ -4136,12 +4144,20 @@ export function usePrincetonTowerDefenseRuntime() {
               const dx = enemyPos.x - troop.pos.x;
               const dy = enemyPos.y - troop.pos.y;
               updated.rotation = Math.atan2(dy, dx);
+              updated.facingRight = getFacingRightFromDelta(
+                dx,
+                troop.facingRight ?? true
+              );
               updated.engaging = true;
             } else {
               // Too far from home to chase - face enemy but stay put
               const dx = enemyPos.x - troop.pos.x;
               const dy = enemyPos.y - troop.pos.y;
               updated.rotation = Math.atan2(dy, dx);
+              updated.facingRight = getFacingRightFromDelta(
+                dx,
+                troop.facingRight ?? true
+              );
               updated.engaging = false; // Will return home
             }
           } else {
@@ -4150,22 +4166,23 @@ export function usePrincetonTowerDefenseRuntime() {
 
             // Only return home if not being moved by player and not stationary
             if (homePos && !isStationary && !troop.moving) {
-              const dx = homePos.x - troop.pos.x;
-              const dy = homePos.y - troop.pos.y;
-              const distToHome = Math.sqrt(dx * dx + dy * dy);
+              const baseReturnSpeed = 1.5;
+              const slowMult =
+                updated.slowed && updated.slowIntensity
+                  ? 1 - updated.slowIntensity
+                  : 1;
+              const returnStep = stepTowardTarget({
+                current: troop.pos,
+                target: homePos,
+                speed: baseReturnSpeed * slowMult,
+                deltaTime,
+                stopDistance: 8,
+              });
 
-              if (distToHome > 8) {
-                // Not at home - move back
-                const baseReturnSpeed = 1.5;
-                const slowMult = updated.slowed && updated.slowIntensity ? (1 - updated.slowIntensity) : 1;
-                const speed = baseReturnSpeed * slowMult;
-                const newX =
-                  troop.pos.x + ((dx / distToHome) * speed * deltaTime) / 16;
-                const newY =
-                  troop.pos.y + ((dy / distToHome) * speed * deltaTime) / 16;
-                const rotation = Math.atan2(dy, dx);
-                updated.pos = { x: newX, y: newY };
-                updated.rotation = rotation;
+              if (!returnStep.reached) {
+                updated.pos = returnStep.pos;
+                updated.rotation = returnStep.rotation;
+                updated.facingRight = returnStep.facingRight;
                 updated.moving = true;
                 updated.targetPos = homePos;
               } else {
@@ -4188,6 +4205,11 @@ export function usePrincetonTowerDefenseRuntime() {
               x: updated.pos.x + force.x * deltaTime * forceMult,
               y: updated.pos.y + force.y * deltaTime * forceMult,
             };
+          }
+
+          if (homePos && !isStationary) {
+            const leash = maxChaseRange + (troop.moving ? 12 : 0);
+            updated.pos = clampPositionToRadius(updated.pos, homePos, leash);
           }
 
           // HP regeneration - regenerate 2% max HP per second when out of combat for 3+ seconds
@@ -4216,23 +4238,33 @@ export function usePrincetonTowerDefenseRuntime() {
 
           // Handle player-commanded movement (overrides engagement, but not for stationary)
           if (troop.moving && troop.targetPos && !isStationary) {
-            const dx = troop.targetPos.x - updated.pos.x;
-            const dy = troop.targetPos.y - updated.pos.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 5) {
+            const moveStep = stepTowardTarget({
+              current: updated.pos,
+              target: troop.targetPos,
+              speed: 1.5,
+              deltaTime,
+              stopDistance: 5,
+            });
+            if (moveStep.reached) {
               return {
                 ...updated,
                 pos: troop.targetPos,
                 moving: false,
                 targetPos: undefined,
                 userTargetPos: troop.targetPos, // Update home position
+                rotation: moveStep.rotation,
+                facingRight: getFacingRightFromDelta(
+                  troop.targetPos.x - updated.pos.x,
+                  troop.facingRight ?? true
+                ),
               };
             }
-            const speed = 1.5;
-            const newX = updated.pos.x + ((dx / dist) * speed * deltaTime) / 16;
-            const newY = updated.pos.y + ((dy / dist) * speed * deltaTime) / 16;
-            const rotation = Math.atan2(dy, dx);
-            return { ...updated, pos: { x: newX, y: newY }, rotation };
+            return {
+              ...updated,
+              pos: moveStep.pos,
+              rotation: moveStep.rotation,
+              facingRight: moveStep.facingRight,
+            };
           }
 
           return updated;
@@ -4796,6 +4828,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     targetPos.y - stationPos.y,
                     targetPos.x - stationPos.x
                   ),
+                  facingRight: targetPos.x >= stationPos.x,
                   attackAnim: 0,
                   selected: false,
                   spawnPoint: rallyPoint,
@@ -4894,6 +4927,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     targetPos.y - stationPos.y,
                     targetPos.x - stationPos.x
                   ),
+                  facingRight: targetPos.x >= stationPos.x,
                   attackAnim: 0,
                   selected: false,
                   spawnPoint: rallyPoint,
@@ -4928,6 +4962,7 @@ export function usePrincetonTowerDefenseRuntime() {
                           targetPos: newTarget,
                           moving: true,
                           userTargetPos: newTarget,
+                          facingRight: newTarget.x >= t.pos.x,
                         };
                       }
                     }
@@ -6224,10 +6259,13 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraZoom
         );
 
-        const minX = WAVE_START_BUBBLE_VIEW_MARGIN + radius;
-        const maxX = viewportWidth - (WAVE_START_BUBBLE_VIEW_MARGIN + radius);
-        const minY = WAVE_START_BUBBLE_VIEW_MARGIN + radius;
-        const maxY = viewportHeight - (WAVE_START_BUBBLE_VIEW_MARGIN + radius);
+        const minX = WAVE_START_BUBBLE_VIEW_MARGIN_X + radius;
+        const maxX = viewportWidth - (WAVE_START_BUBBLE_VIEW_MARGIN_X + radius);
+        const minY = Math.max(
+          WAVE_START_BUBBLE_VIEW_MARGIN_Y + radius,
+          WAVE_START_BUBBLE_TOP_SAFE_Y + radius
+        );
+        const maxY = viewportHeight - (WAVE_START_BUBBLE_VIEW_MARGIN_Y + radius);
 
         const clampToBounds = (point: Position): Position => ({
           x: Math.max(minX, Math.min(maxX, point.x)),
@@ -8471,18 +8509,31 @@ export function usePrincetonTowerDefenseRuntime() {
           // Note: Inspector indicators are now rendered in a separate top-layer pass below
           break;
         case "hero":
+          {
+            const heroRenderable = r.data as Hero;
+            let heroTargetPos: Position | undefined = undefined;
+            if (heroRenderable.aggroTarget) {
+              const aggroEnemy = enemyById.get(heroRenderable.aggroTarget);
+              if (aggroEnemy) {
+                heroTargetPos = getEnemyWorldPos(aggroEnemy);
+              }
+            }
+            if (!heroTargetPos && heroRenderable.targetPos) {
+              heroTargetPos = heroRenderable.targetPos;
+            }
           renderHero(
             ctx,
-            r.data as Hero,
+            heroRenderable,
             canvas.width,
             canvas.height,
             dpr,
             cameraOffset,
-            cameraZoom
+            cameraZoom,
+            heroTargetPos
           );
           // Render hero status effects (burning, slowed, poisoned, stunned)
           {
-            const heroData = r.data as Hero;
+            const heroData = heroRenderable;
             if (heroData.burning || heroData.slowed || heroData.poisoned || heroData.stunned) {
               const heroScreenPos = worldToScreen(
                 heroData.pos,
@@ -8496,6 +8547,7 @@ export function usePrincetonTowerDefenseRuntime() {
             }
           }
           break;
+          }
         case "troop":
           const troopRenderable = r.data as Troop;
           let targetPos: Position | undefined = undefined;
@@ -8632,8 +8684,7 @@ export function usePrincetonTowerDefenseRuntime() {
       )
       : null;
 
-    // Draw bubble BEFORE ambient/vignette overlay so fog can naturally sit on top.
-    for (const waveStartBubble of waveStartBubbles) {
+    const drawWaveStartBubble = (waveStartBubble: WaveStartBubbleScreenData) => {
       const { screenPos, spawnScreenPos, radius, progress } = waveStartBubble;
       const isWaveStartPrimed = primedWaveBubble?.pathKey === waveStartBubble.pathKey;
       const isWaveStartHovered =
@@ -8792,7 +8843,7 @@ export function usePrincetonTowerDefenseRuntime() {
       ctx.shadowBlur = 0;
 
       ctx.restore();
-    }
+    };
 
     const ambientPressure =
       entityCountsRef.current.enemies +
@@ -8852,6 +8903,11 @@ export function usePrincetonTowerDefenseRuntime() {
       } else {
         renderAmbientOverlay(ctx);
       }
+    }
+
+    // Draw wave start bubbles after ambient/vignette pass so they're readable over fog.
+    for (const waveStartBubble of waveStartBubbles) {
+      drawWaveStartBubble(waveStartBubble);
     }
 
     if (primedWaveBubble) {
@@ -9092,6 +9148,111 @@ export function usePrincetonTowerDefenseRuntime() {
     };
   }, [gameState, battleOutcome]); // Stop loop while battle-end overlay is active
 
+  const resolveHeroCommandTarget = useCallback(
+    (clickWorldPos: Position): Position | null => {
+      if (moveTargetPos && moveTargetValid) return moveTargetPos;
+      const pathResult = findClosestPathPoint(clickWorldPos, selectedMap);
+      if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2.5) {
+        return pathResult.point;
+      }
+      return null;
+    },
+    [moveTargetPos, moveTargetValid, selectedMap]
+  );
+
+  const resolveTroopCommandTarget = useCallback(
+    (clickWorldPos: Position, moveInfo: TroopMoveInfo): Position | null => {
+      if (moveTargetPos && moveTargetValid) return moveTargetPos;
+      const pathResult = findClosestPathPointWithinRadius(
+        clickWorldPos,
+        moveInfo.anchorPos,
+        moveInfo.moveRadius,
+        selectedMap
+      );
+      if (!pathResult || !pathResult.isValid) return null;
+      const pathPoint = findClosestPathPoint(clickWorldPos, selectedMap);
+      const isNearPath = !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2.5;
+      return isNearPath ? pathResult.point : null;
+    },
+    [moveTargetPos, moveTargetValid, selectedMap]
+  );
+
+  const issueHeroMoveCommand = useCallback(
+    (heroId: string, targetPos: Position) => {
+      setHero((prev) =>
+        prev && prev.id === heroId
+          ? {
+              ...prev,
+              moving: true,
+              targetPos,
+              selected: false,
+              facingRight: getFacingRightFromDelta(
+                targetPos.x - prev.pos.x,
+                prev.facingRight ?? true
+              ),
+            }
+          : prev
+      );
+      addParticles(targetPos, "glow", 5);
+    },
+    [addParticles]
+  );
+
+  const issueTroopFormationMoveCommand = useCallback(
+    (ownerId: string, targetPos: Position) => {
+      const station = towers.find((tower) => tower.id === ownerId && tower.type === "station");
+      const isBarracksTroop = ownerId === "special_barracks";
+      setTroops((prev) => {
+        const formationTroops = prev.filter((troop) => troop.ownerId === ownerId);
+        if (formationTroops.length === 0) {
+          return prev.map((troop) => ({ ...troop, selected: false }));
+        }
+
+        const formationOffsets = getFormationOffsets(formationTroops.length);
+        const troopIdToFormationIndex = new Map<string, number>();
+        formationTroops.forEach((troop, idx) => {
+          troopIdToFormationIndex.set(troop.id, idx);
+        });
+
+        return prev.map((troop) => {
+          if (troop.ownerId !== ownerId) {
+            return { ...troop, selected: false };
+          }
+
+          const formationIndex = troopIdToFormationIndex.get(troop.id) ?? 0;
+          const offset = formationOffsets[formationIndex] || { x: 0, y: 0 };
+          const newTarget = {
+            x: targetPos.x + offset.x,
+            y: targetPos.y + offset.y,
+          };
+          return {
+            ...troop,
+            moving: true,
+            targetPos: newTarget,
+            userTargetPos: newTarget,
+            selected: false,
+            spawnPoint: station || isBarracksTroop ? targetPos : troop.spawnPoint,
+            facingRight: getFacingRightFromDelta(
+              newTarget.x - troop.pos.x,
+              troop.facingRight ?? true
+            ),
+          };
+        });
+      });
+      addParticles(targetPos, "light", 5);
+    },
+    [addParticles, setTroops, towers]
+  );
+
+  const clearUnitMoveInteraction = useCallback(() => {
+    setMoveTargetPos(null);
+    setMoveTargetValid(false);
+    setSelectedUnitMoveInfo(null);
+    setDraggingUnit(null);
+    setUnitDragStart(null);
+    setUnitDragMoved(false);
+  }, []);
+
   // ========== POINTER DOWN HANDLER ==========
   // Handles starting canvas panning and tower repositioning
   const handlePointerDown = useCallback(
@@ -9323,93 +9484,22 @@ export function usePrincetonTowerDefenseRuntime() {
             !hero.dead &&
             hero.id === draggingUnit.heroId
           ) {
-            let targetPos: Position | null = null;
-
-            if (moveTargetPos && moveTargetValid) {
-              targetPos = moveTargetPos;
-            } else {
-              const pathResult = findClosestPathPoint(clickWorldPos, selectedMap);
-              if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2.5) {
-                targetPos = pathResult.point;
-              }
-            }
-
+            const targetPos = resolveHeroCommandTarget(clickWorldPos);
             if (targetPos) {
-              setHero((prev) =>
-                prev && prev.id === draggingUnit.heroId
-                  ? { ...prev, moving: true, targetPos, selected: false }
-                  : prev
-              );
-              addParticles(targetPos, "glow", 5);
+              issueHeroMoveCommand(draggingUnit.heroId, targetPos);
             }
           } else if (draggingUnit.kind === "troop") {
             const draggedTroop = troops.find((t) => t.id === draggingUnit.troopId);
             if (draggedTroop) {
               const moveInfo = getTroopMoveInfo(draggedTroop, towers, spec);
-              let targetPos: Position | null = null;
-
-              if (moveTargetPos && moveTargetValid) {
-                targetPos = moveTargetPos;
-              } else {
-                const pathResult = findClosestPathPointWithinRadius(
-                  clickWorldPos,
-                  moveInfo.anchorPos,
-                  moveInfo.moveRadius,
-                  selectedMap
-                );
-                const pathPoint = findClosestPathPoint(clickWorldPos, selectedMap);
-                const isNearPath = !!pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2.5;
-                if (pathResult && pathResult.isValid && isNearPath) {
-                  targetPos = pathResult.point;
-                }
-              }
-
+              const targetPos = resolveTroopCommandTarget(clickWorldPos, moveInfo);
               if (targetPos) {
-                const resolvedTarget = targetPos;
-                const ownerId = draggingUnit.ownerId;
-                const formationTroops = troops.filter((t) => t.ownerId === ownerId);
-                const formationOffsets = getFormationOffsets(formationTroops.length);
-
-                const troopIdToFormationIndex = new Map<string, number>();
-                formationTroops.forEach((t, idx) => {
-                  troopIdToFormationIndex.set(t.id, idx);
-                });
-
-                const station = towers.find((t) => t.id === ownerId && t.type === "station");
-                const isBarracksTroop = ownerId === "special_barracks";
-
-                setTroops((prev) =>
-                  prev.map((t) => {
-                    if (t.ownerId === ownerId) {
-                      const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
-                      const offset = formationOffsets[formationIndex] || { x: 0, y: 0 };
-                      const newTarget = {
-                        x: resolvedTarget.x + offset.x,
-                        y: resolvedTarget.y + offset.y,
-                      };
-                      return {
-                        ...t,
-                        moving: true,
-                        targetPos: newTarget,
-                        userTargetPos: newTarget,
-                        selected: false,
-                        spawnPoint: (station || isBarracksTroop) ? resolvedTarget : t.spawnPoint,
-                      };
-                    }
-                    return { ...t, selected: false };
-                  })
-                );
-                addParticles(resolvedTarget, "light", 5);
+                issueTroopFormationMoveCommand(draggingUnit.ownerId, targetPos);
               }
             }
           }
 
-          setMoveTargetPos(null);
-          setMoveTargetValid(false);
-          setSelectedUnitMoveInfo(null);
-          setDraggingUnit(null);
-          setUnitDragStart(null);
-          setUnitDragMoved(false);
+          clearUnitMoveInteraction();
           return;
         }
 
@@ -9673,6 +9763,7 @@ export function usePrincetonTowerDefenseRuntime() {
             overrideHybridMelee: reinforcementStats.rangedUnlocked,
             visualTier: reinforcementStats.visualTier,
             rotation: 0,
+            facingRight: true,
             attackAnim: 0,
             selected: false,
             spawnPoint: troopPos, // Individual spawn point, not shared center
@@ -9802,21 +9893,15 @@ export function usePrincetonTowerDefenseRuntime() {
 
         // Use pre-calculated move target if valid (mouse with hover)
         if (moveTargetPos && moveTargetValid) {
-          setHero((prev) =>
-            prev ? { ...prev, moving: true, targetPos: moveTargetPos, selected: false } : null
-          );
-          addParticles(moveTargetPos, "glow", 5);
+          issueHeroMoveCommand(hero.id, moveTargetPos);
           return;
         }
 
         // For touch: calculate path on-the-fly since there's no hover preview
         if (isTouch) {
-          const pathResult = findClosestPathPoint(clickWorldPos, selectedMap);
-          if (pathResult && pathResult.distance < HERO_PATH_HITBOX_SIZE * 2.5) {
-            setHero((prev) =>
-              prev ? { ...prev, moving: true, targetPos: pathResult.point, selected: false } : null
-            );
-            addParticles(pathResult.point, "glow", 5);
+          const touchTarget = resolveHeroCommandTarget(clickWorldPos);
+          if (touchTarget) {
+            issueHeroMoveCommand(hero.id, touchTarget);
             return;
           }
         }
@@ -9844,99 +9929,17 @@ export function usePrincetonTowerDefenseRuntime() {
 
         // Use pre-calculated move target if valid (mouse with hover)
         if (moveTargetPos && moveTargetValid && selectedUnitMoveInfo) {
-          const ownerId = selectedTroopUnit.ownerId;
-          const formationTroops = troops.filter((t) => t.ownerId === ownerId);
-          const formationOffsets = getFormationOffsets(formationTroops.length);
-
-          // Create a mapping from troop id to their formation index (0, 1, 2...)
-          // This ensures sequential positioning even if spawnSlots are non-sequential (e.g., 0 and 2 after one died)
-          const troopIdToFormationIndex = new Map<string, number>();
-          formationTroops.forEach((t, idx) => {
-            troopIdToFormationIndex.set(t.id, idx);
-          });
-
-          // Check if owned by a dinky station or frontier barracks
-          const station = towers.find((t) => t.id === ownerId && t.type === 'station');
-          const isBarracksTroop = ownerId === 'special_barracks';
-
-          setTroops((prev) =>
-            prev.map((t) => {
-              if (t.ownerId === ownerId) {
-                // Use formation index (sequential 0, 1, 2) not spawnSlot (may have gaps)
-                const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
-                const offset = formationOffsets[formationIndex] || { x: 0, y: 0 };
-                const newTarget = {
-                  x: moveTargetPos.x + offset.x,
-                  y: moveTargetPos.y + offset.y,
-                };
-                return {
-                  ...t,
-                  moving: true,
-                  targetPos: newTarget,
-                  userTargetPos: newTarget,
-                  selected: false, // Deselect after moving
-                  // Update spawn point to rally point for station/barracks troops
-                  spawnPoint: (station || isBarracksTroop) ? moveTargetPos : t.spawnPoint,
-                };
-              }
-              return { ...t, selected: false }; // Deselect all troops
-            })
-          );
-          addParticles(moveTargetPos, "light", 5);
+          issueTroopFormationMoveCommand(selectedTroopUnit.ownerId, moveTargetPos);
           return;
         }
 
         // For touch: calculate path on-the-fly since there's no hover preview
         if (isTouch) {
           const moveInfo = getTroopMoveInfo(selectedTroopUnit, towers, spec);
-          const pathResult = findClosestPathPointWithinRadius(
-            clickWorldPos,
-            moveInfo.anchorPos,
-            moveInfo.moveRadius,
-            selectedMap
-          );
-
-          if (pathResult) {
-            const pathPoint = findClosestPathPoint(clickWorldPos, selectedMap);
-            const isNearPath = pathPoint && pathPoint.distance < HERO_PATH_HITBOX_SIZE * 2.5;
-
-            if (pathResult.isValid && isNearPath) {
-              const ownerId = selectedTroopUnit.ownerId;
-              const formationTroops = troops.filter((t) => t.ownerId === ownerId);
-              const formationOffsets = getFormationOffsets(formationTroops.length);
-
-              const troopIdToFormationIndex = new Map<string, number>();
-              formationTroops.forEach((t, idx) => {
-                troopIdToFormationIndex.set(t.id, idx);
-              });
-
-              const station = towers.find((t) => t.id === ownerId && t.type === 'station');
-              const isBarracksTroop = ownerId === 'special_barracks';
-
-              setTroops((prev) =>
-                prev.map((t) => {
-                  if (t.ownerId === ownerId) {
-                    const formationIndex = troopIdToFormationIndex.get(t.id) ?? 0;
-                    const offset = formationOffsets[formationIndex] || { x: 0, y: 0 };
-                    const newTarget = {
-                      x: pathResult.point.x + offset.x,
-                      y: pathResult.point.y + offset.y,
-                    };
-                    return {
-                      ...t,
-                      moving: true,
-                      targetPos: newTarget,
-                      userTargetPos: newTarget,
-                      selected: false,
-                      spawnPoint: (station || isBarracksTroop) ? pathResult.point : t.spawnPoint,
-                    };
-                  }
-                  return { ...t, selected: false };
-                })
-              );
-              addParticles(pathResult.point, "light", 5);
-              return;
-            }
+          const touchTarget = resolveTroopCommandTarget(clickWorldPos, moveInfo);
+          if (touchTarget) {
+            issueTroopFormationMoveCommand(selectedTroopUnit.ownerId, touchTarget);
+            return;
           }
         }
 
@@ -10071,6 +10074,11 @@ export function usePrincetonTowerDefenseRuntime() {
       getSpecialTowerKey,
       setEffects,
       setSentinelTargets,
+      resolveHeroCommandTarget,
+      resolveTroopCommandTarget,
+      issueHeroMoveCommand,
+      issueTroopFormationMoveCommand,
+      clearUnitMoveInteraction,
     ]
   );
   const handleMouseMove = useCallback(
@@ -11233,6 +11241,7 @@ export function usePrincetonTowerDefenseRuntime() {
             selected: false,
             lastAttack: 0, // IMPORTANT: Initialize for attack timing
             rotation: 0, // IMPORTANT: Initialize rotation
+            facingRight: true,
             attackAnim: 0,
             spawnPoint: knightPos,
             moveRadius: 180, // Captain's summoned knights range
@@ -11275,6 +11284,7 @@ export function usePrincetonTowerDefenseRuntime() {
           selected: false,
           lastAttack: 0,
           rotation: 0,
+          facingRight: true,
           attackAnim: 0,
           spawnPoint: turretPos, // Fixed position
           moveRadius: 0, // Cannot move at all
@@ -11675,6 +11685,26 @@ export function usePrincetonTowerDefenseRuntime() {
   // Main game view (battle overlay stays on top without leaving this view)
   const { width, height, dpr } = getCanvasDimensions();
   const selectedLevelData = LEVEL_DATA[selectedMap];
+  const selectedThemeKey =
+    selectedLevelData?.theme && selectedLevelData.theme in REGION_THEMES
+      ? (selectedLevelData.theme as keyof typeof REGION_THEMES)
+      : "grassland";
+  const selectedThemePalette = REGION_THEMES[selectedThemeKey];
+  const themeAccentRgb = hexToRgb(selectedThemePalette.accent);
+  const themeGroundStartRgb = hexToRgb(selectedThemePalette.ground[0] || "#1a1f25");
+  const themeGroundEndRgb = hexToRgb(selectedThemePalette.ground[2] || "#080b10");
+  const darkenRgbChannel = (value: number, factor: number) =>
+    Math.max(0, Math.min(255, Math.round(value * factor)));
+  const fadeOverlayBackground = `radial-gradient(circle at 24% 16%, rgba(${themeAccentRgb.r}, ${themeAccentRgb.g}, ${themeAccentRgb.b}, 0.26), rgba(${themeAccentRgb.r}, ${themeAccentRgb.g}, ${themeAccentRgb.b}, 0.08) 42%, rgba(0,0,0,0) 76%), linear-gradient(135deg, rgba(${darkenRgbChannel(
+    themeGroundStartRgb.r,
+    0.55
+  )}, ${darkenRgbChannel(themeGroundStartRgb.g, 0.55)}, ${darkenRgbChannel(
+    themeGroundStartRgb.b,
+    0.55
+  )}, 0.98) 0%, rgba(${darkenRgbChannel(themeGroundEndRgb.r, 0.7)}, ${darkenRgbChannel(
+    themeGroundEndRgb.g,
+    0.7
+  )}, ${darkenRgbChannel(themeGroundEndRgb.b, 0.7)}, 0.98) 100%)`;
   const levelAllowedTowers = selectedLevelData?.allowedTowers ?? null;
   const currentLevelStats = levelStats?.[selectedMap] || {};
   const isVictory = battleOutcome === "victory";
@@ -11707,7 +11737,8 @@ export function usePrincetonTowerDefenseRuntime() {
       <div className="flex-1 relative overflow-hidden">
         <div
           ref={containerRef}
-          className="absolute inset-0 bg-gradient-to-br from-amber-950 to-stone-950"
+          className="absolute inset-0"
+          style={{ background: fadeOverlayBackground }}
         >
           <canvas
             ref={canvasRef}
@@ -11716,7 +11747,7 @@ export function usePrincetonTowerDefenseRuntime() {
             onPointerMove={handleMouseMove}
             onPointerLeave={handleCanvasPointerLeave}
             onWheel={handleCanvasWheel}
-            className={`w-full h-full touch-none ${isPanning ? 'cursor-grabbing' :
+            className={`w-full h-full touch-none game-start-fade ${isPanning ? 'cursor-grabbing' :
               repositioningTower ? 'cursor-move' :
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}

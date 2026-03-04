@@ -384,6 +384,7 @@ export interface Hero {
   abilityCooldown: number;
   revived: boolean;
   rotation: number;
+  facingRight?: boolean;
   attackAnim: number;
   selected: boolean;
   dead: boolean;
@@ -470,6 +471,7 @@ export interface Troop {
   moving: boolean;
   lastAttack?: number;
   rotation?: number;
+  facingRight?: boolean;
   attackAnim?: number;
   selected: boolean;
   spawnPoint?: Position;
@@ -977,7 +979,14 @@ export type GameState =
   | "defeat";
 
 // Codex tabs
-export type CodexTab = "towers" | "enemies" | "heroes" | "spells";
+export type CodexTab =
+  | "towers"
+  | "enemies"
+  | "heroes"
+  | "spells"
+  | "special_towers"
+  | "hazards"
+  | "guide";
 
 // Tower upgrade info for UI
 export interface TowerUpgradeInfo {

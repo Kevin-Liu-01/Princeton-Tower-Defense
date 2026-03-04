@@ -1193,7 +1193,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 >
                   <canvas
                     ref={canvasRef}
-                    className="block mx-auto"
+                    className="block mx-auto game-start-fade"
                     style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={() => setHoveredLevel(null)}

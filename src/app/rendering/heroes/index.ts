@@ -3,7 +3,12 @@
 
 import type { Hero, Position } from "../../types";
 import { HERO_DATA } from "../../constants";
-import { worldToScreenRounded, lightenColor, darkenColor } from "../../utils";
+import {
+  worldToScreenRounded,
+  lightenColor,
+  darkenColor,
+  worldToScreen,
+} from "../../utils";
 
 export function renderHero(
   ctx: CanvasRenderingContext2D,
@@ -12,7 +17,8 @@ export function renderHero(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
+  targetPos?: Position
 ) {
   const screenPos = worldToScreenRounded(
     hero.pos,
@@ -62,10 +68,32 @@ export function renderHero(
   const size = 32 * zoom;
   const attackPhase = hero.attackAnim > 0 ? hero.attackAnim / 300 : 0;
   const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.2 : 1;
+  const facingRight =
+    hero.facingRight ??
+    (typeof hero.rotation === "number" ? Math.cos(hero.rotation) >= 0 : true);
+  const targetScreenPos = targetPos
+    ? worldToScreen(
+        targetPos,
+        canvasWidth,
+        canvasHeight,
+        dpr,
+        cameraOffset,
+        cameraZoom
+      )
+    : undefined;
+  const localTargetPos = targetScreenPos
+    ? {
+        x: targetScreenPos.x - screenPos.x,
+        y: targetScreenPos.y - (screenPos.y - size / 2),
+      }
+    : undefined;
+  if (!facingRight && localTargetPos) {
+    localTargetPos.x *= -1;
+  }
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y - size / 2);
-  ctx.scale(attackScale, attackScale);
+  ctx.scale(facingRight ? attackScale : -attackScale, attackScale);
 
   // Draw specific hero type with attack animation
   drawHeroSprite(
@@ -77,7 +105,8 @@ export function renderHero(
     hData.color,
     time,
     zoom,
-    attackPhase
+    attackPhase,
+    localTargetPos
   );
 
   ctx.restore();
@@ -256,6 +285,29 @@ export function renderHero(
   ctx.shadowBlur = 0;
 }
 
+function normalizeSignedAngle(angle: number) {
+  let normalized = angle;
+  while (normalized > Math.PI) normalized -= Math.PI * 2;
+  while (normalized < -Math.PI) normalized += Math.PI * 2;
+  return normalized;
+}
+
+function resolveWeaponRotation(
+  targetPos: Position | undefined,
+  originX: number,
+  originY: number,
+  fallbackRotation: number,
+  forwardOffset: number,
+  maxTurn: number = Math.PI
+) {
+  if (!targetPos) return fallbackRotation;
+  const desiredRotation =
+    Math.atan2(targetPos.y - originY, targetPos.x - originX) + forwardOffset;
+  const delta = normalizeSignedAngle(desiredRotation - fallbackRotation);
+  const clampedDelta = Math.max(-maxTurn, Math.min(maxTurn, delta));
+  return fallbackRotation + clampedDelta;
+}
+
 function drawHeroSprite(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -265,7 +317,8 @@ function drawHeroSprite(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
+  targetPos?: Position
 ) {
   switch (type) {
     case "tiger":
@@ -275,20 +328,30 @@ function drawHeroSprite(
       drawTenorHero(ctx, x, y, size, color, time, zoom, attackPhase);
       break;
     case "mathey":
-      drawMatheyKnightHero(ctx, x, y, size, color, time, zoom, attackPhase);
+      drawMatheyKnightHero(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos
+      );
       break;
     case "rocky":
       drawRockyHero(ctx, x, y, size, color, time, zoom, attackPhase);
       break;
     case "scott":
     case "fscott":
-      drawFScottHero(ctx, x, y, size, color, time, zoom, attackPhase);
+      drawFScottHero(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
       break;
     case "captain":
-      drawCaptainHero(ctx, x, y, size, color, time, zoom, attackPhase);
+      drawCaptainHero(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
       break;
     case "engineer":
-      drawEngineerHero(ctx, x, y, size, color, time, zoom, attackPhase);
+      drawEngineerHero(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
       break;
     default:
       drawDefaultHero(ctx, x, y, size, color, time, zoom, attackPhase);
@@ -1747,7 +1810,8 @@ function drawMatheyKnightHero(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
+  targetPos?: Position
 ) {
   // COLOSSAL JUGGERNAUT KNIGHT - Massive heavily armored warrior with devastating war hammer
   const isAttacking = attackPhase > 0;
@@ -2369,6 +2433,15 @@ function drawMatheyKnightHero(
     hammerX = x + size * 0.6;
     hammerY = y + size * 0.15;
   }
+
+  hammerAngle = resolveWeaponRotation(
+    targetPos,
+    hammerX,
+    hammerY - size * 0.86,
+    hammerAngle,
+    Math.PI / 2,
+    isAttacking ? 1.25 : 0.72
+  );
 
   ctx.save();
   ctx.translate(hammerX, hammerY);
@@ -3373,7 +3446,8 @@ function drawFScottHero(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
+  targetPos?: Position
 ) {
   // ORNATE F. SCOTT FITZGERALD - The Great Gatsby Author, Jazz Age Literary Master
   const isAttacking = attackPhase > 0;
@@ -3946,9 +4020,18 @@ function drawFScottHero(
   const penArmAngle = 0.4 + rightArmFlourish * 0.7;
   const penBaseX = x + size * 0.38 + Math.sin(penArmAngle) * size * 0.35;
   const penBaseY = y - size * 0.1 + Math.cos(penArmAngle) * size * 0.35;
+  const penBaseRotation = -0.5 + penArmAngle * 0.3 + quillFlourish * 0.25;
+  const penRotation = resolveWeaponRotation(
+    targetPos,
+    penBaseX,
+    penBaseY - size * 0.28,
+    penBaseRotation,
+    Math.PI / 2,
+    isAttacking ? 1.2 : 0.66
+  );
   ctx.save();
   ctx.translate(penBaseX, penBaseY + writeGesture * 0.5);
-  ctx.rotate(-0.5 + penArmAngle * 0.3 + quillFlourish * 0.25);
+  ctx.rotate(penRotation);
 
   // Pen glow during attack
   if (isAttacking) {
@@ -4090,7 +4173,8 @@ function drawCaptainHero(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
+  targetPos?: Position
 ) {
   // LEGENDARY DRAGONLORD GENERAL - Epic Fantasy War Commander with Divine Fire
   const breathe = Math.sin(time * 2) * 2;
@@ -4561,9 +4645,18 @@ function drawCaptainHero(
   }
 
   // === LEGENDARY FLAMESWORD ===
+  const swordBaseAngle = 0.7 + swordSwing * 1.4;
+  const swordAngle = resolveWeaponRotation(
+    targetPos,
+    x + size * 0.55,
+    y - size * 0.7,
+    swordBaseAngle,
+    Math.PI / 2,
+    isAttacking ? 1.35 : 0.8
+  );
   ctx.save();
   ctx.translate(x + size * 0.55, y + size * 0.08);
-  ctx.rotate(0.7 + swordSwing * 1.4);
+  ctx.rotate(swordAngle);
 
   // Flame aura around blade
   if (isAttacking || true) {
@@ -5215,7 +5308,8 @@ function drawEngineerHero(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
+  targetPos?: Position
 ) {
   // SCI-FI ENGINEER - Advanced Tech Specialist with holographic displays and nano-tools
   const breathe = Math.sin(time * 2) * 1.5;
@@ -5498,9 +5592,18 @@ function drawEngineerHero(
   }
 
   // High-tech wrench tool
+  const wrenchBaseAngle = -0.6 + workAnimation * 0.35;
+  const wrenchAngle = resolveWeaponRotation(
+    targetPos,
+    x - size * 0.55,
+    y - size * 0.16 + workAnimation * size * 0.05,
+    wrenchBaseAngle,
+    Math.PI / 2,
+    isAttacking ? 1.1 : 0.62
+  );
   ctx.save();
   ctx.translate(x - size * 0.55, y + size * 0.15 + workAnimation * size * 0.05);
-  ctx.rotate(-0.6 + workAnimation * 0.35);
+  ctx.rotate(wrenchAngle);
 
   // Wrench handle (metallic)
   const wrenchGrad = ctx.createLinearGradient(-size * 0.03, 0, size * 0.03, 0);
@@ -5566,9 +5669,18 @@ function drawEngineerHero(
   ctx.fill();
 
   // Plasma welding/cutting tool
+  const plasmaBaseAngle = 0.4 - workAnimation * 0.25;
+  const plasmaAngle = resolveWeaponRotation(
+    targetPos,
+    x + size * 0.55,
+    y - size * 0.15 - workAnimation * size * 0.05,
+    plasmaBaseAngle,
+    Math.PI / 2,
+    isAttacking ? 1.3 : 0.72
+  );
   ctx.save();
   ctx.translate(x + size * 0.55, y + size * 0.1 - workAnimation * size * 0.05);
-  ctx.rotate(0.4 - workAnimation * 0.25);
+  ctx.rotate(plasmaAngle);
 
   // Tool body
   const toolGrad = ctx.createLinearGradient(-size * 0.025, 0, size * 0.025, 0);

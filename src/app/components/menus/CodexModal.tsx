@@ -38,7 +38,15 @@ import {
   AlertTriangle,
   Footprints,
 } from "lucide-react";
-import type { HeroType, SpellType, EnemyTrait, EnemyCategory, EnemyType } from "../../types";
+import type {
+  HeroType,
+  SpellType,
+  EnemyTrait,
+  EnemyCategory,
+  EnemyType,
+  HazardType,
+  SpecialTowerType,
+} from "../../types";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import {
   HERO_DATA,
@@ -47,6 +55,17 @@ import {
   ENEMY_DATA,
   HERO_ABILITY_COOLDOWNS,
   TROOP_DATA,
+  LEVEL_DATA,
+  LEVEL_WAVES,
+  MAP_PATHS,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getPaydaySpellStats,
+  getReinforcementSpellStats,
+  INITIAL_LIVES,
+  INITIAL_PAW_POINTS,
+  WAVE_TIMER_BASE,
 } from "../../constants";
 import { calculateTowerStats, TOWER_STATS } from "../../constants/towerStats";
 import {
@@ -56,7 +75,7 @@ import {
   SpellSprite,
   HeroAbilityIcon,
 } from "../../sprites";
-import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, PURPLE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
+import { PANEL, GOLD, OVERLAY, panelGradient } from "../ui/theme";
 
 // =============================================================================
 // CODEX HELPER FUNCTIONS
@@ -151,6 +170,675 @@ const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, 
   return grouped;
 };
 
+type CodexTabId =
+  | "towers"
+  | "heroes"
+  | "enemies"
+  | "spells"
+  | "special_towers"
+  | "hazards"
+  | "guide";
+
+const SPECIAL_TOWER_ORDER: SpecialTowerType[] = [
+  "vault",
+  "beacon",
+  "shrine",
+  "barracks",
+  "chrono_relay",
+  "sentinel_nexus",
+  "sunforge_orrery",
+];
+
+const SPECIAL_TOWER_INFO: Record<
+  SpecialTowerType,
+  {
+    name: string;
+    role: string;
+    icon: React.ReactNode;
+    color: string;
+    panelClass: string;
+    effect: string;
+    numbers: string;
+    tip: string;
+  }
+> = {
+  vault: {
+    name: "Treasury Vault",
+    role: "Objective",
+    icon: <Banknote size={16} />,
+    color: "text-yellow-300",
+    panelClass: "bg-yellow-950/35 border-yellow-800/40",
+    effect: "Enemies can target this structure. If it falls, you immediately lose 10 lives.",
+    numbers: "Objective HP varies by map (typically 420-1000)",
+    tip: "Build crowd control near vault approach lanes first.",
+  },
+  beacon: {
+    name: "Ancient Beacon",
+    role: "Range Aura",
+    icon: <Zap size={16} />,
+    color: "text-cyan-300",
+    panelClass: "bg-cyan-950/35 border-cyan-800/40",
+    effect: "Buffs nearby towers and station troop deployment distance.",
+    numbers: "+20% range/deploy in 250 radius",
+    tip: "Stack splash towers so one beacon buffs multiple lanes.",
+  },
+  shrine: {
+    name: "Eldritch Shrine",
+    role: "Sustain Aura",
+    icon: <Sparkles size={16} />,
+    color: "text-green-300",
+    panelClass: "bg-green-950/35 border-green-800/40",
+    effect: "Pulses healing to the hero and nearby troops.",
+    numbers: "+50 HP every 5s in 200 radius",
+    tip: "Anchor your frontline near shrine radius to outlast attrition.",
+  },
+  barracks: {
+    name: "Frontier Barracks",
+    role: "Auto Reinforcement",
+    icon: <Users size={16} />,
+    color: "text-red-300",
+    panelClass: "bg-red-950/35 border-red-800/40",
+    effect: "Automatically deploys knight troops onto the road.",
+    numbers: "Spawns every 12s, capped at 3 active knights",
+    tip: "Use rally micro to keep spawned knights at high-traffic choke points.",
+  },
+  chrono_relay: {
+    name: "Arcane Time Crystal",
+    role: "Attack Speed Aura",
+    icon: <Clock size={16} />,
+    color: "text-indigo-300",
+    panelClass: "bg-indigo-950/35 border-indigo-800/40",
+    effect: "Synchronizes nearby towers to faster firing cadence.",
+    numbers: "+25% attack speed in 220 radius",
+    tip: "Best with high base DPS towers, especially chain and splash builds.",
+  },
+  sentinel_nexus: {
+    name: "Imperial Red Sentinel",
+    role: "Retargetable Strike",
+    icon: <Target size={16} />,
+    color: "text-rose-300",
+    panelClass: "bg-rose-950/35 border-rose-800/40",
+    effect: "Calls periodic lightning strikes at a locked coordinate.",
+    numbers: "Every 10s: up to 240 damage in 140 radius + short stun",
+    tip: "Retarget onto spawn exits or boss path corners for highest value.",
+  },
+  sunforge_orrery: {
+    name: "Sunforge Orrery",
+    role: "Cluster Erasure",
+    icon: <Flame size={16} />,
+    color: "text-orange-300",
+    panelClass: "bg-orange-950/35 border-orange-800/40",
+    effect: "Scans for dense enemy clusters and fires tri-plasma barrages.",
+    numbers: "Every 9s: up to 185 direct damage + 28 DPS burn (2.6s) per volley",
+    tip: "Pair with slows and path intersections to maximize cluster density.",
+  },
+};
+
+type CodexHazardType =
+  | "poison_fog"
+  | "deep_water"
+  | "maelstrom"
+  | "storm_field"
+  | "quicksand"
+  | "ice_sheet"
+  | "ice_spikes"
+  | "lava_geyser";
+
+const HAZARD_ORDER: CodexHazardType[] = [
+  "poison_fog",
+  "deep_water",
+  "maelstrom",
+  "storm_field",
+  "quicksand",
+  "ice_sheet",
+  "ice_spikes",
+  "lava_geyser",
+];
+
+const HAZARD_INFO: Record<
+  CodexHazardType,
+  {
+    name: string;
+    icon: React.ReactNode;
+    color: string;
+    panelClass: string;
+    effect: string;
+    numbers: string;
+    counterplay: string;
+  }
+> = {
+  poison_fog: {
+    name: "Poison Fog",
+    icon: <Droplets size={16} />,
+    color: "text-green-300",
+    panelClass: "bg-green-950/35 border-green-800/40",
+    effect: "Constant damage-over-time zone.",
+    numbers: "15 DPS while inside",
+    counterplay: "Use slows/stuns at fog edge so enemies exit slowly while still taking damage.",
+  },
+  deep_water: {
+    name: "Deep Water",
+    icon: <Droplets size={16} />,
+    color: "text-blue-300",
+    panelClass: "bg-blue-950/35 border-blue-800/40",
+    effect: "Drags and drowns enemies moving through water.",
+    numbers: "4-9 DPS and up to 38% slow",
+    counterplay: "Cover entry/exit points so enemies stay in water longer.",
+  },
+  maelstrom: {
+    name: "Maelstrom",
+    icon: <Wind size={16} />,
+    color: "text-cyan-300",
+    panelClass: "bg-cyan-950/35 border-cyan-800/40",
+    effect: "Heavy vortex with strong crush damage and movement loss.",
+    numbers: "8-20 DPS and up to 55% slow",
+    counterplay: "Route boss pressure through maelstrom zones whenever possible.",
+  },
+  storm_field: {
+    name: "Storm Field",
+    icon: <Zap size={16} />,
+    color: "text-sky-300",
+    panelClass: "bg-sky-950/35 border-sky-800/40",
+    effect: "Electrified air hastens movement but shocks units.",
+    numbers: "+15% move speed and 6 DPS",
+    counterplay: "Place burst towers right after storm exits for fast-moving enemies.",
+  },
+  quicksand: {
+    name: "Quicksand",
+    icon: <TrendingDown size={16} />,
+    color: "text-yellow-300",
+    panelClass: "bg-yellow-950/35 border-yellow-800/40",
+    effect: "Movement suppression zone.",
+    numbers: "50% movement slow",
+    counterplay: "Use as pseudo-chokepoints for artillery and chain towers.",
+  },
+  ice_sheet: {
+    name: "Ice Sheet",
+    icon: <Snowflake size={16} />,
+    color: "text-cyan-300",
+    panelClass: "bg-cyan-950/35 border-cyan-800/40",
+    effect: "Slick terrain that accelerates enemy movement.",
+    numbers: "+60% movement speed",
+    counterplay: "Preload damage before the sheet and finish immediately after it.",
+  },
+  ice_spikes: {
+    name: "Ice Spikes",
+    icon: <Snowflake size={16} />,
+    color: "text-blue-300",
+    panelClass: "bg-blue-950/35 border-blue-800/40",
+    effect: "Phase-based burst trap that rises and retracts in cycles.",
+    numbers: "Up to ~30 DPS and up to 45% slow when fully extended",
+    counterplay: "Time freezes/stuns so enemies remain on spikes during active phases.",
+  },
+  lava_geyser: {
+    name: "Lava Geyser",
+    icon: <Flame size={16} />,
+    color: "text-orange-300",
+    panelClass: "bg-orange-950/35 border-orange-800/40",
+    effect: "Random eruptions apply burst fire damage.",
+    numbers: "5 fire damage per eruption tick",
+    counterplay: "Treat as bonus chip damage and avoid relying on it for consistent clears.",
+  },
+};
+
+const normalizeHazardType = (type: HazardType): CodexHazardType | null => {
+  if (type === "spikes") return "ice_spikes";
+  if (type === "eruption_zone") return "lava_geyser";
+  if (type === "slippery_ice" || type === "ice") return "ice_sheet";
+  if (type === "lava" || type === "fire") return "lava_geyser";
+  if (type === "poison" || type === "swamp") return "poison_fog";
+  if (type === "lightning" || type === "void") return "storm_field";
+  if (type in HAZARD_INFO) return type as CodexHazardType;
+  return null;
+};
+
+const SpriteShell: React.FC<{
+  size: number;
+  background: string;
+  border: string;
+  glow: string;
+  children: React.ReactNode;
+}> = ({ size, background, border, glow, children }) => (
+  <div
+    className="relative overflow-hidden rounded-xl shrink-0"
+    style={{
+      width: size,
+      height: size,
+      background,
+      border: `1.5px solid ${border}`,
+      boxShadow: `0 0 20px ${glow}, inset 0 0 18px rgba(6,6,10,0.72)`,
+    }}
+  >
+    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.14)" }} />
+    <div
+      className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+      style={{
+        background:
+          "radial-gradient(circle at 26% 22%, rgba(255,255,255,0.22), rgba(255,255,255,0.03) 38%, rgba(0,0,0,0.25) 90%)",
+      }}
+    />
+    <svg viewBox="0 0 64 64" className="w-full h-full">
+      <ellipse cx="32" cy="50" rx="17" ry="5.8" fill="rgba(0,0,0,0.36)" />
+      <circle cx="22" cy="18" r="18" fill="rgba(255,255,255,0.09)" />
+      <g transform="translate(0 -1)">
+        {children}
+      </g>
+    </svg>
+  </div>
+);
+
+const SPECIAL_TOWER_SPRITE_THEME: Record<
+  SpecialTowerType,
+  { background: string; border: string; glow: string }
+> = {
+  vault: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,240,138,0.3), rgba(120,80,18,0.18) 42%, rgba(60,41,12,0.95) 100%)",
+    border: "rgba(250,204,21,0.7)",
+    glow: "rgba(250,204,21,0.42)",
+  },
+  beacon: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(165,243,252,0.28), rgba(18,92,112,0.18) 42%, rgba(12,48,60,0.96) 100%)",
+    border: "rgba(34,211,238,0.7)",
+    glow: "rgba(34,211,238,0.4)",
+  },
+  shrine: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(187,247,208,0.28), rgba(20,105,70,0.18) 42%, rgba(12,64,44,0.96) 100%)",
+    border: "rgba(34,197,94,0.7)",
+    glow: "rgba(34,197,94,0.38)",
+  },
+  barracks: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,202,202,0.25), rgba(158,42,42,0.2) 42%, rgba(74,22,22,0.96) 100%)",
+    border: "rgba(248,113,113,0.72)",
+    glow: "rgba(248,113,113,0.4)",
+  },
+  chrono_relay: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(199,210,254,0.28), rgba(91,94,197,0.2) 42%, rgba(38,34,96,0.96) 100%)",
+    border: "rgba(129,140,248,0.72)",
+    glow: "rgba(129,140,248,0.42)",
+  },
+  sentinel_nexus: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,205,211,0.28), rgba(160,46,78,0.2) 42%, rgba(78,24,46,0.96) 100%)",
+    border: "rgba(251,113,133,0.72)",
+    glow: "rgba(251,113,133,0.4)",
+  },
+  sunforge_orrery: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.27), rgba(174,87,30,0.2) 42%, rgba(94,38,20,0.96) 100%)",
+    border: "rgba(251,146,60,0.74)",
+    glow: "rgba(251,146,60,0.43)",
+  },
+};
+
+const HAZARD_SPRITE_THEME: Record<
+  CodexHazardType,
+  { background: string; border: string; glow: string }
+> = {
+  poison_fog: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(187,247,208,0.28), rgba(28,120,71,0.18) 42%, rgba(14,66,42,0.96) 100%)",
+    border: "rgba(74,222,128,0.7)",
+    glow: "rgba(74,222,128,0.4)",
+  },
+  deep_water: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(191,219,254,0.28), rgba(35,96,176,0.18) 42%, rgba(17,52,98,0.96) 100%)",
+    border: "rgba(96,165,250,0.7)",
+    glow: "rgba(96,165,250,0.42)",
+  },
+  maelstrom: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(186,230,253,0.27), rgba(34,124,159,0.18) 42%, rgba(12,56,77,0.96) 100%)",
+    border: "rgba(56,189,248,0.72)",
+    glow: "rgba(56,189,248,0.42)",
+  },
+  storm_field: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(219,234,254,0.26), rgba(76,107,202,0.18) 42%, rgba(31,43,100,0.96) 100%)",
+    border: "rgba(125,211,252,0.72)",
+    glow: "rgba(125,211,252,0.42)",
+  },
+  quicksand: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,249,195,0.27), rgba(188,146,47,0.18) 42%, rgba(108,78,28,0.96) 100%)",
+    border: "rgba(250,204,21,0.72)",
+    glow: "rgba(250,204,21,0.42)",
+  },
+  ice_sheet: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(224,242,254,0.28), rgba(99,159,214,0.18) 42%, rgba(32,68,98,0.96) 100%)",
+    border: "rgba(125,211,252,0.72)",
+    glow: "rgba(125,211,252,0.4)",
+  },
+  ice_spikes: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(219,234,254,0.28), rgba(90,130,218,0.18) 42%, rgba(32,58,112,0.96) 100%)",
+    border: "rgba(96,165,250,0.72)",
+    glow: "rgba(96,165,250,0.43)",
+  },
+  lava_geyser: {
+    background:
+      "radial-gradient(circle at 28% 24%, rgba(254,215,170,0.28), rgba(218,99,41,0.18) 42%, rgba(110,37,22,0.96) 100%)",
+    border: "rgba(251,146,60,0.74)",
+    glow: "rgba(251,146,60,0.45)",
+  },
+};
+
+type SpriteFrameTheme = { background: string; border: string; glow: string };
+
+const hexToRgba = (hex: string, alpha: number): string => {
+  const normalized = hex.trim().replace("#", "");
+  const fullHex =
+    normalized.length === 3
+      ? normalized
+        .split("")
+        .map((char) => `${char}${char}`)
+        .join("")
+      : normalized;
+  if (fullHex.length !== 6) return `rgba(245, 158, 11, ${alpha})`;
+  const parsed = Number.parseInt(fullHex, 16);
+  if (Number.isNaN(parsed)) return `rgba(245, 158, 11, ${alpha})`;
+  const r = (parsed >> 16) & 255;
+  const g = (parsed >> 8) & 255;
+  const b = parsed & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const buildThemeFromAccent = (accentHex: string): SpriteFrameTheme => ({
+  background: `radial-gradient(circle at 28% 24%, ${hexToRgba(accentHex, 0.28)}, ${hexToRgba(
+    accentHex,
+    0.18
+  )} 42%, rgba(14,14,22,0.96) 100%)`,
+  border: hexToRgba(accentHex, 0.72),
+  glow: hexToRgba(accentHex, 0.42),
+});
+
+const TOWER_SPRITE_FRAME_THEME: Record<keyof typeof TOWER_DATA, SpriteFrameTheme> = {
+  station: buildThemeFromAccent("#a78bfa"),
+  cannon: buildThemeFromAccent("#f87171"),
+  library: buildThemeFromAccent("#67e8f9"),
+  lab: buildThemeFromAccent("#facc15"),
+  arch: buildThemeFromAccent("#60a5fa"),
+  club: buildThemeFromAccent("#f59e0b"),
+};
+
+const SPELL_SPRITE_FRAME_THEME: Record<SpellType, SpriteFrameTheme> = {
+  fireball: buildThemeFromAccent("#fb923c"),
+  lightning: buildThemeFromAccent("#facc15"),
+  freeze: buildThemeFromAccent("#67e8f9"),
+  payday: buildThemeFromAccent("#34d399"),
+  reinforcements: buildThemeFromAccent("#a78bfa"),
+};
+
+const ENEMY_CATEGORY_SPRITE_FRAME_THEME: Record<EnemyCategory, SpriteFrameTheme> = {
+  academic: buildThemeFromAccent("#c084fc"),
+  campus: buildThemeFromAccent("#f59e0b"),
+  ranged: buildThemeFromAccent("#4ade80"),
+  flying: buildThemeFromAccent("#22d3ee"),
+  boss: buildThemeFromAccent("#f87171"),
+  nature: buildThemeFromAccent("#34d399"),
+  swarm: buildThemeFromAccent("#facc15"),
+};
+
+const getEnemySpriteFrameTheme = (type: EnemyType): SpriteFrameTheme => {
+  const category = ENEMY_DATA[type].category || "campus";
+  return ENEMY_CATEGORY_SPRITE_FRAME_THEME[category];
+};
+
+const getHeroSpriteFrameTheme = (type: HeroType): SpriteFrameTheme =>
+  buildThemeFromAccent(HERO_DATA[type].color || "#f59e0b");
+
+const FramedCodexSprite: React.FC<{
+  size: number;
+  theme: SpriteFrameTheme;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ size, theme, className, children }) => (
+  <div
+    className={`relative overflow-hidden rounded-xl shrink-0 ${className || ""}`}
+    style={{
+      width: size,
+      height: size,
+      background: theme.background,
+      border: `1.5px solid ${theme.border}`,
+      boxShadow: `0 0 20px ${theme.glow}, inset 0 0 18px rgba(6,6,10,0.72)`,
+    }}
+  >
+    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.14)" }} />
+    <div
+      className="absolute inset-[2px] rounded-[10px] pointer-events-none"
+      style={{
+        background:
+          "radial-gradient(circle at 26% 22%, rgba(255,255,255,0.22), rgba(255,255,255,0.03) 38%, rgba(0,0,0,0.25) 90%)",
+      }}
+    />
+    <div className="absolute inset-0 flex items-center justify-center">{children}</div>
+  </div>
+);
+
+const renderSpecialTowerGlyph = (type: SpecialTowerType): React.ReactNode => {
+  switch (type) {
+    case "vault":
+      return (
+        <>
+          <rect x="16" y="42" width="32" height="5" rx="2.5" fill="#3f2a0e" />
+          <rect x="16" y="23" width="32" height="21" rx="5" fill="#5e4217" stroke="#f59e0b" strokeWidth="1.8" />
+          <rect x="15" y="19" width="34" height="8" rx="3" fill="#9a6b23" stroke="#fcd34d" strokeWidth="1.4" />
+          <rect x="18" y="27" width="28" height="14" rx="3.5" fill="#6b4a18" />
+          <circle cx="32" cy="34" r="5.5" fill="#2f1f09" stroke="#fcd34d" strokeWidth="1.4" />
+          <rect x="31" y="34" width="2" height="7.5" rx="1" fill="#fcd34d" />
+          <circle cx="44.5" cy="18.5" r="2.2" fill="#fef3c7" />
+          <path d="M44.5 14.8 L45.4 17.4 L48 18.5 L45.4 19.6 L44.5 22.2 L43.6 19.6 L41 18.5 L43.6 17.4 Z" fill="#fde68a" />
+        </>
+      );
+    case "beacon":
+      return (
+        <>
+          <g transform="translate(0 10)">
+            <ellipse cx="32" cy="44" rx="15" ry="4.4" fill="rgba(6,182,212,0.22)" />
+            <rect x="26.5" y="18" width="11" height="26" rx="3" fill="#155e75" stroke="#67e8f9" strokeWidth="1.6" />
+            <polygon points="32,10 38.2,20 25.8,20" fill="#a5f3fc" stroke="#e0f2fe" strokeWidth="1.2" />
+            <circle cx="32" cy="13.4" r="4.2" fill="#67e8f9" />
+            <circle cx="32" cy="13.4" r="10" fill="none" stroke="rgba(103,232,249,0.75)" strokeWidth="1.5" strokeDasharray="2.4 2.6" />
+            <circle cx="32" cy="13.4" r="15" fill="none" stroke="rgba(103,232,249,0.35)" strokeWidth="1.2" />
+            <path d="M22 30 L42 30" stroke="#a5f3fc" strokeWidth="1.4" strokeLinecap="round" />
+          </g>
+        </>
+      );
+    case "shrine":
+      return (
+        <>
+          <rect x="15" y="42" width="34" height="5" rx="2.5" fill="#0f3f2c" />
+          <rect x="18" y="25" width="7" height="18" rx="2" fill="#166534" stroke="#86efac" strokeWidth="1.1" />
+          <rect x="39" y="25" width="7" height="18" rx="2" fill="#166534" stroke="#86efac" strokeWidth="1.1" />
+          <path d="M20 24 Q32 15 44 24" fill="none" stroke="#86efac" strokeWidth="1.5" />
+          <polygon points="32,15 38,24 32,33 26,24" fill="#86efac" stroke="#dcfce7" strokeWidth="1.3" />
+          <circle cx="32" cy="23.8" r="12" fill="none" stroke="rgba(134,239,172,0.38)" strokeWidth="1.3" />
+          <circle cx="32" cy="23.8" r="2.1" fill="#dcfce7" />
+        </>
+      );
+    case "barracks":
+      return (
+        <>
+          <rect x="14" y="42" width="36" height="5" rx="2.5" fill="#3f1616" />
+          <rect x="14" y="24" width="36" height="19" rx="4" fill="#7f1d1d" stroke="#f87171" strokeWidth="1.6" />
+          <path d="M14 24 L18 20 L22 24 L26 20 L30 24 L34 20 L38 24 L42 20 L46 24 L50 20 L50 24 Z" fill="#991b1b" />
+          <rect x="27" y="31" width="10" height="12" rx="2.5" fill="#450a0a" stroke="#fecaca" strokeWidth="1" />
+          <path d="M20 41 L24 31 M44 41 L40 31" stroke="#fecaca" strokeWidth="1.2" strokeLinecap="round" />
+          <path d="M32 31 L32 21" stroke="#fca5a5" strokeWidth="1.3" />
+          <polygon points="32,20 38,23 32,26" fill="#f87171" />
+        </>
+      );
+    case "chrono_relay":
+      return (
+        <>
+          <circle cx="32" cy="31" r="17" fill="none" stroke="#818cf8" strokeWidth="1.8" />
+          <circle cx="32" cy="31" r="12" fill="none" stroke="#c7d2fe" strokeWidth="1.3" />
+          <polygon points="32,14 42,31 32,48 22,31" fill="#4f46e5" stroke="#c7d2fe" strokeWidth="1.4" />
+          <circle cx="32" cy="31" r="5.5" fill="#1e1b4b" stroke="#a5b4fc" strokeWidth="1.2" />
+          <path d="M32 31 L32 23 M32 31 L38 34.5" stroke="#e0e7ff" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M32 14 L32 11 M49 31 L52 31 M15 31 L12 31 M32 48 L32 51" stroke="#a5b4fc" strokeWidth="1.3" strokeLinecap="round" />
+          <circle cx="45" cy="19" r="1.8" fill="#e0e7ff" />
+        </>
+      );
+    case "sentinel_nexus":
+      return (
+        <>
+          <circle cx="32" cy="31" r="17" fill="none" stroke="#fb7185" strokeWidth="1.8" />
+          <circle cx="32" cy="31" r="10" fill="none" stroke="#fecdd3" strokeWidth="1.2" />
+          <path d="M32 10 L32 17 M32 45 L32 52 M11 31 L18 31 M46 31 L53 31" stroke="#fda4af" strokeWidth="1.7" strokeLinecap="round" />
+          <circle cx="32" cy="31" r="4.2" fill="#9f1239" stroke="#ffe4e6" strokeWidth="1.1" />
+          <path d="M36.5 20 L30.8 30.8 L35.4 30.8 L28.8 42" stroke="#ffe4e6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M21 21 Q32 14 43 21" fill="none" stroke="rgba(251,113,133,0.5)" strokeWidth="1.2" />
+        </>
+      );
+    case "sunforge_orrery":
+      return (
+        <>
+          <circle cx="32" cy="31" r="7.2" fill="#fb923c" stroke="#ffedd5" strokeWidth="1.3" />
+          <circle cx="32" cy="31" r="15" fill="none" stroke="#fdba74" strokeWidth="1.3" />
+          <ellipse cx="32" cy="31" rx="20" ry="8.2" fill="none" stroke="#fb923c" strokeWidth="1.35" />
+          <ellipse cx="32" cy="31" rx="8.2" ry="20" fill="none" stroke="#fb923c" strokeWidth="1.35" />
+          <path d="M22 21 L26 25 M42 21 L38 25 M22 41 L26 37 M42 41 L38 37" stroke="#fed7aa" strokeWidth="1.3" strokeLinecap="round" />
+          <circle cx="46.5" cy="31" r="2.3" fill="#ffedd5" />
+          <circle cx="24.5" cy="17.8" r="2" fill="#ffedd5" />
+        </>
+      );
+    default:
+      return null;
+  }
+};
+
+const renderHazardGlyph = (type: CodexHazardType): React.ReactNode => {
+  switch (type) {
+    case "poison_fog":
+      return (
+        <>
+          <circle cx="21" cy="36" r="10.5" fill="rgba(74,222,128,0.42)" />
+          <circle cx="33" cy="33" r="12" fill="rgba(74,222,128,0.52)" />
+          <circle cx="43" cy="39" r="9" fill="rgba(34,197,94,0.44)" />
+          <circle cx="30.5" cy="40" r="8" fill="rgba(22,163,74,0.36)" />
+          <circle cx="32" cy="34" r="4.9" fill="#052e16" />
+          <circle cx="30.3" cy="33" r="1.15" fill="#bbf7d0" />
+          <circle cx="33.7" cy="33" r="1.15" fill="#bbf7d0" />
+          <path d="M30.8 36.1 Q32 37.2 33.2 36.1" fill="none" stroke="#86efac" strokeWidth="1.2" strokeLinecap="round" />
+        </>
+      );
+    case "deep_water":
+      return (
+        <>
+          <ellipse cx="32" cy="33" rx="16.5" ry="9" fill="rgba(56,189,248,0.22)" />
+          <path d="M14 32 Q20 27 26 32 T38 32 T50 32" fill="none" stroke="#bae6fd" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M11 38 Q18 33 25 38 T39 38 T53 38" fill="none" stroke="#7dd3fc" strokeWidth="2.4" strokeLinecap="round" />
+          <path d="M9 44 Q17 39 25 44 T41 44 T57 44" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M32 15 C29 21 27 24 27 27 C27 30 29.2 32.4 32 32.4 C34.8 32.4 37 30 37 27 C37 24 35 21 32 15 Z" fill="#dbeafe" />
+        </>
+      );
+    case "maelstrom":
+      return (
+        <>
+          <path d="M32 12 C45 12 52 23 49 32 C46 41 36 46 27 42 C20 39 18 32 22 27 C26 22 34 22 36 27 C37.4 30.2 35.6 34 32 34" fill="none" stroke="#bae6fd" strokeWidth="2.3" strokeLinecap="round" />
+          <path d="M18 18 C14 30 18 46 32 50" fill="none" stroke="#38bdf8" strokeWidth="2.1" strokeLinecap="round" />
+          <path d="M46 19 C50 26 49 39 40 46" fill="none" stroke="#67e8f9" strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="32" cy="34" r="2.7" fill="#e0f2fe" />
+        </>
+      );
+    case "storm_field":
+      return (
+        <>
+          <ellipse cx="32" cy="42" rx="16" ry="5" fill="rgba(125,211,252,0.24)" />
+          <circle cx="24" cy="26" r="7.5" fill="#dbeafe" />
+          <circle cx="32" cy="23" r="9" fill="#e0f2fe" />
+          <circle cx="40" cy="27" r="7" fill="#dbeafe" />
+          <path d="M30 28 L25 38 L31.5 38 L27.8 47 L39.2 34.2 L32.4 34.2 L36.2 28 Z" fill="#fde68a" stroke="#facc15" strokeWidth="1.2" strokeLinejoin="round" />
+          <path d="M15 36 Q22 32 29 36 M35 36 Q42 32 49 36" stroke="#93c5fd" strokeWidth="1.3" strokeLinecap="round" />
+        </>
+      );
+    case "quicksand":
+      return (
+        <>
+          <ellipse cx="32" cy="38" rx="17.5" ry="11" fill="rgba(202,138,4,0.46)" />
+          <ellipse cx="32" cy="38" rx="12" ry="7" fill="rgba(253,224,71,0.3)" />
+          <path d="M22 36 C26 32 34 32 38 36 C40 38.2 37 40.5 34.5 40.3 C32.6 40.2 31 38.3 32 36.8 C33 35.4 35.4 35.8 36.2 37" fill="none" stroke="#fde047" strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="23.5" cy="43" r="2.1" fill="#facc15" />
+          <circle cx="39.5" cy="44" r="2.4" fill="#facc15" />
+          <circle cx="32" cy="46" r="1.6" fill="#fde68a" />
+        </>
+      );
+    case "ice_sheet":
+      return (
+        <>
+          <polygon points="15,43 25,19 46,20 52,35 37,50 20,48" fill="rgba(147,197,253,0.5)" stroke="#e0f2fe" strokeWidth="1.5" />
+          <path d="M25 26 L40 34 M31 22 L29 45 M20 36 L44 30 M24 41 L37 26" stroke="#e0f2fe" strokeWidth="1.25" strokeLinecap="round" />
+          <circle cx="44.5" cy="22.5" r="1.7" fill="#f0f9ff" />
+        </>
+      );
+    case "ice_spikes":
+      return (
+        <>
+          <path d="M14 48 H50" stroke="#dbeafe" strokeWidth="1.6" />
+          <polygon points="15,48 22,25 28,48" fill="#93c5fd" stroke="#dbeafe" strokeWidth="1" />
+          <polygon points="24,48 32,16 40,48" fill="#bfdbfe" stroke="#e0f2fe" strokeWidth="1.1" />
+          <polygon points="35,48 43,27 50,48" fill="#93c5fd" stroke="#dbeafe" strokeWidth="1" />
+          <path d="M18 44 Q32 38 46 44" fill="none" stroke="rgba(186,230,253,0.6)" strokeWidth="1.2" />
+        </>
+      );
+    case "lava_geyser":
+      return (
+        <>
+          <ellipse cx="32" cy="45.5" rx="16.5" ry="6.2" fill="rgba(239,68,68,0.34)" />
+          <ellipse cx="32" cy="44" rx="11.2" ry="4" fill="rgba(153,27,27,0.5)" />
+          <path d="M23.5 44 C22 35 26 29 29.5 19 C31.5 24 33.2 26.6 34.8 19.5 C39 30 42.8 35.5 40.6 44 Z" fill="#fb923c" stroke="#f97316" strokeWidth="1.5" />
+          <path d="M29.6 44 C29.6 37 31.3 32.2 32 27.8 C32.7 32.2 34.4 37 34.4 44 Z" fill="#fde68a" opacity={0.86} />
+          <circle cx="22.3" cy="21.8" r="2.2" fill="#fdba74" />
+          <circle cx="40.8" cy="17.8" r="2.5" fill="#fdba74" />
+          <circle cx="46.2" cy="25.2" r="1.9" fill="#fca5a5" />
+        </>
+      );
+    default:
+      return null;
+  }
+};
+
+const SpecialTowerSprite: React.FC<{ type: SpecialTowerType; size?: number }> = ({
+  type,
+  size = 64,
+}) => {
+  const theme = SPECIAL_TOWER_SPRITE_THEME[type];
+  return (
+    <SpriteShell
+      size={size}
+      background={theme.background}
+      border={theme.border}
+      glow={theme.glow}
+    >
+      {renderSpecialTowerGlyph(type)}
+    </SpriteShell>
+  );
+};
+
+const HazardSprite: React.FC<{ type: CodexHazardType; size?: number }> = ({
+  type,
+  size = 64,
+}) => {
+  const theme = HAZARD_SPRITE_THEME[type];
+  return (
+    <SpriteShell
+      size={size}
+      background={theme.background}
+      border={theme.border}
+      glow={theme.glow}
+    >
+      {renderHazardGlyph(type)}
+    </SpriteShell>
+  );
+};
+
 // =============================================================================
 // CODEX MODAL
 // =============================================================================
@@ -160,9 +848,7 @@ export interface CodexModalProps {
 }
 
 export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<
-    "towers" | "heroes" | "enemies" | "spells"
-  >("towers");
+  const [activeTab, setActiveTab] = useState<CodexTabId>("towers");
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [selectedHeroDetail, setSelectedHeroDetail] = useState<string | null>(
     null
@@ -171,6 +857,413 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
   const heroTypes = Object.keys(HERO_DATA) as HeroType[];
   const enemyTypes = Object.keys(ENEMY_DATA) as (keyof typeof ENEMY_DATA)[];
   const spellTypes = Object.keys(SPELL_DATA) as SpellType[];
+  const levelEntries = Object.entries(LEVEL_DATA);
+  const challengeLevelCount = levelEntries.filter(
+    ([, level]) => level.levelKind === "challenge"
+  ).length;
+  const campaignLevelCount = levelEntries.length - challengeLevelCount;
+  const dualPathLevelCount = levelEntries.filter(([, level]) => level.dualPath).length;
+
+  const specialTowerLevels = new Map<SpecialTowerType, Set<string>>();
+  const specialTowerInstanceCounts = new Map<SpecialTowerType, number>();
+  let totalSpecialTowerInstances = 0;
+  levelEntries.forEach(([, level]) => {
+    const currentLevelStructures = [
+      ...(level.specialTower ? [level.specialTower] : []),
+      ...(level.specialTowers || []),
+    ];
+    currentLevelStructures.forEach((tower) => {
+      totalSpecialTowerInstances += 1;
+      const levelSet = specialTowerLevels.get(tower.type) ?? new Set<string>();
+      levelSet.add(level.name);
+      specialTowerLevels.set(tower.type, levelSet);
+      specialTowerInstanceCounts.set(
+        tower.type,
+        (specialTowerInstanceCounts.get(tower.type) ?? 0) + 1
+      );
+    });
+  });
+  const specialTowerTypesInUse = SPECIAL_TOWER_ORDER.filter((type) =>
+    specialTowerLevels.has(type)
+  );
+
+  const hazardLevels = new Map<CodexHazardType, Set<string>>();
+  const hazardZoneCounts = new Map<CodexHazardType, number>();
+  let totalHazardZones = 0;
+  levelEntries.forEach(([, level]) => {
+    (level.hazards || []).forEach((hazard) => {
+      const normalizedType = normalizeHazardType(hazard.type);
+      if (!normalizedType) return;
+      totalHazardZones += 1;
+      const levelSet = hazardLevels.get(normalizedType) ?? new Set<string>();
+      levelSet.add(level.name);
+      hazardLevels.set(normalizedType, levelSet);
+      hazardZoneCounts.set(
+        normalizedType,
+        (hazardZoneCounts.get(normalizedType) ?? 0) + 1
+      );
+    });
+  });
+  const hazardTypesInUse = HAZARD_ORDER.filter((type) => hazardLevels.has(type));
+  const levelsWithHazards = levelEntries.filter(
+    ([, level]) => (level.hazards || []).length > 0
+  ).length;
+  const levelsWithSpecialStructures = levelEntries.filter(
+    ([, level]) => level.specialTower || (level.specialTowers || []).length > 0
+  ).length;
+  const mostCommonSpecialTowerType =
+    specialTowerTypesInUse.length > 0
+      ? specialTowerTypesInUse.reduce((best, current) =>
+        (specialTowerInstanceCounts.get(current) ?? 0) >
+          (specialTowerInstanceCounts.get(best) ?? 0)
+          ? current
+          : best
+      )
+      : null;
+  const averageSpecialTowersPerSpecialMap =
+    levelsWithSpecialStructures > 0
+      ? totalSpecialTowerInstances / levelsWithSpecialStructures
+      : 0;
+  const mostCommonHazardType =
+    hazardTypesInUse.length > 0
+      ? hazardTypesInUse.reduce((best, current) =>
+        (hazardZoneCounts.get(current) ?? 0) > (hazardZoneCounts.get(best) ?? 0)
+          ? current
+          : best
+      )
+      : null;
+  const averageHazardsPerHazardMap =
+    levelsWithHazards > 0 ? totalHazardZones / levelsWithHazards : 0;
+
+  const formatKeyLabel = (value: string) =>
+    LEVEL_DATA[value]?.name ||
+    value
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const towersByCost = towerTypes
+    .map((type) => ({ type, cost: TOWER_DATA[type].cost }))
+    .sort((a, b) => a.cost - b.cost);
+  const cheapestTower = towersByCost[0];
+  const priciestTower = towersByCost[towersByCost.length - 1];
+  const averageTowerCost =
+    towersByCost.length > 0
+      ? towersByCost.reduce((sum, tower) => sum + tower.cost, 0) / towersByCost.length
+      : 0;
+  const level4UpgradeCosts = towerTypes.map((type) => ({
+    type,
+    cost: TOWER_STATS[type]?.level4Cost ?? 0,
+  }));
+  const priciestLevel4Upgrade =
+    level4UpgradeCosts.length > 0
+      ? level4UpgradeCosts.reduce((best, current) =>
+        current.cost > best.cost ? current : best
+      )
+      : null;
+  const supportTowerCount = towerTypes.filter((type) => {
+    const stats = calculateTowerStats(type, 1, undefined, 1, 1);
+    return (
+      stats.damage <= 0 ||
+      Boolean(stats.income && stats.income > 0) ||
+      Boolean(stats.slowAmount && stats.slowAmount > 0)
+    );
+  }).length;
+  const damageTowerCount = towerTypes.filter((type) => {
+    const stats = calculateTowerStats(type, 1, undefined, 1, 1);
+    return stats.damage > 0;
+  }).length;
+
+  const heroCooldownEntries = heroTypes.map((type) => ({
+    type,
+    cooldown: HERO_ABILITY_COOLDOWNS[type] ?? 0,
+  }));
+  const averageHeroHp =
+    heroTypes.length > 0
+      ? heroTypes.reduce((sum, type) => sum + HERO_DATA[type].hp, 0) / heroTypes.length
+      : 0;
+  const averageHeroCooldown =
+    heroCooldownEntries.length > 0
+      ? heroCooldownEntries.reduce((sum, hero) => sum + hero.cooldown, 0) /
+      heroCooldownEntries.length
+      : 0;
+  const shortestHeroCooldown =
+    heroCooldownEntries.length > 0
+      ? heroCooldownEntries.reduce((best, current) =>
+        current.cooldown < best.cooldown ? current : best
+      )
+      : null;
+  const highestHpHero =
+    heroTypes.length > 0
+      ? heroTypes.reduce((best, current) =>
+        HERO_DATA[current].hp > HERO_DATA[best].hp ? current : best
+      )
+      : null;
+  const longestRangeHero =
+    heroTypes.length > 0
+      ? heroTypes.reduce((best, current) =>
+        HERO_DATA[current].range > HERO_DATA[best].range ? current : best
+      )
+      : null;
+  const rangedHeroCount = heroTypes.filter((type) => HERO_DATA[type].range >= 170).length;
+
+  const spellEntries = spellTypes.map((type) => ({
+    type,
+    cost: SPELL_DATA[type].cost,
+    cooldown: SPELL_DATA[type].cooldown,
+  }));
+  const freeSpellCount = spellEntries.filter((spell) => spell.cost === 0).length;
+  const averageSpellCooldown =
+    spellEntries.length > 0
+      ? spellEntries.reduce((sum, spell) => sum + spell.cooldown, 0) /
+      spellEntries.length
+      : 0;
+  const priciestSpell =
+    spellEntries.length > 0
+      ? spellEntries.reduce((best, current) =>
+        current.cost > best.cost ? current : best
+      )
+      : null;
+  const averageSpellCost =
+    spellEntries.length > 0
+      ? spellEntries.reduce((sum, spell) => sum + spell.cost, 0) / spellEntries.length
+      : 0;
+  const controlSpellCount = spellTypes.filter(
+    (type) => type === "freeze" || type === "reinforcements"
+  ).length;
+
+  const rangedEnemyCount = enemyTypes.filter((type) => {
+    const enemy = ENEMY_DATA[type];
+    return enemy.category === "ranged" || enemy.traits?.includes("ranged");
+  }).length;
+  const flyingEnemyCount = enemyTypes.filter((type) => {
+    const enemy = ENEMY_DATA[type];
+    return enemy.flying || enemy.traits?.includes("flying");
+  }).length;
+  const armoredEnemyCount = enemyTypes.filter((type) =>
+    ENEMY_DATA[type].traits?.includes("armored")
+  ).length;
+  const bossEnemyCount = enemyTypes.filter((type) => {
+    const enemy = ENEMY_DATA[type];
+    return enemy.isBoss || enemy.traits?.includes("boss");
+  }).length;
+  const highestLeakEnemy =
+    enemyTypes.length > 0
+      ? enemyTypes.reduce((best, current) => {
+        const bestCost = ENEMY_DATA[best].liveCost ?? 1;
+        const currentCost = ENEMY_DATA[current].liveCost ?? 1;
+        return currentCost > bestCost ? current : best;
+      })
+      : null;
+  const averageEnemyLeakCost =
+    enemyTypes.length > 0
+      ? enemyTypes.reduce((sum, type) => sum + (ENEMY_DATA[type].liveCost ?? 1), 0) /
+      enemyTypes.length
+      : 0;
+
+  const mapPathEntries = Object.entries(MAP_PATHS);
+  const averagePathNodes =
+    mapPathEntries.length > 0
+      ? mapPathEntries.reduce((sum, [, path]) => sum + path.length, 0) /
+      mapPathEntries.length
+      : 0;
+  const longestPathEntry =
+    mapPathEntries.length > 0
+      ? mapPathEntries.reduce((best, current) =>
+        current[1].length > best[1].length ? current : best
+      )
+      : null;
+  const shortestPathEntry =
+    mapPathEntries.length > 0
+      ? mapPathEntries.reduce((best, current) =>
+        current[1].length < best[1].length ? current : best
+      )
+      : null;
+
+  const mapWaveEntries = Object.entries(LEVEL_WAVES);
+  const totalConfiguredWaves = mapWaveEntries.reduce(
+    (sum, [, waves]) => sum + waves.length,
+    0
+  );
+  const averageWavesPerMap =
+    mapWaveEntries.length > 0 ? totalConfiguredWaves / mapWaveEntries.length : 0;
+  const waveSummaries = mapWaveEntries.flatMap(([mapKey, waves]) =>
+    waves.map((groups, index) => ({
+      mapKey,
+      waveNumber: index + 1,
+      groupCount: groups.length,
+      enemyCount: groups.reduce((sum, group) => sum + group.count, 0),
+      leadType: groups[0]?.type ?? null,
+    }))
+  );
+  const averageGroupsPerWave =
+    waveSummaries.length > 0
+      ? waveSummaries.reduce((sum, wave) => sum + wave.groupCount, 0) /
+      waveSummaries.length
+      : 0;
+  const peakGroupWave =
+    waveSummaries.length > 0
+      ? waveSummaries.reduce((best, current) =>
+        current.groupCount > best.groupCount ? current : best
+      )
+      : null;
+  const densestWave =
+    waveSummaries.length > 0
+      ? waveSummaries.reduce((best, current) =>
+        current.enemyCount > best.enemyCount ? current : best
+      )
+      : null;
+  const reinforcementGuideStats = getReinforcementSpellStats(0);
+  const featuredHeroTypes = heroTypes.slice(0, 3);
+  const featuredEnemyTypes = enemyTypes.slice(0, 4);
+  const featuredTowerTypes = towerTypes.slice(0, 4);
+  const featuredSpecialTowers = specialTowerTypesInUse.slice(0, 4);
+  const featuredHazards = hazardTypesInUse.slice(0, 4);
+
+  const getSpellInfo = (
+    type: SpellType
+  ): {
+    category: string;
+    color: string;
+    icon: React.ReactNode;
+    stats: { label: string; value: string; icon: React.ReactNode }[];
+    details: string[];
+    tip: string;
+  } => {
+    switch (type) {
+      case "fireball": {
+        const stats = getFireballSpellStats(0);
+        return {
+          category: "Damage",
+          color: "orange",
+          icon: <Flame size={14} />,
+          stats: [
+            { label: "Meteors", value: `${stats.meteorCount}`, icon: <Users size={12} /> },
+            {
+              label: "Damage",
+              value: `${stats.damagePerMeteor}`,
+              icon: <Swords size={12} />,
+            },
+            { label: "Burn", value: `${stats.burnDamagePerSecond}/s`, icon: <Flame size={12} /> },
+          ],
+          details: [
+            `Impact radius: ${stats.impactRadius}`,
+            `Burn duration: ${(stats.burnDurationMs / 1000).toFixed(1)}s`,
+            `Cast delay: ${(stats.fallDurationMs / 1000).toFixed(1)}s`,
+          ],
+          tip: "Drop on clustered elites near chokepoints.",
+        };
+      }
+      case "lightning": {
+        const stats = getLightningSpellStats(0);
+        return {
+          category: "Chain",
+          color: "yellow",
+          icon: <Zap size={14} />,
+          stats: [
+            { label: "Targets", value: `${stats.chainCount}`, icon: <Users size={12} /> },
+            {
+              label: "Total DMG",
+              value: `${stats.totalDamage}`,
+              icon: <Swords size={12} />,
+            },
+            {
+              label: "Stun",
+              value: `${(stats.stunDurationMs / 1000).toFixed(2)}s`,
+              icon: <CircleOff size={12} />,
+            },
+          ],
+          details: [
+            "Chains from the initial strike target to nearby enemies.",
+            "Good for deleting backline casters and fliers together.",
+            "Stun helps buy breathing room during leaks.",
+          ],
+          tip: "Use after enemies bunch up at turns.",
+        };
+      }
+      case "freeze": {
+        const stats = getFreezeSpellStats(0);
+        return {
+          category: "Control",
+          color: "cyan",
+          icon: <Snowflake size={14} />,
+          stats: [
+            {
+              label: "Duration",
+              value: `${(stats.freezeDurationMs / 1000).toFixed(1)}s`,
+              icon: <Timer size={12} />,
+            },
+            { label: "Range", value: "Global", icon: <Radio size={12} /> },
+            { label: "Targets", value: "All", icon: <Users size={12} /> },
+          ],
+          details: [
+            "Fully immobilizes enemies for the duration.",
+            "Resets tempo when multiple lanes start leaking.",
+            "Pairs well with Sunforge, Sentinel, and Barracks bursts.",
+          ],
+          tip: "Cast right before your burst windows.",
+        };
+      }
+      case "payday": {
+        const stats = getPaydaySpellStats(0);
+        return {
+          category: "Economy",
+          color: "amber",
+          icon: <Banknote size={14} />,
+          stats: [
+            { label: "Base", value: `${stats.basePayout} PP`, icon: <Coins size={12} /> },
+            {
+              label: "Per Enemy",
+              value: `+${stats.bonusPerEnemy} PP`,
+              icon: <TrendingUp size={12} />,
+            },
+            {
+              label: "Max Bonus",
+              value: `+${stats.maxBonus} PP`,
+              icon: <Star size={12} />,
+            },
+          ],
+          details: [
+            `Aura duration: ${(stats.auraDurationMs / 1000).toFixed(1)}s`,
+            "Value spikes when many enemies are already on map.",
+            "Lets you accelerate level 4 timing in long waves.",
+          ],
+          tip: "Hold until wave density is high for max value.",
+        };
+      }
+      case "reinforcements": {
+        const stats = getReinforcementSpellStats(0);
+        return {
+          category: "Summon",
+          color: "green",
+          icon: <Users size={14} />,
+          stats: [
+            { label: "Units", value: `${stats.knightCount}`, icon: <Users size={12} /> },
+            { label: "Knight HP", value: `${stats.knightHp}`, icon: <Heart size={12} /> },
+            {
+              label: "Knight DMG",
+              value: `${stats.knightDamage}`,
+              icon: <Swords size={12} />,
+            },
+          ],
+          details: [
+            `Move radius: ${stats.moveRadius}`,
+            "Can be dropped on demand to block sudden leaks.",
+            "Great for stalling while cooldown-heavy towers reset.",
+          ],
+          tip: "Use to pin bosses in overlapping tower fire.",
+        };
+      }
+      default:
+        return {
+          category: "Spell",
+          color: "purple",
+          icon: <Sparkles size={14} />,
+          stats: [],
+          details: [],
+          tip: "",
+        };
+    }
+  };
 
   // Get dynamic tower stats using the centralized calculation
   const getDynamicStats = (type: string, level: number, upgrade?: "A" | "B") => {
@@ -296,6 +1389,24 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                 icon: <Zap size={16} />,
                 count: spellTypes.length,
               },
+              {
+                id: "special_towers",
+                label: "Special Towers",
+                icon: <Sparkles size={16} />,
+                count: specialTowerTypesInUse.length,
+              },
+              {
+                id: "hazards",
+                label: "Hazards",
+                icon: <AlertTriangle size={16} />,
+                count: hazardTypesInUse.length,
+              },
+              {
+                id: "guide",
+                label: "How To Play",
+                icon: <Info size={16} />,
+                count: 5,
+              },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -333,118 +1444,188 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
           {/* Content area */}
           <div className="p-6 z-10 overflow-y-auto max-h-[calc(92vh-140px)]">
             {activeTab === "towers" && !selectedTower && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {towerTypes.map((type) => {
-                  const tower = TOWER_DATA[type];
-                  const stats = getDynamicStats(type, 1);
-                  const towerDef = TOWER_STATS[type];
-                  const cat = towerCategories[type];
+              <div className="space-y-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                    border: `1.5px solid ${GOLD.border30}`,
+                    boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 text-amber-300">
+                        <Crown size={15} />
+                        <h3 className="text-lg font-bold">Tower Arsenal</h3>
+                      </div>
+                      <p className="text-sm text-stone-300 leading-relaxed">
+                        Towers decide your lane DPS curve. Open for coverage, then spike with path upgrades.
+                        Treat level-4 branching like a build commit, not a cosmetic choice.
+                      </p>
+                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-amber-400 uppercase tracking-wider">Tower Types</div>
+                          <div className="text-lg font-bold text-amber-200">{towerTypes.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-sky-800/35 bg-sky-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-sky-400 uppercase tracking-wider">Damage Towers</div>
+                          <div className="text-lg font-bold text-sky-200">{damageTowerCount}</div>
+                        </div>
+                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-purple-400 uppercase tracking-wider">Support / Control</div>
+                          <div className="text-lg font-bold text-purple-200">{supportTowerCount}</div>
+                        </div>
+                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-rose-400 uppercase tracking-wider">Max L4 Cost</div>
+                          <div className="text-sm font-bold text-rose-200 leading-tight">
+                            {priciestLevel4Upgrade
+                              ? `${TOWER_DATA[priciestLevel4Upgrade.type].name} ${priciestLevel4Upgrade.cost} PP`
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedTower(type)}
-                      className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}
-                    >
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                      {/* Header with category */}
-                      <div className={`px-4 py-2 border-b flex items-center justify-between relative z-10 ${type === "station" ? "bg-purple-950/50 border-purple-800/30" :
-                        type === "cannon" ? "bg-red-950/50 border-red-800/30" :
-                          type === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
-                            type === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
-                              type === "arch" ? "bg-blue-950/50 border-blue-800/30" :
-                                type === "club" ? "bg-amber-950/50 border-amber-800/30" :
-                                  "bg-stone-950/50 border-stone-800/30"
-                        }`}>
-                        <div className="flex items-center gap-2">
-                          {towerIcons[type]}
-                          <span className={`text-xs font-medium uppercase tracking-wider ${type === "station" ? "text-purple-400" :
-                            type === "cannon" ? "text-red-400" :
-                              type === "library" ? "text-cyan-400" :
-                                type === "lab" ? "text-yellow-400" :
-                                  type === "arch" ? "text-blue-400" :
-                                    type === "club" ? "text-amber-400" :
-                                      "text-stone-400"
-                            }`}>
-                            {cat.category}
+                    <div className="xl:w-[280px] rounded-xl border border-amber-700/35 bg-stone-950/45 p-3">
+                      <div className="text-[10px] text-amber-400 uppercase tracking-wider mb-2">Lane Build Diagram</div>
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        {featuredTowerTypes.slice(0, 4).map((type, index) => (
+                          <React.Fragment key={`tower-diagram-${type}`}>
+                            <FramedCodexSprite size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                              <TowerSprite type={type} size={33} level={2} />
+                            </FramedCodexSprite>
+                            {index < Math.min(3, featuredTowerTypes.length - 1) && (
+                              <ChevronRight size={13} className="text-amber-300/70" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="text-[11px] text-stone-400 leading-relaxed">
+                        Cost curve: {Math.round(averageTowerCost)} PP avg entry,{" "}
+                        {cheapestTower ? `${TOWER_DATA[cheapestTower.type].name}` : "N/A"} at{" "}
+                        {cheapestTower ? `${cheapestTower.cost}` : "-"} PP to{" "}
+                        {priciestTower ? `${TOWER_DATA[priciestTower.type].name}` : "N/A"} at{" "}
+                        {priciestTower ? `${priciestTower.cost}` : "-"} PP.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {towerTypes.map((type) => {
+                    const tower = TOWER_DATA[type];
+                    const stats = getDynamicStats(type, 1);
+                    const cat = towerCategories[type];
+
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedTower(type)}
+                        className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
+                        style={{
+                          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                          border: `1.5px solid ${GOLD.border25}`,
+                          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                        }}
+                      >
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        {/* Header with category */}
+                        <div className={`px-4 py-2 border-b flex items-center justify-between relative z-10 ${type === "station" ? "bg-purple-950/50 border-purple-800/30" :
+                          type === "cannon" ? "bg-red-950/50 border-red-800/30" :
+                            type === "library" ? "bg-cyan-950/50 border-cyan-800/30" :
+                              type === "lab" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                type === "arch" ? "bg-blue-950/50 border-blue-800/30" :
+                                  type === "club" ? "bg-amber-950/50 border-amber-800/30" :
+                                    "bg-stone-950/50 border-stone-800/30"
+                          }`}>
+                          <div className="flex items-center gap-2">
+                            {towerIcons[type]}
+                            <span className={`text-xs font-medium uppercase tracking-wider ${type === "station" ? "text-purple-400" :
+                              type === "cannon" ? "text-red-400" :
+                                type === "library" ? "text-cyan-400" :
+                                  type === "lab" ? "text-yellow-400" :
+                                    type === "arch" ? "text-blue-400" :
+                                      type === "club" ? "text-amber-400" :
+                                        "text-stone-400"
+                              }`}>
+                              {cat.category}
+                            </span>
+                          </div>
+                          <span className="text-amber-400 flex items-center gap-1 text-xs">
+                            <Coins size={12} /> {tower.cost} PP
                           </span>
                         </div>
-                        <span className="text-amber-400 flex items-center gap-1 text-xs">
-                          <Coins size={12} /> {tower.cost} PP
-                        </span>
-                      </div>
 
-                      <div className="p-4">
-                        <div className="flex items-start gap-4 mb-3">
-                          <div className="w-16 h-16 rounded-lg flex items-center justify-center group-hover:border-amber-500/50 transition-colors" style={{
-                            background: PANEL.bgDeep,
-                            border: `1.5px solid ${GOLD.border25}`,
-                          }}>
-                            <TowerSprite type={type} size={52} level={1} />
+                        <div className="p-4">
+                          <div className="flex items-start gap-4 mb-3">
+                            <FramedCodexSprite
+                              size={64}
+                              theme={TOWER_SPRITE_FRAME_THEME[type]}
+                              className="group-hover:scale-105 transition-transform"
+                            >
+                              <TowerSprite type={type} size={52} level={1} />
+                            </FramedCodexSprite>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
+                                {tower.name}
+                              </h3>
+                              <p className="text-xs text-stone-400 line-clamp-2 mt-1">
+                                {tower.desc}
+                              </p>
+                            </div>
+                            <ChevronRight
+                              size={20}
+                              className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
+                            />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                              {tower.name}
-                            </h3>
-                            <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                              {tower.desc}
-                            </p>
-                          </div>
-                          <ChevronRight
-                            size={20}
-                            className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                          />
-                        </div>
 
-                        {/* Base stats */}
-                        <div className="flex flex-wrap gap-2 mb-3 text-xs">
-                          {stats.damage > 0 && (
-                            <span className="px-2 py-1 bg-red-950/50 rounded border border-red-900/40 text-red-300 flex items-center gap-1">
-                              <Swords size={11} /> {Math.floor(stats.damage)}
-                            </span>
-                          )}
-                          {stats.range > 0 && (
-                            <span className="px-2 py-1 bg-blue-950/50 rounded border border-blue-900/40 text-blue-300 flex items-center gap-1">
-                              <Target size={11} /> {Math.floor(stats.range)}
-                            </span>
-                          )}
-                          {stats.slowAmount && stats.slowAmount > 0 && (
-                            <span className="px-2 py-1 bg-cyan-950/50 rounded border border-cyan-900/40 text-cyan-300 flex items-center gap-1">
-                              <Snowflake size={11} /> {Math.round(stats.slowAmount * 100)}%
-                            </span>
-                          )}
-                          {stats.income && stats.income > 0 && (
-                            <span className="px-2 py-1 bg-amber-950/50 rounded border border-amber-900/40 text-amber-300 flex items-center gap-1">
-                              <Banknote size={11} /> +{stats.income} PP
-                            </span>
-                          )}
-                          {type === "station" && (
-                            <span className="px-2 py-1 bg-purple-950/50 rounded border border-purple-900/40 text-purple-300 flex items-center gap-1">
-                              <Users size={11} /> {TROOP_DATA.footsoldier.hp} HP
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Level 4 upgrade previews */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="px-2 py-1.5 bg-red-950/30 rounded border border-red-900/30">
-                            <div className="text-[9px] text-red-500/70 uppercase mb-0.5">Path A</div>
-                            <div className="text-xs text-red-300 font-medium truncate">{tower.upgrades.A.name}</div>
+                          {/* Base stats */}
+                          <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                            {stats.damage > 0 && (
+                              <span className="px-2 py-1 bg-red-950/50 rounded border border-red-900/40 text-red-300 flex items-center gap-1">
+                                <Swords size={11} /> {Math.floor(stats.damage)}
+                              </span>
+                            )}
+                            {stats.range > 0 && (
+                              <span className="px-2 py-1 bg-blue-950/50 rounded border border-blue-900/40 text-blue-300 flex items-center gap-1">
+                                <Target size={11} /> {Math.floor(stats.range)}
+                              </span>
+                            )}
+                            {stats.slowAmount && stats.slowAmount > 0 && (
+                              <span className="px-2 py-1 bg-cyan-950/50 rounded border border-cyan-900/40 text-cyan-300 flex items-center gap-1">
+                                <Snowflake size={11} /> {Math.round(stats.slowAmount * 100)}%
+                              </span>
+                            )}
+                            {stats.income && stats.income > 0 && (
+                              <span className="px-2 py-1 bg-amber-950/50 rounded border border-amber-900/40 text-amber-300 flex items-center gap-1">
+                                <Banknote size={11} /> +{stats.income} PP
+                              </span>
+                            )}
+                            {type === "station" && (
+                              <span className="px-2 py-1 bg-purple-950/50 rounded border border-purple-900/40 text-purple-300 flex items-center gap-1">
+                                <Users size={11} /> {TROOP_DATA.footsoldier.hp} HP
+                              </span>
+                            )}
                           </div>
-                          <div className="px-2 py-1.5 bg-blue-950/30 rounded border border-blue-900/30">
-                            <div className="text-[9px] text-blue-500/70 uppercase mb-0.5">Path B</div>
-                            <div className="text-xs text-blue-300 font-medium truncate">{tower.upgrades.B.name}</div>
+
+                          {/* Level 4 upgrade previews */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="px-2 py-1.5 bg-red-950/30 rounded border border-red-900/30">
+                              <div className="text-[9px] text-red-500/70 uppercase mb-0.5">Path A</div>
+                              <div className="text-xs text-red-300 font-medium truncate">{tower.upgrades.A.name}</div>
+                            </div>
+                            <div className="px-2 py-1.5 bg-blue-950/30 rounded border border-blue-900/30">
+                              <div className="text-[9px] text-blue-500/70 uppercase mb-0.5">Path B</div>
+                              <div className="text-xs text-blue-300 font-medium truncate">{tower.upgrades.B.name}</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -629,17 +1810,16 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                           </span>
                         </div>
                         <div className="p-6 flex items-start gap-6">
-                          <div className="w-28 h-28 rounded-xl flex items-center justify-center flex-shrink-0" style={{
-                            background: PANEL.bgDeep,
-                            border: `2px solid ${GOLD.border30}`,
-                            boxShadow: `inset 0 0 15px ${OVERLAY.black40}`,
-                          }}>
+                          <FramedCodexSprite
+                            size={112}
+                            theme={TOWER_SPRITE_FRAME_THEME[selectedTower as keyof typeof TOWER_DATA]}
+                          >
                             <TowerSprite
                               type={selectedTower as keyof typeof TOWER_DATA}
                               size={96}
                               level={4}
                             />
-                          </div>
+                          </FramedCodexSprite>
                           <div className="flex-1">
                             <h3 className="text-3xl font-bold text-amber-200 mb-2">
                               {tower.name}
@@ -896,13 +2076,16 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                               >
                                 {/* Path header */}
                                 <div className={`px-4 py-3 ${path === "A" ? "bg-red-900/30" : "bg-blue-900/30"} flex items-center gap-4`}>
-                                  <div className={`w-14 h-14 rounded-lg ${path === "A" ? "bg-red-950/60 border-red-700/50" : "bg-blue-950/60 border-blue-700/50"} border flex items-center justify-center`}>
+                                  <FramedCodexSprite
+                                    size={56}
+                                    theme={TOWER_SPRITE_FRAME_THEME[selectedTower as keyof typeof TOWER_DATA]}
+                                  >
                                     <TowerSprite
                                       type={selectedTower as keyof typeof TOWER_DATA}
                                       size={48}
                                       level={4}
                                     />
-                                  </div>
+                                  </FramedCodexSprite>
                                   <div className="flex-1">
                                     <div className={`text-[10px] uppercase tracking-wider ${path === "A" ? "text-red-400" : "text-blue-400"}`}>
                                       Path {path} • {pathLabel}
@@ -994,123 +2177,191 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
               })()}
 
             {activeTab === "heroes" && !selectedHeroDetail && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {heroTypes.map((type) => {
-                  const hero = HERO_DATA[type];
-                  const cooldown = HERO_ABILITY_COOLDOWNS[type];
+              <div className="space-y-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                    border: `1.5px solid ${GOLD.border30}`,
+                    boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 text-indigo-300">
+                        <Shield size={15} />
+                        <h3 className="text-lg font-bold">Hero Roster</h3>
+                      </div>
+                      <p className="text-sm text-stone-300 leading-relaxed">
+                        Heroes are your mobile utility layer. They plug leaks, hold lanes, and convert cooldown timing
+                        into tempo advantage on top of static tower defense.
+                      </p>
+                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                        <div className="rounded-lg border border-indigo-800/35 bg-indigo-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-indigo-400 uppercase tracking-wider">Hero Count</div>
+                          <div className="text-lg font-bold text-indigo-200">{heroTypes.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-red-400 uppercase tracking-wider">Highest HP</div>
+                          <div className="text-sm font-bold text-red-200 leading-tight">
+                            {highestHpHero ? `${HERO_DATA[highestHpHero].name} ${HERO_DATA[highestHpHero].hp}` : "N/A"}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-blue-800/35 bg-blue-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-blue-400 uppercase tracking-wider">Longest Range</div>
+                          <div className="text-sm font-bold text-blue-200 leading-tight">
+                            {longestRangeHero ? `${HERO_DATA[longestRangeHero].name} ${HERO_DATA[longestRangeHero].range}` : "N/A"}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Ability Tempo</div>
+                          <div className="text-sm font-bold text-cyan-200 leading-tight">
+                            {shortestHeroCooldown
+                              ? `${(shortestHeroCooldown.cooldown / 1000).toFixed(1)}s min / ${(averageHeroCooldown / 1000).toFixed(1)}s avg`
+                              : "N/A"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                  // Hero role icons and colors
-                  const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
-                    tiger: { role: "Brawler", icon: <Swords size={12} />, color: "orange" },
-                    tenor: { role: "Support", icon: <Volume2 size={12} />, color: "purple" },
-                    mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
-                    rocky: { role: "Artillery", icon: <Target size={12} />, color: "red" },
-                    scott: { role: "Buffer", icon: <TrendingUp size={12} />, color: "yellow" },
-                    captain: { role: "Summoner", icon: <Users size={12} />, color: "green" },
-                    engineer: { role: "Builder", icon: <CircleDot size={12} />, color: "amber" },
-                  };
-                  const roleInfo = heroRoles[type] || { role: "Hero", icon: <Shield size={12} />, color: "amber" };
+                    <div className="xl:w-[280px] rounded-xl border border-indigo-700/35 bg-stone-950/45 p-3">
+                      <div className="text-[10px] text-indigo-400 uppercase tracking-wider mb-2">Role Diagram</div>
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        {featuredHeroTypes.map((type, index) => (
+                          <React.Fragment key={`hero-diagram-${type}`}>
+                            <FramedCodexSprite size={44} theme={getHeroSpriteFrameTheme(type)}>
+                              <HeroSprite type={type} size={34} />
+                            </FramedCodexSprite>
+                            {index < featuredHeroTypes.length - 1 && (
+                              <ChevronRight size={13} className="text-indigo-300/70" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="text-[11px] text-stone-400 leading-relaxed">
+                        Ranged-capable heroes: {rangedHeroCount}/{heroTypes.length}. Average hero HP is{" "}
+                        {Math.round(averageHeroHp)}. Plan your hero around map length and lane split pressure.
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => setSelectedHeroDetail(type)}
-                      className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}
-                    >
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                      {/* Role header */}
-                      <div className={`px-4 py-2 border-b flex items-center justify-between ${roleInfo.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                        roleInfo.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
-                          roleInfo.color === "blue" ? "bg-blue-950/50 border-blue-800/30" :
-                            roleInfo.color === "red" ? "bg-red-950/50 border-red-800/30" :
-                              roleInfo.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                                roleInfo.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                  "bg-amber-950/50 border-amber-800/30"
-                        }`}>
-                        <div className={`flex items-center gap-2 ${roleInfo.color === "orange" ? "text-orange-400" :
-                          roleInfo.color === "purple" ? "text-purple-400" :
-                            roleInfo.color === "blue" ? "text-blue-400" :
-                              roleInfo.color === "red" ? "text-red-400" :
-                                roleInfo.color === "yellow" ? "text-yellow-400" :
-                                  roleInfo.color === "green" ? "text-green-400" :
-                                    "text-amber-400"
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {heroTypes.map((type) => {
+                    const hero = HERO_DATA[type];
+                    const cooldown = HERO_ABILITY_COOLDOWNS[type];
+
+                    // Hero role icons and colors
+                    const heroRoles: Record<string, { role: string; icon: React.ReactNode; color: string }> = {
+                      tiger: { role: "Brawler", icon: <Swords size={12} />, color: "orange" },
+                      tenor: { role: "Support", icon: <Volume2 size={12} />, color: "purple" },
+                      mathey: { role: "Tank", icon: <Shield size={12} />, color: "blue" },
+                      rocky: { role: "Artillery", icon: <Target size={12} />, color: "red" },
+                      scott: { role: "Buffer", icon: <TrendingUp size={12} />, color: "yellow" },
+                      captain: { role: "Summoner", icon: <Users size={12} />, color: "green" },
+                      engineer: { role: "Builder", icon: <CircleDot size={12} />, color: "amber" },
+                    };
+                    const roleInfo = heroRoles[type] || { role: "Hero", icon: <Shield size={12} />, color: "amber" };
+
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedHeroDetail(type)}
+                        className="rounded-xl hover:scale-[1.02] text-left group transition-all overflow-hidden relative"
+                        style={{
+                          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                          border: `1.5px solid ${GOLD.border25}`,
+                          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                        }}
+                      >
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        {/* Role header */}
+                        <div className={`px-4 py-2 border-b flex items-center justify-between ${roleInfo.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                          roleInfo.color === "purple" ? "bg-purple-950/50 border-purple-800/30" :
+                            roleInfo.color === "blue" ? "bg-blue-950/50 border-blue-800/30" :
+                              roleInfo.color === "red" ? "bg-red-950/50 border-red-800/30" :
+                                roleInfo.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                                  roleInfo.color === "green" ? "bg-green-950/50 border-green-800/30" :
+                                    "bg-amber-950/50 border-amber-800/30"
                           }`}>
-                          {roleInfo.icon}
-                          <span className="text-xs font-medium uppercase tracking-wider">
-                            {roleInfo.role}
-                          </span>
-                        </div>
-                        <span className="text-xl">{hero.icon}</span>
-                      </div>
-
-                      <div className="p-4">
-                        <div className="flex items-start gap-4 mb-3">
-                          <div
-                            className="w-16 h-16 rounded-lg border-2 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
-                            style={{
-                              borderColor: hero.color,
-                              backgroundColor: hero.color + "20",
-                              boxShadow: `0 0 20px ${hero.color}30`,
-                            }}
-                          >
-                            <HeroSprite type={type} size={52} color={hero.color} />
+                          <div className={`flex items-center gap-2 ${roleInfo.color === "orange" ? "text-orange-400" :
+                            roleInfo.color === "purple" ? "text-purple-400" :
+                              roleInfo.color === "blue" ? "text-blue-400" :
+                                roleInfo.color === "red" ? "text-red-400" :
+                                  roleInfo.color === "yellow" ? "text-yellow-400" :
+                                    roleInfo.color === "green" ? "text-green-400" :
+                                      "text-amber-400"
+                            }`}>
+                            {roleInfo.icon}
+                            <span className="text-xs font-medium uppercase tracking-wider">
+                              {roleInfo.role}
+                            </span>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
-                              {hero.name}
-                            </h3>
-                            <p className="text-xs text-stone-400 line-clamp-2 mt-1">
-                              {hero.description}
-                            </p>
-                          </div>
-                          <ChevronRight
-                            size={20}
-                            className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
-                          />
+                          <span className="text-xl">{hero.icon}</span>
                         </div>
 
-                        {/* Stats grid */}
-                        <div className="grid grid-cols-4 gap-1.5 mb-3">
-                          <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
-                            <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
-                            <div className="text-red-300 font-bold text-xs">{hero.hp}</div>
-                          </div>
-                          <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/40">
-                            <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
-                            <div className="text-orange-300 font-bold text-xs">{hero.damage}</div>
-                          </div>
-                          <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/40">
-                            <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
-                            <div className="text-blue-300 font-bold text-xs">{hero.range}</div>
-                          </div>
-                          <div className="bg-cyan-950/50 rounded p-1.5 text-center border border-cyan-900/40">
-                            <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
-                            <div className="text-cyan-300 font-bold text-xs">{hero.speed}</div>
-                          </div>
-                        </div>
-
-                        {/* Ability preview */}
-                        <div className="bg-purple-950/40 rounded-lg p-2 border border-purple-800/30">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              <Sparkles size={12} className="text-purple-400" />
-                              <span className="text-xs font-medium text-purple-300">{hero.ability}</span>
+                        <div className="p-4">
+                          <div className="flex items-start gap-4 mb-3">
+                            <FramedCodexSprite
+                              size={64}
+                              theme={getHeroSpriteFrameTheme(type)}
+                              className="group-hover:scale-105 transition-transform"
+                            >
+                              <HeroSprite type={type} size={52} />
+                            </FramedCodexSprite>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg font-bold text-amber-200 group-hover:text-amber-100 truncate">
+                                {hero.name}
+                              </h3>
+                              <p className="text-xs text-stone-400 line-clamp-2 mt-1">
+                                {hero.description}
+                              </p>
                             </div>
-                            <div className="flex items-center gap-1 text-[10px] text-purple-400">
-                              <Timer size={10} />
-                              <span>{cooldown / 1000}s</span>
+                            <ChevronRight
+                              size={20}
+                              className="text-stone-600 group-hover:text-amber-400 transition-colors flex-shrink-0"
+                            />
+                          </div>
+
+                          {/* Stats grid */}
+                          <div className="grid grid-cols-4 gap-1.5 mb-3">
+                            <div className="bg-red-950/50 rounded p-1.5 text-center border border-red-900/40">
+                              <Heart size={12} className="mx-auto text-red-400 mb-0.5" />
+                              <div className="text-red-300 font-bold text-xs">{hero.hp}</div>
+                            </div>
+                            <div className="bg-orange-950/50 rounded p-1.5 text-center border border-orange-900/40">
+                              <Swords size={12} className="mx-auto text-orange-400 mb-0.5" />
+                              <div className="text-orange-300 font-bold text-xs">{hero.damage}</div>
+                            </div>
+                            <div className="bg-blue-950/50 rounded p-1.5 text-center border border-blue-900/40">
+                              <Target size={12} className="mx-auto text-blue-400 mb-0.5" />
+                              <div className="text-blue-300 font-bold text-xs">{hero.range}</div>
+                            </div>
+                            <div className="bg-cyan-950/50 rounded p-1.5 text-center border border-cyan-900/40">
+                              <Wind size={12} className="mx-auto text-cyan-400 mb-0.5" />
+                              <div className="text-cyan-300 font-bold text-xs">{hero.speed}</div>
                             </div>
                           </div>
+
+                          {/* Ability preview */}
+                          <div className="bg-purple-950/40 rounded-lg p-2 border border-purple-800/30">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <Sparkles size={12} className="text-purple-400" />
+                                <span className="text-xs font-medium text-purple-300">{hero.ability}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[10px] text-purple-400">
+                                <Timer size={10} />
+                                <span>{cooldown / 1000}s</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -1281,20 +2532,15 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                         </div>
 
                         <div className="p-6 flex items-start gap-6">
-                          <div
-                            className="w-28 h-28 rounded-xl border-2 flex items-center justify-center flex-shrink-0"
-                            style={{
-                              borderColor: hero.color,
-                              backgroundColor: hero.color + "25",
-                              boxShadow: `0 0 30px ${hero.color}40`,
-                            }}
+                          <FramedCodexSprite
+                            size={112}
+                            theme={getHeroSpriteFrameTheme(selectedHeroDetail as HeroType)}
                           >
                             <HeroSprite
                               type={selectedHeroDetail as HeroType}
                               size={96}
-                              color={hero.color}
                             />
-                          </div>
+                          </FramedCodexSprite>
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-3xl font-bold text-amber-200">
@@ -1432,6 +2678,73 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 
               return (
                 <div className="space-y-6">
+                  <div
+                    className="relative rounded-2xl overflow-hidden"
+                    style={{
+                      background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                      border: `1.5px solid ${GOLD.border30}`,
+                      boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                    }}
+                  >
+                    <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                    <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 text-red-300">
+                          <Skull size={15} />
+                          <h3 className="text-lg font-bold">Enemy Compendium</h3>
+                        </div>
+                        <p className="text-sm text-stone-300 leading-relaxed">
+                          Wave pressure comes from trait combinations, not raw HP alone. Track leak cost, movement type,
+                          and backline threat density before committing your build path.
+                        </p>
+                        <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                          <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
+                            <div className="text-[10px] text-red-400 uppercase tracking-wider">Enemy Types</div>
+                            <div className="text-lg font-bold text-red-200">{enemyTypes.length}</div>
+                          </div>
+                          <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
+                            <div className="text-[10px] text-purple-400 uppercase tracking-wider">Boss Units</div>
+                            <div className="text-lg font-bold text-purple-200">{bossEnemyCount}</div>
+                          </div>
+                          <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
+                            <div className="text-[10px] text-rose-400 uppercase tracking-wider">Max Leak Penalty</div>
+                            <div className="text-sm font-bold text-rose-200 leading-tight">
+                              {highestLeakEnemy
+                                ? `${ENEMY_DATA[highestLeakEnemy].name} ${ENEMY_DATA[highestLeakEnemy].liveCost ?? 1}`
+                                : "N/A"}
+                            </div>
+                          </div>
+                          <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
+                            <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Threat Mix</div>
+                            <div className="text-sm font-bold text-cyan-200 leading-tight">
+                              Fly {flyingEnemyCount} / Ranged {rangedEnemyCount}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="xl:w-[300px] rounded-xl border border-red-700/35 bg-stone-950/45 p-3">
+                        <div className="text-[10px] text-red-400 uppercase tracking-wider mb-2">Pressure Diagram</div>
+                        <div className="flex items-center justify-center gap-1.5 mb-2">
+                          {featuredEnemyTypes.map((type, index) => (
+                            <React.Fragment key={`enemy-diagram-${type}`}>
+                              <FramedCodexSprite size={44} theme={getEnemySpriteFrameTheme(type)}>
+                                <EnemySprite type={type} size={34} animated />
+                              </FramedCodexSprite>
+                              {index < featuredEnemyTypes.length - 1 && (
+                                <ChevronRight size={13} className="text-red-300/70" />
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+                        <div className="text-[11px] text-stone-400 leading-relaxed">
+                          Average leak cost is {averageEnemyLeakCost.toFixed(1)} lives per enemy, so late-wave leaks
+                          are disproportionately expensive.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {CATEGORY_ORDER.map(category => {
                     const categoryEnemies = groupedEnemies[category];
                     if (categoryEnemies.length === 0) return null;
@@ -1525,12 +2838,12 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
 
                                 <div className="p-4">
                                   <div className="flex items-start gap-4 mb-3">
-                                    <div className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{
-                                      background: PANEL.bgDeep,
-                                      border: `1.5px solid ${RED_CARD.border25}`,
-                                    }}>
+                                    <FramedCodexSprite
+                                      size={64}
+                                      theme={getEnemySpriteFrameTheme(type)}
+                                    >
                                       <EnemySprite type={type} size={52} animated />
-                                    </div>
+                                    </FramedCodexSprite>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-start justify-between gap-2">
                                         <h3 className="text-lg font-bold text-red-200 truncate">
@@ -1581,7 +2894,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
                                       </div>
                                       <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
                                         <div className="text-[8px] text-purple-500">Atk Speed</div>
-                                        <div className="text-purple-300 font-bold text-[10px]">{(enemy.attackSpeed / 1000).toFixed(1)}s</div>
+                                        <div className="text-purple-300 font-bold text-[10px]">
+                                          {enemy.attackSpeed ? `${(enemy.attackSpeed / 1000).toFixed(1)}s` : "—"}
+                                        </div>
                                       </div>
                                       <div className="bg-purple-950/40 rounded p-1 text-center border border-purple-900/30">
                                         <div className="text-[8px] text-purple-500">Proj Dmg</div>
@@ -1743,229 +3058,816 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
             })()}
 
             {activeTab === "spells" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {spellTypes.map((type) => {
-                  const spell = SPELL_DATA[type];
-
-                  // Spell type info
-                  const spellInfo: Record<string, {
-                    category: string;
-                    color: string;
-                    icon: React.ReactNode;
-                    stats: { label: string; value: string; icon: React.ReactNode }[];
-                    details: string[];
-                    tip: string;
-                  }> = {
-                    fireball: {
-                      category: "Damage",
-                      color: "orange",
-                      icon: <Flame size={14} />,
-                      stats: [
-                        { label: "Damage", value: "200", icon: <Swords size={12} /> },
-                        { label: "Radius", value: "150", icon: <Radio size={12} /> },
-                        { label: "Delay", value: "1s", icon: <Timer size={12} /> },
-                      ],
-                      details: [
-                        "Meteor falls from sky with visual warning",
-                        "Maximum damage at center, 50% at edge",
-                        "Creates fire explosion effect",
-                      ],
-                      tip: "Best against clustered enemies at chokepoints",
-                    },
-                    lightning: {
-                      category: "Chain",
-                      color: "yellow",
-                      icon: <Zap size={14} />,
-                      stats: [
-                        { label: "Total DMG", value: "600", icon: <Swords size={12} /> },
-                        { label: "Targets", value: "5", icon: <Users size={12} /> },
-                        { label: "Stun", value: "0.5s", icon: <CircleOff size={12} /> },
-                      ],
-                      details: [
-                        "Chains between up to 5 enemies",
-                        "Damage split among all targets",
-                        "Each strike stuns briefly",
-                      ],
-                      tip: "Great for picking off multiple weakened enemies",
-                    },
-                    freeze: {
-                      category: "Control",
-                      color: "cyan",
-                      icon: <Snowflake size={14} />,
-                      stats: [
-                        { label: "Duration", value: "3s", icon: <Timer size={12} /> },
-                        { label: "Range", value: "Global", icon: <Radio size={12} /> },
-                        { label: "Targets", value: "All", icon: <Users size={12} /> },
-                      ],
-                      details: [
-                        "Freezes ALL enemies on the map",
-                        "Enemies completely immobilized",
-                        "Expanding ice wave visual effect",
-                      ],
-                      tip: "Emergency button when overwhelmed",
-                    },
-                    payday: {
-                      category: "Economy",
-                      color: "amber",
-                      icon: <Banknote size={14} />,
-                      stats: [
-                        { label: "Base", value: "80 PP", icon: <Coins size={12} /> },
-                        { label: "Per Enemy", value: "+5 PP", icon: <TrendingUp size={12} /> },
-                        { label: "Max Bonus", value: "+50 PP", icon: <Star size={12} /> },
-                      ],
-                      details: [
-                        "Base payout plus bonus per enemy",
-                        "Maximum possible: 130 PP",
-                        "Gold aura effect on all enemies",
-                      ],
-                      tip: "Use when many enemies are on screen for max value",
-                    },
-                    reinforcements: {
-                      category: "Summon",
-                      color: "green",
-                      icon: <Users size={14} />,
-                      stats: [
-                        { label: "Knights", value: "3", icon: <Users size={12} /> },
-                        { label: "Knight HP", value: "500", icon: <Heart size={12} /> },
-                        { label: "Knight DMG", value: "30", icon: <Swords size={12} /> },
-                      ],
-                      details: [
-                        "Summons 3 armored knight troops",
-                        "Click to place anywhere on map",
-                        "Knights fight independently",
-                      ],
-                      tip: "Great for blocking leaks or supporting weak points",
-                    },
-                  };
-                  const info = spellInfo[type] || { category: "Spell", color: "purple", icon: <Sparkles size={14} />, stats: [], details: [], tip: "" };
-
-                  return (
-                    <div
-                      key={type}
-                      className="rounded-xl overflow-hidden hover:border-purple-700/50 transition-colors relative"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1.5px solid ${GOLD.border25}`,
-                        boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
-                      }}
-                    >
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                      {/* Header */}
-                      <div className={`px-4 py-2.5 border-b flex items-center justify-between ${info.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
-                        info.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
-                          info.color === "cyan" ? "bg-cyan-950/50 border-cyan-800/30" :
-                            info.color === "amber" ? "bg-amber-950/50 border-amber-800/30" :
-                              info.color === "green" ? "bg-green-950/50 border-green-800/30" :
-                                "bg-purple-950/50 border-purple-800/30"
-                        }`}>
-                        <div className={`flex items-center gap-2 ${info.color === "orange" ? "text-orange-400" :
-                          info.color === "yellow" ? "text-yellow-400" :
-                            info.color === "cyan" ? "text-cyan-400" :
-                              info.color === "amber" ? "text-amber-400" :
-                                info.color === "green" ? "text-green-400" :
-                                  "text-purple-400"
-                          }`}>
-                          {info.icon}
-                          <span className="text-xs font-medium uppercase tracking-wider">
-                            {info.category}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-amber-400 flex items-center gap-1 text-xs">
-                            <Coins size={12} />
-                            {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
-                          </span>
-                          <span className="text-blue-400 flex items-center gap-1 text-xs">
-                            <Timer size={12} />
-                            {spell.cooldown / 1000}s
-                          </span>
-                        </div>
+              <div className="space-y-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                    border: `1.5px solid ${GOLD.border30}`,
+                    boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 text-purple-300">
+                        <Zap size={15} />
+                        <h3 className="text-lg font-bold">Spellbook Overview</h3>
                       </div>
-
-                      <div className="p-4">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className={`w-18 h-18 rounded-xl border-2 flex items-center justify-center p-2 flex-shrink-0 ${info.color === "orange" ? "bg-orange-950/40 border-orange-700/50" :
-                            info.color === "yellow" ? "bg-yellow-950/40 border-yellow-700/50" :
-                              info.color === "cyan" ? "bg-cyan-950/40 border-cyan-700/50" :
-                                info.color === "amber" ? "bg-amber-950/40 border-amber-700/50" :
-                                  info.color === "green" ? "bg-green-950/40 border-green-700/50" :
-                                    "bg-purple-950/40 border-purple-700/50"
-                            }`}>
-                            <SpellSprite type={type} size={56} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <h3 className="text-xl font-bold text-purple-200">
-                                {spell.name}
-                              </h3>
-                              <span className="text-xl">{spell.icon}</span>
-                            </div>
-                            <p className="text-sm text-stone-400">{spell.desc}</p>
+                      <p className="text-sm text-stone-300 leading-relaxed">
+                        Spells are your tempo and recovery lever. Build loadouts around wave control, burst conversion,
+                        and economy acceleration instead of stacking overlapping effects.
+                      </p>
+                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-purple-400 uppercase tracking-wider">Spell Types</div>
+                          <div className="text-lg font-bold text-purple-200">{spellTypes.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-emerald-800/35 bg-emerald-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-emerald-400 uppercase tracking-wider">Free Casts</div>
+                          <div className="text-lg font-bold text-emerald-200">{freeSpellCount}</div>
+                        </div>
+                        <div className="rounded-lg border border-blue-800/35 bg-blue-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-blue-400 uppercase tracking-wider">Cooldown Avg</div>
+                          <div className="text-sm font-bold text-blue-200 leading-tight">
+                            {(averageSpellCooldown / 1000).toFixed(1)}s
                           </div>
                         </div>
-
-                        {/* Stats grid */}
-                        <div className="grid grid-cols-3 gap-2 mb-4">
-                          {info.stats.map((stat, i) => (
-                            <div key={i} className={`rounded-lg p-2 text-center border ${info.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
-                              info.color === "yellow" ? "bg-yellow-950/40 border-yellow-800/30" :
-                                info.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
-                                  info.color === "amber" ? "bg-amber-950/40 border-amber-800/30" :
-                                    info.color === "green" ? "bg-green-950/40 border-green-800/30" :
-                                      "bg-purple-950/40 border-purple-800/30"
-                              }`}>
-                              <div className={`flex items-center justify-center mb-1 ${info.color === "orange" ? "text-orange-400" :
-                                info.color === "yellow" ? "text-yellow-400" :
-                                  info.color === "cyan" ? "text-cyan-400" :
-                                    info.color === "amber" ? "text-amber-400" :
-                                      info.color === "green" ? "text-green-400" :
-                                        "text-purple-400"
-                                }`}>
-                                {stat.icon}
-                              </div>
-                              <div className="text-[9px] text-stone-500">{stat.label}</div>
-                              <div className={`font-bold text-sm ${info.color === "orange" ? "text-orange-300" :
-                                info.color === "yellow" ? "text-yellow-300" :
-                                  info.color === "cyan" ? "text-cyan-300" :
-                                    info.color === "amber" ? "text-amber-300" :
-                                      info.color === "green" ? "text-green-300" :
-                                        "text-purple-300"
-                                }`}>{stat.value}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Details */}
-                        <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
-                          <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                            <Info size={10} /> Details
+                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Loadout Utility</div>
+                          <div className="text-sm font-bold text-cyan-200 leading-tight">
+                            3 slots • {controlSpellCount} control spells
                           </div>
-                          <ul className="text-xs text-stone-300 space-y-1">
-                            {info.details.map((detail, i) => (
-                              <li key={i} className="flex items-start gap-2">
-                                <span className="text-purple-400 mt-0.5">•</span>
-                                <span>{detail}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Tip */}
-                        <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${info.color === "orange" ? "bg-orange-950/30 border border-orange-800/30 text-orange-300" :
-                          info.color === "yellow" ? "bg-yellow-950/30 border border-yellow-800/30 text-yellow-300" :
-                            info.color === "cyan" ? "bg-cyan-950/30 border border-cyan-800/30 text-cyan-300" :
-                              info.color === "amber" ? "bg-amber-950/30 border border-amber-800/30 text-amber-300" :
-                                info.color === "green" ? "bg-green-950/30 border border-green-800/30 text-green-300" :
-                                  "bg-purple-950/30 border border-purple-800/30 text-purple-300"
-                          }`}>
-                          <Sparkles size={12} />
-                          <span className="font-medium">Pro Tip:</span>
-                          <span className="text-stone-400">{info.tip}</span>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+
+                    <div className="xl:w-[300px] rounded-xl border border-purple-700/35 bg-stone-950/45 p-3">
+                      <div className="text-[10px] text-purple-400 uppercase tracking-wider mb-2">Cast Flow Diagram</div>
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        {spellTypes.map((type, index) => (
+                          <React.Fragment key={`spell-diagram-${type}`}>
+                            <FramedCodexSprite size={38} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                              <SpellSprite type={type} size={28} />
+                            </FramedCodexSprite>
+                            {index < spellTypes.length - 1 && (
+                              <ChevronRight size={12} className="text-purple-300/70" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="text-[11px] text-stone-400 leading-relaxed">
+                        Average spell cost: {averageSpellCost.toFixed(1)} PP. Most expensive:{" "}
+                        {priciestSpell ? `${SPELL_DATA[priciestSpell.type].name} (${priciestSpell.cost} PP)` : "N/A"}.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {spellTypes.map((type) => {
+                    const spell = SPELL_DATA[type];
+                    const info = getSpellInfo(type);
+
+                    return (
+                      <div
+                        key={type}
+                        className="rounded-xl overflow-hidden hover:border-purple-700/50 transition-colors relative"
+                        style={{
+                          background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                          border: `1.5px solid ${GOLD.border25}`,
+                          boxShadow: `inset 0 0 10px ${GOLD.glow04}`,
+                        }}
+                      >
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                        {/* Header */}
+                        <div className={`px-4 py-2.5 border-b flex items-center justify-between ${info.color === "orange" ? "bg-orange-950/50 border-orange-800/30" :
+                          info.color === "yellow" ? "bg-yellow-950/50 border-yellow-800/30" :
+                            info.color === "cyan" ? "bg-cyan-950/50 border-cyan-800/30" :
+                              info.color === "amber" ? "bg-amber-950/50 border-amber-800/30" :
+                                info.color === "green" ? "bg-green-950/50 border-green-800/30" :
+                                  "bg-purple-950/50 border-purple-800/30"
+                          }`}>
+                          <div className={`flex items-center gap-2 ${info.color === "orange" ? "text-orange-400" :
+                            info.color === "yellow" ? "text-yellow-400" :
+                              info.color === "cyan" ? "text-cyan-400" :
+                                info.color === "amber" ? "text-amber-400" :
+                                  info.color === "green" ? "text-green-400" :
+                                    "text-purple-400"
+                            }`}>
+                            {info.icon}
+                            <span className="text-xs font-medium uppercase tracking-wider">
+                              {info.category}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-amber-400 flex items-center gap-1 text-xs">
+                              <Coins size={12} />
+                              {spell.cost > 0 ? `${spell.cost} PP` : "FREE"}
+                            </span>
+                            <span className="text-blue-400 flex items-center gap-1 text-xs">
+                              <Timer size={12} />
+                              {spell.cooldown / 1000}s
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-4">
+                          <div className="flex items-start gap-4 mb-4">
+                            <FramedCodexSprite
+                              size={72}
+                              theme={SPELL_SPRITE_FRAME_THEME[type]}
+                            >
+                              <SpellSprite type={type} size={56} />
+                            </FramedCodexSprite>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-1">
+                                <h3 className="text-xl font-bold text-purple-200">
+                                  {spell.name}
+                                </h3>
+                                <span className="text-xl">{spell.icon}</span>
+                              </div>
+                              <p className="text-sm text-stone-400">{spell.desc}</p>
+                            </div>
+                          </div>
+
+                          {/* Stats grid */}
+                          <div className="grid grid-cols-3 gap-2 mb-4">
+                            {info.stats.map((stat, i) => (
+                              <div key={i} className={`rounded-lg p-2 text-center border ${info.color === "orange" ? "bg-orange-950/40 border-orange-800/30" :
+                                info.color === "yellow" ? "bg-yellow-950/40 border-yellow-800/30" :
+                                  info.color === "cyan" ? "bg-cyan-950/40 border-cyan-800/30" :
+                                    info.color === "amber" ? "bg-amber-950/40 border-amber-800/30" :
+                                      info.color === "green" ? "bg-green-950/40 border-green-800/30" :
+                                        "bg-purple-950/40 border-purple-800/30"
+                                }`}>
+                                <div className={`flex items-center justify-center mb-1 ${info.color === "orange" ? "text-orange-400" :
+                                  info.color === "yellow" ? "text-yellow-400" :
+                                    info.color === "cyan" ? "text-cyan-400" :
+                                      info.color === "amber" ? "text-amber-400" :
+                                        info.color === "green" ? "text-green-400" :
+                                          "text-purple-400"
+                                  }`}>
+                                  {stat.icon}
+                                </div>
+                                <div className="text-[9px] text-stone-500">{stat.label}</div>
+                                <div className={`font-bold text-sm ${info.color === "orange" ? "text-orange-300" :
+                                  info.color === "yellow" ? "text-yellow-300" :
+                                    info.color === "cyan" ? "text-cyan-300" :
+                                      info.color === "amber" ? "text-amber-300" :
+                                        info.color === "green" ? "text-green-300" :
+                                          "text-purple-300"
+                                  }`}>{stat.value}</div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Details */}
+                          <div className="bg-stone-800/40 rounded-lg p-3 border border-stone-700/40 mb-3">
+                            <div className="text-xs text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                              <Info size={10} /> Details
+                            </div>
+                            <ul className="text-xs text-stone-300 space-y-1">
+                              {info.details.map((detail, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <span className="text-purple-400 mt-0.5">•</span>
+                                  <span>{detail}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Tip */}
+                          <div className={`rounded-lg px-3 py-2 text-xs flex items-center gap-2 ${info.color === "orange" ? "bg-orange-950/30 border border-orange-800/30 text-orange-300" :
+                            info.color === "yellow" ? "bg-yellow-950/30 border border-yellow-800/30 text-yellow-300" :
+                              info.color === "cyan" ? "bg-cyan-950/30 border border-cyan-800/30 text-cyan-300" :
+                                info.color === "amber" ? "bg-amber-950/30 border border-amber-800/30 text-amber-300" :
+                                  info.color === "green" ? "bg-green-950/30 border border-green-800/30 text-green-300" :
+                                    "bg-purple-950/30 border border-purple-800/30 text-purple-300"
+                            }`}>
+                            <Sparkles size={12} />
+                            <span className="font-medium">Pro Tip:</span>
+                            <span className="text-stone-400">{info.tip}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "special_towers" && (
+              <div className="space-y-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                    border: `1.5px solid ${GOLD.border30}`,
+                    boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 text-amber-300">
+                        <Sparkles size={15} />
+                        <h3 className="text-lg font-bold">Special Structure Deck</h3>
+                      </div>
+                      <p className="text-sm text-stone-300 leading-relaxed">
+                        Special structures are map-authored power pieces. Their uptime and geometry create free
+                        tempo swings, so route waves around them like a permanent extra tower slot.
+                      </p>
+                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                        <div className="rounded-lg border border-amber-800/35 bg-amber-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-amber-400 uppercase tracking-wider">Placements</div>
+                          <div className="text-lg font-bold text-amber-200">{totalSpecialTowerInstances}</div>
+                        </div>
+                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Unique Types</div>
+                          <div className="text-lg font-bold text-cyan-200">{specialTowerTypesInUse.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-purple-800/35 bg-purple-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-purple-400 uppercase tracking-wider">Most Common</div>
+                          <div className="text-sm font-bold text-purple-200 leading-tight">
+                            {mostCommonSpecialTowerType
+                              ? `${SPECIAL_TOWER_INFO[mostCommonSpecialTowerType].name} ${specialTowerInstanceCounts.get(mostCommonSpecialTowerType) ?? 0
+                              }`
+                              : "N/A"}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-rose-400 uppercase tracking-wider">Avg / Special Map</div>
+                          <div className="text-sm font-bold text-rose-200 leading-tight">
+                            {levelsWithSpecialStructures > 0
+                              ? `${averageSpecialTowersPerSpecialMap.toFixed(1)} • ${levelsWithSpecialStructures} maps`
+                              : "No special maps"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="xl:w-[320px] rounded-xl border border-amber-700/35 bg-stone-950/45 p-3">
+                      <div className="text-[10px] text-amber-400 uppercase tracking-wider mb-2">Structure Flow</div>
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        {featuredSpecialTowers.map((type, index) => (
+                          <React.Fragment key={`special-diagram-${type}`}>
+                            <SpecialTowerSprite type={type} size={44} />
+                            {index < featuredSpecialTowers.length - 1 && (
+                              <ChevronRight size={13} className="text-amber-300/70" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="text-[11px] text-stone-400 leading-relaxed">
+                        Coverage is {levelsWithSpecialStructures} maps total, with{" "}
+                        {averageSpecialTowersPerSpecialMap.toFixed(1)} structures on average where they appear.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {specialTowerTypesInUse.map((type) => {
+                    const info = SPECIAL_TOWER_INFO[type];
+                    const levels = Array.from(specialTowerLevels.get(type) || []);
+                    return (
+                      <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
+                        <div className="flex items-start gap-3 mb-3">
+                          <SpecialTowerSprite type={type} size={72} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-3">
+                              <h3 className={`text-lg font-bold ${info.color}`}>{info.name}</h3>
+                              <span className="rounded-full border border-white/10 bg-stone-900/45 px-2 py-0.5 text-[10px] uppercase tracking-wider text-stone-300">
+                                {info.role}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-3 text-[11px] text-stone-400">
+                              <span className="inline-flex items-center gap-1">
+                                {info.icon}
+                                Active Tooling
+                              </span>
+                              <span>
+                                {levels.length} level{levels.length !== 1 ? "s" : ""}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Effect</div>
+                            <p className="text-xs text-stone-200 leading-relaxed">{info.effect}</p>
+                          </div>
+                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Numbers</div>
+                            <p className="text-xs text-stone-200 leading-relaxed">{info.numbers}</p>
+                          </div>
+                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Tactical Use</div>
+                            <p className="text-xs text-stone-300 leading-relaxed">{info.tip}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5">Appears On</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {levels.slice(0, 8).map((levelName) => (
+                              <span
+                                key={levelName}
+                                className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-300"
+                              >
+                                {levelName}
+                              </span>
+                            ))}
+                            {levels.length > 8 && (
+                              <span className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-400">
+                                +{levels.length - 8} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "hazards" && (
+              <div className="space-y-5">
+                <div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                    border: `1.5px solid ${GOLD.border30}`,
+                    boxShadow: `inset 0 0 14px ${GOLD.glow04}`,
+                  }}
+                >
+                  <div className="absolute inset-[2px] rounded-[14px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+                  <div className="p-4 flex flex-col xl:flex-row gap-4 xl:gap-5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 text-red-300">
+                        <AlertTriangle size={15} />
+                        <h3 className="text-lg font-bold">Hazard Control Room</h3>
+                      </div>
+                      <p className="text-sm text-stone-300 leading-relaxed">
+                        Hazards are map-level force multipliers. Push enemies through damage fields and debuff zones
+                        to turn pathing decisions into free damage and safer tower uptime.
+                      </p>
+                      <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+                        <div className="rounded-lg border border-red-800/35 bg-red-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-red-400 uppercase tracking-wider">Hazard Zones</div>
+                          <div className="text-lg font-bold text-red-200">{totalHazardZones}</div>
+                        </div>
+                        <div className="rounded-lg border border-orange-800/35 bg-orange-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-orange-400 uppercase tracking-wider">Unique Hazards</div>
+                          <div className="text-lg font-bold text-orange-200">{hazardTypesInUse.length}</div>
+                        </div>
+                        <div className="rounded-lg border border-cyan-800/35 bg-cyan-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-cyan-400 uppercase tracking-wider">Most Common</div>
+                          <div className="text-sm font-bold text-cyan-200 leading-tight">
+                            {mostCommonHazardType
+                              ? `${HAZARD_INFO[mostCommonHazardType].name} ${hazardZoneCounts.get(mostCommonHazardType) ?? 0
+                              }`
+                              : "N/A"}
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-rose-800/35 bg-rose-950/30 px-2.5 py-2">
+                          <div className="text-[10px] text-rose-400 uppercase tracking-wider">Avg / Hazard Map</div>
+                          <div className="text-sm font-bold text-rose-200 leading-tight">
+                            {levelsWithHazards > 0
+                              ? `${averageHazardsPerHazardMap.toFixed(1)} • ${levelsWithHazards} maps`
+                              : "No hazard maps"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="xl:w-[320px] rounded-xl border border-red-700/35 bg-stone-950/45 p-3">
+                      <div className="text-[10px] text-red-400 uppercase tracking-wider mb-2">Hazard Flow</div>
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        {featuredHazards.map((type, index) => (
+                          <React.Fragment key={`hazard-diagram-${type}`}>
+                            <HazardSprite type={type} size={44} />
+                            {index < featuredHazards.length - 1 && (
+                              <ChevronRight size={13} className="text-red-300/70" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div className="text-[11px] text-stone-400 leading-relaxed">
+                        Hazards appear on {levelsWithHazards} maps, averaging{" "}
+                        {averageHazardsPerHazardMap.toFixed(1)} zones where enabled.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {hazardTypesInUse.map((type) => {
+                    const info = HAZARD_INFO[type];
+                    const levels = Array.from(hazardLevels.get(type) || []);
+                    return (
+                      <div key={type} className={`rounded-2xl border p-4 ${info.panelClass}`}>
+                        <div className="flex items-start gap-3 mb-3">
+                          <HazardSprite type={type} size={72} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-3">
+                              <h3 className={`text-lg font-bold ${info.color}`}>{info.name}</h3>
+                              <span className="rounded-full border border-white/10 bg-stone-900/45 px-2 py-0.5 text-[10px] uppercase tracking-wider text-stone-300">
+                                Hazard
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center gap-3 text-[11px] text-stone-400">
+                              <span className="inline-flex items-center gap-1">
+                                {info.icon}
+                                Env Modifier
+                              </span>
+                              <span>
+                                {levels.length} level{levels.length !== 1 ? "s" : ""}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Effect</div>
+                            <p className="text-xs text-stone-200 leading-relaxed">{info.effect}</p>
+                          </div>
+                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Numbers</div>
+                            <p className="text-xs text-stone-200 leading-relaxed">{info.numbers}</p>
+                          </div>
+                          <div className="rounded-lg border border-stone-700/50 bg-stone-900/45 p-2.5">
+                            <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1">Counterplay</div>
+                            <p className="text-xs text-stone-300 leading-relaxed">{info.counterplay}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <div className="text-[10px] text-stone-500 uppercase tracking-wider mb-1.5">Appears On</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {levels.slice(0, 8).map((levelName) => (
+                              <span
+                                key={levelName}
+                                className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-300"
+                              >
+                                {levelName}
+                              </span>
+                            ))}
+                            {levels.length > 8 && (
+                              <span className="rounded-full border border-stone-600/40 bg-stone-900/45 px-2 py-0.5 text-[11px] text-stone-400">
+                                +{levels.length - 8} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "guide" && (
+              <div className="space-y-5">
+                <div className="rounded-2xl border border-amber-700/35 bg-gradient-to-br from-amber-950/35 via-stone-950/45 to-indigo-950/20 p-4">
+                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 text-amber-200 mb-1">
+                        <Info size={16} />
+                        <h3 className="text-xl font-bold">How To Play: Full Battle Loop</h3>
+                      </div>
+                      <p className="text-sm text-stone-300 leading-relaxed">
+                        Start with <span className="text-amber-300 font-semibold">{INITIAL_PAW_POINTS} PP</span>,
+                        defend <span className="text-rose-300 font-semibold">{INITIAL_LIVES} lives</span>, and pace
+                        your economy against escalating wave density. Auto-wave cadence begins at{" "}
+                        <span className="text-cyan-300 font-semibold">{Math.round(WAVE_TIMER_BASE / 1000)}s</span>,
+                        but you can launch early when your setup is ready.
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {featuredTowerTypes.slice(0, 2).map((type) => (
+                          <FramedCodexSprite key={`guide-tower-${type}`} size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                            <TowerSprite type={type} size={33} level={2} />
+                          </FramedCodexSprite>
+                        ))}
+                        {featuredEnemyTypes.slice(0, 2).map((type) => (
+                          <FramedCodexSprite key={`guide-enemy-${type}`} size={42} theme={getEnemySpriteFrameTheme(type)}>
+                            <EnemySprite type={type} size={33} animated />
+                          </FramedCodexSprite>
+                        ))}
+                        {featuredHeroTypes.slice(0, 1).map((type) => (
+                          <FramedCodexSprite key={`guide-hero-${type}`} size={42} theme={getHeroSpriteFrameTheme(type)}>
+                            <HeroSprite type={type} size={33} />
+                          </FramedCodexSprite>
+                        ))}
+                        {spellTypes.slice(0, 1).map((type) => (
+                          <FramedCodexSprite key={`guide-spell-${type}`} size={42} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                            <SpellSprite type={type} size={31} />
+                          </FramedCodexSprite>
+                        ))}
+                        {featuredSpecialTowers.slice(0, 1).map((type) => (
+                          <SpecialTowerSprite key={`guide-special-${type}`} type={type} size={42} />
+                        ))}
+                        {featuredHazards.slice(0, 1).map((type) => (
+                          <HazardSprite key={`guide-hazard-${type}`} type={type} size={42} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 lg:w-[430px]">
+                      <div className="rounded-lg border border-purple-700/30 bg-purple-950/25 p-2.5">
+                        <div className="text-[10px] text-purple-300 uppercase tracking-wider mb-1">Maps</div>
+                        <div className="text-xl font-bold text-purple-200">{campaignLevelCount + challengeLevelCount}</div>
+                        <div className="text-[10px] text-stone-400">Campaign + Challenge</div>
+                      </div>
+                      <div className="rounded-lg border border-sky-700/30 bg-sky-950/25 p-2.5">
+                        <div className="text-[10px] text-sky-300 uppercase tracking-wider mb-1">Dual Paths</div>
+                        <div className="text-xl font-bold text-sky-200">{dualPathLevelCount}</div>
+                        <div className="text-[10px] text-stone-400">Split-lane pressure maps</div>
+                      </div>
+                      <div className="rounded-lg border border-orange-700/30 bg-orange-950/25 p-2.5">
+                        <div className="text-[10px] text-orange-300 uppercase tracking-wider mb-1">Tower Types</div>
+                        <div className="text-xl font-bold text-orange-200">{towerTypes.length}</div>
+                        <div className="text-[10px] text-stone-400">Core build arsenal</div>
+                      </div>
+                      <div className="rounded-lg border border-red-700/30 bg-red-950/25 p-2.5">
+                        <div className="text-[10px] text-red-300 uppercase tracking-wider mb-1">Enemy Types</div>
+                        <div className="text-xl font-bold text-red-200">{enemyTypes.length}</div>
+                        <div className="text-[10px] text-stone-400">Unique unit profiles</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-red-800/35 bg-red-950/20 p-4">
+                    <div className="flex items-center gap-2 text-red-300 mb-2">
+                      <Skull size={14} />
+                      <span className="text-sm font-semibold">1) Enemies and Threat Traits</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {featuredEnemyTypes.map((type) => (
+                        <FramedCodexSprite key={`enemy-guide-${type}`} size={44} theme={getEnemySpriteFrameTheme(type)}>
+                          <EnemySprite type={type} size={34} animated />
+                        </FramedCodexSprite>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                      <div className="rounded border border-red-800/35 bg-red-950/25 px-2 py-1.5 text-red-200">
+                        Bosses: {bossEnemyCount}
+                      </div>
+                      <div className="rounded border border-cyan-800/35 bg-cyan-950/25 px-2 py-1.5 text-cyan-200">
+                        Flying: {flyingEnemyCount}
+                      </div>
+                      <div className="rounded border border-green-800/35 bg-green-950/25 px-2 py-1.5 text-green-200">
+                        Ranged: {rangedEnemyCount}
+                      </div>
+                      <div className="rounded border border-amber-800/35 bg-amber-950/25 px-2 py-1.5 text-amber-200">
+                        Armored: {armoredEnemyCount}
+                      </div>
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Read trait badges in the enemy codex and pre-build counters. Flying ignores ground blocks,
+                      armored needs sustained DPS, ranged enemies punish weak backline coverage, and bosses consume
+                      multiple lives if they leak.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-amber-800/35 bg-amber-950/20 p-4">
+                    <div className="flex items-center gap-2 text-amber-300 mb-2">
+                      <Crown size={14} />
+                      <span className="text-sm font-semibold">2) Towers and Upgrade Priorities</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {towerTypes.map((type) => (
+                        <FramedCodexSprite key={`tower-guide-${type}`} size={42} theme={TOWER_SPRITE_FRAME_THEME[type]}>
+                          <TowerSprite type={type} size={33} level={2} />
+                        </FramedCodexSprite>
+                      ))}
+                    </div>
+                    <div className="rounded border border-amber-800/35 bg-amber-950/25 px-2 py-1.5 text-xs text-amber-200 mb-2">
+                      Cost range: {cheapestTower ? `${TOWER_DATA[cheapestTower.type].name} (${cheapestTower.cost} PP)` : "-"}{" "}
+                      to {priciestTower ? `${TOWER_DATA[priciestTower.type].name} (${priciestTower.cost} PP)` : "-"}
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Open with lane coverage first, then stack level 2-3 upgrades on towers that already have strong
+                      uptime. Don&apos;t over-expand level 1 towers; concentrated upgrades beat thin spread damage.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-blue-800/35 bg-blue-950/20 p-4">
+                    <div className="flex items-center gap-2 text-blue-300 mb-2">
+                      <Flag size={14} />
+                      <span className="text-sm font-semibold">3) Maps, Paths, and Lane Geometry</span>
+                    </div>
+                    <div className="rounded-lg border border-blue-800/35 bg-blue-950/20 p-2.5 mb-3">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <FramedCodexSprite size={34} theme={getEnemySpriteFrameTheme(featuredEnemyTypes[0])}>
+                          <EnemySprite type={featuredEnemyTypes[0]} size={26} animated />
+                        </FramedCodexSprite>
+                        <ChevronRight size={14} className="text-blue-300/80" />
+                        <FramedCodexSprite size={34} theme={getEnemySpriteFrameTheme(featuredEnemyTypes[1] || featuredEnemyTypes[0])}>
+                          <EnemySprite type={featuredEnemyTypes[1] || featuredEnemyTypes[0]} size={26} animated />
+                        </FramedCodexSprite>
+                        <ChevronRight size={14} className="text-blue-300/80" />
+                        <FramedCodexSprite size={34} theme={TOWER_SPRITE_FRAME_THEME[featuredTowerTypes[0]]}>
+                          <TowerSprite type={featuredTowerTypes[0]} size={26} level={2} />
+                        </FramedCodexSprite>
+                        <ChevronRight size={14} className="text-blue-300/80" />
+                        <FramedCodexSprite size={34} theme={TOWER_SPRITE_FRAME_THEME[featuredTowerTypes[1] || featuredTowerTypes[0]]}>
+                          <TowerSprite type={featuredTowerTypes[1] || featuredTowerTypes[0]} size={26} level={3} />
+                        </FramedCodexSprite>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                      <div className="rounded border border-blue-800/35 bg-blue-950/25 px-2 py-1.5 text-blue-200">
+                        Path variants: {mapPathEntries.length}
+                      </div>
+                      <div className="rounded border border-purple-800/35 bg-purple-950/25 px-2 py-1.5 text-purple-200">
+                        Avg nodes/path: {averagePathNodes.toFixed(1)}
+                      </div>
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Long turns are best for DOT and slows; short straights favor burst. Dual-path maps require independent
+                      leak control on each lane. Longest path is{" "}
+                      <span className="text-blue-200 font-medium">
+                        {longestPathEntry ? `${formatKeyLabel(longestPathEntry[0])} (${longestPathEntry[1].length} nodes)` : "N/A"}
+                      </span>
+                      , shortest is{" "}
+                      <span className="text-blue-200 font-medium">
+                        {shortestPathEntry ? `${formatKeyLabel(shortestPathEntry[0])} (${shortestPathEntry[1].length} nodes)` : "N/A"}
+                      </span>.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-fuchsia-800/35 bg-fuchsia-950/20 p-4">
+                    <div className="flex items-center gap-2 text-fuchsia-300 mb-2">
+                      <Timer size={14} />
+                      <span className="text-sm font-semibold">4) Wave Design and Spawn Rhythm</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {featuredEnemyTypes.slice(0, 3).map((type) => (
+                        <FramedCodexSprite key={`wave-enemy-${type}`} size={38} theme={getEnemySpriteFrameTheme(type)}>
+                          <EnemySprite type={type} size={30} animated />
+                        </FramedCodexSprite>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                      <div className="rounded border border-fuchsia-800/35 bg-fuchsia-950/25 px-2 py-1.5 text-fuchsia-200">
+                        Configured maps: {mapWaveEntries.length}
+                      </div>
+                      <div className="rounded border border-violet-800/35 bg-violet-950/25 px-2 py-1.5 text-violet-200">
+                        Total waves: {totalConfiguredWaves}
+                      </div>
+                      <div className="rounded border border-purple-800/35 bg-purple-950/25 px-2 py-1.5 text-purple-200">
+                        Avg waves/map: {averageWavesPerMap.toFixed(1)}
+                      </div>
+                      <div className="rounded border border-pink-800/35 bg-pink-950/25 px-2 py-1.5 text-pink-200">
+                        Avg groups/wave: {averageGroupsPerWave.toFixed(1)}
+                      </div>
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Waves are layered into staggered groups by delay + interval, so lane pressure can spike before
+                      the timer ends. Peak grouped wave:{" "}
+                      <span className="text-fuchsia-200 font-medium">
+                        {peakGroupWave ? `${formatKeyLabel(peakGroupWave.mapKey)} W${peakGroupWave.waveNumber} (${peakGroupWave.groupCount} groups)` : "N/A"}
+                      </span>
+                      . Densest wave by raw bodies:{" "}
+                      <span className="text-fuchsia-200 font-medium">
+                        {densestWave ? `${formatKeyLabel(densestWave.mapKey)} W${densestWave.waveNumber} (${densestWave.enemyCount} enemies)` : "N/A"}
+                      </span>.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-green-800/35 bg-green-950/20 p-4">
+                    <div className="flex items-center gap-2 text-green-300 mb-2">
+                      <Gauge size={14} />
+                      <span className="text-sm font-semibold">5) Tempo Controls: Speed + Early Start</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3 text-xs">
+                      <span className="rounded border border-green-800/35 bg-green-950/30 px-2 py-1 text-green-200">Speed presets: 0.5x / 1x / 2x</span>
+                      <span className="rounded border border-green-800/35 bg-green-950/30 px-2 py-1 text-green-200">Fine tuning: +/- 0.25x</span>
+                      <span className="rounded border border-amber-800/35 bg-amber-950/30 px-2 py-1 text-amber-200">Pause: 0x</span>
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      The top HUD lets you control simulation speed instantly. To launch early, click a lane&apos;s skull wave
+                      bubble once to preview enemies, then click the same bubble again to confirm and start immediately.
+                      Early starts are high-value when your cooldowns are up and build order is stable.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-purple-800/35 bg-purple-950/20 p-4">
+                    <div className="flex items-center gap-2 text-purple-300 mb-2">
+                      <Shield size={14} />
+                      <span className="text-sm font-semibold">6) Heroes and Ability Windows</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {featuredHeroTypes.map((type) => (
+                        <FramedCodexSprite key={`hero-guide-${type}`} size={42} theme={getHeroSpriteFrameTheme(type)}>
+                          <HeroSprite type={type} size={33} />
+                        </FramedCodexSprite>
+                      ))}
+                      {featuredHeroTypes[0] && (
+                        <div className="rounded-lg border border-purple-700/40 bg-purple-950/30 p-1.5 flex items-center justify-center">
+                          <HeroAbilityIcon type={featuredHeroTypes[0]} size={26} />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Pick one hero before deployment and reposition them to live lanes. Ability timing matters more than raw
+                      cooldown uptime: hold abilities for stacked groups, boss entries, or leak-recovery moments where one cast
+                      can preserve multiple lives.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-cyan-800/35 bg-cyan-950/20 p-4">
+                    <div className="flex items-center gap-2 text-cyan-300 mb-2">
+                      <Zap size={14} />
+                      <span className="text-sm font-semibold">7) Spells, Cooldowns, and Economy</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {spellTypes.map((type) => (
+                        <FramedCodexSprite key={`spell-guide-${type}`} size={40} theme={SPELL_SPRITE_FRAME_THEME[type]}>
+                          <SpellSprite type={type} size={30} />
+                        </FramedCodexSprite>
+                      ))}
+                    </div>
+                    <div className="rounded border border-cyan-800/35 bg-cyan-950/25 px-2 py-1.5 text-xs text-cyan-200 mb-2">
+                      Pre-match loadout requires 1 hero + 3 spells.
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Cast proactively to shape wave tempo, not only for panic cleanup. Fireball/Lightning delete clusters,
+                      Freeze resets global pressure, Payday funds greed-to-power spikes, and Reinforcements create emergency
+                      frontline anchors.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-sky-800/35 bg-sky-950/20 p-4">
+                    <div className="flex items-center gap-2 text-sky-300 mb-2">
+                      <Crosshair size={14} />
+                      <span className="text-sm font-semibold">8) Ranged Combat and Target Priority</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      <FramedCodexSprite size={40} theme={TOWER_SPRITE_FRAME_THEME.arch}>
+                        <TowerSprite type="arch" size={31} level={3} />
+                      </FramedCodexSprite>
+                      <FramedCodexSprite size={40} theme={TOWER_SPRITE_FRAME_THEME.lab}>
+                        <TowerSprite type="lab" size={31} level={3} />
+                      </FramedCodexSprite>
+                      <FramedCodexSprite size={40} theme={getEnemySpriteFrameTheme("archer")}>
+                        <EnemySprite type="archer" size={31} animated />
+                      </FramedCodexSprite>
+                      <FramedCodexSprite size={40} theme={getEnemySpriteFrameTheme("crossbowman")}>
+                        <EnemySprite type="crossbowman" size={31} animated />
+                      </FramedCodexSprite>
+                      <FramedCodexSprite size={40} theme={getEnemySpriteFrameTheme("warlock")}>
+                        <EnemySprite type="warlock" size={31} animated />
+                      </FramedCodexSprite>
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Ranged enemies and flying units demand earlier interception than melee packs. Keep at least one anti-air /
+                      ranged-ready lane package, and remember that Reinforcement troops can gain ranged volleys at higher spell
+                      levels (current preview: {reinforcementGuideStats.knightCount} units, {reinforcementGuideStats.knightDamage} DMG each).
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-rose-800/35 bg-rose-950/20 p-4">
+                    <div className="flex items-center gap-2 text-rose-300 mb-2">
+                      <Sparkles size={14} />
+                      <span className="text-sm font-semibold">9) Special Towers + Hazards as Multipliers</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {featuredSpecialTowers.slice(0, 3).map((type) => (
+                        <SpecialTowerSprite key={`mix-special-${type}`} type={type} size={40} />
+                      ))}
+                      {featuredHazards.slice(0, 3).map((type) => (
+                        <HazardSprite key={`mix-hazard-${type}`} type={type} size={40} />
+                      ))}
+                    </div>
+                    <p className="text-xs text-stone-300 leading-relaxed">
+                      Treat map mechanics as part of your build. Aura structures amplify nearby towers, objective structures
+                      create forced-defense lanes, and hazards can either stall for free damage or accelerate enemy leaks.
+                      Overlay these systems with hero and spell windows for high-efficiency clears.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-blue-800/35 bg-blue-950/20 p-4">
+                  <div className="flex items-center gap-2 mb-2 text-blue-300">
+                    <Info size={14} />
+                    <span className="text-sm font-semibold">Match Checklist (Start to Finish)</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-stone-300">
+                    <div className="rounded border border-blue-800/30 bg-blue-950/20 px-2 py-1.5">Lock 1 hero + 3 spells before launch</div>
+                    <div className="rounded border border-blue-800/30 bg-blue-950/20 px-2 py-1.5">Cover every active path before greed upgrades</div>
+                    <div className="rounded border border-blue-800/30 bg-blue-950/20 px-2 py-1.5">Use early-wave bubble starts when cooldowns are ready</div>
+                    <div className="rounded border border-blue-800/30 bg-blue-950/20 px-2 py-1.5">Reserve one recovery tool for unexpected leaks</div>
+                    <div className="rounded border border-blue-800/30 bg-blue-950/20 px-2 py-1.5">Protect objective lanes on vault/special maps</div>
+                    <div className="rounded border border-blue-800/30 bg-blue-950/20 px-2 py-1.5">Exploit hazard zones with stuns, slows, and burst</div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1974,4 +3876,3 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
     </div>
   );
 };
-

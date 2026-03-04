@@ -45,7 +45,13 @@
   box-sizing: border-box;
 }
 
-@keyframes fade-in {
+canvas {
+  touch-action: none;
+  opacity: 1;
+  animation: none;
+}
+
+@keyframes game-canvas-delayed-fade-in {
   from {
     opacity: 0;
   }
@@ -54,10 +60,9 @@
   }
 }
 
-canvas {
+.game-start-fade {
   opacity: 0;
-  touch-action: none;
-  animation: fade-in 5s ease 1s forwards;
+  animation: game-canvas-delayed-fade-in 5s ease 1s forwards;
 }
 
 /* Hide scroll bar but still allow scrolling */
