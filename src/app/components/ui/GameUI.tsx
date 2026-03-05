@@ -29,5 +29,5 @@ export {
   LandmarkTooltip,
   HazardTooltip,
 } from "./Tooltips";
-export { EnemyInspector, EnemyDetailTooltip } from "./EnemyInspector";
+export { EnemyInspector, EnemyDetailTooltip, TroopDetailTooltip, HeroDetailTooltip } from "./EnemyInspector";
 export { HeroHoverTooltip } from "./HeroHoverTooltip";

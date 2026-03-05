@@ -28,8 +28,8 @@ import {
   Ban,
   Wind,
 } from "lucide-react";
-import type { Enemy, Position, EnemyTrait } from "../../types";
-import { ENEMY_DATA } from "../../constants";
+import type { Enemy, Troop, Hero, Position, EnemyTrait } from "../../types";
+import { ENEMY_DATA, HERO_DATA, TROOP_DATA } from "../../constants";
 import { EnemySprite } from "../../sprites";
 import { PANEL, GOLD, OVERLAY, PURPLE_CARD, panelGradient } from "./theme";
 
@@ -43,10 +43,12 @@ interface EnemyInspectorProps {
   selectedEnemy: Enemy | null;
   setSelectedEnemy: (enemy: Enemy | null) => void;
   enemies: Enemy[];
+  troops: Troop[];
   setGameSpeed: (speed: number) => void;
   previousGameSpeed: number;
   setPreviousGameSpeed: (speed: number) => void;
   gameSpeed: number;
+  onDeactivate?: () => void;
 }
 
 export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
@@ -55,22 +57,23 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
   selectedEnemy,
   setSelectedEnemy,
   enemies,
+  troops,
   setGameSpeed,
   previousGameSpeed,
   setPreviousGameSpeed,
   gameSpeed,
+  onDeactivate,
 }) => {
   const handleToggle = () => {
     if (!isActive) {
-      // Activating inspector - pause game
       setPreviousGameSpeed(gameSpeed);
       setGameSpeed(0);
       setIsActive(true);
     } else {
-      // Deactivating inspector - resume game
       setGameSpeed(previousGameSpeed > 0 ? previousGameSpeed : 1);
       setIsActive(false);
       setSelectedEnemy(null);
+      onDeactivate?.();
     }
   };
 
@@ -115,10 +118,10 @@ export const EnemyInspector: React.FC<EnemyInspectorProps> = ({
           <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${PURPLE_CARD.innerBorder}` }} />
           <div className="text-[9px] text-purple-300 mb-1 font-bold text-center tracking-wider flex items-center gap-1 justify-center">
             <AlertTriangle size={10} />
-            PAUSED - CLICK ENEMY
+            PAUSED - CLICK ANY UNIT
           </div>
           <div className="text-[8px] text-purple-400/80 text-center">
-            {enemies.length} enemies on field
+            {enemies.length} enemies{troops.length > 0 ? `, ${troops.filter(t => !t.dead).length} troops` : ""} on field
           </div>
           {selectedEnemy && (
             <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${PURPLE_CARD.border}` }}>
@@ -525,6 +528,308 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// UNIT STATUS EFFECTS SECTION - Reusable across troop/hero tooltips
+// =============================================================================
+
+function StatusEffectsBadges({ unit }: { unit: Troop | Hero }) {
+  const now = Date.now();
+  const hasBurn = unit.burning && unit.burnUntil && unit.burnUntil > now;
+  const hasSlow = unit.slowed && unit.slowUntil && unit.slowUntil > now;
+  const hasPoison = unit.poisoned && unit.poisonUntil && unit.poisonUntil > now;
+  const hasStun = unit.stunned && unit.stunUntil && unit.stunUntil > now;
+  const hasAny = hasBurn || hasSlow || hasPoison || hasStun;
+
+  return (
+    <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+      <div className="text-[10px] text-purple-400 font-bold mb-1.5">ACTIVE EFFECTS</div>
+      <div className="flex flex-wrap gap-2">
+        {hasBurn && (
+          <span className="flex items-center gap-1 px-2 py-1 bg-orange-900/40 rounded text-orange-300 text-[9px]">
+            <Flame size={10} /> Burning
+            {unit.burnDamage && <span className="text-orange-400/80 ml-1">({unit.burnDamage} DPS)</span>}
+          </span>
+        )}
+        {hasSlow && (
+          <span className="flex items-center gap-1 px-2 py-1 bg-cyan-900/40 rounded text-cyan-300 text-[9px]">
+            <Snowflake size={10} /> Slowed
+            {unit.slowIntensity && <span className="text-cyan-400/80 ml-1">({Math.round(unit.slowIntensity * 100)}%)</span>}
+          </span>
+        )}
+        {hasPoison && (
+          <span className="flex items-center gap-1 px-2 py-1 bg-green-900/40 rounded text-green-300 text-[9px]">
+            <Droplets size={10} /> Poisoned
+            {unit.poisonDamage && <span className="text-green-400/80 ml-1">({unit.poisonDamage} DPS)</span>}
+          </span>
+        )}
+        {hasStun && (
+          <span className="flex items-center gap-1 px-2 py-1 bg-yellow-900/40 rounded text-yellow-300 text-[9px]">
+            <ZapIcon size={10} /> Stunned
+          </span>
+        )}
+        {!hasAny && (
+          <span className="text-[9px] text-purple-400/60">No active effects</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// TROOP DETAIL TOOLTIP
+// =============================================================================
+
+interface TroopDetailTooltipProps {
+  troop: Troop;
+  position: Position;
+  onClose: () => void;
+}
+
+export const TroopDetailTooltip: React.FC<TroopDetailTooltipProps> = ({
+  troop,
+  position,
+  onClose,
+}) => {
+  const troopType = troop.type || "footsoldier";
+  const tData = TROOP_DATA[troopType];
+  if (!tData) return null;
+
+  const hpPercent = (troop.hp / troop.maxHp) * 100;
+  const hpColor = hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500";
+  const damage = troop.overrideDamage ?? tData.damage;
+  const atkSpeed = troop.overrideAttackSpeed ?? tData.attackSpeed;
+
+  const tooltipWidth = 280;
+  const tooltipHeight = 320;
+  let tooltipX = position.x - tooltipWidth / 2;
+  let tooltipY = position.y - tooltipHeight - 40;
+  tooltipX = Math.max(10, Math.min(tooltipX, window.innerWidth - tooltipWidth - 10));
+  tooltipY = Math.max(60, tooltipY);
+  if (tooltipY + tooltipHeight > window.innerHeight - 10) {
+    tooltipY = window.innerHeight - tooltipHeight - 10;
+  }
+
+  return (
+    <div
+      className="fixed pointer-events-auto shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+      style={{
+        left: tooltipX,
+        top: tooltipY,
+        zIndex: 300,
+        width: tooltipWidth,
+        background: panelGradient,
+        border: `2px solid ${GOLD.border35}`,
+        boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${GOLD.glow04}`,
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+      {/* Header */}
+      <div
+        className="px-4 py-3 flex items-center justify-between"
+        style={{
+          background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight})`,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg border-2 flex items-center justify-center"
+            style={{ borderColor: tData.color, backgroundColor: tData.color + "20" }}
+          >
+            <Users size={20} style={{ color: tData.color }} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg text-amber-100">{tData.name}</h3>
+            <div className="flex items-center gap-2">
+              {troop.ownerType && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-blue-900/60 rounded text-blue-300">{troop.ownerType.toUpperCase()}</span>
+              )}
+              {(troop.overrideIsRanged || tData.isRanged) && (
+                <span className="text-[9px] px-1.5 py-0.5 bg-green-900/60 rounded text-green-300">RANGED</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg transition-all hover:scale-110"
+          style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+        >
+          <X size={18} className="text-purple-400" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-3">
+        <p className="text-[11px] text-purple-300/90 mb-3 italic">{tData.desc}</p>
+
+        {/* HP Bar */}
+        <div className="mb-3">
+          <div className="flex justify-between text-[10px] mb-1">
+            <span className="text-red-400 font-bold">HP</span>
+            <span className="text-white font-mono">{Math.ceil(troop.hp)} / {troop.maxHp}</span>
+          </div>
+          <div className="w-full bg-black/40 h-3 rounded-full border border-white/10 overflow-hidden">
+            <div className={`h-full ${hpColor} transition-all duration-300`} style={{ width: `${hpPercent}%` }} />
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-2 mb-1">
+          <div className="bg-red-950/40 p-2 rounded-lg border border-red-900/40 text-center">
+            <Swords size={14} className="mx-auto text-red-400 mb-1" />
+            <div className="text-[8px] text-red-500">Damage</div>
+            <div className="text-red-200 font-bold text-sm">{damage}</div>
+          </div>
+          <div className="bg-blue-950/40 p-2 rounded-lg border border-blue-900/40 text-center">
+            <Timer size={14} className="mx-auto text-blue-400 mb-1" />
+            <div className="text-[8px] text-blue-500">Atk Speed</div>
+            <div className="text-blue-200 font-bold text-sm">{(atkSpeed / 1000).toFixed(1)}s</div>
+          </div>
+          <div className="bg-green-950/40 p-2 rounded-lg border border-green-900/40 text-center">
+            <Heart size={14} className="mx-auto text-green-400 mb-1" />
+            <div className="text-[8px] text-green-500">Max HP</div>
+            <div className="text-green-200 font-bold text-sm">{troop.maxHp}</div>
+          </div>
+        </div>
+
+        <StatusEffectsBadges unit={troop} />
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// HERO DETAIL TOOLTIP
+// =============================================================================
+
+interface HeroDetailTooltipProps {
+  hero: Hero;
+  position: Position;
+  onClose: () => void;
+}
+
+export const HeroDetailTooltip: React.FC<HeroDetailTooltipProps> = ({
+  hero,
+  position,
+  onClose,
+}) => {
+  const hData = HERO_DATA[hero.type];
+  if (!hData) return null;
+
+  const hpPercent = (hero.hp / hero.maxHp) * 100;
+  const hpColor = hpPercent > 50 ? "bg-green-500" : hpPercent > 25 ? "bg-yellow-500" : "bg-red-500";
+
+  const tooltipWidth = 300;
+  const tooltipHeight = 400;
+  let tooltipX = position.x - tooltipWidth / 2;
+  let tooltipY = position.y - tooltipHeight - 40;
+  tooltipX = Math.max(10, Math.min(tooltipX, window.innerWidth - tooltipWidth - 10));
+  tooltipY = Math.max(60, tooltipY);
+  if (tooltipY + tooltipHeight > window.innerHeight - 10) {
+    tooltipY = window.innerHeight - tooltipHeight - 10;
+  }
+
+  return (
+    <div
+      className="fixed pointer-events-auto shadow-2xl rounded-xl backdrop-blur-md overflow-hidden"
+      style={{
+        left: tooltipX,
+        top: tooltipY,
+        zIndex: 300,
+        width: tooltipWidth,
+        background: panelGradient,
+        border: `2px solid ${GOLD.border35}`,
+        boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${GOLD.glow04}`,
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="absolute inset-[3px] rounded-[10px] pointer-events-none z-20" style={{ border: `1px solid ${GOLD.innerBorder10}` }} />
+      {/* Header */}
+      <div
+        className="px-4 py-3 flex items-center justify-between"
+        style={{
+          background: `linear-gradient(90deg, ${PANEL.bgDark}, ${PANEL.bgLight})`,
+          borderBottom: `1px solid ${GOLD.border25}`,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-lg border-2 flex items-center justify-center text-2xl"
+            style={{ borderColor: "#f59e0b", backgroundColor: "rgba(245, 158, 11, 0.1)" }}
+          >
+            {hData.icon}
+          </div>
+          <div>
+            <h3 className="font-bold text-lg text-amber-100">{hData.name}</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] px-1.5 py-0.5 bg-amber-900/60 rounded text-amber-300 font-bold">HERO</span>
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg transition-all hover:scale-110"
+          style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+        >
+          <X size={18} className="text-purple-400" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-3">
+        <p className="text-[11px] text-purple-300/90 mb-3 italic">{hData.description}</p>
+
+        {/* HP Bar */}
+        <div className="mb-3">
+          <div className="flex justify-between text-[10px] mb-1">
+            <span className="text-red-400 font-bold">HP</span>
+            <span className="text-white font-mono">{Math.ceil(hero.hp)} / {hero.maxHp}</span>
+          </div>
+          <div className="w-full bg-black/40 h-3 rounded-full border border-white/10 overflow-hidden">
+            <div className={`h-full ${hpColor} transition-all duration-300`} style={{ width: `${hpPercent}%` }} />
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-4 gap-2 mb-1">
+          <div className="bg-red-950/40 p-2 rounded-lg border border-red-900/40 text-center">
+            <Swords size={14} className="mx-auto text-red-400 mb-1" />
+            <div className="text-[8px] text-red-500">Damage</div>
+            <div className="text-red-200 font-bold text-sm">{hData.damage}</div>
+          </div>
+          <div className="bg-blue-950/40 p-2 rounded-lg border border-blue-900/40 text-center">
+            <Target size={14} className="mx-auto text-blue-400 mb-1" />
+            <div className="text-[8px] text-blue-500">Range</div>
+            <div className="text-blue-200 font-bold text-sm">{hData.range}</div>
+          </div>
+          <div className="bg-amber-950/40 p-2 rounded-lg border border-amber-900/40 text-center">
+            <Timer size={14} className="mx-auto text-amber-400 mb-1" />
+            <div className="text-[8px] text-amber-500">Atk Spd</div>
+            <div className="text-amber-200 font-bold text-sm">{(hData.attackSpeed / 1000).toFixed(1)}s</div>
+          </div>
+          <div className="bg-green-950/40 p-2 rounded-lg border border-green-900/40 text-center">
+            <Gauge size={14} className="mx-auto text-green-400 mb-1" />
+            <div className="text-[8px] text-green-500">Speed</div>
+            <div className="text-green-200 font-bold text-sm">{hData.speed}</div>
+          </div>
+        </div>
+
+        {/* Ability */}
+        <div className="mt-3 p-2 rounded-lg border" style={{ background: "rgba(139, 92, 246, 0.1)", borderColor: "rgba(139, 92, 246, 0.3)" }}>
+          <div className="text-[10px] text-purple-400 font-bold mb-1 flex items-center gap-1">
+            <Sparkles size={10} /> ABILITY
+          </div>
+          <div className="text-[11px] text-purple-200">{hData.ability}</div>
+        </div>
+
+        <StatusEffectsBadges unit={hero} />
       </div>
     </div>
   );

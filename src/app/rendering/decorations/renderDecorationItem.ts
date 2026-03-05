@@ -21939,154 +21939,404 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "ice_bridge": {
       const cx = screenPos.x;
       const cy = screenPos.y;
+      const t = decorTime;
 
       if (!skipShadow) {
-        const shGrad = ctx.createRadialGradient(cx, cy + 10 * s, 0, cx, cy + 10 * s, 65 * s);
-        shGrad.addColorStop(0, "rgba(0,40,80,0.35)");
-        shGrad.addColorStop(0.5, "rgba(0,20,50,0.15)");
+        const shGrad = ctx.createRadialGradient(cx, cy + 14 * s, 0, cx, cy + 14 * s, 95 * s);
+        shGrad.addColorStop(0, "rgba(0,25,55,0.45)");
+        shGrad.addColorStop(0.35, "rgba(0,18,45,0.25)");
+        shGrad.addColorStop(0.7, "rgba(0,10,30,0.1)");
         shGrad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = shGrad;
         ctx.beginPath();
-        ctx.ellipse(cx, cy + 10 * s, 65 * s, 28 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy + 14 * s, 95 * s, 42 * s, 0, 0, Math.PI * 2);
         ctx.fill();
       }
       if (shadowOnly) break;
 
-      const iceW = 55 * s;
-      const iceH = 10 * s;
-      const isoW = iceW * 0.866;
-      const isoD2 = iceW * 0.5;
+      const isoW = 60 * s;
+      const isoD = isoW * 0.577;
 
-      // Abutments at iso-symmetric positions
-      const abutOff = 0.65;
-      const aLx = cx - isoW * abutOff;
-      const aLy = cy + isoD2 * abutOff;
-      const aRx = cx + isoW * abutOff;
-      const aRy = cy - isoD2 * abutOff;
-      drawIsometricPrism(ctx, aLx, aLy, 16 * s, 16 * s, 14 * s, "#4a5568", "#2d3748", "#3a4556");
-      drawIsometricPrism(ctx, aRx, aRy, 16 * s, 16 * s, 14 * s, "#4a5568", "#2d3748", "#3a4556");
-      // Abutment caps
-      drawIsometricPrism(ctx, aLx, aLy - 14 * s, 18 * s, 18 * s, 2 * s, "#5a6578", "#3d4858", "#4a5566");
-      drawIsometricPrism(ctx, aRx, aRy - 14 * s, 18 * s, 18 * s, 2 * s, "#5a6578", "#3d4858", "#4a5566");
-
-      // Bridge deck - top surface
-      const bridgeGrad = ctx.createLinearGradient(cx - isoW, cy, cx + isoW, cy);
-      bridgeGrad.addColorStop(0, "#92cce0");
-      bridgeGrad.addColorStop(0.2, "#b8e4f6");
-      bridgeGrad.addColorStop(0.45, "#e8f8ff");
-      bridgeGrad.addColorStop(0.55, "#ffffff");
-      bridgeGrad.addColorStop(0.8, "#c4e6f4");
-      bridgeGrad.addColorStop(1, "#88c4da");
-      ctx.fillStyle = bridgeGrad;
+      // Frozen ground pool beneath the ruin
+      const poolGrad = ctx.createRadialGradient(cx, cy + 8 * s, 0, cx, cy + 8 * s, 70 * s);
+      poolGrad.addColorStop(0, "rgba(120,200,235,0.22)");
+      poolGrad.addColorStop(0.3, "rgba(100,185,225,0.14)");
+      poolGrad.addColorStop(0.6, "rgba(80,160,200,0.07)");
+      poolGrad.addColorStop(1, "rgba(50,120,160,0)");
+      ctx.fillStyle = poolGrad;
       ctx.beginPath();
-      ctx.moveTo(cx, cy - iceH);
-      ctx.lineTo(cx + isoW, cy - iceH + isoD2);
-      ctx.lineTo(cx, cy - iceH + isoD2 * 2);
-      ctx.lineTo(cx - isoW, cy - iceH + isoD2);
-      ctx.closePath();
+      ctx.ellipse(cx, cy + 8 * s, 70 * s, 30 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Left face
-      const leftIceGrad = ctx.createLinearGradient(cx - isoW, cy - iceH + isoD2, cx, cy + isoD2 * 2);
-      leftIceGrad.addColorStop(0, "#6aacc8");
-      leftIceGrad.addColorStop(0.4, "#5898b4");
-      leftIceGrad.addColorStop(1, "#4680a0");
-      ctx.fillStyle = leftIceGrad;
+      // Frozen surface texture - ice sheet with reflections
+      ctx.fillStyle = "rgba(180,225,245,0.06)";
       ctx.beginPath();
-      ctx.moveTo(cx - isoW, cy - iceH + isoD2);
-      ctx.lineTo(cx, cy - iceH + isoD2 * 2);
-      ctx.lineTo(cx, cy + isoD2 * 2);
-      ctx.lineTo(cx - isoW, cy + isoD2);
-      ctx.closePath();
+      ctx.ellipse(cx - 5 * s, cy + 6 * s, 40 * s, 16 * s, -0.15, 0, Math.PI * 2);
       ctx.fill();
 
-      // Right face
-      const rightIceGrad = ctx.createLinearGradient(cx + isoW, cy - iceH + isoD2, cx, cy + isoD2 * 2);
-      rightIceGrad.addColorStop(0, "#a0d5e8");
-      rightIceGrad.addColorStop(0.5, "#8cc8de");
-      rightIceGrad.addColorStop(1, "#78bad0");
-      ctx.fillStyle = rightIceGrad;
-      ctx.beginPath();
-      ctx.moveTo(cx + isoW, cy - iceH + isoD2);
-      ctx.lineTo(cx, cy - iceH + isoD2 * 2);
-      ctx.lineTo(cx, cy + isoD2 * 2);
-      ctx.lineTo(cx + isoW, cy + isoD2);
-      ctx.closePath();
-      ctx.fill();
-
-      // Translucent frozen depth layer
-      ctx.fillStyle = "rgba(120,200,240,0.08)";
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - iceH + 2 * s);
-      ctx.lineTo(cx + isoW * 0.9, cy - iceH + isoD2 * 0.9 + 2 * s);
-      ctx.lineTo(cx, cy - iceH + isoD2 * 1.8 + 2 * s);
-      ctx.lineTo(cx - isoW * 0.9, cy - iceH + isoD2 * 0.9 + 2 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Cracks on surface
-      ctx.strokeStyle = "rgba(80,170,210,0.35)";
-      ctx.lineWidth = 0.7 * s;
-      for (let i = 0; i < 6; i++) {
-        const t = 0.1 + i * 0.14;
-        const crackX = cx + isoW * (2 * t - 1);
-        const crackY = cy - iceH + isoD2;
+      // Radiating frost cracks in the ice
+      ctx.lineWidth = 0.5 * s;
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2 + 0.2;
+        const r1 = 14 * s;
+        const r2 = (30 + Math.sin(decorX * 2 + i * 1.9) * 15) * s;
+        const midR = (r1 + r2) * 0.5;
+        const jitter = Math.sin(decorX * 3 + i * 3.1) * 3 * s;
+        ctx.strokeStyle = `rgba(150,210,238,${0.12 + Math.sin(i * 1.7) * 0.06})`;
         ctx.beginPath();
-        ctx.moveTo(crackX - 3 * s, crackY - 2 * s);
-        ctx.lineTo(crackX + 1 * s, crackY + 2 * s);
-        ctx.lineTo(crackX + 4 * s, crackY);
+        ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1 * 0.44 + 6 * s);
+        ctx.lineTo(cx + Math.cos(a) * midR + jitter, cy + Math.sin(a) * midR * 0.44 + 5 * s);
+        ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2 * 0.44 + 6 * s);
+        ctx.stroke();
+        if (i % 3 === 0) {
+          const branchA = a + 0.4;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(a) * midR + jitter, cy + Math.sin(a) * midR * 0.44 + 5 * s);
+          ctx.lineTo(cx + Math.cos(branchA) * (midR + 8 * s), cy + Math.sin(branchA) * (midR + 8 * s) * 0.44 + 5 * s);
+          ctx.stroke();
+        }
+      }
+
+      // Left abutment - grand crumbling stone pier
+      const aLx = cx - isoW * 0.6;
+      const aLy = cy + isoD * 0.6;
+      drawIsometricPrism(ctx, aLx, aLy + 2 * s, 22 * s, 22 * s, 4 * s, "#4a5868", "#2a3545", "#384856");
+      drawIsometricPrism(ctx, aLx, aLy, 20 * s, 20 * s, 24 * s, "#546878", "#2d3e50", "#3a4e5e");
+      drawIsometricPrism(ctx, aLx, aLy - 24 * s, 22 * s, 22 * s, 3 * s, "#647888", "#3d5060", "#4a5e70");
+
+      // Left archway remnant - tall broken arch pillar
+      drawIsometricPrism(ctx, aLx - 7 * s, aLy - 27 * s, 6 * s, 6 * s, 28 * s, "#5a6e80", "#344858", "#445a6c");
+      drawIsometricPrism(ctx, aLx + 8 * s, aLy - 2 * s - 27 * s, 6 * s, 6 * s, 22 * s, "#586c7e", "#324656", "#42586a");
+
+      // Left arch keystone fragment (the top curve piece, broken)
+      ctx.fillStyle = "#5e7284";
+      ctx.beginPath();
+      ctx.moveTo(aLx - 7 * s, aLy - 55 * s);
+      ctx.quadraticCurveTo(aLx + 2 * s, aLy - 64 * s, aLx + 8 * s, aLy - 51 * s);
+      ctx.lineTo(aLx + 5 * s, aLy - 49 * s);
+      ctx.quadraticCurveTo(aLx + 1 * s, aLy - 58 * s, aLx - 4 * s, aLy - 53 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4a5e70";
+      ctx.beginPath();
+      ctx.moveTo(aLx - 7 * s, aLy - 55 * s);
+      ctx.lineTo(aLx - 4 * s, aLy - 53 * s);
+      ctx.lineTo(aLx - 4 * s, aLy - 50 * s);
+      ctx.lineTo(aLx - 7 * s, aLy - 52 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Ornate carved details on left pillar
+      ctx.strokeStyle = "rgba(100,140,165,0.4)";
+      ctx.lineWidth = 0.8 * s;
+      for (let i = 0; i < 4; i++) {
+        const bandY = aLy - 30 * s - i * 6 * s;
+        ctx.beginPath();
+        ctx.moveTo(aLx - 7 * s, bandY);
+        ctx.lineTo(aLx - 7 * s + 6 * s, bandY - 3 * s);
         ctx.stroke();
       }
 
-      // Icicles underneath with varying thickness
-      for (let i = 0; i < 9; i++) {
-        const t = (i + 0.5) / 9;
-        const icicleLen = (5 + Math.sin(decorX * 3 + i * 1.7) * 4) * s;
-        const icicleW = (1 + Math.sin(decorX * 2 + i) * 0.5) * s;
-        const ix = cx - isoW * (1 - 2 * t) * 0.85;
-        const iy = cy + isoD2 * 2 - isoD2 * Math.abs(1 - 2 * t) * 0.6;
-        const shimmer = 0.5 + Math.sin(decorTime * 2.5 + i * 0.8) * 0.3;
-        const icicleGrad = ctx.createLinearGradient(ix, iy, ix, iy + icicleLen);
-        icicleGrad.addColorStop(0, `rgba(170,215,235,${0.7 + shimmer * 0.2})`);
-        icicleGrad.addColorStop(1, `rgba(200,235,250,${0.3 + shimmer * 0.15})`);
-        ctx.fillStyle = icicleGrad;
+      // Right abutment - more collapsed
+      const aRx = cx + isoW * 0.6;
+      const aRy = cy - isoD * 0.6;
+      drawIsometricPrism(ctx, aRx, aRy + 2 * s, 22 * s, 22 * s, 4 * s, "#4a5868", "#2a3545", "#384856");
+      drawIsometricPrism(ctx, aRx, aRy, 20 * s, 20 * s, 20 * s, "#546878", "#2d3e50", "#3a4e5e");
+      drawIsometricPrism(ctx, aRx, aRy - 20 * s, 22 * s, 22 * s, 2 * s, "#647888", "#3d5060", "#4a5e70");
+
+      // Right archway remnant - shorter, more broken
+      drawIsometricPrism(ctx, aRx - 6 * s, aRy - 22 * s, 6 * s, 6 * s, 18 * s, "#5a6e80", "#344858", "#445a6c");
+      drawIsometricPrism(ctx, aRx + 7 * s, aRy - 1 * s - 22 * s, 6 * s, 6 * s, 10 * s, "#546878", "#304454", "#405664");
+
+      // Collapsed bridge deck - broken cleanly in the middle, sagging
+      const midSag = 10 * s;
+
+      // Left deck slab - slopes from abutment down toward broken center
+      const lDeckGrad = ctx.createLinearGradient(aLx, aLy - 26 * s, cx - 3 * s, cy + midSag);
+      lDeckGrad.addColorStop(0, "#82b8d2");
+      lDeckGrad.addColorStop(0.2, "#98cce0");
+      lDeckGrad.addColorStop(0.5, "#b4dced");
+      lDeckGrad.addColorStop(0.8, "#caeaf6");
+      lDeckGrad.addColorStop(1, "#68a4be");
+      ctx.fillStyle = lDeckGrad;
+      ctx.beginPath();
+      ctx.moveTo(aLx - 10 * s, aLy - 24 * s + isoD * 0.06);
+      ctx.lineTo(cx - 3 * s, cy - 3 * s + midSag);
+      ctx.lineTo(cx + 4 * s, cy + isoD * 0.14 + midSag);
+      ctx.lineTo(aLx - 3 * s, aLy - 24 * s + isoD * 0.35);
+      ctx.closePath();
+      ctx.fill();
+
+      // Left deck thickness face
+      ctx.fillStyle = "#5696b2";
+      ctx.beginPath();
+      ctx.moveTo(aLx - 10 * s, aLy - 24 * s + isoD * 0.06);
+      ctx.lineTo(cx - 3 * s, cy - 3 * s + midSag);
+      ctx.lineTo(cx - 3 * s, cy + midSag + 4 * s);
+      ctx.lineTo(aLx - 10 * s, aLy - 20 * s + isoD * 0.06);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right deck slab - steeper tilt, partially submerged in ice
+      const rDeckGrad = ctx.createLinearGradient(cx + 5 * s, cy + midSag, aRx, aRy - 20 * s);
+      rDeckGrad.addColorStop(0, "#62a0ba");
+      rDeckGrad.addColorStop(0.3, "#a0d4e6");
+      rDeckGrad.addColorStop(0.6, "#c2e6f2");
+      rDeckGrad.addColorStop(1, "#8ac4d8");
+      ctx.fillStyle = rDeckGrad;
+      ctx.beginPath();
+      ctx.moveTo(cx + 5 * s, cy - 2 * s + midSag + 3 * s);
+      ctx.lineTo(aRx + 9 * s, aRy - 20 * s + isoD * 0.08);
+      ctx.lineTo(aRx + 3 * s, aRy - 20 * s + isoD * 0.36);
+      ctx.lineTo(cx + 10 * s, cy + isoD * 0.16 + midSag + 3 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right deck thickness
+      ctx.fillStyle = "#72b0c8";
+      ctx.beginPath();
+      ctx.moveTo(aRx + 9 * s, aRy - 20 * s + isoD * 0.08);
+      ctx.lineTo(cx + 5 * s, cy - 2 * s + midSag + 3 * s);
+      ctx.lineTo(cx + 5 * s, cy + midSag + 6 * s);
+      ctx.lineTo(aRx + 9 * s, aRy - 17 * s + isoD * 0.08);
+      ctx.closePath();
+      ctx.fill();
+
+      // Jagged broken edges at center gap
+      ctx.strokeStyle = "rgba(80,150,185,0.65)";
+      ctx.lineWidth = 1.3 * s;
+      ctx.beginPath();
+      ctx.moveTo(cx - 3 * s, cy - 3 * s + midSag);
+      ctx.lineTo(cx - 1 * s, cy + midSag - 1 * s);
+      ctx.lineTo(cx + 1 * s, cy + midSag + 2 * s);
+      ctx.lineTo(cx + 4 * s, cy + isoD * 0.14 + midSag);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + 5 * s, cy - 2 * s + midSag + 3 * s);
+      ctx.lineTo(cx + 6 * s, cy + midSag + 1 * s);
+      ctx.lineTo(cx + 8 * s, cy + midSag + 4 * s);
+      ctx.lineTo(cx + 10 * s, cy + isoD * 0.16 + midSag + 3 * s);
+      ctx.stroke();
+
+      // Surface cracks on both deck sections
+      ctx.strokeStyle = "rgba(55,125,160,0.3)";
+      ctx.lineWidth = 0.6 * s;
+      for (let i = 0; i < 6; i++) {
+        const frac = 0.12 + i * 0.15;
+        const crX = aLx + (cx - aLx) * frac - 4 * s;
+        const crY = (aLy - 24 * s) + (cy + midSag - (aLy - 24 * s)) * frac;
         ctx.beginPath();
-        ctx.moveTo(ix - icicleW, iy);
-        ctx.lineTo(ix, iy + icicleLen);
-        ctx.lineTo(ix + icicleW, iy);
+        ctx.moveTo(crX - 3 * s, crY - 1 * s);
+        ctx.lineTo(crX + 1 * s, crY + 1.5 * s);
+        ctx.lineTo(crX + 5 * s, crY - 0.5 * s);
+        ctx.stroke();
+      }
+
+      // Fallen rubble blocks in and around the gap
+      const rubble = [
+        { x: cx - 8 * s, y: cy + 5 * s, w: 7, h: 5, d: 3.5 },
+        { x: cx + 3 * s, y: cy + 10 * s, w: 6, h: 4, d: 3 },
+        { x: cx - 12 * s, y: cy + 12 * s, w: 5, h: 3.5, d: 2.5 },
+        { x: cx + 12 * s, y: cy + 3 * s, w: 6, h: 4.5, d: 3 },
+        { x: cx + 1 * s, y: cy + 16 * s, w: 4, h: 3, d: 2 },
+        { x: cx + 8 * s, y: cy + 14 * s, w: 4.5, h: 3.5, d: 2.5 },
+        { x: cx - 4 * s, y: cy + 20 * s, w: 3.5, h: 2.5, d: 2 },
+        { x: cx + 16 * s, y: cy + 8 * s, w: 4, h: 3, d: 2 },
+      ];
+      rubble.forEach((rb) => {
+        drawIsometricPrism(
+          ctx, rb.x, rb.y,
+          rb.w * s, rb.h * s, rb.d * s,
+          "#6498ad", "#3a5868", "#4a6a7c"
+        );
+      });
+
+      // Fallen arch keystone block (the crown piece, fallen to the ground)
+      drawIsometricPrism(ctx, cx - 2 * s, cy + 7 * s, 10 * s, 7 * s, 5 * s, "#5a7080", "#344858", "#445a6c");
+      // Carved detail on the keystone
+      ctx.strokeStyle = "rgba(100,145,170,0.35)";
+      ctx.lineWidth = 0.7 * s;
+      ctx.beginPath();
+      ctx.moveTo(cx - 5 * s, cy + 3 * s);
+      ctx.lineTo(cx - 2 * s, cy + 1.5 * s);
+      ctx.lineTo(cx + 1 * s, cy + 3 * s);
+      ctx.stroke();
+
+      // Ice encrustation on rubble
+      ctx.fillStyle = "rgba(155,218,242,0.14)";
+      rubble.forEach((rb) => {
+        ctx.beginPath();
+        ctx.ellipse(rb.x, rb.y - rb.d * s, rb.w * 0.7 * s, rb.h * 0.35 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Frozen waterfall effect - ice cascading from break point
+      const waterfallX = cx + 1 * s;
+      const waterfallY = cy + midSag + 2 * s;
+      for (let i = 0; i < 5; i++) {
+        const wfGrad = ctx.createLinearGradient(
+          waterfallX + (i - 2) * 3 * s, waterfallY,
+          waterfallX + (i - 2) * 3 * s, waterfallY + (12 + i * 3) * s
+        );
+        wfGrad.addColorStop(0, `rgba(160,215,240,${0.25 - i * 0.03})`);
+        wfGrad.addColorStop(0.5, `rgba(180,228,248,${0.15 - i * 0.02})`);
+        wfGrad.addColorStop(1, `rgba(200,238,252,${0.05})`);
+        ctx.fillStyle = wfGrad;
+        const wfW = (2.5 - i * 0.3) * s;
+        ctx.beginPath();
+        ctx.moveTo(waterfallX + (i - 2) * 3 * s - wfW, waterfallY);
+        ctx.lineTo(waterfallX + (i - 2) * 3 * s, waterfallY + (12 + i * 3) * s);
+        ctx.lineTo(waterfallX + (i - 2) * 3 * s + wfW, waterfallY);
         ctx.closePath();
         ctx.fill();
       }
 
-      // Ice railing ridges (both sides)
-      ctx.strokeStyle = "rgba(190,225,245,0.5)";
+      // Massive icicles from broken deck edges and abutments
+      const icicles = [
+        { x: cx - 5 * s, y: cy + midSag + 3 * s, len: 16, w: 2.2 },
+        { x: cx - 1 * s, y: cy + midSag + 5 * s, len: 22, w: 2.8 },
+        { x: cx + 3 * s, y: cy + midSag + 4 * s, len: 14, w: 1.8 },
+        { x: cx + 6 * s, y: cy + midSag + 5 * s, len: 19, w: 2.4 },
+        { x: cx + 9 * s, y: cy + midSag + 4 * s, len: 12, w: 1.6 },
+        { x: aLx - 8 * s, y: aLy - 18 * s, len: 11, w: 1.6 },
+        { x: aLx + 3 * s, y: aLy - 20 * s, len: 9, w: 1.3 },
+        { x: aLx - 3 * s, y: aLy - 19 * s, len: 13, w: 1.8 },
+        { x: aRx + 6 * s, y: aRy - 15 * s, len: 10, w: 1.4 },
+        { x: aRx - 4 * s, y: aRy - 17 * s, len: 14, w: 2.0 },
+        { x: aRx + 1 * s, y: aRy - 16 * s, len: 8, w: 1.2 },
+        // From archway pillars
+        { x: aLx - 6 * s, y: aLy - 50 * s, len: 7, w: 1.0 },
+        { x: aLx + 6 * s, y: aLy - 45 * s, len: 6, w: 0.9 },
+        { x: aRx - 5 * s, y: aRy - 38 * s, len: 5, w: 0.8 },
+      ];
+      icicles.forEach((ic, i) => {
+        const shimmer = 0.5 + Math.sin(t * 2.0 + i * 0.95) * 0.3;
+        const icGrad = ctx.createLinearGradient(ic.x, ic.y, ic.x, ic.y + ic.len * s);
+        icGrad.addColorStop(0, `rgba(165,215,238,${0.78 + shimmer * 0.12})`);
+        icGrad.addColorStop(0.4, `rgba(185,228,246,${0.55 + shimmer * 0.1})`);
+        icGrad.addColorStop(0.8, `rgba(205,238,250,${0.3 + shimmer * 0.08})`);
+        icGrad.addColorStop(1, `rgba(220,245,255,${0.1})`);
+        ctx.fillStyle = icGrad;
+        ctx.beginPath();
+        ctx.moveTo(ic.x - ic.w * s, ic.y);
+        ctx.lineTo(ic.x, ic.y + ic.len * s);
+        ctx.lineTo(ic.x + ic.w * s, ic.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = `rgba(220,245,255,${0.25 + shimmer * 0.2})`;
+        ctx.lineWidth = 0.35 * s;
+        ctx.beginPath();
+        ctx.moveTo(ic.x - ic.w * s * 0.3, ic.y + 1 * s);
+        ctx.lineTo(ic.x - ic.w * s * 0.08, ic.y + ic.len * s * 0.75);
+        ctx.stroke();
+      });
+
+      // Fallen railing fragments
+      ctx.strokeStyle = "rgba(110,145,168,0.5)";
+      ctx.lineWidth = 2 * s;
+      ctx.beginPath();
+      ctx.moveTo(aLx - 12 * s, aLy - 26 * s);
+      ctx.lineTo(aLx - 16 * s, aLy - 18 * s);
+      ctx.lineTo(cx - 18 * s, cy + 4 * s);
+      ctx.stroke();
       ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
-      ctx.moveTo(cx - isoW * 0.85, cy - iceH + isoD2 * 0.15);
-      ctx.lineTo(cx, cy - iceH - 4 * s);
-      ctx.lineTo(cx + isoW * 0.85, cy - iceH + isoD2 * 0.15);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(160,210,240,0.35)";
-      ctx.beginPath();
-      ctx.moveTo(cx - isoW * 0.85, cy - iceH + isoD2 * 1.85);
-      ctx.lineTo(cx, cy - iceH + isoD2 * 2 + 2 * s);
-      ctx.lineTo(cx + isoW * 0.85, cy - iceH + isoD2 * 1.85);
+      ctx.moveTo(aRx + 10 * s, aRy - 20 * s);
+      ctx.lineTo(cx + 20 * s, cy + 6 * s);
       ctx.stroke();
 
-      // Frost sparkle particles
-      for (let i = 0; i < 8; i++) {
-        const phase = decorTime * 1.4 + i * 0.9 + decorX * 0.5;
-        const sparkAlpha = 0.25 + Math.sin(phase * 3.5) * 0.3;
-        if (sparkAlpha > 0.12) {
-          const px = cx + Math.cos(phase * 0.6) * isoW * 0.7;
-          const py = cy - iceH - 3 * s + Math.sin(phase * 1.2) * isoD2 * 0.5;
-          const sparkSize = (1 + Math.sin(phase * 2) * 0.5) * s;
-          ctx.fillStyle = `rgba(220,242,255,${sparkAlpha})`;
+      // Broken railing post stubs on abutments
+      ctx.lineWidth = 2.5 * s;
+      ctx.strokeStyle = "rgba(95,130,152,0.6)";
+      ctx.beginPath();
+      ctx.moveTo(aLx - 8 * s, aLy - 27 * s);
+      ctx.lineTo(aLx - 8 * s, aLy - 36 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(aLx + 9 * s, aLy - 29 * s);
+      ctx.lineTo(aLx + 9 * s, aLy - 34 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(aRx + 8 * s, aRy - 22 * s);
+      ctx.lineTo(aRx + 8 * s, aRy - 28 * s);
+      ctx.stroke();
+
+      // Frost/snow caps on abutments and pillars
+      ctx.fillStyle = "rgba(218,238,250,0.5)";
+      ctx.beginPath();
+      ctx.ellipse(aLx, aLy - 27 * s, 12 * s, 5.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(aRx, aRy - 22 * s, 11 * s, 5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(210,232,248,0.4)";
+      ctx.beginPath();
+      ctx.ellipse(aLx - 7 * s, aLy - 55 * s, 4 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(aLx + 8 * s, aLy - 49 * s, 3.5 * s, 1.8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Snow drifts around the base
+      ctx.fillStyle = "rgba(208,232,246,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(cx - 24 * s, cy + 20 * s, 16 * s, 6 * s, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + 22 * s, cy + 17 * s, 14 * s, 5 * s, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - 5 * s, cy + 24 * s, 10 * s, 4 * s, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glowing ice runes on the abutment faces
+      const iceRunes = ["ᛁ", "ᛋ", "ᚺ", "ᛇ", "ᛉ", "ᚠ"];
+      ctx.font = `bold ${6 * s}px serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let i = 0; i < 6; i++) {
+        const runeAlpha = 0.08 + Math.sin(t * 1.5 + i * 1.3) * 0.08;
+        ctx.fillStyle = `rgba(130,205,238,${runeAlpha})`;
+        if (i < 3) {
+          ctx.fillText(iceRunes[i], aLx + (i - 1) * 7 * s, aLy - (8 + i * 4) * s);
+        } else {
+          ctx.fillText(iceRunes[i], aRx + (i - 4) * 7 * s, aRy - (6 + (i - 3) * 4) * s);
+        }
+      }
+      // Runes on archway pillars
+      ctx.font = `bold ${4.5 * s}px serif`;
+      for (let i = 0; i < 3; i++) {
+        const pAlpha = 0.06 + Math.sin(t * 1.2 + i * 2.1) * 0.06;
+        ctx.fillStyle = `rgba(130,205,238,${pAlpha})`;
+        ctx.fillText(iceRunes[i], aLx - 7 * s, aLy - (32 + i * 7) * s);
+      }
+
+      // Frozen mist particles drifting through the ruin
+      for (let i = 0; i < 16; i++) {
+        const phase = t * 0.6 + i * 0.65 + decorX * 0.25;
+        const sparkAlpha = 0.12 + Math.sin(phase * 2.5) * 0.18;
+        if (sparkAlpha > 0.06) {
+          const px = cx + Math.cos(phase * 0.4) * isoW * 0.9;
+          const py = cy - 12 * s + Math.sin(phase * 0.75) * isoD * 0.9;
+          const drift = Math.sin(phase * 1.3) * 4 * s;
+          const sparkSize = (1.0 + Math.sin(phase * 2.0) * 0.7) * s;
+          ctx.fillStyle = `rgba(195,232,248,${sparkAlpha})`;
           ctx.beginPath();
-          ctx.arc(px, py, sparkSize, 0, Math.PI * 2);
+          ctx.arc(px + drift, py, sparkSize, 0, Math.PI * 2);
           ctx.fill();
         }
       }
+
+      // Subtle cold ambient glow from the center gap
+      const coldGlow = ctx.createRadialGradient(cx + 2 * s, cy + midSag, 0, cx + 2 * s, cy + midSag, 20 * s);
+      coldGlow.addColorStop(0, `rgba(140,210,240,${0.06 + Math.sin(t * 1.8) * 0.03})`);
+      coldGlow.addColorStop(0.5, `rgba(120,195,230,${0.03 + Math.sin(t * 1.8) * 0.015})`);
+      coldGlow.addColorStop(1, "rgba(100,180,220,0)");
+      ctx.fillStyle = coldGlow;
+      ctx.beginPath();
+      ctx.arc(cx + 2 * s, cy + midSag, 20 * s, 0, Math.PI * 2);
+      ctx.fill();
+
       break;
     }
 

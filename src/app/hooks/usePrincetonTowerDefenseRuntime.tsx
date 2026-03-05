@@ -115,7 +115,9 @@ import {
   renderEnemyInspectIndicator,
   renderTowerDebuffEffects,
   renderUnitStatusEffects,
+  renderUnitInspectIndicator,
 } from "../rendering";
+import { renderEnemyDeath } from "../rendering/effects/deathAnimations";
 // Decoration rendering
 import { renderDecorationItem } from "../rendering/decorations";
 import {
@@ -184,6 +186,8 @@ import {
   HeroHoverTooltip,
   EnemyInspector,
   EnemyDetailTooltip,
+  TroopDetailTooltip,
+  HeroDetailTooltip,
 } from "../components/ui/GameUI";
 // Hooks
 import {
@@ -753,9 +757,9 @@ export function usePrincetonTowerDefenseRuntime() {
           troop.overrideAttackSpeed !== reinforcementStats.knightAttackSpeedMs ||
           troop.overrideIsRanged !== reinforcementStats.rangedUnlocked ||
           (troop.overrideRange ?? 0) !==
-            (reinforcementStats.rangedUnlocked
-              ? reinforcementStats.rangedRange
-              : 0) ||
+          (reinforcementStats.rangedUnlocked
+            ? reinforcementStats.rangedRange
+            : 0) ||
           troop.overrideCanTargetFlying !== reinforcementStats.rangedUnlocked ||
           troop.overrideHybridMelee !== reinforcementStats.rangedUnlocked ||
           troop.visualTier !== reinforcementStats.visualTier ||
@@ -825,7 +829,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const targetingSpellRef = useRef<SpellType | null>(null);
   const placingTroopRef = useRef(false);
   const mousePosRef = useRef<Position>({ x: 0, y: 0 });
-  const executeTargetedSpellRef = useRef<(spellType: SpellType, pos: Position) => void>(() => {});
+  const executeTargetedSpellRef = useRef<(spellType: SpellType, pos: Position) => void>(() => { });
   const [gameSpeed, setGameSpeed] = useState(1);
   const [hoveredSpecialTower, setHoveredSpecialTower] = useState<SpecialTower | null>(null);
   const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
@@ -836,11 +840,15 @@ export function usePrincetonTowerDefenseRuntime() {
   const [sentinelTargets, setSentinelTargets] = useState<
     Record<string, Position>
   >({});
-  // Enemy Inspector state
+  // Unit Inspector state (enemies, troops, heroes)
   const [inspectorActive, setInspectorActive] = useState(false);
   const [selectedInspectEnemy, setSelectedInspectEnemy] = useState<Enemy | null>(null);
+  const [selectedInspectTroop, setSelectedInspectTroop] = useState<Troop | null>(null);
+  const [selectedInspectHero, setSelectedInspectHero] = useState(false);
   const [previousGameSpeed, setPreviousGameSpeed] = useState(1);
   const [hoveredInspectEnemy, setHoveredInspectEnemy] = useState<string | null>(null);
+  const [hoveredInspectTroop, setHoveredInspectTroop] = useState<string | null>(null);
+  const [hoveredInspectHero, setHoveredInspectHero] = useState(false);
   // Troop/Hero movement target indicator state
   const [moveTargetPos, setMoveTargetPos] = useState<Position | null>(null);
   const [moveTargetValid, setMoveTargetValid] = useState(false);
@@ -1281,13 +1289,14 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // Performance constants for particles and effects
   const MAX_PARTICLES = 300;
-  const MAX_EFFECTS = 50;
+  const MAX_EFFECTS = 80;
   const PARTICLE_THROTTLE_MS = 50; // Minimum time between particle spawns at same position
   const lastParticleSpawn = useRef<Map<string, number>>(new Map());
   const pendingParticleBurstsRef = useRef<ParticleBurstRequest[]>([]);
   const projectileUpdateAccumulator = useRef<number>(0); // Throttle projectile simulation under load
   const particleUpdateAccumulator = useRef<number>(0); // Accumulate time between particle updates for throttling
   const effectsUpdateAccumulator = useRef<number>(0); // Accumulate time between effects updates for throttling
+  const pendingDeathEffectsRef = useRef<Effect[]>([]); // Ref-based queue so render sees death effects immediately
 
   // Queue particle bursts and flush once per frame to avoid many setState calls during heavy combat.
   const addParticles = useCallback(
@@ -1347,6 +1356,8 @@ export function usePrincetonTowerDefenseRuntime() {
     []
   );
 
+  const particleIdCounter = useRef(0);
+
   const flushQueuedParticles = useCallback(() => {
     const bursts = pendingParticleBurstsRef.current;
     if (bursts.length === 0) return;
@@ -1364,28 +1375,26 @@ export function usePrincetonTowerDefenseRuntime() {
       const colors = PARTICLE_COLORS[burst.type] || PARTICLE_COLORS.spark;
       const spawnCount = Math.max(1, Math.min(burst.count, remaining));
       remaining -= spawnCount;
+      const isExplosion = burst.type === "explosion";
+      const particleSize = burst.type === "smoke" ? 8 : isExplosion ? 6 : 4;
+      const resolvedType = isExplosion ? "spark" as const : burst.type;
 
       for (let i = 0; i < spawnCount; i++) {
         const angle = (Math.PI * 2 * i) / spawnCount + Math.random() * 0.5;
-        const speed =
-          burst.type === "explosion"
-            ? 2 + Math.random() * 3
-            : 1 + Math.random() * 2;
+        const speed = isExplosion ? 2 + Math.random() * 3 : 1 + Math.random() * 2;
         const colorIndex = Math.floor(Math.random() * colors.length);
-        const particleColor = colors[colorIndex] ?? colors[0] ?? "#ffffff";
         generated.push({
-          id: generateId("particle"),
-          pos: { ...burst.pos },
+          id: `p${particleIdCounter.current++}`,
+          pos: { x: burst.pos.x, y: burst.pos.y },
           velocity: {
             x: Math.cos(angle) * speed,
-            y: Math.sin(angle) * speed - (burst.type === "explosion" ? 1 : 0),
+            y: Math.sin(angle) * speed - (isExplosion ? 1 : 0),
           },
           life: 400 + Math.random() * 300,
           maxLife: 700,
-          size:
-            burst.type === "smoke" ? 8 : burst.type === "explosion" ? 6 : 4,
-          color: particleColor,
-          type: burst.type === "explosion" ? "spark" : burst.type,
+          size: particleSize,
+          color: colors[colorIndex] ?? colors[0] ?? "#ffffff",
+          type: resolvedType,
         });
       }
     }
@@ -1431,15 +1440,15 @@ export function usePrincetonTowerDefenseRuntime() {
       if (enemy.goldAura) addParticles(pos, "gold", 6);
 
       const DEATH_DURATIONS: Record<DeathCause, number> = {
-        lightning: 1100,
-        fire: 1200,
-        freeze: 700,
-        sonic: 550,
-        poison: 900,
+        lightning: 1800,
+        fire: 2000,
+        freeze: 800,
+        sonic: 650,
+        poison: 1200,
         default: 600,
       };
 
-      addEffectEntity({
+      const deathEffect: Effect = {
         id: generateId("fx"),
         pos,
         type: "enemy_death" as const,
@@ -1451,7 +1460,10 @@ export function usePrincetonTowerDefenseRuntime() {
         enemySize: eData.size,
         isFlying: eData.flying,
         deathCause,
-      });
+      };
+      (deathEffect as Effect & { _spawnedAt: number })._spawnedAt = performance.now();
+      pendingDeathEffectsRef.current.push(deathEffect);
+      addEffectEntity(deathEffect);
     },
     [awardBounty, addParticles, addEffectEntity]
   );
@@ -3895,7 +3907,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
             const alertResult = findAllyAlertTarget(
               prev.pos, troopAllies, enemies, getEnemyPosCached,
-              sightRange, (e) => !ENEMY_DATA[e.type].flying,
+              sightRange + ALLY_ALERT_RANGE, (e) => !ENEMY_DATA[e.type].flying,
             );
             if (alertResult) {
               closestEnemy = alertResult.enemy;
@@ -4153,7 +4165,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
             const alertResult = findAllyAlertTarget(
               troop.pos, allies, enemies, getEnemyPosCached,
-              sightRange, flyingFilter,
+              sightRange + ALLY_ALERT_RANGE, flyingFilter,
             );
             if (alertResult) {
               closestEnemy = alertResult.enemy;
@@ -5241,7 +5253,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   0,
                   maxVisualChainLinks
                 );
-                const desiredRealMs = isFocusedBeam ? 140 : 220;
+                const desiredRealMs = isFocusedBeam ? 250 : 420;
                 const gsCompensation = Math.max(1, gameSpeed);
                 const lightningFxDuration = desiredRealMs * gsCompensation;
                 const lightningIntensityScale =
@@ -5400,9 +5412,9 @@ export function usePrincetonTowerDefenseRuntime() {
           } else if (
             tData.attackSpeed > 0 &&
             now - tower.lastAttack >
-              (gameSpeed > 0
-                ? tData.attackSpeed / gameSpeed / attackSpeedMultiplier
-                : tData.attackSpeed)
+            (gameSpeed > 0
+              ? tData.attackSpeed / gameSpeed / attackSpeedMultiplier
+              : tData.attackSpeed)
           ) {
             // Generic tower attack (fallback)
             const validEnemies = getPrioritizedEnemiesInRange(
@@ -5742,10 +5754,10 @@ export function usePrincetonTowerDefenseRuntime() {
                   isReinforcementLancer
                     ? "impact_hit"
                     : troop.type === "knight" || troop.type === "cavalry"
-                    ? "melee_slash"
-                    : troop.type === "armored" || troop.type === "elite"
-                      ? "melee_swipe"
-                      : "impact_hit";
+                      ? "melee_slash"
+                      : troop.type === "armored" || troop.type === "elite"
+                        ? "melee_swipe"
+                        : "impact_hit";
                 queuedTroopEffects.push({
                   id: generateId("eff"),
                   pos: { x: (troop.pos.x + targetPos.x) / 2, y: (troop.pos.y + targetPos.y) / 2 },
@@ -6086,7 +6098,11 @@ export function usePrincetonTowerDefenseRuntime() {
             if (newLife <= 0) continue;
 
             updated.push({
-              ...p,
+              id: p.id,
+              type: p.type,
+              color: p.color,
+              maxLife: p.maxLife,
+              size: p.size,
               life: newLife,
               pos: {
                 x: p.pos.x + p.velocity.x * deltaScale,
@@ -7542,21 +7558,52 @@ export function usePrincetonTowerDefenseRuntime() {
     // Hazards must render beneath all decoration passes.
     drawLevelHazards();
 
+    // Merge pending death effects from the ref queue so they render immediately,
+    // bypassing React state batch timing. Advance their progress using wall-clock time.
+    const pendingDeath = pendingDeathEffectsRef.current;
+    const effectIds = new Set(effects.map(e => e.id));
+    const mergedEffects: Effect[] = [...effects];
+    const now = performance.now();
+    const survivingPending: Effect[] = [];
+    for (const de of pendingDeath) {
+      if (effectIds.has(de.id)) continue;
+      const spawnedAt = (de as Effect & { _spawnedAt?: number })._spawnedAt || now;
+      const elapsed = now - spawnedAt;
+      de.progress = Math.min(0.99, elapsed / (de.duration || 500));
+      if (de.progress < 0.99) {
+        mergedEffects.push(de);
+        survivingPending.push(de);
+      }
+    }
+    pendingDeathEffectsRef.current = survivingPending;
+
     // Ground-level spell effects (scorch marks, impact craters) render above roads/hazards
     // but below decorations, towers, and entities.
     const groundEffectTypes = new Set(["fire_scorch", "lightning_scorch", "meteor_impact"]);
     const skyEffectTypes = new Set(["meteor_falling", "lightning_bolt"]);
+    const deathEffectType = "enemy_death";
     const groundEffects: Effect[] = [];
     const skyEffects: Effect[] = [];
-    for (const eff of effects) {
+    const deathEffects: Effect[] = [];
+    for (const eff of mergedEffects) {
       if (groundEffectTypes.has(eff.type)) groundEffects.push(eff);
       else if (skyEffectTypes.has(eff.type)) skyEffects.push(eff);
+      else if (eff.type === deathEffectType) deathEffects.push(eff);
     }
     for (const eff of groundEffects) {
       renderEffect(
         ctx, eff, canvas.width, canvas.height, dpr,
-        enemies, towers, selectedMap, cameraOffset, cameraZoom, effects.length
+        enemies, towers, selectedMap, cameraOffset, cameraZoom, mergedEffects.length
       );
+    }
+
+    // Death animation effects render above roads/hazards but below decorations and entities.
+    for (const eff of deathEffects) {
+      const deathScreenPos = worldToScreen(eff.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+      const deathZoom = cameraZoom || 1;
+      ctx.save();
+      renderEnemyDeath(ctx, deathScreenPos, deathZoom, eff.progress, eff);
+      ctx.restore();
     }
 
     let animatedVisibleDecorations: CachedVisibleDecoration[] = [];
@@ -7952,9 +7999,9 @@ export function usePrincetonTowerDefenseRuntime() {
         isoY: (x + y) * 0.25,
       });
     });
-    effects.forEach((eff) => {
-      // Ground and sky effects are rendered in dedicated passes, skip them here
-      if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type)) return;
+    mergedEffects.forEach((eff) => {
+      // Ground, sky, and death effects are rendered in dedicated passes, skip them here
+      if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type) || eff.type === deathEffectType) return;
       const fromX = eff.pos.x;
       const fromY = eff.pos.y;
       const toX = eff.targetPos?.x ?? fromX;
@@ -8004,9 +8051,22 @@ export function usePrincetonTowerDefenseRuntime() {
         }).length;
       }
 
+      let chargeProgress = 0;
+      if (spec.type === "sentinel_nexus") {
+        const key = getSpecialTowerKey(spec);
+        const lastStrike = lastSentinelStrikeRef.current.get(key) ?? 0;
+        const strikeInterval = 10000;
+        chargeProgress = lastStrike === 0 ? 1 : Math.min(1, (Date.now() - lastStrike) / strikeInterval);
+      } else if (spec.type === "sunforge_orrery") {
+        const key = getSpecialTowerKey(spec);
+        const lastBarrage = lastSunforgeBarrageRef.current.get(key) ?? 0;
+        const barrageInterval = 9000;
+        chargeProgress = lastBarrage === 0 ? 1 : Math.min(1, (Date.now() - lastBarrage) / barrageInterval);
+      }
+
       renderables.push({
         type: "special-building",
-        data: { ...spec, boostedTowerCount, __towerIndex: index },
+        data: { ...spec, boostedTowerCount, chargeProgress, __towerIndex: index },
         isoY: (worldPos.x + worldPos.y) * 0.25,
       });
     });
@@ -8275,7 +8335,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 ? 140
                 : spec.type === "sunforge_orrery"
                   ? 260
-              : 0;
+                  : 0;
       const ringStroke =
         spec.type === "beacon"
           ? "rgba(0, 229, 255, 0.5)"
@@ -8487,7 +8547,7 @@ export function usePrincetonTowerDefenseRuntime() {
     renderables.forEach((r) => {
       switch (r.type) {
         case "special-building": {
-          const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number };
+          const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number; chargeProgress?: number };
           const sPos = toScreen(gridToWorld(spec.pos));
           const maxHp = spec.type === "vault"
             ? getLevelSpecialTowerHp(selectedMap) ?? spec.hp
@@ -8501,7 +8561,8 @@ export function usePrincetonTowerDefenseRuntime() {
             maxHp,
             specialTowerHp,
             vaultFlash,
-            spec.boostedTowerCount || 0
+            spec.boostedTowerCount || 0,
+            spec.chargeProgress ?? 0
           );
           break;
         }
@@ -8623,32 +8684,32 @@ export function usePrincetonTowerDefenseRuntime() {
             if (!heroTargetPos && heroRenderable.targetPos) {
               heroTargetPos = heroRenderable.targetPos;
             }
-          renderHero(
-            ctx,
-            heroRenderable,
-            canvas.width,
-            canvas.height,
-            dpr,
-            cameraOffset,
-            cameraZoom,
-            heroTargetPos
-          );
-          // Render hero status effects (burning, slowed, poisoned, stunned)
-          {
-            const heroData = heroRenderable;
-            if (heroData.burning || heroData.slowed || heroData.poisoned || heroData.stunned) {
-              const heroScreenPos = worldToScreen(
-                heroData.pos,
-                canvas.width,
-                canvas.height,
-                dpr,
-                cameraOffset,
-                cameraZoom
-              );
-              renderUnitStatusEffects(ctx, heroData, heroScreenPos, cameraZoom);
+            renderHero(
+              ctx,
+              heroRenderable,
+              canvas.width,
+              canvas.height,
+              dpr,
+              cameraOffset,
+              cameraZoom,
+              heroTargetPos
+            );
+            // Render hero status effects (burning, slowed, poisoned, stunned)
+            {
+              const heroData = heroRenderable;
+              if (heroData.burning || heroData.slowed || heroData.poisoned || heroData.stunned) {
+                const heroScreenPos = worldToScreen(
+                  heroData.pos,
+                  canvas.width,
+                  canvas.height,
+                  dpr,
+                  cameraOffset,
+                  cameraZoom
+                );
+                renderUnitStatusEffects(ctx, heroData, heroScreenPos, cameraZoom);
+              }
             }
-          }
-          break;
+            break;
           }
         case "troop":
           const troopRenderable = r.data as Troop;
@@ -8709,7 +8770,7 @@ export function usePrincetonTowerDefenseRuntime() {
             selectedMap,
             cameraOffset,
             cameraZoom,
-            effects.length
+            mergedEffects.length
           );
           break;
         case "particle":
@@ -8753,7 +8814,7 @@ export function usePrincetonTowerDefenseRuntime() {
     for (const eff of skyEffects) {
       renderEffect(
         ctx, eff, canvas.width, canvas.height, dpr,
-        enemies, towers, selectedMap, cameraOffset, cameraZoom, effects.length
+        enemies, towers, selectedMap, cameraOffset, cameraZoom, mergedEffects.length
       );
     }
 
@@ -8775,6 +8836,29 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraZoom
         );
       });
+
+      // Troop inspect indicators
+      troops.forEach((troop) => {
+        if (troop.dead) return;
+        const troopScreen = worldToScreen(troop.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+        renderUnitInspectIndicator(
+          ctx, troopScreen, cameraZoom ?? 1, 18,
+          selectedInspectTroop?.id === troop.id,
+          hoveredInspectTroop === troop.id,
+          "rgba(59, 130, 246, 0.7)",
+        );
+      });
+
+      // Hero inspect indicator
+      if (hero && !hero.dead) {
+        const heroScreen = worldToScreen(hero.pos, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
+        renderUnitInspectIndicator(
+          ctx, heroScreen, cameraZoom ?? 1, 22,
+          selectedInspectHero,
+          hoveredInspectHero,
+          "rgba(245, 158, 11, 0.9)",
+        );
+      }
     }
 
     // ========== SPELL / REINFORCEMENT TARGETING RETICLE ==========
@@ -9392,15 +9476,15 @@ export function usePrincetonTowerDefenseRuntime() {
       setHero((prev) =>
         prev && prev.id === heroId
           ? {
-              ...prev,
-              moving: true,
-              targetPos,
-              selected: false,
-              facingRight: getFacingRightFromDelta(
-                targetPos.x - prev.pos.x,
-                prev.facingRight ?? true
-              ),
-            }
+            ...prev,
+            moving: true,
+            targetPos,
+            selected: false,
+            facingRight: getFacingRightFromDelta(
+              targetPos.x - prev.pos.x,
+              prev.facingRight ?? true
+            ),
+          }
           : prev
       );
       addParticles(targetPos, "glow", 5);
@@ -9518,6 +9602,11 @@ export function usePrincetonTowerDefenseRuntime() {
         return;
       }
 
+      // In inspector mode, let handleCanvasClick handle everything
+      if (inspectorActive && gameSpeed === 0) {
+        return;
+      }
+
       // Check if clicking on a tower to start repositioning
       if (selectedTower) {
         const tower = towers.find((t) => t.id === selectedTower);
@@ -9617,6 +9706,7 @@ export function usePrincetonTowerDefenseRuntime() {
       placingTroop,
       targetingSpell,
       activeSentinelTargetKey,
+      inspectorActive,
       selectedTower,
       towers,
       hero,
@@ -9665,6 +9755,11 @@ export function usePrincetonTowerDefenseRuntime() {
         setPanStartOffset(null);
         // If we actually moved while panning, don't trigger any click logic
         if (wasPanning) {
+          if (inspectorActive) {
+            setSelectedInspectEnemy(null);
+            setSelectedInspectTroop(null);
+            setSelectedInspectHero(false);
+          }
           return;
         }
       }
@@ -9810,8 +9905,8 @@ export function usePrincetonTowerDefenseRuntime() {
         return;
       }
 
-      // ========== INSPECTOR MODE - Handle enemy selection ==========
-      // Only intercept clicks for enemy selection when inspector is active AND game is paused
+      // ========== INSPECTOR MODE - Handle unit selection ==========
+      // Intercept clicks for enemy/troop/hero selection when inspector is active AND game is paused
       if (inspectorActive && gameSpeed === 0) {
         const worldPos = screenToWorld(
           clickPos,
@@ -9822,15 +9917,16 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraZoom
         );
 
-        // Find clicked enemy
-        let closestEnemy: Enemy | null = null;
+        let closestType: "enemy" | "troop" | "hero" | null = null;
         let closestDist = Infinity;
-        const clickRadius = 40 / cameraZoom; // Adjust click radius for zoom
+        let closestEnemy: Enemy | null = null;
+        let closestTroop: Troop | null = null;
+        const clickRadius = 40 / cameraZoom;
 
+        // Check enemies
         for (const enemy of enemies) {
           const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
           const eData = ENEMY_DATA[enemy.type];
-          // Adjust hitbox position for flying enemies (they render higher up)
           const flyingOffset = eData.flying ? 35 : 0;
           const adjustedEnemyPos = { x: enemyPos.x, y: enemyPos.y - flyingOffset };
           const dist = distance(worldPos, adjustedEnemyPos);
@@ -9838,15 +9934,46 @@ export function usePrincetonTowerDefenseRuntime() {
 
           if (dist < hitRadius + clickRadius && dist < closestDist) {
             closestDist = dist;
+            closestType = "enemy";
             closestEnemy = enemy;
+            closestTroop = null;
           }
         }
 
-        if (closestEnemy) {
+        // Check hero
+        if (hero && !hero.dead) {
+          const dist = distance(worldPos, hero.pos);
+          if (dist < 30 + clickRadius && dist < closestDist) {
+            closestDist = dist;
+            closestType = "hero";
+            closestEnemy = null;
+            closestTroop = null;
+          }
+        }
+
+        // Check troops
+        for (const troop of troops) {
+          if (troop.dead) continue;
+          const dist = distance(worldPos, troop.pos);
+          if (dist < 22 + clickRadius && dist < closestDist) {
+            closestDist = dist;
+            closestType = "troop";
+            closestEnemy = null;
+            closestTroop = troop;
+          }
+        }
+
+        // Clear all selections first
+        setSelectedInspectEnemy(null);
+        setSelectedInspectTroop(null);
+        setSelectedInspectHero(false);
+
+        if (closestType === "enemy" && closestEnemy) {
           setSelectedInspectEnemy(closestEnemy);
-        } else {
-          // Clicked on empty space - deselect
-          setSelectedInspectEnemy(null);
+        } else if (closestType === "hero") {
+          setSelectedInspectHero(true);
+        } else if (closestType === "troop" && closestTroop) {
+          setSelectedInspectTroop(closestTroop);
         }
         return;
       }
@@ -10061,13 +10188,13 @@ export function usePrincetonTowerDefenseRuntime() {
         setEffects((prev) => {
           const next = [
             ...prev,
-              {
-                id: generateId("sentinel_lockon"),
-                pos: lockedTarget,
-                type: "sentinel_lockon" as const,
-                progress: 0,
-                size: 72,
-                duration: 460,
+            {
+              id: generateId("sentinel_lockon"),
+              pos: lockedTarget,
+              type: "sentinel_lockon" as const,
+              progress: 0,
+              size: 72,
+              duration: 460,
             },
           ];
           return next.length > MAX_EFFECTS
@@ -10547,10 +10674,34 @@ export function usePrincetonTowerDefenseRuntime() {
           }
         }
 
-        setHoveredInspectEnemy(hoveredEnemy?.id || null);
+        // Check hero hover
+        let isHeroHovered = false;
+        if (hero && !hero.dead) {
+          const heroDist = distance(mouseWorldPos, hero.pos);
+          if (heroDist < 30 + hoverRadius && heroDist < closestDist) {
+            closestDist = heroDist;
+            hoveredEnemy = null;
+            isHeroHovered = true;
+          }
+        }
 
-        // If game is paused, only handle inspector hover and return
-        // Otherwise, continue with normal mouse move handling
+        // Check troop hover
+        let hoveredTroop: Troop | null = null;
+        for (const troop of troops) {
+          if (troop.dead) continue;
+          const troopDist = distance(mouseWorldPos, troop.pos);
+          if (troopDist < 22 + hoverRadius && troopDist < closestDist) {
+            closestDist = troopDist;
+            hoveredEnemy = null;
+            isHeroHovered = false;
+            hoveredTroop = troop;
+          }
+        }
+
+        setHoveredInspectEnemy(hoveredEnemy?.id || null);
+        setHoveredInspectTroop(hoveredTroop?.id || null);
+        setHoveredInspectHero(isHeroHovered);
+
         if (gameSpeed === 0) {
           return;
         }
@@ -10595,14 +10746,17 @@ export function usePrincetonTowerDefenseRuntime() {
         return distance({ x, y }, screenPos) < hitboxRadius;
       });
 
-      // Check if hovering near any special building
+      // Check if hovering near any special building (screen-space for zoom-aware hitbox)
       const specialTowers = getLevelSpecialTowers(selectedMap);
       let hoveredSpecial: SpecialTower | null = null;
       let nearestSpecialDist = Infinity;
       for (const tower of specialTowers) {
         const towerWorldPos = gridToWorld(tower.pos);
-        const dist = distance(mouseWorldPos, towerWorldPos);
-        if (dist < 100 && dist < nearestSpecialDist) {
+        const towerScreenPos = worldToScreen(
+          towerWorldPos, width, height, dpr, cameraOffset, cameraZoom
+        );
+        const dist = distance({ x, y }, towerScreenPos);
+        if (dist < 60 && dist < nearestSpecialDist) {
           hoveredSpecial = tower;
           nearestSpecialDist = dist;
         }
@@ -12113,14 +12267,14 @@ export function usePrincetonTowerDefenseRuntime() {
               sentinelTarget={
                 hoveredSpecialTower.type === "sentinel_nexus"
                   ? sentinelTargets[
-                    getSpecialTowerKey(hoveredSpecialTower)
+                  getSpecialTowerKey(hoveredSpecialTower)
                   ] ?? null
                   : undefined
               }
               sentinelTargeting={
                 hoveredSpecialTower.type === "sentinel_nexus" &&
                 activeSentinelTargetKey ===
-                  getSpecialTowerKey(hoveredSpecialTower)
+                getSpecialTowerKey(hoveredSpecialTower)
               }
             />
           )}
@@ -12137,6 +12291,7 @@ export function usePrincetonTowerDefenseRuntime() {
             selectedEnemy={selectedInspectEnemy}
             setSelectedEnemy={setSelectedInspectEnemy}
             enemies={enemies}
+            troops={troops}
             setGameSpeed={(nextSpeed) => {
               if (battleOutcome) return;
               setGameSpeed(nextSpeed);
@@ -12144,6 +12299,10 @@ export function usePrincetonTowerDefenseRuntime() {
             previousGameSpeed={previousGameSpeed}
             setPreviousGameSpeed={setPreviousGameSpeed}
             gameSpeed={gameSpeed}
+            onDeactivate={() => {
+              setSelectedInspectTroop(null);
+              setSelectedInspectHero(false);
+            }}
           />
           {/* Enemy Detail Tooltip when enemy is selected in inspect mode */}
           {inspectorActive && selectedInspectEnemy && (() => {
@@ -12161,6 +12320,44 @@ export function usePrincetonTowerDefenseRuntime() {
                 enemy={selectedInspectEnemy}
                 position={screenPos}
                 onClose={() => setSelectedInspectEnemy(null)}
+              />
+            );
+          })()}
+          {/* Troop Detail Tooltip when troop is selected in inspect mode */}
+          {inspectorActive && selectedInspectTroop && (() => {
+            const liveTroop = troops.find(t => t.id === selectedInspectTroop.id);
+            if (!liveTroop) return null;
+            const screenPos = worldToScreen(
+              liveTroop.pos,
+              width,
+              height,
+              dpr,
+              cameraOffset,
+              cameraZoom
+            );
+            return (
+              <TroopDetailTooltip
+                troop={liveTroop}
+                position={screenPos}
+                onClose={() => setSelectedInspectTroop(null)}
+              />
+            );
+          })()}
+          {/* Hero Detail Tooltip when hero is selected in inspect mode */}
+          {inspectorActive && selectedInspectHero && hero && (() => {
+            const screenPos = worldToScreen(
+              hero.pos,
+              width,
+              height,
+              dpr,
+              cameraOffset,
+              cameraZoom
+            );
+            return (
+              <HeroDetailTooltip
+                hero={hero}
+                position={screenPos}
+                onClose={() => setSelectedInspectHero(false)}
               />
             );
           })()}

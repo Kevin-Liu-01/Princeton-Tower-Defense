@@ -735,6 +735,78 @@ const LANDMARK_INFO: Record<string, { name: string; icon: React.ReactNode; desc:
     desc: "A gate that defends the battlefield.",
     lore: "The gate doesn't seem to be very sturdy.",
   },
+  carnegie_lake: {
+    name: "Carnegie Lake",
+    icon: <Mountain className="text-blue-400" size={16} />,
+    desc: "A serene body of water reflecting the sky like a mirror.",
+    lore: "Andrew Carnegie donated the lake so Princeton students could row. The fish were not consulted.",
+  },
+  hieroglyph_wall: {
+    name: "Hieroglyph Wall",
+    icon: <Landmark className="text-amber-400" size={16} />,
+    desc: "A weathered stone wall covered in ancient hieroglyphs.",
+    lore: "Scholars have translated most of it. It's mostly complaints about the heat and requests for more beer.",
+  },
+  sarcophagus: {
+    name: "Sarcophagus",
+    icon: <Skull className="text-amber-400" size={16} />,
+    desc: "An ornate stone coffin sealed with ancient wards.",
+    lore: "Whatever's inside keeps knocking. Everyone has agreed to pretend they don't hear it.",
+  },
+  dark_throne: {
+    name: "Dark Throne",
+    icon: <Crown className="text-purple-400" size={16} />,
+    desc: "A menacing throne wreathed in shadow and dread.",
+    lore: "Sitting in it grants immense power and also terrible lower back pain.",
+  },
+  dark_barracks: {
+    name: "Dark Barracks",
+    icon: <Shield className="text-purple-400" size={16} />,
+    desc: "A fortified outpost where dark forces once mustered.",
+    lore: "The bunks are still made. Evil is disciplined about hospital corners, apparently.",
+  },
+  dark_spire: {
+    name: "Dark Spire",
+    icon: <TrendingUp className="text-purple-400" size={16} />,
+    desc: "A jagged tower of black stone piercing the sky.",
+    lore: "Lightning strikes it constantly, yet it never crumbles. The architect was either brilliant or cursed.",
+  },
+  ice_bridge: {
+    name: "Ice Bridge",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    desc: "A frozen arch spanning a treacherous chasm.",
+    lore: "Crossing it requires courage, balance, and the good sense not to look down.",
+  },
+  war_monument: {
+    name: "War Monument",
+    icon: <Swords className="text-stone-400" size={16} />,
+    desc: "A towering memorial honoring fallen warriors of ages past.",
+    lore: "Every name etched into its surface represents a hero. There are a lot of names.",
+  },
+  bone_altar: {
+    name: "Bone Altar",
+    icon: <Skull className="text-red-400" size={16} />,
+    desc: "A grim sacrificial platform assembled from countless bones.",
+    lore: "Dark rituals were performed here. The stains don't come out no matter how hard you scrub.",
+  },
+  sun_obelisk: {
+    name: "Sun Obelisk",
+    icon: <TrendingUp className="text-amber-400" size={16} />,
+    desc: "A golden spire that channels the power of the sun.",
+    lore: "At high noon it casts no shadow. At midnight, it glows faintly, as if remembering the light.",
+  },
+  frost_citadel: {
+    name: "Frost Citadel",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    desc: "A massive fortress sculpted entirely from enchanted ice.",
+    lore: "The throne room is gorgeous but the heating bill is zero—because there is no heating.",
+  },
+  infernal_gate: {
+    name: "Infernal Gate",
+    icon: <Flame className="text-red-400" size={16} />,
+    desc: "A blazing portal crackling with hellfire and brimstone.",
+    lore: "It leads somewhere very hot. The welcome mat on the other side says 'Abandon Hope.' Subtle.",
+  },
 };
 
 export const LandmarkTooltip: React.FC<LandmarkTooltipProps> = ({ landmarkType, position }) => {

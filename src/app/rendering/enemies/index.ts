@@ -11,6 +11,7 @@ import {
   darkenColor,
 } from "../../utils";
 import { setShadowBlur, clearShadow } from "../performance";
+import { renderInspectIndicator } from "../effects/inspectIndicator";
 
 interface EnemyPaletteVariants {
   dark: string;
@@ -1436,192 +1437,26 @@ export function renderEnemyInspectIndicator(
   const eData = ENEMY_DATA[enemy.type];
   const time = Date.now() / 1000;
 
-  const size = eData.size * zoom;
+  const size = eData.size;
+  const sizeZoomed = size * zoom;
   const isFlying = eData.flying;
   const floatOffset = isFlying ? Math.sin(time * 3) * 10 * zoom : 0;
   const bobOffset = Math.sin(time * 5 + enemy.pathIndex) * 2 * zoom;
   const drawY =
     screenPos.y -
-    size / 2 -
+    sizeZoomed / 2 -
     floatOffset -
     bobOffset -
     (isFlying ? 35 * zoom : 0);
 
-  ctx.save();
-
-  // Pulsing animation
-  const pulsePhase = (Math.sin(time * 4) + 1) / 2; // 0 to 1
-  const baseRadius = size * 0.9;
-  const pulseRadius = baseRadius + pulsePhase * 6 * zoom;
-
-  // Ground circle position (below enemy)
-  const groundY = screenPos.y + 8 * zoom;
-
-  // Magnifying glass position (above enemy)
-  const iconY = drawY - size * 0.7;
-  const iconSize = 14 * zoom;
-
-  // Determine colors based on state
-  const isYellow = isHovered && !isSelected;
-  const primaryColor = isYellow
-    ? "rgba(251, 191, 36, 0.9)"
-    : "rgba(168, 85, 247, 0.7)";
-  const secondaryColor = isYellow
-    ? "rgba(254, 240, 138, 0.8)"
-    : "rgba(192, 132, 252, 0.6)";
-  const iconBgColor = isYellow
-    ? "rgba(251, 191, 36, 1)"
-    : "rgba(139, 92, 246, 0.9)";
-  const iconStrokeColor = isYellow ? "#1c1917" : "white";
-
-  // ========== SELECT CIRCLE BELOW ENEMY ==========
-  // Outer pulsing ring
-  ctx.strokeStyle = primaryColor;
-  ctx.lineWidth = (3 + pulsePhase * 1.5) * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    groundY,
-    pulseRadius,
-    pulseRadius * 0.45,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Inner circle
-  ctx.strokeStyle = secondaryColor;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    groundY,
-    baseRadius * 0.7,
-    baseRadius * 0.35,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Center dot
-  ctx.fillStyle = primaryColor;
-  ctx.beginPath();
-  ctx.arc(screenPos.x, groundY, 3 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // ========== MAGNIFYING GLASS ABOVE ENEMY (Lucide Search style) ==========
-  // Icon background circle with glow
-  if (isYellow) {
-    // Yellow glow for hover
-    const glowGrad = ctx.createRadialGradient(
-      screenPos.x,
-      iconY,
-      0,
-      screenPos.x,
-      iconY,
-      iconSize * 1.5,
-    );
-    glowGrad.addColorStop(0, "rgba(251, 191, 36, 0.5)");
-    glowGrad.addColorStop(1, "rgba(251, 191, 36, 0)");
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.arc(screenPos.x, iconY, iconSize * 1.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Icon background
-  ctx.fillStyle = iconBgColor;
-  ctx.beginPath();
-  ctx.arc(screenPos.x, iconY, iconSize, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Icon border
-  ctx.strokeStyle = isYellow
-    ? "rgba(255, 255, 255, 0.9)"
-    : "rgba(255, 255, 255, 0.5)";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.arc(screenPos.x, iconY, iconSize, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Lucide Search icon - scaled to fit within the background circle
-  // Lucide uses a 24x24 viewbox with circle at (11,11) r=8 and line from (21,21) to (16.65,16.65)
-  // Scale factor to fit within iconSize
-  const scale = (iconSize * 0.75) / 12; // Scale so the icon fits nicely
-  const offsetX = screenPos.x - iconSize * 0.15; // Center the lens part
-  const offsetY = iconY - iconSize * 0.15;
-
-  ctx.strokeStyle = iconStrokeColor;
-  ctx.lineWidth = 2 * zoom;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-
-  // Magnifying glass lens (circle) - Lucide: cx=11, cy=11, r=8
-  const lensRadius = 8 * scale;
-  ctx.beginPath();
-  ctx.arc(offsetX, offsetY, lensRadius, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Magnifying glass handle (line) - Lucide: from (16.65, 16.65) to (21, 21)
-  // The handle starts at ~45 degrees from lens edge
-  const handleStartX = offsetX + lensRadius * Math.cos(Math.PI / 4);
-  const handleStartY = offsetY + lensRadius * Math.sin(Math.PI / 4);
-  const handleLength = 5 * scale;
-  const handleEndX = handleStartX + handleLength * Math.cos(Math.PI / 4);
-  const handleEndY = handleStartY + handleLength * Math.sin(Math.PI / 4);
-
-  ctx.lineWidth = 2.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(handleStartX, handleStartY);
-  ctx.lineTo(handleEndX, handleEndY);
-  ctx.stroke();
-
-  ctx.lineCap = "butt";
-  ctx.lineJoin = "miter";
-
-  // ========== SELECTED STATE EXTRAS ==========
-  if (isSelected) {
-    // Bright selection border around enemy
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-    ctx.lineWidth = 3 * zoom;
-    ctx.setLineDash([6 * zoom, 4 * zoom]);
-    ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 1.2, size * 0.75, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Selection glow
-    const selGlow = ctx.createRadialGradient(
-      screenPos.x,
-      drawY,
-      size * 0.3,
-      screenPos.x,
-      drawY,
-      size * 1.5,
-    );
-    selGlow.addColorStop(0, "rgba(168, 85, 247, 0.4)");
-    selGlow.addColorStop(0.6, "rgba(168, 85, 247, 0.15)");
-    selGlow.addColorStop(1, "rgba(168, 85, 247, 0)");
-    ctx.fillStyle = selGlow;
-    ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 1.5, size, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // "INSPECTING" text
-    ctx.font = `bold ${9 * zoom}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "rgba(192, 132, 252, 0.95)";
-    ctx.fillText(
-      "INSPECTING",
-      screenPos.x,
-      groundY + baseRadius * 0.5 + 12 * zoom,
-    );
-  }
-
-  ctx.restore();
+  renderInspectIndicator(ctx, {
+    screenPos,
+    drawY,
+    zoom,
+    unitSize: size,
+    isSelected,
+    isHovered,
+  });
 }
 
 function drawEnemySprite(

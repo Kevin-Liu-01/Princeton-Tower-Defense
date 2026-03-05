@@ -24,7 +24,7 @@ export const HERO_RANGED_SIGHT_RANGE = 220; // Extended sight for Rocky (ranged 
 export const COMBAT_RANGE = 50; // Range at which units stop to fight
 export const MELEE_RANGE = 60; // Close range where ranged units switch to melee
 export const FORMATION_SPACING = 30; // Distance between troops in formation
-export const ALLY_ALERT_RANGE = 120; // Range within which allies share aggro when one is engaging
+export const ALLY_ALERT_RANGE = 150; // Range within which allies share aggro when one is engaging
 export const ENEMY_SPEED_MODIFIER = 1.25; // Global enemy speed multiplier (slower enemies)
 
 export const DEFAULT_CAMERA_OFFSET: Position = {

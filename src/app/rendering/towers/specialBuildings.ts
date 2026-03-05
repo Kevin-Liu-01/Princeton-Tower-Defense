@@ -302,14 +302,24 @@ function drawChronoRelayBuilding(
 function drawSentinelNexusBuilding(
   ctx: CanvasRenderingContext2D,
   s: number,
-  time: number
+  time: number,
+  chargeProgress: number
 ): void {
+  const charge = Math.max(0, Math.min(1, chargeProgress));
   const pulse = Math.sin(time * 3.4) * 0.5 + 0.5;
   const surge = Math.sin(time * 8.2 + 0.8) * 0.5 + 0.5;
   const s2 = s * 1.12;
   const tanA = Math.tan(Math.PI / 6);
-  const glowRgb = "255, 110, 96";
+  const hotRgb = "255, 110, 96";
+  // Smooth gray → red color ramp across 0-1 charge
+  const lerpR = Math.round(120 + 135 * charge);
+  const lerpG = Math.round(120 - 10 * charge);
+  const lerpB = Math.round(130 - 34 * charge);
+  const glowRgb = `${lerpR}, ${lerpG}, ${lerpB}`;
+  const grayRgb = "120, 120, 130";
+  const chargeGlow = 0.45 + charge * 0.55;
   const runes = ["ᚠ", "ᚲ", "ᚾ", "ᛗ", "ᛋ", "ᛉ", "ᛞ", "ᛟ"];
+  const readyFlash = charge >= 0.98 ? (Math.sin(time * 12) * 0.5 + 0.5) * 0.4 : 0;
 
   const baseW = 35 * s2;
   const baseH = 9 * s2;
@@ -322,27 +332,74 @@ function drawSentinelNexusBuilding(
   ctx.ellipse(0, -baseW * tanA + 4 * s2, 50 * s2, 24 * s2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Red runic target reticle
+  // Charge-up ground rune circle: runes light up sequentially as charge fills
+  const runeCount = 16;
+  const litRuneCount = Math.floor(charge * runeCount);
   ctx.save();
   ctx.translate(0, -baseW * tanA + 2.5 * s2);
   ctx.scale(1, 0.5);
-  ctx.strokeStyle = `rgba(${glowRgb}, ${0.32 + pulse * 0.24})`;
+
+  // Outer reticle ring - always visible, gray→red with charge
+  ctx.strokeStyle = `rgba(${glowRgb}, ${0.3 + charge * 0.35 + readyFlash})`;
   ctx.lineWidth = 2.3 * s2;
   ctx.setLineDash([10 * s2, 7 * s2]);
   ctx.beginPath();
   ctx.arc(0, 0, 44 * s2, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.strokeStyle = "rgba(255, 190, 175, 0.7)";
+
+  // Charge fill arc - sweeps around as charge increases
+  if (charge > 0.02) {
+    ctx.strokeStyle = `rgba(${hotRgb}, ${0.5 + charge * 0.4 + readyFlash})`;
+    ctx.lineWidth = 3.5 * s2;
+    ctx.beginPath();
+    ctx.arc(0, 0, 38 * s2, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Inner ring - always visible, gray→tinted
+  ctx.strokeStyle = `rgba(${glowRgb}, ${0.35 + charge * 0.45})`;
   ctx.lineWidth = 1.7 * s2;
   ctx.beginPath();
   ctx.arc(0, 0, 32 * s2, 0, Math.PI * 2);
   ctx.stroke();
+
+  // Sequential rune activation around the circle
+  for (let i = 0; i < runeCount; i++) {
+    const a = (i / runeCount) * Math.PI * 2 - Math.PI / 2;
+    const isLit = i < litRuneCount;
+    const isActivating = i === litRuneCount && charge < 1;
+    const partialBright = isActivating ? (charge * runeCount - litRuneCount) : 0;
+    const runeAlpha = isLit
+      ? 0.7 + Math.sin(time * 4 + i * 0.6) * 0.2 + readyFlash
+      : 0.25 + Math.sin(time * 1.5 + i * 0.8) * 0.08 + partialBright * 0.4;
+    const rx = Math.cos(a) * 28 * s2;
+    const ry = Math.sin(a) * 28 * s2;
+    ctx.font = `bold ${7.2 * s2}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = isLit
+      ? `rgba(${hotRgb}, ${runeAlpha})`
+      : `rgba(${grayRgb}, ${runeAlpha})`;
+    ctx.fillText(runes[i % runes.length], rx, ry);
+
+    if (isLit) {
+      ctx.fillStyle = `rgba(255, 200, 180, ${0.15 + readyFlash * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(rx, ry, 5 * s2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Tick marks - always visible, gray when unlit
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
     const tx = Math.cos(a) * 28 * s2;
     const ty = Math.sin(a) * 28 * s2;
-    ctx.strokeStyle = "rgba(255, 215, 205, 0.75)";
+    const tickLit = (i / 12) < charge;
+    ctx.strokeStyle = tickLit
+      ? `rgba(255, 215, 205, ${0.6 + readyFlash})`
+      : `rgba(${grayRgb}, 0.3)`;
     ctx.lineWidth = (i % 3 === 0 ? 2 : 1.2) * s2;
     ctx.beginPath();
     ctx.moveTo(tx, ty);
@@ -375,16 +432,19 @@ function drawSentinelNexusBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Runic glyph ring on the base
+  // Runic glyph ring on the base - gray when uncharged, colored when lit
   ctx.font = `bold ${7.2 * s2}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   for (let i = 0; i < 14; i++) {
-    const a = (i / 14) * Math.PI * 2 - time * 0.16;
+    const a = (i / 14) * Math.PI * 2 - time * (0.16 + charge * 0.3);
     const rx = Math.cos(a) * 30 * s2;
     const ry = Math.sin(a) * 15 * s2 - baseW * tanA + 2 * s2;
-    const alpha = 0.24 + Math.sin(time * 2.8 + i * 0.9) * 0.18 + pulse * 0.16;
-    ctx.fillStyle = `rgba(${glowRgb}, ${Math.max(0.12, alpha)})`;
+    const runeCharge = (i / 14) < charge ? 1 : 0;
+    const alpha = runeCharge
+      ? 0.4 + Math.sin(time * 2.8 + i * 0.9) * 0.18 + charge * 0.3 + readyFlash
+      : 0.2 + Math.sin(time * 1.2 + i * 0.9) * 0.06;
+    ctx.fillStyle = `rgba(${runeCharge ? hotRgb : grayRgb}, ${Math.max(0.12, alpha)})`;
     ctx.fillText(runes[i % runes.length], rx, ry);
   }
 
@@ -413,7 +473,7 @@ function drawSentinelNexusBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Side generators (ancient emitter modules)
+  // Side generators with charge-reactive crystals
   const generators = [
     { x: -upperW * 0.95, y: upperY - upperW * tanA * 0.65, h: 25 * s2 },
     { x: upperW * 0.95, y: upperY - upperW * tanA * 0.65, h: 27 * s2 },
@@ -428,9 +488,26 @@ function drawSentinelNexusBuilding(
     ctx.lineTo(g.x, g.y - g.h + 4 * s2);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = `rgba(${glowRgb}, ${0.55 + pulse * 0.25})`;
+
+    // Crystal tip: gray at 0, builds color with charge
+    const crystalSize = (3.2 + charge * 1.2) * s2;
+    const crystalAlpha = 0.45 + charge * 0.4 + readyFlash;
+    ctx.fillStyle = `rgba(${glowRgb}, ${crystalAlpha})`;
     ctx.beginPath();
-    ctx.arc(g.x + (idx === 0 ? -2.3 : 2.3) * s2, g.y - g.h + 5 * s2, 2.8 * s2, 0, Math.PI * 2);
+    ctx.arc(g.x + (idx === 0 ? -2.3 : 2.3) * s2, g.y - g.h + 5 * s2, crystalSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Energy accumulation glow around crystal - always visible
+    const haloR = (5 + charge * 4 + readyFlash * 3) * s2;
+    const haloGrad = ctx.createRadialGradient(
+      g.x + (idx === 0 ? -2.3 : 2.3) * s2, g.y - g.h + 5 * s2, 0,
+      g.x + (idx === 0 ? -2.3 : 2.3) * s2, g.y - g.h + 5 * s2, haloR
+    );
+    haloGrad.addColorStop(0, `rgba(${glowRgb}, ${0.12 + 0.25 * charge})`);
+    haloGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(g.x + (idx === 0 ? -2.3 : 2.3) * s2, g.y - g.h + 5 * s2, haloR, 0, Math.PI * 2);
     ctx.fill();
   });
 
@@ -462,21 +539,34 @@ function drawSentinelNexusBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Ancient shield dome
+  // Charge conduit lines running up the tower face - always visible
+  const conduitAlpha = 0.12 + charge * 0.5 + readyFlash;
+  const conduitH = towerH * Math.max(0.08, charge);
+  ctx.strokeStyle = `rgba(${glowRgb}, ${conduitAlpha})`;
+  ctx.lineWidth = 1.4 * s2;
+  for (let i = 0; i < 3; i++) {
+    const xOff = (i - 1) * 4 * s2;
+    ctx.beginPath();
+    ctx.moveTo(xOff, towerBaseY);
+    ctx.lineTo(xOff, towerBaseY - conduitH);
+    ctx.stroke();
+  }
+
+  // Ancient shield dome - always visible, gray→colored
   const shieldY = towerBaseY - towerH + 7 * s2;
   ctx.save();
   ctx.translate(0, shieldY);
   ctx.scale(1, 0.5);
   const shieldGrad = ctx.createRadialGradient(0, -4 * s2, 3 * s2, 0, 0, 30 * s2);
-  shieldGrad.addColorStop(0, `rgba(255, 160, 140, ${0.24 + pulse * 0.14})`);
-  shieldGrad.addColorStop(0.55, `rgba(255, 80, 72, ${0.18 + surge * 0.12})`);
-  shieldGrad.addColorStop(1, "rgba(120, 20, 25, 0)");
+  shieldGrad.addColorStop(0, `rgba(${glowRgb}, ${0.18 + charge * 0.22 + readyFlash * 0.2})`);
+  shieldGrad.addColorStop(0.55, `rgba(${glowRgb}, ${0.1 + charge * 0.18})`);
+  shieldGrad.addColorStop(1, `rgba(${grayRgb}, 0)`);
   ctx.fillStyle = shieldGrad;
   ctx.beginPath();
   ctx.arc(0, 0, 30 * s2, Math.PI, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = `rgba(255, 185, 172, ${0.62 + pulse * 0.2})`;
+  ctx.strokeStyle = `rgba(${glowRgb}, ${0.3 + charge * 0.4 + readyFlash})`;
   ctx.lineWidth = 1.9 * s2;
   ctx.beginPath();
   ctx.arc(0, 0, 30 * s2, Math.PI, 0);
@@ -491,10 +581,12 @@ function drawSentinelNexusBuilding(
     ctx.save();
     ctx.translate(0, coreY + 5 * s2);
     ctx.scale(1, 0.5);
+    // Ring speed increases with charge
+    const ringSpeed = 0.5 + charge * 1.8;
     for (let i = 0; i < 2; i++) {
       ctx.save();
-      ctx.rotate((i === 0 ? 1 : -1) * time * (0.95 + i * 0.25));
-      ctx.strokeStyle = `rgba(${glowRgb}, ${0.46 + pulse * 0.24})`;
+      ctx.rotate((i === 0 ? 1 : -1) * time * (ringSpeed + i * 0.25));
+      ctx.strokeStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.45 + readyFlash})`;
       ctx.lineWidth = (2.4 - i * 0.5) * s2;
       ctx.setLineDash([(10 + i * 3) * s2, (7 + i * 2) * s2]);
       ctx.beginPath();
@@ -506,13 +598,17 @@ function drawSentinelNexusBuilding(
     ctx.restore();
   };
 
-  // Back arcs first so the core sits inside the ring stack.
   drawSentinelGuidanceRings(false);
 
-  const coreGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, 14 * s2);
-  coreGrad.addColorStop(0, `rgba(255, 242, 236, ${0.86 + pulse * 0.08})`);
-  coreGrad.addColorStop(0.45, `rgba(${glowRgb}, ${0.82 + pulse * 0.15})`);
-  coreGrad.addColorStop(1, "rgba(125, 25, 25, 0.2)");
+  // Core crystal: always visible, gray→red with charge, full size
+  const coreSize = 14 * s2;
+  const coreGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, coreSize);
+  const coreWhiteR = Math.round(180 + 75 * charge);
+  const coreWhiteG = Math.round(180 + 62 * charge);
+  const coreWhiteB = Math.round(185 + 51 * charge);
+  coreGrad.addColorStop(0, `rgba(${coreWhiteR}, ${coreWhiteG}, ${coreWhiteB}, ${0.55 + charge * 0.4 + readyFlash * 0.15})`);
+  coreGrad.addColorStop(0.45, `rgba(${glowRgb}, ${0.4 + charge * 0.5})`);
+  coreGrad.addColorStop(1, `rgba(${grayRgb}, 0.08)`);
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
   ctx.moveTo(0, coreY - 13 * s2);
@@ -522,22 +618,46 @@ function drawSentinelNexusBuilding(
   ctx.lineTo(8 * s2, coreY - 2.5 * s2);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = `rgba(255, 255, 255, ${0.7 + surge * 0.2})`;
+
+  // Inner eye: gray dot at 0, brightens to white
+  const eyeR = Math.round(180 + 75 * charge);
+  const eyeG = Math.round(180 + 75 * charge);
+  const eyeB = Math.round(185 + 70 * charge);
+  ctx.fillStyle = `rgba(${eyeR}, ${eyeG}, ${eyeB}, ${0.35 + charge * 0.5 + readyFlash})`;
   ctx.beginPath();
-  ctx.arc(0, coreY + 1.5 * s2, 2.2 * s2, 0, Math.PI * 2);
+  ctx.arc(0, coreY + 1.5 * s2, (2 + charge * 0.8) * s2, 0, Math.PI * 2);
   ctx.fill();
 
-  // Front arcs finish the ring in front of the core.
   drawSentinelGuidanceRings(true);
 
-  // Orbiting ancient targeting drones
+  // Assembling ruin fragments: always visible, gray at 0, converge as charge nears 1
+  const fragmentCount = 6;
+  for (let i = 0; i < fragmentCount; i++) {
+    const a = (i / fragmentCount) * Math.PI * 2 + time * 0.3;
+    const maxDist = 50 * s2;
+    const minDist = 8 * s2;
+    const dist = maxDist - (maxDist - minDist) * charge;
+    const fx = Math.cos(a) * dist;
+    const fy = coreY + 5 * s2 + Math.sin(a) * dist * 0.5;
+    const fSize = (3 + charge * 2) * s2;
+    const fragAlpha = 0.25 + charge * 0.5 + readyFlash;
+    ctx.fillStyle = `rgba(${glowRgb}, ${fragAlpha})`;
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(a + time * (0.5 + charge * 2));
+    ctx.fillRect(-fSize / 2, -fSize / 2, fSize, fSize);
+    ctx.restore();
+  }
+
+  // Orbiting ancient targeting drones - always visible, gray→red
   const droneCount = 4;
+  const droneSpeed = 0.4 + charge * 1.0;
   for (let i = 0; i < droneCount; i++) {
-    const a = (i / droneCount) * Math.PI * 2 + time * (0.8 + i * 0.04);
+    const a = (i / droneCount) * Math.PI * 2 + time * (droneSpeed + i * 0.04);
     const x = Math.cos(a) * 30 * s2;
     const y = coreY + 12 * s2 + Math.sin(a) * 12 * s2;
     const size = (4.4 + (i % 2) * 1.3) * s2;
-    ctx.fillStyle = `rgba(255, 175, 160, ${0.5 + pulse * 0.32})`;
+    ctx.fillStyle = `rgba(${glowRgb}, ${0.35 + charge * 0.4 + readyFlash})`;
     ctx.beginPath();
     ctx.moveTo(x, y - size);
     ctx.lineTo(x - 2.2 * s2, y);
@@ -545,7 +665,7 @@ function drawSentinelNexusBuilding(
     ctx.lineTo(x + 2.2 * s2, y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = `rgba(${glowRgb}, ${0.6 + surge * 0.28})`;
+    ctx.strokeStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.45})`;
     ctx.lineWidth = 1.1 * s2;
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -553,42 +673,56 @@ function drawSentinelNexusBuilding(
     ctx.stroke();
   }
 
-  // Laser-guided sweep beam
-  const sweepAngle = time * 1.02;
+  // Sweep beam - always visible, gray→red
+  const sweepAngle = time * (0.5 + charge * 1.5);
   const beamX = Math.cos(sweepAngle) * 44 * s2;
   const beamY = Math.sin(sweepAngle) * 22 * s2;
   const beamGrad = ctx.createLinearGradient(0, coreY + 2 * s2, beamX, beamY);
-  beamGrad.addColorStop(0, `rgba(${glowRgb}, ${0.67 + surge * 0.2})`);
+  beamGrad.addColorStop(0, `rgba(${glowRgb}, ${0.2 + charge * 0.55 + readyFlash})`);
   beamGrad.addColorStop(1, "transparent");
   ctx.strokeStyle = beamGrad;
-  ctx.lineWidth = 3.6 * s2;
+  ctx.lineWidth = (2 + charge * 2) * s2;
   ctx.beginPath();
   ctx.moveTo(0, coreY + 2 * s2);
   ctx.lineTo(beamX, beamY);
   ctx.stroke();
 
-  // Generator links to side modules
+  // Generator links - always visible, gray→colored
   generators.forEach((g, idx) => {
     const arc = Math.sin(time * 5 + idx * 2) * 0.5 + 0.5;
     const linkGrad = ctx.createLinearGradient(0, coreY + 4 * s2, g.x, g.y - g.h + 2 * s2);
-    linkGrad.addColorStop(0, `rgba(255, 220, 205, ${0.6 + arc * 0.22})`);
-    linkGrad.addColorStop(1, `rgba(${glowRgb}, ${0.16 + arc * 0.2})`);
+    linkGrad.addColorStop(0, `rgba(${glowRgb}, ${0.25 + charge * 0.4 + arc * 0.12})`);
+    linkGrad.addColorStop(1, `rgba(${glowRgb}, ${0.12 + charge * 0.2 + arc * 0.1})`);
     ctx.strokeStyle = linkGrad;
-    ctx.lineWidth = 1.8 * s2;
+    ctx.lineWidth = (1.4 + charge * 0.6) * s2;
     ctx.beginPath();
     ctx.moveTo(0, coreY + 4 * s2);
     ctx.lineTo(g.x * 0.45, coreY + 10 * s2 + (idx === 0 ? -3 : 3) * s2);
     ctx.lineTo(g.x + (idx === 0 ? -2 : 2) * s2, g.y - g.h + 2 * s2);
     ctx.stroke();
   });
+
+  // Charged-ready energy burst halo when at 100%
+  if (charge >= 0.98) {
+    const burstGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, 35 * s2);
+    burstGrad.addColorStop(0, `rgba(255, 220, 200, ${0.15 + readyFlash * 0.25})`);
+    burstGrad.addColorStop(0.5, `rgba(${hotRgb}, ${0.08 + readyFlash * 0.15})`);
+    burstGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = burstGrad;
+    ctx.beginPath();
+    ctx.arc(0, coreY, 35 * s2, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawSunforgeOrreryBuilding(
   ctx: CanvasRenderingContext2D,
   s: number,
   time: number,
-  enemyHeatCount: number
+  enemyHeatCount: number,
+  chargeProgress: number
 ): void {
+  const charge = Math.max(0, Math.min(1, chargeProgress));
   const stage =
     enemyHeatCount === 0
       ? 0
@@ -601,12 +735,23 @@ function drawSunforgeOrreryBuilding(
   const surge = Math.sin(time * 7.6 + 1.1) * 0.5 + 0.5;
   const s2 = s * 1.16;
   const tanA = Math.tan(Math.PI / 6);
-  const glowRgb = [
+  const hotRgb = [
     "240, 131, 58",
     "250, 148, 66",
     "255, 168, 82",
     "255, 198, 120",
   ][stage];
+  // Smooth gray → orange/gold color ramp across 0-1 charge
+  const stageR = [240, 250, 255, 255][stage];
+  const stageG = [131, 148, 168, 198][stage];
+  const stageB = [58, 66, 82, 120][stage];
+  const lerpR = Math.round(120 + (stageR - 120) * charge);
+  const lerpG = Math.round(120 + (stageG - 120) * charge);
+  const lerpB = Math.round(130 + (stageB - 130) * charge);
+  const glowRgb = `${lerpR}, ${lerpG}, ${lerpB}`;
+  const grayRgb = "120, 120, 130";
+  const chargeGlow = 0.45 + charge * 0.55;
+  const readyFlash = charge >= 0.98 ? (Math.sin(time * 11) * 0.5 + 0.5) * 0.35 : 0;
   const runeSet = ["ᚠ", "ᛋ", "ᚱ", "ᛟ", "ᚲ", "ᛞ", "ᛇ", "ᚹ"];
 
   const baseW = 34 * s2;
@@ -615,21 +760,142 @@ function drawSunforgeOrreryBuilding(
   const upperH = 8 * s2;
   const coreY = -baseH - upperH - 38 * s2;
 
+  // Shadow
   ctx.fillStyle = "rgba(0,0,0,0.42)";
   ctx.beginPath();
   ctx.ellipse(0, -baseW * tanA + 5 * s2, 50 * s2, 24 * s2, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  // Orrery glow circle - UNDER the base, intensity scales with charge
+  const railY = -baseW * tanA + 2.2 * s2;
+  const railOuterR = 44 * s2;
+  const railMidR = 35 * s2;
+  const railInnerR = 25 * s2;
+
   const floorGlow = ctx.createRadialGradient(0, -baseW * tanA, 0, 0, -baseW * tanA, 66 * s2);
-  floorGlow.addColorStop(0, `rgba(${glowRgb}, ${0.22 + pulse * 0.2})`);
-  floorGlow.addColorStop(0.52, `rgba(${glowRgb}, ${0.09 + pulse * 0.1})`);
+  floorGlow.addColorStop(0, `rgba(${glowRgb}, ${0.12 + charge * 0.22 + readyFlash * 0.15})`);
+  floorGlow.addColorStop(0.52, `rgba(${glowRgb}, ${0.05 + charge * 0.1})`);
   floorGlow.addColorStop(1, "transparent");
   ctx.fillStyle = floorGlow;
   ctx.beginPath();
   ctx.ellipse(0, -baseW * tanA, 64 * s2, 30 * s2, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Bronze/obsidian base.
+  // Charge fill arc on the ground plane
+  if (charge > 0.02) {
+    ctx.save();
+    ctx.translate(0, railY);
+    ctx.scale(1, 0.5);
+    ctx.strokeStyle = `rgba(${hotRgb}, ${0.35 + charge * 0.5 + readyFlash})`;
+    ctx.lineWidth = 4 * s2;
+    ctx.beginPath();
+    ctx.arc(0, 0, railOuterR + 3 * s2, -Math.PI / 2, -Math.PI / 2 + charge * Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Back rail/runes first (rendered under the base body)
+  const drawSunforgeRail = (frontHalf: boolean): void => {
+    const arcStart = frontHalf ? 0 : Math.PI;
+    const arcEnd = frontHalf ? Math.PI : Math.PI * 2;
+    ctx.save();
+    ctx.translate(0, railY);
+    ctx.scale(1, 0.5);
+
+    // Broad halo - always visible, gray→warm
+    ctx.strokeStyle = `rgba(${glowRgb}, ${0.15 + charge * 0.2 + readyFlash * 0.1})`;
+    ctx.lineWidth = 7.4 * s2;
+    ctx.beginPath();
+    ctx.arc(0, 0, railMidR + 1.5 * s2, arcStart, arcEnd);
+    ctx.stroke();
+
+    // Outer ring
+    ctx.strokeStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.4 + readyFlash})`;
+    ctx.lineWidth = 3 * s2;
+    ctx.beginPath();
+    ctx.arc(0, 0, railOuterR, arcStart, arcEnd);
+    ctx.stroke();
+
+    // Mid ring
+    ctx.strokeStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.35})`;
+    ctx.lineWidth = 2.2 * s2;
+    ctx.beginPath();
+    ctx.arc(0, 0, railMidR, arcStart, arcEnd);
+    ctx.stroke();
+
+    // Inner segmented ring
+    ctx.strokeStyle = `rgba(${glowRgb}, ${0.22 + charge * 0.35})`;
+    ctx.lineWidth = 1.5 * s2;
+    ctx.setLineDash([7 * s2, 5 * s2]);
+    ctx.beginPath();
+    ctx.arc(0, 0, railInnerR, arcStart, arcEnd);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Tick marks - gray when unlit, colored when lit
+    const tickCount = 18;
+    for (let i = 0; i < tickCount; i++) {
+      const a = (i / tickCount) * Math.PI * 2 + time * (0.12 + charge * 0.2);
+      const isFront = Math.sin(a) >= 0;
+      if (isFront !== frontHalf) continue;
+      const ix = Math.cos(a) * (railMidR + 1.3 * s2);
+      const iy = Math.sin(a) * (railMidR + 1.3 * s2);
+      const ox = Math.cos(a) * (railOuterR - 1.2 * s2);
+      const oy = Math.sin(a) * (railOuterR - 1.2 * s2);
+      const tickLit = (i / tickCount) < charge;
+      ctx.strokeStyle = tickLit
+        ? `rgba(255, 228, 188, ${0.55 + surge * 0.3 + readyFlash})`
+        : `rgba(${grayRgb}, 0.3)`;
+      ctx.lineWidth = (i % 3 === 0 ? 1.9 : 1.2) * s2;
+      ctx.beginPath();
+      ctx.moveTo(ix, iy);
+      ctx.lineTo(ox, oy);
+      ctx.stroke();
+    }
+
+    // Orbiting sparks - always visible, gray→warm
+    for (let i = 0; i < 4; i++) {
+      const a = time * (0.4 + i * 0.18 + charge * 0.5) + (i * Math.PI * 2) / 4;
+      const x = Math.cos(a) * 39 * s2;
+      const y = Math.sin(a) * 39 * s2;
+      const isFront = y >= 0;
+      if (isFront !== frontHalf) continue;
+      ctx.fillStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.5 + readyFlash})`;
+      ctx.beginPath();
+      ctx.arc(x, y, (1.8 + charge * 1.2) * s2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  };
+
+  const drawSunforgeRunes = (frontHalf: boolean): void => {
+    ctx.font = `bold ${6.8 * s2}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const totalRunes = 16;
+    const litRunes = Math.floor(charge * totalRunes);
+    for (let i = 0; i < totalRunes; i++) {
+      const a = (i / totalRunes) * Math.PI * 2 - time * (0.2 + charge * 0.25);
+      const x = Math.cos(a) * 31.5 * s2;
+      const y = Math.sin(a) * 15.7 * s2 + railY;
+      const isFront = Math.sin(a) >= 0;
+      if (isFront !== frontHalf) continue;
+      const isLit = i < litRunes;
+      const alpha = isLit
+        ? 0.45 + Math.sin(time * 2.9 + i * 0.8) * 0.14 + charge * 0.3 + readyFlash
+        : 0.22 + Math.sin(time * 1.2 + i * 0.8) * 0.06;
+      ctx.fillStyle = isLit
+        ? `rgba(${hotRgb}, ${Math.max(0.14, alpha)})`
+        : `rgba(${grayRgb}, ${Math.max(0.12, alpha)})`;
+      ctx.fillText(runeSet[i % runeSet.length], x, y);
+    }
+  };
+
+  // Back rail/runes FIRST (under the base)
+  drawSunforgeRail(false);
+  drawSunforgeRunes(false);
+
+  // Bronze/obsidian base
   ctx.fillStyle = "#3a271c";
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -653,7 +919,7 @@ function drawSunforgeOrreryBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Upper crucible.
+  // Upper crucible
   const upperY = -baseH;
   ctx.fillStyle = "#2a1a15";
   ctx.beginPath();
@@ -678,106 +944,15 @@ function drawSunforgeOrreryBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Outer artillery rails.
-  const railY = -baseW * tanA + 2.2 * s2;
-  const railOuterR = 44 * s2;
-  const railMidR = 35 * s2;
-  const railInnerR = 25 * s2;
-  const drawSunforgeRail = (frontHalf: boolean): void => {
-    const arcStart = frontHalf ? 0 : Math.PI;
-    const arcEnd = frontHalf ? Math.PI : Math.PI * 2;
-    ctx.save();
-    ctx.translate(0, railY);
-    ctx.scale(1, 0.5);
-
-    // Broad warm halo to unify all circles as one system.
-    ctx.strokeStyle = `rgba(${glowRgb}, ${0.2 + pulse * 0.14})`;
-    ctx.lineWidth = 7.4 * s2;
-    ctx.beginPath();
-    ctx.arc(0, 0, railMidR + 1.5 * s2, arcStart, arcEnd);
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgba(${glowRgb}, ${0.48 + pulse * 0.22})`;
-    ctx.lineWidth = 3 * s2;
-    ctx.beginPath();
-    ctx.arc(0, 0, railOuterR, arcStart, arcEnd);
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgba(255, 196, 128, ${0.52 + pulse * 0.16})`;
-    ctx.lineWidth = 2.2 * s2;
-    ctx.beginPath();
-    ctx.arc(0, 0, railMidR, arcStart, arcEnd);
-    ctx.stroke();
-
-    // Inner segmented control ring.
-    ctx.strokeStyle = `rgba(255, 222, 176, ${0.44 + pulse * 0.18})`;
-    ctx.lineWidth = 1.5 * s2;
-    ctx.setLineDash([7 * s2, 5 * s2]);
-    ctx.beginPath();
-    ctx.arc(0, 0, railInnerR, arcStart, arcEnd);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Tick marks around the main rail to make the circles feel engineered.
-    const tickCount = 18;
-    for (let i = 0; i < tickCount; i++) {
-      const a = (i / tickCount) * Math.PI * 2 + time * 0.12;
-      const isFront = Math.sin(a) >= 0;
-      if (isFront !== frontHalf) continue;
-      const ix = Math.cos(a) * (railMidR + 1.3 * s2);
-      const iy = Math.sin(a) * (railMidR + 1.3 * s2);
-      const ox = Math.cos(a) * (railOuterR - 1.2 * s2);
-      const oy = Math.sin(a) * (railOuterR - 1.2 * s2);
-      ctx.strokeStyle = `rgba(255, 228, 188, ${0.42 + surge * 0.24})`;
-      ctx.lineWidth = (i % 3 === 0 ? 1.9 : 1.2) * s2;
-      ctx.beginPath();
-      ctx.moveTo(ix, iy);
-      ctx.lineTo(ox, oy);
-      ctx.stroke();
-    }
-
-    for (let i = 0; i < 4; i++) {
-      const a = time * (0.6 + i * 0.18) + (i * Math.PI * 2) / 4;
-      const x = Math.cos(a) * 39 * s2;
-      const y = Math.sin(a) * 39 * s2;
-      const isFront = y >= 0;
-      if (isFront !== frontHalf) continue;
-      ctx.fillStyle = `rgba(255, 230, 200, ${0.45 + surge * 0.4})`;
-      ctx.beginPath();
-      ctx.arc(x, y, 2.4 * s2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  };
-
-  const drawSunforgeRunes = (frontHalf: boolean): void => {
-    ctx.font = `bold ${6.8 * s2}px serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2 - time * 0.2;
-      const x = Math.cos(a) * 31.5 * s2;
-      const y = Math.sin(a) * 15.7 * s2 + railY;
-      const isFront = Math.sin(a) >= 0;
-      if (isFront !== frontHalf) continue;
-      const alpha = 0.24 + Math.sin(time * 2.9 + i * 0.8) * 0.14 + pulse * 0.18;
-      ctx.fillStyle = `rgba(${glowRgb}, ${Math.max(0.14, alpha)})`;
-      ctx.fillText(runeSet[i % runeSet.length], x, y);
-    }
-  };
-
-  // Back rail/runes first so the core assembly occludes them.
-  drawSunforgeRail(false);
-  drawSunforgeRunes(false);
-
-  // Rotating orrery rings.
+  // Rotating orrery rings - always visible, gray→colored
+  const ringSpeed = 0.4 + charge * 1.4;
   ctx.save();
   ctx.translate(0, coreY + 24 * s2);
   ctx.scale(1, 0.5);
   for (let i = 0; i < 2; i++) {
     ctx.save();
-    ctx.rotate((i === 0 ? 1 : -1) * time * (0.92 + i * 0.26));
-    ctx.strokeStyle = `rgba(${glowRgb}, ${0.45 + pulse * 0.24})`;
+    ctx.rotate((i === 0 ? 1 : -1) * time * (ringSpeed + i * 0.26));
+    ctx.strokeStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.45 + readyFlash})`;
     ctx.lineWidth = (2.6 - i * 0.5) * s2;
     ctx.setLineDash([(10 + i * 3) * s2, (6 + i * 3) * s2]);
     ctx.beginPath();
@@ -788,11 +963,14 @@ function drawSunforgeOrreryBuilding(
   ctx.setLineDash([]);
   ctx.restore();
 
-  // Central sun core crystal.
+  // Central sun core crystal - always visible, gray→golden
   const coreGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, 22 * s2);
-  coreGrad.addColorStop(0, `rgba(255, 248, 232, ${0.88 + pulse * 0.08})`);
-  coreGrad.addColorStop(0.35, `rgba(${glowRgb}, ${0.8 + pulse * 0.16})`);
-  coreGrad.addColorStop(1, "rgba(121, 39, 16, 0.25)");
+  const sunWhiteR = Math.round(180 + 75 * charge);
+  const sunWhiteG = Math.round(180 + 68 * charge);
+  const sunWhiteB = Math.round(185 + 47 * charge);
+  coreGrad.addColorStop(0, `rgba(${sunWhiteR}, ${sunWhiteG}, ${sunWhiteB}, ${0.5 + charge * 0.42 + readyFlash * 0.15})`);
+  coreGrad.addColorStop(0.35, `rgba(${glowRgb}, ${0.4 + charge * 0.5})`);
+  coreGrad.addColorStop(1, `rgba(${grayRgb}, 0.08)`);
   ctx.fillStyle = coreGrad;
   ctx.beginPath();
   ctx.moveTo(0, coreY - 16 * s2);
@@ -803,7 +981,40 @@ function drawSunforgeOrreryBuilding(
   ctx.closePath();
   ctx.fill();
 
-  // Launch pylons.
+  // Inner sun dot - gray at 0, blazes when charged
+  const sunEyeR = Math.round(180 + 75 * charge);
+  const sunEyeG = Math.round(180 + 75 * charge);
+  const sunEyeB = Math.round(185 + 55 * charge);
+  ctx.fillStyle = `rgba(${sunEyeR}, ${sunEyeG}, ${sunEyeB}, ${0.35 + charge * 0.5 + readyFlash})`;
+  ctx.beginPath();
+  ctx.arc(0, coreY + 2 * s2, (2.2 + charge * 1.5) * s2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Assembling solar fragments - always visible, gray→warm
+  const fragmentCount = 8;
+  for (let i = 0; i < fragmentCount; i++) {
+    const a = (i / fragmentCount) * Math.PI * 2 + time * 0.4;
+    const maxDist = 45 * s2;
+    const minDist = 6 * s2;
+    const dist = maxDist - (maxDist - minDist) * charge;
+    const fx = Math.cos(a) * dist;
+    const fy = coreY + 8 * s2 + Math.sin(a) * dist * 0.45;
+    const fSize = (2.5 + charge * 2) * s2;
+    ctx.fillStyle = `rgba(${glowRgb}, ${0.25 + charge * 0.5 + readyFlash})`;
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(a + time * (0.4 + charge * 2));
+    ctx.beginPath();
+    ctx.moveTo(0, -fSize);
+    ctx.lineTo(-fSize * 0.6, 0);
+    ctx.lineTo(0, fSize);
+    ctx.lineTo(fSize * 0.6, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Launch pylons with charge-reactive tips
   const pylons = [
     { x: -17 * s2, y: coreY + 10 * s2, h: 24 * s2 },
     { x: 17 * s2, y: coreY + 10 * s2, h: 26 * s2 },
@@ -818,24 +1029,40 @@ function drawSunforgeOrreryBuilding(
     ctx.lineTo(p.x, p.y - p.h + 4 * s2);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = `rgba(${glowRgb}, ${0.6 + pulse * 0.25})`;
+
+    // Pylon tip - always visible, gray→warm
+    const tipSize = (3 + charge * 1.2) * s2;
+    ctx.fillStyle = `rgba(${glowRgb}, ${0.4 + charge * 0.4 + readyFlash})`;
     ctx.beginPath();
-    ctx.arc(p.x + dir * 2.2 * s2, p.y - p.h + 5 * s2, 2.7 * s2, 0, Math.PI * 2);
+    ctx.arc(p.x + dir * 2.2 * s2, p.y - p.h + 5 * s2, tipSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pylon halo - always visible
+    const haloR = (4 + charge * 4 + readyFlash * 3) * s2;
+    const haloGrad = ctx.createRadialGradient(
+      p.x + dir * 2.2 * s2, p.y - p.h + 5 * s2, 0,
+      p.x + dir * 2.2 * s2, p.y - p.h + 5 * s2, haloR
+    );
+    haloGrad.addColorStop(0, `rgba(${glowRgb}, ${0.1 + 0.2 * charge})`);
+    haloGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(p.x + dir * 2.2 * s2, p.y - p.h + 5 * s2, haloR, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  // Front rail/runes last for proper depth.
+  // Front rail/runes last for proper depth
   drawSunforgeRail(true);
   drawSunforgeRunes(true);
 
-  // Floating solar shards.
+  // Floating solar shards - always visible, gray→warm
   const shardCount = 6 + stage * 2;
   for (let i = 0; i < shardCount; i++) {
-    const a = (i / shardCount) * Math.PI * 2 + time * (0.85 + stage * 0.2);
+    const a = (i / shardCount) * Math.PI * 2 + time * (0.5 + stage * 0.2 + charge * 0.5);
     const x = Math.cos(a) * (30 + stage * 4) * s2;
     const y = coreY + 14 * s2 + Math.sin(a * 1.32) * (12 + stage * 1.6) * s2;
     const h = (4 + (i % 3)) * s2;
-    ctx.fillStyle = `rgba(${glowRgb}, ${0.46 + surge * 0.34})`;
+    ctx.fillStyle = `rgba(${glowRgb}, ${0.3 + charge * 0.45 + readyFlash})`;
     ctx.beginPath();
     ctx.moveTo(x, y - h);
     ctx.lineTo(x - 2.3 * s2, y);
@@ -845,25 +1072,36 @@ function drawSunforgeOrreryBuilding(
     ctx.fill();
   }
 
-  // Solar charge arcs.
-  if (stage >= 1) {
-    for (let i = 0; i < stage + 1; i++) {
-      const a = (i / (stage + 1)) * Math.PI * 2 + time * (1.05 + stage * 0.2);
-      const sx = Math.cos(a) * 10 * s2;
-      const sy = coreY + Math.sin(a * 1.2) * 5 * s2;
-      const ex = Math.cos(a + 0.35) * (36 + stage * 4) * s2;
-      const ey = coreY + 34 * s2 + Math.sin(a + 0.35) * 14 * s2;
-      const grad = ctx.createLinearGradient(sx, sy, ex, ey);
-      grad.addColorStop(0, `rgba(${glowRgb}, ${0.66 + pulse * 0.2})`);
-      grad.addColorStop(1, "transparent");
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 2 * s2;
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo((sx + ex) * 0.5 + Math.sin(time * 8 + i) * 4 * s2, (sy + ey) * 0.5);
-      ctx.lineTo(ex, ey);
-      ctx.stroke();
-    }
+  // Solar charge arcs - always visible, gray→warm
+  const arcCount = 2 + Math.floor(charge * 3);
+  for (let i = 0; i < arcCount; i++) {
+    const a = (i / arcCount) * Math.PI * 2 + time * (0.6 + charge * 0.8);
+    const sx = Math.cos(a) * 10 * s2;
+    const sy = coreY + Math.sin(a * 1.2) * 5 * s2;
+    const ex = Math.cos(a + 0.35) * (36 + stage * 4) * s2;
+    const ey = coreY + 34 * s2 + Math.sin(a + 0.35) * 14 * s2;
+    const grad = ctx.createLinearGradient(sx, sy, ex, ey);
+    grad.addColorStop(0, `rgba(${glowRgb}, ${0.15 + charge * 0.55 + readyFlash})`);
+    grad.addColorStop(1, "transparent");
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = (1.2 + charge * 1.3) * s2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo((sx + ex) * 0.5 + Math.sin(time * 8 + i) * 4 * s2, (sy + ey) * 0.5);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+
+  // Ready burst halo
+  if (charge >= 0.98) {
+    const burstGrad = ctx.createRadialGradient(0, coreY, 0, 0, coreY, 30 * s2);
+    burstGrad.addColorStop(0, `rgba(255, 240, 210, ${0.12 + readyFlash * 0.2})`);
+    burstGrad.addColorStop(0.5, `rgba(${hotRgb}, ${0.06 + readyFlash * 0.12})`);
+    burstGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = burstGrad;
+    ctx.beginPath();
+    ctx.arc(0, coreY, 30 * s2, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -877,7 +1115,8 @@ export function renderSpecialBuilding(
     specHp: number | undefined,
     specialTowerHp: number | null,
     vaultFlash: number,
-    boostedTowerCount: number = 0
+    boostedTowerCount: number = 0,
+    chargeProgress: number = 0
   ): void {
     const s = zoom;
     const time = Date.now() / 1000;
@@ -1562,12 +1801,12 @@ export function renderSpecialBuilding(
       }
 
       case "sentinel_nexus": {
-        drawSentinelNexusBuilding(ctx, s, time);
+        drawSentinelNexusBuilding(ctx, s, time, chargeProgress);
         break;
       }
 
       case "sunforge_orrery": {
-        drawSunforgeOrreryBuilding(ctx, s, time, boostedTowerCount);
+        drawSunforgeOrreryBuilding(ctx, s, time, boostedTowerCount, chargeProgress);
         break;
       }
   

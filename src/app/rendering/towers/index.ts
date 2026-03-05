@@ -20113,7 +20113,13 @@ function renderClubTower(
   ctx.fill();
   ctx.fillStyle = "#ffe88a";
   ctx.beginPath();
-  ctx.arc(flagPoleX - 0.5 * zoom, flagPoleTopY - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+  ctx.arc(
+    flagPoleX - 0.5 * zoom,
+    flagPoleTopY - 0.5 * zoom,
+    0.8 * zoom,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Flag with wave segments for cloth-like ripple
@@ -20128,14 +20134,17 @@ function renderClubTower(
   ctx.moveTo(flagPoleX, flagTopY2);
   for (let seg = 1; seg <= waveSegs; seg++) {
     const t = seg / waveSegs;
-    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
+    const sx =
+      flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
     const sy = flagTopY2 + Math.sin(time * 2.5 + t * 2) * 1.5 * zoom * t;
     ctx.lineTo(sx, sy);
   }
   for (let seg = waveSegs; seg >= 0; seg--) {
     const t = seg / waveSegs;
-    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.5) * 2.5 * zoom * t;
-    const sy = flagTopY2 + flagH + Math.sin(time * 2.8 + t * 2) * 1.5 * zoom * t;
+    const sx =
+      flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.5) * 2.5 * zoom * t;
+    const sy =
+      flagTopY2 + flagH + Math.sin(time * 2.8 + t * 2) * 1.5 * zoom * t;
     ctx.lineTo(sx, sy);
   }
   ctx.closePath();
@@ -20147,14 +20156,18 @@ function renderClubTower(
   ctx.moveTo(flagPoleX, flagTopY2 + flagH * 0.35);
   for (let seg = 1; seg <= waveSegs; seg++) {
     const t = seg / waveSegs;
-    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
-    const sy = flagTopY2 + flagH * 0.35 + Math.sin(time * 2.6 + t * 2) * 1.2 * zoom * t;
+    const sx =
+      flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
+    const sy =
+      flagTopY2 + flagH * 0.35 + Math.sin(time * 2.6 + t * 2) * 1.2 * zoom * t;
     ctx.lineTo(sx, sy);
   }
   for (let seg = waveSegs; seg >= 0; seg--) {
     const t = seg / waveSegs;
-    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.3) * 2.2 * zoom * t;
-    const sy = flagTopY2 + flagH * 0.65 + Math.sin(time * 2.7 + t * 2) * 1.2 * zoom * t;
+    const sx =
+      flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.3) * 2.2 * zoom * t;
+    const sy =
+      flagTopY2 + flagH * 0.65 + Math.sin(time * 2.7 + t * 2) * 1.2 * zoom * t;
     ctx.lineTo(sx, sy);
   }
   ctx.closePath();
@@ -20167,7 +20180,8 @@ function renderClubTower(
   ctx.moveTo(flagPoleX, flagTopY2);
   for (let seg = 1; seg <= waveSegs; seg++) {
     const t = seg / waveSegs;
-    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
+    const sx =
+      flagPoleX + flagW * t + Math.sin(time * 3 + t * 3) * 2 * zoom * t;
     const sy = flagTopY2 + Math.sin(time * 2.5 + t * 2) * 1.5 * zoom * t;
     ctx.lineTo(sx, sy);
   }
@@ -20176,14 +20190,17 @@ function renderClubTower(
   ctx.moveTo(flagPoleX, flagTopY2 + flagH);
   for (let seg = 1; seg <= waveSegs; seg++) {
     const t = seg / waveSegs;
-    const sx = flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.5) * 2.5 * zoom * t;
-    const sy = flagTopY2 + flagH + Math.sin(time * 2.8 + t * 2) * 1.5 * zoom * t;
+    const sx =
+      flagPoleX + flagW * t + Math.sin(time * 3 + t * 3 + 0.5) * 2.5 * zoom * t;
+    const sy =
+      flagTopY2 + flagH + Math.sin(time * 2.8 + t * 2) * 1.5 * zoom * t;
     ctx.lineTo(sx, sy);
   }
   ctx.stroke();
 
   // "EC" text with shadow
-  const flagCenterX = flagPoleX + flagW * 0.45 + Math.sin(time * 3 + 1.5) * zoom;
+  const flagCenterX =
+    flagPoleX + flagW * 0.45 + Math.sin(time * 3 + 1.5) * zoom;
   const flagCenterY = flagTopY2 + flagH * 0.5;
   ctx.fillStyle = "rgba(0,0,0,0.3)";
   ctx.font = `bold ${6 * zoom}px serif`;
@@ -20317,7 +20334,10 @@ function renderClubTower(
 
   // Left face base fill (gradient)
   const leftRoofGrad = ctx.createLinearGradient(
-    roofPeakX, roofPeakY, roofLeftX, roofFrontY,
+    roofPeakX,
+    roofPeakY,
+    roofLeftX,
+    roofFrontY,
   );
   leftRoofGrad.addColorStop(0, "#2a5040");
   leftRoofGrad.addColorStop(0.5, "#1e3e30");
@@ -20332,7 +20352,10 @@ function renderClubTower(
 
   // Right face base fill (gradient, lighter for sunlit side)
   const rightRoofGrad = ctx.createLinearGradient(
-    roofPeakX, roofPeakY, roofRightX, roofFrontY,
+    roofPeakX,
+    roofPeakY,
+    roofRightX,
+    roofFrontY,
   );
   rightRoofGrad.addColorStop(0, "#366050");
   rightRoofGrad.addColorStop(0.5, "#2a4a3a");
@@ -20371,7 +20394,8 @@ function renderClubTower(
     const r1y = roofPeakY + (roofFrontY - roofPeakY) * t1;
 
     // Alternating row shading
-    const rowShade = row % 2 === 0 ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.03)";
+    const rowShade =
+      row % 2 === 0 ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.03)";
     ctx.fillStyle = rowShade;
     ctx.beginPath();
     ctx.moveTo(l0x, l0y);
@@ -20421,7 +20445,8 @@ function renderClubTower(
     const r1x = roofPeakX + (roofRightX - roofPeakX) * t1;
     const r1y = roofPeakY + (roofRightY - roofPeakY) * t1;
 
-    const rowShade = row % 2 === 0 ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.05)";
+    const rowShade =
+      row % 2 === 0 ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.05)";
     ctx.fillStyle = rowShade;
     ctx.beginPath();
     ctx.moveTo(l0x, l0y);
@@ -20512,13 +20537,25 @@ function renderClubTower(
   // Dome shadow underneath
   ctx.fillStyle = "rgba(0,0,0,0.15)";
   ctx.beginPath();
-  ctx.ellipse(domeX, domeY + 2 * zoom, domeRX + zoom, domeRY + zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    domeX,
+    domeY + 2 * zoom,
+    domeRX + zoom,
+    domeRY + zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Main dome body gradient
   const domeGrad = ctx.createRadialGradient(
-    domeX - 4 * zoom, domeY - 3 * zoom, 0,
-    domeX, domeY, domeRX,
+    domeX - 4 * zoom,
+    domeY - 3 * zoom,
+    0,
+    domeX,
+    domeY,
+    domeRX,
   );
   domeGrad.addColorStop(0, flashIntensity > 0 ? "#ffffee" : "#fffadc");
   domeGrad.addColorStop(0.15, flashIntensity > 0 ? "#fff066" : "#ffe44d");
@@ -20540,21 +20577,45 @@ function renderClubTower(
   ctx.strokeStyle = "#8b6914";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.ellipse(domeX, domeY + domeRY * 0.7, domeRX * 0.95, domeRY * 0.35, 0, 0, Math.PI);
+  ctx.ellipse(
+    domeX,
+    domeY + domeRY * 0.7,
+    domeRX * 0.95,
+    domeRY * 0.35,
+    0,
+    0,
+    Math.PI,
+  );
   ctx.stroke();
 
   // Specular highlight arc (bright)
   ctx.strokeStyle = "rgba(255, 250, 220, 0.6)";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.ellipse(domeX, domeY, domeRX * 0.7, domeRY * 0.65, 0, Math.PI * 1.15, Math.PI * 1.75);
+  ctx.ellipse(
+    domeX,
+    domeY,
+    domeRX * 0.7,
+    domeRY * 0.65,
+    0,
+    Math.PI * 1.15,
+    Math.PI * 1.75,
+  );
   ctx.stroke();
 
   // Secondary subtle highlight
   ctx.strokeStyle = "rgba(255, 240, 180, 0.3)";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.ellipse(domeX, domeY - domeRY * 0.15, domeRX * 0.5, domeRY * 0.4, 0, Math.PI * 1.0, Math.PI * 1.9);
+  ctx.ellipse(
+    domeX,
+    domeY - domeRY * 0.15,
+    domeRX * 0.5,
+    domeRY * 0.4,
+    0,
+    Math.PI * 1.0,
+    Math.PI * 1.9,
+  );
   ctx.stroke();
 
   // Meridian lines on dome (longitudinal)
@@ -20582,7 +20643,15 @@ function renderClubTower(
   // Finial neck/base collar
   ctx.fillStyle = "#b89020";
   ctx.beginPath();
-  ctx.ellipse(domeX, finialBaseY + 2 * zoom, 3 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    domeX,
+    finialBaseY + 2 * zoom,
+    3 * zoom,
+    1.5 * zoom,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Finial shaft with taper
@@ -20614,7 +20683,13 @@ function renderClubTower(
   ctx.fill();
   ctx.fillStyle = "#ffe88a";
   ctx.beginPath();
-  ctx.arc(domeX - 0.4 * zoom, finialBaseY - 5.5 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+  ctx.arc(
+    domeX - 0.4 * zoom,
+    finialBaseY - 5.5 * zoom,
+    0.6 * zoom,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Finial tip glow
@@ -20720,7 +20795,8 @@ function renderClubTower(
     const orbAngle = time * orb.speed + orb.phase;
     const orbRX = orb.size * zoom;
     const orbRY = orb.size * 0.38 * zoom;
-    const ringAlpha = 0.3 + Math.sin(time * 3.5 + ri * 1.4) * 0.12 + flashIntensity * 0.2;
+    const ringAlpha =
+      0.3 + Math.sin(time * 3.5 + ri * 1.4) * 0.12 + flashIntensity * 0.2;
     ctx.save();
     ctx.translate(screenPos.x, coinY);
     ctx.rotate(orb.tilt);
@@ -20728,7 +20804,15 @@ function renderClubTower(
     ctx.strokeStyle = `rgba(0, 255, 180, ${ringAlpha * 0.25})`;
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.ellipse(0, 0, orbRX + zoom, orbRY + 0.5 * zoom, 0, Math.PI, Math.PI * 2);
+    ctx.ellipse(
+      0,
+      0,
+      orbRX + zoom,
+      orbRY + 0.5 * zoom,
+      0,
+      Math.PI,
+      Math.PI * 2,
+    );
     ctx.stroke();
     // Main ring (back half — upper arc is behind)
     ctx.strokeStyle = `rgba(0, 230, 160, ${ringAlpha})`;
@@ -20762,7 +20846,15 @@ function renderClubTower(
     const edgeDir = coinScale > 0 ? 1 : -1;
     ctx.fillStyle = "#8b6914";
     ctx.beginPath();
-    ctx.ellipse(edgeDir * coinThickness * 0.5, 0, coinThickness * 0.5, coinR, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      edgeDir * coinThickness * 0.5,
+      0,
+      coinThickness * 0.5,
+      coinR,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Edge ridges
@@ -20782,8 +20874,12 @@ function renderClubTower(
 
   // Coin body gradient
   const creditGrad = ctx.createRadialGradient(
-    -2 * zoom, -2 * zoom, 0,
-    0, 0, coinR,
+    -2 * zoom,
+    -2 * zoom,
+    0,
+    0,
+    0,
+    coinR,
   );
   creditGrad.addColorStop(0, flashIntensity > 0 ? "#ffffe8" : "#ffe88a");
   creditGrad.addColorStop(0.3, "#dab540");
@@ -20826,10 +20922,13 @@ function renderClubTower(
   ctx.fillStyle = "rgba(255, 255, 230, 0.3)";
   ctx.beginPath();
   ctx.ellipse(
-    -coinR * 0.25, -coinR * 0.25,
-    coinR * 0.4, coinR * 0.3,
+    -coinR * 0.25,
+    -coinR * 0.25,
+    coinR * 0.4,
+    coinR * 0.3,
     -0.5,
-    0, Math.PI * 2,
+    0,
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -20841,7 +20940,8 @@ function renderClubTower(
     const orbAngle = time * orb.speed + orb.phase;
     const orbRX = orb.size * zoom;
     const orbRY = orb.size * 0.38 * zoom;
-    const ringAlpha = 0.3 + Math.sin(time * 3.5 + ri * 1.4) * 0.12 + flashIntensity * 0.2;
+    const ringAlpha =
+      0.3 + Math.sin(time * 3.5 + ri * 1.4) * 0.12 + flashIntensity * 0.2;
     ctx.save();
     ctx.translate(screenPos.x, coinY);
     ctx.rotate(orb.tilt);
@@ -23826,6 +23926,196 @@ function renderStationTower(
     ctx.lineCap = "butt";
   }
 
+  // ========== ROYAL CAVALRY SIDE POLE STRINGS (renders behind building) ==========
+  if (tower.level === 4 && tower.upgrade === "B") {
+    const purpleDark_b = "#5a2d80";
+    const purpleMid_b = "#7b3fa0";
+    const purpleLight_b = "#9b5fcf";
+    const goldAccent_b = "#c9a227";
+    const goldDark_b = "#a08020";
+    const ropeColor_b = "#706050";
+
+    const drawRope_b = (
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      sag: number,
+    ) => {
+      ctx.strokeStyle = ropeColor_b;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.quadraticCurveTo(
+        (x1 + x2) * 0.5,
+        (y1 + y2) * 0.5 + sag * zoom,
+        x2,
+        y2,
+      );
+      ctx.stroke();
+    };
+
+    const drawIsoPennant_b = (
+      x: number,
+      y: number,
+      h: number,
+      w: number,
+      color: string,
+      ndx: number,
+      ndy: number,
+    ) => {
+      const wave = Math.sin(time * 0.002 + x * 0.1 + y * 0.07) * 1.0 * zoom;
+      const fh = h * zoom;
+      const fw = w * zoom;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x - fw * 0.25 * ndx, y - fw * 0.25 * ndy);
+      ctx.lineTo(x + fw * 0.75 * ndx, y + fw * 0.75 * ndy);
+      ctx.lineTo(x + fw * 0.2 * ndx + wave * 0.1, y + fh + fw * 0.1 * ndy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = goldAccent_b;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.stroke();
+    };
+
+    const drawIsoBunting_b = (
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      sag: number,
+      count: number,
+      colors: string[],
+      flagH: number,
+      flagW: number,
+    ) => {
+      drawRope_b(x1, y1, x2, y2, sag);
+      const edx = x2 - x1;
+      const edy = y2 - y1;
+      const len = Math.sqrt(edx * edx + edy * edy);
+      const ndx = len > 0 ? edx / len : 1;
+      const ndy = len > 0 ? edy / len : 0;
+      for (let i = 0; i < count; i++) {
+        const t = (i + 0.5) / count;
+        const rx = x1 + t * edx;
+        const ry = y1 + t * edy + sag * zoom * (4 * t * (1 - t));
+        drawIsoPennant_b(
+          rx,
+          ry,
+          flagH,
+          flagW,
+          colors[i % colors.length],
+          ndx,
+          ndy,
+        );
+      }
+    };
+
+    const drawDecoPole_b = (x: number, baseY: number, topY: number) => {
+      ctx.strokeStyle = "#4a4a52";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, topY);
+      ctx.stroke();
+      ctx.strokeStyle = goldDark_b;
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, topY);
+      ctx.stroke();
+      ctx.fillStyle = goldAccent_b;
+      ctx.beginPath();
+      ctx.arc(x, topY - 1.5 * zoom, 2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = goldDark_b;
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#4a4a52";
+      ctx.beginPath();
+      ctx.ellipse(x, baseY + 1 * zoom, 3 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = goldDark_b;
+      ctx.beginPath();
+      ctx.ellipse(x, baseY, 2.5 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const platLX_b = screenPos.x - isoW - 4 * zoom;
+    const platLY_b = screenPos.y - 6 * zoom;
+    const platBotY_b = screenPos.y + isoD - 2 * zoom;
+    const platRX_b = screenPos.x + isoW + 4 * zoom;
+    const platRY_b = screenPos.y - 6 * zoom;
+    const platBackX_b = screenPos.x;
+    const platBackY_b = 2 * platLY_b - platBotY_b;
+    const bldgTopY = screenPos.y - 8 * zoom - 30 * zoom;
+
+    const lInnerX = platBackX_b + (platLX_b - platBackX_b) * 0.2 - 2 * zoom;
+    const lInnerBaseY = platBackY_b + (platLY_b - platBackY_b) * 0.2 + 6 * zoom;
+    const lInnerTopY = bldgTopY + 4 * zoom;
+    const lOuterX = platLX_b - 2 * zoom;
+    const lOuterBaseY = platLY_b + 6 * zoom;
+    const lOuterTopY = platLY_b - 28 * zoom;
+
+    drawDecoPole_b(lInnerX, lInnerBaseY, lInnerTopY);
+    drawDecoPole_b(lOuterX, lOuterBaseY, lOuterTopY);
+    drawIsoBunting_b(
+      lInnerX,
+      lInnerTopY,
+      lOuterX,
+      lOuterTopY,
+      6,
+      6,
+      [purpleDark_b, purpleMid_b, purpleLight_b],
+      5.5,
+      3.5,
+    );
+    drawIsoBunting_b(
+      lInnerX,
+      lInnerTopY + 12 * zoom,
+      lOuterX,
+      lOuterTopY + 10 * zoom,
+      5,
+      5,
+      [purpleLight_b, purpleDark_b, purpleMid_b],
+      4.5,
+      3,
+    );
+
+    const rInnerX = platBackX_b + (platRX_b - platBackX_b) * 0.2 + 2 * zoom;
+    const rInnerBaseY = platBackY_b + (platRY_b - platBackY_b) * 0.2 + 6 * zoom;
+    const rInnerTopY = bldgTopY + 2 * zoom;
+    const rOuterX = platRX_b + 2 * zoom;
+    const rOuterBaseY = platRY_b + 6 * zoom;
+    const rOuterTopY = platRY_b - 28 * zoom;
+
+    drawDecoPole_b(rInnerX, rInnerBaseY, rInnerTopY);
+    drawDecoPole_b(rOuterX, rOuterBaseY, rOuterTopY);
+    drawIsoBunting_b(
+      rInnerX,
+      rInnerTopY,
+      rOuterX,
+      rOuterTopY,
+      6,
+      6,
+      [purpleMid_b, purpleDark_b, purpleLight_b],
+      5.5,
+      3.5,
+    );
+    drawIsoBunting_b(
+      rInnerX,
+      rInnerTopY + 12 * zoom,
+      rOuterX,
+      rOuterTopY + 10 * zoom,
+      5,
+      5,
+      [purpleDark_b, purpleLight_b, purpleMid_b],
+      4.5,
+      3,
+    );
+  }
+
   // ========== STATION BUILDING (proper isometric alignment) ==========
   const stationX = screenPos.x - 16 * zoom;
   const stationY = screenPos.y - 8 * zoom;
@@ -26237,7 +26527,12 @@ function renderStationTower(
       const vWave = Math.sin(time * 0.5 + v * 1.2) * 1.5;
       ctx.beginPath();
       ctx.moveTo(bX - 22 * zoom, vy);
-      ctx.quadraticCurveTo(bX - 18 * zoom + vWave, vy - 3 * zoom, bX - 22 * zoom, vy - 5 * zoom);
+      ctx.quadraticCurveTo(
+        bX - 18 * zoom + vWave,
+        vy - 3 * zoom,
+        bX - 22 * zoom,
+        vy - 5 * zoom,
+      );
       ctx.stroke();
     }
     // Vine leaves
@@ -26282,15 +26577,39 @@ function renderStationTower(
     // Herb garden planter
     ctx.fillStyle = "#6a4a2a";
     ctx.beginPath();
-    ctx.ellipse(bX - 14 * zoom, bY + 12 * zoom, 6 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      bX - 14 * zoom,
+      bY + 12 * zoom,
+      6 * zoom,
+      3 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "#4a3018";
     ctx.beginPath();
-    ctx.ellipse(bX - 14 * zoom, bY + 12 * zoom, 6 * zoom, 3 * zoom, 0, Math.PI, 0);
+    ctx.ellipse(
+      bX - 14 * zoom,
+      bY + 12 * zoom,
+      6 * zoom,
+      3 * zoom,
+      0,
+      Math.PI,
+      0,
+    );
     ctx.fill();
     ctx.fillStyle = "#3a5a20";
     ctx.beginPath();
-    ctx.ellipse(bX - 14 * zoom, bY + 11 * zoom, 5 * zoom, 2.5 * zoom, 0, Math.PI, 0);
+    ctx.ellipse(
+      bX - 14 * zoom,
+      bY + 11 * zoom,
+      5 * zoom,
+      2.5 * zoom,
+      0,
+      Math.PI,
+      0,
+    );
     ctx.fill();
     // Small herbs/plants growing
     for (let h = 0; h < 4; h++) {
@@ -26301,11 +26620,24 @@ function renderStationTower(
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(hx, hy + 2 * zoom);
-      ctx.quadraticCurveTo(hx + hSway, hy - 2 * zoom, hx + hSway * 0.5, hy - 4 * zoom);
+      ctx.quadraticCurveTo(
+        hx + hSway,
+        hy - 2 * zoom,
+        hx + hSway * 0.5,
+        hy - 4 * zoom,
+      );
       ctx.stroke();
       ctx.fillStyle = h % 2 === 0 ? "#4a9a3a" : "#5aaa4a";
       ctx.beginPath();
-      ctx.ellipse(hx + hSway * 0.5, hy - 4.5 * zoom, 2 * zoom, 1.2 * zoom, hSway * 0.2, 0, Math.PI * 2);
+      ctx.ellipse(
+        hx + hSway * 0.5,
+        hy - 4.5 * zoom,
+        2 * zoom,
+        1.2 * zoom,
+        hSway * 0.2,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
@@ -26577,7 +26909,12 @@ function renderStationTower(
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(bX - 5 * zoom, bY - 17 * zoom);
-    ctx.quadraticCurveTo(bX - 10 * zoom, bY - 22 * zoom, bX - 7 * zoom, bY - 27 * zoom);
+    ctx.quadraticCurveTo(
+      bX - 10 * zoom,
+      bY - 22 * zoom,
+      bX - 7 * zoom,
+      bY - 27 * zoom,
+    );
     ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(bX - 5 * zoom, bY - 17 * zoom);
@@ -26585,7 +26922,15 @@ function renderStationTower(
     ctx.stroke();
     ctx.fillStyle = "#4a8a3a";
     ctx.beginPath();
-    ctx.ellipse(bX - 5 * zoom, bY - 20 * zoom, 3 * zoom, 2 * zoom, -0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      bX - 5 * zoom,
+      bY - 20 * zoom,
+      3 * zoom,
+      2 * zoom,
+      -0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // === ORNATE STABLE ROOF with clay tiles ===
@@ -26823,7 +27168,15 @@ function renderStationTower(
       ctx.stroke();
       ctx.fillStyle = herbColors[hb];
       ctx.beginPath();
-      ctx.ellipse(hbx + hbSway, rackY + 1 * zoom, 1.8 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        hbx + hbSway,
+        rackY + 1 * zoom,
+        1.8 * zoom,
+        3 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
 
@@ -27898,7 +28251,12 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(tapX, tapY - 12 * zoom);
     ctx.lineTo(tapX + 6 * zoom, tapY - 14 * zoom);
-    ctx.quadraticCurveTo(tapX + 6 * zoom + tapWave, tapY - 6 * zoom, tapX + 6 * zoom, tapY);
+    ctx.quadraticCurveTo(
+      tapX + 6 * zoom + tapWave,
+      tapY - 6 * zoom,
+      tapX + 6 * zoom,
+      tapY,
+    );
     ctx.quadraticCurveTo(tapX + 3 * zoom, tapY + 2 * zoom, tapX, tapY);
     ctx.closePath();
     ctx.fill();
@@ -27906,8 +28264,18 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(tapX + 1 * zoom, tapY - 10 * zoom);
     ctx.lineTo(tapX + 5 * zoom, tapY - 12 * zoom);
-    ctx.quadraticCurveTo(tapX + 5 * zoom + tapWave * 0.7, tapY - 6 * zoom, tapX + 5 * zoom, tapY - 2 * zoom);
-    ctx.quadraticCurveTo(tapX + 3 * zoom, tapY, tapX + 1 * zoom, tapY - 2 * zoom);
+    ctx.quadraticCurveTo(
+      tapX + 5 * zoom + tapWave * 0.7,
+      tapY - 6 * zoom,
+      tapX + 5 * zoom,
+      tapY - 2 * zoom,
+    );
+    ctx.quadraticCurveTo(
+      tapX + 3 * zoom,
+      tapY,
+      tapX + 1 * zoom,
+      tapY - 2 * zoom,
+    );
     ctx.closePath();
     ctx.fill();
     // Gold trim on tapestry
@@ -30460,560 +30828,928 @@ function renderStationTower(
     );
     ctx.fill();
 
-    // Improved wheel helper - more realistic train wheel
     const drawWheel = (
       wx: number,
       wy: number,
       r: number,
       mainColor: string,
       rimColor: string,
+      accentColor?: string,
     ) => {
-      // Wheel outer rim
-      ctx.fillStyle = mainColor;
-      ctx.strokeStyle = rimColor;
-      ctx.lineWidth = 1.5 * zoom;
+      const rz = r * zoom;
+      const halfR = rz * 0.5;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.4)";
+      ctx.shadowBlur = 3 * zoom;
+      ctx.shadowOffsetY = 1 * zoom;
+
+      const tireGrad = ctx.createLinearGradient(wx, wy - halfR, wx, wy + halfR);
+      tireGrad.addColorStop(0, rimColor);
+      tireGrad.addColorStop(0.4, mainColor);
+      tireGrad.addColorStop(0.7, rimColor);
+      tireGrad.addColorStop(1, "rgba(0,0,0,0.5)");
+      ctx.fillStyle = tireGrad;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, r * zoom, r * zoom * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, rz * 1.1, halfR * 1.1, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.stroke();
 
-      // Inner wheel face
-      ctx.fillStyle = rimColor;
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      const faceGrad = ctx.createRadialGradient(
+        wx - rz * 0.15,
+        wy - halfR * 0.15,
+        0,
+        wx,
+        wy,
+        rz * 0.85,
+      );
+      faceGrad.addColorStop(0, accentColor || mainColor);
+      faceGrad.addColorStop(0.6, mainColor);
+      faceGrad.addColorStop(1, rimColor);
+      ctx.fillStyle = faceGrad;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, r * zoom * 0.7, r * zoom * 0.35, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, rz * 0.88, halfR * 0.88, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Spokes
-      ctx.strokeStyle = mainColor;
-      ctx.lineWidth = 1 * zoom;
-      const spokeCount = 5;
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(wx, wy, rz * 0.75, halfR * 0.75, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const spokeCount = 8;
+      ctx.lineWidth = 1.4 * zoom;
       for (let i = 0; i < spokeCount; i++) {
         const angle = (i / spokeCount) * Math.PI * 2 + time * 3;
+        const innerR = rz * 0.18;
+        const outerR = rz * 0.72;
+        const sx = wx + Math.cos(angle) * innerR;
+        const sy = wy + Math.sin(angle) * innerR * 0.5;
+        const ex = wx + Math.cos(angle) * outerR;
+        const ey = wy + Math.sin(angle) * outerR * 0.5;
+        ctx.strokeStyle = i % 2 === 0 ? mainColor : rimColor;
         ctx.beginPath();
-        ctx.moveTo(wx, wy);
-        ctx.lineTo(
-          wx + Math.cos(angle) * r * zoom * 0.6,
-          wy + Math.sin(angle) * r * zoom * 0.3,
-        );
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(ex, ey);
         ctx.stroke();
       }
 
-      // Center hub
-      ctx.fillStyle = "#1a1a1a";
+      const hubGrad = ctx.createRadialGradient(
+        wx - rz * 0.04,
+        wy - halfR * 0.04,
+        0,
+        wx,
+        wy,
+        rz * 0.22,
+      );
+      hubGrad.addColorStop(0, "rgba(220,220,220,0.9)");
+      hubGrad.addColorStop(0.5, accentColor || "#555");
+      hubGrad.addColorStop(1, "#1a1a1a");
+      ctx.fillStyle = hubGrad;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, r * zoom * 0.2, r * zoom * 0.1, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, rz * 0.22, halfR * 0.22, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.5)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(255,255,255,0.35)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        wx,
+        wy,
+        rz * 0.95,
+        halfR * 0.95,
+        0,
+        Math.PI * 1.1,
+        Math.PI * 1.9,
+      );
+      ctx.stroke();
+
+      ctx.restore();
     };
 
     if (tower.level === 1) {
-      // ========== LEVEL 1: Wooden Steam Train ==========
-      const cabPos = isoOffset(trainX, trainY, 6);
+      // ========== LEVEL 1: Classic Princeton Dinky Steam Locomotive ==========
+      const cabPos = isoOffset(trainX, trainY, 7);
       const boilerPos = isoOffset(trainX, trainY, 0);
-      const tenderPos = isoOffset(trainX, trainY, -6);
-      const wheelY = trainY + 4 * zoom;
+      const tenderPos = isoOffset(trainX, trainY, -7);
+      const wheelY = trainY + 4.5 * zoom;
 
-      // --- UNDERCARRIAGE: Iron chassis frame ---
-      ctx.fillStyle = "#2a2018";
+      // --- HEAVY UNDERCARRIAGE: Riveted iron chassis frame ---
+      const chStart = isoOffset(trainX, trainY + 2 * zoom, -10);
+      const chEnd = isoOffset(trainX, trainY + 2 * zoom, 10);
+      const chassGrad = ctx.createLinearGradient(
+        chStart.x,
+        chStart.y,
+        chEnd.x,
+        chEnd.y,
+      );
+      chassGrad.addColorStop(0, "#2a1810");
+      chassGrad.addColorStop(0.5, "#3a2818");
+      chassGrad.addColorStop(1, "#1e1008");
+      ctx.fillStyle = chassGrad;
       ctx.beginPath();
-      const chStart = isoOffset(trainX, trainY + 2 * zoom, -9);
-      const chEnd = isoOffset(trainX, trainY + 2 * zoom, 9);
       ctx.moveTo(chStart.x, chStart.y);
       ctx.lineTo(chEnd.x, chEnd.y);
-      ctx.lineTo(chEnd.x, chEnd.y + 2 * zoom);
-      ctx.lineTo(chStart.x, chStart.y + 2 * zoom);
+      ctx.lineTo(chEnd.x, chEnd.y + 3 * zoom);
+      ctx.lineTo(chStart.x, chStart.y + 3 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#1e1810";
+      ctx.fillStyle = "#1e1008";
       ctx.beginPath();
-      ctx.moveTo(chStart.x - 2 * zoom, chStart.y + 1 * zoom);
-      ctx.lineTo(chEnd.x - 2 * zoom, chEnd.y + 1 * zoom);
-      ctx.lineTo(chEnd.x - 2 * zoom, chEnd.y + 3 * zoom);
-      ctx.lineTo(chStart.x - 2 * zoom, chStart.y + 3 * zoom);
+      ctx.moveTo(chStart.x - 2.5 * zoom, chStart.y + 1.5 * zoom);
+      ctx.lineTo(chEnd.x - 2.5 * zoom, chEnd.y + 1.5 * zoom);
+      ctx.lineTo(chEnd.x - 2.5 * zoom, chEnd.y + 4.5 * zoom);
+      ctx.lineTo(chStart.x - 2.5 * zoom, chStart.y + 4.5 * zoom);
       ctx.closePath();
       ctx.fill();
 
-      // Leaf springs over each wheel pair
-      ctx.strokeStyle = "#3a3028";
-      ctx.lineWidth = 1.2 * zoom;
-      for (const so of [8, 4, -3, -8]) {
-        const sp = isoOffset(trainX, wheelY - 1 * zoom, so);
+      // Animated pistons between drive wheels
+      const pistonPhase = time * 4;
+      const pistonStroke = Math.sin(pistonPhase) * 2.5 * zoom;
+      const pistonY = wheelY - 0.5 * zoom;
+      const p1 = isoOffset(trainX, pistonY, 7);
+      const p2 = isoOffset(trainX, pistonY, 3);
+      ctx.strokeStyle = "#8a7a6a";
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(p1.x + pistonStroke, p1.y - pistonStroke * 0.5);
+      ctx.lineTo(p2.x + pistonStroke * 0.3, p2.y - pistonStroke * 0.15);
+      ctx.stroke();
+      ctx.strokeStyle = "#6a5a4a";
+      ctx.lineWidth = 1.5 * zoom;
+      const p3 = isoOffset(trainX, pistonY, -2);
+      const p4 = isoOffset(trainX, pistonY, -7);
+      ctx.beginPath();
+      ctx.moveTo(p3.x - pistonStroke * 0.3, p3.y + pistonStroke * 0.15);
+      ctx.lineTo(p4.x - pistonStroke, p4.y + pistonStroke * 0.5);
+      ctx.stroke();
+
+      // Leaf springs
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 1.5 * zoom;
+      for (const so of [8, 3, -3, -8]) {
+        const sp = isoOffset(trainX, wheelY - 1.5 * zoom, so);
         ctx.beginPath();
-        ctx.moveTo(sp.x - 2.5 * zoom, sp.y + 0.5 * zoom);
+        ctx.moveTo(sp.x - 3 * zoom, sp.y + 0.5 * zoom);
         ctx.quadraticCurveTo(
           sp.x,
-          sp.y - 1.5 * zoom,
-          sp.x + 2.5 * zoom,
+          sp.y - 2 * zoom,
+          sp.x + 3 * zoom,
           sp.y + 0.5 * zoom,
         );
         ctx.stroke();
+        ctx.strokeStyle = "#4a3a2a";
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sp.x - 2.5 * zoom, sp.y + 1 * zoom);
+        ctx.quadraticCurveTo(
+          sp.x,
+          sp.y - 1 * zoom,
+          sp.x + 2.5 * zoom,
+          sp.y + 1 * zoom,
+        );
+        ctx.stroke();
+        ctx.strokeStyle = "#5a4a3a";
+        ctx.lineWidth = 1.5 * zoom;
       }
 
-      // --- WHEELS ---
+      // --- WHEELS: Rich copper with brass hubs ---
       drawWheel(
         isoOffset(trainX, wheelY, 8).x,
         isoOffset(trainX, wheelY, 8).y,
-        3.5,
-        "#5a4a3a",
-        "#3a2a1a",
+        4,
+        "#8B5E3C",
+        "#5a3a1a",
+        "#B87333",
       );
       drawWheel(
-        isoOffset(trainX, wheelY, 4).x,
-        isoOffset(trainX, wheelY, 4).y,
-        3.5,
-        "#5a4a3a",
-        "#3a2a1a",
+        isoOffset(trainX, wheelY, 3).x,
+        isoOffset(trainX, wheelY, 3).y,
+        4,
+        "#8B5E3C",
+        "#5a3a1a",
+        "#B87333",
       );
       drawWheel(
         isoOffset(trainX, wheelY, -3).x,
         isoOffset(trainX, wheelY, -3).y,
         3.5,
-        "#5a4a3a",
-        "#3a2a1a",
+        "#8B5E3C",
+        "#5a3a1a",
+        "#B87333",
       );
       drawWheel(
         isoOffset(trainX, wheelY, -8).x,
         isoOffset(trainX, wheelY, -8).y,
         3.5,
-        "#5a4a3a",
-        "#3a2a1a",
+        "#8B5E3C",
+        "#5a3a1a",
+        "#B87333",
       );
 
-      // Connecting rods between drive wheels (animated)
-      ctx.strokeStyle = "#6a5a4a";
-      ctx.lineWidth = 1.5 * zoom;
-      const rodPhase = time * 3;
+      // Connecting rod between front drive wheels (animated)
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 2 * zoom;
       const rodW1 = isoOffset(trainX, wheelY, 8);
-      const rodW2 = isoOffset(trainX, wheelY, 4);
-      const rodDy = Math.sin(rodPhase) * 1.5 * zoom;
+      const rodW2 = isoOffset(trainX, wheelY, 3);
+      const rodDy = Math.sin(time * 4) * 2 * zoom;
       ctx.beginPath();
-      ctx.moveTo(rodW1.x + rodDy, rodW1.y);
-      ctx.lineTo(rodW2.x + rodDy, rodW2.y);
+      ctx.moveTo(rodW1.x + rodDy * 0.4, rodW1.y + rodDy * 0.2);
+      ctx.lineTo(rodW2.x + rodDy * 0.4, rodW2.y + rodDy * 0.2);
       ctx.stroke();
+      ctx.fillStyle = "#C9A227";
+      ctx.beginPath();
+      ctx.arc(
+        rodW1.x + rodDy * 0.4,
+        rodW1.y + rodDy * 0.2,
+        1.2 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(
+        rodW2.x + rodDy * 0.4,
+        rodW2.y + rodDy * 0.2,
+        1.2 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
 
-      // === CAB (front, draw first - appears in back) ===
+      // === CAB (front, draw first - appears behind) ===
+      // Rich mahogany cab body with 3D depth
       drawIsometricPrism(
         ctx,
         cabPos.x,
         cabPos.y,
+        11,
         10,
-        9,
-        14,
-        { top: "#6b5030", left: "#5a4020", right: "#4a3010" },
+        16,
+        { top: "#8B4513", left: "#6B3410", right: "#4B2408" },
         zoom,
       );
 
-      // Wooden plank lines on left face
-      ctx.strokeStyle = "#4a3515";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let p = 0; p < 5; p++) {
-        const py = cabPos.y - 2 * zoom - p * 2.5 * zoom;
-        const pL = isoOffset(cabPos.x, py, -5);
+      // Wooden plank texture on left face with alternating shades
+      for (let p = 0; p < 6; p++) {
+        const py = cabPos.y - 2 * zoom - p * 2.3 * zoom;
+        const pL = isoOffset(cabPos.x, py, -5.5);
         const pR = isoOffset(cabPos.x, py, 0);
+        ctx.strokeStyle = p % 2 === 0 ? "#5a2a08" : "#4a2006";
+        ctx.lineWidth = 0.8 * zoom;
         ctx.beginPath();
-        ctx.moveTo(pL.x - 5 * zoom, pL.y);
-        ctx.lineTo(pR.x - 5 * zoom, pR.y);
+        ctx.moveTo(pL.x - 5.5 * zoom, pL.y);
+        ctx.lineTo(pR.x - 5.5 * zoom, pR.y);
         ctx.stroke();
       }
-      // Wooden plank lines on right face
-      ctx.strokeStyle = "#3a2508";
-      for (let p = 0; p < 5; p++) {
-        const py = cabPos.y - 2 * zoom - p * 2.5 * zoom;
+      // Plank texture on right face
+      for (let p = 0; p < 6; p++) {
+        const py = cabPos.y - 2 * zoom - p * 2.3 * zoom;
+        ctx.strokeStyle = p % 2 === 0 ? "#3a1a04" : "#4a2408";
+        ctx.lineWidth = 0.7 * zoom;
         ctx.beginPath();
         ctx.moveTo(cabPos.x + 1 * zoom, py + 0.5 * p * zoom);
-        ctx.lineTo(cabPos.x + 5 * zoom, py - 1.5 * zoom + 0.5 * p * zoom);
+        ctx.lineTo(cabPos.x + 5.5 * zoom, py - 1.8 * zoom + 0.5 * p * zoom);
         ctx.stroke();
       }
 
-      // Cab roof with overhang and visible eaves
-      drawIsometricPrism(
-        ctx,
+      // Copper corner trim strips
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 16 * zoom);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x - 5.5 * zoom, cabPos.y);
+      ctx.lineTo(cabPos.x - 5.5 * zoom, cabPos.y - 16 * zoom);
+      ctx.stroke();
+
+      // Rounded cab roof with copper drip edge
+      const roofW = 6.5 * zoom;
+      const roofTop = cabPos.y - 16 * zoom;
+      ctx.fillStyle = "#5a3010";
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x - roofW, roofTop + 1 * zoom);
+      ctx.quadraticCurveTo(
+        cabPos.x - roofW,
+        roofTop - 4 * zoom,
         cabPos.x,
-        cabPos.y - 14 * zoom,
-        12,
-        11,
-        2,
-        { top: "#5a4020", left: "#4a3010", right: "#3a2000" },
-        zoom,
+        roofTop - 5 * zoom,
       );
-      ctx.fillStyle = "#3a2000";
-      ctx.beginPath();
-      const eaveR1 = isoOffset(cabPos.x, cabPos.y - 14 * zoom, 6);
-      const eaveR2 = isoOffset(cabPos.x, cabPos.y - 14 * zoom, -6);
-      ctx.moveTo(eaveR1.x + 6 * zoom, eaveR1.y);
-      ctx.lineTo(eaveR2.x + 6 * zoom, eaveR2.y);
-      ctx.lineTo(eaveR2.x + 6 * zoom, eaveR2.y + 1 * zoom);
-      ctx.lineTo(eaveR1.x + 6 * zoom, eaveR1.y + 1 * zoom);
+      ctx.quadraticCurveTo(
+        cabPos.x + roofW,
+        roofTop - 4 * zoom,
+        cabPos.x + roofW,
+        roofTop + 1 * zoom,
+      );
+      ctx.lineTo(cabPos.x + roofW, roofTop + 2 * zoom);
+      ctx.lineTo(cabPos.x - roofW, roofTop + 2 * zoom);
       ctx.closePath();
       ctx.fill();
-
-      // Right face window (isometric parallelogram with warm glow)
-      const cabGlow = 0.5 + Math.sin(time * 2) * 0.2;
-      ctx.fillStyle = "#2a1a0a";
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 1.5 * zoom, cabPos.y - 8 * zoom);
-      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 10.5 * zoom);
+      ctx.moveTo(cabPos.x - roofW, roofTop + 2 * zoom);
+      ctx.lineTo(cabPos.x + roofW, roofTop + 2 * zoom);
+      ctx.stroke();
+      // Roof highlight arc
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.quadraticCurveTo(
+        cabPos.x - roofW * 0.5,
+        roofTop - 3.5 * zoom,
+        cabPos.x,
+        roofTop - 4.5 * zoom,
+      );
+      ctx.quadraticCurveTo(
+        cabPos.x + roofW * 0.5,
+        roofTop - 3.5 * zoom,
+        cabPos.x + roofW * 0.8,
+        roofTop - 1 * zoom,
+      );
+      ctx.stroke();
+
+      // Arched window on right face with warm oil lamp glow
+      const cabGlow = 0.55 + Math.sin(time * 2) * 0.2;
+      ctx.fillStyle = "#2a1808";
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 1.5 * zoom, cabPos.y - 4 * zoom);
       ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 5.5 * zoom);
-      ctx.lineTo(cabPos.x + 1.5 * zoom, cabPos.y - 3 * zoom);
+      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 12 * zoom);
+      ctx.quadraticCurveTo(
+        cabPos.x + 3.2 * zoom,
+        cabPos.y - 14 * zoom,
+        cabPos.x + 1.5 * zoom,
+        cabPos.y - 12 * zoom,
+      );
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = `rgba(255, 200, 100, ${cabGlow})`;
+      ctx.fillStyle = `rgba(255, 180, 80, ${cabGlow})`;
+      ctx.shadowColor = "#ff9933";
+      ctx.shadowBlur = 8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 2 * zoom, cabPos.y - 7.5 * zoom);
-      ctx.lineTo(cabPos.x + 4.5 * zoom, cabPos.y - 9.8 * zoom);
+      ctx.moveTo(cabPos.x + 2 * zoom, cabPos.y - 4.5 * zoom);
       ctx.lineTo(cabPos.x + 4.5 * zoom, cabPos.y - 6 * zoom);
-      ctx.lineTo(cabPos.x + 2 * zoom, cabPos.y - 3.7 * zoom);
+      ctx.lineTo(cabPos.x + 4.5 * zoom, cabPos.y - 11.5 * zoom);
+      ctx.quadraticCurveTo(
+        cabPos.x + 3.2 * zoom,
+        cabPos.y - 13 * zoom,
+        cabPos.x + 2 * zoom,
+        cabPos.y - 11.5 * zoom,
+      );
       ctx.closePath();
       ctx.fill();
+      ctx.shadowBlur = 0;
+      // Window mullion (cross)
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 1.8 * zoom, cabPos.y - 8 * zoom);
+      ctx.lineTo(cabPos.x + 4.8 * zoom, cabPos.y - 9 * zoom);
+      ctx.stroke();
 
-      // Left face porthole window
+      // Porthole window on left face
       const sideWin = isoOffset(cabPos.x, cabPos.y - 9 * zoom, -3);
-      ctx.fillStyle = "#2a1a0a";
+      ctx.fillStyle = "#2a1808";
       ctx.beginPath();
       ctx.ellipse(
-        sideWin.x - 5 * zoom,
+        sideWin.x - 5.5 * zoom,
         sideWin.y,
-        2.2 * zoom,
-        1.1 * zoom,
+        2.5 * zoom,
+        1.3 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = `rgba(255, 200, 100, ${cabGlow * 0.7})`;
+      ctx.fillStyle = `rgba(255, 180, 80, ${cabGlow * 0.7})`;
+      ctx.shadowColor = "#ff9933";
+      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
       ctx.ellipse(
-        sideWin.x - 5 * zoom,
+        sideWin.x - 5.5 * zoom,
         sideWin.y,
-        1.6 * zoom,
+        1.8 * zoom,
+        0.9 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        sideWin.x - 5.5 * zoom,
+        sideWin.y,
+        2.5 * zoom,
+        1.3 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+
+      // Brass door with handle on right face
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 1 * zoom, cabPos.y - 1 * zoom);
+      ctx.lineTo(cabPos.x + 3 * zoom, cabPos.y - 2 * zoom);
+      ctx.lineTo(cabPos.x + 3 * zoom, cabPos.y - 10 * zoom);
+      ctx.quadraticCurveTo(
+        cabPos.x + 2 * zoom,
+        cabPos.y - 11 * zoom,
+        cabPos.x + 1 * zoom,
+        cabPos.y - 10 * zoom,
+      );
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fillStyle = "#C9A227";
+      ctx.beginPath();
+      ctx.arc(
+        cabPos.x + 2.5 * zoom,
+        cabPos.y - 5.5 * zoom,
+        0.7 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Cab steps with handrail
+      ctx.fillStyle = "#5a3818";
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y + 2 * zoom);
+      ctx.lineTo(cabPos.x + 8 * zoom, cabPos.y + 0.5 * zoom);
+      ctx.lineTo(cabPos.x + 8 * zoom, cabPos.y + 2 * zoom);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y + 3.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y + 4 * zoom);
+      ctx.lineTo(cabPos.x + 8.5 * zoom, cabPos.y + 2.5 * zoom);
+      ctx.lineTo(cabPos.x + 8.5 * zoom, cabPos.y + 3.5 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y + 5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 8 * zoom, cabPos.y - 4 * zoom);
+      ctx.lineTo(cabPos.x + 8 * zoom, cabPos.y + 3 * zoom);
+      ctx.stroke();
+
+      // === BOILER (middle) - Rich copper 3D cylinder ===
+      drawIsoBoiler(
+        boilerPos.x,
+        boilerPos.y - 5.5 * zoom,
+        5,
+        4.5,
+        "#B87333",
+        "#8B5E3C",
+        "#D4956B",
+      );
+
+      // Brass boiler bands with highlights
+      ctx.lineWidth = 1.8 * zoom;
+      for (let b = 0; b < 4; b++) {
+        const bandPos = isoOffset(
+          boilerPos.x,
+          boilerPos.y - 5.5 * zoom,
+          -4 + b * 2.5,
+        );
+        ctx.strokeStyle = "#C9A227";
+        ctx.beginPath();
+        ctx.ellipse(
+          bandPos.x,
+          bandPos.y,
+          4.5 * zoom * 0.55 + 0.5 * zoom,
+          4.5 * zoom + 0.5 * zoom,
+          0,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(255,220,120,0.3)";
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(
+          bandPos.x,
+          bandPos.y - 0.5 * zoom,
+          4.5 * zoom * 0.52,
+          4.5 * zoom * 0.95,
+          0,
+          Math.PI * 1.2,
+          Math.PI * 1.8,
+        );
+        ctx.stroke();
+        ctx.lineWidth = 1.8 * zoom;
+      }
+
+      // Steam dome on top of boiler with brass cap
+      const domePosL1 = isoOffset(
+        boilerPos.x,
+        boilerPos.y - 5.5 * zoom - 4.5 * zoom,
+        0,
+      );
+      const domeGrad = ctx.createRadialGradient(
+        domePosL1.x - 1 * zoom,
+        domePosL1.y - 2 * zoom,
+        0,
+        domePosL1.x,
+        domePosL1.y,
+        3.5 * zoom,
+      );
+      domeGrad.addColorStop(0, "#D4956B");
+      domeGrad.addColorStop(0.6, "#B87333");
+      domeGrad.addColorStop(1, "#8B5E3C");
+      ctx.fillStyle = domeGrad;
+      ctx.beginPath();
+      ctx.ellipse(
+        domePosL1.x,
+        domePosL1.y,
+        2.8 * zoom,
+        4 * zoom,
+        0,
+        Math.PI,
+        0,
+      );
+      ctx.fill();
+      ctx.fillStyle = "#8B5E3C";
+      ctx.beginPath();
+      ctx.ellipse(
+        domePosL1.x,
+        domePosL1.y,
+        2.8 * zoom,
+        1.4 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.fillStyle = "#C9A227";
+      ctx.beginPath();
+      ctx.ellipse(
+        domePosL1.x,
+        domePosL1.y - 3.5 * zoom,
+        1.5 * zoom,
         0.8 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.strokeStyle = "#8b7355";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "rgba(255,220,120,0.4)";
+      ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
       ctx.ellipse(
-        sideWin.x - 5 * zoom,
-        sideWin.y,
-        2.2 * zoom,
-        1.1 * zoom,
+        domePosL1.x,
+        domePosL1.y - 3.5 * zoom,
+        1.5 * zoom,
+        0.8 * zoom,
         0,
-        0,
-        Math.PI * 2,
+        Math.PI * 1.1,
+        Math.PI * 1.9,
       );
       ctx.stroke();
 
-      // Door outline on right face
-      ctx.strokeStyle = "#3a2508";
-      ctx.lineWidth = 1 * zoom;
+      // === SMOKESTACK: Victorian diamond-stack with spark catcher ===
+      const stackPos = isoOffset(boilerPos.x, boilerPos.y - 14 * zoom, 3.5);
+      // Base (narrow)
+      ctx.fillStyle = "#3a2a1a";
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 1 * zoom, cabPos.y - 1 * zoom);
-      ctx.lineTo(cabPos.x + 3 * zoom, cabPos.y - 2 * zoom);
-      ctx.lineTo(cabPos.x + 3 * zoom, cabPos.y - 10 * zoom);
-      ctx.lineTo(cabPos.x + 1 * zoom, cabPos.y - 9 * zoom);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.fillStyle = "#8b7355";
-      ctx.beginPath();
-      ctx.arc(
-        cabPos.x + 2.5 * zoom,
-        cabPos.y - 5 * zoom,
-        0.5 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Cab steps
-      ctx.fillStyle = "#4a3010";
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y + 2 * zoom);
-      ctx.lineTo(cabPos.x + 7 * zoom, cabPos.y + 1 * zoom);
-      ctx.lineTo(cabPos.x + 7 * zoom, cabPos.y + 2 * zoom);
-      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y + 3 * zoom);
+      ctx.moveTo(stackPos.x - 1.8 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x - 1.5 * zoom, stackPos.y - 4 * zoom);
+      ctx.lineTo(stackPos.x + 1.5 * zoom, stackPos.y - 4 * zoom);
+      ctx.lineTo(stackPos.x + 1.8 * zoom, stackPos.y);
       ctx.closePath();
       ctx.fill();
+      // Flared top (diamond shape)
+      ctx.fillStyle = "#4a3a2a";
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y + 3.5 * zoom);
-      ctx.lineTo(cabPos.x + 7.5 * zoom, cabPos.y + 2.5 * zoom);
-      ctx.lineTo(cabPos.x + 7.5 * zoom, cabPos.y + 3.5 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y + 4.5 * zoom);
+      ctx.moveTo(stackPos.x - 1.5 * zoom, stackPos.y - 4 * zoom);
+      ctx.lineTo(stackPos.x - 4 * zoom, stackPos.y - 12 * zoom);
+      ctx.lineTo(stackPos.x + 4 * zoom, stackPos.y - 12 * zoom);
+      ctx.lineTo(stackPos.x + 1.5 * zoom, stackPos.y - 4 * zoom);
       ctx.closePath();
       ctx.fill();
-
-      // === BOILER (middle) - 3D isometric horizontal cylinder ===
-      drawIsoBoiler(
-        boilerPos.x,
-        boilerPos.y - 5 * zoom,
-        4.5,
-        4,
-        "#5e4830",
-        "#4a3820",
-        "#6a5238",
-      );
-
-      // Iron boiler bands
-      ctx.strokeStyle = "#7a6040";
-      ctx.lineWidth = 1.2 * zoom;
-      for (let b = 0; b < 3; b++) {
-        const bandPos = isoOffset(
-          boilerPos.x,
-          boilerPos.y - 5 * zoom,
-          -3 + b * 3,
-        );
+      // Spark catcher mesh dome
+      ctx.fillStyle = "rgba(90, 80, 60, 0.5)";
+      ctx.beginPath();
+      ctx.arc(stackPos.x, stackPos.y - 13.5 * zoom, 3.5 * zoom, Math.PI, 0);
+      ctx.fill();
+      ctx.strokeStyle = "#6a5a3a";
+      ctx.lineWidth = 0.6 * zoom;
+      for (let mi = 0; mi < 5; mi++) {
+        const meshAngle = (mi / 5) * Math.PI;
         ctx.beginPath();
-        ctx.ellipse(
-          bandPos.x,
-          bandPos.y,
-          4 * zoom * 0.55 + 0.3 * zoom,
-          4 * zoom + 0.3 * zoom,
-          0,
-          0,
-          Math.PI * 2,
+        ctx.moveTo(
+          stackPos.x - 3.5 * zoom * Math.cos(meshAngle),
+          stackPos.y - 13.5 * zoom,
+        );
+        ctx.quadraticCurveTo(
+          stackPos.x,
+          stackPos.y - 17 * zoom,
+          stackPos.x + 3.5 * zoom * Math.cos(Math.PI - meshAngle),
+          stackPos.y - 13.5 * zoom,
         );
         ctx.stroke();
       }
-
-      // Dome on top of boiler
-      const domePosL1 = isoOffset(
-        boilerPos.x,
-        boilerPos.y - 5 * zoom - 4 * zoom,
-        0,
-      );
-      ctx.fillStyle = "#5a4830";
-      ctx.beginPath();
-      ctx.ellipse(
-        domePosL1.x,
-        domePosL1.y,
-        2.5 * zoom,
-        3.5 * zoom,
-        0,
-        Math.PI,
-        0,
-      );
-      ctx.fill();
-      ctx.fillStyle = "#4a3820";
-      ctx.beginPath();
-      ctx.ellipse(
-        domePosL1.x,
-        domePosL1.y,
-        2.5 * zoom,
-        1.2 * zoom,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = "#8b7355";
-      ctx.beginPath();
-      ctx.ellipse(
-        domePosL1.x,
-        domePosL1.y - 3 * zoom,
-        1.2 * zoom,
-        0.6 * zoom,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Smokestack - proper 3D truncated cone (wider at top) with cap ring
-      const stackPos = isoOffset(boilerPos.x, boilerPos.y - 13 * zoom, 3);
-      ctx.fillStyle = "#3a2a1a";
-      ctx.beginPath();
-      ctx.moveTo(stackPos.x - 2 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 3.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#4a3a2a";
-      ctx.strokeStyle = "#5a4a3a";
-      ctx.lineWidth = 1.2 * zoom;
+      // Brass cap ring at top
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.ellipse(
         stackPos.x,
-        stackPos.y - 10 * zoom,
-        4 * zoom,
-        2 * zoom,
+        stackPos.y - 12 * zoom,
+        4.5 * zoom,
+        2.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+      ctx.fillStyle = "#5a4a3a";
+      ctx.beginPath();
+      ctx.ellipse(
+        stackPos.x,
+        stackPos.y - 12 * zoom,
+        3.5 * zoom,
+        1.8 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.stroke();
       ctx.fillStyle = "#2a1a0a";
       ctx.beginPath();
       ctx.ellipse(
         stackPos.x,
         stackPos.y,
-        2 * zoom,
-        1 * zoom,
+        1.8 * zoom,
+        0.9 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
 
-      // Multiple smoke puffs at different heights/sizes
-      for (let puff = 0; puff < 4; puff++) {
-        const puffAge = (time * 2 + puff * 1.2) % 5;
-        const puffY = stackPos.y - 12 * zoom - puffAge * 4 * zoom;
+      // Animated smoke puffs with gradient opacity
+      for (let puff = 0; puff < 5; puff++) {
+        const puffAge = (time * 1.8 + puff * 1.3) % 5;
+        const puffY = stackPos.y - 14 * zoom - puffAge * 5 * zoom;
         const puffX =
-          stackPos.x + Math.sin(time * 2 + puff) * (2 + puff) * zoom;
-        const puffR = (2 + puff * 1.5 + puffAge * 0.8) * zoom;
-        const puffA = Math.max(0, 0.4 - puffAge * 0.08);
-        ctx.fillStyle = `rgba(220, 220, 220, ${puffA})`;
+          stackPos.x +
+          Math.sin(time * 1.5 + puff * 0.8) * (2 + puff * 1.2) * zoom;
+        const puffR = (2.5 + puff * 1.8 + puffAge * 1.2) * zoom;
+        const puffA = Math.max(0, 0.45 - puffAge * 0.09);
+        const puffGrad = ctx.createRadialGradient(
+          puffX,
+          puffY,
+          0,
+          puffX,
+          puffY,
+          puffR,
+        );
+        puffGrad.addColorStop(0, `rgba(240, 235, 225, ${puffA})`);
+        puffGrad.addColorStop(0.5, `rgba(210, 205, 195, ${puffA * 0.7})`);
+        puffGrad.addColorStop(1, `rgba(180, 175, 165, 0)`);
+        ctx.fillStyle = puffGrad;
         ctx.beginPath();
         ctx.arc(puffX, puffY, puffR, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Headlight: mounted on boiler front cap with bracket
-      const lightPos = isoOffset(boilerPos.x, boilerPos.y - 5 * zoom, 4.5);
-      // Mounting bracket arm from boiler body to light
-      ctx.strokeStyle = "#5a4a3a";
-      ctx.lineWidth = 2 * zoom;
+      // Animated embers/sparks from stack
+      for (let em = 0; em < 3; em++) {
+        const emAge = (time * 3 + em * 2) % 3;
+        const emX = stackPos.x + Math.sin(time * 4 + em * 2.5) * 3 * zoom;
+        const emY = stackPos.y - 14 * zoom - emAge * 6 * zoom;
+        const emA = Math.max(0, 0.8 - emAge * 0.3);
+        ctx.fillStyle = `rgba(255, ${140 + em * 30}, 30, ${emA})`;
+        ctx.shadowColor = `rgba(255, ${140 + em * 30}, 30, ${emA * 0.5})`;
+        ctx.shadowBlur = 4 * zoom;
+        ctx.beginPath();
+        ctx.arc(emX, emY, (0.8 + Math.random() * 0.3) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+
+      // Headlight with polished brass housing
+      const lightPos = isoOffset(boilerPos.x, boilerPos.y - 5.5 * zoom, 5);
+      ctx.strokeStyle = "#8B5E3C";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(lightPos.x - 2 * zoom, lightPos.y + 1 * zoom);
-      ctx.lineTo(lightPos.x + 1.5 * zoom, lightPos.y - 1 * zoom);
+      ctx.lineTo(lightPos.x + 2 * zoom, lightPos.y - 0.5 * zoom);
       ctx.stroke();
-      // Hexagonal lantern housing
-      ctx.fillStyle = "#7a6345";
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
-      for (let hi = 0; hi < 6; hi++) {
-        const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
-        const hx = lightPos.x + 1.5 * zoom + Math.cos(ha) * 2 * zoom;
-        const hy = lightPos.y - 0.5 * zoom + Math.sin(ha) * 2 * zoom;
+      for (let hi = 0; hi < 8; hi++) {
+        const ha = (hi / 8) * Math.PI * 2;
+        const hx = lightPos.x + 2 * zoom + Math.cos(ha) * 2.5 * zoom;
+        const hy = lightPos.y - 0.5 * zoom + Math.sin(ha) * 2.5 * zoom;
         if (hi === 0) ctx.moveTo(hx, hy);
         else ctx.lineTo(hx, hy);
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.strokeStyle = "#B8860B";
       ctx.lineWidth = 0.8 * zoom;
       ctx.stroke();
-      // Lens glow
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.7 + Math.sin(time * 3) * 0.2})`;
+      const lightGlow = 0.75 + Math.sin(time * 3) * 0.2;
+      ctx.fillStyle = `rgba(255, 250, 200, ${lightGlow})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 10 * zoom;
+      ctx.shadowBlur = 14 * zoom;
       ctx.beginPath();
       ctx.arc(
-        lightPos.x + 1.5 * zoom,
+        lightPos.x + 2 * zoom,
         lightPos.y - 0.5 * zoom,
-        1.5 * zoom,
+        1.8 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Bell on top with bracket
-      const bellPos = isoOffset(boilerPos.x, boilerPos.y - 16 * zoom, 0);
-      ctx.strokeStyle = "#5a4a3a";
-      ctx.lineWidth = 1 * zoom;
+      // Bell on bracket with brass shine
+      const bellPos = isoOffset(boilerPos.x, boilerPos.y - 17 * zoom, 1);
+      ctx.strokeStyle = "#8B5E3C";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(bellPos.x - 1 * zoom, bellPos.y + 3 * zoom);
       ctx.lineTo(bellPos.x, bellPos.y + 1 * zoom);
       ctx.lineTo(bellPos.x + 1 * zoom, bellPos.y + 3 * zoom);
       ctx.stroke();
-      ctx.fillStyle = "#c9a227";
-      ctx.beginPath();
-      ctx.moveTo(bellPos.x - 2 * zoom, bellPos.y);
-      ctx.quadraticCurveTo(
-        bellPos.x - 2.5 * zoom,
-        bellPos.y + 2 * zoom,
-        bellPos.x - 1 * zoom,
-        bellPos.y + 3 * zoom,
+      const bellGrad = ctx.createRadialGradient(
+        bellPos.x - 0.5 * zoom,
+        bellPos.y,
+        0,
+        bellPos.x,
+        bellPos.y + 1.5 * zoom,
+        3 * zoom,
       );
-      ctx.lineTo(bellPos.x + 1 * zoom, bellPos.y + 3 * zoom);
+      bellGrad.addColorStop(0, "#E8C847");
+      bellGrad.addColorStop(0.5, "#C9A227");
+      bellGrad.addColorStop(1, "#A08020");
+      ctx.fillStyle = bellGrad;
+      ctx.beginPath();
+      ctx.moveTo(bellPos.x - 2.5 * zoom, bellPos.y);
       ctx.quadraticCurveTo(
+        bellPos.x - 3 * zoom,
+        bellPos.y + 2.5 * zoom,
+        bellPos.x - 1.2 * zoom,
+        bellPos.y + 3.5 * zoom,
+      );
+      ctx.lineTo(bellPos.x + 1.2 * zoom, bellPos.y + 3.5 * zoom);
+      ctx.quadraticCurveTo(
+        bellPos.x + 3 * zoom,
+        bellPos.y + 2.5 * zoom,
         bellPos.x + 2.5 * zoom,
-        bellPos.y + 2 * zoom,
-        bellPos.x + 2 * zoom,
         bellPos.y,
       );
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#d4b030";
+      ctx.fillStyle = "#D4B030";
       ctx.beginPath();
-      ctx.ellipse(bellPos.x, bellPos.y, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        bellPos.x,
+        bellPos.y,
+        2.5 * zoom,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      // Bell highlight
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(
+        bellPos.x - 0.5 * zoom,
+        bellPos.y - 0.3 * zoom,
+        1.2 * zoom,
+        0.6 * zoom,
+        -0.3,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
-      // Pressure gauge on boiler side
-      const gaugePos = isoOffset(boilerPos.x, boilerPos.y - 6 * zoom, -4);
+      // Pressure gauge on boiler side with animated needle
+      const gaugePos = isoOffset(boilerPos.x, boilerPos.y - 7 * zoom, -4.5);
       ctx.fillStyle = "#e8e0d0";
       ctx.beginPath();
-      ctx.arc(gaugePos.x - 5 * zoom, gaugePos.y, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.arc(gaugePos.x - 5.5 * zoom, gaugePos.y, 2 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#5a4a3a";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.arc(gaugePos.x - 5 * zoom, gaugePos.y, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1 * zoom;
       ctx.stroke();
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 0.5 * zoom;
+      for (let ti = 0; ti < 8; ti++) {
+        const ta = -Math.PI * 0.75 + (ti / 7) * Math.PI * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(
+          gaugePos.x - 5.5 * zoom + Math.cos(ta) * 1.4 * zoom,
+          gaugePos.y + Math.sin(ta) * 1.4 * zoom,
+        );
+        ctx.lineTo(
+          gaugePos.x - 5.5 * zoom + Math.cos(ta) * 1.7 * zoom,
+          gaugePos.y + Math.sin(ta) * 1.7 * zoom,
+        );
+        ctx.stroke();
+      }
       const needleAngle = -Math.PI * 0.25 + Math.sin(time * 0.5) * 0.3;
-      ctx.strokeStyle = "#aa0000";
+      ctx.strokeStyle = "#cc0000";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(gaugePos.x - 5 * zoom, gaugePos.y);
+      ctx.moveTo(gaugePos.x - 5.5 * zoom, gaugePos.y);
       ctx.lineTo(
-        gaugePos.x - 5 * zoom + Math.cos(needleAngle) * 1.5 * zoom,
+        gaugePos.x - 5.5 * zoom + Math.cos(needleAngle) * 1.5 * zoom,
         gaugePos.y + Math.sin(needleAngle) * 1.5 * zoom,
       );
       ctx.stroke();
+      ctx.fillStyle = "#B87333";
+      ctx.beginPath();
+      ctx.arc(gaugePos.x - 5.5 * zoom, gaugePos.y, 0.4 * zoom, 0, Math.PI * 2);
+      ctx.fill();
 
       // === TENDER (back, draw last - appears in front) ===
       drawIsometricPrism(
         ctx,
         tenderPos.x,
         tenderPos.y,
+        11,
         10,
         9,
-        8,
-        { top: "#7a6040", left: "#5a4020", right: "#4a3010" },
+        { top: "#8B4513", left: "#6B3410", right: "#4B2408" },
         zoom,
       );
 
-      // Plank texture on left face
-      ctx.strokeStyle = "#4a3515";
-      ctx.lineWidth = 0.7 * zoom;
+      // Plank texture on faces
       for (let p = 0; p < 4; p++) {
         const py = tenderPos.y - 1 * zoom - p * 2 * zoom;
+        ctx.strokeStyle = p % 2 === 0 ? "#5a2a08" : "#4a2006";
+        ctx.lineWidth = 0.7 * zoom;
         ctx.beginPath();
-        ctx.moveTo(tenderPos.x - 5 * zoom - 4.5 * zoom, py + 2.3 * zoom);
-        ctx.lineTo(tenderPos.x - 5 * zoom, py);
+        ctx.moveTo(tenderPos.x - 5.5 * zoom - 5 * zoom, py + 2.5 * zoom);
+        ctx.lineTo(tenderPos.x - 5.5 * zoom, py);
         ctx.stroke();
-      }
-      // Plank texture on right face
-      ctx.strokeStyle = "#3a2508";
-      for (let p = 0; p < 4; p++) {
-        const py = tenderPos.y - 1 * zoom - p * 2 * zoom;
+        ctx.strokeStyle = "#3a1a04";
         ctx.beginPath();
         ctx.moveTo(tenderPos.x + 1 * zoom, py + 0.5 * zoom);
-        ctx.lineTo(tenderPos.x + 5 * zoom, py - 1.5 * zoom);
+        ctx.lineTo(tenderPos.x + 5.5 * zoom, py - 1.8 * zoom);
         ctx.stroke();
       }
 
-      // Coal pile mound
-      ctx.fillStyle = "#1a1008";
+      // Copper edge banding
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tenderPos.x - 5.5 * zoom, tenderPos.y - 9 * zoom);
+      ctx.lineTo(tenderPos.x + 5.5 * zoom, tenderPos.y - 9 * zoom);
+      ctx.stroke();
+
+      // Coal pile with gradient mound
+      const coalGrad = ctx.createRadialGradient(
+        tenderPos.x,
+        tenderPos.y - 10 * zoom,
+        0,
+        tenderPos.x,
+        tenderPos.y - 9 * zoom,
+        4.5 * zoom,
+      );
+      coalGrad.addColorStop(0, "#2a2018");
+      coalGrad.addColorStop(0.5, "#1a1008");
+      coalGrad.addColorStop(1, "#0a0804");
+      ctx.fillStyle = coalGrad;
       ctx.beginPath();
       ctx.ellipse(
         tenderPos.x,
-        tenderPos.y - 8 * zoom,
-        4 * zoom,
-        1.5 * zoom,
+        tenderPos.y - 9 * zoom,
+        4.5 * zoom,
+        1.8 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(tenderPos.x, tenderPos.y - 8 * zoom, 3.5 * zoom, Math.PI, 0);
+      ctx.arc(tenderPos.x, tenderPos.y - 9 * zoom, 4 * zoom, Math.PI, 0);
       ctx.fill();
-      // Individual coal chunks
-      ctx.fillStyle = "#2a2010";
+      // Glinting coal chunks
       const coalSpots = [
         [0, 0],
         [-1.5, 0.5],
@@ -31027,89 +31763,115 @@ function renderStationTower(
         [0.3, -1.8],
       ];
       for (const [cx, cy] of coalSpots) {
+        ctx.fillStyle = `rgba(${35 + Math.random() * 15}, ${25 + Math.random() * 10}, ${15 + Math.random() * 10}, 0.9)`;
         ctx.beginPath();
         ctx.arc(
           tenderPos.x + cx * zoom,
-          tenderPos.y - 9.5 * zoom + cy * zoom,
-          0.9 * zoom,
+          tenderPos.y - 10 * zoom + cy * zoom,
+          1 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        // Tiny coal highlight
+        ctx.fillStyle = "rgba(80,70,50,0.4)";
+        ctx.beginPath();
+        ctx.arc(
+          tenderPos.x + cx * zoom - 0.3 * zoom,
+          tenderPos.y - 10.3 * zoom + cy * zoom,
+          0.4 * zoom,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
 
-      // Water tank indicator on left face
-      const tankPos = isoOffset(tenderPos.x, tenderPos.y - 3 * zoom, -4);
-      ctx.fillStyle = "#5a4a3a";
+      // Water level gauge on left face
+      const tankPos = isoOffset(tenderPos.x, tenderPos.y - 3.5 * zoom, -4.5);
+      ctx.fillStyle = "#B87333";
       ctx.fillRect(
-        tankPos.x - 6.5 * zoom,
-        tankPos.y - 1.5 * zoom,
-        2.5 * zoom,
-        4 * zoom,
+        tankPos.x - 7 * zoom,
+        tankPos.y - 2 * zoom,
+        3 * zoom,
+        5 * zoom,
+      );
+      ctx.strokeStyle = "#8B5E3C";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.strokeRect(
+        tankPos.x - 7 * zoom,
+        tankPos.y - 2 * zoom,
+        3 * zoom,
+        5 * zoom,
       );
       const waterLvl = 0.6 + Math.sin(time * 0.3) * 0.1;
       ctx.fillStyle = "#4488bb";
       ctx.fillRect(
-        tankPos.x - 6.2 * zoom,
-        tankPos.y - 1.2 * zoom + (1 - waterLvl) * 3.4 * zoom,
-        1.9 * zoom,
-        waterLvl * 3.4 * zoom,
+        tankPos.x - 6.7 * zoom,
+        tankPos.y - 1.7 * zoom + (1 - waterLvl) * 4.4 * zoom,
+        2.4 * zoom,
+        waterLvl * 4.4 * zoom,
       );
-      ctx.strokeStyle = "#3a2a1a";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.strokeRect(
-        tankPos.x - 6.5 * zoom,
-        tankPos.y - 1.5 * zoom,
-        2.5 * zoom,
-        4 * zoom,
+      // Glass tube highlight
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.fillRect(
+        tankPos.x - 6.2 * zoom,
+        tankPos.y - 1.7 * zoom,
+        0.6 * zoom,
+        4.4 * zoom,
       );
 
-      // Side railing on tender
-      ctx.strokeStyle = "#5a4020";
+      // Brass side railing
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1 * zoom;
       for (let i = 0; i < 3; i++) {
-        const postX = tenderPos.x + 1 * zoom + i * 2 * zoom;
-        const postBase = tenderPos.y - 4 * zoom - i * 1 * zoom;
+        const postX = tenderPos.x + 1 * zoom + i * 2.2 * zoom;
+        const postBase = tenderPos.y - 4.5 * zoom - i * 1.1 * zoom;
         ctx.beginPath();
-        ctx.moveTo(postX, postBase + 4 * zoom);
+        ctx.moveTo(postX, postBase + 4.5 * zoom);
         ctx.lineTo(postX, postBase);
         ctx.stroke();
+        ctx.fillStyle = "#C9A227";
+        ctx.beginPath();
+        ctx.arc(postX, postBase, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.beginPath();
-      ctx.moveTo(tenderPos.x + 1 * zoom, tenderPos.y - 4 * zoom);
-      ctx.lineTo(tenderPos.x + 5 * zoom, tenderPos.y - 6 * zoom);
+      ctx.moveTo(tenderPos.x + 1 * zoom, tenderPos.y - 4.5 * zoom);
+      ctx.lineTo(tenderPos.x + 5.4 * zoom, tenderPos.y - 6.7 * zoom);
       ctx.stroke();
 
-      // === COUPLINGS between cars ===
-      const coup1 = isoOffset(trainX, trainY + 1 * zoom, 3);
-      ctx.fillStyle = "#5a4a3a";
+      // === COUPLINGS between cars (brass chain links) ===
+      const coup1 = isoOffset(trainX, trainY + 1 * zoom, 3.5);
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
-      ctx.arc(coup1.x, coup1.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.arc(coup1.x, coup1.y, 1.3 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#3a2a1a";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "#8B5E3C";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
-      ctx.moveTo(coup1.x - 1.5 * zoom, coup1.y);
-      ctx.lineTo(coup1.x + 1.5 * zoom, coup1.y);
+      ctx.moveTo(coup1.x - 2 * zoom, coup1.y);
+      ctx.lineTo(coup1.x + 2 * zoom, coup1.y);
       ctx.stroke();
-      const coup2 = isoOffset(trainX, trainY + 1 * zoom, -3);
-      ctx.fillStyle = "#5a4a3a";
+      const coup2 = isoOffset(trainX, trainY + 1 * zoom, -3.5);
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
-      ctx.arc(coup2.x, coup2.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.arc(coup2.x, coup2.y, 1.3 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#3a2a1a";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "#8B5E3C";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
-      ctx.moveTo(coup2.x - 1.5 * zoom, coup2.y);
-      ctx.lineTo(coup2.x + 1.5 * zoom, coup2.y);
+      ctx.moveTo(coup2.x - 2 * zoom, coup2.y);
+      ctx.lineTo(coup2.x + 2 * zoom, coup2.y);
       ctx.stroke();
 
-      // === ORANGE STRIPE (3D isometric band on right face) ===
+      // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
-      const stripeH = 2.5 * zoom;
-      const stL = isoOffset(trainX, stripeY, -10);
-      const stR = isoOffset(trainX, stripeY, 10);
-      ctx.fillStyle = "#e06000";
+      const stripeH = 3 * zoom;
+      const stL = isoOffset(trainX, stripeY, -11);
+      const stR = isoOffset(trainX, stripeY, 11);
+      ctx.fillStyle = "#E77500";
+      ctx.shadowColor = "rgba(231, 117, 0, 0.4)";
+      ctx.shadowBlur = 4 * zoom;
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stR.x, stR.y);
@@ -31117,8 +31879,8 @@ function renderStationTower(
       ctx.lineTo(stL.x, stL.y - stripeH);
       ctx.closePath();
       ctx.fill();
-      // Stripe highlight edge
-      ctx.fillStyle = "#ff7020";
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FF8C1A";
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stL.x, stL.y - stripeH);
@@ -31127,455 +31889,548 @@ function renderStationTower(
       ctx.closePath();
       ctx.fill();
 
-      // Front headlight with mounting bracket from cab
-      const frontLight = isoOffset(cabPos.x, cabPos.y - 5 * zoom, 5.5);
-      // Bracket arm connecting cab to light
-      ctx.strokeStyle = "#6a5335";
-      ctx.lineWidth = 2 * zoom;
+      // Front headlight on cab with ornate mounting
+      const frontLight = isoOffset(cabPos.x, cabPos.y - 6 * zoom, 6);
+      ctx.strokeStyle = "#B87333";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y - 6 * zoom);
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 7 * zoom);
       ctx.lineTo(frontLight.x + 1.5 * zoom, frontLight.y - 0.5 * zoom);
       ctx.stroke();
-      // Hexagonal lantern housing
-      ctx.fillStyle = "#7a6345";
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
-      for (let hi = 0; hi < 6; hi++) {
-        const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
-        const hx = frontLight.x + 1.5 * zoom + Math.cos(ha) * 2.2 * zoom;
-        const hy = frontLight.y - 0.5 * zoom + Math.sin(ha) * 2.2 * zoom;
+      for (let hi = 0; hi < 8; hi++) {
+        const ha = (hi / 8) * Math.PI * 2;
+        const hx = frontLight.x + 1.5 * zoom + Math.cos(ha) * 2.8 * zoom;
+        const hy = frontLight.y - 0.5 * zoom + Math.sin(ha) * 2.8 * zoom;
         if (hi === 0) ctx.moveTo(hx, hy);
         else ctx.lineTo(hx, hy);
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.strokeStyle = "#B8860B";
       ctx.lineWidth = 0.8 * zoom;
       ctx.stroke();
-      // Lens glow
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.7 + Math.sin(time * 3) * 0.2})`;
+      ctx.fillStyle = `rgba(255, 250, 200, ${0.75 + Math.sin(time * 3) * 0.2})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 10 * zoom;
+      ctx.shadowBlur = 16 * zoom;
       ctx.beginPath();
       ctx.arc(
         frontLight.x + 1.5 * zoom,
         frontLight.y - 0.5 * zoom,
-        1.8 * zoom,
+        2 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // === COWCATCHER at front (3D wedge attached to chassis) ===
-      const cowPos = isoOffset(cabPos.x, cabPos.y, 5.5);
-      // Mounting bars connecting cowcatcher to chassis
-      ctx.strokeStyle = "#5a4a3a";
+      // === COWCATCHER: Brass V-plow ===
+      const cowPos = isoOffset(cabPos.x, cabPos.y, 6);
+      ctx.strokeStyle = "#B87333";
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y + 1 * zoom);
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y + 1 * zoom);
       ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y + 2 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y - 2 * zoom);
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 2 * zoom);
       ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y - 1 * zoom);
       ctx.stroke();
-      // Right face (3D depth)
-      ctx.fillStyle = "#4a3a2a";
+      // Right face
+      ctx.fillStyle = "#B87333";
       ctx.beginPath();
-      ctx.moveTo(cowPos.x + 4 * zoom, cowPos.y - 4 * zoom);
+      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 4 * zoom);
       ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
       ctx.lineTo(cowPos.x, cowPos.y + 4 * zoom);
       ctx.lineTo(cowPos.x + 3 * zoom, cowPos.y + 3 * zoom);
-      ctx.lineTo(cowPos.x + 7 * zoom, cowPos.y - 1 * zoom);
+      ctx.lineTo(cowPos.x + 8 * zoom, cowPos.y - 1 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Left face (darker side)
-      ctx.fillStyle = "#3a2a1a";
+      // Left face
+      ctx.fillStyle = "#8B5E3C";
       ctx.beginPath();
-      ctx.moveTo(cowPos.x + 4 * zoom, cowPos.y - 4 * zoom);
+      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 4 * zoom);
       ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
       ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 3 * zoom);
       ctx.lineTo(cowPos.x, cowPos.y + 4 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
       // Horizontal bars
-      ctx.strokeStyle = "#6a5a4a";
-      ctx.lineWidth = 1.2 * zoom;
-      for (let b = 0; b < 3; b++) {
-        const barY = cowPos.y + 3 * zoom - b * 2 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.3 * zoom;
+      for (let b = 0; b < 4; b++) {
+        const barY = cowPos.y + 3 * zoom - b * 1.8 * zoom;
         ctx.beginPath();
         ctx.moveTo(cowPos.x - 2 * zoom, barY);
-        ctx.lineTo(cowPos.x + 5 * zoom, barY - 2.5 * zoom);
+        ctx.lineTo(cowPos.x + 6 * zoom, barY - 2.5 * zoom);
         ctx.stroke();
       }
-    } else if (tower.level === 2) {
-      // ========== LEVEL 2: Armored Military Train ==========
-      const cabPos = isoOffset(trainX, trainY, 7);
-      const locoPos = isoOffset(trainX, trainY, 0);
-      const cargoPos = isoOffset(trainX, trainY, -7);
-      const wheelY = trainY + 4 * zoom;
-
-      // --- UNDERCARRIAGE: Heavy steel chassis frame ---
-      ctx.fillStyle = "#2a2a32";
+      // Highlight edge
+      ctx.strokeStyle = "#D4956B";
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      const chStart = isoOffset(trainX, trainY + 2 * zoom, -11);
-      const chEnd = isoOffset(trainX, trainY + 2 * zoom, 11);
+      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 4 * zoom);
+      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
+      ctx.stroke();
+
+      // "DINKY" nameplate on boiler side
+      ctx.fillStyle = "#C9A227";
+      const npPos = isoOffset(boilerPos.x, boilerPos.y - 3 * zoom, -4);
+      ctx.fillRect(
+        npPos.x - 7 * zoom,
+        npPos.y - 1 * zoom,
+        5 * zoom,
+        2.2 * zoom,
+      );
+      ctx.strokeStyle = "#B8860B";
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.strokeRect(
+        npPos.x - 7 * zoom,
+        npPos.y - 1 * zoom,
+        5 * zoom,
+        2.2 * zoom,
+      );
+      ctx.fillStyle = "#4a2408";
+      ctx.font = `bold ${1.4 * zoom}px serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("DINKY", npPos.x - 4.5 * zoom, npPos.y + 0.6 * zoom);
+    } else if (tower.level === 2) {
+      // ========== LEVEL 2: Ironclad Armored War Engine ==========
+      const cabPos = isoOffset(trainX, trainY, 8);
+      const locoPos = isoOffset(trainX, trainY, 0);
+      const cargoPos = isoOffset(trainX, trainY, -8);
+      const wheelY = trainY + 4.5 * zoom;
+
+      // --- HEAVY STEEL UNDERCARRIAGE with riveted I-beams ---
+      const chStart = isoOffset(trainX, trainY + 2 * zoom, -12);
+      const chEnd = isoOffset(trainX, trainY + 2 * zoom, 12);
+      const steelGrad = ctx.createLinearGradient(
+        chStart.x,
+        chStart.y,
+        chEnd.x,
+        chEnd.y,
+      );
+      steelGrad.addColorStop(0, "#1a1e25");
+      steelGrad.addColorStop(0.5, "#2a2e35");
+      steelGrad.addColorStop(1, "#1a1e25");
+      ctx.fillStyle = steelGrad;
+      ctx.beginPath();
       ctx.moveTo(chStart.x, chStart.y);
       ctx.lineTo(chEnd.x, chEnd.y);
-      ctx.lineTo(chEnd.x, chEnd.y + 2.5 * zoom);
-      ctx.lineTo(chStart.x, chStart.y + 2.5 * zoom);
+      ctx.lineTo(chEnd.x, chEnd.y + 3 * zoom);
+      ctx.lineTo(chStart.x, chStart.y + 3 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#222228";
+      ctx.fillStyle = "#151820";
       ctx.beginPath();
-      ctx.moveTo(chStart.x - 2.5 * zoom, chStart.y + 1.3 * zoom);
-      ctx.lineTo(chEnd.x - 2.5 * zoom, chEnd.y + 1.3 * zoom);
-      ctx.lineTo(chEnd.x - 2.5 * zoom, chEnd.y + 3.8 * zoom);
-      ctx.lineTo(chStart.x - 2.5 * zoom, chStart.y + 3.8 * zoom);
+      ctx.moveTo(chStart.x - 3 * zoom, chStart.y + 1.5 * zoom);
+      ctx.lineTo(chEnd.x - 3 * zoom, chEnd.y + 1.5 * zoom);
+      ctx.lineTo(chEnd.x - 3 * zoom, chEnd.y + 4.5 * zoom);
+      ctx.lineTo(chStart.x - 3 * zoom, chStart.y + 4.5 * zoom);
       ctx.closePath();
       ctx.fill();
 
-      // Heavy double suspension springs
-      ctx.strokeStyle = "#3a3a42";
-      ctx.lineWidth = 1.5 * zoom;
-      for (const so of [10, 4, -3, -10]) {
-        const sp = isoOffset(trainX, wheelY - 1 * zoom, so);
+      // Heavy coil springs over each wheel
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 1.8 * zoom;
+      for (const so of [11, 4, -4, -11]) {
+        const sp = isoOffset(trainX, wheelY - 1.5 * zoom, so);
         ctx.beginPath();
-        ctx.moveTo(sp.x - 3 * zoom, sp.y + 0.5 * zoom);
+        ctx.moveTo(sp.x - 3.5 * zoom, sp.y + 0.5 * zoom);
         ctx.quadraticCurveTo(
           sp.x,
-          sp.y - 2 * zoom,
-          sp.x + 3 * zoom,
+          sp.y - 2.5 * zoom,
+          sp.x + 3.5 * zoom,
           sp.y + 0.5 * zoom,
         );
         ctx.stroke();
+        ctx.strokeStyle = "#3a4050";
+        ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
-        ctx.moveTo(sp.x - 2.5 * zoom, sp.y + 1 * zoom);
+        ctx.moveTo(sp.x - 3 * zoom, sp.y + 1.2 * zoom);
         ctx.quadraticCurveTo(
           sp.x,
-          sp.y - 1 * zoom,
-          sp.x + 2.5 * zoom,
-          sp.y + 1 * zoom,
+          sp.y - 1.2 * zoom,
+          sp.x + 3 * zoom,
+          sp.y + 1.2 * zoom,
         );
         ctx.stroke();
+        ctx.strokeStyle = "#4a5060";
+        ctx.lineWidth = 1.8 * zoom;
       }
 
-      // --- WHEELS ---
+      // --- STEEL WHEELS with gunmetal finish ---
       drawWheel(
-        isoOffset(trainX, wheelY, 10).x,
-        isoOffset(trainX, wheelY, 10).y,
-        4,
-        "#5a5a62",
-        "#3a3a42",
+        isoOffset(trainX, wheelY, 11).x,
+        isoOffset(trainX, wheelY, 11).y,
+        4.5,
+        "#3a4050",
+        "#1a1e25",
+        "#5a6070",
       );
       drawWheel(
         isoOffset(trainX, wheelY, 4).x,
         isoOffset(trainX, wheelY, 4).y,
-        4,
-        "#5a5a62",
-        "#3a3a42",
+        4.5,
+        "#3a4050",
+        "#1a1e25",
+        "#5a6070",
       );
       drawWheel(
-        isoOffset(trainX, wheelY, -3).x,
-        isoOffset(trainX, wheelY, -3).y,
-        4,
-        "#5a5a62",
-        "#3a3a42",
+        isoOffset(trainX, wheelY, -4).x,
+        isoOffset(trainX, wheelY, -4).y,
+        4.5,
+        "#3a4050",
+        "#1a1e25",
+        "#5a6070",
       );
       drawWheel(
-        isoOffset(trainX, wheelY, -10).x,
-        isoOffset(trainX, wheelY, -10).y,
-        4,
-        "#5a5a62",
-        "#3a3a42",
+        isoOffset(trainX, wheelY, -11).x,
+        isoOffset(trainX, wheelY, -11).y,
+        4.5,
+        "#3a4050",
+        "#1a1e25",
+        "#5a6070",
       );
 
-      // === CAB (front, draw first) ===
+      // Animated connecting rods
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 2 * zoom;
+      const rodPhase = time * 3;
+      const rodW1 = isoOffset(trainX, wheelY, 11);
+      const rodW2 = isoOffset(trainX, wheelY, 4);
+      const rodDy = Math.sin(rodPhase) * 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(rodW1.x + rodDy * 0.4, rodW1.y + rodDy * 0.2);
+      ctx.lineTo(rodW2.x + rodDy * 0.4, rodW2.y + rodDy * 0.2);
+      ctx.stroke();
+
+      // === ARMORED CAB (front, draw first) ===
       drawIsometricPrism(
         ctx,
         cabPos.x,
         cabPos.y,
+        12,
         11,
-        10,
-        14,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        16,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
 
-      // Rivet lines on left face
-      ctx.fillStyle = "#7a7a82";
-      for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 4; col++) {
-          const rx = cabPos.x - 5.5 * zoom - col * 1 * zoom + row * 0.3 * zoom;
-          const ry = cabPos.y - 2 * zoom - row * 4 * zoom + col * 0.5 * zoom;
+      // Welded armor plate seams on both faces
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 0.8 * zoom;
+      for (let s = 0; s < 3; s++) {
+        const sy = cabPos.y - 3 * zoom - s * 4.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x - 6 * zoom, sy + 3 * zoom);
+        ctx.lineTo(cabPos.x, sy);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x + 1 * zoom, sy);
+        ctx.lineTo(cabPos.x + 6 * zoom, sy - 3 * zoom);
+        ctx.stroke();
+      }
+
+      // Heavy rivet rows on both faces
+      ctx.fillStyle = "#6a7080";
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 5; col++) {
+          const rx = cabPos.x - 6 * zoom - col * 0.8 * zoom + row * 0.3 * zoom;
+          const ry = cabPos.y - 2 * zoom - row * 3.5 * zoom + col * 0.4 * zoom;
           ctx.beginPath();
-          ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
+          ctx.arc(rx, ry, 0.7 * zoom, 0, Math.PI * 2);
           ctx.fill();
         }
-      }
-      // Rivet lines on right face
-      for (let row = 0; row < 3; row++) {
         for (let col = 0; col < 4; col++) {
-          const rx = cabPos.x + 1 * zoom + col * 1.2 * zoom;
-          const ry = cabPos.y - 2 * zoom - row * 4 * zoom - col * 0.6 * zoom;
+          const rx = cabPos.x + 1.5 * zoom + col * 1.3 * zoom;
+          const ry = cabPos.y - 2 * zoom - row * 3.5 * zoom - col * 0.65 * zoom;
           ctx.beginPath();
-          ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
+          ctx.arc(rx, ry, 0.7 * zoom, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      // Armored cab roof
+      // Armored roof with angled deflector
       drawIsometricPrism(
         ctx,
         cabPos.x,
-        cabPos.y - 14 * zoom,
+        cabPos.y - 16 * zoom,
+        14,
         13,
-        12,
-        2,
-        { top: "#4a4a52", left: "#3a3a42", right: "#2a2a32" },
+        2.5,
+        { top: "#2a3040", left: "#1a2030", right: "#101820" },
         zoom,
       );
 
-      // Angled front armor plate (isometric parallelogram)
-      const frontArmor = isoOffset(cabPos.x, cabPos.y, 7);
-      ctx.fillStyle = "#4a4a52";
+      // Angled front armor plate (deflector wedge)
+      const frontArmor = isoOffset(cabPos.x, cabPos.y, 8);
+      const armorGrad = ctx.createLinearGradient(
+        frontArmor.x - 5 * zoom,
+        frontArmor.y,
+        frontArmor.x + 5 * zoom,
+        frontArmor.y,
+      );
+      armorGrad.addColorStop(0, "#3a4050");
+      armorGrad.addColorStop(0.5, "#4a5060");
+      armorGrad.addColorStop(1, "#2a3040");
+      ctx.fillStyle = armorGrad;
       ctx.beginPath();
       ctx.moveTo(frontArmor.x - 5 * zoom, frontArmor.y - 4 * zoom);
-      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 9 * zoom);
+      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 10 * zoom);
       ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 1 * zoom);
-      ctx.lineTo(frontArmor.x - 5 * zoom, frontArmor.y + 4 * zoom);
+      ctx.lineTo(frontArmor.x - 5 * zoom, frontArmor.y + 5 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#6a6a72";
+      ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 1 * zoom;
+      ctx.stroke();
+      // Welded seam on armor plate
+      ctx.strokeStyle = "rgba(120,130,150,0.5)";
+      ctx.lineWidth = 0.6 * zoom;
       ctx.beginPath();
       ctx.moveTo(frontArmor.x - 5 * zoom, frontArmor.y - 4 * zoom);
-      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 9 * zoom);
+      ctx.lineTo(frontArmor.x + 5 * zoom, frontArmor.y - 10 * zoom);
       ctx.stroke();
-      ctx.fillStyle = "#7a7a82";
-      for (let i = 0; i < 3; i++) {
-        const arx = frontArmor.x - 2 * zoom + i * 3 * zoom;
-        const ary = frontArmor.y - 3 * zoom - i * 1.5 * zoom;
-        ctx.beginPath();
-        ctx.arc(arx, ary, 0.7 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
 
-      // Vision slit (isometric parallelogram with green glow)
-      ctx.fillStyle = "#1a1a22";
+      // Green-lit vision slit
+      ctx.fillStyle = "#0a0e14";
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 1.5 * zoom, cabPos.y - 9 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 11 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 9.5 * zoom);
+      ctx.moveTo(cabPos.x + 1.5 * zoom, cabPos.y - 9.5 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 12 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 10 * zoom);
       ctx.lineTo(cabPos.x + 1.5 * zoom, cabPos.y - 7.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      const slitGlow = 0.4 + Math.sin(time * 2) * 0.15;
-      ctx.fillStyle = `rgba(80, 200, 80, ${slitGlow})`;
+      const slitGlow = 0.45 + Math.sin(time * 2) * 0.2;
+      ctx.fillStyle = `rgba(60, 220, 80, ${slitGlow})`;
+      ctx.shadowColor = "#40dd50";
+      ctx.shadowBlur = 8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 2 * zoom, cabPos.y - 8.8 * zoom);
-      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 10.6 * zoom);
-      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 9.7 * zoom);
+      ctx.moveTo(cabPos.x + 2 * zoom, cabPos.y - 9.2 * zoom);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 11.5 * zoom);
+      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 10.2 * zoom);
       ctx.lineTo(cabPos.x + 2 * zoom, cabPos.y - 7.9 * zoom);
       ctx.closePath();
       ctx.fill();
+      ctx.shadowBlur = 0;
 
-      // Periscope with 3D housing
-      const periPos = isoOffset(cabPos.x, cabPos.y - 16 * zoom, 2);
+      // Periscope turret on cab roof
+      const periPos = isoOffset(cabPos.x, cabPos.y - 18.5 * zoom, 2);
       drawIsometricPrism(
         ctx,
         periPos.x,
         periPos.y,
-        3,
-        3,
-        6,
-        { top: "#4a4a52", left: "#3a3a42", right: "#2a2a32" },
+        3.5,
+        3.5,
+        7,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
-      ctx.fillStyle = "#88bbaa";
+      ctx.fillStyle = "#88ccaa";
+      ctx.shadowColor = "#88ccaa";
+      ctx.shadowBlur = 3 * zoom;
       ctx.beginPath();
       ctx.ellipse(
         periPos.x,
-        periPos.y - 6 * zoom,
-        1 * zoom,
-        0.6 * zoom,
+        periPos.y - 7 * zoom,
+        1.2 * zoom,
+        0.7 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
+      ctx.shadowBlur = 0;
 
       // Side armor skirts
-      ctx.fillStyle = "#3a3a42";
+      ctx.fillStyle = "#2a3040";
       ctx.beginPath();
-      ctx.moveTo(cabPos.x - 5.5 * zoom - 2 * zoom, cabPos.y + 1 * zoom);
-      ctx.lineTo(cabPos.x - 5.5 * zoom + 3 * zoom, cabPos.y - 1.5 * zoom);
-      ctx.lineTo(cabPos.x - 5.5 * zoom + 3 * zoom, cabPos.y + 3 * zoom);
-      ctx.lineTo(cabPos.x - 5.5 * zoom - 2 * zoom, cabPos.y + 5 * zoom);
+      ctx.moveTo(cabPos.x - 6 * zoom - 2.5 * zoom, cabPos.y + 1 * zoom);
+      ctx.lineTo(cabPos.x - 6 * zoom + 3.5 * zoom, cabPos.y - 1.8 * zoom);
+      ctx.lineTo(cabPos.x - 6 * zoom + 3.5 * zoom, cabPos.y + 3.5 * zoom);
+      ctx.lineTo(cabPos.x - 6 * zoom - 2.5 * zoom, cabPos.y + 5.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#2a2a32";
+      ctx.fillStyle = "#1a2030";
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 2 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom + 4 * zoom, cabPos.y - 4 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom + 4 * zoom, cabPos.y + 1 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y + 3 * zoom);
+      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 2 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom + 4.5 * zoom, cabPos.y - 4.5 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom + 4.5 * zoom, cabPos.y + 1 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y + 3.5 * zoom);
       ctx.closePath();
       ctx.fill();
 
-      // === LOCOMOTIVE (middle) ===
+      // === LOCOMOTIVE (middle) - Heavy industrial boiler ===
       drawIsometricPrism(
         ctx,
         locoPos.x,
         locoPos.y,
-        12,
-        10,
-        12,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        13,
+        11,
+        13,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
 
-      // Heavier industrial boiler (3D isometric horizontal cylinder)
+      // Armored boiler cylinder
       drawIsoBoiler(
         locoPos.x,
-        locoPos.y - 6 * zoom,
+        locoPos.y - 6.5 * zoom,
+        5.5,
         5,
-        4.5,
-        "#4a4a52",
-        "#3a3a42",
-        "#5a5a62",
+        "#3a4050",
+        "#1a2030",
+        "#5a6070",
       );
 
-      // Armored bands
-      ctx.strokeStyle = "#6a6a72";
-      ctx.lineWidth = 1.5 * zoom;
+      // Steel reinforcement bands
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 2 * zoom;
       for (let b = 0; b < 3; b++) {
         const bandPos = isoOffset(
           locoPos.x,
-          locoPos.y - 6 * zoom,
-          -3.5 + b * 3.5,
+          locoPos.y - 6.5 * zoom,
+          -4 + b * 4,
         );
         ctx.beginPath();
         ctx.ellipse(
           bandPos.x,
           bandPos.y,
-          4.5 * zoom * 0.55 + 0.3 * zoom,
-          4.5 * zoom + 0.3 * zoom,
+          5 * zoom * 0.55 + 0.4 * zoom,
+          5 * zoom + 0.4 * zoom,
           0,
-          0,
+          Math.PI,
           Math.PI * 2,
         );
         ctx.stroke();
       }
 
-      // Exhaust stack with deflector cap
-      const stackPos = isoOffset(locoPos.x, locoPos.y - 12 * zoom, 0);
-      ctx.fillStyle = "#3a3a42";
+      // Industrial exhaust stack with deflector cap
+      const stackPos = isoOffset(locoPos.x, locoPos.y - 13 * zoom, 0);
+      ctx.fillStyle = "#2a3040";
       ctx.beginPath();
-      ctx.moveTo(stackPos.x - 2.5 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 2 * zoom, stackPos.y - 8 * zoom);
-      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y - 8 * zoom);
-      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y);
+      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 9 * zoom);
+      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 9 * zoom);
+      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y);
       ctx.closePath();
       ctx.fill();
       drawIsometricPrism(
         ctx,
         stackPos.x,
-        stackPos.y - 8 * zoom,
+        stackPos.y - 9 * zoom,
+        8,
         7,
-        6,
-        2,
-        { top: "#4a4a52", left: "#3a3a42", right: "#2a2a32" },
+        2.5,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.ellipse(
         stackPos.x,
-        stackPos.y - 10 * zoom,
-        3.5 * zoom,
-        1.5 * zoom,
+        stackPos.y - 11.5 * zoom,
+        4 * zoom,
+        1.8 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.stroke();
 
-      // Dark industrial steam puffs
-      for (let puff = 0; puff < 3; puff++) {
-        const puffAge = (time * 2 + puff * 1.5) % 4;
-        const puffY = stackPos.y - 12 * zoom - puffAge * 4 * zoom;
+      // Dark industrial smoke puffs
+      for (let puff = 0; puff < 4; puff++) {
+        const puffAge = (time * 1.8 + puff * 1.5) % 4.5;
+        const puffY = stackPos.y - 13 * zoom - puffAge * 5 * zoom;
         const puffX =
-          stackPos.x + Math.sin(time * 2 + puff * 1.2) * (2 + puff) * zoom;
-        const puffR = (2.5 + puff * 1.2 + puffAge * 0.6) * zoom;
-        const puffA = Math.max(0, 0.35 - puffAge * 0.09);
-        ctx.fillStyle = `rgba(150, 150, 155, ${puffA})`;
+          stackPos.x + Math.sin(time * 2 + puff * 1.2) * (2.5 + puff) * zoom;
+        const puffR = (3 + puff * 1.5 + puffAge * 0.8) * zoom;
+        const puffA = Math.max(0, 0.4 - puffAge * 0.09);
+        const smokeGrad = ctx.createRadialGradient(
+          puffX,
+          puffY,
+          0,
+          puffX,
+          puffY,
+          puffR,
+        );
+        smokeGrad.addColorStop(0, `rgba(120, 120, 130, ${puffA})`);
+        smokeGrad.addColorStop(0.6, `rgba(100, 100, 110, ${puffA * 0.6})`);
+        smokeGrad.addColorStop(1, `rgba(80, 80, 90, 0)`);
+        ctx.fillStyle = smokeGrad;
         ctx.beginPath();
         ctx.arc(puffX, puffY, puffR, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Side-mounted steam pipes with valve wheels
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1.5 * zoom;
-      const pipeL1 = isoOffset(locoPos.x, locoPos.y - 4 * zoom, -4);
-      const pipeL2 = isoOffset(locoPos.x, locoPos.y - 8 * zoom, -4);
-      ctx.beginPath();
-      ctx.moveTo(pipeL1.x - 6 * zoom, pipeL1.y);
-      ctx.lineTo(pipeL2.x - 6 * zoom, pipeL2.y);
-      ctx.stroke();
-      ctx.strokeStyle = "#7a7a82";
-      ctx.lineWidth = 1 * zoom;
-      const valvePos = isoOffset(locoPos.x, locoPos.y - 6 * zoom, -4);
-      ctx.beginPath();
-      ctx.arc(valvePos.x - 6 * zoom, valvePos.y, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "#5a5a62";
-      ctx.beginPath();
-      ctx.arc(valvePos.x - 6 * zoom, valvePos.y, 0.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(locoPos.x + 5 * zoom, locoPos.y - 3 * zoom);
-      ctx.lineTo(locoPos.x + 5 * zoom, locoPos.y - 9 * zoom);
-      ctx.stroke();
-
-      // Armored headlight housing with bracket
-      const lightPos = isoOffset(locoPos.x, locoPos.y - 7 * zoom, 5.5);
-      // Bracket from loco body
-      ctx.strokeStyle = "#4a4a52";
+      // Side-mounted steam pipes with pressure valves
+      ctx.strokeStyle = "#4a5060";
       ctx.lineWidth = 2 * zoom;
+      const pipeL1 = isoOffset(locoPos.x, locoPos.y - 4 * zoom, -5);
+      const pipeL2 = isoOffset(locoPos.x, locoPos.y - 9 * zoom, -5);
       ctx.beginPath();
-      ctx.moveTo(locoPos.x + 5 * zoom, locoPos.y - 8 * zoom);
+      ctx.moveTo(pipeL1.x - 6.5 * zoom, pipeL1.y);
+      ctx.lineTo(pipeL2.x - 6.5 * zoom, pipeL2.y);
+      ctx.stroke();
+      ctx.strokeStyle = "#6a7080";
+      ctx.lineWidth = 1.2 * zoom;
+      const valvePos = isoOffset(locoPos.x, locoPos.y - 6.5 * zoom, -5);
+      ctx.beginPath();
+      ctx.arc(valvePos.x - 6.5 * zoom, valvePos.y, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#E77500";
+      ctx.beginPath();
+      ctx.arc(valvePos.x - 6.5 * zoom, valvePos.y, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Steam hiss effect
+      const steamAlpha = 0.2 + Math.sin(time * 5) * 0.15;
+      if (steamAlpha > 0.2) {
+        ctx.fillStyle = `rgba(200, 200, 210, ${steamAlpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          valvePos.x - 8.5 * zoom,
+          valvePos.y - 1 * zoom,
+          2 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Armored headlight housing
+      const lightPos = isoOffset(locoPos.x, locoPos.y - 7.5 * zoom, 6);
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(locoPos.x + 6 * zoom, locoPos.y - 8.5 * zoom);
       ctx.lineTo(lightPos.x + 1.5 * zoom, lightPos.y - 0.5 * zoom);
       ctx.stroke();
-      // Hexagonal armored housing
-      ctx.fillStyle = "#4a4a52";
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
-      for (let hi = 0; hi < 6; hi++) {
-        const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
-        const hx = lightPos.x + 1.5 * zoom + Math.cos(ha) * 2.2 * zoom;
-        const hy = lightPos.y - 0.5 * zoom + Math.sin(ha) * 2.2 * zoom;
+      for (let hi = 0; hi < 8; hi++) {
+        const ha = (hi / 8) * Math.PI * 2;
+        const hx = lightPos.x + 1.5 * zoom + Math.cos(ha) * 2.5 * zoom;
+        const hy = lightPos.y - 0.5 * zoom + Math.sin(ha) * 2.5 * zoom;
         if (hi === 0) ctx.moveTo(hx, hy);
         else ctx.lineTo(hx, hy);
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.strokeStyle = "rgba(0,0,0,0.5)";
       ctx.lineWidth = 0.8 * zoom;
       ctx.stroke();
-      // Lens glow
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.5 + Math.sin(time * 3) * 0.2})`;
+      ctx.fillStyle = `rgba(255, 250, 200, ${0.55 + Math.sin(time * 3) * 0.2})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 8 * zoom;
+      ctx.shadowBlur = 10 * zoom;
       ctx.beginPath();
       ctx.arc(
         lightPos.x + 1.5 * zoom,
@@ -31587,282 +32442,255 @@ function renderStationTower(
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // === CARGO/WEAPONS CAR (back, draw last) ===
+      // === WEAPONS/CARGO CAR (back) ===
       drawIsometricPrism(
         ctx,
         cargoPos.x,
         cargoPos.y,
-        12,
-        10,
-        10,
-        { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+        13,
+        11,
+        11,
+        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
         zoom,
       );
 
-      // Rivets on left face
-      ctx.fillStyle = "#8a8a92";
-      for (let row = 0; row < 2; row++) {
-        for (let col = 0; col < 5; col++) {
+      // Heavy rivets on cargo car
+      ctx.fillStyle = "#6a7080";
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 6; col++) {
           const rx =
-            cargoPos.x - 6 * zoom - col * 0.8 * zoom + row * 0.2 * zoom;
+            cargoPos.x - 6.5 * zoom - col * 0.7 * zoom + row * 0.2 * zoom;
           const ry =
-            cargoPos.y - 1.5 * zoom - row * 5 * zoom + col * 0.4 * zoom;
-          ctx.beginPath();
-          ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      // Rivets on right face
-      for (let row = 0; row < 2; row++) {
-        for (let col = 0; col < 4; col++) {
-          const rx = cargoPos.x + 1 * zoom + col * 1.2 * zoom;
-          const ry =
-            cargoPos.y - 1.5 * zoom - row * 5 * zoom - col * 0.6 * zoom;
+            cargoPos.y - 1.5 * zoom - row * 4 * zoom + col * 0.35 * zoom;
           ctx.beginPath();
           ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      // Arrow/gun slits as narrow isometric slots
-      ctx.fillStyle = "#2a2a32";
-      ctx.beginPath();
-      ctx.moveTo(cargoPos.x - 6 * zoom, cargoPos.y - 4 * zoom);
-      ctx.lineTo(cargoPos.x - 5.5 * zoom, cargoPos.y - 4.3 * zoom);
-      ctx.lineTo(cargoPos.x - 5.5 * zoom, cargoPos.y - 7.3 * zoom);
-      ctx.lineTo(cargoPos.x - 6 * zoom, cargoPos.y - 7 * zoom);
-      ctx.closePath();
-      ctx.fill();
+      // Arrow/gun slits with orange interior glow
       for (let s = 0; s < 2; s++) {
+        const slitX = cargoPos.x + (1 + s * 3) * zoom;
+        const slitY = cargoPos.y - (3.5 + s * 1.5) * zoom;
+        ctx.fillStyle = "#0a0e14";
         ctx.beginPath();
-        ctx.moveTo(
-          cargoPos.x + 1 * zoom + s * 3 * zoom,
-          cargoPos.y - 3.5 * zoom - s * 1.5 * zoom,
-        );
-        ctx.lineTo(
-          cargoPos.x + 1.5 * zoom + s * 3 * zoom,
-          cargoPos.y - 3.8 * zoom - s * 1.5 * zoom,
-        );
-        ctx.lineTo(
-          cargoPos.x + 1.5 * zoom + s * 3 * zoom,
-          cargoPos.y - 7.8 * zoom - s * 1.5 * zoom,
-        );
-        ctx.lineTo(
-          cargoPos.x + 1 * zoom + s * 3 * zoom,
-          cargoPos.y - 7.5 * zoom - s * 1.5 * zoom,
-        );
+        ctx.moveTo(slitX, slitY - 4 * zoom);
+        ctx.lineTo(slitX + 1 * zoom, slitY - 4.3 * zoom);
+        ctx.lineTo(slitX + 1 * zoom, slitY - 0.3 * zoom);
+        ctx.lineTo(slitX, slitY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(231, 117, 0, ${0.3 + Math.sin(time * 2 + s) * 0.15})`;
+        ctx.beginPath();
+        ctx.moveTo(slitX + 0.2 * zoom, slitY - 3.7 * zoom);
+        ctx.lineTo(slitX + 0.8 * zoom, slitY - 3.9 * zoom);
+        ctx.lineTo(slitX + 0.8 * zoom, slitY - 0.6 * zoom);
+        ctx.lineTo(slitX + 0.2 * zoom, slitY - 0.3 * zoom);
         ctx.closePath();
         ctx.fill();
       }
 
-      // Shield/emblem as 3D raised medallion
-      const shield = isoOffset(cargoPos.x, cargoPos.y - 5 * zoom, -4);
-      ctx.fillStyle = "#4a4a52";
+      // Shield/emblem on left face (raised Princeton medallion)
+      const shield = isoOffset(cargoPos.x, cargoPos.y - 5.5 * zoom, -4.5);
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
       ctx.ellipse(
-        shield.x - 5 * zoom,
+        shield.x - 5.5 * zoom,
         shield.y,
-        3 * zoom,
-        1.5 * zoom,
+        3.5 * zoom,
+        1.8 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = "#e06000";
-      ctx.shadowColor = "#e06000";
-      ctx.shadowBlur = 4 * zoom;
+      ctx.fillStyle = "#E77500";
+      ctx.shadowColor = "#E77500";
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(shield.x - 5 * zoom, shield.y - 2 * zoom);
-      ctx.lineTo(shield.x - 5 * zoom - 2 * zoom, shield.y);
-      ctx.lineTo(shield.x - 5 * zoom, shield.y + 2 * zoom);
-      ctx.lineTo(shield.x - 5 * zoom + 2 * zoom, shield.y);
+      ctx.moveTo(shield.x - 5.5 * zoom, shield.y - 2.5 * zoom);
+      ctx.lineTo(shield.x - 5.5 * zoom - 2.5 * zoom, shield.y);
+      ctx.lineTo(shield.x - 5.5 * zoom, shield.y + 2.5 * zoom);
+      ctx.lineTo(shield.x - 5.5 * zoom + 2.5 * zoom, shield.y);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Side hatches with handles
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1 * zoom;
+      // Rotating turret on top of cargo car
+      const turretAngle = time * 0.5;
+      drawIsometricPrism(
+        ctx,
+        cargoPos.x,
+        cargoPos.y - 11 * zoom,
+        6,
+        6,
+        5,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
+        zoom,
+      );
+      const turretBarrelEnd = isoOffset(
+        cargoPos.x,
+        cargoPos.y - 13.5 * zoom,
+        4 + Math.sin(turretAngle) * 2,
+      );
+      ctx.strokeStyle = "#2a3040";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cargoPos.x + 2 * zoom, cargoPos.y - 1 * zoom);
-      ctx.lineTo(cargoPos.x + 4 * zoom, cargoPos.y - 2 * zoom);
-      ctx.lineTo(cargoPos.x + 4 * zoom, cargoPos.y - 6 * zoom);
-      ctx.lineTo(cargoPos.x + 2 * zoom, cargoPos.y - 5 * zoom);
-      ctx.closePath();
+      ctx.moveTo(cargoPos.x + 1 * zoom, cargoPos.y - 13.5 * zoom);
+      ctx.lineTo(turretBarrelEnd.x, turretBarrelEnd.y);
       ctx.stroke();
-      ctx.fillStyle = "#7a7a82";
+      ctx.fillStyle = "#1a2030";
       ctx.beginPath();
-      ctx.arc(
-        cargoPos.x + 3.5 * zoom,
-        cargoPos.y - 3.5 * zoom,
-        0.6 * zoom,
+      ctx.arc(turretBarrelEnd.x, turretBarrelEnd.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Turret viewport
+      ctx.fillStyle = `rgba(60, 220, 80, ${0.3 + Math.sin(time * 2) * 0.1})`;
+      ctx.shadowColor = "#40dd50";
+      ctx.shadowBlur = 3 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        cargoPos.x,
+        cargoPos.y - 16 * zoom,
+        1.5 * zoom,
+        0.8 * zoom,
+        0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
+      ctx.shadowBlur = 0;
 
-      // Mounted turret on top
-      drawIsometricPrism(
-        ctx,
-        cargoPos.x,
-        cargoPos.y - 10 * zoom,
-        5,
-        5,
-        4,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
-        zoom,
-      );
-      ctx.strokeStyle = "#3a3a42";
+      // Heavy chains between cars
+      ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 2 * zoom;
-      const turretFront = isoOffset(cargoPos.x, cargoPos.y - 12 * zoom, 4);
+      const chain1 = isoOffset(trainX, trainY + 1 * zoom, 4);
       ctx.beginPath();
-      ctx.moveTo(cargoPos.x + 1 * zoom, cargoPos.y - 12 * zoom);
-      ctx.lineTo(turretFront.x, turretFront.y);
+      ctx.moveTo(chain1.x - 2.5 * zoom, chain1.y);
+      ctx.lineTo(chain1.x + 2.5 * zoom, chain1.y);
       ctx.stroke();
-      ctx.fillStyle = "#2a2a32";
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
-      ctx.arc(turretFront.x, turretFront.y, 1 * zoom, 0, Math.PI * 2);
+      ctx.arc(chain1.x - 2.5 * zoom, chain1.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(chain1.x + 2.5 * zoom, chain1.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      const chain2 = isoOffset(trainX, trainY + 1 * zoom, -4);
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(chain2.x - 2.5 * zoom, chain2.y);
+      ctx.lineTo(chain2.x + 2.5 * zoom, chain2.y);
+      ctx.stroke();
+      ctx.fillStyle = "#3a4050";
+      ctx.beginPath();
+      ctx.arc(chain2.x - 2.5 * zoom, chain2.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(chain2.x + 2.5 * zoom, chain2.y, 1.2 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // === CHAINS/HOOKS between cars ===
-      const chain1 = isoOffset(trainX, trainY + 1 * zoom, 3.5);
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1.5 * zoom;
+      // Front headlight with armored bracket
+      const frontLight = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 8);
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 3 * zoom;
       ctx.beginPath();
-      ctx.moveTo(chain1.x - 2 * zoom, chain1.y);
-      ctx.lineTo(chain1.x + 2 * zoom, chain1.y);
-      ctx.stroke();
-      ctx.fillStyle = "#4a4a52";
-      ctx.beginPath();
-      ctx.arc(chain1.x - 2 * zoom, chain1.y, 1 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(chain1.x + 2 * zoom, chain1.y, 1 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      const chain2 = isoOffset(trainX, trainY + 1 * zoom, -3.5);
-      ctx.beginPath();
-      ctx.moveTo(chain2.x - 2 * zoom, chain2.y);
-      ctx.lineTo(chain2.x + 2 * zoom, chain2.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(chain2.x - 2 * zoom, chain2.y, 1 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(chain2.x + 2 * zoom, chain2.y, 1 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Exhaust grating on locomotive side
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 0.8 * zoom;
-      for (let g = 0; g < 4; g++) {
-        const gy = locoPos.y - 2 * zoom - g * 1.5 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(locoPos.x + 5.5 * zoom, gy);
-        ctx.lineTo(locoPos.x + 6.5 * zoom, gy - 0.5 * zoom);
-        ctx.stroke();
-      }
-
-      // Front headlight with armored mounting bracket
-      const frontLight = isoOffset(cabPos.x, cabPos.y - 6 * zoom, 7);
-      // Bracket arm from cab armor to light housing
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 7 * zoom);
+      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 8 * zoom);
       ctx.lineTo(frontLight.x + 1.5 * zoom, frontLight.y - 0.5 * zoom);
       ctx.stroke();
-      // Octagonal armored housing
-      ctx.fillStyle = "#4a4a52";
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
       for (let hi = 0; hi < 8; hi++) {
         const ha = (hi / 8) * Math.PI * 2;
-        const hx = frontLight.x + 1.5 * zoom + Math.cos(ha) * 2.5 * zoom;
-        const hy = frontLight.y - 0.5 * zoom + Math.sin(ha) * 2.5 * zoom;
+        const hx = frontLight.x + 1.5 * zoom + Math.cos(ha) * 3 * zoom;
+        const hy = frontLight.y - 0.5 * zoom + Math.sin(ha) * 3 * zoom;
         if (hi === 0) ctx.moveTo(hx, hy);
         else ctx.lineTo(hx, hy);
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.strokeStyle = "rgba(0,0,0,0.5)";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Lens glow
       ctx.fillStyle = `rgba(255, 250, 200, ${0.7 + Math.sin(time * 3) * 0.2})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 12 * zoom;
+      ctx.shadowBlur = 14 * zoom;
       ctx.beginPath();
       ctx.arc(
         frontLight.x + 1.5 * zoom,
         frontLight.y - 0.5 * zoom,
-        2 * zoom,
+        2.2 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // === PLOW/RAM at front (attached to chassis with bolts) ===
-      const plowPos = isoOffset(cabPos.x, cabPos.y, 7);
-      // Mounting struts from chassis to plow
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 2 * zoom;
+      // === ARMORED PLOW/RAM at front ===
+      const plowPos = isoOffset(cabPos.x, cabPos.y, 8);
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y + 1 * zoom);
+      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y + 1 * zoom);
       ctx.lineTo(plowPos.x + 2 * zoom, plowPos.y + 2 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 3 * zoom);
+      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 3 * zoom);
       ctx.lineTo(plowPos.x + 2 * zoom, plowPos.y - 2 * zoom);
       ctx.stroke();
-      // Right face
-      ctx.fillStyle = "#4a4a52";
+      const plowGrad = ctx.createLinearGradient(
+        plowPos.x - 4 * zoom,
+        plowPos.y,
+        plowPos.x + 8 * zoom,
+        plowPos.y,
+      );
+      plowGrad.addColorStop(0, "#2a3040");
+      plowGrad.addColorStop(0.5, "#4a5060");
+      plowGrad.addColorStop(1, "#2a3040");
+      ctx.fillStyle = plowGrad;
       ctx.beginPath();
-      ctx.moveTo(plowPos.x + 5 * zoom, plowPos.y - 5 * zoom);
+      ctx.moveTo(plowPos.x + 6 * zoom, plowPos.y - 6 * zoom);
       ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 1 * zoom);
-      ctx.lineTo(plowPos.x, plowPos.y + 5 * zoom);
-      ctx.lineTo(plowPos.x + 4 * zoom, plowPos.y + 3.5 * zoom);
-      ctx.lineTo(plowPos.x + 8 * zoom, plowPos.y - 1 * zoom);
+      ctx.lineTo(plowPos.x, plowPos.y + 5.5 * zoom);
+      ctx.lineTo(plowPos.x + 4.5 * zoom, plowPos.y + 4 * zoom);
+      ctx.lineTo(plowPos.x + 9 * zoom, plowPos.y - 1 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.stroke();
-      // Left face
-      ctx.fillStyle = "#3a3a42";
+      ctx.fillStyle = "#1a2030";
       ctx.beginPath();
-      ctx.moveTo(plowPos.x + 5 * zoom, plowPos.y - 5 * zoom);
+      ctx.moveTo(plowPos.x + 6 * zoom, plowPos.y - 6 * zoom);
       ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 1 * zoom);
-      ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 3 * zoom);
-      ctx.lineTo(plowPos.x, plowPos.y + 5 * zoom);
+      ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 3.5 * zoom);
+      ctx.lineTo(plowPos.x, plowPos.y + 5.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      // Top edge highlight
-      ctx.strokeStyle = "#6a6a72";
+      ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(plowPos.x + 5 * zoom, plowPos.y - 5 * zoom);
+      ctx.moveTo(plowPos.x + 6 * zoom, plowPos.y - 6 * zoom);
       ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 1 * zoom);
       ctx.stroke();
-      // Mounting bolts on plow face
-      ctx.fillStyle = "#7a7a82";
-      for (let bi = 0; bi < 3; bi++) {
+      // Mounting bolts
+      ctx.fillStyle = "#6a7080";
+      for (let bi = 0; bi < 4; bi++) {
         const bx = plowPos.x + (1 + bi * 2) * zoom;
-        const by = plowPos.y - (1 + bi * 1.5) * zoom;
+        const by = plowPos.y - (1.5 + bi * 1.5) * zoom;
         ctx.beginPath();
-        ctx.arc(bx, by, 0.7 * zoom, 0, Math.PI * 2);
+        ctx.arc(bx, by, 0.8 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // === ORANGE STRIPE (3D isometric band on right face) ===
+      // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
-      const stripeH = 3 * zoom;
-      const stL = isoOffset(trainX, stripeY, -12);
-      const stR = isoOffset(trainX, stripeY, 12);
-      ctx.fillStyle = "#e06000";
+      const stripeH = 3.5 * zoom;
+      const stL = isoOffset(trainX, stripeY, -13);
+      const stR = isoOffset(trainX, stripeY, 13);
+      ctx.fillStyle = "#E77500";
+      ctx.shadowColor = "rgba(231, 117, 0, 0.35)";
+      ctx.shadowBlur = 4 * zoom;
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stR.x, stR.y);
@@ -31870,7 +32698,8 @@ function renderStationTower(
       ctx.lineTo(stL.x, stL.y - stripeH);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#ff7020";
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FF8C1A";
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stL.x, stL.y - stripeH);
@@ -31879,82 +32708,95 @@ function renderStationTower(
       ctx.closePath();
       ctx.fill();
     } else if (tower.level === 3) {
-      // ========== LEVEL 3: Fortress War Train ==========
-      const cabPos = isoOffset(trainX, trainY, 8);
+      // ========== LEVEL 3: Gothic Fortress War Train ==========
+      const cabPos = isoOffset(trainX, trainY, 9);
       const locoPos = isoOffset(trainX, trainY, 0);
-      const fortressPos = isoOffset(trainX, trainY, -8);
+      const fortressPos = isoOffset(trainX, trainY, -9);
+      const wheelY = trainY + 4.5 * zoom;
 
       // --- Heavy iron chassis frame ---
-      ctx.fillStyle = "#3a3a42";
+      const chassisL = isoOffset(trainX, trainY + 2 * zoom, 15);
+      const chassisR = isoOffset(trainX, trainY + 2 * zoom, -15);
+      ctx.fillStyle = "#2a2e35";
       ctx.beginPath();
-      const chassisL = isoOffset(trainX, trainY + 2 * zoom, 14);
-      const chassisR = isoOffset(trainX, trainY + 2 * zoom, -14);
       ctx.moveTo(chassisL.x, chassisL.y);
-      ctx.lineTo(chassisL.x, chassisL.y + 2 * zoom);
-      ctx.lineTo(chassisR.x, chassisR.y + 2 * zoom);
+      ctx.lineTo(chassisL.x, chassisL.y + 2.5 * zoom);
+      ctx.lineTo(chassisR.x, chassisR.y + 2.5 * zoom);
       ctx.lineTo(chassisR.x, chassisR.y);
       ctx.closePath();
       ctx.fill();
 
-      // Suspension springs over wheels
-      const wheelY = trainY + 4 * zoom;
-      const springPositions = [12, 4, -4, -12];
+      // Coil spring suspension
+      const springPositions = [13, 4, -4, -13];
       for (const sp of springPositions) {
         const sPos = isoOffset(trainX, wheelY - 5 * zoom, sp);
-        ctx.strokeStyle = "#6a6a72";
+        ctx.strokeStyle = "#5a6070";
         ctx.lineWidth = 1.5 * zoom;
-        ctx.beginPath();
-        for (let si = 0; si < 4; si++) {
-          const sy = sPos.y + si * 1.2 * zoom;
+        for (let si = 0; si < 5; si++) {
+          const sy = sPos.y + si * 1 * zoom;
+          ctx.beginPath();
           ctx.moveTo(sPos.x - 1.5 * zoom, sy);
-          ctx.lineTo(sPos.x + 1.5 * zoom, sy + 0.6 * zoom);
-          ctx.moveTo(sPos.x + 1.5 * zoom, sy + 0.6 * zoom);
-          ctx.lineTo(sPos.x - 1.5 * zoom, sy + 1.2 * zoom);
+          ctx.lineTo(sPos.x + 1.5 * zoom, sy + 0.5 * zoom);
+          ctx.moveTo(sPos.x + 1.5 * zoom, sy + 0.5 * zoom);
+          ctx.lineTo(sPos.x - 1.5 * zoom, sy + 1 * zoom);
+          ctx.stroke();
         }
-        ctx.stroke();
       }
 
-      // Wheels
+      // Heavy drive wheels
       drawWheel(
-        isoOffset(trainX, wheelY, 12).x,
-        isoOffset(trainX, wheelY, 12).y,
-        4.5,
-        "#5a5a62",
-        "#3a3a42",
+        isoOffset(trainX, wheelY, 13).x,
+        isoOffset(trainX, wheelY, 13).y,
+        5,
+        "#4a5060",
+        "#2a2e35",
+        "#5a6070",
       );
       drawWheel(
         isoOffset(trainX, wheelY, 4).x,
         isoOffset(trainX, wheelY, 4).y,
-        4.5,
-        "#5a5a62",
-        "#3a3a42",
+        5,
+        "#4a5060",
+        "#2a2e35",
+        "#5a6070",
       );
       drawWheel(
         isoOffset(trainX, wheelY, -4).x,
         isoOffset(trainX, wheelY, -4).y,
-        4.5,
-        "#5a5a62",
-        "#3a3a42",
+        5,
+        "#4a5060",
+        "#2a2e35",
+        "#5a6070",
       );
       drawWheel(
-        isoOffset(trainX, wheelY, -12).x,
-        isoOffset(trainX, wheelY, -12).y,
-        4.5,
-        "#5a5a62",
-        "#3a3a42",
+        isoOffset(trainX, wheelY, -13).x,
+        isoOffset(trainX, wheelY, -13).y,
+        5,
+        "#4a5060",
+        "#2a2e35",
+        "#5a6070",
       );
 
-      // === CAB (front) ===
-      // Angled front prow/ram plate
-      const prowPos = isoOffset(cabPos.x, cabPos.y, 7);
-      ctx.fillStyle = "#4a4a52";
+      // === CAB: Fortress command car with battlement crown ===
+      // Angled prow/ram
+      const prowPos = isoOffset(cabPos.x, cabPos.y, 8);
+      const prowGrad = ctx.createLinearGradient(
+        prowPos.x - 3 * zoom,
+        prowPos.y,
+        prowPos.x + 3 * zoom,
+        prowPos.y,
+      );
+      prowGrad.addColorStop(0, "#3a4050");
+      prowGrad.addColorStop(0.5, "#5a6070");
+      prowGrad.addColorStop(1, "#2a3040");
+      ctx.fillStyle = prowGrad;
       ctx.beginPath();
-      ctx.moveTo(prowPos.x + 3 * zoom, prowPos.y);
-      ctx.lineTo(prowPos.x, prowPos.y - 10 * zoom);
-      ctx.lineTo(prowPos.x - 3 * zoom, prowPos.y);
+      ctx.moveTo(prowPos.x + 4 * zoom, prowPos.y);
+      ctx.lineTo(prowPos.x, prowPos.y - 12 * zoom);
+      ctx.lineTo(prowPos.x - 4 * zoom, prowPos.y);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#3a3a42";
+      ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 1.5 * zoom;
       ctx.stroke();
 
@@ -31963,383 +32805,349 @@ function renderStationTower(
         ctx,
         cabPos.x,
         cabPos.y,
+        13,
         12,
-        11,
-        16,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        18,
+        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
         zoom,
       );
 
-      // Armor plate rivets on right face
-      ctx.fillStyle = "#7a7a82";
-      for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 2; col++) {
-          const rx = cabPos.x + (3 + col * 3) * zoom;
-          const ry = cabPos.y - (5 + row * 4) * zoom + col * 0.75 * zoom;
+      // Riveted armor plates
+      ctx.fillStyle = "#6a7080";
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 3; col++) {
           ctx.beginPath();
-          ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
+          ctx.arc(
+            cabPos.x + (3 + col * 2.5) * zoom,
+            cabPos.y - (4 + row * 4) * zoom + col * 0.6 * zoom,
+            0.7 * zoom,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
-        }
-      }
-      // Rivets on left face
-      for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 2; col++) {
-          const rx = cabPos.x - (3 + col * 3) * zoom;
-          const ry = cabPos.y - (5 + row * 4) * zoom + col * 0.75 * zoom;
           ctx.beginPath();
-          ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
+          ctx.arc(
+            cabPos.x - (3 + col * 2.5) * zoom,
+            cabPos.y - (4 + row * 4) * zoom + col * 0.6 * zoom,
+            0.7 * zoom,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
       }
 
-      // Arrow slit (iso parallelogram on right face with orange glow)
+      // Fire-glow arrow slit on right face
       const slitCx = cabPos.x + 3 * zoom;
-      const slitCy = cabPos.y - 10 * zoom;
-      ctx.fillStyle = "rgba(255, 120, 20, 0.7)";
-      ctx.shadowColor = "#e06000";
-      ctx.shadowBlur = 4 * zoom;
+      const slitCy = cabPos.y - 11 * zoom;
+      ctx.fillStyle = "rgba(255, 120, 20, 0.8)";
+      ctx.shadowColor = "#ff6600";
+      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(slitCx, slitCy - 2 * zoom);
-      ctx.lineTo(slitCx + 3 * zoom, slitCy - 2 * zoom - 1.5 * zoom);
-      ctx.lineTo(slitCx + 3 * zoom, slitCy + 0.5 * zoom - 1.5 * zoom);
+      ctx.moveTo(slitCx, slitCy - 2.5 * zoom);
+      ctx.lineTo(slitCx + 3.5 * zoom, slitCy - 2.5 * zoom - 1.8 * zoom);
+      ctx.lineTo(slitCx + 3.5 * zoom, slitCy + 0.5 * zoom - 1.8 * zoom);
       ctx.lineTo(slitCx, slitCy + 0.5 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Crenellated battlements: 3 merlons with gaps
-      for (let i = 0; i < 3; i++) {
-        const bPos = isoOffset(cabPos.x, cabPos.y - 16 * zoom, -4 + i * 4);
+      // Crenellated battlements with 3D depth
+      for (let i = 0; i < 4; i++) {
+        const bPos = isoOffset(cabPos.x, cabPos.y - 18 * zoom, -5 + i * 3.3);
         drawIsometricPrism(
           ctx,
           bPos.x,
           bPos.y,
           3,
           3,
-          3,
-          { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+          4,
+          { top: "#5a6070", left: "#4a5060", right: "#3a4050" },
           zoom,
         );
       }
 
-      // Commander's periscope/lookout turret on top
-      const periPos = isoOffset(cabPos.x, cabPos.y - 19 * zoom, 0);
-      ctx.fillStyle = "#5a5a62";
+      // Commander's lookout tower
+      const periPos = isoOffset(cabPos.x, cabPos.y - 22 * zoom, 0);
+      ctx.fillStyle = "#4a5060";
       ctx.beginPath();
       ctx.ellipse(
         periPos.x,
         periPos.y,
-        2.5 * zoom,
-        1.5 * zoom,
+        3 * zoom,
+        1.8 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = "#4a4a52";
+      ctx.fillStyle = "#3a4050";
       ctx.fillRect(
-        periPos.x - 1 * zoom,
-        periPos.y - 4 * zoom,
-        2 * zoom,
-        4 * zoom,
+        periPos.x - 1.2 * zoom,
+        periPos.y - 5 * zoom,
+        2.4 * zoom,
+        5 * zoom,
       );
-      ctx.fillStyle = "#6a6a72";
+      ctx.fillStyle = "#5a6070";
       ctx.beginPath();
       ctx.ellipse(
         periPos.x,
-        periPos.y - 4 * zoom,
-        1.5 * zoom,
-        1 * zoom,
+        periPos.y - 5 * zoom,
+        1.8 * zoom,
+        1.2 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      // Periscope viewport
-      ctx.fillStyle = "#9af";
+      ctx.fillStyle = "#99ccff";
+      ctx.shadowColor = "#99ccff";
+      ctx.shadowBlur = 4 * zoom;
       ctx.beginPath();
       ctx.ellipse(
         periPos.x,
-        periPos.y - 4 * zoom,
-        0.7 * zoom,
+        periPos.y - 5 * zoom,
+        0.8 * zoom,
         0.5 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
+      ctx.shadowBlur = 0;
 
-      // === LOCOMOTIVE (middle) ===
+      // === LOCOMOTIVE (middle) - War engine ===
       drawIsometricPrism(
         ctx,
         locoPos.x,
         locoPos.y,
-        14,
-        12,
-        14,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        15,
+        13,
+        15,
+        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
         zoom,
       );
 
-      // Side-mounted lanterns with brackets from loco body
-      const lanternR = isoOffset(locoPos.x, locoPos.y - 8 * zoom, 6);
-      // Right bracket arm
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(locoPos.x + 5 * zoom, locoPos.y - 8 * zoom);
-      ctx.lineTo(lanternR.x + 1 * zoom, lanternR.y);
-      ctx.stroke();
-      // Hexagonal housing
-      ctx.fillStyle = "#5a5a62";
-      ctx.beginPath();
-      for (let hi = 0; hi < 6; hi++) {
-        const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
-        ctx.lineTo(
-          lanternR.x + 1 * zoom + Math.cos(ha) * 2 * zoom,
-          lanternR.y + Math.sin(ha) * 2 * zoom,
+      // Side-mounted war lanterns on brackets
+      for (const side of [1, -1]) {
+        const lanternPos = isoOffset(locoPos.x, locoPos.y - 9 * zoom, side * 7);
+        ctx.strokeStyle = "#4a5060";
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x + side * 6 * zoom, locoPos.y - 9 * zoom);
+        ctx.lineTo(lanternPos.x + side * 1 * zoom, lanternPos.y);
+        ctx.stroke();
+        ctx.fillStyle = "#4a5060";
+        ctx.beginPath();
+        for (let hi = 0; hi < 6; hi++) {
+          const ha = (hi / 6) * Math.PI * 2;
+          ctx.lineTo(
+            lanternPos.x + side * 1 * zoom + Math.cos(ha) * 2.2 * zoom,
+            lanternPos.y + Math.sin(ha) * 2.2 * zoom,
+          );
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(255, 180, 60, 0.9)";
+        ctx.shadowColor = "#ffa030";
+        ctx.shadowBlur = 8 * zoom;
+        ctx.beginPath();
+        ctx.arc(
+          lanternPos.x + side * 1 * zoom,
+          lanternPos.y,
+          1.6 * zoom,
+          0,
+          Math.PI * 2,
         );
+        ctx.fill();
+        ctx.shadowBlur = 0;
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255, 200, 80, 0.9)";
-      ctx.shadowColor = "#ffa040";
-      ctx.shadowBlur = 6 * zoom;
-      ctx.beginPath();
-      ctx.arc(lanternR.x + 1 * zoom, lanternR.y, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
-      const lanternL = isoOffset(locoPos.x, locoPos.y - 8 * zoom, -6);
-      // Left bracket arm
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(locoPos.x - 5 * zoom, locoPos.y - 8 * zoom);
-      ctx.lineTo(lanternL.x - 1 * zoom, lanternL.y);
-      ctx.stroke();
-      // Hexagonal housing
-      ctx.fillStyle = "#5a5a62";
-      ctx.beginPath();
-      for (let hi = 0; hi < 6; hi++) {
-        const ha = (hi / 6) * Math.PI * 2 - Math.PI / 6;
-        ctx.lineTo(
-          lanternL.x - 1 * zoom + Math.cos(ha) * 2 * zoom,
-          lanternL.y + Math.sin(ha) * 2 * zoom,
-        );
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255, 200, 80, 0.9)";
-      ctx.shadowColor = "#ffa040";
-      ctx.shadowBlur = 6 * zoom;
-      ctx.beginPath();
-      ctx.arc(lanternL.x - 1 * zoom, lanternL.y, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Observation tower with arrow slits
-      const towerPos = isoOffset(locoPos.x, locoPos.y - 14 * zoom, -2);
+      // Siege observation tower with arrow slits
+      const towerPos = isoOffset(locoPos.x, locoPos.y - 15 * zoom, -2);
       drawIsometricPrism(
         ctx,
         towerPos.x,
         towerPos.y,
-        7,
-        7,
-        14,
-        { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+        8,
+        8,
+        16,
+        { top: "#5a6070", left: "#4a5060", right: "#3a4050" },
         zoom,
       );
 
-      // Arrow slit on tower right face
-      ctx.fillStyle = "rgba(255, 120, 20, 0.6)";
-      ctx.shadowColor = "#e06000";
-      ctx.shadowBlur = 3 * zoom;
-      const tSlitR = { x: towerPos.x + 2 * zoom, y: towerPos.y - 7 * zoom };
-      ctx.beginPath();
-      ctx.moveTo(tSlitR.x, tSlitR.y - 2 * zoom);
-      ctx.lineTo(tSlitR.x + 2 * zoom, tSlitR.y - 2.5 * zoom);
-      ctx.lineTo(tSlitR.x + 2 * zoom, tSlitR.y + 0.5 * zoom);
-      ctx.lineTo(tSlitR.x, tSlitR.y + 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      // Arrow slit on tower left face
-      const tSlitL = { x: towerPos.x - 2 * zoom, y: towerPos.y - 7 * zoom };
-      ctx.beginPath();
-      ctx.moveTo(tSlitL.x, tSlitL.y - 2 * zoom);
-      ctx.lineTo(tSlitL.x - 2 * zoom, tSlitL.y - 2.5 * zoom);
-      ctx.lineTo(tSlitL.x - 2 * zoom, tSlitL.y + 0.5 * zoom);
-      ctx.lineTo(tSlitL.x, tSlitL.y + 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
+      // Arrow slits on tower with fire glow
+      for (const side of [1, -1]) {
+        const tSlitPos = {
+          x: towerPos.x + side * 2.5 * zoom,
+          y: towerPos.y - 8 * zoom,
+        };
+        ctx.fillStyle = "rgba(255, 120, 20, 0.65)";
+        ctx.shadowColor = "#ff6600";
+        ctx.shadowBlur = 4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(tSlitPos.x, tSlitPos.y - 2.5 * zoom);
+        ctx.lineTo(tSlitPos.x + side * 2.5 * zoom, tSlitPos.y - 3 * zoom);
+        ctx.lineTo(tSlitPos.x + side * 2.5 * zoom, tSlitPos.y + 0.5 * zoom);
+        ctx.lineTo(tSlitPos.x, tSlitPos.y + 1 * zoom);
+        ctx.closePath();
+        ctx.fill();
+      }
       ctx.shadowBlur = 0;
 
       // Tower battlements
-      for (let i = 0; i < 2; i++) {
-        const tbPos = isoOffset(towerPos.x, towerPos.y - 14 * zoom, -2 + i * 4);
+      for (let i = 0; i < 3; i++) {
+        const tbPos = isoOffset(towerPos.x, towerPos.y - 16 * zoom, -3 + i * 3);
         drawIsometricPrism(
           ctx,
           tbPos.x,
           tbPos.y,
-          3,
-          3,
-          3,
-          { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
+          2.5,
+          2.5,
+          3.5,
+          { top: "#6a7080", left: "#4a5060", right: "#3a4050" },
           zoom,
         );
       }
 
-      // Signal flag on tower top (3D isometric)
-      const flagPole = { x: towerPos.x, y: towerPos.y - 17 * zoom };
-      const fIsoD = 1 * zoom;
-      // Pole with isometric side face
-      ctx.strokeStyle = "#3a3a42";
-      ctx.lineWidth = 1.5 * zoom;
+      // Signal flag on tower (3D isometric, animated)
+      const flagPole = { x: towerPos.x, y: towerPos.y - 19.5 * zoom };
+      ctx.strokeStyle = "#2a3040";
+      ctx.lineWidth = 1.8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(flagPole.x, flagPole.y + 3 * zoom);
-      ctx.lineTo(flagPole.x, flagPole.y - 5 * zoom);
+      ctx.moveTo(flagPole.x, flagPole.y + 3.5 * zoom);
+      ctx.lineTo(flagPole.x, flagPole.y - 6 * zoom);
       ctx.stroke();
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 0.8 * zoom;
+      ctx.fillStyle = "#5a6070";
       ctx.beginPath();
-      ctx.moveTo(
-        flagPole.x + fIsoD * 0.5,
-        flagPole.y + 3 * zoom - fIsoD * 0.25,
-      );
-      ctx.lineTo(
-        flagPole.x + fIsoD * 0.5,
-        flagPole.y - 5 * zoom - fIsoD * 0.25,
-      );
-      ctx.stroke();
-      // Pole finial
-      ctx.fillStyle = "#6a6a72";
-      ctx.beginPath();
-      ctx.arc(flagPole.x, flagPole.y - 5 * zoom, 1 * zoom, 0, Math.PI * 2);
+      ctx.arc(flagPole.x, flagPole.y - 6 * zoom, 1.2 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
-      const flagWave = Math.sin(time * 3) * 0.5;
-      // Flag back face (shadow/depth)
-      ctx.fillStyle = "#a04000";
+      const flagWave = Math.sin(time * 3) * 0.6;
+      ctx.fillStyle = "#c04000";
       ctx.beginPath();
-      ctx.moveTo(flagPole.x + fIsoD, flagPole.y - 4 * zoom - fIsoD * 0.5);
+      ctx.moveTo(flagPole.x + 1 * zoom, flagPole.y - 5 * zoom - 0.5 * zoom);
       ctx.quadraticCurveTo(
-        flagPole.x + 3 * zoom + fIsoD,
-        flagPole.y - 3 * zoom + flagWave * zoom - fIsoD * 0.5,
-        flagPole.x + 5 * zoom + fIsoD,
-        flagPole.y - 2.5 * zoom + flagWave * zoom - fIsoD * 0.5,
+        flagPole.x + 3.5 * zoom + 1 * zoom,
+        flagPole.y - 4 * zoom + flagWave * zoom - 0.5 * zoom,
+        flagPole.x + 6 * zoom + 1 * zoom,
+        flagPole.y - 3.5 * zoom + flagWave * zoom - 0.5 * zoom,
       );
-      ctx.lineTo(flagPole.x + fIsoD, flagPole.y - 1 * zoom - fIsoD * 0.5);
+      ctx.lineTo(flagPole.x + 1 * zoom, flagPole.y - 1.5 * zoom - 0.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Flag front face
-      ctx.fillStyle = "#e06000";
+      ctx.fillStyle = "#E77500";
       ctx.beginPath();
-      ctx.moveTo(flagPole.x, flagPole.y - 4 * zoom);
+      ctx.moveTo(flagPole.x, flagPole.y - 5 * zoom);
       ctx.quadraticCurveTo(
-        flagPole.x + 3 * zoom,
-        flagPole.y - 3 * zoom + flagWave * zoom,
-        flagPole.x + 5 * zoom,
-        flagPole.y - 2.5 * zoom + flagWave * zoom,
+        flagPole.x + 3.5 * zoom,
+        flagPole.y - 4 * zoom + flagWave * zoom,
+        flagPole.x + 6 * zoom,
+        flagPole.y - 3.5 * zoom + flagWave * zoom,
       );
-      ctx.lineTo(flagPole.x, flagPole.y - 1 * zoom);
+      ctx.lineTo(flagPole.x, flagPole.y - 1.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.stroke();
 
-      // Smokestack with cap ring and spark catcher dome
-      const stackPos = isoOffset(locoPos.x, locoPos.y - 14 * zoom, 4);
+      // Heavy smokestack with spark catcher dome
+      const stackPos = isoOffset(locoPos.x, locoPos.y - 15 * zoom, 4.5);
       drawIsometricPrism(
         ctx,
         stackPos.x,
         stackPos.y,
-        5,
-        5,
-        10,
-        { top: "#3a3a42", left: "#2a2a32", right: "#1a1a1a" },
+        5.5,
+        5.5,
+        12,
+        { top: "#2a3040", left: "#1a2030", right: "#101520" },
         zoom,
       );
-      // Cap ring
       drawIsometricPrism(
         ctx,
         stackPos.x,
-        stackPos.y - 10 * zoom,
-        7,
-        7,
-        2,
-        { top: "#4a4a52", left: "#3a3a42", right: "#2a2a32" },
+        stackPos.y - 12 * zoom,
+        7.5,
+        7.5,
+        2.5,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
       // Spark catcher mesh dome
-      ctx.fillStyle = "rgba(90, 90, 98, 0.6)";
+      ctx.fillStyle = "rgba(70, 80, 90, 0.6)";
       ctx.beginPath();
-      ctx.arc(stackPos.x, stackPos.y - 13 * zoom, 3 * zoom, Math.PI, 0);
+      ctx.arc(stackPos.x, stackPos.y - 15.5 * zoom, 3.5 * zoom, Math.PI, 0);
       ctx.fill();
-      ctx.strokeStyle = "#6a6a72";
+      ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 0.7 * zoom;
-      for (let mi = 0; mi < 4; mi++) {
-        const meshAngle = (mi / 4) * Math.PI;
+      for (let mi = 0; mi < 5; mi++) {
+        const meshAngle = (mi / 5) * Math.PI;
         ctx.beginPath();
         ctx.moveTo(
-          stackPos.x - 3 * zoom * Math.cos(meshAngle),
-          stackPos.y - 13 * zoom,
+          stackPos.x - 3.5 * zoom * Math.cos(meshAngle),
+          stackPos.y - 15.5 * zoom,
         );
         ctx.quadraticCurveTo(
           stackPos.x,
-          stackPos.y - 16 * zoom,
-          stackPos.x + 3 * zoom * Math.cos(Math.PI - meshAngle),
-          stackPos.y - 13 * zoom,
+          stackPos.y - 19 * zoom,
+          stackPos.x + 3.5 * zoom * Math.cos(Math.PI - meshAngle),
+          stackPos.y - 15.5 * zoom,
         );
         ctx.stroke();
       }
 
-      // Steam venting
-      const steamAlpha = 0.35 + Math.sin(time * 4) * 0.15;
-      ctx.fillStyle = `rgba(180, 180, 180, ${steamAlpha})`;
+      // Steam venting with embers
+      const steamAlpha = 0.4 + Math.sin(time * 4) * 0.2;
+      ctx.fillStyle = `rgba(160, 160, 170, ${steamAlpha})`;
       ctx.beginPath();
       ctx.arc(
         stackPos.x + Math.sin(time * 3) * 3,
-        stackPos.y - 18 * zoom,
-        6 * zoom,
+        stackPos.y - 20 * zoom,
+        7 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = `rgba(180, 180, 180, ${steamAlpha * 0.6})`;
+      ctx.fillStyle = `rgba(160, 160, 170, ${steamAlpha * 0.5})`;
       ctx.beginPath();
       ctx.arc(
-        stackPos.x + Math.sin(time * 3 + 1) * 4,
-        stackPos.y - 22 * zoom,
-        4 * zoom,
+        stackPos.x + Math.sin(time * 3 + 1) * 4.5,
+        stackPos.y - 25 * zoom,
+        5 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
+      // Embers
+      for (let em = 0; em < 4; em++) {
+        const emAge = (time * 3.5 + em * 1.8) % 3;
+        const emX = stackPos.x + Math.sin(time * 4.5 + em * 2) * 4 * zoom;
+        const emY = stackPos.y - 17 * zoom - emAge * 6 * zoom;
+        const emA = Math.max(0, 0.7 - emAge * 0.25);
+        ctx.fillStyle = `rgba(255, ${120 + em * 25}, 20, ${emA})`;
+        ctx.beginPath();
+        ctx.arc(
+          emX,
+          emY,
+          (0.6 + Math.sin(time * 8 + em) * 0.3) * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
 
-      // Side steam pipe
-      const pipeR = isoOffset(locoPos.x, locoPos.y - 4 * zoom, 7);
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 2 * zoom;
+      // Side steam pipe with vent
+      const pipeR = isoOffset(locoPos.x, locoPos.y - 4 * zoom, 8);
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
       ctx.moveTo(pipeR.x, pipeR.y);
-      ctx.lineTo(pipeR.x + 2 * zoom, pipeR.y - 1 * zoom);
+      ctx.lineTo(pipeR.x + 2.5 * zoom, pipeR.y - 1 * zoom);
       ctx.stroke();
-      const pipeSteam = 0.2 + Math.sin(time * 5 + 1) * 0.15;
-      ctx.fillStyle = `rgba(200, 200, 200, ${pipeSteam})`;
+      const pipeSteam = 0.25 + Math.sin(time * 5 + 1) * 0.15;
+      ctx.fillStyle = `rgba(180, 185, 190, ${pipeSteam})`;
       ctx.beginPath();
       ctx.arc(
-        pipeR.x + 3.5 * zoom,
+        pipeR.x + 4 * zoom,
         pipeR.y - 1.5 * zoom,
-        2 * zoom,
+        2.5 * zoom,
         0,
         Math.PI * 2,
       );
@@ -32350,19 +33158,19 @@ function renderStationTower(
         ctx,
         fortressPos.x,
         fortressPos.y,
-        14,
-        12,
-        12,
-        { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+        15,
+        13,
+        13,
+        { top: "#5a6070", left: "#4a5060", right: "#3a4050" },
         zoom,
       );
 
-      // Heavier battlements: 4 merlons
-      for (let i = 0; i < 4; i++) {
+      // Heavier battlements: 5 merlons
+      for (let i = 0; i < 5; i++) {
         const bPos = isoOffset(
           fortressPos.x,
-          fortressPos.y - 12 * zoom,
-          -5 + i * 3.3,
+          fortressPos.y - 13 * zoom,
+          -6 + i * 3,
         );
         drawIsometricPrism(
           ctx,
@@ -32370,261 +33178,238 @@ function renderStationTower(
           bPos.y,
           2.5,
           2.5,
-          4,
-          { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
+          4.5,
+          { top: "#6a7080", left: "#4a5060", right: "#3a4050" },
           zoom,
         );
       }
 
       // Portcullis gate (isometric grid on right face)
       const portX = fortressPos.x + 2 * zoom;
-      const portY = fortressPos.y - 3 * zoom;
-      ctx.fillStyle = "#2a2a32";
+      const portY = fortressPos.y - 3.5 * zoom;
+      ctx.fillStyle = "#1a2030";
       ctx.beginPath();
-      ctx.moveTo(portX, portY - 6 * zoom);
-      ctx.lineTo(portX + 4 * zoom, portY - 6 * zoom - 2 * zoom);
-      ctx.lineTo(portX + 4 * zoom, portY - 2 * zoom);
+      ctx.moveTo(portX, portY - 7 * zoom);
+      ctx.lineTo(portX + 5 * zoom, portY - 7 * zoom - 2.5 * zoom);
+      ctx.lineTo(portX + 5 * zoom, portY - 2.5 * zoom);
       ctx.lineTo(portX, portY);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let gi = 0; gi < 4; gi++) {
-        const gy = portY - gi * 1.5 * zoom;
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 0.8 * zoom;
+      for (let gi = 0; gi < 5; gi++) {
+        const gy = portY - gi * 1.4 * zoom;
         ctx.beginPath();
-        ctx.moveTo(portX, gy);
-        ctx.lineTo(portX + 4 * zoom, gy - 2 * zoom);
+        ctx.moveTo(portX + 0.3 * zoom, gy);
+        ctx.lineTo(portX + 4.7 * zoom, gy - 2.3 * zoom);
         ctx.stroke();
       }
-      for (let gi = 0; gi < 3; gi++) {
-        const gx = portX + (gi + 1) * 1.2 * zoom;
+      for (let gi = 0; gi < 4; gi++) {
+        const gx = portX + (gi + 1) * 1.1 * zoom;
         ctx.beginPath();
-        ctx.moveTo(gx, portY - 6 * zoom - (gi + 1) * 0.6 * zoom);
-        ctx.lineTo(gx, portY - (gi + 1) * 0.6 * zoom);
+        ctx.moveTo(gx, portY - 7 * zoom - (gi + 1) * 0.55 * zoom);
+        ctx.lineTo(gx, portY - (gi + 1) * 0.55 * zoom);
         ctx.stroke();
       }
 
-      // Rose / stained glass window with petal pattern
-      const roseGlow = 0.6 + Math.sin(time * 2) * 0.25;
-      const rosePos = isoOffset(fortressPos.x, fortressPos.y - 7 * zoom, -5);
-      ctx.fillStyle = "#4a4a52";
+      // Rose window with stained glass effect (fiery orange)
+      const roseGlow = 0.65 + Math.sin(time * 2) * 0.25;
+      const rosePos = isoOffset(
+        fortressPos.x,
+        fortressPos.y - 7.5 * zoom,
+        -5.5,
+      );
+      ctx.fillStyle = "#3a4050";
+      ctx.beginPath();
+      ctx.arc(rosePos.x, rosePos.y, 4.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = `rgba(255, 108, 0, ${roseGlow})`;
+      ctx.shadowColor = "#ff6600";
+      ctx.shadowBlur = 12 * zoom;
       ctx.beginPath();
       ctx.arc(rosePos.x, rosePos.y, 4 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = `rgba(255, 108, 0, ${roseGlow})`;
-      ctx.shadowColor = "#e06000";
-      ctx.shadowBlur = 10 * zoom;
-      ctx.beginPath();
-      ctx.arc(rosePos.x, rosePos.y, 3.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
       ctx.shadowBlur = 0;
-      // 6 petal arcs
-      ctx.strokeStyle = "rgba(180, 60, 0, 0.6)";
+      ctx.strokeStyle = "rgba(180, 60, 0, 0.5)";
       ctx.lineWidth = 0.8 * zoom;
-      for (let pi = 0; pi < 6; pi++) {
-        const pAngle = (pi / 6) * Math.PI * 2;
-        const px = rosePos.x + Math.cos(pAngle) * 1.5 * zoom;
-        const py = rosePos.y + Math.sin(pAngle) * 1.5 * zoom;
+      for (let pi = 0; pi < 8; pi++) {
+        const pAngle = (pi / 8) * Math.PI * 2;
+        const px = rosePos.x + Math.cos(pAngle) * 1.8 * zoom;
+        const py = rosePos.y + Math.sin(pAngle) * 1.8 * zoom;
         ctx.beginPath();
         ctx.arc(px, py, 1.5 * zoom, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.fillStyle = "#fff4e0";
       ctx.beginPath();
-      ctx.arc(rosePos.x, rosePos.y, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.arc(rosePos.x, rosePos.y, 0.9 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Banner pole with flag (3D isometric)
+      // War banner on fortress car (3D isometric)
       const bannerPole = isoOffset(
         fortressPos.x,
-        fortressPos.y - 12 * zoom,
-        -6,
+        fortressPos.y - 13 * zoom,
+        -7,
       );
-      const bpIsoD = 1 * zoom;
-      // Pole with isometric depth face
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 1.8 * zoom;
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 2 * zoom;
       ctx.beginPath();
       ctx.moveTo(bannerPole.x, bannerPole.y);
-      ctx.lineTo(bannerPole.x, bannerPole.y - 9 * zoom);
+      ctx.lineTo(bannerPole.x, bannerPole.y - 10 * zoom);
       ctx.stroke();
-      ctx.strokeStyle = "#6a6a72";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bannerPole.x + bpIsoD * 0.5, bannerPole.y - bpIsoD * 0.25);
-      ctx.lineTo(
-        bannerPole.x + bpIsoD * 0.5,
-        bannerPole.y - 9 * zoom - bpIsoD * 0.25,
-      );
-      ctx.stroke();
-      // Pole finial
-      ctx.fillStyle = "#7a7a82";
+      ctx.fillStyle = "#6a7080";
       ctx.beginPath();
       ctx.arc(
         bannerPole.x,
-        bannerPole.y - 9 * zoom,
-        1.2 * zoom,
+        bannerPole.y - 10 * zoom,
+        1.3 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
-      const bFlagWave = Math.sin(time * 2.5 + 0.5) * 0.5;
-      // Flag back face (depth)
-      ctx.fillStyle = "#a04000";
+      const bFlagWave = Math.sin(time * 2.5 + 0.5) * 0.6;
+      ctx.fillStyle = "#c04000";
       ctx.beginPath();
-      ctx.moveTo(bannerPole.x - bpIsoD, bannerPole.y - 8 * zoom + bpIsoD * 0.5);
+      ctx.moveTo(bannerPole.x - 1 * zoom, bannerPole.y - 9 * zoom + 0.5 * zoom);
       ctx.quadraticCurveTo(
-        bannerPole.x - 3 * zoom - bpIsoD,
-        bannerPole.y - 7 * zoom + bFlagWave * zoom + bpIsoD * 0.5,
-        bannerPole.x - 5 * zoom - bpIsoD,
-        bannerPole.y - 6 * zoom + bFlagWave * zoom + bpIsoD * 0.5,
+        bannerPole.x - 4 * zoom - 1 * zoom,
+        bannerPole.y - 8 * zoom + bFlagWave * zoom + 0.5 * zoom,
+        bannerPole.x - 6 * zoom - 1 * zoom,
+        bannerPole.y - 7 * zoom + bFlagWave * zoom + 0.5 * zoom,
       );
-      ctx.lineTo(bannerPole.x - bpIsoD, bannerPole.y - 5 * zoom + bpIsoD * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Flag front face
-      ctx.fillStyle = "#e06000";
-      ctx.beginPath();
-      ctx.moveTo(bannerPole.x, bannerPole.y - 8 * zoom);
-      ctx.quadraticCurveTo(
-        bannerPole.x - 3 * zoom,
-        bannerPole.y - 7 * zoom + bFlagWave * zoom,
-        bannerPole.x - 5 * zoom,
-        bannerPole.y - 6 * zoom + bFlagWave * zoom,
-      );
-      ctx.lineTo(bannerPole.x, bannerPole.y - 5 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.stroke();
-      // Cloth fold highlight
-      ctx.strokeStyle = "rgba(255,200,100,0.2)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(bannerPole.x - 1.5 * zoom, bannerPole.y - 7.5 * zoom);
       ctx.lineTo(
-        bannerPole.x - 2.5 * zoom,
-        bannerPole.y - 6 * zoom + bFlagWave * zoom * 0.5,
+        bannerPole.x - 1 * zoom,
+        bannerPole.y - 5.5 * zoom + 0.5 * zoom,
       );
-      ctx.stroke();
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#E77500";
+      ctx.beginPath();
+      ctx.moveTo(bannerPole.x, bannerPole.y - 9 * zoom);
+      ctx.quadraticCurveTo(
+        bannerPole.x - 4 * zoom,
+        bannerPole.y - 8 * zoom + bFlagWave * zoom,
+        bannerPole.x - 6 * zoom,
+        bannerPole.y - 7 * zoom + bFlagWave * zoom,
+      );
+      ctx.lineTo(bannerPole.x, bannerPole.y - 5.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
 
-      // Murder holes on floor overhang
-      for (let mhi = 0; mhi < 3; mhi++) {
+      // Murder holes
+      for (let mhi = 0; mhi < 4; mhi++) {
         const mhPos = isoOffset(
           fortressPos.x,
           fortressPos.y + 1 * zoom,
-          -3 + mhi * 3,
+          -4 + mhi * 2.5,
         );
-        ctx.fillStyle = "#1a1a1a";
+        ctx.fillStyle = "#0a0e14";
         ctx.beginPath();
-        ctx.arc(mhPos.x, mhPos.y, 0.8 * zoom, 0, Math.PI * 2);
+        ctx.arc(mhPos.x, mhPos.y, 0.9 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Chains between cars
-      ctx.strokeStyle = "#5a5a62";
-      ctx.lineWidth = 1.5 * zoom;
-      const chain1a = isoOffset(trainX, trainY - 2 * zoom, 4.5);
-      const chain1b = isoOffset(trainX, trainY - 2 * zoom, 3.5);
-      ctx.beginPath();
-      ctx.moveTo(chain1a.x, chain1a.y);
-      ctx.quadraticCurveTo(
-        (chain1a.x + chain1b.x) / 2,
-        (chain1a.y + chain1b.y) / 2 + 2 * zoom,
-        chain1b.x,
-        chain1b.y,
-      );
-      ctx.stroke();
-      const chain2a = isoOffset(trainX, trainY - 2 * zoom, -3.5);
-      const chain2b = isoOffset(trainX, trainY - 2 * zoom, -4.5);
-      ctx.beginPath();
-      ctx.moveTo(chain2a.x, chain2a.y);
-      ctx.quadraticCurveTo(
-        (chain2a.x + chain2b.x) / 2,
-        (chain2a.y + chain2b.y) / 2 + 2 * zoom,
-        chain2b.x,
-        chain2b.y,
-      );
-      ctx.stroke();
+      // Heavy chains between cars
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 2 * zoom;
+      for (const cOff of [5, -5]) {
+        const ca = isoOffset(trainX, trainY - 2 * zoom, cOff);
+        const cb = isoOffset(
+          trainX,
+          trainY - 2 * zoom,
+          cOff > 0 ? cOff - 1 : cOff + 1,
+        );
+        ctx.beginPath();
+        ctx.moveTo(ca.x, ca.y);
+        ctx.quadraticCurveTo(
+          (ca.x + cb.x) / 2,
+          (ca.y + cb.y) / 2 + 2.5 * zoom,
+          cb.x,
+          cb.y,
+        );
+        ctx.stroke();
+      }
 
-      // Front headlight with fortress-style bracket
-      const headlightPos = isoOffset(cabPos.x, cabPos.y - 8 * zoom, 8);
-      // Heavy bracket arm from cab to light
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 2.5 * zoom;
+      // Front headlight with fortress bracket
+      const headlightPos = isoOffset(cabPos.x, cabPos.y - 9 * zoom, 9);
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 3 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 9 * zoom);
+      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 10 * zoom);
       ctx.lineTo(headlightPos.x + 1 * zoom, headlightPos.y);
       ctx.stroke();
-      // Octagonal iron housing
-      ctx.fillStyle = "#4a4a52";
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
       for (let hi = 0; hi < 8; hi++) {
         const ha = (hi / 8) * Math.PI * 2;
-        const hx = headlightPos.x + 1 * zoom + Math.cos(ha) * 2.8 * zoom;
-        const hy = headlightPos.y + Math.sin(ha) * 2.8 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (hi === 0)
+          ctx.moveTo(
+            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
+            headlightPos.y + Math.sin(ha) * 3 * zoom,
+          );
+        else
+          ctx.lineTo(
+            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
+            headlightPos.y + Math.sin(ha) * 3 * zoom,
+          );
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.45)";
+      ctx.strokeStyle = "rgba(0,0,0,0.5)";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Lens glow
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.7 + Math.sin(time * 3) * 0.2})`;
+      ctx.fillStyle = `rgba(255, 250, 200, ${0.75 + Math.sin(time * 3) * 0.2})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 12 * zoom;
+      ctx.shadowBlur = 14 * zoom;
       ctx.beginPath();
       ctx.arc(
         headlightPos.x + 1 * zoom,
         headlightPos.y,
-        2 * zoom,
+        2.2 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Battering ram at front (bolted to chassis)
-      const ramPos = isoOffset(cabPos.x, cabPos.y, 7);
-      // Mounting brackets from chassis
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 2 * zoom;
+      // Battering ram at front
+      const ramPos = isoOffset(cabPos.x, cabPos.y, 8);
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y);
+      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y);
       ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y - 1 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 4 * zoom);
-      ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y - 3 * zoom);
+      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 5 * zoom);
+      ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y - 3.5 * zoom);
       ctx.stroke();
-      // Ram head (hexagonal for 3D look)
-      ctx.fillStyle = "#3a3a42";
+      ctx.fillStyle = "#2a3040";
       ctx.beginPath();
-      for (let hi = 0; hi < 6; hi++) {
-        const ha = (hi / 6) * Math.PI * 2;
-        const hx = ramPos.x + 4.5 * zoom + Math.cos(ha) * 2.5 * zoom;
-        const hy = ramPos.y - 2 * zoom + Math.sin(ha) * 2.5 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+      for (let hi = 0; hi < 8; hi++) {
+        const ha = (hi / 8) * Math.PI * 2;
+        if (hi === 0)
+          ctx.moveTo(
+            ramPos.x + 5 * zoom + Math.cos(ha) * 3 * zoom,
+            ramPos.y - 2 * zoom + Math.sin(ha) * 3 * zoom,
+          );
+        else
+          ctx.lineTo(
+            ramPos.x + 5 * zoom + Math.cos(ha) * 3 * zoom,
+            ramPos.y - 2 * zoom + Math.sin(ha) * 3 * zoom,
+          );
       }
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Ram spike
-      ctx.fillStyle = "#6a6a72";
+      ctx.fillStyle = "#5a6070";
       ctx.beginPath();
       ctx.arc(
-        ramPos.x + 4.5 * zoom,
+        ramPos.x + 5 * zoom,
         ramPos.y - 2 * zoom,
-        1.5 * zoom,
+        1.8 * zoom,
         0,
         Math.PI * 2,
       );
@@ -32632,12 +33417,14 @@ function renderStationTower(
       ctx.strokeStyle = "rgba(0,0,0,0.3)";
       ctx.stroke();
 
-      // Orange stripe (3D isometric band)
+      // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
-      const stripeH = 3.5 * zoom;
-      const stL = isoOffset(trainX, stripeY, -14);
-      const stR = isoOffset(trainX, stripeY, 14);
-      ctx.fillStyle = "#e06000";
+      const stripeH = 4 * zoom;
+      const stL = isoOffset(trainX, stripeY, -15);
+      const stR = isoOffset(trainX, stripeY, 15);
+      ctx.fillStyle = "#E77500";
+      ctx.shadowColor = "rgba(231, 117, 0, 0.3)";
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stR.x, stR.y);
@@ -32645,7 +33432,8 @@ function renderStationTower(
       ctx.lineTo(stL.x, stL.y - stripeH);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#ff7020";
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FF8C1A";
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stL.x, stL.y - stripeH);
@@ -32654,85 +33442,57 @@ function renderStationTower(
       ctx.closePath();
       ctx.fill();
     } else if (tower.level === 4 && tower.upgrade === "A") {
-      // ========== LEVEL 4A: Royal Marble Train ==========
-      // Dark outline glow for visibility against gold building
+      // ========== LEVEL 4A: Royal Marble Palace Train ==========
       ctx.shadowColor = "rgba(0,0,0,0.6)";
-      ctx.shadowBlur = 5 * zoom;
+      ctx.shadowBlur = 6 * zoom;
 
-      const cabPos = isoOffset(trainX, trainY, 7);
+      const cabPos = isoOffset(trainX, trainY, 8);
       const locoPos = isoOffset(trainX, trainY, 0);
-      const passengerPos = isoOffset(trainX, trainY, -7);
+      const passengerPos = isoOffset(trainX, trainY, -8);
+      const wheelY = trainY + 4.5 * zoom;
 
       // --- Ornate gold-trimmed chassis ---
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
-      const chL4a = isoOffset(trainX, trainY + 2 * zoom, 12);
-      const chR4a = isoOffset(trainX, trainY + 2 * zoom, -12);
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
+      const chL4a = isoOffset(trainX, trainY + 2 * zoom, 13);
+      const chR4a = isoOffset(trainX, trainY + 2 * zoom, -13);
       ctx.beginPath();
       ctx.moveTo(chL4a.x, chL4a.y);
       ctx.lineTo(chR4a.x, chR4a.y);
       ctx.stroke();
       ctx.lineWidth = 1 * zoom;
-      for (let sci = 0; sci < 3; sci++) {
-        const scPos = isoOffset(trainX, trainY + 2.5 * zoom, -6 + sci * 6);
+      for (let sci = 0; sci < 4; sci++) {
+        const scPos = isoOffset(trainX, trainY + 2.5 * zoom, -7 + sci * 5);
         ctx.beginPath();
         ctx.arc(scPos.x, scPos.y + 1 * zoom, 1.5 * zoom, 0, Math.PI);
         ctx.stroke();
       }
 
-      // Gold wheels
-      const wheelY = trainY + 4 * zoom;
-      const wPositions = [10, 4, -3, -10];
+      // Gold wheels with ornate spokes
+      const wPositions = [11, 4, -4, -11];
       for (const wp of wPositions) {
         const wPos = isoOffset(trainX, wheelY, wp);
-        ctx.fillStyle = "#c9a227";
-        ctx.strokeStyle = "#b8860b";
-        ctx.lineWidth = 2 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(wPos.x, wPos.y, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.strokeStyle = "#daa520";
-        ctx.lineWidth = 1 * zoom;
-        for (let si = 0; si < 6; si++) {
-          const angle = (si / 6) * Math.PI * 2 + time * 2;
-          ctx.beginPath();
-          ctx.moveTo(wPos.x, wPos.y);
-          ctx.lineTo(
-            wPos.x + Math.cos(angle) * 3.2 * zoom,
-            wPos.y + Math.sin(angle) * 1.6 * zoom,
-          );
-          ctx.stroke();
-        }
-        ctx.fillStyle = "#b8860b";
-        ctx.beginPath();
-        ctx.ellipse(wPos.x, wPos.y, 1.2 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
-        ctx.fill();
+        drawWheel(wPos.x, wPos.y, 4.5, "#C9A227", "#B8860B", "#E8C847");
       }
 
-      // === CAB (front) ===
-      ctx.shadowBlur = 6 * zoom;
+      // === CAB (front) - Marble palace with dome ===
+      ctx.shadowBlur = 7 * zoom;
       drawIsometricPrism(
         ctx,
         cabPos.x,
         cabPos.y,
-        10,
-        10,
-        12,
-        { top: "#ffffff", left: "#f0ece4", right: "#e0d8cc" },
+        11,
+        11,
+        14,
+        { top: "#FAFAF5", left: "#F0ECE4", right: "#E0DCD0" },
         zoom,
       );
 
-      // Gold trim lines on cab edges
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.5 * zoom;
-      const cabW4a = 10 * zoom * 0.5;
-      const cabD4a = 10 * zoom * 0.25;
-      const cabH4a = 12 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x, cabPos.y + cabD4a);
-      ctx.lineTo(cabPos.x, cabPos.y + cabD4a - cabH4a);
-      ctx.stroke();
+      // Gold trim on all cab edges
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.8 * zoom;
+      const cabW4a = 11 * zoom * 0.5;
+      const cabH4a = 14 * zoom;
       ctx.beginPath();
       ctx.moveTo(cabPos.x + cabW4a, cabPos.y);
       ctx.lineTo(cabPos.x + cabW4a, cabPos.y - cabH4a);
@@ -32742,332 +33502,344 @@ function renderStationTower(
       ctx.lineTo(cabPos.x - cabW4a, cabPos.y - cabH4a);
       ctx.stroke();
 
-      // Ornate dome roof
-      ctx.fillStyle = "#e8e4dc";
+      // Ornate dome roof with gold filigree
+      const domeGrad = ctx.createRadialGradient(
+        cabPos.x - 2 * zoom,
+        cabPos.y - 16 * zoom,
+        0,
+        cabPos.x,
+        cabPos.y - 14 * zoom,
+        6.5 * zoom,
+      );
+      domeGrad.addColorStop(0, "#F5F0E8");
+      domeGrad.addColorStop(0.5, "#E8E4DC");
+      domeGrad.addColorStop(1, "#D8D4CC");
+      ctx.fillStyle = domeGrad;
       ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 12 * zoom, 5.5 * zoom, Math.PI, 0);
+      ctx.arc(cabPos.x, cabPos.y - 14 * zoom, 6.5 * zoom, Math.PI, 0);
       ctx.fill();
-      // Gold rim at dome base
-      ctx.strokeStyle = "#c9a227";
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x - 5.5 * zoom, cabPos.y - 12 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 12 * zoom);
+      ctx.moveTo(cabPos.x - 6.5 * zoom, cabPos.y - 14 * zoom);
+      ctx.lineTo(cabPos.x + 6.5 * zoom, cabPos.y - 14 * zoom);
       ctx.stroke();
-      // Dome arc outline
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 12 * zoom, 5.5 * zoom, Math.PI, 0);
+      ctx.arc(cabPos.x, cabPos.y - 14 * zoom, 6.5 * zoom, Math.PI, 0);
       ctx.stroke();
+      // Cross-hatch gold filigree on dome
+      ctx.strokeStyle = "rgba(201, 162, 39, 0.45)";
+      ctx.lineWidth = 0.7 * zoom;
+      for (let fi = 0; fi < 4; fi++) {
+        const a1 = Math.PI + (fi + 1) * (Math.PI / 5);
+        const a2 = Math.PI * 2 - (fi + 1) * (Math.PI / 5);
+        ctx.beginPath();
+        ctx.moveTo(
+          cabPos.x + Math.cos(a1) * 6 * zoom,
+          cabPos.y - 14 * zoom + Math.sin(a1) * 6 * zoom,
+        );
+        ctx.lineTo(
+          cabPos.x + Math.cos(a2) * 6 * zoom,
+          cabPos.y - 14 * zoom + Math.sin(a2) * 6 * zoom,
+        );
+        ctx.stroke();
+      }
 
-      // Decorative finial: pointed spire with gold ball
-      ctx.strokeStyle = "#c9a227";
+      // Pointed finial spire with gold ball
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x, cabPos.y - 17.5 * zoom);
-      ctx.lineTo(cabPos.x, cabPos.y - 21 * zoom);
+      ctx.moveTo(cabPos.x, cabPos.y - 20 * zoom);
+      ctx.lineTo(cabPos.x, cabPos.y - 24 * zoom);
       ctx.stroke();
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 5 * zoom;
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 21.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.arc(cabPos.x, cabPos.y - 24.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Arched window on right face
-      const cabGlow = 0.5 + Math.sin(time * 2) * 0.15;
-      const cabWinR = { x: cabPos.x + 2.5 * zoom, y: cabPos.y - 7 * zoom };
-      ctx.fillStyle = "#c0a060";
-      ctx.beginPath();
-      ctx.arc(cabWinR.x, cabWinR.y - 1 * zoom, 2.5 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(
-        cabWinR.x - 2.5 * zoom,
-        cabWinR.y - 1 * zoom,
-        5 * zoom,
-        3 * zoom,
-      );
-      ctx.fillStyle = `rgba(255, 250, 230, ${cabGlow})`;
-      ctx.beginPath();
-      ctx.arc(cabWinR.x, cabWinR.y - 1 * zoom, 2 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(
-        cabWinR.x - 2 * zoom,
-        cabWinR.y - 1 * zoom,
-        4 * zoom,
-        2.5 * zoom,
-      );
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.arc(cabWinR.x, cabWinR.y - 1 * zoom, 2.5 * zoom, Math.PI, 0);
-      ctx.stroke();
-
-      // Arched window on left face
-      const cabWinL = { x: cabPos.x - 2.5 * zoom, y: cabPos.y - 7 * zoom };
-      ctx.fillStyle = "#c0a060";
-      ctx.beginPath();
-      ctx.arc(cabWinL.x, cabWinL.y - 1 * zoom, 2.5 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(
-        cabWinL.x - 2.5 * zoom,
-        cabWinL.y - 1 * zoom,
-        5 * zoom,
-        3 * zoom,
-      );
-      ctx.fillStyle = `rgba(255, 250, 230, ${cabGlow})`;
-      ctx.beginPath();
-      ctx.arc(cabWinL.x, cabWinL.y - 1 * zoom, 2 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.fillRect(
-        cabWinL.x - 2 * zoom,
-        cabWinL.y - 1 * zoom,
-        4 * zoom,
-        2.5 * zoom,
-      );
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.arc(cabWinL.x, cabWinL.y - 1 * zoom, 2.5 * zoom, Math.PI, 0);
-      ctx.stroke();
-
-      // Balcony railing at window
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let bi = 0; bi < 3; bi++) {
-        const bx = cabWinR.x - 2 * zoom + bi * 2 * zoom;
+      // Arched windows with warm stained glass glow
+      const cabGlow = 0.55 + Math.sin(time * 2) * 0.18;
+      for (const side of [1, -1]) {
+        const winX = cabPos.x + side * 3 * zoom;
+        const winY = cabPos.y - 7.5 * zoom;
+        ctx.fillStyle = "#C0A060";
         ctx.beginPath();
-        ctx.moveTo(bx, cabWinR.y + 2 * zoom);
-        ctx.lineTo(bx, cabWinR.y + 3.5 * zoom);
+        ctx.arc(winX, winY - 1.5 * zoom, 2.8 * zoom, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(
+          winX - 2.8 * zoom,
+          winY - 1.5 * zoom,
+          5.6 * zoom,
+          3.5 * zoom,
+        );
+        ctx.fillStyle = `rgba(255, 250, 230, ${cabGlow})`;
+        ctx.shadowColor = "#fff8e0";
+        ctx.shadowBlur = 8 * zoom;
+        ctx.beginPath();
+        ctx.arc(winX, winY - 1.5 * zoom, 2.2 * zoom, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(
+          winX - 2.2 * zoom,
+          winY - 1.5 * zoom,
+          4.4 * zoom,
+          3 * zoom,
+        );
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.arc(winX, winY - 1.5 * zoom, 2.8 * zoom, Math.PI, 0);
+        ctx.stroke();
+        // Window mullion cross
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(winX, winY - 3.5 * zoom);
+        ctx.lineTo(winX, winY + 1.5 * zoom);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(winX - 2.2 * zoom, winY - 0.5 * zoom);
+        ctx.lineTo(winX + 2.2 * zoom, winY - 0.5 * zoom);
         ctx.stroke();
       }
-      ctx.beginPath();
-      ctx.moveTo(cabWinR.x - 2 * zoom, cabWinR.y + 2 * zoom);
-      ctx.lineTo(cabWinR.x + 2 * zoom, cabWinR.y + 2 * zoom);
-      ctx.stroke();
 
-      // Decorative scrollwork near top
-      ctx.strokeStyle = "#c9a227";
+      // Balcony railing with balusters
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 0.8 * zoom;
+      const balWinR = { x: cabPos.x + 3 * zoom, y: cabPos.y - 4 * zoom };
+      for (let bi = 0; bi < 4; bi++) {
+        const bx = balWinR.x - 2.5 * zoom + bi * 1.7 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(bx, balWinR.y + 0.5 * zoom);
+        ctx.lineTo(bx, balWinR.y + 2.5 * zoom);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 1 * zoom, cabPos.y - 11 * zoom);
-      ctx.quadraticCurveTo(
-        cabPos.x + 3 * zoom,
-        cabPos.y - 12 * zoom,
-        cabPos.x + 4.5 * zoom,
-        cabPos.y - 11 * zoom,
-      );
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x - 1 * zoom, cabPos.y - 11 * zoom);
-      ctx.quadraticCurveTo(
-        cabPos.x - 3 * zoom,
-        cabPos.y - 12 * zoom,
-        cabPos.x - 4.5 * zoom,
-        cabPos.y - 11 * zoom,
-      );
+      ctx.moveTo(balWinR.x - 2.5 * zoom, balWinR.y + 0.5 * zoom);
+      ctx.lineTo(balWinR.x + 2.5 * zoom, balWinR.y + 0.5 * zoom);
       ctx.stroke();
 
-      // === LOCOMOTIVE (middle) ===
+      // Decorative scrollwork cornices
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 0.8 * zoom;
+      for (const side of [1, -1]) {
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 12.5 * zoom);
+        ctx.quadraticCurveTo(
+          cabPos.x + side * 3.5 * zoom,
+          cabPos.y - 13.5 * zoom,
+          cabPos.x + side * 5 * zoom,
+          cabPos.y - 12.5 * zoom,
+        );
+        ctx.stroke();
+      }
+
+      // === LOCOMOTIVE (middle) - Marble and gold ===
       drawIsometricPrism(
         ctx,
         locoPos.x,
         locoPos.y,
-        12,
-        10,
-        12,
-        { top: "#f8f4ec", left: "#e8e4dc", right: "#d8d4cc" },
+        13,
+        11,
+        13,
+        { top: "#F8F4EC", left: "#E8E4DC", right: "#D8D4CC" },
         zoom,
       );
 
       // Wide ornate gold bands
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 3 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 3.5 * zoom;
       for (let bi = 0; bi < 2; bi++) {
-        const bandY = locoPos.y - 4 * zoom - bi * 5 * zoom;
+        const bandY = locoPos.y - 4.5 * zoom - bi * 5.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(locoPos.x - 5.5 * zoom, bandY + 2.5 * zoom);
-        ctx.lineTo(locoPos.x + 5.5 * zoom, bandY - 2.5 * zoom);
+        ctx.moveTo(locoPos.x - 6 * zoom, bandY + 3 * zoom);
+        ctx.lineTo(locoPos.x + 6 * zoom, bandY - 3 * zoom);
         ctx.stroke();
       }
 
       // Larger marble dome with gold filigree
-      ctx.fillStyle = "#e8e4dc";
+      const locoDomeGrad = ctx.createRadialGradient(
+        locoPos.x - 1.5 * zoom,
+        locoPos.y - 16 * zoom,
+        0,
+        locoPos.x,
+        locoPos.y - 14.5 * zoom,
+        5 * zoom,
+      );
+      locoDomeGrad.addColorStop(0, "#F0ECE4");
+      locoDomeGrad.addColorStop(0.7, "#E0DCD4");
+      locoDomeGrad.addColorStop(1, "#D0CCC4");
+      ctx.fillStyle = locoDomeGrad;
       ctx.beginPath();
-      ctx.arc(locoPos.x, locoPos.y - 14 * zoom, 4.5 * zoom, Math.PI, 0);
+      ctx.arc(locoPos.x, locoPos.y - 14.5 * zoom, 5 * zoom, Math.PI, 0);
       ctx.fill();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.stroke();
-      // Cross-hatch gold filigree on dome
-      ctx.strokeStyle = "rgba(201, 162, 39, 0.5)";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let fi = 0; fi < 3; fi++) {
-        const a1 = Math.PI + (fi + 1) * (Math.PI / 4);
-        const a2 = Math.PI * 2 - (fi + 1) * (Math.PI / 4);
-        ctx.beginPath();
-        ctx.moveTo(
-          locoPos.x + Math.cos(a1) * 4.5 * zoom,
-          locoPos.y - 14 * zoom + Math.sin(a1) * 4.5 * zoom,
-        );
-        ctx.lineTo(
-          locoPos.x + Math.cos(a2) * 4.5 * zoom,
-          locoPos.y - 14 * zoom + Math.sin(a2) * 4.5 * zoom,
-        );
-        ctx.stroke();
-      }
 
-      // Brass safety valve on dome
-      ctx.fillStyle = "#b8860b";
+      // Safety valve on dome
+      ctx.fillStyle = "#B8860B";
       ctx.beginPath();
       ctx.arc(
         locoPos.x + 2 * zoom,
-        locoPos.y - 17 * zoom,
-        1 * zoom,
+        locoPos.y - 18.5 * zoom,
+        1.2 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = "#daa520";
+      ctx.fillStyle = "#DAA520";
       ctx.fillRect(
         locoPos.x + 1.5 * zoom,
-        locoPos.y - 19 * zoom,
+        locoPos.y - 21 * zoom,
         1 * zoom,
-        2 * zoom,
+        2.5 * zoom,
       );
 
-      // Ornamental smokestack: fluted column with decorative cap
-      const stackPos = isoOffset(locoPos.x, locoPos.y - 12 * zoom, 3);
-      ctx.fillStyle = "#daa520";
+      // Fluted gold smokestack with decorative cap
+      const stackPos = isoOffset(locoPos.x, locoPos.y - 13 * zoom, 3.5);
+      ctx.fillStyle = "#DAA520";
       ctx.beginPath();
-      ctx.moveTo(stackPos.x - 2 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y);
+      ctx.moveTo(stackPos.x - 2.2 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x - 3 * zoom, stackPos.y - 11 * zoom);
+      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y - 11 * zoom);
+      ctx.lineTo(stackPos.x + 2.2 * zoom, stackPos.y);
       ctx.closePath();
       ctx.fill();
-      // Flute lines
-      ctx.strokeStyle = "#b8860b";
-      ctx.lineWidth = 0.6 * zoom;
+      ctx.strokeStyle = "#B8860B";
+      ctx.lineWidth = 0.7 * zoom;
       for (let fl = -1; fl <= 1; fl++) {
         ctx.beginPath();
         ctx.moveTo(stackPos.x + fl * 1 * zoom, stackPos.y);
-        ctx.lineTo(stackPos.x + fl * 1.2 * zoom, stackPos.y - 10 * zoom);
+        ctx.lineTo(stackPos.x + fl * 1.3 * zoom, stackPos.y - 11 * zoom);
         ctx.stroke();
       }
-      // Decorative cap
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 6 * zoom;
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 7 * zoom;
       ctx.beginPath();
       ctx.ellipse(
         stackPos.x,
-        stackPos.y - 10 * zoom,
-        3.5 * zoom,
-        1.8 * zoom,
+        stackPos.y - 11 * zoom,
+        4 * zoom,
+        2 * zoom,
         0,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
-      // Cap finial
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
-      ctx.arc(stackPos.x, stackPos.y - 12 * zoom, 1 * zoom, 0, Math.PI * 2);
+      ctx.arc(stackPos.x, stackPos.y - 13 * zoom, 1.2 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Golden steam
+      // Golden-tinted steam
       const steam = 0.3 + Math.sin(time * 4) * 0.15;
       ctx.fillStyle = `rgba(255, 245, 220, ${steam})`;
       ctx.beginPath();
       ctx.arc(
         stackPos.x + Math.sin(time * 3) * 3,
-        stackPos.y - 16 * zoom,
-        5 * zoom,
+        stackPos.y - 17 * zoom,
+        5.5 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = `rgba(255, 245, 220, ${steam * 0.5})`;
+      ctx.fillStyle = `rgba(255, 245, 220, ${steam * 0.45})`;
       ctx.beginPath();
       ctx.arc(
         stackPos.x + Math.sin(time * 3 + 1) * 4,
-        stackPos.y - 20 * zoom,
-        3.5 * zoom,
+        stackPos.y - 22 * zoom,
+        4 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
 
-      // Headlight with ornate brass bracket mounting
-      const headlightPos4a = isoOffset(locoPos.x, locoPos.y - 6 * zoom, 5.5);
-      // Brass mounting bracket from loco body
-      ctx.strokeStyle = "#b8860b";
-      ctx.lineWidth = 2 * zoom;
+      // Ornate headlight with brass bracket
+      const headlightPos4a = isoOffset(locoPos.x, locoPos.y - 7 * zoom, 6);
+      ctx.strokeStyle = "#B8860B";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(locoPos.x + 5 * zoom, locoPos.y - 7 * zoom);
+      ctx.moveTo(locoPos.x + 5.5 * zoom, locoPos.y - 8 * zoom);
       ctx.lineTo(headlightPos4a.x, headlightPos4a.y);
       ctx.stroke();
-      // Octagonal brass housing
-      ctx.fillStyle = "#b8860b";
+      ctx.fillStyle = "#B8860B";
       ctx.beginPath();
       for (let hi = 0; hi < 8; hi++) {
         const ha = (hi / 8) * Math.PI * 2;
-        const hx = headlightPos4a.x + Math.cos(ha) * 2.8 * zoom;
-        const hy = headlightPos4a.y + Math.sin(ha) * 2.8 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (hi === 0)
+          ctx.moveTo(
+            headlightPos4a.x + Math.cos(ha) * 3 * zoom,
+            headlightPos4a.y + Math.sin(ha) * 3 * zoom,
+          );
+        else
+          ctx.lineTo(
+            headlightPos4a.x + Math.cos(ha) * 3 * zoom,
+            headlightPos4a.y + Math.sin(ha) * 3 * zoom,
+          );
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#daa520";
+      ctx.strokeStyle = "#DAA520";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Lens glow
       ctx.fillStyle = "rgba(255, 250, 200, 0.9)";
       ctx.shadowColor = "#fff8e0";
-      ctx.shadowBlur = 8 * zoom;
+      ctx.shadowBlur = 10 * zoom;
       ctx.beginPath();
-      ctx.arc(headlightPos4a.x, headlightPos4a.y, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.arc(headlightPos4a.x, headlightPos4a.y, 2 * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // === PASSENGER CAR (back) ===
+      // === PASSENGER CAR (back) - Royal coach ===
       drawIsometricPrism(
         ctx,
         passengerPos.x,
         passengerPos.y,
-        12,
-        10,
-        10,
-        { top: "#f0ece4", left: "#e0dcd4", right: "#d0ccc4" },
+        13,
+        11,
+        11,
+        { top: "#F0ECE4", left: "#E0DCD4", right: "#D0CCC4" },
         zoom,
       );
 
       // Gold columns on right face
-      ctx.fillStyle = "#c9a227";
-      for (let ci = 0; ci < 3; ci++) {
-        const colPos = isoOffset(passengerPos.x, passengerPos.y, -3 + ci * 3);
-        const colX = colPos.x + 2 * zoom;
+      ctx.fillStyle = "#C9A227";
+      for (let ci = 0; ci < 4; ci++) {
+        const colPos = isoOffset(
+          passengerPos.x,
+          passengerPos.y,
+          -3.5 + ci * 2.5,
+        );
+        const colX = colPos.x + 2.5 * zoom;
         ctx.fillRect(
-          colX - 0.5 * zoom,
-          colPos.y - 10 * zoom,
-          1 * zoom,
-          10 * zoom,
+          colX - 0.6 * zoom,
+          colPos.y - 11 * zoom,
+          1.2 * zoom,
+          11 * zoom,
+        );
+        ctx.fillRect(
+          colX - 1.5 * zoom,
+          colPos.y - 11 * zoom,
+          3 * zoom,
+          1.2 * zoom,
         );
         ctx.fillRect(
           colX - 1.2 * zoom,
-          colPos.y - 10 * zoom,
+          colPos.y - 1.2 * zoom,
           2.4 * zoom,
-          1 * zoom,
+          1.2 * zoom,
         );
-        ctx.fillRect(colX - 1 * zoom, colPos.y - 1 * zoom, 2 * zoom, 1 * zoom);
       }
 
-      // Multiple arched windows with warm glow
-      const winGlow = 0.5 + Math.sin(time * 2) * 0.15;
+      // Multiple arched windows with varied warm glow
+      const winGlow = 0.5 + Math.sin(time * 2) * 0.18;
       const winColors4a = [
         `rgba(255, 250, 230, ${winGlow})`,
         `rgba(255, 235, 200, ${winGlow + 0.1})`,
@@ -33076,136 +33848,147 @@ function renderStationTower(
       for (let wi = 0; wi < 3; wi++) {
         const wPos4a = isoOffset(
           passengerPos.x,
-          passengerPos.y - 5 * zoom,
+          passengerPos.y - 5.5 * zoom,
           -2.5 + wi * 2.5,
         );
-        const wx = wPos4a.x + 2 * zoom;
+        const wx = wPos4a.x + 2.5 * zoom;
         const wy = wPos4a.y;
-        ctx.fillStyle = "#c0a060";
+        ctx.fillStyle = "#C0A060";
         ctx.beginPath();
-        ctx.arc(wx, wy - 1 * zoom, 1.5 * zoom, Math.PI, 0);
+        ctx.arc(wx, wy - 1 * zoom, 1.6 * zoom, Math.PI, 0);
         ctx.fill();
-        ctx.fillRect(wx - 1.5 * zoom, wy - 1 * zoom, 3 * zoom, 2 * zoom);
+        ctx.fillRect(wx - 1.6 * zoom, wy - 1 * zoom, 3.2 * zoom, 2.5 * zoom);
         ctx.fillStyle = winColors4a[wi];
+        ctx.shadowColor = "#fff8e0";
+        ctx.shadowBlur = 6 * zoom;
         ctx.beginPath();
-        ctx.arc(wx, wy - 1 * zoom, 1.2 * zoom, Math.PI, 0);
+        ctx.arc(wx, wy - 1 * zoom, 1.3 * zoom, Math.PI, 0);
         ctx.fill();
-        ctx.fillRect(wx - 1.2 * zoom, wy - 1 * zoom, 2.4 * zoom, 1.5 * zoom);
-        ctx.strokeStyle = "#c9a227";
+        ctx.fillRect(wx - 1.3 * zoom, wy - 1 * zoom, 2.6 * zoom, 2 * zoom);
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#C9A227";
         ctx.lineWidth = 0.8 * zoom;
         ctx.beginPath();
-        ctx.arc(wx, wy - 1 * zoom, 1.5 * zoom, Math.PI, 0);
+        ctx.arc(wx, wy - 1 * zoom, 1.6 * zoom, Math.PI, 0);
         ctx.stroke();
       }
 
       // Decorative roof balustrade
-      ctx.strokeStyle = "#c9a227";
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 0.7 * zoom;
-      for (let bi = 0; bi < 5; bi++) {
+      for (let bi = 0; bi < 6; bi++) {
         const bpPos = isoOffset(
           passengerPos.x,
-          passengerPos.y - 10 * zoom,
-          -4 + bi * 2,
+          passengerPos.y - 11 * zoom,
+          -5 + bi * 2,
         );
         ctx.beginPath();
         ctx.moveTo(bpPos.x + 2.5 * zoom, bpPos.y - 0.5 * zoom);
-        ctx.lineTo(bpPos.x + 2.5 * zoom, bpPos.y - 2.5 * zoom);
+        ctx.lineTo(bpPos.x + 2.5 * zoom, bpPos.y - 3 * zoom);
         ctx.stroke();
       }
-      const balL4a = isoOffset(
-        passengerPos.x,
-        passengerPos.y - 12.5 * zoom,
-        -4,
-      );
-      const balR4a = isoOffset(passengerPos.x, passengerPos.y - 12.5 * zoom, 4);
+      const balL4a = isoOffset(passengerPos.x, passengerPos.y - 14 * zoom, -5);
+      const balR4a = isoOffset(passengerPos.x, passengerPos.y - 14 * zoom, 5);
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
       ctx.moveTo(balL4a.x + 2.5 * zoom, balL4a.y);
       ctx.lineTo(balR4a.x + 2.5 * zoom, balR4a.y);
       ctx.stroke();
 
-      // Horse/centaur emblem (cleaner silhouette)
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 5 * zoom;
-      const horsePos = isoOffset(passengerPos.x, passengerPos.y - 5 * zoom, -4);
+      // Horse/centaur emblem (gold relief)
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 6 * zoom;
+      const horsePos = isoOffset(
+        passengerPos.x,
+        passengerPos.y - 5.5 * zoom,
+        -4.5,
+      );
       ctx.beginPath();
-      ctx.moveTo(horsePos.x - 1 * zoom, horsePos.y + 2.5 * zoom);
+      ctx.moveTo(horsePos.x - 1 * zoom, horsePos.y + 3 * zoom);
       ctx.lineTo(horsePos.x - 0.5 * zoom, horsePos.y + 1 * zoom);
       ctx.lineTo(horsePos.x - 1.5 * zoom, horsePos.y - 1 * zoom);
       ctx.quadraticCurveTo(
         horsePos.x - 1 * zoom,
-        horsePos.y - 3 * zoom,
+        horsePos.y - 3.5 * zoom,
         horsePos.x,
-        horsePos.y - 2.5 * zoom,
+        horsePos.y - 3 * zoom,
       );
-      ctx.lineTo(horsePos.x + 0.5 * zoom, horsePos.y - 3.5 * zoom);
+      ctx.lineTo(horsePos.x + 0.5 * zoom, horsePos.y - 4 * zoom);
       ctx.quadraticCurveTo(
-        horsePos.x + 1.5 * zoom,
-        horsePos.y - 2 * zoom,
+        horsePos.x + 2 * zoom,
+        horsePos.y - 2.5 * zoom,
         horsePos.x + 1 * zoom,
         horsePos.y,
       );
-      ctx.lineTo(horsePos.x + 1.5 * zoom, horsePos.y + 2.5 * zoom);
+      ctx.lineTo(horsePos.x + 1.5 * zoom, horsePos.y + 3 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
 
       // Gold chains between cars
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.5 * zoom;
-      const gc1a4a = isoOffset(trainX, trainY - 2 * zoom, 4);
-      const gc1b4a = isoOffset(trainX, trainY - 2 * zoom, 3);
-      ctx.beginPath();
-      ctx.moveTo(gc1a4a.x, gc1a4a.y);
-      ctx.quadraticCurveTo(
-        (gc1a4a.x + gc1b4a.x) / 2,
-        (gc1a4a.y + gc1b4a.y) / 2 + 1.5 * zoom,
-        gc1b4a.x,
-        gc1b4a.y,
-      );
-      ctx.stroke();
-      const gc2a4a = isoOffset(trainX, trainY - 2 * zoom, -3);
-      const gc2b4a = isoOffset(trainX, trainY - 2 * zoom, -4);
-      ctx.beginPath();
-      ctx.moveTo(gc2a4a.x, gc2a4a.y);
-      ctx.quadraticCurveTo(
-        (gc2a4a.x + gc2b4a.x) / 2,
-        (gc2a4a.y + gc2b4a.y) / 2 + 1.5 * zoom,
-        gc2b4a.x,
-        gc2b4a.y,
-      );
-      ctx.stroke();
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.8 * zoom;
+      for (const cOff of [4.5, -4.5]) {
+        const ca = isoOffset(trainX, trainY - 2 * zoom, cOff);
+        const cb = isoOffset(
+          trainX,
+          trainY - 2 * zoom,
+          cOff > 0 ? cOff - 1 : cOff + 1,
+        );
+        ctx.beginPath();
+        ctx.moveTo(ca.x, ca.y);
+        ctx.quadraticCurveTo(
+          (ca.x + cb.x) / 2,
+          (ca.y + cb.y) / 2 + 1.5 * zoom,
+          cb.x,
+          cb.y,
+        );
+        ctx.stroke();
+      }
 
       // Royal pennant flag
       const pennantPole = isoOffset(
         passengerPos.x,
-        passengerPos.y - 10 * zoom,
+        passengerPos.y - 11 * zoom,
         0,
       );
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(pennantPole.x, pennantPole.y);
-      ctx.lineTo(pennantPole.x, pennantPole.y - 6 * zoom);
+      ctx.lineTo(pennantPole.x, pennantPole.y - 7 * zoom);
       ctx.stroke();
-      const pWave4a = Math.sin(time * 3) * 0.5;
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
-      ctx.moveTo(pennantPole.x, pennantPole.y - 6 * zoom);
-      ctx.lineTo(
-        pennantPole.x + 3 * zoom,
-        pennantPole.y - 4.5 * zoom + pWave4a * zoom,
+      ctx.arc(
+        pennantPole.x,
+        pennantPole.y - 7 * zoom,
+        0.8 * zoom,
+        0,
+        Math.PI * 2,
       );
-      ctx.lineTo(pennantPole.x, pennantPole.y - 3 * zoom);
+      ctx.fill();
+      const pWave4a = Math.sin(time * 3) * 0.5;
+      ctx.fillStyle = "#C9A227";
+      ctx.beginPath();
+      ctx.moveTo(pennantPole.x, pennantPole.y - 7 * zoom);
+      ctx.lineTo(
+        pennantPole.x + 3.5 * zoom,
+        pennantPole.y - 5 * zoom + pWave4a * zoom,
+      );
+      ctx.lineTo(pennantPole.x, pennantPole.y - 3.5 * zoom);
       ctx.closePath();
       ctx.fill();
 
-      // Orange stripe (3D isometric band)
+      // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
-      const stripeH = 3.5 * zoom;
-      const stL = isoOffset(trainX, stripeY, -14);
-      const stR = isoOffset(trainX, stripeY, 14);
-      ctx.fillStyle = "#e06000";
+      const stripeH = 4 * zoom;
+      const stL = isoOffset(trainX, stripeY, -15);
+      const stR = isoOffset(trainX, stripeY, 15);
+      ctx.fillStyle = "#E77500";
+      ctx.shadowColor = "rgba(231, 117, 0, 0.3)";
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stR.x, stR.y);
@@ -33213,7 +33996,8 @@ function renderStationTower(
       ctx.lineTo(stL.x, stL.y - stripeH);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#ff7020";
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FF8C1A";
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stL.x, stL.y - stripeH);
@@ -33222,159 +34006,143 @@ function renderStationTower(
       ctx.closePath();
       ctx.fill();
 
-      // Front headlight with gold bracket mount
-      const headlightPos = isoOffset(cabPos.x, cabPos.y - 6 * zoom, 6);
-      // Gold bracket from cab
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
+      // Ornamental cowcatcher (gold)
+      const cowPos = isoOffset(cabPos.x, cabPos.y, 7);
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y - 7 * zoom);
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y);
+      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y + 1 * zoom);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 3 * zoom);
+      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y - 1 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = "#C9A227";
+      ctx.beginPath();
+      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 3.5 * zoom);
+      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
+      ctx.lineTo(cowPos.x, cowPos.y + 4.5 * zoom);
+      ctx.lineTo(cowPos.x + 3.5 * zoom, cowPos.y + 3.5 * zoom);
+      ctx.lineTo(cowPos.x + 8 * zoom, cowPos.y - 1 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#B89227";
+      ctx.beginPath();
+      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 3.5 * zoom);
+      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
+      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 3 * zoom);
+      ctx.lineTo(cowPos.x, cowPos.y + 4.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      // Gold bars
+      ctx.strokeStyle = "#E8C847";
+      ctx.lineWidth = 1.3 * zoom;
+      for (let b = 0; b < 4; b++) {
+        const barY = cowPos.y + 3.5 * zoom - b * 1.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(cowPos.x - 2 * zoom, barY);
+        ctx.lineTo(cowPos.x + 6 * zoom, barY - 2.5 * zoom);
+        ctx.stroke();
+      }
+
+      // Front headlight (gold bracket mount)
+      const headlightPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 7);
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 8 * zoom);
       ctx.lineTo(headlightPos.x + 1 * zoom, headlightPos.y);
       ctx.stroke();
-      // Octagonal gold housing
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
       for (let hi = 0; hi < 8; hi++) {
         const ha = (hi / 8) * Math.PI * 2;
-        const hx = headlightPos.x + 1 * zoom + Math.cos(ha) * 2.5 * zoom;
-        const hy = headlightPos.y + Math.sin(ha) * 2.5 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (hi === 0)
+          ctx.moveTo(
+            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
+            headlightPos.y + Math.sin(ha) * 3 * zoom,
+          );
+        else
+          ctx.lineTo(
+            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
+            headlightPos.y + Math.sin(ha) * 3 * zoom,
+          );
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#daa520";
+      ctx.strokeStyle = "#DAA520";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Lens
-      ctx.fillStyle = `rgba(255, 250, 220, ${0.7 + Math.sin(time * 3) * 0.15})`;
+      ctx.fillStyle = `rgba(255, 250, 220, ${0.75 + Math.sin(time * 3) * 0.15})`;
       ctx.shadowColor = "#fff8e0";
-      ctx.shadowBlur = 12 * zoom;
+      ctx.shadowBlur = 14 * zoom;
       ctx.beginPath();
       ctx.arc(
         headlightPos.x + 1 * zoom,
         headlightPos.y,
-        2 * zoom,
+        2.2 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
-
-      // Ornamental cowcatcher (attached with gold struts)
-      const cowPos = isoOffset(cabPos.x, cabPos.y, 6);
-      // Mounting struts
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y);
-      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y + 1 * zoom);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5 * zoom, cabPos.y - 3 * zoom);
-      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y - 1 * zoom);
-      ctx.stroke();
-      // Right face
-      ctx.fillStyle = "#c9a227";
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 4 * zoom, cowPos.y - 3 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x, cowPos.y + 4 * zoom);
-      ctx.lineTo(cowPos.x + 3 * zoom, cowPos.y + 3 * zoom);
-      ctx.lineTo(cowPos.x + 7 * zoom, cowPos.y - 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      // Left face
-      ctx.fillStyle = "#b89227";
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 4 * zoom, cowPos.y - 3 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 3 * zoom);
-      ctx.lineTo(cowPos.x, cowPos.y + 4 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
     } else {
-      // ========== LEVEL 4B: Royal Armored Train ==========
-      // Dark outline glow for visibility against dark gold building
-      ctx.shadowColor = "rgba(0,0,0,0.65)";
-      ctx.shadowBlur = 6 * zoom;
+      // ========== LEVEL 4B: Dark Royal Armored War Train ==========
+      ctx.shadowColor = "rgba(0,0,0,0.7)";
+      ctx.shadowBlur = 7 * zoom;
 
-      const cabPos = isoOffset(trainX, trainY, 8);
+      const cabPos = isoOffset(trainX, trainY, 9);
       const locoPos = isoOffset(trainX, trainY, 0);
-      const armoredPos = isoOffset(trainX, trainY, -8);
+      const armoredPos = isoOffset(trainX, trainY, -9);
+      const wheelY = trainY + 4.5 * zoom;
 
-      // --- Heavy reinforced chassis with gold-trimmed suspension ---
-      ctx.fillStyle = "#3a3a42";
+      // --- Heavy reinforced chassis with gold accent line ---
+      ctx.fillStyle = "#2a2e35";
+      const chL4b = isoOffset(trainX, trainY + 2 * zoom, 15);
+      const chR4b = isoOffset(trainX, trainY + 2 * zoom, -15);
       ctx.beginPath();
-      const chL4b = isoOffset(trainX, trainY + 2 * zoom, 14);
-      const chR4b = isoOffset(trainX, trainY + 2 * zoom, -14);
       ctx.moveTo(chL4b.x, chL4b.y);
-      ctx.lineTo(chL4b.x, chL4b.y + 2 * zoom);
-      ctx.lineTo(chR4b.x, chR4b.y + 2 * zoom);
+      ctx.lineTo(chL4b.x, chL4b.y + 2.5 * zoom);
+      ctx.lineTo(chR4b.x, chR4b.y + 2.5 * zoom);
       ctx.lineTo(chR4b.x, chR4b.y);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
       ctx.moveTo(chL4b.x, chL4b.y);
       ctx.lineTo(chR4b.x, chR4b.y);
       ctx.stroke();
 
-      // Wheels with gold trim
-      const wheelY = trainY + 4 * zoom;
-      const wPositions = [12, 4, -4, -12];
+      // Dark steel wheels with gold hub caps
+      const wPositions = [13, 4, -4, -13];
       for (const wp of wPositions) {
         const wPos = isoOffset(trainX, wheelY, wp);
-        ctx.fillStyle = "#5a5a62";
-        ctx.strokeStyle = "#c9a227";
-        ctx.lineWidth = 2 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(wPos.x, wPos.y, 4.5 * zoom, 2.25 * zoom, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.strokeStyle = "#4a4a52";
-        ctx.lineWidth = 1 * zoom;
-        for (let si = 0; si < 6; si++) {
-          const angle = (si / 6) * Math.PI * 2 + time * 2;
-          ctx.beginPath();
-          ctx.moveTo(wPos.x, wPos.y);
-          ctx.lineTo(
-            wPos.x + Math.cos(angle) * 3.6 * zoom,
-            wPos.y + Math.sin(angle) * 1.8 * zoom,
-          );
-          ctx.stroke();
-        }
-        ctx.fillStyle = "#c9a227";
-        ctx.beginPath();
-        ctx.ellipse(wPos.x, wPos.y, 1.4 * zoom, 0.7 * zoom, 0, 0, Math.PI * 2);
-        ctx.fill();
+        drawWheel(wPos.x, wPos.y, 5, "#3a4050", "#1a1e25", "#C9A227");
       }
 
-      // === CAB (front) ===
+      // === ARMORED CAB (front) - War command car with crown ===
       drawIsometricPrism(
         ctx,
         cabPos.x,
         cabPos.y,
-        12,
-        12,
-        16,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        13,
+        13,
+        18,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
 
-      // Gold trim on all cab edges
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.5 * zoom;
-      const cW4b = 12 * zoom * 0.5;
-      const cD4b = 12 * zoom * 0.25;
-      const cH4b = 16 * zoom;
+      // Gold trim on all edges
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.8 * zoom;
+      const cW4b = 13 * zoom * 0.5;
+      const cD4b = 13 * zoom * 0.25;
+      const cH4b = 18 * zoom;
       ctx.beginPath();
       ctx.moveTo(cabPos.x, cabPos.y + cD4b);
       ctx.lineTo(cabPos.x, cabPos.y + cD4b - cH4b);
@@ -33387,7 +34155,6 @@ function renderStationTower(
       ctx.moveTo(cabPos.x - cW4b, cabPos.y);
       ctx.lineTo(cabPos.x - cW4b, cabPos.y - cH4b);
       ctx.stroke();
-      // Top edges
       ctx.beginPath();
       ctx.moveTo(cabPos.x, cabPos.y - cH4b + cD4b);
       ctx.lineTo(cabPos.x + cW4b, cabPos.y - cH4b);
@@ -33397,278 +34164,282 @@ function renderStationTower(
       ctx.lineTo(cabPos.x - cW4b, cabPos.y - cH4b);
       ctx.stroke();
 
-      // Side armor plates with gold borders
-      ctx.strokeStyle = "#c9a227";
+      // Armor plate panels with gold border (both faces)
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 1 * zoom, cabPos.y - 4 * zoom);
-      ctx.lineTo(cabPos.x + cW4b - 1 * zoom, cabPos.y - 4.5 * zoom);
-      ctx.lineTo(cabPos.x + cW4b - 1 * zoom, cabPos.y - 13 * zoom);
-      ctx.lineTo(cabPos.x + 1 * zoom, cabPos.y - 12.5 * zoom);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x - 1 * zoom, cabPos.y - 4 * zoom);
-      ctx.lineTo(cabPos.x - cW4b + 1 * zoom, cabPos.y - 4.5 * zoom);
-      ctx.lineTo(cabPos.x - cW4b + 1 * zoom, cabPos.y - 13 * zoom);
-      ctx.lineTo(cabPos.x - 1 * zoom, cabPos.y - 12.5 * zoom);
-      ctx.closePath();
-      ctx.stroke();
+      for (const side of [1, -1]) {
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 4 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - 1) * zoom, cabPos.y - 4.5 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - 1) * zoom, cabPos.y - 15 * zoom);
+        ctx.lineTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 14.5 * zoom);
+        ctx.closePath();
+        ctx.stroke();
+      }
 
-      // Decorative gold rivets (symmetrical)
-      ctx.fillStyle = "#c9a227";
-      const rivetPos4b = [
-        { dx: 2, dy: -6 },
-        { dx: 4, dy: -6.5 },
-        { dx: 2, dy: -10 },
-        { dx: 4, dy: -10.5 },
-        { dx: -2, dy: -6 },
-        { dx: -4, dy: -6.5 },
-        { dx: -2, dy: -10 },
-        { dx: -4, dy: -10.5 },
-      ];
-      for (const r of rivetPos4b) {
+      // Gold decorative rivets
+      ctx.fillStyle = "#C9A227";
+      for (const r of [
+        { dx: 2.5, dy: -7 },
+        { dx: 4.5, dy: -7.5 },
+        { dx: 2.5, dy: -12 },
+        { dx: 4.5, dy: -12.5 },
+        { dx: -2.5, dy: -7 },
+        { dx: -4.5, dy: -7.5 },
+        { dx: -2.5, dy: -12 },
+        { dx: -4.5, dy: -12.5 },
+      ]) {
         ctx.beginPath();
         ctx.arc(
           cabPos.x + r.dx * zoom,
           cabPos.y + r.dy * zoom,
-          0.6 * zoom,
+          0.7 * zoom,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
 
-      // Gold-framed vision slit (iso parallelogram)
+      // Gold-framed vision slit with emerald glow
       const vsX4b = cabPos.x + 3 * zoom;
-      const vsY4b = cabPos.y - 8 * zoom;
-      ctx.fillStyle = "#1a1a22";
+      const vsY4b = cabPos.y - 9 * zoom;
+      ctx.fillStyle = "#0a0e14";
       ctx.beginPath();
-      ctx.moveTo(vsX4b, vsY4b - 1 * zoom);
-      ctx.lineTo(vsX4b + 4 * zoom, vsY4b - 1 * zoom - 2 * zoom);
-      ctx.lineTo(vsX4b + 4 * zoom, vsY4b + 0.5 * zoom - 2 * zoom);
+      ctx.moveTo(vsX4b, vsY4b - 1.5 * zoom);
+      ctx.lineTo(vsX4b + 4.5 * zoom, vsY4b - 1.5 * zoom - 2.3 * zoom);
+      ctx.lineTo(vsX4b + 4.5 * zoom, vsY4b + 0.5 * zoom - 2.3 * zoom);
       ctx.lineTo(vsX4b, vsY4b + 0.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#c9a227";
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-
-      // Ornate crown on top
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 8 * zoom;
-      // Crown base band
-      ctx.fillRect(
-        cabPos.x - 5.5 * zoom,
-        cabPos.y - 17 * zoom,
-        11 * zoom,
-        2 * zoom,
-      );
-      // Crown peaks (4 peaks)
+      const vsGlow = 0.4 + Math.sin(time * 2) * 0.15;
+      ctx.fillStyle = `rgba(60, 220, 80, ${vsGlow})`;
+      ctx.shadowColor = "#40dd50";
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x - 5.5 * zoom, cabPos.y - 17 * zoom);
-      ctx.lineTo(cabPos.x - 4 * zoom, cabPos.y - 22 * zoom);
-      ctx.lineTo(cabPos.x - 2.5 * zoom, cabPos.y - 18 * zoom);
-      ctx.lineTo(cabPos.x - 0.5 * zoom, cabPos.y - 22 * zoom);
-      ctx.lineTo(cabPos.x + 1 * zoom, cabPos.y - 18 * zoom);
-      ctx.lineTo(cabPos.x + 2.5 * zoom, cabPos.y - 22 * zoom);
-      ctx.lineTo(cabPos.x + 4 * zoom, cabPos.y - 18 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 22 * zoom);
-      ctx.lineTo(cabPos.x + 5.5 * zoom, cabPos.y - 17 * zoom);
+      ctx.moveTo(vsX4b + 0.3 * zoom, vsY4b - 1.2 * zoom);
+      ctx.lineTo(vsX4b + 4.2 * zoom, vsY4b - 1.2 * zoom - 2 * zoom);
+      ctx.lineTo(vsX4b + 4.2 * zoom, vsY4b + 0.2 * zoom - 2 * zoom);
+      ctx.lineTo(vsX4b + 0.3 * zoom, vsY4b + 0.2 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Jewel dots at each peak
-      ctx.fillStyle = "#e06000";
-      const jewelPeaks4b = [-4, -0.5, 2.5, 5.5];
-      for (const jp of jewelPeaks4b) {
+      ctx.shadowBlur = 0;
+
+      // Ornate crown on top with jewels
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 10 * zoom;
+      ctx.fillRect(
+        cabPos.x - 6 * zoom,
+        cabPos.y - 19 * zoom,
+        12 * zoom,
+        2.5 * zoom,
+      );
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x - 6 * zoom, cabPos.y - 19 * zoom);
+      ctx.lineTo(cabPos.x - 4.5 * zoom, cabPos.y - 25 * zoom);
+      ctx.lineTo(cabPos.x - 3 * zoom, cabPos.y - 20 * zoom);
+      ctx.lineTo(cabPos.x - 1 * zoom, cabPos.y - 25 * zoom);
+      ctx.lineTo(cabPos.x + 0.5 * zoom, cabPos.y - 20 * zoom);
+      ctx.lineTo(cabPos.x + 2 * zoom, cabPos.y - 25 * zoom);
+      ctx.lineTo(cabPos.x + 3.5 * zoom, cabPos.y - 20 * zoom);
+      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 25 * zoom);
+      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 19 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      // Amethyst jewels at each crown peak
+      ctx.fillStyle = "#9B5FC0";
+      ctx.shadowColor = "#9B5FC0";
+      ctx.shadowBlur = 4 * zoom;
+      for (const jp of [-4.5, -1, 2, 5]) {
         ctx.beginPath();
         ctx.arc(
           cabPos.x + jp * zoom,
-          cabPos.y - 22 * zoom,
-          1 * zoom,
+          cabPos.y - 25 * zoom,
+          1.2 * zoom,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
-      // Center jewel (larger)
-      ctx.fillStyle = "#ff3030";
+      // Large center jewel
+      ctx.fillStyle = "#B040FF";
+      ctx.shadowColor = "#B040FF";
+      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 19 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.arc(cabPos.x, cabPos.y - 21.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // === LOCOMOTIVE (middle) ===
+      // === LOCOMOTIVE (middle) - Heavy armored engine ===
       drawIsometricPrism(
         ctx,
         locoPos.x,
         locoPos.y,
-        14,
-        12,
-        14,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        15,
+        13,
+        15,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
 
-      // Wider gold bands
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 3 * zoom;
+      // Wide gold bands
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 3.5 * zoom;
       for (let bi = 0; bi < 2; bi++) {
-        const bandY = locoPos.y - 5 * zoom - bi * 6 * zoom;
+        const bandY = locoPos.y - 5.5 * zoom - bi * 6.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(locoPos.x - 6.5 * zoom, bandY + 3 * zoom);
-        ctx.lineTo(locoPos.x + 6.5 * zoom, bandY - 3 * zoom);
+        ctx.moveTo(locoPos.x - 7 * zoom, bandY + 3.5 * zoom);
+        ctx.lineTo(locoPos.x + 7 * zoom, bandY - 3.5 * zoom);
         ctx.stroke();
       }
 
       // Armored dome with gold crown trim
-      ctx.fillStyle = "#4a4a52";
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
-      ctx.arc(locoPos.x, locoPos.y - 15 * zoom, 4.5 * zoom, Math.PI, 0);
+      ctx.arc(locoPos.x, locoPos.y - 16 * zoom, 5 * zoom, Math.PI, 0);
       ctx.fill();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2.5 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 3 * zoom;
       ctx.stroke();
       // Mini crown trim on dome
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = "#C9A227";
       for (let ci = 0; ci < 3; ci++) {
-        const cpx = locoPos.x - 3 * zoom + ci * 3 * zoom;
+        const cpx = locoPos.x - 3.5 * zoom + ci * 3.5 * zoom;
         ctx.beginPath();
-        ctx.moveTo(cpx - 1 * zoom, locoPos.y - 19 * zoom);
-        ctx.lineTo(cpx, locoPos.y - 21 * zoom);
-        ctx.lineTo(cpx + 1 * zoom, locoPos.y - 19 * zoom);
+        ctx.moveTo(cpx - 1.2 * zoom, locoPos.y - 20.5 * zoom);
+        ctx.lineTo(cpx, locoPos.y - 23 * zoom);
+        ctx.lineTo(cpx + 1.2 * zoom, locoPos.y - 20.5 * zoom);
         ctx.closePath();
         ctx.fill();
       }
 
       // Side-mounted exhaust pipes with gold valve wheels
       for (const side of [-1, 1]) {
-        const epPos = isoOffset(locoPos.x, locoPos.y - 6 * zoom, side * 7);
-        ctx.fillStyle = "#4a4a52";
+        const epPos = isoOffset(locoPos.x, locoPos.y - 7 * zoom, side * 8);
+        ctx.fillStyle = "#3a4050";
         ctx.fillRect(
-          epPos.x - 1 * zoom,
-          epPos.y - 3 * zoom,
-          2 * zoom,
-          6 * zoom,
+          epPos.x - 1.2 * zoom,
+          epPos.y - 3.5 * zoom,
+          2.4 * zoom,
+          7 * zoom,
         );
-        ctx.strokeStyle = "#c9a227";
-        ctx.lineWidth = 1 * zoom;
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
-        ctx.arc(epPos.x, epPos.y, 1.5 * zoom, 0, Math.PI * 2);
+        ctx.arc(epPos.x, epPos.y, 1.8 * zoom, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.fillStyle = "#c9a227";
+        ctx.fillStyle = "#C9A227";
         ctx.beginPath();
-        ctx.arc(epPos.x, epPos.y, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.arc(epPos.x, epPos.y, 0.6 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Smokestack with refined crown
-      const stackPos = isoOffset(locoPos.x, locoPos.y - 14 * zoom, 4);
-      // Fluted stack body
-      ctx.fillStyle = "#4a4a52";
+      // Crown-topped smokestack
+      const stackPos = isoOffset(locoPos.x, locoPos.y - 15 * zoom, 4.5);
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
-      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 2 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y);
+      ctx.moveTo(stackPos.x - 3.5 * zoom, stackPos.y);
+      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 11 * zoom);
+      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 11 * zoom);
+      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y);
       ctx.closePath();
       ctx.fill();
-      // Flute lines
-      ctx.strokeStyle = "#3a3a42";
-      ctx.lineWidth = 0.6 * zoom;
+      ctx.strokeStyle = "#2a3040";
+      ctx.lineWidth = 0.7 * zoom;
       for (let fl = -1; fl <= 1; fl++) {
         ctx.beginPath();
-        ctx.moveTo(stackPos.x + fl * 1 * zoom, stackPos.y);
-        ctx.lineTo(stackPos.x + fl * 0.8 * zoom, stackPos.y - 10 * zoom);
+        ctx.moveTo(stackPos.x + fl * 1.2 * zoom, stackPos.y);
+        ctx.lineTo(stackPos.x + fl * 1 * zoom, stackPos.y - 11 * zoom);
         ctx.stroke();
       }
       // Gold band at top
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(stackPos.x - 2.5 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 10 * zoom);
+      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y - 11 * zoom);
+      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y - 11 * zoom);
       ctx.stroke();
-      // Mini crown on stack (3 peaks with jewels)
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 5 * zoom;
+      // Mini crown on stack with jewels
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
-      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y - 10 * zoom);
-      ctx.lineTo(stackPos.x - 2 * zoom, stackPos.y - 14 * zoom);
-      ctx.lineTo(stackPos.x - 0.5 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 0.5 * zoom, stackPos.y - 14 * zoom);
-      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y - 14 * zoom);
-      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y - 10 * zoom);
+      ctx.moveTo(stackPos.x - 3.5 * zoom, stackPos.y - 11 * zoom);
+      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 15 * zoom);
+      ctx.lineTo(stackPos.x - 0.8 * zoom, stackPos.y - 12 * zoom);
+      ctx.lineTo(stackPos.x + 0.5 * zoom, stackPos.y - 15 * zoom);
+      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y - 12 * zoom);
+      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y - 15 * zoom);
+      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y - 11 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Jewels on crown peaks
-      ctx.fillStyle = "#e06000";
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x - 2 * zoom,
-        stackPos.y - 14 * zoom,
-        0.7 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + 0.5 * zoom,
-        stackPos.y - 14 * zoom,
-        0.7 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + 3 * zoom,
-        stackPos.y - 14 * zoom,
-        0.7 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      ctx.fillStyle = "#9B5FC0";
+      for (const jp of [-2.5, 0.5, 3.5]) {
+        ctx.beginPath();
+        ctx.arc(
+          stackPos.x + jp * zoom,
+          stackPos.y - 15 * zoom,
+          0.8 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
       ctx.shadowBlur = 0;
 
-      // Headlight with ornate bracket mount
-      const headlightPos4b = isoOffset(locoPos.x, locoPos.y - 8 * zoom, 6);
-      // Bracket arm from loco body
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
+      // War smoke
+      const smoke4b = 0.35 + Math.sin(time * 4) * 0.15;
+      ctx.fillStyle = `rgba(140, 140, 150, ${smoke4b})`;
       ctx.beginPath();
-      ctx.moveTo(locoPos.x + 5 * zoom, locoPos.y - 9 * zoom);
+      ctx.arc(
+        stackPos.x + Math.sin(time * 3) * 3.5,
+        stackPos.y - 21 * zoom,
+        7 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Headlight with ornate bracket mount
+      const headlightPos4b = isoOffset(locoPos.x, locoPos.y - 9 * zoom, 7);
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(locoPos.x + 6 * zoom, locoPos.y - 10 * zoom);
       ctx.lineTo(headlightPos4b.x, headlightPos4b.y);
       ctx.stroke();
-      // Octagonal ornate housing
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = "#C9A227";
       ctx.beginPath();
       for (let hi = 0; hi < 8; hi++) {
         const ha = (hi / 8) * Math.PI * 2;
-        const hx = headlightPos4b.x + Math.cos(ha) * 3 * zoom;
-        const hy = headlightPos4b.y + Math.sin(ha) * 3 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (hi === 0)
+          ctx.moveTo(
+            headlightPos4b.x + Math.cos(ha) * 3.2 * zoom,
+            headlightPos4b.y + Math.sin(ha) * 3.2 * zoom,
+          );
+        else
+          ctx.lineTo(
+            headlightPos4b.x + Math.cos(ha) * 3.2 * zoom,
+            headlightPos4b.y + Math.sin(ha) * 3.2 * zoom,
+          );
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#daa520";
+      ctx.strokeStyle = "#DAA520";
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
-      // Lens glow
       ctx.fillStyle = "rgba(255, 250, 200, 0.9)";
       ctx.shadowColor = "#fff8e0";
-      ctx.shadowBlur = 8 * zoom;
+      ctx.shadowBlur = 10 * zoom;
       ctx.beginPath();
-      ctx.arc(headlightPos4b.x, headlightPos4b.y, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.arc(headlightPos4b.x, headlightPos4b.y, 2 * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
-      // Ornate frame rays (decorative spokes)
-      ctx.strokeStyle = "#daa520";
+      // Decorative spokes
+      ctx.strokeStyle = "#DAA520";
       ctx.lineWidth = 1 * zoom;
       for (let ri = 0; ri < 8; ri++) {
         const ra = (ri / 8) * Math.PI * 2;
@@ -33678,43 +34449,30 @@ function renderStationTower(
           headlightPos4b.y + Math.sin(ra) * 2.5 * zoom,
         );
         ctx.lineTo(
-          headlightPos4b.x + Math.cos(ra) * 3.2 * zoom,
-          headlightPos4b.y + Math.sin(ra) * 3.2 * zoom,
+          headlightPos4b.x + Math.cos(ra) * 3.5 * zoom,
+          headlightPos4b.y + Math.sin(ra) * 3.5 * zoom,
         );
         ctx.stroke();
       }
 
-      // Steam
-      const steam = 0.35 + Math.sin(time * 4) * 0.15;
-      ctx.fillStyle = `rgba(180, 180, 180, ${steam})`;
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + Math.sin(time * 3) * 3,
-        stackPos.y - 20 * zoom,
-        6 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // === ARMORED CAR (back) ===
+      // === ARMORED CAR (back) - War fortress ===
       drawIsometricPrism(
         ctx,
         armoredPos.x,
         armoredPos.y,
-        14,
-        12,
-        12,
-        { top: "#6a6a72", left: "#5a5a62", right: "#4a4a52" },
+        15,
+        13,
+        13,
+        { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
         zoom,
       );
 
       // Gold borders on panel edges
-      ctx.strokeStyle = "#c9a227";
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 2 * zoom;
-      const aW4b = 14 * zoom * 0.5;
-      const aD4b = 12 * zoom * 0.25;
-      const aH4b = 12 * zoom;
+      const aW4b = 15 * zoom * 0.5;
+      const aD4b = 13 * zoom * 0.25;
+      const aH4b = 13 * zoom;
       ctx.beginPath();
       ctx.moveTo(armoredPos.x, armoredPos.y - aH4b + aD4b);
       ctx.lineTo(armoredPos.x + aW4b, armoredPos.y - aH4b);
@@ -33728,233 +34486,206 @@ function renderStationTower(
       ctx.lineTo(armoredPos.x, armoredPos.y + aD4b - aH4b);
       ctx.stroke();
 
-      // Gun ports on sides
+      // Gun ports with gold frame
       for (let gi = 0; gi < 2; gi++) {
         const gpPos = isoOffset(
           armoredPos.x,
-          armoredPos.y - 4 * zoom,
-          -3 + gi * 6,
+          armoredPos.y - 4.5 * zoom,
+          -3.5 + gi * 7,
         );
-        const gpX = gpPos.x + 2 * zoom;
+        const gpX = gpPos.x + 2.5 * zoom;
         const gpY = gpPos.y;
-        ctx.fillStyle = "#1a1a22";
-        ctx.fillRect(gpX - 1.2 * zoom, gpY - 1 * zoom, 2.4 * zoom, 2 * zoom);
-        ctx.strokeStyle = "#c9a227";
+        ctx.fillStyle = "#0a0e14";
+        ctx.fillRect(gpX - 1.5 * zoom, gpY - 1.2 * zoom, 3 * zoom, 2.4 * zoom);
+        ctx.strokeStyle = "#C9A227";
         ctx.lineWidth = 0.8 * zoom;
         ctx.strokeRect(
-          gpX - 1.5 * zoom,
-          gpY - 1.3 * zoom,
+          gpX - 1.8 * zoom,
+          gpY - 1.5 * zoom,
+          3.6 * zoom,
           3 * zoom,
-          2.6 * zoom,
         );
       }
 
-      // Large stained-glass rose window with 6-petal pattern
-      const sgGlow = 0.6 + Math.sin(time * 2) * 0.25;
-      ctx.fillStyle = "#4a4a52";
-      ctx.beginPath();
-      ctx.arc(armoredPos.x, armoredPos.y - 6 * zoom, 5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.arc(armoredPos.x, armoredPos.y - 6 * zoom, 5 * zoom, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 150, 50, ${sgGlow})`;
-      ctx.shadowColor = "#e06000";
-      ctx.shadowBlur = 10 * zoom;
+      // Large stained-glass rose window with purple glow
+      const sgGlow = 0.65 + Math.sin(time * 2) * 0.25;
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
       ctx.arc(
         armoredPos.x,
-        armoredPos.y - 6 * zoom,
-        4.5 * zoom,
+        armoredPos.y - 6.5 * zoom,
+        5.5 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = `rgba(140, 70, 200, ${sgGlow})`;
+      ctx.shadowColor = "#7B3FA0";
+      ctx.shadowBlur = 12 * zoom;
+      ctx.beginPath();
+      ctx.arc(
+        armoredPos.x,
+        armoredPos.y - 6.5 * zoom,
+        5 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
-      // 6-petal pattern
-      ctx.strokeStyle = "rgba(180, 60, 0, 0.5)";
+      ctx.strokeStyle = "rgba(100, 40, 160, 0.5)";
       ctx.lineWidth = 0.8 * zoom;
-      for (let pi = 0; pi < 6; pi++) {
-        const pAngle = (pi / 6) * Math.PI * 2;
-        const ppx = armoredPos.x + Math.cos(pAngle) * 2 * zoom;
-        const ppy = armoredPos.y - 6 * zoom + Math.sin(pAngle) * 2 * zoom;
+      for (let pi = 0; pi < 8; pi++) {
+        const pAngle = (pi / 8) * Math.PI * 2;
+        const ppx = armoredPos.x + Math.cos(pAngle) * 2.3 * zoom;
+        const ppy = armoredPos.y - 6.5 * zoom + Math.sin(pAngle) * 2.3 * zoom;
         ctx.beginPath();
         ctx.arc(ppx, ppy, 2 * zoom, 0, Math.PI * 2);
         ctx.stroke();
       }
       ctx.fillStyle = "#fff4e0";
       ctx.beginPath();
-      ctx.arc(armoredPos.x, armoredPos.y - 6 * zoom, 1 * zoom, 0, Math.PI * 2);
+      ctx.arc(
+        armoredPos.x,
+        armoredPos.y - 6.5 * zoom,
+        1.2 * zoom,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
-      // Small turret on top with crown finial
-      const turretPos4b = isoOffset(armoredPos.x, armoredPos.y - 12 * zoom, 0);
+      // Turret with crown finial
+      const turretPos4b = isoOffset(armoredPos.x, armoredPos.y - 13 * zoom, 0);
       drawIsometricPrism(
         ctx,
         turretPos4b.x,
         turretPos4b.y,
-        5,
-        5,
-        5,
-        { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
+        6,
+        6,
+        6,
+        { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 4 * zoom;
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(turretPos4b.x - 2 * zoom, turretPos4b.y - 5 * zoom);
-      ctx.lineTo(turretPos4b.x - 1 * zoom, turretPos4b.y - 8 * zoom);
-      ctx.lineTo(turretPos4b.x, turretPos4b.y - 6 * zoom);
-      ctx.lineTo(turretPos4b.x + 1 * zoom, turretPos4b.y - 8 * zoom);
-      ctx.lineTo(turretPos4b.x + 2 * zoom, turretPos4b.y - 5 * zoom);
+      ctx.moveTo(turretPos4b.x - 2.5 * zoom, turretPos4b.y - 6 * zoom);
+      ctx.lineTo(turretPos4b.x - 1.2 * zoom, turretPos4b.y - 9 * zoom);
+      ctx.lineTo(turretPos4b.x, turretPos4b.y - 7 * zoom);
+      ctx.lineTo(turretPos4b.x + 1.2 * zoom, turretPos4b.y - 9 * zoom);
+      ctx.lineTo(turretPos4b.x + 2.5 * zoom, turretPos4b.y - 6 * zoom);
       ctx.closePath();
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Gold crown emblem with cross on top
-      ctx.fillStyle = "#c9a227";
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 6 * zoom;
-      const crownPos = isoOffset(armoredPos.x, armoredPos.y - 10 * zoom, -6);
+      // Gold crown emblem with cross on left face
+      ctx.fillStyle = "#C9A227";
+      ctx.shadowColor = "#C9A227";
+      ctx.shadowBlur = 7 * zoom;
+      const crownPos = isoOffset(armoredPos.x, armoredPos.y - 11 * zoom, -7);
       ctx.beginPath();
-      ctx.moveTo(crownPos.x - 4 * zoom, crownPos.y);
-      ctx.lineTo(crownPos.x - 3 * zoom, crownPos.y - 3 * zoom);
-      ctx.lineTo(crownPos.x - 1.5 * zoom, crownPos.y - 1.5 * zoom);
-      ctx.lineTo(crownPos.x, crownPos.y - 3.5 * zoom);
-      ctx.lineTo(crownPos.x + 1.5 * zoom, crownPos.y - 1.5 * zoom);
-      ctx.lineTo(crownPos.x + 3 * zoom, crownPos.y - 3 * zoom);
-      ctx.lineTo(crownPos.x + 4 * zoom, crownPos.y);
+      ctx.moveTo(crownPos.x - 4.5 * zoom, crownPos.y);
+      ctx.lineTo(crownPos.x - 3.5 * zoom, crownPos.y - 3.5 * zoom);
+      ctx.lineTo(crownPos.x - 1.8 * zoom, crownPos.y - 1.8 * zoom);
+      ctx.lineTo(crownPos.x, crownPos.y - 4 * zoom);
+      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 1.8 * zoom);
+      ctx.lineTo(crownPos.x + 3.5 * zoom, crownPos.y - 3.5 * zoom);
+      ctx.lineTo(crownPos.x + 4.5 * zoom, crownPos.y);
       ctx.closePath();
       ctx.fill();
-      // Cross on top
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.2 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(crownPos.x, crownPos.y - 3.5 * zoom);
-      ctx.lineTo(crownPos.x, crownPos.y - 6 * zoom);
+      ctx.moveTo(crownPos.x, crownPos.y - 4 * zoom);
+      ctx.lineTo(crownPos.x, crownPos.y - 7 * zoom);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(crownPos.x - 1.5 * zoom, crownPos.y - 5 * zoom);
-      ctx.lineTo(crownPos.x + 1.5 * zoom, crownPos.y - 5 * zoom);
+      ctx.moveTo(crownPos.x - 1.8 * zoom, crownPos.y - 5.8 * zoom);
+      ctx.lineTo(crownPos.x + 1.8 * zoom, crownPos.y - 5.8 * zoom);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
       // Gold-plated chains between cars
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 2 * zoom;
-      const gc1a4b = isoOffset(trainX, trainY - 2 * zoom, 4.5);
-      const gc1b4b = isoOffset(trainX, trainY - 2 * zoom, 3.5);
-      ctx.beginPath();
-      ctx.moveTo(gc1a4b.x, gc1a4b.y);
-      ctx.quadraticCurveTo(
-        (gc1a4b.x + gc1b4b.x) / 2,
-        (gc1a4b.y + gc1b4b.y) / 2 + 2 * zoom,
-        gc1b4b.x,
-        gc1b4b.y,
-      );
-      ctx.stroke();
-      const gc2a4b = isoOffset(trainX, trainY - 2 * zoom, -3.5);
-      const gc2b4b = isoOffset(trainX, trainY - 2 * zoom, -4.5);
-      ctx.beginPath();
-      ctx.moveTo(gc2a4b.x, gc2a4b.y);
-      ctx.quadraticCurveTo(
-        (gc2a4b.x + gc2b4b.x) / 2,
-        (gc2a4b.y + gc2b4b.y) / 2 + 2 * zoom,
-        gc2b4b.x,
-        gc2b4b.y,
-      );
-      ctx.stroke();
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 2.5 * zoom;
+      for (const cOff of [5, -5]) {
+        const ca = isoOffset(trainX, trainY - 2 * zoom, cOff);
+        const cb = isoOffset(
+          trainX,
+          trainY - 2 * zoom,
+          cOff > 0 ? cOff - 1 : cOff + 1,
+        );
+        ctx.beginPath();
+        ctx.moveTo(ca.x, ca.y);
+        ctx.quadraticCurveTo(
+          (ca.x + cb.x) / 2,
+          (ca.y + cb.y) / 2 + 2.5 * zoom,
+          cb.x,
+          cb.y,
+        );
+        ctx.stroke();
+      }
 
       // Royal standard flag (3D isometric with gold trim)
-      const rsPole4b = isoOffset(armoredPos.x, armoredPos.y - 17 * zoom, 0);
-      const rsIsoD = 1.2 * zoom;
-      // Gold pole with isometric depth
-      ctx.strokeStyle = "#a08020";
-      ctx.lineWidth = 2 * zoom;
+      const rsPole4b = isoOffset(armoredPos.x, armoredPos.y - 19 * zoom, 0);
+      ctx.strokeStyle = "#A08020";
+      ctx.lineWidth = 2.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(rsPole4b.x, rsPole4b.y + 5 * zoom);
+      ctx.moveTo(rsPole4b.x, rsPole4b.y + 6 * zoom);
+      ctx.lineTo(rsPole4b.x, rsPole4b.y - 5 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = "#DAA520";
+      ctx.beginPath();
+      ctx.arc(rsPole4b.x, rsPole4b.y - 5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#E8C847";
+      ctx.beginPath();
+      ctx.moveTo(rsPole4b.x, rsPole4b.y - 7 * zoom);
+      ctx.lineTo(rsPole4b.x + 1 * zoom, rsPole4b.y - 5.5 * zoom);
       ctx.lineTo(rsPole4b.x, rsPole4b.y - 4 * zoom);
-      ctx.stroke();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(
-        rsPole4b.x + rsIsoD * 0.4,
-        rsPole4b.y + 5 * zoom - rsIsoD * 0.2,
-      );
-      ctx.lineTo(
-        rsPole4b.x + rsIsoD * 0.4,
-        rsPole4b.y - 4 * zoom - rsIsoD * 0.2,
-      );
-      ctx.stroke();
-      // Gold pole finial (ornamental)
-      ctx.fillStyle = "#daa520";
-      ctx.beginPath();
-      ctx.arc(rsPole4b.x, rsPole4b.y - 4 * zoom, 1.3 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.stroke();
-      // Diamond finial tip
-      ctx.fillStyle = "#e8c847";
-      ctx.beginPath();
-      ctx.moveTo(rsPole4b.x, rsPole4b.y - 6 * zoom);
-      ctx.lineTo(rsPole4b.x + 0.8 * zoom, rsPole4b.y - 4.5 * zoom);
-      ctx.lineTo(rsPole4b.x, rsPole4b.y - 3.5 * zoom);
-      ctx.lineTo(rsPole4b.x - 0.8 * zoom, rsPole4b.y - 4.5 * zoom);
+      ctx.lineTo(rsPole4b.x - 1 * zoom, rsPole4b.y - 5.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      const rsWave4b = Math.sin(time * 2.5) * 0.5;
-      // Flag back face (depth shadow)
-      ctx.fillStyle = "#a04000";
+      const rsWave4b = Math.sin(time * 2.5) * 0.6;
+      ctx.fillStyle = "#C04000";
       ctx.beginPath();
-      ctx.moveTo(rsPole4b.x + rsIsoD, rsPole4b.y - 3 * zoom - rsIsoD * 0.5);
+      ctx.moveTo(rsPole4b.x + 1.2 * zoom, rsPole4b.y - 4 * zoom - 0.6 * zoom);
       ctx.quadraticCurveTo(
-        rsPole4b.x + 3 * zoom + rsIsoD,
-        rsPole4b.y - 2 * zoom + rsWave4b * zoom - rsIsoD * 0.5,
-        rsPole4b.x + 5 * zoom + rsIsoD,
-        rsPole4b.y - 1.5 * zoom + rsWave4b * zoom - rsIsoD * 0.5,
+        rsPole4b.x + 4 * zoom + 1.2 * zoom,
+        rsPole4b.y - 3 * zoom + rsWave4b * zoom - 0.6 * zoom,
+        rsPole4b.x + 6 * zoom + 1.2 * zoom,
+        rsPole4b.y - 2 * zoom + rsWave4b * zoom - 0.6 * zoom,
       );
-      ctx.lineTo(rsPole4b.x + rsIsoD, rsPole4b.y + 0.5 * zoom - rsIsoD * 0.5);
+      ctx.lineTo(rsPole4b.x + 1.2 * zoom, rsPole4b.y - 0.5 * zoom - 0.6 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Flag front face
-      ctx.fillStyle = "#e06000";
+      ctx.fillStyle = "#E77500";
       ctx.beginPath();
-      ctx.moveTo(rsPole4b.x, rsPole4b.y - 3 * zoom);
+      ctx.moveTo(rsPole4b.x, rsPole4b.y - 4 * zoom);
       ctx.quadraticCurveTo(
-        rsPole4b.x + 3 * zoom,
+        rsPole4b.x + 4 * zoom,
+        rsPole4b.y - 3 * zoom + rsWave4b * zoom,
+        rsPole4b.x + 6 * zoom,
         rsPole4b.y - 2 * zoom + rsWave4b * zoom,
-        rsPole4b.x + 5 * zoom,
-        rsPole4b.y - 1.5 * zoom + rsWave4b * zoom,
       );
-      ctx.lineTo(rsPole4b.x, rsPole4b.y + 0.5 * zoom);
+      ctx.lineTo(rsPole4b.x, rsPole4b.y - 0.5 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Flag outline with gold trim
-      ctx.strokeStyle = "#c9a227";
+      ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 0.8 * zoom;
-      ctx.stroke();
-      // Cloth fold highlight
-      ctx.strokeStyle = "rgba(255,200,100,0.2)";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rsPole4b.x + 1.5 * zoom, rsPole4b.y - 2.5 * zoom);
-      ctx.lineTo(
-        rsPole4b.x + 2.5 * zoom,
-        rsPole4b.y - 0.5 * zoom + rsWave4b * zoom * 0.5,
-      );
       ctx.stroke();
 
-      // Orange stripe (3D isometric band)
+      // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
-      const stripeH = 3.5 * zoom;
-      const stL = isoOffset(trainX, stripeY, -14);
-      const stR = isoOffset(trainX, stripeY, 14);
-      ctx.fillStyle = "#e06000";
+      const stripeH = 4.5 * zoom;
+      const stL = isoOffset(trainX, stripeY, -16);
+      const stR = isoOffset(trainX, stripeY, 16);
+      ctx.fillStyle = "#E77500";
+      ctx.shadowColor = "rgba(231, 117, 0, 0.35)";
+      ctx.shadowBlur = 5 * zoom;
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stR.x, stR.y);
@@ -33962,108 +34693,113 @@ function renderStationTower(
       ctx.lineTo(stL.x, stL.y - stripeH);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#ff7020";
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#FF8C1A";
       ctx.beginPath();
       ctx.moveTo(stR.x, stR.y - stripeH);
       ctx.lineTo(stL.x, stL.y - stripeH);
-      ctx.lineTo(stL.x, stL.y - stripeH + 1 * zoom);
-      ctx.lineTo(stR.x, stR.y - stripeH + 1 * zoom);
+      ctx.lineTo(stL.x, stL.y - stripeH + 1.2 * zoom);
+      ctx.lineTo(stR.x, stR.y - stripeH + 1.2 * zoom);
       ctx.closePath();
       ctx.fill();
 
-      // Front headlight with heavy bracket mount
-      const headlightPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 8);
-      // Heavy bracket from cab
-      ctx.strokeStyle = "#4a4a52";
+      // Armored ram with gold trim
+      const ramPos = isoOffset(cabPos.x, cabPos.y, 9);
+      ctx.strokeStyle = "#3a4050";
       ctx.lineWidth = 3 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 8 * zoom);
+      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y);
+      ctx.lineTo(ramPos.x + 3.5 * zoom, ramPos.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 5 * zoom);
+      ctx.lineTo(ramPos.x + 3.5 * zoom, ramPos.y - 3.5 * zoom);
+      ctx.stroke();
+      const ramGrad = ctx.createLinearGradient(
+        ramPos.x - 4 * zoom,
+        ramPos.y,
+        ramPos.x + 9 * zoom,
+        ramPos.y,
+      );
+      ramGrad.addColorStop(0, "#1a2030");
+      ramGrad.addColorStop(0.5, "#3a4050");
+      ramGrad.addColorStop(1, "#1a2030");
+      ctx.fillStyle = ramGrad;
+      ctx.beginPath();
+      ctx.moveTo(ramPos.x + 6 * zoom, ramPos.y - 6 * zoom);
+      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
+      ctx.lineTo(ramPos.x, ramPos.y + 6 * zoom);
+      ctx.lineTo(ramPos.x + 5 * zoom, ramPos.y + 4.5 * zoom);
+      ctx.lineTo(ramPos.x + 9 * zoom, ramPos.y - 1 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = "#1a2030";
+      ctx.beginPath();
+      ctx.moveTo(ramPos.x + 6 * zoom, ramPos.y - 6 * zoom);
+      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
+      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 3.5 * zoom);
+      ctx.lineTo(ramPos.x, ramPos.y + 6 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ramPos.x + 6 * zoom, ramPos.y - 6 * zoom);
+      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = "#C9A227";
+      for (let bi = 0; bi < 4; bi++) {
+        const bx = ramPos.x + (1 + bi * 2) * zoom;
+        const by = ramPos.y - (1.5 + bi * 1.5) * zoom;
+        ctx.beginPath();
+        ctx.arc(bx, by, 0.8 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Front headlight
+      const headlightPos = isoOffset(cabPos.x, cabPos.y - 8 * zoom, 9);
+      ctx.strokeStyle = "#3a4050";
+      ctx.lineWidth = 3.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 9 * zoom);
       ctx.lineTo(headlightPos.x + 1.5 * zoom, headlightPos.y);
       ctx.stroke();
-      // Octagonal armored housing with gold trim
-      ctx.fillStyle = "#4a4a52";
+      ctx.fillStyle = "#3a4050";
       ctx.beginPath();
       for (let hi = 0; hi < 8; hi++) {
         const ha = (hi / 8) * Math.PI * 2;
-        const hx = headlightPos.x + 1.5 * zoom + Math.cos(ha) * 3 * zoom;
-        const hy = headlightPos.y + Math.sin(ha) * 3 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+        if (hi === 0)
+          ctx.moveTo(
+            headlightPos.x + 1.5 * zoom + Math.cos(ha) * 3.5 * zoom,
+            headlightPos.y + Math.sin(ha) * 3.5 * zoom,
+          );
+        else
+          ctx.lineTo(
+            headlightPos.x + 1.5 * zoom + Math.cos(ha) * 3.5 * zoom,
+            headlightPos.y + Math.sin(ha) * 3.5 * zoom,
+          );
       }
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.2 * zoom;
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.5 * zoom;
       ctx.stroke();
-      // Lens glow
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.7 + Math.sin(time * 3) * 0.2})`;
+      ctx.fillStyle = `rgba(255, 250, 200, ${0.75 + Math.sin(time * 3) * 0.2})`;
       ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 14 * zoom;
+      ctx.shadowBlur = 16 * zoom;
       ctx.beginPath();
       ctx.arc(
         headlightPos.x + 1.5 * zoom,
         headlightPos.y,
-        2.5 * zoom,
+        2.8 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
       ctx.shadowBlur = 0;
-
-      // Armored ram with gold trim (bolted to chassis)
-      const ramPos = isoOffset(cabPos.x, cabPos.y, 8);
-      // Mounting struts from chassis
-      ctx.strokeStyle = "#4a4a52";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y);
-      ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 4 * zoom);
-      ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y - 3 * zoom);
-      ctx.stroke();
-      // Right face
-      ctx.fillStyle = "#4a4a52";
-      ctx.beginPath();
-      ctx.moveTo(ramPos.x + 5 * zoom, ramPos.y - 5 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
-      ctx.lineTo(ramPos.x, ramPos.y + 5 * zoom);
-      ctx.lineTo(ramPos.x + 4 * zoom, ramPos.y + 3 * zoom);
-      ctx.lineTo(ramPos.x + 8 * zoom, ramPos.y - 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      // Left face
-      ctx.fillStyle = "#3a3a42";
-      ctx.beginPath();
-      ctx.moveTo(ramPos.x + 5 * zoom, ramPos.y - 5 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 3 * zoom);
-      ctx.lineTo(ramPos.x, ramPos.y + 5 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      // Gold trim on ram edge
-      ctx.strokeStyle = "#c9a227";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(ramPos.x + 5 * zoom, ramPos.y - 5 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
-      ctx.stroke();
-      // Mounting bolts
-      ctx.fillStyle = "#c9a227";
-      for (let bi = 0; bi < 3; bi++) {
-        const bx = ramPos.x + (1 + bi * 2) * zoom;
-        const by = ramPos.y - (1 + bi * 1.5) * zoom;
-        ctx.beginPath();
-        ctx.arc(bx, by, 0.7 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
     }
 
     ctx.restore();
@@ -35839,19 +36575,28 @@ function renderStationTower(
       const vx = screenPos.x - (baseW + 26) * zoom * 0.5 + v * 7 * zoom;
       const vy = screenPos.y + 24 * zoom + v * 1.2 * zoom;
       drawVineTendril(
-        vx, vy,
-        vx + (v % 2 === 0 ? -3 : 2) * zoom, vy - (8 + v) * zoom,
-        vx + (v % 2 === 0 ? 3 : -2) * zoom, vy - 4 * zoom,
-        vineGreen1, 1.4,
+        vx,
+        vy,
+        vx + (v % 2 === 0 ? -3 : 2) * zoom,
+        vy - (8 + v) * zoom,
+        vx + (v % 2 === 0 ? 3 : -2) * zoom,
+        vy - 4 * zoom,
+        vineGreen1,
+        1.4,
       );
-      ctx.fillStyle = v % 3 === 0 ? leafGreen1 : v % 3 === 1 ? leafGreen2 : leafGreen3;
+      ctx.fillStyle =
+        v % 3 === 0 ? leafGreen1 : v % 3 === 1 ? leafGreen2 : leafGreen3;
       drawLeaf(
-        vx + (v % 2 === 0 ? 2 : -1) * zoom, vy - 5 * zoom,
-        v * 0.6 - 0.8, 2.2,
+        vx + (v % 2 === 0 ? 2 : -1) * zoom,
+        vy - 5 * zoom,
+        v * 0.6 - 0.8,
+        2.2,
       );
       drawLeaf(
-        vx + (v % 2 === 0 ? -2 : 1.5) * zoom, vy - (7 + v * 0.5) * zoom,
-        -v * 0.4 + 0.5, 1.8,
+        vx + (v % 2 === 0 ? -2 : 1.5) * zoom,
+        vy - (7 + v * 0.5) * zoom,
+        -v * 0.4 + 0.5,
+        1.8,
       );
     }
 
@@ -35860,19 +36605,27 @@ function renderStationTower(
       const vx = screenPos.x + (baseW + 26) * zoom * 0.05 + v * 8 * zoom;
       const vy = screenPos.y + 20 * zoom - v * 1.5 * zoom;
       drawVineTendril(
-        vx, vy,
-        vx + (v % 2 === 0 ? 2 : -2) * zoom, vy - (9 + v) * zoom,
-        vx + (v % 2 === 0 ? -2 : 3) * zoom, vy - 5 * zoom,
-        vineGreen2, 1.3,
+        vx,
+        vy,
+        vx + (v % 2 === 0 ? 2 : -2) * zoom,
+        vy - (9 + v) * zoom,
+        vx + (v % 2 === 0 ? -2 : 3) * zoom,
+        vy - 5 * zoom,
+        vineGreen2,
+        1.3,
       );
       ctx.fillStyle = v % 2 === 0 ? leafGreen2 : leafGreen1;
       drawLeaf(
-        vx + (v % 2 === 0 ? -1 : 2) * zoom, vy - 6 * zoom,
-        v * 0.5 + 0.2, 2.0,
+        vx + (v % 2 === 0 ? -1 : 2) * zoom,
+        vy - 6 * zoom,
+        v * 0.5 + 0.2,
+        2.0,
       );
       drawLeaf(
-        vx + (v % 2 === 0 ? 1.5 : -1.5) * zoom, vy - (8 + v * 0.4) * zoom,
-        -v * 0.3 - 0.4, 1.6,
+        vx + (v % 2 === 0 ? 1.5 : -1.5) * zoom,
+        vy - (8 + v * 0.4) * zoom,
+        -v * 0.3 - 0.4,
+        1.6,
       );
     }
 
@@ -35882,15 +36635,21 @@ function renderStationTower(
       const vy = screenPos.y + 10 * zoom + v * 0.6 * zoom;
       const hangLen = (5 + v * 0.8) * zoom;
       drawVineTendril(
-        vx, vy - hangLen,
-        vx + (v % 2 === 0 ? 1 : -1.5) * zoom, vy,
-        vx + (v % 2 === 0 ? -2 : 2) * zoom, vy - hangLen * 0.5,
-        vineGreen1, 1.1,
+        vx,
+        vy - hangLen,
+        vx + (v % 2 === 0 ? 1 : -1.5) * zoom,
+        vy,
+        vx + (v % 2 === 0 ? -2 : 2) * zoom,
+        vy - hangLen * 0.5,
+        vineGreen1,
+        1.1,
       );
       ctx.fillStyle = v % 3 === 0 ? leafGreen3 : leafGreen1;
       drawLeaf(
-        vx + (v % 2 === 0 ? -1 : 1) * zoom, vy - hangLen * 0.6,
-        v * 0.4, 1.6,
+        vx + (v % 2 === 0 ? -1 : 1) * zoom,
+        vy - hangLen * 0.6,
+        v * 0.4,
+        1.6,
       );
       if (v % 2 === 0) {
         ctx.fillStyle = leafGreen2;
@@ -35904,15 +36663,21 @@ function renderStationTower(
       const vy = screenPos.y + 8 * zoom - v * 0.5 * zoom;
       const hangLen = (4 + v * 0.6) * zoom;
       drawVineTendril(
-        vx, vy - hangLen,
-        vx + (v % 2 === 0 ? -1 : 2) * zoom, vy,
-        vx + (v % 2 === 0 ? 2 : -1.5) * zoom, vy - hangLen * 0.5,
-        vineGreen2, 1.0,
+        vx,
+        vy - hangLen,
+        vx + (v % 2 === 0 ? -1 : 2) * zoom,
+        vy,
+        vx + (v % 2 === 0 ? 2 : -1.5) * zoom,
+        vy - hangLen * 0.5,
+        vineGreen2,
+        1.0,
       );
       ctx.fillStyle = v % 2 === 0 ? leafGreen1 : leafGreen3;
       drawLeaf(
-        vx + (v % 2 === 0 ? 1 : -1) * zoom, vy - hangLen * 0.5,
-        -v * 0.5 + 0.7, 1.5,
+        vx + (v % 2 === 0 ? 1 : -1) * zoom,
+        vy - hangLen * 0.5,
+        -v * 0.5 + 0.7,
+        1.5,
       );
     }
 
@@ -35920,23 +36685,32 @@ function renderStationTower(
     for (let v = 0; v < 10; v++) {
       const t = v / 9;
       const edgeX = screenPos.x - isoW * 0.85 + t * isoW * 1.7;
-      const edgeY = t < 0.5
-        ? screenPos.y - 6 * zoom + t * 2 * isoD * 0.8
-        : screenPos.y - 6 * zoom + (1 - t) * 2 * isoD * 0.8;
+      const edgeY =
+        t < 0.5
+          ? screenPos.y - 6 * zoom + t * 2 * isoD * 0.8
+          : screenPos.y - 6 * zoom + (1 - t) * 2 * isoD * 0.8;
       drawVineTendril(
-        edgeX, edgeY + 2 * zoom,
-        edgeX + (v % 2 === 0 ? 2 : -2) * zoom, edgeY - 5 * zoom,
-        edgeX + (v % 2 === 0 ? -1.5 : 1.5) * zoom, edgeY - 2 * zoom,
-        vineGreen1, 1.2,
+        edgeX,
+        edgeY + 2 * zoom,
+        edgeX + (v % 2 === 0 ? 2 : -2) * zoom,
+        edgeY - 5 * zoom,
+        edgeX + (v % 2 === 0 ? -1.5 : 1.5) * zoom,
+        edgeY - 2 * zoom,
+        vineGreen1,
+        1.2,
       );
       ctx.fillStyle = [leafGreen1, leafGreen2, leafGreen3][v % 3];
       drawLeaf(
-        edgeX + (v % 2 === 0 ? 1 : -1) * zoom, edgeY - 4 * zoom,
-        v * 0.35 - 1.5, 1.8,
+        edgeX + (v % 2 === 0 ? 1 : -1) * zoom,
+        edgeY - 4 * zoom,
+        v * 0.35 - 1.5,
+        1.8,
       );
       drawLeaf(
-        edgeX + (v % 2 === 0 ? -1 : 0.5) * zoom, edgeY - 1 * zoom,
-        -v * 0.25 + 0.8, 1.5,
+        edgeX + (v % 2 === 0 ? -1 : 0.5) * zoom,
+        edgeY - 1 * zoom,
+        -v * 0.25 + 0.8,
+        1.5,
       );
     }
 
@@ -35950,12 +36724,26 @@ function renderStationTower(
         const sy = postBaseY - seg * 4 * zoom;
         const ey = sy - 4 * zoom;
         const cx = postX + postDir * (seg % 2 === 0 ? 2 : -2) * zoom;
-        drawVineTendril(postX, sy, postX + postDir * (seg % 2 === 0 ? 1 : -1) * zoom, ey, cx, (sy + ey) * 0.5, vineGreen1, 1.5);
+        drawVineTendril(
+          postX,
+          sy,
+          postX + postDir * (seg % 2 === 0 ? 1 : -1) * zoom,
+          ey,
+          cx,
+          (sy + ey) * 0.5,
+          vineGreen1,
+          1.5,
+        );
         ctx.fillStyle = seg % 2 === 0 ? leafGreen1 : leafGreen2;
         drawLeaf(cx, (sy + ey) * 0.5, postDir * (seg * 0.4 + 0.2), 1.8);
       }
       ctx.fillStyle = leafGreen3;
-      drawLeaf(postX - postDir * 2 * zoom, postTopY + 2 * zoom, postDir * 1.2, 2.5);
+      drawLeaf(
+        postX - postDir * 2 * zoom,
+        postTopY + 2 * zoom,
+        postDir * 1.2,
+        2.5,
+      );
       drawLeaf(postX + postDir * 1.5 * zoom, postTopY, -postDir * 0.8, 2.0);
     }
 
@@ -35969,21 +36757,29 @@ function renderStationTower(
       const ty = fy - 6 * zoom;
       const wx = bX - 12 * zoom + seg * 1 * zoom;
       drawVineTendril(
-        wx, fy,
-        wx + (seg % 2 === 0 ? 2 : -1.5) * zoom, ty,
-        wx + (seg % 2 === 0 ? -1 : 2) * zoom, (fy + ty) * 0.5,
-        vineGreen1, 1.6 - seg * 0.15,
+        wx,
+        fy,
+        wx + (seg % 2 === 0 ? 2 : -1.5) * zoom,
+        ty,
+        wx + (seg % 2 === 0 ? -1 : 2) * zoom,
+        (fy + ty) * 0.5,
+        vineGreen1,
+        1.6 - seg * 0.15,
       );
       ctx.fillStyle = [leafGreen1, leafGreen2, leafGreen3][seg % 3];
       drawLeaf(
-        wx + (seg % 2 === 0 ? -3 : 3) * zoom, (fy + ty) * 0.5,
-        seg * 0.4 - 0.6, 2.0 - seg * 0.1,
+        wx + (seg % 2 === 0 ? -3 : 3) * zoom,
+        (fy + ty) * 0.5,
+        seg * 0.4 - 0.6,
+        2.0 - seg * 0.1,
       );
       if (seg % 2 === 0) {
         ctx.fillStyle = leafDark;
         drawLeaf(
-          wx + (seg % 2 === 0 ? 2 : -2) * zoom, ty + 1 * zoom,
-          -seg * 0.3 + 0.8, 1.5,
+          wx + (seg % 2 === 0 ? 2 : -2) * zoom,
+          ty + 1 * zoom,
+          -seg * 0.3 + 0.8,
+          1.5,
         );
       }
     }
@@ -35994,18 +36790,29 @@ function renderStationTower(
       const ty = fy - 7 * zoom;
       const wx = bX + 18 * zoom - seg * 0.5 * zoom;
       drawVineTendril(
-        wx, fy,
-        wx + (seg % 2 === 0 ? -2 : 1.5) * zoom, ty,
-        wx + (seg % 2 === 0 ? 1.5 : -2) * zoom, (fy + ty) * 0.5,
-        vineGreen2, 1.4 - seg * 0.1,
+        wx,
+        fy,
+        wx + (seg % 2 === 0 ? -2 : 1.5) * zoom,
+        ty,
+        wx + (seg % 2 === 0 ? 1.5 : -2) * zoom,
+        (fy + ty) * 0.5,
+        vineGreen2,
+        1.4 - seg * 0.1,
       );
       ctx.fillStyle = [leafGreen2, leafGreen3, leafGreen1][seg % 3];
       drawLeaf(
-        wx + (seg % 2 === 0 ? 2.5 : -2.5) * zoom, (fy + ty) * 0.5,
-        -seg * 0.5 + 0.3, 1.8,
+        wx + (seg % 2 === 0 ? 2.5 : -2.5) * zoom,
+        (fy + ty) * 0.5,
+        -seg * 0.5 + 0.3,
+        1.8,
       );
       ctx.fillStyle = leafGreen1;
-      drawLeaf(wx + (seg % 2 === 0 ? -1.5 : 2) * zoom, ty + 2 * zoom, seg * 0.3, 1.4);
+      drawLeaf(
+        wx + (seg % 2 === 0 ? -1.5 : 2) * zoom,
+        ty + 2 * zoom,
+        seg * 0.3,
+        1.4,
+      );
     }
 
     // --- Roof draping vines (hanging from roof edges) ---
@@ -36018,13 +36825,22 @@ function renderStationTower(
       const ry = roofY + v * 2 * zoom;
       const dropLen = (4 + v * 1.2) * zoom;
       drawVineTendril(
-        rx, ry,
-        rx + (v % 2 === 0 ? 1 : -1.5) * zoom, ry + dropLen,
-        rx + (v % 2 === 0 ? -2 : 1) * zoom, ry + dropLen * 0.5,
-        vineGreen2, 1.0,
+        rx,
+        ry,
+        rx + (v % 2 === 0 ? 1 : -1.5) * zoom,
+        ry + dropLen,
+        rx + (v % 2 === 0 ? -2 : 1) * zoom,
+        ry + dropLen * 0.5,
+        vineGreen2,
+        1.0,
       );
       ctx.fillStyle = [leafGreen3, leafGreen1, leafGreen2][v % 3];
-      drawLeaf(rx + (v % 2 === 0 ? -1.5 : 1) * zoom, ry + dropLen * 0.6, v * 0.4 + 0.5, 1.6);
+      drawLeaf(
+        rx + (v % 2 === 0 ? -1.5 : 1) * zoom,
+        ry + dropLen * 0.6,
+        v * 0.4 + 0.5,
+        1.6,
+      );
     }
 
     for (let v = 0; v < 5; v++) {
@@ -36032,13 +36848,22 @@ function renderStationTower(
       const ry = roofY + v * 2 * zoom;
       const dropLen = (3 + v * 1.0) * zoom;
       drawVineTendril(
-        rx, ry,
-        rx + (v % 2 === 0 ? -1 : 1.5) * zoom, ry + dropLen,
-        rx + (v % 2 === 0 ? 2 : -1) * zoom, ry + dropLen * 0.5,
-        vineGreen1, 0.9,
+        rx,
+        ry,
+        rx + (v % 2 === 0 ? -1 : 1.5) * zoom,
+        ry + dropLen,
+        rx + (v % 2 === 0 ? 2 : -1) * zoom,
+        ry + dropLen * 0.5,
+        vineGreen1,
+        0.9,
       );
       ctx.fillStyle = v % 2 === 0 ? leafGreen2 : leafGreen3;
-      drawLeaf(rx + (v % 2 === 0 ? 1 : -1) * zoom, ry + dropLen * 0.5, -v * 0.35, 1.4);
+      drawLeaf(
+        rx + (v % 2 === 0 ? 1 : -1) * zoom,
+        ry + dropLen * 0.5,
+        -v * 0.35,
+        1.4,
+      );
     }
 
     // --- Stable section vines (draping from the side stable roofs) ---
@@ -36050,7 +36875,16 @@ function renderStationTower(
       const sx = stableLeftX + v * 4 * zoom;
       const sy = stableRoofY + v * 1.5 * zoom;
       const drop = (5 + v) * zoom;
-      drawVineTendril(sx, sy, sx + 1 * zoom, sy + drop, sx - 1.5 * zoom, sy + drop * 0.4, vineGreen1, 1.1);
+      drawVineTendril(
+        sx,
+        sy,
+        sx + 1 * zoom,
+        sy + drop,
+        sx - 1.5 * zoom,
+        sy + drop * 0.4,
+        vineGreen1,
+        1.1,
+      );
       ctx.fillStyle = v % 2 === 0 ? leafGreen1 : leafGreen3;
       drawLeaf(sx - 1 * zoom, sy + drop * 0.5, v * 0.5, 1.7);
       drawLeaf(sx + 1.5 * zoom, sy + drop * 0.7, -v * 0.3 + 1.0, 1.3);
@@ -36060,7 +36894,16 @@ function renderStationTower(
       const sx = stableRightX - v * 4 * zoom;
       const sy = stableRoofY + v * 1.5 * zoom;
       const drop = (4 + v) * zoom;
-      drawVineTendril(sx, sy, sx - 1 * zoom, sy + drop, sx + 1.5 * zoom, sy + drop * 0.4, vineGreen2, 1.0);
+      drawVineTendril(
+        sx,
+        sy,
+        sx - 1 * zoom,
+        sy + drop,
+        sx + 1.5 * zoom,
+        sy + drop * 0.4,
+        vineGreen2,
+        1.0,
+      );
       ctx.fillStyle = v % 2 === 0 ? leafGreen2 : leafGreen1;
       drawLeaf(sx + 1 * zoom, sy + drop * 0.4, -v * 0.4, 1.5);
       drawLeaf(sx - 1.5 * zoom, sy + drop * 0.65, v * 0.35 + 0.5, 1.3);
@@ -36074,10 +36917,14 @@ function renderStationTower(
       const spreadX = (v % 2 === 0 ? 4 : -3) * zoom;
       const spreadY = (2 + v * 0.3) * zoom;
       drawVineTendril(
-        gx, gy,
-        gx + spreadX, gy - spreadY,
-        gx + spreadX * 0.5, gy - spreadY * 0.3,
-        vineGreen1, 1.0,
+        gx,
+        gy,
+        gx + spreadX,
+        gy - spreadY,
+        gx + spreadX * 0.5,
+        gy - spreadY * 0.3,
+        vineGreen1,
+        1.0,
       );
       ctx.fillStyle = [leafGreen1, leafGreen2, leafGreen3, leafDark][v % 4];
       drawLeaf(gx + spreadX * 0.6, gy - spreadY * 0.5, v * 0.3, 1.5);
@@ -36092,14 +36939,28 @@ function renderStationTower(
       const fx = screenPos.x - isoW * 0.6 + v * isoW * 0.3;
       const fy = screenPos.y - 1 * zoom + v * 0.8 * zoom;
       drawVineTendril(
-        fx, fy,
-        fx + (v % 2 === 0 ? 3 : -2) * zoom, fy - 8 * zoom,
-        fx + (v % 2 === 0 ? -1 : 2) * zoom, fy - 4 * zoom,
-        vineGreen2, 1.2,
+        fx,
+        fy,
+        fx + (v % 2 === 0 ? 3 : -2) * zoom,
+        fy - 8 * zoom,
+        fx + (v % 2 === 0 ? -1 : 2) * zoom,
+        fy - 4 * zoom,
+        vineGreen2,
+        1.2,
       );
       ctx.fillStyle = v % 2 === 0 ? leafGreen1 : leafGreen2;
-      drawLeaf(fx + (v % 2 === 0 ? -1.5 : 1.5) * zoom, fy - 5 * zoom, v * 0.4 - 0.8, 1.8);
-      drawLeaf(fx + (v % 2 === 0 ? 2 : -1) * zoom, fy - 7 * zoom, -v * 0.3 + 0.5, 1.4);
+      drawLeaf(
+        fx + (v % 2 === 0 ? -1.5 : 1.5) * zoom,
+        fy - 5 * zoom,
+        v * 0.4 - 0.8,
+        1.8,
+      );
+      drawLeaf(
+        fx + (v % 2 === 0 ? 2 : -1) * zoom,
+        fy - 7 * zoom,
+        -v * 0.3 + 0.5,
+        1.4,
+      );
     }
   }
 
@@ -36122,124 +36983,135 @@ function renderStationTower(
     const goldDark = "#a08020";
     const ropeColor = "#706050";
 
-    // Isometric unit vectors: left edge goes (-2, 1), right edge goes (2, 1)
-    const isoLX = -2;
-    const isoLY = 1;
-    const isoRX = 2;
-    const isoRY = 1;
-
-    const drawRope = (x1: number, y1: number, x2: number, y2: number, sag: number) => {
+    const drawRope = (
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      sag: number,
+    ) => {
       ctx.strokeStyle = ropeColor;
       ctx.lineWidth = 1.0 * zoom;
       ctx.beginPath();
       ctx.moveTo(x1, y1);
-      ctx.quadraticCurveTo((x1 + x2) * 0.5, (y1 + y2) * 0.5 + sag * zoom, x2, y2);
+      ctx.quadraticCurveTo(
+        (x1 + x2) * 0.5,
+        (y1 + y2) * 0.5 + sag * zoom,
+        x2,
+        y2,
+      );
       ctx.stroke();
     };
 
-    // Isometric pennant: hangs down in 3D, drawn as a parallelogram
-    // that respects isometric projection. The flag plane faces the camera
-    // but the bottom tip offsets along the isometric axis.
     const drawIsoPennant = (
-      x: number, y: number,
-      h: number, w: number,
+      x: number,
+      y: number,
+      h: number,
+      w: number,
       color: string,
-      isoOffX: number, isoOffY: number,
+      ndx: number,
+      ndy: number,
     ) => {
       const wave = Math.sin(time * 0.002 + x * 0.1 + y * 0.07) * 1.0 * zoom;
       const fh = h * zoom;
       const fw = w * zoom;
-      const ox = isoOffX * zoom * 0.3;
-      const oy = isoOffY * zoom * 0.3;
-
-      // Front face
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x - fw * 0.5, y);
-      ctx.lineTo(x + fw * 0.5, y);
-      ctx.lineTo(x + ox + wave * 0.2, y + fh + oy);
+      ctx.moveTo(x - fw * 0.25 * ndx, y - fw * 0.25 * ndy);
+      ctx.lineTo(x + fw * 0.75 * ndx, y + fw * 0.75 * ndy);
+      ctx.lineTo(x + fw * 0.2 * ndx + wave * 0.1, y + fh + fw * 0.1 * ndy);
       ctx.closePath();
       ctx.fill();
-
-      // Isometric side sliver (depth)
-      ctx.fillStyle = purpleDeep;
-      ctx.beginPath();
-      ctx.moveTo(x + fw * 0.5, y);
-      ctx.lineTo(x + fw * 0.5 + 1.5 * zoom, y - 0.75 * zoom);
-      ctx.lineTo(x + ox + wave * 0.2 + 1.5 * zoom, y + fh + oy - 0.75 * zoom);
-      ctx.lineTo(x + ox + wave * 0.2, y + fh + oy);
-      ctx.closePath();
-      ctx.fill();
-
       ctx.strokeStyle = goldAccent;
       ctx.lineWidth = 0.4 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(x - fw * 0.5, y);
-      ctx.lineTo(x + fw * 0.5, y);
-      ctx.lineTo(x + ox + wave * 0.2, y + fh + oy);
-      ctx.closePath();
       ctx.stroke();
     };
 
-    // Bunting with isometric pennants along a rope
     const drawIsoBunting = (
-      x1: number, y1: number,
-      x2: number, y2: number,
-      sag: number, count: number,
-      colors: string[], flagH: number, flagW: number,
-      isoOX: number, isoOY: number,
+      x1: number,
+      y1: number,
+      x2: number,
+      y2: number,
+      sag: number,
+      count: number,
+      colors: string[],
+      flagH: number,
+      flagW: number,
     ) => {
       drawRope(x1, y1, x2, y2, sag);
+      const edx = x2 - x1;
+      const edy = y2 - y1;
+      const len = Math.sqrt(edx * edx + edy * edy);
+      const ndx = len > 0 ? edx / len : 1;
+      const ndy = len > 0 ? edy / len : 0;
       for (let i = 0; i < count; i++) {
         const t = (i + 0.5) / count;
-        const rx = x1 + t * (x2 - x1);
-        const ry = y1 + t * (y2 - y1) + sag * zoom * (4 * t * (1 - t));
-        drawIsoPennant(rx, ry, flagH, flagW, colors[i % colors.length], isoOX, isoOY);
+        const rx = x1 + t * edx;
+        const ry = y1 + t * edy + sag * zoom * (4 * t * (1 - t));
+        drawIsoPennant(
+          rx,
+          ry,
+          flagH,
+          flagW,
+          colors[i % colors.length],
+          ndx,
+          ndy,
+        );
       }
     };
 
-    // 3D isometric wall banner
     const drawWallBanner = (
-      x: number, y: number,
-      w: number, h: number,
-      faceColor: string, sideColor: string,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      faceColor: string,
+      _sideColor: string,
       hasEmblem: boolean,
+      edgeDX: number,
+      edgeDY: number,
     ) => {
       const wave = Math.sin(time * 0.0015 + x * 0.05) * 1.5 * zoom;
       const bw = w * zoom;
       const bh = h * zoom;
-      const depth = 2 * zoom;
-
-      ctx.fillStyle = sideColor;
-      ctx.beginPath();
-      ctx.moveTo(x + bw * 0.5, y);
-      ctx.lineTo(x + bw * 0.5 + depth, y - depth * 0.5);
-      ctx.lineTo(x + bw * 0.5 + depth, y + bh - depth * 0.5 + wave);
-      ctx.lineTo(x + bw * 0.5, y + bh + wave);
-      ctx.closePath();
-      ctx.fill();
+      const elen = Math.sqrt(edgeDX * edgeDX + edgeDY * edgeDY);
+      const ndx = elen > 0 ? edgeDX / elen : 1;
+      const ndy = elen > 0 ? edgeDY / elen : 0;
 
       ctx.fillStyle = faceColor;
       ctx.beginPath();
-      ctx.moveTo(x - bw * 0.5, y);
-      ctx.lineTo(x + bw * 0.5, y);
-      ctx.lineTo(x + bw * 0.5, y + bh + wave);
-      ctx.lineTo(x, y + bh + wave + 2.5 * zoom);
-      ctx.lineTo(x - bw * 0.5, y + bh + wave);
+      ctx.moveTo(x - bw * 0.3 * ndx, y - bw * 0.3 * ndy);
+      ctx.lineTo(x + bw * 0.7 * ndx, y + bw * 0.7 * ndy);
+      ctx.lineTo(x + bw * 0.7 * ndx, y + bh + wave + bw * 0.7 * ndy);
+      ctx.lineTo(
+        x + bw * 0.2 * ndx,
+        y + bh + wave + 2.5 * zoom + bw * 0.2 * ndy,
+      );
+      ctx.lineTo(x - bw * 0.3 * ndx, y + bh + wave - bw * 0.3 * ndy);
       ctx.closePath();
       ctx.fill();
 
       ctx.fillStyle = goldAccent;
-      ctx.fillRect(x - bw * 0.5 - 0.5 * zoom, y - 1.2 * zoom, bw + 1 * zoom, 2 * zoom);
+      const rodHW = bw * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(x - rodHW * ndx - 0.5 * zoom, y - rodHW * ndy - 1.2 * zoom);
+      ctx.lineTo(x + rodHW * ndx + 0.5 * zoom, y + rodHW * ndy - 1.2 * zoom);
+      ctx.lineTo(x + rodHW * ndx + 0.5 * zoom, y + rodHW * ndy + 0.8 * zoom);
+      ctx.lineTo(x - rodHW * ndx - 0.5 * zoom, y - rodHW * ndy + 0.8 * zoom);
+      ctx.closePath();
+      ctx.fill();
 
       ctx.strokeStyle = goldAccent;
       ctx.lineWidth = 0.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(x - bw * 0.5, y);
-      ctx.lineTo(x - bw * 0.5, y + bh + wave);
-      ctx.lineTo(x, y + bh + wave + 2.5 * zoom);
-      ctx.lineTo(x + bw * 0.5, y + bh + wave);
-      ctx.lineTo(x + bw * 0.5, y);
+      ctx.moveTo(x - bw * 0.3 * ndx, y - bw * 0.3 * ndy);
+      ctx.lineTo(x - bw * 0.3 * ndx, y + bh + wave - bw * 0.3 * ndy);
+      ctx.lineTo(
+        x + bw * 0.2 * ndx,
+        y + bh + wave + 2.5 * zoom + bw * 0.2 * ndy,
+      );
+      ctx.lineTo(x + bw * 0.7 * ndx, y + bh + wave + bw * 0.7 * ndy);
+      ctx.lineTo(x + bw * 0.7 * ndx, y + bw * 0.7 * ndy);
       ctx.stroke();
 
       if (hasEmblem) {
@@ -36256,11 +37128,14 @@ function renderStationTower(
       }
     };
 
-    // Pole flag on a vertical pole
     const drawPoleFlag = (
-      x: number, y: number,
-      poleH: number, fw: number, fh: number,
-      color: string, dir: number,
+      x: number,
+      y: number,
+      poleH: number,
+      fw: number,
+      fh: number,
+      color: string,
+      dir: number,
     ) => {
       const wave = Math.sin(time * 0.002 + x * 0.08 + y * 0.06) * 1.5 * zoom;
       const ph = poleH * zoom;
@@ -36272,11 +37147,13 @@ function renderStationTower(
       ctx.lineTo(x, y - ph);
       ctx.stroke();
 
+      const fW = fw * zoom;
+      const fH = fh * zoom;
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.moveTo(x, y - ph);
-      ctx.lineTo(x + dir * fw * zoom, y - ph + fh * 0.5 * zoom + wave);
-      ctx.lineTo(x, y - ph + fh * zoom);
+      ctx.lineTo(x + dir * fW * 0.7, y - ph + fH * 0.15 + wave * 0.3);
+      ctx.lineTo(x + dir * fW * 0.1, y - ph + fH * 0.6 + wave * 0.5);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = goldAccent;
@@ -36313,6 +37190,20 @@ function renderStationTower(
     const btRX = screenPos.x + (baseW + 26) * zoom * 0.5;
     const btRY = screenPos.y + 13 * zoom;
 
+    // Edge direction vectors for each tier (left-front and right-front edges)
+    const platLDx = platBotX - platLX;
+    const platLDy = platBotY - platLY;
+    const platRDx = platRX - platBotX;
+    const platRDy = platRY - platBotY;
+    const midLDx = midBotX - midLX;
+    const midLDy = midBotY - midLY;
+    const midRDx = midRX - midBotX;
+    const midRDy = midRY - midBotY;
+    const btLDx = btBotX - btLX;
+    const btLDy = btBotY - btLY;
+    const btRDx = btRX - btBotX;
+    const btRDy = btRY - btBotY;
+
     // =============================================
     // 1. TOWER TOP FLAGS (pole-mounted on each tower peak)
     // =============================================
@@ -36323,153 +37214,226 @@ function renderStationTower(
     // 2. TOWER-TO-TOWER BUNTING (high string between tower tops)
     // =============================================
     drawIsoBunting(
-      ltX, ltTopY + 6 * zoom,
-      rtX, rtTopY + 6 * zoom,
-      7, 7,
-      [purpleMid, purpleDark, purpleLight], 5, 3, 0, 0,
+      ltX,
+      ltTopY + 6 * zoom,
+      rtX,
+      rtTopY + 6 * zoom,
+      7,
+      7,
+      [purpleMid, purpleDark, purpleLight],
+      5,
+      3,
     );
 
     // =============================================
-    // 3. MID-LEVEL BUNTING (between towers, lower)
+    // 5. WALL-MOUNTED BANNERS + FOUNDATION BANNERS (top tier)
+    // =============================================
+    drawWallBanner(
+      ltX - 5 * zoom,
+      ltY - 32 * zoom,
+      5,
+      11,
+      purpleMid,
+      purpleDark,
+      true,
+      platLDx,
+      platLDy,
+    );
+
+    // =============================================
+    // 6. TOP PLATFORM EDGE BUNTING (isometric diamond edges)
     // =============================================
     drawIsoBunting(
-      ltX - 4 * zoom, bY - 16 * zoom,
-      rtX + 4 * zoom, bY - 14 * zoom,
-      6, 6,
-      [purpleLight, purpleMid, purpleDark], 4, 2.5, 0, 0,
-    );
-
-    // =============================================
-    // 4. DIAGONAL BUNTING (tower to keep corners)
-    // =============================================
-    drawIsoBunting(
-      ltX, ltTopY + 10 * zoom,
-      bX - 6 * zoom, keepTopY + 4 * zoom,
-      4, 3,
-      [purpleMid, purpleLight], 4, 2.5, 0, 0,
+      platLX,
+      platLY,
+      platBotX,
+      platBotY,
+      4,
+      5,
+      [purpleDark, purpleMid, purpleLight],
+      3.5,
+      2,
     );
     drawIsoBunting(
-      rtX, rtTopY + 10 * zoom,
-      bX + 6 * zoom, keepTopY + 4 * zoom,
-      4, 3,
-      [purpleDark, purpleLight], 4, 2.5, 0, 0,
+      platBotX,
+      platBotY,
+      platRX,
+      platRY,
+      4,
+      5,
+      [purpleLight, purpleDark, purpleMid],
+      3.5,
+      2,
     );
 
     // =============================================
-    // 5. LEFT SIDE POLE STRINGS (along the top-left / back-left edge)
-    // Strings running along the back-left isometric edge of the platform,
-    // from the back (top) corner to the left corner.
+    // 7. MIDDLE TIER BUNTING + FOUNDATION BANNERS
     // =============================================
-    const platBackX = screenPos.x;
-    const platBackY = 2 * platLY - platBotY;
-
-    // Left pole near the back corner (offset outward along top-left edge)
-    const lPole1X = platBackX + (platLX - platBackX) * 0.1 - 4 * zoom;
-    const lPole1Y = platBackY + (platLY - platBackY) * 0.1 - 2 * zoom;
-    // Left pole near the left corner (offset outward)
-    const lPole2X = platLX + (platLX - platBackX) * 0.05 - 4 * zoom;
-    const lPole2Y = platLY + (platLY - platBackY) * 0.05 - 2 * zoom;
-
-    drawPoleFlag(lPole1X, lPole1Y, 16, 5, 7, purpleMid, -1);
-    drawPoleFlag(lPole2X, lPole2Y, 14, 5, 6, purpleLight, -1);
-
-    // Upper left string
     drawIsoBunting(
-      lPole1X, lPole1Y - 16 * zoom,
-      lPole2X, lPole2Y - 14 * zoom,
-      5, 6,
-      [purpleDark, purpleMid, purpleLight], 5.5, 3.5, isoLX, isoLY,
+      midLX,
+      midLY,
+      midBotX,
+      midBotY,
+      3,
+      4,
+      [purpleMid, purpleLight],
+      3,
+      2,
     );
-
-    // Lower left string
     drawIsoBunting(
-      lPole1X, lPole1Y - 8 * zoom,
-      lPole2X, lPole2Y - 6 * zoom,
-      4, 5,
-      [purpleLight, purpleDark, purpleMid], 4.5, 3, isoLX, isoLY,
+      midBotX,
+      midBotY,
+      midRX,
+      midRY,
+      3,
+      4,
+      [purpleDark, purpleMid],
+      3,
+      2,
+    );
+    // Mid tier left face banners
+    drawWallBanner(
+      midLX + (midBotX - midLX) * 0.3,
+      midLY + (midBotY - midLY) * 0.3 - 3 * zoom,
+      3,
+      5,
+      purpleLight,
+      purpleMid,
+      false,
+      midLDx,
+      midLDy,
+    );
+    drawWallBanner(
+      midLX + (midBotX - midLX) * 0.7,
+      midLY + (midBotY - midLY) * 0.7 - 3 * zoom,
+      3,
+      5,
+      purpleMid,
+      purpleDark,
+      false,
+      midLDx,
+      midLDy,
+    );
+    // Mid tier right face banners
+    drawWallBanner(
+      midBotX + (midRX - midBotX) * 0.3,
+      midBotY + (midRY - midBotY) * 0.3 - 3 * zoom,
+      3,
+      5,
+      purpleDark,
+      purpleDeep,
+      false,
+      midRDx,
+      midRDy,
+    );
+    drawWallBanner(
+      midBotX + (midRX - midBotX) * 0.7,
+      midBotY + (midRY - midBotY) * 0.7 - 3 * zoom,
+      3,
+      5,
+      purpleLight,
+      purpleMid,
+      false,
+      midRDx,
+      midRDy,
     );
 
     // =============================================
-    // 6. RIGHT SIDE POLE STRINGS (along the top-right / back-right edge)
-    // Strings running along the back-right isometric edge of the platform,
-    // from the back (top) corner to the right corner.
-    // =============================================
-    // Right pole near the back corner (offset outward along top-right edge)
-    const rPole1X = platBackX + (platRX - platBackX) * 0.1 + 4 * zoom;
-    const rPole1Y = platBackY + (platRY - platBackY) * 0.1 - 2 * zoom;
-    // Right pole near the right corner (offset outward)
-    const rPole2X = platRX + (platRX - platBackX) * 0.05 + 4 * zoom;
-    const rPole2Y = platRY + (platRY - platBackY) * 0.05 - 2 * zoom;
-
-    drawPoleFlag(rPole1X, rPole1Y, 16, 5, 7, purpleLight, 1);
-    drawPoleFlag(rPole2X, rPole2Y, 14, 5, 6, purpleDark, 1);
-
-    // Upper right string
-    drawIsoBunting(
-      rPole1X, rPole1Y - 16 * zoom,
-      rPole2X, rPole2Y - 14 * zoom,
-      5, 6,
-      [purpleMid, purpleDark, purpleLight], 5.5, 3.5, isoRX, isoRY,
-    );
-
-    // Lower right string
-    drawIsoBunting(
-      rPole1X, rPole1Y - 8 * zoom,
-      rPole2X, rPole2Y - 6 * zoom,
-      4, 5,
-      [purpleDark, purpleLight, purpleMid], 4.5, 3, isoRX, isoRY,
-    );
-
-    // =============================================
-    // 7. WALL-MOUNTED BANNERS (3D isometric on key walls)
-    // =============================================
-    drawWallBanner(ltX - 5 * zoom, ltY - 32 * zoom, 5, 11, purpleMid, purpleDark, true);
-    drawWallBanner(rtX + 5 * zoom, rtY - 38 * zoom, 5, 11, purpleDark, purpleDeep, true);
-    drawWallBanner(bX + 1 * zoom, bY - 22 * zoom, 6, 12, purpleMid, purpleDark, true);
-
-    // =============================================
-    // 8. TOP PLATFORM EDGE BUNTING (isometric diamond edges)
-    // =============================================
-    drawIsoBunting(platLX, platLY, platBotX, platBotY, 4, 5, [purpleDark, purpleMid, purpleLight], 3.5, 2, isoLX, isoLY);
-    drawIsoBunting(platBotX, platBotY, platRX, platRY, 4, 5, [purpleLight, purpleDark, purpleMid], 3.5, 2, isoRX, isoRY);
-
-    // =============================================
-    // 9. MIDDLE TIER BUNTING (foundation mid layer)
-    // =============================================
-    drawIsoBunting(midLX, midLY, midBotX, midBotY, 3, 4, [purpleMid, purpleLight], 3, 2, isoLX, isoLY);
-    drawIsoBunting(midBotX, midBotY, midRX, midRY, 3, 4, [purpleDark, purpleMid], 3, 2, isoRX, isoRY);
-
-    // =============================================
-    // 10. BOTTOM TIER BUNTING (lowest foundation layer, moved up)
+    // 8. BOTTOM TIER BUNTING + FOUNDATION BANNERS
     // =============================================
     const btOffY = -4 * zoom;
-    drawIsoBunting(btLX, btLY + btOffY, btBotX, btBotY + btOffY, 3, 4, [purpleLight, purpleDark], 3, 2, isoLX, isoLY);
-    drawIsoBunting(btBotX, btBotY + btOffY, btRX, btRY + btOffY, 3, 4, [purpleMid, purpleLight], 3, 2, isoRX, isoRY);
+    drawIsoBunting(
+      btLX,
+      btLY + btOffY,
+      btBotX,
+      btBotY + btOffY,
+      3,
+      4,
+      [purpleLight, purpleDark],
+      3,
+      2,
+    );
+    drawIsoBunting(
+      btBotX,
+      btBotY + btOffY,
+      btRX,
+      btRY + btOffY,
+      3,
+      4,
+      [purpleMid, purpleLight],
+      3,
+      2,
+    );
+    // Bottom tier left face banners
+    drawWallBanner(
+      btLX + (btBotX - btLX) * 0.3,
+      btLY + (btBotY - btLY) * 0.3 + btOffY - 3 * zoom,
+      3,
+      5,
+      purpleMid,
+      purpleDark,
+      false,
+      btLDx,
+      btLDy,
+    );
+    drawWallBanner(
+      btLX + (btBotX - btLX) * 0.7,
+      btLY + (btBotY - btLY) * 0.7 + btOffY - 3 * zoom,
+      3,
+      5,
+      purpleLight,
+      purpleMid,
+      false,
+      btLDx,
+      btLDy,
+    );
+    // Bottom tier right face banners
+    drawWallBanner(
+      btBotX + (btRX - btBotX) * 0.3,
+      btBotY + (btRY - btBotY) * 0.3 + btOffY - 3 * zoom,
+      3,
+      5,
+      purpleDark,
+      purpleDeep,
+      false,
+      btRDx,
+      btRDy,
+    );
+    drawWallBanner(
+      btBotX + (btRX - btBotX) * 0.7,
+      btBotY + (btRY - btBotY) * 0.7 + btOffY - 3 * zoom,
+      3,
+      5,
+      purpleMid,
+      purpleDark,
+      false,
+      btRDx,
+      btRDy,
+    );
 
     // =============================================
-    // 11. CORNER POST FLAGS
+    // 9. STABLE ROOF BANNERS
+    // =============================================
+    drawWallBanner(
+      bX - 24 * zoom,
+      bY - 12 * zoom,
+      4,
+      6,
+      purpleLight,
+      purpleMid,
+      false,
+      platLDx,
+      platLDy,
+    );
+
+    // =============================================
+    // 10. CORNER POST FLAGS
     // =============================================
     const postLfX = screenPos.x - (baseW + 8) * zoom * 0.45;
     const postRtX = screenPos.x + (baseW + 8) * zoom * 0.45;
     const postBaseY = screenPos.y - 2 * zoom;
     drawPoleFlag(postLfX, postBaseY, 8, 4, 5, purpleMid, -1);
     drawPoleFlag(postRtX, postBaseY, 8, 4, 5, purpleLight, 1);
-
-    // =============================================
-    // 12. STABLE ROOF BANNERS
-    // =============================================
-    drawWallBanner(bX - 24 * zoom, bY - 12 * zoom, 4, 6, purpleLight, purpleMid, false);
-    drawWallBanner(bX + 26 * zoom, bY - 12 * zoom, 4, 6, purpleDark, purpleDeep, false);
-
-    // =============================================
-    // 13. BATTLEMENTS BUNTING (along keep top)
-    // =============================================
-    drawIsoBunting(
-      bX - 12 * zoom, keepTopY + 3 * zoom,
-      bX + 12 * zoom, keepTopY + 3 * zoom,
-      3, 4,
-      [purpleLight, purpleDark], 3.5, 2, 0, 0,
-    );
   }
 
   ctx.restore();
@@ -36507,11 +37471,19 @@ export function renderStationRange(
 
   // Use cyan tint when boosted by beacon, otherwise orange
   ctx.strokeStyle = isBoosted
-    ? (tower.isHovered ? "rgba(0, 229, 255, 0.5)" : "rgba(0, 229, 255, 0.7)")
-    : (tower.isHovered ? "rgba(255, 180, 100, 0.4)" : "rgba(255, 180, 100, 0.6)");
+    ? tower.isHovered
+      ? "rgba(0, 229, 255, 0.5)"
+      : "rgba(0, 229, 255, 0.7)"
+    : tower.isHovered
+      ? "rgba(255, 180, 100, 0.4)"
+      : "rgba(255, 180, 100, 0.6)";
   ctx.fillStyle = isBoosted
-    ? (tower.isHovered ? "rgba(0, 229, 255, 0.08)" : "rgba(0, 229, 255, 0.15)")
-    : (tower.isHovered ? "rgba(255, 180, 100, 0.08)" : "rgba(255, 180, 100, 0.15)");
+    ? tower.isHovered
+      ? "rgba(0, 229, 255, 0.08)"
+      : "rgba(0, 229, 255, 0.15)"
+    : tower.isHovered
+      ? "rgba(255, 180, 100, 0.08)"
+      : "rgba(255, 180, 100, 0.15)";
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 4]);
   ctx.beginPath();
