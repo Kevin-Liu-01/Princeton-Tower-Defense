@@ -179,12 +179,14 @@ interface OrnateBorderProps {
   position: "top" | "bottom" | "left" | "right";
   color?: string;
   glowColor?: string;
+  scale?: number;
 }
 
 const OrnateBorder: React.FC<OrnateBorderProps> = ({
   position,
   color = "#d97706",
   glowColor = "#f59e0b",
+  scale = 1,
 }) => {
   const isHorizontal = position === "top" || position === "bottom";
 
@@ -201,8 +203,8 @@ const OrnateBorder: React.FC<OrnateBorderProps> = ({
         className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
         style={{
           width: "calc(100% - 48px)",
-          height: 8,
-          filter: `drop-shadow(0 0 4px ${glowColor}35)`,
+          height: 8 * scale,
+          filter: `drop-shadow(0 0 ${4 * scale}px ${glowColor}35)`,
         }}
       >
         <svg
@@ -274,9 +276,9 @@ const OrnateBorder: React.FC<OrnateBorderProps> = ({
     <div
       className={`absolute ${positionClasses[position]} pointer-events-none z-20`}
       style={{
-        width: 14,
+        width: 14 * scale,
         height: "calc(100% - 48px)",
-        filter: `drop-shadow(0 0 4px ${glowColor}30)`,
+        filter: `drop-shadow(0 0 ${4 * scale}px ${glowColor}30)`,
       }}
     >
       <svg
@@ -350,6 +352,9 @@ export interface OrnateFrameProps {
   showBorders?: boolean;
   showSideBorders?: boolean;
   showTopBottomBorders?: boolean;
+  borderScale?: number;
+  sideBorderScale?: number;
+  topBottomBorderScale?: number;
   color?: string;
   glowColor?: string;
 }
@@ -361,6 +366,9 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
   showBorders = true,
   showSideBorders = true,
   showTopBottomBorders = true,
+  borderScale = 1,
+  sideBorderScale,
+  topBottomBorderScale,
   color = "#d97706",
   glowColor = "#f59e0b",
 }) => {
@@ -378,14 +386,14 @@ export const OrnateFrame: React.FC<OrnateFrameProps> = ({
         <>
           {showTopBottomBorders && (
             <>
-              <OrnateBorder position="top" color={color} glowColor={glowColor} />
-              <OrnateBorder position="bottom" color={color} glowColor={glowColor} />
+              <OrnateBorder position="top" color={color} glowColor={glowColor} scale={topBottomBorderScale ?? borderScale} />
+              <OrnateBorder position="bottom" color={color} glowColor={glowColor} scale={topBottomBorderScale ?? borderScale} />
             </>
           )}
           {showSideBorders && (
             <>
-              <OrnateBorder position="left" color={color} glowColor={glowColor} />
-              <OrnateBorder position="right" color={color} glowColor={glowColor} />
+              <OrnateBorder position="left" color={color} glowColor={glowColor} scale={sideBorderScale ?? borderScale} />
+              <OrnateBorder position="right" color={color} glowColor={glowColor} scale={sideBorderScale ?? borderScale} />
             </>
           )}
         </>

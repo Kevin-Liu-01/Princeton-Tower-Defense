@@ -12,6 +12,7 @@ import type {
   Hero,
 } from "../../types";
 import { worldToScreen } from "../../utils";
+import { ISO_Y_RATIO } from "../../constants";
 import { drawLightningBolt, drawExplosion } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
 import { renderEnemyDeath } from "./deathAnimations";
@@ -109,7 +110,7 @@ export function renderEffect(
             screenPos.x,
             screenPos.y,
             ringRadius,
-            ringRadius * 0.5,
+            ringRadius * ISO_Y_RATIO,
             0,
             0,
             Math.PI * 2,
@@ -130,7 +131,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         fieldRadius,
-        fieldRadius * 0.5,
+        fieldRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -160,7 +161,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         arcaneRadius,
-        arcaneRadius * 0.5,
+        arcaneRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -290,7 +291,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         waveRadius,
-        waveRadius * 0.5,
+        waveRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -366,7 +367,7 @@ export function renderEffect(
           targetScreen.x,
           targetScreen.y,
           warningSize,
-          warningSize * 0.5,
+          warningSize * ISO_Y_RATIO,
           0,
           0,
           Math.PI * 2,
@@ -400,7 +401,7 @@ export function renderEffect(
           targetScreen.x,
           targetScreen.y,
           groundGlowRadius,
-          groundGlowRadius * 0.5,
+          groundGlowRadius * ISO_Y_RATIO,
           0,
           0,
           Math.PI * 2,
@@ -678,7 +679,7 @@ export function renderEffect(
           screenPos.x,
           screenPos.y,
           shockRadius,
-          shockRadius * 0.5,
+          shockRadius * ISO_Y_RATIO,
           0,
           0,
           Math.PI * 2,
@@ -695,7 +696,7 @@ export function renderEffect(
           screenPos.x,
           screenPos.y,
           shock2Radius,
-          shock2Radius * 0.5,
+          shock2Radius * ISO_Y_RATIO,
           0,
           0,
           Math.PI * 2,
@@ -721,7 +722,7 @@ export function renderEffect(
           screenPos.x,
           screenPos.y,
           scorchRadius,
-          scorchRadius * 0.5,
+          scorchRadius * ISO_Y_RATIO,
           0,
           0,
           Math.PI * 2,
@@ -790,7 +791,7 @@ export function renderEffect(
           const debrisX = screenPos.x + Math.cos(debrisAngle) * debrisDist;
           const debrisY =
             screenPos.y +
-            Math.sin(debrisAngle) * debrisDist * 0.5 -
+            Math.sin(debrisAngle) * debrisDist * ISO_Y_RATIO -
             progress * 30 * zoom;
           const debrisAlpha = alpha * (1 - progress * 0.5);
           const debrisSize =
@@ -838,7 +839,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         freezeRadius,
-        freezeRadius * 0.5,
+        freezeRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -872,7 +873,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         inspireRadius,
-        inspireRadius * 0.5,
+        inspireRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -995,7 +996,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         smashRadius,
-        smashRadius * 0.5,
+        smashRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1150,7 +1151,7 @@ export function renderEffect(
         ctx.beginPath();
         ctx.arc(
           screenPos.x + Math.cos(angle) * dist,
-          screenPos.y + Math.sin(angle) * dist * 0.5 - rise,
+          screenPos.y + Math.sin(angle) * dist * ISO_Y_RATIO - rise,
           pSize,
           0,
           Math.PI * 2,
@@ -1177,7 +1178,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         ringRadius,
-        ringRadius * 0.5,
+        ringRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1202,7 +1203,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         ringRadius,
-        ringRadius * 0.5,
+        ringRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1262,7 +1263,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         burstRadius,
-        burstRadius * 0.5,
+        burstRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1277,7 +1278,7 @@ export function renderEffect(
         ctx.beginPath();
         ctx.arc(
           screenPos.x + Math.cos(pAngle) * pDist,
-          screenPos.y + Math.sin(pAngle) * pDist * 0.5,
+          screenPos.y + Math.sin(pAngle) * pDist * ISO_Y_RATIO,
           3 * zoom * (1 - progress * 0.5),
           0,
           Math.PI * 2,
@@ -1310,7 +1311,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         fireRadius,
-        fireRadius * 0.5,
+        fireRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1325,7 +1326,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         fireRadius,
-        fireRadius * 0.5,
+        fireRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1357,7 +1358,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         iceRadius,
-        iceRadius * 0.5,
+        iceRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1369,7 +1370,7 @@ export function renderEffect(
       for (let i = 0; i < 8; i++) {
         const cAngle = (i / 8) * Math.PI * 2;
         const cx = screenPos.x + Math.cos(cAngle) * iceRadius;
-        const cy = screenPos.y + Math.sin(cAngle) * iceRadius * 0.5;
+        const cy = screenPos.y + Math.sin(cAngle) * iceRadius * ISO_Y_RATIO;
         const cSize = 5 * zoom * (1 - progress * 0.5);
 
         ctx.beginPath();
@@ -1406,7 +1407,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         darkRadius,
-        darkRadius * 0.5,
+        darkRadius * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -1424,7 +1425,7 @@ export function renderEffect(
           screenPos.x + Math.cos(tAngle + 0.3) * darkRadius * 0.6,
           screenPos.y + Math.sin(tAngle + 0.3) * darkRadius * 0.3,
           screenPos.x + Math.cos(tAngle) * darkRadius,
-          screenPos.y + Math.sin(tAngle) * darkRadius * 0.5,
+          screenPos.y + Math.sin(tAngle) * darkRadius * ISO_Y_RATIO,
         );
         ctx.stroke();
       }
@@ -1500,7 +1501,7 @@ export function renderEffect(
         ctx.beginPath();
         ctx.arc(
           screenPos.x + Math.cos(sAngle) * sDist,
-          screenPos.y + Math.sin(sAngle) * sDist * 0.5,
+          screenPos.y + Math.sin(sAngle) * sDist * ISO_Y_RATIO,
           2 * zoom * (1 - progress),
           0,
           Math.PI * 2,
@@ -1547,7 +1548,7 @@ export function renderEffect(
         ctx.beginPath();
         ctx.arc(
           screenPos.x + Math.cos(eAngle) * eDist,
-          screenPos.y + Math.sin(eAngle) * eDist * 0.5 - eRise,
+          screenPos.y + Math.sin(eAngle) * eDist * ISO_Y_RATIO - eRise,
           3 * zoom * (1 - progress * 0.5),
           0,
           Math.PI * 2,
@@ -1586,7 +1587,7 @@ export function renderEffect(
         ctx.beginPath();
         ctx.arc(
           screenPos.x + Math.cos(dAngle) * dDist,
-          screenPos.y + Math.sin(dAngle) * dDist * 0.5 - dRise,
+          screenPos.y + Math.sin(dAngle) * dDist * ISO_Y_RATIO - dRise,
           dSize,
           0,
           Math.PI * 2,
@@ -1688,7 +1689,7 @@ export function renderEffect(
         const shardAngle = (i / 6) * Math.PI * 2;
         const shardDist = frostRadius * progress;
         const sx = screenPos.x + Math.cos(shardAngle) * shardDist;
-        const sy = screenPos.y + Math.sin(shardAngle) * shardDist * 0.5;
+        const sy = screenPos.y + Math.sin(shardAngle) * shardDist * ISO_Y_RATIO;
         const shardSize = 6 * zoom * (1 - progress * 0.5);
 
         ctx.save();
@@ -1834,7 +1835,7 @@ export function renderEffect(
         const wDist = scottSize * (0.4 + progress * 0.5);
         const wx = screenPos.x + Math.cos(wAngle) * wDist;
         const wy =
-          screenPos.y + Math.sin(wAngle) * wDist * 0.5 - progress * 10 * zoom;
+          screenPos.y + Math.sin(wAngle) * wDist * ISO_Y_RATIO - progress * 10 * zoom;
         ctx.fillText(words[i], wx, wy);
       }
       break;
@@ -1984,7 +1985,7 @@ export function renderEffect(
         screenPos.x,
         screenPos.y,
         towerWeakenSize,
-        towerWeakenSize * 0.5,
+        towerWeakenSize * ISO_Y_RATIO,
         0,
         0,
         Math.PI * 2,
@@ -2231,7 +2232,7 @@ export function renderEffect(
         const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
         const cy =
           screenPos.y +
-          Math.sin(crystalAngle) * crystalDist * 0.5 -
+          Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO -
           statusSlowedSize * 0.2;
         ctx.beginPath();
         ctx.moveTo(cx, cy - 4 * zoom);
@@ -2296,7 +2297,7 @@ export function renderEffect(
       ctx.strokeStyle = `rgba(74, 222, 128, ${alpha * 0.4 * statusPoisonPulse})`;
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y + 2 * zoom, statusPoisonSize * 0.5, statusPoisonSize * 0.25, 0, 0, Math.PI * 2);
+      ctx.ellipse(screenPos.x, screenPos.y + 2 * zoom, statusPoisonSize * 0.5, statusPoisonSize * 0.5 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.stroke();
       break;
     }
@@ -3227,7 +3228,7 @@ export function renderTowerDebuffEffects(
     for (let i = 0; i < 3; i++) {
       const starAngle = rotationSpeed + (i * Math.PI * 2) / 3;
       const starX = screenPos.x + Math.cos(starAngle) * starRadius;
-      const starY = screenPos.y + Math.sin(starAngle) * starRadius * 0.5; // Flattened for isometric
+      const starY = screenPos.y + Math.sin(starAngle) * starRadius * ISO_Y_RATIO; // Flattened for isometric
 
       // Pulsing/flickering effect
       const flicker = 0.6 + Math.sin(time * 4 + i * 1.5) * 0.4;
@@ -3498,7 +3499,7 @@ export function renderUnitStatusEffects(
       const crystalAngle = (i / 4) * Math.PI * 2 + now / 800;
       const crystalDist = baseSize * zoom * 0.75;
       const cx = screenPos.x + Math.cos(crystalAngle) * crystalDist;
-      const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * 0.5 - baseSize * zoom * 0.3;
+      const cy = screenPos.y + Math.sin(crystalAngle) * crystalDist * ISO_Y_RATIO - baseSize * zoom * 0.3;
       const cSize = 3.5 * zoom;
 
       ctx.fillStyle = `rgba(200, 230, 255, ${alpha * 0.4})`;
@@ -3518,7 +3519,7 @@ export function renderUnitStatusEffects(
     ctx.lineWidth = 1.5 * zoom;
     ctx.setLineDash([3 * zoom, 3 * zoom]);
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, screenPos.y, baseSize * zoom * 0.9, baseSize * zoom * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
   }

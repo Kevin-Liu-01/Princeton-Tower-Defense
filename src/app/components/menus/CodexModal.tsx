@@ -170,7 +170,7 @@ const groupEnemiesByCategory = (enemyTypes: EnemyType[]): Record<EnemyCategory, 
   return grouped;
 };
 
-type CodexTabId =
+export type CodexTabId =
   | "towers"
   | "heroes"
   | "enemies"
@@ -845,10 +845,11 @@ const HazardSprite: React.FC<{ type: CodexHazardType; size?: number }> = ({
 
 export interface CodexModalProps {
   onClose: () => void;
+  defaultTab?: CodexTabId;
 }
 
-export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<CodexTabId>("towers");
+export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) => {
+  const [activeTab, setActiveTab] = useState<CodexTabId>(defaultTab ?? "towers");
   const [selectedTower, setSelectedTower] = useState<string | null>(null);
   const [selectedHeroDetail, setSelectedHeroDetail] = useState<string | null>(
     null
@@ -1368,13 +1369,13 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
               {
                 id: "towers",
                 label: "Towers",
-                icon: <Crown size={16} />,
+                icon: <Shield size={16} />,
                 count: towerTypes.length,
               },
               {
                 id: "heroes",
                 label: "Heroes",
-                icon: <Shield size={16} />,
+                icon: <Crown size={16} />,
                 count: heroTypes.length,
               },
               {

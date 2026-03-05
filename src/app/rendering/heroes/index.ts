@@ -2,7 +2,7 @@
 // Renders all hero types with unique visual designs
 
 import type { Hero, Position } from "../../types";
-import { HERO_DATA } from "../../constants";
+import { HERO_DATA, ISO_Y_RATIO } from "../../constants";
 import {
   worldToScreenRounded,
   lightenColor,
@@ -42,7 +42,7 @@ export function renderHero(
       screenPos.x,
       screenPos.y + 3 * zoom,
       40 * zoom,
-      20 * zoom,
+      40 * ISO_Y_RATIO * zoom,
       0,
       0,
       Math.PI * 2
@@ -57,8 +57,8 @@ export function renderHero(
   ctx.ellipse(
     screenPos.x,
     screenPos.y + 1 * zoom,
-    22 * zoom,
-    11 * zoom,
+      22 * zoom,
+      22 * ISO_Y_RATIO * zoom,
     0,
     0,
     Math.PI * 2
@@ -2785,7 +2785,7 @@ function drawRockyHero(
       ctx.strokeStyle = `rgba(218, 165, 32, ${ringAlpha})`;
       ctx.lineWidth = (3 - ring * 0.5) * zoom;
       ctx.beginPath();
-      ctx.ellipse(x, y - hop, size * (0.55 + ringPhase * 0.5), size * (0.5 + ringPhase * 0.45), 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y - hop, size * (0.55 + ringPhase * 0.5), size * (ISO_Y_RATIO + ringPhase * 0.45), 0, 0, Math.PI * 2);
       ctx.stroke();
       // Inner bright ring
       ctx.strokeStyle = `rgba(255, 235, 150, ${ringAlpha * 0.4})`;

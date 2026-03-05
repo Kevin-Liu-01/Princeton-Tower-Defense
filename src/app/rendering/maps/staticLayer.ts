@@ -5,6 +5,7 @@ import {
   MAP_PATHS,
   ROAD_EXCLUSION_BUFFER,
   TILE_SIZE,
+  ISO_TILE_HEIGHT_FACTOR,
   getLevelPathKeys,
 } from "../../constants";
 import type { GridPosition, Position } from "../../types";
@@ -22,6 +23,7 @@ import {
   getChallengePathSegments,
   isChallengeMountainTopCell,
 } from "./challengeTerrain";
+import { drawPathDecorations } from "./pathDecorations";
 
 export interface RegionTheme {
   ground: string[];
@@ -47,7 +49,7 @@ export interface RenderStaticMapLayerParams {
   cameraZoom: number;
 }
 
-interface RoadGeometry {
+export interface RoadGeometry {
   smoothPath: Position[];
   screenCenter: Position[];
   screenLeft: Position[];
@@ -1544,7 +1546,7 @@ export function renderStaticMapLayer({
     );
 
   const tileWidth = TILE_SIZE * cameraZoom;
-  const tileHeight = TILE_SIZE * 0.5 * cameraZoom;
+  const tileHeight = TILE_SIZE * ISO_TILE_HEIGHT_FACTOR * cameraZoom;
   let challengeDistanceByCell: number[] | null = null;
 
   if (isChallengeMountainLevel && mapThemeKey) {
@@ -1632,6 +1634,7 @@ export function renderStaticMapLayer({
   }
 
   const fogEndpoints: StaticMapFogEndpoint[] = [];
+  const roads: RoadGeometry[] = [];
   const pathKeys = getLevelPathKeys(selectedMap);
   for (let i = 0; i < pathKeys.length; i++) {
     const pathKey = pathKeys[i];
@@ -1641,6 +1644,7 @@ export function renderStaticMapLayer({
     const road = buildRoadGeometry(pathPoints, mapSeed, toScreen);
     if (!road) continue;
 
+    roads.push(road);
     drawRoad(
       ctx,
       road,
@@ -1652,6 +1656,22 @@ export function renderStaticMapLayer({
       toScreen,
     );
     fogEndpoints.push(...getFogEndpoints(road));
+  }
+
+  const themeName = LEVEL_DATA[selectedMap]?.theme || "grassland";
+  for (const road of roads) {
+    drawPathDecorations({
+      ctx,
+      screenCenter: road.screenCenter,
+      screenLeft: road.screenLeft,
+      screenRight: road.screenRight,
+      smoothPath: road.smoothPath,
+      theme,
+      themeName,
+      cameraZoom,
+      mapSeed,
+      toScreen,
+    });
   }
 
   return { fogEndpoints };

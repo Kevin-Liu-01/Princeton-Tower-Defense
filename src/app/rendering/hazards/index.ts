@@ -3,7 +3,7 @@
 
 import type { Position, MapHazard } from "../../types";
 import { worldToScreen, gridToWorld } from "../../utils";
-import { TILE_SIZE } from "../../constants";
+import { TILE_SIZE, ISO_Y_RATIO } from "../../constants";
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -179,7 +179,7 @@ export function renderHazard(
   );
   const sRad = (hazard.radius || 2) * TILE_SIZE * zoom;
   const time = Date.now() / 1000;
-  const isoRatio = 0.5; // Standard isometric Y compression
+  const isoRatio = ISO_Y_RATIO;
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
@@ -383,7 +383,7 @@ function drawLavaGeyserHazard(
   const eruptionIntensity = isErupting ? Math.sin((cycleTime / 1.2) * Math.PI) : 0;
 
   // Stretched isometric ratio for proper volcanic appearance
-  const lavaIsoRatio = 0.55;
+  const lavaIsoRatio = ISO_Y_RATIO * 0.95;
 
   // 1. Scorched earth ring around vent (organic shape)
   const scorchGrad = ctx.createRadialGradient(0, 0, sRad * 0.3, 0, 0, sRad * 1.4);
@@ -597,7 +597,7 @@ function drawVolcanoHazard(
   cameraZoom: number
 ): void {
   const hazSeed = (pos.x || 0) * 41.3 + (pos.y || 0) * 23.7;
-  const lavaIsoRatio = 0.55;
+  const lavaIsoRatio = ISO_Y_RATIO * 0.95;
 
   // Fireball summon cycle: 7s period, fireball appears at 0-2s
   const cycleTime = (time + seededNoise(hazSeed) * 7) % 7;

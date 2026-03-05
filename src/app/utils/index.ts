@@ -18,6 +18,10 @@ import {
   HERO_PATH_HITBOX_SIZE,
   ROAD_EXCLUSION_BUFFER,
   TOWER_FOOTPRINTS,
+  ISO_X_FACTOR,
+  ISO_Y_FACTOR,
+  ISO_INV_X,
+  ISO_INV_Y,
   getLevelPaths,
   getLevelUniquePathSegments,
 } from "../constants";
@@ -82,9 +86,9 @@ export function worldToScreen(
   const zoom = cameraZoom || 1;
   const offset = cameraOffset || { x: 0, y: 0 };
 
-  // Isometric projection
-  const isoX = (pos.x - pos.y) * 0.5;
-  const isoY = (pos.x + pos.y) * 0.25;
+  // 2:1 Isometric projection
+  const isoX = (pos.x - pos.y) * ISO_X_FACTOR;
+  const isoY = (pos.x + pos.y) * ISO_Y_FACTOR;
 
   // Apply camera offset and zoom, then center
   return {
@@ -135,11 +139,11 @@ export function screenToWorld(
   const isoX = (screenPos.x - width / 2) / zoom - offset.x;
   const isoY = (screenPos.y - height / 3) / zoom - offset.y;
 
-  // Reverse isometric projection
-  // isoX = (x - y) * 0.5  =>  x - y = isoX * 2
-  // isoY = (x + y) * 0.25 =>  x + y = isoY * 4
-  const worldX = isoX + isoY * 2;
-  const worldY = isoY * 2 - isoX;
+  // Reverse 2:1 isometric projection
+  const xMinusY = isoX * ISO_INV_X;
+  const xPlusY = isoY * ISO_INV_Y;
+  const worldX = (xMinusY + xPlusY) * 0.5;
+  const worldY = (xPlusY - xMinusY) * 0.5;
 
   return { x: worldX, y: worldY };
 }

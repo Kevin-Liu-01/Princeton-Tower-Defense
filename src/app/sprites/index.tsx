@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useCallback } from "react";
 import type { TowerType, HeroType, SpellType } from "../types";
+import { ISO_Y_RATIO } from "../constants";
 import { setupSpriteCanvas, useSpriteTicker } from "./hooks";
 import {
   Volume2,
@@ -1219,7 +1220,7 @@ export const TowerSprite: React.FC<{
             const orbitAngle = t * 1.5 + (i * Math.PI * 2) / 3;
             const orbitRadius = 8 * s;
             const orbX = cx + Math.cos(orbitAngle) * orbitRadius;
-            const orbY = dollarY + Math.sin(orbitAngle) * orbitRadius * 0.4; // Flatten for isometric
+            const orbY = dollarY + Math.sin(orbitAngle) * orbitRadius * ISO_Y_RATIO;
             const orbSize = 1.5 * s + Math.sin(t * 3 + i) * 0.3 * s;
             ctx.fillStyle = `rgba(255, 230, 100, ${0.7 + Math.sin(t * 4 + i) * 0.2})`;
             ctx.shadowColor = "#ffee66";

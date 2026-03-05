@@ -1,4 +1,5 @@
 import type { Tower, Enemy, Effect, Particle, Position } from "../types";
+import { ISO_Y_RATIO } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
 
 // Performance utilities - critical for Firefox
@@ -332,7 +333,7 @@ export function renderEffect(
 
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
-      ctx.scale(1, 0.5);
+      ctx.scale(1, ISO_Y_RATIO);
       ctx.strokeStyle = `rgba(255, 228, 230, ${alpha * (0.6 + pulse * 0.28)})`;
       ctx.fillStyle = `rgba(190, 24, 93, ${alpha * (0.14 + pulse * 0.1)})`;
       ctx.lineWidth = 2.8 * zoom;
@@ -363,7 +364,7 @@ export function renderEffect(
 
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
-      ctx.scale(1, 0.5);
+      ctx.scale(1, ISO_Y_RATIO);
       const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius);
       glow.addColorStop(0, `rgba(255, 228, 230, ${alpha * 0.46})`);
       glow.addColorStop(0.45, `rgba(251, 113, 133, ${alpha * 0.31})`);
@@ -486,7 +487,7 @@ export function renderEffect(
 
       ctx.save();
       ctx.translate(screenPos.x, screenPos.y);
-      ctx.scale(1, 0.5);
+      ctx.scale(1, ISO_Y_RATIO);
       const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, impactRadius);
       glow.addColorStop(0, `rgba(255, 237, 213, ${alpha * 0.66})`);
       glow.addColorStop(0.38, `rgba(251, 146, 60, ${alpha * 0.44})`);

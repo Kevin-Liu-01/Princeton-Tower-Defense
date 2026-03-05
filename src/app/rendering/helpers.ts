@@ -1,6 +1,7 @@
 // Princeton Tower Defense - Rendering Helper Functions
 // Common utility functions used across rendering modules
 
+import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../constants";
 import { setShadowBlur, clearShadow } from "./performance";
 
 // ============================================================================
@@ -51,8 +52,8 @@ export function drawIsometricPrism(
   leftColor: string,
   rightColor: string
 ): void {
-  const isoWidth = width * 0.866;
-  const isoDepth = depth * 0.5;
+  const isoWidth = width * ISO_COS;
+  const isoDepth = depth * ISO_SIN;
 
   // Top face
   ctx.fillStyle = topColor;
@@ -95,8 +96,8 @@ export function drawIsometricPyramid(
   leftColor: string,
   rightColor: string,
 ): void {
-  const iW = baseWidth * 0.866;
-  const iD = baseWidth * 0.5;
+  const iW = baseWidth * ISO_COS;
+  const iD = baseWidth * ISO_SIN;
   const back = { x: x, y: y };
   const left = { x: x - iW, y: y + iD };
   const front = { x: x, y: y + iD * 2 };
@@ -418,7 +419,7 @@ export function drawSelectionIndicator(
   ctx.setLineDash([5, 5]);
   ctx.lineDashOffset = -time * 20;
   ctx.beginPath();
-  ctx.ellipse(x, y, scaledRadius, scaledRadius * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y, scaledRadius, scaledRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
 }
@@ -436,7 +437,7 @@ export function drawRangeIndicator(
 
   ctx.fillStyle = colorWithAlpha(color, alpha);
   ctx.beginPath();
-  ctx.ellipse(x, y, scaledRange, scaledRange * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y, scaledRange, scaledRange * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = colorWithAlpha(color, alpha * 2);
@@ -574,7 +575,7 @@ export function drawExplosion(
   ctx.strokeStyle = `rgba(255, 100, 0, ${alpha * 0.5})`;
   ctx.lineWidth = 4 * zoom * (1 - progress);
   ctx.beginPath();
-  ctx.ellipse(x, y, radius, radius * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y, radius, radius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.stroke();
 
   // Inner glow
@@ -585,7 +586,7 @@ export function drawExplosion(
   grad.addColorStop(1, "rgba(100, 0, 0, 0)");
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.ellipse(x, y, radius, radius * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y, radius, radius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -610,7 +611,7 @@ export function drawWaterRipple(
     ctx.strokeStyle = colorWithAlpha(color, rippleAlpha);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(x, y, rippleRadius, rippleRadius * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y, rippleRadius, rippleRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
 }
@@ -631,7 +632,7 @@ export function drawLavaGlow(
 
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.ellipse(x, y, radius, radius * 0.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y, radius, radius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 

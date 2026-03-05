@@ -7,6 +7,7 @@ import {
   Target,
   Gauge,
   Timer,
+  Info,
 } from "lucide-react";
 import type { HeroType } from "../../types";
 import { HERO_DATA, HERO_ABILITY_COOLDOWNS } from "../../constants";
@@ -27,6 +28,7 @@ interface HeroSelectorProps {
   setSelectedHero: (hero: HeroType) => void;
   hoveredHero: HeroType | null;
   setHoveredHero: (hero: HeroType | null) => void;
+  onOpenCodex?: () => void;
 }
 
 export const HeroSelector: React.FC<HeroSelectorProps> = ({
@@ -34,6 +36,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
   setSelectedHero,
   hoveredHero,
   setHoveredHero,
+  onOpenCodex,
 }) => {
   return (
     <div className="flex-1 relative rounded-lg sm:rounded-xl flex flex-col min-w-0"
@@ -45,7 +48,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
   {/* Inner border glow */}
   <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.1)' }} />
   {/* Header */}
-  <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative"
+  <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative flex items-center justify-between"
     style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
     <div className="flex items-center gap-1.5 sm:gap-2">
       <Shield size={11} className="text-amber-400 sm:w-[13px] sm:h-[13px]" />
@@ -53,6 +56,19 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
         Select Champion
       </span>
     </div>
+    {onOpenCodex && (
+      <button
+        onClick={onOpenCodex}
+        className="hidden sm:flex items-center justify-center w-5 h-5 rounded-md transition-all hover:scale-110 hover:brightness-125"
+        style={{
+          background: 'rgba(180,140,60,0.12)',
+          border: '1px solid rgba(180,140,60,0.25)',
+        }}
+        title="View in Codex"
+      >
+        <Info size={10} className="text-amber-400/70" />
+      </button>
+    )}
     <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
   </div>
   <div className="p-1.5 sm:p-3 flex-1 flex flex-col justify-between">

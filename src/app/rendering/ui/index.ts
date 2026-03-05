@@ -4,7 +4,7 @@
 import type { Position, Tower, Hero } from "../../types";
 import { worldToScreen, gridToWorld } from "../../utils";
 import { drawFloatingText, colorWithAlpha } from "../helpers";
-import { HERO_DATA } from "../../constants";
+import { HERO_DATA, ISO_Y_RATIO } from "../../constants";
 
 // ============================================================================
 // FLOATING DAMAGE TEXT
@@ -533,7 +533,7 @@ export function renderTroopMoveRange(
 
   // Calculate isometric ellipse dimensions (proper isometric ratio)
   const rangeX = config.moveRadius * zoom * 0.7;
-  const rangeY = config.moveRadius * zoom * 0.35;
+  const rangeY = rangeX * ISO_Y_RATIO;
 
   // Animated pulse effect only for non-station/barracks types
   const pulse =
@@ -662,7 +662,7 @@ export function renderPathTargetIndicator(
 
   // Draw ISOMETRIC target indicator (ellipse instead of circle)
   const outerRadiusX = 16 * zoom * pulse;
-  const outerRadiusY = 8 * zoom * pulse; // Half for isometric
+  const outerRadiusY = outerRadiusX * ISO_Y_RATIO;
 
   // Outer isometric ring
   ctx.strokeStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.65 * validityMultiplier})`;
@@ -681,7 +681,7 @@ export function renderPathTargetIndicator(
 
   // Inner isometric ellipse (filled)
   const innerRadiusX = 5 * zoom;
-  const innerRadiusY = 2.5 * zoom;
+  const innerRadiusY = innerRadiusX * ISO_Y_RATIO;
   ctx.fillStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.8 * validityMultiplier})`;
   ctx.beginPath();
   ctx.ellipse(
@@ -697,9 +697,9 @@ export function renderPathTargetIndicator(
 
   // Isometric crosshair lines (adjusted for isometric view)
   const crossLengthX = 7 * zoom;
-  const crossLengthY = 3.5 * zoom; // Shorter for isometric
+  const crossLengthY = crossLengthX * ISO_Y_RATIO;
   const gapX = 4 * zoom;
-  const gapY = 2 * zoom;
+  const gapY = gapX * ISO_Y_RATIO;
 
   ctx.strokeStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.5 * validityMultiplier})`;
   ctx.lineWidth = 1.5 * zoom;
@@ -738,22 +738,22 @@ export function renderPathTargetIndicator(
   );
   const arrowDist = outerRadiusX + 14 * zoom;
   const arrowX = targetScreen.x - Math.cos(angle) * arrowDist;
-  const arrowY = targetScreen.y - Math.sin(angle) * arrowDist * 0.5; // Compress for isometric
+  const arrowY = targetScreen.y - Math.sin(angle) * arrowDist * ISO_Y_RATIO;
 
   ctx.fillStyle = `rgba(${baseColor.r}, ${baseColor.g}, ${baseColor.b}, ${0.7 * validityMultiplier * pulse})`;
   ctx.beginPath();
   const arrowSize = 6 * zoom;
   ctx.moveTo(
     arrowX + Math.cos(angle) * arrowSize,
-    arrowY + Math.sin(angle) * arrowSize * 0.5,
+    arrowY + Math.sin(angle) * arrowSize * ISO_Y_RATIO,
   );
   ctx.lineTo(
     arrowX + Math.cos(angle - 2.3) * arrowSize * 0.7,
-    arrowY + Math.sin(angle - 2.3) * arrowSize * 0.35,
+    arrowY + Math.sin(angle - 2.3) * arrowSize * 0.7 * ISO_Y_RATIO,
   );
   ctx.lineTo(
     arrowX + Math.cos(angle + 2.3) * arrowSize * 0.7,
-    arrowY + Math.sin(angle + 2.3) * arrowSize * 0.35,
+    arrowY + Math.sin(angle + 2.3) * arrowSize * 0.7 * ISO_Y_RATIO,
   );
   ctx.closePath();
   ctx.fill();
@@ -764,7 +764,7 @@ export function renderPathTargetIndicator(
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     const xSizeX = 8 * zoom;
-    const xSizeY = 4 * zoom; // Compressed for isometric
+    const xSizeY = xSizeX * ISO_Y_RATIO;
     ctx.moveTo(targetScreen.x - xSizeX, targetScreen.y - xSizeY);
     ctx.lineTo(targetScreen.x + xSizeX, targetScreen.y + xSizeY);
     ctx.moveTo(targetScreen.x + xSizeX, targetScreen.y - xSizeY);

@@ -3,6 +3,7 @@
 
 import type { Position, MapDecoration } from "../../types";
 import { worldToScreen } from "../../utils";
+import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import { lightenColor, darkenColor, drawIsometricPrism } from "../helpers";
 
 // Import landmark renderers
@@ -643,10 +644,10 @@ function drawObelisk(
   const shaftTop = shaftBase - height;
 
   // Pre-compute shared values
-  const bw86 = baseW * 0.866;
-  const tw86 = topW * 0.866;
-  const bwIso = baseW * 0.5;
-  const twIso = topW * 0.5;
+  const bw86 = baseW * ISO_COS;
+  const tw86 = topW * ISO_COS;
+  const bwIso = baseW * ISO_SIN;
+  const twIso = topW * ISO_SIN;
 
   // --- Shaft: 3 visible faces + top ---
   ctx.fillStyle = p.left;
@@ -1350,11 +1351,10 @@ function drawBuilding(
   if (v === 0) {
     // === COZY STONE COTTAGE — hip roof, chimney, warm window glow, flower box ===
     const wW = 24 * s,
-      wD = 15 * s,
       wH = 24 * s,
       rH = 16 * s;
-    const iW = wW * 0.866,
-      iD = wD * 0.5;
+    const iW = wW * ISO_COS,
+      iD = iW * ISO_Y_RATIO;
 
     // Stone foundation
     ctx.fillStyle = "#3E3028";
@@ -1503,11 +1503,10 @@ function drawBuilding(
   } else if (v === 1) {
     // === STONE WATCHTOWER — tall with battlements, conical roof, flag ===
     const tW = 16 * s,
-      tD = 12 * s,
       tH = 38 * s,
       batH = 5 * s;
-    const tiW = tW * 0.866,
-      tiD = tD * 0.5;
+    const tiW = tW * ISO_COS,
+      tiD = tiW * ISO_Y_RATIO;
 
     // Stone platform
     ctx.fillStyle = "#3E3028";
@@ -1725,11 +1724,10 @@ function drawBuilding(
   } else if (v === 2) {
     // === HALF-TIMBER MANOR — lower stone, upper plaster with beams, steep roof ===
     const wW = 28 * s,
-      wD = 18 * s,
       wH = 28 * s,
       rH = 20 * s;
-    const iW = wW * 0.866,
-      iD = wD * 0.5;
+    const iW = wW * ISO_COS,
+      iD = iW * ISO_Y_RATIO;
     const stoneH = wH * 0.4;
 
     // Foundation
@@ -1985,7 +1983,7 @@ function drawBuilding(
     // Top rim
     ctx.fillStyle = "#6A5A48";
     ctx.beginPath();
-    ctx.ellipse(x, y - hH, hR + 1.5 * s, hR * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y - hH, hR + 1.5 * s, hR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "#7A6A58";
     ctx.beginPath();
@@ -2223,37 +2221,65 @@ function drawFence(
   x: number,
   y: number,
   scale: number,
-  variant?: string,
+  _v?: string,
 ): void {
-  const fenceColor = variant === "iron" ? "#4a4a4a" : "#8b7355";
-  const postCount = 3;
+  const s = scale;
+  const wallLen = 30 * s;
+  const wallH = 14 * s;
+  const d = 4 * s;
+  const faceCol = "#747468";
+  const topCol = "#9a9a8c";
+  const mort = "rgba(30,28,22,0.42)";
 
-  for (let i = 0; i < postCount; i++) {
-    const postX = x + (i - 1) * 12 * scale;
+  const x1 = x - wallLen * 0.5;
+  const y1 = y + wallLen * 0.25;
+  const x2 = x + wallLen * 0.5;
+  const y2 = y - wallLen * 0.25;
 
-    // Post
-    ctx.fillStyle = fenceColor;
-    ctx.fillRect(postX - 2 * scale, y - 20 * scale, 4 * scale, 20 * scale);
+  // Top face
+  ctx.fillStyle = topCol;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1 - wallH);
+  ctx.lineTo(x2, y2 - wallH);
+  ctx.lineTo(x2 - d, y2 - d * 0.5 - wallH);
+  ctx.lineTo(x1 - d, y1 - d * 0.5 - wallH);
+  ctx.closePath();
+  ctx.fill();
 
-    // Post cap
-    if (variant === "iron") {
-      ctx.beginPath();
-      ctx.arc(postX, y - 22 * scale, 3 * scale, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(postX, y - 25 * scale);
-      ctx.lineTo(postX - 3 * scale, y - 20 * scale);
-      ctx.lineTo(postX + 3 * scale, y - 20 * scale);
-      ctx.closePath();
-      ctx.fill();
+  // Front face
+  ctx.fillStyle = faceCol;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.lineTo(x2, y2 - wallH);
+  ctx.lineTo(x1, y1 - wallH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Mortar lines
+  ctx.strokeStyle = mort;
+  ctx.lineWidth = 0.5 * s;
+  const bH = wallH / 4;
+  for (let r = 1; r < 4; r++) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1 - r * bH);
+    ctx.lineTo(x2, y2 - r * bH);
+    ctx.stroke();
+  }
+  for (let r = 0; r < 4; r++) {
+    const off = r % 2 === 0 ? 0 : 0.5;
+    for (let c = 1; c < 5; c++) {
+      const t = (c + off) / 5;
+      if (t > 0.02 && t < 0.98) {
+        const jx = x1 + t * (x2 - x1);
+        const jy = y1 + t * (y2 - y1);
+        ctx.beginPath();
+        ctx.moveTo(jx, jy - r * bH);
+        ctx.lineTo(jx, jy - (r + 1) * bH);
+        ctx.stroke();
+      }
     }
   }
-
-  // Horizontal bars
-  ctx.fillStyle = fenceColor;
-  ctx.fillRect(x - 18 * scale, y - 15 * scale, 36 * scale, 2 * scale);
-  ctx.fillRect(x - 18 * scale, y - 8 * scale, 36 * scale, 2 * scale);
 }
 
 // ============================================================================
@@ -2391,9 +2417,9 @@ function drawCrater(
 
   const style = craterStyles[variant % craterStyles.length];
 
-  // Base dimensions - isometric ratio (2:1 for proper perspective)
+  // Base dimensions - true isometric (30°) perspective
   const baseWidth = 18 * scale * style.widthMult;
-  const baseDepth = baseWidth * 0.5; // Isometric foreshortening
+  const baseDepth = baseWidth * ISO_Y_RATIO;
   const craterDepth = 8 * scale * style.depthMult;
   const rimThickness = 4 * scale * style.rimHeight;
 
@@ -2514,7 +2540,7 @@ function drawCrater(
     const angle = (i / debrisCount) * Math.PI * 2 + seed * 0.01;
     const dist = baseWidth * (0.9 + Math.sin(seed + i * 47) * 0.3);
     const debrisX = Math.cos(angle) * dist;
-    const debrisY = Math.sin(angle) * dist * 0.5; // Isometric
+    const debrisY = Math.sin(angle) * dist * ISO_Y_RATIO;
     const debrisSize = (2 + Math.abs(Math.sin(seed + i * 31)) * 3) * scale;
 
     // Small rocks/dirt chunks
@@ -2589,7 +2615,7 @@ function drawDebris(
     const angle = (seed + i * 67) % (Math.PI * 2);
     const dist = (3 + ((seed + i * 31) % 10)) * scale;
     const px = Math.cos(angle) * dist;
-    const py = Math.sin(angle) * dist * 0.5;
+    const py = Math.sin(angle) * dist * ISO_Y_RATIO;
     const size = (3 + ((seed + i * 23) % 5)) * scale;
     const rotation = (seed + i * 41) % (Math.PI * 2);
 

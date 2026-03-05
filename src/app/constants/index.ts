@@ -1,4 +1,5 @@
 export * from "./gameplay";
+export * from "./isometric";
 export * from "./towers";
 export * from "./enemies";
 export * from "./heroes";

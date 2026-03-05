@@ -18,6 +18,10 @@ import {
   Book,
   AlertTriangle,
   Hammer,
+  Eye,
+  BarChart3,
+  Shield,
+  Sparkles,
 } from "lucide-react";
 import type {
   GameState,
@@ -39,7 +43,8 @@ import {
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
 import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, PURPLE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
 import { WORLD_LEVELS, MAP_WIDTH, getWaveCount } from "./worldMapData";
-import { CodexModal } from "./CodexModal";
+import { CodexModal, type CodexTabId } from "./CodexModal";
+import { CampaignOverview } from "./CampaignOverview";
 import { BattlefieldPreview } from "./BattlefieldPreview";
 import { HeroSelector } from "./HeroSelector";
 import { SpellSelector } from "./SpellSelector";
@@ -145,6 +150,7 @@ type SelectableLevel = {
   region: (typeof WORLD_LEVELS)[number]["region"];
   difficulty: 1 | 2 | 3;
   kind?: "campaign" | "challenge" | "custom";
+  tags: string[];
   isCustom?: boolean;
 };
 
@@ -176,7 +182,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const [canvasDisplaySize, setCanvasDisplaySize] = useState<{ w: number; h: number } | null>(null);
   const [showCodex, setShowCodex] = useState(false);
+  const [codexTab, setCodexTab] = useState<CodexTabId>("towers");
   const [showCreator, setShowCreator] = useState(false);
+  const [showBattlefieldPreview, setShowBattlefieldPreview] = useState(false);
   const [animTime, setAnimTime] = useState(0);
   const animTimeRef = useRef(0);
   const [mapHeight, setMapHeight] = useState(500);
@@ -247,6 +255,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         region: customLevel.theme,
         difficulty: customLevel.difficulty,
         kind: "custom",
+        tags: ["Custom"],
         isCustom: true,
       };
     },
@@ -328,8 +337,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         lastDrawTime = timestamp;
         drawMapRef.current();
       }
-      // React state update throttled (~10fps) for BattlefieldPreview.
-      if (timestamp - lastStateTime > 20) {
+      // React state for BattlefieldPreview (~10fps)
+      if (timestamp - lastStateTime > 100) {
         setAnimTime(timestamp / 1000);
         lastStateTime = timestamp;
       }
@@ -452,6 +461,18 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     }, 50);
   };
 
+  const openCodexTo = useCallback((tab: CodexTabId) => {
+    setCodexTab(tab);
+    setShowCodex(true);
+  }, []);
+
+  const hasBattles = useMemo(
+    () => Object.values(levelStats).some((s) => (s.timesPlayed || 0) > 0),
+    [levelStats]
+  );
+
+  const showPreview = !selectedLevel && (showBattlefieldPreview || !hasBattles);
+
   const canStart = selectedLevel && selectedHero && selectedSpells.length === 3;
   const hasAlternateTooltipOpen = Boolean(
     hoveredLevel && hoveredLevel !== selectedLevel
@@ -568,6 +589,27 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             {/* Left: Logo */}
             <PrincetonLogo />
 
+            {/* Center: Current level / region breadcrumb */}
+            {currentLevel && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
+                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                border: `1px solid ${GOLD.border25}`,
+              }}>
+                <MapPin size={13} className="text-amber-400" />
+                <span className="text-[10px] text-amber-400/70 font-medium uppercase tracking-wider">
+                  {currentLevel.region === "grassland" ? "Princeton Grounds"
+                    : currentLevel.region === "swamp" ? "Mathey Marshes"
+                      : currentLevel.region === "desert" ? "Stadium Sands"
+                        : currentLevel.region === "winter" ? "Frist Frontier"
+                          : "Dormitory Depths"}
+                </span>
+                <ChevronRight size={12} className="text-amber-500/50" />
+                <span className="text-sm font-bold text-amber-200 tracking-wide">
+                  {currentLevel.name}
+                </span>
+              </div>
+            )}
+
             {/* Right: Stats strip */}
             <div className="flex items-center gap-2 sm:gap-2.5">
               {/* Hearts stat */}
@@ -644,7 +686,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
               {/* Codex */}
               <button
-                onClick={() => setShowCodex(true)}
+                onClick={() => openCodexTo("towers")}
                 className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
                 style={{
                   background: `linear-gradient(135deg, ${PURPLE_CARD.bgLight}, ${PURPLE_CARD.bgDark})`,
@@ -704,450 +746,517 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col sm:flex-row overflow-y-hidden overflow-x-auto min-h-0">
         {/* LEFT SIDEBAR - Fixed height on mobile to prevent map from shifting */}
-        <div className="h-[40vh] sm:h-auto sm:w-80 flex-shrink-0 flex flex-col overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
-          {selectedLevel && currentLevel ? (
-            <div className="flex-1 flex flex-col h-full overflow-auto">
-              <div className="flex-shrink-0 relative overflow-hidden">
-                {/* Top gold divider line */}
-                <div className="h-px" style={{ background: dividerGradient }} />
-                <div className="relative p-4" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
-                  {/* Inner glow border */}
-                  <div className="absolute inset-[2px] rounded-sm pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+        <div className="h-[40vh] sm:h-auto sm:w-80 flex-shrink-0 flex flex-col overflow-hidden p-2 sm:p-3" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+          <OrnateFrame
+            className="flex-1 flex flex-col overflow-hidden rounded-2xl border-2 border-amber-600/50 shadow-2xl"
+            cornerSize={24}
+            showBorders={true}
+            showSideBorders={true}
+            showTopBottomBorders={true}
+            borderScale={0.4}
+          >
+            <div className="flex-1 flex flex-col h-full overflow-hidden" style={{ background: panelGradient, boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 20px ${GOLD.glow04}` }}>
+              {selectedLevel && currentLevel ? (
+                <div className="flex-1 flex flex-col h-full overflow-auto">
+                  <div className="flex-shrink-0 relative overflow-hidden">
+                    {/* Top gold divider line */}
+                    <div className="h-px" style={{ background: dividerGradient }} />
+                    <div className="relative p-4" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
+                      {/* Inner glow border */}
+                      <div className="absolute inset-[2px] rounded-sm pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
 
-                  {/* Level name + close button */}
-                  <div className="flex items-center justify-between mb-2 relative z-10">
-                    <div className="flex items-center gap-2">
-                      <div className="relative">
-                        <MapPin size={20} className="text-amber-400 drop-shadow-lg" />
-                        <div className="absolute inset-0 animate-ping opacity-30">
-                          <MapPin size={20} className="text-amber-400" />
-                        </div>
-                      </div>
-                      <h2 className="text-xl font-bold text-amber-100 drop-shadow-lg tracking-wide">
-                        {currentLevel.name}
-                      </h2>
-                      {isCurrentChallengeLevel && (
-                        <span
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase"
-                          style={challengeBadgeStyle}
-                        >
-                          Challenge
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setSelectedLevel(null)}
-                      className="p-1.5 rounded-lg transition-all hover:scale-110"
-                      style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
-                    >
-                      <X size={16} className="text-amber-400" />
-                    </button>
-                  </div>
-
-                  {/* Description */}
-                  <p className="hidden sm:block whitespace-pre-line text-amber-400/80 text-sm italic mb-3 relative z-10">
-                    &ldquo;{currentLevel.description}&rdquo;
-                  </p>
-
-                  {/* Difficulty + Waves + Stars row */}
-                  <div className="flex items-center gap-2 sm:mb-3 relative z-10 flex-wrap">
-                    {/* Difficulty card */}
-                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg" style={{
-                      background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                      border: `1.5px solid ${NEUTRAL.border}`,
-                      boxShadow: `inset 0 0 8px ${NEUTRAL.glow}`
-                    }}>
-                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
-                      <Skull size={14} className="text-amber-400" />
-                      <div className="flex gap-1">
-                        {[1, 2, 3].map((d) => (
-                          <div
-                            key={d}
-                            className={`w-3 h-3 rounded-full transition-all ${d <= currentLevel.difficulty
-                              ? `${currentLevel.difficulty === 1
-                                ? "bg-green-500 shadow-green-500/50"
-                                : currentLevel.difficulty === 2
-                                  ? "bg-yellow-500 shadow-yellow-500/50"
-                                  : "bg-red-500 shadow-red-500/50"
-                              } shadow-lg`
-                              : "bg-stone-700"
-                              }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Waves card */}
-                    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
-                      background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                      border: `1.5px solid ${AMBER_CARD.border}`,
-                      boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
-                    }}>
-                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                      <Flag size={14} className="text-amber-300" />
-                      <span className="text-amber-200 font-bold text-sm">
-                        {waveCount} Waves
-                      </span>
-                    </div>
-
-                    {/* Stars (mobile) */}
-                    <div className="flex sm:hidden items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
-                      background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                      border: `1.5px solid ${AMBER_CARD.border}`,
-                      boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
-                    }}>
-                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                      <Trophy size={14} className="text-yellow-500" />
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3].map((s) => (
-                          <Star
-                            key={s}
-                            size={16}
-                            className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
-                              ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                              : "text-stone-600"
-                              }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Best Stars (desktop) */}
-                  <div className="hidden sm:flex items-center gap-3 p-2.5 rounded-lg relative" style={{
-                    background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                    border: `1.5px solid ${AMBER_CARD.border}`,
-                    boxShadow: `inset 0 0 10px ${AMBER_CARD.glow}`
-                  }}>
-                    <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                    <Trophy size={18} className="text-yellow-500" />
-                    <span className="text-amber-400 text-sm font-medium">Best:</span>
-                    <div className="flex gap-1">
-                      {[1, 2, 3].map((s) => (
-                        <Star
-                          key={s}
-                          size={18}
-                          className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
-                            ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
-                            : "text-stone-600"
-                            }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stats cards (hearts + time) */}
-                  {levelStats[currentLevel.id] && (
-                    <div className="grid grid-cols-2 gap-2 mt-2 relative z-10">
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
-                        background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
-                        border: `1.5px solid ${RED_CARD.border}`,
-                        boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
-                      }}>
-                        <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
-                        <Heart size={16} className="text-red-400 fill-red-400" />
-                        <div className="text-sm text-red-200 font-mono font-bold">
-                          {levelStats[currentLevel.id]?.bestHearts}/20
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
-                        background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
-                        border: `1.5px solid ${BLUE_CARD.border}`,
-                        boxShadow: `inset 0 0 10px ${BLUE_CARD.glow}`
-                      }}>
-                        <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
-                        <Clock size={16} className="text-blue-400" />
-                        <span className="text-blue-200 text-sm font-mono font-bold">
-                          {levelStats[currentLevel.id]?.bestTime
-                            ? `${Math.floor(
-                              levelStats[currentLevel.id]!.bestTime! / 60
-                            )}m ${levelStats[currentLevel.id]!.bestTime! % 60
-                            }s`
-                            : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex-1 sm:flex-none p-2 sm:p-4 flex flex-col min-h-0" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
-                <div className="hidden sm:flex items-center gap-2 mb-2">
-                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
-                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Battlefield Preview</span>
-                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-                </div>
-                <div className="relative flex-1 sm:flex-none sm:aspect-video rounded-2xl overflow-hidden" style={{
-                  background: PANEL.bgDeep,
-                  border: `2px solid ${GOLD.border30}`,
-                  boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${OVERLAY.black40}`
-                }}>
-                  <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
-                  {currentLevelPreviewImage ? (
-                    <Image
-                      src={currentLevelPreviewImage}
-                      alt={`${currentLevel.name} preview`}
-                      fill
-                      sizes="(max-width: 640px) 100vw, 520px"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : null}
-                  <div
-                    className={`absolute inset-0 flex items-center justify-center ${currentLevelPreviewImage
-                      ? "opacity-0"
-                      : "opacity-100"
-                      }`}
-                  >
-                    <div
-                      className={`w-full h-full ${currentLevel.region === "grassland"
-                        ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
-                        : currentLevel.region === "swamp"
-                          ? "bg-gradient-to-br from-emerald-900/80 via-teal-900/65 to-stone-900/45"
-                          : currentLevel.region === "desert"
-                            ? "bg-gradient-to-br from-amber-800/80 via-yellow-900/60 to-orange-900/40"
-                            : currentLevel.region === "winter"
-                              ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
-                              : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
-                        } flex items-center justify-center`}
-                    >
-                      <div className="text-center">
-                        <div className="text-4xl mb-2">
-                          {isCurrentChallengeLevel
-                            ? "⚔️"
-                            : currentLevel.region === "grassland"
-                            ? "🌲"
-                            : currentLevel.region === "swamp"
-                              ? "🦆"
-                              : currentLevel.region === "desert"
-                                ? "🏜️"
-                                : currentLevel.region === "winter"
-                                  ? "❄️"
-                                  : "🌋"}
-                        </div>
-                        <span className="text-amber-400/60 text-xs font-medium tracking-wide">
-                          Preview Coming
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider" style={{
-                    background: PANEL.bgDark,
-                    color: "rgb(252,211,77)",
-                    border: `1px solid ${GOLD.border30}`,
-                    boxShadow: `0 2px 6px ${OVERLAY.black40}`
-                  }}>
-                    {currentLevel.region}
-                  </div>
-                </div>
-              </div>
-
-              <div className="hidden sm:inline flex-1 p-4 overflow-y-auto">
-                {/* Section title with decorative lines */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
-                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Region Campaign</span>
-                  <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
-                </div>
-                {(() => {
-                  if (isCurrentCustomLevel) {
-                    return (
-                      <div className="space-y-2">
-                        <div className="rounded-lg border border-amber-700/40 bg-amber-900/15 p-2.5">
-                          <div className="text-xs uppercase tracking-widest text-amber-400/90 mb-1">
-                            Custom Sandbox
-                          </div>
-                          <div className="text-xs text-amber-200/80 mb-2">
-                            this map lives in your local creator sandbox. open creator to edit paths, landmarks, hazards, and objectives.
-                          </div>
-                          <button
-                            onClick={() => setShowCreator(true)}
-                            className="rounded-md border border-amber-600/60 bg-amber-700/20 px-2.5 py-1 text-xs hover:bg-amber-700/30"
-                          >
-                            Open Creator
-                          </button>
-                        </div>
-
-                        <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                          {customLevels.map((level) => (
-                            <button
-                              key={level.id}
-                              onClick={() => handleCustomLevelPlaytest(level.id)}
-                              className="w-full text-left rounded-lg border border-amber-800/50 bg-stone-900/70 px-2.5 py-2 hover:bg-stone-800/80 transition-colors"
-                            >
-                              <div className="text-sm font-medium text-amber-100 truncate">
-                                {level.name}
-                              </div>
-                              <div className="text-[11px] text-amber-400/70">
-                                {level.theme} • diff {level.difficulty}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const regionLevels = WORLD_LEVELS.filter(
-                    (l) => l.region === currentLevel.region
-                  );
-                  const regionStars = regionLevels.reduce(
-                    (sum, l) => sum + (levelStars[l.id] || 0),
-                    0
-                  );
-                  const maxRegionStars = regionLevels.length * 3;
-                  return (
-                    <div className="space-y-1.5">
-                      {regionLevels.map((l) => (
-                        <div
-                          key={l.id}
-                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative"
-                          style={{
-                            background: l.id === selectedLevel
-                              ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})`
-                              : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                            border: l.id === selectedLevel
-                              ? `1.5px solid ${GOLD.accentBorder40}`
-                              : `1.5px solid ${GOLD.border25}`,
-                            boxShadow: l.id === selectedLevel
-                              ? `inset 0 0 10px ${GOLD.accentGlow08}`
-                              : `inset 0 0 8px ${GOLD.glow04}`
-                          }}
-                          onClick={() => handleLevelClick(l.id)}
-                        >
-                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
-                            border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
-                          }} />
-                          <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-lg relative"
-                            style={{
-                              background: isLevelUnlocked(l.id) ? PANEL.bgDeep : NEUTRAL.bgDark,
-                              border: `1px solid ${isLevelUnlocked(l.id) ? GOLD.border25 : NEUTRAL.border}`
-                            }}
-                          >
-                            {isLevelUnlocked(l.id)
-                              ? l.kind === "challenge"
-                                ? "⚔️"
-                                : l.region === "grassland"
-                                ? "🌲"
-                                : l.region === "swamp"
-                                  ? "🦆"
-                                  : l.region === "desert"
-                                    ? "🏜️"
-                                    : l.region === "winter"
-                                      ? "❄️"
-                                      : "🌋"
-                              : "🔒"}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
-                              {l.name}
-                              {l.kind === "challenge" ? " • Challenge" : ""}
+                      {/* Level name + close button */}
+                      <div className="flex items-start justify-between mb-1 relative z-10">
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <MapPin size={20} className="text-amber-400 drop-shadow-lg" />
+                            <div className="absolute inset-0 animate-ping opacity-30">
+                              <MapPin size={20} className="text-amber-400" />
                             </div>
                           </div>
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3].map((s) => (
-                              <Star
-                                key={s}
-                                size={14}
-                                className={
-                                  (levelStars[l.id] || 0) >= s
-                                    ? "text-yellow-400 fill-yellow-400 drop-shadow"
-                                    : "text-stone-600"
-                                }
+                          <h2 className="text-xl font-bold text-amber-100 drop-shadow-lg tracking-wide">
+                            {currentLevel.name}
+                          </h2>
+                        </div>
+                        <button
+                          onClick={() => setSelectedLevel(null)}
+                          className="p-1.5 rounded-lg transition-all hover:scale-110 shrink-0"
+                          style={{ background: PANEL.bgWarmMid, border: `1px solid ${GOLD.border25}` }}
+                        >
+                          <X size={16} className="text-amber-400" />
+                        </button>
+                      </div>
+
+                      {/* Tags row */}
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2 relative z-10">
+                        {isCurrentChallengeLevel && (
+                          <span
+                            className="text-[9px] font-bold px-2 py-0.5 rounded-md tracking-wider uppercase"
+                            style={challengeBadgeStyle}
+                          >
+                            Challenge
+                          </span>
+                        )}
+                        {currentLevel.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-[9px] font-semibold px-2 py-0.5 rounded-md tracking-wide"
+                            style={{
+                              background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                              border: `1px solid ${GOLD.border25}`,
+                              color: "rgba(252,211,77,0.8)",
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Description */}
+                      <p className="hidden sm:block whitespace-pre-line text-amber-400/80 text-sm italic mb-3 relative z-10">
+                        &ldquo;{currentLevel.description}&rdquo;
+                      </p>
+
+                      {/* Difficulty + Waves + Stars row */}
+                      <div className="flex items-center gap-2 sm:mb-3 relative z-10 flex-wrap">
+                        {/* Difficulty card */}
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg" style={{
+                          background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                          border: `1.5px solid ${NEUTRAL.border}`,
+                          boxShadow: `inset 0 0 8px ${NEUTRAL.glow}`
+                        }}>
+                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
+                          <Skull size={14} className="text-amber-400" />
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((d) => (
+                              <div
+                                key={d}
+                                className={`w-3 h-3 rounded-full transition-all ${d <= currentLevel.difficulty
+                                  ? `${currentLevel.difficulty === 1
+                                    ? "bg-green-500 shadow-green-500/50"
+                                    : currentLevel.difficulty === 2
+                                      ? "bg-yellow-500 shadow-yellow-500/50"
+                                      : "bg-red-500 shadow-red-500/50"
+                                  } shadow-lg`
+                                  : "bg-stone-700"
+                                  }`}
                               />
                             ))}
                           </div>
                         </div>
-                      ))}
-                      {/* Region Progress footer */}
-                      <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
-                        <span className="text-amber-400 text-sm font-medium">
-                          Region Progress:
-                        </span>
-                        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md" style={{
-                          background: PANEL.bgWarmMid,
-                          border: `1px solid ${GOLD.border25}`
+
+                        {/* Waves card */}
+                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
+                          background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                          border: `1.5px solid ${AMBER_CARD.border}`,
+                          boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
                         }}>
-                          <Star
-                            size={14}
-                            className="text-yellow-400 fill-yellow-400"
-                          />
+                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                          <Flag size={14} className="text-amber-300" />
                           <span className="text-amber-200 font-bold text-sm">
-                            {regionStars}/{maxRegionStars}
+                            {waveCount} Waves
                           </span>
                         </div>
+
+                        {/* Stars (mobile) */}
+                        <div className="flex sm:hidden items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
+                          background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                          border: `1.5px solid ${AMBER_CARD.border}`,
+                          boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
+                        }}>
+                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                          <Trophy size={14} className="text-yellow-500" />
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3].map((s) => (
+                              <Star
+                                key={s}
+                                size={16}
+                                className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
+                                  ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
+                                  : "text-stone-600"
+                                  }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Best Stars (desktop) */}
+                      <div className="hidden sm:flex items-center gap-3 p-2.5 rounded-lg relative" style={{
+                        background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
+                        border: `1.5px solid ${AMBER_CARD.border}`,
+                        boxShadow: `inset 0 0 10px ${AMBER_CARD.glow}`
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                        <Trophy size={18} className="text-yellow-500" />
+                        <span className="text-amber-400 text-sm font-medium">Best:</span>
+                        <div className="flex gap-1">
+                          {[1, 2, 3].map((s) => (
+                            <Star
+                              key={s}
+                              size={18}
+                              className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
+                                ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
+                                : "text-stone-600"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stats cards (hearts + time) */}
+                      {levelStats[currentLevel.id] && (
+                        <div className="grid grid-cols-2 gap-2 mt-2 relative z-10">
+                          <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
+                            background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
+                            border: `1.5px solid ${RED_CARD.border}`,
+                            boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
+                          }}>
+                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
+                            <Heart size={16} className="text-red-400 fill-red-400" />
+                            <div className="text-sm text-red-200 font-mono font-bold">
+                              {levelStats[currentLevel.id]?.bestHearts}/20
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
+                            background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
+                            border: `1.5px solid ${BLUE_CARD.border}`,
+                            boxShadow: `inset 0 0 10px ${BLUE_CARD.glow}`
+                          }}>
+                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
+                            <Clock size={16} className="text-blue-400" />
+                            <span className="text-blue-200 text-sm font-mono font-bold">
+                              {levelStats[currentLevel.id]?.bestTime
+                                ? `${Math.floor(
+                                  levelStats[currentLevel.id]!.bestTime! / 60
+                                )}m ${levelStats[currentLevel.id]!.bestTime! % 60
+                                }s`
+                                : "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 sm:flex-none p-2 sm:p-4 flex flex-col min-h-0" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
+                    <div className="hidden sm:flex items-center gap-2 mb-2">
+                      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Battlefield Preview</span>
+                      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+                    </div>
+                    <div className="relative flex-1 sm:flex-none sm:aspect-video rounded-2xl overflow-hidden" style={{
+                      background: PANEL.bgDeep,
+                      border: `2px solid ${GOLD.border30}`,
+                      boxShadow: `0 0 30px ${GOLD.glow07}, inset 0 0 15px ${OVERLAY.black40}`
+                    }}>
+                      <div className="absolute inset-[3px] rounded-[14px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+                      {currentLevelPreviewImage ? (
+                        <Image
+                          src={currentLevelPreviewImage}
+                          alt={`${currentLevel.name} preview`}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 520px"
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : null}
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center ${currentLevelPreviewImage
+                          ? "opacity-0"
+                          : "opacity-100"
+                          }`}
+                      >
+                        <div
+                          className={`w-full h-full ${currentLevel.region === "grassland"
+                            ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
+                            : currentLevel.region === "swamp"
+                              ? "bg-gradient-to-br from-emerald-900/80 via-teal-900/65 to-stone-900/45"
+                              : currentLevel.region === "desert"
+                                ? "bg-gradient-to-br from-amber-800/80 via-yellow-900/60 to-orange-900/40"
+                                : currentLevel.region === "winter"
+                                  ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
+                                  : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
+                            } flex items-center justify-center`}
+                        >
+                          <div className="text-center">
+                            <div className="text-4xl mb-2">
+                              {isCurrentChallengeLevel
+                                ? "⚔️"
+                                : currentLevel.region === "grassland"
+                                  ? "🌲"
+                                  : currentLevel.region === "swamp"
+                                    ? "🦆"
+                                    : currentLevel.region === "desert"
+                                      ? "🏜️"
+                                      : currentLevel.region === "winter"
+                                        ? "❄️"
+                                        : "🌋"}
+                            </div>
+                            <span className="text-amber-400/60 text-xs font-medium tracking-wide">
+                              Preview Coming
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider" style={{
+                        background: PANEL.bgDark,
+                        color: "rgb(252,211,77)",
+                        border: `1px solid ${GOLD.border30}`,
+                        boxShadow: `0 2px 6px ${OVERLAY.black40}`
+                      }}>
+                        {currentLevel.region}
                       </div>
                     </div>
-                  );
-                })()}
-              </div>
+                  </div>
 
-              <div className="flex-shrink-0 p-2 sm:p-4" style={{ borderTop: `1px solid ${GOLD.border25}`, background: `linear-gradient(180deg, transparent 0%, ${PANEL.bgDark} 100%)` }}>
-                {/* Warning messages - show prominently when not ready */}
-                {!canStart && (
-                  <div className="mb-2 p-2 sm:p-3 rounded-xl relative" style={{
-                    background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
-                    border: `1.5px solid ${RED_CARD.border25}`,
-                    boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
-                  }}>
-                    <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
-                    <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-300 relative z-10">
-                      <AlertTriangle size={16} className="text-orange-400 animate-pulse" />
-                      {!selectedHero && !selectedSpells.length && (
-                        <span>Select a Champion & 3 Spells</span>
-                      )}
-                      {!selectedHero && selectedSpells.length > 0 && (
-                        <span>Select a Champion</span>
-                      )}
-                      {selectedHero && selectedSpells.length < 3 && (
-                        <span>Select {3 - selectedSpells.length} more Spell{3 - selectedSpells.length > 1 ? "s" : ""}</span>
-                      )}
+                  <div className="hidden sm:inline flex-1 p-4 overflow-y-auto">
+                    {/* Section title with decorative lines */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                      <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Region Campaign</span>
+                      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
                     </div>
+                    {(() => {
+                      if (isCurrentCustomLevel) {
+                        return (
+                          <div className="space-y-2">
+                            <div className="rounded-lg border border-amber-700/40 bg-amber-900/15 p-2.5">
+                              <div className="text-xs uppercase tracking-widest text-amber-400/90 mb-1">
+                                Custom Sandbox
+                              </div>
+                              <div className="text-xs text-amber-200/80 mb-2">
+                                this map lives in your local creator sandbox. open creator to edit paths, landmarks, hazards, and objectives.
+                              </div>
+                              <button
+                                onClick={() => setShowCreator(true)}
+                                className="rounded-md border border-amber-600/60 bg-amber-700/20 px-2.5 py-1 text-xs hover:bg-amber-700/30"
+                              >
+                                Open Creator
+                              </button>
+                            </div>
+
+                            <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                              {customLevels.map((level) => (
+                                <button
+                                  key={level.id}
+                                  onClick={() => handleCustomLevelPlaytest(level.id)}
+                                  className="w-full text-left rounded-lg border border-amber-800/50 bg-stone-900/70 px-2.5 py-2 hover:bg-stone-800/80 transition-colors"
+                                >
+                                  <div className="text-sm font-medium text-amber-100 truncate">
+                                    {level.name}
+                                  </div>
+                                  <div className="text-[11px] text-amber-400/70">
+                                    {level.theme} • diff {level.difficulty}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      const regionLevels = WORLD_LEVELS.filter(
+                        (l) => l.region === currentLevel.region
+                      );
+                      const regionStars = regionLevels.reduce(
+                        (sum, l) => sum + (levelStars[l.id] || 0),
+                        0
+                      );
+                      const maxRegionStars = regionLevels.length * 3;
+                      return (
+                        <div className="space-y-1.5">
+                          {regionLevels.map((l) => (
+                            <div
+                              key={l.id}
+                              className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative"
+                              style={{
+                                background: l.id === selectedLevel
+                                  ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})`
+                                  : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                                border: l.id === selectedLevel
+                                  ? `1.5px solid ${GOLD.accentBorder40}`
+                                  : `1.5px solid ${GOLD.border25}`,
+                                boxShadow: l.id === selectedLevel
+                                  ? `inset 0 0 10px ${GOLD.accentGlow08}`
+                                  : `inset 0 0 8px ${GOLD.glow04}`
+                              }}
+                              onClick={() => handleLevelClick(l.id)}
+                            >
+                              <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
+                                border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
+                              }} />
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg relative"
+                                style={{
+                                  background: isLevelUnlocked(l.id) ? PANEL.bgDeep : NEUTRAL.bgDark,
+                                  border: `1px solid ${isLevelUnlocked(l.id) ? GOLD.border25 : NEUTRAL.border}`
+                                }}
+                              >
+                                {isLevelUnlocked(l.id)
+                                  ? l.kind === "challenge"
+                                    ? "⚔️"
+                                    : l.region === "grassland"
+                                      ? "🌲"
+                                      : l.region === "swamp"
+                                        ? "🦆"
+                                        : l.region === "desert"
+                                          ? "🏜️"
+                                          : l.region === "winter"
+                                            ? "❄️"
+                                            : "🌋"
+                                  : "🔒"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
+                                  {l.name}
+                                  {l.kind === "challenge" ? " • Challenge" : ""}
+                                </div>
+                              </div>
+                              <div className="flex gap-0.5">
+                                {[1, 2, 3].map((s) => (
+                                  <Star
+                                    key={s}
+                                    size={14}
+                                    className={
+                                      (levelStars[l.id] || 0) >= s
+                                        ? "text-yellow-400 fill-yellow-400 drop-shadow"
+                                        : "text-stone-600"
+                                    }
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                          {/* Region Progress footer */}
+                          <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+                            <span className="text-amber-400 text-sm font-medium">
+                              Region Progress:
+                            </span>
+                            <div className="flex items-center gap-2 px-2.5 py-1 rounded-md" style={{
+                              background: PANEL.bgWarmMid,
+                              border: `1px solid ${GOLD.border25}`
+                            }}>
+                              <Star
+                                size={14}
+                                className="text-yellow-400 fill-yellow-400"
+                              />
+                              <span className="text-amber-200 font-bold text-sm">
+                                {regionStars}/{maxRegionStars}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
-                )}
-                <button
-                  onClick={startGame}
-                  disabled={!canStart}
-                  className="w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group"
-                  style={canStart ? {
-                    background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
-                    border: `2px solid ${GOLD.accentBorder50}`,
-                    boxShadow: `0 0 20px ${GOLD.accentGlow10}, inset 0 0 15px ${GOLD.accentGlow08}`,
-                    color: "#1a1000",
-                  } : {
-                    background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                    border: `1.5px solid ${NEUTRAL.border}`,
-                    color: "rgb(120,113,108)",
-                    cursor: "not-allowed"
-                  }}
-                >
-                  {canStart && (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                      <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
-                    </>
+
+                  <div className="flex-shrink-0 p-2 sm:p-4" style={{ borderTop: `1px solid ${GOLD.border25}`, background: `linear-gradient(180deg, transparent 0%, ${PANEL.bgDark} 100%)` }}>
+                    {/* Warning messages - show prominently when not ready */}
+                    {!canStart && (
+                      <div className="mb-2 p-2 sm:p-3 rounded-xl relative" style={{
+                        background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
+                        border: `1.5px solid ${RED_CARD.border25}`,
+                        boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
+                      }}>
+                        <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder10}` }} />
+                        <div className="flex items-center justify-center gap-2 text-sm font-bold text-orange-300 relative z-10">
+                          <AlertTriangle size={16} className="text-orange-400 animate-pulse" />
+                          {!selectedHero && !selectedSpells.length && (
+                            <span>Select a Champion & 3 Spells</span>
+                          )}
+                          {!selectedHero && selectedSpells.length > 0 && (
+                            <span>Select a Champion</span>
+                          )}
+                          {selectedHero && selectedSpells.length < 3 && (
+                            <span>Select {3 - selectedSpells.length} more Spell{3 - selectedSpells.length > 1 ? "s" : ""}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <button
+                      onClick={startGame}
+                      disabled={!canStart}
+                      className="w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all relative overflow-hidden group"
+                      style={canStart ? {
+                        background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
+                        border: `2px solid ${GOLD.accentBorder50}`,
+                        boxShadow: `0 0 20px ${GOLD.accentGlow10}, inset 0 0 15px ${GOLD.accentGlow08}`,
+                        color: "rgba(253, 230, 138, 0.9)",
+                        textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                      } : {
+                        background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                        border: `1.5px solid ${NEUTRAL.border}`,
+                        color: "rgb(120,113,108)",
+                        cursor: "not-allowed"
+                      }}
+                    >
+                      {canStart && (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                          <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
+                        </>
+                      )}
+                      <div className="relative flex items-center justify-center gap-2 sm:gap-3">
+                        <Swords size={20} className="sm:w-6 sm:h-6" />
+                        <span className="tracking-wider">{canStart ? "BATTLE" : "Waiting..."}</span>
+                        {canStart && <Play size={18} className="sm:w-5 sm:h-5" />}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              ) : showPreview ? (
+                <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                  <BattlefieldPreview
+                    animTime={animTime}
+                    onSelectFarthestLevel={() => {
+                      const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
+                      if (unlockedLevelsList.length > 0) {
+                        const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                        handleLevelClick(farthestLevel.id);
+                      }
+                    }}
+                  />
+                  {hasBattles && (
+                    <button
+                      onClick={() => setShowBattlefieldPreview(false)}
+                      className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 hover:brightness-110"
+                      style={{
+                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                        border: `1px solid ${GOLD.border25}`,
+                        boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
+                      }}
+                      title="Show Campaign Stats"
+                    >
+                      <BarChart3 size={12} className="text-amber-400/80" />
+                      <span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Stats</span>
+                    </button>
                   )}
-                  <div className="relative flex items-center justify-center gap-2 sm:gap-3">
-                    <Swords size={20} className="sm:w-6 sm:h-6" />
-                    <span className="tracking-wider">{canStart ? "BATTLE" : "Waiting..."}</span>
-                    {canStart && <Play size={18} className="sm:w-5 sm:h-5" />}
-                  </div>
-                </button>
-              </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                  <button
+                    onClick={() => setShowBattlefieldPreview(true)}
+                    className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 hover:brightness-110"
+                    style={{
+                      background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                      border: `1px solid ${GOLD.border25}`,
+                      boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
+                    }}
+                    title="Show Battle Scene"
+                  >
+                    <Eye size={12} className="text-amber-400/80" />
+                    <span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Preview</span>
+                  </button>
+                  <CampaignOverview
+                    levelStars={levelStars}
+                    levelStats={levelStats}
+                    unlockedMaps={unlockedMaps}
+                    onSelectLevel={handleLevelClick}
+                  />
+                </div>
+              )}
             </div>
-          ) : (
-            <BattlefieldPreview
-              animTime={animTime}
-              onSelectFarthestLevel={() => {
-                // Find the farthest unlocked level
-                const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
-                if (unlockedLevelsList.length > 0) {
-                  const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
-                  handleLevelClick(farthestLevel.id);
-                }
-              }}
-            />
-          )}
+          </OrnateFrame>
         </div>
         {/* RIGHT: Map */}
         <div className="relative flex-1 flex flex-col min-w-0 pl-3 sm:pl-0 py-3 pr-3 overflow-x-auto" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
@@ -1236,7 +1345,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
                               border: `2px solid ${GOLD.accentBorder50}`,
                               boxShadow: `0 0 12px ${GOLD.accentGlow10}`,
-                              color: "#1a1000",
+                              color: "rgba(253, 230, 138, 0.9)",
+                              textShadow: "0 1px 3px rgba(0,0,0,0.5)",
                             }
                             : {
                               background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
@@ -1265,56 +1375,77 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 background: `linear-gradient(180deg, transparent 0%, transparent 40%, rgba(18,12,6,0.4) 65%, rgba(18,12,6,0.92) 85%, rgba(18,12,6,0.98) 100%)`
               }}>
                 <div className="flex w-full mt-auto gap-1.5 sm:gap-3 pointer-events-auto items-stretch">
-                  {/* --- War is Coming Panel --- */}
-                  <div className="hidden sm:flex sm:flex-col w-44 flex-shrink-0 relative rounded-xl"
+                  {/* --- Flavor / Battle Summary Panel --- */}
+                  <div className="hidden sm:flex sm:flex-col w-40 flex-shrink-0 relative rounded-xl"
                     style={{
                       background: 'linear-gradient(180deg, rgba(41,32,20,0.97) 0%, rgba(28,22,15,0.99) 100%)',
                       border: '1.5px solid rgba(180,140,60,0.45)',
                       boxShadow: 'inset 0 0 20px rgba(180,140,60,0.06), 0 4px 24px rgba(0,0,0,0.5)',
                     }}>
-                    {/* Inner border glow */}
                     <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.12)' }} />
-                    {/* Header */}
-                    <div className="px-3 py-2 relative"
-                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.2), rgba(120,80,20,0.1), transparent)' }}>
-                      <div className="flex items-center gap-2">
-                        <Crown size={13} className="text-amber-500" />
-                        <span className="text-[9px] font-bold text-amber-400/90 tracking-[0.2em] uppercase">
-                          War is Coming
+                    {/* Header — matches HeroSelector header height */}
+                    <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative"
+                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Book size={11} className="text-amber-400 sm:w-[13px] sm:h-[13px]" />
+                        <span className="text-[8px] sm:text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                          Codex
                         </span>
                       </div>
-                      {/* Ornate divider */}
-                      <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.4) 20%, rgba(255,200,80,0.5) 50%, rgba(180,140,60,0.4) 80%, transparent)' }} />
+                      <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
                     </div>
-                    <div className="p-3 flex-1 flex flex-col justify-between">
-                      <div>
-                        <p className="text-[9px] text-amber-200/60 leading-relaxed italic">
-                          &ldquo;The shadows gather at the gates. Ancient towers
-                          stand resolute, their arcane fires burning eternal
-                          against the darkness.&rdquo;
-                        </p>
-                        <div className="my-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.25), transparent)' }} />
-                        <p className="text-[8px] text-stone-400/70 leading-relaxed">
-                          Choose your champion and ready your spells. The horde approaches.
-                        </p>
+                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
+                      <div className="grid grid-cols-2 gap-1">
+                        {([
+                          { label: "Towers", tab: "towers" as CodexTabId, icon: <Shield size={10} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)", span: false },
+                          { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={10} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)", span: false },
+                          { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={10} />, color: "text-purple-300", bg: "rgba(80,40,120,0.25)", border: "rgba(140,80,200,0.22)", span: false },
+                          { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={10} />, color: "text-red-300", bg: "rgba(100,30,30,0.25)", border: "rgba(180,60,60,0.22)", span: false },
+                          { label: "Special", tab: "special_towers" as CodexTabId, icon: <Star size={10} />, color: "text-yellow-300", bg: "rgba(100,80,20,0.25)", border: "rgba(200,160,40,0.22)", span: false },
+                          { label: "Hazards", tab: "hazards" as CodexTabId, icon: <AlertTriangle size={10} />, color: "text-orange-300", bg: "rgba(100,50,15,0.25)", border: "rgba(200,100,30,0.22)", span: false },
+                          { label: "Guide", tab: "guide" as CodexTabId, icon: <Book size={10} />, color: "text-blue-300", bg: "rgba(30,50,100,0.25)", border: "rgba(80,120,200,0.22)", span: true },
+                        ]).map((item) => (
+                          <button
+                            key={item.tab}
+                            onClick={() => openCodexTo(item.tab)}
+                            className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-[8px] font-semibold ${item.color} tracking-wide uppercase transition-all hover:brightness-130 hover:scale-105 ${item.span ? "col-span-2" : ""}`}
+                            style={{
+                              background: `linear-gradient(135deg, ${item.bg}, rgba(30,22,12,0.2))`,
+                              border: `1px solid ${item.border}`,
+                            }}
+                          >
+                            {item.icon}
+                            {item.label}
+                          </button>
+                        ))}
                       </div>
-                      <div className="mt-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5"
+                      <button
+                        onClick={() => {
+                          const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
+                          if (unlockedLevelsList.length > 0) {
+                            const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                            handleLevelClick(farthestLevel.id);
+                          }
+                        }}
+                        className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 transition-all hover:brightness-110 hover:scale-[1.02]"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(120,80,20,0.2), rgba(80,50,10,0.15))',
-                          border: '1px solid rgba(180,140,60,0.2)',
-                          boxShadow: 'inset 0 1px 0 rgba(255,200,80,0.05)',
+                          background: 'linear-gradient(135deg, rgba(140,95,20,0.5), rgba(100,65,12,0.4))',
+                          border: '1px solid rgba(180,140,60,0.3)',
+                          boxShadow: 'inset 0 1px 0 rgba(255,200,80,0.08)',
                         }}>
-                        <Swords size={11} className="text-amber-500/80" />
-                        <span className="text-[9px] font-semibold text-amber-400/80 tracking-wider uppercase">Defend the Realm</span>
-                      </div>
+                        <Swords size={12} className="text-amber-400" />
+                        <span className="text-[9px] font-bold text-amber-300 tracking-wider uppercase">Defend the Realm</span>
+                      </button>
                     </div>
                   </div>
+
                   {/* --- Hero Panel --- */}
                   <HeroSelector
                     selectedHero={selectedHero}
                     setSelectedHero={setSelectedHero}
                     hoveredHero={hoveredHero}
                     setHoveredHero={setHoveredHero}
+                    onOpenCodex={() => openCodexTo("heroes")}
                   />
 
                   {/* --- Spell Panel --- */}
@@ -1328,6 +1459,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     spentSpellStars={spentSpellStars}
                     spellUpgradeLevels={spellUpgradeLevels}
                     upgradeSpell={upgradeSpell}
+                    onOpenCodex={() => openCodexTo("spells")}
                   />
                 </div>
               </div>
@@ -1336,7 +1468,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         </div>
       </div>
 
-      {showCodex && <CodexModal onClose={() => setShowCodex(false)} />}
+      {showCodex && <CodexModal onClose={() => setShowCodex(false)} defaultTab={codexTab} />}
       {showCreator && (
         <CustomLevelCreatorModal
           isOpen={showCreator}

@@ -15,6 +15,7 @@ import {
   Shield,
   TrendingUp,
   Star,
+  Info,
 } from "lucide-react";
 import type { SpellType, SpellUpgradeLevels } from "../../types";
 import {
@@ -47,6 +48,7 @@ interface SpellSelectorProps {
   spentSpellStars: number;
   spellUpgradeLevels: SpellUpgradeLevels;
   upgradeSpell: (spellType: SpellType) => void;
+  onOpenCodex?: () => void;
 }
 
 export const SpellSelector: React.FC<SpellSelectorProps> = ({
@@ -59,6 +61,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
   spentSpellStars,
   spellUpgradeLevels,
   upgradeSpell,
+  onOpenCodex,
 }) => {
   const [showUpgradeModal, setShowUpgradeModal] = React.useState(false);
   const fireballStats = getFireballSpellStats(spellUpgradeLevels.fireball);
@@ -88,7 +91,6 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           </span>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-
           {/* Spell slots indicator */}
           <div className="flex items-center gap-0.5 sm:gap-1">
             {[0, 1, 2].map((i) => (
@@ -102,6 +104,19 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                 }} />
             ))}
           </div>
+          {onOpenCodex && (
+            <button
+              onClick={onOpenCodex}
+              className="hidden sm:flex items-center justify-center w-5 h-5 rounded-md transition-all hover:scale-110 hover:brightness-125"
+              style={{
+                background: 'rgba(140,80,200,0.12)',
+                border: '1px solid rgba(140,80,200,0.25)',
+              }}
+              title="View in Codex"
+            >
+              <Info size={10} className="text-purple-400/70" />
+            </button>
+          )}
         </div>
         <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(140,80,200,0.3) 20%, rgba(180,120,255,0.4) 50%, rgba(140,80,200,0.3) 80%, transparent)' }} />
       </div>

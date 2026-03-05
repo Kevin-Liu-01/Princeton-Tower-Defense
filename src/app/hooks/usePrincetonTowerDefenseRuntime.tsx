@@ -63,6 +63,8 @@ import {
   getNextSpellUpgradeCost,
   getSpentSpellUpgradeStars,
   getLevelPathKeys,
+  ISO_Y_FACTOR,
+  ISO_Y_RATIO,
 } from "../constants";
 // Utils
 import {
@@ -168,7 +170,10 @@ import {
 
 // Components
 import { WorldMap } from "../components/menus/WorldMap";
-import { VictoryScreen } from "../components/menus/VictoryScreen";
+import {
+  VictoryScreen,
+  calculateCategoryRatings,
+} from "../components/menus/VictoryScreen";
 import { DefeatScreen } from "../components/menus/DefeatScreen";
 import {
   TopHUD,
@@ -325,11 +330,9 @@ const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.0022;
 const ENEMY_LANE_OFFSETS = getEnemyLaneOffsets(5);
 const ENEMY_CENTER_LANE_INDEX = Math.floor((ENEMY_LANE_OFFSETS.length - 1) / 2);
 const ENEMY_SPAWN_LANE_JITTER = 0.08;
-const ENEMY_LANE_SWITCH_LOOKAHEAD = 0.55;
-const ENEMY_LANE_FRONT_CLEARANCE = 0.42;
-const ENEMY_LANE_BACK_CLEARANCE = 0.28;
-const ENEMY_LANE_STALL_GAP = 0.16;
-const ENEMY_LANE_STALL_PUSHBACK = 0.025;
+const ENEMY_REPULSION_PROGRESS_RADIUS = 0.5;
+const ENEMY_REPULSION_LATERAL_STRENGTH = 0.18;
+const ENEMY_FORMATION_PULL_STRENGTH = 0.035;
 const ENEMY_LANE_SHIFT_MS = 180;
 
 type EnemyFormationPattern = "echelon" | "line" | "file" | "wedge" | "vee";
@@ -449,11 +452,11 @@ const getFormationLaneIndex = (
 };
 const WAVE_START_BUBBLE_BASE_RADIUS = 22;
 const WAVE_START_BUBBLE_HIT_RADIUS = 1.2;
-const WAVE_START_BUBBLE_SIDE_OFFSET = 98;
-const WAVE_START_BUBBLE_BACK_OFFSET = 20;
-const WAVE_START_BUBBLE_VIEW_MARGIN_X = 92;
-const WAVE_START_BUBBLE_VIEW_MARGIN_Y = 68;
-const WAVE_START_BUBBLE_TOP_SAFE_Y = 108;
+const WAVE_START_BUBBLE_FORWARD_OFFSET = 85;
+const WAVE_START_BUBBLE_SIDE_OFFSET = 38;
+const WAVE_START_BUBBLE_VIEW_MARGIN_X = 28;
+const WAVE_START_BUBBLE_VIEW_MARGIN_Y = 28;
+const WAVE_START_BUBBLE_TOP_SAFE_Y = 28;
 const WAVE_START_BUBBLE_CORNER_MARGIN = 34;
 
 // Only keep high-value effects live; everything else is baked into static decoration layer.
@@ -500,7 +503,7 @@ const DECORATION_ISO_Y_OFFSETS: Partial<Record<DecorationType, number>> = {
 const getDecorationIsoY = (
   decoration: Pick<RuntimeDecoration, "type" | "x" | "y" | "scale">
 ): number =>
-  (decoration.x + decoration.y) * 0.25 +
+  (decoration.x + decoration.y) * ISO_Y_FACTOR +
   (DECORATION_ISO_Y_OFFSETS[decoration.type] ?? 0) * decoration.scale;
 
 const getRuntimeDecorationHeightTag = (
@@ -3604,208 +3607,122 @@ export function usePrincetonTowerDefenseRuntime() {
           })
           .filter(isDefined)
       );
-      // Lane-aware movement: keep enemies in discrete lanes and let faster units overtake.
+      // Soft-repulsion lane spreading: push nearby same-layer enemies apart
+      // laterally instead of hard blocking. Enemies always move forward at
+      // their natural speed; only the lateral (perpendicular) offset changes.
       setEnemies((prev) => {
-        if (prev.length <= 1 || ENEMY_LANE_OFFSETS.length <= 1) return prev;
+        if (prev.length <= 1) return prev;
 
-        type LaneOccupant = {
-          id: string;
+        type LaneEntry = {
+          index: number;
           pathKey: string;
-          laneIndex: number;
+          isFlying: boolean;
           progressMetric: number;
-          enemy: Enemy;
+          laneOffset: number;
+          formationOffset: number;
         };
 
-        const laneBuckets = new Map<string, LaneOccupant[]>();
-        const occupantById = new Map<string, LaneOccupant>();
-        const laneKeyFor = (pathKey: string, laneIndex: number) =>
-          `${pathKey}:${laneIndex}`;
+        const layerBuckets = new Map<string, LaneEntry[]>();
+        const entries: LaneEntry[] = new Array(prev.length);
 
-        prev.forEach((enemy) => {
+        for (let i = 0; i < prev.length; i++) {
+          const enemy = prev[i];
           const pathKey = enemy.pathKey || selectedMap;
-          const laneIndex = clampLaneIndex(getNearestLaneIndex(enemy.laneOffset));
-          const occupant: LaneOccupant = {
-            id: enemy.id,
-            pathKey,
-            laneIndex,
-            progressMetric: enemy.pathIndex + enemy.progress,
-            enemy,
-          };
-          occupantById.set(enemy.id, occupant);
-          const laneKey = laneKeyFor(pathKey, laneIndex);
-          const bucket = laneBuckets.get(laneKey);
-          if (bucket) {
-            bucket.push(occupant);
-          } else {
-            laneBuckets.set(laneKey, [occupant]);
-          }
-        });
-
-        laneBuckets.forEach((bucket) => {
-          bucket.sort((a, b) => a.progressMetric - b.progressMetric);
-        });
-
-        const findFrontOccupant = (
-          pathKey: string,
-          laneIndex: number,
-          progressMetric: number,
-          enemyId: string
-        ): LaneOccupant | undefined => {
-          const bucket = laneBuckets.get(laneKeyFor(pathKey, laneIndex));
-          if (!bucket) return undefined;
-          for (const occupant of bucket) {
-            if (occupant.id === enemyId) continue;
-            if (occupant.progressMetric > progressMetric) return occupant;
-          }
-          return undefined;
-        };
-
-        const isLaneClear = (
-          pathKey: string,
-          laneIndex: number,
-          progressMetric: number,
-          enemyId: string,
-          frontClearance: number = ENEMY_LANE_FRONT_CLEARANCE,
-          backClearance: number = ENEMY_LANE_BACK_CLEARANCE
-        ): boolean => {
-          const bucket = laneBuckets.get(laneKeyFor(pathKey, laneIndex));
-          if (!bucket) return true;
-          for (const occupant of bucket) {
-            if (occupant.id === enemyId) continue;
-            const diff = occupant.progressMetric - progressMetric;
-            if (diff >= 0 && diff < frontClearance) return false;
-            if (diff < 0 && Math.abs(diff) < backClearance) return false;
-          }
-          return true;
-        };
-
-        const buildLaneCandidates = (
-          currentLane: number,
-          preferredLane: number
-        ): number[] => {
-          const ordered: number[] = [];
-          const addLane = (laneIndex: number) => {
-            if (laneIndex < 0 || laneIndex >= ENEMY_LANE_OFFSETS.length) return;
-            if (!ordered.includes(laneIndex)) ordered.push(laneIndex);
-          };
-
-          addLane(preferredLane);
-          for (let step = 1; step < ENEMY_LANE_OFFSETS.length; step++) {
-            addLane(currentLane - step);
-            addLane(currentLane + step);
-          }
-          addLane(currentLane);
-          return ordered;
-        };
-
-        let hasLaneChanges = false;
-        const updated = prev.map((enemy) => {
-          const occupant = occupantById.get(enemy.id);
-          if (!occupant) return enemy;
-
-          const currentLane = occupant.laneIndex;
+          const isFlying = ENEMY_DATA[enemy.type].flying;
           const preferredLane = clampLaneIndex(
             typeof enemy.formationLane === "number"
               ? enemy.formationLane
-              : currentLane
+              : ENEMY_CENTER_LANE_INDEX
           );
-          const pathKey = occupant.pathKey;
-          const ownSpeed = ENEMY_DATA[enemy.type].speed;
-          const frontInCurrent = findFrontOccupant(
+          const entry: LaneEntry = {
+            index: i,
             pathKey,
-            currentLane,
-            occupant.progressMetric,
-            enemy.id
-          );
-          const frontGap =
-            frontInCurrent?.progressMetric != null
-              ? frontInCurrent.progressMetric - occupant.progressMetric
-              : Number.POSITIVE_INFINITY;
+            isFlying,
+            progressMetric: enemy.pathIndex + enemy.progress,
+            laneOffset: enemy.laneOffset,
+            formationOffset: ENEMY_LANE_OFFSETS[preferredLane] ?? 0,
+          };
+          entries[i] = entry;
+          const layerKey = `${pathKey}:${isFlying ? "f" : "g"}`;
+          const bucket = layerBuckets.get(layerKey);
+          if (bucket) bucket.push(entry);
+          else layerBuckets.set(layerKey, [entry]);
+        }
 
-          const canReposition =
-            !enemy.inCombat &&
-            !enemy.taunted &&
-            !enemy.frozen &&
-            now >= enemy.stunUntil;
+        layerBuckets.forEach((bucket) =>
+          bucket.sort((a, b) => a.progressMetric - b.progressMetric)
+        );
 
-          const shouldOvertake =
-            canReposition &&
-            Number.isFinite(frontGap) &&
-            frontGap < ENEMY_LANE_SWITCH_LOOKAHEAD &&
-            !!frontInCurrent &&
-            (frontInCurrent.enemy.inCombat ||
-              ENEMY_DATA[frontInCurrent.enemy.type].speed <= ownSpeed * 0.96 ||
-              frontGap < ENEMY_LANE_STALL_GAP * 1.4);
+        let hasChanges = false;
+        const updated = prev.map((enemy, i) => {
+          const entry = entries[i];
+          if (
+            enemy.inCombat ||
+            enemy.taunted ||
+            enemy.frozen ||
+            now < enemy.stunUntil
+          )
+            return enemy;
 
-          let desiredLane = currentLane;
-          if (canReposition) {
-            if (shouldOvertake) {
-              const candidates = buildLaneCandidates(currentLane, preferredLane);
-              for (const laneIndex of candidates) {
-                if (laneIndex === currentLane) continue;
-                if (
-                  isLaneClear(
-                    pathKey,
-                    laneIndex,
-                    occupant.progressMetric,
-                    enemy.id
-                  )
-                ) {
-                  desiredLane = laneIndex;
-                  break;
-                }
-              }
-            } else if (
-              preferredLane !== currentLane &&
-              isLaneClear(
-                pathKey,
-                preferredLane,
-                occupant.progressMetric,
-                enemy.id,
-                ENEMY_LANE_FRONT_CLEARANCE * 0.8,
-                ENEMY_LANE_BACK_CLEARANCE * 0.8
-              )
-            ) {
-              desiredLane = preferredLane;
+          const layerKey = `${entry.pathKey}:${entry.isFlying ? "f" : "g"}`;
+          const bucket = layerBuckets.get(layerKey);
+          if (!bucket || bucket.length <= 1) return enemy;
+
+          let lateralPush = 0;
+          for (const other of bucket) {
+            if (other.index === i) continue;
+            const progressDist = Math.abs(
+              other.progressMetric - entry.progressMetric
+            );
+            if (progressDist > ENEMY_REPULSION_PROGRESS_RADIUS) continue;
+
+            const lateralDiff = entry.laneOffset - other.laneOffset;
+            const absLateral = Math.abs(lateralDiff);
+            const proximityFactor =
+              1 - progressDist / ENEMY_REPULSION_PROGRESS_RADIUS;
+
+            if (absLateral < 0.05) {
+              const sign = enemy.id > prev[other.index].id ? 1 : -1;
+              lateralPush +=
+                sign * ENEMY_REPULSION_LATERAL_STRENGTH * proximityFactor;
+            } else {
+              const sign = lateralDiff > 0 ? 1 : -1;
+              lateralPush +=
+                (sign * ENEMY_REPULSION_LATERAL_STRENGTH * proximityFactor) /
+                (1 + absLateral * 4);
             }
           }
 
-          const targetLaneOffset =
-            ENEMY_LANE_OFFSETS[desiredLane] ?? enemy.laneOffset;
+          const formationPull =
+            (entry.formationOffset - entry.laneOffset) *
+            ENEMY_FORMATION_PULL_STRENGTH;
+
+          const totalForce = lateralPush + formationPull;
           const laneBlend = Math.min(1, deltaTime / ENEMY_LANE_SHIFT_MS);
           const nextLaneOffset = clampLaneOffset(
-            enemy.laneOffset + (targetLaneOffset - enemy.laneOffset) * laneBlend
+            entry.laneOffset + totalForce * laneBlend
           );
 
-          let nextProgress = enemy.progress;
-          if (
-            canReposition &&
-            desiredLane === currentLane &&
-            Number.isFinite(frontGap) &&
-            frontGap < ENEMY_LANE_STALL_GAP
-          ) {
-            const pushbackStrength =
-              ((ENEMY_LANE_STALL_GAP - frontGap) / ENEMY_LANE_STALL_GAP) *
-              ENEMY_LANE_STALL_PUSHBACK;
-            nextProgress = Math.max(0, Math.min(1, enemy.progress - pushbackStrength));
-          }
+          const preferredLane = clampLaneIndex(
+            typeof enemy.formationLane === "number"
+              ? enemy.formationLane
+              : ENEMY_CENTER_LANE_INDEX
+          );
 
           if (
             Math.abs(nextLaneOffset - enemy.laneOffset) > 0.0005 ||
-            Math.abs(nextProgress - enemy.progress) > 0.0005 ||
             enemy.formationLane !== preferredLane
           ) {
-            hasLaneChanges = true;
+            hasChanges = true;
             return {
               ...enemy,
               laneOffset: nextLaneOffset,
-              progress: nextProgress,
               formationLane: preferredLane,
             };
           }
           return enemy;
         });
-        return hasLaneChanges ? updated : prev;
+        return hasChanges ? updated : prev;
       });
       // Summoner enemies spawn minions periodically
       setEnemies((prev) => {
@@ -5102,8 +5019,7 @@ export function usePrincetonTowerDefenseRuntime() {
               const trackTargetPos = getEnemyAimPosCached(trackTarget);
               const trackDx = trackTargetPos.x - towerWorldPos.x;
               const trackDy = trackTargetPos.y - towerWorldPos.y;
-              // Account for isometric projection: isoX = (x-y)*0.5, isoY = (x+y)*0.25
-              // Visual angle needs: atan2(dx+dy, dx-dy) to match screen-space direction
+              // Account for isometric projection: screen direction
               const trackRotation = Math.atan2(trackDx + trackDy, trackDx - trackDy);
 
               // Update rotation to track enemy continuously
@@ -5154,7 +5070,7 @@ export function usePrincetonTowerDefenseRuntime() {
               // Update lastAttack timestamp (rotation already tracked continuously above)
               const dx = targetAimPos.x - towerWorldPos.x;
               const dy = targetAimPos.y - towerWorldPos.y;
-              // Account for isometric projection: isoX = (x-y)*0.5, isoY = (x+y)*0.25
+              // Account for isometric projection
               const rotation = Math.atan2(dx + dy, dx - dy);
               queueTowerPatch(tower.id, { lastAttack: now });
               // Create cannon shot effect - renderer will position from turret
@@ -6168,13 +6084,17 @@ export function usePrincetonTowerDefenseRuntime() {
       ) {
         gameEndHandledRef.current = true;
 
-        // Calculate stars based on lives remaining
-        const stars = lives >= 18 ? 3 : lives >= 10 ? 2 : 1;
-        setStarsEarned(stars);
-
         // Calculate time spent
         const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
         setTimeSpent(finalTime);
+
+        // Calculate stars from multi-category ratings
+        const { overall: stars } = calculateCategoryRatings(
+          finalTime,
+          lives,
+          totalWaves,
+        );
+        setStarsEarned(stars);
 
         // Freeze battle in-place and show overlay without leaving the battle screen.
         clearAllTimers();
@@ -6245,6 +6165,7 @@ export function usePrincetonTowerDefenseRuntime() {
       levelStartTime,
       clearAllTimers,
       levelStars,
+      totalWaves,
       updateLevelStats,
       updateLevelStars,
       unlockedMaps,
@@ -6314,18 +6235,18 @@ export function usePrincetonTowerDefenseRuntime() {
           WAVE_START_BUBBLE_BASE_RADIUS *
           Math.max(0.85, Math.min(1.35, cameraZoom * 0.95));
 
-        // Keep bubble anchors camera-independent to prevent edge "dragging".
-        const sideSign = pathCount > 1 ? (pathIndex % 2 === 0 ? 1 : -1) : 1;
+        // Place bubble ahead of spawn along the enemy path direction.
+        const sideSign = pathCount > 1 ? (pathIndex % 2 === 0 ? 1 : -1) : 0;
         const preferredWorldPos: Position = {
           x:
             spawnWorld.x +
-            perpX * WAVE_START_BUBBLE_SIDE_OFFSET * sideSign -
-            dirX * WAVE_START_BUBBLE_BACK_OFFSET +
+            dirX * WAVE_START_BUBBLE_FORWARD_OFFSET +
+            perpX * WAVE_START_BUBBLE_SIDE_OFFSET * sideSign +
             dirX * longitudinalOffset,
           y:
             spawnWorld.y +
-            perpY * WAVE_START_BUBBLE_SIDE_OFFSET * sideSign -
-            dirY * WAVE_START_BUBBLE_BACK_OFFSET +
+            dirY * WAVE_START_BUBBLE_FORWARD_OFFSET +
+            perpY * WAVE_START_BUBBLE_SIDE_OFFSET * sideSign +
             dirY * longitudinalOffset,
         };
         const spawnScreenPos = worldToScreen(
@@ -7899,7 +7820,7 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "tower",
         data: tower,
-        isoY: (worldPos.x + worldPos.y) * 0.25,
+        isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
       });
     });
     towers.forEach((tower) => {
@@ -7909,7 +7830,7 @@ export function usePrincetonTowerDefenseRuntime() {
         renderables.push({
           type: "station-range",
           data: { ...tower, isHovered },
-          isoY: (worldPos.x + worldPos.y) * 0.25 - 1000,
+          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR - 1000,
         });
       }
     });
@@ -7921,7 +7842,7 @@ export function usePrincetonTowerDefenseRuntime() {
         renderables.push({
           type: "tower-range",
           data: tower,
-          isoY: (worldPos.x + worldPos.y) * 0.25 - 999,
+          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR - 999,
         });
       }
     }
@@ -7933,7 +7854,7 @@ export function usePrincetonTowerDefenseRuntime() {
         renderables.push({
           type: "tower-range",
           data: { ...tower, isHovered: true },
-          isoY: (worldPos.x + worldPos.y) * 0.25 - 998,
+          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR - 998,
         });
       }
     }
@@ -7964,14 +7885,14 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "enemy",
         data: enemy,
-        isoY: (worldPos.x + worldPos.y) * 0.25 + stableOffset,
+        isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR + stableOffset,
       });
     });
     if (hero && !hero.dead) {
       renderables.push({
         type: "hero",
         data: hero,
-        isoY: (hero.pos.x + hero.pos.y) * 0.25,
+        isoY: (hero.pos.x + hero.pos.y) * ISO_Y_FACTOR,
       });
     }
     // Only render living troops (dead ones handled separately for ghost effect)
@@ -7979,7 +7900,7 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "troop",
         data: troop,
-        isoY: (troop.pos.x + troop.pos.y) * 0.25,
+        isoY: (troop.pos.x + troop.pos.y) * ISO_Y_FACTOR,
       });
     });
     projectiles.forEach((proj) => {
@@ -7996,7 +7917,7 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "projectile",
         data: proj,
-        isoY: (x + y) * 0.25,
+        isoY: (x + y) * ISO_Y_FACTOR,
       });
     });
     mergedEffects.forEach((eff) => {
@@ -8021,14 +7942,14 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "effect",
         data: eff,
-        isoY: (eff.pos.x + eff.pos.y) * 0.25,
+        isoY: (eff.pos.x + eff.pos.y) * ISO_Y_FACTOR,
       });
     });
     particles.forEach((p) => {
       renderables.push({
         type: "particle",
         data: p,
-        isoY: (p.pos.x + p.pos.y) * 0.25,
+        isoY: (p.pos.x + p.pos.y) * ISO_Y_FACTOR,
       });
     });
     // Add special building to renderables for proper depth sorting
@@ -8067,7 +7988,7 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "special-building",
         data: { ...spec, boostedTowerCount, chargeProgress, __towerIndex: index },
-        isoY: (worldPos.x + worldPos.y) * 0.25,
+        isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
       });
     });
     if (draggingTower) {
@@ -8083,7 +8004,7 @@ export function usePrincetonTowerDefenseRuntime() {
       renderables.push({
         type: "tower-preview",
         data: draggingTower,
-        isoY: (worldPos.x + worldPos.y) * 0.25,
+        isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
       });
     }
     // Tower repositioning preview - show tower being moved at new position
@@ -8121,7 +8042,7 @@ export function usePrincetonTowerDefenseRuntime() {
             level: tower.level,
             upgrade: tower.upgrade,
           },
-          isoY: (worldPos.x + worldPos.y) * 0.25,
+          isoY: (worldPos.x + worldPos.y) * ISO_Y_FACTOR,
         });
       }
     }
@@ -8191,8 +8112,8 @@ export function usePrincetonTowerDefenseRuntime() {
       ctx.shadowColor = theme.glow;
       ctx.shadowBlur = 25 * s * buffPulse;
 
-      // IMPORTANT: Squish everything into isometric perspective (2:1 ratio)
-      ctx.scale(1, 0.5);
+      // Squish into 2:1 isometric perspective
+      ctx.scale(1, ISO_Y_RATIO);
 
       // --- 1. Soft Core Glow (No rotation) - Larger and more visible ---
       const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 * s);
@@ -8360,7 +8281,7 @@ export function usePrincetonTowerDefenseRuntime() {
       if (range > 0) {
         ctx.save();
         ctx.translate(sPos.x, sPos.y);
-        ctx.scale(1, 0.5); // Perspective lock
+        ctx.scale(1, ISO_Y_RATIO);
 
         if (spec.type === "sunforge_orrery") {
           const outerR = range * cameraZoom;
@@ -8456,7 +8377,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
       ctx.save();
       ctx.translate(targetScreenPos.x, targetScreenPos.y);
-      ctx.scale(1, 0.5);
+      ctx.scale(1, ISO_Y_RATIO);
       const markerRadius = sentinelStrikeRadiusWorld * cameraZoom;
       const markerAlpha = isActiveTargeting ? 0.24 + pulse * 0.15 : 0.14 + pulse * 0.1;
       ctx.fillStyle = `rgba(190, 24, 93, ${markerAlpha})`;
@@ -9012,40 +8933,41 @@ export function usePrincetonTowerDefenseRuntime() {
       if (linkDistance > radius * 1.8) {
         const linkUx = linkDx / linkDistance;
         const linkUy = linkDy / linkDistance;
-        const linkStart = {
-          x: spawnScreenPos.x + linkUx * 8,
-          y: spawnScreenPos.y + linkUy * 8,
-        };
-        const linkEnd = {
-          x: animatedBubbleCenter.x - linkUx * (radius * 1.1),
-          y: animatedBubbleCenter.y - linkUy * (radius * 1.1),
-        };
         ctx.save();
-        ctx.strokeStyle = isWaveStartPrimed
+        const triColor = isWaveStartPrimed
           ? isWaveStartHovered
-            ? "rgba(255, 198, 148, 0.62)"
-            : "rgba(255, 176, 120, 0.48)"
+            ? "rgba(255, 198, 148, 0.95)"
+            : "rgba(255, 176, 120, 0.88)"
           : isWaveStartHovered
-            ? "rgba(255, 132, 132, 0.62)"
-            : "rgba(248, 110, 110, 0.42)";
-        ctx.lineWidth = 2 + hoverBoost * 1.2;
-        ctx.lineCap = "round";
+            ? "rgba(255, 132, 132, 0.95)"
+            : "rgba(248, 110, 110, 0.82)";
+        const triSize = 10 + hoverBoost * 3;
+        const triDist = radius * 0.85;
+        const triCx = animatedBubbleCenter.x - linkUx * triDist;
+        const triCy = animatedBubbleCenter.y - linkUy * triDist;
+        const triAngle = Math.atan2(-linkUy, -linkUx);
+        ctx.fillStyle = triColor;
         ctx.beginPath();
-        ctx.moveTo(linkStart.x, linkStart.y);
-        ctx.lineTo(linkEnd.x, linkEnd.y);
-        ctx.stroke();
+        ctx.moveTo(
+          triCx + Math.cos(triAngle) * triSize,
+          triCy + Math.sin(triAngle) * triSize,
+        );
+        ctx.lineTo(
+          triCx + Math.cos(triAngle + 2.4) * triSize * 0.65,
+          triCy + Math.sin(triAngle + 2.4) * triSize * 0.65,
+        );
+        ctx.lineTo(
+          triCx + Math.cos(triAngle - 2.4) * triSize * 0.65,
+          triCy + Math.sin(triAngle - 2.4) * triSize * 0.65,
+        );
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
       }
 
       ctx.save();
       ctx.translate(animatedBubbleCenter.x, animatedBubbleCenter.y);
       ctx.scale(bubbleScale, bubbleScale);
-
-      // Ground shadow for depth.
-      ctx.fillStyle = `rgba(0, 0, 0, ${(0.26 + 0.16 * pulse).toFixed(3)})`;
-      ctx.beginPath();
-      ctx.ellipse(0, radius * 1.18, radius * 0.9, radius * 0.34, 0, 0, Math.PI * 2);
-      ctx.fill();
 
       // Main circular bubble body.
       const bodyGradient = ctx.createRadialGradient(
@@ -12403,6 +12325,7 @@ export function usePrincetonTowerDefenseRuntime() {
           bestHearts={currentLevelStats.bestHearts}
           levelName={LEVEL_DATA[selectedMap]?.name || selectedMap}
           resetGame={resetGame}
+          totalWaves={totalWaves}
           overlay
         />
       )}

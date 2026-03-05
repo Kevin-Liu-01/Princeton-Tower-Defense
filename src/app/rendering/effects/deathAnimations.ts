@@ -1,4 +1,5 @@
 import type { Effect, Position } from "../../types";
+import { ISO_Y_RATIO } from "../../constants";
 
 interface DeathAnimationParams {
   ctx: CanvasRenderingContext2D;
@@ -102,7 +103,7 @@ export function renderLightningDeath({
       const angle = (i / arcCount) * Math.PI * 2 + seededRandom(i * 7) * 0.6;
       const dist = arcT * size * (1.2 + seededRandom(i * 11) * 0.8);
       const ax = cx + Math.cos(angle) * dist;
-      const ay = cy + Math.sin(angle) * dist * 0.5 - arcT * size * 0.15;
+      const ay = cy + Math.sin(angle) * dist * ISO_Y_RATIO - arcT * size * 0.15;
 
       // Jagged lightning bolt segments
       ctx.globalAlpha = (1 - arcT) * 0.9;
@@ -550,7 +551,7 @@ export function renderFreezeDeath({
       const speed = 0.8 + seededRandom(i * 7) * 0.6;
       const dist = shardT * size * speed * 1.5;
       const sx = cx + Math.cos(angle) * dist;
-      const sy = cy + Math.sin(angle) * dist * 0.5 + shardT * size * 0.15;
+      const sy = cy + Math.sin(angle) * dist * ISO_Y_RATIO + shardT * size * 0.15;
 
       const shardW = size * (0.06 + seededRandom(i * 29) * 0.08) * (1 - shardT * 0.5);
       const shardH = shardW * (1.8 + seededRandom(i * 43) * 2.5);
@@ -597,7 +598,7 @@ export function renderFreezeDeath({
       const angle = seededRandom(i * 79) * Math.PI * 2;
       const dist = size * (0.3 + seededRandom(i * 83) * 1.0) * easeOutQuad(sparkleT);
       const sx = cx + Math.cos(angle) * dist;
-      const sy = cy + Math.sin(angle) * dist * 0.5;
+      const sy = cy + Math.sin(angle) * dist * ISO_Y_RATIO;
       const starSize = zoom * (2 + seededRandom(i * 89) * 2.5) * (1 - sparkleT * 0.5);
 
       ctx.globalAlpha = twinkle * 0.95 * (1 - sparkleT);
@@ -697,7 +698,7 @@ export function renderSonicDeath({
       ctx.strokeStyle = i === 0 ? "#eeccff" : i === 1 ? "#cc99ee" : i === 2 ? "#aa77dd" : "#9966cc";
       ctx.lineWidth = Math.max(0.5, (1 - ringT) * (3 - i * 0.4) * zoom);
       ctx.beginPath();
-      ctx.ellipse(cx, cy, ringRadius, ringRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy, ringRadius, ringRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
@@ -913,7 +914,7 @@ export function renderDefaultDeath({
       const speed = 0.6 + seededRandom(i * 13) * 0.6;
       const dist = fragT * deathSize * speed * 1.8;
       const fragX = cx + Math.cos(angle) * dist;
-      const fragY = cy + Math.sin(angle) * dist * 0.5 - fragT * deathSize * 0.3;
+      const fragY = cy + Math.sin(angle) * dist * ISO_Y_RATIO - fragT * deathSize * 0.3;
       const fragSize = deathSize * 0.1 * (1 - fragT * 0.7);
 
       ctx.globalAlpha = (1 - fragT) * 0.8;

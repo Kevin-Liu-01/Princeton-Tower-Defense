@@ -1,6 +1,6 @@
 // Tower Rendering Functions - Extracted from rendering/index.ts
 import type { Tower, Enemy, DraggingTower, Position } from "../../types";
-import { TILE_SIZE, TOWER_DATA, TOWER_COLORS } from "../../constants";
+import { TILE_SIZE, TOWER_DATA, TOWER_COLORS, ISO_ANGLE, ISO_PRISM_W_FACTOR, ISO_PRISM_D_FACTOR, ISO_Y_RATIO } from "../../constants";
 import { TOWER_STATS } from "../../constants/towerStats";
 import {
   gridToWorld,
@@ -28,8 +28,8 @@ function drawIsometricPrism(
   },
   zoom: number = 1,
 ) {
-  const w = width * zoom * 0.5;
-  const d = depth * zoom * 0.25;
+  const w = width * zoom * ISO_PRISM_W_FACTOR;
+  const d = depth * zoom * ISO_PRISM_D_FACTOR;
   const h = height * zoom;
 
   // Calculate vertices for isometric box
@@ -115,7 +115,7 @@ function drawIsoCylinder(
   h: number,
   colors: { body: string; dark: string; light: string; top: string },
 ) {
-  const ry = rx * 0.5;
+  const ry = rx * ISO_Y_RATIO;
 
   ctx.fillStyle = colors.dark;
   ctx.beginPath();
@@ -172,7 +172,7 @@ function drawMerlon(
   hasArrowSlit: boolean = true,
 ) {
   const hw = w * zoom * 0.5;
-  const hd = d * zoom * 0.25;
+  const hd = d * zoom * ISO_PRISM_D_FACTOR;
   const hh = h * zoom;
   const outlineStyle = "rgba(0,0,0,0.4)";
   const outlineWidth = 1 * zoom;
@@ -219,7 +219,7 @@ function drawMerlon(
   // Capstone slab (wider overhang)
   const capH = 1.5 * zoom;
   const capW = (w + 1.5) * zoom * 0.5;
-  const capD = (d + 1.5) * zoom * 0.25;
+  const capD = (d + 1.5) * zoom * ISO_PRISM_D_FACTOR;
   const capY = cy - hh - capH;
   // Capstone top
   ctx.fillStyle = colors.top;
@@ -292,7 +292,7 @@ function drawIsoGothicWindow(
   glowAlpha: number = 0.3,
   colors?: { frame?: string; void?: string; sill?: string },
 ) {
-  const slope = face === "right" ? -0.5 : 0.5;
+  const slope = face === "right" ? -ISO_Y_RATIO : ISO_Y_RATIO;
   const hw = w * zoom * 0.5;
   const hh = h * zoom * 0.5;
   const archPeak = hh + 2.5 * zoom;
@@ -300,7 +300,7 @@ function drawIsoGothicWindow(
   // Recess depth for 3D effect
   const rd = 1.2 * zoom;
   const rdx = face === "right" ? rd : -rd;
-  const rdy = -rd * 0.5;
+  const rdy = -rd * ISO_Y_RATIO;
 
   const frameColor = colors?.frame ?? "#2a2a32";
   const voidColor = colors?.void ?? "#1a1a22";
@@ -338,11 +338,11 @@ function drawIsoGothicWindow(
     ctx.fillStyle = `${glowColor}, ${glowAlpha})`;
     ctx.beginPath();
     const inset = 0.3 * zoom;
-    ctx.moveTo(cx - hw + inset, cy - hh + -hw * slope + inset * 0.5);
+    ctx.moveTo(cx - hw + inset, cy - hh + -hw * slope + inset * ISO_Y_RATIO);
     ctx.lineTo(cx, cy - archPeak + inset);
-    ctx.lineTo(cx + hw - inset, cy - hh + hw * slope + inset * 0.5);
-    ctx.lineTo(cx + hw - inset, cy + hh + hw * slope - inset * 0.5);
-    ctx.lineTo(cx - hw + inset, cy + hh + -hw * slope - inset * 0.5);
+    ctx.lineTo(cx + hw - inset, cy - hh + hw * slope + inset * ISO_Y_RATIO);
+    ctx.lineTo(cx + hw - inset, cy + hh + hw * slope - inset * ISO_Y_RATIO);
+    ctx.lineTo(cx - hw + inset, cy + hh + -hw * slope - inset * ISO_Y_RATIO);
     ctx.closePath();
     ctx.fill();
   }
@@ -412,7 +412,7 @@ function drawGear(
     0,
     0,
     innerRadius * zoom,
-    innerRadius * zoom * 0.5,
+    innerRadius * zoom * ISO_Y_RATIO,
     0,
     0,
     Math.PI * 2,
@@ -426,7 +426,7 @@ function drawGear(
     0,
     0,
     innerRadius * 0.6 * zoom,
-    innerRadius * 0.6 * zoom * 0.5,
+    innerRadius * 0.6 * zoom * ISO_Y_RATIO,
     0,
     0,
     Math.PI * 2,
@@ -440,7 +440,7 @@ function drawGear(
     0,
     0,
     innerRadius * 0.25 * zoom,
-    innerRadius * 0.25 * zoom * 0.5,
+    innerRadius * 0.25 * zoom * ISO_Y_RATIO,
     0,
     0,
     Math.PI * 2,
@@ -627,8 +627,8 @@ function drawAmmoBox(
   const bounce = Math.sin(bouncePhase) * 2 * zoom;
   const boxY = y - bounce;
 
-  const hw = width * zoom * 0.5;
-  const hd = depth * zoom * 0.25;
+  const hw = width * zoom * ISO_PRISM_W_FACTOR;
+  const hd = depth * zoom * ISO_PRISM_D_FACTOR;
   const hh = height * zoom;
 
   // Left face
@@ -2309,7 +2309,7 @@ function renderCannonTower(
 
   // ========== BASE RAILING SETUP & BACK HALF (behind building body) ==========
   const canBalW = baseWidth * zoom * 0.5;
-  const canBalD = baseWidth * zoom * 0.25;
+  const canBalD = baseWidth * zoom * ISO_PRISM_D_FACTOR;
   const canBalY = screenPos.y + 2 * zoom;
   const canBalRX = canBalW * 1.05;
   const canBalRY = canBalD * 1.05;
@@ -2463,7 +2463,7 @@ function renderCannonTower(
     screenPos.x,
     topY + 2 * zoom,
     baseWidth * 0.5 * zoom,
-    baseWidth * 0.25 * zoom,
+    baseWidth * ISO_PRISM_D_FACTOR * zoom,
     0,
     0,
     Math.PI * 2,
@@ -2580,6 +2580,318 @@ function renderCannonTower(
   ctx.restore();
 }
 
+function drawMechanicalFaceDetails(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  colors: { base: string; dark: string; light: string; accent: string },
+  zoom: number,
+  time: number,
+  level: number,
+) {
+  const wFactor = 0.5;
+  const dFactor = ISO_PRISM_D_FACTOR;
+  const w = width * zoom * wFactor;
+  const d = width * zoom * dFactor;
+  const h = (height - 8) * zoom;
+  const baseY = y + 4 * zoom;
+
+  // Front-left face corners (topLeft -> topFront -> bottomFront -> bottomLeft)
+  const lTL = { x: x - w, y: baseY - h };
+  const lTF = { x, y: baseY - h + d };
+  const lBF = { x, y: baseY + d };
+  const lBL = { x: x - w, y: baseY };
+
+  // Front-right face corners (topRight -> topFront -> bottomFront -> bottomRight)
+  const rTR = { x: x + w, y: baseY - h };
+  const rTF = { x, y: baseY - h + d };
+  const rBF = { x, y: baseY + d };
+  const rBR = { x: x + w, y: baseY };
+
+  const lerpV = (a: { x: number; y: number }, b: { x: number; y: number }, t: number) => ({
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t,
+  });
+
+  // ── Weathering gradient (darker at bottom, lighter at top) ──
+  const panelRows = 3 + Math.min(level, 2);
+  for (let row = 0; row < panelRows; row++) {
+    const t0 = row / panelRows;
+    const t1 = (row + 1) / panelRows;
+    const darken = (1 - t0) * 0.06;
+
+    // Left face weathering strip
+    const ls0 = lerpV(lBL, lTL, t0);
+    const ls1 = lerpV(lBL, lTL, t1);
+    const le0 = lerpV(lBF, lTF, t0);
+    const le1 = lerpV(lBF, lTF, t1);
+
+    if (row % 2 === 0) {
+      ctx.fillStyle = `rgba(0, 0, 0, ${darken})`;
+      ctx.beginPath();
+      ctx.moveTo(ls1.x, ls1.y);
+      ctx.lineTo(le1.x, le1.y);
+      ctx.lineTo(le0.x, le0.y);
+      ctx.lineTo(ls0.x, ls0.y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Right face weathering strip
+    const rs0 = lerpV(rBR, rTR, t0);
+    const rs1 = lerpV(rBR, rTR, t1);
+    const re0 = lerpV(rBF, rTF, t0);
+    const re1 = lerpV(rBF, rTF, t1);
+
+    if (row % 2 === 0) {
+      ctx.fillStyle = `rgba(0, 0, 0, ${darken})`;
+      ctx.beginPath();
+      ctx.moveTo(rs1.x, rs1.y);
+      ctx.lineTo(re1.x, re1.y);
+      ctx.lineTo(re0.x, re0.y);
+      ctx.lineTo(rs0.x, rs0.y);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // ── Horizontal panel seam lines ──
+  ctx.lineWidth = 1 * zoom;
+  for (let row = 1; row < panelRows; row++) {
+    const t = row / panelRows;
+
+    // Left face seam
+    const ls = lerpV(lBL, lTL, t);
+    const le = lerpV(lBF, lTF, t);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(ls.x, ls.y);
+    ctx.lineTo(le.x, le.y);
+    ctx.stroke();
+    // Highlight below seam
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.06)`;
+    ctx.beginPath();
+    ctx.moveTo(ls.x, ls.y + 1 * zoom);
+    ctx.lineTo(le.x, le.y + 1 * zoom);
+    ctx.stroke();
+
+    // Right face seam
+    const rs = lerpV(rBR, rTR, t);
+    const re = lerpV(rBF, rTF, t);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.beginPath();
+    ctx.moveTo(rs.x, rs.y);
+    ctx.lineTo(re.x, re.y);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255, 255, 255, 0.04)`;
+    ctx.beginPath();
+    ctx.moveTo(rs.x, rs.y + 1 * zoom);
+    ctx.lineTo(re.x, re.y + 1 * zoom);
+    ctx.stroke();
+  }
+
+  // ── Vertical panel division (center of each face) ──
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.18)";
+  ctx.lineWidth = 1 * zoom;
+  const lMidTop = lerpV(lTL, lTF, 0.5);
+  const lMidBot = lerpV(lBL, lBF, 0.5);
+  ctx.beginPath();
+  ctx.moveTo(lMidTop.x, lMidTop.y);
+  ctx.lineTo(lMidBot.x, lMidBot.y);
+  ctx.stroke();
+
+  const rMidTop = lerpV(rTR, rTF, 0.5);
+  const rMidBot = lerpV(rBR, rBF, 0.5);
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.14)";
+  ctx.beginPath();
+  ctx.moveTo(rMidTop.x, rMidTop.y);
+  ctx.lineTo(rMidBot.x, rMidBot.y);
+  ctx.stroke();
+
+  // ── Rivet/bolt details at panel intersections ──
+  ctx.fillStyle = lightenColor(colors.base, 25);
+  for (let row = 0; row <= panelRows; row++) {
+    const t = row / panelRows;
+    // Left face rivets: at edges and center
+    for (const s of [0.08, 0.5, 0.92]) {
+      const edgeL = lerpV(lBL, lTL, t);
+      const edgeR = lerpV(lBF, lTF, t);
+      const rp = lerpV(edgeL, edgeR, s);
+      ctx.beginPath();
+      ctx.arc(rp.x, rp.y, 1.3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Right face rivets
+    ctx.fillStyle = lightenColor(colors.dark, 20);
+    for (const s of [0.08, 0.5, 0.92]) {
+      const edgeL = lerpV(rBR, rTR, t);
+      const edgeR = lerpV(rBF, rTF, t);
+      const rp = lerpV(edgeL, edgeR, s);
+      ctx.beginPath();
+      ctx.arc(rp.x, rp.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = lightenColor(colors.base, 25);
+  }
+
+  // ── Observation slits (narrow glowing viewports) ──
+  const slitCount = Math.min(level, 3);
+  for (let i = 0; i < slitCount; i++) {
+    const slitT = 0.3 + (i * 0.25) / Math.max(slitCount, 1);
+    const slitGlow = 0.4 + Math.sin(time * 3 + i * 1.5) * 0.2;
+
+    // Left face slit
+    const slitLS = lerpV(lerpV(lBL, lTL, slitT), lerpV(lBF, lTF, slitT), 0.2);
+    const slitLE = lerpV(lerpV(lBL, lTL, slitT), lerpV(lBF, lTF, slitT), 0.45);
+
+    // Slit recess (dark)
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(slitLS.x, slitLS.y);
+    ctx.lineTo(slitLE.x, slitLE.y);
+    ctx.stroke();
+
+    // Slit glow
+    ctx.strokeStyle = `rgba(255, 102, 0, ${slitGlow * 0.45})`;
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(slitLS.x, slitLS.y);
+    ctx.lineTo(slitLE.x, slitLE.y);
+    ctx.stroke();
+
+    // Right face slit
+    const slitRS = lerpV(lerpV(rBR, rTR, slitT), lerpV(rBF, rTF, slitT), 0.55);
+    const slitRE = lerpV(lerpV(rBR, rTR, slitT), lerpV(rBF, rTF, slitT), 0.8);
+
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.45)";
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(slitRS.x, slitRS.y);
+    ctx.lineTo(slitRE.x, slitRE.y);
+    ctx.stroke();
+
+    ctx.strokeStyle = `rgba(255, 102, 0, ${slitGlow * 0.35})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(slitRS.x, slitRS.y);
+    ctx.lineTo(slitRE.x, slitRE.y);
+    ctx.stroke();
+  }
+
+  // ── Corner edge reinforcement (beveled metal strips) ──
+  // Front-left edge (where left and right faces meet at front vertex)
+  ctx.strokeStyle = lightenColor(colors.light, 15);
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(lTF.x, lTF.y);
+  ctx.lineTo(lBF.x, lBF.y);
+  ctx.stroke();
+
+  // Left edge highlight
+  ctx.strokeStyle = `rgba(255, 255, 255, 0.08)`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(lTL.x + 1 * zoom, lTL.y);
+  ctx.lineTo(lBL.x + 1 * zoom, lBL.y);
+  ctx.stroke();
+
+  // Right edge highlight
+  ctx.strokeStyle = `rgba(255, 255, 255, 0.05)`;
+  ctx.beginPath();
+  ctx.moveTo(rTR.x - 1 * zoom, rTR.y);
+  ctx.lineTo(rBR.x - 1 * zoom, rBR.y);
+  ctx.stroke();
+
+  // ── Crenellations / battlements along the top ──
+  const crenelCount = 4 + Math.min(level, 2);
+  const crenelH = 4 * zoom;
+  const crenelGap = 0.5;
+
+  // Left face crenellations
+  for (let i = 0; i < crenelCount; i++) {
+    const t = (i + 0.25) / crenelCount;
+    if (i % 2 !== 0) continue;
+    const tNext = Math.min((i + crenelGap) / crenelCount, 1);
+    const bl = lerpV(lTL, lTF, t);
+    const br = lerpV(lTL, lTF, tNext);
+
+    // Merlon (raised portion)
+    ctx.fillStyle = lightenColor(colors.base, 8);
+    ctx.beginPath();
+    ctx.moveTo(bl.x, bl.y);
+    ctx.lineTo(bl.x, bl.y - crenelH);
+    ctx.lineTo(br.x, br.y - crenelH);
+    ctx.lineTo(br.x, br.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+  }
+
+  // Right face crenellations
+  for (let i = 0; i < crenelCount; i++) {
+    const t = (i + 0.25) / crenelCount;
+    if (i % 2 !== 0) continue;
+    const tNext = Math.min((i + crenelGap) / crenelCount, 1);
+    const bl = lerpV(rTR, rTF, t);
+    const br = lerpV(rTR, rTF, tNext);
+
+    ctx.fillStyle = darkenColor(colors.dark, 5);
+    ctx.beginPath();
+    ctx.moveTo(bl.x, bl.y);
+    ctx.lineTo(bl.x, bl.y - crenelH);
+    ctx.lineTo(br.x, br.y - crenelH);
+    ctx.lineTo(br.x, br.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+  }
+
+  // ── Emblem / insignia on front-left face ──
+  const emblemT = 0.55;
+  const emblemS = 0.35;
+  const emblemEdgeL = lerpV(lBL, lTL, emblemT);
+  const emblemEdgeR = lerpV(lBF, lTF, emblemT);
+  const emblemCenter = lerpV(emblemEdgeL, emblemEdgeR, emblemS);
+  const emblemR = 5 * zoom;
+
+  // Insignia backing plate
+  ctx.fillStyle = darkenColor(colors.base, 10);
+  ctx.beginPath();
+  ctx.arc(emblemCenter.x, emblemCenter.y, emblemR + 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ring
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.arc(emblemCenter.x, emblemCenter.y, emblemR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Crosshair
+  ctx.strokeStyle = colors.accent;
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(emblemCenter.x - emblemR * 0.7, emblemCenter.y);
+  ctx.lineTo(emblemCenter.x + emblemR * 0.7, emblemCenter.y);
+  ctx.moveTo(emblemCenter.x, emblemCenter.y - emblemR * 0.7);
+  ctx.lineTo(emblemCenter.x, emblemCenter.y + emblemR * 0.7);
+  ctx.stroke();
+
+  // Center dot
+  const emblemPulse = 0.5 + Math.sin(time * 4) * 0.3;
+  ctx.fillStyle = `rgba(255, 102, 0, ${emblemPulse})`;
+  ctx.beginPath();
+  ctx.arc(emblemCenter.x, emblemCenter.y, 1.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 // Mechanical base with tech details - FULLY ENCLOSED isometric design
 function drawMechanicalTowerBase(
   ctx: CanvasRenderingContext2D,
@@ -2646,10 +2958,13 @@ function drawMechanicalTowerBase(
     zoom,
   );
 
+  // ========== FACE DETAIL OVERLAYS (panels, rivets, slits, crenellations) ==========
+  drawMechanicalFaceDetails(ctx, x, y, width, height, colors, zoom, time, level);
+
   // Add tech details on top of the fully enclosed base
   const topY = y - height * zoom;
   const w = width * zoom * 0.5;
-  const d = width * zoom * 0.25;
+  const d = width * zoom * ISO_PRISM_D_FACTOR;
 
   // ========== STEAM VENTS ==========
   // Left side steam vent
@@ -10116,7 +10431,7 @@ function renderLibraryTower(
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 30 + tower.level * 10;
   const w = baseWidth * zoom * 0.5;
-  const d = baseWidth * zoom * 0.25;
+  const d = baseWidth * zoom * ISO_PRISM_D_FACTOR;
 
   let mainColor = "rgba(180, 100, 255,";
   let glowColor = "180, 100, 255";
@@ -11309,7 +11624,7 @@ function renderLibraryTower(
     screenPos.x,
     plateY + 2 * zoom,
     (baseWidth + 8) * zoom * 0.5,
-    (baseWidth + 8) * zoom * 0.25,
+    (baseWidth + 8) * zoom * ISO_PRISM_D_FACTOR,
     0,
     0,
     Math.PI * 2,
@@ -11322,7 +11637,7 @@ function renderLibraryTower(
     screenPos.x,
     plateY,
     (baseWidth + 6) * zoom * 0.5,
-    (baseWidth + 6) * zoom * 0.25,
+    (baseWidth + 6) * zoom * ISO_PRISM_D_FACTOR,
     0,
     0,
     Math.PI * 2,
@@ -11335,7 +11650,7 @@ function renderLibraryTower(
     screenPos.x,
     plateY - 3 * zoom,
     (baseWidth + 4) * zoom * 0.5,
-    (baseWidth + 4) * zoom * 0.25,
+    (baseWidth + 4) * zoom * ISO_PRISM_D_FACTOR,
     0,
     0,
     Math.PI * 2,
@@ -11448,7 +11763,7 @@ function renderLibraryTower(
 
   // Piston connector ring — right half matches right face color
   const connRX = (baseWidth - 2) * zoom * 0.5;
-  const connRY = (baseWidth - 2) * zoom * 0.25;
+  const connRY = (baseWidth - 2) * zoom * ISO_PRISM_D_FACTOR;
   const connY = pistonTopY + 2 * zoom;
 
   ctx.fillStyle = "#5a4a3a";
@@ -12230,7 +12545,7 @@ function renderLabTower(
   );
   ctx.lineTo(
     screenPos.x,
-    screenPos.y + (baseWidth + 10) * zoom * 0.25 + 4 * zoom,
+    screenPos.y + (baseWidth + 10) * zoom * ISO_PRISM_D_FACTOR + 4 * zoom,
   );
   ctx.lineTo(
     screenPos.x + (baseWidth + 10) * zoom * 0.5,
@@ -15789,7 +16104,7 @@ function renderChainLightning(
   // === TOP RAILING FRONT HALF (so sub-coils render on top) ===
   const bw4 = 30 + tower.level * 4;
   const railW = bw4 * zoom * 0.5;
-  const railD = bw4 * zoom * 0.25;
+  const railD = bw4 * zoom * ISO_PRISM_D_FACTOR;
   const railY = topY + 4 * zoom;
   const railRX = railW * 0.88;
   const railRY = railD * 0.88;
@@ -16584,8 +16899,8 @@ function renderArchTower(
   screenPos = { x: screenPos.x, y: screenPos.y - 8 * zoom };
   const baseWidth = 38 + tower.level * 5;
   const baseDepth = 30 + tower.level * 4;
-  const w = baseWidth * zoom * 0.5;
-  const d = baseDepth * zoom * 0.25;
+  const w = baseWidth * zoom * ISO_PRISM_W_FACTOR;
+  const d = baseDepth * zoom * ISO_PRISM_D_FACTOR;
 
   const isShockwave = tower.level === 4 && tower.upgrade === "A";
   const isSymphony = tower.level === 4 && tower.upgrade === "B";
@@ -16803,8 +17118,8 @@ function renderArchTower(
 
   // ========== BASE RAILING (3D isometric ring) ==========
   const archBalY = screenPos.y + 4 * zoom + subBounce;
-  const archBalRX = (subBuildingWidth - 4 + pillarSpread * 2) * zoom * 0.5;
-  const archBalRY = (baseDepth + 24 + pillarSpread * 2) * zoom * 0.25;
+  const archBalRX = (subBuildingWidth - 4 + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR;
+  const archBalRY = (baseDepth + 24 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR;
   const archBalH = 5 * zoom;
   const archBalSegs = 32;
   const archBalPosts = 16;
@@ -16912,8 +17227,8 @@ function renderArchTower(
 
   // === DETAILED STONE MASONRY ON SUB-BUILDING FACES ===
   const mortarGlow = 0.12 + Math.sin(time * 1.5) * 0.06 + attackPulse * 0.15;
-  const sbHalfW = sbExpandW * zoom * 0.5;
-  const sbDepthOff = sbExpandD * zoom * 0.25;
+  const sbHalfW = sbExpandW * zoom * ISO_PRISM_W_FACTOR;
+  const sbDepthOff = sbExpandD * zoom * ISO_PRISM_D_FACTOR;
   const sbH = subBuildingHeight * zoom;
   const sbBaseY = screenPos.y + 2 * zoom + subBounce;
   const sbBaseX = screenPos.x + foundationShift * 0.4 + subShift;
@@ -17343,7 +17658,7 @@ function renderArchTower(
   const pillarXR =
     screenPos.x + baseWidth * zoom * 0.35 + archVibrate * 0.3 + pillarSpread;
   const pw = pillarWidth * zoom * 0.5;
-  const pd = pillarWidth * zoom * 0.25;
+  const pd = pillarWidth * zoom * ISO_PRISM_D_FACTOR;
 
   // Left pillar square isometric base
   const lbX = pillarX + pillarBounce * 0.5;
@@ -17435,7 +17750,7 @@ function renderArchTower(
     const rowY =
       shaftBaseY - lowerShaftH - transH - 4 * zoom - row * upperShaftH * 0.28;
     ctx.beginPath();
-    ctx.ellipse(leftPCX, rowY, upperCylRx, upperCylRx * 0.5, 0, 0, Math.PI);
+    ctx.ellipse(leftPCX, rowY, upperCylRx, upperCylRx * ISO_Y_RATIO, 0, 0, Math.PI);
     ctx.stroke();
   }
 
@@ -17610,7 +17925,7 @@ function renderArchTower(
     const rowY =
       shaftBaseY - lowerShaftH - transH - 4 * zoom - row * upperShaftH * 0.28;
     ctx.beginPath();
-    ctx.ellipse(rightPCX, rowY, upperCylRx, upperCylRx * 0.5, 0, 0, Math.PI);
+    ctx.ellipse(rightPCX, rowY, upperCylRx, upperCylRx * ISO_Y_RATIO, 0, 0, Math.PI);
     ctx.stroke();
   }
 
@@ -19045,7 +19360,7 @@ function renderClubTower(
   const baseWidth = 34 + tower.level * 5;
   const baseHeight = 25 + tower.level * 8;
   const w = baseWidth * zoom * 0.5;
-  const d = baseWidth * zoom * 0.25;
+  const d = baseWidth * zoom * ISO_PRISM_D_FACTOR;
   const h = baseHeight * zoom;
 
   // Check if pawpoints were recently generated (flash effect)
@@ -19159,7 +19474,7 @@ function renderClubTower(
   );
   ctx.lineTo(
     screenPos.x,
-    screenPos.y + (baseWidth + 10) * zoom * 0.25 + 2 * zoom,
+    screenPos.y + (baseWidth + 10) * zoom * ISO_PRISM_D_FACTOR + 2 * zoom,
   );
   ctx.lineTo(
     screenPos.x + (baseWidth + 10) * zoom * 0.5,
@@ -21381,7 +21696,7 @@ function renderStationTower(
 
   // Isometric conversion factors
   const isoW = baseW * zoom * 0.5;
-  const isoD = baseD * zoom * 0.25;
+  const isoD = baseD * zoom * ISO_PRISM_D_FACTOR;
 
   // ========== FOUNDATION (proper isometric diamond aligned with grid) ==========
   // Helper function for isometric diamond
@@ -23969,9 +24284,9 @@ function renderStationTower(
       const fw = w * zoom;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x - fw * 0.25 * ndx, y - fw * 0.25 * ndy);
-      ctx.lineTo(x + fw * 0.75 * ndx, y + fw * 0.75 * ndy);
-      ctx.lineTo(x + fw * 0.2 * ndx + wave * 0.1, y + fh + fw * 0.1 * ndy);
+      ctx.moveTo(x - fw * 0.5 * ndx, y - fw * 0.5 * ndy);
+      ctx.lineTo(x + fw * 0.5 * ndx, y + fw * 0.5 * ndy);
+      ctx.lineTo(x + wave * 0.1, y + fh);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = goldAccent_b;
@@ -25154,7 +25469,7 @@ function renderStationTower(
     ctx.shadowBlur = 0;
 
     // Clock face on tower
-    drawClockFace(towerX + 1 * zoom, towerY - 35 * zoom, 6 * zoom);
+    drawClockFace(towerX + 1 * zoom, towerY - 35 * zoom, 4 * zoom);
 
     // Main stone building
     drawIsometricPrism(
@@ -25411,7 +25726,7 @@ function renderStationTower(
     const bannerWave2 = Math.sin(time * 3) * 2;
     const gpX = bX - 12 * zoom;
     const gpPoleBot = crenY + 2 * zoom;
-    const gpPoleTop = crenY - 16 * zoom;
+    const gpPoleTop = crenY - 22 * zoom;
     const gpTop = gpPoleTop + 1 * zoom;
     const gpBot = gpPoleTop + 13 * zoom;
     const gpIsoD = 1.5 * zoom;
@@ -25442,13 +25757,13 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(gpX + gpIsoD, gpTop - gpIsoD * 0.5);
     ctx.quadraticCurveTo(
-      gpX + 7 * zoom + bannerWave2 * 0.6 + gpIsoD,
+      gpX - 7 * zoom - bannerWave2 * 0.6 + gpIsoD,
       gpTop + 4.5 * zoom - gpIsoD * 0.5,
-      gpX + 12 * zoom + bannerWave2 * 0.5 + gpIsoD,
+      gpX - 12 * zoom - bannerWave2 * 0.5 + gpIsoD,
       gpTop + 6 * zoom - gpIsoD * 0.5,
     );
     ctx.quadraticCurveTo(
-      gpX + 7 * zoom + bannerWave2 * 0.4 + gpIsoD,
+      gpX - 7 * zoom - bannerWave2 * 0.4 + gpIsoD,
       gpTop + 7.5 * zoom - gpIsoD * 0.5,
       gpX + gpIsoD,
       gpBot - gpIsoD * 0.5,
@@ -25460,13 +25775,13 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(gpX, gpTop);
     ctx.quadraticCurveTo(
-      gpX + 7 * zoom + bannerWave2 * 0.6,
+      gpX - 7 * zoom - bannerWave2 * 0.6,
       gpTop + 4.5 * zoom,
-      gpX + 12 * zoom + bannerWave2 * 0.5,
+      gpX - 12 * zoom - bannerWave2 * 0.5,
       gpTop + 6 * zoom,
     );
     ctx.quadraticCurveTo(
-      gpX + 7 * zoom + bannerWave2 * 0.4,
+      gpX - 7 * zoom - bannerWave2 * 0.4,
       gpTop + 7.5 * zoom,
       gpX,
       gpBot,
@@ -25481,11 +25796,11 @@ function renderStationTower(
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
     ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
-    ctx.moveTo(gpX + 3 * zoom + bannerWave2 * 0.2, gpTop + 1.5 * zoom);
+    ctx.moveTo(gpX - 3 * zoom - bannerWave2 * 0.2, gpTop + 1.5 * zoom);
     ctx.quadraticCurveTo(
-      gpX + 5 * zoom + bannerWave2 * 0.4,
+      gpX - 5 * zoom - bannerWave2 * 0.4,
       gpTop + 6 * zoom,
-      gpX + 3 * zoom + bannerWave2 * 0.2,
+      gpX - 3 * zoom - bannerWave2 * 0.2,
       gpBot - 1.5 * zoom,
     );
     ctx.stroke();
@@ -26196,13 +26511,13 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(fp3X + fp3IsoD, fp3Top - fp3IsoD * 0.5);
     ctx.quadraticCurveTo(
-      fp3X + 6 * zoom + flagWave * 0.6 + fp3IsoD,
+      fp3X - 6 * zoom - flagWave * 0.6 + fp3IsoD,
       fp3Top + 3.5 * zoom - fp3IsoD * 0.5,
-      fp3X + 10 * zoom + flagWave * 0.5 + fp3IsoD,
+      fp3X - 10 * zoom - flagWave * 0.5 + fp3IsoD,
       fp3Top + 5 * zoom - fp3IsoD * 0.5,
     );
     ctx.quadraticCurveTo(
-      fp3X + 6 * zoom + flagWave * 0.4 + fp3IsoD,
+      fp3X - 6 * zoom - flagWave * 0.4 + fp3IsoD,
       fp3Top + 6.5 * zoom - fp3IsoD * 0.5,
       fp3X + fp3IsoD,
       fp3Bot - fp3IsoD * 0.5,
@@ -26214,13 +26529,13 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(fp3X, fp3Top);
     ctx.quadraticCurveTo(
-      fp3X + 6 * zoom + flagWave * 0.6,
+      fp3X - 6 * zoom - flagWave * 0.6,
       fp3Top + 3.5 * zoom,
-      fp3X + 10 * zoom + flagWave * 0.5,
+      fp3X - 10 * zoom - flagWave * 0.5,
       fp3Top + 5 * zoom,
     );
     ctx.quadraticCurveTo(
-      fp3X + 6 * zoom + flagWave * 0.4,
+      fp3X - 6 * zoom - flagWave * 0.4,
       fp3Top + 6.5 * zoom,
       fp3X,
       fp3Bot,
@@ -26235,11 +26550,11 @@ function renderStationTower(
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
     ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
-    ctx.moveTo(fp3X + 3 * zoom + flagWave * 0.2, fp3Top + 1.5 * zoom);
+    ctx.moveTo(fp3X - 3 * zoom - flagWave * 0.2, fp3Top + 1.5 * zoom);
     ctx.quadraticCurveTo(
-      fp3X + 5 * zoom + flagWave * 0.4,
+      fp3X - 5 * zoom - flagWave * 0.4,
       fp3Top + 5 * zoom,
-      fp3X + 3 * zoom + flagWave * 0.2,
+      fp3X - 3 * zoom - flagWave * 0.2,
       fp3Bot - 1.5 * zoom,
     );
     ctx.stroke();
@@ -26333,7 +26648,7 @@ function renderStationTower(
     ctx.fillRect(rtX - 1 * zoom, rtRoofY - 24 * zoom, 2 * zoom, 8 * zoom);
 
     // Clock on right tower (no numerals)
-    drawClockFace(rtX + 1 * zoom, rtY - 36 * zoom, 6 * zoom);
+    drawClockFace(rtX + 1 * zoom, rtY - 36 * zoom, 4 * zoom);
 
     // Grand portcullis entrance
     ctx.fillStyle = "#1a1a22";
@@ -28572,13 +28887,13 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(rbpX + rbpIsoD, rbpTop - rbpIsoD * 0.5);
     ctx.quadraticCurveTo(
-      rbpX + 7 * zoom + flagWave * 0.6 + rbpIsoD,
+      rbpX - 7 * zoom - flagWave * 0.6 + rbpIsoD,
       rbpTop + 5 * zoom - rbpIsoD * 0.5,
-      rbpX + 12 * zoom + flagWave * 0.5 + rbpIsoD,
+      rbpX - 12 * zoom - flagWave * 0.5 + rbpIsoD,
       rbpTop + 7 * zoom - rbpIsoD * 0.5,
     );
     ctx.quadraticCurveTo(
-      rbpX + 7 * zoom + flagWave * 0.4 + rbpIsoD,
+      rbpX - 7 * zoom - flagWave * 0.4 + rbpIsoD,
       rbpTop + 9 * zoom - rbpIsoD * 0.5,
       rbpX + rbpIsoD,
       rbpBot - rbpIsoD * 0.5,
@@ -28590,13 +28905,13 @@ function renderStationTower(
     ctx.beginPath();
     ctx.moveTo(rbpX, rbpTop);
     ctx.quadraticCurveTo(
-      rbpX + 7 * zoom + flagWave * 0.6,
+      rbpX - 7 * zoom - flagWave * 0.6,
       rbpTop + 5 * zoom,
-      rbpX + 12 * zoom + flagWave * 0.5,
+      rbpX - 12 * zoom - flagWave * 0.5,
       rbpTop + 7 * zoom,
     );
     ctx.quadraticCurveTo(
-      rbpX + 7 * zoom + flagWave * 0.4,
+      rbpX - 7 * zoom - flagWave * 0.4,
       rbpTop + 9 * zoom,
       rbpX,
       rbpBot,
@@ -28611,11 +28926,11 @@ function renderStationTower(
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
     ctx.lineWidth = 0.7 * zoom;
     ctx.beginPath();
-    ctx.moveTo(rbpX + 3.5 * zoom + flagWave * 0.2, rbpTop + 2 * zoom);
+    ctx.moveTo(rbpX - 3.5 * zoom - flagWave * 0.2, rbpTop + 2 * zoom);
     ctx.quadraticCurveTo(
-      rbpX + 5.5 * zoom + flagWave * 0.4,
+      rbpX - 5.5 * zoom - flagWave * 0.4,
       rbpTop + 7 * zoom,
-      rbpX + 3.5 * zoom + flagWave * 0.2,
+      rbpX - 3.5 * zoom - flagWave * 0.2,
       rbpBot - 2 * zoom,
     );
     ctx.stroke();
@@ -29263,9 +29578,9 @@ function renderStationTower(
   const sillColor =
     tower.level >= 4 ? "#a08020" : tower.level >= 3 ? "#6a6a72" : "#6a5a4a";
 
-  // Isometric slope for window faces: 2:1 iso ratio
-  // Left face runs direction (-1, -0.5) toward back-left; width skews along (+1, +0.5)
-  // Right face runs direction (+1, -0.5) toward back-right; width skews along (+1, -0.5)
+  // Isometric slope for window faces: 2:1 isometric
+  // Left face runs direction (-1, -ISO_Y_RATIO) toward back-left
+  // Right face runs direction (+1, -ISO_Y_RATIO) toward back-right
 
   // Window positions shifted northeast so they sit properly on building faces
   const winOffX = 4 * zoom;
@@ -29321,8 +29636,7 @@ function renderStationTower(
     const winH = 6 * zoom;
     const halfW = winW * 0.5;
     const halfH = winH * 0.5;
-    // Iso slope: for left face width skews along (+1, -0.5), for right face along (+1, +0.5)
-    const slopeY = isLeft ? -0.5 : 0.5;
+    const slopeY = isLeft ? -ISO_Y_RATIO : ISO_Y_RATIO;
 
     // Parallelogram: vertical edges are straight up/down, horizontal edges follow the face
     const tlx = wx - halfW;
@@ -35796,10 +36110,10 @@ function renderStationTower(
   const conveyorW = 3 * zoom;
   const beltSpeed = stationActive ? time * 2.5 : time * 1.5;
 
-  // Belt side rails (3D frame) — proper 2:1 iso slope
+  // Belt side rails (3D frame) — 2:1 iso slope
   const beltRailColor =
     tower.level >= 4 ? "#8a7020" : tower.level >= 3 ? "#4a4a52" : "#5a4a3a";
-  const beltTilt = Math.atan2(-1, 2);
+  const beltTilt = -ISO_ANGLE;
   ctx.strokeStyle = beltRailColor;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
@@ -37017,9 +37331,9 @@ function renderStationTower(
       const fw = w * zoom;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.moveTo(x - fw * 0.25 * ndx, y - fw * 0.25 * ndy);
-      ctx.lineTo(x + fw * 0.75 * ndx, y + fw * 0.75 * ndy);
-      ctx.lineTo(x + fw * 0.2 * ndx + wave * 0.1, y + fh + fw * 0.1 * ndy);
+      ctx.moveTo(x - fw * 0.5 * ndx, y - fw * 0.5 * ndy);
+      ctx.lineTo(x + fw * 0.5 * ndx, y + fw * 0.5 * ndy);
+      ctx.lineTo(x + wave * 0.1, y + fh);
       ctx.closePath();
       ctx.fill();
       ctx.strokeStyle = goldAccent;
@@ -37174,21 +37488,23 @@ function renderStationTower(
     const platRX = screenPos.x + isoW + 4 * zoom;
     const platRY = screenPos.y - 6 * zoom;
 
-    // Middle tier diamond corners
+    // Middle tier diamond corners (top face of prism at cy=screenPos.y+8, h=9)
+    const midTopY = screenPos.y + 8 * zoom - 9 * zoom;
     const midLX = screenPos.x - (baseW + 16) * zoom * 0.5;
-    const midLY = screenPos.y + 2 * zoom;
+    const midLY = midTopY;
     const midBotX = screenPos.x;
-    const midBotY = screenPos.y + 8 * zoom + (baseD + 30) * zoom * 0.25;
+    const midBotY = midTopY + (baseD + 30) * zoom * 0.25;
     const midRX = screenPos.x + (baseW + 16) * zoom * 0.5;
-    const midRY = screenPos.y + 2 * zoom;
+    const midRY = midTopY;
 
-    // Bottom tier diamond corners
+    // Bottom tier diamond corners (top face of prism at cy=screenPos.y+19, h=12)
+    const btTopY = screenPos.y + 19 * zoom - 12 * zoom;
     const btLX = screenPos.x - (baseW + 26) * zoom * 0.5;
-    const btLY = screenPos.y + 13 * zoom;
+    const btLY = btTopY;
     const btBotX = screenPos.x;
-    const btBotY = screenPos.y + 19 * zoom + (baseD + 42) * zoom * 0.25;
+    const btBotY = btTopY + (baseD + 42) * zoom * 0.25;
     const btRX = screenPos.x + (baseW + 26) * zoom * 0.5;
-    const btRY = screenPos.y + 13 * zoom;
+    const btRY = btTopY;
 
     // Edge direction vectors for each tier (left-front and right-front edges)
     const platLDx = platBotX - platLX;
@@ -37341,12 +37657,11 @@ function renderStationTower(
     // =============================================
     // 8. BOTTOM TIER BUNTING + FOUNDATION BANNERS
     // =============================================
-    const btOffY = -4 * zoom;
     drawIsoBunting(
       btLX,
-      btLY + btOffY,
+      btLY,
       btBotX,
-      btBotY + btOffY,
+      btBotY,
       3,
       4,
       [purpleLight, purpleDark],
@@ -37355,9 +37670,9 @@ function renderStationTower(
     );
     drawIsoBunting(
       btBotX,
-      btBotY + btOffY,
+      btBotY,
       btRX,
-      btRY + btOffY,
+      btRY,
       3,
       4,
       [purpleMid, purpleLight],
@@ -37367,7 +37682,7 @@ function renderStationTower(
     // Bottom tier left face banners
     drawWallBanner(
       btLX + (btBotX - btLX) * 0.3,
-      btLY + (btBotY - btLY) * 0.3 + btOffY - 3 * zoom,
+      btLY + (btBotY - btLY) * 0.3 - 3 * zoom,
       3,
       5,
       purpleMid,
@@ -37378,7 +37693,7 @@ function renderStationTower(
     );
     drawWallBanner(
       btLX + (btBotX - btLX) * 0.7,
-      btLY + (btBotY - btLY) * 0.7 + btOffY - 3 * zoom,
+      btLY + (btBotY - btLY) * 0.7 - 3 * zoom,
       3,
       5,
       purpleLight,
@@ -37390,7 +37705,7 @@ function renderStationTower(
     // Bottom tier right face banners
     drawWallBanner(
       btBotX + (btRX - btBotX) * 0.3,
-      btBotY + (btRY - btBotY) * 0.3 + btOffY - 3 * zoom,
+      btBotY + (btRY - btBotY) * 0.3 - 3 * zoom,
       3,
       5,
       purpleDark,
@@ -37401,7 +37716,7 @@ function renderStationTower(
     );
     drawWallBanner(
       btBotX + (btRX - btBotX) * 0.7,
-      btBotY + (btRY - btBotY) * 0.7 + btOffY - 3 * zoom,
+      btBotY + (btRY - btBotY) * 0.7 - 3 * zoom,
       3,
       5,
       purpleMid,

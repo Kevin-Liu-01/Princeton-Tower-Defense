@@ -2,6 +2,7 @@
 // Creates living, breathing map atmospheres for each region
 
 import { colorWithAlpha } from "../helpers";
+import { ISO_Y_RATIO } from "../../constants";
 import { 
   setShadowBlur, 
   clearShadow, 
@@ -835,7 +836,7 @@ export function renderSwampEnvironment(
     mistGrad.addColorStop(1, "rgba(60, 100, 60, 0)");
     ctx.fillStyle = mistGrad;
     ctx.beginPath();
-    ctx.ellipse(mistX, mistY, mistSize, mistSize * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(mistX, mistY, mistSize, mistSize * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 

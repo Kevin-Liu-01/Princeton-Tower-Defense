@@ -8,7 +8,6 @@ import {
   Sparkles,
   Crown,
   Swords,
-  Shield,
 } from "lucide-react";
 import { OrnateFrame } from "../ui/OrnateFrame";
 import { GOLD, DIVIDER, VICTORY, OVERLAY, panelGradient } from "../ui/theme";
@@ -20,6 +19,42 @@ const formatTime = (seconds: number): string => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+interface CategoryRatings {
+  speed: number;
+  survival: number;
+  strategy: number;
+  overall: number;
+}
+
+const SPEED_THRESHOLDS = { three: 15, two: 25 }; // seconds per wave
+const SURVIVAL_THRESHOLDS = { three: 18, two: 10 }; // lives remaining out of 20
+
+export function calculateCategoryRatings(
+  timeSpent: number,
+  lives: number,
+  totalWaves: number,
+): CategoryRatings {
+  const secsPerWave = totalWaves > 0 ? timeSpent / totalWaves : timeSpent;
+
+  const speed =
+    secsPerWave <= SPEED_THRESHOLDS.three
+      ? 3
+      : secsPerWave <= SPEED_THRESHOLDS.two
+        ? 2
+        : 1;
+  const survival =
+    lives >= SURVIVAL_THRESHOLDS.three
+      ? 3
+      : lives >= SURVIVAL_THRESHOLDS.two
+        ? 2
+        : 1;
+  const strategy =
+    speed >= 3 && survival >= 3 ? 3 : speed >= 2 && survival >= 2 ? 2 : 1;
+  const overall = Math.floor((speed + survival + strategy) / 3);
+
+  return { speed, survival, strategy, overall };
+}
+
 interface VictoryScreenProps {
   starsEarned: number;
   lives: number;
@@ -29,6 +64,7 @@ interface VictoryScreenProps {
   levelName: string;
   resetGame: () => void;
   overlay?: boolean;
+  totalWaves?: number;
 }
 
 // Animated trophy with sparkles
@@ -442,8 +478,76 @@ function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerR:
   ctx.fill();
 }
 
+const CATEGORY_CONFIG: {
+  key: keyof Omit<CategoryRatings, "overall">;
+  label: string;
+  icon: typeof Clock;
+  color: string;
+  fillClass: string;
+  emptyClass: string;
+}[] = [
+    {
+      key: "speed",
+      label: "Speed",
+      icon: Clock,
+      color: "text-blue-400/70",
+      fillClass: "text-blue-400 fill-blue-400",
+      emptyClass: "text-blue-900/30",
+    },
+    {
+      key: "survival",
+      label: "Survival",
+      icon: Heart,
+      color: "text-red-400/70",
+      fillClass: "text-red-400 fill-red-400",
+      emptyClass: "text-red-900/30",
+    },
+    {
+      key: "strategy",
+      label: "Strategy",
+      icon: Swords,
+      color: "text-amber-500/70",
+      fillClass: "text-amber-400 fill-amber-400",
+      emptyClass: "text-amber-900/30",
+    },
+  ];
+
+const CategoryRatingRow: React.FC<{
+  icon: typeof Clock;
+  label: string;
+  stars: number;
+  iconColor: string;
+  fillClass: string;
+  emptyClass: string;
+}> = ({ icon: Icon, label, stars, iconColor, fillClass, emptyClass }) => (
+  <div
+    className="rounded-lg px-3 py-2 flex items-center justify-between"
+    style={{
+      background:
+        "linear-gradient(90deg, rgba(120,80,20,0.10), rgba(180,140,60,0.12), rgba(120,80,20,0.10))",
+      border: "1px solid rgba(180,140,60,0.15)",
+    }}
+  >
+    <div className="flex items-center gap-2">
+      <Icon size={12} className={iconColor} />
+      <span className="text-[9px] font-bold text-amber-500/60 tracking-[0.15em] uppercase">
+        {label}
+      </span>
+    </div>
+    <div className="flex items-center gap-0.5">
+      {[...Array(3)].map((_, i) => (
+        <Star
+          key={i}
+          size={12}
+          className={i < stars ? fillClass : emptyClass}
+        />
+      ))}
+    </div>
+  </div>
+);
+
 export function VictoryScreen({
-  starsEarned,
+  starsEarned: _starsEarned,
   lives,
   timeSpent,
   bestTime,
@@ -451,7 +555,11 @@ export function VictoryScreen({
   levelName,
   resetGame,
   overlay = false,
+  totalWaves = 10,
 }: VictoryScreenProps) {
+  void _starsEarned;
+  const ratings = calculateCategoryRatings(timeSpent, lives, totalWaves);
+  const displayStars = ratings.overall;
   const isNewBestTime = !bestTime || timeSpent < bestTime;
   const isNewBestHearts = !bestHearts || lives > bestHearts;
   const [showContent, setShowContent] = useState(false);
@@ -462,9 +570,9 @@ export function VictoryScreen({
   }, []);
 
   const victoryMessage =
-    starsEarned === 3
+    displayStars === 3
       ? "A flawless defense! The realm shall sing of this triumph for ages!"
-      : starsEarned === 2
+      : displayStars === 2
         ? "A valiant victory! The enemy retreats in disarray!"
         : "By the narrowest of margins... the kingdom stands.";
 
@@ -564,17 +672,17 @@ export function VictoryScreen({
 
             {/* ===== Star Rating ===== */}
             <div className="flex justify-center py-1">
-              <StarRating earned={starsEarned} size={55} />
+              <StarRating earned={displayStars} size={55} />
             </div>
 
             {/* Rating label */}
-            <div className="flex justify-center mb-1">
+            <div className="flex items-center justify-center mb-1">
               <div className="px-4 py-1 rounded-full" style={{
                 background: "linear-gradient(135deg, rgba(180,140,60,0.15), rgba(120,80,20,0.1))",
                 border: `1px solid ${GOLD.border25}`,
               }}>
                 <span className="text-[10px] font-bold text-amber-400/90 tracking-[0.3em] uppercase">
-                  {starsEarned === 3 ? "★ Legendary ★" : starsEarned === 2 ? "Heroic" : "Survived"}
+                  {displayStars === 3 ? "★ Legendary ★" : displayStars === 2 ? "Heroic" : "Survived"}
                 </span>
               </div>
             </div>
@@ -639,20 +747,19 @@ export function VictoryScreen({
                 </div>
               </div>
 
-              {/* Performance summary bar */}
-              <div className="mt-2.5 rounded-xl p-2.5 flex items-center justify-between" style={{
-                background: "linear-gradient(90deg, rgba(120,80,20,0.12), rgba(180,140,60,0.15), rgba(120,80,20,0.12))",
-                border: "1.5px solid rgba(180,140,60,0.2)",
-              }}>
-                <div className="flex items-center gap-2">
-                  <Shield size={12} className="text-amber-500/70" />
-                  <span className="text-[9px] font-bold text-amber-500/60 tracking-[0.15em] uppercase">Defense Rating</span>
-                </div>
-                <div className="flex items-center gap-0.5">
-                  {[...Array(3)].map((_, i) => (
-                    <Star key={i} size={12} className={i < starsEarned ? "text-amber-400 fill-amber-400" : "text-amber-900/30"} />
-                  ))}
-                </div>
+              {/* Category rating breakdown */}
+              <div className="mt-2.5 flex flex-col gap-1.5">
+                {CATEGORY_CONFIG.map((cat) => (
+                  <CategoryRatingRow
+                    key={cat.key}
+                    icon={cat.icon}
+                    label={cat.label}
+                    stars={ratings[cat.key]}
+                    iconColor={cat.color}
+                    fillClass={cat.fillClass}
+                    emptyClass={cat.emptyClass}
+                  />
+                ))}
               </div>
             </div>
 

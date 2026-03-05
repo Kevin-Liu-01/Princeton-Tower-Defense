@@ -2,7 +2,7 @@
 // Renders all enemy types with unique visual designs
 
 import type { Enemy, Position, SlowSourceType } from "../../types";
-import { ENEMY_DATA } from "../../constants";
+import { ENEMY_DATA, ISO_Y_RATIO } from "../../constants";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -319,7 +319,7 @@ export function renderEnemy(
     screenPos.x,
     screenPos.y + 5 * zoom,
     size * 0.6,
-    size * 0.3,
+    size * 0.6 * ISO_Y_RATIO,
     0,
     0,
     Math.PI * 2,
@@ -936,7 +936,7 @@ export function renderEnemy(
       const angle = (i / 5) * Math.PI * 2 + crystalRotation;
       const dist = size * 0.55;
       const cx = screenPos.x + Math.cos(angle) * dist;
-      const cy = drawY + Math.sin(angle) * dist * 0.5;
+      const cy = drawY + Math.sin(angle) * dist * ISO_Y_RATIO;
       const cSize = (3.5 + Math.sin(i * 1.3) * 1.5) * zoom;
 
       // Crystal body - hexagonal ice shard
@@ -1069,7 +1069,7 @@ export function renderEnemy(
     // Aura glow underneath
     ctx.fillStyle = `rgba(${sc.aura}, ${0.35 * slowIntensity})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.85 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Outer magic circle - thick rotating ring
@@ -1140,7 +1140,7 @@ export function renderEnemy(
         const trailAlpha = (1 - t * 0.3) * 0.5;
         const tx = screenPos.x + Math.cos(trailAngle) * orbitRadius * 0.7;
         const ty =
-          drawY - size * 0.65 + Math.sin(trailAngle) * orbitRadius * 0.25;
+          drawY - size * 0.65 + Math.sin(trailAngle) * orbitRadius * ISO_Y_RATIO;
         ctx.fillStyle = `rgba(255, 255, 100, ${trailAlpha})`;
         ctx.beginPath();
         ctx.arc(tx, ty, (2 - t * 0.4) * zoom, 0, Math.PI * 2);
@@ -1149,7 +1149,7 @@ export function renderEnemy(
 
       // Main star position
       const sx = screenPos.x + Math.cos(baseAngle) * orbitRadius * 0.7;
-      const sy = drawY - size * 0.65 + Math.sin(baseAngle) * orbitRadius * 0.25;
+      const sy = drawY - size * 0.65 + Math.sin(baseAngle) * orbitRadius * ISO_Y_RATIO;
       const starSize = 4 * zoom;
 
       // 4-pointed star shape
@@ -1180,7 +1180,7 @@ export function renderEnemy(
     for (let i = 0; i < 5; i++) {
       const coinAngle = time * 2.5 + (i * Math.PI * 2) / 5;
       const coinOrbitX = Math.cos(coinAngle) * size * 1.0;
-      const coinOrbitY = Math.sin(coinAngle) * size * 0.5; // Flattened for isometric
+      const coinOrbitY = Math.sin(coinAngle) * size * ISO_Y_RATIO; // Flattened for isometric
       const coinFloat = Math.sin(time * 4 + i * 1.2) * 6 * zoom; // Bobbing motion
       const coinX = screenPos.x + coinOrbitX;
       const coinY = drawY + coinOrbitY - 10 * zoom + coinFloat;
@@ -1225,7 +1225,7 @@ export function renderEnemy(
     const glowAlpha = 0.25 + Math.sin(time * 3) * 0.1;
     ctx.fillStyle = `rgba(255, 215, 0, ${glowAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(screenPos.x, drawY, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 

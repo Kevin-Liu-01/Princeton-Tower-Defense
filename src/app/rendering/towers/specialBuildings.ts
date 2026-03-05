@@ -1,3 +1,4 @@
+import { ISO_TAN, ISO_Y_RATIO } from "../../constants";
 
 // Special Building Types rendering
 function drawChronoRelayBuilding(
@@ -18,7 +19,7 @@ function drawChronoRelayBuilding(
   const fastPulse = Math.sin(time * 6.1 + 0.8) * 0.5 + 0.5;
   const power = 0.28 + stage * 0.24;
   const s2 = s * 1.13;
-  const tanA = Math.tan(Math.PI / 6);
+  const tanA = ISO_TAN;
   const hue = 208 + stage * 18 + Math.sin(time * 0.8) * 16;
   const glowRgb = [
     "126, 145, 186",
@@ -108,7 +109,7 @@ function drawChronoRelayBuilding(
     const arcEnd = frontHalf ? Math.PI : Math.PI * 2;
     ctx.save();
     ctx.translate(0, railY);
-    ctx.scale(1, 0.5);
+    ctx.scale(1, ISO_Y_RATIO);
     ctx.strokeStyle = `rgba(${glowRgb}, ${0.36 + pulse * 0.2})`;
     ctx.lineWidth = 2.6 * s2;
     ctx.beginPath();
@@ -141,7 +142,7 @@ function drawChronoRelayBuilding(
   // Clock face
   ctx.save();
   ctx.translate(0, railY);
-  ctx.scale(1, 0.5);
+  ctx.scale(1, ISO_Y_RATIO);
   ctx.save();
   ctx.rotate(time * (0.36 + stage * 0.09));
   ctx.strokeStyle = `rgba(${glowRgb}, ${0.45 + fastPulse * 0.25})`;
@@ -309,7 +310,7 @@ function drawSentinelNexusBuilding(
   const pulse = Math.sin(time * 3.4) * 0.5 + 0.5;
   const surge = Math.sin(time * 8.2 + 0.8) * 0.5 + 0.5;
   const s2 = s * 1.12;
-  const tanA = Math.tan(Math.PI / 6);
+  const tanA = ISO_TAN;
   const hotRgb = "255, 110, 96";
   // Smooth gray → red color ramp across 0-1 charge
   const lerpR = Math.round(120 + 135 * charge);
@@ -337,7 +338,7 @@ function drawSentinelNexusBuilding(
   const litRuneCount = Math.floor(charge * runeCount);
   ctx.save();
   ctx.translate(0, -baseW * tanA + 2.5 * s2);
-  ctx.scale(1, 0.5);
+  ctx.scale(1, ISO_Y_RATIO);
 
   // Outer reticle ring - always visible, gray→red with charge
   ctx.strokeStyle = `rgba(${glowRgb}, ${0.3 + charge * 0.35 + readyFlash})`;
@@ -556,7 +557,7 @@ function drawSentinelNexusBuilding(
   const shieldY = towerBaseY - towerH + 7 * s2;
   ctx.save();
   ctx.translate(0, shieldY);
-  ctx.scale(1, 0.5);
+  ctx.scale(1, ISO_Y_RATIO);
   const shieldGrad = ctx.createRadialGradient(0, -4 * s2, 3 * s2, 0, 0, 30 * s2);
   shieldGrad.addColorStop(0, `rgba(${glowRgb}, ${0.18 + charge * 0.22 + readyFlash * 0.2})`);
   shieldGrad.addColorStop(0.55, `rgba(${glowRgb}, ${0.1 + charge * 0.18})`);
@@ -580,7 +581,7 @@ function drawSentinelNexusBuilding(
     const arcEnd = frontHalf ? Math.PI : Math.PI * 2;
     ctx.save();
     ctx.translate(0, coreY + 5 * s2);
-    ctx.scale(1, 0.5);
+    ctx.scale(1, ISO_Y_RATIO);
     // Ring speed increases with charge
     const ringSpeed = 0.5 + charge * 1.8;
     for (let i = 0; i < 2; i++) {
@@ -734,7 +735,7 @@ function drawSunforgeOrreryBuilding(
   const pulse = Math.sin(time * 3.1) * 0.5 + 0.5;
   const surge = Math.sin(time * 7.6 + 1.1) * 0.5 + 0.5;
   const s2 = s * 1.16;
-  const tanA = Math.tan(Math.PI / 6);
+  const tanA = ISO_TAN;
   const hotRgb = [
     "240, 131, 58",
     "250, 148, 66",
@@ -785,7 +786,7 @@ function drawSunforgeOrreryBuilding(
   if (charge > 0.02) {
     ctx.save();
     ctx.translate(0, railY);
-    ctx.scale(1, 0.5);
+    ctx.scale(1, ISO_Y_RATIO);
     ctx.strokeStyle = `rgba(${hotRgb}, ${0.35 + charge * 0.5 + readyFlash})`;
     ctx.lineWidth = 4 * s2;
     ctx.beginPath();
@@ -800,7 +801,7 @@ function drawSunforgeOrreryBuilding(
     const arcEnd = frontHalf ? Math.PI : Math.PI * 2;
     ctx.save();
     ctx.translate(0, railY);
-    ctx.scale(1, 0.5);
+    ctx.scale(1, ISO_Y_RATIO);
 
     // Broad halo - always visible, gray→warm
     ctx.strokeStyle = `rgba(${glowRgb}, ${0.15 + charge * 0.2 + readyFlash * 0.1})`;
@@ -948,7 +949,7 @@ function drawSunforgeOrreryBuilding(
   const ringSpeed = 0.4 + charge * 1.4;
   ctx.save();
   ctx.translate(0, coreY + 24 * s2);
-  ctx.scale(1, 0.5);
+  ctx.scale(1, ISO_Y_RATIO);
   for (let i = 0; i < 2; i++) {
     ctx.save();
     ctx.rotate((i === 0 ? 1 : -1) * time * (ringSpeed + i * 0.26));
@@ -1158,7 +1159,7 @@ export function renderSpecialBuilding(
         // Elder Futhark Runes for authenticity
         const elderFuthark = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ", "ᚺ", "ᚾ", "ᛁ", "ᛃ", "ᛇ", "ᛈ", "ᛉ", "ᛊ", "ᛏ", "ᛒ", "ᛖ", "ᛗ", "ᛚ", "ᛜ", "ᛞ", "ᛟ"];
         
-        const tanA = Math.tan(Math.PI / 6);
+        const tanA = ISO_TAN;
         
         // =====================================================
         // 1. MASSIVE GROUND EFFECT & SHADOW
@@ -1172,7 +1173,7 @@ export function renderSpecialBuilding(
           ctx.lineWidth = 2 * s2;
           ctx.setLineDash([8 * s2, 4 * s2]);
           ctx.beginPath();
-          ctx.ellipse(0, 5 * s2, circleRadius, circleRadius * 0.5, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 5 * s2, circleRadius, circleRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
           ctx.stroke();
           ctx.setLineDash([]);
           ctx.restore();
@@ -1187,7 +1188,7 @@ export function renderSpecialBuilding(
           const angle = (i / groundRuneCount) * Math.PI * 2 + time * 0.3 * (powerStage > 0 ? 1 : 0);
           const radius = 35 * s2;
           const rx = Math.cos(angle) * radius;
-          const ry = Math.sin(angle) * radius * 0.5 + 5 * s2;
+          const ry = Math.sin(angle) * radius * ISO_Y_RATIO + 5 * s2;
           const runeOpacity = powerStage === 0 ? 0.2 : (0.3 + basePulse * 0.4 + (i % 3 === Math.floor(time * 2) % 3 ? 0.3 : 0));
           ctx.fillStyle = `rgba(0, 229, 255, ${runeOpacity * powerIntensity})`;
           ctx.fillText(elderFuthark[i % elderFuthark.length], rx, ry);
@@ -1196,7 +1197,7 @@ export function renderSpecialBuilding(
         // Ground shadow
         ctx.fillStyle = `rgba(0,0,0,${0.25 + powerStage * 0.05})`;
         ctx.beginPath();
-        ctx.ellipse(0, 3 * s2, 38 * s2, 19 * s2, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 3 * s2, 38 * s2, 38 * ISO_Y_RATIO * s2, 0, 0, Math.PI * 2);
         ctx.fill();
         
         // Ground glow effect (increases with power)
@@ -1207,7 +1208,7 @@ export function renderSpecialBuilding(
           groundGlow.addColorStop(1, "transparent");
           ctx.fillStyle = groundGlow;
           ctx.beginPath();
-          ctx.ellipse(0, 0, 45 * s2, 22 * s2, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, 45 * s2, 45 * ISO_Y_RATIO * s2, 0, 0, Math.PI * 2);
           ctx.fill();
         }
         
@@ -1220,7 +1221,7 @@ export function renderSpecialBuilding(
         const drawMonolith = (i: number, drawEnergyLine: boolean) => {
           const stoneAngle = (i / stoneCount) * Math.PI * 2 - Math.PI / 2;
           const sx = Math.cos(stoneAngle) * stoneRadius;
-          const sy = Math.sin(stoneAngle) * stoneRadius * 0.5 + 2 * s2;
+          const sy = Math.sin(stoneAngle) * stoneRadius * ISO_Y_RATIO + 2 * s2;
           const stoneHeight = (22 + (i % 3) * 5) * s2;
           const stoneW = 5 * s2;
           const stoneD = 3 * s2;
@@ -1818,8 +1819,7 @@ export function renderSpecialBuilding(
   
         const w = 26 * s2;
         const h = 36 * s2;
-        const angle = Math.PI / 6;
-        const tanAngle = Math.tan(angle);
+        const tanAngle = ISO_TAN;
         const roofOffset = w * tanAngle * 2;
   
         // Ground Shadow
@@ -2416,7 +2416,7 @@ export function renderSpecialBuilding(
   
         const w = 32 * s2;
         const h = 12 * s2;
-        const tanA = Math.tan(Math.PI / 6);
+        const tanA = ISO_TAN;
   
         // Foundation Shadow
         ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -2750,7 +2750,7 @@ export function renderSpecialBuilding(
         // Sacred Circle on Ground
         const circleY = -w * tanA * 2;
         ctx.save();
-        ctx.scale(1, 0.5);
+        ctx.scale(1, ISO_Y_RATIO);
         ctx.strokeStyle = "rgba(118, 255, 3, 0.15)";
         ctx.lineWidth = 2 * s2;
         ctx.beginPath();
@@ -2781,7 +2781,7 @@ export function renderSpecialBuilding(
           const pulseY = -w * tanA * 2;
   
           ctx.save();
-          ctx.scale(1, 0.5);
+          ctx.scale(1, ISO_Y_RATIO);
   
           for (let ring = 0; ring < 3; ring++) {
             const ringProg = Math.max(0, prog - ring * 0.15);
@@ -2836,8 +2836,7 @@ export function renderSpecialBuilding(
   
         const w = 34 * s;
         const h = 48 * s;
-        const angle = Math.PI / 6;
-        const tanA = Math.tan(angle);
+        const tanA = ISO_TAN;
   
         // Foundation Shadow
         ctx.fillStyle = "rgba(0,0,0,0.35)";
@@ -3270,7 +3269,7 @@ export function renderSpecialBuilding(
           const spawnCircleY = -w * tanA * 2;
           ctx.save();
           ctx.translate(0, spawnCircleY * 0.5);
-          ctx.scale(1, 0.5);
+          ctx.scale(1, ISO_Y_RATIO);
           ctx.rotate(time * 2);
           ctx.strokeStyle = `rgba(79, 195, 247, ${1 - spawnCycle / 1500})`;
           ctx.lineWidth = 3 * s;
