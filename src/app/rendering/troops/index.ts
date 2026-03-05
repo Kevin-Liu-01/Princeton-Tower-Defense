@@ -13,154 +13,154 @@ export interface KnightTheme {
   // Name for identification
   name: string;
   // Aura and flame colors
-  auraColorInner: string;   // Inner aura glow
-  auraColorMid: string;     // Mid aura
-  auraColorOuter: string;   // Outer aura edge
-  flameWisps: string;       // Floating flame wisps
-  energyRings: string;      // Attack energy rings
+  auraColorInner: string; // Inner aura glow
+  auraColorMid: string; // Mid aura
+  auraColorOuter: string; // Outer aura edge
+  flameWisps: string; // Floating flame wisps
+  energyRings: string; // Attack energy rings
   // Cape colors
-  capeLight: string;        // Cape highlight
-  capeMid: string;          // Cape main color
-  capeDark: string;         // Cape shadow
-  capeInner: string;        // Cape inner shadow
+  capeLight: string; // Cape highlight
+  capeMid: string; // Cape main color
+  capeDark: string; // Cape shadow
+  capeInner: string; // Cape inner shadow
   // Armor accent colors
-  sigilGlow: string;        // Chest sigil glow
-  beltBuckle: string;       // Belt buckle accent
+  sigilGlow: string; // Chest sigil glow
+  beltBuckle: string; // Belt buckle accent
   // Weapon colors
-  crossguardMain: string;   // Sword crossguard
+  crossguardMain: string; // Sword crossguard
   crossguardAccent: string; // Crossguard highlights
-  gemColor: string;         // Crossguard gems
-  bladeRunes: string;       // Glowing blade runes
-  swingTrail: string;       // Sword swing trail
-  swingTrailAlt: string;    // Secondary swing trail
+  gemColor: string; // Crossguard gems
+  bladeRunes: string; // Glowing blade runes
+  swingTrail: string; // Sword swing trail
+  swingTrailAlt: string; // Secondary swing trail
   // Shield and helm
-  shieldEmblem: string;     // Shield emblem color
-  plume: string;            // Helmet plume
-  eyeGlow: string;          // Glowing eye color
-  eyeShadow: string;        // Eye shadow/glow
+  shieldEmblem: string; // Shield emblem color
+  plume: string; // Helmet plume
+  eyeGlow: string; // Glowing eye color
+  eyeShadow: string; // Eye shadow/glow
   // Effects
-  shockwave: string;        // Battle cry shockwave
+  shockwave: string; // Battle cry shockwave
 }
 
 // Orange theme - Default/Station knights (Princeton orange)
 const KNIGHT_THEME_ORANGE: KnightTheme = {
-  name: 'princeton',
-  auraColorInner: 'rgba(255, 100, 20, ',
-  auraColorMid: 'rgba(255, 60, 0, ',
-  auraColorOuter: 'rgba(200, 40, 0, 0)',
-  flameWisps: 'rgba(255, 150, 50, ',
-  energyRings: 'rgba(255, 80, 20, ',
-  capeLight: '#cc3300',
-  capeMid: '#ff5500',
-  capeDark: '#aa2200',
-  capeInner: '#8b2200',
-  sigilGlow: 'rgba(200, 80, 0, ',
-  beltBuckle: '#c0c0d0',
-  crossguardMain: '#8b0000',
-  crossguardAccent: '#aa2020',
-  gemColor: 'rgba(255, 200, 50, ',
-  bladeRunes: 'rgba(200, 80, 0, ',
-  swingTrail: 'rgba(255, 150, 50, ',
-  swingTrailAlt: 'rgba(255, 200, 100, ',
-  shieldEmblem: '#cc4400',
-  plume: '#dd4400',
-  eyeGlow: 'rgba(255, 150, 50, ',
-  eyeShadow: '#ff6600',
-  shockwave: 'rgba(255, 100, 50, ',
+  name: "princeton",
+  auraColorInner: "rgba(255, 100, 20, ",
+  auraColorMid: "rgba(255, 60, 0, ",
+  auraColorOuter: "rgba(200, 40, 0, 0)",
+  flameWisps: "rgba(255, 150, 50, ",
+  energyRings: "rgba(255, 80, 20, ",
+  capeLight: "#cc3300",
+  capeMid: "#ff5500",
+  capeDark: "#aa2200",
+  capeInner: "#8b2200",
+  sigilGlow: "rgba(200, 80, 0, ",
+  beltBuckle: "#c0c0d0",
+  crossguardMain: "#8b0000",
+  crossguardAccent: "#aa2020",
+  gemColor: "rgba(255, 200, 50, ",
+  bladeRunes: "rgba(200, 80, 0, ",
+  swingTrail: "rgba(255, 150, 50, ",
+  swingTrailAlt: "rgba(255, 200, 100, ",
+  shieldEmblem: "#cc4400",
+  plume: "#dd4400",
+  eyeGlow: "rgba(255, 150, 50, ",
+  eyeShadow: "#ff6600",
+  shockwave: "rgba(255, 100, 50, ",
 };
 
 // Blue theme - Frontier Barracks knights
 const KNIGHT_THEME_BLUE: KnightTheme = {
-  name: 'frontier',
-  auraColorInner: 'rgba(80, 160, 255, ',
-  auraColorMid: 'rgba(40, 120, 220, ',
-  auraColorOuter: 'rgba(20, 80, 180, 0)',
-  flameWisps: 'rgba(100, 180, 255, ',
-  energyRings: 'rgba(60, 140, 255, ',
-  capeLight: '#1a4a8a',
-  capeMid: '#2266bb',
-  capeDark: '#0a3366',
-  capeInner: '#082244',
-  sigilGlow: 'rgba(80, 160, 255, ',
-  beltBuckle: '#8aa8cc',
-  crossguardMain: '#1a4080',
-  crossguardAccent: '#2855a0',
-  gemColor: 'rgba(150, 220, 255, ',
-  bladeRunes: 'rgba(80, 180, 255, ',
-  swingTrail: 'rgba(100, 180, 255, ',
-  swingTrailAlt: 'rgba(150, 210, 255, ',
-  shieldEmblem: '#2266aa',
-  plume: '#3388dd',
-  eyeGlow: 'rgba(120, 200, 255, ',
-  eyeShadow: '#4499ff',
-  shockwave: 'rgba(80, 160, 255, ',
+  name: "frontier",
+  auraColorInner: "rgba(80, 160, 255, ",
+  auraColorMid: "rgba(40, 120, 220, ",
+  auraColorOuter: "rgba(20, 80, 180, 0)",
+  flameWisps: "rgba(100, 180, 255, ",
+  energyRings: "rgba(60, 140, 255, ",
+  capeLight: "#1a4a8a",
+  capeMid: "#2266bb",
+  capeDark: "#0a3366",
+  capeInner: "#082244",
+  sigilGlow: "rgba(80, 160, 255, ",
+  beltBuckle: "#8aa8cc",
+  crossguardMain: "#1a4080",
+  crossguardAccent: "#2855a0",
+  gemColor: "rgba(150, 220, 255, ",
+  bladeRunes: "rgba(80, 180, 255, ",
+  swingTrail: "rgba(100, 180, 255, ",
+  swingTrailAlt: "rgba(150, 210, 255, ",
+  shieldEmblem: "#2266aa",
+  plume: "#3388dd",
+  eyeGlow: "rgba(120, 200, 255, ",
+  eyeShadow: "#4499ff",
+  shockwave: "rgba(80, 160, 255, ",
 };
 
 // Red theme - General Mercer (Captain hero) summoned knights
 const KNIGHT_THEME_RED: KnightTheme = {
-  name: 'mercer',
-  auraColorInner: 'rgba(255, 60, 60, ',
-  auraColorMid: 'rgba(200, 30, 30, ',
-  auraColorOuter: 'rgba(150, 20, 20, 0)',
-  flameWisps: 'rgba(255, 100, 100, ',
-  energyRings: 'rgba(255, 50, 50, ',
-  capeLight: '#8b1a1a',
-  capeMid: '#cc2222',
-  capeDark: '#661111',
-  capeInner: '#440a0a',
-  sigilGlow: 'rgba(255, 80, 80, ',
-  beltBuckle: '#cc9999',
-  crossguardMain: '#660000',
-  crossguardAccent: '#882020',
-  gemColor: 'rgba(255, 180, 180, ',
-  bladeRunes: 'rgba(255, 60, 60, ',
-  swingTrail: 'rgba(255, 100, 100, ',
-  swingTrailAlt: 'rgba(255, 150, 150, ',
-  shieldEmblem: '#aa2222',
-  plume: '#dd3333',
-  eyeGlow: 'rgba(255, 120, 120, ',
-  eyeShadow: '#ff4444',
-  shockwave: 'rgba(255, 80, 80, ',
+  name: "mercer",
+  auraColorInner: "rgba(255, 60, 60, ",
+  auraColorMid: "rgba(200, 30, 30, ",
+  auraColorOuter: "rgba(150, 20, 20, 0)",
+  flameWisps: "rgba(255, 100, 100, ",
+  energyRings: "rgba(255, 50, 50, ",
+  capeLight: "#8b1a1a",
+  capeMid: "#cc2222",
+  capeDark: "#661111",
+  capeInner: "#440a0a",
+  sigilGlow: "rgba(255, 80, 80, ",
+  beltBuckle: "#cc9999",
+  crossguardMain: "#660000",
+  crossguardAccent: "#882020",
+  gemColor: "rgba(255, 180, 180, ",
+  bladeRunes: "rgba(255, 60, 60, ",
+  swingTrail: "rgba(255, 100, 100, ",
+  swingTrailAlt: "rgba(255, 150, 150, ",
+  shieldEmblem: "#aa2222",
+  plume: "#dd3333",
+  eyeGlow: "rgba(255, 120, 120, ",
+  eyeShadow: "#ff4444",
+  shockwave: "rgba(255, 80, 80, ",
 };
 
 // Purple theme - Reinforcement spell knights
 const KNIGHT_THEME_PURPLE: KnightTheme = {
-  name: 'reinforcement',
-  auraColorInner: 'rgba(180, 80, 255, ',
-  auraColorMid: 'rgba(140, 40, 220, ',
-  auraColorOuter: 'rgba(100, 20, 180, 0)',
-  flameWisps: 'rgba(200, 120, 255, ',
-  energyRings: 'rgba(160, 60, 255, ',
-  capeLight: '#5a2a8a',
-  capeMid: '#7733bb',
-  capeDark: '#3a1a66',
-  capeInner: '#2a0a44',
-  sigilGlow: 'rgba(180, 100, 255, ',
-  beltBuckle: '#b8a0cc',
-  crossguardMain: '#4a1a80',
-  crossguardAccent: '#6830a0',
-  gemColor: 'rgba(220, 180, 255, ',
-  bladeRunes: 'rgba(180, 100, 255, ',
-  swingTrail: 'rgba(200, 120, 255, ',
-  swingTrailAlt: 'rgba(220, 170, 255, ',
-  shieldEmblem: '#7733aa',
-  plume: '#9944dd',
-  eyeGlow: 'rgba(200, 150, 255, ',
-  eyeShadow: '#aa66ff',
-  shockwave: 'rgba(180, 100, 255, ',
+  name: "reinforcement",
+  auraColorInner: "rgba(180, 80, 255, ",
+  auraColorMid: "rgba(140, 40, 220, ",
+  auraColorOuter: "rgba(100, 20, 180, 0)",
+  flameWisps: "rgba(200, 120, 255, ",
+  energyRings: "rgba(160, 60, 255, ",
+  capeLight: "#5a2a8a",
+  capeMid: "#7733bb",
+  capeDark: "#3a1a66",
+  capeInner: "#2a0a44",
+  sigilGlow: "rgba(180, 100, 255, ",
+  beltBuckle: "#b8a0cc",
+  crossguardMain: "#4a1a80",
+  crossguardAccent: "#6830a0",
+  gemColor: "rgba(220, 180, 255, ",
+  bladeRunes: "rgba(180, 100, 255, ",
+  swingTrail: "rgba(200, 120, 255, ",
+  swingTrailAlt: "rgba(220, 170, 255, ",
+  shieldEmblem: "#7733aa",
+  plume: "#9944dd",
+  eyeGlow: "rgba(200, 150, 255, ",
+  eyeShadow: "#aa66ff",
+  shockwave: "rgba(180, 100, 255, ",
 };
 
 // Get knight theme based on owner type
 export function getKnightTheme(ownerType?: TroopOwnerType): KnightTheme {
   switch (ownerType) {
-    case 'barracks':
+    case "barracks":
       return KNIGHT_THEME_BLUE;
-    case 'hero_summon':
+    case "hero_summon":
       return KNIGHT_THEME_RED;
-    case 'spell':
+    case "spell":
       return KNIGHT_THEME_PURPLE;
-    case 'station':
-    case 'default':
+    case "station":
+    case "default":
     default:
       return KNIGHT_THEME_ORANGE;
   }
@@ -177,7 +177,7 @@ export function renderTroop(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   const screenPos = worldToScreenRounded(
     troop.pos,
@@ -185,7 +185,7 @@ export function renderTroop(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   const zoom = cameraZoom || 1;
   const troopType = troop.type || "footsoldier";
@@ -204,7 +204,7 @@ export function renderTroop(
       14 * zoom,
       0,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.stroke();
     ctx.setLineDash([]);
@@ -219,12 +219,13 @@ export function renderTroop(
     7 * zoom,
     0,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
 
   const size = 22 * zoom;
-  const attackPhase = (troop.attackAnim && troop.attackAnim > 0) ? troop.attackAnim / 300 : 0;
+  const attackPhase =
+    troop.attackAnim && troop.attackAnim > 0 ? troop.attackAnim / 300 : 0;
   const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.15 : 1;
   const facingRight =
     troop.facingRight ??
@@ -239,7 +240,7 @@ export function renderTroop(
       canvasHeight,
       dpr,
       cameraOffset,
-      cameraZoom
+      cameraZoom,
     );
   }
 
@@ -270,47 +271,74 @@ export function renderTroop(
     attackPhase,
     localTargetPos,
     troop.ownerType,
-    troop.visualTier
+    troop.visualTier,
   );
 
   ctx.restore();
 
   // HEALING AURA EFFECT - Soft, elegant healing visualization
   // Show for 500ms after healFlash (for shrine heals), or while hp < maxHp (for regeneration)
-  const healAuraActive = troop.healFlash && (Date.now() - troop.healFlash < 500 || troop.hp < troop.maxHp);
+  const healAuraActive =
+    troop.healFlash &&
+    (Date.now() - troop.healFlash < 500 || troop.hp < troop.maxHp);
   if (healAuraActive) {
     const pulseAlpha = 0.85 + Math.sin(time * 3) * 0.15; // Stronger breathing effect
 
     // Soft outer glow - diffuse emerald light
     const outerGlow = ctx.createRadialGradient(
-      screenPos.x, screenPos.y, size * 0.1,
-      screenPos.x, screenPos.y, size * 1.0
+      screenPos.x,
+      screenPos.y,
+      size * 0.1,
+      screenPos.x,
+      screenPos.y,
+      size * 1.0,
     );
     outerGlow.addColorStop(0, `rgba(134, 239, 172, ${0.5 * pulseAlpha})`);
     outerGlow.addColorStop(0.4, `rgba(74, 222, 128, ${0.3 * pulseAlpha})`);
     outerGlow.addColorStop(1, "rgba(34, 197, 94, 0)");
     ctx.fillStyle = outerGlow;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y, size * 0.9, size * 0.9 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y,
+      size * 0.9,
+      size * 0.9 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Inner warm core
     const innerGlow = ctx.createRadialGradient(
-      screenPos.x, screenPos.y - size * 0.08, 0,
-      screenPos.x, screenPos.y, size * 0.45
+      screenPos.x,
+      screenPos.y - size * 0.08,
+      0,
+      screenPos.x,
+      screenPos.y,
+      size * 0.45,
     );
     innerGlow.addColorStop(0, `rgba(187, 247, 208, ${0.65 * pulseAlpha})`);
     innerGlow.addColorStop(0.5, `rgba(134, 239, 172, ${0.3 * pulseAlpha})`);
     innerGlow.addColorStop(1, "rgba(74, 222, 128, 0)");
     ctx.fillStyle = innerGlow;
     ctx.beginPath();
-    ctx.ellipse(screenPos.x, screenPos.y - size * 0.04, size * 0.45, size * 0.45 * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      screenPos.x,
+      screenPos.y - size * 0.04,
+      size * 0.45,
+      size * 0.45 * ISO_Y_RATIO,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Floating sparkle particles - gentle upward drift
     for (let i = 0; i < 6; i++) {
       const sparklePhase = (time * 0.7 + i * 0.17) % 1;
-      const sparkleX = screenPos.x + Math.sin(time * 1.8 + i * 1.2) * size * 0.38;
+      const sparkleX =
+        screenPos.x + Math.sin(time * 1.8 + i * 1.2) * size * 0.38;
       const sparkleY = screenPos.y + size * 0.15 - sparklePhase * size * 0.9;
       const sparkleAlpha = Math.sin(sparklePhase * Math.PI) * pulseAlpha;
       const sparkleSize = (2.0 + Math.sin(i * 1.2) * 0.6) * zoom;
@@ -328,12 +356,14 @@ export function renderTroop(
 
     // Shimmer highlights orbiting
     for (let i = 0; i < 3; i++) {
-      const shimmerAngle = time * 1.0 + i * (Math.PI * 2 / 3);
+      const shimmerAngle = time * 1.0 + i * ((Math.PI * 2) / 3);
       const shimmerDist = size * 0.35;
       const shimmerX = screenPos.x + Math.cos(shimmerAngle) * shimmerDist;
-      const shimmerY = screenPos.y + Math.sin(shimmerAngle) * shimmerDist * ISO_Y_RATIO;
-      const shimmerAlpha = (0.7 + Math.sin(time * 4 + i * 2) * 0.2) * pulseAlpha;
-      
+      const shimmerY =
+        screenPos.y + Math.sin(shimmerAngle) * shimmerDist * ISO_Y_RATIO;
+      const shimmerAlpha =
+        (0.7 + Math.sin(time * 4 + i * 2) * 0.2) * pulseAlpha;
+
       ctx.fillStyle = `rgba(255, 255, 255, ${shimmerAlpha * 0.8})`;
       ctx.beginPath();
       ctx.arc(shimmerX, shimmerY, 1.8 * zoom, 0, Math.PI * 2);
@@ -357,7 +387,13 @@ export function renderTroop(
     // Background with rounded corners
     ctx.fillStyle = "rgba(10, 10, 15, 0.9)";
     ctx.beginPath();
-    ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+    ctx.roundRect(
+      barX - 1,
+      barY - 1,
+      barWidth + 2,
+      barHeight + 2,
+      cornerRadius,
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
@@ -373,7 +409,12 @@ export function renderTroop(
 
     // Health gradient fill
     if (hpWidth > 0) {
-      const hpGradient = ctx.createLinearGradient(barX, barY, barX, barY + barHeight);
+      const hpGradient = ctx.createLinearGradient(
+        barX,
+        barY,
+        barX,
+        barY + barHeight,
+      );
       if (hpPercent > 0.5) {
         // Green - healthy
         hpGradient.addColorStop(0, "#86efac");
@@ -392,25 +433,51 @@ export function renderTroop(
       }
       ctx.fillStyle = hpGradient;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, hpWidth, barHeight, [cornerRadius - 1, hpPercent > 0.9 ? cornerRadius - 1 : 0, hpPercent > 0.9 ? cornerRadius - 1 : 0, cornerRadius - 1]);
+      ctx.roundRect(barX, barY, hpWidth, barHeight, [
+        cornerRadius - 1,
+        hpPercent > 0.9 ? cornerRadius - 1 : 0,
+        hpPercent > 0.9 ? cornerRadius - 1 : 0,
+        cornerRadius - 1,
+      ]);
       ctx.fill();
 
       // Shine highlight
-      const shineGrad = ctx.createLinearGradient(barX, barY, barX, barY + barHeight * 0.45);
+      const shineGrad = ctx.createLinearGradient(
+        barX,
+        barY,
+        barX,
+        barY + barHeight * 0.45,
+      );
       shineGrad.addColorStop(0, "rgba(255, 255, 255, 0.35)");
       shineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = shineGrad;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, hpWidth, barHeight * 0.45, [cornerRadius - 1, hpPercent > 0.9 ? cornerRadius - 1 : 0, 0, 0]);
+      ctx.roundRect(barX, barY, hpWidth, barHeight * 0.45, [
+        cornerRadius - 1,
+        hpPercent > 0.9 ? cornerRadius - 1 : 0,
+        0,
+        0,
+      ]);
       ctx.fill();
     }
 
     // Subtle outer glow based on health
-    const glowColor = hpPercent > 0.5 ? "rgba(74, 222, 128, 0.3)" : hpPercent > 0.25 ? "rgba(250, 204, 21, 0.3)" : "rgba(248, 113, 113, 0.3)";
+    const glowColor =
+      hpPercent > 0.5
+        ? "rgba(74, 222, 128, 0.3)"
+        : hpPercent > 0.25
+          ? "rgba(250, 204, 21, 0.3)"
+          : "rgba(248, 113, 113, 0.3)";
     ctx.strokeStyle = glowColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2, cornerRadius);
+    ctx.roundRect(
+      barX - 1,
+      barY - 1,
+      barWidth + 2,
+      barHeight + 2,
+      cornerRadius,
+    );
     ctx.stroke();
   }
 }
@@ -427,14 +494,14 @@ function drawTroopSprite(
   attackPhase: number = 0,
   targetPos?: Position,
   ownerType?: TroopOwnerType,
-  visualTier?: number
+  visualTier?: number,
 ) {
   const TROOP_SPRITE_SCALES: Record<string, number> = {
     footsoldier: 1.0,
     soldier: 1.15,
     rowing: 1.15,
     armored: 1.3,
-    elite: 1.35,
+    elite: 1.5,
     thesis: 1.35,
     cavalry: 1.5,
     centaur: 1.5,
@@ -449,34 +516,136 @@ function drawTroopSprite(
   switch (type) {
     case "soldier":
     case "footsoldier":
-      drawSoldierTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawSoldierTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "cavalry":
-      drawCavalryTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawCavalryTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "centaur":
-      drawCentaurTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawCentaurTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "elite":
-      drawEliteTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawEliteTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "armored":
-      drawArmoredTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawArmoredTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "thesis":
-      drawThesisTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawThesisTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "rowing":
-      drawRowingTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawRowingTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     case "knight":
-      drawKnightTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, ownerType, visualTier, targetPos);
+      drawKnightTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        ownerType,
+        visualTier,
+        targetPos,
+      );
       break;
     case "turret":
-      drawTurretTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
+      drawTurretTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
       break;
     default:
-      drawDefaultTroop(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
+      drawDefaultTroop(
+        ctx,
+        x,
+        y,
+        size,
+        color,
+        time,
+        zoom,
+        attackPhase,
+        targetPos,
+      );
   }
 }
 
@@ -493,10 +662,12 @@ function resolveWeaponRotation(
   originY: number,
   fallbackRotation: number,
   forwardOffset: number,
-  maxTurn: number = Math.PI
+  maxTurn: number = Math.PI,
 ) {
   if (!targetPos) return fallbackRotation;
 
+  // The solve origin should match the grip pivot used by ctx.translate(...)
+  // so the weapon tip tracks toward the target while the handle stays anchored.
   const desiredRotation =
     Math.atan2(targetPos.y - originY, targetPos.x - originX) + forwardOffset;
   const delta = normalizeSignedAngle(desiredRotation - fallbackRotation);
@@ -513,7 +684,15 @@ interface TroopMasterworkStyle {
 }
 
 const TROOP_MASTERWORK_STYLES: Record<
-  "soldier" | "armored" | "elite" | "cavalry" | "centaur" | "thesis" | "rowing",
+  | "soldier"
+  | "armored"
+  | "elite"
+  | "cavalry"
+  | "centaur"
+  | "thesis"
+  | "rowing"
+  | "knight"
+  | "turret",
   TroopMasterworkStyle
 > = {
   soldier: {
@@ -565,7 +744,45 @@ const TROOP_MASTERWORK_STYLES: Record<
     metalSheen: "rgba(255, 232, 205, ",
     crest: "#ff9548",
   },
+  knight: {
+    rimLight: "rgba(170, 212, 255, 0.62)",
+    aura: "rgba(86, 141, 224, ",
+    rune: "rgba(181, 220, 255, ",
+    metalSheen: "rgba(231, 242, 255, ",
+    crest: "#78b2ff",
+  },
+  turret: {
+    rimLight: "rgba(255, 194, 122, 0.58)",
+    aura: "rgba(255, 117, 54, ",
+    rune: "rgba(255, 213, 152, ",
+    metalSheen: "rgba(255, 233, 203, ",
+    crest: "#ff8e4d",
+  },
 };
+
+function drawTroopFinishMotes(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  glowColor: string,
+  count: number,
+  spreadX: number,
+  rise: number,
+) {
+  for (let mote = 0; mote < count; mote++) {
+    const phase = (time * 0.7 + mote * 0.19) % 1;
+    const drift = Math.sin(time * 2.1 + mote * 1.7) * spreadX;
+    const moteX = x + drift * (0.4 + phase * 0.7);
+    const moteY = y - phase * rise + Math.cos(time * 2.8 + mote) * size * 0.015;
+    const alpha = (1 - phase) * 0.28;
+    ctx.fillStyle = `${glowColor}${alpha})`;
+    ctx.beginPath();
+    ctx.arc(moteX, moteY, size * (0.012 + mote * 0.0015), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
 
 function drawTroopMasterworkFinish(
   ctx: CanvasRenderingContext2D,
@@ -575,17 +792,102 @@ function drawTroopMasterworkFinish(
   time: number,
   zoom: number,
   style: TroopMasterworkStyle,
-  options: { mounted?: boolean; scholar?: boolean; vanguard?: boolean } = {}
+  options: { mounted?: boolean; scholar?: boolean; vanguard?: boolean } = {},
 ) {
-  // Disabled per request: remove extra circle/aura overlays on dinky troops.
-  void ctx;
-  void x;
-  void y;
-  void size;
-  void time;
-  void zoom;
-  void style;
-  void options;
+  const pulse = 0.58 + Math.sin(time * 4.1) * 0.18;
+  const shimmer = 0.52 + Math.sin(time * 6.3 + 0.5) * 0.22;
+  const shoulderY = y - size * (options.mounted ? 0.06 : 0.03);
+  const shoulderSpan = size * (options.mounted ? 0.24 : 0.16);
+  const chestY = y + size * (options.mounted ? 0.03 : 0.06);
+  const chestWidth = size * (options.mounted ? 0.12 : 0.09);
+  const runeY = y + size * (options.mounted ? 0.12 : 0.08);
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  // Subtle cold rim accents sharpen the silhouette without adding large overlays.
+  ctx.strokeStyle = style.rimLight;
+  ctx.lineWidth = 1.2 * zoom;
+  for (let side = -1; side <= 1; side += 2) {
+    ctx.beginPath();
+    ctx.moveTo(x + side * shoulderSpan, shoulderY);
+    ctx.quadraticCurveTo(
+      x + side * shoulderSpan * 0.72,
+      shoulderY - size * 0.06,
+      x + side * chestWidth,
+      chestY - size * 0.02,
+    );
+    ctx.stroke();
+  }
+
+  // Chest and belt-line sheen keeps the armor readable at small scales.
+  ctx.strokeStyle = `${style.metalSheen}${0.14 + shimmer * 0.18})`;
+  ctx.lineWidth = 0.9 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - chestWidth, chestY);
+  ctx.lineTo(x, chestY + size * 0.04);
+  ctx.lineTo(x + chestWidth, chestY);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - chestWidth * 0.82, chestY + size * 0.11);
+  ctx.lineTo(x + chestWidth * 0.82, chestY + size * 0.11);
+  ctx.stroke();
+
+  // Tiny crest gem adds a focal point without brightening the whole sprite.
+  ctx.fillStyle = style.crest;
+  ctx.globalAlpha = 0.55 + pulse * 0.18;
+  ctx.beginPath();
+  ctx.moveTo(x, chestY - size * 0.03);
+  ctx.lineTo(x - size * 0.018, chestY + size * 0.002);
+  ctx.lineTo(x, chestY + size * 0.03);
+  ctx.lineTo(x + size * 0.018, chestY + size * 0.002);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Vanguard units get harsher slash motifs; scholars get cleaner runic marks.
+  ctx.strokeStyle = `${style.rune}${0.18 + pulse * 0.2})`;
+  ctx.lineWidth = 0.8 * zoom;
+  if (options.vanguard) {
+    for (let side = -1; side <= 1; side += 2) {
+      ctx.beginPath();
+      ctx.moveTo(x + side * size * 0.11, chestY + size * 0.02);
+      ctx.lineTo(x + side * size * 0.07, chestY + size * 0.11);
+      ctx.moveTo(x + side * size * 0.085, chestY + size * 0.01);
+      ctx.lineTo(x + side * size * 0.045, chestY + size * 0.1);
+      ctx.stroke();
+    }
+  }
+  if (options.scholar) {
+    for (let rune = 0; rune < 3; rune++) {
+      const runeX = x - size * 0.06 + rune * size * 0.06;
+      const runeLift = Math.sin(time * 3.5 + rune) * size * 0.008;
+      ctx.beginPath();
+      ctx.moveTo(runeX, runeY + runeLift);
+      ctx.lineTo(runeX + size * 0.014, runeY - size * 0.02 + runeLift);
+      ctx.lineTo(runeX + size * 0.028, runeY + size * 0.01 + runeLift);
+      ctx.stroke();
+    }
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.06, runeY);
+    ctx.quadraticCurveTo(x, runeY - size * 0.028, x + size * 0.06, runeY);
+    ctx.stroke();
+  }
+
+  drawTroopFinishMotes(
+    ctx,
+    x,
+    y + size * 0.16,
+    size,
+    time,
+    style.rune,
+    options.mounted ? 4 : 3,
+    size * (options.mounted ? 0.14 : 0.09),
+    size * (options.mounted ? 0.18 : 0.12),
+  );
+  ctx.restore();
 }
 
 function drawSoldierTroop(
@@ -597,13 +899,13 @@ function drawSoldierTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // ============================================================================
   // DINKY LEGIONNAIRE - Level 1 Princeton Recruit with Detailed Roman Style
   // A scrappy but determined young soldier with worn but proud equipment
   // ============================================================================
-  
+
   // Animation parameters - subtle but lively
   const stance = Math.sin(time * 3.5) * 1.2;
   const breathe = Math.sin(time * 2.5) * 0.8;
@@ -614,9 +916,15 @@ function drawSoldierTroop(
 
   // Attack animation calculations
   const isAttacking = attackPhase > 0;
-  const attackSwing = isAttacking ? Math.sin(attackPhase * Math.PI * 2) * 1.8 : 0;
-  const attackLunge = isAttacking ? Math.sin(attackPhase * Math.PI) * size * 0.18 : 0;
-  const bodyTwist = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.25 : 0;
+  const attackSwing = isAttacking
+    ? Math.sin(attackPhase * Math.PI * 2) * 1.8
+    : 0;
+  const attackLunge = isAttacking
+    ? Math.sin(attackPhase * Math.PI) * size * 0.18
+    : 0;
+  const bodyTwist = isAttacking
+    ? Math.sin(attackPhase * Math.PI) * 0.25
+    : Math.sin(time * 1.4) * 0.03;
   const attackIntensity = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
 
   ctx.save();
@@ -627,7 +935,10 @@ function drawSoldierTroop(
   if (isAttacking || footTap > 0.5) {
     for (let d = 0; d < 4; d++) {
       const dustPhase = (time * 2 + d * 0.4) % 1;
-      const dustX = x + (Math.random() - 0.5) * size * 0.6 + Math.sin(time * 3 + d) * size * 0.2;
+      const dustX =
+        x +
+        (Math.random() - 0.5) * size * 0.6 +
+        Math.sin(time * 3 + d) * size * 0.2;
       const dustY = y + size * 0.55 - dustPhase * size * 0.3;
       const dustAlpha = (1 - dustPhase) * (isAttacking ? 0.4 : 0.15);
       const dustSize = (2 + d * 0.5) * zoom * (1 - dustPhase * 0.5);
@@ -641,8 +952,10 @@ function drawSoldierTroop(
   // === FLOWING CAPE (behind soldier) ===
   const capeWave1 = Math.sin(time * 3 + 0.5) * 0.15;
   const capeWave2 = Math.sin(time * 4) * 0.1;
-  const capeAttackFlutter = isAttacking ? Math.sin(attackPhase * Math.PI * 4) * 0.3 : 0;
-  
+  const capeAttackFlutter = isAttacking
+    ? Math.sin(attackPhase * Math.PI * 4) * 0.3
+    : Math.sin(time * 2.4) * 0.04;
+
   // Cape shadow
   ctx.fillStyle = "rgba(0,0,0,0.2)";
   ctx.beginPath();
@@ -650,31 +963,60 @@ function drawSoldierTroop(
   ctx.quadraticCurveTo(
     x - size * 0.25 + capeWave1 * size - attackLunge * 0.3,
     y + size * 0.2,
-    x - size * 0.18 + capeWave2 * size - attackLunge * 0.4 + capeAttackFlutter * size,
-    y + size * 0.5
+    x -
+      size * 0.18 +
+      capeWave2 * size -
+      attackLunge * 0.4 +
+      capeAttackFlutter * size,
+    y + size * 0.5,
   );
-  ctx.lineTo(x + size * 0.12 + capeWave2 * size * 0.5 - attackLunge * 0.2, y + size * 0.48);
-  ctx.quadraticCurveTo(x + size * 0.1, y + size * 0.1, x + size * 0.12, y - size * 0.08);
+  ctx.lineTo(
+    x + size * 0.12 + capeWave2 * size * 0.5 - attackLunge * 0.2,
+    y + size * 0.48,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.1,
+    y + size * 0.1,
+    x + size * 0.12,
+    y - size * 0.08,
+  );
   ctx.closePath();
   ctx.fill();
 
   // Main cape - deep Princeton orange-red
-  const capeGrad = ctx.createLinearGradient(x - size * 0.2, y - size * 0.1, x - size * 0.15, y + size * 0.5);
-  capeGrad.addColorStop(0, "#a33a00");
-  capeGrad.addColorStop(0.3, "#cc4400");
-  capeGrad.addColorStop(0.7, "#992200");
-  capeGrad.addColorStop(1, "#661a00");
+  const capeGrad = ctx.createLinearGradient(
+    x - size * 0.2,
+    y - size * 0.1,
+    x - size * 0.15,
+    y + size * 0.5,
+  );
+  capeGrad.addColorStop(0, "#7a2306");
+  capeGrad.addColorStop(0.3, "#a92f0d");
+  capeGrad.addColorStop(0.7, "#641607");
+  capeGrad.addColorStop(1, "#341006");
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.12, y - size * 0.1);
   ctx.quadraticCurveTo(
     x - size * 0.22 + capeWave1 * size - attackLunge * 0.25,
     y + size * 0.15,
-    x - size * 0.15 + capeWave2 * size - attackLunge * 0.35 + capeAttackFlutter * size,
-    y + size * 0.45
+    x -
+      size * 0.15 +
+      capeWave2 * size -
+      attackLunge * 0.35 +
+      capeAttackFlutter * size,
+    y + size * 0.45,
   );
-  ctx.lineTo(x + size * 0.1 + capeWave2 * size * 0.4 - attackLunge * 0.15, y + size * 0.43);
-  ctx.quadraticCurveTo(x + size * 0.08, y + size * 0.08, x + size * 0.1, y - size * 0.1);
+  ctx.lineTo(
+    x + size * 0.1 + capeWave2 * size * 0.4 - attackLunge * 0.15,
+    y + size * 0.43,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.08,
+    y + size * 0.08,
+    x + size * 0.1,
+    y - size * 0.1,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -686,8 +1028,12 @@ function drawSoldierTroop(
   ctx.quadraticCurveTo(
     x - size * 0.22 + capeWave1 * size - attackLunge * 0.25,
     y + size * 0.15,
-    x - size * 0.15 + capeWave2 * size - attackLunge * 0.35 + capeAttackFlutter * size,
-    y + size * 0.45
+    x -
+      size * 0.15 +
+      capeWave2 * size -
+      attackLunge * 0.35 +
+      capeAttackFlutter * size,
+    y + size * 0.45,
   );
   ctx.stroke();
 
@@ -710,27 +1056,37 @@ function drawSoldierTroop(
   ctx.save();
   ctx.translate(x - size * 0.12 - legSpread + leftLegShift, y + size * 0.32);
   ctx.rotate(-0.08 + footTap * 0.03 - (isAttacking ? 0.18 : 0));
-  
+
   // Tunic skirt piece (pteruges)
   ctx.fillStyle = "#8b4513";
   ctx.fillRect(-size * 0.08, -size * 0.05, size * 0.16, size * 0.08);
   ctx.fillStyle = "#704010";
   for (let strip = 0; strip < 3; strip++) {
-    ctx.fillRect(-size * 0.07 + strip * size * 0.045, -size * 0.05, size * 0.035, size * 0.1);
+    ctx.fillRect(
+      -size * 0.07 + strip * size * 0.045,
+      -size * 0.05,
+      size * 0.035,
+      size * 0.1,
+    );
   }
-  
+
   // Upper leg (thigh)
   ctx.fillStyle = "#dbb896";
   ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.12);
-  
+
   // Knee guard
   ctx.fillStyle = "#7a7a8a";
   ctx.beginPath();
   ctx.ellipse(0, size * 0.12, size * 0.05, size * 0.035, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Greave (shin armor) with detail
-  const greaveGrad = ctx.createLinearGradient(-size * 0.04, size * 0.12, size * 0.04, size * 0.12);
+  const greaveGrad = ctx.createLinearGradient(
+    -size * 0.04,
+    size * 0.12,
+    size * 0.04,
+    size * 0.12,
+  );
   greaveGrad.addColorStop(0, "#6a6a7a");
   greaveGrad.addColorStop(0.3, "#9a9aaa");
   greaveGrad.addColorStop(0.5, "#8a8a9a");
@@ -743,7 +1099,7 @@ function drawSoldierTroop(
   ctx.lineTo(size * 0.055, size * 0.13);
   ctx.closePath();
   ctx.fill();
-  
+
   // Greave ridge detail
   ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + shimmer * 0.15})`;
   ctx.lineWidth = 1 * zoom;
@@ -751,11 +1107,11 @@ function drawSoldierTroop(
   ctx.moveTo(0, size * 0.14);
   ctx.lineTo(0, size * 0.25);
   ctx.stroke();
-  
+
   // Ankle straps
   ctx.fillStyle = "#5a3a1a";
   ctx.fillRect(-size * 0.06, size * 0.24, size * 0.12, size * 0.025);
-  
+
   // Sandal with straps
   ctx.fillStyle = "#4a2a10";
   ctx.fillRect(-size * 0.07, size * 0.26, size * 0.14, size * 0.05);
@@ -774,27 +1130,37 @@ function drawSoldierTroop(
   ctx.save();
   ctx.translate(x + size * 0.12 + legSpread + rightLegShift, y + size * 0.32);
   ctx.rotate(0.08 - footTap * 0.03 + (isAttacking ? 0.18 : 0));
-  
+
   // Tunic skirt piece
   ctx.fillStyle = "#8b4513";
   ctx.fillRect(-size * 0.08, -size * 0.05, size * 0.16, size * 0.08);
   ctx.fillStyle = "#704010";
   for (let strip = 0; strip < 3; strip++) {
-    ctx.fillRect(-size * 0.07 + strip * size * 0.045, -size * 0.05, size * 0.035, size * 0.1);
+    ctx.fillRect(
+      -size * 0.07 + strip * size * 0.045,
+      -size * 0.05,
+      size * 0.035,
+      size * 0.1,
+    );
   }
-  
+
   // Upper leg
   ctx.fillStyle = "#dbb896";
   ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.12);
-  
+
   // Knee guard
   ctx.fillStyle = "#7a7a8a";
   ctx.beginPath();
   ctx.ellipse(0, size * 0.12, size * 0.05, size * 0.035, 0, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Greave
-  const greaveGrad2 = ctx.createLinearGradient(-size * 0.04, size * 0.12, size * 0.04, size * 0.12);
+  const greaveGrad2 = ctx.createLinearGradient(
+    -size * 0.04,
+    size * 0.12,
+    size * 0.04,
+    size * 0.12,
+  );
   greaveGrad2.addColorStop(0, "#5a5a6a");
   greaveGrad2.addColorStop(0.5, "#8a8a9a");
   greaveGrad2.addColorStop(0.7, "#9a9aaa");
@@ -807,7 +1173,7 @@ function drawSoldierTroop(
   ctx.lineTo(size * 0.055, size * 0.13);
   ctx.closePath();
   ctx.fill();
-  
+
   // Greave ridge
   ctx.strokeStyle = `rgba(255, 255, 255, ${0.2 + shimmer * 0.15})`;
   ctx.lineWidth = 1 * zoom;
@@ -815,7 +1181,7 @@ function drawSoldierTroop(
   ctx.moveTo(0, size * 0.14);
   ctx.lineTo(0, size * 0.25);
   ctx.stroke();
-  
+
   // Ankle and sandal
   ctx.fillStyle = "#5a3a1a";
   ctx.fillRect(-size * 0.06, size * 0.24, size * 0.12, size * 0.025);
@@ -843,7 +1209,12 @@ function drawSoldierTroop(
   ctx.fill();
 
   // Main chest plate with Princeton orange and breathing animation
-  const chestGrad = ctx.createLinearGradient(x - size * 0.22, y, x + size * 0.22, y);
+  const chestGrad = ctx.createLinearGradient(
+    x - size * 0.22,
+    y,
+    x + size * 0.22,
+    y,
+  );
   chestGrad.addColorStop(0, "#b84c00");
   chestGrad.addColorStop(0.2, "#e05500");
   chestGrad.addColorStop(0.5, "#ff6600");
@@ -853,7 +1224,12 @@ function drawSoldierTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.32 + breathe);
   ctx.lineTo(x - size * 0.25, y - size * 0.1 + breathe * 0.5);
-  ctx.quadraticCurveTo(x, y - size * 0.22 + breathe * 0.3, x + size * 0.25, y - size * 0.1 + breathe * 0.5);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.22 + breathe * 0.3,
+    x + size * 0.25,
+    y - size * 0.1 + breathe * 0.5,
+  );
   ctx.lineTo(x + size * 0.22, y + size * 0.32 + breathe);
   ctx.closePath();
   ctx.fill();
@@ -862,18 +1238,20 @@ function drawSoldierTroop(
   ctx.strokeStyle = "rgba(0,0,0,0.35)";
   ctx.lineWidth = 1.2 * zoom;
   for (let band = 0; band < 5; band++) {
-    const bandY = y - size * 0.05 + band * size * 0.075 + breathe * (0.3 + band * 0.15);
+    const bandY =
+      y - size * 0.05 + band * size * 0.075 + breathe * (0.3 + band * 0.15);
     ctx.beginPath();
     ctx.moveTo(x - size * 0.21, bandY);
     ctx.lineTo(x + size * 0.21, bandY);
     ctx.stroke();
   }
-  
+
   // Metal highlight strips on bands
   ctx.strokeStyle = `rgba(255, 180, 100, ${0.15 + shimmer * 0.1})`;
   ctx.lineWidth = 0.8 * zoom;
   for (let band = 0; band < 4; band++) {
-    const bandY = y - size * 0.03 + band * size * 0.075 + breathe * (0.3 + band * 0.15);
+    const bandY =
+      y - size * 0.03 + band * size * 0.075 + breathe * (0.3 + band * 0.15);
     ctx.beginPath();
     ctx.moveTo(x - size * 0.18, bandY);
     ctx.lineTo(x + size * 0.18, bandY);
@@ -894,70 +1272,166 @@ function drawSoldierTroop(
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("P", x, y + size * 0.09 + breathe * 0.5);
-  
+
   // Emblem shine
   ctx.fillStyle = `rgba(255, 200, 150, ${0.2 + shimmer * 0.15})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.03, y + size * 0.05 + breathe * 0.5, size * 0.02, size * 0.015, -0.5, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.03,
+    y + size * 0.05 + breathe * 0.5,
+    size * 0.02,
+    size * 0.015,
+    -0.5,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Shoulder guards (pauldrons) with rivets
   // Left pauldron
-  const pauldronGrad = ctx.createLinearGradient(x - size * 0.35, y - size * 0.05, x - size * 0.2, y + size * 0.05);
+  const pauldronGrad = ctx.createLinearGradient(
+    x - size * 0.35,
+    y - size * 0.05,
+    x - size * 0.2,
+    y + size * 0.05,
+  );
   pauldronGrad.addColorStop(0, "#5a5a6a");
   pauldronGrad.addColorStop(0.4, "#8a8a9a");
   pauldronGrad.addColorStop(1, "#6a6a7a");
   ctx.fillStyle = pauldronGrad;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.26, y - size * 0.02 + breathe * 0.3, size * 0.1, size * 0.06, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.26,
+    y - size * 0.02 + breathe * 0.3,
+    size * 0.1,
+    size * 0.06,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Pauldron rivets
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
-  ctx.arc(x - size * 0.3, y - size * 0.02 + breathe * 0.3, size * 0.015, 0, Math.PI * 2);
-  ctx.arc(x - size * 0.22, y - size * 0.02 + breathe * 0.3, size * 0.015, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.3,
+    y - size * 0.02 + breathe * 0.3,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x - size * 0.22,
+    y - size * 0.02 + breathe * 0.3,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Right pauldron
-  const pauldronGrad2 = ctx.createLinearGradient(x + size * 0.2, y - size * 0.05, x + size * 0.35, y + size * 0.05);
+  const pauldronGrad2 = ctx.createLinearGradient(
+    x + size * 0.2,
+    y - size * 0.05,
+    x + size * 0.35,
+    y + size * 0.05,
+  );
   pauldronGrad2.addColorStop(0, "#6a6a7a");
   pauldronGrad2.addColorStop(0.6, "#8a8a9a");
   pauldronGrad2.addColorStop(1, "#5a5a6a");
   ctx.fillStyle = pauldronGrad2;
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.26, y - size * 0.02 + breathe * 0.3, size * 0.1, size * 0.06, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.26,
+    y - size * 0.02 + breathe * 0.3,
+    size * 0.1,
+    size * 0.06,
+    -0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
-  ctx.arc(x + size * 0.3, y - size * 0.02 + breathe * 0.3, size * 0.015, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.22, y - size * 0.02 + breathe * 0.3, size * 0.015, 0, Math.PI * 2);
+  ctx.arc(
+    x + size * 0.3,
+    y - size * 0.02 + breathe * 0.3,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.22,
+    y - size * 0.02 + breathe * 0.3,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === LEATHER BELT WITH POUCHES ===
   ctx.fillStyle = "#4a3020";
-  ctx.fillRect(x - size * 0.22, y + size * 0.24 + breathe, size * 0.44, size * 0.07);
+  ctx.fillRect(
+    x - size * 0.22,
+    y + size * 0.24 + breathe,
+    size * 0.44,
+    size * 0.07,
+  );
   // Belt buckle
   ctx.fillStyle = "#c9a227";
-  ctx.fillRect(x - size * 0.05, y + size * 0.25 + breathe, size * 0.1, size * 0.05);
+  ctx.fillRect(
+    x - size * 0.05,
+    y + size * 0.25 + breathe,
+    size * 0.1,
+    size * 0.05,
+  );
   ctx.fillStyle = `rgba(255, 220, 130, ${0.4 + shimmer * 0.3})`;
-  ctx.fillRect(x - size * 0.04, y + size * 0.255 + breathe, size * 0.03, size * 0.035);
+  ctx.fillRect(
+    x - size * 0.04,
+    y + size * 0.255 + breathe,
+    size * 0.03,
+    size * 0.035,
+  );
   // Belt studs
   ctx.fillStyle = "#8a7020";
   for (let stud = 0; stud < 3; stud++) {
     ctx.beginPath();
-    ctx.arc(x - size * 0.15 + stud * size * 0.04, y + size * 0.275 + breathe, size * 0.012, 0, Math.PI * 2);
-    ctx.arc(x + size * 0.08 + stud * size * 0.04, y + size * 0.275 + breathe, size * 0.012, 0, Math.PI * 2);
+    ctx.arc(
+      x - size * 0.15 + stud * size * 0.04,
+      y + size * 0.275 + breathe,
+      size * 0.012,
+      0,
+      Math.PI * 2,
+    );
+    ctx.arc(
+      x + size * 0.08 + stud * size * 0.04,
+      y + size * 0.275 + breathe,
+      size * 0.012,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
   // Small pouch on belt
   ctx.fillStyle = "#5a4030";
-  ctx.fillRect(x + size * 0.12, y + size * 0.26 + breathe, size * 0.06, size * 0.08);
+  ctx.fillRect(
+    x + size * 0.12,
+    y + size * 0.26 + breathe,
+    size * 0.06,
+    size * 0.08,
+  );
   ctx.fillStyle = "#4a3020";
-  ctx.fillRect(x + size * 0.12, y + size * 0.26 + breathe, size * 0.06, size * 0.02);
+  ctx.fillRect(
+    x + size * 0.12,
+    y + size * 0.26 + breathe,
+    size * 0.06,
+    size * 0.02,
+  );
 
   // === SHIELD ARM (thrusts forward during attack) ===
   const shieldX = x - size * 0.42 + (isAttacking ? attackLunge * 0.9 : 0);
-  const shieldY = y + size * 0.08 - (isAttacking ? size * 0.12 * attackSwing : 0);
+  const shieldY =
+    y + size * 0.08 - (isAttacking ? size * 0.12 * attackSwing : 0);
 
   // Arm with bracer
   ctx.fillStyle = "#dbb896";
@@ -981,25 +1455,44 @@ function drawSoldierTroop(
   // === DETAILED SCUTUM SHIELD ===
   ctx.save();
   ctx.translate(shieldX, shieldY);
-  ctx.rotate(isAttacking ? -0.35 - attackSwing * 0.35 : -0.25 + ambientSway * 0.1);
-  
+  ctx.rotate(
+    isAttacking ? -0.35 - attackSwing * 0.35 : -0.25 + ambientSway * 0.1,
+  );
+
   // Shield outer rim (bronze/gold)
   ctx.fillStyle = "#a08040";
   ctx.beginPath();
-  ctx.roundRect(-size * 0.2, -size * 0.22, size * 0.4, size * 0.38, size * 0.04);
+  ctx.roundRect(
+    -size * 0.2,
+    -size * 0.22,
+    size * 0.4,
+    size * 0.38,
+    size * 0.04,
+  );
   ctx.fill();
-  
+
   // Shield main body (red with gradient)
-  const shieldBodyGrad = ctx.createLinearGradient(-size * 0.15, -size * 0.18, size * 0.15, size * 0.18);
+  const shieldBodyGrad = ctx.createLinearGradient(
+    -size * 0.15,
+    -size * 0.18,
+    size * 0.15,
+    size * 0.18,
+  );
   shieldBodyGrad.addColorStop(0, "#8b1a1a");
   shieldBodyGrad.addColorStop(0.3, "#b32222");
   shieldBodyGrad.addColorStop(0.7, "#a01c1c");
   shieldBodyGrad.addColorStop(1, "#701515");
   ctx.fillStyle = shieldBodyGrad;
   ctx.beginPath();
-  ctx.roundRect(-size * 0.17, -size * 0.19, size * 0.34, size * 0.34, size * 0.025);
+  ctx.roundRect(
+    -size * 0.17,
+    -size * 0.19,
+    size * 0.34,
+    size * 0.34,
+    size * 0.025,
+  );
   ctx.fill();
-  
+
   // Shield boss (center metal dome)
   const bossGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.08);
   bossGrad.addColorStop(0, `rgba(255, 255, 255, ${0.6 + shimmer * 0.3})`);
@@ -1010,7 +1503,7 @@ function drawSoldierTroop(
   ctx.beginPath();
   ctx.arc(0, 0, size * 0.07, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Shield decorative wings/pattern
   ctx.fillStyle = "#c9a227";
   // Left wing
@@ -1027,7 +1520,7 @@ function drawSoldierTroop(
   ctx.quadraticCurveTo(size * 0.13, size * 0.04, size * 0.08, size * 0.02);
   ctx.closePath();
   ctx.fill();
-  
+
   // Shield rivets around boss
   ctx.fillStyle = "#8a7a3a";
   for (let r = 0; r < 6; r++) {
@@ -1068,18 +1561,20 @@ function drawSoldierTroop(
   ctx.save();
   const armOriginX = x + size * 0.28;
   const armOriginY = y + size * 0.02;
-  const armBaseSwing = isAttacking ? -1.4 + attackPhase * 2.8 : 0.25 + stance * 0.025;
+  const armBaseSwing = isAttacking
+    ? -1.4 + attackPhase * 2.8
+    : 0.25 + stance * 0.025;
   const armSwing = resolveWeaponRotation(
     targetPos,
     armOriginX,
     armOriginY,
     armBaseSwing,
     Math.PI / 2,
-    isAttacking ? 1.2 : 0.55
+    isAttacking ? 1.2 : 0.55,
   );
   ctx.translate(armOriginX, armOriginY);
   ctx.rotate(armSwing);
-  
+
   // Arm
   ctx.fillStyle = "#dbb896";
   ctx.fillRect(-size * 0.045, 0, size * 0.09, size * 0.18);
@@ -1090,24 +1585,34 @@ function drawSoldierTroop(
 
   // === MASTERWORK GLADIUS (deeper blade profile and richer materials) ===
   ctx.save();
-  const swordBaseAngle = isAttacking ? -1.02 + attackPhase * 2.04 : -0.24 + stance * 0.04;
+  const swordBaseAngle = isAttacking
+    ? -1.02 + attackPhase * 2.04
+    : -0.24 + stance * 0.04;
   const swordX = x + size * 0.41 + (isAttacking ? attackLunge * 1.7 : 0);
-  const swordY = y - size * 0.06 - (isAttacking ? size * 0.28 * (1 - attackPhase) : 0);
+  const swordY =
+    y - size * 0.06 - (isAttacking ? size * 0.28 * (1 - attackPhase) : 0);
   const swordAngle = resolveWeaponRotation(
     targetPos,
     swordX,
-    swordY - size * 0.45,
+    swordY,
     swordBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.45 : 0.7
+    isAttacking ? 1.45 : 0.7,
   );
   ctx.translate(swordX, swordY);
   ctx.rotate(swordAngle);
 
-  const swordGlow = isAttacking ? 0.45 + attackIntensity * 0.35 : 0.2 + shimmer * 0.15;
+  const swordGlow = isAttacking
+    ? 0.45 + attackIntensity * 0.35
+    : 0.2 + shimmer * 0.15;
 
   // Grip and wrapping.
-  const gripGrad = ctx.createLinearGradient(-size * 0.022, size * 0.035, size * 0.022, size * 0.18);
+  const gripGrad = ctx.createLinearGradient(
+    -size * 0.022,
+    size * 0.035,
+    size * 0.022,
+    size * 0.18,
+  );
   gripGrad.addColorStop(0, "#2d1f14");
   gripGrad.addColorStop(0.5, "#4d3728");
   gripGrad.addColorStop(1, "#24170f");
@@ -1130,7 +1635,7 @@ function drawSoldierTroop(
     size * 0.003,
     0,
     size * 0.19,
-    size * 0.032
+    size * 0.032,
   );
   pommelGrad.addColorStop(0, "#ffe4a6");
   pommelGrad.addColorStop(0.5, "#d5a240");
@@ -1140,13 +1645,24 @@ function drawSoldierTroop(
   ctx.arc(0, size * 0.19, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
 
-  const guardGrad = ctx.createLinearGradient(-size * 0.055, size * 0.03, size * 0.055, size * 0.06);
+  const guardGrad = ctx.createLinearGradient(
+    -size * 0.055,
+    size * 0.03,
+    size * 0.055,
+    size * 0.06,
+  );
   guardGrad.addColorStop(0, "#8d5f1a");
   guardGrad.addColorStop(0.5, "#d6a847");
   guardGrad.addColorStop(1, "#8b5c16");
   ctx.fillStyle = guardGrad;
   ctx.beginPath();
-  ctx.roundRect(-size * 0.055, size * 0.028, size * 0.11, size * 0.03, size * 0.01);
+  ctx.roundRect(
+    -size * 0.055,
+    size * 0.028,
+    size * 0.11,
+    size * 0.03,
+    size * 0.01,
+  );
   ctx.fill();
   ctx.fillStyle = "#e3bf65";
   ctx.beginPath();
@@ -1157,7 +1673,12 @@ function drawSoldierTroop(
   // Blade core with fuller.
   const bladeLength = size * 0.45;
   const bladeWidth = size * 0.035;
-  const bladeGrad = ctx.createLinearGradient(-bladeWidth, -bladeLength, bladeWidth, -bladeLength);
+  const bladeGrad = ctx.createLinearGradient(
+    -bladeWidth,
+    -bladeLength,
+    bladeWidth,
+    -bladeLength,
+  );
   bladeGrad.addColorStop(0, "#8f97a5");
   bladeGrad.addColorStop(0.22, "#dbe4ef");
   bladeGrad.addColorStop(0.5, "#ffffff");
@@ -1207,7 +1728,15 @@ function drawSoldierTroop(
   // Tip glint.
   ctx.fillStyle = `rgba(255,255,255,${0.72 + swordGlow * 0.28})`;
   ctx.beginPath();
-  ctx.ellipse(0, -bladeLength * 0.92, size * 0.018, size * 0.05, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    0,
+    -bladeLength * 0.92,
+    size * 0.018,
+    size * 0.05,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   if (isAttacking && attackPhase < 0.62) {
@@ -1221,12 +1750,13 @@ function drawSoldierTroop(
         -size * (0.1 + trail * 0.03),
         -size * 0.2,
         -size * (0.02 + trail * 0.05),
-        size * 0.02
+        size * 0.02,
       );
       ctx.stroke();
     }
     for (let sp = 0; sp < 5; sp++) {
-      const sparkX = -size * 0.06 + Math.sin(time * 16 + sp * 1.3) * size * 0.11;
+      const sparkX =
+        -size * 0.06 + Math.sin(time * 16 + sp * 1.3) * size * 0.11;
       const sparkY = -size * 0.24 - sp * size * 0.065;
       ctx.fillStyle = `rgba(255, 220, 145, ${trailAlpha * (0.85 - sp * 0.12)})`;
       ctx.beginPath();
@@ -1245,14 +1775,14 @@ function drawSoldierTroop(
     x - size * 0.18,
     y - size * 0.25,
     x - size * 0.12,
-    y - size * 0.15
+    y - size * 0.15,
   );
   ctx.lineTo(x + size * 0.12, y - size * 0.15);
   ctx.quadraticCurveTo(
     x + size * 0.18,
     y - size * 0.25,
     x + size * 0.14,
-    y - size * 0.32
+    y - size * 0.32,
   );
   ctx.closePath();
   ctx.fill();
@@ -1267,21 +1797,39 @@ function drawSoldierTroop(
 
   // === DETAILED GALEA HELMET ===
   // Helmet base (bowl)
-  const helmetGrad = ctx.createLinearGradient(x - size * 0.18, y - size * 0.5, x + size * 0.18, y - size * 0.3);
+  const helmetGrad = ctx.createLinearGradient(
+    x - size * 0.18,
+    y - size * 0.5,
+    x + size * 0.18,
+    y - size * 0.3,
+  );
   helmetGrad.addColorStop(0, "#5a5a6a");
   helmetGrad.addColorStop(0.3, "#8a8a9a");
   helmetGrad.addColorStop(0.6, "#7a7a8a");
   helmetGrad.addColorStop(1, "#4a4a5a");
   ctx.fillStyle = helmetGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.4, size * 0.17, size * 0.12, 0, Math.PI, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y - size * 0.4,
+    size * 0.17,
+    size * 0.12,
+    0,
+    Math.PI,
+    Math.PI * 2,
+  );
   ctx.fill();
-  
+
   // Helmet crown
   ctx.beginPath();
   ctx.moveTo(x - size * 0.17, y - size * 0.4);
   ctx.quadraticCurveTo(x - size * 0.18, y - size * 0.48, x, y - size * 0.52);
-  ctx.quadraticCurveTo(x + size * 0.18, y - size * 0.48, x + size * 0.17, y - size * 0.4);
+  ctx.quadraticCurveTo(
+    x + size * 0.18,
+    y - size * 0.48,
+    x + size * 0.17,
+    y - size * 0.4,
+  );
   ctx.fill();
 
   // Helmet crest holder
@@ -1293,7 +1841,7 @@ function drawSoldierTroop(
     x - size * 0.2,
     y - size * 0.36,
     x + size * 0.2,
-    y - size * 0.16
+    y - size * 0.16,
   );
   cheekGuardGrad.addColorStop(0, "#5f6174");
   cheekGuardGrad.addColorStop(0.5, "#7f8298");
@@ -1307,7 +1855,7 @@ function drawSoldierTroop(
     x - size * 0.18,
     y - size * 0.15,
     x - size * 0.03,
-    y - size * 0.18
+    y - size * 0.18,
   );
   ctx.lineTo(x - size * 0.045, y - size * 0.31);
   ctx.closePath();
@@ -1320,7 +1868,7 @@ function drawSoldierTroop(
     x + size * 0.18,
     y - size * 0.15,
     x + size * 0.03,
-    y - size * 0.18
+    y - size * 0.18,
   );
   ctx.lineTo(x + size * 0.045, y - size * 0.31);
   ctx.closePath();
@@ -1339,35 +1887,67 @@ function drawSoldierTroop(
   // Helmet shine
   ctx.fillStyle = `rgba(255, 255, 255, ${0.15 + shimmer * 0.12})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.06, y - size * 0.46, size * 0.04, size * 0.025, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.06,
+    y - size * 0.46,
+    size * 0.04,
+    size * 0.025,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === EPIC HORSEHAIR PLUME (dynamic physics) ===
-  const plumeWave = Math.sin(time * 5) * 1.2 + (isAttacking ? attackSwing * 2.5 : 0);
+  const plumeWave =
+    Math.sin(time * 5) * 1.2 + (isAttacking ? attackSwing * 2.5 : 0);
   const plumeStretch = isAttacking ? 1.1 : 1;
-  
+
   // Plume shadow
   ctx.fillStyle = "rgba(0,0,0,0.2)";
   ctx.beginPath();
   ctx.moveTo(x + size * 0.02, y - size * 0.52);
   for (let i = 0; i < 10; i++) {
     const t = i / 9;
-    const px = x + size * 0.02 + (t - 0.5) * size * 0.28 * plumeStretch + plumeWave * 2.5 * (1 - t);
-    const py = y - size * 0.52 - t * size * 0.38 - Math.sin(t * Math.PI) * size * 0.15 + size * 0.02;
+    const px =
+      x +
+      size * 0.02 +
+      (t - 0.5) * size * 0.28 * plumeStretch +
+      plumeWave * 2.5 * (1 - t);
+    const py =
+      y -
+      size * 0.52 -
+      t * size * 0.38 -
+      Math.sin(t * Math.PI) * size * 0.15 +
+      size * 0.02;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
   for (let i = 9; i >= 0; i--) {
     const t = i / 9;
-    const px = x + size * 0.02 + (t - 0.5) * size * 0.28 * plumeStretch + plumeWave * 2.5 * (1 - t);
-    const py = y - size * 0.52 - t * size * 0.32 - Math.sin(t * Math.PI) * size * 0.1 + size * 0.02;
+    const px =
+      x +
+      size * 0.02 +
+      (t - 0.5) * size * 0.28 * plumeStretch +
+      plumeWave * 2.5 * (1 - t);
+    const py =
+      y -
+      size * 0.52 -
+      t * size * 0.32 -
+      Math.sin(t * Math.PI) * size * 0.1 +
+      size * 0.02;
     ctx.lineTo(px, py);
   }
   ctx.closePath();
   ctx.fill();
-  
+
   // Outer plume layer (darker orange)
-  const plumeGrad = ctx.createLinearGradient(x, y - size * 0.5, x, y - size * 0.9);
+  const plumeGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.5,
+    x,
+    y - size * 0.9,
+  );
   plumeGrad.addColorStop(0, "#cc4400");
   plumeGrad.addColorStop(0.5, "#ff5500");
   plumeGrad.addColorStop(1, "#ff7722");
@@ -1377,16 +1957,26 @@ function drawSoldierTroop(
   for (let i = 0; i < 10; i++) {
     const t = i / 9;
     const waveOffset = Math.sin(time * 6 + t * 3) * 0.5;
-    const px = x + (t - 0.5) * size * 0.26 * plumeStretch + plumeWave * 2.2 * (1 - t) + waveOffset;
-    const py = y - size * 0.52 - t * size * 0.38 - Math.sin(t * Math.PI) * size * 0.14;
+    const px =
+      x +
+      (t - 0.5) * size * 0.26 * plumeStretch +
+      plumeWave * 2.2 * (1 - t) +
+      waveOffset;
+    const py =
+      y - size * 0.52 - t * size * 0.38 - Math.sin(t * Math.PI) * size * 0.14;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
   for (let i = 9; i >= 0; i--) {
     const t = i / 9;
     const waveOffset = Math.sin(time * 6 + t * 3) * 0.3;
-    const px = x + (t - 0.5) * size * 0.26 * plumeStretch + plumeWave * 2.2 * (1 - t) + waveOffset;
-    const py = y - size * 0.52 - t * size * 0.32 - Math.sin(t * Math.PI) * size * 0.1;
+    const px =
+      x +
+      (t - 0.5) * size * 0.26 * plumeStretch +
+      plumeWave * 2.2 * (1 - t) +
+      waveOffset;
+    const py =
+      y - size * 0.52 - t * size * 0.32 - Math.sin(t * Math.PI) * size * 0.1;
     ctx.lineTo(px, py);
   }
   ctx.closePath();
@@ -1398,15 +1988,24 @@ function drawSoldierTroop(
   for (let i = 0; i < 8; i++) {
     const t = i / 7;
     const waveOffset = Math.sin(time * 7 + t * 2.5) * 0.4;
-    const px = x + (t - 0.5) * size * 0.18 * plumeStretch + plumeWave * 1.8 * (1 - t) + waveOffset;
-    const py = y - size * 0.55 - t * size * 0.32 - Math.sin(t * Math.PI) * size * 0.1;
+    const px =
+      x +
+      (t - 0.5) * size * 0.18 * plumeStretch +
+      plumeWave * 1.8 * (1 - t) +
+      waveOffset;
+    const py =
+      y - size * 0.55 - t * size * 0.32 - Math.sin(t * Math.PI) * size * 0.1;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
   for (let i = 7; i >= 0; i--) {
     const t = i / 7;
     const waveOffset = Math.sin(time * 7 + t * 2.5) * 0.3;
-    const px = x + (t - 0.5) * size * 0.18 * plumeStretch + plumeWave * 1.8 * (1 - t) + waveOffset;
+    const px =
+      x +
+      (t - 0.5) * size * 0.18 * plumeStretch +
+      plumeWave * 1.8 * (1 - t) +
+      waveOffset;
     const py = y - size * 0.55 - t * size * 0.28;
     ctx.lineTo(px, py);
   }
@@ -1419,7 +2018,8 @@ function drawSoldierTroop(
   for (let i = 0; i < 6; i++) {
     const t = i / 5;
     const px = x + (t - 0.5) * size * 0.1 + plumeWave * 1.2 * (1 - t);
-    const py = y - size * 0.58 - t * size * 0.25 - Math.sin(t * Math.PI) * size * 0.06;
+    const py =
+      y - size * 0.58 - t * size * 0.25 - Math.sin(t * Math.PI) * size * 0.06;
     if (i === 0) ctx.moveTo(px, py);
     else ctx.lineTo(px, py);
   }
@@ -1436,12 +2036,24 @@ function drawSoldierTroop(
   for (let f = 0; f < 5; f++) {
     const fiberPhase = (time * 3 + f * 0.6) % 1;
     const fiberT = 0.3 + f * 0.12;
-    const fx = x + (fiberT - 0.5) * size * 0.3 + plumeWave * 2 * (1 - fiberT) + Math.sin(time * 8 + f) * 2;
+    const fx =
+      x +
+      (fiberT - 0.5) * size * 0.3 +
+      plumeWave * 2 * (1 - fiberT) +
+      Math.sin(time * 8 + f) * 2;
     const fy = y - size * 0.55 - fiberT * size * 0.35 - fiberPhase * size * 0.1;
     const fiberAlpha = (1 - fiberPhase) * 0.6;
     ctx.fillStyle = `rgba(255, 136, 68, ${fiberAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(fx, fy, size * 0.008, size * 0.02, plumeWave * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      fx,
+      fy,
+      size * 0.008,
+      size * 0.02,
+      plumeWave * 0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -1449,8 +2061,24 @@ function drawSoldierTroop(
   // Eyes - determined look
   ctx.fillStyle = "#3a2a1a";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.055, y - size * 0.33, size * 0.028, size * (isAttacking ? 0.012 : 0.022), 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.055, y - size * 0.33, size * 0.028, size * (isAttacking ? 0.012 : 0.022), 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.055,
+    y - size * 0.33,
+    size * 0.028,
+    size * (isAttacking ? 0.012 : 0.022),
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.055,
+    y - size * 0.33,
+    size * 0.028,
+    size * (isAttacking ? 0.012 : 0.022),
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Eye whites
   ctx.fillStyle = "#fff";
@@ -1471,11 +2099,21 @@ function drawSoldierTroop(
   const browAnger = isAttacking ? 0.12 : 0;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.1, y - size * (0.37 - browAnger));
-  ctx.quadraticCurveTo(x - size * 0.055, y - size * (0.4 + browAnger), x - size * 0.02, y - size * 0.38);
+  ctx.quadraticCurveTo(
+    x - size * 0.055,
+    y - size * (0.4 + browAnger),
+    x - size * 0.02,
+    y - size * 0.38,
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.1, y - size * (0.37 - browAnger));
-  ctx.quadraticCurveTo(x + size * 0.055, y - size * (0.4 + browAnger), x + size * 0.02, y - size * 0.38);
+  ctx.quadraticCurveTo(
+    x + size * 0.055,
+    y - size * (0.4 + browAnger),
+    x + size * 0.02,
+    y - size * 0.38,
+  );
   ctx.stroke();
 
   // Nose
@@ -1491,7 +2129,15 @@ function drawSoldierTroop(
   if (isAttacking) {
     ctx.fillStyle = "#4a2a1a";
     ctx.beginPath();
-    ctx.ellipse(x, y - size * 0.22, size * 0.045, size * 0.035 * (1 + attackPhase * 0.6), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y - size * 0.22,
+      size * 0.045,
+      size * 0.035 * (1 + attackPhase * 0.6),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     // Teeth hint
     ctx.fillStyle = "#f0f0f0";
@@ -1530,13 +2176,19 @@ function drawSoldierTroop(
     y - size * 0.33,
     size * 0.124,
     size * 0.028,
-    size * 0.008
+    size * 0.008,
   );
   ctx.fill();
   ctx.fillStyle = "#2a2d3f";
   for (let vent = -1; vent <= 1; vent++) {
     ctx.beginPath();
-    ctx.arc(x + vent * size * 0.02, y - size * 0.235, size * 0.006, 0, Math.PI * 2);
+    ctx.arc(
+      x + vent * size * 0.02,
+      y - size * 0.235,
+      size * 0.006,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -1549,7 +2201,7 @@ function drawSoldierTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.soldier,
-    { vanguard: true }
+    { vanguard: true },
   );
 }
 
@@ -1562,21 +2214,21 @@ function drawCavalryTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // ROYAL CAVALRY CHAMPION - Epic Knight of Princeton with Ornate Detail
-  const gallop = Math.sin(time * 8) * 3;
-  const legCycle = Math.sin(time * 8) * 0.35;
-  const headBob = Math.sin(time * 8 + 0.5) * 2;
+  const gallop = Math.sin(time * 8.4) * 3.6;
+  const legCycle = Math.sin(time * 8.4) * 0.4;
+  const headBob = Math.sin(time * 8.4 + 0.5) * 2.4;
   const breathe = Math.sin(time * 2) * 0.3;
   const shimmer = Math.sin(time * 5) * 0.5 + 0.5;
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
-  const royalPurpleDark = "#2f1a55";
-  const royalPurpleMid = "#5b3290";
-  const royalPurpleLight = "#8a65cb";
-  const brassDark = "#7e5c16";
-  const brassMid = "#d6af42";
-  const brassLight = "#f3d98f";
+  const royalPurpleDark = "#201334";
+  const royalPurpleMid = "#4b2b74";
+  const royalPurpleLight = "#7762b2";
+  const brassDark = "#5f4312";
+  const brassMid = "#b98b36";
+  const brassLight = "#e2c984";
   const horseCoatDark = "#23150b";
   const horseCoatMid = "#3a2516";
   const horseCoatLight = "#5a3d24";
@@ -1593,18 +2245,39 @@ function drawCavalryTroop(
   // Multiple layered aura for depth
   for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
     const layerOffset = auraLayer * 0.12;
-  const auraGrad = ctx.createRadialGradient(
-      x, y + size * 0.1, size * (0.08 + layerOffset),
-      x, y + size * 0.1, size * (0.9 + layerOffset * 0.3)
+    const auraGrad = ctx.createRadialGradient(
+      x,
+      y + size * 0.1,
+      size * (0.08 + layerOffset),
+      x,
+      y + size * 0.1,
+      size * (0.9 + layerOffset * 0.3),
     );
-    auraGrad.addColorStop(0, `rgba(146, 98, 235, ${auraIntensity * auraPulse * (0.5 - auraLayer * 0.12)})`);
-    auraGrad.addColorStop(0.4, `rgba(110, 70, 204, ${auraIntensity * auraPulse * (0.3 - auraLayer * 0.08)})`);
-    auraGrad.addColorStop(0.7, `rgba(72, 46, 150, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.04)})`);
-  auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.15, size * (0.8 + layerOffset * 0.2), size * (0.52 + layerOffset * 0.12), 0, 0, Math.PI * 2);
-  ctx.fill();
+    auraGrad.addColorStop(
+      0,
+      `rgba(146, 98, 235, ${auraIntensity * auraPulse * (0.5 - auraLayer * 0.12)})`,
+    );
+    auraGrad.addColorStop(
+      0.4,
+      `rgba(110, 70, 204, ${auraIntensity * auraPulse * (0.3 - auraLayer * 0.08)})`,
+    );
+    auraGrad.addColorStop(
+      0.7,
+      `rgba(72, 46, 150, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.04)})`,
+    );
+    auraGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      x,
+      y + size * 0.15,
+      size * (0.8 + layerOffset * 0.2),
+      size * (0.52 + layerOffset * 0.12),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
 
   // Floating royal rune particles
@@ -1634,16 +2307,19 @@ function drawCavalryTroop(
       ctx.lineWidth = (3.5 - ring * 0.5) * zoom;
       ctx.beginPath();
       ctx.ellipse(
-        x, y + size * 0.1,
+        x,
+        y + size * 0.1,
         size * (0.45 + ringPhase * 0.45),
         size * (0.3 + ringPhase * 0.28),
-        0, 0, Math.PI * 2
+        0,
+        0,
+        Math.PI * 2,
       );
       ctx.stroke();
     }
     // Spark particles during attack
     for (let sp = 0; sp < 6; sp++) {
-      const spAngle = time * 8 + sp * Math.PI / 3;
+      const spAngle = time * 8 + (sp * Math.PI) / 3;
       const spDist = size * 0.4 + attackIntensity * size * 0.3;
       const spX = x + Math.cos(spAngle) * spDist;
       const spY = y + size * 0.1 + Math.sin(spAngle) * spDist * 0.4;
@@ -1657,8 +2333,12 @@ function drawCavalryTroop(
   // === MAJESTIC ROYAL WAR STEED ===
   // Horse body with rich gradient
   const bodyGrad = ctx.createRadialGradient(
-    x - size * 0.1, y + size * 0.05, 0,
-    x, y + size * 0.15, size * 0.55
+    x - size * 0.1,
+    y + size * 0.05,
+    0,
+    x,
+    y + size * 0.15,
+    size * 0.55,
   );
   bodyGrad.addColorStop(0, horseCoatLight);
   bodyGrad.addColorStop(0.3, "#4a2f1d");
@@ -1667,9 +2347,13 @@ function drawCavalryTroop(
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(
-    x, y + size * 0.18 + gallop * 0.15,
-    size * 0.48, size * 0.31,
-    0, 0, Math.PI * 2
+    x,
+    y + size * 0.18 + gallop * 0.15,
+    size * 0.48,
+    size * 0.31,
+    0,
+    0,
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -1677,17 +2361,35 @@ function drawCavalryTroop(
   ctx.strokeStyle = "rgba(60, 40, 20, 0.4)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.15, y + size * 0.15 + gallop * 0.15, size * 0.18, size * 0.12, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.15,
+    y + size * 0.15 + gallop * 0.15,
+    size * 0.18,
+    size * 0.12,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.15, y + size * 0.2 + gallop * 0.15, size * 0.2, size * 0.14, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.15,
+    y + size * 0.2 + gallop * 0.15,
+    size * 0.2,
+    size * 0.14,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.stroke();
 
   // === ORNATE ROYAL BARDING (horse armor) ===
   // Base barding plate with gradient
   const bardingGrad = ctx.createLinearGradient(
-    x - size * 0.4, y + size * 0.1,
-    x + size * 0.4, y + size * 0.25
+    x - size * 0.4,
+    y + size * 0.1,
+    x + size * 0.4,
+    y + size * 0.25,
   );
   bardingGrad.addColorStop(0, "#3a3a42");
   bardingGrad.addColorStop(0.2, "#5a5a62");
@@ -1697,9 +2399,13 @@ function drawCavalryTroop(
   ctx.fillStyle = bardingGrad;
   ctx.beginPath();
   ctx.ellipse(
-    x, y + size * 0.18 + gallop * 0.15,
-    size * 0.44, size * 0.24,
-    0, Math.PI * 0.65, Math.PI * 2.35
+    x,
+    y + size * 0.18 + gallop * 0.15,
+    size * 0.44,
+    size * 0.24,
+    0,
+    Math.PI * 0.65,
+    Math.PI * 2.35,
   );
   ctx.fill();
 
@@ -1708,9 +2414,13 @@ function drawCavalryTroop(
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.ellipse(
-    x, y + size * 0.18 + gallop * 0.15,
-    size * 0.44, size * 0.24,
-    0, Math.PI * 0.7, Math.PI * 2.3
+    x,
+    y + size * 0.18 + gallop * 0.15,
+    size * 0.44,
+    size * 0.24,
+    0,
+    Math.PI * 0.7,
+    Math.PI * 2.3,
   );
   ctx.stroke();
 
@@ -1719,18 +2429,26 @@ function drawCavalryTroop(
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
   ctx.ellipse(
-    x, y + size * 0.18 + gallop * 0.15,
-    size * 0.44, size * 0.24,
-    0, Math.PI * 0.75, Math.PI * 2.25
+    x,
+    y + size * 0.18 + gallop * 0.15,
+    size * 0.44,
+    size * 0.24,
+    0,
+    Math.PI * 0.75,
+    Math.PI * 2.25,
   );
   ctx.stroke();
   ctx.strokeStyle = brassLight;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.ellipse(
-    x, y + size * 0.16 + gallop * 0.15,
-    size * 0.42, size * 0.22,
-    0, Math.PI * 0.8, Math.PI * 2.2
+    x,
+    y + size * 0.16 + gallop * 0.15,
+    size * 0.42,
+    size * 0.22,
+    0,
+    Math.PI * 0.8,
+    Math.PI * 2.2,
   );
   ctx.stroke();
 
@@ -1741,14 +2459,34 @@ function drawCavalryTroop(
   // Left swirl
   ctx.beginPath();
   ctx.moveTo(x - size * 0.3, y + size * 0.08 + gallop * 0.15);
-  ctx.quadraticCurveTo(x - size * 0.35, y + size * 0.15, x - size * 0.28, y + size * 0.18 + gallop * 0.15);
-  ctx.quadraticCurveTo(x - size * 0.22, y + size * 0.22, x - size * 0.28, y + size * 0.28 + gallop * 0.15);
+  ctx.quadraticCurveTo(
+    x - size * 0.35,
+    y + size * 0.15,
+    x - size * 0.28,
+    y + size * 0.18 + gallop * 0.15,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.22,
+    y + size * 0.22,
+    x - size * 0.28,
+    y + size * 0.28 + gallop * 0.15,
+  );
   ctx.stroke();
   // Right swirl
   ctx.beginPath();
   ctx.moveTo(x + size * 0.2, y + size * 0.06 + gallop * 0.15);
-  ctx.quadraticCurveTo(x + size * 0.28, y + size * 0.12, x + size * 0.22, y + size * 0.16 + gallop * 0.15);
-  ctx.quadraticCurveTo(x + size * 0.16, y + size * 0.2, x + size * 0.22, y + size * 0.26 + gallop * 0.15);
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y + size * 0.12,
+    x + size * 0.22,
+    y + size * 0.16 + gallop * 0.15,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.16,
+    y + size * 0.2,
+    x + size * 0.22,
+    y + size * 0.26 + gallop * 0.15,
+  );
   ctx.stroke();
   ctx.globalAlpha = 1;
 
@@ -1757,7 +2495,8 @@ function drawCavalryTroop(
   ctx.shadowBlur = 5 * zoom;
   for (let i = 0; i < 5; i++) {
     const medX = x - size * 0.28 + i * size * 0.14;
-    const medY = y + size * 0.04 + gallop * 0.15 + Math.sin(i * 0.8) * size * 0.02;
+    const medY =
+      y + size * 0.04 + gallop * 0.15 + Math.sin(i * 0.8) * size * 0.02;
     // Gold medallion base
     ctx.fillStyle = brassMid;
     ctx.beginPath();
@@ -1783,23 +2522,18 @@ function drawCavalryTroop(
     x - size * 0.35,
     y + size * 0.19,
     x + size * 0.35,
-    y + size * 0.31
+    y + size * 0.31,
   );
   fauldGrad.addColorStop(0, "#2f3442");
   fauldGrad.addColorStop(0.5, "#525f74");
   fauldGrad.addColorStop(1, "#2e3440");
   for (let plate = 0; plate < 6; plate++) {
     const plateX = x - size * 0.34 + plate * size * 0.11;
-    const plateY = y + size * 0.23 + gallop * 0.15 + Math.sin(plate * 0.9) * size * 0.01;
+    const plateY =
+      y + size * 0.23 + gallop * 0.15 + Math.sin(plate * 0.9) * size * 0.01;
     ctx.fillStyle = fauldGrad;
     ctx.beginPath();
-    ctx.roundRect(
-      plateX,
-      plateY,
-      size * 0.1,
-      size * 0.08,
-      size * 0.016
-    );
+    ctx.roundRect(plateX, plateY, size * 0.1, size * 0.08, size * 0.016);
     ctx.fill();
     ctx.strokeStyle = "rgba(196, 206, 224, 0.5)";
     ctx.lineWidth = 0.9 * zoom;
@@ -1816,7 +2550,7 @@ function drawCavalryTroop(
     x - size * 0.2,
     y + size * 0.3,
     x + size * 0.2,
-    y + size * 0.43
+    y + size * 0.43,
   );
   bellyGrad.addColorStop(0, "#2b2f3c");
   bellyGrad.addColorStop(0.5, "#49576e");
@@ -1828,7 +2562,7 @@ function drawCavalryTroop(
     y + size * 0.29 + gallop * 0.15,
     size * 0.42,
     size * 0.08,
-    size * 0.02
+    size * 0.02,
   );
   ctx.fill();
   ctx.strokeStyle = `rgba(179, 135, 63, 0.68)`;
@@ -1857,7 +2591,7 @@ function drawCavalryTroop(
     legX: number,
     legY: number,
     stride: number,
-    bendPhase: number
+    bendPhase: number,
   ) => {
     const upperLen = size * 0.17;
     const lowerLen = size * 0.19;
@@ -1869,14 +2603,24 @@ function drawCavalryTroop(
     ctx.rotate(stride);
 
     // Upper leg
-    const upperGrad = ctx.createLinearGradient(-size * 0.05, 0, size * 0.05, upperLen);
+    const upperGrad = ctx.createLinearGradient(
+      -size * 0.05,
+      0,
+      size * 0.05,
+      upperLen,
+    );
     upperGrad.addColorStop(0, horseCoatLight);
     upperGrad.addColorStop(0.6, horseCoatMid);
     upperGrad.addColorStop(1, horseCoatDark);
     ctx.fillStyle = upperGrad;
     ctx.beginPath();
     ctx.moveTo(-size * 0.045, 0);
-    ctx.quadraticCurveTo(-size * 0.06, upperLen * 0.55, kneeSwing - size * 0.04, upperLen);
+    ctx.quadraticCurveTo(
+      -size * 0.06,
+      upperLen * 0.55,
+      kneeSwing - size * 0.04,
+      upperLen,
+    );
     ctx.lineTo(kneeSwing + size * 0.04, upperLen);
     ctx.quadraticCurveTo(size * 0.06, upperLen * 0.55, size * 0.045, 0);
     ctx.closePath();
@@ -1885,7 +2629,15 @@ function drawCavalryTroop(
     // Knee cap
     ctx.fillStyle = "rgba(90, 63, 41, 0.7)";
     ctx.beginPath();
-    ctx.ellipse(kneeSwing, upperLen, size * 0.042, size * 0.028, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      kneeSwing,
+      upperLen,
+      size * 0.042,
+      size * 0.028,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Lower leg
@@ -1894,7 +2646,7 @@ function drawCavalryTroop(
       kneeSwing - size * 0.045,
       upperLen,
       fetlockX + size * 0.045,
-      upperLen + lowerLen
+      upperLen + lowerLen,
     );
     lowerGrad.addColorStop(0, "#595f6d");
     lowerGrad.addColorStop(0.45, "#7a8394");
@@ -1937,16 +2689,38 @@ function drawCavalryTroop(
     ctx.restore();
   };
 
-  drawCavalryHorseLeg(x - size * 0.25, y + size * 0.36 + gallop * 0.13, legCycle * 1.15, 0.2);
-  drawCavalryHorseLeg(x - size * 0.08, y + size * 0.37 + gallop * 0.13, -legCycle * 0.95, 1.2);
-  drawCavalryHorseLeg(x + size * 0.13, y + size * 0.37 + gallop * 0.13, -legCycle * 1.05, 2.1);
-  drawCavalryHorseLeg(x + size * 0.3, y + size * 0.36 + gallop * 0.13, legCycle * 0.88, 3.1);
+  drawCavalryHorseLeg(
+    x - size * 0.25,
+    y + size * 0.36 + gallop * 0.13,
+    legCycle * 1.15,
+    0.2,
+  );
+  drawCavalryHorseLeg(
+    x - size * 0.08,
+    y + size * 0.37 + gallop * 0.13,
+    -legCycle * 0.95,
+    1.2,
+  );
+  drawCavalryHorseLeg(
+    x + size * 0.13,
+    y + size * 0.37 + gallop * 0.13,
+    -legCycle * 1.05,
+    2.1,
+  );
+  drawCavalryHorseLeg(
+    x + size * 0.3,
+    y + size * 0.36 + gallop * 0.13,
+    legCycle * 0.88,
+    3.1,
+  );
 
   // === HORSE NECK AND HEAD ===
   // Neck with gradient
   const neckGrad = ctx.createLinearGradient(
-    x - size * 0.35, y + size * 0.1,
-    x - size * 0.6, y - size * 0.1
+    x - size * 0.35,
+    y + size * 0.1,
+    x - size * 0.6,
+    y - size * 0.1,
   );
   neckGrad.addColorStop(0, "#3a2a1a");
   neckGrad.addColorStop(0.5, "#2a1a0a");
@@ -1955,14 +2729,18 @@ function drawCavalryTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.36, y + size * 0.08 + gallop * 0.15);
   ctx.quadraticCurveTo(
-    x - size * 0.52, y - size * 0.18 + headBob * 0.5,
-    x - size * 0.6, y - size * 0.06 + headBob
+    x - size * 0.52,
+    y - size * 0.18 + headBob * 0.5,
+    x - size * 0.6,
+    y - size * 0.06 + headBob,
   );
   ctx.lineTo(x - size * 0.72, y - size * 0.03 + headBob);
   ctx.lineTo(x - size * 0.58, y + size * 0.06 + headBob);
   ctx.quadraticCurveTo(
-    x - size * 0.42, y + size * 0.14 + gallop * 0.15,
-    x - size * 0.28, y + size * 0.2 + gallop * 0.15
+    x - size * 0.42,
+    y + size * 0.14 + gallop * 0.15,
+    x - size * 0.28,
+    y + size * 0.2 + gallop * 0.15,
   );
   ctx.fill();
 
@@ -1971,13 +2749,17 @@ function drawCavalryTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.38, y + size * 0.02 + gallop * 0.15);
   ctx.quadraticCurveTo(
-    x - size * 0.48, y - size * 0.12 + headBob * 0.5,
-    x - size * 0.54, y - size * 0.08 + headBob
+    x - size * 0.48,
+    y - size * 0.12 + headBob * 0.5,
+    x - size * 0.54,
+    y - size * 0.08 + headBob,
   );
   ctx.lineTo(x - size * 0.5, y - size * 0.02 + headBob);
   ctx.quadraticCurveTo(
-    x - size * 0.44, y + size * 0.06 + gallop * 0.15,
-    x - size * 0.36, y + size * 0.08 + gallop * 0.15
+    x - size * 0.44,
+    y + size * 0.06 + gallop * 0.15,
+    x - size * 0.36,
+    y + size * 0.08 + gallop * 0.15,
   );
   ctx.closePath();
   ctx.fill();
@@ -1989,8 +2771,10 @@ function drawCavalryTroop(
   // === ORNATE CHANFRON (head armor) ===
   // Base chanfron
   const chanfronGrad = ctx.createLinearGradient(
-    x - size * 0.7, y - size * 0.05,
-    x - size * 0.5, y - size * 0.15
+    x - size * 0.7,
+    y - size * 0.05,
+    x - size * 0.5,
+    y - size * 0.15,
   );
   chanfronGrad.addColorStop(0, "#485062");
   chanfronGrad.addColorStop(0.5, "#6d788d");
@@ -2003,14 +2787,19 @@ function drawCavalryTroop(
   ctx.lineTo(x - size * 0.52, y - size * 0.1 + headBob);
   ctx.closePath();
   ctx.fill();
-  
+
   // Chanfron engravings
   ctx.strokeStyle = brassMid;
   ctx.lineWidth = 0.8;
   ctx.globalAlpha = 0.8;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.58, y - size * 0.1 + headBob);
-  ctx.quadraticCurveTo(x - size * 0.64, y - size * 0.06, x - size * 0.6, y - size * 0.02 + headBob);
+  ctx.quadraticCurveTo(
+    x - size * 0.64,
+    y - size * 0.06,
+    x - size * 0.6,
+    y - size * 0.02 + headBob,
+  );
   ctx.stroke();
   ctx.globalAlpha = 1;
 
@@ -2019,7 +2808,7 @@ function drawCavalryTroop(
     x - size * 0.66,
     y - size * 0.13 + headBob,
     x - size * 0.54,
-    y + size * 0.06 + headBob
+    y + size * 0.06 + headBob,
   );
   facePlateGrad.addColorStop(0, "#3a404e");
   facePlateGrad.addColorStop(0.45, "#5f7086");
@@ -2053,7 +2842,7 @@ function drawCavalryTroop(
     x - size * 0.78,
     y - size * 0.03 + headBob,
     x - size * 0.62,
-    y + size * 0.08 + headBob
+    y + size * 0.08 + headBob,
   );
   snoutGrad.addColorStop(0, "#4d3321");
   snoutGrad.addColorStop(0.55, "#6a4a30");
@@ -2061,8 +2850,18 @@ function drawCavalryTroop(
   ctx.fillStyle = snoutGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.73, y - size * 0.045 + headBob);
-  ctx.quadraticCurveTo(x - size * 0.79, y + size * 0.005 + headBob, x - size * 0.75, y + size * 0.06 + headBob);
-  ctx.quadraticCurveTo(x - size * 0.69, y + size * 0.1 + headBob, x - size * 0.62, y + size * 0.045 + headBob);
+  ctx.quadraticCurveTo(
+    x - size * 0.79,
+    y + size * 0.005 + headBob,
+    x - size * 0.75,
+    y + size * 0.06 + headBob,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.69,
+    y + size * 0.1 + headBob,
+    x - size * 0.62,
+    y + size * 0.045 + headBob,
+  );
   ctx.lineTo(x - size * 0.66, y - size * 0.02 + headBob);
   ctx.closePath();
   ctx.fill();
@@ -2074,8 +2873,24 @@ function drawCavalryTroop(
   ctx.stroke();
   ctx.fillStyle = "#2b1a11";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.73, y + size * 0.02 + headBob, size * 0.014, size * 0.009, 0.2, 0, Math.PI * 2);
-  ctx.ellipse(x - size * 0.705, y + size * 0.036 + headBob, size * 0.012, size * 0.008, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.73,
+    y + size * 0.02 + headBob,
+    size * 0.014,
+    size * 0.009,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x - size * 0.705,
+    y + size * 0.036 + headBob,
+    size * 0.012,
+    size * 0.008,
+    -0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Elaborate golden crest with multiple spikes
@@ -2109,7 +2924,13 @@ function drawCavalryTroop(
   ctx.shadowColor = royalPurpleLight;
   ctx.shadowBlur = 5 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(x - size * 0.58, y - size * 0.08 + headBob, size * 0.022, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.58,
+    y - size * 0.08 + headBob,
+    size * 0.022,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -2118,26 +2939,56 @@ function drawCavalryTroop(
   ctx.shadowColor = royalPurpleLight;
   ctx.shadowBlur = 8 * zoom;
   ctx.beginPath();
-  ctx.arc(x - size * 0.58, y - size * 0.02 + headBob, size * 0.035, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.58,
+    y - size * 0.02 + headBob,
+    size * 0.035,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Eye inner glow
   ctx.fillStyle = "#b193ef";
   ctx.beginPath();
-  ctx.arc(x - size * 0.58, y - size * 0.02 + headBob, size * 0.02, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.58,
+    y - size * 0.02 + headBob,
+    size * 0.02,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Eye highlight
   ctx.fillStyle = `rgba(255, 255, 200, ${shimmer})`;
   ctx.beginPath();
-  ctx.arc(x - size * 0.59, y - size * 0.025 + headBob, size * 0.008, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.59,
+    y - size * 0.025 + headBob,
+    size * 0.008,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Iris + pupil for stronger expression
   ctx.fillStyle = "rgba(211, 191, 255, 0.9)";
   ctx.beginPath();
-  ctx.arc(x - size * 0.58, y - size * 0.02 + headBob, size * 0.01, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.58,
+    y - size * 0.02 + headBob,
+    size * 0.01,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#1c0f04";
   ctx.beginPath();
-  ctx.arc(x - size * 0.578, y - size * 0.02 + headBob, size * 0.0055, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.578,
+    y - size * 0.02 + headBob,
+    size * 0.0055,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -2166,7 +3017,8 @@ function drawCavalryTroop(
     const t = i / 9;
     const maneX = x - size * 0.46 + t * size * 0.6;
     const maneWave = Math.sin(time * 8 + i * 0.6) * 5;
-    const maneY = y - size * 0.28 + maneWave + gallop * (0.1 - t * 0.08) + t * size * 0.16;
+    const maneY =
+      y - size * 0.28 + maneWave + gallop * (0.1 - t * 0.08) + t * size * 0.16;
     ctx.lineTo(maneX, maneY);
   }
   ctx.lineTo(x + size * 0.14, y - size * 0.04 + gallop * 0.15);
@@ -2182,8 +3034,10 @@ function drawCavalryTroop(
     ctx.moveTo(startX, y - size * 0.14 + headBob);
     const waveOffset = Math.sin(time * 8 + strand * 0.8) * 4;
     ctx.quadraticCurveTo(
-      startX + size * 0.05 + waveOffset, y - size * 0.22,
-      startX + size * 0.1 + waveOffset, y - size * 0.08 + gallop * 0.1
+      startX + size * 0.05 + waveOffset,
+      y - size * 0.22,
+      startX + size * 0.1 + waveOffset,
+      y - size * 0.08 + gallop * 0.1,
     );
     ctx.stroke();
   }
@@ -2193,7 +3047,8 @@ function drawCavalryTroop(
   for (let i = 0; i < 8; i++) {
     const t = i / 7;
     const tipX = x - size * 0.42 + t * size * 0.56;
-    const tipY = y - size * 0.32 + Math.sin(time * 8 + i * 0.7) * 5 + gallop * 0.08;
+    const tipY =
+      y - size * 0.32 + Math.sin(time * 8 + i * 0.7) * 5 + gallop * 0.08;
     // Outer glow
     ctx.fillStyle = `rgba(106, 74, 186, ${maneGlow * 0.45})`;
     ctx.beginPath();
@@ -2214,7 +3069,13 @@ function drawCavalryTroop(
   for (let strand = 0; strand < 4; strand++) {
     const strandOffset = (strand - 1.5) * size * 0.012;
     ctx.strokeStyle =
-      strand === 0 ? "#1d130d" : strand === 1 ? "#2a1a10" : strand === 2 ? "#3d2616" : "rgba(156, 129, 219, 0.75)";
+      strand === 0
+        ? "#1d130d"
+        : strand === 1
+          ? "#2a1a10"
+          : strand === 2
+            ? "#3d2616"
+            : "rgba(156, 129, 219, 0.75)";
     ctx.lineWidth = (6.8 - strand * 1.2) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -2223,13 +3084,21 @@ function drawCavalryTroop(
       x + size * 0.62 + tailWave1 + strandOffset * 7,
       y + size * (0.24 + strand * 0.02),
       x + size * 0.59 + tailWave2 + strandOffset * 8,
-      y + size * (0.5 - strand * 0.02)
+      y + size * (0.5 - strand * 0.02),
     );
     ctx.stroke();
   }
   ctx.fillStyle = `rgba(193, 168, 252, ${0.45 + maneGlow * 0.35})`;
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.59 + tailWave2, y + size * 0.49, size * 0.03, size * 0.018, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.59 + tailWave2,
+    y + size * 0.49,
+    size * 0.03,
+    size * 0.018,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === ROYAL KNIGHT RIDER ===
@@ -2242,7 +3111,7 @@ function drawCavalryTroop(
     x - size * 0.3,
     y - size * 0.56 + riderBob * 0.4,
     x + size * 0.25,
-    capeBottomY
+    capeBottomY,
   );
   riderCapeGrad.addColorStop(0, "#22123f");
   riderCapeGrad.addColorStop(0.45, royalPurpleDark);
@@ -2255,14 +3124,14 @@ function drawCavalryTroop(
     x - size * 0.36 + capeFlow,
     y - size * 0.2,
     x - size * 0.24 + capeFlow2,
-    capeBottomY
+    capeBottomY,
   );
   ctx.lineTo(x + size * 0.24 + capeFlow2 * 0.6, capeBottomY - size * 0.01);
   ctx.quadraticCurveTo(
     x + size * 0.32 + capeFlow * 0.6,
     y - size * 0.18,
     x + size * 0.2,
-    y - size * 0.46 + riderBob * 0.5
+    y - size * 0.46 + riderBob * 0.5,
   );
   ctx.closePath();
   ctx.fill();
@@ -2274,7 +3143,7 @@ function drawCavalryTroop(
     x - size * 0.3 + capeFlow * 0.9,
     y - size * 0.2,
     x - size * 0.2 + capeFlow2 * 0.9,
-    capeBottomY - size * 0.02
+    capeBottomY - size * 0.02,
   );
   ctx.stroke();
 
@@ -2283,7 +3152,7 @@ function drawCavalryTroop(
     x - size * 0.24,
     y - size * 0.5,
     x + size * 0.24,
-    y - size * 0.06
+    y - size * 0.06,
   );
   cuirassGrad.addColorStop(0, "#3e4552");
   cuirassGrad.addColorStop(0.25, "#596372");
@@ -2298,7 +3167,7 @@ function drawCavalryTroop(
     x,
     y - size * 0.61 + riderBob * 0.45,
     x + size * 0.24,
-    y - size * 0.5 + riderBob * 0.55
+    y - size * 0.5 + riderBob * 0.55,
   );
   ctx.lineTo(x + size * 0.21, y - size * 0.085 + riderBob);
   ctx.closePath();
@@ -2321,14 +3190,16 @@ function drawCavalryTroop(
   // Arms for better mounted silhouette readability.
   const rightArmBaseX = x + size * 0.23;
   const rightArmBaseY = y - size * 0.28 + riderBob * 0.55;
-  const rightArmBaseAngle = isAttacking ? -1.24 + attackPhase * 0.65 : -0.92 + Math.sin(time * 2.1) * 0.06;
+  const rightArmBaseAngle = isAttacking
+    ? -1.24 + attackPhase * 0.65
+    : -0.92 + Math.sin(time * 2.1) * 0.06;
   const rightArmAngle = resolveWeaponRotation(
     targetPos,
     rightArmBaseX,
     rightArmBaseY,
     rightArmBaseAngle,
     Math.PI / 2,
-    isAttacking ? 0.95 : 0.52
+    isAttacking ? 0.95 : 0.52,
   );
   ctx.save();
   ctx.translate(rightArmBaseX, rightArmBaseY);
@@ -2359,7 +3230,7 @@ function drawCavalryTroop(
     x - size * 0.12,
     y - size * 0.38 + gallop * 0.1,
     x + size * 0.12,
-    y - size * 0.04 + gallop * 0.15
+    y - size * 0.04 + gallop * 0.15,
   );
   tabardGrad.addColorStop(0, royalPurpleDark);
   tabardGrad.addColorStop(0.5, royalPurpleMid);
@@ -2404,7 +3275,12 @@ function drawCavalryTroop(
     ctx.save();
     ctx.translate(sx, sy);
     ctx.rotate(side * 0.18);
-    const shoulderGrad = ctx.createLinearGradient(-size * 0.11, -size * 0.02, size * 0.11, size * 0.08);
+    const shoulderGrad = ctx.createLinearGradient(
+      -size * 0.11,
+      -size * 0.02,
+      size * 0.11,
+      size * 0.08,
+    );
     shoulderGrad.addColorStop(0, "#4b5564");
     shoulderGrad.addColorStop(0.5, "#708095");
     shoulderGrad.addColorStop(1, "#465264");
@@ -2414,11 +3290,27 @@ function drawCavalryTroop(
     ctx.fill();
     ctx.fillStyle = "#606f82";
     ctx.beginPath();
-    ctx.ellipse(-side * size * 0.012, size * 0.027, size * 0.086, size * 0.05, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      -side * size * 0.012,
+      size * 0.027,
+      size * 0.086,
+      size * 0.05,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.fillStyle = "#556377";
     ctx.beginPath();
-    ctx.ellipse(-side * size * 0.02, size * 0.048, size * 0.064, size * 0.04, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      -side * size * 0.02,
+      size * 0.048,
+      size * 0.064,
+      size * 0.04,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.strokeStyle = `rgba(179, 135, 63, 0.72)`;
     ctx.lineWidth = 1.1 * zoom;
@@ -2437,7 +3329,12 @@ function drawCavalryTroop(
 
   // Faceted sallet/armet hybrid helmet.
   const helmY = y - size * 0.6 + gallop * 0.08 + breathe * 0.2;
-  const helmGrad = ctx.createLinearGradient(x - size * 0.16, helmY - size * 0.2, x + size * 0.16, helmY + size * 0.08);
+  const helmGrad = ctx.createLinearGradient(
+    x - size * 0.16,
+    helmY - size * 0.2,
+    x + size * 0.16,
+    helmY + size * 0.08,
+  );
   helmGrad.addColorStop(0, "#505a69");
   helmGrad.addColorStop(0.46, "#7f8ea2");
   helmGrad.addColorStop(1, "#4c5766");
@@ -2475,17 +3372,33 @@ function drawCavalryTroop(
   // Nasal crest and ornamental etch.
   ctx.fillStyle = "#667689";
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.014, helmY - size * 0.19, size * 0.028, size * 0.22, size * 0.008);
+  ctx.roundRect(
+    x - size * 0.014,
+    helmY - size * 0.19,
+    size * 0.028,
+    size * 0.22,
+    size * 0.008,
+  );
   ctx.fill();
   ctx.strokeStyle = `rgba(179, 135, 63, 0.72)`;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.055, helmY - size * 0.14);
-  ctx.quadraticCurveTo(x, helmY - size * 0.19, x + size * 0.055, helmY - size * 0.14);
+  ctx.quadraticCurveTo(
+    x,
+    helmY - size * 0.19,
+    x + size * 0.055,
+    helmY - size * 0.14,
+  );
   ctx.stroke();
 
   // Angular visor slit with visible irises/pupils.
-  const visorGrad = ctx.createLinearGradient(x - size * 0.11, helmY - size * 0.02, x + size * 0.11, helmY + size * 0.03);
+  const visorGrad = ctx.createLinearGradient(
+    x - size * 0.11,
+    helmY - size * 0.02,
+    x + size * 0.11,
+    helmY + size * 0.03,
+  );
   visorGrad.addColorStop(0, "#242d3a");
   visorGrad.addColorStop(1, "#1a222f");
   ctx.fillStyle = visorGrad;
@@ -2515,7 +3428,13 @@ function drawCavalryTroop(
     ctx.fill();
     ctx.fillStyle = `rgba(255, 244, 219, ${0.6 + shimmer * 0.2})`;
     ctx.beginPath();
-    ctx.arc(ex - side * size * 0.003, ey - size * 0.003, size * 0.0028, 0, Math.PI * 2);
+    ctx.arc(
+      ex - side * size * 0.003,
+      ey - size * 0.003,
+      size * 0.0028,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -2523,7 +3442,13 @@ function drawCavalryTroop(
   ctx.fillStyle = "#1a222f";
   for (let vent = 0; vent < 4; vent++) {
     ctx.beginPath();
-    ctx.arc(x - size * 0.07 + vent * size * 0.046, helmY + size * 0.052, size * 0.0065, 0, Math.PI * 2);
+    ctx.arc(
+      x - size * 0.07 + vent * size * 0.046,
+      helmY + size * 0.052,
+      size * 0.0065,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -2563,7 +3488,12 @@ function drawCavalryTroop(
   }
   ctx.closePath();
   ctx.fill();
-  const plumeGrad = ctx.createLinearGradient(x, helmY - size * 0.18, x, helmY - size * 0.47);
+  const plumeGrad = ctx.createLinearGradient(
+    x,
+    helmY - size * 0.18,
+    x,
+    helmY - size * 0.47,
+  );
   plumeGrad.addColorStop(0, royalPurpleMid);
   plumeGrad.addColorStop(0.45, royalPurpleLight);
   plumeGrad.addColorStop(1, royalPurpleDark);
@@ -2572,12 +3502,14 @@ function drawCavalryTroop(
   ctx.moveTo(x, helmY - size * 0.18);
   for (let i = 0; i < 6; i++) {
     const py = helmY - size * 0.18 - i * size * 0.045;
-    const pw = size * (0.034 + i * 0.015) + Math.sin(time * 6.8 + i * 0.8) * 1.7;
+    const pw =
+      size * (0.034 + i * 0.015) + Math.sin(time * 6.8 + i * 0.8) * 1.7;
     ctx.lineTo(x - pw + plumeWave2, py);
   }
   for (let i = 5; i >= 0; i--) {
     const py = helmY - size * 0.18 - i * size * 0.045;
-    const pw = size * (0.034 + i * 0.015) + Math.sin(time * 6.8 + i * 0.8) * 1.7;
+    const pw =
+      size * (0.034 + i * 0.015) + Math.sin(time * 6.8 + i * 0.8) * 1.7;
     ctx.lineTo(x + pw + plumeWave2, py);
   }
   ctx.closePath();
@@ -2594,7 +3526,7 @@ function drawCavalryTroop(
       x + offset + fw,
       helmY - size * 0.31,
       x + offset + plumeWave2 * 0.5,
-      helmY - size * 0.46
+      helmY - size * 0.46,
     );
     ctx.stroke();
   }
@@ -2603,21 +3535,20 @@ function drawCavalryTroop(
   // === ORNATE ROYAL LANCE ===
   ctx.save();
   const lanceBaseAngle = isAttacking ? -0.35 - lanceThrust * 0.35 : -0.35;
-  const lanceLunge = isAttacking ? size * 0.32 * Math.sin(attackPhase * Math.PI) : 0;
+  const lanceLunge = isAttacking
+    ? size * 0.32 * Math.sin(attackPhase * Math.PI)
+    : 0;
   const lanceX = x + size * 0.26 + lanceLunge * 0.5;
   const lanceY = y - size * 0.32 + gallop * 0.12 - lanceLunge * 0.3;
   const lanceAngle = resolveWeaponRotation(
     targetPos,
     lanceX,
-    lanceY - size * 0.96,
+    lanceY,
     lanceBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.05 : 0.58
+    isAttacking ? 1.05 : 0.58,
   );
-  ctx.translate(
-    lanceX,
-    lanceY
-  );
+  ctx.translate(lanceX, lanceY);
   ctx.rotate(lanceAngle);
 
   // Ornate lance shaft with wood grain gradient
@@ -2667,7 +3598,12 @@ function drawCavalryTroop(
   }
 
   // Elaborate gleaming lance tip
-  const tipGrad = ctx.createLinearGradient(-size * 0.08, -size * 0.85, size * 0.08, -size * 0.85);
+  const tipGrad = ctx.createLinearGradient(
+    -size * 0.08,
+    -size * 0.85,
+    size * 0.08,
+    -size * 0.85,
+  );
   tipGrad.addColorStop(0, "#b0b0b0");
   tipGrad.addColorStop(0.3, "#e0e0e0");
   tipGrad.addColorStop(0.5, "#f0f0f0");
@@ -2747,7 +3683,8 @@ function drawCavalryTroop(
   }
 
   // Ornate multi-layer pennant
-  const pennantWave = Math.sin(time * 8) * 4 + (isAttacking ? lanceThrust * 6 : 0);
+  const pennantWave =
+    Math.sin(time * 8) * 4 + (isAttacking ? lanceThrust * 6 : 0);
   // Pennant shadow
   ctx.fillStyle = royalPurpleDark;
   ctx.beginPath();
@@ -2756,7 +3693,7 @@ function drawCavalryTroop(
     -size * 0.22 + pennantWave,
     -size * 0.68,
     -size * 0.3 + pennantWave * 1.5,
-    -size * 0.64
+    -size * 0.64,
   );
   ctx.lineTo(-size * 0.03, -size * 0.58);
   ctx.closePath();
@@ -2769,7 +3706,7 @@ function drawCavalryTroop(
     -size * 0.2 + pennantWave,
     -size * 0.69,
     -size * 0.28 + pennantWave * 1.5,
-    -size * 0.65
+    -size * 0.65,
   );
   ctx.lineTo(-size * 0.025, -size * 0.6);
   ctx.closePath();
@@ -2786,7 +3723,7 @@ function drawCavalryTroop(
     -size * 0.15 + pennantWave,
     -size * 0.69,
     -size * 0.2 + pennantWave * 1.2,
-    -size * 0.66
+    -size * 0.66,
   );
   ctx.lineTo(-size * 0.04, -size * 0.62);
   ctx.closePath();
@@ -2953,7 +3890,7 @@ function drawCavalryTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.cavalry,
-    { mounted: true, vanguard: true }
+    { mounted: true, vanguard: true },
   );
 }
 
@@ -2966,25 +3903,25 @@ function drawCentaurTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // EPIC ORNATE CENTAUR ARCHER - Golden War Champion of Princeton
-  const gallop = Math.sin(time * 7) * 4;
-  const legCycle = Math.sin(time * 7) * 0.4;
+  const gallop = Math.sin(time * 7.4) * 4.4;
+  const legCycle = Math.sin(time * 7.4) * 0.44;
   const breathe = Math.sin(time * 2) * 0.5;
-  const tailSwish = Math.sin(time * 5);
-  const hairFlow = Math.sin(time * 4);
+  const tailSwish = Math.sin(time * 5.6);
+  const hairFlow = Math.sin(time * 4.6);
   const shimmer = Math.sin(time * 5) * 0.5 + 0.5;
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
-  const centaurBrownDark = "#3c2a1a";
-  const centaurBrownMid = "#6b4a2a";
-  const centaurBrownLight = "#8d6a43";
-  const centaurLeafDark = "#355632";
-  const centaurLeafMid = "#4f7a42";
-  const centaurLeafLight = "#78a95a";
-  const centaurGoldDark = "#7f5f2c";
-  const centaurGoldMid = "#b79245";
-  const centaurGoldLight = "#e3c780";
+  const centaurBrownDark = "#2b1c13";
+  const centaurBrownMid = "#5a3d24";
+  const centaurBrownLight = "#7d5d3f";
+  const centaurLeafDark = "#22331e";
+  const centaurLeafMid = "#395536";
+  const centaurLeafLight = "#61804f";
+  const centaurGoldDark = "#685026";
+  const centaurGoldMid = "#9f7a3a";
+  const centaurGoldLight = "#ceb270";
 
   // Attack animation - bow draw and release
   const isAttacking = attackPhase > 0;
@@ -2995,11 +3932,11 @@ function drawCentaurTroop(
   const bowY = y - size * 0.2 + gallop * 0.06;
   const bowRotation = resolveWeaponRotation(
     targetPos,
-    bowX - size * 0.44,
+    bowX,
     bowY,
     bowBaseRotation,
     -Math.PI,
-    isAttacking ? 1.0 : 0.52
+    isAttacking ? 1.0 : 0.52,
   );
   const bowRotationDelta = normalizeSignedAngle(bowRotation - bowBaseRotation);
 
@@ -3010,18 +3947,39 @@ function drawCentaurTroop(
   // Multiple layered auras for depth
   for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
     const layerOffset = auraLayer * 0.12;
-  const auraGrad = ctx.createRadialGradient(
-      x + size * 0.05, y + size * 0.1, size * (0.08 + layerOffset),
-      x + size * 0.05, y + size * 0.1, size * (0.9 + layerOffset * 0.3)
+    const auraGrad = ctx.createRadialGradient(
+      x + size * 0.05,
+      y + size * 0.1,
+      size * (0.08 + layerOffset),
+      x + size * 0.05,
+      y + size * 0.1,
+      size * (0.9 + layerOffset * 0.3),
     );
-    auraGrad.addColorStop(0, `rgba(160, 194, 96, ${auraIntensity * auraPulse * (0.5 - auraLayer * 0.12)})`);
-    auraGrad.addColorStop(0.3, `rgba(109, 152, 74, ${auraIntensity * auraPulse * (0.35 - auraLayer * 0.08)})`);
-    auraGrad.addColorStop(0.6, `rgba(84, 113, 45, ${auraIntensity * auraPulse * (0.2 - auraLayer * 0.05)})`);
+    auraGrad.addColorStop(
+      0,
+      `rgba(160, 194, 96, ${auraIntensity * auraPulse * (0.5 - auraLayer * 0.12)})`,
+    );
+    auraGrad.addColorStop(
+      0.3,
+      `rgba(109, 152, 74, ${auraIntensity * auraPulse * (0.35 - auraLayer * 0.08)})`,
+    );
+    auraGrad.addColorStop(
+      0.6,
+      `rgba(84, 113, 45, ${auraIntensity * auraPulse * (0.2 - auraLayer * 0.05)})`,
+    );
     auraGrad.addColorStop(1, "rgba(47, 67, 28, 0)");
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-    ctx.ellipse(x + size * 0.05, y + size * 0.15, size * (0.8 + layerOffset * 0.2), size * (0.55 + layerOffset * 0.15), 0, 0, Math.PI * 2);
-  ctx.fill();
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      x + size * 0.05,
+      y + size * 0.15,
+      size * (0.8 + layerOffset * 0.2),
+      size * (0.55 + layerOffset * 0.15),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
 
   // Floating forest-gold rune particles
@@ -3052,16 +4010,19 @@ function drawCentaurTroop(
       ctx.lineWidth = (3.5 - ring * 0.5) * zoom;
       ctx.beginPath();
       ctx.ellipse(
-        x, y + size * 0.1,
+        x,
+        y + size * 0.1,
         size * (0.5 + ringPhase * 0.45),
         size * (0.32 + ringPhase * 0.28),
-        0, 0, Math.PI * 2
+        0,
+        0,
+        Math.PI * 2,
       );
       ctx.stroke();
     }
     // Golden spark particles
     for (let sp = 0; sp < 8; sp++) {
-      const spAngle = time * 6 + sp * Math.PI / 4;
+      const spAngle = time * 6 + (sp * Math.PI) / 4;
       const spDist = size * 0.35 + attackIntensity * size * 0.35;
       const spX = x + Math.cos(spAngle) * spDist;
       const spY = y + size * 0.1 + Math.sin(spAngle) * spDist * 0.4;
@@ -3075,8 +4036,12 @@ function drawCentaurTroop(
   // === POWERFUL HORSE BODY WITH DETAILED COAT ===
   // Main body with brown-green coat gradient
   const bodyGrad = ctx.createRadialGradient(
-    x + size * 0.02, y + size * 0.05, 0,
-    x + size * 0.08, y + size * 0.15, size * 0.55
+    x + size * 0.02,
+    y + size * 0.05,
+    0,
+    x + size * 0.08,
+    y + size * 0.15,
+    size * 0.55,
   );
   bodyGrad.addColorStop(0, centaurBrownLight);
   bodyGrad.addColorStop(0.25, "#80603c");
@@ -3086,9 +4051,13 @@ function drawCentaurTroop(
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
   ctx.ellipse(
-    x + size * 0.08, y + size * 0.15 + gallop * 0.12,
-    size * 0.46, size * 0.28,
-    0, 0, Math.PI * 2
+    x + size * 0.08,
+    y + size * 0.15 + gallop * 0.12,
+    size * 0.46,
+    size * 0.28,
+    0,
+    0,
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -3096,20 +4065,44 @@ function drawCentaurTroop(
   ctx.strokeStyle = "rgba(188, 164, 109, 0.4)";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
-  ctx.arc(x - size * 0.1, y + size * 0.08 + gallop * 0.12, size * 0.14, 0.4, 2.2);
+  ctx.arc(
+    x - size * 0.1,
+    y + size * 0.08 + gallop * 0.12,
+    size * 0.14,
+    0.4,
+    2.2,
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(x + size * 0.3, y + size * 0.06 + gallop * 0.12, size * 0.12, 0.5, 2.0);
+  ctx.arc(
+    x + size * 0.3,
+    y + size * 0.06 + gallop * 0.12,
+    size * 0.12,
+    0.5,
+    2.0,
+  );
   ctx.stroke();
 
   // Muscle definition shadows
   ctx.strokeStyle = "rgba(71,53,34,0.55)";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.arc(x - size * 0.08, y + size * 0.14 + gallop * 0.12, size * 0.17, 0.3, 2.5);
+  ctx.arc(
+    x - size * 0.08,
+    y + size * 0.14 + gallop * 0.12,
+    size * 0.17,
+    0.3,
+    2.5,
+  );
   ctx.stroke();
   ctx.beginPath();
-  ctx.arc(x + size * 0.28, y + size * 0.12 + gallop * 0.12, size * 0.15, 0.4, 2.3);
+  ctx.arc(
+    x + size * 0.28,
+    y + size * 0.12 + gallop * 0.12,
+    size * 0.15,
+    0.4,
+    2.3,
+  );
   ctx.stroke();
 
   // Battle scars (honorable marks)
@@ -3127,8 +4120,10 @@ function drawCentaurTroop(
   // === ORNATE ARMORED BARDING ===
   // Chest armor plate with gradient
   const chestArmorGrad = ctx.createLinearGradient(
-    x - size * 0.35, y + size * 0.1,
-    x - size * 0.1, y + size * 0.25
+    x - size * 0.35,
+    y + size * 0.1,
+    x - size * 0.1,
+    y + size * 0.25,
   );
   chestArmorGrad.addColorStop(0, centaurLeafDark);
   chestArmorGrad.addColorStop(0.3, centaurLeafMid);
@@ -3154,11 +4149,21 @@ function drawCentaurTroop(
   ctx.globalAlpha = 0.7;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.28, y + size * 0.1 + gallop * 0.12);
-  ctx.quadraticCurveTo(x - size * 0.32, y + size * 0.16, x - size * 0.26, y + size * 0.2 + gallop * 0.12);
+  ctx.quadraticCurveTo(
+    x - size * 0.32,
+    y + size * 0.16,
+    x - size * 0.26,
+    y + size * 0.2 + gallop * 0.12,
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.08 + gallop * 0.12);
-  ctx.quadraticCurveTo(x - size * 0.26, y + size * 0.14, x - size * 0.2, y + size * 0.18 + gallop * 0.12);
+  ctx.quadraticCurveTo(
+    x - size * 0.26,
+    y + size * 0.14,
+    x - size * 0.2,
+    y + size * 0.18 + gallop * 0.12,
+  );
   ctx.stroke();
   ctx.globalAlpha = 1;
 
@@ -3167,14 +4172,22 @@ function drawCentaurTroop(
   ctx.shadowColor = centaurGoldLight;
   ctx.shadowBlur = 5 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(x - size * 0.25, y + size * 0.14 + gallop * 0.12, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.25,
+    y + size * 0.14 + gallop * 0.12,
+    size * 0.025,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
   // Back armor plate
   const backArmorGrad = ctx.createLinearGradient(
-    x + size * 0.2, y + size * 0.0,
-    x + size * 0.4, y + size * 0.2
+    x + size * 0.2,
+    y + size * 0.0,
+    x + size * 0.4,
+    y + size * 0.2,
   );
   backArmorGrad.addColorStop(0, centaurLeafDark);
   backArmorGrad.addColorStop(0.5, centaurLeafMid);
@@ -3196,7 +4209,13 @@ function drawCentaurTroop(
   ctx.shadowColor = centaurGoldLight;
   ctx.shadowBlur = 4 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(x + size * 0.32, y + size * 0.1 + gallop * 0.12, size * 0.02, 0, Math.PI * 2);
+  ctx.arc(
+    x + size * 0.32,
+    y + size * 0.1 + gallop * 0.12,
+    size * 0.02,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -3205,12 +4224,18 @@ function drawCentaurTroop(
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.2, y + size * 0.22 + gallop * 0.12);
-  ctx.quadraticCurveTo(x, y + size * 0.26 + gallop * 0.12, x + size * 0.2, y + size * 0.22 + gallop * 0.12);
+  ctx.quadraticCurveTo(
+    x,
+    y + size * 0.26 + gallop * 0.12,
+    x + size * 0.2,
+    y + size * 0.22 + gallop * 0.12,
+  );
   ctx.stroke();
   // Medallions on chain
   for (let med = 0; med < 5; med++) {
     const medX = x - size * 0.16 + med * size * 0.09;
-    const medY = y + size * 0.24 + Math.sin(med * 0.8) * size * 0.015 + gallop * 0.12;
+    const medY =
+      y + size * 0.24 + Math.sin(med * 0.8) * size * 0.015 + gallop * 0.12;
     ctx.fillStyle = centaurGoldLight;
     ctx.beginPath();
     ctx.arc(medX, medY, size * 0.018, 0, Math.PI * 2);
@@ -3222,7 +4247,7 @@ function drawCentaurTroop(
     legX: number,
     legY: number,
     stride: number,
-    phaseOffset: number
+    phaseOffset: number,
   ) => {
     const upperLen = size * 0.16;
     const lowerLen = size * 0.18;
@@ -3233,21 +4258,39 @@ function drawCentaurTroop(
     ctx.rotate(stride);
 
     // Upper leg muscle
-    const upperGrad = ctx.createLinearGradient(-size * 0.05, 0, size * 0.05, upperLen);
+    const upperGrad = ctx.createLinearGradient(
+      -size * 0.05,
+      0,
+      size * 0.05,
+      upperLen,
+    );
     upperGrad.addColorStop(0, centaurBrownLight);
     upperGrad.addColorStop(0.6, centaurBrownMid);
     upperGrad.addColorStop(1, centaurBrownDark);
     ctx.fillStyle = upperGrad;
     ctx.beginPath();
     ctx.moveTo(-size * 0.05, 0);
-    ctx.quadraticCurveTo(-size * 0.065, upperLen * 0.55, kneeSwing - size * 0.04, upperLen);
+    ctx.quadraticCurveTo(
+      -size * 0.065,
+      upperLen * 0.55,
+      kneeSwing - size * 0.04,
+      upperLen,
+    );
     ctx.lineTo(kneeSwing + size * 0.04, upperLen);
     ctx.quadraticCurveTo(size * 0.065, upperLen * 0.55, size * 0.05, 0);
     ctx.closePath();
     ctx.fill();
     ctx.fillStyle = "rgba(214, 190, 140, 0.24)";
     ctx.beginPath();
-    ctx.ellipse(kneeSwing - size * 0.006, upperLen * 0.46, size * 0.023, size * 0.043, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(
+      kneeSwing - size * 0.006,
+      upperLen * 0.46,
+      size * 0.023,
+      size * 0.043,
+      0.2,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Lower leg armor
@@ -3256,7 +4299,7 @@ function drawCentaurTroop(
       kneeSwing - size * 0.042,
       upperLen,
       fetlockX + size * 0.042,
-      upperLen + lowerLen
+      upperLen + lowerLen,
     );
     lowerGrad.addColorStop(0, centaurLeafDark);
     lowerGrad.addColorStop(0.45, centaurLeafMid);
@@ -3299,10 +4342,30 @@ function drawCentaurTroop(
     ctx.restore();
   };
 
-  drawCentaurHorseLeg(x - size * 0.2, y + size * 0.33 + gallop * 0.1, legCycle * 1.12, 0.1);
-  drawCentaurHorseLeg(x - size * 0.05, y + size * 0.34 + gallop * 0.1, -legCycle * 0.9, 1.15);
-  drawCentaurHorseLeg(x + size * 0.22, y + size * 0.34 + gallop * 0.1, -legCycle * 1.03, 2.15);
-  drawCentaurHorseLeg(x + size * 0.37, y + size * 0.33 + gallop * 0.1, legCycle * 0.86, 3.0);
+  drawCentaurHorseLeg(
+    x - size * 0.2,
+    y + size * 0.33 + gallop * 0.1,
+    legCycle * 1.12,
+    0.1,
+  );
+  drawCentaurHorseLeg(
+    x - size * 0.05,
+    y + size * 0.34 + gallop * 0.1,
+    -legCycle * 0.9,
+    1.15,
+  );
+  drawCentaurHorseLeg(
+    x + size * 0.22,
+    y + size * 0.34 + gallop * 0.1,
+    -legCycle * 1.03,
+    2.15,
+  );
+  drawCentaurHorseLeg(
+    x + size * 0.37,
+    y + size * 0.33 + gallop * 0.1,
+    legCycle * 0.86,
+    3.0,
+  );
 
   // === MAJESTIC FLOWING TAIL ===
   const tailRootX = x + size * 0.5;
@@ -3323,13 +4386,21 @@ function drawCentaurTroop(
       x + size * 0.72 + tailSwish * (11 - strand),
       y + size * (0.14 + strand * 0.012),
       x + size * 0.6 + tailSwish * (15 - strand),
-      y + size * (0.44 - strand * 0.012)
+      y + size * (0.44 - strand * 0.012),
     );
     ctx.stroke();
   }
   ctx.fillStyle = `rgba(214, 187, 118, ${0.45 + Math.sin(time * 4) * 0.2})`;
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.61 + tailSwish * 14, y + size * 0.44, size * 0.024, size * 0.015, 0.2, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.61 + tailSwish * 14,
+    y + size * 0.44,
+    size * 0.024,
+    size * 0.015,
+    0.2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === MUSCULAR HUMAN TORSO ===
@@ -3337,16 +4408,22 @@ function drawCentaurTroop(
   ctx.fillStyle = "#c89050";
   ctx.beginPath();
   ctx.ellipse(
-    x, y - size * 0.06 + gallop * 0.08 + breathe,
-    size * 0.24, size * 0.2,
-    0, 0, Math.PI * 2
+    x,
+    y - size * 0.06 + gallop * 0.08 + breathe,
+    size * 0.24,
+    size * 0.2,
+    0,
+    0,
+    Math.PI * 2,
   );
   ctx.fill();
 
   // Main torso with rich gradient
   const torsoGrad = ctx.createLinearGradient(
-    x - size * 0.24, y - size * 0.25,
-    x + size * 0.24, y + size * 0.05
+    x - size * 0.24,
+    y - size * 0.25,
+    x + size * 0.24,
+    y + size * 0.05,
   );
   torsoGrad.addColorStop(0, "#c08040");
   torsoGrad.addColorStop(0.2, "#d8a060");
@@ -3359,8 +4436,10 @@ function drawCentaurTroop(
   ctx.moveTo(x - size * 0.22, y + size * 0.02 + gallop * 0.08 + breathe);
   ctx.lineTo(x - size * 0.28, y - size * 0.32 + gallop * 0.04 + breathe * 0.5);
   ctx.quadraticCurveTo(
-    x, y - size * 0.46 + gallop * 0.04 + breathe * 0.3,
-    x + size * 0.28, y - size * 0.32 + gallop * 0.04 + breathe * 0.5
+    x,
+    y - size * 0.46 + gallop * 0.04 + breathe * 0.3,
+    x + size * 0.28,
+    y - size * 0.32 + gallop * 0.04 + breathe * 0.5,
   );
   ctx.lineTo(x + size * 0.22, y + size * 0.02 + gallop * 0.08 + breathe);
   ctx.closePath();
@@ -3372,8 +4451,10 @@ function drawCentaurTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.18, y - size * 0.24 + gallop * 0.05 + breathe * 0.4);
   ctx.quadraticCurveTo(
-    x, y - size * 0.18 + gallop * 0.05 + breathe * 0.4,
-    x + size * 0.18, y - size * 0.24 + gallop * 0.05 + breathe * 0.4
+    x,
+    y - size * 0.18 + gallop * 0.05 + breathe * 0.4,
+    x + size * 0.18,
+    y - size * 0.24 + gallop * 0.05 + breathe * 0.4,
   );
   ctx.stroke();
   // Ab definition lines
@@ -3394,8 +4475,10 @@ function drawCentaurTroop(
 
   // Ornate warrior sash with detail
   const sashGrad = ctx.createLinearGradient(
-    x - size * 0.22, y - size * 0.26,
-    x + size * 0.1, y - size * 0.04
+    x - size * 0.22,
+    y - size * 0.26,
+    x + size * 0.1,
+    y - size * 0.04,
   );
   sashGrad.addColorStop(0, centaurLeafDark);
   sashGrad.addColorStop(0.5, centaurLeafMid);
@@ -3415,7 +4498,13 @@ function drawCentaurTroop(
   // Sash medallion
   ctx.fillStyle = centaurGoldLight;
   ctx.beginPath();
-  ctx.arc(x - size * 0.06, y - size * 0.16 + gallop * 0.06, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.06,
+    y - size * 0.16 + gallop * 0.06,
+    size * 0.025,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === POWERFUL ARMS WITH BRACERS ===
@@ -3424,7 +4513,14 @@ function drawCentaurTroop(
   ctx.translate(x - size * 0.3, y - size * 0.2 + gallop * 0.05);
   ctx.rotate(-0.72 - bowDraw * 0.12 + bowRotationDelta * 0.45);
   // Upper arm
-  const armGrad = ctx.createRadialGradient(0, size * 0.08, 0, 0, size * 0.08, size * 0.12);
+  const armGrad = ctx.createRadialGradient(
+    0,
+    size * 0.08,
+    0,
+    0,
+    size * 0.08,
+    size * 0.12,
+  );
   armGrad.addColorStop(0, "#e8b878");
   armGrad.addColorStop(1, "#c89050");
   ctx.fillStyle = armGrad;
@@ -3434,12 +4530,28 @@ function drawCentaurTroop(
   // Forearm
   ctx.fillStyle = "#e0a868";
   ctx.beginPath();
-  ctx.ellipse(-size * 0.05, size * 0.22, size * 0.055, size * 0.11, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    -size * 0.05,
+    size * 0.22,
+    size * 0.055,
+    size * 0.11,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Ornate bracer
   ctx.fillStyle = centaurGoldDark;
   ctx.beginPath();
-  ctx.ellipse(-size * 0.06, size * 0.2, size * 0.06, size * 0.05, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    -size * 0.06,
+    size * 0.2,
+    size * 0.06,
+    size * 0.05,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 1;
@@ -3464,12 +4576,28 @@ function drawCentaurTroop(
   ctx.fill();
   ctx.fillStyle = "#e0a868";
   ctx.beginPath();
-  ctx.ellipse(size * 0.04, size * 0.2, size * 0.055, size * 0.11, 0.25, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.04,
+    size * 0.2,
+    size * 0.055,
+    size * 0.11,
+    0.25,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Bracer
   ctx.fillStyle = centaurGoldDark;
   ctx.beginPath();
-  ctx.ellipse(size * 0.05, size * 0.18, size * 0.06, size * 0.05, 0.25, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.05,
+    size * 0.18,
+    size * 0.06,
+    size * 0.05,
+    0.25,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 1;
@@ -3485,17 +4613,31 @@ function drawCentaurTroop(
 
   // === ORNATE HEAD ===
   // Neck with highlights
-  const neckGrad = ctx.createLinearGradient(x - size * 0.06, y - size * 0.42, x + size * 0.06, y - size * 0.42);
+  const neckGrad = ctx.createLinearGradient(
+    x - size * 0.06,
+    y - size * 0.42,
+    x + size * 0.06,
+    y - size * 0.42,
+  );
   neckGrad.addColorStop(0, "#c89050");
   neckGrad.addColorStop(0.5, "#e0a868");
   neckGrad.addColorStop(1, "#c89050");
   ctx.fillStyle = neckGrad;
-  ctx.fillRect(x - size * 0.07, y - size * 0.42 + gallop * 0.04, size * 0.14, size * 0.12);
+  ctx.fillRect(
+    x - size * 0.07,
+    y - size * 0.42 + gallop * 0.04,
+    size * 0.14,
+    size * 0.12,
+  );
 
   // Face with gradient
   const faceGrad = ctx.createRadialGradient(
-    x - size * 0.02, y - size * 0.52 + gallop * 0.04, 0,
-    x, y - size * 0.5 + gallop * 0.04, size * 0.15
+    x - size * 0.02,
+    y - size * 0.52 + gallop * 0.04,
+    0,
+    x,
+    y - size * 0.5 + gallop * 0.04,
+    size * 0.15,
   );
   faceGrad.addColorStop(0, "#f0c890");
   faceGrad.addColorStop(0.6, "#e8b878");
@@ -3516,7 +4658,11 @@ function drawCentaurTroop(
     const hairLen = size * (0.22 + (i > 4 ? 0.12 : 0));
     ctx.lineTo(
       x + Math.cos(hairAngle) * hairLen + hairWave * 0.6,
-      y - size * 0.52 + Math.sin(hairAngle) * hairLen * 0.85 + hairWave + gallop * 0.04
+      y -
+        size * 0.52 +
+        Math.sin(hairAngle) * hairLen * 0.85 +
+        hairWave +
+        gallop * 0.04,
     );
   }
   ctx.closePath();
@@ -3532,7 +4678,11 @@ function drawCentaurTroop(
     const hairLen = size * (0.2 + (i > 4 ? 0.1 : 0));
     ctx.lineTo(
       x + Math.cos(hairAngle) * hairLen + hairWave * 0.5,
-      y - size * 0.52 + Math.sin(hairAngle) * hairLen * 0.82 + hairWave + gallop * 0.04
+      y -
+        size * 0.52 +
+        Math.sin(hairAngle) * hairLen * 0.82 +
+        hairWave +
+        gallop * 0.04,
     );
   }
   ctx.closePath();
@@ -3547,7 +4697,11 @@ function drawCentaurTroop(
     const hairWave = Math.sin(time * 5 + i * 0.6) * 2.5 + hairFlow * 1.5;
     ctx.lineTo(
       x + Math.cos(hairAngle) * size * 0.16 + hairWave * 0.35,
-      y - size * 0.54 + Math.sin(hairAngle) * size * 0.13 + hairWave * 0.55 + gallop * 0.04
+      y -
+        size * 0.54 +
+        Math.sin(hairAngle) * size * 0.13 +
+        hairWave * 0.55 +
+        gallop * 0.04,
     );
   }
   ctx.closePath();
@@ -3560,15 +4714,18 @@ function drawCentaurTroop(
   for (let strand = 0; strand < 4; strand++) {
     const strandAngle = -0.6 + strand * 0.4;
     const strandWave = Math.sin(time * 5 + strand * 0.8) * 2;
-  ctx.beginPath();
-    ctx.moveTo(x + Math.cos(strandAngle) * size * 0.08, y - size * 0.58 + gallop * 0.04);
+    ctx.beginPath();
+    ctx.moveTo(
+      x + Math.cos(strandAngle) * size * 0.08,
+      y - size * 0.58 + gallop * 0.04,
+    );
     ctx.quadraticCurveTo(
       x + Math.cos(strandAngle) * size * 0.14 + strandWave,
       y - size * 0.52 + Math.sin(strandAngle) * size * 0.08,
       x + Math.cos(strandAngle) * size * 0.18 + strandWave * 1.5,
-      y - size * 0.46 + Math.sin(strandAngle) * size * 0.12 + gallop * 0.04
-  );
-  ctx.stroke();
+      y - size * 0.46 + Math.sin(strandAngle) * size * 0.12 + gallop * 0.04,
+    );
+    ctx.stroke();
   }
   ctx.globalAlpha = 1;
 
@@ -3576,19 +4733,35 @@ function drawCentaurTroop(
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 2.3 * zoom;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.57 + gallop * 0.04, size * 0.14, Math.PI * 0.78, Math.PI * 0.22, true);
+  ctx.arc(
+    x,
+    y - size * 0.57 + gallop * 0.04,
+    size * 0.14,
+    Math.PI * 0.78,
+    Math.PI * 0.22,
+    true,
+  );
   ctx.stroke();
   ctx.strokeStyle = centaurGoldDark;
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.57 + gallop * 0.04, size * 0.122, Math.PI * 0.8, Math.PI * 0.2, true);
+  ctx.arc(
+    x,
+    y - size * 0.57 + gallop * 0.04,
+    size * 0.122,
+    Math.PI * 0.8,
+    Math.PI * 0.2,
+    true,
+  );
   ctx.stroke();
 
   for (let side = -1; side <= 1; side += 2) {
     for (let i = 0; i < 7; i++) {
-      const leafAngle = side === -1 ? Math.PI * 0.77 - i * 0.115 : Math.PI * 0.23 + i * 0.115;
+      const leafAngle =
+        side === -1 ? Math.PI * 0.77 - i * 0.115 : Math.PI * 0.23 + i * 0.115;
       const leafX = x + Math.cos(leafAngle) * size * 0.14;
-      const leafY = y - size * 0.57 + Math.sin(leafAngle) * size * 0.14 + gallop * 0.04;
+      const leafY =
+        y - size * 0.57 + Math.sin(leafAngle) * size * 0.14 + gallop * 0.04;
       const leafSize = size * (0.03 - i * 0.0018);
       ctx.fillStyle = i % 2 === 0 ? centaurLeafMid : centaurLeafLight;
       ctx.beginPath();
@@ -3599,14 +4772,20 @@ function drawCentaurTroop(
         leafSize * 0.44,
         leafAngle + Math.PI * 0.5 * side,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
       ctx.strokeStyle = "rgba(38, 78, 36, 0.8)";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
-      ctx.moveTo(leafX - Math.cos(leafAngle) * leafSize * 0.4, leafY - Math.sin(leafAngle) * leafSize * 0.4);
-      ctx.lineTo(leafX + Math.cos(leafAngle) * leafSize * 0.45, leafY + Math.sin(leafAngle) * leafSize * 0.45);
+      ctx.moveTo(
+        leafX - Math.cos(leafAngle) * leafSize * 0.4,
+        leafY - Math.sin(leafAngle) * leafSize * 0.4,
+      );
+      ctx.lineTo(
+        leafX + Math.cos(leafAngle) * leafSize * 0.45,
+        leafY + Math.sin(leafAngle) * leafSize * 0.45,
+      );
       ctx.stroke();
     }
   }
@@ -3619,13 +4798,31 @@ function drawCentaurTroop(
   ctx.arc(x, y - size * 0.71 + gallop * 0.04, size * 0.022, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(x - size * 0.12, y - size * 0.62 + gallop * 0.04, size * 0.013, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.12, y - size * 0.62 + gallop * 0.04, size * 0.013, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.12,
+    y - size * 0.62 + gallop * 0.04,
+    size * 0.013,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.12,
+    y - size * 0.62 + gallop * 0.04,
+    size * 0.013,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.fillStyle = `rgba(255, 249, 226, ${shimmer * 0.75})`;
   ctx.beginPath();
-  ctx.arc(x - size * 0.007, y - size * 0.714 + gallop * 0.04, size * 0.007, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.007,
+    y - size * 0.714 + gallop * 0.04,
+    size * 0.007,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Bronze battle helm details over the laurel crown.
@@ -3633,7 +4830,7 @@ function drawCentaurTroop(
     x - size * 0.14,
     y - size * 0.64 + gallop * 0.04,
     x + size * 0.14,
-    y - size * 0.5 + gallop * 0.04
+    y - size * 0.5 + gallop * 0.04,
   );
   centaurHelmGrad.addColorStop(0, "#6d5b2a");
   centaurHelmGrad.addColorStop(0.5, "#a88a3b");
@@ -3641,9 +4838,19 @@ function drawCentaurTroop(
   ctx.fillStyle = centaurHelmGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.13, y - size * 0.58 + gallop * 0.04);
-  ctx.quadraticCurveTo(x, y - size * 0.66 + gallop * 0.04, x + size * 0.13, y - size * 0.58 + gallop * 0.04);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.66 + gallop * 0.04,
+    x + size * 0.13,
+    y - size * 0.58 + gallop * 0.04,
+  );
   ctx.lineTo(x + size * 0.11, y - size * 0.53 + gallop * 0.04);
-  ctx.quadraticCurveTo(x, y - size * 0.56 + gallop * 0.04, x - size * 0.11, y - size * 0.53 + gallop * 0.04);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.56 + gallop * 0.04,
+    x - size * 0.11,
+    y - size * 0.53 + gallop * 0.04,
+  );
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = "#806726";
@@ -3653,13 +4860,19 @@ function drawCentaurTroop(
     y - size * 0.62 + gallop * 0.04,
     size * 0.024,
     size * 0.11,
-    size * 0.006
+    size * 0.006,
   );
   ctx.fill();
   ctx.fillStyle = "#dabb66";
   for (let side = -1; side <= 1; side += 2) {
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.085, y - size * 0.57 + gallop * 0.04, size * 0.009, 0, Math.PI * 2);
+    ctx.arc(
+      x + side * size * 0.085,
+      y - size * 0.57 + gallop * 0.04,
+      size * 0.009,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -3667,23 +4880,67 @@ function drawCentaurTroop(
   // Eye base
   ctx.fillStyle = "#577f45";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.05, y - size * 0.54 + gallop * 0.04, size * 0.028, size * 0.022, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.05, y - size * 0.54 + gallop * 0.04, size * 0.028, size * 0.022, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.05,
+    y - size * 0.54 + gallop * 0.04,
+    size * 0.028,
+    size * 0.022,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.05,
+    y - size * 0.54 + gallop * 0.04,
+    size * 0.028,
+    size * 0.022,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Eye glow
   ctx.fillStyle = "#8eb863";
   ctx.shadowColor = "#9ccd7a";
   ctx.shadowBlur = 4 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.05, y - size * 0.54 + gallop * 0.04, size * 0.02, size * 0.015, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.05, y - size * 0.54 + gallop * 0.04, size * 0.02, size * 0.015, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.05,
+    y - size * 0.54 + gallop * 0.04,
+    size * 0.02,
+    size * 0.015,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.05,
+    y - size * 0.54 + gallop * 0.04,
+    size * 0.02,
+    size * 0.015,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
   // Eye shine
   ctx.fillStyle = "#fff";
   ctx.beginPath();
-  ctx.arc(x - size * 0.045, y - size * 0.545 + gallop * 0.04, size * 0.01, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.055, y - size * 0.545 + gallop * 0.04, size * 0.01, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.045,
+    y - size * 0.545 + gallop * 0.04,
+    size * 0.01,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.055,
+    y - size * 0.545 + gallop * 0.04,
+    size * 0.01,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Determined eyebrows
@@ -3702,7 +4959,13 @@ function drawCentaurTroop(
   ctx.strokeStyle = "#b08060";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.arc(x, y - size * 0.47 + gallop * 0.04, size * 0.035, 0.15, Math.PI - 0.15);
+  ctx.arc(
+    x,
+    y - size * 0.47 + gallop * 0.04,
+    size * 0.035,
+    0.15,
+    Math.PI - 0.15,
+  );
   ctx.stroke();
 
   // === MASTERWORK RECURVE BOW === (richer silhouette + stronger read)
@@ -3718,7 +4981,13 @@ function drawCentaurTroop(
   ctx.strokeStyle = "#3a220e";
   ctx.lineWidth = 3.6 * zoom;
   ctx.beginPath();
-  ctx.arc(0, 0, outerRadius, Math.PI - bowBend * Math.PI, Math.PI + bowBend * Math.PI);
+  ctx.arc(
+    0,
+    0,
+    outerRadius,
+    Math.PI - bowBend * Math.PI,
+    Math.PI + bowBend * Math.PI,
+  );
   ctx.stroke();
 
   // Main laminated wood body.
@@ -3730,7 +4999,13 @@ function drawCentaurTroop(
   ctx.strokeStyle = bowCoreGrad;
   ctx.lineWidth = 2.8 * zoom;
   ctx.beginPath();
-  ctx.arc(0, 0, innerRadius, Math.PI - bowBend * Math.PI, Math.PI + bowBend * Math.PI);
+  ctx.arc(
+    0,
+    0,
+    innerRadius,
+    Math.PI - bowBend * Math.PI,
+    Math.PI + bowBend * Math.PI,
+  );
   ctx.stroke();
 
   // Gold inlay channels.
@@ -3767,13 +5042,24 @@ function drawCentaurTroop(
   ctx.fill();
 
   // Grip and gemstone.
-  const gripGrad = ctx.createLinearGradient(-size * 0.255, -size * 0.04, -size * 0.17, size * 0.04);
+  const gripGrad = ctx.createLinearGradient(
+    -size * 0.255,
+    -size * 0.04,
+    -size * 0.17,
+    size * 0.04,
+  );
   gripGrad.addColorStop(0, "#2e1c0f");
   gripGrad.addColorStop(0.5, "#4a2a15");
   gripGrad.addColorStop(1, "#24160b");
   ctx.fillStyle = gripGrad;
   ctx.beginPath();
-  ctx.roundRect(-size * 0.255, -size * 0.04, size * 0.085, size * 0.08, size * 0.014);
+  ctx.roundRect(
+    -size * 0.255,
+    -size * 0.04,
+    size * 0.085,
+    size * 0.08,
+    size * 0.014,
+  );
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
   ctx.lineWidth = 1 * zoom;
@@ -3811,12 +5097,22 @@ function drawCentaurTroop(
   // Nocked arrow.
   if (!isAttacking || attackPhase < 0.52) {
     const arrowOffset = isAttacking ? bowDraw * size * 0.11 : 0;
-    const shaftGrad = ctx.createLinearGradient(stringPull - size * 0.44, 0, stringPull, 0);
+    const shaftGrad = ctx.createLinearGradient(
+      stringPull - size * 0.44,
+      0,
+      stringPull,
+      0,
+    );
     shaftGrad.addColorStop(0, "#322010");
     shaftGrad.addColorStop(0.5, "#5b3f22");
     shaftGrad.addColorStop(1, "#2f1d10");
     ctx.fillStyle = shaftGrad;
-    ctx.fillRect(stringPull + arrowOffset * 0.5 - size * 0.44, -size * 0.015, size * 0.44, size * 0.03);
+    ctx.fillRect(
+      stringPull + arrowOffset * 0.5 - size * 0.44,
+      -size * 0.015,
+      size * 0.44,
+      size * 0.03,
+    );
 
     // Fletching.
     ctx.fillStyle = centaurLeafMid;
@@ -3845,7 +5141,7 @@ function drawCentaurTroop(
       stringPull - size * 0.47,
       -size * 0.04,
       stringPull - size * 0.47,
-      size * 0.04
+      size * 0.04,
     );
     headGrad.addColorStop(0, "#c7cfdd");
     headGrad.addColorStop(0.5, isAttacking ? "#f4f7ff" : "#e7ebf3");
@@ -3869,7 +5165,7 @@ function drawCentaurTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.centaur,
-    { mounted: true }
+    { mounted: true },
   );
 }
 
@@ -3883,7 +5179,7 @@ function drawEliteTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   const stance = Math.sin(time * 3) * 1.2;
   const breathe = Math.sin(time * 2) * 0.5;
@@ -3891,23 +5187,35 @@ function drawEliteTroop(
   const capeWave2 = Math.sin(time * 4.2 + 0.5);
   const shimmer = Math.sin(time * 6) * 0.5 + 0.5;
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
+  const weightShift = Math.sin(time * 1.9) * size * 0.03;
+  const hipBounce = Math.abs(Math.sin(time * 3.2)) * size * 0.012;
+  const plumeWhip = Math.sin(time * 4.8 + 0.7);
+  const heraldicColor = color || "#ff7a2f";
 
   // Attack animation - halberd swing
   const isAttacking = attackPhase > 0;
+  const attackDrive = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
+  const attackSnap = isAttacking ? Math.sin(attackPhase * Math.PI * 2.2) : 0;
+  const attackLunge = attackDrive * size * 0.16;
+  const bodyLean = isAttacking
+    ? attackSnap * 0.18
+    : Math.sin(time * 1.7) * 0.03;
+  const stanceSpread = size * (isAttacking ? 0.13 : 0.11);
   const halberdSwing = isAttacking
     ? Math.sin(attackPhase * Math.PI * 1.5) * 1.8
     : 0;
-  const halberdX = x + size * 0.27 + (isAttacking ? halberdSwing * size * 0.18 : 0);
+  const halberdX =
+    x + size * 0.27 + (isAttacking ? halberdSwing * size * 0.18 : 0);
   const halberdY =
     y - size * 0.12 - (isAttacking ? Math.abs(halberdSwing) * size * 0.12 : 0);
   const halberdBaseAngle = 0.15 + stance * 0.02 + halberdSwing;
   const halberdAngle = resolveWeaponRotation(
     targetPos,
     halberdX,
-    halberdY - size * 0.62,
+    halberdY,
     halberdBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.15 : 0.62
+    isAttacking ? 1.15 : 0.62,
   );
 
   // === ELITE AURA (always present, stronger during attack) ===
@@ -3918,22 +5226,43 @@ function drawEliteTroop(
   for (let auraLayer = 0; auraLayer < 3; auraLayer++) {
     const layerOffset = auraLayer * 0.15;
     const auraGrad = ctx.createRadialGradient(
-      x, y + size * 0.1, size * (0.05 + layerOffset),
-      x, y + size * 0.1, size * (0.6 + layerOffset)
+      x,
+      y + size * 0.1,
+      size * (0.05 + layerOffset),
+      x,
+      y + size * 0.1,
+      size * (0.6 + layerOffset),
     );
-    auraGrad.addColorStop(0, `rgba(255, 108, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.1)})`);
-    auraGrad.addColorStop(0.4, `rgba(255, 140, 40, ${auraIntensity * auraPulse * (0.25 - auraLayer * 0.06)})`);
-    auraGrad.addColorStop(0.7, `rgba(255, 180, 80, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.04)})`);
-  auraGrad.addColorStop(1, "rgba(255, 108, 0, 0)");
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.15, size * (0.7 + layerOffset * 0.3), size * (0.55 + layerOffset * 0.2), 0, 0, Math.PI * 2);
-  ctx.fill();
+    auraGrad.addColorStop(
+      0,
+      `rgba(255, 108, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.1)})`,
+    );
+    auraGrad.addColorStop(
+      0.4,
+      `rgba(255, 140, 40, ${auraIntensity * auraPulse * (0.25 - auraLayer * 0.06)})`,
+    );
+    auraGrad.addColorStop(
+      0.7,
+      `rgba(255, 180, 80, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.04)})`,
+    );
+    auraGrad.addColorStop(1, "rgba(255, 108, 0, 0)");
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.ellipse(
+      x,
+      y + size * 0.15,
+      size * (0.7 + layerOffset * 0.3),
+      size * (0.55 + layerOffset * 0.2),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
 
   // Floating rune particles around the elite
   for (let p = 0; p < 6; p++) {
-    const pAngle = (time * 0.8 + p * Math.PI / 3) % (Math.PI * 2);
+    const pAngle = (time * 0.8 + (p * Math.PI) / 3) % (Math.PI * 2);
     const pRadius = size * 0.5 + Math.sin(time * 2 + p) * size * 0.1;
     const pX = x + Math.cos(pAngle) * pRadius;
     const pY = y + Math.sin(pAngle) * pRadius * 0.4 + size * 0.1;
@@ -3959,37 +5288,52 @@ function drawEliteTroop(
         size * (0.22 + ringPhase * 0.25),
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.stroke();
     }
   }
 
+  // A wider elite stance plus a subtle body lean sells the upgraded silhouette.
+  ctx.save();
+  ctx.translate(
+    x + weightShift * 0.35 + attackLunge * 0.18,
+    y + hipBounce * 0.15,
+  );
+  ctx.rotate(bodyLean);
+  ctx.scale(1.08 + attackDrive * 0.05, 1);
+  ctx.translate(
+    -(x + weightShift * 0.35 + attackLunge * 0.18),
+    -(y + hipBounce * 0.15),
+  );
+
   // === ROYAL CAPE (multi-layered with intricate patterns) ===
   // Cape shadow layer (deepest)
   ctx.fillStyle = "#050515";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.16, y - size * 0.08 + breathe);
+  ctx.moveTo(x - size * 0.2, y - size * 0.1 + breathe);
   ctx.quadraticCurveTo(
-    x - size * 0.3 + capeWave * 5,
-    y + size * 0.35,
-    x - size * 0.26 + capeWave * 6,
-    y + size * 0.68
+    x - size * 0.38 + capeWave * 7 - attackLunge * 0.18,
+    y + size * 0.3 + hipBounce,
+    x - size * 0.32 + capeWave * 8,
+    y + size * 0.74,
   );
-  ctx.lineTo(x + size * 0.14 + capeWave * 4, y + size * 0.62);
+  ctx.lineTo(x + size * 0.2 + capeWave * 4.5, y + size * 0.66);
   ctx.quadraticCurveTo(
-    x + size * 0.08,
-    y + size * 0.25,
-    x + size * 0.14,
-    y - size * 0.06 + breathe
+    x + size * 0.12,
+    y + size * 0.22,
+    x + size * 0.16,
+    y - size * 0.08 + breathe,
   );
   ctx.closePath();
   ctx.fill();
 
   // Cape inner layer (royal purple)
   const capeInnerGrad = ctx.createLinearGradient(
-    x - size * 0.2, y - size * 0.1,
-    x + size * 0.1, y + size * 0.6
+    x - size * 0.2,
+    y - size * 0.1,
+    x + size * 0.1,
+    y + size * 0.6,
   );
   capeInnerGrad.addColorStop(0, "#1a0a3a");
   capeInnerGrad.addColorStop(0.3, "#0d0520");
@@ -3997,46 +5341,48 @@ function drawEliteTroop(
   capeInnerGrad.addColorStop(1, "#0a0418");
   ctx.fillStyle = capeInnerGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.14, y - size * 0.1 + breathe);
+  ctx.moveTo(x - size * 0.18, y - size * 0.11 + breathe);
   ctx.quadraticCurveTo(
-    x - size * 0.26 + capeWave * 4,
-    y + size * 0.3,
-    x - size * 0.22 + capeWave * 5,
-    y + size * 0.6
+    x - size * 0.31 + capeWave * 5.5 - attackLunge * 0.12,
+    y + size * 0.27,
+    x - size * 0.25 + capeWave * 6,
+    y + size * 0.64,
   );
-  ctx.lineTo(x + size * 0.1 + capeWave * 3, y + size * 0.55);
+  ctx.lineTo(x + size * 0.16 + capeWave * 3.4, y + size * 0.58);
   ctx.quadraticCurveTo(
-    x + size * 0.06,
-    y + size * 0.2,
-    x + size * 0.12,
-    y - size * 0.08 + breathe
+    x + size * 0.08,
+    y + size * 0.17,
+    x + size * 0.14,
+    y - size * 0.09 + breathe,
   );
   ctx.closePath();
   ctx.fill();
 
   // Cape middle layer with gradient
   const capeGrad = ctx.createLinearGradient(
-    x - size * 0.15, y,
-    x + size * 0.1, y + size * 0.5
+    x - size * 0.15,
+    y,
+    x + size * 0.1,
+    y + size * 0.5,
   );
   capeGrad.addColorStop(0, "#2a1a5a");
   capeGrad.addColorStop(0.4, "#1d1045");
   capeGrad.addColorStop(1, "#120830");
   ctx.fillStyle = capeGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.12, y - size * 0.12 + breathe);
+  ctx.moveTo(x - size * 0.16, y - size * 0.13 + breathe);
   ctx.quadraticCurveTo(
-    x - size * 0.22 + capeWave * 3,
-    y + size * 0.2,
-    x - size * 0.18 + capeWave * 4,
-    y + size * 0.5
+    x - size * 0.26 + capeWave * 4.2 - attackLunge * 0.08,
+    y + size * 0.18,
+    x - size * 0.21 + capeWave * 4.8,
+    y + size * 0.53,
   );
-  ctx.lineTo(x + size * 0.08 + capeWave * 2, y + size * 0.45);
+  ctx.lineTo(x + size * 0.14 + capeWave * 2.6, y + size * 0.49);
   ctx.quadraticCurveTo(
-    x + size * 0.05,
-    y + size * 0.15,
-    x + size * 0.1,
-    y - size * 0.1 + breathe
+    x + size * 0.07,
+    y + size * 0.12,
+    x + size * 0.12,
+    y - size * 0.11 + breathe,
   );
   ctx.closePath();
   ctx.fill();
@@ -4044,7 +5390,7 @@ function drawEliteTroop(
   // Cape embroidered pattern (gold thread design)
   ctx.save();
   ctx.globalAlpha = 0.6;
-  ctx.strokeStyle = "#c9a227";
+  ctx.strokeStyle = heraldicColor;
   ctx.lineWidth = 0.8;
   // Decorative swirl patterns on cape
   for (let row = 0; row < 3; row++) {
@@ -4053,31 +5399,35 @@ function drawEliteTroop(
     ctx.beginPath();
     ctx.moveTo(x - size * 0.1 + waveOffset, rowY);
     ctx.quadraticCurveTo(
-      x - size * 0.05 + waveOffset, rowY - size * 0.03,
-      x + waveOffset, rowY
+      x - size * 0.05 + waveOffset,
+      rowY - size * 0.03,
+      x + waveOffset,
+      rowY,
     );
     ctx.quadraticCurveTo(
-      x + size * 0.05 + waveOffset, rowY + size * 0.03,
-      x + size * 0.08 + waveOffset, rowY
+      x + size * 0.05 + waveOffset,
+      rowY + size * 0.03,
+      x + size * 0.08 + waveOffset,
+      rowY,
     );
     ctx.stroke();
   }
   ctx.restore();
 
   // Cape outer gold trim with decorative pattern
-  ctx.strokeStyle = "#dab32f";
+  ctx.strokeStyle = `rgba(255, 207, 122, ${0.72 + shimmer * 0.18})`;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.18 + capeWave * 4, y + size * 0.5);
-  ctx.lineTo(x + size * 0.08 + capeWave * 2, y + size * 0.45);
+  ctx.moveTo(x - size * 0.23 + capeWave * 4.6, y + size * 0.54);
+  ctx.lineTo(x + size * 0.14 + capeWave * 2.4, y + size * 0.49);
   ctx.stroke();
 
   // Inner trim line
   ctx.strokeStyle = "#a08020";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.17 + capeWave * 4, y + size * 0.48);
-  ctx.lineTo(x + size * 0.07 + capeWave * 2, y + size * 0.43);
+  ctx.moveTo(x - size * 0.22 + capeWave * 4.6, y + size * 0.52);
+  ctx.lineTo(x + size * 0.13 + capeWave * 2.4, y + size * 0.47);
   ctx.stroke();
 
   // Cape clasp gem at shoulder
@@ -4085,22 +5435,37 @@ function drawEliteTroop(
   ctx.shadowColor = "#ff6600";
   ctx.shadowBlur = 6 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(x - size * 0.1, y - size * 0.08 + breathe, size * 0.035, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.1,
+    y - size * 0.08 + breathe,
+    size * 0.035,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
   // Gem highlight
   ctx.fillStyle = "rgba(255,255,200,0.7)";
   ctx.beginPath();
-  ctx.arc(x - size * 0.11, y - size * 0.09 + breathe, size * 0.012, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.11,
+    y - size * 0.09 + breathe,
+    size * 0.012,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === LEGS (ornate greaves with engravings) ===
   // Left leg
   ctx.save();
-  ctx.translate(x - size * 0.1, y + size * 0.28);
-  ctx.rotate(-0.06 + stance * 0.015);
-  ctx.scale(1.12, 1);
-  
+  ctx.translate(
+    x - stanceSpread + weightShift * 0.18,
+    y + size * 0.28 + hipBounce,
+  );
+  ctx.rotate(-0.09 + stance * 0.018 - attackDrive * 0.06);
+  ctx.scale(1.18, 1);
+
   // Greave base with metallic gradient
   const legGradL = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
   legGradL.addColorStop(0, "#4a4a5a");
@@ -4109,7 +5474,7 @@ function drawEliteTroop(
   legGradL.addColorStop(1, "#5a5a6a");
   ctx.fillStyle = legGradL;
   ctx.fillRect(-size * 0.06, 0, size * 0.12, size * 0.22);
-  
+
   // Leg armor segments
   ctx.strokeStyle = "#3a3a4a";
   ctx.lineWidth = 1;
@@ -4119,7 +5484,7 @@ function drawEliteTroop(
   ctx.moveTo(-size * 0.055, size * 0.12);
   ctx.lineTo(size * 0.055, size * 0.12);
   ctx.stroke();
-  
+
   // Ornate knee guard with layered design
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
@@ -4137,7 +5502,7 @@ function drawEliteTroop(
   ctx.arc(0, size * 0.08, size * 0.018, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  
+
   // Detailed boot with buckles
   ctx.fillStyle = "#2a2a3a";
   ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
@@ -4151,10 +5516,13 @@ function drawEliteTroop(
 
   // Right leg
   ctx.save();
-  ctx.translate(x + size * 0.1, y + size * 0.28);
-  ctx.rotate(0.06 - stance * 0.015);
-  ctx.scale(1.12, 1);
-  
+  ctx.translate(
+    x + stanceSpread - weightShift * 0.18,
+    y + size * 0.28 + hipBounce,
+  );
+  ctx.rotate(0.09 - stance * 0.018 + attackDrive * 0.06);
+  ctx.scale(1.18, 1);
+
   // Greave base
   const legGradR = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
   legGradR.addColorStop(0, "#5a5a6a");
@@ -4163,7 +5531,7 @@ function drawEliteTroop(
   legGradR.addColorStop(1, "#4a4a5a");
   ctx.fillStyle = legGradR;
   ctx.fillRect(-size * 0.06, 0, size * 0.12, size * 0.22);
-  
+
   // Leg armor segments
   ctx.strokeStyle = "#3a3a4a";
   ctx.lineWidth = 1;
@@ -4173,7 +5541,7 @@ function drawEliteTroop(
   ctx.moveTo(-size * 0.055, size * 0.12);
   ctx.lineTo(size * 0.055, size * 0.12);
   ctx.stroke();
-  
+
   // Ornate knee guard
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
@@ -4191,7 +5559,7 @@ function drawEliteTroop(
   ctx.arc(0, size * 0.08, size * 0.018, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  
+
   // Boot with buckles
   ctx.fillStyle = "#2a2a3a";
   ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
@@ -4205,17 +5573,19 @@ function drawEliteTroop(
   // Back plate
   ctx.fillStyle = "#3a3a4a";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.21, y + size * 0.32 + breathe);
-  ctx.lineTo(x - size * 0.24, y - size * 0.1 + breathe * 0.5);
-  ctx.lineTo(x + size * 0.24, y - size * 0.1 + breathe * 0.5);
-  ctx.lineTo(x + size * 0.21, y + size * 0.32 + breathe);
+  ctx.moveTo(x - size * 0.25, y + size * 0.34 + breathe);
+  ctx.lineTo(x - size * 0.29, y - size * 0.11 + breathe * 0.5);
+  ctx.lineTo(x + size * 0.29, y - size * 0.11 + breathe * 0.5);
+  ctx.lineTo(x + size * 0.25, y + size * 0.34 + breathe);
   ctx.closePath();
   ctx.fill();
 
   // Front chest plate with elaborate metallic gradient
   const plateGrad = ctx.createLinearGradient(
-    x - size * 0.2, y - size * 0.1,
-    x + size * 0.2, y + size * 0.3
+    x - size * 0.2,
+    y - size * 0.1,
+    x + size * 0.2,
+    y + size * 0.3,
   );
   plateGrad.addColorStop(0, "#5a5a6a");
   plateGrad.addColorStop(0.15, "#7a7a8a");
@@ -4226,15 +5596,15 @@ function drawEliteTroop(
   plateGrad.addColorStop(1, "#5a5a6a");
   ctx.fillStyle = plateGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.19, y + size * 0.3 + breathe);
-  ctx.lineTo(x - size * 0.22, y - size * 0.08 + breathe * 0.5);
+  ctx.moveTo(x - size * 0.24, y + size * 0.32 + breathe);
+  ctx.lineTo(x - size * 0.27, y - size * 0.09 + breathe * 0.5);
   ctx.quadraticCurveTo(
     x,
-    y - size * 0.14 + breathe * 0.3,
-    x + size * 0.22,
-    y - size * 0.08 + breathe * 0.5
+    y - size * 0.16 + breathe * 0.3,
+    x + size * 0.27,
+    y - size * 0.09 + breathe * 0.5,
   );
-  ctx.lineTo(x + size * 0.19, y + size * 0.3 + breathe);
+  ctx.lineTo(x + size * 0.24, y + size * 0.32 + breathe);
   ctx.closePath();
   ctx.fill();
 
@@ -4242,13 +5612,13 @@ function drawEliteTroop(
   ctx.strokeStyle = "#a0a0b0";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.19, y + size * 0.28 + breathe);
-  ctx.lineTo(x - size * 0.21, y - size * 0.06 + breathe * 0.5);
+  ctx.moveTo(x - size * 0.24, y + size * 0.3 + breathe);
+  ctx.lineTo(x - size * 0.26, y - size * 0.07 + breathe * 0.5);
   ctx.quadraticCurveTo(
     x,
-    y - size * 0.12 + breathe * 0.3,
-    x + size * 0.21,
-    y - size * 0.06 + breathe * 0.5
+    y - size * 0.14 + breathe * 0.3,
+    x + size * 0.26,
+    y - size * 0.07 + breathe * 0.5,
   );
   ctx.stroke();
 
@@ -4263,9 +5633,19 @@ function drawEliteTroop(
   // Pectoral lines
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y + size * 0.02 + breathe);
-  ctx.quadraticCurveTo(x - size * 0.08, y + size * 0.08, x - size * 0.02, y + size * 0.04 + breathe);
+  ctx.quadraticCurveTo(
+    x - size * 0.08,
+    y + size * 0.08,
+    x - size * 0.02,
+    y + size * 0.04 + breathe,
+  );
   ctx.moveTo(x + size * 0.15, y + size * 0.02 + breathe);
-  ctx.quadraticCurveTo(x + size * 0.08, y + size * 0.08, x + size * 0.02, y + size * 0.04 + breathe);
+  ctx.quadraticCurveTo(
+    x + size * 0.08,
+    y + size * 0.08,
+    x + size * 0.02,
+    y + size * 0.04 + breathe,
+  );
   ctx.stroke();
   // Abdominal segments
   ctx.beginPath();
@@ -4282,14 +5662,34 @@ function drawEliteTroop(
   // Left filigree swirl
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, y - size * 0.02 + breathe);
-  ctx.quadraticCurveTo(x - size * 0.18, y + size * 0.06, x - size * 0.12, y + size * 0.08 + breathe);
-  ctx.quadraticCurveTo(x - size * 0.08, y + size * 0.1, x - size * 0.14, y + size * 0.14 + breathe);
+  ctx.quadraticCurveTo(
+    x - size * 0.18,
+    y + size * 0.06,
+    x - size * 0.12,
+    y + size * 0.08 + breathe,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.08,
+    y + size * 0.1,
+    x - size * 0.14,
+    y + size * 0.14 + breathe,
+  );
   ctx.stroke();
   // Right filigree swirl
   ctx.beginPath();
   ctx.moveTo(x + size * 0.14, y - size * 0.02 + breathe);
-  ctx.quadraticCurveTo(x + size * 0.18, y + size * 0.06, x + size * 0.12, y + size * 0.08 + breathe);
-  ctx.quadraticCurveTo(x + size * 0.08, y + size * 0.1, x + size * 0.14, y + size * 0.14 + breathe);
+  ctx.quadraticCurveTo(
+    x + size * 0.18,
+    y + size * 0.06,
+    x + size * 0.12,
+    y + size * 0.08 + breathe,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.08,
+    y + size * 0.1,
+    x + size * 0.14,
+    y + size * 0.14 + breathe,
+  );
   ctx.stroke();
   ctx.globalAlpha = 1;
 
@@ -4323,206 +5723,112 @@ function drawEliteTroop(
   // Gem sparkle
   ctx.fillStyle = `rgba(255, 255, 200, ${shimmer * 0.8})`;
   ctx.beginPath();
-  ctx.arc(x - size * 0.01, y + size * 0.06 + breathe, size * 0.008, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.01,
+    y + size * 0.06 + breathe,
+    size * 0.008,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Belt with ornate buckle and pouches
   ctx.fillStyle = "#3a2a1a";
-  ctx.fillRect(x - size * 0.18, y + size * 0.22 + breathe, size * 0.36, size * 0.045);
+  ctx.fillRect(
+    x - size * 0.21,
+    y + size * 0.23 + breathe,
+    size * 0.42,
+    size * 0.05,
+  );
   // Belt buckle
   ctx.fillStyle = "#c9a227";
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.06, y + size * 0.215 + breathe, size * 0.12, size * 0.055, size * 0.01);
+  ctx.roundRect(
+    x - size * 0.065,
+    y + size * 0.22 + breathe,
+    size * 0.13,
+    size * 0.06,
+    size * 0.01,
+  );
   ctx.fill();
   ctx.fillStyle = "#dab32f";
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.04, y + size * 0.225 + breathe, size * 0.08, size * 0.035, size * 0.005);
+  ctx.roundRect(
+    x - size * 0.045,
+    y + size * 0.232 + breathe,
+    size * 0.09,
+    size * 0.04,
+    size * 0.005,
+  );
   ctx.fill();
   // Buckle gem
   ctx.fillStyle = "#ff4400";
   ctx.beginPath();
-  ctx.arc(x, y + size * 0.242 + breathe, size * 0.012, 0, Math.PI * 2);
+  ctx.arc(x, y + size * 0.25 + breathe, size * 0.013, 0, Math.PI * 2);
   ctx.fill();
   // Belt pouches
   ctx.fillStyle = "#4a3a2a";
-  ctx.fillRect(x - size * 0.16, y + size * 0.24 + breathe, size * 0.05, size * 0.04);
-  ctx.fillRect(x + size * 0.11, y + size * 0.24 + breathe, size * 0.05, size * 0.04);
-
-  // === ORNATE HALBERD (polearm weapon with intricate design) ===
-  ctx.save();
-  ctx.translate(halberdX, halberdY);
-  ctx.rotate(halberdAngle);
-
-  // Ornate pole with wrapped leather
-  const poleGrad = ctx.createLinearGradient(-size * 0.03, -size * 0.5, size * 0.03, -size * 0.5);
-  poleGrad.addColorStop(0, "#3a2a1a");
-  poleGrad.addColorStop(0.3, "#5a4a3a");
-  poleGrad.addColorStop(0.7, "#5a4a3a");
-  poleGrad.addColorStop(1, "#3a2a1a");
-  ctx.fillStyle = poleGrad;
-  ctx.fillRect(-size * 0.025, -size * 0.55, size * 0.05, size * 1.0);
-  
-  // Leather wrappings on pole
-  ctx.strokeStyle = "#2a1a0a";
-  ctx.lineWidth = 1.5;
-  for (let wrap = 0; wrap < 6; wrap++) {
-    const wrapY = -size * 0.1 + wrap * size * 0.12;
-    ctx.beginPath();
-    ctx.moveTo(-size * 0.025, wrapY);
-    ctx.lineTo(size * 0.025, wrapY + size * 0.03);
-    ctx.stroke();
-  }
-
-  // Gold pole rings
-  ctx.fillStyle = "#c9a227";
-  ctx.fillRect(-size * 0.03, -size * 0.52, size * 0.06, size * 0.025);
-  ctx.fillRect(-size * 0.03, -size * 0.2, size * 0.06, size * 0.02);
-  ctx.fillRect(-size * 0.03, size * 0.25, size * 0.06, size * 0.02);
-
-  // Elaborate axe head (glows during attack)
-  if (isAttacking) {
-    ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = 15 * zoom * Math.abs(halberdSwing);
-  }
-  
-  // Axe blade with gradient
-  const bladeGrad = ctx.createLinearGradient(-size * 0.18, -size * 0.4, -size * 0.02, -size * 0.3);
-  bladeGrad.addColorStop(0, isAttacking ? "#e0e0f0" : "#b0b0c0");
-  bladeGrad.addColorStop(0.5, isAttacking ? "#f0f0ff" : "#d0d0e0");
-  bladeGrad.addColorStop(1, isAttacking ? "#c0c0d0" : "#a0a0b0");
-  ctx.fillStyle = bladeGrad;
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.025, -size * 0.52);
-  ctx.lineTo(-size * 0.18, -size * 0.38);
-  ctx.quadraticCurveTo(-size * 0.2, -size * 0.32, -size * 0.15, -size * 0.26);
-  ctx.lineTo(-size * 0.025, -size * 0.32);
-  ctx.closePath();
-  ctx.fill();
-
-  // Blade edge highlight
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 0.8;
-  ctx.globalAlpha = 0.6;
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.025, -size * 0.52);
-  ctx.lineTo(-size * 0.17, -size * 0.38);
-  ctx.quadraticCurveTo(-size * 0.19, -size * 0.33, -size * 0.14, -size * 0.27);
-  ctx.stroke();
-  ctx.globalAlpha = 1;
-  
-  // Blade engravings
-  ctx.strokeStyle = "#7a7a8a";
-  ctx.lineWidth = 0.6;
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.06, -size * 0.42);
-  ctx.quadraticCurveTo(-size * 0.1, -size * 0.38, -size * 0.08, -size * 0.32);
-  ctx.stroke();
-
-  // Ornate spike tip
-  ctx.fillStyle = isAttacking ? "#e0e0f0" : "#c0c0d0";
-  ctx.beginPath();
-  ctx.moveTo(0, -size * 0.62);
-  ctx.lineTo(-size * 0.04, -size * 0.52);
-  ctx.lineTo(size * 0.04, -size * 0.52);
-  ctx.closePath();
-  ctx.fill();
-
-  // Spike decorative collar
-  ctx.fillStyle = "#c9a227";
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.05, -size * 0.52);
-  ctx.lineTo(-size * 0.035, -size * 0.54);
-  ctx.lineTo(size * 0.035, -size * 0.54);
-  ctx.lineTo(size * 0.05, -size * 0.52);
-  ctx.closePath();
-  ctx.fill();
-
-  // Back spike with curve
-  ctx.fillStyle = isAttacking ? "#d0d0e0" : "#b0b0c0";
-  ctx.beginPath();
-  ctx.moveTo(size * 0.025, -size * 0.44);
-  ctx.quadraticCurveTo(size * 0.12, -size * 0.42, size * 0.1, -size * 0.38);
-  ctx.quadraticCurveTo(size * 0.08, -size * 0.34, size * 0.025, -size * 0.36);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.shadowBlur = 0;
-
-  // Swing trail effect with particles
-  if (isAttacking && Math.abs(halberdSwing) > 0.4) {
-    // Main trail
-    ctx.strokeStyle = `rgba(255, 200, 100, ${Math.abs(halberdSwing) * 0.5})`;
-    ctx.lineWidth = 4 * zoom;
-    ctx.beginPath();
-    ctx.arc(
-      0,
-      -size * 0.42,
-      size * 0.25,
-      -Math.PI * 0.5,
-      -Math.PI * 0.5 + halberdSwing * 0.9
-    );
-    ctx.stroke();
-    
-    // Inner trail
-    ctx.strokeStyle = `rgba(255, 255, 200, ${Math.abs(halberdSwing) * 0.3})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.arc(
-      0,
-      -size * 0.42,
-      size * 0.22,
-      -Math.PI * 0.5,
-      -Math.PI * 0.5 + halberdSwing * 0.85
-    );
-    ctx.stroke();
-    
-    // Spark particles
-    for (let sp = 0; sp < 4; sp++) {
-      const spAngle = -Math.PI * 0.5 + halberdSwing * (0.5 + sp * 0.1);
-      const spDist = size * (0.2 + sp * 0.02);
-      const spX = Math.cos(spAngle) * spDist;
-      const spY = -size * 0.42 + Math.sin(spAngle) * spDist;
-      ctx.fillStyle = `rgba(255, 220, 150, ${0.8 - sp * 0.15})`;
-      ctx.beginPath();
-      ctx.arc(spX, spY, size * 0.015, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  ctx.restore();
+  ctx.fillRect(
+    x - size * 0.18,
+    y + size * 0.25 + breathe,
+    size * 0.055,
+    size * 0.045,
+  );
+  ctx.fillRect(
+    x + size * 0.125,
+    y + size * 0.25 + breathe,
+    size * 0.055,
+    size * 0.045,
+  );
 
   // === SHOULDERS (elaborate layered pauldrons) ===
   // Left pauldron - multiple layers
   ctx.save();
-  ctx.translate(x - size * 0.19, y - size * 0.04 + breathe);
-  
+  ctx.translate(x - size * 0.23, y - size * 0.04 + breathe);
+
   // Pauldron base layer
-  const pauldronGradL = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.12);
+  const pauldronGradL = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.14);
   pauldronGradL.addColorStop(0, "#8a8a9a");
   pauldronGradL.addColorStop(0.6, "#6a6a7a");
   pauldronGradL.addColorStop(1, "#4a4a5a");
   ctx.fillStyle = pauldronGradL;
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.12, size * 0.08, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, size * 0.14, size * 0.09, -0.3, 0, Math.PI * 2);
   ctx.fill();
-  
+
   // Pauldron ridge layers
   ctx.fillStyle = "#7a7a8a";
   ctx.beginPath();
-  ctx.ellipse(size * 0.02, size * 0.03, size * 0.09, size * 0.05, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.025,
+    size * 0.03,
+    size * 0.1,
+    size * 0.055,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#6a6a7a";
   ctx.beginPath();
-  ctx.ellipse(size * 0.04, size * 0.05, size * 0.06, size * 0.035, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    size * 0.045,
+    size * 0.05,
+    size * 0.07,
+    size * 0.04,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
-  
+
   // Gold trim and rivets
   ctx.strokeStyle = "#c9a227";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.12, size * 0.08, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, size * 0.14, size * 0.09, -0.3, 0, Math.PI * 2);
   ctx.stroke();
-  
+
   // Decorative rivets
   ctx.fillStyle = "#dab32f";
   for (let rivet = 0; rivet < 4; rivet++) {
@@ -4533,43 +5839,59 @@ function drawEliteTroop(
     ctx.arc(rivetX, rivetY, size * 0.012, 0, Math.PI * 2);
     ctx.fill();
   }
-  
+
   // Pauldron spike
   ctx.fillStyle = "#5a5a6a";
   ctx.beginPath();
-  ctx.moveTo(-size * 0.08, -size * 0.02);
-  ctx.lineTo(-size * 0.14, -size * 0.06);
-  ctx.lineTo(-size * 0.06, 0);
+  ctx.moveTo(-size * 0.1, -size * 0.025);
+  ctx.lineTo(-size * 0.18, -size * 0.07);
+  ctx.lineTo(-size * 0.08, size * 0.005);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 
   // Right pauldron
   ctx.save();
-  ctx.translate(x + size * 0.19, y - size * 0.04 + breathe);
-  
-  const pauldronGradR = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.12);
+  ctx.translate(x + size * 0.23, y - size * 0.04 + breathe);
+
+  const pauldronGradR = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.14);
   pauldronGradR.addColorStop(0, "#8a8a9a");
   pauldronGradR.addColorStop(0.6, "#6a6a7a");
   pauldronGradR.addColorStop(1, "#4a4a5a");
   ctx.fillStyle = pauldronGradR;
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.12, size * 0.08, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, size * 0.14, size * 0.09, 0.3, 0, Math.PI * 2);
   ctx.fill();
-  
+
   ctx.fillStyle = "#7a7a8a";
   ctx.beginPath();
-  ctx.ellipse(-size * 0.02, size * 0.03, size * 0.09, size * 0.05, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    -size * 0.025,
+    size * 0.03,
+    size * 0.1,
+    size * 0.055,
+    0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#6a6a7a";
   ctx.beginPath();
-  ctx.ellipse(-size * 0.04, size * 0.05, size * 0.06, size * 0.035, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    -size * 0.045,
+    size * 0.05,
+    size * 0.07,
+    size * 0.04,
+    0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
-  
+
   ctx.strokeStyle = "#c9a227";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.12, size * 0.08, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, size * 0.14, size * 0.09, 0.3, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.fillStyle = "#dab32f";
@@ -4581,19 +5903,24 @@ function drawEliteTroop(
     ctx.arc(rivetX, rivetY, size * 0.012, 0, Math.PI * 2);
     ctx.fill();
   }
-  
+
   ctx.fillStyle = "#5a5a6a";
   ctx.beginPath();
-  ctx.moveTo(size * 0.08, -size * 0.02);
-  ctx.lineTo(size * 0.14, -size * 0.06);
-  ctx.lineTo(size * 0.06, 0);
+  ctx.moveTo(size * 0.1, -size * 0.025);
+  ctx.lineTo(size * 0.18, -size * 0.07);
+  ctx.lineTo(size * 0.08, size * 0.005);
   ctx.closePath();
   ctx.fill();
   ctx.restore();
 
   // === HEAD (elaborate plumed helm with face guard) ===
   // Gorget (neck armor)
-  const gorgetGrad = ctx.createLinearGradient(x - size * 0.08, y - size * 0.14, x + size * 0.08, y - size * 0.14);
+  const gorgetGrad = ctx.createLinearGradient(
+    x - size * 0.08,
+    y - size * 0.14,
+    x + size * 0.08,
+    y - size * 0.14,
+  );
   gorgetGrad.addColorStop(0, "#4a4a5a");
   gorgetGrad.addColorStop(0.5, "#6a6a7a");
   gorgetGrad.addColorStop(1, "#4a4a5a");
@@ -4601,7 +5928,12 @@ function drawEliteTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.08, y - size * 0.08 + breathe);
   ctx.lineTo(x - size * 0.1, y - size * 0.16 + breathe);
-  ctx.quadraticCurveTo(x, y - size * 0.18, x + size * 0.1, y - size * 0.16 + breathe);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.18,
+    x + size * 0.1,
+    y - size * 0.16 + breathe,
+  );
   ctx.lineTo(x + size * 0.08, y - size * 0.08 + breathe);
   ctx.closePath();
   ctx.fill();
@@ -4612,8 +5944,12 @@ function drawEliteTroop(
 
   // Helm base with gradient
   const helmGrad = ctx.createRadialGradient(
-    x - size * 0.03, y - size * 0.32 + breathe, size * 0.02,
-    x, y - size * 0.28 + breathe, size * 0.14
+    x - size * 0.03,
+    y - size * 0.32 + breathe,
+    size * 0.02,
+    x,
+    y - size * 0.28 + breathe,
+    size * 0.14,
   );
   helmGrad.addColorStop(0, "#9a9aaa");
   helmGrad.addColorStop(0.4, "#7a7a8a");
@@ -4643,19 +5979,45 @@ function drawEliteTroop(
     size * 0.05,
     0,
     0,
-    Math.PI
+    Math.PI,
   );
   ctx.fill();
   // Visor slits
   ctx.fillStyle = "#0a0a15";
-  ctx.fillRect(x - size * 0.08, y - size * 0.26 + breathe, size * 0.16, size * 0.01);
-  ctx.fillRect(x - size * 0.06, y - size * 0.24 + breathe, size * 0.12, size * 0.008);
-  
+  ctx.fillRect(
+    x - size * 0.08,
+    y - size * 0.26 + breathe,
+    size * 0.16,
+    size * 0.01,
+  );
+  ctx.fillRect(
+    x - size * 0.06,
+    y - size * 0.24 + breathe,
+    size * 0.12,
+    size * 0.008,
+  );
+
   // Eye glow behind visor
   ctx.fillStyle = `rgba(255, 100, 0, ${0.4 + shimmer * 0.3})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.03, y - size * 0.26 + breathe, size * 0.015, size * 0.008, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.03, y - size * 0.26 + breathe, size * 0.015, size * 0.008, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.03,
+    y - size * 0.26 + breathe,
+    size * 0.015,
+    size * 0.008,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.03,
+    y - size * 0.26 + breathe,
+    size * 0.015,
+    size * 0.008,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Extra elite helmet details.
@@ -4666,7 +6028,7 @@ function drawEliteTroop(
     y - size * 0.33 + breathe,
     size * 0.026,
     size * 0.11,
-    size * 0.006
+    size * 0.006,
   );
   ctx.fill();
   ctx.fillStyle = "#8c8ea2";
@@ -4686,7 +6048,7 @@ function drawEliteTroop(
       y - size * 0.34 + breathe,
       size * 0.008,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
   }
@@ -4700,7 +6062,7 @@ function drawEliteTroop(
     y - size * 0.28 + breathe,
     size * 0.14,
     Math.PI * 1.15,
-    Math.PI * 1.85
+    Math.PI * 1.85,
   );
   ctx.stroke();
 
@@ -4710,14 +6072,20 @@ function drawEliteTroop(
     const cpAngle = Math.PI * 1.3 + cp * Math.PI * 0.2;
     const cpX = x + Math.cos(cpAngle) * size * 0.14;
     const cpY = y - size * 0.28 + breathe + Math.sin(cpAngle) * size * 0.14;
-  ctx.beginPath();
+    ctx.beginPath();
     ctx.moveTo(cpX, cpY);
-    ctx.lineTo(cpX + Math.cos(cpAngle) * size * 0.04, cpY + Math.sin(cpAngle) * size * 0.04 - size * 0.02);
-    ctx.lineTo(cpX + Math.cos(cpAngle + 0.3) * size * 0.02, cpY + Math.sin(cpAngle + 0.3) * size * 0.02);
+    ctx.lineTo(
+      cpX + Math.cos(cpAngle) * size * 0.04,
+      cpY + Math.sin(cpAngle) * size * 0.04 - size * 0.02,
+    );
+    ctx.lineTo(
+      cpX + Math.cos(cpAngle + 0.3) * size * 0.02,
+      cpY + Math.sin(cpAngle + 0.3) * size * 0.02,
+    );
     ctx.closePath();
     ctx.fill();
   }
-  
+
   // Crown center gem
   ctx.fillStyle = "#ff3300";
   ctx.shadowColor = "#ff4400";
@@ -4736,21 +6104,23 @@ function drawEliteTroop(
     x + size * 0.2 + capeWave * 2.5,
     y - size * 0.58,
     x + size * 0.28 + capeWave * 4,
-    y - size * 0.4 + breathe
+    y - size * 0.4 + breathe,
   );
   ctx.quadraticCurveTo(
     x + size * 0.15,
     y - size * 0.35,
     x + size * 0.02,
-    y - size * 0.4 + breathe
+    y - size * 0.4 + breathe,
   );
   ctx.closePath();
   ctx.fill();
 
   // Main plume with gradient
   const plumeGrad = ctx.createLinearGradient(
-    x, y - size * 0.55,
-    x + size * 0.25, y - size * 0.35
+    x,
+    y - size * 0.55,
+    x + size * 0.25,
+    y - size * 0.35,
   );
   plumeGrad.addColorStop(0, "#ff7700");
   plumeGrad.addColorStop(0.3, "#ff5500");
@@ -4760,16 +6130,16 @@ function drawEliteTroop(
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.42 + breathe);
   ctx.quadraticCurveTo(
-    x + size * 0.18 + capeWave * 2,
-    y - size * 0.56,
-    x + size * 0.24 + capeWave * 3.5,
-    y - size * 0.38 + breathe
+    x + size * 0.2 + capeWave * 2.4 + plumeWhip * size * 0.035,
+    y - size * 0.58,
+    x + size * 0.28 + capeWave * 4 + plumeWhip * size * 0.045,
+    y - size * 0.38 + breathe,
   );
   ctx.quadraticCurveTo(
     x + size * 0.12,
     y - size * 0.34,
     x,
-    y - size * 0.4 + breathe
+    y - size * 0.4 + breathe,
   );
   ctx.closePath();
   ctx.fill();
@@ -4783,10 +6153,16 @@ function drawEliteTroop(
     ctx.beginPath();
     ctx.moveTo(x + size * 0.02, y - size * 0.42 + breathe);
     ctx.quadraticCurveTo(
-      x + size * (0.1 + fOffset) + capeWave * (1.5 + feather * 0.3),
+      x +
+        size * (0.1 + fOffset) +
+        capeWave * (1.5 + feather * 0.3) +
+        plumeWhip * size * 0.02,
       y - size * (0.48 + fOffset * 0.3),
-      x + size * (0.15 + fOffset) + capeWave * (2 + feather * 0.4),
-      y - size * 0.38 + breathe
+      x +
+        size * (0.15 + fOffset) +
+        capeWave * (2 + feather * 0.4) +
+        plumeWhip * size * 0.03,
+      y - size * 0.38 + breathe,
     );
     ctx.stroke();
   }
@@ -4800,13 +6176,13 @@ function drawEliteTroop(
     x + size * 0.08 + capeWave2 * 1.5,
     y - size * 0.48,
     x + size * 0.12 + capeWave2 * 2,
-    y - size * 0.36 + breathe
+    y - size * 0.36 + breathe,
   );
   ctx.quadraticCurveTo(
     x + size * 0.04,
     y - size * 0.34,
     x - size * 0.02,
-    y - size * 0.38 + breathe
+    y - size * 0.38 + breathe,
   );
   ctx.closePath();
   ctx.fill();
@@ -4814,34 +6190,37 @@ function drawEliteTroop(
   // Elite kite shield with layered crest.
   const eliteShieldGlow = 0.68 + Math.sin(time * 4.2) * 0.32;
   ctx.save();
-  ctx.translate(x - size * 0.34, y + size * 0.03 + breathe * 0.55);
-  ctx.rotate(-0.36 + stance * 0.02);
+  ctx.translate(
+    x - size * 0.4,
+    y + size * 0.04 + breathe * 0.55 + hipBounce * 0.4,
+  );
+  ctx.rotate(-0.42 + stance * 0.03 - attackDrive * 0.08);
   const eliteShieldGrad = ctx.createLinearGradient(
-    -size * 0.09,
-    -size * 0.22,
-    size * 0.09,
-    size * 0.18
+    -size * 0.11,
+    -size * 0.24,
+    size * 0.11,
+    size * 0.2,
   );
   eliteShieldGrad.addColorStop(0, "#252b38");
   eliteShieldGrad.addColorStop(0.52, "#4b5f7f");
   eliteShieldGrad.addColorStop(1, "#202737");
   ctx.fillStyle = eliteShieldGrad;
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.24);
-  ctx.lineTo(-size * 0.13, -size * 0.14);
-  ctx.lineTo(-size * 0.1, size * 0.16);
-  ctx.lineTo(0, size * 0.22);
-  ctx.lineTo(size * 0.1, size * 0.16);
-  ctx.lineTo(size * 0.13, -size * 0.14);
+  ctx.moveTo(0, -size * 0.27);
+  ctx.lineTo(-size * 0.15, -size * 0.16);
+  ctx.lineTo(-size * 0.12, size * 0.19);
+  ctx.lineTo(0, size * 0.26);
+  ctx.lineTo(size * 0.12, size * 0.19);
+  ctx.lineTo(size * 0.15, -size * 0.16);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#d0b37a";
   ctx.lineWidth = 1.8 * zoom;
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.17);
-  ctx.lineTo(0, size * 0.16);
-  ctx.moveTo(-size * 0.055, -size * 0.015);
-  ctx.lineTo(size * 0.055, -size * 0.015);
+  ctx.moveTo(0, -size * 0.19);
+  ctx.lineTo(0, size * 0.18);
+  ctx.moveTo(-size * 0.065, -size * 0.015);
+  ctx.lineTo(size * 0.065, -size * 0.015);
   ctx.stroke();
   ctx.fillStyle = `rgba(255, 157, 62, ${0.34 + eliteShieldGlow * 0.25})`;
   ctx.beginPath();
@@ -4861,7 +6240,7 @@ function drawEliteTroop(
       tasselX + side * size * 0.028,
       tasselY + size * 0.08,
       tasselX + side * size * 0.02,
-      tasselY + size * 0.18
+      tasselY + size * 0.18,
     );
     ctx.stroke();
     ctx.fillStyle = "#d5a54c";
@@ -4871,7 +6250,7 @@ function drawEliteTroop(
       tasselY + size * 0.17,
       size * 0.024,
       size * 0.03,
-      size * 0.008
+      size * 0.008,
     );
     ctx.fill();
   }
@@ -4880,11 +6259,17 @@ function drawEliteTroop(
   ctx.lineWidth = 1.3 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y + size * 0.23 + breathe);
-  ctx.quadraticCurveTo(x, y + size * 0.29 + breathe, x + size * 0.14, y + size * 0.23 + breathe);
+  ctx.quadraticCurveTo(
+    x,
+    y + size * 0.29 + breathe,
+    x + size * 0.14,
+    y + size * 0.23 + breathe,
+  );
   ctx.stroke();
   for (let link = 0; link < 3; link++) {
     const linkX = x - size * 0.09 + link * size * 0.09;
-    const linkY = y + size * 0.25 + breathe + Math.sin(link * 1.2) * size * 0.008;
+    const linkY =
+      y + size * 0.25 + breathe + Math.sin(link * 1.2) * size * 0.008;
     ctx.fillStyle = link % 2 === 0 ? "#c79b44" : "#ff7a2f";
     ctx.beginPath();
     ctx.arc(linkX, linkY, size * 0.013, 0, Math.PI * 2);
@@ -4895,13 +6280,58 @@ function drawEliteTroop(
   ctx.save();
   ctx.translate(halberdX, halberdY);
   ctx.rotate(halberdAngle);
-  const edgeGlow = isAttacking ? 0.55 + Math.abs(halberdSwing) * 0.4 : 0.28 + shimmer * 0.18;
+  const edgeGlow = isAttacking
+    ? 0.55 + Math.abs(halberdSwing) * 0.4
+    : 0.28 + shimmer * 0.18;
+  const bannerWave =
+    Math.sin(time * 6 + attackPhase * Math.PI * 1.6) *
+    size *
+    (isAttacking ? 0.05 : 0.03);
+
+  if (isAttacking && Math.abs(halberdSwing) > 0.25) {
+    ctx.strokeStyle = `rgba(255, 194, 110, ${0.24 + attackDrive * 0.34})`;
+    ctx.lineWidth = 5 * zoom;
+    ctx.beginPath();
+    ctx.arc(
+      0,
+      -size * 0.42,
+      size * 0.3,
+      -Math.PI * 0.52,
+      -Math.PI * 0.52 + halberdSwing * 0.92,
+    );
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(255, 248, 220, ${0.16 + attackDrive * 0.22})`;
+    ctx.lineWidth = 2.2 * zoom;
+    ctx.beginPath();
+    ctx.arc(
+      0,
+      -size * 0.42,
+      size * 0.25,
+      -Math.PI * 0.52,
+      -Math.PI * 0.52 + halberdSwing * 0.88,
+    );
+    ctx.stroke();
+    for (let spark = 0; spark < 5; spark++) {
+      const sparkAngle = -Math.PI * 0.52 + halberdSwing * (0.45 + spark * 0.08);
+      const sparkRadius = size * (0.22 + spark * 0.03);
+      ctx.fillStyle = `rgba(255, 224, 166, ${0.75 - spark * 0.12})`;
+      ctx.beginPath();
+      ctx.arc(
+        Math.cos(sparkAngle) * sparkRadius,
+        -size * 0.42 + Math.sin(sparkAngle) * sparkRadius,
+        size * 0.015,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
 
   const crescentGrad = ctx.createLinearGradient(
     -size * 0.2,
     -size * 0.5,
     size * 0.02,
-    -size * 0.28
+    -size * 0.28,
   );
   crescentGrad.addColorStop(0, "#c3c9d8");
   crescentGrad.addColorStop(0.5, "#eef1ff");
@@ -4963,19 +6393,29 @@ function drawEliteTroop(
     ctx.stroke();
   }
 
-  ctx.fillStyle = `rgba(255, 146, 54, ${0.35 + shimmer * 0.28})`;
+  ctx.fillStyle = heraldicColor;
   ctx.beginPath();
   ctx.moveTo(size * 0.015, -size * 0.2);
-  ctx.lineTo(size * 0.18, -size * 0.16);
-  ctx.lineTo(size * 0.08, -size * 0.05);
-  ctx.lineTo(size * 0.015, -size * 0.08);
+  ctx.lineTo(size * 0.22, -size * 0.15 + bannerWave);
+  ctx.lineTo(size * 0.12, -size * 0.03 + bannerWave * 0.55);
+  ctx.lineTo(size * 0.2, size * 0.02 + bannerWave * 0.2);
+  ctx.lineTo(size * 0.015, -size * 0.05);
   ctx.closePath();
   ctx.fill();
+  ctx.strokeStyle = `rgba(255, 228, 179, ${0.25 + edgeGlow * 0.3})`;
+  ctx.lineWidth = 0.9 * zoom;
+  ctx.stroke();
 
   // Counterweight spike and accent collar for stronger silhouette.
   ctx.fillStyle = "#c7aa6b";
   ctx.beginPath();
-  ctx.roundRect(-size * 0.04, -size * 0.525, size * 0.08, size * 0.02, size * 0.005);
+  ctx.roundRect(
+    -size * 0.04,
+    -size * 0.525,
+    size * 0.08,
+    size * 0.02,
+    size * 0.005,
+  );
   ctx.fill();
   ctx.fillStyle = "#c0c8d8";
   ctx.beginPath();
@@ -4986,6 +6426,8 @@ function drawEliteTroop(
   ctx.fill();
   ctx.restore();
 
+  ctx.restore();
+
   drawTroopMasterworkFinish(
     ctx,
     x,
@@ -4994,7 +6436,7 @@ function drawEliteTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.elite,
-    { vanguard: true }
+    { vanguard: true },
   );
 }
 
@@ -5007,7 +6449,7 @@ function drawArmoredTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   const stance = Math.sin(time * 2.8) * 1.1;
   const breathe = Math.sin(time * 2.05) * 0.45;
@@ -5020,7 +6462,9 @@ function drawArmoredTroop(
   const maceSwing = isAttacking
     ? Math.sin(attackPhase * Math.PI * 1.5) * 2.25
     : 0;
-  const bodyLean = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.2 : 0;
+  const bodyLean = isAttacking
+    ? Math.sin(attackPhase * Math.PI) * 0.2
+    : Math.sin(time * 1.6) * 0.03;
 
   ctx.save();
   ctx.translate(x, y);
@@ -5032,7 +6476,7 @@ function drawArmoredTroop(
     x - size * 0.24,
     y - size * 0.18,
     x + size * 0.12,
-    y + size * 0.54
+    y + size * 0.54,
   );
   capeOuter.addColorStop(0, "#13243a");
   capeOuter.addColorStop(0.55, "#0f1d30");
@@ -5044,14 +6488,14 @@ function drawArmoredTroop(
     x - size * 0.29 + capeWave * 4,
     y + size * 0.2,
     x - size * 0.2 + capeWave * 5,
-    y + size * 0.52
+    y + size * 0.52,
   );
   ctx.lineTo(x + size * 0.13 + capeWave * 2.2, y + size * 0.47);
   ctx.quadraticCurveTo(
     x + size * 0.08,
     y + size * 0.14,
     x + size * 0.13,
-    y - size * 0.1 + breathe
+    y - size * 0.1 + breathe,
   );
   ctx.closePath();
   ctx.fill();
@@ -5060,7 +6504,7 @@ function drawArmoredTroop(
     x - size * 0.18,
     y - size * 0.08,
     x + size * 0.08,
-    y + size * 0.44
+    y + size * 0.44,
   );
   capeInner.addColorStop(0, "#7a2a14");
   capeInner.addColorStop(0.45, "#aa3a18");
@@ -5072,17 +6516,27 @@ function drawArmoredTroop(
     x - size * 0.2 + capeWave * 3.2,
     y + size * 0.15,
     x - size * 0.14 + capeWave * 3.8,
-    y + size * 0.39
+    y + size * 0.39,
   );
   ctx.lineTo(x + size * 0.09 + capeWave * 1.8, y + size * 0.35);
-  ctx.quadraticCurveTo(x + size * 0.05, y + size * 0.1, x + size * 0.09, y - size * 0.09 + breathe);
+  ctx.quadraticCurveTo(
+    x + size * 0.05,
+    y + size * 0.1,
+    x + size * 0.09,
+    y - size * 0.09 + breathe,
+  );
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = `rgba(233, 173, 84, ${0.35 + shimmer * 0.3})`;
   ctx.lineWidth = 1.6 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, y - size * 0.13 + breathe);
-  ctx.quadraticCurveTo(x - size * 0.29 + capeWave * 4, y + size * 0.2, x - size * 0.2 + capeWave * 5, y + size * 0.52);
+  ctx.quadraticCurveTo(
+    x - size * 0.29 + capeWave * 4,
+    y + size * 0.2,
+    x - size * 0.2 + capeWave * 5,
+    y + size * 0.52,
+  );
   ctx.stroke();
 
   // Legs and sabatons.
@@ -5090,7 +6544,12 @@ function drawArmoredTroop(
     ctx.save();
     ctx.translate(x + side * size * 0.09, y + size * 0.3);
     ctx.rotate(side * (-0.09 + stance * 0.02));
-    const greaveGrad = ctx.createLinearGradient(-size * 0.06, 0, size * 0.06, 0);
+    const greaveGrad = ctx.createLinearGradient(
+      -size * 0.06,
+      0,
+      size * 0.06,
+      0,
+    );
     greaveGrad.addColorStop(0, "#394a5f");
     greaveGrad.addColorStop(0.5, "#7f97b2");
     greaveGrad.addColorStop(1, "#34465c");
@@ -5114,7 +6573,13 @@ function drawArmoredTroop(
   // Chainmail fauld and belt.
   ctx.fillStyle = "#566a83";
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.17, y + size * 0.22 + breathe, size * 0.34, size * 0.1, size * 0.02);
+  ctx.roundRect(
+    x - size * 0.17,
+    y + size * 0.22 + breathe,
+    size * 0.34,
+    size * 0.1,
+    size * 0.02,
+  );
   ctx.fill();
   ctx.strokeStyle = "rgba(205, 226, 246, 0.33)";
   ctx.lineWidth = 1 * zoom;
@@ -5131,7 +6596,7 @@ function drawArmoredTroop(
     x - size * 0.22,
     y - size * 0.14,
     x + size * 0.22,
-    y + size * 0.32
+    y + size * 0.32,
   );
   cuirassGrad.addColorStop(0, "#3e5167");
   cuirassGrad.addColorStop(0.24, "#7d98b5");
@@ -5146,7 +6611,7 @@ function drawArmoredTroop(
     x,
     y - size * 0.22 + breathe * 0.35,
     x + size * 0.225,
-    y - size * 0.1 + breathe * 0.5
+    y - size * 0.1 + breathe * 0.5,
   );
   ctx.lineTo(x + size * 0.205, y + size * 0.34 + breathe);
   ctx.closePath();
@@ -5163,7 +6628,7 @@ function drawArmoredTroop(
     x - size * 0.1,
     y - size * 0.02,
     x + size * 0.1,
-    y + size * 0.27
+    y + size * 0.27,
   );
   tabardGrad.addColorStop(0, "#922f16");
   tabardGrad.addColorStop(0.5, heraldicColor);
@@ -5188,16 +6653,38 @@ function drawArmoredTroop(
 
   // Belt and buckle.
   ctx.fillStyle = "#253142";
-  ctx.fillRect(x - size * 0.19, y + size * 0.252 + breathe, size * 0.38, size * 0.058);
+  ctx.fillRect(
+    x - size * 0.19,
+    y + size * 0.252 + breathe,
+    size * 0.38,
+    size * 0.058,
+  );
   ctx.fillStyle = `rgba(186, 61, 45, ${0.54 + steelPulse * 0.22})`;
-  ctx.fillRect(x - size * 0.175, y + size * 0.262 + breathe, size * 0.35, size * 0.017);
+  ctx.fillRect(
+    x - size * 0.175,
+    y + size * 0.262 + breathe,
+    size * 0.35,
+    size * 0.017,
+  );
   ctx.fillStyle = "#c8a567";
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.048, y + size * 0.255 + breathe, size * 0.096, size * 0.051, size * 0.01);
+  ctx.roundRect(
+    x - size * 0.048,
+    y + size * 0.255 + breathe,
+    size * 0.096,
+    size * 0.051,
+    size * 0.01,
+  );
   ctx.fill();
   ctx.fillStyle = `rgba(255, 225, 162, ${0.35 + shimmer * 0.25})`;
   ctx.beginPath();
-  ctx.roundRect(x - size * 0.02, y + size * 0.268 + breathe, size * 0.022, size * 0.022, size * 0.004);
+  ctx.roundRect(
+    x - size * 0.02,
+    y + size * 0.268 + breathe,
+    size * 0.022,
+    size * 0.022,
+    size * 0.004,
+  );
   ctx.fill();
 
   // Pauldrons with knight motif.
@@ -5206,7 +6693,7 @@ function drawArmoredTroop(
       x + side * size * 0.31,
       y - size * 0.13,
       x + side * size * 0.16,
-      y + size * 0.04
+      y + size * 0.04,
     );
     pauldronGrad.addColorStop(0, "#627f9d");
     pauldronGrad.addColorStop(0.45, "#8eabc9");
@@ -5220,7 +6707,7 @@ function drawArmoredTroop(
       size * 0.082,
       side * 0.28,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
     ctx.strokeStyle = "rgba(227, 202, 144, 0.75)";
@@ -5243,7 +6730,12 @@ function drawArmoredTroop(
   ctx.save();
   ctx.translate(x - size * 0.39, y + size * 0.075 + breathe * 0.55);
   ctx.rotate(-0.36 + stance * 0.02);
-  const shieldGrad = ctx.createLinearGradient(-size * 0.09, -size * 0.2, size * 0.09, size * 0.16);
+  const shieldGrad = ctx.createLinearGradient(
+    -size * 0.09,
+    -size * 0.2,
+    size * 0.09,
+    size * 0.16,
+  );
   shieldGrad.addColorStop(0, "#2f4359");
   shieldGrad.addColorStop(0.52, "#5a7898");
   shieldGrad.addColorStop(1, "#2d4158");
@@ -5281,7 +6773,9 @@ function drawArmoredTroop(
 
   // Right arm and upgraded mace (drawn in single context so mace stays attached).
   ctx.save();
-  const armBaseAngle = isAttacking ? -1.2 + attackPhase * 2.65 : 0.19 + stance * 0.03;
+  const armBaseAngle = isAttacking
+    ? -1.2 + attackPhase * 2.65
+    : 0.19 + stance * 0.03;
   const armX = x + size * 0.31 + (isAttacking ? maceSwing * size * 0.08 : 0);
   const armY = y + size * 0.02 + breathe * 0.45;
   const armAngle = resolveWeaponRotation(
@@ -5290,7 +6784,7 @@ function drawArmoredTroop(
     armY,
     armBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.05 : 0.58
+    isAttacking ? 1.05 : 0.58,
   );
   ctx.translate(armX, armY);
   ctx.rotate(armAngle);
@@ -5300,11 +6794,18 @@ function drawArmoredTroop(
   ctx.fillStyle = "#86a7c4";
   ctx.fillRect(-size * 0.06, size * 0.162, size * 0.12, size * 0.08);
 
-  const maceWristAngle = isAttacking ? -0.12 + attackPhase * 0.3 : -0.08 + stance * 0.01;
+  const maceWristAngle = isAttacking
+    ? -0.12 + attackPhase * 0.3
+    : -0.08 + stance * 0.01;
   ctx.translate(0, size * 0.21);
   ctx.rotate(maceWristAngle);
 
-  const shaftGrad = ctx.createLinearGradient(-size * 0.022, -size * 0.56, size * 0.022, 0.2 * size);
+  const shaftGrad = ctx.createLinearGradient(
+    -size * 0.022,
+    -size * 0.56,
+    size * 0.022,
+    0.2 * size,
+  );
   shaftGrad.addColorStop(0, "#2f2215");
   shaftGrad.addColorStop(0.5, "#5a4331");
   shaftGrad.addColorStop(1, "#271b11");
@@ -5322,13 +6823,26 @@ function drawArmoredTroop(
 
   ctx.fillStyle = "#c8aa73";
   ctx.beginPath();
-  ctx.roundRect(-size * 0.032, -size * 0.52, size * 0.064, size * 0.024, size * 0.007);
+  ctx.roundRect(
+    -size * 0.032,
+    -size * 0.52,
+    size * 0.064,
+    size * 0.024,
+    size * 0.007,
+  );
   ctx.fill();
   ctx.beginPath();
   ctx.arc(0, size * 0.2, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
 
-  const maceHeadGrad = ctx.createRadialGradient(0, -size * 0.64, size * 0.016, 0, -size * 0.64, size * 0.1);
+  const maceHeadGrad = ctx.createRadialGradient(
+    0,
+    -size * 0.64,
+    size * 0.016,
+    0,
+    -size * 0.64,
+    size * 0.1,
+  );
   maceHeadGrad.addColorStop(0, "#e5ecf8");
   maceHeadGrad.addColorStop(0.45, "#a7bad6");
   maceHeadGrad.addColorStop(1, "#5f7491");
@@ -5370,7 +6884,7 @@ function drawArmoredTroop(
       -size * 0.64,
       size * 0.24,
       -Math.PI * 0.54,
-      -Math.PI * 0.54 + maceSwing * 0.84
+      -Math.PI * 0.54 + maceSwing * 0.84,
     );
     ctx.stroke();
   }
@@ -5381,7 +6895,7 @@ function drawArmoredTroop(
     x - size * 0.09,
     y - size * 0.15,
     x + size * 0.09,
-    y - size * 0.15
+    y - size * 0.15,
   );
   gorgetGrad.addColorStop(0, "#4a5d76");
   gorgetGrad.addColorStop(0.5, "#6f88a3");
@@ -5390,7 +6904,12 @@ function drawArmoredTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.09, y - size * 0.085 + breathe);
   ctx.lineTo(x - size * 0.11, y - size * 0.165 + breathe);
-  ctx.quadraticCurveTo(x, y - size * 0.192, x + size * 0.11, y - size * 0.165 + breathe);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.192,
+    x + size * 0.11,
+    y - size * 0.165 + breathe,
+  );
   ctx.lineTo(x + size * 0.09, y - size * 0.085 + breathe);
   ctx.closePath();
   ctx.fill();
@@ -5402,7 +6921,7 @@ function drawArmoredTroop(
     x - size * 0.16,
     y - size * 0.44 + breathe * 0.25,
     x + size * 0.16,
-    y - size * 0.18 + breathe * 0.25
+    y - size * 0.18 + breathe * 0.25,
   );
   helmGrad.addColorStop(0, "#5e7894");
   helmGrad.addColorStop(0.45, "#9ab6d3");
@@ -5410,8 +6929,18 @@ function drawArmoredTroop(
   ctx.fillStyle = helmGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.14, y - size * 0.34 + breathe * 0.2);
-  ctx.quadraticCurveTo(x - size * 0.16, y - size * 0.45 + breathe * 0.1, x, y - size * 0.47 + breathe * 0.1);
-  ctx.quadraticCurveTo(x + size * 0.16, y - size * 0.45 + breathe * 0.1, x + size * 0.14, y - size * 0.34 + breathe * 0.2);
+  ctx.quadraticCurveTo(
+    x - size * 0.16,
+    y - size * 0.45 + breathe * 0.1,
+    x,
+    y - size * 0.47 + breathe * 0.1,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.16,
+    y - size * 0.45 + breathe * 0.1,
+    x + size * 0.14,
+    y - size * 0.34 + breathe * 0.2,
+  );
   ctx.lineTo(x + size * 0.125, y - size * 0.2 + breathe * 0.2);
   ctx.lineTo(x - size * 0.125, y - size * 0.2 + breathe * 0.2);
   ctx.closePath();
@@ -5425,18 +6954,36 @@ function drawArmoredTroop(
     y - size * 0.33 + breathe * 0.2,
     size * 0.204,
     size * 0.045,
-    size * 0.012
+    size * 0.012,
   );
   ctx.fill();
   ctx.fillStyle = `rgba(184, 232, 255, ${0.5 + shimmer * 0.32})`;
   ctx.beginPath();
-  ctx.arc(x - size * 0.044, y - size * 0.307 + breathe * 0.2, size * 0.014, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.044, y - size * 0.307 + breathe * 0.2, size * 0.014, 0, Math.PI * 2);
+  ctx.arc(
+    x - size * 0.044,
+    y - size * 0.307 + breathe * 0.2,
+    size * 0.014,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.044,
+    y - size * 0.307 + breathe * 0.2,
+    size * 0.014,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#243247";
   for (let vent = -1; vent <= 1; vent++) {
     ctx.beginPath();
-    ctx.arc(x + vent * size * 0.03, y - size * 0.245 + breathe * 0.2, size * 0.007, 0, Math.PI * 2);
+    ctx.arc(
+      x + vent * size * 0.03,
+      y - size * 0.245 + breathe * 0.2,
+      size * 0.007,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -5448,7 +6995,7 @@ function drawArmoredTroop(
     y - size * 0.37 + breathe * 0.2,
     size * 0.032,
     size * 0.14,
-    size * 0.007
+    size * 0.007,
   );
   ctx.fill();
   ctx.beginPath();
@@ -5466,7 +7013,13 @@ function drawArmoredTroop(
   ctx.fillStyle = "#d5b775";
   for (let rivet = 0; rivet < 3; rivet++) {
     ctx.beginPath();
-    ctx.arc(x - size * 0.08 + rivet * size * 0.08, y - size * 0.355 + breathe * 0.2, size * 0.008, 0, Math.PI * 2);
+    ctx.arc(
+      x - size * 0.08 + rivet * size * 0.08,
+      y - size * 0.355 + breathe * 0.2,
+      size * 0.008,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -5474,7 +7027,7 @@ function drawArmoredTroop(
     x,
     y - size * 0.56,
     x + size * 0.22,
-    y - size * 0.36
+    y - size * 0.36,
   );
   plumeGrad.addColorStop(0, "#ff7a14");
   plumeGrad.addColorStop(0.45, "#ff5812");
@@ -5486,13 +7039,13 @@ function drawArmoredTroop(
     x + size * 0.17 + capeWave * 1.5,
     y - size * 0.56,
     x + size * 0.24 + capeWave * 2.2,
-    y - size * 0.39 + breathe * 0.15
+    y - size * 0.39 + breathe * 0.15,
   );
   ctx.quadraticCurveTo(
     x + size * 0.11,
     y - size * 0.35,
     x,
-    y - size * 0.43 + breathe * 0.15
+    y - size * 0.43 + breathe * 0.15,
   );
   ctx.closePath();
   ctx.fill();
@@ -5504,7 +7057,7 @@ function drawArmoredTroop(
     x + size * 0.14 + capeWave * 1.2,
     y - size * 0.51,
     x + size * 0.2 + capeWave * 1.8,
-    y - size * 0.4 + breathe * 0.15
+    y - size * 0.4 + breathe * 0.15,
   );
   ctx.stroke();
 
@@ -5518,7 +7071,7 @@ function drawArmoredTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.armored,
-    { vanguard: true }
+    { vanguard: true },
   );
 }
 
@@ -5531,7 +7084,7 @@ function drawThesisTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   drawEliteTroop(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
 
@@ -5544,7 +7097,7 @@ function drawThesisTroop(
     x - size * 0.08,
     y + size * 0.01,
     x + size * 0.08,
-    y + size * 0.13
+    y + size * 0.13,
   );
   bookGrad.addColorStop(0, "#3f2e60");
   bookGrad.addColorStop(0.5, "#6a4d95");
@@ -5556,7 +7109,7 @@ function drawThesisTroop(
     y + size * 0.015 + breathe * 0.45,
     size * 0.17,
     size * 0.11,
-    size * 0.018
+    size * 0.018,
   );
   ctx.fill();
 
@@ -5582,7 +7135,13 @@ function drawThesisTroop(
     ctx.rotate(Math.sin(time * 3.1 + p) * 0.3);
     ctx.fillStyle = `rgba(249, 238, 209, ${0.45 + pagePulse * 0.3})`;
     ctx.beginPath();
-    ctx.roundRect(-size * 0.03, -size * 0.022, size * 0.06, size * 0.044, size * 0.008);
+    ctx.roundRect(
+      -size * 0.03,
+      -size * 0.022,
+      size * 0.06,
+      size * 0.044,
+      size * 0.008,
+    );
     ctx.fill();
     ctx.strokeStyle = "rgba(166, 128, 216, 0.7)";
     ctx.lineWidth = 1 * zoom;
@@ -5604,7 +7163,7 @@ function drawThesisTroop(
       y - size * 0.12,
       size * (0.22 + attackPhase * 0.06),
       -Math.PI * 0.8,
-      Math.PI * 0.2
+      Math.PI * 0.2,
     );
     ctx.stroke();
   }
@@ -5618,7 +7177,7 @@ function drawThesisTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.thesis,
-    { scholar: true, vanguard: true }
+    { scholar: true, vanguard: true },
   );
 }
 
@@ -5631,7 +7190,7 @@ function drawRowingTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   drawSoldierTroop(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
 
@@ -5647,7 +7206,7 @@ function drawRowingTroop(
     y - size * 0.05 + breathe * 0.45,
     size * 0.32,
     size * 0.06,
-    size * 0.015
+    size * 0.015,
   );
   ctx.fill();
 
@@ -5686,7 +7245,7 @@ function drawRowingTroop(
     size * 0.015,
     0,
     0,
-    size * 0.16
+    size * 0.16,
   );
   shieldGrad.addColorStop(0, "#754623");
   shieldGrad.addColorStop(0.7, "#55341c");
@@ -5717,7 +7276,7 @@ function drawRowingTroop(
     time,
     zoom,
     TROOP_MASTERWORK_STYLES.rowing,
-    { vanguard: true }
+    { vanguard: true },
   );
 }
 
@@ -5730,10 +7289,22 @@ function drawDefaultTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // Default falls back to knight
-  drawKnightTroop(ctx, x, y, size, color, time, zoom, attackPhase, undefined, 0, targetPos);
+  drawKnightTroop(
+    ctx,
+    x,
+    y,
+    size,
+    color,
+    time,
+    zoom,
+    attackPhase,
+    undefined,
+    0,
+    targetPos,
+  );
 }
 
 function drawReinforcementKnightTroop(
@@ -5745,7 +7316,7 @@ function drawReinforcementKnightTroop(
   zoom: number,
   attackPhase: number = 0,
   tierInput: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   const tier = Math.max(0, Math.min(5, Math.floor(tierInput)));
   const isAttacking = attackPhase > 0;
@@ -5831,7 +7402,7 @@ function drawReinforcementKnightTroop(
   const palette = palettes[tier];
 
   // Tier aura
-  const auraStrength = Math.min(0.88, (0.2 + tier * 0.08 + attackDrive * 0.25));
+  const auraStrength = Math.min(0.88, 0.2 + tier * 0.08 + attackDrive * 0.25);
   const auraPulse = 0.86 + Math.sin(time * 3.7) * 0.14;
   const auraGrad = ctx.createRadialGradient(
     x,
@@ -5839,22 +7410,14 @@ function drawReinforcementKnightTroop(
     size * 0.08,
     x,
     y + size * 0.08,
-    size * 0.74
+    size * 0.74,
   );
   auraGrad.addColorStop(0, `${palette.glow}${auraStrength * auraPulse})`);
   auraGrad.addColorStop(0.5, `${palette.glow}${auraStrength * 0.35})`);
   auraGrad.addColorStop(1, `${palette.glow}0)`);
   ctx.fillStyle = auraGrad;
   ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.1,
-    size * 0.65,
-    size * 0.48,
-    0,
-    0,
-    Math.PI * 2
-  );
+  ctx.ellipse(x, y + size * 0.1, size * 0.65, size * 0.48, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Keep body parts, helm lines, and head in the same attack translation.
@@ -5870,14 +7433,14 @@ function drawReinforcementKnightTroop(
     x - size * 0.36 + capeWave,
     y + size * 0.18,
     x - size * 0.28 + capeWave * 1.2,
-    y + size * 0.48
+    y + size * 0.48,
   );
   ctx.lineTo(x + size * 0.14 + capeWave * 0.5, y + size * 0.45);
   ctx.quadraticCurveTo(
     x + size * 0.1 + capeWave * 0.25,
     y + size * 0.1,
     x + size * 0.14,
-    y - size * 0.14 + breathe * 0.4
+    y - size * 0.14 + breathe * 0.4,
   );
   ctx.closePath();
   ctx.fill();
@@ -5889,14 +7452,14 @@ function drawReinforcementKnightTroop(
     x - size * 0.2 + capeWave * 0.5,
     y + size * 0.14,
     x - size * 0.12 + capeWave,
-    y + size * 0.36
+    y + size * 0.36,
   );
   ctx.lineTo(x + size * 0.02 + capeWave * 0.4, y + size * 0.34);
   ctx.quadraticCurveTo(
     x + size * 0.01,
     y + size * 0.08,
     x + size * 0.06,
-    y - size * 0.08 + breathe * 0.4
+    y - size * 0.08 + breathe * 0.4,
   );
   ctx.closePath();
   ctx.fill();
@@ -5920,7 +7483,7 @@ function drawReinforcementKnightTroop(
       size * 0.11,
       size * 0.13,
       size * 0.06,
-      size * 0.025
+      size * 0.025,
     );
     ctx.fill();
 
@@ -5931,7 +7494,7 @@ function drawReinforcementKnightTroop(
       size * 0.2,
       size * 0.15,
       size * 0.1,
-      size * 0.025
+      size * 0.025,
     );
     ctx.fill();
     ctx.restore();
@@ -5942,7 +7505,7 @@ function drawReinforcementKnightTroop(
     x - size * 0.24,
     y - size * 0.22,
     x + size * 0.24,
-    y + size * 0.28
+    y + size * 0.28,
   );
   chestGrad.addColorStop(0, palette.armorDark);
   chestGrad.addColorStop(0.45, palette.armorMid);
@@ -5956,7 +7519,7 @@ function drawReinforcementKnightTroop(
     x,
     y - size * 0.25 + breathe * 0.2,
     x + size * 0.24,
-    y - size * 0.14 + breathe * 0.4
+    y - size * 0.14 + breathe * 0.4,
   );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + breathe);
   ctx.closePath();
@@ -5980,7 +7543,7 @@ function drawReinforcementKnightTroop(
         y + size * 0.08 + breathe,
         size * 0.06,
         size * 0.09,
-        size * 0.015
+        size * 0.015,
       );
       ctx.fill();
     }
@@ -5997,23 +7560,14 @@ function drawReinforcementKnightTroop(
         size * 0.09,
         side * 0.28,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
       ctx.fillStyle = palette.trim;
       ctx.beginPath();
-      ctx.moveTo(
-        x + side * size * 0.31,
-        y - size * 0.14 + breathe * 0.4
-      );
-      ctx.lineTo(
-        x + side * size * 0.38,
-        y - size * 0.08 + breathe * 0.4
-      );
-      ctx.lineTo(
-        x + side * size * 0.3,
-        y - size * 0.02 + breathe * 0.4
-      );
+      ctx.moveTo(x + side * size * 0.31, y - size * 0.14 + breathe * 0.4);
+      ctx.lineTo(x + side * size * 0.38, y - size * 0.08 + breathe * 0.4);
+      ctx.lineTo(x + side * size * 0.3, y - size * 0.02 + breathe * 0.4);
       ctx.closePath();
       ctx.fill();
     }
@@ -6067,7 +7621,7 @@ function drawReinforcementKnightTroop(
       -size * 0.08,
       -size * 0.18,
       size * 0.08,
-      size * 0.16
+      size * 0.16,
     );
     shieldGrad.addColorStop(0, palette.armorDark);
     shieldGrad.addColorStop(0.5, palette.armorMid);
@@ -6110,12 +7664,9 @@ function drawReinforcementKnightTroop(
     armY,
     armBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.0 : 0.58
+    isAttacking ? 1.0 : 0.58,
   );
-  ctx.translate(
-    armX,
-    armY
-  );
+  ctx.translate(armX, armY);
   ctx.rotate(armAngle);
   ctx.fillStyle = palette.armorMid;
   ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.23);
@@ -6134,15 +7685,12 @@ function drawReinforcementKnightTroop(
     const spearAngle = resolveWeaponRotation(
       targetPos,
       spearX,
-      spearY - size * 0.9,
+      spearY,
       spearBaseAngle,
       Math.PI / 2,
-      isAttacking ? 1.28 : 0.72
+      isAttacking ? 1.28 : 0.72,
     );
-    ctx.translate(
-      spearX,
-      spearY
-    );
+    ctx.translate(spearX, spearY);
     ctx.rotate(spearAngle);
 
     ctx.fillStyle = "#5a3a1b";
@@ -6155,7 +7703,7 @@ function drawReinforcementKnightTroop(
       -size * 0.06,
       -size * 0.86,
       size * 0.06,
-      -size * 0.62
+      -size * 0.62,
     );
     tipGrad.addColorStop(0, "#c8aa5a");
     tipGrad.addColorStop(0.5, "#fff0c4");
@@ -6183,21 +7731,22 @@ function drawReinforcementKnightTroop(
     const swordBaseAngle = isAttacking
       ? -1.28 + attackPhase * 3.05
       : -0.32 + stride * 0.04;
-    const swordX = x + size * 0.37 + (isAttacking ? attackSwing * size * 0.16 : 0);
+    const swordX =
+      x + size * 0.37 + (isAttacking ? attackSwing * size * 0.16 : 0);
     const swordY =
-      y - size * 0.08 + breathe * 0.5 - (isAttacking ? attackDrive * size * 0.09 : 0);
+      y -
+      size * 0.08 +
+      breathe * 0.5 -
+      (isAttacking ? attackDrive * size * 0.09 : 0);
     const swordAngle = resolveWeaponRotation(
       targetPos,
       swordX,
-      swordY - bladeLength * 0.85,
+      swordY,
       swordBaseAngle,
       Math.PI / 2,
-      isAttacking ? 1.38 : 0.78
+      isAttacking ? 1.38 : 0.78,
     );
-    ctx.translate(
-      swordX,
-      swordY
-    );
+    ctx.translate(swordX, swordY);
     ctx.rotate(swordAngle);
     ctx.fillStyle = "#2d1f16";
     ctx.fillRect(-size * 0.028, size * 0.08, size * 0.056, size * 0.2);
@@ -6213,7 +7762,7 @@ function drawReinforcementKnightTroop(
       -size * 0.05,
       -bladeLength,
       size * 0.05,
-      size * 0.08
+      size * 0.08,
     );
     bladeGrad.addColorStop(0, "#f2f2f2");
     bladeGrad.addColorStop(0.35, "#d2d8e4");
@@ -6250,7 +7799,7 @@ function drawReinforcementKnightTroop(
       y - size * 0.39 + breathe * 0.2 + headYOffset,
       size * 0.23,
       -2.5,
-      -0.65
+      -0.65,
     );
     ctx.stroke();
     ctx.beginPath();
@@ -6259,7 +7808,7 @@ function drawReinforcementKnightTroop(
       y - size * 0.39 + breathe * 0.2 + headYOffset,
       size * 0.23,
       -2.5 + Math.PI,
-      -0.65 + Math.PI
+      -0.65 + Math.PI,
     );
     ctx.stroke();
   }
@@ -6271,7 +7820,7 @@ function drawReinforcementKnightTroop(
     0,
     x,
     y - size * 0.38 + headYOffset,
-    size * 0.2
+    size * 0.2,
   );
   helmGrad.addColorStop(0, palette.armorLight);
   helmGrad.addColorStop(0.4, palette.armorMid);
@@ -6283,7 +7832,7 @@ function drawReinforcementKnightTroop(
     y - size * 0.39 + breathe * 0.25 + headYOffset,
     size * 0.18,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -6302,7 +7851,7 @@ function drawReinforcementKnightTroop(
     x - size * 0.12,
     y - size * 0.42 + breathe * 0.2 + headYOffset,
     size * 0.24,
-    size * 0.048
+    size * 0.048,
   );
   const eyeGlow = 0.58 + Math.sin(time * 3.8) * 0.2 + attackDrive * 0.35;
   ctx.fillStyle = `${palette.eye}${eyeGlow})`;
@@ -6314,14 +7863,14 @@ function drawReinforcementKnightTroop(
     y - size * 0.4 + breathe * 0.2 + headYOffset,
     size * 0.018,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.arc(
     x + size * 0.052,
     y - size * 0.4 + breathe * 0.2 + headYOffset,
     size * 0.018,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
   ctx.shadowBlur = 0;
@@ -6346,7 +7895,7 @@ function drawReinforcementKnightTroop(
       x + size * 0.14 + stride * 0.8,
       y - size * 0.66 + headYOffset,
       x + size * 0.1 + stride * 0.5,
-      y - size * 0.46 + breathe * 0.2 + headYOffset
+      y - size * 0.46 + breathe * 0.2 + headYOffset,
     );
     ctx.stroke();
   }
@@ -6361,7 +7910,7 @@ function drawReinforcementKnightTroop(
       -size * 0.09,
       -size * 0.17,
       size * 0.09,
-      size * 0.15
+      size * 0.15,
     );
     lancerShieldGrad.addColorStop(0, palette.armorDark);
     lancerShieldGrad.addColorStop(0.45, palette.armorMid);
@@ -6392,15 +7941,44 @@ function drawReinforcementKnightTroop(
 
     ctx.fillStyle = palette.trim;
     ctx.beginPath();
-    ctx.roundRect(-size * 0.02, -size * 0.08, size * 0.04, size * 0.18, size * 0.01);
+    ctx.roundRect(
+      -size * 0.02,
+      -size * 0.08,
+      size * 0.04,
+      size * 0.18,
+      size * 0.01,
+    );
     ctx.fill();
     ctx.beginPath();
-    ctx.roundRect(-size * 0.05, -size * 0.015, size * 0.1, size * 0.03, size * 0.01);
+    ctx.roundRect(
+      -size * 0.05,
+      -size * 0.015,
+      size * 0.1,
+      size * 0.03,
+      size * 0.01,
+    );
     ctx.fill();
     ctx.restore();
   }
 
   ctx.restore();
+
+  const reinforcementFinishStyle =
+    tier >= 5
+      ? TROOP_MASTERWORK_STYLES.cavalry
+      : tier >= 3
+        ? TROOP_MASTERWORK_STYLES.elite
+        : TROOP_MASTERWORK_STYLES.armored;
+  drawTroopMasterworkFinish(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    reinforcementFinishStyle,
+    { vanguard: tier >= 3 },
+  );
 }
 
 function drawKnightTroop(
@@ -6414,7 +7992,7 @@ function drawKnightTroop(
   attackPhase: number = 0,
   ownerType?: TroopOwnerType,
   visualTier: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // Get theme based on owner type
   const theme = getKnightTheme(ownerType);
@@ -6433,11 +8011,11 @@ function drawKnightTroop(
       zoom,
       attackPhase,
       reinforcementTier,
-      targetPos
+      targetPos,
     );
     return;
   }
-  
+
   // DARK CHAMPION - Elite Knight with Soul-Forged Greatsword
   const stance = Math.sin(time * 3) * 1;
   const breathe = Math.sin(time * 2) * 0.4;
@@ -6448,8 +8026,14 @@ function drawKnightTroop(
   const swordSwing = isAttacking
     ? Math.sin(attackPhase * Math.PI * 1.2) * 2.2
     : 0;
-  const bodyLean = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.25 : 0;
+  const bodyLean = isAttacking
+    ? Math.sin(attackPhase * Math.PI) * 0.25
+    : Math.sin(time * 1.7) * 0.03;
   const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+  const armorPeak = "#acb2c6";
+  const armorHigh = "#878ea7";
+  const armorMid = "#646b81";
+  const armorDark = "#41485b";
 
   // === DARK FLAME AURA (always present) ===
   const auraIntensity = isAttacking ? 0.6 : 0.35;
@@ -6462,15 +8046,15 @@ function drawKnightTroop(
     size * 0.1,
     x,
     y + size * 0.1,
-    size * 0.8
+    size * 0.8,
   );
   auraGrad.addColorStop(
     0,
-    `${theme.auraColorInner}${auraIntensity * auraPulse * 0.5})`
+    `${theme.auraColorInner}${auraIntensity * auraPulse * 0.5})`,
   );
   auraGrad.addColorStop(
     0.4,
-    `${theme.auraColorMid}${auraIntensity * auraPulse * 0.3})`
+    `${theme.auraColorMid}${auraIntensity * auraPulse * 0.3})`,
   );
   auraGrad.addColorStop(1, theme.auraColorOuter);
   ctx.fillStyle = auraGrad;
@@ -6506,7 +8090,7 @@ function drawKnightTroop(
         size * (0.65 + ringPhase * 0.35),
         0,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.stroke();
     }
@@ -6522,7 +8106,7 @@ function drawKnightTroop(
     x - size * 0.3,
     y - size * 0.2,
     x + size * 0.1,
-    y + size * 0.5
+    y + size * 0.5,
   );
   capeGrad.addColorStop(0, theme.capeLight);
   capeGrad.addColorStop(0.5, theme.capeMid);
@@ -6534,14 +8118,14 @@ function drawKnightTroop(
     x - size * 0.3 + capeWave * 4,
     y + size * 0.2,
     x - size * 0.25 + capeWave * 6,
-    y + size * 0.5
+    y + size * 0.5,
   );
   ctx.lineTo(x + size * 0.12 + capeWave * 3, y + size * 0.45);
   ctx.quadraticCurveTo(
     x + size * 0.08 + capeWave * 1.5,
     y + size * 0.12,
     x + size * 0.14,
-    y - size * 0.12 + breathe
+    y - size * 0.12 + breathe,
   );
   ctx.closePath();
   ctx.fill();
@@ -6554,14 +8138,14 @@ function drawKnightTroop(
     x - size * 0.18 + capeWave * 2.5,
     y + size * 0.12,
     x - size * 0.12 + capeWave * 4,
-    y + size * 0.38
+    y + size * 0.38,
   );
   ctx.lineTo(x + capeWave * 1.5, y + size * 0.35);
   ctx.quadraticCurveTo(
     x,
     y + size * 0.08,
     x + size * 0.06,
-    y - size * 0.08 + breathe
+    y - size * 0.08 + breathe,
   );
   ctx.closePath();
   ctx.fill();
@@ -6575,15 +8159,15 @@ function drawKnightTroop(
 
     // Upper leg armor
     const legGrad = ctx.createLinearGradient(-size * 0.065, 0, size * 0.065, 0);
-    legGrad.addColorStop(0, "#4a4a5a");
-    legGrad.addColorStop(0.3, "#6a6a7a");
-    legGrad.addColorStop(0.7, "#7a7a8a");
-    legGrad.addColorStop(1, "#4a4a5a");
+    legGrad.addColorStop(0, armorDark);
+    legGrad.addColorStop(0.3, armorMid);
+    legGrad.addColorStop(0.55, armorPeak);
+    legGrad.addColorStop(1, armorDark);
     ctx.fillStyle = legGrad;
     ctx.fillRect(-size * 0.07, 0, size * 0.14, size * 0.22);
 
     // Thigh plate overlay
-    ctx.fillStyle = "#5a5a6a";
+    ctx.fillStyle = armorHigh;
     ctx.beginPath();
     ctx.moveTo(-size * 0.06, 0);
     ctx.lineTo(-size * 0.075, size * 0.08);
@@ -6595,11 +8179,11 @@ function drawKnightTroop(
     ctx.fill();
 
     // Knee guard with spike
-    ctx.fillStyle = "#8a8a9a";
+    ctx.fillStyle = armorPeak;
     ctx.beginPath();
     ctx.ellipse(0, size * 0.1, size * 0.085, size * 0.06, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#6a6a7a";
+    ctx.fillStyle = armorMid;
     ctx.beginPath();
     ctx.moveTo(0, size * 0.055);
     ctx.lineTo(-size * 0.025, size * 0.015);
@@ -6608,20 +8192,20 @@ function drawKnightTroop(
     ctx.fill();
 
     // Shin guard
-    ctx.fillStyle = "#555568";
+    ctx.fillStyle = armorMid;
     ctx.fillRect(-size * 0.06, size * 0.13, size * 0.12, size * 0.1);
 
     // Armored boot
-    ctx.fillStyle = "#3a3a4a";
+    ctx.fillStyle = armorDark;
     ctx.fillRect(-size * 0.08, size * 0.2, size * 0.16, size * 0.09);
-    ctx.fillStyle = "#5a5a6a";
+    ctx.fillStyle = armorHigh;
     ctx.fillRect(-size * 0.085, size * 0.27, size * 0.17, size * 0.04);
     ctx.restore();
   }
 
   // === DARK PLATE ARMOR ===
   // Back plate
-  ctx.fillStyle = "#3a3a4a";
+  ctx.fillStyle = armorDark;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.24, y + size * 0.35 + breathe);
   ctx.lineTo(x - size * 0.26, y - size * 0.12 + breathe * 0.5);
@@ -6635,13 +8219,13 @@ function drawKnightTroop(
     x - size * 0.22,
     y - size * 0.1,
     x + size * 0.22,
-    y + size * 0.2
+    y + size * 0.2,
   );
-  plateGrad.addColorStop(0, "#5a5a6a");
-  plateGrad.addColorStop(0.2, "#8a8a9a");
-  plateGrad.addColorStop(0.5, "#a8a8bb");
-  plateGrad.addColorStop(0.8, "#8a8a9a");
-  plateGrad.addColorStop(1, "#5a5a6a");
+  plateGrad.addColorStop(0, armorMid);
+  plateGrad.addColorStop(0.2, armorHigh);
+  plateGrad.addColorStop(0.5, armorPeak);
+  plateGrad.addColorStop(0.8, armorHigh);
+  plateGrad.addColorStop(1, armorMid);
   ctx.fillStyle = plateGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.34 + breathe);
@@ -6650,7 +8234,7 @@ function drawKnightTroop(
     x,
     y - size * 0.24 + breathe * 0.3,
     x + size * 0.24,
-    y - size * 0.14 + breathe * 0.5
+    y - size * 0.14 + breathe * 0.5,
   );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + breathe);
   ctx.closePath();
@@ -6673,7 +8257,12 @@ function drawKnightTroop(
   ctx.beginPath();
   ctx.moveTo(x - size * 0.22, y + size * 0.34 + breathe);
   ctx.lineTo(x - size * 0.24, y - size * 0.14 + breathe * 0.5);
-  ctx.quadraticCurveTo(x, y - size * 0.24 + breathe * 0.3, x + size * 0.24, y - size * 0.14 + breathe * 0.5);
+  ctx.quadraticCurveTo(
+    x,
+    y - size * 0.24 + breathe * 0.3,
+    x + size * 0.24,
+    y - size * 0.14 + breathe * 0.5,
+  );
   ctx.lineTo(x + size * 0.22, y + size * 0.34 + breathe);
   ctx.stroke();
 
@@ -6682,9 +8271,9 @@ function drawKnightTroop(
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.06 + breathe);
   ctx.lineTo(x - size * 0.065, y + size * 0.02 + breathe);
-  ctx.lineTo(x - size * 0.08, y + size * 0.10 + breathe);
+  ctx.lineTo(x - size * 0.08, y + size * 0.1 + breathe);
   ctx.lineTo(x, y + size * 0.18 + breathe);
-  ctx.lineTo(x + size * 0.08, y + size * 0.10 + breathe);
+  ctx.lineTo(x + size * 0.08, y + size * 0.1 + breathe);
   ctx.lineTo(x + size * 0.065, y + size * 0.02 + breathe);
   ctx.closePath();
   ctx.fill();
@@ -6717,7 +8306,7 @@ function drawKnightTroop(
     x - size * 0.2,
     y + size * 0.28 + breathe,
     size * 0.4,
-    size * 0.07
+    size * 0.07,
   );
   // Belt skull buckle - THEMED
   ctx.fillStyle = theme.beltBuckle;
@@ -6731,14 +8320,14 @@ function drawKnightTroop(
     y + size * 0.31 + breathe,
     size * 0.008,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.arc(
     x + size * 0.012,
     y + size * 0.31 + breathe,
     size * 0.008,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -6761,7 +8350,7 @@ function drawKnightTroop(
       y + size * 0.11 + breathe,
       size * 0.34,
       size * 0.06,
-      size * 0.02
+      size * 0.02,
     );
     ctx.fill();
   }
@@ -6804,20 +8393,40 @@ function drawKnightTroop(
     // Pauldron shadow
     ctx.fillStyle = "#2a2a38";
     ctx.beginPath();
-    ctx.ellipse(pauldronX, pauldronY + size * 0.015, size * 0.145, size * 0.115, side * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      pauldronX,
+      pauldronY + size * 0.015,
+      size * 0.145,
+      size * 0.115,
+      side * 0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Main pauldron dome with gradient
     const pauldGrad = ctx.createRadialGradient(
-      pauldronX - side * size * 0.03, pauldronY - size * 0.025, size * 0.01,
-      pauldronX, pauldronY, size * 0.14
+      pauldronX - side * size * 0.03,
+      pauldronY - size * 0.025,
+      size * 0.01,
+      pauldronX,
+      pauldronY,
+      size * 0.14,
     );
-    pauldGrad.addColorStop(0, "#8a8a9a");
-    pauldGrad.addColorStop(0.45, "#5a5a6a");
-    pauldGrad.addColorStop(1, "#3a3a4a");
+    pauldGrad.addColorStop(0, armorPeak);
+    pauldGrad.addColorStop(0.45, armorHigh);
+    pauldGrad.addColorStop(1, armorDark);
     ctx.fillStyle = pauldGrad;
     ctx.beginPath();
-    ctx.ellipse(pauldronX, pauldronY, size * 0.14, size * 0.11, side * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      pauldronX,
+      pauldronY,
+      size * 0.14,
+      size * 0.11,
+      side * 0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Layered plate ridges
@@ -6826,23 +8435,31 @@ function drawKnightTroop(
       ctx.strokeStyle = `rgba(30, 30, 40, ${0.6 - seg * 0.15})`;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
-      ctx.ellipse(pauldronX, segY, size * (0.12 - seg * 0.015), size * 0.03, side * 0.3, 0, Math.PI);
+      ctx.ellipse(
+        pauldronX,
+        segY,
+        size * (0.12 - seg * 0.015),
+        size * 0.03,
+        side * 0.3,
+        0,
+        Math.PI,
+      );
       ctx.stroke();
     }
 
     // Pauldron spike
-    ctx.fillStyle = "#4a4a58";
+    ctx.fillStyle = armorMid;
     ctx.beginPath();
-    ctx.moveTo(pauldronX + side * size * 0.10, pauldronY - size * 0.07);
+    ctx.moveTo(pauldronX + side * size * 0.1, pauldronY - size * 0.07);
     ctx.lineTo(pauldronX + side * size * 0.22, pauldronY - size * 0.02);
     ctx.lineTo(pauldronX + side * size * 0.12, pauldronY + size * 0.03);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#7a7a8a";
+    ctx.strokeStyle = armorPeak;
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.moveTo(pauldronX + side * size * 0.11, pauldronY - size * 0.05);
-    ctx.lineTo(pauldronX + side * size * 0.20, pauldronY - size * 0.015);
+    ctx.lineTo(pauldronX + side * size * 0.2, pauldronY - size * 0.015);
     ctx.stroke();
 
     // Themed edge trim - THEMED
@@ -6850,12 +8467,20 @@ function drawKnightTroop(
     ctx.lineWidth = 1.5 * zoom;
     ctx.globalAlpha = 0.35;
     ctx.beginPath();
-    ctx.ellipse(pauldronX, pauldronY + size * 0.035, size * 0.115, size * 0.04, side * 0.3, 0, Math.PI);
+    ctx.ellipse(
+      pauldronX,
+      pauldronY + size * 0.035,
+      size * 0.115,
+      size * 0.04,
+      side * 0.3,
+      0,
+      Math.PI,
+    );
     ctx.stroke();
     ctx.globalAlpha = 1.0;
 
     // Rivets
-    ctx.fillStyle = "#9a9aa8";
+    ctx.fillStyle = armorPeak;
     for (let r = 0; r < 3; r++) {
       const rivetAngle = (r / 2 - 0.5) * 1.4 + side * 0.3;
       const rivetX = pauldronX + Math.cos(rivetAngle) * size * 0.095;
@@ -6868,18 +8493,29 @@ function drawKnightTroop(
 
   // === ARMS ===
   // Left arm
-  ctx.fillStyle = "#5a5a6a";
   ctx.save();
   ctx.translate(x - size * 0.3, y + size * 0.02 + breathe * 0.5);
   ctx.rotate(-0.25 - (isAttacking ? bodyLean * 0.6 : 0));
+  const leftArmGrad = ctx.createLinearGradient(
+    -size * 0.055,
+    0,
+    size * 0.055,
+    0,
+  );
+  leftArmGrad.addColorStop(0, armorDark);
+  leftArmGrad.addColorStop(0.45, armorMid);
+  leftArmGrad.addColorStop(1, armorHigh);
+  ctx.fillStyle = leftArmGrad;
   ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.22);
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = armorPeak;
   ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
   ctx.restore();
 
   // Right arm (sword arm - swings dramatically)
   ctx.save();
-  const armBaseSwing = isAttacking ? -1.2 + attackPhase * 2.8 : 0.2 + stance * 0.03;
+  const armBaseSwing = isAttacking
+    ? -1.2 + attackPhase * 2.8
+    : 0.2 + stance * 0.03;
   const armSwingX = x + size * 0.3;
   const armSwingY =
     y +
@@ -6892,22 +8528,28 @@ function drawKnightTroop(
     armSwingY,
     armBaseSwing,
     Math.PI / 2,
-    isAttacking ? 1.02 : 0.6
+    isAttacking ? 1.02 : 0.6,
   );
-  ctx.translate(
-    armSwingX,
-    armSwingY
-  );
+  ctx.translate(armSwingX, armSwingY);
   ctx.rotate(armSwing);
-  ctx.fillStyle = "#5a5a6a";
+  const rightArmGrad = ctx.createLinearGradient(
+    -size * 0.055,
+    0,
+    size * 0.055,
+    0,
+  );
+  rightArmGrad.addColorStop(0, armorDark);
+  rightArmGrad.addColorStop(0.45, armorMid);
+  rightArmGrad.addColorStop(1, armorHigh);
+  ctx.fillStyle = rightArmGrad;
   ctx.fillRect(-size * 0.055, 0, size * 0.11, size * 0.22);
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = armorPeak;
   ctx.fillRect(-size * 0.065, size * 0.17, size * 0.13, size * 0.09);
   ctx.restore();
 
   // === SOUL-FORGED GREATSWORD ===
   ctx.save();
-  const swordScale = 1.25;
+  const swordScale = 1.08;
   const swordBaseAngle = isAttacking
     ? -1.4 + attackPhase * 3.2
     : -0.35 + stance * 0.04;
@@ -6920,10 +8562,10 @@ function drawKnightTroop(
   const swordAngle = resolveWeaponRotation(
     targetPos,
     swordX,
-    swordY - size * 0.9,
+    swordY,
     swordBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.45 : 0.82
+    isAttacking ? 1.45 : 0.82,
   );
   ctx.translate(swordX, swordY);
   ctx.rotate(swordAngle);
@@ -6931,22 +8573,45 @@ function drawKnightTroop(
   // Pommel
   ctx.fillStyle = "#3a2a1a";
   ctx.beginPath();
-  ctx.arc(0, size * 0.32 * swordScale, size * 0.035 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    0,
+    size * 0.32 * swordScale,
+    size * 0.035 * swordScale,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = `${theme.gemColor}0.6)`;
   ctx.beginPath();
-  ctx.arc(0, size * 0.32 * swordScale, size * 0.015 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    0,
+    size * 0.32 * swordScale,
+    size * 0.015 * swordScale,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Wrapped handle
   ctx.fillStyle = "#2a1a10";
-  ctx.fillRect(-size * 0.032 * swordScale, size * 0.1 * swordScale, size * 0.064 * swordScale, size * 0.22 * swordScale);
+  ctx.fillRect(
+    -size * 0.032 * swordScale,
+    size * 0.1 * swordScale,
+    size * 0.064 * swordScale,
+    size * 0.22 * swordScale,
+  );
   ctx.strokeStyle = "#4a3525";
   ctx.lineWidth = 2 * zoom;
   for (let i = 0; i < 6; i++) {
     ctx.beginPath();
-    ctx.moveTo(-size * 0.032 * swordScale, size * (0.12 + i * 0.033) * swordScale);
-    ctx.lineTo(size * 0.032 * swordScale, size * (0.14 + i * 0.033) * swordScale);
+    ctx.moveTo(
+      -size * 0.032 * swordScale,
+      size * (0.12 + i * 0.033) * swordScale,
+    );
+    ctx.lineTo(
+      size * 0.032 * swordScale,
+      size * (0.14 + i * 0.033) * swordScale,
+    );
     ctx.stroke();
   }
 
@@ -6964,14 +8629,38 @@ function drawKnightTroop(
   // Crossguard end caps - THEMED
   ctx.fillStyle = theme.crossguardAccent;
   ctx.beginPath();
-  ctx.arc(-size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.035 * swordScale, 0, Math.PI * 2);
-  ctx.arc(size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.035 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    -size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.035 * swordScale,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.035 * swordScale,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Crossguard gems - THEMED
   ctx.fillStyle = `${theme.gemColor}${0.7 + attackIntensity * 0.3})`;
   ctx.beginPath();
-  ctx.arc(-size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.018 * swordScale, 0, Math.PI * 2);
-  ctx.arc(size * 0.16 * swordScale, size * 0.097 * swordScale, size * 0.018 * swordScale, 0, Math.PI * 2);
+  ctx.arc(
+    -size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.018 * swordScale,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    size * 0.16 * swordScale,
+    size * 0.097 * swordScale,
+    size * 0.018 * swordScale,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Massive blade with dark runes - THEMED shadow
@@ -7028,7 +8717,12 @@ function drawKnightTroop(
   ctx.fillStyle = `${theme.bladeRunes}${runeGlow})`;
   for (let i = 0; i < 5; i++) {
     const runeY = -size * 0.08 * swordScale - i * size * 0.13 * swordScale;
-    ctx.fillRect(-size * 0.018 * swordScale, runeY, size * 0.036 * swordScale, size * 0.065 * swordScale);
+    ctx.fillRect(
+      -size * 0.018 * swordScale,
+      runeY,
+      size * 0.036 * swordScale,
+      size * 0.065 * swordScale,
+    );
   }
 
   // Devastating swing trail - THEMED
@@ -7072,12 +8766,15 @@ function drawKnightTroop(
 
   // Shield body
   const shieldGrad = ctx.createLinearGradient(
-    -size * 0.12 * shieldScale, 0, size * 0.12 * shieldScale, 0
+    -size * 0.12 * shieldScale,
+    0,
+    size * 0.12 * shieldScale,
+    0,
   );
-  shieldGrad.addColorStop(0, "#1a1a2a");
-  shieldGrad.addColorStop(0.3, "#2a2a3a");
-  shieldGrad.addColorStop(0.7, "#2a2a3a");
-  shieldGrad.addColorStop(1, "#121220");
+  shieldGrad.addColorStop(0, armorDark);
+  shieldGrad.addColorStop(0.28, armorMid);
+  shieldGrad.addColorStop(0.55, armorPeak);
+  shieldGrad.addColorStop(1, armorDark);
   ctx.fillStyle = shieldGrad;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.25 * shieldScale);
@@ -7090,7 +8787,7 @@ function drawKnightTroop(
   ctx.fill();
 
   // Shield rim
-  ctx.strokeStyle = "#5a5a6a";
+  ctx.strokeStyle = armorPeak;
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.25 * shieldScale);
@@ -7103,7 +8800,7 @@ function drawKnightTroop(
   ctx.stroke();
 
   // Shield cross bars
-  ctx.strokeStyle = "#4a4a5a";
+  ctx.strokeStyle = armorHigh;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.22 * shieldScale);
@@ -7129,7 +8826,7 @@ function drawKnightTroop(
   // Shield emblem inner glow - THEMED
   ctx.fillStyle = `${theme.sigilGlow}0.2)`;
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.10 * shieldScale);
+  ctx.moveTo(0, -size * 0.1 * shieldScale);
   ctx.lineTo(-size * 0.04 * shieldScale, 0);
   ctx.lineTo(0, size * 0.08 * shieldScale);
   ctx.lineTo(size * 0.04 * shieldScale, 0);
@@ -7137,13 +8834,13 @@ function drawKnightTroop(
   ctx.fill();
 
   // Shield rivets
-  ctx.fillStyle = "#7a7a8a";
+  ctx.fillStyle = armorPeak;
   const rivetPositions = [
     [0, -size * 0.22 * shieldScale],
-    [-size * 0.10 * shieldScale, -size * 0.12 * shieldScale],
-    [size * 0.10 * shieldScale, -size * 0.12 * shieldScale],
-    [-size * 0.09 * shieldScale, size * 0.10 * shieldScale],
-    [size * 0.09 * shieldScale, size * 0.10 * shieldScale],
+    [-size * 0.1 * shieldScale, -size * 0.12 * shieldScale],
+    [size * 0.1 * shieldScale, -size * 0.12 * shieldScale],
+    [-size * 0.09 * shieldScale, size * 0.1 * shieldScale],
+    [size * 0.09 * shieldScale, size * 0.1 * shieldScale],
     [0, size * 0.18 * shieldScale],
   ];
   for (const [rx, ry] of rivetPositions) {
@@ -7154,11 +8851,16 @@ function drawKnightTroop(
   ctx.restore();
 
   // === ARMORED GORGET ===
-  const gorgetGrad = ctx.createLinearGradient(x - size * 0.14, 0, x + size * 0.14, 0);
-  gorgetGrad.addColorStop(0, "#3a3a4a");
-  gorgetGrad.addColorStop(0.3, "#5a5a6a");
-  gorgetGrad.addColorStop(0.7, "#5a5a6a");
-  gorgetGrad.addColorStop(1, "#3a3a4a");
+  const gorgetGrad = ctx.createLinearGradient(
+    x - size * 0.14,
+    0,
+    x + size * 0.14,
+    0,
+  );
+  gorgetGrad.addColorStop(0, armorDark);
+  gorgetGrad.addColorStop(0.3, armorMid);
+  gorgetGrad.addColorStop(0.7, armorHigh);
+  gorgetGrad.addColorStop(1, armorDark);
   ctx.fillStyle = gorgetGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.15, y - size * 0.15 + breathe * 0.3);
@@ -7168,7 +8870,7 @@ function drawKnightTroop(
   ctx.closePath();
   ctx.fill();
   // Gorget rim highlight
-  ctx.strokeStyle = "#7a7a8a";
+  ctx.strokeStyle = armorPeak;
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.12, y - size * 0.21 + breathe * 0.25);
@@ -7180,20 +8882,24 @@ function drawKnightTroop(
 
   // Helm base dome
   const helmGrad = ctx.createRadialGradient(
-    x - size * 0.04, helmY - size * 0.04, size * 0.02,
-    x, helmY, size * 0.21
+    x - size * 0.04,
+    helmY - size * 0.04,
+    size * 0.02,
+    x,
+    helmY,
+    size * 0.21,
   );
-  helmGrad.addColorStop(0, "#8a8a9a");
-  helmGrad.addColorStop(0.35, "#6a6a7a");
-  helmGrad.addColorStop(0.7, "#4a4a5a");
-  helmGrad.addColorStop(1, "#2a2a38");
+  helmGrad.addColorStop(0, armorPeak);
+  helmGrad.addColorStop(0.35, armorHigh);
+  helmGrad.addColorStop(0.7, armorMid);
+  helmGrad.addColorStop(1, armorDark);
   ctx.fillStyle = helmGrad;
   ctx.beginPath();
   ctx.ellipse(x, helmY, size * 0.19, size * 0.185, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // Helm center ridge
-  ctx.strokeStyle = "#7a7a88";
+  ctx.strokeStyle = armorPeak;
   ctx.lineWidth = 2.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x, helmY - size * 0.175);
@@ -7201,10 +8907,16 @@ function drawKnightTroop(
   ctx.stroke();
 
   // Angular face plate
-  const fpGrad = ctx.createLinearGradient(x - size * 0.16, helmY, x + size * 0.16, helmY);
-  fpGrad.addColorStop(0, "#3a3a4a");
-  fpGrad.addColorStop(0.5, "#4a4a5a");
-  fpGrad.addColorStop(1, "#3a3a4a");
+  const fpGrad = ctx.createLinearGradient(
+    x - size * 0.16,
+    helmY,
+    x + size * 0.16,
+    helmY,
+  );
+  fpGrad.addColorStop(0, armorDark);
+  fpGrad.addColorStop(0.4, armorHigh);
+  fpGrad.addColorStop(0.55, armorPeak);
+  fpGrad.addColorStop(1, armorDark);
   ctx.fillStyle = fpGrad;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.155, helmY - size * 0.04);
@@ -7218,29 +8930,18 @@ function drawKnightTroop(
   ctx.fill();
 
   // Visor slit - narrow angular opening
-  ctx.fillStyle = "#08080f";
+  ctx.fillStyle = "#06060d";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.13, helmY - size * 0.01);
-  ctx.lineTo(x - size * 0.04, helmY + size * 0.015);
+  ctx.moveTo(x - size * 0.135, helmY - size * 0.014);
+  ctx.lineTo(x - size * 0.046, helmY + size * 0.02);
   ctx.lineTo(x, helmY + size * 0.005);
-  ctx.lineTo(x + size * 0.04, helmY + size * 0.015);
-  ctx.lineTo(x + size * 0.13, helmY - size * 0.01);
-  ctx.lineTo(x + size * 0.11, helmY - size * 0.025);
+  ctx.lineTo(x + size * 0.046, helmY + size * 0.02);
+  ctx.lineTo(x + size * 0.135, helmY - size * 0.014);
+  ctx.lineTo(x + size * 0.115, helmY - size * 0.03);
   ctx.lineTo(x, helmY - size * 0.005);
-  ctx.lineTo(x - size * 0.11, helmY - size * 0.025);
+  ctx.lineTo(x - size * 0.115, helmY - size * 0.03);
   ctx.closePath();
   ctx.fill();
-
-  // Visor edge highlight
-  ctx.strokeStyle = "#6a6a78";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.12, helmY - size * 0.015);
-  ctx.lineTo(x - size * 0.04, helmY + size * 0.01);
-  ctx.lineTo(x, helmY);
-  ctx.lineTo(x + size * 0.04, helmY + size * 0.01);
-  ctx.lineTo(x + size * 0.12, helmY - size * 0.015);
-  ctx.stroke();
 
   // Breathing holes - V pattern on lower face plate
   ctx.fillStyle = "#08080f";
@@ -7251,56 +8952,92 @@ function drawKnightTroop(
         x + bSide * (size * 0.03 + i * size * 0.025),
         helmY + size * 0.06 + i * size * 0.018,
         size * 0.009,
-        0, Math.PI * 2
+        0,
+        Math.PI * 2,
       );
       ctx.fill();
     }
   }
 
   // Glowing eyes behind visor - THEMED
-  const eyeGlow = 0.6 + Math.sin(time * 3) * 0.3 + attackIntensity * 0.4;
+  const eyeGlow = 0.42 + Math.sin(time * 3) * 0.16 + attackIntensity * 0.24;
   ctx.fillStyle = `${theme.eyeGlow}${eyeGlow})`;
   ctx.shadowColor = theme.eyeShadow;
-  ctx.shadowBlur = 8 * zoom;
+  ctx.shadowBlur = 6 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.058, helmY - size * 0.002, size * 0.025, size * 0.012, -0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.058,
+    helmY - size * 0.002,
+    size * 0.018,
+    size * 0.008,
+    -0.1,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.058, helmY - size * 0.002, size * 0.025, size * 0.012, 0.1, 0, Math.PI * 2);
+  ctx.ellipse(
+    x + size * 0.058,
+    helmY - size * 0.002,
+    size * 0.018,
+    size * 0.008,
+    0.1,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   // Eye core highlights
-  ctx.fillStyle = `rgba(255, 255, 255, ${eyeGlow * 0.4})`;
+  ctx.fillStyle = `rgba(255, 255, 255, ${eyeGlow * 0.18})`;
   ctx.beginPath();
-  ctx.arc(x - size * 0.058, helmY - size * 0.002, size * 0.009, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.058, helmY - size * 0.002, size * 0.009, 0, Math.PI * 2);
+  ctx.arc(x - size * 0.058, helmY - size * 0.002, size * 0.005, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.058, helmY - size * 0.002, size * 0.005, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
   // Dramatic plume - THEMED
   ctx.fillStyle = theme.plume;
   ctx.beginPath();
-  const plumeBaseY = helmY - size * 0.16;
+  const plumeBaseY = helmY - size * 0.14;
+  ctx.fillStyle = armorHigh;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.028, helmY - size * 0.155);
+  ctx.lineTo(x - size * 0.022, plumeBaseY + size * 0.01);
+  ctx.lineTo(x + size * 0.022, plumeBaseY + size * 0.01);
+  ctx.lineTo(x + size * 0.028, helmY - size * 0.155);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = theme.plume;
   ctx.moveTo(x, plumeBaseY);
   const crestWave =
     Math.sin(time * 5) * 1.5 + (isAttacking ? swordSwing * 1.2 : 0);
   for (let i = 0; i < 7; i++) {
     const t = i / 6;
     const cx = x + (t - 0.5) * size * 0.25 + crestWave * 2.5 * (1 - t);
-    const cy = plumeBaseY - t * size * 0.28 - Math.sin(t * Math.PI) * size * 0.1;
+    const cy =
+      plumeBaseY - t * size * 0.28 - Math.sin(t * Math.PI) * size * 0.1;
     ctx.lineTo(cx, cy);
   }
   for (let i = 6; i >= 0; i--) {
     const t = i / 6;
     const cx = x + (t - 0.5) * size * 0.25 + crestWave * 2.5 * (1 - t);
-    const cy = plumeBaseY - t * size * 0.24 - Math.sin(t * Math.PI) * size * 0.06;
+    const cy =
+      plumeBaseY - t * size * 0.24 - Math.sin(t * Math.PI) * size * 0.06;
     ctx.lineTo(cx, cy);
   }
   ctx.closePath();
   ctx.fill();
   // Plume base mount
-  ctx.fillStyle = "#4a4a58";
+  ctx.fillStyle = armorPeak;
   ctx.beginPath();
-  ctx.ellipse(x, plumeBaseY + size * 0.01, size * 0.04, size * 0.022, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    plumeBaseY + size * 0.012,
+    size * 0.048,
+    size * 0.026,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Battle cry shockwave during attack - THEMED
@@ -7316,6 +9053,16 @@ function drawKnightTroop(
   }
 
   ctx.restore();
+  drawTroopMasterworkFinish(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    TROOP_MASTERWORK_STYLES.knight,
+    { vanguard: true },
+  );
 }
 // ============================================================================
 // TURRET TROOP - Engineer's Heavy Machine Gun Emplacement
@@ -7329,7 +9076,7 @@ function drawTurretTroop(
   time: number,
   zoom: number,
   attackPhase: number = 0,
-  targetPos?: Position
+  targetPos?: Position,
 ) {
   // ENGINEER'S HEAVY MACHINE GUN - Belt-fed rapid fire emplacement
   const y = y2 + 12;
@@ -7344,7 +9091,10 @@ function drawTurretTroop(
     rotation = Math.atan2(targetPos.y - y, targetPos.x - x);
   } else {
     // Idle scanning - sweeping motion
-    rotation = Math.sin(time * 0.8) * 1.2 + Math.sin(time * 0.3) * 0.5;
+    rotation =
+      Math.sin(time * 0.8) * 1.2 +
+      Math.sin(time * 0.3) * 0.5 +
+      Math.sin(time * 2.2) * 0.12;
   }
 
   const cosR = Math.cos(rotation);
@@ -7393,7 +9143,15 @@ function drawTurretTroop(
     // Leg shadow
     ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
     ctx.beginPath();
-    ctx.ellipse(legEndX, legEndY + s * 0.02, s * 0.06, s * 0.02, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      legEndX,
+      legEndY + s * 0.02,
+      s * 0.06,
+      s * 0.02,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Main leg strut
@@ -7418,7 +9176,15 @@ function drawTurretTroop(
     // Foot pad with grip teeth
     ctx.fillStyle = "#2a2a35";
     ctx.beginPath();
-    ctx.ellipse(legEndX, legEndY, s * 0.055, s * 0.025, legAngle * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      legEndX,
+      legEndY,
+      s * 0.055,
+      s * 0.025,
+      legAngle * 0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     // Foot grip spikes
@@ -7431,7 +9197,7 @@ function drawTurretTroop(
         legEndY + Math.sin(spikeAngle) * s * 0.015,
         s * 0.012,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       ctx.fill();
     }
@@ -7442,7 +9208,10 @@ function drawTurretTroop(
     ctx.strokeStyle = "#5a5a68";
     ctx.lineWidth = s * 0.025;
     ctx.beginPath();
-    ctx.moveTo(x + Math.cos(legAngle) * s * 0.1, baseY + Math.sin(legAngle) * s * 0.04);
+    ctx.moveTo(
+      x + Math.cos(legAngle) * s * 0.1,
+      baseY + Math.sin(legAngle) * s * 0.04,
+    );
     ctx.lineTo(midX + Math.cos(legAngle + Math.PI / 2) * s * 0.04, midY);
     ctx.stroke();
 
@@ -7467,7 +9236,7 @@ function drawTurretTroop(
     x - s * 0.15,
     pivotY,
     x + s * 0.15,
-    pivotY
+    pivotY,
   );
   bearingGrad.addColorStop(0, "#2a2a35");
   bearingGrad.addColorStop(0.3, "#4a4a58");
@@ -7498,7 +9267,7 @@ function drawTurretTroop(
     ammoBoxX - s * 0.15,
     ammoBoxY - s * 0.12,
     ammoBoxX + s * 0.15,
-    ammoBoxY + s * 0.12
+    ammoBoxY + s * 0.12,
   );
   ammoBoxGrad.addColorStop(0, "#2d3d2a");
   ammoBoxGrad.addColorStop(0.3, "#3d4d3a");
@@ -7530,7 +9299,13 @@ function drawTurretTroop(
   // Ammo box lid latch
   ctx.fillStyle = "#6a6a78";
   ctx.beginPath();
-  ctx.roundRect(ammoBoxX - s * 0.02, ammoBoxY - s * 0.19, s * 0.06, s * 0.03, s * 0.005);
+  ctx.roundRect(
+    ammoBoxX - s * 0.02,
+    ammoBoxY - s * 0.19,
+    s * 0.06,
+    s * 0.03,
+    s * 0.005,
+  );
   ctx.fill();
 
   // Warning stripes on ammo box
@@ -7559,7 +9334,12 @@ function drawTurretTroop(
   ctx.lineWidth = s * 0.02;
   ctx.beginPath();
   ctx.moveTo(ammoBoxX - s * 0.08, ammoBoxY - s * 0.2);
-  ctx.quadraticCurveTo(ammoBoxX, ammoBoxY - s * 0.28, ammoBoxX + s * 0.02, ammoBoxY - s * 0.2);
+  ctx.quadraticCurveTo(
+    ammoBoxX,
+    ammoBoxY - s * 0.28,
+    ammoBoxX + s * 0.02,
+    ammoBoxY - s * 0.2,
+  );
   ctx.stroke();
 
   // ========== AMMO BELT FEEDING ==========
@@ -7608,7 +9388,10 @@ function drawTurretTroop(
     }
 
     // Bullet in belt
-    const bulletAngle = Math.atan2(beltFeedY - beltStartY, beltFeedX - beltStartX);
+    const bulletAngle = Math.atan2(
+      beltFeedY - beltStartY,
+      beltFeedX - beltStartX,
+    );
 
     // Brass casing
     ctx.fillStyle = "#d4a520";
@@ -7635,7 +9418,7 @@ function drawTurretTroop(
     gunPivotX - s * 0.2 * cosR,
     gunPivotY - s * 0.2 * sinR * 0.5,
     gunPivotX + s * 0.2 * cosR,
-    gunPivotY + s * 0.2 * sinR * 0.5
+    gunPivotY + s * 0.2 * sinR * 0.5,
   );
   receiverGrad.addColorStop(0, "#2d2d3a");
   receiverGrad.addColorStop(0.2, "#4a4a58");
@@ -7652,20 +9435,20 @@ function drawTurretTroop(
   // Back corners
   ctx.moveTo(
     gunPivotX - cosR * recvBack + sinR * recvWidth,
-    gunPivotY - sinR * recvBack * 0.5 - cosR * recvWidth * 0.3
+    gunPivotY - sinR * recvBack * 0.5 - cosR * recvWidth * 0.3,
   );
   ctx.lineTo(
     gunPivotX - cosR * recvBack - sinR * recvWidth,
-    gunPivotY - sinR * recvBack * 0.5 + cosR * recvWidth * 0.3
+    gunPivotY - sinR * recvBack * 0.5 + cosR * recvWidth * 0.3,
   );
   // Front corners
   ctx.lineTo(
     gunPivotX + cosR * recvFront - sinR * recvWidth * 0.8,
-    gunPivotY + sinR * recvFront * 0.5 + cosR * recvWidth * 0.24
+    gunPivotY + sinR * recvFront * 0.5 + cosR * recvWidth * 0.24,
   );
   ctx.lineTo(
     gunPivotX + cosR * recvFront + sinR * recvWidth * 0.8,
-    gunPivotY + sinR * recvFront * 0.5 - cosR * recvWidth * 0.24
+    gunPivotY + sinR * recvFront * 0.5 - cosR * recvWidth * 0.24,
   );
   ctx.closePath();
   ctx.fill();
@@ -7676,19 +9459,31 @@ function drawTurretTroop(
   ctx.beginPath();
   ctx.moveTo(
     gunPivotX - cosR * recvBack * 0.6 + sinR * recvWidth * 1.1,
-    gunPivotY - sinR * recvBack * 0.3 - cosR * recvWidth * 0.33 - topOffset * 0.5
+    gunPivotY -
+      sinR * recvBack * 0.3 -
+      cosR * recvWidth * 0.33 -
+      topOffset * 0.5,
   );
   ctx.lineTo(
     gunPivotX + cosR * recvFront * 0.8 + sinR * recvWidth * 1.1,
-    gunPivotY + sinR * recvFront * 0.4 - cosR * recvWidth * 0.33 - topOffset * 0.3
+    gunPivotY +
+      sinR * recvFront * 0.4 -
+      cosR * recvWidth * 0.33 -
+      topOffset * 0.3,
   );
   ctx.lineTo(
     gunPivotX + cosR * recvFront * 0.8 + sinR * recvWidth * 0.5,
-    gunPivotY + sinR * recvFront * 0.4 - cosR * recvWidth * 0.15 - topOffset * 0.4
+    gunPivotY +
+      sinR * recvFront * 0.4 -
+      cosR * recvWidth * 0.15 -
+      topOffset * 0.4,
   );
   ctx.lineTo(
     gunPivotX - cosR * recvBack * 0.6 + sinR * recvWidth * 0.5,
-    gunPivotY - sinR * recvBack * 0.3 - cosR * recvWidth * 0.15 - topOffset * 0.5
+    gunPivotY -
+      sinR * recvBack * 0.3 -
+      cosR * recvWidth * 0.15 -
+      topOffset * 0.5,
   );
   ctx.closePath();
   ctx.fill();
@@ -7698,7 +9493,15 @@ function drawTurretTroop(
   const feedTrayX = gunPivotX + sinR * recvWidth * 0.8;
   const feedTrayY = gunPivotY - cosR * recvWidth * 0.24 - topOffset * 0.5;
   ctx.beginPath();
-  ctx.ellipse(feedTrayX, feedTrayY, s * 0.06, s * 0.03, rotation, 0, Math.PI * 2);
+  ctx.ellipse(
+    feedTrayX,
+    feedTrayY,
+    s * 0.06,
+    s * 0.03,
+    rotation,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#6a6a78";
   ctx.beginPath();
@@ -7719,7 +9522,15 @@ function drawTurretTroop(
   const handleY = gunPivotY - sinR * handleDist * 0.5 - cosR * recvWidth * 0.18;
   ctx.fillStyle = "#3a3a48";
   ctx.beginPath();
-  ctx.ellipse(handleX, handleY, s * 0.03, s * 0.015, rotation - Math.PI/2, 0, Math.PI * 2);
+  ctx.ellipse(
+    handleX,
+    handleY,
+    s * 0.03,
+    s * 0.015,
+    rotation - Math.PI / 2,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.fillStyle = "#5a5a68";
   ctx.beginPath();
@@ -7732,8 +9543,10 @@ function drawTurretTroop(
   const barrelLength = s * 0.55;
 
   // Calculate barrel end - pointing directly at target
-  const barrelEndX = barrelStartX + cosR * barrelLength + barrelVibration * cosR;
-  const barrelEndY = barrelStartY + sinR * barrelLength * 0.5 + barrelVibration * sinR * 0.5;
+  const barrelEndX =
+    barrelStartX + cosR * barrelLength + barrelVibration * cosR;
+  const barrelEndY =
+    barrelStartY + sinR * barrelLength * 0.5 + barrelVibration * sinR * 0.5;
 
   const barrelPerpX = -sinR * s * 0.045;
   const barrelPerpY = cosR * s * 0.045 * 0.5;
@@ -7743,7 +9556,7 @@ function drawTurretTroop(
     barrelStartX,
     barrelStartY - s * 0.06,
     barrelStartX,
-    barrelStartY + s * 0.06
+    barrelStartY + s * 0.06,
   );
   shroudGrad.addColorStop(0, "#5a5a68");
   shroudGrad.addColorStop(0.3, "#4a4a58");
@@ -7758,9 +9571,10 @@ function drawTurretTroop(
     const ringY = barrelStartY + sinR * jacketLength * t * 0.5;
 
     // Heat coloring based on firing
-    const heatColor = heatGlow > 0 ? 
-      `rgba(255, ${150 - ring * 10}, ${50 - ring * 5}, ${heatGlow * 0.3 * (1 - t)})` : 
-      null;
+    const heatColor =
+      heatGlow > 0
+        ? `rgba(255, ${150 - ring * 10}, ${50 - ring * 5}, ${heatGlow * 0.3 * (1 - t)})`
+        : null;
 
     // Cooling ring
     ctx.fillStyle = shroudGrad;
@@ -7783,14 +9597,30 @@ function drawTurretTroop(
         const holeX = ringX + Math.cos(holeAngle) * s * 0.035;
         const holeY = ringY + Math.sin(holeAngle) * s * 0.02;
         ctx.beginPath();
-        ctx.ellipse(holeX, holeY, s * 0.008, s * 0.005, holeAngle, 0, Math.PI * 2);
+        ctx.ellipse(
+          holeX,
+          holeY,
+          s * 0.008,
+          s * 0.005,
+          holeAngle,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
 
         // Heat shimmer from holes when firing
         if (heatGlow > 0.3) {
           ctx.fillStyle = `rgba(255, 150, 50, ${heatGlow * 0.15})`;
           ctx.beginPath();
-          ctx.ellipse(holeX, holeY - s * 0.02, s * 0.01, s * 0.015, 0, 0, Math.PI * 2);
+          ctx.ellipse(
+            holeX,
+            holeY - s * 0.02,
+            s * 0.01,
+            s * 0.015,
+            0,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
       }
@@ -7800,10 +9630,16 @@ function drawTurretTroop(
   // Inner barrel
   ctx.fillStyle = "#2a2a35";
   ctx.beginPath();
-  ctx.moveTo(barrelStartX + barrelPerpX * 0.6, barrelStartY + barrelPerpY * 0.6);
+  ctx.moveTo(
+    barrelStartX + barrelPerpX * 0.6,
+    barrelStartY + barrelPerpY * 0.6,
+  );
   ctx.lineTo(barrelEndX + barrelPerpX * 0.4, barrelEndY + barrelPerpY * 0.4);
   ctx.lineTo(barrelEndX - barrelPerpX * 0.4, barrelEndY - barrelPerpY * 0.4);
-  ctx.lineTo(barrelStartX - barrelPerpX * 0.6, barrelStartY - barrelPerpY * 0.6);
+  ctx.lineTo(
+    barrelStartX - barrelPerpX * 0.6,
+    barrelStartY - barrelPerpY * 0.6,
+  );
   ctx.closePath();
   ctx.fill();
 
@@ -7813,7 +9649,7 @@ function drawTurretTroop(
       barrelStartX,
       barrelStartY,
       barrelEndX,
-      barrelEndY
+      barrelEndY,
     );
     heatBarrelGrad.addColorStop(0, `rgba(255, 100, 30, ${heatGlow * 0.2})`);
     heatBarrelGrad.addColorStop(0.5, `rgba(255, 150, 50, ${heatGlow * 0.35})`);
@@ -7857,7 +9693,7 @@ function drawTurretTroop(
     s * 0.018,
     rotation,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
 
@@ -7873,9 +9709,19 @@ function drawTurretTroop(
     ctx.shadowBlur = 25 * zoom;
 
     // Core flash
-    const flashGrad = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize);
+    const flashGrad = ctx.createRadialGradient(
+      flashX,
+      flashY,
+      0,
+      flashX,
+      flashY,
+      flashSize,
+    );
     flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity})`);
-    flashGrad.addColorStop(0.15, `rgba(255, 255, 200, ${flashIntensity * 0.95})`);
+    flashGrad.addColorStop(
+      0.15,
+      `rgba(255, 255, 200, ${flashIntensity * 0.95})`,
+    );
     flashGrad.addColorStop(0.3, `rgba(255, 220, 100, ${flashIntensity * 0.8})`);
     flashGrad.addColorStop(0.5, `rgba(255, 150, 50, ${flashIntensity * 0.5})`);
     flashGrad.addColorStop(0.7, `rgba(255, 80, 20, ${flashIntensity * 0.3})`);
@@ -7895,7 +9741,7 @@ function drawTurretTroop(
       ctx.moveTo(flashX, flashY);
       ctx.lineTo(
         flashX + Math.cos(spikeAngle) * spikeLen,
-        flashY + Math.sin(spikeAngle) * spikeLen * 0.5
+        flashY + Math.sin(spikeAngle) * spikeLen * 0.5,
       );
       ctx.stroke();
     }
@@ -7906,11 +9752,11 @@ function drawTurretTroop(
     ctx.moveTo(flashX, flashY);
     ctx.lineTo(
       flashX + cosR * flashSize * 2 + sinR * flashSize * 0.5,
-      flashY + sinR * flashSize + cosR * flashSize * 0.25
+      flashY + sinR * flashSize + cosR * flashSize * 0.25,
     );
     ctx.lineTo(
       flashX + cosR * flashSize * 2 - sinR * flashSize * 0.5,
-      flashY + sinR * flashSize - cosR * flashSize * 0.25
+      flashY + sinR * flashSize - cosR * flashSize * 0.25,
     );
     ctx.closePath();
     ctx.fill();
@@ -7923,7 +9769,7 @@ function drawTurretTroop(
     // Draw multiple bullet tracers for machine gun effect
     const numTracers = 4;
     for (let tracer = 0; tracer < numTracers; tracer++) {
-      const tracerPhase = ((time * fireRate + tracer * 0.25) % 1);
+      const tracerPhase = (time * fireRate + tracer * 0.25) % 1;
       const tracerProgress = tracerPhase;
 
       if (tracerProgress < 0.8) {
@@ -7931,8 +9777,10 @@ function drawTurretTroop(
         const tracerStartY = muzzleY + sinR * s * 0.04;
 
         // Tracer travels toward target
-        const tracerX = tracerStartX + (targetPos.x - tracerStartX) * tracerProgress;
-        const tracerY = tracerStartY + (targetPos.y - tracerStartY) * tracerProgress;
+        const tracerX =
+          tracerStartX + (targetPos.x - tracerStartX) * tracerProgress;
+        const tracerY =
+          tracerStartY + (targetPos.y - tracerStartY) * tracerProgress;
 
         // Tracer trail length
         const trailLength = s * 0.15;
@@ -7945,9 +9793,17 @@ function drawTurretTroop(
         ctx.shadowBlur = 8 * zoom;
 
         // Tracer trail
-        const tracerGrad = ctx.createLinearGradient(trailX, trailY, tracerX, tracerY);
+        const tracerGrad = ctx.createLinearGradient(
+          trailX,
+          trailY,
+          tracerX,
+          tracerY,
+        );
         tracerGrad.addColorStop(0, `rgba(255, 200, 50, 0)`);
-        tracerGrad.addColorStop(0.5, `rgba(255, 220, 100, ${tracerAlpha * 0.5})`);
+        tracerGrad.addColorStop(
+          0.5,
+          `rgba(255, 220, 100, ${tracerAlpha * 0.5})`,
+        );
         tracerGrad.addColorStop(1, `rgba(255, 255, 200, ${tracerAlpha})`);
         ctx.strokeStyle = tracerGrad;
         ctx.lineWidth = 3 * zoom;
@@ -7974,7 +9830,7 @@ function drawTurretTroop(
 
     // Multiple casings for rapid fire
     for (let casing = 0; casing < 5; casing++) {
-      const casingPhase = ((time * fireRate * 0.8 + casing * 0.2) % 1);
+      const casingPhase = (time * fireRate * 0.8 + casing * 0.2) % 1;
 
       if (casingPhase < 0.6) {
         // Casing trajectory - arcing eject
@@ -8005,7 +9861,7 @@ function drawTurretTroop(
           s * 0.008,
           spinAngle,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.fill();
 
@@ -8017,7 +9873,7 @@ function drawTurretTroop(
           casingY - Math.sin(spinAngle) * s * 0.005,
           s * 0.006,
           0,
-          Math.PI * 2
+          Math.PI * 2,
         );
         ctx.fill();
 
@@ -8025,7 +9881,15 @@ function drawTurretTroop(
         if (heatGlow > 0.3) {
           ctx.fillStyle = `rgba(255, 200, 100, ${heatGlow * 0.3 * (1 - ejectProgress)})`;
           ctx.beginPath();
-          ctx.ellipse(casingX, casingY, s * 0.022, s * 0.012, spinAngle, 0, Math.PI * 2);
+          ctx.ellipse(
+            casingX,
+            casingY,
+            s * 0.022,
+            s * 0.012,
+            spinAngle,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
       }
@@ -8036,7 +9900,7 @@ function drawTurretTroop(
   if (isAttacking) {
     // Barrel smoke
     for (let smoke = 0; smoke < 3; smoke++) {
-      const smokePhase = ((time * 2 + smoke * 0.33) % 1);
+      const smokePhase = (time * 2 + smoke * 0.33) % 1;
       const smokeX =
         muzzleX +
         cosR * s * 0.08 +
@@ -8053,7 +9917,8 @@ function drawTurretTroop(
 
     // Ejection port smoke
     const portSmokeX = gunPivotX + sinR * s * 0.08;
-    const portSmokeY = gunPivotY - cosR * s * 0.04 - Math.sin(time * 5) * s * 0.02;
+    const portSmokeY =
+      gunPivotY - cosR * s * 0.04 - Math.sin(time * 5) * s * 0.02;
     ctx.fillStyle = `rgba(100, 100, 110, ${heatGlow * 0.2})`;
     ctx.beginPath();
     ctx.arc(portSmokeX, portSmokeY, s * 0.025, 0, Math.PI * 2);
@@ -8067,24 +9932,52 @@ function drawTurretTroop(
   // Optic housing
   ctx.fillStyle = "#2a2a35";
   ctx.beginPath();
-  ctx.ellipse(opticX, opticY, s * 0.05, s * 0.035, rotation * 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    opticX,
+    opticY,
+    s * 0.05,
+    s * 0.035,
+    rotation * 0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Optic lens
-  const lensGlow = targetPos ? 0.8 + Math.sin(time * 6) * 0.2 : 0.4 + Math.sin(time * 2) * 0.1;
-  const lensColor = targetPos ? `rgba(255, 50, 50, ${lensGlow})` : `rgba(50, 200, 255, ${lensGlow})`;
+  const lensGlow = targetPos
+    ? 0.8 + Math.sin(time * 6) * 0.2
+    : 0.4 + Math.sin(time * 2) * 0.1;
+  const lensColor = targetPos
+    ? `rgba(255, 50, 50, ${lensGlow})`
+    : `rgba(50, 200, 255, ${lensGlow})`;
   ctx.fillStyle = lensColor;
   ctx.shadowColor = targetPos ? "#ff3232" : "#00aaff";
   ctx.shadowBlur = 6 * zoom;
   ctx.beginPath();
-  ctx.ellipse(opticX, opticY, s * 0.03, s * 0.02, rotation * 0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    opticX,
+    opticY,
+    s * 0.03,
+    s * 0.02,
+    rotation * 0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
   // Lens reflection
   ctx.fillStyle = `rgba(255, 255, 255, ${lensGlow * 0.3})`;
   ctx.beginPath();
-  ctx.ellipse(opticX - s * 0.01, opticY - s * 0.008, s * 0.01, s * 0.006, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    opticX - s * 0.01,
+    opticY - s * 0.008,
+    s * 0.01,
+    s * 0.006,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // ========== TARGETING LASER BEAM ==========
@@ -8192,14 +10085,24 @@ function drawTurretTroop(
     ctx.beginPath();
     ctx.moveTo(
       emblemX + Math.cos(gearAngle) * s * 0.035,
-      emblemY + Math.sin(gearAngle) * s * 0.035
+      emblemY + Math.sin(gearAngle) * s * 0.035,
     );
     ctx.lineTo(
       emblemX + Math.cos(gearAngle) * s * 0.05,
-      emblemY + Math.sin(gearAngle) * s * 0.05
+      emblemY + Math.sin(gearAngle) * s * 0.05,
     );
     ctx.stroke();
   }
 
+  drawTroopMasterworkFinish(
+    ctx,
+    x,
+    y,
+    size,
+    time,
+    zoom,
+    TROOP_MASTERWORK_STYLES.turret,
+    { vanguard: true },
+  );
   ctx.restore();
 }

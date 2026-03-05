@@ -157,7 +157,6 @@ import {
 } from "../game/pageHelpers";
 import {
   clampPositionToRadius,
-  computeRepulsionFromNeighbors,
   computeSeparationForces,
   getFacingRightFromDelta,
   stepTowardTarget,
@@ -334,6 +333,7 @@ const ENEMY_REPULSION_PROGRESS_RADIUS = 0.5;
 const ENEMY_REPULSION_LATERAL_STRENGTH = 0.18;
 const ENEMY_FORMATION_PULL_STRENGTH = 0.035;
 const ENEMY_LANE_SHIFT_MS = 180;
+const FRIENDLY_SEPARATION_MULT = 0.18;
 
 type EnemyFormationPattern = "echelon" | "line" | "file" | "wedge" | "vee";
 
@@ -3773,6 +3773,20 @@ export function usePrincetonTowerDefenseRuntime() {
         return summoned.length > 0 ? [...updated, ...summoned] : updated;
       });
 
+      // Unified separation forces for all friendly units (hero + troops).
+      // Computed once, applied to both hero and troops for consistent behaviour.
+      const friendlyUnits: { id: string; pos: Position }[] = troops
+        .filter((t) => !t.dead)
+        .map((t) => ({ id: t.id, pos: t.pos }));
+      if (hero && !hero.dead) {
+        friendlyUnits.push({ id: hero.id, pos: hero.pos });
+      }
+      const friendlySeparation = computeSeparationForces(
+        friendlyUnits,
+        TROOP_SEPARATION_DIST,
+        1.35
+      );
+
       // Update hero movement - with sight-based engagement
       if (hero && !hero.dead) {
         setHero((prev) => {
@@ -3782,29 +3796,11 @@ export function usePrincetonTowerDefenseRuntime() {
           const slowMultiplier =
             prev.slowed && prev.slowIntensity ? 1 - prev.slowIntensity : 1;
           const speed = heroData.speed * slowMultiplier;
-          const isRanged = heroData.isRanged || false; // Use isRanged from hero data
-          const attackRange = heroData.range; // Use the hero's actual range
+          const isRanged = heroData.isRanged || false;
+          const attackRange = heroData.range;
           const sightRange = isRanged
             ? HERO_RANGED_SIGHT_RANGE
             : HERO_SIGHT_RANGE;
-          const nearbyTroops = troops
-            .filter((troop) => !troop.dead)
-            .map((troop) => ({ id: troop.id, pos: troop.pos }));
-          const applyTroopAvoidance = (candidatePos: Position): Position => {
-            const repulsion = computeRepulsionFromNeighbors(
-              candidatePos,
-              nearbyTroops,
-              TROOP_SEPARATION_DIST * 0.82,
-              0.95
-            );
-            if (Math.abs(repulsion.x) <= 0.0001 && Math.abs(repulsion.y) <= 0.0001) {
-              return candidatePos;
-            }
-            return {
-              x: candidatePos.x + repulsion.x * deltaTime * 0.1,
-              y: candidatePos.y + repulsion.y * deltaTime * 0.1,
-            };
-          };
 
           let closestEnemy = getClosestEnemyInRange(
             prev.pos,
@@ -3861,13 +3857,12 @@ export function usePrincetonTowerDefenseRuntime() {
                 ),
               };
             }
-            const nextPos = applyTroopAvoidance(step.pos);
             return {
               ...prev,
-              pos: nextPos,
+              pos: step.pos,
               rotation: step.rotation,
               facingRight: step.facingRight,
-              homePos: prev.targetPos, // Set home to destination
+              homePos: prev.targetPos,
               aggroTarget: undefined,
               returning: false,
             };
@@ -3907,10 +3902,9 @@ export function usePrincetonTowerDefenseRuntime() {
                 });
 
                 if (!step.reached) {
-                  const nextPos = applyTroopAvoidance(step.pos);
                   return {
                     ...prev,
-                    pos: nextPos,
+                    pos: step.pos,
                     rotation: step.rotation,
                     facingRight: step.facingRight,
                     aggroTarget: closestEnemy.id,
@@ -3952,10 +3946,9 @@ export function usePrincetonTowerDefenseRuntime() {
             });
 
             if (!step.reached) {
-              const nextPos = applyTroopAvoidance(step.pos);
               return {
                 ...prev,
-                pos: nextPos,
+                pos: step.pos,
                 rotation: step.rotation,
                 facingRight: step.facingRight,
                 aggroTarget: undefined,
@@ -3974,24 +3967,27 @@ export function usePrincetonTowerDefenseRuntime() {
 
           return prev;
         });
+        // Apply unified separation force to hero
+        setHero((prev) => {
+          if (!prev || prev.dead) return prev;
+          const force = friendlySeparation.get(prev.id);
+          if (
+            !force ||
+            (Math.abs(force.x) < 0.0001 && Math.abs(force.y) < 0.0001)
+          )
+            return prev;
+          return {
+            ...prev,
+            pos: {
+              x: prev.pos.x + force.x * deltaTime * FRIENDLY_SEPARATION_MULT,
+              y: prev.pos.y + force.y * deltaTime * FRIENDLY_SEPARATION_MULT,
+            },
+          };
+        });
       }
       // Update troop movement - with sight-based engagement
       setTroops((prev) => {
-        // First pass: calculate shared separation forces for troops and hero.
-        const separationUnits = prev.map((troop) => ({
-          id: troop.id,
-          pos: troop.pos,
-        }));
-        if (hero && !hero.dead) {
-          separationUnits.push({ id: hero.id, pos: hero.pos });
-        }
-        const separationForces = computeSeparationForces(
-          separationUnits,
-          TROOP_SEPARATION_DIST,
-          1.35
-        );
-
-        // Second pass: update positions with sight-based engagement
+        // Update positions with sight-based engagement
         return prev.map((troop) => {
           const updated = { ...troop };
           if (!troop.type) return updated; // Skip troops without type
@@ -4202,17 +4198,11 @@ export function usePrincetonTowerDefenseRuntime() {
             }
           }
 
-          // Apply separation force - ALWAYS apply (except stationary) to prevent bundling/vibration
-          // Use stronger force and always apply to prevent the oscillation bug where
-          // troops bundle when engaging then separate when not engaging
-          const force = separationForces.get(troop.id);
+          const force = friendlySeparation.get(troop.id);
           if (force && !isStationary) {
-            // Apply separation more aggressively to prevent overlap
-            // Scale down slightly when engaging to allow some grouping but prevent vibration
-            const forceMult = updated.engaging ? 0.15 : 0.2;
             updated.pos = {
-              x: updated.pos.x + force.x * deltaTime * forceMult,
-              y: updated.pos.y + force.y * deltaTime * forceMult,
+              x: updated.pos.x + force.x * deltaTime * FRIENDLY_SEPARATION_MULT,
+              y: updated.pos.y + force.y * deltaTime * FRIENDLY_SEPARATION_MULT,
             };
           }
 

@@ -301,6 +301,8 @@ function resolveWeaponRotation(
   maxTurn: number = Math.PI
 ) {
   if (!targetPos) return fallbackRotation;
+  // Match the solve origin to the grip pivot used by ctx.translate(...)
+  // so the weapon handle stays anchored to the hero while the tip aims.
   const desiredRotation =
     Math.atan2(targetPos.y - originY, targetPos.x - originX) + forwardOffset;
   const delta = normalizeSignedAngle(desiredRotation - fallbackRotation);
@@ -2437,7 +2439,7 @@ function drawMatheyKnightHero(
   hammerAngle = resolveWeaponRotation(
     targetPos,
     hammerX,
-    hammerY - size * 0.86,
+    hammerY,
     hammerAngle,
     Math.PI / 2,
     isAttacking ? 1.25 : 0.72
@@ -4024,7 +4026,7 @@ function drawFScottHero(
   const penRotation = resolveWeaponRotation(
     targetPos,
     penBaseX,
-    penBaseY - size * 0.28,
+    penBaseY + writeGesture * 0.5,
     penBaseRotation,
     Math.PI / 2,
     isAttacking ? 1.2 : 0.66
@@ -4649,7 +4651,7 @@ function drawCaptainHero(
   const swordAngle = resolveWeaponRotation(
     targetPos,
     x + size * 0.55,
-    y - size * 0.7,
+    y + size * 0.08,
     swordBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.35 : 0.8
@@ -5596,7 +5598,7 @@ function drawEngineerHero(
   const wrenchAngle = resolveWeaponRotation(
     targetPos,
     x - size * 0.55,
-    y - size * 0.16 + workAnimation * size * 0.05,
+    y + size * 0.15 + workAnimation * size * 0.05,
     wrenchBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.1 : 0.62
@@ -5673,7 +5675,7 @@ function drawEngineerHero(
   const plasmaAngle = resolveWeaponRotation(
     targetPos,
     x + size * 0.55,
-    y - size * 0.15 - workAnimation * size * 0.05,
+    y + size * 0.1 - workAnimation * size * 0.05,
     plasmaBaseAngle,
     Math.PI / 2,
     isAttacking ? 1.3 : 0.72

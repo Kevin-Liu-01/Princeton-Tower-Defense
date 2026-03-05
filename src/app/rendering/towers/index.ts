@@ -1,6 +1,8 @@
 // Tower Rendering Functions - Extracted from rendering/index.ts
 import type { Tower, Enemy, DraggingTower, Position } from "../../types";
 import { TILE_SIZE, TOWER_DATA, TOWER_COLORS, ISO_ANGLE, ISO_PRISM_W_FACTOR, ISO_PRISM_D_FACTOR, ISO_Y_RATIO } from "../../constants";
+import { LEVEL_DATA, REGION_THEMES } from "../../constants/maps";
+import type { MapTheme } from "../../constants/maps";
 import { TOWER_STATS } from "../../constants/towerStats";
 import {
   gridToWorld,
@@ -2060,6 +2062,409 @@ function hexToRgb(hex: string): string {
 }
 
 // ============================================================================
+// REGIONAL GROUND TRANSITION — dug-in construction base under towers
+// ============================================================================
+
+const GROUND_TRANSITION_PALETTES: Record<
+  MapTheme,
+  {
+    outerDirt: string;
+    innerDirt: string;
+    packedEarth: string;
+    rubbleLight: string;
+    rubbleDark: string;
+    edgeDetail: string;
+    accentGlow: string;
+    accentAlpha: number;
+  }
+> = {
+  grassland: {
+    outerDirt: "#4a3a20",
+    innerDirt: "#3a2a15",
+    packedEarth: "#2a1e10",
+    rubbleLight: "#6a5a3a",
+    rubbleDark: "#3a2a18",
+    edgeDetail: "#5a7a4a",
+    accentGlow: "rgba(80, 130, 60, 0.15)",
+    accentAlpha: 0.12,
+  },
+  desert: {
+    outerDirt: "#9a8050",
+    innerDirt: "#7a6540",
+    packedEarth: "#5a4830",
+    rubbleLight: "#c4a45a",
+    rubbleDark: "#6a5030",
+    edgeDetail: "#b8a060",
+    accentGlow: "rgba(200, 170, 80, 0.12)",
+    accentAlpha: 0.1,
+  },
+  winter: {
+    outerDirt: "#5a6a7a",
+    innerDirt: "#3a4a5a",
+    packedEarth: "#2a3544",
+    rubbleLight: "#8899aa",
+    rubbleDark: "#3a4a5a",
+    edgeDetail: "#c8d8e8",
+    accentGlow: "rgba(150, 190, 220, 0.15)",
+    accentAlpha: 0.15,
+  },
+  volcanic: {
+    outerDirt: "#3a2020",
+    innerDirt: "#2a1515",
+    packedEarth: "#1a0a0a",
+    rubbleLight: "#5a3a3a",
+    rubbleDark: "#2a1010",
+    edgeDetail: "#ff4400",
+    accentGlow: "rgba(255, 68, 0, 0.12)",
+    accentAlpha: 0.1,
+  },
+  swamp: {
+    outerDirt: "#2a3a20",
+    innerDirt: "#1a2a15",
+    packedEarth: "#101a0a",
+    rubbleLight: "#4a5a3a",
+    rubbleDark: "#1a2a12",
+    edgeDetail: "#3a6a3a",
+    accentGlow: "rgba(60, 120, 60, 0.15)",
+    accentAlpha: 0.12,
+  },
+};
+
+function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
+  const level = tower.level;
+  switch (tower.type) {
+    case "cannon": {
+      const base = 36 + level * 5;
+      return { w: base + 18, d: base + 18 };
+    }
+    case "library": {
+      const base = 34 + level * 5;
+      return { w: base + 20, d: base + 20 };
+    }
+    case "lab": {
+      const base = 30 + level * 4;
+      return { w: base + 16, d: base + 16 };
+    }
+    case "arch": {
+      const baseW = 38 + level * 5;
+      const baseD = 30 + level * 4;
+      return { w: baseW + 32, d: baseD + 40 };
+    }
+    case "club": {
+      const base = 34 + level * 5;
+      return { w: base + 18, d: base + 18 };
+    }
+    case "station": {
+      const baseW = 56 + level * 6;
+      const baseD = 44 + level * 5;
+      return { w: baseW + 22, d: baseD + 34 };
+    }
+    default:
+      return { w: 60, d: 60 };
+  }
+}
+
+function drawGroundTransition(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  tower: Tower,
+  zoom: number,
+  time: number,
+  selectedMap: string,
+) {
+  const levelData = LEVEL_DATA[selectedMap];
+  const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
+  const palette = GROUND_TRANSITION_PALETTES[mapTheme];
+  const regionTheme = REGION_THEMES[mapTheme];
+
+  const foundation = getTowerFoundationSize(tower);
+  const fndW = foundation.w * zoom * ISO_PRISM_W_FACTOR;
+  const fndH = foundation.d * zoom * ISO_PRISM_D_FACTOR;
+
+  const cx = screenPos.x;
+  const cy = screenPos.y + 6 * zoom;
+  const outerW = fndW * 1.3;
+  const outerH = fndH * 1.3;
+  const midW = fndW * 1.0;
+  const midH = fndH * 1.0;
+  const innerW = fndW * 0.75;
+  const innerH = fndH * 0.75;
+  // Scale element counts proportionally (reference: 60-unit foundation)
+  const detailScale = Math.max(0.6, Math.min(1.6, (foundation.w + foundation.d) * 0.5 / 60));
+
+  ctx.save();
+
+  // === Outer excavation ring — disturbed terrain ===
+  const outerGrad = ctx.createRadialGradient(cx, cy, midW * 0.6, cx, cy, outerW);
+  outerGrad.addColorStop(0, "rgba(0,0,0,0)");
+  outerGrad.addColorStop(0.5, palette.outerDirt);
+  outerGrad.addColorStop(1, regionTheme.ground[1]);
+  ctx.fillStyle = outerGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, outerW, outerH, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Edge roughness — irregular clumps breaking the clean ellipse
+  const clumpSeed = selectedMap.charCodeAt(0) + (screenPos.x | 0);
+  const numClumps = Math.floor(12 * detailScale);
+  for (let i = 0; i < numClumps; i++) {
+    const angle = (i / numClumps) * Math.PI * 2 + (clumpSeed % 7) * 0.3;
+    const dist = outerW * (0.92 + ((clumpSeed * (i + 1) * 7) % 17) / 85);
+    const clX = cx + Math.cos(angle) * dist;
+    const clY = cy + Math.sin(angle) * dist * (outerH / outerW);
+    const clR = (1.5 + ((clumpSeed * (i + 3)) % 11) / 7) * zoom;
+    ctx.fillStyle = i % 3 === 0 ? palette.outerDirt : regionTheme.ground[2];
+    ctx.beginPath();
+    ctx.ellipse(clX, clY, clR * 1.3, clR * 0.7, angle, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === Middle ring — exposed subsoil ===
+  const midGrad = ctx.createRadialGradient(cx, cy, innerW * 0.5, cx, cy, midW);
+  midGrad.addColorStop(0, palette.innerDirt);
+  midGrad.addColorStop(1, palette.outerDirt);
+  ctx.fillStyle = midGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, midW, midH, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Excavation score marks — concentric arcs showing dig patterns
+  ctx.strokeStyle = `rgba(0,0,0,0.12)`;
+  ctx.lineWidth = 0.6 * zoom;
+  for (let ring = 0; ring < 3; ring++) {
+    const ringR = midW * (0.6 + ring * 0.15);
+    const ringH = midH * (0.6 + ring * 0.15);
+    const startAngle = ((clumpSeed + ring * 5) % 6) * 0.5;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, ringR, ringH, 0, startAngle, startAngle + Math.PI * 0.6);
+    ctx.stroke();
+  }
+
+  // === Inner packed earth — construction base ===
+  const innerGrad = ctx.createRadialGradient(
+    cx - innerW * 0.1, cy - innerH * 0.1, 0,
+    cx, cy, innerW * 0.9,
+  );
+  innerGrad.addColorStop(0, palette.packedEarth);
+  innerGrad.addColorStop(0.7, palette.innerDirt);
+  innerGrad.addColorStop(1, palette.outerDirt);
+  ctx.fillStyle = innerGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, innerW, innerH, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === Rubble and debris ring (between middle and inner) ===
+  const numRubble = Math.floor(16 * detailScale);
+  for (let i = 0; i < numRubble; i++) {
+    const angle = (i / numRubble) * Math.PI * 2 + (clumpSeed % 5) * 0.4;
+    const dist = midW * (0.65 + ((clumpSeed * (i + 2) * 13) % 19) / 60);
+    const rx = cx + Math.cos(angle) * dist;
+    const ry = cy + Math.sin(angle) * dist * (midH / midW);
+    const rSize = (0.8 + ((clumpSeed * (i + 7)) % 13) / 10) * zoom;
+    ctx.fillStyle = i % 2 === 0 ? palette.rubbleLight : palette.rubbleDark;
+    ctx.beginPath();
+    ctx.ellipse(rx, ry, rSize, rSize * 0.6, angle * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Rubble highlight
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.beginPath();
+    ctx.ellipse(rx - 0.2 * zoom, ry - 0.2 * zoom, rSize * 0.4, rSize * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === Region-specific details ===
+  if (mapTheme === "grassland") {
+    // Torn grass tufts around excavation edge
+    const numTufts = Math.floor(8 * detailScale);
+    for (let i = 0; i < numTufts; i++) {
+      const angle = (i / numTufts) * Math.PI * 2 + 0.3;
+      const dist = outerW * (0.85 + ((clumpSeed * (i + 1)) % 9) / 45);
+      const gx = cx + Math.cos(angle) * dist;
+      const gy = cy + Math.sin(angle) * dist * (outerH / outerW);
+      ctx.strokeStyle = "#5a8a4a";
+      ctx.lineWidth = 0.8 * zoom;
+      for (let b = 0; b < 3; b++) {
+        const bAngle = angle + (b - 1) * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy);
+        ctx.lineTo(
+          gx + Math.cos(bAngle) * 2.5 * zoom,
+          gy - (2 + b * 0.8) * zoom,
+        );
+        ctx.stroke();
+      }
+    }
+    // Exposed root fragments
+    ctx.strokeStyle = "#5a4020";
+    ctx.lineWidth = 0.7 * zoom;
+    for (let i = 0; i < 3; i++) {
+      const rAngle = ((clumpSeed + i * 4) % 12) * (Math.PI / 6);
+      const rd = midW * 0.7;
+      const rsx = cx + Math.cos(rAngle) * rd * 0.5;
+      const rsy = cy + Math.sin(rAngle) * rd * 0.5 * (midH / midW);
+      ctx.beginPath();
+      ctx.moveTo(rsx, rsy);
+      ctx.quadraticCurveTo(
+        rsx + Math.cos(rAngle + 0.5) * 3 * zoom,
+        rsy + Math.sin(rAngle + 0.5) * 2 * zoom,
+        rsx + Math.cos(rAngle) * 5 * zoom,
+        rsy + Math.sin(rAngle) * 3 * zoom * (midH / midW),
+      );
+      ctx.stroke();
+    }
+  } else if (mapTheme === "desert") {
+    // Sand drift mounds pushed aside by excavation
+    const numDrifts = Math.floor(6 * detailScale);
+    for (let i = 0; i < numDrifts; i++) {
+      const angle = (i / numDrifts) * Math.PI * 2 + 0.5;
+      const dist = outerW * (0.88 + ((clumpSeed * (i + 3)) % 7) / 35);
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist * (outerH / outerW);
+      const driftGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 3 * zoom);
+      driftGrad.addColorStop(0, "#c4a45a");
+      driftGrad.addColorStop(1, "rgba(164,131,58,0)");
+      ctx.fillStyle = driftGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, 3.5 * zoom, 1.5 * zoom, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Exposed sandstone chunks
+    ctx.fillStyle = "#b8943a";
+    for (let i = 0; i < 4; i++) {
+      const angle = ((clumpSeed + i * 3) % 8) * (Math.PI / 4);
+      const dist = midW * 0.75;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist * (midH / midW);
+      ctx.beginPath();
+      ctx.moveTo(sx, sy - 1 * zoom);
+      ctx.lineTo(sx + 1.5 * zoom, sy);
+      ctx.lineTo(sx + 0.5 * zoom, sy + 1 * zoom);
+      ctx.lineTo(sx - 1 * zoom, sy + 0.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+    }
+  } else if (mapTheme === "winter") {
+    // Snow banks pushed aside at excavation edge
+    const numSnow = Math.floor(6 * detailScale);
+    for (let i = 0; i < numSnow; i++) {
+      const angle = (i / numSnow) * Math.PI * 2 + 0.2;
+      const dist = outerW * (0.9 + ((clumpSeed * (i + 2)) % 5) / 25);
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist * (outerH / outerW);
+      const snowGrad = ctx.createRadialGradient(sx, sy - 0.5 * zoom, 0, sx, sy, 3.5 * zoom);
+      snowGrad.addColorStop(0, "rgba(220, 235, 250, 0.7)");
+      snowGrad.addColorStop(0.6, "rgba(200, 215, 235, 0.4)");
+      snowGrad.addColorStop(1, "rgba(180, 200, 220, 0)");
+      ctx.fillStyle = snowGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, 4 * zoom, 1.8 * zoom, angle * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Ice patches on exposed ground
+    ctx.fillStyle = "rgba(160, 200, 240, 0.2)";
+    for (let i = 0; i < 3; i++) {
+      const angle = ((clumpSeed + i * 5) % 6) * (Math.PI / 3);
+      const dist = midW * 0.5;
+      const ix = cx + Math.cos(angle) * dist;
+      const iy = cy + Math.sin(angle) * dist * (midH / midW);
+      ctx.beginPath();
+      ctx.ellipse(ix, iy, 2.5 * zoom, 1.2 * zoom, angle, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (mapTheme === "volcanic") {
+    // Lava cracks radiating from excavation
+    const lavaGlow = 0.3 + Math.sin(time * 2) * 0.1;
+    ctx.strokeStyle = `rgba(255, 68, 0, ${lavaGlow})`;
+    ctx.shadowColor = "#ff4400";
+    ctx.shadowBlur = 3 * zoom;
+    ctx.lineWidth = 0.8 * zoom;
+    const numCracks = Math.floor(5 * detailScale);
+    for (let i = 0; i < numCracks; i++) {
+      const angle = (i / numCracks) * Math.PI * 2 + (clumpSeed % 3) * 0.6;
+      const startD = innerW * 0.8;
+      const endD = midW * 0.95;
+      const sx = cx + Math.cos(angle) * startD;
+      const sy = cy + Math.sin(angle) * startD * (innerH / innerW);
+      const ex = cx + Math.cos(angle + 0.15) * endD;
+      const ey = cy + Math.sin(angle + 0.15) * endD * (midH / midW);
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo(
+        (sx + ex) / 2 + Math.cos(angle + 0.8) * 2 * zoom,
+        (sy + ey) / 2 + Math.sin(angle + 0.8) * 1.5 * zoom,
+        ex, ey,
+      );
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // Ash dust particles
+    ctx.fillStyle = "rgba(80, 60, 60, 0.35)";
+    const numAsh = Math.floor(8 * detailScale);
+    for (let i = 0; i < numAsh; i++) {
+      const angle = (i / numAsh) * Math.PI * 2;
+      const dist = outerW * (0.7 + ((clumpSeed * (i + 4)) % 11) / 35);
+      const ax = cx + Math.cos(angle) * dist;
+      const ay = cy + Math.sin(angle) * dist * (outerH / outerW);
+      ctx.beginPath();
+      ctx.arc(ax, ay, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (mapTheme === "swamp") {
+    // Muddy water puddles in excavation
+    const numPuddles = Math.floor(4 * detailScale);
+    for (let i = 0; i < numPuddles; i++) {
+      const angle = (i / numPuddles) * Math.PI * 2 + 0.8;
+      const dist = midW * (0.5 + ((clumpSeed * (i + 1)) % 7) / 20);
+      const px = cx + Math.cos(angle) * dist;
+      const py = cy + Math.sin(angle) * dist * (midH / midW);
+      const pudGrad = ctx.createRadialGradient(px, py, 0, px, py, 2.5 * zoom);
+      pudGrad.addColorStop(0, "rgba(40, 60, 35, 0.5)");
+      pudGrad.addColorStop(0.6, "rgba(30, 50, 25, 0.3)");
+      pudGrad.addColorStop(1, "rgba(20, 40, 15, 0)");
+      ctx.fillStyle = pudGrad;
+      ctx.beginPath();
+      ctx.ellipse(px, py, 3 * zoom, 1.5 * zoom, angle * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Water surface highlight
+      ctx.fillStyle = "rgba(100, 150, 100, 0.15)";
+      ctx.beginPath();
+      ctx.ellipse(px - 0.5 * zoom, py - 0.3 * zoom, 1.5 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Moss tendrils creeping toward tower
+    ctx.strokeStyle = "#3a6a2a";
+    ctx.lineWidth = 0.7 * zoom;
+    const numMoss = Math.floor(5 * detailScale);
+    for (let i = 0; i < numMoss; i++) {
+      const angle = (i / numMoss) * Math.PI * 2 + 0.4;
+      const startD = outerW * 0.85;
+      const endD = midW * 0.6;
+      const mx = cx + Math.cos(angle) * startD;
+      const my = cy + Math.sin(angle) * startD * (outerH / outerW);
+      const ex = cx + Math.cos(angle + 0.1) * endD;
+      const ey = cy + Math.sin(angle + 0.1) * endD * (midH / midW);
+      ctx.beginPath();
+      ctx.moveTo(mx, my);
+      ctx.quadraticCurveTo(
+        (mx + ex) / 2 + Math.cos(angle + 1) * 1.5 * zoom,
+        (my + ey) / 2,
+        ex, ey,
+      );
+      ctx.stroke();
+    }
+  }
+
+  // === Accent glow ring — subtle regional color at excavation border ===
+  ctx.strokeStyle = palette.accentGlow;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, midW * 1.02, midH * 1.02, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+// ============================================================================
 // TOWER RENDERING
 // ============================================================================
 export function renderTower(
@@ -2092,6 +2497,9 @@ export function renderTower(
 
   // Draw passive effects first (behind tower)
   drawTowerPassiveEffects(ctx, screenPos, tower, zoom, time, colors);
+
+  // Regional ground transition — dug-in construction base (scaled to tower footprint)
+  drawGroundTransition(ctx, screenPos, tower, zoom, time, selectedMap);
 
   // Selection/hover glow with enhanced effect
   if (isSelected || isHovered) {
@@ -2153,14 +2561,17 @@ export function renderTower(
     ctx.restore();
   }
 
-  // Enhanced shadow with soft edges
+  // Enhanced shadow with soft edges (scaled to tower foundation)
+  const shadowFnd = getTowerFoundationSize(tower);
+  const shadowW = shadowFnd.w * zoom * ISO_PRISM_W_FACTOR * 1.1;
+  const shadowH = shadowFnd.d * zoom * ISO_PRISM_D_FACTOR * 1.1;
   const shadowGrad = ctx.createRadialGradient(
     screenPos.x,
     screenPos.y + 8 * zoom,
     0,
     screenPos.x,
     screenPos.y + 8 * zoom,
-    32 * zoom,
+    shadowW,
   );
   shadowGrad.addColorStop(0, "rgba(0,0,0,0.4)");
   shadowGrad.addColorStop(0.6, "rgba(0,0,0,0.2)");
@@ -2170,8 +2581,8 @@ export function renderTower(
   ctx.ellipse(
     screenPos.x,
     screenPos.y + 8 * zoom,
-    32 * zoom,
-    16 * zoom,
+    shadowW,
+    shadowH,
     0,
     0,
     Math.PI * 2,
@@ -2853,43 +3264,6 @@ function drawMechanicalFaceDetails(
     ctx.stroke();
   }
 
-  // ── Emblem / insignia on front-left face ──
-  const emblemT = 0.55;
-  const emblemS = 0.35;
-  const emblemEdgeL = lerpV(lBL, lTL, emblemT);
-  const emblemEdgeR = lerpV(lBF, lTF, emblemT);
-  const emblemCenter = lerpV(emblemEdgeL, emblemEdgeR, emblemS);
-  const emblemR = 5 * zoom;
-
-  // Insignia backing plate
-  ctx.fillStyle = darkenColor(colors.base, 10);
-  ctx.beginPath();
-  ctx.arc(emblemCenter.x, emblemCenter.y, emblemR + 1.5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Ring
-  ctx.strokeStyle = colors.accent;
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.arc(emblemCenter.x, emblemCenter.y, emblemR, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Crosshair
-  ctx.strokeStyle = colors.accent;
-  ctx.lineWidth = 1.2 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(emblemCenter.x - emblemR * 0.7, emblemCenter.y);
-  ctx.lineTo(emblemCenter.x + emblemR * 0.7, emblemCenter.y);
-  ctx.moveTo(emblemCenter.x, emblemCenter.y - emblemR * 0.7);
-  ctx.lineTo(emblemCenter.x, emblemCenter.y + emblemR * 0.7);
-  ctx.stroke();
-
-  // Center dot
-  const emblemPulse = 0.5 + Math.sin(time * 4) * 0.3;
-  ctx.fillStyle = `rgba(255, 102, 0, ${emblemPulse})`;
-  ctx.beginPath();
-  ctx.arc(emblemCenter.x, emblemCenter.y, 1.5 * zoom, 0, Math.PI * 2);
-  ctx.fill();
 }
 
 // Mechanical base with tech details - FULLY ENCLOSED isometric design
@@ -2904,7 +3278,25 @@ function drawMechanicalTowerBase(
   time: number,
   level: number,
 ) {
-  // Foundation platform (bottom layer)
+  // Stepped foundation — rough-hewn plinth (bottom tier)
+  drawIsometricPrism(
+    ctx,
+    x,
+    y + 14 * zoom,
+    width + 18,
+    width + 18,
+    6,
+    {
+      top: "#2a2a32",
+      left: "#222230",
+      right: "#1a1a28",
+      leftBack: "#282838",
+      rightBack: "#222232",
+    },
+    zoom,
+  );
+
+  // Foundation middle tier — dressed stone
   drawIsometricPrism(
     ctx,
     x,
@@ -2921,6 +3313,82 @@ function drawMechanicalTowerBase(
     },
     zoom,
   );
+
+  // Copper trim band along upper step edge
+  {
+    const trimW = (width + 12) * zoom * 0.5;
+    const trimD = (width + 12) * zoom * ISO_PRISM_D_FACTOR;
+    const trimY = y + 4 * zoom;
+    ctx.strokeStyle = "#b87333";
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - trimW, trimY);
+    ctx.lineTo(x, trimY + trimD);
+    ctx.lineTo(x + trimW, trimY);
+    ctx.stroke();
+    // Copper rivet dots along trim
+    ctx.fillStyle = "#d4956a";
+    const rivetCount = 6;
+    for (let r = 0; r < rivetCount; r++) {
+      const t = (r + 0.5) / rivetCount;
+      if (t < 0.5) {
+        const rx = x - trimW + t * 2 * trimW;
+        const ry = trimY + t * 2 * trimD;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 0.9 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const t2 = (t - 0.5) * 2;
+        const rx = x + t2 * trimW;
+        const ry = trimY + trimD - t2 * trimD;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 0.9 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // Foundation mortar joints with double-line rendering (dark groove + light upper edge)
+  {
+    const fndW = (width + 12) * zoom * 0.5;
+    const fndD = (width + 12) * zoom * ISO_PRISM_D_FACTOR;
+    const fndH = 6 * zoom;
+    const fndBaseY = y + 10 * zoom;
+    // Left face mortar
+    for (let m = 1; m <= 2; m++) {
+      const mFrac = m / 3;
+      const mY = fndBaseY - mFrac * fndH;
+      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - fndW, mY);
+      ctx.lineTo(x, mY + fndD);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - fndW, mY - 0.8 * zoom);
+      ctx.lineTo(x, mY + fndD - 0.8 * zoom);
+      ctx.stroke();
+    }
+    // Right face mortar
+    for (let m = 1; m <= 2; m++) {
+      const mFrac = m / 3;
+      const mY = fndBaseY - mFrac * fndH;
+      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x, mY + fndD);
+      ctx.lineTo(x + fndW, mY);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.03)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x, mY + fndD - 0.8 * zoom);
+      ctx.lineTo(x + fndW, mY - 0.8 * zoom);
+      ctx.stroke();
+    }
+  }
 
   // Main tower body (middle layer) - this is the core structure
   drawIsometricPrism(
@@ -3038,44 +3506,108 @@ function drawMechanicalTowerBase(
     ctx.stroke();
   }
 
-  // ========== GLOWING VENTS WITH PULSING LIGHT ==========
+  // ========== LOUVERED EXHAUST VENTS WITH 3D HOUSING ==========
   const ventGlow = 0.6 + Math.sin(time * 4) * 0.3;
-  ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow})`;
-  ctx.shadowColor = "#ff6600";
-  ctx.shadowBlur = 6 * zoom;
+
+  // Draw a single louvered vent on an isometric face
+  const drawFaceVent = (
+    vx: number, vy: number,
+    vw: number, vh: number,
+    isoSlopeX: number, isoSlopeY: number,
+    faceSide: number,
+  ) => {
+    // Vent recess
+    ctx.fillStyle = "#1a1a22";
+    ctx.beginPath();
+    ctx.moveTo(vx, vy);
+    ctx.lineTo(vx + isoSlopeX * vw, vy + isoSlopeY * vw);
+    ctx.lineTo(vx + isoSlopeX * vw, vy + isoSlopeY * vw + vh);
+    ctx.lineTo(vx, vy + vh);
+    ctx.closePath();
+    ctx.fill();
+
+    // Louvered slats
+    const numSlats = 3;
+    for (let s = 0; s < numSlats; s++) {
+      const sT = (s + 0.5) / numSlats;
+      const sY = vy + sT * vh;
+      const sYR = vy + isoSlopeY * vw + sT * vh;
+      ctx.fillStyle = faceSide > 0 ? "#4a4a52" : "#3a3a42";
+      ctx.beginPath();
+      ctx.moveTo(vx + 0.5 * zoom, sY - 1 * zoom);
+      ctx.lineTo(vx + isoSlopeX * vw - 0.5 * zoom, sYR - 1 * zoom);
+      ctx.lineTo(vx + isoSlopeX * vw - 0.5 * zoom, sYR);
+      ctx.lineTo(vx + 0.5 * zoom, sY);
+      ctx.closePath();
+      ctx.fill();
+      // Slat highlight
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.beginPath();
+      ctx.moveTo(vx + 0.5 * zoom, sY - 1 * zoom);
+      ctx.lineTo(vx + isoSlopeX * vw - 0.5 * zoom, sYR - 1 * zoom);
+      ctx.lineTo(vx + isoSlopeX * vw - 0.5 * zoom, sYR - 0.5 * zoom);
+      ctx.lineTo(vx + 0.5 * zoom, sY - 0.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Inner glow between slats
+    ctx.fillStyle = `rgba(255, 102, 0, ${ventGlow * 0.5})`;
+    ctx.beginPath();
+    ctx.moveTo(vx + 0.8 * zoom, vy + 0.8 * zoom);
+    ctx.lineTo(vx + isoSlopeX * vw - 0.8 * zoom, vy + isoSlopeY * vw + 0.8 * zoom);
+    ctx.lineTo(vx + isoSlopeX * vw - 0.8 * zoom, vy + isoSlopeY * vw + vh - 0.8 * zoom);
+    ctx.lineTo(vx + 0.8 * zoom, vy + vh - 0.8 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Iron frame
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(vx, vy);
+    ctx.lineTo(vx + isoSlopeX * vw, vy + isoSlopeY * vw);
+    ctx.lineTo(vx + isoSlopeX * vw, vy + isoSlopeY * vw + vh);
+    ctx.lineTo(vx, vy + vh);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Corner rivets
+    ctx.fillStyle = "#6a6a72";
+    const corners = [
+      { x: vx + 0.8 * zoom, y: vy + 0.8 * zoom },
+      { x: vx + isoSlopeX * vw - 0.8 * zoom, y: vy + isoSlopeY * vw + 0.8 * zoom },
+      { x: vx + 0.8 * zoom, y: vy + vh - 0.8 * zoom },
+      { x: vx + isoSlopeX * vw - 0.8 * zoom, y: vy + isoSlopeY * vw + vh - 0.8 * zoom },
+    ];
+    for (const c of corners) {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+
+  // Right face vents (visible on front-right isometric face)
+  for (let i = 0; i < Math.min(level, 3); i++) {
+    const ventY = y - height * zoom * 0.3 - i * 12 * zoom + d * 1.2;
+    drawFaceVent(
+      x + w * 0.3, ventY,
+      w * 0.5, 5 * zoom,
+      1, -0.5,
+      1,
+    );
+  }
 
   // Left face vents
   for (let i = 0; i < Math.min(level, 3); i++) {
-    const ventY = y - height * zoom * 0.3 - i * 12 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      x + w * 0.55,
-      ventY + d * 1.4,
-      3 * zoom,
-      2 * zoom,
-      -0.4,
-      0,
-      Math.PI * 2,
+    const ventY = y - height * zoom * 0.3 - i * 12 * zoom + d * 1.2;
+    drawFaceVent(
+      x - w * 0.8, ventY,
+      w * 0.5, 5 * zoom,
+      1, 0.5,
+      -1,
     );
-    ctx.fill();
   }
-
-  // Right face vents
-  for (let i = 0; i < Math.min(level, 3); i++) {
-    const ventY = y - height * zoom * 0.3 - i * 12 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      x - w * 0.55,
-      ventY + d * 1.4,
-      3 * zoom,
-      2 * zoom,
-      0.4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
-  ctx.shadowBlur = 0;
 
   // ========== ROTATING GEARS ==========
   const gearRotation = 1.25;
@@ -3205,66 +3737,152 @@ function drawMechanicalTowerBase(
 
   // ========== SCAFFOLDING & SUPPORT STRUCTURE (Level 2+) ==========
   if (level >= 2) {
-    const scaffoldRingY = y - height * zoom * 0.4;
+    const ws = w * 1.15;
+    const ds = d * 1.15;
+    const scaffBase = y + 6 * zoom;
+    const scaffTop = topY + 8 * zoom;
+    const scaffH = scaffBase - scaffTop;
 
-    // Vertical support struts following isometric edges
-    ctx.strokeStyle = "#6a6a72";
-    ctx.lineWidth = 3 * zoom;
+    // 4 isometric diamond vertices at base and top
+    const postBase = [
+      { x: x - ws, y: scaffBase },           // left
+      { x, y: scaffBase + ds },               // front
+      { x: x + ws, y: scaffBase },            // right
+      { x, y: scaffBase - ds },               // back
+    ];
+    const postTop = [
+      { x: x - ws, y: scaffBase - scaffH },
+      { x, y: scaffBase + ds - scaffH },
+      { x: x + ws, y: scaffBase - scaffH },
+      { x, y: scaffBase - ds - scaffH },
+    ];
 
-    // Front-left strut (follows left iso edge)
+    // Horizontal frame heights (fractions of scaffH)
+    const frameLevels = level >= 3 ? [0, 0.35, 0.7, 1] : [0, 0.5, 1];
+
+    // Helper: draw an isometric beam (thick stroke with highlight)
+    const drawBeam = (
+      ax: number, ay: number, bx: number, by: number,
+      thickness: number, color: string, highlightAlpha: number,
+    ) => {
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = (thickness + 1.5) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay + 0.8 * zoom);
+      ctx.lineTo(bx, by + 0.8 * zoom);
+      ctx.stroke();
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = thickness * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+
+      if (highlightAlpha > 0) {
+        ctx.strokeStyle = `rgba(255,255,255,${highlightAlpha})`;
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay - 0.5 * zoom);
+        ctx.lineTo(bx, by - 0.5 * zoom);
+        ctx.stroke();
+      }
+    };
+
+    // Helper: bolt/connector at a joint
+    const drawJointBolt = (bx: number, by: number, radius: number) => {
+      ctx.fillStyle = "#7a7a82";
+      ctx.beginPath();
+      ctx.arc(bx, by, radius * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#5a5a62";
+      ctx.beginPath();
+      ctx.arc(bx, by, radius * 0.55 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    // Draw back faces first (behind tower: back-left edge [3->0] and back-right edge [3->2])
+    // Back horizontal beams
+    for (const frac of frameLevels) {
+      const hy = scaffH * frac;
+      const lv = { x: postBase[0].x, y: postBase[0].y - hy };
+      const bv = { x: postBase[3].x, y: postBase[3].y - hy };
+      const rv = { x: postBase[2].x, y: postBase[2].y - hy };
+      drawBeam(bv.x, bv.y, lv.x, lv.y, 2.2, "#4a4a52", 0);
+      drawBeam(bv.x, bv.y, rv.x, rv.y, 2.2, "#3a3a42", 0);
+    }
+
+    // Back vertical posts (left and back)
+    drawBeam(postBase[3].x, postBase[3].y, postTop[3].x, postTop[3].y, 2.5, "#4a4a52", 0);
+    drawBeam(postBase[0].x, postBase[0].y, postTop[0].x, postTop[0].y, 2.5, "#4a4a52", 0.04);
+
+    // Back X-braces (back-left face)
+    if (level >= 3) {
+      const midFrac = frameLevels.length > 2 ? 1 : 0;
+      const bBot = { x: postBase[3].x, y: postBase[3].y };
+      const lTop = { x: postTop[0].x, y: postTop[0].y };
+      const lBot = { x: postBase[0].x, y: postBase[0].y };
+      const bTop = { x: postTop[3].x, y: postTop[3].y };
+      void midFrac;
+      ctx.strokeStyle = "rgba(80,80,90,0.5)";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(bBot.x, bBot.y);
+      ctx.lineTo(lTop.x, lTop.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(lBot.x, lBot.y);
+      ctx.lineTo(bTop.x, bTop.y);
+      ctx.stroke();
+    }
+
+    // Front vertical posts (front and right)
+    drawBeam(postBase[1].x, postBase[1].y, postTop[1].x, postTop[1].y, 3, "#6a6a72", 0.08);
+    drawBeam(postBase[2].x, postBase[2].y, postTop[2].x, postTop[2].y, 2.8, "#5a5a62", 0.06);
+
+    // Front horizontal beams (front-left edge [0->1] and front-right edge [1->2])
+    for (const frac of frameLevels) {
+      const hy = scaffH * frac;
+      const lv = { x: postBase[0].x, y: postBase[0].y - hy };
+      const fv = { x: postBase[1].x, y: postBase[1].y - hy };
+      const rv = { x: postBase[2].x, y: postBase[2].y - hy };
+      drawBeam(lv.x, lv.y, fv.x, fv.y, 2.5, "#6a6a72", 0.07);
+      drawBeam(fv.x, fv.y, rv.x, rv.y, 2.5, "#5a5a62", 0.05);
+    }
+
+    // Front X-braces (front-left and front-right faces)
+    const xBraceColor = "#5a5a62";
+    ctx.lineWidth = 1.5 * zoom;
+    // Front-left face brace
+    ctx.strokeStyle = xBraceColor;
     ctx.beginPath();
-    ctx.moveTo(x - w * 1.15, y + 8 * zoom);
-    ctx.lineTo(x - w * 1.05, topY + 15 * zoom);
+    ctx.moveTo(postBase[0].x, postBase[0].y);
+    ctx.lineTo(postTop[1].x, postTop[1].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(postBase[1].x, postBase[1].y);
+    ctx.lineTo(postTop[0].x, postTop[0].y);
+    ctx.stroke();
+    // Front-right face brace
+    ctx.beginPath();
+    ctx.moveTo(postBase[1].x, postBase[1].y);
+    ctx.lineTo(postTop[2].x, postTop[2].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(postBase[2].x, postBase[2].y);
+    ctx.lineTo(postTop[1].x, postTop[1].y);
     ctx.stroke();
 
-    // Front-right strut (follows right iso edge)
-    ctx.beginPath();
-    ctx.moveTo(x + w * 1.15, y + 8 * zoom);
-    ctx.lineTo(x + w * 1.05, topY + 15 * zoom);
-    ctx.stroke();
-
-    // Back-left strut
-    ctx.strokeStyle = "#5a5a62";
-    ctx.beginPath();
-    ctx.moveTo(x - w * 0.4, y - d * 0.8 + 8 * zoom);
-    ctx.lineTo(x - w * 0.35, topY + 15 * zoom);
-    ctx.stroke();
-
-    // Back-right strut
-    ctx.beginPath();
-    ctx.moveTo(x + w * 0.4, y - d * 0.8 + 8 * zoom);
-    ctx.lineTo(x + w * 0.35, topY + 15 * zoom);
-    ctx.stroke();
-
-    // Cross bracing (isometric diagonals)
-    ctx.strokeStyle = "#5a5a62";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x - w * 1.1, y - height * zoom * 0.15);
-    ctx.lineTo(x - w * 0.35, topY + 20 * zoom);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x + w * 1.1, y - height * zoom * 0.15);
-    ctx.lineTo(x + w * 0.35, topY + 20 * zoom);
-    ctx.stroke();
-
-    // Horizontal support ring (isometric ellipse, front half only)
-    ctx.strokeStyle = "#7a7a82";
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(x, scaffoldRingY, w * 1.1, d * 1.1, 0, 0, Math.PI);
-    ctx.stroke();
-
-    // Support bar connectors at ring ends
-    ctx.fillStyle = "#5a5a62";
-    const connLeftX = x - w * 1.1;
-    const connRightX = x + w * 1.1;
-    ctx.beginPath();
-    ctx.arc(connLeftX, scaffoldRingY, 3 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(connRightX, scaffoldRingY, 3 * zoom, 0, Math.PI * 2);
-    ctx.fill();
+    // Joint bolts at frame intersections
+    for (const frac of frameLevels) {
+      const hy = scaffH * frac;
+      for (let pi = 0; pi < 4; pi++) {
+        const jx = postBase[pi].x;
+        const jy = postBase[pi].y - hy;
+        const isFront = pi === 1 || pi === 2;
+        drawJointBolt(jx, jy, isFront ? 2.2 : 1.6);
+      }
+    }
   }
 
   // ========== AMMO CHAIN/BELT FEED SYSTEM (Level 2+) ==========
@@ -3315,44 +3933,101 @@ function drawMechanicalTowerBase(
       ctx.fill();
     }
 
-    // Ammo storage drum
-    ctx.fillStyle = "#4a4a52";
-    ctx.beginPath();
-    ctx.ellipse(
-      chainStartX,
-      chainStartY,
-      8 * zoom,
-      12 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+    // 3D Ammo storage drum (isometric cylinder)
+    {
+      const drumX = chainStartX;
+      const drumY = chainStartY;
+      const drumRx = 7 * zoom;
+      const drumRy = 4 * zoom;
+      const drumH = 18 * zoom;
 
-    // Drum highlight
-    ctx.strokeStyle = "#6a6a72";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      chainStartX,
-      chainStartY,
-      6 * zoom,
-      10 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.stroke();
+      // Drum body (multi-facet cylinder - visible lower half)
+      const drumFacets = 12;
+      for (let f = 0; f < drumFacets; f++) {
+        const a0 = (f / drumFacets) * Math.PI;
+        const a1 = ((f + 1) / drumFacets) * Math.PI;
+        const x0 = drumX + Math.cos(a0) * drumRx;
+        const y0t = drumY - drumH + Math.sin(a0) * drumRy;
+        const y0b = drumY + Math.sin(a0) * drumRy;
+        const x1 = drumX + Math.cos(a1) * drumRx;
+        const y1t = drumY - drumH + Math.sin(a1) * drumRy;
+        const y1b = drumY + Math.sin(a1) * drumRy;
+        const normalUp = Math.sin((a0 + a1) * 0.5);
+        const shade = Math.round(58 + normalUp * 20);
+        ctx.fillStyle = `rgb(${shade}, ${shade}, ${shade + 10})`;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0t);
+        ctx.lineTo(x1, y1t);
+        ctx.lineTo(x1, y1b);
+        ctx.lineTo(x0, y0b);
+        ctx.closePath();
+        ctx.fill();
+      }
 
-    // Drum bands
-    ctx.strokeStyle = "#ff6600";
-    ctx.lineWidth = 1 * zoom;
-    for (let band = 0; band < 3; band++) {
-      const bandY = chainStartY - 8 * zoom + band * 8 * zoom;
+      // Top ellipse cap
+      ctx.fillStyle = "#5a5a62";
       ctx.beginPath();
-      ctx.moveTo(chainStartX - 6 * zoom, bandY);
-      ctx.lineTo(chainStartX + 6 * zoom, bandY);
+      ctx.ellipse(drumX, drumY - drumH, drumRx, drumRy, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 0.8 * zoom;
       ctx.stroke();
+
+      // Top cap inner ring
+      ctx.strokeStyle = "#6a6a72";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(drumX, drumY - drumH, drumRx * 0.65, drumRy * 0.65, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Metallic bands around drum
+      for (let band = 0; band < 3; band++) {
+        const bandT = (band + 0.5) / 3;
+        const bandY = drumY - drumH + bandT * drumH;
+        ctx.strokeStyle = "#ff6600";
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(drumX, bandY, drumRx, drumRy, 0, 0, Math.PI);
+        ctx.stroke();
+        // Band highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.1)";
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(drumX, bandY - 0.5 * zoom, drumRx * 0.98, drumRy * 0.98, 0, Math.PI * 0.2, Math.PI * 0.8);
+        ctx.stroke();
+      }
+
+      // Rivets on bands
+      ctx.fillStyle = "#7a7a82";
+      for (let band = 0; band < 3; band++) {
+        const bandT = (band + 0.5) / 3;
+        const bandY = drumY - drumH + bandT * drumH;
+        for (let rv = 0; rv < 4; rv++) {
+          const rvA = (rv / 4) * Math.PI + 0.2;
+          const rvX = drumX + Math.cos(rvA) * drumRx;
+          const rvY = bandY + Math.sin(rvA) * drumRy;
+          ctx.beginPath();
+          ctx.arc(rvX, rvY, 0.8 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Bottom rim shadow
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(drumX, drumY, drumRx, drumRy, 0, 0, Math.PI);
+      ctx.stroke();
+
+      // Specular highlight streak
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.beginPath();
+      ctx.moveTo(drumX - drumRx * 0.3, drumY - drumH);
+      ctx.lineTo(drumX - drumRx * 0.1, drumY - drumH);
+      ctx.lineTo(drumX - drumRx * 0.1, drumY);
+      ctx.lineTo(drumX - drumRx * 0.3, drumY);
+      ctx.closePath();
+      ctx.fill();
     }
   }
 
@@ -3531,33 +4206,169 @@ function drawMechanicalTowerBase(
       ctx.stroke();
     }
 
-    // Targeting sensor array
-    ctx.fillStyle = "#2a2a32";
-    ctx.fillRect(x + w * 0.5, topY + 25 * zoom, 8 * zoom, 12 * zoom);
+    // 3D Targeting sensor array housing
+    {
+      const sensorX = x + w * 0.5;
+      const sensorY = topY + 25 * zoom;
+      const sensorW = 8 * zoom;
+      const sensorH = 12 * zoom;
+      const sIsoSlope = 0.5;
 
-    // Sensor lens
-    const sensorGlow = 0.5 + Math.sin(time * 5) * 0.3;
-    ctx.fillStyle = `rgba(255, 0, 0, ${sensorGlow})`;
-    ctx.shadowColor = "#ff0000";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.arc(x + w * 0.5 + 4 * zoom, topY + 31 * zoom, 3 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
+      // Housing back shadow
+      ctx.fillStyle = "#1a1a22";
+      ctx.beginPath();
+      ctx.moveTo(sensorX + 0.5 * zoom, sensorY + 0.5 * zoom);
+      ctx.lineTo(sensorX + sensorW + 0.5 * zoom, sensorY - sensorW * sIsoSlope + 0.5 * zoom);
+      ctx.lineTo(sensorX + sensorW + 0.5 * zoom, sensorY - sensorW * sIsoSlope + sensorH + 0.5 * zoom);
+      ctx.lineTo(sensorX + 0.5 * zoom, sensorY + sensorH + 0.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
 
-    // Exhaust vents
+      // Housing front face (isometric parallelogram)
+      ctx.fillStyle = "#2a2a32";
+      ctx.beginPath();
+      ctx.moveTo(sensorX, sensorY);
+      ctx.lineTo(sensorX + sensorW, sensorY - sensorW * sIsoSlope);
+      ctx.lineTo(sensorX + sensorW, sensorY - sensorW * sIsoSlope + sensorH);
+      ctx.lineTo(sensorX, sensorY + sensorH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Housing edge highlight
+      ctx.strokeStyle = "#4a4a52";
+      ctx.lineWidth = 1 * zoom;
+      ctx.stroke();
+
+      // Antenna stub on top
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sensorX + sensorW * 0.5, sensorY - sensorW * sIsoSlope * 0.5);
+      ctx.lineTo(sensorX + sensorW * 0.5, sensorY - sensorW * sIsoSlope * 0.5 - 5 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = "#ff0000";
+      ctx.beginPath();
+      ctx.arc(sensorX + sensorW * 0.5, sensorY - sensorW * sIsoSlope * 0.5 - 5 * zoom, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sensor lens (recessed with glow)
+      const sensorGlow = 0.5 + Math.sin(time * 5) * 0.3;
+      const lensCx = sensorX + sensorW * 0.45;
+      const lensCy = sensorY + sensorH * 0.45 - sensorW * sIsoSlope * 0.45;
+
+      // Lens recess
+      ctx.fillStyle = "#0a0a12";
+      ctx.beginPath();
+      ctx.arc(lensCx, lensCy, 3.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Lens glow
+      const lensGrad = ctx.createRadialGradient(
+        lensCx - 0.5 * zoom, lensCy - 0.5 * zoom, 0,
+        lensCx, lensCy, 3 * zoom,
+      );
+      lensGrad.addColorStop(0, `rgba(255, 80, 80, ${sensorGlow})`);
+      lensGrad.addColorStop(0.5, `rgba(255, 0, 0, ${sensorGlow * 0.7})`);
+      lensGrad.addColorStop(1, `rgba(180, 0, 0, ${sensorGlow * 0.3})`);
+      ctx.fillStyle = lensGrad;
+      ctx.beginPath();
+      ctx.arc(lensCx, lensCy, 3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Lens ring
+      ctx.strokeStyle = "#4a4a52";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.arc(lensCx, lensCy, 3.2 * zoom, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Specular highlight
+      ctx.fillStyle = `rgba(255, 200, 200, ${sensorGlow * 0.5})`;
+      ctx.beginPath();
+      ctx.arc(lensCx - 0.8 * zoom, lensCy - 0.8 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Scanning sweep line
+      const sweepAngle = time * 3;
+      ctx.strokeStyle = `rgba(255, 0, 0, ${sensorGlow * 0.4})`;
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(lensCx, lensCy);
+      ctx.lineTo(
+        lensCx + Math.cos(sweepAngle) * 2.5 * zoom,
+        lensCy + Math.sin(sweepAngle) * 2.5 * zoom,
+      );
+      ctx.stroke();
+    }
+
+    // 3D Louvered exhaust vents (isometric)
     for (let vent = 0; vent < 2; vent++) {
-      const ventX = x + w * (vent === 0 ? -0.95 : 0.95);
-      const ventY = topY + 30 * zoom;
+      const evX = x + w * (vent === 0 ? -0.95 : 0.95);
+      const evY = topY + 30 * zoom;
+      const evW = 8 * zoom;
+      const evH = 10 * zoom;
+      const evIsoX = vent === 0 ? -1 : 1;
 
-      // Vent housing
-      ctx.fillStyle = "#3a3a42";
-      ctx.fillRect(ventX - 4 * zoom, ventY - 6 * zoom, 8 * zoom, 12 * zoom);
+      // Vent recess
+      ctx.fillStyle = "#1a1a22";
+      ctx.beginPath();
+      ctx.moveTo(evX - evW * 0.5, evY - evH * 0.5);
+      ctx.lineTo(evX + evW * 0.5, evY - evH * 0.5 - evW * 0.25 * evIsoX);
+      ctx.lineTo(evX + evW * 0.5, evY + evH * 0.5 - evW * 0.25 * evIsoX);
+      ctx.lineTo(evX - evW * 0.5, evY + evH * 0.5);
+      ctx.closePath();
+      ctx.fill();
 
-      // Vent glow
-      const ventGlow = 0.4 + Math.sin(time * 4 + vent) * 0.3;
-      ctx.fillStyle = `rgba(255, 100, 0, ${ventGlow})`;
-      ctx.fillRect(ventX - 3 * zoom, ventY - 4 * zoom, 6 * zoom, 8 * zoom);
+      // Louvered slats
+      const numSlats = 4;
+      for (let s = 0; s < numSlats; s++) {
+        const sT = (s + 0.5) / numSlats;
+        const sYL = evY - evH * 0.5 + sT * evH;
+        const sYR = sYL - evW * 0.25 * evIsoX;
+        ctx.fillStyle = "#3a3a42";
+        ctx.beginPath();
+        ctx.moveTo(evX - evW * 0.5 + 0.5 * zoom, sYL - 1 * zoom);
+        ctx.lineTo(evX + evW * 0.5 - 0.5 * zoom, sYR - 1 * zoom);
+        ctx.lineTo(evX + evW * 0.5 - 0.5 * zoom, sYR);
+        ctx.lineTo(evX - evW * 0.5 + 0.5 * zoom, sYL);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Inner glow
+      const evGlow = 0.4 + Math.sin(time * 4 + vent) * 0.3;
+      ctx.fillStyle = `rgba(255, 100, 0, ${evGlow})`;
+      ctx.beginPath();
+      ctx.moveTo(evX - evW * 0.4, evY - evH * 0.35);
+      ctx.lineTo(evX + evW * 0.4, evY - evH * 0.35 - evW * 0.2 * evIsoX);
+      ctx.lineTo(evX + evW * 0.4, evY + evH * 0.35 - evW * 0.2 * evIsoX);
+      ctx.lineTo(evX - evW * 0.4, evY + evH * 0.35);
+      ctx.closePath();
+      ctx.fill();
+
+      // Iron frame
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(evX - evW * 0.5, evY - evH * 0.5);
+      ctx.lineTo(evX + evW * 0.5, evY - evH * 0.5 - evW * 0.25 * evIsoX);
+      ctx.lineTo(evX + evW * 0.5, evY + evH * 0.5 - evW * 0.25 * evIsoX);
+      ctx.lineTo(evX - evW * 0.5, evY + evH * 0.5);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Heat shimmer wisps
+      const heatAlpha = 0.15 + Math.sin(time * 3 + vent * 2) * 0.1;
+      ctx.fillStyle = `rgba(200, 180, 160, ${heatAlpha})`;
+      for (let p = 0; p < 2; p++) {
+        const pT = ((time * 1.2 + p * 1.5 + vent) % 2.5) / 2.5;
+        const pY = evY - evH * 0.6 - pT * 6 * zoom;
+        const pAlpha = Math.max(0, heatAlpha * (1 - pT));
+        ctx.fillStyle = `rgba(200, 180, 160, ${pAlpha})`;
+        ctx.beginPath();
+        ctx.arc(evX + Math.sin(time * 2 + p) * 2 * zoom, pY, (1.2 + pT * 0.6) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
 
     // Heavy bolts/anchors
@@ -10480,15 +11291,33 @@ function renderLibraryTower(
 
   const shakeY = 0;
 
-  // ========== MYSTICAL GROUND FOUNDATION ==========
-  // Outer mystical platform
+  // ========== STEPPED STONE FOUNDATION ==========
+  // Lowest step — wide rough-hewn stone base
   drawIsometricPrism(
     ctx,
     screenPos.x,
     screenPos.y + 14 * zoom,
-    baseWidth + 18,
-    baseWidth + 18,
-    4,
+    baseWidth + 20,
+    baseWidth + 20,
+    3,
+    {
+      top: "#3a2a1a",
+      left: "#2a1a0a",
+      right: "#1a0a00",
+      leftBack: "#4a3a2a",
+      rightBack: "#3a2a1a",
+    },
+    zoom,
+  );
+
+  // Middle step — dressed stone
+  drawIsometricPrism(
+    ctx,
+    screenPos.x,
+    screenPos.y + 11 * zoom,
+    baseWidth + 14,
+    baseWidth + 14,
+    3,
     {
       top: "#4a3a2a",
       left: "#3a2a1a",
@@ -10499,39 +11328,7 @@ function renderLibraryTower(
     zoom,
   );
 
-  // Mystical rune circle on ground
-  const groundRuneGlow = 0.25 + Math.sin(time * 2) * 0.12 + attackPulse * 0.3;
-  ctx.strokeStyle = `rgba(${glowColor}, ${groundRuneGlow})`;
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y + 12 * zoom,
-    (baseWidth + 14) * zoom * 0.4,
-    (baseWidth + 14) * zoom * 0.2,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Ground rune symbols
-  const groundRunes = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ"];
-  ctx.fillStyle = `rgba(${glowColor}, ${groundRuneGlow + 0.1})`;
-  ctx.font = `${7 * zoom}px serif`;
-  ctx.textAlign = "center";
-  for (let i = 0; i < 6; i++) {
-    const runeAngle = (i / 6) * Math.PI * 2 + time * 0.15;
-    const runeX =
-      screenPos.x + Math.cos(runeAngle) * (baseWidth + 10) * zoom * 0.35;
-    const runeY =
-      screenPos.y +
-      12 * zoom +
-      Math.sin(runeAngle) * (baseWidth + 10) * zoom * 0.17;
-    ctx.fillText(groundRunes[i], runeX, runeY);
-  }
-
-  // Main foundation platform
+  // Upper step — polished foundation with rune trim
   drawIsometricPrism(
     ctx,
     screenPos.x,
@@ -10549,41 +11346,90 @@ function renderLibraryTower(
     zoom,
   );
 
-  // Foundation corner pillars
-  for (const corner of [0, 1, 2, 3]) {
-    const cx =
-      screenPos.x + (corner < 2 ? -1 : 1) * (baseWidth + 8) * zoom * 0.4;
-    const cy =
-      screenPos.y +
-      6 * zoom +
-      (corner % 2 === 0 ? -1 : 1) * (baseWidth + 8) * zoom * 0.15;
+  // Mystical rune circle inscribed on upper step
+  const groundRuneGlow = 0.25 + Math.sin(time * 2) * 0.12 + attackPulse * 0.3;
+  ctx.strokeStyle = `rgba(${glowColor}, ${groundRuneGlow})`;
+  ctx.lineWidth = 1.5 * zoom;
+  const fndRX = (baseWidth + 10) * zoom * 0.4;
+  const fndRY = (baseWidth + 10) * zoom * 0.2;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 4 * zoom, fndRX, fndRY, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Inner rune circle
+  ctx.strokeStyle = `rgba(${glowColor}, ${groundRuneGlow * 0.6})`;
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 4 * zoom, fndRX * 0.7, fndRY * 0.7, 0, 0, Math.PI * 2);
+  ctx.stroke();
 
-    // Pillar base
-    ctx.fillStyle = "#6a5a4a";
+  // Ground rune symbols
+  const groundRunes = ["ᚠ", "ᚢ", "ᚦ", "ᚨ", "ᚱ", "ᚲ"];
+  ctx.fillStyle = `rgba(${glowColor}, ${groundRuneGlow + 0.1})`;
+  ctx.font = `${7 * zoom}px serif`;
+  ctx.textAlign = "center";
+  for (let i = 0; i < 6; i++) {
+    const runeAngle = (i / 6) * Math.PI * 2 + time * 0.15;
+    const runeX = screenPos.x + Math.cos(runeAngle) * fndRX * 0.85;
+    const runeY = screenPos.y + 4 * zoom + Math.sin(runeAngle) * fndRY * 0.85;
+    ctx.fillText(groundRunes[i], runeX, runeY);
+  }
+
+  // Gold trim along upper step front edge
+  const fndW2 = (baseWidth + 10) * zoom * 0.5;
+  const fndD2 = (baseWidth + 10) * zoom * ISO_PRISM_D_FACTOR;
+  ctx.strokeStyle = `rgba(201, 162, 39, ${0.35 + Math.sin(time * 1.5) * 0.1})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x - fndW2, screenPos.y);
+  ctx.lineTo(screenPos.x, screenPos.y + fndD2);
+  ctx.lineTo(screenPos.x + fndW2, screenPos.y);
+  ctx.stroke();
+
+  // Foundation corner pillars with proper 3D isometric prism
+  const pillarPositions = [
+    { x: screenPos.x - fndW2 * 0.85, y: screenPos.y + fndD2 * 0.15 },
+    { x: screenPos.x - fndW2 * 0.35, y: screenPos.y + fndD2 * 0.65 },
+    { x: screenPos.x + fndW2 * 0.35, y: screenPos.y + fndD2 * 0.65 },
+    { x: screenPos.x + fndW2 * 0.85, y: screenPos.y + fndD2 * 0.15 },
+  ];
+  for (let corner = 0; corner < pillarPositions.length; corner++) {
+    const pp = pillarPositions[corner];
+
+    // Pillar as isometric prism
+    drawIsometricPrism(ctx, pp.x, pp.y + 2 * zoom, 5, 5, 12, {
+      top: "#7a6a5a",
+      left: "#5a4a3a",
+      right: "#4a3a2a",
+      leftBack: "#6a5a4a",
+      rightBack: "#5a4a3a",
+    }, zoom);
+
+    // Pillar cap (pyramid)
+    const capY = pp.y + 2 * zoom - 12 * zoom;
+    ctx.fillStyle = "#8a7a6a";
     ctx.beginPath();
-    ctx.ellipse(cx, cy + 2 * zoom, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Pillar shaft
-    ctx.fillStyle = "#5a4a3a";
-    ctx.fillRect(cx - 2.5 * zoom, cy - 10 * zoom, 5 * zoom, 12 * zoom);
-
-    // Pillar cap
-    ctx.fillStyle = "#7a6a5a";
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - 14 * zoom);
-    ctx.lineTo(cx - 4 * zoom, cy - 10 * zoom);
-    ctx.lineTo(cx + 4 * zoom, cy - 10 * zoom);
+    ctx.moveTo(pp.x, capY - 4 * zoom);
+    ctx.lineTo(pp.x - 3.5 * zoom, capY);
+    ctx.lineTo(pp.x, capY + 1.5 * zoom);
+    ctx.lineTo(pp.x + 3.5 * zoom, capY);
     ctx.closePath();
     ctx.fill();
 
-    // Pillar rune glow
-    const pillarGlow =
-      0.4 + Math.sin(time * 3 + corner) * 0.2 + attackPulse * 0.3;
-    ctx.fillStyle = `rgba(${glowColor}, ${pillarGlow})`;
+    // Pillar gold finial
+    ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.arc(cx, cy - 6 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.arc(pp.x, capY - 5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
     ctx.fill();
+
+    // Pillar rune glow
+    const pillarGlow = 0.4 + Math.sin(time * 3 + corner) * 0.2 + attackPulse * 0.3;
+    ctx.fillStyle = `rgba(${glowColor}, ${pillarGlow})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 3 * zoom;
+    ctx.beginPath();
+    ctx.arc(pp.x, pp.y - 4 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   }
 
   // Ground-level attack effects (drawn before tower body so building occludes inner portion)
@@ -10940,35 +11786,46 @@ function renderLibraryTower(
   }
 
   // Stone block pattern on lower body with mortar joints
-  ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 1 * zoom;
   for (let row = 0; row < 5; row++) {
     const blockY = screenPos.y - row * lowerBodyHeight * zoom * 0.18;
+    const nextBlockY = screenPos.y - (row + 1) * lowerBodyHeight * zoom * 0.18;
 
-    // Horizontal mortar lines (left face)
+    // Left face horizontal mortar (darker groove + lighter upper edge)
+    ctx.strokeStyle = "#2a1a0a";
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
     ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
     ctx.stroke();
+    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15 - 1 * zoom);
+    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55 - 1 * zoom);
+    ctx.stroke();
 
-    // Horizontal mortar lines (right face)
+    // Right face horizontal mortar
+    ctx.strokeStyle = "#2a1a0a";
     ctx.beginPath();
     ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
     ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
     ctx.stroke();
+    ctx.strokeStyle = "rgba(120, 100, 80, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15 - 1 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55 - 1 * zoom);
+    ctx.stroke();
 
-    // Vertical mortar joints (staggered per row for brick pattern)
+    // Vertical mortar joints (staggered per row for ashlar bond)
     const stagger = row % 2 === 0 ? 0 : 0.15;
     for (let col = 0; col < 3; col++) {
       const t = 0.25 + col * 0.25 + stagger;
       if (t > 0.95) continue;
-      const nextBlockY =
-        screenPos.y - (row + 1) * lowerBodyHeight * zoom * 0.18;
 
       // Left face vertical joints
       const ljX = screenPos.x - w * (0.1 + t * 0.75);
       const ljY1 = blockY + d * (0.15 - t * 0.7);
       const ljY2 = nextBlockY + d * (0.15 - t * 0.7);
+      ctx.strokeStyle = "#2a1a0a";
       ctx.beginPath();
       ctx.moveTo(ljX, ljY1);
       ctx.lineTo(ljX, ljY2);
@@ -10983,16 +11840,30 @@ function renderLibraryTower(
     }
   }
 
-  // Weathered stone texture highlights
-  ctx.globalAlpha = 0.08;
+  // Weathered stone texture using proper rgba (no globalAlpha hack)
   for (let i = 0; i < 12; i++) {
     const stoneX = screenPos.x + ((((i * 7 + 3) % 11) / 11) * 2 - 1) * w * 0.7;
-    const stoneY =
-      screenPos.y - ((i * 13 + 5) % 9) * lowerBodyHeight * zoom * 0.1;
-    ctx.fillStyle = i % 2 === 0 ? "#8a7a6a" : "#4a3a2a";
+    const stoneY = screenPos.y - ((i * 13 + 5) % 9) * lowerBodyHeight * zoom * 0.1;
+    ctx.fillStyle = i % 2 === 0 ? "rgba(138, 122, 106, 0.08)" : "rgba(74, 58, 42, 0.08)";
     ctx.fillRect(stoneX - 2 * zoom, stoneY - 1.5 * zoom, 4 * zoom, 3 * zoom);
   }
-  ctx.globalAlpha = 1.0;
+
+  // Left-face weathering gradient (rain stain effect)
+  const leftWeatherGrad = ctx.createLinearGradient(
+    screenPos.x - w * 0.85, screenPos.y - lowerBodyHeight * zoom,
+    screenPos.x - w * 0.1, screenPos.y,
+  );
+  leftWeatherGrad.addColorStop(0, "rgba(30, 20, 10, 0.12)");
+  leftWeatherGrad.addColorStop(0.5, "rgba(30, 20, 10, 0.04)");
+  leftWeatherGrad.addColorStop(1, "rgba(30, 20, 10, 0)");
+  ctx.fillStyle = leftWeatherGrad;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x, screenPos.y + d * 0.15);
+  ctx.lineTo(screenPos.x - w, screenPos.y - d * 0.5);
+  ctx.lineTo(screenPos.x - w, screenPos.y - lowerBodyHeight * zoom - d * 0.5);
+  ctx.lineTo(screenPos.x, screenPos.y - lowerBodyHeight * zoom);
+  ctx.closePath();
+  ctx.fill();
 
   // Mystical wall runes on lower body
   const wallRuneGlow = 0.4 + Math.sin(time * 2.5) * 0.2 + attackPulse * 0.4;
@@ -11008,7 +11879,7 @@ function renderLibraryTower(
   }
   ctx.shadowBlur = 0;
 
-  // Wall sconces with mystical light chains
+  // ========== ORNATE WALL LANTERNS WITH ARCANE CHAINS ==========
   const sconcePosns: { x: number; y: number }[] = [];
   for (let i = 0; i < 4; i++) {
     const side = i < 2 ? -1 : 1;
@@ -11017,115 +11888,196 @@ function renderLibraryTower(
     const scY = screenPos.y - lowerBodyHeight * zoom * (0.2 + idx * 0.35);
     sconcePosns.push({ x: scX, y: scY });
 
-    // Sconce bracket
-    ctx.fillStyle = "#5a4a3a";
+    const lanternTipX = scX + side * 5 * zoom;
+
+    // Ornate wall mount plate
+    ctx.fillStyle = "#4a3a2a";
     ctx.beginPath();
-    ctx.moveTo(scX, scY);
-    ctx.lineTo(scX + side * 4 * zoom, scY - 2 * zoom);
-    ctx.lineTo(scX + side * 4 * zoom, scY + 3 * zoom);
+    ctx.moveTo(scX - side * 0.5 * zoom, scY - 2.5 * zoom);
+    ctx.lineTo(scX - side * 0.5 * zoom, scY + 2.5 * zoom);
+    ctx.lineTo(scX + side * 1.5 * zoom, scY + 2 * zoom);
+    ctx.lineTo(scX + side * 1.5 * zoom, scY - 2 * zoom);
     ctx.closePath();
     ctx.fill();
 
-    // Sconce cup
+    // Curved iron bracket arm
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(scX + side * 1 * zoom, scY);
+    ctx.quadraticCurveTo(
+      scX + side * 3 * zoom, scY - 4 * zoom,
+      lanternTipX, scY - 1 * zoom,
+    );
+    ctx.stroke();
+    // Scroll flourish at bracket end
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.arc(scX + side * 1 * zoom, scY - 1.5 * zoom, 1 * zoom, 0, Math.PI * 1.2);
+    ctx.stroke();
+
+    // Lantern cage (hexagonal)
+    const lx = lanternTipX;
+    const ly = scY;
+    const lSize = 2.5 * zoom;
+
+    // Lantern top cap
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.ellipse(
-      scX + side * 4 * zoom,
-      scY,
-      2.5 * zoom,
-      1.5 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.moveTo(lx, ly - lSize * 1.8);
+    ctx.lineTo(lx - lSize, ly - lSize * 1.2);
+    ctx.lineTo(lx + lSize, ly - lSize * 1.2);
+    ctx.closePath();
     ctx.fill();
 
-    // Flame glow on sconce
-    const flameFlicker =
-      0.5 +
-      Math.sin(time * 8 + i * 2.3) * 0.2 +
-      Math.sin(time * 12.7 + i * 1.1) * 0.1;
+    // Lantern body (glass panels)
+    ctx.fillStyle = "rgba(60, 40, 20, 0.6)";
+    ctx.fillRect(lx - lSize, ly - lSize * 1.2, lSize * 2, lSize * 2);
+
+    // Lantern glass frame struts
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.strokeRect(lx - lSize, ly - lSize * 1.2, lSize * 2, lSize * 2);
+    ctx.beginPath();
+    ctx.moveTo(lx, ly - lSize * 1.2);
+    ctx.lineTo(lx, ly + lSize * 0.8);
+    ctx.stroke();
+
+    // Lantern bottom finial
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.moveTo(lx, ly + lSize * 1.2);
+    ctx.lineTo(lx - lSize * 0.5, ly + lSize * 0.8);
+    ctx.lineTo(lx + lSize * 0.5, ly + lSize * 0.8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Flame inside lantern
+    const flameFlicker = 0.5 + Math.sin(time * 8 + i * 2.3) * 0.2 + Math.sin(time * 12.7 + i * 1.1) * 0.1;
     ctx.fillStyle = `rgba(255, 200, 100, ${flameFlicker})`;
     ctx.shadowColor = "rgba(255, 180, 80, 0.6)";
     ctx.shadowBlur = 6 * zoom;
     ctx.beginPath();
-    ctx.ellipse(
-      scX + side * 4 * zoom,
-      scY - 3 * zoom,
-      2 * zoom,
-      3 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(lx, ly - lSize * 0.2, lSize * 0.5, lSize * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Hot core
+    ctx.fillStyle = `rgba(255, 255, 220, ${flameFlicker * 0.7})`;
+    ctx.beginPath();
+    ctx.ellipse(lx, ly - lSize * 0.3, lSize * 0.2, lSize * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Light spill on wall
+    const spillGrad = ctx.createRadialGradient(scX + side * 2 * zoom, scY, 0, scX + side * 2 * zoom, scY, 6 * zoom);
+    spillGrad.addColorStop(0, `rgba(255, 200, 120, ${flameFlicker * 0.12})`);
+    spillGrad.addColorStop(1, "rgba(255, 200, 120, 0)");
+    ctx.fillStyle = spillGrad;
+    ctx.fillRect(scX - 6 * zoom, scY - 6 * zoom, 12 * zoom, 12 * zoom);
   }
 
-  // Mystical chains of light connecting sconces on each side
+  // Arcane chains of light connecting lanterns on each side
   for (let side = 0; side < 2; side++) {
     const s0 = sconcePosns[side * 2];
     const s1 = sconcePosns[side * 2 + 1];
-    const chainGlow =
-      0.25 + Math.sin(time * 3 + side) * 0.15 + attackPulse * 0.3;
+    const dir = side === 0 ? -1 : 1;
+    const chainGlow = 0.25 + Math.sin(time * 3 + side) * 0.15 + attackPulse * 0.3;
+
+    // Main catenary chain
     ctx.strokeStyle = `rgba(${glowColor}, ${chainGlow})`;
     ctx.lineWidth = 1 * zoom;
     ctx.setLineDash([3 * zoom, 3 * zoom]);
+    const ch0X = s0.x + dir * 5 * zoom;
+    const ch1X = s1.x + dir * 5 * zoom;
+    const midX = (ch0X + ch1X) / 2 + dir * 4 * zoom;
+    const midY = (s0.y + s1.y) / 2 + 8 * zoom + Math.sin(time * 2 + side) * 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(s0.x + (side === 0 ? -1 : 1) * 4 * zoom, s0.y);
-    const midX = (s0.x + s1.x) / 2 + (side === 0 ? -1 : 1) * 6 * zoom;
-    const midY =
-      (s0.y + s1.y) / 2 + 8 * zoom + Math.sin(time * 2 + side) * 2 * zoom;
-    ctx.quadraticCurveTo(
-      midX,
-      midY,
-      s1.x + (side === 0 ? -1 : 1) * 4 * zoom,
-      s1.y,
-    );
+    ctx.moveTo(ch0X, s0.y);
+    ctx.quadraticCurveTo(midX, midY, ch1X, s1.y);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Travelling spark along chain
+    // Second parallel chain (thinner)
+    ctx.strokeStyle = `rgba(${glowColor}, ${chainGlow * 0.4})`;
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.setLineDash([2 * zoom, 4 * zoom]);
+    ctx.beginPath();
+    ctx.moveTo(ch0X, s0.y + 2 * zoom);
+    ctx.quadraticCurveTo(midX, midY + 3 * zoom, ch1X, s1.y + 2 * zoom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Travelling spark along main chain
     const sparkT = (time * 1.5 + side * 0.5) % 1;
-    const sparkX =
-      s0.x * (1 - sparkT) * (1 - sparkT) +
-      midX * 2 * sparkT * (1 - sparkT) +
-      s1.x * sparkT * sparkT;
-    const sparkY =
-      s0.y * (1 - sparkT) * (1 - sparkT) +
-      midY * 2 * sparkT * (1 - sparkT) +
-      s1.y * sparkT * sparkT;
+    const sparkX = ch0X * (1 - sparkT) * (1 - sparkT) + midX * 2 * sparkT * (1 - sparkT) + ch1X * sparkT * sparkT;
+    const sparkY = s0.y * (1 - sparkT) * (1 - sparkT) + midY * 2 * sparkT * (1 - sparkT) + s1.y * sparkT * sparkT;
     ctx.fillStyle = `rgba(${glowColor}, ${0.7 + Math.sin(time * 10) * 0.3})`;
     ctx.shadowColor = `rgb(${glowColor})`;
     ctx.shadowBlur = 4 * zoom;
     ctx.beginPath();
     ctx.arc(sparkX, sparkY, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
+
+    // Trailing spark particles
+    for (let tp = 1; tp <= 3; tp++) {
+      const trailT = (sparkT - tp * 0.04 + 1) % 1;
+      const tpX = ch0X * (1 - trailT) * (1 - trailT) + midX * 2 * trailT * (1 - trailT) + ch1X * trailT * trailT;
+      const tpY = s0.y * (1 - trailT) * (1 - trailT) + midY * 2 * trailT * (1 - trailT) + s1.y * trailT * trailT;
+      ctx.fillStyle = `rgba(${glowColor}, ${(0.5 - tp * 0.12)})`;
+      ctx.beginPath();
+      ctx.arc(tpX, tpY, (1.2 - tp * 0.2) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.shadowBlur = 0;
   }
 
-  // Rose window (circular stained glass) on front face
+  // ========== ROSE WINDOW (stained glass) on front face ==========
   const roseY = screenPos.y - lowerBodyHeight * zoom * 0.65;
   const roseRadius = 7 * zoom;
   const roseGlow = 0.5 + Math.sin(time * 1.8) * 0.2 + attackPulse * 0.3;
 
-  // Rose window stone frame
+  // Outer stone frame with molding
   ctx.strokeStyle = "#3a2a1a";
-  ctx.lineWidth = 2 * zoom;
+  ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
-  ctx.arc(screenPos.x, roseY, roseRadius + 1.5 * zoom, 0, Math.PI * 2);
+  ctx.arc(screenPos.x, roseY, roseRadius + 2 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+  // Inner frame
+  ctx.strokeStyle = "#5a4a3a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.arc(screenPos.x, roseY, roseRadius + 0.5 * zoom, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Rose window glass background
-  ctx.fillStyle = `rgba(${glowColor}, ${roseGlow * 0.6})`;
+  // Background glow
+  ctx.fillStyle = `rgba(${glowColor}, ${roseGlow * 0.4})`;
   ctx.shadowColor = `rgb(${glowColor})`;
-  ctx.shadowBlur = 8 * zoom;
+  ctx.shadowBlur = 10 * zoom;
   ctx.beginPath();
   ctx.arc(screenPos.x, roseY, roseRadius, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Rose window tracery (Gothic pattern)
+  // Stained glass colored segments
+  const stainedColors = [
+    "rgba(180, 50, 50, 0.35)", "rgba(50, 50, 180, 0.35)",
+    "rgba(50, 150, 50, 0.35)", "rgba(180, 150, 50, 0.35)",
+    "rgba(150, 50, 150, 0.35)", "rgba(50, 150, 150, 0.35)",
+    "rgba(180, 80, 50, 0.35)", "rgba(80, 50, 180, 0.35)",
+  ];
+  for (let petal = 0; petal < 8; petal++) {
+    const a0 = (petal / 8) * Math.PI * 2;
+    const a1 = ((petal + 1) / 8) * Math.PI * 2;
+
+    // Outer petal segment (colored glass)
+    ctx.fillStyle = stainedColors[petal];
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, roseY);
+    ctx.arc(screenPos.x, roseY, roseRadius, a0, a1);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Gothic tracery (stone mullions)
   ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 0.8 * zoom;
   for (let petal = 0; petal < 8; petal++) {
@@ -11140,7 +12092,7 @@ function renderLibraryTower(
     );
     ctx.stroke();
 
-    // Inner trefoil arcs
+    // Inner trefoil arcs between spokes
     const midAngle = petalAngle + Math.PI / 8;
     const innerR = roseRadius * 0.55;
     ctx.beginPath();
@@ -11152,19 +12104,40 @@ function renderLibraryTower(
       midAngle + Math.PI * 0.5,
     );
     ctx.stroke();
+
+    // Outer cusps between spokes
+    const cuspAngle = midAngle;
+    const cuspR = roseRadius * 0.78;
+    ctx.beginPath();
+    ctx.arc(
+      screenPos.x + Math.cos(cuspAngle) * cuspR,
+      roseY + Math.sin(cuspAngle) * cuspR,
+      roseRadius * 0.18,
+      cuspAngle + Math.PI * 0.3,
+      cuspAngle + Math.PI * 1.7,
+    );
+    ctx.stroke();
   }
 
-  // Rose window inner ring
+  // Inner ring (middle stone circle)
   ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.arc(screenPos.x, roseY, roseRadius * 0.5, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Rose window center gem
-  ctx.fillStyle = `rgba(255, 220, 255, ${roseGlow})`;
+  // Center gem with faceted highlight
+  ctx.fillStyle = `rgba(${glowColor}, ${roseGlow})`;
+  ctx.shadowColor = `rgb(${glowColor})`;
+  ctx.shadowBlur = 5 * zoom;
   ctx.beginPath();
-  ctx.arc(screenPos.x, roseY, 2 * zoom, 0, Math.PI * 2);
+  ctx.arc(screenPos.x, roseY, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Gem highlight
+  ctx.fillStyle = `rgba(255, 255, 255, ${roseGlow * 0.5})`;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x - 0.5 * zoom, roseY - 0.5 * zoom, 1 * zoom, 0.6 * zoom, -0.4, 0, Math.PI * 2);
   ctx.fill();
 
   // Sequentially appearing/fading arcane glyphs on walls
@@ -11190,36 +12163,88 @@ function renderLibraryTower(
   }
   ctx.shadowBlur = 0;
 
-  // Entrance doorway with flickering torches
+  // ========== GRAND ENTRANCE DOORWAY ==========
   const entranceX = screenPos.x;
   const entranceY = screenPos.y - 2 * zoom;
   const doorW = 6 * zoom;
   const doorH = 12 * zoom;
 
-  // Door frame (Gothic pointed arch)
+  // Stone step at entrance base
+  ctx.fillStyle = "#5a4a3a";
+  ctx.beginPath();
+  ctx.moveTo(entranceX - doorW - 2 * zoom, entranceY + 1 * zoom);
+  ctx.lineTo(entranceX, entranceY + 3 * zoom);
+  ctx.lineTo(entranceX + doorW + 2 * zoom, entranceY + 1 * zoom);
+  ctx.lineTo(entranceX, entranceY - 1 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  // Step front edge
+  ctx.fillStyle = "#4a3a2a";
+  ctx.beginPath();
+  ctx.moveTo(entranceX - doorW - 2 * zoom, entranceY + 1 * zoom);
+  ctx.lineTo(entranceX, entranceY + 3 * zoom);
+  ctx.lineTo(entranceX, entranceY + 5 * zoom);
+  ctx.lineTo(entranceX - doorW - 2 * zoom, entranceY + 3 * zoom);
+  ctx.closePath();
+  ctx.fill();
   ctx.fillStyle = "#3a2a1a";
+  ctx.beginPath();
+  ctx.moveTo(entranceX, entranceY + 3 * zoom);
+  ctx.lineTo(entranceX + doorW + 2 * zoom, entranceY + 1 * zoom);
+  ctx.lineTo(entranceX + doorW + 2 * zoom, entranceY + 3 * zoom);
+  ctx.lineTo(entranceX, entranceY + 5 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Deep door recess (shadow)
+  ctx.fillStyle = "#1a0a00";
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW, entranceY);
   ctx.lineTo(entranceX - doorW, entranceY - doorH * 0.6);
-  ctx.quadraticCurveTo(
-    entranceX,
-    entranceY - doorH * 1.2,
-    entranceX + doorW,
-    entranceY - doorH * 0.6,
-  );
+  ctx.quadraticCurveTo(entranceX, entranceY - doorH * 1.2, entranceX + doorW, entranceY - doorH * 0.6);
   ctx.lineTo(entranceX + doorW, entranceY);
   ctx.closePath();
+  ctx.fill();
+
+  // Outer archivolt (ornate arch molding)
+  ctx.strokeStyle = "#6a5a4a";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(entranceX - doorW - 1.5 * zoom, entranceY);
+  ctx.lineTo(entranceX - doorW - 1.5 * zoom, entranceY - doorH * 0.55);
+  ctx.quadraticCurveTo(entranceX, entranceY - doorH * 1.3, entranceX + doorW + 1.5 * zoom, entranceY - doorH * 0.55);
+  ctx.lineTo(entranceX + doorW + 1.5 * zoom, entranceY);
+  ctx.stroke();
+
+  // Inner archivolt
+  ctx.strokeStyle = "#5a4a3a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(entranceX - doorW + 0.5 * zoom, entranceY);
+  ctx.lineTo(entranceX - doorW + 0.5 * zoom, entranceY - doorH * 0.58);
+  ctx.quadraticCurveTo(entranceX, entranceY - doorH * 1.15, entranceX + doorW - 0.5 * zoom, entranceY - doorH * 0.58);
+  ctx.lineTo(entranceX + doorW - 0.5 * zoom, entranceY);
+  ctx.stroke();
+
+  // Keystone at arch apex
+  ctx.fillStyle = "#7a6a5a";
+  ctx.beginPath();
+  ctx.moveTo(entranceX, entranceY - doorH * 0.95);
+  ctx.lineTo(entranceX - 2.5 * zoom, entranceY - doorH * 0.82);
+  ctx.lineTo(entranceX + 2.5 * zoom, entranceY - doorH * 0.82);
+  ctx.closePath();
+  ctx.fill();
+  // Gold inlay on keystone
+  ctx.fillStyle = "#c9a227";
+  ctx.beginPath();
+  ctx.arc(entranceX, entranceY - doorH * 0.87, 1 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
   // Warm interior glow through door
   const doorGlow = 0.4 + Math.sin(time * 6) * 0.1 + Math.sin(time * 9.3) * 0.08;
   const doorGrad = ctx.createRadialGradient(
-    entranceX,
-    entranceY - doorH * 0.4,
-    0,
-    entranceX,
-    entranceY - doorH * 0.4,
-    doorW * 1.2,
+    entranceX, entranceY - doorH * 0.4, 0,
+    entranceX, entranceY - doorH * 0.4, doorW * 1.2,
   );
   doorGrad.addColorStop(0, `rgba(255, 200, 120, ${doorGlow})`);
   doorGrad.addColorStop(0.6, `rgba(255, 160, 60, ${doorGlow * 0.5})`);
@@ -11228,79 +12253,104 @@ function renderLibraryTower(
   ctx.beginPath();
   ctx.moveTo(entranceX - doorW + 1.5 * zoom, entranceY);
   ctx.lineTo(entranceX - doorW + 1.5 * zoom, entranceY - doorH * 0.55);
-  ctx.quadraticCurveTo(
-    entranceX,
-    entranceY - doorH * 1.1,
-    entranceX + doorW - 1.5 * zoom,
-    entranceY - doorH * 0.55,
-  );
+  ctx.quadraticCurveTo(entranceX, entranceY - doorH * 1.1, entranceX + doorW - 1.5 * zoom, entranceY - doorH * 0.55);
   ctx.lineTo(entranceX + doorW - 1.5 * zoom, entranceY);
   ctx.closePath();
   ctx.fill();
 
-  // Torch brackets on each side of entrance
+  // Iron-bound door panels (visible inside arch)
+  ctx.strokeStyle = "rgba(80, 60, 40, 0.4)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(entranceX, entranceY);
+  ctx.lineTo(entranceX, entranceY - doorH * 0.75);
+  ctx.stroke();
+  // Iron strap hinges
+  for (let h = 0; h < 3; h++) {
+    const hingeY = entranceY - doorH * (0.15 + h * 0.22);
+    ctx.strokeStyle = "rgba(60, 50, 40, 0.5)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(entranceX - doorW + 2 * zoom, hingeY);
+    ctx.lineTo(entranceX - 1 * zoom, hingeY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(entranceX + 1 * zoom, hingeY);
+    ctx.lineTo(entranceX + doorW - 2 * zoom, hingeY);
+    ctx.stroke();
+  }
+
+  // Torch brackets with ornate ironwork
   for (const tSide of [-1, 1]) {
-    const torchX = entranceX + tSide * (doorW + 3 * zoom);
+    const torchX = entranceX + tSide * (doorW + 4 * zoom);
     const torchY = entranceY - doorH * 0.5;
 
-    // Bracket
+    // Wall plate
     ctx.fillStyle = "#4a3a2a";
-    ctx.fillRect(torchX - 1 * zoom, torchY, 2 * zoom, 6 * zoom);
+    ctx.fillRect(torchX - 1.5 * zoom, torchY + 1 * zoom, 3 * zoom, 4 * zoom);
 
-    // Torch cup
+    // Ornate bracket arm (curved iron)
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(torchX, torchY + 3 * zoom);
+    ctx.quadraticCurveTo(torchX + tSide * 3 * zoom, torchY - 1 * zoom, torchX + tSide * 1 * zoom, torchY - 3 * zoom);
+    ctx.stroke();
+
+    // Torch bowl (cup shape)
     ctx.fillStyle = "#6a5a3a";
     ctx.beginPath();
-    ctx.moveTo(torchX - 2 * zoom, torchY);
-    ctx.lineTo(torchX + 2 * zoom, torchY);
-    ctx.lineTo(torchX + 1.5 * zoom, torchY - 2 * zoom);
-    ctx.lineTo(torchX - 1.5 * zoom, torchY - 2 * zoom);
+    ctx.moveTo(torchX + tSide * 0 * zoom - 2.5 * zoom, torchY - 2 * zoom);
+    ctx.lineTo(torchX + tSide * 0 * zoom + 2.5 * zoom, torchY - 2 * zoom);
+    ctx.lineTo(torchX + tSide * 0 * zoom + 2 * zoom, torchY - 4 * zoom);
+    ctx.lineTo(torchX + tSide * 0 * zoom - 2 * zoom, torchY - 4 * zoom);
     ctx.closePath();
     ctx.fill();
 
-    // Animated flame
+    // Animated flame (multi-layer)
     const fl1 = Math.sin(time * 10 + tSide * 3) * 0.15;
     const fl2 = Math.sin(time * 14 + tSide * 5) * 0.1;
     const flameH = (5 + Math.sin(time * 8 + tSide) * 1.5) * zoom;
 
+    // Outer flame glow
+    ctx.fillStyle = `rgba(255, 150, 50, ${0.3 + fl1 * 0.5})`;
+    ctx.shadowColor = "rgba(255, 180, 50, 0.6)";
+    ctx.shadowBlur = 10 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(torchX, torchY - 5 * zoom, 3.5 * zoom, flameH * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main flame body
     ctx.fillStyle = `rgba(255, 220, 100, ${0.8 + fl1})`;
-    ctx.shadowColor = "rgba(255, 180, 50, 0.7)";
     ctx.shadowBlur = 8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(torchX - 2 * zoom, torchY - 2 * zoom);
-    ctx.quadraticCurveTo(
-      torchX + fl2 * zoom * 4,
-      torchY - flameH,
-      torchX,
-      torchY - flameH - 2 * zoom,
-    );
-    ctx.quadraticCurveTo(
-      torchX - fl2 * zoom * 3,
-      torchY - flameH,
-      torchX + 2 * zoom,
-      torchY - 2 * zoom,
-    );
+    ctx.moveTo(torchX - 2 * zoom, torchY - 4 * zoom);
+    ctx.quadraticCurveTo(torchX + fl2 * zoom * 4, torchY - flameH - 2 * zoom, torchX, torchY - flameH - 4 * zoom);
+    ctx.quadraticCurveTo(torchX - fl2 * zoom * 3, torchY - flameH - 2 * zoom, torchX + 2 * zoom, torchY - 4 * zoom);
     ctx.closePath();
     ctx.fill();
 
-    // Inner flame (hotter core)
+    // Inner hot core
     ctx.fillStyle = `rgba(255, 255, 200, ${0.6 + fl2})`;
+    ctx.shadowBlur = 4 * zoom;
     ctx.beginPath();
-    ctx.moveTo(torchX - 1 * zoom, torchY - 2.5 * zoom);
-    ctx.quadraticCurveTo(
-      torchX,
-      torchY - flameH * 0.6,
-      torchX,
-      torchY - flameH * 0.7,
-    );
-    ctx.quadraticCurveTo(
-      torchX,
-      torchY - flameH * 0.6,
-      torchX + 1 * zoom,
-      torchY - 2.5 * zoom,
-    );
+    ctx.moveTo(torchX - 1 * zoom, torchY - 4.5 * zoom);
+    ctx.quadraticCurveTo(torchX, torchY - flameH * 0.5 - 2 * zoom, torchX, torchY - flameH * 0.6 - 3 * zoom);
+    ctx.quadraticCurveTo(torchX, torchY - flameH * 0.5 - 2 * zoom, torchX + 1 * zoom, torchY - 4.5 * zoom);
     ctx.closePath();
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Smoke wisp above flame
+    const smokePhase = (time * 2 + tSide * 1.5) % 3;
+    if (smokePhase < 2) {
+      const smokeAlpha = 0.1 * (1 - smokePhase / 2);
+      const smokeY2 = torchY - flameH - 6 * zoom - smokePhase * 8 * zoom;
+      ctx.fillStyle = `rgba(120, 110, 100, ${smokeAlpha})`;
+      ctx.beginPath();
+      ctx.ellipse(torchX + Math.sin(time * 3 + tSide) * 2 * zoom, smokeY2, 2 * zoom * (1 + smokePhase * 0.3), 1.5 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // Flying buttresses (Gothic supports) with 3D isometric depth
@@ -11703,41 +12753,63 @@ function renderLibraryTower(
     ctx.shadowBlur = 0;
   }
 
-  // Piston guides with ornate details
+  // Piston guides — 3D stone-and-iron pilasters
   for (const dx of [-1, 1]) {
-    // Main rail
+    const railX = screenPos.x + dx * baseWidth * zoom * 0.4;
+    const railTop = plateY - baseHeight * zoom * 0.6;
+    const railH = baseHeight * zoom * 0.6;
+
+    // Shadow side of rail
+    ctx.fillStyle = "#3a2a1a";
+    ctx.fillRect(railX - 4 * zoom + (dx > 0 ? 6 * zoom : 0), railTop, 2 * zoom, railH);
+
+    // Main rail body
     ctx.fillStyle = "#4a3a2a";
-    ctx.fillRect(
-      screenPos.x + dx * baseWidth * zoom * 0.4 - 4 * zoom,
-      plateY - baseHeight * zoom * 0.6,
-      8 * zoom,
-      baseHeight * zoom * 0.6,
-    );
+    ctx.fillRect(railX - 4 * zoom, railTop, 8 * zoom, railH);
 
-    // Rail highlight
-    ctx.fillStyle = "#5a4a3a";
-    ctx.fillRect(
-      screenPos.x + dx * baseWidth * zoom * 0.4 - 4 * zoom,
-      plateY - baseHeight * zoom * 0.6,
-      2 * zoom,
-      baseHeight * zoom * 0.6,
-    );
+    // Rail highlight edge
+    ctx.fillStyle = "#6a5a4a";
+    ctx.fillRect(railX - 4 * zoom + (dx < 0 ? 0 : 6 * zoom), railTop, 2 * zoom, railH);
 
-    // Ornate rivets
-    ctx.fillStyle = "#c9a227";
+    // Rail cap (chamfered top)
+    ctx.fillStyle = "#7a6a5a";
+    ctx.beginPath();
+    ctx.moveTo(railX - 5 * zoom, railTop);
+    ctx.lineTo(railX, railTop - 3 * zoom);
+    ctx.lineTo(railX + 5 * zoom, railTop);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold rivets with shadow
     for (let r = 0; r < 5; r++) {
-      const rivetY =
-        plateY - baseHeight * zoom * 0.12 - r * baseHeight * zoom * 0.11;
+      const rivetY = plateY - baseHeight * zoom * 0.12 - r * baseHeight * zoom * 0.11;
+      // Rivet shadow
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
       ctx.beginPath();
-      ctx.arc(
-        screenPos.x + dx * baseWidth * zoom * 0.4,
-        rivetY,
-        1.5 * zoom,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(railX + 0.5 * zoom, rivetY + 0.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Rivet
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(railX, rivetY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Rivet highlight
+      ctx.fillStyle = "rgba(255, 220, 150, 0.4)";
+      ctx.beginPath();
+      ctx.arc(railX - 0.4 * zoom, rivetY - 0.4 * zoom, 0.6 * zoom, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Carved rune on rail midpoint
+    const runeY2 = plateY - baseHeight * zoom * 0.35;
+    const runeAlpha = 0.35 + Math.sin(time * 2.5 + dx * 1.5) * 0.15 + attackPulse * 0.3;
+    ctx.fillStyle = `rgba(${glowColor}, ${runeAlpha})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 3 * zoom;
+    ctx.font = `${5 * zoom}px serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(dx < 0 ? "ᛉ" : "ᛊ", railX, runeY2);
+    ctx.shadowBlur = 0;
   }
 
   // UPPER PISTON SECTION
@@ -11761,43 +12833,53 @@ function renderLibraryTower(
     zoom,
   );
 
-  // Piston connector ring — right half matches right face color
+  // Piston connector ring — ornate cornice band
   const connRX = (baseWidth - 2) * zoom * 0.5;
   const connRY = (baseWidth - 2) * zoom * ISO_PRISM_D_FACTOR;
   const connY = pistonTopY + 2 * zoom;
 
+  // Ring body (back half)
   ctx.fillStyle = "#5a4a3a";
   ctx.beginPath();
   ctx.ellipse(screenPos.x, connY, connRX, connRY, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Left half overlay matches prism left face color
+  // Left half matches left face
   ctx.fillStyle = "#6a5a4a";
   ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    connY,
-    connRX,
-    connRY,
-    0,
-    Math.PI * 0.5,
-    Math.PI * 1.5,
-  );
+  ctx.ellipse(screenPos.x, connY, connRX, connRY, 0, Math.PI * 0.5, Math.PI * 1.5);
   ctx.closePath();
   ctx.fill();
 
-  // Border on bottom (front) half of connector ellipse
+  // Gold trim on connector ring
+  ctx.strokeStyle = "rgba(201, 162, 39, 0.4)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, connY - 1 * zoom, connRX * 0.95, connRY * 0.95, 0, 0, Math.PI);
+  ctx.stroke();
+
+  // Front border
   ctx.strokeStyle = "#3a2a1a";
   ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(screenPos.x, connY, connRX, connRY, 0, 0, Math.PI);
   ctx.stroke();
 
-  // Stone blocks on upper section
-  ctx.strokeStyle = "#4a3a2a";
+  // Dentil molding along connector ring (front arc)
+  ctx.fillStyle = "#7a6a5a";
+  for (let dm = 0; dm < 10; dm++) {
+    const dmAngle = (dm / 10) * Math.PI;
+    const dmX = screenPos.x + Math.cos(dmAngle) * connRX * 0.92;
+    const dmY = connY + Math.sin(dmAngle) * connRY * 0.92;
+    ctx.fillRect(dmX - 0.8 * zoom, dmY - 1.5 * zoom, 1.6 * zoom, 1.5 * zoom);
+  }
+
+  // Stone blocks on upper section with improved mortar rendering
   ctx.lineWidth = 1 * zoom;
   for (let row = 0; row < 4; row++) {
     const blockY = pistonTopY + 12 - row * baseHeight * 0.12 * zoom;
+    // Dark mortar groove
+    ctx.strokeStyle = "#2a1a0a";
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15);
     ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55);
@@ -11806,18 +12888,27 @@ function renderLibraryTower(
     ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15);
     ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55);
     ctx.stroke();
+    // Light mortar upper edge
+    ctx.strokeStyle = "rgba(120, 100, 80, 0.2)";
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.1, blockY + d * 0.15 - 1 * zoom);
+    ctx.lineTo(screenPos.x - w * 0.85, blockY - d * 0.55 - 1 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + w * 0.1, blockY + d * 0.15 - 1 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.85, blockY - d * 0.55 - 1 * zoom);
+    ctx.stroke();
   }
 
   const topY = pistonTopY - baseHeight * 0.4 * zoom;
 
-  // Accent panel lines
+  // Mystical rune accent bands (per level)
   const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse;
-  ctx.strokeStyle = `${mainColor} ${panelGlow})`;
   ctx.lineWidth = 1 * zoom;
 
   for (let i = 1; i <= tower.level; i++) {
-    const lineY =
-      pistonTopY + 16 - (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
+    const lineY = pistonTopY + 16 - (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
+    ctx.strokeStyle = `${mainColor} ${panelGlow * 0.5})`;
     ctx.beginPath();
     ctx.moveTo(sX - w * 0.15, lineY + d * 0.3);
     ctx.lineTo(sX - w * 0.7, lineY - d * 0.2);
@@ -11826,39 +12917,70 @@ function renderLibraryTower(
     ctx.moveTo(sX + w * 0.7, lineY - d * 0.2);
     ctx.lineTo(sX + w * 0.15, lineY + d * 0.3);
     ctx.stroke();
+
+    // Small rune glyph at the center of each accent band
+    const bandRuneAlpha = 0.3 + Math.sin(time * 2.5 + i * 1.2) * 0.15 + attackPulse * 0.2;
+    ctx.fillStyle = `rgba(${glowColor}, ${bandRuneAlpha})`;
+    ctx.font = `${4 * zoom}px serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("ᛏ", sX - w * 0.4, lineY + d * 0.05);
+    ctx.fillText("ᛏ", sX + w * 0.4, lineY + d * 0.05);
   }
 
-  // Energy vents
+  // Gothic louvered exhaust vents (heat from mystical forge inside)
   for (let i = 0; i < Math.min(tower.level, 3); i++) {
     const ventY = screenPos.y - lowerBodyHeight * zoom * 0.35 - i * 8 * zoom;
-    const ventGlow = 0.5 + Math.sin(time * 4 + i * 0.5) * 0.3 + attackPulse;
+    const ventGlow = 0.3 + Math.sin(time * 4 + i * 0.5) * 0.15 + attackPulse * 0.3;
 
-    ctx.fillStyle = `${mainColor} ${ventGlow})`;
-    ctx.shadowColor = "#b466ff";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      sX - w * 0.55,
-      ventY + d * 0.15,
-      3.5 * zoom,
-      1.8 * zoom,
-      0.4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(
-      sX + w * 0.55,
-      ventY + d * 0.15,
-      3.5 * zoom,
-      1.8 * zoom,
-      -0.4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    for (const side of [-1, 1]) {
+      const vx = sX + side * w * 0.55;
+      const vy = ventY + d * 0.15;
+      const vw = 5 * zoom;
+      const vh = 4 * zoom;
+
+      // Gothic pointed vent housing
+      ctx.fillStyle = "#3a2a1a";
+      ctx.beginPath();
+      ctx.moveTo(vx - vw, vy + vh * 0.3);
+      ctx.lineTo(vx - vw, vy - vh * 0.5);
+      ctx.quadraticCurveTo(vx, vy - vh * 1.1, vx + vw, vy - vh * 0.5);
+      ctx.lineTo(vx + vw, vy + vh * 0.3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Louvered slats
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 0.6 * zoom;
+      for (let s = 0; s < 3; s++) {
+        const slY = vy - vh * 0.3 + s * vh * 0.25;
+        ctx.beginPath();
+        ctx.moveTo(vx - vw * 0.75, slY);
+        ctx.lineTo(vx + vw * 0.75, slY);
+        ctx.stroke();
+      }
+
+      // Warm glow from within
+      const ventGrad = ctx.createRadialGradient(vx, vy - vh * 0.1, 0, vx, vy - vh * 0.1, vw);
+      ventGrad.addColorStop(0, `rgba(${glowColor}, ${ventGlow * 0.6})`);
+      ventGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+      ctx.fillStyle = ventGrad;
+      ctx.beginPath();
+      ctx.moveTo(vx - vw * 0.8, vy + vh * 0.2);
+      ctx.lineTo(vx - vw * 0.8, vy - vh * 0.4);
+      ctx.quadraticCurveTo(vx, vy - vh * 0.9, vx + vw * 0.8, vy - vh * 0.4);
+      ctx.lineTo(vx + vw * 0.8, vy + vh * 0.2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Heat shimmer above vent
+      if (i === 0) {
+        const shimmerAlpha = 0.08 + Math.sin(time * 6 + side * 2) * 0.04;
+        ctx.fillStyle = `rgba(${glowColor}, ${shimmerAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(vx, vy - vh * 1.2 - Math.sin(time * 3 + side) * 1.5 * zoom, 3 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   }
 
   // ========== GOTHIC PINNACLES ON ROOF CORNERS ==========
@@ -11909,6 +13031,37 @@ function renderLibraryTower(
   const balconyW = baseWidth * zoom * 0.48;
   const balconyD = baseWidth * zoom * 0.24;
 
+  // Balcony underside (corbel support — 3D depth)
+  ctx.fillStyle = "#3a2a1a";
+  ctx.beginPath();
+  ctx.moveTo(sX - balconyW, balconyY);
+  ctx.lineTo(sX, balconyY + balconyD);
+  ctx.lineTo(sX, balconyY + balconyD + 3 * zoom);
+  ctx.lineTo(sX - balconyW * 0.7, balconyY + 3 * zoom);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#2a1a0a";
+  ctx.beginPath();
+  ctx.moveTo(sX, balconyY + balconyD);
+  ctx.lineTo(sX + balconyW, balconyY);
+  ctx.lineTo(sX + balconyW * 0.7, balconyY + 3 * zoom);
+  ctx.lineTo(sX, balconyY + balconyD + 3 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Corbel brackets (decorative supports)
+  for (const cb of [-0.6, 0, 0.6]) {
+    const cbX = sX + cb * balconyW * 0.7;
+    const cbY = balconyY + balconyD * (1 - Math.abs(cb) * 0.7);
+    ctx.fillStyle = "#5a4a3a";
+    ctx.beginPath();
+    ctx.moveTo(cbX - 1.5 * zoom, cbY + 3 * zoom);
+    ctx.lineTo(cbX, cbY + 6 * zoom);
+    ctx.lineTo(cbX + 1.5 * zoom, cbY + 3 * zoom);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   // Balcony floor (isometric slab)
   ctx.fillStyle = "#6a5a4a";
   ctx.beginPath();
@@ -11919,16 +13072,28 @@ function renderLibraryTower(
   ctx.closePath();
   ctx.fill();
 
-  // Balcony edge trim
-  ctx.strokeStyle = "#4a3a2a";
-  ctx.lineWidth = 1 * zoom;
+  // Balcony floor tile pattern
+  ctx.strokeStyle = "rgba(74, 58, 42, 0.3)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(sX - balconyW * 0.5, balconyY + balconyD * 0.5);
+  ctx.lineTo(sX + balconyW * 0.5, balconyY - balconyD * 0.5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(sX - balconyW * 0.5, balconyY - balconyD * 0.5);
+  ctx.lineTo(sX + balconyW * 0.5, balconyY + balconyD * 0.5);
+  ctx.stroke();
+
+  // Balcony gold edge trim
+  ctx.strokeStyle = "rgba(201, 162, 39, 0.35)";
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(sX - balconyW, balconyY);
   ctx.lineTo(sX, balconyY + balconyD);
   ctx.lineTo(sX + balconyW, balconyY);
   ctx.stroke();
 
-  // Railing posts
+  // Stone balustrade railing with Gothic tracery
   const railH = 6 * zoom;
   const railPosts = [
     { x: sX - balconyW * 0.8, y: balconyY + balconyD * 0.2 },
@@ -11937,23 +13102,67 @@ function renderLibraryTower(
     { x: sX + balconyW * 0.4, y: balconyY + balconyD * 0.6 },
     { x: sX + balconyW * 0.8, y: balconyY + balconyD * 0.2 },
   ];
+
+  // Panel infills between posts (Gothic trefoil cutouts)
+  for (let pi = 0; pi < railPosts.length - 1; pi++) {
+    const p0 = railPosts[pi];
+    const p1 = railPosts[pi + 1];
+    const midRailX = (p0.x + p1.x) / 2;
+    const midRailY = (p0.y + p1.y) / 2;
+
+    // Panel fill
+    ctx.fillStyle = "rgba(90, 74, 58, 0.45)";
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.lineTo(p1.x, p1.y - railH);
+    ctx.lineTo(p0.x, p0.y - railH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gothic arch cutout (decorative)
+    ctx.strokeStyle = "rgba(74, 58, 42, 0.5)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(p0.x + (p1.x - p0.x) * 0.2, p0.y + (p1.y - p0.y) * 0.2 - 1 * zoom);
+    ctx.quadraticCurveTo(
+      midRailX, midRailY - railH * 0.8,
+      p0.x + (p1.x - p0.x) * 0.8, p0.y + (p1.y - p0.y) * 0.8 - 1 * zoom,
+    );
+    ctx.stroke();
+  }
+
   for (const post of railPosts) {
+    // Post with chamfered top
     ctx.fillStyle = "#5a4a3a";
-    ctx.fillRect(post.x - 0.8 * zoom, post.y - railH, 1.6 * zoom, railH);
-    // Post cap
+    ctx.fillRect(post.x - 1 * zoom, post.y - railH, 2 * zoom, railH);
+    // Post cap (gold finial)
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.arc(post.x, post.y - railH, 1 * zoom, 0, Math.PI * 2);
+    ctx.moveTo(post.x, post.y - railH - 1.5 * zoom);
+    ctx.lineTo(post.x - 1.2 * zoom, post.y - railH);
+    ctx.lineTo(post.x + 1.2 * zoom, post.y - railH);
+    ctx.closePath();
     ctx.fill();
   }
 
-  // Railing bar connecting posts
+  // Upper railing bar
   ctx.strokeStyle = "#5a4a3a";
-  ctx.lineWidth = 1 * zoom;
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(railPosts[0].x, railPosts[0].y - railH);
   for (let i = 1; i < railPosts.length; i++) {
     ctx.lineTo(railPosts[i].x, railPosts[i].y - railH);
+  }
+  ctx.stroke();
+
+  // Lower railing bar
+  ctx.strokeStyle = "#4a3a2a";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(railPosts[0].x, railPosts[0].y - railH * 0.35);
+  for (let i = 1; i < railPosts.length; i++) {
+    ctx.lineTo(railPosts[i].x, railPosts[i].y - railH * 0.35);
   }
   ctx.stroke();
 
@@ -12516,13 +13725,50 @@ function renderLabTower(
   const d = baseWidth * zoom * 0.25;
   const h = baseHeight * zoom;
 
-  // Foundation platform with tech details
+  // ========== STEPPED TECH FOUNDATION ==========
+  // Lowest step — heavy concrete plinth
   drawIsometricPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 10 * zoom,
-    baseWidth + 10,
-    baseWidth + 10,
+    screenPos.y + 12 * zoom,
+    baseWidth + 16,
+    baseWidth + 16,
+    3,
+    {
+      top: "#1a2a3a",
+      left: "#122230",
+      right: "#0a1a28",
+      leftBack: "#1d2d3d",
+      rightBack: "#152535",
+    },
+    zoom,
+  );
+
+  // Middle step — reinforced platform
+  drawIsometricPrism(
+    ctx,
+    screenPos.x,
+    screenPos.y + 9 * zoom,
+    baseWidth + 12,
+    baseWidth + 12,
+    3,
+    {
+      top: "#1a3545",
+      left: "#142d3d",
+      right: "#0e2535",
+      leftBack: "#1d3848",
+      rightBack: "#173040",
+    },
+    zoom,
+  );
+
+  // Upper step — main platform with hazard trim
+  drawIsometricPrism(
+    ctx,
+    screenPos.x,
+    screenPos.y + 6 * zoom,
+    baseWidth + 8,
+    baseWidth + 8,
     6,
     {
       top: "#1a3a4f",
@@ -12534,24 +13780,72 @@ function renderLabTower(
     zoom,
   );
 
-  // Foundation edge glow
+  // Cyan edge glow on upper step
   const foundGlow = 0.3 + Math.sin(time * 2) * 0.15;
+  const fndLabW = (baseWidth + 8) * zoom * 0.5;
+  const fndLabD = (baseWidth + 8) * zoom * ISO_PRISM_D_FACTOR;
   ctx.strokeStyle = `rgba(0, 255, 255, ${foundGlow})`;
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(
-    screenPos.x - (baseWidth + 10) * zoom * 0.5,
-    screenPos.y + 4 * zoom,
-  );
-  ctx.lineTo(
-    screenPos.x,
-    screenPos.y + (baseWidth + 10) * zoom * ISO_PRISM_D_FACTOR + 4 * zoom,
-  );
-  ctx.lineTo(
-    screenPos.x + (baseWidth + 10) * zoom * 0.5,
-    screenPos.y + 4 * zoom,
-  );
+  ctx.moveTo(screenPos.x - fndLabW, screenPos.y);
+  ctx.lineTo(screenPos.x, screenPos.y + fndLabD);
+  ctx.lineTo(screenPos.x + fndLabW, screenPos.y);
   ctx.stroke();
+
+  // Yellow/black hazard chevron stripe along front edge
+  const chevCount = 6;
+  for (let ch = 0; ch < chevCount; ch++) {
+    const t0 = ch / chevCount;
+    const t1 = (ch + 0.5) / chevCount;
+    const t2 = (ch + 1) / chevCount;
+    let cx0: number, cy0: number, cx1: number, cy1: number, cx2: number, cy2: number;
+    if (ch < chevCount / 2) {
+      cx0 = screenPos.x - fndLabW + (fndLabW) * t0 * 2;
+      cy0 = screenPos.y + fndLabD * t0 * 2;
+      cx1 = screenPos.x - fndLabW + (fndLabW) * t1 * 2;
+      cy1 = screenPos.y + fndLabD * t1 * 2;
+      cx2 = screenPos.x - fndLabW + (fndLabW) * t2 * 2;
+      cy2 = screenPos.y + fndLabD * t2 * 2;
+    } else {
+      const st = (ch - chevCount / 2);
+      cx0 = screenPos.x + fndLabW * (st / (chevCount / 2)) * 2;
+      cy0 = screenPos.y + fndLabD * (1 - (st / (chevCount / 2)) * 2);
+      const st1 = st + 0.5;
+      cx1 = screenPos.x + fndLabW * (st1 / (chevCount / 2)) * 2;
+      cy1 = screenPos.y + fndLabD * (1 - (st1 / (chevCount / 2)) * 2);
+      const st2 = st + 1;
+      cx2 = screenPos.x + fndLabW * Math.min(1, (st2 / (chevCount / 2)) * 2);
+      cy2 = screenPos.y + fndLabD * Math.max(0, 1 - (st2 / (chevCount / 2)) * 2);
+    }
+    if (ch % 2 === 0) {
+      ctx.fillStyle = "rgba(200, 180, 0, 0.35)";
+    } else {
+      ctx.fillStyle = "rgba(20, 20, 20, 0.25)";
+    }
+    ctx.beginPath();
+    ctx.moveTo(cx0, cy0 + 2 * zoom);
+    ctx.lineTo(cx1, cy1 + 2 * zoom);
+    ctx.lineTo(cx2, cy2 + 2 * zoom);
+    ctx.lineTo(cx2, cy2 - 1 * zoom);
+    ctx.lineTo(cx1, cy1 - 1 * zoom);
+    ctx.lineTo(cx0, cy0 - 1 * zoom);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Corner anchor bolts
+  for (const side of [-1, 1]) {
+    const boltX = screenPos.x + side * fndLabW * 0.85;
+    const boltY = screenPos.y + fndLabD * 0.15;
+    ctx.fillStyle = "#5a7a9a";
+    ctx.beginPath();
+    ctx.arc(boltX, boltY, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7a9ab0";
+    ctx.beginPath();
+    ctx.arc(boltX - 0.3 * zoom, boltY - 0.3 * zoom, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // Main sci-fi tower body
   drawIsometricPrism(
@@ -12680,48 +13974,176 @@ function renderLabTower(
     ctx.fill();
   }
 
-  // Structural panel lines for better 3D effect
-  ctx.strokeStyle = "#2a5a75";
-  ctx.lineWidth = 1 * zoom;
-  // Left face vertical panels
-  for (let panel = 0; panel < 3; panel++) {
-    const panelX = screenPos.x - w * (0.2 + panel * 0.3);
+  // ========== FACE DETAILS (panel seams, rivets, weathering) ==========
+  const bodyH = (baseHeight - 6) * zoom;
+  const bodyTopY = screenPos.y + 2 * zoom - bodyH;
+
+  // Left face — vertical panel seams
+  ctx.strokeStyle = "rgba(30, 70, 100, 0.4)";
+  ctx.lineWidth = 0.6 * zoom;
+  const panelSeams = 5;
+  for (let s = 1; s < panelSeams; s++) {
+    const seamT = s / panelSeams;
+    const seamBotX = screenPos.x - w * seamT;
+    const seamBotY = screenPos.y + 2 * zoom + d * (1 - seamT) * 0.5;
+    const seamTopX = seamBotX;
+    const seamTopY = bodyTopY + d * (1 - seamT) * 0.5;
     ctx.beginPath();
-    ctx.moveTo(panelX, screenPos.y + 2 * zoom);
-    ctx.lineTo(
-      panelX - d * 0.5,
-      screenPos.y - (baseHeight - 6) * zoom + d * 0.5,
-    );
-    ctx.stroke();
-  }
-  // Right face vertical panels
-  for (let panel = 0; panel < 3; panel++) {
-    const panelX = screenPos.x + w * (0.2 + panel * 0.3);
-    ctx.beginPath();
-    ctx.moveTo(panelX, screenPos.y + 2 * zoom);
-    ctx.lineTo(
-      panelX + d * 0.5,
-      screenPos.y - (baseHeight - 6) * zoom + d * 0.5,
-    );
+    ctx.moveTo(seamBotX, seamBotY);
+    ctx.lineTo(seamTopX, seamTopY);
     ctx.stroke();
   }
 
-  // Corner reinforcement struts
-  ctx.fillStyle = "#3a6a8a";
-  for (const side of [-1, 1]) {
+  // Right face — vertical panel seams
+  for (let s = 1; s < panelSeams; s++) {
+    const seamT = s / panelSeams;
+    const seamBotX = screenPos.x + w * seamT;
+    const seamBotY = screenPos.y + 2 * zoom + d * (1 - seamT) * 0.5;
+    const seamTopX = seamBotX;
+    const seamTopY = bodyTopY + d * (1 - seamT) * 0.5;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + side * w * 0.95, screenPos.y + d * 0.4);
-    ctx.lineTo(screenPos.x + side * w * 1.05, screenPos.y + d * 0.5);
-    ctx.lineTo(
-      screenPos.x + side * w * 1.05,
-      screenPos.y - (baseHeight - 10) * zoom + d * 0.4,
-    );
-    ctx.lineTo(
-      screenPos.x + side * w * 0.95,
-      screenPos.y - (baseHeight - 10) * zoom + d * 0.3,
-    );
+    ctx.moveTo(seamBotX, seamBotY);
+    ctx.lineTo(seamTopX, seamTopY);
+    ctx.stroke();
+  }
+
+  // Horizontal seam lines
+  const horizSeams = 5;
+  for (let r = 1; r < horizSeams; r++) {
+    const seamT = r / horizSeams;
+    const seamY = screenPos.y + 2 * zoom - bodyH * seamT;
+    // Left face
+    ctx.strokeStyle = "rgba(30, 70, 100, 0.3)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.95, seamY + d * 0.45);
+    ctx.lineTo(screenPos.x, seamY + d * 0.95);
+    ctx.stroke();
+    // Right face
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, seamY + d * 0.95);
+    ctx.lineTo(screenPos.x + w * 0.95, seamY + d * 0.45);
+    ctx.stroke();
+
+    // Seam highlight (lighter line just above)
+    ctx.strokeStyle = "rgba(100, 160, 200, 0.12)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.95, seamY + d * 0.45 - 0.5 * zoom);
+    ctx.lineTo(screenPos.x, seamY + d * 0.95 - 0.5 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.95, seamY + d * 0.45 - 0.5 * zoom);
+    ctx.stroke();
+  }
+
+  // Rivet rows along panel seams (left face visible rivets)
+  ctx.fillStyle = "#5a8aaa";
+  for (let r = 0; r < horizSeams; r++) {
+    const ry = screenPos.y + 2 * zoom - bodyH * ((r + 0.5) / horizSeams);
+    for (let c = 0; c < 3; c++) {
+      const cx = screenPos.x - w * (0.25 + c * 0.3);
+      const cyOff = d * (0.75 - c * 0.15);
+      ctx.beginPath();
+      ctx.arc(cx, ry + cyOff, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // Right face rivets
+  for (let r = 0; r < horizSeams; r++) {
+    const ry = screenPos.y + 2 * zoom - bodyH * ((r + 0.5) / horizSeams);
+    for (let c = 0; c < 3; c++) {
+      const cx = screenPos.x + w * (0.25 + c * 0.3);
+      const cyOff = d * (0.75 - c * 0.15);
+      ctx.beginPath();
+      ctx.arc(cx, ry + cyOff, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Weathering gradient on left face (darker at bottom)
+  const leftLabWeather = ctx.createLinearGradient(
+    screenPos.x - w * 0.5,
+    screenPos.y + 2 * zoom,
+    screenPos.x - w * 0.5,
+    bodyTopY,
+  );
+  leftLabWeather.addColorStop(0, "rgba(0, 0, 0, 0.12)");
+  leftLabWeather.addColorStop(0.4, "rgba(0, 0, 0, 0.03)");
+  leftLabWeather.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = leftLabWeather;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x, screenPos.y + 2 * zoom);
+  ctx.lineTo(screenPos.x - w, screenPos.y + 2 * zoom);
+  ctx.lineTo(screenPos.x - w, bodyTopY);
+  ctx.lineTo(screenPos.x, bodyTopY);
+  ctx.closePath();
+  ctx.fill();
+
+  // Corner reinforcement struts (improved with 3D depth)
+  for (const side of [-1, 1]) {
+    const strutX = screenPos.x + side * w * 0.97;
+    const strutBotY = screenPos.y + d * 0.38;
+    const strutTopY = screenPos.y - (baseHeight - 10) * zoom + d * 0.3;
+    // Strut shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.beginPath();
+    ctx.moveTo(strutX + side * 0.5 * zoom, strutBotY + 0.5 * zoom);
+    ctx.lineTo(strutX + side * 2 * zoom + 0.5 * zoom, strutBotY + d * 0.12 + 0.5 * zoom);
+    ctx.lineTo(strutX + side * 2 * zoom + 0.5 * zoom, strutTopY + d * 0.12 + 0.5 * zoom);
+    ctx.lineTo(strutX + side * 0.5 * zoom, strutTopY + 0.5 * zoom);
     ctx.closePath();
     ctx.fill();
+    // Main strut
+    ctx.fillStyle = "#3a6a8a";
+    ctx.beginPath();
+    ctx.moveTo(strutX, strutBotY);
+    ctx.lineTo(strutX + side * 2 * zoom, strutBotY + d * 0.12);
+    ctx.lineTo(strutX + side * 2 * zoom, strutTopY + d * 0.12);
+    ctx.lineTo(strutX, strutTopY);
+    ctx.closePath();
+    ctx.fill();
+    // Strut highlight
+    ctx.strokeStyle = "#6a9aba";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(strutX + side * 0.3 * zoom, strutBotY);
+    ctx.lineTo(strutX + side * 0.3 * zoom, strutTopY);
+    ctx.stroke();
+    // Top and bottom caps
+    ctx.fillStyle = "#5a8aaa";
+    for (const capY of [strutBotY, strutTopY]) {
+      ctx.beginPath();
+      ctx.ellipse(
+        strutX + side * 1 * zoom,
+        capY + d * 0.06,
+        2 * zoom,
+        1 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
+
+  // Cyan accent stripes (horizontal tech bands)
+  for (let band = 0; band < tower.level; band++) {
+    const bandY = screenPos.y + 2 * zoom - bodyH * (0.25 + band * 0.25);
+    const bandGlow = 0.2 + Math.sin(time * 2 + band * 1.5) * 0.1;
+    ctx.strokeStyle = `rgba(0, 200, 255, ${bandGlow})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.92, bandY + d * 0.4);
+    ctx.lineTo(screenPos.x, bandY + d * 0.85);
+    ctx.lineTo(screenPos.x + w * 0.92, bandY + d * 0.4);
+    ctx.stroke();
+    // Band highlight
+    ctx.strokeStyle = `rgba(100, 220, 255, ${bandGlow * 0.5})`;
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.9, bandY + d * 0.4 - 0.8 * zoom);
+    ctx.lineTo(screenPos.x, bandY + d * 0.85 - 0.8 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.9, bandY + d * 0.4 - 0.8 * zoom);
+    ctx.stroke();
   }
 
   // ========== ROTATING ENERGY RINGS ==========
@@ -12757,176 +14179,358 @@ function renderLabTower(
     }
   }
 
-  // ========== ENERGY TUBES (following isometric faces) ==========
-  // Left face energy tube
-  drawEnergyTube(
-    ctx,
-    screenPos.x - w * 0.85,
-    screenPos.y + d * 0.2 + 4 * zoom,
-    screenPos.x - w * 0.5,
-    screenPos.y - h * 0.6 + d * 0.1,
-    2.5,
-    time,
-    zoom,
-    "rgb(0, 200, 255)",
-  );
+  // ========== RIGID CONDUIT PIPES (following isometric faces) ==========
+  for (const side of [-1, 1]) {
+    const pipeStartX = screenPos.x + side * w * 0.82;
+    const pipeStartY = screenPos.y + d * 0.18 + 2 * zoom;
+    const pipeEndX = screenPos.x + side * w * 0.48;
+    const pipeEndY = screenPos.y - h * 0.62 + d * 0.1;
 
-  // Right face energy tube
-  drawEnergyTube(
-    ctx,
-    screenPos.x + w * 0.85,
-    screenPos.y + d * 0.15 + 4 * zoom,
-    screenPos.x + w * 0.5,
-    screenPos.y - h * 0.6 + d * 0.1,
-    2.5,
-    time + 0.5,
-    zoom,
-    "rgb(0, 200, 255)",
-  );
+    // Pipe shadow
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.lineWidth = 4.5 * zoom;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(pipeStartX + 0.5 * zoom, pipeStartY + 0.8 * zoom);
+    ctx.lineTo(pipeEndX + 0.5 * zoom, pipeEndY + 0.8 * zoom);
+    ctx.stroke();
 
-  // Cross-connecting tube (follows front iso edge, left to right)
+    // Pipe body
+    ctx.strokeStyle = "#3a5a7a";
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pipeStartX, pipeStartY);
+    ctx.lineTo(pipeEndX, pipeEndY);
+    ctx.stroke();
+
+    // Pipe highlight
+    ctx.strokeStyle = "#6a9aba";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pipeStartX - 0.5 * zoom, pipeStartY - 0.4 * zoom);
+    ctx.lineTo(pipeEndX - 0.5 * zoom, pipeEndY - 0.4 * zoom);
+    ctx.stroke();
+
+    // Pipe clamp bands
+    const pipeDx = pipeEndX - pipeStartX;
+    const pipeDy = pipeEndY - pipeStartY;
+    for (let cl = 0; cl < 4; cl++) {
+      const t = (cl + 0.5) / 4;
+      const clX = pipeStartX + pipeDx * t;
+      const clY = pipeStartY + pipeDy * t;
+      ctx.strokeStyle = "#5a8aaa";
+      ctx.lineWidth = 1.5 * zoom;
+      const pAngle = Math.atan2(pipeDy, pipeDx) + Math.PI * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(clX + Math.cos(pAngle) * 2.2 * zoom, clY + Math.sin(pAngle) * 2.2 * zoom);
+      ctx.lineTo(clX - Math.cos(pAngle) * 2.2 * zoom, clY - Math.sin(pAngle) * 2.2 * zoom);
+      ctx.stroke();
+    }
+
+    // Flanged connector at each end
+    for (const endT of [0, 1]) {
+      const fX = pipeStartX + pipeDx * endT;
+      const fY = pipeStartY + pipeDy * endT;
+      ctx.fillStyle = "#5a7a9a";
+      ctx.beginPath();
+      ctx.arc(fX, fY, 3 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#7aaaba";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+    }
+  }
+
+  // Cross-connecting pipe (follows front iso edge, left to right)
   if (tower.level >= 2) {
-    drawEnergyTube(
-      ctx,
-      screenPos.x - w * 0.6,
-      screenPos.y - h * 0.3 + d * 0.3,
-      screenPos.x + w * 0.6,
-      screenPos.y - h * 0.3 + d * 0.3,
-      2,
-      time + 0.3,
-      zoom,
-      "rgb(100, 255, 255)",
-    );
+    const crossY = screenPos.y - h * 0.3 + d * 0.3;
+    const crossLX = screenPos.x - w * 0.58;
+    const crossRX = screenPos.x + w * 0.58;
+    // Shadow
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.lineWidth = 4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(crossLX + 0.5 * zoom, crossY + 0.8 * zoom);
+    ctx.lineTo(crossRX + 0.5 * zoom, crossY + 0.8 * zoom);
+    ctx.stroke();
+    // Body
+    ctx.strokeStyle = "#3a6a8a";
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(crossLX, crossY);
+    ctx.lineTo(crossRX, crossY);
+    ctx.stroke();
+    // Highlight
+    ctx.strokeStyle = "#6a9aba";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(crossLX, crossY - 0.5 * zoom);
+    ctx.lineTo(crossRX, crossY - 0.5 * zoom);
+    ctx.stroke();
+    // Flow indicator
+    const flowGlow = 0.3 + Math.sin(time * 3) * 0.15;
+    const flowPhase = (time * 2) % 1;
+    const flowX = crossLX + (crossRX - crossLX) * flowPhase;
+    ctx.fillStyle = `rgba(0, 200, 255, ${flowGlow})`;
+    ctx.shadowColor = "#00ccff";
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(flowX, crossY, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   }
 
   // ========== SCAFFOLDING & SUPPORT STRUCTURE (Level 2+) ==========
   if (tower.level >= 2) {
-    // Front-left strut (follows left iso edge)
-    ctx.strokeStyle = "#5a7a9a";
-    ctx.lineWidth = 2.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 1.1, screenPos.y + 6 * zoom);
-    ctx.lineTo(screenPos.x - w * 1.0, screenPos.y - h * 0.7);
-    ctx.stroke();
+    const ws = w * 1.15;
+    const ds = d * 1.15;
+    const scaffBase = screenPos.y + 6 * zoom;
+    const scaffTopY = screenPos.y - h * 0.72;
+    const scaffH = scaffBase - scaffTopY;
 
-    // Front-right strut (follows right iso edge)
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 1.1, screenPos.y + 6 * zoom);
-    ctx.lineTo(screenPos.x + w * 1.0, screenPos.y - h * 0.7);
-    ctx.stroke();
+    // 4 isometric diamond vertices at base and top
+    const labPostBase = [
+      { x: screenPos.x - ws, y: scaffBase },
+      { x: screenPos.x, y: scaffBase + ds },
+      { x: screenPos.x + ws, y: scaffBase },
+      { x: screenPos.x, y: scaffBase - ds },
+    ];
+    const labPostTop = [
+      { x: screenPos.x - ws, y: scaffBase - scaffH },
+      { x: screenPos.x, y: scaffBase + ds - scaffH },
+      { x: screenPos.x + ws, y: scaffBase - scaffH },
+      { x: screenPos.x, y: scaffBase - ds - scaffH },
+    ];
 
-    // Back struts (lighter, behind tower body)
-    ctx.strokeStyle = "#4a6a8a";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.3, screenPos.y - d * 0.7 + 6 * zoom);
-    ctx.lineTo(screenPos.x - w * 0.25, screenPos.y - h * 0.7 - d * 0.1);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.3, screenPos.y - d * 0.7 + 6 * zoom);
-    ctx.lineTo(screenPos.x + w * 0.25, screenPos.y - h * 0.7 - d * 0.1);
-    ctx.stroke();
+    const labFrameLevels = tower.level >= 3 ? [0, 0.3, 0.6, 1] : [0, 0.45, 1];
 
-    // Cross bracing (front-to-back on each side, isometric diagonal)
-    ctx.strokeStyle = "#4a6a8a";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 1.05, screenPos.y - h * 0.1);
-    ctx.lineTo(screenPos.x - w * 0.25, screenPos.y - h * 0.5 - d * 0.1);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 1.05, screenPos.y - h * 0.1);
-    ctx.lineTo(screenPos.x + w * 0.25, screenPos.y - h * 0.5 - d * 0.1);
-    ctx.stroke();
-
-    // Isometric support ring (front arc)
-    ctx.strokeStyle = "#6a8aaa";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y - h * 0.35,
-      w * 1.05,
-      d * 1.05,
-      0,
-      0,
-      Math.PI,
-    );
-    ctx.stroke();
-
-    // Power cables following iso faces with sag
-    ctx.lineWidth = 1.5 * zoom;
-    for (let cable = 0; cable < 2; cable++) {
-      const cableBaseY = screenPos.y - h * (0.2 + cable * 0.25);
-      const sag = Math.sin(time * 2 + cable) * 3 * zoom;
-      // Left face cable (angled along iso left face)
-      ctx.strokeStyle = "#ff6600";
+    const drawLabBeam = (
+      ax: number, ay: number, bx: number, by: number,
+      thickness: number, color: string, highlightAlpha: number,
+    ) => {
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = (thickness + 1.2) * zoom;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - w * 1.0, cableBaseY - d * 0.1);
-      ctx.quadraticCurveTo(
-        screenPos.x - w * 0.7,
-        cableBaseY + sag + d * 0.05,
-        screenPos.x - w * 0.4,
-        cableBaseY - 2 * zoom + d * 0.15,
-      );
+      ctx.moveTo(ax, ay + 0.7 * zoom);
+      ctx.lineTo(bx, by + 0.7 * zoom);
       ctx.stroke();
-      // Right face cable
+      ctx.strokeStyle = color;
+      ctx.lineWidth = thickness * zoom;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + w * 1.0, cableBaseY - d * 0.05);
-      ctx.quadraticCurveTo(
-        screenPos.x + w * 0.7,
-        cableBaseY + sag + d * 0.1,
-        screenPos.x + w * 0.4,
-        cableBaseY - 2 * zoom + d * 0.2,
-      );
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+      if (highlightAlpha > 0) {
+        ctx.strokeStyle = `rgba(120, 220, 255, ${highlightAlpha})`;
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay - 0.5 * zoom);
+        ctx.lineTo(bx, by - 0.5 * zoom);
+        ctx.stroke();
+      }
+    };
+
+    const drawLabBolt = (bx: number, by: number, radius: number, glow: boolean) => {
+      ctx.fillStyle = "#6a8aaa";
+      ctx.beginPath();
+      ctx.arc(bx, by, radius * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      if (glow) {
+        const boltGlow = 0.35 + Math.sin(time * 3 + bx * 0.1) * 0.2;
+        ctx.fillStyle = `rgba(0, 200, 255, ${boltGlow})`;
+        ctx.beginPath();
+        ctx.arc(bx, by, radius * 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = "#4a6a8a";
+        ctx.beginPath();
+        ctx.arc(bx, by, radius * 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    // --- Back faces (behind tower: edges 3->0 and 3->2) ---
+    for (const frac of labFrameLevels) {
+      const hy = scaffH * frac;
+      const lv = { x: labPostBase[0].x, y: labPostBase[0].y - hy };
+      const bv = { x: labPostBase[3].x, y: labPostBase[3].y - hy };
+      const rv = { x: labPostBase[2].x, y: labPostBase[2].y - hy };
+      drawLabBeam(bv.x, bv.y, lv.x, lv.y, 2, "#3a5a7a", 0);
+      drawLabBeam(bv.x, bv.y, rv.x, rv.y, 2, "#2d4a6a", 0);
+    }
+
+    // Back vertical posts
+    drawLabBeam(labPostBase[3].x, labPostBase[3].y, labPostTop[3].x, labPostTop[3].y, 2.2, "#3a5a7a", 0);
+    drawLabBeam(labPostBase[0].x, labPostBase[0].y, labPostTop[0].x, labPostTop[0].y, 2.2, "#3a5a7a", 0.03);
+
+    // Back X-braces
+    if (tower.level >= 3) {
+      ctx.strokeStyle = "rgba(60, 90, 120, 0.45)";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(labPostBase[3].x, labPostBase[3].y);
+      ctx.lineTo(labPostTop[0].x, labPostTop[0].y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(labPostBase[0].x, labPostBase[0].y);
+      ctx.lineTo(labPostTop[3].x, labPostTop[3].y);
       ctx.stroke();
     }
 
-    // Capacitor banks on scaffolding (isometric boxes)
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < 2; i++) {
-        const capX = screenPos.x + side * w * 1.0;
-        const capY = screenPos.y - h * (0.15 + i * 0.2);
-        const capW = 4 * zoom;
-        const capH = 5 * zoom;
-        const capD = 2 * zoom;
+    // --- Front vertical posts ---
+    drawLabBeam(labPostBase[1].x, labPostBase[1].y, labPostTop[1].x, labPostTop[1].y, 2.8, "#5a8aaa", 0.08);
+    drawLabBeam(labPostBase[2].x, labPostBase[2].y, labPostTop[2].x, labPostTop[2].y, 2.5, "#4a7a9a", 0.06);
 
-        // Left face of capacitor
-        ctx.fillStyle = i % 2 === 0 ? "#3a5a7a" : "#4a7a9a";
-        ctx.beginPath();
-        ctx.moveTo(capX - capW, capY);
-        ctx.lineTo(capX, capY + capD);
-        ctx.lineTo(capX, capY + capD - capH);
-        ctx.lineTo(capX - capW, capY - capH);
-        ctx.closePath();
-        ctx.fill();
+    // --- Front horizontal beams (edges 0->1 and 1->2) ---
+    for (const frac of labFrameLevels) {
+      const hy = scaffH * frac;
+      const lv = { x: labPostBase[0].x, y: labPostBase[0].y - hy };
+      const fv = { x: labPostBase[1].x, y: labPostBase[1].y - hy };
+      const rv = { x: labPostBase[2].x, y: labPostBase[2].y - hy };
+      drawLabBeam(lv.x, lv.y, fv.x, fv.y, 2.3, "#5a8aaa", 0.06);
+      drawLabBeam(fv.x, fv.y, rv.x, rv.y, 2.3, "#4a7a9a", 0.04);
+    }
 
-        // Right face of capacitor
-        ctx.fillStyle = i % 2 === 0 ? "#2a4a6a" : "#3a6a8a";
-        ctx.beginPath();
-        ctx.moveTo(capX, capY + capD);
-        ctx.lineTo(capX + capW, capY);
-        ctx.lineTo(capX + capW, capY - capH);
-        ctx.lineTo(capX, capY + capD - capH);
-        ctx.closePath();
-        ctx.fill();
+    // --- Front X-braces ---
+    ctx.strokeStyle = "#4a7090";
+    ctx.lineWidth = 1.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(labPostBase[0].x, labPostBase[0].y);
+    ctx.lineTo(labPostTop[1].x, labPostTop[1].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(labPostBase[1].x, labPostBase[1].y);
+    ctx.lineTo(labPostTop[0].x, labPostTop[0].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(labPostBase[1].x, labPostBase[1].y);
+    ctx.lineTo(labPostTop[2].x, labPostTop[2].y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(labPostBase[2].x, labPostBase[2].y);
+    ctx.lineTo(labPostTop[1].x, labPostTop[1].y);
+    ctx.stroke();
 
-        // Capacitor glow
-        const capGlow = 0.4 + Math.sin(time * 3 + i + side) * 0.3;
-        ctx.strokeStyle = `rgba(0, 200, 255, ${capGlow})`;
-        ctx.lineWidth = 1.5 * zoom;
-        ctx.beginPath();
-        ctx.ellipse(
-          capX,
-          capY - capH * 0.5,
-          capW * 0.8,
-          capD * 0.8,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.stroke();
+    // --- Joint bolts at all intersections ---
+    for (const frac of labFrameLevels) {
+      const hy = scaffH * frac;
+      for (let pi = 0; pi < 4; pi++) {
+        const jx = labPostBase[pi].x;
+        const jy = labPostBase[pi].y - hy;
+        const isFront = pi === 1 || pi === 2;
+        drawLabBolt(jx, jy, isFront ? 2.2 : 1.5, isFront && frac > 0 && frac < 1);
       }
+    }
+
+    // --- Power cables routed along scaffolding with sag ---
+    const cableColors = ["#ff5500", "#00ccff", "#ff5500"];
+    for (let cable = 0; cable < (tower.level >= 3 ? 3 : 2); cable++) {
+      const cableFrac = 0.2 + cable * 0.25;
+      const hy = scaffH * cableFrac;
+      const sag = (3 + Math.sin(time * 1.8 + cable * 1.2) * 2) * zoom;
+
+      // Left face cable: from left post to front post
+      const cLStart = { x: labPostBase[0].x, y: labPostBase[0].y - hy };
+      const cLEnd = { x: screenPos.x - w * 0.35, y: labPostBase[0].y - hy + d * 0.3 };
+      ctx.strokeStyle = cableColors[cable % cableColors.length];
+      ctx.lineWidth = 1.3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(cLStart.x, cLStart.y);
+      ctx.quadraticCurveTo(
+        (cLStart.x + cLEnd.x) / 2,
+        (cLStart.y + cLEnd.y) / 2 + sag,
+        cLEnd.x, cLEnd.y,
+      );
+      ctx.stroke();
+
+      // Cable connector at start
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.arc(cLStart.x, cLStart.y, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Right face cable: from right post to front post
+      const cRStart = { x: labPostBase[2].x, y: labPostBase[2].y - hy };
+      const cREnd = { x: screenPos.x + w * 0.35, y: labPostBase[2].y - hy + d * 0.3 };
+      ctx.strokeStyle = cableColors[cable % cableColors.length];
+      ctx.beginPath();
+      ctx.moveTo(cRStart.x, cRStart.y);
+      ctx.quadraticCurveTo(
+        (cRStart.x + cREnd.x) / 2,
+        (cRStart.y + cREnd.y) / 2 + sag,
+        cREnd.x, cREnd.y,
+      );
+      ctx.stroke();
+
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.arc(cRStart.x, cRStart.y, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // --- Capacitor banks mounted at scaffolding joints ---
+    const capPositions = [
+      { post: 0, frac: 0.35, face: -1 },
+      { post: 2, frac: 0.35, face: 1 },
+      ...(tower.level >= 3
+        ? [{ post: 0, frac: 0.65, face: -1 }, { post: 2, frac: 0.65, face: 1 }]
+        : []),
+    ];
+    for (let ci = 0; ci < capPositions.length; ci++) {
+      const cp = capPositions[ci];
+      const hy = scaffH * cp.frac;
+      const capX = labPostBase[cp.post].x;
+      const capY = labPostBase[cp.post].y - hy;
+      const capW = 4.5 * zoom;
+      const capHt = 6 * zoom;
+      const capD = 2 * zoom;
+
+      // Left face of capacitor (isometric)
+      ctx.fillStyle = ci % 2 === 0 ? "#3a5a7a" : "#4a7a9a";
+      ctx.beginPath();
+      ctx.moveTo(capX - capW, capY);
+      ctx.lineTo(capX, capY + capD);
+      ctx.lineTo(capX, capY + capD - capHt);
+      ctx.lineTo(capX - capW, capY - capHt);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right face of capacitor
+      ctx.fillStyle = ci % 2 === 0 ? "#2a4a6a" : "#3a6a8a";
+      ctx.beginPath();
+      ctx.moveTo(capX, capY + capD);
+      ctx.lineTo(capX + capW, capY);
+      ctx.lineTo(capX + capW, capY - capHt);
+      ctx.lineTo(capX, capY + capD - capHt);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top face
+      ctx.fillStyle = "#5a8aaa";
+      ctx.beginPath();
+      ctx.moveTo(capX - capW, capY - capHt);
+      ctx.lineTo(capX, capY + capD - capHt);
+      ctx.lineTo(capX + capW, capY - capHt);
+      ctx.lineTo(capX, capY - capD - capHt);
+      ctx.closePath();
+      ctx.fill();
+
+      // Energy indicator glow ring
+      const capGlow = 0.4 + Math.sin(time * 3 + ci * 1.5) * 0.25;
+      ctx.strokeStyle = `rgba(0, 200, 255, ${capGlow})`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(capX, capY - capHt * 0.5, capW * 0.7, capD * 0.7, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Terminal nubs on top
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(capX - capW * 0.3, capY - capHt - capD * 0.2, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(capX + capW * 0.3, capY - capHt - capD * 0.2, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
@@ -13071,30 +14675,52 @@ function renderLabTower(
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Additional wiring network
-    ctx.strokeStyle = "#ff4400";
-    ctx.lineWidth = 1 * zoom;
-    for (let wire = 0; wire < 4; wire++) {
-      const wireY = screenPos.y - h * (0.1 + wire * 0.15);
-      const wireSag = Math.sin(time * 2 + wire) * 2 * zoom;
+    // Bundled wiring harness (from side coils to tower body)
+    const wireColors = ["#ff4400", "#00bbdd", "#ff6622", "#00ddaa"];
+    const wireCount = 4 + tower.level;
+    for (let wire = 0; wire < wireCount; wire++) {
+      const wireFrac = 0.08 + (wire / wireCount) * 0.55;
+      const wireBaseY = screenPos.y - h * wireFrac;
+      const wireSag = (2.5 + Math.sin(time * 1.6 + wire * 0.9) * 1.8) * zoom;
+      const wireSpread = (wire % 2 === 0 ? 0.5 : -0.5) * zoom;
+
+      ctx.strokeStyle = wireColors[wire % wireColors.length];
+      ctx.lineWidth = (0.8 + (wire % 3) * 0.2) * zoom;
+
+      // Left side: from side coil scaffold to tower body
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - w * 1.2, wireY);
-      ctx.quadraticCurveTo(
-        screenPos.x - w * 0.9,
-        wireY + wireSag,
-        screenPos.x - w * 0.7,
-        wireY,
+      ctx.moveTo(screenPos.x - w * 1.18, wireBaseY + wireSpread);
+      ctx.bezierCurveTo(
+        screenPos.x - w * 0.95, wireBaseY + wireSag + wireSpread,
+        screenPos.x - w * 0.75, wireBaseY + wireSag * 0.6,
+        screenPos.x - w * 0.5, wireBaseY + d * 0.15,
       );
       ctx.stroke();
+
+      // Right side
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + w * 1.2, wireY);
-      ctx.quadraticCurveTo(
-        screenPos.x + w * 0.9,
-        wireY + wireSag,
-        screenPos.x + w * 0.7,
-        wireY,
+      ctx.moveTo(screenPos.x + w * 1.18, wireBaseY - wireSpread);
+      ctx.bezierCurveTo(
+        screenPos.x + w * 0.95, wireBaseY + wireSag - wireSpread,
+        screenPos.x + w * 0.75, wireBaseY + wireSag * 0.6,
+        screenPos.x + w * 0.5, wireBaseY + d * 0.15,
       );
       ctx.stroke();
+    }
+
+    // Wire bundle clamps at tower body entry points
+    for (const side of [-1, 1]) {
+      for (let ci = 0; ci < 2; ci++) {
+        const clampY = screenPos.y - h * (0.18 + ci * 0.28);
+        const clampX = screenPos.x + side * w * 0.52;
+        ctx.fillStyle = "#3a5a7a";
+        ctx.beginPath();
+        ctx.ellipse(clampX, clampY + d * 0.15, 3 * zoom, 1.5 * zoom, side * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#5a8aaa";
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.stroke();
+      }
     }
 
     // Rotating plasma field around main tower
@@ -13372,258 +14998,355 @@ function renderLabTower(
   }
   ctx.restore();
 
-  // Add sci-fi panel details on left face (flipped orientation)
-  const panelGlow = 0.4 + Math.sin(time * 3) * 0.2;
-  ctx.strokeStyle = `rgba(0, 255, 255, ${panelGlow})`;
-  ctx.lineWidth = 1 * zoom;
+  // ========== SURFACE TECH CONDUIT RUNS ==========
+  const conduitGlow = 0.3 + Math.sin(time * 2.5) * 0.12;
 
-  // Left face horizontal tech lines (flipped)
   for (let i = 1; i <= tower.level + 1; i++) {
     const lineY =
       screenPos.y +
       2 * zoom -
       ((baseHeight - 6) * zoom * i) / (tower.level + 2);
+
+    // Left face conduit — bezier for natural routing
+    ctx.strokeStyle = `rgba(0, 200, 255, ${conduitGlow})`;
+    ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.2, lineY + d * 0.3);
-    ctx.lineTo(screenPos.x - w * 0.85, lineY - d * 0.2);
+    ctx.moveTo(screenPos.x - w * 0.15, lineY + d * 0.25);
+    ctx.quadraticCurveTo(
+      screenPos.x - w * 0.5,
+      lineY + d * 0.1 - 1.5 * zoom,
+      screenPos.x - w * 0.82,
+      lineY - d * 0.18,
+    );
     ctx.stroke();
-  }
 
-  // Right face tech lines (flipped)
-  for (let i = 1; i <= tower.level + 1; i++) {
-    const lineY =
-      screenPos.y +
-      2 * zoom -
-      ((baseHeight - 6) * zoom * i) / (tower.level + 2);
+    // Right face conduit
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.85, lineY - d * 0.2);
-    ctx.lineTo(screenPos.x + w * 0.2, lineY + d * 0.3);
+    ctx.moveTo(screenPos.x + w * 0.15, lineY + d * 0.25);
+    ctx.quadraticCurveTo(
+      screenPos.x + w * 0.5,
+      lineY + d * 0.1 - 1.5 * zoom,
+      screenPos.x + w * 0.82,
+      lineY - d * 0.18,
+    );
     ctx.stroke();
-  }
 
-  // ========== ANIMATED COOLANT FLOW ==========
-  // Coolant tanks on sides
-  ctx.fillStyle = "#1a4a6a";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x - w * 0.75,
-    screenPos.y - h * 0.15,
-    5 * zoom,
-    8 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x + w * 0.75,
-    screenPos.y - h * 0.15,
-    5 * zoom,
-    8 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Animated coolant bubbles
-  for (let i = 0; i < 3; i++) {
-    const bubblePhase = (time * 2 + i * 0.4) % 1;
-    const bubbleY = screenPos.y - h * 0.05 - bubblePhase * h * 0.2;
-    const bubbleAlpha = Math.sin(bubblePhase * Math.PI) * 0.6;
-
-    ctx.fillStyle = `rgba(100, 200, 255, ${bubbleAlpha})`;
-    ctx.beginPath();
-    ctx.arc(
-      screenPos.x - w * 0.75 + (i - 1) * 2 * zoom,
-      bubbleY,
+    // Junction boxes at endpoints
+    ctx.fillStyle = "#2a5a7a";
+    ctx.fillRect(
+      screenPos.x - w * 0.85 - 1.5 * zoom,
+      lineY - d * 0.2 - 1 * zoom,
+      3 * zoom,
       2 * zoom,
+    );
+    ctx.fillRect(
+      screenPos.x + w * 0.82 - 1.5 * zoom,
+      lineY - d * 0.2 - 1 * zoom,
+      3 * zoom,
+      2 * zoom,
+    );
+  }
+
+  // ========== RADIATOR UNITS (isometric heat exchangers) ==========
+  for (const side of [-1, 1]) {
+    const radX = screenPos.x + side * w * 0.75;
+    const radY = screenPos.y - h * 0.15;
+    const radW = 5 * zoom;
+    const radHt = 14 * zoom;
+
+    // Radiator body (isometric box)
+    const radDOff = 2 * zoom;
+    // Left face
+    ctx.fillStyle = side === -1 ? "#1a4a6a" : "#153d5a";
+    ctx.beginPath();
+    ctx.moveTo(radX - radW, radY);
+    ctx.lineTo(radX, radY + radDOff);
+    ctx.lineTo(radX, radY + radDOff - radHt);
+    ctx.lineTo(radX - radW, radY - radHt);
+    ctx.closePath();
+    ctx.fill();
+    // Right face
+    ctx.fillStyle = side === -1 ? "#153d5a" : "#1a4a6a";
+    ctx.beginPath();
+    ctx.moveTo(radX, radY + radDOff);
+    ctx.lineTo(radX + radW, radY);
+    ctx.lineTo(radX + radW, radY - radHt);
+    ctx.lineTo(radX, radY + radDOff - radHt);
+    ctx.closePath();
+    ctx.fill();
+    // Top face
+    ctx.fillStyle = "#2a5a7a";
+    ctx.beginPath();
+    ctx.moveTo(radX - radW, radY - radHt);
+    ctx.lineTo(radX, radY + radDOff - radHt);
+    ctx.lineTo(radX + radW, radY - radHt);
+    ctx.lineTo(radX, radY - radDOff - radHt);
+    ctx.closePath();
+    ctx.fill();
+
+    // Radiator fins (horizontal lines)
+    ctx.strokeStyle = "rgba(30, 80, 120, 0.5)";
+    ctx.lineWidth = 0.5 * zoom;
+    for (let fin = 1; fin < 8; fin++) {
+      const finT = fin / 8;
+      const finY = radY - radHt * finT;
+      ctx.beginPath();
+      ctx.moveTo(radX - radW, finY);
+      ctx.lineTo(radX, finY + radDOff);
+      ctx.lineTo(radX + radW, finY);
+      ctx.stroke();
+    }
+
+    // Coolant inlet/outlet pipes
+    ctx.fillStyle = "#3a6a8a";
+    ctx.beginPath();
+    ctx.arc(radX, radY - radHt - radDOff + zoom, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(radX, radY + radDOff - zoom, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Heat shimmer glow
+    const heatGlow = 0.15 + Math.sin(time * 3 + side * 2) * 0.1;
+    ctx.fillStyle = `rgba(0, 200, 255, ${heatGlow})`;
+    ctx.beginPath();
+    ctx.ellipse(
+      radX,
+      radY - radHt * 0.5,
+      radW * 1.3,
+      radHt * 0.4,
+      0,
       0,
       Math.PI * 2,
     );
     ctx.fill();
-    ctx.beginPath();
-    ctx.arc(
-      screenPos.x + w * 0.75 + (i - 1) * 2 * zoom,
-      bubbleY + 3 * zoom,
-      2 * zoom,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
   }
 
-  // Glowing vents on sides with enhanced glow
+  // Exhaust vents (louvered openings on the tower face)
   for (let i = 0; i < tower.level; i++) {
     const ventY = screenPos.y - h * 0.3 - i * 12 * zoom;
-    const ventGlow = 0.5 + Math.sin(time * 4 + i * 0.5) * 0.3;
+    for (const side of [-1, 1]) {
+      const ventX = screenPos.x + side * w * 0.55;
+      const ventW = 5 * zoom;
+      const ventH = 3 * zoom;
 
-    ctx.shadowColor = "#00ffff";
-    ctx.shadowBlur = 8 * zoom;
+      // Vent housing
+      ctx.fillStyle = "#1a3545";
+      ctx.fillRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
+      ctx.strokeStyle = "#3a6a8a";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.strokeRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
 
-    // Left vent
-    ctx.fillStyle = `rgba(0, 255, 255, ${ventGlow})`;
+      // Louver slats
+      ctx.strokeStyle = "#2a5a75";
+      ctx.lineWidth = 0.4 * zoom;
+      for (let sl = 0; sl < 3; sl++) {
+        const slY = ventY - ventH * 0.35 + sl * ventH * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(ventX - ventW * 0.4, slY);
+        ctx.lineTo(ventX + ventW * 0.4, slY);
+        ctx.stroke();
+      }
+
+      // Vent glow
+      const ventGlow = 0.25 + Math.sin(time * 4 + i * 0.5 + side) * 0.15;
+      ctx.fillStyle = `rgba(0, 200, 255, ${ventGlow})`;
+      ctx.fillRect(
+        ventX - ventW * 0.4,
+        ventY - ventH * 0.35,
+        ventW * 0.8,
+        ventH * 0.7,
+      );
+    }
+  }
+
+  // ========== PCB CIRCUIT TRACES WITH ANIMATED CURRENT ==========
+  // Multi-path circuit traces (more complex routing)
+  for (const side of [-1, 1]) {
+    const traceX0 = screenPos.x + side * w * 0.35;
+    const traceX1 = screenPos.x + side * w * 0.55;
+    const traceX2 = screenPos.x + side * w * 0.72;
+
+    // Main vertical trace
+    ctx.strokeStyle = "#4a7a9a";
+    ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x - w * 0.6,
-      ventY + d * 0.2,
-      4 * zoom,
-      2 * zoom,
-      0.4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+    ctx.moveTo(traceX0, screenPos.y - h * 0.15);
+    ctx.lineTo(traceX0, screenPos.y - h * 0.35);
+    ctx.stroke();
 
-    // Right vent
+    // Horizontal branch
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x + w * 0.6,
-      ventY + d * 0.2,
-      4 * zoom,
-      2 * zoom,
-      -0.4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
+    ctx.moveTo(traceX0, screenPos.y - h * 0.35);
+    ctx.lineTo(traceX1, screenPos.y - h * 0.38);
+    ctx.stroke();
 
+    // Diagonal branch to node
+    ctx.beginPath();
+    ctx.moveTo(traceX1, screenPos.y - h * 0.38);
+    ctx.lineTo(traceX2, screenPos.y - h * 0.48);
+    ctx.stroke();
+
+    // Secondary trace (thinner)
+    ctx.strokeStyle = "#3a6a8a";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(traceX0 + side * 3 * zoom, screenPos.y - h * 0.2);
+    ctx.lineTo(traceX0 + side * 3 * zoom, screenPos.y - h * 0.32);
+    ctx.lineTo(traceX1, screenPos.y - h * 0.42);
+    ctx.stroke();
+
+    // Animated current pulse traveling along trace
+    const currentPhase = (time * 2.5 + (side > 0 ? 0.5 : 0)) % 1;
+    let cpX: number, cpY: number;
+    if (currentPhase < 0.4) {
+      const t = currentPhase / 0.4;
+      cpX = traceX0;
+      cpY = screenPos.y - h * (0.15 + t * 0.2);
+    } else if (currentPhase < 0.7) {
+      const t = (currentPhase - 0.4) / 0.3;
+      cpX = traceX0 + (traceX1 - traceX0) * t;
+      cpY = screenPos.y - h * 0.35 + (screenPos.y - h * 0.38 - (screenPos.y - h * 0.35)) * t;
+    } else {
+      const t = (currentPhase - 0.7) / 0.3;
+      cpX = traceX1 + (traceX2 - traceX1) * t;
+      cpY = screenPos.y - h * 0.38 + (screenPos.y - h * 0.48 - (screenPos.y - h * 0.38)) * t;
+    }
+
+    const pulseAlpha = Math.sin(currentPhase * Math.PI) * 0.8;
+    ctx.fillStyle = `rgba(0, 220, 255, ${pulseAlpha})`;
+    ctx.shadowColor = "#00ccff";
+    ctx.shadowBlur = 5 * zoom;
+    ctx.beginPath();
+    ctx.arc(cpX, cpY, 1.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
     ctx.shadowBlur = 0;
+
+    // Terminal node at end
+    const nodeGlow = 0.5 + Math.sin(time * 4 + side * 2) * 0.25;
+    ctx.fillStyle = "#2a5a7a";
+    ctx.beginPath();
+    ctx.arc(traceX2, screenPos.y - h * 0.48, 3.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = `rgba(0, 220, 255, ${nodeGlow})`;
+    ctx.shadowColor = "#00ccff";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.arc(traceX2, screenPos.y - h * 0.48, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // SMD component pads along traces
+    ctx.fillStyle = "#5a8aaa";
+    const padPositions = [0.22, 0.28, 0.33];
+    for (const padT of padPositions) {
+      const padY = screenPos.y - h * padT;
+      ctx.fillRect(
+        traceX0 - 1.5 * zoom,
+        padY - 0.8 * zoom,
+        3 * zoom,
+        1.6 * zoom,
+      );
+    }
   }
 
-  // ========== CIRCUIT BOARD PATTERNS WITH ANIMATED CURRENT ==========
-  ctx.strokeStyle = "#5a8aab";
+  // ========== DIAGNOSTIC DISPLAY PANEL ==========
+  const dispX = screenPos.x;
+  const dispY = screenPos.y - h * 0.38;
+  const dispW = 12 * zoom;
+  const dispH = 10 * zoom;
+
+  // Panel housing
+  ctx.fillStyle = "#0a1a28";
+  ctx.fillRect(dispX - dispW * 0.5, dispY, dispW, dispH);
+  // Beveled frame
+  ctx.strokeStyle = "#3a6a8a";
   ctx.lineWidth = 1.5 * zoom;
-
-  // Left circuit (flipped to go other direction)
-  ctx.beginPath();
-  ctx.moveTo(screenPos.x - w * 0.4, screenPos.y - h * 0.2);
-  ctx.lineTo(screenPos.x - w * 0.4, screenPos.y - h * 0.4);
-  ctx.lineTo(screenPos.x - w * 0.7, screenPos.y - h * 0.5);
-  ctx.stroke();
-
-  // Right circuit (flipped)
-  ctx.beginPath();
-  ctx.moveTo(screenPos.x + w * 0.4, screenPos.y - h * 0.2);
-  ctx.lineTo(screenPos.x + w * 0.4, screenPos.y - h * 0.4);
-  ctx.lineTo(screenPos.x + w * 0.7, screenPos.y - h * 0.5);
-  ctx.stroke();
-
-  // Animated current flowing through circuits
-  const currentPhase = (time * 3) % 1;
-  ctx.fillStyle = `rgba(0, 255, 255, ${0.8})`;
-  ctx.shadowColor = "#00ffff";
-  ctx.shadowBlur = 6 * zoom;
-
-  // Left circuit current
-  const leftCurrentX = screenPos.x - w * (0.4 + currentPhase * 0.3);
-  const leftCurrentY = screenPos.y - h * (0.2 + currentPhase * 0.3);
-  ctx.beginPath();
-  ctx.arc(leftCurrentX, leftCurrentY, 2 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Right circuit current
-  const rightCurrentX = screenPos.x + w * (0.4 + currentPhase * 0.3);
-  const rightCurrentY = screenPos.y - h * (0.2 + currentPhase * 0.3);
-  ctx.beginPath();
-  ctx.arc(rightCurrentX, rightCurrentY, 2 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.shadowBlur = 0;
-
-  // Node points with enhanced glow
-  const nodeGlow = 0.6 + Math.sin(time * 5) * 0.3;
-  ctx.fillStyle = `rgba(0, 255, 255, ${nodeGlow})`;
-  ctx.shadowColor = "#00ffff";
-  ctx.shadowBlur = 10 * zoom;
-  ctx.beginPath();
-  ctx.arc(
-    screenPos.x - w * 0.7,
-    screenPos.y - h * 0.5,
-    3 * zoom,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(
-    screenPos.x + w * 0.7,
-    screenPos.y - h * 0.5,
-    3 * zoom,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // ========== HOLOGRAPHIC DATA DISPLAY ==========
-  ctx.fillStyle = "#0a2030";
-  const screenW = 10 * zoom;
-  const screenH = 8 * zoom;
-  ctx.fillRect(
-    screenPos.x - screenW / 2,
-    screenPos.y - h * 0.38,
-    screenW,
-    screenH,
-  );
-
-  // Screen frame glow
-  ctx.strokeStyle = `rgba(0, 255, 255, ${0.6 + Math.sin(time * 3) * 0.2})`;
-  ctx.lineWidth = 1.5 * zoom;
+  ctx.strokeRect(dispX - dispW * 0.5, dispY, dispW, dispH);
+  // Inner bezel
+  ctx.strokeStyle = "#2a5a75";
+  ctx.lineWidth = 0.5 * zoom;
   ctx.strokeRect(
-    screenPos.x - screenW / 2,
-    screenPos.y - h * 0.38,
-    screenW,
-    screenH,
+    dispX - dispW * 0.5 + 1.5 * zoom,
+    dispY + 1.5 * zoom,
+    dispW - 3 * zoom,
+    dispH - 3 * zoom,
   );
 
-  // Screen content (scrolling data with waveform)
-  ctx.fillStyle = `rgba(0, 255, 255, 0.8)`;
-  for (let i = 0; i < 4; i++) {
-    const lineOffset = (time * 30 + i * 2) % 8;
-    ctx.fillRect(
-      screenPos.x - screenW / 2 + 1 * zoom,
-      screenPos.y - h * 0.38 + lineOffset * zoom,
-      (3 + Math.sin(time * 15 + i * 2) * 2) * zoom,
-      1 * zoom,
+  // Screen content — scrolling hex data
+  const screenGlow = 0.6 + Math.sin(time * 3) * 0.2;
+  ctx.fillStyle = `rgba(0, 200, 255, ${screenGlow * 0.7})`;
+  ctx.font = `${3.5 * zoom}px monospace`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  const hexChars = "0123456789ABCDEF";
+  for (let row = 0; row < 3; row++) {
+    let hexStr = "";
+    for (let ch = 0; ch < 4; ch++) {
+      const idx = Math.floor(
+        (Math.sin(time * 4 + row * 2.3 + ch * 1.7) * 0.5 + 0.5) * 16,
+      );
+      hexStr += hexChars[idx % 16];
+    }
+    ctx.fillText(
+      hexStr,
+      dispX - dispW * 0.4,
+      dispY + 2.5 * zoom + row * 3 * zoom,
     );
   }
 
-  // Waveform on screen
-  ctx.strokeStyle = `rgba(0, 255, 255, 0.9)`;
-  ctx.lineWidth = 1 * zoom;
+  // Waveform overlay
+  ctx.strokeStyle = `rgba(0, 255, 255, ${screenGlow})`;
+  ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  for (let i = 0; i < 8; i++) {
-    const waveX = screenPos.x - screenW / 2 + 1 * zoom + i * zoom;
-    const waveY =
-      screenPos.y - h * 0.34 + Math.sin(time * 10 + i * 0.8) * 2 * zoom;
+  for (let i = 0; i < 10; i++) {
+    const waveX = dispX - dispW * 0.4 + i * 1.1 * zoom;
+    const waveY = dispY + dispH * 0.75 + Math.sin(time * 8 + i * 0.9) * 1.5 * zoom;
     if (i === 0) ctx.moveTo(waveX, waveY);
     else ctx.lineTo(waveX, waveY);
   }
   ctx.stroke();
 
-  // ========== WARNING LIGHTS ==========
-  drawWarningLight(
-    ctx,
-    screenPos.x - w * 0.85,
-    screenPos.y - h * 0.1,
-    2.5,
-    time,
-    zoom,
-    "#00ffff",
-    5,
-  );
-  drawWarningLight(
-    ctx,
-    screenPos.x + w * 0.85,
-    screenPos.y - h * 0.1,
-    2.5,
-    time + 0.3,
-    zoom,
-    "#00ffff",
-    5,
-  );
+  // Status LED
+  const ledOn = Math.sin(time * 6) > 0;
+  ctx.fillStyle = ledOn ? "rgba(0, 255, 100, 0.8)" : "rgba(0, 60, 30, 0.5)";
+  ctx.beginPath();
+  ctx.arc(dispX + dispW * 0.35, dispY + 2.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ========== HAZARD BEACON LIGHTS ==========
+  const beaconPositions = [
+    { x: screenPos.x - w * 0.85, y: screenPos.y - h * 0.1, phase: 0 },
+    { x: screenPos.x + w * 0.85, y: screenPos.y - h * 0.1, phase: 0.3 },
+  ];
+  for (const bp of beaconPositions) {
+    // Beacon mount
+    ctx.fillStyle = "#3a5a7a";
+    ctx.fillRect(bp.x - 1.5 * zoom, bp.y, 3 * zoom, 3 * zoom);
+
+    // Beacon dome
+    ctx.fillStyle = "#2a4a6a";
+    ctx.beginPath();
+    ctx.arc(bp.x, bp.y, 2.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Rotating beam effect
+    const beamAngle = time * 5 + bp.phase * Math.PI * 2;
+    const beamAlpha = 0.4 + Math.sin(beamAngle) * 0.3;
+    ctx.fillStyle = `rgba(0, 200, 255, ${beamAlpha})`;
+    ctx.shadowColor = "#00ccff";
+    ctx.shadowBlur = 5 * zoom;
+    ctx.beginPath();
+    ctx.arc(bp.x, bp.y, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Beacon lens highlight
+    ctx.fillStyle = "rgba(150, 230, 255, 0.3)";
+    ctx.beginPath();
+    ctx.arc(bp.x - 0.5 * zoom, bp.y - 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   const topY = screenPos.y - baseHeight * zoom;
 
@@ -16952,7 +18675,7 @@ function renderArchTower(
       ? "100, 200, 255"
       : "50, 200, 100";
 
-  // === MYSTICAL FOUNDATION BASE ===
+  // === STEPPED STONE FOUNDATION ===
   const subBuildingWidth = baseWidth + 20;
   const subBuildingHeight = 18;
   const subBounce =
@@ -16960,14 +18683,32 @@ function renderArchTower(
       ? Math.sin(time * 6) * 2 * zoom
       : Math.sin(time * 3) * 1 * zoom;
 
-  // Ancient stone foundation with mystical glow
+  // Lowest step — rough-hewn stone plinth
+  drawIsometricPrism(
+    ctx,
+    screenPos.x + foundationShift * 0.3,
+    screenPos.y + 22 * zoom,
+    subBuildingWidth + 12 + pillarSpread * 2,
+    baseDepth + 40 + pillarSpread * 2,
+    3,
+    {
+      top: "#3a2a1a",
+      left: "#2a1a0a",
+      right: "#1a0a00",
+      leftBack: "#4a3a2a",
+      rightBack: "#3a2a1a",
+    },
+    zoom,
+  );
+
+  // Middle step — dressed stone
   drawIsometricPrism(
     ctx,
     screenPos.x + foundationShift * 0.3,
     screenPos.y + 20 * zoom,
     subBuildingWidth + 8 + pillarSpread * 2,
     baseDepth + 36 + pillarSpread * 2,
-    6,
+    4,
     {
       top: "#5a4a3a",
       left: "#4a3a2a",
@@ -16978,56 +18719,7 @@ function renderArchTower(
     zoom,
   );
 
-  // Foundation rune circle on ground
-  const runeCircleGlow = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.4;
-  ctx.strokeStyle = `rgba(${glowColor}, ${runeCircleGlow})`;
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y + 18 * zoom,
-    (subBuildingWidth + 4 + pillarSpread * 2) * zoom * 0.4,
-    (baseDepth + 32 + pillarSpread * 2) * zoom * 0.2,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Inner rune circle
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y + 18 * zoom,
-    (subBuildingWidth - 4 + pillarSpread * 2) * zoom * 0.35,
-    (baseDepth + 24 + pillarSpread * 2) * zoom * 0.18,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Ground rune symbols
-  const groundRunes = ["ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ", "ᚺ", "ᛁ", "ᛃ"];
-  ctx.fillStyle = `rgba(${glowColor}, ${runeCircleGlow + 0.1})`;
-  ctx.font = `${8 * zoom}px serif`;
-  ctx.textAlign = "center";
-  for (let i = 0; i < 8; i++) {
-    const runeAngle = (i / 8) * Math.PI * 2 + time * 0.2;
-    const runeX =
-      screenPos.x +
-      Math.cos(runeAngle) *
-        (subBuildingWidth - 2 + pillarSpread * 2) *
-        zoom *
-        0.35;
-    const runeY =
-      screenPos.y +
-      18 * zoom +
-      Math.sin(runeAngle) * (baseDepth + 20 + pillarSpread * 2) * zoom * 0.16;
-    ctx.fillText(groundRunes[i], runeX, runeY);
-  }
-
-  // Lower foundation block
+  // Upper step — polished foundation
   drawIsometricPrism(
     ctx,
     screenPos.x + foundationShift * 0.3,
@@ -17045,48 +18737,93 @@ function renderArchTower(
     zoom,
   );
 
-  // Corner buttress supports (mystical stone pillars)
-  for (const corner of [0, 1, 2, 3]) {
-    const cx =
-      screenPos.x +
-      (corner < 2 ? -1 : 1) *
-        ((subBuildingWidth + pillarSpread * 2) * 0.42) *
-        zoom;
-    const cy =
-      screenPos.y +
-      14 * zoom +
-      (corner % 2 === 0 ? -1 : 1) *
-        (baseDepth + 20 + pillarSpread * 2) *
-        zoom *
-        0.18;
+  // Gold trim along upper step front edge
+  const fndHW = (subBuildingWidth + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR;
+  const fndHD = (baseDepth + 28 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR;
+  ctx.strokeStyle = `rgba(201, 162, 39, ${0.3 + Math.sin(time * 1.5) * 0.1})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x + foundationShift * 0.3 - fndHW, screenPos.y + 4 * zoom);
+  ctx.lineTo(screenPos.x + foundationShift * 0.3, screenPos.y + 4 * zoom + fndHD);
+  ctx.lineTo(screenPos.x + foundationShift * 0.3 + fndHW, screenPos.y + 4 * zoom);
+  ctx.stroke();
 
-    // Buttress pillar
-    ctx.fillStyle = "#6a5a4a";
+  // Foundation rune circle on upper step
+  const runeCircleGlow = 0.3 + Math.sin(time * 2) * 0.15 + attackPulse * 0.4;
+  const runeRX = (subBuildingWidth + pillarSpread * 2) * zoom * 0.38;
+  const runeRY = (baseDepth + 28 + pillarSpread * 2) * zoom * 0.18;
+  ctx.strokeStyle = `rgba(${glowColor}, ${runeCircleGlow})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 4 * zoom, runeRX, runeRY, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner rune circle
+  ctx.strokeStyle = `rgba(${glowColor}, ${runeCircleGlow * 0.6})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 4 * zoom, runeRX * 0.7, runeRY * 0.7, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Ground rune symbols
+  const groundRunes = ["ᚨ", "ᚱ", "ᚲ", "ᚷ", "ᚹ", "ᚺ", "ᛁ", "ᛃ"];
+  ctx.fillStyle = `rgba(${glowColor}, ${runeCircleGlow + 0.1})`;
+  ctx.font = `${8 * zoom}px serif`;
+  ctx.textAlign = "center";
+  for (let i = 0; i < 8; i++) {
+    const runeAngle = (i / 8) * Math.PI * 2 + time * 0.2;
+    const runeX = screenPos.x + Math.cos(runeAngle) * runeRX * 0.85;
+    const runeY = screenPos.y + 4 * zoom + Math.sin(runeAngle) * runeRY * 0.85;
+    ctx.fillText(groundRunes[i], runeX, runeY);
+  }
+
+  // Corner buttress supports — proper isometric prism pillars
+  const buttressPositions = [
+    { sx: -1, sy: -1 },
+    { sx: -1, sy: 1 },
+    { sx: 1, sy: -1 },
+    { sx: 1, sy: 1 },
+  ];
+  for (let corner = 0; corner < 4; corner++) {
+    const bp = buttressPositions[corner];
+    const cx = screenPos.x + bp.sx * ((subBuildingWidth + pillarSpread * 2) * 0.42) * zoom;
+    const cy = screenPos.y + 14 * zoom + bp.sy * (baseDepth + 20 + pillarSpread * 2) * zoom * 0.18;
+
+    // Buttress as isometric prism
+    drawIsometricPrism(ctx, cx, cy + 4 * zoom, 7, 7, 16, {
+      top: "#8a7a6a",
+      left: "#6a5a4a",
+      right: "#5a4a3a",
+      leftBack: "#7a6a5a",
+      rightBack: "#6a5a4a",
+    }, zoom);
+
+    // Buttress pyramid cap
+    const capY2 = cy + 4 * zoom - 16 * zoom;
+    ctx.fillStyle = "#9a8a7a";
     ctx.beginPath();
-    ctx.moveTo(cx, cy - 14 * zoom);
-    ctx.lineTo(cx - 4 * zoom, cy - 8 * zoom);
-    ctx.lineTo(cx - 4 * zoom, cy + 4 * zoom);
-    ctx.lineTo(cx + 4 * zoom, cy + 4 * zoom);
-    ctx.lineTo(cx + 4 * zoom, cy - 8 * zoom);
+    ctx.moveTo(cx, capY2 - 5 * zoom);
+    ctx.lineTo(cx - 4.5 * zoom, capY2);
+    ctx.lineTo(cx, capY2 + 2 * zoom);
+    ctx.lineTo(cx + 4.5 * zoom, capY2);
     ctx.closePath();
     ctx.fill();
 
-    // Buttress cap
-    ctx.fillStyle = "#8a7a6a";
+    // Gold finial
+    ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.moveTo(cx, cy - 18 * zoom);
-    ctx.lineTo(cx - 5 * zoom, cy - 12 * zoom);
-    ctx.lineTo(cx + 5 * zoom, cy - 12 * zoom);
-    ctx.closePath();
+    ctx.arc(cx, capY2 - 6 * zoom, 1.3 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
     // Buttress rune glow
-    const buttressGlow =
-      0.4 + Math.sin(time * 3 + corner) * 0.25 + attackPulse * 0.3;
+    const buttressGlow = 0.4 + Math.sin(time * 3 + corner) * 0.25 + attackPulse * 0.3;
     ctx.fillStyle = `rgba(${glowColor}, ${buttressGlow})`;
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 3 * zoom;
     ctx.beginPath();
-    ctx.arc(cx, cy - 4 * zoom, 2 * zoom, 0, Math.PI * 2);
+    ctx.arc(cx, cy - 2 * zoom, 2 * zoom, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
   }
 
   // Sub-building main structure
@@ -17432,22 +19169,56 @@ function renderArchTower(
     ctx.stroke();
   }
 
-  // --- Moss/weathering at base ---
-  ctx.fillStyle = `rgba(55, 110, 45, ${0.07 + Math.sin(time * 0.4) * 0.02})`;
-  for (let i = 0; i < 3; i++) {
-    const mx = sbBaseX + (i - 1) * 16 * zoom;
+  // --- Left face weathering gradient (rain stain) ---
+  const lwGrad = ctx.createLinearGradient(
+    sbBaseX - sbHalfW, sbBaseY - sbH,
+    sbBaseX, sbBaseY,
+  );
+  lwGrad.addColorStop(0, "rgba(40, 30, 20, 0.12)");
+  lwGrad.addColorStop(0.4, "rgba(40, 30, 20, 0.05)");
+  lwGrad.addColorStop(1, "rgba(40, 30, 20, 0)");
+  ctx.fillStyle = lwGrad;
+  ctx.beginPath();
+  ctx.moveTo(sbBaseX, sbBaseY + sbDepthOff);
+  ctx.lineTo(sbBaseX - sbHalfW, sbBaseY);
+  ctx.lineTo(sbBaseX - sbHalfW, sbBaseY - sbH);
+  ctx.lineTo(sbBaseX, sbBaseY - sbH + sbDepthOff);
+  ctx.closePath();
+  ctx.fill();
+
+  // --- Moss/weathering at base (improved with lichen patches) ---
+  const mossPatches = [
+    { x: -1.2, s: 3.0 }, { x: -0.3, s: 2.2 }, { x: 0.5, s: 2.8 },
+    { x: 1.1, s: 2.0 }, { x: -0.7, s: 1.5 },
+  ];
+  for (let i = 0; i < mossPatches.length; i++) {
+    const mp = mossPatches[i];
+    const mx = sbBaseX + mp.x * 14 * zoom;
     const my = sbBaseY - 1 * zoom;
+    // Darker moss shadow
+    ctx.fillStyle = `rgba(35, 80, 30, ${0.06 + Math.sin(time * 0.4 + i) * 0.02})`;
     ctx.beginPath();
-    ctx.ellipse(
-      mx,
-      my,
-      (2.5 + Math.sin(i * 3.1) * 0.5) * zoom,
-      0.8 * zoom,
-      i * 0.3,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(mx, my + 0.5 * zoom, mp.s * zoom, 1 * zoom, i * 0.4, 0, Math.PI * 2);
     ctx.fill();
+    // Lighter moss
+    ctx.fillStyle = `rgba(65, 120, 50, ${0.05 + Math.sin(time * 0.4 + i * 2) * 0.02})`;
+    ctx.beginPath();
+    ctx.ellipse(mx, my, (mp.s - 0.5) * zoom, 0.7 * zoom, i * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // --- Ivy tendrils climbing up left face ---
+  ctx.strokeStyle = "rgba(50, 100, 40, 0.08)";
+  ctx.lineWidth = 1 * zoom;
+  for (let iv = 0; iv < 2; iv++) {
+    const ivX = sbBaseX - sbHalfW * (0.3 + iv * 0.35);
+    ctx.beginPath();
+    ctx.moveTo(ivX, sbBaseY);
+    ctx.quadraticCurveTo(
+      ivX + Math.sin(iv * 2.3) * 3 * zoom, sbBaseY - sbH * 0.3,
+      ivX - 1 * zoom, sbBaseY - sbH * 0.5,
+    );
+    ctx.stroke();
   }
 
   // --- Mystical wall runes on sub-building ---
@@ -17552,32 +19323,90 @@ function renderArchTower(
     }
   }
 
-  // Energy conduit pipes with mystical flow
-  const pipeGlow = 0.3 + attackPulse * 0.6;
-  ctx.strokeStyle = `${mainColor} ${pipeGlow})`;
-  ctx.lineWidth = 2.5 * zoom;
+  // Rigid conduit pipes with 3D rendering and mystical flow
   for (let side = -1; side <= 1; side += 2) {
     const pipeStartX = screenPos.x + side * 30 * zoom + side * pillarSpread;
-    const pipeEndX = screenPos.x + side * (baseWidth * 0.35) * zoom;
+    const pipeStartY = screenPos.y + 7 * zoom + subBounce;
+    const pipeMidX = screenPos.x + side * 32 * zoom;
+    const pipeMidY = screenPos.y - 8 * zoom;
+    const pipeEndX = screenPos.x + side * (baseWidth * 0.35) * zoom - pillarSpread * side * 0.3;
+    const pipeEndY = screenPos.y - 14 * zoom;
+    const pipeR = 2.5 * zoom;
+
+    // Pipe shadow (offset darker line)
+    ctx.strokeStyle = "rgba(40, 30, 20, 0.3)";
+    ctx.lineWidth = (pipeR * 2 + 1) * 1;
     ctx.beginPath();
-    ctx.moveTo(pipeStartX + subShift * 0.3, screenPos.y + 7 * zoom + subBounce);
-    ctx.quadraticCurveTo(
-      screenPos.x + side * 32 * zoom,
-      screenPos.y - 8 * zoom,
-      pipeEndX - pillarSpread * side * 0.3,
-      screenPos.y - 14 * zoom,
-    );
+    ctx.moveTo(pipeStartX + subShift * 0.3 + 1 * zoom, pipeStartY + 1 * zoom);
+    ctx.quadraticCurveTo(pipeMidX + 1 * zoom, pipeMidY + 1 * zoom, pipeEndX + 1 * zoom, pipeEndY + 1 * zoom);
+    ctx.stroke();
+
+    // Pipe body (stone conduit)
+    ctx.strokeStyle = "#6a5a4a";
+    ctx.lineWidth = pipeR * 2;
+    ctx.beginPath();
+    ctx.moveTo(pipeStartX + subShift * 0.3, pipeStartY);
+    ctx.quadraticCurveTo(pipeMidX, pipeMidY, pipeEndX, pipeEndY);
+    ctx.stroke();
+
+    // Pipe highlight edge
+    ctx.strokeStyle = "rgba(160, 145, 125, 0.35)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pipeStartX + subShift * 0.3 - 0.8 * zoom, pipeStartY - 0.8 * zoom);
+    ctx.quadraticCurveTo(pipeMidX - 0.8 * zoom, pipeMidY - 0.8 * zoom, pipeEndX - 0.8 * zoom, pipeEndY - 0.8 * zoom);
+    ctx.stroke();
+
+    // Clamp bands along pipe
+    for (let cb = 0; cb < 4; cb++) {
+      const t = (cb + 0.5) / 4;
+      const t2 = t * t;
+      const cbX = (1 - t2) * (1 - t) * (pipeStartX + subShift * 0.3) + 2 * t * (1 - t) * pipeMidX + t2 * pipeEndX;
+      const cbY = (1 - t2) * (1 - t) * pipeStartY + 2 * t * (1 - t) * pipeMidY + t2 * pipeEndY;
+      ctx.strokeStyle = "#8a7a6a";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(cbX, cbY, pipeR * 1.3, pipeR * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Inner mystical energy flow (glowing core inside pipe)
+    const pipeGlow = 0.3 + attackPulse * 0.6;
+    ctx.strokeStyle = `rgba(${glowColor}, ${pipeGlow * 0.5})`;
+    ctx.lineWidth = pipeR * 0.8;
+    ctx.beginPath();
+    ctx.moveTo(pipeStartX + subShift * 0.3, pipeStartY);
+    ctx.quadraticCurveTo(pipeMidX, pipeMidY, pipeEndX, pipeEndY);
     ctx.stroke();
 
     // Flowing energy particles along pipe
-    for (let p = 0; p < 3; p++) {
-      const pipePhase = (time * 2 + p * 0.33 + side * 0.5) % 1;
-      const px = pipeStartX + (pipeEndX - pipeStartX) * pipePhase;
-      const py = screenPos.y + 7 * zoom - pipePhase * 20 * zoom;
-      ctx.fillStyle = `${mainColor} ${0.6 + Math.sin(time * 8 + p) * 0.3})`;
+    for (let p = 0; p < 4; p++) {
+      const pipePhase = (time * 2 + p * 0.25 + side * 0.5) % 1;
+      const pt = pipePhase;
+      const pt2 = pt * pt;
+      const px = (1 - pt2) * (1 - pt) * (pipeStartX + subShift * 0.3) + 2 * pt * (1 - pt) * pipeMidX + pt2 * pipeEndX;
+      const py = (1 - pt2) * (1 - pt) * pipeStartY + 2 * pt * (1 - pt) * pipeMidY + pt2 * pipeEndY;
+      const pAlpha = 0.5 + Math.sin(time * 8 + p) * 0.3;
+      ctx.fillStyle = `rgba(${glowColor}, ${pAlpha})`;
+      ctx.shadowColor = `rgb(${glowColor})`;
+      ctx.shadowBlur = 3 * zoom;
       ctx.beginPath();
-      ctx.arc(px, py, 2 * zoom, 0, Math.PI * 2);
+      ctx.arc(px, py, 1.8 * zoom, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // Flanged connectors at pipe ends
+    for (const end of [0, 1]) {
+      const eX = end === 0 ? pipeStartX + subShift * 0.3 : pipeEndX;
+      const eY = end === 0 ? pipeStartY : pipeEndY;
+      ctx.fillStyle = "#7a6a5a";
+      ctx.beginPath();
+      ctx.ellipse(eX, eY, pipeR * 1.5, pipeR * 0.7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
     }
   }
 
@@ -17633,13 +19462,26 @@ function renderArchTower(
     ctx.fillText(corner < 0 ? "ᚠ" : "ᚢ", stoneX, stoneY + 2 * zoom);
   }
 
-  // Green tech panel lines on foundation
+  // Arcane channel lines on upper platform (carved glowing grooves)
   const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + attackPulse;
-  ctx.strokeStyle = `${mainColor} ${panelGlow})`;
   ctx.lineWidth = 1 * zoom;
 
   for (let i = 1; i <= 2; i++) {
     const lineY = screenPos.y - 16 * zoom - i * 4 * zoom;
+
+    // Dark groove
+    ctx.strokeStyle = "rgba(40, 30, 20, 0.25)";
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.2, lineY + d * 0.3 + 0.5 * zoom);
+    ctx.lineTo(screenPos.x - w * 0.9, lineY - d * 0.2 + 0.5 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + w * 0.9, lineY - d * 0.2 + 0.5 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.2, lineY + d * 0.3 + 0.5 * zoom);
+    ctx.stroke();
+
+    // Glowing energy fill
+    ctx.strokeStyle = `rgba(${glowColor}, ${panelGlow * 0.4})`;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - w * 0.2, lineY + d * 0.3);
     ctx.lineTo(screenPos.x - w * 0.9, lineY - d * 0.2);
@@ -17648,6 +19490,30 @@ function renderArchTower(
     ctx.moveTo(screenPos.x + w * 0.9, lineY - d * 0.2);
     ctx.lineTo(screenPos.x + w * 0.2, lineY + d * 0.3);
     ctx.stroke();
+  }
+
+  // Corner rune medallions on upper platform
+  for (const pSide of [-1, 1]) {
+    const medalX = screenPos.x + pSide * (baseWidth + 4) * zoom * 0.35;
+    const medalY = screenPos.y - 20 * zoom;
+    const medalGlow = 0.35 + Math.sin(time * 2.5 + pSide) * 0.15 + attackPulse * 0.25;
+
+    // Medallion circle
+    ctx.strokeStyle = "#8a7a6a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(medalX, medalY, 3.5 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Medallion glow fill
+    ctx.fillStyle = `rgba(${glowColor}, ${medalGlow * 0.3})`;
+    ctx.fill();
+
+    // Medallion rune
+    ctx.fillStyle = `rgba(${glowColor}, ${medalGlow})`;
+    ctx.font = `${5 * zoom}px serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(pSide < 0 ? "ᚠ" : "ᚢ", medalX, medalY + 2 * zoom);
   }
 
   // === MYSTICAL PILLARS WITH RUNES ===
@@ -18090,38 +19956,128 @@ function renderArchTower(
       ctx.stroke();
     }
 
-    // Ancient tome/altar between pillars
+    // Ancient stone altar between pillars (3D isometric)
     const altarY = screenPos.y - 18 * zoom;
-    ctx.fillStyle = "#5a4a3a";
-    ctx.fillRect(
-      screenPos.x - 6 * zoom,
-      altarY - 4 * zoom,
-      12 * zoom,
-      8 * zoom,
-    );
+    drawIsometricPrism(ctx, screenPos.x, altarY, 14, 10, 5, {
+      top: "#6a5a4a",
+      left: "#5a4a3a",
+      right: "#4a3a2a",
+      leftBack: "#7a6a5a",
+      rightBack: "#6a5a4a",
+    }, zoom);
 
-    // Tome on altar
-    ctx.fillStyle = "#3a2a1a";
-    ctx.fillRect(screenPos.x - 4 * zoom, altarY - 7 * zoom, 8 * zoom, 5 * zoom);
+    // Carved relief on altar front faces
+    const altarHW = 14 * zoom * ISO_PRISM_W_FACTOR;
+    const altarHD = 10 * zoom * ISO_PRISM_D_FACTOR;
+    ctx.strokeStyle = "rgba(120, 105, 85, 0.3)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.strokeRect(screenPos.x - altarHW * 0.6, altarY - 3 * zoom, altarHW * 0.6, 3 * zoom);
+    ctx.strokeRect(screenPos.x + altarHW * 0.1, altarY - 3 * zoom, altarHW * 0.6, 3 * zoom);
 
-    // Tome glow
+    // Gold inlay on altar edge
+    ctx.strokeStyle = "rgba(201, 162, 39, 0.3)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - altarHW, altarY - 5 * zoom);
+    ctx.lineTo(screenPos.x, altarY - 5 * zoom + altarHD);
+    ctx.lineTo(screenPos.x + altarHW, altarY - 5 * zoom);
+    ctx.stroke();
+
+    // Ancient tome on altar (3D book shape)
+    const tomeX = screenPos.x;
+    const tomeY = altarY - 6 * zoom;
+
+    // Book spine (isometric slab)
+    ctx.fillStyle = "#2a1508";
+    ctx.beginPath();
+    ctx.moveTo(tomeX - 5 * zoom, tomeY + 1 * zoom);
+    ctx.lineTo(tomeX, tomeY + 2.5 * zoom);
+    ctx.lineTo(tomeX + 5 * zoom, tomeY + 1 * zoom);
+    ctx.lineTo(tomeX, tomeY - 0.5 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Book cover depth (front edge)
+    ctx.fillStyle = "#1a0a00";
+    ctx.beginPath();
+    ctx.moveTo(tomeX - 5 * zoom, tomeY + 1 * zoom);
+    ctx.lineTo(tomeX, tomeY + 2.5 * zoom);
+    ctx.lineTo(tomeX, tomeY + 3.5 * zoom);
+    ctx.lineTo(tomeX - 5 * zoom, tomeY + 2 * zoom);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#150800";
+    ctx.beginPath();
+    ctx.moveTo(tomeX, tomeY + 2.5 * zoom);
+    ctx.lineTo(tomeX + 5 * zoom, tomeY + 1 * zoom);
+    ctx.lineTo(tomeX + 5 * zoom, tomeY + 2 * zoom);
+    ctx.lineTo(tomeX, tomeY + 3.5 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Page edges visible
+    ctx.fillStyle = "#e8dcc0";
+    ctx.beginPath();
+    ctx.moveTo(tomeX - 4.5 * zoom, tomeY + 1.8 * zoom);
+    ctx.lineTo(tomeX, tomeY + 3 * zoom);
+    ctx.lineTo(tomeX, tomeY + 3.3 * zoom);
+    ctx.lineTo(tomeX - 4.5 * zoom, tomeY + 2.1 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold corner clasps
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.arc(tomeX - 4.5 * zoom, tomeY + 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(tomeX + 4.5 * zoom, tomeY + 0.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tome glowing rune on cover
     const tomeGlow = 0.5 + Math.sin(time * 2) * 0.2;
     ctx.fillStyle = `rgba(${glowColor}, ${tomeGlow})`;
-    ctx.fillRect(screenPos.x - 3 * zoom, altarY - 6 * zoom, 6 * zoom, 3 * zoom);
+    ctx.shadowColor = `rgb(${glowColor})`;
+    ctx.shadowBlur = 5 * zoom;
+    ctx.font = `${5 * zoom}px serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("ᛉ", tomeX, tomeY + 1 * zoom);
+    ctx.shadowBlur = 0;
 
-    // Flying arcane pages
-    for (let page = 0; page < 3; page++) {
+    // Tome aura glow
+    const tomeAuraGrad = ctx.createRadialGradient(tomeX, tomeY, 0, tomeX, tomeY, 8 * zoom);
+    tomeAuraGrad.addColorStop(0, `rgba(${glowColor}, ${tomeGlow * 0.15})`);
+    tomeAuraGrad.addColorStop(1, `rgba(${glowColor}, 0)`);
+    ctx.fillStyle = tomeAuraGrad;
+    ctx.beginPath();
+    ctx.ellipse(tomeX, tomeY, 8 * zoom, 5 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flying arcane pages with text lines
+    for (let page = 0; page < 4; page++) {
       const pagePhase = (time * 0.8 + page * 0.5) % 2;
       const pageX = screenPos.x + Math.sin(pagePhase * Math.PI * 2) * 15 * zoom;
       const pageY = altarY - 10 * zoom - pagePhase * 20 * zoom;
       const pageAlpha = Math.max(0, 1 - pagePhase / 2) * 0.6;
 
       if (pageAlpha > 0.1) {
-        ctx.fillStyle = `rgba(255, 250, 240, ${pageAlpha})`;
         ctx.save();
         ctx.translate(pageX, pageY);
         ctx.rotate(Math.sin(time * 4 + page) * 0.3);
+        // Page
+        ctx.fillStyle = `rgba(255, 250, 240, ${pageAlpha})`;
         ctx.fillRect(-3 * zoom, -4 * zoom, 6 * zoom, 8 * zoom);
+        // Text lines on page
+        ctx.fillStyle = `rgba(60, 40, 20, ${pageAlpha * 0.4})`;
+        for (let line = 0; line < 4; line++) {
+          const lineW = (4 - Math.abs(line - 1.5) * 0.5) * zoom;
+          ctx.fillRect(-lineW * 0.5, -2.5 * zoom + line * 1.8 * zoom, lineW, 0.5 * zoom);
+        }
+        // Glowing rune on page
+        ctx.fillStyle = `rgba(${glowColor}, ${pageAlpha * 0.5})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, 1 * zoom, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       }
     }
@@ -19370,133 +21326,90 @@ function renderClubTower(
     ? Math.max(0, 1 - (Date.now() - tower.lastAttack!) / 500)
     : 0;
 
-  // ========== ENHANCED FOUNDATION WITH TECH SCAFFOLDING ==========
-  // Bottom tech platform
+  // ========== STEPPED STONE FOUNDATION ==========
+  // Lowest step — wide stone plinth
   drawIsometricPrism(
     ctx,
     screenPos.x,
     screenPos.y + 12 * zoom,
-    baseWidth + 16,
-    baseWidth + 16,
-    4,
+    baseWidth + 18,
+    baseWidth + 18,
+    3,
     {
-      top: "#1a2a1a",
-      left: "#0a1a0a",
-      right: "#051505",
-      leftBack: "#2a3a2a",
-      rightBack: "#1a2a1a",
+      top: "#3a4a3a",
+      left: "#2a3a2a",
+      right: "#1a2a1a",
+      leftBack: "#4a5a4a",
+      rightBack: "#3a4a3a",
     },
     zoom,
   );
 
-  // Foundation support struts
-  ctx.strokeStyle = "#3a4a3a";
-  ctx.lineWidth = 2 * zoom;
-  for (const side of [-1, 1]) {
-    // Diagonal support beams
-    ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x + side * (baseWidth + 16) * zoom * 0.45,
-      screenPos.y + 8 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + side * (baseWidth + 6) * zoom * 0.35,
-      screenPos.y + 2 * zoom,
-    );
-    ctx.stroke();
-    // Vertical struts
-    ctx.beginPath();
-    ctx.moveTo(
-      screenPos.x + side * (baseWidth + 12) * zoom * 0.4,
-      screenPos.y + 8 * zoom,
-    );
-    ctx.lineTo(
-      screenPos.x + side * (baseWidth + 12) * zoom * 0.4,
-      screenPos.y + 2 * zoom,
-    );
-    ctx.stroke();
-  }
-
-  // Foundation data conduits
-  ctx.strokeStyle = "#2a5a3a";
-  ctx.lineWidth = 3 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(
-    screenPos.x - (baseWidth + 14) * zoom * 0.4,
-    screenPos.y + 10 * zoom,
-  );
-  ctx.lineTo(
-    screenPos.x + (baseWidth + 14) * zoom * 0.4,
-    screenPos.y + 10 * zoom,
-  );
-  ctx.stroke();
-
-  // Foundation circuit lights
-  for (let i = 0; i < 5; i++) {
-    const lightX =
-      screenPos.x -
-      (baseWidth + 10) * zoom * 0.3 +
-      i * (baseWidth + 10) * zoom * 0.15;
-    const lightGlow =
-      0.4 + Math.sin(time * 6 + i * 0.8) * 0.3 + flashIntensity * 0.5;
-    ctx.fillStyle = `rgba(0, 255, 100, ${lightGlow})`;
-    ctx.beginPath();
-    ctx.arc(lightX, screenPos.y + 10 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // Main foundation with gold accents
+  // Middle step
   drawIsometricPrism(
     ctx,
     screenPos.x,
-    screenPos.y + 8 * zoom,
-    baseWidth + 10,
-    baseWidth + 10,
-    6,
+    screenPos.y + 9 * zoom,
+    baseWidth + 13,
+    baseWidth + 13,
+    3,
     {
-      top: "#2a4a3a",
-      left: "#1a3a2a",
-      right: "#0a2a1a",
-      leftBack: "#3a5a4a",
-      rightBack: "#2a4a3a",
+      top: "#3a5a3a",
+      left: "#2a4a2a",
+      right: "#1a3a1a",
+      leftBack: "#4a6a4a",
+      rightBack: "#3a5a3a",
     },
     zoom,
   );
 
-  // Foundation gold trim edge with flash effect
-  const foundGlow = 0.4 + Math.sin(time * 2) * 0.2 + flashIntensity * 0.4;
+  // Upper step with gold bevel
+  drawIsometricPrism(
+    ctx,
+    screenPos.x,
+    screenPos.y + 6 * zoom,
+    baseWidth + 8,
+    baseWidth + 8,
+    6,
+    {
+      top: "#2a5a3a",
+      left: "#1a4a2a",
+      right: "#0a3a1a",
+      leftBack: "#3a6a4a",
+      rightBack: "#2a5a3a",
+    },
+    zoom,
+  );
+
+  // Gold trim along the front visible edge of upper step
+  const foundGlow = 0.5 + Math.sin(time * 2) * 0.2 + flashIntensity * 0.4;
   ctx.strokeStyle = `rgba(201, 162, 39, ${foundGlow})`;
   ctx.lineWidth = 2 * zoom;
+  const fndW = (baseWidth + 8) * zoom * 0.5;
+  const fndD = (baseWidth + 8) * zoom * ISO_PRISM_D_FACTOR;
   ctx.beginPath();
-  ctx.moveTo(
-    screenPos.x - (baseWidth + 10) * zoom * 0.5,
-    screenPos.y + 2 * zoom,
-  );
-  ctx.lineTo(
-    screenPos.x,
-    screenPos.y + (baseWidth + 10) * zoom * ISO_PRISM_D_FACTOR + 2 * zoom,
-  );
-  ctx.lineTo(
-    screenPos.x + (baseWidth + 10) * zoom * 0.5,
-    screenPos.y + 2 * zoom,
-  );
+  ctx.moveTo(screenPos.x - fndW, screenPos.y);
+  ctx.lineTo(screenPos.x, screenPos.y + fndD);
+  ctx.lineTo(screenPos.x + fndW, screenPos.y);
   ctx.stroke();
 
-  // Corner tech nodes on foundation
-  ctx.fillStyle = "#4a5a4a";
+  // Carved rosette medallions at front corners
   for (const side of [-1, 1]) {
-    const nodeX = screenPos.x + side * (baseWidth + 10) * zoom * 0.45;
+    const rosX = screenPos.x + side * fndW * 0.75;
+    const rosY = screenPos.y + fndD * 0.3;
+    ctx.fillStyle = "#1a4a2a";
     ctx.beginPath();
-    ctx.arc(nodeX, screenPos.y + 4 * zoom, 3 * zoom, 0, Math.PI * 2);
+    ctx.arc(rosX, rosY, 3 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    // Node glow
-    const nodeGlow =
-      0.5 + Math.sin(time * 4 + side) * 0.3 + flashIntensity * 0.4;
-    ctx.fillStyle = `rgba(0, 255, 100, ${nodeGlow})`;
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+    const rosGlow =
+      0.4 + Math.sin(time * 3 + side * 1.5) * 0.2 + flashIntensity * 0.3;
+    ctx.fillStyle = `rgba(201, 162, 39, ${rosGlow})`;
     ctx.beginPath();
-    ctx.arc(nodeX, screenPos.y + 4 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.arc(rosX, rosY, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "#4a5a4a";
   }
 
   // Main tower body - dark green tech with gold trim
@@ -19643,45 +21556,141 @@ function renderClubTower(
 
   // ========== ENTRANCE PORTICO WITH GREEK REVIVAL COLUMNS ==========
   const porticoFrontY = screenPos.y + d * 0.45;
-  const porticoH = h * 0.32;
+  const porticoH = h * 0.34;
   const colPositions = [-0.32, -0.11, 0.11, 0.32];
   for (const colOff of colPositions) {
     const colX = screenPos.x + w * colOff;
     const colBase = porticoFrontY + d * Math.abs(colOff) * 0.6;
-    ctx.fillStyle = "#d4c9a8";
+    const colTopY = colBase - porticoH;
+
+    // Column shadow
+    ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+    ctx.beginPath();
+    ctx.moveTo(colX - 2.5 * zoom + zoom, colBase + zoom);
+    ctx.lineTo(colX - 2 * zoom + zoom, colTopY + zoom);
+    ctx.lineTo(colX + 2 * zoom + zoom, colTopY + zoom);
+    ctx.lineTo(colX + 2.5 * zoom + zoom, colBase + zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Main column shaft — gradient for 3D roundness
+    const colGrad = ctx.createLinearGradient(
+      colX - 2.5 * zoom,
+      colBase,
+      colX + 2.5 * zoom,
+      colBase,
+    );
+    colGrad.addColorStop(0, "#b8a888");
+    colGrad.addColorStop(0.25, "#d4c9a8");
+    colGrad.addColorStop(0.5, "#e8dcc0");
+    colGrad.addColorStop(0.75, "#d4c9a8");
+    colGrad.addColorStop(1, "#a89878");
+    ctx.fillStyle = colGrad;
     ctx.beginPath();
     ctx.moveTo(colX - 2.5 * zoom, colBase);
-    ctx.lineTo(colX - 2 * zoom, colBase - porticoH);
-    ctx.lineTo(colX + 2 * zoom, colBase - porticoH);
+    ctx.lineTo(colX - 2 * zoom, colTopY);
+    ctx.lineTo(colX + 2 * zoom, colTopY);
     ctx.lineTo(colX + 2.5 * zoom, colBase);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "rgba(180,160,120,0.4)";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(colX, colBase);
-    ctx.lineTo(colX, colBase - porticoH);
-    ctx.stroke();
+
+    // Fluting lines (vertical grooves)
+    ctx.strokeStyle = "rgba(160, 140, 100, 0.3)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let fl = -1; fl <= 1; fl++) {
+      ctx.beginPath();
+      ctx.moveTo(colX + fl * 1.2 * zoom, colBase);
+      ctx.lineTo(colX + fl * 1 * zoom, colTopY);
+      ctx.stroke();
+    }
+
+    // Capital (Ionic-style top block)
     ctx.fillStyle = "#c9a227";
     ctx.fillRect(
       colX - 3.5 * zoom,
-      colBase - porticoH - 2 * zoom,
+      colTopY - 2 * zoom,
       7 * zoom,
       3 * zoom,
     );
-    ctx.fillStyle = "#b8a888";
+    ctx.strokeStyle = "#ffe88a";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.strokeRect(
+      colX - 3.5 * zoom,
+      colTopY - 2 * zoom,
+      7 * zoom,
+      3 * zoom,
+    );
+    // Volute scrolls on capital
+    for (const vs of [-1, 1]) {
+      ctx.strokeStyle = "#dab540";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.arc(
+        colX + vs * 3.5 * zoom,
+        colTopY - 0.5 * zoom,
+        1.2 * zoom,
+        0,
+        Math.PI * 1.5,
+      );
+      ctx.stroke();
+    }
+
+    // Plinth (base block)
+    ctx.fillStyle = "#c0b090";
     ctx.fillRect(colX - 3 * zoom, colBase - 1 * zoom, 6 * zoom, 2 * zoom);
+    ctx.strokeStyle = "rgba(160, 140, 100, 0.4)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeRect(colX - 3 * zoom, colBase - 1 * zoom, 6 * zoom, 2 * zoom);
   }
-  ctx.fillStyle = "#3a6a4a";
+
+  // Entablature (beam across columns)
   const entabY = porticoFrontY - porticoH + d * 0.08;
-  ctx.fillRect(screenPos.x - w * 0.38, entabY, w * 0.76, 3 * zoom);
+  const entabGrad = ctx.createLinearGradient(
+    screenPos.x - w * 0.38,
+    entabY,
+    screenPos.x - w * 0.38,
+    entabY + 4 * zoom,
+  );
+  entabGrad.addColorStop(0, "#4a7a5a");
+  entabGrad.addColorStop(1, "#2a5a3a");
+  ctx.fillStyle = entabGrad;
+  ctx.fillRect(screenPos.x - w * 0.38, entabY, w * 0.76, 4 * zoom);
   ctx.strokeStyle = "#c9a227";
   ctx.lineWidth = 1 * zoom;
-  ctx.strokeRect(screenPos.x - w * 0.38, entabY, w * 0.76, 3 * zoom);
-  ctx.fillStyle = "#2a5a3a";
+  ctx.strokeRect(screenPos.x - w * 0.38, entabY, w * 0.76, 4 * zoom);
+
+  // Frieze detail — small triglyphs
+  const triCount = 5;
+  for (let tri = 0; tri < triCount; tri++) {
+    const triX =
+      screenPos.x -
+      w * 0.35 +
+      (tri / (triCount - 1)) * w * 0.7;
+    ctx.fillStyle = "#2a5a3a";
+    ctx.fillRect(triX - 1.5 * zoom, entabY + 0.5 * zoom, 3 * zoom, 3 * zoom);
+    ctx.strokeStyle = "rgba(201, 162, 39, 0.4)";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(triX - 0.5 * zoom, entabY + 0.5 * zoom);
+    ctx.lineTo(triX - 0.5 * zoom, entabY + 3.5 * zoom);
+    ctx.moveTo(triX + 0.5 * zoom, entabY + 0.5 * zoom);
+    ctx.lineTo(triX + 0.5 * zoom, entabY + 3.5 * zoom);
+    ctx.stroke();
+  }
+
+  // Pediment (triangular gable)
+  const pedGrad = ctx.createLinearGradient(
+    screenPos.x,
+    entabY - 9 * zoom,
+    screenPos.x,
+    entabY,
+  );
+  pedGrad.addColorStop(0, "#3a6a4a");
+  pedGrad.addColorStop(1, "#2a5a3a");
+  ctx.fillStyle = pedGrad;
   ctx.beginPath();
   ctx.moveTo(screenPos.x - w * 0.4, entabY);
-  ctx.lineTo(screenPos.x, entabY - 8 * zoom);
+  ctx.lineTo(screenPos.x, entabY - 9 * zoom);
   ctx.lineTo(screenPos.x + w * 0.4, entabY);
   ctx.closePath();
   ctx.fill();
@@ -19689,29 +21698,100 @@ function renderClubTower(
   ctx.lineWidth = 1.5 * zoom;
   ctx.stroke();
 
-  // ========== CLUB CREST ON FRONT FACE ==========
-  const crestX = screenPos.x;
-  const crestY = screenPos.y - h * 0.58;
-  const crestR = 6 * zoom;
-  ctx.fillStyle = "#1a3a2a";
+  // Pediment tympanum decoration (small relief)
+  ctx.fillStyle = `rgba(201, 162, 39, ${0.3 + Math.sin(time * 1.5) * 0.1})`;
   ctx.beginPath();
-  ctx.moveTo(crestX, crestY - crestR);
-  ctx.lineTo(crestX + crestR * 0.8, crestY - crestR * 0.4);
-  ctx.lineTo(crestX + crestR * 0.8, crestY + crestR * 0.3);
-  ctx.lineTo(crestX, crestY + crestR);
-  ctx.lineTo(crestX - crestR * 0.8, crestY + crestR * 0.3);
-  ctx.lineTo(crestX - crestR * 0.8, crestY - crestR * 0.4);
+  ctx.moveTo(screenPos.x, entabY - 6 * zoom);
+  ctx.lineTo(screenPos.x + 3 * zoom, entabY - 2 * zoom);
+  ctx.lineTo(screenPos.x - 3 * zoom, entabY - 2 * zoom);
   ctx.closePath();
   ctx.fill();
+
+  // ========== ORNATE CLUB CREST ON FRONT FACE ==========
+  const crestX = screenPos.x;
+  const crestY = screenPos.y - h * 0.58;
+  const crestR = 7 * zoom;
+
+  // Crest backing shadow
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.beginPath();
+  ctx.moveTo(crestX + 0.5 * zoom, crestY - crestR + 0.5 * zoom);
+  ctx.lineTo(crestX + crestR * 0.85 + 0.5 * zoom, crestY - crestR * 0.35 + 0.5 * zoom);
+  ctx.lineTo(crestX + crestR * 0.85 + 0.5 * zoom, crestY + crestR * 0.35 + 0.5 * zoom);
+  ctx.lineTo(crestX + 0.5 * zoom, crestY + crestR * 1.05 + 0.5 * zoom);
+  ctx.lineTo(crestX - crestR * 0.85 + 0.5 * zoom, crestY + crestR * 0.35 + 0.5 * zoom);
+  ctx.lineTo(crestX - crestR * 0.85 + 0.5 * zoom, crestY - crestR * 0.35 + 0.5 * zoom);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shield body — dark green with gradient
+  const crestGrad = ctx.createLinearGradient(
+    crestX - crestR,
+    crestY - crestR,
+    crestX + crestR,
+    crestY + crestR,
+  );
+  crestGrad.addColorStop(0, "#1a4a2a");
+  crestGrad.addColorStop(0.5, "#0a3a1a");
+  crestGrad.addColorStop(1, "#082a12");
+  ctx.fillStyle = crestGrad;
+  ctx.beginPath();
+  ctx.moveTo(crestX, crestY - crestR);
+  ctx.lineTo(crestX + crestR * 0.85, crestY - crestR * 0.35);
+  ctx.lineTo(crestX + crestR * 0.85, crestY + crestR * 0.35);
+  ctx.lineTo(crestX, crestY + crestR * 1.05);
+  ctx.lineTo(crestX - crestR * 0.85, crestY + crestR * 0.35);
+  ctx.lineTo(crestX - crestR * 0.85, crestY - crestR * 0.35);
+  ctx.closePath();
+  ctx.fill();
+
+  // Gold border — double line
   ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1.5 * zoom;
+  ctx.lineWidth = 1.8 * zoom;
   ctx.stroke();
+  ctx.strokeStyle = "#dab540";
+  ctx.lineWidth = 0.6 * zoom;
+  // Inner border
+  ctx.beginPath();
+  ctx.moveTo(crestX, crestY - crestR * 0.8);
+  ctx.lineTo(crestX + crestR * 0.65, crestY - crestR * 0.25);
+  ctx.lineTo(crestX + crestR * 0.65, crestY + crestR * 0.25);
+  ctx.lineTo(crestX, crestY + crestR * 0.85);
+  ctx.lineTo(crestX - crestR * 0.65, crestY + crestR * 0.25);
+  ctx.lineTo(crestX - crestR * 0.65, crestY - crestR * 0.25);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Horizontal divider line
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(crestX - crestR * 0.7, crestY);
+  ctx.lineTo(crestX + crestR * 0.7, crestY);
+  ctx.stroke();
+
+  // "P" monogram with embossed effect
   const crestGlow = 0.7 + Math.sin(time * 2) * 0.2 + flashIntensity * 0.3;
-  ctx.fillStyle = `rgba(201, 162, 39, ${crestGlow})`;
-  ctx.font = `bold ${7 * zoom}px serif`;
+  ctx.fillStyle = `rgba(100, 80, 20, 0.3)`;
+  ctx.font = `bold ${8 * zoom}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("P", crestX, crestY + zoom);
+  ctx.fillText("P", crestX + 0.3 * zoom, crestY - crestR * 0.15 + 0.3 * zoom);
+  ctx.fillStyle = `rgba(201, 162, 39, ${crestGlow})`;
+  ctx.fillText("P", crestX, crestY - crestR * 0.15);
+
+  // Small crown above the shield
+  ctx.fillStyle = `rgba(201, 162, 39, ${crestGlow * 0.9})`;
+  ctx.beginPath();
+  ctx.moveTo(crestX - 3 * zoom, crestY - crestR - 1 * zoom);
+  ctx.lineTo(crestX - 4 * zoom, crestY - crestR - 4 * zoom);
+  ctx.lineTo(crestX - 2 * zoom, crestY - crestR - 2.5 * zoom);
+  ctx.lineTo(crestX, crestY - crestR - 5 * zoom);
+  ctx.lineTo(crestX + 2 * zoom, crestY - crestR - 2.5 * zoom);
+  ctx.lineTo(crestX + 4 * zoom, crestY - crestR - 4 * zoom);
+  ctx.lineTo(crestX + 3 * zoom, crestY - crestR - 1 * zoom);
+  ctx.closePath();
+  ctx.fill();
 
   // ========== DORMER WINDOWS WITH TREASURY GLOW ==========
   for (let wi = 0; wi < 3; wi++) {
@@ -19782,139 +21862,394 @@ function renderClubTower(
     }
   }
 
-  // ========== EXTERNAL SCAFFOLDING AND TECH INFRASTRUCTURE ==========
-  // Left face scaffolding (follows left isometric edge)
-  ctx.strokeStyle = "#5a6a5a";
-  ctx.lineWidth = 1.5 * zoom;
+  // ========== ISOMETRIC BUTTRESSES & ARCHITECTURAL SUPPORTS ==========
+  const buttW = baseWidth * 1.25;
+  const buttHalf = buttW * zoom * 0.5;
+  const buttD = buttW * zoom * ISO_PRISM_D_FACTOR;
+  const buttTopY = screenPos.y - h * 0.85;
 
-  // Left face outer strut (follows iso left edge slope)
-  ctx.beginPath();
-  ctx.moveTo(screenPos.x - w * 1.1, screenPos.y + 4 * zoom);
-  ctx.lineTo(screenPos.x - w * 1.1 - d * 0.15, screenPos.y - h * 0.8 - d * 0.1);
-  ctx.stroke();
-  // Left face inner strut
-  ctx.beginPath();
-  ctx.moveTo(screenPos.x - w * 0.85, screenPos.y + d * 0.15 + 2 * zoom);
-  ctx.lineTo(
-    screenPos.x - w * 0.85 - d * 0.1,
-    screenPos.y - h * 0.75 - d * 0.05,
-  );
-  ctx.stroke();
+  const buttL = { x: screenPos.x - buttHalf, y: screenPos.y };
+  const buttF = { x: screenPos.x, y: screenPos.y + buttD };
+  const buttR = { x: screenPos.x + buttHalf, y: screenPos.y };
+  const buttB = { x: screenPos.x, y: screenPos.y - buttD };
+  const buttLT = { x: buttL.x, y: buttTopY };
+  const buttFT = { x: buttF.x, y: buttTopY + buttD };
+  const buttRT = { x: buttR.x, y: buttTopY };
+  const buttBT = { x: buttB.x, y: buttTopY - buttD };
 
-  // Horizontal scaffold bars (angled to follow left iso face)
-  for (let i = 0; i < 4; i++) {
-    const barY = screenPos.y - h * 0.1 - i * h * 0.18;
+  const drawClubBeam = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    thick: number,
+    dark: string,
+    main: string,
+    light: string,
+  ) => {
+    ctx.strokeStyle = dark;
+    ctx.lineWidth = (thick + 1.2) * zoom;
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 1.12, barY - d * 0.1);
-    ctx.lineTo(screenPos.x - w * 0.83, barY + d * 0.1);
+    ctx.moveTo(x1, y1 + 0.5 * zoom);
+    ctx.lineTo(x2, y2 + 0.5 * zoom);
     ctx.stroke();
-  }
-
-  // Diagonal braces on left face
-  ctx.strokeStyle = "#4a5a4a";
-  ctx.lineWidth = 1 * zoom;
-  for (let i = 0; i < 3; i++) {
-    const braceY = screenPos.y - h * 0.05 - i * h * 0.22;
+    ctx.strokeStyle = main;
+    ctx.lineWidth = thick * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 1.1, braceY - d * 0.08);
-    ctx.lineTo(screenPos.x - w * 0.85, braceY - h * 0.15 + d * 0.08);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
     ctx.stroke();
-  }
-
-  // Right face scaffolding (follows right isometric edge)
-  if (tower.level >= 2) {
-    ctx.strokeStyle = "#5a6a5a";
-    ctx.lineWidth = 1.5 * zoom;
-    // Right face outer strut
+    ctx.strokeStyle = light;
+    ctx.lineWidth = (thick * 0.35) * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 1.05, screenPos.y + 2 * zoom);
-    ctx.lineTo(
-      screenPos.x + w * 1.05 + d * 0.15,
-      screenPos.y - h * 0.7 - d * 0.1,
-    );
+    ctx.moveTo(x1, y1 - 0.3 * zoom);
+    ctx.lineTo(x2, y2 - 0.3 * zoom);
     ctx.stroke();
-    // Right face inner strut
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.85, screenPos.y + d * 0.1);
-    ctx.lineTo(
-      screenPos.x + w * 0.85 + d * 0.1,
-      screenPos.y - h * 0.65 - d * 0.05,
-    );
-    ctx.stroke();
+  };
 
-    // Right face horizontal bars (angled for right iso face)
-    for (let i = 0; i < 3; i++) {
-      const barY = screenPos.y - h * 0.15 - i * h * 0.2;
+  const drawClubBolt = (bx: number, by: number, glow: boolean) => {
+    ctx.fillStyle = glow ? "#c9a227" : "#8a7a5a";
+    ctx.beginPath();
+    ctx.arc(bx, by, 1.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    if (glow) {
+      ctx.fillStyle = "#ffe88a";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + w * 0.83, barY + d * 0.08);
-      ctx.lineTo(screenPos.x + w * 1.07, barY - d * 0.08);
-      ctx.stroke();
+      ctx.arc(bx - 0.3 * zoom, by - 0.3 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
     }
+  };
+
+  // Back vertical posts
+  drawClubBeam(buttB.x, buttB.y, buttBT.x, buttBT.y, 2.2, "#1a3a1a", "#2a5a3a", "#3a7a4a");
+  drawClubBeam(buttL.x, buttL.y, buttLT.x, buttLT.y, 2.2, "#1a3a1a", "#2a5a3a", "#3a7a4a");
+
+  // Back horizontal frames
+  const frameLevels = Math.min(tower.level + 2, 4);
+  for (let fl = 0; fl < frameLevels; fl++) {
+    const t = (fl + 1) / (frameLevels + 1);
+    const fBx = buttB.x + (buttBT.x - buttB.x) * t;
+    const fBy = buttB.y + (buttBT.y - buttB.y) * t;
+    const fLx = buttL.x + (buttLT.x - buttL.x) * t;
+    const fLy = buttL.y + (buttLT.y - buttL.y) * t;
+    const fRx = buttR.x + (buttRT.x - buttR.x) * t;
+    const fRy = buttR.y + (buttRT.y - buttR.y) * t;
+    // Back-left and back-right
+    drawClubBeam(fBx, fBy, fLx, fLy, 1.5, "#1a3a1a", "#2a5a3a", "#3a7a4a");
+    drawClubBeam(fBx, fBy, fRx, fRy, 1.5, "#1a3a1a", "#2a5a3a", "#3a7a4a");
+    drawClubBolt(fBx, fBy, false);
   }
 
-  // Isometric support ring (front arc visible)
-  ctx.strokeStyle = "#6a7a6a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y - h * 0.45,
-    w * 1.05,
-    d * 1.0,
-    0,
-    0,
-    Math.PI,
+  // Back X-bracing
+  for (let fl = 0; fl < frameLevels - 1; fl++) {
+    const t0 = (fl + 1) / (frameLevels + 1);
+    const t1 = (fl + 2) / (frameLevels + 1);
+    const b0x = buttB.x + (buttBT.x - buttB.x) * t0;
+    const b0y = buttB.y + (buttBT.y - buttB.y) * t0;
+    const l0x = buttL.x + (buttLT.x - buttL.x) * t0;
+    const l0y = buttL.y + (buttLT.y - buttL.y) * t0;
+    const b1x = buttB.x + (buttBT.x - buttB.x) * t1;
+    const b1y = buttB.y + (buttBT.y - buttB.y) * t1;
+    const l1x = buttL.x + (buttLT.x - buttL.x) * t1;
+    const l1y = buttL.y + (buttLT.y - buttL.y) * t1;
+    ctx.strokeStyle = "rgba(42, 90, 58, 0.4)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(b0x, b0y);
+    ctx.lineTo(l1x, l1y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(l0x, l0y);
+    ctx.lineTo(b1x, b1y);
+    ctx.stroke();
+  }
+
+  // Front vertical posts
+  drawClubBeam(buttR.x, buttR.y, buttRT.x, buttRT.y, 2.5, "#1a4a2a", "#3a6a4a", "#5a8a6a");
+  drawClubBeam(buttF.x, buttF.y, buttFT.x, buttFT.y, 2.5, "#1a4a2a", "#3a6a4a", "#5a8a6a");
+
+  // Front horizontal frames + gold trim
+  for (let fl = 0; fl < frameLevels; fl++) {
+    const t = (fl + 1) / (frameLevels + 1);
+    const fFx = buttF.x + (buttFT.x - buttF.x) * t;
+    const fFy = buttF.y + (buttFT.y - buttF.y) * t;
+    const fRx = buttR.x + (buttRT.x - buttR.x) * t;
+    const fRy = buttR.y + (buttRT.y - buttR.y) * t;
+    const fLx = buttL.x + (buttLT.x - buttL.x) * t;
+    const fLy = buttL.y + (buttLT.y - buttL.y) * t;
+    // Front-right and front-left
+    drawClubBeam(fFx, fFy, fRx, fRy, 1.8, "#1a4a2a", "#3a6a4a", "#5a8a6a");
+    drawClubBeam(fFx, fFy, fLx, fLy, 1.8, "#1a4a2a", "#3a6a4a", "#5a8a6a");
+    // Gold accent on front bolts
+    drawClubBolt(fFx, fFy, true);
+    drawClubBolt(fRx, fRy, true);
+    drawClubBolt(fLx, fLy, true);
+  }
+
+  // Front X-bracing (right face only - visible)
+  for (let fl = 0; fl < frameLevels - 1; fl++) {
+    const t0 = (fl + 1) / (frameLevels + 1);
+    const t1 = (fl + 2) / (frameLevels + 1);
+    const f0x = buttF.x + (buttFT.x - buttF.x) * t0;
+    const f0y = buttF.y + (buttFT.y - buttF.y) * t0;
+    const r0x = buttR.x + (buttRT.x - buttR.x) * t0;
+    const r0y = buttR.y + (buttRT.y - buttR.y) * t0;
+    const f1x = buttF.x + (buttFT.x - buttF.x) * t1;
+    const f1y = buttF.y + (buttFT.y - buttF.y) * t1;
+    const r1x = buttR.x + (buttRT.x - buttR.x) * t1;
+    const r1y = buttR.y + (buttRT.y - buttR.y) * t1;
+    ctx.strokeStyle = "rgba(58, 106, 74, 0.5)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(f0x, f0y);
+    ctx.lineTo(r1x, r1y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(r0x, r0y);
+    ctx.lineTo(f1x, f1y);
+    ctx.stroke();
+  }
+
+  // ========== FACE DETAILS (stone blocks, weathering, gold inlays) ==========
+  // Left face (visible) — stone block seams
+  ctx.strokeStyle = "rgba(20, 60, 30, 0.35)";
+  ctx.lineWidth = 0.6 * zoom;
+  const leftFaceSeams = 5;
+  for (let s = 1; s < leftFaceSeams; s++) {
+    const seamT = s / leftFaceSeams;
+    const seamBotX = screenPos.x - w * seamT;
+    const seamBotY = screenPos.y + d * (1 - seamT) * 0.5;
+    const seamTopX = seamBotX;
+    const seamTopY = screenPos.y - h + d * (1 - seamT) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(seamBotX, seamBotY);
+    ctx.lineTo(seamTopX, seamTopY);
+    ctx.stroke();
+  }
+
+  // Right face (visible) — stone block seams
+  for (let s = 1; s < leftFaceSeams; s++) {
+    const seamT = s / leftFaceSeams;
+    const seamBotX = screenPos.x + w * seamT;
+    const seamBotY = screenPos.y + d * (1 - seamT) * 0.5;
+    const seamTopX = seamBotX;
+    const seamTopY = screenPos.y - h + d * (1 - seamT) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(seamBotX, seamBotY);
+    ctx.lineTo(seamTopX, seamTopY);
+    ctx.stroke();
+  }
+
+  // Horizontal mortar lines
+  const mortarRows = 6;
+  for (let r = 1; r < mortarRows; r++) {
+    const mortarT = r / mortarRows;
+    const mortarY = screenPos.y - h * mortarT;
+    // Left face mortar
+    ctx.strokeStyle = "rgba(20, 60, 30, 0.25)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.95, mortarY + d * 0.45);
+    ctx.lineTo(screenPos.x, mortarY + d * 0.95);
+    ctx.stroke();
+    // Right face mortar
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, mortarY + d * 0.95);
+    ctx.lineTo(screenPos.x + w * 0.95, mortarY + d * 0.45);
+    ctx.stroke();
+  }
+
+  // Weathering gradient on left face (darker at bottom)
+  const leftWeather = ctx.createLinearGradient(
+    screenPos.x - w * 0.5,
+    screenPos.y,
+    screenPos.x - w * 0.5,
+    screenPos.y - h,
   );
-  ctx.stroke();
+  leftWeather.addColorStop(0, "rgba(0, 0, 0, 0.12)");
+  leftWeather.addColorStop(0.4, "rgba(0, 0, 0, 0.02)");
+  leftWeather.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = leftWeather;
+  ctx.beginPath();
+  ctx.moveTo(screenPos.x, screenPos.y);
+  ctx.lineTo(screenPos.x - w, screenPos.y);
+  ctx.lineTo(screenPos.x - w, screenPos.y - h);
+  ctx.lineTo(screenPos.x, screenPos.y - h);
+  ctx.closePath();
+  ctx.fill();
 
-  // Structural panel lines for better 3D effect
-  ctx.strokeStyle = "#1a4a2a";
-  ctx.lineWidth = 1 * zoom;
-  // Left face vertical panels
-  for (let panel = 0; panel < 3; panel++) {
-    const panelX = screenPos.x - w * (0.2 + panel * 0.3);
+  // Gold inlay diamond motifs on front face
+  const inlayCount = tower.level + 1;
+  for (let i = 0; i < inlayCount; i++) {
+    const inlayY = screenPos.y - h * (0.3 + i * 0.2);
+    const inlayX = screenPos.x;
+    const inlaySize = 3 * zoom;
+    const inlayGlow =
+      0.5 + Math.sin(time * 2 + i * 1.2) * 0.2 + flashIntensity * 0.3;
+    ctx.fillStyle = `rgba(201, 162, 39, ${inlayGlow})`;
     ctx.beginPath();
-    ctx.moveTo(panelX, screenPos.y);
-    ctx.lineTo(panelX - d * 0.5, screenPos.y - baseHeight * zoom + d * 0.5);
+    ctx.moveTo(inlayX, inlayY - inlaySize);
+    ctx.lineTo(inlayX + inlaySize * 0.7, inlayY);
+    ctx.lineTo(inlayX, inlayY + inlaySize);
+    ctx.lineTo(inlayX - inlaySize * 0.7, inlayY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
   }
-  // Right face vertical panels
-  for (let panel = 0; panel < 3; panel++) {
-    const panelX = screenPos.x + w * (0.2 + panel * 0.3);
-    ctx.beginPath();
-    ctx.moveTo(panelX, screenPos.y);
-    ctx.lineTo(panelX + d * 0.5, screenPos.y - baseHeight * zoom + d * 0.5);
-    ctx.stroke();
-  }
 
-  // Gold corner accents
-  ctx.fillStyle = "#c9a227";
+  // Wall-mounted lanterns
   for (const side of [-1, 1]) {
+    const lanternX = screenPos.x + side * w * 0.55;
+    const lanternY = screenPos.y - h * 0.3;
+    // Bracket
+    ctx.strokeStyle = "#4a3a2a";
+    ctx.lineWidth = 1.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + side * w * 0.95, screenPos.y);
-    ctx.lineTo(screenPos.x + side * w * 1.0, screenPos.y - 2 * zoom);
-    ctx.lineTo(
-      screenPos.x + side * w * 1.0,
-      screenPos.y - baseHeight * zoom * 0.9,
+    ctx.moveTo(lanternX - side * 2 * zoom, lanternY + 2 * zoom);
+    ctx.lineTo(lanternX, lanternY);
+    ctx.lineTo(lanternX, lanternY - 4 * zoom);
+    ctx.stroke();
+    // Lantern body
+    ctx.fillStyle = "#2a2a22";
+    ctx.fillRect(
+      lanternX - 2 * zoom,
+      lanternY - 4 * zoom,
+      4 * zoom,
+      5 * zoom,
     );
-    ctx.lineTo(
-      screenPos.x + side * w * 0.95,
-      screenPos.y - baseHeight * zoom * 0.9 + 2 * zoom,
+    // Lantern glow
+    const lanternGlow =
+      0.4 + Math.sin(time * 3 + side * 2) * 0.2 + flashIntensity * 0.3;
+    ctx.fillStyle = `rgba(255, 200, 80, ${lanternGlow})`;
+    ctx.shadowColor = "rgba(255, 180, 50, 0.4)";
+    ctx.shadowBlur = 5 * zoom;
+    ctx.fillRect(
+      lanternX - 1.5 * zoom,
+      lanternY - 3.5 * zoom,
+      3 * zoom,
+      4 * zoom,
     );
+    ctx.shadowBlur = 0;
+    // Lantern cap
+    ctx.fillStyle = "#6a5a3a";
+    ctx.beginPath();
+    ctx.moveTo(lanternX - 2.5 * zoom, lanternY - 4 * zoom);
+    ctx.lineTo(lanternX, lanternY - 6 * zoom);
+    ctx.lineTo(lanternX + 2.5 * zoom, lanternY - 4 * zoom);
     ctx.closePath();
     ctx.fill();
   }
 
-  // Horizontal gold bands (multiple levels)
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 2 * zoom;
+  // Gold corner pilasters (tapered strips following isometric edges)
+  ctx.fillStyle = "#c9a227";
+  for (const side of [-1, 1]) {
+    const pilX = screenPos.x + side * w * 0.97;
+    const pilBotY = screenPos.y;
+    const pilTopY = screenPos.y - baseHeight * zoom * 0.92;
+    // Pilaster shadow
+    ctx.fillStyle = "rgba(100, 80, 20, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(pilX + side * 1 * zoom, pilBotY + 1 * zoom);
+    ctx.lineTo(pilX + side * 1.5 * zoom, pilBotY - 2 * zoom);
+    ctx.lineTo(pilX + side * 1.5 * zoom, pilTopY - 1 * zoom);
+    ctx.lineTo(pilX + side * 0.5 * zoom, pilTopY + 1 * zoom);
+    ctx.closePath();
+    ctx.fill();
+    // Main pilaster
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.moveTo(pilX, pilBotY);
+    ctx.lineTo(pilX + side * 1.2 * zoom, pilBotY - 1.5 * zoom);
+    ctx.lineTo(pilX + side * 1.2 * zoom, pilTopY);
+    ctx.lineTo(pilX, pilTopY + 1.5 * zoom);
+    ctx.closePath();
+    ctx.fill();
+    // Pilaster highlight
+    ctx.strokeStyle = "#ffe88a";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pilX + side * 0.3 * zoom, pilBotY);
+    ctx.lineTo(pilX + side * 0.3 * zoom, pilTopY + 1.5 * zoom);
+    ctx.stroke();
+    // Capital (top ornament)
+    ctx.fillStyle = "#dab540";
+    ctx.beginPath();
+    ctx.ellipse(
+      pilX + side * 0.6 * zoom,
+      pilTopY,
+      2.5 * zoom,
+      1.2 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    // Base (bottom ornament)
+    ctx.beginPath();
+    ctx.ellipse(
+      pilX + side * 0.6 * zoom,
+      pilBotY - 0.5 * zoom,
+      2 * zoom,
+      1 * zoom,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Horizontal gold cornice bands (multiple levels)
   for (let band = 0; band < tower.level; band++) {
     const bandY = screenPos.y - baseHeight * zoom * (0.25 + band * 0.25);
+    // Band shadow
+    ctx.strokeStyle = "rgba(100, 80, 20, 0.3)";
+    ctx.lineWidth = 3 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.9, bandY + d * 0.35);
-    ctx.lineTo(screenPos.x, bandY + d * 0.5);
-    ctx.lineTo(screenPos.x + w * 0.9, bandY + d * 0.35);
+    ctx.moveTo(screenPos.x - w * 0.92, bandY + d * 0.35 + 1 * zoom);
+    ctx.lineTo(screenPos.x, bandY + d * 0.5 + 1 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.92, bandY + d * 0.35 + 1 * zoom);
     ctx.stroke();
+    // Main band
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.92, bandY + d * 0.35);
+    ctx.lineTo(screenPos.x, bandY + d * 0.5);
+    ctx.lineTo(screenPos.x + w * 0.92, bandY + d * 0.35);
+    ctx.stroke();
+    // Band highlight
+    ctx.strokeStyle = "rgba(255, 232, 138, 0.35)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x - w * 0.9, bandY + d * 0.35 - 1 * zoom);
+    ctx.lineTo(screenPos.x, bandY + d * 0.5 - 1 * zoom);
+    ctx.lineTo(screenPos.x + w * 0.9, bandY + d * 0.35 - 1 * zoom);
+    ctx.stroke();
+    // Dentil molding (small square blocks along the band)
+    const dentilCount = 8 + tower.level * 2;
+    for (let dt = 0; dt < dentilCount; dt++) {
+      const dtT = (dt + 0.5) / dentilCount;
+      let dtX: number, dtY: number;
+      if (dtT < 0.5) {
+        const t2 = dtT * 2;
+        dtX = screenPos.x - w * 0.9 + (screenPos.x - (screenPos.x - w * 0.9)) * t2;
+        dtY = bandY + d * 0.35 + (d * 0.5 - d * 0.35) * t2;
+      } else {
+        const t2 = (dtT - 0.5) * 2;
+        dtX = screenPos.x + (w * 0.9) * t2;
+        dtY = bandY + d * 0.5 + (d * 0.35 - d * 0.5) * t2;
+      }
+      ctx.fillStyle = "#b89020";
+      ctx.fillRect(
+        dtX - 0.8 * zoom,
+        dtY - 2.5 * zoom,
+        1.6 * zoom,
+        1.5 * zoom,
+      );
+    }
   }
 
   const topY = screenPos.y - baseHeight * zoom;
@@ -19996,100 +22331,95 @@ function renderClubTower(
     );
   }
 
-  // ========== DIGITAL SCREENS THAT FLASH WHEN GENERATING ==========
-  // Main digital display panel (left side)
-  ctx.fillStyle = "#0a1510";
-  ctx.fillRect(
-    screenPos.x - w * 0.85,
-    screenPos.y - h * 0.45,
-    14 * zoom,
-    18 * zoom,
-  );
-  ctx.strokeStyle = "#2a4a3a";
-  ctx.lineWidth = 1 * zoom;
+  // ========== LEDGER BOARD (framed notice panel, left side) ==========
+  const ledgerX = screenPos.x - w * 0.85;
+  const ledgerY = screenPos.y - h * 0.45;
+  const ledgerW = 14 * zoom;
+  const ledgerH = 18 * zoom;
+
+  // Frame background (dark wood)
+  ctx.fillStyle = "#1a1208";
+  ctx.fillRect(ledgerX, ledgerY, ledgerW, ledgerH);
+  // Ornate gold frame
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.strokeRect(ledgerX, ledgerY, ledgerW, ledgerH);
+  // Inner frame line
+  ctx.strokeStyle = "#8a7020";
+  ctx.lineWidth = 0.5 * zoom;
   ctx.strokeRect(
-    screenPos.x - w * 0.85,
-    screenPos.y - h * 0.45,
-    14 * zoom,
-    18 * zoom,
+    ledgerX + 1.5 * zoom,
+    ledgerY + 1.5 * zoom,
+    ledgerW - 3 * zoom,
+    ledgerH - 3 * zoom,
   );
 
-  // Screen content with flash effect
+  // Ledger content with flash effect
   const screenFlash = flashIntensity > 0 ? flashIntensity : 0;
   const screenBaseGlow = 0.5 + Math.sin(time * 3) * 0.2;
 
-  // Pawpoint counter display
-  ctx.fillStyle = `rgba(0, 255, 100, ${screenBaseGlow + screenFlash * 0.5})`;
+  // Gold text heading
+  ctx.fillStyle = `rgba(201, 162, 39, ${screenBaseGlow + screenFlash * 0.5})`;
   if (flashIntensity > 0) {
-    ctx.shadowColor = "#00ff66";
-    ctx.shadowBlur = 10 * zoom * flashIntensity;
+    ctx.shadowColor = "#ffd700";
+    ctx.shadowBlur = 8 * zoom * flashIntensity;
   }
-  ctx.font = `bold ${6 * zoom}px monospace`;
+  ctx.font = `bold ${5 * zoom}px serif`;
   ctx.textAlign = "center";
-  ctx.fillText(
-    "PAW",
-    screenPos.x - w * 0.85 + 7 * zoom,
-    screenPos.y - h * 0.42,
-  );
-  ctx.fillText(
-    "PTS",
-    screenPos.x - w * 0.85 + 7 * zoom,
-    screenPos.y - h * 0.38,
-  );
+  ctx.fillText("PAW", ledgerX + ledgerW * 0.5, ledgerY + 5 * zoom);
+  ctx.fillText("PTS", ledgerX + ledgerW * 0.5, ledgerY + 9 * zoom);
   ctx.shadowBlur = 0;
 
-  // Animated data bars
+  // Gold value bars
   for (let i = 0; i < 4; i++) {
-    const barY = screenPos.y - h * 0.35 + i * 3.5 * zoom;
+    const barY = ledgerY + 11 * zoom + i * 3 * zoom;
     const barWidth =
-      (5 + Math.sin(time * 6 + i * 1.5) * 3 + flashIntensity * 4) * zoom;
+      (4 + Math.sin(time * 4 + i * 1.5) * 3 + flashIntensity * 3) * zoom;
     const barGlow =
-      screenBaseGlow +
-      (flashIntensity > 0 && i === Math.floor(time * 10) % 4 ? 0.4 : 0);
-    ctx.fillStyle = `rgba(255, 215, 0, ${barGlow})`;
-    ctx.fillRect(screenPos.x - w * 0.83, barY, barWidth, 2 * zoom);
+      0.4 +
+      Math.sin(time * 2 + i * 0.8) * 0.15 +
+      (flashIntensity > 0 && i === Math.floor(time * 8) % 4 ? 0.3 : 0);
+    ctx.fillStyle = `rgba(201, 162, 39, ${barGlow})`;
+    ctx.fillRect(ledgerX + 2 * zoom, barY, barWidth, 1.5 * zoom);
   }
 
-  // Right side screen (level 2+)
+  // Right side notice board (level 2+)
   if (tower.level >= 2) {
-    ctx.fillStyle = "#0a1510";
-    ctx.fillRect(
-      screenPos.x + w * 0.55,
-      screenPos.y - h * 0.5,
-      12 * zoom,
-      16 * zoom,
-    );
-    ctx.strokeStyle = "#2a4a3a";
-    ctx.strokeRect(
-      screenPos.x + w * 0.55,
-      screenPos.y - h * 0.5,
-      12 * zoom,
-      16 * zoom,
-    );
-
-    // Live graph display
-    ctx.strokeStyle = `rgba(0, 255, 100, ${screenBaseGlow + screenFlash * 0.4})`;
+    const rBoardX = screenPos.x + w * 0.55;
+    const rBoardY = screenPos.y - h * 0.5;
+    const rBoardW = 12 * zoom;
+    const rBoardH = 16 * zoom;
+    ctx.fillStyle = "#1a1208";
+    ctx.fillRect(rBoardX, rBoardY, rBoardW, rBoardH);
+    ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 1.5 * zoom;
+    ctx.strokeRect(rBoardX, rBoardY, rBoardW, rBoardH);
+
+    // Earnings graph (gold line)
+    ctx.strokeStyle = `rgba(201, 162, 39, ${screenBaseGlow + screenFlash * 0.3})`;
+    ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.57, screenPos.y - h * 0.4);
-    for (let i = 0; i < 8; i++) {
-      const graphX = screenPos.x + w * 0.57 + i * 1.2 * zoom;
+    ctx.moveTo(rBoardX + 1.5 * zoom, rBoardY + rBoardH * 0.6);
+    for (let i = 0; i < 7; i++) {
+      const graphX = rBoardX + 1.5 * zoom + i * 1.4 * zoom;
       const graphY =
-        screenPos.y - h * 0.42 - Math.sin(time * 4 + i * 0.8) * 3 * zoom;
+        rBoardY +
+        rBoardH * 0.5 -
+        Math.sin(time * 3 + i * 0.9) * 3 * zoom;
       ctx.lineTo(graphX, graphY);
     }
     ctx.stroke();
 
-    // Flash indicator when generating
+    // Flash indicator
     if (flashIntensity > 0) {
       ctx.fillStyle = `rgba(255, 215, 0, ${flashIntensity})`;
       ctx.shadowColor = "#ffd700";
-      ctx.shadowBlur = 8 * zoom;
+      ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
       ctx.arc(
-        screenPos.x + w * 0.61,
-        screenPos.y - h * 0.47,
-        2 * zoom,
+        rBoardX + rBoardW * 0.5,
+        rBoardY + 3 * zoom,
+        1.5 * zoom,
         0,
         Math.PI * 2,
       );
@@ -20098,238 +22428,309 @@ function renderClubTower(
     }
   }
 
-  // Level 3 holographic projection screen
+  // Level 3 — framed portrait gallery
   if (tower.level >= 3) {
-    // Holographic projector base
-    ctx.fillStyle = "#3a4a3a";
+    const portraitCX = screenPos.x;
+    const portraitCY = screenPos.y - h * 0.78;
+    const pFrameW = 8 * zoom;
+    const pFrameH = 10 * zoom;
+
+    // Portrait frame
+    ctx.fillStyle = "#0a0a06";
+    ctx.fillRect(
+      portraitCX - pFrameW * 0.5,
+      portraitCY - pFrameH * 0.5,
+      pFrameW,
+      pFrameH,
+    );
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.strokeRect(
+      portraitCX - pFrameW * 0.5,
+      portraitCY - pFrameH * 0.5,
+      pFrameW,
+      pFrameH,
+    );
+
+    // Silhouette figure inside
+    const figGlow =
+      0.35 + Math.sin(time * 1.5) * 0.1 + flashIntensity * 0.2;
+    ctx.fillStyle = `rgba(160, 130, 50, ${figGlow})`;
     ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      screenPos.y - h * 0.75,
+    ctx.arc(portraitCX, portraitCY - 2 * zoom, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(portraitCX - 3 * zoom, portraitCY + pFrameH * 0.35);
+    ctx.lineTo(portraitCX - 2 * zoom, portraitCY);
+    ctx.lineTo(portraitCX + 2 * zoom, portraitCY);
+    ctx.lineTo(portraitCX + 3 * zoom, portraitCY + pFrameH * 0.35);
+    ctx.closePath();
+    ctx.fill();
+
+    // Gold nameplate
+    ctx.fillStyle = `rgba(201, 162, 39, ${figGlow + 0.1})`;
+    ctx.fillRect(
+      portraitCX - 4 * zoom,
+      portraitCY + pFrameH * 0.35 + zoom,
       8 * zoom,
-      4 * zoom,
-      0,
+      2 * zoom,
+    );
+  }
+
+  // ========== TREASURE CHEST (level 2+) ==========
+  if (tower.level >= 2) {
+    const chestX = screenPos.x - w * 0.65;
+    const chestY = screenPos.y + 4 * zoom;
+    const chestW = 10;
+    const chestD = 8;
+    const chestH = 6;
+
+    // Chest body
+    drawIsometricPrism(
+      ctx,
+      chestX,
+      chestY,
+      chestW,
+      chestD,
+      chestH,
+      {
+        top: "#5a3a1a",
+        left: "#4a2a0a",
+        right: "#3a1a00",
+        leftBack: "#6a4a2a",
+        rightBack: "#5a3a1a",
+      },
+      zoom,
+    );
+
+    // Gold banding on chest
+    const chestHW = chestW * zoom * 0.5;
+    const chestDO = chestD * zoom * ISO_PRISM_D_FACTOR;
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1 * zoom;
+    // Horizontal band
+    const bandY = chestY - chestH * zoom * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(chestX - chestHW, bandY);
+    ctx.lineTo(chestX, bandY + chestDO);
+    ctx.lineTo(chestX + chestHW, bandY);
+    ctx.stroke();
+
+    // Gold latch/lock
+    const lockGlow =
+      0.5 + Math.sin(time * 3) * 0.2 + flashIntensity * 0.4;
+    ctx.fillStyle = `rgba(201, 162, 39, ${lockGlow})`;
+    ctx.beginPath();
+    ctx.arc(
+      chestX,
+      chestY - chestH * zoom * 0.5 + chestDO * 0.5,
+      2 * zoom,
       0,
       Math.PI * 2,
     );
     ctx.fill();
 
-    // Holographic display field
-    const holoGlow = 0.3 + Math.sin(time * 2) * 0.15 + flashIntensity * 0.3;
-    ctx.fillStyle = `rgba(0, 255, 150, ${holoGlow * 0.3})`;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - 10 * zoom, screenPos.y - h * 0.75);
-    ctx.lineTo(screenPos.x - 15 * zoom, screenPos.y - h * 0.95);
-    ctx.lineTo(screenPos.x + 15 * zoom, screenPos.y - h * 0.95);
-    ctx.lineTo(screenPos.x + 10 * zoom, screenPos.y - h * 0.75);
-    ctx.closePath();
-    ctx.fill();
-
-    // Holographic data streams
-    ctx.strokeStyle = `rgba(0, 255, 150, ${holoGlow})`;
-    ctx.lineWidth = 1 * zoom;
-    for (let i = 0; i < 5; i++) {
-      const streamX = screenPos.x - 8 * zoom + i * 4 * zoom;
-      const streamPhase = (time * 3 + i * 0.5) % 1;
-      ctx.beginPath();
-      ctx.moveTo(streamX, screenPos.y - h * 0.76);
-      ctx.lineTo(
-        streamX + (i - 2) * 1.5 * zoom,
-        screenPos.y - h * 0.76 - streamPhase * 15 * zoom,
-      );
-      ctx.stroke();
-    }
-  }
-
-  // ========== GOLD COIN CONVEYOR ==========
-  if (tower.level >= 2) {
-    // Conveyor frame
-    ctx.strokeStyle = "#4a4a52";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.75, screenPos.y + 6 * zoom);
-    ctx.lineTo(screenPos.x + w * 0.15, screenPos.y - h * 0.28);
-    ctx.stroke();
-
-    // Conveyor track
-    ctx.strokeStyle = "#3a3a42";
-    ctx.lineWidth = 6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.7, screenPos.y + 4 * zoom);
-    ctx.lineTo(screenPos.x + w * 0.1, screenPos.y - h * 0.3);
-    ctx.stroke();
-
-    // Conveyor rollers
-    ctx.fillStyle = "#5a5a62";
-    for (let r = 0; r < 4; r++) {
-      const rollerPhase = r / 4;
-      const rollerX = screenPos.x - w * 0.7 + w * 0.8 * rollerPhase;
-      const rollerY = screenPos.y + 4 * zoom - (h * 0.3 + 4) * rollerPhase;
-      ctx.beginPath();
-      ctx.ellipse(rollerX, rollerY, 3 * zoom, 1.5 * zoom, 0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Animated gold coins on conveyor
-    for (let c = 0; c < 4; c++) {
-      const coinPhase = (time * 0.6 + c * 0.25) % 1;
-      const coinX = screenPos.x - w * 0.7 + w * 0.8 * coinPhase;
-      const coinY = screenPos.y + 4 * zoom - (h * 0.3 + 4) * coinPhase;
-
+    // Overflowing gold coins
+    for (let gc = 0; gc < 3; gc++) {
+      const gcOff = (gc - 1) * 3 * zoom;
+      const gcBob = Math.sin(time * 2 + gc * 1.5) * 0.5 * zoom;
       ctx.fillStyle = "#c9a227";
       ctx.shadowColor = "#ffaa00";
-      ctx.shadowBlur = (4 + flashIntensity * 4) * zoom;
+      ctx.shadowBlur = (3 + flashIntensity * 3) * zoom;
       ctx.beginPath();
-      ctx.ellipse(coinX, coinY, 4 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        chestX + gcOff,
+        chestY - chestH * zoom - 1 * zoom + gcBob,
+        2.5 * zoom,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
       ctx.shadowBlur = 0;
     }
   }
 
-  // ========== GOLD STORAGE VAULT ==========
-  // Vault frame
-  ctx.strokeStyle = "#5a5a62";
-  ctx.lineWidth = 2 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y - h * 0.25,
-    10 * zoom,
-    12 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.stroke();
+  // ========== ORNATE VAULT DOOR ==========
+  const vaultCX = screenPos.x;
+  const vaultCY = screenPos.y - h * 0.25;
 
-  // Vault door
-  ctx.fillStyle = "#4a4a52";
+  // Heavy door surround (dark stone frame)
+  ctx.fillStyle = "#2a2a22";
   ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    screenPos.y - h * 0.25,
-    8 * zoom,
-    10 * zoom,
-    0,
-    0,
-    Math.PI * 2,
-  );
+  ctx.arc(vaultCX, vaultCY, 11 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
-  // Vault spokes (rotating faster when generating)
-  const spokeSpeed = flashIntensity > 0 ? 2 : 0.5;
-  ctx.strokeStyle = "#6a6a72";
+  // Gold rim
+  ctx.strokeStyle = "#c9a227";
   ctx.lineWidth = 2 * zoom;
-  for (let spoke = 0; spoke < 6; spoke++) {
-    const spokeAngle = (spoke / 6) * Math.PI * 2 + time * spokeSpeed;
+  ctx.beginPath();
+  ctx.arc(vaultCX, vaultCY, 10 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Main vault door face (brushed metal)
+  const vaultGrad = ctx.createRadialGradient(
+    vaultCX - 3 * zoom,
+    vaultCY - 3 * zoom,
+    0,
+    vaultCX,
+    vaultCY,
+    9 * zoom,
+  );
+  vaultGrad.addColorStop(0, "#6a6a72");
+  vaultGrad.addColorStop(0.5, "#4a4a52");
+  vaultGrad.addColorStop(1, "#3a3a42");
+  ctx.fillStyle = vaultGrad;
+  ctx.beginPath();
+  ctx.arc(vaultCX, vaultCY, 9 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner decorative rings
+  ctx.strokeStyle = "#5a5a62";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.arc(vaultCX, vaultCY, 7 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(vaultCX, vaultCY, 4.5 * zoom, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Rivets around the vault door
+  const rivetCount = 8;
+  for (let rv = 0; rv < rivetCount; rv++) {
+    const rvAngle = (rv / rivetCount) * Math.PI * 2;
+    const rvX = vaultCX + Math.cos(rvAngle) * 7.5 * zoom;
+    const rvY = vaultCY + Math.sin(rvAngle) * 7.5 * zoom;
+    ctx.fillStyle = "#7a7a82";
     ctx.beginPath();
-    ctx.moveTo(screenPos.x, screenPos.y - h * 0.25);
+    ctx.arc(rvX, rvY, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#9a9aa2";
+    ctx.beginPath();
+    ctx.arc(rvX - 0.2 * zoom, rvY - 0.2 * zoom, 0.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Vault handle (rotating combination dial)
+  const spokeSpeed = flashIntensity > 0 ? 2 : 0.5;
+  ctx.strokeStyle = "#8a8a92";
+  ctx.lineWidth = 1.5 * zoom;
+  for (let spoke = 0; spoke < 4; spoke++) {
+    const spokeAngle = (spoke / 4) * Math.PI * 2 + time * spokeSpeed;
+    ctx.beginPath();
+    ctx.moveTo(vaultCX, vaultCY);
     ctx.lineTo(
-      screenPos.x + Math.cos(spokeAngle) * 6 * zoom,
-      screenPos.y - h * 0.25 + Math.sin(spokeAngle) * 8 * zoom,
+      vaultCX + Math.cos(spokeAngle) * 4 * zoom,
+      vaultCY + Math.sin(spokeAngle) * 4 * zoom,
     );
     ctx.stroke();
   }
 
-  // Vault center with enhanced flash effect
+  // Vault center jewel
   const vaultGlow = 0.6 + Math.sin(time * 3) * 0.3 + flashIntensity * 0.4;
   ctx.fillStyle = `rgba(255, 215, 0, ${vaultGlow})`;
   ctx.shadowColor = "#c9a227";
-  ctx.shadowBlur = (8 + flashIntensity * 12) * zoom;
+  ctx.shadowBlur = (6 + flashIntensity * 10) * zoom;
   ctx.beginPath();
-  ctx.arc(screenPos.x, screenPos.y - h * 0.25, 3 * zoom, 0, Math.PI * 2);
+  ctx.arc(vaultCX, vaultCY, 2.5 * zoom, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Tech circuit lines with flash
-  const panelGlow = 0.4 + Math.sin(time * 3) * 0.2 + flashIntensity * 0.3;
-  ctx.strokeStyle = `rgba(0, 255, 100, ${panelGlow})`;
-  ctx.lineWidth = 1 * zoom;
+  // Highlight specular
+  ctx.fillStyle = "rgba(255, 250, 220, 0.25)";
+  ctx.beginPath();
+  ctx.ellipse(
+    vaultCX - 3 * zoom,
+    vaultCY - 3 * zoom,
+    3 * zoom,
+    2 * zoom,
+    -0.4,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Gold filigree scroll lines
+  const filigreeGlow =
+    0.35 + Math.sin(time * 2) * 0.15 + flashIntensity * 0.25;
+  ctx.strokeStyle = `rgba(201, 162, 39, ${filigreeGlow})`;
+  ctx.lineWidth = 0.8 * zoom;
 
   for (let i = 1; i <= tower.level + 1; i++) {
     const lineY = screenPos.y - (h * i) / (tower.level + 2);
+    // Left face scroll
     ctx.beginPath();
-    ctx.moveTo(screenPos.x - w * 0.2, lineY + d * 0.3);
-    ctx.lineTo(screenPos.x - w * 0.85, lineY - d * 0.2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(screenPos.x + w * 0.85, lineY - d * 0.2);
-    ctx.lineTo(screenPos.x + w * 0.2, lineY + d * 0.3);
-    ctx.stroke();
-  }
-
-  // ========== MONEY TUBES (flowing gold particles) ==========
-  drawEnergyTube(
-    ctx,
-    screenPos.x - w * 0.6,
-    screenPos.y + 6 * zoom,
-    screenPos.x - w * 0.4,
-    screenPos.y - h * 0.7,
-    2.5 + flashIntensity,
-    time,
-    zoom,
-    "rgb(255, 215, 0)",
-  );
-
-  drawEnergyTube(
-    ctx,
-    screenPos.x + w * 0.5,
-    screenPos.y + 2 * zoom,
-    screenPos.x + w * 0.35,
-    screenPos.y - h * 0.65,
-    2.5 + flashIntensity,
-    time + 0.4,
-    zoom,
-    "rgb(255, 200, 50)",
-  );
-
-  // Level 2+ additional tubes
-  if (tower.level >= 2) {
-    drawEnergyTube(
-      ctx,
-      screenPos.x - w * 0.3,
-      screenPos.y + 4 * zoom,
-      screenPos.x - w * 0.1,
-      screenPos.y - h * 0.6,
-      2,
-      time + 0.2,
-      zoom,
-      "rgb(200, 255, 100)",
+    ctx.moveTo(screenPos.x - w * 0.15, lineY + d * 0.25);
+    ctx.quadraticCurveTo(
+      screenPos.x - w * 0.5,
+      lineY + d * 0.1 - 2 * zoom,
+      screenPos.x - w * 0.82,
+      lineY - d * 0.15,
     );
+    ctx.stroke();
+    // Right face scroll
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x + w * 0.15, lineY + d * 0.25);
+    ctx.quadraticCurveTo(
+      screenPos.x + w * 0.5,
+      lineY + d * 0.1 - 2 * zoom,
+      screenPos.x + w * 0.82,
+      lineY - d * 0.15,
+    );
+    ctx.stroke();
   }
 
-  // Glowing resource vents with flash effect
-  for (let i = 0; i < tower.level + 1; i++) {
-    const ventY = screenPos.y - h * 0.3 - i * 10 * zoom;
-    const ventGlow =
-      0.5 + Math.sin(time * 4 + i * 0.5) * 0.3 + flashIntensity * 0.4;
+  // ========== ORNAMENTAL DOWNSPOUTS ==========
+  for (const side of [-1, 1]) {
+    const spoutX = screenPos.x + side * w * 0.65;
+    const spoutTopY = screenPos.y - h * 0.7;
+    const spoutBotY = screenPos.y + 4 * zoom;
 
-    ctx.shadowColor = "#00ff66";
-    ctx.shadowBlur = (6 + flashIntensity * 6) * zoom;
-    ctx.fillStyle = `rgba(0, 255, 100, ${ventGlow})`;
+    ctx.strokeStyle = "#6a5a3a";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(spoutX, spoutTopY);
+    ctx.lineTo(spoutX, spoutBotY - 4 * zoom);
+    ctx.quadraticCurveTo(
+      spoutX,
+      spoutBotY,
+      spoutX + side * 4 * zoom,
+      spoutBotY + 2 * zoom,
+    );
+    ctx.stroke();
+
+    ctx.strokeStyle = "#8a7a5a";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(spoutX - 0.6 * zoom, spoutTopY);
+    ctx.lineTo(spoutX - 0.6 * zoom, spoutBotY - 4 * zoom);
+    ctx.stroke();
+
+    for (let b = 0; b < 4; b++) {
+      const bandY = spoutTopY + (spoutBotY - spoutTopY) * (b / 4 + 0.1);
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(spoutX - 2 * zoom, bandY);
+      ctx.lineTo(spoutX + 2 * zoom, bandY);
+      ctx.stroke();
+    }
+
+    const spoutMouthGlow =
+      0.15 + Math.sin(time * 2 + side) * 0.08 + flashIntensity * 0.2;
+    ctx.fillStyle = `rgba(201, 162, 39, ${spoutMouthGlow})`;
     ctx.beginPath();
     ctx.ellipse(
-      screenPos.x - w * 0.6,
-      ventY + d * 0.2,
-      4 * zoom,
-      2 * zoom,
-      0.4,
+      spoutX + side * 4 * zoom,
+      spoutBotY + 2 * zoom,
+      2.5 * zoom,
+      1.5 * zoom,
+      0,
       0,
       Math.PI * 2,
     );
     ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x + w * 0.6,
-      ventY + d * 0.2,
-      4 * zoom,
-      2 * zoom,
-      -0.4,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
   // ========== TOP RAILING BACK HALF (behind roof/dome/chimney) ==========
@@ -20525,14 +22926,14 @@ function renderClubTower(
   ctx.fillStyle = `rgba(201, 162, 39, ${0.9 + Math.sin(time * 2) * 0.1})`;
   ctx.fillText("EC", flagCenterX, flagCenterY);
 
-  // ========== CHIMNEY WITH ANIMATED SMOKE (3D isometric, left side) ==========
+  // ========== ORNATE CHIMNEY (3D isometric, left side) ==========
   const chimneyX = screenPos.x - w * 0.3;
   const chimneyBaseY = topY + 2 * zoom;
-  const chimneyH = 18 * zoom;
-  const chimneyW = 5;
-  const chimneyD = 5;
+  const chimneyH = 20 * zoom;
+  const chimneyW = 6;
+  const chimneyD = 6;
 
-  // Chimney shaft (isometric prism)
+  // Chimney shaft (isometric prism) — warm brick
   drawIsometricPrism(
     ctx,
     chimneyX,
@@ -20541,72 +22942,150 @@ function renderClubTower(
     chimneyD,
     chimneyH / zoom,
     {
-      top: "#5a4a4a",
-      left: "#4a3a3a",
-      right: "#3a2a2a",
-      leftBack: "#5a4a4a",
-      rightBack: "#4a3a3a",
+      top: "#6a4a3a",
+      left: "#5a3a2a",
+      right: "#4a2a1a",
+      leftBack: "#6a4a3a",
+      rightBack: "#5a3a2a",
     },
     zoom,
   );
 
-  // Chimney cap (wider crown)
-  drawIsometricPrism(
-    ctx,
-    chimneyX,
-    chimneyBaseY - chimneyH + zoom,
-    chimneyW + 2,
-    chimneyD + 2,
-    2,
-    {
-      top: "#6a5a5a",
-      left: "#5a4a4a",
-      right: "#4a3a3a",
-      leftBack: "#6a5a5a",
-      rightBack: "#5a4a4a",
-    },
-    zoom,
-  );
-
-  // Brick lines on chimney faces
-  ctx.strokeStyle = "rgba(80, 60, 50, 0.3)";
-  ctx.lineWidth = 0.5 * zoom;
+  // Brick mortar lines with staggered pattern
   const chHW = chimneyW * zoom * 0.5;
   const chDO = chimneyD * zoom * 0.25;
-  for (let br = 1; br < 6; br++) {
-    const bry = chimneyBaseY - chimneyH * (br / 6);
+  const brickRows = 8;
+  for (let br = 1; br < brickRows; br++) {
+    const bry = chimneyBaseY - chimneyH * (br / brickRows);
+    // Horizontal mortar
+    ctx.strokeStyle = "rgba(90, 70, 55, 0.4)";
+    ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(chimneyX - chHW, bry);
     ctx.lineTo(chimneyX, bry + chDO);
     ctx.lineTo(chimneyX + chHW, bry);
     ctx.stroke();
+
+    // Staggered vertical mortar (left face)
+    const vOff = br % 2 === 0 ? 0.33 : 0.66;
+    ctx.beginPath();
+    const vx = chimneyX - chHW * (1 - vOff);
+    const vy = bry + chDO * vOff * 0.5;
+    const prevBry = chimneyBaseY - chimneyH * ((br - 1) / brickRows);
+    const pvx = chimneyX - chHW * (1 - vOff);
+    const pvy = prevBry + chDO * vOff * 0.5;
+    ctx.moveTo(vx, vy);
+    ctx.lineTo(pvx, pvy);
+    ctx.stroke();
+
+    // Staggered vertical mortar (right face)
+    const rvOff = br % 2 === 0 ? 0.66 : 0.33;
+    const rvx = chimneyX + chHW * rvOff;
+    const rvy = bry + chDO * (1 - rvOff) * 0.5;
+    const prvx = chimneyX + chHW * rvOff;
+    const prvy = prevBry + chDO * (1 - rvOff) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(rvx, rvy);
+    ctx.lineTo(prvx, prvy);
+    ctx.stroke();
   }
 
-  // Dark chimney opening
-  ctx.fillStyle = "#1a0a0a";
+  // Chimney corbel (decorative stepped crown)
+  drawIsometricPrism(
+    ctx,
+    chimneyX,
+    chimneyBaseY - chimneyH + 2 * zoom,
+    chimneyW + 1.5,
+    chimneyD + 1.5,
+    1.5,
+    {
+      top: "#7a5a4a",
+      left: "#6a4a3a",
+      right: "#5a3a2a",
+      leftBack: "#7a5a4a",
+      rightBack: "#6a4a3a",
+    },
+    zoom,
+  );
+  drawIsometricPrism(
+    ctx,
+    chimneyX,
+    chimneyBaseY - chimneyH,
+    chimneyW + 3,
+    chimneyD + 3,
+    2,
+    {
+      top: "#8a6a5a",
+      left: "#7a5a4a",
+      right: "#6a4a3a",
+      leftBack: "#8a6a5a",
+      rightBack: "#7a5a4a",
+    },
+    zoom,
+  );
+
+  // Gold trim ring around chimney crown
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1 * zoom;
+  const crownW = (chimneyW + 3) * zoom * 0.5;
+  const crownD = (chimneyD + 3) * zoom * 0.25;
+  const crownY = chimneyBaseY - chimneyH - 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(chimneyX - crownW, crownY);
+  ctx.lineTo(chimneyX, crownY + crownD);
+  ctx.lineTo(chimneyX + crownW, crownY);
+  ctx.stroke();
+
+  // Dark chimney flue opening
+  ctx.fillStyle = "#120808";
   ctx.beginPath();
   ctx.ellipse(
     chimneyX,
-    chimneyBaseY - chimneyH - zoom,
-    chHW * 0.6,
-    chDO * 0.5,
+    crownY - 0.5 * zoom,
+    crownW * 0.55,
+    crownD * 0.55,
     0,
     0,
     Math.PI * 2,
   );
   ctx.fill();
 
-  // Animated smoke puffs
-  for (let s = 0; s < 5; s++) {
-    const smokeAge = (time * 0.7 + s * 0.2) % 1;
-    const smokeY = chimneyBaseY - chimneyH - 2 * zoom - smokeAge * 28 * zoom;
-    const smokeX =
-      chimneyX + Math.sin(time * 1.8 + s * 1.7) * 5 * zoom * smokeAge;
-    const smokeAlpha = (1 - smokeAge) * 0.3;
-    const smokeSize = (1.5 + smokeAge * 6) * zoom;
-    ctx.fillStyle = `rgba(180, 180, 195, ${smokeAlpha})`;
+  // Inner ember glow
+  const emberGlow =
+    0.15 + Math.sin(time * 2) * 0.1 + flashIntensity * 0.2;
+  ctx.fillStyle = `rgba(200, 80, 20, ${emberGlow})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    chimneyX,
+    crownY - 0.5 * zoom,
+    crownW * 0.35,
+    crownD * 0.35,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Layered smoke puffs with better dissipation
+  for (let s = 0; s < 6; s++) {
+    const smokeAge = (time * 0.6 + s * 0.17) % 1;
+    const drift = Math.sin(time * 1.2 + s * 1.9) * (6 + smokeAge * 4) * zoom;
+    const rise = smokeAge * 30 * zoom;
+    const smokeY = crownY - 2 * zoom - rise;
+    const smokeX = chimneyX + drift;
+    const smokeAlpha = (1 - smokeAge) * 0.25 * (1 - smokeAge);
+    const smokeSize = (2 + smokeAge * 7) * zoom;
+    ctx.fillStyle = `rgba(170, 170, 185, ${smokeAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(smokeX, smokeY, smokeSize, smokeSize * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      smokeX,
+      smokeY,
+      smokeSize,
+      smokeSize * 0.65,
+      drift * 0.02,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -21047,50 +23526,44 @@ function renderClubTower(
     }
   }
 
-  // ========== WARNING LIGHTS ==========
-  drawWarningLight(
-    ctx,
-    screenPos.x - w * 0.8,
-    screenPos.y - h * 0.1,
-    2.5,
-    time,
-    zoom,
-    "#00ff66",
-    4,
-  );
-  drawWarningLight(
-    ctx,
-    screenPos.x + w * 0.8,
-    screenPos.y - h * 0.15,
-    2.5,
-    time + 0.5,
-    zoom,
-    "#c9a227",
-    3,
-  );
-
-  // Level 2+ extra warning lights on scaffolding
+  // ========== EXTERIOR GAS LANTERNS ==========
+  const lanternPositions = [
+    { x: screenPos.x - w * 0.85, y: screenPos.y - h * 0.1, phase: 0 },
+    { x: screenPos.x + w * 0.85, y: screenPos.y - h * 0.15, phase: 0.5 },
+  ];
   if (tower.level >= 2) {
-    drawWarningLight(
-      ctx,
-      screenPos.x - w * 1.05,
-      screenPos.y - h * 0.5,
-      2,
-      time + 0.25,
-      zoom,
-      "#ff6600",
-      5,
+    lanternPositions.push(
+      { x: screenPos.x - buttHalf * 0.9, y: screenPos.y - h * 0.5, phase: 0.25 },
+      { x: screenPos.x + buttHalf * 0.9, y: screenPos.y - h * 0.4, phase: 0.75 },
     );
-    drawWarningLight(
-      ctx,
-      screenPos.x + w * 1.0,
-      screenPos.y - h * 0.4,
-      2,
-      time + 0.75,
-      zoom,
-      "#00ffff",
-      4,
-    );
+  }
+  for (const lp of lanternPositions) {
+    // Bracket arm
+    ctx.strokeStyle = "#4a3a2a";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(lp.x, lp.y + 3 * zoom);
+    ctx.lineTo(lp.x, lp.y - 1 * zoom);
+    ctx.stroke();
+    // Lantern cage
+    ctx.fillStyle = "#2a2a1a";
+    ctx.fillRect(lp.x - 1.5 * zoom, lp.y - 1 * zoom, 3 * zoom, 3.5 * zoom);
+    // Warm glow
+    const glowAlpha =
+      0.5 + Math.sin(time * 4 + lp.phase * 6) * 0.2 + flashIntensity * 0.3;
+    ctx.fillStyle = `rgba(255, 200, 80, ${glowAlpha})`;
+    ctx.shadowColor = "rgba(255, 180, 50, 0.5)";
+    ctx.shadowBlur = 4 * zoom;
+    ctx.fillRect(lp.x - 1 * zoom, lp.y - 0.5 * zoom, 2 * zoom, 2.5 * zoom);
+    ctx.shadowBlur = 0;
+    // Tiny cap
+    ctx.fillStyle = "#6a5a3a";
+    ctx.beginPath();
+    ctx.moveTo(lp.x - 2 * zoom, lp.y - 1 * zoom);
+    ctx.lineTo(lp.x, lp.y - 2.5 * zoom);
+    ctx.lineTo(lp.x + 2 * zoom, lp.y - 1 * zoom);
+    ctx.closePath();
+    ctx.fill();
   }
 
   // ========== HOLOGRAPHIC CREDIT DISPLAY ==========
@@ -24567,102 +27040,109 @@ function renderStationTower(
     const bX = stationX;
     const bY = stationY;
 
-    // === ENHANCED FOUNDATION with exposed machinery ===
-    // Heavy stone foundation base (taller, matching L4B pattern)
+    // === STEPPED FOUNDATION with exposed machinery ===
+    // Bottom step — rough-hewn stone plinth (widest)
     drawIsometricPrism(
       ctx,
       bX,
       bY + 10 * zoom,
       38,
       32,
-      10,
+      4,
+      { top: "#505050", left: "#404040", right: "#333333" },
+      zoom,
+    );
+    // Bottom step mortar lines
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 19 * zoom, bY + 11 * zoom);
+    ctx.lineTo(bX, bY + 19 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 19 * zoom);
+    ctx.lineTo(bX + 19 * zoom, bY + 11 * zoom);
+    ctx.stroke();
+    // Bottom step highlight mortar
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 19 * zoom, bY + 10.5 * zoom);
+    ctx.lineTo(bX, bY + 18.5 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 18.5 * zoom);
+    ctx.lineTo(bX + 19 * zoom, bY + 10.5 * zoom);
+    ctx.stroke();
+
+    // Middle step — dressed stone
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 6 * zoom,
+      34,
+      28,
+      3,
+      { top: "#585858", left: "#484848", right: "#383838" },
+      zoom,
+    );
+    // Middle step mortar line
+    ctx.strokeStyle = "rgba(0,0,0,0.13)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 17 * zoom, bY + 7 * zoom);
+    ctx.lineTo(bX, bY + 14.5 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 14.5 * zoom);
+    ctx.lineTo(bX + 17 * zoom, bY + 7 * zoom);
+    ctx.stroke();
+
+    // Top step — polished stone cap
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 3 * zoom,
+      30,
+      24,
+      3,
       { top: "#5a5a5a", left: "#4a4a4a", right: "#3a3a3a" },
       zoom,
     );
 
-    // Stone mortar lines on foundation - left face
-    ctx.strokeStyle = "rgba(0,0,0,0.15)";
-    ctx.lineWidth = 0.8 * zoom;
-    for (let r = 1; r <= 3; r++) {
-      ctx.beginPath();
-      ctx.moveTo(bX - 19 * zoom, bY - 1 * zoom + r * 3 * zoom);
-      ctx.lineTo(bX, bY + 8 * zoom + r * 3 * zoom);
-      ctx.stroke();
-    }
-    // Stone mortar lines on foundation - right face
-    for (let r = 1; r <= 3; r++) {
-      ctx.beginPath();
-      ctx.moveTo(bX, bY + 8 * zoom + r * 3 * zoom);
-      ctx.lineTo(bX + 19 * zoom, bY - 1 * zoom + r * 3 * zoom);
-      ctx.stroke();
-    }
-
-    // Staggered vertical mortar joints - left face
-    ctx.strokeStyle = "rgba(0,0,0,0.1)";
-    const l1BlockW = 4.5 * zoom;
-    for (let r = 0; r < 3; r++) {
-      const stagger = (r % 2) * (l1BlockW * 0.5);
-      for (let j = 0; j < 5; j++) {
-        const jx = bX - 17 * zoom + stagger + j * l1BlockW;
-        if (jx < bX - 1 * zoom) {
-          const xOff = jx - (bX - 19 * zoom);
-          const yBase = bY - 1 * zoom + xOff * (9 / 19);
-          ctx.beginPath();
-          ctx.moveTo(jx, yBase + r * 3 * zoom);
-          ctx.lineTo(jx, yBase + (r + 1) * 3 * zoom);
-          ctx.stroke();
-        }
-      }
-    }
-    // Staggered vertical mortar joints - right face
-    for (let r = 0; r < 3; r++) {
-      const stagger = (r % 2) * (l1BlockW * 0.5);
-      for (let j = 0; j < 5; j++) {
-        const jx = bX + 2 * zoom + stagger + j * l1BlockW;
-        if (jx < bX + 18 * zoom) {
-          const xOff = jx - bX;
-          const yBase = bY + 8 * zoom - xOff * (9 / 19);
-          ctx.beginPath();
-          ctx.moveTo(jx, yBase + r * 3 * zoom);
-          ctx.lineTo(jx, yBase + (r + 1) * 3 * zoom);
-          ctx.stroke();
-        }
-      }
-    }
-
-    // Warm steampunk trim band on foundation - left face
+    // Copper trim band on top step edge — left face
     ctx.strokeStyle = "#c06020";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(bX - 18 * zoom, bY + 6 * zoom);
-    ctx.lineTo(bX + 2 * zoom, bY + 15 * zoom);
+    ctx.moveTo(bX - 15 * zoom, bY + 3.5 * zoom);
+    ctx.lineTo(bX, bY + 10.5 * zoom);
     ctx.stroke();
-    // Trim band - right face
+    // Trim band — right face
     ctx.beginPath();
-    ctx.moveTo(bX - 2 * zoom, bY + 15 * zoom);
-    ctx.lineTo(bX + 18 * zoom, bY + 6 * zoom);
+    ctx.moveTo(bX, bY + 10.5 * zoom);
+    ctx.lineTo(bX + 15 * zoom, bY + 3.5 * zoom);
     ctx.stroke();
 
-    // Copper rivets along trim - left face
+    // Copper rivets along trim — left face
     ctx.fillStyle = "#b87333";
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       ctx.beginPath();
       ctx.arc(
-        bX - 14 * zoom + i * 4 * zoom,
-        bY + 7.5 * zoom + i * 1.2 * zoom,
-        1.2 * zoom,
+        bX - 12 * zoom + i * 4 * zoom,
+        bY + 4.5 * zoom + i * 1.5 * zoom,
+        1.1 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
     }
-    // Copper rivets along trim - right face
-    for (let i = 0; i < 5; i++) {
+    // Copper rivets along trim — right face
+    for (let i = 0; i < 4; i++) {
       ctx.beginPath();
       ctx.arc(
-        bX + 1 * zoom + i * 4 * zoom,
-        bY + 15 * zoom - i * 1.2 * zoom,
-        1.2 * zoom,
+        bX + 2 * zoom + i * 3.5 * zoom,
+        bY + 10 * zoom - i * 1.5 * zoom,
+        1.1 * zoom,
         0,
         Math.PI * 2,
       );
@@ -24691,29 +27171,104 @@ function renderStationTower(
     ctx.arc(bX - 18 * zoom, bY - 5 * zoom, 2 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
-    // Foundation vent grate
-    ctx.fillStyle = "#2a2a2a";
-    ctx.fillRect(bX + 8 * zoom, bY + 2 * zoom, 6 * zoom, 4 * zoom);
-    ctx.strokeStyle = "#4a4a4a";
-    ctx.lineWidth = 1 * zoom;
-    for (let i = 0; i < 3; i++) {
+    // Industrial louvered exhaust vent with housing
+    {
+      const ventX = bX + 8 * zoom;
+      const ventY = bY + 1 * zoom;
+      const ventW = 7 * zoom;
+      const ventH = 5 * zoom;
+
+      // Vent recess shadow
+      ctx.fillStyle = "#1a1a1a";
       ctx.beginPath();
-      ctx.moveTo(bX + 9 * zoom + i * 2 * zoom, bY + 2 * zoom);
-      ctx.lineTo(bX + 9 * zoom + i * 2 * zoom, bY + 6 * zoom);
+      ctx.moveTo(ventX, ventY);
+      ctx.lineTo(ventX + ventW, ventY - ventW * 0.5);
+      ctx.lineTo(ventX + ventW, ventY - ventW * 0.5 + ventH);
+      ctx.lineTo(ventX, ventY + ventH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Louvered slats (angled for airflow)
+      const numSlats = 4;
+      for (let s = 0; s < numSlats; s++) {
+        const slatT = (s + 0.5) / numSlats;
+        const slatY = ventY + slatT * ventH;
+        const slatYR = ventY - ventW * 0.5 + slatT * ventH;
+        ctx.fillStyle = "#4a4a4a";
+        ctx.beginPath();
+        ctx.moveTo(ventX + 0.5 * zoom, slatY - 0.8 * zoom);
+        ctx.lineTo(ventX + ventW - 0.5 * zoom, slatYR - 0.8 * zoom);
+        ctx.lineTo(ventX + ventW - 0.5 * zoom, slatYR + 0.2 * zoom);
+        ctx.lineTo(ventX + 0.5 * zoom, slatY + 0.2 * zoom);
+        ctx.closePath();
+        ctx.fill();
+        // Slat highlight
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.beginPath();
+        ctx.moveTo(ventX + 0.5 * zoom, slatY - 0.8 * zoom);
+        ctx.lineTo(ventX + ventW - 0.5 * zoom, slatYR - 0.8 * zoom);
+        ctx.lineTo(ventX + ventW - 0.5 * zoom, slatYR - 0.4 * zoom);
+        ctx.lineTo(ventX + 0.5 * zoom, slatY - 0.4 * zoom);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Inner warm glow between slats
+      const ventGlow = 0.3 + Math.sin(time * 3) * 0.15;
+      ctx.fillStyle = `rgba(255, 140, 40, ${ventGlow})`;
+      ctx.beginPath();
+      ctx.moveTo(ventX + 1 * zoom, ventY + 1 * zoom);
+      ctx.lineTo(ventX + ventW - 1 * zoom, ventY - ventW * 0.5 + 1 * zoom);
+      ctx.lineTo(ventX + ventW - 1 * zoom, ventY - ventW * 0.5 + ventH - 1 * zoom);
+      ctx.lineTo(ventX + 1 * zoom, ventY + ventH - 1 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Iron frame border
+      ctx.strokeStyle = "#5a5a5a";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ventX, ventY);
+      ctx.lineTo(ventX + ventW, ventY - ventW * 0.5);
+      ctx.lineTo(ventX + ventW, ventY - ventW * 0.5 + ventH);
+      ctx.lineTo(ventX, ventY + ventH);
+      ctx.closePath();
       ctx.stroke();
+
+      // Corner rivets
+      ctx.fillStyle = "#6a6a6a";
+      const ventCorners = [
+        { x: ventX + 0.8 * zoom, y: ventY + 0.5 * zoom },
+        { x: ventX + ventW - 0.8 * zoom, y: ventY - ventW * 0.5 + 0.5 * zoom },
+        { x: ventX + 0.8 * zoom, y: ventY + ventH - 0.5 * zoom },
+        { x: ventX + ventW - 0.8 * zoom, y: ventY - ventW * 0.5 + ventH - 0.5 * zoom },
+      ];
+      for (const c of ventCorners) {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 0.7 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Heat shimmer / steam wisps rising from vent
+      const ventSteam = 0.25 + Math.sin(time * 3) * 0.15;
+      const shimmerDrift = Math.sin(time * 1.8) * 2;
+      ctx.fillStyle = `rgba(200, 200, 200, ${ventSteam})`;
+      for (let p = 0; p < 3; p++) {
+        const pT = (time * 1.5 + p * 1.2) % 3;
+        const pY = ventY - 2 * zoom - pT * 4 * zoom;
+        const pAlpha = Math.max(0, ventSteam * (1 - pT / 3));
+        ctx.fillStyle = `rgba(200, 200, 200, ${pAlpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          ventX + ventW * 0.5 + shimmerDrift + p * 1.5 * zoom,
+          pY,
+          (1.5 + pT * 0.8) * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
     }
-    // Vent steam
-    const ventSteam = 0.3 + Math.sin(time * 3) * 0.2;
-    ctx.fillStyle = `rgba(200, 200, 200, ${ventSteam})`;
-    ctx.beginPath();
-    ctx.arc(
-      bX + 11 * zoom,
-      bY - 1 * zoom + Math.sin(time * 2) * 2,
-      3 * zoom,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
 
     // Main wooden building
     drawIsometricPrism(
@@ -24982,39 +27537,155 @@ function renderStationTower(
     ctx.arc(peak.x, peak.y - 8 * zoom, 1.2 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
-    // Large double door (left face)
-    ctx.fillStyle = "#4a3215";
-    ctx.beginPath();
-    ctx.moveTo(bX - 12 * zoom, bY - 2 * zoom);
-    ctx.lineTo(bX - 12 * zoom, bY - 18 * zoom);
-    ctx.lineTo(bX - 3 * zoom, bY - 16 * zoom);
-    ctx.lineTo(bX - 3 * zoom, bY);
-    ctx.closePath();
-    ctx.fill();
-    // Door frame
-    ctx.strokeStyle = "#3a2205";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.stroke();
-    // Door split line
-    ctx.beginPath();
-    ctx.moveTo(bX - 7.5 * zoom, bY - 1 * zoom);
-    ctx.lineTo(bX - 7.5 * zoom, bY - 22 * zoom);
-    ctx.stroke();
-    // Door handles (brass)
-    ctx.fillStyle = "#c9a227";
-    ctx.beginPath();
-    ctx.arc(bX - 9 * zoom, bY - 9 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(bX - 6 * zoom, bY - 8.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-    ctx.fill();
+    // Iron-bound double door with stone arch frame (left face)
+    {
+      const doorL = bX - 13 * zoom;
+      const doorR = bX - 2 * zoom;
+      const doorBot = bY - 1 * zoom;
+      const doorTopL = bY - 19 * zoom;
+      const doorTopR = bY - 17 * zoom;
+      const doorMidX = (doorL + doorR) * 0.5;
+      const doorMidTopY = (doorTopL + doorTopR) * 0.5;
+      const isoSlope = (doorTopR - doorTopL) / (doorR - doorL);
 
-    // Window with warm glow (right face, isometric parallelogram)
+      // Stone step at base
+      ctx.fillStyle = "#6a5a4a";
+      ctx.beginPath();
+      ctx.moveTo(doorL - 1 * zoom, doorBot + 1 * zoom);
+      ctx.lineTo(doorR + 1 * zoom, doorBot + 1 * zoom + (doorR - doorL + 2 * zoom) * isoSlope);
+      ctx.lineTo(doorR + 1 * zoom, doorBot + 3 * zoom + (doorR - doorL + 2 * zoom) * isoSlope);
+      ctx.lineTo(doorL - 1 * zoom, doorBot + 3 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#5a4a3a";
+      ctx.beginPath();
+      ctx.moveTo(doorR + 1 * zoom, doorBot + 1 * zoom + (doorR - doorL + 2 * zoom) * isoSlope);
+      ctx.lineTo(doorR + 1 * zoom, doorBot + 3 * zoom + (doorR - doorL + 2 * zoom) * isoSlope);
+      ctx.lineTo(doorR + 2 * zoom, doorBot + 2.5 * zoom + (doorR - doorL + 3 * zoom) * isoSlope);
+      ctx.lineTo(doorR + 2 * zoom, doorBot + 0.5 * zoom + (doorR - doorL + 3 * zoom) * isoSlope);
+      ctx.closePath();
+      ctx.fill();
+
+      // Deep recess shadow behind the door
+      ctx.fillStyle = "#1a0e05";
+      ctx.beginPath();
+      ctx.moveTo(doorL, doorBot);
+      ctx.lineTo(doorL, doorTopL);
+      ctx.lineTo(doorR, doorTopR);
+      ctx.lineTo(doorR, doorBot + (doorR - doorL) * isoSlope);
+      ctx.closePath();
+      ctx.fill();
+
+      // Left door panel (darker wood)
+      ctx.fillStyle = "#4a3215";
+      ctx.beginPath();
+      ctx.moveTo(doorL + 1 * zoom, doorBot);
+      ctx.lineTo(doorL + 1 * zoom, doorTopL + 1 * zoom);
+      ctx.lineTo(doorMidX, doorMidTopY + 0.5 * zoom);
+      ctx.lineTo(doorMidX, doorBot + (doorMidX - doorL) * isoSlope);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right door panel (slightly lighter)
+      ctx.fillStyle = "#553b1a";
+      ctx.beginPath();
+      ctx.moveTo(doorMidX, doorBot + (doorMidX - doorL) * isoSlope);
+      ctx.lineTo(doorMidX, doorMidTopY + 0.5 * zoom);
+      ctx.lineTo(doorR - 1 * zoom, doorTopR + 1 * zoom);
+      ctx.lineTo(doorR - 1 * zoom, doorBot + (doorR - doorL - 1 * zoom) * isoSlope);
+      ctx.closePath();
+      ctx.fill();
+
+      // Iron strap hinges (3 on each panel)
+      ctx.strokeStyle = "#3a3a3a";
+      ctx.lineWidth = 1.8 * zoom;
+      for (let h = 0; h < 3; h++) {
+        const hingeY = doorBot - 3 * zoom - h * 5.5 * zoom;
+        const hingeYL = hingeY;
+        const hingeYR = hingeY + (doorMidX - doorL) * isoSlope;
+        ctx.beginPath();
+        ctx.moveTo(doorL + 1.5 * zoom, hingeYL);
+        ctx.lineTo(doorMidX - 1 * zoom, hingeYR);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(doorMidX + 1 * zoom, hingeYR);
+        ctx.lineTo(doorR - 1.5 * zoom, hingeYR + (doorR - doorMidX - 2.5 * zoom) * isoSlope);
+        ctx.stroke();
+      }
+
+      // Iron strap hinge rivets
+      ctx.fillStyle = "#5a5a5a";
+      for (let h = 0; h < 3; h++) {
+        const hingeY = doorBot - 3 * zoom - h * 5.5 * zoom;
+        ctx.beginPath();
+        ctx.arc(doorL + 2 * zoom, hingeY + 0.2 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(doorR - 2 * zoom, hingeY + (doorR - doorL - 2 * zoom) * isoSlope, 0.8 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Door split line
+      ctx.strokeStyle = "#2a1a08";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(doorMidX, doorBot + (doorMidX - doorL) * isoSlope);
+      ctx.lineTo(doorMidX, doorMidTopY + 0.5 * zoom);
+      ctx.stroke();
+
+      // Stone arch frame with double molding
+      ctx.strokeStyle = "#7a6a5a";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(doorL - 0.5 * zoom, doorBot);
+      ctx.lineTo(doorL - 0.5 * zoom, doorTopL - 1 * zoom);
+      ctx.lineTo(doorR + 0.5 * zoom, doorTopR - 1 * zoom);
+      ctx.lineTo(doorR + 0.5 * zoom, doorBot + (doorR - doorL + 1 * zoom) * isoSlope);
+      ctx.stroke();
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(doorL - 1.5 * zoom, doorBot);
+      ctx.lineTo(doorL - 1.5 * zoom, doorTopL - 2 * zoom);
+      ctx.lineTo(doorR + 1.5 * zoom, doorTopR - 2 * zoom);
+      ctx.lineTo(doorR + 1.5 * zoom, doorBot + (doorR - doorL + 3 * zoom) * isoSlope);
+      ctx.stroke();
+
+      // Brass door ring handles with shadow
+      ctx.strokeStyle = "#b8860b";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.arc(doorMidX - 2.5 * zoom, doorBot - 8 * zoom + (doorMidX - 2.5 * zoom - doorL) * isoSlope, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(doorMidX + 2.5 * zoom, doorBot - 8 * zoom + (doorMidX + 2.5 * zoom - doorL) * isoSlope, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(doorMidX - 2.5 * zoom, doorBot - 10 * zoom + (doorMidX - 2.5 * zoom - doorL) * isoSlope, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(doorMidX + 2.5 * zoom, doorBot - 10 * zoom + (doorMidX + 2.5 * zoom - doorL) * isoSlope, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Warm interior light spill from door gap
+      const doorGlow = 0.2 + Math.sin(time * 1.5) * 0.08;
+      ctx.fillStyle = `rgba(255, 180, 80, ${doorGlow})`;
+      ctx.beginPath();
+      ctx.moveTo(doorMidX - 0.5 * zoom, doorBot + (doorMidX - 0.5 * zoom - doorL) * isoSlope);
+      ctx.lineTo(doorMidX + 0.5 * zoom, doorBot + (doorMidX + 0.5 * zoom - doorL) * isoSlope);
+      ctx.lineTo(doorMidX + 0.5 * zoom, doorMidTopY + 2 * zoom);
+      ctx.lineTo(doorMidX - 0.5 * zoom, doorMidTopY + 2 * zoom);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Gothic arched window with stained glass (right face, isometric)
     {
       const wCx = bX + 9 * zoom;
       const wCy = bY - 20 * zoom;
-      const wHalfW = 4 * zoom;
-      const wHalfH = 5 * zoom;
+      const wHalfW = 4.5 * zoom;
+      const wHalfH = 6 * zoom;
       const wSlope = -0.5;
 
       const wTlx = wCx - wHalfW;
@@ -25026,26 +27697,41 @@ function renderStationTower(
       const wBlx = wCx - wHalfW;
       const wBly = wCy + wHalfH - wHalfW * wSlope;
 
-      ctx.fillStyle = "#3a2a1a";
+      // Gothic pointed arch peak
+      const archPeakX = (wTlx + wTrx) * 0.5;
+      const archPeakY = (wTly + wTry) * 0.5 - 3 * zoom;
+
+      // Deep stone recess behind window
+      ctx.fillStyle = "#1a1208";
       ctx.beginPath();
-      ctx.moveTo(wTlx, wTly);
-      ctx.lineTo(wTrx, wTry);
+      ctx.moveTo(wBlx, wBly);
+      ctx.lineTo(wTlx, wTly);
+      ctx.quadraticCurveTo(wTlx + 1 * zoom, archPeakY + 1 * zoom, archPeakX, archPeakY);
+      ctx.quadraticCurveTo(wTrx - 1 * zoom, wTry + 1 * zoom, wTrx, wTry);
       ctx.lineTo(wBrx, wBry);
-      ctx.lineTo(wBlx, wBly);
       ctx.closePath();
       ctx.fill();
 
+      // Warm interior glow (stained glass effect)
       const winGlow1 = 0.5 + Math.sin(time * 2) * 0.2;
-      ctx.fillStyle = `rgba(255, 200, 100, ${winGlow1})`;
+      const glassInset = 1.2 * zoom;
+      ctx.fillStyle = `rgba(255, 180, 80, ${winGlow1})`;
       ctx.beginPath();
-      ctx.moveTo(wTlx + 1 * zoom, wTly + 1 * zoom);
-      ctx.lineTo(wTrx - 1 * zoom, wTry + 1 * zoom);
-      ctx.lineTo(wBrx - 1 * zoom, wBry - 1 * zoom);
-      ctx.lineTo(wBlx + 1 * zoom, wBly - 1 * zoom);
+      ctx.moveTo(wBlx + glassInset, wBly - glassInset * 0.5);
+      ctx.lineTo(wTlx + glassInset, wTly + glassInset * 0.5);
+      ctx.quadraticCurveTo(wTlx + 2 * zoom, archPeakY + 2 * zoom, archPeakX, archPeakY + glassInset);
+      ctx.quadraticCurveTo(wTrx - 2 * zoom, wTry + 2 * zoom, wTrx - glassInset, wTry + glassInset * 0.5);
+      ctx.lineTo(wBrx - glassInset, wBry - glassInset * 0.5);
       ctx.closePath();
       ctx.fill();
 
-      // Mullion cross (follows the parallelogram)
+      // Colored glass panes (amber and copper tones)
+      const paneColors = [
+        `rgba(200, 120, 40, ${winGlow1 * 0.5})`,
+        `rgba(180, 90, 30, ${winGlow1 * 0.4})`,
+        `rgba(220, 160, 60, ${winGlow1 * 0.45})`,
+        `rgba(160, 80, 40, ${winGlow1 * 0.35})`,
+      ];
       const wMidTopX = (wTlx + wTrx) * 0.5;
       const wMidTopY = (wTly + wTry) * 0.5;
       const wMidBotX = (wBlx + wBrx) * 0.5;
@@ -25054,21 +27740,110 @@ function renderStationTower(
       const wMidLeftY = (wTly + wBly) * 0.5;
       const wMidRightX = (wTrx + wBrx) * 0.5;
       const wMidRightY = (wTry + wBry) * 0.5;
-      ctx.strokeStyle = "#3a2a1a";
-      ctx.lineWidth = 1.5 * zoom;
+
+      // Top-left pane
+      ctx.fillStyle = paneColors[0];
+      ctx.beginPath();
+      ctx.moveTo(wMidLeftX, wMidLeftY);
+      ctx.lineTo(wTlx + glassInset, wTly + glassInset * 0.5);
+      ctx.quadraticCurveTo(wTlx + 2 * zoom, archPeakY + 2 * zoom, archPeakX, archPeakY + glassInset);
+      ctx.lineTo(wMidTopX, wMidTopY);
+      ctx.closePath();
+      ctx.fill();
+      // Top-right pane
+      ctx.fillStyle = paneColors[1];
+      ctx.beginPath();
+      ctx.moveTo(wMidTopX, wMidTopY);
+      ctx.lineTo(archPeakX, archPeakY + glassInset);
+      ctx.quadraticCurveTo(wTrx - 2 * zoom, wTry + 2 * zoom, wTrx - glassInset, wTry + glassInset * 0.5);
+      ctx.lineTo(wMidRightX, wMidRightY);
+      ctx.closePath();
+      ctx.fill();
+      // Bottom-left pane
+      ctx.fillStyle = paneColors[2];
+      ctx.beginPath();
+      ctx.moveTo(wBlx + glassInset, wBly - glassInset * 0.5);
+      ctx.lineTo(wMidLeftX, wMidLeftY);
+      ctx.lineTo(wMidBotX, wMidBotY);
+      ctx.closePath();
+      ctx.fill();
+      // Bottom-right pane
+      ctx.fillStyle = paneColors[3];
+      ctx.beginPath();
+      ctx.moveTo(wMidBotX, wMidBotY);
+      ctx.lineTo(wMidRightX, wMidRightY);
+      ctx.lineTo(wBrx - glassInset, wBry - glassInset * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Lead came mullion cross (dark iron)
+      ctx.strokeStyle = "#2a1a08";
+      ctx.lineWidth = 1.8 * zoom;
       ctx.beginPath();
       ctx.moveTo(wMidTopX, wMidTopY);
       ctx.lineTo(wMidBotX, wMidBotY);
       ctx.moveTo(wMidLeftX, wMidLeftY);
       ctx.lineTo(wMidRightX, wMidRightY);
       ctx.stroke();
+      // Came highlight
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wMidTopX - 0.5 * zoom, wMidTopY);
+      ctx.lineTo(wMidBotX - 0.5 * zoom, wMidBotY);
+      ctx.stroke();
+
+      // Stone arch frame with double molding
+      ctx.strokeStyle = "#6a5a4a";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wBlx - 0.5 * zoom, wBly + 0.5 * zoom);
+      ctx.lineTo(wTlx - 0.5 * zoom, wTly - 0.5 * zoom);
+      ctx.quadraticCurveTo(wTlx, archPeakY - 0.5 * zoom, archPeakX, archPeakY - 1.5 * zoom);
+      ctx.quadraticCurveTo(wTrx, wTry - 0.5 * zoom, wTrx + 0.5 * zoom, wTry - 0.5 * zoom);
+      ctx.lineTo(wBrx + 0.5 * zoom, wBry + 0.5 * zoom);
+      ctx.stroke();
+      // Outer frame
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wBlx - 1.5 * zoom, wBly + 1 * zoom);
+      ctx.lineTo(wTlx - 1.5 * zoom, wTly - 1 * zoom);
+      ctx.quadraticCurveTo(wTlx - 0.5 * zoom, archPeakY - 1.5 * zoom, archPeakX, archPeakY - 3 * zoom);
+      ctx.quadraticCurveTo(wTrx + 0.5 * zoom, wTry - 1 * zoom, wTrx + 1.5 * zoom, wTry - 1 * zoom);
+      ctx.lineTo(wBrx + 1.5 * zoom, wBry + 1 * zoom);
+      ctx.stroke();
+
+      // Sill (bottom stone ledge)
+      ctx.fillStyle = "#7a6a5a";
+      ctx.beginPath();
+      ctx.moveTo(wBlx - 1 * zoom, wBly + 0.5 * zoom);
+      ctx.lineTo(wBrx + 1 * zoom, wBry + 0.5 * zoom);
+      ctx.lineTo(wBrx + 1.5 * zoom, wBry + 2 * zoom);
+      ctx.lineTo(wBlx - 1.5 * zoom, wBly + 2 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      // Light spill below window
+      ctx.fillStyle = `rgba(255, 200, 100, ${winGlow1 * 0.12})`;
+      ctx.beginPath();
+      ctx.moveTo(wBlx, wBly + 2 * zoom);
+      ctx.lineTo(wBrx, wBry + 2 * zoom);
+      ctx.lineTo(wBrx + 3 * zoom, wBry + 8 * zoom);
+      ctx.lineTo(wBlx - 3 * zoom, wBly + 8 * zoom);
+      ctx.closePath();
+      ctx.fill();
     }
 
-    // Stone chimney with smoke stack
+    // Stone chimney with smoke stack and mortar detail
     const chimneyBaseY = roofBaseY + 2 * zoom;
+    const chimX = bX + 6 * zoom;
     drawIsometricPrism(
       ctx,
-      bX + 6 * zoom,
+      chimX,
       chimneyBaseY - 8 * zoom,
       5,
       4,
@@ -25076,10 +27851,36 @@ function renderStationTower(
       { top: "#6a6a6a", left: "#5a5a5a", right: "#4a4a4a" },
       zoom,
     );
-    // Chimney cap
+
+    // Chimney mortar lines (horizontal)
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.6 * zoom;
+    for (let m = 1; m <= 4; m++) {
+      const mY = chimneyBaseY - 8 * zoom - m * 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(chimX - 2.5 * zoom, mY);
+      ctx.lineTo(chimX, mY + 1 * zoom);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(chimX, mY + 1 * zoom);
+      ctx.lineTo(chimX + 2.5 * zoom, mY);
+      ctx.stroke();
+    }
+
+    // Soot staining on chimney (dark gradient)
+    ctx.fillStyle = "rgba(20,15,10,0.15)";
+    ctx.beginPath();
+    ctx.moveTo(chimX - 2.5 * zoom, chimneyBaseY - 18 * zoom);
+    ctx.lineTo(chimX, chimneyBaseY - 17 * zoom);
+    ctx.lineTo(chimX, chimneyBaseY - 22 * zoom);
+    ctx.lineTo(chimX - 2.5 * zoom, chimneyBaseY - 22 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Chimney cap with overhang
     drawIsometricPrism(
       ctx,
-      bX + 6 * zoom,
+      chimX,
       chimneyBaseY - 22 * zoom,
       7,
       5,
@@ -25087,28 +27888,36 @@ function renderStationTower(
       { top: "#5a5a5a", left: "#4a4a4a", right: "#3a3a3a" },
       zoom,
     );
-    // Smoke
-    const smokeAlpha1 = 0.25 + Math.sin(time * 2) * 0.1;
-    ctx.fillStyle = `rgba(180, 180, 180, ${smokeAlpha1})`;
-    const smokeOff1 = Math.sin(time * 1.5) * 3;
+    // Cap underside shadow
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
     ctx.beginPath();
-    ctx.arc(
-      bX + 6 * zoom + smokeOff1,
-      chimneyBaseY - 28 * zoom,
-      3 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.moveTo(chimX - 3.5 * zoom, chimneyBaseY - 22 * zoom);
+    ctx.lineTo(chimX, chimneyBaseY - 22 * zoom + 1.25 * zoom);
+    ctx.lineTo(chimX + 3.5 * zoom, chimneyBaseY - 22 * zoom);
+    ctx.lineTo(chimX, chimneyBaseY - 22 * zoom - 1.25 * zoom);
+    ctx.closePath();
     ctx.fill();
+
+    // Chimney fire glow at opening
+    const chimneyFireGlow = 0.3 + Math.sin(time * 4) * 0.15;
+    ctx.fillStyle = `rgba(255, 120, 30, ${chimneyFireGlow})`;
     ctx.beginPath();
-    ctx.arc(
-      bX + 11 * zoom + smokeOff1 * 0.7,
-      chimneyBaseY - 34 * zoom,
-      2.5 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(chimX, chimneyBaseY - 24.5 * zoom, 1.8 * zoom, 0.9 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Multi-layer smoke wisps with wind drift
+    const windDrift = Math.sin(time * 0.8) * 4;
+    for (let s = 0; s < 5; s++) {
+      const smokeT = ((time * 0.6 + s * 0.7) % 3.5) / 3.5;
+      const smokeAlpha = 0.3 * (1 - smokeT) * (1 - smokeT);
+      const smokeRadius = (2 + smokeT * 3.5) * zoom;
+      const smokeX = chimX + windDrift * smokeT + s * 0.8 * zoom * smokeT;
+      const smokeY = chimneyBaseY - 26 * zoom - smokeT * 16 * zoom;
+      ctx.fillStyle = `rgba(160, 155, 145, ${smokeAlpha})`;
+      ctx.beginPath();
+      ctx.arc(smokeX, smokeY, smokeRadius, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // === HIGH-TECH: Small gear on side ===
     const gearX1 = bX - 16 * zoom;
@@ -25856,38 +28665,66 @@ function renderStationTower(
     const bX = stationX;
     const bY = stationY;
 
-    // === FOUNDATION - Industrial fortress base (extends lower) ===
+    // === STEPPED FOUNDATION - Industrial fortress base ===
+    // Bottom step — heavy rough iron plinth (widest)
     drawIsometricPrism(
       ctx,
       bX,
-      bY + 2 * zoom,
+      bY + 4 * zoom,
       42,
       40,
-      4,
+      3,
+      { top: "#505058", left: "#404048", right: "#333340" },
+      zoom,
+    );
+    // Bottom step mortar
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 21 * zoom, bY + 5 * zoom);
+    ctx.lineTo(bX, bY + 14 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 14 * zoom);
+    ctx.lineTo(bX + 21 * zoom, bY + 5 * zoom);
+    ctx.stroke();
+
+    // Top step — reinforced platform
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 1 * zoom,
+      38,
+      36,
+      3,
       { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
       zoom,
     );
+    // Top step mortar
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.beginPath();
+    ctx.moveTo(bX - 19 * zoom, bY + 2 * zoom);
+    ctx.lineTo(bX, bY + 10 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 10 * zoom);
+    ctx.lineTo(bX + 19 * zoom, bY + 2 * zoom);
+    ctx.stroke();
 
-    // Foundation stone mortar lines - left face
-    ctx.strokeStyle = "rgba(0,0,0,0.15)";
-    ctx.lineWidth = 0.8 * zoom;
-    for (let i = 1; i <= 2; i++) {
-      const h = (i * 4 * zoom) / 3;
-      ctx.beginPath();
-      ctx.moveTo(bX - 21 * zoom, bY + 2 * zoom - h);
-      ctx.lineTo(bX, bY + 12 * zoom - h);
-      ctx.stroke();
-    }
-    // Foundation stone mortar lines - right face
-    for (let i = 1; i <= 2; i++) {
-      const h = (i * 4 * zoom) / 3;
-      ctx.beginPath();
-      ctx.moveTo(bX, bY + 12 * zoom - h);
-      ctx.lineTo(bX + 21 * zoom, bY + 2 * zoom - h);
-      ctx.stroke();
-    }
+    // Iron trim band between steps — left face
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 21 * zoom, bY + 4.5 * zoom);
+    ctx.lineTo(bX, bY + 14 * zoom);
+    ctx.stroke();
+    // Iron trim band — right face
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 14 * zoom);
+    ctx.lineTo(bX + 21 * zoom, bY + 4.5 * zoom);
+    ctx.stroke();
 
-    // Heavy machinery in foundation - gear system
+    // Heavy machinery in foundation - gear system on bottom step face
     const fGearX = bX + 14 * zoom;
     const fGearY = bY + 9 * zoom;
     ctx.fillStyle = "#5a5a62";
@@ -25907,7 +28744,7 @@ function renderStationTower(
     ctx.ellipse(fGearX, fGearY, 1.5 * zoom, 0.75 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Steam exhaust vents
+    // Steam exhaust vent on bottom step
     ctx.fillStyle = "#3a3a42";
     ctx.beginPath();
     ctx.ellipse(
@@ -25932,7 +28769,7 @@ function renderStationTower(
     );
     ctx.fill();
 
-    // Power conduit running along foundation
+    // Power conduit on bottom step face
     ctx.strokeStyle = "#5a5a62";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
@@ -26650,40 +29487,272 @@ function renderStationTower(
     // Clock on right tower (no numerals)
     drawClockFace(rtX + 1 * zoom, rtY - 36 * zoom, 4 * zoom);
 
-    // Grand portcullis entrance
-    ctx.fillStyle = "#1a1a22";
-    ctx.beginPath();
-    ctx.moveTo(bX - 7 * zoom, bY - 2 * zoom);
-    ctx.lineTo(bX - 7 * zoom, bY - 16 * zoom);
-    ctx.arc(bX - 2 * zoom, bY - 16 * zoom, 5 * zoom, Math.PI, 0);
-    ctx.lineTo(bX + 3 * zoom, bY - 2 * zoom);
-    ctx.closePath();
-    ctx.fill();
-    // Portcullis bars
-    ctx.strokeStyle = "#6a6a72";
-    ctx.lineWidth = 1.5 * zoom;
-    for (let i = 0; i < 4; i++) {
+    // Grand portcullis entrance with chains and archivolt
+    {
+      const portL = bX - 7 * zoom;
+      const portR = bX + 3 * zoom;
+      const portBot = bY - 2 * zoom;
+      const portArchY = bY - 16 * zoom;
+      const portArchCx = bX - 2 * zoom;
+      const portArchR = 5 * zoom;
+
+      // Deep recess shadow
+      ctx.fillStyle = "#0a0a12";
       ctx.beginPath();
-      ctx.moveTo(bX - 7 * zoom + i * 3 * zoom, bY - 2 * zoom);
-      ctx.lineTo(bX - 7 * zoom + i * 3 * zoom, bY - 16 * zoom + i * 0.6 * zoom);
+      ctx.moveTo(portL - 1 * zoom, portBot + 1 * zoom);
+      ctx.lineTo(portL - 1 * zoom, portArchY);
+      ctx.arc(portArchCx, portArchY, portArchR + 1 * zoom, Math.PI, 0);
+      ctx.lineTo(portR + 1 * zoom, portBot + 1 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Interior void (dark)
+      ctx.fillStyle = "#1a1a22";
+      ctx.beginPath();
+      ctx.moveTo(portL, portBot);
+      ctx.lineTo(portL, portArchY);
+      ctx.arc(portArchCx, portArchY, portArchR, Math.PI, 0);
+      ctx.lineTo(portR, portBot);
+      ctx.closePath();
+      ctx.fill();
+
+      // Interior warm glow from inside
+      const portGlow = 0.15 + Math.sin(time * 1.5) * 0.06;
+      const portGlowGrad = ctx.createLinearGradient(portArchCx, portBot, portArchCx, portArchY - portArchR);
+      portGlowGrad.addColorStop(0, `rgba(255, 120, 40, ${portGlow * 0.5})`);
+      portGlowGrad.addColorStop(0.5, `rgba(255, 100, 30, ${portGlow})`);
+      portGlowGrad.addColorStop(1, "rgba(255, 80, 20, 0)");
+      ctx.fillStyle = portGlowGrad;
+      ctx.beginPath();
+      ctx.moveTo(portL + 1 * zoom, portBot);
+      ctx.lineTo(portL + 1 * zoom, portArchY);
+      ctx.arc(portArchCx, portArchY, portArchR - 1 * zoom, Math.PI, 0);
+      ctx.lineTo(portR - 1 * zoom, portBot);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone archivolt molding (double arch frame)
+      ctx.strokeStyle = "#7a7a82";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(portL - 0.5 * zoom, portBot);
+      ctx.lineTo(portL - 0.5 * zoom, portArchY);
+      ctx.arc(portArchCx, portArchY, portArchR + 0.5 * zoom, Math.PI, 0);
+      ctx.lineTo(portR + 0.5 * zoom, portBot);
+      ctx.stroke();
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(portL - 2 * zoom, portBot);
+      ctx.lineTo(portL - 2 * zoom, portArchY);
+      ctx.arc(portArchCx, portArchY, portArchR + 2 * zoom, Math.PI, 0);
+      ctx.lineTo(portR + 2 * zoom, portBot);
+      ctx.stroke();
+
+      // Carved keystone at arch apex
+      ctx.fillStyle = "#7a7a82";
+      ctx.beginPath();
+      ctx.moveTo(portArchCx - 2 * zoom, portArchY - portArchR);
+      ctx.lineTo(portArchCx, portArchY - portArchR - 3 * zoom);
+      ctx.lineTo(portArchCx + 2 * zoom, portArchY - portArchR);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+      // Keystone inlay
+      ctx.fillStyle = "#c9a227";
+      ctx.beginPath();
+      ctx.arc(portArchCx, portArchY - portArchR - 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Portcullis iron grid
+      ctx.strokeStyle = "#6a6a72";
+      ctx.lineWidth = 1.5 * zoom;
+      const portW = portR - portL;
+      for (let v = 0; v < 4; v++) {
+        const vx = portL + (v + 0.5) * (portW / 4);
+        const isoY = portArchY + Math.sqrt(Math.max(0, portArchR * portArchR - (vx - portArchCx) * (vx - portArchCx)));
+        const topClipY = portArchY - Math.sqrt(Math.max(0, portArchR * portArchR - (vx - portArchCx) * (vx - portArchCx)));
+        ctx.beginPath();
+        ctx.moveTo(vx, portBot);
+        ctx.lineTo(vx, Math.min(isoY, topClipY));
+        ctx.stroke();
+      }
+      // Horizontal bars
+      for (let h = 0; h < 3; h++) {
+        const hy = portBot - (h + 1) * 3.5 * zoom;
+        const isoSlope = (portR - portL) > 0 ? 0.2 : 0;
+        ctx.beginPath();
+        ctx.moveTo(portL + 0.5 * zoom, hy);
+        ctx.lineTo(portR - 0.5 * zoom, hy - portW * isoSlope);
+        ctx.stroke();
+      }
+
+      // Portcullis spikes at bottom
+      ctx.fillStyle = "#5a5a62";
+      for (let sp = 0; sp < 4; sp++) {
+        const spx = portL + (sp + 0.5) * (portW / 4);
+        ctx.beginPath();
+        ctx.moveTo(spx - 0.8 * zoom, portBot);
+        ctx.lineTo(spx, portBot + 2 * zoom);
+        ctx.lineTo(spx + 0.8 * zoom, portBot);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Chains on either side of the portcullis
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1 * zoom;
+      const chainY = portArchY - portArchR - 2 * zoom;
+      for (const side of [-1, 1]) {
+        const cx = portArchCx + side * (portArchR + 1.5 * zoom);
+        for (let link = 0; link < 4; link++) {
+          const ly = chainY - link * 2.5 * zoom;
+          ctx.beginPath();
+          ctx.ellipse(cx, ly, 1 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      // Winch mechanism hint (small gear above arch)
+      ctx.fillStyle = "#5a5a62";
+      ctx.beginPath();
+      for (let g = 0; g < 8; g++) {
+        const gAngle = (g / 8) * Math.PI * 2 + time * 0.2;
+        const gR = g % 2 === 0 ? 2.5 * zoom : 1.8 * zoom;
+        const gx = portArchCx + Math.cos(gAngle) * gR;
+        const gy = chainY - 12 * zoom + Math.sin(gAngle) * gR * 0.5;
+        if (g === 0) ctx.moveTo(gx, gy);
+        else ctx.lineTo(gx, gy);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.ellipse(portArchCx, chainY - 12 * zoom, 1 * zoom, 0.5 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Stone step at entrance base
+      ctx.fillStyle = "#5a5a62";
+      ctx.beginPath();
+      ctx.moveTo(portL - 1.5 * zoom, portBot + 1 * zoom);
+      ctx.lineTo(portR + 1.5 * zoom, portBot + 1 * zoom);
+      ctx.lineTo(portR + 2 * zoom, portBot + 3 * zoom);
+      ctx.lineTo(portL - 2 * zoom, portBot + 3 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.2)";
+      ctx.lineWidth = 0.6 * zoom;
       ctx.stroke();
     }
-    // Horizontal bar
-    ctx.beginPath();
-    ctx.moveTo(bX - 8 * zoom, bY - 8 * zoom);
-    ctx.lineTo(bX + 2 * zoom, bY - 6 * zoom);
-    ctx.stroke();
 
-    // Rose window above entrance (glowing)
-    const roseGlow = 0.4 + Math.sin(time * 2) * 0.2;
-    ctx.fillStyle = `rgba(255, 108, 0, ${roseGlow})`;
-    ctx.beginPath();
-    ctx.arc(bX - 3 * zoom, bY - 26 * zoom, 4 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    // Rose window frame
-    ctx.strokeStyle = "#5a5a62";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.stroke();
+    // Ornate rose window above entrance with tracery and stained glass
+    {
+      const roseX = bX - 3 * zoom;
+      const roseY = bY - 26 * zoom;
+      const roseR = 4.5 * zoom;
+      const roseGlow = 0.4 + Math.sin(time * 2) * 0.2;
+
+      // Deep recess behind window
+      ctx.fillStyle = "#1a1a22";
+      ctx.beginPath();
+      ctx.arc(roseX, roseY, roseR + 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer stone frame ring (double molding)
+      ctx.strokeStyle = "#6a6a72";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.arc(roseX, roseY, roseR + 0.5 * zoom, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.arc(roseX, roseY, roseR + 2 * zoom, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Stained glass segments (8 colored petals)
+      const petalColors = [
+        "#cc5500", "#aa3300", "#dd7700", "#bb4400",
+        "#cc6600", "#aa4400", "#dd8800", "#bb5500",
+      ];
+      for (let p = 0; p < 8; p++) {
+        const a1 = (p / 8) * Math.PI * 2;
+        const a2 = ((p + 1) / 8) * Math.PI * 2;
+        ctx.fillStyle = petalColors[p];
+        ctx.globalAlpha = roseGlow;
+        ctx.beginPath();
+        ctx.moveTo(roseX, roseY);
+        ctx.arc(roseX, roseY, roseR - 0.5 * zoom, a1, a2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Overall glow overlay
+      ctx.fillStyle = `rgba(255, 140, 40, ${roseGlow * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(roseX, roseY, roseR - 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tracery spokes (stone dividers between petals)
+      ctx.strokeStyle = "#4a4a52";
+      ctx.lineWidth = 1.2 * zoom;
+      for (let s = 0; s < 8; s++) {
+        const angle = (s / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(roseX, roseY);
+        ctx.lineTo(
+          roseX + Math.cos(angle) * (roseR - 0.5 * zoom),
+          roseY + Math.sin(angle) * (roseR - 0.5 * zoom),
+        );
+        ctx.stroke();
+      }
+
+      // Inner tracery ring
+      ctx.strokeStyle = "#4a4a52";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.arc(roseX, roseY, roseR * 0.55, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Cusp decorations between spokes (outer ring)
+      for (let c = 0; c < 8; c++) {
+        const cAngle = ((c + 0.5) / 8) * Math.PI * 2;
+        const cR = roseR * 0.78;
+        ctx.fillStyle = "#4a4a52";
+        ctx.beginPath();
+        ctx.arc(
+          roseX + Math.cos(cAngle) * cR,
+          roseY + Math.sin(cAngle) * cR,
+          1 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Center boss gem
+      ctx.fillStyle = `rgba(255, 160, 60, ${roseGlow})`;
+      ctx.shadowColor = "#ff8800";
+      ctx.shadowBlur = 6 * zoom;
+      ctx.beginPath();
+      ctx.arc(roseX, roseY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Gem specular highlight
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.beginPath();
+      ctx.arc(roseX - 0.3 * zoom, roseY - 0.4 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Light spill on wall below rose window
+      ctx.fillStyle = `rgba(255, 140, 40, ${roseGlow * 0.08})`;
+      ctx.beginPath();
+      ctx.arc(roseX, roseY + roseR + 4 * zoom, roseR * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // (Sign removed)
   } else if (tower.level === 4 && tower.upgrade === "A") {
@@ -26691,137 +29760,129 @@ function renderStationTower(
     const bX = stationX;
     const bY = stationY;
 
-    // === ENHANCED FOUNDATION - Dark clay stone with lighter clay trim (extends lower) ===
+    // === STEPPED FOUNDATION - Dark clay stone with lighter clay trim ===
+    // Bottom step — rough-hewn clay plinth (widest)
     drawIsometricPrism(
       ctx,
       bX,
       bY + 16 * zoom,
       44,
       38,
-      12,
-      { top: "#5a3020", left: "#4a2a1a", right: "#3d1c12" },
+      5,
+      { top: "#4a2518", left: "#3d1c12", right: "#30150c" },
       zoom,
     );
-
-    // Stone mortar lines on foundation - left face (more visible, matching L4B)
+    // Bottom step mortar lines
     ctx.strokeStyle = "rgba(0,0,0,0.18)";
     ctx.lineWidth = 0.9 * zoom;
-    for (let r = 1; r <= 3; r++) {
-      ctx.beginPath();
-      ctx.moveTo(bX - 22 * zoom, bY + 4 * zoom + r * 3 * zoom);
-      ctx.lineTo(bX, bY + 14 * zoom + r * 3 * zoom);
-      ctx.stroke();
-    }
-    // Stone mortar lines on foundation - right face
-    for (let r = 1; r <= 3; r++) {
-      ctx.beginPath();
-      ctx.moveTo(bX, bY + 14 * zoom + r * 3 * zoom);
-      ctx.lineTo(bX + 22 * zoom, bY + 4 * zoom + r * 3 * zoom);
-      ctx.stroke();
-    }
-
-    // Staggered vertical mortar joints - left face (stronger visibility)
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    const l4aBlockW = 4 * zoom;
-    for (let r = 0; r < 3; r++) {
-      const stagger = (r % 2) * (l4aBlockW * 0.5);
-      for (let j = 0; j < 6; j++) {
-        const jx = bX - 20 * zoom + stagger + j * l4aBlockW;
-        if (jx < bX - 1 * zoom) {
-          const xOff = jx - (bX - 22 * zoom);
-          const yBase = bY + 4 * zoom + xOff * (10 / 22);
-          ctx.beginPath();
-          ctx.moveTo(jx, yBase + r * 3 * zoom);
-          ctx.lineTo(jx, yBase + (r + 1) * 3 * zoom);
-          ctx.stroke();
-        }
-      }
-    }
-    // Staggered vertical mortar joints - right face
-    for (let r = 0; r < 3; r++) {
-      const stagger = (r % 2) * (l4aBlockW * 0.5);
-      for (let j = 0; j < 6; j++) {
-        const jx = bX + 2 * zoom + stagger + j * l4aBlockW;
-        if (jx < bX + 21 * zoom) {
-          const xOff = jx - bX;
-          const yBase = bY + 14 * zoom - xOff * (10 / 22);
-          ctx.beginPath();
-          ctx.moveTo(jx, yBase + r * 3 * zoom);
-          ctx.lineTo(jx, yBase + (r + 1) * 3 * zoom);
-          ctx.stroke();
-        }
-      }
-    }
-
-    // Pseudo-random stone block shading (lighter/darker alternating blocks for depth)
-    ctx.save();
     ctx.beginPath();
-    ctx.moveTo(bX - 22 * zoom, bY + 4 * zoom);
-    ctx.lineTo(bX, bY + 14 * zoom);
+    ctx.moveTo(bX - 22 * zoom, bY + 17 * zoom);
     ctx.lineTo(bX, bY + 26 * zoom);
-    ctx.lineTo(bX - 22 * zoom, bY + 16 * zoom);
-    ctx.closePath();
-    ctx.clip();
-    for (let r = 0; r < 3; r++) {
-      for (let j = 0; j < 6; j++) {
-        if ((r + j) % 3 === 0) {
-          ctx.fillStyle = "rgba(139,69,50,0.08)";
-          const jx =
-            bX - 20 * zoom + (r % 2) * (l4aBlockW * 0.5) + j * l4aBlockW;
-          const xOff = jx - (bX - 22 * zoom);
-          const yTop = bY + 4 * zoom + xOff * (10 / 22) + r * 3 * zoom;
-          ctx.fillRect(jx, yTop, l4aBlockW, 3 * zoom);
-        }
-      }
-    }
-    ctx.restore();
-
-    // Upper lighter clay trim band - left face
-    ctx.strokeStyle = "#8b4532";
-    ctx.lineWidth = 2 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(bX - 21 * zoom, bY + 6 * zoom);
-    ctx.lineTo(bX + 2 * zoom, bY + 15.5 * zoom);
     ctx.stroke();
-    // Upper lighter clay trim band - right face
     ctx.beginPath();
-    ctx.moveTo(bX - 2 * zoom, bY + 15.5 * zoom);
-    ctx.lineTo(bX + 21 * zoom, bY + 6 * zoom);
+    ctx.moveTo(bX, bY + 26 * zoom);
+    ctx.lineTo(bX + 22 * zoom, bY + 17 * zoom);
+    ctx.stroke();
+    // Bottom step highlight mortar
+    ctx.strokeStyle = "rgba(139,69,50,0.08)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 22 * zoom, bY + 16.5 * zoom);
+    ctx.lineTo(bX, bY + 25.5 * zoom);
     ctx.stroke();
 
-    // Lower lighter clay trim band - left face
-    ctx.strokeStyle = "#6a3022";
-    ctx.lineWidth = 2.5 * zoom;
+    // Middle step — dressed clay stone
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 11 * zoom,
+      40,
+      34,
+      4,
+      { top: "#523020", left: "#4a2a1a", right: "#3d1c12" },
+      zoom,
+    );
+    // Middle step mortar lines
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
     ctx.moveTo(bX - 20 * zoom, bY + 12 * zoom);
-    ctx.lineTo(bX + 4 * zoom, bY + 22 * zoom);
+    ctx.lineTo(bX, bY + 20 * zoom);
     ctx.stroke();
-    // Lower lighter clay trim band - right face
     ctx.beginPath();
-    ctx.moveTo(bX - 2 * zoom, bY + 22 * zoom);
+    ctx.moveTo(bX, bY + 20 * zoom);
     ctx.lineTo(bX + 20 * zoom, bY + 12 * zoom);
     ctx.stroke();
 
-    // Lighter clay accents along upper trim - left face
+    // Top step — polished clay cap
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 7 * zoom,
+      36,
+      30,
+      4,
+      { top: "#5a3020", left: "#4a2a1a", right: "#3d1c12" },
+      zoom,
+    );
+    // Top step mortar
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 18 * zoom, bY + 8 * zoom);
+    ctx.lineTo(bX, bY + 15 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 15 * zoom);
+    ctx.lineTo(bX + 18 * zoom, bY + 8 * zoom);
+    ctx.stroke();
+
+    // Lighter clay trim band on middle step edge — left face
+    ctx.strokeStyle = "#8b4532";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 20 * zoom, bY + 11.5 * zoom);
+    ctx.lineTo(bX, bY + 20 * zoom);
+    ctx.stroke();
+    // Trim band — right face
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 20 * zoom);
+    ctx.lineTo(bX + 20 * zoom, bY + 11.5 * zoom);
+    ctx.stroke();
+
+    // Darker clay trim band on bottom step edge — left face
+    ctx.strokeStyle = "#6a3022";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 22 * zoom, bY + 16.5 * zoom);
+    ctx.lineTo(bX, bY + 26 * zoom);
+    ctx.stroke();
+    // Bottom trim — right face
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 26 * zoom);
+    ctx.lineTo(bX + 22 * zoom, bY + 16.5 * zoom);
+    ctx.stroke();
+
+    // Clay accents on middle step — left face
     ctx.fillStyle = "#8b4532";
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       ctx.beginPath();
       ctx.arc(
-        bX - 17 * zoom + i * 5 * zoom,
-        bY + 7 * zoom + i * 1.2 * zoom,
-        1.5 * zoom,
+        bX - 16 * zoom + i * 5 * zoom,
+        bY + 12.5 * zoom + i * 1.4 * zoom,
+        1.3 * zoom,
         0,
         Math.PI * 2,
       );
       ctx.fill();
     }
-    // Lighter clay accents along lower trim - right face
-    for (let i = 0; i < 5; i++) {
+    // Clay accents on bottom step — right face
+    for (let i = 0; i < 4; i++) {
       ctx.beginPath();
       ctx.arc(
-        bX + 1 * zoom + i * 4 * zoom,
-        bY + 21 * zoom - i * 1.2 * zoom,
-        1.5 * zoom,
+        bX + 2 * zoom + i * 5 * zoom,
+        bY + 25 * zoom - i * 1.4 * zoom,
+        1.3 * zoom,
         0,
         Math.PI * 2,
       );
@@ -27518,40 +30579,88 @@ function renderStationTower(
     const bX = stationX;
     const bY = stationY;
 
-    // === FOUNDATION - Royal armored base with purple trim (extends lower) ===
+    // === STEPPED FOUNDATION - Royal armored base with purple trim ===
+    // Bottom step — rough-hewn stone plinth (widest)
     drawIsometricPrism(
       ctx,
       bX,
       bY + 16 * zoom,
       46,
       40,
-      12,
+      5,
+      { top: "#505058", left: "#404048", right: "#333340" },
+      zoom,
+    );
+    // Bottom step mortar
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 23 * zoom, bY + 17 * zoom);
+    ctx.lineTo(bX, bY + 26 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 26 * zoom);
+    ctx.lineTo(bX + 23 * zoom, bY + 17 * zoom);
+    ctx.stroke();
+    // Highlight mortar
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 23 * zoom, bY + 16.5 * zoom);
+    ctx.lineTo(bX, bY + 25.5 * zoom);
+    ctx.stroke();
+
+    // Middle step — dressed stone
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 11 * zoom,
+      42,
+      36,
+      4,
+      { top: "#555560", left: "#484850", right: "#3a3a42" },
+      zoom,
+    );
+    // Middle step mortar
+    ctx.strokeStyle = "rgba(0,0,0,0.13)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(bX - 21 * zoom, bY + 12 * zoom);
+    ctx.lineTo(bX, bY + 20 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 20 * zoom);
+    ctx.lineTo(bX + 21 * zoom, bY + 12 * zoom);
+    ctx.stroke();
+
+    // Top step — polished cap
+    drawIsometricPrism(
+      ctx,
+      bX,
+      bY + 7 * zoom,
+      38,
+      32,
+      4,
       { top: "#5a5a62", left: "#4a4a52", right: "#3a3a42" },
       zoom,
     );
-
-    // Stone mortar lines on foundation - left face
-    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    // Top step mortar
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
     ctx.lineWidth = 0.8 * zoom;
-    for (let r = 1; r <= 3; r++) {
-      ctx.beginPath();
-      ctx.moveTo(bX - 23 * zoom, bY + 4 * zoom + r * 3 * zoom);
-      ctx.lineTo(bX, bY + 14 * zoom + r * 3 * zoom);
-      ctx.stroke();
-    }
-    // Stone mortar lines on foundation - right face
-    for (let r = 1; r <= 3; r++) {
-      ctx.beginPath();
-      ctx.moveTo(bX, bY + 14 * zoom + r * 3 * zoom);
-      ctx.lineTo(bX + 23 * zoom, bY + 4 * zoom + r * 3 * zoom);
-      ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.moveTo(bX - 19 * zoom, bY + 8 * zoom);
+    ctx.lineTo(bX, bY + 15 * zoom);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX, bY + 15 * zoom);
+    ctx.lineTo(bX + 19 * zoom, bY + 8 * zoom);
+    ctx.stroke();
 
-    // Purple trim bands on foundation (isometric, both faces)
-    const fndHW = 23 * zoom;
-    const fndFD = 10 * zoom;
+    // Purple trim band on middle step edge — left face
+    const fndHW = 21 * zoom;
+    const fndFD = 9 * zoom;
     const fndBandH = 2.5 * zoom;
-    const fndBandY = 12 * zoom;
+    const fndBandY = 11.5 * zoom;
     ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(bX - fndHW, bY + fndBandY);
@@ -27560,6 +30669,7 @@ function renderStationTower(
     ctx.lineTo(bX - fndHW, bY + fndBandY + fndBandH);
     ctx.closePath();
     ctx.fill();
+    // Purple trim — right face
     ctx.fillStyle = "#5a2d80";
     ctx.beginPath();
     ctx.moveTo(bX, bY + fndFD + fndBandY);
@@ -27568,14 +30678,14 @@ function renderStationTower(
     ctx.lineTo(bX, bY + fndFD + fndBandY + fndBandH);
     ctx.closePath();
     ctx.fill();
-    // Bronze rivets (less intense than gold)
+    // Bronze rivets along purple trim
     ctx.fillStyle = "#c9a227";
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       ctx.beginPath();
       ctx.arc(
-        bX - 17 * zoom + i * 5 * zoom,
-        bY + 13 * zoom - i * 0.5 * zoom,
-        1.5 * zoom,
+        bX - 16 * zoom + i * 5 * zoom,
+        bY + 12.5 * zoom + i * 0.8 * zoom,
+        1.3 * zoom,
         0,
         Math.PI * 2,
       );
@@ -32036,7 +35146,7 @@ function renderStationTower(
       ctx.lineTo(tenderPos.x + 5.5 * zoom, tenderPos.y - 9 * zoom);
       ctx.stroke();
 
-      // Coal pile with gradient mound
+      // Coal pile with gradient mound and ember glow
       const coalGrad = ctx.createRadialGradient(
         tenderPos.x,
         tenderPos.y - 10 * zoom,
@@ -32063,21 +35173,24 @@ function renderStationTower(
       ctx.beginPath();
       ctx.arc(tenderPos.x, tenderPos.y - 9 * zoom, 4 * zoom, Math.PI, 0);
       ctx.fill();
-      // Glinting coal chunks
+
+      // Deterministic coal chunks with faceted shading
       const coalSpots = [
-        [0, 0],
-        [-1.5, 0.5],
-        [1.2, 0.3],
-        [-0.5, -1],
-        [1, -0.8],
-        [-1.8, -0.3],
-        [0.5, 0.7],
-        [-0.8, -1.5],
-        [1.5, -1.2],
-        [0.3, -1.8],
+        [0, 0, 38, 28, 18],
+        [-1.5, 0.5, 42, 32, 22],
+        [1.2, 0.3, 35, 25, 15],
+        [-0.5, -1, 40, 30, 20],
+        [1, -0.8, 36, 26, 16],
+        [-1.8, -0.3, 44, 34, 24],
+        [0.5, 0.7, 37, 27, 17],
+        [-0.8, -1.5, 41, 31, 21],
+        [1.5, -1.2, 33, 23, 13],
+        [0.3, -1.8, 39, 29, 19],
+        [-1.2, -1.0, 45, 35, 25],
+        [0.8, -0.3, 34, 24, 14],
       ];
-      for (const [cx, cy] of coalSpots) {
-        ctx.fillStyle = `rgba(${35 + Math.random() * 15}, ${25 + Math.random() * 10}, ${15 + Math.random() * 10}, 0.9)`;
+      for (const [cx, cy, cr, cg, cb] of coalSpots) {
+        ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.9)`;
         ctx.beginPath();
         ctx.arc(
           tenderPos.x + cx * zoom,
@@ -32087,18 +35200,59 @@ function renderStationTower(
           Math.PI * 2,
         );
         ctx.fill();
-        // Tiny coal highlight
-        ctx.fillStyle = "rgba(80,70,50,0.4)";
+        // Faceted highlight on upper-left
+        ctx.fillStyle = `rgba(${cr + 35}, ${cg + 30}, ${cb + 25}, 0.45)`;
         ctx.beginPath();
         ctx.arc(
           tenderPos.x + cx * zoom - 0.3 * zoom,
           tenderPos.y - 10.3 * zoom + cy * zoom,
-          0.4 * zoom,
+          0.45 * zoom,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
+
+      // Ember glow deep in the coal pile
+      const emberGlow = 0.25 + Math.sin(time * 1.8) * 0.15;
+      ctx.fillStyle = `rgba(255, 80, 20, ${emberGlow})`;
+      ctx.shadowColor = "rgba(255, 80, 20, 0.5)";
+      ctx.shadowBlur = 6 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        tenderPos.x - 0.5 * zoom,
+        tenderPos.y - 9.5 * zoom,
+        2.5 * zoom,
+        1 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Glowing coal crevice lines
+      const creviceGlow = 0.15 + Math.sin(time * 2.5 + 1) * 0.1;
+      ctx.strokeStyle = `rgba(255, 100, 30, ${creviceGlow})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tenderPos.x - 2 * zoom, tenderPos.y - 9.8 * zoom);
+      ctx.quadraticCurveTo(
+        tenderPos.x - 0.5 * zoom,
+        tenderPos.y - 10.5 * zoom,
+        tenderPos.x + 1.5 * zoom,
+        tenderPos.y - 9.8 * zoom,
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(tenderPos.x - 1 * zoom, tenderPos.y - 9.3 * zoom);
+      ctx.quadraticCurveTo(
+        tenderPos.x + 0.5 * zoom,
+        tenderPos.y - 10 * zoom,
+        tenderPos.x + 2 * zoom,
+        tenderPos.y - 9.5 * zoom,
+      );
+      ctx.stroke();
 
       // Water level gauge on left face
       const tankPos = isoOffset(tenderPos.x, tenderPos.y - 3.5 * zoom, -4.5);
@@ -32294,27 +35448,109 @@ function renderStationTower(
       ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
       ctx.stroke();
 
-      // "DINKY" nameplate on boiler side
-      ctx.fillStyle = "#C9A227";
+      // "DINKY" nameplate on boiler side — 3D raised brass plaque
       const npPos = isoOffset(boilerPos.x, boilerPos.y - 3 * zoom, -4);
-      ctx.fillRect(
-        npPos.x - 7 * zoom,
-        npPos.y - 1 * zoom,
-        5 * zoom,
-        2.2 * zoom,
-      );
-      ctx.strokeStyle = "#B8860B";
+      const npX = npPos.x - 7 * zoom;
+      const npY = npPos.y - 1.2 * zoom;
+      const npW = 5.5 * zoom;
+      const npH = 2.6 * zoom;
+      const npBevel = 0.6 * zoom;
+
+      // Shadow behind plaque for depth
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.beginPath();
+      ctx.moveTo(npX + npBevel + 0.5 * zoom, npY + npBevel + 0.5 * zoom);
+      ctx.lineTo(npX + npW + 0.5 * zoom, npY + npBevel + 0.5 * zoom);
+      ctx.lineTo(npX + npW + 0.5 * zoom, npY + npH + 0.5 * zoom);
+      ctx.lineTo(npX + npBevel + 0.5 * zoom, npY + npH + 0.5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+
+      // Plaque body with gradient
+      const npGrad = ctx.createLinearGradient(npX, npY, npX + npW, npY + npH);
+      npGrad.addColorStop(0, "#D4A830");
+      npGrad.addColorStop(0.3, "#C9A227");
+      npGrad.addColorStop(0.7, "#B8960F");
+      npGrad.addColorStop(1, "#A08020");
+      ctx.fillStyle = npGrad;
+      ctx.beginPath();
+      ctx.moveTo(npX + npBevel, npY);
+      ctx.lineTo(npX + npW - npBevel, npY);
+      ctx.quadraticCurveTo(npX + npW, npY, npX + npW, npY + npBevel);
+      ctx.lineTo(npX + npW, npY + npH - npBevel);
+      ctx.quadraticCurveTo(npX + npW, npY + npH, npX + npW - npBevel, npY + npH);
+      ctx.lineTo(npX + npBevel, npY + npH);
+      ctx.quadraticCurveTo(npX, npY + npH, npX, npY + npH - npBevel);
+      ctx.lineTo(npX, npY + npBevel);
+      ctx.quadraticCurveTo(npX, npY, npX + npBevel, npY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top bevel highlight
+      ctx.strokeStyle = "rgba(255,240,180,0.55)";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(npX + npBevel, npY + 0.4 * zoom);
+      ctx.lineTo(npX + npW - npBevel, npY + 0.4 * zoom);
+      ctx.stroke();
+
+      // Bottom bevel shadow
+      ctx.strokeStyle = "rgba(80,60,20,0.5)";
+      ctx.lineWidth = 0.7 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(npX + npBevel, npY + npH - 0.4 * zoom);
+      ctx.lineTo(npX + npW - npBevel, npY + npH - 0.4 * zoom);
+      ctx.stroke();
+
+      // Border frame with double line
+      ctx.strokeStyle = "#8B6914";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(npX + npBevel, npY);
+      ctx.lineTo(npX + npW - npBevel, npY);
+      ctx.quadraticCurveTo(npX + npW, npY, npX + npW, npY + npBevel);
+      ctx.lineTo(npX + npW, npY + npH - npBevel);
+      ctx.quadraticCurveTo(npX + npW, npY + npH, npX + npW - npBevel, npY + npH);
+      ctx.lineTo(npX + npBevel, npY + npH);
+      ctx.quadraticCurveTo(npX, npY + npH, npX, npY + npH - npBevel);
+      ctx.lineTo(npX, npY + npBevel);
+      ctx.quadraticCurveTo(npX, npY, npX + npBevel, npY);
+      ctx.stroke();
+
+      // Inner frame line
+      ctx.strokeStyle = "rgba(255,220,120,0.3)";
       ctx.lineWidth = 0.5 * zoom;
-      ctx.strokeRect(
-        npPos.x - 7 * zoom,
-        npPos.y - 1 * zoom,
-        5 * zoom,
-        2.2 * zoom,
-      );
-      ctx.fillStyle = "#4a2408";
-      ctx.font = `bold ${1.4 * zoom}px serif`;
+      const inset = 0.8 * zoom;
+      ctx.strokeRect(npX + inset, npY + inset, npW - inset * 2, npH - inset * 2);
+
+      // Engraved text with shadow
+      ctx.font = `bold ${1.6 * zoom}px serif`;
       ctx.textAlign = "center";
-      ctx.fillText("DINKY", npPos.x - 4.5 * zoom, npPos.y + 0.6 * zoom);
+      ctx.fillStyle = "rgba(60,40,10,0.6)";
+      ctx.fillText("DINKY", npX + npW * 0.5 + 0.3 * zoom, npY + npH * 0.65 + 0.3 * zoom);
+      ctx.fillStyle = "#3a1a08";
+      ctx.fillText("DINKY", npX + npW * 0.5, npY + npH * 0.65);
+      // Specular highlight on text
+      ctx.fillStyle = "rgba(255,240,180,0.2)";
+      ctx.fillText("DINKY", npX + npW * 0.5 - 0.15 * zoom, npY + npH * 0.65 - 0.15 * zoom);
+
+      // Corner rivets
+      const npCorners = [
+        [npX + 1 * zoom, npY + 1 * zoom],
+        [npX + npW - 1 * zoom, npY + 1 * zoom],
+        [npX + 1 * zoom, npY + npH - 1 * zoom],
+        [npX + npW - 1 * zoom, npY + npH - 1 * zoom],
+      ];
+      for (const [crx, cry] of npCorners) {
+        ctx.fillStyle = "#8B6914";
+        ctx.beginPath();
+        ctx.arc(crx, cry, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,240,180,0.3)";
+        ctx.beginPath();
+        ctx.arc(crx - 0.1 * zoom, cry - 0.1 * zoom, 0.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
     } else if (tower.level === 2) {
       // ========== LEVEL 2: Ironclad Armored War Engine ==========
       const cabPos = isoOffset(trainX, trainY, 8);
@@ -32830,43 +36066,201 @@ function renderStationTower(
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Rotating turret on top of cargo car
+      // Rotating turret on top of cargo car with ring base
       const turretAngle = time * 0.5;
+      const turretBaseY = cargoPos.y - 11 * zoom;
+
+      // Turret rotation ring — recessed track
+      ctx.fillStyle = "#1a2030";
+      ctx.beginPath();
+      ctx.ellipse(
+        cargoPos.x,
+        turretBaseY + 0.5 * zoom,
+        4 * zoom,
+        2.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        cargoPos.x,
+        turretBaseY + 0.5 * zoom,
+        4 * zoom,
+        2.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+      // Ring bearing teeth (visible arc)
+      ctx.strokeStyle = "rgba(100,110,130,0.5)";
+      ctx.lineWidth = 0.5 * zoom;
+      for (let ti = 0; ti < 12; ti++) {
+        const ta = (ti / 12) * Math.PI * 2 + turretAngle;
+        const tx = cargoPos.x + Math.cos(ta) * 3.5 * zoom;
+        const ty = turretBaseY + 0.5 * zoom + Math.sin(ta) * 1.9 * zoom;
+        if (Math.sin(ta) < 0.3) {
+          ctx.beginPath();
+          ctx.arc(tx, ty, 0.4 * zoom, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      // Turret body
       drawIsometricPrism(
         ctx,
         cargoPos.x,
-        cargoPos.y - 11 * zoom,
+        turretBaseY,
         6,
         6,
         5,
         { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
+
+      // Turret armor rivets
+      ctx.fillStyle = "#6a7080";
+      for (let ri = 0; ri < 3; ri++) {
+        ctx.beginPath();
+        ctx.arc(
+          cargoPos.x + (1 + ri * 1.8) * zoom,
+          turretBaseY - (2 + ri * 0.9) * zoom,
+          0.5 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Gun barrel with muzzle brake
+      const barrelSwing = Math.sin(turretAngle) * 2;
       const turretBarrelEnd = isoOffset(
         cargoPos.x,
-        cargoPos.y - 13.5 * zoom,
-        4 + Math.sin(turretAngle) * 2,
+        turretBaseY - 2.5 * zoom,
+        5 + barrelSwing,
       );
-      ctx.strokeStyle = "#2a3040";
-      ctx.lineWidth = 2.5 * zoom;
+      const barrelStart = isoOffset(
+        cargoPos.x,
+        turretBaseY - 2.5 * zoom,
+        1,
+      );
+
+      // Barrel mantlet (thick mount plate)
+      ctx.fillStyle = "#2a3040";
       ctx.beginPath();
-      ctx.moveTo(cargoPos.x + 1 * zoom, cargoPos.y - 13.5 * zoom);
+      ctx.ellipse(
+        barrelStart.x,
+        barrelStart.y,
+        2 * zoom,
+        1.2 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Main barrel
+      ctx.strokeStyle = "#2a3040";
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(barrelStart.x, barrelStart.y);
       ctx.lineTo(turretBarrelEnd.x, turretBarrelEnd.y);
       ctx.stroke();
+      // Barrel highlight stripe
+      ctx.strokeStyle = "rgba(90,100,120,0.4)";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(barrelStart.x, barrelStart.y - 1 * zoom);
+      ctx.lineTo(turretBarrelEnd.x, turretBarrelEnd.y - 1 * zoom);
+      ctx.stroke();
+
+      // Muzzle brake — slotted box at barrel end
+      const mzDir = { x: turretBarrelEnd.x - barrelStart.x, y: turretBarrelEnd.y - barrelStart.y };
+      const mzLen = Math.sqrt(mzDir.x * mzDir.x + mzDir.y * mzDir.y);
+      const mzNx = mzDir.x / mzLen;
+      const mzNy = mzDir.y / mzLen;
+      const mzPerpX = -mzNy;
+      const mzPerpY = mzNx;
+
       ctx.fillStyle = "#1a2030";
       ctx.beginPath();
-      ctx.arc(turretBarrelEnd.x, turretBarrelEnd.y, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.moveTo(
+        turretBarrelEnd.x - mzPerpX * 2.2 * zoom,
+        turretBarrelEnd.y - mzPerpY * 2.2 * zoom,
+      );
+      ctx.lineTo(
+        turretBarrelEnd.x + mzPerpX * 2.2 * zoom,
+        turretBarrelEnd.y + mzPerpY * 2.2 * zoom,
+      );
+      ctx.lineTo(
+        turretBarrelEnd.x + mzNx * 2 * zoom + mzPerpX * 2.2 * zoom,
+        turretBarrelEnd.y + mzNy * 2 * zoom + mzPerpY * 2.2 * zoom,
+      );
+      ctx.lineTo(
+        turretBarrelEnd.x + mzNx * 2 * zoom - mzPerpX * 2.2 * zoom,
+        turretBarrelEnd.y + mzNy * 2 * zoom - mzPerpY * 2.2 * zoom,
+      );
+      ctx.closePath();
       ctx.fill();
-      // Turret viewport
-      ctx.fillStyle = `rgba(60, 220, 80, ${0.3 + Math.sin(time * 2) * 0.1})`;
-      ctx.shadowColor = "#40dd50";
-      ctx.shadowBlur = 3 * zoom;
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      // Muzzle brake vent slots
+      for (let si = 0; si < 2; si++) {
+        const slotT = 0.3 + si * 0.4;
+        const slotX = turretBarrelEnd.x + mzNx * slotT * 2 * zoom;
+        const slotY = turretBarrelEnd.y + mzNy * slotT * 2 * zoom;
+        ctx.strokeStyle = "rgba(0,0,0,0.5)";
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(slotX - mzPerpX * 1.8 * zoom, slotY - mzPerpY * 1.8 * zoom);
+        ctx.lineTo(slotX + mzPerpX * 1.8 * zoom, slotY + mzPerpY * 1.8 * zoom);
+        ctx.stroke();
+      }
+
+      // Muzzle bore opening
+      ctx.fillStyle = "#0a0e14";
+      ctx.beginPath();
+      ctx.arc(
+        turretBarrelEnd.x + mzNx * 2 * zoom,
+        turretBarrelEnd.y + mzNy * 2 * zoom,
+        1.2 * zoom,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Turret viewport with scanning glow
+      const viewportGlow = 0.3 + Math.sin(time * 2) * 0.1;
+      ctx.fillStyle = "#0a0e14";
       ctx.beginPath();
       ctx.ellipse(
         cargoPos.x,
-        cargoPos.y - 16 * zoom,
+        turretBaseY - 5 * zoom,
+        2 * zoom,
+        1 * zoom,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.fillStyle = `rgba(60, 220, 80, ${viewportGlow})`;
+      ctx.shadowColor = "#40dd50";
+      ctx.shadowBlur = 4 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(
+        cargoPos.x,
+        turretBaseY - 5 * zoom,
         1.5 * zoom,
-        0.8 * zoom,
+        0.7 * zoom,
         0,
         0,
         Math.PI * 2,
@@ -33181,54 +36575,135 @@ function renderStationTower(
         );
       }
 
-      // Commander's lookout tower
+      // Commander's lookout tower — 3D multi-facet cylinder with periscope
       const periPos = isoOffset(cabPos.x, cabPos.y - 22 * zoom, 0);
-      ctx.fillStyle = "#4a5060";
-      ctx.beginPath();
-      ctx.ellipse(
-        periPos.x,
-        periPos.y,
-        3 * zoom,
-        1.8 * zoom,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      const lookR = 2.2 * zoom;
+      const lookH = 6 * zoom;
+      const lookER = lookR * 0.55;
+
+      // Base ring — recessed mounting
       ctx.fillStyle = "#3a4050";
-      ctx.fillRect(
-        periPos.x - 1.2 * zoom,
-        periPos.y - 5 * zoom,
-        2.4 * zoom,
-        5 * zoom,
-      );
-      ctx.fillStyle = "#5a6070";
       ctx.beginPath();
-      ctx.ellipse(
-        periPos.x,
-        periPos.y - 5 * zoom,
-        1.8 * zoom,
-        1.2 * zoom,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(periPos.x, periPos.y + 0.5 * zoom, lookER + 1 * zoom, lookR + 1 * zoom, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#99ccff";
-      ctx.shadowColor = "#99ccff";
-      ctx.shadowBlur = 4 * zoom;
+      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Cylinder body — 10-facet with per-facet lighting
+      const lookFacets = 10;
+      const bkPtsL: { x: number; y: number }[] = [];
+      const ftPtsL: { x: number; y: number }[] = [];
+      for (let i = 0; i <= lookFacets; i++) {
+        const a = Math.PI + (i / lookFacets) * Math.PI;
+        const fy = Math.sin(a) * lookR;
+        const fx = Math.cos(a) * lookER;
+        bkPtsL.push({ x: periPos.x + fx, y: periPos.y + fy });
+        ftPtsL.push({ x: periPos.x + fx, y: periPos.y - lookH + fy });
+      }
+
+      for (let i = 0; i < lookFacets; i++) {
+        const midAngle = Math.PI + ((i + 0.5) / lookFacets) * Math.PI;
+        const normalUp = -Math.sin(midAngle);
+
+        ctx.fillStyle = "#3a4050";
+        ctx.beginPath();
+        ctx.moveTo(bkPtsL[i].x, bkPtsL[i].y);
+        ctx.lineTo(bkPtsL[i + 1].x, bkPtsL[i + 1].y);
+        ctx.lineTo(ftPtsL[i + 1].x, ftPtsL[i + 1].y);
+        ctx.lineTo(ftPtsL[i].x, ftPtsL[i].y);
+        ctx.closePath();
+        ctx.fill();
+
+        if (normalUp > 0) {
+          ctx.fillStyle = `rgba(255,255,255,${normalUp * 0.22})`;
+        } else {
+          ctx.fillStyle = `rgba(0,0,0,${-normalUp * 0.28})`;
+        }
+        ctx.fill();
+      }
+
+      // Specular highlight streak
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
       ctx.beginPath();
-      ctx.ellipse(
-        periPos.x,
-        periPos.y - 5 * zoom,
-        0.8 * zoom,
-        0.5 * zoom,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(periPos.x - lookER * 0.2, periPos.y - lookR);
+      ctx.lineTo(periPos.x - lookER * 0.2, periPos.y - lookH - lookR);
+      ctx.lineTo(periPos.x + lookER * 0.2, periPos.y - lookH - lookR * 0.3);
+      ctx.lineTo(periPos.x + lookER * 0.2, periPos.y - lookR * 0.3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Steel bands on cylinder
+      for (let bi = 0; bi < 2; bi++) {
+        const bandY = periPos.y - (2 + bi * 3) * zoom;
+        ctx.strokeStyle = "#5a6070";
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(periPos.x, bandY, lookER, lookR, 0, Math.PI, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(periPos.x, bandY - 0.4 * zoom, lookER * 0.95, lookR * 0.95, 0, Math.PI * 1.2, Math.PI * 1.8);
+        ctx.stroke();
+      }
+
+      // Top cap with radial gradient
+      const lookCapGrad = ctx.createRadialGradient(
+        periPos.x - lookER * 0.2, periPos.y - lookH - lookR * 0.2, 0,
+        periPos.x, periPos.y - lookH, lookR,
       );
+      lookCapGrad.addColorStop(0, "#5a6070");
+      lookCapGrad.addColorStop(0.6, "#4a5060");
+      lookCapGrad.addColorStop(1, "#2a3040");
+      ctx.fillStyle = lookCapGrad;
+      ctx.beginPath();
+      ctx.ellipse(periPos.x, periPos.y - lookH, lookER, lookR, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+
+      // Periscope housing on top
+      const pScopeX = periPos.x + 0.5 * zoom;
+      const pScopeY = periPos.y - lookH - lookR * 0.3;
+      ctx.fillStyle = "#2a3040";
+      ctx.beginPath();
+      ctx.moveTo(pScopeX - 0.8 * zoom, pScopeY);
+      ctx.lineTo(pScopeX - 0.8 * zoom, pScopeY - 3 * zoom);
+      ctx.lineTo(pScopeX + 0.8 * zoom, pScopeY - 3 * zoom);
+      ctx.lineTo(pScopeX + 0.8 * zoom, pScopeY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#4a5060";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      // Periscope viewport lens
+      ctx.fillStyle = "#0a1020";
+      ctx.beginPath();
+      ctx.ellipse(pScopeX, pScopeY - 3 * zoom, 1 * zoom, 0.6 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const pScopeGlow = 0.4 + Math.sin(time * 2.5) * 0.15;
+      ctx.fillStyle = `rgba(153, 204, 255, ${pScopeGlow})`;
+      ctx.shadowColor = "#99ccff";
+      ctx.shadowBlur = 5 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(pScopeX, pScopeY - 3 * zoom, 0.7 * zoom, 0.4 * zoom, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
+
+      // Observation slit on cylinder face
+      ctx.fillStyle = "#0a0e14";
+      ctx.beginPath();
+      ctx.moveTo(periPos.x + lookER * 0.6, periPos.y - 2 * zoom);
+      ctx.lineTo(periPos.x + lookER * 1.1, periPos.y - 2.5 * zoom);
+      ctx.lineTo(periPos.x + lookER * 1.1, periPos.y - 4.5 * zoom);
+      ctx.lineTo(periPos.x + lookER * 0.6, periPos.y - 4 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = `rgba(153, 204, 255, ${pScopeGlow * 0.5})`;
+      ctx.fill();
 
       // === LOCOMOTIVE (middle) - War engine ===
       drawIsometricPrism(
@@ -33241,6 +36716,95 @@ function renderStationTower(
         { top: "#4a5060", left: "#3a4050", right: "#2a3040" },
         zoom,
       );
+
+      // Armor plate welded seams on left face
+      ctx.strokeStyle = "#5a6070";
+      ctx.lineWidth = 0.9 * zoom;
+      for (let ps = 0; ps < 3; ps++) {
+        const psY = locoPos.y - (3 + ps * 4.5) * zoom;
+        const psL = isoOffset(locoPos.x, psY, -7.5);
+        const psR = isoOffset(locoPos.x, psY, 0);
+        ctx.beginPath();
+        ctx.moveTo(psL.x - 7.5 * zoom, psL.y);
+        ctx.lineTo(psR.x - 7.5 * zoom, psR.y);
+        ctx.stroke();
+        // Welded seam highlight
+        ctx.strokeStyle = "rgba(100,110,130,0.35)";
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(psL.x - 7.5 * zoom, psL.y - 0.5 * zoom);
+        ctx.lineTo(psR.x - 7.5 * zoom, psR.y - 0.5 * zoom);
+        ctx.stroke();
+        ctx.strokeStyle = "#5a6070";
+        ctx.lineWidth = 0.9 * zoom;
+      }
+
+      // Armor plate seams on right face
+      for (let ps = 0; ps < 3; ps++) {
+        const psY = locoPos.y - (3 + ps * 4.5) * zoom;
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x + 1 * zoom, psY);
+        ctx.lineTo(locoPos.x + 7.5 * zoom, psY - 3.5 * zoom);
+        ctx.stroke();
+      }
+
+      // Rivet strips along top and bottom edges
+      ctx.fillStyle = "#6a7080";
+      for (let ri = 0; ri < 8; ri++) {
+        const riOff = -6 + ri * 1.8;
+        const riPosL = isoOffset(locoPos.x, locoPos.y - 1.5 * zoom, riOff);
+        ctx.beginPath();
+        ctx.arc(riPosL.x - 7.5 * zoom, riPosL.y, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        const riPosT = isoOffset(locoPos.x, locoPos.y - 14 * zoom, riOff);
+        ctx.beginPath();
+        ctx.arc(riPosT.x - 7.5 * zoom, riPosT.y, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // Right face rivet strip
+      for (let ri = 0; ri < 5; ri++) {
+        const rrx = locoPos.x + (1.5 + ri * 1.5) * zoom;
+        const rry = locoPos.y - (2 + ri * 0.75) * zoom;
+        ctx.beginPath();
+        ctx.arc(rrx, rry, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(rrx, rry - 12 * zoom, 0.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Industrial exhaust vents on left face
+      for (let vi = 0; vi < 2; vi++) {
+        const ventPos = isoOffset(locoPos.x, locoPos.y - (5 + vi * 5) * zoom, -6);
+        const ventX = ventPos.x - 6 * zoom;
+        const ventY = ventPos.y;
+        const ventW = 2.5 * zoom;
+        const ventH = 1.8 * zoom;
+
+        // Vent recess
+        ctx.fillStyle = "#1a2030";
+        ctx.fillRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
+
+        // Louvered slats
+        ctx.strokeStyle = "#4a5060";
+        ctx.lineWidth = 0.6 * zoom;
+        for (let si = 0; si < 3; si++) {
+          const sy = ventY - ventH * 0.35 + si * ventH * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(ventX - ventW * 0.4, sy);
+          ctx.lineTo(ventX + ventW * 0.4, sy);
+          ctx.stroke();
+        }
+
+        // Inner warm glow
+        ctx.fillStyle = `rgba(255, 120, 40, ${0.2 + Math.sin(time * 3 + vi) * 0.1})`;
+        ctx.fillRect(ventX - ventW * 0.35, ventY - ventH * 0.35, ventW * 0.7, ventH * 0.7);
+
+        // Vent frame
+        ctx.strokeStyle = "#5a6070";
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.strokeRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
+      }
 
       // Side-mounted war lanterns on brackets
       for (const side of [1, -1]) {
@@ -33407,45 +36971,48 @@ function renderStationTower(
         ctx.stroke();
       }
 
-      // Steam venting with embers
-      const steamAlpha = 0.4 + Math.sin(time * 4) * 0.2;
-      ctx.fillStyle = `rgba(160, 160, 170, ${steamAlpha})`;
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + Math.sin(time * 3) * 3,
-        stackPos.y - 20 * zoom,
-        7 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = `rgba(160, 160, 170, ${steamAlpha * 0.5})`;
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + Math.sin(time * 3 + 1) * 4.5,
-        stackPos.y - 25 * zoom,
-        5 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Embers
-      for (let em = 0; em < 4; em++) {
-        const emAge = (time * 3.5 + em * 1.8) % 3;
-        const emX = stackPos.x + Math.sin(time * 4.5 + em * 2) * 4 * zoom;
-        const emY = stackPos.y - 17 * zoom - emAge * 6 * zoom;
-        const emA = Math.max(0, 0.7 - emAge * 0.25);
-        ctx.fillStyle = `rgba(255, ${120 + em * 25}, 20, ${emA})`;
-        ctx.beginPath();
-        ctx.arc(
-          emX,
-          emY,
-          (0.6 + Math.sin(time * 8 + em) * 0.3) * zoom,
+      // Multi-layer war engine smoke plume with gradient opacity
+      for (let puff = 0; puff < 6; puff++) {
+        const puffAge = (time * 1.5 + puff * 1.4) % 5;
+        const puffY = stackPos.y - 17 * zoom - puffAge * 5 * zoom;
+        const puffX =
+          stackPos.x +
+          Math.sin(time * 1.8 + puff * 0.9) * (3 + puff * 1.5) * zoom;
+        const puffR = (3.5 + puff * 2 + puffAge * 1.5) * zoom;
+        const puffA = Math.max(0, 0.5 - puffAge * 0.1);
+        const puffGrad = ctx.createRadialGradient(
+          puffX,
+          puffY,
           0,
-          Math.PI * 2,
+          puffX,
+          puffY,
+          puffR,
         );
+        puffGrad.addColorStop(0, `rgba(140, 140, 155, ${puffA})`);
+        puffGrad.addColorStop(0.4, `rgba(120, 120, 135, ${puffA * 0.7})`);
+        puffGrad.addColorStop(0.7, `rgba(100, 100, 115, ${puffA * 0.4})`);
+        puffGrad.addColorStop(1, `rgba(80, 80, 95, 0)`);
+        ctx.fillStyle = puffGrad;
+        ctx.beginPath();
+        ctx.arc(puffX, puffY, puffR, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // War embers and sparks rising from stack
+      for (let em = 0; em < 5; em++) {
+        const emAge = (time * 3.5 + em * 1.6) % 3.5;
+        const emX = stackPos.x + Math.sin(time * 4.5 + em * 2) * 4 * zoom;
+        const emY = stackPos.y - 17 * zoom - emAge * 7 * zoom;
+        const emA = Math.max(0, 0.8 - emAge * 0.25);
+        const emR = (0.7 + Math.sin(time * 8 + em) * 0.3) * zoom;
+        ctx.fillStyle = `rgba(255, ${110 + em * 25}, 20, ${emA})`;
+        ctx.shadowColor = `rgba(255, ${110 + em * 25}, 20, ${emA * 0.4})`;
+        ctx.shadowBlur = 3 * zoom;
+        ctx.beginPath();
+        ctx.arc(emX, emY, emR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
 
       // Side steam pipe with vent
       const pipeR = isoOffset(locoPos.x, locoPos.y - 4 * zoom, 8);
