@@ -709,7 +709,7 @@ const CodexModal: React.FC<CodexModalProps> = ({
     },
     {
       type: "reinforcements" as const,
-      name: "Reinforcements",
+      name: "Reinforce",
       desc: "Summons 3 knight troops at target location.",
       cost: 100,
     },

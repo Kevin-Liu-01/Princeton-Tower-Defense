@@ -209,6 +209,9 @@ export function renderHazard(
     case "storm_field":
       drawStormFieldHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
       break;
+    case "volcano":
+      drawVolcanoHazard(ctx, sRad, time, hazard.pos, isoRatio, zoom);
+      break;
     case "lava":
       drawSimpleLavaHazard(ctx, sRad, time, zoom);
       break;
@@ -577,6 +580,194 @@ function drawLavaGeyserHazard(
     ctx.fillStyle = `rgba(255, ${150 + ember * 10}, 0, ${0.8 * (1 - emberPhase / 2)})`;
     ctx.beginPath();
     ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ============================================================================
+// VOLCANO HAZARD
+// ============================================================================
+
+function drawVolcanoHazard(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  pos: Position,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  const hazSeed = (pos.x || 0) * 41.3 + (pos.y || 0) * 23.7;
+  const lavaIsoRatio = 0.55;
+
+  // Fireball summon cycle: 7s period, fireball appears at 0-2s
+  const cycleTime = (time + seededNoise(hazSeed) * 7) % 7;
+  const isSummoning = cycleTime < 2.0;
+  const buildUp = cycleTime > 5.5;
+  const summonIntensity = isSummoning ? Math.sin((cycleTime / 2.0) * Math.PI) : 0;
+
+  // 1. Volcanic base - dark scorched crater
+  const baseGrad = ctx.createRadialGradient(0, 0, sRad * 0.15, 0, 0, sRad * 1.3);
+  baseGrad.addColorStop(0, "rgba(80, 35, 10, 0.95)");
+  baseGrad.addColorStop(0.35, "rgba(50, 22, 8, 0.88)");
+  baseGrad.addColorStop(0.7, "rgba(35, 15, 5, 0.6)");
+  baseGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = baseGrad;
+  drawOrganicBlob(ctx, sRad * 1.3, sRad * 1.2 * lavaIsoRatio, hazSeed, 0.22);
+  ctx.fill();
+
+  // 2. Lava veins radiating outward
+  for (let vein = 0; vein < 8; vein++) {
+    const veinAngle = (vein / 8) * Math.PI * 2 + Math.sin(hazSeed + vein * 3) * 0.25;
+    const veinLen = sRad * (0.5 + seededNoise(hazSeed + vein * 7) * 0.4);
+    const pulse = 0.3 + Math.sin(time * 2 + vein * 0.9) * 0.15;
+    ctx.strokeStyle = `rgba(255, 100, 0, ${pulse + (buildUp ? 0.2 : 0) + summonIntensity * 0.3})`;
+    ctx.lineWidth = (2 + Math.sin(hazSeed + vein) * 0.8) * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    const midR = veinLen * 0.5;
+    const midAngle = veinAngle + (seededNoise(hazSeed + vein * 11) - 0.5) * 0.3;
+    ctx.quadraticCurveTo(
+      Math.cos(midAngle) * midR,
+      Math.sin(midAngle) * midR * lavaIsoRatio,
+      Math.cos(veinAngle) * veinLen,
+      Math.sin(veinAngle) * veinLen * lavaIsoRatio
+    );
+    ctx.stroke();
+  }
+
+  // 3. Volcanic cone structure (layered trapezoids for 3D effect)
+  const coneBase = sRad * 0.7;
+  const coneTop = sRad * 0.3;
+  const coneHeight = 35 * cameraZoom;
+
+  // Back face of cone
+  ctx.fillStyle = "#2a1a0a";
+  ctx.beginPath();
+  ctx.moveTo(-coneBase, 5 * cameraZoom * lavaIsoRatio);
+  ctx.lineTo(-coneTop, -coneHeight);
+  ctx.lineTo(coneTop, -coneHeight);
+  ctx.lineTo(coneBase, 5 * cameraZoom * lavaIsoRatio);
+  ctx.closePath();
+  ctx.fill();
+
+  // Rocky texture on cone
+  for (let rock = 0; rock < 6; rock++) {
+    const rx = (seededNoise(hazSeed + rock * 5) - 0.5) * coneBase * 1.2;
+    const ry = -seededNoise(hazSeed + rock * 8) * coneHeight * 0.7;
+    ctx.fillStyle = `rgba(${40 + rock * 5}, ${25 + rock * 3}, ${10 + rock * 2}, 0.6)`;
+    ctx.beginPath();
+    ctx.arc(rx, ry, (4 + rock % 3) * cameraZoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Cone highlight edge
+  ctx.strokeStyle = "rgba(90, 50, 20, 0.5)";
+  ctx.lineWidth = 1.5 * cameraZoom;
+  ctx.beginPath();
+  ctx.moveTo(coneBase, 5 * cameraZoom * lavaIsoRatio);
+  ctx.lineTo(coneTop, -coneHeight);
+  ctx.stroke();
+
+  // 4. Crater opening with glowing magma
+  const craterGrad = ctx.createRadialGradient(0, -coneHeight, 0, 0, -coneHeight, coneTop);
+  const glowIntensity = buildUp ? 1.4 : (isSummoning ? 1.6 : 1);
+  craterGrad.addColorStop(0, `rgba(255, 220, ${buildUp ? 100 : 60}, ${glowIntensity})`);
+  craterGrad.addColorStop(0.4, "rgba(255, 120, 0, 0.9)");
+  craterGrad.addColorStop(0.7, "rgba(200, 60, 0, 0.7)");
+  craterGrad.addColorStop(1, "rgba(100, 30, 0, 0.3)");
+
+  ctx.save();
+  if (buildUp || isSummoning) {
+    ctx.shadowColor = "#ff4400";
+    ctx.shadowBlur = (15 + summonIntensity * 25) * cameraZoom;
+  }
+  ctx.fillStyle = craterGrad;
+  ctx.beginPath();
+  ctx.ellipse(0, -coneHeight, coneTop, coneTop * 0.4 * lavaIsoRatio, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // 5. Fireball summon effect
+  if (isSummoning) {
+    const fireballPhase = cycleTime / 2.0;
+    // Fireball rises from crater, arcs upward, then plummets down
+    const risePhase = Math.min(1, fireballPhase * 2);
+    const arcHeight = 90 * cameraZoom * Math.sin(risePhase * Math.PI);
+    const fireballY = -coneHeight - arcHeight;
+    const driftX = Math.sin(fireballPhase * Math.PI * 3) * sRad * 0.3 * fireballPhase;
+    const fireballSize = (8 + summonIntensity * 6) * cameraZoom;
+
+    // Fireball trail
+    ctx.save();
+    for (let trail = 4; trail >= 0; trail--) {
+      const trailT = Math.max(0, risePhase - trail * 0.05);
+      const trailArc = 90 * cameraZoom * Math.sin(trailT * Math.PI);
+      const trailY = -coneHeight - trailArc;
+      const trailX = Math.sin(trailT * Math.PI * 3) * sRad * 0.3 * trailT;
+      const trailAlpha = (1 - trail * 0.2) * summonIntensity * 0.5;
+      const trailSize = fireballSize * (1 - trail * 0.15);
+
+      ctx.fillStyle = `rgba(255, ${100 + trail * 30}, 0, ${trailAlpha})`;
+      ctx.beginPath();
+      ctx.arc(trailX, trailY, trailSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Main fireball
+    ctx.shadowColor = "#ff6600";
+    ctx.shadowBlur = 20 * cameraZoom;
+    const fbGrad = ctx.createRadialGradient(driftX, fireballY, 0, driftX, fireballY, fireballSize);
+    fbGrad.addColorStop(0, "rgba(255, 255, 200, 1)");
+    fbGrad.addColorStop(0.3, "rgba(255, 180, 50, 0.95)");
+    fbGrad.addColorStop(0.6, "rgba(255, 100, 0, 0.8)");
+    fbGrad.addColorStop(1, "rgba(200, 50, 0, 0.3)");
+    ctx.fillStyle = fbGrad;
+    ctx.beginPath();
+    ctx.arc(driftX, fireballY, fireballSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Smoke trail from fireball
+    for (let smoke = 0; smoke < 5; smoke++) {
+      const smokeT = Math.max(0, fireballPhase - smoke * 0.06);
+      const smokeX = driftX + (seededNoise(hazSeed + smoke * 3) - 0.5) * 15 * cameraZoom;
+      const smokeY = fireballY + smoke * 8 * cameraZoom;
+      const smokeAlpha = (0.4 - smoke * 0.07) * summonIntensity;
+
+      ctx.fillStyle = `rgba(80, 60, 40, ${smokeAlpha})`;
+      ctx.beginPath();
+      ctx.arc(smokeX, smokeY, (3 + smoke * 1.5) * cameraZoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // 6. Ambient smoke and embers
+  for (let ember = 0; ember < 10; ember++) {
+    const emberPhase = (time * 0.5 + ember * 0.35 + seededNoise(hazSeed + ember) * 2) % 3;
+    const emberAngle = ember * 0.63 + hazSeed * 0.01;
+    const emberDist = sRad * 0.15 + seededNoise(hazSeed + ember * 5) * sRad * 0.2;
+    const emberX = Math.cos(emberAngle) * emberDist + (seededNoise(hazSeed + ember * 9) - 0.5) * 10 * cameraZoom;
+    const emberY = -coneHeight - emberPhase * 35 * cameraZoom;
+    const emberSize = (1.8 + (ember % 3) * 0.6) * cameraZoom * (1 - emberPhase / 3);
+
+    if (ember < 5) {
+      // Embers
+      ctx.fillStyle = `rgba(255, ${160 + ember * 15}, ${50 - ember * 8}, ${0.7 * (1 - emberPhase / 3)})`;
+    } else {
+      // Smoke
+      ctx.fillStyle = `rgba(60, 50, 40, ${0.3 * (1 - emberPhase / 3)})`;
+    }
+    ctx.beginPath();
+    ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 7. Heat shimmer around base
+  if (buildUp || isSummoning) {
+    const shimmerAlpha = buildUp ? 0.12 : summonIntensity * 0.15;
+    ctx.fillStyle = `rgba(255, 150, 50, ${shimmerAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, sRad * 0.9, sRad * 0.5 * lavaIsoRatio, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -1305,6 +1496,73 @@ function drawMaelstromHazard(
     ctx.beginPath();
     ctx.arc(px, py, size, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // 6. Occasional lightning bolts inside the maelstrom
+  drawMaelstromLightning(ctx, sRad, time, hazSeed, isoRatio, cameraZoom);
+}
+
+function drawMaelstromLightning(
+  ctx: CanvasRenderingContext2D,
+  sRad: number,
+  time: number,
+  hazSeed: number,
+  isoRatio: number,
+  cameraZoom: number
+): void {
+  // Two independent lightning slots, each with its own cycle
+  for (let slot = 0; slot < 2; slot++) {
+    const slotSeed = hazSeed + slot * 137.3;
+    const cyclePeriod = 2.8 + seededNoise(slotSeed + 10) * 1.4;
+    const cyclePhase = (time + seededNoise(slotSeed) * cyclePeriod) % cyclePeriod;
+    const flashDuration = 0.18;
+
+    if (cyclePhase > flashDuration) continue;
+
+    const flashAlpha = 1 - cyclePhase / flashDuration;
+    const boltAngle = seededNoise(slotSeed + Math.floor(time / cyclePeriod) * 7.1) * Math.PI * 2;
+    const boltDist = sRad * (0.15 + seededNoise(slotSeed + Math.floor(time / cyclePeriod) * 3.3) * 0.55);
+    const startX = Math.cos(boltAngle) * boltDist * 0.3;
+    const startY = Math.sin(boltAngle) * boltDist * 0.3 * isoRatio - sRad * 0.5 * cameraZoom;
+    const endX = Math.cos(boltAngle) * boltDist;
+    const endY = Math.sin(boltAngle) * boltDist * isoRatio;
+
+    ctx.save();
+    ctx.shadowColor = `rgba(120, 200, 255, ${flashAlpha * 0.9})`;
+    ctx.shadowBlur = 18 * cameraZoom;
+
+    // Main bolt with jagged segments
+    ctx.strokeStyle = `rgba(200, 240, 255, ${flashAlpha * 0.95})`;
+    ctx.lineWidth = (2.5 + slot * 0.5) * cameraZoom;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    const segments = 5;
+    for (let s = 1; s <= segments; s++) {
+      const t = s / segments;
+      const baseX = startX + (endX - startX) * t;
+      const baseY = startY + (endY - startY) * t;
+      const jitter = (1 - Math.abs(t - 0.5) * 2) * sRad * 0.15;
+      const jx = baseX + (seededNoise(slotSeed + s * 11.1 + Math.floor(time / cyclePeriod)) - 0.5) * jitter;
+      const jy = baseY + (seededNoise(slotSeed + s * 17.7 + Math.floor(time / cyclePeriod)) - 0.5) * jitter * isoRatio;
+      ctx.lineTo(jx, jy);
+    }
+    ctx.stroke();
+
+    // Bright core
+    ctx.strokeStyle = `rgba(255, 255, 255, ${flashAlpha * 0.7})`;
+    ctx.lineWidth = 1.2 * cameraZoom;
+    ctx.stroke();
+
+    // Impact flash at endpoint
+    const impactGrad = ctx.createRadialGradient(endX, endY, 0, endX, endY, 8 * cameraZoom);
+    impactGrad.addColorStop(0, `rgba(200, 240, 255, ${flashAlpha * 0.8})`);
+    impactGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = impactGrad;
+    ctx.beginPath();
+    ctx.arc(endX, endY, 8 * cameraZoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
 }
 

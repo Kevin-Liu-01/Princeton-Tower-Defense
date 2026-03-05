@@ -29,19 +29,19 @@ export const ENEMY_LANE_OFFSET_LIMIT = 1;
 export const ENEMY_LANE_MIN_WORLD_SPACING = 18;
 export const ENEMY_LANE_HALF_SPAN_WORLD = Math.max(
   24,
-  Math.min(HERO_PATH_HITBOX_SIZE - 8, 42)
+  Math.min(HERO_PATH_HITBOX_SIZE - 8, 42),
 );
 
 export function getEnemyLaneCount(maxLanes: number = ENEMY_MAX_LANES): number {
   const derivedCount =
     Math.floor(
-      (ENEMY_LANE_HALF_SPAN_WORLD * 2) / ENEMY_LANE_MIN_WORLD_SPACING
+      (ENEMY_LANE_HALF_SPAN_WORLD * 2) / ENEMY_LANE_MIN_WORLD_SPACING,
     ) + 1;
   return Math.max(1, Math.min(maxLanes, derivedCount));
 }
 
 export function getEnemyLaneOffsets(
-  laneCount: number = getEnemyLaneCount()
+  laneCount: number = getEnemyLaneCount(),
 ): number[] {
   if (laneCount <= 1) return [0];
   const clampedCount = Math.max(1, laneCount);
@@ -75,7 +75,7 @@ export function worldToScreen(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ): Position {
   const width = canvasWidth / dpr;
   const height = canvasHeight / dpr;
@@ -103,9 +103,16 @@ export function worldToScreenRounded(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ): { x: number; y: number } {
-  const p = worldToScreen(pos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom);
+  const p = worldToScreen(
+    pos,
+    canvasWidth,
+    canvasHeight,
+    dpr,
+    cameraOffset,
+    cameraZoom,
+  );
   return { x: Math.round(p.x), y: Math.round(p.y) };
 }
 
@@ -116,7 +123,7 @@ export function screenToWorld(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ): Position {
   const width = canvasWidth / dpr;
   const height = canvasHeight / dpr;
@@ -144,7 +151,7 @@ export function screenToGrid(
   canvasHeight: number,
   dpr: number,
   cameraOffset?: Position,
-  cameraZoom?: number
+  cameraZoom?: number,
 ): GridPosition {
   const worldPos = screenToWorld(
     screenPos,
@@ -152,7 +159,7 @@ export function screenToGrid(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   // Round to nearest tile (tiles are centered at +0.5)
   return {
@@ -172,7 +179,7 @@ export function distance(a: Position, b: Position): number {
 export function distanceToLineSegment(
   point: Position,
   lineStart: Position,
-  lineEnd: Position
+  lineEnd: Position,
 ): number {
   const A = point.x - lineStart.x;
   const B = point.y - lineStart.y;
@@ -207,7 +214,7 @@ export function distanceToLineSegment(
 export function closestPointOnLine(
   point: Position,
   lineStart: Position,
-  lineEnd: Position
+  lineEnd: Position,
 ): Position {
   const A = point.x - lineStart.x;
   const B = point.y - lineStart.y;
@@ -229,7 +236,7 @@ export function closestPointOnLine(
 // Includes lane offset for spreading enemies across the road width
 export function getEnemyPosition(
   enemy: { pathIndex: number; progress: number; laneOffset?: number },
-  mapKey: string
+  mapKey: string,
 ): Position {
   const path = MAP_PATHS[mapKey];
   if (!path || path.length < 2) return { x: 0, y: 0 };
@@ -247,7 +254,7 @@ export function getEnemyPosition(
   // Calculate perpendicular offset for lane spreading
   const laneOffset = Math.max(
     -ENEMY_LANE_OFFSET_LIMIT,
-    Math.min(ENEMY_LANE_OFFSET_LIMIT, enemy.laneOffset || 0)
+    Math.min(ENEMY_LANE_OFFSET_LIMIT, enemy.laneOffset || 0),
   );
   const laneHalfSpan = ENEMY_LANE_HALF_SPAN_WORLD;
 
@@ -276,27 +283,35 @@ export function getEnemyPosition(
 
     if (laneProgress < blendWindow && currentIndex > 0) {
       const prevNode = gridToWorldPath(path[currentIndex - 1]);
-      const prevDir = safeNormalize(current.x - prevNode.x, current.y - prevNode.y);
+      const prevDir = safeNormalize(
+        current.x - prevNode.x,
+        current.y - prevNode.y,
+      );
       const cornerStart = safeNormalize(
         prevDir.x + currentDir.x,
-        prevDir.y + currentDir.y
+        prevDir.y + currentDir.y,
       );
       const startBlend = smoothStep(laneProgress / blendWindow);
       tangent = safeNormalize(
         cornerStart.x * (1 - startBlend) + currentDir.x * startBlend,
-        cornerStart.y * (1 - startBlend) + currentDir.y * startBlend
+        cornerStart.y * (1 - startBlend) + currentDir.y * startBlend,
       );
-    } else if (laneProgress > 1 - blendWindow && currentIndex < path.length - 2) {
+    } else if (
+      laneProgress > 1 - blendWindow &&
+      currentIndex < path.length - 2
+    ) {
       const afterNode = gridToWorldPath(path[currentIndex + 2]);
       const nextDir = safeNormalize(afterNode.x - next.x, afterNode.y - next.y);
       const cornerEnd = safeNormalize(
         currentDir.x + nextDir.x,
-        currentDir.y + nextDir.y
+        currentDir.y + nextDir.y,
       );
-      const endBlend = smoothStep((laneProgress - (1 - blendWindow)) / blendWindow);
+      const endBlend = smoothStep(
+        (laneProgress - (1 - blendWindow)) / blendWindow,
+      );
       tangent = safeNormalize(
         currentDir.x * (1 - endBlend) + cornerEnd.x * endBlend,
-        currentDir.y * (1 - endBlend) + cornerEnd.y * endBlend
+        currentDir.y * (1 - endBlend) + cornerEnd.y * endBlend,
       );
     }
 
@@ -333,7 +348,6 @@ export const DECORATION_HEIGHT_TAG_BY_TYPE: Partial<
   dock: "tall",
   hanging_cage: "tall",
   mushroom: "tall",
-  mushroom_cluster: "tall",
 
   // Landmarks and major set pieces
   pyramid: "landmark",
@@ -361,16 +375,21 @@ export const DECORATION_HEIGHT_TAG_BY_TYPE: Partial<
   dark_throne: "landmark",
   dark_barracks: "landmark",
   dark_spire: "landmark",
-  mountain_peak: "landmark",
   ice_bridge: "landmark",
   demon_statue: "landmark",
+  tombstone: "medium",
+  war_monument: "landmark",
+  bone_altar: "landmark",
+  sun_obelisk: "landmark",
+  frost_citadel: "landmark",
+  infernal_gate: "landmark",
 };
 
 export const DEFAULT_DECORATION_HEIGHT_TAG: DecorationHeightTag = "short";
 
 export function getDecorationHeightTag(
   type: DecorationType,
-  explicitHeightTag?: DecorationHeightTag
+  explicitHeightTag?: DecorationHeightTag,
 ): DecorationHeightTag {
   return (
     explicitHeightTag ??
@@ -574,19 +593,66 @@ const DECORATION_VOLUME_OVERRIDES: Partial<
     anchorOffsetY: -5,
     frontDepthPadding: 11,
   },
+  war_monument: {
+    width: 110,
+    length: 90,
+    height: 180,
+    anchorOffsetY: -8,
+    frontDepthPadding: 14,
+    landmarkCoreRadius: 1.2,
+    landmarkFullPadding: 0.8,
+  },
+  bone_altar: {
+    width: 120,
+    length: 100,
+    height: 130,
+    anchorOffsetY: -6,
+    frontDepthPadding: 12,
+    landmarkCoreRadius: 1.1,
+    landmarkFullPadding: 0.75,
+  },
+  sun_obelisk: {
+    width: 100,
+    length: 80,
+    height: 200,
+    anchorOffsetY: -10,
+    frontDepthPadding: 16,
+    landmarkCoreRadius: 1.0,
+    landmarkFullPadding: 0.7,
+  },
+  frost_citadel: {
+    width: 150,
+    length: 120,
+    height: 190,
+    anchorOffsetY: -8,
+    frontDepthPadding: 15,
+    landmarkCoreRadius: 1.3,
+    landmarkFullPadding: 0.85,
+  },
+  infernal_gate: {
+    width: 140,
+    length: 110,
+    height: 170,
+    anchorOffsetY: -8,
+    frontDepthPadding: 14,
+    landmarkCoreRadius: 1.25,
+    landmarkFullPadding: 0.8,
+  },
 };
 
 export function getDecorationVolumeSpec(
   type: string,
-  explicitHeightTag?: DecorationHeightTag
+  explicitHeightTag?: DecorationHeightTag,
 ): DecorationVolumeSpec {
   const typedType = type as DecorationType;
   const heightTag = getDecorationHeightTag(typedType, explicitHeightTag);
   const defaults = DECORATION_VOLUME_DEFAULTS_BY_TAG[heightTag];
-  const overrides = (DECORATION_VOLUME_OVERRIDES as Record<
-    string,
-    Partial<Omit<DecorationVolumeSpec, "heightTag">>
-  >)[type];
+  const overrides = (
+    DECORATION_VOLUME_OVERRIDES as Record<
+      string,
+      Partial<Omit<DecorationVolumeSpec, "heightTag">>
+    >
+  )[type];
 
   return {
     heightTag,
@@ -594,7 +660,8 @@ export function getDecorationVolumeSpec(
     length: overrides?.length ?? defaults.length,
     height: overrides?.height ?? defaults.height,
     anchorOffsetY: overrides?.anchorOffsetY ?? defaults.anchorOffsetY,
-    frontDepthPadding: overrides?.frontDepthPadding ?? defaults.frontDepthPadding,
+    frontDepthPadding:
+      overrides?.frontDepthPadding ?? defaults.frontDepthPadding,
     landmarkCoreRadius:
       overrides?.landmarkCoreRadius ?? defaults.landmarkCoreRadius,
     landmarkFullPadding:
@@ -610,7 +677,7 @@ export function getDecorationVolumeSpec(
 export function getDecorationWorldOffset(
   type: string,
   scale: number,
-  explicitHeightTag?: DecorationHeightTag
+  explicitHeightTag?: DecorationHeightTag,
 ): Position {
   const volume = getDecorationVolumeSpec(type, explicitHeightTag);
   const safeBaseScale = Math.max(0.0001, volume.offsetBaseScale);
@@ -627,69 +694,112 @@ interface MapDecorationRuntimeRule {
 }
 
 const MAP_DECORATION_RUNTIME_RULES: Record<string, MapDecorationRuntimeRule> = {
-  pyramid: { runtimeType: "pyramid", scaleMultiplier: 1.5 },
-  obelisk: { runtimeType: "obelisk", scaleMultiplier: 1.2 },
-  nassau_hall: { runtimeType: "nassau_hall", scaleMultiplier: 1 },
-  statue: { runtimeType: "statue", scaleMultiplier: 1.3 },
-  demon_statue: { runtimeType: "statue", scaleMultiplier: 1.3 },
-  ruined_temple: { runtimeType: "ruins", scaleMultiplier: 1.5 },
-  lava_pool: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
-  lake: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
-  algae_pool: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
-  torch: { runtimeType: "torch", scaleMultiplier: 1 },
-  fire_pit: { runtimeType: "torch", scaleMultiplier: 1 },
-  magma_vent: { runtimeType: "torch", scaleMultiplier: 1 },
+  // Grassland basics
+  tree: { runtimeType: "tree", scaleMultiplier: 1 },
+  bush: { runtimeType: "bush", scaleMultiplier: 0.8 },
+  rock: { runtimeType: "rock", scaleMultiplier: 0.9 },
+  fence: { runtimeType: "fence", scaleMultiplier: 1 },
+  cart: { runtimeType: "cart", scaleMultiplier: 1 },
+  tent: { runtimeType: "tent", scaleMultiplier: 1 },
+  building: { runtimeType: "hut", scaleMultiplier: 1.1 },
+  flag: { runtimeType: "torch", scaleMultiplier: 1 },
   flowers: { runtimeType: "flowers", scaleMultiplier: 0.6 },
   signpost: { runtimeType: "signpost", scaleMultiplier: 0.8 },
   fountain: { runtimeType: "fountain", scaleMultiplier: 1.2 },
   bench: { runtimeType: "bench", scaleMultiplier: 0.7 },
   lamppost: { runtimeType: "lamppost", scaleMultiplier: 1 },
-  witch_cottage: { runtimeType: "witch_cottage", scaleMultiplier: 1.1 },
-  cauldron: { runtimeType: "cauldron", scaleMultiplier: 0.8 },
-  tentacle: { runtimeType: "tentacle", scaleMultiplier: 1.2 },
-  deep_water: { runtimeType: "deep_water", scaleMultiplier: 1.3 },
-  giant_sphinx: { runtimeType: "giant_sphinx", scaleMultiplier: 1.4 },
-  sphinx: { runtimeType: "sphinx", scaleMultiplier: 1.4 },
-  oasis_pool: { runtimeType: "oasis_pool", scaleMultiplier: 1.1 },
-  carnegie_lake: { runtimeType: "carnegie_lake", scaleMultiplier: 1.2 },
-  ice_fortress: { runtimeType: "ice_fortress", scaleMultiplier: 1.3 },
-  ice_throne: { runtimeType: "ice_throne", scaleMultiplier: 1.2 },
-  frozen_waterfall: { runtimeType: "frozen_waterfall", scaleMultiplier: 1.3 },
-  aurora_crystal: { runtimeType: "aurora_crystal", scaleMultiplier: 1.1 },
-  snow_lantern: { runtimeType: "snow_lantern", scaleMultiplier: 0.9 },
-  frozen_pond: { runtimeType: "frozen_pond", scaleMultiplier: 1.2 },
-  frozen_soldier: { runtimeType: "frozen_soldier", scaleMultiplier: 1 },
-  frozen_gate: { runtimeType: "frozen_gate", scaleMultiplier: 1.2 },
-  broken_wall: { runtimeType: "broken_wall", scaleMultiplier: 1.1 },
-  icicles: { runtimeType: "icicles", scaleMultiplier: 1 },
-  obsidian_castle: { runtimeType: "obsidian_castle", scaleMultiplier: 1.5 },
-  dark_throne: { runtimeType: "dark_throne", scaleMultiplier: 1.2 },
-  dark_barracks: { runtimeType: "dark_barracks", scaleMultiplier: 1.2 },
-  dark_spire: { runtimeType: "dark_spire", scaleMultiplier: 1.2 },
-  sarcophagus: { runtimeType: "sarcophagus", scaleMultiplier: 1.1 },
-  cobra_statue: { runtimeType: "cobra_statue", scaleMultiplier: 1.2 },
-  hieroglyph_wall: { runtimeType: "hieroglyph_wall", scaleMultiplier: 1.1 },
-  pottery: { runtimeType: "pottery", scaleMultiplier: 0.9 },
-  sand_pile: { runtimeType: "sand_pile", scaleMultiplier: 1 },
-  treasure_chest: { runtimeType: "treasure_chest", scaleMultiplier: 0.9 },
-  lava_fall: { runtimeType: "lava_fall", scaleMultiplier: 1.3 },
-  obsidian_pillar: { runtimeType: "obsidian_pillar", scaleMultiplier: 1.2 },
-  fire_crystal: { runtimeType: "fire_crystal", scaleMultiplier: 1.1 },
-  skull_throne: { runtimeType: "skull_throne", scaleMultiplier: 1.2 },
-  ember_rock: { runtimeType: "ember_rock", scaleMultiplier: 1 },
-  volcano_rim: { runtimeType: "volcano_rim", scaleMultiplier: 1.3 },
-  sunken_pillar: { runtimeType: "sunken_pillar", scaleMultiplier: 1.1 },
-  idol_statue: { runtimeType: "idol_statue", scaleMultiplier: 1.1 },
-  glowing_runes: { runtimeType: "glowing_runes", scaleMultiplier: 1 },
-  hanging_cage: { runtimeType: "hanging_cage", scaleMultiplier: 1 },
-  poison_pool: { runtimeType: "poison_pool", scaleMultiplier: 1.1 },
-  skeleton_pile: { runtimeType: "skeleton_pile", scaleMultiplier: 1 },
   hedge: { runtimeType: "hedge", scaleMultiplier: 0.9 },
   campfire: { runtimeType: "campfire", scaleMultiplier: 0.9 },
   dock: { runtimeType: "dock", scaleMultiplier: 1.1 },
   gate: { runtimeType: "gate", scaleMultiplier: 1.2 },
   reeds: { runtimeType: "reeds", scaleMultiplier: 0.8 },
   fishing_spot: { runtimeType: "fishing_spot", scaleMultiplier: 0.9 },
+  // Grassland landmarks
+  nassau_hall: { runtimeType: "nassau_hall", scaleMultiplier: 1 },
+  statue: { runtimeType: "statue", scaleMultiplier: 1.3 },
+  carnegie_lake: { runtimeType: "carnegie_lake", scaleMultiplier: 1.2 },
+  // Desert
+  palm: { runtimeType: "palm", scaleMultiplier: 1 },
+  cactus: { runtimeType: "cactus", scaleMultiplier: 1 },
+  dune: { runtimeType: "dune", scaleMultiplier: 1 },
+  sand_pile: { runtimeType: "sand_pile", scaleMultiplier: 1 },
+  pottery: { runtimeType: "pottery", scaleMultiplier: 0.9 },
+  treasure_chest: { runtimeType: "treasure_chest", scaleMultiplier: 0.9 },
+  obelisk: { runtimeType: "obelisk", scaleMultiplier: 1.2 },
+  pyramid: { runtimeType: "pyramid", scaleMultiplier: 1.5 },
+  sphinx: { runtimeType: "sphinx", scaleMultiplier: 1.4 },
+  giant_sphinx: { runtimeType: "giant_sphinx", scaleMultiplier: 1.4 },
+  oasis_pool: { runtimeType: "oasis_pool", scaleMultiplier: 1.1 },
+  sarcophagus: { runtimeType: "sarcophagus", scaleMultiplier: 1.1 },
+  cobra_statue: { runtimeType: "cobra_statue", scaleMultiplier: 1.2 },
+  hieroglyph_wall: { runtimeType: "hieroglyph_wall", scaleMultiplier: 1.1 },
+  // Winter
+  pine_tree: { runtimeType: "pine", scaleMultiplier: 1 },
+  snowman: { runtimeType: "snowman", scaleMultiplier: 1 },
+  snow_pile: { runtimeType: "snow_pile", scaleMultiplier: 1 },
+  ice_crystal: { runtimeType: "ice_crystal", scaleMultiplier: 1 },
+  icicles: { runtimeType: "icicles", scaleMultiplier: 1 },
+  snow_lantern: { runtimeType: "snow_lantern", scaleMultiplier: 0.9 },
+  frozen_pond: { runtimeType: "frozen_pond", scaleMultiplier: 1.2 },
+  frozen_soldier: { runtimeType: "frozen_soldier", scaleMultiplier: 1 },
+  frozen_gate: { runtimeType: "frozen_gate", scaleMultiplier: 1.2 },
+  broken_wall: { runtimeType: "broken_wall", scaleMultiplier: 1.1 },
+  battle_crater: { runtimeType: "battle_crater", scaleMultiplier: 1 },
+  ice_fortress: { runtimeType: "ice_fortress", scaleMultiplier: 1.3 },
+  ice_throne: { runtimeType: "ice_throne", scaleMultiplier: 1.2 },
+  frozen_waterfall: { runtimeType: "frozen_waterfall", scaleMultiplier: 1.3 },
+  aurora_crystal: { runtimeType: "aurora_crystal", scaleMultiplier: 1.1 },
+  // Volcanic
+  charred_tree: { runtimeType: "charred_tree", scaleMultiplier: 1 },
+  ember: { runtimeType: "ember", scaleMultiplier: 0.8 },
+  ember_rock: { runtimeType: "ember_rock", scaleMultiplier: 1 },
+  obsidian_spike: { runtimeType: "obsidian_spike", scaleMultiplier: 1 },
+  fire_crystal: { runtimeType: "fire_crystal", scaleMultiplier: 1.1 },
+  lava_pool: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
+  lava_fall: { runtimeType: "lava_fall", scaleMultiplier: 1.3 },
+  torch: { runtimeType: "torch", scaleMultiplier: 1 },
+  fire_pit: { runtimeType: "fire_pit", scaleMultiplier: 1 },
+  magma_vent: { runtimeType: "torch", scaleMultiplier: 1 },
+  obsidian_castle: { runtimeType: "obsidian_castle", scaleMultiplier: 1.5 },
+  obsidian_pillar: { runtimeType: "obsidian_pillar", scaleMultiplier: 1.2 },
+  dark_throne: { runtimeType: "dark_throne", scaleMultiplier: 1.2 },
+  dark_barracks: { runtimeType: "dark_barracks", scaleMultiplier: 1.2 },
+  dark_spire: { runtimeType: "dark_spire", scaleMultiplier: 1.2 },
+  demon_statue: { runtimeType: "statue", scaleMultiplier: 1.3 },
+  skull_throne: { runtimeType: "skull_throne", scaleMultiplier: 1.2 },
+  volcano_rim: { runtimeType: "volcano_rim", scaleMultiplier: 1.3 },
+  // Swamp
+  swamp_tree: { runtimeType: "swamp_tree", scaleMultiplier: 1 },
+  fog_patch: { runtimeType: "fog_wisp", scaleMultiplier: 1.2 },
+  broken_bridge: { runtimeType: "broken_wall", scaleMultiplier: 1.1 },
+  skeleton: { runtimeType: "skeleton", scaleMultiplier: 1 },
+  bones: { runtimeType: "bones", scaleMultiplier: 0.9 },
+  skull: { runtimeType: "skeleton", scaleMultiplier: 0.8 },
+  skull_pile: { runtimeType: "skeleton_pile", scaleMultiplier: 1 },
+  candles: { runtimeType: "torch", scaleMultiplier: 0.7 },
+  ritual_circle: { runtimeType: "glowing_runes", scaleMultiplier: 1.1 },
+  witch_cottage: { runtimeType: "witch_cottage", scaleMultiplier: 1.1 },
+  cauldron: { runtimeType: "cauldron", scaleMultiplier: 0.8 },
+  tentacle: { runtimeType: "tentacle", scaleMultiplier: 1.2 },
+  deep_water: { runtimeType: "deep_water", scaleMultiplier: 1.3 },
+  ruined_temple: { runtimeType: "ruins", scaleMultiplier: 1.5 },
+  sunken_pillar: { runtimeType: "sunken_pillar", scaleMultiplier: 1.1 },
+  idol_statue: { runtimeType: "idol_statue", scaleMultiplier: 1.1 },
+  glowing_runes: { runtimeType: "glowing_runes", scaleMultiplier: 1 },
+  hanging_cage: { runtimeType: "hanging_cage", scaleMultiplier: 1 },
+  poison_pool: { runtimeType: "poison_pool", scaleMultiplier: 1.1 },
+  skeleton_pile: { runtimeType: "skeleton_pile", scaleMultiplier: 1 },
+  // Challenge landmarks
+  war_monument: { runtimeType: "war_monument", scaleMultiplier: 1.4 },
+  bone_altar: { runtimeType: "bone_altar", scaleMultiplier: 1.3 },
+  sun_obelisk: { runtimeType: "sun_obelisk", scaleMultiplier: 1.4 },
+  frost_citadel: { runtimeType: "frost_citadel", scaleMultiplier: 1.4 },
+  infernal_gate: { runtimeType: "infernal_gate", scaleMultiplier: 1.4 },
+  ice_bridge: { runtimeType: "ice_bridge", scaleMultiplier: 1.2 },
+  tombstone: { runtimeType: "tombstone", scaleMultiplier: 1 },
+  // Aliases
+  lake: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
+  algae_pool: { runtimeType: "lava_pool", scaleMultiplier: 1.2 },
 };
 
 export interface MapDecorationRuntimePlacement {
@@ -699,7 +809,7 @@ export interface MapDecorationRuntimePlacement {
 }
 
 export function resolveMapDecorationRuntimePlacement(
-  decoration: Pick<MapDecoration, "type" | "category" | "size">
+  decoration: Pick<MapDecoration, "type" | "category" | "size">,
 ): MapDecorationRuntimePlacement | null {
   const sourceType = decoration.category ?? decoration.type;
   if (!sourceType) return null;
@@ -721,7 +831,7 @@ export function getMapDecorationWorldPos(decoration: MapDecoration): Position {
   const offset = getDecorationWorldOffset(
     resolvedPlacement.runtimeType,
     resolvedPlacement.scale,
-    decoration.heightTag
+    decoration.heightTag,
   );
   return {
     x: basePos.x + offset.x,
@@ -732,7 +842,7 @@ export function getMapDecorationWorldPos(decoration: MapDecoration): Position {
 export function getLandmarkSpawnExclusion(
   type: string,
   size: number,
-  explicitHeightTag?: DecorationHeightTag
+  explicitHeightTag?: DecorationHeightTag,
 ): { coreR: number; fullR: number } | null {
   const volume = getDecorationVolumeSpec(type, explicitHeightTag);
   if (volume.heightTag !== "landmark") return null;
@@ -746,16 +856,22 @@ export const LARGE_DECORATION_TYPES = new Set<DecorationType>(
     (type) => {
       const tag = DECORATION_HEIGHT_TAG_BY_TYPE[type];
       return tag === "tall" || tag === "landmark";
-    }
-  )
+    },
+  ),
 );
 
 // Landmark decoration types that should block tower placement
 export const LANDMARK_DECORATION_TYPES = new Set<string>(
   (Object.keys(DECORATION_HEIGHT_TAG_BY_TYPE) as DecorationType[]).filter(
-    (type) => DECORATION_HEIGHT_TAG_BY_TYPE[type] === "landmark"
-  )
+    (type) => DECORATION_HEIGHT_TAG_BY_TYPE[type] === "landmark",
+  ),
 );
+
+// Decoration types rendered as static background (water, lava, etc.) that block tower placement.
+export const BACKGROUND_BLOCKING_DECORATION_TYPES = new Set<string>([
+  "deep_water",
+  "lava_pool",
+]);
 
 // Vertical offset for landmark hitboxes (in scale units). Tall structures like pyramids
 // draw upward from their base—the hitbox center is shifted up so hovering the visible
@@ -764,7 +880,7 @@ export const LANDMARK_HITBOX_Y_OFFSET: Record<string, number> = {
   // Pyramid body spans from ~-60s (tip) to +25s (base), so center should be only
   // modestly above anchor. A larger value drifts the tooltip hitbox far above.
   pyramid: 20,
-  sphinx: 45,
+  sphinx: 10,
   giant_sphinx: 60,
   nassau_hall: 50,
   ice_fortress: 55,
@@ -778,14 +894,19 @@ export const LANDMARK_HITBOX_Y_OFFSET: Record<string, number> = {
 // Get the core grid cells a tower occupies (for bounds/path/blocked checks).
 // This always returns the anchor cell; the extended exclusion zone from larger
 // footprints (e.g. station 1.5x1.5) is handled by doFootprintsOverlap.
-export function getTowerFootprint(_type: TowerType, pos: GridPosition): GridPosition[] {
+export function getTowerFootprint(
+  _type: TowerType,
+  pos: GridPosition,
+): GridPosition[] {
   return [{ x: pos.x, y: pos.y }];
 }
 
 // Check if two towers' centered footprints overlap (rectangle-rectangle test).
 export function doFootprintsOverlap(
-  type1: TowerType, pos1: GridPosition,
-  type2: TowerType, pos2: GridPosition,
+  type1: TowerType,
+  pos1: GridPosition,
+  type2: TowerType,
+  pos2: GridPosition,
 ): boolean {
   const fp1 = TOWER_FOOTPRINTS[type1];
   const fp2 = TOWER_FOOTPRINTS[type2];
@@ -934,7 +1055,7 @@ export function findNonOverlappingPosition(
   basePos: Position,
   existingTroops: { pos: Position }[],
   minDistance: number = TROOP_SPREAD_RADIUS,
-  maxAttempts: number = 30
+  maxAttempts: number = 30,
 ): Position {
   // If no existing troops, return base position
   if (existingTroops.length === 0) return basePos;
@@ -986,11 +1107,11 @@ export function lerp(a: number, b: number, t: number): number {
 // Get the length of a path segment in world units
 export function getPathSegmentLength(
   pathIndex: number,
-  mapKey: string
+  mapKey: string,
 ): number {
   const path = MAP_PATHS[mapKey];
   if (!path || pathIndex < 0 || pathIndex >= path.length - 1) return TILE_SIZE;
-  
+
   const p1 = gridToWorldPath(path[pathIndex]);
   const p2 = gridToWorldPath(path[pathIndex + 1]);
   return distance(p1, p2);
@@ -1052,7 +1173,7 @@ export function getProjectileOrigin(
   towerPos: Position,
   targetPos: Position,
   towerHeight: number,
-  rotation: number
+  rotation: number,
 ): Position {
   // Calculate the offset based on tower height and direction to target
   const barrelLength = 18;
@@ -1068,7 +1189,7 @@ export function getProjectileOrigin(
 export function calculateProjectileArc(
   from: Position,
   to: Position,
-  baseHeight: number = 30
+  baseHeight: number = 30,
 ): number {
   const dist = distance(from, to);
   return Math.min(baseHeight + dist * 0.15, 80);
@@ -1082,7 +1203,7 @@ export function isOnScreen(
   dpr: number,
   cameraOffset?: Position,
   cameraZoom?: number,
-  margin: number = 100
+  margin: number = 100,
 ): boolean {
   const screenPos = worldToScreen(
     worldPos,
@@ -1090,7 +1211,7 @@ export function isOnScreen(
     canvasHeight,
     dpr,
     cameraOffset,
-    cameraZoom
+    cameraZoom,
   );
   const width = canvasWidth / dpr;
   const height = canvasHeight / dpr;
@@ -1112,7 +1233,7 @@ export function isOnScreen(
  */
 export function findClosestPathPoint(
   worldPos: Position,
-  mapKey: string
+  mapKey: string,
 ): { point: Position; distance: number; segmentIndex: number } | null {
   const paths = getLevelPaths(mapKey);
   if (paths.length === 0) return null;
@@ -1137,7 +1258,11 @@ export function findClosestPathPoint(
     }
   }
 
-  return { point: closestPoint, distance: minDist, segmentIndex: closestSegmentIndex };
+  return {
+    point: closestPoint,
+    distance: minDist,
+    segmentIndex: closestSegmentIndex,
+  };
 }
 
 /**
@@ -1148,13 +1273,13 @@ export function findClosestPathPointWithinRadius(
   worldPos: Position,
   anchorPos: Position,
   radius: number,
-  mapKey: string
+  mapKey: string,
 ): { point: Position; isValid: boolean; clampedToRadius: boolean } | null {
   const pathResult = findClosestPathPoint(worldPos, mapKey);
   if (!pathResult) return null;
 
   const distFromAnchor = distance(pathResult.point, anchorPos);
-  
+
   // If the closest path point is within radius, it's valid
   if (distFromAnchor <= radius) {
     return { point: pathResult.point, isValid: true, clampedToRadius: false };
@@ -1215,7 +1340,7 @@ export function lineCircleIntersection(
   p1: Position,
   p2: Position,
   center: Position,
-  radius: number
+  radius: number,
 ): Position[] {
   const dx = p2.x - p1.x;
   const dy = p2.y - p1.y;
@@ -1227,12 +1352,12 @@ export function lineCircleIntersection(
   const c = fx * fx + fy * fy - radius * radius;
 
   const discriminant = b * b - 4 * a * c;
-  
+
   if (discriminant < 0) return [];
-  
+
   const intersections: Position[] = [];
   const sqrtDisc = Math.sqrt(discriminant);
-  
+
   const t1 = (-b - sqrtDisc) / (2 * a);
   const t2 = (-b + sqrtDisc) / (2 * a);
 
@@ -1260,7 +1385,7 @@ export interface TroopMoveInfo {
   anchorPos: Position;
   moveRadius: number;
   canMoveAnywhere: boolean; // For heroes
-  ownerType: 'station' | 'barracks' | 'spell' | 'hero' | 'hero_summon';
+  ownerType: "station" | "barracks" | "spell" | "hero" | "hero_summon";
   ownerId: string;
 }
 
@@ -1272,52 +1397,62 @@ const HERO_SUMMON_RANGE = 180; // Captain's rally range
 
 export function getTroopMoveInfo(
   troop: Troop,
-  towers: { id: string; type: string; pos: { x: number; y: number }; rangeBoost?: number }[],
-  specialTower?: { type: string; pos: { x: number; y: number } }
+  towers: {
+    id: string;
+    type: string;
+    pos: { x: number; y: number };
+    rangeBoost?: number;
+  }[],
+  specialTower?: { type: string; pos: { x: number; y: number } },
 ): TroopMoveInfo {
   // Check if owned by a dinky station
-  const station = towers.find((t) => t.id === troop.ownerId && t.type === 'station');
+  const station = towers.find(
+    (t) => t.id === troop.ownerId && t.type === "station",
+  );
   if (station) {
     const boostedRange = STATION_TROOP_RANGE * (station.rangeBoost || 1);
     return {
       anchorPos: gridToWorld(station.pos),
       moveRadius: boostedRange,
       canMoveAnywhere: false,
-      ownerType: 'station',
+      ownerType: "station",
       ownerId: station.id,
     };
   }
 
   // Check if owned by frontier barracks (special building)
-  if (troop.ownerId === 'special_barracks' && specialTower?.type === 'barracks') {
+  if (
+    troop.ownerId === "special_barracks" &&
+    specialTower?.type === "barracks"
+  ) {
     return {
       anchorPos: gridToWorld(specialTower.pos),
       moveRadius: BARRACKS_TROOP_RANGE,
       canMoveAnywhere: false,
-      ownerType: 'barracks',
-      ownerId: 'special_barracks',
+      ownerType: "barracks",
+      ownerId: "special_barracks",
     };
   }
 
   // Check if owned by hero (captain's rally ability)
-  if (troop.ownerId.startsWith('hero-')) {
+  if (troop.ownerId.startsWith("hero-")) {
     return {
       anchorPos: troop.spawnPoint || troop.pos,
       moveRadius: troop.moveRadius || HERO_SUMMON_RANGE,
       canMoveAnywhere: false,
-      ownerType: 'hero_summon',
+      ownerType: "hero_summon",
       ownerId: troop.ownerId,
     };
   }
 
-  // Spell-spawned troops (reinforcements)
-  if (troop.ownerId === 'spell') {
+  // Spell-spawned troops (reinforcements) - ownerId is "spell-<timestamp>-<counter>"
+  if (troop.ownerId.startsWith("spell")) {
     return {
       anchorPos: troop.spawnPoint || troop.pos,
       moveRadius: troop.moveRadius || SPELL_TROOP_RANGE,
       canMoveAnywhere: false,
-      ownerType: 'spell',
-      ownerId: 'spell',
+      ownerType: "spell",
+      ownerId: troop.ownerId,
     };
   }
 
@@ -1326,7 +1461,7 @@ export function getTroopMoveInfo(
     anchorPos: troop.spawnPoint || troop.pos,
     moveRadius: troop.moveRadius || SPELL_TROOP_RANGE,
     canMoveAnywhere: false,
-    ownerType: 'spell',
+    ownerType: "spell",
     ownerId: troop.ownerId,
   };
 }

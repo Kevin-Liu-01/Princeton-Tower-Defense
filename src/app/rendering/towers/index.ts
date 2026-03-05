@@ -22757,22 +22757,22 @@ function renderStationTower(
     ctx.lineTo(bannerX2 + 2.5 * zoom + bWave * 0.2, bannerY2 + 7 * zoom);
     ctx.stroke();
   } else if (tower.level === 4 && tower.upgrade === "A") {
-    // ROYAL STABLE BASE - Elegant Marble Greek platform (3 thick tiers matching L2/L3/L4B)
+    // CENTAUR STABLE BASE - Clay red foundation with dark clay trim and mossy vine overlay (3 tiers)
 
-    // Bottom tier - heavy dark marble foundation (deepest, widest)
+    // Bottom tier - heavy dark clay red foundation (deepest, widest)
     drawIsoDiamond(
       screenPos.x,
       screenPos.y + 19 * zoom,
       baseW + 26,
       baseD + 42,
       12,
-      "#b0a898",
-      "#a09888",
-      "#908878",
+      "#4a2a1a",
+      "#3d1c12",
+      "#30160e",
     );
 
-    // Double gold trim bands on bottom tier
-    ctx.strokeStyle = "#c9a227";
+    // Lighter clay trim bands on bottom tier
+    ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(
@@ -22788,6 +22788,7 @@ function renderStationTower(
       screenPos.y + 10 * zoom,
     );
     ctx.stroke();
+    ctx.strokeStyle = "#6a3022";
     ctx.beginPath();
     ctx.moveTo(
       screenPos.x - (baseW + 26) * zoom * 0.5,
@@ -22803,8 +22804,8 @@ function renderStationTower(
     );
     ctx.stroke();
 
-    // Gold anchor bolts on bottom tier
-    ctx.fillStyle = "#a09888";
+    // Clay red rivets on bottom tier
+    ctx.fillStyle = "#4a2a1a";
     const l4aAnchors = [
       {
         x: screenPos.x - (baseW + 26) * zoom * 0.42,
@@ -22831,65 +22832,27 @@ function renderStationTower(
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 3 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#c9a227";
+      ctx.fillStyle = "#8b4532";
       ctx.beginPath();
       ctx.arc(anchor.x, anchor.y, 1.8 * zoom, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#a09888";
+      ctx.fillStyle = "#6a3a2a";
     }
 
-    // Decorative rosettes on bottom tier corners
-    ctx.fillStyle = "#c9a227";
-    const rosettePositions = [
-      {
-        x: screenPos.x - (baseW + 26) * zoom * 0.45,
-        y: screenPos.y + 14 * zoom,
-      },
-      {
-        x: screenPos.x + (baseW + 26) * zoom * 0.45,
-        y: screenPos.y + 14 * zoom,
-      },
-      {
-        x: screenPos.x,
-        y: screenPos.y + (baseD + 42) * zoom * 0.22 + 14 * zoom,
-      },
-    ];
-    for (const rosette of rosettePositions) {
-      for (let p = 0; p < 6; p++) {
-        const angle = (p / 6) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.ellipse(
-          rosette.x + Math.cos(angle) * 2 * zoom,
-          rosette.y + Math.sin(angle) * 1 * zoom,
-          1.5 * zoom,
-          0.8 * zoom,
-          angle,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-      ctx.fillStyle = "#b8860b";
-      ctx.beginPath();
-      ctx.arc(rosette.x, rosette.y, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#c9a227";
-    }
-
-    // Middle tier - warm marble with fluted columns
+    // Middle tier - dark clay red stone
     drawIsoDiamond(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 16,
       baseD + 30,
       9,
-      "#d8d0c4",
-      "#c8c0b4",
-      "#b8b0a4",
+      "#5a3020",
+      "#4a2a1a",
+      "#3d1c12",
     );
 
-    // Gold molding edge on middle tier
-    ctx.strokeStyle = "#c9a227";
+    // Lighter clay molding edge on middle tier
+    ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - (baseW + 16) * zoom * 0.5, screenPos.y + 1 * zoom);
@@ -22900,8 +22863,8 @@ function renderStationTower(
     ctx.lineTo(screenPos.x + (baseW + 16) * zoom * 0.5, screenPos.y + 1 * zoom);
     ctx.stroke();
 
-    // Fluted column effect on middle tier left face
-    ctx.strokeStyle = "#a09888";
+    // Stone mortar lines on middle tier left face
+    ctx.strokeStyle = "rgba(0,0,0,0.1)";
     ctx.lineWidth = 1 * zoom;
     for (let col = 0; col < 6; col++) {
       const fluteX = screenPos.x - (baseW + 16) * zoom * 0.35 - col * 4 * zoom;
@@ -22913,7 +22876,7 @@ function renderStationTower(
       ctx.stroke();
     }
 
-    // Fluted column effect on middle tier right face
+    // Stone mortar lines on middle tier right face
     for (let col = 0; col < 6; col++) {
       const fluteX = screenPos.x + (baseW + 16) * zoom * 0.35 + col * 4 * zoom;
       const fluteTopY = screenPos.y + 1 * zoom + col * 0.8 * zoom;
@@ -22924,23 +22887,22 @@ function renderStationTower(
       ctx.stroke();
     }
 
-    // Top tier - bright marble platform
+    // Top tier - dark clay red platform
     drawIsoDiamond(
       screenPos.x,
       screenPos.y,
       baseW + 8,
       baseD + 18,
       6,
-      "#ece8e0",
-      "#dcd8d0",
-      "#ccc8c0",
+      "#6a3a2a",
+      "#5a3020",
+      "#4a2a1a",
     );
 
-    // Top platform tile pattern (diagonal marble tiles)
-    ctx.strokeStyle = "#c0bab4";
+    // Top platform tile pattern (stone flagstones)
+    ctx.strokeStyle = "rgba(60,50,40,0.15)";
     ctx.lineWidth = 0.5 * zoom;
     for (let i = -3; i <= 3; i++) {
-      // One diagonal direction
       ctx.beginPath();
       ctx.moveTo(
         screenPos.x - (baseW + 8) * zoom * 0.35 + i * 5 * zoom,
@@ -22951,7 +22913,6 @@ function renderStationTower(
         screenPos.y + (baseD + 18) * zoom * 0.15 - 6 * zoom - i * 2.5 * zoom,
       );
       ctx.stroke();
-      // Other diagonal direction
       ctx.beginPath();
       ctx.moveTo(
         screenPos.x + (baseW + 8) * zoom * 0.35 + i * 5 * zoom,
@@ -22964,11 +22925,11 @@ function renderStationTower(
       ctx.stroke();
     }
 
-    // Gold edge trim with glow
-    ctx.strokeStyle = "#c9a227";
+    // Lighter clay edge trim
+    ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2.5 * zoom;
-    ctx.shadowColor = "#c9a227";
-    ctx.shadowBlur = 6 * zoom;
+    ctx.shadowColor = "#6a3022";
+    ctx.shadowBlur = 4 * zoom;
     ctx.beginPath();
     ctx.moveTo(screenPos.x - isoW - 4 * zoom, screenPos.y - 6 * zoom);
     ctx.lineTo(screenPos.x, screenPos.y + isoD - 2 * zoom);
@@ -22976,25 +22937,7 @@ function renderStationTower(
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // Greek meander/key pattern on platform edge
-    ctx.strokeStyle = "#b8860b";
-    ctx.lineWidth = 1 * zoom;
-    for (let i = -4; i <= 4; i++) {
-      const px = screenPos.x + i * 6 * zoom;
-      const py = screenPos.y + Math.abs(i) * 0.4 * zoom - 3 * zoom;
-      // Greek key pattern
-      ctx.beginPath();
-      ctx.moveTo(px - 2 * zoom, py - 1.5 * zoom);
-      ctx.lineTo(px + 2 * zoom, py - 1.5 * zoom);
-      ctx.lineTo(px + 2 * zoom, py + 1.5 * zoom);
-      ctx.lineTo(px - 1 * zoom, py + 1.5 * zoom);
-      ctx.lineTo(px - 1 * zoom, py);
-      ctx.lineTo(px + 1 * zoom, py);
-      ctx.stroke();
-    }
-
-    // Decorative corner pedestals
-    ctx.fillStyle = "#e0dcd4";
+    // Corner clay posts
     drawIsometricPrism(
       ctx,
       screenPos.x - (baseW + 8) * zoom * 0.45,
@@ -23002,7 +22945,7 @@ function renderStationTower(
       5,
       5,
       10,
-      { top: "#f0ece4", left: "#e0dcd4", right: "#d0ccc4" },
+      { top: "#5a3020", left: "#4a2a1a", right: "#3d1c12" },
       zoom,
     );
     drawIsometricPrism(
@@ -23012,12 +22955,12 @@ function renderStationTower(
       5,
       5,
       10,
-      { top: "#f0ece4", left: "#e0dcd4", right: "#d0ccc4" },
+      { top: "#5a3020", left: "#4a2a1a", right: "#3d1c12" },
       zoom,
     );
 
-    // Pedestal gold caps
-    ctx.fillStyle = "#c9a227";
+    // Lighter clay caps on posts
+    ctx.fillStyle = "#8b4532";
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x - (baseW + 8) * zoom * 0.45,
@@ -23041,14 +22984,14 @@ function renderStationTower(
     );
     ctx.fill();
 
-    // Small golden urns on pedestals
-    ctx.fillStyle = "#c9a227";
+    // Lanterns on posts
+    ctx.fillStyle = "#5a4020";
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x - (baseW + 8) * zoom * 0.45,
-      screenPos.y - 16 * zoom,
+      screenPos.y - 15 * zoom,
       2 * zoom,
-      3 * zoom,
+      2.5 * zoom,
       0,
       0,
       Math.PI * 2,
@@ -23057,34 +23000,30 @@ function renderStationTower(
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x + (baseW + 8) * zoom * 0.45,
-      screenPos.y - 16 * zoom,
+      screenPos.y - 15 * zoom,
       2 * zoom,
-      3 * zoom,
+      2.5 * zoom,
       0,
       0,
       Math.PI * 2,
     );
     ctx.fill();
-    // Urn rims
-    ctx.fillStyle = "#b8860b";
+    // Lantern glow
+    ctx.fillStyle = "rgba(255, 180, 80, 0.5)";
     ctx.beginPath();
-    ctx.ellipse(
+    ctx.arc(
       screenPos.x - (baseW + 8) * zoom * 0.45,
-      screenPos.y - 19 * zoom,
-      1.5 * zoom,
-      0.8 * zoom,
-      0,
+      screenPos.y - 16 * zoom,
+      2.5 * zoom,
       0,
       Math.PI * 2,
     );
     ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(
+    ctx.arc(
       screenPos.x + (baseW + 8) * zoom * 0.45,
-      screenPos.y - 19 * zoom,
-      1.5 * zoom,
-      0.8 * zoom,
-      0,
+      screenPos.y - 16 * zoom,
+      2.5 * zoom,
       0,
       Math.PI * 2,
     );
@@ -26143,11 +26082,11 @@ function renderStationTower(
 
     // (Sign removed)
   } else if (tower.level === 4 && tower.upgrade === "A") {
-    // ========== LEVEL 4A: CENTAUR STABLES - Grand Archer's Training Grounds ==========
+    // ========== LEVEL 4A: CENTAUR STABLES - Verdant Training Grounds ==========
     const bX = stationX;
     const bY = stationY;
 
-    // === ENHANCED FOUNDATION - Stone with brass pipes (extends lower) ===
+    // === ENHANCED FOUNDATION - Dark clay stone with lighter clay trim (extends lower) ===
     drawIsometricPrism(
       ctx,
       bX,
@@ -26155,7 +26094,7 @@ function renderStationTower(
       44,
       38,
       12,
-      { top: "#8a7a6a", left: "#7a6a5a", right: "#6a5a4a" },
+      { top: "#5a3020", left: "#4a2a1a", right: "#3d1c12" },
       zoom,
     );
 
@@ -26221,7 +26160,7 @@ function renderStationTower(
     for (let r = 0; r < 3; r++) {
       for (let j = 0; j < 6; j++) {
         if ((r + j) % 3 === 0) {
-          ctx.fillStyle = "rgba(255,240,200,0.06)";
+          ctx.fillStyle = "rgba(139,69,50,0.08)";
           const jx =
             bX - 20 * zoom + (r % 2) * (l4aBlockW * 0.5) + j * l4aBlockW;
           const xOff = jx - (bX - 22 * zoom);
@@ -26232,34 +26171,34 @@ function renderStationTower(
     }
     ctx.restore();
 
-    // Upper gold trim band - left face
-    ctx.strokeStyle = "#c9a227";
+    // Upper lighter clay trim band - left face
+    ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
     ctx.moveTo(bX - 21 * zoom, bY + 6 * zoom);
     ctx.lineTo(bX + 2 * zoom, bY + 15.5 * zoom);
     ctx.stroke();
-    // Upper gold trim band - right face
+    // Upper lighter clay trim band - right face
     ctx.beginPath();
     ctx.moveTo(bX - 2 * zoom, bY + 15.5 * zoom);
     ctx.lineTo(bX + 21 * zoom, bY + 6 * zoom);
     ctx.stroke();
 
-    // Lower brass trim band - left face
-    ctx.strokeStyle = "#b89227";
+    // Lower lighter clay trim band - left face
+    ctx.strokeStyle = "#6a3022";
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(bX - 20 * zoom, bY + 12 * zoom);
     ctx.lineTo(bX + 4 * zoom, bY + 22 * zoom);
     ctx.stroke();
-    // Lower brass trim band - right face
+    // Lower lighter clay trim band - right face
     ctx.beginPath();
     ctx.moveTo(bX - 2 * zoom, bY + 22 * zoom);
     ctx.lineTo(bX + 20 * zoom, bY + 12 * zoom);
     ctx.stroke();
 
-    // Decorative rivets along upper trim - left face
-    ctx.fillStyle = "#c9a227";
+    // Lighter clay accents along upper trim - left face
+    ctx.fillStyle = "#8b4532";
     for (let i = 0; i < 5; i++) {
       ctx.beginPath();
       ctx.arc(
@@ -26271,7 +26210,7 @@ function renderStationTower(
       );
       ctx.fill();
     }
-    // Decorative rivets along lower trim - right face
+    // Lighter clay accents along lower trim - right face
     for (let i = 0; i < 5; i++) {
       ctx.beginPath();
       ctx.arc(
@@ -26284,98 +26223,91 @@ function renderStationTower(
       ctx.fill();
     }
 
-    // Steam pipes running along foundation
-    ctx.strokeStyle = "#8b7355";
-    ctx.lineWidth = 3.5 * zoom;
+    // Vine trellis growing up the wall
+    ctx.strokeStyle = "#5a4020";
+    ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.moveTo(bX - 22 * zoom, bY + 10 * zoom);
-    ctx.lineTo(bX - 22 * zoom, bY - 17 * zoom);
-    ctx.quadraticCurveTo(
-      bX - 22 * zoom,
-      bY - 18 * zoom,
-      bX - 16 * zoom,
-      bY - 18 * zoom,
-    );
+    ctx.lineTo(bX - 22 * zoom, bY - 20 * zoom);
     ctx.stroke();
-    // Pipe joints
-    ctx.fillStyle = "#b89227";
-    ctx.beginPath();
-    ctx.arc(bX - 22 * zoom, bY + 10 * zoom, 2.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(bX - 22 * zoom, bY - 17 * zoom, 2.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Large animated gear cluster
-    const fGearX = bX + 18 * zoom;
-    const fGearY = bY + 8 * zoom;
-    ctx.fillStyle = "#b89227";
-    ctx.beginPath();
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2 + time * 0.25;
-      const r = i % 2 === 0 ? 5 * zoom : 3.8 * zoom;
-      const gx = fGearX + Math.cos(angle) * r;
-      const gy = fGearY + Math.sin(angle) * r * 0.5;
-      if (i === 0) ctx.moveTo(gx, gy);
-      else ctx.lineTo(gx, gy);
+    ctx.strokeStyle = "#3a6a2a";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let v = 0; v < 5; v++) {
+      const vy = bY + 8 * zoom - v * 6 * zoom;
+      const vWave = Math.sin(time * 0.5 + v * 1.2) * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(bX - 22 * zoom, vy);
+      ctx.quadraticCurveTo(bX - 18 * zoom + vWave, vy - 3 * zoom, bX - 22 * zoom, vy - 5 * zoom);
+      ctx.stroke();
     }
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#6a5a4a";
-    ctx.beginPath();
-    ctx.ellipse(fGearX, fGearY, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Interlocking gears
-    const fGear2X = fGearX - 7 * zoom;
-    const fGear2Y = fGearY + 3 * zoom;
-    ctx.fillStyle = "#a88217";
-    ctx.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2 - time * 0.35;
-      const r = i % 2 === 0 ? 3.5 * zoom : 2.5 * zoom;
-      const gx = fGear2X + Math.cos(angle) * r;
-      const gy = fGear2Y + Math.sin(angle) * r * 0.5;
-      if (i === 0) ctx.moveTo(gx, gy);
-      else ctx.lineTo(gx, gy);
+    // Vine leaves
+    ctx.fillStyle = "#4a8a3a";
+    for (let lf = 0; lf < 6; lf++) {
+      const ly = bY + 6 * zoom - lf * 5 * zoom;
+      const lx = bX - 21 * zoom + Math.sin(lf * 2.3) * 2 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, 2.5 * zoom, 1.5 * zoom, lf * 0.5, 0, Math.PI * 2);
+      ctx.fill();
     }
-    ctx.closePath();
+
+    // Hanging flower basket
+    const basketX = bX + 18 * zoom;
+    const basketY = bY + 6 * zoom;
+    ctx.strokeStyle = "#5a4020";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(basketX, basketY - 10 * zoom);
+    ctx.lineTo(basketX, basketY - 4 * zoom);
+    ctx.stroke();
+    ctx.strokeStyle = "#7a6040";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.arc(basketX, basketY - 2 * zoom, 4 * zoom, 0, Math.PI);
+    ctx.stroke();
+    // Flowers in basket
+    const flowerColors = ["#d44a4a", "#e8a030", "#d070d0", "#eaea40"];
+    for (let f = 0; f < 4; f++) {
+      const fx = basketX - 3 * zoom + f * 2 * zoom;
+      const fy = basketY - 5 * zoom - Math.abs(f - 1.5) * 1.5 * zoom;
+      ctx.fillStyle = flowerColors[f];
+      ctx.beginPath();
+      ctx.arc(fx, fy, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = "#3a7a2a";
+    ctx.beginPath();
+    ctx.ellipse(basketX, basketY - 4 * zoom, 5 * zoom, 2 * zoom, 0, Math.PI, 0);
     ctx.fill();
 
-    // Steam vents with animated puffs
-    ctx.fillStyle = "#5a4a3a";
+    // Herb garden planter
+    ctx.fillStyle = "#6a4a2a";
     ctx.beginPath();
-    ctx.ellipse(
-      bX - 14 * zoom,
-      bY + 12 * zoom,
-      3 * zoom,
-      1.5 * zoom,
-      0,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(bX - 14 * zoom, bY + 12 * zoom, 6 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
     ctx.fill();
-    const steamPuff = 0.4 + Math.sin(time * 3) * 0.2;
-    ctx.fillStyle = `rgba(200, 200, 200, ${steamPuff})`;
+    ctx.fillStyle = "#4a3018";
     ctx.beginPath();
-    ctx.arc(
-      bX - 14 * zoom + Math.sin(time * 2) * 2,
-      bY + 4 * zoom,
-      4 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(bX - 14 * zoom, bY + 12 * zoom, 6 * zoom, 3 * zoom, 0, Math.PI, 0);
     ctx.fill();
-    ctx.fillStyle = `rgba(180, 180, 180, ${steamPuff * 0.6})`;
+    ctx.fillStyle = "#3a5a20";
     ctx.beginPath();
-    ctx.arc(
-      bX - 13 * zoom + Math.sin(time * 2.5) * 2,
-      bY - 2 * zoom,
-      3 * zoom,
-      0,
-      Math.PI * 2,
-    );
+    ctx.ellipse(bX - 14 * zoom, bY + 11 * zoom, 5 * zoom, 2.5 * zoom, 0, Math.PI, 0);
     ctx.fill();
+    // Small herbs/plants growing
+    for (let h = 0; h < 4; h++) {
+      const hx = bX - 18 * zoom + h * 3 * zoom;
+      const hy = bY + 8 * zoom;
+      const hSway = Math.sin(time * 1.5 + h * 1.1) * 0.8;
+      ctx.strokeStyle = "#3a7a2a";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy + 2 * zoom);
+      ctx.quadraticCurveTo(hx + hSway, hy - 2 * zoom, hx + hSway * 0.5, hy - 4 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = h % 2 === 0 ? "#4a9a3a" : "#5aaa4a";
+      ctx.beginPath();
+      ctx.ellipse(hx + hSway * 0.5, hy - 4.5 * zoom, 2 * zoom, 1.2 * zoom, hSway * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // === LEFT HORSE STABLE ===
     const lwX = bX - 16 * zoom;
@@ -26400,7 +26332,7 @@ function renderStationTower(
       7,
       "right",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       lwSlitGlow,
     );
     drawIsoGothicWindow(
@@ -26411,7 +26343,7 @@ function renderStationTower(
       7,
       "left",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       lwSlitGlow,
     );
     // Stable roof
@@ -26461,9 +26393,9 @@ function renderStationTower(
       true,
     );
     ctx.stroke();
-    // Orange pennant on stable
+    // Forest green pennant on stable
     const lwFlagWave = Math.sin(time * 4) * 2;
-    ctx.fillStyle = "#ff6600";
+    ctx.fillStyle = "#2d8b2d";
     ctx.beginPath();
     ctx.moveTo(lwX + 2 * zoom, lwY - 30 * zoom);
     ctx.lineTo(lwX + 2 * zoom, lwY - 38 * zoom);
@@ -26476,7 +26408,7 @@ function renderStationTower(
     ctx.lineTo(lwX + 2 * zoom, lwY - 34 * zoom);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#b89227";
+    ctx.fillStyle = "#5a7040";
     ctx.fillRect(lwX + 1 * zoom, lwY - 40 * zoom, 2 * zoom, 12 * zoom);
 
     // === RIGHT HORSE STABLE ===
@@ -26489,7 +26421,7 @@ function renderStationTower(
       14,
       12,
       22,
-      { top: "#9b7b5b", left: "#8b6b4b", right: "#7b5b3b" },
+      { top: "#7b8b5b", left: "#6b7b4b", right: "#5b6b3b" },
       zoom,
     );
     // Gothic windows on right stable
@@ -26501,7 +26433,7 @@ function renderStationTower(
       7,
       "right",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       lwSlitGlow,
     );
     drawIsoGothicWindow(
@@ -26512,7 +26444,7 @@ function renderStationTower(
       7,
       "left",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       lwSlitGlow,
     );
     drawSlopedRoof(
@@ -26544,8 +26476,8 @@ function renderStationTower(
     ctx.beginPath();
     ctx.arc(rwX + 3.5 * zoom, rwY - 10.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    // Orange pennant
-    ctx.fillStyle = "#ff6600";
+    // Forest green pennant
+    ctx.fillStyle = "#2d8b2d";
     ctx.beginPath();
     ctx.moveTo(rwX - 2 * zoom, rwY - 30 * zoom);
     ctx.lineTo(rwX - 2 * zoom, rwY - 38 * zoom);
@@ -26561,7 +26493,7 @@ function renderStationTower(
     ctx.fillStyle = "#b89227";
     ctx.fillRect(rwX - 3 * zoom, rwY - 40 * zoom, 2 * zoom, 12 * zoom);
 
-    // === MAIN BUILDING - Gilded Archery Hall ===
+    // === MAIN BUILDING - Nature Hall ===
     drawIsometricPrism(
       ctx,
       bX,
@@ -26583,7 +26515,7 @@ function renderStationTower(
       10,
       "right",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       hallSlitGlow,
     );
     drawIsoGothicWindow(
@@ -26594,7 +26526,7 @@ function renderStationTower(
       10,
       "right",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       hallSlitGlow,
     );
     drawIsoGothicWindow(
@@ -26605,7 +26537,7 @@ function renderStationTower(
       10,
       "left",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       hallSlitGlow,
     );
     drawIsoGothicWindow(
@@ -26616,7 +26548,7 @@ function renderStationTower(
       10,
       "left",
       zoom,
-      "rgba(255, 180, 80",
+      "rgba(160, 210, 100",
       hallSlitGlow,
     );
 
@@ -26630,8 +26562,8 @@ function renderStationTower(
       ctx.stroke();
     }
 
-    // Brass bands
-    ctx.strokeStyle = "#b89227";
+    // Lighter clay bands
+    ctx.strokeStyle = "#8b4532";
     ctx.lineWidth = 2.5 * zoom;
     for (let i = 0; i < 3; i++) {
       ctx.beginPath();
@@ -26640,18 +26572,21 @@ function renderStationTower(
       ctx.stroke();
     }
 
-    // Decorative bow emblem on wall
+    // Antler/leaf nature emblem on wall
     ctx.strokeStyle = "#c9a227";
-    ctx.lineWidth = 2.5 * zoom;
+    ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.arc(
-      bX - 5 * zoom,
-      bY - 22 * zoom,
-      5 * zoom,
-      -Math.PI * 0.6,
-      Math.PI * 0.6,
-    );
+    ctx.moveTo(bX - 5 * zoom, bY - 17 * zoom);
+    ctx.quadraticCurveTo(bX - 10 * zoom, bY - 22 * zoom, bX - 7 * zoom, bY - 27 * zoom);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bX - 5 * zoom, bY - 17 * zoom);
+    ctx.quadraticCurveTo(bX, bY - 22 * zoom, bX - 3 * zoom, bY - 27 * zoom);
+    ctx.stroke();
+    ctx.fillStyle = "#4a8a3a";
+    ctx.beginPath();
+    ctx.ellipse(bX - 5 * zoom, bY - 20 * zoom, 3 * zoom, 2 * zoom, -0.3, 0, Math.PI * 2);
+    ctx.fill();
 
     // === ORNATE STABLE ROOF with clay tiles ===
     const roofY = bY - 34 * zoom;
@@ -26794,7 +26729,7 @@ function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Cupola vent openings
-    ctx.fillStyle = "#2a1008";
+    ctx.fillStyle = "#2a3a18";
     ctx.fillRect(cupX - 2 * zoom, cupY + 1 * zoom, 1.5 * zoom, 3 * zoom);
     ctx.fillRect(cupX + 0.5 * zoom, cupY + 1 * zoom, 1.5 * zoom, 3 * zoom);
     // Cupola peaked cap
@@ -26847,7 +26782,7 @@ function renderStationTower(
     ctx.fill();
     // Interior glow
     const interiorGlow = 0.4 + Math.sin(time * 2) * 0.15;
-    ctx.fillStyle = `rgba(255, 180, 100, ${interiorGlow})`;
+    ctx.fillStyle = `rgba(180, 210, 100, ${interiorGlow})`;
     ctx.beginPath();
     ctx.ellipse(
       bX - 2 * zoom,
@@ -26866,27 +26801,31 @@ function renderStationTower(
     ctx.arc(bX - 2 * zoom, bY - 18 * zoom, 4.5 * zoom, Math.PI, 0);
     ctx.stroke();
 
-    // Pressure gauge on wall
-    const gaugeX = bX + 22 * zoom;
-    const gaugeY = bY - 18 * zoom;
-    ctx.fillStyle = "#b89227";
+    // Hanging herb drying rack
+    const rackX = bX + 22 * zoom;
+    const rackY = bY - 18 * zoom;
+    ctx.strokeStyle = "#5a4020";
+    ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.arc(gaugeX, gaugeY, 4 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#f0f0e8";
-    ctx.beginPath();
-    ctx.arc(gaugeX, gaugeY, 3 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    const needleAngle = Math.PI + Math.sin(time * 2) * 0.4 + Math.PI * 0.6;
-    ctx.strokeStyle = "#cc0000";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(gaugeX, gaugeY);
-    ctx.lineTo(
-      gaugeX + Math.cos(needleAngle) * 2.5 * zoom,
-      gaugeY + Math.sin(needleAngle) * 2.5 * zoom,
-    );
+    ctx.moveTo(rackX - 5 * zoom, rackY - 4 * zoom);
+    ctx.lineTo(rackX + 5 * zoom, rackY - 4 * zoom);
     ctx.stroke();
+    // Hanging herb bundles
+    const herbColors = ["#5a8a3a", "#4a7a2a", "#6a9a4a"];
+    for (let hb = 0; hb < 3; hb++) {
+      const hbx = rackX - 3 * zoom + hb * 3 * zoom;
+      const hbSway = Math.sin(time * 1.2 + hb * 1.5) * 0.5;
+      ctx.strokeStyle = "#7a6040";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(hbx, rackY - 4 * zoom);
+      ctx.lineTo(hbx + hbSway, rackY);
+      ctx.stroke();
+      ctx.fillStyle = herbColors[hb];
+      ctx.beginPath();
+      ctx.ellipse(hbx + hbSway, rackY + 1 * zoom, 1.8 * zoom, 3 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Hay bale
     ctx.fillStyle = "#d4a017";
@@ -26907,11 +26846,11 @@ function renderStationTower(
 
     // (sign removed)
   } else {
-    // ========== LEVEL 4B: ROYAL CAVALRY FORTRESS - Orange Royal Military Stronghold ==========
+    // ========== LEVEL 4B: ROYAL CAVALRY FORTRESS - Royal Purple Military Stronghold ==========
     const bX = stationX;
     const bY = stationY;
 
-    // === FOUNDATION - Royal armored base with orange trim (extends lower) ===
+    // === FOUNDATION - Royal armored base with purple trim (extends lower) ===
     drawIsometricPrism(
       ctx,
       bX,
@@ -26940,12 +26879,12 @@ function renderStationTower(
       ctx.stroke();
     }
 
-    // Orange trim bands on foundation (isometric, both faces)
+    // Purple trim bands on foundation (isometric, both faces)
     const fndHW = 23 * zoom;
     const fndFD = 10 * zoom;
     const fndBandH = 2.5 * zoom;
     const fndBandY = 12 * zoom;
-    ctx.fillStyle = "#e06000";
+    ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(bX - fndHW, bY + fndBandY);
     ctx.lineTo(bX, bY + fndFD + fndBandY);
@@ -26953,7 +26892,7 @@ function renderStationTower(
     ctx.lineTo(bX - fndHW, bY + fndBandY + fndBandH);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = "#c04000";
+    ctx.fillStyle = "#5a2d80";
     ctx.beginPath();
     ctx.moveTo(bX, bY + fndFD + fndBandY);
     ctx.lineTo(bX + fndHW, bY + fndBandY);
@@ -27203,7 +27142,7 @@ function renderStationTower(
     // Stable door
     ctx.fillStyle = "#3a2a1a";
     ctx.fillRect(lwX - 5 * zoom, lwY - 16 * zoom, 8 * zoom, 16 * zoom);
-    ctx.strokeStyle = "#e06000";
+    ctx.strokeStyle = "#7b3fa0";
     ctx.lineWidth = 1.5 * zoom;
     ctx.strokeRect(lwX - 4.5 * zoom, lwY - 15.5 * zoom, 7 * zoom, 7 * zoom);
     // War horse head
@@ -27219,8 +27158,8 @@ function renderStationTower(
       Math.PI * 2,
     );
     ctx.fill();
-    // Orange eye (subtle)
-    ctx.fillStyle = "#e07000";
+    // Purple eye (subtle)
+    ctx.fillStyle = "#8b5fcf";
     ctx.beginPath();
     ctx.arc(lwX + 0.5 * zoom, lwY - 11.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -27244,7 +27183,7 @@ function renderStationTower(
     const lwpBot = lwY - 34 * zoom;
     const lwpIsoD = 1.5 * zoom;
     // Back face
-    ctx.fillStyle = "#a04000";
+    ctx.fillStyle = "#5a2d80";
     ctx.beginPath();
     ctx.moveTo(lwpX + lwpIsoD, lwpTop - lwpIsoD * 0.5);
     ctx.quadraticCurveTo(
@@ -27262,7 +27201,7 @@ function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Front face
-    ctx.fillStyle = "#e06000";
+    ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(lwpX, lwpTop);
     ctx.quadraticCurveTo(
@@ -27522,7 +27461,7 @@ function renderStationTower(
       Math.PI * 2,
     );
     ctx.fill();
-    ctx.fillStyle = "#e07000";
+    ctx.fillStyle = "#8b5fcf";
     ctx.beginPath();
     ctx.arc(rwX + 4 * zoom, rwY - 11.5 * zoom, 0.8 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -27532,7 +27471,7 @@ function renderStationTower(
     const rwpBot = rwY - 34 * zoom;
     const rwpIsoD = 1.5 * zoom;
     // Back face
-    ctx.fillStyle = "#a04000";
+    ctx.fillStyle = "#5a2d80";
     ctx.beginPath();
     ctx.moveTo(rwpX + rwpIsoD, rwpTop - rwpIsoD * 0.5);
     ctx.quadraticCurveTo(
@@ -27550,7 +27489,7 @@ function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Front face
-    ctx.fillStyle = "#e06000";
+    ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(rwpX, rwpTop);
     ctx.quadraticCurveTo(
@@ -27652,7 +27591,7 @@ function renderStationTower(
     ctx.arc(bX - 24 * zoom, bY - 8 * zoom, 3 * zoom, 0, Math.PI * 2);
     ctx.fill();
 
-    // Steam exhaust with orange glow
+    // Steam exhaust with purple glow
     ctx.fillStyle = "#4a4a52";
     ctx.beginPath();
     ctx.ellipse(
@@ -27666,7 +27605,7 @@ function renderStationTower(
     );
     ctx.fill();
     const fireGlow = 0.5 + Math.sin(time * 6) * 0.25;
-    ctx.fillStyle = `rgba(224, 96, 0, ${fireGlow})`;
+    ctx.fillStyle = `rgba(140, 80, 200, ${fireGlow})`;
     ctx.beginPath();
     ctx.ellipse(
       bX - 16 * zoom,
@@ -27845,7 +27784,7 @@ function renderStationTower(
       10,
       "right",
       zoom,
-      "rgba(255, 150, 50",
+      "rgba(180, 130, 255",
       fortSlitGlow,
     );
     drawIsoGothicWindow(
@@ -27856,7 +27795,7 @@ function renderStationTower(
       10,
       "right",
       zoom,
-      "rgba(255, 150, 50",
+      "rgba(180, 130, 255",
       fortSlitGlow,
     );
     drawIsoGothicWindow(
@@ -27867,7 +27806,7 @@ function renderStationTower(
       10,
       "left",
       zoom,
-      "rgba(255, 150, 50",
+      "rgba(180, 130, 255",
       fortSlitGlow,
     );
     drawIsoGothicWindow(
@@ -27878,7 +27817,7 @@ function renderStationTower(
       10,
       "left",
       zoom,
-      "rgba(255, 150, 50",
+      "rgba(180, 130, 255",
       fortSlitGlow,
     );
     drawIsoGothicWindow(
@@ -27889,7 +27828,7 @@ function renderStationTower(
       10,
       "right",
       zoom,
-      "rgba(255, 150, 50",
+      "rgba(180, 130, 255",
       fortSlitGlow,
     );
     drawIsoGothicWindow(
@@ -27900,18 +27839,18 @@ function renderStationTower(
       10,
       "left",
       zoom,
-      "rgba(255, 150, 50",
+      "rgba(180, 130, 255",
       fortSlitGlow,
     );
 
-    // Orange trim bands on walls (isometric, both faces)
+    // Purple trim bands on walls (isometric, both faces)
     const fortHW = 17 * zoom;
     const fortFD = 7 * zoom;
     const bandH = 2.5 * zoom;
     for (let i = 0; i < 3; i++) {
       const bh = 10 * zoom + i * 10 * zoom;
       // Left face band
-      ctx.fillStyle = "#e06000";
+      ctx.fillStyle = "#7b3fa0";
       ctx.beginPath();
       ctx.moveTo(bX - fortHW, bY - bh);
       ctx.lineTo(bX, bY + fortFD - bh);
@@ -27920,7 +27859,7 @@ function renderStationTower(
       ctx.closePath();
       ctx.fill();
       // Right face band
-      ctx.fillStyle = "#c04000";
+      ctx.fillStyle = "#5a2d80";
       ctx.beginPath();
       ctx.moveTo(bX, bY + fortFD - bh);
       ctx.lineTo(bX + fortHW, bY - bh);
@@ -27942,12 +27881,48 @@ function renderStationTower(
     ctx.lineTo(bX - 4 * zoom, bY - 30 * zoom);
     ctx.stroke();
     // Shield behind spears
-    ctx.fillStyle = "#e06000";
+    ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(bX - 4 * zoom, bY - 33 * zoom);
     ctx.lineTo(bX - 8 * zoom, bY - 22 * zoom);
     ctx.lineTo(bX - 4 * zoom, bY - 16 * zoom);
     ctx.lineTo(bX, bY - 22 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Royal purple tapestry hanging from wall
+    const tapX = bX + 8 * zoom;
+    const tapY = bY - 16 * zoom;
+    const tapWave = Math.sin(time * 1.5) * 0.8;
+    ctx.fillStyle = "#5a2d80";
+    ctx.beginPath();
+    ctx.moveTo(tapX, tapY - 12 * zoom);
+    ctx.lineTo(tapX + 6 * zoom, tapY - 14 * zoom);
+    ctx.quadraticCurveTo(tapX + 6 * zoom + tapWave, tapY - 6 * zoom, tapX + 6 * zoom, tapY);
+    ctx.quadraticCurveTo(tapX + 3 * zoom, tapY + 2 * zoom, tapX, tapY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#7b3fa0";
+    ctx.beginPath();
+    ctx.moveTo(tapX + 1 * zoom, tapY - 10 * zoom);
+    ctx.lineTo(tapX + 5 * zoom, tapY - 12 * zoom);
+    ctx.quadraticCurveTo(tapX + 5 * zoom + tapWave * 0.7, tapY - 6 * zoom, tapX + 5 * zoom, tapY - 2 * zoom);
+    ctx.quadraticCurveTo(tapX + 3 * zoom, tapY, tapX + 1 * zoom, tapY - 2 * zoom);
+    ctx.closePath();
+    ctx.fill();
+    // Gold trim on tapestry
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(tapX, tapY - 12 * zoom);
+    ctx.lineTo(tapX + 6 * zoom, tapY - 14 * zoom);
+    ctx.stroke();
+    // Gold lion/crown symbol on tapestry
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.moveTo(tapX + 3 * zoom, tapY - 10 * zoom);
+    ctx.lineTo(tapX + 2 * zoom, tapY - 7 * zoom);
+    ctx.lineTo(tapX + 4 * zoom, tapY - 7 * zoom);
     ctx.closePath();
     ctx.fill();
 
@@ -28116,13 +28091,13 @@ function renderStationTower(
     }
     ctx.restore();
 
-    // Tower orange bands (isometric, both faces)
+    // Tower purple bands (isometric, both faces)
     const twrHW = 6 * zoom;
     const twrFD = 2.5 * zoom;
     const twrBandH = 2 * zoom;
     for (let i = 0; i < 3; i++) {
       const tbh = 12 * zoom + i * 12 * zoom;
-      ctx.fillStyle = "#e06000";
+      ctx.fillStyle = "#7b3fa0";
       ctx.beginPath();
       ctx.moveTo(ltX - twrHW, ltY - tbh);
       ctx.lineTo(ltX, ltY + twrFD - tbh);
@@ -28130,7 +28105,7 @@ function renderStationTower(
       ctx.lineTo(ltX - twrHW, ltY - tbh + twrBandH);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#c04000";
+      ctx.fillStyle = "#5a2d80";
       ctx.beginPath();
       ctx.moveTo(ltX, ltY + twrFD - tbh);
       ctx.lineTo(ltX + twrHW, ltY - tbh);
@@ -28225,7 +28200,7 @@ function renderStationTower(
     ctx.arc(rbpX, rbpTop - 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
     // Back face for depth
-    ctx.fillStyle = "#a04000";
+    ctx.fillStyle = "#5a2d80";
     ctx.beginPath();
     ctx.moveTo(rbpX + rbpIsoD, rbpTop - rbpIsoD * 0.5);
     ctx.quadraticCurveTo(
@@ -28243,7 +28218,7 @@ function renderStationTower(
     ctx.closePath();
     ctx.fill();
     // Front face
-    ctx.fillStyle = "#e06000";
+    ctx.fillStyle = "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(rbpX, rbpTop);
     ctx.quadraticCurveTo(
@@ -28489,9 +28464,22 @@ function renderStationTower(
     ctx.fillRect(rtX - 1.5 * zoom, rtRoofY - 26 * zoom, 3 * zoom, 10 * zoom);
     ctx.fillRect(rtX - 4 * zoom, rtRoofY - 23 * zoom, 8 * zoom, 3 * zoom);
 
-    // Glowing forge window (orange)
+    // Royal crown ornament
+    ctx.fillStyle = "#c9a227";
+    ctx.beginPath();
+    ctx.moveTo(rtX - 3 * zoom, rtRoofY - 25 * zoom);
+    ctx.lineTo(rtX - 2 * zoom, rtRoofY - 28 * zoom);
+    ctx.lineTo(rtX - 0.5 * zoom, rtRoofY - 26 * zoom);
+    ctx.lineTo(rtX + 0.5 * zoom, rtRoofY - 28 * zoom);
+    ctx.lineTo(rtX + 2 * zoom, rtRoofY - 26 * zoom);
+    ctx.lineTo(rtX + 3 * zoom, rtRoofY - 28 * zoom);
+    ctx.lineTo(rtX + 4 * zoom, rtRoofY - 25 * zoom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing forge window (purple)
     const forgeGlow = 0.5 + Math.sin(time * 3) * 0.2;
-    ctx.fillStyle = `rgba(224, 120, 0, ${forgeGlow})`;
+    ctx.fillStyle = `rgba(150, 90, 210, ${forgeGlow})`;
     ctx.beginPath();
     ctx.arc(rtX - 3 * zoom, rtY - 38 * zoom, 5 * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -28514,9 +28502,9 @@ function renderStationTower(
     ctx.beginPath();
     ctx.arc(bX - 2 * zoom, bY - 20 * zoom, 5.5 * zoom, Math.PI, 0);
     ctx.stroke();
-    // Interior orange glow
+    // Interior purple glow
     const intGlow = 0.4 + Math.sin(time * 2) * 0.15;
-    ctx.fillStyle = `rgba(224, 120, 0, ${intGlow})`;
+    ctx.fillStyle = `rgba(150, 90, 210, ${intGlow})`;
     ctx.beginPath();
     ctx.ellipse(
       bX - 2 * zoom,
@@ -28809,7 +28797,7 @@ function renderStationTower(
     ctx.fill();
     ctx.shadowBlur = 0;
     // Crown on crest
-    ctx.fillStyle = "#e06000";
+    ctx.fillStyle = tower.upgrade === "A" ? "#2d8b2d" : "#7b3fa0";
     ctx.beginPath();
     ctx.moveTo(crestX - 2 * zoom, crestY - 1 * zoom);
     ctx.lineTo(crestX - 1 * zoom, crestY - 3 * zoom);
@@ -35799,6 +35787,690 @@ function renderStationTower(
     wire2EndY,
   );
   ctx.stroke();
+
+  // ========== CENTAUR STABLES VINE OVERLAY (renders above everything) ==========
+  if (tower.level === 4 && tower.upgrade === "A") {
+    const vineGreen1 = "#2a5a1a";
+    const vineGreen2 = "#3a6a2a";
+    const leafGreen1 = "#4a8a3a";
+    const leafGreen2 = "#3a7a2a";
+    const leafGreen3 = "#5a9a4a";
+    const leafDark = "#2a6020";
+
+    const drawLeaf = (lx: number, ly: number, angle: number, size: number) => {
+      ctx.save();
+      ctx.translate(lx, ly);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, size * zoom, size * 0.5 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = leafDark;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(-size * zoom * 0.8, 0);
+      ctx.lineTo(size * zoom * 0.8, 0);
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const drawVineTendril = (
+      sx: number,
+      sy: number,
+      ex: number,
+      ey: number,
+      cx: number,
+      cy: number,
+      color: string,
+      width: number,
+    ) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width * zoom;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.quadraticCurveTo(cx, cy, ex, ey);
+      ctx.stroke();
+    };
+
+    const bX = screenPos.x - 16 * zoom;
+    const bY = screenPos.y - 8 * zoom;
+
+    // --- Bottom platform tier vines (left face - thick sprawling vines) ---
+    for (let v = 0; v < 6; v++) {
+      const vx = screenPos.x - (baseW + 26) * zoom * 0.5 + v * 7 * zoom;
+      const vy = screenPos.y + 24 * zoom + v * 1.2 * zoom;
+      drawVineTendril(
+        vx, vy,
+        vx + (v % 2 === 0 ? -3 : 2) * zoom, vy - (8 + v) * zoom,
+        vx + (v % 2 === 0 ? 3 : -2) * zoom, vy - 4 * zoom,
+        vineGreen1, 1.4,
+      );
+      ctx.fillStyle = v % 3 === 0 ? leafGreen1 : v % 3 === 1 ? leafGreen2 : leafGreen3;
+      drawLeaf(
+        vx + (v % 2 === 0 ? 2 : -1) * zoom, vy - 5 * zoom,
+        v * 0.6 - 0.8, 2.2,
+      );
+      drawLeaf(
+        vx + (v % 2 === 0 ? -2 : 1.5) * zoom, vy - (7 + v * 0.5) * zoom,
+        -v * 0.4 + 0.5, 1.8,
+      );
+    }
+
+    // --- Bottom platform tier vines (right face) ---
+    for (let v = 0; v < 5; v++) {
+      const vx = screenPos.x + (baseW + 26) * zoom * 0.05 + v * 8 * zoom;
+      const vy = screenPos.y + 20 * zoom - v * 1.5 * zoom;
+      drawVineTendril(
+        vx, vy,
+        vx + (v % 2 === 0 ? 2 : -2) * zoom, vy - (9 + v) * zoom,
+        vx + (v % 2 === 0 ? -2 : 3) * zoom, vy - 5 * zoom,
+        vineGreen2, 1.3,
+      );
+      ctx.fillStyle = v % 2 === 0 ? leafGreen2 : leafGreen1;
+      drawLeaf(
+        vx + (v % 2 === 0 ? -1 : 2) * zoom, vy - 6 * zoom,
+        v * 0.5 + 0.2, 2.0,
+      );
+      drawLeaf(
+        vx + (v % 2 === 0 ? 1.5 : -1.5) * zoom, vy - (8 + v * 0.4) * zoom,
+        -v * 0.3 - 0.4, 1.6,
+      );
+    }
+
+    // --- Middle tier vine creepers (left edge draping down) ---
+    for (let v = 0; v < 7; v++) {
+      const vx = screenPos.x - (baseW + 16) * zoom * 0.4 + v * 6 * zoom;
+      const vy = screenPos.y + 10 * zoom + v * 0.6 * zoom;
+      const hangLen = (5 + v * 0.8) * zoom;
+      drawVineTendril(
+        vx, vy - hangLen,
+        vx + (v % 2 === 0 ? 1 : -1.5) * zoom, vy,
+        vx + (v % 2 === 0 ? -2 : 2) * zoom, vy - hangLen * 0.5,
+        vineGreen1, 1.1,
+      );
+      ctx.fillStyle = v % 3 === 0 ? leafGreen3 : leafGreen1;
+      drawLeaf(
+        vx + (v % 2 === 0 ? -1 : 1) * zoom, vy - hangLen * 0.6,
+        v * 0.4, 1.6,
+      );
+      if (v % 2 === 0) {
+        ctx.fillStyle = leafGreen2;
+        drawLeaf(vx, vy - hangLen * 0.3, -v * 0.3 + 1.2, 1.4);
+      }
+    }
+
+    // --- Middle tier vine creepers (right edge) ---
+    for (let v = 0; v < 6; v++) {
+      const vx = screenPos.x + (baseW + 16) * zoom * 0.05 + v * 6 * zoom;
+      const vy = screenPos.y + 8 * zoom - v * 0.5 * zoom;
+      const hangLen = (4 + v * 0.6) * zoom;
+      drawVineTendril(
+        vx, vy - hangLen,
+        vx + (v % 2 === 0 ? -1 : 2) * zoom, vy,
+        vx + (v % 2 === 0 ? 2 : -1.5) * zoom, vy - hangLen * 0.5,
+        vineGreen2, 1.0,
+      );
+      ctx.fillStyle = v % 2 === 0 ? leafGreen1 : leafGreen3;
+      drawLeaf(
+        vx + (v % 2 === 0 ? 1 : -1) * zoom, vy - hangLen * 0.5,
+        -v * 0.5 + 0.7, 1.5,
+      );
+    }
+
+    // --- Top platform edge vine border (dense isometric vine border) ---
+    for (let v = 0; v < 10; v++) {
+      const t = v / 9;
+      const edgeX = screenPos.x - isoW * 0.85 + t * isoW * 1.7;
+      const edgeY = t < 0.5
+        ? screenPos.y - 6 * zoom + t * 2 * isoD * 0.8
+        : screenPos.y - 6 * zoom + (1 - t) * 2 * isoD * 0.8;
+      drawVineTendril(
+        edgeX, edgeY + 2 * zoom,
+        edgeX + (v % 2 === 0 ? 2 : -2) * zoom, edgeY - 5 * zoom,
+        edgeX + (v % 2 === 0 ? -1.5 : 1.5) * zoom, edgeY - 2 * zoom,
+        vineGreen1, 1.2,
+      );
+      ctx.fillStyle = [leafGreen1, leafGreen2, leafGreen3][v % 3];
+      drawLeaf(
+        edgeX + (v % 2 === 0 ? 1 : -1) * zoom, edgeY - 4 * zoom,
+        v * 0.35 - 1.5, 1.8,
+      );
+      drawLeaf(
+        edgeX + (v % 2 === 0 ? -1 : 0.5) * zoom, edgeY - 1 * zoom,
+        -v * 0.25 + 0.8, 1.5,
+      );
+    }
+
+    // --- Corner post vines (thick climbing vines with many leaves) ---
+    for (const postDir of [-1, 1]) {
+      const postX = screenPos.x + postDir * (baseW + 8) * zoom * 0.45;
+      const postBaseY = screenPos.y - 2 * zoom;
+      const postTopY = screenPos.y - 14 * zoom;
+
+      for (let seg = 0; seg < 3; seg++) {
+        const sy = postBaseY - seg * 4 * zoom;
+        const ey = sy - 4 * zoom;
+        const cx = postX + postDir * (seg % 2 === 0 ? 2 : -2) * zoom;
+        drawVineTendril(postX, sy, postX + postDir * (seg % 2 === 0 ? 1 : -1) * zoom, ey, cx, (sy + ey) * 0.5, vineGreen1, 1.5);
+        ctx.fillStyle = seg % 2 === 0 ? leafGreen1 : leafGreen2;
+        drawLeaf(cx, (sy + ey) * 0.5, postDir * (seg * 0.4 + 0.2), 1.8);
+      }
+      ctx.fillStyle = leafGreen3;
+      drawLeaf(postX - postDir * 2 * zoom, postTopY + 2 * zoom, postDir * 1.2, 2.5);
+      drawLeaf(postX + postDir * 1.5 * zoom, postTopY, -postDir * 0.8, 2.0);
+    }
+
+    // --- Building wall vines (climbing up stable walls, left and right) ---
+    const wallBaseY = bY + 6 * zoom;
+    const wallTopY = bY - 24 * zoom;
+
+    // Left wall - thick vine trunk with branching tendrils
+    for (let seg = 0; seg < 5; seg++) {
+      const fy = wallBaseY - seg * 6 * zoom;
+      const ty = fy - 6 * zoom;
+      const wx = bX - 12 * zoom + seg * 1 * zoom;
+      drawVineTendril(
+        wx, fy,
+        wx + (seg % 2 === 0 ? 2 : -1.5) * zoom, ty,
+        wx + (seg % 2 === 0 ? -1 : 2) * zoom, (fy + ty) * 0.5,
+        vineGreen1, 1.6 - seg * 0.15,
+      );
+      ctx.fillStyle = [leafGreen1, leafGreen2, leafGreen3][seg % 3];
+      drawLeaf(
+        wx + (seg % 2 === 0 ? -3 : 3) * zoom, (fy + ty) * 0.5,
+        seg * 0.4 - 0.6, 2.0 - seg * 0.1,
+      );
+      if (seg % 2 === 0) {
+        ctx.fillStyle = leafDark;
+        drawLeaf(
+          wx + (seg % 2 === 0 ? 2 : -2) * zoom, ty + 1 * zoom,
+          -seg * 0.3 + 0.8, 1.5,
+        );
+      }
+    }
+
+    // Right wall vine cluster
+    for (let seg = 0; seg < 4; seg++) {
+      const fy = wallBaseY - seg * 7 * zoom;
+      const ty = fy - 7 * zoom;
+      const wx = bX + 18 * zoom - seg * 0.5 * zoom;
+      drawVineTendril(
+        wx, fy,
+        wx + (seg % 2 === 0 ? -2 : 1.5) * zoom, ty,
+        wx + (seg % 2 === 0 ? 1.5 : -2) * zoom, (fy + ty) * 0.5,
+        vineGreen2, 1.4 - seg * 0.1,
+      );
+      ctx.fillStyle = [leafGreen2, leafGreen3, leafGreen1][seg % 3];
+      drawLeaf(
+        wx + (seg % 2 === 0 ? 2.5 : -2.5) * zoom, (fy + ty) * 0.5,
+        -seg * 0.5 + 0.3, 1.8,
+      );
+      ctx.fillStyle = leafGreen1;
+      drawLeaf(wx + (seg % 2 === 0 ? -1.5 : 2) * zoom, ty + 2 * zoom, seg * 0.3, 1.4);
+    }
+
+    // --- Roof draping vines (hanging from roof edges) ---
+    const roofLeftEdgeX = bX - 18 * zoom;
+    const roofRightEdgeX = bX + 24 * zoom;
+    const roofY = bY - 28 * zoom;
+
+    for (let v = 0; v < 6; v++) {
+      const rx = roofLeftEdgeX + v * 3 * zoom;
+      const ry = roofY + v * 2 * zoom;
+      const dropLen = (4 + v * 1.2) * zoom;
+      drawVineTendril(
+        rx, ry,
+        rx + (v % 2 === 0 ? 1 : -1.5) * zoom, ry + dropLen,
+        rx + (v % 2 === 0 ? -2 : 1) * zoom, ry + dropLen * 0.5,
+        vineGreen2, 1.0,
+      );
+      ctx.fillStyle = [leafGreen3, leafGreen1, leafGreen2][v % 3];
+      drawLeaf(rx + (v % 2 === 0 ? -1.5 : 1) * zoom, ry + dropLen * 0.6, v * 0.4 + 0.5, 1.6);
+    }
+
+    for (let v = 0; v < 5; v++) {
+      const rx = roofRightEdgeX - v * 3 * zoom;
+      const ry = roofY + v * 2 * zoom;
+      const dropLen = (3 + v * 1.0) * zoom;
+      drawVineTendril(
+        rx, ry,
+        rx + (v % 2 === 0 ? -1 : 1.5) * zoom, ry + dropLen,
+        rx + (v % 2 === 0 ? 2 : -1) * zoom, ry + dropLen * 0.5,
+        vineGreen1, 0.9,
+      );
+      ctx.fillStyle = v % 2 === 0 ? leafGreen2 : leafGreen3;
+      drawLeaf(rx + (v % 2 === 0 ? 1 : -1) * zoom, ry + dropLen * 0.5, -v * 0.35, 1.4);
+    }
+
+    // --- Stable section vines (draping from the side stable roofs) ---
+    const stableLeftX = bX - 26 * zoom;
+    const stableRightX = bX + 30 * zoom;
+    const stableRoofY = bY - 18 * zoom;
+
+    for (let v = 0; v < 4; v++) {
+      const sx = stableLeftX + v * 4 * zoom;
+      const sy = stableRoofY + v * 1.5 * zoom;
+      const drop = (5 + v) * zoom;
+      drawVineTendril(sx, sy, sx + 1 * zoom, sy + drop, sx - 1.5 * zoom, sy + drop * 0.4, vineGreen1, 1.1);
+      ctx.fillStyle = v % 2 === 0 ? leafGreen1 : leafGreen3;
+      drawLeaf(sx - 1 * zoom, sy + drop * 0.5, v * 0.5, 1.7);
+      drawLeaf(sx + 1.5 * zoom, sy + drop * 0.7, -v * 0.3 + 1.0, 1.3);
+    }
+
+    for (let v = 0; v < 4; v++) {
+      const sx = stableRightX - v * 4 * zoom;
+      const sy = stableRoofY + v * 1.5 * zoom;
+      const drop = (4 + v) * zoom;
+      drawVineTendril(sx, sy, sx - 1 * zoom, sy + drop, sx + 1.5 * zoom, sy + drop * 0.4, vineGreen2, 1.0);
+      ctx.fillStyle = v % 2 === 0 ? leafGreen2 : leafGreen1;
+      drawLeaf(sx + 1 * zoom, sy + drop * 0.4, -v * 0.4, 1.5);
+      drawLeaf(sx - 1.5 * zoom, sy + drop * 0.65, v * 0.35 + 0.5, 1.3);
+    }
+
+    // --- Ground-level vine sprawl (around base of tower, organic spread) ---
+    const groundY = screenPos.y + 6 * zoom;
+    for (let v = 0; v < 8; v++) {
+      const gx = screenPos.x - isoW * 0.8 + v * isoW * 0.23;
+      const gy = groundY + (v % 2 === 0 ? 2 : -1) * zoom;
+      const spreadX = (v % 2 === 0 ? 4 : -3) * zoom;
+      const spreadY = (2 + v * 0.3) * zoom;
+      drawVineTendril(
+        gx, gy,
+        gx + spreadX, gy - spreadY,
+        gx + spreadX * 0.5, gy - spreadY * 0.3,
+        vineGreen1, 1.0,
+      );
+      ctx.fillStyle = [leafGreen1, leafGreen2, leafGreen3, leafDark][v % 4];
+      drawLeaf(gx + spreadX * 0.6, gy - spreadY * 0.5, v * 0.3, 1.5);
+      if (v % 3 === 0) {
+        ctx.fillStyle = leafGreen3;
+        drawLeaf(gx + spreadX * 0.3, gy - spreadY * 0.15, -v * 0.2 + 1.0, 1.2);
+      }
+    }
+
+    // --- Fence/railing vine wraps ---
+    for (let v = 0; v < 5; v++) {
+      const fx = screenPos.x - isoW * 0.6 + v * isoW * 0.3;
+      const fy = screenPos.y - 1 * zoom + v * 0.8 * zoom;
+      drawVineTendril(
+        fx, fy,
+        fx + (v % 2 === 0 ? 3 : -2) * zoom, fy - 8 * zoom,
+        fx + (v % 2 === 0 ? -1 : 2) * zoom, fy - 4 * zoom,
+        vineGreen2, 1.2,
+      );
+      ctx.fillStyle = v % 2 === 0 ? leafGreen1 : leafGreen2;
+      drawLeaf(fx + (v % 2 === 0 ? -1.5 : 1.5) * zoom, fy - 5 * zoom, v * 0.4 - 0.8, 1.8);
+      drawLeaf(fx + (v % 2 === 0 ? 2 : -1) * zoom, fy - 7 * zoom, -v * 0.3 + 0.5, 1.4);
+    }
+  }
+
+  // ========== ROYAL CAVALRY BANNERS & FLAGS (front layer - renders above building) ==========
+  if (tower.level === 4 && tower.upgrade === "B") {
+    const bX = screenPos.x - 16 * zoom;
+    const bY = screenPos.y - 8 * zoom;
+    const ltX = bX - 18 * zoom;
+    const ltY = bY + 4 * zoom;
+    const rtX = bX + 18 * zoom;
+    const rtY = bY + 4 * zoom;
+    const ltTopY = ltY - 48 * zoom;
+    const rtTopY = rtY - 54 * zoom;
+
+    const purpleDark = "#5a2d80";
+    const purpleMid = "#7b3fa0";
+    const purpleLight = "#9b5fcf";
+    const purpleDeep = "#3a1860";
+    const goldAccent = "#c9a227";
+    const goldDark = "#a08020";
+    const ropeColor = "#706050";
+
+    // Isometric unit vectors: left edge goes (-2, 1), right edge goes (2, 1)
+    const isoLX = -2;
+    const isoLY = 1;
+    const isoRX = 2;
+    const isoRY = 1;
+
+    const drawRope = (x1: number, y1: number, x2: number, y2: number, sag: number) => {
+      ctx.strokeStyle = ropeColor;
+      ctx.lineWidth = 1.0 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.quadraticCurveTo((x1 + x2) * 0.5, (y1 + y2) * 0.5 + sag * zoom, x2, y2);
+      ctx.stroke();
+    };
+
+    // Isometric pennant: hangs down in 3D, drawn as a parallelogram
+    // that respects isometric projection. The flag plane faces the camera
+    // but the bottom tip offsets along the isometric axis.
+    const drawIsoPennant = (
+      x: number, y: number,
+      h: number, w: number,
+      color: string,
+      isoOffX: number, isoOffY: number,
+    ) => {
+      const wave = Math.sin(time * 0.002 + x * 0.1 + y * 0.07) * 1.0 * zoom;
+      const fh = h * zoom;
+      const fw = w * zoom;
+      const ox = isoOffX * zoom * 0.3;
+      const oy = isoOffY * zoom * 0.3;
+
+      // Front face
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x - fw * 0.5, y);
+      ctx.lineTo(x + fw * 0.5, y);
+      ctx.lineTo(x + ox + wave * 0.2, y + fh + oy);
+      ctx.closePath();
+      ctx.fill();
+
+      // Isometric side sliver (depth)
+      ctx.fillStyle = purpleDeep;
+      ctx.beginPath();
+      ctx.moveTo(x + fw * 0.5, y);
+      ctx.lineTo(x + fw * 0.5 + 1.5 * zoom, y - 0.75 * zoom);
+      ctx.lineTo(x + ox + wave * 0.2 + 1.5 * zoom, y + fh + oy - 0.75 * zoom);
+      ctx.lineTo(x + ox + wave * 0.2, y + fh + oy);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = goldAccent;
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - fw * 0.5, y);
+      ctx.lineTo(x + fw * 0.5, y);
+      ctx.lineTo(x + ox + wave * 0.2, y + fh + oy);
+      ctx.closePath();
+      ctx.stroke();
+    };
+
+    // Bunting with isometric pennants along a rope
+    const drawIsoBunting = (
+      x1: number, y1: number,
+      x2: number, y2: number,
+      sag: number, count: number,
+      colors: string[], flagH: number, flagW: number,
+      isoOX: number, isoOY: number,
+    ) => {
+      drawRope(x1, y1, x2, y2, sag);
+      for (let i = 0; i < count; i++) {
+        const t = (i + 0.5) / count;
+        const rx = x1 + t * (x2 - x1);
+        const ry = y1 + t * (y2 - y1) + sag * zoom * (4 * t * (1 - t));
+        drawIsoPennant(rx, ry, flagH, flagW, colors[i % colors.length], isoOX, isoOY);
+      }
+    };
+
+    // 3D isometric wall banner
+    const drawWallBanner = (
+      x: number, y: number,
+      w: number, h: number,
+      faceColor: string, sideColor: string,
+      hasEmblem: boolean,
+    ) => {
+      const wave = Math.sin(time * 0.0015 + x * 0.05) * 1.5 * zoom;
+      const bw = w * zoom;
+      const bh = h * zoom;
+      const depth = 2 * zoom;
+
+      ctx.fillStyle = sideColor;
+      ctx.beginPath();
+      ctx.moveTo(x + bw * 0.5, y);
+      ctx.lineTo(x + bw * 0.5 + depth, y - depth * 0.5);
+      ctx.lineTo(x + bw * 0.5 + depth, y + bh - depth * 0.5 + wave);
+      ctx.lineTo(x + bw * 0.5, y + bh + wave);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = faceColor;
+      ctx.beginPath();
+      ctx.moveTo(x - bw * 0.5, y);
+      ctx.lineTo(x + bw * 0.5, y);
+      ctx.lineTo(x + bw * 0.5, y + bh + wave);
+      ctx.lineTo(x, y + bh + wave + 2.5 * zoom);
+      ctx.lineTo(x - bw * 0.5, y + bh + wave);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = goldAccent;
+      ctx.fillRect(x - bw * 0.5 - 0.5 * zoom, y - 1.2 * zoom, bw + 1 * zoom, 2 * zoom);
+
+      ctx.strokeStyle = goldAccent;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x - bw * 0.5, y);
+      ctx.lineTo(x - bw * 0.5, y + bh + wave);
+      ctx.lineTo(x, y + bh + wave + 2.5 * zoom);
+      ctx.lineTo(x + bw * 0.5, y + bh + wave);
+      ctx.lineTo(x + bw * 0.5, y);
+      ctx.stroke();
+
+      if (hasEmblem) {
+        const ey = y + bh * 0.35;
+        ctx.fillStyle = goldAccent;
+        ctx.beginPath();
+        ctx.moveTo(x - 1.8 * zoom, ey);
+        ctx.lineTo(x - 1 * zoom, ey - 2.2 * zoom);
+        ctx.lineTo(x, ey - 0.8 * zoom);
+        ctx.lineTo(x + 1 * zoom, ey - 2.2 * zoom);
+        ctx.lineTo(x + 1.8 * zoom, ey);
+        ctx.closePath();
+        ctx.fill();
+      }
+    };
+
+    // Pole flag on a vertical pole
+    const drawPoleFlag = (
+      x: number, y: number,
+      poleH: number, fw: number, fh: number,
+      color: string, dir: number,
+    ) => {
+      const wave = Math.sin(time * 0.002 + x * 0.08 + y * 0.06) * 1.5 * zoom;
+      const ph = poleH * zoom;
+
+      ctx.strokeStyle = goldDark;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y - ph);
+      ctx.stroke();
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x, y - ph);
+      ctx.lineTo(x + dir * fw * zoom, y - ph + fh * 0.5 * zoom + wave);
+      ctx.lineTo(x, y - ph + fh * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = goldAccent;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.stroke();
+
+      ctx.fillStyle = goldAccent;
+      ctx.beginPath();
+      ctx.arc(x, y - ph - 1.2 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    // Platform diamond corner coordinates
+    const platLX = screenPos.x - isoW - 4 * zoom;
+    const platLY = screenPos.y - 6 * zoom;
+    const platBotX = screenPos.x;
+    const platBotY = screenPos.y + isoD - 2 * zoom;
+    const platRX = screenPos.x + isoW + 4 * zoom;
+    const platRY = screenPos.y - 6 * zoom;
+
+    // Middle tier diamond corners
+    const midLX = screenPos.x - (baseW + 16) * zoom * 0.5;
+    const midLY = screenPos.y + 2 * zoom;
+    const midBotX = screenPos.x;
+    const midBotY = screenPos.y + 8 * zoom + (baseD + 30) * zoom * 0.25;
+    const midRX = screenPos.x + (baseW + 16) * zoom * 0.5;
+    const midRY = screenPos.y + 2 * zoom;
+
+    // Bottom tier diamond corners
+    const btLX = screenPos.x - (baseW + 26) * zoom * 0.5;
+    const btLY = screenPos.y + 13 * zoom;
+    const btBotX = screenPos.x;
+    const btBotY = screenPos.y + 19 * zoom + (baseD + 42) * zoom * 0.25;
+    const btRX = screenPos.x + (baseW + 26) * zoom * 0.5;
+    const btRY = screenPos.y + 13 * zoom;
+
+    // =============================================
+    // 1. TOWER TOP FLAGS (pole-mounted on each tower peak)
+    // =============================================
+    drawPoleFlag(ltX - 2 * zoom, ltTopY + 3 * zoom, 10, 6, 8, purpleLight, -1);
+    drawPoleFlag(rtX + 3 * zoom, rtTopY + 3 * zoom, 12, 6, 9, purpleMid, 1);
+
+    // =============================================
+    // 2. TOWER-TO-TOWER BUNTING (high string between tower tops)
+    // =============================================
+    drawIsoBunting(
+      ltX, ltTopY + 6 * zoom,
+      rtX, rtTopY + 6 * zoom,
+      7, 7,
+      [purpleMid, purpleDark, purpleLight], 5, 3, 0, 0,
+    );
+
+    // =============================================
+    // 3. MID-LEVEL BUNTING (between towers, lower)
+    // =============================================
+    drawIsoBunting(
+      ltX - 4 * zoom, bY - 16 * zoom,
+      rtX + 4 * zoom, bY - 14 * zoom,
+      6, 6,
+      [purpleLight, purpleMid, purpleDark], 4, 2.5, 0, 0,
+    );
+
+    // =============================================
+    // 4. DIAGONAL BUNTING (tower to keep corners)
+    // =============================================
+    drawIsoBunting(
+      ltX, ltTopY + 10 * zoom,
+      bX - 6 * zoom, keepTopY + 4 * zoom,
+      4, 3,
+      [purpleMid, purpleLight], 4, 2.5, 0, 0,
+    );
+    drawIsoBunting(
+      rtX, rtTopY + 10 * zoom,
+      bX + 6 * zoom, keepTopY + 4 * zoom,
+      4, 3,
+      [purpleDark, purpleLight], 4, 2.5, 0, 0,
+    );
+
+    // =============================================
+    // 5. LEFT SIDE POLE STRINGS (along the top-left / back-left edge)
+    // Strings running along the back-left isometric edge of the platform,
+    // from the back (top) corner to the left corner.
+    // =============================================
+    const platBackX = screenPos.x;
+    const platBackY = 2 * platLY - platBotY;
+
+    // Left pole near the back corner (offset outward along top-left edge)
+    const lPole1X = platBackX + (platLX - platBackX) * 0.1 - 4 * zoom;
+    const lPole1Y = platBackY + (platLY - platBackY) * 0.1 - 2 * zoom;
+    // Left pole near the left corner (offset outward)
+    const lPole2X = platLX + (platLX - platBackX) * 0.05 - 4 * zoom;
+    const lPole2Y = platLY + (platLY - platBackY) * 0.05 - 2 * zoom;
+
+    drawPoleFlag(lPole1X, lPole1Y, 16, 5, 7, purpleMid, -1);
+    drawPoleFlag(lPole2X, lPole2Y, 14, 5, 6, purpleLight, -1);
+
+    // Upper left string
+    drawIsoBunting(
+      lPole1X, lPole1Y - 16 * zoom,
+      lPole2X, lPole2Y - 14 * zoom,
+      5, 6,
+      [purpleDark, purpleMid, purpleLight], 5.5, 3.5, isoLX, isoLY,
+    );
+
+    // Lower left string
+    drawIsoBunting(
+      lPole1X, lPole1Y - 8 * zoom,
+      lPole2X, lPole2Y - 6 * zoom,
+      4, 5,
+      [purpleLight, purpleDark, purpleMid], 4.5, 3, isoLX, isoLY,
+    );
+
+    // =============================================
+    // 6. RIGHT SIDE POLE STRINGS (along the top-right / back-right edge)
+    // Strings running along the back-right isometric edge of the platform,
+    // from the back (top) corner to the right corner.
+    // =============================================
+    // Right pole near the back corner (offset outward along top-right edge)
+    const rPole1X = platBackX + (platRX - platBackX) * 0.1 + 4 * zoom;
+    const rPole1Y = platBackY + (platRY - platBackY) * 0.1 - 2 * zoom;
+    // Right pole near the right corner (offset outward)
+    const rPole2X = platRX + (platRX - platBackX) * 0.05 + 4 * zoom;
+    const rPole2Y = platRY + (platRY - platBackY) * 0.05 - 2 * zoom;
+
+    drawPoleFlag(rPole1X, rPole1Y, 16, 5, 7, purpleLight, 1);
+    drawPoleFlag(rPole2X, rPole2Y, 14, 5, 6, purpleDark, 1);
+
+    // Upper right string
+    drawIsoBunting(
+      rPole1X, rPole1Y - 16 * zoom,
+      rPole2X, rPole2Y - 14 * zoom,
+      5, 6,
+      [purpleMid, purpleDark, purpleLight], 5.5, 3.5, isoRX, isoRY,
+    );
+
+    // Lower right string
+    drawIsoBunting(
+      rPole1X, rPole1Y - 8 * zoom,
+      rPole2X, rPole2Y - 6 * zoom,
+      4, 5,
+      [purpleDark, purpleLight, purpleMid], 4.5, 3, isoRX, isoRY,
+    );
+
+    // =============================================
+    // 7. WALL-MOUNTED BANNERS (3D isometric on key walls)
+    // =============================================
+    drawWallBanner(ltX - 5 * zoom, ltY - 32 * zoom, 5, 11, purpleMid, purpleDark, true);
+    drawWallBanner(rtX + 5 * zoom, rtY - 38 * zoom, 5, 11, purpleDark, purpleDeep, true);
+    drawWallBanner(bX + 1 * zoom, bY - 22 * zoom, 6, 12, purpleMid, purpleDark, true);
+
+    // =============================================
+    // 8. TOP PLATFORM EDGE BUNTING (isometric diamond edges)
+    // =============================================
+    drawIsoBunting(platLX, platLY, platBotX, platBotY, 4, 5, [purpleDark, purpleMid, purpleLight], 3.5, 2, isoLX, isoLY);
+    drawIsoBunting(platBotX, platBotY, platRX, platRY, 4, 5, [purpleLight, purpleDark, purpleMid], 3.5, 2, isoRX, isoRY);
+
+    // =============================================
+    // 9. MIDDLE TIER BUNTING (foundation mid layer)
+    // =============================================
+    drawIsoBunting(midLX, midLY, midBotX, midBotY, 3, 4, [purpleMid, purpleLight], 3, 2, isoLX, isoLY);
+    drawIsoBunting(midBotX, midBotY, midRX, midRY, 3, 4, [purpleDark, purpleMid], 3, 2, isoRX, isoRY);
+
+    // =============================================
+    // 10. BOTTOM TIER BUNTING (lowest foundation layer, moved up)
+    // =============================================
+    const btOffY = -4 * zoom;
+    drawIsoBunting(btLX, btLY + btOffY, btBotX, btBotY + btOffY, 3, 4, [purpleLight, purpleDark], 3, 2, isoLX, isoLY);
+    drawIsoBunting(btBotX, btBotY + btOffY, btRX, btRY + btOffY, 3, 4, [purpleMid, purpleLight], 3, 2, isoRX, isoRY);
+
+    // =============================================
+    // 11. CORNER POST FLAGS
+    // =============================================
+    const postLfX = screenPos.x - (baseW + 8) * zoom * 0.45;
+    const postRtX = screenPos.x + (baseW + 8) * zoom * 0.45;
+    const postBaseY = screenPos.y - 2 * zoom;
+    drawPoleFlag(postLfX, postBaseY, 8, 4, 5, purpleMid, -1);
+    drawPoleFlag(postRtX, postBaseY, 8, 4, 5, purpleLight, 1);
+
+    // =============================================
+    // 12. STABLE ROOF BANNERS
+    // =============================================
+    drawWallBanner(bX - 24 * zoom, bY - 12 * zoom, 4, 6, purpleLight, purpleMid, false);
+    drawWallBanner(bX + 26 * zoom, bY - 12 * zoom, 4, 6, purpleDark, purpleDeep, false);
+
+    // =============================================
+    // 13. BATTLEMENTS BUNTING (along keep top)
+    // =============================================
+    drawIsoBunting(
+      bX - 12 * zoom, keepTopY + 3 * zoom,
+      bX + 12 * zoom, keepTopY + 3 * zoom,
+      3, 4,
+      [purpleLight, purpleDark], 3.5, 2, 0, 0,
+    );
+  }
 
   ctx.restore();
 }

@@ -9,6 +9,7 @@ import {
 import {
   getEnemyPosition,
   LANDMARK_DECORATION_TYPES,
+  BACKGROUND_BLOCKING_DECORATION_TYPES,
   getMapDecorationWorldPos,
   resolveMapDecorationRuntimePlacement,
 } from "../utils";
@@ -23,6 +24,7 @@ export const HERO_RANGED_SIGHT_RANGE = 220; // Extended sight for Rocky (ranged 
 export const COMBAT_RANGE = 50; // Range at which units stop to fight
 export const MELEE_RANGE = 60; // Close range where ranged units switch to melee
 export const FORMATION_SPACING = 30; // Distance between troops in formation
+export const ALLY_ALERT_RANGE = 120; // Range within which allies share aggro when one is engaging
 export const ENEMY_SPEED_MODIFIER = 1.25; // Global enemy speed multiplier (slower enemies)
 
 export const DEFAULT_CAMERA_OFFSET: Position = {
@@ -159,7 +161,22 @@ export const getBlockedPositionsForMap = (mapKey: string): Set<string> => {
         const baseX = Math.floor(worldPos.x / TILE_SIZE - 0.5);
         const baseY = Math.floor(worldPos.y / TILE_SIZE - 0.5);
 
-        // Block a grid area around the landmark based on its size
+        const range = Math.ceil(size);
+        for (let dx = -range; dx <= range; dx++) {
+          for (let dy = -range; dy <= range; dy++) {
+            blocked.add(`${baseX + dx},${baseY + dy}`);
+          }
+        }
+      }
+
+      // Block background decoration positions (water, lava, etc.)
+      const resolvedType = resolveMapDecorationRuntimePlacement(deco)?.runtimeType ?? decorType;
+      if (resolvedType && BACKGROUND_BLOCKING_DECORATION_TYPES.has(resolvedType)) {
+        const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
+        const size = resolvedPlacement?.scale ?? (deco.size || 1);
+        const worldPos = getMapDecorationWorldPos(deco);
+        const baseX = Math.floor(worldPos.x / TILE_SIZE - 0.5);
+        const baseY = Math.floor(worldPos.y / TILE_SIZE - 0.5);
         const range = Math.ceil(size);
         for (let dx = -range; dx <= range; dx++) {
           for (let dy = -range; dy <= range; dy++) {

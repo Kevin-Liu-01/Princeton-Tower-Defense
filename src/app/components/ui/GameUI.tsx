@@ -24,6 +24,7 @@ export {
   TowerHoverTooltip,
   BuildTowerTooltip,
   PlacingTroopIndicator,
+  TargetingSpellIndicator,
   SpecialBuildingTooltip,
   LandmarkTooltip,
   HazardTooltip,

@@ -198,6 +198,10 @@ export function renderEffect(
 
         ctx.save();
 
+        // Lightning-specific alpha: stay bright longer, then fade at the end
+        const boltAlpha = progress < 0.6 ? alpha : Math.pow(1 - progress, 1.8) * 2.5;
+        const effectAlpha = Math.min(1, boltAlpha);
+
         const dx = targetScreen.x - sourceX;
         const dy = targetScreen.y - sourceY;
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -210,7 +214,6 @@ export function renderEffect(
         const seedBase = (hashString32(effect.id) ^ timeBucket) >>> 0;
         const noise = (seed: number) => seededNoise(seedBase + seed);
 
-        // Generate bolt path points with temporal coherence
         const segments = minimalDetail
           ? Math.max(3, Math.floor(dist / 42))
           : lowDetail
@@ -234,96 +237,60 @@ export function renderEffect(
         }
         mainPts.push({ x: targetScreen.x, y: targetScreen.y });
 
-        // Draw bolt in 3 layers: outer glow → mid glow → bright core
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
+        ctx.shadowBlur = 0;
 
-        // Layer 1: wide outer glow (deep blue)
-        ctx.shadowColor = "#0088ff";
-        ctx.shadowBlur = lowDetail ? 0 : 20 * zoom * intensity;
-        ctx.strokeStyle = `rgba(30, 100, 255, ${alpha * 0.25 * intensity})`;
-        ctx.lineWidth = (minimalDetail ? 4 : lowDetail ? 7 : 10) * zoom * intensity;
+        // Layer 1: wide outer glow (no shadowBlur — just a wide translucent stroke)
+        ctx.strokeStyle = `rgba(30, 100, 255, ${effectAlpha * 0.22 * intensity})`;
+        ctx.lineWidth = (minimalDetail ? 5 : lowDetail ? 8 : 12) * zoom * intensity;
         tracePolyline(ctx, mainPts);
         ctx.stroke();
 
         // Layer 2: mid glow (cyan)
-        ctx.shadowColor = "#00ffff";
-        ctx.shadowBlur = lowDetail ? 0 : 12 * zoom * intensity;
-        ctx.strokeStyle = `rgba(0, 220, 255, ${alpha * 0.6 * intensity})`;
-        ctx.lineWidth = (minimalDetail ? 2 : lowDetail ? 3 : 4) * zoom * intensity;
+        ctx.strokeStyle = `rgba(0, 220, 255, ${effectAlpha * 0.55 * intensity})`;
+        ctx.lineWidth = (minimalDetail ? 2.5 : lowDetail ? 3.5 : 5) * zoom * intensity;
         tracePolyline(ctx, mainPts);
         ctx.stroke();
 
         if (!minimalDetail) {
           // Layer 3: white-hot core
-          ctx.shadowBlur = lowDetail ? 0 : 6 * zoom * intensity;
-          ctx.strokeStyle = `rgba(220, 255, 255, ${alpha * 0.9 * intensity})`;
-          ctx.lineWidth = (lowDetail ? 1.1 : 1.5) * zoom * intensity;
+          ctx.strokeStyle = `rgba(220, 255, 255, ${effectAlpha * 0.9 * intensity})`;
+          ctx.lineWidth = (lowDetail ? 1.2 : 1.8) * zoom * intensity;
           tracePolyline(ctx, mainPts);
           ctx.stroke();
 
           if (!lowDetail) {
-            // Branch lightning forks
-            ctx.shadowBlur = 8 * zoom * intensity;
-            const branchCount = 1 + Math.floor(noise(99) * 2);
-            for (let b = 0; b < branchCount; b++) {
-              const branchIdx = 1 + Math.floor(noise(41 + b * 41) * (segments - 2));
-              const branchPt = mainPts[branchIdx];
-              const branchAngle = angle + (noise(73 + b * 73) - 0.5) * Math.PI * 0.8;
-              const branchLen = (12 + noise(53 + b * 53) * 20) * zoom * intensity;
-              const branchSegs = 2;
-              const brPts = [{ x: branchPt.x, y: branchPt.y }];
-
-              for (let s = 1; s <= branchSegs; s++) {
-                const bt = s / branchSegs;
-                const bn = (noise(31 + b * 31 + s * 19) - 0.5) * 7 * zoom;
-                brPts.push({
-                  x:
-                    branchPt.x +
-                    Math.cos(branchAngle) * branchLen * bt +
-                    Math.cos(branchAngle + Math.PI / 2) * bn,
-                  y:
-                    branchPt.y +
-                    Math.sin(branchAngle) * branchLen * bt +
-                    Math.sin(branchAngle + Math.PI / 2) * bn,
-                });
-              }
-
-              ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.35 * intensity})`;
-              ctx.lineWidth = 2.4 * zoom * intensity;
-              tracePolyline(ctx, brPts);
-              ctx.stroke();
-
-              ctx.strokeStyle = `rgba(200, 255, 255, ${alpha * 0.6 * intensity})`;
-              ctx.lineWidth = 0.9 * zoom * intensity;
-              tracePolyline(ctx, brPts);
-              ctx.stroke();
+            // Single branch fork
+            const branchIdx = 1 + Math.floor(noise(41) * (segments - 2));
+            const branchPt = mainPts[branchIdx];
+            const branchAngle = angle + (noise(73) - 0.5) * Math.PI * 0.8;
+            const branchLen = (12 + noise(53) * 20) * zoom * intensity;
+            const brPts = [{ x: branchPt.x, y: branchPt.y }];
+            for (let s = 1; s <= 2; s++) {
+              const bt = s / 2;
+              const bn = (noise(31 + s * 19) - 0.5) * 7 * zoom;
+              brPts.push({
+                x: branchPt.x + Math.cos(branchAngle) * branchLen * bt + Math.cos(branchAngle + Math.PI / 2) * bn,
+                y: branchPt.y + Math.sin(branchAngle) * branchLen * bt + Math.sin(branchAngle + Math.PI / 2) * bn,
+              });
             }
 
-            // Source crackle (small arcs at origin)
-            ctx.shadowColor = "#00ffff";
-            ctx.shadowBlur = 9 * zoom;
-            for (let a = 0; a < 2; a++) {
-              const arcAngle = noise(67 + a * 67) * Math.PI * 2;
-              const arcLen = (4 + noise(37 + a * 37) * 5) * zoom;
-              ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.5 * intensity})`;
-              ctx.lineWidth = 1 * zoom;
-              ctx.beginPath();
-              ctx.moveTo(sourceX, sourceY);
-              ctx.lineTo(
-                sourceX + Math.cos(arcAngle) * arcLen,
-                sourceY + Math.sin(arcAngle) * arcLen,
-              );
-              ctx.stroke();
-            }
+            ctx.strokeStyle = `rgba(0, 200, 255, ${effectAlpha * 0.35 * intensity})`;
+            ctx.lineWidth = 2.4 * zoom * intensity;
+            tracePolyline(ctx, brPts);
+            ctx.stroke();
+
+            ctx.strokeStyle = `rgba(200, 255, 255, ${effectAlpha * 0.6 * intensity})`;
+            ctx.lineWidth = 0.9 * zoom * intensity;
+            tracePolyline(ctx, brPts);
+            ctx.stroke();
           }
         }
 
-        // Impact effect — electric sparks + glow ring
-        ctx.shadowBlur = 0;
+        // Impact glow halo
         const impactPulse = 0.7 + noise(913) * 0.3;
         if (!minimalDetail) {
-          // Glow halo at impact
           const impactRadius = (lowDetail ? 9 : 14) * zoom * intensity;
           const impGrad = ctx.createRadialGradient(
             targetScreen.x,
@@ -333,43 +300,17 @@ export function renderEffect(
             targetScreen.y,
             impactRadius,
           );
-          impGrad.addColorStop(
-            0,
-            `rgba(200, 255, 255, ${alpha * 0.6 * intensity * impactPulse})`,
-          );
-          impGrad.addColorStop(
-            0.4,
-            `rgba(0, 200, 255, ${alpha * 0.3 * intensity})`,
-          );
+          impGrad.addColorStop(0, `rgba(200, 255, 255, ${effectAlpha * 0.6 * intensity * impactPulse})`);
+          impGrad.addColorStop(0.4, `rgba(0, 200, 255, ${effectAlpha * 0.3 * intensity})`);
           impGrad.addColorStop(1, `rgba(0, 100, 255, 0)`);
           ctx.fillStyle = impGrad;
           ctx.beginPath();
           ctx.arc(targetScreen.x, targetScreen.y, impactRadius, 0, Math.PI * 2);
           ctx.fill();
-
-          const sparkLines = lowDetail ? 2 : 4;
-          for (let s = 0; s < sparkLines; s++) {
-            const sparkAngle = noise(23 + s * 23) * Math.PI * 2;
-            const sparkLen = (4 + noise(47 + s * 47) * 7) * zoom * intensity;
-            ctx.strokeStyle = `rgba(150, 255, 255, ${alpha * 0.6 * intensity})`;
-            ctx.lineWidth = 0.8 * zoom;
-            ctx.beginPath();
-            ctx.moveTo(targetScreen.x, targetScreen.y);
-            const midAngle = sparkAngle + (noise(89 + s * 89) - 0.5) * 0.6;
-            ctx.lineTo(
-              targetScreen.x + Math.cos(midAngle) * sparkLen * 0.5,
-              targetScreen.y + Math.sin(midAngle) * sparkLen * 0.5,
-            );
-            ctx.lineTo(
-              targetScreen.x + Math.cos(sparkAngle) * sparkLen,
-              targetScreen.y + Math.sin(sparkAngle) * sparkLen,
-            );
-            ctx.stroke();
-          }
         }
 
         // White-hot impact dot
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8 * intensity * impactPulse})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${effectAlpha * 0.8 * intensity * impactPulse})`;
         ctx.beginPath();
         ctx.arc(
           targetScreen.x,
@@ -1381,8 +1322,7 @@ export function renderEffect(
 
       // ========== GROUND EFFECTS ==========
       // Pulsing danger zone indicator
-      const pulseSpeed = 60;
-      const warningAlpha = 0.4 + Math.sin(Date.now() / pulseSpeed) * 0.25;
+      const warningAlpha = 0.4 + Math.sin(progress * 25) * 0.25;
       const warningSize = 55 * zoom * (0.4 + progress * 0.6);
 
       // Outer warning ring
@@ -1532,23 +1472,30 @@ export function renderEffect(
       ctx.stroke();
 
       // ========== SCATTERED EMBER PARTICLES IN TRAIL ==========
-      for (let i = 0; i < 8; i++) {
-        const emberProgress = (i / 8) * 0.7;
+      const mSeed = hashString32(effect.id);
+      for (let i = 0; i < 10; i++) {
+        const emberFrac = (i / 10) * 0.75;
         const emberBaseX =
-          meteorX - Math.cos(trailAngle) * outerTrailLength * emberProgress;
+          meteorX - Math.cos(trailAngle) * outerTrailLength * emberFrac;
         const emberBaseY =
-          meteorY - Math.sin(trailAngle) * outerTrailLength * emberProgress;
+          meteorY - Math.sin(trailAngle) * outerTrailLength * emberFrac;
         const perpAngle = trailAngle + Math.PI / 2;
         const scatter =
-          Math.sin(Date.now() / 80 + i * 2 + meteorIdx) * 15 * zoom;
+          Math.sin(progress * 20 + i * 2.3 + meteorIdx) * 16 * zoom;
         const emberX = emberBaseX + Math.cos(perpAngle) * scatter;
         const emberY = emberBaseY + Math.sin(perpAngle) * scatter;
-        const emberAlpha = alpha * (1 - emberProgress) * 0.8;
-        const emberSize = (2 + Math.random() * 2) * zoom;
+        const emberAlpha = alpha * (1 - emberFrac) * 0.85;
+        const emberSize = (1.5 + seededNoise(mSeed + i * 3) * 2.5) * zoom;
 
-        ctx.fillStyle = `rgba(255, ${180 + Math.floor(Math.random() * 75)}, ${50 + Math.floor(Math.random() * 50)}, ${emberAlpha})`;
+        const eG = 180 + Math.floor(seededNoise(mSeed + i * 5) * 75);
+        const eB = 40 + Math.floor(seededNoise(mSeed + i * 7) * 60);
+        const emberGrad = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, emberSize * 1.8);
+        emberGrad.addColorStop(0, `rgba(255, ${eG}, ${eB}, ${emberAlpha})`);
+        emberGrad.addColorStop(0.5, `rgba(255, ${eG - 40}, ${Math.max(0, eB - 20)}, ${emberAlpha * 0.5})`);
+        emberGrad.addColorStop(1, `rgba(200, 60, 0, 0)`);
+        ctx.fillStyle = emberGrad;
         ctx.beginPath();
-        ctx.arc(emberX, emberY, emberSize, 0, Math.PI * 2);
+        ctx.arc(emberX, emberY, emberSize * 1.8, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -1594,7 +1541,7 @@ export function renderEffect(
       // Jagged rocky meteor shape
       ctx.save();
       ctx.translate(meteorX, meteorY);
-      ctx.rotate(Date.now() / 500 + meteorIdx);
+      ctx.rotate(progress * 8 + meteorIdx);
 
       const rockGrad = ctx.createRadialGradient(
         -meteorSize * 0.3,
@@ -1669,33 +1616,28 @@ export function renderEffect(
       }
 
       // ========== ORBITING EMBER PARTICLES ==========
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         const orbitAngle =
-          Date.now() / 60 + i * ((Math.PI * 2) / 6) + meteorIdx;
+          progress * 15 + i * ((Math.PI * 2) / 8) + meteorIdx;
         const orbitDist =
-          meteorSize * (1.3 + Math.sin(Date.now() / 100 + i) * 0.2);
+          meteorSize * (1.2 + Math.sin(progress * 10 + i * 1.1) * 0.25);
         const emberX = meteorX + Math.cos(orbitAngle) * orbitDist;
-        const emberY = meteorY + Math.sin(orbitAngle) * orbitDist * 0.7;
+        const emberY = meteorY + Math.sin(orbitAngle) * orbitDist * 0.65;
+        const eSize = (3 + seededNoise(mSeed + i * 11) * 3) * zoom;
 
-        const emberGlow = ctx.createRadialGradient(
-          emberX,
-          emberY,
-          0,
-          emberX,
-          emberY,
-          5 * zoom,
-        );
-        emberGlow.addColorStop(0, `rgba(255, 255, 200, ${alpha * 0.9})`);
-        emberGlow.addColorStop(0.5, `rgba(255, 180, 50, ${alpha * 0.5})`);
-        emberGlow.addColorStop(1, "rgba(255, 100, 0, 0)");
+        const emberGlow = ctx.createRadialGradient(emberX, emberY, 0, emberX, emberY, eSize * 1.6);
+        emberGlow.addColorStop(0, `rgba(255, 255, 210, ${alpha * 0.9})`);
+        emberGlow.addColorStop(0.3, `rgba(255, 200, 80, ${alpha * 0.6})`);
+        emberGlow.addColorStop(0.7, `rgba(255, 130, 20, ${alpha * 0.3})`);
+        emberGlow.addColorStop(1, "rgba(200, 60, 0, 0)");
         ctx.fillStyle = emberGlow;
         ctx.beginPath();
-        ctx.arc(emberX, emberY, 5 * zoom, 0, Math.PI * 2);
+        ctx.arc(emberX, emberY, eSize * 1.6, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = `rgba(255, ${200 + Math.floor(Math.random() * 55)}, ${100 + Math.floor(Math.random() * 100)}, ${alpha})`;
+        ctx.fillStyle = `rgba(255, 240, 180, ${alpha * 0.9})`;
         ctx.beginPath();
-        ctx.arc(emberX, emberY, 2 * zoom, 0, Math.PI * 2);
+        ctx.arc(emberX, emberY, eSize * 0.4, 0, Math.PI * 2);
         ctx.fill();
       }
       break;
@@ -1790,222 +1732,273 @@ export function renderEffect(
     }
 
     case "meteor_impact": {
-      // Massive explosion with shockwave
-      const impactProgress = progress;
+      const ip = progress;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const sz = effect.size * zoom;
 
-      // Ground crater
-      ctx.fillStyle = `rgba(50, 30, 20, ${alpha * 0.6})`;
+      // Deep ground crater with dark scorch
+      const craterAlpha = alpha * (0.8 - ip * 0.3);
+      const craterGrad = ctx.createRadialGradient(sx, sy + 4 * zoom, 0, sx, sy + 4 * zoom, sz * 0.5);
+      craterGrad.addColorStop(0, `rgba(20, 10, 5, ${craterAlpha})`);
+      craterGrad.addColorStop(0.4, `rgba(40, 20, 10, ${craterAlpha * 0.7})`);
+      craterGrad.addColorStop(0.7, `rgba(60, 30, 10, ${craterAlpha * 0.4})`);
+      craterGrad.addColorStop(1, "rgba(50, 25, 10, 0)");
+      ctx.fillStyle = craterGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 5 * zoom,
-        effect.size * zoom * 0.4,
-        effect.size * zoom * 0.2,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy + 4 * zoom, sz * 0.5, sz * 0.25, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Main explosion
-      const expSize = effect.size * zoom * (0.3 + impactProgress * 0.7);
+      // Massive mushroom cloud explosion — layered for depth
       ctx.shadowColor = "#ff4400";
-      ctx.shadowBlur = 40 * zoom * alpha;
+      ctx.shadowBlur = 60 * zoom * alpha;
 
-      const expGrad = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        expSize,
-      );
-      expGrad.addColorStop(0, `rgba(255, 255, 200, ${alpha})`);
-      expGrad.addColorStop(0.2, `rgba(255, 200, 50, ${alpha * 0.9})`);
-      expGrad.addColorStop(0.5, `rgba(200, 80, 0, ${alpha * 0.7})`);
-      expGrad.addColorStop(0.8, `rgba(200, 50, 0, ${alpha * 0.4})`);
-      expGrad.addColorStop(1, `rgba(100, 20, 0, 0)`);
-      ctx.fillStyle = expGrad;
+      // Outer heat haze
+      const hazeSize = sz * (0.6 + ip * 1.4);
+      const hazeGrad = ctx.createRadialGradient(sx, sy - ip * 20 * zoom, 0, sx, sy - ip * 20 * zoom, hazeSize);
+      hazeGrad.addColorStop(0, `rgba(255, 180, 60, ${alpha * 0.5 * (1 - ip)})`);
+      hazeGrad.addColorStop(0.3, `rgba(255, 100, 20, ${alpha * 0.35 * (1 - ip)})`);
+      hazeGrad.addColorStop(0.6, `rgba(200, 50, 0, ${alpha * 0.2 * (1 - ip)})`);
+      hazeGrad.addColorStop(1, "rgba(150, 30, 0, 0)");
+      ctx.fillStyle = hazeGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y,
-        expSize,
-        expSize * 0.6,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(sx, sy - ip * 20 * zoom, hazeSize, hazeSize * 0.7, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Shockwave rings
-      for (let ring = 0; ring < 3; ring++) {
-        const ringProgress = Math.min(1, impactProgress * 1.5 + ring * 0.1);
-        const ringRadius = effect.size * zoom * ringProgress;
-        const ringAlpha = (1 - ringProgress) * alpha * 0.5;
+      // Inner fireball core
+      const coreSize = sz * (0.4 + ip * 0.5) * (1 - ip * 0.3);
+      const coreGrad = ctx.createRadialGradient(sx, sy - ip * 12 * zoom, 0, sx, sy - ip * 12 * zoom, coreSize);
+      coreGrad.addColorStop(0, `rgba(255, 255, 240, ${alpha})`);
+      coreGrad.addColorStop(0.15, `rgba(255, 240, 160, ${alpha})`);
+      coreGrad.addColorStop(0.35, `rgba(255, 200, 50, ${alpha * 0.95})`);
+      coreGrad.addColorStop(0.55, `rgba(255, 120, 10, ${alpha * 0.8})`);
+      coreGrad.addColorStop(0.8, `rgba(200, 50, 0, ${alpha * 0.5})`);
+      coreGrad.addColorStop(1, "rgba(120, 20, 0, 0)");
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy - ip * 12 * zoom, coreSize, coreSize * 0.65, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-        ctx.strokeStyle = `rgba(255, 150, 50, ${ringAlpha})`;
-        ctx.lineWidth = (4 - ring) * zoom;
+      // Rising smoke column
+      if (ip > 0.15) {
+        const smokeFrac = (ip - 0.15) / 0.85;
+        const smokeY = sy - smokeFrac * 70 * zoom;
+        const smokeR = sz * 0.3 * smokeFrac;
+        const smokeA = alpha * (1 - smokeFrac) * 0.35;
+        ctx.fillStyle = `rgba(60, 50, 40, ${smokeA})`;
         ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y,
-          ringRadius,
-          ringRadius * 0.5,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.stroke();
-      }
-
-      // Flying debris
-      for (let d = 0; d < 12; d++) {
-        const debrisAngle = (d / 12) * Math.PI * 2;
-        const debrisDist =
-          effect.size *
-          zoom *
-          0.3 *
-          impactProgress *
-          (0.5 + Math.sin(d * 2.5) * 0.5);
-        const debrisX = screenPos.x + Math.cos(debrisAngle) * debrisDist;
-        const debrisY =
-          screenPos.y +
-          Math.sin(debrisAngle) * debrisDist * 0.5 -
-          impactProgress * 30 * zoom * Math.sin(d);
-
-        ctx.fillStyle = `rgba(100, 60, 30, ${alpha * (1 - impactProgress)})`;
-        ctx.beginPath();
-        ctx.arc(debrisX, debrisY, 3 * zoom, 0, Math.PI * 2);
+        ctx.ellipse(sx, smokeY, smokeR, smokeR * 1.3, 0, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // Ground-level fire shockwave rings — expanding rapidly
+      for (let ring = 0; ring < 4; ring++) {
+        const rp = Math.min(1, ip * 2.0 + ring * 0.08);
+        const rRadius = sz * rp * (0.8 + ring * 0.15);
+        const rAlpha = (1 - rp) * alpha * (0.6 - ring * 0.1);
+        if (rAlpha <= 0) continue;
+
+        const rGrad = ctx.createRadialGradient(sx, sy, rRadius * 0.85, sx, sy, rRadius);
+        rGrad.addColorStop(0, "rgba(255, 150, 50, 0)");
+        rGrad.addColorStop(0.5, `rgba(255, ${120 - ring * 20}, ${30 - ring * 5}, ${rAlpha})`);
+        rGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
+        ctx.fillStyle = rGrad;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, rRadius, rRadius * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Flying ember debris
+      for (let d = 0; d < 18; d++) {
+        const dSeed = hashString32(effect.id + d);
+        const dAngle = (dSeed % 628) / 100;
+        const dSpeed = 0.4 + (dSeed % 60) / 100;
+        const dDist = sz * 0.4 * ip * dSpeed;
+        const dGrav = ip * ip * 25 * zoom;
+        const dx = sx + Math.cos(dAngle) * dDist;
+        const dy = sy + Math.sin(dAngle) * dDist * 0.5 - ip * 40 * zoom * (1 - ip) + dGrav;
+        const dAlpha = alpha * (1 - ip) * 0.9;
+        if (dAlpha <= 0) continue;
+
+        const dSize = (2 + (dSeed % 3)) * zoom;
+        const dGrad = ctx.createRadialGradient(dx, dy, 0, dx, dy, dSize * 2);
+        dGrad.addColorStop(0, `rgba(255, 240, 150, ${dAlpha})`);
+        dGrad.addColorStop(0.5, `rgba(255, 150, 30, ${dAlpha * 0.6})`);
+        dGrad.addColorStop(1, "rgba(200, 60, 0, 0)");
+        ctx.fillStyle = dGrad;
+        ctx.beginPath();
+        ctx.arc(dx, dy, dSize * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 220, 120, ${dAlpha})`;
+        ctx.beginPath();
+        ctx.arc(dx, dy, dSize * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Bright white flash at center (first 30% of animation)
+      if (ip < 0.3) {
+        const flashA = (0.3 - ip) / 0.3 * alpha * 0.7;
+        const flashR = sz * 0.6;
+        const flashGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, flashR);
+        flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashA})`);
+        flashGrad.addColorStop(0.3, `rgba(255, 255, 200, ${flashA * 0.6})`);
+        flashGrad.addColorStop(1, "rgba(255, 200, 100, 0)");
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, flashR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.shadowBlur = 0;
       break;
     }
 
     case "lightning_bolt": {
-      // Lightning strike from sky - dramatic and grand
-      const strikeProgress = progress;
-      const targetScreen = effect.targetPos
-        ? worldToScreen(
-            effect.targetPos,
-            canvasWidth,
-            canvasHeight,
-            dpr,
-            cameraOffset,
-            cameraZoom,
-          )
+      const sp = progress;
+      const ts = effect.targetPos
+        ? worldToScreen(effect.targetPos, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom)
         : screenPos;
 
-      // Sky flash - brighter and longer
-      if (strikeProgress < 0.4) {
-        const flashAlpha = (0.4 - strikeProgress) * 0.5;
-        ctx.fillStyle = `rgba(180, 200, 255, ${flashAlpha})`;
+      // Dramatic sky flash with blue-white tint
+      if (sp < 0.5) {
+        const flashPhase = sp / 0.5;
+        const flashA = Math.pow(1 - flashPhase, 2) * 0.45;
+        ctx.fillStyle = `rgba(180, 210, 255, ${flashA})`;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        // Secondary warm flash near impact
+        const warmR = 300 * zoom;
+        const warmGrad = ctx.createRadialGradient(ts.x, ts.y, 0, ts.x, ts.y, warmR);
+        warmGrad.addColorStop(0, `rgba(220, 230, 255, ${flashA * 0.8})`);
+        warmGrad.addColorStop(0.5, `rgba(150, 180, 255, ${flashA * 0.3})`);
+        warmGrad.addColorStop(1, "rgba(100, 130, 255, 0)");
+        ctx.fillStyle = warmGrad;
+        ctx.beginPath();
+        ctx.arc(ts.x, ts.y, warmR, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       ctx.save();
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
 
-      const startY = targetScreen.y - 700 * zoom;
-      const segments = 20;
+      const boltSeed = hashString32(effect.id);
+      const skyY = ts.y - 800 * zoom;
+      const segs = 28;
 
-      // Build main bolt path with stored jitter points
-      const boltPoints: { x: number; y: number }[] = [{ x: targetScreen.x, y: startY }];
-      for (let i = 1; i <= segments; i++) {
-        const t = i / segments;
-        const baseY = startY + (targetScreen.y - startY) * t;
-        const jitterScale = (1 - t * 0.7) * 45 * zoom;
-        const x = targetScreen.x + (Math.random() - 0.5) * jitterScale;
-        boltPoints.push({ x, y: baseY });
+      // Build main bolt with seeded jitter for temporal coherence
+      const boltPts: { x: number; y: number }[] = [{ x: ts.x + (seededNoise(boltSeed) - 0.5) * 20 * zoom, y: skyY }];
+      for (let i = 1; i <= segs; i++) {
+        const t = i / segs;
+        const baseY = skyY + (ts.y - skyY) * t;
+        const jScale = (1 - t * 0.6) * 55 * zoom;
+        const jx = ts.x + (seededNoise(boltSeed + i * 7) - 0.5) * jScale;
+        boltPts.push({ x: jx, y: baseY });
       }
-      boltPoints.push({ x: targetScreen.x, y: targetScreen.y });
+      boltPts.push({ x: ts.x, y: ts.y });
 
-      // Outer glow layer (wide, soft)
-      ctx.strokeStyle = `rgba(80, 120, 255, ${alpha * 0.25})`;
-      ctx.lineWidth = 16 * zoom;
-      ctx.shadowColor = "#6688ff";
-      ctx.shadowBlur = 60 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
-      for (let i = 1; i < boltPoints.length; i++) {
-        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
-      }
+      // Layer 1: Deep outer corona (very wide, deep blue)
+      ctx.strokeStyle = `rgba(60, 80, 200, ${alpha * 0.15})`;
+      ctx.lineWidth = 28 * zoom;
+      ctx.shadowColor = "#4466cc";
+      ctx.shadowBlur = 80 * zoom;
+      tracePolyline(ctx, boltPts);
       ctx.stroke();
 
-      // Mid glow layer
-      ctx.strokeStyle = `rgba(150, 190, 255, ${alpha * 0.6})`;
-      ctx.lineWidth = 8 * zoom;
+      // Layer 2: Electric outer glow
+      ctx.strokeStyle = `rgba(100, 140, 255, ${alpha * 0.3})`;
+      ctx.lineWidth = 18 * zoom;
+      ctx.shadowColor = "#6699ff";
+      ctx.shadowBlur = 50 * zoom;
+      tracePolyline(ctx, boltPts);
+      ctx.stroke();
+
+      // Layer 3: Bright mid glow
+      ctx.strokeStyle = `rgba(170, 200, 255, ${alpha * 0.65})`;
+      ctx.lineWidth = 9 * zoom;
       ctx.shadowColor = "#aaccff";
-      ctx.shadowBlur = 35 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
-      for (let i = 1; i < boltPoints.length; i++) {
-        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
-      }
+      ctx.shadowBlur = 30 * zoom;
+      tracePolyline(ctx, boltPts);
       ctx.stroke();
 
-      // Bright core
-      ctx.strokeStyle = `rgba(220, 240, 255, ${alpha})`;
-      ctx.lineWidth = 3 * zoom;
+      // Layer 4: Searing white-hot core
+      ctx.strokeStyle = `rgba(240, 248, 255, ${alpha})`;
+      ctx.lineWidth = 3.5 * zoom;
       ctx.shadowColor = "#ffffff";
-      ctx.shadowBlur = 15 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(boltPoints[0].x, boltPoints[0].y);
-      for (let i = 1; i < boltPoints.length; i++) {
-        ctx.lineTo(boltPoints[i].x, boltPoints[i].y);
-      }
+      ctx.shadowBlur = 18 * zoom;
+      tracePolyline(ctx, boltPts);
       ctx.stroke();
 
-      // Branch lightning - more frequent and longer
-      ctx.strokeStyle = `rgba(170, 200, 255, ${alpha * 0.7})`;
-      ctx.lineWidth = 2 * zoom;
+      // Branch lightning — short jagged forks
+      ctx.shadowBlur = 14 * zoom;
       ctx.shadowColor = "#88aaff";
-      ctx.shadowBlur = 20 * zoom;
-      for (let i = 3; i < boltPoints.length - 3; i++) {
-        if (Math.random() > 0.35) {
-          const bp = boltPoints[i];
-          ctx.beginPath();
-          ctx.moveTo(bp.x, bp.y);
-          const branchAngle = (Math.random() - 0.5) * Math.PI * 0.6;
-          const branchLen = (50 + Math.random() * 60) * zoom;
-          const bx = bp.x + Math.cos(branchAngle) * branchLen;
-          const by = bp.y + Math.abs(Math.sin(branchAngle)) * branchLen * 0.4;
-          ctx.lineTo(bx, by);
+      for (let i = 3; i < boltPts.length - 3; i++) {
+        const branchChance = seededNoise(boltSeed + i * 13);
+        if (branchChance < 0.45) continue;
+        const bp = boltPts[i];
+        const nextPt = boltPts[i + 1];
+        const mainAngle = Math.atan2(nextPt.y - bp.y, nextPt.x - bp.x);
+        const side = seededNoise(boltSeed + i * 19) > 0.5 ? 1 : -1;
+        const bAngle = mainAngle + side * (0.4 + seededNoise(boltSeed + i * 23) * 0.5);
+        const bLen = (15 + seededNoise(boltSeed + i * 29) * 25) * zoom;
 
-          // Sub-branches for extra detail
-          if (Math.random() > 0.5) {
-            const subAngle = branchAngle + (Math.random() - 0.5) * 0.8;
-            const subLen = branchLen * 0.5;
-            ctx.moveTo(bx, by);
-            ctx.lineTo(
-              bx + Math.cos(subAngle) * subLen,
-              by + Math.abs(Math.sin(subAngle)) * subLen * 0.3,
-            );
-          }
-          ctx.stroke();
+        const branchSegs = 3;
+        const brPts: { x: number; y: number }[] = [{ x: bp.x, y: bp.y }];
+        for (let j = 1; j <= branchSegs; j++) {
+          const t = j / branchSegs;
+          const jitter = (seededNoise(boltSeed + i * 41 + j * 17) - 0.5) * 8 * zoom * (1 - t);
+          brPts.push({
+            x: bp.x + Math.cos(bAngle) * bLen * t + Math.cos(bAngle + Math.PI / 2) * jitter,
+            y: bp.y + Math.sin(bAngle) * bLen * t + Math.sin(bAngle + Math.PI / 2) * jitter,
+          });
         }
-      }
 
-      // Impact glow - larger and more dramatic
-      const impactGrad = ctx.createRadialGradient(
-        targetScreen.x,
-        targetScreen.y,
-        0,
-        targetScreen.x,
-        targetScreen.y,
-        90 * zoom,
-      );
-      impactGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-      impactGrad.addColorStop(0.15, `rgba(200, 220, 255, ${alpha * 0.9})`);
-      impactGrad.addColorStop(0.4, `rgba(100, 150, 255, ${alpha * 0.5})`);
-      impactGrad.addColorStop(1, `rgba(50, 80, 200, 0)`);
+        ctx.strokeStyle = `rgba(130, 170, 255, ${alpha * 0.35})`;
+        ctx.lineWidth = 4 * zoom;
+        tracePolyline(ctx, brPts);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(220, 235, 255, ${alpha * 0.7})`;
+        ctx.lineWidth = 1.2 * zoom;
+        tracePolyline(ctx, brPts);
+        ctx.stroke();
+      }
       ctx.shadowBlur = 0;
-      ctx.fillStyle = impactGrad;
+
+      // Ground impact — massive electric explosion
+      const impR = 100 * zoom;
+      const impGrad = ctx.createRadialGradient(ts.x, ts.y, 0, ts.x, ts.y, impR);
+      impGrad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+      impGrad.addColorStop(0.1, `rgba(220, 235, 255, ${alpha * 0.95})`);
+      impGrad.addColorStop(0.25, `rgba(150, 190, 255, ${alpha * 0.7})`);
+      impGrad.addColorStop(0.5, `rgba(80, 130, 255, ${alpha * 0.35})`);
+      impGrad.addColorStop(1, "rgba(40, 60, 180, 0)");
+      ctx.fillStyle = impGrad;
       ctx.beginPath();
-      ctx.arc(targetScreen.x, targetScreen.y, 80 * zoom, 0, Math.PI * 2);
+      ctx.arc(ts.x, ts.y, impR, 0, Math.PI * 2);
       ctx.fill();
+
+      // Ground electric shockwave ring
+      const shockR = 70 * zoom * (0.3 + sp * 0.7);
+      const shockA = alpha * (1 - sp) * 0.6;
+      ctx.strokeStyle = `rgba(150, 200, 255, ${shockA})`;
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(ts.x, ts.y, shockR, shockR * 0.45, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Electric sparks radiating from impact
+      for (let s = 0; s < 10; s++) {
+        const sAngle = seededNoise(boltSeed + s * 41) * Math.PI * 2;
+        const sDist = (20 + seededNoise(boltSeed + s * 47) * 50) * zoom * sp;
+        const ex = ts.x + Math.cos(sAngle) * sDist;
+        const ey = ts.y + Math.sin(sAngle) * sDist * 0.5;
+        const sparkA = alpha * (1 - sp) * 0.8;
+        ctx.fillStyle = `rgba(200, 230, 255, ${sparkA})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       ctx.restore();
       break;
@@ -2081,6 +2074,226 @@ export function renderEffect(
       ctx.setLineDash([]);
       ctx.restore();
 
+      break;
+    }
+
+    // ========== SPELL GROUND SCORCH EFFECTS ==========
+
+    case "fire_scorch": {
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const scorchR = effect.size * zoom * 0.55;
+      const fa = alpha;
+      const fSeed = hashString32(effect.id);
+
+      // Irregular scorch shape — use clipping path for organic look
+      ctx.save();
+      ctx.beginPath();
+      const lobes = 10;
+      for (let i = 0; i <= lobes; i++) {
+        const a = (i / lobes) * Math.PI * 2;
+        const wobble = 0.8 + seededNoise(fSeed + i * 7) * 0.4;
+        const rx = scorchR * wobble;
+        const ry = scorchR * 0.5 * wobble;
+        const px = sx + Math.cos(a) * rx;
+        const py = sy + Math.sin(a) * ry;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.clip();
+
+      // Deep charred ground base
+      const baseGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, scorchR);
+      baseGrad.addColorStop(0, `rgba(10, 5, 2, ${fa * 0.65})`);
+      baseGrad.addColorStop(0.25, `rgba(25, 12, 5, ${fa * 0.55})`);
+      baseGrad.addColorStop(0.5, `rgba(40, 18, 6, ${fa * 0.4})`);
+      baseGrad.addColorStop(0.75, `rgba(55, 25, 8, ${fa * 0.2})`);
+      baseGrad.addColorStop(1, "rgba(45, 20, 6, 0)");
+      ctx.fillStyle = baseGrad;
+      ctx.fillRect(sx - scorchR * 1.1, sy - scorchR * 0.6, scorchR * 2.2, scorchR * 1.2);
+
+      // Glowing ember rim (first 55%)
+      if (progress < 0.55) {
+        const ep = progress / 0.55;
+        const emberA = fa * (1 - ep) * 0.65;
+        const rimGrad = ctx.createRadialGradient(sx, sy, scorchR * 0.55, sx, sy, scorchR);
+        rimGrad.addColorStop(0, "rgba(255, 120, 20, 0)");
+        rimGrad.addColorStop(0.35, `rgba(255, 90, 10, ${emberA * 0.5})`);
+        rimGrad.addColorStop(0.7, `rgba(220, 50, 0, ${emberA * 0.7})`);
+        rimGrad.addColorStop(1, "rgba(150, 20, 0, 0)");
+        ctx.fillStyle = rimGrad;
+        ctx.fillRect(sx - scorchR * 1.1, sy - scorchR * 0.6, scorchR * 2.2, scorchR * 1.2);
+
+        // Small glowing ember specks
+        for (let e = 0; e < 8; e++) {
+          const eA = seededNoise(fSeed + e * 31) * Math.PI * 2;
+          const eD = scorchR * (0.4 + seededNoise(fSeed + e * 37) * 0.5);
+          const ex = sx + Math.cos(eA) * eD;
+          const ey = sy + Math.sin(eA) * eD * 0.5;
+          const eSize = (1.5 + seededNoise(fSeed + e * 43) * 2) * zoom;
+          const eGlow = emberA * (0.5 + seededNoise(fSeed + e * 47) * 0.5);
+          ctx.fillStyle = `rgba(255, ${140 + Math.floor(seededNoise(fSeed + e * 53) * 80)}, 30, ${eGlow})`;
+          ctx.beginPath();
+          ctx.arc(ex, ey, eSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Radial crack lines — charred fractures
+      ctx.strokeStyle = `rgba(15, 8, 3, ${fa * 0.35})`;
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.lineCap = "round";
+      for (let c = 0; c < 6; c++) {
+        const cA = seededNoise(fSeed + c * 71) * Math.PI * 2;
+        const cLen = scorchR * (0.35 + seededNoise(fSeed + c * 73) * 0.5);
+        const midOff = (seededNoise(fSeed + c * 79) - 0.5) * 10 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo(
+          sx + Math.cos(cA) * cLen * 0.5 + midOff,
+          sy + Math.sin(cA) * cLen * 0.25 + midOff * 0.4,
+          sx + Math.cos(cA) * cLen,
+          sy + Math.sin(cA) * cLen * 0.5
+        );
+        ctx.stroke();
+      }
+
+      // Smoke wisps rising (first 65%)
+      if (progress < 0.65) {
+        const wA = fa * (1 - progress / 0.65) * 0.2;
+        for (let w = 0; w < 3; w++) {
+          const wAngle = seededNoise(fSeed + w * 91) * Math.PI * 2;
+          const wD = scorchR * (0.15 + seededNoise(fSeed + w * 97) * 0.4);
+          const wx = sx + Math.cos(wAngle) * wD;
+          const wy = sy + Math.sin(wAngle) * wD * 0.5 - progress * 20 * zoom;
+          const wR = (4 + seededNoise(fSeed + w * 101) * 5) * zoom;
+          const wGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, wR);
+          wGrad.addColorStop(0, `rgba(80, 60, 40, ${wA})`);
+          wGrad.addColorStop(1, "rgba(60, 45, 30, 0)");
+          ctx.fillStyle = wGrad;
+          ctx.beginPath();
+          ctx.arc(wx, wy, wR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+      break;
+    }
+
+    case "lightning_scorch": {
+      const lx = screenPos.x;
+      const ly = screenPos.y;
+      const lR = effect.size * zoom * 0.5;
+      const la = alpha;
+      const lSeed = hashString32(effect.id);
+
+      // Glass-fused circular base with blue tint
+      const baseGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, lR);
+      baseGrad.addColorStop(0, `rgba(8, 10, 25, ${la * 0.55})`);
+      baseGrad.addColorStop(0.3, `rgba(15, 20, 40, ${la * 0.45})`);
+      baseGrad.addColorStop(0.6, `rgba(25, 30, 55, ${la * 0.3})`);
+      baseGrad.addColorStop(0.85, `rgba(30, 35, 50, ${la * 0.12})`);
+      baseGrad.addColorStop(1, "rgba(20, 25, 40, 0)");
+      ctx.fillStyle = baseGrad;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, lR, lR * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glassy surface sheen
+      const sheenA = la * 0.15;
+      const sheenGrad = ctx.createRadialGradient(lx - lR * 0.2, ly - lR * 0.1, 0, lx, ly, lR * 0.6);
+      sheenGrad.addColorStop(0, `rgba(180, 210, 255, ${sheenA})`);
+      sheenGrad.addColorStop(0.5, `rgba(120, 160, 230, ${sheenA * 0.4})`);
+      sheenGrad.addColorStop(1, "rgba(80, 120, 200, 0)");
+      ctx.fillStyle = sheenGrad;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, lR * 0.6, lR * 0.3, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Lichtenberg figure veins — branching fractal lightning scars
+      ctx.lineCap = "round";
+      for (let v = 0; v < 8; v++) {
+        const vA = seededNoise(lSeed + v * 7) * Math.PI * 2;
+        const vLen = lR * (0.5 + seededNoise(lSeed + v * 13) * 0.45);
+        const segments = 3 + Math.floor(seededNoise(lSeed + v * 17) * 3);
+        const pts: { x: number; y: number }[] = [{ x: lx, y: ly }];
+        for (let s = 1; s <= segments; s++) {
+          const frac = s / segments;
+          const jitter = (seededNoise(lSeed + v * 19 + s * 23) - 0.5) * 12 * zoom;
+          pts.push({
+            x: lx + Math.cos(vA) * vLen * frac + jitter,
+            y: ly + Math.sin(vA) * vLen * 0.5 * frac + jitter * 0.4,
+          });
+        }
+
+        // Outer glow
+        ctx.strokeStyle = `rgba(80, 140, 255, ${la * 0.3})`;
+        ctx.lineWidth = 3.5 * zoom;
+        tracePolyline(ctx, pts);
+        ctx.stroke();
+
+        // Bright core
+        ctx.strokeStyle = `rgba(190, 220, 255, ${la * 0.55})`;
+        ctx.lineWidth = 1.2 * zoom;
+        tracePolyline(ctx, pts);
+        ctx.stroke();
+
+        // Branch fork from midpoint
+        if (seededNoise(lSeed + v * 29) > 0.4 && pts.length > 2) {
+          const mid = pts[Math.floor(pts.length / 2)];
+          const bA = vA + (seededNoise(lSeed + v * 31) - 0.5) * 1.5;
+          const bLen = vLen * 0.35;
+          const bEnd = {
+            x: mid.x + Math.cos(bA) * bLen,
+            y: mid.y + Math.sin(bA) * bLen * 0.5,
+          };
+          ctx.strokeStyle = `rgba(140, 190, 255, ${la * 0.35})`;
+          ctx.lineWidth = 2 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(mid.x, mid.y);
+          ctx.lineTo(bEnd.x, bEnd.y);
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(210, 235, 255, ${la * 0.45})`;
+          ctx.lineWidth = 0.8 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(mid.x, mid.y);
+          ctx.lineTo(bEnd.x, bEnd.y);
+          ctx.stroke();
+        }
+      }
+
+      // Residual electric crackles (first 45%)
+      if (progress < 0.45) {
+        const crackA = la * (1 - progress / 0.45) * 0.7;
+        for (let s = 0; s < 5; s++) {
+          const sA = seededNoise(lSeed + s * 41) * Math.PI * 2;
+          const sD = lR * (0.15 + seededNoise(lSeed + s * 47) * 0.6);
+          const sx2 = lx + Math.cos(sA) * sD;
+          const sy2 = ly + Math.sin(sA) * sD * 0.5;
+          const sR = (2 + seededNoise(lSeed + s * 53) * 3) * zoom;
+          const sGrad = ctx.createRadialGradient(sx2, sy2, 0, sx2, sy2, sR);
+          sGrad.addColorStop(0, `rgba(230, 245, 255, ${crackA})`);
+          sGrad.addColorStop(0.4, `rgba(140, 190, 255, ${crackA * 0.5})`);
+          sGrad.addColorStop(1, "rgba(80, 130, 220, 0)");
+          ctx.fillStyle = sGrad;
+          ctx.beginPath();
+          ctx.arc(sx2, sy2, sR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Central impact glow
+      const cGlowA = la * 0.25;
+      const cGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, lR * 0.35);
+      cGrad.addColorStop(0, `rgba(180, 215, 255, ${cGlowA})`);
+      cGrad.addColorStop(0.6, `rgba(100, 150, 235, ${cGlowA * 0.35})`);
+      cGrad.addColorStop(1, "rgba(60, 100, 200, 0)");
+      ctx.fillStyle = cGrad;
+      ctx.beginPath();
+      ctx.ellipse(lx, ly, lR * 0.35, lR * 0.18, 0, 0, Math.PI * 2);
+      ctx.fill();
       break;
     }
 

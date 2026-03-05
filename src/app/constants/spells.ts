@@ -36,7 +36,7 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
   },
   reinforcements: {
     name: "Knight Squad",
-    shortName: "Reinforcements",
+    shortName: "Reinforce",
     cost: 75,
     cooldown: 25000,
     desc: "Summons 3 armored knights to the battlefield",
@@ -80,7 +80,7 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
     {
       level: 2,
       title: "Twinfall Pattern",
-      description: "+2 meteors with wider strike lanes",
+      description: "+2 meteors with wider strike lanes. Unlocks manual targeting.",
       cost: SPELL_UPGRADE_COSTS[1],
     },
     {
@@ -112,7 +112,7 @@ export const SPELL_TECH_TREE: Record<SpellType, SpellUpgradeNode[]> = {
     {
       level: 2,
       title: "Storm Battery",
-      description: "+120 total split damage",
+      description: "+120 total split damage. Unlocks manual targeting.",
       cost: SPELL_UPGRADE_COSTS[1],
     },
     {

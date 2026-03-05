@@ -1,7 +1,7 @@
 // Princeton Tower Defense - Enemy Rendering Module
 // Renders all enemy types with unique visual designs
 
-import type { Enemy, Position } from "../../types";
+import type { Enemy, Position, SlowSourceType } from "../../types";
 import { ENEMY_DATA } from "../../constants";
 import {
   worldToScreen,
@@ -23,6 +23,74 @@ interface EnemyFlashProfile {
   rimColor: string;
   intensityScale: number;
   attackBoost: number;
+}
+
+interface SlowAuraColors {
+  aura: string;       // r, g, b for aura glow
+  ring: string;       // r, g, b for outer ring
+  inner: string;      // r, g, b for inner ring
+  rune: string;       // r, g, b for rune markers
+  runeOutline: string; // r, g, b for rune outlines
+  particle: string;   // r, g, b for floating particles
+}
+
+function getSlowAuraColors(source?: SlowSourceType): SlowAuraColors {
+  switch (source) {
+    case "quicksand":
+      return {
+        aura: "194, 154, 80",
+        ring: "210, 170, 90",
+        inner: "230, 200, 140",
+        rune: "240, 220, 170",
+        runeOutline: "170, 130, 60",
+        particle: "220, 190, 120",
+      };
+    case "maelstrom":
+      return {
+        aura: "50, 130, 220",
+        ring: "80, 160, 240",
+        inner: "140, 200, 255",
+        rune: "180, 220, 255",
+        runeOutline: "40, 100, 200",
+        particle: "120, 190, 255",
+      };
+    case "deep_water":
+      return {
+        aura: "30, 90, 160",
+        ring: "50, 120, 190",
+        inner: "100, 170, 220",
+        rune: "150, 200, 240",
+        runeOutline: "25, 75, 140",
+        particle: "80, 160, 220",
+      };
+    case "ice_spikes":
+      return {
+        aura: "100, 200, 240",
+        ring: "130, 215, 250",
+        inner: "180, 230, 255",
+        rune: "210, 240, 255",
+        runeOutline: "70, 170, 220",
+        particle: "160, 225, 255",
+      };
+    case "library":
+      return {
+        aura: "147, 51, 234",
+        ring: "168, 85, 247",
+        inner: "216, 180, 254",
+        rune: "233, 213, 255",
+        runeOutline: "147, 51, 234",
+        particle: "216, 180, 254",
+      };
+    default:
+      return {
+        aura: "147, 51, 234",
+        ring: "168, 85, 247",
+        inner: "216, 180, 254",
+        rune: "233, 213, 255",
+        runeOutline: "147, 51, 234",
+        particle: "216, 180, 254",
+      };
+  }
 }
 
 const enemyPaletteCache = new Map<string, EnemyPaletteVariants>();
@@ -986,18 +1054,19 @@ export function renderEnemy(
     }
   }
 
-  // SLOWED EFFECT - Highly visible arcane magic circles
+  // SLOWED EFFECT - Highly visible magic circles colored by slow source
   if (
     enemy.slowed &&
     enemy.slowIntensity &&
     enemy.slowIntensity > 0 &&
     !enemy.frozen
   ) {
-    const slowIntensity = Math.max(0.6, enemy.slowIntensity); // Minimum visibility
+    const slowIntensity = Math.max(0.6, enemy.slowIntensity);
     const pulseAlpha = 0.8 + Math.sin(time * 4) * 0.2;
+    const sc = getSlowAuraColors(enemy.slowSource);
 
-    // Purple aura glow underneath for visibility
-    ctx.fillStyle = `rgba(147, 51, 234, ${0.35 * slowIntensity})`;
+    // Aura glow underneath
+    ctx.fillStyle = `rgba(${sc.aura}, ${0.35 * slowIntensity})`;
     ctx.beginPath();
     ctx.ellipse(screenPos.x, drawY, size * 0.85, size * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1006,7 +1075,7 @@ export function renderEnemy(
     ctx.save();
     ctx.translate(screenPos.x, drawY);
     ctx.rotate(time * 0.8);
-    ctx.strokeStyle = `rgba(168, 85, 247, ${0.9 * slowIntensity * pulseAlpha})`;
+    ctx.strokeStyle = `rgba(${sc.ring}, ${0.9 * slowIntensity * pulseAlpha})`;
     ctx.lineWidth = 3 * zoom;
     ctx.setLineDash([8 * zoom, 4 * zoom]);
     ctx.beginPath();
@@ -1015,7 +1084,7 @@ export function renderEnemy(
     ctx.restore();
 
     // Inner magic circle - solid bright ring
-    ctx.strokeStyle = `rgba(216, 180, 254, ${0.95 * slowIntensity})`;
+    ctx.strokeStyle = `rgba(${sc.inner}, ${0.95 * slowIntensity})`;
     ctx.lineWidth = 2.5 * zoom;
     ctx.beginPath();
     ctx.ellipse(screenPos.x, drawY, size * 0.5, size * 0.3, 0, 0, Math.PI * 2);
@@ -1027,8 +1096,7 @@ export function renderEnemy(
       const rx = screenPos.x + Math.cos(runeAngle) * size * 0.78;
       const ry = drawY + Math.sin(runeAngle) * size * 0.47;
 
-      // Bright rune diamond
-      ctx.fillStyle = `rgba(233, 213, 255, ${0.95 * slowIntensity})`;
+      ctx.fillStyle = `rgba(${sc.rune}, ${0.95 * slowIntensity})`;
       ctx.beginPath();
       const runeSize = 4.5 * zoom;
       ctx.moveTo(rx, ry - runeSize);
@@ -1038,8 +1106,7 @@ export function renderEnemy(
       ctx.closePath();
       ctx.fill();
 
-      // Rune outline for extra pop
-      ctx.strokeStyle = `rgba(147, 51, 234, ${0.8 * slowIntensity})`;
+      ctx.strokeStyle = `rgba(${sc.runeOutline}, ${0.8 * slowIntensity})`;
       ctx.lineWidth = 1 * zoom;
       ctx.stroke();
     }
@@ -1051,7 +1118,7 @@ export function renderEnemy(
       const px = screenPos.x + Math.cos(pAngle) * pDist;
       const py = drawY + Math.sin(pAngle) * pDist * 0.5 - size * 0.1;
 
-      ctx.fillStyle = `rgba(216, 180, 254, ${0.9 * slowIntensity})`;
+      ctx.fillStyle = `rgba(${sc.particle}, ${0.9 * slowIntensity})`;
       ctx.beginPath();
       ctx.arc(px, py, 3 * zoom, 0, Math.PI * 2);
       ctx.fill();

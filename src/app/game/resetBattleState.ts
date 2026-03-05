@@ -9,6 +9,7 @@ import type {
   Position,
   Projectile,
   Spell,
+  SpellType,
   Tower,
   TowerType,
   Troop,
@@ -49,6 +50,7 @@ export interface BattleStateSetters {
   setRepositionPreviewPos: Setter<Position | null>;
   setWaveInProgress: Setter<boolean>;
   setPlacingTroop: Setter<boolean>;
+  setTargetingSpell: Setter<SpellType | null>;
   setSpells: Setter<Spell[]>;
   setGameSpeed: Setter<number>;
   setGoldSpellActive: Setter<boolean>;
@@ -127,6 +129,7 @@ export function resetBattleState({
   setters.setRepositionPreviewPos(null);
   setters.setWaveInProgress(false);
   setters.setPlacingTroop(false);
+  setters.setTargetingSpell(null);
   setters.setSpells([]);
 
   setters.setGameSpeed(1);

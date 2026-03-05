@@ -31,7 +31,7 @@ import {
   Fence,
   Skull,
 } from "lucide-react";
-import type { Tower, TowerType, Position } from "../../types";
+import type { Tower, TowerType, Position, SpellType } from "../../types";
 import { TOWER_DATA } from "../../constants";
 import { calculateTowerStats } from "../../constants/towerStats";
 import { PANEL, GOLD, RED_CARD, panelGradient } from "./theme";
@@ -396,10 +396,50 @@ export const PlacingTroopIndicator: React.FC = () => {
     >
       <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
         <Users size={16} className="text-purple-400" />
-        <span className="text-purple-100">Click to Deploy Reinforcements</span>
+        <span className="text-purple-100">Click to Deploy Reinforce</span>
         <span className="text-purple-400 text-xs">
           (3 Knights with 500 HP each)
         </span>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// TARGETING SPELL INDICATOR
+// =============================================================================
+
+const SPELL_TARGET_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode; borderColor: string; bgGrad: string; glowColor: string }> = {
+  fireball: {
+    label: "Click to Target Meteor Shower",
+    color: "text-orange-100",
+    icon: <Flame size={16} className="text-orange-400" />,
+    borderColor: "rgba(234,88,12,0.6)",
+    bgGrad: "linear-gradient(135deg, rgba(120,50,10,0.92), rgba(60,25,5,0.88))",
+    glowColor: "0 0 20px rgba(234,88,12,0.4)",
+  },
+  lightning: {
+    label: "Click to Target Chain Lightning",
+    color: "text-yellow-100",
+    icon: <Zap size={16} className="text-yellow-400" />,
+    borderColor: "rgba(234,179,8,0.6)",
+    bgGrad: "linear-gradient(135deg, rgba(120,100,10,0.92), rgba(60,50,5,0.88))",
+    glowColor: "0 0 20px rgba(234,179,8,0.4)",
+  },
+};
+
+export const TargetingSpellIndicator: React.FC<{ spellType: SpellType }> = ({ spellType }) => {
+  const config = SPELL_TARGET_CONFIG[spellType];
+  if (!config) return null;
+  return (
+    <div
+      className="absolute top-16 left-1/2 transform -translate-x-1/2 px-4 py-2 shadow-xl rounded-lg animate-pulse backdrop-blur-sm"
+      style={{ zIndex: 150, background: config.bgGrad, border: `1.5px solid ${config.borderColor}`, boxShadow: config.glowColor }}
+    >
+      <div className="text-sm font-bold flex items-center gap-2 tracking-wide">
+        {config.icon}
+        <span className={config.color}>{config.label}</span>
+        <Target size={14} className="text-stone-400" />
       </div>
     </div>
   );

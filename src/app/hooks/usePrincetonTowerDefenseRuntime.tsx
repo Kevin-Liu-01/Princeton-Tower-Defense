@@ -26,6 +26,7 @@ import type {
   DecorationHeightTag,
   SpecialTower,
   SpellUpgradeLevels,
+  DeathCause,
 } from "../types";
 // Constants
 import {
@@ -85,6 +86,7 @@ import {
   type TroopMoveInfo,
   LANDMARK_DECORATION_TYPES,
   LANDMARK_HITBOX_Y_OFFSET,
+  BACKGROUND_BLOCKING_DECORATION_TYPES,
   getMapDecorationWorldPos,
   getDecorationVolumeSpec,
   getLandmarkSpawnExclusion,
@@ -138,6 +140,7 @@ import {
   ENEMY_SPEED_MODIFIER,
   DEFAULT_CAMERA_OFFSET,
   DEFAULT_CAMERA_ZOOM,
+  ALLY_ALERT_RANGE,
   getEnemyPosWithPath,
   getFormationOffsets,
   getTowerHitboxRadius,
@@ -155,6 +158,7 @@ import {
   getFacingRightFromDelta,
   stepTowardTarget,
 } from "../game/unitMovement";
+import { findAllyAlertTarget } from "../game/allyAlert";
 import {
   resetBattleState,
   type PausableTimeoutEntry,
@@ -173,6 +177,7 @@ import {
   TowerUpgradePanel,
   TowerHoverTooltip,
   PlacingTroopIndicator,
+  TargetingSpellIndicator,
   SpecialBuildingTooltip,
   LandmarkTooltip,
   HazardTooltip,
@@ -515,9 +520,13 @@ const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
   "swamp_tree",
   "charred_tree",
   "mushroom",
-  "mushroom_cluster",
   "hut",
   "building",
+  "tent",
+  "fence",
+  "cart",
+  "barrel",
+  "bench",
   "ruins",
   "broken_wall",
   "broken_bridge",
@@ -537,24 +546,31 @@ const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
   "obsidian_pillar",
   "hanging_cage",
   "idol_statue",
+  "war_monument",
+  "bone_altar",
+  "sun_obelisk",
+  "frost_citadel",
+  "infernal_gate",
+  "ice_bridge",
+  "tombstone",
 ]);
 
 // Some oversized landmarks should always interleave by depth, regardless of path proximity.
 const ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES = new Set<DecorationType>([
   "nassau_hall",
-  // Sunken temple set pieces should depth-interleave with animated tentacles.
   "ruins",
   "sunken_pillar",
+  "war_monument",
+  "bone_altar",
+  "sun_obelisk",
+  "frost_citadel",
+  "infernal_gate",
 ]);
 const DEPTH_SENSITIVE_PATH_DISTANCE = 180;
 
-// Fog counts — reduced at lower quality for performance (fewer gradient/arc draws per frame)
-function getFogBlobCount(quality: RenderQuality): number {
-  return quality === "high" ? 60 : quality === "medium" ? 40 : 24;
-}
-function getFogWispCount(quality: RenderQuality): number {
-  return quality === "high" ? 10 : quality === "medium" ? 6 : 4;
-}
+// Fog counts — always use high quality (60 blobs, 10 wisps) regardless of render quality
+const FOG_BLOB_COUNT = 60;
+const FOG_WISP_COUNT = 10;
 
 const QUALITY_TRANSITION_COOLDOWN_MS = 1500;
 const DEV_CONFIG_ENV_VALUE = process.env.NEXT_PUBLIC_TD_DEV_PERF;
@@ -725,7 +741,7 @@ export function usePrincetonTowerDefenseRuntime() {
     setTroops((prev) => {
       let changed = false;
       const next = prev.map((troop) => {
-        if (troop.ownerId !== "spell" || troop.type !== "knight") return troop;
+        if (!troop.ownerId.startsWith("spell") || troop.type !== "knight") return troop;
         const hpPercent = troop.maxHp > 0 ? troop.hp / troop.maxHp : 1;
         const nextMaxHp = reinforcementStats.knightHp;
         const nextHp = Math.max(
@@ -805,6 +821,11 @@ export function usePrincetonTowerDefenseRuntime() {
     null
   );
   const [placingTroop, setPlacingTroop] = useState(false);
+  const [targetingSpell, setTargetingSpell] = useState<SpellType | null>(null);
+  const targetingSpellRef = useRef<SpellType | null>(null);
+  const placingTroopRef = useRef(false);
+  const mousePosRef = useRef<Position>({ x: 0, y: 0 });
+  const executeTargetedSpellRef = useRef<(spellType: SpellType, pos: Position) => void>(() => {});
   const [gameSpeed, setGameSpeed] = useState(1);
   const [hoveredSpecialTower, setHoveredSpecialTower] = useState<SpecialTower | null>(null);
   const [hoveredLandmark, setHoveredLandmark] = useState<string | null>(null);
@@ -1402,23 +1423,34 @@ export function usePrincetonTowerDefenseRuntime() {
 
   // Centralized enemy death handler - awards bounty, particles, and death animation effect
   const onEnemyKill = useCallback(
-    (enemy: Enemy, pos: Position, particleCount: number = 8) => {
+    (enemy: Enemy, pos: Position, particleCount: number = 8, deathCause: DeathCause = "default") => {
       const eData = ENEMY_DATA[enemy.type];
       const baseBounty = eData.bounty;
       awardBounty(baseBounty, enemy.goldAura || false, enemy.id);
       addParticles(pos, "explosion", particleCount);
       if (enemy.goldAura) addParticles(pos, "gold", 6);
+
+      const DEATH_DURATIONS: Record<DeathCause, number> = {
+        lightning: 1100,
+        fire: 1200,
+        freeze: 700,
+        sonic: 550,
+        poison: 900,
+        default: 600,
+      };
+
       addEffectEntity({
         id: generateId("fx"),
         pos,
         type: "enemy_death" as const,
         progress: 0,
         size: eData.size,
-        duration: 600,
+        duration: DEATH_DURATIONS[deathCause],
         color: eData.color,
         enemyType: enemy.type,
         enemySize: eData.size,
         isFlying: eData.flying,
+        deathCause,
       });
     },
     [awardBounty, addParticles, addEffectEntity]
@@ -1537,6 +1569,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setBuildingTower(null);
       setDraggingTower(null);
       setPlacingTroop(false);
+      setTargetingSpell(null);
       setActiveSentinelTargetKey(null);
       setSentinelTargets({});
       setSpells([]);
@@ -2348,7 +2381,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 const enemyPos = getEnemyPosCached(enemy);
                 const hp = enemy.hp - getEnemyDamageTaken(enemy, incoming);
                 if (hp <= 0) {
-                  onEnemyKill(enemy, enemyPos, 14);
+                  onEnemyKill(enemy, enemyPos, 14, "lightning");
                   return null;
                 }
                 return {
@@ -2520,7 +2553,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 const enemyPos = getEnemyPosCached(enemy);
                 const hp = enemy.hp - getEnemyDamageTaken(enemy, incoming.damage);
                 if (hp <= 0) {
-                  onEnemyKill(enemy, enemyPos, 12);
+                  onEnemyKill(enemy, enemyPos, 12, "fire");
                   return null;
                 }
                 return {
@@ -3151,7 +3184,7 @@ export function usePrincetonTowerDefenseRuntime() {
         if (damage > 0 && troop.hp - damage <= 0) {
           troopsThatWillDie.add(troop.id);
           addParticles(troop.pos, "explosion", 8);
-          if (troop.ownerId && troop.ownerId !== "spell") {
+          if (troop.ownerId && !troop.ownerId.startsWith("spell")) {
             deathsToQueue.push({
               ownerId: troop.ownerId,
               slot: troop.spawnSlot ?? 0,
@@ -3256,7 +3289,7 @@ export function usePrincetonTowerDefenseRuntime() {
               const burnDmg = ((enemy.burnDamage || 10) * deltaTime) / 1000;
               const newHp = enemy.hp - burnDmg;
               if (newHp <= 0) {
-                onEnemyKill(enemy, getEnemyPosCached(enemy));
+                onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "fire");
                 return null;
               }
               enemy = { ...enemy, hp: newHp };
@@ -3485,6 +3518,8 @@ export function usePrincetonTowerDefenseRuntime() {
             // Update slowed visual indicator
             const slowedVisual = enemy.slowEffect > 0;
             const slowIntensity = enemy.slowEffect;
+            const decayedSlow = Math.max(0, enemy.slowEffect - deltaTime / 5000);
+            const decayedSlowSource = decayedSlow > 0 ? enemy.slowSource : undefined;
             // Move enemy along path - normalize speed by segment length for consistent world-space speed
             if (!enemy.inCombat) {
               // Use enemy's pathKey for dual-path support
@@ -3493,7 +3528,8 @@ export function usePrincetonTowerDefenseRuntime() {
               if (!path || path.length < 2) {
                 return {
                   ...enemy,
-                  slowEffect: Math.max(0, enemy.slowEffect - deltaTime / 5000),
+                  slowEffect: decayedSlow,
+                  slowSource: decayedSlowSource,
                   slowed: slowedVisual,
                   slowIntensity: slowIntensity,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
@@ -3539,7 +3575,8 @@ export function usePrincetonTowerDefenseRuntime() {
                   0,
                   Math.min(0.999, segmentDistance / currentSegmentLength)
                 ),
-                slowEffect: Math.max(0, enemy.slowEffect - deltaTime / 5000),
+                slowEffect: decayedSlow,
+                slowSource: decayedSlowSource,
                 slowed: slowedVisual,
                 slowIntensity: slowIntensity,
                 damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
@@ -3840,14 +3877,31 @@ export function usePrincetonTowerDefenseRuntime() {
             };
           };
 
-          const closestEnemy = getClosestEnemyInRange(
+          let closestEnemy = getClosestEnemyInRange(
             prev.pos,
             sightRange,
             (enemy) => !ENEMY_DATA[enemy.type].flying
           );
-          const closestDist = closestEnemy
+          let closestDist = closestEnemy
             ? distance(prev.pos, getEnemyPosCached(closestEnemy))
             : Number.POSITIVE_INFINITY;
+
+          // Ally alert: if no enemy in direct sight and not player-moving,
+          // check if nearby troops are in combat and join the fight
+          if (!closestEnemy && !prev.moving) {
+            const troopAllies = troops
+              .filter((t) => !t.dead)
+              .map((t) => ({ pos: t.pos, engaging: !!t.engaging }));
+
+            const alertResult = findAllyAlertTarget(
+              prev.pos, troopAllies, enemies, getEnemyPosCached,
+              sightRange, (e) => !ENEMY_DATA[e.type].flying,
+            );
+            if (alertResult) {
+              closestEnemy = alertResult.enemy;
+              closestDist = alertResult.dist;
+            }
+          }
 
           // Determine home position (where the hero should return to)
           const homePos = prev.homePos || prev.pos;
@@ -4078,6 +4132,32 @@ export function usePrincetonTowerDefenseRuntime() {
             if (dist < closestDist) {
               closestDist = dist;
               closestEnemy = enemy;
+            }
+          }
+
+          // Ally alert: if no enemy in direct sight and not player-moving,
+          // check if nearby allies are in combat and join the fight
+          if (!closestEnemy && !troop.moving) {
+            const flyingFilter = canHitFlying
+              ? undefined
+              : (e: Enemy) => !ENEMY_DATA[e.type].flying;
+
+            const allies: { pos: Position; engaging: boolean }[] = [];
+            for (const other of prev) {
+              if (other.id === troop.id || other.dead) continue;
+              allies.push({ pos: other.pos, engaging: !!other.engaging });
+            }
+            if (hero && !hero.dead) {
+              allies.push({ pos: hero.pos, engaging: !!hero.aggroTarget });
+            }
+
+            const alertResult = findAllyAlertTarget(
+              troop.pos, allies, enemies, getEnemyPosCached,
+              sightRange, flyingFilter,
+            );
+            if (alertResult) {
+              closestEnemy = alertResult.enemy;
+              closestDist = alertResult.dist;
             }
           }
 
@@ -4638,6 +4718,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     newEnemy.slowEffect = slowAmount;
                     newEnemy.slowed = true;
                     newEnemy.slowIntensity = slowAmount;
+                    newEnemy.slowSource = "library";
 
                     // Blizzard freeze
                     if (shouldApplyBlizzardFreeze) {
@@ -4658,7 +4739,7 @@ export function usePrincetonTowerDefenseRuntime() {
                         bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         sparkPositions.push(info.pos);
                         const eDeathData = ENEMY_DATA[enemy.type];
-                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData.size, duration: 600, color: eDeathData.color, enemyType: enemy.type, enemySize: eDeathData.size, isFlying: eDeathData.flying }]);
+                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData.size, duration: 600, color: eDeathData.color, enemyType: enemy.type, enemySize: eDeathData.size, isFlying: eDeathData.flying, deathCause: "default" as const }]);
                         return null;
                       }
                     }
@@ -4679,7 +4760,7 @@ export function usePrincetonTowerDefenseRuntime() {
                         bountyHadGoldAura = bountyHadGoldAura || !!enemy.goldAura;
                         particlePositions.push(info.pos);
                         const eDeathData2 = ENEMY_DATA[enemy.type];
-                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData2.size, duration: 600, color: eDeathData2.color, enemyType: enemy.type, enemySize: eDeathData2.size, isFlying: eDeathData2.flying }]);
+                        setEffects((prev) => [...prev, { id: generateId("fx"), pos: info.pos, type: "enemy_death" as const, progress: 0, size: eDeathData2.size, duration: 600, color: eDeathData2.color, enemyType: enemy.type, enemySize: eDeathData2.size, isFlying: eDeathData2.flying, deathCause: "default" as const }]);
                         return null;
                       }
                     }
@@ -4799,8 +4880,7 @@ export function usePrincetonTowerDefenseRuntime() {
 
             for (const r of pendingRespawns) {
               const newTimer = r.timer - deltaTime;
-              if (newTimer <= 0) {
-                // Calculate how many troops will exist after this spawn
+              if (newTimer <= 0 && stationTroops.length + troopsToSpawn.length < MAX_STATION_TROOPS) {
                 const futureCount =
                   stationTroops.length + troopsToSpawn.length + 1;
                 const formationOffsets = getFormationOffsets(futureCount);
@@ -4849,13 +4929,12 @@ export function usePrincetonTowerDefenseRuntime() {
               addTroopEntities(troopsToSpawn);
             }
 
-            // Total occupied = living troops + pending respawns
-            const totalOccupied = stationTroops.length + remainingRespawns.length;
+            const totalOccupied = stationTroops.length + troopsToSpawn.length + remainingRespawns.length;
             const canSpawn = totalOccupied < MAX_STATION_TROOPS;
 
-            // Find available spawn slot
             const occupiedSlots = new Set([
               ...stationTroops.map((t) => t.spawnSlot ?? 0),
+              ...troopsToSpawn.map((t) => t.spawnSlot ?? 0),
               ...remainingRespawns.map((r) => r.slot),
             ]);
             const availableSlot =
@@ -4885,8 +4964,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 const rallyPoint =
                   existingRallyTroop?.userTargetPos || findRoadPoint(stationPos);
 
-                // Calculate formation position
-                const futureCount = stationTroops.length + 1;
+                const futureCount = stationTroops.length + troopsToSpawn.length + 1;
                 const formationOffsets = getFormationOffsets(futureCount);
                 const slotOffset = formationOffsets[availableSlot] || {
                   x: 0,
@@ -4975,22 +5053,20 @@ export function usePrincetonTowerDefenseRuntime() {
                 queueTowerPatch(tower.id, {
                   lastAttack: now,
                   trainAnimProgress: newProgress >= 1 ? 0.01 : newProgress,
-                  currentTroopCount: stationTroops.length + 1,
+                  currentTroopCount: stationTroops.length + troopsToSpawn.length + 1,
                   pendingRespawns: remainingRespawns,
                 });
               } else {
-                // Just animate the train and update respawns
                 queueTowerPatch(tower.id, {
                   trainAnimProgress: newProgress >= 1 ? 0.01 : newProgress,
-                  currentTroopCount: stationTroops.length,
+                  currentTroopCount: stationTroops.length + troopsToSpawn.length,
                   pendingRespawns: remainingRespawns,
                 });
               }
             } else {
-              // At max capacity - park train at platform
               queueTowerPatch(tower.id, {
                 trainAnimProgress: 0.35,
-                currentTroopCount: stationTroops.length,
+                currentTroopCount: stationTroops.length + troopsToSpawn.length,
                 pendingRespawns: remainingRespawns,
               });
             }
@@ -5049,7 +5125,7 @@ export function usePrincetonTowerDefenseRuntime() {
               queueTowerEnemyMutation(target.id, (enemy) => {
                 const newHp = enemy.hp - getEnemyDamageTaken(enemy, damage);
                 if (newHp <= 0) {
-                  onEnemyKill(enemy, targetPos, 12);
+                  onEnemyKill(enemy, targetPos, 12, isFlamethrower ? "fire" : "default");
                   return null;
                 }
                 const updates: Partial<Enemy> = {
@@ -5135,7 +5211,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     const newHp =
                       enemy.hp - getEnemyDamageTaken(enemy, chainDamage);
                     if (newHp <= 0) {
-                      onEnemyKill(enemy, getEnemyPosCached(enemy));
+                      onEnemyKill(enemy, getEnemyPosCached(enemy), 8, "lightning");
                       return null;
                     }
                     return { ...enemy, hp: newHp, damageFlash: 150 };
@@ -5165,15 +5241,9 @@ export function usePrincetonTowerDefenseRuntime() {
                   0,
                   maxVisualChainLinks
                 );
-                const lightningFxDuration = isFocusedBeam
-                  ? Math.max(
-                    70,
-                    Math.min(120, Math.round(effectiveLabCooldown * 1.1))
-                  )
-                  : Math.max(
-                    90,
-                    Math.min(170, Math.round(effectiveLabCooldown * 0.9))
-                  );
+                const desiredRealMs = isFocusedBeam ? 140 : 220;
+                const gsCompensation = Math.max(1, gameSpeed);
+                const lightningFxDuration = desiredRealMs * gsCompensation;
                 const lightningIntensityScale =
                   lightningVisualPressure > 240
                     ? 0.7
@@ -5275,7 +5345,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     const targetEnemyPos = getEnemyPosCached(enemy);
                     const newHp = enemy.hp - getEnemyDamageTaken(enemy, damage);
                     if (newHp <= 0) {
-                      onEnemyKill(enemy, targetEnemyPos, 10);
+                      onEnemyKill(enemy, targetEnemyPos, 10, "sonic");
                       return null;
                     }
                     const updates: Partial<Enemy> = {
@@ -6530,20 +6600,14 @@ export function usePrincetonTowerDefenseRuntime() {
     const fogGroundRgb = hexToRgb(theme.ground[2]);
     const fogAccentRgb = hexToRgb(theme.accent);
     const fogPathRgb = hexToRgb(theme.path[2]);
-    const fogPressure =
-      entityCountsRef.current.enemies +
-      entityCountsRef.current.projectiles * 0.8 +
-      entityCountsRef.current.effects * 0.5;
-    const fogDensityScale =
-      fogPressure > 260 ? 0.5 : fogPressure > 190 ? 0.65 : fogPressure > 130 ? 0.8 : 1;
     const challengeFogCountScale = isChallengeTerrainLevel ? 0.58 : 1;
     const fogBlobCount = Math.max(
       isChallengeTerrainLevel ? 7 : 12,
-      Math.floor(getFogBlobCount(renderQuality) * fogDensityScale * challengeFogCountScale)
+      Math.floor(FOG_BLOB_COUNT * challengeFogCountScale)
     );
     const fogWispCount = Math.max(
       isChallengeTerrainLevel ? 1 : 2,
-      Math.floor(getFogWispCount(renderQuality) * fogDensityScale * challengeFogCountScale)
+      Math.floor(FOG_WISP_COUNT * challengeFogCountScale)
     );
     const drawRoadEndFog = (
       endPos: Position,
@@ -6745,10 +6809,10 @@ export function usePrincetonTowerDefenseRuntime() {
             };
           case "swamp":
             return {
-              trees: ["swamp_tree", "mushroom", "mushroom_cluster"],
+              trees: ["swamp_tree", "mushroom"],
               structures: ["ruins", "gravestone", "tombstone", "broken_bridge"],
-              terrain: ["rock", "lily_pad", "lily_pads", "fog_patch"],
-              scattered: ["bones", "frog", "tentacle"],
+              terrain: ["rock", "lily_pad", "fog_patch"],
+              scattered: ["bones", "tentacle"],
             };
           default: // grassland
             return {
@@ -7352,6 +7416,20 @@ export function usePrincetonTowerDefenseRuntime() {
 
       // Cache the generated decorations
       cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
+
+      // Add blocked positions from procedural background decorations (water, lava, etc.)
+      for (const dec of decorations) {
+        if (dec.source === "manual") continue;
+        if (!BACKGROUND_BLOCKING_DECORATION_TYPES.has(dec.type)) continue;
+        const gx = Math.floor(dec.x / TILE_SIZE - 0.5);
+        const gy = Math.floor(dec.y / TILE_SIZE - 0.5);
+        const range = Math.ceil(dec.scale);
+        for (let dx = -range; dx <= range; dx++) {
+          for (let dy = -range; dy <= range; dy++) {
+            blockedPositions.add(`${gx + dx},${gy + dy}`);
+          }
+        }
+      }
     } // End of decoration generation (else block)
 
     const decorTime = nowSeconds;
@@ -7464,6 +7542,23 @@ export function usePrincetonTowerDefenseRuntime() {
     // Hazards must render beneath all decoration passes.
     drawLevelHazards();
 
+    // Ground-level spell effects (scorch marks, impact craters) render above roads/hazards
+    // but below decorations, towers, and entities.
+    const groundEffectTypes = new Set(["fire_scorch", "lightning_scorch", "meteor_impact"]);
+    const skyEffectTypes = new Set(["meteor_falling", "lightning_bolt"]);
+    const groundEffects: Effect[] = [];
+    const skyEffects: Effect[] = [];
+    for (const eff of effects) {
+      if (groundEffectTypes.has(eff.type)) groundEffects.push(eff);
+      else if (skyEffectTypes.has(eff.type)) skyEffects.push(eff);
+    }
+    for (const eff of groundEffects) {
+      renderEffect(
+        ctx, eff, canvas.width, canvas.height, dpr,
+        enemies, towers, selectedMap, cameraOffset, cameraZoom, effects.length
+      );
+    }
+
     let animatedVisibleDecorations: CachedVisibleDecoration[] = [];
     let depthSensitiveVisibleDecorations: CachedVisibleDecoration[] = [];
     const cachedStaticDecorationLayer = cachedStaticDecorationLayerRef.current;
@@ -7544,8 +7639,8 @@ export function usePrincetonTowerDefenseRuntime() {
           heightTag: volume.heightTag,
           centerX: entry.screenPos.x,
           centerY: entry.screenPos.y + volume.anchorOffsetY * screenScale,
-          radiusX: (volume.width * 0.5) * screenScale,
-          radiusY: (volume.length * 0.5) * screenScale,
+          radiusX: (volume.width * 0.35) * screenScale,
+          radiusY: (volume.length * 0.35) * screenScale,
           isoY: entry.isoY,
           frontDepthPadding: volume.frontDepthPadding * entry.decoration.scale,
         });
@@ -7657,6 +7752,8 @@ export function usePrincetonTowerDefenseRuntime() {
           staticDecorations.push(resolvedEntry);
         }
       }
+
+      staticDecorations.sort((a, b) => a.isoY - b.isoY);
 
       let staticDecorationCanvas: HTMLCanvasElement | null = null;
       if (typeof document !== "undefined") {
@@ -7856,6 +7953,8 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     });
     effects.forEach((eff) => {
+      // Ground and sky effects are rendered in dedicated passes, skip them here
+      if (groundEffectTypes.has(eff.type) || skyEffectTypes.has(eff.type)) return;
       const fromX = eff.pos.x;
       const fromY = eff.pos.y;
       const toX = eff.targetPos?.x ?? fromX;
@@ -8390,13 +8489,16 @@ export function usePrincetonTowerDefenseRuntime() {
         case "special-building": {
           const spec = r.data as { type: string; pos: Position; hp?: number; boostedTowerCount?: number };
           const sPos = toScreen(gridToWorld(spec.pos));
+          const maxHp = spec.type === "vault"
+            ? getLevelSpecialTowerHp(selectedMap) ?? spec.hp
+            : spec.hp;
           renderSpecialBuilding(
             ctx,
             sPos.x,
             sPos.y,
             cameraZoom,
             spec.type,
-            spec.hp,
+            maxHp,
             specialTowerHp,
             vaultFlash,
             spec.boostedTowerCount || 0
@@ -8647,6 +8749,14 @@ export function usePrincetonTowerDefenseRuntime() {
       }
     });
 
+    // Sky-level spell effects (falling meteors, lightning bolts) render above all map objects.
+    for (const eff of skyEffects) {
+      renderEffect(
+        ctx, eff, canvas.width, canvas.height, dpr,
+        enemies, towers, selectedMap, cameraOffset, cameraZoom, effects.length
+      );
+    }
+
     // ========== INSPECTOR INDICATORS - TOP LAYER ==========
     // Render inspector indicators as a separate pass so they're always on top
     // and can be easily hovered/clicked
@@ -8665,6 +8775,103 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraZoom
         );
       });
+    }
+
+    // ========== SPELL / REINFORCEMENT TARGETING RETICLE ==========
+    const rTargeting = targetingSpellRef.current;
+    const rPlacing = placingTroopRef.current;
+    const rMouse = mousePosRef.current;
+    if ((rTargeting || rPlacing) && rMouse.x > 0 && rMouse.y > 0) {
+      const reticleScreenX = rMouse.x;
+      const reticleScreenY = rMouse.y;
+      const z = cameraZoom ?? 1;
+      const t = Date.now() * 0.003;
+      const pulse = 0.7 + Math.sin(t * 3) * 0.3;
+
+      let mainR: number, mainG: number, mainB: number;
+      let glowR: number, glowG: number, glowB: number;
+      let reticleRadius: number;
+
+      if (rTargeting === "fireball") {
+        mainR = 255; mainG = 120; mainB = 20;
+        glowR = 255; glowG = 80; glowB = 0;
+        reticleRadius = 50 * z;
+      } else if (rTargeting === "lightning") {
+        mainR = 120; mainG = 180; mainB = 255;
+        glowR = 80; glowG = 140; glowB = 255;
+        reticleRadius = 45 * z;
+      } else {
+        mainR = 100; mainG = 220; mainB = 140;
+        glowR = 50; glowG = 200; glowB = 120;
+        reticleRadius = 40 * z;
+      }
+
+      // Outer glow halo
+      const haloR = reticleRadius * 1.5;
+      const haloGrad = ctx.createRadialGradient(reticleScreenX, reticleScreenY, reticleRadius * 0.6, reticleScreenX, reticleScreenY, haloR);
+      haloGrad.addColorStop(0, `rgba(${glowR}, ${glowG}, ${glowB}, ${0.08 * pulse})`);
+      haloGrad.addColorStop(1, `rgba(${glowR}, ${glowG}, ${glowB}, 0)`);
+      ctx.fillStyle = haloGrad;
+      ctx.beginPath();
+      ctx.ellipse(reticleScreenX, reticleScreenY, haloR, haloR * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main reticle ellipse
+      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.6 * pulse})`;
+      ctx.lineWidth = 2 * z;
+      ctx.setLineDash([8 * z, 5 * z]);
+      ctx.beginPath();
+      ctx.ellipse(reticleScreenX, reticleScreenY, reticleRadius, reticleRadius * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Inner solid ring
+      const innerR = reticleRadius * 0.6;
+      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.45 * pulse})`;
+      ctx.lineWidth = 1.5 * z;
+      ctx.beginPath();
+      ctx.ellipse(reticleScreenX, reticleScreenY, innerR, innerR * 0.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Crosshair lines
+      const chLen = reticleRadius * 0.35;
+      const chGap = reticleRadius * 0.15;
+      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.7 * pulse})`;
+      ctx.lineWidth = 1.5 * z;
+      ctx.beginPath();
+      ctx.moveTo(reticleScreenX - chLen - chGap, reticleScreenY);
+      ctx.lineTo(reticleScreenX - chGap, reticleScreenY);
+      ctx.moveTo(reticleScreenX + chGap, reticleScreenY);
+      ctx.lineTo(reticleScreenX + chLen + chGap, reticleScreenY);
+      ctx.moveTo(reticleScreenX, reticleScreenY - (chLen + chGap) * 0.5);
+      ctx.lineTo(reticleScreenX, reticleScreenY - chGap * 0.5);
+      ctx.moveTo(reticleScreenX, reticleScreenY + chGap * 0.5);
+      ctx.lineTo(reticleScreenX, reticleScreenY + (chLen + chGap) * 0.5);
+      ctx.stroke();
+
+      // Center dot
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * pulse})`;
+      ctx.beginPath();
+      ctx.arc(reticleScreenX, reticleScreenY, 2 * z, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotating tick marks
+      const tickCount = 4;
+      const tickDist = reticleRadius * 0.85;
+      const rotation = t * 0.8;
+      ctx.strokeStyle = `rgba(${mainR}, ${mainG}, ${mainB}, ${0.5 * pulse})`;
+      ctx.lineWidth = 2 * z;
+      for (let i = 0; i < tickCount; i++) {
+        const angle = rotation + (i / tickCount) * Math.PI * 2;
+        const tx = reticleScreenX + Math.cos(angle) * tickDist;
+        const ty = reticleScreenY + Math.sin(angle) * tickDist * 0.5;
+        const tx2 = reticleScreenX + Math.cos(angle) * (tickDist + 6 * z);
+        const ty2 = reticleScreenY + Math.sin(angle) * (tickDist + 6 * z) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx2, ty2);
+        ctx.stroke();
+      }
     }
 
     // Restore state
@@ -9055,6 +9262,9 @@ export function usePrincetonTowerDefenseRuntime() {
   // This allows the game loop to always use the latest version without restarting
   updateGameRef.current = updateGame;
   renderRef.current = render;
+  targetingSpellRef.current = targetingSpell;
+  placingTroopRef.current = placingTroop;
+  mousePosRef.current = mousePos;
   flushParticleQueueRef.current = flushQueuedParticles;
 
   // Game loop - uses refs to avoid restarting when state changes
@@ -9202,6 +9412,7 @@ export function usePrincetonTowerDefenseRuntime() {
     (ownerId: string, targetPos: Position) => {
       const station = towers.find((tower) => tower.id === ownerId && tower.type === "station");
       const isBarracksTroop = ownerId === "special_barracks";
+      const isSpellTroop = ownerId.startsWith("spell");
       setTroops((prev) => {
         const formationTroops = prev.filter((troop) => troop.ownerId === ownerId);
         if (formationTroops.length === 0) {
@@ -9225,13 +9436,14 @@ export function usePrincetonTowerDefenseRuntime() {
             x: targetPos.x + offset.x,
             y: targetPos.y + offset.y,
           };
+          const shouldRelocateAnchor = !!station || isBarracksTroop || isSpellTroop;
           return {
             ...troop,
             moving: true,
             targetPos: newTarget,
             userTargetPos: newTarget,
             selected: false,
-            spawnPoint: station || isBarracksTroop ? targetPos : troop.spawnPoint,
+            spawnPoint: shouldRelocateAnchor ? newTarget : troop.spawnPoint,
             facingRight: getFacingRightFromDelta(
               newTarget.x - troop.pos.x,
               troop.facingRight ?? true
@@ -9289,8 +9501,8 @@ export function usePrincetonTowerDefenseRuntime() {
         return;
       }
 
-      // Don't start panning while a troop spell placement is armed.
-      if (placingTroop) return;
+      // Don't start panning while a troop/spell placement is armed.
+      if (placingTroop || targetingSpell) return;
 
       const waveStartBubbles = getWaveStartBubblesScreenData(width, height, dpr);
       const clickedWaveBubble = waveStartBubbles.find(
@@ -9403,6 +9615,7 @@ export function usePrincetonTowerDefenseRuntime() {
       buildingTower,
       draggingTower,
       placingTroop,
+      targetingSpell,
       activeSentinelTargetKey,
       selectedTower,
       towers,
@@ -9732,6 +9945,15 @@ export function usePrincetonTowerDefenseRuntime() {
         const reinforcementStats = getReinforcementSpellStats(
           spellUpgradeLevels.reinforcements
         );
+
+        // Snap placement to nearest path point — ignore clicks too far from any path
+        const pathSnap = findClosestPathPoint(worldPos, selectedMap);
+        if (!pathSnap || pathSnap.distance > HERO_PATH_HITBOX_SIZE * 2.5) {
+          return;
+        }
+        const castCenter = pathSnap.point;
+        const castGroupId = generateId("spell");
+
         // Spawn troops in a compact formation around the cast point.
         const troopOffsets = [
           { x: 0, y: -25 },
@@ -9741,12 +9963,11 @@ export function usePrincetonTowerDefenseRuntime() {
           { x: 48, y: -4 },
         ].slice(0, reinforcementStats.knightCount);
         const newTroops: Troop[] = troopOffsets.map((offset, i) => {
-          // Each troop gets their own individual home position to prevent bundling/vibration
-          const troopPos = { x: worldPos.x + offset.x, y: worldPos.y + offset.y };
+          const troopPos = { x: castCenter.x + offset.x, y: castCenter.y + offset.y };
           return {
             id: generateId("troop"),
-            ownerId: "spell",
-            ownerType: "spell" as const, // Purple themed knight
+            ownerId: castGroupId,
+            ownerType: "spell" as const,
             pos: troopPos,
             hp: reinforcementStats.knightHp,
             maxHp: reinforcementStats.knightHp,
@@ -9773,10 +9994,23 @@ export function usePrincetonTowerDefenseRuntime() {
           };
         });
         addTroopEntities(newTroops);
-        addParticles(worldPos, "glow", 20);
-        addParticles({ x: worldPos.x - 20, y: worldPos.y + 15 }, "spark", 8);
-        addParticles({ x: worldPos.x + 20, y: worldPos.y + 15 }, "spark", 8);
+        addParticles(castCenter, "glow", 20);
+        addParticles({ x: castCenter.x - 20, y: castCenter.y + 15 }, "spark", 8);
+        addParticles({ x: castCenter.x + 20, y: castCenter.y + 15 }, "spark", 8);
         setPlacingTroop(false);
+        return;
+      }
+      if (targetingSpell) {
+        const worldPos = screenToWorld(
+          clickPos,
+          width,
+          height,
+          dpr,
+          cameraOffset,
+          cameraZoom
+        );
+        executeTargetedSpellRef.current(targetingSpell, worldPos);
+        setTargetingSpell(null);
         return;
       }
 
@@ -9805,7 +10039,7 @@ export function usePrincetonTowerDefenseRuntime() {
       );
       const clickedSpecialTower =
         levelSpecialTowers.find(
-          (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 65
+          (tower) => distance(clickWorldPos, gridToWorld(tower.pos)) < 105
         ) ?? null;
       const clickedSentinelNexus =
         clickedSpecialTower?.type === "sentinel_nexus"
@@ -10032,6 +10266,7 @@ export function usePrincetonTowerDefenseRuntime() {
     [
       draggingTower,
       placingTroop,
+      targetingSpell,
       buildingTower,
       towers,
       hero,
@@ -10367,7 +10602,7 @@ export function usePrincetonTowerDefenseRuntime() {
       for (const tower of specialTowers) {
         const towerWorldPos = gridToWorld(tower.pos);
         const dist = distance(mouseWorldPos, towerWorldPos);
-        if (dist < 60 && dist < nearestSpecialDist) {
+        if (dist < 100 && dist < nearestSpecialDist) {
           hoveredSpecial = tower;
           nearestSpecialDist = dist;
         }
@@ -10388,7 +10623,7 @@ export function usePrincetonTowerDefenseRuntime() {
           );
           return distance({ x, y }, screenPos) < 22;
         });
-        if (hoveredTroop && hoveredTroop.ownerId !== "spell") {
+        if (hoveredTroop && !hoveredTroop.ownerId.startsWith("spell")) {
           hoveredTroopOwnerId = hoveredTroop.ownerId;
         }
       }
@@ -10636,6 +10871,31 @@ export function usePrincetonTowerDefenseRuntime() {
       // Prevent spell casting when game is paused
       if (gameSpeed === 0) return;
 
+      // Cancel targeting if clicking the same spell again
+      if (targetingSpell === spellType) {
+        setTargetingSpell(null);
+        // Refund the PP and reset cooldown
+        const refundCost = SPELL_DATA[spellType]?.cost ?? 0;
+        if (refundCost > 0) addPawPoints(refundCost);
+        setSpells((prev) =>
+          prev.map((s) =>
+            s.type === spellType ? { ...s, cooldown: 0 } : s
+          )
+        );
+        return;
+      }
+      // Cancel any existing targeting if switching to a different spell
+      if (targetingSpell) {
+        const prevCost = SPELL_DATA[targetingSpell]?.cost ?? 0;
+        if (prevCost > 0) addPawPoints(prevCost);
+        setSpells((prev) =>
+          prev.map((s) =>
+            s.type === targetingSpell ? { ...s, cooldown: 0 } : s
+          )
+        );
+        setTargetingSpell(null);
+      }
+
       const spell = spells.find((s) => s.type === spellType);
       if (!spell || spell.cooldown > 0) return;
       const cost = SPELL_DATA[spellType]?.cost ?? 0;
@@ -10649,165 +10909,17 @@ export function usePrincetonTowerDefenseRuntime() {
       if (!spendPawPoints(cost)) return;
 
       switch (spellType) {
-        case "fireball": {
-          // METEOR SHOWER - Rains down 10 meteors in random locations, burning enemies
-          if (enemies.length > 0) {
-            const fireballStats = getFireballSpellStats(
-              spellUpgradeLevels.fireball
-            );
-            const meteorCount = fireballStats.meteorCount;
-            const damagePerMeteor = fireballStats.damagePerMeteor;
-            const impactRadius = fireballStats.impactRadius;
-            const burnDuration = fireballStats.burnDurationMs;
-            const burnDamage = fireballStats.burnDamagePerSecond;
-            const fallDuration = fireballStats.fallDurationMs;
-
-            // Generate random target positions around enemies
-            const meteorTargets: Position[] = [];
-            for (let i = 0; i < meteorCount; i++) {
-              // Pick a random enemy to target near
-              const randomEnemy = enemies[Math.floor(Math.random() * enemies.length)];
-              const basePos = getEnemyPosWithPath(randomEnemy, selectedMap);
-              // Add some random offset so meteors spread out more
-              const offsetX = (Math.random() - 0.5) * 300;
-              const offsetY = (Math.random() - 0.5) * 150;
-              meteorTargets.push({
-                x: basePos.x + offsetX,
-                y: basePos.y + offsetY,
-              });
-            }
-
-            // Create all meteor effects with staggered delays
-            meteorTargets.forEach((targetPos, index) => {
-              const staggerDelay = index * 180; // 180ms between each meteor start
-
-              setTimeout(() => {
-                // Create falling meteor effect - comes from WAY across screen in top RIGHT
-                setEffects((ef) => [
-                  ...ef,
-                  {
-                    id: generateId("meteor_falling"),
-                    pos: { x: targetPos.x + 700, y: targetPos.y - 2800 }, // Start from far upper RIGHT
-                    targetPos: targetPos,
-                    type: "meteor_falling",
-                    progress: 0,
-                    size: 90,
-                    duration: fallDuration,
-                    meteorIndex: index,
-                  },
-                ]);
-
-                // Impact happens when meteor lands (synced with fall animation)
-                setTimeout(() => {
-                  const now = Date.now();
-                  setEnemies((prev) =>
-                    prev
-                      .map((e) => {
-                        const pos = getEnemyPosWithPath(e, selectedMap);
-                        const dist = distance(pos, targetPos);
-                        if (dist < impactRadius) {
-                          // Damage falls off with distance
-                          const damageMultiplier = 1 - (dist / impactRadius) * 0.5;
-                          const damage = Math.floor(damagePerMeteor * damageMultiplier);
-                          const newHp = e.hp - getEnemyDamageTaken(e, damage, "fire");
-                          if (newHp <= 0) {
-                            onEnemyKill(e, pos, 20);
-                            addParticles(pos, "fire", 15);
-                            return null;
-                          }
-                          // Apply burn effect
-                          return {
-                            ...e,
-                            hp: newHp,
-                            damageFlash: 300,
-                            burning: true,
-                            burnDamage: burnDamage,
-                            burnUntil: now + burnDuration,
-                          };
-                        }
-                        return e;
-                      })
-                      .filter(isDefined)
-                  );
-
-                  // Create dramatic impact explosion effect
-                  setEffects((ef) => [
-                    ...ef,
-                    {
-                      id: generateId("meteor_impact"),
-                      pos: targetPos,
-                      type: "meteor_impact",
-                      progress: 0,
-                      size: impactRadius * 1.5,
-                    },
-                  ]);
-                  addParticles(targetPos, "explosion", 40);
-                  addParticles(targetPos, "fire", 35);
-                  addParticles(targetPos, "smoke", 25);
-                }, fallDuration);
-              }, staggerDelay);
-            });
-          }
-          break;
-        }
-
+        case "fireball":
         case "lightning": {
-          // ENHANCED LIGHTNING - Strikes 8 enemies one by one with chain effect
-          if (enemies.length > 0) {
-            const lightningStats = getLightningSpellStats(
-              spellUpgradeLevels.lightning
-            );
-            const totalDamage = lightningStats.totalDamage;
-            const targetCount = Math.min(lightningStats.chainCount, enemies.length);
-            const damagePerTarget = Math.floor(totalDamage / targetCount);
-            const shuffled = [...enemies].sort(() => Math.random() - 0.5);
-            const targets = shuffled.slice(0, targetCount);
-
-            // Strike each target with a delay for dramatic effect
-            targets.forEach((target, index) => {
-              setTimeout(() => {
-                const targetPos = getEnemyPosWithPath(target, selectedMap);
-
-                // Create lightning bolt from sky
-                setEffects((ef) => [
-                  ...ef,
-                  {
-                    id: generateId("lightning_bolt"),
-                    pos: { x: targetPos.x, y: targetPos.y - 700 },
-                    targetPos: targetPos,
-                    type: "lightning_bolt",
-                    progress: 0,
-                    size: 120,
-                    strikeIndex: index,
-                  },
-                ]);
-
-                setEnemies((prev) =>
-                  prev
-                    .map((e) => {
-                      if (e.id === target.id) {
-                        const newHp =
-                          e.hp - getEnemyDamageTaken(e, damagePerTarget);
-                        if (newHp <= 0) {
-                          onEnemyKill(e, targetPos, 12);
-                          addParticles(targetPos, "spark", 25);
-                          addParticles(targetPos, "glow", 15);
-                          return null;
-                        }
-                        return {
-                          ...e,
-                          hp: newHp,
-                          damageFlash: 250,
-                          stunUntil: Date.now() + lightningStats.stunDurationMs,
-                        };
-                      }
-                      return e;
-                    })
-                    .filter(isDefined)
-                );
-                addParticles(targetPos, "spark", 20);
-              }, index * 200); // 200ms delay between each strike
-            });
+          const level = spellUpgradeLevels[spellType] ?? 0;
+          if (level >= 2) {
+            setTargetingSpell(spellType);
+          } else {
+            // Auto-target: pick center of enemies as the cast point
+            const enemyPositions = enemies.map((e) => getEnemyPosWithPath(e, selectedMap));
+            const avgX = enemyPositions.reduce((s, p) => s + p.x, 0) / enemyPositions.length;
+            const avgY = enemyPositions.reduce((s, p) => s + p.y, 0) / enemyPositions.length;
+            executeTargetedSpellRef.current(spellType, { x: avgX, y: avgY });
           }
           break;
         }
@@ -10902,6 +11014,7 @@ export function usePrincetonTowerDefenseRuntime() {
       selectedMap,
       addParticles,
       gameSpeed,
+      targetingSpell,
       onEnemyKill,
       canAffordPawPoints,
       spendPawPoints,
@@ -10911,6 +11024,184 @@ export function usePrincetonTowerDefenseRuntime() {
       spellUpgradeLevels,
     ]
   );
+
+  const executeTargetedSpell = useCallback(
+    (spellType: SpellType, centerWorldPos: Position) => {
+      if (spellType === "fireball") {
+        const fireballStats = getFireballSpellStats(
+          spellUpgradeLevels.fireball
+        );
+        const meteorCount = fireballStats.meteorCount;
+        const damagePerMeteor = fireballStats.damagePerMeteor;
+        const impactRadius = fireballStats.impactRadius;
+        const burnDuration = fireballStats.burnDurationMs;
+        const burnDamage = fireballStats.burnDamagePerSecond;
+        const fallDuration = fireballStats.fallDurationMs;
+
+        const meteorTargets: Position[] = [];
+        for (let i = 0; i < meteorCount; i++) {
+          const offsetX = (Math.random() - 0.5) * 300;
+          const offsetY = (Math.random() - 0.5) * 150;
+          meteorTargets.push({
+            x: centerWorldPos.x + offsetX,
+            y: centerWorldPos.y + offsetY,
+          });
+        }
+
+        meteorTargets.forEach((targetPos, index) => {
+          const staggerDelay = index * 180;
+
+          setTimeout(() => {
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("meteor_falling"),
+                pos: { x: targetPos.x + 700, y: targetPos.y - 2800 },
+                targetPos: targetPos,
+                type: "meteor_falling",
+                progress: 0,
+                size: 90,
+                duration: fallDuration,
+                meteorIndex: index,
+              },
+            ]);
+
+            setTimeout(() => {
+              const now = Date.now();
+              setEnemies((prev) =>
+                prev
+                  .map((e) => {
+                    const pos = getEnemyPosWithPath(e, selectedMap);
+                    const dist = distance(pos, targetPos);
+                    if (dist < impactRadius) {
+                      const damageMultiplier = 1 - (dist / impactRadius) * 0.5;
+                      const damage = Math.floor(damagePerMeteor * damageMultiplier);
+                      const newHp = e.hp - getEnemyDamageTaken(e, damage, "fire");
+                      if (newHp <= 0) {
+                        onEnemyKill(e, pos, 20, "fire");
+                        addParticles(pos, "fire", 15);
+                        return null;
+                      }
+                      return {
+                        ...e,
+                        hp: newHp,
+                        damageFlash: 300,
+                        burning: true,
+                        burnDamage: burnDamage,
+                        burnUntil: now + burnDuration,
+                      };
+                    }
+                    return e;
+                  })
+                  .filter(isDefined)
+              );
+
+              setEffects((ef) => [
+                ...ef,
+                {
+                  id: generateId("meteor_impact"),
+                  pos: targetPos,
+                  type: "meteor_impact",
+                  progress: 0,
+                  size: impactRadius * 1.5,
+                },
+                {
+                  id: generateId("fire_scorch"),
+                  pos: targetPos,
+                  type: "fire_scorch",
+                  progress: 0,
+                  size: impactRadius * 1.2,
+                  duration: 3000,
+                },
+              ]);
+              addParticles(targetPos, "explosion", 40);
+              addParticles(targetPos, "fire", 35);
+              addParticles(targetPos, "smoke", 25);
+            }, fallDuration);
+          }, staggerDelay);
+        });
+      } else if (spellType === "lightning") {
+        const lightningStats = getLightningSpellStats(
+          spellUpgradeLevels.lightning
+        );
+        const totalDamage = lightningStats.totalDamage;
+        const targetCount = Math.min(lightningStats.chainCount, enemies.length);
+        const damagePerTarget = targetCount > 0 ? Math.floor(totalDamage / targetCount) : 0;
+
+        // Sort enemies by distance to clicked position, prioritize closest
+        const sorted = [...enemies]
+          .map((e) => ({
+            enemy: e,
+            dist: distance(getEnemyPosWithPath(e, selectedMap), centerWorldPos),
+          }))
+          .sort((a, b) => a.dist - b.dist);
+        const targets = sorted.slice(0, targetCount).map((s) => s.enemy);
+
+        targets.forEach((target, index) => {
+          setTimeout(() => {
+            const targetPos = getEnemyPosWithPath(target, selectedMap);
+
+            setEffects((ef) => [
+              ...ef,
+              {
+                id: generateId("lightning_bolt"),
+                pos: { x: targetPos.x, y: targetPos.y - 700 },
+                targetPos: targetPos,
+                type: "lightning_bolt",
+                progress: 0,
+                size: 120,
+                strikeIndex: index,
+              },
+              {
+                id: generateId("lightning_scorch"),
+                pos: targetPos,
+                type: "lightning_scorch",
+                progress: 0,
+                size: 80,
+                duration: 2500,
+              },
+            ]);
+
+            setEnemies((prev) =>
+              prev
+                .map((e) => {
+                  if (e.id === target.id) {
+                    const newHp =
+                      e.hp - getEnemyDamageTaken(e, damagePerTarget);
+                    if (newHp <= 0) {
+                      onEnemyKill(e, targetPos, 12, "lightning");
+                      addParticles(targetPos, "spark", 25);
+                      addParticles(targetPos, "glow", 15);
+                      return null;
+                    }
+                    return {
+                      ...e,
+                      hp: newHp,
+                      damageFlash: 250,
+                      stunUntil: Date.now() + lightningStats.stunDurationMs,
+                    };
+                  }
+                  return e;
+                })
+                .filter(isDefined)
+            );
+            addParticles(targetPos, "spark", 20);
+          }, index * 200);
+        });
+      }
+    },
+    [
+      enemies,
+      selectedMap,
+      addParticles,
+      onEnemyKill,
+      setEnemies,
+      setEffects,
+      spellUpgradeLevels,
+    ]
+  );
+  executeTargetedSpellRef.current = executeTargetedSpell;
+
   const upgradeSpell = useCallback(
     (spellType: SpellType) => {
       setProgress((prev) => {
@@ -11007,7 +11298,7 @@ export function usePrincetonTowerDefenseRuntime() {
               if (isTarget) {
                 const newHp = e.hp - getEnemyDamageTaken(e, 80);
                 if (newHp <= 0) {
-                  onEnemyKill(e, getEnemyPosWithPath(e, selectedMap));
+                  onEnemyKill(e, getEnemyPosWithPath(e, selectedMap), 8, "sonic");
                   return null;
                 }
                 return {
@@ -11371,6 +11662,7 @@ export function usePrincetonTowerDefenseRuntime() {
           setRepositionPreviewPos,
           setWaveInProgress,
           setPlacingTroop,
+          setTargetingSpell,
           setSpells,
           setGameSpeed,
           setGoldSpellActive,
@@ -11793,6 +12085,7 @@ export function usePrincetonTowerDefenseRuntime() {
               );
             })()}
           {placingTroop && <PlacingTroopIndicator />}
+          {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} />}
           {activeSentinelTargetKey && (
             <div
               className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
@@ -11879,6 +12172,7 @@ export function usePrincetonTowerDefenseRuntime() {
               pawPoints={pawPoints}
               enemies={enemies}
               spellUpgradeLevels={spellUpgradeLevels}
+              targetingSpell={targetingSpell}
               toggleHeroSelection={toggleHeroSelection}
               onUseHeroAbility={triggerHeroAbility}
               castSpell={castSpell}

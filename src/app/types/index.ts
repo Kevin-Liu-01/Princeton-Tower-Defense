@@ -313,6 +313,7 @@ export interface Enemy {
   burnUntil?: number;
   slowed?: boolean;
   slowIntensity?: number;
+  slowSource?: SlowSourceType;
   taunted?: boolean;
   tauntTarget?: string;
   tauntOffset?: Position; // Offset from path position when moving toward taunt target
@@ -652,12 +653,24 @@ export type EffectType =
   | "sentinel_impact" // Sentinel lightning impact burst
   | "sunforge_beam" // Sunforge focused plasma beam
   | "sunforge_impact" // Sunforge impact eruption
+  // Spell ground scorch marks
+  | "fire_scorch" // Burned ground left by meteor impact
+  | "lightning_scorch" // Electrified ground left by lightning strike
   // Unit status effect visuals (troops/heroes)
   | "status_burning" // On-fire effect
   | "status_slowed" // Slowed/frozen effect
   | "status_poisoned" // Poison dripping effect
   | "status_stunned" // Stunned/dazed effect
   | "enemy_death"; // Enemy death dissolve/shatter
+
+// What killed the enemy - determines death animation style
+export type DeathCause =
+  | "lightning"
+  | "fire"
+  | "freeze"
+  | "sonic"
+  | "poison"
+  | "default";
 
 // Visual effect
 export interface Effect {
@@ -689,6 +702,7 @@ export interface Effect {
   enemyType?: EnemyType;
   enemySize?: number;
   isFlying?: boolean;
+  deathCause?: DeathCause;
 }
 
 // Particle types
@@ -808,7 +822,6 @@ export type DecorationCategory =
   | "frozen_soldier"
   | "battle_crater"
   | "ice_throne"
-  | "mountain_peak"
   | "ice_bridge"
   | "frozen_waterfall"
   | "aurora_crystal"
@@ -838,11 +851,8 @@ export type DecorationCategory =
   | "battle_standard"
   // Swamp
   | "swamp_tree"
-  | "lily_pads"
-  | "mushroom_cluster"
   | "fog_patch"
   | "broken_bridge"
-  | "frog"
   | "witch_cottage"
   | "cauldron"
   | "tombstone"
@@ -867,7 +877,13 @@ export type DecorationCategory =
   | "bones"
   | "candles"
   | "ritual_circle"
-  | "ember";
+  | "ember"
+  // Challenge landmarks
+  | "war_monument"
+  | "bone_altar"
+  | "sun_obelisk"
+  | "frost_citadel"
+  | "infernal_gate";
 
 export interface MapDecoration {
   type?: DecorationCategory;
@@ -899,8 +915,18 @@ export type HazardType =
   | "fire"
   | "lightning"
   | "void"
+  | "volcano"
   // Legacy alias for ice_spikes.
   | "spikes";
+
+export type SlowSourceType =
+  | "quicksand"
+  | "maelstrom"
+  | "deep_water"
+  | "ice_spikes"
+  | "library"
+  | "spell"
+  | "unknown";
 
 export interface MapHazard {
   type: HazardType;
@@ -1089,7 +1115,6 @@ export type DecorationType =
   | "aurora_crystal"
   | "snow_lantern"
   | "ice_bridge"
-  | "mountain_peak"
   | "snow_drift"
   | "obsidian_castle"
   | "dark_throne"
@@ -1103,8 +1128,6 @@ export type DecorationType =
   | "battle_crater"
   | "demon_statue"
   | "fire_pit"
-  | "lily_pads"
-  | "mushroom_cluster"
   | "fog_patch"
   | "ruined_temple"
   | "sunken_pillar"
@@ -1112,7 +1135,6 @@ export type DecorationType =
   | "skeleton_pile"
   | "tombstone"
   | "broken_bridge"
-  | "frog"
   // Desert additions
   | "sarcophagus"
   | "cobra_statue"
@@ -1137,7 +1159,13 @@ export type DecorationType =
   | "dock"
   | "gate"
   | "reeds"
-  | "fishing_spot";
+  | "fishing_spot"
+  // Challenge landmarks
+  | "war_monument"
+  | "bone_altar"
+  | "sun_obelisk"
+  | "frost_citadel"
+  | "infernal_gate";
 
 export interface Decoration {
   type: DecorationType;
@@ -1152,9 +1180,6 @@ export interface Decoration {
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-
-// Maximum troops per station
-export const MAX_STATION_TROOPS = 3;
 
 // Spawn positions relative to station world position
 export const STATION_SPAWN_OFFSETS = [

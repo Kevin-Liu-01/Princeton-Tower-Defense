@@ -180,8 +180,6 @@ const MANUAL_DECORATION_OPTIONS: DecorationCategory[] = [
   "bench",
   "fence",
   "swamp_tree",
-  "lily_pads",
-  "mushroom_cluster",
   "fog_patch",
   "palm",
   "cactus",

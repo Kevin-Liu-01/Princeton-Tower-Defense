@@ -14,6 +14,7 @@ import type {
 import { worldToScreen } from "../../utils";
 import { drawLightningBolt, drawExplosion } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import { renderEnemyDeath } from "./deathAnimations";
 
 // Re-export fog effects
 export { renderRoadEndFog } from "./fog";
@@ -2337,68 +2338,7 @@ export function renderEffect(
     }
 
     case "enemy_death": {
-      const deathSize = (effect.enemySize || effect.size || 20) * zoom;
-      const deathColor = effect.color || "#ff4444";
-      const t = progress;
-
-      // Phase 1 (0-0.3): Flash white and scale up
-      if (t < 0.3) {
-        const flashT = t / 0.3;
-        const scale = 1 + flashT * 0.4;
-        const flashAlpha = (1 - flashT * 0.5);
-        ctx.globalAlpha = flashAlpha;
-        ctx.fillStyle = `rgba(255, 255, 255, ${1 - flashT * 0.7})`;
-        ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, deathSize * 0.5 * scale, deathSize * 0.4 * scale, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = deathColor;
-        ctx.globalAlpha = flashAlpha * 0.6;
-        ctx.beginPath();
-        ctx.ellipse(screenPos.x, screenPos.y, deathSize * 0.4 * scale, deathSize * 0.3 * scale, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Phase 2 (0.15-0.8): Shatter fragments fly outward
-      const fragCount = 8;
-      if (t > 0.1 && t < 0.9) {
-        const fragT = (t - 0.1) / 0.8;
-        for (let i = 0; i < fragCount; i++) {
-          const angle = (i / fragCount) * Math.PI * 2 + i * 0.7;
-          const dist = fragT * deathSize * 1.8;
-          const fragX = screenPos.x + Math.cos(angle) * dist;
-          const fragY = screenPos.y + Math.sin(angle) * dist - fragT * deathSize * 0.5;
-          const fragSize = deathSize * 0.15 * (1 - fragT);
-          const fragAlpha = (1 - fragT) * 0.8;
-          ctx.globalAlpha = fragAlpha;
-          ctx.fillStyle = i % 2 === 0 ? deathColor : "#ffffff";
-          ctx.fillRect(fragX - fragSize / 2, fragY - fragSize / 2, fragSize, fragSize);
-        }
-      }
-
-      // Phase 3 (0.2-1.0): Dissolve ring expanding outward
-      if (t > 0.15) {
-        const ringT = (t - 0.15) / 0.85;
-        const ringRadius = ringT * deathSize * 1.2;
-        const ringAlpha = (1 - ringT) * 0.4;
-        ctx.globalAlpha = ringAlpha;
-        ctx.strokeStyle = deathColor;
-        ctx.lineWidth = (1 - ringT) * 3 * zoom;
-        ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y, ringRadius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-
-      // Smoke puff at center fading out
-      if (t > 0.2 && t < 1) {
-        const smokeT = (t - 0.2) / 0.8;
-        const smokeAlpha = (1 - smokeT) * 0.3;
-        const smokeSize = deathSize * 0.3 * (1 + smokeT * 2);
-        ctx.globalAlpha = smokeAlpha;
-        ctx.fillStyle = `rgba(80, 80, 80, ${smokeAlpha})`;
-        ctx.beginPath();
-        ctx.arc(screenPos.x, screenPos.y - smokeT * deathSize * 0.3, smokeSize, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      renderEnemyDeath(ctx, screenPos, zoom, progress, effect);
       break;
     }
 

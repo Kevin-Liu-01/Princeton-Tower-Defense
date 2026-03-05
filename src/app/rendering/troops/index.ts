@@ -192,16 +192,6 @@ export function renderTroop(
   const tData = TROOP_DATA[troopType];
   const time = Date.now() / 1000;
 
-  // Check for large troops
-  const isLargeTroop =
-    troop.type === "elite" ||
-    troop.type === "centaur" ||
-    troop.type === "cavalry" ||
-    troop.type === "knight" ||
-    troop.type === "turret";
-  const sizeScale = isLargeTroop ? 1.6 : 1;
-
-  // Selection indicator - scaled for large troops
   if (troop.selected) {
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 2 * zoom;
@@ -210,8 +200,8 @@ export function renderTroop(
     ctx.ellipse(
       screenPos.x,
       screenPos.y + 2 * zoom,
-      28 * zoom * sizeScale,
-      14 * zoom * sizeScale,
+      28 * zoom,
+      14 * zoom,
       0,
       0,
       Math.PI * 2
@@ -220,29 +210,20 @@ export function renderTroop(
     ctx.setLineDash([]);
   }
 
-  // Shadow - scale based on troop type
   ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
     screenPos.y + 5 * zoom,
-    15 * zoom * sizeScale,
-    7 * zoom * sizeScale,
+    15 * zoom,
+    7 * zoom,
     0,
     0,
     Math.PI * 2
   );
   ctx.fill();
 
-  // Scale up level 3 elite troops and level 4 mounted troops
-  let baseSize = 22;
-  if (troop.type === "elite") baseSize = 31; // Level 3 Elite Guard - larger
-  else if (troop.type === "centaur") baseSize = 32; // Level 4 Centaur - mounted
-  else if (troop.type === "cavalry")
-    baseSize = 32; // Level 4 Royal Cavalry - mounted
-  else if (troop.type === "knight") baseSize = 32; // Level 4 Knight - mounted
-  else if (troop.type === "turret") baseSize = 34; // Engineer's turret - medium-large
-  const size = baseSize * zoom;
+  const size = 22 * zoom;
   const attackPhase = (troop.attackAnim && troop.attackAnim > 0) ? troop.attackAnim / 300 : 0;
   const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.15 : 1;
   const facingRight =
@@ -362,7 +343,7 @@ export function renderTroop(
 
   // HP Bar - Modern styled with gradients
   if (troop.hp < troop.maxHp) {
-    const barWidth = 32 * zoom * sizeScale;
+    const barWidth = 32 * zoom;
     const barHeight = 5 * zoom;
     const barY = screenPos.y - size - 10 * zoom;
     const barX = screenPos.x - barWidth / 2;
@@ -448,113 +429,51 @@ function drawTroopSprite(
   ownerType?: TroopOwnerType,
   visualTier?: number
 ) {
-  const stationTierScale = 1.15;
-  const stationTierSize = size * stationTierScale;
-  const stationTierY = y - size * 0.055;
-  const armoredScale = 1.3;
-  const armoredSize = size * armoredScale;
-  const armoredY = y - size * 0.11;
+  const TROOP_SPRITE_SCALES: Record<string, number> = {
+    footsoldier: 1.0,
+    soldier: 1.15,
+    rowing: 1.15,
+    armored: 1.3,
+    elite: 1.35,
+    thesis: 1.35,
+    cavalry: 1.5,
+    centaur: 1.5,
+    knight: 1.6,
+    turret: 1.7,
+  };
+
+  const scale = TROOP_SPRITE_SCALES[type] ?? 1.0;
+  const scaledSize = size * scale;
+  const scaledY = y - size * (scale - 1) * 0.5;
 
   switch (type) {
     case "soldier":
     case "footsoldier":
-      drawSoldierTroop(
-        ctx,
-        x,
-        stationTierY,
-        stationTierSize,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        targetPos
-      );
+      drawSoldierTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "cavalry":
-      drawCavalryTroop(
-        ctx,
-        x,
-        y,
-        size,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        targetPos
-      );
+      drawCavalryTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "centaur":
-      drawCentaurTroop(
-        ctx,
-        x,
-        y,
-        size,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        targetPos
-      );
+      drawCentaurTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "elite":
-      drawEliteTroop(
-        ctx,
-        x,
-        stationTierY,
-        stationTierSize,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        targetPos
-      );
+      drawEliteTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "armored":
-      drawArmoredTroop(
-        ctx,
-        x,
-        armoredY,
-        armoredSize,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        targetPos
-      );
+      drawArmoredTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "thesis":
-      drawThesisTroop(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
+      drawThesisTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "rowing":
-      drawRowingTroop(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
+      drawRowingTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     case "knight":
-      drawKnightTroop(
-        ctx,
-        x,
-        y,
-        size,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        ownerType,
-        visualTier,
-        targetPos
-      );
+      drawKnightTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, ownerType, visualTier, targetPos);
       break;
     case "turret":
-      drawTurretTroop(
-        ctx,
-        x,
-        y,
-        size,
-        color,
-        time,
-        zoom,
-        attackPhase,
-        targetPos
-      );
+      drawTurretTroop(ctx, x, scaledY, scaledSize, color, time, zoom, attackPhase, targetPos);
       break;
     default:
       drawDefaultTroop(ctx, x, y, size, color, time, zoom, attackPhase, targetPos);
@@ -1736,16 +1655,6 @@ function drawCavalryTroop(
   }
 
   // === MAJESTIC ROYAL WAR STEED ===
-  // Shadow with depth
-  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.55, 0, x, y + size * 0.55, size * 0.5);
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-  shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.3)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.55, size * 0.52, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   // Horse body with rich gradient
   const bodyGrad = ctx.createRadialGradient(
     x - size * 0.1, y + size * 0.05, 0,
@@ -3162,16 +3071,6 @@ function drawCentaurTroop(
       ctx.fill();
     }
   }
-
-  // === SHADOW WITH DEPTH ===
-  const shadowGrad = ctx.createRadialGradient(x + size * 0.05, y + size * 0.55, 0, x + size * 0.05, y + size * 0.55, size * 0.55);
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-  shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.3)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x + size * 0.05, y + size * 0.55, size * 0.55, size * 0.16, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   // === POWERFUL HORSE BODY WITH DETAILED COAT ===
   // Main body with brown-green coat gradient
@@ -5118,33 +5017,10 @@ function drawArmoredTroop(
   const heraldicColor = color || "#ff6a2a";
 
   const isAttacking = attackPhase > 0;
-  const attackDrive = isAttacking ? Math.sin(attackPhase * Math.PI) : 0;
   const maceSwing = isAttacking
     ? Math.sin(attackPhase * Math.PI * 1.5) * 2.25
     : 0;
   const bodyLean = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.2 : 0;
-
-  // Steel aura and ground shadow.
-  const auraGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.12,
-    size * 0.08,
-    x,
-    y + size * 0.12,
-    size * 0.74
-  );
-  auraGrad.addColorStop(0, `rgba(170, 205, 240, ${0.24 + attackDrive * 0.24})`);
-  auraGrad.addColorStop(0.45, "rgba(140, 185, 235, 0.14)");
-  auraGrad.addColorStop(1, "rgba(120, 165, 220, 0)");
-  ctx.fillStyle = auraGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.16, size * 0.63, size * 0.49, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.57, size * 0.46, size * 0.145, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   ctx.save();
   ctx.translate(x, y);
@@ -5403,7 +5279,7 @@ function drawArmoredTroop(
   ctx.fill();
   ctx.restore();
 
-  // Right arm and upgraded mace.
+  // Right arm and upgraded mace (drawn in single context so mace stays attached).
   ctx.save();
   const armBaseAngle = isAttacking ? -1.2 + attackPhase * 2.65 : 0.19 + stance * 0.03;
   const armX = x + size * 0.31 + (isAttacking ? maceSwing * size * 0.08 : 0);
@@ -5416,31 +5292,17 @@ function drawArmoredTroop(
     Math.PI / 2,
     isAttacking ? 1.05 : 0.58
   );
-  ctx.translate(
-    armX,
-    armY
-  );
+  ctx.translate(armX, armY);
   ctx.rotate(armAngle);
+
   ctx.fillStyle = "#617f9e";
   ctx.fillRect(-size * 0.056, 0, size * 0.112, size * 0.225);
   ctx.fillStyle = "#86a7c4";
   ctx.fillRect(-size * 0.06, size * 0.162, size * 0.12, size * 0.08);
-  ctx.restore();
 
-  ctx.save();
-  const maceBaseAngle = isAttacking ? -1.32 + attackPhase * 2.95 : -0.28 + stance * 0.04;
-  const maceX = x + size * 0.4 + (isAttacking ? maceSwing * size * 0.18 : 0);
-  const maceY = y - size * 0.09 + breathe * 0.5 - (isAttacking ? attackDrive * size * 0.11 : 0);
-  const maceAngle = resolveWeaponRotation(
-    targetPos,
-    maceX,
-    maceY - size * 0.66,
-    maceBaseAngle,
-    Math.PI / 2,
-    isAttacking ? 1.32 : 0.76
-  );
-  ctx.translate(maceX, maceY);
-  ctx.rotate(maceAngle);
+  const maceWristAngle = isAttacking ? -0.12 + attackPhase * 0.3 : -0.08 + stance * 0.01;
+  ctx.translate(0, size * 0.21);
+  ctx.rotate(maceWristAngle);
 
   const shaftGrad = ctx.createLinearGradient(-size * 0.022, -size * 0.56, size * 0.022, 0.2 * size);
   shaftGrad.addColorStop(0, "#2f2215");
@@ -5458,7 +5320,6 @@ function drawArmoredTroop(
     ctx.stroke();
   }
 
-  // Guard ring and pommel.
   ctx.fillStyle = "#c8aa73";
   ctx.beginPath();
   ctx.roundRect(-size * 0.032, -size * 0.52, size * 0.064, size * 0.024, size * 0.007);
@@ -5467,7 +5328,6 @@ function drawArmoredTroop(
   ctx.arc(0, size * 0.2, size * 0.025, 0, Math.PI * 2);
   ctx.fill();
 
-  // Morningstar head.
   const maceHeadGrad = ctx.createRadialGradient(0, -size * 0.64, size * 0.016, 0, -size * 0.64, size * 0.1);
   maceHeadGrad.addColorStop(0, "#e5ecf8");
   maceHeadGrad.addColorStop(0.45, "#a7bad6");
@@ -5969,20 +5829,6 @@ function drawReinforcementKnightTroop(
     },
   ] as const;
   const palette = palettes[tier];
-
-  // Ground shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.55,
-    size * 0.46,
-    size * 0.14,
-    0,
-    0,
-    Math.PI * 2
-  );
-  ctx.fill();
 
   // Tier aura
   const auraStrength = Math.min(0.88, (0.2 + tier * 0.08 + attackDrive * 0.25));
@@ -6665,12 +6511,6 @@ function drawKnightTroop(
       ctx.stroke();
     }
   }
-
-  // === SHADOW ===
-  ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.55, size * 0.45, size * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
 
   ctx.save();
   ctx.translate(x, y);

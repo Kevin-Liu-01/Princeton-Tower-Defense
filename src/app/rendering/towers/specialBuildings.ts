@@ -1573,7 +1573,7 @@ export function renderSpecialBuilding(
   
       case "vault": {
         const hpPct =
-          specialTowerHp !== null && specHp ? specialTowerHp / specHp : 1;
+          specialTowerHp !== null && specHp ? Math.min(specialTowerHp / specHp, 1) : 1;
         const isFlashing = vaultFlash > 0;
         const s2 = s * 1.2;
   

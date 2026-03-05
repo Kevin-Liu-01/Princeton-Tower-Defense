@@ -1391,7 +1391,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
               },
               {
                 id: "special_towers",
-                label: "Special Towers",
+                label: "Structures",
                 icon: <Sparkles size={16} />,
                 count: specialTowerTypesInUse.length,
               },
@@ -1403,7 +1403,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose }) => {
               },
               {
                 id: "guide",
-                label: "How To Play",
+                label: "FAQ",
                 icon: <Info size={16} />,
                 count: 5,
               },

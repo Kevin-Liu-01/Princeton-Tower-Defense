@@ -52,6 +52,7 @@ interface HeroSpellBarProps {
   pawPoints: number;
   enemies: Enemy[];
   spellUpgradeLevels: SpellUpgradeLevels;
+  targetingSpell: SpellType | null;
   toggleHeroSelection: () => void;
   onUseHeroAbility: () => void;
   castSpell: (spellType: SpellType) => void;
@@ -63,6 +64,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   pawPoints,
   enemies,
   spellUpgradeLevels,
+  targetingSpell,
   toggleHeroSelection,
   onUseHeroAbility,
   castSpell,
@@ -97,7 +99,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         { label: "Burn", value: `${(fireballStats.burnDurationMs / 1000).toFixed(1)}s`, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)", icon: <Flame size={9} className="text-amber-400" /> },
       ],
       effectBg: "rgba(124,45,18,0.15)", effectLabel: "text-orange-500/80", effectText: "text-orange-200/90",
-      effect: `Rains ${fireballStats.meteorCount} meteors in an area. Each deals ${fireballStats.damagePerMeteor} AoE damage with falloff and sets enemies ablaze for ${(fireballStats.burnDurationMs / 1000).toFixed(1)} seconds.`,
+      effect: `Rains ${fireballStats.meteorCount} meteors in an area. Each deals ${fireballStats.damagePerMeteor} AoE damage with falloff and sets enemies ablaze for ${(fireballStats.burnDurationMs / 1000).toFixed(1)} seconds.${spellUpgradeLevels.fireball >= 2 ? " Click to choose target location." : ""}`,
     },
     lightning: {
       border: "border-yellow-600", bg: "from-yellow-800/90 to-yellow-950/90", activeBg: "from-yellow-700/90 to-yellow-900/90", glow: "shadow-yellow-500/30",
@@ -109,7 +111,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
         { label: "Stun", value: `${(lightningStats.stunDurationMs / 1000).toFixed(2)}s`, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)", icon: <Timer size={9} className="text-blue-400" /> },
       ],
       effectBg: "rgba(113,63,18,0.15)", effectLabel: "text-yellow-500/80", effectText: "text-yellow-200/90",
-      effect: `Lightning chains between up to ${lightningStats.chainCount} enemies, splitting ${lightningStats.totalDamage} total damage. Each hit stuns for ${(lightningStats.stunDurationMs / 1000).toFixed(2)} seconds.`,
+      effect: `Lightning chains between up to ${lightningStats.chainCount} enemies, splitting ${lightningStats.totalDamage} total damage. Each hit stuns for ${(lightningStats.stunDurationMs / 1000).toFixed(2)} seconds.${spellUpgradeLevels.lightning >= 2 ? " Click to choose target location." : ""}`,
     },
     freeze: {
       border: "border-cyan-600", bg: "from-cyan-800/90 to-cyan-950/90", activeBg: "from-cyan-700/90 to-cyan-900/90", glow: "shadow-cyan-500/30",
@@ -433,24 +435,32 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               enemies.length === 0
             );
           const isHovered = hoveredSpell === spell.type;
+          const isTargeting = targetingSpell === spell.type;
           return (
             <div key={spell.type} className="relative self-stretch flex">
               <button
                 onClick={() => castSpell(spell.type)}
-                disabled={!canCast}
+                disabled={!canCast && !isTargeting}
                 onMouseEnter={() => !isTouchDevice && setHoveredSpell(spell.type)}
                 onMouseLeave={() => !isTouchDevice && setHoveredSpell(null)}
-                className="relative px-1 sm:px-4 py-1 sm:py-2.5 transition-all rounded-lg sm:rounded-xl overflow-hidden self-stretch hover:brightness-110"
+                className={`relative px-1 sm:px-4 py-1 sm:py-2.5 transition-all rounded-lg sm:rounded-xl overflow-hidden self-stretch hover:brightness-110 ${isTargeting ? "animate-pulse ring-2 ring-offset-1 ring-offset-transparent" : ""}`}
                 style={{
-                  background: canCast
+                  background: isTargeting
                     ? (theme ? `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeep})` : "linear-gradient(135deg, rgba(60,30,70,0.8), rgba(40,20,50,0.6))")
-                    : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                  border: canCast
-                    ? `1.5px solid ${theme?.panelBorder || "rgba(140,80,180,0.4)"}`
-                    : `1.5px solid ${NEUTRAL.border}`,
-                  boxShadow: canCast
-                    ? `inset 0 0 12px ${OVERLAY.white03}`
-                    : "none",
+                    : canCast
+                      ? (theme ? `linear-gradient(180deg, ${theme.panelBg}, ${PANEL.bgDeep})` : "linear-gradient(135deg, rgba(60,30,70,0.8), rgba(40,20,50,0.6))")
+                      : `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                  border: isTargeting
+                    ? `2px solid ${theme?.panelBorder || "rgba(140,80,180,0.8)"}`
+                    : canCast
+                      ? `1.5px solid ${theme?.panelBorder || "rgba(140,80,180,0.4)"}`
+                      : `1.5px solid ${NEUTRAL.border}`,
+                  boxShadow: isTargeting
+                    ? `inset 0 0 20px ${OVERLAY.white03}, 0 0 15px ${theme?.panelBorder || "rgba(140,80,180,0.4)"}`
+                    : canCast
+                      ? `inset 0 0 12px ${OVERLAY.white03}`
+                      : "none",
+                  ...(isTargeting ? { ringColor: theme?.panelBorder } : {}),
                   opacity: canCast ? 1 : 0.5,
                   cursor: canCast ? "pointer" : "not-allowed",
                 }}
@@ -466,7 +476,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                     border: "1px solid rgba(250,204,21,0.18)",
                   }}
                 >
-                  Lv {spellLevel}
+                  Lv {spellLevel + 1}
                 </div>
                 <div className="flex flex-col items-center justify-center h-full min-w-[28px] sm:min-w-[48px]">
                   <SpellSprite type={spell.type} size={sizes.heroIcon > 36 ? 28 : 20} />
@@ -522,7 +532,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       {theme.icon}
                       <span className={`font-bold text-sm ${theme.accentColor}`}>{spellData.name}</span>
                       <span className="ml-auto text-[10px] font-bold px-1.5 py-px rounded border border-yellow-500/20 bg-yellow-800/20 text-yellow-200">
-                        LV {spellLevel}/{MAX_SPELL_UPGRADE_LEVEL}
+                        LV {spellLevel + 1}/{MAX_SPELL_UPGRADE_LEVEL + 1}
                       </span>
                     </div>
                     <div className="absolute bottom-0 left-3 right-3 h-px" style={{ background: `linear-gradient(90deg, transparent, ${OVERLAY.white10} 50%, transparent)` }} />

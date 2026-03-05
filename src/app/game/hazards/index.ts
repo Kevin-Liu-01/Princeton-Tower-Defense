@@ -1,7 +1,7 @@
 // Princeton Tower Defense - Hazard Game Logic Module
 // Handles calculation of hazard effects on enemies
 
-import type { Position, Enemy, MapHazard, Particle } from "../../types";
+import type { Position, Enemy, MapHazard, Particle, SlowSourceType } from "../../types";
 import { gridToWorld, distance } from "../../utils";
 import { TILE_SIZE } from "../../constants";
 
@@ -13,6 +13,7 @@ export interface HazardEffect {
   poisonDamage: number;
   lavaDamage: number;
   environmentalSlow: number;
+  environmentalSlowSource?: SlowSourceType;
   environmentalSpeed: number;
   fireParticlePos?: Position;
 }
@@ -125,7 +126,10 @@ function calculateSingleHazardEffect(
       const distFactor = 1 - dist / hazard.radius;
       const drownDps = 4 + distFactor * 5;
       effect.poisonDamage += (drownDps * deltaTime) / 1000;
-      effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.38);
+      if (effect.environmentalSlow < 0.38) {
+        effect.environmentalSlow = 0.38;
+        effect.environmentalSlowSource = "deep_water";
+      }
       if (Math.random() < 0.08) {
         particles.push({ pos: hazard.worldPos, type: "ice", count: 2 });
       }
@@ -135,7 +139,15 @@ function calculateSingleHazardEffect(
       const distFactor = 1 - dist / hazard.radius;
       const crushDps = 8 + distFactor * 12;
       effect.poisonDamage += (crushDps * deltaTime) / 1000;
-      effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.55);
+      if (effect.environmentalSlow < 0.55) {
+        effect.environmentalSlow = 0.55;
+        effect.environmentalSlowSource = "maelstrom";
+      }
+      // Occasional lightning strike inside the maelstrom
+      if (Math.random() < 0.04) {
+        effect.lavaDamage += 12;
+        particles.push({ pos: enemyPos, type: "spark", count: 5 });
+      }
       if (Math.random() < 0.12) {
         particles.push({ pos: hazard.worldPos, type: "ice", count: 3 });
       }
@@ -149,7 +161,10 @@ function calculateSingleHazardEffect(
       }
       break;
     case "quicksand":
-      effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.5);
+      if (effect.environmentalSlow < 0.5) {
+        effect.environmentalSlow = 0.5;
+        effect.environmentalSlowSource = "quicksand";
+      }
       if (Math.random() < 0.1) {
         particles.push({ pos: hazard.worldPos, type: "smoke", count: 3 });
       }
@@ -171,7 +186,11 @@ function calculateSingleHazardEffect(
       const coreFactor = 0.35 + distFactor * 0.65;
       const spikeDps = (6 + intensity * 24) * coreFactor;
       effect.poisonDamage += (spikeDps * deltaTime) / 1000;
-      effect.environmentalSlow = Math.max(effect.environmentalSlow, 0.12 + intensity * 0.33);
+      const iceSpikeSlow = 0.12 + intensity * 0.33;
+      if (effect.environmentalSlow < iceSpikeSlow) {
+        effect.environmentalSlow = iceSpikeSlow;
+        effect.environmentalSlowSource = "ice_spikes";
+      }
 
       if (
         hazard.particleBudget &&
@@ -191,6 +210,15 @@ function calculateSingleHazardEffect(
         effect.fireParticlePos = enemyPos;
       }
       break;
+    case "volcano": {
+      // Periodically summons fireballs - less frequent but more damaging than geyser
+      if (Math.random() < 0.055) {
+        effect.lavaDamage += 15;
+        effect.fireParticlePos = enemyPos;
+        particles.push({ pos: enemyPos, type: "fire", count: 8 });
+      }
+      break;
+    }
   }
 
   return effect;
@@ -204,6 +232,7 @@ function createDefaultEffect(): HazardEffect {
     poisonDamage: 0,
     lavaDamage: 0,
     environmentalSlow: 0,
+    environmentalSlowSource: undefined,
     environmentalSpeed: 1,
     fireParticlePos: undefined,
   };
@@ -284,11 +313,18 @@ export function applyHazardEffect(
     damageFlash = 200;
   }
 
+  const newSlowEffect = Math.max(enemy.slowEffect, effect.environmentalSlow);
+  const slowSource =
+    effect.environmentalSlow > enemy.slowEffect && effect.environmentalSlowSource
+      ? effect.environmentalSlowSource
+      : enemy.slowSource;
+
   return {
     ...enemy,
     hp: newHp,
     damageFlash,
-    slowEffect: Math.max(enemy.slowEffect, effect.environmentalSlow),
+    slowEffect: newSlowEffect,
+    slowSource,
     speed: baseSpeed * effect.environmentalSpeed,
     dead: newHp <= 0,
   };
