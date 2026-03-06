@@ -565,6 +565,7 @@ const TOWER_SPRITE_FRAME_THEME: Record<keyof typeof TOWER_DATA, SpriteFrameTheme
   lab: buildThemeFromAccent("#facc15"),
   arch: buildThemeFromAccent("#60a5fa"),
   club: buildThemeFromAccent("#f59e0b"),
+  mortar: buildThemeFromAccent("#fb923c"),
 };
 
 const SPELL_SPRITE_FRAME_THEME: Record<SpellType, SpriteFrameTheme> = {
@@ -1312,6 +1313,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
     lab: { category: "Energy Damage", color: "yellow" },
     arch: { category: "Multi-Target", color: "blue" },
     club: { category: "Economy", color: "amber" },
+    mortar: { category: "Siege AoE", color: "orange" },
   };
 
   return (

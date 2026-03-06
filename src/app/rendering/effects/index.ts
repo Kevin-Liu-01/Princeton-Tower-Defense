@@ -2388,22 +2388,18 @@ export function renderProjectile(
 
   const currentX = proj.from.x + (proj.to.x - proj.from.x) * t;
   const currentY = proj.from.y + (proj.to.y - proj.from.y) * t;
-
-  let arcOffset = 0;
-  if (proj.arcHeight) {
-    arcOffset = Math.sin(t * Math.PI) * proj.arcHeight;
-  }
-
-  const elevationFade = proj.elevation ? proj.elevation * (1 - t) : 0;
-  const currentPos = { x: currentX, y: currentY - arcOffset - elevationFade };
-  const screenPos = worldToScreen(
-    currentPos,
+  const groundScreenPos = worldToScreen(
+    { x: currentX, y: currentY },
     canvasWidth,
     canvasHeight,
     dpr,
     cameraOffset,
     cameraZoom,
   );
+  // Arc and elevation are HEIGHT above the ground — offset screen-Y only
+  const arcOffset = proj.arcHeight ? Math.sin(t * Math.PI) * proj.arcHeight * zoom : 0;
+  const elevationFade = proj.elevation ? proj.elevation * (1 - t) * zoom : 0;
+  const screenPos = { x: groundScreenPos.x, y: groundScreenPos.y - arcOffset - elevationFade };
 
   ctx.save();
 
@@ -2413,19 +2409,17 @@ export function renderProjectile(
     const trailT = Math.max(0, t - i * 0.06);
     const trailX = proj.from.x + (proj.to.x - proj.from.x) * trailT;
     const trailY = proj.from.y + (proj.to.y - proj.from.y) * trailT;
-    let trailArc = 0;
-    if (proj.arcHeight) {
-      trailArc = Math.sin(trailT * Math.PI) * proj.arcHeight;
-    }
-    const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) : 0;
-    const trailPos = worldToScreen(
-      { x: trailX, y: trailY - trailArc - trailElevation },
+    const trailGroundPos = worldToScreen(
+      { x: trailX, y: trailY },
       canvasWidth,
       canvasHeight,
       dpr,
       cameraOffset,
       cameraZoom,
     );
+    const trailArc = proj.arcHeight ? Math.sin(trailT * Math.PI) * proj.arcHeight * zoom : 0;
+    const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) * zoom : 0;
+    const trailPos = { x: trailGroundPos.x, y: trailGroundPos.y - trailArc - trailElevation };
 
     const alpha = 0.35 * (1 - i / trailLength);
     ctx.fillStyle = proj.isFlamethrower

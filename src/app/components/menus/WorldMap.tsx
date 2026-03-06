@@ -1320,51 +1320,63 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     const showBelow = worldLevel.y < 50;
                     const cardYMap = showBelow ? yMap + size + 12 : yMap - size - cardHeight - 12;
                     const cardBottomPx = (cardYMap + cardHeight) * scaleY;
-                    const gap = 8;
-                    const buttonW = 150;
+                    const buttonW = 130;
                     const buttonH = 44;
+                    const shieldPad = 12;
                     const left = Math.max(8, Math.min(canvasDisplaySize.w - buttonW - 8, levelCenterX - buttonW / 2));
-                    const top = cardBottomPx + gap;
+                    const top = cardBottomPx;
                     const handleBattleClick = (e: React.MouseEvent) => {
                       e.stopPropagation();
                       if (canStart) startGame();
                       else onStartWithRandomLoadout?.();
                     };
                     return (
-                      <button
-                        type="button"
-                        onClick={handleBattleClick}
-                        className="absolute z-30 pointer-events-auto py-2 rounded-lg font-bold text-sm transition-all overflow-hidden group"
+                      <div
+                        className="absolute z-30 pointer-events-auto"
                         style={{
-                          left: `${left}px`,
-                          top: `${top}px`,
-                          width: `${buttonW}px`,
-                          height: `${buttonH}px`,
-                          ...(canStart
-                            ? {
-                              background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
-                              border: `2px solid ${GOLD.accentBorder50}`,
-                              boxShadow: `0 0 12px ${GOLD.accentGlow10}`,
-                              color: "rgba(253, 230, 138, 0.9)",
-                              textShadow: "0 1px 3px rgba(0,0,0,0.5)",
-                            }
-                            : {
-                              background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                              border: `1.5px solid ${GOLD.border35}`,
-                              boxShadow: `inset 0 0 8px ${GOLD.glow04}`,
-                              color: "rgb(252,211,77)",
-                            }),
+                          left: `${left - shieldPad}px`,
+                          top: `${top - shieldPad}px`,
+                          width: `${buttonW + shieldPad * 2}px`,
+                          height: `${buttonH + shieldPad * 2}px`,
                         }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
                       >
-                        {canStart && (
-                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
-                        )}
-                        <span className="flex items-center text-xs justify-center gap-1.5 relative z-10">
-                          <Swords size={16} />
-                          {canStart ? "BATTLE" : "Random Loadout"}
-                          {canStart && <Play size={14} />}
-                        </span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={handleBattleClick}
+                          className="absolute rounded-b-lg font-bold text-sm transition-all overflow-hidden group"
+                          style={{
+                            left: `${shieldPad}px`,
+                            top: `${shieldPad}px`,
+                            width: `${buttonW}px`,
+                            height: `${buttonH}px`,
+                            ...(canStart
+                              ? {
+                                background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
+                                border: `2px solid ${GOLD.accentBorder50}`,
+                                boxShadow: `0 0 12px ${GOLD.accentGlow10}`,
+                                color: "rgba(253, 230, 138, 0.9)",
+                                textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                              }
+                              : {
+                                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                                border: `1.5px solid ${GOLD.border35}`,
+                                boxShadow: `inset 0 0 8px ${GOLD.glow04}`,
+                                color: "rgb(252,211,77)",
+                              }),
+                          }}
+                        >
+                          {canStart && (
+                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
+                          )}
+                          <span className="flex items-center text-xs justify-center gap-1.5 relative z-10">
+                            <Swords size={16} />
+                            {canStart ? "BATTLE" : "Random Loadout"}
+                            {canStart && <Play size={14} />}
+                          </span>
+                        </button>
+                      </div>
                     );
                   })()}
                 </div>

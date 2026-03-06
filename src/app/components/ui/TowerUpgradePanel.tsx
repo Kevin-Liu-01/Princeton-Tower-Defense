@@ -50,6 +50,8 @@ interface TowerUpgradePanelProps {
   upgradeTower: (towerId: string, choice?: "A" | "B") => void;
   sellTower: (towerId: string) => void;
   onClose: () => void;
+  onRetargetMissile?: (towerId: string) => void;
+  onToggleMissileAutoAim?: (towerId: string) => void;
 }
 
 export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
@@ -59,6 +61,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   upgradeTower,
   sellTower,
   onClose,
+  onRetargetMissile,
+  onToggleMissileAutoAim,
 }) => {
   const sizes = useResponsiveSizes();
   const towerData = TOWER_DATA[tower.type];
@@ -758,6 +762,44 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             <div className="bg-blue-950/40 p-1.5 rounded-lg border border-blue-800/40">
               <div className="text-blue-300 text-center">{towerData.upgrades.B.effect}</div>
             </div>
+          </div>
+        )}
+
+        {/* Missile Battery controls (4A): Auto-Aim toggle + Retarget side by side */}
+        {tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && (
+          <div className="flex gap-1.5 mb-1">
+            {onToggleMissileAutoAim && (
+              <button
+                onClick={() => onToggleMissileAutoAim(tower.id)}
+                className="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 text-[10px]"
+                style={{
+                  background: tower.mortarAutoAim
+                    ? `linear-gradient(180deg, #1a3a1a 0%, #0a200a 100%)`
+                    : `linear-gradient(180deg, #3a2a1a 0%, #1a1008 100%)`,
+                  border: tower.mortarAutoAim
+                    ? "1px solid rgba(0, 200, 100, 0.55)"
+                    : "1px solid rgba(150, 100, 50, 0.4)",
+                  color: tower.mortarAutoAim ? "#66ffaa" : "#aa9977",
+                }}
+              >
+                <Focus size={12} />
+                <span>{tower.mortarAutoAim ? "Auto-Aim" : "Manual"}</span>
+              </button>
+            )}
+            {onRetargetMissile && !tower.mortarAutoAim && (
+              <button
+                onClick={() => onRetargetMissile(tower.id)}
+                className="flex-1 py-1.5 rounded-lg transition-all flex items-center justify-center gap-1 text-[10px]"
+                style={{
+                  background: `linear-gradient(180deg, #4a2000 0%, #2a1000 100%)`,
+                  border: "1px solid rgba(255, 100, 0, 0.45)",
+                  color: "#ffaa66",
+                }}
+              >
+                <Crosshair size={12} />
+                <span>Retarget</span>
+              </button>
+            )}
           </div>
         )}
 

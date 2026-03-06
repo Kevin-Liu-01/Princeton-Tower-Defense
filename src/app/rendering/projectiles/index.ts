@@ -108,21 +108,22 @@ function drawTrail(
     const trailT = Math.max(0, t - i * 0.05);
     const trailX = proj.from.x + (proj.to.x - proj.from.x) * trailT;
     const trailY = proj.from.y + (proj.to.y - proj.from.y) * trailT;
-    const trailArc = proj.arcHeight ? Math.sin(trailT * Math.PI) * proj.arcHeight : 0;
-    const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) : 0;
-    const trailPos = worldToScreen(
-      { x: trailX, y: trailY - trailArc - trailElevation },
+    const trailGroundPos = worldToScreen(
+      { x: trailX, y: trailY },
       canvasWidth,
       canvasHeight,
       dpr,
       cameraOffset,
       cameraZoom,
     );
+    // Arc and elevation are HEIGHT above ground — apply as screen-Y offset
+    const trailArc = proj.arcHeight ? Math.sin(trailT * Math.PI) * proj.arcHeight * cameraZoom : 0;
+    const trailElevation = proj.elevation ? proj.elevation * (1 - trailT) * cameraZoom : 0;
     const alpha = 0.35 * (1 - i / (trailLength + 1));
     const size = Math.max(1, (trailSize - i * 0.6) * cameraZoom);
     ctx.fillStyle = colorWithAlpha(trailColor, alpha);
     ctx.beginPath();
-    ctx.arc(trailPos.x, trailPos.y, size, 0, Math.PI * 2);
+    ctx.arc(trailGroundPos.x, trailGroundPos.y - trailArc - trailElevation, size, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -640,6 +641,189 @@ function renderCannonball(
 }
 
 // ============================================================================
+// MORTAR SHELL - Heavy explosive with fire trail and tumble
+// ============================================================================
+function renderMortarShell(
+  ctx: CanvasRenderingContext2D,
+  zoom: number,
+  progress: number,
+  time: number,
+) {
+  const tumble = progress * Math.PI * 2;
+  const size = 7 * zoom;
+
+  ctx.save();
+  ctx.rotate(tumble * 0.5);
+
+  // Fiery trail (larger than cannonball)
+  const trailLen = 10 * zoom;
+  for (let i = 0; i < 3; i++) {
+    const tOff = -trailLen + i * 3 * zoom + Math.sin(time * 10 + i) * zoom;
+    const tSize = (6 - i * 1.5) * zoom;
+    const tAlpha = 0.6 - i * 0.15;
+    const tGrad = ctx.createRadialGradient(tOff, 0, 0, tOff, 0, tSize);
+    tGrad.addColorStop(0, `rgba(255, 200, 60, ${tAlpha})`);
+    tGrad.addColorStop(0.5, `rgba(255, 120, 20, ${tAlpha * 0.6})`);
+    tGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+    ctx.fillStyle = tGrad;
+    ctx.beginPath();
+    ctx.arc(tOff, Math.sin(time * 8 + i) * zoom, tSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Shell body - dark iron with copper bands
+  const shellGrad = ctx.createRadialGradient(-1 * zoom, -1 * zoom, 0, 0, 0, size);
+  shellGrad.addColorStop(0, "#7a6a5a");
+  shellGrad.addColorStop(0.4, "#4a3a2a");
+  shellGrad.addColorStop(1, "#2a1a0a");
+  ctx.fillStyle = shellGrad;
+
+  // Elongated shell shape
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size * 1.2, size * 0.8, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Copper band
+  ctx.strokeStyle = "#c9a227";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Nose highlight
+  ctx.fillStyle = "rgba(255, 200, 150, 0.3)";
+  ctx.beginPath();
+  ctx.ellipse(-2 * zoom, -1.5 * zoom, 2 * zoom, 1.5 * zoom, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ============================================================================
+// MISSILE - Sleek rocket with smoke trail
+// ============================================================================
+function renderMissile(
+  ctx: CanvasRenderingContext2D,
+  zoom: number,
+  progress: number,
+  time: number,
+) {
+  const size = 5 * zoom;
+
+  // Smoke trail
+  for (let i = 0; i < 4; i++) {
+    const tOff = -(4 + i * 3) * zoom;
+    const tSize = (2 + i * 1.5) * zoom;
+    const tAlpha = 0.3 - i * 0.06;
+    ctx.fillStyle = `rgba(180, 180, 180, ${tAlpha})`;
+    ctx.beginPath();
+    ctx.arc(tOff, Math.sin(time * 6 + i * 2) * zoom * 0.5, tSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Exhaust flame
+  const exhaustGrad = ctx.createRadialGradient(-6 * zoom, 0, 0, -6 * zoom, 0, 5 * zoom);
+  exhaustGrad.addColorStop(0, `rgba(255, 255, 150, ${0.5 + Math.sin(time * 15) * 0.2})`);
+  exhaustGrad.addColorStop(0.5, "rgba(255, 100, 0, 0.4)");
+  exhaustGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
+  ctx.fillStyle = exhaustGrad;
+  ctx.beginPath();
+  ctx.arc(-6 * zoom, 0, 5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Missile body
+  const bodyGrad = ctx.createLinearGradient(0, -size, 0, size);
+  bodyGrad.addColorStop(0, "#888");
+  bodyGrad.addColorStop(0.3, "#bbb");
+  bodyGrad.addColorStop(0.7, "#777");
+  bodyGrad.addColorStop(1, "#555");
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.moveTo(size * 1.8, 0);
+  ctx.lineTo(size * 0.5, -size * 0.6);
+  ctx.lineTo(-size * 1.2, -size * 0.5);
+  ctx.lineTo(-size * 1.2, size * 0.5);
+  ctx.lineTo(size * 0.5, size * 0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  // Red nose cone
+  ctx.fillStyle = "#cc1100";
+  ctx.beginPath();
+  ctx.moveTo(size * 1.8, 0);
+  ctx.lineTo(size * 0.8, -size * 0.4);
+  ctx.lineTo(size * 0.8, size * 0.4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Fins
+  ctx.fillStyle = "#666";
+  ctx.beginPath();
+  ctx.moveTo(-size * 1.0, -size * 0.5);
+  ctx.lineTo(-size * 1.4, -size * 1.0);
+  ctx.lineTo(-size * 1.2, -size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-size * 1.0, size * 0.5);
+  ctx.lineTo(-size * 1.4, size * 1.0);
+  ctx.lineTo(-size * 1.2, size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  void progress;
+}
+
+// ============================================================================
+// EMBER - Glowing burning glob
+// ============================================================================
+function renderEmber(
+  ctx: CanvasRenderingContext2D,
+  zoom: number,
+  progress: number,
+  time: number,
+) {
+  const size = 5 * zoom;
+  const tumble = progress * Math.PI * 4;
+
+  ctx.save();
+  ctx.rotate(tumble);
+
+  // Glow halo
+  const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 2);
+  glowGrad.addColorStop(0, `rgba(255, 150, 30, ${0.4 + Math.sin(time * 8) * 0.15})`);
+  glowGrad.addColorStop(0.5, "rgba(255, 80, 0, 0.2)");
+  glowGrad.addColorStop(1, "rgba(200, 30, 0, 0)");
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ember body - irregular hot rock
+  const emberGrad = ctx.createRadialGradient(-zoom, -zoom, 0, 0, 0, size);
+  emberGrad.addColorStop(0, "#ffcc44");
+  emberGrad.addColorStop(0.4, "#ff6600");
+  emberGrad.addColorStop(0.8, "#cc3300");
+  emberGrad.addColorStop(1, "#661100");
+  ctx.fillStyle = emberGrad;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.8, 0);
+  ctx.quadraticCurveTo(size * 0.6, -size * 0.7, 0, -size * 0.9);
+  ctx.quadraticCurveTo(-size * 0.8, -size * 0.5, -size * 0.9, 0);
+  ctx.quadraticCurveTo(-size * 0.6, size * 0.8, 0, size * 0.7);
+  ctx.quadraticCurveTo(size * 0.7, size * 0.5, size * 0.8, 0);
+  ctx.fill();
+
+  // Hot spot
+  ctx.fillStyle = "rgba(255, 255, 200, 0.6)";
+  ctx.beginPath();
+  ctx.arc(-zoom, -zoom, size * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ============================================================================
 // FLAME - Flamethrower stream
 // ============================================================================
 function renderFlame(
@@ -843,23 +1027,21 @@ export function renderProjectile(
   const lowDetail = projectileDensityHint > 140;
   const minimalDetail = projectileDensityHint > 220;
 
-  // Calculate position
+  // Calculate position on ground plane, then apply height as screen-Y offset
   const currentX = proj.from.x + (proj.to.x - proj.from.x) * t;
   const currentY = proj.from.y + (proj.to.y - proj.from.y) * t;
-  let arcOffset = 0;
-  if (proj.arcHeight) {
-    arcOffset = Math.sin(t * Math.PI) * proj.arcHeight;
-  }
-  const elevationFade = proj.elevation ? proj.elevation * (1 - t) : 0;
-  const currentPos = { x: currentX, y: currentY - arcOffset - elevationFade };
-  const screenPos = worldToScreen(
-    currentPos,
+  const groundScreenPos = worldToScreen(
+    { x: currentX, y: currentY },
     canvasWidth,
     canvasHeight,
     dpr,
     cameraOffset,
     cameraZoom
   );
+  // Arc and elevation are HEIGHT above the ground — offset in screen-Y only
+  const arcOffset = proj.arcHeight ? Math.sin(t * Math.PI) * proj.arcHeight * zoom : 0;
+  const elevationFade = proj.elevation ? proj.elevation * (1 - t) * zoom : 0;
+  const screenPos = { x: groundScreenPos.x, y: groundScreenPos.y - arcOffset - elevationFade };
 
   // Get base color - use projectile color if provided, otherwise use type default
   let baseColor: { r: number; g: number; b: number };
@@ -991,7 +1173,19 @@ export function renderProjectile(
     case "cannon":
       renderCannonball(ctx, zoom, t);
       break;
-      
+
+    case "mortarShell":
+      renderMortarShell(ctx, zoom, t, time);
+      break;
+
+    case "missile":
+      renderMissile(ctx, zoom, t, time);
+      break;
+
+    case "ember":
+      renderEmber(ctx, zoom, t, time);
+      break;
+
     case "flame":
       renderFlame(ctx, zoom, time);
       break;

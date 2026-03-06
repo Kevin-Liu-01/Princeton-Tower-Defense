@@ -103,6 +103,10 @@ export const getTowerHitboxRadius = (tower: Tower, zoom: number = 1): number => 
       baseWidth = 56 + level * 6;
       baseHeight = 40 + level * 12;
       break;
+    case "mortar":
+      baseWidth = 34 + level * 4;
+      baseHeight = 20 + level * 8;
+      break;
     default:
       baseWidth = 36 + level * 5;
       baseHeight = 24 + level * 10;

@@ -6171,7 +6171,7 @@ function drawEliteTroop(
   ctx.closePath();
   ctx.fill();
 
-  // Elite kite shield with layered crest.
+  // Elite ornate kite shield with layered crest.
   const eliteShieldGlow = 0.68 + Math.sin(time * 4.2) * 0.32;
   ctx.save();
   ctx.translate(
@@ -6179,37 +6179,186 @@ function drawEliteTroop(
     y + size * 0.04 + breathe * 0.55 + hipBounce * 0.4,
   );
   ctx.rotate(-0.42 + stance * 0.03 - attackDrive * 0.08);
-  const eliteShieldGrad = ctx.createLinearGradient(
-    -size * 0.11,
-    -size * 0.24,
-    size * 0.11,
-    size * 0.2,
-  );
-  eliteShieldGrad.addColorStop(0, "#252b38");
-  eliteShieldGrad.addColorStop(0.52, "#4b5f7f");
-  eliteShieldGrad.addColorStop(1, "#202737");
-  ctx.fillStyle = eliteShieldGrad;
+
+  // Shield shadow
+  ctx.fillStyle = "rgba(0,0,0,0.32)";
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.27);
-  ctx.lineTo(-size * 0.15, -size * 0.16);
-  ctx.lineTo(-size * 0.12, size * 0.19);
-  ctx.lineTo(0, size * 0.26);
-  ctx.lineTo(size * 0.12, size * 0.19);
-  ctx.lineTo(size * 0.15, -size * 0.16);
+  ctx.moveTo(size * 0.02, -size * 0.27);
+  ctx.lineTo(-size * 0.16, -size * 0.15);
+  ctx.lineTo(-size * 0.14, size * 0.2);
+  ctx.lineTo(size * 0.02, size * 0.29);
+  ctx.lineTo(size * 0.17, size * 0.2);
+  ctx.lineTo(size * 0.19, -size * 0.15);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#d0b37a";
-  ctx.lineWidth = 1.8 * zoom;
+
+  // Shield outer body (dark steel)
+  const shieldOuterGrad = ctx.createLinearGradient(
+    -size * 0.17,
+    0,
+    size * 0.17,
+    0,
+  );
+  shieldOuterGrad.addColorStop(0, "#1e2430");
+  shieldOuterGrad.addColorStop(0.3, "#3a4460");
+  shieldOuterGrad.addColorStop(0.5, "#4a5672");
+  shieldOuterGrad.addColorStop(0.7, "#3a4460");
+  shieldOuterGrad.addColorStop(1, "#1e2430");
+  ctx.fillStyle = shieldOuterGrad;
   ctx.beginPath();
-  ctx.moveTo(0, -size * 0.19);
-  ctx.lineTo(0, size * 0.18);
-  ctx.moveTo(-size * 0.065, -size * 0.015);
-  ctx.lineTo(size * 0.065, -size * 0.015);
-  ctx.stroke();
-  ctx.fillStyle = `rgba(255, 157, 62, ${0.34 + eliteShieldGlow * 0.25})`;
-  ctx.beginPath();
-  ctx.arc(0, size * 0.03, size * 0.022, 0, Math.PI * 2);
+  ctx.moveTo(0, -size * 0.29);
+  ctx.lineTo(-size * 0.17, -size * 0.17);
+  ctx.lineTo(-size * 0.15, size * 0.21);
+  ctx.lineTo(0, size * 0.29);
+  ctx.lineTo(size * 0.15, size * 0.21);
+  ctx.lineTo(size * 0.17, -size * 0.17);
+  ctx.closePath();
   ctx.fill();
+
+  // Inner field (deep navy with vertical gradient)
+  const shieldFieldGrad = ctx.createLinearGradient(
+    0,
+    -size * 0.22,
+    0,
+    size * 0.22,
+  );
+  shieldFieldGrad.addColorStop(0, "#2a3352");
+  shieldFieldGrad.addColorStop(0.5, "#1e2744");
+  shieldFieldGrad.addColorStop(1, "#161d36");
+  ctx.fillStyle = shieldFieldGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.22);
+  ctx.lineTo(-size * 0.12, -size * 0.12);
+  ctx.lineTo(-size * 0.1, size * 0.16);
+  ctx.lineTo(0, size * 0.22);
+  ctx.lineTo(size * 0.1, size * 0.16);
+  ctx.lineTo(size * 0.12, -size * 0.12);
+  ctx.closePath();
+  ctx.fill();
+
+  // Filigree engravings (gold swirls)
+  ctx.strokeStyle = "rgba(208, 179, 122, 0.5)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.07, -size * 0.13);
+  ctx.quadraticCurveTo(-size * 0.09, -size * 0.06, -size * 0.04, -size * 0.01);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.07, -size * 0.13);
+  ctx.quadraticCurveTo(size * 0.09, -size * 0.06, size * 0.04, -size * 0.01);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.04, size * 0.08);
+  ctx.quadraticCurveTo(-size * 0.07, size * 0.13, -size * 0.02, size * 0.16);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.04, size * 0.08);
+  ctx.quadraticCurveTo(size * 0.07, size * 0.13, size * 0.02, size * 0.16);
+  ctx.stroke();
+
+  // Cross emblem (thicker, with glow)
+  ctx.strokeStyle = `rgba(220, 195, 130, ${0.7 + eliteShieldGlow * 0.2})`;
+  ctx.lineWidth = 2.4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.18);
+  ctx.lineTo(0, size * 0.17);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.075, -size * 0.01);
+  ctx.lineTo(size * 0.075, -size * 0.01);
+  ctx.stroke();
+  // Cross glow layer
+  ctx.strokeStyle = `rgba(255, 220, 150, ${0.15 + eliteShieldGlow * 0.12})`;
+  ctx.lineWidth = 4.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.16);
+  ctx.lineTo(0, size * 0.15);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.065, -size * 0.01);
+  ctx.lineTo(size * 0.065, -size * 0.01);
+  ctx.stroke();
+
+  // Outer gold trim border (double line)
+  ctx.strokeStyle = "#d4b86a";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.29);
+  ctx.lineTo(-size * 0.17, -size * 0.17);
+  ctx.lineTo(-size * 0.15, size * 0.21);
+  ctx.lineTo(0, size * 0.29);
+  ctx.lineTo(size * 0.15, size * 0.21);
+  ctx.lineTo(size * 0.17, -size * 0.17);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.strokeStyle = "#a38940";
+  ctx.lineWidth = 1.0 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.26);
+  ctx.lineTo(-size * 0.14, -size * 0.15);
+  ctx.lineTo(-size * 0.12, size * 0.18);
+  ctx.lineTo(0, size * 0.25);
+  ctx.lineTo(size * 0.12, size * 0.18);
+  ctx.lineTo(size * 0.14, -size * 0.15);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Central boss (metal dome with highlight)
+  const bossGrad = ctx.createRadialGradient(
+    -size * 0.008,
+    -size * 0.02,
+    size * 0.005,
+    0,
+    0,
+    size * 0.04,
+  );
+  bossGrad.addColorStop(0, "#f0e8d0");
+  bossGrad.addColorStop(0.4, "#c8a848");
+  bossGrad.addColorStop(1, "#7a6530");
+  ctx.fillStyle = bossGrad;
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.01, size * 0.035, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#d4b86a";
+  ctx.lineWidth = 1.0 * zoom;
+  ctx.stroke();
+
+  // Corner rivets
+  const rivetPositions = [
+    [0, -size * 0.25],
+    [-size * 0.13, -size * 0.04],
+    [size * 0.13, -size * 0.04],
+    [-size * 0.08, size * 0.16],
+    [size * 0.08, size * 0.16],
+  ];
+  for (const [rx, ry] of rivetPositions) {
+    ctx.fillStyle = "#c8b060";
+    ctx.beginPath();
+    ctx.arc(rx, ry, size * 0.012, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e8d898";
+    ctx.beginPath();
+    ctx.arc(rx - size * 0.003, ry - size * 0.003, size * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Glowing center gem
+  ctx.shadowColor = "rgba(255, 157, 62, 0.6)";
+  ctx.shadowBlur = 6 * zoom * eliteShieldGlow;
+  ctx.fillStyle = `rgba(255, 157, 62, ${0.6 + eliteShieldGlow * 0.35})`;
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.01, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+
+  // Shield edge highlight (specular)
+  ctx.strokeStyle = "rgba(180, 200, 230, 0.25)";
+  ctx.lineWidth = 1.0 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.01, -size * 0.28);
+  ctx.lineTo(-size * 0.16, -size * 0.16);
+  ctx.stroke();
   ctx.restore();
 
   // Extra elite accessories: pauldron tassels and chained relic seals.
@@ -6271,6 +6420,33 @@ function drawEliteTroop(
     Math.sin(time * 6 + attackPhase * Math.PI * 1.6) *
     size *
     (isAttacking ? 0.05 : 0.03);
+
+  // Halberd shaft (drawn first so blade elements render on top)
+  const shaftGrad = ctx.createLinearGradient(
+    -size * 0.03,
+    0,
+    size * 0.03,
+    0,
+  );
+  shaftGrad.addColorStop(0, "#3e2510");
+  shaftGrad.addColorStop(0.3, "#6b4422");
+  shaftGrad.addColorStop(0.55, "#7d5530");
+  shaftGrad.addColorStop(0.8, "#5a3a1b");
+  shaftGrad.addColorStop(1, "#3a2212");
+  ctx.fillStyle = shaftGrad;
+  ctx.fillRect(-size * 0.028, -size * 0.53, size * 0.056, size * 0.88);
+  // Wood grain highlight
+  ctx.fillStyle = "rgba(160, 120, 65, 0.22)";
+  ctx.fillRect(-size * 0.008, -size * 0.50, size * 0.016, size * 0.82);
+  // Metal grip bands
+  const bandColor = "#9a8a60";
+  const bandHighlight = "#c4b47a";
+  for (const bandY of [-size * 0.08, size * 0.1, size * 0.28]) {
+    ctx.fillStyle = bandColor;
+    ctx.fillRect(-size * 0.035, bandY, size * 0.07, size * 0.028);
+    ctx.fillStyle = bandHighlight;
+    ctx.fillRect(-size * 0.035, bandY, size * 0.07, size * 0.008);
+  }
 
   if (isAttacking && Math.abs(halberdSwing) > 0.25) {
     ctx.strokeStyle = `rgba(255, 194, 110, ${0.24 + attackDrive * 0.34})`;

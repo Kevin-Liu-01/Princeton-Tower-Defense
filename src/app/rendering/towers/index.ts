@@ -18,8 +18,11 @@ import {
   computeHexSideNormals,
   sortSidesByDepth,
   drawHexCap,
+  drawHexBand,
   scaleVerts,
+  drawOrganicBlobAt,
   type IsoOffFn,
+  type Pt,
 } from "../helpers";
 
 function drawIsometricPrism(
@@ -2289,6 +2292,10 @@ export function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
       const baseD = 44 + level * 5;
       return { w: baseW + 22, d: baseD + 34 };
     }
+    case "mortar": {
+      const mBase = 38 + level * 5;
+      return { w: mBase + 24, d: mBase + 22 };
+    }
     default:
       return { w: 60, d: 60 };
   }
@@ -2322,6 +2329,9 @@ function drawGroundTransition(
   // Scale element counts proportionally (reference: 60-unit foundation)
   const detailScale = Math.max(0.6, Math.min(1.6, (foundation.w + foundation.d) * 0.5 / 60));
 
+  // Stable seed per tower for organic terrain shape
+  const blobSeed = selectedMap.charCodeAt(0) + tower.pos.x * 73 + tower.pos.y * 137;
+
   ctx.save();
 
   // === Outer excavation ring — disturbed terrain ===
@@ -2330,12 +2340,11 @@ function drawGroundTransition(
   outerGrad.addColorStop(0.5, palette.outerDirt);
   outerGrad.addColorStop(1, regionTheme.ground[1]);
   ctx.fillStyle = outerGrad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, outerW, outerH, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, cx, cy, outerW, outerH, blobSeed, 0.15);
   ctx.fill();
 
-  // Edge roughness — irregular clumps breaking the clean ellipse
-  const clumpSeed = selectedMap.charCodeAt(0) + tower.pos.x * 73 + tower.pos.y * 137;
+  // Edge roughness — irregular clumps breaking the organic edge
+  const clumpSeed = blobSeed;
   const numClumps = Math.floor(12 * detailScale);
   for (let i = 0; i < numClumps; i++) {
     const angle = (i / numClumps) * Math.PI * 2 + (clumpSeed % 7) * 0.3;
@@ -2354,8 +2363,7 @@ function drawGroundTransition(
   midGrad.addColorStop(0, palette.innerDirt);
   midGrad.addColorStop(1, palette.outerDirt);
   ctx.fillStyle = midGrad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, midW, midH, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, cx, cy, midW, midH, blobSeed + 17.3, 0.12);
   ctx.fill();
 
   // Excavation score marks — concentric arcs showing dig patterns
@@ -2379,8 +2387,7 @@ function drawGroundTransition(
   innerGrad.addColorStop(0.7, palette.innerDirt);
   innerGrad.addColorStop(1, palette.outerDirt);
   ctx.fillStyle = innerGrad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, innerW, innerH, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, cx, cy, innerW, innerH, blobSeed + 41.7, 0.10);
   ctx.fill();
 
   // === Rubble and debris ring (between middle and inner) ===
@@ -2587,9 +2594,2900 @@ function drawGroundTransition(
   // === Accent glow ring — subtle regional color at excavation border ===
   ctx.strokeStyle = palette.accentGlow;
   ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, midW * 1.02, midH * 1.02, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, cx, cy, midW * 1.02, midH * 1.02, blobSeed + 17.3, 0.12);
   ctx.stroke();
+
+  ctx.restore();
+}
+
+// ============================================================================
+// MORTAR TOWER - Barrel-dominant artillery emplacement
+// Foundation = fortified hex-prism ammunition depot
+// ============================================================================
+function renderMortarTower(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  tower: Tower,
+  zoom: number,
+  time: number,
+  colors: { base: string; dark: string; light: string; accent: string },
+) {
+  void colors;
+  ctx.save();
+  const level = tower.level;
+  const isMissile = level === 4 && tower.upgrade === "A";
+  const isEmber = level === 4 && tower.upgrade === "B";
+  const baseW = 38 + level * 5;
+  const depotH = (22 + level * 10) * 0.35;
+  const rot = tower.rotation || 0;
+  const cosR = Math.cos(rot);
+  const sinR = Math.sin(rot);
+  const hexSides = 8;
+  const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
+
+  const timeSinceFire = Date.now() - tower.lastAttack;
+  const recoilDur = 600;
+  let recoilBase = 0, recoilMid = 0, recoilTip = 0;
+  if (timeSinceFire < recoilDur) {
+    const t = timeSinceFire / recoilDur;
+    recoilBase = t < 0.15 ? (t / 0.15) * 3 * zoom : 3 * zoom * Math.pow(1 - (t - 0.15) / 0.85, 2);
+    recoilMid  = t < 0.1  ? (t / 0.1)  * 6 * zoom : 6 * zoom * Math.pow(1 - (t - 0.1)  / 0.9, 1.8);
+    recoilTip  = t < 0.06 ? (t / 0.06) * 14 * zoom : 14 * zoom * Math.pow(1 - (t - 0.06) / 0.94, 1.5);
+  }
+
+  // ========== GROUND SHADOW ==========
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.beginPath();
+  ctx.ellipse(screenPos.x, screenPos.y + 10 * zoom,
+    baseW * 0.65 * zoom, baseW * 0.3 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ========== HEX-PRISM FOUNDATION WALL (sandbag replacement) ==========
+  const wallR = (baseW + 12) * 0.5 * zoom;
+  const wallH = 6 * zoom;
+  const wallBaseY = screenPos.y + 6 * zoom;
+  const wallVerts = generateIsoHexVertices(isoOff, wallR, hexSides);
+  const wallNormals = computeHexSideNormals(0, hexSides);
+  const wallSorted = sortSidesByDepth(wallNormals);
+  const wallBot: Pt = { x: screenPos.x, y: wallBaseY };
+  const wallTop: Pt = { x: screenPos.x, y: wallBaseY - wallH };
+
+  for (const i of wallSorted) {
+    const ni = (i + 1) % hexSides;
+    const n = wallNormals[i];
+    const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+    // Level-dependent wall material
+    let r: number, g: number, b: number;
+    if (level >= 3) {
+      r = Math.floor(60 + bright * 40); g = Math.floor(60 + bright * 38); b = Math.floor(68 + bright * 30);
+    } else if (level >= 2) {
+      r = Math.floor(70 + bright * 45); g = Math.floor(65 + bright * 40); b = Math.floor(55 + bright * 32);
+    } else {
+      r = Math.floor(90 + bright * 50); g = Math.floor(80 + bright * 40); b = Math.floor(60 + bright * 30);
+    }
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.beginPath();
+    ctx.moveTo(wallBot.x + wallVerts[i].x, wallBot.y + wallVerts[i].y);
+    ctx.lineTo(wallBot.x + wallVerts[ni].x, wallBot.y + wallVerts[ni].y);
+    ctx.lineTo(wallTop.x + wallVerts[ni].x, wallTop.y + wallVerts[ni].y);
+    ctx.lineTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+
+    if (n < -0.3) continue;
+    if (level === 1) {
+      // L1: sandbag texture
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 0.5 * zoom;
+      const midY = (wallBot.y + wallTop.y) * 0.5;
+      const mx1 = (wallVerts[i].x + wallVerts[ni].x) * 0.33;
+      const my1 = (wallVerts[i].y + wallVerts[ni].y) * 0.33;
+      ctx.beginPath();
+      ctx.moveTo(wallBot.x + mx1, wallBot.y + my1);
+      ctx.lineTo(wallTop.x + mx1, midY + my1 * 0.5);
+      ctx.stroke();
+    } else if (level === 2) {
+      // L2: metal plate rivets
+      ctx.fillStyle = `rgba(120,120,130,${0.3 + bright * 0.3})`;
+      const mx = (wallVerts[i].x + wallVerts[ni].x) * 0.5;
+      const my = (wallVerts[i].y + wallVerts[ni].y) * 0.5;
+      ctx.beginPath();
+      ctx.arc(wallTop.x + mx, wallTop.y + my + 1 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(wallBot.x + mx, wallBot.y + my - 1 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // L3+: armored plating with gold rivet accents
+      ctx.strokeStyle = `rgba(201,162,39,${0.15 + bright * 0.1})`;
+      ctx.lineWidth = 0.4 * zoom;
+      const mx = (wallVerts[i].x + wallVerts[ni].x) * 0.5;
+      const my = (wallVerts[i].y + wallVerts[ni].y) * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(wallBot.x + mx, wallBot.y + my);
+      ctx.lineTo(wallTop.x + mx, wallTop.y + my);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(201,162,39,${0.45 + bright * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(wallTop.x + wallVerts[i].x * 0.98, wallTop.y + wallVerts[i].y * 0.98 + 1 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  const wallCapColor = level >= 3 ? "#6a6a72" : level >= 2 ? "#7a7a72" : "#9a8a70";
+  drawHexCap(ctx, wallTop, wallVerts, wallCapColor, "rgba(0,0,0,0.1)", 0.6 * zoom);
+
+  // ========== HEX-PRISM CONCRETE PLATFORM ==========
+  const platR = (baseW + 4) * 0.48 * zoom;
+  const platH = 5 * zoom;
+  const platBaseY = wallBaseY - wallH + 1 * zoom;
+  const platVerts = generateIsoHexVertices(isoOff, platR, hexSides);
+  const platNormals = computeHexSideNormals(0, hexSides);
+  const platSorted = sortSidesByDepth(platNormals);
+  const platBot: Pt = { x: screenPos.x, y: platBaseY };
+  const platTop: Pt = { x: screenPos.x, y: platBaseY - platH };
+
+  for (const i of platSorted) {
+    const ni = (i + 1) % hexSides;
+    const n = platNormals[i];
+    const bright = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.32));
+    ctx.fillStyle = `rgb(${Math.floor(50 + bright * 30)},${Math.floor(50 + bright * 30)},${Math.floor(58 + bright * 24)})`;
+    ctx.beginPath();
+    ctx.moveTo(platBot.x + platVerts[i].x, platBot.y + platVerts[i].y);
+    ctx.lineTo(platBot.x + platVerts[ni].x, platBot.y + platVerts[ni].y);
+    ctx.lineTo(platTop.x + platVerts[ni].x, platTop.y + platVerts[ni].y);
+    ctx.lineTo(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+  drawHexCap(ctx, platTop, platVerts, "#4a4a52", "rgba(0,0,0,0.1)", 0.5 * zoom);
+
+  // ========== ANCHOR BOLTS at hex vertices ==========
+  ctx.fillStyle = "#7a7a82";
+  for (let i = 0; i < hexSides; i++) {
+    if (platNormals[i] < -0.3 && platNormals[(i + hexSides - 1) % hexSides] < -0.3) continue;
+    ctx.beginPath();
+    ctx.arc(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#aaa";
+    ctx.beginPath();
+    ctx.arc(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y, 0.7 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#7a7a82";
+  }
+
+  // ========== SUPPORT STRUTS from hex vertices to ground ==========
+  {
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 2.5 * zoom;
+    for (let i = 0; i < hexSides; i++) {
+      if (wallNormals[i] < -0.7 && wallNormals[(i + hexSides - 1) % hexSides] < -0.7) continue;
+      const vx = wallVerts[i].x;
+      const vy = wallVerts[i].y;
+      // Diagonal brace from wall vertex down
+      ctx.beginPath();
+      ctx.moveTo(wallTop.x + vx, wallTop.y + vy);
+      ctx.lineTo(wallBot.x + vx * 1.12, wallBot.y + vy * 1.12 + 3 * zoom);
+      ctx.stroke();
+    }
+  }
+
+  // ========== CROSS-BRACES between wall faces (level 2+) ==========
+  if (level >= 2) {
+    ctx.strokeStyle = "#5a5a5a";
+    ctx.lineWidth = 1.2 * zoom;
+    for (let i = 0; i < hexSides; i++) {
+      const ni = (i + 1) % hexSides;
+      if (wallNormals[i] < -0.7) continue;
+      const mx1 = (wallVerts[i].x + wallVerts[ni].x) * 0.5;
+      const my1 = (wallVerts[i].y + wallVerts[ni].y) * 0.5;
+      // X-brace on visible faces
+      ctx.beginPath();
+      ctx.moveTo(wallBot.x + wallVerts[i].x, wallBot.y + wallVerts[i].y);
+      ctx.lineTo(wallTop.x + wallVerts[ni].x, wallTop.y + wallVerts[ni].y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(wallBot.x + wallVerts[ni].x, wallBot.y + wallVerts[ni].y);
+      ctx.lineTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
+      ctx.stroke();
+      // Center bolt
+      ctx.fillStyle = "#8a8a8a";
+      ctx.beginPath();
+      ctx.arc(wallBot.x + mx1, (wallBot.y + wallTop.y) * 0.5 + my1, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ========== HEX-PRISM AMMUNITION DEPOT ==========
+  const depotR = (baseW - 4) * 0.45 * zoom;
+  const depotBaseY = platBaseY - platH;
+  const depotVerts = generateIsoHexVertices(isoOff, depotR, hexSides);
+  const depotNormals = computeHexSideNormals(0, hexSides);
+  const depotSorted = sortSidesByDepth(depotNormals);
+  const depotBot: Pt = { x: screenPos.x, y: depotBaseY };
+  const depotTop: Pt = { x: screenPos.x, y: depotBaseY - depotH * zoom };
+  const topY = depotTop.y;
+
+  for (const i of depotSorted) {
+    const ni = (i + 1) % hexSides;
+    const n = depotNormals[i];
+    const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+    let dr: number, dg: number, db: number;
+    if (level >= 3) {
+      dr = Math.floor(48 + bright * 42); dg = Math.floor(42 + bright * 38); db = Math.floor(30 + bright * 24);
+    } else if (level >= 2) {
+      dr = Math.floor(52 + bright * 45); dg = Math.floor(44 + bright * 38); db = Math.floor(28 + bright * 22);
+    } else {
+      dr = Math.floor(58 + bright * 48); dg = Math.floor(48 + bright * 38); db = Math.floor(28 + bright * 22);
+    }
+    ctx.fillStyle = `rgb(${dr},${dg},${db})`;
+    ctx.beginPath();
+    ctx.moveTo(depotBot.x + depotVerts[i].x, depotBot.y + depotVerts[i].y);
+    ctx.lineTo(depotBot.x + depotVerts[ni].x, depotBot.y + depotVerts[ni].y);
+    ctx.lineTo(depotTop.x + depotVerts[ni].x, depotTop.y + depotVerts[ni].y);
+    ctx.lineTo(depotTop.x + depotVerts[i].x, depotTop.y + depotVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+    if (n < -0.2) continue;
+    // Horizontal seam
+    ctx.strokeStyle = "rgba(0,0,0,0.1)";
+    ctx.lineWidth = 0.5 * zoom;
+    const seamY = (depotBot.y + depotTop.y) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(depotBot.x + depotVerts[i].x, seamY + depotVerts[i].y * 0.3);
+    ctx.lineTo(depotBot.x + depotVerts[ni].x, seamY + depotVerts[ni].y * 0.3);
+    ctx.stroke();
+    // L2+: additional detail per depot face
+    if (level >= 2) {
+      const mx = (depotVerts[i].x + depotVerts[ni].x) * 0.5;
+      const my = (depotVerts[i].y + depotVerts[ni].y) * 0.5;
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.beginPath();
+      ctx.moveTo(depotBot.x + mx, depotBot.y + my);
+      ctx.lineTo(depotTop.x + mx, depotTop.y + my);
+      ctx.stroke();
+    }
+    // L3: gold accent rivets on depot
+    if (level >= 3) {
+      ctx.fillStyle = `rgba(201,162,39,${0.35 + bright * 0.25})`;
+      ctx.beginPath();
+      ctx.arc(depotTop.x + depotVerts[i].x * 0.97, depotTop.y + depotVerts[i].y * 0.97 + 1 * zoom, 0.6 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  const depotCapColor = level >= 3 ? "#5a5240" : level >= 2 ? "#605840" : "#6a5a40";
+  drawHexCap(ctx, depotTop, depotVerts, depotCapColor, "rgba(0,0,0,0.1)", 0.5 * zoom);
+
+  // Depot metal band at top
+  drawHexBand(ctx, depotVerts, depotNormals,
+    { x: depotTop.x, y: depotTop.y + 2 * zoom }, depotTop, 1.04,
+    (n) => {
+      const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+      return `rgb(${Math.floor(70 * (0.6 + b * 0.4))},${Math.floor(60 * (0.6 + b * 0.4))},${Math.floor(40 * (0.6 + b * 0.4))})`;
+    }, "rgba(0,0,0,0.15)", 0.4 * zoom, -0.3);
+
+  // ========== HYDRAULIC ACTUATORS (platform to depot, animated) ==========
+  {
+    const hydCount = level >= 3 ? 4 : level >= 2 ? 3 : 2;
+    const hydSpacing = hexSides / hydCount;
+    for (let h = 0; h < hydCount; h++) {
+      const hi = Math.floor(h * hydSpacing + 1) % hexSides;
+      const n = platNormals[hi];
+      if (n < -0.3) continue;
+      const footX = screenPos.x + platVerts[hi].x * 0.95;
+      const footY = platTop.y + platVerts[hi].y * 0.95;
+      const attachX = screenPos.x + depotVerts[hi].x * 0.85;
+      const attachY = depotTop.y + depotVerts[hi].y * 0.85 + 3 * zoom;
+      const midX = (footX + attachX) * 0.5;
+      const midY = (footY + attachY) * 0.55;
+      // Outer cylinder
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(footX, footY);
+      ctx.lineTo(midX, midY);
+      ctx.stroke();
+      // Inner piston rod
+      ctx.strokeStyle = "#9a9aa0";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(midX, midY);
+      ctx.lineTo(attachX, attachY);
+      ctx.stroke();
+      // Pivot bolts
+      ctx.fillStyle = "#7a7a82";
+      ctx.beginPath();
+      ctx.arc(footX, footY, 2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#aaa";
+      ctx.beginPath();
+      ctx.arc(footX, footY, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ========== CABLE CONDUITS along hex edges (level 2+) ==========
+  if (level >= 2) {
+    ctx.strokeStyle = "#3a3a3a";
+    ctx.lineWidth = 1 * zoom;
+    for (let i = 0; i < 3; i++) {
+      const ci = (i * 2 + 1) % hexSides;
+      const cni = (ci + 1) % hexSides;
+      if (platNormals[ci] < -0.7) continue;
+      const startX = platTop.x + platVerts[ci].x * 0.9;
+      const startY = platTop.y + platVerts[ci].y * 0.9;
+      const endX = platTop.x + platVerts[cni].x * 0.9;
+      const endY = platTop.y + platVerts[cni].y * 0.9;
+      const sagY = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo((startX + endX) * 0.5, (startY + endY) * 0.5 + sagY, endX, endY);
+      ctx.stroke();
+    }
+  }
+
+  // ========== RAILING POSTS on hex vertices ==========
+  {
+    const railH = 7 * zoom;
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let i = 0; i < hexSides; i++) {
+      if (wallNormals[i] < -0.7 && wallNormals[(i + hexSides - 1) % hexSides] < -0.7) continue;
+      const px = wallTop.x + wallVerts[i].x * 1.02;
+      const py = wallTop.y + wallVerts[i].y * 1.02;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px, py - railH);
+      ctx.stroke();
+      // Post cap
+      ctx.fillStyle = "#6a5a4a";
+      ctx.beginPath();
+      ctx.arc(px, py - railH, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Rail between posts
+    ctx.strokeStyle = "#6a5a4a";
+    ctx.lineWidth = 1.2 * zoom;
+    for (let i = 0; i < hexSides; i++) {
+      const ni = (i + 1) % hexSides;
+      if (wallNormals[i] < -0.7) continue;
+      ctx.beginPath();
+      ctx.moveTo(wallTop.x + wallVerts[i].x * 1.02, wallTop.y + wallVerts[i].y * 1.02 - railH);
+      ctx.lineTo(wallTop.x + wallVerts[ni].x * 1.02, wallTop.y + wallVerts[ni].y * 1.02 - railH);
+      ctx.stroke();
+      // Mid rail
+      ctx.beginPath();
+      ctx.moveTo(wallTop.x + wallVerts[i].x * 1.02, wallTop.y + wallVerts[i].y * 1.02 - railH * 0.5);
+      ctx.lineTo(wallTop.x + wallVerts[ni].x * 1.02, wallTop.y + wallVerts[ni].y * 1.02 - railH * 0.5);
+      ctx.stroke();
+    }
+  }
+
+  // ========== AMMO CRATES ==========
+  for (let c = 0; c < Math.min(level, 3); c++) {
+    const crateAngle = Math.PI * 0.3 + c * 0.4;
+    const crateR = depotR * 0.7;
+    const crateX = screenPos.x + Math.cos(crateAngle) * crateR;
+    const crateY = depotBot.y + Math.sin(crateAngle) * crateR * ISO_Y_RATIO;
+    drawIsometricPrism(ctx, crateX, crateY, 6 - c, 6 - c, 5,
+      { top: c === 0 ? "#5a6a3a" : "#4a5a32",
+        left: c === 0 ? "#4a5a2a" : "#3a4a22", right: "#3a4a1a" }, zoom);
+    ctx.fillStyle = isMissile ? "#cc2200" : isEmber ? "#ff6600" : "#ffaa00";
+    ctx.fillRect(crateX - 2 * zoom, crateY - 4 * zoom, 4 * zoom, 1.2 * zoom);
+  }
+
+  // ========== PROPELLANT TANKS (level 2+) ==========
+  if (level >= 2) {
+    for (let t = 0; t < Math.min(level - 1, 2); t++) {
+      const tankAngle = -Math.PI * 0.35 - t * 0.5;
+      const tankR = depotR * 0.75;
+      const tankX = screenPos.x + Math.cos(tankAngle) * tankR;
+      const tankY = depotBot.y + Math.sin(tankAngle) * tankR * ISO_Y_RATIO;
+      ctx.fillStyle = t === 0 ? "#5a2a1a" : "#4a3a2a";
+      ctx.beginPath();
+      ctx.ellipse(tankX, tankY, 4 * zoom, 2.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#7a5a4a";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = t === 0 ? "#cc4400" : "#aa6600";
+      ctx.beginPath();
+      ctx.arc(tankX + 3 * zoom, tankY - 1 * zoom, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tankX, tankY - 2 * zoom);
+      ctx.lineTo(screenPos.x, topY + 3 * zoom);
+      ctx.stroke();
+    }
+  }
+
+  // ========== SHELL RACK ==========
+  {
+    const rackAngle = Math.PI * 0.75;
+    const rackDist = depotR * 0.6;
+    const rackX = screenPos.x + Math.cos(rackAngle) * rackDist;
+    const rackY = depotBot.y + Math.sin(rackAngle) * rackDist * ISO_Y_RATIO;
+    drawIsometricPrism(ctx, rackX, rackY, 5, 8, 12,
+      { top: "#4a3a28", left: "#3a2818", right: "#2a1808" }, zoom);
+    const shellCount = level + 1;
+    const loadingIdx = timeSinceFire < 800 ? Math.floor((timeSinceFire / 800) * shellCount) : -1;
+    for (let sh = 0; sh < shellCount; sh++) {
+      if (sh === loadingIdx) continue;
+      const shellY = rackY - (3 + sh * 3.5) * zoom;
+      ctx.fillStyle = isMissile ? "#aa1100" : isEmber ? "#cc5500" : "#7a6a50";
+      ctx.beginPath();
+      ctx.ellipse(rackX, shellY, 2.2 * zoom, 1.3 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (level >= 2 && timeSinceFire < 1200) {
+      const loadT = Math.min(1, timeSinceFire / 1200);
+      const armSwing = loadT < 0.4
+        ? (loadT / 0.4) * Math.PI * 0.35
+        : Math.PI * 0.35 * Math.max(0, 1 - (loadT - 0.4) / 0.6);
+      const armLen = 10 * zoom;
+      const pivotX = rackX + 3 * zoom;
+      const pivotY = rackY - 10 * zoom;
+      ctx.strokeStyle = "#7a6a5a";
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(pivotX, pivotY);
+      ctx.lineTo(pivotX + Math.cos(-Math.PI * 0.4 + armSwing) * armLen,
+        pivotY + Math.sin(-Math.PI * 0.4 + armSwing) * armLen);
+      ctx.stroke();
+      ctx.fillStyle = "#aaa";
+      ctx.beginPath();
+      ctx.arc(pivotX, pivotY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ========== SHELL FEEDER ==========
+  if (level >= 2) {
+    const convStartX = screenPos.x - baseW * 0.18 * zoom;
+    const convStartY = depotBot.y - depotH * zoom * 0.3;
+    const convEndX = screenPos.x;
+    const convEndY = topY + 3 * zoom;
+    ctx.strokeStyle = "#5a4a3a";
+    ctx.lineWidth = 2.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(convStartX, convStartY);
+    ctx.quadraticCurveTo(convStartX + 4 * zoom, convEndY + 3 * zoom, convEndX, convEndY);
+    ctx.stroke();
+    if (timeSinceFire < 1000) {
+      const shellT = Math.min(1, timeSinceFire / 1000);
+      const sx = convStartX + (convEndX - convStartX) * shellT;
+      const sy = convStartY + (convEndY - convStartY) * shellT;
+      ctx.fillStyle = isMissile ? "#cc2200" : isEmber ? "#ff6600" : "#8a7a5a";
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, 2 * zoom, 1.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ========== HEX GEAR RING on depot top ==========
+  {
+    const gearR = depotR * 0.9;
+    const gearVerts = generateIsoHexVertices(isoOff, gearR, hexSides);
+    const gearNormals = computeHexSideNormals(0, hexSides);
+    const gearBot: Pt = { x: screenPos.x, y: topY + 2 * zoom };
+    const gearTop: Pt = { x: screenPos.x, y: topY };
+
+    drawHexBand(ctx, gearVerts, gearNormals, gearBot, gearTop, 1.0,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+        return `rgb(${Math.floor(70 + b * 30)},${Math.floor(70 + b * 30)},${Math.floor(78 + b * 22)})`;
+      }, "rgba(0,0,0,0.15)", 0.4 * zoom, -0.3);
+    drawHexCap(ctx, gearTop, gearVerts, "#5a5a62", "rgba(0,0,0,0.1)", 0.4 * zoom);
+
+    // Gear teeth
+    const toothCount = 16 + level * 2;
+    ctx.fillStyle = "#6a6a6a";
+    for (let i = 0; i < toothCount; i++) {
+      const a = (i / toothCount) * Math.PI * 2 + time * 0.3;
+      ctx.beginPath();
+      ctx.arc(screenPos.x + Math.cos(a) * gearR * 1.06,
+        topY + Math.sin(a) * gearR * ISO_Y_RATIO * 1.06, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Inner bearing ring
+    const bearingVerts = generateIsoHexVertices(isoOff, gearR * 0.55, hexSides);
+    drawHexCap(ctx, gearTop, bearingVerts, "#4a4a50", "rgba(0,0,0,0.12)", 0.5 * zoom);
+  }
+
+  // ========== DRIVE SHAFT ==========
+  if (level >= 2) {
+    const shaftIdx = 2;
+    const shaftStartX = screenPos.x + depotVerts[shaftIdx].x * 0.8;
+    const shaftStartY = depotBot.y + depotVerts[shaftIdx].y * 0.6;
+    const shaftEndX = screenPos.x + depotVerts[shaftIdx].x * 0.5;
+    const shaftEndY = topY + 1 * zoom;
+    ctx.strokeStyle = "#5a5a5a";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(shaftStartX, shaftStartY);
+    ctx.lineTo(shaftEndX, shaftEndY);
+    ctx.stroke();
+    ctx.fillStyle = "#7a7a7a";
+    ctx.beginPath();
+    ctx.arc(shaftStartX, shaftStartY, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(shaftEndX, shaftEndY, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ========== AIMING SYSTEMS ==========
+  if (level >= 2) {
+    const rfX = screenPos.x + depotR * 0.55;
+    const rfY = topY;
+    ctx.strokeStyle = "#5a5a5a";
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(rfX, rfY + 2 * zoom);
+    ctx.lineTo(rfX, rfY - 8 * zoom);
+    ctx.stroke();
+    ctx.strokeStyle = "#6a6a6a";
+    ctx.lineWidth = 2.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(rfX - 4 * zoom, rfY - 8 * zoom);
+    ctx.lineTo(rfX + 4 * zoom, rfY - 8 * zoom);
+    ctx.stroke();
+    const lensGlow = 0.35 + Math.sin(time * 2.5) * 0.15;
+    ctx.fillStyle = `rgba(80, 200, 255, ${lensGlow})`;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.arc(rfX + side * 4 * zoom, rfY - 8 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (level >= 3) {
+    const compY = topY + 1 * zoom;
+    const compR = depotR * 0.35;
+    ctx.strokeStyle = "rgba(201,162,39,0.5)";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(screenPos.x, compY, compR, compR * ISO_Y_RATIO, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "#ff4400";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(screenPos.x, compY);
+    ctx.lineTo(screenPos.x + cosR * compR * 0.65, compY + sinR * compR * ISO_Y_RATIO * 0.65);
+    ctx.stroke();
+  }
+
+  // Control panel
+  {
+    const cpAngle = -Math.PI * 0.6;
+    const cpDist = depotR * 0.55;
+    const cpX = screenPos.x + Math.cos(cpAngle) * cpDist;
+    const cpY = depotBot.y + Math.sin(cpAngle) * cpDist * ISO_Y_RATIO;
+    drawIsometricPrism(ctx, cpX, cpY, 6, 5, 6,
+      { top: "#3a3a42", left: "#2a2a32", right: "#1a1a28" }, zoom);
+    const dp = 0.3 + Math.sin(time * 2.5) * 0.15;
+    ctx.fillStyle = `rgba(40, 180, 80, ${dp})`;
+    ctx.fillRect(cpX - 2 * zoom, cpY - 5 * zoom, 4 * zoom, 2.5 * zoom);
+    ctx.fillStyle = timeSinceFire < 1500 ? "#ff2200" : "#00ff44";
+    ctx.beginPath();
+    ctx.arc(cpX, cpY - 2 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ========== LEVEL-DEPENDENT BASE ACCESSORIES ==========
+
+  // L1: sandbag pile and targeting flag
+  if (level === 1) {
+    const sbX = screenPos.x + wallR * 0.5;
+    const sbY = wallBaseY - wallH * 0.5;
+    for (let sb = 0; sb < 3; sb++) {
+      ctx.fillStyle = sb === 0 ? "#8a7a60" : "#7a6a50";
+      ctx.beginPath();
+      ctx.ellipse(sbX + sb * 3 * zoom, sbY - sb * 2 * zoom, 4 * zoom, 2 * zoom, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.1)";
+      ctx.lineWidth = 0.4 * zoom;
+      ctx.stroke();
+    }
+  }
+
+  // L2: warning lights on wall vertices
+  if (level === 2) {
+    for (let wi = 0; wi < hexSides; wi += 2) {
+      if (wallNormals[wi] < -0.7) continue;
+      const lx = wallTop.x + wallVerts[wi].x * 1.02;
+      const ly = wallTop.y + wallVerts[wi].y * 1.02 - 8 * zoom;
+      const lightOn = Math.sin(time * 3 + wi) > 0.3;
+      ctx.fillStyle = lightOn ? "#ffaa00" : "#553300";
+      ctx.beginPath();
+      ctx.arc(lx, ly, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      if (lightOn) {
+        ctx.fillStyle = "rgba(255,170,0,0.15)";
+        ctx.beginPath();
+        ctx.arc(lx, ly, 3 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // L3: searchlight on one wall vertex, warning stripes, antenna
+  if (level >= 3) {
+    const slIdx = 1;
+    if (wallNormals[slIdx] > -0.7) {
+      const slx = wallTop.x + wallVerts[slIdx].x * 1.05;
+      const sly = wallTop.y + wallVerts[slIdx].y * 1.05 - 8 * zoom;
+      ctx.strokeStyle = "#6a6a6e";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(slx, sly + 5 * zoom);
+      ctx.lineTo(slx, sly);
+      ctx.stroke();
+      ctx.fillStyle = "#4a4a50";
+      ctx.beginPath();
+      ctx.ellipse(slx, sly, 2.5 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const slGlow = 0.5 + Math.sin(time * 2) * 0.2;
+      ctx.fillStyle = `rgba(200, 230, 255, ${slGlow})`;
+      ctx.beginPath();
+      ctx.arc(slx + cosR * 1 * zoom, sly + sinR * 0.5 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Antenna
+    const antIdx = 5 % hexSides;
+    if (wallNormals[antIdx] > -0.3 || wallNormals[(antIdx + hexSides - 1) % hexSides] > -0.3) {
+      const ax = wallTop.x + wallVerts[antIdx].x * 0.95;
+      const ay = wallTop.y + wallVerts[antIdx].y * 0.95;
+      ctx.strokeStyle = "#6a6a6e";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ax, ay - 12 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = Math.sin(time * 5) > 0 ? "#ff0000" : "#880000";
+      ctx.beginPath();
+      ctx.arc(ax, ay - 12 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Warning stripes on one depot face
+    const warnIdx = 3;
+    if (depotNormals[warnIdx] > 0) {
+      const wni = (warnIdx + 1) % hexSides;
+      ctx.strokeStyle = "rgba(200,160,0,0.2)";
+      ctx.lineWidth = 1.5 * zoom;
+      for (let ch = 0; ch < 3; ch++) {
+        const t = (ch + 0.5) / 3;
+        const cx = depotBot.x + depotVerts[warnIdx].x + (depotVerts[wni].x - depotVerts[warnIdx].x) * t;
+        const cy = depotBot.y + depotVerts[warnIdx].y + (depotVerts[wni].y - depotVerts[warnIdx].y) * t;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx, depotTop.y + depotVerts[warnIdx].y + (depotVerts[wni].y - depotVerts[warnIdx].y) * t);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ========== VARIANT-SPECIFIC BARREL ==========
+  if (isEmber) {
+    renderMortarEmberTurret(ctx, screenPos, topY, tower, zoom, time,
+      recoilBase, recoilMid, recoilTip, timeSinceFire);
+  } else if (isMissile) {
+    renderMortarMissileSilo(ctx, screenPos, topY, tower, zoom, time, timeSinceFire);
+  } else {
+    renderMortarStandardBarrel(ctx, screenPos, topY, tower, zoom, time,
+      recoilBase, recoilMid, recoilTip, timeSinceFire);
+  }
+
+  // ========== SMOKE ==========
+  const steamCount = 1 + level;
+  for (let s = 0; s < steamCount; s++) {
+    const st = time * 0.8 + s * 1.7;
+    const sx = screenPos.x + Math.sin(st * 1.3) * 5 * zoom;
+    const sy = topY - 15 * zoom - (st % 3) * 6 * zoom;
+    const sa = Math.max(0, 0.1 - ((st % 3) / 3) * 0.1);
+    ctx.fillStyle = `rgba(180, 160, 140, ${sa})`;
+    ctx.beginPath();
+    ctx.arc(sx, sy, (2 + (st % 3) * 1.5) * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (timeSinceFire < 2000) {
+    const smokeT = timeSinceFire / 2000;
+    for (let p = 0; p < 3; p++) {
+      const ang = time * 2 + p * 2.09;
+      const dist = (5 + smokeT * 12) * zoom;
+      const smokeA = Math.max(0, (1 - smokeT) * 0.12);
+      ctx.fillStyle = `rgba(140, 130, 120, ${smokeA})`;
+      ctx.beginPath();
+      ctx.arc(screenPos.x + Math.cos(ang) * dist * 0.4,
+        topY - 8 * zoom - smokeT * 10 * zoom + Math.sin(ang) * dist * 0.2,
+        (3 + smokeT * 3) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+// Standard mortar barrel (L1-3): rigid-body tilt, quadpod, sights, propellant injectors
+// Standard mortar barrel (L1-3): rich per-level detail, rigid-body tilt
+function renderMortarStandardBarrel(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  topY: number,
+  tower: Tower,
+  zoom: number,
+  time: number,
+  recoilBase: number,
+  recoilMid: number,
+  recoilTip: number,
+  timeSinceFire: number,
+) {
+  const level = tower.level;
+  const rot = tower.rotation || 0;
+  const cosR = Math.cos(rot);
+  const sinR = Math.sin(rot);
+
+  ctx.save();
+  ctx.translate(screenPos.x, topY);
+
+  const hexSides = 8;
+  const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
+
+  const fireTiltBoost = timeSinceFire < 600 ? (1 - timeSinceFire / 600) * 0.12 : 0;
+  const tiltStr = 0.25 + level * 0.03 + fireTiltBoost;
+  const tierRecoils = [recoilBase * 0.15, recoilMid * 0.35, recoilTip * 0.65];
+
+  const tiers = [
+    { r: (16 + level * 2.5) * zoom, h: (7 + level) * zoom,
+      dark: level >= 3 ? "#3e3228" : level >= 2 ? "#3a2e22" : "#3a2a1a",
+      mid: level >= 3 ? "#7a6a52" : level >= 2 ? "#6a5848" : "#6a5a4a",
+      light: level >= 3 ? "#a09070" : level >= 2 ? "#8a7a68" : "#8a7a6a" },
+    { r: (12 + level * 2) * zoom, h: (7 + level) * zoom,
+      dark: level >= 3 ? "#4a3e32" : level >= 2 ? "#443830" : "#44342a",
+      mid: level >= 3 ? "#8a7a62" : level >= 2 ? "#7a6854" : "#7a6a5a",
+      light: level >= 3 ? "#b0a080" : level >= 2 ? "#9a8a78" : "#9a8a7a" },
+    { r: (9 + level * 1.5) * zoom, h: (5 + level * 0.5) * zoom,
+      dark: level >= 3 ? "#544838" : level >= 2 ? "#4e4232" : "#4e3e2e",
+      mid: level >= 3 ? "#9a8a72" : level >= 2 ? "#8a7a68" : "#8a7a6a",
+      light: level >= 3 ? "#c0b090" : level >= 2 ? "#aa9a88" : "#aa9a8a" },
+  ];
+
+  const totalH = tiers[0].h + tiers[1].h + tiers[2].h;
+  const maxTiltX = cosR * tiltStr * 12 * zoom;
+  const maxTiltY = sinR * tiltStr * ISO_Y_RATIO * 12 * zoom;
+
+  const posAtFrac = (frac: number, recoilOffset: number): Pt => ({
+    x: frac * maxTiltX,
+    y: -frac * totalH + frac * maxTiltY + recoilOffset,
+  });
+
+  // ===== QUADPOD / TRIPOD SUPPORTS =====
+  {
+    const legCount = level >= 2 ? 4 : 3;
+    const legAngles = level >= 2
+      ? [Math.PI * 0.2, Math.PI * 0.8, -Math.PI * 0.2, -Math.PI * 0.8]
+      : [Math.PI * 0.5, -Math.PI * 0.25, -Math.PI * 0.75];
+    const baseR = tiers[0].r * (level >= 3 ? 1.2 : level >= 2 ? 1.1 : 1.0);
+    const attachFrac = level >= 3 ? 0.6 : level >= 2 ? 0.55 : 0.45;
+    const attachRecoil = tierRecoils[0] + tierRecoils[1] * 0.5;
+    const attachPt = posAtFrac(attachFrac, attachRecoil);
+
+    const legThick = level >= 3 ? 5 : level >= 2 ? 4 : 3;
+    const rodThick = level >= 3 ? 2.5 : level >= 2 ? 2 : 1.5;
+
+    for (let li = 0; li < legCount; li++) {
+      const la = legAngles[li];
+      const footX = Math.cos(la) * baseR;
+      const footY = Math.sin(la) * baseR * ISO_Y_RATIO + 4 * zoom;
+      const kneeX = (footX + attachPt.x) * (level >= 2 ? 0.45 : 0.5);
+      const kneeY = (footY + attachPt.y) * (level >= 2 ? 0.55 : 0.6);
+
+      // Lower leg (thick)
+      ctx.strokeStyle = level >= 3 ? "#6a6a6e" : level >= 2 ? "#5a5a5a" : "#5a4a3a";
+      ctx.lineWidth = legThick * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(footX, footY);
+      ctx.lineTo(kneeX, kneeY);
+      ctx.stroke();
+
+      // Upper leg (thinner rod)
+      ctx.strokeStyle = level >= 3 ? "#9a9aa0" : level >= 2 ? "#8a8a90" : "#7a6a5a";
+      ctx.lineWidth = rodThick * zoom;
+      ctx.beginPath();
+      ctx.moveTo(kneeX, kneeY);
+      ctx.lineTo(attachPt.x + (li % 2 === 0 ? -3 : 3) * zoom, attachPt.y);
+      ctx.stroke();
+
+      // Foot pad
+      ctx.fillStyle = level >= 3 ? "#5a5a60" : level >= 2 ? "#4a4a50" : "#5a4a38";
+      ctx.beginPath();
+      ctx.ellipse(footX, footY, (level >= 2 ? 3.5 : 2.5) * zoom, (level >= 2 ? 1.8 : 1.3) * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Knee joint
+      ctx.fillStyle = level >= 3 ? "#8a8a90" : level >= 2 ? "#7a7a80" : "#6a5a4a";
+      ctx.beginPath();
+      ctx.arc(kneeX, kneeY, (level >= 2 ? 2.8 : 2) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = level >= 3 ? "#bbb" : level >= 2 ? "#aaa" : "#8a7a6a";
+      ctx.beginPath();
+      ctx.arc(kneeX, kneeY, (level >= 2 ? 1.2 : 0.8) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // L1: rope lashing at knee
+      if (level === 1) {
+        ctx.strokeStyle = "#8a7a5a";
+        ctx.lineWidth = 0.8 * zoom;
+        for (let rp = 0; rp < 3; rp++) {
+          const ry = kneeY - 1 * zoom + rp * 0.8 * zoom;
+          ctx.beginPath();
+          ctx.ellipse(kneeX, ry, 3 * zoom, 1.5 * zoom, 0, 0, Math.PI);
+          ctx.stroke();
+        }
+      }
+
+      // L2+: hydraulic shock absorber on each leg
+      if (level >= 2) {
+        const shockX = (footX + kneeX) * 0.55;
+        const shockY = (footY + kneeY) * 0.55;
+        const shockEndX = (kneeX + attachPt.x) * 0.6;
+        const shockEndY = (kneeY + attachPt.y) * 0.6;
+        ctx.strokeStyle = "#7a7a82";
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(shockX, shockY);
+        ctx.lineTo((shockX + shockEndX) * 0.5, (shockY + shockEndY) * 0.5);
+        ctx.stroke();
+        ctx.strokeStyle = "#b0b0b8";
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo((shockX + shockEndX) * 0.5, (shockY + shockEndY) * 0.5);
+        ctx.lineTo(shockEndX, shockEndY);
+        ctx.stroke();
+      }
+
+      // L2+: cross-braces
+      if (level >= 2 && li < Math.min(legCount - 2, 2)) {
+        const otherLa = legAngles[li + (level >= 2 ? 2 : 1)];
+        const otherFx = Math.cos(otherLa) * baseR;
+        const otherFy = Math.sin(otherLa) * baseR * ISO_Y_RATIO + 4 * zoom;
+        ctx.strokeStyle = level >= 3 ? "#6a6a6e" : "#5a5a5a";
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo((footX + kneeX) * 0.5, (footY + kneeY) * 0.5);
+        const otherKneeX = (otherFx + attachPt.x) * 0.45;
+        const otherKneeY = (otherFy + attachPt.y) * 0.55;
+        ctx.lineTo((otherFx + otherKneeX) * 0.5, (otherFy + otherKneeY) * 0.5);
+        ctx.stroke();
+      }
+
+      // L3: power conduit along leg
+      if (level >= 3) {
+        ctx.strokeStyle = "#3a3a44";
+        ctx.lineWidth = 0.8 * zoom;
+        const condStartX = footX * 0.95 + kneeX * 0.05;
+        const condStartY = footY * 0.95 + kneeY * 0.05;
+        const condEndX = kneeX * 0.5 + attachPt.x * 0.5;
+        const condEndY = kneeY * 0.5 + attachPt.y * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(condStartX + 2 * zoom, condStartY);
+        ctx.quadraticCurveTo(kneeX + 3 * zoom, kneeY + 1 * zoom, condEndX + 2 * zoom, condEndY);
+        ctx.stroke();
+      }
+    }
+    ctx.lineCap = "butt";
+
+    // L3: stabilizer ring connecting all legs at mid-height
+    if (level >= 3) {
+      ctx.strokeStyle = "#7a7a82";
+      ctx.lineWidth = 1.5 * zoom;
+      for (let li = 0; li < legCount; li++) {
+        const la1 = legAngles[li];
+        const la2 = legAngles[(li + 1) % legCount];
+        const r1 = baseR * 0.55;
+        const r2 = baseR * 0.55;
+        const p1x = Math.cos(la1) * r1;
+        const p1y = Math.sin(la1) * r1 * ISO_Y_RATIO + 2 * zoom;
+        const p2x = Math.cos(la2) * r2;
+        const p2y = Math.sin(la2) * r2 * ISO_Y_RATIO + 2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(p1x, p1y + attachPt.y * 0.4);
+        ctx.lineTo(p2x, p2y + attachPt.y * 0.4);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ===== TRUNNION MOUNT =====
+  {
+    const mountFrac = 0.15;
+    const mountPt = posAtFrac(mountFrac, tierRecoils[0] * 0.5);
+    const mountW = tiers[0].r * (level >= 3 ? 0.7 : 0.6);
+    ctx.fillStyle = level >= 3 ? "#6a6a6e" : level >= 2 ? "#5a5a5a" : "#4a4a4a";
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(mountPt.x + side * mountW, mountPt.y + 3 * zoom);
+      ctx.lineTo(mountPt.x + side * mountW * 1.4, mountPt.y + 6 * zoom);
+      ctx.lineTo(mountPt.x + side * mountW * 1.4, mountPt.y - 1 * zoom);
+      ctx.lineTo(mountPt.x + side * mountW, mountPt.y - 2 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      // Trunnion pivot pin
+      ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
+      ctx.beginPath();
+      ctx.arc(mountPt.x + side * mountW * 1.1, mountPt.y + 1 * zoom,
+        (level >= 2 ? 2.5 : 2) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Pin center
+      ctx.fillStyle = level >= 3 ? "#e8c840" : "#bbb";
+      ctx.beginPath();
+      ctx.arc(mountPt.x + side * mountW * 1.1, mountPt.y + 1 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = level >= 3 ? "#6a6a6e" : level >= 2 ? "#5a5a5a" : "#4a4a4a";
+    }
+
+    // L2+: trunnion reinforcement plate
+    if (level >= 2) {
+      ctx.fillStyle = level >= 3 ? "#5a5a60" : "#4a4a50";
+      ctx.beginPath();
+      ctx.moveTo(mountPt.x - mountW * 0.5, mountPt.y - 2 * zoom);
+      ctx.lineTo(mountPt.x + mountW * 0.5, mountPt.y - 2 * zoom);
+      ctx.lineTo(mountPt.x + mountW * 0.3, mountPt.y + 4 * zoom);
+      ctx.lineTo(mountPt.x - mountW * 0.3, mountPt.y + 4 * zoom);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // ===== 3 STACKED HEX-PRISM TIERS (rigid-body tilt) =====
+  let cumH = 0;
+  let cumRecoil = 0;
+  for (let ti = 0; ti < 3; ti++) {
+    const tier = tiers[ti];
+    cumRecoil += tierRecoils[ti];
+
+    const botFrac = cumH / totalH;
+    const topFrac = (cumH + tier.h) / totalH;
+    const botCenter = posAtFrac(botFrac, cumRecoil - tierRecoils[ti]);
+    const topCenter = posAtFrac(topFrac, cumRecoil);
+
+    const hexVerts = generateIsoHexVertices(isoOff, tier.r, hexSides);
+    const sideNormals = computeHexSideNormals(cosR, hexSides);
+    const sorted = sortSidesByDepth(sideNormals);
+
+    // Draw hex faces with per-level surface detail
+    for (const i of sorted) {
+      const ni = (i + 1) % hexSides;
+      const n = sideNormals[i];
+      const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+      const dr = parseInt(tier.dark.slice(1, 3), 16);
+      const dg = parseInt(tier.dark.slice(3, 5), 16);
+      const db = parseInt(tier.dark.slice(5, 7), 16);
+      const lr = parseInt(tier.light.slice(1, 3), 16);
+      const lg = parseInt(tier.light.slice(3, 5), 16);
+      const lb = parseInt(tier.light.slice(5, 7), 16);
+      const fR = Math.floor(dr + (lr - dr) * bright);
+      const fG = Math.floor(dg + (lg - dg) * bright);
+      const fB = Math.floor(db + (lb - db) * bright);
+      ctx.fillStyle = `rgb(${fR},${fG},${fB})`;
+      ctx.beginPath();
+      ctx.moveTo(botCenter.x + hexVerts[i].x, botCenter.y + hexVerts[i].y);
+      ctx.lineTo(botCenter.x + hexVerts[ni].x, botCenter.y + hexVerts[ni].y);
+      ctx.lineTo(topCenter.x + hexVerts[ni].x, topCenter.y + hexVerts[ni].y);
+      ctx.lineTo(topCenter.x + hexVerts[i].x, topCenter.y + hexVerts[i].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+
+      // Skip only truly hidden backfaces
+      if (n < -0.7) continue;
+
+      // L1: wood plank seams and nail heads
+      if (level === 1) {
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 0.4 * zoom;
+        const mx = (hexVerts[i].x + hexVerts[ni].x) * 0.5;
+        const my = (hexVerts[i].y + hexVerts[ni].y) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(botCenter.x + mx, botCenter.y + my);
+        ctx.lineTo(topCenter.x + mx, topCenter.y + my);
+        ctx.stroke();
+        // Nail heads
+        ctx.fillStyle = `rgba(60,60,60,${0.3 + bright * 0.2})`;
+        const nailFrac = 0.3;
+        const nx = botCenter.x + hexVerts[i].x * 0.7 + hexVerts[ni].x * 0.3;
+        const ny = botCenter.y + hexVerts[i].y * 0.7 + hexVerts[ni].y * 0.3;
+        const tnx = topCenter.x + hexVerts[i].x * 0.7 + hexVerts[ni].x * 0.3;
+        const tny = topCenter.y + hexVerts[i].y * 0.7 + hexVerts[ni].y * 0.3;
+        ctx.beginPath();
+        ctx.arc(nx + (tnx - nx) * nailFrac, ny + (tny - ny) * nailFrac, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(nx + (tnx - nx) * 0.7, ny + (tny - ny) * 0.7, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // L2: metal plate seams with rivets
+      if (level === 2) {
+        ctx.strokeStyle = "rgba(0,0,0,0.12)";
+        ctx.lineWidth = 0.6 * zoom;
+        // Horizontal seam at mid-height
+        const midX1 = (botCenter.x + topCenter.x) * 0.5 + hexVerts[i].x;
+        const midY1 = (botCenter.y + topCenter.y) * 0.5 + hexVerts[i].y;
+        const midX2 = (botCenter.x + topCenter.x) * 0.5 + hexVerts[ni].x;
+        const midY2 = (botCenter.y + topCenter.y) * 0.5 + hexVerts[ni].y;
+        ctx.beginPath();
+        ctx.moveTo(midX1, midY1);
+        ctx.lineTo(midX2, midY2);
+        ctx.stroke();
+        // Rivets along seam
+        ctx.fillStyle = `rgba(140,140,150,${0.4 + bright * 0.3})`;
+        for (let rv = 0; rv < 2; rv++) {
+          const t = (rv + 0.5) / 2;
+          ctx.beginPath();
+          ctx.arc(midX1 + (midX2 - midX1) * t, midY1 + (midY2 - midY1) * t, 0.7 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Vertical center seam
+        const mx = (hexVerts[i].x + hexVerts[ni].x) * 0.5;
+        const my = (hexVerts[i].y + hexVerts[ni].y) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(botCenter.x + mx, botCenter.y + my);
+        ctx.lineTo(topCenter.x + mx, topCenter.y + my);
+        ctx.stroke();
+      }
+
+      // L3: polished plates with gold accent rivets and engraved lines
+      if (level >= 3) {
+        // Engraved line
+        ctx.strokeStyle = `rgba(201,162,39,${0.15 + bright * 0.1})`;
+        ctx.lineWidth = 0.4 * zoom;
+        const inset = 0.15;
+        const il = hexVerts[i].x * (1 - inset) + hexVerts[ni].x * inset;
+        const ir = hexVerts[i].x * inset + hexVerts[ni].x * (1 - inset);
+        const ily = hexVerts[i].y * (1 - inset) + hexVerts[ni].y * inset;
+        const iry = hexVerts[i].y * inset + hexVerts[ni].y * (1 - inset);
+        const bx = (botCenter.x + topCenter.x) * 0.5;
+        const by = (botCenter.y + topCenter.y) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + il, by + ily);
+        ctx.lineTo(bx + ir, by + iry);
+        ctx.stroke();
+        // Gold rivet at each corner
+        ctx.fillStyle = `rgba(201,162,39,${0.5 + bright * 0.3})`;
+        for (const vIdx of [i, ni]) {
+          ctx.beginPath();
+          ctx.arc(topCenter.x + hexVerts[vIdx].x * 0.95,
+            topCenter.y + hexVerts[vIdx].y * 0.95, 0.7 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(botCenter.x + hexVerts[vIdx].x * 0.95,
+            botCenter.y + hexVerts[vIdx].y * 0.95, 0.7 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Cap
+    drawHexCap(ctx, topCenter, hexVerts, tier.light, "rgba(0,0,0,0.12)", 0.8 * zoom);
+
+    // Metal band at tier top
+    const bandH = 2 * zoom;
+    const bandBot: Pt = { x: topCenter.x, y: topCenter.y + bandH };
+    const bandColor = level >= 3 ? "#c9a227" : level >= 2 ? "#8b7355" : "#6a5a4a";
+    drawHexBand(ctx, hexVerts, sideNormals, bandBot, topCenter, 1.03,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+        const bR = parseInt(bandColor.slice(1, 3), 16);
+        const bG = parseInt(bandColor.slice(3, 5), 16);
+        const bB = parseInt(bandColor.slice(5, 7), 16);
+        return `rgb(${Math.floor(bR * (0.6 + b * 0.4))},${Math.floor(bG * (0.6 + b * 0.4))},${Math.floor(bB * (0.6 + b * 0.4))})`;
+      }, "rgba(0,0,0,0.2)", 0.5 * zoom, -0.3);
+
+    // L1: rope bindings between tiers
+    if (level === 1 && ti < 2) {
+      ctx.strokeStyle = "#8a7a5a";
+      ctx.lineWidth = 0.8 * zoom;
+      for (let rp = 0; rp < 2; rp++) {
+        const ropeFrac = rp === 0 ? 0.25 : 0.75;
+        const rpPt: Pt = {
+          x: botCenter.x + (topCenter.x - botCenter.x) * ropeFrac,
+          y: botCenter.y + (topCenter.y - botCenter.y) * ropeFrac,
+        };
+        for (let ri = 0; ri < hexSides; ri++) {
+          if (sideNormals[ri] < -0.7) continue;
+          const rni = (ri + 1) % hexSides;
+          ctx.beginPath();
+          ctx.moveTo(rpPt.x + hexVerts[ri].x * 1.01, rpPt.y + hexVerts[ri].y * 1.01);
+          ctx.lineTo(rpPt.x + hexVerts[rni].x * 1.01, rpPt.y + hexVerts[rni].y * 1.01);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // L2+: band rivets
+    if (level >= 2) {
+      ctx.fillStyle = level >= 3 ? "#e8c840" : "#a09080";
+      for (let i = 0; i < hexSides; i++) {
+        if (sideNormals[i] < -0.7) continue;
+        ctx.beginPath();
+        ctx.arc(topCenter.x + hexVerts[i].x * 1.03, topCenter.y + hexVerts[i].y * 1.03,
+          (level >= 3 ? 1.1 : 0.9) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Per-tier accessories
+    if (ti === 0) {
+      // L1: iron hoop reinforcement at bottom
+      if (level === 1) {
+        const hoopFrac = 0.2;
+        const hoopPt: Pt = {
+          x: botCenter.x + (topCenter.x - botCenter.x) * hoopFrac,
+          y: botCenter.y + (topCenter.y - botCenter.y) * hoopFrac,
+        };
+        ctx.strokeStyle = "#5a5a5a";
+        ctx.lineWidth = 1.5 * zoom;
+        for (let hi = 0; hi < hexSides; hi++) {
+          if (sideNormals[hi] < -0.7) continue;
+          const hni = (hi + 1) % hexSides;
+          ctx.beginPath();
+          ctx.moveTo(hoopPt.x + hexVerts[hi].x * 1.02, hoopPt.y + hexVerts[hi].y * 1.02);
+          ctx.lineTo(hoopPt.x + hexVerts[hni].x * 1.02, hoopPt.y + hexVerts[hni].y * 1.02);
+          ctx.stroke();
+        }
+      }
+
+      // L2+: propellant injector nozzle
+      if (level >= 2) {
+        const injPt = posAtFrac(botFrac + (topFrac - botFrac) * 0.5, cumRecoil - tierRecoils[ti] * 0.5);
+        const injX = injPt.x + cosR * tier.r * 0.9;
+        const injY = injPt.y + sinR * tier.r * ISO_Y_RATIO * 0.9;
+        ctx.fillStyle = level >= 3 ? "#7a5a3a" : "#6a4a2a";
+        ctx.beginPath();
+        ctx.ellipse(injX, injY, 2.8 * zoom, 1.8 * zoom, rot, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = level >= 3 ? "#9a7a5a" : "#8a6a4a";
+        ctx.lineWidth = 1 * zoom;
+        ctx.stroke();
+        ctx.strokeStyle = "#5a4a3a";
+        ctx.lineWidth = 1.2 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(injX, injY);
+        ctx.lineTo(injX + cosR * 8 * zoom, injY + sinR * 4 * zoom);
+        ctx.stroke();
+        // L3: second feed pipe
+        if (level >= 3) {
+          ctx.strokeStyle = "#4a3a2a";
+          ctx.lineWidth = 0.8 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(injX + sinR * 2 * zoom, injY - cosR * 1 * zoom);
+          ctx.lineTo(injX + cosR * 6 * zoom + sinR * 2 * zoom, injY + sinR * 3 * zoom - cosR * 1 * zoom);
+          ctx.stroke();
+        }
+      }
+
+      // L1: rope handle
+      if (level === 1) {
+        const handlePt = posAtFrac(botFrac + (topFrac - botFrac) * 0.6, cumRecoil - tierRecoils[ti] * 0.4);
+        const hx = handlePt.x - cosR * tier.r * 0.8;
+        const hy = handlePt.y - sinR * tier.r * ISO_Y_RATIO * 0.8;
+        ctx.strokeStyle = "#8a7a5a";
+        ctx.lineWidth = 1.5 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(hx - 2 * zoom, hy);
+        ctx.quadraticCurveTo(hx, hy + 4 * zoom, hx + 2 * zoom, hy);
+        ctx.stroke();
+      }
+    }
+
+    if (ti === 1) {
+      // L3: elevation screw jack
+      if (level >= 3) {
+        const screwPt = posAtFrac(botFrac + (topFrac - botFrac) * 0.3, cumRecoil - tierRecoils[ti] * 0.7);
+        const screwX = screwPt.x - cosR * tier.r * 0.7;
+        const screwY = screwPt.y - sinR * tier.r * ISO_Y_RATIO * 0.7;
+        ctx.strokeStyle = "#9a9aa0";
+        ctx.lineWidth = 1.8 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(screwX, screwY + tier.h * 0.6);
+        ctx.lineTo(screwX, screwY);
+        ctx.stroke();
+        ctx.fillStyle = "#c9a227";
+        for (let s = 0; s < 5; s++) {
+          ctx.beginPath();
+          ctx.arc(screwX, screwY + s * tier.h * 0.12, 0.9 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Handwheel at bottom
+        ctx.strokeStyle = "#7a7a82";
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(screwX, screwY + tier.h * 0.65, 2.5 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // L2: side-mounted handles
+      if (level === 2) {
+        for (const side of [-1, 1]) {
+          const hPt = posAtFrac(botFrac + (topFrac - botFrac) * 0.5, cumRecoil - tierRecoils[ti] * 0.5);
+          const hx = hPt.x + side * sinR * tier.r * 0.85;
+          const hy = hPt.y - side * cosR * tier.r * ISO_Y_RATIO * 0.4;
+          ctx.strokeStyle = "#6a6a6a";
+          ctx.lineWidth = 1.5 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(hx - side * 1 * zoom, hy - 2 * zoom);
+          ctx.lineTo(hx - side * 1 * zoom, hy + 2 * zoom);
+          ctx.stroke();
+        }
+      }
+
+      // L2+: external gauge
+      if (level >= 2) {
+        const gaugePt = posAtFrac(botFrac + (topFrac - botFrac) * 0.7, cumRecoil - tierRecoils[ti] * 0.3);
+        const gx = gaugePt.x + cosR * tier.r * 0.85;
+        const gy = gaugePt.y + sinR * tier.r * ISO_Y_RATIO * 0.85;
+        ctx.fillStyle = "#2a2a30";
+        ctx.beginPath();
+        ctx.arc(gx, gy, 2.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
+        ctx.lineWidth = 0.8 * zoom;
+        ctx.stroke();
+        // Needle
+        const needleAngle = time * 0.5 + rot;
+        ctx.strokeStyle = "#ff4400";
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy);
+        ctx.lineTo(gx + Math.cos(needleAngle) * 1.8 * zoom, gy + Math.sin(needleAngle) * 1.8 * zoom);
+        ctx.stroke();
+      }
+    }
+
+    if (ti === 2) {
+      // L2+: vent holes near top
+      if (level >= 2) {
+        const ventPt = posAtFrac(botFrac + (topFrac - botFrac) * 0.4, cumRecoil - tierRecoils[ti] * 0.6);
+        for (let vi = 0; vi < 3; vi++) {
+          const va = rot + vi * Math.PI * 0.5;
+          const vx = ventPt.x + Math.cos(va) * tier.r * 0.85;
+          const vy = ventPt.y + Math.sin(va) * tier.r * ISO_Y_RATIO * 0.85;
+          if (Math.cos(va) * cosR + Math.sin(va) * sinR < -0.3) continue;
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath();
+          ctx.ellipse(vx, vy, 1.2 * zoom, 0.6 * zoom, rot, 0, Math.PI * 2);
+          ctx.fill();
+          // Steam from vents after firing
+          if (timeSinceFire < 1500) {
+            const steamA = (1 - timeSinceFire / 1500) * 0.2;
+            ctx.fillStyle = `rgba(200,200,200,${steamA})`;
+            ctx.beginPath();
+            ctx.arc(vx, vy - (timeSinceFire / 1500) * 5 * zoom, (1 + timeSinceFire / 1500 * 2) * zoom, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // L3: exhaust pipes
+      if (level >= 3) {
+        for (const side of [-1, 1]) {
+          const epPt = posAtFrac(botFrac + (topFrac - botFrac) * 0.3, cumRecoil - tierRecoils[ti] * 0.7);
+          const epx = epPt.x + side * sinR * tier.r * 0.9;
+          const epy = epPt.y - side * cosR * tier.r * ISO_Y_RATIO * 0.5;
+          ctx.strokeStyle = "#5a5a5a";
+          ctx.lineWidth = 2 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(epx, epy);
+          ctx.lineTo(epx + side * sinR * 4 * zoom, epy - side * cosR * 2 * zoom - 3 * zoom);
+          ctx.stroke();
+          ctx.fillStyle = "#3a3a3a";
+          ctx.beginPath();
+          ctx.ellipse(epx + side * sinR * 4 * zoom, epy - side * cosR * 2 * zoom - 3 * zoom,
+            1.5 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    cumH += tier.h;
+  }
+
+  // ===== SIGHT UNIT (level-specific) =====
+  {
+    const sightFrac = 0.65;
+    const sightPt = posAtFrac(sightFrac, cumRecoil * 0.8);
+
+    // L1: simple iron sight (bent wire)
+    if (level === 1) {
+      const postX = sightPt.x - sinR * tiers[1].r * 0.8;
+      const postY = sightPt.y + cosR * tiers[1].r * ISO_Y_RATIO * 0.3;
+      ctx.strokeStyle = "#5a5a5a";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(postX, postY + 3 * zoom);
+      ctx.lineTo(postX, postY - 4 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = "#7a7a7a";
+      ctx.beginPath();
+      ctx.arc(postX, postY - 4 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Notch
+      ctx.strokeStyle = "#7a7a7a";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(postX - 1.5 * zoom, postY - 5 * zoom);
+      ctx.lineTo(postX, postY - 3 * zoom);
+      ctx.lineTo(postX + 1.5 * zoom, postY - 5 * zoom);
+      ctx.stroke();
+    }
+
+    // L2: periscope optic
+    if (level === 2) {
+      const scopeX = sightPt.x + sinR * tiers[1].r * 0.7;
+      const scopeY = sightPt.y - cosR * tiers[1].r * ISO_Y_RATIO * 0.2;
+      ctx.strokeStyle = "#4a4a50";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(scopeX, scopeY + 2 * zoom);
+      ctx.lineTo(scopeX, scopeY - 6 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = "#3a3a40";
+      ctx.fillRect(scopeX - 2 * zoom, scopeY - 8 * zoom, 4 * zoom, 3 * zoom);
+      // Lens
+      const sGlow = 0.3 + Math.sin(time * 3) * 0.15;
+      ctx.fillStyle = `rgba(80, 255, 120, ${sGlow})`;
+      ctx.beginPath();
+      ctx.arc(scopeX, scopeY - 7 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Eyepiece
+      ctx.fillStyle = "#2a2a30";
+      ctx.beginPath();
+      ctx.arc(scopeX, scopeY + 3 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // L3: digital rangefinder + targeting display
+    if (level >= 3) {
+      const dfPt = posAtFrac(0.8, cumRecoil * 0.85);
+      // Housing
+      ctx.fillStyle = "#2a2a32";
+      const dfW = 8 * zoom;
+      const dfH = 5 * zoom;
+      ctx.fillRect(dfPt.x - dfW * 0.5, dfPt.y - dfH * 0.5, dfW, dfH);
+      ctx.strokeStyle = "#c9a227";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.strokeRect(dfPt.x - dfW * 0.5, dfPt.y - dfH * 0.5, dfW, dfH);
+      // Display screen
+      const screenGlow = 0.5 + Math.sin(time * 2) * 0.2;
+      ctx.fillStyle = `rgba(0, 200, 255, ${screenGlow})`;
+      ctx.fillRect(dfPt.x - dfW * 0.35, dfPt.y - dfH * 0.3, dfW * 0.7, dfH * 0.6);
+      // Crosshair on screen
+      ctx.strokeStyle = `rgba(255, 50, 50, ${screenGlow})`;
+      ctx.lineWidth = 0.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(dfPt.x - dfW * 0.2, dfPt.y);
+      ctx.lineTo(dfPt.x + dfW * 0.2, dfPt.y);
+      ctx.moveTo(dfPt.x, dfPt.y - dfH * 0.15);
+      ctx.lineTo(dfPt.x, dfPt.y + dfH * 0.15);
+      ctx.stroke();
+      // Antenna
+      ctx.strokeStyle = "#6a6a6e";
+      ctx.lineWidth = 1 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(dfPt.x + dfW * 0.5, dfPt.y - dfH * 0.5);
+      ctx.lineTo(dfPt.x + dfW * 0.5 + 2 * zoom, dfPt.y - dfH * 0.5 - 4 * zoom);
+      ctx.stroke();
+      ctx.fillStyle = Math.sin(time * 5) > 0 ? "#ff2200" : "#880000";
+      ctx.beginPath();
+      ctx.arc(dfPt.x + dfW * 0.5 + 2 * zoom, dfPt.y - dfH * 0.5 - 4 * zoom, 0.7 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ===== L1: targeting stake planted in ground =====
+  if (level === 1) {
+    const stakeX = cosR * tiers[0].r * 1.6;
+    const stakeY = sinR * tiers[0].r * ISO_Y_RATIO * 1.6 + 4 * zoom;
+    ctx.strokeStyle = "#6a5a4a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(stakeX, stakeY + 2 * zoom);
+    ctx.lineTo(stakeX, stakeY - 6 * zoom);
+    ctx.stroke();
+    // Flag
+    ctx.fillStyle = "#cc4400";
+    ctx.beginPath();
+    ctx.moveTo(stakeX, stakeY - 6 * zoom);
+    ctx.lineTo(stakeX + 3 * zoom, stakeY - 5 * zoom);
+    ctx.lineTo(stakeX, stakeY - 4 * zoom);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // ===== L2: instrument panel mounted on leg =====
+  if (level === 2) {
+    const panelX = -sinR * tiers[0].r * 1.0;
+    const panelY = cosR * tiers[0].r * ISO_Y_RATIO * 0.5 - totalH * 0.2;
+    ctx.fillStyle = "#3a3a42";
+    ctx.fillRect(panelX - 3 * zoom, panelY - 2 * zoom, 6 * zoom, 4 * zoom);
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.strokeRect(panelX - 3 * zoom, panelY - 2 * zoom, 6 * zoom, 4 * zoom);
+    // LED indicators
+    const colors = ["#00ff44", "#ffaa00", timeSinceFire < 1000 ? "#ff2200" : "#004400"];
+    for (let ci = 0; ci < 3; ci++) {
+      ctx.fillStyle = colors[ci];
+      ctx.beginPath();
+      ctx.arc(panelX - 1.5 * zoom + ci * 1.5 * zoom, panelY, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Scaffolding (level 3+)
+  if (level >= 3) {
+    const scaffR = tiers[0].r * 0.9;
+    ctx.strokeStyle = "#7a7a80";
+    ctx.lineWidth = 1.2 * zoom;
+    const scaffAngles = [rot * 0.1, rot * 0.1 + Math.PI * 0.6, rot * 0.1 + Math.PI * 1.2];
+    for (let s = 0; s < 3; s++) {
+      const sa = scaffAngles[s];
+      if (Math.sin(sa) < -0.3) continue;
+      const footX = Math.cos(sa) * scaffR;
+      const footY = Math.sin(sa) * scaffR * ISO_Y_RATIO + 4 * zoom;
+      const topPt = posAtFrac(0.4, tierRecoils[0]);
+      // Vertical pole
+      ctx.beginPath();
+      ctx.moveTo(footX, footY);
+      ctx.lineTo(topPt.x + footX * 0.2, topPt.y);
+      ctx.stroke();
+      // Horizontal platform beam
+      const nextS = (s + 1) % 3;
+      const nsa = scaffAngles[nextS];
+      if (Math.sin(nsa) >= -0.3) {
+        const nfx = Math.cos(nsa) * scaffR;
+        const nfy = Math.sin(nsa) * scaffR * ISO_Y_RATIO + 4 * zoom;
+        const beamY = (footY + topPt.y) * 0.5;
+        ctx.strokeStyle = "#6a6a6e";
+        ctx.lineWidth = 1 * zoom;
+        ctx.beginPath();
+        ctx.moveTo((footX + topPt.x + footX * 0.2) * 0.5, beamY);
+        ctx.lineTo((nfx + topPt.x + nfx * 0.2) * 0.5, (nfy + topPt.y) * 0.5);
+        ctx.stroke();
+        ctx.strokeStyle = "#7a7a80";
+        ctx.lineWidth = 1.2 * zoom;
+      }
+    }
+
+    // L3: small power generator box beside the tower
+    {
+      const genX = -cosR * tiers[0].r * 1.4;
+      const genY = -sinR * tiers[0].r * ISO_Y_RATIO * 1.4 + 4 * zoom;
+      drawIsometricPrism(ctx, genX, genY, 5, 4, 5,
+        { top: "#3a3a42", left: "#2a2a32", right: "#1a1a28" }, zoom);
+      const pulse = 0.3 + Math.sin(time * 4) * 0.2;
+      ctx.fillStyle = `rgba(0, 180, 255, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(genX, genY - 4 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Power cable to barrel
+      ctx.strokeStyle = "#2a2a32";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(genX, genY - 3 * zoom);
+      ctx.quadraticCurveTo(genX + cosR * 5 * zoom, genY - 8 * zoom, 0, -totalH * 0.5);
+      ctx.stroke();
+    }
+  }
+
+  // ===== RECOIL HYDRAULICS (follow barrel tilt and compress on fire) =====
+  {
+    const hydFrac = 0.35;
+    const hydRecoil = tierRecoils[0] + tierRecoils[1] * 0.3;
+    const hydPt = posAtFrac(hydFrac, hydRecoil);
+    for (const side of [-1, 1]) {
+      const footX = side * tiers[0].r * 0.7;
+      const footY = 5 * zoom;
+      const attachX = hydPt.x + side * tiers[1].r * 0.5;
+      const attachY = hydPt.y;
+      const midX = (footX + attachX) * 0.5;
+      const midY = (footY + attachY) * 0.55;
+      // Cylinder
+      ctx.strokeStyle = level >= 3 ? "#6a6a72" : "#5a5a62";
+      ctx.lineWidth = 3.5 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(footX, footY);
+      ctx.lineTo(midX, midY);
+      ctx.stroke();
+      // Piston rod (extends during recoil)
+      ctx.strokeStyle = level >= 3 ? "#b0b0b8" : "#9a9aa0";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(midX, midY);
+      ctx.lineTo(attachX, attachY);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+      // Pivot bolt at base
+      ctx.fillStyle = level >= 3 ? "#c9a227" : "#7a7a82";
+      ctx.beginPath();
+      ctx.arc(footX, footY, 2.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#bbb";
+      ctx.beginPath();
+      ctx.arc(footX, footY, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      // Pivot at attach point
+      ctx.fillStyle = "#5a5a62";
+      ctx.beginPath();
+      ctx.arc(attachX, attachY, 1.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ===== RECOIL SPRINGS (visible coils that compress on fire) =====
+  if (level >= 2) {
+    const springFrac = 0.2;
+    const springRecoil = tierRecoils[0] * 0.8;
+    const springPt = posAtFrac(springFrac, springRecoil);
+    for (const side of [-1, 1]) {
+      const sx = springPt.x + side * sinR * tiers[0].r * 0.6;
+      const sy = springPt.y - side * cosR * tiers[0].r * ISO_Y_RATIO * 0.3;
+      const baseY = 3 * zoom;
+      const coilCount = 5;
+      const coilSpacing = (baseY - sy) / coilCount;
+      ctx.strokeStyle = level >= 3 ? "#9a9aa0" : "#7a7a82";
+      ctx.lineWidth = 1.2 * zoom;
+      for (let c = 0; c < coilCount; c++) {
+        const cy = sy + c * coilSpacing;
+        const cx = sx * (1 - c / coilCount);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, 2.5 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // ===== WIRES / CABLES (from base to barrel, sway with recoil) =====
+  {
+    const wireCount = level >= 3 ? 3 : level >= 2 ? 2 : 1;
+    for (let w = 0; w < wireCount; w++) {
+      const wireAngle = rot + Math.PI * 0.5 + w * Math.PI * 0.3;
+      const startX = Math.cos(wireAngle) * tiers[0].r * 0.8;
+      const startY = Math.sin(wireAngle) * tiers[0].r * ISO_Y_RATIO * 0.8 + 4 * zoom;
+      const endFrac = 0.5 + w * 0.15;
+      const endRecoil = cumRecoil * (0.4 + w * 0.15);
+      const endPt = posAtFrac(endFrac, endRecoil);
+      // Sag with dynamic offset from recoil
+      const sagX = (startX + endPt.x) * 0.5 + (recoilBase * 0.2);
+      const sagY = (startY + endPt.y) * 0.5 + 3 * zoom;
+      ctx.strokeStyle = w === 0 ? "#2a2a2a" : w === 1 ? "#3a2a1a" : "#1a2a1a";
+      ctx.lineWidth = (0.8 + w * 0.2) * zoom;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(sagX, sagY, endPt.x, endPt.y);
+      ctx.stroke();
+      // Connection dots
+      ctx.fillStyle = "#5a5a5a";
+      ctx.beginPath();
+      ctx.arc(startX, startY, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ===== WARNING LIGHTS (on barrel, pulse with recoil) =====
+  {
+    const lightCount = level >= 3 ? 3 : level >= 2 ? 2 : 1;
+    for (let li = 0; li < lightCount; li++) {
+      const lightFrac = 0.3 + li * 0.25;
+      const lightRecoil = cumRecoil * (0.3 + li * 0.2);
+      const lightPt = posAtFrac(lightFrac, lightRecoil);
+      const lightAngle = rot + Math.PI * 0.5 + li * Math.PI * 0.4;
+      const lightR = tiers[Math.min(li, 2)].r;
+      const lx = lightPt.x + Math.cos(lightAngle) * lightR * 0.95;
+      const ly = lightPt.y + Math.sin(lightAngle) * lightR * ISO_Y_RATIO * 0.95;
+
+      const recoilFlash = timeSinceFire < 800;
+      const lightOn = recoilFlash || Math.sin(time * 3 + li * 2) > 0.3;
+      const color = li === 0 ? (recoilFlash ? "#ff2200" : "#00ff44") :
+        li === 1 ? (recoilFlash ? "#ff6600" : "#ffaa00") : "#0088ff";
+      ctx.fillStyle = lightOn ? color : `rgba(40,40,40,0.5)`;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      if (lightOn) {
+        ctx.fillStyle = color.replace(")", ",0.12)").replace("rgb", "rgba").replace("#", "");
+        // Use a simpler glow
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 3 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  // ===== ROTATING GUIDE RAILS (follow rotation direction) =====
+  {
+    for (const side of [-1, 1]) {
+      const guideAngle = rot + side * Math.PI * 0.5;
+      const guideStartX = Math.cos(guideAngle) * tiers[0].r * 0.85;
+      const guideStartY = Math.sin(guideAngle) * tiers[0].r * ISO_Y_RATIO * 0.85 + 3 * zoom;
+      const guideEndPt = posAtFrac(0.6, cumRecoil * 0.5);
+      const guideEndX = guideEndPt.x + Math.cos(guideAngle) * tiers[1].r * 0.5;
+      const guideEndY = guideEndPt.y + Math.sin(guideAngle) * tiers[1].r * ISO_Y_RATIO * 0.5;
+      ctx.strokeStyle = level >= 3 ? "#6a6a72" : "#4a4a52";
+      ctx.lineWidth = 1.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(guideStartX, guideStartY);
+      ctx.lineTo(guideEndX, guideEndY);
+      ctx.stroke();
+      // Guide rail bracket
+      ctx.fillStyle = level >= 3 ? "#8a8a90" : "#5a5a62";
+      ctx.beginPath();
+      ctx.arc(guideStartX, guideStartY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ===== BARREL COLLAR (moves with recoil at tier junction) =====
+  {
+    const collarFrac = tiers[0].h / totalH;
+    const collarRecoil = tierRecoils[0];
+    const collarPt = posAtFrac(collarFrac, collarRecoil);
+    const collarR = (tiers[0].r + tiers[1].r) * 0.5;
+    const collarVerts = generateIsoHexVertices(isoOff, collarR * 1.05, hexSides);
+    const collarNormals = computeHexSideNormals(cosR, hexSides);
+    const collarBotPt: Pt = { x: collarPt.x, y: collarPt.y + 1 * zoom };
+    const collarTopPt: Pt = { x: collarPt.x, y: collarPt.y - 1 * zoom };
+    drawHexBand(ctx, collarVerts, collarNormals, collarBotPt, collarTopPt, 1.0,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+        return level >= 3
+          ? `rgb(${Math.floor(180 * (0.6 + b * 0.4))},${Math.floor(150 * (0.6 + b * 0.4))},${Math.floor(40 * (0.6 + b * 0.4))})`
+          : `rgb(${Math.floor(90 + b * 30)},${Math.floor(90 + b * 30)},${Math.floor(100 + b * 22)})`;
+      }, "rgba(0,0,0,0.15)", 0.4 * zoom, -0.7);
+    // Collar bolts
+    ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
+    for (let ci = 0; ci < hexSides; ci++) {
+      if (collarNormals[ci] < -0.7) continue;
+      ctx.beginPath();
+      ctx.arc(collarPt.x + collarVerts[ci].x, collarPt.y + collarVerts[ci].y, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // ===== TOP RIM =====
+  const topTier = tiers[2];
+  const rimPt = posAtFrac(1.0, cumRecoil);
+  const rimR = (topTier.r / zoom + (level >= 3 ? 2.5 : 2)) * zoom;
+  const rimVerts = generateIsoHexVertices(isoOff, rimR, hexSides);
+  const rimInnerVerts = generateIsoHexVertices(isoOff, topTier.r * 0.92, hexSides);
+  const rimNormals = computeHexSideNormals(cosR, hexSides);
+  const rimBandH = (level >= 3 ? 3 : 2.5) * zoom;
+  const rimBotPt: Pt = { x: rimPt.x, y: rimPt.y + rimBandH };
+  const rimColor = level >= 3 ? "#c9a227" : level >= 2 ? "#8b7355" : "#6a5a4a";
+  const rimSorted = sortSidesByDepth(rimNormals);
+  for (const i of rimSorted) {
+    const ni = (i + 1) % hexSides;
+    const n = rimNormals[i];
+    const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+    const bR = parseInt(rimColor.slice(1, 3), 16);
+    const bG = parseInt(rimColor.slice(3, 5), 16);
+    const bB = parseInt(rimColor.slice(5, 7), 16);
+    ctx.fillStyle = `rgb(${Math.floor(bR * (0.6 + b * 0.4))},${Math.floor(bG * (0.6 + b * 0.4))},${Math.floor(bB * (0.6 + b * 0.4))})`;
+    ctx.beginPath();
+    ctx.moveTo(rimBotPt.x + rimVerts[i].x, rimBotPt.y + rimVerts[i].y);
+    ctx.lineTo(rimBotPt.x + rimVerts[ni].x, rimBotPt.y + rimVerts[ni].y);
+    ctx.lineTo(rimPt.x + rimVerts[ni].x, rimPt.y + rimVerts[ni].y);
+    ctx.lineTo(rimPt.x + rimVerts[i].x, rimPt.y + rimVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+  drawHexCap(ctx, rimPt, rimVerts, level >= 3 ? "#d4aa30" : level >= 2 ? "#9a8a6a" : "#7a6a5a", "rgba(0,0,0,0.1)", 0.6 * zoom);
+  drawHexCap(ctx, rimPt, rimInnerVerts, "#0a0804", "rgba(0,0,0,0.3)", 0.8 * zoom);
+
+  if (timeSinceFire < 2000) {
+    const glowA = Math.max(0, 0.4 - timeSinceFire / 2000 * 0.4);
+    drawHexCap(ctx, rimPt, scaleVerts(rimInnerVerts, 0.6), `rgba(255, 100, 20, ${glowA})`);
+  }
+
+  // ===== MUZZLE FLASH =====
+  if (timeSinceFire < 400) {
+    const fT = timeSinceFire / 400;
+    const fA = (1 - fT) * 0.85;
+    const fSize = (12 + level * 4) * zoom * (1 + fT * 0.4);
+    const fGrad = ctx.createRadialGradient(rimPt.x, rimPt.y - fSize * 0.3, 0,
+      rimPt.x, rimPt.y - fSize * 0.3, fSize);
+    fGrad.addColorStop(0, `rgba(255, 240, 140, ${fA})`);
+    fGrad.addColorStop(0.3, `rgba(255, 180, 60, ${fA * 0.7})`);
+    fGrad.addColorStop(0.6, `rgba(255, 80, 10, ${fA * 0.3})`);
+    fGrad.addColorStop(1, "rgba(255, 40, 0, 0)");
+    ctx.fillStyle = fGrad;
+    ctx.beginPath();
+    ctx.arc(rimPt.x, rimPt.y - fSize * 0.3, fSize, 0, Math.PI * 2);
+    ctx.fill();
+    for (let p = 0; p < 4; p++) {
+      const pA = fT * 3 + p * 1.57;
+      const pDist = fSize * (0.3 + fT * 0.5);
+      ctx.fillStyle = `rgba(100, 90, 80, ${Math.max(0, (1 - fT * 1.5)) * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(rimPt.x + Math.cos(pA) * pDist * 0.5,
+        rimPt.y - fSize * 0.3 + Math.sin(pA) * pDist * 0.3 - fT * 10 * zoom,
+        (2.5 + fT * 4) * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.restore();
+}
+
+// Ember Foundry (4B): aimed revolver triple barrel with rigid-body tilt
+function renderMortarEmberTurret(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  topY: number,
+  tower: Tower,
+  zoom: number,
+  time: number,
+  recoilBase: number,
+  recoilMid: number,
+  recoilTip: number,
+  timeSinceFire: number,
+) {
+  const rot = tower.rotation || -Math.PI / 4;
+  const cosR = Math.cos(rot);
+  const sinR = Math.sin(rot);
+  const hexSides = 8;
+  const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
+  const totalRecoil = (recoilBase + recoilMid + recoilTip) * 0.25;
+
+  ctx.save();
+  ctx.translate(screenPos.x, topY);
+
+  // Rigid-body tilt toward target
+  const fireTiltBoost = timeSinceFire < 600 ? (1 - timeSinceFire / 600) * 0.1 : 0;
+  const tiltStr = 0.2 + fireTiltBoost;
+  const maxTiltX = cosR * tiltStr * 10 * zoom;
+  const maxTiltY = sinR * tiltStr * ISO_Y_RATIO * 10 * zoom;
+
+  // === HEX-PRISM ROTATING PLATFORM ===
+  const platR = 24 * zoom;
+  const platH = 4 * zoom;
+  const ePlatVerts = generateIsoHexVertices(isoOff, platR, hexSides);
+  const ePlatNormals = computeHexSideNormals(0, hexSides);
+  const ePlatSorted = sortSidesByDepth(ePlatNormals);
+  const ePlatBot: Pt = { x: 0, y: 3 * zoom };
+  const ePlatTop: Pt = { x: 0, y: 3 * zoom - platH };
+
+  for (const i of ePlatSorted) {
+    const ni = (i + 1) % hexSides;
+    const n = ePlatNormals[i];
+    const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+    const cr = Math.floor(42 + bright * 48);
+    const cg = Math.floor(32 + bright * 42);
+    const cb = Math.floor(16 + bright * 24);
+    ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+    ctx.beginPath();
+    ctx.moveTo(ePlatBot.x + ePlatVerts[i].x, ePlatBot.y + ePlatVerts[i].y);
+    ctx.lineTo(ePlatBot.x + ePlatVerts[ni].x, ePlatBot.y + ePlatVerts[ni].y);
+    ctx.lineTo(ePlatTop.x + ePlatVerts[ni].x, ePlatTop.y + ePlatVerts[ni].y);
+    ctx.lineTo(ePlatTop.x + ePlatVerts[i].x, ePlatTop.y + ePlatVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+  drawHexCap(ctx, ePlatTop, ePlatVerts, "#5a4a38", "rgba(0,0,0,0.1)", 0.5 * zoom);
+
+  // Hex gear ring on platform
+  {
+    const gR = platR * 0.92;
+    const gVerts = generateIsoHexVertices(isoOff, gR, hexSides);
+    const gNormals = computeHexSideNormals(0, hexSides);
+    drawHexBand(ctx, gVerts, gNormals,
+      { x: 0, y: ePlatTop.y + 1.5 * zoom }, ePlatTop, 1.0,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+        return `rgb(${Math.floor(90 * (0.6 + b * 0.4))},${Math.floor(80 * (0.6 + b * 0.4))},${Math.floor(60 * (0.6 + b * 0.4))})`;
+      }, "rgba(0,0,0,0.12)", 0.4 * zoom, -0.3);
+    for (let g = 0; g < 18; g++) {
+      const ga = (g / 18) * Math.PI * 2;
+      ctx.fillStyle = "#7a6a5a";
+      ctx.beginPath();
+      ctx.arc(Math.cos(ga) * gR, Math.sin(ga) * gR * ISO_Y_RATIO, 1 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Anchor bolts on platform vertices
+  ctx.fillStyle = "#6a5a4a";
+  for (let i = 0; i < hexSides; i++) {
+    if (ePlatNormals[i] < -0.7 && ePlatNormals[(i + hexSides - 1) % hexSides] < -0.7) continue;
+    ctx.beginPath();
+    ctx.arc(ePlatTop.x + ePlatVerts[i].x, ePlatTop.y + ePlatVerts[i].y, 1.3 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Support struts from platform edges
+  ctx.strokeStyle = "#4a3a28";
+  ctx.lineWidth = 1.5 * zoom;
+  for (let i = 0; i < hexSides; i++) {
+    if (ePlatNormals[i] < -0.7) continue;
+    const ni = (i + 1) % hexSides;
+    const mx = (ePlatVerts[i].x + ePlatVerts[ni].x) * 0.5;
+    const my = (ePlatVerts[i].y + ePlatVerts[ni].y) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(ePlatTop.x + mx, ePlatTop.y + my);
+    ctx.lineTo(ePlatBot.x + mx * 1.15, ePlatBot.y + my * 1.15 + 2 * zoom);
+    ctx.stroke();
+  }
+
+  // Aim indicator line
+  ctx.strokeStyle = "#ff440040";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(cosR * platR * 0.3, sinR * platR * ISO_Y_RATIO * 0.3);
+  ctx.lineTo(cosR * platR * 0.9, sinR * platR * ISO_Y_RATIO * 0.9);
+  ctx.stroke();
+
+  // === QUADPOD FRAME ===
+  {
+    const legAngles = [Math.PI * 0.15, Math.PI * 0.85, -Math.PI * 0.15, -Math.PI * 0.85];
+    const footR = platR * 0.85;
+    const topAttachX = maxTiltX * 0.5;
+    const topAttachY = -8 * zoom + maxTiltY * 0.5;
+    for (let li = 0; li < 4; li++) {
+      const la = legAngles[li];
+      const fx = Math.cos(la) * footR;
+      const fy = Math.sin(la) * footR * ISO_Y_RATIO + 2 * zoom;
+      ctx.strokeStyle = "#5a4a38";
+      ctx.lineWidth = 3.5 * zoom;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(topAttachX + fx * 0.15, topAttachY);
+      ctx.stroke();
+      ctx.fillStyle = "#4a3a28";
+      ctx.beginPath();
+      ctx.ellipse(fx, fy, 2.5 * zoom, 1.3 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.lineCap = "butt";
+    ctx.strokeStyle = "#5a4a38";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let li = 0; li < 2; li++) {
+      const x1 = Math.cos(legAngles[li]) * footR * 0.5;
+      const y1 = Math.sin(legAngles[li]) * footR * ISO_Y_RATIO * 0.5;
+      const x2 = Math.cos(legAngles[li + 2]) * footR * 0.5;
+      const y2 = Math.sin(legAngles[li + 2]) * footR * ISO_Y_RATIO * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+  }
+
+  // === REVOLVER MECHANISM ===
+  const attackSpeed = 2500;
+  const barrelCount = 3;
+  const shotInterval = attackSpeed / barrelCount;
+  const cyclePos = timeSinceFire % attackSpeed;
+  const activeBarrel = Math.floor(cyclePos / shotInterval);
+  const shotProgress = (cyclePos % shotInterval) / shotInterval;
+  const smoothAngle = (timeSinceFire / attackSpeed) * Math.PI * 2;
+
+  // Central spindle (tilted)
+  const spindleBase: Pt = { x: 0, y: -2 * zoom };
+  const spindleTop: Pt = { x: maxTiltX * 0.8, y: -13 * zoom + maxTiltY * 0.8 };
+
+  ctx.fillStyle = "#3a2a18";
+  ctx.beginPath();
+  ctx.ellipse(spindleBase.x, spindleBase.y, 7 * zoom, 3.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#4a3a28";
+  ctx.lineWidth = 6 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(spindleBase.x, spindleBase.y);
+  ctx.lineTo(spindleTop.x, spindleTop.y);
+  ctx.stroke();
+  ctx.fillStyle = "#4a3a28";
+  ctx.beginPath();
+  ctx.ellipse(spindleTop.x, spindleTop.y, 5 * zoom, 2.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ratchet gear
+  ctx.strokeStyle = "#6a5a4a";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(spindleBase.x, spindleBase.y, 9 * zoom, 4.5 * zoom, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  for (let t = 0; t < 14; t++) {
+    const ta = (t / 14) * Math.PI * 2 + smoothAngle;
+    ctx.fillStyle = "#7a6a5a";
+    ctx.beginPath();
+    ctx.arc(spindleBase.x + Math.cos(ta) * 9 * zoom,
+      spindleBase.y + Math.sin(ta) * 4.5 * zoom, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Furnace glow
+  const furnPulse = 0.5 + Math.sin(time * 3) * 0.25;
+  const furnCx = (spindleBase.x + spindleTop.x) * 0.5;
+  const furnCy = (spindleBase.y + spindleTop.y) * 0.5;
+  const furnGrad = ctx.createRadialGradient(furnCx, furnCy, 0, furnCx, furnCy, 14 * zoom);
+  furnGrad.addColorStop(0, `rgba(255, 120, 0, ${furnPulse * 0.6})`);
+  furnGrad.addColorStop(0.5, `rgba(255, 60, 0, ${furnPulse * 0.25})`);
+  furnGrad.addColorStop(1, "rgba(200, 30, 0, 0)");
+  ctx.fillStyle = furnGrad;
+  ctx.beginPath();
+  ctx.ellipse(furnCx, furnCy, 14 * zoom, 7 * zoom, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Propellant feed pipes
+  for (let p = 0; p < 3; p++) {
+    const pa = smoothAngle + p * (Math.PI * 2 / 3);
+    const px = spindleBase.x + Math.cos(pa) * 6 * zoom;
+    const py = spindleBase.y + Math.sin(pa) * 3 * zoom;
+    ctx.strokeStyle = "#5a3a2a";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(spindleBase.x, spindleBase.y);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+  }
+
+  // === THREE BARRELS (revolving, tilted toward target) ===
+  const barrelSpread = 13 * zoom;
+  const barrelTiers = [
+    { r: 7.5 * zoom, h: 6 * zoom, dark: "#3a2010", light: "#7a5a3a" },
+    { r: 6 * zoom, h: 5.5 * zoom, dark: "#44302a", light: "#8a6a4a" },
+  ];
+  const barrelTotalH = barrelTiers[0].h + barrelTiers[1].h;
+
+  const barrelAngles = [0, 1, 2].map(i => smoothAngle + i * (Math.PI * 2 / 3));
+  const barrelOrder = [0, 1, 2].sort((a, b) =>
+    Math.sin(barrelAngles[a]) - Math.sin(barrelAngles[b]));
+
+  for (const bi of barrelOrder) {
+    const bAngle = smoothAngle + bi * (Math.PI * 2 / 3);
+    // Barrel center orbits the spindle (tilted)
+    const orbitCx = (spindleBase.x + spindleTop.x) * 0.5;
+    const orbitCy = (spindleBase.y + spindleTop.y) * 0.5;
+    const bx = orbitCx + Math.cos(bAngle) * barrelSpread;
+    const by = orbitCy + Math.sin(bAngle) * barrelSpread * ISO_Y_RATIO;
+
+    // Support arm
+    ctx.strokeStyle = "#5a4a38";
+    ctx.lineWidth = 3 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(spindleTop.x, spindleTop.y);
+    ctx.lineTo(bx, by - barrelTotalH * 0.5);
+    ctx.stroke();
+    ctx.fillStyle = "#6a5a4a";
+    ctx.beginPath();
+    ctx.arc(bx, by - barrelTotalH * 0.5, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    const isActiveBarrel = bi === activeBarrel;
+    const barrelRecoil = isActiveBarrel && shotProgress < 0.3
+      ? (1 - shotProgress / 0.3) * totalRecoil : 0;
+
+    // Per-barrel rigid-body tilt (same direction as main tilt)
+    const bMaxTiltX = maxTiltX * 0.4;
+    const bMaxTiltY = maxTiltY * 0.4;
+
+    let bCumH = 0;
+    for (let ti = 0; ti < 2; ti++) {
+      const tier = barrelTiers[ti];
+      const botFrac = bCumH / barrelTotalH;
+      const topFrac = (bCumH + tier.h) / barrelTotalH;
+
+      const botC: Pt = {
+        x: bx + botFrac * bMaxTiltX,
+        y: by - bCumH + botFrac * bMaxTiltY + barrelRecoil,
+      };
+      const topC: Pt = {
+        x: bx + topFrac * bMaxTiltX,
+        y: by - (bCumH + tier.h) + topFrac * bMaxTiltY + barrelRecoil,
+      };
+
+      const hexVerts = generateIsoHexVertices(isoOff, tier.r, hexSides);
+      const sideNormals = computeHexSideNormals(cosR, hexSides);
+      const sorted = sortSidesByDepth(sideNormals);
+
+      for (const i of sorted) {
+        const ni = (i + 1) % hexSides;
+        const n = sideNormals[i];
+        const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+        const dr = parseInt(tier.dark.slice(1, 3), 16);
+        const dg = parseInt(tier.dark.slice(3, 5), 16);
+        const db = parseInt(tier.dark.slice(5, 7), 16);
+        const lr = parseInt(tier.light.slice(1, 3), 16);
+        const lg = parseInt(tier.light.slice(3, 5), 16);
+        const lb = parseInt(tier.light.slice(5, 7), 16);
+        ctx.fillStyle = `rgb(${Math.floor(dr + (lr - dr) * bright)},${Math.floor(dg + (lg - dg) * bright)},${Math.floor(db + (lb - db) * bright)})`;
+        ctx.beginPath();
+        ctx.moveTo(botC.x + hexVerts[i].x, botC.y + hexVerts[i].y);
+        ctx.lineTo(botC.x + hexVerts[ni].x, botC.y + hexVerts[ni].y);
+        ctx.lineTo(topC.x + hexVerts[ni].x, topC.y + hexVerts[ni].y);
+        ctx.lineTo(topC.x + hexVerts[i].x, topC.y + hexVerts[i].y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.12)";
+        ctx.lineWidth = 0.5 * zoom;
+        ctx.stroke();
+      }
+      drawHexCap(ctx, topC, hexVerts, tier.light, "rgba(0,0,0,0.1)", 0.5 * zoom);
+
+      const bandBot: Pt = { x: topC.x, y: topC.y + 1.5 * zoom };
+      drawHexBand(ctx, hexVerts, sideNormals, bandBot, topC, 1.05,
+        (n) => {
+          const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+          return `rgb(${Math.floor(139 * (0.6 + b * 0.4))},${Math.floor(115 * (0.6 + b * 0.4))},${Math.floor(85 * (0.6 + b * 0.4))})`;
+        }, "rgba(0,0,0,0.15)", 0.4 * zoom, -0.3);
+      bCumH += tier.h;
+    }
+
+    // Rim + bore
+    const rimR = barrelTiers[1].r * 1.15;
+    const rimVerts = generateIsoHexVertices(isoOff, rimR, hexSides);
+    const innerVerts = generateIsoHexVertices(isoOff, barrelTiers[1].r * 0.7, hexSides);
+    const rimC: Pt = {
+      x: bx + bMaxTiltX,
+      y: by - barrelTotalH + bMaxTiltY + barrelRecoil,
+    };
+    drawHexCap(ctx, rimC, rimVerts, "#c9a227", "rgba(0,0,0,0.15)", 0.6 * zoom);
+    drawHexCap(ctx, rimC, innerVerts, "#0a0804", "rgba(0,0,0,0.3)", 0.6 * zoom);
+
+    const mPulse = 0.4 + Math.sin(time * 3 + bi * 2.1) * 0.3;
+    drawHexCap(ctx, rimC, scaleVerts(innerVerts, 0.5), `rgba(255, 80, 0, ${mPulse})`);
+
+    if (isActiveBarrel && shotProgress < 0.15) {
+      const fA = (1 - shotProgress / 0.15) * 0.7;
+      const fSize = 10 * zoom;
+      const fGrad = ctx.createRadialGradient(rimC.x, rimC.y - 3 * zoom, 0, rimC.x, rimC.y - 3 * zoom, fSize);
+      fGrad.addColorStop(0, `rgba(255, 200, 80, ${fA})`);
+      fGrad.addColorStop(0.4, `rgba(255, 100, 0, ${fA * 0.5})`);
+      fGrad.addColorStop(1, "rgba(255, 50, 0, 0)");
+      ctx.fillStyle = fGrad;
+      ctx.beginPath();
+      ctx.arc(rimC.x, rimC.y - 3 * zoom, fSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === HEAT SHIELDS (between barrels and platform) ===
+  {
+    for (let hs = 0; hs < 3; hs++) {
+      const hsA = smoothAngle + hs * (Math.PI * 2 / 3) + Math.PI / 3;
+      const hsx = Math.cos(hsA) * barrelSpread * 0.6;
+      const hsy = Math.sin(hsA) * barrelSpread * ISO_Y_RATIO * 0.6 - 4 * zoom;
+      if (Math.sin(hsA) > 0.5) continue;
+      ctx.fillStyle = "#3a2218";
+      ctx.beginPath();
+      ctx.moveTo(hsx - 3 * zoom, hsy);
+      ctx.lineTo(hsx + 3 * zoom, hsy);
+      ctx.lineTo(hsx + 2 * zoom, hsy - 5 * zoom);
+      ctx.lineTo(hsx - 2 * zoom, hsy - 5 * zoom);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#5a3a28";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+    }
+  }
+
+  // === FUEL LINES (from platform edge to spindle) ===
+  {
+    ctx.strokeStyle = "#5a3a20";
+    ctx.lineWidth = 1.2 * zoom;
+    for (let fl = 0; fl < 3; fl++) {
+      const fla = fl * (Math.PI * 2 / 3) + Math.PI * 0.5;
+      const startX = Math.cos(fla) * platR * 0.75;
+      const startY = Math.sin(fla) * platR * ISO_Y_RATIO * 0.75;
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.quadraticCurveTo(startX * 0.4, startY * 0.4 - 3 * zoom, spindleBase.x, spindleBase.y);
+      ctx.stroke();
+      ctx.fillStyle = "#8a5a3a";
+      ctx.beginPath();
+      ctx.arc(startX, startY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === EXHAUST VENTS (on spindle sides) ===
+  {
+    for (const side of [-1, 1]) {
+      const vx = spindleBase.x + side * 8 * zoom;
+      const vy = spindleBase.y + side * 2 * zoom;
+      ctx.fillStyle = "#2a1a10";
+      ctx.beginPath();
+      ctx.ellipse(vx, vy, 2 * zoom, 1 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (timeSinceFire < 1200) {
+        const ventA = (1 - timeSinceFire / 1200) * 0.35;
+        ctx.fillStyle = `rgba(255, 100, 20, ${ventA})`;
+        ctx.beginPath();
+        ctx.arc(vx + side * 2 * zoom, vy - (1 - timeSinceFire / 1200) * 4 * zoom,
+          (1.5 + (1 - timeSinceFire / 1200) * 2) * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // === AMMO HOPPER (near platform edge) ===
+  {
+    const hopX = cosR * platR * 0.65;
+    const hopY = sinR * platR * ISO_Y_RATIO * 0.65;
+    drawIsometricPrism(ctx, hopX, hopY, 5, 4, 5,
+      { top: "#4a3a20", left: "#3a2a14", right: "#2a1a0a" }, zoom);
+    ctx.fillStyle = "#ff6600";
+    ctx.fillRect(hopX - 1.5 * zoom, hopY - 4 * zoom, 3 * zoom, 1 * zoom);
+    // Shells visible on top
+    for (let sh = 0; sh < 2; sh++) {
+      ctx.fillStyle = "#cc5500";
+      ctx.beginPath();
+      ctx.ellipse(hopX + (sh - 0.5) * 2 * zoom, hopY - 4.5 * zoom, 1.2 * zoom, 0.7 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === SIGHT UNIT with targeting display ===
+  {
+    const sightX = spindleTop.x + 5 * zoom;
+    const sightY = spindleTop.y - 7 * zoom;
+    ctx.strokeStyle = "#5a5a5a";
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(spindleTop.x, spindleTop.y);
+    ctx.lineTo(sightX, sightY);
+    ctx.stroke();
+    ctx.fillStyle = "#2a2a32";
+    ctx.fillRect(sightX - 3 * zoom, sightY - 2 * zoom, 6 * zoom, 4 * zoom);
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.strokeRect(sightX - 3 * zoom, sightY - 2 * zoom, 6 * zoom, 4 * zoom);
+    const sGlow = 0.5 + Math.sin(time * 3) * 0.2;
+    ctx.fillStyle = `rgba(255, 80, 0, ${sGlow})`;
+    ctx.fillRect(sightX - 2 * zoom, sightY - 1 * zoom, 4 * zoom, 2 * zoom);
+    // Crosshair
+    ctx.strokeStyle = `rgba(255, 200, 0, ${sGlow})`;
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sightX - 1.5 * zoom, sightY);
+    ctx.lineTo(sightX + 1.5 * zoom, sightY);
+    ctx.moveTo(sightX, sightY - 0.8 * zoom);
+    ctx.lineTo(sightX, sightY + 0.8 * zoom);
+    ctx.stroke();
+  }
+
+  // === TEMPERATURE GAUGE ===
+  {
+    const gx = -cosR * platR * 0.5;
+    const gy = -sinR * platR * ISO_Y_RATIO * 0.5 - 2 * zoom;
+    ctx.fillStyle = "#1a1a20";
+    ctx.beginPath();
+    ctx.arc(gx, gy, 3 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#c9a227";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+    const heatLevel = 0.5 + Math.sin(time * 0.8) * 0.3;
+    ctx.strokeStyle = `rgb(${Math.floor(255 * heatLevel)}, ${Math.floor(80 * (1 - heatLevel))}, 0)`;
+    ctx.lineWidth = 0.6 * zoom;
+    const needleA = -Math.PI * 0.5 + heatLevel * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(gx, gy);
+    ctx.lineTo(gx + Math.cos(needleA) * 2 * zoom, gy + Math.sin(needleA) * 2 * zoom);
+    ctx.stroke();
+  }
+
+  // === EMBER SPARKS (enhanced) ===
+  for (let sp = 0; sp < 8; sp++) {
+    const sa = time * 1.5 + sp * Math.PI * 0.25;
+    const sr = 12 * zoom + Math.sin(sa * 2) * 5 * zoom;
+    const sparkR = (1 + Math.sin(sa * 2) * 0.4) * zoom;
+    ctx.fillStyle = `rgba(255, ${80 + Math.floor(Math.sin(sa) * 80)}, 0, ${0.4 + Math.sin(sa * 3) * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(spindleTop.x + Math.cos(sa) * sr, spindleTop.y - 6 * zoom - Math.abs(Math.sin(sa * 1.3)) * 10 * zoom,
+      sparkR, 0, Math.PI * 2);
+    ctx.fill();
+    // Trailing glow
+    ctx.fillStyle = `rgba(255, 60, 0, ${0.1 + Math.sin(sa * 3) * 0.08})`;
+    ctx.beginPath();
+    ctx.arc(spindleTop.x + Math.cos(sa) * sr * 0.8, spindleTop.y - 4 * zoom - Math.abs(Math.sin(sa * 1.3)) * 8 * zoom,
+      sparkR * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === HEAT SHIMMER ===
+  {
+    const shimmerA = 0.06 + Math.sin(time * 4) * 0.03;
+    ctx.fillStyle = `rgba(255, 150, 50, ${shimmerA})`;
+    ctx.beginPath();
+    ctx.ellipse(spindleTop.x, spindleTop.y - 15 * zoom, 18 * zoom, 8 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// Missile Battery (4A): proper 3D isometric launcher rack with visible tubes
+function renderMortarMissileSilo(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  topY: number,
+  tower: Tower,
+  zoom: number,
+  time: number,
+  timeSinceFire: number,
+) {
+  const rot = tower.rotation || -Math.PI / 4;
+  const cosR = Math.cos(rot);
+  const sinR = Math.sin(rot);
+
+  ctx.save();
+  ctx.translate(screenPos.x, topY);
+
+  // Directional vectors (screen-space)
+  const fwdX = cosR;
+  const fwdY = sinR * 0.5;
+  const perpX = -sinR;
+  const perpY = cosR * 0.5;
+
+  // === HEX-PRISM TURNTABLE ===
+  const hexSides = 8;
+  const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
+  const platR = 24 * zoom;
+  const mPlatH = 5 * zoom;
+  const mPlatVerts = generateIsoHexVertices(isoOff, platR, hexSides);
+  const mPlatNormals = computeHexSideNormals(0, hexSides);
+  const mPlatSorted = sortSidesByDepth(mPlatNormals);
+  const mPlatBot: Pt = { x: 0, y: 4 * zoom };
+  const mPlatTop: Pt = { x: 0, y: 4 * zoom - mPlatH };
+
+  for (const i of mPlatSorted) {
+    const ni = (i + 1) % hexSides;
+    const n = mPlatNormals[i];
+    const bright = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.32));
+    const cv = Math.floor(38 + bright * 38);
+    ctx.fillStyle = `rgb(${cv},${cv + 4},${cv + 10})`;
+    ctx.beginPath();
+    ctx.moveTo(mPlatBot.x + mPlatVerts[i].x, mPlatBot.y + mPlatVerts[i].y);
+    ctx.lineTo(mPlatBot.x + mPlatVerts[ni].x, mPlatBot.y + mPlatVerts[ni].y);
+    ctx.lineTo(mPlatTop.x + mPlatVerts[ni].x, mPlatTop.y + mPlatVerts[ni].y);
+    ctx.lineTo(mPlatTop.x + mPlatVerts[i].x, mPlatTop.y + mPlatVerts[i].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+  drawHexCap(ctx, mPlatTop, mPlatVerts, "#4a4a52", "rgba(0,0,0,0.1)", 0.5 * zoom);
+
+  // Hex gear ring
+  {
+    const gR = platR * 0.9;
+    const gVerts = generateIsoHexVertices(isoOff, gR, hexSides);
+    const gNormals = computeHexSideNormals(0, hexSides);
+    drawHexBand(ctx, gVerts, gNormals,
+      { x: 0, y: mPlatTop.y + 1.5 * zoom }, mPlatTop, 1.0,
+      (n) => {
+        const b = Math.max(0, Math.min(1, 0.4 + (n + 1) * 0.3));
+        return `rgb(${Math.floor(70 + b * 32)},${Math.floor(70 + b * 32)},${Math.floor(82 + b * 24)})`;
+      }, "rgba(0,0,0,0.12)", 0.4 * zoom, -0.3);
+    for (let g = 0; g < 20; g++) {
+      const ga = (g / 20) * Math.PI * 2 + time * 0.15;
+      ctx.fillStyle = "#6a6a72";
+      ctx.beginPath();
+      ctx.arc(Math.cos(ga) * gR, Math.sin(ga) * gR * ISO_Y_RATIO, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Anchor bolts on platform vertices
+  ctx.fillStyle = "#5a5a62";
+  for (let i = 0; i < hexSides; i++) {
+    if (mPlatNormals[i] < -0.7 && mPlatNormals[(i + hexSides - 1) % hexSides] < -0.7) continue;
+    ctx.beginPath();
+    ctx.arc(mPlatTop.x + mPlatVerts[i].x, mPlatTop.y + mPlatVerts[i].y, 1.3 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Support struts from platform edges
+  ctx.strokeStyle = "#3a3a42";
+  ctx.lineWidth = 1.5 * zoom;
+  for (let i = 0; i < hexSides; i++) {
+    if (mPlatNormals[i] < -0.7) continue;
+    const ni = (i + 1) % hexSides;
+    const mx = (mPlatVerts[i].x + mPlatVerts[ni].x) * 0.5;
+    const my = (mPlatVerts[i].y + mPlatVerts[ni].y) * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(mPlatTop.x + mx, mPlatTop.y + my);
+    ctx.lineTo(mPlatBot.x + mx * 1.12, mPlatBot.y + my * 1.12 + 2 * zoom);
+    ctx.stroke();
+  }
+
+  // Aim indicator
+  ctx.strokeStyle = "rgba(255,34,0,0.35)";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(fwdX * platR * 0.3, fwdY * platR * 0.3);
+  ctx.lineTo(fwdX * platR * 0.88, fwdY * platR * 0.88);
+  ctx.stroke();
+
+  // === LAUNCHER HOUSING (3D isometric box) ===
+  // Housing sits on the turntable, tilts forward/up toward target
+  const hW = 11 * zoom;   // half-width (perpendicular to aim)
+  const hL = 20 * zoom;   // length (along aim direction)
+  const hBackH = 8 * zoom;  // height at rear
+  const hFrontH = 20 * zoom; // height at front (tilted upward)
+
+  // Offset: housing center is slightly behind turntable center
+  const hOx = -fwdX * 3 * zoom;
+  const hOy = -fwdY * 3 * zoom;
+
+  // 8 corners of the tilted box
+  // Bottom face (on turntable plane)
+  const bb_l = { x: hOx - perpX * hW - fwdX * hL * 0.3, y: hOy - perpY * hW - fwdY * hL * 0.3 };
+  const bb_r = { x: hOx + perpX * hW - fwdX * hL * 0.3, y: hOy + perpY * hW - fwdY * hL * 0.3 };
+  const bf_l = { x: hOx - perpX * hW + fwdX * hL * 0.7, y: hOy - perpY * hW + fwdY * hL * 0.7 };
+  const bf_r = { x: hOx + perpX * hW + fwdX * hL * 0.7, y: hOy + perpY * hW + fwdY * hL * 0.7 };
+  // Top face (elevated, front higher due to tilt)
+  const tb_l = { x: bb_l.x, y: bb_l.y - hBackH };
+  const tb_r = { x: bb_r.x, y: bb_r.y - hBackH };
+  const tf_l = { x: bf_l.x, y: bf_l.y - hFrontH };
+  const tf_r = { x: bf_r.x, y: bf_r.y - hFrontH };
+
+  // Determine face visibility based on rotation
+  // Left face normal in screen space ~ perpX, perpY (points left of aim)
+  const leftVis = -perpX * 0.7 + perpY * 0.5;  // dot with ~(−1,1) camera dir
+  const rightVis = perpX * 0.7 - perpY * 0.5;
+  const frontVis = -fwdX * 0.7 + fwdY * 0.5;
+  const backVis = fwdX * 0.7 - fwdY * 0.5;
+
+  // Color helper: shade based on visibility/lighting
+  const shadeGray = (base: number, bright: number) => {
+    const v = Math.floor(base + bright * 25);
+    return `rgb(${v},${v + 4},${v + 8})`;
+  };
+
+  // Draw faces back-to-front
+  // Back face
+  if (backVis > -0.3) {
+    const b = Math.max(0, Math.min(1, backVis * 0.5 + 0.5));
+    ctx.fillStyle = shadeGray(40, b);
+    ctx.beginPath();
+    ctx.moveTo(bb_l.x, bb_l.y); ctx.lineTo(bb_r.x, bb_r.y);
+    ctx.lineTo(tb_r.x, tb_r.y); ctx.lineTo(tb_l.x, tb_l.y);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 0.6 * zoom; ctx.stroke();
+  }
+
+  // Left face
+  if (leftVis > -0.3) {
+    const b = Math.max(0, Math.min(1, leftVis * 0.5 + 0.5));
+    ctx.fillStyle = shadeGray(35, b);
+    ctx.beginPath();
+    ctx.moveTo(bb_l.x, bb_l.y); ctx.lineTo(bf_l.x, bf_l.y);
+    ctx.lineTo(tf_l.x, tf_l.y); ctx.lineTo(tb_l.x, tb_l.y);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 0.6 * zoom; ctx.stroke();
+    // Panel seam
+    const midLx = (bb_l.x + bf_l.x) * 0.5;
+    const midLy = (bb_l.y + bf_l.y) * 0.5;
+    const midTLx = (tb_l.x + tf_l.x) * 0.5;
+    const midTLy = (tb_l.y + tf_l.y) * 0.5;
+    ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath(); ctx.moveTo(midLx, midLy); ctx.lineTo(midTLx, midTLy); ctx.stroke();
+    // Rivets
+    ctx.fillStyle = "#7a7a82";
+    for (let rv = 0; rv < 3; rv++) {
+      const t = (rv + 0.5) / 3;
+      ctx.beginPath();
+      ctx.arc(bb_l.x + (bf_l.x - bb_l.x) * t, (bb_l.y + (bf_l.y - bb_l.y) * t) - 2 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Right face
+  if (rightVis > -0.3) {
+    const b = Math.max(0, Math.min(1, rightVis * 0.5 + 0.5));
+    ctx.fillStyle = shadeGray(35, b);
+    ctx.beginPath();
+    ctx.moveTo(bb_r.x, bb_r.y); ctx.lineTo(bf_r.x, bf_r.y);
+    ctx.lineTo(tf_r.x, tf_r.y); ctx.lineTo(tb_r.x, tb_r.y);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.15)"; ctx.lineWidth = 0.6 * zoom; ctx.stroke();
+    const midRx = (bb_r.x + bf_r.x) * 0.5;
+    const midRy = (bb_r.y + bf_r.y) * 0.5;
+    const midTRx = (tb_r.x + tf_r.x) * 0.5;
+    const midTRy = (tb_r.y + tf_r.y) * 0.5;
+    ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath(); ctx.moveTo(midRx, midRy); ctx.lineTo(midTRx, midTRy); ctx.stroke();
+    ctx.fillStyle = "#7a7a82";
+    for (let rv = 0; rv < 3; rv++) {
+      const t = (rv + 0.5) / 3;
+      ctx.beginPath();
+      ctx.arc(bb_r.x + (bf_r.x - bb_r.x) * t, (bb_r.y + (bf_r.y - bb_r.y) * t) - 2 * zoom, 0.8 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Bottom face (only if looking from below — in iso we see it when housing tilts)
+  ctx.fillStyle = shadeGray(30, 0.3);
+  ctx.beginPath();
+  ctx.moveTo(bb_l.x, bb_l.y); ctx.lineTo(bb_r.x, bb_r.y);
+  ctx.lineTo(bf_r.x, bf_r.y); ctx.lineTo(bf_l.x, bf_l.y);
+  ctx.closePath(); ctx.fill();
+
+  // Top face (always visible in iso view)
+  ctx.fillStyle = shadeGray(55, 0.8);
+  ctx.beginPath();
+  ctx.moveTo(tb_l.x, tb_l.y); ctx.lineTo(tb_r.x, tb_r.y);
+  ctx.lineTo(tf_r.x, tf_r.y); ctx.lineTo(tf_l.x, tf_l.y);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.12)"; ctx.lineWidth = 0.6 * zoom; ctx.stroke();
+
+  // Top face detail: center seam + warning stripes
+  {
+    const topMidB = { x: (tb_l.x + tb_r.x) * 0.5, y: (tb_l.y + tb_r.y) * 0.5 };
+    const topMidF = { x: (tf_l.x + tf_r.x) * 0.5, y: (tf_l.y + tf_r.y) * 0.5 };
+    ctx.strokeStyle = "rgba(0,0,0,0.12)";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(topMidB.x, topMidB.y);
+    ctx.lineTo(topMidF.x, topMidF.y);
+    ctx.stroke();
+    // Warning chevrons
+    ctx.strokeStyle = "rgba(200,160,0,0.2)";
+    ctx.lineWidth = 1.5 * zoom;
+    for (let ch = 0; ch < 3; ch++) {
+      const t = (ch + 1) / 4;
+      const cx = topMidB.x + (topMidF.x - topMidB.x) * t;
+      const cy = topMidB.y + (topMidF.y - topMidB.y) * t;
+      const pw = ((tf_l.x - tf_r.x) - (tb_l.x - tb_r.x)) * t + (tb_l.x - tb_r.x);
+      ctx.beginPath();
+      ctx.moveTo(cx - pw * 0.15, cy);
+      ctx.lineTo(cx, cy - 1.5 * zoom);
+      ctx.lineTo(cx + pw * 0.15, cy);
+      ctx.stroke();
+    }
+  }
+
+  // Front face (tube openings) — always draw, it's the business end
+  {
+    const fb = Math.max(0, Math.min(1, frontVis * 0.5 + 0.6));
+    ctx.fillStyle = shadeGray(32, fb);
+    ctx.beginPath();
+    ctx.moveTo(bf_l.x, bf_l.y); ctx.lineTo(bf_r.x, bf_r.y);
+    ctx.lineTo(tf_r.x, tf_r.y); ctx.lineTo(tf_l.x, tf_l.y);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.18)"; ctx.lineWidth = 0.7 * zoom; ctx.stroke();
+
+    // === MISSILE TUBES (2x3 grid on the front face) ===
+    const podRows = 3;
+    const podCols = 2;
+    const tubeR = 3.2 * zoom;
+
+    for (let row = 0; row < podRows; row++) {
+      for (let col = 0; col < podCols; col++) {
+        const podIdx = row * podCols + col;
+        // Parametric position on the front face
+        const u = (col + 0.5) / podCols; // 0..1 across width
+        const v = (row + 0.5) / podRows; // 0..1 across height
+
+        // Bilinear interpolation of front face corners
+        const tubeX = bf_l.x + (bf_r.x - bf_l.x) * u + (tf_l.x - bf_l.x + (tf_r.x - bf_r.x - tf_l.x + bf_l.x) * u) * v;
+        const tubeY = bf_l.y + (bf_r.y - bf_l.y) * u + (tf_l.y - bf_l.y + (tf_r.y - bf_r.y - tf_l.y + bf_l.y) * u) * v;
+
+        // Tube ring
+        ctx.fillStyle = "#3a3a44";
+        ctx.beginPath();
+        ctx.ellipse(tubeX, tubeY, tubeR * 1.25, tubeR * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#5a5a64";
+        ctx.lineWidth = 1 * zoom;
+        ctx.stroke();
+
+        // Tube bore (dark opening)
+        ctx.fillStyle = "#0a0808";
+        ctx.beginPath();
+        ctx.ellipse(tubeX, tubeY, tubeR * 0.85, tubeR * 0.48, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === MISSILE STATE ===
+        const fireDelay = podIdx * 200;
+        const mSince = timeSinceFire - fireDelay;
+        const isLaunching = mSince >= 0 && mSince < 400;
+        const isEmpty = mSince >= 400 && mSince < 1500;
+        const isReloading = mSince >= 1500 && mSince < 2200;
+        const isReady = mSince < 0 || mSince >= 2200;
+
+        // Missile warhead visible in tube
+        if (isReady || isReloading) {
+          const reloadT = isReloading ? (mSince - 1500) / 700 : 1;
+          // Missile nose pokes out
+          const noseProtrude = reloadT * 3 * zoom;
+          const noseX = tubeX + fwdX * noseProtrude;
+          const noseY = tubeY + fwdY * noseProtrude - noseProtrude * 0.1;
+          ctx.fillStyle = "#cc2200";
+          ctx.beginPath();
+          ctx.ellipse(noseX, noseY, tubeR * 0.55, tubeR * 0.32, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Warhead tip
+          ctx.fillStyle = "#ff4400";
+          ctx.beginPath();
+          ctx.arc(noseX + fwdX * 2 * zoom, noseY + fwdY * 2 * zoom, tubeR * 0.22, 0, Math.PI * 2);
+          ctx.fill();
+          // Fin marks at bore edge
+          if (reloadT > 0.8) {
+            ctx.strokeStyle = "#8a8a8a";
+            ctx.lineWidth = 0.6 * zoom;
+            for (let f = 0; f < 4; f++) {
+              const fa = (f / 4) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.moveTo(tubeX + Math.cos(fa) * tubeR * 0.5, tubeY + Math.sin(fa) * tubeR * 0.28);
+              ctx.lineTo(tubeX + Math.cos(fa) * tubeR * 0.85, tubeY + Math.sin(fa) * tubeR * 0.48);
+              ctx.stroke();
+            }
+          }
+        }
+
+        if (isEmpty) {
+          // Deeper bore when empty
+          const boreGrad = ctx.createRadialGradient(tubeX, tubeY, 0, tubeX, tubeY, tubeR * 0.8);
+          boreGrad.addColorStop(0, "#050404");
+          boreGrad.addColorStop(1, "#1a1515");
+          ctx.fillStyle = boreGrad;
+          ctx.beginPath();
+          ctx.ellipse(tubeX, tubeY, tubeR * 0.8, tubeR * 0.45, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Launching missile
+        if (isLaunching) {
+          const launchT = mSince / 400;
+          const mRiseY = -launchT * 25 * zoom;
+          const mFwdDist = launchT * launchT * 18 * zoom;
+          const mAlpha = Math.max(0, 1 - launchT);
+          const mX = tubeX + fwdX * mFwdDist;
+          const mY = tubeY + mRiseY + fwdY * mFwdDist;
+
+          ctx.globalAlpha = mAlpha;
+          // Missile body (elongated diamond)
+          const mLen = 6 * zoom;
+          const mWid = 1.8 * zoom;
+          ctx.fillStyle = "#cc2200";
+          ctx.beginPath();
+          ctx.moveTo(mX + fwdX * mLen, mY + fwdY * mLen);
+          ctx.lineTo(mX + perpX * mWid, mY + perpY * mWid);
+          ctx.lineTo(mX - fwdX * mLen * 0.4, mY - fwdY * mLen * 0.4);
+          ctx.lineTo(mX - perpX * mWid, mY - perpY * mWid);
+          ctx.closePath();
+          ctx.fill();
+          // Warhead
+          ctx.fillStyle = "#ff5500";
+          ctx.beginPath();
+          ctx.arc(mX + fwdX * mLen * 1.15, mY + fwdY * mLen * 1.15, 1.2 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          // Fins
+          ctx.strokeStyle = `rgba(150,150,150,${mAlpha})`;
+          ctx.lineWidth = 0.8 * zoom;
+          for (const s of [-1, 1]) {
+            ctx.beginPath();
+            ctx.moveTo(mX - fwdX * mLen * 0.3, mY - fwdY * mLen * 0.3);
+            ctx.lineTo(mX - fwdX * mLen * 0.4 + perpX * s * 3 * zoom, mY - fwdY * mLen * 0.4 + perpY * s * 3 * zoom);
+            ctx.stroke();
+          }
+          // Exhaust plume
+          const exhaust1 = `rgba(255, 200, 60, ${mAlpha * 0.7})`;
+          const exhaust2 = `rgba(255, 120, 20, ${mAlpha * 0.4})`;
+          const exhaust3 = `rgba(180, 180, 180, ${mAlpha * 0.25})`;
+          ctx.fillStyle = exhaust1;
+          ctx.beginPath();
+          ctx.arc(mX - fwdX * mLen * 0.5, mY - fwdY * mLen * 0.5, (1.5 + launchT * 2) * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = exhaust2;
+          ctx.beginPath();
+          ctx.arc(mX - fwdX * mLen * 0.8, mY - fwdY * mLen * 0.8 + zoom, (2 + launchT * 3) * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = exhaust3;
+          ctx.beginPath();
+          ctx.arc(mX - fwdX * mLen * 1.2, mY - fwdY * mLen * 1.2 + 2 * zoom, (3 + launchT * 4) * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+
+          // Muzzle flash at tube opening
+          if (mSince < 180) {
+            const flashA = (1 - mSince / 180) * 0.5;
+            const flashR = tubeR * 2.5;
+            const flashGrad = ctx.createRadialGradient(tubeX, tubeY, 0, tubeX, tubeY, flashR);
+            flashGrad.addColorStop(0, `rgba(255, 220, 120, ${flashA})`);
+            flashGrad.addColorStop(0.5, `rgba(255, 140, 40, ${flashA * 0.5})`);
+            flashGrad.addColorStop(1, `rgba(255, 80, 0, 0)`);
+            ctx.fillStyle = flashGrad;
+            ctx.beginPath();
+            ctx.arc(tubeX, tubeY, flashR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+  }
+
+  // === SUPPORT FRAME (connects turntable to housing) ===
+  // Rear support arch
+  {
+    ctx.strokeStyle = "#4a4a52";
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.lineCap = "round";
+    // Left rear strut
+    ctx.beginPath();
+    ctx.moveTo(-perpX * platR * 0.7 - fwdX * platR * 0.3, -perpY * platR * 0.7 - fwdY * platR * 0.3);
+    ctx.lineTo(bb_l.x, bb_l.y - hBackH * 0.5);
+    ctx.stroke();
+    // Right rear strut
+    ctx.beginPath();
+    ctx.moveTo(perpX * platR * 0.7 - fwdX * platR * 0.3, perpY * platR * 0.7 - fwdY * platR * 0.3);
+    ctx.lineTo(bb_r.x, bb_r.y - hBackH * 0.5);
+    ctx.stroke();
+    ctx.lineCap = "butt";
+  }
+
+  // Hydraulic elevation pistons (from platform to underside of housing)
+  for (const side of [-1, 1]) {
+    const pistonBaseX = perpX * side * 8 * zoom - fwdX * 8 * zoom;
+    const pistonBaseY = perpY * side * 8 * zoom - fwdY * 8 * zoom + 1 * zoom;
+    // Piston attaches to mid-underside of housing
+    const pistonTopX = (bb_l.x + bf_l.x) * 0.5 * (side < 0 ? 1 : 0) + (bb_r.x + bf_r.x) * 0.5 * (side > 0 ? 1 : 0);
+    const pistonTopY = ((bb_l.y + bf_l.y) * 0.5 * (side < 0 ? 1 : 0) + (bb_r.y + bf_r.y) * 0.5 * (side > 0 ? 1 : 0)) - 3 * zoom;
+
+    const pistonMidX = (pistonBaseX + pistonTopX) * 0.5;
+    const pistonMidY = (pistonBaseY + pistonTopY) * 0.55;
+
+    // Outer cylinder
+    ctx.strokeStyle = "#5a5a62";
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pistonBaseX, pistonBaseY);
+    ctx.lineTo(pistonMidX, pistonMidY);
+    ctx.stroke();
+    // Inner rod
+    ctx.strokeStyle = "#9a9aa0";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(pistonMidX, pistonMidY);
+    ctx.lineTo(pistonTopX, pistonTopY);
+    ctx.stroke();
+    // Pivot joints
+    ctx.fillStyle = "#6a6a72";
+    ctx.beginPath();
+    ctx.arc(pistonBaseX, pistonBaseY, 3 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#bbb";
+    ctx.beginPath();
+    ctx.arc(pistonBaseX, pistonBaseY, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#5a5a62";
+    ctx.beginPath();
+    ctx.arc(pistonTopX, pistonTopY, 2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // === AMMO STORAGE BOX (beside the launcher) ===
+  {
+    const boxX = -perpX * 16 * zoom - fwdX * 2 * zoom;
+    const boxY = -perpY * 16 * zoom - fwdY * 2 * zoom;
+    drawIsometricPrism(ctx, boxX, boxY, 6, 8, 6,
+      { top: "#4a5a3a", left: "#3a4a2a", right: "#2a3a1a" }, zoom);
+    // Warning label
+    ctx.fillStyle = "#cc2200";
+    ctx.fillRect(boxX - 2 * zoom, boxY - 4.5 * zoom, 4 * zoom, 1.2 * zoom);
+  }
+
+  // === RADAR + SENSORS ===
+  {
+    // Radar mast from back of housing
+    const radarBaseX = (tb_l.x + tb_r.x) * 0.5;
+    const radarBaseY = (tb_l.y + tb_r.y) * 0.5;
+    const radarTopY = radarBaseY - 10 * zoom;
+    ctx.strokeStyle = "#6a6a72";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(radarBaseX, radarBaseY);
+    ctx.lineTo(radarBaseX, radarTopY);
+    ctx.stroke();
+
+    // Dish
+    const dishAngle = time * 2;
+    const dishW = 6 * zoom * Math.abs(Math.cos(dishAngle));
+    ctx.fillStyle = "#8a8a92";
+    ctx.beginPath();
+    ctx.ellipse(radarBaseX, radarTopY, dishW, 2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = Math.sin(time * 6) > 0 ? "#ff2200" : "#880000";
+    ctx.beginPath();
+    ctx.arc(radarBaseX, radarTopY, 1 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Side-mounted sensor pod
+    const sensorX = perpX * 14 * zoom + fwdX * 2 * zoom;
+    const sensorY = perpY * 14 * zoom + fwdY * 2 * zoom - 6 * zoom;
+    ctx.fillStyle = "#3a3a44";
+    ctx.beginPath();
+    ctx.ellipse(sensorX, sensorY, 3 * zoom, 2 * zoom, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#5a5a64";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+    const sensorGlow = 0.35 + Math.sin(time * 3) * 0.2;
+    ctx.fillStyle = `rgba(255, 60, 0, ${sensorGlow})`;
+    ctx.beginPath();
+    ctx.arc(sensorX, sensorY, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+    // Sensor arm
+    ctx.strokeStyle = "#5a5a5a";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(sensorX, sensorY);
+    ctx.lineTo((tb_r.x + tf_r.x) * 0.5, (tb_r.y + tf_r.y) * 0.5);
+    ctx.stroke();
+  }
+
+  // === CABLE RUNS (from ammo box to housing) ===
+  {
+    const cableStartX = -perpX * 12 * zoom - fwdX * 2 * zoom;
+    const cableStartY = -perpY * 12 * zoom - fwdY * 2 * zoom - 3 * zoom;
+    ctx.strokeStyle = "#3a3a3a";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(cableStartX, cableStartY);
+    ctx.quadraticCurveTo(cableStartX + perpX * 5 * zoom, cableStartY - 4 * zoom,
+      (bb_l.x + tb_l.x) * 0.5, (bb_l.y + tb_l.y) * 0.5);
+    ctx.stroke();
+    // Second cable (power)
+    ctx.strokeStyle = "#2a2a32";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(cableStartX + 2 * zoom, cableStartY + 1 * zoom);
+    ctx.quadraticCurveTo(cableStartX + perpX * 5 * zoom + 2 * zoom, cableStartY - 3 * zoom,
+      (bb_r.x + tb_r.x) * 0.5, (bb_r.y + tb_r.y) * 0.5);
+    ctx.stroke();
+  }
+
+  // === TARGETING COMPUTER (behind launcher) ===
+  {
+    const tcX = -fwdX * platR * 0.65 + perpX * 6 * zoom;
+    const tcY = -fwdY * platR * 0.65 + perpY * 6 * zoom;
+    drawIsometricPrism(ctx, tcX, tcY, 5, 5, 7,
+      { top: "#2a2a32", left: "#1a1a24", right: "#151520" }, zoom);
+    const screenG = 0.5 + Math.sin(time * 2.5) * 0.2;
+    ctx.fillStyle = `rgba(0, 200, 80, ${screenG})`;
+    ctx.fillRect(tcX - 1.5 * zoom, tcY - 5.5 * zoom, 3 * zoom, 2 * zoom);
+    // Blinking status LEDs
+    for (let led = 0; led < 3; led++) {
+      const ledOn = Math.sin(time * 4 + led * 2) > 0.3;
+      ctx.fillStyle = led === 0 ? (ledOn ? "#00ff44" : "#003310") :
+        led === 1 ? (ledOn ? "#ffaa00" : "#332200") : (timeSinceFire < 1000 ? "#ff0000" : (ledOn ? "#00ff44" : "#003310"));
+      ctx.beginPath();
+      ctx.arc(tcX + (led - 1) * 1.5 * zoom, tcY - 3 * zoom, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === COUNTERMEASURE LAUNCHERS (on housing sides) ===
+  {
+    for (const side of [-1, 1]) {
+      const cmVis = side < 0 ? leftVis : rightVis;
+      if (cmVis < -0.2) continue;
+      const cmX = (side < 0 ? (tb_l.x + tf_l.x) : (tb_r.x + tf_r.x)) * 0.5 + perpX * side * 3 * zoom;
+      const cmY = (side < 0 ? (tb_l.y + tf_l.y) : (tb_r.y + tf_r.y)) * 0.5 + perpY * side * 3 * zoom - 2 * zoom;
+      ctx.fillStyle = "#3a3a42";
+      ctx.beginPath();
+      ctx.ellipse(cmX, cmY, 2 * zoom, 1.5 * zoom, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#5a5a62";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+      // Mini tubes
+      for (let mt = 0; mt < 2; mt++) {
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.arc(cmX + (mt - 0.5) * 1.5 * zoom, cmY, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // === FRONT STABILIZER BRACES ===
+  {
+    ctx.strokeStyle = "#4a4a52";
+    ctx.lineWidth = 2 * zoom;
+    for (const side of [-1, 1]) {
+      const braceStartX = perpX * side * platR * 0.5 + fwdX * platR * 0.4;
+      const braceStartY = perpY * side * platR * 0.5 + fwdY * platR * 0.4 + 1 * zoom;
+      const braceEndX = side < 0 ? bf_l.x : bf_r.x;
+      const braceEndY = (side < 0 ? bf_l.y : bf_r.y) - 2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(braceStartX, braceStartY);
+      ctx.lineTo(braceEndX, braceEndY);
+      ctx.stroke();
+      ctx.fillStyle = "#5a5a62";
+      ctx.beginPath();
+      ctx.arc(braceStartX, braceStartY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === RELOAD STATUS DISPLAY (on platform) ===
+  {
+    const rdX = -fwdX * platR * 0.4 - perpX * 8 * zoom;
+    const rdY = -fwdY * platR * 0.4 - perpY * 8 * zoom - 1 * zoom;
+    ctx.fillStyle = "#1a1a20";
+    ctx.fillRect(rdX - 2.5 * zoom, rdY - 1.5 * zoom, 5 * zoom, 3 * zoom);
+    ctx.strokeStyle = "#3a3a44";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeRect(rdX - 2.5 * zoom, rdY - 1.5 * zoom, 5 * zoom, 3 * zoom);
+    for (let ri = 0; ri < 6; ri++) {
+      const mSince = timeSinceFire - ri * 200;
+      const isReady = mSince < 0 || mSince >= 2200;
+      ctx.fillStyle = isReady ? "#00cc44" : (mSince >= 0 && mSince < 400 ? "#ff2200" : "#553300");
+      ctx.fillRect(rdX - 2 * zoom + ri * 0.7 * zoom, rdY - 0.8 * zoom, 0.5 * zoom, 1.6 * zoom);
+    }
+  }
+
+  // === AUTO-AIM INDICATOR (hex outline) ===
+  if (tower.mortarAutoAim) {
+    const pulseA = 0.3 + Math.sin(time * 4) * 0.15;
+    ctx.strokeStyle = `rgba(0, 200, 100, ${pulseA})`;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.setLineDash([3 * zoom, 2 * zoom]);
+    const aiVerts = scaleVerts(mPlatVerts, 1.06);
+    ctx.beginPath();
+    for (let i = 0; i <= hexSides; i++) {
+      const v = aiVerts[i % hexSides];
+      if (i === 0) ctx.moveTo(mPlatTop.x + v.x, mPlatTop.y + v.y);
+      else ctx.lineTo(mPlatTop.x + v.x, mPlatTop.y + v.y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // === STATUS LIGHTS (on hex platform edges) ===
+  for (let li = 0; li < 6; li++) {
+    const mSince = timeSinceFire - li * 200;
+    const isLaunching = mSince >= 0 && mSince < 400;
+    ctx.fillStyle = isLaunching ? "#ff2200" : (Math.sin(time * 4 + li) > 0.5 ? "#00ff44" : "#004410");
+    const lightIdx = Math.floor((li / 6) * hexSides) % hexSides;
+    const lni = (lightIdx + 1) % hexSides;
+    const lx = (mPlatVerts[lightIdx].x + mPlatVerts[lni].x) * 0.5 * 0.85;
+    const ly = (mPlatVerts[lightIdx].y + mPlatVerts[lni].y) * 0.5 * 0.85;
+    ctx.beginPath();
+    ctx.arc(mPlatTop.x + lx, mPlatTop.y + ly - 1 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.restore();
 }
@@ -2764,6 +5662,9 @@ export function renderTower(
       break;
     case "station":
       renderStationTower(ctx, screenPos, tower, zoom, time, colors);
+      break;
+    case "mortar":
+      renderMortarTower(ctx, screenPos, tower, zoom, time, colors);
       break;
   }
 
@@ -40555,6 +43456,8 @@ function getTowerPreviewColors(type: string): {
       return { top: "#3a6a4a", left: "#2a5a3a", right: "#1a4a2a" };
     case "station":
       return { top: "#6b5030", left: "#5a4020", right: "#4a3010" };
+    case "mortar":
+      return { top: "#9a7c5a", left: "#7a5c3a", right: "#4a3520" };
     default:
       return { top: "#6a6a72", left: "#4a4a52", right: "#2a2a32" };
   }
@@ -40578,6 +43481,8 @@ function getTowerPreviewDimensions(type: string): {
       return { width: 43, height: 42 };
     case "station":
       return { width: 40, height: 36 };
+    case "mortar":
+      return { width: 43, height: 38 };
     default:
       return { width: 34, height: 28 };
   }

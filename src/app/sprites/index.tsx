@@ -1644,6 +1644,139 @@ export const TowerSprite: React.FC<{
         }
         break;
       }
+      case "mortar": {
+        // =====================================================================
+        // PALMER MORTAR - Stacked hex-prism tiers with ammo foundation
+        // =====================================================================
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 18 * s, 20 * s, 9 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sandbag perimeter
+        const sbGrad = ctx.createLinearGradient(cx - 16 * s, 0, cx + 16 * s, 0);
+        sbGrad.addColorStop(0, "#5a5040");
+        sbGrad.addColorStop(0.35, "#8a7a60");
+        sbGrad.addColorStop(0.65, "#7a6a50");
+        sbGrad.addColorStop(1, "#4a4030");
+        ctx.fillStyle = sbGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 14 * s, 17 * s, 8.5 * s, 0, 0, Math.PI);
+        ctx.lineTo(cx - 17 * s, cy + 10 * s);
+        ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, Math.PI, 0, true);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#9a8a70";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Concrete pad
+        ctx.fillStyle = "#4a4a50";
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 9 * s, 15 * s, 7.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ammo crates (right side)
+        for (let c = 0; c < Math.min(level, 3); c++) {
+          const crX = cx + (9 + c * 2) * s;
+          const crY = cy + (5 - c * 3) * s;
+          ctx.fillStyle = c === 0 ? "#4a5a2a" : "#3a4a22";
+          ctx.fillRect(crX - 2 * s, crY - 2.5 * s, 4 * s, 3.5 * s);
+          ctx.fillStyle = "#ffaa00";
+          ctx.fillRect(crX - 1 * s, crY - 1.5 * s, 2 * s, 0.7 * s);
+        }
+
+        // 3 stacked tiers (wide at bottom, narrow at top)
+        const tierRadii = [14 * s, 11 * s, 8 * s];
+        const tierHeights = [6 * s, 5 * s, 4 * s];
+        const tierDarks = ["#3a2a1a", "#44342a", "#4e3e2e"];
+        const tierLights = ["#8a7a6a", "#9a8a7a", "#aa9a8a"];
+        let tierY = cy + 6 * s;
+
+        for (let ti = 0; ti < 3; ti++) {
+          const tr = tierRadii[ti];
+          const th = tierHeights[ti];
+
+          // Tier cylinder side
+          const tGrad = ctx.createLinearGradient(cx - tr, 0, cx + tr, 0);
+          tGrad.addColorStop(0, tierDarks[ti]);
+          tGrad.addColorStop(0.3, tierLights[ti]);
+          tGrad.addColorStop(0.7, tierLights[ti]);
+          tGrad.addColorStop(1, tierDarks[ti]);
+          ctx.fillStyle = tGrad;
+          ctx.beginPath();
+          ctx.ellipse(cx, tierY, tr, tr * 0.5, 0, 0, Math.PI);
+          ctx.lineTo(cx - tr, tierY - th);
+          ctx.ellipse(cx, tierY - th, tr, tr * 0.5, 0, Math.PI, 0, true);
+          ctx.closePath();
+          ctx.fill();
+
+          // Tier top face
+          const topGrad = ctx.createRadialGradient(cx - 1 * s, tierY - th - 1 * s, 0, cx, tierY - th, tr);
+          topGrad.addColorStop(0, lightenColor(tierLights[ti], 15));
+          topGrad.addColorStop(0.6, tierLights[ti]);
+          topGrad.addColorStop(1, tierDarks[ti]);
+          ctx.fillStyle = topGrad;
+          ctx.beginPath();
+          ctx.ellipse(cx, tierY - th, tr, tr * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Metal band at top of tier
+          const bandColor = level >= 3 ? "#c9a227" : "#8b7355";
+          ctx.strokeStyle = bandColor;
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.ellipse(cx, tierY - th + 0.5 * s, tr * 1.02, tr * 0.51, 0, 0, Math.PI);
+          ctx.stroke();
+
+          tierY -= th;
+        }
+
+        // Top rim (flared, wider than top tier)
+        const rimR = tierRadii[2] * 1.2;
+        ctx.strokeStyle = level >= 3 ? "#c9a227" : "#8b7355";
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.ellipse(cx, tierY, rimR, rimR * 0.5, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = level >= 3 ? "#d4aa30" : "#9a8a6a";
+        ctx.beginPath();
+        ctx.ellipse(cx, tierY, rimR, rimR * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dark bore opening
+        ctx.fillStyle = "#0a0804";
+        ctx.beginPath();
+        ctx.ellipse(cx, tierY, tierRadii[2] * 0.75, tierRadii[2] * 0.375, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bore glow (animated)
+        if (animated) {
+          const glowPulse = 0.25 + Math.sin(t * 3) * 0.15;
+          ctx.fillStyle = `rgba(255, 100, 20, ${glowPulse})`;
+          ctx.shadowColor = "#ff4400";
+          ctx.shadowBlur = 6 * s;
+          ctx.beginPath();
+          ctx.ellipse(cx, tierY, tierRadii[2] * 0.4, tierRadii[2] * 0.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // Level stars
+        if (level > 1) {
+          ctx.fillStyle = "#ff6600";
+          ctx.shadowColor = "#ff6600";
+          ctx.shadowBlur = 4 * s;
+          for (let i = 0; i < Math.min(level - 1, 3); i++) {
+            drawStar(ctx, cx - 6 * s + i * 6 * s, cy + 22 * s, 2.5 * s);
+          }
+          ctx.shadowBlur = 0;
+        }
+        break;
+      }
     }
   }, [type, size, level, animated]);
 
@@ -16209,12 +16342,148 @@ export const EnemySprite: React.FC<{
 // =============================================================================
 // REGION/MAP ICONS
 // =============================================================================
-export type RegionType = "grassland" | "desert" | "winter" | "volcanic";
+export type RegionType = "grassland" | "swamp" | "desert" | "winter" | "volcanic";
+
+const REGION_FRAME_PALETTES: Record<RegionType, {
+  ringLight: string; ringMid: string; ringDark: string;
+  border: string; edge: string; notch: string;
+  innerLight: string; innerDark: string;
+}> = {
+  grassland: {
+    ringLight: "#8AA858", ringMid: "#6A8840", ringDark: "#4A6828",
+    border: "#90B860", edge: "rgba(160,220,120,0.25)",
+    notch: "#A0C868", innerLight: "#5A7838", innerDark: "#3A5020",
+  },
+  swamp: {
+    ringLight: "#6FAFA1", ringMid: "#508878", ringDark: "#346858",
+    border: "#6CBCAC", edge: "rgba(120,200,180,0.25)",
+    notch: "#80C8B8", innerLight: "#446F66", innerDark: "#24443D",
+  },
+  desert: {
+    ringLight: "#BE9B5C", ringMid: "#9A7A3C", ringDark: "#705828",
+    border: "#C8A860", edge: "rgba(220,185,100,0.25)",
+    notch: "#D4B468", innerLight: "#876431", innerDark: "#50381B",
+  },
+  winter: {
+    ringLight: "#78A4C8", ringMid: "#5880A0", ringDark: "#3A5E78",
+    border: "#80B0D0", edge: "rgba(140,190,240,0.25)",
+    notch: "#90C0E0", innerLight: "#486C8C", innerDark: "#274158",
+  },
+  volcanic: {
+    ringLight: "#AA5238", ringMid: "#883828", ringDark: "#602018",
+    border: "#B85838", edge: "rgba(220,110,70,0.25)",
+    notch: "#CC6848", innerLight: "#7A3828", innerDark: "#4A1C10",
+  },
+};
+
+function drawRegionFrame(ctx: CanvasRenderingContext2D, size: number, type: RegionType, locked: boolean) {
+  const p = REGION_FRAME_PALETTES[type];
+  const r = size * 0.14;
+  const pad = 1.5;
+
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  roundRect(ctx, pad + 2, pad + 2.5, size - pad * 2, size - pad * 2, r);
+  ctx.fill();
+
+  const ringGrad = ctx.createLinearGradient(0, 0, size, size);
+  if (locked) {
+    ringGrad.addColorStop(0, "#4A4A4A");
+    ringGrad.addColorStop(0.5, "#3A3A3A");
+    ringGrad.addColorStop(1, "#2A2A2A");
+  } else {
+    ringGrad.addColorStop(0, p.ringLight);
+    ringGrad.addColorStop(0.5, p.ringMid);
+    ringGrad.addColorStop(1, p.ringDark);
+  }
+  ctx.fillStyle = ringGrad;
+  roundRect(ctx, pad, pad, size - pad * 2, size - pad * 2, r);
+  ctx.fill();
+
+  ctx.strokeStyle = locked ? "#505050" : p.border;
+  ctx.lineWidth = 2;
+  roundRect(ctx, pad, pad, size - pad * 2, size - pad * 2, r);
+  ctx.stroke();
+
+  ctx.strokeStyle = locked ? "rgba(100,100,100,0.15)" : p.edge;
+  ctx.lineWidth = 1;
+  roundRect(ctx, pad + 2.5, pad + 2.5, size - pad * 2 - 5, size - pad * 2 - 5, r * 0.8);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = 1;
+  roundRect(ctx, pad - 0.5, pad - 0.5, size - pad * 2 + 1, size - pad * 2 + 1, r + 0.5);
+  ctx.stroke();
+
+  if (!locked) {
+    ctx.fillStyle = p.notch;
+    const cx = size / 2;
+    const cy = size / 2;
+    const half = size / 2 - pad - 1;
+    const corners = [
+      [pad + 3, pad + 3], [size - pad - 3, pad + 3],
+      [pad + 3, size - pad - 3], [size - pad - 3, size - pad - 3],
+    ];
+    for (const [nx, ny] of corners) {
+      ctx.beginPath();
+      ctx.arc(nx, ny, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const midpoints = [
+      [cx, pad + 1], [cx, size - pad - 1],
+      [pad + 1, cy], [size - pad - 1, cy],
+    ];
+    for (const [nx, ny] of midpoints) {
+      ctx.beginPath();
+      ctx.arc(nx, ny, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  const inset = size * 0.15;
+  const innerGrad = ctx.createLinearGradient(inset, inset, size - inset, size - inset);
+  if (locked) {
+    innerGrad.addColorStop(0, "#333028");
+    innerGrad.addColorStop(1, "#201D18");
+  } else {
+    innerGrad.addColorStop(0, p.innerLight);
+    innerGrad.addColorStop(1, p.innerDark);
+  }
+  ctx.fillStyle = innerGrad;
+  roundRect(ctx, inset, inset, size - inset * 2, size - inset * 2, r * 0.55);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0,0,0,0.4)";
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, inset, inset, size - inset * 2, size - inset * 2, r * 0.55);
+  ctx.stroke();
+
+  if (!locked) {
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    roundRect(ctx, inset + 1, inset + 1, size - inset * 2 - 2, size - inset * 2 - 2, r * 0.45);
+    ctx.fill();
+  }
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 export const RegionIcon: React.FC<{
   type: RegionType;
   size?: number;
   locked?: boolean;
-}> = ({ type, size = 60, locked = false }) => {
+  framed?: boolean;
+}> = ({ type, size = 60, locked = false, framed = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -16223,113 +16492,215 @@ export const RegionIcon: React.FC<{
     if (!ctx) return;
     const cx = size / 2;
     const cy = size / 2;
-    const scale = size / 60;
-    let bgColor = "#4a7c59";
-    switch (type) {
-      case "grassland":
-        bgColor = "#4a7c59";
-        break;
-      case "desert":
-        bgColor = "#c4a35a";
-        break;
-      case "winter":
-        bgColor = "#6ba3be";
-        break;
-      case "volcanic":
-        bgColor = "#8b3a3a";
-        break;
+
+    if (framed) {
+      drawRegionFrame(ctx, size, type, locked);
     }
-    ctx.fillStyle = locked ? "#4a4a4a" : bgColor;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 26 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = locked ? "#333" : darkenColor(bgColor, 30);
-    ctx.lineWidth = 3 * scale;
-    ctx.stroke();
-    if (locked) {
-      ctx.fillStyle = "#666";
-      ctx.fillRect(cx - 8 * scale, cy - 2 * scale, 16 * scale, 14 * scale);
-      ctx.strokeStyle = "#666";
-      ctx.lineWidth = 3 * scale;
-      ctx.beginPath();
-      ctx.arc(cx, cy - 6 * scale, 6 * scale, Math.PI, 0);
-      ctx.stroke();
-      ctx.fillStyle = "#333";
-      ctx.beginPath();
-      ctx.arc(cx, cy + 4 * scale, 3 * scale, 0, Math.PI * 2);
-      ctx.fill();
-      return;
+
+    if (locked && !framed) {
+      ctx.globalAlpha = 0.35;
     }
+
+    const iconScale = framed ? size / 42 : size / 28;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(iconScale, iconScale);
     switch (type) {
-      case "grassland":
-        ctx.fillStyle = "#5d4037";
-        ctx.fillRect(cx - 3 * scale, cy, 6 * scale, 14 * scale);
-        ctx.fillStyle = "#2e7d32";
+      case "grassland": {
+        ctx.fillStyle = "#A07040";
         ctx.beginPath();
-        ctx.arc(cx, cy - 4 * scale, 14 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#388e3c";
-        ctx.beginPath();
-        ctx.arc(cx, cy - 8 * scale, 10 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-      case "desert":
-        ctx.fillStyle = "#2e7d32";
-        ctx.fillRect(cx - 4 * scale, cy - 8 * scale, 8 * scale, 22 * scale);
-        ctx.fillRect(cx - 14 * scale, cy - 4 * scale, 10 * scale, 6 * scale);
-        ctx.fillRect(cx - 14 * scale, cy - 10 * scale, 6 * scale, 10 * scale);
-        ctx.fillRect(cx + 4 * scale, cy, 10 * scale, 6 * scale);
-        ctx.fillRect(cx + 8 * scale, cy - 8 * scale, 6 * scale, 12 * scale);
-        ctx.fillStyle = "#ffd700";
-        ctx.beginPath();
-        ctx.arc(cx + 12 * scale, cy - 14 * scale, 6 * scale, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-      case "winter":
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 2.5 * scale;
-        for (let i = 0; i < 6; i++) {
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate((i * Math.PI) / 3);
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(0, -18 * scale);
-          ctx.moveTo(0, -10 * scale);
-          ctx.lineTo(-6 * scale, -14 * scale);
-          ctx.moveTo(0, -10 * scale);
-          ctx.lineTo(6 * scale, -14 * scale);
-          ctx.stroke();
-          ctx.restore();
-        }
-        break;
-      case "volcanic":
-        ctx.fillStyle = "#5d4037";
-        ctx.beginPath();
-        ctx.moveTo(cx - 20 * scale, cy + 14 * scale);
-        ctx.lineTo(cx - 8 * scale, cy - 10 * scale);
-        ctx.lineTo(cx + 8 * scale, cy - 10 * scale);
-        ctx.lineTo(cx + 20 * scale, cy + 14 * scale);
+        ctx.moveTo(-2, 2); ctx.lineTo(-1.5, 10); ctx.lineTo(1.5, 10); ctx.lineTo(2, 2);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#ff4400";
+        ctx.strokeStyle = "#C89858";
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.fillStyle = "#C89050";
+        ctx.fillRect(-0.3, 2.5, 1.2, 6);
+        ctx.fillStyle = "#38A838";
+        ctx.beginPath(); ctx.arc(0, -1, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#48C848";
+        ctx.beginPath(); ctx.arc(-3, -3, 6.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(3.5, -1, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#60E060";
+        ctx.beginPath(); ctx.arc(-1, -4.5, 5.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(2, -3.5, 4.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#90FF80";
+        ctx.beginPath(); ctx.arc(-2, -6, 2.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#80FF70";
+        ctx.beginPath(); ctx.arc(3, -5, 2, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case "swamp": {
+        ctx.fillStyle = "#2a6858";
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath(); ctx.ellipse(0, 8, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#D8C8B0";
         ctx.beginPath();
-        ctx.moveTo(cx - 6 * scale, cy - 10 * scale);
-        ctx.quadraticCurveTo(
-          cx,
-          cy - 18 * scale,
-          cx + 6 * scale,
-          cy - 10 * scale
-        );
+        ctx.moveTo(-2.5, 3); ctx.lineTo(-2, -2); ctx.lineTo(2, -2); ctx.lineTo(2.5, 3);
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "rgba(100,100,100,0.6)";
+        ctx.strokeStyle = "#E8D8C0";
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+        ctx.fillStyle = "#F0E0D0";
+        ctx.fillRect(-0.5, -1, 1, 4);
+        ctx.fillStyle = "#C040E8";
+        ctx.beginPath(); ctx.ellipse(0, -2.6, 10, 8, 0, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = "#A030C8";
+        ctx.beginPath(); ctx.ellipse(0, -2.5, 9, 2.5, 0, 0, Math.PI); ctx.fill();
+        ctx.fillStyle = "#E8A0FF";
+        ctx.beginPath(); ctx.arc(-4, -6, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(2, -7, 1.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(5, -4.5, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#F0C8FF";
+        ctx.beginPath(); ctx.arc(-1, -8, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#D868FF";
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(0, -3.5, 10, 7, 0, Math.PI, 0); ctx.stroke();
+        ctx.fillStyle = "#80FFD0";
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath(); ctx.arc(-6, 5, 1.6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#70FFBB";
+        ctx.beginPath(); ctx.arc(5, 6, 1.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#90FFE0";
+        ctx.beginPath(); ctx.arc(-2, 7, 0.8, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#B050E0";
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath(); ctx.ellipse(-5, -0.5, 1, 2, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(6, 0, 0.8, 1.5, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+        break;
+      }
+      case "desert": {
+        ctx.strokeStyle = "#FFB800";
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        for (let r = 0; r < 8; r++) {
+          const a = (r * Math.PI) / 4 + Math.PI / 8;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * 6, Math.sin(a) * 6);
+          ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
+          ctx.stroke();
+        }
+        ctx.strokeStyle = "#FFD860";
+        ctx.lineWidth = 1.2;
+        for (let r = 0; r < 8; r++) {
+          const a = (r * Math.PI) / 4 + Math.PI / 8;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(a) * 8, Math.sin(a) * 8);
+          ctx.lineTo(Math.cos(a) * 12, Math.sin(a) * 12);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#FFAA00";
+        ctx.beginPath(); ctx.arc(0, 0, 6.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#FFC830";
+        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#FFE870";
+        ctx.beginPath(); ctx.arc(0, -0.5, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#FFF8D0";
+        ctx.beginPath(); ctx.arc(0, -1, 2, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case "winter": {
+        for (let i = 0; i < 6; i++) {
+          ctx.save();
+          ctx.rotate((i * Math.PI) / 3);
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(-1.2, 0); ctx.lineTo(-0.5, -9.5); ctx.lineTo(0.5, -9.5); ctx.lineTo(1.2, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#a0d8ff";
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.moveTo(0, -12); ctx.lineTo(-2, -9.5); ctx.lineTo(0, -8); ctx.lineTo(2, -9.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#b0e0ff";
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          ctx.fillStyle = "#d0f0ff";
+          ctx.beginPath();
+          ctx.moveTo(0, -4); ctx.lineTo(-4.5, -7); ctx.lineTo(-3.5, -5.5); ctx.lineTo(0, -3.2);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(0, -4); ctx.lineTo(4.5, -7); ctx.lineTo(3.5, -5.5); ctx.lineTo(0, -3.2);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = "#e0f4ff";
+          ctx.beginPath();
+          ctx.moveTo(0, -6.5); ctx.lineTo(-3, -8.5); ctx.lineTo(-2.2, -7.5); ctx.lineTo(0, -6);
+          ctx.closePath(); ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(0, -6.5); ctx.lineTo(3, -8.5); ctx.lineTo(2.2, -7.5); ctx.lineTo(0, -6);
+          ctx.closePath(); ctx.fill();
+          ctx.restore();
+        }
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#d8f0ff";
+        ctx.beginPath(); ctx.arc(0, 0, 1.8, 0, Math.PI * 2); ctx.fill();
+        break;
+      }
+      case "volcanic": {
+        ctx.fillStyle = "#DD2200";
         ctx.beginPath();
-        ctx.arc(cx - 4 * scale, cy - 18 * scale, 4 * scale, 0, Math.PI * 2);
-        ctx.arc(cx + 2 * scale, cy - 22 * scale, 3 * scale, 0, Math.PI * 2);
+        ctx.moveTo(0, -12);
+        ctx.quadraticCurveTo(5, -8, 7, -3);
+        ctx.quadraticCurveTo(9, 2, 6, 6);
+        ctx.quadraticCurveTo(3, 10, 0, 10);
+        ctx.quadraticCurveTo(-3, 10, -6, 6);
+        ctx.quadraticCurveTo(-9, 2, -7, -3);
+        ctx.quadraticCurveTo(-5, -8, 0, -12);
+        ctx.fill();
+        ctx.fillStyle = "#EE4400";
+        ctx.beginPath();
+        ctx.moveTo(-3, -5);
+        ctx.quadraticCurveTo(-7, -9, -4, -11);
+        ctx.quadraticCurveTo(-2, -8, -1, -6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(3, -4);
+        ctx.quadraticCurveTo(6, -7, 5, -10);
+        ctx.quadraticCurveTo(3, -7, 2, -5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#FF6600";
+        ctx.beginPath();
+        ctx.moveTo(0, -9);
+        ctx.quadraticCurveTo(3.5, -5, 5, -1);
+        ctx.quadraticCurveTo(6, 3, 4, 6);
+        ctx.quadraticCurveTo(2, 9, 0, 9);
+        ctx.quadraticCurveTo(-2, 9, -4, 6);
+        ctx.quadraticCurveTo(-6, 3, -5, -1);
+        ctx.quadraticCurveTo(-3.5, -5, 0, -9);
+        ctx.fill();
+        ctx.fillStyle = "#FFAA00";
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.quadraticCurveTo(2.5, -3, 3, 1);
+        ctx.quadraticCurveTo(3.5, 5, 0, 7);
+        ctx.quadraticCurveTo(-3.5, 5, -3, 1);
+        ctx.quadraticCurveTo(-2.5, -3, 0, -6);
+        ctx.fill();
+        ctx.fillStyle = "#FFD800";
+        ctx.beginPath();
+        ctx.moveTo(0, -3);
+        ctx.quadraticCurveTo(1.5, -1, 1.8, 2);
+        ctx.quadraticCurveTo(2, 5, 0, 6);
+        ctx.quadraticCurveTo(-2, 5, -1.8, 2);
+        ctx.quadraticCurveTo(-1.5, -1, 0, -3);
         ctx.fill();
         break;
+      }
     }
-  }, [type, size, locked]);
+    ctx.restore();
+  }, [type, size, locked, framed]);
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 // =============================================================================

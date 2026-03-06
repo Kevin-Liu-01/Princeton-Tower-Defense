@@ -4,42 +4,21 @@
 import type { Position, MapHazard } from "../../types";
 import { worldToScreen, gridToWorld } from "../../utils";
 import { TILE_SIZE, ISO_Y_RATIO } from "../../constants";
+import { drawOrganicBlobAt } from "../helpers";
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Draws an organic blob shape instead of a perfect ellipse
- * Creates natural-looking edges for hazards
- */
+/** Draws an organic blob at the current context origin (hazards use ctx.translate before calling). */
 function drawOrganicBlob(
   ctx: CanvasRenderingContext2D,
   radiusX: number,
   radiusY: number,
   seed: number,
-  bumpiness: number = 0.15
+  bumpiness: number = 0.15,
 ): void {
-  ctx.beginPath();
-  const points = 24;
-  for (let i = 0; i <= points; i++) {
-    const angle = (i / points) * Math.PI * 2;
-    // Use seed to create consistent organic variation
-    const noise1 = Math.sin(angle * 3 + seed) * bumpiness;
-    const noise2 = Math.sin(angle * 5 + seed * 2.3) * bumpiness * 0.5;
-    const noise3 = Math.sin(angle * 7 + seed * 4.1) * bumpiness * 0.25;
-    const variation = 1 + noise1 + noise2 + noise3;
-
-    const x = Math.cos(angle) * radiusX * variation;
-    const y = Math.sin(angle) * radiusY * variation;
-
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-  }
-  ctx.closePath();
+  drawOrganicBlobAt(ctx, 0, 0, radiusX, radiusY, seed, bumpiness);
 }
 
 function seededNoise(seed: number): number {

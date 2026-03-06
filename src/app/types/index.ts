@@ -26,7 +26,8 @@ export type TowerType =
   | "lab"
   | "arch"
   | "club"
-  | "station";
+  | "station"
+  | "mortar";
 
 export type TowerUpgrade = "A" | "B";
 
@@ -129,6 +130,9 @@ export interface Tower {
   // Temporary tower (from abilities)
   temporary?: boolean;
   expireTime?: number;
+  // Mortar Missile Battery (4A) targeting
+  mortarTarget?: Position;
+  mortarAutoAim?: boolean;
   // Rendering-only transient fields
   _orbScreenY?: number;
   spawnEffect?: number;
@@ -560,7 +564,10 @@ export type ProjectileType =
   | "arch" // Arch tower music note
   | "infernalFire" // Infernal demon fire
   | "bansheeScream" // Banshee wail
-  | "dragonBreath"; // Dragon fire
+  | "dragonBreath" // Dragon fire
+  | "mortarShell" // Mortar explosive shell (high arc)
+  | "missile" // Missile battery projectile (4A)
+  | "ember"; // Burning ember glob (4B)
 
 // Projectile
 export interface Projectile {
@@ -579,6 +586,8 @@ export interface Projectile {
   // AoE properties
   isAoE?: boolean;
   aoeRadius?: number;
+  // Speed multiplier (1.0 = normal, <1 = slower, >1 = faster)
+  speed?: number;
   // Visual customization
   color?: string;
   scale?: number;
@@ -617,6 +626,10 @@ export type EffectType =
   | "meteor_incoming"
   | "meteor_falling"
   | "meteor_impact"
+  | "mortar_launch"
+  | "mortar_impact"
+  | "ember_field"
+  | "missile_trail"
   | "lightning_bolt"
   | "freeze_wave"
   // Physical attack effects

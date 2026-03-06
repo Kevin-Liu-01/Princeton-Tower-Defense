@@ -3113,7 +3113,240 @@ export function renderEffect(
       ctx.restore();
       break;
     }
+
+    case "mortar_launch": {
+      // Mortar launch muzzle blast - upward smoke burst
+      const launchSize = effect.size * zoom * (0.5 + progress);
+      const launchAlpha = (1 - progress) * 0.8;
+
+      // Muzzle flash
+      if (progress < 0.3) {
+        const flashP = progress / 0.3;
+        const flashSize = launchSize * (1 + flashP * 0.5);
+        const flashGrad = ctx.createRadialGradient(
+          screenPos.x, screenPos.y, 0,
+          screenPos.x, screenPos.y, flashSize,
+        );
+        flashGrad.addColorStop(0, `rgba(255, 220, 100, ${(1 - flashP) * 0.9})`);
+        flashGrad.addColorStop(0.4, `rgba(255, 140, 40, ${(1 - flashP) * 0.6})`);
+        flashGrad.addColorStop(1, "rgba(255, 60, 0, 0)");
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y, flashSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Rising smoke puffs
+      for (let p = 0; p < 5; p++) {
+        const pProgress = Math.min(1, progress * 2 + p * 0.1);
+        const py = screenPos.y - pProgress * 30 * zoom;
+        const px = screenPos.x + Math.sin(pProgress * 4 + p) * 6 * zoom;
+        const pSize = (4 + p * 2) * zoom * pProgress;
+        const pAlpha = launchAlpha * (1 - pProgress) * 0.5;
+        ctx.fillStyle = `rgba(120, 100, 80, ${pAlpha})`;
+        ctx.beginPath();
+        ctx.arc(px, py, pSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "mortar_impact": {
+      // Heavy explosive landing - crater + fire ring + debris
+      const ip = progress;
+      const sx = screenPos.x;
+      const sy = screenPos.y;
+      const sz = effect.size * zoom;
+
+      // Ground scorch mark (persists longer)
+      const scorchAlpha = alpha * 0.7;
+      const scorchGrad = ctx.createRadialGradient(sx, sy, 0, sx, sy, sz * 0.6);
+      scorchGrad.addColorStop(0, `rgba(30, 15, 5, ${scorchAlpha})`);
+      scorchGrad.addColorStop(0.5, `rgba(60, 30, 10, ${scorchAlpha * 0.6})`);
+      scorchGrad.addColorStop(1, "rgba(40, 20, 5, 0)");
+      ctx.fillStyle = scorchGrad;
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, sz * 0.6, sz * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Central fireball (early phase)
+      if (ip < 0.5) {
+        const fireP = ip / 0.5;
+        const fireSize = sz * 0.8 * (0.3 + fireP * 0.7);
+        const fireGrad = ctx.createRadialGradient(sx, sy - fireP * 10 * zoom, 0, sx, sy - fireP * 10 * zoom, fireSize);
+        fireGrad.addColorStop(0, `rgba(255, 255, 180, ${(1 - fireP) * 0.9})`);
+        fireGrad.addColorStop(0.3, `rgba(255, 180, 50, ${(1 - fireP) * 0.8})`);
+        fireGrad.addColorStop(0.6, `rgba(255, 80, 0, ${(1 - fireP) * 0.5})`);
+        fireGrad.addColorStop(1, "rgba(200, 30, 0, 0)");
+        ctx.fillStyle = fireGrad;
+        ctx.beginPath();
+        ctx.arc(sx, sy - fireP * 10 * zoom, fireSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Expanding shockwave rings
+      for (let ring = 0; ring < 3; ring++) {
+        const rp = Math.min(1, ip * 1.5 + ring * 0.1);
+        const rRadius = sz * rp * (0.6 + ring * 0.2);
+        const rAlpha = (1 - rp) * alpha * (0.5 - ring * 0.12);
+        if (rAlpha <= 0) continue;
+
+        const rGrad = ctx.createRadialGradient(sx, sy, rRadius * 0.85, sx, sy, rRadius);
+        rGrad.addColorStop(0, "rgba(255, 140, 40, 0)");
+        rGrad.addColorStop(0.6, `rgba(255, ${100 - ring * 25}, ${20 - ring * 5}, ${rAlpha})`);
+        rGrad.addColorStop(1, "rgba(180, 40, 0, 0)");
+        ctx.fillStyle = rGrad;
+        ctx.beginPath();
+        ctx.ellipse(sx, sy, rRadius, rRadius * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Flying debris chunks
+      const debrisCount = 8;
+      for (let d = 0; d < debrisCount; d++) {
+        const dAngle = (d / debrisCount) * Math.PI * 2 + 0.3;
+        const dDist = sz * 0.3 * ip * (0.5 + (d % 3) * 0.3);
+        const dx = sx + Math.cos(dAngle) * dDist;
+        const dy = sy + Math.sin(dAngle) * dDist * 0.5 - ip * (1 - ip) * 20 * zoom;
+        const dSize = (2 + (d % 2)) * zoom * (1 - ip);
+        const dAlpha = alpha * (1 - ip) * 0.7;
+        ctx.fillStyle = `rgba(${100 + d * 10}, ${60 + d * 5}, ${30 + d * 3}, ${dAlpha})`;
+        ctx.beginPath();
+        ctx.arc(dx, dy, dSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Smoke column (later phase)
+      if (ip > 0.2) {
+        const smokeP = (ip - 0.2) / 0.8;
+        for (let s = 0; s < 4; s++) {
+          const sp = Math.min(1, smokeP + s * 0.15);
+          const smokeY = sy - sp * 40 * zoom;
+          const smokeX = sx + Math.sin(sp * 3 + s) * 8 * zoom;
+          const smokeSize = (6 + s * 3) * zoom * sp;
+          const smokeAlpha = alpha * (1 - sp) * 0.3;
+          ctx.fillStyle = `rgba(80, 70, 60, ${smokeAlpha})`;
+          ctx.beginPath();
+          ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      break;
+    }
+
+    case "ember_field": {
+      // Burning ember pile on the ground
+      const emberSize = effect.size * zoom;
+      const time = Date.now() / 1000;
+
+      // Ground fire glow
+      const fireGrad = ctx.createRadialGradient(
+        screenPos.x, screenPos.y, 0,
+        screenPos.x, screenPos.y, emberSize,
+      );
+      const pulse = Math.sin(time * 4) * 0.15 + 0.5;
+      fireGrad.addColorStop(0, `rgba(255, 120, 20, ${alpha * pulse})`);
+      fireGrad.addColorStop(0.5, `rgba(255, 60, 0, ${alpha * pulse * 0.5})`);
+      fireGrad.addColorStop(1, "rgba(200, 20, 0, 0)");
+      ctx.fillStyle = fireGrad;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y, emberSize, emberSize * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Individual ember sparks
+      for (let e = 0; e < 6; e++) {
+        const eAngle = time * 2 + e * Math.PI / 3;
+        const eR = emberSize * 0.4 * (0.5 + Math.sin(eAngle * 2) * 0.3);
+        const ex = screenPos.x + Math.cos(eAngle) * eR;
+        const ey = screenPos.y + Math.sin(eAngle) * eR * 0.5;
+        const eAlpha = alpha * (0.4 + Math.sin(eAngle * 3) * 0.3);
+        ctx.fillStyle = `rgba(255, ${150 + Math.floor(Math.sin(eAngle) * 60)}, 30, ${eAlpha})`;
+        ctx.beginPath();
+        ctx.arc(ex, ey - Math.abs(Math.sin(eAngle * 1.5)) * 4 * zoom, 2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "missile_trail": {
+      // Missile smoke trail effect
+      const trailLen = effect.size * zoom;
+      for (let t = 0; t < 6; t++) {
+        const tp = t / 6;
+        const tx = screenPos.x - tp * trailLen * 0.3;
+        const ty = screenPos.y + tp * 5 * zoom;
+        const tSize = (2 + t * 1.5) * zoom;
+        const tAlpha = alpha * (1 - tp) * 0.3;
+        ctx.fillStyle = `rgba(180, 170, 160, ${tAlpha})`;
+        ctx.beginPath();
+        ctx.arc(tx, ty, tSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
   }
+}
+
+// ============================================================================
+// MISSILE TARGET RETICLE
+// ============================================================================
+export function renderMissileTargetReticle(
+  ctx: CanvasRenderingContext2D,
+  screenPos: Position,
+  zoom: number,
+  timeSeconds: number
+): void {
+  const pulse = 0.6 + Math.sin(timeSeconds * 3) * 0.4;
+  const rotAngle = timeSeconds * 0.8;
+  const outerRadius = 28 * zoom;
+  const innerRadius = 8 * zoom;
+
+  ctx.save();
+  ctx.translate(screenPos.x, screenPos.y);
+
+  // Outer pulsing ring (isometric)
+  ctx.save();
+  ctx.scale(1, ISO_Y_RATIO);
+  ctx.strokeStyle = `rgba(255, 80, 0, ${0.35 + pulse * 0.25})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.setLineDash([6 * zoom, 4 * zoom]);
+  ctx.lineDashOffset = -timeSeconds * 40;
+  ctx.beginPath();
+  ctx.arc(0, 0, outerRadius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Inner filled glow
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, innerRadius * 2);
+  glow.addColorStop(0, `rgba(255, 100, 0, ${0.25 * pulse})`);
+  glow.addColorStop(1, "rgba(255, 60, 0, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, innerRadius * 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Rotating crosshair lines
+  ctx.rotate(rotAngle);
+  ctx.strokeStyle = `rgba(255, 140, 0, ${0.5 + pulse * 0.3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  for (let i = 0; i < 4; i++) {
+    const a = (i * Math.PI) / 2;
+    const cos = Math.cos(a);
+    const sin = Math.sin(a);
+    ctx.beginPath();
+    ctx.moveTo(cos * innerRadius, sin * innerRadius * ISO_Y_RATIO);
+    ctx.lineTo(cos * outerRadius * 0.7, sin * outerRadius * 0.7 * ISO_Y_RATIO);
+    ctx.stroke();
+  }
+
+  // Center dot
+  ctx.fillStyle = `rgba(255, 200, 100, ${0.7 + pulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, 2.5 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 // ============================================================================

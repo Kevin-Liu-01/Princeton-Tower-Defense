@@ -8,6 +8,41 @@ import { setShadowBlur, clearShadow } from "./performance";
 // COLOR UTILITIES
 // ============================================================================
 
+/**
+ * Draws an organic blob path (instead of a perfect ellipse) centered at (cx, cy).
+ * Uses multi-frequency sine wave noise for natural-looking terrain edges.
+ * Only builds the path — caller must fill/stroke after.
+ */
+export function drawOrganicBlobAt(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radiusX: number,
+  radiusY: number,
+  seed: number,
+  bumpiness: number = 0.15,
+  points: number = 24,
+): void {
+  ctx.beginPath();
+  for (let i = 0; i <= points; i++) {
+    const angle = (i / points) * Math.PI * 2;
+    const noise1 = Math.sin(angle * 3 + seed) * bumpiness;
+    const noise2 = Math.sin(angle * 5 + seed * 2.3) * bumpiness * 0.5;
+    const noise3 = Math.sin(angle * 7 + seed * 4.1) * bumpiness * 0.25;
+    const variation = 1 + noise1 + noise2 + noise3;
+
+    const x = cx + Math.cos(angle) * radiusX * variation;
+    const y = cy + Math.sin(angle) * radiusY * variation;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.closePath();
+}
+
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result

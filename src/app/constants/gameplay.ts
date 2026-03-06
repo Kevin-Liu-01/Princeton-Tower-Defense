@@ -24,6 +24,7 @@ export const TOWER_FOOTPRINTS: Record<
   arch: { width: 1, height: 1 },
   club: { width: 1, height: 1 },
   station: { width: 1.5, height: 1.5 },
+  mortar: { width: 1, height: 1 },
 };
 export const INITIAL_PAW_POINTS = 300;
 export const INITIAL_LIVES = 20;

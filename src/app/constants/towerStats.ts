@@ -413,6 +413,63 @@ export const TOWER_STATS: Record<string, TowerStatsDefinition> = {
       },
     },
   },
+  mortar: {
+    name: "Palmer Mortar",
+    icon: "💥",
+    baseStats: {
+      damage: 120,
+      range: 300,
+      attackSpeed: 3000,
+      projectileSpeed: 400,
+      splashRadius: 60,
+      specialEffect: "Launches explosive shells in high arcs",
+    },
+    levels: {
+      1: {
+        cost: 160,
+        description: "Basic Mortar - Lobbed explosives with splash",
+      },
+      2: {
+        cost: 200,
+        description: "Improved Mortar - Bigger payload, wider splash",
+        multipliers: { damage: 1.5, splashRadius: 1.3 },
+      },
+      3: {
+        cost: 300,
+        description: "Siege Mortar - Heavy ordnance, massive AoE",
+        multipliers: { damage: 2, splashRadius: 1.6 },
+      },
+    },
+    level4Cost: 500,
+    upgrades: {
+      A: {
+        name: "Missile Battery",
+        description: "Targeted missile strikes on selected area",
+        effect: "Click to target area for devastating missile barrages",
+        stats: {
+          damage: 120 * 2 * 1.5,
+          range: 400,
+          attackSpeed: 4000,
+          splashRadius: 90,
+          specialEffect: "Targeted missile strike on selected area",
+        },
+      },
+      B: {
+        name: "Ember Foundry",
+        description: "Rains burning embers across the field",
+        effect: "Scatters burning ember piles that deal DoT",
+        stats: {
+          damage: 120 * 2 * 0.4,
+          range: 350,
+          attackSpeed: 2500,
+          burnDamage: 25,
+          burnDuration: 4000,
+          splashRadius: 100,
+          specialEffect: "Creates burning ember fields",
+        },
+      },
+    },
+  },
 };
 
 // ============================================================================

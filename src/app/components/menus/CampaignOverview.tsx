@@ -24,14 +24,20 @@ import {
   NEUTRAL,
 } from "../ui/theme";
 import { WORLD_LEVELS, type LevelNode } from "./worldMapData";
+import { RegionIcon } from "../../sprites";
 
-const REGION_META: Record<
-  LevelNode["region"],
-  { displayName: string; emoji: string; color: string; bgLight: string; bgDark: string; border: string; glow: string }
-> = {
+interface RegionMeta {
+  displayName: string;
+  color: string;
+  bgLight: string;
+  bgDark: string;
+  border: string;
+  glow: string;
+}
+
+const REGION_META: Record<LevelNode["region"], RegionMeta> = {
   grassland: {
     displayName: "Princeton Grounds",
-    emoji: "🌲",
     color: "text-green-400",
     bgLight: "rgba(30,50,25,0.8)",
     bgDark: "rgba(20,35,18,0.65)",
@@ -40,7 +46,6 @@ const REGION_META: Record<
   },
   swamp: {
     displayName: "Mathey Marshes",
-    emoji: "🦆",
     color: "text-teal-400",
     bgLight: "rgba(20,40,38,0.8)",
     bgDark: "rgba(15,30,28,0.65)",
@@ -49,7 +54,6 @@ const REGION_META: Record<
   },
   desert: {
     displayName: "Stadium Sands",
-    emoji: "🏜️",
     color: "text-amber-400",
     bgLight: "rgba(55,40,18,0.8)",
     bgDark: "rgba(40,28,12,0.65)",
@@ -58,7 +62,6 @@ const REGION_META: Record<
   },
   winter: {
     displayName: "Frist Frontier",
-    emoji: "❄️",
     color: "text-blue-400",
     bgLight: "rgba(25,35,50,0.8)",
     bgDark: "rgba(18,25,40,0.65)",
@@ -67,7 +70,6 @@ const REGION_META: Record<
   },
   volcanic: {
     displayName: "Dormitory Depths",
-    emoji: "🌋",
     color: "text-red-400",
     bgLight: "rgba(50,25,20,0.8)",
     bgDark: "rgba(35,18,15,0.65)",
@@ -421,7 +423,9 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                   }}
                 />
                 <div className="relative px-3 py-2.5 flex items-center gap-2.5">
-                  <span className="text-lg">{meta.emoji}</span>
+                  <div className="shrink-0">
+                    <RegionIcon type={region} size={32} framed />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-amber-100 truncate">

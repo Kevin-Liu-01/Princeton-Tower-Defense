@@ -120,6 +120,7 @@ import {
   renderTowerDebuffEffects,
   renderUnitStatusEffects,
   renderUnitInspectIndicator,
+  renderMissileTargetReticle,
 } from "../rendering";
 import { renderEnemyDeath } from "../rendering/effects/deathAnimations";
 // Decoration rendering
@@ -842,6 +843,9 @@ export function usePrincetonTowerDefenseRuntime() {
   const [activeSentinelTargetKey, setActiveSentinelTargetKey] = useState<
     string | null
   >(null);
+  const [missileMortarTargetingId, setMissileMortarTargetingId] = useState<
+    string | null
+  >(null);
   const [sentinelTargets, setSentinelTargets] = useState<
     Record<string, Position>
   >({});
@@ -1507,6 +1511,7 @@ export function usePrincetonTowerDefenseRuntime() {
           // Unselect all towers, heroes, and troops
           setSelectedTower(null);
           setActiveSentinelTargetKey(null);
+          setMissileMortarTargetingId(null);
           setHero((prev) => (prev ? { ...prev, selected: false } : null));
           setTroops((prev) => prev.map((t) => ({ ...t, selected: false })));
           break;
@@ -1588,6 +1593,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setPlacingTroop(false);
       setTargetingSpell(null);
       setActiveSentinelTargetKey(null);
+      setMissileMortarTargetingId(null);
       setSentinelTargets({});
       setSpells([]);
       setGameSpeed(1);
@@ -5317,6 +5323,198 @@ export function usePrincetonTowerDefenseRuntime() {
                 });
               }
             }
+          } else if (tower.type === "mortar") {
+            const isMissileBattery = tower.level === 4 && tower.upgrade === "A";
+            const isEmberFoundry = tower.level === 4 && tower.upgrade === "B";
+
+            const attackCooldown = isMissileBattery
+              ? 4000
+              : isEmberFoundry
+                ? 2500
+                : tData.attackSpeed;
+            const effectiveAttackCooldown =
+              gameSpeed > 0
+                ? attackCooldown / gameSpeed / attackSpeedMultiplier
+                : attackCooldown;
+
+            const mortarStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+            const splashRadius = mortarStats.splashRadius || 60;
+            let damage = tData.damage * finalDamageMult;
+            if (tower.level === 2) damage *= 1.5;
+            if (tower.level >= 3) damage *= 2;
+
+            // Missile Battery: auto-aim targets nearest enemy, manual uses stored position
+            if (isMissileBattery && !tower.mortarAutoAim && tower.mortarTarget) {
+              const missileTarget = tower.mortarTarget;
+              const tDx = missileTarget.x - towerWorldPos.x;
+              const tDy = missileTarget.y - towerWorldPos.y;
+              const trackRotation = Math.atan2(tDx + tDy, tDx - tDy);
+              queueTowerPatch(tower.id, { rotation: trackRotation });
+
+              if (now - tower.lastAttack > effectiveAttackCooldown) {
+                const missileCount = 3;
+                for (let i = 0; i < missileCount; i++) {
+                  const spread = 20;
+                  const offsetX = (Math.random() - 0.5) * spread * 2;
+                  const offsetY = (Math.random() - 0.5) * spread * 2;
+                  const targetPos = {
+                    x: missileTarget.x + offsetX,
+                    y: missileTarget.y + offsetY,
+                  };
+                  const dx = targetPos.x - towerWorldPos.x;
+                  const dy = targetPos.y - towerWorldPos.y;
+                  const rotation = Math.atan2(dy, dx);
+                  queuedTowerProjectiles.push({
+                    id: generateId("msl"),
+                    from: towerWorldPos,
+                    to: targetPos,
+                    progress: 0,
+                    type: "missile",
+                    rotation,
+                    arcHeight: 140 + i * 20,
+                    damage: damage * 0.6,
+                    targetType: "enemy",
+                    isAoE: true,
+                    aoeRadius: splashRadius,
+                    speed: 0.18 + i * 0.03,
+                    color: "#ff2200",
+                    trailColor: "#ffaa00",
+                  });
+                }
+                queueTowerPatch(tower.id, { lastAttack: now });
+                addParticles(towerWorldPos, "smoke", 6);
+              }
+            } else if (isMissileBattery && tower.mortarAutoAim) {
+              const autoEnemies = getPrioritizedEnemiesInRange(towerWorldPos, finalRange);
+              if (autoEnemies.length > 0) {
+                const autoTarget = autoEnemies[0];
+                const autoPos = getEnemyAimPosCached(autoTarget);
+                const aDx = autoPos.x - towerWorldPos.x;
+                const aDy = autoPos.y - towerWorldPos.y;
+                const aRot = Math.atan2(aDx + aDy, aDx - aDy);
+                queueTowerPatch(tower.id, { rotation: aRot, targetId: autoTarget.id });
+
+                if (now - tower.lastAttack > effectiveAttackCooldown) {
+                  const missileCount = 3;
+                  for (let i = 0; i < missileCount; i++) {
+                    const spread = 20;
+                    const offsetX = (Math.random() - 0.5) * spread * 2;
+                    const offsetY = (Math.random() - 0.5) * spread * 2;
+                    const targetPos = {
+                      x: autoPos.x + offsetX,
+                      y: autoPos.y + offsetY,
+                    };
+                    const dx = targetPos.x - towerWorldPos.x;
+                    const dy = targetPos.y - towerWorldPos.y;
+                    const rotation = Math.atan2(dy, dx);
+                    queuedTowerProjectiles.push({
+                      id: generateId("msl"),
+                      from: towerWorldPos,
+                      to: targetPos,
+                      progress: 0,
+                      type: "missile",
+                      rotation,
+                      arcHeight: 140 + i * 20,
+                      damage: damage * 0.6,
+                      targetType: "enemy",
+                      isAoE: true,
+                      aoeRadius: splashRadius,
+                      speed: 0.18 + i * 0.03,
+                      color: "#ff2200",
+                      trailColor: "#ffaa00",
+                    });
+                  }
+                  queueTowerPatch(tower.id, { lastAttack: now });
+                  addParticles(towerWorldPos, "smoke", 6);
+                }
+              }
+            } else {
+              // Non-missile mortar types need enemies in range
+              const validEnemies = getPrioritizedEnemiesInRange(
+                towerWorldPos,
+                finalRange
+              );
+
+              // Track target for barrel rotation
+              if (validEnemies.length > 0) {
+                const trackTarget = validEnemies[0];
+                const trackTargetPos = getEnemyAimPosCached(trackTarget);
+                const trackDx = trackTargetPos.x - towerWorldPos.x;
+                const trackDy = trackTargetPos.y - towerWorldPos.y;
+                const trackRotation = Math.atan2(trackDx + trackDy, trackDx - trackDy);
+                queueTowerPatch(tower.id, {
+                  rotation: trackRotation,
+                  targetId: trackTarget.id,
+                });
+              }
+
+              if (now - tower.lastAttack > effectiveAttackCooldown && validEnemies.length > 0) {
+                if (isEmberFoundry) {
+                  const emberTarget = validEnemies[0];
+                  const emberAimPos = getEnemyAimPosCached(emberTarget);
+                  const spread = 35;
+                  for (let i = 0; i < 3; i++) {
+                    const offsetX = (Math.random() - 0.5) * spread * 2;
+                    const offsetY = (Math.random() - 0.5) * spread * 2;
+                    const targetPos = { x: emberAimPos.x + offsetX, y: emberAimPos.y + offsetY };
+                    const dx = targetPos.x - towerWorldPos.x;
+                    const dy = targetPos.y - towerWorldPos.y;
+                    const rotation = Math.atan2(dy, dx);
+                    queuedTowerProjectiles.push({
+                      id: generateId("emb"),
+                      from: towerWorldPos,
+                      to: targetPos,
+                      progress: 0,
+                      type: "ember",
+                      rotation,
+                      arcHeight: 100 + i * 15,
+                      damage: damage * 0.55,
+                      targetType: "enemy",
+                      isAoE: true,
+                      aoeRadius: splashRadius * 0.8,
+                      speed: 0.22 + i * 0.03,
+                      color: "#ff4400",
+                      trailColor: "#ff8800",
+                    });
+                  }
+                  queueTowerPatch(tower.id, { lastAttack: now });
+                  addParticles(towerWorldPos, "fire", 5);
+                } else {
+                // Base mortar: single high-arc explosive shell
+                const target = validEnemies[0];
+                const targetAimPos = getEnemyAimPosCached(target);
+                const dx = targetAimPos.x - towerWorldPos.x;
+                const dy = targetAimPos.y - towerWorldPos.y;
+                const rotation = Math.atan2(dx + dy, dx - dy);
+                queuedTowerProjectiles.push({
+                  id: generateId("mrt"),
+                  from: towerWorldPos,
+                  to: targetAimPos,
+                  progress: 0,
+                  type: "mortarShell",
+                  rotation,
+                  arcHeight: 120,
+                  damage,
+                  targetType: "enemy",
+                  isAoE: true,
+                  aoeRadius: splashRadius,
+                  speed: 0.3,
+                });
+                queueTowerPatch(tower.id, { lastAttack: now });
+                queuedTowerEffects.push({
+                  id: generateId("mrt"),
+                  pos: towerWorldPos,
+                  type: "mortar_launch",
+                  progress: 0,
+                  size: 40,
+                  towerId: tower.id,
+                  towerLevel: tower.level,
+                  rotation,
+                });
+                addParticles(towerWorldPos, "smoke", 4);
+                }
+              }
+            }
           } else if (
             tData.attackSpeed > 0 &&
             now - tower.lastAttack >
@@ -5816,11 +6014,14 @@ export function usePrincetonTowerDefenseRuntime() {
 
           const nextProjectiles: Projectile[] = [];
           const completingProjectiles: Projectile[] = [];
-          const progressStep = projectileDelta / 300;
+          const baseProgressStep = projectileDelta / 300;
           for (const proj of prev) {
+            const progressStep = baseProgressStep * (proj.speed ?? 1);
             const nextProgress = Math.min(1, proj.progress + progressStep);
             if (nextProgress >= 1) {
-              if (proj.targetType && proj.targetId && proj.damage) {
+              if (proj.targetType && proj.damage) {
+                completingProjectiles.push(proj);
+              } else if (proj.isAoE && proj.damage) {
                 completingProjectiles.push(proj);
               }
             } else {
@@ -5849,6 +6050,11 @@ export function usePrincetonTowerDefenseRuntime() {
               case "arrow":
               case "bolt":
                 return "arrow_hit";
+              case "mortarShell":
+              case "missile":
+                return "mortar_impact";
+              case "ember":
+                return "fire_impact";
               default:
                 return "impact_hit";
             }
@@ -5859,6 +6065,8 @@ export function usePrincetonTowerDefenseRuntime() {
           let shouldDeflectOnHero = false;
           const directTroopDamage = new Map<string, number>();
           const aoeEvents: Array<{ center: Position; radius: number; damage: number }> = [];
+          const mortarAoEEvents: Array<{ center: Position; radius: number; damage: number; isBurning: boolean }> = [];
+          const queuedImpactParticles: Array<{ pos: Position; type: string }> = [];
           const queuedImpactEffects: Effect[] = [];
 
           for (const proj of completingProjectiles) {
@@ -5909,6 +6117,28 @@ export function usePrincetonTowerDefenseRuntime() {
                 rotation: proj.rotation,
               });
             }
+
+            // Mortar/tower AoE projectiles targeting enemies - collect for batch processing
+            if (proj.targetType === "enemy" && proj.isAoE && proj.aoeRadius && proj.damage) {
+              queuedImpactEffects.push({
+                id: generateId("eff"),
+                pos: proj.to,
+                type: proj.type === "ember" ? "fire_nova" : "mortar_impact",
+                progress: 0,
+                size: proj.aoeRadius,
+                duration: proj.type === "ember" ? 600 : 800,
+              });
+              mortarAoEEvents.push({
+                center: proj.to,
+                radius: proj.aoeRadius,
+                damage: proj.damage,
+                isBurning: proj.type === "ember",
+              });
+              queuedImpactParticles.push({
+                pos: proj.to,
+                type: proj.type === "ember" ? "fire" : "explosion",
+              });
+            }
           }
 
           if (heroDamageTotal > 0) {
@@ -5954,6 +6184,43 @@ export function usePrincetonTowerDefenseRuntime() {
             );
           }
 
+          // Mortar AoE damage against enemies
+          if (mortarAoEEvents.length > 0) {
+            setEnemies((prevEnemies) => {
+              const nextEnemies: Enemy[] = [];
+              for (const enemy of prevEnemies) {
+                const enemyPos = getEnemyPosWithPath(enemy, selectedMap);
+                let totalDamage = 0;
+                let shouldBurn = false;
+                for (const aoe of mortarAoEEvents) {
+                  const dist = distance(enemyPos, aoe.center);
+                  if (dist <= aoe.radius) {
+                    const falloff = 1 - (dist / aoe.radius) * 0.4;
+                    totalDamage += getEnemyDamageTaken(enemy, aoe.damage * falloff);
+                    if (aoe.isBurning) shouldBurn = true;
+                  }
+                }
+                if (totalDamage <= 0) {
+                  nextEnemies.push(enemy);
+                  continue;
+                }
+                const newHp = enemy.hp - totalDamage;
+                if (newHp <= 0) {
+                  onEnemyKill(enemy, enemyPos, 12, shouldBurn ? "fire" : "default");
+                  continue;
+                }
+                const updates: Partial<Enemy> = { hp: newHp, damageFlash: 200 };
+                if (shouldBurn) {
+                  updates.burning = true;
+                  updates.burnDamage = 25;
+                  updates.burnUntil = nowMs + 4000;
+                }
+                nextEnemies.push({ ...enemy, ...updates });
+              }
+              return nextEnemies;
+            });
+          }
+
           if (queuedImpactEffects.length > 0) {
             setEffects((ef) => {
               const combined = [...ef, ...queuedImpactEffects];
@@ -5962,6 +6229,11 @@ export function usePrincetonTowerDefenseRuntime() {
               }
               return combined;
             });
+          }
+
+          // Mortar impact particles (called from within updater for batching)
+          for (const p of queuedImpactParticles) {
+            addParticles(p.pos, p.type as "fire" | "explosion", 8);
           }
 
           return nextProjectiles;
@@ -8584,6 +8856,18 @@ export function usePrincetonTowerDefenseRuntime() {
               // Pass tower with only active debuffs for rendering
               renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom);
             }
+            // Missile Battery target reticle
+            if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarTarget) {
+              const targetScreenPos = worldToScreen(
+                tower.mortarTarget,
+                canvas.width,
+                canvas.height,
+                dpr,
+                cameraOffset,
+                cameraZoom
+              );
+              renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds);
+            }
           }
           break;
         case "enemy":
@@ -10103,6 +10387,22 @@ export function usePrincetonTowerDefenseRuntime() {
           ? clickedSpecialTower
           : null;
 
+      // Missile mortar targeting mode: click to set target
+      if (missileMortarTargetingId) {
+        const targetPos = clampWorldToMapBounds(clickWorldPos);
+        setTowers((prev) =>
+          prev.map((t) =>
+            t.id === missileMortarTargetingId
+              ? { ...t, mortarTarget: targetPos }
+              : t
+          )
+        );
+        setMissileMortarTargetingId(null);
+        addParticles(targetPos, "fire", 10);
+        addParticles(targetPos, "spark", 6);
+        return;
+      }
+
       if (activeSentinelTargetKey) {
         if (clickedSentinelNexus) {
           setActiveSentinelTargetKey(getSpecialTowerKey(clickedSentinelNexus));
@@ -10331,6 +10631,7 @@ export function usePrincetonTowerDefenseRuntime() {
       enemies,
       selectedTower,
       activeSentinelTargetKey,
+      missileMortarTargetingId,
       selectedMap,
       canAffordPawPoints,
       gameSpeed,
@@ -10884,7 +11185,19 @@ export function usePrincetonTowerDefenseRuntime() {
       setTowers((prev) =>
         prev.map((t) => {
           if (t.id === towerId) {
-            return { ...t, level: newLevel, upgrade: newUpgrade };
+            const updates: Partial<Tower> = { level: newLevel, upgrade: newUpgrade };
+            // Missile Battery (mortar 4A): set initial target near enemy spawn
+            if (t.type === "mortar" && newLevel === 4 && newUpgrade === "A") {
+              const defaultPathKey = activeWaveSpawnPaths[0] ?? selectedMap;
+              const path = MAP_PATHS[defaultPathKey] ?? MAP_PATHS[selectedMap] ?? [];
+              if (path.length >= 2) {
+                const spawnNode = path[Math.min(2, path.length - 1)];
+                updates.mortarTarget = gridToWorld({ x: spawnNode.x, y: spawnNode.y });
+              } else {
+                updates.mortarTarget = gridToWorld(t.pos);
+              }
+            }
+            return { ...t, ...updates };
           }
           return t;
         })
@@ -10925,7 +11238,7 @@ export function usePrincetonTowerDefenseRuntime() {
       addParticles(gridToWorld(tower.pos), "glow", 20);
       setSelectedTower(null);
     },
-    [addParticles, removePawPoints, setTowers, setTroops]
+    [addParticles, removePawPoints, setTowers, setTroops, activeWaveSpawnPaths, selectedMap]
   );
   const sellTower = useCallback(
     (towerId: string) => {
@@ -12165,6 +12478,19 @@ export function usePrincetonTowerDefenseRuntime() {
                   upgradeTower={upgradeTower}
                   sellTower={sellTower}
                   onClose={() => setSelectedTower(null)}
+                  onRetargetMissile={(towerId) => {
+                    setMissileMortarTargetingId(towerId);
+                    setSelectedTower(null);
+                  }}
+                  onToggleMissileAutoAim={(towerId) => {
+                    setTowers((prev) =>
+                      prev.map((t) =>
+                        t.id === towerId
+                          ? { ...t, mortarAutoAim: !t.mortarAutoAim }
+                          : t
+                      )
+                    );
+                  }}
                 />
               );
             })()}
@@ -12182,6 +12508,20 @@ export function usePrincetonTowerDefenseRuntime() {
               }}
             >
               Imperial Sentinel targeting mode: click any map location.
+            </div>
+          )}
+          {missileMortarTargetingId && (
+            <div
+              className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
+              style={{
+                zIndex: 180,
+                background: "rgba(74, 32, 0, 0.9)",
+                border: "1px solid rgba(255, 140, 0, 0.6)",
+                color: "#ffcc88",
+                boxShadow: "0 0 18px rgba(255, 100, 0, 0.35)",
+              }}
+            >
+              Missile Battery targeting: click any map location to set strike zone.
             </div>
           )}
           {!isTouchDeviceRef.current && hoveredSpecialTower && (

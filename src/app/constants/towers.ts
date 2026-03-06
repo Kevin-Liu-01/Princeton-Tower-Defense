@@ -191,6 +191,35 @@ export const TOWER_DATA: Record<
       },
     },
   },
+  mortar: {
+    name: TOWER_STATS.mortar.name,
+    icon: TOWER_STATS.mortar.icon,
+    cost: TOWER_STATS.mortar.levels[1].cost,
+    damage: TOWER_STATS.mortar.baseStats.damage,
+    range: TOWER_STATS.mortar.baseStats.range,
+    attackSpeed: TOWER_STATS.mortar.baseStats.attackSpeed,
+    desc: "Fortified artillery emplacement with quadpod-mounted barrel.",
+    levelDesc: {
+      1: "Field Mortar - Quadpod barrel with iron sights",
+      2: "Siege Mortar - Propellant injectors, periscope optic, shell feeder",
+      3: "Grand Mortar - Digital rangefinder, scaffolding, elevation screw",
+      4: "Choose: Missile Battery or Ember Foundry",
+    },
+    upgrades: {
+      A: {
+        name: "Missile Battery",
+        desc: "6-pod guided launcher rack",
+        effect: "Auto-aim or manual targeting for devastating barrages",
+        range: 400,
+      },
+      B: {
+        name: "Ember Foundry",
+        desc: "Triple-barrel revolver cannon",
+        effect: "Fires 3 large incendiary shells at target, deals burn DoT",
+        range: 350,
+      },
+    },
+  },
 };
 
 // Tower colors
@@ -252,5 +281,13 @@ export const TOWER_COLORS: Record<
     light: "#ab2020",
     primary: "#8b0000",
     secondary: "#5c0000",
+  },
+  mortar: {
+    base: "#7a5c3a",
+    dark: "#4a3520",
+    accent: "#ff4400",
+    light: "#9a7c5a",
+    primary: "#7a5c3a",
+    secondary: "#4a3520",
   },
 };

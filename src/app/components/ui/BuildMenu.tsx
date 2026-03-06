@@ -64,6 +64,8 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
       "Slows enemies in range. Perfect before high-damage towers. Stacks with multiple libraries.",
     lab: "Deals chain/splash damage. Excellent against swarms. Place where enemies cluster.",
     club: "Generates extra PP over time. Build early for economic advantage. No combat ability.",
+    mortar:
+      "Slow but devastating AoE. Shells arc high and explode on impact. Ideal against grouped enemies.",
   };
 
   return (
