@@ -22,6 +22,10 @@ export function isFirefox(): boolean {
 export interface PerformanceSettings {
   // Disable expensive shadow effects (huge Firefox improvement)
   disableShadows: boolean;
+  // Scale factor for shadowBlur radii (1.0 = full, 0.5 = halved, 0 = off).
+  // Applied even when disableShadows is false so lower quality levels can
+  // reduce GPU-expensive blur without removing shadows entirely.
+  shadowQualityMultiplier: number;
   // Reduce particle counts
   reducedParticles: boolean;
   // Simplify gradients (fewer color stops)
@@ -35,6 +39,7 @@ export interface PerformanceSettings {
 // Default settings based on browser
 const firefoxDefaults: PerformanceSettings = {
   disableShadows: true,
+  shadowQualityMultiplier: 0,
   reducedParticles: true,
   simplifiedGradients: true,
   skipEnvironmentEffects: false,
@@ -43,6 +48,7 @@ const firefoxDefaults: PerformanceSettings = {
 
 const defaultSettings: PerformanceSettings = {
   disableShadows: false,
+  shadowQualityMultiplier: 1,
   reducedParticles: false,
   simplifiedGradients: false,
   skipEnvironmentEffects: false,
@@ -67,15 +73,18 @@ export function setPerformanceSettings(settings: Partial<PerformanceSettings>): 
 // ============================================================================
 
 /**
- * Safely set shadowBlur - skipped on Firefox for massive performance gains
- * Firefox's canvas shadowBlur implementation is 10-30x slower than Chrome's
+ * Safely set shadowBlur with quality-aware scaling.
+ * - Completely skipped when shadows are disabled (Firefox).
+ * - Blur radius is multiplied by shadowQualityMultiplier so lower quality
+ *   levels get cheaper (smaller radius) shadows without losing the visual.
  */
 export function setShadowBlur(ctx: CanvasRenderingContext2D, blur: number, color?: string): void {
-  if (getPerformanceSettings().disableShadows) {
+  const settings = getPerformanceSettings();
+  if (settings.disableShadows) {
     ctx.shadowBlur = 0;
     return;
   }
-  ctx.shadowBlur = blur;
+  ctx.shadowBlur = blur * settings.shadowQualityMultiplier;
   if (color) {
     ctx.shadowColor = color;
   }

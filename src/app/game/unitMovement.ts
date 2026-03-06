@@ -26,10 +26,15 @@ export interface StepTowardTargetResult {
 
 export function getFacingRightFromDelta(
   dx: number,
-  fallbackFacingRight: boolean = true
+  dy: number,
+  fallbackFacingRight: boolean = true,
 ): boolean {
-  if (!Number.isFinite(dx) || Math.abs(dx) <= EPSILON) return fallbackFacingRight;
-  return dx >= 0;
+  // In 2:1 isometric projection, screenX ∝ (worldX - worldY).
+  // "Facing right on screen" means the screen-space X component is positive.
+  const screenDx = dx - dy;
+  if (!Number.isFinite(screenDx) || Math.abs(screenDx) <= EPSILON)
+    return fallbackFacingRight;
+  return screenDx >= 0;
 }
 
 export function stepTowardTarget({
@@ -44,7 +49,7 @@ export function stepTowardTarget({
   const distance = Math.hypot(dx, dy);
   const safeDistance = Math.max(distance, EPSILON);
   const rotation = Math.atan2(dy, dx);
-  const facingRight = getFacingRightFromDelta(dx);
+  const facingRight = getFacingRightFromDelta(dx, dy);
   const minStopDistance = Math.max(0, stopDistance);
 
   if (distance <= minStopDistance + EPSILON) {

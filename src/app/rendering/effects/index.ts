@@ -18,7 +18,7 @@ import { setShadowBlur, clearShadow } from "../performance";
 import { renderEnemyDeath } from "./deathAnimations";
 
 // Re-export fog effects
-export { renderRoadEndFog } from "./fog";
+export { drawRoadEndFog, computeFogCounts, type RgbColor, type DrawRoadEndFogParams } from "./fog";
 export { renderInspectIndicator, renderUnitInspectIndicator, type InspectIndicatorConfig } from "./inspectIndicator";
 
 // ============================================================================
@@ -2371,10 +2371,11 @@ export function renderEffect(
 }
 
 // ============================================================================
-// PROJECTILE RENDERING
+// PROJECTILE RENDERING (LEGACY — now in projectiles/index.ts)
+// Kept as unexported dead code marker; remove once confirmed unused.
 // ============================================================================
 
-export function renderProjectile(
+function _legacyRenderProjectile(
   ctx: CanvasRenderingContext2D,
   proj: Projectile,
   canvasWidth: number,
@@ -2521,10 +2522,11 @@ export function renderProjectile(
 }
 
 // ============================================================================
-// PARTICLE RENDERING
+// PARTICLE RENDERING (LEGACY — now in particles/renderParticle.ts)
+// Kept as unexported dead code marker; remove once confirmed unused.
 // ============================================================================
 
-export function renderParticle(
+function _legacyRenderParticle(
   ctx: CanvasRenderingContext2D,
   particle: Particle,
   canvasWidth: number,

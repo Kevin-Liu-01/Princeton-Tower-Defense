@@ -1,5 +1,5 @@
 import type { Position } from "../../types";
-import { resolveWeaponRotation } from "./helpers";
+import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
 export function drawMatheyKnightHero(
   ctx: CanvasRenderingContext2D,
@@ -639,7 +639,8 @@ export function drawMatheyKnightHero(
     hammerY,
     hammerAngle,
     Math.PI / 2,
-    isAttacking ? 1.25 : 0.72
+    isAttacking ? 1.25 : 0.72,
+    WEAPON_LIMITS.rightMelee,
   );
 
   ctx.save();

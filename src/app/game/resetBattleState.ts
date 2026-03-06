@@ -5,7 +5,6 @@ import type {
   DraggingTower,
   GameState,
   Hero,
-  Particle,
   Position,
   Projectile,
   Spell,
@@ -39,7 +38,7 @@ export interface BattleStateSetters {
   setTroops: Setter<Troop[]>;
   setProjectiles: Setter<Projectile[]>;
   setEffects: Setter<Effect[]>;
-  setParticles: Setter<Particle[]>;
+  clearParticlePool: () => void;
   setSelectedTower: Setter<string | null>;
   setBuildingTower: Setter<TowerType | null>;
   setDraggingTower: Setter<DraggingTower | null>;
@@ -117,7 +116,7 @@ export function resetBattleState({
   setters.setTroops([]);
   setters.setProjectiles([]);
   setters.setEffects([]);
-  setters.setParticles([]);
+  setters.clearParticlePool();
 
   setters.setSelectedTower(null);
   setters.setBuildingTower(null);

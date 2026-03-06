@@ -16,6 +16,8 @@ import {
   hexToRgba,
   worldToScreen,
 } from "../../utils";
+import { createSeededRandom } from "../../utils/seededRandom";
+import { clampRgb } from "../../utils/colorUtils";
 import {
   CHALLENGE_MOUNTAIN_DEPTH,
   CHALLENGE_MOUNTAIN_SKIRT_LAYERS,
@@ -185,14 +187,6 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     skyDecor: "rgba(255,130,78,0.5)",
   },
 };
-
-function createSeededRandom(seed: number): () => number {
-  let seedState = seed;
-  return () => {
-    seedState = (seedState * 1103515245 + 12345) & 0x7fffffff;
-    return seedState / 0x7fffffff;
-  };
-}
 
 function catmullRom(
   p0: Position,
@@ -587,9 +581,7 @@ function drawIsoTile(
 
 function rgbToHex(r: number, g: number, b: number): string {
   const toHex = (value: number) =>
-    Math.max(0, Math.min(255, Math.round(value)))
-      .toString(16)
-      .padStart(2, "0");
+    clampRgb(value).toString(16).padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
@@ -625,10 +617,11 @@ function blendHexColors(colorA: string, colorB: string, t: number): string {
 
 function shadeHexColor(color: string, amount: number): string {
   const rgb = parseColorToRgb(color);
-  const nextR = Math.max(0, Math.min(255, Math.round(rgb.r + amount)));
-  const nextG = Math.max(0, Math.min(255, Math.round(rgb.g + amount)));
-  const nextB = Math.max(0, Math.min(255, Math.round(rgb.b + amount)));
-  return rgbToHex(nextR, nextG, nextB);
+  return rgbToHex(
+    clampRgb(rgb.r + amount),
+    clampRgb(rgb.g + amount),
+    clampRgb(rgb.b + amount)
+  );
 }
 
 function tileNoise(gx: number, gy: number, seed: number): number {

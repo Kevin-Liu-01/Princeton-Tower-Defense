@@ -8,6 +8,7 @@ import {
   drawIsometricPyramid,
   drawBrickFace as sharedBrickFace,
 } from "../helpers";
+import { setShadowBlur, clearShadow } from "../performance";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -2709,8 +2710,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.shadowColor = "#ff6600";
-      ctx.shadowBlur = 15 * s;
+      setShadowBlur(ctx, 15 * s, "#ff6600");
       const flameH = 12 + Math.sin(decorTime * 8) * 4;
       const fireGrad = ctx.createRadialGradient(
         screenPos.x,
@@ -2748,7 +2748,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
       ctx.fillStyle = "#5d4037";
       ctx.beginPath();
       ctx.ellipse(
@@ -7223,8 +7223,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Wind-blown crest (highlighted edge with glow)
-      ctx.shadowColor = "rgba(255,230,150,0.4)";
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, "rgba(255,230,150,0.4)");
       ctx.strokeStyle = "#f5e090";
       ctx.lineWidth = 2 * s;
       ctx.beginPath();
@@ -7238,7 +7237,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         duneBaseY - 12 * s,
       );
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Wind ripples texture on the dune face
       ctx.strokeStyle = "rgba(160,120,50,0.35)";
@@ -7413,8 +7412,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const capY = tipY + capHeight;
 
       // Outer glow effect
-      ctx.shadowColor = "rgba(255,215,100,0.8)";
-      ctx.shadowBlur = 20 * s;
+      setShadowBlur(ctx, 20 * s, "rgba(255,215,100,0.8)");
 
       // Golden cap base - right face
       const capRightGrad = ctx.createLinearGradient(
@@ -7456,7 +7454,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
 
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Bright tip highlight
       const tipHighlightGrad = ctx.createRadialGradient(
@@ -8526,8 +8524,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Mystical glowing eyes
       const eyeGlowIntensity = mysticPulse * 0.8;
       ctx.fillStyle = `rgba(64, 208, 255, ${eyeGlowIntensity})`;
-      ctx.shadowColor = eyeGlow;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, eyeGlow);
       ctx.beginPath();
       ctx.ellipse(
         headCenterX - 5 * s,
@@ -8550,7 +8547,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Eye pupils
       ctx.fillStyle = "#104050";
@@ -8662,12 +8659,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Gem on collar
       ctx.fillStyle = `rgba(64, 208, 255, ${mysticPulse})`;
-      ctx.shadowColor = eyeGlow;
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, eyeGlow);
       ctx.beginPath();
       ctx.arc(headCenterX, collarY + 8 * s, 2.5 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // ========== WEATHERING AND CRACKS ==========
       ctx.strokeStyle = "rgba(80, 60, 40, 0.3)";
@@ -14536,14 +14532,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Lava cracks with glow
       ctx.strokeStyle = "#ff4400";
       ctx.lineWidth = 1.5 * s;
-      ctx.shadowColor = "#ff6600";
-      ctx.shadowBlur = 5 * s;
+      setShadowBlur(ctx, 5 * s, "#ff6600");
       ctx.beginPath();
       ctx.moveTo(spikeBaseX - 2 * s, spikeBaseY + 2 * s);
       ctx.lineTo(spikeBaseX - 1 * s, spikeBaseY - 8 * s);
       ctx.lineTo(spikeBaseX + 1 * s, spikeBaseY - 5 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Tip glint
       ctx.fillStyle = "rgba(200,200,255,0.6)";
@@ -14883,8 +14878,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       const fI = 28 * s * ISO_COS;
       const fD = 28 * s * ISO_SIN;
-      ctx.shadowColor = lGlow;
-      ctx.shadowBlur = 5 * s;
+      setShadowBlur(ctx, 5 * s, lGlow);
       ctx.strokeStyle = `rgba(255,61,0,${0.2 + cPulse * 0.15})`;
       ctx.lineWidth = 1 * s;
       for (let i = 0; i < 4; i++) {
@@ -14895,7 +14889,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(rx + 3 * s, ry - 3 * s);
         ctx.stroke();
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       const btW = 10 * s;
       const btH = 50 * s;
@@ -14957,8 +14951,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ox + mI, mTop + mD);
       ctx.stroke();
 
-      ctx.shadowColor = lGlow;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, lGlow);
       ctx.fillStyle = `rgba(255,70,20,${0.35 + cPulse * 0.3})`;
       const mWinY1 = mBase - mH * 0.35;
       ctx.fillRect(ox - mI * 0.55 - 1.2 * s, mWinY1 + mD * 0.5, 2.4 * s, 7 * s);
@@ -14976,7 +14969,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         2 * s,
         6 * s,
       );
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       drawIsometricPrism(
         ctx,
@@ -15080,14 +15073,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           cMid,
         );
 
-        ctx.shadowColor = lGlow;
-        ctx.shadowBlur = 7 * s;
+        setShadowBlur(ctx, 7 * s, lGlow);
         ctx.fillStyle = `rgba(255,70,20,${0.4 + cPulse * 0.3})`;
         const wY1 = tty + ttD2 - tH3 * 0.35;
         ctx.fillRect(ttx - 1 * s, wY1 - 3.5 * s, 2 * s, 7 * s);
         const wY2 = tty + ttD2 - tH3 * 0.6;
         ctx.fillRect(ttx - 0.8 * s, wY2 - 3 * s, 1.6 * s, 6 * s);
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
       });
 
       const gateY = mBase + mD * 2;
@@ -15099,32 +15091,29 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ox + 5 * s, gateY);
       ctx.closePath();
       ctx.fill();
-      ctx.shadowColor = lCore;
-      ctx.shadowBlur = 14 * s;
+      setShadowBlur(ctx, 14 * s, lCore);
       ctx.fillStyle = lCore;
       ctx.beginPath();
       ctx.arc(ox, gateY - 9 * s, 3 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       ctx.fillStyle = "#3D3D3D";
       [-6 * s, 6 * s].forEach((xOff) => {
         ctx.beginPath();
         ctx.arc(ox + xOff, gateY - 18 * s, 2.5 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowColor = lGlow;
-        ctx.shadowBlur = 4 * s;
+        setShadowBlur(ctx, 4 * s, lGlow);
         ctx.fillStyle = lGlow;
         ctx.beginPath();
         ctx.arc(ox + xOff - 1 * s, gateY - 18.5 * s, 0.7 * s, 0, Math.PI * 2);
         ctx.arc(ox + xOff + 1 * s, gateY - 18.5 * s, 0.7 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
         ctx.fillStyle = "#3D3D3D";
       });
 
-      ctx.shadowColor = lGlow;
-      ctx.shadowBlur = 10 * s;
+      setShadowBlur(ctx, 10 * s, lGlow);
       ctx.strokeStyle = lGlow;
       ctx.lineWidth = 1.8 * s;
       ctx.beginPath();
@@ -15142,10 +15131,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.moveTo(ox - 2 * s, mBase + mD * 2 - 5 * s);
       ctx.lineTo(ox + 1 * s, mBase + mD * 2 - 15 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
-      ctx.shadowColor = lGlow;
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, lGlow);
       ctx.strokeStyle = `rgba(255,61,0,${0.25 + cPulse * 0.2})`;
       ctx.lineWidth = 1.2 * s;
       const fRuneY = fY + fD - 2 * s;
@@ -15156,7 +15144,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(ox + fI * 0.2, fRuneY - 3 * s);
       ctx.lineTo(ox + fI * 0.4, fRuneY);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       for (let p = 0; p < 8; p++) {
         const pT = decorTime + p * 0.5;
@@ -15252,8 +15240,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(bx + kI, kTop + kD);
       ctx.stroke();
 
-      ctx.shadowColor = lavaCore;
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, lavaCore);
       ctx.fillStyle = `rgba(255,90,30,${0.3 + pulse * 0.25})`;
       const bWinY = kBase - kH * 0.4;
       ctx.fillRect(bx - kI * 0.5 - 1 * s, bWinY + kD * 0.5, 2 * s, 6 * s);
@@ -15263,7 +15250,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         1.6 * s,
         6 * s,
       );
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       const gW2 = variant === 1 ? 10 * s : 7 * s;
       const gH2 = variant === 1 ? 24 * s : 20 * s;
@@ -15304,11 +15291,10 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const wy = slitY + side * kD * 0.5;
         ctx.fillStyle = "#050508";
         ctx.fillRect(wx - 1.2 * s, wy - 4 * s, 2.4 * s, 8 * s);
-        ctx.shadowColor = lavaCore;
-        ctx.shadowBlur = 6 * s;
+        setShadowBlur(ctx, 6 * s, lavaCore);
         ctx.fillStyle = `rgba(255,120,40,${0.35 + pulse * 0.3})`;
         ctx.fillRect(wx - 0.6 * s, wy - 3 * s, 1.2 * s, 6 * s);
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
       });
 
       if (!peaked) {
@@ -15485,18 +15471,16 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.stroke();
         }
 
-        ctx.shadowColor = lavaCore;
-        ctx.shadowBlur = 7 * s;
+        setShadowBlur(ctx, 7 * s, lavaCore);
         const twY = tBase2 + tbD - tH2 * 0.4;
         ctx.fillStyle = `rgba(255,110,40,${0.4 + pulse * 0.3})`;
         ctx.fillRect(ttx - 1 * s, twY - 3.5 * s, 2 * s, 7 * s);
         const twY2 = tBase2 + tbD - tH2 * 0.65;
         ctx.fillRect(ttx - 0.8 * s, twY2 - 3 * s, 1.6 * s, 6 * s);
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
       });
 
-      ctx.shadowColor = lavaGlow;
-      ctx.shadowBlur = 5 * s;
+      setShadowBlur(ctx, 5 * s, lavaGlow);
       ctx.strokeStyle = `rgba(255,110,20,${0.2 + pulse * 0.15})`;
       ctx.lineWidth = 1 * s;
       const fI2 = 36 * s * ISO_COS;
@@ -15506,7 +15490,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(bx, by + fD2 * 1.1);
       ctx.lineTo(bx + fI2 * 0.5, by + fD2 * 0.6);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       if (hasFlag) {
         const fpB = peaked ? kTop - 20 * s : kTop - 9 * s;
@@ -15530,8 +15514,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
       }
 
-      ctx.shadowColor = lavaGlow;
-      ctx.shadowBlur = 10 * s;
+      setShadowBlur(ctx, 10 * s, lavaGlow);
       ctx.strokeStyle = `rgba(255,110,20,${0.5 + pulse * 0.2})`;
       ctx.lineWidth = 1.3 * s;
       const chevY = kBase + kD - kH * 0.75;
@@ -15540,7 +15523,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(bx, chevY - 3 * s);
       ctx.lineTo(bx + kI * 0.3, chevY + kD * 0.3);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       for (let i = 0; i < 5; i++) {
         const t = (decorTime * 0.75 + i * 0.35 + variant * 0.11) % 1.2;
@@ -15608,8 +15591,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(tx + d1I, ty - 6 * s + d1D);
       ctx.stroke();
 
-      ctx.shadowColor = "#c03030";
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, "#c03030");
       ctx.strokeStyle = `rgba(200,50,50,${0.15 + rPulse * 0.12})`;
       ctx.lineWidth = 0.8 * s;
       const d0I = 32 * s * ISO_COS;
@@ -15619,7 +15601,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(tx, ty + d0D * 1.05);
       ctx.lineTo(tx + d0I * 0.35, ty + d0D * 0.7);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       const sW = 16 * s;
       const sH = 14 * s;
@@ -15657,13 +15639,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.arc(ax, ay - 6 * s, 2 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowColor = "#c03030";
-        ctx.shadowBlur = 5 * s;
+        setShadowBlur(ctx, 5 * s, "#c03030");
         ctx.fillStyle = `rgba(200,50,50,${0.5 + rPulse * 0.3})`;
         ctx.beginPath();
         ctx.arc(ax, ay - 6 * s, 1.2 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
       });
 
       const bkW = 18 * s;
@@ -15758,8 +15739,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineWidth = 1 * s;
       ctx.stroke();
 
-      ctx.shadowColor = "#c03030";
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, "#c03030");
       ctx.strokeStyle = `rgba(200,50,50,${0.2 + rPulse * 0.15})`;
       ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
@@ -15767,7 +15747,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(tx, bkBase + bD2 * 0.35 + 4 * s);
       ctx.lineTo(tx + btI * 0.6, bkBase + bD2 * 0.35);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       [-12, -6, 0, 6, 12].forEach((off, idx) => {
         const spkH = idx === 2 ? 14 * s : 9 * s;
@@ -15789,17 +15769,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.ellipse(tx, bkTop + btD + 8 * s, 5 * s, 4.5 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowColor = "#c03030";
-      ctx.shadowBlur = 12 * s;
+      setShadowBlur(ctx, 12 * s, "#c03030");
       ctx.fillStyle = `rgba(255,60,60,${0.55 + rPulse * 0.3})`;
       ctx.beginPath();
       ctx.arc(tx - 1.8 * s, bkTop + btD + 7 * s, 1.2 * s, 0, Math.PI * 2);
       ctx.arc(tx + 1.8 * s, bkTop + btD + 7 * s, 1.2 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
-      ctx.shadowColor = "#8a1010";
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, "#8a1010");
       ctx.strokeStyle = `rgba(220,40,40,${0.5 + rPulse * 0.3})`;
       ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
@@ -15812,7 +15790,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(tx, bkTop + btD + 14 * s);
       ctx.lineTo(tx + 3 * s, bkTop + btD + 20 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       for (let i = 0; i < 6; i++) {
         const t = (decorTime * 0.6 + i * 0.45) % 2;
@@ -15961,8 +15939,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         dsMid,
       );
 
-      ctx.shadowColor = dsRune;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, dsRune);
       ctx.strokeStyle = `rgba(200,50,50,${0.3 + dsPulse * 0.4})`;
       ctx.lineWidth = 1.2 * s;
       for (let i = 0; i < 3; i++) {
@@ -15978,26 +15955,23 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.stroke();
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       const winY = spBase + (spTop - spBase) * 0.4;
       const winGD = spBD + (spTD - spBD) * 0.4;
-      ctx.shadowColor = dsRune;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, dsRune);
       ctx.fillStyle = `rgba(220,60,60,${0.4 + dsPulse * 0.3})`;
       ctx.fillRect(dx - 1 * s, winY + winGD * 2 - 4 * s, 2 * s, 8 * s);
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       const winY2 = spBase + (spTop - spBase) * 0.65;
       const winGD2 = spBD + (spTD - spBD) * 0.65;
-      ctx.shadowColor = dsRune;
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, dsRune);
       ctx.fillStyle = `rgba(220,60,60,${0.3 + dsPulse * 0.2})`;
       ctx.fillRect(dx - 0.8 * s, winY2 + winGD2 * 2 - 3 * s, 1.6 * s, 6 * s);
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
-      ctx.shadowColor = dsRune;
-      ctx.shadowBlur = 5 * s;
+      setShadowBlur(ctx, 5 * s, dsRune);
       ctx.strokeStyle = `rgba(200,50,50,${0.2 + dsPulse * 0.15})`;
       ctx.lineWidth = 0.8 * s;
       const baseI = 14 * s * dsWM * ISO_COS;
@@ -16007,7 +15981,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(dx, dy + baseD * 1.1);
       ctx.lineTo(dx + baseI * 0.4, dy + baseD * 0.7);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       for (let i = 0; i < 4; i++) {
         const t = (decorTime * 0.7 + i * 0.5 + variant * 0.4) % 1.5;
@@ -16332,8 +16306,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
 
-      ctx.shadowColor = magOrg;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, magOrg);
       ctx.strokeStyle = `rgba(255,152,0,${0.25 + poolP * 0.15})`;
       ctx.lineWidth = 1 * s;
       ctx.beginPath();
@@ -16344,7 +16317,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.moveTo(lx + cascHalf * 1.2, srcY + 1 * s);
       ctx.lineTo(lx + cascHalf * 0.6, srcY - 2 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       if (!wide) {
         const s2x = lx + cI * 0.6;
@@ -16374,8 +16347,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
       }
 
-      ctx.shadowColor = magOrg;
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, magOrg);
       ctx.fillStyle = `rgba(255,200,50,${poolP * 0.5})`;
       ctx.beginPath();
       ctx.ellipse(
@@ -16388,7 +16360,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       for (let e = 0; e < 8; e++) {
         const ePh = (decorTime * 1.5 + e * 0.65) % 2;
@@ -16540,8 +16512,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(px, shTop + tD * 2);
       ctx.stroke();
 
-      ctx.shadowColor = runeCol;
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, runeCol);
       ctx.strokeStyle = `rgba(255,106,58,${0.15 + pulse * 0.12})`;
       ctx.lineWidth = 0.8 * s;
       const baseI2 = 16 * s * wM * ISO_COS;
@@ -16551,21 +16522,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(px, py + baseD2 * 1.1);
       ctx.lineTo(px + baseI2 * 0.4, py + baseD2 * 0.7);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       const capY = shTop - 12 * s * hM;
       const cW = 6 * s * wM;
       const cD2 = cW * ISO_SIN;
 
-      ctx.shadowColor = runeCol;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, runeCol);
       ctx.strokeStyle = `rgba(255,120,70,${0.25 + pulse * 0.4})`;
       ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
       ctx.moveTo(px, shTop + tD);
       ctx.lineTo(px, capY + cD2 * 2 + 2 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       drawIsometricPyramid(ctx, px, capY, cW, 9 * s, obsHi, obsBlack, obsMid);
 
@@ -16579,13 +16549,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
 
-      ctx.shadowColor = `rgba(255,100,50,${pulse})`;
-      ctx.shadowBlur = 14 * s;
+      setShadowBlur(ctx, 14 * s, `rgba(255,100,50,${pulse})`);
       ctx.fillStyle = `rgba(255,140,80,${0.1 + pulse * 0.12})`;
       ctx.beginPath();
       ctx.arc(px, capY, cW * 1.8, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       [-1, 1].forEach((side) => {
         const sx = px + side * 14 * s * wM;
@@ -16619,8 +16588,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
       });
 
-      ctx.shadowColor = runeCol;
-      ctx.shadowBlur = 10 * s;
+      setShadowBlur(ctx, 10 * s, runeCol);
       ctx.strokeStyle = `rgba(255,120,70,${0.3 + pulse * 0.45})`;
       ctx.lineWidth = 1.3 * s;
       const nR = variant === 0 ? 4 : 3;
@@ -16638,7 +16606,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.stroke();
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       if (variant === 1) {
         ctx.strokeStyle = `rgba(255,80,40,${0.2 + pulse * 0.15})`;
@@ -17034,13 +17002,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = 0.5 * s;
         ctx.stroke();
         drawSkull(ax, ay - 5 * s, 2.5, side);
-        ctx.shadowColor = redGl;
-        ctx.shadowBlur = 4 * s;
+        setShadowBlur(ctx, 4 * s, redGl);
         ctx.fillStyle = `rgba(200,30,30,${0.4 + sPulse * 0.25})`;
         ctx.beginPath();
         ctx.arc(ax, ay - 5.3 * s, 0.8 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
       });
 
       [-10, -5, 0, 5, 10].forEach((off, idx) => {
@@ -17084,17 +17051,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.fill();
 
-      ctx.shadowColor = redGl;
-      ctx.shadowBlur = 12 * s;
+      setShadowBlur(ctx, 12 * s, redGl);
       ctx.fillStyle = `rgba(220,30,30,${0.5 + sPulse * 0.3})`;
       ctx.beginPath();
       ctx.arc(sx - 2.2 * s, cSkY - 0.3 * s, 1.6 * s, 0, Math.PI * 2);
       ctx.arc(sx + 2.2 * s, cSkY - 0.3 * s, 1.6 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
-      ctx.shadowColor = redGl;
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, redGl);
       ctx.strokeStyle = `rgba(200,30,30,${0.3 + sPulse * 0.2})`;
       ctx.lineWidth = 1 * s;
       ctx.beginPath();
@@ -17107,7 +17072,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(sx, bkTop + bkTD + 16 * s);
       ctx.lineTo(sx + 2.5 * s, bkTop + bkTD + 22 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       for (let p = 0; p < 5; p++) {
         const pt = (decorTime * 0.5 + p * 0.5) % 2;
@@ -18345,8 +18310,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Eerie glow from inside door gap
       ctx.fillStyle = `rgba(74, 255, 74, ${ambientPulse * 0.4})`;
-      ctx.shadowColor = glowGreen;
-      ctx.shadowBlur = 8 * s;
+      setShadowBlur(ctx, 8 * s, glowGreen);
       ctx.beginPath();
       ctx.moveTo(screenPos.x - 6 * s, screenPos.y - 5 * s);
       ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 28 * s);
@@ -18354,7 +18318,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 5 * s);
       ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // ========== WINDOWS ==========
       // Main window (glowing)
@@ -18364,10 +18328,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Window glow
       const windowPulse = 0.7 + Math.sin(time * 2.5 + 1) * 0.2;
       ctx.fillStyle = `rgba(74, 255, 74, ${windowPulse})`;
-      ctx.shadowColor = glowGreen;
-      ctx.shadowBlur = 15 * s;
+      setShadowBlur(ctx, 15 * s, glowGreen);
       ctx.fillRect(screenPos.x + 3 * s, screenPos.y - 34 * s, 10 * s, 10 * s);
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Window cross frame
       ctx.strokeStyle = woodDark;
@@ -18415,10 +18378,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillStyle = "#0a0808";
       ctx.fillRect(screenPos.x + 24 * s, screenPos.y - 38 * s, 8 * s, 8 * s);
       ctx.fillStyle = `rgba(155, 77, 255, ${windowPulse * 0.8})`;
-      ctx.shadowColor = glowPurple;
-      ctx.shadowBlur = 10 * s;
+      setShadowBlur(ctx, 10 * s, glowPurple);
       ctx.fillRect(screenPos.x + 25 * s, screenPos.y - 37 * s, 6 * s, 6 * s);
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // ========== THATCHED ROOF ==========
       // Roof back layer
@@ -18600,8 +18562,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Bubbling potion
       const bubbleGlow = 0.8 + Math.sin(time * 4) * 0.2;
       ctx.fillStyle = `rgba(74, 255, 74, ${bubbleGlow * 0.7})`;
-      ctx.shadowColor = glowGreen;
-      ctx.shadowBlur = 12 * s;
+      setShadowBlur(ctx, 12 * s, glowGreen);
       ctx.beginPath();
       ctx.ellipse(
         screenPos.x - 38 * s,
@@ -18613,7 +18574,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         Math.PI * 2,
       );
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Bubbles
       for (let i = 0; i < 5; i++) {
@@ -22928,8 +22889,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.stroke();
 
       // Pulsing rune diamonds around base
-      ctx.shadowColor = "#ff4400";
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, "#ff4400");
       const baseI = 38 * s * 0.433;
       const baseD = 38 * s * 0.25;
       for (let face = 0; face < 2; face++) {
@@ -22954,7 +22914,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.stroke();
         }
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Main obelisk pillar
       const wmPillarW = 11 * s;
@@ -23106,8 +23066,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ff1 = Math.sin(decorTime * 8) * 2 * s;
       const ff2 = Math.cos(decorTime * 6.3) * 1.5 * s;
       const ff3 = Math.sin(decorTime * 10) * 1 * s;
-      ctx.shadowColor = "#ff6600";
-      ctx.shadowBlur = 16 * s;
+      setShadowBlur(ctx, 16 * s, "#ff6600");
       // Outer glow
       ctx.fillStyle = `rgba(255,60,0,${0.2 + wmPulse * 0.15})`;
       ctx.beginPath();
@@ -23162,7 +23121,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Tattered war banners (properly iso-offset from pillar center)
       [-1, 1].forEach((side) => {
@@ -23337,8 +23296,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       }
 
       // Glowing rune circle on ground (drawn before platform so it's behind)
-      ctx.shadowColor = "#44ff44";
-      ctx.shadowBlur = 6 * s;
+      setShadowBlur(ctx, 6 * s, "#44ff44");
       ctx.strokeStyle = `rgba(80,255,80,${0.2 + baPulse * 0.3})`;
       ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
@@ -23358,7 +23316,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Base bone platform
       drawIsometricPrism(
@@ -23564,8 +23522,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const baf1 = Math.sin(decorTime * 7) * 2 * s;
       const baf2 = Math.cos(decorTime * 5.5) * 1.5 * s;
       const baf3 = Math.sin(decorTime * 9) * 1 * s;
-      ctx.shadowColor = "#33ff66";
-      ctx.shadowBlur = 16 * s;
+      setShadowBlur(ctx, 16 * s, "#33ff66");
       // Outer wispy green
       ctx.fillStyle = `rgba(30,200,60,${0.3 + baPulse * 0.25})`;
       ctx.beginPath();
@@ -23603,7 +23560,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
       // Purple core
-      ctx.shadowColor = "#9944ff";
+      setShadowBlur(ctx, 16 * s, "#9944ff");
       ctx.fillStyle = `rgba(170,80,255,${0.55 + baPulse * 0.3})`;
       ctx.beginPath();
       ctx.moveTo(cx - 3 * s, baFlameY + 3 * s);
@@ -23621,7 +23578,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.closePath();
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Green wisps rising
       for (let i = 0; i < 3; i++) {
@@ -23764,8 +23721,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.stroke();
 
       // Detailed hieroglyphs on both visible faces
-      ctx.shadowColor = "#ffaa00";
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, "#ffaa00");
       for (let row = 0; row < 7; row++) {
         const ry = soBase - soH * ((row + 0.8) / 9);
         const glyphAlpha =
@@ -23807,7 +23763,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fillRect(rx - 1.5 * s, ry2 - 0.8 * s, 3 * s, 1.6 * s);
         }
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Pyramidion tip (gold-capped)
       drawIsometricPyramid(
@@ -23838,8 +23794,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Radiant light from tip
       const soTipY = soTop + soD - 16 * s;
-      ctx.shadowColor = "#ffcc00";
-      ctx.shadowBlur = 22 * s;
+      setShadowBlur(ctx, 22 * s, "#ffcc00");
       const tipGlow = ctx.createRadialGradient(
         cx,
         soTipY,
@@ -23856,7 +23811,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.arc(cx, soTipY, 22 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Sun rays rotating from tip
       for (let i = 0; i < 12; i++) {
@@ -23970,8 +23925,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const fcWD = fcBaseW * 0.25;
 
       // Blue energy veins (left wall)
-      ctx.shadowColor = fcVein;
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, fcVein);
       ctx.lineWidth = 0.7 * s;
       for (let i = 0; i < 3; i++) {
         const t = (i + 0.4) / 3;
@@ -23996,7 +23950,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(vx, vy - 3 * s);
         ctx.stroke();
       }
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Battlement rim
       const fcWallTopY = cy - fcWallH;
@@ -24055,22 +24009,20 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           fcMid,
         );
         // Spire energy vein
-        ctx.shadowColor = fcVein;
-        ctx.shadowBlur = 3 * s;
+        setShadowBlur(ctx, 3 * s, fcVein);
         ctx.strokeStyle = `rgba(51,136,255,${0.15 + fcPulse * 0.2})`;
         ctx.lineWidth = 0.5 * s;
         ctx.beginPath();
         ctx.moveTo(fsx, fsy + fsW * 0.25);
         ctx.lineTo(fsx + side * 0.5 * s, fsy - fsH * 0.5);
         ctx.stroke();
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
 
         // Aurora glow at peak
         const peakY = fsTop - 14 * s;
         const auroraPh = decorTime * 1.2 + side * 0.8;
         const aHue = 200 + Math.sin(auroraPh) * 40;
-        ctx.shadowColor = `hsl(${aHue}, 80%, 60%)`;
-        ctx.shadowBlur = 10 * s;
+        setShadowBlur(ctx, 10 * s, `hsl(${aHue}, 80%, 60%)`);
         const peakGlow = ctx.createRadialGradient(
           fsx,
           peakY,
@@ -24085,7 +24037,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.arc(fsx, peakY, 5 * s, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
+        clearShadow(ctx);
       });
 
       // Central main spire (tall and dominant)
@@ -24104,8 +24056,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       const fcSpireTop = fcFlankBase - fcSpireH;
       // Spire energy veins
-      ctx.shadowColor = fcVein;
-      ctx.shadowBlur = 3 * s;
+      setShadowBlur(ctx, 3 * s, fcVein);
       ctx.strokeStyle = `rgba(51,136,255,${0.2 + fcPulse * 0.2})`;
       ctx.lineWidth = 0.6 * s;
       ctx.beginPath();
@@ -24113,7 +24064,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineTo(cx - 1 * s, fcFlankBase - fcSpireH * 0.4);
       ctx.lineTo(cx + 0.5 * s, fcFlankBase - fcSpireH * 0.7);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
       drawIsometricPyramid(
         ctx,
         cx,
@@ -24129,8 +24080,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const mainPeakY = fcSpireTop - 20 * s;
       const auroraPhase = decorTime * 0.8;
       const auroraHue = 200 + Math.sin(auroraPhase) * 50;
-      ctx.shadowColor = `hsl(${auroraHue}, 85%, 55%)`;
-      ctx.shadowBlur = 20 * s;
+      setShadowBlur(ctx, 20 * s, `hsl(${auroraHue}, 85%, 55%)`);
       const auroraGrad = ctx.createRadialGradient(
         cx,
         mainPeakY,
@@ -24150,7 +24100,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.arc(cx, mainPeakY, 14 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Aurora curtain wisps
       for (let i = 0; i < 4; i++) {
@@ -24354,8 +24304,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
 
       // Rune engravings on pillars
-      ctx.shadowColor = igLava;
-      ctx.shadowBlur = 3 * s;
+      setShadowBlur(ctx, 3 * s, igLava);
       [
         { px: igLPx, py: igLPy },
         { px: igRPx, py: igRPy },
@@ -24439,7 +24388,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         }
       });
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Archway
       const igArchTopL = igLPy - igPH;
@@ -24475,15 +24424,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
       // Arch lava trim
-      ctx.shadowColor = igLava;
-      ctx.shadowBlur = 4 * s;
+      setShadowBlur(ctx, 4 * s, igLava);
       ctx.strokeStyle = `rgba(255,80,10,${0.15 + igPulse * 0.15})`;
       ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
       ctx.moveTo(igLPx, igArchTopL + 5 * s);
       ctx.quadraticCurveTo(igArchMidX, igArchMidY, igRPx, igArchTopR + 5 * s);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Horn caps on pillars
       [-1, 1].forEach((side) => {
@@ -24552,8 +24500,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Flames on pillars
-      ctx.shadowColor = igLava;
-      ctx.shadowBlur = 10 * s;
+      setShadowBlur(ctx, 10 * s, igLava);
       [
         { px: igLPx, py: igLPy },
         { px: igRPx, py: igRPy },
@@ -24603,7 +24550,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         }
       });
-      ctx.shadowBlur = 0;
+      clearShadow(ctx);
 
       // Ember particle storm
       for (let i = 0; i < 8; i++) {

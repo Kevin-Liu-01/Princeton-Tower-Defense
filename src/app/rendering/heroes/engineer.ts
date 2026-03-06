@@ -1,5 +1,5 @@
 import type { Position } from "../../types";
-import { resolveWeaponRotation } from "./helpers";
+import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
 export function drawEngineerHero(
   ctx: CanvasRenderingContext2D,
@@ -300,7 +300,8 @@ export function drawEngineerHero(
     y + size * 0.15 + workAnimation * size * 0.05,
     wrenchBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.1 : 0.62
+    isAttacking ? 1.1 : 0.62,
+    WEAPON_LIMITS.leftTool,
   );
   ctx.save();
   ctx.translate(x - size * 0.55, y + size * 0.15 + workAnimation * size * 0.05);
@@ -377,7 +378,8 @@ export function drawEngineerHero(
     y + size * 0.1 - workAnimation * size * 0.05,
     plasmaBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.3 : 0.72
+    isAttacking ? 1.3 : 0.72,
+    WEAPON_LIMITS.rightMelee,
   );
   ctx.save();
   ctx.translate(x + size * 0.55, y + size * 0.1 - workAnimation * size * 0.05);

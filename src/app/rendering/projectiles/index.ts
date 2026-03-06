@@ -1011,6 +1011,12 @@ const COLORS = {
 // ============================================================================
 // MAIN RENDER FUNCTION
 // ============================================================================
+let _cachedTime = 0;
+
+export function setProjectileRenderTime(nowMs: number): void {
+  _cachedTime = nowMs / 1000;
+}
+
 export function renderProjectile(
   ctx: CanvasRenderingContext2D,
   proj: Projectile,
@@ -1023,7 +1029,7 @@ export function renderProjectile(
 ) {
   const zoom = cameraZoom || 1;
   const t = proj.progress;
-  const time = Date.now() / 1000;
+  const time = _cachedTime || Date.now() / 1000;
   const lowDetail = projectileDensityHint > 140;
   const minimalDetail = projectileDensityHint > 220;
 

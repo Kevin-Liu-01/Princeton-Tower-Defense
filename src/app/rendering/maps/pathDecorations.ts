@@ -1,6 +1,7 @@
 import type { Position } from "../../types";
 import type { RegionTheme } from "./staticLayer";
 import { hexToRgba } from "../../utils";
+import { createSeededRandom } from "../../utils/seededRandom";
 
 export interface PathDecorationParams {
   ctx: CanvasRenderingContext2D;
@@ -13,14 +14,6 @@ export interface PathDecorationParams {
   cameraZoom: number;
   mapSeed: number;
   toScreen: (pos: Position) => Position;
-}
-
-function createSeededRandom(seed: number): () => number {
-  let seedState = seed;
-  return () => {
-    seedState = (seedState * 1103515245 + 12345) & 0x7fffffff;
-    return seedState / 0x7fffffff;
-  };
 }
 
 function lerpPos(a: Position, b: Position, t: number): Position {

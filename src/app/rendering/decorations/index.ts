@@ -5,6 +5,7 @@ import type { Position, MapDecoration } from "../../types";
 import { worldToScreen } from "../../utils";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import { lightenColor, darkenColor, drawIsometricPrism, drawGroundShadow } from "../helpers";
+import { setShadowBlur, clearShadow } from "../performance";
 
 // Import landmark renderers
 import {
@@ -817,8 +818,7 @@ function drawRock(
 
   if (variant === "crystal") {
     // Crystal glow
-    ctx.shadowColor = "#87ceeb";
-    ctx.shadowBlur = 10 * scale;
+    setShadowBlur(ctx, 10 * scale, "#87ceeb");
     ctx.fillStyle = `rgba(135, 206, 235, 0.5)`;
     ctx.beginPath();
     ctx.moveTo(x, y - 20 * scale);
@@ -826,7 +826,7 @@ function drawRock(
     ctx.lineTo(x - 5 * scale, y - 10 * scale);
     ctx.closePath();
     ctx.fill();
-    ctx.shadowBlur = 0;
+    clearShadow(ctx);
   }
 }
 
@@ -2183,13 +2183,12 @@ function drawLamp(
   ctx.fill();
 
   // Light glow
-  ctx.shadowColor = "#ffdd88";
-  ctx.shadowBlur = 20 * scale * glowIntensity;
+  setShadowBlur(ctx, 20 * scale * glowIntensity, "#ffdd88");
   ctx.fillStyle = `rgba(255, 220, 100, ${glowIntensity})`;
   ctx.beginPath();
   ctx.arc(x, y - 35 * scale, 5 * scale, 0, Math.PI * 2);
   ctx.fill();
-  ctx.shadowBlur = 0;
+  clearShadow(ctx);
 
   // Light cone
   ctx.fillStyle = `rgba(255, 220, 100, ${glowIntensity * 0.2})`;

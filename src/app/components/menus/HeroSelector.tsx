@@ -59,7 +59,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
     {onOpenCodex && (
       <button
         onClick={onOpenCodex}
-        className="hidden sm:flex items-center justify-center w-5 h-5 rounded-md transition-all hover:scale-110 hover:brightness-125"
+        className="flex items-center justify-center w-5 h-5 rounded-md transition-all hover:scale-110 hover:brightness-125"
         style={{
           background: 'rgba(180,140,60,0.12)',
           border: '1px solid rgba(180,140,60,0.25)',
@@ -116,7 +116,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
       })}
     </div>
     {selectedHero ? (
-      <div className="hidden sm:block rounded-lg p-1.5 relative"
+      <div className="rounded-lg p-1.5 relative"
         style={{
           background: 'linear-gradient(180deg, rgba(28,24,18,0.8), rgba(20,16,12,0.9))',
           border: '1px solid rgba(120,100,60,0.2)',

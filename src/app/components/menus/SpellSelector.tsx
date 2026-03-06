@@ -107,7 +107,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
           {onOpenCodex && (
             <button
               onClick={onOpenCodex}
-              className="hidden sm:flex items-center justify-center w-5 h-5 rounded-md transition-all hover:scale-110 hover:brightness-125"
+              className="flex items-center justify-center w-5 h-5 rounded-md transition-all hover:scale-110 hover:brightness-125"
               style={{
                 background: 'rgba(140,80,200,0.12)',
                 border: '1px solid rgba(140,80,200,0.25)',
@@ -201,6 +201,23 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => setShowUpgradeModal(true)}
+                className="sm:hidden relative w-full p-1 pb-0.5 flex flex-col items-center justify-center gap-1 rounded-md transition-all hover:scale-105 hover:brightness-110"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(98,72,18,0.45), rgba(72,52,12,0.35))',
+                  border: '1.5px solid rgba(250,204,21,0.35)',
+                  boxShadow: 'inset 0 0 12px rgba(250,204,21,0.08)',
+                }}
+              >
+                <Sparkles size={20} className="text-yellow-300" />
+                <span className="text-[7px] font-bold uppercase tracking-wide text-yellow-200">Upgrades</span>
+                <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[7px] font-semibold text-yellow-100 bg-yellow-950/45 border border-yellow-500/25">
+                  <Star size={8} className="fill-yellow-300 text-yellow-300" />
+                  {availableSpellStars}
+                </span>
+              </button>
             </div>
           );
         })()}
@@ -264,7 +281,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
               }}
             >
               <Sparkles size={10} className="text-yellow-300 sm:w-3 sm:h-3" />
-              <span className="hidden sm:inline text-[8px] font-bold uppercase tracking-wide text-yellow-200">
+              <span className="text-[8px] font-bold uppercase tracking-wide text-yellow-200">
                 Upgrades
               </span>
               <span className="inline-flex items-center gap-0.5 rounded px-1 py-px text-[8px] font-semibold text-yellow-100 bg-yellow-950/45 border border-yellow-500/25">

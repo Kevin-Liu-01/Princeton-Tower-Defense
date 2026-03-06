@@ -46,11 +46,14 @@ import { WORLD_LEVELS, MAP_WIDTH, getWaveCount } from "./worldMapData";
 import { CodexModal, type CodexTabId } from "./CodexModal";
 import { CampaignOverview } from "./CampaignOverview";
 import { BattlefieldPreview } from "./BattlefieldPreview";
+import { RegionIcon } from "../../sprites";
 import { HeroSelector } from "./HeroSelector";
 import { SpellSelector } from "./SpellSelector";
 import { CustomLevelCreatorModal } from "./CustomLevelCreatorModal";
 import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
 import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
+
+const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as const;
 
 // =============================================================================
 // LOGO COMPONENT
@@ -177,10 +180,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const bottomPanelRef = useRef<HTMLDivElement>(null);
   const [hoveredLevel, setHoveredLevel] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
-  const [canvasDisplaySize, setCanvasDisplaySize] = useState<{ w: number; h: number } | null>(null);
   const [showCodex, setShowCodex] = useState(false);
   const [codexTab, setCodexTab] = useState<CodexTabId>("towers");
   const [showCreator, setShowCreator] = useState(false);
@@ -188,6 +191,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [animTime, setAnimTime] = useState(0);
   const animTimeRef = useRef(0);
   const [mapHeight, setMapHeight] = useState(500);
+  const [containerWidth, setContainerWidth] = useState(MAP_WIDTH);
   const [hoveredHero, setHoveredHero] = useState<HeroType | null>(null);
   const [hoveredSpell, setHoveredSpell] = useState<SpellType | null>(null);
   const imageCache = useRef<Record<string, HTMLImageElement>>({});
@@ -195,7 +199,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const dragRef = useRef({
     hasDragged: false,
     dragStartX: 0,
+    dragStartY: 0,
     scrollStartLeft: 0,
+    scrollStartTop: 0,
     resetTimeoutId: 0 as number | undefined,
   });
 
@@ -203,28 +209,32 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
-    const updateHeight = () => {
-      if (containerRef.current)
-        setMapHeight(Math.max(300, containerRef.current.clientHeight));
+    const updateDimensions = () => {
+      if (!containerRef.current) return;
+      const cw = containerRef.current.clientWidth;
+      const ch = containerRef.current.clientHeight;
+      const panelH = bottomPanelRef.current?.offsetHeight ?? 0;
+      const overlayPad = 24;
+      const scale = Math.max(1.0, Math.min(1.5, cw / MAP_WIDTH));
+      const minMapH = MAP_WIDTH * 0.28;
+      const desiredMapH = (ch - panelH - overlayPad) / scale;
+      setContainerWidth(cw);
+      setMapHeight(Math.max(minMapH, desiredMapH));
     };
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    const panelEl = bottomPanelRef.current;
+    let ro: ResizeObserver | undefined;
+    if (panelEl) {
+      ro = new ResizeObserver(updateDimensions);
+      ro.observe(panelEl);
+    }
+    return () => {
+      window.removeEventListener("resize", updateDimensions);
+      ro?.disconnect();
+    };
   }, []);
 
-  useEffect(() => {
-    const wrapper = canvasWrapperRef.current;
-    if (!wrapper) return;
-    const ro = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setCanvasDisplaySize({ w: width, h: height });
-    });
-    ro.observe(wrapper);
-    setCanvasDisplaySize({ w: wrapper.offsetWidth, h: wrapper.offsetHeight });
-    return () => ro.disconnect();
-  }, []);
 
   const totalStars = Object.values(levelStars).reduce((a, b) => a + b, 0);
   const maxStars = WORLD_LEVELS.length * 3;
@@ -261,6 +271,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     },
     [customLevelById]
   );
+  const mapScale = Math.max(1.0, Math.min(1.5, containerWidth / MAP_WIDTH));
+  const displayW = Math.round(MAP_WIDTH * mapScale);
+  const displayH = Math.round(mapHeight * mapScale);
+
   const getY = useCallback(
     (pct: number) => getWorldMapY(pct, mapHeight),
     [mapHeight]
@@ -301,6 +315,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     drawWorldMapCanvas({
       canvasRef,
       mapHeight,
+      containerWidth,
       hoveredLevel,
       selectedLevel,
       levelStars,
@@ -399,7 +414,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     setIsDragging(true);
     dragRef.current.hasDragged = false;
     dragRef.current.dragStartX = e.pageX - container.offsetLeft;
+    dragRef.current.dragStartY = e.pageY - container.offsetTop;
     dragRef.current.scrollStartLeft = container.scrollLeft;
+    dragRef.current.scrollStartTop = container.scrollTop;
   };
 
   const handleDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -408,12 +425,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const container = scrollContainerRef.current;
     if (!container) return;
     const x = e.pageX - container.offsetLeft;
-    const walk = (x - dragRef.current.dragStartX) * 1.5; // Multiply for faster scrolling
-    // Only consider it a drag if moved more than 5 pixels
-    if (Math.abs(x - dragRef.current.dragStartX) > 5) {
+    const y = e.pageY - container.offsetTop;
+    const walkX = (x - dragRef.current.dragStartX) * 1.5;
+    const walkY = (y - dragRef.current.dragStartY) * 1.5;
+    if (Math.abs(x - dragRef.current.dragStartX) > 5 || Math.abs(y - dragRef.current.dragStartY) > 5) {
       dragRef.current.hasDragged = true;
     }
-    container.scrollLeft = dragRef.current.scrollStartLeft - walk;
+    container.scrollLeft = dragRef.current.scrollStartLeft - walkX;
+    container.scrollTop = dragRef.current.scrollStartTop - walkY;
   };
 
   const handleDragEnd = () => {
@@ -435,7 +454,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     setIsDragging(true);
     dragRef.current.hasDragged = false;
     dragRef.current.dragStartX = e.touches[0].pageX - container.offsetLeft;
+    dragRef.current.dragStartY = e.touches[0].pageY - container.offsetTop;
     dragRef.current.scrollStartLeft = container.scrollLeft;
+    dragRef.current.scrollStartTop = container.scrollTop;
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
@@ -443,11 +464,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const container = scrollContainerRef.current;
     if (!container || e.touches.length !== 1) return;
     const x = e.touches[0].pageX - container.offsetLeft;
-    const walk = (x - dragRef.current.dragStartX) * 1.5;
-    if (Math.abs(x - dragRef.current.dragStartX) > 5) {
+    const y = e.touches[0].pageY - container.offsetTop;
+    const walkX = (x - dragRef.current.dragStartX) * 1.5;
+    const walkY = (y - dragRef.current.dragStartY) * 1.5;
+    if (Math.abs(x - dragRef.current.dragStartX) > 5 || Math.abs(y - dragRef.current.dragStartY) > 5) {
       dragRef.current.hasDragged = true;
     }
-    container.scrollLeft = dragRef.current.scrollStartLeft - walk;
+    container.scrollLeft = dragRef.current.scrollStartLeft - walkX;
+    container.scrollTop = dragRef.current.scrollStartTop - walkY;
   };
 
   const handleTouchEnd = () => {
@@ -613,7 +637,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             {/* Right: Stats strip */}
             <div className="flex items-center gap-2 sm:gap-2.5">
               {/* Hearts stat */}
-              <div className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+              <div className="hidden sm:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
                 background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
                 border: `1.5px solid ${RED_CARD.border}`,
                 boxShadow: `inset 0 0 12px ${RED_CARD.glow06}`,
@@ -632,7 +656,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               </div>
 
               {/* Stars stat */}
-              <div className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
+              <div className="hidden sm:flex relative items-center gap-2 px-3 sm:px-4 py-2 rounded-xl" style={{
                 background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
                 border: `1.5px solid ${AMBER_CARD.border}`,
                 boxShadow: `inset 0 0 12px ${AMBER_CARD.glow}`,
@@ -744,9 +768,210 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       </OrnateFrame>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col sm:flex-row overflow-y-hidden overflow-x-auto min-h-0">
-        {/* LEFT SIDEBAR - Fixed height on mobile to prevent map from shifting */}
-        <div className="h-[40vh] sm:h-auto sm:w-80 flex-shrink-0 flex flex-col overflow-hidden p-2 sm:p-3" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+      <div className="flex-1 flex flex-col sm:flex-row overflow-y-auto sm:overflow-hidden min-h-0">
+
+        {/* MOBILE: Campaign / Level detail panel above map */}
+        <div className="sm:hidden h-[28vh] flex-shrink-0 flex flex-col overflow-hidden px-2 pt-1.5 pb-1" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+          <div className="flex-1 flex flex-col overflow-hidden rounded-lg relative" style={{ background: panelGradient, border: `1.5px solid ${GOLD.border25}`, boxShadow: `inset 0 0 12px ${GOLD.glow04}` }}>
+            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
+            {selectedLevel && currentLevel ? (() => {
+              const previewImg = LEVEL_DATA[currentLevel.id]?.previewImage;
+              return (
+                <div className="flex-1 flex flex-col overflow-hidden relative">
+                  {previewImg && (
+                    <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+                      <img src={previewImg} alt="" className="absolute right-0 top-0 h-full w-[60%] object-cover opacity-25" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)" }} />
+                      <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${PANEL.bgDark} 35%, transparent 75%)` }} />
+                    </div>
+                  )}
+                  <div className="flex-1 flex flex-col overflow-auto p-2 relative z-10">
+                    {/* Row 1: Icon + Name + nav + close */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <RegionIcon type={currentLevel.region} size={22} framed />
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-sm font-bold text-amber-100 truncate">{currentLevel.name}</h2>
+                        <p className="text-[9px] text-amber-400/60 italic truncate leading-tight">&ldquo;{currentLevel.description}&rdquo;</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={() => goToPreviousLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
+                          <ChevronLeft size={14} className="text-amber-400" />
+                        </button>
+                        <button onClick={() => goToNextLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
+                          <ChevronRight size={14} className="text-amber-400" />
+                        </button>
+                        <button onClick={() => setSelectedLevel(null)} className="p-0.5 rounded border transition-colors ml-0.5" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
+                          <X size={14} className="text-amber-400" />
+                        </button>
+                      </div>
+                    </div>
+                    {/* Row 2: Tags + stats side by side */}
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                      {isCurrentChallengeLevel && (
+                        <span className="text-[8px] font-bold px-1.5 py-px rounded tracking-wider uppercase" style={challengeBadgeStyle}>Challenge</span>
+                      )}
+                      {currentLevel.tags.map((tag) => (
+                        <span key={tag} className="text-[8px] font-semibold px-1.5 py-px rounded tracking-wide" style={{ background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`, border: `1px solid ${GOLD.border25}`, color: "rgba(252,211,77,0.8)" }}>{tag}</span>
+                      ))}
+                      <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`, border: `1px solid ${NEUTRAL.border}` }}>
+                        <Skull size={10} className="text-amber-400" />
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3].map((d) => (
+                            <div key={d} className={`w-2 h-2 rounded-full ${d <= currentLevel.difficulty ? currentLevel.difficulty === 1 ? "bg-green-500" : currentLevel.difficulty === 2 ? "bg-yellow-500" : "bg-red-500" : "bg-stone-700"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`, border: `1px solid ${AMBER_CARD.border}` }}>
+                        <Flag size={10} className="text-amber-300" />
+                        <span className="text-amber-200 font-bold text-[9px]">{waveCount}W</span>
+                      </div>
+                      <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`, border: `1px solid ${AMBER_CARD.border}` }}>
+                        <Trophy size={10} className="text-yellow-500" />
+                        <div className="flex gap-px">
+                          {[1, 2, 3].map((s) => (
+                            <Star key={s} size={10} className={`${(levelStars[currentLevel.id] || 0) >= s ? "text-yellow-400 fill-yellow-400" : "text-stone-600"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      {levelStats[currentLevel.id] && (
+                        <>
+                          <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`, border: `1px solid ${RED_CARD.border}` }}>
+                            <Heart size={10} className="text-red-400 fill-red-400" />
+                            <span className="text-red-200 font-mono font-bold text-[9px]">{levelStats[currentLevel.id]?.bestHearts}/20</span>
+                          </div>
+                          <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`, border: `1px solid ${BLUE_CARD.border}` }}>
+                            <Clock size={10} className="text-blue-400" />
+                            <span className="text-blue-200 font-mono font-bold text-[9px]">{levelStats[currentLevel.id]?.bestTime ? `${Math.floor(levelStats[currentLevel.id]!.bestTime! / 60)}m${levelStats[currentLevel.id]!.bestTime! % 60}s` : "—"}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {/* Row 3: Region levels */}
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
+                        <span className="text-[8px] font-bold text-amber-400 uppercase tracking-widest">Region</span>
+                        <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {WORLD_LEVELS.filter((l) => l.region === currentLevel.region).map((l) => (
+                          <button
+                            key={l.id}
+                            onClick={() => handleLevelClick(l.id)}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded transition-all text-left"
+                            style={{
+                              background: l.id === selectedLevel ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})` : `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                              border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder40 : GOLD.border25}`,
+                            }}
+                          >
+                            <span className={`text-[9px] font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/80"}`}>{l.name}</span>
+                            <div className="flex gap-px flex-shrink-0">
+                              {[1, 2, 3].map((s) => (
+                                <Star key={s} size={8} className={(levelStars[l.id] || 0) >= s ? "text-yellow-400 fill-yellow-400" : "text-stone-600"} />
+                              ))}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <div className="flex-1 flex flex-col overflow-auto p-2 relative z-10">
+                {/* Campaign header + progress */}
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Shield size={14} className="text-amber-400" />
+                  <span className="text-xs font-bold text-amber-100 tracking-wide">Campaign</span>
+                  <div className="flex-1" />
+                  <div className="flex items-center gap-1">
+                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                    <span className="text-[10px] font-bold text-amber-300">{totalStars}/{maxStars}</span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => goToPreviousLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
+                      <ChevronLeft size={14} className="text-amber-400" />
+                    </button>
+                    <button onClick={() => goToNextLevel()} className="p-0.5 rounded border transition-colors" style={{ background: PANEL.bgWarmMid, borderColor: GOLD.border25 }}>
+                      <ChevronRight size={14} className="text-amber-400" />
+                    </button>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div className="h-2 rounded-full overflow-hidden mb-2 relative" style={{ background: PANEL.bgDeep, border: `1px solid ${GOLD.border25}` }}>
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${maxStars > 0 ? (totalStars / maxStars) * 100 : 0}%`, background: "linear-gradient(90deg, rgba(180,120,20,0.9), rgba(220,170,40,0.95), rgba(180,120,20,0.9))", boxShadow: "0 0 8px rgba(220,170,40,0.4)" }} />
+                </div>
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-1 mb-2">
+                  {[
+                    { icon: <Swords size={10} className="text-blue-400/80" />, value: Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0), color: "text-blue-300/90", bg: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`, border: BLUE_CARD.border, label: "Battles" },
+                    { icon: <Trophy size={10} className="text-emerald-400/80" />, value: Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0), color: "text-emerald-300/90", bg: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`, border: GREEN_CARD.border, label: "Wins" },
+                    { icon: <Heart size={10} className="text-red-400 fill-red-400" />, value: Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0), color: "text-red-300/90", bg: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`, border: RED_CARD.border, label: "Hearts" },
+                  ].map((s) => (
+                    <div key={s.label} className="flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                      {s.icon}
+                      <span className={`text-[9px] font-bold ${s.color}`}>{s.value}</span>
+                      <span className="text-[7px] text-stone-500">{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Region list with icons and preview gradients */}
+                <div className="flex-1 overflow-y-auto space-y-1">
+                  {REGION_ORDER.map((region) => {
+                    const levels = WORLD_LEVELS.filter((l) => l.region === region);
+                    const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
+                    const rMax = levels.length * 3;
+                    const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
+                    const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
+                    const regionMeta: Record<string, { name: string; color: string; border: string; bgLight: string; bgDark: string }> = {
+                      grassland: { name: "Princeton Grounds", color: "text-green-400", border: "rgba(80,160,60,0.45)", bgLight: "rgba(30,50,25,0.8)", bgDark: "rgba(20,35,18,0.65)" },
+                      swamp: { name: "Mathey Marshes", color: "text-teal-400", border: "rgba(60,140,130,0.45)", bgLight: "rgba(20,40,38,0.8)", bgDark: "rgba(15,30,28,0.65)" },
+                      desert: { name: "Stadium Sands", color: "text-amber-400", border: "rgba(180,140,50,0.45)", bgLight: "rgba(55,40,18,0.8)", bgDark: "rgba(40,28,12,0.65)" },
+                      winter: { name: "Frist Frontier", color: "text-blue-400", border: "rgba(80,130,200,0.45)", bgLight: "rgba(25,35,50,0.8)", bgDark: "rgba(18,25,40,0.65)" },
+                      volcanic: { name: "Dormitory Depths", color: "text-red-400", border: "rgba(180,70,50,0.45)", bgLight: "rgba(50,25,20,0.8)", bgDark: "rgba(35,18,15,0.65)" },
+                    };
+                    const meta = regionMeta[region] ?? { name: region, color: "text-amber-400", border: GOLD.border25, bgLight: PANEL.bgWarmLight, bgDark: PANEL.bgWarmMid };
+                    const targetLevel = levels.find((l) => unlockedMapSet.has(l.id) && (levelStars[l.id] || 0) < 3) ?? levels[0];
+                    const previewImg = targetLevel ? LEVEL_DATA[targetLevel.id]?.previewImage : undefined;
+                    return (
+                      <button
+                        key={region}
+                        onClick={() => { if (targetLevel) handleLevelClick(targetLevel.id); }}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded overflow-hidden transition-all hover:brightness-110 relative"
+                        style={{ background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`, border: `1px solid ${meta.border}`, boxShadow: `inset 0 0 8px ${meta.border.replace('0.45', '0.08')}` }}
+                      >
+                        {previewImg && (
+                          <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+                            <img src={previewImg} alt="" className="absolute right-0 top-0 h-full w-[55%] object-cover opacity-20" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%, black 65%, transparent 100%)" }} />
+                          </div>
+                        )}
+                        <div className="absolute inset-[1px] rounded-[3px] pointer-events-none" style={{ border: "1px solid rgba(255,255,255,0.05)" }} />
+                        <div className="relative flex-shrink-0">
+                          <RegionIcon type={region} size={20} framed />
+                        </div>
+                        <div className="relative flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className={`text-[9px] font-bold truncate ${meta.color}`}>{meta.name}</span>
+                            <span className="text-[8px] text-amber-400/60 font-medium ml-1 flex-shrink-0">{completed}/{levels.length}</span>
+                          </div>
+                          <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: meta.border }} />
+                          </div>
+                        </div>
+                        <div className="relative flex items-center gap-px flex-shrink-0">
+                          <Star size={9} className={stars > 0 ? "text-yellow-400 fill-yellow-400" : "text-stone-600"} />
+                          <span className="text-[8px] font-bold text-amber-300/70">{stars}/{rMax}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* DESKTOP: LEFT SIDEBAR */}
+        <div className="hidden sm:flex sm:h-auto sm:w-80 flex-shrink-0 flex-col overflow-hidden pl-3 py-3" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <OrnateFrame
             className="flex-1 flex flex-col overflow-hidden rounded-2xl border-2 border-amber-600/50 shadow-2xl"
             cornerSize={24}
@@ -813,7 +1038,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </div>
 
                       {/* Description */}
-                      <p className="hidden sm:block whitespace-pre-line text-amber-400/80 text-sm italic mb-3 relative z-10">
+                      <p className="whitespace-pre-line text-amber-400/80 text-sm italic mb-3 relative z-10">
                         &ldquo;{currentLevel.description}&rdquo;
                       </p>
 
@@ -940,7 +1165,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   </div>
 
                   <div className="flex-1 sm:flex-none p-2 sm:p-4 flex flex-col min-h-0" style={{ borderBottom: `1px solid ${GOLD.border25}` }}>
-                    <div className="hidden sm:flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2">
                       <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
                       <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Battlefield Preview</span>
                       <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
@@ -1009,7 +1234,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     </div>
                   </div>
 
-                  <div className="hidden sm:inline flex-1 p-4 overflow-y-auto">
+                  <div className="flex-1 p-2 sm:p-4 overflow-y-auto">
                     {/* Section title with decorative lines */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
@@ -1259,23 +1484,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           </OrnateFrame>
         </div>
         {/* RIGHT: Map */}
-        <div className="relative flex-1 flex flex-col min-w-0 pl-3 sm:pl-0 py-3 pr-3 overflow-x-auto" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
-          <div className="z-20 sm:hidden absolute flex top-4 right-8  items-center gap-1 px-1.5 py-1.5 rounded-xl">
-            <button
-              onClick={() => goToPreviousLevel()}
-              className="p-0.5 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={() => goToNextLevel()}
-              className="p-0.5 bg-amber-800/30 hover:bg-amber-800/70 rounded-lg border border-amber-700/50 transition-colors text-amber-400 hover:text-amber-200"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+        <div className="relative flex-shrink-0 sm:flex-1 flex flex-col min-w-0 py-2 sm:py-3 px-2 sm:px-3 overflow-hidden" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <OrnateFrame
-            className="flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 sm:overflow-hidden shadow-2xl min-h-0"
+            className="h-[50vh] sm:h-auto sm:flex-1 relative bg-gradient-to-br from-stone-900 to-stone-950 rounded-2xl border-2 border-amber-600/50 overflow-hidden shadow-2xl sm:min-h-0"
             cornerSize={28}
             showBorders={true}
           >
@@ -1285,8 +1496,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
             >
               <div
                 ref={scrollContainerRef}
-                className="absolute h-full inset-0 overflow-x-auto overflow-y-hidden z-10"
-                style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'pan-y', background: '#0a0806' }}
+                className="absolute h-full inset-0 overflow-auto z-10"
+                style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none', background: '#0a0806' }}
                 onMouseDown={handleDragStart}
                 onMouseMove={handleDragMove}
                 onMouseUp={handleDragEnd}
@@ -1297,34 +1508,38 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               >
                 <div
                   ref={canvasWrapperRef}
-                  className="relative inline-block min-h-full"
-                  style={{ minWidth: `${MAP_WIDTH}px`, height: "100%" }}
+                  className="relative"
+                  style={{
+                    width: `${displayW}px`,
+                    height: `${displayH}px`,
+                    margin: displayW <= containerWidth ? '0 auto' : undefined,
+                  }}
                 >
                   <canvas
                     ref={canvasRef}
-                    className="block mx-auto game-start-fade"
-                    style={{ minWidth: `${MAP_WIDTH}px`, height: "100%", cursor: isDragging ? 'grabbing' : 'grab' }}
+                    className="block game-start-fade"
+                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={() => setHoveredLevel(null)}
                     onClick={handleClick}
                   />
-                  {selectedLevel && canvasDisplaySize && !hasAlternateTooltipOpen && (() => {
+                  {selectedLevel && !hasAlternateTooltipOpen && (() => {
                     const worldLevel = WORLD_LEVELS.find((l) => l.id === selectedLevel);
                     if (!worldLevel) return null;
-                    const scaleX = canvasDisplaySize.w / MAP_WIDTH;
-                    const scaleY = canvasDisplaySize.h / mapHeight;
-                    const levelCenterX = worldLevel.x * scaleX;
+                    const scale = mapScale;
                     const yMap = getY(worldLevel.y);
                     const size = 28;
+                    const cardWidth = 150;
                     const cardHeight = 110;
+                    const cardXMap = worldLevel.x - cardWidth / 2;
                     const showBelow = worldLevel.y < 50;
                     const cardYMap = showBelow ? yMap + size + 12 : yMap - size - cardHeight - 12;
-                    const cardBottomPx = (cardYMap + cardHeight) * scaleY;
-                    const buttonW = 130;
-                    const buttonH = 44;
+                    const cardBottomPx = (cardYMap + cardHeight) * scale;
+                    const inset = 6;
+                    const btnLeftPx = (cardXMap + inset) * scale;
+                    const btnWidthPx = (cardWidth - inset * 2) * scale;
+                    const buttonH = 28;
                     const shieldPad = 12;
-                    const left = Math.max(8, Math.min(canvasDisplaySize.w - buttonW - 8, levelCenterX - buttonW / 2));
-                    const top = cardBottomPx;
                     const handleBattleClick = (e: React.MouseEvent) => {
                       e.stopPropagation();
                       if (canStart) startGame();
@@ -1334,9 +1549,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <div
                         className="absolute z-30 pointer-events-auto"
                         style={{
-                          left: `${left - shieldPad}px`,
-                          top: `${top - shieldPad}px`,
-                          width: `${buttonW + shieldPad * 2}px`,
+                          left: `${btnLeftPx - shieldPad}px`,
+                          top: `${cardBottomPx - shieldPad}px`,
+                          width: `${btnWidthPx + shieldPad * 2}px`,
                           height: `${buttonH + shieldPad * 2}px`,
                         }}
                         onClick={(e) => e.stopPropagation()}
@@ -1345,35 +1560,25 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <button
                           type="button"
                           onClick={handleBattleClick}
-                          className="absolute rounded-b-lg font-bold text-sm transition-all overflow-hidden group"
+                          className="absolute rounded-b-md font-bold transition-all overflow-hidden group"
                           style={{
                             left: `${shieldPad}px`,
                             top: `${shieldPad}px`,
-                            width: `${buttonW}px`,
+                            width: `${btnWidthPx}px`,
                             height: `${buttonH}px`,
-                            ...(canStart
-                              ? {
-                                background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
-                                border: `2px solid ${GOLD.accentBorder50}`,
-                                boxShadow: `0 0 12px ${GOLD.accentGlow10}`,
-                                color: "rgba(253, 230, 138, 0.9)",
-                                textShadow: "0 1px 3px rgba(0,0,0,0.5)",
-                              }
-                              : {
-                                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                                border: `1.5px solid ${GOLD.border35}`,
-                                boxShadow: `inset 0 0 8px ${GOLD.glow04}`,
-                                color: "rgb(252,211,77)",
-                              }),
+                            background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
+                            border: `1.5px solid ${GOLD.accentBorder50}`,
+                            borderTop: 'none',
+                            boxShadow: `0 4px 12px ${GOLD.accentGlow10}`,
+                            color: "rgba(253, 230, 138, 0.9)",
+                            textShadow: "0 1px 3px rgba(0,0,0,0.5)",
                           }}
                         >
-                          {canStart && (
-                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
-                          )}
-                          <span className="flex items-center text-xs justify-center gap-1.5 relative z-10">
-                            <Swords size={16} />
-                            {canStart ? "BATTLE" : "Random Loadout"}
-                            {canStart && <Play size={14} />}
+                          <div className="absolute inset-[1px] top-0 rounded-b-[4px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}`, borderTop: 'none' }} />
+                          <span className="flex items-center text-[10px] font-bold justify-center gap-1 relative z-10">
+                            <Swords size={12} />
+                            BATTLE
+                            <Play size={10} />
                           </span>
                         </button>
                       </div>
@@ -1382,11 +1587,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
               </div>
 
-              {/* HERO & SPELL SELECTION OVERLAY */}
-              <div className="absolute w-full flex bottom-0 left-0 right-0 p-1.5 sm:p-3 pointer-events-none h-full overflow-x-auto z-20" style={{
+              {/* HERO & SPELL SELECTION OVERLAY (desktop only) */}
+              <div className="hidden sm:flex absolute w-full bottom-0 left-0 right-0 p-3 pointer-events-none h-full overflow-x-auto z-20" style={{
                 background: `linear-gradient(180deg, transparent 0%, transparent 40%, rgba(18,12,6,0.4) 65%, rgba(18,12,6,0.92) 85%, rgba(18,12,6,0.98) 100%)`
               }}>
-                <div className="flex w-full mt-auto gap-1.5 sm:gap-3 pointer-events-auto items-stretch">
+                <div ref={bottomPanelRef} className="flex w-full mt-auto gap-3 pointer-events-auto items-stretch">
                   {/* --- Flavor / Battle Summary Panel --- */}
                   <div className="hidden sm:flex sm:flex-col w-40 flex-shrink-0 relative rounded-xl"
                     style={{
@@ -1477,6 +1682,29 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               </div>
             </div>
           </OrnateFrame>
+
+          {/* MOBILE: Hero & Spell panels stacked below the map */}
+          <div className="sm:hidden flex flex-col gap-2 pt-2 flex-shrink-0">
+            <HeroSelector
+              selectedHero={selectedHero}
+              setSelectedHero={setSelectedHero}
+              hoveredHero={hoveredHero}
+              setHoveredHero={setHoveredHero}
+              onOpenCodex={() => openCodexTo("heroes")}
+            />
+            <SpellSelector
+              selectedSpells={selectedSpells}
+              toggleSpell={toggleSpell}
+              hoveredSpell={hoveredSpell}
+              setHoveredSpell={setHoveredSpell}
+              availableSpellStars={availableSpellStars}
+              totalSpellStarsEarned={totalSpellStarsEarned}
+              spentSpellStars={spentSpellStars}
+              spellUpgradeLevels={spellUpgradeLevels}
+              upgradeSpell={upgradeSpell}
+              onOpenCodex={() => openCodexTo("spells")}
+            />
+          </div>
         </div>
       </div>
 

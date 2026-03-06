@@ -1,5 +1,5 @@
 import type { Position } from "../../types";
-import { resolveWeaponRotation } from "./helpers";
+import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
 export function drawFScottHero(
   ctx: CanvasRenderingContext2D,
@@ -590,7 +590,8 @@ export function drawFScottHero(
     penBaseY + writeGesture * 0.5,
     penBaseRotation,
     Math.PI / 2,
-    isAttacking ? 1.2 : 0.66
+    isAttacking ? 1.2 : 0.66,
+    WEAPON_LIMITS.rightMelee,
   );
   ctx.save();
   ctx.translate(penBaseX, penBaseY + writeGesture * 0.5);

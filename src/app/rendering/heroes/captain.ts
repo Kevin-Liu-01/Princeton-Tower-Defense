@@ -1,5 +1,5 @@
 import type { Position } from "../../types";
-import { resolveWeaponRotation } from "./helpers";
+import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
 export function drawCaptainHero(
   ctx: CanvasRenderingContext2D,
@@ -488,7 +488,8 @@ export function drawCaptainHero(
     y + size * 0.08,
     swordBaseAngle,
     Math.PI / 2,
-    isAttacking ? 1.35 : 0.8
+    isAttacking ? 1.35 : 0.8,
+    WEAPON_LIMITS.rightMelee,
   );
   ctx.save();
   ctx.translate(x + size * 0.55, y + size * 0.08);

@@ -1,4 +1,4 @@
-import type { Tower, Enemy, Effect, Particle, Position } from "../types";
+import type { Tower, Enemy, Effect, Position } from "../types";
 import { ISO_Y_RATIO } from "../constants";
 import { worldToScreen, gridToWorld } from "../utils";
 
@@ -38,7 +38,7 @@ export { renderTroop } from "./troops";
 export { renderHazard } from "./hazards";
 
 // Projectile rendering
-export { renderProjectile } from "./projectiles";
+export { renderProjectile, setProjectileRenderTime } from "./projectiles";
 
 // ============================================================================
 // EFFECT RENDERING
@@ -3349,163 +3349,17 @@ export function renderMissileTargetReticle(
   ctx.restore();
 }
 
-// ============================================================================
-// PARTICLE RENDERING
-// ============================================================================
-export function renderParticle(
-  ctx: CanvasRenderingContext2D,
-  particle: Particle,
-  canvasWidth: number,
-  canvasHeight: number,
-  dpr: number,
-  cameraOffset?: Position,
-  cameraZoom?: number,
-) {
-  const screenPos = worldToScreen(
-    particle.pos,
-    canvasWidth,
-    canvasHeight,
-    dpr,
-    cameraOffset,
-    cameraZoom,
-  );
-
-  // Cull offscreen particles
-  if (
-    screenPos.x < -20 || screenPos.x > canvasWidth + 20 ||
-    screenPos.y < -20 || screenPos.y > canvasHeight + 20
-  ) return;
-
-  const zoom = cameraZoom || 1;
-  const lifeRatio = particle.life / particle.maxLife;
-  const alpha = lifeRatio;
-  const size = particle.size * zoom * lifeRatio;
-  if (size < 0.3) return;
-
-  ctx.save();
-  ctx.globalAlpha = alpha;
-
-  switch (particle.type) {
-    case "fire": {
-      // Teardrop flame shape with warm gradient
-      const grad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, size * 1.5,
-      );
-      grad.addColorStop(0, "rgba(255, 255, 180, 0.9)");
-      grad.addColorStop(0.35, particle.color);
-      grad.addColorStop(1, "rgba(200, 40, 0, 0)");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - size * 1.8);
-      ctx.quadraticCurveTo(screenPos.x + size, screenPos.y - size * 0.2, screenPos.x, screenPos.y + size * 0.5);
-      ctx.quadraticCurveTo(screenPos.x - size, screenPos.y - size * 0.2, screenPos.x, screenPos.y - size * 1.8);
-      ctx.fill();
-      break;
-    }
-
-    case "ice": {
-      // Diamond crystal shape
-      ctx.fillStyle = "rgba(200, 235, 255, 0.7)";
-      ctx.strokeStyle = "rgba(160, 210, 255, 0.5)";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - size * 1.2);
-      ctx.lineTo(screenPos.x + size * 0.8, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + size * 1.2);
-      ctx.lineTo(screenPos.x - size * 0.8, screenPos.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      break;
-    }
-
-    case "spark": {
-      // Bright circle with soft glow
-      ctx.shadowColor = particle.color;
-      ctx.shadowBlur = 4 * zoom;
-      ctx.fillStyle = particle.color;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      break;
-    }
-
-    case "smoke": {
-      // Larger soft circle with reduced opacity
-      ctx.fillStyle = particle.color;
-      ctx.globalAlpha = alpha * 0.5;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size * 1.6, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-
-    case "gold": {
-      // Golden circle with glow
-      ctx.shadowColor = "#c9a227";
-      ctx.shadowBlur = 5 * zoom;
-      ctx.fillStyle = particle.color;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      break;
-    }
-
-    case "magic": {
-      // Purple glow with radial gradient halo
-      const magicGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, size * 2.2,
-      );
-      magicGrad.addColorStop(0, particle.color);
-      magicGrad.addColorStop(0.5, "rgba(139, 92, 246, 0.3)");
-      magicGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = magicGrad;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size * 2.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = particle.color;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-
-    case "glow":
-    case "light": {
-      // Soft radial gradient halo
-      const glowGrad = ctx.createRadialGradient(
-        screenPos.x, screenPos.y, 0,
-        screenPos.x, screenPos.y, size * 2,
-      );
-      glowGrad.addColorStop(0, particle.color);
-      glowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = glowGrad;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size * 2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = particle.color;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size * 0.6, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-
-    case "explosion":
-    default: {
-      ctx.fillStyle = particle.color;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y, size, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-  }
-
-  ctx.restore();
-}
+// Particle rendering — delegated to dedicated particles module
+export { renderParticle } from "./particles";
+export {
+  initParticlePool,
+  acquireParticle,
+  updateParticles as updateParticlePool,
+  getActiveParticles,
+  getActiveParticleCount,
+  clearParticlePool,
+  enforceParticleCap,
+} from "./particles";
 
 // Re-export environment effects
 export { renderEnvironment, renderAmbientVisuals } from "./maps/environment";
@@ -3515,7 +3369,8 @@ export { renderPath } from "./maps";
 export { gridToWorldPath, hexToRgba } from "../utils";
 
 // Re-export fog effects
-export { renderRoadEndFog } from "./effects/fog";
+export { drawRoadEndFog, computeFogCounts } from "./effects/fog";
+export type { RgbColor, DrawRoadEndFogParams } from "./effects/fog";
 
 // Re-export debuff/status effect rendering functions
 export { renderTowerDebuffEffects, renderUnitStatusEffects } from "./effects";

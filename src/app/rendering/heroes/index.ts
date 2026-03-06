@@ -77,7 +77,9 @@ export function renderHero(
   const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.2 : 1;
   const facingRight =
     hero.facingRight ??
-    (typeof hero.rotation === "number" ? Math.cos(hero.rotation) >= 0 : true);
+    (typeof hero.rotation === "number"
+      ? Math.cos(hero.rotation + Math.PI / 4) >= 0
+      : true);
   const targetScreenPos = targetPos
     ? worldToScreen(
         targetPos,
