@@ -1,0 +1,926 @@
+import type { Position } from "../../types";
+import { resolveWeaponRotation } from "./helpers";
+
+export function drawMatheyKnightHero(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  color: string,
+  time: number,
+  zoom: number,
+  attackPhase: number = 0,
+  targetPos?: Position
+) {
+  // COLOSSAL JUGGERNAUT KNIGHT - Massive heavily armored warrior with devastating war hammer
+  const isAttacking = attackPhase > 0;
+  const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
+  const heavyStance = Math.sin(time * 1.5) * 1.5; // Slower, heavier movement
+  const breathe = Math.sin(time * 1.8) * 1.5;
+  const gemPulse = Math.sin(time * 2) * 0.3 + 0.7;
+
+  // === MULTI-LAYERED FROST/STEEL AURA ===
+  const auraIntensity = isAttacking ? 0.55 : 0.28;
+  const auraPulse = 0.85 + Math.sin(time * 2.5) * 0.15;
+  for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
+    const layerOffset = auraLayer * 0.1;
+    const auraGrad = ctx.createRadialGradient(
+      x, y, size * (0.12 + layerOffset),
+      x, y, size * (1.0 + layerOffset * 0.3)
+    );
+    auraGrad.addColorStop(0, `rgba(100, 180, 255, ${auraIntensity * auraPulse * (0.45 - auraLayer * 0.1)})`);
+    auraGrad.addColorStop(0.4, `rgba(150, 200, 255, ${auraIntensity * auraPulse * (0.3 - auraLayer * 0.06)})`);
+    auraGrad.addColorStop(0.7, `rgba(200, 220, 255, ${auraIntensity * auraPulse * (0.15 - auraLayer * 0.03)})`);
+    auraGrad.addColorStop(1, "rgba(100, 180, 255, 0)");
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.ellipse(x, y, size * (0.95 + layerOffset * 0.2), size * (0.65 + layerOffset * 0.15), 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Floating frost/steel particles
+  for (let p = 0; p < 12; p++) {
+    const pAngle = (time * 0.8 + p * Math.PI * 0.167) % (Math.PI * 2);
+    const pDist = size * 0.7 + Math.sin(time * 1.5 + p * 0.6) * size * 0.12;
+    const px = x + Math.cos(pAngle) * pDist;
+    const py = y + Math.sin(pAngle) * pDist * 0.5;
+    const pAlpha = 0.55 + Math.sin(time * 3 + p * 0.4) * 0.3;
+    // Ice crystal particle
+    ctx.fillStyle = p % 3 === 0 ? `rgba(200, 230, 255, ${pAlpha})` : `rgba(100, 180, 255, ${pAlpha})`;
+    ctx.beginPath();
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(time * 2 + p);
+    // Diamond shape
+    ctx.moveTo(0, -size * 0.025);
+    ctx.lineTo(size * 0.015, 0);
+    ctx.lineTo(0, size * 0.025);
+    ctx.lineTo(-size * 0.015, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // === DEEP SHADOW ===
+  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.55, 0, x, y + size * 0.55, size * 0.6);
+  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.6)");
+  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
+  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = shadowGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.55, size * 0.6, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // === MASSIVE BULKY PLATE ARMOR BODY ===
+  // This knight is significantly wider and heavier
+  const armorGrad = ctx.createLinearGradient(x - size * 0.55, y - size * 0.35, x + size * 0.55, y + size * 0.45);
+  armorGrad.addColorStop(0, "#252535");
+  armorGrad.addColorStop(0.1, "#404058");
+  armorGrad.addColorStop(0.25, "#505070");
+  armorGrad.addColorStop(0.4, "#606088");
+  armorGrad.addColorStop(0.5, "#707098");
+  armorGrad.addColorStop(0.6, "#606088");
+  armorGrad.addColorStop(0.75, "#505070");
+  armorGrad.addColorStop(0.9, "#404058");
+  armorGrad.addColorStop(1, "#252535");
+  ctx.fillStyle = armorGrad;
+  ctx.beginPath();
+  // Much wider, bulkier body shape
+  ctx.moveTo(x - size * 0.52, y + size * 0.55 + breathe);
+  ctx.lineTo(x - size * 0.58, y + size * 0.1);
+  ctx.lineTo(x - size * 0.55, y - size * 0.15);
+  ctx.lineTo(x - size * 0.4, y - size * 0.32);
+  ctx.quadraticCurveTo(x, y - size * 0.42, x + size * 0.4, y - size * 0.32);
+  ctx.lineTo(x + size * 0.55, y - size * 0.15);
+  ctx.lineTo(x + size * 0.58, y + size * 0.1);
+  ctx.lineTo(x + size * 0.52, y + size * 0.55 + breathe);
+  ctx.closePath();
+  ctx.fill();
+
+  // Armor edge highlight (left side)
+  ctx.strokeStyle = "#8888aa";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.5, y + size * 0.53 + breathe);
+  ctx.lineTo(x - size * 0.56, y + size * 0.08);
+  ctx.lineTo(x - size * 0.53, y - size * 0.13);
+  ctx.lineTo(x - size * 0.38, y - size * 0.3);
+  ctx.stroke();
+
+  // Armor border
+  ctx.strokeStyle = "#151525";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.52, y + size * 0.55 + breathe);
+  ctx.lineTo(x - size * 0.58, y + size * 0.1);
+  ctx.lineTo(x - size * 0.55, y - size * 0.15);
+  ctx.lineTo(x - size * 0.4, y - size * 0.32);
+  ctx.quadraticCurveTo(x, y - size * 0.42, x + size * 0.4, y - size * 0.32);
+  ctx.lineTo(x + size * 0.55, y - size * 0.15);
+  ctx.lineTo(x + size * 0.58, y + size * 0.1);
+  ctx.lineTo(x + size * 0.52, y + size * 0.55 + breathe);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Heavy armor plate segments
+  ctx.strokeStyle = "#303048";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  // Horizontal segments
+  ctx.moveTo(x - size * 0.48, y - size * 0.08);
+  ctx.lineTo(x + size * 0.48, y - size * 0.08);
+  ctx.moveTo(x - size * 0.46, y + size * 0.12);
+  ctx.lineTo(x + size * 0.46, y + size * 0.12);
+  ctx.moveTo(x - size * 0.44, y + size * 0.32);
+  ctx.lineTo(x + size * 0.44, y + size * 0.32);
+  // Center vertical line
+  ctx.moveTo(x, y - size * 0.32);
+  ctx.lineTo(x, y + size * 0.52);
+  ctx.stroke();
+
+  // Ice blue filigree patterns on armor
+  ctx.strokeStyle = "#80c0ff";
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6;
+  // Left ornate pattern
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.38, y - size * 0.2);
+  ctx.quadraticCurveTo(x - size * 0.45, y - size * 0.05, x - size * 0.38, y + size * 0.08);
+  ctx.quadraticCurveTo(x - size * 0.32, y + size * 0.15, x - size * 0.38, y + size * 0.25);
+  ctx.stroke();
+  // Right ornate pattern
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.38, y - size * 0.2);
+  ctx.quadraticCurveTo(x + size * 0.45, y - size * 0.05, x + size * 0.38, y + size * 0.08);
+  ctx.quadraticCurveTo(x + size * 0.32, y + size * 0.15, x + size * 0.38, y + size * 0.25);
+  ctx.stroke();
+  // Center frost rune pattern
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.15);
+  ctx.lineTo(x, y - size * 0.25);
+  ctx.lineTo(x + size * 0.15, y - size * 0.15);
+  ctx.moveTo(x - size * 0.1, y + size * 0.02);
+  ctx.lineTo(x, y - size * 0.08);
+  ctx.lineTo(x + size * 0.1, y + size * 0.02);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Heavy reinforced rivets in rows
+  for (let row = 0; row < 4; row++) {
+    for (let i = -3; i <= 3; i++) {
+      if (i === 0) continue; // Skip center
+      const rivetX = x + i * size * 0.12;
+      const rivetY = y - size * 0.08 + row * size * 0.16;
+      // Rivet base
+      ctx.fillStyle = "#404058";
+      ctx.beginPath();
+      ctx.arc(rivetX, rivetY, size * 0.028, 0, Math.PI * 2);
+      ctx.fill();
+      // Rivet highlight
+      ctx.fillStyle = "#707098";
+      ctx.beginPath();
+      ctx.arc(rivetX - size * 0.008, rivetY - size * 0.008, size * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+      // Rivet border
+      ctx.strokeStyle = "#252535";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(rivetX, rivetY, size * 0.028, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  // === MASSIVE MATHEY CREST ON CHEST ===
+  if (isAttacking) {
+    ctx.shadowColor = "#60a0ff";
+    ctx.shadowBlur = 18 * zoom * attackIntensity;
+  }
+  // Crest outer hexagonal frame
+  ctx.fillStyle = "#80c0ff";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.28);
+  ctx.lineTo(x - size * 0.18, y - size * 0.1);
+  ctx.lineTo(x - size * 0.18, y + size * 0.12);
+  ctx.lineTo(x, y + size * 0.28);
+  ctx.lineTo(x + size * 0.18, y + size * 0.12);
+  ctx.lineTo(x + size * 0.18, y - size * 0.1);
+  ctx.closePath();
+  ctx.fill();
+  // Crest inner dark blue
+  ctx.fillStyle = "#1a3050";
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.22);
+  ctx.lineTo(x - size * 0.14, y - size * 0.06);
+  ctx.lineTo(x - size * 0.14, y + size * 0.08);
+  ctx.lineTo(x, y + size * 0.22);
+  ctx.lineTo(x + size * 0.14, y + size * 0.08);
+  ctx.lineTo(x + size * 0.14, y - size * 0.06);
+  ctx.closePath();
+  ctx.fill();
+  // Frost gem in center
+  ctx.fillStyle = "#40a0ff";
+  ctx.shadowColor = "#60c0ff";
+  ctx.shadowBlur = isAttacking ? 12 * zoom * gemPulse : 6 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  // Inner gem glow
+  ctx.fillStyle = "#a0e0ff";
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.01, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Crest "M" emblem with ice effect
+  ctx.fillStyle = "#a0d0ff";
+  ctx.font = `bold ${14 * zoom}px serif`;
+  ctx.textAlign = "center";
+  ctx.fillText("M", x, y + size * 0.14);
+
+  // === COLOSSAL SHOULDER PAULDRONS ===
+  for (let side = -1; side <= 1; side += 2) {
+    const pauldronX = x + side * size * 0.62;
+    
+    // Massive pauldron base with gradient
+    const pauldronGrad = ctx.createRadialGradient(pauldronX, y - size * 0.18, 0, pauldronX, y - size * 0.18, size * 0.3);
+    pauldronGrad.addColorStop(0, "#707098");
+    pauldronGrad.addColorStop(0.4, "#505070");
+    pauldronGrad.addColorStop(0.7, "#404058");
+    pauldronGrad.addColorStop(1, "#303048");
+    ctx.fillStyle = pauldronGrad;
+    ctx.beginPath();
+    ctx.ellipse(pauldronX, y - size * 0.16, size * 0.28, size * 0.22, side * 0.35, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Pauldron layered plates (3 layers for heavy look)
+    for (let layer = 0; layer < 3; layer++) {
+      const layerY = y - size * 0.1 + layer * size * 0.08;
+      const layerWidth = size * (0.22 - layer * 0.04);
+      const layerHeight = size * (0.14 - layer * 0.03);
+      ctx.fillStyle = `rgb(${80 + layer * 15}, ${80 + layer * 15}, ${100 + layer * 15})`;
+      ctx.beginPath();
+      ctx.ellipse(pauldronX + side * size * 0.04, layerY, layerWidth, layerHeight, side * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+      // Layer edge
+      ctx.strokeStyle = "#252535";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    
+    // Ice blue trim
+    ctx.strokeStyle = "#80c0ff";
+    ctx.lineWidth = 2 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(pauldronX, y - size * 0.16, size * 0.28, size * 0.22, side * 0.35, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Triple spike crown on each pauldron
+    for (let spike = -1; spike <= 1; spike++) {
+      const spikeX = pauldronX + side * size * 0.08 + spike * size * 0.08;
+      const spikeLen = spike === 0 ? size * 0.35 : size * 0.25;
+      ctx.fillStyle = "#404058";
+      ctx.beginPath();
+      ctx.moveTo(spikeX - size * 0.025, y - size * 0.28);
+      ctx.lineTo(spikeX, y - size * 0.28 - spikeLen);
+      ctx.lineTo(spikeX + size * 0.025, y - size * 0.28);
+      ctx.closePath();
+      ctx.fill();
+      // Spike edge highlight
+      ctx.strokeStyle = "#707098";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(spikeX - size * 0.02, y - size * 0.28);
+      ctx.lineTo(spikeX, y - size * 0.28 - spikeLen + size * 0.02);
+      ctx.stroke();
+    }
+    
+    // Pauldron frost gem
+    ctx.fillStyle = "#40a0ff";
+    ctx.shadowColor = "#60c0ff";
+    ctx.shadowBlur = 6 * zoom * gemPulse;
+    ctx.beginPath();
+    ctx.arc(pauldronX, y - size * 0.18, size * 0.035, 0, Math.PI * 2);
+    ctx.fill();
+    // Gem inner glow
+    ctx.fillStyle = "#a0e0ff";
+    ctx.beginPath();
+    ctx.arc(pauldronX - size * 0.01, y - size * 0.19, size * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // === HEAVY BARREL HELM ===
+  // Different from Captain's - this is a brutal bucket helm
+  const helmGrad = ctx.createRadialGradient(
+    x - size * 0.06, y - size * 0.58, size * 0.06,
+    x, y - size * 0.52, size * 0.42
+  );
+  helmGrad.addColorStop(0, "#707098");
+  helmGrad.addColorStop(0.25, "#606080");
+  helmGrad.addColorStop(0.5, "#505068");
+  helmGrad.addColorStop(0.75, "#404050");
+  helmGrad.addColorStop(1, "#303040");
+  ctx.fillStyle = helmGrad;
+  // Barrel helm shape (taller, more rectangular)
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.3, y - size * 0.3);
+  ctx.lineTo(x - size * 0.32, y - size * 0.7);
+  ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.92, x, y - size * 0.95);
+  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.92, x + size * 0.32, y - size * 0.7);
+  ctx.lineTo(x + size * 0.3, y - size * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Helm reinforcement bands
+  ctx.strokeStyle = "#404058";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.31, y - size * 0.45);
+  ctx.lineTo(x + size * 0.31, y - size * 0.45);
+  ctx.moveTo(x - size * 0.32, y - size * 0.65);
+  ctx.lineTo(x + size * 0.32, y - size * 0.65);
+  ctx.stroke();
+
+  // Center vertical reinforcement
+  ctx.strokeStyle = "#505068";
+  ctx.lineWidth = 4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.32);
+  ctx.lineTo(x, y - size * 0.9);
+  ctx.stroke();
+
+  // Ice blue helm trim
+  ctx.strokeStyle = "#80c0ff";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.3, y - size * 0.32);
+  ctx.lineTo(x - size * 0.32, y - size * 0.7);
+  ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.9, x, y - size * 0.93);
+  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.9, x + size * 0.32, y - size * 0.7);
+  ctx.lineTo(x + size * 0.3, y - size * 0.32);
+  ctx.stroke();
+
+  // Helm border
+  ctx.strokeStyle = "#151525";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.3, y - size * 0.3);
+  ctx.lineTo(x - size * 0.32, y - size * 0.7);
+  ctx.quadraticCurveTo(x - size * 0.32, y - size * 0.92, x, y - size * 0.95);
+  ctx.quadraticCurveTo(x + size * 0.32, y - size * 0.92, x + size * 0.32, y - size * 0.7);
+  ctx.lineTo(x + size * 0.3, y - size * 0.3);
+  ctx.closePath();
+  ctx.stroke();
+
+  // T-Visor (brutal, intimidating)
+  ctx.fillStyle = "#0a0a15";
+  ctx.beginPath();
+  // Horizontal slit
+  ctx.moveTo(x - size * 0.26, y - size * 0.58);
+  ctx.lineTo(x + size * 0.26, y - size * 0.58);
+  ctx.lineTo(x + size * 0.26, y - size * 0.48);
+  ctx.lineTo(x - size * 0.26, y - size * 0.48);
+  ctx.closePath();
+  ctx.fill();
+  // Vertical slit (forms the T)
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06, y - size * 0.48);
+  ctx.lineTo(x + size * 0.06, y - size * 0.48);
+  ctx.lineTo(x + size * 0.06, y - size * 0.35);
+  ctx.lineTo(x - size * 0.06, y - size * 0.35);
+  ctx.closePath();
+  ctx.fill();
+
+  // Glowing eyes in T-visor
+  ctx.fillStyle = isAttacking
+    ? `rgba(100, 200, 255, ${0.8 + attackIntensity * 0.2})`
+    : "rgba(80, 160, 220, 0.6)";
+  if (isAttacking) {
+    ctx.shadowColor = "#60c0ff";
+    ctx.shadowBlur = 10 * zoom;
+  }
+  // Left eye
+  ctx.beginPath();
+  ctx.arc(x - size * 0.12, y - size * 0.53, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  // Right eye
+  ctx.beginPath();
+  ctx.arc(x + size * 0.12, y - size * 0.53, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Visor breathing holes
+  ctx.fillStyle = "#0a0a15";
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      ctx.beginPath();
+      ctx.arc(x - size * 0.18 + col * size * 0.04, y - size * 0.4 + row * size * 0.025, size * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + size * 0.06 + col * size * 0.04, y - size * 0.4 + row * size * 0.025, size * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Helm crown with frost gem
+  ctx.fillStyle = "#505068";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, y - size * 0.93);
+  ctx.lineTo(x, y - size * 1.05);
+  ctx.lineTo(x + size * 0.08, y - size * 0.93);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = "#40a0ff";
+  ctx.shadowColor = "#60c0ff";
+  ctx.shadowBlur = 8 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.97, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // === NO PLUME - Instead, heavy metal horns ===
+  for (let side = -1; side <= 1; side += 2) {
+    const hornX = x + side * size * 0.25;
+    // Horn base
+    ctx.fillStyle = "#404058";
+    ctx.beginPath();
+    ctx.moveTo(hornX - side * size * 0.04, y - size * 0.82);
+    ctx.quadraticCurveTo(
+      hornX + side * size * 0.15, y - size * 1.0,
+      hornX + side * size * 0.32, y - size * 0.9
+    );
+    ctx.quadraticCurveTo(
+      hornX + side * size * 0.18, y - size * 0.85,
+      hornX + side * size * 0.02, y - size * 0.78
+    );
+    ctx.closePath();
+    ctx.fill();
+    // Horn highlight
+    ctx.strokeStyle = "#606080";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(hornX - side * size * 0.02, y - size * 0.8);
+    ctx.quadraticCurveTo(
+      hornX + side * size * 0.12, y - size * 0.96,
+      hornX + side * size * 0.28, y - size * 0.88
+    );
+    ctx.stroke();
+    // Frost glow at horn tips
+    ctx.fillStyle = "#60c0ff";
+    ctx.shadowColor = "#80e0ff";
+    ctx.shadowBlur = 4 * zoom;
+    ctx.beginPath();
+    ctx.arc(hornX + side * size * 0.3, y - size * 0.89, size * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // === ORNATE TOWER SHIELD (Left side) ===
+  ctx.save();
+  ctx.translate(x - size * 0.58, y + size * 0.05);
+  ctx.rotate(0.2);
+
+  // Shield shadow
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.02, -size * 0.32);
+  ctx.lineTo(-size * 0.2, -size * 0.2);
+  ctx.lineTo(-size * 0.22, size * 0.25);
+  ctx.lineTo(size * 0.02, size * 0.42);
+  ctx.lineTo(size * 0.24, size * 0.25);
+  ctx.lineTo(size * 0.26, -size * 0.2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shield body with frost steel gradient
+  const shieldGrad = ctx.createLinearGradient(-size * 0.22, 0, size * 0.22, 0);
+  shieldGrad.addColorStop(0, "#303050");
+  shieldGrad.addColorStop(0.25, "#505078");
+  shieldGrad.addColorStop(0.5, "#606090");
+  shieldGrad.addColorStop(0.75, "#505078");
+  shieldGrad.addColorStop(1, "#303050");
+  ctx.fillStyle = shieldGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.35);
+  ctx.lineTo(-size * 0.22, -size * 0.22);
+  ctx.lineTo(-size * 0.24, size * 0.22);
+  ctx.lineTo(0, size * 0.4);
+  ctx.lineTo(size * 0.24, size * 0.22);
+  ctx.lineTo(size * 0.22, -size * 0.22);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shield edge highlight
+  ctx.strokeStyle = "#8888aa";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.01, -size * 0.33);
+  ctx.lineTo(-size * 0.2, -size * 0.2);
+  ctx.stroke();
+
+  // Shield border
+  ctx.strokeStyle = "#151525";
+  ctx.lineWidth = 3 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.35);
+  ctx.lineTo(-size * 0.22, -size * 0.22);
+  ctx.lineTo(-size * 0.24, size * 0.22);
+  ctx.lineTo(0, size * 0.4);
+  ctx.lineTo(size * 0.24, size * 0.22);
+  ctx.lineTo(size * 0.22, -size * 0.22);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Ice blue inner trim
+  ctx.strokeStyle = "#80c0ff";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.3);
+  ctx.lineTo(-size * 0.17, -size * 0.18);
+  ctx.lineTo(-size * 0.19, size * 0.18);
+  ctx.lineTo(0, size * 0.34);
+  ctx.lineTo(size * 0.19, size * 0.18);
+  ctx.lineTo(size * 0.17, -size * 0.18);
+  ctx.closePath();
+  ctx.stroke();
+
+  // Shield frost rune patterns
+  ctx.strokeStyle = "#60a0ff";
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, -size * 0.12);
+  ctx.quadraticCurveTo(-size * 0.12, 0, -size * 0.08, size * 0.12);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.1, -size * 0.12);
+  ctx.quadraticCurveTo(size * 0.12, 0, size * 0.08, size * 0.12);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Shield boss with "M" emblem
+  ctx.fillStyle = "#80c0ff";
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#1a3050";
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.09, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#151525";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.12, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // "M" emblem
+  ctx.fillStyle = "#80c0ff";
+  ctx.font = `bold ${16 * zoom}px serif`;
+  ctx.textAlign = "center";
+  ctx.fillText("M", 0, size * 0.05);
+
+  // Shield corner gems
+  ctx.fillStyle = "#40a0ff";
+  ctx.shadowColor = "#60c0ff";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.26, size * 0.022, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-size * 0.14, size * 0.12, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(size * 0.14, size * 0.12, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, size * 0.3, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // === MASSIVE WAR HAMMER (Right side, angled away from face) ===
+  // Epic attack animation: wind-up → overhead → devastating slam
+  let hammerAngle: number;
+  let hammerX: number;
+  let hammerY: number;
+  
+  if (isAttacking) {
+    // Phase 1 (0-0.3): Wind-up - hammer goes back and up
+    // Phase 2 (0.3-0.6): Overhead swing - hammer arcs over
+    // Phase 3 (0.6-1.0): Devastating slam - hammer crashes down
+    if (attackPhase < 0.3) {
+      // Wind-up: pull back
+      const windUp = attackPhase / 0.3;
+      hammerAngle = 0.8 + windUp * 1.5; // Rotate back
+      hammerX = x + size * 0.55 + windUp * size * 0.15;
+      hammerY = y - size * 0.1 - windUp * size * 0.2;
+    } else if (attackPhase < 0.6) {
+      // Overhead: arc forward
+      const overheadProgress = (attackPhase - 0.3) / 0.3;
+      hammerAngle = 2.3 - overheadProgress * 3.5; // Arc from back to front
+      hammerX = x + size * 0.7 - overheadProgress * size * 0.3;
+      hammerY = y - size * 0.3 + overheadProgress * size * 0.4;
+    } else {
+      // Slam: crash down
+      const slamProgress = (attackPhase - 0.6) / 0.4;
+      hammerAngle = -1.2 + slamProgress * 0.4; // Slight recovery
+      hammerX = x + size * 0.4;
+      hammerY = y + size * 0.1 - slamProgress * size * 0.15;
+    }
+  } else {
+    // Idle: hammer resting at side, angled away from face
+    hammerAngle = 0.6 + heavyStance * 0.02; // Tilted to the right
+    hammerX = x + size * 0.6;
+    hammerY = y + size * 0.15;
+  }
+
+  hammerAngle = resolveWeaponRotation(
+    targetPos,
+    hammerX,
+    hammerY,
+    hammerAngle,
+    Math.PI / 2,
+    isAttacking ? 1.25 : 0.72
+  );
+
+  ctx.save();
+  ctx.translate(hammerX, hammerY);
+  ctx.rotate(hammerAngle);
+
+  // Hammer handle - thick reinforced shaft
+  const shaftGrad = ctx.createLinearGradient(-size * 0.05, -size * 0.1, size * 0.05, -size * 0.1);
+  shaftGrad.addColorStop(0, "#2a1a10");
+  shaftGrad.addColorStop(0.3, "#4a3020");
+  shaftGrad.addColorStop(0.5, "#5a4030");
+  shaftGrad.addColorStop(0.7, "#4a3020");
+  shaftGrad.addColorStop(1, "#2a1a10");
+  ctx.fillStyle = shaftGrad;
+  ctx.fillRect(-size * 0.05, -size * 0.85, size * 0.1, size * 1.05);
+
+  // Metal bands on shaft
+  for (let band = 0; band < 6; band++) {
+    const bandY = -size * 0.75 + band * size * 0.18;
+    ctx.fillStyle = "#505068";
+    ctx.fillRect(-size * 0.06, bandY, size * 0.12, size * 0.045);
+    ctx.fillStyle = "#707098";
+    ctx.fillRect(-size * 0.06, bandY, size * 0.12, size * 0.018);
+  }
+
+  // Shaft border
+  ctx.strokeStyle = "#1a0a05";
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-size * 0.05, -size * 0.85, size * 0.1, size * 1.05);
+
+  // === MASSIVE HAMMER HEAD ===
+  if (isAttacking && attackPhase > 0.5) {
+    ctx.shadowColor = "#60c0ff";
+    ctx.shadowBlur = 20 * zoom * attackIntensity;
+  }
+
+  // Hammer head main body
+  const headGrad = ctx.createLinearGradient(-size * 0.22, -size * 0.95, size * 0.22, -size * 0.95);
+  headGrad.addColorStop(0, "#252540");
+  headGrad.addColorStop(0.15, "#404060");
+  headGrad.addColorStop(0.35, "#505078");
+  headGrad.addColorStop(0.5, "#606090");
+  headGrad.addColorStop(0.65, "#505078");
+  headGrad.addColorStop(0.85, "#404060");
+  headGrad.addColorStop(1, "#252540");
+  ctx.fillStyle = headGrad;
+  ctx.beginPath();
+  // Main striking head (larger, more imposing)
+  ctx.moveTo(-size * 0.2, -size * 0.82);
+  ctx.lineTo(-size * 0.25, -size * 1.02);
+  ctx.lineTo(size * 0.25, -size * 1.02);
+  ctx.lineTo(size * 0.2, -size * 0.82);
+  ctx.closePath();
+  ctx.fill();
+
+  // Top flat face with bevel
+  ctx.fillStyle = "#505070";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.23, -size * 1.02);
+  ctx.lineTo(-size * 0.18, -size * 1.08);
+  ctx.lineTo(size * 0.18, -size * 1.08);
+  ctx.lineTo(size * 0.23, -size * 1.02);
+  ctx.closePath();
+  ctx.fill();
+
+  // Spike on back of hammer (war pick side)
+  ctx.fillStyle = "#404058";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, -size * 0.86);
+  ctx.lineTo(-size * 0.4, -size * 0.92);
+  ctx.lineTo(-size * 0.2, -size * 0.98);
+  ctx.closePath();
+  ctx.fill();
+  // Spike highlight
+  ctx.strokeStyle = "#606080";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, -size * 0.87);
+  ctx.lineTo(-size * 0.38, -size * 0.92);
+  ctx.stroke();
+
+  // Hammer head border
+  ctx.strokeStyle = "#151525";
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, -size * 0.82);
+  ctx.lineTo(-size * 0.25, -size * 1.02);
+  ctx.lineTo(-size * 0.18, -size * 1.08);
+  ctx.lineTo(size * 0.18, -size * 1.08);
+  ctx.lineTo(size * 0.25, -size * 1.02);
+  ctx.lineTo(size * 0.2, -size * 0.82);
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+
+  // Frost runes on hammer head (glowing intensely during attack)
+  const runeGlow = isAttacking && attackPhase > 0.4 ? 0.8 + attackIntensity * 0.2 : 0.5;
+  ctx.fillStyle = `rgba(100, 200, 255, ${runeGlow})`;
+  ctx.shadowColor = "#60c0ff";
+  ctx.shadowBlur = isAttacking && attackPhase > 0.4 ? 12 * zoom : 4 * zoom;
+  // Central rune
+  ctx.beginPath();
+  ctx.arc(0, -size * 0.92, size * 0.03, 0, Math.PI * 2);
+  ctx.fill();
+  // Side runes
+  ctx.beginPath();
+  ctx.arc(-size * 0.12, -size * 0.92, size * 0.022, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(size * 0.12, -size * 0.92, size * 0.022, 0, Math.PI * 2);
+  ctx.fill();
+  // Rune connecting frost lines
+  ctx.strokeStyle = `rgba(100, 200, 255, ${runeGlow * 0.7})`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.1, -size * 0.92);
+  ctx.lineTo(-size * 0.02, -size * 0.92);
+  ctx.moveTo(size * 0.1, -size * 0.92);
+  ctx.lineTo(size * 0.02, -size * 0.92);
+  ctx.stroke();
+  // Vertical rune line
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.89);
+  ctx.lineTo(0, -size * 0.95);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Ice blue accent trim on hammer
+  ctx.strokeStyle = "#80c0ff";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.18, -size * 0.84);
+  ctx.lineTo(-size * 0.23, -size * 1.0);
+  ctx.lineTo(size * 0.23, -size * 1.0);
+  ctx.lineTo(size * 0.18, -size * 0.84);
+  ctx.stroke();
+
+  // Ornate pommel at bottom
+  ctx.fillStyle = "#505068";
+  ctx.beginPath();
+  ctx.arc(0, size * 0.22, size * 0.065, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#40a0ff";
+  ctx.shadowColor = "#60c0ff";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(0, size * 0.22, size * 0.035, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // === EPIC IMPACT EFFECTS (during slam phase) ===
+  if (isAttacking && attackPhase > 0.55) {
+    const slamIntensity = attackPhase > 0.6 ? ((attackPhase - 0.6) / 0.4) : 0;
+    const impactX = x + size * 0.4;
+    const impactY = y + size * 0.55;
+    
+    // Screen shake effect simulation via offset particles
+    const shakeOffset = slamIntensity * 3 * Math.sin(time * 50);
+    
+    // Massive shockwave rings
+    for (let ring = 0; ring < 5; ring++) {
+      const ringSize = size * 0.2 + ring * size * 0.25 * slamIntensity;
+      const ringAlpha = (0.8 - ring * 0.15) * slamIntensity;
+      ctx.strokeStyle = ring % 2 === 0 
+        ? `rgba(100, 180, 255, ${ringAlpha})` 
+        : `rgba(200, 230, 255, ${ringAlpha * 0.7})`;
+      ctx.lineWidth = (4 - ring * 0.5) * zoom;
+      ctx.beginPath();
+      ctx.ellipse(impactX + shakeOffset, impactY, ringSize, ringSize * 0.25, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    // Ground crack lines radiating outward
+    for (let crack = 0; crack < 12; crack++) {
+      const crackAngle = crack * Math.PI / 6 + Math.sin(crack * 0.7) * 0.2;
+      const crackLen = size * (0.4 + Math.random() * 0.3) * slamIntensity;
+      const crackWidth = (3 - crack * 0.15) * zoom;
+      
+      // Main crack
+      ctx.strokeStyle = `rgba(80, 150, 220, ${0.8 * slamIntensity})`;
+      ctx.lineWidth = crackWidth;
+      ctx.beginPath();
+      ctx.moveTo(impactX, impactY);
+      // Jagged crack path
+      const midX = impactX + Math.cos(crackAngle) * crackLen * 0.5 + Math.sin(crack * 2) * size * 0.05;
+      const midY = impactY + Math.sin(crackAngle) * crackLen * 0.15;
+      ctx.lineTo(midX, midY);
+      ctx.lineTo(
+        impactX + Math.cos(crackAngle) * crackLen,
+        impactY + Math.sin(crackAngle) * crackLen * 0.25
+      );
+      ctx.stroke();
+      
+      // Crack glow
+      ctx.strokeStyle = `rgba(150, 200, 255, ${0.4 * slamIntensity})`;
+      ctx.lineWidth = crackWidth * 2;
+      ctx.stroke();
+    }
+    
+    // Flying debris and ice shards
+    for (let debris = 0; debris < 20; debris++) {
+      const debrisAngle = debris * Math.PI / 10 + time * 2;
+      const debrisDist = size * 0.1 + debris * size * 0.04 * slamIntensity;
+      const debrisHeight = Math.sin((attackPhase - 0.6) * Math.PI * 2 + debris * 0.3) * size * 0.4;
+      const debrisX = impactX + Math.cos(debrisAngle) * debrisDist;
+      const debrisY = impactY - Math.abs(debrisHeight) * slamIntensity;
+      const debrisAlpha = 0.9 * slamIntensity * (1 - debris * 0.04);
+      
+      // Ice shard shape
+      ctx.fillStyle = debris % 3 === 0 
+        ? `rgba(200, 230, 255, ${debrisAlpha})` 
+        : `rgba(100, 180, 255, ${debrisAlpha * 0.7})`;
+      ctx.save();
+      ctx.translate(debrisX, debrisY);
+      ctx.rotate(debrisAngle + time * 5);
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.025);
+      ctx.lineTo(size * 0.012, 0);
+      ctx.lineTo(0, size * 0.025);
+      ctx.lineTo(-size * 0.012, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    
+    // Central impact flash
+    if (attackPhase > 0.58 && attackPhase < 0.75) {
+      const flashIntensity = Math.sin((attackPhase - 0.58) / 0.17 * Math.PI);
+      const flashGrad = ctx.createRadialGradient(impactX, impactY, 0, impactX, impactY, size * 0.4);
+      flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity * 0.8})`);
+      flashGrad.addColorStop(0.3, `rgba(150, 220, 255, ${flashIntensity * 0.5})`);
+      flashGrad.addColorStop(1, "rgba(100, 180, 255, 0)");
+      ctx.fillStyle = flashGrad;
+      ctx.beginPath();
+      ctx.ellipse(impactX, impactY, size * 0.4, size * 0.15, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // === ARMORED LEGS/GREAVES ===
+  for (let side = -1; side <= 1; side += 2) {
+    const legX = x + side * size * 0.22;
+    
+    // Heavy greave
+    const greaveGrad = ctx.createLinearGradient(legX - size * 0.08, y + size * 0.3, legX + size * 0.08, y + size * 0.3);
+    greaveGrad.addColorStop(0, "#303048");
+    greaveGrad.addColorStop(0.5, "#505070");
+    greaveGrad.addColorStop(1, "#303048");
+    ctx.fillStyle = greaveGrad;
+    ctx.beginPath();
+    ctx.moveTo(legX - size * 0.1, y + size * 0.52);
+    ctx.lineTo(legX - size * 0.12, y + size * 0.32);
+    ctx.lineTo(legX + size * 0.12, y + size * 0.32);
+    ctx.lineTo(legX + size * 0.1, y + size * 0.52);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Knee guard
+    ctx.fillStyle = "#505068";
+    ctx.beginPath();
+    ctx.ellipse(legX, y + size * 0.34, size * 0.08, size * 0.06, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#40a0ff";
+    ctx.shadowColor = "#60c0ff";
+    ctx.shadowBlur = 3 * zoom * gemPulse;
+    ctx.beginPath();
+    ctx.arc(legX, y + size * 0.34, size * 0.02, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    
+    // Armored boot
+    ctx.fillStyle = "#404058";
+    ctx.beginPath();
+    ctx.moveTo(legX - size * 0.1, y + size * 0.52);
+    ctx.lineTo(legX - size * 0.12, y + size * 0.58);
+    ctx.lineTo(legX + side * size * 0.02, y + size * 0.6);
+    ctx.lineTo(legX + size * 0.12, y + size * 0.58);
+    ctx.lineTo(legX + size * 0.1, y + size * 0.52);
+    ctx.closePath();
+    ctx.fill();
+  }
+}

@@ -127,7 +127,7 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             lightning: { brief: "Chain lightning stuns and shocks eight enemies", nameColor: "text-yellow-300", briefColor: "text-yellow-400/50", borderColor: "rgba(234,179,8,0.4)" },
             freeze: { brief: "Freeze every enemy on the map for three seconds", nameColor: "text-cyan-300", briefColor: "text-cyan-400/50", borderColor: "rgba(6,182,212,0.4)" },
             payday: { brief: "Earn bonus Paw Points based on alive enemy count", nameColor: "text-amber-300", briefColor: "text-amber-400/50", borderColor: "rgba(245,158,11,0.4)" },
-            reinforcements: { brief: "Summon three armored knights to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)" },
+            reinforcements: { brief: "Summon three armored reinforcements to block and fight", nameColor: "text-emerald-300", briefColor: "text-emerald-400/50", borderColor: "rgba(16,185,129,0.4)" },
           };
           return (
             <div className="grid grid-cols-3 sm:flex gap-1 sm:gap-1.5">
@@ -335,14 +335,14 @@ export const SpellSelector: React.FC<SpellSelectorProps> = ({
             headerBg: "linear-gradient(90deg, rgba(20,120,80,0.2), rgba(10,80,50,0.08), transparent)",
             icon: <Shield size={16} className="text-emerald-400" />, accentText: "text-emerald-300",
             stats: [
-              { label: "Knights", value: `${reinforcementStats.knightCount}`, color: "text-emerald-300", statBg: "rgba(6,78,59,0.3)", statBorder: "rgba(6,78,59,0.2)", icon: <Users size={10} className="text-emerald-400" /> },
+              { label: "Units", value: `${reinforcementStats.knightCount}`, color: "text-emerald-300", statBg: "rgba(6,78,59,0.3)", statBorder: "rgba(6,78,59,0.2)", icon: <Users size={10} className="text-emerald-400" /> },
               { label: "HP Each", value: `${reinforcementStats.knightHp}`, color: "text-red-300", statBg: "rgba(127,29,29,0.3)", statBorder: "rgba(127,29,29,0.2)", icon: <Heart size={10} className="text-red-400" /> },
               { label: "DMG Each", value: `${reinforcementStats.knightDamage}`, color: "text-orange-300", statBg: "rgba(124,45,18,0.3)", statBorder: "rgba(124,45,18,0.2)", icon: <Swords size={10} className="text-orange-400" /> },
             ],
             effectBg: "rgba(6,78,59,0.15)", effectLabel: "text-emerald-500/80", effectText: "text-emerald-200/90",
             effect: reinforcementStats.rangedUnlocked
-              ? `Summons ${reinforcementStats.knightCount} veteran knights with tier-${reinforcementStats.visualTier} armor. They fight in melee and fire ranged volleys.`
-              : `Summons ${reinforcementStats.knightCount} armored knights at a chosen location. They block and fight enemies until defeated.`,
+              ? `Summons ${reinforcementStats.knightCount} veteran reinforcements with tier-${reinforcementStats.visualTier} armor. They fight in melee and fire ranged volleys.`
+              : `Summons ${reinforcementStats.knightCount} armored reinforcements at a chosen location. They block and fight enemies until defeated.`,
           },
         };
         const info = spellInfo[hoveredSpell];

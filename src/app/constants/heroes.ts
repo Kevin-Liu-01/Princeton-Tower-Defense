@@ -89,7 +89,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     attackSpeed: 650,
     speed: 2.5,
     ability: "Rally Knights",
-    abilityDesc: "Summons 3 reinforcement knights to fight",
+    abilityDesc: "Summons 3 armored knights to fight",
     color: "#dc2626",
     isRanged: false,
   },

@@ -3,7 +3,7 @@
 
 import type { DecorationType, Position } from "../../types";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
-import { drawIsometricPrism, drawIsometricPyramid } from "../helpers";
+import { drawIsometricPrism, drawIsometricPyramid, drawBrickFace as sharedBrickFace } from "../helpers";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -50,94 +50,7 @@ function drawOrganicWaterShape(
   ctx.closePath();
 }
 
-/**
- * Draws a brick-textured parallelogram face for isometric walls.
- * The face runs from (x1,y1) to (x2,y2) at the base and extends upward by h.
- * Bricks follow a running bond pattern with mortar joints.
- */
-function drawBrickFace(
-  ctx: CanvasRenderingContext2D,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  h: number,
-  baseColor: string,
-  mortarColor: string,
-  scale: number,
-  rows: number,
-  cols: number,
-): void {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const bH = h / rows;
-
-  ctx.fillStyle = baseColor;
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.lineTo(x2, y2 - h);
-  ctx.lineTo(x1, y1 - h);
-  ctx.closePath();
-  ctx.fill();
-
-  for (let r = 0; r < rows; r++) {
-    const bondOff = r % 2 === 0 ? 0 : 0.5;
-    for (let c = 0; c < cols; c++) {
-      const t1 = Math.max(0, (c + bondOff) / cols);
-      const t2 = Math.min(1, (c + 1 + bondOff) / cols);
-      if (t1 >= 1 || t2 <= 0) continue;
-      const bx1 = x1 + t1 * dx;
-      const by1 = y1 + t1 * dy - r * bH;
-      const bx2 = x1 + t2 * dx;
-      const by2 = y1 + t2 * dy - r * bH;
-      const shade = ((r * 7 + c * 13) % 5) * 0.015;
-      if (shade > 0.02) {
-        ctx.fillStyle = `rgba(255,255,240,${shade})`;
-        ctx.beginPath();
-        ctx.moveTo(bx1, by1);
-        ctx.lineTo(bx2, by2);
-        ctx.lineTo(bx2, by2 - bH + 0.3 * scale);
-        ctx.lineTo(bx1, by1 - bH + 0.3 * scale);
-        ctx.closePath();
-        ctx.fill();
-      }
-      if (shade < 0.01) {
-        ctx.fillStyle = `rgba(0,0,0,0.04)`;
-        ctx.beginPath();
-        ctx.moveTo(bx1, by1);
-        ctx.lineTo(bx2, by2);
-        ctx.lineTo(bx2, by2 - bH + 0.3 * scale);
-        ctx.lineTo(bx1, by1 - bH + 0.3 * scale);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-  }
-
-  ctx.strokeStyle = mortarColor;
-  ctx.lineWidth = 0.6 * scale;
-  for (let r = 1; r < rows; r++) {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1 - r * bH);
-    ctx.lineTo(x2, y2 - r * bH);
-    ctx.stroke();
-  }
-  for (let r = 0; r < rows; r++) {
-    const off = r % 2 === 0 ? 0 : 0.5;
-    for (let c = 1; c < cols; c++) {
-      const t = (c + off) / cols;
-      if (t > 0.02 && t < 0.98) {
-        const jx = x1 + t * dx;
-        const jy = y1 + t * dy;
-        ctx.beginPath();
-        ctx.moveTo(jx, jy - r * bH);
-        ctx.lineTo(jx, jy - (r + 1) * bH);
-        ctx.stroke();
-      }
-    }
-  }
-}
+const drawBrickFace = sharedBrickFace;
 
 /**
  * Renders a single decoration item based on its type.

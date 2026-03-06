@@ -123,33 +123,6 @@ const KNIGHT_THEME_RED: KnightTheme = {
   shockwave: "rgba(255, 80, 80, ",
 };
 
-// Purple theme - Reinforcement spell knights
-const KNIGHT_THEME_PURPLE: KnightTheme = {
-  name: "reinforcement",
-  auraColorInner: "rgba(180, 80, 255, ",
-  auraColorMid: "rgba(140, 40, 220, ",
-  auraColorOuter: "rgba(100, 20, 180, 0)",
-  flameWisps: "rgba(200, 120, 255, ",
-  energyRings: "rgba(160, 60, 255, ",
-  capeLight: "#5a2a8a",
-  capeMid: "#7733bb",
-  capeDark: "#3a1a66",
-  capeInner: "#2a0a44",
-  sigilGlow: "rgba(180, 100, 255, ",
-  beltBuckle: "#b8a0cc",
-  crossguardMain: "#4a1a80",
-  crossguardAccent: "#6830a0",
-  gemColor: "rgba(220, 180, 255, ",
-  bladeRunes: "rgba(180, 100, 255, ",
-  swingTrail: "rgba(200, 120, 255, ",
-  swingTrailAlt: "rgba(220, 170, 255, ",
-  shieldEmblem: "#7733aa",
-  plume: "#9944dd",
-  eyeGlow: "rgba(200, 150, 255, ",
-  eyeShadow: "#aa66ff",
-  shockwave: "rgba(180, 100, 255, ",
-};
-
 // Get knight theme based on owner type
 export function getKnightTheme(ownerType?: TroopOwnerType): KnightTheme {
   switch (ownerType) {
@@ -157,8 +130,6 @@ export function getKnightTheme(ownerType?: TroopOwnerType): KnightTheme {
       return KNIGHT_THEME_BLUE;
     case "hero_summon":
       return KNIGHT_THEME_RED;
-    case "spell":
-      return KNIGHT_THEME_PURPLE;
     case "station":
     case "default":
     default:
@@ -503,6 +474,7 @@ function drawTroopSprite(
     armored: 1.3,
     elite: 1.5,
     thesis: 1.35,
+    reinforcement: 1.5,
     cavalry: 1.5,
     centaur: 1.5,
     knight: 1.6,
@@ -593,6 +565,19 @@ function drawTroopSprite(
         targetPos,
       );
       break;
+    case "reinforcement":
+      drawReinforcementTroop(
+        ctx,
+        x,
+        scaledY,
+        scaledSize,
+        time,
+        zoom,
+        attackPhase,
+        visualTier,
+        targetPos,
+      );
+      break;
     case "rowing":
       drawRowingTroop(
         ctx,
@@ -617,7 +602,6 @@ function drawTroopSprite(
         zoom,
         attackPhase,
         ownerType,
-        visualTier,
         targetPos,
       );
       break;
@@ -7302,12 +7286,11 @@ function drawDefaultTroop(
     zoom,
     attackPhase,
     undefined,
-    0,
     targetPos,
   );
 }
 
-function drawReinforcementKnightTroop(
+function drawReinforcementTroop(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -7991,30 +7974,10 @@ function drawKnightTroop(
   zoom: number,
   attackPhase: number = 0,
   ownerType?: TroopOwnerType,
-  visualTier: number = 0,
   targetPos?: Position,
 ) {
   // Get theme based on owner type
   const theme = getKnightTheme(ownerType);
-  const reinforcementTier =
-    ownerType === "spell"
-      ? Math.max(0, Math.min(5, Math.floor(visualTier)))
-      : 0;
-
-  if (ownerType === "spell") {
-    drawReinforcementKnightTroop(
-      ctx,
-      x,
-      y,
-      size,
-      time,
-      zoom,
-      attackPhase,
-      reinforcementTier,
-      targetPos,
-    );
-    return;
-  }
 
   // DARK CHAMPION - Elite Knight with Soul-Forged Greatsword
   const stance = Math.sin(time * 3) * 1;
@@ -8330,60 +8293,6 @@ function drawKnightTroop(
     Math.PI * 2,
   );
   ctx.fill();
-
-  // Reinforcement spell progression visuals:
-  // each tier adds visible armor/weapon upgrades.
-  if (reinforcementTier >= 1) {
-    ctx.strokeStyle = "rgba(220, 220, 255, 0.35)";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(x - size * 0.12, y + size * 0.04 + breathe);
-    ctx.lineTo(x + size * 0.12, y + size * 0.04 + breathe);
-    ctx.stroke();
-  }
-
-  if (reinforcementTier >= 2) {
-    ctx.fillStyle = "rgba(180, 195, 225, 0.55)";
-    ctx.beginPath();
-    ctx.roundRect(
-      x - size * 0.17,
-      y + size * 0.11 + breathe,
-      size * 0.34,
-      size * 0.06,
-      size * 0.02,
-    );
-    ctx.fill();
-  }
-
-  if (reinforcementTier >= 3) {
-    ctx.strokeStyle = "rgba(250, 225, 160, 0.55)";
-    ctx.lineWidth = 1.8 * zoom;
-    ctx.beginPath();
-    ctx.arc(x, y + size * 0.08 + breathe, size * 0.055, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  if (reinforcementTier >= 4) {
-    ctx.fillStyle = "rgba(210, 220, 255, 0.6)";
-    ctx.beginPath();
-    ctx.moveTo(x, y - size * 0.61 + breathe * 0.2);
-    ctx.lineTo(x - size * 0.03, y - size * 0.55 + breathe * 0.2);
-    ctx.lineTo(x + size * 0.03, y - size * 0.55 + breathe * 0.2);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  if (reinforcementTier >= 5) {
-    // Arcane repeater rig on the back to indicate ranged capability.
-    ctx.save();
-    ctx.translate(x - size * 0.38, y - size * 0.02 + breathe);
-    ctx.rotate(-0.45);
-    ctx.fillStyle = "rgba(85, 55, 140, 0.9)";
-    ctx.fillRect(-size * 0.06, -size * 0.02, size * 0.12, size * 0.2);
-    ctx.fillStyle = "rgba(190, 170, 255, 0.8)";
-    ctx.fillRect(-size * 0.01, -size * 0.16, size * 0.02, size * 0.34);
-    ctx.restore();
-  }
 
   // === MASSIVE PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
@@ -9064,6 +8973,87 @@ function drawKnightTroop(
     { vanguard: true },
   );
 }
+function drawTurretIsometricCrate(
+  ctx: CanvasRenderingContext2D,
+  left: number,
+  top: number,
+  width: number,
+  height: number,
+  depth: number,
+  colors: { top: string; side: string; front: string; outline?: string },
+) {
+  const depthX = depth;
+  const depthY = depth * 0.58;
+
+  ctx.fillStyle = colors.top;
+  ctx.beginPath();
+  ctx.moveTo(left, top);
+  ctx.lineTo(left + depthX, top - depthY);
+  ctx.lineTo(left + width + depthX, top - depthY);
+  ctx.lineTo(left + width, top);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = colors.side;
+  ctx.beginPath();
+  ctx.moveTo(left + width, top);
+  ctx.lineTo(left + width + depthX, top - depthY);
+  ctx.lineTo(left + width + depthX, top + height - depthY);
+  ctx.lineTo(left + width, top + height);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = colors.front;
+  ctx.fillRect(left, top, width, height);
+
+  if (colors.outline) {
+    ctx.strokeStyle = colors.outline;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left + depthX, top - depthY);
+    ctx.lineTo(left + width + depthX, top - depthY);
+    ctx.lineTo(left + width + depthX, top + height - depthY);
+    ctx.lineTo(left + width, top + height);
+    ctx.lineTo(left, top + height);
+    ctx.closePath();
+    ctx.stroke();
+  }
+}
+
+function drawTurretBoltRow(
+  ctx: CanvasRenderingContext2D,
+  startX: number,
+  y: number,
+  count: number,
+  spacing: number,
+  radius: number,
+  color: string,
+) {
+  ctx.fillStyle = color;
+  for (let i = 0; i < count; i++) {
+    ctx.beginPath();
+    ctx.arc(startX + i * spacing, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function projectTurretLocalPoint(
+  originX: number,
+  originY: number,
+  rotation: number,
+  squashY: number,
+  localX: number,
+  localY: number,
+): Position {
+  const cosR = Math.cos(rotation);
+  const sinR = Math.sin(rotation);
+  return {
+    x: originX + cosR * localX - sinR * (localY * squashY),
+    y: originY + sinR * localX + cosR * (localY * squashY),
+  };
+}
+
 // ============================================================================
 // TURRET TROOP - Engineer's Heavy Machine Gun Emplacement
 // ============================================================================
@@ -9078,637 +9068,515 @@ function drawTurretTroop(
   attackPhase: number = 0,
   targetPos?: Position,
 ) {
-  // ENGINEER'S HEAVY MACHINE GUN - Belt-fed rapid fire emplacement
-  const y = y2 + 12;
+  const y = y2 + 10;
+  const s = size * 1.72;
+  const squashY = 0.58;
+  const engineerAccent = color || "#f59e0b";
 
-  // Scale up the turret
-  const scale = 1.5;
-  const s = size * scale;
-
-  // Calculate rotation toward target with smooth tracking
   let rotation = 0;
   if (targetPos) {
-    rotation = Math.atan2(targetPos.y - y, targetPos.x - x);
+    rotation = Math.atan2(targetPos.y - (y - s * 0.08), targetPos.x - x);
   } else {
-    // Idle scanning - sweeping motion
     rotation =
-      Math.sin(time * 0.8) * 1.2 +
-      Math.sin(time * 0.3) * 0.5 +
-      Math.sin(time * 2.2) * 0.12;
+      -0.42 +
+      Math.sin(time * 0.55) * 0.24 +
+      Math.sin(time * 1.45 + 0.8) * 0.07;
   }
 
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
-  const foreshorten = Math.abs(cosR);
-
-  // RAPID FIRE timing - machine gun fires in bursts
+  const foreshorten = 0.56 + Math.abs(cosR) * 0.44;
   const isAttacking = attackPhase > 0;
-  const fireRate = 18; // Rapid fire rate
+  const fireRate = 18;
   const burstPhase = (time * fireRate) % 1;
-  const inBurst = isAttacking && burstPhase < 0.6;
-
-  // Rapid recoil oscillation during firing
-  let recoilOffset = 0;
-  let turretShake = 0;
-  let heatGlow = 0;
-  let barrelVibration = 0;
-
-  if (isAttacking) {
-    // Continuous rapid recoil
-    const rapidCycle = time * fireRate * Math.PI * 2;
-    recoilOffset = Math.sin(rapidCycle) * 3.5 * zoom;
-    turretShake = Math.sin(rapidCycle * 1.5) * 2.5 * zoom;
-    barrelVibration = Math.sin(rapidCycle * 2) * 1.5 * zoom;
-
-    // Heat builds up over time
-    heatGlow = Math.min(1, attackPhase * 1.5 + Math.sin(time * 8) * 0.15);
-  }
-
-  // Apply shake
+  const inBurst = isAttacking && burstPhase < 0.58;
+  const idleBob = Math.sin(time * 2.1) * s * 0.012;
+  const idleHum = Math.sin(time * 1.2 + 0.6) * s * 0.006;
+  const recoilOffset = isAttacking
+    ? Math.sin(time * fireRate * Math.PI * 2) * s * 0.05
+    : 0;
+  const turretShake = isAttacking
+    ? Math.sin(time * fireRate * Math.PI * 1.35) * s * 0.018
+    : 0;
+  const barrelVibration = isAttacking
+    ? Math.sin(time * fireRate * Math.PI * 2.6) * s * 0.012
+    : 0;
+  const heatGlow = isAttacking
+    ? Math.min(1, attackPhase * 1.45 + Math.sin(time * 8.2) * 0.12)
+    : 0;
   const shakeX = turretShake * cosR;
-  const shakeY = turretShake * sinR * 0.5;
+  const shakeY = turretShake * sinR * 0.35;
 
   ctx.save();
 
-  // ========== TRIPOD BASE ==========
-  const baseY = y + s * 0.15;
+  ctx.fillStyle = "rgba(0, 0, 0, 0.36)";
+  ctx.beginPath();
+  ctx.ellipse(x, y + s * 0.42, s * 0.58, s * 0.16, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-  // Draw three tripod legs
-  for (let i = 0; i < 3; i++) {
-    const legAngle = (i / 3) * Math.PI * 2 - Math.PI / 2;
-    const legLength = s * 0.45;
-    const legEndX = x + Math.cos(legAngle) * legLength;
-    const legEndY = baseY + Math.sin(legAngle) * legLength * 0.4 + s * 0.25;
+  const platformLeft = x - s * 0.36;
+  const platformTop = y + s * 0.06 + idleBob;
 
-    // Leg shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+  drawTurretIsometricCrate(
+    ctx,
+    platformLeft,
+    platformTop,
+    s * 0.46,
+    s * 0.2,
+    s * 0.15,
+    {
+      top: "#66735f",
+      side: "#495344",
+      front: "#31392e",
+      outline: "rgba(225, 222, 196, 0.08)",
+    },
+  );
+
+  drawTurretIsometricCrate(
+    ctx,
+    x - s * 0.31,
+    platformTop - s * 0.065,
+    s * 0.21,
+    s * 0.14,
+    s * 0.09,
+    {
+      top: "#4d5848",
+      side: "#374133",
+      front: "#2d352a",
+      outline: "rgba(225, 222, 196, 0.06)",
+    },
+  );
+
+  ctx.fillStyle = "#42503a";
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.08, platformTop + s * 0.03);
+  ctx.lineTo(x + s * 0.16, platformTop + s * 0.03);
+  ctx.lineTo(x + s * 0.28, platformTop + s * 0.11);
+  ctx.lineTo(x + s * 0.03, platformTop + s * 0.11);
+  ctx.closePath();
+  ctx.fill();
+
+  drawTurretBoltRow(
+    ctx,
+    platformLeft + s * 0.03,
+    platformTop + s * 0.035,
+    5,
+    s * 0.09,
+    s * 0.008,
+    "rgba(206, 197, 150, 0.75)",
+  );
+
+  const stabilizers = [
+    {
+      startX: x - s * 0.22,
+      startY: platformTop + s * 0.19,
+      endX: x - s * 0.46,
+      endY: y + s * 0.4,
+    },
+    {
+      startX: x + s * 0.08,
+      startY: platformTop + s * 0.18,
+      endX: x + s * 0.37,
+      endY: y + s * 0.38,
+    },
+    {
+      startX: x - s * 0.03,
+      startY: platformTop + s * 0.2,
+      endX: x - s * 0.02,
+      endY: y + s * 0.47,
+    },
+  ] as const;
+
+  ctx.lineCap = "round";
+  for (const stabilizer of stabilizers) {
+    ctx.strokeStyle = "#464c5b";
+    ctx.lineWidth = s * 0.05;
     ctx.beginPath();
-    ctx.ellipse(
-      legEndX,
-      legEndY + s * 0.02,
-      s * 0.06,
-      s * 0.02,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Main leg strut
-    const legGrad = ctx.createLinearGradient(x, baseY, legEndX, legEndY);
-    legGrad.addColorStop(0, "#3d3d4a");
-    legGrad.addColorStop(0.5, "#4a4a5a");
-    legGrad.addColorStop(1, "#2d2d3a");
-    ctx.strokeStyle = legGrad;
-    ctx.lineWidth = s * 0.055;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(x, baseY);
-    ctx.lineTo(legEndX, legEndY);
+    ctx.moveTo(stabilizer.startX, stabilizer.startY);
+    ctx.lineTo(stabilizer.endX, stabilizer.endY);
     ctx.stroke();
 
-    // Leg joint at base
-    ctx.fillStyle = "#4a4a58";
-    ctx.beginPath();
-    ctx.arc(x, baseY, s * 0.08, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Foot pad with grip teeth
-    ctx.fillStyle = "#2a2a35";
-    ctx.beginPath();
-    ctx.ellipse(
-      legEndX,
-      legEndY,
-      s * 0.055,
-      s * 0.025,
-      legAngle * 0.3,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Foot grip spikes
-    ctx.fillStyle = "#5a5a68";
-    for (let spike = 0; spike < 3; spike++) {
-      const spikeAngle = legAngle + (spike - 1) * 0.4;
-      ctx.beginPath();
-      ctx.arc(
-        legEndX + Math.cos(spikeAngle) * s * 0.04,
-        legEndY + Math.sin(spikeAngle) * s * 0.015,
-        s * 0.012,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
-
-    // Hydraulic strut
-    const midX = (x + legEndX) / 2;
-    const midY = (baseY + legEndY) / 2 - s * 0.03;
-    ctx.strokeStyle = "#5a5a68";
-    ctx.lineWidth = s * 0.025;
+    ctx.strokeStyle = "#7a8293";
+    ctx.lineWidth = s * 0.018;
     ctx.beginPath();
     ctx.moveTo(
-      x + Math.cos(legAngle) * s * 0.1,
-      baseY + Math.sin(legAngle) * s * 0.04,
+      stabilizer.startX + (stabilizer.endX - stabilizer.startX) * 0.22,
+      stabilizer.startY + (stabilizer.endY - stabilizer.startY) * 0.22,
     );
-    ctx.lineTo(midX + Math.cos(legAngle + Math.PI / 2) * s * 0.04, midY);
+    ctx.lineTo(
+      stabilizer.startX + (stabilizer.endX - stabilizer.startX) * 0.66,
+      stabilizer.startY + (stabilizer.endY - stabilizer.startY) * 0.66,
+    );
     ctx.stroke();
 
-    // Piston detail
-    ctx.fillStyle = "#c0c0cc";
+    ctx.fillStyle = "#242831";
     ctx.beginPath();
-    ctx.ellipse(midX, midY, s * 0.02, s * 0.012, legAngle, 0, Math.PI * 2);
+    ctx.ellipse(
+      stabilizer.endX,
+      stabilizer.endY,
+      s * 0.07,
+      s * 0.03,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
-  // ========== CENTRAL PIVOT MOUNT ==========
-  const pivotY = baseY - s * 0.12;
+  const ringX = x - s * 0.02;
+  const ringY = platformTop - s * 0.01;
 
-  // Pivot base plate
-  ctx.fillStyle = "#3a3a48";
+  ctx.fillStyle = "#404947";
   ctx.beginPath();
-  ctx.ellipse(x, pivotY + s * 0.08, s * 0.18, s * 0.06, 0, 0, Math.PI * 2);
+  ctx.ellipse(ringX, ringY + s * 0.12, s * 0.22, s * 0.08, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Rotation bearing ring
-  const bearingGrad = ctx.createLinearGradient(
-    x - s * 0.15,
-    pivotY,
-    x + s * 0.15,
-    pivotY,
+  const ringGrad = ctx.createLinearGradient(
+    ringX - s * 0.16,
+    ringY,
+    ringX + s * 0.16,
+    ringY,
   );
-  bearingGrad.addColorStop(0, "#2a2a35");
-  bearingGrad.addColorStop(0.3, "#4a4a58");
-  bearingGrad.addColorStop(0.7, "#4a4a58");
-  bearingGrad.addColorStop(1, "#2a2a35");
-  ctx.fillStyle = bearingGrad;
+  ringGrad.addColorStop(0, "#252a30");
+  ringGrad.addColorStop(0.25, "#586062");
+  ringGrad.addColorStop(0.5, "#7a8686");
+  ringGrad.addColorStop(0.75, "#586062");
+  ringGrad.addColorStop(1, "#252a30");
+  ctx.fillStyle = ringGrad;
   ctx.beginPath();
-  ctx.ellipse(x, pivotY + s * 0.04, s * 0.14, s * 0.05, 0, 0, Math.PI * 2);
+  ctx.ellipse(ringX, ringY + s * 0.08, s * 0.17, s * 0.06, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Bearing ball details
-  ctx.fillStyle = "#5a5a68";
-  for (let i = 0; i < 12; i++) {
-    const ballAngle = rotation + (i / 12) * Math.PI * 2;
-    const ballX = x + Math.cos(ballAngle) * s * 0.12;
-    const ballY = pivotY + s * 0.04 + Math.sin(ballAngle) * s * 0.035;
+  ctx.fillStyle = "#2a302f";
+  ctx.beginPath();
+  ctx.ellipse(ringX, ringY + s * 0.08, s * 0.095, s * 0.035, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (let i = 0; i < 10; i++) {
+    const rivetAngle = (i / 10) * Math.PI * 2 + time * 0.15;
+    ctx.fillStyle = "rgba(194, 186, 150, 0.72)";
     ctx.beginPath();
-    ctx.arc(ballX, ballY, s * 0.012, 0, Math.PI * 2);
+    ctx.arc(
+      ringX + Math.cos(rivetAngle) * s * 0.135,
+      ringY + s * 0.08 + Math.sin(rivetAngle) * s * 0.045,
+      s * 0.008,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
-  // ========== HEAVY AMMO BOX ==========
-  const ammoBoxX = x - sinR * s * 0.28;
-  const ammoBoxY = pivotY - s * 0.1 + cosR * s * 0.08;
-
-  // Ammo box body - military green with wear
-  const ammoBoxGrad = ctx.createLinearGradient(
-    ammoBoxX - s * 0.15,
-    ammoBoxY - s * 0.12,
-    ammoBoxX + s * 0.15,
-    ammoBoxY + s * 0.12,
+  const ammoLeft = x - s * 0.5;
+  const ammoTop = platformTop + s * 0.01;
+  drawTurretIsometricCrate(
+    ctx,
+    ammoLeft,
+    ammoTop,
+    s * 0.19,
+    s * 0.16,
+    s * 0.08,
+    {
+      top: "#55654f",
+      side: "#3f4b3c",
+      front: "#2b3329",
+      outline: "rgba(225, 222, 196, 0.06)",
+    },
   );
-  ammoBoxGrad.addColorStop(0, "#2d3d2a");
-  ammoBoxGrad.addColorStop(0.3, "#3d4d3a");
-  ammoBoxGrad.addColorStop(0.7, "#354535");
-  ammoBoxGrad.addColorStop(1, "#253025");
-  ctx.fillStyle = ammoBoxGrad;
-
-  // Box shape (isometric)
-  ctx.beginPath();
-  ctx.moveTo(ammoBoxX - s * 0.14, ammoBoxY + s * 0.1);
-  ctx.lineTo(ammoBoxX - s * 0.14, ammoBoxY - s * 0.08);
-  ctx.lineTo(ammoBoxX - s * 0.06, ammoBoxY - s * 0.14);
-  ctx.lineTo(ammoBoxX + s * 0.14, ammoBoxY - s * 0.14);
-  ctx.lineTo(ammoBoxX + s * 0.14, ammoBoxY + s * 0.04);
-  ctx.lineTo(ammoBoxX + s * 0.06, ammoBoxY + s * 0.1);
-  ctx.closePath();
-  ctx.fill();
-
-  // Box top face
-  ctx.fillStyle = "#4a5a48";
-  ctx.beginPath();
-  ctx.moveTo(ammoBoxX - s * 0.06, ammoBoxY - s * 0.14);
-  ctx.lineTo(ammoBoxX + s * 0.14, ammoBoxY - s * 0.14);
-  ctx.lineTo(ammoBoxX + s * 0.06, ammoBoxY - s * 0.2);
-  ctx.lineTo(ammoBoxX - s * 0.14, ammoBoxY - s * 0.2);
-  ctx.closePath();
-  ctx.fill();
-
-  // Ammo box lid latch
-  ctx.fillStyle = "#6a6a78";
-  ctx.beginPath();
-  ctx.roundRect(
-    ammoBoxX - s * 0.02,
-    ammoBoxY - s * 0.19,
-    s * 0.06,
-    s * 0.03,
-    s * 0.005,
+  drawTurretBoltRow(
+    ctx,
+    ammoLeft + s * 0.03,
+    ammoTop + s * 0.045,
+    3,
+    s * 0.045,
+    s * 0.007,
+    "rgba(209, 198, 150, 0.72)",
   );
-  ctx.fill();
-
-  // Warning stripes on ammo box
-  ctx.fillStyle = "#b8860b";
-  ctx.beginPath();
-  ctx.moveTo(ammoBoxX - s * 0.12, ammoBoxY + s * 0.06);
-  ctx.lineTo(ammoBoxX - s * 0.12, ammoBoxY + s * 0.02);
-  ctx.lineTo(ammoBoxX + s * 0.08, ammoBoxY + s * 0.02);
-  ctx.lineTo(ammoBoxX + s * 0.08, ammoBoxY + s * 0.06);
-  ctx.closePath();
-  ctx.fill();
-
-  // Diagonal warning stripes
-  ctx.strokeStyle = "#1a1a1a";
-  ctx.lineWidth = s * 0.01;
-  for (let stripe = 0; stripe < 4; stripe++) {
-    const stripeX = ammoBoxX - s * 0.1 + stripe * s * 0.05;
+  ctx.fillStyle = engineerAccent;
+  ctx.globalAlpha = 0.85;
+  ctx.fillRect(ammoLeft + s * 0.02, ammoTop + s * 0.1, s * 0.13, s * 0.03);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = "rgba(18, 18, 18, 0.85)";
+  ctx.lineWidth = s * 0.009;
+  for (let i = 0; i < 3; i++) {
+    const stripeX = ammoLeft + s * (0.035 + i * 0.04);
     ctx.beginPath();
-    ctx.moveTo(stripeX, ammoBoxY + s * 0.06);
-    ctx.lineTo(stripeX + s * 0.04, ammoBoxY + s * 0.02);
+    ctx.moveTo(stripeX, ammoTop + s * 0.13);
+    ctx.lineTo(stripeX + s * 0.03, ammoTop + s * 0.1);
     ctx.stroke();
   }
 
-  // Carrying handle
-  ctx.strokeStyle = "#4a4a58";
-  ctx.lineWidth = s * 0.02;
+  const gunPivotX = ringX + shakeX;
+  const gunPivotY = ringY - s * 0.03 + idleHum + shakeY;
+
+  ctx.save();
+  ctx.translate(gunPivotX, gunPivotY);
+  ctx.rotate(rotation);
+  ctx.scale(1, squashY);
+
+  ctx.fillStyle = "#31392d";
   ctx.beginPath();
-  ctx.moveTo(ammoBoxX - s * 0.08, ammoBoxY - s * 0.2);
-  ctx.quadraticCurveTo(
-    ammoBoxX,
-    ammoBoxY - s * 0.28,
-    ammoBoxX + s * 0.02,
-    ammoBoxY - s * 0.2,
-  );
-  ctx.stroke();
+  ctx.roundRect(-s * 0.24, -s * 0.11, s * 0.17, s * 0.22, s * 0.03);
+  ctx.fill();
 
-  // ========== AMMO BELT FEEDING ==========
-  const beltStartX = ammoBoxX + s * 0.08;
-  const beltStartY = ammoBoxY - s * 0.12;
-  const beltFeedX = x + shakeX + cosR * s * 0.08;
-  const beltFeedY = pivotY - s * 0.15 + shakeY;
+  ctx.fillStyle = "#586550";
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.07, -s * 0.18);
+  ctx.lineTo(s * 0.2, -s * 0.23);
+  ctx.lineTo(s * 0.3, 0);
+  ctx.lineTo(s * 0.2, s * 0.23);
+  ctx.lineTo(-s * 0.07, s * 0.18);
+  ctx.lineTo(-s * 0.14, 0);
+  ctx.closePath();
+  ctx.fill();
 
-  // Animated belt feed
-  const beltWave = isAttacking ? time * 25 : time * 2;
+  ctx.fillStyle = "#434d40";
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.02, -s * 0.14);
+  ctx.lineTo(s * 0.17, -s * 0.16);
+  ctx.lineTo(s * 0.23, 0);
+  ctx.lineTo(s * 0.17, s * 0.16);
+  ctx.lineTo(-s * 0.02, s * 0.14);
+  ctx.closePath();
+  ctx.fill();
 
-  // Draw belt links
-  const beltSegments = 8;
-  ctx.strokeStyle = "#8b7355";
-  ctx.lineWidth = s * 0.025;
-
-  for (let i = 0; i < beltSegments; i++) {
-    const t = i / (beltSegments - 1);
-    const nextT = (i + 1) / (beltSegments - 1);
-
-    // Curved path with feeding motion
-    const wave = Math.sin(beltWave + i * 0.8) * s * 0.015;
-
-    const linkX = beltStartX + (beltFeedX - beltStartX) * t;
-    const linkY =
-      beltStartY +
-      (beltFeedY - beltStartY) * t -
-      Math.sin(t * Math.PI) * s * 0.08 +
-      wave;
-
-    if (i < beltSegments - 1) {
-      const nextLinkX = beltStartX + (beltFeedX - beltStartX) * nextT;
-      const nextLinkY =
-        beltStartY +
-        (beltFeedY - beltStartY) * nextT -
-        Math.sin(nextT * Math.PI) * s * 0.08 +
-        Math.sin(beltWave + (i + 1) * 0.8) * s * 0.015;
-
-      // Belt link
-      ctx.strokeStyle = "#6d5d4d";
-      ctx.lineWidth = s * 0.018;
-      ctx.beginPath();
-      ctx.moveTo(linkX, linkY);
-      ctx.lineTo(nextLinkX, nextLinkY);
-      ctx.stroke();
-    }
-
-    // Bullet in belt
-    const bulletAngle = Math.atan2(
-      beltFeedY - beltStartY,
-      beltFeedX - beltStartX,
-    );
-
-    // Brass casing
-    ctx.fillStyle = "#d4a520";
-    ctx.beginPath();
-    ctx.ellipse(linkX, linkY, s * 0.022, s * 0.01, bulletAngle, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Bullet tip
-    ctx.fillStyle = "#c0a080";
-    const tipX = linkX + Math.cos(bulletAngle) * s * 0.015;
-    const tipY = linkY + Math.sin(bulletAngle) * s * 0.006;
-    ctx.beginPath();
-    ctx.ellipse(tipX, tipY, s * 0.012, s * 0.007, bulletAngle, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // ========== GUN RECEIVER/BODY (ROTATES WITH TARGET) ==========
-  // Pivot point for the gun
-  const gunPivotX = x + shakeX;
-  const gunPivotY = pivotY - s * 0.12 + shakeY;
-
-  // Draw rotated receiver body
-  const receiverGrad = ctx.createLinearGradient(
-    gunPivotX - s * 0.2 * cosR,
-    gunPivotY - s * 0.2 * sinR * 0.5,
-    gunPivotX + s * 0.2 * cosR,
-    gunPivotY + s * 0.2 * sinR * 0.5,
-  );
-  receiverGrad.addColorStop(0, "#2d2d3a");
-  receiverGrad.addColorStop(0.2, "#4a4a58");
-  receiverGrad.addColorStop(0.5, "#5a5a68");
-  receiverGrad.addColorStop(0.8, "#4a4a58");
-  receiverGrad.addColorStop(1, "#3a3a48");
+  const receiverGrad = ctx.createLinearGradient(-s * 0.1, 0, s * 0.26, 0);
+  receiverGrad.addColorStop(0, "#262a34");
+  receiverGrad.addColorStop(0.2, "#4e5565");
+  receiverGrad.addColorStop(0.5, "#727c90");
+  receiverGrad.addColorStop(0.82, "#4b5260");
+  receiverGrad.addColorStop(1, "#2b3039");
   ctx.fillStyle = receiverGrad;
-
-  // Receiver shape - rotated quadrilateral following gun direction
-  const recvBack = s * 0.08;
-  const recvFront = s * 0.12;
-  const recvWidth = s * 0.06;
   ctx.beginPath();
-  // Back corners
-  ctx.moveTo(
-    gunPivotX - cosR * recvBack + sinR * recvWidth,
-    gunPivotY - sinR * recvBack * 0.5 - cosR * recvWidth * 0.3,
-  );
-  ctx.lineTo(
-    gunPivotX - cosR * recvBack - sinR * recvWidth,
-    gunPivotY - sinR * recvBack * 0.5 + cosR * recvWidth * 0.3,
-  );
-  // Front corners
-  ctx.lineTo(
-    gunPivotX + cosR * recvFront - sinR * recvWidth * 0.8,
-    gunPivotY + sinR * recvFront * 0.5 + cosR * recvWidth * 0.24,
-  );
-  ctx.lineTo(
-    gunPivotX + cosR * recvFront + sinR * recvWidth * 0.8,
-    gunPivotY + sinR * recvFront * 0.5 - cosR * recvWidth * 0.24,
-  );
-  ctx.closePath();
+  ctx.roundRect(-s * 0.08, -s * 0.1, s * 0.36, s * 0.2, s * 0.035);
   ctx.fill();
 
-  // Receiver top cover - follows rotation
-  ctx.fillStyle = "#5a5a68";
-  const topOffset = s * 0.04;
+  ctx.fillStyle = "#6c7689";
   ctx.beginPath();
-  ctx.moveTo(
-    gunPivotX - cosR * recvBack * 0.6 + sinR * recvWidth * 1.1,
-    gunPivotY -
-      sinR * recvBack * 0.3 -
-      cosR * recvWidth * 0.33 -
-      topOffset * 0.5,
+  ctx.roundRect(-s * 0.03, -s * 0.14, s * 0.19, s * 0.06, s * 0.02);
+  ctx.fill();
+  drawTurretBoltRow(
+    ctx,
+    -s * 0.01,
+    -s * 0.11,
+    3,
+    s * 0.055,
+    s * 0.01,
+    "rgba(221, 221, 216, 0.45)",
   );
-  ctx.lineTo(
-    gunPivotX + cosR * recvFront * 0.8 + sinR * recvWidth * 1.1,
-    gunPivotY +
-      sinR * recvFront * 0.4 -
-      cosR * recvWidth * 0.33 -
-      topOffset * 0.3,
-  );
-  ctx.lineTo(
-    gunPivotX + cosR * recvFront * 0.8 + sinR * recvWidth * 0.5,
-    gunPivotY +
-      sinR * recvFront * 0.4 -
-      cosR * recvWidth * 0.15 -
-      topOffset * 0.4,
-  );
-  ctx.lineTo(
-    gunPivotX - cosR * recvBack * 0.6 + sinR * recvWidth * 0.5,
-    gunPivotY -
-      sinR * recvBack * 0.3 -
-      cosR * recvWidth * 0.15 -
-      topOffset * 0.5,
-  );
-  ctx.closePath();
+
+  ctx.fillStyle = "#3f464d";
+  ctx.beginPath();
+  ctx.roundRect(s * 0.01, -s * 0.19, s * 0.17, s * 0.08, s * 0.02);
+  ctx.fill();
+  ctx.fillStyle = targetPos
+    ? `rgba(255, 96, 80, ${0.75 + Math.sin(time * 6.5) * 0.18})`
+    : `rgba(104, 189, 255, ${0.45 + Math.sin(time * 2.8) * 0.12})`;
+  ctx.beginPath();
+  ctx.ellipse(s * 0.1, -s * 0.15, s * 0.045, s * 0.03, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
+  ctx.beginPath();
+  ctx.ellipse(s * 0.085, -s * 0.16, s * 0.014, s * 0.009, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Feed tray cover - on top of receiver, follows rotation
-  ctx.fillStyle = "#4a4a58";
-  const feedTrayX = gunPivotX + sinR * recvWidth * 0.8;
-  const feedTrayY = gunPivotY - cosR * recvWidth * 0.24 - topOffset * 0.5;
-  ctx.beginPath();
-  ctx.ellipse(
-    feedTrayX,
-    feedTrayY,
-    s * 0.06,
-    s * 0.03,
-    rotation,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.fillStyle = "#6a6a78";
-  ctx.beginPath();
-  ctx.arc(feedTrayX, feedTrayY, s * 0.015, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Ejection port - on the side
-  ctx.fillStyle = "#1a1a24";
-  const ejectX = gunPivotX + cosR * s * 0.04 - sinR * recvWidth * 0.9;
-  const ejectY = gunPivotY + sinR * s * 0.02 + cosR * recvWidth * 0.27;
-  ctx.beginPath();
-  ctx.ellipse(ejectX, ejectY, s * 0.025, s * 0.015, rotation, 0, Math.PI * 2);
-  ctx.fill();
-
-  // ========== CHARGING HANDLE ==========
-  const handleDist = s * 0.06;
-  const handleX = gunPivotX - cosR * handleDist + sinR * recvWidth * 0.6;
-  const handleY = gunPivotY - sinR * handleDist * 0.5 - cosR * recvWidth * 0.18;
-  ctx.fillStyle = "#3a3a48";
-  ctx.beginPath();
-  ctx.ellipse(
-    handleX,
-    handleY,
-    s * 0.03,
-    s * 0.015,
-    rotation - Math.PI / 2,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.fillStyle = "#5a5a68";
-  ctx.beginPath();
-  ctx.arc(handleX, handleY, s * 0.01, 0, Math.PI * 2);
-  ctx.fill();
-
-  // ========== HEAVY BARREL WITH COOLING JACKET ==========
-  const barrelStartX = gunPivotX + cosR * s * 0.1 - cosR * recoilOffset;
-  const barrelStartY = gunPivotY + sinR * s * 0.05 - sinR * recoilOffset * 0.5;
-  const barrelLength = s * 0.55;
-
-  // Calculate barrel end - pointing directly at target
-  const barrelEndX =
-    barrelStartX + cosR * barrelLength + barrelVibration * cosR;
-  const barrelEndY =
-    barrelStartY + sinR * barrelLength * 0.5 + barrelVibration * sinR * 0.5;
-
-  const barrelPerpX = -sinR * s * 0.045;
-  const barrelPerpY = cosR * s * 0.045 * 0.5;
-
-  // Barrel shroud/heat shield
-  const shroudGrad = ctx.createLinearGradient(
-    barrelStartX,
-    barrelStartY - s * 0.06,
-    barrelStartX,
-    barrelStartY + s * 0.06,
-  );
-  shroudGrad.addColorStop(0, "#5a5a68");
-  shroudGrad.addColorStop(0.3, "#4a4a58");
-  shroudGrad.addColorStop(0.7, "#3a3a48");
-  shroudGrad.addColorStop(1, "#2a2a35");
-
-  // Draw cooling jacket with ventilation holes
-  const jacketLength = barrelLength * 0.75;
-  for (let ring = 0; ring < 8; ring++) {
-    const t = ring / 7;
-    const ringX = barrelStartX + cosR * jacketLength * t;
-    const ringY = barrelStartY + sinR * jacketLength * t * 0.5;
-
-    // Heat coloring based on firing
-    const heatColor =
-      heatGlow > 0
-        ? `rgba(255, ${150 - ring * 10}, ${50 - ring * 5}, ${heatGlow * 0.3 * (1 - t)})`
-        : null;
-
-    // Cooling ring
-    ctx.fillStyle = shroudGrad;
+  const barrelStartLocalX = s * 0.16 - recoilOffset;
+  const barrelEndLocalX = s * 0.67 - recoilOffset + barrelVibration;
+  const jacketLength = s * 0.34;
+  for (let ring = 0; ring < 9; ring++) {
+    const t = ring / 8;
+    const ringX = barrelStartLocalX + jacketLength * t;
+    const radiusX = s * (0.06 - t * 0.008);
+    const radiusY = s * (0.034 - t * 0.004);
+    ctx.fillStyle = "#525a67";
     ctx.beginPath();
-    ctx.ellipse(ringX, ringY, s * 0.05, s * 0.03, rotation, 0, Math.PI * 2);
+    ctx.ellipse(ringX, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    if (heatColor) {
-      ctx.fillStyle = heatColor;
+    ctx.fillStyle = "#2a2f39";
+    ctx.beginPath();
+    ctx.ellipse(ringX, 0, radiusX * 0.65, radiusY * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (heatGlow > 0.15) {
+      ctx.fillStyle = `rgba(255, 160, 70, ${heatGlow * 0.16 * (1 - t * 0.65)})`;
       ctx.beginPath();
-      ctx.ellipse(ringX, ringY, s * 0.045, s * 0.025, rotation, 0, Math.PI * 2);
+      ctx.ellipse(ringX, 0, radiusX * 0.82, radiusY * 0.75, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-
-    // Ventilation holes
-    if (ring > 0 && ring < 7) {
-      ctx.fillStyle = "#1a1a24";
-      for (let hole = 0; hole < 4; hole++) {
-        const holeAngle = rotation + (hole / 4) * Math.PI * 2 + ring * 0.3;
-        const holeX = ringX + Math.cos(holeAngle) * s * 0.035;
-        const holeY = ringY + Math.sin(holeAngle) * s * 0.02;
-        ctx.beginPath();
-        ctx.ellipse(
-          holeX,
-          holeY,
-          s * 0.008,
-          s * 0.005,
-          holeAngle,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Heat shimmer from holes when firing
-        if (heatGlow > 0.3) {
-          ctx.fillStyle = `rgba(255, 150, 50, ${heatGlow * 0.15})`;
-          ctx.beginPath();
-          ctx.ellipse(
-            holeX,
-            holeY - s * 0.02,
-            s * 0.01,
-            s * 0.015,
-            0,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-        }
-      }
-    }
   }
 
-  // Inner barrel
-  ctx.fillStyle = "#2a2a35";
+  ctx.fillStyle = "#1f232b";
   ctx.beginPath();
-  ctx.moveTo(
-    barrelStartX + barrelPerpX * 0.6,
-    barrelStartY + barrelPerpY * 0.6,
+  ctx.roundRect(
+    barrelStartLocalX - s * 0.01,
+    -s * 0.022,
+    barrelEndLocalX - barrelStartLocalX,
+    s * 0.044,
+    s * 0.012,
   );
-  ctx.lineTo(barrelEndX + barrelPerpX * 0.4, barrelEndY + barrelPerpY * 0.4);
-  ctx.lineTo(barrelEndX - barrelPerpX * 0.4, barrelEndY - barrelPerpY * 0.4);
-  ctx.lineTo(
-    barrelStartX - barrelPerpX * 0.6,
-    barrelStartY - barrelPerpY * 0.6,
-  );
-  ctx.closePath();
   ctx.fill();
 
-  // Barrel heat gradient when firing
-  if (heatGlow > 0) {
-    const heatBarrelGrad = ctx.createLinearGradient(
-      barrelStartX,
-      barrelStartY,
-      barrelEndX,
-      barrelEndY,
-    );
-    heatBarrelGrad.addColorStop(0, `rgba(255, 100, 30, ${heatGlow * 0.2})`);
-    heatBarrelGrad.addColorStop(0.5, `rgba(255, 150, 50, ${heatGlow * 0.35})`);
-    heatBarrelGrad.addColorStop(1, `rgba(255, 200, 100, ${heatGlow * 0.5})`);
-    ctx.strokeStyle = heatBarrelGrad;
-    ctx.lineWidth = s * 0.04;
-    ctx.beginPath();
-    ctx.moveTo(barrelStartX, barrelStartY);
-    ctx.lineTo(barrelEndX, barrelEndY);
-    ctx.stroke();
-  }
+  ctx.strokeStyle = "#40464f";
+  ctx.lineWidth = s * 0.026;
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.03, s * 0.1);
+  ctx.lineTo(s * 0.24, s * 0.12);
+  ctx.stroke();
 
-  // ========== FLASH HIDER / MUZZLE BRAKE ==========
-  const muzzleX = barrelEndX;
-  const muzzleY = barrelEndY;
+  ctx.fillStyle = "#3b434c";
+  ctx.beginPath();
+  ctx.roundRect(
+    barrelEndLocalX - s * 0.005,
+    -s * 0.045,
+    s * 0.085,
+    s * 0.09,
+    s * 0.018,
+  );
+  ctx.fill();
 
-  // Flash hider prongs
-  ctx.fillStyle = "#3a3a48";
-  for (let prong = 0; prong < 4; prong++) {
-    const prongAngle = rotation + (prong / 4) * Math.PI * 2;
-    const prongX = muzzleX + Math.cos(prongAngle) * s * 0.035;
-    const prongY = muzzleY + Math.sin(prongAngle) * s * 0.02;
-    const prongEndX = prongX + cosR * s * 0.06;
-    const prongEndY = prongY + sinR * s * 0.03;
-
-    ctx.beginPath();
-    ctx.moveTo(prongX, prongY);
-    ctx.lineTo(prongEndX, prongEndY);
-    ctx.lineWidth = s * 0.018;
-    ctx.strokeStyle = "#4a4a58";
-    ctx.stroke();
-  }
-
-  // Muzzle bore
-  ctx.fillStyle = "#0a0a0f";
+  ctx.fillStyle = "#11161c";
   ctx.beginPath();
   ctx.ellipse(
-    muzzleX + cosR * s * 0.06,
-    muzzleY + sinR * s * 0.03,
-    s * 0.022 * foreshorten + s * 0.01,
-    s * 0.018,
-    rotation,
+    barrelEndLocalX + s * 0.075,
+    0,
+    s * 0.02 * foreshorten + s * 0.01,
+    s * 0.026,
+    0,
     0,
     Math.PI * 2,
   );
   ctx.fill();
 
-  // ========== MUZZLE FLASH - RAPID FIRE ==========
+  ctx.strokeStyle = "rgba(206, 195, 145, 0.44)";
+  ctx.lineWidth = s * 0.012;
+  ctx.beginPath();
+  ctx.arc(-s * 0.18, -s * 0.14, s * 0.05, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.18, -s * 0.19);
+  ctx.lineTo(-s * 0.18, -s * 0.09);
+  ctx.moveTo(-s * 0.23, -s * 0.14);
+  ctx.lineTo(-s * 0.13, -s * 0.14);
+  ctx.stroke();
+
+  ctx.restore();
+
+  const beltStart = {
+    x: ammoLeft + s * 0.16,
+    y: ammoTop - s * 0.01,
+  };
+  const beltControl = {
+    x: x - s * 0.2 - sinR * s * 0.05,
+    y: platformTop - s * 0.2 - Math.abs(cosR) * s * 0.03,
+  };
+  const beltFeed = projectTurretLocalPoint(
+    gunPivotX,
+    gunPivotY,
+    rotation,
+    squashY,
+    s * 0.03,
+    -s * 0.11,
+  );
+
+  const beltWave = isAttacking ? time * 20 : time * 3;
+  for (let i = 0; i < 8; i++) {
+    const t = i / 7;
+    const nextT = Math.min(1, (i + 1) / 7);
+    const wobble = Math.sin(beltWave + i * 0.9) * s * 0.01;
+    const nextWobble = Math.sin(beltWave + (i + 1) * 0.9) * s * 0.01;
+
+    const linkX =
+      (1 - t) * (1 - t) * beltStart.x +
+      2 * (1 - t) * t * beltControl.x +
+      t * t * beltFeed.x;
+    const linkY =
+      (1 - t) * (1 - t) * beltStart.y +
+      2 * (1 - t) * t * beltControl.y +
+      t * t * beltFeed.y +
+      wobble;
+    const nextLinkX =
+      (1 - nextT) * (1 - nextT) * beltStart.x +
+      2 * (1 - nextT) * nextT * beltControl.x +
+      nextT * nextT * beltFeed.x;
+    const nextLinkY =
+      (1 - nextT) * (1 - nextT) * beltStart.y +
+      2 * (1 - nextT) * nextT * beltControl.y +
+      nextT * nextT * beltFeed.y +
+      nextWobble;
+
+    ctx.strokeStyle = "#5b4d3c";
+    ctx.lineWidth = s * 0.015;
+    ctx.beginPath();
+    ctx.moveTo(linkX, linkY);
+    ctx.lineTo(nextLinkX, nextLinkY);
+    ctx.stroke();
+
+    const bulletAngle = Math.atan2(nextLinkY - linkY, nextLinkX - linkX);
+    ctx.fillStyle = "#caa24d";
+    ctx.beginPath();
+    ctx.ellipse(linkX, linkY, s * 0.02, s * 0.009, bulletAngle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#e5d0a7";
+    ctx.beginPath();
+    ctx.ellipse(
+      linkX + Math.cos(bulletAngle) * s * 0.012,
+      linkY + Math.sin(bulletAngle) * s * 0.012,
+      s * 0.008,
+      s * 0.004,
+      bulletAngle,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  const muzzleTip = projectTurretLocalPoint(
+    gunPivotX,
+    gunPivotY,
+    rotation,
+    squashY,
+    s * 0.78 - recoilOffset + barrelVibration,
+    0,
+  );
+  const ejectPort = projectTurretLocalPoint(
+    gunPivotX,
+    gunPivotY,
+    rotation,
+    squashY,
+    s * 0.02,
+    s * 0.08,
+  );
+  const opticLens = projectTurretLocalPoint(
+    gunPivotX,
+    gunPivotY,
+    rotation,
+    squashY,
+    s * 0.1,
+    -s * 0.15,
+  );
+
+  if (targetPos) {
+    const lockPulse = 0.18 + Math.sin(time * 8) * 0.05;
+    ctx.strokeStyle = `rgba(255, 175, 80, ${lockPulse})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.setLineDash([4 * zoom, 3 * zoom]);
+    ctx.beginPath();
+    ctx.moveTo(opticLens.x, opticLens.y);
+    ctx.lineTo(targetPos.x, targetPos.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = `rgba(255, 110, 80, ${0.55 + Math.sin(time * 7) * 0.18})`;
+    ctx.beginPath();
+    ctx.arc(targetPos.x, targetPos.y, s * 0.015, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   if (isAttacking && inBurst) {
-    const flashIntensity = 0.6 + Math.sin(time * fireRate * Math.PI * 2) * 0.4;
-    const flashSize = s * 0.12 * flashIntensity;
-    const flashX = muzzleX + cosR * s * 0.1;
-    const flashY = muzzleY + sinR * s * 0.05;
-
-    // Multiple flash layers for machine gun effect
-    ctx.shadowColor = "#ffcc00";
-    ctx.shadowBlur = 25 * zoom;
-
-    // Core flash
+    const flashIntensity = 0.62 + Math.sin(time * fireRate * Math.PI * 2) * 0.38;
+    const flashSize = s * 0.14 * flashIntensity;
+    const flashX = muzzleTip.x + cosR * s * 0.02;
+    const flashY = muzzleTip.y + sinR * s * 0.02;
     const flashGrad = ctx.createRadialGradient(
       flashX,
       flashY,
@@ -9717,379 +9585,135 @@ function drawTurretTroop(
       flashY,
       flashSize,
     );
-    flashGrad.addColorStop(0, `rgba(255, 255, 255, ${flashIntensity})`);
-    flashGrad.addColorStop(
-      0.15,
-      `rgba(255, 255, 200, ${flashIntensity * 0.95})`,
-    );
-    flashGrad.addColorStop(0.3, `rgba(255, 220, 100, ${flashIntensity * 0.8})`);
-    flashGrad.addColorStop(0.5, `rgba(255, 150, 50, ${flashIntensity * 0.5})`);
-    flashGrad.addColorStop(0.7, `rgba(255, 80, 20, ${flashIntensity * 0.3})`);
-    flashGrad.addColorStop(1, "rgba(255, 50, 0, 0)");
+    flashGrad.addColorStop(0, `rgba(255,255,255,${flashIntensity})`);
+    flashGrad.addColorStop(0.2, `rgba(255,236,174,${flashIntensity * 0.88})`);
+    flashGrad.addColorStop(0.5, `rgba(255,170,78,${flashIntensity * 0.52})`);
+    flashGrad.addColorStop(1, "rgba(255,80,20,0)");
     ctx.fillStyle = flashGrad;
     ctx.beginPath();
     ctx.arc(flashX, flashY, flashSize, 0, Math.PI * 2);
     ctx.fill();
 
-    // Star-burst flash spikes
-    ctx.strokeStyle = `rgba(255, 255, 200, ${flashIntensity * 0.8})`;
-    ctx.lineWidth = 2 * zoom;
-    for (let spike = 0; spike < 6; spike++) {
-      const spikeAngle = rotation + (spike / 6) * Math.PI * 2 + time * 15;
-      const spikeLen = flashSize * (0.8 + Math.sin(time * 50 + spike) * 0.4);
-      ctx.beginPath();
-      ctx.moveTo(flashX, flashY);
-      ctx.lineTo(
-        flashX + Math.cos(spikeAngle) * spikeLen,
-        flashY + Math.sin(spikeAngle) * spikeLen * 0.5,
-      );
-      ctx.stroke();
-    }
-
-    // Forward flash cone
-    ctx.fillStyle = `rgba(255, 200, 100, ${flashIntensity * 0.4})`;
+    ctx.fillStyle = `rgba(255, 205, 120, ${flashIntensity * 0.5})`;
     ctx.beginPath();
     ctx.moveTo(flashX, flashY);
     ctx.lineTo(
-      flashX + cosR * flashSize * 2 + sinR * flashSize * 0.5,
-      flashY + sinR * flashSize + cosR * flashSize * 0.25,
+      flashX + cosR * flashSize * 2.3 + sinR * flashSize * 0.45,
+      flashY + sinR * flashSize * 1.2 - cosR * flashSize * 0.25,
     );
     ctx.lineTo(
-      flashX + cosR * flashSize * 2 - sinR * flashSize * 0.5,
-      flashY + sinR * flashSize - cosR * flashSize * 0.25,
+      flashX + cosR * flashSize * 2.3 - sinR * flashSize * 0.45,
+      flashY + sinR * flashSize * 1.2 + cosR * flashSize * 0.25,
     );
     ctx.closePath();
     ctx.fill();
-
-    ctx.shadowBlur = 0;
   }
 
-  // ========== BULLET TRACERS ==========
   if (isAttacking && targetPos) {
-    // Draw multiple bullet tracers for machine gun effect
-    const numTracers = 4;
-    for (let tracer = 0; tracer < numTracers; tracer++) {
-      const tracerPhase = (time * fireRate + tracer * 0.25) % 1;
-      const tracerProgress = tracerPhase;
+    for (let tracer = 0; tracer < 3; tracer++) {
+      const tracerPhase = (time * fireRate + tracer * 0.27) % 1;
+      if (tracerPhase > 0.82) continue;
 
-      if (tracerProgress < 0.8) {
-        const tracerStartX = muzzleX + cosR * s * 0.08;
-        const tracerStartY = muzzleY + sinR * s * 0.04;
-
-        // Tracer travels toward target
-        const tracerX =
-          tracerStartX + (targetPos.x - tracerStartX) * tracerProgress;
-        const tracerY =
-          tracerStartY + (targetPos.y - tracerStartY) * tracerProgress;
-
-        // Tracer trail length
-        const trailLength = s * 0.15;
-        const trailX = tracerX - cosR * trailLength;
-        const trailY = tracerY - sinR * trailLength * 0.5;
-
-        // Tracer glow
-        const tracerAlpha = 1 - tracerProgress * 0.8;
-        ctx.shadowColor = "#ffff00";
-        ctx.shadowBlur = 8 * zoom;
-
-        // Tracer trail
-        const tracerGrad = ctx.createLinearGradient(
-          trailX,
-          trailY,
-          tracerX,
-          tracerY,
-        );
-        tracerGrad.addColorStop(0, `rgba(255, 200, 50, 0)`);
-        tracerGrad.addColorStop(
-          0.5,
-          `rgba(255, 220, 100, ${tracerAlpha * 0.5})`,
-        );
-        tracerGrad.addColorStop(1, `rgba(255, 255, 200, ${tracerAlpha})`);
-        ctx.strokeStyle = tracerGrad;
-        ctx.lineWidth = 3 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(trailX, trailY);
-        ctx.lineTo(tracerX, tracerY);
-        ctx.stroke();
-
-        // Bright tracer head
-        ctx.fillStyle = `rgba(255, 255, 220, ${tracerAlpha})`;
-        ctx.beginPath();
-        ctx.arc(tracerX, tracerY, s * 0.015, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-      }
+      const headX = muzzleTip.x + (targetPos.x - muzzleTip.x) * tracerPhase;
+      const headY = muzzleTip.y + (targetPos.y - muzzleTip.y) * tracerPhase;
+      const tailX = headX - cosR * s * 0.16;
+      const tailY = headY - sinR * s * 0.08;
+      const tracerAlpha = 1 - tracerPhase * 0.75;
+      const tracerGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
+      tracerGrad.addColorStop(0, "rgba(255, 210, 90, 0)");
+      tracerGrad.addColorStop(0.5, `rgba(255, 218, 126, ${tracerAlpha * 0.45})`);
+      tracerGrad.addColorStop(1, `rgba(255, 245, 210, ${tracerAlpha})`);
+      ctx.strokeStyle = tracerGrad;
+      ctx.lineWidth = 2.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tailX, tailY);
+      ctx.lineTo(headX, headY);
+      ctx.stroke();
     }
   }
 
-  // ========== SHELL CASINGS EJECTING ==========
   if (isAttacking) {
-    const casingEjectX = gunPivotX + sinR * s * 0.1;
-    const casingEjectY = gunPivotY - cosR * s * 0.02;
+    for (let casing = 0; casing < 4; casing++) {
+      const casingPhase = (time * fireRate * 0.76 + casing * 0.23) % 1;
+      if (casingPhase > 0.62) continue;
 
-    // Multiple casings for rapid fire
-    for (let casing = 0; casing < 5; casing++) {
-      const casingPhase = (time * fireRate * 0.8 + casing * 0.2) % 1;
+      const ejectProgress = casingPhase / 0.62;
+      const ejectAngle = rotation + Math.PI * 0.72;
+      const casingX =
+        ejectPort.x +
+        Math.cos(ejectAngle) * s * 0.28 * ejectProgress +
+        Math.sin(time * 34 + casing * 2) * s * 0.01;
+      const casingY =
+        ejectPort.y +
+        Math.sin(ejectAngle) * s * 0.12 * ejectProgress +
+        s * 0.42 * ejectProgress * ejectProgress;
+      const spin = time * 24 + casing;
 
-      if (casingPhase < 0.6) {
-        // Casing trajectory - arcing eject
-        const ejectProgress = casingPhase / 0.6;
-        const ejectAngle = -Math.PI * 0.3 + rotation;
-        const ejectSpeed = s * 0.4;
-        const gravity = s * 0.8;
-
-        const casingX =
-          casingEjectX +
-          Math.cos(ejectAngle) * ejectSpeed * ejectProgress +
-          (Math.sin(time * 50 + casing * 7) * 0.5 - 0.25) * s * 0.02;
-        const casingY =
-          casingEjectY +
-          Math.sin(ejectAngle) * ejectSpeed * ejectProgress * 0.5 +
-          gravity * ejectProgress * ejectProgress;
-
-        // Spinning casing
-        const spinAngle = time * 30 + casing * 2;
-
-        // Brass casing
-        ctx.fillStyle = "#d4a520";
-        ctx.beginPath();
-        ctx.ellipse(
-          casingX,
-          casingY,
-          s * 0.018,
-          s * 0.008,
-          spinAngle,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Casing rim
-        ctx.fillStyle = "#b8960b";
-        ctx.beginPath();
-        ctx.arc(
-          casingX - Math.cos(spinAngle) * s * 0.012,
-          casingY - Math.sin(spinAngle) * s * 0.005,
-          s * 0.006,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Hot casing glow
-        if (heatGlow > 0.3) {
-          ctx.fillStyle = `rgba(255, 200, 100, ${heatGlow * 0.3 * (1 - ejectProgress)})`;
-          ctx.beginPath();
-          ctx.ellipse(
-            casingX,
-            casingY,
-            s * 0.022,
-            s * 0.012,
-            spinAngle,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-        }
-      }
+      ctx.fillStyle = "#d0a54f";
+      ctx.beginPath();
+      ctx.ellipse(
+        casingX,
+        casingY,
+        s * 0.016,
+        s * 0.007,
+        spin,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
     }
   }
 
-  // ========== SMOKE EFFECTS ==========
   if (isAttacking) {
-    // Barrel smoke
     for (let smoke = 0; smoke < 3; smoke++) {
-      const smokePhase = (time * 2 + smoke * 0.33) % 1;
+      const smokePhase = (time * 1.7 + smoke * 0.28) % 1;
       const smokeX =
-        muzzleX +
-        cosR * s * 0.08 +
-        (Math.sin(time * 3 + smoke) - 0.5) * s * 0.04;
-      const smokeY = muzzleY + sinR * s * 0.04 - smokePhase * s * 0.15;
-      const smokeSize = s * 0.03 + smokePhase * s * 0.04;
-      const smokeAlpha = (1 - smokePhase) * 0.25 * heatGlow;
-
-      ctx.fillStyle = `rgba(150, 150, 160, ${smokeAlpha})`;
+        muzzleTip.x +
+        cosR * s * (0.06 + smokePhase * 0.08) -
+        sinR * s * 0.04 * smoke;
+      const smokeY =
+        muzzleTip.y +
+        sinR * s * (0.03 + smokePhase * 0.06) -
+        smokePhase * s * 0.12;
+      const smokeSize = s * (0.025 + smokePhase * 0.04);
+      ctx.fillStyle = `rgba(132, 136, 144, ${(1 - smokePhase) * (0.18 + heatGlow * 0.12)})`;
       ctx.beginPath();
       ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
 
-    // Ejection port smoke
-    const portSmokeX = gunPivotX + sinR * s * 0.08;
-    const portSmokeY =
-      gunPivotY - cosR * s * 0.04 - Math.sin(time * 5) * s * 0.02;
-    ctx.fillStyle = `rgba(100, 100, 110, ${heatGlow * 0.2})`;
+  const ammoLedPulse = 0.45 + Math.sin(time * 4.2) * 0.16;
+  ctx.fillStyle = `rgba(110, 255, 160, ${ammoLedPulse})`;
+  ctx.beginPath();
+  ctx.arc(ammoLeft + s * 0.15, ammoTop + s * 0.03, s * 0.012, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (heatGlow > 0.35) {
+    const heatPulse = Math.sin(time * 14) > 0 ? 1 : 0.35;
+    ctx.fillStyle = `rgba(255, 92, 48, ${heatPulse})`;
     ctx.beginPath();
-    ctx.arc(portSmokeX, portSmokeY, s * 0.025, 0, Math.PI * 2);
+    ctx.arc(gunPivotX + s * 0.08, gunPivotY - s * 0.12, s * 0.014, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // ========== TARGETING OPTICS ==========
-  const opticX = gunPivotX - sinR * s * 0.08;
-  const opticY = gunPivotY - s * 0.12 + cosR * s * 0.02;
-
-  // Optic housing
-  ctx.fillStyle = "#2a2a35";
+  ctx.strokeStyle = engineerAccent;
+  ctx.lineWidth = 1.4 * zoom;
+  const emblemX = x - s * 0.07;
+  const emblemY = platformTop + s * 0.125;
   ctx.beginPath();
-  ctx.ellipse(
-    opticX,
-    opticY,
-    s * 0.05,
-    s * 0.035,
-    rotation * 0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Optic lens
-  const lensGlow = targetPos
-    ? 0.8 + Math.sin(time * 6) * 0.2
-    : 0.4 + Math.sin(time * 2) * 0.1;
-  const lensColor = targetPos
-    ? `rgba(255, 50, 50, ${lensGlow})`
-    : `rgba(50, 200, 255, ${lensGlow})`;
-  ctx.fillStyle = lensColor;
-  ctx.shadowColor = targetPos ? "#ff3232" : "#00aaff";
-  ctx.shadowBlur = 6 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    opticX,
-    opticY,
-    s * 0.03,
-    s * 0.02,
-    rotation * 0.3,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Lens reflection
-  ctx.fillStyle = `rgba(255, 255, 255, ${lensGlow * 0.3})`;
-  ctx.beginPath();
-  ctx.ellipse(
-    opticX - s * 0.01,
-    opticY - s * 0.008,
-    s * 0.01,
-    s * 0.006,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // ========== TARGETING LASER BEAM ==========
-  if (targetPos) {
-    const laserStartX = opticX + cosR * s * 0.04;
-    const laserStartY = opticY + sinR * s * 0.02;
-
-    // Pulsing laser when locked on
-    const laserPulse = 0.5 + Math.sin(time * 12) * 0.3;
-
-    // Laser beam to target
-    ctx.strokeStyle = `rgba(255, 0, 0, ${laserPulse * 0.4})`;
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.setLineDash([4 * zoom, 3 * zoom]);
-    ctx.beginPath();
-    ctx.moveTo(laserStartX, laserStartY);
-    ctx.lineTo(targetPos.x, targetPos.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Laser dot on target
-    ctx.fillStyle = `rgba(255, 0, 0, ${laserPulse})`;
-    ctx.shadowColor = "#ff0000";
-    ctx.shadowBlur = 10 * zoom;
-    ctx.beginPath();
-    ctx.arc(targetPos.x, targetPos.y, s * 0.02, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Targeting reticle on target
-    ctx.strokeStyle = `rgba(255, 50, 50, ${laserPulse * 0.6})`;
-    ctx.lineWidth = 1 * zoom;
-    const reticleSize = s * 0.08;
-    ctx.beginPath();
-    ctx.arc(targetPos.x, targetPos.y, reticleSize, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Crosshairs
-    ctx.beginPath();
-    ctx.moveTo(targetPos.x - reticleSize * 1.3, targetPos.y);
-    ctx.lineTo(targetPos.x - reticleSize * 0.5, targetPos.y);
-    ctx.moveTo(targetPos.x + reticleSize * 0.5, targetPos.y);
-    ctx.lineTo(targetPos.x + reticleSize * 1.3, targetPos.y);
-    ctx.moveTo(targetPos.x, targetPos.y - reticleSize * 1.3);
-    ctx.lineTo(targetPos.x, targetPos.y - reticleSize * 0.5);
-    ctx.moveTo(targetPos.x, targetPos.y + reticleSize * 0.5);
-    ctx.lineTo(targetPos.x, targetPos.y + reticleSize * 1.3);
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-  }
-
-  // ========== STATUS INDICATORS ==========
-  // Ammo counter LED
-  const ammoLedX = ammoBoxX + s * 0.1;
-  const ammoLedY = ammoBoxY - s * 0.08;
-  const ammoGlow = 0.6 + Math.sin(time * 4) * 0.2;
-  ctx.fillStyle = `rgba(50, 255, 100, ${ammoGlow})`;
-  ctx.shadowColor = "#32ff64";
-  ctx.shadowBlur = 4 * zoom;
-  ctx.beginPath();
-  ctx.arc(ammoLedX, ammoLedY, s * 0.012, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // Heat warning LED (blinks when hot)
-  if (heatGlow > 0.5) {
-    const heatLedX = gunPivotX + s * 0.12;
-    const heatLedY = gunPivotY - s * 0.08;
-    const heatBlink = Math.sin(time * 15) > 0 ? 1 : 0.3;
-    ctx.fillStyle = `rgba(255, 80, 30, ${heatBlink})`;
-    ctx.shadowColor = "#ff5020";
-    ctx.shadowBlur = 6 * zoom;
-    ctx.beginPath();
-    ctx.arc(heatLedX, heatLedY, s * 0.015, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  }
-
-  // Power indicator
-  const powerLedX = gunPivotX - s * 0.12;
-  const powerLedY = gunPivotY - s * 0.08;
-  const powerPulse = isAttacking ? 1 : 0.5 + Math.sin(time * 2) * 0.2;
-  ctx.fillStyle = isAttacking
-    ? `rgba(255, 150, 50, ${powerPulse})`
-    : `rgba(50, 200, 255, ${powerPulse})`;
-  ctx.shadowColor = isAttacking ? "#ff9632" : "#32c8ff";
-  ctx.shadowBlur = 4 * zoom;
-  ctx.beginPath();
-  ctx.arc(powerLedX, powerLedY, s * 0.01, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-
-  // ========== ENGINEER EMBLEM ==========
-  ctx.strokeStyle = "#fbbf24";
-  ctx.lineWidth = 1.5 * zoom;
-  const emblemX = x;
-  const emblemY = pivotY + s * 0.12;
-  ctx.beginPath();
-  ctx.arc(emblemX, emblemY, s * 0.035, 0, Math.PI * 2);
+  ctx.arc(emblemX, emblemY, s * 0.032, 0, Math.PI * 2);
   ctx.stroke();
-
-  // Rotating gear teeth
-  for (let i = 0; i < 8; i++) {
-    const gearAngle = (i / 8) * Math.PI * 2 + time * (isAttacking ? 3 : 0.5);
+  for (let i = 0; i < 6; i++) {
+    const toothAngle = (i / 6) * Math.PI * 2 + time * (isAttacking ? 1.7 : 0.35);
     ctx.beginPath();
     ctx.moveTo(
-      emblemX + Math.cos(gearAngle) * s * 0.035,
-      emblemY + Math.sin(gearAngle) * s * 0.035,
+      emblemX + Math.cos(toothAngle) * s * 0.032,
+      emblemY + Math.sin(toothAngle) * s * 0.032,
     );
     ctx.lineTo(
-      emblemX + Math.cos(gearAngle) * s * 0.05,
-      emblemY + Math.sin(gearAngle) * s * 0.05,
+      emblemX + Math.cos(toothAngle) * s * 0.046,
+      emblemY + Math.sin(toothAngle) * s * 0.046,
     );
     ctx.stroke();
   }

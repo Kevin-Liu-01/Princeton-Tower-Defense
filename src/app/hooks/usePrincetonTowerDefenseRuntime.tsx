@@ -99,6 +99,8 @@ import { calculateTowerStats, getUpgradeCost } from "../constants/towerStats";
 // Rendering
 import {
   renderTower,
+  renderTowerGroundTransition,
+  getTowerFoundationSize,
   renderEnemy,
   renderHero,
   renderTroop,
@@ -5641,7 +5643,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 (!(troop.overrideHybridMelee ?? false) ||
                   targetDistance > MELEE_RANGE * 1.05);
               const isReinforcementLancer =
-                troop.type === "knight" &&
+                troop.type === "reinforcement" &&
                 troop.ownerType === "spell" &&
                 (troop.visualTier ?? 0) >= 5;
               // Apply damage immediately (projectile is just visual)
@@ -5659,7 +5661,9 @@ export function usePrincetonTowerDefenseRuntime() {
                 const troopEffectType: EffectType =
                   isReinforcementLancer
                     ? "impact_hit"
-                    : troop.type === "knight" || troop.type === "cavalry"
+                    : troop.type === "knight" ||
+                        troop.type === "reinforcement" ||
+                        troop.type === "cavalry"
                       ? "melee_slash"
                       : troop.type === "armored" || troop.type === "elite"
                         ? "melee_swipe"
@@ -5678,7 +5682,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 const projType =
                   troop.type === "turret"
                     ? "bullet"
-                    : troop.type === "knight"
+                    : troop.type === "knight" || troop.type === "reinforcement"
                       ? isReinforcementLancer
                         ? "spear"
                         : "bolt"
@@ -5686,7 +5690,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 const spawnOffset =
                   troop.type === "centaur"
                     ? { x: 0, y: -20 }
-                    : troop.type === "knight"
+                    : troop.type === "knight" || troop.type === "reinforcement"
                       ? isReinforcementLancer
                         ? { x: 0, y: -16 }
                         : { x: 0, y: -12 }
@@ -8039,196 +8043,6 @@ export function usePrincetonTowerDefenseRuntime() {
     renderables.sort((a, b) => a.isoY - b.isoY);
 
     // =========================================================================
-    // EPIC ISOMETRIC BUFF AURA
-    // =========================================================================
-    towers.forEach((t) => {
-      const hasDamageBuff = t.damageBoost && t.damageBoost > 1;
-      const hasRangeBuff = t.rangeBoost && t.rangeBoost > 1;
-      const hasAttackSpeedBuff =
-        t.attackSpeedBoost && t.attackSpeedBoost > 1;
-
-      // If no buff is active, don't render the aura
-      if (!hasDamageBuff && !hasRangeBuff && !hasAttackSpeedBuff && !t.isBuffed)
-        return;
-
-      const activeBuffCount =
-        Number(hasDamageBuff) + Number(hasRangeBuff) + Number(hasAttackSpeedBuff);
-      const theme =
-        activeBuffCount >= 2
-          ? {
-            base: "255, 220, 140",
-            accent: "255, 200, 90",
-            glow: "#ffe08c",
-            fill: "rgba(255, 220, 140, 0.08)",
-            icon: "✦",
-          }
-          : hasAttackSpeedBuff
-            ? {
-              base: "165, 180, 255",
-              accent: "129, 140, 248",
-              glow: "#a5b4fc",
-              fill: "rgba(165, 180, 255, 0.08)",
-              icon: "⌁",
-            }
-            : hasDamageBuff
-              ? {
-                base: "255, 100, 100",
-                accent: "255, 150, 50",
-                glow: "#ff6464",
-                fill: "rgba(255, 100, 100, 0.06)",
-                icon: "◆",
-              }
-              : {
-                base: "100, 200, 255",
-                accent: "50, 150, 255",
-                glow: "#64c8ff",
-                fill: "rgba(100, 200, 255, 0.06)",
-                icon: "◎",
-              };
-
-      const time = nowSeconds;
-      const sPos = toScreen(gridToWorld(t.pos));
-      const s = cameraZoom;
-
-      // Calculate dynamic pulse - more pronounced for visibility
-      const pulse = Math.sin(time * 4) * 0.08;
-      const opacity = 0.6 + Math.sin(time * 2) * 0.25;
-      const buffPulse = 0.5 + Math.sin(time * 4) * 0.5;
-
-      ctx.save();
-      ctx.translate(sPos.x, sPos.y);
-
-      // --- Enhanced Glow Effect (before isometric transform) ---
-      ctx.shadowColor = theme.glow;
-      ctx.shadowBlur = 25 * s * buffPulse;
-
-      // Squish into 2:1 isometric perspective
-      ctx.scale(1, ISO_Y_RATIO);
-
-      // --- 1. Soft Core Glow (No rotation) - Larger and more visible ---
-      const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 50 * s);
-      innerGlow.addColorStop(0, `rgba(${theme.base}, ${0.5 * opacity})`);
-      innerGlow.addColorStop(0.5, `rgba(${theme.base}, ${0.25 * opacity})`);
-      innerGlow.addColorStop(1, `rgba(${theme.base}, 0)`);
-      ctx.fillStyle = innerGlow;
-      ctx.beginPath();
-      ctx.arc(0, 0, 55 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // --- 2. Outer Orbiting Ring (Counter-Clockwise) - Thicker and brighter ---
-      ctx.save();
-      ctx.rotate(-time * 0.6);
-      ctx.strokeStyle = `rgba(${theme.base}, ${0.7 * opacity})`;
-      ctx.lineWidth = 3 * s;
-      ctx.setLineDash([12 * s, 6 * s]);
-      ctx.beginPath();
-      ctx.arc(0, 0, 45 * s * (1 + pulse), 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Add glowing dots on the outer ring
-      const dotCount = activeBuffCount >= 2 ? 6 : 4;
-      for (let i = 0; i < dotCount; i++) {
-        ctx.rotate((Math.PI * 2) / dotCount);
-        ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + Math.sin(time * 5 + i) * 0.2})`;
-        ctx.shadowColor = theme.glow;
-        ctx.shadowBlur = 8 * s;
-        ctx.beginPath();
-        ctx.arc(45 * s * (1 + pulse), 0, 3 * s, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      // --- 3. The Main Runic Seal (Overlapping Triangles) ---
-      ctx.save();
-      ctx.rotate(time * 0.8);
-
-      const drawTriangle = (size: number, color: string) => {
-        ctx.beginPath();
-        for (let i = 0; i < 3; i++) {
-          const angle = (i * Math.PI * 2) / 3;
-          const x = Math.cos(angle) * size;
-          const y = Math.sin(angle) * size;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-        ctx.strokeStyle = color;
-        ctx.stroke();
-      };
-
-      ctx.lineWidth = 2 * s;
-      // Double triangle (Star of David style)
-      drawTriangle(32 * s, `rgba(${theme.accent}, ${0.85 * opacity})`);
-      ctx.rotate(Math.PI);
-      drawTriangle(32 * s, `rgba(${theme.accent}, ${0.85 * opacity})`);
-
-      ctx.fillStyle = theme.fill;
-      ctx.fill();
-      ctx.restore();
-
-      // --- 4. Inner Orbitals (Floating Particles) - More particles for combined buff ---
-      ctx.save();
-      ctx.rotate(time * 1.5);
-      const orbitalCount = activeBuffCount >= 2 ? 5 : 3;
-      for (let i = 0; i < orbitalCount; i++) {
-        ctx.rotate((Math.PI * 2) / orbitalCount);
-        const orbitDist = 20 * s + Math.sin(time * 3 + i) * 6 * s;
-        ctx.fillStyle = "#FFFFFF";
-        ctx.shadowBlur = 12 * s;
-        ctx.shadowColor = theme.glow;
-        ctx.beginPath();
-        ctx.arc(orbitDist, 0, 3.5 * s, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      // --- 5. Rising particles effect ---
-      ctx.shadowBlur = 0;
-      for (let i = 0; i < 4; i++) {
-        const riseProgress = ((time * 0.8 + i * 0.25) % 1);
-        const riseY = -riseProgress * 60 * s;
-        const riseAlpha = (1 - riseProgress) * 0.6 * buffPulse;
-        const riseX = Math.sin(time * 3 + i * 2) * 20 * s;
-
-        ctx.fillStyle = `rgba(${theme.base}, ${riseAlpha})`;
-        ctx.shadowColor = theme.glow;
-        ctx.shadowBlur = 6 * s;
-        ctx.beginPath();
-        ctx.arc(riseX, riseY, 2.5 * s, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // --- 6. Buff Icon at Bottom of Aura Ring (in isometric space) ---
-      ctx.shadowBlur = 0;
-      const iconY = 50 * s; // Bottom of the isometric ring
-
-      // Glowing icon background circle
-      ctx.fillStyle = `rgba(0, 0, 0, 0.6)`;
-      ctx.shadowColor = theme.glow;
-      ctx.shadowBlur = 12 * s * buffPulse;
-      ctx.beginPath();
-      ctx.arc(0, iconY, 10 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Icon border
-      ctx.strokeStyle = `rgba(${theme.base}, ${0.8 + buffPulse * 0.2})`;
-      ctx.lineWidth = 2 * s;
-      ctx.stroke();
-
-      ctx.restore();
-
-      // Draw icon outside isometric transform for proper text rendering
-      ctx.save();
-      ctx.shadowColor = theme.glow;
-      ctx.shadowBlur = 8 * s * buffPulse;
-      ctx.fillStyle = `rgba(${theme.base}, 1)`;
-      ctx.font = `bold ${11 * s}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(theme.icon, sPos.x, sPos.y + 25 * s); // Bottom of aura in screen space
-      ctx.restore();
-    });
-    // =========================================================================
     // SPECIAL BUILDING RANGE RINGS (On Hover)
     // =========================================================================
     if (hoveredSpecialTower) {
@@ -8453,6 +8267,210 @@ export function usePrincetonTowerDefenseRuntime() {
         cameraZoom
       );
     }
+
+    // Pre-pass: draw ALL tower ground transitions before any tower bodies
+    for (const r of renderables) {
+      if (r.type === "tower") {
+        renderTowerGroundTransition(
+          ctx,
+          r.data as Tower,
+          canvas.width,
+          canvas.height,
+          dpr,
+          selectedMap,
+          cameraOffset,
+          cameraZoom,
+        );
+      }
+    }
+
+    // =========================================================================
+    // EPIC ISOMETRIC BUFF AURA (rendered above ground transitions, below towers)
+    // =========================================================================
+    towers.forEach((t) => {
+      const hasDamageBuff = t.damageBoost && t.damageBoost > 1;
+      const hasRangeBuff = t.rangeBoost && t.rangeBoost > 1;
+      const hasAttackSpeedBuff =
+        t.attackSpeedBoost && t.attackSpeedBoost > 1;
+
+      if (!hasDamageBuff && !hasRangeBuff && !hasAttackSpeedBuff && !t.isBuffed)
+        return;
+
+      const activeBuffCount =
+        Number(hasDamageBuff) + Number(hasRangeBuff) + Number(hasAttackSpeedBuff);
+      const theme =
+        activeBuffCount >= 2
+          ? {
+            base: "255, 220, 140",
+            accent: "255, 200, 90",
+            glow: "#ffe08c",
+            fill: "rgba(255, 220, 140, 0.08)",
+            icon: "✦",
+          }
+          : hasAttackSpeedBuff
+            ? {
+              base: "165, 180, 255",
+              accent: "129, 140, 248",
+              glow: "#a5b4fc",
+              fill: "rgba(165, 180, 255, 0.08)",
+              icon: "⌁",
+            }
+            : hasDamageBuff
+              ? {
+                base: "255, 100, 100",
+                accent: "255, 150, 50",
+                glow: "#ff6464",
+                fill: "rgba(255, 100, 100, 0.06)",
+                icon: "◆",
+              }
+              : {
+                base: "100, 200, 255",
+                accent: "50, 150, 255",
+                glow: "#64c8ff",
+                fill: "rgba(100, 200, 255, 0.06)",
+                icon: "◎",
+              };
+
+      const time = nowSeconds;
+      const sPos = toScreen(gridToWorld(t.pos));
+      const s = cameraZoom;
+
+      const fnd = getTowerFoundationSize(t);
+      const auraR = Math.max(fnd.w, fnd.d) * 0.5 * s;
+      const outerR = auraR * 1.15;
+      const sealR = auraR * 0.7;
+      const orbitR = auraR * 0.45;
+
+      const pulse = Math.sin(time * 4) * 0.08;
+      const opacity = 0.6 + Math.sin(time * 2) * 0.25;
+      const buffPulse = 0.5 + Math.sin(time * 4) * 0.5;
+
+      ctx.save();
+      ctx.translate(sPos.x, sPos.y + 10 * s);
+
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 25 * s * buffPulse;
+
+      ctx.scale(1, ISO_Y_RATIO);
+
+      // 1. Soft Core Glow
+      const innerGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, outerR * 1.1);
+      innerGlow.addColorStop(0, `rgba(${theme.base}, ${0.5 * opacity})`);
+      innerGlow.addColorStop(0.5, `rgba(${theme.base}, ${0.25 * opacity})`);
+      innerGlow.addColorStop(1, `rgba(${theme.base}, 0)`);
+      ctx.fillStyle = innerGlow;
+      ctx.beginPath();
+      ctx.arc(0, 0, outerR * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Outer Orbiting Ring
+      ctx.save();
+      ctx.rotate(-time * 0.6);
+      ctx.strokeStyle = `rgba(${theme.base}, ${0.7 * opacity})`;
+      ctx.lineWidth = 3 * s;
+      ctx.setLineDash([12 * s, 6 * s]);
+      ctx.beginPath();
+      ctx.arc(0, 0, outerR * (1 + pulse), 0, Math.PI * 2);
+      ctx.stroke();
+
+      const dotCount = activeBuffCount >= 2 ? 6 : 4;
+      for (let i = 0; i < dotCount; i++) {
+        ctx.rotate((Math.PI * 2) / dotCount);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + Math.sin(time * 5 + i) * 0.2})`;
+        ctx.shadowColor = theme.glow;
+        ctx.shadowBlur = 8 * s;
+        ctx.beginPath();
+        ctx.arc(outerR * (1 + pulse), 0, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // 3. Runic Seal (Overlapping Triangles)
+      ctx.save();
+      ctx.rotate(time * 0.8);
+
+      const drawTriangle = (size: number, color: string) => {
+        ctx.beginPath();
+        for (let i = 0; i < 3; i++) {
+          const angle = (i * Math.PI * 2) / 3;
+          const x = Math.cos(angle) * size;
+          const y = Math.sin(angle) * size;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = color;
+        ctx.stroke();
+      };
+
+      ctx.lineWidth = 2 * s;
+      drawTriangle(sealR, `rgba(${theme.accent}, ${0.85 * opacity})`);
+      ctx.rotate(Math.PI);
+      drawTriangle(sealR, `rgba(${theme.accent}, ${0.85 * opacity})`);
+
+      ctx.fillStyle = theme.fill;
+      ctx.fill();
+      ctx.restore();
+
+      // 4. Inner Orbitals
+      ctx.save();
+      ctx.rotate(time * 1.5);
+      const orbitalCount = activeBuffCount >= 2 ? 5 : 3;
+      for (let i = 0; i < orbitalCount; i++) {
+        ctx.rotate((Math.PI * 2) / orbitalCount);
+        const orbitDist = orbitR + Math.sin(time * 3 + i) * 6 * s;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.shadowBlur = 12 * s;
+        ctx.shadowColor = theme.glow;
+        ctx.beginPath();
+        ctx.arc(orbitDist, 0, 3.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // 5. Rising particles
+      ctx.shadowBlur = 0;
+      for (let i = 0; i < 4; i++) {
+        const riseProgress = ((time * 0.8 + i * 0.25) % 1);
+        const riseY = -riseProgress * outerR * 1.3;
+        const riseAlpha = (1 - riseProgress) * 0.6 * buffPulse;
+        const riseX = Math.sin(time * 3 + i * 2) * orbitR;
+
+        ctx.fillStyle = `rgba(${theme.base}, ${riseAlpha})`;
+        ctx.shadowColor = theme.glow;
+        ctx.shadowBlur = 6 * s;
+        ctx.beginPath();
+        ctx.arc(riseX, riseY, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 6. Buff Icon
+      ctx.shadowBlur = 0;
+      const iconY = outerR * 1.1;
+
+      ctx.fillStyle = `rgba(0, 0, 0, 0.6)`;
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 12 * s * buffPulse;
+      ctx.beginPath();
+      ctx.arc(0, iconY, 10 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(${theme.base}, ${0.8 + buffPulse * 0.2})`;
+      ctx.lineWidth = 2 * s;
+      ctx.stroke();
+
+      ctx.restore();
+
+      ctx.save();
+      ctx.shadowColor = theme.glow;
+      ctx.shadowBlur = 8 * s * buffPulse;
+      ctx.fillStyle = `rgba(${theme.base}, 1)`;
+      ctx.font = `bold ${11 * s}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(theme.icon, sPos.x, sPos.y + 10 * s + iconY * ISO_Y_RATIO);
+      ctx.restore();
+    });
 
     // Render all entities with camera offset and zoom (including special buildings)
     renderables.forEach((r) => {
@@ -10012,7 +10030,7 @@ export function usePrincetonTowerDefenseRuntime() {
             maxHp: reinforcementStats.knightHp,
             moving: false,
             lastAttack: 0,
-            type: "knight" as const,
+            type: "reinforcement" as const,
             overrideDamage: reinforcementStats.knightDamage,
             overrideAttackSpeed: reinforcementStats.knightAttackSpeedMs,
             overrideIsRanged: reinforcementStats.rangedUnlocked,

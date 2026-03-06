@@ -142,14 +142,14 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
       nameColor: "text-emerald-200", icon: <Shield size={10} className="text-emerald-400" />, accentColor: "text-emerald-300",
       panelBg: SPELL_THEME.nature.panelBg, panelBorder: "rgba(16,185,129,0.5)", headerBg: "linear-gradient(90deg, rgba(20,120,80,0.25), transparent)",
       stats: [
-        { label: "Knights", value: `${reinforcementStats.knightCount}`, color: "text-emerald-300", bg: "rgba(6,78,59,0.3)", border: "rgba(6,78,59,0.2)", icon: <Users size={9} className="text-emerald-400" /> },
+        { label: "Units", value: `${reinforcementStats.knightCount}`, color: "text-emerald-300", bg: "rgba(6,78,59,0.3)", border: "rgba(6,78,59,0.2)", icon: <Users size={9} className="text-emerald-400" /> },
         { label: "HP Each", value: `${reinforcementStats.knightHp}`, color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)", icon: <Heart size={9} className="text-red-400" /> },
         { label: "DMG Each", value: `${reinforcementStats.knightDamage}`, color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)", icon: <Swords size={9} className="text-orange-400" /> },
       ],
       effectBg: "rgba(6,78,59,0.15)", effectLabel: "text-emerald-500/80", effectText: "text-emerald-200/90",
       effect: reinforcementStats.rangedUnlocked
-        ? `Summons ${reinforcementStats.knightCount} veteran knights with tier-${reinforcementStats.visualTier} armor. They fight in melee and fire ranged volleys.`
-        : `Summons ${reinforcementStats.knightCount} armored knights at a chosen location. They block and fight enemies until defeated.`,
+        ? `Summons ${reinforcementStats.knightCount} veteran reinforcements with tier-${reinforcementStats.visualTier} armor. They fight in melee and fire ranged volleys.`
+        : `Summons ${reinforcementStats.knightCount} armored reinforcements at a chosen location. They block and fight enemies until defeated.`,
     },
   };
 
@@ -466,9 +466,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                 }}
               >
                 <div
-                  className={`absolute top-1 right-1 px-1 py-px rounded text-[8px] font-bold ${
-                    canCast ? "text-yellow-200" : "text-stone-300"
-                  }`}
+                  className={`absolute top-1 right-1 px-1 py-px rounded text-[8px] font-bold ${canCast ? "text-yellow-200" : "text-stone-300"
+                    }`}
                   style={{
                     background: canCast
                       ? "rgba(120,90,20,0.5)"

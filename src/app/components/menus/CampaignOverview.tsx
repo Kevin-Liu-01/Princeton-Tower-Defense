@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { LevelStars } from "../../types";
 import type { LevelStats } from "../../useLocalStorage";
+import { LEVEL_DATA } from "../../constants";
 import {
   PANEL,
   GOLD,
@@ -83,6 +84,29 @@ const REGION_ORDER: LevelNode["region"][] = [
   "volcanic",
 ];
 
+function getPreviewImage(levelId: string): string | undefined {
+  return LEVEL_DATA[levelId]?.previewImage;
+}
+
+function MapPreviewBg({ src, fadeColor }: { src: string; fadeColor: string }) {
+  return (
+    <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+      <img
+        src={src}
+        alt=""
+        className="absolute right-0 top-0 h-full w-[65%] object-cover object-center opacity-30"
+        style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(to right, ${fadeColor} 30%, transparent 70%)`,
+        }}
+      />
+    </div>
+  );
+}
+
 interface CampaignOverviewProps {
   levelStars: LevelStars;
   levelStats: Record<string, LevelStats>;
@@ -100,7 +124,10 @@ function computeRegionData(
     const maxStars = levels.length * 3;
     const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
     const unlocked = levels.filter((l) => unlockedMaps.has(l.id)).length;
-    return { region, levels, stars, maxStars, completed, unlocked, total: levels.length };
+    const targetLevel =
+      levels.find((l) => unlockedMaps.has(l.id) && (levelStars[l.id] || 0) < 3) ??
+      levels[0] ?? null;
+    return { region, levels, stars, maxStars, completed, unlocked, total: levels.length, targetLevel };
   });
 }
 
@@ -296,6 +323,12 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               boxShadow: `0 0 16px ${GOLD.accentGlow10}, inset 0 0 12px ${GOLD.accentGlow08}`,
             }}
           >
+            {getPreviewImage(recommended.id) && (
+              <MapPreviewBg
+                src={getPreviewImage(recommended.id)!}
+                fadeColor="rgba(140,95,15,0.95)"
+              />
+            )}
             <div
               className="absolute inset-[2px] rounded-[10px] pointer-events-none"
               style={{ border: `1px solid ${GOLD.accentBorder15}` }}
@@ -350,10 +383,11 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
         </div>
 
         <div className="space-y-1.5">
-          {regionData.map(({ region, stars, maxStars: rMax, completed, total }) => {
+          {regionData.map(({ region, stars, maxStars: rMax, completed, total, targetLevel }) => {
             const meta = REGION_META[region];
             const pct = rMax > 0 ? (stars / rMax) * 100 : 0;
             const isFullyComplete = stars === rMax;
+            const regionPreview = targetLevel ? getPreviewImage(targetLevel.id) : undefined;
             return (
               <button
                 key={region}
@@ -370,13 +404,16 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
                   if (firstUnbeaten) onSelectLevel(firstUnbeaten.id);
                   else if (firstInRegion) onSelectLevel(firstInRegion.id);
                 }}
-                className="w-full text-left rounded-lg transition-all hover:brightness-110 relative"
+                className="w-full text-left rounded-lg overflow-hidden transition-all hover:brightness-110 relative"
                 style={{
                   background: `linear-gradient(135deg, ${meta.bgLight}, ${meta.bgDark})`,
                   border: `1.5px solid ${meta.border}`,
                   boxShadow: `inset 0 0 10px ${meta.glow}`,
                 }}
               >
+                {regionPreview && (
+                  <MapPreviewBg src={regionPreview} fadeColor={meta.bgLight} />
+                )}
                 <div
                   className="absolute inset-[2px] rounded-[6px] pointer-events-none"
                   style={{
@@ -456,13 +493,19 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             </div>
             <button
               onClick={() => onSelectLevel(lastPlayed.id)}
-              className="w-full text-left rounded-lg transition-all hover:brightness-110 relative"
+              className="w-full text-left rounded-lg overflow-hidden transition-all hover:brightness-110 relative"
               style={{
                 background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
                 border: `1.5px solid ${GOLD.border25}`,
                 boxShadow: `inset 0 0 8px ${GOLD.glow04}`,
               }}
             >
+              {getPreviewImage(lastPlayed.id) && (
+                <MapPreviewBg
+                  src={getPreviewImage(lastPlayed.id)!}
+                  fadeColor={PANEL.bgWarmLight}
+                />
+              )}
               <div
                 className="absolute inset-[2px] rounded-[6px] pointer-events-none"
                 style={{ border: `1px solid ${GOLD.innerBorder08}` }}

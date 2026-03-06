@@ -35,11 +35,11 @@ export const SPELL_DATA: Record<SpellType, SpellData> = {
     icon: "💰",
   },
   reinforcements: {
-    name: "Knight Squad",
+    name: "Reinforcements",
     shortName: "Reinforce",
     cost: 75,
     cooldown: 25000,
-    desc: "Summons 3 armored knights to the battlefield",
+    desc: "Summons 3 armored reinforcements to the battlefield",
     icon: "🏇",
   },
 };

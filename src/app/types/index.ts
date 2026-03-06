@@ -421,6 +421,7 @@ export type TroopType =
   | "armored"
   | "elite"
   | "knight"
+  | "reinforcement"
   | "centaur"
   | "cavalry"
   | "thesis"

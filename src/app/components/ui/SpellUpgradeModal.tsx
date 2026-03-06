@@ -25,7 +25,9 @@ import {
   Star,
   Swords,
   Target,
+  Timer,
   TrendingUp,
+  Users,
   X,
   Zap,
 } from "lucide-react";
@@ -36,6 +38,11 @@ import {
   SPELL_TOTAL_MAX_UPGRADE_STARS,
   MAX_SPELL_UPGRADE_LEVEL,
   getSpellUpgradeNodes,
+  getFireballSpellStats,
+  getLightningSpellStats,
+  getFreezeSpellStats,
+  getPaydaySpellStats,
+  getReinforcementSpellStats,
 } from "../../constants";
 import { SpellSprite } from "../../sprites";
 import { OrnateFrame } from "./OrnateFrame";
@@ -438,6 +445,78 @@ const getUpgradeIcon = (spellType: SpellType, tier: number): LucideIcon =>
 const getUpgradeTags = (spellType: SpellType, tier: number): UpgradeTag[] =>
   UPGRADE_TAGS[`${spellType}-${tier}`] ?? [];
 
+// ── Spell Stat Display ────────────────────────────────────────────────────
+
+interface StatEntry {
+  label: string;
+  value: string;
+  Icon: LucideIcon;
+  color: string;
+  bg: string;
+  border: string;
+}
+
+const getSpellStatsForDisplay = (
+  spellType: SpellType,
+  level: number,
+): StatEntry[] => {
+  switch (spellType) {
+    case "fireball": {
+      const s = getFireballSpellStats(level);
+      return [
+        { label: "Damage", value: `${s.damagePerMeteor}×${s.meteorCount}`, Icon: Swords, color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)" },
+        { label: "Meteors", value: `${s.meteorCount}`, Icon: Flame, color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)" },
+        { label: "Radius", value: `${s.impactRadius}`, Icon: Target, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)" },
+        { label: "Burn", value: `${(s.burnDurationMs / 1000).toFixed(1)}s`, Icon: Flame, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)" },
+        { label: "Burn DPS", value: `${s.burnDamagePerSecond}/s`, Icon: Flame, color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)" },
+        { label: "Fall Time", value: `${(s.fallDurationMs / 1000).toFixed(1)}s`, Icon: Timer, color: "text-stone-300", bg: "rgba(68,64,60,0.3)", border: "rgba(68,64,60,0.2)" },
+      ];
+    }
+    case "lightning": {
+      const s = getLightningSpellStats(level);
+      return [
+        { label: "Total DMG", value: `${s.totalDamage}`, Icon: Zap, color: "text-yellow-300", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)" },
+        { label: "Chains", value: `${s.chainCount}`, Icon: GitBranch, color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)" },
+        { label: "Stun", value: `${(s.stunDurationMs / 1000).toFixed(2)}s`, Icon: Timer, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)" },
+      ];
+    }
+    case "freeze": {
+      const s = getFreezeSpellStats(level);
+      return [
+        { label: "Duration", value: `${(s.freezeDurationMs / 1000).toFixed(1)}s`, Icon: Timer, color: "text-cyan-300", bg: "rgba(22,78,99,0.3)", border: "rgba(22,78,99,0.2)" },
+        { label: "Range", value: "Global", Icon: Globe, color: "text-blue-300", bg: "rgba(30,58,138,0.3)", border: "rgba(30,58,138,0.2)" },
+        { label: "Slow", value: "100%", Icon: Snowflake, color: "text-indigo-300", bg: "rgba(49,46,129,0.3)", border: "rgba(49,46,129,0.2)" },
+      ];
+    }
+    case "payday": {
+      const s = getPaydaySpellStats(level);
+      return [
+        { label: "Base PP", value: `${s.basePayout}`, Icon: Coins, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)" },
+        { label: "Per Enemy", value: `+${s.bonusPerEnemy}`, Icon: TrendingUp, color: "text-green-300", bg: "rgba(20,83,45,0.3)", border: "rgba(20,83,45,0.2)" },
+        { label: "Max Bonus", value: `+${s.maxBonus}`, Icon: Gem, color: "text-yellow-300", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)" },
+        { label: "Max Total", value: `${s.basePayout + s.maxBonus}`, Icon: Sparkles, color: "text-yellow-200", bg: "rgba(113,63,18,0.3)", border: "rgba(113,63,18,0.2)" },
+        { label: "Aura", value: `${(s.auraDurationMs / 1000).toFixed(0)}s`, Icon: Timer, color: "text-amber-300", bg: "rgba(120,53,15,0.3)", border: "rgba(120,53,15,0.2)" },
+      ];
+    }
+    case "reinforcements": {
+      const s = getReinforcementSpellStats(level);
+      const entries: StatEntry[] = [
+        { label: "Knights", value: `${s.knightCount}`, Icon: Users, color: "text-emerald-300", bg: "rgba(6,78,59,0.3)", border: "rgba(6,78,59,0.2)" },
+        { label: "HP Each", value: `${s.knightHp}`, Icon: Heart, color: "text-red-300", bg: "rgba(127,29,29,0.3)", border: "rgba(127,29,29,0.2)" },
+        { label: "DMG Each", value: `${s.knightDamage}`, Icon: Swords, color: "text-orange-300", bg: "rgba(124,45,18,0.3)", border: "rgba(124,45,18,0.2)" },
+        { label: "Atk Speed", value: `${(s.knightAttackSpeedMs / 1000).toFixed(1)}s`, Icon: Timer, color: "text-stone-300", bg: "rgba(68,64,60,0.3)", border: "rgba(68,64,60,0.2)" },
+        { label: "Range", value: `${s.moveRadius}`, Icon: Target, color: "text-teal-300", bg: "rgba(13,148,136,0.2)", border: "rgba(13,148,136,0.15)" },
+      ];
+      if (s.rangedUnlocked) {
+        entries.push({ label: "Ranged", value: `${s.rangedRange}`, Icon: Crosshair, color: "text-purple-300", bg: "rgba(88,28,135,0.3)", border: "rgba(88,28,135,0.2)" });
+      }
+      return entries;
+    }
+    default:
+      return [];
+  }
+};
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
@@ -486,6 +565,8 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
     selectedState === "next" && availableStars >= selectedNodeDef.cost;
   const selectedTheme = SPELL_THEMES[selectedNode.spellType];
   const selectedTags = getUpgradeTags(selectedNode.spellType, selectedNode.tier);
+  const selectedSpellStats = getSpellStatsForDisplay(selectedNode.spellType, selectedSpellLevel);
+  const selectedSpellData = SPELL_DATA[selectedNode.spellType];
 
   const modalContent = (
     <div className="fixed inset-0 z-[1300] isolate flex items-center justify-center p-2 sm:p-4 pointer-events-auto">
@@ -864,11 +945,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                                   title={node.title}
                                 >
                                   <div
-                                    className={`flex h-full flex-col items-center justify-center text-center font-semibold leading-[1.1] ${
-                                      nodeTitle.compact
+                                    className={`flex h-full flex-col items-center justify-center text-center font-semibold leading-[1.1] ${nodeTitle.compact
                                         ? "text-[8.5px]"
                                         : "text-[10px]"
-                                    }`}
+                                      }`}
                                     style={{
                                       color: visuals.titleColor,
                                       textShadow: "0 1px 2px rgba(0,0,0,0.8)",
@@ -918,79 +998,103 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                         animated
                       />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="font-bold text-amber-100 leading-tight truncate">
-                        {SPELL_DATA[selectedNode.spellType].name}
+                        {selectedSpellData.name}
                       </div>
-                      <div className="mt-1.5 flex items-center gap-2">
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
                         <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-900/25 px-1.5 py-0.5 text-[10px] text-amber-200">
-                          {(() => {
-                            const TIcon = LEVEL_ICON_MAP[selectedNode.tier].Icon;
-                            return <TIcon size={10} />;
-                          })()}
-                          Tier {selectedNode.tier}
+                          Lv {selectedSpellLevel}/{MAX_SPELL_UPGRADE_LEVEL}
                         </span>
-                        <span className="text-[10px] text-amber-300/55 font-medium">
-                          {LEVEL_ICON_MAP[selectedNode.tier].label}
+                        <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px]"
+                          style={{ borderColor: 'rgba(120,80,20,0.25)', background: 'rgba(120,80,20,0.15)', color: '#fcd34d' }}>
+                          <Coins size={9} />
+                          {selectedSpellData.cost > 0 ? `${selectedSpellData.cost} PP` : "Free"}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px]"
+                          style={{ borderColor: 'rgba(30,58,138,0.25)', background: 'rgba(30,58,138,0.15)', color: '#93c5fd' }}>
+                          <Clock size={9} />
+                          {selectedSpellData.cooldown / 1000}s
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Upgrade details */}
-                <div className="mt-3 rounded-xl border border-stone-700/45 bg-stone-900/65 p-3">
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300/70">
-                    Upgrade Details
+                {/* Spell stats */}
+                <div className="mt-3 rounded-xl border border-stone-700/45 bg-stone-900/50 p-3">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300/70 mb-2">
+                    Spell Stats
                   </div>
-                  <div className="mt-1.5 text-sm font-bold text-amber-100">
-                    {selectedNodeDef.title}
-                  </div>
-                  <div className="mt-2 text-xs leading-relaxed text-amber-200/80">
-                    {selectedNodeDef.description}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {selectedSpellStats.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className="rounded-md px-1.5 py-1.5 text-center"
+                        style={{ background: stat.bg, border: `1px solid ${stat.border}` }}
+                      >
+                        <div className="flex items-center justify-center mb-0.5">
+                          <stat.Icon size={11} className={stat.color} />
+                        </div>
+                        <div className="text-[7px] text-stone-400 font-medium uppercase">{stat.label}</div>
+                        <div className={`font-bold text-[12px] leading-tight ${stat.color}`}>{stat.value}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Upgrade effect tags */}
-                {selectedTags.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {selectedTags.map((tag, i) =>
-                      tag.special ? (
-                        <div
-                          key={i}
-                          className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-bold"
-                          style={{
-                            borderColor: `${tag.accent}55`,
-                            background: `${tag.accent}18`,
-                            boxShadow: `0 0 10px ${tag.accent}15`,
-                          }}
-                        >
-                          <Sparkles size={11} style={{ color: tag.accent }} />
-                          <span style={{ color: "#fef9c3" }}>{tag.label}</span>
-                        </div>
-                      ) : (
-                        <div
-                          key={i}
-                          className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold"
-                          style={{
-                            borderColor: `${tag.accent}35`,
-                            background: `${tag.accent}12`,
-                            color: tag.accent,
-                          }}
-                        >
-                          <tag.icon size={10} />
-                          {tag.label}
-                        </div>
-                      ),
-                    )}
+                {/* Tier upgrade tags */}
+                <div className="mt-3 rounded-xl border border-stone-700/45 bg-stone-900/50 p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300/70">
+                      Tier {selectedNode.tier} Upgrade
+                    </div>
+                    <span className="text-[10px] text-amber-300/45 font-medium">
+                      {LEVEL_ICON_MAP[selectedNode.tier].label}
+                    </span>
                   </div>
-                )}
+                  {selectedTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedTags.map((tag, i) =>
+                        tag.special ? (
+                          <div
+                            key={i}
+                            className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-bold"
+                            style={{
+                              borderColor: `${tag.accent}55`,
+                              background: `${tag.accent}18`,
+                              boxShadow: `0 0 10px ${tag.accent}15`,
+                            }}
+                          >
+                            <Sparkles size={11} style={{ color: tag.accent }} />
+                            <span style={{ color: "#fef9c3" }}>{tag.label}</span>
+                          </div>
+                        ) : (
+                          <div
+                            key={i}
+                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold"
+                            style={{
+                              borderColor: `${tag.accent}35`,
+                              background: `${tag.accent}12`,
+                              color: tag.accent,
+                            }}
+                          >
+                            <tag.icon size={10} />
+                            {tag.label}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-stone-500 italic">No tags available</div>
+                  )}
+                </div>
 
-                {/* Stats row */}
+                {/* Cost & progress row */}
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <div className="rounded-lg border border-yellow-500/30 bg-yellow-900/20 px-2.5 py-2 text-yellow-200">
                     <div className="text-[10px] uppercase text-yellow-300/70 font-medium">
-                      Cost
+                      Upgrade Cost
                     </div>
                     <div className="mt-0.5 font-bold inline-flex items-center gap-1">
                       <Star
@@ -1012,13 +1116,12 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
 
                 {/* Status indicator */}
                 <div
-                  className={`mt-3 rounded-lg border px-3 py-2 text-xs flex items-center gap-2 ${
-                    selectedState === "unlocked"
+                  className={`mt-3 rounded-lg border px-3 py-2 text-xs flex items-center gap-2 ${selectedState === "unlocked"
                       ? "border-emerald-500/30 bg-emerald-950/30"
                       : selectedState === "next"
                         ? "border-yellow-500/30 bg-yellow-950/30"
                         : "border-stone-600/30 bg-stone-950/40"
-                  }`}
+                    }`}
                 >
                   {selectedState === "unlocked" && (
                     <>
@@ -1056,11 +1159,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                     onUpgradeSpell(selectedNode.spellType);
                   }}
                   disabled={!canBuySelected}
-                  className={`mt-3 w-full rounded-lg border px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${
-                    canBuySelected
+                  className={`mt-3 w-full rounded-lg border px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${canBuySelected
                       ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70"
                       : "border-stone-600/40 bg-stone-800/40 text-stone-500 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   {selectedState === "unlocked"
                     ? "Unlocked"

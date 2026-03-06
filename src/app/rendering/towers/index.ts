@@ -13,6 +13,14 @@ import {
   darkenColor,
 } from "../../utils";
 import { setShadowBlur, clearShadow } from "../performance";
+import {
+  generateIsoHexVertices,
+  computeHexSideNormals,
+  sortSidesByDepth,
+  drawHexCap,
+  scaleVerts,
+  type IsoOffFn,
+} from "../helpers";
 
 function drawIsometricPrism(
   ctx: CanvasRenderingContext2D,
@@ -54,7 +62,7 @@ function drawIsometricPrism(
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = zoom;
   ctx.stroke();
 
   ctx.fillStyle = colors.rightBack || darkenColor(colors.right, -20);
@@ -66,7 +74,7 @@ function drawIsometricPrism(
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = zoom;
   ctx.stroke();
 
   // Front-left wall
@@ -79,7 +87,7 @@ function drawIsometricPrism(
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.4)";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = zoom;
   ctx.stroke();
 
   // Front-right wall
@@ -92,7 +100,7 @@ function drawIsometricPrism(
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.3)";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = zoom;
   ctx.stroke();
 
   // Top face
@@ -105,8 +113,130 @@ function drawIsometricPrism(
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "rgba(0,0,0,0.2)";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = zoom;
   ctx.stroke();
+}
+
+function drawIsoDiamond(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  w: number,
+  d: number,
+  h: number,
+  topColor: string,
+  leftColor: string,
+  rightColor: string,
+  zoom: number,
+) {
+  const hw = w * zoom * 0.5;
+  const hd = d * zoom * 0.25;
+  const hh = h * zoom;
+
+  // Top face (diamond)
+  ctx.fillStyle = topColor;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - hh - hd);
+  ctx.lineTo(cx + hw, cy - hh);
+  ctx.lineTo(cx, cy - hh + hd);
+  ctx.lineTo(cx - hw, cy - hh);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = zoom;
+  ctx.stroke();
+
+  // Left face
+  ctx.fillStyle = leftColor;
+  ctx.beginPath();
+  ctx.moveTo(cx - hw, cy - hh);
+  ctx.lineTo(cx, cy - hh + hd);
+  ctx.lineTo(cx, cy + hd);
+  ctx.lineTo(cx - hw, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.4)";
+  ctx.lineWidth = zoom;
+  ctx.stroke();
+
+  // Right face
+  ctx.fillStyle = rightColor;
+  ctx.beginPath();
+  ctx.moveTo(cx + hw, cy - hh);
+  ctx.lineTo(cx + hw, cy);
+  ctx.lineTo(cx, cy + hd);
+  ctx.lineTo(cx, cy - hh + hd);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.3)";
+  ctx.lineWidth = zoom;
+  ctx.stroke();
+}
+
+function drawIsometricRailing(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  height: number,
+  segments: number,
+  posts: number,
+  colors: { rail: string; topRail: string; backPanel: string; frontPanel: string },
+  zoom: number,
+  half: "back" | "front" | "both" = "both",
+) {
+  const drawHalf = (isBack: boolean) => {
+    const arcStart = isBack ? Math.PI : 0;
+    const arcEnd = isBack ? Math.PI * 2 : Math.PI;
+    const sinCheck = isBack ? (v: number) => v > 0 : (v: number) => v <= 0;
+    const panelFill = isBack ? colors.backPanel : colors.frontPanel;
+
+    ctx.strokeStyle = colors.rail;
+    ctx.lineWidth = 1.5 * zoom;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, arcStart, arcEnd);
+    ctx.stroke();
+
+    ctx.strokeStyle = colors.topRail;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy - height, rx, ry, 0, arcStart, arcEnd);
+    ctx.stroke();
+
+    ctx.strokeStyle = colors.topRail;
+    ctx.lineWidth = zoom;
+    for (let bp = 0; bp < posts; bp++) {
+      const pa = (bp / posts) * Math.PI * 2;
+      if (sinCheck(Math.sin(pa))) continue;
+      const px = cx + Math.cos(pa) * rx;
+      const py = cy + Math.sin(pa) * ry;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px, py - height);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = panelFill;
+    for (let i = 0; i < segments; i++) {
+      const a0 = (i / segments) * Math.PI * 2;
+      const a1 = ((i + 1) / segments) * Math.PI * 2;
+      if (sinCheck(Math.sin((a0 + a1) / 2))) continue;
+      const x0 = cx + Math.cos(a0) * rx;
+      const y0b = cy + Math.sin(a0) * ry;
+      const x1 = cx + Math.cos(a1) * rx;
+      const y1b = cy + Math.sin(a1) * ry;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0b);
+      ctx.lineTo(x1, y1b);
+      ctx.lineTo(x1, y1b - height);
+      ctx.lineTo(x0, y0b - height);
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  if (half === "back" || half === "both") drawHalf(true);
+  if (half === "front" || half === "both") drawHalf(false);
 }
 
 function drawIsoCylinder(
@@ -2130,7 +2260,7 @@ const GROUND_TRANSITION_PALETTES: Record<
   },
 };
 
-function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
+export function getTowerFoundationSize(tower: Tower): { w: number; d: number } {
   const level = tower.level;
   switch (tower.type) {
     case "cannon": {
@@ -2182,7 +2312,7 @@ function drawGroundTransition(
   const fndH = foundation.d * zoom * ISO_PRISM_D_FACTOR;
 
   const cx = screenPos.x;
-  const cy = screenPos.y + 6 * zoom;
+  const cy = screenPos.y + 10 * zoom;
   const outerW = fndW * 1.3;
   const outerH = fndH * 1.3;
   const midW = fndW * 1.0;
@@ -2205,7 +2335,7 @@ function drawGroundTransition(
   ctx.fill();
 
   // Edge roughness — irregular clumps breaking the clean ellipse
-  const clumpSeed = selectedMap.charCodeAt(0) + (screenPos.x | 0);
+  const clumpSeed = selectedMap.charCodeAt(0) + tower.pos.x * 73 + tower.pos.y * 137;
   const numClumps = Math.floor(12 * detailScale);
   for (let i = 0; i < numClumps; i++) {
     const angle = (i / numClumps) * Math.PI * 2 + (clumpSeed % 7) * 0.3;
@@ -2498,8 +2628,7 @@ export function renderTower(
   // Draw passive effects first (behind tower)
   drawTowerPassiveEffects(ctx, screenPos, tower, zoom, time, colors);
 
-  // Regional ground transition — dug-in construction base (scaled to tower footprint)
-  drawGroundTransition(ctx, screenPos, tower, zoom, time, selectedMap);
+  // Ground transition is now drawn in a separate pre-pass (see renderTowerGroundTransition)
 
   // Selection/hover glow with enhanced effect
   if (isSelected || isHovered) {
@@ -2544,7 +2673,7 @@ export function renderTower(
       const ringPulse = 1 + Math.sin(time * 4) * 0.05;
       ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
       ctx.lineWidth = 2 * zoom;
-      ctx.setLineDash([8, 4]);
+      ctx.setLineDash([8 * zoom, 4 * zoom]);
       ctx.beginPath();
       ctx.ellipse(
         screenPos.x,
@@ -5072,19 +5201,9 @@ function drawCannonBarrel(
   const hexSides = 6;
   const facingFwd = fwdY >= 0;
 
-  // Hex vertices
-  const hexVerts: { x: number; y: number }[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const a = (i / hexSides) * Math.PI * 2;
-    hexVerts.push(isoOff(Math.cos(a) * hexR, Math.sin(a) * hexR));
-  }
-
-  // Taper: hex shrinks slightly toward muzzle junction
+  const hexVerts = generateIsoHexVertices(isoOff, hexR, hexSides);
   const taperScale = 0.88;
-  const taperVerts: { x: number; y: number }[] = hexVerts.map((v) => ({
-    x: v.x * taperScale,
-    y: v.y * taperScale,
-  }));
+  const taperVerts = scaleVerts(hexVerts, taperScale);
 
   // Key axis points
   const hexBackPt = axisPoint(startDist);
@@ -5092,44 +5211,21 @@ function drawCannonBarrel(
   const muzzleBackPt = hexFrontPt;
   const muzzleEndPt = axisPoint(startDist + hexLen + muzzleLen + 1 * zoom);
 
-  // Side normals for hex faces
-  const sideNormals: number[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const midA = ((i + 0.5) / hexSides) * Math.PI * 2;
-    sideNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-  }
+  const sideNormals = computeHexSideNormals(cosR, hexSides);
 
-  // Muzzle hex vertices (slightly wider)
   const muzzleScale = 1.1;
-  const muzzleVerts: { x: number; y: number }[] = taperVerts.map((v) => ({
-    x: v.x * muzzleScale,
-    y: v.y * muzzleScale,
-  }));
-  const muzzleTipVerts: { x: number; y: number }[] = taperVerts.map((v) => ({
-    x: v.x * muzzleScale * 1.08,
-    y: v.y * muzzleScale * 1.08,
-  }));
+  const muzzleVerts = scaleVerts(taperVerts, muzzleScale);
+  const muzzleTipVerts = scaleVerts(taperVerts, muzzleScale * 1.08);
 
-  // === BREECH HEX CAP (always drawn to close the barrel) ===
+  // === BREECH HEX CAP ===
   {
     const capPt = facingFwd ? hexBackPt : hexFrontPt;
     const capVerts = facingFwd ? hexVerts : taperVerts;
-    ctx.fillStyle = facingFwd ? "#6c6c78" : "#5c5c6a";
-    ctx.beginPath();
-    ctx.moveTo(capPt.x + capVerts[0].x, capPt.y + capVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(capPt.x + capVerts[i].x, capPt.y + capVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#4a4a58";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
+    drawHexCap(ctx, capPt, capVerts, facingFwd ? "#6c6c78" : "#5c5c6a", "#4a4a58", 0.6 * zoom);
   }
 
   // === HEXAGONAL BARREL BODY — draw ALL 6 side quads, depth-sorted ===
-  const sortedSides = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => sideNormals[a] - sideNormals[b],
-  );
+  const sortedSides = sortSidesByDepth(sideNormals);
 
   for (const i of sortedSides) {
     const ni = (i + 1) % hexSides;
@@ -5268,41 +5364,27 @@ function drawCannonBarrel(
     ctx.stroke();
   }
 
-  // === BARREL-MUZZLE JUNCTION CAP (close the front of barrel body) ===
-  {
-    const jCapPt = facingFwd ? hexFrontPt : hexBackPt;
-    const jCapVerts = facingFwd ? taperVerts : hexVerts;
-    ctx.fillStyle = facingFwd ? "#60606e" : "#6c6c78";
-    ctx.beginPath();
-    ctx.moveTo(jCapPt.x + jCapVerts[0].x, jCapPt.y + jCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(jCapPt.x + jCapVerts[i].x, jCapPt.y + jCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#4e4e5c";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-  }
+  // === BARREL-MUZZLE JUNCTION CAP ===
+  drawHexCap(
+    ctx,
+    facingFwd ? hexFrontPt : hexBackPt,
+    facingFwd ? taperVerts : hexVerts,
+    facingFwd ? "#60606e" : "#6c6c78",
+    "#4e4e5c",
+    0.5 * zoom,
+  );
 
-  // === MUZZLE BACK CAP (close the back of muzzle, opposite of front cap) ===
-  {
-    const mbCapPt = facingFwd ? muzzleBackPt : muzzleEndPt;
-    const mbCapVerts = facingFwd ? muzzleVerts : muzzleTipVerts;
-    ctx.fillStyle = facingFwd ? "#565664" : "#4c4c5a";
-    ctx.beginPath();
-    ctx.moveTo(mbCapPt.x + mbCapVerts[0].x, mbCapPt.y + mbCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(mbCapPt.x + mbCapVerts[i].x, mbCapPt.y + mbCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-  }
+  // === MUZZLE BACK CAP ===
+  drawHexCap(
+    ctx,
+    facingFwd ? muzzleBackPt : muzzleEndPt,
+    facingFwd ? muzzleVerts : muzzleTipVerts,
+    facingFwd ? "#565664" : "#4c4c5a",
+  );
 
   // === MUZZLE — hex prism section (wider, matching barrel projection) ===
   const muzzleSideNormals: number[] = sideNormals;
-
-  const muzzleSorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => muzzleSideNormals[a] - muzzleSideNormals[b],
-  );
+  const muzzleSorted = sortSidesByDepth(muzzleSideNormals);
 
   for (const i of muzzleSorted) {
     const ni = (i + 1) % hexSides;
@@ -5408,46 +5490,18 @@ function drawCannonBarrel(
   const mCapPt = facingFwd ? muzzleEndPt : muzzleBackPt;
   const mCapVerts = facingFwd ? muzzleTipVerts : muzzleVerts;
 
-  ctx.fillStyle = facingFwd ? "#5c5c6a" : "#4c4c5a";
-  ctx.beginPath();
-  ctx.moveTo(mCapPt.x + mCapVerts[0].x, mCapPt.y + mCapVerts[0].y);
-  for (let i = 1; i < hexSides; i++)
-    ctx.lineTo(mCapPt.x + mCapVerts[i].x, mCapPt.y + mCapVerts[i].y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#6a6a7a";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
+  drawHexCap(ctx, mCapPt, mCapVerts, facingFwd ? "#5c5c6a" : "#4c4c5a", "#6a6a7a", 0.8 * zoom);
 
   if (facingFwd) {
-    // Bore hole (smaller hex)
-    ctx.fillStyle = "#0a0a0e";
-    ctx.beginPath();
-    ctx.moveTo(
-      mCapPt.x + mCapVerts[0].x * 0.5,
-      mCapPt.y + mCapVerts[0].y * 0.5,
-    );
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(
-        mCapPt.x + mCapVerts[i].x * 0.5,
-        mCapPt.y + mCapVerts[i].y * 0.5,
-      );
-    ctx.closePath();
-    ctx.fill();
-
+    drawHexCap(ctx, mCapPt, scaleVerts(mCapVerts, 0.5), "#0a0a0e");
     // Rifling ring
     ctx.strokeStyle = "#1a1a24";
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      mCapPt.x + mCapVerts[0].x * 0.32,
-      mCapPt.y + mCapVerts[0].y * 0.32,
-    );
+    const riflingVerts = scaleVerts(mCapVerts, 0.32);
+    ctx.moveTo(mCapPt.x + riflingVerts[0].x, mCapPt.y + riflingVerts[0].y);
     for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(
-        mCapPt.x + mCapVerts[i].x * 0.32,
-        mCapPt.y + mCapVerts[i].y * 0.32,
-      );
+      ctx.lineTo(mCapPt.x + riflingVerts[i].x, mCapPt.y + riflingVerts[i].y);
     ctx.closePath();
     ctx.stroke();
   }
@@ -5537,14 +5591,11 @@ function drawHexMantlet(
   const plateThick = 2.5 * zoom * scale;
   const facingFwd = fwdY >= 0;
 
-  const hexVerts: { x: number; y: number }[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const a = (i / hexSides) * Math.PI * 2;
-    hexVerts.push({
-      x: perpX * Math.cos(a) * hexR + upX * Math.sin(a) * hexR,
-      y: perpY * Math.cos(a) * hexR + upY * Math.sin(a) * hexR,
-    });
-  }
+  const mantletIsoOff: IsoOffFn = (dx, dy) => ({
+    x: perpX * dx + upX * dy,
+    y: perpY * dx + upY * dy,
+  });
+  const hexVerts = generateIsoHexVertices(mantletIsoOff, hexR, hexSides);
 
   const frontOff = facingFwd ? plateThick : 0;
   const backOff = facingFwd ? 0 : plateThick;
@@ -5552,25 +5603,13 @@ function drawHexMantlet(
   const frontPt = { x: cx + fwdX * frontOff, y: cy + fwdY * frontOff };
   const backPt = { x: cx + fwdX * backOff, y: cy + fwdY * backOff };
 
-  const sideNormals: number[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const midA = ((i + 0.5) / hexSides) * Math.PI * 2;
-    sideNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-  }
+  const sideNormals = computeHexSideNormals(cosR, hexSides);
 
   // Back hex face
-  ctx.fillStyle = facingFwd ? "#4a4a58" : "#5a5a68";
-  ctx.beginPath();
-  ctx.moveTo(backPt.x + hexVerts[0].x, backPt.y + hexVerts[0].y);
-  for (let i = 1; i < hexSides; i++)
-    ctx.lineTo(backPt.x + hexVerts[i].x, backPt.y + hexVerts[i].y);
-  ctx.closePath();
-  ctx.fill();
+  drawHexCap(ctx, backPt, hexVerts, facingFwd ? "#4a4a58" : "#5a5a68");
 
   // Side faces (depth-sorted)
-  const sortedSides = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => sideNormals[a] - sideNormals[b],
-  );
+  const sortedSides = sortSidesByDepth(sideNormals);
 
   for (const i of sortedSides) {
     const ni = (i + 1) % hexSides;
@@ -5607,32 +5646,10 @@ function drawHexMantlet(
   }
 
   // Front hex face
-  ctx.fillStyle = facingFwd ? "#5e5e6c" : "#4e4e5c";
-  ctx.beginPath();
-  ctx.moveTo(frontPt.x + hexVerts[0].x, frontPt.y + hexVerts[0].y);
-  for (let i = 1; i < hexSides; i++)
-    ctx.lineTo(frontPt.x + hexVerts[i].x, frontPt.y + hexVerts[i].y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#6a6a78";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
+  drawHexCap(ctx, frontPt, hexVerts, facingFwd ? "#5e5e6c" : "#4e4e5c", "#6a6a78", 0.8 * zoom);
 
   // Barrel bore hole in center
-  const boreR = 0.35;
-  ctx.fillStyle = "#1a1a22";
-  ctx.beginPath();
-  ctx.moveTo(
-    frontPt.x + hexVerts[0].x * boreR,
-    frontPt.y + hexVerts[0].y * boreR,
-  );
-  for (let i = 1; i < hexSides; i++)
-    ctx.lineTo(
-      frontPt.x + hexVerts[i].x * boreR,
-      frontPt.y + hexVerts[i].y * boreR,
-    );
-  ctx.closePath();
-  ctx.fill();
+  drawHexCap(ctx, frontPt, scaleVerts(hexVerts, 0.35), "#1a1a22");
 
   // Vertex bolts on front face
   ctx.fillStyle = "#7a7a8a";
@@ -6854,59 +6871,30 @@ function drawHeavyCannonBarrel(
   const hexSides = 6;
   const facingFwd = fwdY >= 0;
 
-  const hexVerts: { x: number; y: number }[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const a = (i / hexSides) * Math.PI * 2;
-    hexVerts.push(isoOff(Math.cos(a) * hexR, Math.sin(a) * hexR));
-  }
-
+  const hexVerts = generateIsoHexVertices(isoOff, hexR, hexSides);
   const taperScale = 0.85;
-  const taperVerts = hexVerts.map((v) => ({
-    x: v.x * taperScale,
-    y: v.y * taperScale,
-  }));
+  const taperVerts = scaleVerts(hexVerts, taperScale);
 
   const hexBackPt = axisPoint(startDist);
   const hexFrontPt = axisPoint(startDist + hexLen);
   const muzzleBackPt = hexFrontPt;
   const muzzleEndPt = axisPoint(startDist + hexLen + muzzleLen + 1 * zoom);
 
-  const sideNormals: number[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const midA = ((i + 0.5) / hexSides) * Math.PI * 2;
-    sideNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-  }
+  const sideNormals = computeHexSideNormals(cosR, hexSides);
 
   const muzzleScale = 1.15;
-  const muzzleVerts = taperVerts.map((v) => ({
-    x: v.x * muzzleScale,
-    y: v.y * muzzleScale,
-  }));
-  const muzzleTipVerts = taperVerts.map((v) => ({
-    x: v.x * muzzleScale * 1.1,
-    y: v.y * muzzleScale * 1.1,
-  }));
+  const muzzleVerts = scaleVerts(taperVerts, muzzleScale);
+  const muzzleTipVerts = scaleVerts(taperVerts, muzzleScale * 1.1);
 
   // === BREECH HEX CAP ===
   {
     const capPt = facingFwd ? hexBackPt : hexFrontPt;
     const capVerts = facingFwd ? hexVerts : taperVerts;
-    ctx.fillStyle = facingFwd ? "#5a5a68" : "#4a4a58";
-    ctx.beginPath();
-    ctx.moveTo(capPt.x + capVerts[0].x, capPt.y + capVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(capPt.x + capVerts[i].x, capPt.y + capVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#3a3a48";
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
+    drawHexCap(ctx, capPt, capVerts, facingFwd ? "#5a5a68" : "#4a4a58", "#3a3a48", 0.6 * zoom);
   }
 
   // === HEX BARREL BODY — all 6 side quads, depth-sorted ===
-  const sortedSides = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => sideNormals[a] - sideNormals[b],
-  );
+  const sortedSides = sortSidesByDepth(sideNormals);
 
   for (const i of sortedSides) {
     const ni = (i + 1) % hexSides;
@@ -7087,35 +7075,23 @@ function drawHeavyCannonBarrel(
   }
 
   // === BARREL-MUZZLE JUNCTION CAP ===
-  {
-    const jCapPt = facingFwd ? hexFrontPt : hexBackPt;
-    const jCapVerts = facingFwd ? taperVerts : hexVerts;
-    ctx.fillStyle = facingFwd ? "#4e4e5c" : "#5a5a68";
-    ctx.beginPath();
-    ctx.moveTo(jCapPt.x + jCapVerts[0].x, jCapPt.y + jCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(jCapPt.x + jCapVerts[i].x, jCapPt.y + jCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-  }
+  drawHexCap(
+    ctx,
+    facingFwd ? hexFrontPt : hexBackPt,
+    facingFwd ? taperVerts : hexVerts,
+    facingFwd ? "#4e4e5c" : "#5a5a68",
+  );
 
   // === MUZZLE BACK CAP ===
-  {
-    const mbCapPt = facingFwd ? muzzleBackPt : muzzleEndPt;
-    const mbCapVerts = facingFwd ? muzzleVerts : muzzleTipVerts;
-    ctx.fillStyle = facingFwd ? "#444454" : "#3a3a48";
-    ctx.beginPath();
-    ctx.moveTo(mbCapPt.x + mbCapVerts[0].x, mbCapPt.y + mbCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(mbCapPt.x + mbCapVerts[i].x, mbCapPt.y + mbCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-  }
+  drawHexCap(
+    ctx,
+    facingFwd ? muzzleBackPt : muzzleEndPt,
+    facingFwd ? muzzleVerts : muzzleTipVerts,
+    facingFwd ? "#444454" : "#3a3a48",
+  );
 
   // === MUZZLE — hex prism section ===
-  const muzzleSorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => sideNormals[a] - sideNormals[b],
-  );
+  const muzzleSorted = sortSidesByDepth(sideNormals);
 
   for (const i of muzzleSorted) {
     const ni = (i + 1) % hexSides;
@@ -7166,45 +7142,18 @@ function drawHeavyCannonBarrel(
   // === MUZZLE FRONT HEX CAP ===
   const mCapPt = facingFwd ? muzzleEndPt : muzzleBackPt;
   const mCapVerts = facingFwd ? muzzleTipVerts : muzzleVerts;
-
-  ctx.fillStyle = facingFwd ? "#4a4a58" : "#3a3a48";
-  ctx.beginPath();
-  ctx.moveTo(mCapPt.x + mCapVerts[0].x, mCapPt.y + mCapVerts[0].y);
-  for (let i = 1; i < hexSides; i++)
-    ctx.lineTo(mCapPt.x + mCapVerts[i].x, mCapPt.y + mCapVerts[i].y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = "#5a5a6a";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
+  drawHexCap(ctx, mCapPt, mCapVerts, facingFwd ? "#4a4a58" : "#3a3a48", "#5a5a6a", 0.8 * zoom);
 
   if (facingFwd) {
-    ctx.fillStyle = "#0a0a0e";
-    ctx.beginPath();
-    ctx.moveTo(
-      mCapPt.x + mCapVerts[0].x * 0.5,
-      mCapPt.y + mCapVerts[0].y * 0.5,
-    );
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(
-        mCapPt.x + mCapVerts[i].x * 0.5,
-        mCapPt.y + mCapVerts[i].y * 0.5,
-      );
-    ctx.closePath();
-    ctx.fill();
-
+    drawHexCap(ctx, mCapPt, scaleVerts(mCapVerts, 0.5), "#0a0a0e");
+    // Rifling ring
     ctx.strokeStyle = "#1a1a24";
     ctx.lineWidth = 0.5 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      mCapPt.x + mCapVerts[0].x * 0.32,
-      mCapPt.y + mCapVerts[0].y * 0.32,
-    );
+    const riflingVerts2 = scaleVerts(mCapVerts, 0.32);
+    ctx.moveTo(mCapPt.x + riflingVerts2[0].x, mCapPt.y + riflingVerts2[0].y);
     for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(
-        mCapPt.x + mCapVerts[i].x * 0.32,
-        mCapPt.y + mCapVerts[i].y * 0.32,
-      );
+      ctx.lineTo(mCapPt.x + riflingVerts2[i].x, mCapPt.y + riflingVerts2[i].y);
     ctx.closePath();
     ctx.stroke();
   }
@@ -8151,12 +8100,8 @@ function drawGatlingBarrels(
   const hexSides = 6;
   const facingFwd = fwdY >= 0;
 
-  // Compute hex vertices in isometric space
-  const hVerts: { x: number; y: number }[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const a = (i / hexSides) * Math.PI * 2;
-    hVerts.push(isoOffset(Math.cos(a) * housingR, Math.sin(a) * housingR));
-  }
+  const hVerts = generateIsoHexVertices(isoOffset, housingR, hexSides);
+  const housingSideNormals = computeHexSideNormals(cosR, hexSides);
 
   const hFrontDist = facingFwd ? housingDepth : 0;
   const hBackDist = facingFwd ? 0 : housingDepth;
@@ -8165,18 +8110,7 @@ function drawGatlingBarrels(
 
   // Back hex face
   const drawHousingBack = () => {
-    const bfx = hBackPt.x;
-    const bfy = hBackPt.y;
-    ctx.fillStyle = "#3a3a45";
-    ctx.beginPath();
-    ctx.moveTo(bfx + hVerts[0].x, bfy + hVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(bfx + hVerts[i].x, bfy + hVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#2a2a35";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.stroke();
+    drawHexCap(ctx, hBackPt, hVerts, "#3a3a45", "#2a2a35", 0.8 * zoom);
   };
 
   // Side faces of housing hex prism
@@ -8186,20 +8120,11 @@ function drawGatlingBarrels(
     const bbx = hBackPt.x;
     const bby = hBackPt.y;
 
-    const sorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-      (a, b) => {
-        const midAA = ((a + 0.5) / hexSides) * Math.PI * 2;
-        const nA = Math.cos(midAA) * cosR + 0.5 * Math.sin(midAA);
-        const midBB = ((b + 0.5) / hexSides) * Math.PI * 2;
-        const nB = Math.cos(midBB) * cosR + 0.5 * Math.sin(midBB);
-        return nA - nB;
-      },
-    );
+    const sorted = sortSidesByDepth(housingSideNormals);
 
     for (const i of sorted) {
       const ni = (i + 1) % hexSides;
-      const midA = ((i + 0.5) / hexSides) * Math.PI * 2;
-      const normal = Math.cos(midA) * cosR + 0.5 * Math.sin(midA);
+      const normal = housingSideNormals[i];
       if (normal < -0.15) continue;
 
       const v0 = hVerts[i];
@@ -8614,12 +8539,7 @@ function drawGatlingMuzzleIso(
     y: fwdY * dist + dist * pitchRate,
   });
 
-  // Compute 6 hexagon vertices in isometric space
-  const hexVerts: { x: number; y: number }[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const a = (i / hexSides) * Math.PI * 2;
-    hexVerts.push(isoVtx(Math.cos(a) * hexR, Math.sin(a) * hexR));
-  }
+  const hexVerts = generateIsoHexVertices(isoVtx, hexR, hexSides);
 
   // Front/back face offsets along barrel axis (pitch-aware)
   const frontDist = facingCamera ? prismDepth : 0;
@@ -8627,29 +8547,13 @@ function drawGatlingMuzzleIso(
   const frontOffPt = axisOff(frontDist);
   const backOffPt = axisOff(backDist);
 
-  // Face normal — correct isometric visibility: cosR*cos(midA) + 0.5*sin(midA)
-  const sideNormals: number[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const midA = ((i + 0.5) / hexSides) * Math.PI * 2;
-    sideNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-  }
+  const sideNormals = computeHexSideNormals(cosR, hexSides);
 
   // === BACK HEXAGONAL FACE (draw first if facing camera) ===
   const drawBackFace = () => {
     const bfx = cx + backOffPt.x;
     const bfy = cy + backOffPt.y;
-
-    ctx.fillStyle = "#7a7a8e";
-    ctx.beginPath();
-    ctx.moveTo(bfx + hexVerts[0].x, bfy + hexVerts[0].y);
-    for (let i = 1; i < hexSides; i++) {
-      ctx.lineTo(bfx + hexVerts[i].x, bfy + hexVerts[i].y);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#6a6a7e";
-    ctx.lineWidth = 1 * zoom;
-    ctx.stroke();
+    drawHexCap(ctx, { x: bfx, y: bfy }, hexVerts, "#7a7a8e", "#6a6a7e", 1 * zoom);
 
     // Back face bolts at each vertex
     ctx.fillStyle = "#9a9aaa";
@@ -8673,10 +8577,7 @@ function drawGatlingMuzzleIso(
     const bbx = cx + backOffPt.x;
     const bby = cy + backOffPt.y;
 
-    // Sort sides by depth so closer faces draw last
-    const sortedSides = Array.from({ length: hexSides }, (_, i) => i).sort(
-      (a, b) => sideNormals[a] - sideNormals[b],
-    );
+    const sortedSides = sortSidesByDepth(sideNormals);
 
     for (const i of sortedSides) {
       const ni = (i + 1) % hexSides;
@@ -9805,17 +9706,9 @@ function drawFlamethrowerNozzle(
   const hexSides = 6;
   const facingFwd = fwdY >= 0;
 
-  const hexVerts: { x: number; y: number }[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const a = (i / hexSides) * Math.PI * 2;
-    hexVerts.push(isoOff(Math.cos(a) * hexR, Math.sin(a) * hexR));
-  }
-
+  const hexVerts = generateIsoHexVertices(isoOff, hexR, hexSides);
   const taperScale = 0.85;
-  const taperVerts = hexVerts.map((v) => ({
-    x: v.x * taperScale,
-    y: v.y * taperScale,
-  }));
+  const taperVerts = scaleVerts(hexVerts, taperScale);
 
   // Sections along barrel axis
   const startDist = 0;
@@ -9827,23 +9720,12 @@ function drawFlamethrowerNozzle(
   const muzzleBackPt = hexFrontPt;
   const muzzleEndPt = axisPoint(startDist + hexLen + muzzleLen);
 
-  // Side normals for depth sorting and lighting
-  const sideNormals: number[] = [];
-  for (let i = 0; i < hexSides; i++) {
-    const midA = ((i + 0.5) / hexSides) * Math.PI * 2;
-    sideNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-  }
+  const sideNormals = computeHexSideNormals(cosR, hexSides);
 
   // Flared muzzle vertices
   const muzzleScale = 1.35;
-  const muzzleVerts = taperVerts.map((v) => ({
-    x: v.x * muzzleScale,
-    y: v.y * muzzleScale,
-  }));
-  const muzzleTipVerts = taperVerts.map((v) => ({
-    x: v.x * muzzleScale * 1.15,
-    y: v.y * muzzleScale * 1.15,
-  }));
+  const muzzleVerts = scaleVerts(taperVerts, muzzleScale);
+  const muzzleTipVerts = scaleVerts(taperVerts, muzzleScale * 1.15);
 
   // Fuel line from pivot to barrel base
   ctx.strokeStyle = "#555";
@@ -9886,88 +9768,32 @@ function drawFlamethrowerNozzle(
       y: cageFrontPt.y - fwdY * (cageLen + cageRecoil) - cageLen * pitchRate,
     };
 
-    // Hex vertices for the cage cross-section
-    const cageVerts: { x: number; y: number }[] = [];
-    for (let i = 0; i < cageSides; i++) {
-      const a = (i / cageSides) * Math.PI * 2;
-      cageVerts.push(isoOff(Math.cos(a) * cageR, Math.sin(a) * cageR));
-    }
-
-    // Side face normals for depth sorting and lighting
-    const cageSideNormals: number[] = [];
-    for (let i = 0; i < cageSides; i++) {
-      const midA = ((i + 0.5) / cageSides) * Math.PI * 2;
-      cageSideNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-    }
-
+    const cageVerts = generateIsoHexVertices(isoOff, cageR, cageSides);
+    const cageSideNormals = computeHexSideNormals(cosR, cageSides);
     const cageFacingFwd = fwdY >= 0;
 
     // --- Draw back face (breech cap) ---
     const drawBreechCap = () => {
       const capPt = cageFacingFwd ? cageBackPt : cageFrontPt;
-      const capFill = cageFacingFwd ? "#4a4a55" : "#5a5a65";
-
-      ctx.fillStyle = capFill;
-      ctx.beginPath();
-      ctx.moveTo(capPt.x + cageVerts[0].x, capPt.y + cageVerts[0].y);
-      for (let i = 1; i < cageSides; i++) {
-        ctx.lineTo(capPt.x + cageVerts[i].x, capPt.y + cageVerts[i].y);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#3a3a45";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.stroke();
+      drawHexCap(ctx, capPt, cageVerts, cageFacingFwd ? "#4a4a55" : "#5a5a65", "#3a3a45", 0.7 * zoom);
 
       // Breech cap bolts at vertices
       ctx.fillStyle = "#6a6a78";
+      const boltVerts = scaleVerts(cageVerts, 0.7);
       for (let i = 0; i < cageSides; i++) {
         ctx.beginPath();
-        ctx.arc(
-          capPt.x + cageVerts[i].x * 0.7,
-          capPt.y + cageVerts[i].y * 0.7,
-          1.3 * zoom,
-          0,
-          Math.PI * 2,
-        );
+        ctx.arc(capPt.x + boltVerts[i].x, capPt.y + boltVerts[i].y, 1.3 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // Central breech plate (smaller hex inset)
-      ctx.fillStyle = "#555560";
-      ctx.beginPath();
-      ctx.moveTo(
-        capPt.x + cageVerts[0].x * 0.45,
-        capPt.y + cageVerts[0].y * 0.45,
-      );
-      for (let i = 1; i < cageSides; i++) {
-        ctx.lineTo(
-          capPt.x + cageVerts[i].x * 0.45,
-          capPt.y + cageVerts[i].y * 0.45,
-        );
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#48484e";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
+      drawHexCap(ctx, capPt, scaleVerts(cageVerts, 0.45), "#555560", "#48484e", 0.5 * zoom);
     };
 
     // --- Draw front face ---
     const drawFrontFace = () => {
       const facePt = cageFacingFwd ? cageFrontPt : cageBackPt;
-
-      ctx.fillStyle = cageFacingFwd ? "#5a5a65" : "#4a4a55";
-      ctx.beginPath();
-      ctx.moveTo(facePt.x + cageVerts[0].x, facePt.y + cageVerts[0].y);
-      for (let i = 1; i < cageSides; i++) {
-        ctx.lineTo(facePt.x + cageVerts[i].x, facePt.y + cageVerts[i].y);
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#3a3a45";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.stroke();
+      drawHexCap(ctx, facePt, cageVerts, cageFacingFwd ? "#5a5a65" : "#4a4a55", "#3a3a45", 0.6 * zoom);
 
       // Barrel opening hole (dark circle in center)
       ctx.fillStyle = "#1a1a22";
@@ -9978,9 +9804,7 @@ function drawFlamethrowerNozzle(
 
     // --- Draw side faces (depth-sorted) ---
     const drawSideFaces = () => {
-      const sortedSides = Array.from({ length: cageSides }, (_, i) => i).sort(
-        (a, b) => cageSideNormals[a] - cageSideNormals[b],
-      );
+      const sortedSides = sortSidesByDepth(cageSideNormals);
 
       for (const i of sortedSides) {
         const ni = (i + 1) % cageSides;
@@ -10077,9 +9901,7 @@ function drawFlamethrowerNozzle(
   }
 
   // === HEXAGONAL BARREL BODY — depth-sorted side quads with heat gradient ===
-  const sortedSides = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => sideNormals[a] - sideNormals[b],
-  );
+  const sortedSides = sortSidesByDepth(sideNormals);
 
   for (const i of sortedSides) {
     const ni = (i + 1) % hexSides;
@@ -10213,38 +10035,25 @@ function drawFlamethrowerNozzle(
   }
 
   // === BARREL-MUZZLE JUNCTION CAP ===
-  {
-    const jCapPt = facingFwd ? hexFrontPt : hexBackPt;
-    const jCapVerts = facingFwd ? taperVerts : hexVerts;
-    ctx.fillStyle = facingFwd ? "#505058" : "#5a5a62";
-    ctx.beginPath();
-    ctx.moveTo(jCapPt.x + jCapVerts[0].x, jCapPt.y + jCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(jCapPt.x + jCapVerts[i].x, jCapPt.y + jCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "#4e4e5c";
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-  }
+  drawHexCap(
+    ctx,
+    facingFwd ? hexFrontPt : hexBackPt,
+    facingFwd ? taperVerts : hexVerts,
+    facingFwd ? "#505058" : "#5a5a62",
+    "#4e4e5c",
+    0.5 * zoom,
+  );
 
   // === MUZZLE BACK CAP ===
-  {
-    const mbCapPt = facingFwd ? muzzleBackPt : muzzleEndPt;
-    const mbCapVerts = facingFwd ? muzzleVerts : muzzleTipVerts;
-    ctx.fillStyle = facingFwd ? "#484850" : "#404048";
-    ctx.beginPath();
-    ctx.moveTo(mbCapPt.x + mbCapVerts[0].x, mbCapPt.y + mbCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(mbCapPt.x + mbCapVerts[i].x, mbCapPt.y + mbCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-  }
+  drawHexCap(
+    ctx,
+    facingFwd ? muzzleBackPt : muzzleEndPt,
+    facingFwd ? muzzleVerts : muzzleTipVerts,
+    facingFwd ? "#484850" : "#404048",
+  );
 
   // === FLARED HEXAGONAL MUZZLE — depth-sorted with heat coloring ===
-  const muzzleSorted = Array.from({ length: hexSides }, (_, i) => i).sort(
-    (a, b) => sideNormals[a] - sideNormals[b],
-  );
+  const muzzleSorted = sortSidesByDepth(sideNormals);
 
   for (const i of muzzleSorted) {
     const ni = (i + 1) % hexSides;
@@ -10293,16 +10102,7 @@ function drawFlamethrowerNozzle(
   {
     const mCapPt = facingFwd ? muzzleEndPt : muzzleBackPt;
     const mCapVerts = facingFwd ? muzzleTipVerts : muzzleVerts;
-    ctx.fillStyle = facingFwd ? "#4a3a30" : "#3a3035";
-    ctx.beginPath();
-    ctx.moveTo(mCapPt.x + mCapVerts[0].x, mCapPt.y + mCapVerts[0].y);
-    for (let i = 1; i < hexSides; i++)
-      ctx.lineTo(mCapPt.x + mCapVerts[i].x, mCapPt.y + mCapVerts[i].y);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255, 80, 30, 0.4)";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.stroke();
+    drawHexCap(ctx, mCapPt, mCapVerts, facingFwd ? "#4a3a30" : "#3a3035", "rgba(255, 80, 30, 0.4)", 0.8 * zoom);
   }
 
   // Orange hex rings on muzzle
@@ -10338,23 +10138,9 @@ function drawFlamethrowerNozzle(
     const injFront = axisPoint(startDist + injLen);
     const injTipPt = axisPoint(startDist + injLen + muzzleLen * 0.1);
 
-    // Hex cross-section vertices
-    const injVerts: { x: number; y: number }[] = [];
-    for (let i = 0; i < injSides; i++) {
-      const a = (i / injSides) * Math.PI * 2;
-      injVerts.push(isoOff(Math.cos(a) * injHexR, Math.sin(a) * injHexR));
-    }
-    const injTaperVerts = injVerts.map((v) => ({
-      x: v.x * injTaper,
-      y: v.y * injTaper,
-    }));
-
-    // Side normals for depth sorting & lighting
-    const injNormals: number[] = [];
-    for (let i = 0; i < injSides; i++) {
-      const midA = ((i + 0.5) / injSides) * Math.PI * 2;
-      injNormals.push(Math.cos(midA) * cosR + 0.5 * Math.sin(midA));
-    }
+    const injVerts = generateIsoHexVertices(isoOff, injHexR, injSides);
+    const injTaperVerts = scaleVerts(injVerts, injTaper);
+    const injNormals = computeHexSideNormals(cosR, injSides);
 
     // Feed line from pivot to injector
     ctx.strokeStyle = "#4a4a55";
@@ -10386,49 +10172,19 @@ function drawFlamethrowerNozzle(
     );
     ctx.stroke();
 
-    // Back cap (drawn first if facing forward)
     const injFacingFwd = fwdY >= 0;
     const drawInjBackCap = () => {
       const cPt = injFacingFwd ? injBack : injTipPt;
       const cVerts = injFacingFwd ? injVerts : injTaperVerts;
-      ctx.fillStyle = injFacingFwd ? "#42424c" : "#4e4e58";
-      ctx.beginPath();
-      ctx.moveTo(
-        cPt.x + injOff.x + cVerts[0].x,
-        cPt.y + injOff.y + cVerts[0].y,
-      );
-      for (let i = 1; i < injSides; i++)
-        ctx.lineTo(
-          cPt.x + injOff.x + cVerts[i].x,
-          cPt.y + injOff.y + cVerts[i].y,
-        );
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#35353e";
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
+      const center = { x: cPt.x + injOff.x, y: cPt.y + injOff.y };
+      drawHexCap(ctx, center, cVerts, injFacingFwd ? "#42424c" : "#4e4e58", "#35353e", 0.5 * zoom);
     };
 
-    // Front cap with bore hole
     const drawInjFrontCap = () => {
       const cPt = injFacingFwd ? injTipPt : injBack;
       const cVerts = injFacingFwd ? injTaperVerts : injVerts;
-      ctx.fillStyle = injFacingFwd ? "#4e4e58" : "#42424c";
-      ctx.beginPath();
-      ctx.moveTo(
-        cPt.x + injOff.x + cVerts[0].x,
-        cPt.y + injOff.y + cVerts[0].y,
-      );
-      for (let i = 1; i < injSides; i++)
-        ctx.lineTo(
-          cPt.x + injOff.x + cVerts[i].x,
-          cPt.y + injOff.y + cVerts[i].y,
-        );
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 80, 30, 0.35)";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.stroke();
+      const center = { x: cPt.x + injOff.x, y: cPt.y + injOff.y };
+      drawHexCap(ctx, center, cVerts, injFacingFwd ? "#4e4e58" : "#42424c", "rgba(255, 80, 30, 0.35)", 0.6 * zoom);
       // Bore hole
       ctx.fillStyle = "#1a1a22";
       ctx.beginPath();
@@ -10444,9 +10200,7 @@ function drawFlamethrowerNozzle(
 
     // Depth-sorted side faces with heat gradient
     const drawInjSides = () => {
-      const sorted = Array.from({ length: injSides }, (_, i) => i).sort(
-        (a, b) => injNormals[a] - injNormals[b],
-      );
+      const sorted = sortSidesByDepth(injNormals);
 
       for (const i of sorted) {
         const ni = (i + 1) % injSides;
@@ -10552,9 +10306,7 @@ function drawFlamethrowerNozzle(
         y: v.y * bScale * 1.1,
       }));
 
-      const bSorted = Array.from({ length: injSides }, (_, i) => i).sort(
-        (a, bb2) => injNormals[a] - injNormals[bb2],
-      );
+      const bSorted = sortSidesByDepth(injNormals);
       for (const i of bSorted) {
         const ni = (i + 1) % injSides;
         if (injNormals[i] < -0.15) continue;
@@ -10884,7 +10636,7 @@ function drawLibraryOrbitalEffects(
 
   // Floating arcane rings — small flat ellipses (no rotation)
   for (let ring = 0; ring < 3; ring++) {
-    const ringY = topY - 10 - spireHeight * (0.35 + ring * 0.2);
+    const ringY = topY - 10 * zoom - spireHeight * (0.35 + ring * 0.2);
     const ringSize = (3.5 - ring * 0.4) * zoom;
     const ringRY = ringSize * 0.4;
     const ringAlpha =
@@ -11194,7 +10946,7 @@ function drawLibraryOrbitalEffects(
 
     ctx.strokeStyle = `rgba(100, 200, 255, ${0.4 + Math.sin(time * 3) * 0.2})`;
     ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([4 * zoom, 4 * zoom]);
     ctx.beginPath();
     ctx.ellipse(
       sX,
@@ -11677,113 +11429,12 @@ function renderLibraryTower(
   );
 
   // ========== BASE RAILING (3D isometric ring) ==========
-  const libBalY = screenPos.y + 2 * zoom;
-  const libBalRX = w * 1.05;
-  const libBalRY = d * 1.05;
-  const libBalH = 5 * zoom;
-  const libBalSegs = 32;
-  const libBalPosts = 16;
-
-  ctx.strokeStyle = "#4a3a2a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    libBalY,
-    libBalRX,
-    libBalRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
+  drawIsometricRailing(
+    ctx, screenPos.x, screenPos.y + 2 * zoom,
+    w * 1.05, d * 1.05, 5 * zoom, 32, 16,
+    { rail: "#4a3a2a", topRail: "#6a5a4a", backPanel: "rgba(90, 74, 58, 0.35)", frontPanel: "rgba(90, 74, 58, 0.25)" },
+    zoom,
   );
-  ctx.stroke();
-  ctx.strokeStyle = "#6a5a4a";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    libBalY - libBalH,
-    libBalRX,
-    libBalRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#6a5a4a";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < libBalPosts; bp++) {
-    const pa = (bp / libBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) > 0) continue;
-    const px = screenPos.x + Math.cos(pa) * libBalRX;
-    const py = libBalY + Math.sin(pa) * libBalRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - libBalH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < libBalSegs; i++) {
-    const a0 = (i / libBalSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / libBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * libBalRX;
-    const y0b = libBalY + Math.sin(a0) * libBalRY;
-    const x1 = screenPos.x + Math.cos(a1) * libBalRX;
-    const y1b = libBalY + Math.sin(a1) * libBalRY;
-    ctx.fillStyle = `rgba(90, 74, 58, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - libBalH);
-    ctx.lineTo(x0, y0b - libBalH);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.strokeStyle = "#4a3a2a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, libBalY, libBalRX, libBalRY, 0, 0, Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = "#6a5a4a";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    libBalY - libBalH,
-    libBalRX,
-    libBalRY,
-    0,
-    0,
-    Math.PI,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#6a5a4a";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < libBalPosts; bp++) {
-    const pa = (bp / libBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) <= 0) continue;
-    const px = screenPos.x + Math.cos(pa) * libBalRX;
-    const py = libBalY + Math.sin(pa) * libBalRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - libBalH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < libBalSegs; i++) {
-    const a0 = (i / libBalSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / libBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * libBalRX;
-    const y0b = libBalY + Math.sin(a0) * libBalRY;
-    const x1 = screenPos.x + Math.cos(a1) * libBalRX;
-    const y1b = libBalY + Math.sin(a1) * libBalRY;
-    ctx.fillStyle = `rgba(90, 74, 58, 0.25)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - libBalH);
-    ctx.lineTo(x0, y0b - libBalH);
-    ctx.closePath();
-    ctx.fill();
-  }
 
   // Stone block pattern on lower body with mortar joints
   ctx.lineWidth = 1 * zoom;
@@ -12877,7 +12528,7 @@ function renderLibraryTower(
   // Stone blocks on upper section with improved mortar rendering
   ctx.lineWidth = 1 * zoom;
   for (let row = 0; row < 4; row++) {
-    const blockY = pistonTopY + 12 - row * baseHeight * 0.12 * zoom;
+    const blockY = pistonTopY + 12 * zoom - row * baseHeight * 0.12 * zoom;
     // Dark mortar groove
     ctx.strokeStyle = "#2a1a0a";
     ctx.beginPath();
@@ -12907,7 +12558,7 @@ function renderLibraryTower(
   ctx.lineWidth = 1 * zoom;
 
   for (let i = 1; i <= tower.level; i++) {
-    const lineY = pistonTopY + 16 - (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
+    const lineY = pistonTopY + 16 * zoom - (baseHeight * 0.6 * zoom * i) / (tower.level + 1);
     ctx.strokeStyle = `${mainColor} ${panelGlow * 0.5})`;
     ctx.beginPath();
     ctx.moveTo(sX - w * 0.15, lineY + d * 0.3);
@@ -13486,7 +13137,7 @@ function renderLibraryTower(
   ctx.shadowBlur = 0;
 
   ctx.strokeStyle = "#3a2a1a";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1 * zoom;
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2 + time * 2;
     ctx.beginPath();
@@ -13866,113 +13517,12 @@ function renderLabTower(
   );
 
   // ========== BASE RAILING (3D isometric ring wrapping the base) ==========
-  const labBalY = screenPos.y + 4 * zoom;
-  const labBalRX = w * 1.05;
-  const labBalRY = d * 1.05;
-  const labBalH = 5 * zoom;
-  const labBalSegs = 32;
-  const labBalPosts = 16;
-
-  ctx.strokeStyle = "#2a6a8a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    labBalY,
-    labBalRX,
-    labBalRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
+  drawIsometricRailing(
+    ctx, screenPos.x, screenPos.y + 4 * zoom,
+    w * 1.05, d * 1.05, 5 * zoom, 32, 16,
+    { rail: "#2a6a8a", topRail: "#3a8aaa", backPanel: "rgba(45, 90, 123, 0.35)", frontPanel: "rgba(45, 90, 123, 0.25)" },
+    zoom,
   );
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    labBalY - labBalH,
-    labBalRX,
-    labBalRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < labBalPosts; bp++) {
-    const pa = (bp / labBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) > 0) continue;
-    const px = screenPos.x + Math.cos(pa) * labBalRX;
-    const py = labBalY + Math.sin(pa) * labBalRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - labBalH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < labBalSegs; i++) {
-    const a0 = (i / labBalSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / labBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * labBalRX;
-    const y0b = labBalY + Math.sin(a0) * labBalRY;
-    const x1 = screenPos.x + Math.cos(a1) * labBalRX;
-    const y1b = labBalY + Math.sin(a1) * labBalRY;
-    ctx.fillStyle = `rgba(45, 90, 123, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - labBalH);
-    ctx.lineTo(x0, y0b - labBalH);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.strokeStyle = "#2a6a8a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, labBalY, labBalRX, labBalRY, 0, 0, Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    labBalY - labBalH,
-    labBalRX,
-    labBalRY,
-    0,
-    0,
-    Math.PI,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < labBalPosts; bp++) {
-    const pa = (bp / labBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) <= 0) continue;
-    const px = screenPos.x + Math.cos(pa) * labBalRX;
-    const py = labBalY + Math.sin(pa) * labBalRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - labBalH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < labBalSegs; i++) {
-    const a0 = (i / labBalSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / labBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * labBalRX;
-    const y0b = labBalY + Math.sin(a0) * labBalRY;
-    const x1 = screenPos.x + Math.cos(a1) * labBalRX;
-    const y1b = labBalY + Math.sin(a1) * labBalRY;
-    ctx.fillStyle = `rgba(45, 90, 123, 0.25)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - labBalH);
-    ctx.lineTo(x0, y0b - labBalH);
-    ctx.closePath();
-    ctx.fill();
-  }
 
   // ========== FACE DETAILS (panel seams, rivets, weathering) ==========
   const bodyH = (baseHeight - 6) * zoom;
@@ -15355,63 +14905,8 @@ function renderLabTower(
   const labTopRailRX = w * 0.88;
   const labTopRailRY = d * 0.88;
   const labTopRailH = 5 * zoom;
-  const labTopRailSegs = 32;
-  const labTopRailPosts = 16;
-
-  ctx.strokeStyle = "#2a6a8a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    labTopRailY,
-    labTopRailRX,
-    labTopRailRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    labTopRailY - labTopRailH,
-    labTopRailRX,
-    labTopRailRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < labTopRailPosts; bp++) {
-    const pa = (bp / labTopRailPosts) * Math.PI * 2;
-    if (Math.sin(pa) > 0) continue;
-    const px = screenPos.x + Math.cos(pa) * labTopRailRX;
-    const py = labTopRailY + Math.sin(pa) * labTopRailRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - labTopRailH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < labTopRailSegs; i++) {
-    const a0 = (i / labTopRailSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / labTopRailSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * labTopRailRX;
-    const y0b = labTopRailY + Math.sin(a0) * labTopRailRY;
-    const x1 = screenPos.x + Math.cos(a1) * labTopRailRX;
-    const y1b = labTopRailY + Math.sin(a1) * labTopRailRY;
-    ctx.fillStyle = `rgba(45, 90, 123, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - labTopRailH);
-    ctx.lineTo(x0, y0b - labTopRailH);
-    ctx.closePath();
-    ctx.fill();
-  }
+  const labTopRailColors = { rail: "#2a6a8a", topRail: "#3a8aaa", backPanel: "rgba(45, 90, 123, 0.35)", frontPanel: "rgba(45, 90, 123, 0.25)" };
+  drawIsometricRailing(ctx, screenPos.x, labTopRailY, labTopRailRX, labTopRailRY, labTopRailH, 32, 16, labTopRailColors, zoom, "back");
 
   if (tower.level === 4 && tower.upgrade === "A") {
     renderFocusedBeam(
@@ -15452,60 +14947,7 @@ function renderLabTower(
   // ========== TOP RAILING FRONT HALF (in front of coil/beam) ==========
   // For 4B, the front railing is drawn inside renderChainLightning before sub-coils
   if (!(tower.level === 4 && tower.upgrade === "B")) {
-    ctx.strokeStyle = "#2a6a8a";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      labTopRailY,
-      labTopRailRX,
-      labTopRailRY,
-      0,
-      0,
-      Math.PI,
-    );
-    ctx.stroke();
-    ctx.strokeStyle = "#3a8aaa";
-    ctx.beginPath();
-    ctx.ellipse(
-      screenPos.x,
-      labTopRailY - labTopRailH,
-      labTopRailRX,
-      labTopRailRY,
-      0,
-      0,
-      Math.PI,
-    );
-    ctx.stroke();
-    ctx.strokeStyle = "#3a8aaa";
-    ctx.lineWidth = 1 * zoom;
-    for (let bp = 0; bp < labTopRailPosts; bp++) {
-      const pa = (bp / labTopRailPosts) * Math.PI * 2;
-      if (Math.sin(pa) <= 0) continue;
-      const px = screenPos.x + Math.cos(pa) * labTopRailRX;
-      const py = labTopRailY + Math.sin(pa) * labTopRailRY;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(px, py - labTopRailH);
-      ctx.stroke();
-    }
-    for (let i = 0; i < labTopRailSegs; i++) {
-      const a0 = (i / labTopRailSegs) * Math.PI * 2;
-      const a1 = ((i + 1) / labTopRailSegs) * Math.PI * 2;
-      if (Math.sin((a0 + a1) / 2) <= 0) continue;
-      const x0 = screenPos.x + Math.cos(a0) * labTopRailRX;
-      const y0b = labTopRailY + Math.sin(a0) * labTopRailRY;
-      const x1 = screenPos.x + Math.cos(a1) * labTopRailRX;
-      const y1b = labTopRailY + Math.sin(a1) * labTopRailRY;
-      ctx.fillStyle = `rgba(45, 90, 123, 0.25)`;
-      ctx.beginPath();
-      ctx.moveTo(x0, y0b);
-      ctx.lineTo(x1, y1b);
-      ctx.lineTo(x1, y1b - labTopRailH);
-      ctx.lineTo(x0, y0b - labTopRailH);
-      ctx.closePath();
-      ctx.fill();
-    }
+    drawIsometricRailing(ctx, screenPos.x, labTopRailY, labTopRailRX, labTopRailRY, labTopRailH, 32, 16, labTopRailColors, zoom, "front");
   }
 
   ctx.restore();
@@ -17832,44 +17274,11 @@ function renderChainLightning(
   const railRX = railW * 0.88;
   const railRY = railD * 0.88;
   const railH = 5 * zoom;
-  ctx.strokeStyle = "#2a6a8a";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, railY, railRX, railRY, 0, 0, Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, railY - railH, railRX, railRY, 0, 0, Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = "#3a8aaa";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < 16; bp++) {
-    const pa = (bp / 16) * Math.PI * 2;
-    if (Math.sin(pa) <= 0) continue;
-    const px = screenPos.x + Math.cos(pa) * railRX;
-    const py = railY + Math.sin(pa) * railRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - railH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < 32; i++) {
-    const a0 = (i / 32) * Math.PI * 2;
-    const a1 = ((i + 1) / 32) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * railRX;
-    const y0b = railY + Math.sin(a0) * railRY;
-    const x1 = screenPos.x + Math.cos(a1) * railRX;
-    const y1b = railY + Math.sin(a1) * railRY;
-    ctx.fillStyle = "rgba(45, 90, 123, 0.25)";
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - railH);
-    ctx.lineTo(x0, y0b - railH);
-    ctx.closePath();
-    ctx.fill();
-  }
+  drawIsometricRailing(
+    ctx, screenPos.x, railY, railRX, railRY, railH, 32, 16,
+    { rail: "#2a6a8a", topRail: "#3a8aaa", backPanel: "rgba(45, 90, 123, 0.35)", frontPanel: "rgba(45, 90, 123, 0.25)" },
+    zoom, "front",
+  );
 
   // === SUB-COIL TOWERS with PISTONS, 3D COILS, and INSULATORS ===
   const coilPositions = [
@@ -18858,109 +18267,11 @@ function renderArchTower(
   const archBalRX = (subBuildingWidth - 4 + pillarSpread * 2) * zoom * ISO_PRISM_W_FACTOR;
   const archBalRY = (baseDepth + 24 + pillarSpread * 2) * zoom * ISO_PRISM_D_FACTOR;
   const archBalH = 5 * zoom;
-  const archBalSegs = 32;
-  const archBalPosts = 16;
-
-  ctx.strokeStyle = "#786858";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    archBalY,
-    archBalRX,
-    archBalRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
+  drawIsometricRailing(
+    ctx, screenPos.x, archBalY, archBalRX, archBalRY, archBalH, 32, 16,
+    { rail: "#786858", topRail: "#a89878", backPanel: "rgba(152, 136, 104, 0.35)", frontPanel: "rgba(152, 136, 104, 0.25)" },
+    zoom,
   );
-  ctx.stroke();
-  ctx.strokeStyle = "#a89878";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    archBalY - archBalH,
-    archBalRX,
-    archBalRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#a89878";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < archBalPosts; bp++) {
-    const pa = (bp / archBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) > 0) continue;
-    const px = screenPos.x + Math.cos(pa) * archBalRX;
-    const py = archBalY + Math.sin(pa) * archBalRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - archBalH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < archBalSegs; i++) {
-    const a0 = (i / archBalSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / archBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * archBalRX;
-    const y0b = archBalY + Math.sin(a0) * archBalRY;
-    const x1 = screenPos.x + Math.cos(a1) * archBalRX;
-    const y1b = archBalY + Math.sin(a1) * archBalRY;
-    ctx.fillStyle = `rgba(152, 136, 104, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - archBalH);
-    ctx.lineTo(x0, y0b - archBalH);
-    ctx.closePath();
-    ctx.fill();
-  }
-  ctx.strokeStyle = "#786858";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, archBalY, archBalRX, archBalRY, 0, 0, Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = "#a89878";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    archBalY - archBalH,
-    archBalRX,
-    archBalRY,
-    0,
-    0,
-    Math.PI,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#a89878";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < archBalPosts; bp++) {
-    const pa = (bp / archBalPosts) * Math.PI * 2;
-    if (Math.sin(pa) <= 0) continue;
-    const px = screenPos.x + Math.cos(pa) * archBalRX;
-    const py = archBalY + Math.sin(pa) * archBalRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - archBalH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < archBalSegs; i++) {
-    const a0 = (i / archBalSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / archBalSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * archBalRX;
-    const y0b = archBalY + Math.sin(a0) * archBalRY;
-    const x1 = screenPos.x + Math.cos(a1) * archBalRX;
-    const y1b = archBalY + Math.sin(a1) * archBalRY;
-    ctx.fillStyle = `rgba(152, 136, 104, 0.25)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - archBalH);
-    ctx.lineTo(x0, y0b - archBalH);
-    ctx.closePath();
-    ctx.fill();
-  }
 
   // === DETAILED STONE MASONRY ON SUB-BUILDING FACES ===
   const mortarGlow = 0.12 + Math.sin(time * 1.5) * 0.06 + attackPulse * 0.15;
@@ -19335,7 +18646,7 @@ function renderArchTower(
 
     // Pipe shadow (offset darker line)
     ctx.strokeStyle = "rgba(40, 30, 20, 0.3)";
-    ctx.lineWidth = (pipeR * 2 + 1) * 1;
+    ctx.lineWidth = pipeR * 2 + zoom;
     ctx.beginPath();
     ctx.moveTo(pipeStartX + subShift * 0.3 + 1 * zoom, pipeStartY + 1 * zoom);
     ctx.quadraticCurveTo(pipeMidX + 1 * zoom, pipeMidY + 1 * zoom, pipeEndX + 1 * zoom, pipeEndY + 1 * zoom);
@@ -21435,124 +20746,11 @@ function renderClubTower(
   const balRingRX = w * 1.05;
   const balRingRY = d * 1.05;
   const balRingH = 6 * zoom;
-  const balSegments = 32;
-  const balPosts = 16;
-
-  // Back half of bottom ellipse
-  ctx.strokeStyle = "#a08020";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    balRingY,
-    balRingRX,
-    balRingRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
+  drawIsometricRailing(
+    ctx, screenPos.x, balRingY, balRingRX, balRingRY, balRingH, 32, 16,
+    { rail: "#a08020", topRail: "#c9a227", backPanel: "rgba(42, 90, 58, 0.35)", frontPanel: "rgba(42, 90, 58, 0.25)" },
+    zoom,
   );
-  ctx.stroke();
-
-  // Back half of top ellipse
-  ctx.strokeStyle = "#c9a227";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    balRingY - balRingH,
-    balRingRX,
-    balRingRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-
-  // Vertical posts (back half)
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < balPosts; bp++) {
-    const postAngle = (bp / balPosts) * Math.PI * 2;
-    if (Math.sin(postAngle) > 0) continue;
-    const postX = screenPos.x + Math.cos(postAngle) * balRingRX;
-    const postBaseY = balRingY + Math.sin(postAngle) * balRingRY;
-    ctx.beginPath();
-    ctx.moveTo(postX, postBaseY);
-    ctx.lineTo(postX, postBaseY - balRingH);
-    ctx.stroke();
-  }
-
-  // Back wall fills
-  for (let i = 0; i < balSegments; i++) {
-    const a0 = (i / balSegments) * Math.PI * 2;
-    const a1 = ((i + 1) / balSegments) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * balRingRX;
-    const y0b = balRingY + Math.sin(a0) * balRingRY;
-    const x1 = screenPos.x + Math.cos(a1) * balRingRX;
-    const y1b = balRingY + Math.sin(a1) * balRingRY;
-    ctx.fillStyle = `rgba(42, 90, 58, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - balRingH);
-    ctx.lineTo(x0, y0b - balRingH);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // Front half of bottom ellipse
-  ctx.strokeStyle = "#a08020";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, balRingY, balRingRX, balRingRY, 0, 0, Math.PI);
-  ctx.stroke();
-
-  // Front half of top ellipse
-  ctx.strokeStyle = "#c9a227";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    balRingY - balRingH,
-    balRingRX,
-    balRingRY,
-    0,
-    0,
-    Math.PI,
-  );
-  ctx.stroke();
-
-  // Vertical posts (front half)
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < balPosts; bp++) {
-    const postAngle = (bp / balPosts) * Math.PI * 2;
-    if (Math.sin(postAngle) <= 0) continue;
-    const postX = screenPos.x + Math.cos(postAngle) * balRingRX;
-    const postBaseY = balRingY + Math.sin(postAngle) * balRingRY;
-    ctx.beginPath();
-    ctx.moveTo(postX, postBaseY);
-    ctx.lineTo(postX, postBaseY - balRingH);
-    ctx.stroke();
-  }
-
-  // Front wall fills
-  for (let i = 0; i < balSegments; i++) {
-    const a0 = (i / balSegments) * Math.PI * 2;
-    const a1 = ((i + 1) / balSegments) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * balRingRX;
-    const y0b = balRingY + Math.sin(a0) * balRingRY;
-    const x1 = screenPos.x + Math.cos(a1) * balRingRX;
-    const y1b = balRingY + Math.sin(a1) * balRingRY;
-    ctx.fillStyle = `rgba(42, 90, 58, 0.25)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - balRingH);
-    ctx.lineTo(x0, y0b - balRingH);
-    ctx.closePath();
-    ctx.fill();
-  }
 
   // ========== ENTRANCE PORTICO WITH GREEK REVIVAL COLUMNS ==========
   const porticoFrontY = screenPos.y + d * 0.45;
@@ -22738,63 +21936,8 @@ function renderClubTower(
   const topRailRX = w * 0.88;
   const topRailRY = d * 0.88;
   const topRailH = 5 * zoom;
-  const topRailSegs = 32;
-  const topRailPosts = 16;
-
-  ctx.strokeStyle = "#a08020";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topRailY,
-    topRailRX,
-    topRailRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#c9a227";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topRailY - topRailH,
-    topRailRX,
-    topRailRY,
-    0,
-    Math.PI,
-    Math.PI * 2,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < topRailPosts; bp++) {
-    const pa = (bp / topRailPosts) * Math.PI * 2;
-    if (Math.sin(pa) > 0) continue;
-    const px = screenPos.x + Math.cos(pa) * topRailRX;
-    const py = topRailY + Math.sin(pa) * topRailRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - topRailH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < topRailSegs; i++) {
-    const a0 = (i / topRailSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / topRailSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) > 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * topRailRX;
-    const y0b = topRailY + Math.sin(a0) * topRailRY;
-    const x1 = screenPos.x + Math.cos(a1) * topRailRX;
-    const y1b = topRailY + Math.sin(a1) * topRailRY;
-    ctx.fillStyle = `rgba(42, 90, 58, 0.35)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - topRailH);
-    ctx.lineTo(x0, y0b - topRailH);
-    ctx.closePath();
-    ctx.fill();
-  }
+  const clubTopRailColors = { rail: "#a08020", topRail: "#c9a227", backPanel: "rgba(42, 90, 58, 0.35)", frontPanel: "rgba(42, 90, 58, 0.25)" };
+  drawIsometricRailing(ctx, screenPos.x, topRailY, topRailRX, topRailRY, topRailH, 32, 16, clubTopRailColors, zoom, "back");
 
   // ========== WAVING CLUB BANNER (behind roof, on right side) ==========
   const flagPoleX = screenPos.x + w * 0.35;
@@ -23917,52 +23060,7 @@ function renderClubTower(
   }
 
   // ========== TOP RAILING FRONT HALF (in front of roof/dome/chimney/effects) ==========
-  ctx.strokeStyle = "#a08020";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.ellipse(screenPos.x, topRailY, topRailRX, topRailRY, 0, 0, Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = "#c9a227";
-  ctx.beginPath();
-  ctx.ellipse(
-    screenPos.x,
-    topRailY - topRailH,
-    topRailRX,
-    topRailRY,
-    0,
-    0,
-    Math.PI,
-  );
-  ctx.stroke();
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1 * zoom;
-  for (let bp = 0; bp < topRailPosts; bp++) {
-    const pa = (bp / topRailPosts) * Math.PI * 2;
-    if (Math.sin(pa) <= 0) continue;
-    const px = screenPos.x + Math.cos(pa) * topRailRX;
-    const py = topRailY + Math.sin(pa) * topRailRY;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(px, py - topRailH);
-    ctx.stroke();
-  }
-  for (let i = 0; i < topRailSegs; i++) {
-    const a0 = (i / topRailSegs) * Math.PI * 2;
-    const a1 = ((i + 1) / topRailSegs) * Math.PI * 2;
-    if (Math.sin((a0 + a1) / 2) <= 0) continue;
-    const x0 = screenPos.x + Math.cos(a0) * topRailRX;
-    const y0b = topRailY + Math.sin(a0) * topRailRY;
-    const x1 = screenPos.x + Math.cos(a1) * topRailRX;
-    const y1b = topRailY + Math.sin(a1) * topRailRY;
-    ctx.fillStyle = `rgba(42, 90, 58, 0.25)`;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0b);
-    ctx.lineTo(x1, y1b);
-    ctx.lineTo(x1, y1b - topRailH);
-    ctx.lineTo(x0, y0b - topRailH);
-    ctx.closePath();
-    ctx.fill();
-  }
+  drawIsometricRailing(ctx, screenPos.x, topRailY, topRailRX, topRailRY, topRailH, 32, 16, clubTopRailColors, zoom, "front");
 
   // ========== LEVEL 2 UNIQUE FEATURES ==========
   if (tower.level >= 2) {
@@ -24172,67 +23270,18 @@ function renderStationTower(
   const isoD = baseD * zoom * ISO_PRISM_D_FACTOR;
 
   // ========== FOUNDATION (proper isometric diamond aligned with grid) ==========
-  // Helper function for isometric diamond
-  const drawIsoDiamond = (
-    cx: number,
-    cy: number,
-    w: number,
-    d: number,
-    h: number,
-    topColor: string,
-    leftColor: string,
-    rightColor: string,
-  ) => {
-    const hw = w * zoom * 0.5;
-    const hd = d * zoom * 0.25;
-    const hh = h * zoom;
-
-    // Top face (diamond)
-    ctx.fillStyle = topColor;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - hh - hd); // Top
-    ctx.lineTo(cx + hw, cy - hh); // Right
-    ctx.lineTo(cx, cy - hh + hd); // Bottom
-    ctx.lineTo(cx - hw, cy - hh); // Left
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Left face
-    ctx.fillStyle = leftColor;
-    ctx.beginPath();
-    ctx.moveTo(cx - hw, cy - hh); // Top-left
-    ctx.lineTo(cx, cy - hh + hd); // Top-right
-    ctx.lineTo(cx, cy + hd); // Bottom-right
-    ctx.lineTo(cx - hw, cy); // Bottom-left
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.4)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Right face
-    ctx.fillStyle = rightColor;
-    ctx.beginPath();
-    ctx.moveTo(cx + hw, cy - hh); // Top-right
-    ctx.lineTo(cx + hw, cy); // Bottom-right
-    ctx.lineTo(cx, cy + hd); // Bottom
-    ctx.lineTo(cx, cy - hh + hd); // Top
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  };
+  const stationDiamond = (
+    cx: number, cy: number,
+    w: number, d: number, h: number,
+    topColor: string, leftColor: string, rightColor: string,
+  ) => drawIsoDiamond(ctx, cx, cy, w, d, h, topColor, leftColor, rightColor, zoom);
 
   // ========== LEVEL-SPECIFIC THEMED BASE ==========
   if (tower.level === 1) {
     // BARRACKS BASE - Wooden military camp platform with detailed texturing
 
     // Bottom dirt/stone foundation layer (thick, matching L2/L3 pattern)
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 19 * zoom,
       baseW + 22,
@@ -24303,7 +23352,7 @@ function renderStationTower(
     }
 
     // Middle wooden plank platform (thick mid-tier)
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 12,
@@ -24393,7 +23442,7 @@ function renderStationTower(
     }
 
     // Top wooden deck (thicker, matching L2/L3 tier pattern)
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y,
       baseW + 4,
@@ -24600,7 +23649,7 @@ function renderStationTower(
     // GARRISON BASE - Stone military platform with detailed masonry
 
     // Foundation stone - heavy base
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 17 * zoom,
       baseW + 20,
@@ -24664,7 +23713,7 @@ function renderStationTower(
     }
 
     // Cobblestone layer
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 7 * zoom,
       baseW + 12,
@@ -24685,7 +23734,7 @@ function renderStationTower(
     ctx.stroke();
 
     // Top stone platform
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y,
       baseW + 4,
@@ -25025,7 +24074,7 @@ function renderStationTower(
     // FORTRESS BASE - Heavy stone fortress platform with imposing masonry
 
     // Deep foundation - massive stone base
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 19 * zoom,
       baseW + 24,
@@ -25104,7 +24153,7 @@ function renderStationTower(
     }
 
     // Stone wall layer
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 14,
@@ -25128,7 +24177,7 @@ function renderStationTower(
     ctx.stroke();
 
     // Top fortress platform
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y,
       baseW + 6,
@@ -25648,7 +24697,7 @@ function renderStationTower(
     // CENTAUR STABLE BASE - Clay red foundation with dark clay trim and mossy vine overlay (3 tiers)
 
     // Bottom tier - heavy dark clay red foundation (deepest, widest)
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 19 * zoom,
       baseW + 26,
@@ -25728,7 +24777,7 @@ function renderStationTower(
     }
 
     // Middle tier - dark clay red stone
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 16,
@@ -25776,7 +24825,7 @@ function renderStationTower(
     }
 
     // Top tier - dark clay red platform
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y,
       baseW + 8,
@@ -25993,7 +25042,7 @@ function renderStationTower(
     // ROYAL CASTLE BASE - Grand royal military fortress with detailed masonry
 
     // Deep royal foundation - massive stone base
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 19 * zoom,
       baseW + 26,
@@ -26073,7 +25122,7 @@ function renderStationTower(
     }
 
     // Royal stone tier
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y + 8 * zoom,
       baseW + 16,
@@ -26097,7 +25146,7 @@ function renderStationTower(
     ctx.stroke();
 
     // Top royal platform
-    drawIsoDiamond(
+    stationDiamond(
       screenPos.x,
       screenPos.y,
       baseW + 8,
@@ -33331,7 +32380,7 @@ function renderStationTower(
   const dockY = screenPos.y + 2 * zoom;
 
   // Dock platform
-  drawIsoDiamond(
+  stationDiamond(
     dockX,
     dockY + 4 * zoom,
     14,
@@ -38051,8 +37100,8 @@ function renderStationTower(
       for (const side of [1, -1]) {
         ctx.beginPath();
         ctx.moveTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 4 * zoom);
-        ctx.lineTo(cabPos.x + side * (cW4b - 1) * zoom, cabPos.y - 4.5 * zoom);
-        ctx.lineTo(cabPos.x + side * (cW4b - 1) * zoom, cabPos.y - 15 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - zoom), cabPos.y - 4.5 * zoom);
+        ctx.lineTo(cabPos.x + side * (cW4b - zoom), cabPos.y - 15 * zoom);
         ctx.lineTo(cabPos.x + side * 1.5 * zoom, cabPos.y - 14.5 * zoom);
         ctx.closePath();
         ctx.stroke();
@@ -39528,7 +38577,7 @@ function renderStationTower(
         ? `rgba(255, 100, 100, ${pulse * 0.6})`
         : `rgba(255, 108, 0, ${pulse})`;
       ctx.lineWidth = 2.5 * zoom;
-      ctx.setLineDash([5, 4]);
+      ctx.setLineDash([5 * zoom, 4 * zoom]);
       ctx.beginPath();
       ctx.ellipse(pos.x, pos.y, 14 * zoom, 7 * zoom, 0, 0, Math.PI * 2);
       ctx.stroke();
@@ -41366,8 +40415,8 @@ export function renderStationRange(
     : tower.isHovered
       ? "rgba(255, 180, 100, 0.08)"
       : "rgba(255, 180, 100, 0.15)";
-  ctx.lineWidth = 2;
-  ctx.setLineDash([8, 4]);
+  ctx.lineWidth = 2 * zoom;
+  ctx.setLineDash([8 * zoom, 4 * zoom]);
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -41470,7 +40519,7 @@ export function renderTowerRange(
     ctx.strokeStyle = "rgba(100, 200, 255, 0.5)";
     ctx.fillStyle = "rgba(100, 200, 255, 0.1)";
   }
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2 * zoom;
   ctx.beginPath();
   ctx.ellipse(
     screenPos.x,
@@ -41666,7 +40715,7 @@ export function renderTowerPreview(
       ? "rgba(100, 200, 255, 0.6)"
       : "rgba(255, 100, 100, 0.6)";
     ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([8, 6]);
+    ctx.setLineDash([8 * zoom, 6 * zoom]);
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x,
@@ -41686,7 +40735,7 @@ export function renderTowerPreview(
       ? "rgba(255, 200, 100, 0.5)"
       : "rgba(255, 100, 100, 0.5)";
     ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([6, 4]);
+    ctx.setLineDash([6 * zoom, 4 * zoom]);
     ctx.beginPath();
     ctx.ellipse(
       screenPos.x,
@@ -41700,4 +40749,28 @@ export function renderTowerPreview(
     ctx.stroke();
     ctx.setLineDash([]);
   }
+}
+
+export function renderTowerGroundTransition(
+  ctx: CanvasRenderingContext2D,
+  tower: Tower,
+  canvasWidth: number,
+  canvasHeight: number,
+  dpr: number,
+  selectedMap: string,
+  cameraOffset?: Position,
+  cameraZoom?: number,
+) {
+  const worldPos = gridToWorld(tower.pos);
+  const screenPos = worldToScreenRounded(
+    worldPos,
+    canvasWidth,
+    canvasHeight,
+    dpr,
+    cameraOffset,
+    cameraZoom,
+  );
+  const zoom = cameraZoom || 1;
+  const time = Date.now() / 1000;
+  drawGroundTransition(ctx, screenPos, tower, zoom, time, selectedMap);
 }

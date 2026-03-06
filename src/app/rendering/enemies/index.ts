@@ -12,6 +12,14 @@ import {
 } from "../../utils";
 import { setShadowBlur, clearShadow } from "../performance";
 import { renderInspectIndicator } from "../effects/inspectIndicator";
+import {
+  drawEnemyShadow,
+  drawRadialShadow,
+  drawRadialAura,
+  drawFaceCircle,
+  drawEyes,
+  drawRobeBody,
+} from "./helpers";
 
 interface EnemyPaletteVariants {
   dark: string;
@@ -2287,21 +2295,11 @@ function drawFreshmanEnemy(
   }
 
   // Shadow beneath with corruption seepage
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.48,
-    0,
-    x,
-    y + size * 0.48,
-    size * 0.35,
-  );
-  shadowGrad.addColorStop(0, "rgba(20, 60, 20, 0.6)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.35, size * 0.35, size * 0.12, [
+    { offset: 0, color: "rgba(20, 60, 20, 0.6)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Floating forbidden tome (behind) - more ornate
   ctx.save();
@@ -2477,21 +2475,11 @@ function drawFreshmanEnemy(
   ctx.fill();
 
   // Face (pale, gaunt, corrupted)
-  const faceGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.4 + bobble,
-    0,
-    x,
-    y - size * 0.4 + bobble,
-    size * 0.22,
-  );
-  faceGrad.addColorStop(0, "#d0f0d0");
-  faceGrad.addColorStop(0.6, "#a8d8a8");
-  faceGrad.addColorStop(1, "#80b080");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.4 + bobble, size * 0.2, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, x, y - size * 0.4 + bobble, size * 0.22, [
+    { offset: 0, color: "#d0f0d0" },
+    { offset: 0.6, color: "#a8d8a8" },
+    { offset: 1, color: "#80b080" },
+  ], size * 0.2);
 
   // Corruption spreading across face
   ctx.strokeStyle = "#2a6a2a";
@@ -2525,78 +2513,12 @@ function drawFreshmanEnemy(
   ctx.stroke();
 
   // Possessed glowing eyes with void pupils (optimized - no shadowBlur)
-  // Outer glow layer
-  ctx.fillStyle = "rgba(74, 222, 128, 0.3)";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.07,
-    y - size * 0.42 + bobble,
-    size * 0.07,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.07,
-    y - size * 0.42 + bobble,
-    size * 0.07,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Core
-  ctx.fillStyle = "#4ade80";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.07,
-    y - size * 0.42 + bobble,
-    size * 0.045,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.07,
-    y - size * 0.42 + bobble,
-    size * 0.045,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Void center pupils
-  ctx.fillStyle = "#001000";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.07,
-    y - size * 0.42 + bobble,
-    size * 0.018,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.07,
-    y - size * 0.42 + bobble,
-    size * 0.018,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Eye reflection
-  ctx.fillStyle = "rgba(200, 255, 200, 0.6)";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.08,
-    y - size * 0.44 + bobble,
-    size * 0.01,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.06,
-    y - size * 0.44 + bobble,
-    size * 0.01,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  drawEyes(ctx, x, y - size * 0.42 + bobble, size * 0.07, [
+    { radius: size * 0.07, color: "rgba(74, 222, 128, 0.3)" },
+    { radius: size * 0.045, color: "#4ade80" },
+    { radius: size * 0.018, color: "#001000" },
+    { radius: size * 0.01, color: "rgba(200, 255, 200, 0.6)", yOffset: -size * 0.02, xOffset: -size * 0.01 },
+  ]);
 
   // Grimacing mouth with sharp fangs
   ctx.fillStyle = "#0a1a0a";
@@ -2771,21 +2693,11 @@ function drawSophomoreEnemy(
   }
 
   // Shadow with electrical discharge
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.48,
-    0,
-    x,
-    y + size * 0.48,
-    size * 0.35,
-  );
-  shadowGrad.addColorStop(0, "rgba(30, 58, 95, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.35)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.35, size * 0.35, size * 0.12, [
+    { offset: 0, color: "rgba(30, 58, 95, 0.5)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.35)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Flowing apprentice robes with storm patterns
   const robeGrad = ctx.createLinearGradient(
@@ -2882,21 +2794,11 @@ function drawSophomoreEnemy(
   ctx.fillText("⚡", x, y);
 
   // Confident face with magical features
-  const faceGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.44 + swagger * 0.15,
-    0,
-    x,
-    y - size * 0.44 + swagger * 0.15,
-    size * 0.24,
-  );
-  faceGrad.addColorStop(0, "#fde8d8");
-  faceGrad.addColorStop(0.7, "#fcd9b6");
-  faceGrad.addColorStop(1, "#e5c4a0");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.44 + swagger * 0.15, size * 0.23, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, x, y - size * 0.44 + swagger * 0.15, size * 0.24, [
+    { offset: 0, color: "#fde8d8" },
+    { offset: 0.7, color: "#fcd9b6" },
+    { offset: 1, color: "#e5c4a0" },
+  ], size * 0.23);
 
   // Stylish swept hair with magical highlights
   ctx.fillStyle = "#0f172a";
@@ -2968,42 +2870,11 @@ function drawSophomoreEnemy(
     Math.PI * 2,
   );
   ctx.fill();
-  // Electric blue magical pupils (optimized - no shadowBlur)
-  ctx.fillStyle = "#60a5fa";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.085,
-    y - size * 0.46 + swagger * 0.15,
-    size * 0.035,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.085,
-    y - size * 0.46 + swagger * 0.15,
-    size * 0.035,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Inner spark
-  ctx.fillStyle = "#dbeafe";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.095,
-    y - size * 0.475 + swagger * 0.15,
-    size * 0.012,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.075,
-    y - size * 0.475 + swagger * 0.15,
-    size * 0.012,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  // Electric blue magical pupils + inner spark
+  drawEyes(ctx, x, y - size * 0.46 + swagger * 0.15, size * 0.085, [
+    { radius: size * 0.035, color: "#60a5fa" },
+    { radius: size * 0.012, color: "#dbeafe", yOffset: -size * 0.015, xOffset: -size * 0.01 },
+  ]);
 
   // Cocky raised eyebrow
   ctx.strokeStyle = "#0f172a";
@@ -3250,21 +3121,11 @@ function drawJuniorEnemy(
   }
 
   // Shadow with madness seeping out
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.5,
-    0,
-    x,
-    y + size * 0.5,
-    size * 0.4,
-  );
-  shadowGrad.addColorStop(0, "rgba(59, 7, 100, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.38, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.5, size * 0.4, size * 0.38, size * 0.12, [
+    { offset: 0, color: "rgba(59, 7, 100, 0.5)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Disheveled scholar robes - worn and stained with ink
   const robeGrad = ctx.createLinearGradient(
@@ -3360,21 +3221,11 @@ function drawJuniorEnemy(
   ctx.restore();
 
   // Gaunt, haunted face - pale and drawn
-  const faceGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.44 + twitch * 0.2,
-    0,
-    x,
-    y - size * 0.44 + twitch * 0.2,
-    size * 0.24,
-  );
-  faceGrad.addColorStop(0, "#ede9fe");
-  faceGrad.addColorStop(0.5, "#ddd6fe");
-  faceGrad.addColorStop(1, "#c4b5fd");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.44 + twitch * 0.2, size * 0.23, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, x, y - size * 0.44 + twitch * 0.2, size * 0.24, [
+    { offset: 0, color: "#ede9fe" },
+    { offset: 0.5, color: "#ddd6fe" },
+    { offset: 1, color: "#c4b5fd" },
+  ], size * 0.23);
 
   // Deep sunken cheeks
   ctx.fillStyle = "rgba(91, 33, 182, 0.35)";
@@ -3716,21 +3567,11 @@ function drawSeniorEnemy(
 
   // === LAYER 3: SHADOW AND GROUND EFFECT ===
   // Complex shadow with distortion
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.5,
-  );
-  shadowGrad.addColorStop(0, "rgba(80, 20, 60, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(40, 10, 30, 0.35)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.45, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.5, size * 0.45, size * 0.15, [
+    { offset: 0, color: "rgba(80, 20, 60, 0.5)" },
+    { offset: 0.5, color: "rgba(40, 10, 30, 0.35)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Corruption tendrils from shadow
   ctx.strokeStyle = `rgba(157, 23, 77, ${0.3 + powerSurge * 0.3})`;
@@ -3897,14 +3738,11 @@ function drawSeniorEnemy(
   const headY = y - size * 0.42 + strut * 0.12 + floatHeight;
 
   // Face base
-  const faceGrad = ctx.createRadialGradient(x, headY, 0, x, headY, size * 0.2);
-  faceGrad.addColorStop(0, "#fdf4ff");
-  faceGrad.addColorStop(0.7, "#fce7f3");
-  faceGrad.addColorStop(1, "#fbcfe8");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, headY, size * 0.18, size * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, x, headY, size * 0.2, [
+    { offset: 0, color: "#fdf4ff" },
+    { offset: 0.7, color: "#fce7f3" },
+    { offset: 1, color: "#fbcfe8" },
+  ], size * 0.18, size * 0.2);
 
   // Jaw definition
   ctx.fillStyle = "#f9a8d4";
@@ -4065,29 +3903,14 @@ function drawSeniorEnemy(
   );
   ctx.fill();
 
-  // Irises - glowing with power
   const irisGlow = isAttacking
     ? 0.9 + attackIntensity * 0.1
     : 0.7 + Math.sin(time * 2) * 0.2;
-  ctx.fillStyle = `rgba(219, 39, 119, ${irisGlow})`;
-  ctx.beginPath();
-  ctx.arc(x - size * 0.075, headY - size * 0.02, size * 0.035, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.075, headY - size * 0.02, size * 0.035, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Pupils
-  ctx.fillStyle = "#1e1b4b";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.075, headY - size * 0.02, size * 0.018, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.075, headY - size * 0.02, size * 0.018, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Eye shine
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.085, headY - size * 0.035, size * 0.012, 0, Math.PI * 2);
-  ctx.arc(x + size * 0.065, headY - size * 0.035, size * 0.012, 0, Math.PI * 2);
-  ctx.fill();
+  drawEyes(ctx, x, headY - size * 0.02, size * 0.075, [
+    { radius: size * 0.035, color: `rgba(219, 39, 119, ${irisGlow})` },
+    { radius: size * 0.018, color: "#1e1b4b" },
+    { radius: size * 0.012, color: "#fff", yOffset: -size * 0.015, xOffset: -size * 0.01 },
+  ]);
 
   // Confident brow lines
   ctx.strokeStyle = "#1e1b4b";
@@ -4366,21 +4189,11 @@ function drawGradStudentEnemy(
   }
 
   // Shadow with dimensional bleed
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.4,
-  );
-  shadowGrad.addColorStop(0, "rgba(120, 53, 15, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.4, size * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.14, [
+    { offset: 0, color: "rgba(120, 53, 15, 0.5)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Tattered lab coat with dimensional burns and chemical stains
   const coatGrad = ctx.createLinearGradient(
@@ -4495,14 +4308,11 @@ function drawGradStudentEnemy(
   ctx.translate(x + caffeineTremor, y - size * 0.44 + exhaustionSway * 0.15);
   ctx.rotate(exhaustionSway * 0.025);
 
-  const faceGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.24);
-  faceGrad.addColorStop(0, "#fef9c3");
-  faceGrad.addColorStop(0.6, "#fef3c7");
-  faceGrad.addColorStop(1, "#fde68a");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(0, 0, size * 0.24, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, 0, 0, size * 0.24, [
+    { offset: 0, color: "#fef9c3" },
+    { offset: 0.6, color: "#fef3c7" },
+    { offset: 1, color: "#fde68a" },
+  ]);
 
   // Extremely sunken cheeks
   ctx.fillStyle = "rgba(120, 53, 15, 0.25)";
@@ -4584,18 +4394,11 @@ function drawGradStudentEnemy(
       ctx.stroke();
     }
   }
-  // Orange dimensional-touched pupils (optimized - no shadowBlur)
-  ctx.fillStyle = "#fbbf24";
-  ctx.beginPath();
-  ctx.arc(-size * 0.09 + eyeTwitch, -size * 0.02, size * 0.028, 0, Math.PI * 2);
-  ctx.arc(size * 0.09 + eyeTwitch, -size * 0.02, size * 0.028, 0, Math.PI * 2);
-  ctx.fill();
-  // Tiny pinprick pupils (over-caffeinated)
-  ctx.fillStyle = "#1c1917";
-  ctx.beginPath();
-  ctx.arc(-size * 0.09 + eyeTwitch, -size * 0.02, size * 0.007, 0, Math.PI * 2);
-  ctx.arc(size * 0.09 + eyeTwitch, -size * 0.02, size * 0.007, 0, Math.PI * 2);
-  ctx.fill();
+  // Orange dimensional-touched pupils + pinprick pupils
+  drawEyes(ctx, eyeTwitch, -size * 0.02, size * 0.09, [
+    { radius: size * 0.028, color: "#fbbf24" },
+    { radius: size * 0.007, color: "#1c1917" },
+  ]);
 
   // Massive dark circles - practically bruises
   ctx.fillStyle = "rgba(88, 28, 135, 0.6)";
@@ -4797,10 +4600,7 @@ function drawProfessorEnemy(
   }
 
   // Shadow (weakened by undeath)
-  ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.35, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.52, size * 0.35, size * 0.1, 0.3);
 
   // Ancient tweed robes (tattered, elegant)
   const robeGrad = ctx.createLinearGradient(
@@ -4815,27 +4615,13 @@ function drawProfessorEnemy(
   robeGrad.addColorStop(0.7, "#78716c");
   robeGrad.addColorStop(1, "#44403c");
   ctx.fillStyle = robeGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.38, y + size * 0.5);
-  // Tattered bottom
-  for (let i = 0; i < 6; i++) {
-    const jagX = x - size * 0.38 + i * size * 0.152;
-    const jagY =
-      y +
-      size * 0.5 +
-      Math.sin(time * 3 + i) * size * 0.03 +
-      (i % 2) * size * 0.04;
-    ctx.lineTo(jagX, jagY);
-  }
-  ctx.quadraticCurveTo(
-    x + size * 0.45,
-    y,
-    x + size * 0.22,
-    y - size * 0.32 + hover * 0.2,
-  );
-  ctx.lineTo(x - size * 0.22, y - size * 0.32 + hover * 0.2);
-  ctx.quadraticCurveTo(x - size * 0.45, y, x - size * 0.38, y + size * 0.5);
-  ctx.fill();
+  drawRobeBody(ctx, x, size * 0.22, y - size * 0.32 + hover * 0.2, size * 0.38, y + size * 0.5, size * 0.45, y, {
+    count: 5,
+    amplitude: size * 0.03,
+    time: time,
+    speed: 3,
+    altAmplitude: size * 0.04,
+  });
 
   // Elbow patches (leather, worn)
   ctx.fillStyle = "#57534e";
@@ -5190,21 +4976,11 @@ function drawDeanEnemy(
   }
 
   // Void shadow beneath - reality warped
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.58,
-    0,
-    x,
-    y + size * 0.58,
-    size * 0.55,
-  );
-  shadowGrad.addColorStop(0, "rgba(30, 10, 60, 0.7)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.58, size * 0.5, size * 0.16, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.58, size * 0.55, size * 0.5, size * 0.16, [
+    { offset: 0, color: "rgba(30, 10, 60, 0.7)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Magnificent flowing robes with reality-warping edges
   ctx.save();
@@ -5339,21 +5115,11 @@ function drawDeanEnemy(
   ctx.fill();
 
   // Commanding face - otherworldly beauty
-  const faceGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.55 + hover,
-    0,
-    x,
-    y - size * 0.55 + hover,
-    size * 0.26,
-  );
-  faceGrad.addColorStop(0, "#f3e8ff");
-  faceGrad.addColorStop(0.5, "#e9d5ff");
-  faceGrad.addColorStop(1, "#d8b4fe");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.55 + hover, size * 0.26, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, x, y - size * 0.55 + hover, size * 0.26, [
+    { offset: 0, color: "#f3e8ff" },
+    { offset: 0.5, color: "#e9d5ff" },
+    { offset: 1, color: "#d8b4fe" },
+  ]);
 
   // Distinguished but otherworldly features - sunken cheeks
   ctx.fillStyle = "rgba(91, 33, 182, 0.2)";
@@ -5400,41 +5166,10 @@ function drawDeanEnemy(
     Math.PI * 2,
   );
   ctx.fill();
-  ctx.fillStyle = "#c084fc";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.09,
-    y - size * 0.57 + hover,
-    size * 0.035,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.09,
-    y - size * 0.57 + hover,
-    size * 0.035,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-  // Void pupils
-  ctx.fillStyle = "#1e0a3a";
-  ctx.beginPath();
-  ctx.arc(
-    x - size * 0.09,
-    y - size * 0.57 + hover,
-    size * 0.015,
-    0,
-    Math.PI * 2,
-  );
-  ctx.arc(
-    x + size * 0.09,
-    y - size * 0.57 + hover,
-    size * 0.015,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  drawEyes(ctx, x, y - size * 0.57 + hover, size * 0.09, [
+    { radius: size * 0.035, color: "#c084fc" },
+    { radius: size * 0.015, color: "#1e0a3a" },
+  ]);
 
   // Stern furrowed brows
   ctx.strokeStyle = "#581c87";
@@ -6137,10 +5872,7 @@ function drawDefaultEnemy(
   }
 
   // Shadow beneath
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.28, size * 0.09, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.48, size * 0.28, size * 0.09);
 
   // Shadowy robes
   const robeGrad = ctx.createLinearGradient(
@@ -6384,21 +6116,11 @@ function drawTrusteeEnemy(
   }
 
   // Lavish shadow with gold tint
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.58,
-    0,
-    x,
-    y + size * 0.58,
-    size * 0.5,
-  );
-  shadowGrad.addColorStop(0, "rgba(120, 80, 0, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(60, 40, 0, 0.3)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.58, size * 0.5, size * 0.16, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.58, size * 0.5, size * 0.5, size * 0.16, [
+    { offset: 0, color: "rgba(120, 80, 0, 0.5)" },
+    { offset: 0.5, color: "rgba(60, 40, 0, 0.3)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Magnificent golden robes with purple velvet lining and corruption veins
   const robeGrad = ctx.createLinearGradient(
@@ -6564,21 +6286,11 @@ function drawTrusteeEnemy(
   ctx.fill();
 
   // Distinguished aged face with corruption hints
-  const faceGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.5 + float,
-    0,
-    x,
-    y - size * 0.5 + float,
-    size * 0.24,
-  );
-  faceGrad.addColorStop(0, "#fef9e7");
-  faceGrad.addColorStop(0.6, "#fef3c7");
-  faceGrad.addColorStop(1, "#fde68a");
-  ctx.fillStyle = faceGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.5 + float, size * 0.24, 0, Math.PI * 2);
-  ctx.fill();
+  drawFaceCircle(ctx, x, y - size * 0.5 + float, size * 0.24, [
+    { offset: 0, color: "#fef9e7" },
+    { offset: 0.6, color: "#fef3c7" },
+    { offset: 1, color: "#fde68a" },
+  ]);
 
   // Gold-blood veins on face
   ctx.strokeStyle = `rgba(251, 191, 36, ${greedAura * 0.4})`;
@@ -6967,10 +6679,7 @@ function drawArcherEnemy(
   const shadowPulse = 0.6 + Math.sin(time * 4) * 0.4;
 
   // Simple shadow beneath
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.32, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.52, size * 0.32, size * 0.1);
 
   // Enchanted quiver with arrows (simplified - no shadowBlur)
   ctx.save();
@@ -7405,10 +7114,7 @@ function drawMageEnemy(
   }
 
   // Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.32, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.32, size * 0.1);
 
   // Staff in right hand
   ctx.save();
@@ -7468,18 +7174,7 @@ function drawMageEnemy(
   robeGrad.addColorStop(0.5, "#6d28d9");
   robeGrad.addColorStop(1, "#3b0764");
   ctx.fillStyle = robeGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.4, y + size * 0.5);
-  ctx.quadraticCurveTo(
-    x - size * 0.45,
-    y,
-    x - size * 0.15,
-    y - size * 0.4 + float,
-  );
-  ctx.lineTo(x + size * 0.15, y - size * 0.4 + float);
-  ctx.quadraticCurveTo(x + size * 0.45, y, x + size * 0.4, y + size * 0.5);
-  ctx.closePath();
-  ctx.fill();
+  drawRobeBody(ctx, x, size * 0.15, y - size * 0.4 + float, size * 0.4, y + size * 0.5, size * 0.45, y);
 
   // Robe inner lining visible
   ctx.fillStyle = "#2e1065";
@@ -7818,10 +7513,7 @@ function drawCatapultEnemy(
   ctx.fill();
 
   // Shadow with hell-cracks
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.55, size * 0.18, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.48, size * 0.55, size * 0.18, 0.5);
   // Hell cracks in ground
   ctx.strokeStyle = `rgba(220, 38, 38, ${hellGlow * 0.5})`;
   ctx.lineWidth = 1.5 * zoom;
@@ -8160,21 +7852,11 @@ function drawWarlockEnemy(
   }
 
   // Deeper shadow
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.4,
-  );
-  shadowGrad.addColorStop(0, "rgba(30, 10, 60, 0.7)");
-  shadowGrad.addColorStop(0.6, "rgba(30, 10, 60, 0.3)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.12, [
+    { offset: 0, color: "rgba(30, 10, 60, 0.7)" },
+    { offset: 0.6, color: "rgba(30, 10, 60, 0.3)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Dark robes - more tattered and flowing
   const robeGrad = ctx.createLinearGradient(
@@ -8224,21 +7906,11 @@ function drawWarlockEnemy(
   }
 
   // Ancient skull face
-  const skullGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.38 + hover,
-    0,
-    x,
-    y - size * 0.38 + hover,
-    size * 0.2,
-  );
-  skullGrad.addColorStop(0, "#f5f5f4");
-  skullGrad.addColorStop(0.6, "#e8e0d0");
-  skullGrad.addColorStop(1, "#d6d3d1");
-  ctx.fillStyle = skullGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.38 + hover, size * 0.2, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialAura(ctx, x, y - size * 0.38 + hover, size * 0.2, [
+    { offset: 0, color: "#f5f5f4" },
+    { offset: 0.6, color: "#e8e0d0" },
+    { offset: 1, color: "#d6d3d1" },
+  ]);
   // Skull cracks
   ctx.strokeStyle = "#a8a29e";
   ctx.lineWidth = 1 * zoom;
@@ -8428,21 +8100,11 @@ function drawCrossbowmanEnemy(
   ctx.fill();
 
   // Shadow with curse marks
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.5,
-    0,
-    x,
-    y + size * 0.5,
-    size * 0.35,
-  );
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-  shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.25)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.5, size * 0.35, size * 0.35, size * 0.12, [
+    { offset: 0, color: "rgba(0, 0, 0, 0.5)" },
+    { offset: 0.6, color: "rgba(0, 0, 0, 0.25)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Heavy cursed armor body
   const armorGrad = ctx.createLinearGradient(
@@ -8825,21 +8487,11 @@ function drawHexerEnemy(
   }
 
   // === LAYER 4: SHADOW ===
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.35,
-  );
-  shadowGrad.addColorStop(0, "rgba(76, 29, 149, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.3)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.35, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.35, size * 0.35, size * 0.1, [
+    { offset: 0, color: "rgba(76, 29, 149, 0.5)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.3)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // === LAYER 5: TATTERED DRESS WITH MAGICAL THREADS ===
   const dressGrad = ctx.createLinearGradient(
@@ -8854,32 +8506,13 @@ function drawHexerEnemy(
   dressGrad.addColorStop(0.7, "#9d174d");
   dressGrad.addColorStop(1, "#6b21a8");
   ctx.fillStyle = dressGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.4, y + size * 0.52);
-  // Ragged bottom edge with more detail
-  for (let i = 0; i < 9; i++) {
-    const jagX = x - size * 0.4 + i * size * 0.1;
-    const jagY =
-      y +
-      size * 0.52 +
-      Math.sin(time * 4 + i * 0.8) * size * 0.04 +
-      (i % 2) * size * 0.08;
-    ctx.lineTo(jagX, jagY);
-  }
-  ctx.quadraticCurveTo(
-    x + size * 0.42,
-    y + size * 0.1,
-    x + size * 0.18,
-    y - size * 0.32 + sway + breathe,
-  );
-  ctx.lineTo(x - size * 0.18, y - size * 0.32 + sway + breathe);
-  ctx.quadraticCurveTo(
-    x - size * 0.42,
-    y + size * 0.1,
-    x - size * 0.4,
-    y + size * 0.52,
-  );
-  ctx.fill();
+  drawRobeBody(ctx, x, size * 0.18, y - size * 0.32 + sway + breathe, size * 0.4, y + size * 0.52, size * 0.42, y + size * 0.1, {
+    count: 8,
+    amplitude: size * 0.04,
+    time: time,
+    speed: 4,
+    altAmplitude: size * 0.08,
+  });
 
   // Dress inner shading
   const innerDressGrad = ctx.createLinearGradient(
@@ -8987,20 +8620,10 @@ function drawHexerEnemy(
 
   // === LAYER 7: PALE FACE WITH DETAILS ===
   // Face glow effect (gradient)
-  const faceGlow = ctx.createRadialGradient(
-    x,
-    y - size * 0.42 + sway,
-    0,
-    x,
-    y - size * 0.42 + sway,
-    size * 0.22,
-  );
-  faceGlow.addColorStop(0, "rgba(251, 207, 232, 0.3)");
-  faceGlow.addColorStop(1, "rgba(251, 207, 232, 0)");
-  ctx.fillStyle = faceGlow;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.42 + sway, size * 0.22, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialAura(ctx, x, y - size * 0.42 + sway, size * 0.22, [
+    { offset: 0, color: "rgba(251, 207, 232, 0.3)" },
+    { offset: 1, color: "rgba(251, 207, 232, 0)" },
+  ]);
 
   // Face base
   const faceGrad = ctx.createRadialGradient(
@@ -11700,21 +11323,11 @@ function drawBerserkerEnemy(
   ctx.globalAlpha = 1;
 
   // Blood-soaked ground
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.5,
-    0,
-    x,
-    y + size * 0.5,
-    size * 0.4,
-  );
-  shadowGrad.addColorStop(0, "rgba(127, 29, 29, 0.5)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.3)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.35, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.5, size * 0.4, size * 0.35, size * 0.12, [
+    { offset: 0, color: "rgba(127, 29, 29, 0.5)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.3)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Muscular demonic body with runes
   const bodyGrad = ctx.createLinearGradient(
@@ -12050,21 +11663,11 @@ function drawGolemEnemy(
   }
 
   // Heavy shadow
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.48,
-    0,
-    x,
-    y + size * 0.48,
-    size * 0.5,
-  );
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.6)");
-  shadowGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.55, size * 0.18, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.48, size * 0.5, size * 0.55, size * 0.18, [
+    { offset: 0, color: "rgba(0, 0, 0, 0.6)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.4)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Tail (behind body)
   ctx.save();
@@ -12735,21 +12338,11 @@ function drawNecromancerEnemy(
   }
 
   // Deep shadow
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.4,
-  );
-  shadowGrad.addColorStop(0, "rgba(30, 27, 75, 0.6)");
-  shadowGrad.addColorStop(0.5, "rgba(15, 10, 46, 0.35)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.12, [
+    { offset: 0, color: "rgba(30, 27, 75, 0.6)" },
+    { offset: 0.5, color: "rgba(15, 10, 46, 0.35)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Dark robes with soul threads
   const robeGrad = ctx.createLinearGradient(
@@ -12764,26 +12357,13 @@ function drawNecromancerEnemy(
   robeGrad.addColorStop(0.7, "#1e1b4b");
   robeGrad.addColorStop(1, "#0a0820");
   ctx.fillStyle = robeGrad;
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.42, y + size * 0.55);
-  for (let i = 0; i < 7; i++) {
-    const jagX = x - size * 0.42 + i * size * 0.14;
-    const jagY =
-      y +
-      size * 0.55 +
-      Math.sin(time * 5 + i * 1.1) * size * 0.05 +
-      (i % 2) * size * 0.03;
-    ctx.lineTo(jagX, jagY);
-  }
-  ctx.quadraticCurveTo(
-    x + size * 0.45,
-    y,
-    x + size * 0.18,
-    y - size * 0.45 + hover,
-  );
-  ctx.lineTo(x - size * 0.18, y - size * 0.45 + hover);
-  ctx.quadraticCurveTo(x - size * 0.45, y, x - size * 0.42, y + size * 0.55);
-  ctx.fill();
+  drawRobeBody(ctx, x, size * 0.18, y - size * 0.45 + hover, size * 0.42, y + size * 0.55, size * 0.45, y, {
+    count: 6,
+    amplitude: size * 0.05,
+    time: time,
+    speed: 5,
+    altAmplitude: size * 0.03,
+  });
 
   // Soul threads on robe
   ctx.strokeStyle = `rgba(74, 222, 128, ${deathPulse * 0.4})`;
@@ -12861,21 +12441,11 @@ function drawNecromancerEnemy(
   }
 
   // Skeletal face - more detailed lich skull
-  const skullGrad = ctx.createRadialGradient(
-    x,
-    y - size * 0.45 + hover,
-    0,
-    x,
-    y - size * 0.45 + hover,
-    size * 0.18,
-  );
-  skullGrad.addColorStop(0, "#f5f5f4");
-  skullGrad.addColorStop(0.6, "#e8e0d0");
-  skullGrad.addColorStop(1, "#d6d3d1");
-  ctx.fillStyle = skullGrad;
-  ctx.beginPath();
-  ctx.arc(x, y - size * 0.45 + hover, size * 0.18, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialAura(ctx, x, y - size * 0.45 + hover, size * 0.18, [
+    { offset: 0, color: "#f5f5f4" },
+    { offset: 0.6, color: "#e8e0d0" },
+    { offset: 1, color: "#d6d3d1" },
+  ]);
   // Skull cracks
   ctx.strokeStyle = "#a8a29e";
   ctx.lineWidth = 1 * zoom;
@@ -13126,21 +12696,11 @@ function drawShadowKnightEnemy(
   }
 
   // Deeper shadow
-  const groundShadow = ctx.createRadialGradient(
-    x,
-    y + size * 0.52,
-    0,
-    x,
-    y + size * 0.52,
-    size * 0.4,
-  );
-  groundShadow.addColorStop(0, "rgba(0, 0, 0, 0.6)");
-  groundShadow.addColorStop(0.5, "rgba(0, 0, 0, 0.35)");
-  groundShadow.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = groundShadow;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.52, size * 0.4, size * 0.14, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52, size * 0.4, size * 0.4, size * 0.14, [
+    { offset: 0, color: "rgba(0, 0, 0, 0.6)" },
+    { offset: 0.5, color: "rgba(0, 0, 0, 0.35)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Articulated armored legs with heavy deliberate stride
   const thighLen = size * 0.18;
@@ -13797,18 +13357,7 @@ function drawCultistEnemy(
   }
 
   // Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.45,
-    size * 0.35,
-    size * 0.12,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.45, size * 0.35, size * 0.12, 0.4);
 
   // Dark energy chains/tendrils wrapping around the body
   ctx.strokeStyle = `rgba(100, 30, 10, ${runeGlow * 0.5})`;
@@ -16691,21 +16240,11 @@ function drawInfernalEnemy(
   }
 
   // Charred ground shadow
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.45,
-    0,
-    x,
-    y + size * 0.45,
-    size * 0.4,
-  );
-  shadowGrad.addColorStop(0, "rgba(50, 20, 10, 0.6)");
-  shadowGrad.addColorStop(0.5, "rgba(30, 10, 5, 0.4)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0.2)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.45, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.45, size * 0.4, size * 0.4, size * 0.12, [
+    { offset: 0, color: "rgba(50, 20, 10, 0.6)" },
+    { offset: 0.5, color: "rgba(30, 10, 5, 0.4)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0.2)" },
+  ]);
 
   // Tail with fire tip
   const tailWave = Math.sin(time * 3) * size * 0.08;
@@ -17909,28 +17448,10 @@ function drawJuggernautEnemy(
   }
 
   // Heavy shadow
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.5,
-    0,
-    x,
-    y + size * 0.5,
-    size * 0.55,
-  );
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.5)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    x + groundShake,
-    y + size * 0.5,
-    size * 0.55,
-    size * 0.18,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  drawRadialShadow(ctx, x + groundShake, y + size * 0.5, size * 0.55, size * 0.55, size * 0.18, [
+    { offset: 0, color: "rgba(0, 0, 0, 0.5)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   // Massive legs
   ctx.fillStyle = bodyColorDark;
@@ -18898,29 +18419,11 @@ function drawDragonEnemy(
   ctx.fill();
 
   // Ground shadow
-  const shadowGrad = ctx.createRadialGradient(
-    x,
-    y + size * 0.52 + hover,
-    0,
-    x,
-    y + size * 0.52 + hover,
-    size * 0.58,
-  );
-  shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.42)");
-  shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.22)");
-  shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    x,
-    y + size * 0.52 + hover,
-    size * 0.58,
-    size * 0.18,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  drawRadialShadow(ctx, x, y + size * 0.52 + hover, size * 0.58, size * 0.58, size * 0.18, [
+    { offset: 0, color: "rgba(0, 0, 0, 0.42)" },
+    { offset: 0.6, color: "rgba(0, 0, 0, 0.22)" },
+    { offset: 1, color: "rgba(0, 0, 0, 0)" },
+  ]);
 
   const drawWing = (side: -1 | 1): void => {
     const wingRotation = side === -1 ? -0.5 + wingFlap : 0.5 - wingFlap;
@@ -19657,18 +19160,7 @@ function drawAthleteEnemy(
   ctx.globalAlpha = 1;
 
   // Ground shadow (elongated for speed)
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.beginPath();
-  ctx.ellipse(
-    x + size * 0.1,
-    y + size * 0.45,
-    size * 0.45,
-    size * 0.1,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
+  drawEnemyShadow(ctx, x + size * 0.1, y + size * 0.45, size * 0.45, size * 0.1, 0.25);
 
   // --- LEGS with detailed anatomy ---
   const skinTone = "#e8c4a0";
@@ -20104,10 +19596,7 @@ function drawProtestorEnemy(
       (isAttacking ? 0.25 : 0.15);
 
   // Ground shadow
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.48, size * 0.4, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.48, size * 0.4, size * 0.1, 0.25);
 
   // --- LEGS (jeans with details) ---
   const jeansColor = "#2d4263";
@@ -20720,10 +20209,7 @@ function drawBogCreatureEnemy(
   ctx.fill();
 
   // Deep shadow with murky puddle
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.55, size * 0.18, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.55, size * 0.18, 0.6);
 
   // Toxic ripples in the pool
   ctx.strokeStyle = `rgba(132, 204, 22, ${0.2 + Math.sin(time * 3) * 0.1})`;
@@ -21680,10 +21166,7 @@ function drawSwampTrollEnemy(
   size *= 1.3; // Larger size
 
   // Ground impact crater shadow
-  ctx.fillStyle = "rgba(0,0,0,0.6)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.55, size * 0.65, size * 0.22, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.55, size * 0.65, size * 0.22, 0.6);
 
   // Murky footprint puddles
   ctx.fillStyle = "rgba(34, 87, 22, 0.35)";
@@ -22247,10 +21730,7 @@ function drawNomadEnemy(
   }
 
   // Deep shadow
-  ctx.fillStyle = "rgba(0,0,0,0.45)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.45, size * 0.45, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.45, size * 0.45, size * 0.15, 0.45);
 
   // Trailing shadow wisps
   ctx.fillStyle = "rgba(0,0,0,0.2)";
@@ -22761,10 +22241,7 @@ function drawScorpionEnemy(
   size *= 1.5; // Larger size
 
   // Ground disturbance shadow
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.35, size * 0.65, size * 0.25, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.65, size * 0.25, 0.5);
 
   // Disturbed sand around creature
   ctx.fillStyle = "rgba(139, 119, 89, 0.3)";
@@ -23022,21 +22499,11 @@ function drawScorpionEnemy(
     tailX += Math.cos(tailCurve + segSway) * size * 0.08;
     tailY -= Math.sin(tailCurve + segSway) * size * 0.1;
 
-    const segGrad = ctx.createRadialGradient(
-      tailX,
-      tailY,
-      0,
-      tailX,
-      tailY,
-      segSize,
-    );
-    segGrad.addColorStop(0, bodyColorLight);
-    segGrad.addColorStop(0.6, bodyColor);
-    segGrad.addColorStop(1, bodyColorDark);
-    ctx.fillStyle = segGrad;
-    ctx.beginPath();
-    ctx.arc(tailX, tailY, segSize, 0, Math.PI * 2);
-    ctx.fill();
+    drawRadialAura(ctx, tailX, tailY, segSize, [
+      { offset: 0, color: bodyColorLight },
+      { offset: 0.6, color: bodyColor },
+      { offset: 1, color: bodyColorDark },
+    ]);
 
     // Segment armor lines
     if (seg > 0) {
@@ -25237,10 +24704,7 @@ function drawMagmaSpawnEnemy(
   ctx.fill();
 
   // Scorched earth underneath
-  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.35, size * 0.55, size * 0.2, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.55, size * 0.2, 0.5);
 
   // Lava pool beneath
   const poolGrad = ctx.createRadialGradient(
@@ -25631,10 +25095,7 @@ function drawFireImpEnemy(
   ctx.fill();
 
   // Scorched ground shadow
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.35, size * 0.3, size * 0.1, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.3, size * 0.1);
 
   // Ember trail on ground
   ctx.fillStyle = `rgba(251, 146, 60, ${0.4 + flameFlicker * 0.2})`;
@@ -26187,10 +25648,7 @@ function drawEmberGuardEnemy(
   ctx.fill();
 
   // Shadow
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.5, size * 0.45, size * 0.15, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.45, size * 0.15, 0.5);
 
   // Articulated armored legs with molten joints
   const thighLen = size * 0.17;

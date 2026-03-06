@@ -34,6 +34,14 @@ export const TROOP_DATA: Record<TroopType, TroopData> = {
     desc: "Elite warrior",
     color: "#c0c0c0",
   },
+  reinforcement: {
+    name: "Reinforcement",
+    hp: 1000,
+    damage: 30,
+    attackSpeed: 1000,
+    desc: "Spell-summoned frontline unit",
+    color: "#a78bfa",
+  },
   centaur: {
     name: "Centaur",
     hp: 1200,

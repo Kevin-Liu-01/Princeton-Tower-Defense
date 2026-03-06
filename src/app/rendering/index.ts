@@ -16,6 +16,8 @@ export {
 // Tower rendering
 export {
   renderTower,
+  renderTowerGroundTransition,
+  getTowerFoundationSize,
   renderTowerRange,
   renderStationRange,
   renderTowerPreview,

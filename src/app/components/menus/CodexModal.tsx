@@ -1239,9 +1239,9 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
           icon: <Users size={14} />,
           stats: [
             { label: "Units", value: `${stats.knightCount}`, icon: <Users size={12} /> },
-            { label: "Knight HP", value: `${stats.knightHp}`, icon: <Heart size={12} /> },
+            { label: "Unit HP", value: `${stats.knightHp}`, icon: <Heart size={12} /> },
             {
-              label: "Knight DMG",
+              label: "Unit DMG",
               value: `${stats.knightDamage}`,
               icon: <Swords size={12} />,
             },
@@ -2459,7 +2459,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
                     strengths: ["Extra troops on demand", "Flexible positioning", "Good for blocking"],
                     weaknesses: ["Knights are temporary", "Moderate personal stats", "Cooldown dependent"],
                     abilityDetails: [
-                      "Summons 3 knight troops near the hero",
+                      "Summons 3 knights troops near the hero",
                       "Knights have 500 HP and 30 damage each",
                       "Summoning circle with energy pillars effect",
                     ],

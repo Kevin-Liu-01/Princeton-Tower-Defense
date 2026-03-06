@@ -4,7 +4,7 @@
 import type { Position, MapDecoration } from "../../types";
 import { worldToScreen } from "../../utils";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
-import { lightenColor, darkenColor, drawIsometricPrism } from "../helpers";
+import { lightenColor, darkenColor, drawIsometricPrism, drawGroundShadow } from "../helpers";
 
 // Import landmark renderers
 import {
@@ -177,11 +177,7 @@ function drawTree(
 ): void {
   const sway = Math.sin(time * 1.5 + x * 0.01) * 2 * scale;
 
-  // Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + 5 * scale, 20 * scale, 10 * scale, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawGroundShadow(ctx, x, y + 5 * scale, 20 * scale, 10 * scale);
 
   // Trunk
   ctx.fillStyle = "#5d4037";
@@ -778,10 +774,7 @@ function drawRock(
           : "#808080";
 
   // Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + 3 * scale, 15 * scale, 7 * scale, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawGroundShadow(ctx, x, y + 3 * scale, 15 * scale, 7 * scale);
 
   // Top face (lightest)
   ctx.fillStyle = rockColor;
@@ -858,10 +851,7 @@ function drawBush(
   const sway = Math.sin(time * 2 + x * 0.02) * scale;
 
   // Shadow
-  ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-  ctx.beginPath();
-  ctx.ellipse(x, y + 2 * scale, 12 * scale, 5 * scale, 0, 0, Math.PI * 2);
-  ctx.fill();
+  drawGroundShadow(ctx, x, y + 2 * scale, 12 * scale, 5 * scale, 0.15);
 
   // Bush layers
   for (let i = 0; i < 3; i++) {
