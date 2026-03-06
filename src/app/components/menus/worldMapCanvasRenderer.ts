@@ -6510,6 +6510,13 @@ export const drawWorldMapCanvas = ({
     drawCastleLabel(MAP_WIDTH - 70, 50, "ENEMY KINGDOM", true);
 
     // --- PATH CONNECTIONS ---
+    const LOCKED_PATH_COLORS: Record<string, { partial: string; locked: string }> = {
+      grassland: { partial: "#6a5a4a", locked: "#3a3020" },
+      swamp:     { partial: "#5a6a5a", locked: "#2a3a2a" },
+      desert:    { partial: "#c4a878", locked: "#9a7e52" },
+      winter:    { partial: "#8aa8c4", locked: "#5a7a98" },
+      volcanic:  { partial: "#8a5040", locked: "#4a2018" },
+    };
     WORLD_LEVELS.forEach((level) => {
       const fromX = level.x;
       const fromY = getY(level.y);
@@ -6611,8 +6618,8 @@ export const drawWorldMapCanvas = ({
             ctx.globalAlpha = 1;
           }
         } else {
-          // Locked/partial path
-          ctx.strokeStyle = isPartial ? "#6a5a4a" : "#3a3020";
+          const lockedColors = LOCKED_PATH_COLORS[level.region] ?? LOCKED_PATH_COLORS.grassland;
+          ctx.strokeStyle = isPartial ? lockedColors.partial : lockedColors.locked;
           ctx.lineWidth = isPartial ? 6 : 4;
           ctx.setLineDash([8, 6]);
           ctx.beginPath();

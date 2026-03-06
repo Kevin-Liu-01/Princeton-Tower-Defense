@@ -1655,12 +1655,12 @@ export const TowerSprite: React.FC<{
         ctx.ellipse(cx, cy + 18 * s, 20 * s, 9 * s, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Sandbag perimeter
+        // Iron hex foundation wall
         const sbGrad = ctx.createLinearGradient(cx - 16 * s, 0, cx + 16 * s, 0);
-        sbGrad.addColorStop(0, "#5a5040");
-        sbGrad.addColorStop(0.35, "#8a7a60");
-        sbGrad.addColorStop(0.65, "#7a6a50");
-        sbGrad.addColorStop(1, "#4a4030");
+        sbGrad.addColorStop(0, "#2a2a32");
+        sbGrad.addColorStop(0.35, "#4a4a52");
+        sbGrad.addColorStop(0.65, "#3e3e46");
+        sbGrad.addColorStop(1, "#222228");
         ctx.fillStyle = sbGrad;
         ctx.beginPath();
         ctx.ellipse(cx, cy + 14 * s, 17 * s, 8.5 * s, 0, 0, Math.PI);
@@ -1668,13 +1668,13 @@ export const TowerSprite: React.FC<{
         ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, Math.PI, 0, true);
         ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#9a8a70";
+        ctx.fillStyle = "#5a5a62";
         ctx.beginPath();
         ctx.ellipse(cx, cy + 10 * s, 17 * s, 8.5 * s, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Concrete pad
-        ctx.fillStyle = "#4a4a50";
+        ctx.fillStyle = "#3a3a42";
         ctx.beginPath();
         ctx.ellipse(cx, cy + 9 * s, 15 * s, 7.5 * s, 0, 0, Math.PI * 2);
         ctx.fill();
@@ -1692,8 +1692,8 @@ export const TowerSprite: React.FC<{
         // 3 stacked tiers (wide at bottom, narrow at top)
         const tierRadii = [14 * s, 11 * s, 8 * s];
         const tierHeights = [6 * s, 5 * s, 4 * s];
-        const tierDarks = ["#3a2a1a", "#44342a", "#4e3e2e"];
-        const tierLights = ["#8a7a6a", "#9a8a7a", "#aa9a8a"];
+        const tierDarks = ["#2a2a2e", "#2e2e34", "#32323a"];
+        const tierLights = ["#606068", "#686870", "#72727a"];
         let tierY = cy + 6 * s;
 
         for (let ti = 0; ti < 3; ti++) {
@@ -1725,7 +1725,7 @@ export const TowerSprite: React.FC<{
           ctx.fill();
 
           // Metal band at top of tier
-          const bandColor = level >= 3 ? "#c9a227" : "#8b7355";
+          const bandColor = level >= 3 ? "#c9a227" : "#505058";
           ctx.strokeStyle = bandColor;
           ctx.lineWidth = 1.5 * s;
           ctx.beginPath();
@@ -1737,18 +1737,42 @@ export const TowerSprite: React.FC<{
 
         // Top rim (flared, wider than top tier)
         const rimR = tierRadii[2] * 1.2;
-        ctx.strokeStyle = level >= 3 ? "#c9a227" : "#8b7355";
+        ctx.strokeStyle = level >= 3 ? "#c9a227" : "#505058";
         ctx.lineWidth = 2 * s;
         ctx.beginPath();
         ctx.ellipse(cx, tierY, rimR, rimR * 0.5, 0, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.fillStyle = level >= 3 ? "#d4aa30" : "#9a8a6a";
+        ctx.fillStyle = level >= 3 ? "#d4aa30" : "#686870";
         ctx.beginPath();
         ctx.ellipse(cx, tierY, rimR, rimR * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
 
+        // Cradle arms (simplified side brackets)
+        for (const armSide of [-1, 1]) {
+          const armX = cx + armSide * tierRadii[0] * 0.85;
+          const armTopY = tierY + 2 * s;
+          const armBotY = cy + 5 * s;
+          ctx.strokeStyle = "#48424e";
+          ctx.lineWidth = 2.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(armX, armBotY);
+          ctx.lineTo(armX + armSide * 1 * s, armTopY);
+          ctx.stroke();
+          ctx.strokeStyle = "#6a6270";
+          ctx.lineWidth = 1.2 * s;
+          ctx.beginPath();
+          ctx.moveTo(armX + 0.3 * s, armBotY);
+          ctx.lineTo(armX + armSide * 1.3 * s, armTopY);
+          ctx.stroke();
+          // Trunnion bolt
+          ctx.fillStyle = "#8a8290";
+          ctx.beginPath();
+          ctx.arc(armX + armSide * 0.5 * s, armTopY + 3 * s, 1.2 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
         // Dark bore opening
-        ctx.fillStyle = "#0a0804";
+        ctx.fillStyle = "#0a0808";
         ctx.beginPath();
         ctx.ellipse(cx, tierY, tierRadii[2] * 0.75, tierRadii[2] * 0.375, 0, 0, Math.PI * 2);
         ctx.fill();
