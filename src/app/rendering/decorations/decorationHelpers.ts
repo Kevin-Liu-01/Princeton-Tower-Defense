@@ -7,7 +7,6 @@ export type DecorationRenderLayer = "background" | "default";
 const BACKGROUND_DECORATION_TYPES = new Set<DecorationType>([
   "deep_water",
   "lava_pool",
-  "carnegie_lake",
 ]);
 
 export interface RuntimeDecoration extends Decoration {
@@ -30,7 +29,7 @@ export function getDecorationRenderLayer(
 const DECORATION_ISO_Y_OFFSETS: Partial<Record<DecorationType, number>> = {
   nassau_hall: 12,
   pyramid: 6,
-  carnegie_lake: 0,
+  carnegie_lake: 20,
 };
 
 export function getDecorationIsoY(

@@ -1,5 +1,7 @@
 import type { Tower, Position } from "../../types";
+import { ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import { drawIsometricPrism } from "./towerHelpers";
+import { drawIsoGothicWindow, drawIsoFlushSlit, drawIsoFlushRect } from "../isoFlush";
 
 export function renderDinkyTrains(
   ctx: CanvasRenderingContext2D,
@@ -56,7 +58,7 @@ export function renderDinkyTrains(
       const bk = isoOffset(cx, cy, -halfLen);
       const ft = isoOffset(cx, cy, halfLen);
       const r = radius * zoom;
-      const er = r * 0.55;
+      const er = r * ISO_SIN;
 
       // === BACK CAP with outer lip for depth ===
       ctx.fillStyle = darkCol;
@@ -365,30 +367,29 @@ export function renderDinkyTrains(
     );
     ctx.fill();
 
-    const drawWheel = (
-      wx: number,
-      wy: number,
-      r: number,
-      mainColor: string,
-      rimColor: string,
-      accentColor?: string,
-    ) => {
-      const rz = r * zoom;
-      const halfR = rz * 0.5;
+    // Cross-track half-width — perpendicular to iso track direction.
+    // Track dir is (1, -0.5); near-side (toward viewer) is (+1, +0.5).
+    const CROSS_HALF = 2;
 
+    // Draws a single wheel disc at (wx, wy)
+    const drawSingleWheel = (
+      wx: number, wy: number,
+      iRx: number, iRy: number, rz: number,
+      mainColor: string, rimColor: string, accentColor: string | undefined,
+    ) => {
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.4)";
       ctx.shadowBlur = 3 * zoom;
       ctx.shadowOffsetY = 1 * zoom;
 
-      const tireGrad = ctx.createLinearGradient(wx, wy - halfR, wx, wy + halfR);
+      const tireGrad = ctx.createLinearGradient(wx, wy - iRy, wx, wy + iRy);
       tireGrad.addColorStop(0, rimColor);
       tireGrad.addColorStop(0.4, mainColor);
       tireGrad.addColorStop(0.7, rimColor);
       tireGrad.addColorStop(1, "rgba(0,0,0,0.5)");
       ctx.fillStyle = tireGrad;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, rz * 1.1, halfR * 1.1, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, iRx * 1.08, iRy * 1.08, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.6)";
       ctx.lineWidth = 1.2 * zoom;
@@ -398,58 +399,41 @@ export function renderDinkyTrains(
       ctx.shadowOffsetY = 0;
 
       const faceGrad = ctx.createRadialGradient(
-        wx - rz * 0.15,
-        wy - halfR * 0.15,
-        0,
-        wx,
-        wy,
-        rz * 0.85,
+        wx - iRx * 0.15, wy - iRy * 0.15, 0,
+        wx, wy, rz * 0.85,
       );
       faceGrad.addColorStop(0, accentColor || mainColor);
       faceGrad.addColorStop(0.6, mainColor);
       faceGrad.addColorStop(1, rimColor);
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, rz * 0.88, halfR * 0.88, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, iRx * 0.88, iRy * 0.88, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = "rgba(0,0,0,0.25)";
       ctx.lineWidth = 0.8 * zoom;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, rz * 0.75, halfR * 0.75, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, iRx * 0.75, iRy * 0.75, 0, 0, Math.PI * 2);
       ctx.stroke();
 
       const spokeCount = 8;
       ctx.lineWidth = 1.4 * zoom;
       for (let i = 0; i < spokeCount; i++) {
         const angle = (i / spokeCount) * Math.PI * 2 + time * 3;
-        const innerR = rz * 0.18;
-        const outerR = rz * 0.72;
-        const sx = wx + Math.cos(angle) * innerR;
-        const sy = wy + Math.sin(angle) * innerR * 0.5;
-        const ex = wx + Math.cos(angle) * outerR;
-        const ey = wy + Math.sin(angle) * outerR * 0.5;
         ctx.strokeStyle = i % 2 === 0 ? mainColor : rimColor;
         ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(ex, ey);
+        ctx.moveTo(wx + Math.cos(angle) * iRx * 0.18, wy + Math.sin(angle) * iRy * 0.18);
+        ctx.lineTo(wx + Math.cos(angle) * iRx * 0.72, wy + Math.sin(angle) * iRy * 0.72);
         ctx.stroke();
       }
 
-      const hubGrad = ctx.createRadialGradient(
-        wx - rz * 0.04,
-        wy - halfR * 0.04,
-        0,
-        wx,
-        wy,
-        rz * 0.22,
-      );
+      const hubGrad = ctx.createRadialGradient(wx, wy, 0, wx, wy, iRx * 0.22);
       hubGrad.addColorStop(0, "rgba(220,220,220,0.9)");
       hubGrad.addColorStop(0.5, accentColor || "#555");
       hubGrad.addColorStop(1, "#1a1a1a");
       ctx.fillStyle = hubGrad;
       ctx.beginPath();
-      ctx.ellipse(wx, wy, rz * 0.22, halfR * 0.22, 0, 0, Math.PI * 2);
+      ctx.ellipse(wx, wy, iRx * 0.22, iRy * 0.22, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "rgba(0,0,0,0.5)";
       ctx.lineWidth = 0.6 * zoom;
@@ -458,18 +442,194 @@ export function renderDinkyTrains(
       ctx.strokeStyle = "rgba(255,255,255,0.35)";
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.ellipse(
-        wx,
-        wy,
-        rz * 0.95,
-        halfR * 0.95,
-        0,
-        Math.PI * 1.1,
-        Math.PI * 1.9,
-      );
+      ctx.ellipse(wx, wy, iRx * 0.95, iRy * 0.95, 0, Math.PI * 1.1, Math.PI * 1.9);
       ctx.stroke();
 
       ctx.restore();
+    };
+
+    // Draws a wheel PAIR (far + near side) with an axle between them.
+    const drawWheel = (
+      wx: number, wy: number, r: number,
+      mainColor: string, rimColor: string, accentColor?: string,
+    ) => {
+      const rz = r * zoom;
+      const iRx = rz * ISO_SIN;
+      const iRy = rz;
+      const ch = CROSS_HALF * zoom;
+
+      // Far-side wheel (away from viewer — upper-left offset, dimmed)
+      ctx.save();
+      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * 0.6;
+      drawSingleWheel(wx - ch, wy - ch * 0.5, iRx, iRy, rz, mainColor, rimColor, accentColor);
+      ctx.restore();
+
+      // Axle connecting near ↔ far
+      ctx.strokeStyle = "rgba(80,80,80,0.7)";
+      ctx.lineWidth = 1.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wx - ch, wy - ch * 0.5);
+      ctx.lineTo(wx + ch, wy + ch * 0.5);
+      ctx.stroke();
+
+      // Near-side wheel (toward viewer — lower-right offset)
+      drawSingleWheel(wx + ch, wy + ch * 0.5, iRx, iRy, rz, mainColor, rimColor, accentColor);
+    };
+
+    // Connecting rods between drive wheels on the near side.
+    const drawConnectingRods = (
+      positions: number[],
+      baseX: number, baseY: number,
+      rodColor: string,
+    ) => {
+      if (positions.length < 2) return;
+      const ch = CROSS_HALF * zoom;
+      const phase = time * 3;
+      const crankR = 1.8 * zoom;
+
+      // Near-side coupling rod
+      ctx.strokeStyle = rodColor;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      for (let i = 0; i < positions.length; i++) {
+        const wp = isoOffset(baseX, baseY, positions[i]);
+        const px = wp.x + ch + Math.sin(phase) * crankR * ISO_SIN;
+        const py = wp.y + ch * 0.5 + Math.cos(phase) * crankR;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Crank pins
+      ctx.fillStyle = rodColor;
+      for (const p of positions) {
+        const wp = isoOffset(baseX, baseY, p);
+        const px = wp.x + ch + Math.sin(phase) * crankR * ISO_SIN;
+        const py = wp.y + ch * 0.5 + Math.cos(phase) * crankR;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.2 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Far-side rod (dimmed)
+      ctx.save();
+      ctx.globalAlpha = (ctx.globalAlpha ?? 1) * 0.45;
+      ctx.strokeStyle = rodColor;
+      ctx.lineWidth = 2 * zoom;
+      ctx.beginPath();
+      for (let i = 0; i < positions.length; i++) {
+        const wp = isoOffset(baseX, baseY, positions[i]);
+        const px = wp.x - ch + Math.sin(phase) * crankR * ISO_SIN;
+        const py = wp.y - ch * 0.5 + Math.cos(phase) * crankR;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // Isometric headlight — elliptical housing with glow, bracket to anchor.
+    const drawIsoHeadlight = (
+      anchorX: number, anchorY: number,
+      cx: number, cy: number,
+      r: number,
+      housingColor: string, bracketColor: string,
+      glowAlpha: number,
+    ) => {
+      const hlRx = r * zoom * ISO_SIN;
+      const hlRy = r * zoom;
+      ctx.strokeStyle = bracketColor;
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(anchorX, anchorY);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+      ctx.fillStyle = housingColor;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, hlRx, hlRy, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255, 250, 200, ${glowAlpha})`;
+      ctx.shadowColor = "#fffacc";
+      ctx.shadowBlur = 12 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, hlRx * 0.65, hlRy * 0.65, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    };
+
+    // Isometric cowcatcher / plow — proper V-wedge flush with track direction.
+    // cx,cy = base center. forwardOff = how far tip extends along track.
+    // halfW = cross-track half-width at base (in world units).
+    const drawIsoCowcatcher = (
+      cx: number, cy: number,
+      forwardOff: number, halfW: number, barH: number,
+      mainCol: string, darkCol: string, barCol: string,
+      barCount: number = 4,
+    ) => {
+      const tip = isoOffset(cx, cy, forwardOff);
+      const hw = halfW * zoom;
+      // Cross-track perpendicular to track (1,-0.5): near=(+1,+0.5), far=(-1,-0.5)
+      const nearX = cx + hw;
+      const nearY = cy + hw * 0.5;
+      const farX = cx - hw;
+      const farY = cy - hw * 0.5;
+      const bH = barH * zoom;
+
+      // Top face — isometric V
+      ctx.fillStyle = mainCol;
+      ctx.beginPath();
+      ctx.moveTo(farX, farY);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.lineTo(nearX, nearY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Near face (toward viewer — darker)
+      ctx.fillStyle = darkCol;
+      ctx.beginPath();
+      ctx.moveTo(nearX, nearY);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.lineTo(tip.x, tip.y + bH);
+      ctx.lineTo(nearX, nearY + bH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Far face (away from viewer — lighter)
+      ctx.fillStyle = mainCol;
+      ctx.beginPath();
+      ctx.moveTo(farX, farY);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.lineTo(tip.x, tip.y + bH);
+      ctx.lineTo(farX, farY + bH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Edge outlines
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 0.8 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(tip.x, tip.y);
+      ctx.lineTo(nearX, nearY);
+      ctx.lineTo(nearX, nearY + bH);
+      ctx.lineTo(tip.x, tip.y + bH);
+      ctx.lineTo(farX, farY + bH);
+      ctx.lineTo(farX, farY);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.stroke();
+
+      // Horizontal bars — cross-track at narrowing widths
+      ctx.strokeStyle = barCol;
+      ctx.lineWidth = 1.2 * zoom;
+      for (let bi = 0; bi < barCount; bi++) {
+        const t = (bi + 1) / (barCount + 1);
+        const bCenter = isoOffset(cx, cy, forwardOff * t);
+        const bHw = hw * (1 - t);
+        ctx.beginPath();
+        ctx.moveTo(bCenter.x - bHw, bCenter.y - bHw * 0.5 + bH * 0.5);
+        ctx.lineTo(bCenter.x + bHw, bCenter.y + bHw * 0.5 + bH * 0.5);
+        ctx.stroke();
+      }
     };
 
     if (tower.level === 1) {
@@ -508,26 +668,8 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Animated pistons between drive wheels
-      const pistonPhase = time * 4;
-      const pistonStroke = Math.sin(pistonPhase) * 2.5 * zoom;
-      const pistonY = wheelY - 0.5 * zoom;
-      const p1 = isoOffset(trainX, pistonY, 7);
-      const p2 = isoOffset(trainX, pistonY, 3);
-      ctx.strokeStyle = "#8a7a6a";
-      ctx.lineWidth = 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(p1.x + pistonStroke, p1.y - pistonStroke * 0.5);
-      ctx.lineTo(p2.x + pistonStroke * 0.3, p2.y - pistonStroke * 0.15);
-      ctx.stroke();
-      ctx.strokeStyle = "#6a5a4a";
-      ctx.lineWidth = 1.5 * zoom;
-      const p3 = isoOffset(trainX, pistonY, -2);
-      const p4 = isoOffset(trainX, pistonY, -7);
-      ctx.beginPath();
-      ctx.moveTo(p3.x - pistonStroke * 0.3, p3.y + pistonStroke * 0.15);
-      ctx.lineTo(p4.x - pistonStroke, p4.y + pistonStroke * 0.5);
-      ctx.stroke();
+      // Animated pistons — proper isometric connecting rods
+      drawConnectingRods([8, 3, -3, -8], trainX, wheelY, "#8a7a6a");
 
       // Leaf springs
       ctx.strokeStyle = "#5a4a3a";
@@ -591,36 +733,6 @@ export function renderDinkyTrains(
         "#5a3a1a",
         "#B87333",
       );
-
-      // Connecting rod between front drive wheels (animated)
-      ctx.strokeStyle = "#B87333";
-      ctx.lineWidth = 2 * zoom;
-      const rodW1 = isoOffset(trainX, wheelY, 8);
-      const rodW2 = isoOffset(trainX, wheelY, 3);
-      const rodDy = Math.sin(time * 4) * 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rodW1.x + rodDy * 0.4, rodW1.y + rodDy * 0.2);
-      ctx.lineTo(rodW2.x + rodDy * 0.4, rodW2.y + rodDy * 0.2);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      ctx.arc(
-        rodW1.x + rodDy * 0.4,
-        rodW1.y + rodDy * 0.2,
-        1.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(
-        rodW2.x + rodDy * 0.4,
-        rodW2.y + rodDy * 0.2,
-        1.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
 
       // === CAB (front, draw first - appears behind) ===
       // Rich mahogany cab body with 3D depth
@@ -981,24 +1093,25 @@ export function renderDinkyTrains(
       ctx.lineTo(stackPos.x + 1.5 * zoom, stackPos.y - 4 * zoom);
       ctx.closePath();
       ctx.fill();
-      // Spark catcher mesh dome
+      // Spark catcher mesh dome — isometric elliptical
       ctx.fillStyle = "rgba(90, 80, 60, 0.5)";
       ctx.beginPath();
-      ctx.arc(stackPos.x, stackPos.y - 13.5 * zoom, 3.5 * zoom, Math.PI, 0);
+      ctx.ellipse(stackPos.x, stackPos.y - 13.5 * zoom, 3.5 * zoom * ISO_SIN, 3.5 * zoom, 0, Math.PI, 0);
       ctx.fill();
       ctx.strokeStyle = "#6a5a3a";
       ctx.lineWidth = 0.6 * zoom;
       for (let mi = 0; mi < 5; mi++) {
         const meshAngle = (mi / 5) * Math.PI;
+        const meshRx = 3.5 * zoom * ISO_SIN;
         ctx.beginPath();
         ctx.moveTo(
-          stackPos.x - 3.5 * zoom * Math.cos(meshAngle),
+          stackPos.x - meshRx * Math.cos(meshAngle),
           stackPos.y - 13.5 * zoom,
         );
         ctx.quadraticCurveTo(
           stackPos.x,
           stackPos.y - 17 * zoom,
-          stackPos.x + 3.5 * zoom * Math.cos(Math.PI - meshAngle),
+          stackPos.x + meshRx * Math.cos(Math.PI - meshAngle),
           stackPos.y - 13.5 * zoom,
         );
         ctx.stroke();
@@ -1083,42 +1196,14 @@ export function renderDinkyTrains(
       }
       ctx.shadowBlur = 0;
 
-      // Headlight with polished brass housing
-      const lightPos = isoOffset(boilerPos.x, boilerPos.y - 5.5 * zoom, 5);
-      ctx.strokeStyle = "#8B5E3C";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(lightPos.x - 2 * zoom, lightPos.y + 1 * zoom);
-      ctx.lineTo(lightPos.x + 2 * zoom, lightPos.y - 0.5 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        const hx = lightPos.x + 2 * zoom + Math.cos(ha) * 2.5 * zoom;
-        const hy = lightPos.y - 0.5 * zoom + Math.sin(ha) * 2.5 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+      // Isometric headlight on boiler
+      {
+        const hlPos = isoOffset(boilerPos.x, boilerPos.y - 5.5 * zoom, 5);
+        drawIsoHeadlight(
+          boilerPos.x + 4 * zoom, boilerPos.y - 6 * zoom,
+          hlPos.x, hlPos.y, 2.5,
+          "#C9A227", "#8B5E3C", 0.75 + Math.sin(time * 3) * 0.2);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#B8860B";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.stroke();
-      const lightGlow = 0.75 + Math.sin(time * 3) * 0.2;
-      ctx.fillStyle = `rgba(255, 250, 200, ${lightGlow})`;
-      ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 14 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        lightPos.x + 2 * zoom,
-        lightPos.y - 0.5 * zoom,
-        1.8 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
       // Bell on bracket with brass shine
       const bellPos = isoOffset(boilerPos.x, boilerPos.y - 17 * zoom, 1);
@@ -1284,7 +1369,7 @@ export function renderDinkyTrains(
       );
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(tenderPos.x, tenderPos.y - 9 * zoom, 4 * zoom, Math.PI, 0);
+      ctx.ellipse(tenderPos.x, tenderPos.y - 9 * zoom, 4 * zoom * ISO_SIN, 4 * zoom, 0, Math.PI, 0);
       ctx.fill();
 
       // Deterministic coal chunks with faceted shading
@@ -1470,96 +1555,20 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Front headlight on cab with ornate mounting
-      const frontLight = isoOffset(cabPos.x, cabPos.y - 6 * zoom, 6);
-      ctx.strokeStyle = "#B87333";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 7 * zoom);
-      ctx.lineTo(frontLight.x + 1.5 * zoom, frontLight.y - 0.5 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        const hx = frontLight.x + 1.5 * zoom + Math.cos(ha) * 2.8 * zoom;
-        const hy = frontLight.y - 0.5 * zoom + Math.sin(ha) * 2.8 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+      // Isometric front headlight on cab
+      {
+        const flPos = isoOffset(cabPos.x, cabPos.y - 6 * zoom, 6);
+        drawIsoHeadlight(
+          cabPos.x + 5.5 * zoom, cabPos.y - 7 * zoom,
+          flPos.x, flPos.y, 2.8,
+          "#C9A227", "#B87333", 0.75 + Math.sin(time * 3) * 0.2);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#B8860B";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.75 + Math.sin(time * 3) * 0.2})`;
-      ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 16 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        frontLight.x + 1.5 * zoom,
-        frontLight.y - 0.5 * zoom,
-        2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
-      // === COWCATCHER: Brass V-plow ===
-      const cowPos = isoOffset(cabPos.x, cabPos.y, 6);
-      ctx.strokeStyle = "#B87333";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y + 2 * zoom);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 2 * zoom);
-      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y - 1 * zoom);
-      ctx.stroke();
-      // Right face
-      ctx.fillStyle = "#B87333";
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 4 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x, cowPos.y + 4 * zoom);
-      ctx.lineTo(cowPos.x + 3 * zoom, cowPos.y + 3 * zoom);
-      ctx.lineTo(cowPos.x + 8 * zoom, cowPos.y - 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      // Left face
-      ctx.fillStyle = "#8B5E3C";
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 4 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 3 * zoom);
-      ctx.lineTo(cowPos.x, cowPos.y + 4 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      // Horizontal bars
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1.3 * zoom;
-      for (let b = 0; b < 4; b++) {
-        const barY = cowPos.y + 3 * zoom - b * 1.8 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(cowPos.x - 2 * zoom, barY);
-        ctx.lineTo(cowPos.x + 6 * zoom, barY - 2.5 * zoom);
-        ctx.stroke();
-      }
-      // Highlight edge
-      ctx.strokeStyle = "#D4956B";
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 4 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.stroke();
+      // === COWCATCHER: Isometric brass V-plow ===
+      drawIsoCowcatcher(
+        cabPos.x + 5 * zoom, cabPos.y - 0.5 * zoom,
+        6, 5, 6,
+        "#B87333", "#8B5E3C", "#C9A227", 4);
 
       // "DINKY" nameplate on boiler side — 3D raised brass plaque
       const npPos = isoOffset(boilerPos.x, boilerPos.y - 3 * zoom, -4);
@@ -1786,17 +1795,8 @@ export function renderDinkyTrains(
         "#5a6070",
       );
 
-      // Animated connecting rods
-      ctx.strokeStyle = "#5a6070";
-      ctx.lineWidth = 2 * zoom;
-      const rodPhase = time * 3;
-      const rodW1 = isoOffset(trainX, wheelY, 11);
-      const rodW2 = isoOffset(trainX, wheelY, 4);
-      const rodDy = Math.sin(rodPhase) * 2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rodW1.x + rodDy * 0.4, rodW1.y + rodDy * 0.2);
-      ctx.lineTo(rodW2.x + rodDy * 0.4, rodW2.y + rodDy * 0.2);
-      ctx.stroke();
+      // Animated connecting rods — proper isometric
+      drawConnectingRods([11, 4, -4, -11], trainX, wheelY, "#5a6070");
 
       // === ARMORED CAB (front, draw first) ===
       drawIsometricPrism(
@@ -2092,41 +2092,14 @@ export function renderDinkyTrains(
         ctx.fill();
       }
 
-      // Armored headlight housing
-      const lightPos = isoOffset(locoPos.x, locoPos.y - 7.5 * zoom, 6);
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(locoPos.x + 6 * zoom, locoPos.y - 8.5 * zoom);
-      ctx.lineTo(lightPos.x + 1.5 * zoom, lightPos.y - 0.5 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        const hx = lightPos.x + 1.5 * zoom + Math.cos(ha) * 2.5 * zoom;
-        const hy = lightPos.y - 0.5 * zoom + Math.sin(ha) * 2.5 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+      // Isometric armored headlight on loco
+      {
+        const hlPos = isoOffset(locoPos.x, locoPos.y - 7.5 * zoom, 6);
+        drawIsoHeadlight(
+          locoPos.x + 6 * zoom, locoPos.y - 8.5 * zoom,
+          hlPos.x, hlPos.y, 2.5,
+          "#3a4050", "#3a4050", 0.55 + Math.sin(time * 3) * 0.2);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.5)";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.55 + Math.sin(time * 3) * 0.2})`;
-      ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 10 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        lightPos.x + 1.5 * zoom,
-        lightPos.y - 0.5 * zoom,
-        1.5 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
       // === WEAPONS/CARGO CAR (back) ===
       drawIsometricPrism(
@@ -2433,98 +2406,20 @@ export function renderDinkyTrains(
       ctx.arc(chain2.x + 2.5 * zoom, chain2.y, 1.2 * zoom, 0, Math.PI * 2);
       ctx.fill();
 
-      // Front headlight with armored bracket
-      const frontLight = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 8);
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 8 * zoom);
-      ctx.lineTo(frontLight.x + 1.5 * zoom, frontLight.y - 0.5 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        const hx = frontLight.x + 1.5 * zoom + Math.cos(ha) * 3 * zoom;
-        const hy = frontLight.y - 0.5 * zoom + Math.sin(ha) * 3 * zoom;
-        if (hi === 0) ctx.moveTo(hx, hy);
-        else ctx.lineTo(hx, hy);
+      // Isometric front headlight on cab
+      {
+        const flPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 8);
+        drawIsoHeadlight(
+          cabPos.x + 6 * zoom, cabPos.y - 8 * zoom,
+          flPos.x, flPos.y, 3,
+          "#3a4050", "#3a4050", 0.7 + Math.sin(time * 3) * 0.2);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.5)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.7 + Math.sin(time * 3) * 0.2})`;
-      ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 14 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        frontLight.x + 1.5 * zoom,
-        frontLight.y - 0.5 * zoom,
-        2.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
-      // === ARMORED PLOW/RAM at front ===
-      const plowPos = isoOffset(cabPos.x, cabPos.y, 8);
-      ctx.strokeStyle = "#4a5060";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y + 1 * zoom);
-      ctx.lineTo(plowPos.x + 2 * zoom, plowPos.y + 2 * zoom);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6 * zoom, cabPos.y - 3 * zoom);
-      ctx.lineTo(plowPos.x + 2 * zoom, plowPos.y - 2 * zoom);
-      ctx.stroke();
-      const plowGrad = ctx.createLinearGradient(
-        plowPos.x - 4 * zoom,
-        plowPos.y,
-        plowPos.x + 8 * zoom,
-        plowPos.y,
-      );
-      plowGrad.addColorStop(0, "#2a3040");
-      plowGrad.addColorStop(0.5, "#4a5060");
-      plowGrad.addColorStop(1, "#2a3040");
-      ctx.fillStyle = plowGrad;
-      ctx.beginPath();
-      ctx.moveTo(plowPos.x + 6 * zoom, plowPos.y - 6 * zoom);
-      ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 1 * zoom);
-      ctx.lineTo(plowPos.x, plowPos.y + 5.5 * zoom);
-      ctx.lineTo(plowPos.x + 4.5 * zoom, plowPos.y + 4 * zoom);
-      ctx.lineTo(plowPos.x + 9 * zoom, plowPos.y - 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "#1a2030";
-      ctx.beginPath();
-      ctx.moveTo(plowPos.x + 6 * zoom, plowPos.y - 6 * zoom);
-      ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 1 * zoom);
-      ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 3.5 * zoom);
-      ctx.lineTo(plowPos.x, plowPos.y + 5.5 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#5a6070";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(plowPos.x + 6 * zoom, plowPos.y - 6 * zoom);
-      ctx.lineTo(plowPos.x - 4 * zoom, plowPos.y + 1 * zoom);
-      ctx.stroke();
-      // Mounting bolts
-      ctx.fillStyle = "#6a7080";
-      for (let bi = 0; bi < 4; bi++) {
-        const bx = plowPos.x + (1 + bi * 2) * zoom;
-        const by = plowPos.y - (1.5 + bi * 1.5) * zoom;
-        ctx.beginPath();
-        ctx.arc(bx, by, 0.8 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // === ARMORED PLOW/RAM — isometric V-wedge ===
+      drawIsoCowcatcher(
+        cabPos.x + 6 * zoom, cabPos.y - 1 * zoom,
+        8, 6, 7,
+        "#4a5060", "#2a3040", "#5a6070", 4);
 
       // === PRINCETON ORANGE STRIPE (3D isometric band with glow) ===
       const stripeY = trainY - 2 * zoom;
@@ -2619,6 +2514,7 @@ export function renderDinkyTrains(
         "#2a2e35",
         "#5a6070",
       );
+      drawConnectingRods([13, 4, -4, -13], trainX, wheelY, "#5a6070");
 
       // === CAB: Fortress command car with battlement crown ===
       // Angled prow/ram
@@ -3136,24 +3032,25 @@ export function renderDinkyTrains(
         { top: "#3a4050", left: "#2a3040", right: "#1a2030" },
         zoom,
       );
-      // Spark catcher mesh dome
+      // Spark catcher mesh dome — isometric elliptical
       ctx.fillStyle = "rgba(70, 80, 90, 0.6)";
       ctx.beginPath();
-      ctx.arc(stackPos.x, stackPos.y - 15.5 * zoom, 3.5 * zoom, Math.PI, 0);
+      ctx.ellipse(stackPos.x, stackPos.y - 15.5 * zoom, 3.5 * zoom * ISO_SIN, 3.5 * zoom, 0, Math.PI, 0);
       ctx.fill();
       ctx.strokeStyle = "#5a6070";
       ctx.lineWidth = 0.7 * zoom;
       for (let mi = 0; mi < 5; mi++) {
         const meshAngle = (mi / 5) * Math.PI;
+        const meshRx = 3.5 * zoom * ISO_SIN;
         ctx.beginPath();
         ctx.moveTo(
-          stackPos.x - 3.5 * zoom * Math.cos(meshAngle),
+          stackPos.x - meshRx * Math.cos(meshAngle),
           stackPos.y - 15.5 * zoom,
         );
         ctx.quadraticCurveTo(
           stackPos.x,
           stackPos.y - 19 * zoom,
-          stackPos.x + 3.5 * zoom * Math.cos(Math.PI - meshAngle),
+          stackPos.x + meshRx * Math.cos(Math.PI - meshAngle),
           stackPos.y - 15.5 * zoom,
         );
         ctx.stroke();
@@ -3399,92 +3296,20 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
 
-      // Front headlight with fortress bracket
-      const headlightPos = isoOffset(cabPos.x, cabPos.y - 9 * zoom, 9);
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 10 * zoom);
-      ctx.lineTo(headlightPos.x + 1 * zoom, headlightPos.y);
-      ctx.stroke();
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        if (hi === 0)
-          ctx.moveTo(
-            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
-            headlightPos.y + Math.sin(ha) * 3 * zoom,
-          );
-        else
-          ctx.lineTo(
-            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
-            headlightPos.y + Math.sin(ha) * 3 * zoom,
-          );
+      // Isometric front headlight with fortress bracket
+      {
+        const hlPos = isoOffset(cabPos.x, cabPos.y - 9 * zoom, 9);
+        drawIsoHeadlight(
+          cabPos.x + 6.5 * zoom, cabPos.y - 10 * zoom,
+          hlPos.x, hlPos.y, 3,
+          "#3a4050", "#3a4050", 0.75 + Math.sin(time * 3) * 0.2);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.5)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.75 + Math.sin(time * 3) * 0.2})`;
-      ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 14 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        headlightPos.x + 1 * zoom,
-        headlightPos.y,
-        2.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
 
-      // Battering ram at front
-      const ramPos = isoOffset(cabPos.x, cabPos.y, 8);
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y);
-      ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y - 1 * zoom);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 5 * zoom);
-      ctx.lineTo(ramPos.x + 3 * zoom, ramPos.y - 3.5 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#2a3040";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        if (hi === 0)
-          ctx.moveTo(
-            ramPos.x + 5 * zoom + Math.cos(ha) * 3 * zoom,
-            ramPos.y - 2 * zoom + Math.sin(ha) * 3 * zoom,
-          );
-        else
-          ctx.lineTo(
-            ramPos.x + 5 * zoom + Math.cos(ha) * 3 * zoom,
-            ramPos.y - 2 * zoom + Math.sin(ha) * 3 * zoom,
-          );
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "#5a6070";
-      ctx.beginPath();
-      ctx.arc(
-        ramPos.x + 5 * zoom,
-        ramPos.y - 2 * zoom,
-        1.8 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.3)";
-      ctx.stroke();
+      // Isometric battering ram — armored V-wedge
+      drawIsoCowcatcher(
+        cabPos.x + 6.5 * zoom, cabPos.y - 2.5 * zoom,
+        8, 6, 7,
+        "#3a4050", "#1a2030", "#5a6070", 3);
 
       // Princeton orange stripe
       const stripeY = trainY - 2 * zoom;
@@ -3520,29 +3345,33 @@ export function renderDinkyTrains(
       const passengerPos = isoOffset(trainX, trainY, -8);
       const wheelY = trainY + 4.5 * zoom;
 
-      // --- Ornate gold-trimmed chassis ---
+      // Ornate gold-trimmed chassis — isometric beam
+      drawIsometricPrism(ctx, trainX, trainY + 3 * zoom, 26, 5, 2,
+        { top: "#F0ECE4", left: "#E0DCD0", right: "#D0CCC0" }, zoom);
       ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
+      ctx.lineWidth = 1.5 * zoom;
       const chL4a = isoOffset(trainX, trainY + 2 * zoom, 13);
       const chR4a = isoOffset(trainX, trainY + 2 * zoom, -13);
       ctx.beginPath();
       ctx.moveTo(chL4a.x, chL4a.y);
       ctx.lineTo(chR4a.x, chR4a.y);
       ctx.stroke();
+      // Decorative scrollwork arcs on right face
       ctx.lineWidth = 1 * zoom;
       for (let sci = 0; sci < 4; sci++) {
         const scPos = isoOffset(trainX, trainY + 2.5 * zoom, -7 + sci * 5);
         ctx.beginPath();
-        ctx.arc(scPos.x, scPos.y + 1 * zoom, 1.5 * zoom, 0, Math.PI);
+        ctx.ellipse(scPos.x, scPos.y + 1 * zoom, 1.5 * zoom * ISO_SIN, 1.5 * zoom, 0, 0, Math.PI);
         ctx.stroke();
       }
 
       // Gold wheels with ornate spokes
-      const wPositions = [11, 4, -4, -11];
-      for (const wp of wPositions) {
+      const wPositions4a = [11, 4, -4, -11];
+      for (const wp of wPositions4a) {
         const wPos = isoOffset(trainX, wheelY, wp);
         drawWheel(wPos.x, wPos.y, 4.5, "#C9A227", "#B8860B", "#E8C847");
       }
+      drawConnectingRods(wPositions4a, trainX, wheelY, "#B8860B");
 
       // === CAB (front) - Marble palace with dome ===
       ctx.shadowBlur = 7 * zoom;
@@ -3571,108 +3400,91 @@ export function renderDinkyTrains(
       ctx.lineTo(cabPos.x - cabW4a, cabPos.y - cabH4a);
       ctx.stroke();
 
-      // Ornate dome roof with gold filigree
-      const domeGrad = ctx.createRadialGradient(
-        cabPos.x - 2 * zoom,
-        cabPos.y - 16 * zoom,
-        0,
-        cabPos.x,
-        cabPos.y - 14 * zoom,
-        6.5 * zoom,
-      );
-      domeGrad.addColorStop(0, "#F5F0E8");
-      domeGrad.addColorStop(0.5, "#E8E4DC");
-      domeGrad.addColorStop(1, "#D8D4CC");
-      ctx.fillStyle = domeGrad;
-      ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 14 * zoom, 6.5 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x - 6.5 * zoom, cabPos.y - 14 * zoom);
-      ctx.lineTo(cabPos.x + 6.5 * zoom, cabPos.y - 14 * zoom);
-      ctx.stroke();
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 14 * zoom, 6.5 * zoom, Math.PI, 0);
-      ctx.stroke();
-      // Cross-hatch gold filigree on dome
-      ctx.strokeStyle = "rgba(201, 162, 39, 0.45)";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let fi = 0; fi < 4; fi++) {
-        const a1 = Math.PI + (fi + 1) * (Math.PI / 5);
-        const a2 = Math.PI * 2 - (fi + 1) * (Math.PI / 5);
+      // Isometric dome roof — proper 3D dome with left/right face shading
+      {
+        const dBaseY = cabPos.y - 14 * zoom;
+        const dPeakY = cabPos.y - 21 * zoom;
+        const dRx = 6.5 * zoom;
+        const dRy = dRx * ISO_SIN;
+
+        // Right face (darker)
+        ctx.fillStyle = "#D8D4CC";
         ctx.beginPath();
-        ctx.moveTo(
-          cabPos.x + Math.cos(a1) * 6 * zoom,
-          cabPos.y - 14 * zoom + Math.sin(a1) * 6 * zoom,
-        );
-        ctx.lineTo(
-          cabPos.x + Math.cos(a2) * 6 * zoom,
-          cabPos.y - 14 * zoom + Math.sin(a2) * 6 * zoom,
-        );
+        ctx.moveTo(cabPos.x, dBaseY + dRy);
+        ctx.quadraticCurveTo(cabPos.x + dRx * 0.95, dBaseY - (dPeakY - dBaseY) * 0.2, cabPos.x + dRx * 0.15, dPeakY);
+        ctx.lineTo(cabPos.x, dPeakY + 0.5 * zoom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Left face (lighter)
+        ctx.fillStyle = "#F0ECE4";
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x, dBaseY + dRy);
+        ctx.quadraticCurveTo(cabPos.x - dRx * 0.95, dBaseY - (dPeakY - dBaseY) * 0.2, cabPos.x - dRx * 0.15, dPeakY);
+        ctx.lineTo(cabPos.x, dPeakY + 0.5 * zoom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Back face (just above the top of the prism)
+        ctx.fillStyle = "#E8E4DC";
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x - dRx, dBaseY);
+        ctx.quadraticCurveTo(cabPos.x, dBaseY - dRy * 1.5, cabPos.x + dRx, dBaseY);
+        ctx.lineTo(cabPos.x, dBaseY + dRy);
+        ctx.closePath();
+        ctx.fill();
+
+        // Gold trim at dome base
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 2 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(cabPos.x, dBaseY, dRx, dRy, 0, 0, Math.PI);
         ctx.stroke();
+
+        // Gold filigree arcs on dome
+        ctx.strokeStyle = "rgba(201, 162, 39, 0.45)";
+        ctx.lineWidth = 0.7 * zoom;
+        for (let fi = 1; fi <= 3; fi++) {
+          const t = fi / 4;
+          const arcY = dBaseY + (dPeakY - dBaseY) * t;
+          const arcRx = dRx * (1 - t * 0.85);
+          const arcRy = dRy * (1 - t * 0.85);
+          ctx.beginPath();
+          ctx.ellipse(cabPos.x, arcY, arcRx, arcRy, 0, Math.PI * 0.1, Math.PI * 0.9);
+          ctx.stroke();
+        }
       }
 
       // Pointed finial spire with gold ball
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.5 * zoom;
       ctx.beginPath();
-      ctx.moveTo(cabPos.x, cabPos.y - 20 * zoom);
-      ctx.lineTo(cabPos.x, cabPos.y - 24 * zoom);
+      ctx.moveTo(cabPos.x, cabPos.y - 21 * zoom);
+      ctx.lineTo(cabPos.x, cabPos.y - 25 * zoom);
       ctx.stroke();
       ctx.fillStyle = "#C9A227";
       ctx.shadowColor = "#C9A227";
       ctx.shadowBlur = 6 * zoom;
       ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 24.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.arc(cabPos.x, cabPos.y - 25.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Arched windows with warm stained glass glow
-      const cabGlow = 0.55 + Math.sin(time * 2) * 0.18;
-      for (const side of [1, -1]) {
-        const winX = cabPos.x + side * 3 * zoom;
-        const winY = cabPos.y - 7.5 * zoom;
-        ctx.fillStyle = "#C0A060";
-        ctx.beginPath();
-        ctx.arc(winX, winY - 1.5 * zoom, 2.8 * zoom, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(
-          winX - 2.8 * zoom,
-          winY - 1.5 * zoom,
-          5.6 * zoom,
-          3.5 * zoom,
-        );
-        ctx.fillStyle = `rgba(255, 250, 230, ${cabGlow})`;
-        ctx.shadowColor = "#fff8e0";
-        ctx.shadowBlur = 8 * zoom;
-        ctx.beginPath();
-        ctx.arc(winX, winY - 1.5 * zoom, 2.2 * zoom, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(
-          winX - 2.2 * zoom,
-          winY - 1.5 * zoom,
-          4.4 * zoom,
-          3 * zoom,
-        );
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "#C9A227";
-        ctx.lineWidth = 1.2 * zoom;
-        ctx.beginPath();
-        ctx.arc(winX, winY - 1.5 * zoom, 2.8 * zoom, Math.PI, 0);
-        ctx.stroke();
-        // Window mullion cross
-        ctx.lineWidth = 0.6 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(winX, winY - 3.5 * zoom);
-        ctx.lineTo(winX, winY + 1.5 * zoom);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(winX - 2.2 * zoom, winY - 0.5 * zoom);
-        ctx.lineTo(winX + 2.2 * zoom, winY - 0.5 * zoom);
-        ctx.stroke();
+      // Arched windows — isometric gothic flush with cab faces
+      {
+        const cabGlow = 0.55 + Math.sin(time * 2) * 0.18;
+        // Right face window
+        drawIsoGothicWindow(ctx,
+          cabPos.x + 3 * zoom, cabPos.y - 7.5 * zoom,
+          4, 6.5, "right", zoom,
+          "rgba(255, 250, 230", cabGlow,
+          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" });
+        // Left face window
+        drawIsoGothicWindow(ctx,
+          cabPos.x - 3 * zoom, cabPos.y - 7.5 * zoom,
+          4, 6.5, "left", zoom,
+          "rgba(255, 250, 230", cabGlow,
+          { frame: "#C0A060", void: "#2a1808", sill: "#C9A227" });
       }
 
       // Balcony railing with balusters
@@ -3730,141 +3542,139 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
 
-      // Larger marble dome with gold filigree
-      const locoDomeGrad = ctx.createRadialGradient(
-        locoPos.x - 1.5 * zoom,
-        locoPos.y - 16 * zoom,
-        0,
-        locoPos.x,
-        locoPos.y - 14.5 * zoom,
-        5 * zoom,
-      );
-      locoDomeGrad.addColorStop(0, "#F0ECE4");
-      locoDomeGrad.addColorStop(0.7, "#E0DCD4");
-      locoDomeGrad.addColorStop(1, "#D0CCC4");
-      ctx.fillStyle = locoDomeGrad;
-      ctx.beginPath();
-      ctx.arc(locoPos.x, locoPos.y - 14.5 * zoom, 5 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.stroke();
+      // Isometric dome on locomotive
+      {
+        const ldBaseY = locoPos.y - 14.5 * zoom;
+        const ldPeakY = locoPos.y - 19.5 * zoom;
+        const ldRx = 5 * zoom;
+        const ldRy = ldRx * ISO_SIN;
 
-      // Safety valve on dome
-      ctx.fillStyle = "#B8860B";
-      ctx.beginPath();
-      ctx.arc(
-        locoPos.x + 2 * zoom,
-        locoPos.y - 18.5 * zoom,
-        1.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = "#DAA520";
-      ctx.fillRect(
-        locoPos.x + 1.5 * zoom,
-        locoPos.y - 21 * zoom,
-        1 * zoom,
-        2.5 * zoom,
-      );
-
-      // Fluted gold smokestack with decorative cap
-      const stackPos = isoOffset(locoPos.x, locoPos.y - 13 * zoom, 3.5);
-      ctx.fillStyle = "#DAA520";
-      ctx.beginPath();
-      ctx.moveTo(stackPos.x - 2.2 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 3 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 2.2 * zoom, stackPos.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#B8860B";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let fl = -1; fl <= 1; fl++) {
+        ctx.fillStyle = "#D0CCC4";
         ctx.beginPath();
-        ctx.moveTo(stackPos.x + fl * 1 * zoom, stackPos.y);
-        ctx.lineTo(stackPos.x + fl * 1.3 * zoom, stackPos.y - 11 * zoom);
+        ctx.moveTo(locoPos.x, ldBaseY + ldRy);
+        ctx.quadraticCurveTo(locoPos.x + ldRx * 0.9, ldBaseY - 2 * zoom, locoPos.x + ldRx * 0.1, ldPeakY);
+        ctx.lineTo(locoPos.x, ldPeakY + 0.5 * zoom);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#F0ECE4";
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x, ldBaseY + ldRy);
+        ctx.quadraticCurveTo(locoPos.x - ldRx * 0.9, ldBaseY - 2 * zoom, locoPos.x - ldRx * 0.1, ldPeakY);
+        ctx.lineTo(locoPos.x, ldPeakY + 0.5 * zoom);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#E0DCD4";
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x - ldRx, ldBaseY);
+        ctx.quadraticCurveTo(locoPos.x, ldBaseY - ldRy * 1.5, locoPos.x + ldRx, ldBaseY);
+        ctx.lineTo(locoPos.x, ldBaseY + ldRy);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 2 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(locoPos.x, ldBaseY, ldRx, ldRy, 0, 0, Math.PI);
         ctx.stroke();
-      }
-      ctx.fillStyle = "#C9A227";
-      ctx.shadowColor = "#C9A227";
-      ctx.shadowBlur = 7 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(
-        stackPos.x,
-        stackPos.y - 11 * zoom,
-        4 * zoom,
-        2 * zoom,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      ctx.arc(stackPos.x, stackPos.y - 13 * zoom, 1.2 * zoom, 0, Math.PI * 2);
-      ctx.fill();
 
-      // Golden-tinted steam
-      const steam = 0.3 + Math.sin(time * 4) * 0.15;
-      ctx.fillStyle = `rgba(255, 245, 220, ${steam})`;
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + Math.sin(time * 3) * 3,
-        stackPos.y - 17 * zoom,
-        5.5 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = `rgba(255, 245, 220, ${steam * 0.45})`;
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + Math.sin(time * 3 + 1) * 4,
-        stackPos.y - 22 * zoom,
-        4 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Ornate headlight with brass bracket
-      const headlightPos4a = isoOffset(locoPos.x, locoPos.y - 7 * zoom, 6);
-      ctx.strokeStyle = "#B8860B";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(locoPos.x + 5.5 * zoom, locoPos.y - 8 * zoom);
-      ctx.lineTo(headlightPos4a.x, headlightPos4a.y);
-      ctx.stroke();
-      ctx.fillStyle = "#B8860B";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        if (hi === 0)
-          ctx.moveTo(
-            headlightPos4a.x + Math.cos(ha) * 3 * zoom,
-            headlightPos4a.y + Math.sin(ha) * 3 * zoom,
-          );
-        else
-          ctx.lineTo(
-            headlightPos4a.x + Math.cos(ha) * 3 * zoom,
-            headlightPos4a.y + Math.sin(ha) * 3 * zoom,
-          );
+        // Safety valve on dome
+        ctx.fillStyle = "#B8860B";
+        ctx.beginPath();
+        ctx.ellipse(locoPos.x + 1.5 * zoom, ldPeakY + 1 * zoom, 1.2 * zoom * ISO_SIN, 1.2 * zoom, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#DAA520";
+        ctx.fillRect(locoPos.x + 1 * zoom, ldPeakY - 2.5 * zoom, 1 * zoom, 2.5 * zoom);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#DAA520";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255, 250, 200, 0.9)";
-      ctx.shadowColor = "#fff8e0";
-      ctx.shadowBlur = 10 * zoom;
-      ctx.beginPath();
-      ctx.arc(headlightPos4a.x, headlightPos4a.y, 2 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
+
+      // Isometric fluted gold smokestack
+      {
+        const stackPos = isoOffset(locoPos.x, locoPos.y - 13 * zoom, 3.5);
+        const stRBot = 2.2 * zoom;
+        const stRTop = 3 * zoom;
+        const stH = 11 * zoom;
+        const stErBot = stRBot * ISO_SIN;
+        const stErTop = stRTop * ISO_SIN;
+
+        // Stack body — isometric cylinder with taper
+        // Right face
+        ctx.fillStyle = "#B8860B";
+        ctx.beginPath();
+        ctx.moveTo(stackPos.x + stErBot, stackPos.y);
+        ctx.lineTo(stackPos.x + stErTop, stackPos.y - stH);
+        ctx.lineTo(stackPos.x, stackPos.y - stH + stRTop * ISO_SIN);
+        ctx.lineTo(stackPos.x, stackPos.y + stRBot * ISO_SIN);
+        ctx.closePath();
+        ctx.fill();
+        // Left face
+        ctx.fillStyle = "#DAA520";
+        ctx.beginPath();
+        ctx.moveTo(stackPos.x - stErBot, stackPos.y);
+        ctx.lineTo(stackPos.x - stErTop, stackPos.y - stH);
+        ctx.lineTo(stackPos.x, stackPos.y - stH + stRTop * ISO_SIN);
+        ctx.lineTo(stackPos.x, stackPos.y + stRBot * ISO_SIN);
+        ctx.closePath();
+        ctx.fill();
+
+        // Flute lines
+        ctx.strokeStyle = "#B8860B";
+        ctx.lineWidth = 0.7 * zoom;
+        for (let fl = -1; fl <= 1; fl++) {
+          const fOff = fl * stErBot * 0.5;
+          ctx.beginPath();
+          ctx.moveTo(stackPos.x + fOff, stackPos.y);
+          ctx.lineTo(stackPos.x + fOff * (stRTop / stRBot), stackPos.y - stH);
+          ctx.stroke();
+        }
+
+        // Top cap — isometric ellipse
+        ctx.fillStyle = "#C9A227";
+        ctx.shadowColor = "#C9A227";
+        ctx.shadowBlur = 7 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(stackPos.x, stackPos.y - stH, stErTop * 1.3, stRTop * ISO_SIN * 1.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Finial on top
+        ctx.fillStyle = "#C9A227";
+        ctx.beginPath();
+        ctx.ellipse(stackPos.x, stackPos.y - stH - 2 * zoom, 1.2 * zoom * ISO_SIN, 1.2 * zoom, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Golden-tinted steam
+        const steam = 0.3 + Math.sin(time * 4) * 0.15;
+        ctx.fillStyle = `rgba(255, 245, 220, ${steam})`;
+        ctx.beginPath();
+        ctx.arc(
+          stackPos.x + Math.sin(time * 3) * 3,
+          stackPos.y - stH - 4 * zoom,
+          5.5 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = `rgba(255, 245, 220, ${steam * 0.45})`;
+        ctx.beginPath();
+        ctx.arc(
+          stackPos.x + Math.sin(time * 3 + 1) * 4,
+          stackPos.y - stH - 9 * zoom,
+          4 * zoom,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+
+      // Isometric headlight with brass bracket
+      {
+        const hlPos = isoOffset(locoPos.x, locoPos.y - 7 * zoom, 6);
+        drawIsoHeadlight(
+          locoPos.x + 5.5 * zoom, locoPos.y - 8 * zoom,
+          hlPos.x, hlPos.y, 3,
+          "#B8860B", "#B8860B", 0.9);
+      }
 
       // === PASSENGER CAR (back) - Royal coach ===
       drawIsometricPrism(
@@ -3878,68 +3688,34 @@ export function renderDinkyTrains(
         zoom,
       );
 
-      // Gold columns on right face
-      ctx.fillStyle = "#C9A227";
+      // Gold columns on right face — isometric flush lines
+      ctx.strokeStyle = "#C9A227";
+      ctx.lineWidth = 1.2 * zoom;
       for (let ci = 0; ci < 4; ci++) {
-        const colPos = isoOffset(
-          passengerPos.x,
-          passengerPos.y,
-          -3.5 + ci * 2.5,
-        );
+        const colPos = isoOffset(passengerPos.x, passengerPos.y, -3.5 + ci * 2.5);
         const colX = colPos.x + 2.5 * zoom;
-        ctx.fillRect(
-          colX - 0.6 * zoom,
-          colPos.y - 11 * zoom,
-          1.2 * zoom,
-          11 * zoom,
-        );
-        ctx.fillRect(
-          colX - 1.5 * zoom,
-          colPos.y - 11 * zoom,
-          3 * zoom,
-          1.2 * zoom,
-        );
-        ctx.fillRect(
-          colX - 1.2 * zoom,
-          colPos.y - 1.2 * zoom,
-          2.4 * zoom,
-          1.2 * zoom,
-        );
+        const colTopY = colPos.y - 11 * zoom;
+        const slope = -ISO_Y_RATIO;
+        ctx.beginPath();
+        ctx.moveTo(colX, colTopY);
+        ctx.lineTo(colX, colPos.y);
+        ctx.stroke();
+        // Capital and base — isometric flush rects
+        drawIsoFlushRect(ctx, colX, colTopY + 0.6 * zoom, 2.5, 1, "right", zoom, { fill: "#C9A227" });
+        drawIsoFlushRect(ctx, colX, colPos.y - 0.6 * zoom, 2, 1, "right", zoom, { fill: "#C9A227" });
       }
 
-      // Multiple arched windows with varied warm glow
-      const winGlow = 0.5 + Math.sin(time * 2) * 0.18;
-      const winColors4a = [
-        `rgba(255, 250, 230, ${winGlow})`,
-        `rgba(255, 235, 200, ${winGlow + 0.1})`,
-        `rgba(200, 230, 255, ${winGlow})`,
-      ];
-      for (let wi = 0; wi < 3; wi++) {
-        const wPos4a = isoOffset(
-          passengerPos.x,
-          passengerPos.y - 5.5 * zoom,
-          -2.5 + wi * 2.5,
-        );
-        const wx = wPos4a.x + 2.5 * zoom;
-        const wy = wPos4a.y;
-        ctx.fillStyle = "#C0A060";
-        ctx.beginPath();
-        ctx.arc(wx, wy - 1 * zoom, 1.6 * zoom, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(wx - 1.6 * zoom, wy - 1 * zoom, 3.2 * zoom, 2.5 * zoom);
-        ctx.fillStyle = winColors4a[wi];
-        ctx.shadowColor = "#fff8e0";
-        ctx.shadowBlur = 6 * zoom;
-        ctx.beginPath();
-        ctx.arc(wx, wy - 1 * zoom, 1.3 * zoom, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(wx - 1.3 * zoom, wy - 1 * zoom, 2.6 * zoom, 2 * zoom);
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "#C9A227";
-        ctx.lineWidth = 0.8 * zoom;
-        ctx.beginPath();
-        ctx.arc(wx, wy - 1 * zoom, 1.6 * zoom, Math.PI, 0);
-        ctx.stroke();
+      // Arched windows — isometric gothic flush with right wall
+      {
+        const winGlow = 0.5 + Math.sin(time * 2) * 0.18;
+        for (let wi = 0; wi < 3; wi++) {
+          const wPos4a = isoOffset(passengerPos.x, passengerPos.y - 5.5 * zoom, -2.5 + wi * 2.5);
+          const wx = wPos4a.x + 2.5 * zoom;
+          const wy = wPos4a.y;
+          drawIsoGothicWindow(ctx, wx, wy, 2.8, 4.5, "right", zoom,
+            "rgba(255, 250, 230", winGlow,
+            { frame: "#C0A060", void: "#1a1008", sill: "#C9A227" });
+        }
       }
 
       // Decorative roof balustrade
@@ -4075,90 +3851,20 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Ornamental cowcatcher (gold)
-      const cowPos = isoOffset(cabPos.x, cabPos.y, 7);
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y);
-      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y + 1 * zoom);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 3 * zoom);
-      ctx.lineTo(cowPos.x + 2 * zoom, cowPos.y - 1 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 3.5 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x, cowPos.y + 4.5 * zoom);
-      ctx.lineTo(cowPos.x + 3.5 * zoom, cowPos.y + 3.5 * zoom);
-      ctx.lineTo(cowPos.x + 8 * zoom, cowPos.y - 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.25)";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "#B89227";
-      ctx.beginPath();
-      ctx.moveTo(cowPos.x + 5 * zoom, cowPos.y - 3.5 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 1 * zoom);
-      ctx.lineTo(cowPos.x - 3 * zoom, cowPos.y + 3 * zoom);
-      ctx.lineTo(cowPos.x, cowPos.y + 4.5 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      // Gold bars
-      ctx.strokeStyle = "#E8C847";
-      ctx.lineWidth = 1.3 * zoom;
-      for (let b = 0; b < 4; b++) {
-        const barY = cowPos.y + 3.5 * zoom - b * 1.8 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(cowPos.x - 2 * zoom, barY);
-        ctx.lineTo(cowPos.x + 6 * zoom, barY - 2.5 * zoom);
-        ctx.stroke();
-      }
+      // Ornamental cowcatcher — isometric gold V-plow
+      drawIsoCowcatcher(
+        cabPos.x + 5.5 * zoom, cabPos.y - 1.5 * zoom,
+        7, 5, 6,
+        "#C9A227", "#B89227", "#E8C847", 4);
 
-      // Front headlight (gold bracket mount)
-      const headlightPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 7);
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 5.5 * zoom, cabPos.y - 8 * zoom);
-      ctx.lineTo(headlightPos.x + 1 * zoom, headlightPos.y);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        if (hi === 0)
-          ctx.moveTo(
-            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
-            headlightPos.y + Math.sin(ha) * 3 * zoom,
-          );
-        else
-          ctx.lineTo(
-            headlightPos.x + 1 * zoom + Math.cos(ha) * 3 * zoom,
-            headlightPos.y + Math.sin(ha) * 3 * zoom,
-          );
+      // Isometric front headlight (gold bracket mount)
+      {
+        const hlPos = isoOffset(cabPos.x, cabPos.y - 7 * zoom, 7);
+        drawIsoHeadlight(
+          cabPos.x + 5.5 * zoom, cabPos.y - 8 * zoom,
+          hlPos.x, hlPos.y, 3,
+          "#C9A227", "#C9A227", 0.75 + Math.sin(time * 3) * 0.15);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#DAA520";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 250, 220, ${0.75 + Math.sin(time * 3) * 0.15})`;
-      ctx.shadowColor = "#fff8e0";
-      ctx.shadowBlur = 14 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        headlightPos.x + 1 * zoom,
-        headlightPos.y,
-        2.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
     } else {
       // ========== LEVEL 4B: Dark Royal Armored War Train ==========
       ctx.shadowColor = "rgba(0,0,0,0.7)";
@@ -4169,30 +3875,25 @@ export function renderDinkyTrains(
       const armoredPos = isoOffset(trainX, trainY, -9);
       const wheelY = trainY + 4.5 * zoom;
 
-      // --- Heavy reinforced chassis with gold accent line ---
-      ctx.fillStyle = "#2a2e35";
-      const chL4b = isoOffset(trainX, trainY + 2 * zoom, 15);
-      const chR4b = isoOffset(trainX, trainY + 2 * zoom, -15);
-      ctx.beginPath();
-      ctx.moveTo(chL4b.x, chL4b.y);
-      ctx.lineTo(chL4b.x, chL4b.y + 2.5 * zoom);
-      ctx.lineTo(chR4b.x, chR4b.y + 2.5 * zoom);
-      ctx.lineTo(chR4b.x, chR4b.y);
-      ctx.closePath();
-      ctx.fill();
+      // Heavy reinforced chassis — isometric beam
+      drawIsometricPrism(ctx, trainX, trainY + 3 * zoom, 30, 6, 2.5,
+        { top: "#3a3e45", left: "#2a2e35", right: "#1a1e25" }, zoom);
       ctx.strokeStyle = "#C9A227";
       ctx.lineWidth = 1.2 * zoom;
+      const chL4b = isoOffset(trainX, trainY + 2 * zoom, 15);
+      const chR4b = isoOffset(trainX, trainY + 2 * zoom, -15);
       ctx.beginPath();
       ctx.moveTo(chL4b.x, chL4b.y);
       ctx.lineTo(chR4b.x, chR4b.y);
       ctx.stroke();
 
       // Dark steel wheels with gold hub caps
-      const wPositions = [13, 4, -4, -13];
-      for (const wp of wPositions) {
+      const wPositions4b = [13, 4, -4, -13];
+      for (const wp of wPositions4b) {
         const wPos = isoOffset(trainX, wheelY, wp);
         drawWheel(wPos.x, wPos.y, 5, "#3a4050", "#1a1e25", "#C9A227");
       }
+      drawConnectingRods(wPositions4b, trainX, wheelY, "#C9A227");
 
       // === ARMORED CAB (front) - War command car with crown ===
       drawIsometricPrism(
@@ -4269,78 +3970,90 @@ export function renderDinkyTrains(
         ctx.fill();
       }
 
-      // Gold-framed vision slit with emerald glow
-      const vsX4b = cabPos.x + 3 * zoom;
-      const vsY4b = cabPos.y - 9 * zoom;
-      ctx.fillStyle = "#0a0e14";
-      ctx.beginPath();
-      ctx.moveTo(vsX4b, vsY4b - 1.5 * zoom);
-      ctx.lineTo(vsX4b + 4.5 * zoom, vsY4b - 1.5 * zoom - 2.3 * zoom);
-      ctx.lineTo(vsX4b + 4.5 * zoom, vsY4b + 0.5 * zoom - 2.3 * zoom);
-      ctx.lineTo(vsX4b, vsY4b + 0.5 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      const vsGlow = 0.4 + Math.sin(time * 2) * 0.15;
-      ctx.fillStyle = `rgba(60, 220, 80, ${vsGlow})`;
-      ctx.shadowColor = "#40dd50";
-      ctx.shadowBlur = 5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(vsX4b + 0.3 * zoom, vsY4b - 1.2 * zoom);
-      ctx.lineTo(vsX4b + 4.2 * zoom, vsY4b - 1.2 * zoom - 2 * zoom);
-      ctx.lineTo(vsX4b + 4.2 * zoom, vsY4b + 0.2 * zoom - 2 * zoom);
-      ctx.lineTo(vsX4b + 0.3 * zoom, vsY4b + 0.2 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      // Ornate crown on top with jewels
-      ctx.fillStyle = "#C9A227";
-      ctx.shadowColor = "#C9A227";
-      ctx.shadowBlur = 10 * zoom;
-      ctx.fillRect(
-        cabPos.x - 6 * zoom,
-        cabPos.y - 19 * zoom,
-        12 * zoom,
-        2.5 * zoom,
-      );
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x - 6 * zoom, cabPos.y - 19 * zoom);
-      ctx.lineTo(cabPos.x - 4.5 * zoom, cabPos.y - 25 * zoom);
-      ctx.lineTo(cabPos.x - 3 * zoom, cabPos.y - 20 * zoom);
-      ctx.lineTo(cabPos.x - 1 * zoom, cabPos.y - 25 * zoom);
-      ctx.lineTo(cabPos.x + 0.5 * zoom, cabPos.y - 20 * zoom);
-      ctx.lineTo(cabPos.x + 2 * zoom, cabPos.y - 25 * zoom);
-      ctx.lineTo(cabPos.x + 3.5 * zoom, cabPos.y - 20 * zoom);
-      ctx.lineTo(cabPos.x + 5 * zoom, cabPos.y - 25 * zoom);
-      ctx.lineTo(cabPos.x + 6 * zoom, cabPos.y - 19 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      // Amethyst jewels at each crown peak
-      ctx.fillStyle = "#9B5FC0";
-      ctx.shadowColor = "#9B5FC0";
-      ctx.shadowBlur = 4 * zoom;
-      for (const jp of [-4.5, -1, 2, 5]) {
-        ctx.beginPath();
-        ctx.arc(
-          cabPos.x + jp * zoom,
-          cabPos.y - 25 * zoom,
-          1.2 * zoom,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
+      // Vision slit — isometric flush with right face
+      {
+        const vsGlow = 0.4 + Math.sin(time * 2) * 0.15;
+        drawIsoFlushSlit(ctx,
+          cabPos.x + 4.5 * zoom, cabPos.y - 9 * zoom,
+          2, 5, "right", zoom, {
+            voidColor: "#0a0e14",
+            frameColor: "#C9A227",
+            glowColor: "rgba(60, 220, 80",
+            glowAlpha: vsGlow,
+          });
       }
-      // Large center jewel
-      ctx.fillStyle = "#B040FF";
-      ctx.shadowColor = "#B040FF";
-      ctx.shadowBlur = 6 * zoom;
-      ctx.beginPath();
-      ctx.arc(cabPos.x, cabPos.y - 21.5 * zoom, 1.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
+
+      // Isometric crown on top — skewed to match cab top face
+      {
+        const crownY = cabPos.y - 18 * zoom;
+        const crHw = cW4b;
+        const crHd = cD4b;
+        const crH = 6 * zoom;
+
+        // Crown base band — isometric diamond matching cab top
+        ctx.fillStyle = "#C9A227";
+        ctx.shadowColor = "#C9A227";
+        ctx.shadowBlur = 10 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(cabPos.x - crHw, crownY);
+        ctx.lineTo(cabPos.x, crownY - crHd);
+        ctx.lineTo(cabPos.x + crHw, crownY);
+        ctx.lineTo(cabPos.x, crownY + crHd);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crown tines — isometric: front-left & front-right edges
+        const tines = 4;
+        for (let ti = 0; ti < tines; ti++) {
+          const t = (ti + 0.5) / tines;
+          // Along the right edge: from (cx, cy-crHd) to (cx+crHw, cy)
+          const tx = cabPos.x + crHw * t;
+          const ty = crownY - crHd * (1 - t);
+          ctx.beginPath();
+          ctx.moveTo(tx - 1 * zoom, ty + 0.5 * zoom);
+          ctx.lineTo(tx, ty - crH);
+          ctx.lineTo(tx + 1 * zoom, ty + 0.5 * zoom);
+          ctx.closePath();
+          ctx.fill();
+          // Mirror on left edge
+          const tx2 = cabPos.x - crHw * t;
+          const ty2 = crownY - crHd * (1 - t);
+          ctx.beginPath();
+          ctx.moveTo(tx2 - 1 * zoom, ty2 + 0.5 * zoom);
+          ctx.lineTo(tx2, ty2 - crH);
+          ctx.lineTo(tx2 + 1 * zoom, ty2 + 0.5 * zoom);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // Amethyst jewels at each crown peak
+        ctx.fillStyle = "#9B5FC0";
+        ctx.shadowColor = "#9B5FC0";
+        ctx.shadowBlur = 4 * zoom;
+        for (let ti = 0; ti < tines; ti++) {
+          const t = (ti + 0.5) / tines;
+          const tx = cabPos.x + crHw * t;
+          const ty = crownY - crHd * (1 - t) - crH;
+          ctx.beginPath();
+          ctx.arc(tx, ty, 1.2 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+          const tx2 = cabPos.x - crHw * t;
+          const ty2 = crownY - crHd * (1 - t) - crH;
+          ctx.beginPath();
+          ctx.arc(tx2, ty2, 1.2 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Large center jewel
+        ctx.fillStyle = "#B040FF";
+        ctx.shadowColor = "#B040FF";
+        ctx.shadowBlur = 6 * zoom;
+        ctx.beginPath();
+        ctx.arc(cabPos.x, crownY - 1 * zoom, 1.5 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
 
       // === LOCOMOTIVE (middle) - Heavy armored engine ===
       drawIsometricPrism(
@@ -4365,163 +4078,183 @@ export function renderDinkyTrains(
         ctx.stroke();
       }
 
-      // Armored dome with gold crown trim
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      ctx.arc(locoPos.x, locoPos.y - 16 * zoom, 5 * zoom, Math.PI, 0);
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 3 * zoom;
-      ctx.stroke();
-      // Mini crown trim on dome
-      ctx.fillStyle = "#C9A227";
-      for (let ci = 0; ci < 3; ci++) {
-        const cpx = locoPos.x - 3.5 * zoom + ci * 3.5 * zoom;
+      // Isometric armored dome
+      {
+        const adBaseY = locoPos.y - 16 * zoom;
+        const adPeakY = locoPos.y - 21 * zoom;
+        const adRx = 5 * zoom;
+        const adRy = adRx * ISO_SIN;
+
+        ctx.fillStyle = "#2a3040";
         ctx.beginPath();
-        ctx.moveTo(cpx - 1.2 * zoom, locoPos.y - 20.5 * zoom);
-        ctx.lineTo(cpx, locoPos.y - 23 * zoom);
-        ctx.lineTo(cpx + 1.2 * zoom, locoPos.y - 20.5 * zoom);
+        ctx.moveTo(locoPos.x, adBaseY + adRy);
+        ctx.quadraticCurveTo(locoPos.x + adRx * 0.9, adBaseY - 1.5 * zoom, locoPos.x + adRx * 0.1, adPeakY);
+        ctx.lineTo(locoPos.x, adPeakY + 0.5 * zoom);
         ctx.closePath();
         ctx.fill();
+
+        ctx.fillStyle = "#4a5060";
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x, adBaseY + adRy);
+        ctx.quadraticCurveTo(locoPos.x - adRx * 0.9, adBaseY - 1.5 * zoom, locoPos.x - adRx * 0.1, adPeakY);
+        ctx.lineTo(locoPos.x, adPeakY + 0.5 * zoom);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#3a4050";
+        ctx.beginPath();
+        ctx.moveTo(locoPos.x - adRx, adBaseY);
+        ctx.quadraticCurveTo(locoPos.x, adBaseY - adRy * 1.5, locoPos.x + adRx, adBaseY);
+        ctx.lineTo(locoPos.x, adBaseY + adRy);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 2.5 * zoom;
+        ctx.beginPath();
+        ctx.ellipse(locoPos.x, adBaseY, adRx, adRy, 0, 0, Math.PI);
+        ctx.stroke();
+
+        // Mini crown trim on dome — isometric tines
+        ctx.fillStyle = "#C9A227";
+        for (let ci = 0; ci < 3; ci++) {
+          const cpx = locoPos.x - 2.5 * zoom + ci * 2.5 * zoom;
+          ctx.beginPath();
+          ctx.moveTo(cpx - 1 * zoom, adPeakY + 0.5 * zoom);
+          ctx.lineTo(cpx, adPeakY - 2.5 * zoom);
+          ctx.lineTo(cpx + 1 * zoom, adPeakY + 0.5 * zoom);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
 
-      // Side-mounted exhaust pipes with gold valve wheels
+      // Side-mounted exhaust pipes — isometric cylinders with gold valve wheels
       for (const side of [-1, 1]) {
         const epPos = isoOffset(locoPos.x, locoPos.y - 7 * zoom, side * 8);
+        const pipeRx = 1.2 * zoom * ISO_SIN;
+        const pipeRy = 1.2 * zoom;
+        // Pipe body (vertical isometric cylinder)
         ctx.fillStyle = "#3a4050";
-        ctx.fillRect(
-          epPos.x - 1.2 * zoom,
-          epPos.y - 3.5 * zoom,
-          2.4 * zoom,
-          7 * zoom,
-        );
+        ctx.beginPath();
+        ctx.moveTo(epPos.x - pipeRx, epPos.y - 3.5 * zoom);
+        ctx.lineTo(epPos.x - pipeRx, epPos.y + 3.5 * zoom);
+        ctx.ellipse(epPos.x, epPos.y + 3.5 * zoom, pipeRx, pipeRy * 0.6, 0, Math.PI, 0);
+        ctx.lineTo(epPos.x + pipeRx, epPos.y - 3.5 * zoom);
+        ctx.closePath();
+        ctx.fill();
+        // Pipe cap
+        ctx.fillStyle = "#4a5060";
+        ctx.beginPath();
+        ctx.ellipse(epPos.x, epPos.y - 3.5 * zoom, pipeRx, pipeRy * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Gold valve wheel
         ctx.strokeStyle = "#C9A227";
         ctx.lineWidth = 1.2 * zoom;
         ctx.beginPath();
-        ctx.arc(epPos.x, epPos.y, 1.8 * zoom, 0, Math.PI * 2);
+        ctx.ellipse(epPos.x, epPos.y, pipeRx * 1.5, pipeRy * 1.5, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.fillStyle = "#C9A227";
         ctx.beginPath();
-        ctx.arc(epPos.x, epPos.y, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.ellipse(epPos.x, epPos.y, pipeRx * 0.4, pipeRy * 0.4, 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Crown-topped smokestack
-      const stackPos = isoOffset(locoPos.x, locoPos.y - 15 * zoom, 4.5);
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      ctx.moveTo(stackPos.x - 3.5 * zoom, stackPos.y);
-      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 2.5 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#2a3040";
-      ctx.lineWidth = 0.7 * zoom;
-      for (let fl = -1; fl <= 1; fl++) {
+      // Isometric crown-topped smokestack
+      {
+        const stackPos = isoOffset(locoPos.x, locoPos.y - 15 * zoom, 4.5);
+        const stRBot = 3.5 * zoom;
+        const stRTop = 2.5 * zoom;
+        const stH = 11 * zoom;
+        const stErBot = stRBot * ISO_SIN;
+        const stErTop = stRTop * ISO_SIN;
+
+        // Stack body — isometric tapered cylinder
+        ctx.fillStyle = "#2a3040";
         ctx.beginPath();
-        ctx.moveTo(stackPos.x + fl * 1.2 * zoom, stackPos.y);
-        ctx.lineTo(stackPos.x + fl * 1 * zoom, stackPos.y - 11 * zoom);
+        ctx.moveTo(stackPos.x + stErBot, stackPos.y);
+        ctx.lineTo(stackPos.x + stErTop, stackPos.y - stH);
+        ctx.lineTo(stackPos.x, stackPos.y - stH + stRTop * ISO_SIN);
+        ctx.lineTo(stackPos.x, stackPos.y + stRBot * ISO_SIN);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#4a5060";
+        ctx.beginPath();
+        ctx.moveTo(stackPos.x - stErBot, stackPos.y);
+        ctx.lineTo(stackPos.x - stErTop, stackPos.y - stH);
+        ctx.lineTo(stackPos.x, stackPos.y - stH + stRTop * ISO_SIN);
+        ctx.lineTo(stackPos.x, stackPos.y + stRBot * ISO_SIN);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top cap ellipse
+        ctx.fillStyle = "#3a4050";
+        ctx.beginPath();
+        ctx.ellipse(stackPos.x, stackPos.y - stH, stErTop * 1.2, stRTop * ISO_SIN * 1.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 2.5 * zoom;
         ctx.stroke();
-      }
-      // Gold band at top
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(stackPos.x - 3 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x + 3 * zoom, stackPos.y - 11 * zoom);
-      ctx.stroke();
-      // Mini crown on stack with jewels
-      ctx.fillStyle = "#C9A227";
-      ctx.shadowColor = "#C9A227";
-      ctx.shadowBlur = 6 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(stackPos.x - 3.5 * zoom, stackPos.y - 11 * zoom);
-      ctx.lineTo(stackPos.x - 2.5 * zoom, stackPos.y - 15 * zoom);
-      ctx.lineTo(stackPos.x - 0.8 * zoom, stackPos.y - 12 * zoom);
-      ctx.lineTo(stackPos.x + 0.5 * zoom, stackPos.y - 15 * zoom);
-      ctx.lineTo(stackPos.x + 2 * zoom, stackPos.y - 12 * zoom);
-      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y - 15 * zoom);
-      ctx.lineTo(stackPos.x + 3.5 * zoom, stackPos.y - 11 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#9B5FC0";
-      for (const jp of [-2.5, 0.5, 3.5]) {
+
+        // Mini crown tines on stack
+        ctx.fillStyle = "#C9A227";
+        ctx.shadowColor = "#C9A227";
+        ctx.shadowBlur = 6 * zoom;
+        for (let ci = 0; ci < 3; ci++) {
+          const a = (ci / 3) * Math.PI * 2;
+          const tx = stackPos.x + Math.cos(a) * stErTop * 0.8;
+          const ty = stackPos.y - stH + Math.sin(a) * stRTop * ISO_SIN * 0.8;
+          ctx.beginPath();
+          ctx.moveTo(tx - 0.8 * zoom, ty);
+          ctx.lineTo(tx, ty - 4 * zoom);
+          ctx.lineTo(tx + 0.8 * zoom, ty);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Jewels at crown peaks
+        ctx.fillStyle = "#9B5FC0";
+        for (let ci = 0; ci < 3; ci++) {
+          const a = (ci / 3) * Math.PI * 2;
+          const tx = stackPos.x + Math.cos(a) * stErTop * 0.8;
+          const ty = stackPos.y - stH + Math.sin(a) * stRTop * ISO_SIN * 0.8 - 4 * zoom;
+          ctx.beginPath();
+          ctx.arc(tx, ty, 0.8 * zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+
+        // War smoke
+        const smoke4b = 0.35 + Math.sin(time * 4) * 0.15;
+        ctx.fillStyle = `rgba(140, 140, 150, ${smoke4b})`;
         ctx.beginPath();
         ctx.arc(
-          stackPos.x + jp * zoom,
-          stackPos.y - 15 * zoom,
-          0.8 * zoom,
+          stackPos.x + Math.sin(time * 3) * 3.5,
+          stackPos.y - stH - 6 * zoom,
+          7 * zoom,
           0,
           Math.PI * 2,
         );
         ctx.fill();
       }
-      ctx.shadowBlur = 0;
 
-      // War smoke
-      const smoke4b = 0.35 + Math.sin(time * 4) * 0.15;
-      ctx.fillStyle = `rgba(140, 140, 150, ${smoke4b})`;
-      ctx.beginPath();
-      ctx.arc(
-        stackPos.x + Math.sin(time * 3) * 3.5,
-        stackPos.y - 21 * zoom,
-        7 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Headlight with ornate bracket mount
-      const headlightPos4b = isoOffset(locoPos.x, locoPos.y - 9 * zoom, 7);
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(locoPos.x + 6 * zoom, locoPos.y - 10 * zoom);
-      ctx.lineTo(headlightPos4b.x, headlightPos4b.y);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        if (hi === 0)
-          ctx.moveTo(
-            headlightPos4b.x + Math.cos(ha) * 3.2 * zoom,
-            headlightPos4b.y + Math.sin(ha) * 3.2 * zoom,
-          );
-        else
-          ctx.lineTo(
-            headlightPos4b.x + Math.cos(ha) * 3.2 * zoom,
-            headlightPos4b.y + Math.sin(ha) * 3.2 * zoom,
-          );
-      }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#DAA520";
-      ctx.lineWidth = 1 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "rgba(255, 250, 200, 0.9)";
-      ctx.shadowColor = "#fff8e0";
-      ctx.shadowBlur = 10 * zoom;
-      ctx.beginPath();
-      ctx.arc(headlightPos4b.x, headlightPos4b.y, 2 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      // Decorative spokes
-      ctx.strokeStyle = "#DAA520";
-      ctx.lineWidth = 1 * zoom;
-      for (let ri = 0; ri < 8; ri++) {
-        const ra = (ri / 8) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(
-          headlightPos4b.x + Math.cos(ra) * 2.5 * zoom,
-          headlightPos4b.y + Math.sin(ra) * 2.5 * zoom,
-        );
-        ctx.lineTo(
-          headlightPos4b.x + Math.cos(ra) * 3.5 * zoom,
-          headlightPos4b.y + Math.sin(ra) * 3.5 * zoom,
-        );
-        ctx.stroke();
+      // Isometric headlight with ornate bracket
+      {
+        const hlPos = isoOffset(locoPos.x, locoPos.y - 9 * zoom, 7);
+        drawIsoHeadlight(
+          locoPos.x + 6 * zoom, locoPos.y - 10 * zoom,
+          hlPos.x, hlPos.y, 3.2,
+          "#C9A227", "#C9A227", 0.9);
+        // Decorative spokes — isometric elliptical
+        const hlRx = 3.2 * zoom * ISO_SIN;
+        const hlRy = 3.2 * zoom;
+        ctx.strokeStyle = "#DAA520";
+        ctx.lineWidth = 1 * zoom;
+        for (let ri = 0; ri < 8; ri++) {
+          const ra = (ri / 8) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(hlPos.x + Math.cos(ra) * hlRx * 0.75, hlPos.y + Math.sin(ra) * hlRy * 0.75);
+          ctx.lineTo(hlPos.x + Math.cos(ra) * hlRx * 1.1, hlPos.y + Math.sin(ra) * hlRy * 1.1);
+          ctx.stroke();
+        }
       }
 
       // === ARMORED CAR (back) - War fortress ===
@@ -4555,75 +4288,70 @@ export function renderDinkyTrains(
       ctx.lineTo(armoredPos.x, armoredPos.y + aD4b - aH4b);
       ctx.stroke();
 
-      // Gun ports with gold frame
+      // Gun ports — isometric flush slits on right face
       for (let gi = 0; gi < 2; gi++) {
-        const gpPos = isoOffset(
-          armoredPos.x,
-          armoredPos.y - 4.5 * zoom,
-          -3.5 + gi * 7,
-        );
+        const gpPos = isoOffset(armoredPos.x, armoredPos.y - 4.5 * zoom, -3.5 + gi * 7);
         const gpX = gpPos.x + 2.5 * zoom;
-        const gpY = gpPos.y;
-        ctx.fillStyle = "#0a0e14";
-        ctx.fillRect(gpX - 1.5 * zoom, gpY - 1.2 * zoom, 3 * zoom, 2.4 * zoom);
-        ctx.strokeStyle = "#C9A227";
-        ctx.lineWidth = 0.8 * zoom;
-        ctx.strokeRect(
-          gpX - 1.8 * zoom,
-          gpY - 1.5 * zoom,
-          3.6 * zoom,
-          3 * zoom,
-        );
+        drawIsoFlushSlit(ctx, gpX, gpPos.y, 2, 3.5, "right", zoom, {
+          voidColor: "#0a0e14", frameColor: "#C9A227",
+        });
       }
 
-      // Large stained-glass rose window with purple glow
-      const sgGlow = 0.65 + Math.sin(time * 2) * 0.25;
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      ctx.arc(
-        armoredPos.x,
-        armoredPos.y - 6.5 * zoom,
-        5.5 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 2.5 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(140, 70, 200, ${sgGlow})`;
-      ctx.shadowColor = "#7B3FA0";
-      ctx.shadowBlur = 12 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        armoredPos.x,
-        armoredPos.y - 6.5 * zoom,
-        5 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = "rgba(100, 40, 160, 0.5)";
-      ctx.lineWidth = 0.8 * zoom;
-      for (let pi = 0; pi < 8; pi++) {
-        const pAngle = (pi / 8) * Math.PI * 2;
-        const ppx = armoredPos.x + Math.cos(pAngle) * 2.3 * zoom;
-        const ppy = armoredPos.y - 6.5 * zoom + Math.sin(pAngle) * 2.3 * zoom;
+      // Rose window — isometric ellipse flush with left face
+      {
+        const rwCY = armoredPos.y - 6.5 * zoom;
+        const rwR = 5.5 * zoom;
+        const rwSlope = ISO_Y_RATIO;
+        const sgGlow = 0.65 + Math.sin(time * 2) * 0.25;
+
+        // Outer frame
+        ctx.fillStyle = "#3a4050";
         ctx.beginPath();
-        ctx.arc(ppx, ppy, 2 * zoom, 0, Math.PI * 2);
+        for (let i = 0; i <= 16; i++) {
+          const a = (i / 16) * Math.PI * 2;
+          const px = armoredPos.x + Math.cos(a) * rwR * 0.6;
+          const py = rwCY + Math.sin(a) * rwR - Math.cos(a) * rwR * 0.6 * rwSlope;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#C9A227";
+        ctx.lineWidth = 2.5 * zoom;
         ctx.stroke();
+
+        // Purple glow fill
+        ctx.fillStyle = `rgba(140, 70, 200, ${sgGlow})`;
+        ctx.shadowColor = "#7B3FA0";
+        ctx.shadowBlur = 12 * zoom;
+        ctx.beginPath();
+        for (let i = 0; i <= 16; i++) {
+          const a = (i / 16) * Math.PI * 2;
+          const px = armoredPos.x + Math.cos(a) * rwR * 0.55;
+          const py = rwCY + Math.sin(a) * rwR * 0.92 - Math.cos(a) * rwR * 0.55 * rwSlope;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Petal circles — isometric
+        ctx.strokeStyle = "rgba(100, 40, 160, 0.5)";
+        ctx.lineWidth = 0.8 * zoom;
+        for (let pi = 0; pi < 8; pi++) {
+          const pAngle = (pi / 8) * Math.PI * 2;
+          const ppx = armoredPos.x + Math.cos(pAngle) * rwR * 0.25;
+          const ppy = rwCY + Math.sin(pAngle) * rwR * 0.42 - Math.cos(pAngle) * rwR * 0.25 * rwSlope;
+          ctx.beginPath();
+          ctx.ellipse(ppx, ppy, rwR * 0.12, rwR * 0.22, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Center jewel
+        ctx.fillStyle = "#fff4e0";
+        ctx.beginPath();
+        ctx.ellipse(armoredPos.x, rwCY, 1.2 * zoom * 0.6, 1.2 * zoom, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.fillStyle = "#fff4e0";
-      ctx.beginPath();
-      ctx.arc(
-        armoredPos.x,
-        armoredPos.y - 6.5 * zoom,
-        1.2 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
 
       // Turret with crown finial
       const turretPos4b = isoOffset(armoredPos.x, armoredPos.y - 13 * zoom, 0);
@@ -4772,103 +4500,20 @@ export function renderDinkyTrains(
       ctx.closePath();
       ctx.fill();
 
-      // Armored ram with gold trim
-      const ramPos = isoOffset(cabPos.x, cabPos.y, 9);
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 3 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y);
-      ctx.lineTo(ramPos.x + 3.5 * zoom, ramPos.y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 5 * zoom);
-      ctx.lineTo(ramPos.x + 3.5 * zoom, ramPos.y - 3.5 * zoom);
-      ctx.stroke();
-      const ramGrad = ctx.createLinearGradient(
-        ramPos.x - 4 * zoom,
-        ramPos.y,
-        ramPos.x + 9 * zoom,
-        ramPos.y,
-      );
-      ramGrad.addColorStop(0, "#1a2030");
-      ramGrad.addColorStop(0.5, "#3a4050");
-      ramGrad.addColorStop(1, "#1a2030");
-      ctx.fillStyle = ramGrad;
-      ctx.beginPath();
-      ctx.moveTo(ramPos.x + 6 * zoom, ramPos.y - 6 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
-      ctx.lineTo(ramPos.x, ramPos.y + 6 * zoom);
-      ctx.lineTo(ramPos.x + 5 * zoom, ramPos.y + 4.5 * zoom);
-      ctx.lineTo(ramPos.x + 9 * zoom, ramPos.y - 1 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "rgba(0,0,0,0.4)";
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = "#1a2030";
-      ctx.beginPath();
-      ctx.moveTo(ramPos.x + 6 * zoom, ramPos.y - 6 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 3.5 * zoom);
-      ctx.lineTo(ramPos.x, ramPos.y + 6 * zoom);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(ramPos.x + 6 * zoom, ramPos.y - 6 * zoom);
-      ctx.lineTo(ramPos.x - 4 * zoom, ramPos.y + 1 * zoom);
-      ctx.stroke();
-      ctx.fillStyle = "#C9A227";
-      for (let bi = 0; bi < 4; bi++) {
-        const bx = ramPos.x + (1 + bi * 2) * zoom;
-        const by = ramPos.y - (1.5 + bi * 1.5) * zoom;
-        ctx.beginPath();
-        ctx.arc(bx, by, 0.8 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // Armored ram — isometric V-wedge with gold trim
+      drawIsoCowcatcher(
+        cabPos.x + 6.5 * zoom, cabPos.y - 2.5 * zoom,
+        9, 7, 8,
+        "#3a4050", "#1a2030", "#C9A227", 4);
 
-      // Front headlight
-      const headlightPos = isoOffset(cabPos.x, cabPos.y - 8 * zoom, 9);
-      ctx.strokeStyle = "#3a4050";
-      ctx.lineWidth = 3.5 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(cabPos.x + 6.5 * zoom, cabPos.y - 9 * zoom);
-      ctx.lineTo(headlightPos.x + 1.5 * zoom, headlightPos.y);
-      ctx.stroke();
-      ctx.fillStyle = "#3a4050";
-      ctx.beginPath();
-      for (let hi = 0; hi < 8; hi++) {
-        const ha = (hi / 8) * Math.PI * 2;
-        if (hi === 0)
-          ctx.moveTo(
-            headlightPos.x + 1.5 * zoom + Math.cos(ha) * 3.5 * zoom,
-            headlightPos.y + Math.sin(ha) * 3.5 * zoom,
-          );
-        else
-          ctx.lineTo(
-            headlightPos.x + 1.5 * zoom + Math.cos(ha) * 3.5 * zoom,
-            headlightPos.y + Math.sin(ha) * 3.5 * zoom,
-          );
+      // Isometric front headlight
+      {
+        const hlPos = isoOffset(cabPos.x, cabPos.y - 8 * zoom, 9);
+        drawIsoHeadlight(
+          cabPos.x + 6.5 * zoom, cabPos.y - 9 * zoom,
+          hlPos.x, hlPos.y, 3.5,
+          "#3a4050", "#3a4050", 0.75 + Math.sin(time * 3) * 0.2);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = "#C9A227";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.stroke();
-      ctx.fillStyle = `rgba(255, 250, 200, ${0.75 + Math.sin(time * 3) * 0.2})`;
-      ctx.shadowColor = "#fffacc";
-      ctx.shadowBlur = 16 * zoom;
-      ctx.beginPath();
-      ctx.arc(
-        headlightPos.x + 1.5 * zoom,
-        headlightPos.y,
-        2.8 * zoom,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.shadowBlur = 0;
     }
 
     ctx.restore();

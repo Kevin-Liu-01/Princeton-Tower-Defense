@@ -643,13 +643,14 @@ const DECORATION_VOLUME_OVERRIDES: Partial<
     landmarkFullPadding: 0.8,
   },
   carnegie_lake: {
-    width: 280,
-    length: 240,
-    height: 120,
+    width: 200,
+    length: 180,
+    height: 90,
     anchorOffsetY: 0,
-    frontDepthPadding: 20,
-    landmarkCoreRadius: 2.5,
-    landmarkFullPadding: 1.5,
+    frontDepthPadding: 15,
+    landmarkCoreRadius: 1.1,
+    landmarkFullPadding: 0.4,
+    backgroundShadowOnly: true,
   },
 };
 
