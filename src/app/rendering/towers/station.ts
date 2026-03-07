@@ -11,6 +11,7 @@ import {
   drawIsometricPrism,
   drawIsoDiamond,
   drawIsoGothicWindow,
+  drawIsoFlushSlit,
   drawMerlon,
 } from "./towerHelpers";
 import { renderDinkyTrains } from "./dinkyTrains";
@@ -1026,14 +1027,11 @@ export function renderStationTower(
         { top: "#7a7a82", left: "#5a5a62", right: "#4a4a52" },
         zoom,
       );
-      // Battlement arrow slit
-      ctx.fillStyle = "#2a2a32";
-      ctx.fillRect(
-        screenPos.x + side * isoW * 0.7 - 1 * zoom,
-        screenPos.y + side * 2 * zoom - 6 * zoom,
-        2 * zoom,
-        4 * zoom,
-      );
+      // Battlement arrow slit — isometric flush with left face
+      drawIsoFlushSlit(ctx,
+        screenPos.x + side * isoW * 0.7,
+        screenPos.y + side * 2 * zoom - 4 * zoom,
+        1.2, 4, "left", zoom);
     }
 
     // Fortress corner towers (small)

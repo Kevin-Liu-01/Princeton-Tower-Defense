@@ -631,8 +631,9 @@ export const LEVEL_DATA: Record<
       { type: "flowers", pos: { x: 8, y: 22 }, variant: 1 },
       // Signpost near path start
       { type: "signpost", pos: { x: 0, y: 18 }, variant: 0 },
-      // Statue and landmarks near path center
-      { type: "statue", pos: { x: 19, y: 8 }, variant: 0 },
+      // Tiger statue pair flanking the path center
+      { type: "statue", pos: { x: 19, y: 8 }, variant: 4 },
+      { type: "statue", pos: { x: 13, y: 14 }, variant: 7 },
       // Lampposts along the path
       { type: "lamppost", pos: { x: 6, y: 12 }, variant: 0 },
       { type: "lamppost", pos: { x: 12, y: 10 }, variant: 0 },
@@ -680,7 +681,8 @@ export const LEVEL_DATA: Record<
       { type: "reeds", pos: { x: 2, y: 18 }, variant: 1 },
       // Landmarks and features
       { type: "bench", pos: { x: 18, y: 16 }, variant: 0 },
-      { type: "statue", pos: { x: 18, y: 16 }, variant: 0 },
+      { type: "statue", pos: { x: 18, y: 16 }, variant: 5 },
+      { type: "statue", pos: { x: 24, y: 8 }, variant: 6 },
       { type: "hedge", pos: { x: 18, y: 22 }, variant: 0 },
       { type: "bench", pos: { x: 10, y: 4 }, variant: 0 },
       // Lampposts along path
@@ -719,9 +721,10 @@ export const LEVEL_DATA: Record<
     decorations: [
       // Nassau Hall near path center (path: x:-2 to 32, y:8 to 20)
       { type: "nassau_hall", pos: { x: 15, y: -3 }, variant: 0, size: 3 },
-      { type: "statue", pos: { x: 7, y: 7.5 }, variant: 1 },
-      { type: "statue", pos: { x: 21, y: 2 }, variant: 0 },
-      { type: "statue", pos: { x: 17, y: 17 }, variant: 0 },
+      { type: "statue", pos: { x: 7, y: 7.5 }, variant: 7 },
+      { type: "statue", pos: { x: 21, y: 2 }, variant: 4 },
+      { type: "statue", pos: { x: 17, y: 17 }, variant: 5 },
+      { type: "statue", pos: { x: 25, y: 17 }, variant: 6 },
       { type: "fountain", pos: { x: 22.75, y: 7 }, variant: 0 },
       // Trees around the expanded area
       { type: "tree", pos: { x: 4, y: 4 }, variant: 1 },
@@ -780,7 +783,7 @@ export const LEVEL_DATA: Record<
       { type: "deep_water", pos: { x: 14, y: 6 }, variant: 1, size: 2.5 },
       { type: "fog_patch", pos: { x: 8, y: 16 }, variant: 0 },
       { type: "fog_patch", pos: { x: 20, y: 14 }, variant: 1 },
-      { type: "broken_bridge", pos: { x: 14, y: 16 }, variant: 0 },
+      { type: "ruined_temple", pos: { x: 14, y: 16 }, variant: 5, size: 1 },
       { type: "tentacle", pos: { x: 2, y: 16 }, variant: 0 },
       { type: "tentacle", pos: { x: 14, y: 6 }, variant: 1, size: 1.25 },
       { type: "skeleton", pos: { x: 10, y: 24 }, variant: 0 },
@@ -788,6 +791,7 @@ export const LEVEL_DATA: Record<
       { type: "poison_pool", pos: { x: 26, y: 20 }, variant: 0 },
       { type: "glowing_runes", pos: { x: 18, y: 24 }, variant: 0 },
       { type: "hanging_cage", pos: { x: 8, y: 10 }, variant: 0 },
+      { type: "idol_statue", pos: { x: 22, y: 8 }, variant: 0 },
     ],
     previewImage: "/images/previews/murky_bog.png",
   },
@@ -861,8 +865,8 @@ export const LEVEL_DATA: Record<
       hp: 800,
     },
     decorations: [
-      // Ruined temple near path center (paths: x:-2 to 32, y:8 to 24)
-      { type: "ruined_temple", pos: { x: 16, y: 6 }, variant: 0, size: 3 },
+      // Grand ruined temple near path center (variant 6 = grand temple)
+      { type: "ruined_temple", pos: { x: 16, y: 6 }, variant: 6, size: 3 },
       { type: "sunken_pillar", pos: { x: 4, y: 6 }, variant: 0 },
       { type: "sunken_pillar", pos: { x: 8, y: 12 }, variant: 1 },
       { type: "sunken_pillar", pos: { x: 26, y: 12 }, variant: 2 },
@@ -939,7 +943,8 @@ export const LEVEL_DATA: Record<
       { type: "skull", pos: { x: 16, y: 6 }, variant: 0 },
       { type: "pottery", pos: { x: 10, y: 20 }, variant: 0 },
       { type: "obelisk", pos: { x: 8, y: 6 }, variant: 0 },
-      { type: "statue", pos: { x: 9, y: 6.5 }, variant: 0 },
+      { type: "statue", pos: { x: 9, y: 6.5 }, variant: 7 },
+      { type: "statue", pos: { x: 22, y: 18 }, variant: 0 },
       { type: "obelisk", pos: { x: 10, y: 7 }, variant: 1 },
       { type: "bones", pos: { x: 24, y: 4 }, variant: 0 },
       { type: "tent", pos: { x: 2, y: 20 }, variant: 0 },
@@ -1134,6 +1139,9 @@ export const LEVEL_DATA: Record<
       { type: "frozen_soldier", pos: { x: 2, y: 16 }, variant: 0 },
       { type: "broken_wall", pos: { x: 8, y: 24 }, variant: 0 },
       { type: "bones", pos: { x: 26, y: 18 }, variant: 1 },
+      // Frozen hero statues guarding the glacier path
+      { type: "statue", pos: { x: 6, y: 10 }, variant: 0 },
+      { type: "statue", pos: { x: 20, y: 8 }, variant: 4 },
     ],
     hazards: [{ type: "ice_spikes", pos: { x: 17.5, y: 18 }, radius: 1.5 }],
     previewImage: "/images/previews/glacier.png",
@@ -1158,8 +1166,8 @@ export const LEVEL_DATA: Record<
       // Ice fortresses flanking the entrance
       { type: "ice_fortress", pos: { x: 6, y: 4 }, variant: 0, size: 2 },
       { type: "ice_fortress", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
-      // Ruined temple in the courtyard
-      { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 0, size: 2 },
+      // Ruined temple in the courtyard (variant 5 = small pillar for frost)
+      { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 5, size: 2 },
       // Ice thrones - commanding positions
       { type: "ice_throne", pos: { x: 4, y: 8 }, variant: 0, size: 3 },
       { type: "ice_throne", pos: { x: 26, y: 8 }, variant: 1, size: 2 },
@@ -1201,6 +1209,10 @@ export const LEVEL_DATA: Record<
       // Snow features
       { type: "snow_pile", pos: { x: 6, y: 24 }, variant: 0 },
       { type: "snowman", pos: { x: 30, y: 20 }, variant: 0 },
+      // Guardian statues flanking the fortress gate
+      { type: "statue", pos: { x: 12, y: 8 }, variant: 7 },
+      { type: "statue", pos: { x: 20, y: 8 }, variant: 0 },
+      { type: "statue", pos: { x: 16, y: 22 }, variant: 5 },
     ],
     hazards: [{ type: "ice_sheet", pos: { x: 15, y: 8 }, radius: 2 }],
     previewImage: "/images/previews/fortress.png",
@@ -1271,6 +1283,9 @@ export const LEVEL_DATA: Record<
       { type: "frozen_soldier", pos: { x: 4, y: 16 }, variant: 0, size: 1 },
       { type: "frozen_soldier", pos: { x: 26, y: 12 }, variant: 1, size: 1 },
       { type: "bones", pos: { x: 22, y: 8 }, variant: 1 },
+      // Summit heroic statues
+      { type: "statue", pos: { x: 14, y: 4 }, variant: 4 },
+      { type: "statue", pos: { x: 8, y: 12 }, variant: 3 },
     ],
     hazards: [
       { type: "ice_sheet", pos: { x: 20, y: 7 }, radius: 2 },
@@ -1321,6 +1336,9 @@ export const LEVEL_DATA: Record<
       { type: "fire_crystal", pos: { x: 16, y: 18 }, variant: 0 },
       { type: "obsidian_pillar", pos: { x: 30, y: 12 }, variant: 0 },
       { type: "volcano_rim", pos: { x: 20, y: 24 }, variant: 0 },
+      // Demon statues flanking the lava fields
+      { type: "demon_statue", pos: { x: 8, y: 8 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 24, y: 20 }, variant: 3 },
     ],
     hazards: [{ type: "lava_geyser", pos: { x: 14, y: 14 }, radius: 2.5 }],
     previewImage: "/images/previews/lava_fields.png",
@@ -1363,8 +1381,8 @@ export const LEVEL_DATA: Record<
       // Decorations
       { type: "fire_pit", pos: { x: 10, y: 12 }, variant: 0 },
       { type: "fire_pit", pos: { x: 22, y: 20 }, variant: 1 },
-      { type: "demon_statue", pos: { x: 6, y: 18 }, variant: 0 },
-      { type: "demon_statue", pos: { x: 24, y: 14 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 6, y: 18 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 24, y: 14 }, variant: 3 },
       { type: "ember", pos: { x: 16, y: 10 }, variant: 0 },
       { type: "ember", pos: { x: 12, y: 20 }, variant: 1 },
       { type: "bones", pos: { x: 2, y: 12 }, variant: 0 },
@@ -1406,11 +1424,11 @@ export const LEVEL_DATA: Record<
       { type: "dark_barracks", pos: { x: 26, y: 6 }, variant: 2 },
       { type: "dark_barracks", pos: { x: 4, y: 22 }, variant: 0 },
       { type: "dark_barracks", pos: { x: 26, y: 22 }, variant: 1 },
-      // Demon statues
-      { type: "demon_statue", pos: { x: 7, y: 10 }, variant: 0 },
-      { type: "demon_statue", pos: { x: 24, y: 8 }, variant: 1 },
-      { type: "demon_statue", pos: { x: 10, y: 18 }, variant: 2 },
-      { type: "demon_statue", pos: { x: 20, y: 16 }, variant: 0 },
+      // Demon statues (diverse hero & troop figures)
+      { type: "demon_statue", pos: { x: 7, y: 10 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 24, y: 8 }, variant: 4 },
+      { type: "demon_statue", pos: { x: 10, y: 18 }, variant: 7 },
+      { type: "demon_statue", pos: { x: 20, y: 16 }, variant: 3 },
       // Lava pools
       { type: "lava_pool", pos: { x: 2, y: 14 }, variant: 0, size: 1 },
       { type: "lava_pool", pos: { x: 27, y: 11.5 }, variant: 1, size: 2 },
@@ -1471,8 +1489,9 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "war_monument", pos: { x: 15, y: 2 }, variant: 0, size: 2.2 },
-      { type: "statue", pos: { x: 10, y: 10 }, variant: 0 },
-      { type: "statue", pos: { x: 24, y: 20 }, variant: 1 },
+      { type: "statue", pos: { x: 10, y: 10 }, variant: 6 },
+      { type: "statue", pos: { x: 24, y: 20 }, variant: 4 },
+      { type: "statue", pos: { x: 20, y: 6 }, variant: 7 },
       { type: "fountain", pos: { x: 17, y: 16 }, variant: 0 },
       { type: "tree", pos: { x: 4, y: 4 }, variant: 1 },
       { type: "tree", pos: { x: 28, y: 4 }, variant: 2 },
@@ -1510,6 +1529,7 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "bone_altar", pos: { x: 17, y: 6 }, variant: 0, size: 2.2 },
+      { type: "ruined_temple", pos: { x: 14, y: 24 }, variant: 6, size: 2 },
       { type: "sunken_pillar", pos: { x: 8, y: 12 }, variant: 0 },
       { type: "sunken_pillar", pos: { x: 24, y: 22 }, variant: 1 },
       { type: "tombstone", pos: { x: 6, y: 7 }, variant: 2 },
@@ -1520,6 +1540,7 @@ export const LEVEL_DATA: Record<
       { type: "fog_patch", pos: { x: 21, y: 8 }, variant: 0 },
       { type: "tentacle", pos: { x: 17, y: 10 }, variant: 2, size: 1.2 },
       { type: "glowing_runes", pos: { x: 25, y: 14 }, variant: 0 },
+      { type: "idol_statue", pos: { x: 12, y: 18 }, variant: 0 },
     ],
     previewImage: "/images/previews/sunken_temple.png",
   },
@@ -1560,6 +1581,9 @@ export const LEVEL_DATA: Record<
       { type: "cactus", pos: { x: 30, y: 13 }, variant: 0 },
       { type: "treasure_chest", pos: { x: 19, y: 7 }, variant: 0 },
       { type: "torch", pos: { x: 20, y: 17 }, variant: 1 },
+      // Ancient guardian statues flanking the labyrinth
+      { type: "statue", pos: { x: 8, y: 18 }, variant: 7 },
+      { type: "statue", pos: { x: 26, y: 14 }, variant: 0 },
     ],
     previewImage: "/images/previews/sphinx.png",
   },
@@ -1599,6 +1623,9 @@ export const LEVEL_DATA: Record<
       { type: "pine_tree", pos: { x: 28, y: 4 }, variant: 1 },
       { type: "snow_lantern", pos: { x: 13, y: 17 }, variant: 0, size: 1 },
       { type: "snow_lantern", pos: { x: 22, y: 12 }, variant: 1, size: 1 },
+      // Frozen warrior statues guarding the pass
+      { type: "statue", pos: { x: 8, y: 10 }, variant: 3 },
+      { type: "statue", pos: { x: 24, y: 10 }, variant: 7 },
     ],
     previewImage: "/images/previews/peak.png",
   },
@@ -1636,8 +1663,8 @@ export const LEVEL_DATA: Record<
       { type: "lava_pool", pos: { x: 22, y: 22 }, variant: 1, size: 1.8 },
       { type: "dark_spire", pos: { x: 6, y: 8 }, variant: 0 },
       { type: "dark_spire", pos: { x: 26, y: 8 }, variant: 1 },
-      { type: "demon_statue", pos: { x: 10, y: 20 }, variant: 0 },
-      { type: "demon_statue", pos: { x: 24, y: 14 }, variant: 1 },
+      { type: "demon_statue", pos: { x: 10, y: 20 }, variant: 5 },
+      { type: "demon_statue", pos: { x: 24, y: 14 }, variant: 6 },
       { type: "fire_pit", pos: { x: 14, y: 24 }, variant: 0 },
       { type: "fire_pit", pos: { x: 30, y: 15 }, variant: 1 },
       { type: "obsidian_pillar", pos: { x: 3, y: 18 }, variant: 0 },
@@ -1681,6 +1708,9 @@ export const LEVEL_DATA: Record<
       { type: "tombstone", pos: { x: 10, y: 22 }, variant: 0 },
       { type: "tombstone", pos: { x: 22, y: 6 }, variant: 3 },
       { type: "campfire", pos: { x: 30, y: 16 }, variant: 0 },
+      // Hero & troop statues flanking battlefield
+      { type: "statue", pos: { x: 8, y: 14 }, variant: 4 },
+      { type: "statue", pos: { x: 24, y: 14 }, variant: 7 },
     ],
     previewImage: "/images/previews/nassau.png",
   },
@@ -1710,6 +1740,7 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "bone_altar", pos: { x: 16, y: 4 }, variant: 1, size: 2 },
+      { type: "ruined_temple", pos: { x: 16, y: 26 }, variant: 6, size: 2 },
       { type: "sunken_pillar", pos: { x: 7, y: 10 }, variant: 1 },
       { type: "sunken_pillar", pos: { x: 25, y: 23 }, variant: 0 },
       { type: "swamp_tree", pos: { x: 3, y: 5 }, variant: 0 },
@@ -1718,6 +1749,9 @@ export const LEVEL_DATA: Record<
       { type: "swamp_tree", pos: { x: 28, y: 27 }, variant: 0 },
       { type: "tombstone", pos: { x: 23, y: 8 }, variant: 1 },
       { type: "glowing_runes", pos: { x: 26, y: 14 }, variant: 0 },
+      // Paired idol statues guarding the keep entrance
+      { type: "idol_statue", pos: { x: 10, y: 14 }, variant: 0 },
+      { type: "idol_statue", pos: { x: 22, y: 18 }, variant: 0 },
     ],
     previewImage: "/images/previews/sunken_temple.png",
   },
@@ -1751,13 +1785,21 @@ export const LEVEL_DATA: Record<
       { type: "ice_bridge", pos: { x: 6, y: 14 }, variant: 0, size: 1.3 },
       { type: "ice_bridge", pos: { x: 27, y: 14 }, variant: 1, size: 1.3 },
       { type: "frozen_waterfall", pos: { x: 2, y: 10 }, variant: 0, size: 1.2 },
-      { type: "frozen_waterfall", pos: { x: 30, y: 10 }, variant: 1, size: 1.2 },
+      {
+        type: "frozen_waterfall",
+        pos: { x: 30, y: 10 },
+        variant: 1,
+        size: 1.2,
+      },
       { type: "aurora_crystal", pos: { x: 10, y: 23 }, variant: 0, size: 1.2 },
       { type: "aurora_crystal", pos: { x: 24, y: 23 }, variant: 1, size: 1.2 },
       { type: "pine_tree", pos: { x: 3, y: 4 }, variant: 0 },
       { type: "pine_tree", pos: { x: 28, y: 4 }, variant: 1 },
       { type: "snow_lantern", pos: { x: 13, y: 17 }, variant: 0, size: 1 },
       { type: "snow_lantern", pos: { x: 22, y: 12 }, variant: 1, size: 1 },
+      // Outpost defender statues
+      { type: "statue", pos: { x: 10, y: 8 }, variant: 0 },
+      { type: "statue", pos: { x: 22, y: 8 }, variant: 5 },
     ],
     previewImage: "/images/previews/peak.png",
   },

@@ -7,6 +7,8 @@ import {
   drawGear,
   drawIsometricRailing,
 } from "./towerHelpers";
+import { traceIsoFlushRect, getIsoSlope } from "../isoFlush";
+import type { IsoFace } from "../isoFlush";
 
 export function renderClubTower(
   ctx: CanvasRenderingContext2D,
@@ -397,43 +399,57 @@ export function renderClubTower(
   ctx.closePath();
   ctx.fill();
 
-  // ========== DORMER WINDOWS WITH TREASURY GLOW ==========
+  // ========== DORMER WINDOWS WITH TREASURY GLOW — isometric flush ==========
   for (let wi = 0; wi < 3; wi++) {
     const winOff = (wi - 1) * w * 0.5;
     const winX = screenPos.x + winOff;
-    const winY = screenPos.y - h * 0.42 - Math.abs(wi - 1) * 2 * zoom;
-    const winW = 5 * zoom;
-    const winH = 7 * zoom;
+    const winBaseY = screenPos.y - h * 0.42 - Math.abs(wi - 1) * 2 * zoom;
+    const wW = 5;
+    const wH = 7;
+    const winCY = winBaseY - wH * zoom * 0.5;
+    const face: IsoFace = winOff < 0 ? "left" : "right";
+    const slope = getIsoSlope(face);
+
+    // Dark void
+    traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
     ctx.fillStyle = "#0a1a0a";
-    ctx.fillRect(winX - winW * 0.5, winY - winH, winW, winH);
+    ctx.fill();
+
+    // Treasury glow
     const treasGlow =
       0.25 + Math.sin(time * 2.5 + wi) * 0.15 + flashIntensity * 0.5;
     const winGrad = ctx.createRadialGradient(
-      winX,
-      winY - winH * 0.5,
-      0,
-      winX,
-      winY - winH * 0.5,
-      winW,
+      winX, winCY, 0, winX, winCY, wW * zoom,
     );
     winGrad.addColorStop(0, `rgba(255, 200, 50, ${treasGlow})`);
     winGrad.addColorStop(1, `rgba(100, 80, 20, ${treasGlow * 0.2})`);
+    traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
     ctx.fillStyle = winGrad;
-    ctx.fillRect(winX - winW * 0.5, winY - winH, winW, winH);
+    ctx.fill();
+
+    // Border
+    traceIsoFlushRect(ctx, winX, winCY, wW, wH, face, zoom);
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 1 * zoom;
-    ctx.strokeRect(winX - winW * 0.5, winY - winH, winW, winH);
-    ctx.beginPath();
-    ctx.moveTo(winX, winY - winH);
-    ctx.lineTo(winX, winY);
-    ctx.moveTo(winX - winW * 0.5, winY - winH * 0.5);
-    ctx.lineTo(winX + winW * 0.5, winY - winH * 0.5);
     ctx.stroke();
+
+    // Mullion crossbars (skewed to match face)
+    const hw = wW * zoom * 0.5;
+    const hh = wH * zoom * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(winX, winCY - hh);
+    ctx.lineTo(winX, winCY + hh);
+    ctx.moveTo(winX - hw, winCY - hw * slope);
+    ctx.lineTo(winX + hw, winCY + hw * slope);
+    ctx.stroke();
+
+    // Dormer roof cap (skewed triangle)
+    const capHw = hw * 1.4;
     ctx.fillStyle = "#1a3a2a";
     ctx.beginPath();
-    ctx.moveTo(winX - winW * 0.7, winY - winH);
-    ctx.lineTo(winX, winY - winH - 3.5 * zoom);
-    ctx.lineTo(winX + winW * 0.7, winY - winH);
+    ctx.moveTo(winX - capHw, winCY - hh - capHw * slope);
+    ctx.lineTo(winX, winCY - hh - 3.5 * zoom);
+    ctx.lineTo(winX + capHw, winCY - hh + capHw * slope);
     ctx.closePath();
     ctx.fill();
   }

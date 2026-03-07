@@ -92,19 +92,25 @@ export function renderTroop(
     );
   }
 
+  // Cavalry and centaur sprites are drawn facing LEFT by default (horse head
+  // on the negative-x side), opposite to every other troop sprite.  Invert
+  // the flip so the horse body visually matches the logical facing direction.
+  const spriteReversed = troopType === "cavalry" || troopType === "centaur";
+  const effectiveFacingRight = spriteReversed ? !facingRight : facingRight;
+
   const localTargetPos = targetScreenPos
     ? {
         x: targetScreenPos.x - screenPos.x,
         y: targetScreenPos.y - (screenPos.y - size / 2),
       }
     : undefined;
-  if (!facingRight && localTargetPos) {
+  if (!effectiveFacingRight && localTargetPos) {
     localTargetPos.x *= -1;
   }
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y - size / 2);
-  ctx.scale(facingRight ? attackScale : -attackScale, attackScale);
+  ctx.scale(effectiveFacingRight ? attackScale : -attackScale, attackScale);
 
   drawTroopSprite(
     ctx,

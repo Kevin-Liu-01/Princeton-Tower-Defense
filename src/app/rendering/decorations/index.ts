@@ -6,7 +6,7 @@ import { worldToScreen } from "../../utils";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import { lightenColor, darkenColor, drawIsometricPrism, drawGroundShadow } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawIsoGothicWindow } from "../towers/towerHelpers";
+import { drawIsoGothicWindow, drawIsoFlushDoor, drawIsoFlushSlit } from "../isoFlush";
 
 // Import landmark renderers
 import {
@@ -1008,77 +1008,7 @@ function drawBldgStoneWall(
   }
 }
 
-function drawBldgDoor(
-  ctx: CanvasRenderingContext2D,
-  dx: number,
-  dy: number,
-  dw: number,
-  dh: number,
-  s: number,
-  hasStep: boolean = true,
-): void {
-  if (hasStep) {
-    ctx.fillStyle = "#5A4A38";
-    ctx.beginPath();
-    ctx.moveTo(dx - dw * 0.7, dy + 1 * s);
-    ctx.lineTo(dx + dw * 0.7, dy + 1 * s);
-    ctx.lineTo(dx + dw * 0.5, dy + 3 * s);
-    ctx.lineTo(dx - dw * 0.3, dy + 3 * s);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  ctx.fillStyle = "#4A3828";
-  ctx.beginPath();
-  ctx.moveTo(dx - dw * 0.55, dy);
-  ctx.lineTo(dx - dw * 0.55, dy - dh - dw * 0.25);
-  ctx.lineTo(dx + dw * 0.55, dy - dh - dw * 0.25);
-  ctx.lineTo(dx + dw * 0.55, dy);
-  ctx.closePath();
-  ctx.fill();
-
-  const doorG = ctx.createLinearGradient(dx - dw * 0.5, dy, dx + dw * 0.5, dy);
-  doorG.addColorStop(0, "#3A2210");
-  doorG.addColorStop(0.3, "#4A3220");
-  doorG.addColorStop(0.7, "#3A2210");
-  doorG.addColorStop(1, "#2A1808");
-  ctx.fillStyle = doorG;
-  ctx.beginPath();
-  ctx.moveTo(dx - dw * 0.5, dy);
-  ctx.lineTo(dx - dw * 0.5, dy - dh);
-  ctx.arc(dx, dy - dh, dw * 0.5, Math.PI, 0);
-  ctx.lineTo(dx + dw * 0.5, dy);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#5A4A35";
-  ctx.lineWidth = 0.6 * s;
-  ctx.beginPath();
-  ctx.moveTo(dx - dw * 0.5, dy - dh * 0.33);
-  ctx.lineTo(dx + dw * 0.5, dy - dh * 0.33);
-  ctx.moveTo(dx - dw * 0.5, dy - dh * 0.66);
-  ctx.lineTo(dx + dw * 0.5, dy - dh * 0.66);
-  ctx.stroke();
-
-  ctx.fillStyle = "#6A5A40";
-  ctx.beginPath();
-  ctx.arc(dx - dw * 0.5, dy - dh * 0.33, 1 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(dx + dw * 0.5, dy - dh * 0.33, 1 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(dx - dw * 0.5, dy - dh * 0.66, 1 * s, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(dx + dw * 0.5, dy - dh * 0.66, 1 * s, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#C8A860";
-  ctx.beginPath();
-  ctx.arc(dx + dw * 0.22, dy - dh * 0.45, 1 * s, 0, Math.PI * 2);
-  ctx.fill();
-}
+// drawBldgDoor has been replaced by drawIsoFlushDoor from isoFlush.ts
 
 function drawBldgChimney(
   ctx: CanvasRenderingContext2D,
@@ -1334,8 +1264,8 @@ function drawBuilding(
       s,
     );
 
-    // Door
-    drawBldgDoor(ctx, x + iW * 0.35, y + iD * 0.35, 7 * s, 14 * s, s);
+    // Door — isometric flush with right wall face
+    drawIsoFlushDoor(ctx, x + iW * 0.35, y + iD * 0.35 - 7 * s, 7, 14, "right", s);
 
     // Right wall window — isometric gothic flush with wall
     drawIsoGothicWindow(ctx, x + iW * 0.72, y - wH * 0.4 + iD * 0.15, 5, 8, "right", s,
@@ -1500,17 +1430,16 @@ function drawBuilding(
       ctx.fill();
     }
 
-    // Door
-    drawBldgDoor(ctx, x + tiW * 0.4, y + tiD * 0.25, 5 * s, 11 * s, s);
+    // Door — isometric flush with right wall face
+    drawIsoFlushDoor(ctx, x + tiW * 0.4, y + tiD * 0.25 - 5.5 * s, 5, 11, "right", s);
 
-    // Arrow slits on right wall
+    // Arrow slits on right wall — isometric flush
     for (let w = 0; w < 3; w++) {
       const wy = y - tH * (0.2 + w * 0.25);
       const wx = x + tiW * 0.55 - w * tiD * 0.12;
-      ctx.fillStyle = "#1A1008";
-      ctx.fillRect(wx - 1 * s, wy - 3.5 * s, 2 * s, 7 * s);
-      ctx.fillStyle = "rgba(200,150,70,0.35)";
-      ctx.fillRect(wx - 0.7 * s, wy - 3 * s, 1.4 * s, 6 * s);
+      drawIsoFlushSlit(ctx, wx, wy, 1.4, 7, "right", s, {
+        glowColor: "rgba(200,150,70", glowAlpha: 0.35,
+      });
     }
 
     // Left wall window — isometric gothic flush with wall
@@ -1781,8 +1710,8 @@ function drawBuilding(
     ctx.lineTo(x - 2 * s, y + iD - wH);
     ctx.stroke();
 
-    // Large door
-    drawBldgDoor(ctx, x + iW * 0.2, y + iD * 0.7, 8 * s, 15 * s, s);
+    // Large door — isometric flush with right wall face
+    drawIsoFlushDoor(ctx, x + iW * 0.2, y + iD * 0.7 - 7.5 * s, 8, 15, "right", s);
 
     // Right wall windows (upper) — isometric gothic flush with wall
     for (let wi = 0; wi < 3; wi++) {
@@ -1920,7 +1849,7 @@ function drawBuilding(
     const dAngle = 0.35;
     const dX = x + Math.cos(dAngle) * hR * 0.72;
     const dBaseY = y + Math.sin(dAngle) * hR * 0.3;
-    drawBldgDoor(ctx, dX, dBaseY, 6 * s, 12 * s, s);
+    drawIsoFlushDoor(ctx, dX, dBaseY - 6 * s, 6, 12, "right", s);
 
     // Windows — isometric gothic flush with wall
     drawIsoGothicWindow(ctx, x - hR * 0.62, y - hH * 0.45, 4.5, 7, "left", s,

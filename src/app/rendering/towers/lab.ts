@@ -6,6 +6,7 @@ import {
   drawIsometricPrism,
   drawIsometricRailing,
 } from "./towerHelpers";
+import { drawIsoFlushVent, traceIsoFlushRect } from "../isoFlush";
 import {
   renderTeslaCoil,
   renderFocusedBeam,
@@ -1451,41 +1452,22 @@ export function renderLabTower(
     ctx.fill();
   }
 
-  // Exhaust vents (louvered openings on the tower face)
+  // Exhaust vents (louvered openings on the tower face) — isometric flush
   for (let i = 0; i < tower.level; i++) {
     const ventY = screenPos.y - h * 0.3 - i * 12 * zoom;
     for (const side of [-1, 1]) {
       const ventX = screenPos.x + side * w * 0.55;
-      const ventW = 5 * zoom;
-      const ventH = 3 * zoom;
-
-      // Vent housing
-      ctx.fillStyle = "#1a3545";
-      ctx.fillRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
-      ctx.strokeStyle = "#3a6a8a";
-      ctx.lineWidth = 0.6 * zoom;
-      ctx.strokeRect(ventX - ventW * 0.5, ventY - ventH * 0.5, ventW, ventH);
-
-      // Louver slats
-      ctx.strokeStyle = "#2a5a75";
-      ctx.lineWidth = 0.4 * zoom;
-      for (let sl = 0; sl < 3; sl++) {
-        const slY = ventY - ventH * 0.35 + sl * ventH * 0.35;
-        ctx.beginPath();
-        ctx.moveTo(ventX - ventW * 0.4, slY);
-        ctx.lineTo(ventX + ventW * 0.4, slY);
-        ctx.stroke();
-      }
-
-      // Vent glow
+      const face = side === -1 ? "left" as const : "right" as const;
+      drawIsoFlushVent(ctx, ventX, ventY, 5, 3, face, zoom, {
+        frameColor: "#1a3545",
+        bgColor: "#0a2030",
+        slatColor: "#2a5a75",
+        slats: 3,
+      });
       const ventGlow = 0.25 + Math.sin(time * 4 + i * 0.5 + side) * 0.15;
       ctx.fillStyle = `rgba(0, 200, 255, ${ventGlow})`;
-      ctx.fillRect(
-        ventX - ventW * 0.4,
-        ventY - ventH * 0.35,
-        ventW * 0.8,
-        ventH * 0.7,
-      );
+      traceIsoFlushRect(ctx, ventX, ventY, 4, 2.1, face, zoom);
+      ctx.fill();
     }
   }
 

@@ -9,7 +9,11 @@ import {
   drawBrickFace as sharedBrickFace,
 } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
-import { drawIsoGothicWindow } from "../towers/towerHelpers";
+import {
+  drawIsoGothicWindow,
+  drawIsoFlushDoor,
+  traceIsoFlushRect,
+} from "../isoFlush";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -20,6 +24,7 @@ export interface DecorationRenderParams {
   variant: number;
   decorTime: number;
   decorX: number; // Original decoration x position for seeding
+  decorY: number; // Original decoration y position for seeding
   selectedMap: string;
   // Optional split-pass controls used for large landmarks with ground shadows.
   shadowOnly?: boolean;
@@ -72,13 +77,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     variant,
     decorTime,
     decorX,
+    decorY,
     selectedMap,
     shadowOnly = false,
     skipShadow = false,
   } = params;
 
-  // Create a local reference to avoid repetitive params access
-  const dec = { x: decorX, y: 0 }; // Used for seeding animations
+  const dec = { x: decorX, y: decorY };
 
   switch (type) {
     // === GRASSLAND DECORATIONS ===
@@ -1602,37 +1607,291 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fillRect(-8 * s, -12 * s, 4 * s, 20 * s);
       ctx.restore();
       break;
-    case "cart":
-      ctx.fillStyle = "rgba(0,0,0,0.22)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 2,
-        screenPos.y + 5 * s,
-        25 * s,
-        12 * s,
-        0,
-        0,
-        Math.PI * 2,
+    case "cart": {
+      const ctX = screenPos.x;
+      const ctY = screenPos.y;
+      const ctV = variant % 3;
+      const ctD = 5 * s;
+
+      // Ground shadow
+      const ctShadG = ctx.createRadialGradient(
+        ctX + 3 * s, ctY + 6 * s, 0,
+        ctX + 3 * s, ctY + 6 * s, 32 * s,
       );
+      ctShadG.addColorStop(0, "rgba(0,0,0,0.3)");
+      ctShadG.addColorStop(0.5, "rgba(0,0,0,0.1)");
+      ctShadG.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = ctShadG;
+      ctx.beginPath();
+      ctx.ellipse(ctX + 3 * s, ctY + 6 * s, 32 * s, 14 * s, 0.15, 0, Math.PI * 2);
       ctx.fill();
-      ctx.save();
-      ctx.translate(screenPos.x, screenPos.y);
-      ctx.rotate(rotation * 0.3);
-      ctx.fillStyle = "#5d4037";
-      ctx.fillRect(-20 * s, -8 * s, 40 * s, 12 * s);
-      ctx.strokeStyle = "#4a3525";
-      ctx.lineWidth = 3 * s;
+
+      // Isometric cart aligned to ground plane
+      const woodDark = "#3e2723";
+      const woodMid = "#5d4037";
+      const woodLit = "#795548";
+      const woodHi = "#8d6e63";
+      const ironDark = "#37474f";
+      const ironMid = "#546e7a";
+
+      // === WHEELS (back, drawn first) ===
+      const drawWheel = (wx: number, wy: number, wRad: number) => {
+        // Tire rim (iron)
+        ctx.strokeStyle = ironDark;
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.ellipse(wx, wy, wRad, wRad * 0.45, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Rim highlight
+        ctx.strokeStyle = ironMid;
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.ellipse(wx, wy, wRad, wRad * 0.45, 0, Math.PI * 1.1, Math.PI * 1.8);
+        ctx.stroke();
+
+        // Hub
+        const hubG = ctx.createRadialGradient(wx, wy, 0, wx, wy, 2.5 * s);
+        hubG.addColorStop(0, woodHi);
+        hubG.addColorStop(0.6, woodMid);
+        hubG.addColorStop(1, woodDark);
+        ctx.fillStyle = hubG;
+        ctx.beginPath();
+        ctx.ellipse(wx, wy, 2.5 * s, 1.2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Spokes
+        ctx.strokeStyle = woodMid;
+        ctx.lineWidth = 0.8 * s;
+        for (let sp = 0; sp < 6; sp++) {
+          const spAng = (sp / 6) * Math.PI * 2 + decorX * 0.5;
+          ctx.beginPath();
+          ctx.moveTo(wx, wy);
+          ctx.lineTo(
+            wx + Math.cos(spAng) * (wRad - 1 * s),
+            wy + Math.sin(spAng) * (wRad - 1 * s) * 0.45,
+          );
+          ctx.stroke();
+        }
+
+        // Iron hub cap
+        ctx.fillStyle = ironDark;
+        ctx.beginPath();
+        ctx.ellipse(wx, wy, 1.5 * s, 0.7 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = ironMid;
+        ctx.beginPath();
+        ctx.ellipse(wx - 0.3 * s, wy - 0.2 * s, 0.8 * s, 0.4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      // Back wheels (partially hidden)
+      drawWheel(ctX - 14 * s, ctY + 1 * s, 8 * s);
+      drawWheel(ctX + 16 * s, ctY - 5 * s, 8 * s);
+
+      // === CART BED — isometric box ===
+      const bedL = 32 * s;
+      const bedW = ctD;
+      const bedH = 6 * s;
+      const bedTop = ctY - 8 * s;
+
+      // Bed bottom (visible due to iso angle)
+      ctx.fillStyle = woodDark;
       ctx.beginPath();
-      ctx.arc(-15 * s, 2 * s, 8 * s, 0, Math.PI * 1.5);
+      ctx.moveTo(ctX - bedL * 0.5, bedTop + bedH);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop + bedH - bedL * 0.25);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop + bedH - bedL * 0.25 - bedW * 0.5);
+      ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop + bedH - bedW * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bed front-left face (lit)
+      const bedFG = ctx.createLinearGradient(ctX - bedL * 0.5, bedTop, ctX + bedL * 0.5, bedTop);
+      bedFG.addColorStop(0, woodMid);
+      bedFG.addColorStop(0.5, woodLit);
+      bedFG.addColorStop(1, woodMid);
+      ctx.fillStyle = bedFG;
+      ctx.beginPath();
+      ctx.moveTo(ctX - bedL * 0.5, bedTop);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop - bedL * 0.25);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop + bedH - bedL * 0.25);
+      ctx.lineTo(ctX - bedL * 0.5, bedTop + bedH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bed front-right face (dark)
+      ctx.fillStyle = woodDark;
+      ctx.beginPath();
+      ctx.moveTo(ctX + bedL * 0.5, bedTop - bedL * 0.25);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop + bedH - bedL * 0.25 - bedW * 0.5);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop + bedH - bedL * 0.25);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bed top face
+      const bedTG = ctx.createLinearGradient(ctX - bedL * 0.5, bedTop, ctX + bedW, bedTop - bedW * 0.5);
+      bedTG.addColorStop(0, woodLit);
+      bedTG.addColorStop(0.5, woodHi);
+      bedTG.addColorStop(1, woodMid);
+      ctx.fillStyle = bedTG;
+      ctx.beginPath();
+      ctx.moveTo(ctX - bedL * 0.5, bedTop);
+      ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop - bedL * 0.25);
+      ctx.closePath();
+      ctx.fill();
+
+      // Plank lines on top
+      ctx.strokeStyle = "rgba(30,18,10,0.18)";
+      ctx.lineWidth = 0.4 * s;
+      for (let pl = 1; pl < 5; pl++) {
+        const pt = pl / 5;
+        const plX1 = ctX - bedL * 0.5 + bedW * pt;
+        const plY1 = bedTop - bedW * 0.5 * pt;
+        ctx.beginPath();
+        ctx.moveTo(plX1, plY1);
+        ctx.lineTo(plX1 + bedL, plY1 - bedL * 0.25);
+        ctx.stroke();
+      }
+
+      // Side rails (raised edges)
+      const railH = 8 * s;
+
+      // Left rail
+      ctx.fillStyle = woodMid;
+      ctx.beginPath();
+      ctx.moveTo(ctX - bedL * 0.5, bedTop);
+      ctx.lineTo(ctX - bedL * 0.5, bedTop - railH);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop - bedL * 0.25 - railH);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop - bedL * 0.25);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rail plank separations
+      ctx.strokeStyle = "rgba(30,18,10,0.22)";
+      ctx.lineWidth = 0.5 * s;
+      for (let rp = 1; rp < 4; rp++) {
+        const rpT = rp / 4;
+        const rpX = ctX - bedL * 0.5 + bedL * rpT;
+        const rpY = bedTop - bedL * 0.25 * rpT;
+        ctx.beginPath();
+        ctx.moveTo(rpX, rpY);
+        ctx.lineTo(rpX, rpY - railH);
+        ctx.stroke();
+      }
+
+      // Right rail (back side)
+      ctx.fillStyle = woodLit;
+      ctx.beginPath();
+      ctx.moveTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5);
+      ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5 - railH);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5 - railH);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rail top connecting edges
+      ctx.fillStyle = woodHi;
+      ctx.beginPath();
+      ctx.moveTo(ctX - bedL * 0.5, bedTop - railH);
+      ctx.lineTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5 - railH);
+      ctx.lineTo(ctX + bedL * 0.5 + bedW, bedTop - bedL * 0.25 - bedW * 0.5 - railH);
+      ctx.lineTo(ctX + bedL * 0.5, bedTop - bedL * 0.25 - railH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front wheels (in front of cart body)
+      drawWheel(ctX - 12 * s, ctY + 5 * s, 8 * s);
+      drawWheel(ctX + 18 * s, ctY - 1 * s, 8 * s);
+
+      // Handles/shafts extending from front
+      const handleEndX = ctX - bedL * 0.5 - 14 * s;
+      const handleEndY = bedTop + bedH + 7 * s;
+
+      ctx.strokeStyle = woodMid;
+      ctx.lineWidth = 1.5 * s;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(ctX - bedL * 0.5, bedTop + 2 * s);
+      ctx.lineTo(handleEndX, handleEndY);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(15 * s, -5 * s, 8 * s, Math.PI * 0.5, Math.PI * 1.8);
+      ctx.moveTo(ctX - bedL * 0.5 + bedW, bedTop - bedW * 0.5 + 2 * s);
+      ctx.lineTo(handleEndX + bedW, handleEndY - bedW * 0.5);
       ctx.stroke();
-      ctx.fillStyle = "#8d6e63";
-      ctx.fillRect(5 * s, -12 * s, 8 * s, 6 * s);
-      ctx.fillRect(-10 * s, 4 * s, 6 * s, 5 * s);
-      ctx.restore();
+
+      // Handle grips
+      ctx.fillStyle = "#2a1a10";
+      ctx.beginPath();
+      ctx.ellipse(handleEndX, handleEndY, 1.5 * s, 1 * s, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(handleEndX + bedW, handleEndY - bedW * 0.5, 1.5 * s, 1 * s, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Variant cargo — different loads inside cart
+      if (ctV === 0) {
+        // Hay bales
+        ctx.fillStyle = "#c8a860";
+        ctx.beginPath();
+        ctx.ellipse(ctX, bedTop - 3 * s, 8 * s, 4 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#b89848";
+        ctx.beginPath();
+        ctx.ellipse(ctX + 6 * s, bedTop - 4 * s, 6 * s, 3 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(80,60,30,0.2)";
+        ctx.lineWidth = 0.4 * s;
+        for (let hl = 0; hl < 3; hl++) {
+          ctx.beginPath();
+          ctx.moveTo(ctX - 6 * s + hl * 4 * s, bedTop - 5 * s);
+          ctx.lineTo(ctX - 5 * s + hl * 4 * s, bedTop - 1 * s);
+          ctx.stroke();
+        }
+      } else if (ctV === 1) {
+        // Barrels
+        ctx.fillStyle = "#6d4c41";
+        ctx.beginPath();
+        ctx.ellipse(ctX - 3 * s, bedTop - 5 * s, 5 * s, 3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#5d4037";
+        ctx.fillRect(ctX - 8 * s, bedTop - 9 * s, 10 * s, 8 * s);
+        ctx.strokeStyle = "#3e2723";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(ctX - 7 * s, bedTop - 6 * s);
+        ctx.lineTo(ctX + 1 * s, bedTop - 6 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ctX - 7 * s, bedTop - 3 * s);
+        ctx.lineTo(ctX + 1 * s, bedTop - 3 * s);
+        ctx.stroke();
+      } else {
+        // Sacks / cloth bundles
+        ctx.fillStyle = "#a09070";
+        ctx.beginPath();
+        ctx.ellipse(ctX - 2 * s, bedTop - 3 * s, 7 * s, 4 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#908060";
+        ctx.beginPath();
+        ctx.ellipse(ctX + 5 * s, bedTop - 5 * s, 5 * s, 3.5 * s, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+        // Tied tops
+        ctx.strokeStyle = "#5a4a30";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(ctX - 2 * s, bedTop - 6 * s);
+        ctx.lineTo(ctX - 1 * s, bedTop - 8 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ctX + 5 * s, bedTop - 7 * s);
+        ctx.lineTo(ctX + 6 * s, bedTop - 9 * s);
+        ctx.stroke();
+      }
       break;
+    }
     case "hut": {
       const cx = screenPos.x;
       const cy = screenPos.y;
@@ -1654,55 +1913,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.ellipse(cx + 6 * s, cy + 8 * s, 42 * s, 18 * s, 0.15, 0, Math.PI * 2);
       ctx.fill();
-
-      const hutDoor = (dx: number, dy: number, dw: number, dh: number) => {
-        ctx.fillStyle = "#5A4A38";
-        ctx.beginPath();
-        ctx.moveTo(dx - dw * 0.7, dy + 1 * s);
-        ctx.lineTo(dx + dw * 0.7, dy + 1 * s);
-        ctx.lineTo(dx + dw * 0.5, dy + 3 * s);
-        ctx.lineTo(dx - dw * 0.3, dy + 3 * s);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "#4A3828";
-        ctx.beginPath();
-        ctx.moveTo(dx - dw * 0.55, dy);
-        ctx.lineTo(dx - dw * 0.55, dy - dh - dw * 0.25);
-        ctx.lineTo(dx + dw * 0.55, dy - dh - dw * 0.25);
-        ctx.lineTo(dx + dw * 0.55, dy);
-        ctx.closePath();
-        ctx.fill();
-        const dG = ctx.createLinearGradient(
-          dx - dw * 0.5,
-          dy,
-          dx + dw * 0.5,
-          dy,
-        );
-        dG.addColorStop(0, "#3A2210");
-        dG.addColorStop(0.35, "#4A3220");
-        dG.addColorStop(0.65, "#3A2210");
-        dG.addColorStop(1, "#2A1808");
-        ctx.fillStyle = dG;
-        ctx.beginPath();
-        ctx.moveTo(dx - dw * 0.5, dy);
-        ctx.lineTo(dx - dw * 0.5, dy - dh);
-        ctx.arc(dx, dy - dh, dw * 0.5, Math.PI, 0);
-        ctx.lineTo(dx + dw * 0.5, dy);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#5A4A35";
-        ctx.lineWidth = 0.6 * s;
-        ctx.beginPath();
-        ctx.moveTo(dx - dw * 0.5, dy - dh * 0.33);
-        ctx.lineTo(dx + dw * 0.5, dy - dh * 0.33);
-        ctx.moveTo(dx - dw * 0.5, dy - dh * 0.66);
-        ctx.lineTo(dx + dw * 0.5, dy - dh * 0.66);
-        ctx.stroke();
-        ctx.fillStyle = "#C8A860";
-        ctx.beginPath();
-        ctx.arc(dx + dw * 0.22, dy - dh * 0.45, 1 * s, 0, Math.PI * 2);
-        ctx.fill();
-      };
 
       const hutRoof = (
         peakY: number,
@@ -1955,14 +2165,42 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           }
         }
 
-        // Door
-        hutDoor(cx + iW * 0.35, cy + iD * 0.35, 7 * s, 14 * s);
+        // Door — isometric flush with right wall face
+        drawIsoFlushDoor(
+          ctx,
+          cx + iW * 0.35,
+          cy + iD * 0.35 - 7 * s,
+          7,
+          14,
+          "right",
+          s,
+        );
 
         // Windows — isometric gothic flush with walls
-        drawIsoGothicWindow(ctx, cx + iW * 0.72, cy - wH * 0.4 + iD * 0.15, 5, 8, "right", s,
-          "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
-        drawIsoGothicWindow(ctx, cx - iW * 0.5, cy - wH * 0.45, 4.5, 7.5, "left", s,
-          "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+        drawIsoGothicWindow(
+          ctx,
+          cx + iW * 0.72,
+          cy - wH * 0.4 + iD * 0.15,
+          5,
+          8,
+          "right",
+          s,
+          "rgba(255, 200, 100",
+          0.35,
+          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+        );
+        drawIsoGothicWindow(
+          ctx,
+          cx - iW * 0.5,
+          cy - wH * 0.45,
+          4.5,
+          7.5,
+          "left",
+          s,
+          "rgba(255, 200, 100",
+          0.3,
+          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+        );
 
         // Roof
         hutRoof(
@@ -2045,7 +2283,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
             const jy = ly + (ry - ly) * ct;
             ctx.beginPath();
             ctx.moveTo(jx, jy);
-            ctx.lineTo(jx, jy - tH / 12 * 0.8);
+            ctx.lineTo(jx, jy - (tH / 12) * 0.8);
             ctx.stroke();
           }
         }
@@ -2073,26 +2311,61 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         }
 
-        // Door
-        hutDoor(cx + tiW * 0.4, cy + tiD * 0.25, 5 * s, 11 * s);
+        // Door — isometric flush with right wall face
+        drawIsoFlushDoor(
+          ctx,
+          cx + tiW * 0.4,
+          cy + tiD * 0.25 - 5.5 * s,
+          5,
+          11,
+          "right",
+          s,
+        );
 
         // Isometric arrow slits on right wall (properly skewed)
         for (let w = 0; w < 3; w++) {
           const slitT = 0.2 + w * 0.25;
           const slitCX = cx + tiW * 0.55;
           const slitCY = cy - tH * slitT + tiD * (0.5 - slitT * 0.5);
-          drawIsoGothicWindow(ctx, slitCX, slitCY, 2, 5, "right", s,
-            "rgba(200, 150, 70", 0.25,
-            { frame: "#2a2018", void: "#1A1008", sill: "#4a3a2a" });
+          drawIsoGothicWindow(
+            ctx,
+            slitCX,
+            slitCY,
+            2,
+            5,
+            "right",
+            s,
+            "rgba(200, 150, 70",
+            0.25,
+            { frame: "#2a2018", void: "#1A1008", sill: "#4a3a2a" },
+          );
         }
 
         // Left wall window — proper isometric gothic window
-        drawIsoGothicWindow(ctx, cx - tiW * 0.5, cy - tH * 0.55, 5, 8, "left", s,
-          "rgba(255, 200, 100", 0.35);
+        drawIsoGothicWindow(
+          ctx,
+          cx - tiW * 0.5,
+          cy - tH * 0.55,
+          5,
+          8,
+          "left",
+          s,
+          "rgba(255, 200, 100",
+          0.35,
+        );
 
         // Second left wall window (lower)
-        drawIsoGothicWindow(ctx, cx - tiW * 0.5, cy - tH * 0.3, 4, 6, "left", s,
-          "rgba(255, 180, 80", 0.25);
+        drawIsoGothicWindow(
+          ctx,
+          cx - tiW * 0.5,
+          cy - tH * 0.3,
+          4,
+          6,
+          "left",
+          s,
+          "rgba(255, 180, 80",
+          0.25,
+        );
 
         // Battlements top
         const batBase = cy - tH;
@@ -2290,23 +2563,44 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#B03030";
         ctx.beginPath();
         ctx.moveTo(cx + 1 * s, pk - 12 * s);
-        ctx.quadraticCurveTo(cx + 5 * s + fWave, pk - 10 * s, cx + 8 * s, pk - 9 * s + fWave * 0.5);
+        ctx.quadraticCurveTo(
+          cx + 5 * s + fWave,
+          pk - 10 * s,
+          cx + 8 * s,
+          pk - 9 * s + fWave * 0.5,
+        );
         ctx.lineTo(cx + 8 * s, pk - 5 * s + fWave * 0.5);
-        ctx.quadraticCurveTo(cx + 5 * s + fWave * 0.5, pk - 6 * s, cx + 1 * s, pk - 8 * s);
+        ctx.quadraticCurveTo(
+          cx + 5 * s + fWave * 0.5,
+          pk - 6 * s,
+          cx + 1 * s,
+          pk - 8 * s,
+        );
         ctx.closePath();
         ctx.fill();
         // Banner stripe
         ctx.fillStyle = "#D8A838";
         ctx.beginPath();
         ctx.moveTo(cx + 1 * s, pk - 10 * s);
-        ctx.quadraticCurveTo(cx + 5 * s + fWave * 0.8, pk - 8.5 * s, cx + 8 * s, pk - 7.5 * s + fWave * 0.5);
+        ctx.quadraticCurveTo(
+          cx + 5 * s + fWave * 0.8,
+          pk - 8.5 * s,
+          cx + 8 * s,
+          pk - 7.5 * s + fWave * 0.5,
+        );
         ctx.lineTo(cx + 8 * s, pk - 6.5 * s + fWave * 0.5);
-        ctx.quadraticCurveTo(cx + 5 * s + fWave * 0.6, pk - 7.5 * s, cx + 1 * s, pk - 9 * s);
+        ctx.quadraticCurveTo(
+          cx + 5 * s + fWave * 0.6,
+          pk - 7.5 * s,
+          cx + 1 * s,
+          pk - 9 * s,
+        );
         ctx.closePath();
         ctx.fill();
 
         // Brazier on battlements
-        const brx = cx - tiW * 0.3, bry = batBase - batH;
+        const brx = cx - tiW * 0.3,
+          bry = batBase - batH;
         ctx.fillStyle = "#4A3A2A";
         ctx.beginPath();
         ctx.moveTo(brx - 2.5 * s, bry);
@@ -2326,7 +2620,14 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.ellipse(brx, bry - 6 * s, 1.2 * s, 2 * s, 0, 0, Math.PI * 2);
         ctx.fill();
         // Fire glow on surroundings
-        const fireGlowG = ctx.createRadialGradient(brx, bry - 5 * s, 0, brx, bry - 5 * s, 10 * s);
+        const fireGlowG = ctx.createRadialGradient(
+          brx,
+          bry - 5 * s,
+          0,
+          brx,
+          bry - 5 * s,
+          10 * s,
+        );
         fireGlowG.addColorStop(0, `rgba(255,150,50,${firePulse * 0.12})`);
         fireGlowG.addColorStop(1, "rgba(255,150,50,0)");
         ctx.fillStyle = fireGlowG;
@@ -2465,18 +2766,46 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineTo(cx - 2 * s, cy + iD - wH);
         ctx.stroke();
 
-        // Door
-        hutDoor(cx + iW * 0.2, cy + iD * 0.7, 8 * s, 15 * s);
+        // Door — isometric flush with right wall face
+        drawIsoFlushDoor(
+          ctx,
+          cx + iW * 0.2,
+          cy + iD * 0.7 - 7.5 * s,
+          8,
+          15,
+          "right",
+          s,
+        );
 
         // Windows — isometric gothic flush with walls
         for (let wi = 0; wi < 3; wi++) {
           const wwx = cx + iW * (0.15 + wi * 0.32);
           const wwy = cy + iD * (0.65 - wi * 0.32) - wH * 0.58;
-          drawIsoGothicWindow(ctx, wwx, wwy, 4.5, 7, "right", s,
-            "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+          drawIsoGothicWindow(
+            ctx,
+            wwx,
+            wwy,
+            4.5,
+            7,
+            "right",
+            s,
+            "rgba(255, 200, 100",
+            0.3,
+            { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+          );
         }
-        drawIsoGothicWindow(ctx, cx - iW * 0.55, cy - wH * 0.6, 5, 8, "left", s,
-          "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+        drawIsoGothicWindow(
+          ctx,
+          cx - iW * 0.55,
+          cy - wH * 0.6,
+          5,
+          8,
+          "left",
+          s,
+          "rgba(255, 200, 100",
+          0.35,
+          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+        );
 
         // Roof
         hutRoof(
@@ -2639,19 +2968,42 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.ellipse(cx, cy - hH, hR, hR * 0.42, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Door
-        hutDoor(
+        // Door — isometric flush with right wall face
+        drawIsoFlushDoor(
+          ctx,
           cx + Math.cos(0.35) * hR * 0.72,
-          cy + Math.sin(0.35) * hR * 0.3,
-          6 * s,
-          12 * s,
+          cy + Math.sin(0.35) * hR * 0.3 - 6 * s,
+          6,
+          12,
+          "right",
+          s,
         );
 
         // Windows — isometric gothic flush with curved wall
-        drawIsoGothicWindow(ctx, cx - hR * 0.62, cy - hH * 0.45, 4.5, 7, "left", s,
-          "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
-        drawIsoGothicWindow(ctx, cx + hR * 0.12, cy - hH * 0.5 + hR * 0.1, 3.5, 6, "right", s,
-          "rgba(255, 200, 100", 0.25, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+        drawIsoGothicWindow(
+          ctx,
+          cx - hR * 0.62,
+          cy - hH * 0.45,
+          4.5,
+          7,
+          "left",
+          s,
+          "rgba(255, 200, 100",
+          0.3,
+          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+        );
+        drawIsoGothicWindow(
+          ctx,
+          cx + hR * 0.12,
+          cy - hH * 0.5 + hR * 0.1,
+          3.5,
+          6,
+          "right",
+          s,
+          "rgba(255, 200, 100",
+          0.25,
+          { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" },
+        );
 
         // Thatched roof — single gradient fill, zero internal edges
         const roofBase = cy - hH;
@@ -2831,57 +3183,584 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.fill();
       break;
-    case "sword":
-      ctx.save();
-      ctx.translate(screenPos.x, screenPos.y);
-      ctx.rotate(rotation);
-      ctx.fillStyle = "#9e9e9e";
+    case "sword": {
+      const swX = screenPos.x;
+      const swY = screenPos.y;
+      const swSeed = decorX * 73 + decorY * 137;
+      const swHash = (n: number) => {
+        const h = Math.sin(swSeed * 0.1 + n * 2.654) * 43758.5453;
+        return h - Math.floor(h);
+      };
+
+      // 1-3 swords in a cluster
+      const swCount = 1 + Math.floor(swHash(0) * 2.99);
+      const swSpread = swCount > 1 ? 6 + swCount * 2 : 0;
+
+      // Cluster ground shadow
+      const swShadR = 10 + swSpread;
+      const swShadG = ctx.createRadialGradient(
+        swX + 2 * s, swY + 4 * s, 0,
+        swX + 2 * s, swY + 4 * s, swShadR * s,
+      );
+      swShadG.addColorStop(0, "rgba(0,0,0,0.25)");
+      swShadG.addColorStop(0.5, "rgba(0,0,0,0.08)");
+      swShadG.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = swShadG;
       ctx.beginPath();
-      ctx.moveTo(0, -20 * s);
-      ctx.lineTo(3 * s, -5 * s);
-      ctx.lineTo(3 * s, 8 * s);
-      ctx.lineTo(-3 * s, 8 * s);
-      ctx.lineTo(-3 * s, -5 * s);
-      ctx.closePath();
+      ctx.ellipse(swX + 2 * s, swY + 4 * s, swShadR * s, swShadR * 0.4 * s, 0.15, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#5d4037";
-      ctx.fillRect(-8 * s, 6 * s, 16 * s, 4 * s);
-      ctx.fillStyle = "#3e2723";
-      ctx.fillRect(-2 * s, 10 * s, 4 * s, 10 * s);
-      ctx.restore();
+
+      // Sword style definitions
+      const swStyles = [
+        { bW: 3.5, gW: 9, gripLen: 10, gemCol: "#c62828", bladeTint: 0 },
+        { bW: 4.5, gW: 10, gripLen: 9, gemCol: "#1565c0", bladeTint: 1 },
+        { bW: 2.5, gW: 7, gripLen: 12, gemCol: "#2e7d32", bladeTint: 2 },
+        { bW: 3, gW: 8, gripLen: 8, gemCol: "#ff8f00", bladeTint: 0 },
+        { bW: 5, gW: 6, gripLen: 9, gemCol: "#6a1b9a", bladeTint: 1 },
+      ];
+
+      // Blade tint palettes
+      const bladePalettes = [
+        { dark: "#707880", mid: "#b8c0c8", lit: "#e0e4e8", hi: "#f0f2f5" },
+        { dark: "#505058", mid: "#808890", lit: "#b0b8c0", hi: "#d0d4d8" },
+        { dark: "#7a6848", mid: "#b8a878", lit: "#d8c898", hi: "#e8daa8" },
+      ];
+
+      // Excalibur-style: blade goes INTO ground, pommel sticks UP
+      // Local coords: y=0 is ground level, negative Y = above ground, positive Y = below ground
+      const drawExcaliburSword = (
+        ox: number, oy: number, tiltAng: number,
+        sc: number, styleIdx: number,
+      ) => {
+        const sty = swStyles[styleIdx % swStyles.length];
+        const pal = bladePalettes[sty.bladeTint];
+        const bW = sty.bW * sc;
+        const gW = sty.gW * sc;
+        const gripLen = sty.gripLen * sc;
+
+        // How much blade is visible above ground (just a sliver)
+        const visibleBlade = 6 * sc;
+
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.rotate(tiltAng);
+
+        // === VISIBLE BLADE STUB above ground ===
+        const blG = ctx.createLinearGradient(-bW * s, 0, bW * s, 0);
+        blG.addColorStop(0, pal.dark);
+        blG.addColorStop(0.25, pal.mid);
+        blG.addColorStop(0.45, pal.lit);
+        blG.addColorStop(0.55, pal.hi);
+        blG.addColorStop(0.75, pal.mid);
+        blG.addColorStop(1, pal.dark);
+
+        ctx.fillStyle = blG;
+        ctx.beginPath();
+        ctx.moveTo(-bW * 0.7 * s, 0);
+        ctx.lineTo(-bW * s, -visibleBlade * s);
+        ctx.lineTo(bW * s, -visibleBlade * s);
+        ctx.lineTo(bW * 0.7 * s, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fuller on visible blade
+        ctx.strokeStyle = "rgba(40,45,55,0.3)";
+        ctx.lineWidth = 0.8 * sc * s;
+        ctx.beginPath();
+        ctx.moveTo(0, -1 * sc * s);
+        ctx.lineTo(0, -visibleBlade * s);
+        ctx.stroke();
+        ctx.strokeStyle = `rgba(${sty.bladeTint === 2 ? "200,190,150" : "180,190,200"},0.2)`;
+        ctx.lineWidth = 0.3 * sc * s;
+        ctx.beginPath();
+        ctx.moveTo(0.3 * sc * s, -1.5 * sc * s);
+        ctx.lineTo(0.3 * sc * s, -(visibleBlade - 0.5) * s);
+        ctx.stroke();
+
+        // Blade edge highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.lineWidth = 0.4 * sc * s;
+        ctx.beginPath();
+        ctx.moveTo(-bW * 0.85 * s, -1 * sc * s);
+        ctx.lineTo(-bW * 0.95 * s, -visibleBlade * s);
+        ctx.stroke();
+
+        // Blade outline
+        ctx.strokeStyle = "rgba(30,35,45,0.3)";
+        ctx.lineWidth = 0.35 * sc * s;
+        ctx.beginPath();
+        ctx.moveTo(-bW * 0.7 * s, 0);
+        ctx.lineTo(-bW * s, -visibleBlade * s);
+        ctx.lineTo(bW * s, -visibleBlade * s);
+        ctx.lineTo(bW * 0.7 * s, 0);
+        ctx.stroke();
+
+        // === CROSS-GUARD ===
+        const guardY = -(visibleBlade + 1) * sc * s;
+        const guardH = 3 * sc;
+        const guardGr = ctx.createLinearGradient(-gW * s, guardY, gW * s, guardY);
+        guardGr.addColorStop(0, "#4a3a28");
+        guardGr.addColorStop(0.3, "#8a7a60");
+        guardGr.addColorStop(0.5, "#a09070");
+        guardGr.addColorStop(0.7, "#8a7a60");
+        guardGr.addColorStop(1, "#4a3a28");
+
+        // Guard front face
+        ctx.fillStyle = guardGr;
+        ctx.beginPath();
+        ctx.moveTo(-gW * s, guardY);
+        ctx.lineTo(gW * s, guardY);
+        ctx.quadraticCurveTo((gW + 1) * s, guardY + guardH * 0.5 * s, gW * s, guardY + guardH * s);
+        ctx.lineTo(-gW * s, guardY + guardH * s);
+        ctx.quadraticCurveTo(-(gW + 1) * s, guardY + guardH * 0.5 * s, -gW * s, guardY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Guard top face
+        ctx.fillStyle = "#b0a080";
+        ctx.beginPath();
+        ctx.moveTo(-gW * s, guardY);
+        ctx.lineTo((-gW + 1) * s, guardY - 1 * sc * s);
+        ctx.lineTo((gW + 1) * s, guardY - 1 * sc * s);
+        ctx.lineTo(gW * s, guardY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Guard end caps
+        ctx.fillStyle = "#6a5a40";
+        ctx.beginPath();
+        ctx.ellipse(-gW * s, guardY + guardH * 0.5 * s, 1.3 * sc * s, 1.8 * sc * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#7a6a50";
+        ctx.beginPath();
+        ctx.ellipse(gW * s, guardY + guardH * 0.5 * s, 1.3 * sc * s, 1.8 * sc * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // === GRIP — leather-wrapped handle extending upward ===
+        const gripTop = guardY - 1 * sc * s;
+        const gripBottom = gripTop - gripLen * s;
+
+        const grpG = ctx.createLinearGradient(-2 * sc * s, gripTop, 2 * sc * s, gripTop);
+        grpG.addColorStop(0, "#3a2415");
+        grpG.addColorStop(0.4, "#5a3d25");
+        grpG.addColorStop(0.6, "#6a4d30");
+        grpG.addColorStop(1, "#3a2415");
+        ctx.fillStyle = grpG;
+        ctx.beginPath();
+        ctx.moveTo(-2 * sc * s, gripTop);
+        ctx.lineTo(2 * sc * s, gripTop);
+        ctx.lineTo(1.6 * sc * s, gripBottom);
+        ctx.lineTo(-1.6 * sc * s, gripBottom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Leather wrapping
+        ctx.strokeStyle = "rgba(25,15,8,0.3)";
+        ctx.lineWidth = 0.4 * sc * s;
+        const wrapCount = Math.floor(gripLen / 2.2);
+        for (let lw = 0; lw < wrapCount; lw++) {
+          const lwY = gripTop - (1.5 + lw * 2.2) * sc * s;
+          ctx.beginPath();
+          ctx.moveTo(-1.8 * sc * s, lwY);
+          ctx.lineTo(1.8 * sc * s, lwY - 0.8 * sc * s);
+          ctx.stroke();
+        }
+
+        // === POMMEL at the very top ===
+        const pomY = gripBottom - 1 * sc * s;
+        const pmG = ctx.createRadialGradient(
+          0.3 * sc * s, pomY + 0.5 * sc * s, 0.3 * sc * s,
+          0, pomY, 3 * sc * s,
+        );
+        pmG.addColorStop(0, "#c0a878");
+        pmG.addColorStop(0.5, "#8a7a55");
+        pmG.addColorStop(1, "#4a3a28");
+        ctx.fillStyle = pmG;
+        ctx.beginPath();
+        ctx.ellipse(0, pomY, 2.8 * sc * s, 2.2 * sc * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gem on pommel
+        const gmG = ctx.createRadialGradient(
+          0.2 * sc * s, pomY + 0.3 * sc * s, 0.1 * sc * s,
+          0, pomY, 1.3 * sc * s,
+        );
+        gmG.addColorStop(0, "#ffffff");
+        gmG.addColorStop(0.3, sty.gemCol);
+        gmG.addColorStop(1, "#1a1a1a");
+        ctx.fillStyle = gmG;
+        ctx.beginPath();
+        ctx.ellipse(0, pomY, 1.3 * sc * s, 1 * sc * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pommel outline
+        ctx.strokeStyle = "rgba(40,30,20,0.4)";
+        ctx.lineWidth = 0.35 * sc * s;
+        ctx.beginPath();
+        ctx.ellipse(0, pomY, 2.8 * sc * s, 2.2 * sc * s, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+      };
+
+      // Disturbed ground / dirt mound at base of cluster
+      if (swCount > 1) {
+        ctx.fillStyle = "rgba(70,58,40,0.22)";
+        ctx.beginPath();
+        ctx.ellipse(swX, swY + 3 * s, (5 + swCount * 2) * s, (2.5 + swCount) * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Generate each sword in the cluster
+      for (let si = 0; si < swCount; si++) {
+        const h1 = swHash(si * 7 + 1);
+        const h2 = swHash(si * 7 + 2);
+        const h3 = swHash(si * 7 + 3);
+        const h4 = swHash(si * 7 + 4);
+        const h5 = swHash(si * 7 + 5);
+
+        // Spread positions — fan out from center
+        const sAng = (si / swCount) * Math.PI * 1.4 - 0.7 + (h1 - 0.5) * 0.5;
+        const dist = swCount === 1 ? 0 : (3 + h2 * swSpread * 0.5);
+        const ox = swX + Math.cos(sAng) * dist * s;
+        const oy = swY + Math.sin(sAng) * dist * ISO_Y_RATIO * s;
+
+        // Tilt angle — dramatic lean, ±15° to ±35°
+        const tiltDir = h3 < 0.5 ? -1 : 1;
+        const tilt = tiltDir * (0.25 + h4 * 0.35);
+
+        // Scale variation — 0.75 to 1.15
+        const sc = 0.75 + h4 * 0.4;
+
+        // Style index
+        const styleIdx = Math.floor(h5 * swStyles.length);
+
+        // Ground insertion — draw BEFORE sword so sword overlaps
+        // Cracked ground / disturbed earth at insertion
+        ctx.fillStyle = "rgba(55,45,30,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 1 * s, 5 * sc * s, 2.5 * sc * s, tilt * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(40,32,20,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 1.5 * s, 3.5 * sc * s, 1.5 * sc * s, tilt * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Small radial cracks emanating from insertion point
+        ctx.strokeStyle = "rgba(50,40,28,0.2)";
+        ctx.lineWidth = 0.5 * s;
+        for (let cr = 0; cr < 4; cr++) {
+          const crAng = (cr / 4) * Math.PI * 2 + swHash(si * 5 + cr + 50) * 0.8;
+          const crLen = (3 + swHash(si * 5 + cr + 55) * 4) * sc;
+          ctx.beginPath();
+          ctx.moveTo(ox, oy + 1 * s);
+          ctx.lineTo(
+            ox + Math.cos(crAng) * crLen * s,
+            oy + 1 * s + Math.sin(crAng) * crLen * 0.4 * s,
+          );
+          ctx.stroke();
+        }
+
+        // Tiny dirt clumps pushed up around insertion
+        ctx.fillStyle = "rgba(75,62,42,0.25)";
+        for (let dc = 0; dc < 3; dc++) {
+          const dcAng = (dc / 3) * Math.PI * 2 + swHash(si * 3 + dc + 60);
+          const dcR = (3 + swHash(si * 3 + dc + 63)) * sc;
+          ctx.beginPath();
+          ctx.ellipse(
+            ox + Math.cos(dcAng) * dcR * s,
+            oy + 1.5 * s + Math.sin(dcAng) * dcR * 0.35 * s,
+            (0.8 + swHash(si * 3 + dc + 66) * 0.6) * s,
+            (0.4 + swHash(si * 3 + dc + 66) * 0.3) * s,
+            dcAng * 0.3, 0, Math.PI * 2,
+          );
+          ctx.fill();
+        }
+
+        drawExcaliburSword(ox, oy, tilt, sc, styleIdx);
+      }
       break;
-    case "arrow":
-      ctx.save();
-      ctx.translate(screenPos.x, screenPos.y);
-      ctx.rotate(rotation);
-      ctx.strokeStyle = "#5d4037";
-      ctx.lineWidth = 2 * s;
+    }
+    case "arrow": {
+      const arX = screenPos.x;
+      const arY = screenPos.y;
+      const arSeed = decorX * 59 + decorY * 113;
+      const arHash = (n: number) => {
+        const h = Math.sin(arSeed * 0.1 + n * 3.217) * 43758.5453;
+        return h - Math.floor(h);
+      };
+
+      // 2-6 arrows in a cluster
+      const arCount = 2 + Math.floor(arHash(0) * 4.99);
+      const arSpread = 5 + arCount * 2.5;
+
+      // Cluster ground shadow — wider for bigger groups
+      const arShadR = 10 + arSpread;
+      const arShadG = ctx.createRadialGradient(
+        arX + 1 * s, arY + 3 * s, 0,
+        arX + 1 * s, arY + 3 * s, arShadR * s,
+      );
+      arShadG.addColorStop(0, "rgba(0,0,0,0.2)");
+      arShadG.addColorStop(0.5, "rgba(0,0,0,0.06)");
+      arShadG.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = arShadG;
       ctx.beginPath();
-      ctx.moveTo(-12 * s, 0);
-      ctx.lineTo(12 * s, 0);
-      ctx.stroke();
-      ctx.fillStyle = "#757575";
-      ctx.beginPath();
-      ctx.moveTo(12 * s, 0);
-      ctx.lineTo(8 * s, -3 * s);
-      ctx.lineTo(8 * s, 3 * s);
-      ctx.closePath();
+      ctx.ellipse(arX + 1 * s, arY + 3 * s, arShadR * s, arShadR * 0.4 * s, 0.12, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#8d6e63";
-      ctx.beginPath();
-      ctx.moveTo(-12 * s, 0);
-      ctx.lineTo(-8 * s, -4 * s);
-      ctx.lineTo(-8 * s, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(-12 * s, 0);
-      ctx.lineTo(-8 * s, 4 * s);
-      ctx.lineTo(-8 * s, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
+
+      // Disturbed ground at base of cluster
+      if (arCount > 2) {
+        ctx.fillStyle = "rgba(65,55,38,0.18)";
+        ctx.beginPath();
+        ctx.ellipse(arX, arY + 2 * s, (4 + arCount * 1.5) * s, (2 + arCount * 0.6) * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Arrowhead shape variants
+      const headShapes = ["broadhead", "bodkin", "barbed", "leaf"];
+
+      // Fletching color palettes
+      const fletchPalettes = [
+        ["#c62828", "#8b1c1c"],
+        ["#e0e0e0", "#9e9e9e"],
+        ["#2e7d32", "#1b5e20"],
+        ["#1565c0", "#0d47a1"],
+        ["#ff8f00", "#e65100"],
+        ["#6a1b9a", "#4a148c"],
+      ];
+
+      // Shaft wood tones
+      const shaftTones = [
+        { dark: "#4a3020", mid: "#6a4a35", lit: "#8a6a50", hi: "#a08060" },
+        { dark: "#3a2818", mid: "#5a4030", lit: "#7a5a42", hi: "#9a7a5a" },
+        { dark: "#554030", mid: "#755a48", lit: "#957a60", hi: "#b09a78" },
+      ];
+
+      const drawSingleArrow = (
+        ox: number, oy: number, tiltAng: number,
+        len: number, sc: number,
+        headType: string, broken: boolean,
+        shaftTone: typeof shaftTones[0],
+        fletchCol: string[],
+      ) => {
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.rotate(tiltAng);
+
+        const visLen = broken ? len * (0.35 + arHash(77) * 0.3) : len;
+
+        // Shaft shadow
+        ctx.strokeStyle = shaftTone.dark;
+        ctx.lineWidth = 2 * sc * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(0, 2 * sc * s);
+        ctx.lineTo(0, -visLen * sc * s);
+        ctx.stroke();
+
+        // Main shaft
+        const shG = ctx.createLinearGradient(-1 * sc * s, 0, 1 * sc * s, 0);
+        shG.addColorStop(0, shaftTone.dark);
+        shG.addColorStop(0.3, shaftTone.mid);
+        shG.addColorStop(0.5, shaftTone.lit);
+        shG.addColorStop(0.7, shaftTone.mid);
+        shG.addColorStop(1, shaftTone.dark);
+        ctx.strokeStyle = shG;
+        ctx.lineWidth = 1.4 * sc * s;
+        ctx.beginPath();
+        ctx.moveTo(0, 2 * sc * s);
+        ctx.lineTo(0, -visLen * sc * s);
+        ctx.stroke();
+
+        // Shaft highlight
+        ctx.strokeStyle = `rgba(${shaftTone.hi === "#a08060" ? "160,128,96" : shaftTone.hi === "#9a7a5a" ? "154,122,90" : "176,154,120"},0.25)`;
+        ctx.lineWidth = 0.35 * sc * s;
+        ctx.beginPath();
+        ctx.moveTo(-0.25 * sc * s, 1 * sc * s);
+        ctx.lineTo(-0.25 * sc * s, -(visLen - 1) * sc * s);
+        ctx.stroke();
+
+        if (broken) {
+          // Splintered break at top
+          ctx.strokeStyle = shaftTone.lit;
+          ctx.lineWidth = 0.5 * sc * s;
+          const brkY = -visLen * sc * s;
+          ctx.beginPath();
+          ctx.moveTo(-0.6 * sc * s, brkY);
+          ctx.lineTo(-0.3 * sc * s, brkY - 1.5 * sc * s);
+          ctx.moveTo(0.2 * sc * s, brkY);
+          ctx.lineTo(0.5 * sc * s, brkY - 1 * sc * s);
+          ctx.moveTo(-0.1 * sc * s, brkY);
+          ctx.lineTo(0, brkY - 2 * sc * s);
+          ctx.stroke();
+        }
+
+        if (!broken) {
+          // Arrowhead
+          const hY = -visLen * sc * s;
+          const hW = (headType === "broadhead" ? 3 : headType === "leaf" ? 2.5 : headType === "barbed" ? 2.8 : 1.5) * sc;
+          const hL = (headType === "bodkin" ? 6 : headType === "leaf" ? 4.5 : 5) * sc;
+
+          const hdG = ctx.createLinearGradient(-hW * s, hY, hW * s, hY);
+          hdG.addColorStop(0, "#555e68");
+          hdG.addColorStop(0.3, "#98a0a8");
+          hdG.addColorStop(0.5, "#c0c8d0");
+          hdG.addColorStop(0.7, "#98a0a8");
+          hdG.addColorStop(1, "#454e58");
+          ctx.fillStyle = hdG;
+
+          ctx.beginPath();
+          if (headType === "broadhead") {
+            ctx.moveTo(0, hY - hL * s);
+            ctx.lineTo(hW * s, hY + 0.5 * sc * s);
+            ctx.lineTo(hW * 0.5 * s, hY);
+            ctx.lineTo(0, hY + 1 * sc * s);
+            ctx.lineTo(-hW * 0.5 * s, hY);
+            ctx.lineTo(-hW * s, hY + 0.5 * sc * s);
+          } else if (headType === "bodkin") {
+            ctx.moveTo(0, hY - hL * s);
+            ctx.lineTo(hW * 0.8 * s, hY + 0.5 * sc * s);
+            ctx.lineTo(0, hY + 1 * sc * s);
+            ctx.lineTo(-hW * 0.8 * s, hY + 0.5 * sc * s);
+          } else if (headType === "barbed") {
+            ctx.moveTo(0, hY - hL * s);
+            ctx.lineTo(hW * s, hY - 1 * sc * s);
+            ctx.lineTo(hW * 0.5 * s, hY + 0.8 * sc * s);
+            ctx.lineTo(hW * 0.8 * s, hY + 1.5 * sc * s);
+            ctx.lineTo(0, hY + 1 * sc * s);
+            ctx.lineTo(-hW * 0.8 * s, hY + 1.5 * sc * s);
+            ctx.lineTo(-hW * 0.5 * s, hY + 0.8 * sc * s);
+            ctx.lineTo(-hW * s, hY - 1 * sc * s);
+          } else {
+            ctx.moveTo(0, hY - hL * s);
+            ctx.quadraticCurveTo(hW * 1.2 * s, hY - hL * 0.3 * s, hW * 0.8 * s, hY + 0.5 * sc * s);
+            ctx.lineTo(0, hY + 1 * sc * s);
+            ctx.lineTo(-hW * 0.8 * s, hY + 0.5 * sc * s);
+            ctx.quadraticCurveTo(-hW * 1.2 * s, hY - hL * 0.3 * s, 0, hY - hL * s);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Head outline
+          ctx.strokeStyle = "rgba(25,30,40,0.4)";
+          ctx.lineWidth = 0.35 * sc * s;
+          ctx.stroke();
+
+          // Center ridge
+          ctx.strokeStyle = "rgba(200,210,220,0.35)";
+          ctx.lineWidth = 0.3 * sc * s;
+          ctx.beginPath();
+          ctx.moveTo(0, hY - (hL - 0.5) * s);
+          ctx.lineTo(0, hY + 0.5 * sc * s);
+          ctx.stroke();
+        }
+
+        // Fletching — only if shaft is long enough to show it
+        if (visLen > 8) {
+          const flBase = 0;
+          const [fL, fD] = fletchCol;
+          for (let fv = 0; fv < 3; fv++) {
+            const fAng = (fv / 3) * Math.PI * 2;
+            const fx = Math.cos(fAng) * 2.2 * sc * s;
+            const fy = Math.sin(fAng) * 0.7 * sc * s;
+
+            ctx.fillStyle = fv < 2 ? fL : fD;
+            ctx.beginPath();
+            ctx.moveTo(fx * 0.15, (flBase - 0.8 * sc) * s + fy * 0.15);
+            ctx.quadraticCurveTo(
+              fx, (flBase + 1.8 * sc) * s + fy,
+              fx * 0.25, (flBase + 4.5 * sc) * s + fy * 0.25,
+            );
+            ctx.quadraticCurveTo(
+              0, (flBase + 2.5 * sc) * s,
+              fx * 0.15, (flBase - 0.8 * sc) * s + fy * 0.15,
+            );
+            ctx.fill();
+
+            // Feather spine
+            ctx.strokeStyle = "rgba(0,0,0,0.18)";
+            ctx.lineWidth = 0.25 * sc * s;
+            ctx.beginPath();
+            ctx.moveTo(fx * 0.12, (flBase - 0.3 * sc) * s + fy * 0.12);
+            ctx.lineTo(fx * 0.2, (flBase + 4 * sc) * s + fy * 0.2);
+            ctx.stroke();
+          }
+
+          // Nock at very bottom
+          ctx.fillStyle = shaftTone.dark;
+          ctx.beginPath();
+          ctx.ellipse(0, (flBase + 5 * sc) * s, 0.8 * sc * s, 0.5 * sc * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      };
+
+      // Generate each arrow in the cluster
+      for (let ai = 0; ai < arCount; ai++) {
+        const h1 = arHash(ai * 9 + 1);
+        const h2 = arHash(ai * 9 + 2);
+        const h3 = arHash(ai * 9 + 3);
+        const h4 = arHash(ai * 9 + 4);
+        const h5 = arHash(ai * 9 + 5);
+        const h6 = arHash(ai * 9 + 6);
+        const h7 = arHash(ai * 9 + 7);
+
+        // Fan positions around center — tight cluster
+        const ang = (ai / arCount) * Math.PI * 1.4 - 0.7 + (h1 - 0.5) * 0.5;
+        const dist = 2 + h2 * arSpread * 0.5;
+        const ox = arX + Math.cos(ang) * dist * s;
+        const oy = arY + Math.sin(ang) * dist * ISO_Y_RATIO * s;
+
+        // Tilt — steep angles (jabbed into ground), between 0.15 and 0.7 magnitude
+        const tiltDir = h3 < 0.5 ? -1 : 1;
+        const tilt = tiltDir * (0.15 + h4 * 0.55);
+
+        // Length 14-26
+        const len = 14 + h5 * 12;
+
+        // Scale 0.7-1.15
+        const sc = 0.7 + h6 * 0.45;
+
+        // Head shape
+        const headIdx = Math.floor(h7 * headShapes.length);
+        const headType = headShapes[headIdx];
+
+        // ~20% chance of being a broken shaft
+        const broken = h1 < 0.2;
+
+        // Shaft tone & fletching
+        const shaftTone = shaftTones[Math.floor(h2 * shaftTones.length)];
+        const fletchCol = fletchPalettes[Math.floor(h3 * fletchPalettes.length)];
+
+        drawSingleArrow(ox, oy, tilt, len, sc, headType, broken, shaftTone, fletchCol);
+
+        // Dirt ring at insertion
+        ctx.fillStyle = "rgba(55,45,30,0.28)";
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 2 * sc * s, 2.5 * sc * s, 1.2 * sc * s, tilt * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(40,32,20,0.15)";
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 2.5 * sc * s, 1.5 * sc * s, 0.7 * sc * s, tilt * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Scatter small dirt clods around cluster
+      ctx.fillStyle = "rgba(75,62,42,0.15)";
+      for (let cd = 0; cd < Math.min(arCount, 4); cd++) {
+        const ca = arHash(cd * 3 + 50) * Math.PI * 2;
+        const cr = (3 + arHash(cd * 3 + 51) * arSpread * 0.3) * s;
+        ctx.beginPath();
+        ctx.ellipse(
+          arX + Math.cos(ca) * cr, arY + Math.sin(ca) * cr * ISO_Y_RATIO + 2 * s,
+          (0.8 + arHash(cd * 3 + 52) * 0.8) * s, (0.4 + arHash(cd * 3 + 52) * 0.3) * s,
+          ca * 0.3, 0, Math.PI * 2,
+        );
+        ctx.fill();
+      }
       break;
+    }
     case "skeleton": {
       // Lying-down isometric skeleton — rotated along the ground plane
       // Uses ctx.rotate to orient the body along an isometric ground axis
@@ -4959,118 +5838,421 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
       } else {
-        // === ANCIENT WAYSTONE — runed stone pillar with magical glow ===
-        const stoneH = 24 * s;
-        const stoneW = 6 * s;
-        const stiW = stoneW * ISO_COS,
-          stiD = stoneW * 0.4;
+        // === ANCIENT WAYSTONE — imposing runed stone pillar with arcane glow ===
+        const wsHeight = 50 * s;
+        const wsBaseW = 11 * s;
+        const wsTopW = 7 * s;
 
-        // Base stones
-        ctx.fillStyle = "#546E7A";
+        const bw86 = wsBaseW * ISO_COS;
+        const tw86 = wsTopW * ISO_COS;
+        const bwIso = wsBaseW * ISO_SIN;
+        const twIso = wsTopW * ISO_SIN;
+
+        // Ground shadow
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
         ctx.beginPath();
-        ctx.ellipse(sx, sy + 1 * s, 8 * s, 3.5 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          sx + 4 * s,
+          sy + 6 * s,
+          20 * s,
+          9 * s,
+          0.15,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
 
-        // Pillar left face
-        ctx.fillStyle = "#455A64";
+        // Two-tier stepped stone pedestal
+        const wsPed1W = 14 * s;
+        const wsPed1H = 4 * s;
+        drawIsometricPrism(
+          ctx,
+          sx,
+          sy,
+          wsPed1W,
+          wsPed1W,
+          wsPed1H,
+          "#6B7B8A",
+          "#4A5A68",
+          "#5A6A78",
+        );
+        const wsPed2W = 12 * s;
+        const wsPed2H = 4 * s;
+        drawIsometricPrism(
+          ctx,
+          sx,
+          sy - wsPed1H,
+          wsPed2W,
+          wsPed2W,
+          wsPed2H,
+          "#7A8A9A",
+          "#546E7A",
+          "#607D8B",
+        );
+
+        const wsBase = sy - wsPed1H - wsPed2H;
+        const wsTop = wsBase - wsHeight;
+
+        // --- Main shaft: tapered isometric pillar (3 visible faces + top) ---
+
+        // Left face (shadow side)
+        const wsLG = ctx.createLinearGradient(
+          sx - bw86,
+          wsBase,
+          sx - tw86,
+          wsTop,
+        );
+        wsLG.addColorStop(0, "#455A64");
+        wsLG.addColorStop(0.5, "#4A6070");
+        wsLG.addColorStop(1, "#3E5260");
+        ctx.fillStyle = wsLG;
         ctx.beginPath();
-        ctx.moveTo(sx - stiW, sy);
-        ctx.lineTo(sx, sy + stiD);
-        ctx.lineTo(sx, sy + stiD - stoneH);
-        ctx.lineTo(sx - stiW * 0.85, sy - stoneH + 2 * s);
+        ctx.moveTo(sx - bw86, wsBase + bwIso);
+        ctx.lineTo(sx, wsBase + bwIso * 2);
+        ctx.lineTo(sx, wsTop + twIso * 2);
+        ctx.lineTo(sx - tw86, wsTop + twIso);
         ctx.closePath();
         ctx.fill();
 
-        // Pillar right face
-        const stG = ctx.createLinearGradient(sx, sy, sx + stiW, sy);
-        stG.addColorStop(0, "#607D8B");
-        stG.addColorStop(1, "#546E7A");
-        ctx.fillStyle = stG;
+        // Right face (lit side)
+        const wsRG = ctx.createLinearGradient(
+          sx + bw86,
+          wsBase,
+          sx + tw86,
+          wsTop,
+        );
+        wsRG.addColorStop(0, "#607D8B");
+        wsRG.addColorStop(0.5, "#6A8898");
+        wsRG.addColorStop(1, "#546E7A");
+        ctx.fillStyle = wsRG;
         ctx.beginPath();
-        ctx.moveTo(sx + stiW, sy);
-        ctx.lineTo(sx, sy + stiD);
-        ctx.lineTo(sx, sy + stiD - stoneH);
-        ctx.lineTo(sx + stiW * 0.85, sy - stoneH + 2 * s);
+        ctx.moveTo(sx + bw86, wsBase + bwIso);
+        ctx.lineTo(sx, wsBase + bwIso * 2);
+        ctx.lineTo(sx, wsTop + twIso * 2);
+        ctx.lineTo(sx + tw86, wsTop + twIso);
         ctx.closePath();
         ctx.fill();
 
-        // Pointed top
+        // Front face (viewer-facing)
+        const wsFG = ctx.createLinearGradient(
+          sx,
+          wsBase + bwIso,
+          sx,
+          wsTop + twIso,
+        );
+        wsFG.addColorStop(0, "#546E7A");
+        wsFG.addColorStop(0.5, "#5A7585");
+        wsFG.addColorStop(1, "#4E6575");
+        ctx.fillStyle = wsFG;
+        ctx.beginPath();
+        ctx.moveTo(sx - bw86, wsBase + bwIso);
+        ctx.lineTo(sx + bw86, wsBase + bwIso);
+        ctx.lineTo(sx + tw86, wsTop + twIso);
+        ctx.lineTo(sx - tw86, wsTop + twIso);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top diamond
         ctx.fillStyle = "#78909C";
         ctx.beginPath();
-        ctx.moveTo(sx, sy - stoneH - 5 * s);
-        ctx.lineTo(sx - stiW * 0.85, sy - stoneH + 2 * s);
-        ctx.lineTo(sx, sy + stiD - stoneH);
-        ctx.lineTo(sx + stiW * 0.85, sy - stoneH + 2 * s);
+        ctx.moveTo(sx, wsTop);
+        ctx.lineTo(sx + tw86, wsTop + twIso);
+        ctx.lineTo(sx, wsTop + twIso * 2);
+        ctx.lineTo(sx - tw86, wsTop + twIso);
         ctx.closePath();
         ctx.fill();
 
-        // Glowing runes on right face
-        const runeGlow = 0.4 + Math.sin(decorTime * 2) * 0.2;
-        ctx.strokeStyle = `rgba(200,160,80,${runeGlow})`;
-        ctx.lineWidth = 1.2 * s;
-        const runes = [
-          { y: 0.2, type: 0 },
-          { y: 0.4, type: 1 },
-          { y: 0.6, type: 2 },
-          { y: 0.8, type: 0 },
-        ];
-        for (const r of runes) {
-          const rx = sx + stiW * 0.45;
-          const ry = sy - stoneH * r.y;
-          if (r.type === 0) {
-            ctx.beginPath();
-            ctx.moveTo(rx - 1.5 * s, ry - 1.5 * s);
-            ctx.lineTo(rx, ry - 3 * s);
-            ctx.lineTo(rx + 1.5 * s, ry - 1.5 * s);
-            ctx.lineTo(rx, ry);
-            ctx.closePath();
-            ctx.stroke();
-          } else if (r.type === 1) {
-            ctx.beginPath();
-            ctx.arc(rx, ry - 1.5 * s, 1.5 * s, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(rx, ry - 3 * s);
-            ctx.lineTo(rx, ry);
-            ctx.stroke();
-          } else {
-            ctx.beginPath();
-            ctx.moveTo(rx - 2 * s, ry);
-            ctx.lineTo(rx, ry - 3 * s);
-            ctx.lineTo(rx + 2 * s, ry);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(rx - 1.5 * s, ry - 1.5 * s);
-            ctx.lineTo(rx + 1.5 * s, ry - 1.5 * s);
-            ctx.stroke();
-          }
+        // --- Stone course lines on front face ---
+        ctx.strokeStyle = "rgba(0,0,0,0.07)";
+        ctx.lineWidth = 0.5 * s;
+        const wsCRows = 7;
+        for (let cr = 1; cr < wsCRows; cr++) {
+          const ct = cr / wsCRows;
+          const clx = sx - (bw86 + (tw86 - bw86) * ct);
+          const crx = sx + (bw86 + (tw86 - bw86) * ct);
+          const cly =
+            wsBase + bwIso + (wsTop + twIso - wsBase - bwIso) * ct;
+          ctx.beginPath();
+          ctx.moveTo(clx, cly);
+          ctx.lineTo(crx, cly);
+          ctx.stroke();
         }
 
-        // Ambient glow around stone
-        const ambG = ctx.createRadialGradient(
-          sx,
-          sy - stoneH * 0.5,
-          0,
-          sx,
-          sy - stoneH * 0.5,
-          12 * s,
-        );
-        ambG.addColorStop(0, `rgba(200,160,80,${runeGlow * 0.15})`);
-        ambG.addColorStop(1, "rgba(200,160,80,0)");
-        ctx.fillStyle = ambG;
+        // Stone course lines on left face
+        for (let cr = 1; cr < wsCRows; cr++) {
+          const ct = cr / wsCRows;
+          const crW = bw86 + (tw86 - bw86) * ct;
+          const crI = bwIso + (twIso - bwIso) * ct;
+          const crY = wsBase + (wsTop - wsBase) * ct;
+          ctx.beginPath();
+          ctx.moveTo(sx - crW, crY + crI);
+          ctx.lineTo(sx, crY + crI * 2);
+          ctx.stroke();
+        }
+
+        // Stone course lines on right face
+        for (let cr = 1; cr < wsCRows; cr++) {
+          const ct = cr / wsCRows;
+          const crW = bw86 + (tw86 - bw86) * ct;
+          const crI = bwIso + (twIso - bwIso) * ct;
+          const crY = wsBase + (wsTop - wsBase) * ct;
+          ctx.beginPath();
+          ctx.moveTo(sx + crW, crY + crI);
+          ctx.lineTo(sx, crY + crI * 2);
+          ctx.stroke();
+        }
+
+        // --- Pyramidion pointed cap ---
+        const wsCTip = wsTop - 12 * s;
+
+        // Cap left face
+        ctx.fillStyle = "#4A6070";
         ctx.beginPath();
-        ctx.arc(sx, sy - stoneH * 0.5, 12 * s, 0, Math.PI * 2);
+        ctx.moveTo(sx, wsCTip);
+        ctx.lineTo(sx - tw86, wsTop + twIso);
+        ctx.lineTo(sx, wsTop + twIso * 2);
+        ctx.closePath();
         ctx.fill();
 
-        // Floating particles
-        for (let p = 0; p < 4; p++) {
-          const pPhase = decorTime + p * 1.5;
-          const ppx = sx + Math.sin(pPhase * 0.8) * 6 * s;
-          const ppy = sy - stoneH * 0.3 - (pPhase % 3) * 5 * s;
-          const pAlpha = 0.3 + Math.sin(pPhase * 2) * 0.2;
-          ctx.fillStyle = `rgba(200,170,100,${pAlpha})`;
+        // Cap right face
+        ctx.fillStyle = "#6A8898";
+        ctx.beginPath();
+        ctx.moveTo(sx, wsCTip);
+        ctx.lineTo(sx + tw86, wsTop + twIso);
+        ctx.lineTo(sx, wsTop + twIso * 2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cap front face
+        ctx.fillStyle = "#5A7888";
+        ctx.beginPath();
+        ctx.moveTo(sx, wsCTip);
+        ctx.lineTo(sx - tw86, wsTop + twIso);
+        ctx.lineTo(sx + tw86, wsTop + twIso);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cap highlight
+        ctx.fillStyle = "#90A4AE";
+        ctx.globalAlpha = 0.35;
+        ctx.beginPath();
+        ctx.moveTo(sx, wsCTip);
+        ctx.lineTo(sx + tw86 * 0.5, wsTop + twIso * 0.6);
+        ctx.lineTo(sx, wsTop + twIso);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // --- Edge highlights ---
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.lineWidth = s;
+        ctx.beginPath();
+        ctx.moveTo(sx, wsCTip);
+        ctx.lineTo(sx + tw86, wsTop + twIso);
+        ctx.lineTo(sx + bw86, wsBase + bwIso);
+        ctx.stroke();
+
+        ctx.strokeStyle = "rgba(255,255,255,0.06)";
+        ctx.beginPath();
+        ctx.moveTo(sx, wsCTip);
+        ctx.lineTo(sx - tw86, wsTop + twIso);
+        ctx.lineTo(sx - bw86, wsBase + bwIso);
+        ctx.stroke();
+
+        // --- Glowing Elder Futhark runes on front face ---
+        const wsRnGlow =
+          0.45 + Math.sin(decorTime * 2) * 0.25;
+        ctx.lineWidth = 1.3 * s;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = `rgba(220,180,80,${wsRnGlow})`;
+
+        const wsRuneSlots = [
+          { t: 0.15, rt: 0 },
+          { t: 0.38, rt: 1 },
+          { t: 0.58, rt: 2 },
+          { t: 0.78, rt: 3 },
+        ];
+
+        for (const rSlot of wsRuneSlots) {
+          const rfY =
+            wsBase +
+            bwIso +
+            (wsTop + twIso - wsBase - bwIso) * rSlot.t;
+          const rcx = sx;
+          const rcy = rfY;
+          const rs = 3.5 * s;
+
+          if (rSlot.rt === 0) {
+            // Tiwaz — upward arrow
+            ctx.beginPath();
+            ctx.moveTo(rcx, rcy + rs);
+            ctx.lineTo(rcx, rcy - rs);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rcx - rs * 0.65, rcy - rs * 0.25);
+            ctx.lineTo(rcx, rcy - rs);
+            ctx.lineTo(rcx + rs * 0.65, rcy - rs * 0.25);
+            ctx.stroke();
+          } else if (rSlot.rt === 1) {
+            // Othala — diamond with legs
+            ctx.beginPath();
+            ctx.moveTo(rcx, rcy - rs);
+            ctx.lineTo(rcx + rs * 0.6, rcy - rs * 0.2);
+            ctx.lineTo(rcx, rcy + rs * 0.4);
+            ctx.lineTo(rcx - rs * 0.6, rcy - rs * 0.2);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rcx - rs * 0.6, rcy - rs * 0.2);
+            ctx.lineTo(rcx - rs * 0.35, rcy + rs);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rcx + rs * 0.6, rcy - rs * 0.2);
+            ctx.lineTo(rcx + rs * 0.35, rcy + rs);
+            ctx.stroke();
+          } else if (rSlot.rt === 2) {
+            // Sowilo — lightning bolt
+            ctx.beginPath();
+            ctx.moveTo(rcx + rs * 0.4, rcy - rs);
+            ctx.lineTo(rcx - rs * 0.4, rcy - rs * 0.2);
+            ctx.lineTo(rcx + rs * 0.4, rcy + rs * 0.2);
+            ctx.lineTo(rcx - rs * 0.4, rcy + rs);
+            ctx.stroke();
+          } else {
+            // Algiz — branching Y
+            ctx.beginPath();
+            ctx.moveTo(rcx, rcy + rs);
+            ctx.lineTo(rcx, rcy - rs * 0.3);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rcx, rcy - rs * 0.3);
+            ctx.lineTo(rcx - rs * 0.6, rcy - rs);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rcx, rcy - rs * 0.3);
+            ctx.lineTo(rcx + rs * 0.6, rcy - rs);
+            ctx.stroke();
+          }
+
+          // Per-rune glow halo
+          const rhG = ctx.createRadialGradient(
+            rcx,
+            rcy,
+            0,
+            rcx,
+            rcy,
+            rs * 2.5,
+          );
+          rhG.addColorStop(
+            0,
+            `rgba(220,180,80,${wsRnGlow * 0.1})`,
+          );
+          rhG.addColorStop(1, "rgba(220,180,80,0)");
+          ctx.fillStyle = rhG;
           ctx.beginPath();
-          ctx.arc(ppx, ppy, 0.8 * s, 0, Math.PI * 2);
+          ctx.arc(rcx, rcy, rs * 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // --- Moss patches at base ---
+        ctx.fillStyle = "rgba(80,120,60,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(
+          sx - bw86 * 0.6,
+          wsBase + bwIso * 1.4,
+          3 * s,
+          1.5 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(
+          sx + bw86 * 0.4,
+          wsBase + bwIso * 1.2,
+          2 * s,
+          1 * s,
+          -0.2,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        // --- Ambient glow around stone ---
+        const wsAmbG = ctx.createRadialGradient(
+          sx,
+          wsBase - wsHeight * 0.4,
+          0,
+          sx,
+          wsBase - wsHeight * 0.4,
+          22 * s,
+        );
+        wsAmbG.addColorStop(
+          0,
+          `rgba(220,180,80,${wsRnGlow * 0.08})`,
+        );
+        wsAmbG.addColorStop(
+          0.5,
+          `rgba(220,180,80,${wsRnGlow * 0.03})`,
+        );
+        wsAmbG.addColorStop(1, "rgba(220,180,80,0)");
+        ctx.fillStyle = wsAmbG;
+        ctx.beginPath();
+        ctx.arc(
+          sx,
+          wsBase - wsHeight * 0.4,
+          22 * s,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        // --- Ground glow ring ---
+        const wsGndG = ctx.createRadialGradient(
+          sx,
+          sy + 2 * s,
+          2 * s,
+          sx,
+          sy + 2 * s,
+          16 * s,
+        );
+        wsGndG.addColorStop(
+          0,
+          `rgba(220,180,80,${wsRnGlow * 0.06})`,
+        );
+        wsGndG.addColorStop(
+          0.7,
+          `rgba(220,180,80,${wsRnGlow * 0.02})`,
+        );
+        wsGndG.addColorStop(1, "rgba(220,180,80,0)");
+        ctx.fillStyle = wsGndG;
+        ctx.beginPath();
+        ctx.ellipse(
+          sx,
+          sy + 2 * s,
+          16 * s,
+          7 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        // --- Floating arcane particles ---
+        for (let pi = 0; pi < 5; pi++) {
+          const pPh = decorTime * 0.7 + pi * 1.25;
+          const oR = (7 + Math.sin(pPh * 0.4) * 4) * s;
+          const ppx = sx + Math.sin(pPh) * oR;
+          const rise = ((pPh * 2) % 6) / 6;
+          const ppy = wsBase - wsHeight * rise * 0.8;
+          const pA = 0.35 + Math.sin(pPh * 2.5) * 0.2;
+          const pSz =
+            (0.7 + Math.sin(pPh * 1.8) * 0.3) * s;
+          ctx.fillStyle = `rgba(220,190,100,${pA})`;
+          ctx.beginPath();
+          ctx.arc(ppx, ppy, pSz, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -6001,14 +7183,25 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
 
     case "hedge": {
-      const hx = screenPos.x, hy = screenPos.y;
-      const hSeed = decorX * 73 + hy * 41;
-      const hw = 22 * s, hd = 10 * s, hh = 20 * s;
+      const hx = screenPos.x,
+        hy = screenPos.y;
+      const hSeed = decorX * 73 + decorY * 41;
+      const hw = 22 * s,
+        hd = 10 * s,
+        hh = 20 * s;
 
       // Ground shadow
       ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.beginPath();
-      ctx.ellipse(hx + 3 * s, hy + 5 * s, hw * 0.6, hd * 0.55, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(
+        hx + 3 * s,
+        hy + 5 * s,
+        hw * 0.6,
+        hd * 0.55,
+        0.1,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
 
       // Woody stems visible at base
@@ -6023,8 +7216,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.moveTo(hx - hw * 0.48, hy + 1 * s);
       ctx.lineTo(hx - hw * 0.5, hy - hh * 0.15);
-      ctx.quadraticCurveTo(hx - hw * 0.46, hy - hh * 0.6, hx - hw * 0.28, hy - hh * 0.82);
-      ctx.quadraticCurveTo(hx - hw * 0.1, hy - hh * 0.98, hx, hy - hh * 0.88 + hd * 0.35);
+      ctx.quadraticCurveTo(
+        hx - hw * 0.46,
+        hy - hh * 0.6,
+        hx - hw * 0.28,
+        hy - hh * 0.82,
+      );
+      ctx.quadraticCurveTo(
+        hx - hw * 0.1,
+        hy - hh * 0.98,
+        hx,
+        hy - hh * 0.88 + hd * 0.35,
+      );
       ctx.lineTo(hx, hy + hd * 0.45);
       ctx.closePath();
       ctx.fill();
@@ -6037,14 +7240,31 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.beginPath();
       ctx.moveTo(hx + hw * 0.48, hy + 1 * s);
       ctx.lineTo(hx + hw * 0.5, hy - hh * 0.15);
-      ctx.quadraticCurveTo(hx + hw * 0.46, hy - hh * 0.55, hx + hw * 0.28, hy - hh * 0.78);
-      ctx.quadraticCurveTo(hx + hw * 0.1, hy - hh * 0.92, hx, hy - hh * 0.88 + hd * 0.35);
+      ctx.quadraticCurveTo(
+        hx + hw * 0.46,
+        hy - hh * 0.55,
+        hx + hw * 0.28,
+        hy - hh * 0.78,
+      );
+      ctx.quadraticCurveTo(
+        hx + hw * 0.1,
+        hy - hh * 0.92,
+        hx,
+        hy - hh * 0.88 + hd * 0.35,
+      );
       ctx.lineTo(hx, hy + hd * 0.45);
       ctx.closePath();
       ctx.fill();
 
       // Top surface — rounded elliptical crown
-      const topG = ctx.createRadialGradient(hx - 2 * s, hy - hh * 0.88, 0, hx, hy - hh * 0.85, hw * 0.45);
+      const topG = ctx.createRadialGradient(
+        hx - 2 * s,
+        hy - hh * 0.88,
+        0,
+        hx,
+        hy - hh * 0.85,
+        hw * 0.45,
+      );
       topG.addColorStop(0, "#5abf5a");
       topG.addColorStop(0.5, "#43a043");
       topG.addColorStop(1, "#369036");
@@ -6056,22 +7276,54 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Layered leaf clusters on left face
       for (let i = 0; i < 14; i++) {
         const lx = hx - hw * 0.33 + Math.sin(hSeed + i * 2.7) * hw * 0.14;
-        const ly = hy - hh * 0.1 - i * hh * 0.052 + Math.cos(hSeed + i * 1.9) * 1.5 * s;
+        const ly =
+          hy - hh * 0.1 - i * hh * 0.052 + Math.cos(hSeed + i * 1.9) * 1.5 * s;
         const lr = (2.8 + Math.sin(hSeed + i * 3.1) * 0.9) * s;
-        ctx.fillStyle = i % 4 === 0 ? "#1d5a1d" : i % 4 === 1 ? "#226822" : i % 4 === 2 ? "#1a521a" : "#1f601f";
+        ctx.fillStyle =
+          i % 4 === 0
+            ? "#1d5a1d"
+            : i % 4 === 1
+              ? "#226822"
+              : i % 4 === 2
+                ? "#1a521a"
+                : "#1f601f";
         ctx.beginPath();
-        ctx.ellipse(lx, ly, lr * 1.4, lr * 0.85, 0.3 * (i % 5 - 2), 0, Math.PI * 2);
+        ctx.ellipse(
+          lx,
+          ly,
+          lr * 1.4,
+          lr * 0.85,
+          0.3 * ((i % 5) - 2),
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
       // Layered leaf clusters on right face
       for (let i = 0; i < 14; i++) {
         const rx = hx + hw * 0.33 + Math.sin(hSeed + i * 2.3) * hw * 0.11;
-        const ry = hy - hh * 0.1 - i * hh * 0.052 + Math.cos(hSeed + i * 1.7) * 1.5 * s;
+        const ry =
+          hy - hh * 0.1 - i * hh * 0.052 + Math.cos(hSeed + i * 1.7) * 1.5 * s;
         const rr = (2.8 + Math.sin(hSeed + i * 2.9) * 0.9) * s;
-        ctx.fillStyle = i % 4 === 0 ? "#3a8a3a" : i % 4 === 1 ? "#348234" : i % 4 === 2 ? "#2e7a2e" : "#368636";
+        ctx.fillStyle =
+          i % 4 === 0
+            ? "#3a8a3a"
+            : i % 4 === 1
+              ? "#348234"
+              : i % 4 === 2
+                ? "#2e7a2e"
+                : "#368636";
         ctx.beginPath();
-        ctx.ellipse(rx, ry, rr * 1.4, rr * 0.85, -0.3 * (i % 5 - 2), 0, Math.PI * 2);
+        ctx.ellipse(
+          rx,
+          ry,
+          rr * 1.4,
+          rr * 0.85,
+          -0.3 * ((i % 5) - 2),
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
@@ -6082,7 +7334,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const tx = hx + Math.cos(angle) * dist;
         const ty = hy - hh * 0.85 + Math.sin(angle) * hd * 0.24;
         const tr = (3.2 + Math.sin(hSeed + i * 4.1) * 1.2) * s;
-        ctx.fillStyle = i % 3 === 0 ? "#43a043" : i % 3 === 1 ? "#3a963a" : "#4aaa4a";
+        ctx.fillStyle =
+          i % 3 === 0 ? "#43a043" : i % 3 === 1 ? "#3a963a" : "#4aaa4a";
         ctx.beginPath();
         ctx.arc(tx, ty, tr, 0, Math.PI * 2);
         ctx.fill();
@@ -6095,7 +7348,13 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const hly = hy - hh * 0.88 + Math.cos(hSeed + i * 3.3) * hd * 0.14;
         ctx.fillStyle = "#5abf5a";
         ctx.beginPath();
-        ctx.arc(hlx, hly, (2.2 + Math.sin(hSeed + i * 2.1)) * s, 0, Math.PI * 2);
+        ctx.arc(
+          hlx,
+          hly,
+          (2.2 + Math.sin(hSeed + i * 2.1)) * s,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -6116,12 +7375,21 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const flwC = ["#ff4081", "#ffffff", "#ffeb3b", "#ff80ab", "#e8f5e9"];
         for (let f = 0; f < 7; f++) {
           const fx = hx + Math.sin(hSeed + f * 4.7) * hw * 0.32;
-          const fy = hy - hh * 0.2 - f * hh * 0.09 + Math.cos(hSeed + f * 3.1) * 2 * s;
+          const fy =
+            hy - hh * 0.2 - f * hh * 0.09 + Math.cos(hSeed + f * 3.1) * 2 * s;
           ctx.fillStyle = flwC[f % flwC.length];
           for (let p = 0; p < 4; p++) {
             const pa = (p / 4) * Math.PI * 2 + hSeed * 0.01;
             ctx.beginPath();
-            ctx.ellipse(fx + Math.cos(pa) * 1.3 * s, fy + Math.sin(pa) * 0.8 * s, 1.3 * s, 0.7 * s, pa, 0, Math.PI * 2);
+            ctx.ellipse(
+              fx + Math.cos(pa) * 1.3 * s,
+              fy + Math.sin(pa) * 0.8 * s,
+              1.3 * s,
+              0.7 * s,
+              pa,
+              0,
+              Math.PI * 2,
+            );
             ctx.fill();
           }
           ctx.fillStyle = "#ffd740";
@@ -6133,7 +7401,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Bird perched on top (variant 1 or 3)
       if (variant % 4 === 1 || variant % 4 === 3) {
-        const bx = hx + 3 * s, by = hy - hh * 0.95;
+        const bx = hx + 3 * s,
+          by = hy - hh * 0.95;
         ctx.fillStyle = variant % 4 === 1 ? "#5a3a2a" : "#3a4a6a";
         ctx.beginPath();
         ctx.ellipse(bx, by, 2.5 * s, 1.5 * s, -0.2, 0, Math.PI * 2);
@@ -6157,166 +7426,336 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "campfire": {
-      const logBrown = "#5d4037";
-      const logDark = "#3e2723";
-      const ashGray = "#616161";
+      const cfX = screenPos.x;
+      const cfY = screenPos.y;
+      const cfSeed = decorX * 47 + decorY * 89;
 
-      // Ground glow
-      const fireGlow = ctx.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        0,
-        screenPos.x,
-        screenPos.y,
-        25 * s,
+      // Warm ambient ground glow
+      const cfGndGlow = ctx.createRadialGradient(
+        cfX, cfY + 2 * s, 3 * s,
+        cfX, cfY + 2 * s, 35 * s,
       );
-      const fgPulse = 0.15 + Math.sin(decorTime * 4) * 0.06;
-      fireGlow.addColorStop(0, `rgba(255,150,50,${fgPulse})`);
-      fireGlow.addColorStop(1, "transparent");
-      ctx.fillStyle = fireGlow;
+      const cfGlowPulse = 0.18 + Math.sin(decorTime * 3.5) * 0.06;
+      cfGndGlow.addColorStop(0, `rgba(255,140,40,${cfGlowPulse})`);
+      cfGndGlow.addColorStop(0.4, `rgba(255,90,20,${cfGlowPulse * 0.45})`);
+      cfGndGlow.addColorStop(1, "rgba(255,50,10,0)");
+      ctx.fillStyle = cfGndGlow;
       ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 25 * s, 12 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(cfX, cfY + 2 * s, 35 * s, 18 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ash circle
-      ctx.fillStyle = ashGray;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 2 * s,
-        10 * s,
-        5 * s,
-        0,
-        0,
-        Math.PI * 2,
+      // Ash / char circle on ground — organic shape
+      const ashG = ctx.createRadialGradient(
+        cfX, cfY + 2 * s, 2 * s,
+        cfX, cfY + 2 * s, 12 * s,
       );
+      ashG.addColorStop(0, "#2a2220");
+      ashG.addColorStop(0.3, "#3a3530");
+      ashG.addColorStop(0.6, "#4a4540");
+      ashG.addColorStop(1, "#5a5550");
+      ctx.fillStyle = ashG;
+      drawOrganicWaterShape(ctx, cfX, cfY + 2 * s, 12 * s, 6 * s, cfSeed + 5, 0.14);
       ctx.fill();
 
-      // Stone ring
-      const stoneCount = 8;
-      for (let st = 0; st < stoneCount; st++) {
-        const stAngle = (st / stoneCount) * Math.PI * 2;
-        const stx = screenPos.x + Math.cos(stAngle) * 9 * s;
-        const sty = screenPos.y + 2 * s + Math.sin(stAngle) * 4.5 * s;
-        ctx.fillStyle = st % 2 === 0 ? "#757575" : "#616161";
-        ctx.beginPath();
-        ctx.ellipse(stx, sty, 2.5 * s, 1.5 * s, stAngle, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // Charcoal / soot stain ring around ash
+      ctx.fillStyle = "rgba(30,25,20,0.2)";
+      drawOrganicWaterShape(ctx, cfX, cfY + 2 * s, 14 * s, 7 * s, cfSeed + 8, 0.16);
+      ctx.fill();
 
-      // Logs (isometric 3D cylinders)
-      {
-        const cfx = screenPos.x,
-          cfy = screenPos.y;
-        // Log 1
-        const l1G = ctx.createLinearGradient(
-          cfx,
-          cfy - 2 * s,
-          cfx,
-          cfy + 2 * s,
-        );
-        l1G.addColorStop(0, "#8D6E63");
-        l1G.addColorStop(0.5, logBrown);
-        l1G.addColorStop(1, logDark);
-        ctx.fillStyle = l1G;
-        ctx.beginPath();
-        ctx.moveTo(cfx - 7 * s, cfy + 1 * s);
-        ctx.lineTo(cfx + 7 * s, cfy - 2 * s);
-        ctx.lineTo(cfx + 7 * s, cfy + 1 * s);
-        ctx.lineTo(cfx - 7 * s, cfy + 4 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Log 1 end cap
-        ctx.fillStyle = "#A1887F";
-        ctx.beginPath();
-        ctx.ellipse(
-          cfx + 7 * s,
-          cfy - 0.5 * s,
-          1.5 * s,
-          1.5 * s,
-          0.3,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        // Log 2
-        const l2G = ctx.createLinearGradient(
-          cfx,
-          cfy - 2 * s,
-          cfx,
-          cfy + 2 * s,
-        );
-        l2G.addColorStop(0, "#795548");
-        l2G.addColorStop(0.5, logDark);
-        l2G.addColorStop(1, "#2A1A10");
-        ctx.fillStyle = l2G;
-        ctx.beginPath();
-        ctx.moveTo(cfx - 6 * s, cfy - 2 * s);
-        ctx.lineTo(cfx + 6 * s, cfy + 1 * s);
-        ctx.lineTo(cfx + 6 * s, cfy + 4 * s);
-        ctx.lineTo(cfx - 6 * s, cfy + 1 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Log 2 end cap
-        ctx.fillStyle = "#8D6E63";
-        ctx.beginPath();
-        ctx.ellipse(
-          cfx - 6 * s,
-          cfy - 0.5 * s,
-          1.5 * s,
-          1.5 * s,
-          -0.4,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-      }
-
-      // Fire flames
-      const flamePhase = decorTime * 6;
-      const flames = [
-        { dx: 0, h: 18, w: 4, color: "#ffeb3b" },
-        { dx: -3, h: 14, w: 3, color: "#ff9800" },
-        { dx: 3, h: 12, w: 3, color: "#ff9800" },
-        { dx: -1, h: 20, w: 3.5, color: "#f44336" },
-        { dx: 2, h: 16, w: 3, color: "#f44336" },
+      // Stone ring — 3D individual stones with lit/shadow faces
+      const cfStoneCount = 10;
+      const stonePalettes = [
+        { top: "#8a8580", front: "#6a6560", side: "#4a4540" },
+        { top: "#9a9590", front: "#7a7570", side: "#5a5550" },
+        { top: "#7a7872", front: "#5a5852", side: "#3a3832" },
       ];
-      flames.forEach((fl, idx) => {
-        const flx =
-          screenPos.x + fl.dx * s + Math.sin(flamePhase + idx * 1.5) * 2 * s;
-        const flh =
-          fl.h * s * (0.7 + Math.sin(flamePhase * 1.5 + idx * 0.8) * 0.3);
-        ctx.fillStyle = fl.color;
+      for (let st = 0; st < cfStoneCount; st++) {
+        const stAng = (st / cfStoneCount) * Math.PI * 2 + cfSeed * 0.01;
+        const stR = 10 + Math.sin(cfSeed + st * 1.7) * 1.5;
+        const stx = cfX + Math.cos(stAng) * stR * s;
+        const sty = cfY + 2 * s + Math.sin(stAng) * stR * 0.5 * s;
+        const stW = (2 + Math.sin(cfSeed + st * 3.1) * 0.8) * s;
+        const stH = (1.5 + Math.cos(cfSeed + st * 2.3) * 0.5) * s;
+        const stD = 2 * s;
+        const pal = stonePalettes[st % 3];
+
+        // Stone top face
+        ctx.fillStyle = pal.top;
         ctx.beginPath();
-        ctx.moveTo(flx - fl.w * s, screenPos.y);
-        ctx.quadraticCurveTo(
-          flx - fl.w * 0.5 * s,
-          screenPos.y - flh * 0.5,
-          flx + Math.sin(flamePhase + idx) * 1.5 * s,
-          screenPos.y - flh,
+        ctx.ellipse(stx, sty - stD, stW, stH, stAng * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        // Stone front face
+        ctx.fillStyle = pal.front;
+        ctx.beginPath();
+        ctx.ellipse(stx, sty - stD * 0.3, stW, stH, stAng * 0.3, 0, Math.PI);
+        ctx.fill();
+        // Heat tint on inner face
+        const heatTint = 0.12 + Math.sin(decorTime * 2 + st) * 0.04;
+        ctx.fillStyle = `rgba(255,100,30,${heatTint})`;
+        ctx.beginPath();
+        ctx.ellipse(stx, sty - stD * 0.5, stW * 0.7, stH * 0.5, stAng * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Ember bed — glowing coals under the fire
+      const coalG = ctx.createRadialGradient(
+        cfX, cfY, 1 * s,
+        cfX, cfY, 8 * s,
+      );
+      const coalPulse = 0.7 + Math.sin(decorTime * 4) * 0.15;
+      coalG.addColorStop(0, `rgba(255,120,20,${coalPulse})`);
+      coalG.addColorStop(0.3, `rgba(200,60,10,${coalPulse * 0.7})`);
+      coalG.addColorStop(0.6, `rgba(120,30,5,${coalPulse * 0.4})`);
+      coalG.addColorStop(1, "rgba(40,10,0,0.3)");
+      ctx.fillStyle = coalG;
+      drawOrganicWaterShape(ctx, cfX, cfY + 1 * s, 8 * s, 4 * s, cfSeed + 20, 0.18);
+      ctx.fill();
+
+      // Individual hot coals
+      for (let co = 0; co < 6; co++) {
+        const coAng = (co / 6) * Math.PI * 2 + cfSeed * 0.03;
+        const coR = 2 + Math.sin(cfSeed + co * 2.7) * 2;
+        const cox = cfX + Math.cos(coAng) * coR * s;
+        const coy = cfY + 1 * s + Math.sin(coAng) * coR * 0.5 * s;
+        const coPulse = 0.5 + Math.sin(decorTime * 5 + co * 1.3) * 0.3;
+        const coG = ctx.createRadialGradient(cox, coy, 0, cox, coy, 1.8 * s);
+        coG.addColorStop(0, `rgba(255,200,80,${coPulse})`);
+        coG.addColorStop(0.5, `rgba(255,80,10,${coPulse * 0.6})`);
+        coG.addColorStop(1, "rgba(80,20,0,0.2)");
+        ctx.fillStyle = coG;
+        ctx.beginPath();
+        ctx.ellipse(cox, coy, 1.8 * s, 1 * s, coAng * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3D isometric logs — proper cylinders with bark and char
+      const drawCfLog = (
+        x1: number, y1: number, x2: number, y2: number,
+        radius: number, barkDark: string, barkLit: string, charAmount: number,
+      ) => {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const ang = Math.atan2(dy, dx);
+        const nx = -Math.sin(ang) * radius * s;
+        const ny = Math.cos(ang) * radius * s;
+
+        // Log body gradient
+        const logG = ctx.createLinearGradient(
+          x1 + nx, y1 + ny,
+          x1 - nx, y1 - ny,
         );
-        ctx.quadraticCurveTo(
-          flx + fl.w * 0.5 * s,
-          screenPos.y - flh * 0.5,
-          flx + fl.w * s,
-          screenPos.y,
-        );
+        logG.addColorStop(0, barkDark);
+        logG.addColorStop(0.35, barkLit);
+        logG.addColorStop(0.7, barkDark);
+        logG.addColorStop(1, "#1a0e08");
+        ctx.fillStyle = logG;
+        ctx.beginPath();
+        ctx.moveTo(x1 + nx, y1 + ny);
+        ctx.lineTo(x2 + nx, y2 + ny);
+        ctx.lineTo(x2 - nx, y2 - ny);
+        ctx.lineTo(x1 - nx, y1 - ny);
         ctx.closePath();
         ctx.fill();
-      });
 
-      // Sparks
-      for (let sp = 0; sp < 4; sp++) {
-        const spPhase = (decorTime * 2 + sp * 0.6) % 1.5;
-        if (spPhase < 1) {
-          const spAlpha = (1 - spPhase) * 0.8;
-          const spx = screenPos.x + Math.sin(decorTime * 3 + sp * 2) * 5 * s;
-          const spy = screenPos.y - 10 * s - spPhase * 15 * s;
-          ctx.fillStyle = `rgba(255,200,50,${spAlpha})`;
+        // Bark texture lines
+        ctx.strokeStyle = "rgba(20,12,5,0.2)";
+        ctx.lineWidth = 0.3 * s;
+        for (let bl = 0; bl < 3; bl++) {
+          const t = (bl + 1) / 4;
           ctx.beginPath();
-          ctx.arc(spx, spy, 0.8 * s, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(x1 + nx * (1 - 2 * t), y1 + ny * (1 - 2 * t));
+          ctx.lineTo(x2 + nx * (1 - 2 * t), y2 + ny * (1 - 2 * t));
+          ctx.stroke();
         }
+
+        // Char on the center-facing side
+        if (charAmount > 0) {
+          const charG = ctx.createLinearGradient(
+            (x1 + x2) * 0.5 - nx * 0.5, (y1 + y2) * 0.5 - ny * 0.5,
+            (x1 + x2) * 0.5 + nx * 0.5, (y1 + y2) * 0.5 + ny * 0.5,
+          );
+          charG.addColorStop(0, `rgba(20,10,5,${charAmount})`);
+          charG.addColorStop(0.5, `rgba(40,15,5,${charAmount * 0.5})`);
+          charG.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = charG;
+          ctx.beginPath();
+          ctx.moveTo(x1 + nx, y1 + ny);
+          ctx.lineTo(x2 + nx, y2 + ny);
+          ctx.lineTo(x2 - nx, y2 - ny);
+          ctx.lineTo(x1 - nx, y1 - ny);
+          ctx.closePath();
+          ctx.fill();
+
+          // Ember glow along charred edge
+          const embPulse = 0.15 + Math.sin(decorTime * 3 + ang) * 0.08;
+          ctx.strokeStyle = `rgba(255,80,10,${embPulse})`;
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(
+            x1 * 0.7 + x2 * 0.3 + nx * 0.3,
+            y1 * 0.7 + y2 * 0.3 + ny * 0.3,
+          );
+          ctx.lineTo(
+            x1 * 0.3 + x2 * 0.7 + nx * 0.3,
+            y1 * 0.3 + y2 * 0.7 + ny * 0.3,
+          );
+          ctx.stroke();
+        }
+
+        // End caps (cross-section ellipses showing rings)
+        const drawEndCap = (ex: number, ey: number) => {
+          const capG = ctx.createRadialGradient(
+            ex - nx * 0.2, ey - ny * 0.2, 0,
+            ex, ey, radius * s,
+          );
+          capG.addColorStop(0, "#c8a878");
+          capG.addColorStop(0.3, "#a08060");
+          capG.addColorStop(0.7, barkDark);
+          capG.addColorStop(1, "#2a1a10");
+          ctx.fillStyle = capG;
+          ctx.beginPath();
+          ctx.ellipse(ex, ey, radius * s, radius * 0.6 * s, ang, 0, Math.PI * 2);
+          ctx.fill();
+          // Tree rings
+          ctx.strokeStyle = "rgba(60,40,20,0.25)";
+          ctx.lineWidth = 0.3 * s;
+          for (let ring = 1; ring < 3; ring++) {
+            const rt = ring / 3;
+            ctx.beginPath();
+            ctx.ellipse(ex, ey, radius * rt * s, radius * rt * 0.6 * s, ang, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        };
+        drawEndCap(x1, y1);
+        drawEndCap(x2, y2);
+      };
+
+      // Three logs arranged in a triangle/tepee base
+      drawCfLog(
+        cfX - 8 * s, cfY + 3 * s, cfX + 5 * s, cfY - 1 * s,
+        1.8, "#4a3020", "#7a5a42", 0.6,
+      );
+      drawCfLog(
+        cfX + 7 * s, cfY + 3 * s, cfX - 4 * s, cfY - 1 * s,
+        1.6, "#3e2723", "#6d4c41", 0.5,
+      );
+      drawCfLog(
+        cfX - 3 * s, cfY + 4 * s, cfX + 8 * s, cfY + 1 * s,
+        1.4, "#5d4037", "#8d6e63", 0.4,
+      );
+
+      // Multi-layered animated fire
+      const cfFP = decorTime * 6;
+      const cfFlk1 = Math.sin(cfFP) * 2.5 * s;
+      const cfFlk2 = Math.sin(cfFP * 1.3 + 1.2) * 2 * s;
+      const cfFlk3 = Math.cos(cfFP * 0.8) * 1.5 * s;
+      const cfFlameBase = cfY - 1 * s;
+
+      // Outer dark flame (deep red)
+      ctx.fillStyle = "#b71c1c";
+      ctx.beginPath();
+      ctx.moveTo(cfX - 7 * s, cfFlameBase);
+      ctx.quadraticCurveTo(cfX - 4 * s + cfFlk2, cfFlameBase - 20 * s, cfX + cfFlk1 * 0.4, cfFlameBase - 28 * s);
+      ctx.quadraticCurveTo(cfX + 4 * s - cfFlk2, cfFlameBase - 20 * s, cfX + 7 * s, cfFlameBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Middle flame (orange-red)
+      ctx.fillStyle = "#e65100";
+      ctx.beginPath();
+      ctx.moveTo(cfX - 5.5 * s, cfFlameBase);
+      ctx.quadraticCurveTo(cfX - 3 * s - cfFlk1, cfFlameBase - 17 * s, cfX + cfFlk3, cfFlameBase - 24 * s);
+      ctx.quadraticCurveTo(cfX + 3 * s + cfFlk1, cfFlameBase - 17 * s, cfX + 5.5 * s, cfFlameBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bright flame (orange)
+      ctx.fillStyle = "#ff8f00";
+      ctx.beginPath();
+      ctx.moveTo(cfX - 4 * s, cfFlameBase);
+      ctx.quadraticCurveTo(cfX + cfFlk1 * 0.5, cfFlameBase - 14 * s, cfX - cfFlk3 * 0.4, cfFlameBase - 20 * s);
+      ctx.quadraticCurveTo(cfX - cfFlk1 * 0.5, cfFlameBase - 14 * s, cfX + 4 * s, cfFlameBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner flame (yellow)
+      ctx.fillStyle = "#ffc107";
+      ctx.beginPath();
+      ctx.moveTo(cfX - 2.5 * s, cfFlameBase);
+      ctx.quadraticCurveTo(cfX - cfFlk2 * 0.3, cfFlameBase - 10 * s, cfX + cfFlk1 * 0.3, cfFlameBase - 15 * s);
+      ctx.quadraticCurveTo(cfX + cfFlk2 * 0.3, cfFlameBase - 10 * s, cfX + 2.5 * s, cfFlameBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Core (white-yellow)
+      const cfCoreG = ctx.createRadialGradient(
+        cfX, cfFlameBase - 4 * s, 0.5 * s,
+        cfX, cfFlameBase - 4 * s, 5 * s,
+      );
+      cfCoreG.addColorStop(0, "rgba(255,255,230,0.85)");
+      cfCoreG.addColorStop(0.4, "rgba(255,230,150,0.5)");
+      cfCoreG.addColorStop(1, "rgba(255,180,60,0)");
+      ctx.fillStyle = cfCoreG;
+      ctx.beginPath();
+      ctx.moveTo(cfX - 1.5 * s, cfFlameBase);
+      ctx.quadraticCurveTo(cfX, cfFlameBase - 7 * s, cfX, cfFlameBase - 10 * s);
+      ctx.quadraticCurveTo(cfX, cfFlameBase - 7 * s, cfX + 1.5 * s, cfFlameBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Secondary side flame tongue
+      const sideFl = Math.sin(cfFP * 1.7 + 0.5) * 1.5 * s;
+      ctx.fillStyle = "rgba(255,140,0,0.6)";
+      ctx.beginPath();
+      ctx.moveTo(cfX + 4 * s, cfFlameBase);
+      ctx.quadraticCurveTo(cfX + 7 * s + sideFl, cfFlameBase - 8 * s, cfX + 5 * s + sideFl, cfFlameBase - 12 * s);
+      ctx.quadraticCurveTo(cfX + 6 * s, cfFlameBase - 5 * s, cfX + 5 * s, cfFlameBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Flame glow halo
+      const cfHaloG = ctx.createRadialGradient(
+        cfX, cfFlameBase - 10 * s, 2 * s,
+        cfX, cfFlameBase - 10 * s, 22 * s,
+      );
+      const cfHaloPulse = 0.2 + Math.sin(decorTime * 4.5) * 0.06;
+      cfHaloG.addColorStop(0, `rgba(255,160,40,${cfHaloPulse})`);
+      cfHaloG.addColorStop(0.5, `rgba(255,100,20,${cfHaloPulse * 0.3})`);
+      cfHaloG.addColorStop(1, "rgba(255,60,10,0)");
+      ctx.fillStyle = cfHaloG;
+      ctx.beginPath();
+      ctx.arc(cfX, cfFlameBase - 10 * s, 22 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rising embers / sparks
+      for (let sp = 0; sp < 7; sp++) {
+        const spSeed = cfSeed + sp * 2.3;
+        const spLife = ((decorTime * 1.8 + spSeed * 0.1) % 2.5) / 2.5;
+        const spAlpha = Math.max(0, (1 - spLife * 1.1)) * 0.85;
+        const spDrift = Math.sin(spSeed + decorTime * 2.5) * 6 * s * spLife;
+        const spX = cfX + spDrift + Math.sin(spSeed * 3) * 3 * s;
+        const spY = cfFlameBase - 16 * s - spLife * 22 * s;
+        const spSize = (0.6 + Math.sin(spSeed) * 0.3) * s * (1 - spLife * 0.4);
+        const spR = Math.floor(255);
+        const spG = Math.floor(200 - spLife * 120);
+        const spB = Math.floor(50 - spLife * 40);
+        ctx.fillStyle = `rgba(${spR},${spG},${spB},${spAlpha})`;
+        ctx.beginPath();
+        ctx.arc(spX, spY, spSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Smoke wisps rising from the top
+      for (let sm = 0; sm < 3; sm++) {
+        const smLife = ((decorTime * 0.7 + sm * 1.4) % 3) / 3;
+        const smAlpha = Math.sin(smLife * Math.PI) * 0.08;
+        const smX = cfX + Math.sin(decorTime * 0.8 + sm * 2.1) * 8 * s * smLife;
+        const smY = cfFlameBase - 25 * s - smLife * 20 * s;
+        const smR = (4 + smLife * 6) * s;
+        ctx.fillStyle = `rgba(100,90,80,${smAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(smX, smY, smR, smR * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
       break;
     }
@@ -6325,107 +7764,228 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const dockWood = "#6d4c41";
       const dockWoodDark = "#4e342e";
       const dockWoodLight = "#8d6e63";
-      const dockWater = "rgba(70,130,180,0.5)";
+      const dkSeed = (dec.x || 0) * 17.3 + (dec.y || 0) * 9.1;
+      const dx = screenPos.x, dy = screenPos.y;
 
-      // Water
-      ctx.fillStyle = dockWater;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 8 * s,
-        screenPos.y + 5 * s,
-        22 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
+      // Organic water body with depth gradient
+      const dkWaterG = ctx.createRadialGradient(
+        dx + 6 * s, dy + 6 * s, 2 * s,
+        dx + 8 * s, dy + 5 * s, 22 * s,
       );
+      dkWaterG.addColorStop(0, "rgba(20,65,115,0.72)");
+      dkWaterG.addColorStop(0.35, "rgba(40,100,155,0.6)");
+      dkWaterG.addColorStop(0.65, "rgba(60,130,180,0.48)");
+      dkWaterG.addColorStop(1, "rgba(90,160,205,0.25)");
+      ctx.fillStyle = dkWaterG;
+      drawOrganicWaterShape(ctx, dx + 8 * s, dy + 5 * s, 22 * s, 10 * s, dkSeed, 0.14);
       ctx.fill();
 
-      // Support posts (isometric pilings)
-      const posts = [
-        { dx: -8, dy: 2 },
-        { dx: -8, dy: -6 },
-        { dx: 8, dy: 2 },
-        { dx: 8, dy: -6 },
-      ];
-      posts.forEach((p) => {
-        const ppx = screenPos.x + p.dx * s,
-          ppy = screenPos.y + p.dy * s;
-        // Front face
-        ctx.fillStyle = dockWoodDark;
-        ctx.beginPath();
-        ctx.moveTo(ppx - 1.5 * s, ppy + 4 * s);
-        ctx.lineTo(ppx + 1.5 * s, ppy + 4 * s);
-        ctx.lineTo(ppx + 1.5 * s, ppy - 4 * s);
-        ctx.lineTo(ppx - 1.5 * s, ppy - 4 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Side face
-        ctx.fillStyle = "#3A2518";
-        ctx.beginPath();
-        ctx.moveTo(ppx + 1.5 * s, ppy + 4 * s);
-        ctx.lineTo(ppx + 2.5 * s, ppy + 3.5 * s);
-        ctx.lineTo(ppx + 2.5 * s, ppy - 4.5 * s);
-        ctx.lineTo(ppx + 1.5 * s, ppy - 4 * s);
-        ctx.closePath();
-        ctx.fill();
-        // Top cap
-        ctx.fillStyle = dockWoodLight;
-        ctx.beginPath();
-        ctx.moveTo(ppx - 1.5 * s, ppy - 4 * s);
-        ctx.lineTo(ppx + 1.5 * s, ppy - 4 * s);
-        ctx.lineTo(ppx + 2.5 * s, ppy - 4.5 * s);
-        ctx.lineTo(ppx - 0.5 * s, ppy - 4.5 * s);
-        ctx.closePath();
-        ctx.fill();
-      });
-
-      // Deck planks - isometric rectangle
-      ctx.fillStyle = dockWood;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 2 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 8 * s);
-      ctx.lineTo(screenPos.x + 16 * s, screenPos.y - 2 * s);
-      ctx.lineTo(screenPos.x + 6 * s, screenPos.y + 4 * s);
-      ctx.closePath();
+      // Deeper center shadow
+      ctx.fillStyle = "rgba(10,35,65,0.2)";
+      drawOrganicWaterShape(ctx, dx + 6 * s, dy + 6 * s, 12 * s, 5 * s, dkSeed + 30, 0.1);
       ctx.fill();
 
-      // Plank lines
-      ctx.strokeStyle = dockWoodDark;
-      ctx.lineWidth = 0.8 * s;
-      for (let pl = 0; pl < 5; pl++) {
-        const t = pl / 5;
-        const lx = screenPos.x - 10 * s + t * 26 * s;
-        const ly = screenPos.y - 2 * s - t * 0 * s;
-        ctx.beginPath();
-        ctx.moveTo(lx - 2 * s + t * 8 * s, ly - 6 * s + t * 6 * s);
-        ctx.lineTo(lx + 4 * s + t * 2 * s, ly + 2 * s + t * 0 * s);
+      // Surface sheen
+      ctx.fillStyle = "rgba(180,225,255,0.1)";
+      drawOrganicWaterShape(ctx, dx + 10 * s, dy + 3 * s, 14 * s, 6 * s, dkSeed + 55, 0.09);
+      ctx.fill();
+
+      // Animated caustic ripple bands
+      for (let band = 0; band < 3; band++) {
+        const bPhase = decorTime * 1.2 + band * 1.1;
+        const wobble = 1 + Math.sin(bPhase) * 0.05;
+        const bR = (8 + band * 5) * s;
+        ctx.strokeStyle = `rgba(160,215,255,${0.12 - band * 0.03})`;
+        ctx.lineWidth = (1.5 - band * 0.3) * s;
+        drawOrganicWaterShape(ctx, dx + 8 * s, dy + 5 * s, bR * wobble, bR * 0.45 * wobble, dkSeed + band * 23, 0.08);
         ctx.stroke();
       }
 
-      // Top plank layer
-      ctx.fillStyle = dockWoodLight;
+      // Pilings — 3D isometric wooden posts rising from water
+      const pilings = [
+        { px: -8, py: 2 },
+        { px: -8, py: -6 },
+        { px: 8, py: 2 },
+        { px: 8, py: -6 },
+      ];
+      pilings.forEach((p, pi) => {
+        const ppx = dx + p.px * s, ppy = dy + p.py * s;
+        const postH = 10 * s;
+        const postW = 2 * s;
+        const postD = 1.2 * s;
+
+        // Water ring around piling
+        ctx.strokeStyle = "rgba(150,200,240,0.18)";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.ellipse(ppx + postD * 0.5, ppy + 4 * s, postW + 1 * s, (postW + 1 * s) * 0.4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Dark face (left)
+        ctx.fillStyle = "#3a2518";
+        ctx.beginPath();
+        ctx.moveTo(ppx - postW * 0.5, ppy + 4 * s);
+        ctx.lineTo(ppx - postW * 0.5, ppy + 4 * s - postH);
+        ctx.lineTo(ppx + postW * 0.5, ppy + 4 * s - postH);
+        ctx.lineTo(ppx + postW * 0.5, ppy + 4 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Lit face (right)
+        ctx.fillStyle = dockWoodDark;
+        ctx.beginPath();
+        ctx.moveTo(ppx + postW * 0.5, ppy + 4 * s);
+        ctx.lineTo(ppx + postW * 0.5, ppy + 4 * s - postH);
+        ctx.lineTo(ppx + postW * 0.5 + postD, ppy + 4 * s - postH - postD * 0.5);
+        ctx.lineTo(ppx + postW * 0.5 + postD, ppy + 4 * s - postD * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top cap diamond
+        ctx.fillStyle = dockWoodLight;
+        ctx.beginPath();
+        ctx.moveTo(ppx - postW * 0.5, ppy + 4 * s - postH);
+        ctx.lineTo(ppx + postW * 0.5, ppy + 4 * s - postH);
+        ctx.lineTo(ppx + postW * 0.5 + postD, ppy + 4 * s - postH - postD * 0.5);
+        ctx.lineTo(ppx - postW * 0.5 + postD, ppy + 4 * s - postH - postD * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Weathering marks on posts
+        if (pi % 2 === 0) {
+          ctx.strokeStyle = "rgba(30,20,10,0.15)";
+          ctx.lineWidth = 0.4 * s;
+          for (let wm = 0; wm < 3; wm++) {
+            const wmy = ppy + 4 * s - postH * 0.3 - wm * 2.5 * s;
+            ctx.beginPath();
+            ctx.moveTo(ppx - postW * 0.4, wmy);
+            ctx.lineTo(ppx + postW * 0.4, wmy);
+            ctx.stroke();
+          }
+        }
+
+        // Algae/moss at waterline
+        ctx.fillStyle = "rgba(60,120,60,0.25)";
+        ctx.beginPath();
+        ctx.ellipse(ppx, ppy + 3 * s, postW * 0.8, 1.5 * s, 0, 0, Math.PI);
+        ctx.fill();
+      });
+
+      // Deck underside shadow
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 4 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 10 * s);
-      ctx.lineTo(screenPos.x + 16 * s, screenPos.y - 4 * s);
-      ctx.lineTo(screenPos.x + 6 * s, screenPos.y + 2 * s);
+      ctx.moveTo(dx - 10 * s, dy - 1 * s);
+      ctx.lineTo(dx, dy - 7 * s);
+      ctx.lineTo(dx + 16 * s, dy - 1 * s);
+      ctx.lineTo(dx + 6 * s, dy + 5 * s);
       ctx.closePath();
       ctx.fill();
 
-      // Rope coil
-      ctx.strokeStyle = "#8d6e63";
-      ctx.lineWidth = 1.5 * s;
+      // Deck planks - isometric rectangle (bottom layer)
+      ctx.fillStyle = dockWood;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 10 * s,
-        screenPos.y - 4 * s,
-        3 * s,
-        1.5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.moveTo(dx - 10 * s, dy - 2 * s);
+      ctx.lineTo(dx, dy - 8 * s);
+      ctx.lineTo(dx + 16 * s, dy - 2 * s);
+      ctx.lineTo(dx + 6 * s, dy + 4 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Plank gap lines (along iso-right direction)
+      ctx.strokeStyle = "rgba(40,25,12,0.35)";
+      ctx.lineWidth = 0.6 * s;
+      for (let pl = 1; pl < 6; pl++) {
+        const t = pl / 6;
+        const x0 = dx - 10 * s + t * (dx + 6 * s - (dx - 10 * s));
+        const y0 = dy - 2 * s + t * (dy + 4 * s - (dy - 2 * s));
+        const x1 = dx + t * (dx + 16 * s - dx);
+        const y1 = dy - 8 * s + t * (dy - 2 * s - (dy - 8 * s));
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+
+      // Top plank face (lighter, with wood grain suggestion)
+      const deckTopG = ctx.createLinearGradient(dx - 5 * s, dy - 10 * s, dx + 10 * s, dy + 2 * s);
+      deckTopG.addColorStop(0, "#8d6e63");
+      deckTopG.addColorStop(0.5, "#7b5b4f");
+      deckTopG.addColorStop(1, "#6d4c41");
+      ctx.fillStyle = deckTopG;
+      ctx.beginPath();
+      ctx.moveTo(dx - 10 * s, dy - 4 * s);
+      ctx.lineTo(dx, dy - 10 * s);
+      ctx.lineTo(dx + 16 * s, dy - 4 * s);
+      ctx.lineTo(dx + 6 * s, dy + 2 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Plank gap lines on top face
+      ctx.strokeStyle = "rgba(50,30,15,0.25)";
+      ctx.lineWidth = 0.5 * s;
+      for (let pl = 1; pl < 6; pl++) {
+        const t = pl / 6;
+        const x0 = dx - 10 * s + t * (dx + 6 * s - (dx - 10 * s));
+        const y0 = dy - 4 * s + t * (dy + 2 * s - (dy - 4 * s));
+        const x1 = dx + t * (dx + 16 * s - dx);
+        const y1 = dy - 10 * s + t * (dy - 4 * s - (dy - 10 * s));
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+      }
+
+      // Front edge thickness (left face)
+      const edgeDark = "#5d4037";
+      ctx.fillStyle = edgeDark;
+      ctx.beginPath();
+      ctx.moveTo(dx - 10 * s, dy - 4 * s);
+      ctx.lineTo(dx + 6 * s, dy + 2 * s);
+      ctx.lineTo(dx + 6 * s, dy + 4 * s);
+      ctx.lineTo(dx - 10 * s, dy - 2 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front edge thickness (right face)
+      ctx.fillStyle = "#4e342e";
+      ctx.beginPath();
+      ctx.moveTo(dx + 6 * s, dy + 2 * s);
+      ctx.lineTo(dx + 16 * s, dy - 4 * s);
+      ctx.lineTo(dx + 16 * s, dy - 2 * s);
+      ctx.lineTo(dx + 6 * s, dy + 4 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bollard (mooring post) on deck
+      const blx = dx + 10 * s, bly = dy - 6 * s;
+      ctx.fillStyle = "#5d4037";
+      ctx.fillRect(blx - 1 * s, bly - 3 * s, 2 * s, 3 * s);
+      ctx.fillStyle = dockWoodLight;
+      ctx.beginPath();
+      ctx.ellipse(blx, bly - 3 * s, 1.8 * s, 0.8 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rope coiled around bollard
+      ctx.strokeStyle = "#a1887f";
+      ctx.lineWidth = 1 * s;
+      for (let rc = 0; rc < 3; rc++) {
+        ctx.beginPath();
+        ctx.ellipse(blx, bly - 1 * s - rc * 0.8 * s, 2.2 * s, 0.9 * s, 0, 0.3, Math.PI * 1.7);
+        ctx.stroke();
+      }
+
+      // Rope trailing into water
+      ctx.strokeStyle = "rgba(140,110,80,0.5)";
+      ctx.lineWidth = 0.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(blx + 2 * s, bly - 1 * s);
+      ctx.quadraticCurveTo(blx + 8 * s, bly + 4 * s, blx + 5 * s, dy + 6 * s);
+      ctx.stroke();
+
+      // Water edge foam/shore highlight
+      ctx.strokeStyle = "rgba(200,235,255,0.22)";
+      ctx.lineWidth = 1.2 * s;
+      drawOrganicWaterShape(ctx, dx + 8 * s, dy + 5 * s, 22 * s, 10 * s, dkSeed, 0.14);
       ctx.stroke();
       break;
     }
@@ -6622,89 +8182,218 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "reeds": {
-      const reedGreen = "#558b2f";
-      const reedDark = "#33691e";
-      const reedBrown = "#795548";
+      const rdSeed = (dec.x || 0) * 13.7 + (dec.y || 0) * 7.3;
+      const rx0 = screenPos.x, ry0 = screenPos.y;
 
-      // Water base
-      ctx.fillStyle = "rgba(70,130,180,0.35)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 3 * s,
-        14 * s,
-        6 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      // Marshy ground shadow
+      ctx.fillStyle = "rgba(30,50,20,0.12)";
+      drawOrganicWaterShape(ctx, rx0, ry0 + 5 * s, 16 * s, 8 * s, rdSeed + 5, 0.18);
       ctx.fill();
 
-      // Reed stalks
-      const reedCount = 7;
-      for (let r = 0; r < reedCount; r++) {
-        const rx = screenPos.x + (r - 3) * 3 * s + Math.sin(r * 1.7) * 2 * s;
-        const rh = (20 + Math.sin(r * 2.3) * 8) * s;
-        const sway = Math.sin(decorTime * 1.5 + r * 0.8) * 2 * s;
+      // Organic water body with depth gradient
+      const rdWaterG = ctx.createRadialGradient(
+        rx0 - 1 * s, ry0 + 4 * s, 1 * s,
+        rx0, ry0 + 3 * s, 14 * s,
+      );
+      rdWaterG.addColorStop(0, "rgba(25,70,120,0.6)");
+      rdWaterG.addColorStop(0.35, "rgba(45,105,155,0.5)");
+      rdWaterG.addColorStop(0.65, "rgba(65,135,180,0.4)");
+      rdWaterG.addColorStop(1, "rgba(90,165,200,0.2)");
+      ctx.fillStyle = rdWaterG;
+      drawOrganicWaterShape(ctx, rx0, ry0 + 3 * s, 14 * s, 6 * s, rdSeed, 0.15);
+      ctx.fill();
 
-        ctx.strokeStyle = r % 2 === 0 ? reedGreen : reedDark;
-        ctx.lineWidth = 1.5 * s;
+      // Deeper center
+      ctx.fillStyle = "rgba(15,45,80,0.18)";
+      drawOrganicWaterShape(ctx, rx0 - 1 * s, ry0 + 4 * s, 7 * s, 3 * s, rdSeed + 20, 0.1);
+      ctx.fill();
+
+      // Surface sheen highlight
+      ctx.fillStyle = "rgba(180,225,255,0.09)";
+      drawOrganicWaterShape(ctx, rx0 + 2 * s, ry0 + 1 * s, 8 * s, 3.5 * s, rdSeed + 40, 0.08);
+      ctx.fill();
+
+      // Animated ripple bands
+      for (let rb = 0; rb < 2; rb++) {
+        const rbPhase = decorTime * 1.0 + rb * 1.3;
+        const wobble = 1 + Math.sin(rbPhase) * 0.04;
+        const rbR = (5 + rb * 4) * s;
+        ctx.strokeStyle = `rgba(150,210,250,${0.1 - rb * 0.03})`;
+        ctx.lineWidth = (1.2 - rb * 0.3) * s;
+        drawOrganicWaterShape(ctx, rx0, ry0 + 3 * s, rbR * wobble, rbR * 0.45 * wobble, rdSeed + rb * 17, 0.07);
+        ctx.stroke();
+      }
+
+      // Mud/silt patches at edge
+      const mudPositions = [
+        { mx: -10, my: 5 }, { mx: 8, my: 4 }, { mx: -3, my: 7 },
+      ];
+      mudPositions.forEach((mp, mi) => {
+        ctx.fillStyle = `rgba(80,65,40,${0.15 + mi * 0.03})`;
+        drawOrganicWaterShape(ctx, rx0 + mp.mx * s, ry0 + mp.my * s, 4 * s, 2 * s, rdSeed + mi * 31, 0.2);
+        ctx.fill();
+      });
+
+      // Reed stalks with varied thickness, draping leaves, and 3D cattails
+      const reedCount = 9;
+      for (let r = 0; r < reedCount; r++) {
+        const spread = (r - (reedCount - 1) * 0.5) * 2.8 * s;
+        const rx = rx0 + spread + Math.sin(r * 1.7 + rdSeed) * 2 * s;
+        const rh = (18 + Math.sin(r * 2.3 + rdSeed) * 10) * s;
+        const sway = Math.sin(decorTime * 1.5 + r * 0.8 + rdSeed * 0.1) * 2 * s;
+        const thick = (1.2 + Math.sin(r * 3.1) * 0.4) * s;
+        const rBase = ry0 + 2 * s + Math.sin(r * 1.9) * 0.5 * s;
+
+        // Stalk color varies
+        const stalkHue = r % 3 === 0 ? "#558b2f" : r % 3 === 1 ? "#33691e" : "#4a7a28";
+
+        // Main stalk (thicker at base, tapering)
+        ctx.strokeStyle = stalkHue;
+        ctx.lineWidth = thick;
+        ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(rx, screenPos.y + 2 * s);
+        ctx.moveTo(rx, rBase);
         ctx.quadraticCurveTo(
-          rx + sway * 0.5,
-          screenPos.y - rh * 0.5,
+          rx + sway * 0.4,
+          rBase - rh * 0.5,
           rx + sway,
-          screenPos.y - rh,
+          rBase - rh,
         );
         ctx.stroke();
 
-        // Reed tip / cattail
+        // Thin upper stalk (tapers further)
+        ctx.lineWidth = thick * 0.5;
+        ctx.strokeStyle = "#6a9f3a";
+        ctx.beginPath();
+        ctx.moveTo(rx + sway * 0.7, rBase - rh * 0.7);
+        ctx.quadraticCurveTo(
+          rx + sway * 0.9,
+          rBase - rh * 0.85,
+          rx + sway,
+          rBase - rh,
+        );
+        ctx.stroke();
+
+        // Cattail head on every ~3rd reed
         if (r % 3 === 0) {
-          ctx.fillStyle = reedBrown;
+          const ctX = rx + sway;
+          const ctY = rBase - rh;
+          const ctH = 6 * s;
+          const ctW = 1.8 * s;
+          const ctTilt = sway * 0.04;
+
+          // Cattail body (dark brown oblong with subtle shading)
+          const ctG = ctx.createLinearGradient(ctX - ctW, ctY - ctH * 0.5, ctX + ctW, ctY + ctH * 0.3);
+          ctG.addColorStop(0, "#5d4037");
+          ctG.addColorStop(0.4, "#795548");
+          ctG.addColorStop(0.7, "#5d4037");
+          ctG.addColorStop(1, "#4e342e");
+          ctx.fillStyle = ctG;
           ctx.beginPath();
-          ctx.ellipse(
-            rx + sway,
-            screenPos.y - rh - 3 * s,
-            1.5 * s,
-            4 * s,
-            0,
-            0,
-            Math.PI * 2,
-          );
+          ctx.ellipse(ctX, ctY - ctH * 0.15, ctW, ctH * 0.5, ctTilt, 0, Math.PI * 2);
           ctx.fill();
-        } else {
-          // Leaf tip
-          ctx.fillStyle = reedGreen;
+
+          // Fuzzy texture dots on cattail
+          ctx.fillStyle = "rgba(100,70,50,0.3)";
+          for (let fz = 0; fz < 4; fz++) {
+            const fzY = ctY - ctH * 0.35 + fz * ctH * 0.2;
+            const fzX = ctX + Math.sin(fz * 2.7 + rdSeed) * ctW * 0.4;
+            ctx.beginPath();
+            ctx.arc(fzX, fzY, 0.6 * s, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Spike tip above cattail
+          ctx.strokeStyle = "#7cb342";
+          ctx.lineWidth = 0.6 * s;
           ctx.beginPath();
-          ctx.moveTo(rx + sway, screenPos.y - rh);
-          ctx.lineTo(rx + sway - 1 * s, screenPos.y - rh - 4 * s);
-          ctx.lineTo(rx + sway + 1 * s, screenPos.y - rh - 3 * s);
-          ctx.closePath();
+          ctx.moveTo(ctX, ctY - ctH * 0.55);
+          ctx.lineTo(ctX + sway * 0.15, ctY - ctH * 0.55 - 4 * s);
+          ctx.stroke();
+        }
+
+        // Drooping leaves at stalk mid-point (1-2 per stalk)
+        const leafCount = r % 2 === 0 ? 2 : 1;
+        for (let lf = 0; lf < leafCount; lf++) {
+          const lfFrac = 0.3 + lf * 0.25;
+          const lfX = rx + sway * lfFrac;
+          const lfY = rBase - rh * lfFrac;
+          const lfDir = (r + lf) % 2 === 0 ? 1 : -1;
+          const lfSway = Math.sin(decorTime * 1.8 + r * 1.1 + lf * 2.3) * 1.5 * s;
+
+          ctx.strokeStyle = "#7cb342";
+          ctx.lineWidth = 1.2 * s;
+          ctx.beginPath();
+          ctx.moveTo(lfX, lfY);
+          ctx.quadraticCurveTo(
+            lfX + lfDir * 5 * s + lfSway,
+            lfY + 2 * s,
+            lfX + lfDir * 8 * s + lfSway * 1.3,
+            lfY + 5 * s,
+          );
+          ctx.stroke();
+
+          // Leaf blade (thin filled shape)
+          ctx.fillStyle = "rgba(100,160,50,0.3)";
+          ctx.beginPath();
+          ctx.moveTo(lfX, lfY);
+          ctx.quadraticCurveTo(
+            lfX + lfDir * 5 * s + lfSway,
+            lfY + 1 * s,
+            lfX + lfDir * 8 * s + lfSway * 1.3,
+            lfY + 5 * s,
+          );
+          ctx.quadraticCurveTo(
+            lfX + lfDir * 5 * s + lfSway,
+            lfY + 3 * s,
+            lfX, lfY + 0.5 * s,
+          );
           ctx.fill();
         }
       }
+
+      // Water edge foam/shore line
+      ctx.strokeStyle = "rgba(200,235,255,0.2)";
+      ctx.lineWidth = 1 * s;
+      drawOrganicWaterShape(ctx, rx0, ry0 + 3 * s, 14 * s, 6 * s, rdSeed, 0.15);
+      ctx.stroke();
+      ctx.lineCap = "butt";
       break;
     }
 
     case "fishing_spot": {
-      const fx = screenPos.x, fy = screenPos.y;
+      const fx = screenPos.x,
+        fy = screenPos.y;
+      const fishSeed = (dec.x || 0) * 21.7;
 
       // Water body — organic shape with depth gradient
-      const waterG = ctx.createRadialGradient(fx - 2 * s, fy + 4 * s, 2 * s, fx, fy + 5 * s, 20 * s);
+      const waterG = ctx.createRadialGradient(
+        fx - 2 * s,
+        fy + 4 * s,
+        2 * s,
+        fx,
+        fy + 5 * s,
+        20 * s,
+      );
       waterG.addColorStop(0, "rgba(30,80,130,0.65)");
       waterG.addColorStop(0.4, "rgba(50,110,160,0.55)");
       waterG.addColorStop(0.7, "rgba(70,140,190,0.45)");
       waterG.addColorStop(1, "rgba(100,170,210,0.3)");
       ctx.fillStyle = waterG;
-      ctx.beginPath();
-      ctx.ellipse(fx, fy + 5 * s, 20 * s, 9 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(ctx, fx, fy + 5 * s, 20 * s, 9 * s, fishSeed, 0.12);
       ctx.fill();
 
       // Water surface sheen
       ctx.fillStyle = "rgba(180,220,255,0.12)";
-      ctx.beginPath();
-      ctx.ellipse(fx + 3 * s, fy + 3 * s, 12 * s, 5 * s, 0.15, 0, Math.PI * 2);
+      drawOrganicWaterShape(
+        ctx,
+        fx + 3 * s,
+        fy + 3 * s,
+        12 * s,
+        5 * s,
+        fishSeed + 15,
+        0.1,
+      );
       ctx.fill();
 
       // Fish shadow under water
@@ -6756,23 +8445,47 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.lineWidth = 1.2 * s;
         ctx.beginPath();
         ctx.moveTo(rx, rBase);
-        ctx.quadraticCurveTo(rx + rSway * 0.3, rBase - 12 * s, rx + rSway, rBase - 22 * s);
+        ctx.quadraticCurveTo(
+          rx + rSway * 0.3,
+          rBase - 12 * s,
+          rx + rSway,
+          rBase - 22 * s,
+        );
         ctx.stroke();
         if (r % 2 === 0) {
           ctx.fillStyle = "#5d4037";
           ctx.beginPath();
-          ctx.ellipse(rx + rSway * 0.8, rBase - 20 * s, 1.2 * s, 3 * s, rSway * 0.05, 0, Math.PI * 2);
+          ctx.ellipse(
+            rx + rSway * 0.8,
+            rBase - 20 * s,
+            1.2 * s,
+            3 * s,
+            rSway * 0.05,
+            0,
+            Math.PI * 2,
+          );
           ctx.fill();
         }
         ctx.fillStyle = "#7cb342";
         ctx.beginPath();
-        ctx.ellipse(rx + rSway * 0.3, rBase - 6 * s, 1 * s, 5 * s, rSway * 0.03, 0, Math.PI * 2);
+        ctx.ellipse(
+          rx + rSway * 0.3,
+          rBase - 6 * s,
+          1 * s,
+          5 * s,
+          rSway * 0.03,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
       // Dock platform — isometric with plank detail
-      const dW = 10 * s, dD = 5 * s, dH = 3 * s;
-      const dkx = fx + 4 * s, dky = fy - 1 * s;
+      const dW = 10 * s,
+        dD = 5 * s,
+        dH = 3 * s;
+      const dkx = fx + 4 * s,
+        dky = fy - 1 * s;
 
       // Support posts
       ctx.fillStyle = "#4e342e";
@@ -6827,7 +8540,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.lineWidth = 1.8 * s;
       ctx.beginPath();
       ctx.moveTo(dkx + 3 * s, dky - 2 * s);
-      ctx.quadraticCurveTo(dkx + 14 * s, dky - 28 * s, dkx + 20 * s, dky - 22 * s);
+      ctx.quadraticCurveTo(
+        dkx + 14 * s,
+        dky - 28 * s,
+        dkx + 20 * s,
+        dky - 22 * s,
+      );
       ctx.stroke();
       // Rod handle
       ctx.strokeStyle = "#3e2723";
@@ -6852,7 +8570,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const bobSway = Math.sin(decorTime * 2) * 2 * s;
       ctx.beginPath();
       ctx.moveTo(dkx + 20 * s, dky - 22 * s);
-      ctx.quadraticCurveTo(dkx + 18 * s + bobSway * 0.5, dky - 5 * s, dkx + 14 * s + bobSway, fy + 3 * s);
+      ctx.quadraticCurveTo(
+        dkx + 18 * s + bobSway * 0.5,
+        dky - 5 * s,
+        dkx + 14 * s + bobSway,
+        fy + 3 * s,
+      );
       ctx.stroke();
 
       // Bobber with detail
@@ -6872,7 +8595,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Bucket with fish
-      const bkx = dkx - 6 * s, bky = dky - 1 * s;
+      const bkx = dkx - 6 * s,
+        bky = dky - 1 * s;
       ctx.fillStyle = "#5d4037";
       ctx.beginPath();
       ctx.moveTo(bkx - 2.5 * s, bky);
@@ -6914,7 +8638,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.strokeStyle = `rgba(150,200,255,${ripAlpha})`;
           ctx.lineWidth = 0.7 * s;
           ctx.beginPath();
-          ctx.ellipse(bobberX, fy + 4 * s, 3 * s * ripPhase + 2 * s, 1.2 * s * ripPhase + 0.8 * s, 0, 0, Math.PI * 2);
+          ctx.ellipse(
+            bobberX,
+            fy + 4 * s,
+            3 * s * ripPhase + 2 * s,
+            1.2 * s * ripPhase + 0.8 * s,
+            0,
+            0,
+            Math.PI * 2,
+          );
           ctx.stroke();
         }
       }
@@ -6922,8 +8654,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       // Water edge highlight
       ctx.strokeStyle = "rgba(180,220,255,0.2)";
       ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.ellipse(fx, fy + 5 * s, 20 * s, 9 * s, 0, Math.PI * 1.1, Math.PI * 1.9);
+      drawOrganicWaterShape(ctx, fx, fy + 5 * s, 20 * s, 9 * s, fishSeed, 0.12);
       ctx.stroke();
       break;
     }
@@ -8407,29 +10138,80 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.closePath();
       ctx.fill();
 
-      // Body contour lines (muscle definition)
+      // Body contour lines (enhanced muscle definition)
       ctx.strokeStyle = sandDark;
       ctx.lineWidth = 1 * s;
+      // Spine line
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 28 * s);
+      ctx.quadraticCurveTo(
+        screenPos.x - 10 * s, screenPos.y - 32 * s,
+        screenPos.x + 5 * s, screenPos.y - 30 * s,
+      );
+      ctx.stroke();
+      // Shoulder blade
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 28 * s);
+      ctx.quadraticCurveTo(
+        screenPos.x + 12 * s, screenPos.y - 25 * s,
+        screenPos.x + 18 * s, screenPos.y - 20 * s,
+      );
+      ctx.stroke();
+      // Upper body contour
+      ctx.strokeStyle = "rgba(100, 80, 50, 0.25)";
       ctx.beginPath();
       ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
       ctx.quadraticCurveTo(
-        screenPos.x - 5 * s,
-        screenPos.y - 20 * s,
-        screenPos.x + 5 * s,
-        screenPos.y - 22 * s,
+        screenPos.x - 5 * s, screenPos.y - 20 * s,
+        screenPos.x + 5 * s, screenPos.y - 22 * s,
       );
       ctx.stroke();
-
-      // Ribcage suggestion
+      // Ribcage suggestion (multiple ribs)
+      ctx.strokeStyle = "rgba(100, 80, 50, 0.18)";
+      ctx.lineWidth = 0.8 * s;
+      for (let rib = 0; rib < 3; rib++) {
+        const ribOff = rib * 3.5;
+        ctx.beginPath();
+        ctx.moveTo(
+          screenPos.x - 12 * s + ribOff * s,
+          screenPos.y - 18 * s + ribOff * s,
+        );
+        ctx.quadraticCurveTo(
+          screenPos.x - 8 * s + ribOff * s,
+          screenPos.y - 14 * s + ribOff * s,
+          screenPos.x - 5 * s + ribOff * s,
+          screenPos.y - 12 * s + ribOff * s,
+        );
+        ctx.stroke();
+      }
+      // Haunch muscle
+      ctx.strokeStyle = sandDark;
+      ctx.lineWidth = 1 * s;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 18 * s);
+      ctx.moveTo(screenPos.x - 22 * s, screenPos.y - 8 * s);
       ctx.quadraticCurveTo(
-        screenPos.x - 8 * s,
-        screenPos.y - 14 * s,
-        screenPos.x - 5 * s,
-        screenPos.y - 12 * s,
+        screenPos.x - 18 * s, screenPos.y - 18 * s,
+        screenPos.x - 10 * s, screenPos.y - 22 * s,
       );
       ctx.stroke();
+      // Body highlight (top surface lit)
+      ctx.fillStyle = "rgba(220, 200, 150, 0.12)";
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 18 * s, screenPos.y - 30 * s);
+      ctx.quadraticCurveTo(
+        screenPos.x - 10 * s, screenPos.y - 34 * s,
+        screenPos.x + 5 * s, screenPos.y - 32 * s,
+      );
+      ctx.quadraticCurveTo(
+        screenPos.x + 12 * s, screenPos.y - 30 * s,
+        screenPos.x + 18 * s, screenPos.y - 24 * s,
+      );
+      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 26 * s);
+      ctx.quadraticCurveTo(
+        screenPos.x - 5 * s, screenPos.y - 28 * s,
+        screenPos.x - 18 * s, screenPos.y - 30 * s,
+      );
+      ctx.fill();
 
       // ========== FRONT LEGS ==========
       // Right front leg (lit side, visible)
@@ -8751,127 +10533,295 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // ========== FACIAL FEATURES ==========
-      // Eyebrows (carved)
-      ctx.strokeStyle = sandDark;
-      ctx.lineWidth = 2 * s;
-      ctx.beginPath();
-      ctx.moveTo(headCenterX - 8 * s, headCenterY - 3 * s);
-      ctx.quadraticCurveTo(
-        headCenterX - 5 * s,
-        headCenterY - 5 * s,
-        headCenterX - 2 * s,
-        headCenterY - 3 * s,
-      );
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(headCenterX + 2 * s, headCenterY - 3 * s);
-      ctx.quadraticCurveTo(
-        headCenterX + 5 * s,
-        headCenterY - 5 * s,
-        headCenterX + 8 * s,
-        headCenterY - 3 * s,
-      );
-      ctx.stroke();
 
-      // Eye sockets
+      // Face contouring — forehead shadow
+      const foreheadGrad = ctx.createLinearGradient(
+        headCenterX, headCenterY - 8 * s,
+        headCenterX, headCenterY - 2 * s,
+      );
+      foreheadGrad.addColorStop(0, "rgba(100, 80, 50, 0.15)");
+      foreheadGrad.addColorStop(1, "rgba(100, 80, 50, 0)");
+      ctx.fillStyle = foreheadGrad;
+      ctx.fillRect(headCenterX - 9 * s, headCenterY - 8 * s, 18 * s, 6 * s);
+
+      // Cheekbone highlights
+      ctx.fillStyle = "rgba(220, 200, 160, 0.2)";
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenterX - 6 * s, headCenterY + 2 * s,
+        3.5 * s, 1.8 * s, -0.15, 0, Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenterX + 6 * s, headCenterY + 2 * s,
+        3.5 * s, 1.8 * s, 0.15, 0, Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Temple shadows
+      ctx.fillStyle = "rgba(90, 70, 45, 0.18)";
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenterX - 9 * s, headCenterY - 1 * s,
+        2 * s, 3.5 * s, -0.1, 0, Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenterX + 9 * s, headCenterY - 1 * s,
+        2 * s, 3.5 * s, 0.1, 0, Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Sculpted brow ridge
+      const browGrad = ctx.createLinearGradient(
+        headCenterX, headCenterY - 4.5 * s,
+        headCenterX, headCenterY - 1.5 * s,
+      );
+      browGrad.addColorStop(0, sandMid);
+      browGrad.addColorStop(1, sandDark);
+      ctx.fillStyle = browGrad;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 8.5 * s, headCenterY - 2 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY - 4.5 * s,
+        headCenterX - 1.5 * s, headCenterY - 2.5 * s,
+      );
+      ctx.lineTo(headCenterX - 1.5 * s, headCenterY - 1 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY - 3 * s,
+        headCenterX - 8.5 * s, headCenterY - 0.5 * s,
+      );
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(headCenterX + 1.5 * s, headCenterY - 2.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY - 4.5 * s,
+        headCenterX + 8.5 * s, headCenterY - 2 * s,
+      );
+      ctx.lineTo(headCenterX + 8.5 * s, headCenterY - 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY - 3 * s,
+        headCenterX + 1.5 * s, headCenterY - 1 * s,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Almond eye sockets
       ctx.fillStyle = sandShadow;
       ctx.beginPath();
-      ctx.ellipse(
-        headCenterX - 5 * s,
-        headCenterY,
-        3.5 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(headCenterX - 8 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY - 1.5 * s,
+        headCenterX - 1.5 * s, headCenterY + 0.5 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY + 2.2 * s,
+        headCenterX - 8 * s, headCenterY + 0.5 * s,
       );
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(
-        headCenterX + 5 * s,
-        headCenterY,
-        3.5 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(headCenterX + 1.5 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY - 1.5 * s,
+        headCenterX + 8 * s, headCenterY + 0.5 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY + 2.2 * s,
+        headCenterX + 1.5 * s, headCenterY + 0.5 * s,
       );
       ctx.fill();
 
-      // Mystical glowing eyes
-      const eyeGlowIntensity = mysticPulse * 0.8;
+      // Glowing almond eyes
+      const eyeGlowIntensity = mysticPulse * 0.65;
+      setShadowBlur(ctx, 4 * s, eyeGlow);
       ctx.fillStyle = `rgba(64, 208, 255, ${eyeGlowIntensity})`;
-      setShadowBlur(ctx, 8 * s, eyeGlow);
       ctx.beginPath();
-      ctx.ellipse(
-        headCenterX - 5 * s,
-        headCenterY,
-        2.5 * s,
-        1.5 * s,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(headCenterX - 7.5 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY - 0.8 * s,
+        headCenterX - 2 * s, headCenterY + 0.5 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY + 1.6 * s,
+        headCenterX - 7.5 * s, headCenterY + 0.5 * s,
       );
       ctx.fill();
       ctx.beginPath();
-      ctx.ellipse(
-        headCenterX + 5 * s,
-        headCenterY,
-        2.5 * s,
-        1.5 * s,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.moveTo(headCenterX + 2 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY - 0.8 * s,
+        headCenterX + 7.5 * s, headCenterY + 0.5 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY + 1.6 * s,
+        headCenterX + 2 * s, headCenterY + 0.5 * s,
       );
       ctx.fill();
       clearShadow(ctx);
 
-      // Eye pupils
-      ctx.fillStyle = "#104050";
+      // Kohl liner (Egyptian eye-line)
+      ctx.strokeStyle = "#1a1008";
+      ctx.lineWidth = 1.2 * s;
+      ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.arc(headCenterX - 5 * s, headCenterY, 1 * s, 0, Math.PI * 2);
-      ctx.arc(headCenterX + 5 * s, headCenterY, 1 * s, 0, Math.PI * 2);
+      ctx.moveTo(headCenterX - 8 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY - 1.5 * s,
+        headCenterX - 1.5 * s, headCenterY + 0.5 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX - 5 * s, headCenterY + 2.2 * s,
+        headCenterX - 8 * s, headCenterY + 0.5 * s,
+      );
+      ctx.stroke();
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 8 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 9.5 * s, headCenterY + 1.5 * s,
+        headCenterX - 10 * s, headCenterY + 3 * s,
+      );
+      ctx.stroke();
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX + 1.5 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY - 1.5 * s,
+        headCenterX + 8 * s, headCenterY + 0.5 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX + 5 * s, headCenterY + 2.2 * s,
+        headCenterX + 1.5 * s, headCenterY + 0.5 * s,
+      );
+      ctx.stroke();
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX + 8 * s, headCenterY + 0.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 9.5 * s, headCenterY + 1.5 * s,
+        headCenterX + 10 * s, headCenterY + 3 * s,
+      );
+      ctx.stroke();
+      ctx.lineCap = "butt";
+
+      // Eye highlights
+      ctx.fillStyle = "rgba(200, 240, 255, 0.45)";
+      ctx.beginPath();
+      ctx.arc(headCenterX - 4 * s, headCenterY, 0.7 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(headCenterX + 6 * s, headCenterY, 0.7 * s, 0, Math.PI * 2);
       ctx.fill();
 
-      // Nose
-      ctx.fillStyle = sandMid;
+      // Nose bridge
+      ctx.fillStyle = sandBase;
       ctx.beginPath();
-      ctx.moveTo(headCenterX, headCenterY + 1 * s);
-      ctx.lineTo(headCenterX - 2.5 * s, headCenterY + 7 * s);
-      ctx.lineTo(headCenterX, headCenterY + 6 * s);
-      ctx.lineTo(headCenterX + 2.5 * s, headCenterY + 7 * s);
+      ctx.moveTo(headCenterX - 1.2 * s, headCenterY + 2 * s);
+      ctx.lineTo(headCenterX + 1.2 * s, headCenterY + 2 * s);
+      ctx.lineTo(headCenterX + 2 * s, headCenterY + 6.5 * s);
+      ctx.lineTo(headCenterX - 2 * s, headCenterY + 6.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(90, 70, 45, 0.2)";
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 1.2 * s, headCenterY + 2 * s);
+      ctx.lineTo(headCenterX, headCenterY + 2.5 * s);
+      ctx.lineTo(headCenterX, headCenterY + 6.5 * s);
+      ctx.lineTo(headCenterX - 2 * s, headCenterY + 6.5 * s);
       ctx.closePath();
       ctx.fill();
 
-      // Nose shadow
-      ctx.strokeStyle = sandDark;
-      ctx.lineWidth = 1 * s;
+      // Nose tip and nostrils
+      ctx.fillStyle = sandMid;
       ctx.beginPath();
-      ctx.moveTo(headCenterX - 2 * s, headCenterY + 7 * s);
-      ctx.lineTo(headCenterX + 2 * s, headCenterY + 7 * s);
-      ctx.stroke();
-
-      // Mouth (serene smile)
-      ctx.strokeStyle = sandDark;
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(headCenterX - 5 * s, headCenterY + 10 * s);
+      ctx.moveTo(headCenterX - 2.8 * s, headCenterY + 7 * s);
       ctx.quadraticCurveTo(
-        headCenterX,
-        headCenterY + 12 * s,
-        headCenterX + 5 * s,
-        headCenterY + 10 * s,
+        headCenterX, headCenterY + 8 * s,
+        headCenterX + 2.8 * s, headCenterY + 7 * s,
+      );
+      ctx.lineTo(headCenterX + 2 * s, headCenterY + 6.5 * s);
+      ctx.lineTo(headCenterX - 2 * s, headCenterY + 6.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = sandShadow;
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenterX - 1.3 * s, headCenterY + 7.2 * s,
+        0.5 * s, 0.35 * s, 0, 0, Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(
+        headCenterX + 1.3 * s, headCenterY + 7.2 * s,
+        0.5 * s, 0.35 * s, 0, 0, Math.PI * 2,
+      );
+      ctx.fill();
+
+      // Nasolabial folds
+      ctx.strokeStyle = "rgba(100, 80, 50, 0.18)";
+      ctx.lineWidth = 0.6 * s;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 2.5 * s, headCenterY + 7.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX - 3.5 * s, headCenterY + 9 * s,
+        headCenterX - 4 * s, headCenterY + 10 * s,
+      );
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(headCenterX + 2.5 * s, headCenterY + 7.5 * s);
+      ctx.quadraticCurveTo(
+        headCenterX + 3.5 * s, headCenterY + 9 * s,
+        headCenterX + 4 * s, headCenterY + 10 * s,
       );
       ctx.stroke();
 
-      // Chin definition
+      // Mouth (enigmatic, barely curved)
+      ctx.strokeStyle = sandShadow;
+      ctx.lineWidth = 1.3 * s;
       ctx.beginPath();
-      ctx.moveTo(headCenterX - 3 * s, headCenterY + 13 * s);
+      ctx.moveTo(headCenterX - 4 * s, headCenterY + 10.5 * s);
       ctx.quadraticCurveTo(
-        headCenterX,
-        headCenterY + 15 * s,
-        headCenterX + 3 * s,
-        headCenterY + 13 * s,
+        headCenterX - 1.5 * s, headCenterY + 11.2 * s,
+        headCenterX, headCenterY + 10.8 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX + 1.5 * s, headCenterY + 11.2 * s,
+        headCenterX + 4 * s, headCenterY + 10.5 * s,
+      );
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(190, 170, 130, 0.15)";
+      ctx.lineWidth = 0.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 3 * s, headCenterY + 10 * s);
+      ctx.quadraticCurveTo(
+        headCenterX, headCenterY + 9.5 * s,
+        headCenterX + 3 * s, headCenterY + 10 * s,
+      );
+      ctx.stroke();
+
+      // Chin and jaw definition
+      ctx.fillStyle = "rgba(180, 160, 120, 0.12)";
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 7 * s, headCenterY + 12 * s);
+      ctx.quadraticCurveTo(
+        headCenterX, headCenterY + 16 * s,
+        headCenterX + 7 * s, headCenterY + 12 * s,
+      );
+      ctx.quadraticCurveTo(
+        headCenterX, headCenterY + 14 * s,
+        headCenterX - 7 * s, headCenterY + 12 * s,
+      );
+      ctx.fill();
+      ctx.strokeStyle = sandDark;
+      ctx.lineWidth = 0.7 * s;
+      ctx.beginPath();
+      ctx.moveTo(headCenterX - 4 * s, headCenterY + 13 * s);
+      ctx.quadraticCurveTo(
+        headCenterX, headCenterY + 15 * s,
+        headCenterX + 4 * s, headCenterY + 13 * s,
       );
       ctx.stroke();
 
@@ -8943,22 +10893,59 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       clearShadow(ctx);
 
       // ========== WEATHERING AND CRACKS ==========
-      ctx.strokeStyle = "rgba(80, 60, 40, 0.3)";
+      ctx.strokeStyle = "rgba(80, 60, 40, 0.25)";
       ctx.lineWidth = 0.5 * s;
 
-      // Crack on face
+      // Face crack with branch
       ctx.beginPath();
       ctx.moveTo(headCenterX + 8 * s, headCenterY + 3 * s);
       ctx.lineTo(headCenterX + 10 * s, headCenterY + 8 * s);
       ctx.lineTo(headCenterX + 9 * s, headCenterY + 12 * s);
       ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(headCenterX + 10 * s, headCenterY + 8 * s);
+      ctx.lineTo(headCenterX + 12 * s, headCenterY + 9 * s);
+      ctx.stroke();
 
-      // Crack on body
+      // Body cracks
       ctx.beginPath();
       ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 20 * s);
       ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 15 * s);
       ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 10 * s);
       ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 15 * s);
+      ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
+      ctx.lineTo(screenPos.x - 7 * s, screenPos.y - 8 * s);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x + 15 * s, screenPos.y - 8 * s);
+      ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 5 * s);
+      ctx.stroke();
+
+      // Erosion pitting
+      ctx.fillStyle = "rgba(80, 60, 40, 0.15)";
+      for (let pit = 0; pit < 12; pit++) {
+        const pitAngle = (pit / 12) * Math.PI * 2 + 0.3;
+        const pitDist = (12 + ((pit * 73) % 15)) * s;
+        const pitX = screenPos.x + Math.cos(pitAngle) * pitDist;
+        const pitY = screenPos.y - 15 * s + Math.sin(pitAngle) * pitDist * 0.5;
+        const pitR = (0.5 + ((pit * 37) % 5) / 5) * s;
+        ctx.beginPath();
+        ctx.arc(pitX, pitY, pitR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Stone block joint lines
+      ctx.strokeStyle = "rgba(80, 60, 40, 0.12)";
+      ctx.lineWidth = 0.4 * s;
+      for (let joint = 0; joint < 3; joint++) {
+        const jY = screenPos.y - 5 * s - joint * 8 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s + joint * 3 * s, jY);
+        ctx.lineTo(screenPos.x + 15 * s - joint * 5 * s, jY - 2 * s);
+        ctx.stroke();
+      }
 
       // ========== MYSTICAL AURA ==========
       // Subtle glow around the sphinx
@@ -10124,7 +12111,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       );
       ctx.stroke();
 
-      // === BOATHOUSE (right side) - Tudor style ===
+      // === BOATHOUSE (right side) - Detailed Tudor Boathouse ===
       const bhx = cx + 46 * s;
       const bhy = cy - 4 * s;
       const bhW = 14 * s,
@@ -10132,168 +12119,545 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         bhH = 18 * s;
 
       // Shadow under building
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.beginPath();
-      ctx.ellipse(bhx, bhy + bhD + 3 * s, 16 * s, 6 * s, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(bhx + 2 * s, bhy + bhD + 4 * s, 18 * s, 7 * s, 0.08, 0, Math.PI * 2);
       ctx.fill();
 
-      // Stone foundation
-      ctx.fillStyle = "#4A3A2A";
-      ctx.beginPath();
-      ctx.moveTo(bhx - bhW * ISO, bhy + bhD * 0.5 + 2 * s);
-      ctx.lineTo(bhx, bhy + bhD + 2 * s);
-      ctx.lineTo(bhx + bhW * ISO, bhy + bhD * 0.5 + 2 * s);
-      ctx.lineTo(bhx + bhW * ISO, bhy + bhD * 0.5 - 1 * s);
-      ctx.lineTo(bhx, bhy + bhD - 1 * s);
-      ctx.lineTo(bhx - bhW * ISO, bhy + bhD * 0.5 - 1 * s);
-      ctx.closePath();
-      ctx.fill();
+      // Stone foundation — layered stone blocks with mortar
+      {
+        const fndH = 3 * s;
+        const fndLeft = { x: bhx - bhW * ISO, y: bhy + bhD * 0.5 };
+        const fndFront = { x: bhx, y: bhy + bhD };
+        const fndRight = { x: bhx + bhW * ISO, y: bhy + bhD * 0.5 };
 
-      // Dock/pier extending into water
-      ctx.fillStyle = "#6d5030";
-      ctx.beginPath();
-      ctx.moveTo(bhx - 10 * s, bhy + 6 * s);
-      ctx.lineTo(bhx - 24 * s, bhy + 13 * s);
-      ctx.lineTo(bhx - 22 * s, bhy + 15 * s);
-      ctx.lineTo(bhx - 8 * s, bhy + 8 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#5a4020";
-      ctx.beginPath();
-      ctx.moveTo(bhx - 22 * s, bhy + 15 * s);
-      ctx.lineTo(bhx - 24 * s, bhy + 13 * s);
-      ctx.lineTo(bhx - 24 * s, bhy + 15.5 * s);
-      ctx.lineTo(bhx - 22 * s, bhy + 17.5 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Dock planks
-      ctx.strokeStyle = "rgba(90,64,32,0.4)";
-      ctx.lineWidth = 0.7 * s;
-      for (let dp = 0; dp < 5; dp++) {
-        const dpf = dp / 5;
-        const dpx1 = bhx - 10 * s + (bhx - 24 * s - bhx + 10 * s) * dpf;
-        const dpy1 = bhy + 6 * s + (bhy + 13 * s - bhy - 6 * s) * dpf;
+        // Foundation base (dark)
+        ctx.fillStyle = "#3a2a1a";
         ctx.beginPath();
-        ctx.moveTo(dpx1, dpy1 + 1 * s);
-        ctx.lineTo(dpx1 + 2 * s, dpy1 + 2.5 * s);
-        ctx.stroke();
-      }
-      // Dock posts
-      ctx.fillStyle = "#4a3018";
-      for (let dp = 0; dp < 3; dp++) {
-        const dpx = bhx - 12 * s - dp * 5 * s;
-        const dpy = bhy + 8 * s + dp * 2.8 * s;
-        ctx.fillRect(dpx - 1 * s, dpy - 4 * s, 2 * s, 6 * s);
-        ctx.fillStyle = "#3a2008";
-        ctx.beginPath();
-        ctx.arc(dpx, dpy - 4 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.moveTo(fndLeft.x, fndLeft.y + fndH);
+        ctx.lineTo(fndFront.x, fndFront.y + fndH);
+        ctx.lineTo(fndRight.x, fndRight.y + fndH);
+        ctx.lineTo(fndRight.x, fndRight.y - 1 * s);
+        ctx.lineTo(fndFront.x, fndFront.y - 1 * s);
+        ctx.lineTo(fndLeft.x, fndLeft.y - 1 * s);
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#4a3018";
+
+        // Foundation top face
+        ctx.fillStyle = "#5a4a38";
+        ctx.beginPath();
+        ctx.moveTo(fndLeft.x, fndLeft.y - 1 * s);
+        ctx.lineTo(fndFront.x, fndFront.y - 1 * s);
+        ctx.lineTo(fndRight.x, fndRight.y - 1 * s);
+        ctx.lineTo(bhx, bhy + bhD - fndH - 1 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone block texture on left face
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.4 * s;
+        for (let row = 0; row < 2; row++) {
+          const ry = fndLeft.y + row * fndH * 0.5;
+          const t = row * 0.5;
+          ctx.beginPath();
+          ctx.moveTo(fndLeft.x, ry);
+          ctx.lineTo(fndFront.x, fndFront.y - (1 - t) * fndH);
+          ctx.stroke();
+        }
+        for (let col = 0; col < 4; col++) {
+          const cf = (col + 0.5) / 4;
+          const bx = fndLeft.x + (fndFront.x - fndLeft.x) * cf;
+          const by = fndLeft.y + (fndFront.y - fndLeft.y) * cf;
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 1 * s);
+          ctx.lineTo(bx, by + fndH);
+          ctx.stroke();
+        }
+
+        // Stone block texture on right face
+        for (let row = 0; row < 2; row++) {
+          const ry = fndRight.y + row * fndH * 0.5;
+          const t = row * 0.5;
+          ctx.beginPath();
+          ctx.moveTo(fndRight.x, ry);
+          ctx.lineTo(fndFront.x, fndFront.y - (1 - t) * fndH);
+          ctx.stroke();
+        }
+        for (let col = 0; col < 4; col++) {
+          const cf = (col + 0.5) / 4;
+          const bx = fndFront.x + (fndRight.x - fndFront.x) * cf;
+          const by = fndFront.y + (fndRight.y - fndFront.y) * cf;
+          ctx.beginPath();
+          ctx.moveTo(bx, by - 1 * s);
+          ctx.lineTo(bx, by + fndH);
+          ctx.stroke();
+        }
       }
 
-      // Left wall (shadowed)
-      const bwlGrad = ctx.createLinearGradient(bhx - bhW * ISO, bhy, bhx, bhy);
-      bwlGrad.addColorStop(0, "#3A2515");
-      bwlGrad.addColorStop(0.5, "#4A3020");
-      bwlGrad.addColorStop(1, "#3A2515");
-      ctx.fillStyle = bwlGrad;
-      ctx.beginPath();
-      ctx.moveTo(bhx - bhW * ISO, bhy - bhH + bhD * 0.5);
-      ctx.lineTo(bhx, bhy - bhH + bhD);
-      ctx.lineTo(bhx, bhy + bhD);
-      ctx.lineTo(bhx - bhW * ISO, bhy + bhD * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Right wall (lit)
-      const bwrGrad = ctx.createLinearGradient(bhx, bhy, bhx + bhW * ISO, bhy);
-      bwrGrad.addColorStop(0, "#5A3A20");
-      bwrGrad.addColorStop(0.5, "#6A4A2A");
-      bwrGrad.addColorStop(1, "#5A3A20");
-      ctx.fillStyle = bwrGrad;
-      ctx.beginPath();
-      ctx.moveTo(bhx + bhW * ISO, bhy - bhH + bhD * 0.5);
-      ctx.lineTo(bhx, bhy - bhH + bhD);
-      ctx.lineTo(bhx, bhy + bhD);
-      ctx.lineTo(bhx + bhW * ISO, bhy + bhD * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Timber frame details (Tudor cross beams)
-      ctx.strokeStyle = "#3a2008";
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(bhx + bhW * ISO * 0.5, bhy - bhH * 0.7 + bhD * 0.5);
-      ctx.lineTo(bhx + bhW * ISO * 0.5, bhy + bhD * 0.5);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(bhx + bhW * ISO * 0.15, bhy - bhH * 0.35 + bhD * 0.75);
-      ctx.lineTo(bhx + bhW * ISO * 0.85, bhy - bhH * 0.35 + bhD * 0.25);
-      ctx.stroke();
-      // Peaked roof with overhang
-      const roofExt = 3 * s;
-      ctx.fillStyle = "#4a2a10";
-      ctx.beginPath();
-      ctx.moveTo(bhx, bhy - bhH - 7 * s);
-      ctx.lineTo(bhx - (bhW + roofExt) * ISO, bhy - bhH + bhD * 0.5 + 2 * s);
-      ctx.lineTo(bhx, bhy - bhH + bhD + 3 * s);
-      ctx.lineTo(bhx + (bhW + roofExt) * ISO, bhy - bhH + bhD * 0.5 + 2 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Roof lit side
-      ctx.fillStyle = "#5a3a18";
-      ctx.beginPath();
-      ctx.moveTo(bhx, bhy - bhH - 7 * s);
-      ctx.lineTo(bhx + (bhW + roofExt) * ISO, bhy - bhH + bhD * 0.5 + 2 * s);
-      ctx.lineTo(bhx, bhy - bhH + bhD + 3 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Roof ridge highlight
-      ctx.strokeStyle = "#6b4a28";
-      ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.moveTo(bhx - 2 * s, bhy - bhH - 6 * s);
-      ctx.lineTo(bhx + 2 * s, bhy - bhH - 6 * s);
-      ctx.stroke();
-      // Chimney
-      ctx.fillStyle = "#6a5040";
-      ctx.fillRect(bhx + 4 * s, bhy - bhH - 5 * s, 3 * s, 6 * s);
-      ctx.fillStyle = "#7a6050";
-      ctx.fillRect(bhx + 3.5 * s, bhy - bhH - 6 * s, 4 * s, 1.5 * s);
-      // Arched doorway
-      ctx.fillStyle = "#1a0a00";
-      ctx.beginPath();
-      ctx.arc(bhx, bhy + bhD * 0.3, 3 * s, Math.PI, 0);
-      ctx.lineTo(bhx + 3 * s, bhy + bhD * 0.3 + 5 * s);
-      ctx.lineTo(bhx - 3 * s, bhy + bhD * 0.3 + 5 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Warm light from door
-      ctx.fillStyle = "rgba(200,150,70,0.1)";
-      ctx.beginPath();
-      ctx.arc(bhx, bhy + bhD * 0.3 + 2 * s, 5 * s, 0, Math.PI * 2);
-      ctx.fill();
-      // Windows with warm glow
-      const bhWindows = [
-        { x: bhx + 5 * s, y: bhy - bhH + bhD * 0.65 },
-        { x: bhx + 8 * s, y: bhy - bhH + bhD * 0.85 },
-        { x: bhx - 6 * s, y: bhy - bhH + bhD * 0.7 },
-      ];
-      for (const w of bhWindows) {
-        ctx.fillStyle = "rgba(200,150,70,0.55)";
-        ctx.fillRect(w.x - 1.5 * s, w.y - 1.5 * s, 3 * s, 3 * s);
-        ctx.fillStyle = "rgba(200,150,70,0.15)";
+      // Dock/pier extending into water — improved with 3D planks
+      {
+        const dockStartX = bhx - 10 * s, dockStartY = bhy + 6 * s;
+        const dockEndX = bhx - 26 * s, dockEndY = bhy + 14 * s;
+        const dockW = 3 * s;
+
+        // Dock shadow on water
+        ctx.fillStyle = "rgba(0,0,0,0.1)";
         ctx.beginPath();
-        ctx.arc(w.x, w.y, 4 * s, 0, Math.PI * 2);
+        ctx.moveTo(dockStartX - dockW, dockStartY + 2 * s);
+        ctx.lineTo(dockEndX - dockW, dockEndY + 2 * s);
+        ctx.lineTo(dockEndX + dockW, dockEndY + 2 * s);
+        ctx.lineTo(dockStartX + dockW, dockStartY + 2 * s);
+        ctx.closePath();
         ctx.fill();
+
+        // Dock top
+        const dockTopG = ctx.createLinearGradient(dockStartX, dockStartY, dockEndX, dockEndY);
+        dockTopG.addColorStop(0, "#7a5a35");
+        dockTopG.addColorStop(0.5, "#6d5030");
+        dockTopG.addColorStop(1, "#5a4025");
+        ctx.fillStyle = dockTopG;
+        ctx.beginPath();
+        ctx.moveTo(dockStartX - dockW, dockStartY);
+        ctx.lineTo(dockEndX - dockW, dockEndY);
+        ctx.lineTo(dockEndX + dockW, dockEndY - 1.5 * s);
+        ctx.lineTo(dockStartX + dockW, dockStartY - 1.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dock front edge thickness
+        ctx.fillStyle = "#5a4020";
+        ctx.beginPath();
+        ctx.moveTo(dockEndX - dockW, dockEndY);
+        ctx.lineTo(dockStartX - dockW, dockStartY);
+        ctx.lineTo(dockStartX - dockW, dockStartY + 2 * s);
+        ctx.lineTo(dockEndX - dockW, dockEndY + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Plank lines
+        ctx.strokeStyle = "rgba(60,40,20,0.35)";
+        ctx.lineWidth = 0.5 * s;
+        for (let dp = 1; dp < 8; dp++) {
+          const dpf = dp / 8;
+          const dpx = dockStartX + (dockEndX - dockStartX) * dpf;
+          const dpy = dockStartY + (dockEndY - dockStartY) * dpf;
+          ctx.beginPath();
+          ctx.moveTo(dpx - dockW, dpy + 0.5 * s);
+          ctx.lineTo(dpx + dockW, dpy - 1 * s);
+          ctx.stroke();
+        }
+
+        // Dock posts with water rings
+        for (let dp = 0; dp < 3; dp++) {
+          const dpf = (dp + 0.5) / 3;
+          const dpx = dockStartX + (dockEndX - dockStartX) * dpf - dockW;
+          const dpy = dockStartY + (dockEndY - dockStartY) * dpf;
+          const postH = 7 * s;
+
+          // Water ring
+          ctx.strokeStyle = "rgba(140,200,230,0.15)";
+          ctx.lineWidth = 0.6 * s;
+          ctx.beginPath();
+          ctx.ellipse(dpx, dpy + 2 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Post
+          ctx.fillStyle = "#4a3018";
+          ctx.fillRect(dpx - 1 * s, dpy - postH + 2 * s, 2 * s, postH);
+          // Top cap
+          ctx.fillStyle = "#3a2008";
+          ctx.beginPath();
+          ctx.arc(dpx, dpy - postH + 2 * s, 1.4 * s, 0, Math.PI * 2);
+          ctx.fill();
+          // Rope tied to end post
+          if (dp === 2) {
+            ctx.strokeStyle = "#a08060";
+            ctx.lineWidth = 0.8 * s;
+            ctx.beginPath();
+            ctx.moveTo(dpx, dpy - postH + 4 * s);
+            ctx.quadraticCurveTo(dpx - 3 * s, dpy - postH + 8 * s, dpx - 2 * s, dpy + 1 * s);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Left wall (shadowed) — with plaster + timber frame
+      {
+        const wallTL = { x: bhx - bhW * ISO, y: bhy - bhH + bhD * 0.5 };
+        const wallBL = { x: bhx - bhW * ISO, y: bhy + bhD * 0.5 };
+        const wallTR = { x: bhx, y: bhy - bhH + bhD };
+        const wallBR = { x: bhx, y: bhy + bhD };
+
+        // Plaster fill
+        const bwlGrad = ctx.createLinearGradient(wallTL.x, wallTL.y, wallTR.x, wallTR.y);
+        bwlGrad.addColorStop(0, "#c8b898");
+        bwlGrad.addColorStop(0.5, "#d4c4a4");
+        bwlGrad.addColorStop(1, "#c0b090");
+        ctx.fillStyle = bwlGrad;
+        ctx.beginPath();
+        ctx.moveTo(wallTL.x, wallTL.y);
+        ctx.lineTo(wallTR.x, wallTR.y);
+        ctx.lineTo(wallBR.x, wallBR.y);
+        ctx.lineTo(wallBL.x, wallBL.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dark timber frame beams (Tudor pattern)
         ctx.strokeStyle = "#3a2008";
-        ctx.lineWidth = 0.6 * s;
-        ctx.strokeRect(w.x - 1.5 * s, w.y - 1.5 * s, 3 * s, 3 * s);
+        ctx.lineWidth = 1.8 * s;
+
+        // Horizontal beam at mid-height
+        const midL = { x: (wallTL.x + wallBL.x) * 0.5, y: (wallTL.y + wallBL.y) * 0.5 };
+        const midR = { x: (wallTR.x + wallBR.x) * 0.5, y: (wallTR.y + wallBR.y) * 0.5 };
         ctx.beginPath();
-        ctx.moveTo(w.x, w.y - 1.5 * s);
-        ctx.lineTo(w.x, w.y + 1.5 * s);
+        ctx.moveTo(midL.x, midL.y);
+        ctx.lineTo(midR.x, midR.y);
+        ctx.stroke();
+
+        // Vertical center beam
+        const cTop = { x: (wallTL.x + wallTR.x) * 0.5, y: (wallTL.y + wallTR.y) * 0.5 };
+        const cBot = { x: (wallBL.x + wallBR.x) * 0.5, y: (wallBL.y + wallBR.y) * 0.5 };
+        ctx.beginPath();
+        ctx.moveTo(cTop.x, cTop.y);
+        ctx.lineTo(cBot.x, cBot.y);
+        ctx.stroke();
+
+        // Diagonal braces in upper panels
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(wallTL.x, wallTL.y);
+        ctx.lineTo(cBot.x, cBot.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(wallTR.x, wallTR.y);
+        ctx.lineTo(cBot.x * 0.5 + wallBL.x * 0.5, cBot.y * 0.5 + wallBL.y * 0.5);
+        ctx.stroke();
+
+        // Border frame
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(wallTL.x, wallTL.y);
+        ctx.lineTo(wallTR.x, wallTR.y);
+        ctx.lineTo(wallBR.x, wallBR.y);
+        ctx.lineTo(wallBL.x, wallBL.y);
+        ctx.closePath();
         ctx.stroke();
       }
 
-      // === GRANDSTAND / COLUMNED PAVILION (left side) ===
+      // Right wall (lit) — with plaster + timber frame
+      {
+        const wallTL2 = { x: bhx, y: bhy - bhH + bhD };
+        const wallBL2 = { x: bhx, y: bhy + bhD };
+        const wallTR2 = { x: bhx + bhW * ISO, y: bhy - bhH + bhD * 0.5 };
+        const wallBR2 = { x: bhx + bhW * ISO, y: bhy + bhD * 0.5 };
+
+        // Plaster fill (lighter — lit side)
+        const bwrGrad = ctx.createLinearGradient(wallTL2.x, wallTL2.y, wallTR2.x, wallTR2.y);
+        bwrGrad.addColorStop(0, "#d8c8a8");
+        bwrGrad.addColorStop(0.5, "#e4d4b4");
+        bwrGrad.addColorStop(1, "#d0c0a0");
+        ctx.fillStyle = bwrGrad;
+        ctx.beginPath();
+        ctx.moveTo(wallTL2.x, wallTL2.y);
+        ctx.lineTo(wallTR2.x, wallTR2.y);
+        ctx.lineTo(wallBR2.x, wallBR2.y);
+        ctx.lineTo(wallBL2.x, wallBL2.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dark timber frame beams
+        ctx.strokeStyle = "#3a2008";
+        ctx.lineWidth = 1.8 * s;
+
+        // Horizontal beam at mid-height
+        const midL2 = { x: (wallTL2.x + wallBL2.x) * 0.5, y: (wallTL2.y + wallBL2.y) * 0.5 };
+        const midR2 = { x: (wallTR2.x + wallBR2.x) * 0.5, y: (wallTR2.y + wallBR2.y) * 0.5 };
+        ctx.beginPath();
+        ctx.moveTo(midL2.x, midL2.y);
+        ctx.lineTo(midR2.x, midR2.y);
+        ctx.stroke();
+
+        // Vertical center beam
+        const cTop2 = { x: (wallTL2.x + wallTR2.x) * 0.5, y: (wallTL2.y + wallTR2.y) * 0.5 };
+        const cBot2 = { x: (wallBL2.x + wallBR2.x) * 0.5, y: (wallBL2.y + wallBR2.y) * 0.5 };
+        ctx.beginPath();
+        ctx.moveTo(cTop2.x, cTop2.y);
+        ctx.lineTo(cBot2.x, cBot2.y);
+        ctx.stroke();
+
+        // Diagonal braces
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(midL2.x, midL2.y);
+        ctx.lineTo(wallTR2.x, wallTR2.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(midR2.x, midR2.y);
+        ctx.lineTo(wallTL2.x, wallTL2.y);
+        ctx.stroke();
+
+        // Border frame
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(wallTL2.x, wallTL2.y);
+        ctx.lineTo(wallTR2.x, wallTR2.y);
+        ctx.lineTo(wallBR2.x, wallBR2.y);
+        ctx.lineTo(wallBL2.x, wallBL2.y);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // Peaked roof with overhang — with shingle rows
+      {
+        const roofExt = 4 * s;
+        const roofPeak = { x: bhx, y: bhy - bhH - 8 * s };
+        const roofL = { x: bhx - (bhW + roofExt) * ISO, y: bhy - bhH + bhD * 0.5 + 3 * s };
+        const roofF = { x: bhx, y: bhy - bhH + bhD + 4 * s };
+        const roofR = { x: bhx + (bhW + roofExt) * ISO, y: bhy - bhH + bhD * 0.5 + 3 * s };
+
+        // Roof dark side (left)
+        const roofDarkG = ctx.createLinearGradient(roofPeak.x, roofPeak.y, roofL.x, roofL.y);
+        roofDarkG.addColorStop(0, "#5a3518");
+        roofDarkG.addColorStop(0.5, "#4a2a10");
+        roofDarkG.addColorStop(1, "#3a2008");
+        ctx.fillStyle = roofDarkG;
+        ctx.beginPath();
+        ctx.moveTo(roofPeak.x, roofPeak.y);
+        ctx.lineTo(roofL.x, roofL.y);
+        ctx.lineTo(roofF.x, roofF.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Roof lit side (right)
+        const roofLitG = ctx.createLinearGradient(roofPeak.x, roofPeak.y, roofR.x, roofR.y);
+        roofLitG.addColorStop(0, "#6b4a28");
+        roofLitG.addColorStop(0.5, "#5a3a18");
+        roofLitG.addColorStop(1, "#4a2a10");
+        ctx.fillStyle = roofLitG;
+        ctx.beginPath();
+        ctx.moveTo(roofPeak.x, roofPeak.y);
+        ctx.lineTo(roofR.x, roofR.y);
+        ctx.lineTo(roofF.x, roofF.y);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shingle rows on lit side
+        ctx.strokeStyle = "rgba(30,15,5,0.3)";
+        ctx.lineWidth = 0.5 * s;
+        for (let sh = 1; sh < 8; sh++) {
+          const shf = sh / 8;
+          const shL = {
+            x: roofPeak.x + (roofF.x - roofPeak.x) * shf,
+            y: roofPeak.y + (roofF.y - roofPeak.y) * shf,
+          };
+          const shR2 = {
+            x: roofPeak.x + (roofR.x - roofPeak.x) * shf,
+            y: roofPeak.y + (roofR.y - roofPeak.y) * shf,
+          };
+          ctx.beginPath();
+          ctx.moveTo(shL.x, shL.y);
+          ctx.lineTo(shR2.x, shR2.y);
+          ctx.stroke();
+        }
+
+        // Shingle rows on dark side
+        for (let sh = 1; sh < 8; sh++) {
+          const shf = sh / 8;
+          const shL2 = {
+            x: roofPeak.x + (roofL.x - roofPeak.x) * shf,
+            y: roofPeak.y + (roofL.y - roofPeak.y) * shf,
+          };
+          const shR3 = {
+            x: roofPeak.x + (roofF.x - roofPeak.x) * shf,
+            y: roofPeak.y + (roofF.y - roofPeak.y) * shf,
+          };
+          ctx.beginPath();
+          ctx.moveTo(shL2.x, shL2.y);
+          ctx.lineTo(shR3.x, shR3.y);
+          ctx.stroke();
+        }
+
+        // Ridge cap
+        ctx.strokeStyle = "#7a5a30";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(roofPeak.x, roofPeak.y);
+        ctx.lineTo(roofF.x, roofF.y);
+        ctx.stroke();
+
+        // Eave overhang shadow
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(roofL.x + 2 * s, roofL.y + 1 * s);
+        ctx.lineTo(roofF.x, roofF.y + 1 * s);
+        ctx.lineTo(roofR.x - 2 * s, roofR.y + 1 * s);
+        ctx.stroke();
+      }
+
+      // Chimney with brick detail + animated smoke
+      {
+        const chX = bhx + 5 * s, chY = bhy - bhH - 5 * s;
+        const chW = 3.5 * s, chH = 8 * s;
+
+        // Chimney left face (dark)
+        ctx.fillStyle = "#5a4030";
+        ctx.beginPath();
+        ctx.moveTo(chX - chW * 0.5, chY);
+        ctx.lineTo(chX - chW * 0.5, chY + chH);
+        ctx.lineTo(chX, chY + chH + 1 * s);
+        ctx.lineTo(chX, chY + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Chimney right face (lit)
+        ctx.fillStyle = "#7a5a40";
+        ctx.beginPath();
+        ctx.moveTo(chX + chW * 0.5, chY);
+        ctx.lineTo(chX + chW * 0.5, chY + chH);
+        ctx.lineTo(chX, chY + chH + 1 * s);
+        ctx.lineTo(chX, chY + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Chimney top face
+        ctx.fillStyle = "#8a6a50";
+        ctx.beginPath();
+        ctx.moveTo(chX, chY);
+        ctx.lineTo(chX + chW * 0.5, chY + 0.5 * s);
+        ctx.lineTo(chX, chY + 1 * s);
+        ctx.lineTo(chX - chW * 0.5, chY + 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brick mortar lines
+        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.lineWidth = 0.3 * s;
+        for (let br = 0; br < 4; br++) {
+          const bry = chY + 1.5 * s + br * 1.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(chX - chW * 0.5, bry);
+          ctx.lineTo(chX + chW * 0.5, bry);
+          ctx.stroke();
+        }
+
+        // Chimney cap
+        ctx.fillStyle = "#6a5040";
+        ctx.beginPath();
+        ctx.moveTo(chX - chW * 0.6, chY - 0.5 * s);
+        ctx.lineTo(chX + chW * 0.6, chY - 0.5 * s);
+        ctx.lineTo(chX + chW * 0.6, chY + 0.3 * s);
+        ctx.lineTo(chX - chW * 0.6, chY + 0.3 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Animated smoke puffs
+        for (let sm = 0; sm < 4; sm++) {
+          const smPhase = (time * 0.8 + sm * 0.7) % 3.5;
+          const smAlpha = Math.max(0, 0.25 - smPhase * 0.08);
+          if (smAlpha > 0) {
+            const smX = chX + Math.sin(time * 0.5 + sm * 1.3) * 2 * s * (1 + smPhase * 0.4);
+            const smY = chY - 2 * s - smPhase * 5 * s;
+            const smR = (1.5 + smPhase * 2) * s;
+            ctx.fillStyle = `rgba(180,170,160,${smAlpha})`;
+            ctx.beginPath();
+            ctx.arc(smX, smY, smR, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // Arched doorway with depth and warm glow
+      {
+        const doorCx = bhx, doorCy = bhy + bhD * 0.35;
+        const doorW = 3.5 * s, doorH = 6 * s;
+
+        // Deep recess
+        ctx.fillStyle = "#0a0500";
+        ctx.beginPath();
+        ctx.arc(doorCx, doorCy, doorW + 0.5 * s, Math.PI, 0);
+        ctx.lineTo(doorCx + doorW + 0.5 * s, doorCy + doorH + 0.5 * s);
+        ctx.lineTo(doorCx - doorW - 0.5 * s, doorCy + doorH + 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner doorway
+        ctx.fillStyle = "#1a0a00";
+        ctx.beginPath();
+        ctx.arc(doorCx, doorCy, doorW, Math.PI, 0);
+        ctx.lineTo(doorCx + doorW, doorCy + doorH);
+        ctx.lineTo(doorCx - doorW, doorCy + doorH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Warm interior light
+        const doorGlowA = 0.12 + Math.sin(time * 1.5) * 0.04;
+        const doorGlowG = ctx.createRadialGradient(
+          doorCx, doorCy + doorH * 0.5, 0,
+          doorCx, doorCy + doorH * 0.5, doorW * 2.5,
+        );
+        doorGlowG.addColorStop(0, `rgba(220,160,70,${doorGlowA})`);
+        doorGlowG.addColorStop(0.5, `rgba(200,140,50,${doorGlowA * 0.5})`);
+        doorGlowG.addColorStop(1, "transparent");
+        ctx.fillStyle = doorGlowG;
+        ctx.beginPath();
+        ctx.arc(doorCx, doorCy + doorH * 0.5, doorW * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stone archway keystone
+        ctx.fillStyle = "#5a4a38";
+        ctx.beginPath();
+        ctx.arc(doorCx, doorCy, doorW + 1.5 * s, Math.PI + 0.2, -0.2);
+        ctx.arc(doorCx, doorCy, doorW + 0.3 * s, -0.2, Math.PI + 0.2, true);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Windows with mullions, warm glow, and shutters
+      {
+        const bhWinPositions = [
+          { x: bhx + 5.5 * s, y: bhy - bhH + bhD * 0.6, face: "right" },
+          { x: bhx + 9 * s, y: bhy - bhH + bhD * 0.78, face: "right" },
+          { x: bhx - 5 * s, y: bhy - bhH + bhD * 0.55, face: "left" },
+          { x: bhx - 8 * s, y: bhy - bhH + bhD * 0.45, face: "left" },
+        ];
+        for (const w of bhWinPositions) {
+          const wW = 2.2 * s, wH = 3 * s;
+          const isLit = w.face === "right";
+
+          // Glow halo
+          const wGlowA = isLit ? 0.2 : 0.1;
+          ctx.fillStyle = `rgba(200,150,70,${wGlowA + Math.sin(time * 1.5 + w.x) * 0.04})`;
+          ctx.beginPath();
+          ctx.arc(w.x, w.y, 4.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Warm lit interior
+          ctx.fillStyle = `rgba(220,170,80,${isLit ? 0.65 : 0.4})`;
+          ctx.fillRect(w.x - wW, w.y - wH * 0.5, wW * 2, wH);
+
+          // Mullion cross
+          ctx.strokeStyle = "#3a2008";
+          ctx.lineWidth = 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(w.x, w.y - wH * 0.5);
+          ctx.lineTo(w.x, w.y + wH * 0.5);
+          ctx.moveTo(w.x - wW, w.y);
+          ctx.lineTo(w.x + wW, w.y);
+          ctx.stroke();
+
+          // Frame
+          ctx.strokeStyle = "#3a2008";
+          ctx.lineWidth = 1 * s;
+          ctx.strokeRect(w.x - wW, w.y - wH * 0.5, wW * 2, wH);
+
+          // Sill
+          ctx.fillStyle = "#4a3a28";
+          ctx.fillRect(w.x - wW - 0.5 * s, w.y + wH * 0.5 - 0.3 * s, wW * 2 + 1 * s, 1 * s);
+        }
+      }
+
+      // === GRANDSTAND / COLUMNED PAVILION (left side) - Neoclassical ===
       const gx = cx - 50 * s;
       const gy = cy - 8 * s;
       const gW = 16 * s,
@@ -10301,203 +12665,775 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         gH = 22 * s;
 
       // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
       ctx.beginPath();
-      ctx.ellipse(gx, gy + gD + 3 * s, 18 * s, 7 * s, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(gx + 2 * s, gy + gD + 4 * s, 20 * s, 8 * s, 0.08, 0, Math.PI * 2);
       ctx.fill();
 
-      // Raised stone platform
-      ctx.fillStyle = "#4A3A2A";
-      ctx.beginPath();
-      ctx.moveTo(gx, gy + gD + 3 * s);
-      ctx.lineTo(gx + gW * ISO, gy + gD * 0.5 + 3 * s);
-      ctx.lineTo(gx + gW * ISO, gy + gD * 0.5);
-      ctx.lineTo(gx, gy + gD);
-      ctx.lineTo(gx - gW * ISO, gy + gD * 0.5);
-      ctx.lineTo(gx - gW * ISO, gy + gD * 0.5 + 3 * s);
-      ctx.closePath();
-      ctx.fill();
+      // Stepped stone platform (3 steps)
+      {
+        const stepH = 1.5 * s;
+        const stepInset = 2 * s;
+        for (let st = 0; st < 3; st++) {
+          const stW = gW + (2 - st) * stepInset;
+          const stD = gD + (2 - st) * stepInset * 0.5;
+          const stY = gy + gD + (2 - st) * stepH;
+          const stIso = ISO;
 
-      // Left wall (dark stone)
-      ctx.fillStyle = "#5A4A3A";
-      ctx.beginPath();
-      ctx.moveTo(gx - gW * ISO, gy - gH + gD * 0.5);
-      ctx.lineTo(gx, gy - gH + gD);
-      ctx.lineTo(gx, gy + gD);
-      ctx.lineTo(gx - gW * ISO, gy + gD * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Right wall (lit stone)
-      ctx.fillStyle = "#6A5A48";
-      ctx.beginPath();
-      ctx.moveTo(gx + gW * ISO, gy - gH + gD * 0.5);
-      ctx.lineTo(gx, gy - gH + gD);
-      ctx.lineTo(gx, gy + gD);
-      ctx.lineTo(gx + gW * ISO, gy + gD * 0.5);
-      ctx.closePath();
-      ctx.fill();
+          // Step front-left face
+          ctx.fillStyle = st % 2 === 0 ? "#5a4a38" : "#6a5a48";
+          ctx.beginPath();
+          ctx.moveTo(gx - stW * stIso, stY - stD * 0.5);
+          ctx.lineTo(gx, stY);
+          ctx.lineTo(gx, stY + stepH);
+          ctx.lineTo(gx - stW * stIso, stY - stD * 0.5 + stepH);
+          ctx.closePath();
+          ctx.fill();
 
-      // Stone columns on right face
-      ctx.fillStyle = "#6A5A48";
-      for (let p = 0; p < 4; p++) {
-        const pf = (p + 0.5) / 4;
-        const ppx = gx + gW * ISO * pf;
-        const ppy = gy + gD * 0.5 * (1 - pf * 0.8);
-        const colH = gH - 4 * s;
-        ctx.fillStyle = "#6A5A48";
-        ctx.fillRect(ppx - 1.2 * s, ppy - colH, 2.4 * s, colH);
-        ctx.fillStyle = "#5A4A38";
-        ctx.fillRect(ppx - 2 * s, ppy - colH - 1 * s, 4 * s, 2 * s);
-        ctx.fillStyle = "#4A3A2A";
-        ctx.fillRect(ppx - 2 * s, ppy - 1 * s, 4 * s, 2 * s);
+          // Step front-right face
+          ctx.fillStyle = st % 2 === 0 ? "#6a5a48" : "#7a6a58";
+          ctx.beginPath();
+          ctx.moveTo(gx + stW * stIso, stY - stD * 0.5);
+          ctx.lineTo(gx, stY);
+          ctx.lineTo(gx, stY + stepH);
+          ctx.lineTo(gx + stW * stIso, stY - stD * 0.5 + stepH);
+          ctx.closePath();
+          ctx.fill();
+
+          // Step top face
+          ctx.fillStyle = st % 2 === 0 ? "#7a6a55" : "#8a7a65";
+          ctx.beginPath();
+          ctx.moveTo(gx, stY - stD);
+          ctx.lineTo(gx + stW * stIso, stY - stD * 0.5);
+          ctx.lineTo(gx, stY);
+          ctx.lineTo(gx - stW * stIso, stY - stD * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        }
       }
 
-      // Pediment (triangular top)
-      ctx.fillStyle = "#5A4A38";
-      ctx.beginPath();
-      ctx.moveTo(gx, gy - gH);
-      ctx.lineTo(gx + gW * ISO, gy - gH + gD * 0.5);
-      ctx.lineTo(gx, gy - gH + gD);
-      ctx.lineTo(gx - gW * ISO, gy - gH + gD * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Pediment ridge
-      ctx.fillStyle = "#4A3A2A";
-      ctx.beginPath();
-      ctx.moveTo(gx, gy - gH);
-      ctx.lineTo(gx - gW * ISO, gy - gH + gD * 0.5);
-      ctx.lineTo(gx, gy - gH + gD);
-      ctx.closePath();
-      ctx.fill();
-      // Triangular gable on right face
-      ctx.fillStyle = "#5A4A38";
-      ctx.beginPath();
-      ctx.moveTo(gx + gW * ISO * 0.5, gy - gH - 4 * s + gD * 0.25);
-      ctx.lineTo(gx + gW * ISO * 0.05, gy - gH + gD * 0.5);
-      ctx.lineTo(gx + gW * ISO * 0.95, gy - gH + gD * 0.25);
-      ctx.closePath();
-      ctx.fill();
-      // Windows
-      ctx.fillStyle = "rgba(200,150,70,0.5)";
-      for (let w = 0; w < 3; w++) {
-        const wy = gy - gH + gD * 0.6 + w * 5.5 * s;
+      // Back wall (recessed interior — dark)
+      {
+        const interiorGrad = ctx.createLinearGradient(gx - gW * ISO, gy, gx, gy);
+        interiorGrad.addColorStop(0, "#3a3028");
+        interiorGrad.addColorStop(1, "#4a4038");
+        ctx.fillStyle = interiorGrad;
         ctx.beginPath();
-        ctx.arc(gx + gW * ISO * 0.5, wy + gD * 0.25, 1.5 * s, Math.PI, 0);
-        ctx.lineTo(gx + gW * ISO * 0.5 + 1.5 * s, wy + gD * 0.25 + 3 * s);
-        ctx.lineTo(gx + gW * ISO * 0.5 - 1.5 * s, wy + gD * 0.25 + 3 * s);
+        ctx.moveTo(gx - gW * ISO, gy - gH + gD * 0.5);
+        ctx.lineTo(gx, gy - gH + gD);
+        ctx.lineTo(gx, gy + gD);
+        ctx.lineTo(gx - gW * ISO, gy + gD * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone coursing on back wall
+        ctx.strokeStyle = "rgba(0,0,0,0.12)";
+        ctx.lineWidth = 0.4 * s;
+        for (let row = 1; row < 8; row++) {
+          const rf = row / 8;
+          const ry1 = gy - gH + gD * 0.5 + (gy + gD * 0.5 - gy + gH - gD * 0.5) * rf;
+          const ry2 = gy - gH + gD + (gy + gD - gy + gH - gD) * rf;
+          ctx.beginPath();
+          ctx.moveTo(gx - gW * ISO, ry1);
+          ctx.lineTo(gx, ry2);
+          ctx.stroke();
+        }
+      }
+
+      // Right wall (lit stone with coursing)
+      {
+        const rwGrad = ctx.createLinearGradient(gx, gy, gx + gW * ISO, gy);
+        rwGrad.addColorStop(0, "#7a6a55");
+        rwGrad.addColorStop(0.4, "#8a7a65");
+        rwGrad.addColorStop(1, "#6a5a48");
+        ctx.fillStyle = rwGrad;
+        ctx.beginPath();
+        ctx.moveTo(gx + gW * ISO, gy - gH + gD * 0.5);
+        ctx.lineTo(gx, gy - gH + gD);
+        ctx.lineTo(gx, gy + gD);
+        ctx.lineTo(gx + gW * ISO, gy + gD * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone coursing on right wall
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 0.4 * s;
+        for (let row = 1; row < 8; row++) {
+          const rf = row / 8;
+          const ry1 = gy - gH + gD * 0.5 + (gy + gD * 0.5 - gy + gH - gD * 0.5) * rf;
+          const ry2 = gy - gH + gD + (gy + gD - gy + gH - gD) * rf;
+          ctx.beginPath();
+          ctx.moveTo(gx + gW * ISO, ry1);
+          ctx.lineTo(gx, ry2);
+          ctx.stroke();
+        }
+
+        // Vertical block joints
+        for (let col = 1; col < 5; col++) {
+          const cf = col / 5;
+          const cx1 = gx + gW * ISO * cf;
+          ctx.beginPath();
+          ctx.moveTo(cx1, gy - gH + gD * (0.5 + cf * 0.5));
+          ctx.lineTo(cx1, gy + gD * (0.5 + cf * 0.5) * 0.96);
+          ctx.stroke();
+        }
+      }
+
+      // Classical fluted columns on right face
+      {
+        const colCount = 4;
+        for (let p = 0; p < colCount; p++) {
+          const pf = (p + 0.5) / colCount;
+          const colBaseX = gx + gW * ISO * pf;
+          const colBaseY = gy + gD * 0.5 * (1 - pf * 0.78);
+          const colH2 = gH - 5 * s;
+          const colW = 1.8 * s;
+          const colTopX = colBaseX;
+          const colTopY = colBaseY - colH2;
+
+          // Column base (Attic base — wider plinth)
+          ctx.fillStyle = "#7a6a55";
+          ctx.beginPath();
+          ctx.ellipse(colBaseX, colBaseY, colW + 1 * s, (colW + 1 * s) * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#6a5a48";
+          ctx.beginPath();
+          ctx.ellipse(colBaseX, colBaseY - 1 * s, colW + 0.5 * s, (colW + 0.5 * s) * 0.4, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Column shaft (tapered slightly)
+          const shaftTopW = colW * 0.85;
+          ctx.fillStyle = "#8a7a65";
+          ctx.beginPath();
+          ctx.moveTo(colBaseX - colW, colBaseY - 1 * s);
+          ctx.lineTo(colTopX - shaftTopW, colTopY + 2 * s);
+          ctx.lineTo(colTopX + shaftTopW, colTopY + 2 * s);
+          ctx.lineTo(colBaseX + colW, colBaseY - 1 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Fluting (vertical grooves) — 3 visible flutes
+          ctx.strokeStyle = "rgba(0,0,0,0.08)";
+          ctx.lineWidth = 0.4 * s;
+          for (let fl = 0; fl < 3; fl++) {
+            const flf = (fl + 1) / 4;
+            const flxB = colBaseX - colW + flf * colW * 2;
+            const flxT = colTopX - shaftTopW + flf * shaftTopW * 2;
+            ctx.beginPath();
+            ctx.moveTo(flxB, colBaseY - 1.5 * s);
+            ctx.lineTo(flxT, colTopY + 2.5 * s);
+            ctx.stroke();
+          }
+
+          // Highlight on shaft (light catching)
+          ctx.fillStyle = "rgba(255,255,255,0.06)";
+          ctx.beginPath();
+          ctx.moveTo(colBaseX + colW * 0.3, colBaseY - 1 * s);
+          ctx.lineTo(colTopX + shaftTopW * 0.3, colTopY + 2 * s);
+          ctx.lineTo(colTopX + shaftTopW * 0.8, colTopY + 2 * s);
+          ctx.lineTo(colBaseX + colW * 0.8, colBaseY - 1 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Capital (Ionic — wider top with volute suggestion)
+          ctx.fillStyle = "#7a6a55";
+          ctx.beginPath();
+          ctx.ellipse(colTopX, colTopY + 2 * s, colW + 0.8 * s, (colW + 0.8 * s) * 0.35, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#9a8a72";
+          ctx.fillRect(colTopX - colW - 1.2 * s, colTopY, (colW + 1.2 * s) * 2, 2 * s);
+
+          // Volute curls (simplified)
+          ctx.strokeStyle = "#6a5a48";
+          ctx.lineWidth = 0.5 * s;
+          ctx.beginPath();
+          ctx.arc(colTopX - colW - 0.8 * s, colTopY + 1 * s, 1 * s, -Math.PI * 0.5, Math.PI * 0.8);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(colTopX + colW + 0.8 * s, colTopY + 1 * s, 1 * s, Math.PI * 0.2, Math.PI * 1.5);
+          ctx.stroke();
+        }
+      }
+
+      // Entablature (horizontal band above columns)
+      {
+        const entY = gy - gH + gD * 0.5;
+        const entY2 = gy - gH + gD;
+        const entH2 = 3 * s;
+
+        // Architrave
+        ctx.fillStyle = "#8a7a65";
+        ctx.beginPath();
+        ctx.moveTo(gx + gW * ISO, entY - entH2);
+        ctx.lineTo(gx, entY2 - entH2);
+        ctx.lineTo(gx, entY2);
+        ctx.lineTo(gx + gW * ISO, entY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Frieze (slightly recessed)
+        ctx.fillStyle = "#7a6a55";
+        ctx.beginPath();
+        ctx.moveTo(gx + gW * ISO, entY - entH2 * 2);
+        ctx.lineTo(gx, entY2 - entH2 * 2);
+        ctx.lineTo(gx, entY2 - entH2);
+        ctx.lineTo(gx + gW * ISO, entY - entH2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Triglyph/metope pattern on frieze
+        ctx.strokeStyle = "rgba(0,0,0,0.12)";
+        ctx.lineWidth = 0.6 * s;
+        for (let tg = 0; tg < 6; tg++) {
+          const tgf = (tg + 0.5) / 6;
+          const tgx = gx + gW * ISO * tgf;
+          const tgy = entY - entH2 * 2 + (entY2 - entH2 * 2 - entY + entH2 * 2) * tgf;
+          ctx.beginPath();
+          ctx.moveTo(tgx - 0.3 * s, tgy);
+          ctx.lineTo(tgx - 0.3 * s, tgy + entH2);
+          ctx.moveTo(tgx + 0.3 * s, tgy);
+          ctx.lineTo(tgx + 0.3 * s, tgy + entH2);
+          ctx.stroke();
+        }
+
+        // Cornice (projecting top)
+        ctx.fillStyle = "#9a8a72";
+        ctx.beginPath();
+        ctx.moveTo(gx + (gW + 1) * ISO, entY - entH2 * 2 - 1.5 * s);
+        ctx.lineTo(gx - 1 * s, entY2 - entH2 * 2 - 1.5 * s);
+        ctx.lineTo(gx, entY2 - entH2 * 2);
+        ctx.lineTo(gx + gW * ISO, entY - entH2 * 2);
         ctx.closePath();
         ctx.fill();
       }
-      // Entrance arch
-      ctx.fillStyle = "#2a1a08";
-      ctx.beginPath();
-      ctx.arc(gx + gW * ISO * 0.3, gy + gD * 0.3, 3.5 * s, Math.PI, 0);
-      ctx.lineTo(gx + gW * ISO * 0.3 + 3.5 * s, gy + gD * 0.3 + 6 * s);
-      ctx.lineTo(gx + gW * ISO * 0.3 - 3.5 * s, gy + gD * 0.3 + 6 * s);
-      ctx.closePath();
-      ctx.fill();
 
-      // === CLOCK TOWER (back-left) ===
+      // Pediment (triangular gable with tympanum)
+      {
+        const pedBase = gy - gH + gD * 0.5;
+        const pedBase2 = gy - gH + gD;
+        const pedPeakX = gx + gW * ISO * 0.5;
+        const pedPeakY = gy - gH - 5 * s + gD * 0.25;
+
+        // Pediment triangle (right side visible)
+        const pedG = ctx.createLinearGradient(pedPeakX, pedPeakY, gx + gW * ISO, pedBase);
+        pedG.addColorStop(0, "#8a7a65");
+        pedG.addColorStop(1, "#6a5a48");
+        ctx.fillStyle = pedG;
+        ctx.beginPath();
+        ctx.moveTo(pedPeakX, pedPeakY);
+        ctx.lineTo(gx + gW * ISO + 1 * s, pedBase - 1 * s);
+        ctx.lineTo(gx - 1 * s, pedBase2 - 1 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tympanum (recessed inner triangle)
+        ctx.fillStyle = "#5a4a38";
+        ctx.beginPath();
+        ctx.moveTo(pedPeakX, pedPeakY + 2 * s);
+        ctx.lineTo(gx + gW * ISO - 1 * s, pedBase + 0.5 * s);
+        ctx.lineTo(gx + 1 * s, pedBase2 + 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Acroterion (finial) at peak
+        ctx.fillStyle = "#8a7a65";
+        ctx.beginPath();
+        ctx.arc(pedPeakX, pedPeakY - 1 * s, 1.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#7a6a55";
+        ctx.beginPath();
+        ctx.moveTo(pedPeakX, pedPeakY - 4 * s);
+        ctx.lineTo(pedPeakX - 1.2 * s, pedPeakY - 1 * s);
+        ctx.lineTo(pedPeakX + 1.2 * s, pedPeakY - 1 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Pediment left side (dark face)
+        ctx.fillStyle = "#5a4a38";
+        ctx.beginPath();
+        ctx.moveTo(gx, pedBase2 - 1 * s);
+        ctx.lineTo(gx - gW * ISO, pedBase - 1 * s);
+        ctx.lineTo(pedPeakX - gW * ISO, pedPeakY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Arched windows on right wall (3 tall arches)
+      {
+        for (let w = 0; w < 3; w++) {
+          const wf = (w + 1) / 4;
+          const wCx = gx + gW * ISO * wf;
+          const wCy = gy - gH * 0.4 + gD * (0.5 + wf * 0.3);
+          const wW = 2 * s, wH2 = 4.5 * s;
+
+          // Deep recess
+          ctx.fillStyle = "#2a1a08";
+          ctx.beginPath();
+          ctx.arc(wCx, wCy, wW, Math.PI, 0);
+          ctx.lineTo(wCx + wW, wCy + wH2);
+          ctx.lineTo(wCx - wW, wCy + wH2);
+          ctx.closePath();
+          ctx.fill();
+
+          // Warm interior glow
+          const wGA = 0.35 + Math.sin(time * 1.2 + w * 0.8) * 0.1;
+          ctx.fillStyle = `rgba(210,160,80,${wGA})`;
+          ctx.beginPath();
+          ctx.arc(wCx, wCy, wW - 0.5 * s, Math.PI, 0);
+          ctx.lineTo(wCx + wW - 0.5 * s, wCy + wH2 - 0.5 * s);
+          ctx.lineTo(wCx - wW + 0.5 * s, wCy + wH2 - 0.5 * s);
+          ctx.closePath();
+          ctx.fill();
+
+          // Light halo
+          ctx.fillStyle = `rgba(200,150,70,${wGA * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(wCx, wCy + wH2 * 0.3, 5 * s, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Stone archivolt (arch surround)
+          ctx.strokeStyle = "#6a5a48";
+          ctx.lineWidth = 1 * s;
+          ctx.beginPath();
+          ctx.arc(wCx, wCy, wW + 0.5 * s, Math.PI, 0);
+          ctx.stroke();
+
+          // Keystone
+          ctx.fillStyle = "#7a6a55";
+          ctx.beginPath();
+          ctx.moveTo(wCx - 0.8 * s, wCy - wW - 0.5 * s);
+          ctx.lineTo(wCx + 0.8 * s, wCy - wW - 0.5 * s);
+          ctx.lineTo(wCx + 0.5 * s, wCy - wW + 0.5 * s);
+          ctx.lineTo(wCx - 0.5 * s, wCy - wW + 0.5 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      // Grand entrance arch on front face
+      {
+        const archCx = gx + gW * ISO * 0.3;
+        const archCy = gy + gD * 0.25;
+        const archW = 4 * s, archH2 = 7 * s;
+
+        // Deep recess
+        ctx.fillStyle = "#0a0500";
+        ctx.beginPath();
+        ctx.arc(archCx, archCy, archW + 0.5 * s, Math.PI, 0);
+        ctx.lineTo(archCx + archW + 0.5 * s, archCy + archH2 + 0.5 * s);
+        ctx.lineTo(archCx - archW - 0.5 * s, archCy + archH2 + 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Interior
+        ctx.fillStyle = "#1a0a00";
+        ctx.beginPath();
+        ctx.arc(archCx, archCy, archW, Math.PI, 0);
+        ctx.lineTo(archCx + archW, archCy + archH2);
+        ctx.lineTo(archCx - archW, archCy + archH2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Warm light from inside
+        const archGlowA = 0.12 + Math.sin(time * 1.3) * 0.05;
+        const archGlowG = ctx.createRadialGradient(archCx, archCy + 2 * s, 0, archCx, archCy + 2 * s, archW * 2.5);
+        archGlowG.addColorStop(0, `rgba(220,160,70,${archGlowA})`);
+        archGlowG.addColorStop(1, "transparent");
+        ctx.fillStyle = archGlowG;
+        ctx.beginPath();
+        ctx.arc(archCx, archCy + 2 * s, archW * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stone archivolt
+        ctx.strokeStyle = "#5a4a38";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.arc(archCx, archCy, archW + 1 * s, Math.PI + 0.15, -0.15);
+        ctx.stroke();
+
+        // Keystone
+        ctx.fillStyle = "#6a5a48";
+        ctx.beginPath();
+        ctx.moveTo(archCx - 1 * s, archCy - archW - 1 * s);
+        ctx.lineTo(archCx + 1 * s, archCy - archW - 1 * s);
+        ctx.lineTo(archCx + 0.7 * s, archCy - archW + 0.5 * s);
+        ctx.lineTo(archCx - 0.7 * s, archCy - archW + 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Balustrade along front edge
+      {
+        const balCount = 6;
+        for (let bl = 0; bl < balCount; bl++) {
+          const blf = (bl + 0.5) / balCount;
+          const blx = gx - gW * ISO * (1 - blf) + gW * ISO * blf * 0;
+          const bly = gy + gD * 0.5 * (1 - blf) + gD * blf;
+
+          // Baluster
+          ctx.fillStyle = "#7a6a55";
+          ctx.fillRect(blx - 0.5 * s, bly - 4 * s, 1 * s, 4 * s);
+
+          // Baluster bulge (vase shape)
+          ctx.beginPath();
+          ctx.ellipse(blx, bly - 2.5 * s, 0.8 * s, 1 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Top rail
+        ctx.fillStyle = "#8a7a65";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(gx - gW * ISO, gy + gD * 0.5 - 4 * s);
+        ctx.lineTo(gx, gy + gD - 4 * s);
+        ctx.lineTo(gx, gy + gD - 3 * s);
+        ctx.lineTo(gx - gW * ISO, gy + gD * 0.5 - 3 * s);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // === CLOCK TOWER (back-left) - Detailed Gothic Tower ===
       const tx = cx - 32 * s;
       const ty = cy - 18 * s;
       const tW = 7 * s,
         tH = 28 * s;
 
-      // Tower left wall
-      ctx.fillStyle = "#5A4A3A";
+      // Tower shadow
+      ctx.fillStyle = "rgba(0,0,0,0.14)";
       ctx.beginPath();
-      ctx.moveTo(tx - tW * ISO, ty - tH + tW * 0.5);
-      ctx.lineTo(tx, ty - tH + tW);
-      ctx.lineTo(tx, ty + tW);
-      ctx.lineTo(tx - tW * ISO, ty + tW * 0.5);
-      ctx.closePath();
+      ctx.ellipse(tx + 2 * s, ty + tW + 2 * s, 10 * s, 4 * s, 0.1, 0, Math.PI * 2);
       ctx.fill();
-      // Tower right wall
-      ctx.fillStyle = "#6A5A48";
-      ctx.beginPath();
-      ctx.moveTo(tx + tW * ISO, ty - tH + tW * 0.5);
-      ctx.lineTo(tx, ty - tH + tW);
-      ctx.lineTo(tx, ty + tW);
-      ctx.lineTo(tx + tW * ISO, ty + tW * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Tower top face
-      ctx.fillStyle = "#7A6A55";
-      ctx.beginPath();
-      ctx.moveTo(tx, ty - tH);
-      ctx.lineTo(tx + tW * ISO, ty - tH + tW * 0.5);
-      ctx.lineTo(tx, ty - tH + tW);
-      ctx.lineTo(tx - tW * ISO, ty - tH + tW * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Pointed spire
-      ctx.fillStyle = "#2A1F15";
-      ctx.beginPath();
-      ctx.moveTo(tx, ty - tH - 14 * s);
-      ctx.lineTo(tx - tW * ISO * 0.8, ty - tH + tW * 0.4);
-      ctx.lineTo(tx, ty - tH + tW * 0.8);
-      ctx.lineTo(tx + tW * ISO * 0.8, ty - tH + tW * 0.4);
-      ctx.closePath();
-      ctx.fill();
-      // Spire lit side
-      ctx.fillStyle = "#3A2A1A";
-      ctx.beginPath();
-      ctx.moveTo(tx, ty - tH - 14 * s);
-      ctx.lineTo(tx + tW * ISO * 0.8, ty - tH + tW * 0.4);
-      ctx.lineTo(tx, ty - tH + tW * 0.8);
-      ctx.closePath();
-      ctx.fill();
-      // Spire finial
-      ctx.fillStyle = "#8A7050";
-      ctx.beginPath();
-      ctx.arc(tx, ty - tH - 14 * s, 1.5 * s, 0, Math.PI * 2);
-      ctx.fill();
-      // Clock face
-      ctx.fillStyle = "#8A7A65";
-      ctx.beginPath();
-      ctx.arc(tx + tW * ISO * 0.5, ty - tH * 0.55, 3 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#3A2A1A";
-      ctx.lineWidth = 0.5 * s;
-      ctx.beginPath();
-      ctx.arc(tx + tW * ISO * 0.5, ty - tH * 0.55, 3 * s, 0, Math.PI * 2);
-      ctx.stroke();
-      // Clock hands
-      const clockAngle = (time * 0.1) % (Math.PI * 2);
-      ctx.strokeStyle = "#1A100A";
-      ctx.lineWidth = 0.8 * s;
-      ctx.beginPath();
-      ctx.moveTo(tx + tW * ISO * 0.5, ty - tH * 0.55);
-      ctx.lineTo(
-        tx + tW * ISO * 0.5 + Math.cos(clockAngle) * 2 * s,
-        ty - tH * 0.55 + Math.sin(clockAngle) * 2 * s,
-      );
-      ctx.stroke();
-      ctx.lineWidth = 0.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(tx + tW * ISO * 0.5, ty - tH * 0.55);
-      ctx.lineTo(
-        tx + tW * ISO * 0.5 + Math.cos(clockAngle * 12) * 1.5 * s,
-        ty - tH * 0.55 + Math.sin(clockAngle * 12) * 1.5 * s,
-      );
-      ctx.stroke();
-      // Tower windows
-      for (let tw = 0; tw < 3; tw++) {
-        const twy = ty - tH + tW + 3 * s + tw * 7 * s;
-        ctx.fillStyle =
-          tw === 1 ? "rgba(200,150,70,0.6)" : "rgba(180,130,50,0.35)";
-        ctx.fillRect(tx + tW * ISO * 0.3, twy, 2.5 * s, 3 * s);
-        if (tw === 1) {
-          ctx.fillStyle = "rgba(200,150,70,0.15)";
+
+      // Tower left wall (shadowed stone)
+      {
+        const twlG = ctx.createLinearGradient(tx - tW * ISO, ty, tx, ty);
+        twlG.addColorStop(0, "#4a3a2a");
+        twlG.addColorStop(0.5, "#5a4a3a");
+        twlG.addColorStop(1, "#4a3a2a");
+        ctx.fillStyle = twlG;
+        ctx.beginPath();
+        ctx.moveTo(tx - tW * ISO, ty - tH + tW * 0.5);
+        ctx.lineTo(tx, ty - tH + tW);
+        ctx.lineTo(tx, ty + tW);
+        ctx.lineTo(tx - tW * ISO, ty + tW * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone coursing
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 0.3 * s;
+        for (let row = 1; row < 10; row++) {
+          const rf = row / 10;
+          const ry1 = ty - tH + tW * 0.5 + (ty + tW * 0.5 - ty + tH - tW * 0.5) * rf;
+          const ry2 = ty - tH + tW + (ty + tW - ty + tH - tW) * rf;
           ctx.beginPath();
-          ctx.arc(
-            tx + tW * ISO * 0.3 + 1.25 * s,
-            twy + 1.5 * s,
-            4 * s,
-            0,
-            Math.PI * 2,
-          );
+          ctx.moveTo(tx - tW * ISO, ry1);
+          ctx.lineTo(tx, ry2);
+          ctx.stroke();
+        }
+      }
+
+      // Tower right wall (lit stone)
+      {
+        const twrG = ctx.createLinearGradient(tx, ty, tx + tW * ISO, ty);
+        twrG.addColorStop(0, "#6a5a48");
+        twrG.addColorStop(0.5, "#7a6a55");
+        twrG.addColorStop(1, "#6a5a48");
+        ctx.fillStyle = twrG;
+        ctx.beginPath();
+        ctx.moveTo(tx + tW * ISO, ty - tH + tW * 0.5);
+        ctx.lineTo(tx, ty - tH + tW);
+        ctx.lineTo(tx, ty + tW);
+        ctx.lineTo(tx + tW * ISO, ty + tW * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Stone coursing
+        ctx.strokeStyle = "rgba(0,0,0,0.08)";
+        ctx.lineWidth = 0.3 * s;
+        for (let row = 1; row < 10; row++) {
+          const rf = row / 10;
+          const ry1 = ty - tH + tW * 0.5 + (ty + tW * 0.5 - ty + tH - tW * 0.5) * rf;
+          const ry2 = ty - tH + tW + (ty + tW - ty + tH - tW) * rf;
+          ctx.beginPath();
+          ctx.moveTo(tx + tW * ISO, ry1);
+          ctx.lineTo(tx, ry2);
+          ctx.stroke();
+        }
+      }
+
+      // Corner quoins (alternating blocks at edges)
+      {
+        ctx.fillStyle = "#7a6a55";
+        for (let q = 0; q < 6; q++) {
+          const qf = q / 6;
+          const qy = ty - tH + tW + (tH - tW) * qf;
+          if (q % 2 === 0) {
+            // Right edge quoin
+            ctx.fillRect(tx + tW * ISO - 1.5 * s, qy + tW * 0.5 * (1 - qf) - 0.5 * s, 1.5 * s, 2.5 * s);
+          }
+        }
+      }
+
+      // Belfry openings (arched louver windows near top)
+      {
+        const belY = ty - tH + tW * 0.5 + 2 * s;
+        const belCxR = tx + tW * ISO * 0.5;
+        const belCyR = belY + tW * 0.25 + 2 * s;
+        const belW = 2 * s, belH2 = 3 * s;
+
+        // Right face belfry opening
+        ctx.fillStyle = "#1a1008";
+        ctx.beginPath();
+        ctx.arc(belCxR, belCyR, belW, Math.PI, 0);
+        ctx.lineTo(belCxR + belW, belCyR + belH2);
+        ctx.lineTo(belCxR - belW, belCyR + belH2);
+        ctx.closePath();
+        ctx.fill();
+
+        // Louver slats
+        ctx.strokeStyle = "#3a2a1a";
+        ctx.lineWidth = 0.5 * s;
+        for (let lv = 0; lv < 3; lv++) {
+          const lvy = belCyR + lv * 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(belCxR - belW + 0.3 * s, lvy);
+          ctx.lineTo(belCxR + belW - 0.3 * s, lvy);
+          ctx.stroke();
+        }
+
+        // Stone archivolt
+        ctx.strokeStyle = "#6a5a48";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.arc(belCxR, belCyR, belW + 0.5 * s, Math.PI, 0);
+        ctx.stroke();
+      }
+
+      // Tower top parapet with crenellations
+      {
+        ctx.fillStyle = "#7A6A55";
+        ctx.beginPath();
+        ctx.moveTo(tx, ty - tH);
+        ctx.lineTo(tx + tW * ISO, ty - tH + tW * 0.5);
+        ctx.lineTo(tx, ty - tH + tW);
+        ctx.lineTo(tx - tW * ISO, ty - tH + tW * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crenellations (merlons) on right edge
+        const merlonCount = 3;
+        for (let m = 0; m < merlonCount; m++) {
+          const mf = (m + 0.3) / merlonCount;
+          const mx = tx + tW * ISO * mf;
+          const my = ty - tH + tW * 0.5 * mf;
+
+          ctx.fillStyle = "#6a5a48";
+          ctx.fillRect(mx - 0.8 * s, my - 2.5 * s, 1.6 * s, 2.5 * s);
+          ctx.fillStyle = "#7a6a55";
+          ctx.fillRect(mx - 1 * s, my - 2.8 * s, 2 * s, 0.8 * s);
+        }
+      }
+
+      // Pointed spire with copper patina and dormer
+      {
+        const spireH = 16 * s;
+        const spireTip = { x: tx, y: ty - tH - spireH };
+        const spireBase = tW * ISO * 0.85;
+
+        // Spire dark side (left)
+        const spireDG = ctx.createLinearGradient(spireTip.x, spireTip.y, tx - spireBase, ty - tH + tW * 0.4);
+        spireDG.addColorStop(0, "#2a4a3a");
+        spireDG.addColorStop(0.5, "#1a3a2a");
+        spireDG.addColorStop(1, "#2a3a28");
+        ctx.fillStyle = spireDG;
+        ctx.beginPath();
+        ctx.moveTo(spireTip.x, spireTip.y);
+        ctx.lineTo(tx - spireBase, ty - tH + tW * 0.4);
+        ctx.lineTo(tx, ty - tH + tW * 0.8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Spire lit side (right)
+        const spireLG = ctx.createLinearGradient(spireTip.x, spireTip.y, tx + spireBase, ty - tH + tW * 0.4);
+        spireLG.addColorStop(0, "#3a5a4a");
+        spireLG.addColorStop(0.5, "#4a6a58");
+        spireLG.addColorStop(1, "#3a5a48");
+        ctx.fillStyle = spireLG;
+        ctx.beginPath();
+        ctx.moveTo(spireTip.x, spireTip.y);
+        ctx.lineTo(tx + spireBase, ty - tH + tW * 0.4);
+        ctx.lineTo(tx, ty - tH + tW * 0.8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Spire ridge seams
+        ctx.strokeStyle = "rgba(0,0,0,0.12)";
+        ctx.lineWidth = 0.4 * s;
+        for (let sr = 1; sr < 6; sr++) {
+          const srf = sr / 6;
+          const srx = spireTip.x + (tx + spireBase - spireTip.x) * srf * 0.5 + (tx - spireBase - spireTip.x) * srf * 0.5;
+          const sry = spireTip.y + (ty - tH + tW * 0.6 - spireTip.y) * srf;
+          ctx.beginPath();
+          ctx.moveTo(spireTip.x, spireTip.y);
+          ctx.lineTo(srx + srf * 3 * s, sry);
+          ctx.stroke();
+        }
+
+        // Finial (gold sphere + cross)
+        ctx.fillStyle = "#c4a040";
+        ctx.beginPath();
+        ctx.arc(spireTip.x, spireTip.y, 1.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#d4b050";
+        ctx.beginPath();
+        ctx.arc(spireTip.x + 0.3 * s, spireTip.y - 0.3 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Weathervane rod
+        ctx.strokeStyle = "#8a7050";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(spireTip.x, spireTip.y - 1.5 * s);
+        ctx.lineTo(spireTip.x, spireTip.y - 5 * s);
+        ctx.stroke();
+
+        // Weathervane arrow (rotating with wind)
+        const vaneAngle = Math.sin(time * 0.3) * 0.4;
+        ctx.save();
+        ctx.translate(spireTip.x, spireTip.y - 5 * s);
+        ctx.rotate(vaneAngle);
+        ctx.fillStyle = "#8a7050";
+        ctx.beginPath();
+        ctx.moveTo(3 * s, 0);
+        ctx.lineTo(-2 * s, -0.8 * s);
+        ctx.lineTo(-1.5 * s, 0);
+        ctx.lineTo(-2 * s, 0.8 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Clock face (detailed, on right wall)
+      {
+        const clkCx = tx + tW * ISO * 0.5;
+        const clkCy = ty - tH * 0.48;
+        const clkR = 3.5 * s;
+
+        // Clock face plate
+        const clkG = ctx.createRadialGradient(clkCx, clkCy, 0, clkCx, clkCy, clkR);
+        clkG.addColorStop(0, "#f0e8d8");
+        clkG.addColorStop(0.7, "#e8dcc8");
+        clkG.addColorStop(1, "#d0c4a8");
+        ctx.fillStyle = clkG;
+        ctx.beginPath();
+        ctx.arc(clkCx, clkCy, clkR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outer rim
+        ctx.strokeStyle = "#5a4a30";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.arc(clkCx, clkCy, clkR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner rim
+        ctx.strokeStyle = "#8a7a58";
+        ctx.lineWidth = 0.4 * s;
+        ctx.beginPath();
+        ctx.arc(clkCx, clkCy, clkR - 1 * s, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Hour markers (12 ticks)
+        ctx.strokeStyle = "#3a2a18";
+        ctx.lineWidth = 0.5 * s;
+        for (let h = 0; h < 12; h++) {
+          const ha = (h / 12) * Math.PI * 2 - Math.PI * 0.5;
+          const isCardinal = h % 3 === 0;
+          const innerR = isCardinal ? clkR - 1.5 * s : clkR - 1 * s;
+          ctx.lineWidth = isCardinal ? 0.7 * s : 0.4 * s;
+          ctx.beginPath();
+          ctx.moveTo(clkCx + Math.cos(ha) * innerR, clkCy + Math.sin(ha) * innerR);
+          ctx.lineTo(clkCx + Math.cos(ha) * (clkR - 0.5 * s), clkCy + Math.sin(ha) * (clkR - 0.5 * s));
+          ctx.stroke();
+        }
+
+        // Hour hand
+        const clockAngle = (time * 0.1) % (Math.PI * 2);
+        ctx.strokeStyle = "#1a100a";
+        ctx.lineWidth = 0.8 * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(clkCx, clkCy);
+        ctx.lineTo(
+          clkCx + Math.cos(clockAngle - Math.PI * 0.5) * 2 * s,
+          clkCy + Math.sin(clockAngle - Math.PI * 0.5) * 2 * s,
+        );
+        ctx.stroke();
+
+        // Minute hand
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(clkCx, clkCy);
+        ctx.lineTo(
+          clkCx + Math.cos(clockAngle * 12 - Math.PI * 0.5) * 2.5 * s,
+          clkCy + Math.sin(clockAngle * 12 - Math.PI * 0.5) * 2.5 * s,
+        );
+        ctx.stroke();
+        ctx.lineCap = "butt";
+
+        // Center pin
+        ctx.fillStyle = "#3a2a18";
+        ctx.beginPath();
+        ctx.arc(clkCx, clkCy, 0.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Tower windows (arched, with warm glow)
+      {
+        for (let tw = 0; tw < 3; tw++) {
+          const twY = ty - tH + tW + 4 * s + tw * 7 * s;
+          const twCx = tx + tW * ISO * 0.45;
+          const twCy = twY + tW * 0.22;
+          const twW = 1.5 * s, twH2 = 2.5 * s;
+
+          // Glow (middle window is brighter)
+          const twGlowA = tw === 1 ? 0.25 : 0.12;
+          ctx.fillStyle = `rgba(200,150,70,${twGlowA + Math.sin(time * 1.5 + tw) * 0.04})`;
+          ctx.beginPath();
+          ctx.arc(twCx, twCy + twH2 * 0.3, 4 * s, 0, Math.PI * 2);
           ctx.fill();
+
+          // Window recess
+          ctx.fillStyle = tw === 1 ? "rgba(220,170,80,0.65)" : "rgba(180,130,50,0.4)";
+          ctx.beginPath();
+          ctx.arc(twCx, twCy, twW, Math.PI, 0);
+          ctx.lineTo(twCx + twW, twCy + twH2);
+          ctx.lineTo(twCx - twW, twCy + twH2);
+          ctx.closePath();
+          ctx.fill();
+
+          // Stone frame
+          ctx.strokeStyle = "#5a4a38";
+          ctx.lineWidth = 0.6 * s;
+          ctx.beginPath();
+          ctx.arc(twCx, twCy, twW + 0.3 * s, Math.PI, 0);
+          ctx.lineTo(twCx + twW + 0.3 * s, twCy + twH2 + 0.3 * s);
+          ctx.lineTo(twCx - twW - 0.3 * s, twCy + twH2 + 0.3 * s);
+          ctx.closePath();
+          ctx.stroke();
+
+          // Mullion cross
+          ctx.strokeStyle = "#3a2a18";
+          ctx.lineWidth = 0.4 * s;
+          ctx.beginPath();
+          ctx.moveTo(twCx, twCy - twW + 0.3 * s);
+          ctx.lineTo(twCx, twCy + twH2);
+          ctx.stroke();
+
+          // Sill
+          ctx.fillStyle = "#6a5a48";
+          ctx.fillRect(twCx - twW - 0.5 * s, twCy + twH2, twW * 2 + 1 * s, 0.7 * s);
         }
       }
 
@@ -10895,156 +13831,394 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "cobra_statue": {
-      const cobraStone = "#a09070";
-      const cobraDark = "#706040";
-      const cobraGold = "#c8a030";
+      const cx = screenPos.x;
+      const cy = screenPos.y;
+      const csLight = "#b8a880";
+      const csMid = "#a09070";
+      const csDark = "#706040";
+      const csDeep = "#504828";
+      const csGold = "#d4a830";
+      const csGoldDark = "#a08020";
 
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y + 5 * s,
-        18 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
+      // Ground shadow
+      const cobraShadGrad = ctx.createRadialGradient(
+        cx + 4 * s, cy + 7 * s, 0,
+        cx + 4 * s, cy + 7 * s, 24 * s,
       );
+      cobraShadGrad.addColorStop(0, "rgba(0,0,0,0.35)");
+      cobraShadGrad.addColorStop(0.5, "rgba(0,0,0,0.12)");
+      cobraShadGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = cobraShadGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx + 4 * s, cy + 7 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pedestal
-      ctx.fillStyle = cobraDark;
+      // === 3D ISOMETRIC PEDESTAL (2-tier) ===
+      const pedW1 = 14 * s;
+      const pedH1 = 5 * s;
+      // Bottom tier top
+      ctx.fillStyle = csLight;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y - 5 * s);
+      ctx.moveTo(cx - pedW1, cy - pedH1);
+      ctx.lineTo(cx, cy - pedH1 - pedW1 * 0.5);
+      ctx.lineTo(cx + pedW1, cy - pedH1);
+      ctx.lineTo(cx, cy - pedH1 + pedW1 * 0.5);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = cobraStone;
+      // Left face
+      ctx.fillStyle = csMid;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 8 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y + 3 * s);
+      ctx.moveTo(cx - pedW1, cy - pedH1);
+      ctx.lineTo(cx - pedW1, cy);
+      ctx.lineTo(cx, cy + pedW1 * 0.5);
+      ctx.lineTo(cx, cy - pedH1 + pedW1 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // Right face
+      ctx.fillStyle = csDark;
+      ctx.beginPath();
+      ctx.moveTo(cx + pedW1, cy - pedH1);
+      ctx.lineTo(cx + pedW1, cy);
+      ctx.lineTo(cx, cy + pedW1 * 0.5);
+      ctx.lineTo(cx, cy - pedH1 + pedW1 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // Top tier
+      const ped2Y = cy - pedH1;
+      const pedW2 = 10 * s;
+      const pedH2 = 3 * s;
+      ctx.fillStyle = csLight;
+      ctx.beginPath();
+      ctx.moveTo(cx - pedW2, ped2Y - pedH2);
+      ctx.lineTo(cx, ped2Y - pedH2 - pedW2 * 0.5);
+      ctx.lineTo(cx + pedW2, ped2Y - pedH2);
+      ctx.lineTo(cx, ped2Y - pedH2 + pedW2 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = csMid;
+      ctx.beginPath();
+      ctx.moveTo(cx - pedW2, ped2Y - pedH2);
+      ctx.lineTo(cx - pedW2, ped2Y);
+      ctx.lineTo(cx, ped2Y + pedW2 * 0.5);
+      ctx.lineTo(cx, ped2Y - pedH2 + pedW2 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = csDark;
+      ctx.beginPath();
+      ctx.moveTo(cx + pedW2, ped2Y - pedH2);
+      ctx.lineTo(cx + pedW2, ped2Y);
+      ctx.lineTo(cx, ped2Y + pedW2 * 0.5);
+      ctx.lineTo(cx, ped2Y - pedH2 + pedW2 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      // Gold decorative band on pedestal
+      ctx.strokeStyle = csGoldDark;
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath();
+      ctx.moveTo(cx - pedW2 + 1 * s, ped2Y - pedH2 * 0.5);
+      ctx.lineTo(cx, ped2Y - pedH2 * 0.5 + pedW2 * 0.45);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + pedW2 - 1 * s, ped2Y - pedH2 * 0.5);
+      ctx.lineTo(cx, ped2Y - pedH2 * 0.5 + pedW2 * 0.45);
+      ctx.stroke();
+
+      // === COBRA BODY COILS (3D stacked) ===
+      const coilBase = ped2Y - pedH2;
+      // Bottom coil
+      ctx.fillStyle = csMid;
+      ctx.beginPath();
+      ctx.ellipse(cx, coilBase - 2 * s, 9 * s, 6 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = csDark;
+      ctx.beginPath();
+      ctx.ellipse(cx + 1 * s, coilBase - 1 * s, 7 * s, 4 * s, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      // Top coil (smaller, offset)
+      ctx.fillStyle = csLight;
+      ctx.beginPath();
+      ctx.ellipse(cx - 1 * s, coilBase - 7 * s, 7 * s, 4.5 * s, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = csMid;
+      ctx.beginPath();
+      ctx.ellipse(cx, coilBase - 6 * s, 5 * s, 3 * s, 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      // Scale pattern on coils
+      ctx.strokeStyle = csDeep;
+      ctx.lineWidth = 0.5 * s;
+      for (let row = 0; row < 2; row++) {
+        const scy = coilBase - 1 * s - row * 5.5 * s;
+        const sr = row === 0 ? 7 : 5;
+        for (let sc = 0; sc < 8; sc++) {
+          const sa = (sc / 8) * Math.PI * 2;
+          const ssx = cx + Math.cos(sa) * sr * s * 0.7;
+          const ssy = scy + Math.sin(sa) * sr * s * 0.35;
+          ctx.beginPath();
+          ctx.arc(ssx, ssy, 1.5 * s, 0, Math.PI, true);
+          ctx.stroke();
+        }
+      }
+
+      // === COBRA NECK (rising, S-curve) ===
+      // Back of neck (darker, drawn first)
+      ctx.fillStyle = csDark;
+      ctx.beginPath();
+      ctx.moveTo(cx + 4 * s, coilBase - 9 * s);
+      ctx.bezierCurveTo(
+        cx + 6 * s, coilBase - 22 * s,
+        cx + 3 * s, coilBase - 35 * s,
+        cx + 1 * s, coilBase - 44 * s,
+      );
+      ctx.lineTo(cx - 1 * s, coilBase - 44 * s);
+      ctx.bezierCurveTo(
+        cx - 3 * s, coilBase - 35 * s,
+        cx - 4 * s, coilBase - 22 * s,
+        cx - 4 * s, coilBase - 9 * s,
+      );
+      ctx.closePath();
+      ctx.fill();
+      // Front of neck (lighter)
+      ctx.fillStyle = csMid;
+      ctx.beginPath();
+      ctx.moveTo(cx + 3 * s, coilBase - 9 * s);
+      ctx.bezierCurveTo(
+        cx + 5 * s, coilBase - 22 * s,
+        cx + 2 * s, coilBase - 35 * s,
+        cx, coilBase - 44 * s,
+      );
+      ctx.bezierCurveTo(
+        cx - 2 * s, coilBase - 35 * s,
+        cx - 3 * s, coilBase - 22 * s,
+        cx - 3 * s, coilBase - 9 * s,
+      );
+      ctx.closePath();
+      ctx.fill();
+      // Neck belly scales (lighter underside)
+      ctx.fillStyle = csLight;
+      ctx.beginPath();
+      ctx.moveTo(cx + 1.5 * s, coilBase - 10 * s);
+      ctx.bezierCurveTo(
+        cx + 2.5 * s, coilBase - 22 * s,
+        cx + 1 * s, coilBase - 34 * s,
+        cx, coilBase - 42 * s,
+      );
+      ctx.bezierCurveTo(
+        cx - 1 * s, coilBase - 34 * s,
+        cx - 1.5 * s, coilBase - 22 * s,
+        cx - 1.5 * s, coilBase - 10 * s,
+      );
+      ctx.closePath();
+      ctx.fill();
+      // Horizontal scale lines on neck
+      ctx.strokeStyle = csDeep;
+      ctx.lineWidth = 0.4 * s;
+      for (let nl = 0; nl < 7; nl++) {
+        const ny2 = coilBase - 12 * s - nl * 4.5 * s;
+        const nw = 3 - nl * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(cx - nw * s, ny2);
+        ctx.lineTo(cx + nw * s, ny2);
+        ctx.stroke();
+      }
+
+      // === COBRA HOOD (spread wide, detailed) ===
+      const hoodTop = coilBase - 44 * s;
+      // Hood back (darker)
+      ctx.fillStyle = csDark;
+      ctx.beginPath();
+      ctx.moveTo(cx, hoodTop);
+      ctx.bezierCurveTo(
+        cx - 8 * s, hoodTop + 2 * s,
+        cx - 15 * s, hoodTop + 6 * s,
+        cx - 13 * s, hoodTop + 18 * s,
+      );
+      ctx.quadraticCurveTo(cx - 8 * s, hoodTop + 22 * s, cx, hoodTop + 16 * s);
+      ctx.quadraticCurveTo(cx + 8 * s, hoodTop + 22 * s, cx + 13 * s, hoodTop + 18 * s);
+      ctx.bezierCurveTo(
+        cx + 15 * s, hoodTop + 6 * s,
+        cx + 8 * s, hoodTop + 2 * s,
+        cx, hoodTop,
+      );
+      ctx.closePath();
+      ctx.fill();
+      // Hood front (lighter, slightly smaller)
+      ctx.fillStyle = csMid;
+      ctx.beginPath();
+      ctx.moveTo(cx, hoodTop + 1 * s);
+      ctx.bezierCurveTo(
+        cx - 6 * s, hoodTop + 3 * s,
+        cx - 12 * s, hoodTop + 7 * s,
+        cx - 11 * s, hoodTop + 17 * s,
+      );
+      ctx.quadraticCurveTo(cx - 6 * s, hoodTop + 20 * s, cx, hoodTop + 15 * s);
+      ctx.quadraticCurveTo(cx + 6 * s, hoodTop + 20 * s, cx + 11 * s, hoodTop + 17 * s);
+      ctx.bezierCurveTo(
+        cx + 12 * s, hoodTop + 7 * s,
+        cx + 6 * s, hoodTop + 3 * s,
+        cx, hoodTop + 1 * s,
+      );
       ctx.closePath();
       ctx.fill();
 
-      // Cobra body coil
-      ctx.fillStyle = cobraStone;
+      // Hood markings - gold diamond pattern
+      ctx.fillStyle = csGold;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 5 * s,
-        8 * s,
-        6 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = cobraDark;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 1 * s,
-        screenPos.y - 4 * s,
-        6 * s,
-        4 * s,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Cobra neck rising up
-      ctx.fillStyle = cobraStone;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 8 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 5 * s,
-        screenPos.y - 30 * s,
-        screenPos.x,
-        screenPos.y - 42 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x + 5 * s,
-        screenPos.y - 30 * s,
-        screenPos.x + 4 * s,
-        screenPos.y - 8 * s,
-      );
+      ctx.moveTo(cx, hoodTop + 4 * s);
+      ctx.lineTo(cx - 5 * s, hoodTop + 12 * s);
+      ctx.lineTo(cx, hoodTop + 16 * s);
+      ctx.lineTo(cx + 5 * s, hoodTop + 12 * s);
       ctx.closePath();
       ctx.fill();
-
-      // Hood spread
-      ctx.fillStyle = cobraDark;
+      ctx.fillStyle = csGoldDark;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - 42 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 12 * s,
-        screenPos.y - 38 * s,
-        screenPos.x - 10 * s,
-        screenPos.y - 28 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x - 5 * s,
-        screenPos.y - 25 * s,
-        screenPos.x,
-        screenPos.y - 28 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x + 5 * s,
-        screenPos.y - 25 * s,
-        screenPos.x + 10 * s,
-        screenPos.y - 28 * s,
-      );
-      ctx.quadraticCurveTo(
-        screenPos.x + 12 * s,
-        screenPos.y - 38 * s,
-        screenPos.x,
-        screenPos.y - 42 * s,
-      );
+      ctx.moveTo(cx, hoodTop + 6 * s);
+      ctx.lineTo(cx - 3 * s, hoodTop + 12 * s);
+      ctx.lineTo(cx, hoodTop + 14 * s);
+      ctx.lineTo(cx + 3 * s, hoodTop + 12 * s);
       ctx.closePath();
       ctx.fill();
-
-      // Hood pattern
-      ctx.fillStyle = cobraGold;
+      // Smaller gold accents on hood sides
+      ctx.fillStyle = csGold;
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + side * 8 * s, hoodTop + 8 * s);
+        ctx.lineTo(cx + side * 6 * s, hoodTop + 12 * s);
+        ctx.lineTo(cx + side * 8 * s, hoodTop + 14 * s);
+        ctx.lineTo(cx + side * 10 * s, hoodTop + 11 * s);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // Hood edge highlight
+      ctx.strokeStyle = csLight;
+      ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - 40 * s);
-      ctx.lineTo(screenPos.x - 4 * s, screenPos.y - 32 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 30 * s);
-      ctx.lineTo(screenPos.x + 4 * s, screenPos.y - 32 * s);
+      ctx.moveTo(cx - 13 * s, hoodTop + 18 * s);
+      ctx.bezierCurveTo(
+        cx - 15 * s, hoodTop + 6 * s,
+        cx - 8 * s, hoodTop + 2 * s,
+        cx, hoodTop,
+      );
+      ctx.stroke();
+
+      // === COBRA HEAD (on top of hood) ===
+      const headY2 = hoodTop + 2 * s;
+      // Head shape
+      ctx.fillStyle = csLight;
+      ctx.beginPath();
+      ctx.ellipse(cx, headY2, 4 * s, 3.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = csMid;
+      ctx.beginPath();
+      ctx.ellipse(cx + 0.5 * s, headY2 + 0.5 * s, 3 * s, 2.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Snout
+      ctx.fillStyle = csLight;
+      ctx.beginPath();
+      ctx.ellipse(cx, headY2 + 3 * s, 2.5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Nostrils
+      ctx.fillStyle = csDeep;
+      ctx.beginPath();
+      ctx.arc(cx - 1 * s, headY2 + 3.5 * s, 0.5 * s, 0, Math.PI * 2);
+      ctx.arc(cx + 1 * s, headY2 + 3.5 * s, 0.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Forked tongue (animated)
+      const tongueExt = (Math.sin(decorTime * 4) + 1) * 0.5;
+      if (tongueExt > 0.3) {
+        ctx.strokeStyle = "#c04040";
+        ctx.lineWidth = 0.7 * s;
+        const tLen = tongueExt * 6 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx, headY2 + 4.5 * s);
+        ctx.lineTo(cx, headY2 + 4.5 * s + tLen);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx, headY2 + 4.5 * s + tLen);
+        ctx.lineTo(cx - 1.5 * s, headY2 + 5 * s + tLen);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx, headY2 + 4.5 * s + tLen);
+        ctx.lineTo(cx + 1.5 * s, headY2 + 5 * s + tLen);
+        ctx.stroke();
+      }
+
+      // Eyes (jewel-like with glow)
+      const cobraEyeGlow = 0.5 + Math.sin(decorTime * 3) * 0.3;
+      // Eye socket shadow
+      ctx.fillStyle = csDeep;
+      ctx.beginPath();
+      ctx.ellipse(cx - 2.5 * s, headY2 - 0.5 * s, 2 * s, 1.8 * s, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(cx + 2.5 * s, headY2 - 0.5 * s, 2 * s, 1.8 * s, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      // Outer glow
+      ctx.fillStyle = `rgba(229,57,53,${cobraEyeGlow * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(cx - 2.5 * s, headY2 - 0.5 * s, 3.5 * s, 0, Math.PI * 2);
+      ctx.arc(cx + 2.5 * s, headY2 - 0.5 * s, 3.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // Ruby eyes
+      const eyeGrad = ctx.createRadialGradient(
+        cx - 3 * s, headY2 - 1 * s, 0,
+        cx - 2.5 * s, headY2 - 0.5 * s, 2 * s,
+      );
+      eyeGrad.addColorStop(0, "#ff6060");
+      eyeGrad.addColorStop(0.4, "#e53935");
+      eyeGrad.addColorStop(1, "#8b1a1a");
+      ctx.fillStyle = eyeGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx - 2.5 * s, headY2 - 0.5 * s, 1.5 * s, 1.3 * s, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+      const eyeGrad2 = ctx.createRadialGradient(
+        cx + 2 * s, headY2 - 1 * s, 0,
+        cx + 2.5 * s, headY2 - 0.5 * s, 2 * s,
+      );
+      eyeGrad2.addColorStop(0, "#ff6060");
+      eyeGrad2.addColorStop(0.4, "#e53935");
+      eyeGrad2.addColorStop(1, "#8b1a1a");
+      ctx.fillStyle = eyeGrad2;
+      ctx.beginPath();
+      ctx.ellipse(cx + 2.5 * s, headY2 - 0.5 * s, 1.5 * s, 1.3 * s, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      // Eye specular highlight
+      ctx.fillStyle = `rgba(255,200,200,${cobraEyeGlow * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(cx - 3 * s, headY2 - 1 * s, 0.5 * s, 0, Math.PI * 2);
+      ctx.arc(cx + 2 * s, headY2 - 1 * s, 0.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Gold crown/diadem on head
+      ctx.fillStyle = csGold;
+      ctx.beginPath();
+      ctx.moveTo(cx - 3 * s, headY2 - 2 * s);
+      ctx.lineTo(cx - 2 * s, headY2 - 5 * s);
+      ctx.lineTo(cx, headY2 - 3.5 * s);
+      ctx.lineTo(cx + 2 * s, headY2 - 5 * s);
+      ctx.lineTo(cx + 3 * s, headY2 - 2 * s);
       ctx.closePath();
       ctx.fill();
+      // Gem in crown
+      ctx.fillStyle = "#2196f3";
+      ctx.beginPath();
+      ctx.arc(cx, headY2 - 3.8 * s, 0.8 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(100,200,255,0.5)";
+      ctx.beginPath();
+      ctx.arc(cx - 0.2 * s, headY2 - 4 * s, 0.3 * s, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Eyes (gem-like)
-      ctx.fillStyle = "#e53935";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 3 * s,
-        screenPos.y - 38 * s,
-        1.5 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y - 38 * s,
-        1.5 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Eye glow
-      ctx.fillStyle = `rgba(229,57,53,${0.4 + Math.sin(decorTime * 3) * 0.2})`;
-      ctx.beginPath();
-      ctx.arc(screenPos.x - 3 * s, screenPos.y - 38 * s, 3 * s, 0, Math.PI * 2);
-      ctx.arc(screenPos.x + 3 * s, screenPos.y - 38 * s, 3 * s, 0, Math.PI * 2);
-      ctx.fill();
+      // Sand/dust particles drifting
+      for (let p = 0; p < 3; p++) {
+        const pp = (decorTime * 0.5 + p * 1.1) % 2.5;
+        const pa = Math.sin((pp / 2.5) * Math.PI) * 0.2;
+        const px = cx + Math.sin(decorTime * 0.3 + p * 2) * 14 * s;
+        const py = cy - 10 * s - pp * 12 * s;
+        ctx.fillStyle = `rgba(200,180,130,${pa})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
       break;
     }
 
@@ -11159,137 +14333,256 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "pottery": {
-      const potBase = "#c08050";
-      const potDark = "#8a5830";
-      const potLight = "#d8a070";
+      const ptX = screenPos.x;
+      const ptY = screenPos.y;
+      const ptSeed = decorX * 61 + decorY * 97;
+      const ptHash = (n: number) => {
+        const h = Math.sin(ptSeed * 0.1 + n * 2.891) * 43758.5453;
+        return h - Math.floor(h);
+      };
+      const ptV = variant % 4;
 
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 3 * s,
-        16 * s,
-        7 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      // Color palettes for pots
+      const potPalettes = [
+        { dark: "#7a4828", base: "#b07040", light: "#d09060", rim: "#c8a070", pattern: "#5a3018" },
+        { dark: "#6a3820", base: "#a06038", light: "#c88050", rim: "#b89060", pattern: "#4a2810" },
+        { dark: "#8a5a38", base: "#c08858", light: "#d8a878", rim: "#d0b880", pattern: "#6a4028" },
+        { dark: "#5a3020", base: "#8a5838", light: "#b08050", rim: "#a87848", pattern: "#3a1810" },
+      ];
 
-      // Large intact pot - back
-      ctx.fillStyle = potDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 6 * s, screenPos.y);
-      ctx.quadraticCurveTo(
-        screenPos.x - 8 * s,
-        screenPos.y - 10 * s,
-        screenPos.x - 5 * s,
-        screenPos.y - 18 * s,
+      // Ground shadow
+      const ptShadG = ctx.createRadialGradient(
+        ptX + 2 * s, ptY + 4 * s, 0,
+        ptX + 2 * s, ptY + 4 * s, 22 * s,
       );
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 18 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x + 8 * s,
-        screenPos.y - 10 * s,
-        screenPos.x + 6 * s,
-        screenPos.y,
-      );
-      ctx.closePath();
-      ctx.fill();
-      // Front highlight
-      ctx.fillStyle = potBase;
+      ptShadG.addColorStop(0, "rgba(0,0,0,0.22)");
+      ptShadG.addColorStop(0.6, "rgba(0,0,0,0.06)");
+      ptShadG.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = ptShadG;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, screenPos.y);
-      ctx.quadraticCurveTo(
-        screenPos.x - 7 * s,
-        screenPos.y - 10 * s,
-        screenPos.x - 4 * s,
-        screenPos.y - 17 * s,
-      );
-      ctx.lineTo(screenPos.x + 1 * s, screenPos.y - 17 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 1 * s,
-        screenPos.y - 10 * s,
-        screenPos.x - 1 * s,
-        screenPos.y,
-      );
-      ctx.closePath();
-      ctx.fill();
-      // Rim
-      ctx.fillStyle = potLight;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 18 * s,
-        5 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Pattern band
-      ctx.strokeStyle = potDark;
-      ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 10 * s,
-        7.5 * s,
-        2 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.stroke();
-
-      // Broken pot shards
-      ctx.fillStyle = potBase;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 10 * s, screenPos.y + 2 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 5 * s);
-      ctx.lineTo(screenPos.x + 14 * s, screenPos.y - 3 * s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = potDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 12 * s, screenPos.y + 1 * s);
-      ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 6 * s);
-      ctx.lineTo(screenPos.x + 18 * s, screenPos.y);
-      ctx.closePath();
+      ctx.ellipse(ptX + 2 * s, ptY + 4 * s, 22 * s, 9 * s, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Small pot
-      ctx.fillStyle = potLight;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 12 * s, screenPos.y + 2 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 14 * s,
-        screenPos.y - 4 * s,
-        screenPos.x - 11 * s,
-        screenPos.y - 8 * s,
-      );
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 8 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - 6 * s,
-        screenPos.y - 4 * s,
-        screenPos.x - 8 * s,
-        screenPos.y + 2 * s,
-      );
-      ctx.closePath();
+      // Scattered sand/dirt under pots
+      ctx.fillStyle = "rgba(180,150,100,0.12)";
+      drawOrganicWaterShape(ctx, ptX, ptY + 3 * s, 18 * s, 8 * s, ptSeed + 50, 0.16);
       ctx.fill();
-      ctx.fillStyle = potDark;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 9.5 * s,
-        screenPos.y - 8 * s,
-        2.5 * s,
-        1 * s,
-        0,
-        0,
-        Math.PI * 2,
+
+      // Helper: draw a single organic pot
+      const drawPot = (
+        px: number, py: number, width: number, height: number,
+        bulge: number, neckRatio: number, pal: typeof potPalettes[0],
+        broken: boolean, tilt: number, hasSand: boolean,
+      ) => {
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(tilt);
+
+        const w = width * s;
+        const h = height * s;
+        const neckW = w * neckRatio;
+        const bulgeW = w * bulge;
+        const blobSeed = px * 0.1 + py * 0.2;
+
+        if (broken) {
+          // Broken pot — jagged top half with organic shape for base
+          const breakH = h * (0.3 + ptHash(77) * 0.3);
+
+          // Base body using organic blob
+          const potBodyG = ctx.createLinearGradient(-bulgeW, 0, bulgeW, 0);
+          potBodyG.addColorStop(0, pal.dark);
+          potBodyG.addColorStop(0.3, pal.base);
+          potBodyG.addColorStop(0.5, pal.light);
+          potBodyG.addColorStop(0.7, pal.base);
+          potBodyG.addColorStop(1, pal.dark);
+          ctx.fillStyle = potBodyG;
+
+          drawOrganicWaterShape(ctx, 0, -breakH * 0.5, bulgeW, breakH * 0.5, blobSeed, 0.08);
+          ctx.fill();
+
+          // Jagged break edge at top
+          ctx.strokeStyle = pal.dark;
+          ctx.lineWidth = 0.6 * s;
+          ctx.beginPath();
+          const jagPts = 6;
+          for (let j = 0; j <= jagPts; j++) {
+            const jt = j / jagPts;
+            const jx = -bulgeW * 0.8 + jt * bulgeW * 1.6;
+            const jy = -breakH + Math.sin(blobSeed + j * 2.3) * 2 * s;
+            if (j === 0) ctx.moveTo(jx, jy);
+            else ctx.lineTo(jx, jy);
+          }
+          ctx.stroke();
+
+          // Inner shadow at break
+          ctx.fillStyle = "rgba(40,20,10,0.35)";
+          ctx.beginPath();
+          ctx.ellipse(0, -breakH + 1 * s, bulgeW * 0.6, 2 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Full intact pot with organic body shape
+
+          // Pot body — using stacked organic slices for a natural hand-thrown look
+          const bodyG = ctx.createLinearGradient(-bulgeW, 0, bulgeW, 0);
+          bodyG.addColorStop(0, pal.dark);
+          bodyG.addColorStop(0.25, pal.base);
+          bodyG.addColorStop(0.45, pal.light);
+          bodyG.addColorStop(0.55, pal.light);
+          bodyG.addColorStop(0.75, pal.base);
+          bodyG.addColorStop(1, pal.dark);
+
+          // Draw pot profile as a series of organic slices
+          ctx.fillStyle = bodyG;
+          ctx.beginPath();
+          const slices = 16;
+          // Right side going up
+          for (let sl = 0; sl <= slices; sl++) {
+            const t = sl / slices;
+            const slY = -t * h;
+            // Profile: wide at belly, narrow at base and neck
+            const belly = Math.sin(t * Math.PI) * (bulge - 1) + 1;
+            const neckTaper = t > 0.7 ? 1 - (t - 0.7) / 0.3 * (1 - neckRatio) : 1;
+            const baseW = 0.6 + t * 0.4;
+            const slW = w * belly * neckTaper * baseW;
+            const wobble = Math.sin(blobSeed + sl * 1.7) * 0.5 * s;
+            if (sl === 0) ctx.moveTo(slW + wobble, slY);
+            else ctx.lineTo(slW + wobble, slY);
+          }
+          // Left side going down
+          for (let sl = slices; sl >= 0; sl--) {
+            const t = sl / slices;
+            const slY = -t * h;
+            const belly = Math.sin(t * Math.PI) * (bulge - 1) + 1;
+            const neckTaper = t > 0.7 ? 1 - (t - 0.7) / 0.3 * (1 - neckRatio) : 1;
+            const baseW = 0.6 + t * 0.4;
+            const slW = w * belly * neckTaper * baseW;
+            const wobble = Math.sin(blobSeed + sl * 1.7 + 3) * 0.5 * s;
+            ctx.lineTo(-slW + wobble, slY);
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          // Throwing rings (horizontal lines from wheel)
+          ctx.strokeStyle = "rgba(0,0,0,0.08)";
+          ctx.lineWidth = 0.3 * s;
+          for (let ring = 2; ring < 8; ring++) {
+            const rt = ring / 10;
+            const ry = -rt * h;
+            const belly = Math.sin(rt * Math.PI) * (bulge - 1) + 1;
+            const neckTaper = rt > 0.7 ? 1 - (rt - 0.7) / 0.3 * (1 - neckRatio) : 1;
+            const baseW = 0.6 + rt * 0.4;
+            const rW = w * belly * neckTaper * baseW;
+            ctx.beginPath();
+            ctx.ellipse(0, ry, rW, rW * 0.12, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+
+          // Decorative pattern band at widest point
+          const bandT = 0.5;
+          const bandY = -bandT * h;
+          const bandBelly = Math.sin(bandT * Math.PI) * (bulge - 1) + 1;
+          const bandW = w * bandBelly * (0.6 + bandT * 0.4);
+          ctx.strokeStyle = pal.pattern;
+          ctx.lineWidth = 1.2 * s;
+          ctx.beginPath();
+          ctx.ellipse(0, bandY, bandW, bandW * 0.12, 0, 0, Math.PI);
+          ctx.stroke();
+
+          // Zigzag pattern within the band
+          ctx.strokeStyle = pal.pattern;
+          ctx.lineWidth = 0.5 * s;
+          ctx.beginPath();
+          const zigCount = 8;
+          for (let z = 0; z <= zigCount; z++) {
+            const zt = z / zigCount;
+            const zAng = (zt - 0.5) * Math.PI;
+            const zx = Math.sin(zAng) * bandW;
+            const zy = bandY + Math.cos(zAng) * bandW * 0.12 + (z % 2 === 0 ? -1.5 : 1.5) * s;
+            if (z === 0) ctx.moveTo(zx, zy);
+            else ctx.lineTo(zx, zy);
+          }
+          ctx.stroke();
+
+          // Rim — 3D ellipse with depth
+          const rimW = neckW * (0.6 + 1 * 0.4);
+          // Rim outer
+          ctx.fillStyle = pal.rim;
+          ctx.beginPath();
+          ctx.ellipse(0, -h, rimW + 1 * s, (rimW + 1 * s) * 0.3, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Rim inner (dark opening)
+          ctx.fillStyle = "rgba(30,15,5,0.6)";
+          ctx.beginPath();
+          ctx.ellipse(0, -h, rimW * 0.7, rimW * 0.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Rim highlight
+          ctx.strokeStyle = "rgba(255,255,255,0.15)";
+          ctx.lineWidth = 0.4 * s;
+          ctx.beginPath();
+          ctx.ellipse(0, -h, rimW + 0.5 * s, (rimW + 0.5 * s) * 0.3, 0, Math.PI * 1.1, Math.PI * 1.8);
+          ctx.stroke();
+
+          // Specular highlight on body
+          ctx.fillStyle = "rgba(255,255,255,0.1)";
+          ctx.beginPath();
+          ctx.ellipse(-w * 0.3, -h * 0.55, w * 0.2, h * 0.25, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (hasSand) {
+          // Sand spilling from pot or around base
+          ctx.fillStyle = "rgba(200,170,120,0.25)";
+          drawOrganicWaterShape(ctx, 2 * s, 1 * s, 4 * s, 2 * s, blobSeed + 40, 0.2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      };
+
+      // Main large pot
+      const pal0 = potPalettes[ptV];
+      drawPot(ptX, ptY, 7, 20, 1.35, 0.6, pal0, false, 0, false);
+
+      // Second pot — smaller, different palette, slightly offset
+      const pal1 = potPalettes[(ptV + 1) % potPalettes.length];
+      drawPot(
+        ptX - 13 * s, ptY + 2 * s, 4.5, 12, 1.25, 0.55,
+        pal1, ptHash(10) < 0.3, ptHash(11) * 0.15 - 0.07, false,
       );
-      ctx.fill();
+
+      // Third element — broken shards with organic shapes
+      const shardPal = potPalettes[(ptV + 2) % potPalettes.length];
+      const shardX = ptX + 12 * s;
+      const shardY = ptY + 2 * s;
+
+      // Shard scatter using organic shapes
+      for (let sh = 0; sh < 3; sh++) {
+        const sha = ptHash(20 + sh * 3) * Math.PI * 2;
+        const shr = 2 + ptHash(21 + sh * 3) * 3;
+        const shx = shardX + Math.cos(sha) * shr * s;
+        const shy = shardY + Math.sin(sha) * shr * 0.4 * s;
+        const shW = (2 + ptHash(22 + sh * 3) * 2) * s;
+        const shH = (1 + ptHash(22 + sh * 3)) * s;
+
+        ctx.fillStyle = sh % 2 === 0 ? shardPal.base : shardPal.dark;
+        drawOrganicWaterShape(ctx, shx, shy, shW, shH, ptSeed + sh * 17, 0.25);
+        ctx.fill();
+
+        // Inner face (visible on broken edge)
+        ctx.fillStyle = shardPal.light;
+        drawOrganicWaterShape(ctx, shx + 0.3 * s, shy - 0.3 * s, shW * 0.6, shH * 0.6, ptSeed + sh * 17 + 5, 0.2);
+        ctx.fill();
+      }
+
+      // Optional: small intact pot near shards
+      if (ptHash(40) > 0.4) {
+        const pal2 = potPalettes[(ptV + 3) % potPalettes.length];
+        drawPot(
+          ptX + 10 * s, ptY + 1 * s, 3, 8, 1.4, 0.5,
+          pal2, false, -0.08, true,
+        );
+      }
+
       break;
     }
 
@@ -15231,21 +18524,47 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       setShadowBlur(ctx, 8 * s, lGlow);
       ctx.fillStyle = `rgba(255,70,20,${0.35 + cPulse * 0.3})`;
       const mWinY1 = mBase - mH * 0.35;
-      ctx.fillRect(ox - mI * 0.55 - 1.2 * s, mWinY1 + mD * 0.5, 2.4 * s, 7 * s);
-      ctx.fillRect(
-        ox + mI * 0.35 - 1 * s,
-        mWinY1 + mD * 0.5 - 2 * s,
-        2 * s,
-        7 * s,
+      traceIsoFlushRect(
+        ctx,
+        ox - mI * 0.55,
+        mWinY1 + mD * 0.5 + 3.5 * s,
+        2.4,
+        7,
+        "left",
+        s,
       );
+      ctx.fill();
+      traceIsoFlushRect(
+        ctx,
+        ox + mI * 0.35,
+        mWinY1 + mD * 0.5 + 1.5 * s,
+        2,
+        7,
+        "right",
+        s,
+      );
+      ctx.fill();
       const mWinY2 = mBase - mH * 0.6;
-      ctx.fillRect(ox - mI * 0.45 - 1 * s, mWinY2 + mD * 0.5, 2 * s, 6 * s);
-      ctx.fillRect(
-        ox + mI * 0.45 - 1 * s,
-        mWinY2 + mD * 0.5 - 2 * s,
-        2 * s,
-        6 * s,
+      traceIsoFlushRect(
+        ctx,
+        ox - mI * 0.45,
+        mWinY2 + mD * 0.5 + 3 * s,
+        2,
+        6,
+        "left",
+        s,
       );
+      ctx.fill();
+      traceIsoFlushRect(
+        ctx,
+        ox + mI * 0.45,
+        mWinY2 + mD * 0.5 + 1 * s,
+        2,
+        6,
+        "right",
+        s,
+      );
+      ctx.fill();
       clearShadow(ctx);
 
       drawIsometricPrism(
@@ -15353,9 +18672,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         setShadowBlur(ctx, 7 * s, lGlow);
         ctx.fillStyle = `rgba(255,70,20,${0.4 + cPulse * 0.3})`;
         const wY1 = tty + ttD2 - tH3 * 0.35;
-        ctx.fillRect(ttx - 1 * s, wY1 - 3.5 * s, 2 * s, 7 * s);
+        const tFace = side === -1 ? ("left" as const) : ("right" as const);
+        traceIsoFlushRect(ctx, ttx, wY1, 2, 7, tFace, s);
+        ctx.fill();
         const wY2 = tty + ttD2 - tH3 * 0.6;
-        ctx.fillRect(ttx - 0.8 * s, wY2 - 3 * s, 1.6 * s, 6 * s);
+        traceIsoFlushRect(ctx, ttx, wY2, 1.6, 6, tFace, s);
+        ctx.fill();
         clearShadow(ctx);
       });
 
@@ -15520,13 +18842,26 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       setShadowBlur(ctx, 6 * s, lavaCore);
       ctx.fillStyle = `rgba(255,90,30,${0.3 + pulse * 0.25})`;
       const bWinY = kBase - kH * 0.4;
-      ctx.fillRect(bx - kI * 0.5 - 1 * s, bWinY + kD * 0.5, 2 * s, 6 * s);
-      ctx.fillRect(
-        bx + kI * 0.4 - 0.8 * s,
-        bWinY + kD * 0.5 - 1.5 * s,
-        1.6 * s,
-        6 * s,
+      traceIsoFlushRect(
+        ctx,
+        bx - kI * 0.5,
+        bWinY + kD * 0.5 + 3 * s,
+        2,
+        6,
+        "left",
+        s,
       );
+      ctx.fill();
+      traceIsoFlushRect(
+        ctx,
+        bx + kI * 0.4,
+        bWinY + kD * 0.5 + 1.5 * s,
+        1.6,
+        6,
+        "right",
+        s,
+      );
+      ctx.fill();
       clearShadow(ctx);
 
       const gW2 = variant === 1 ? 10 * s : 7 * s;
@@ -15751,9 +19086,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         setShadowBlur(ctx, 7 * s, lavaCore);
         const twY = tBase2 + tbD - tH2 * 0.4;
         ctx.fillStyle = `rgba(255,110,40,${0.4 + pulse * 0.3})`;
-        ctx.fillRect(ttx - 1 * s, twY - 3.5 * s, 2 * s, 7 * s);
+        const t2Face = side === -1 ? ("left" as const) : ("right" as const);
+        traceIsoFlushRect(ctx, ttx, twY, 2, 7, t2Face, s);
+        ctx.fill();
         const twY2 = tBase2 + tbD - tH2 * 0.65;
-        ctx.fillRect(ttx - 0.8 * s, twY2 - 3 * s, 1.6 * s, 6 * s);
+        traceIsoFlushRect(ctx, ttx, twY2, 1.6, 6, t2Face, s);
+        ctx.fill();
         clearShadow(ctx);
       });
 
@@ -19919,126 +23257,412 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "idol_statue": {
-      const idolStone = "#5a5a50";
-      const idolDark = "#3a3a30";
-      const idolGlow = "#4aff4a";
+      const ix = screenPos.x;
+      const iy = screenPos.y;
+      const idolLight = "#6a6a58";
+      const idolMid = "#5a5a48";
+      const idolDark = "#3a3a28";
+      const idolDeep = "#2a2a1a";
+      const idolMoss = "#3a5a2a";
+      const glowCol = "#4aff4a";
+      const glowPulse = 0.5 + Math.sin(decorTime * 2) * 0.3;
 
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      // Atmospheric ground glow
+      const idolAuraGrad = ctx.createRadialGradient(
+        ix,
+        iy + 4 * s,
+        0,
+        ix,
+        iy + 4 * s,
+        28 * s,
+      );
+      idolAuraGrad.addColorStop(
+        0,
+        `rgba(74,255,74,${0.08 + Math.sin(decorTime * 1.5) * 0.04})`,
+      );
+      idolAuraGrad.addColorStop(0.5, "rgba(74,255,74,0.02)");
+      idolAuraGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = idolAuraGrad;
+      ctx.beginPath();
+      ctx.ellipse(ix, iy + 4 * s, 28 * s, 14 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ground shadow
+      const idolShadGrad = ctx.createRadialGradient(
+        ix + 3 * s,
+        iy + 6 * s,
+        0,
+        ix + 3 * s,
+        iy + 6 * s,
+        22 * s,
+      );
+      idolShadGrad.addColorStop(0, "rgba(0,0,0,0.35)");
+      idolShadGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
+      idolShadGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = idolShadGrad;
+      ctx.beginPath();
+      ctx.ellipse(ix + 3 * s, iy + 6 * s, 20 * s, 10 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === BOTTOM PEDESTAL TIER ===
+      const pedW1 = 14 * s;
+      const pedH1 = 5 * s;
+      ctx.fillStyle = idolLight;
+      ctx.beginPath();
+      ctx.moveTo(ix - pedW1, iy - pedH1);
+      ctx.lineTo(ix, iy - pedH1 - pedW1 * 0.5);
+      ctx.lineTo(ix + pedW1, iy - pedH1);
+      ctx.lineTo(ix, iy - pedH1 + pedW1 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = idolMid;
+      ctx.beginPath();
+      ctx.moveTo(ix - pedW1, iy - pedH1);
+      ctx.lineTo(ix - pedW1, iy);
+      ctx.lineTo(ix, iy + pedW1 * 0.5);
+      ctx.lineTo(ix, iy - pedH1 + pedW1 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = idolDark;
+      ctx.beginPath();
+      ctx.moveTo(ix + pedW1, iy - pedH1);
+      ctx.lineTo(ix + pedW1, iy);
+      ctx.lineTo(ix, iy + pedW1 * 0.5);
+      ctx.lineTo(ix, iy - pedH1 + pedW1 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // === TOP PEDESTAL TIER ===
+      const pedY2 = iy - pedH1;
+      const pedW2 = 10 * s;
+      const pedH2 = 4 * s;
+      ctx.fillStyle = idolLight;
+      ctx.beginPath();
+      ctx.moveTo(ix - pedW2, pedY2 - pedH2);
+      ctx.lineTo(ix, pedY2 - pedH2 - pedW2 * 0.5);
+      ctx.lineTo(ix + pedW2, pedY2 - pedH2);
+      ctx.lineTo(ix, pedY2 - pedH2 + pedW2 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = idolMid;
+      ctx.beginPath();
+      ctx.moveTo(ix - pedW2, pedY2 - pedH2);
+      ctx.lineTo(ix - pedW2, pedY2);
+      ctx.lineTo(ix, pedY2 + pedW2 * 0.5);
+      ctx.lineTo(ix, pedY2 - pedH2 + pedW2 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = idolDark;
+      ctx.beginPath();
+      ctx.moveTo(ix + pedW2, pedY2 - pedH2);
+      ctx.lineTo(ix + pedW2, pedY2);
+      ctx.lineTo(ix, pedY2 + pedW2 * 0.5);
+      ctx.lineTo(ix, pedY2 - pedH2 + pedW2 * 0.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // === IDOL BODY ===
+      const bodyBase = pedY2 - pedH2;
+      const bodyW = 9 * s;
+      const bodyH = 38 * s;
+      const bodyTopW = 7 * s;
+
+      // Left face (lit)
+      ctx.fillStyle = idolMid;
+      ctx.beginPath();
+      ctx.moveTo(ix - bodyW, bodyBase);
+      ctx.lineTo(ix - bodyTopW, bodyBase - bodyH);
+      ctx.lineTo(ix, bodyBase - bodyH);
+      ctx.lineTo(ix, bodyBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Right face (shadow)
+      ctx.fillStyle = idolDark;
+      ctx.beginPath();
+      ctx.moveTo(ix + bodyW, bodyBase);
+      ctx.lineTo(ix + bodyTopW, bodyBase - bodyH);
+      ctx.lineTo(ix, bodyBase - bodyH);
+      ctx.lineTo(ix, bodyBase);
+      ctx.closePath();
+      ctx.fill();
+
+      // Front edge highlight
+      ctx.strokeStyle = idolLight;
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.moveTo(ix, bodyBase);
+      ctx.lineTo(ix, bodyBase - bodyH);
+      ctx.stroke();
+
+      // Top cap
+      ctx.fillStyle = idolLight;
+      ctx.beginPath();
+      ctx.moveTo(ix - bodyTopW, bodyBase - bodyH);
+      ctx.lineTo(ix, bodyBase - bodyH - 3 * s);
+      ctx.lineTo(ix + bodyTopW, bodyBase - bodyH);
+      ctx.lineTo(ix, bodyBase - bodyH + 3 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // === LOWER FACE (grimacing mouth) ===
+      const mouthY = bodyBase - 10 * s;
+      ctx.fillStyle = idolDeep;
+      ctx.beginPath();
+      ctx.moveTo(ix - 6 * s, mouthY);
+      ctx.lineTo(ix - 4 * s, mouthY + 4 * s);
+      ctx.lineTo(ix + 4 * s, mouthY + 4 * s);
+      ctx.lineTo(ix + 6 * s, mouthY);
+      ctx.lineTo(ix + 4 * s, mouthY - 3 * s);
+      ctx.lineTo(ix - 4 * s, mouthY - 3 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fangs (top)
+      ctx.fillStyle = "#c8c0a8";
+      for (let t = 0; t < 5; t++) {
+        const tx = ix - 4 * s + t * 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(tx, mouthY - 3 * s);
+        ctx.lineTo(tx + 1 * s, mouthY - 0.5 * s);
+        ctx.lineTo(tx + 2 * s, mouthY - 3 * s);
+        ctx.fill();
+      }
+      // Fangs (bottom) - larger corner fangs
+      ctx.beginPath();
+      ctx.moveTo(ix - 4 * s, mouthY + 4 * s);
+      ctx.lineTo(ix - 3 * s, mouthY + 1 * s);
+      ctx.lineTo(ix - 2 * s, mouthY + 4 * s);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(ix + 2 * s, mouthY + 4 * s);
+      ctx.lineTo(ix + 3 * s, mouthY + 1 * s);
+      ctx.lineTo(ix + 4 * s, mouthY + 4 * s);
+      ctx.fill();
+
+      // === DECORATIVE CARVED BAND ===
+      const bandY = bodyBase - 17 * s;
+      ctx.strokeStyle = idolDeep;
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(ix - 8 * s, bandY);
+      ctx.lineTo(ix + 8 * s, bandY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(ix - 8 * s, bandY - 3 * s);
+      ctx.lineTo(ix + 8 * s, bandY - 3 * s);
+      ctx.stroke();
+      // Zigzag pattern between bands
+      ctx.strokeStyle = "#8a7a60";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      for (let z = 0; z < 8; z++) {
+        const zx = ix - 7 * s + z * 2 * s;
+        const zy = z % 2 === 0 ? bandY - 0.5 * s : bandY - 2.5 * s;
+        if (z === 0) ctx.moveTo(zx, zy);
+        else ctx.lineTo(zx, zy);
+      }
+      ctx.stroke();
+
+      // === UPPER FACE (main face - larger) ===
+      // Brow ridge
+      ctx.fillStyle = idolDeep;
+      ctx.beginPath();
+      ctx.moveTo(ix - 7 * s, bodyBase - 25 * s);
+      ctx.quadraticCurveTo(
+        ix,
+        bodyBase - 27 * s,
+        ix + 7 * s,
+        bodyBase - 25 * s,
+      );
+      ctx.lineTo(ix + 7 * s, bodyBase - 23 * s);
+      ctx.quadraticCurveTo(
+        ix,
+        bodyBase - 24 * s,
+        ix - 7 * s,
+        bodyBase - 23 * s,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Eye sockets
+      ctx.fillStyle = idolDeep;
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x + 2 * s,
-        screenPos.y + 6 * s,
-        16 * s,
-        8 * s,
+        ix - 4 * s,
+        bodyBase - 28 * s,
+        3 * s,
+        2.5 * s,
+        -0.15,
         0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(
+        ix + 4 * s,
+        bodyBase - 28 * s,
+        3 * s,
+        2.5 * s,
+        0.15,
         0,
         Math.PI * 2,
       );
       ctx.fill();
 
-      // Pedestal
+      // Glowing eyes - outer glow
+      ctx.fillStyle = `rgba(74,255,74,${glowPulse * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(ix - 4 * s, bodyBase - 28 * s, 4 * s, 0, Math.PI * 2);
+      ctx.arc(ix + 4 * s, bodyBase - 28 * s, 4 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // Eye orbs
+      ctx.fillStyle = `rgba(74,255,74,${glowPulse})`;
+      ctx.beginPath();
+      ctx.arc(ix - 4 * s, bodyBase - 28 * s, 2 * s, 0, Math.PI * 2);
+      ctx.arc(ix + 4 * s, bodyBase - 28 * s, 2 * s, 0, Math.PI * 2);
+      ctx.fill();
+      // Bright pupils
+      ctx.fillStyle = glowCol;
+      ctx.beginPath();
+      ctx.arc(ix - 4 * s, bodyBase - 28 * s, 1 * s, 0, Math.PI * 2);
+      ctx.arc(ix + 4 * s, bodyBase - 28 * s, 1 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Nose ridge
+      ctx.strokeStyle = idolDeep;
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(ix, bodyBase - 26 * s);
+      ctx.lineTo(ix - 1 * s, bodyBase - 21 * s);
+      ctx.lineTo(ix + 1 * s, bodyBase - 20 * s);
+      ctx.stroke();
+
+      // === CROWN CREST ===
+      const crownY = bodyBase - bodyH;
       ctx.fillStyle = idolDark;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y - 5 * s);
+      ctx.moveTo(ix - 5 * s, crownY);
+      ctx.lineTo(ix - 6 * s, crownY - 5 * s);
+      ctx.lineTo(ix - 3 * s, crownY - 3 * s);
+      ctx.lineTo(ix, crownY - 7 * s);
+      ctx.lineTo(ix + 3 * s, crownY - 3 * s);
+      ctx.lineTo(ix + 6 * s, crownY - 5 * s);
+      ctx.lineTo(ix + 5 * s, crownY);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = idolStone;
+      ctx.fillStyle = idolMid;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 5 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 8 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y + 3 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Idol body - squat tiki-like figure
-      ctx.fillStyle = idolStone;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 3 * s);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 25 * s);
-      ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 32 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 32 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 25 * s);
-      ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 3 * s);
+      ctx.moveTo(ix - 5 * s, crownY);
+      ctx.lineTo(ix - 6 * s, crownY - 5 * s);
+      ctx.lineTo(ix - 3 * s, crownY - 3 * s);
+      ctx.lineTo(ix, crownY - 7 * s);
+      ctx.lineTo(ix, crownY);
       ctx.closePath();
       ctx.fill();
 
-      // Face - large mouth
-      ctx.fillStyle = idolDark;
+      // === CARVED SIDE PATTERNS ===
+      // Left side spirals
+      ctx.strokeStyle = "#7a6a50";
+      ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 15 * s);
-      ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 12 * s);
-      ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 12 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 15 * s);
-      ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 18 * s);
-      ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 18 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Glowing eyes
-      const idolEyeGlow = 0.5 + Math.sin(decorTime * 2) * 0.3;
-      ctx.fillStyle = `rgba(74,255,74,${idolEyeGlow})`;
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x - 3 * s,
-        screenPos.y - 24 * s,
-        2.5 * s,
-        0,
-        Math.PI * 2,
-      );
-      ctx.arc(
-        screenPos.x + 3 * s,
-        screenPos.y - 24 * s,
-        2.5 * s,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = idolGlow;
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x - 3 * s,
-        screenPos.y - 24 * s,
-        1.2 * s,
-        0,
-        Math.PI * 2,
-      );
-      ctx.arc(
-        screenPos.x + 3 * s,
-        screenPos.y - 24 * s,
-        1.2 * s,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Teeth in mouth
-      ctx.fillStyle = "#c0c0b0";
-      for (let t = 0; t < 4; t++) {
-        const tx = screenPos.x - 3 * s + t * 2 * s;
+      for (let a = 0; a < Math.PI * 3; a += 0.3) {
+        const sr = a * 0.5 * s;
+        const sx = ix - 5 * s + Math.cos(a + 1) * sr;
+        const sy = bodyBase - 7 * s + Math.sin(a + 1) * sr * 0.5;
+        if (a === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+      // Right side diamond pattern
+      for (let d = 0; d < 3; d++) {
+        const dy = bodyBase - 5 * s - d * 4 * s;
+        ctx.strokeStyle = "#7a6a50";
+        ctx.lineWidth = 0.7 * s;
         ctx.beginPath();
-        ctx.moveTo(tx, screenPos.y - 18 * s);
-        ctx.lineTo(tx + 1 * s, screenPos.y - 16 * s);
-        ctx.lineTo(tx + 2 * s, screenPos.y - 18 * s);
+        ctx.moveTo(ix + 4 * s, dy);
+        ctx.lineTo(ix + 6 * s, dy - 1.5 * s);
+        ctx.lineTo(ix + 4 * s, dy - 3 * s);
+        ctx.lineTo(ix + 2 * s, dy - 1.5 * s);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // === MOSS & VINES ===
+      // Moss patches at base
+      ctx.fillStyle = idolMoss;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.ellipse(
+        ix - 6 * s,
+        bodyBase + 1 * s,
+        3 * s,
+        1.5 * s,
+        0.3,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(
+        ix + 5 * s,
+        bodyBase - 1 * s,
+        2.5 * s,
+        1.2 * s,
+        -0.2,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Vine climbing left side
+      ctx.strokeStyle = "#2a5a1a";
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(ix - bodyW + 1 * s, bodyBase);
+      ctx.quadraticCurveTo(
+        ix - bodyW - 1 * s,
+        bodyBase - 15 * s,
+        ix - bodyTopW + 1 * s,
+        bodyBase - 32 * s,
+      );
+      ctx.stroke();
+      // Vine leaves
+      ctx.fillStyle = "#3a6a22";
+      for (let lf = 0; lf < 4; lf++) {
+        const lt = lf / 3;
+        const lx =
+          ix -
+          bodyW +
+          1 * s +
+          (bodyW - bodyTopW) * lt -
+          Math.sin(lt * 3) * 2 * s;
+        const ly = bodyBase - lt * 32 * s;
+        ctx.beginPath();
+        ctx.ellipse(
+          lx - 2 * s,
+          ly,
+          2 * s,
+          1 * s,
+          -0.5 + lf * 0.3,
+          0,
+          Math.PI * 2,
+        );
         ctx.fill();
       }
 
-      // Vines growing up
-      ctx.strokeStyle = "#2a4a1a";
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 7 * s, screenPos.y);
-      ctx.quadraticCurveTo(
-        screenPos.x - 9 * s,
-        screenPos.y - 15 * s,
-        screenPos.x - 6 * s,
-        screenPos.y - 28 * s,
-      );
-      ctx.stroke();
+      // Floating glow particles
+      for (let p = 0; p < 5; p++) {
+        const pp = (decorTime * 0.8 + p * 1.2) % 3;
+        const pa = Math.sin((pp / 3) * Math.PI) * 0.5;
+        const px = ix + Math.sin(decorTime * 0.5 + p * 1.3) * 12 * s;
+        const py = bodyBase - 20 * s - pp * 8 * s;
+        ctx.fillStyle = `rgba(74,255,74,${pa * glowPulse})`;
+        ctx.beginPath();
+        ctx.arc(px, py, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
       break;
     }
 
@@ -20247,25 +23871,32 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const poisonGreen = "#4caf50";
       const poisonDark = "#2e7d32";
       const poisonBright = "#76ff03";
+      const poolSeed = (dec.x || 0) * 19.3;
 
       // Shadow/stain
       ctx.fillStyle = "rgba(30,80,30,0.25)";
-      ctx.beginPath();
-      ctx.ellipse(
+      drawOrganicWaterShape(
+        ctx,
         screenPos.x,
         screenPos.y + 3 * s,
         24 * s,
         12 * s,
-        0,
-        0,
-        Math.PI * 2,
+        poolSeed - 10,
+        0.14,
       );
       ctx.fill();
 
       // Muddy rim
       ctx.fillStyle = "#3a3a28";
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 22 * s, 11 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        22 * s,
+        11 * s,
+        poolSeed + 3,
+        0.12,
+      );
       ctx.fill();
 
       // Poison surface
@@ -20281,8 +23912,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       poisonGrad.addColorStop(0.4, poisonGreen);
       poisonGrad.addColorStop(1, poisonDark);
       ctx.fillStyle = poisonGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, screenPos.y, 18 * s, 9 * s, 0, 0, Math.PI * 2);
+      drawOrganicWaterShape(
+        ctx,
+        screenPos.x,
+        screenPos.y,
+        18 * s,
+        9 * s,
+        poolSeed,
+        0.12,
+      );
       ctx.fill();
 
       // Animated bubbles
@@ -20333,26 +23971,24 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // Dead plant matter at edges
       ctx.fillStyle = "#4a4a20";
-      ctx.beginPath();
-      ctx.ellipse(
+      drawOrganicWaterShape(
+        ctx,
         screenPos.x - 14 * s,
         screenPos.y + 2 * s,
         3 * s,
         1.5 * s,
-        0.5,
-        0,
-        Math.PI * 2,
+        poolSeed + 20,
+        0.18,
       );
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(
+      drawOrganicWaterShape(
+        ctx,
         screenPos.x + 12 * s,
         screenPos.y - 1 * s,
         2.5 * s,
         1.2 * s,
-        -0.3,
-        0,
-        Math.PI * 2,
+        poolSeed + 30,
+        0.18,
       );
       ctx.fill();
       break;
@@ -20469,9 +24105,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
     // === MISC DECORATIONS ===
     case "ruins": {
-      // 5 unique ruin variants (variant 4 is original, used for sunken_temple)
-      // For sunken_temple level, force variant 4 (original ruins)
-      const ruinVariant = selectedMap === "sunken_temple" ? 4 : variant % 5;
+      // 7 ruin variants: 0-3 generic, 4 sunken_temple, 5 small pillar (frost), 6 grand temple (swamp)
+      const ruinVariant = selectedMap === "sunken_temple" ? 4 : variant % 7;
       const stoneBase = "#5a5a5a";
       const stoneDark = "#3a3a3a";
       const stoneLight = "#7a7a7a";
@@ -20504,7 +24139,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       if (ruinVariant === 0) {
         // VARIANT 0: Broken Roman column with scattered debris
-        // Column base
         ctx.fillStyle = stoneLight;
         ctx.beginPath();
         ctx.ellipse(
@@ -20530,7 +24164,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         );
         ctx.fill();
 
-        // Column shaft (broken, angled)
         ctx.fillStyle = stoneBase;
         ctx.beginPath();
         ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
@@ -20541,7 +24174,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
 
-        // Column fluting (vertical lines)
         ctx.strokeStyle = stoneDark;
         ctx.lineWidth = 0.5 * s;
         for (let i = -5; i <= 5; i += 2) {
@@ -20551,7 +24183,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.stroke();
         }
 
-        // Broken capital piece lying nearby
         ctx.fillStyle = stoneLight;
         ctx.beginPath();
         ctx.moveTo(screenPos.x + 18 * s, screenPos.y + 3 * s);
@@ -20561,7 +24192,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
 
-        // Scattered rubble
         ctx.fillStyle = stoneDark;
         for (let r = 0; r < 5; r++) {
           const rx =
@@ -20580,7 +24210,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         }
 
-        // Moss patches
         ctx.fillStyle = mossColor;
         ctx.globalAlpha = 0.6;
         ctx.beginPath();
@@ -20851,9 +24480,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.ellipse(rx, ry, 4 * s, 2.5 * s, angle, 0, Math.PI * 2);
           ctx.fill();
         }
-      } else {
+      } else if (ruinVariant === 4) {
         // VARIANT 4: Properly isometric 3D sunken temple ruins
-        // Shadow already drawn above
 
         const stoneLight = "#8a8a7a";
         const stoneMid = "#6a6a5a";
@@ -20905,9 +24533,9 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
         // === LEFT WALL (3D isometric box) ===
         const lWallX = screenPos.x - 28 * s;
-        const lWallW = 14 * s; // Width
-        const lWallD = 7 * s; // Depth
-        const lWallH = 38 * s; // Height
+        const lWallW = 14 * s;
+        const lWallD = 7 * s;
+        const lWallH = 38 * s;
 
         // Left wall - LEFT face (darkest, shadow)
         const leftFaceGrad = ctx.createLinearGradient(
@@ -20922,7 +24550,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(lWallX - lWallD, screenPos.y + 8 * s);
         ctx.lineTo(lWallX - lWallD, screenPos.y - lWallH + 12 * s);
-        // Broken top edge
         ctx.lineTo(lWallX - lWallD + 3 * s, screenPos.y - lWallH + 8 * s);
         ctx.lineTo(lWallX - lWallD + 5 * s, screenPos.y - lWallH + 14 * s);
         ctx.lineTo(lWallX, screenPos.y - lWallH + 5 * s);
@@ -20944,7 +24571,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(lWallX, screenPos.y + 5 * s);
         ctx.lineTo(lWallX, screenPos.y - lWallH + 5 * s);
-        // Broken top
         ctx.lineTo(lWallX + 4 * s, screenPos.y - lWallH);
         ctx.lineTo(lWallX + 8 * s, screenPos.y - lWallH + 8 * s);
         ctx.lineTo(lWallX + lWallW, screenPos.y - lWallH + 3 * s);
@@ -21029,7 +24655,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.beginPath();
         ctx.moveTo(rWallX, screenPos.y + 8 * s);
         ctx.lineTo(rWallX, screenPos.y - rWallH + 12 * s);
-        // Broken top
         ctx.lineTo(rWallX + 5 * s, screenPos.y - rWallH + 5 * s);
         ctx.lineTo(rWallX + 10 * s, screenPos.y - rWallH + 10 * s);
         ctx.lineTo(rWallX + rWallW, screenPos.y - rWallH + 8 * s);
@@ -21112,7 +24737,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           Math.PI * 2,
         );
         ctx.fill();
-        // Base rim shadow
         ctx.fillStyle = stoneDark;
         ctx.beginPath();
         ctx.ellipse(
@@ -21247,7 +24871,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           const ry = screenPos.y + rb.y * s;
           const rSize = rb.size * s;
 
-          // 3D rock - top face
           ctx.fillStyle = idx % 2 === 0 ? stoneLight : stoneMid;
           ctx.beginPath();
           ctx.moveTo(rx, ry - rSize * 0.8);
@@ -21257,7 +24880,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.closePath();
           ctx.fill();
 
-          // Front face
           ctx.fillStyle = stoneMid;
           ctx.beginPath();
           ctx.moveTo(rx - rSize * 0.7, ry - rSize * 0.2);
@@ -21267,7 +24889,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.closePath();
           ctx.fill();
 
-          // Right face
           ctx.fillStyle = stoneDark;
           ctx.beginPath();
           ctx.moveTo(rx + rSize * 0.3, ry + rSize * 0.2);
@@ -21284,7 +24905,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         const fallR = 4 * s;
         const fallLen = 14 * s;
 
-        // Cylinder lying on side (isometric)
         ctx.fillStyle = stoneDark;
         ctx.beginPath();
         ctx.ellipse(
@@ -21298,7 +24918,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         );
         ctx.fill();
 
-        // Body
         const fallGrad = ctx.createLinearGradient(
           fallX,
           fallY - fallR,
@@ -21335,7 +24954,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.closePath();
         ctx.fill();
 
-        // End cap
         ctx.fillStyle = stoneMid;
         ctx.beginPath();
         ctx.ellipse(
@@ -21352,7 +24970,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // === MOSS & VINES ===
         ctx.fillStyle = mossColor;
         ctx.globalAlpha = 0.75;
-        // Moss on left wall
         ctx.beginPath();
         ctx.ellipse(
           lWallX + 5 * s,
@@ -21364,7 +24981,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           Math.PI * 2,
         );
         ctx.fill();
-        // Moss on column
         ctx.beginPath();
         ctx.ellipse(
           colX - 3 * s,
@@ -21376,7 +24992,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           Math.PI * 2,
         );
         ctx.fill();
-        // Moss on floor
         ctx.beginPath();
         ctx.ellipse(
           screenPos.x + 8 * s,
@@ -21390,7 +25005,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
         ctx.globalAlpha = 1;
 
-        // Hanging vines
         ctx.strokeStyle = vineColor;
         ctx.lineWidth = 1.5 * s;
         ctx.lineCap = "round";
@@ -21413,7 +25027,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         );
         ctx.stroke();
 
-        // Vine leaves
         ctx.fillStyle = mossColor;
         const leaves = [
           { x: lWallX + 6 * s, y: screenPos.y - 18 * s },
@@ -21427,7 +25040,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.fill();
         });
 
-        // Cracks in stonework
         ctx.strokeStyle = "#2a2a1a";
         ctx.lineWidth = 0.8 * s;
         ctx.beginPath();
@@ -21439,6 +25051,509 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.moveTo(rWallX + 5 * s, screenPos.y - 15 * s);
         ctx.lineTo(rWallX + 8 * s, screenPos.y - 10 * s);
         ctx.stroke();
+      } else if (ruinVariant === 5) {
+        // VARIANT 5: Small single pillar with minor ruins (frost_fortress courtyard)
+        const stoneMid = "#6a6a6a";
+        const stoneShadow = "#2a2a2a";
+
+        // Small stone base platform
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 10 * s);
+        ctx.lineTo(screenPos.x + 22 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 14 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 14 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 18 * s);
+        ctx.lineTo(screenPos.x - 22 * s, screenPos.y + 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 22 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 14 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 18 * s);
+        ctx.lineTo(screenPos.x + 22 * s, screenPos.y + 6 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Central column
+        const colR = 6 * s;
+        const colH = 35 * s;
+
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y + 4 * s,
+          colR + 2 * s,
+          (colR + 2 * s) * 0.5,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y + 2 * s,
+          colR,
+          colR * 0.5,
+          0,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.lineTo(screenPos.x + colR, screenPos.y - colH + 12 * s);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y - colH + 12 * s,
+          colR,
+          colR * 0.5,
+          0,
+          0,
+          Math.PI,
+          true,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        const cGrad = ctx.createLinearGradient(
+          screenPos.x - colR,
+          screenPos.y,
+          screenPos.x + colR,
+          screenPos.y,
+        );
+        cGrad.addColorStop(0, stoneMid);
+        cGrad.addColorStop(0.3, stoneLight);
+        cGrad.addColorStop(0.6, stoneMid);
+        cGrad.addColorStop(1, stoneDark);
+        ctx.fillStyle = cGrad;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y + 2 * s,
+          colR,
+          colR * 0.5,
+          0,
+          0,
+          Math.PI,
+        );
+        ctx.lineTo(screenPos.x - colR, screenPos.y - colH + 12 * s);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y - colH + 12 * s,
+          colR,
+          colR * 0.5,
+          0,
+          Math.PI,
+          Math.PI * 2,
+          true,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Broken jagged top
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - colR, screenPos.y - colH + 12 * s);
+        ctx.lineTo(screenPos.x - colR + 2 * s, screenPos.y - colH + 6 * s);
+        ctx.lineTo(screenPos.x - 1 * s, screenPos.y - colH + 10 * s);
+        ctx.lineTo(screenPos.x + 2 * s, screenPos.y - colH + 4 * s);
+        ctx.lineTo(screenPos.x + colR - 1 * s, screenPos.y - colH + 8 * s);
+        ctx.lineTo(screenPos.x + colR, screenPos.y - colH + 12 * s);
+        ctx.ellipse(
+          screenPos.x,
+          screenPos.y - colH + 12 * s,
+          colR,
+          colR * 0.5,
+          0,
+          0,
+          Math.PI,
+          true,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Column fluting
+        ctx.strokeStyle = stoneShadow;
+        ctx.lineWidth = 0.6 * s;
+        for (let fl = 0; fl < 4; fl++) {
+          const flA = (fl / 4) * Math.PI - Math.PI / 2;
+          const flX = screenPos.x + Math.cos(flA) * colR * 0.85;
+          ctx.beginPath();
+          ctx.moveTo(flX, screenPos.y + 1 * s);
+          ctx.lineTo(flX, screenPos.y - colH + 14 * s);
+          ctx.stroke();
+        }
+
+        // Highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - colR * 0.4, screenPos.y);
+        ctx.lineTo(screenPos.x - colR * 0.4, screenPos.y - colH + 16 * s);
+        ctx.stroke();
+
+        // Small rubble around base
+        const rubble = [
+          { x: -16, y: 8, sz: 3 },
+          { x: 14, y: 10, sz: 3.5 },
+          { x: -10, y: 12, sz: 2.5 },
+          { x: 8, y: 13, sz: 2 },
+          { x: 18, y: 6, sz: 2.5 },
+          { x: -18, y: 5, sz: 2 },
+        ];
+        rubble.forEach((rb, idx) => {
+          const rx = screenPos.x + rb.x * s;
+          const ry = screenPos.y + rb.y * s;
+          const rSz = rb.sz * s;
+
+          ctx.fillStyle = idx % 2 === 0 ? stoneLight : stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - rSz * 0.7);
+          ctx.lineTo(rx + rSz * 0.8, ry - rSz * 0.2);
+          ctx.lineTo(rx + rSz * 0.2, ry + rSz * 0.3);
+          ctx.lineTo(rx - rSz * 0.6, ry);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath();
+          ctx.moveTo(rx + rSz * 0.2, ry + rSz * 0.3);
+          ctx.lineTo(rx + rSz * 0.8, ry - rSz * 0.2);
+          ctx.lineTo(rx + rSz * 0.6, ry + rSz * 0.1);
+          ctx.lineTo(rx + rSz * 0.1, ry + rSz * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Small broken wall fragment
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 12 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 12 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 15 * s);
+        ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 10 * s);
+        ctx.lineTo(screenPos.x + 18 * s, screenPos.y + 4 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 12 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 15 * s);
+        ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 10 * s);
+        ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 14 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Moss patches
+        ctx.fillStyle = mossColor;
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x - 3 * s,
+          screenPos.y - 14 * s,
+          3 * s,
+          1.5 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(
+          screenPos.x + 5 * s,
+          screenPos.y + 6 * s,
+          4 * s,
+          2 * s,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      } else {
+        // VARIANT 6: Grand ruined temple complex (swamp challenge levels)
+        const stoneMid = "#5a5a4a";
+        const stoneShadow = "#2a2a2a";
+        const vineColor = "#2d4a2d";
+
+        // Stone platform
+        const platW = 48 * s;
+        const platD = 24 * s;
+        const platH = 5 * s;
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - platW, screenPos.y);
+        ctx.lineTo(screenPos.x, screenPos.y - platD);
+        ctx.lineTo(screenPos.x + platW, screenPos.y);
+        ctx.lineTo(screenPos.x, screenPos.y + platD);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - platW, screenPos.y);
+        ctx.lineTo(screenPos.x, screenPos.y + platD);
+        ctx.lineTo(screenPos.x, screenPos.y + platD + platH);
+        ctx.lineTo(screenPos.x - platW, screenPos.y + platH);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + platW, screenPos.y);
+        ctx.lineTo(screenPos.x, screenPos.y + platD);
+        ctx.lineTo(screenPos.x, screenPos.y + platD + platH);
+        ctx.lineTo(screenPos.x + platW, screenPos.y + platH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Tile grid
+        ctx.strokeStyle = stoneShadow;
+        ctx.lineWidth = 0.5 * s;
+        for (let i = -3; i <= 3; i++) {
+          const off = i * 12 * s;
+          ctx.beginPath();
+          ctx.moveTo(
+            screenPos.x + off,
+            screenPos.y - platD + Math.abs(i) * 4 * s,
+          );
+          ctx.lineTo(
+            screenPos.x + off,
+            screenPos.y + platD - Math.abs(i) * 4 * s,
+          );
+          ctx.stroke();
+        }
+
+        // Back wall facade
+        const wallX = screenPos.x - 34 * s;
+        const wallTopY = screenPos.y - 52 * s;
+        const wallW = 68 * s;
+        const wallThick = 7 * s;
+
+        const wallLeftGrad = ctx.createLinearGradient(
+          wallX,
+          screenPos.y,
+          wallX - wallThick,
+          screenPos.y,
+        );
+        wallLeftGrad.addColorStop(0, stoneDark);
+        wallLeftGrad.addColorStop(1, stoneShadow);
+        ctx.fillStyle = wallLeftGrad;
+        ctx.beginPath();
+        ctx.moveTo(wallX - wallThick, screenPos.y + 2 * s);
+        ctx.lineTo(wallX - wallThick, wallTopY + 14 * s);
+        ctx.lineTo(wallX - wallThick + 3 * s, wallTopY + 9 * s);
+        ctx.lineTo(wallX - wallThick + 5 * s, wallTopY + 16 * s);
+        ctx.lineTo(wallX, wallTopY + 5 * s);
+        ctx.lineTo(wallX, screenPos.y - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        const wallFrontGrad = ctx.createLinearGradient(
+          wallX,
+          wallTopY,
+          wallX + wallW,
+          screenPos.y,
+        );
+        wallFrontGrad.addColorStop(0, stoneMid);
+        wallFrontGrad.addColorStop(0.3, stoneLight);
+        wallFrontGrad.addColorStop(0.7, stoneMid);
+        wallFrontGrad.addColorStop(1, stoneDark);
+        ctx.fillStyle = wallFrontGrad;
+        ctx.beginPath();
+        ctx.moveTo(wallX, screenPos.y - 2 * s);
+        ctx.lineTo(wallX, wallTopY + 5 * s);
+        ctx.lineTo(wallX + 8 * s, wallTopY);
+        ctx.lineTo(wallX + 15 * s, wallTopY + 8 * s);
+        ctx.lineTo(wallX + 22 * s, wallTopY + 3 * s);
+        ctx.lineTo(wallX + 30 * s, wallTopY + 12 * s);
+        ctx.lineTo(wallX + 38 * s, wallTopY + 5 * s);
+        ctx.lineTo(wallX + 45 * s, wallTopY + 14 * s);
+        ctx.lineTo(wallX + 52 * s, wallTopY + 8 * s);
+        ctx.lineTo(wallX + 58 * s, wallTopY + 16 * s);
+        ctx.lineTo(wallX + wallW, wallTopY + 20 * s);
+        ctx.lineTo(wallX + wallW, screenPos.y + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Wall top edge
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(wallX - wallThick, wallTopY + 14 * s);
+        ctx.lineTo(wallX - wallThick + 3 * s, wallTopY + 9 * s);
+        ctx.lineTo(wallX, wallTopY + 5 * s);
+        ctx.lineTo(wallX + 8 * s, wallTopY);
+        ctx.lineTo(wallX + 15 * s, wallTopY + 8 * s);
+        ctx.lineTo(wallX + 22 * s, wallTopY + 3 * s);
+        ctx.lineTo(wallX + 38 * s, wallTopY + 5 * s);
+        ctx.lineTo(wallX + 52 * s, wallTopY + 8 * s);
+        ctx.lineTo(wallX + wallW, wallTopY + 20 * s);
+        ctx.lineTo(wallX + wallW - wallThick, wallTopY + 17 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brick lines
+        ctx.strokeStyle = stoneShadow;
+        ctx.lineWidth = 0.5 * s;
+        for (let row = 0; row < 7; row++) {
+          const rowY = wallTopY + 22 * s + row * 6 * s;
+          if (rowY < screenPos.y) {
+            ctx.beginPath();
+            ctx.moveTo(wallX + 2 * s, rowY);
+            ctx.lineTo(wallX + wallW - 2 * s, rowY + 2 * s);
+            ctx.stroke();
+          }
+        }
+
+        // Arched niche
+        const nicheX = wallX + 24 * s;
+        const nicheY = screenPos.y - 38 * s;
+        ctx.fillStyle = "#1a1a15";
+        ctx.beginPath();
+        ctx.moveTo(nicheX, nicheY + 12 * s);
+        ctx.lineTo(nicheX, nicheY + 3 * s);
+        ctx.arc(nicheX + 6 * s, nicheY + 3 * s, 6 * s, Math.PI, 0);
+        ctx.lineTo(nicheX + 12 * s, nicheY + 12 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Columns at varying heights
+        const columns = [
+          { cx: -28, h: 34, r: 5, broken: false },
+          { cx: -14, h: 46, r: 5.5, broken: false },
+          { cx: 0, h: 40, r: 6, broken: false },
+          { cx: 14, h: 24, r: 5.5, broken: true },
+          { cx: 28, h: 11, r: 5, broken: true },
+        ];
+        columns.forEach((col) => {
+          const cx = screenPos.x + col.cx * s;
+          const cy = screenPos.y;
+          const cr = col.r * s;
+          const ch = col.h * s;
+
+          ctx.fillStyle = stoneMid;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 4 * s, cr + 3 * s, (cr + 3 * s) * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 2 * s, cr, cr * 0.5, 0, Math.PI, Math.PI * 2);
+          ctx.lineTo(cx + cr, cy - ch + 10 * s);
+          ctx.ellipse(cx, cy - ch + 10 * s, cr, cr * 0.5, 0, 0, Math.PI, true);
+          ctx.closePath();
+          ctx.fill();
+
+          const cGrad = ctx.createLinearGradient(cx - cr, cy, cx + cr, cy);
+          cGrad.addColorStop(0, stoneMid);
+          cGrad.addColorStop(0.25, stoneLight);
+          cGrad.addColorStop(0.6, stoneMid);
+          cGrad.addColorStop(1, stoneDark);
+          ctx.fillStyle = cGrad;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy + 2 * s, cr, cr * 0.5, 0, 0, Math.PI);
+          ctx.lineTo(cx - cr, cy - ch + 10 * s);
+          ctx.ellipse(cx, cy - ch + 10 * s, cr, cr * 0.5, 0, Math.PI, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = stoneShadow;
+          ctx.lineWidth = 0.6 * s;
+          for (let fl = 0; fl < 4; fl++) {
+            const flA = (fl / 4) * Math.PI - Math.PI / 2;
+            const flX = cx + Math.cos(flA) * cr * 0.85;
+            ctx.beginPath();
+            ctx.moveTo(flX, cy + 1 * s);
+            ctx.lineTo(flX, cy - ch + 12 * s);
+            ctx.stroke();
+          }
+
+          if (!col.broken) {
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy - ch + 5 * s, cr + 2 * s, (cr + 2 * s) * 0.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = stoneLight;
+            ctx.beginPath();
+            ctx.moveTo(cx - cr, cy - ch + 10 * s);
+            ctx.lineTo(cx - cr + 2 * s, cy - ch + 5 * s);
+            ctx.lineTo(cx + 2 * s, cy - ch + 3 * s);
+            ctx.lineTo(cx + cr, cy - ch + 10 * s);
+            ctx.ellipse(cx, cy - ch + 10 * s, cr, cr * 0.5, 0, 0, Math.PI, true);
+            ctx.closePath();
+            ctx.fill();
+          }
+        });
+
+        // Scattered rubble
+        const rubblePositions = [
+          { x: -40, y: 12, sz: 4.5 },
+          { x: -18, y: 11, sz: 3.5 },
+          { x: 8, y: 16, sz: 3 },
+          { x: 20, y: 13, sz: 5 },
+          { x: 40, y: 10, sz: 4 },
+          { x: -10, y: 8, sz: 2.5 },
+          { x: 36, y: 5, sz: 3 },
+        ];
+        rubblePositions.forEach((rb, idx) => {
+          const rx = screenPos.x + rb.x * s;
+          const ry = screenPos.y + rb.y * s;
+          const rSz = rb.sz * s;
+          ctx.fillStyle = idx % 2 === 0 ? stoneLight : stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(rx, ry - rSz * 0.8);
+          ctx.lineTo(rx + rSz, ry - rSz * 0.3);
+          ctx.lineTo(rx + rSz * 0.3, ry + rSz * 0.2);
+          ctx.lineTo(rx - rSz * 0.7, ry - rSz * 0.2);
+          ctx.closePath();
+          ctx.fill();
+        });
+
+        // Moss patches
+        ctx.fillStyle = mossColor;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.ellipse(wallX + 15 * s, screenPos.y - 14 * s, 6 * s, 3 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x + 12 * s, screenPos.y + 5 * s, 7 * s, 3.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Hanging vines
+        ctx.strokeStyle = vineColor;
+        ctx.lineWidth = 1.5 * s;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(wallX + 12 * s, wallTopY + 12 * s);
+        ctx.quadraticCurveTo(wallX + 8 * s, screenPos.y - 18 * s, wallX + 14 * s, screenPos.y - 6 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 38 * s);
+        ctx.quadraticCurveTo(screenPos.x - 6 * s, screenPos.y - 24 * s, screenPos.x - 10 * s, screenPos.y - 10 * s);
+        ctx.stroke();
+
+        ctx.fillStyle = mossColor;
+        ctx.globalAlpha = 0.85;
+        [
+          [wallX + 10 * s, screenPos.y - 14 * s],
+          [wallX + 13 * s, screenPos.y - 8 * s],
+          [screenPos.x - 8 * s, screenPos.y - 26 * s],
+          [screenPos.x + 6 * s, screenPos.y - 13 * s],
+        ].forEach(([lx, ly]) => {
+          ctx.beginPath();
+          ctx.ellipse(lx, ly, 2.5 * s, 1.2 * s, 0.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
       }
       break;
     }
@@ -21685,436 +25800,2486 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       break;
     }
-    case "torch":
-      // Stand
-      ctx.fillStyle = "#4a3a2a";
-      ctx.fillRect(screenPos.x - 2 * s, screenPos.y - 20 * s, 4 * s, 25 * s);
-      // Flame
-      const flameFlicker = Math.sin(decorTime * 8) * 2 * s;
-      ctx.fillStyle = "#ff4400";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 20 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x + flameFlicker,
-        screenPos.y - 35 * s,
-        screenPos.x + 5 * s,
-        screenPos.y - 20 * s,
+    case "torch": {
+      const tcX = screenPos.x;
+      const tcY = screenPos.y;
+      const tcD = 3 * s;
+
+      // Warm ground glow
+      const tcGndGlow = ctx.createRadialGradient(
+        tcX, tcY + 2 * s, 2 * s,
+        tcX, tcY + 2 * s, 28 * s,
       );
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = "#ff8800";
+      const tcPulse = 0.12 + Math.sin(decorTime * 4) * 0.04;
+      tcGndGlow.addColorStop(0, `rgba(255,140,40,${tcPulse})`);
+      tcGndGlow.addColorStop(0.4, `rgba(255,100,20,${tcPulse * 0.4})`);
+      tcGndGlow.addColorStop(1, "rgba(255,60,10,0)");
+      ctx.fillStyle = tcGndGlow;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 3 * s, screenPos.y - 20 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x - flameFlicker * 0.5,
-        screenPos.y - 30 * s,
-        screenPos.x + 3 * s,
-        screenPos.y - 20 * s,
-      );
-      ctx.closePath();
+      ctx.ellipse(tcX, tcY + 2 * s, 28 * s, 14 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      // Glow
-      ctx.fillStyle = `rgba(255,150,50,${
-        0.15 + Math.sin(decorTime * 6) * 0.05
-      })`;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 25 * s, 20 * s, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    case "statue": {
-      // Grayscale stone statue with raised sword
-      const stoneLight = "#a8a8a8";
-      const stoneMid = "#888888";
-      const stoneDark = "#686868";
-      const stoneShadow = "#484848";
-      const figureHighlight = "#b0b0b0";
-      const figureLight = "#909090";
-      const figureMid = "#707070";
-      const figureDark = "#505050";
-      const figureShadow = "#383838";
-      const steelLight = "#c8c8c8";
-      const steelDark = "#606060";
 
       // Ground shadow
-      const statueShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        25 * s,
+      const tcShadG = ctx.createRadialGradient(
+        tcX + 2 * s, tcY + 4 * s, 0,
+        tcX + 2 * s, tcY + 4 * s, 12 * s,
       );
-      statueShadowGrad.addColorStop(0, "rgba(0,0,0,0.4)");
-      statueShadowGrad.addColorStop(0.5, "rgba(0,0,0,0.15)");
-      statueShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = statueShadowGrad;
+      tcShadG.addColorStop(0, "rgba(0,0,0,0.25)");
+      tcShadG.addColorStop(0.6, "rgba(0,0,0,0.08)");
+      tcShadG.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = tcShadG;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        22 * s,
-        11 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(tcX + 2 * s, tcY + 4 * s, 12 * s, 5 * s, 0.2, 0, Math.PI * 2);
       ctx.fill();
 
-      // ========== STONE PEDESTAL (3-tier, bottom to top) ==========
-      const baseY = screenPos.y + 5 * s;
+      // Stone base — isometric slab
+      const baseG = ctx.createLinearGradient(tcX - 6 * s, tcY, tcX + 6 * s, tcY);
+      baseG.addColorStop(0, "#5a5550");
+      baseG.addColorStop(0.4, "#807870");
+      baseG.addColorStop(0.6, "#908880");
+      baseG.addColorStop(1, "#4a4540");
 
-      // === BOTTOM TIER (largest) ===
-      const tier1W = 16 * s;
-      const tier1H = 6 * s;
-      // Top surface
-      ctx.fillStyle = stoneLight;
+      // Base top face
+      ctx.fillStyle = "#908880";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier1W, baseY - tier1H);
-      ctx.lineTo(screenPos.x, baseY - tier1H - tier1W * 0.5);
-      ctx.lineTo(screenPos.x + tier1W, baseY - tier1H);
-      ctx.lineTo(screenPos.x, baseY - tier1H + tier1W * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Left face
-      ctx.fillStyle = stoneMid;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier1W, baseY - tier1H);
-      ctx.lineTo(screenPos.x - tier1W, baseY);
-      ctx.lineTo(screenPos.x, baseY + tier1W * 0.5);
-      ctx.lineTo(screenPos.x, baseY - tier1H + tier1W * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Right face
-      ctx.fillStyle = stoneDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + tier1W, baseY - tier1H);
-      ctx.lineTo(screenPos.x + tier1W, baseY);
-      ctx.lineTo(screenPos.x, baseY + tier1W * 0.5);
-      ctx.lineTo(screenPos.x, baseY - tier1H + tier1W * 0.5);
+      ctx.moveTo(tcX, tcY - 2 * s);
+      ctx.lineTo(tcX + 7 * s, tcY + 1.5 * s);
+      ctx.lineTo(tcX, tcY + 5 * s);
+      ctx.lineTo(tcX - 7 * s, tcY + 1.5 * s);
       ctx.closePath();
       ctx.fill();
 
-      // === MIDDLE TIER ===
-      const tier2Y = baseY - tier1H;
-      const tier2W = 12 * s;
-      const tier2H = 10 * s;
-      // Top surface
-      ctx.fillStyle = stoneLight;
+      // Base front-left face
+      ctx.fillStyle = baseG;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier2W, tier2Y - tier2H);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H - tier2W * 0.5);
-      ctx.lineTo(screenPos.x + tier2W, tier2Y - tier2H);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H + tier2W * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Left face
-      ctx.fillStyle = stoneMid;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier2W, tier2Y - tier2H);
-      ctx.lineTo(screenPos.x - tier2W, tier2Y);
-      ctx.lineTo(screenPos.x, tier2Y + tier2W * 0.5);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H + tier2W * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Right face
-      ctx.fillStyle = stoneDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + tier2W, tier2Y - tier2H);
-      ctx.lineTo(screenPos.x + tier2W, tier2Y);
-      ctx.lineTo(screenPos.x, tier2Y + tier2W * 0.5);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H + tier2W * 0.5);
+      ctx.moveTo(tcX - 7 * s, tcY + 1.5 * s);
+      ctx.lineTo(tcX, tcY + 5 * s);
+      ctx.lineTo(tcX, tcY + 8 * s);
+      ctx.lineTo(tcX - 7 * s, tcY + 4.5 * s);
       ctx.closePath();
       ctx.fill();
 
-      // Decorative line on middle tier
-      ctx.strokeStyle = stoneShadow;
-      ctx.lineWidth = 1 * s;
+      // Base front-right face
+      ctx.fillStyle = "#4a4540";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier2W + 2 * s, tier2Y - tier2H * 0.5);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.5 + tier2W * 0.4);
+      ctx.moveTo(tcX, tcY + 5 * s);
+      ctx.lineTo(tcX + 7 * s, tcY + 1.5 * s);
+      ctx.lineTo(tcX + 7 * s, tcY + 4.5 * s);
+      ctx.lineTo(tcX, tcY + 8 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wooden pole — isometric cylinder
+      const poleG = ctx.createLinearGradient(tcX - 2.5 * s, 0, tcX + 2.5 * s, 0);
+      poleG.addColorStop(0, "#3a2818");
+      poleG.addColorStop(0.3, "#5a4030");
+      poleG.addColorStop(0.5, "#6a5040");
+      poleG.addColorStop(0.7, "#5a4030");
+      poleG.addColorStop(1, "#2a1a10");
+
+      // Pole front face
+      ctx.fillStyle = poleG;
+      ctx.beginPath();
+      ctx.moveTo(tcX - 2.5 * s, tcY);
+      ctx.lineTo(tcX + 2.5 * s, tcY);
+      ctx.lineTo(tcX + 2.5 * s, tcY - 35 * s);
+      ctx.lineTo(tcX - 2.5 * s, tcY - 35 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pole side face
+      ctx.fillStyle = "#2a1a10";
+      ctx.beginPath();
+      ctx.moveTo(tcX + 2.5 * s, tcY);
+      ctx.lineTo(tcX + 2.5 * s + tcD * 0.5, tcY - tcD * 0.25);
+      ctx.lineTo(tcX + 2.5 * s + tcD * 0.5, tcY - 35 * s - tcD * 0.25);
+      ctx.lineTo(tcX + 2.5 * s, tcY - 35 * s);
+      ctx.closePath();
+      ctx.fill();
+
+      // Pole wood grain
+      ctx.strokeStyle = "rgba(20,12,5,0.2)";
+      ctx.lineWidth = 0.4 * s;
+      for (let pg = 0; pg < 4; pg++) {
+        const pgx = tcX + (-1 + pg * 0.8) * s;
+        ctx.beginPath();
+        ctx.moveTo(pgx, tcY - 2 * s);
+        ctx.lineTo(pgx + 0.3 * s, tcY - 33 * s);
+        ctx.stroke();
+      }
+
+      // Iron bracket/cradle at top
+      const brY = tcY - 33 * s;
+      ctx.strokeStyle = "#3a3535";
+      ctx.lineWidth = 1.5 * s;
+      ctx.lineCap = "round";
+      // Bracket arms
+      ctx.beginPath();
+      ctx.moveTo(tcX - 5 * s, brY + 2 * s);
+      ctx.quadraticCurveTo(tcX - 6 * s, brY - 3 * s, tcX - 4 * s, brY - 5 * s);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + tier2W - 2 * s, tier2Y - tier2H * 0.5);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.5 + tier2W * 0.4);
+      ctx.moveTo(tcX + 5 * s, brY + 2 * s);
+      ctx.quadraticCurveTo(tcX + 6 * s, brY - 3 * s, tcX + 4 * s, brY - 5 * s);
+      ctx.stroke();
+      // Bracket base ring
+      ctx.strokeStyle = "#4a4545";
+      ctx.lineWidth = 1.2 * s;
+      ctx.beginPath();
+      ctx.ellipse(tcX, brY + 2 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // === TOP TIER (smallest, figure stands on this) ===
-      const tier3Y = tier2Y - tier2H;
-      const tier3W = 8 * s;
-      const tier3H = 4 * s;
-      // Top surface
-      ctx.fillStyle = stoneLight;
+      // Iron highlight
+      ctx.strokeStyle = "rgba(120,115,110,0.3)";
+      ctx.lineWidth = 0.5 * s;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier3W, tier3Y - tier3H);
-      ctx.lineTo(screenPos.x, tier3Y - tier3H - tier3W * 0.5);
-      ctx.lineTo(screenPos.x + tier3W, tier3Y - tier3H);
-      ctx.lineTo(screenPos.x, tier3Y - tier3H + tier3W * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Left face
-      ctx.fillStyle = stoneMid;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - tier3W, tier3Y - tier3H);
-      ctx.lineTo(screenPos.x - tier3W, tier3Y);
-      ctx.lineTo(screenPos.x, tier3Y + tier3W * 0.5);
-      ctx.lineTo(screenPos.x, tier3Y - tier3H + tier3W * 0.5);
-      ctx.closePath();
-      ctx.fill();
-      // Right face
-      ctx.fillStyle = stoneDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + tier3W, tier3Y - tier3H);
-      ctx.lineTo(screenPos.x + tier3W, tier3Y);
-      ctx.lineTo(screenPos.x, tier3Y + tier3W * 0.5);
-      ctx.lineTo(screenPos.x, tier3Y - tier3H + tier3W * 0.5);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(tcX - 4.5 * s, brY + 1 * s);
+      ctx.quadraticCurveTo(tcX - 5.5 * s, brY - 3 * s, tcX - 3.5 * s, brY - 5 * s);
+      ctx.stroke();
 
-      // ========== STONE FIGURE ==========
-      const figureBase = tier3Y - tier3H;
+      // Multi-layer animated flame
+      const tcFlicker = Math.sin(decorTime * 8) * 2 * s;
+      const tcFlicker2 = Math.sin(decorTime * 11 + 1.5) * 1.5 * s;
+      const tcFlicker3 = Math.cos(decorTime * 6) * 1 * s;
+      const flameBase = brY - 2 * s;
 
-      // Legs/Robe base
-      ctx.fillStyle = figureDark;
+      // Outer flame (darkest red-orange)
+      ctx.fillStyle = "#cc3300";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, figureBase);
-      ctx.lineTo(screenPos.x - 6 * s, figureBase - 18 * s);
-      ctx.lineTo(screenPos.x, figureBase - 20 * s);
-      ctx.lineTo(screenPos.x, figureBase);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = figureMid;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 5 * s, figureBase);
-      ctx.lineTo(screenPos.x + 6 * s, figureBase - 18 * s);
-      ctx.lineTo(screenPos.x, figureBase - 20 * s);
-      ctx.lineTo(screenPos.x, figureBase);
-      ctx.closePath();
-      ctx.fill();
-
-      // Torso
-      ctx.fillStyle = figureDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, figureBase - 18 * s);
-      ctx.lineTo(screenPos.x - 4 * s, figureBase - 32 * s);
-      ctx.lineTo(screenPos.x, figureBase - 34 * s);
-      ctx.lineTo(screenPos.x, figureBase - 20 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = figureMid;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 5 * s, figureBase - 18 * s);
-      ctx.lineTo(screenPos.x + 4 * s, figureBase - 32 * s);
-      ctx.lineTo(screenPos.x, figureBase - 34 * s);
-      ctx.lineTo(screenPos.x, figureBase - 20 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Cape flowing back
-      ctx.fillStyle = figureShadow;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 4 * s, figureBase - 30 * s);
+      ctx.moveTo(tcX - 6 * s, flameBase);
       ctx.quadraticCurveTo(
-        screenPos.x - 12 * s,
-        figureBase - 25 * s,
-        screenPos.x - 10 * s,
-        figureBase - 12 * s,
+        tcX - 3 * s + tcFlicker2, flameBase - 16 * s,
+        tcX + tcFlicker * 0.5, flameBase - 20 * s,
       );
-      ctx.lineTo(screenPos.x - 6 * s, figureBase - 18 * s);
+      ctx.quadraticCurveTo(
+        tcX + 3 * s - tcFlicker2, flameBase - 16 * s,
+        tcX + 6 * s, flameBase,
+      );
       ctx.closePath();
       ctx.fill();
 
-      // Left arm (holding shield at side)
-      ctx.fillStyle = figureDark;
+      // Middle flame (bright orange)
+      ctx.fillStyle = "#ff6600";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 4 * s, figureBase - 30 * s);
-      ctx.lineTo(screenPos.x - 8 * s, figureBase - 20 * s);
-      ctx.lineTo(screenPos.x - 6 * s, figureBase - 19 * s);
-      ctx.lineTo(screenPos.x - 3 * s, figureBase - 28 * s);
+      ctx.moveTo(tcX - 4.5 * s, flameBase);
+      ctx.quadraticCurveTo(
+        tcX - 2 * s - tcFlicker, flameBase - 13 * s,
+        tcX + tcFlicker3, flameBase - 17 * s,
+      );
+      ctx.quadraticCurveTo(
+        tcX + 2 * s + tcFlicker, flameBase - 13 * s,
+        tcX + 4.5 * s, flameBase,
+      );
       ctx.closePath();
       ctx.fill();
 
-      // Shield at side
-      ctx.fillStyle = figureMid;
+      // Inner flame (yellow-orange)
+      ctx.fillStyle = "#ff9900";
+      ctx.beginPath();
+      ctx.moveTo(tcX - 3 * s, flameBase);
+      ctx.quadraticCurveTo(
+        tcX + tcFlicker * 0.6, flameBase - 10 * s,
+        tcX - tcFlicker3 * 0.5, flameBase - 14 * s,
+      );
+      ctx.quadraticCurveTo(
+        tcX - tcFlicker * 0.6, flameBase - 10 * s,
+        tcX + 3 * s, flameBase,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Core flame (bright yellow-white)
+      const coreG = ctx.createRadialGradient(
+        tcX, flameBase - 5 * s, 0.5 * s,
+        tcX, flameBase - 5 * s, 4 * s,
+      );
+      coreG.addColorStop(0, "rgba(255,255,220,0.9)");
+      coreG.addColorStop(0.4, "rgba(255,220,100,0.6)");
+      coreG.addColorStop(1, "rgba(255,150,50,0)");
+      ctx.fillStyle = coreG;
+      ctx.beginPath();
+      ctx.moveTo(tcX - 2 * s, flameBase);
+      ctx.quadraticCurveTo(
+        tcX - tcFlicker2 * 0.3, flameBase - 8 * s,
+        tcX, flameBase - 11 * s,
+      );
+      ctx.quadraticCurveTo(
+        tcX + tcFlicker2 * 0.3, flameBase - 8 * s,
+        tcX + 2 * s, flameBase,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // Flickering embers/sparks
+      const tcSeed = decorX * 37 + decorY * 53;
+      for (let em = 0; em < 4; em++) {
+        const emPhase = tcSeed + em * 1.7;
+        const emLife = ((decorTime * 2 + emPhase) % 3) / 3;
+        const emX = tcX + Math.sin(emPhase + decorTime * 3) * 4 * s * emLife;
+        const emY = flameBase - 14 * s - emLife * 12 * s;
+        const emAlpha = Math.max(0, 1 - emLife * 1.3) * 0.7;
+        const emSize = (0.8 + Math.sin(emPhase) * 0.3) * s * (1 - emLife * 0.5);
+
+        ctx.fillStyle = `rgba(255,${Math.floor(180 - emLife * 100)},${Math.floor(50 - emLife * 40)},${emAlpha})`;
+        ctx.beginPath();
+        ctx.arc(emX, emY, emSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Flame glow halo
+      const tcHaloG = ctx.createRadialGradient(
+        tcX, flameBase - 8 * s, 2 * s,
+        tcX, flameBase - 8 * s, 18 * s,
+      );
+      const haloPulse = 0.2 + Math.sin(decorTime * 5) * 0.06;
+      tcHaloG.addColorStop(0, `rgba(255,160,40,${haloPulse})`);
+      tcHaloG.addColorStop(0.5, `rgba(255,100,20,${haloPulse * 0.3})`);
+      tcHaloG.addColorStop(1, "rgba(255,60,10,0)");
+      ctx.fillStyle = tcHaloG;
+      ctx.beginPath();
+      ctx.arc(tcX, flameBase - 8 * s, 18 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      break;
+    }
+    case "statue": {
+      const stoneLight = "#b5b0a5";
+      const stoneMid = "#928d82";
+      const stoneDark = "#706b62";
+      const stoneShadow = "#504b42";
+      const stoneDeep = "#3a3530";
+      const figureHighlight = "#c0bbb0";
+      const figureLight = "#a09a90";
+      const figureMid = "#807a70";
+      const figureDark = "#605a50";
+      const figureShadow = "#403a30";
+      const steelLight = "#d0ccc5";
+      const steelDark = "#6a6560";
+      const px = screenPos.x;
+      const py = screenPos.y;
+
+      // Ground shadow
+      const statueShadG = ctx.createRadialGradient(
+        px + 4 * s, py + 8 * s, 0,
+        px + 4 * s, py + 8 * s, 28 * s,
+      );
+      statueShadG.addColorStop(0, "rgba(0,0,0,0.45)");
+      statueShadG.addColorStop(0.4, "rgba(0,0,0,0.18)");
+      statueShadG.addColorStop(0.7, "rgba(0,0,0,0.06)");
+      statueShadG.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = statueShadG;
+      ctx.beginPath();
+      ctx.ellipse(px + 4 * s, py + 8 * s, 25 * s, 12 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Helper: draw a gradient-lit isometric tier
+      const drawPedTier = (
+        cx2: number, ty: number, tw: number, th: number,
+        topCol: string, leftCol: string, rightCol: string,
+        topHi: string, leftHi: string,
+      ) => {
+        // Top surface with gradient
+        const tg = ctx.createLinearGradient(
+          cx2 - tw, ty - th, cx2 + tw, ty - th,
+        );
+        tg.addColorStop(0, topHi);
+        tg.addColorStop(0.5, topCol);
+        tg.addColorStop(1, topCol);
+        ctx.fillStyle = tg;
+        ctx.beginPath();
+        ctx.moveTo(cx2 - tw, ty - th);
+        ctx.lineTo(cx2, ty - th - tw * 0.5);
+        ctx.lineTo(cx2 + tw, ty - th);
+        ctx.lineTo(cx2, ty - th + tw * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Left face gradient (lit)
+        const lg = ctx.createLinearGradient(
+          cx2 - tw, ty - th, cx2, ty + tw * 0.5,
+        );
+        lg.addColorStop(0, leftHi);
+        lg.addColorStop(0.3, leftCol);
+        lg.addColorStop(1, leftCol);
+        ctx.fillStyle = lg;
+        ctx.beginPath();
+        ctx.moveTo(cx2 - tw, ty - th);
+        ctx.lineTo(cx2 - tw, ty);
+        ctx.lineTo(cx2, ty + tw * 0.5);
+        ctx.lineTo(cx2, ty - th + tw * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Right face (shadow)
+        ctx.fillStyle = rightCol;
+        ctx.beginPath();
+        ctx.moveTo(cx2 + tw, ty - th);
+        ctx.lineTo(cx2 + tw, ty);
+        ctx.lineTo(cx2, ty + tw * 0.5);
+        ctx.lineTo(cx2, ty - th + tw * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Bottom edge line (ground contact)
+        ctx.strokeStyle = stoneDeep;
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx2 - tw, ty);
+        ctx.lineTo(cx2, ty + tw * 0.5);
+        ctx.lineTo(cx2 + tw, ty);
+        ctx.stroke();
+      };
+
+      // Helper: draw a cornice molding between tiers
+      const drawCornice = (
+        cx2: number, cy2: number, cw: number, ch: number,
+      ) => {
+        // Lit chamfer strip on left
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(cx2 - cw, cy2);
+        ctx.lineTo(cx2 - cw - 1.5 * s, cy2 + ch);
+        ctx.lineTo(cx2, cy2 + ch + cw * 0.5 + 0.75 * s);
+        ctx.lineTo(cx2, cy2 + cw * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Shadow chamfer strip on right
+        ctx.fillStyle = stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(cx2 + cw, cy2);
+        ctx.lineTo(cx2 + cw + 1.5 * s, cy2 + ch);
+        ctx.lineTo(cx2, cy2 + ch + cw * 0.5 + 0.75 * s);
+        ctx.lineTo(cx2, cy2 + cw * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Top edge highlight
+        ctx.strokeStyle = "#c5c0b5";
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx2 - cw, cy2);
+        ctx.lineTo(cx2, cy2 - cw * 0.5);
+        ctx.stroke();
+      };
+
+      // ========== STONE PEDESTAL ==========
+      const baseY = py + 5 * s;
+
+      // === BOTTOM PLINTH ===
+      const t1W = 16 * s;
+      const t1H = 6 * s;
+      drawPedTier(px, baseY, t1W, t1H, stoneLight, stoneMid, stoneDark, "#c5c0b5", "#a5a095");
+      // Weathered stone patches on bottom tier
+      ctx.fillStyle = "rgba(90,85,75,0.15)";
+      ctx.beginPath();
+      ctx.ellipse(px - 8 * s, baseY - 2 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(px + 5 * s, baseY - 3 * s, 3 * s, 1.5 * s, -0.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === CORNICE between bottom and middle ===
+      const t2Y = baseY - t1H;
+      drawCornice(px, t2Y - 2 * s, 13.5 * s, 2 * s);
+
+      // === MIDDLE COLUMN ===
+      const t2W = 12 * s;
+      const t2H = 10 * s;
+      drawPedTier(px, t2Y, t2W, t2H, stoneLight, stoneMid, stoneDark, "#c0bbb0", "#a09a90");
+
+      // Carved inscription band (left face)
+      ctx.strokeStyle = stoneShadow;
+      ctx.lineWidth = 0.7 * s;
+      const bandY1 = t2Y - t2H * 0.65;
+      const bandY2 = t2Y - t2H * 0.35;
+      ctx.beginPath();
+      ctx.moveTo(px - t2W + 2 * s, bandY1);
+      ctx.lineTo(px, bandY1 + t2W * 0.42);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(px - t2W + 2 * s, bandY2);
+      ctx.lineTo(px, bandY2 + t2W * 0.42);
+      ctx.stroke();
+      // Inscription symbols between lines (left face)
+      ctx.strokeStyle = "rgba(70,65,55,0.3)";
+      ctx.lineWidth = 0.5 * s;
+      for (let gi = 0; gi < 5; gi++) {
+        const gt = (gi + 0.5) / 5;
+        const gx = px - t2W + 3 * s + gt * (t2W - 4 * s);
+        const gy = bandY1 + gt * t2W * 0.42 + (bandY2 - bandY1) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - 1.5 * s);
+        ctx.lineTo(gx + 1 * s, gy);
+        ctx.lineTo(gx, gy + 1.5 * s);
+        ctx.stroke();
+      }
+      // Inscription band (right face)
+      ctx.strokeStyle = stoneShadow;
+      ctx.lineWidth = 0.7 * s;
+      ctx.beginPath();
+      ctx.moveTo(px + t2W - 2 * s, bandY1);
+      ctx.lineTo(px, bandY1 + t2W * 0.42);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(px + t2W - 2 * s, bandY2);
+      ctx.lineTo(px, bandY2 + t2W * 0.42);
+      ctx.stroke();
+
+      // Plaque (inset on left face, above inscription)
+      const plaqueY = t2Y - t2H * 0.8;
+      ctx.fillStyle = stoneDeep;
+      ctx.beginPath();
+      ctx.moveTo(px - 7 * s, plaqueY);
+      ctx.lineTo(px, plaqueY + 3.5 * s);
+      ctx.lineTo(px + 7 * s, plaqueY);
+      ctx.lineTo(px, plaqueY - 3.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = stoneShadow;
+      ctx.beginPath();
+      ctx.moveTo(px - 6 * s, plaqueY);
+      ctx.lineTo(px, plaqueY + 3 * s);
+      ctx.lineTo(px + 6 * s, plaqueY);
+      ctx.lineTo(px, plaqueY - 3 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Plaque highlight edge
+      ctx.strokeStyle = "rgba(200,195,185,0.3)";
+      ctx.lineWidth = 0.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(px - 6 * s, plaqueY);
+      ctx.lineTo(px, plaqueY - 3 * s);
+      ctx.lineTo(px + 6 * s, plaqueY);
+      ctx.stroke();
+
+      // === CORNICE between middle and top ===
+      const t3Y = t2Y - t2H;
+      drawCornice(px, t3Y - 1.5 * s, 9.5 * s, 1.5 * s);
+
+      // === TOP CAP ===
+      const t3W = 8 * s;
+      const t3H = 4 * s;
+      drawPedTier(px, t3Y, t3W, t3H, "#c0bbb0", stoneLight, stoneMid, "#ccc7bc", "#b0aba0");
+
+      // Moss patches on pedestal
+      ctx.fillStyle = "rgba(70,90,55,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(px - t1W + 4 * s, baseY - 1 * s, 3.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(60,80,45,0.2)";
+      ctx.beginPath();
+      ctx.ellipse(px + 6 * s, t2Y + 1 * s, 2.5 * s, 1.2 * s, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subtle crack line
+      ctx.strokeStyle = "rgba(50,45,38,0.2)";
+      ctx.lineWidth = 0.4 * s;
+      ctx.beginPath();
+      ctx.moveTo(px + 3 * s, t2Y - 1 * s);
+      ctx.quadraticCurveTo(px + 5 * s, t2Y - t2H * 0.4, px + 4 * s, t2Y - t2H + 2 * s);
+      ctx.stroke();
+
+      // ========== STONE FIGURE (variant-based) ==========
+      const figureBase = t3Y - t3H;
+      const sv = variant % 8;
+      const fx = px;
+
+      if (sv === 0) {
+        // === VARIANT 0: KNIGHT with raised sword & shield ===
+        // Legs/Robe
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase);
+        ctx.lineTo(fx - 6 * s, figureBase - 18 * s);
+        ctx.lineTo(fx, figureBase - 20 * s);
+        ctx.lineTo(fx, figureBase);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase);
+        ctx.lineTo(fx + 6 * s, figureBase - 18 * s);
+        ctx.lineTo(fx, figureBase - 20 * s);
+        ctx.lineTo(fx, figureBase);
+        ctx.closePath();
+        ctx.fill();
+
+        // Torso
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 4 * s, figureBase - 32 * s);
+        ctx.lineTo(fx, figureBase - 34 * s);
+        ctx.lineTo(fx, figureBase - 20 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase - 18 * s);
+        ctx.lineTo(fx + 4 * s, figureBase - 32 * s);
+        ctx.lineTo(fx, figureBase - 34 * s);
+        ctx.lineTo(fx, figureBase - 20 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cape
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, figureBase - 30 * s);
+        ctx.quadraticCurveTo(
+          fx - 12 * s,
+          figureBase - 25 * s,
+          fx - 10 * s,
+          figureBase - 12 * s,
+        );
+        ctx.lineTo(fx - 6 * s, figureBase - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Left arm + shield
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, figureBase - 30 * s);
+        ctx.lineTo(fx - 8 * s, figureBase - 20 * s);
+        ctx.lineTo(fx - 6 * s, figureBase - 19 * s);
+        ctx.lineTo(fx - 3 * s, figureBase - 28 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx - 10 * s,
+          figureBase - 18 * s,
+          5 * s,
+          7 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = figureLight;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx - 10 * s,
+          figureBase - 18 * s,
+          3 * s,
+          4.5 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.arc(fx - 10 * s, figureBase - 18 * s, 1.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right arm + sword
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 3 * s, figureBase - 30 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 45 * s);
+        ctx.lineTo(fx + 12 * s, figureBase - 43 * s);
+        ctx.lineTo(fx + 5 * s, figureBase - 28 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureLight;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx + 11 * s,
+          figureBase - 44 * s,
+          2 * s,
+          1.5 * s,
+          0.7,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        // Blade
+        ctx.fillStyle = steelLight;
+        ctx.beginPath();
+        ctx.moveTo(fx + 10 * s, figureBase - 46 * s);
+        ctx.lineTo(fx + 8 * s, figureBase - 70 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 72 * s);
+        ctx.lineTo(fx + 12 * s, figureBase - 70 * s);
+        ctx.lineTo(fx + 12 * s, figureBase - 46 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = steelDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 10 * s, figureBase - 46 * s);
+        ctx.lineTo(fx + 8 * s, figureBase - 70 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 72 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 46 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.beginPath();
+        ctx.moveTo(fx + 11 * s, figureBase - 48 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 68 * s);
+        ctx.lineTo(fx + 11 * s, figureBase - 68 * s);
+        ctx.lineTo(fx + 11.5 * s, figureBase - 48 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Crossguard
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 7 * s, figureBase - 45 * s);
+        ctx.lineTo(fx + 15 * s, figureBase - 47 * s);
+        ctx.lineTo(fx + 15 * s, figureBase - 45 * s);
+        ctx.lineTo(fx + 7 * s, figureBase - 43 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head + helmet
+        const kHeadY = figureBase - 38 * s;
+        const kHG = ctx.createRadialGradient(
+          fx - 1 * s,
+          kHeadY - 2 * s,
+          0,
+          fx,
+          kHeadY,
+          6 * s,
+        );
+        kHG.addColorStop(0, figureHighlight);
+        kHG.addColorStop(0.4, figureLight);
+        kHG.addColorStop(0.8, figureMid);
+        kHG.addColorStop(1, figureDark);
+        ctx.fillStyle = kHG;
+        ctx.beginPath();
+        ctx.ellipse(fx, kHeadY, 5 * s, 6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx,
+          kHeadY - 3 * s,
+          5.5 * s,
+          3.5 * s,
+          0,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx, kHeadY - 6 * s);
+        ctx.lineTo(fx - 1 * s, kHeadY - 3 * s);
+        ctx.lineTo(fx + 1 * s, kHeadY - 3 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.arc(fx - 1.5 * s, kHeadY - 1 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 1.5 * s, kHeadY - 1 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.15)";
+        ctx.beginPath();
+        ctx.ellipse(
+          fx - 2 * s,
+          kHeadY - 3 * s,
+          2 * s,
+          1.5 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      } else if (sv === 1) {
+        // === VARIANT 1: DEMON LORD with horns & wings ===
+        // Broad legs
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, figureBase);
+        ctx.lineTo(fx - 7 * s, figureBase - 16 * s);
+        ctx.lineTo(fx - 2 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 1 * s, figureBase);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6 * s, figureBase);
+        ctx.lineTo(fx + 7 * s, figureBase - 16 * s);
+        ctx.lineTo(fx + 2 * s, figureBase - 18 * s);
+        ctx.lineTo(fx + 1 * s, figureBase);
+        ctx.closePath();
+        ctx.fill();
+
+        // Muscular torso (wider)
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, figureBase - 16 * s);
+        ctx.lineTo(fx - 7 * s, figureBase - 30 * s);
+        ctx.lineTo(fx, figureBase - 33 * s);
+        ctx.lineTo(fx, figureBase - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6 * s, figureBase - 16 * s);
+        ctx.lineTo(fx + 7 * s, figureBase - 30 * s);
+        ctx.lineTo(fx, figureBase - 33 * s);
+        ctx.lineTo(fx, figureBase - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Wings (behind, spread wide)
+        ctx.fillStyle = figureShadow;
+        // Left wing
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase - 28 * s);
+        ctx.quadraticCurveTo(
+          fx - 20 * s,
+          figureBase - 45 * s,
+          fx - 22 * s,
+          figureBase - 35 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx - 18 * s,
+          figureBase - 28 * s,
+          fx - 15 * s,
+          figureBase - 18 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx - 10 * s,
+          figureBase - 22 * s,
+          fx - 5 * s,
+          figureBase - 20 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Right wing
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase - 28 * s);
+        ctx.quadraticCurveTo(
+          fx + 20 * s,
+          figureBase - 45 * s,
+          fx + 22 * s,
+          figureBase - 35 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx + 18 * s,
+          figureBase - 28 * s,
+          fx + 15 * s,
+          figureBase - 18 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx + 10 * s,
+          figureBase - 22 * s,
+          fx + 5 * s,
+          figureBase - 20 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Wing bone highlights
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase - 28 * s);
+        ctx.quadraticCurveTo(
+          fx - 14 * s,
+          figureBase - 40 * s,
+          fx - 22 * s,
+          figureBase - 35 * s,
+        );
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase - 28 * s);
+        ctx.quadraticCurveTo(
+          fx + 14 * s,
+          figureBase - 40 * s,
+          fx + 22 * s,
+          figureBase - 35 * s,
+        );
+        ctx.stroke();
+
+        // Arms at sides, clawed
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, figureBase - 28 * s);
+        ctx.lineTo(fx - 10 * s, figureBase - 15 * s);
+        ctx.lineTo(fx - 8 * s, figureBase - 14 * s);
+        ctx.lineTo(fx - 5 * s, figureBase - 26 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6 * s, figureBase - 28 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 15 * s);
+        ctx.lineTo(fx + 8 * s, figureBase - 14 * s);
+        ctx.lineTo(fx + 5 * s, figureBase - 26 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Claws
+        for (let c = 0; c < 3; c++) {
+          ctx.fillStyle = steelLight;
+          ctx.beginPath();
+          ctx.moveTo(fx - 10 * s + c * 1.2 * s, figureBase - 15 * s);
+          ctx.lineTo(fx - 11 * s + c * 1.2 * s, figureBase - 11 * s);
+          ctx.lineTo(fx - 9.5 * s + c * 1.2 * s, figureBase - 14 * s);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(fx + 8 * s + c * 1.2 * s, figureBase - 15 * s);
+          ctx.lineTo(fx + 7 * s + c * 1.2 * s, figureBase - 11 * s);
+          ctx.lineTo(fx + 8.5 * s + c * 1.2 * s, figureBase - 14 * s);
+          ctx.fill();
+        }
+
+        // Demon head
+        const dHeadY = figureBase - 37 * s;
+        const dHG = ctx.createRadialGradient(
+          fx,
+          dHeadY - 1 * s,
+          0,
+          fx,
+          dHeadY,
+          6 * s,
+        );
+        dHG.addColorStop(0, figureHighlight);
+        dHG.addColorStop(0.5, figureMid);
+        dHG.addColorStop(1, figureDark);
+        ctx.fillStyle = dHG;
+        ctx.beginPath();
+        ctx.ellipse(fx, dHeadY, 5 * s, 5.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horns
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, dHeadY - 3 * s);
+        ctx.quadraticCurveTo(
+          fx - 10 * s,
+          dHeadY - 12 * s,
+          fx - 8 * s,
+          dHeadY - 16 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx - 6 * s,
+          dHeadY - 10 * s,
+          fx - 3 * s,
+          dHeadY - 4 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx + 4 * s, dHeadY - 3 * s);
+        ctx.quadraticCurveTo(
+          fx + 10 * s,
+          dHeadY - 12 * s,
+          fx + 8 * s,
+          dHeadY - 16 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx + 6 * s,
+          dHeadY - 10 * s,
+          fx + 3 * s,
+          dHeadY - 4 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Horn highlights
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, dHeadY - 4 * s);
+        ctx.quadraticCurveTo(
+          fx - 8 * s,
+          dHeadY - 11 * s,
+          fx - 8 * s,
+          dHeadY - 15 * s,
+        );
+        ctx.lineTo(fx - 8 * s, dHeadY - 16 * s);
+        ctx.quadraticCurveTo(
+          fx - 7 * s,
+          dHeadY - 11 * s,
+          fx - 3.5 * s,
+          dHeadY - 5 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx + 4 * s, dHeadY - 4 * s);
+        ctx.quadraticCurveTo(
+          fx + 8 * s,
+          dHeadY - 11 * s,
+          fx + 8 * s,
+          dHeadY - 15 * s,
+        );
+        ctx.lineTo(fx + 8 * s, dHeadY - 16 * s);
+        ctx.quadraticCurveTo(
+          fx + 7 * s,
+          dHeadY - 11 * s,
+          fx + 3.5 * s,
+          dHeadY - 5 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing eyes
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx - 2 * s,
+          dHeadY - 0.5 * s,
+          1.5 * s,
+          1 * s,
+          -0.1,
+          0,
+          Math.PI * 2,
+        );
+        ctx.ellipse(
+          fx + 2 * s,
+          dHeadY - 0.5 * s,
+          1.5 * s,
+          1 * s,
+          0.1,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        const dEyeGlow = 0.4 + Math.sin(decorTime * 2.5) * 0.3;
+        ctx.fillStyle = `rgba(200,50,30,${dEyeGlow})`;
+        ctx.beginPath();
+        ctx.arc(fx - 2 * s, dHeadY - 0.5 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 2 * s, dHeadY - 0.5 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ff4030";
+        ctx.beginPath();
+        ctx.arc(fx - 2 * s, dHeadY - 0.5 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 2 * s, dHeadY - 0.5 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Snarling mouth
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 3 * s, dHeadY + 2 * s);
+        ctx.lineTo(fx, dHeadY + 4 * s);
+        ctx.lineTo(fx + 3 * s, dHeadY + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = steelLight;
+        ctx.beginPath();
+        ctx.moveTo(fx - 1.5 * s, dHeadY + 2.5 * s);
+        ctx.lineTo(fx - 0.8 * s, dHeadY + 3.2 * s);
+        ctx.lineTo(fx, dHeadY + 2.5 * s);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx, dHeadY + 2.5 * s);
+        ctx.lineTo(fx + 0.8 * s, dHeadY + 3.2 * s);
+        ctx.lineTo(fx + 1.5 * s, dHeadY + 2.5 * s);
+        ctx.fill();
+      } else if (sv === 2) {
+        // === VARIANT 2: ROBED MAGE with staff & orb ===
+        // Long flowing robes (wider at base)
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 7 * s, figureBase);
+        ctx.lineTo(fx - 4 * s, figureBase - 30 * s);
+        ctx.lineTo(fx, figureBase - 33 * s);
+        ctx.lineTo(fx, figureBase);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 7 * s, figureBase);
+        ctx.lineTo(fx + 4 * s, figureBase - 30 * s);
+        ctx.lineTo(fx, figureBase - 33 * s);
+        ctx.lineTo(fx, figureBase);
+        ctx.closePath();
+        ctx.fill();
+
+        // Robe trim at bottom
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 7 * s, figureBase);
+        ctx.quadraticCurveTo(fx, figureBase + 2 * s, fx + 7 * s, figureBase);
+        ctx.stroke();
+
+        // Left arm holding book/scroll
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, figureBase - 28 * s);
+        ctx.lineTo(fx - 8 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 6 * s, figureBase - 17 * s);
+        ctx.lineTo(fx - 3 * s, figureBase - 26 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Book/tome
+        ctx.fillStyle = "#5a4a38";
+        ctx.fillRect(fx - 11 * s, figureBase - 20 * s, 5 * s, 6 * s);
+        ctx.fillStyle = "#7a6a50";
+        ctx.fillRect(fx - 10.5 * s, figureBase - 19.5 * s, 4 * s, 5 * s);
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 8.5 * s, figureBase - 19 * s);
+        ctx.lineTo(fx - 8.5 * s, figureBase - 15 * s);
+        ctx.stroke();
+
+        // Right arm raised holding staff
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 3 * s, figureBase - 28 * s);
+        ctx.lineTo(fx + 7 * s, figureBase - 40 * s);
+        ctx.lineTo(fx + 9 * s, figureBase - 38 * s);
+        ctx.lineTo(fx + 5 * s, figureBase - 26 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Staff
+        ctx.fillStyle = "#5a4a3a";
+        ctx.fillRect(fx + 7 * s, figureBase - 65 * s, 2.5 * s, 52 * s);
+        ctx.fillStyle = "#4a3a2a";
+        ctx.fillRect(fx + 7 * s, figureBase - 65 * s, 1 * s, 52 * s);
+        // Staff top knot
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.arc(fx + 8.25 * s, figureBase - 65 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Orb on staff
+        const orbGlow = 0.5 + Math.sin(decorTime * 2) * 0.3;
+        const orbGrad = ctx.createRadialGradient(
+          fx + 7.5 * s,
+          figureBase - 69 * s,
+          0,
+          fx + 8.25 * s,
+          figureBase - 68 * s,
+          4 * s,
+        );
+        orbGrad.addColorStop(0, `rgba(100,180,255,${orbGlow})`);
+        orbGrad.addColorStop(0.5, `rgba(60,120,220,${orbGlow * 0.7})`);
+        orbGrad.addColorStop(1, `rgba(30,60,150,${orbGlow * 0.3})`);
+        ctx.fillStyle = orbGrad;
+        ctx.beginPath();
+        ctx.arc(fx + 8.25 * s, figureBase - 68 * s, 3.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(200,230,255,${orbGlow * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(fx + 7.5 * s, figureBase - 69 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hooded head
+        const mHeadY = figureBase - 36 * s;
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, mHeadY + 3 * s);
+        ctx.quadraticCurveTo(fx - 7 * s, mHeadY - 6 * s, fx, mHeadY - 9 * s);
+        ctx.quadraticCurveTo(
+          fx + 7 * s,
+          mHeadY - 6 * s,
+          fx + 6 * s,
+          mHeadY + 3 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Hood inner shadow
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, mHeadY + 2 * s);
+        ctx.quadraticCurveTo(fx - 5 * s, mHeadY - 3 * s, fx, mHeadY - 5 * s);
+        ctx.quadraticCurveTo(
+          fx + 5 * s,
+          mHeadY - 3 * s,
+          fx + 4 * s,
+          mHeadY + 2 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Shadowed face (barely visible)
+        const mFG = ctx.createRadialGradient(fx, mHeadY, 0, fx, mHeadY, 4 * s);
+        mFG.addColorStop(0, figureMid);
+        mFG.addColorStop(0.5, figureShadow);
+        mFG.addColorStop(1, "#1a1a1a");
+        ctx.fillStyle = mFG;
+        ctx.beginPath();
+        ctx.ellipse(fx, mHeadY, 3.5 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Faint glowing eyes under hood
+        const mEyeGlow = 0.3 + Math.sin(decorTime * 1.8) * 0.2;
+        ctx.fillStyle = `rgba(100,180,255,${mEyeGlow})`;
+        ctx.beginPath();
+        ctx.arc(fx - 1.2 * s, mHeadY - 0.5 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 1.2 * s, mHeadY - 0.5 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (sv === 3) {
+        // === VARIANT 3: WARRIOR with battle axe ===
+        // Heavy armored legs
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, figureBase);
+        ctx.lineTo(fx - 6 * s, figureBase - 16 * s);
+        ctx.lineTo(fx - 1 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 1 * s, figureBase);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6 * s, figureBase);
+        ctx.lineTo(fx + 6 * s, figureBase - 16 * s);
+        ctx.lineTo(fx + 1 * s, figureBase - 18 * s);
+        ctx.lineTo(fx + 1 * s, figureBase);
+        ctx.closePath();
+        ctx.fill();
+
+        // Broad torso with pauldrons
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, figureBase - 16 * s);
+        ctx.lineTo(fx - 7 * s, figureBase - 30 * s);
+        ctx.lineTo(fx, figureBase - 32 * s);
+        ctx.lineTo(fx, figureBase - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6 * s, figureBase - 16 * s);
+        ctx.lineTo(fx + 7 * s, figureBase - 30 * s);
+        ctx.lineTo(fx, figureBase - 32 * s);
+        ctx.lineTo(fx, figureBase - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Pauldrons (shoulder armor)
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx - 8 * s,
+          figureBase - 29 * s,
+          4 * s,
+          3 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx - 8 * s,
+          figureBase - 30 * s,
+          3.5 * s,
+          2.5 * s,
+          -0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx + 8 * s,
+          figureBase - 29 * s,
+          4 * s,
+          3 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx + 8 * s,
+          figureBase - 30 * s,
+          3.5 * s,
+          2.5 * s,
+          0.3,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+
+        // Left arm resting
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 7 * s, figureBase - 28 * s);
+        ctx.lineTo(fx - 10 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 8 * s, figureBase - 17 * s);
+        ctx.lineTo(fx - 5 * s, figureBase - 26 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Fist
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.arc(fx - 9 * s, figureBase - 16 * s, 2 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right arm raised with axe
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6 * s, figureBase - 28 * s);
+        ctx.lineTo(fx + 12 * s, figureBase - 42 * s);
+        ctx.lineTo(fx + 14 * s, figureBase - 40 * s);
+        ctx.lineTo(fx + 8 * s, figureBase - 26 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Axe handle
+        ctx.fillStyle = "#5a4a3a";
+        ctx.save();
+        ctx.translate(fx + 13 * s, figureBase - 41 * s);
+        ctx.rotate(-0.4);
+        ctx.fillRect(-1.2 * s, -20 * s, 2.4 * s, 20 * s);
+        ctx.restore();
+        // Axe head (large crescent)
+        ctx.fillStyle = steelLight;
+        ctx.beginPath();
+        ctx.moveTo(fx + 10 * s, figureBase - 58 * s);
+        ctx.quadraticCurveTo(
+          fx + 18 * s,
+          figureBase - 62 * s,
+          fx + 16 * s,
+          figureBase - 52 * s,
+        );
+        ctx.lineTo(fx + 11 * s, figureBase - 52 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = steelDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 10 * s, figureBase - 58 * s);
+        ctx.quadraticCurveTo(
+          fx + 14 * s,
+          figureBase - 60 * s,
+          fx + 13 * s,
+          figureBase - 52 * s,
+        );
+        ctx.lineTo(fx + 11 * s, figureBase - 52 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Axe edge highlight
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        ctx.beginPath();
+        ctx.moveTo(fx + 15 * s, figureBase - 60 * s);
+        ctx.quadraticCurveTo(
+          fx + 17 * s,
+          figureBase - 58 * s,
+          fx + 16 * s,
+          figureBase - 53 * s,
+        );
+        ctx.lineTo(fx + 15.5 * s, figureBase - 53 * s);
+        ctx.quadraticCurveTo(
+          fx + 16 * s,
+          figureBase - 58 * s,
+          fx + 14.5 * s,
+          figureBase - 59.5 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        // Viking-style head
+        const wHeadY = figureBase - 36 * s;
+        const wHG = ctx.createRadialGradient(
+          fx,
+          wHeadY - 1 * s,
+          0,
+          fx,
+          wHeadY,
+          5.5 * s,
+        );
+        wHG.addColorStop(0, figureHighlight);
+        wHG.addColorStop(0.4, figureLight);
+        wHG.addColorStop(0.8, figureMid);
+        wHG.addColorStop(1, figureDark);
+        ctx.fillStyle = wHG;
+        ctx.beginPath();
+        ctx.ellipse(fx, wHeadY, 5 * s, 5.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Viking helm (flat top, nose guard)
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, wHeadY - 2 * s);
+        ctx.lineTo(fx - 5.5 * s, wHeadY - 5 * s);
+        ctx.lineTo(fx + 5.5 * s, wHeadY - 5 * s);
+        ctx.lineTo(fx + 6 * s, wHeadY - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureDark;
+        ctx.fillRect(fx - 0.8 * s, wHeadY - 5 * s, 1.6 * s, 6 * s);
+        // Eyes
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.arc(fx - 2 * s, wHeadY - 0.5 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 2 * s, wHeadY - 0.5 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Beard
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 3 * s, wHeadY + 2 * s);
+        ctx.quadraticCurveTo(fx, wHeadY + 7 * s, fx + 3 * s, wHeadY + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+      } else if (sv === 4) {
+        // === VARIANT 4: PRINCETON TIGER (crouching/prowling) ===
+        const tB = figureBase - 2 * s;
+
+        // Tail with gradient thickness
+        ctx.lineCap = "round";
+        ctx.strokeStyle = figureMid;
+        ctx.lineWidth = 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx + 7 * s, tB - 8 * s);
+        ctx.bezierCurveTo(fx + 12 * s, tB - 16 * s, fx + 15 * s, tB - 22 * s, fx + 10 * s, tB - 28 * s);
+        ctx.stroke();
+        ctx.strokeStyle = figureLight;
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx + 6.5 * s, tB - 8 * s);
+        ctx.bezierCurveTo(fx + 11 * s, tB - 16 * s, fx + 14 * s, tB - 22 * s, fx + 9.5 * s, tB - 27 * s);
+        ctx.stroke();
+        // Tail tip dark
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx + 11 * s, tB - 26 * s);
+        ctx.quadraticCurveTo(fx + 10.5 * s, tB - 28 * s, fx + 10 * s, tB - 28.5 * s);
+        ctx.stroke();
+
+        // Hind body with gradient
+        const hindG = ctx.createRadialGradient(fx + 4 * s, tB - 9 * s, 1 * s, fx + 5 * s, tB - 8 * s, 8 * s);
+        hindG.addColorStop(0, figureLight);
+        hindG.addColorStop(0.5, figureMid);
+        hindG.addColorStop(1, figureDark);
+        ctx.fillStyle = hindG;
+        ctx.beginPath();
+        ctx.ellipse(fx + 5 * s, tB - 8 * s, 7.5 * s, 5.5 * s, 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        // Haunch muscle highlight
+        ctx.fillStyle = "rgba(190,185,175,0.15)";
+        ctx.beginPath();
+        ctx.ellipse(fx + 3 * s, tB - 10 * s, 3 * s, 3 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hind legs (shaped with knee joint)
+        const drawTigerLeg = (lx: number, ly: number, kneeOff: number, col1: string, col2: string) => {
+          ctx.fillStyle = col1;
+          ctx.beginPath();
+          ctx.moveTo(lx - 1.5 * s, ly);
+          ctx.quadraticCurveTo(lx - 2 * s + kneeOff, ly + 4 * s, lx - 1 * s + kneeOff * 0.5, ly + 7 * s);
+          ctx.lineTo(lx + 1 * s + kneeOff * 0.5, ly + 7 * s);
+          ctx.quadraticCurveTo(lx + 1 * s + kneeOff, ly + 4 * s, lx + 1.5 * s, ly);
+          ctx.closePath();
+          ctx.fill();
+          // Paw
+          ctx.fillStyle = col2;
+          ctx.beginPath();
+          ctx.ellipse(lx + kneeOff * 0.4, ly + 7.5 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        };
+        drawTigerLeg(fx + 7 * s, tB - 4 * s, 1.5, figureMid, figureDark);
+        drawTigerLeg(fx + 2 * s, tB - 4 * s, -0.5, figureDark, figureShadow);
+
+        // Torso with gradient
+        const torsoG = ctx.createLinearGradient(fx - 6 * s, tB - 14 * s, fx + 4 * s, tB - 5 * s);
+        torsoG.addColorStop(0, figureLight);
+        torsoG.addColorStop(0.5, figureMid);
+        torsoG.addColorStop(1, figureDark);
+        ctx.fillStyle = torsoG;
+        ctx.beginPath();
+        ctx.moveTo(fx + 3 * s, tB - 10 * s);
+        ctx.bezierCurveTo(fx, tB - 14 * s, fx - 4 * s, tB - 16 * s, fx - 7 * s, tB - 13 * s);
+        ctx.lineTo(fx - 6 * s, tB - 5 * s);
+        ctx.bezierCurveTo(fx - 2 * s, tB - 6 * s, fx + 2 * s, tB - 5 * s, fx + 4 * s, tB - 5 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Spine highlight
+        ctx.strokeStyle = "rgba(200,195,185,0.12)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx + 2 * s, tB - 10 * s);
+        ctx.bezierCurveTo(fx - 1 * s, tB - 13 * s, fx - 4 * s, tB - 15 * s, fx - 7 * s, tB - 14 * s);
+        ctx.stroke();
+
+        // Front chest (raised) with gradient
+        const chestG = ctx.createRadialGradient(fx - 7 * s, tB - 15 * s, 1 * s, fx - 6 * s, tB - 13 * s, 7 * s);
+        chestG.addColorStop(0, figureHighlight);
+        chestG.addColorStop(0.4, figureLight);
+        chestG.addColorStop(1, figureMid);
+        ctx.fillStyle = chestG;
+        ctx.beginPath();
+        ctx.ellipse(fx - 6 * s, tB - 14 * s, 6.5 * s, 6 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Shoulder muscle
+        ctx.fillStyle = "rgba(200,195,185,0.12)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 8 * s, tB - 15 * s, 3 * s, 2.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Front legs (shaped)
+        drawTigerLeg(fx - 10 * s, tB - 9 * s, -1, figureLight, figureMid);
+        drawTigerLeg(fx - 4 * s, tB - 9 * s, 0, figureMid, figureDark);
+
+        // Tiger stripes (carved into stone, dual-line)
+        ctx.lineWidth = 1.2 * s;
+        for (let si = 0; si < 6; si++) {
+          const sx2 = fx - 5 * s + si * 2.8 * s;
+          const sy2 = tB - 12 * s + si * 0.4 * s;
+          ctx.strokeStyle = figureShadow;
+          ctx.beginPath();
+          ctx.moveTo(sx2, sy2 - 2.5 * s);
+          ctx.bezierCurveTo(sx2 + 0.8 * s, sy2 - 1 * s, sx2 + 0.8 * s, sy2 + 1 * s, sx2, sy2 + 2.5 * s);
+          ctx.stroke();
+          ctx.strokeStyle = "rgba(200,195,185,0.08)";
+          ctx.lineWidth = 0.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(sx2 + 0.5 * s, sy2 - 2 * s);
+          ctx.bezierCurveTo(sx2 + 1.2 * s, sy2 - 0.5 * s, sx2 + 1.2 * s, sy2 + 0.5 * s, sx2 + 0.5 * s, sy2 + 2 * s);
+          ctx.stroke();
+          ctx.lineWidth = 1.2 * s;
+        }
+
+        // Head with gradient
+        const tHX = fx - 9 * s;
+        const tHY = tB - 20 * s;
+        const headG = ctx.createRadialGradient(tHX - 1 * s, tHY - 1 * s, 0, tHX, tHY, 6 * s);
+        headG.addColorStop(0, figureHighlight);
+        headG.addColorStop(0.35, figureLight);
+        headG.addColorStop(0.7, figureMid);
+        headG.addColorStop(1, figureDark);
+        ctx.fillStyle = headG;
+        ctx.beginPath();
+        ctx.ellipse(tHX, tHY, 5.5 * s, 5 * s, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Muzzle with gradient
+        const muzG = ctx.createRadialGradient(tHX - 3 * s, tHY + 1 * s, 0, tHX - 3 * s, tHY + 1.5 * s, 3.5 * s);
+        muzG.addColorStop(0, figureHighlight);
+        muzG.addColorStop(0.5, figureLight);
+        muzG.addColorStop(1, figureMid);
+        ctx.fillStyle = muzG;
+        ctx.beginPath();
+        ctx.ellipse(tHX - 3 * s, tHY + 1.5 * s, 3.5 * s, 2.8 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Jaw line
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(tHX - 5.5 * s, tHY + 1 * s);
+        ctx.quadraticCurveTo(tHX - 3 * s, tHY + 4.5 * s, tHX - 0.5 * s, tHY + 3 * s);
+        ctx.stroke();
+
+        // Open mouth (roaring)
+        ctx.fillStyle = stoneDeep;
+        ctx.beginPath();
+        ctx.moveTo(tHX - 6 * s, tHY + 1 * s);
+        ctx.quadraticCurveTo(tHX - 4.5 * s, tHY + 5 * s, tHX - 1.5 * s, tHY + 3.5 * s);
+        ctx.lineTo(tHX - 1.5 * s, tHY + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Tongue cavity
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(tHX - 3.5 * s, tHY + 2.5 * s, 1.5 * s, 1 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fangs (4 visible)
+        ctx.fillStyle = steelLight;
+        const fangs = [[-5.5, 1], [-4, 1], [-2.5, 1], [-1.8, 1]];
+        for (const [fgx, fgy] of fangs) {
+          ctx.beginPath();
+          ctx.moveTo(tHX + fgx * s, tHY + fgy * s);
+          ctx.lineTo(tHX + (fgx + 0.3) * s, tHY + (fgy + 1.8) * s);
+          ctx.lineTo(tHX + (fgx + 0.8) * s, tHY + fgy * s);
+          ctx.fill();
+        }
+
+        // Eyes (deep set with socket shadow)
+        ctx.fillStyle = stoneDeep;
+        ctx.beginPath();
+        ctx.ellipse(tHX - 2 * s, tHY - 1.5 * s, 1.6 * s, 1.1 * s, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(tHX + 1.5 * s, tHY - 1.5 * s, 1.6 * s, 1.1 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(tHX - 2 * s, tHY - 1.5 * s, 1 * s, 0.6 * s, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(tHX + 1.5 * s, tHY - 1.5 * s, 1 * s, 0.6 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Nose
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(tHX - 5 * s, tHY + 0.5 * s, 1 * s, 0.7 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ears (with inner shadow)
+        for (const [ex, edir] of [[-1, -1], [2, 1]] as [number, number][]) {
+          ctx.fillStyle = figureMid;
+          ctx.beginPath();
+          ctx.moveTo(tHX + ex * s, tHY - 4 * s);
+          ctx.lineTo(tHX + (ex + edir * 2) * s, tHY - 8 * s);
+          ctx.lineTo(tHX + (ex + edir * 3.5) * s, tHY - 5 * s);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = figureDark;
+          ctx.beginPath();
+          ctx.moveTo(tHX + (ex + edir * 0.5) * s, tHY - 4.5 * s);
+          ctx.lineTo(tHX + (ex + edir * 2) * s, tHY - 7 * s);
+          ctx.lineTo(tHX + (ex + edir * 3) * s, tHY - 5.2 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Forehead stripes
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.8 * s;
+        for (let fi = 0; fi < 3; fi++) {
+          const fsx = tHX - 1.5 * s + fi * 1.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(fsx, tHY - 4 * s);
+          ctx.lineTo(fsx + 0.5 * s, tHY - 1.5 * s);
+          ctx.stroke();
+        }
+        // Whisker indentations
+        ctx.strokeStyle = "rgba(80,75,65,0.2)";
+        ctx.lineWidth = 0.4 * s;
+        for (let wi = 0; wi < 3; wi++) {
+          const wy = tHY + 0.5 * s + wi * 0.8 * s;
+          ctx.beginPath();
+          ctx.moveTo(tHX - 5 * s, wy);
+          ctx.lineTo(tHX - 8 * s, wy - 0.5 * s + wi * 0.3 * s);
+          ctx.stroke();
+        }
+      } else if (sv === 5) {
+        // === VARIANT 5: MOUNTED CAVALRY (rider on horse) ===
+        const hY = figureBase - 2 * s;
+
+        // Flowing tail with volume
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 9 * s, hY - 13 * s);
+        ctx.bezierCurveTo(fx + 13 * s, hY - 11 * s, fx + 15 * s, hY - 5 * s, fx + 13 * s, hY);
+        ctx.bezierCurveTo(fx + 12 * s, hY - 4 * s, fx + 10 * s, hY - 8 * s, fx + 8 * s, hY - 12 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx + 11 * s, hY - 10 * s);
+        ctx.bezierCurveTo(fx + 13 * s, hY - 7 * s, fx + 14 * s, hY - 3 * s, fx + 12.5 * s, hY - 1 * s);
+        ctx.stroke();
+
+        // Hind quarters with gradient
+        const hqG = ctx.createRadialGradient(fx + 3 * s, hY - 11 * s, 1 * s, fx + 4 * s, hY - 10 * s, 9 * s);
+        hqG.addColorStop(0, figureLight);
+        hqG.addColorStop(0.5, figureMid);
+        hqG.addColorStop(1, figureDark);
+        ctx.fillStyle = hqG;
+        ctx.beginPath();
+        ctx.ellipse(fx + 4 * s, hY - 10 * s, 7 * s, 7.5 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Haunch muscle
+        ctx.fillStyle = "rgba(200,195,185,0.12)";
+        ctx.beginPath();
+        ctx.ellipse(fx + 2 * s, hY - 12 * s, 3 * s, 3 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Barrel with gradient
+        const barG = ctx.createLinearGradient(fx - 6 * s, hY - 17 * s, fx + 3 * s, hY - 4 * s);
+        barG.addColorStop(0, figureLight);
+        barG.addColorStop(0.5, figureMid);
+        barG.addColorStop(1, figureDark);
+        ctx.fillStyle = barG;
+        ctx.beginPath();
+        ctx.moveTo(fx + 2 * s, hY - 16 * s);
+        ctx.bezierCurveTo(fx + 1 * s, hY - 4 * s, fx - 5 * s, hY - 4 * s, fx - 6 * s, hY - 5 * s);
+        ctx.lineTo(fx - 6 * s, hY - 16 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Belly shadow
+        ctx.fillStyle = "rgba(60,55,45,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 2 * s, hY - 5 * s, 5 * s, 1.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Chest with gradient
+        const chG = ctx.createRadialGradient(fx - 7 * s, hY - 14 * s, 1 * s, fx - 6 * s, hY - 12 * s, 8 * s);
+        chG.addColorStop(0, figureHighlight);
+        chG.addColorStop(0.4, figureLight);
+        chG.addColorStop(1, figureMid);
+        ctx.fillStyle = chG;
+        ctx.beginPath();
+        ctx.ellipse(fx - 6 * s, hY - 12 * s, 5.5 * s, 7.5 * s, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horse legs (shaped with joints)
+        const drawHorseLeg = (lx: number, ly: number, h: number, knee: number, col: string) => {
+          const lg = ctx.createLinearGradient(lx - 1.5 * s, ly, lx + 1.5 * s, ly + h * s);
+          lg.addColorStop(0, col);
+          lg.addColorStop(1, figureShadow);
+          ctx.fillStyle = lg;
+          ctx.beginPath();
+          ctx.moveTo(lx - 1.5 * s, ly);
+          ctx.quadraticCurveTo(lx - 2 * s + knee * s, ly + h * 0.45 * s, lx - 1.2 * s + knee * 0.5 * s, ly + h * 0.7 * s);
+          ctx.lineTo(lx - 1.5 * s + knee * 0.3 * s, ly + h * s);
+          ctx.lineTo(lx + 1.5 * s + knee * 0.3 * s, ly + h * s);
+          ctx.lineTo(lx + 1.2 * s + knee * 0.5 * s, ly + h * 0.7 * s);
+          ctx.quadraticCurveTo(lx + 1.5 * s + knee * s, ly + h * 0.45 * s, lx + 1.5 * s, ly);
+          ctx.closePath();
+          ctx.fill();
+          // Hoof
+          ctx.fillStyle = stoneDeep;
+          ctx.beginPath();
+          ctx.ellipse(lx + knee * 0.3 * s, ly + (h + 0.5) * s, 2.2 * s, 1 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        };
+        drawHorseLeg(fx + 3 * s, hY - 4 * s, 6, 0.5, figureDark);
+        drawHorseLeg(fx + 6.5 * s, hY - 4 * s, 6, 0.8, figureMid);
+        drawHorseLeg(fx - 7 * s, hY - 6 * s, 8, -0.5, figureMid);
+        drawHorseLeg(fx - 4.5 * s, hY - 6 * s, 8, -0.3, figureLight);
+
+        // Horse neck with gradient
+        const neckG = ctx.createLinearGradient(fx - 10 * s, hY - 30 * s, fx - 4 * s, hY - 15 * s);
+        neckG.addColorStop(0, figureLight);
+        neckG.addColorStop(0.6, figureMid);
+        neckG.addColorStop(1, figureDark);
+        ctx.fillStyle = neckG;
+        ctx.beginPath();
+        ctx.moveTo(fx - 7 * s, hY - 16 * s);
+        ctx.bezierCurveTo(fx - 9 * s, hY - 22 * s, fx - 10 * s, hY - 28 * s, fx - 8 * s, hY - 30 * s);
+        ctx.lineTo(fx - 5 * s, hY - 28 * s);
+        ctx.bezierCurveTo(fx - 6 * s, hY - 24 * s, fx - 6 * s, hY - 20 * s, fx - 4 * s, hY - 15 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Neck muscle line
+        ctx.strokeStyle = "rgba(200,195,185,0.1)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 6 * s, hY - 17 * s);
+        ctx.bezierCurveTo(fx - 8 * s, hY - 22 * s, fx - 9 * s, hY - 26 * s, fx - 7 * s, hY - 29 * s);
+        ctx.stroke();
+
+        // Mane (filled flowing shape)
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 8.5 * s, hY - 30 * s);
+        ctx.bezierCurveTo(fx - 11 * s, hY - 28 * s, fx - 12 * s, hY - 24 * s, fx - 10 * s, hY - 20 * s);
+        ctx.bezierCurveTo(fx - 11 * s, hY - 18 * s, fx - 10 * s, hY - 16 * s, fx - 8 * s, hY - 16 * s);
+        ctx.bezierCurveTo(fx - 9 * s, hY - 19 * s, fx - 10 * s, hY - 23 * s, fx - 9 * s, hY - 27 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Mane strands
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.5 * s;
+        for (let mi = 0; mi < 4; mi++) {
+          const mt2 = mi / 3;
+          const my2 = hY - 28 * s + mt2 * 11 * s;
+          const mx2 = fx - 9 * s + mt2 * 1 * s;
+          ctx.beginPath();
+          ctx.moveTo(mx2, my2);
+          ctx.quadraticCurveTo(mx2 - 2 * s, my2 + 1.5 * s, mx2 - 1 * s, my2 + 3 * s);
+          ctx.stroke();
+        }
+
+        // Horse head with gradient
+        const hhG = ctx.createRadialGradient(fx - 10 * s, hY - 31 * s, 1 * s, fx - 11 * s, hY - 30 * s, 6 * s);
+        hhG.addColorStop(0, figureHighlight);
+        hhG.addColorStop(0.4, figureLight);
+        hhG.addColorStop(1, figureMid);
+        ctx.fillStyle = hhG;
+        ctx.beginPath();
+        ctx.moveTo(fx - 8 * s, hY - 30 * s);
+        ctx.bezierCurveTo(fx - 9 * s, hY - 34 * s, fx - 13 * s, hY - 35 * s, fx - 14 * s, hY - 31 * s);
+        ctx.bezierCurveTo(fx - 14 * s, hY - 28 * s, fx - 11 * s, hY - 27 * s, fx - 8 * s, hY - 28 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Jaw line
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 13.5 * s, hY - 30 * s);
+        ctx.bezierCurveTo(fx - 13 * s, hY - 28 * s, fx - 11 * s, hY - 27.5 * s, fx - 9 * s, hY - 28 * s);
+        ctx.stroke();
+        // Nostrils
+        ctx.fillStyle = stoneDeep;
+        ctx.beginPath();
+        ctx.ellipse(fx - 13.5 * s, hY - 30 * s, 0.6 * s, 0.4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Eye (deep set)
+        ctx.fillStyle = stoneDeep;
+        ctx.beginPath();
+        ctx.ellipse(fx - 10.5 * s, hY - 32 * s, 1 * s, 0.7 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(fx - 10.5 * s, hY - 32 * s, 0.6 * s, 0.4 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        // Ears
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx - 9 * s, hY - 33 * s);
+        ctx.lineTo(fx - 10 * s, hY - 37 * s);
+        ctx.lineTo(fx - 8 * s, hY - 34 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx - 7.5 * s, hY - 32.5 * s);
+        ctx.lineTo(fx - 8 * s, hY - 36 * s);
+        ctx.lineTo(fx - 6.5 * s, hY - 33 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bridle
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 9 * s, hY - 33 * s);
+        ctx.lineTo(fx - 13 * s, hY - 31 * s);
+        ctx.lineTo(fx - 12 * s, hY - 28 * s);
+        ctx.stroke();
+
+        // Saddle
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 3 * s, hY - 17 * s);
+        ctx.bezierCurveTo(fx - 2 * s, hY - 18 * s, fx + 2 * s, hY - 18 * s, fx + 3 * s, hY - 17 * s);
+        ctx.lineTo(fx + 2 * s, hY - 15 * s);
+        ctx.bezierCurveTo(fx + 1 * s, hY - 15.5 * s, fx - 1 * s, hY - 15.5 * s, fx - 2 * s, hY - 15 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Saddle blanket edge
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, hY - 15 * s);
+        ctx.quadraticCurveTo(fx, hY - 14 * s, fx + 4 * s, hY - 15 * s);
+        ctx.stroke();
+
+        // Rider legs (shaped)
+        const rY = hY - 17 * s;
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 3.5 * s, rY + 1 * s);
+        ctx.quadraticCurveTo(fx - 4 * s, rY + 4 * s, fx - 3 * s, rY + 6 * s);
+        ctx.lineTo(fx - 1 * s, rY + 6 * s);
+        ctx.quadraticCurveTo(fx - 1.5 * s, rY + 3 * s, fx - 1.5 * s, rY + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 1.5 * s, rY + 1 * s);
+        ctx.quadraticCurveTo(fx + 2 * s, rY + 4 * s, fx + 2 * s, rY + 6 * s);
+        ctx.lineTo(fx + 3.5 * s, rY + 6 * s);
+        ctx.quadraticCurveTo(fx + 3.5 * s, rY + 3 * s, fx + 3 * s, rY + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Boots
+        ctx.fillStyle = stoneDeep;
+        ctx.beginPath();
+        ctx.ellipse(fx - 2 * s, rY + 6.5 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
+        ctx.ellipse(fx + 2.5 * s, rY + 6.5 * s, 2 * s, 1 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rider torso with armor gradient
+        const rtG = ctx.createLinearGradient(fx - 3 * s, rY - 14 * s, fx + 3 * s, rY);
+        rtG.addColorStop(0, figureLight);
+        rtG.addColorStop(0.4, figureMid);
+        rtG.addColorStop(1, figureDark);
+        ctx.fillStyle = rtG;
+        ctx.beginPath();
+        ctx.moveTo(fx - 3.5 * s, rY + 1 * s);
+        ctx.bezierCurveTo(fx - 4 * s, rY - 5 * s, fx - 3.5 * s, rY - 12 * s, fx - 2 * s, rY - 14 * s);
+        ctx.lineTo(fx + 2 * s, rY - 14 * s);
+        ctx.bezierCurveTo(fx + 3.5 * s, rY - 12 * s, fx + 4 * s, rY - 5 * s, fx + 3.5 * s, rY + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Armor edge
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx, rY - 14 * s);
+        ctx.lineTo(fx, rY + 1 * s);
+        ctx.stroke();
+        // Shoulder pads
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.ellipse(fx - 4 * s, rY - 12 * s, 2.5 * s, 1.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = figureLight;
+        ctx.beginPath();
+        ctx.ellipse(fx + 4 * s, rY - 12 * s, 2.5 * s, 1.5 * s, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rider head with gradient
+        const rhG = ctx.createRadialGradient(fx - 0.5 * s, rY - 17 * s, 0, fx, rY - 16.5 * s, 4.5 * s);
+        rhG.addColorStop(0, figureHighlight);
+        rhG.addColorStop(0.4, figureLight);
+        rhG.addColorStop(0.8, figureMid);
+        rhG.addColorStop(1, figureDark);
+        ctx.fillStyle = rhG;
+        ctx.beginPath();
+        ctx.ellipse(fx, rY - 17 * s, 3.8 * s, 4.2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Helmet
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(fx, rY - 19.5 * s, 4.2 * s, 2.8 * s, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+        // Helmet crest
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx, rY - 22 * s);
+        ctx.bezierCurveTo(fx + 1 * s, rY - 21 * s, fx + 3 * s, rY - 19 * s, fx + 5 * s, rY - 18 * s);
+        ctx.lineTo(fx + 4 * s, rY - 19 * s);
+        ctx.bezierCurveTo(fx + 2 * s, rY - 19.5 * s, fx + 1 * s, rY - 20.5 * s, fx, rY - 21 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Visor slit
+        ctx.strokeStyle = stoneDeep;
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 2 * s, rY - 16.5 * s);
+        ctx.lineTo(fx + 2 * s, rY - 16.5 * s);
+        ctx.stroke();
+
+        // Lance with detail
+        ctx.save();
+        ctx.translate(fx + 4 * s, rY - 10 * s);
+        ctx.rotate(-0.12);
+        // Shaft with gradient
+        const lnG = ctx.createLinearGradient(0, -42 * s, 0, 0);
+        lnG.addColorStop(0, "#7a6a5a");
+        lnG.addColorStop(0.5, "#5a4a3a");
+        lnG.addColorStop(1, "#4a3a2a");
+        ctx.fillStyle = lnG;
+        ctx.fillRect(-1 * s, -42 * s, 2 * s, 42 * s);
+        ctx.restore();
+        // Lance tip
+        const ltG = ctx.createLinearGradient(fx + 3 * s, rY - 52 * s, fx + 3 * s, rY - 46 * s);
+        ltG.addColorStop(0, steelLight);
+        ltG.addColorStop(1, figureShadow);
+        ctx.fillStyle = ltG;
+        ctx.beginPath();
+        ctx.moveTo(fx + 3 * s, rY - 53 * s);
+        ctx.lineTo(fx + 1.5 * s, rY - 46 * s);
+        ctx.lineTo(fx + 4.5 * s, rY - 46 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Pennant
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 2 * s, rY - 45 * s);
+        ctx.bezierCurveTo(fx - 1 * s, rY - 43 * s, fx - 2 * s, rY - 41 * s, fx - 1 * s, rY - 39 * s);
+        ctx.lineTo(fx + 2 * s, rY - 41 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shield on rider's left
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, rY - 10 * s);
+        ctx.quadraticCurveTo(fx - 7 * s, rY - 8 * s, fx - 6 * s, rY - 3 * s);
+        ctx.quadraticCurveTo(fx - 5 * s, rY - 2 * s, fx - 4 * s, rY - 3 * s);
+        ctx.quadraticCurveTo(fx - 3 * s, rY - 7 * s, fx - 4 * s, rY - 10 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.4 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, rY - 9 * s);
+        ctx.lineTo(fx - 5 * s, rY - 3.5 * s);
+        ctx.stroke();
+      } else if (sv === 6) {
+        // === VARIANT 6: CENTAUR ARCHER ===
+        const cY = figureBase - 2 * s;
+
+        // Tail with volume
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 7 * s, cY - 10 * s);
+        ctx.bezierCurveTo(fx + 11 * s, cY - 8 * s, fx + 13 * s, cY - 3 * s, fx + 11 * s, cY + 1 * s);
+        ctx.bezierCurveTo(fx + 10 * s, cY - 2 * s, fx + 9 * s, cY - 6 * s, fx + 7 * s, cY - 9 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hind quarters with gradient
+        const cHqG = ctx.createRadialGradient(fx + 2 * s, cY - 9 * s, 1 * s, fx + 3 * s, cY - 8 * s, 7 * s);
+        cHqG.addColorStop(0, figureLight);
+        cHqG.addColorStop(0.5, figureMid);
+        cHqG.addColorStop(1, figureDark);
+        ctx.fillStyle = cHqG;
+        ctx.beginPath();
+        ctx.ellipse(fx + 3 * s, cY - 8 * s, 6 * s, 6 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Haunch muscle
+        ctx.fillStyle = "rgba(200,195,185,0.12)";
+        ctx.beginPath();
+        ctx.ellipse(fx + 1 * s, cY - 10 * s, 2.5 * s, 2.5 * s, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Barrel with gradient
+        const cBarG = ctx.createLinearGradient(fx - 5 * s, cY - 14 * s, fx + 2 * s, cY - 3 * s);
+        cBarG.addColorStop(0, figureLight);
+        cBarG.addColorStop(0.5, figureMid);
+        cBarG.addColorStop(1, figureDark);
+        ctx.fillStyle = cBarG;
+        ctx.beginPath();
+        ctx.moveTo(fx + 1 * s, cY - 13 * s);
+        ctx.bezierCurveTo(fx + 1 * s, cY - 4 * s, fx - 4 * s, cY - 3 * s, fx - 5 * s, cY - 4 * s);
+        ctx.lineTo(fx - 5 * s, cY - 13 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Belly shadow
+        ctx.fillStyle = "rgba(60,55,45,0.08)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 2 * s, cY - 4 * s, 4 * s, 1.2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Front chest with gradient
+        const cChG = ctx.createRadialGradient(fx - 5 * s, cY - 12 * s, 1 * s, fx - 4 * s, cY - 10 * s, 7 * s);
+        cChG.addColorStop(0, figureHighlight);
+        cChG.addColorStop(0.4, figureLight);
+        cChG.addColorStop(1, figureMid);
+        ctx.fillStyle = cChG;
+        ctx.beginPath();
+        ctx.ellipse(fx - 4 * s, cY - 10 * s, 4.5 * s, 6.5 * s, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Horse legs (shaped with joints)
+        const drawCentLeg = (lx: number, ly: number, h: number, knee: number, col: string) => {
+          const clG = ctx.createLinearGradient(lx - 1.2 * s, ly, lx + 1.2 * s, ly + h * s);
+          clG.addColorStop(0, col);
+          clG.addColorStop(1, figureShadow);
+          ctx.fillStyle = clG;
+          ctx.beginPath();
+          ctx.moveTo(lx - 1.2 * s, ly);
+          ctx.quadraticCurveTo(lx - 1.5 * s + knee * s, ly + h * 0.4 * s, lx - 1 * s + knee * 0.5 * s, ly + h * 0.7 * s);
+          ctx.lineTo(lx - 1.2 * s + knee * 0.3 * s, ly + h * s);
+          ctx.lineTo(lx + 1.2 * s + knee * 0.3 * s, ly + h * s);
+          ctx.lineTo(lx + 1 * s + knee * 0.5 * s, ly + h * 0.7 * s);
+          ctx.quadraticCurveTo(lx + 1.5 * s + knee * s, ly + h * 0.4 * s, lx + 1.2 * s, ly);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = stoneDeep;
+          ctx.beginPath();
+          ctx.ellipse(lx + knee * 0.3 * s, ly + (h + 0.5) * s, 1.8 * s, 0.8 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        };
+        drawCentLeg(fx + 2 * s, cY - 3 * s, 5, 0.4, figureDark);
+        drawCentLeg(fx + 5 * s, cY - 3 * s, 5, 0.6, figureMid);
+        drawCentLeg(fx - 5 * s, cY - 5 * s, 7, -0.4, figureMid);
+        drawCentLeg(fx - 3 * s, cY - 5 * s, 7, -0.2, figureLight);
+
+        // Human torso with gradient and muscle definition
+        const cTB = cY - 14 * s;
+        const ctG = ctx.createLinearGradient(fx - 5 * s, cTB - 18 * s, fx + 2 * s, cTB);
+        ctG.addColorStop(0, figureLight);
+        ctG.addColorStop(0.4, figureMid);
+        ctG.addColorStop(1, figureDark);
+        ctx.fillStyle = ctG;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, cTB);
+        ctx.bezierCurveTo(fx - 4.5 * s, cTB - 6 * s, fx - 5 * s, cTB - 14 * s, fx - 3 * s, cTB - 18 * s);
+        ctx.lineTo(fx + 1 * s, cTB - 18 * s);
+        ctx.bezierCurveTo(fx + 2 * s, cTB - 14 * s, fx + 2 * s, cTB - 6 * s, fx + 1 * s, cTB);
+        ctx.closePath();
+        ctx.fill();
+        // Center line / muscle def
+        ctx.strokeStyle = "rgba(80,75,65,0.08)";
+        ctx.lineWidth = 0.4 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 1 * s, cTB - 2 * s);
+        ctx.lineTo(fx - 1 * s, cTB - 16 * s);
+        ctx.stroke();
+        // Chest highlight
+        ctx.fillStyle = "rgba(200,195,185,0.1)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 2 * s, cTB - 14 * s, 2 * s, 2.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Leather strap across chest
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, cTB - 16 * s);
+        ctx.lineTo(fx + 1 * s, cTB - 8 * s);
+        ctx.stroke();
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, cTB - 15.5 * s);
+        ctx.lineTo(fx + 1 * s, cTB - 7.5 * s);
+        ctx.stroke();
+
+        // Left arm extended holding bow (muscular)
+        const armG = ctx.createLinearGradient(fx - 4 * s, cTB - 15 * s, fx - 12 * s, cTB - 15 * s);
+        armG.addColorStop(0, figureMid);
+        armG.addColorStop(1, figureDark);
+        ctx.fillStyle = armG;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, cTB - 15.5 * s);
+        ctx.bezierCurveTo(fx - 7 * s, cTB - 17 * s, fx - 10 * s, cTB - 17 * s, fx - 12 * s, cTB - 16 * s);
+        ctx.lineTo(fx - 12 * s, cTB - 14 * s);
+        ctx.bezierCurveTo(fx - 10 * s, cTB - 14.5 * s, fx - 7 * s, cTB - 13 * s, fx - 4 * s, cTB - 12.5 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Bicep highlight
+        ctx.fillStyle = "rgba(200,195,185,0.1)";
+        ctx.beginPath();
+        ctx.ellipse(fx - 6 * s, cTB - 15 * s, 1.5 * s, 1 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right arm drawn back
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 1 * s, cTB - 15 * s);
+        ctx.bezierCurveTo(fx + 3 * s, cTB - 14 * s, fx + 4.5 * s, cTB - 13 * s, fx + 5 * s, cTB - 14 * s);
+        ctx.lineTo(fx + 5 * s, cTB - 15.5 * s);
+        ctx.bezierCurveTo(fx + 3.5 * s, cTB - 16 * s, fx + 2 * s, cTB - 16 * s, fx + 1 * s, cTB - 16 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bow (thicker, recurve shape)
+        const bowG = ctx.createLinearGradient(fx - 13 * s, cTB - 22 * s, fx - 13 * s, cTB - 8 * s);
+        bowG.addColorStop(0, "#7a6a5a");
+        bowG.addColorStop(0.5, "#5a4a3a");
+        bowG.addColorStop(1, "#7a6a5a");
+        ctx.strokeStyle = bowG;
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 13 * s, cTB - 7 * s);
+        ctx.bezierCurveTo(fx - 17 * s, cTB - 12 * s, fx - 17 * s, cTB - 18 * s, fx - 13 * s, cTB - 23 * s);
+        ctx.stroke();
+        // Recurve tips
+        ctx.strokeStyle = "#5a4a3a";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 13 * s, cTB - 7 * s);
+        ctx.quadraticCurveTo(fx - 12 * s, cTB - 5 * s, fx - 11 * s, cTB - 6 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(fx - 13 * s, cTB - 23 * s);
+        ctx.quadraticCurveTo(fx - 12 * s, cTB - 25 * s, fx - 11 * s, cTB - 24 * s);
+        ctx.stroke();
+
+        // Bowstring (taut)
+        ctx.strokeStyle = figureShadow;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 13 * s, cTB - 7 * s);
+        ctx.lineTo(fx + 4 * s, cTB - 14 * s);
+        ctx.lineTo(fx - 13 * s, cTB - 23 * s);
+        ctx.stroke();
+
+        // Arrow nocked
+        ctx.save();
+        ctx.translate(fx - 4 * s, cTB - 14.5 * s);
+        ctx.rotate(0.1);
+        const arG = ctx.createLinearGradient(0, 0, 15 * s, 0);
+        arG.addColorStop(0, "#5a4a3a");
+        arG.addColorStop(1, "#7a6a5a");
+        ctx.fillStyle = arG;
+        ctx.fillRect(0, -0.6 * s, 15 * s, 1.2 * s);
+        ctx.restore();
+        // Arrowhead
+        const ahG = ctx.createLinearGradient(fx - 18 * s, cTB - 15 * s, fx - 14 * s, cTB - 15 * s);
+        ahG.addColorStop(0, steelLight);
+        ahG.addColorStop(1, figureShadow);
+        ctx.fillStyle = ahG;
+        ctx.beginPath();
+        ctx.moveTo(fx - 18 * s, cTB - 15 * s);
+        ctx.lineTo(fx - 14.5 * s, cTB - 16.5 * s);
+        ctx.lineTo(fx - 14.5 * s, cTB - 13.5 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Fletching
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 8 * s, cTB - 14 * s);
+        ctx.lineTo(fx + 10 * s, cTB - 16 * s);
+        ctx.lineTo(fx + 10 * s, cTB - 14 * s);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx + 8 * s, cTB - 14 * s);
+        ctx.lineTo(fx + 10 * s, cTB - 12 * s);
+        ctx.lineTo(fx + 10 * s, cTB - 14 * s);
+        ctx.fill();
+
+        // Quiver on back
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx + 1 * s, cTB - 17 * s);
+        ctx.lineTo(fx + 3 * s, cTB - 18 * s);
+        ctx.lineTo(fx + 4 * s, cTB - 6 * s);
+        ctx.lineTo(fx + 2 * s, cTB - 5 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Arrow shafts sticking out
+        ctx.strokeStyle = "#6a5a4a";
+        ctx.lineWidth = 0.5 * s;
+        for (let qi = 0; qi < 3; qi++) {
+          ctx.beginPath();
+          ctx.moveTo(fx + (2 + qi * 0.5) * s, cTB - 17.5 * s);
+          ctx.lineTo(fx + (1.5 + qi * 0.6) * s, cTB - 21 * s - qi * 0.5 * s);
+          ctx.stroke();
+        }
+
+        // Head with gradient
+        const cHdY = cTB - 21 * s;
+        const cHdG = ctx.createRadialGradient(fx - 1.5 * s, cHdY - 1 * s, 0, fx - 1 * s, cHdY, 5 * s);
+        cHdG.addColorStop(0, figureHighlight);
+        cHdG.addColorStop(0.35, figureLight);
+        cHdG.addColorStop(0.7, figureMid);
+        cHdG.addColorStop(1, figureDark);
+        ctx.fillStyle = cHdG;
+        ctx.beginPath();
+        ctx.ellipse(fx - 1 * s, cHdY, 4.2 * s, 4.8 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Flowing hair
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx + 2 * s, cHdY - 3 * s);
+        ctx.bezierCurveTo(fx + 5 * s, cHdY - 1 * s, fx + 7 * s, cHdY + 2 * s, fx + 6 * s, cHdY + 8 * s);
+        ctx.bezierCurveTo(fx + 5 * s, cHdY + 5 * s, fx + 4 * s, cHdY + 2 * s, fx + 3 * s, cHdY);
+        ctx.closePath();
+        ctx.fill();
+        // Hair strands
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.4 * s;
+        for (let hi = 0; hi < 3; hi++) {
+          ctx.beginPath();
+          ctx.moveTo(fx + (3 + hi) * s, cHdY + hi * s);
+          ctx.bezierCurveTo(fx + (5 + hi) * s, cHdY + (2 + hi) * s, fx + (6 + hi * 0.5) * s, cHdY + (4 + hi) * s, fx + (5.5 + hi * 0.3) * s, cHdY + (6 + hi) * s);
+          ctx.stroke();
+        }
+
+        // Eyes (deep set)
+        ctx.fillStyle = stoneDeep;
+        ctx.beginPath();
+        ctx.ellipse(fx - 2.8 * s, cHdY - 0.5 * s, 1 * s, 0.7 * s, -0.1, 0, Math.PI * 2);
+        ctx.ellipse(fx + 0.8 * s, cHdY - 0.5 * s, 1 * s, 0.7 * s, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.arc(fx - 2.8 * s, cHdY - 0.5 * s, 0.5 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 0.8 * s, cHdY - 0.5 * s, 0.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pointed ears
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx - 4 * s, cHdY - 1 * s);
+        ctx.lineTo(fx - 7 * s, cHdY - 3 * s);
+        ctx.lineTo(fx - 4.5 * s, cHdY + 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brow / stern expression
+        ctx.strokeStyle = figureDark;
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(fx - 3.5 * s, cHdY - 1.5 * s);
+        ctx.quadraticCurveTo(fx - 2.5 * s, cHdY - 2 * s, fx - 1.5 * s, cHdY - 1.5 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(fx - 0.2 * s, cHdY - 1.5 * s);
+        ctx.quadraticCurveTo(fx + 0.5 * s, cHdY - 2 * s, fx + 1.5 * s, cHdY - 1.5 * s);
+        ctx.stroke();
+      } else {
+        // === VARIANT 7: GENERAL / COMMANDER with banner ===
+        // Armored legs
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase);
+        ctx.lineTo(fx - 5 * s, figureBase - 17 * s);
+        ctx.lineTo(fx - 1 * s, figureBase - 19 * s);
+        ctx.lineTo(fx - 1 * s, figureBase);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase);
+        ctx.lineTo(fx + 5 * s, figureBase - 17 * s);
+        ctx.lineTo(fx + 1 * s, figureBase - 19 * s);
+        ctx.lineTo(fx + 1 * s, figureBase);
+        ctx.closePath();
+        ctx.fill();
+
+        // Torso with ornate breastplate
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase - 17 * s);
+        ctx.lineTo(fx - 6 * s, figureBase - 32 * s);
+        ctx.lineTo(fx, figureBase - 35 * s);
+        ctx.lineTo(fx, figureBase - 19 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase - 17 * s);
+        ctx.lineTo(fx + 6 * s, figureBase - 32 * s);
+        ctx.lineTo(fx, figureBase - 35 * s);
+        ctx.lineTo(fx, figureBase - 19 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Breastplate emblem
+        ctx.fillStyle = figureLight;
+        ctx.beginPath();
+        ctx.moveTo(fx, figureBase - 30 * s);
+        ctx.lineTo(fx - 2 * s, figureBase - 27 * s);
+        ctx.lineTo(fx, figureBase - 24 * s);
+        ctx.lineTo(fx + 2 * s, figureBase - 27 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cape flowing behind both sides
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase - 31 * s);
+        ctx.quadraticCurveTo(
+          fx - 14 * s,
+          figureBase - 28 * s,
+          fx - 12 * s,
+          figureBase - 6 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx - 10 * s,
+          figureBase - 2 * s,
+          fx - 8 * s,
+          figureBase,
+        );
+        ctx.lineTo(fx - 6 * s, figureBase - 17 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx + 5 * s, figureBase - 31 * s);
+        ctx.quadraticCurveTo(
+          fx + 14 * s,
+          figureBase - 28 * s,
+          fx + 12 * s,
+          figureBase - 6 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx + 10 * s,
+          figureBase - 2 * s,
+          fx + 8 * s,
+          figureBase,
+        );
+        ctx.lineTo(fx + 6 * s, figureBase - 17 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Left arm with sword at side
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 5 * s, figureBase - 30 * s);
+        ctx.lineTo(fx - 8 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 6 * s, figureBase - 17 * s);
+        ctx.lineTo(fx - 4 * s, figureBase - 28 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = steelLight;
+        ctx.beginPath();
+        ctx.moveTo(fx - 8 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 9 * s, figureBase - 2 * s);
+        ctx.lineTo(fx - 8.5 * s, figureBase);
+        ctx.lineTo(fx - 7 * s, figureBase - 2 * s);
+        ctx.lineTo(fx - 7 * s, figureBase - 18 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = steelDark;
+        ctx.beginPath();
+        ctx.moveTo(fx - 8 * s, figureBase - 18 * s);
+        ctx.lineTo(fx - 9 * s, figureBase - 2 * s);
+        ctx.lineTo(fx - 8.5 * s, figureBase);
+        ctx.lineTo(fx - 8 * s, figureBase - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureDark;
+        ctx.fillRect(fx - 10.5 * s, figureBase - 19 * s, 5 * s, 1.5 * s);
+
+        // Right arm raised holding banner pole
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 4 * s, figureBase - 30 * s);
+        ctx.lineTo(fx + 8 * s, figureBase - 42 * s);
+        ctx.lineTo(fx + 10 * s, figureBase - 40 * s);
+        ctx.lineTo(fx + 6 * s, figureBase - 28 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Banner pole
+        ctx.fillStyle = "#5a4a3a";
+        ctx.fillRect(fx + 8.5 * s, figureBase - 68 * s, 2 * s, 50 * s);
+        // Banner flag
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx + 10.5 * s, figureBase - 68 * s);
+        ctx.lineTo(fx + 22 * s, figureBase - 65 * s);
+        ctx.quadraticCurveTo(
+          fx + 20 * s,
+          figureBase - 58 * s,
+          fx + 22 * s,
+          figureBase - 52 * s,
+        );
+        ctx.lineTo(fx + 10.5 * s, figureBase - 55 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx + 10.5 * s, figureBase - 68 * s);
+        ctx.lineTo(fx + 16 * s, figureBase - 66 * s);
+        ctx.quadraticCurveTo(
+          fx + 15 * s,
+          figureBase - 61 * s,
+          fx + 16 * s,
+          figureBase - 56 * s,
+        );
+        ctx.lineTo(fx + 10.5 * s, figureBase - 55 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Banner star emblem
+        ctx.fillStyle = figureLight;
+        const bex = fx + 16 * s;
+        const bey = figureBase - 61 * s;
+        ctx.beginPath();
+        for (let sp = 0; sp < 5; sp++) {
+          const angle = (sp / 5) * Math.PI * 2 - Math.PI / 2;
+          const innerAngle = angle + Math.PI / 5;
+          const ox = bex + Math.cos(angle) * 3 * s;
+          const oy = bey + Math.sin(angle) * 3 * s;
+          const ix2 = bex + Math.cos(innerAngle) * 1.2 * s;
+          const iy2 = bey + Math.sin(innerAngle) * 1.2 * s;
+          if (sp === 0) ctx.moveTo(ox, oy);
+          else ctx.lineTo(ox, oy);
+          ctx.lineTo(ix2, iy2);
+        }
+        ctx.closePath();
+        ctx.fill();
+        // Pole top finial
+        ctx.fillStyle = steelLight;
+        ctx.beginPath();
+        ctx.moveTo(fx + 9.5 * s, figureBase - 68 * s);
+        ctx.lineTo(fx + 8 * s, figureBase - 71 * s);
+        ctx.lineTo(fx + 9.5 * s, figureBase - 73 * s);
+        ctx.lineTo(fx + 11 * s, figureBase - 71 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Head with plumed helm
+        const gHeadY = figureBase - 39 * s;
+        const gHG = ctx.createRadialGradient(
+          fx - 1 * s,
+          gHeadY - 1 * s,
+          0,
+          fx,
+          gHeadY,
+          5.5 * s,
+        );
+        gHG.addColorStop(0, figureHighlight);
+        gHG.addColorStop(0.4, figureLight);
+        gHG.addColorStop(0.8, figureMid);
+        gHG.addColorStop(1, figureDark);
+        ctx.fillStyle = gHG;
+        ctx.beginPath();
+        ctx.ellipse(fx, gHeadY, 4.5 * s, 5.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.ellipse(
+          fx,
+          gHeadY - 3 * s,
+          5 * s,
+          3 * s,
+          0,
+          Math.PI,
+          Math.PI * 2,
+        );
+        ctx.fill();
+        // Plume
+        ctx.fillStyle = figureDark;
+        ctx.beginPath();
+        ctx.moveTo(fx, gHeadY - 5.5 * s);
+        ctx.quadraticCurveTo(
+          fx + 2 * s,
+          gHeadY - 12 * s,
+          fx - 2 * s,
+          gHeadY - 14 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx - 4 * s,
+          gHeadY - 10 * s,
+          fx - 1 * s,
+          gHeadY - 6 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = figureMid;
+        ctx.beginPath();
+        ctx.moveTo(fx, gHeadY - 6 * s);
+        ctx.quadraticCurveTo(
+          fx + 1 * s,
+          gHeadY - 10 * s,
+          fx - 1 * s,
+          gHeadY - 12 * s,
+        );
+        ctx.quadraticCurveTo(
+          fx - 2 * s,
+          gHeadY - 9 * s,
+          fx - 0.5 * s,
+          gHeadY - 6.5 * s,
+        );
+        ctx.closePath();
+        ctx.fill();
+        // Face
+        ctx.fillStyle = figureShadow;
+        ctx.beginPath();
+        ctx.arc(fx - 1.5 * s, gHeadY - 0.5 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.arc(fx + 1.5 * s, gHeadY - 0.5 * s, 0.7 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // === SHARED FIGURE EFFECTS (all variants) ===
+
+      // Ambient occlusion at figure base (where figure meets pedestal)
+      const aoGrad = ctx.createRadialGradient(
+        fx, figureBase + 1 * s, 0,
+        fx, figureBase + 1 * s, 8 * s,
+      );
+      aoGrad.addColorStop(0, "rgba(50,45,38,0.3)");
+      aoGrad.addColorStop(0.5, "rgba(50,45,38,0.1)");
+      aoGrad.addColorStop(1, "rgba(50,45,38,0)");
+      ctx.fillStyle = aoGrad;
+      ctx.beginPath();
+      ctx.ellipse(fx, figureBase + 1 * s, 8 * s, 3 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rim light on lit side (left edge highlight)
+      ctx.fillStyle = "rgba(220,215,205,0.15)";
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x - 10 * s,
-        figureBase - 18 * s,
-        5 * s,
-        7 * s,
-        0.3,
-        0,
-        Math.PI * 2,
+        fx - 3 * s, figureBase - 22 * s,
+        1 * s, 8 * s, -0.15, 0, Math.PI * 2,
       );
       ctx.fill();
-      ctx.fillStyle = figureLight;
+
+      // Torso stone highlight
+      ctx.fillStyle = "rgba(255,255,255,0.1)";
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x - 10 * s,
-        figureBase - 18 * s,
-        3 * s,
-        4.5 * s,
-        0.3,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = figureDark;
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x - 10 * s,
-        figureBase - 18 * s,
-        1.5 * s,
-        0,
-        Math.PI * 2,
+        fx + 2 * s, figureBase - 26 * s,
+        1.5 * s, 4 * s, 0.2, 0, Math.PI * 2,
       );
       ctx.fill();
 
-      // Right arm (raised high, holding sword)
-      ctx.fillStyle = figureMid;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 3 * s, figureBase - 30 * s);
-      ctx.lineTo(screenPos.x + 10 * s, figureBase - 45 * s);
-      ctx.lineTo(screenPos.x + 12 * s, figureBase - 43 * s);
-      ctx.lineTo(screenPos.x + 5 * s, figureBase - 28 * s);
-      ctx.closePath();
-      ctx.fill();
+      // Stone texture streaks (subtle weathering on figure)
+      ctx.strokeStyle = "rgba(80,75,65,0.08)";
+      ctx.lineWidth = 0.6 * s;
+      for (let ws = 0; ws < 3; ws++) {
+        const wsx = fx - 2 * s + ws * 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(wsx, figureBase - 10 * s);
+        ctx.lineTo(wsx + 0.5 * s, figureBase - 25 * s);
+        ctx.stroke();
+      }
 
-      // Hand gripping sword
-      ctx.fillStyle = figureLight;
+      // Small moss spots on figure base
+      ctx.fillStyle = "rgba(65,85,50,0.18)";
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x + 11 * s,
-        figureBase - 44 * s,
-        2 * s,
-        1.5 * s,
-        0.7,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Sword blade (raised high)
-      ctx.fillStyle = steelLight;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 10 * s, figureBase - 46 * s);
-      ctx.lineTo(screenPos.x + 8 * s, figureBase - 70 * s);
-      ctx.lineTo(screenPos.x + 10 * s, figureBase - 72 * s);
-      ctx.lineTo(screenPos.x + 12 * s, figureBase - 70 * s);
-      ctx.lineTo(screenPos.x + 12 * s, figureBase - 46 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Blade dark edge
-      ctx.fillStyle = steelDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 10 * s, figureBase - 46 * s);
-      ctx.lineTo(screenPos.x + 8 * s, figureBase - 70 * s);
-      ctx.lineTo(screenPos.x + 10 * s, figureBase - 72 * s);
-      ctx.lineTo(screenPos.x + 10 * s, figureBase - 46 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Blade highlight
-      ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 11 * s, figureBase - 48 * s);
-      ctx.lineTo(screenPos.x + 10 * s, figureBase - 68 * s);
-      ctx.lineTo(screenPos.x + 11 * s, figureBase - 68 * s);
-      ctx.lineTo(screenPos.x + 11.5 * s, figureBase - 48 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Sword crossguard
-      ctx.fillStyle = figureDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 7 * s, figureBase - 45 * s);
-      ctx.lineTo(screenPos.x + 15 * s, figureBase - 47 * s);
-      ctx.lineTo(screenPos.x + 15 * s, figureBase - 45 * s);
-      ctx.lineTo(screenPos.x + 7 * s, figureBase - 43 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Head
-      const headY = figureBase - 38 * s;
-      const headGrad = ctx.createRadialGradient(
-        screenPos.x - 1 * s,
-        headY - 2 * s,
-        0,
-        screenPos.x,
-        headY,
-        6 * s,
-      );
-      headGrad.addColorStop(0, figureHighlight);
-      headGrad.addColorStop(0.4, figureLight);
-      headGrad.addColorStop(0.8, figureMid);
-      headGrad.addColorStop(1, figureDark);
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x, headY, 5 * s, 6 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Helmet
-      ctx.fillStyle = figureDark;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        headY - 3 * s,
-        5.5 * s,
-        3.5 * s,
-        0,
-        Math.PI,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Helmet crest
-      ctx.fillStyle = figureShadow;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, headY - 6 * s);
-      ctx.lineTo(screenPos.x - 1 * s, headY - 3 * s);
-      ctx.lineTo(screenPos.x + 1 * s, headY - 3 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Face features (subtle)
-      ctx.fillStyle = figureShadow;
-      ctx.beginPath();
-      ctx.arc(screenPos.x - 1.5 * s, headY - 1 * s, 0.7 * s, 0, Math.PI * 2);
-      ctx.arc(screenPos.x + 1.5 * s, headY - 1 * s, 0.7 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Highlights
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 2 * s,
-        headY - 3 * s,
-        2 * s,
-        1.5 * s,
-        -0.3,
-        0,
-        Math.PI * 2,
+        fx - 4 * s, figureBase - 1 * s,
+        2 * s, 1 * s, 0.2, 0, Math.PI * 2,
       );
       ctx.fill();
       ctx.beginPath();
       ctx.ellipse(
-        screenPos.x + 2 * s,
-        figureBase - 28 * s,
-        1.5 * s,
-        3 * s,
-        0.2,
-        0,
-        Math.PI * 2,
+        fx + 3 * s, figureBase - 2 * s,
+        1.5 * s, 0.8 * s, -0.1, 0, Math.PI * 2,
       );
-      ctx.fill();
-
-      // Pedestal plaque
-      ctx.fillStyle = figureDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 6 * s, tier2Y - tier2H * 0.3);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.3 + 3 * s);
-      ctx.lineTo(screenPos.x + 6 * s, tier2Y - tier2H * 0.3);
-      ctx.lineTo(screenPos.x, tier2Y - tier2H * 0.3 - 3 * s);
-      ctx.closePath();
       ctx.fill();
       break;
     }

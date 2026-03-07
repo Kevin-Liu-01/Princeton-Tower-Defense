@@ -7,6 +7,7 @@ import {
   ISO_PRISM_D_FACTOR,
   ISO_Y_RATIO,
 } from "../../constants";
+import { drawIsoFlushSlit } from "../isoFlush";
 import { LEVEL_DATA, REGION_THEMES } from "../../constants/maps";
 import type { MapTheme } from "../../constants/maps";
 import {
@@ -404,102 +405,13 @@ export function drawMerlon(
   if (hasArrowSlit) {
     const slitCx = cx - hw * 0.5;
     const slitCy = cy - hh * 0.5 + hd * 0.25;
-    ctx.fillStyle = "rgba(10,10,15,0.6)";
-    ctx.beginPath();
-    ctx.moveTo(slitCx, slitCy - 2.2 * zoom);
-    ctx.lineTo(slitCx + 0.6 * zoom, slitCy);
-    ctx.lineTo(slitCx, slitCy + 2.2 * zoom);
-    ctx.lineTo(slitCx - 0.6 * zoom, slitCy);
-    ctx.closePath();
-    ctx.fill();
+    drawIsoFlushSlit(ctx, slitCx, slitCy, 1.2, 4.4, "left", zoom);
   }
 }
 
-/**
- * Draws a 3D isometric gothic (pointed-arch) window flush against an iso wall face.
- * @param face "left" or "right" — determines the iso skew direction
- * @param glowColor CSS color string for the inner glow, or null for no glow
- * @param glowAlpha opacity multiplier for the glow
- * @param colors optional overrides for frame, void, and sill
- */
-export function drawIsoGothicWindow(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  w: number,
-  h: number,
-  face: "left" | "right",
-  zoom: number,
-  glowColor: string | null = "rgba(255, 150, 50",
-  glowAlpha: number = 0.3,
-  colors?: { frame?: string; void?: string; sill?: string },
-) {
-  const slope = face === "right" ? -ISO_Y_RATIO : ISO_Y_RATIO;
-  const hw = w * zoom * 0.5;
-  const hh = h * zoom * 0.5;
-  const archPeak = hh + 2.5 * zoom;
-
-  // Recess depth for 3D effect
-  const rd = 1.2 * zoom;
-  const rdx = face === "right" ? rd : -rd;
-  const rdy = -rd * ISO_Y_RATIO;
-
-  const frameColor = colors?.frame ?? "#2a2a32";
-  const voidColor = colors?.void ?? "#1a1a22";
-  const sillColor = colors?.sill ?? "#5a5a62";
-
-  // Frame recess (darker border)
-  ctx.fillStyle = frameColor;
-  ctx.beginPath();
-  ctx.moveTo(cx - hw + rdx, cy - hh + -hw * slope + rdy);
-  ctx.lineTo(cx + rdx, cy - archPeak + rdy);
-  ctx.lineTo(cx + hw + rdx, cy - hh + hw * slope + rdy);
-  ctx.lineTo(cx + hw + rdx, cy + hh + hw * slope + rdy);
-  ctx.lineTo(cx - hw + rdx, cy + hh + -hw * slope + rdy);
-  ctx.closePath();
-  ctx.fill();
-
-  // Window void (darkest)
-  ctx.fillStyle = voidColor;
-  ctx.beginPath();
-  ctx.moveTo(cx - hw, cy - hh + -hw * slope);
-  ctx.lineTo(cx, cy - archPeak);
-  ctx.lineTo(cx + hw, cy - hh + hw * slope);
-  ctx.lineTo(cx + hw, cy + hh + hw * slope);
-  ctx.lineTo(cx - hw, cy + hh + -hw * slope);
-  ctx.closePath();
-  ctx.fill();
-
-  // Outline
-  ctx.strokeStyle = "rgba(0,0,0,0.4)";
-  ctx.lineWidth = 0.8 * zoom;
-  ctx.stroke();
-
-  // Inner glow
-  if (glowColor) {
-    ctx.fillStyle = `${glowColor}, ${glowAlpha})`;
-    ctx.beginPath();
-    const inset = 0.3 * zoom;
-    ctx.moveTo(cx - hw + inset, cy - hh + -hw * slope + inset * ISO_Y_RATIO);
-    ctx.lineTo(cx, cy - archPeak + inset);
-    ctx.lineTo(cx + hw - inset, cy - hh + hw * slope + inset * ISO_Y_RATIO);
-    ctx.lineTo(cx + hw - inset, cy + hh + hw * slope - inset * ISO_Y_RATIO);
-    ctx.lineTo(cx - hw + inset, cy + hh + -hw * slope - inset * ISO_Y_RATIO);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  // Stone sill at bottom
-  ctx.fillStyle = sillColor;
-  ctx.beginPath();
-  const sillH = 1 * zoom;
-  ctx.moveTo(cx - hw - 0.5 * zoom, cy + hh + -hw * slope);
-  ctx.lineTo(cx + hw + 0.5 * zoom, cy + hh + hw * slope);
-  ctx.lineTo(cx + hw + 0.5 * zoom, cy + hh + hw * slope + sillH);
-  ctx.lineTo(cx - hw - 0.5 * zoom, cy + hh + -hw * slope + sillH);
-  ctx.closePath();
-  ctx.fill();
-}
+// Re-exported from unified flush element system
+export { drawIsoGothicWindow, drawIsoFlushSlit, drawIsoFlushRect, drawIsoFlushDoor, drawIsoFlushVent, drawIsoFlushPanel } from "../isoFlush";
+export type { IsoFace } from "../isoFlush";
 
 // ============================================================================
 // ENHANCED MECHANICAL HELPER FUNCTIONS - Moving parts, gears, steam, etc.

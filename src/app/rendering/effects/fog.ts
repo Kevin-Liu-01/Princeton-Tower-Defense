@@ -1,4 +1,5 @@
 import type { Position } from "../../types";
+import { drawOrganicBlobAt } from "../helpers";
 
 export interface RgbColor {
   r: number;
@@ -97,8 +98,7 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
   coreGrad.addColorStop(0.75, `rgba(${gr},${gg},${gb},${(0.7 * challengeFogOpacityScale).toFixed(3)})`);
   coreGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
   ctx.fillStyle = coreGrad;
-  ctx.beginPath();
-  ctx.ellipse(endPos.x, endPos.y, coreSize, coreSize * 0.5, 0, 0, Math.PI * 2);
+  drawOrganicBlobAt(ctx, endPos.x, endPos.y, coreSize, coreSize * 0.5, fogHash(42.7) * 1000, 0.14);
   ctx.fill();
 
   // Mid layer: slightly offset opaque fills to widen the solid coverage
@@ -113,8 +113,7 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     mGrad.addColorStop(0.55, `rgba(${gr},${gg},${gb},${(0.6 * challengeFogOpacityScale).toFixed(3)})`);
     mGrad.addColorStop(1, `rgba(${gr},${gg},${gb},0)`);
     ctx.fillStyle = mGrad;
-    ctx.beginPath();
-    ctx.ellipse(mx, my, mSize, mSize * 0.5, 0, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, mx, my, mSize, mSize * 0.5, fogHash(m * 31.3 + 77) * 1000, 0.16);
     ctx.fill();
   }
 
@@ -178,8 +177,7 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     grad.addColorStop(0.5, `rgba(${edgeR},${edgeG},${edgeB},${(alpha * 0.5).toFixed(3)})`);
     grad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
     ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(bx + animX, by + animY, blobSize, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, bx + animX, by + animY, blobSize, blobSize * 0.6, fogHash(i * 19.7 + 123) * 1000, 0.2);
     ctx.fill();
   }
 
@@ -198,8 +196,7 @@ export function drawRoadEndFog(params: DrawRoadEndFogParams): void {
     wGrad.addColorStop(0.45, `rgba(${edgeR},${edgeG},${edgeB},${(wa * 0.45).toFixed(3)})`);
     wGrad.addColorStop(1, `rgba(${edgeR},${edgeG},${edgeB},0)`);
     ctx.fillStyle = wGrad;
-    ctx.beginPath();
-    ctx.arc(wx, wy, wSize, 0, Math.PI * 2);
+    drawOrganicBlobAt(ctx, wx, wy, wSize, wSize * 0.65, fogHash(i * 41.1 + 200) * 1000, 0.22);
     ctx.fill();
   }
 }

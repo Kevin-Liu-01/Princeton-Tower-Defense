@@ -1364,11 +1364,11 @@ export function drawCavalryTroop(
   ctx.fillStyle = lanceGrad;
   ctx.fillRect(-size * 0.04, -size * 0.85, size * 0.08, size * 1.0);
 
-  // Spiral leather wrapping
+  // Spiral leather wrapping (constrained to shaft bounds: y -0.85 to +0.15)
   ctx.strokeStyle = "#3a1a0a";
   ctx.lineWidth = 1.5;
-  for (let wrap = 0; wrap < 8; wrap++) {
-    const wrapY = -size * 0.15 + wrap * size * 0.1;
+  for (let wrap = 0; wrap < 5; wrap++) {
+    const wrapY = -size * 0.12 + wrap * size * 0.06;
     ctx.beginPath();
     ctx.moveTo(-size * 0.04, wrapY);
     ctx.lineTo(size * 0.04, wrapY + size * 0.04);

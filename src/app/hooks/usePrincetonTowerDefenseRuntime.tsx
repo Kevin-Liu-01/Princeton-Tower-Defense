@@ -196,6 +196,7 @@ import {
 // Decoration rendering
 import { renderDecorationItem } from "../rendering/decorations";
 import { getDecorationCategories } from "../rendering/decorations/decorationCategories";
+import { renderDecorationGroundTransitions } from "../rendering/decorations/landmarkTransition";
 import {
   renderStaticMapLayer,
   type StaticMapFogEndpoint,
@@ -6194,6 +6195,17 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     }
 
+    // Pre-pass: decoration ground transitions (above roads, below all decorations/towers)
+    renderDecorationGroundTransitions(
+      ctx,
+      selectedMap,
+      canvas.width,
+      canvas.height,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
+
     // Generate theme-specific decorations (CACHED for performance)
     // PERFORMANCE FIX: Cache decorations to avoid regenerating 500+ objects every frame
     // This was a major cause of freezing on mobile devices
@@ -6932,6 +6944,7 @@ export function usePrincetonTowerDefenseRuntime() {
           variant: dec.variant,
           decorTime,
           decorX: dec.x,
+          decorY: dec.y,
           selectedMap,
           shadowOnly: !!entry.shadowOnly,
           skipShadow: hasBackgroundShadowPass && !entry.shadowOnly,
@@ -7167,6 +7180,7 @@ export function usePrincetonTowerDefenseRuntime() {
               variant: dec.variant,
               decorTime: 0,
               decorX: dec.x,
+              decorY: dec.y,
               selectedMap,
               skipShadow: getDecorationVolumeSpec(dec.type, dec.heightTag)
                 .backgroundShadowOnly,
@@ -7963,6 +7977,7 @@ export function usePrincetonTowerDefenseRuntime() {
             variant: decData.variant,
             decorTime: decData.decorTime,
             decorX: decData.x,
+            decorY: decData.y,
             selectedMap: decData.selectedMap,
             skipShadow: getDecorationVolumeSpec(
               decData.type,

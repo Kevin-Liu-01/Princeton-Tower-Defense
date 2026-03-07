@@ -1,4 +1,5 @@
 import { ISO_TAN, ISO_Y_RATIO } from "../../constants";
+import { drawIsoFlushSlit, drawIsoFlushDoor } from "../isoFlush";
 
 // Special Building Types rendering
 function drawChronoRelayBuilding(
@@ -2940,40 +2941,18 @@ export function renderSpecialBuilding(
           ctx.fillRect(w - 4 * s, -w * tanA + cornerY - 1 * s, 6 * s, 10 * s);
         }
   
-        // Arrow Slit Windows
-        ctx.fillStyle = "#1a1a2e";
-        ctx.save();
-        ctx.translate(-w * 0.5, -w * tanA * 0.5 - h * 0.65 - baseH);
-        ctx.beginPath();
-        ctx.moveTo(0, -8 * s);
-        ctx.lineTo(-2 * s, -4 * s);
-        ctx.lineTo(-2 * s, 6 * s);
-        ctx.lineTo(2 * s, 6 * s);
-        ctx.lineTo(2 * s, -4 * s);
-        ctx.closePath();
-        ctx.fill();
-        if (isPreparing) {
-          ctx.fillStyle = "rgba(79, 195, 247, 0.4)";
-          ctx.fill();
+        // Arrow Slit Windows — isometric flush with wall faces
+        {
+          const slitCY = -w * tanA * 0.5 - h * 0.65 - baseH - 1 * s;
+          drawIsoFlushSlit(ctx, -w * 0.5, slitCY, 2.5, 10, "left", s, {
+            glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
+            glowAlpha: 0.4,
+          });
+          drawIsoFlushSlit(ctx, w * 0.5, slitCY, 2.5, 10, "right", s, {
+            glowColor: isPreparing ? "rgba(79, 195, 247" : undefined,
+            glowAlpha: 0.4,
+          });
         }
-        ctx.restore();
-  
-        ctx.save();
-        ctx.translate(w * 0.5, -w * tanA * 0.5 - h * 0.65 - baseH);
-        ctx.fillStyle = "#1a1a2e";
-        ctx.beginPath();
-        ctx.moveTo(0, -8 * s);
-        ctx.lineTo(-2 * s, -4 * s);
-        ctx.lineTo(-2 * s, 6 * s);
-        ctx.lineTo(2 * s, 6 * s);
-        ctx.lineTo(2 * s, -4 * s);
-        ctx.closePath();
-        ctx.fill();
-        if (isPreparing) {
-          ctx.fillStyle = "rgba(79, 195, 247, 0.4)";
-          ctx.fill();
-        }
-        ctx.restore();
   
         // The Grand Archway Door
         const doorY = -baseH - 8 * s;

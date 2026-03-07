@@ -21,7 +21,7 @@ import {
   Eye,
   BarChart3,
   Shield,
-  Scroll,
+  Map as MapIcon,
   Sparkles,
 } from "lucide-react";
 import type {
@@ -900,7 +900,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               <div className="flex-1 flex flex-col overflow-auto p-2 relative z-10">
                 {/* Campaign header + progress */}
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Scroll size={14} className="text-amber-400" />
+                  <MapIcon size={14} className="text-amber-400" />
                   <span className="text-xs font-bold text-amber-100 tracking-wide">Campaign</span>
                   <div className="flex-1" />
                   <div className="flex items-center gap-1">
@@ -1521,7 +1521,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               >
                 <div
                   ref={canvasWrapperRef}
-                  className="relative"
+                  className="relative game-start-fade"
                   style={{
                     width: `${displayW}px`,
                     height: `${displayH}px`,
@@ -1530,7 +1530,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 >
                   <canvas
                     ref={canvasRef}
-                    className="block game-start-fade"
+                    className="block"
                     style={{ cursor: dragCursor ? 'grabbing' : 'grab' }}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={() => setHoveredLevel(null)}

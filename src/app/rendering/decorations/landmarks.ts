@@ -24,6 +24,7 @@ function renderLandmark(
     variant,
     decorTime: time,
     decorX: x,
+    decorY: y,
     selectedMap: "",
   });
 }

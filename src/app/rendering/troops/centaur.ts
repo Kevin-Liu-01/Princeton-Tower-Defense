@@ -1082,192 +1082,232 @@ export function drawCentaurTroop(
   );
   ctx.stroke();
 
-  // === MASTERWORK RECURVE BOW === (richer silhouette + stronger read)
+  // === MASTERWORK RECURVE BOW ===
   ctx.save();
   ctx.translate(bowX, bowY);
   ctx.rotate(bowRotation);
 
   const bowBend = isAttacking ? 0.64 + bowDraw * 0.25 : 0.62;
-  const outerRadius = size * 0.3;
-  const innerRadius = size * 0.275;
+  const bowRadius = size * 0.28;
+  const bendAmt = bowBend * Math.PI;
+  const arcStart = Math.PI - bendAmt;
+  const arcEnd = Math.PI + bendAmt;
 
-  // Outer horn shell.
-  ctx.strokeStyle = "#3a220e";
-  ctx.lineWidth = 3.6 * zoom;
+  // Tip positions on the arc
+  const topTipX = Math.cos(arcStart) * bowRadius;
+  const topTipY = Math.sin(arcStart) * bowRadius;
+  const botTipX = Math.cos(arcEnd) * bowRadius;
+  const botTipY = Math.sin(arcEnd) * bowRadius;
+
+  // Recurve horn kicks at tips
+  const recurveKick = size * 0.04;
+  const hornTopX = topTipX + recurveKick * 0.4;
+  const hornTopY = topTipY - recurveKick;
+  const hornBotX = botTipX + recurveKick * 0.4;
+  const hornBotY = botTipY + recurveKick;
+
+  // --- Bow arc body (clean arc) ---
+  // Dark outer edge
+  ctx.strokeStyle = "#2e1a0a";
+  ctx.lineWidth = 3.0 * zoom;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.arc(
-    0,
-    0,
-    outerRadius,
-    Math.PI - bowBend * Math.PI,
-    Math.PI + bowBend * Math.PI,
-  );
+  ctx.arc(0, 0, bowRadius, arcStart, arcEnd);
   ctx.stroke();
 
-  // Main laminated wood body.
-  const bowCoreGrad = ctx.createLinearGradient(-outerRadius, 0, size * 0.08, 0);
-  bowCoreGrad.addColorStop(0, "#5b3918");
-  bowCoreGrad.addColorStop(0.28, "#83592f");
-  bowCoreGrad.addColorStop(0.62, "#714725");
-  bowCoreGrad.addColorStop(1, "#5a3617");
-  ctx.strokeStyle = bowCoreGrad;
-  ctx.lineWidth = 2.8 * zoom;
-  ctx.beginPath();
-  ctx.arc(
-    0,
-    0,
-    innerRadius,
-    Math.PI - bowBend * Math.PI,
-    Math.PI + bowBend * Math.PI,
+  // Wood core with gradient
+  const limbGrad = ctx.createLinearGradient(
+    -bowRadius, -bowRadius * 0.5, -bowRadius * 0.3, bowRadius * 0.5,
   );
+  limbGrad.addColorStop(0, "#5c3818");
+  limbGrad.addColorStop(0.25, "#8a5e34");
+  limbGrad.addColorStop(0.5, "#7a5028");
+  limbGrad.addColorStop(0.75, "#8a5e34");
+  limbGrad.addColorStop(1, "#5c3818");
+  ctx.strokeStyle = limbGrad;
+  ctx.lineWidth = 2.0 * zoom;
+  ctx.beginPath();
+  ctx.arc(0, 0, bowRadius, arcStart, arcEnd);
   ctx.stroke();
 
-  // Gold inlay channels.
-  ctx.strokeStyle = "#d2ab4d";
-  ctx.lineWidth = 1.25 * zoom;
+  // Inner highlight along belly of the arc
+  ctx.strokeStyle = "rgba(196, 158, 96, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.arc(0, 0, bowRadius - size * 0.008, arcStart + 0.1, arcEnd - 0.1);
+  ctx.stroke();
+
+  // Gold inlay accent marks along the arc
+  ctx.strokeStyle = centaurGoldMid;
+  ctx.lineWidth = 1.0 * zoom;
   for (let mark = 0; mark < 3; mark++) {
-    const mid = 0.47 + mark * 0.48;
+    const markAngle = Math.PI + (mark - 1) * bendAmt * 0.45;
     ctx.beginPath();
-    ctx.arc(0, 0, innerRadius, Math.PI * (mid - 0.03), Math.PI * (mid + 0.03));
+    ctx.arc(0, 0, bowRadius, markAngle - 0.04, markAngle + 0.04);
     ctx.stroke();
   }
 
-  // Tip geometry.
-  const topTipX = Math.cos(Math.PI - bowBend * Math.PI) * outerRadius;
-  const topTipY = Math.sin(Math.PI - bowBend * Math.PI) * outerRadius;
-  const botTipX = Math.cos(Math.PI + bowBend * Math.PI) * outerRadius;
-  const botTipY = Math.sin(Math.PI + bowBend * Math.PI) * outerRadius;
-  const hornTopX = topTipX - size * 0.02;
-  const hornTopY = topTipY - size * 0.028;
-  const hornBotX = botTipX - size * 0.02;
-  const hornBotY = botTipY + size * 0.028;
-  ctx.fillStyle = "#d8ba6f";
-  ctx.beginPath();
-  ctx.moveTo(topTipX - size * 0.01, topTipY);
-  ctx.lineTo(hornTopX, hornTopY);
-  ctx.lineTo(topTipX + size * 0.012, topTipY - size * 0.005);
-  ctx.closePath();
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(botTipX - size * 0.01, botTipY);
-  ctx.lineTo(hornBotX, hornBotY);
-  ctx.lineTo(botTipX + size * 0.012, botTipY + size * 0.005);
-  ctx.closePath();
-  ctx.fill();
+  // --- Recurve horn tips ---
+  for (const side of [-1, 1] as const) {
+    const tipX = side === -1 ? topTipX : botTipX;
+    const tipY = side === -1 ? topTipY : botTipY;
+    const hornX = side === -1 ? hornTopX : hornBotX;
+    const hornY = side === -1 ? hornTopY : hornBotY;
 
-  // Grip and gemstone.
+    ctx.strokeStyle = "#4a3018";
+    ctx.lineWidth = 1.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.quadraticCurveTo(
+      tipX + recurveKick * 0.7,
+      tipY - side * recurveKick * 0.5,
+      hornX,
+      hornY,
+    );
+    ctx.stroke();
+
+    // Gold accent on horn
+    ctx.strokeStyle = centaurGoldMid;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.quadraticCurveTo(
+      tipX + recurveKick * 0.7,
+      tipY - side * recurveKick * 0.5,
+      hornX,
+      hornY,
+    );
+    ctx.stroke();
+
+    // Nock notch
+    ctx.fillStyle = "#1a0f08";
+    ctx.beginPath();
+    ctx.arc(hornX, hornY, size * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // --- Leather grip wrap ---
+  const gripCx = -bowRadius;
+  const gripH = size * 0.055;
+  const gripW = size * 0.05;
   const gripGrad = ctx.createLinearGradient(
-    -size * 0.255,
-    -size * 0.04,
-    -size * 0.17,
-    size * 0.04,
+    gripCx - gripW * 0.5, -gripH, gripCx + gripW * 0.5, gripH,
   );
   gripGrad.addColorStop(0, "#2e1c0f");
-  gripGrad.addColorStop(0.5, "#4a2a15");
+  gripGrad.addColorStop(0.4, "#4a2a15");
   gripGrad.addColorStop(1, "#24160b");
   ctx.fillStyle = gripGrad;
   ctx.beginPath();
-  ctx.roundRect(
-    -size * 0.255,
-    -size * 0.04,
-    size * 0.085,
-    size * 0.08,
-    size * 0.014,
-  );
+  ctx.roundRect(gripCx - gripW * 0.5, -gripH, gripW, gripH * 2, size * 0.008);
   ctx.fill();
   ctx.strokeStyle = centaurGoldMid;
-  ctx.lineWidth = 1 * zoom;
+  ctx.lineWidth = 0.7 * zoom;
   ctx.stroke();
+
+  // Wrap stitch lines
+  ctx.strokeStyle = "rgba(80, 50, 25, 0.55)";
+  ctx.lineWidth = 0.5 * zoom;
+  for (let w = 0; w < 3; w++) {
+    const wy = -gripH + (w + 0.5) * (gripH * 2) / 3;
+    ctx.beginPath();
+    ctx.moveTo(gripCx - gripW * 0.35, wy);
+    ctx.lineTo(gripCx + gripW * 0.35, wy + size * 0.006);
+    ctx.stroke();
+  }
+
+  // Grip gemstone
   ctx.fillStyle = centaurGoldLight;
   ctx.shadowColor = centaurGoldLight;
-  ctx.shadowBlur = 6 * zoom * gemPulse;
+  ctx.shadowBlur = 5 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(-size * 0.212, 0, size * 0.016, 0, Math.PI * 2);
+  ctx.arc(gripCx, 0, size * 0.012, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = centaurLeafLight;
+  ctx.beginPath();
+  ctx.arc(gripCx, 0, size * 0.007, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Dual-layer string.
+  // --- Bowstring - straight lines ---
   const stringPull = -size * (0.2 + (isAttacking ? bowDraw * 0.24 : 0));
+  ctx.lineCap = "round";
   if (isAttacking) {
-    ctx.shadowColor = "#ffd06c";
-    ctx.shadowBlur = 7 * zoom * bowDraw;
+    ctx.shadowColor = "rgba(255, 215, 120, 0.6)";
+    ctx.shadowBlur = 4 * zoom * bowDraw;
   }
-  ctx.strokeStyle = isAttacking ? "#fff7db" : "#f6eed5";
-  ctx.lineWidth = (isAttacking ? 2.6 : 2.1) * zoom;
+  ctx.strokeStyle = isAttacking ? "#f5ecd4" : "#ddd5be";
+  ctx.lineWidth = (isAttacking ? 1.0 : 0.8) * zoom;
   ctx.beginPath();
   ctx.moveTo(hornTopX, hornTopY);
   ctx.lineTo(stringPull, 0);
   ctx.lineTo(hornBotX, hornBotY);
   ctx.stroke();
-  ctx.strokeStyle = "rgba(255, 220, 145, 0.5)";
-  ctx.lineWidth = 1 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(topTipX, topTipY);
-  ctx.lineTo(stringPull + size * 0.01, 0);
-  ctx.lineTo(botTipX, botTipY);
-  ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Nocked arrow.
+  // Nocked arrow
   if (!isAttacking || attackPhase < 0.52) {
     const arrowOffset = isAttacking ? bowDraw * size * 0.11 : 0;
-    const shaftGrad = ctx.createLinearGradient(
-      stringPull - size * 0.44,
-      0,
-      stringPull,
-      0,
-    );
-    shaftGrad.addColorStop(0, "#322010");
-    shaftGrad.addColorStop(0.5, "#5b3f22");
-    shaftGrad.addColorStop(1, "#2f1d10");
+    const shaftStart = stringPull + arrowOffset * 0.5 - size * 0.4;
+    const shaftEnd = stringPull + arrowOffset * 0.5;
+    const shaftW = size * 0.01;
+
+    // Arrow shaft
+    const shaftGrad = ctx.createLinearGradient(shaftStart, 0, shaftEnd, 0);
+    shaftGrad.addColorStop(0, "#3a2414");
+    shaftGrad.addColorStop(0.5, "#5c3e24");
+    shaftGrad.addColorStop(1, "#3a2414");
     ctx.fillStyle = shaftGrad;
-    ctx.fillRect(
-      stringPull + arrowOffset * 0.5 - size * 0.44,
-      -size * 0.015,
-      size * 0.44,
-      size * 0.03,
-    );
+    ctx.fillRect(shaftStart, -shaftW, shaftEnd - shaftStart, shaftW * 2);
 
-    // Fletching.
-    ctx.fillStyle = centaurLeafMid;
-    ctx.beginPath();
-    ctx.moveTo(stringPull + arrowOffset * 0.28 + size * 0.018, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.52 + size * 0.068, -size * 0.037);
-    ctx.lineTo(stringPull + arrowOffset * 0.28 - size * 0.03, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.52 + size * 0.068, size * 0.037);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = centaurLeafLight;
-    ctx.beginPath();
-    ctx.moveTo(stringPull + arrowOffset * 0.3 + size * 0.008, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.42 + size * 0.042, -size * 0.021);
-    ctx.lineTo(stringPull + arrowOffset * 0.3 - size * 0.015, 0);
-    ctx.lineTo(stringPull + arrowOffset * 0.42 + size * 0.042, size * 0.021);
-    ctx.closePath();
-    ctx.fill();
+    // Fletching vanes (three angled feathers)
+    const fletchX = shaftEnd - size * 0.02;
+    for (let f = -1; f <= 1; f++) {
+      ctx.fillStyle = f === 0 ? centaurLeafLight : centaurLeafMid;
+      ctx.globalAlpha = f === 0 ? 0.9 : 0.7;
+      ctx.beginPath();
+      ctx.moveTo(fletchX, 0);
+      ctx.lineTo(fletchX + size * 0.055, f * size * 0.022 - size * 0.003);
+      ctx.lineTo(fletchX + size * 0.06, 0);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
 
-    // Arrow head.
+    // Nock (string notch)
+    ctx.fillStyle = "#221408";
+    ctx.fillRect(shaftEnd - size * 0.004, -shaftW * 1.3, size * 0.008, shaftW * 2.6);
+
+    // Arrowhead - broadhead style
+    const headX = shaftStart;
     if (isAttacking) {
       ctx.shadowColor = "#ffcf74";
-      ctx.shadowBlur = 8 * zoom * bowDraw;
+      ctx.shadowBlur = 6 * zoom * bowDraw;
     }
     const headGrad = ctx.createLinearGradient(
-      stringPull - size * 0.47,
-      -size * 0.04,
-      stringPull - size * 0.47,
-      size * 0.04,
+      headX - size * 0.06,
+      -size * 0.025,
+      headX - size * 0.06,
+      size * 0.025,
     );
-    headGrad.addColorStop(0, "#c7cfdd");
-    headGrad.addColorStop(0.5, isAttacking ? "#f4f7ff" : "#e7ebf3");
-    headGrad.addColorStop(1, "#9ea9ba");
+    headGrad.addColorStop(0, "#bcc4d4");
+    headGrad.addColorStop(0.5, isAttacking ? "#eef1fa" : "#dde2ec");
+    headGrad.addColorStop(1, "#96a0b2");
     ctx.fillStyle = headGrad;
     ctx.beginPath();
-    ctx.moveTo(stringPull - size * 0.438, 0);
-    ctx.lineTo(stringPull - size * 0.344, -size * 0.038);
-    ctx.lineTo(stringPull - size * 0.368, 0);
-    ctx.lineTo(stringPull - size * 0.344, size * 0.038);
+    ctx.moveTo(headX - size * 0.065, 0);
+    ctx.lineTo(headX - size * 0.01, -size * 0.024);
+    ctx.lineTo(headX + size * 0.005, 0);
+    ctx.lineTo(headX - size * 0.01, size * 0.024);
     ctx.closePath();
     ctx.fill();
+
+    // Arrowhead edge highlight
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(headX - size * 0.06, 0);
+    ctx.lineTo(headX - size * 0.012, -size * 0.02);
+    ctx.stroke();
     ctx.shadowBlur = 0;
   }
   ctx.restore();
