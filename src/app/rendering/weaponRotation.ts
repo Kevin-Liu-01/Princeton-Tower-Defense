@@ -51,4 +51,5 @@ export const WEAPON_LIMITS = {
   leftTool: [-Math.PI * 0.85, Math.PI * 0.55] as const,
   bow: [-Math.PI * 0.75, Math.PI * 0.25] as const,
   lance: [-Math.PI * 0.6, Math.PI * 0.5] as const,
+  rifle: [-Math.PI * 0.92, Math.PI * 0.92] as const,
 } as const;

@@ -1,6 +1,391 @@
 import type { Position } from "../../types";
 import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
+// ─── DRAGON SKIRT ARMOR (segmented plate tassets below the breastplate) ──────
+
+function drawDragonSkirtArmor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+  gemPulse: number,
+  flamePulse: number,
+) {
+  const skirtTop = y + size * 0.28;
+  const bandCount = 5;
+  const totalHeight = size * 0.38;
+  const bandHeight = totalHeight / bandCount;
+  const gapHalf = size * 0.12;
+
+  drawCenterBanner(ctx, x, y, size, time, zoom, skirtTop, totalHeight, gapHalf, gemPulse);
+
+  for (let side = -1; side <= 1; side += 2) {
+    drawTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, bandCount, bandHeight, totalHeight, gapHalf, gemPulse, isAttacking, attackIntensity, flamePulse);
+  }
+
+  drawGoldChain(ctx, x, size, zoom, skirtTop, gapHalf, gemPulse, time);
+  drawSkirtBelt(ctx, x, size, zoom, skirtTop, gemPulse);
+}
+
+function drawTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  _y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  side: number,
+  skirtTop: number,
+  bandCount: number,
+  bandHeight: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+  flamePulse: number,
+) {
+  const shear = size * -0.12;
+
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const innerBotY = innerTopY + bandHeight;
+    const outerTopY = innerTopY + shear;
+    const outerBotY = innerBotY + shear;
+
+    const outerW = size * (0.42 + band * 0.035);
+    const innerGap = gapHalf + band * size * 0.008;
+    const sway =
+      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
+
+    const innerX = x + side * innerGap + sway;
+    const outerX = x + side * outerW + sway;
+
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#4a4a4a");
+      plateG.addColorStop(0.25, "#404040");
+      plateG.addColorStop(0.55, "#333333");
+      plateG.addColorStop(1, "#1a1a1a");
+    } else {
+      plateG.addColorStop(0, "#1a1a1a");
+      plateG.addColorStop(0.45, "#333333");
+      plateG.addColorStop(0.75, "#404040");
+      plateG.addColorStop(1, "#4a4a4a");
+    }
+
+    ctx.fillStyle = plateG;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(110, 110, 110, 0.5)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.002);
+    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.002);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(5, 5, 5, 0.65)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX - side * size * 0.002, innerBotY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#0a0a0a";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.stroke();
+
+    const rivetMidT = 0.75;
+    const rivetX = innerX + rivetMidT * (outerX - innerX);
+    const rivetY = innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - size * 0.002, rivetY - size * 0.002, 0,
+      rivetX, rivetY, size * 0.009,
+    );
+    rg.addColorStop(0, "#ffe080");
+    rg.addColorStop(0.4, "#daa520");
+    rg.addColorStop(1, "#805010");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (band % 2 === 0) {
+      ctx.fillStyle = "#4a4a4a";
+      const scaleCount = 2 + Math.floor(band / 2);
+      for (let sc = 0; sc < scaleCount; sc++) {
+        const t = (sc + 0.5) / scaleCount;
+        const scaleX = innerX + t * (outerX - innerX);
+        const scaleYBase = innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+        const scaleSize = size * 0.026;
+        ctx.beginPath();
+        ctx.moveTo(scaleX, scaleYBase - scaleSize * 0.3);
+        ctx.quadraticCurveTo(scaleX + scaleSize, scaleYBase, scaleX, scaleYBase + scaleSize * 0.6);
+        ctx.quadraticCurveTo(scaleX - scaleSize, scaleYBase, scaleX, scaleYBase - scaleSize * 0.3);
+        ctx.fill();
+      }
+    }
+
+    if (band % 2 === 1) {
+      const midT = 0.5;
+      const accentInnerX = innerX + side * size * 0.015;
+      const accentOuterX = outerX - side * size * 0.015;
+      const accentInnerY = innerTopY + bandHeight * midT;
+      const accentOuterY = outerTopY + bandHeight * midT;
+      ctx.strokeStyle = `rgba(220, 38, 38, ${0.25 + gemPulse * 0.15})`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.shadowColor = "#dc2626";
+      ctx.shadowBlur = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(accentInnerX, accentInnerY);
+      ctx.lineTo(accentOuterX, accentOuterY);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  if (isAttacking) {
+    const lastBand = bandCount - 1;
+    const outerW = size * (0.42 + lastBand * 0.035);
+    const innerGap = gapHalf + lastBand * size * 0.008;
+    const innerBotY = skirtTop + totalHeight;
+    const outerBotY = innerBotY + shear;
+    const innerX = x + side * innerGap;
+    const outerX = x + side * outerW;
+    ctx.strokeStyle = `rgba(255, 102, 48, ${0.35 * attackIntensity * flamePulse})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.shadowColor = "#ff4400";
+    ctx.shadowBlur = 6 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerBotY);
+    const segs = 5;
+    for (let f = 0; f < segs; f++) {
+      const t1 = (f + 0.5) / segs;
+      const t2 = (f + 1) / segs;
+      const mx = innerX + t1 * (outerX - innerX);
+      const my = innerBotY + t1 * (outerBotY - innerBotY);
+      const ex = innerX + t2 * (outerX - innerX);
+      const ey = innerBotY + t2 * (outerBotY - innerBotY);
+      const fWave = Math.sin(time * 7 + f * 0.9 + side * 2) * size * 0.02;
+      ctx.lineTo(mx, my + size * 0.018 + fWave);
+      ctx.lineTo(ex, ey);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  _y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  skirtTop: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+) {
+  const bannerTop = skirtTop + size * 0.04;
+  const bannerBottom = skirtTop + totalHeight * 0.92;
+  const bannerHalfW = gapHalf * 0.75;
+  const wave = Math.sin(time * 2.5) * size * 0.008;
+  const wave2 = Math.sin(time * 3.2 + 0.5) * size * 0.005;
+
+  const bannerGrad = ctx.createLinearGradient(x, bannerTop, x, bannerBottom);
+  bannerGrad.addColorStop(0, "#8b1010");
+  bannerGrad.addColorStop(0.15, "#b81818");
+  bannerGrad.addColorStop(0.4, "#dc2626");
+  bannerGrad.addColorStop(0.7, "#b81818");
+  bannerGrad.addColorStop(1, "#8b1010");
+  ctx.fillStyle = bannerGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - bannerHalfW, bannerTop);
+  ctx.lineTo(x + bannerHalfW, bannerTop);
+  ctx.bezierCurveTo(
+    x + bannerHalfW + wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85, bannerBottom,
+  );
+  ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
+  ctx.bezierCurveTo(
+    x - bannerHalfW * 0.9 - wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW, bannerTop,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#f0c040";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  ctx.fillStyle = "#daa520";
+  ctx.shadowColor = "#ffdd00";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  const emblemY = (bannerTop + bannerBottom) * 0.5 - size * 0.03;
+  ctx.beginPath();
+  ctx.moveTo(x, emblemY - size * 0.05);
+  ctx.lineTo(x - size * 0.03, emblemY - size * 0.01);
+  ctx.lineTo(x - size * 0.02, emblemY + size * 0.03);
+  ctx.lineTo(x, emblemY + size * 0.02);
+  ctx.lineTo(x + size * 0.02, emblemY + size * 0.03);
+  ctx.lineTo(x + size * 0.03, emblemY - size * 0.01);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = "#dc2626";
+  ctx.shadowColor = "#ff4444";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, emblemY, size * 0.015, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawGoldChain(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gapHalf: number,
+  gemPulse: number,
+  time: number,
+) {
+  const chainY = skirtTop + size * 0.025;
+  const leftAnchor = x - gapHalf + size * 0.01;
+  const rightAnchor = x + gapHalf - size * 0.01;
+  const sag = size * 0.035 + Math.sin(time * 2) * size * 0.004;
+  const linkCount = 7;
+
+  for (let i = 0; i <= linkCount; i++) {
+    const t = i / linkCount;
+    const lx = leftAnchor + t * (rightAnchor - leftAnchor);
+    const sagT = 4 * t * (1 - t);
+    const ly = chainY + sag * sagT;
+
+    const linkGrad = ctx.createRadialGradient(
+      lx - size * 0.002, ly - size * 0.002, 0,
+      lx, ly, size * 0.012,
+    );
+    linkGrad.addColorStop(0, "#ffe080");
+    linkGrad.addColorStop(0.5, "#daa520");
+    linkGrad.addColorStop(1, "#805010");
+    ctx.fillStyle = linkGrad;
+    ctx.beginPath();
+    const linkW = size * 0.011;
+    const linkH = size * 0.007;
+    const angle = i % 2 === 0 ? 0.3 : -0.3;
+    ctx.ellipse(lx, ly, linkW, linkH, angle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#604008";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = `rgba(240, 192, 64, ${0.5 + gemPulse * 0.2})`;
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.shadowColor = "#ffdd00";
+  ctx.shadowBlur = 3 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.moveTo(leftAnchor, chainY);
+  ctx.quadraticCurveTo(x, chainY + sag, rightAnchor, chainY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  for (let side = -1; side <= 1; side += 2) {
+    const anchorX = side === -1 ? leftAnchor : rightAnchor;
+    ctx.fillStyle = "#daa520";
+    ctx.shadowColor = "#ffdd00";
+    ctx.shadowBlur = 3 * zoom * gemPulse;
+    ctx.beginPath();
+    ctx.arc(anchorX, chainY, size * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#805010";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gemPulse: number,
+) {
+  const beltHalfW = size * 0.43;
+  const beltThick = size * 0.048;
+  const vDip = size * 0.08;
+
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
+  );
+  beltGrad.addColorStop(0, "#805010");
+  beltGrad.addColorStop(0.2, "#c9a227");
+  beltGrad.addColorStop(0.4, "#f0c040");
+  beltGrad.addColorStop(0.5, "#ffe060");
+  beltGrad.addColorStop(0.6, "#f0c040");
+  beltGrad.addColorStop(0.8, "#c9a227");
+  beltGrad.addColorStop(1, "#805010");
+
+  ctx.fillStyle = beltGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.lineTo(x, skirtTop + beltThick * 0.5 + vDip);
+  ctx.lineTo(x - beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#604008";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "#ffe060";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.stroke();
+
+  ctx.fillStyle = "#dc2626";
+  ctx.shadowColor = "#ff4444";
+  ctx.shadowBlur = 6 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + vDip * 0.35, size * 0.032, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ff8888";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 export function drawCaptainHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -21,6 +406,9 @@ export function drawCaptainHero(
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
   const flamePulse = Math.sin(time * 6) * 0.15 + 0.85;
   const divineGlow = Math.sin(time * 1.5) * 0.2 + 0.8;
+
+  ctx.save();
+  ctx.translate(0, breathe);
 
   // === DIVINE FLAME AURA - Radiating Power ===
   const auraBase = isAttacking ? 0.45 : 0.28;
@@ -90,13 +478,13 @@ export function drawCaptainHero(
   ctx.restore();
 
   // === SHADOW WITH DEPTH ===
-  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.54, 0, x, y + size * 0.54, size * 0.6);
+  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.64, 0, x, y + size * 0.64, size * 0.68);
   shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.6)");
   shadowGrad.addColorStop(0.5, "rgba(50, 0, 0, 0.3)");
   shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
   ctx.fillStyle = shadowGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + size * 0.54, size * 0.55, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + size * 0.64, size * 0.62, size * 0.2, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // === LEGENDARY FLAME CAPE ===
@@ -217,12 +605,12 @@ export function drawCaptainHero(
   armorGrad.addColorStop(1, "#1a1a1a");
   ctx.fillStyle = armorGrad;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.4, y + size * 0.52 + breathe);
+  ctx.moveTo(x - size * 0.4, y + size * 0.52);
   ctx.lineTo(x - size * 0.48, y - size * 0.05);
   ctx.lineTo(x - size * 0.32, y - size * 0.3);
   ctx.quadraticCurveTo(x, y - size * 0.42, x + size * 0.32, y - size * 0.3);
   ctx.lineTo(x + size * 0.48, y - size * 0.05);
-  ctx.lineTo(x + size * 0.4, y + size * 0.52 + breathe);
+  ctx.lineTo(x + size * 0.4, y + size * 0.52);
   ctx.closePath();
   ctx.fill();
 
@@ -266,12 +654,12 @@ export function drawCaptainHero(
   ctx.strokeStyle = "#0a0a0a";
   ctx.lineWidth = 2.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.4, y + size * 0.52 + breathe);
+  ctx.moveTo(x - size * 0.4, y + size * 0.52);
   ctx.lineTo(x - size * 0.48, y - size * 0.05);
   ctx.lineTo(x - size * 0.32, y - size * 0.3);
   ctx.quadraticCurveTo(x, y - size * 0.42, x + size * 0.32, y - size * 0.3);
   ctx.lineTo(x + size * 0.48, y - size * 0.05);
-  ctx.lineTo(x + size * 0.4, y + size * 0.52 + breathe);
+  ctx.lineTo(x + size * 0.4, y + size * 0.52);
   ctx.closePath();
   ctx.stroke();
 
@@ -303,6 +691,9 @@ export function drawCaptainHero(
   ctx.arc(x - size * 0.01, y - size * 0.01, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
+
+  // === DRAGON SKIRT ARMOR (in front of breastplate) ===
+  drawDragonSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackPhase, gemPulse, flamePulse);
 
   // === DRAGON PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
@@ -1131,6 +1522,6 @@ export function drawCaptainHero(
       ctx.shadowBlur = 0;
     }
   }
+
+  ctx.restore();
 }
-
-

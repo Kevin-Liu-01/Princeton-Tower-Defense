@@ -1,6 +1,10 @@
 import type { Position } from "../../types";
 import { ISO_Y_RATIO } from "../../constants";
 
+// ============================================================================
+// SHARED TURRET HELPERS
+// ============================================================================
+
 export function drawTurretIsometricCrate(
   ctx: CanvasRenderingContext2D,
   left: number,
@@ -83,6 +87,252 @@ export function projectTurretLocalPoint(
 }
 
 // ============================================================================
+// ISOMETRIC 3D PROJECTION HELPERS
+// ============================================================================
+
+// Proper iso projection: applies Y-compression AFTER rotation so the barrel
+// foreshortens when pointing into/away from the camera.
+// fwd = along barrel, right = perpendicular in ground plane, up = vertical
+function isoProject3D(
+  px: number,
+  py: number,
+  cosR: number,
+  sinR: number,
+  fwd: number,
+  right: number,
+  up: number = 0,
+): Position {
+  const wx = cosR * fwd - sinR * right;
+  const wy = sinR * fwd + cosR * right;
+  return { x: px + wx, y: py + wy * ISO_Y_RATIO - up };
+}
+
+function fillQuad(
+  ctx: CanvasRenderingContext2D,
+  a: Position,
+  b: Position,
+  c: Position,
+  d: Position,
+  fill: string,
+  stroke?: string,
+  lw?: number,
+) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.lineTo(c.x, c.y);
+  ctx.lineTo(d.x, d.y);
+  ctx.closePath();
+  ctx.fill();
+  if (stroke) {
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = lw ?? 1;
+    ctx.stroke();
+  }
+}
+
+// Draws a ring perpendicular to the barrel, correctly projected to iso.
+// The ring tilts and changes shape as the barrel rotates.
+function drawIsoBarrelRing(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  sinR: number,
+  cosR: number,
+  fill: string,
+  segments: number = 16,
+) {
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  for (let i = 0; i <= segments; i++) {
+    const t = (i / segments) * Math.PI * 2;
+    const ct = Math.cos(t);
+    const st = Math.sin(t);
+    const px = cx + radius * (-sinR * ct);
+    const py = cy + radius * (cosR * ISO_Y_RATIO * ct - st);
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Draws one tripod leg as a 3D rectangular beam with top face and side face
+function drawIsoTripodLeg(
+  ctx: CanvasRenderingContext2D,
+  sx: number,
+  sy: number,
+  ex: number,
+  ey: number,
+  startW: number,
+  endW: number,
+  thickness: number,
+  bodyColor: string,
+  topColor: string,
+  edgeColor: string,
+) {
+  const dx = ex - sx;
+  const dy = ey - sy;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 0.01) return;
+
+  const nx = -dy / len;
+  const ny = dx / len;
+
+  const bl0 = { x: sx - nx * startW * 0.5, y: sy - ny * startW * 0.5 };
+  const br0 = { x: sx + nx * startW * 0.5, y: sy + ny * startW * 0.5 };
+  const bl1 = { x: ex - nx * endW * 0.5, y: ey - ny * endW * 0.5 };
+  const br1 = { x: ex + nx * endW * 0.5, y: ey + ny * endW * 0.5 };
+
+  const endThick = thickness * 0.55;
+  const tl0 = { x: bl0.x, y: bl0.y - thickness };
+  const tr0 = { x: br0.x, y: br0.y - thickness };
+  const tl1 = { x: bl1.x, y: bl1.y - endThick };
+  const tr1 = { x: br1.x, y: br1.y - endThick };
+
+  // Side wall (draw the face that points more toward camera)
+  if (ny < 0) {
+    fillQuad(ctx, tl0, tl1, bl1, bl0, edgeColor);
+  } else {
+    fillQuad(ctx, tr0, tr1, br1, br0, edgeColor);
+  }
+
+  // Main body face
+  fillQuad(ctx, bl0, br0, br1, bl1, bodyColor);
+
+  // Top face (highlight)
+  fillQuad(ctx, tl0, tr0, tr1, tl1, topColor);
+
+  // Edge highlight
+  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(tl0.x, tl0.y);
+  ctx.lineTo(tl1.x, tl1.y);
+  ctx.stroke();
+
+  // Hub-end joint bolt
+  const jx = (tl0.x + tr0.x + bl0.x + br0.x) * 0.25;
+  const jy = (tl0.y + tr0.y + bl0.y + br0.y) * 0.25;
+  ctx.fillStyle = "#6e7886";
+  ctx.beginPath();
+  ctx.arc(jx, jy, startW * 0.32, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#4a5260";
+  ctx.beginPath();
+  ctx.arc(jx, jy, startW * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Foot pad
+  ctx.fillStyle = "#1a1e26";
+  ctx.beginPath();
+  ctx.ellipse(ex, ey + endThick * 0.2, endW * 1.4, endW * 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#282e38";
+  ctx.beginPath();
+  ctx.ellipse(ex, ey - endThick * 0.1, endW, endW * 0.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rivet at midpoint
+  const mx = (sx + ex) * 0.5;
+  const my = (sy + ey) * 0.5 - thickness * 0.3;
+  ctx.fillStyle = "rgba(180,186,200,0.4)";
+  ctx.beginPath();
+  ctx.arc(mx, my, startW * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// Draws an isometric cylinder (for the hub)
+function drawIsoCylinder(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  rx: number,
+  height: number,
+  topColor: string,
+  sideColors: [string, string, string],
+  rimColor: string,
+) {
+  const ry = rx * ISO_Y_RATIO;
+  const topY = cy - height;
+
+  const sideGrad = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
+  sideGrad.addColorStop(0, sideColors[0]);
+  sideGrad.addColorStop(0.5, sideColors[1]);
+  sideGrad.addColorStop(1, sideColors[2]);
+  ctx.fillStyle = sideGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI);
+  ctx.lineTo(cx - rx, topY);
+  ctx.ellipse(cx, topY, rx, ry, 0, Math.PI, 0, true);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI);
+  ctx.stroke();
+
+  ctx.fillStyle = topColor;
+  ctx.beginPath();
+  ctx.ellipse(cx, topY, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = rimColor;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(cx, topY, rx, ry, 0, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// Draws a 3D isometric box with proper face sorting (painter's algorithm).
+// cosR/sinR determine which faces are visible.
+function drawIsoBox(
+  ctx: CanvasRenderingContext2D,
+  cosR: number,
+  sinR: number,
+  corners: {
+    tnl: Position; tnr: Position; tfl: Position; tfr: Position;
+    bnl: Position; bnr: Position; bfl: Position; bfr: Position;
+  },
+  colors: { top: string; sideLight: string; sideDark: string; endLight: string; endDark: string },
+  stroke: string = "rgba(0,0,0,0.18)",
+  lw: number = 0.6,
+) {
+  type FaceEntry = { draw: () => void; depth: number };
+  const faces: FaceEntry[] = [];
+  const c = corners;
+
+  if (cosR > 0)
+    faces.push({
+      draw: () => fillQuad(ctx, c.tnl, c.tfl, c.bfl, c.bnl, colors.sideLight, stroke, lw),
+      depth: cosR,
+    });
+  if (cosR < 0)
+    faces.push({
+      draw: () => fillQuad(ctx, c.tnr, c.tfr, c.bfr, c.bnr, colors.sideDark, stroke, lw),
+      depth: -cosR,
+    });
+  if (sinR > 0)
+    faces.push({
+      draw: () => fillQuad(ctx, c.tnl, c.tnr, c.bnr, c.bnl, colors.endLight, stroke, lw),
+      depth: sinR,
+    });
+  if (sinR < 0)
+    faces.push({
+      draw: () => fillQuad(ctx, c.tfl, c.tfr, c.bfr, c.bfl, colors.endDark, stroke, lw),
+      depth: -sinR,
+    });
+
+  faces.sort((a, b) => a.depth - b.depth);
+  for (const f of faces) f.draw();
+  fillQuad(ctx, c.tnl, c.tnr, c.tfr, c.tfl, colors.top, stroke, lw);
+}
+
+// ============================================================================
 // TURRET TROOP - Engineer's Heavy Machine Gun Emplacement
 // ============================================================================
 export function drawTurretTroop(
@@ -98,7 +348,6 @@ export function drawTurretTroop(
 ) {
   const y = y2 + 8;
   const s = size * 1.5;
-  const squashY = ISO_Y_RATIO;
   const engineerAccent = color || "#f59e0b";
 
   let rotation = 0;
@@ -113,7 +362,6 @@ export function drawTurretTroop(
 
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
-  const foreshorten = ISO_Y_RATIO + Math.abs(cosR) * (1 - ISO_Y_RATIO);
   const isAttacking = attackPhase > 0;
   const fireRate = 18;
   const burstPhase = (time * fireRate) % 1;
@@ -137,10 +385,20 @@ export function drawTurretTroop(
 
   ctx.save();
 
-  // ── GROUND SHADOW ──
-  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+  // ── GROUND SHADOW (multi-layer soft) ──
+  const shX = x + 1.5;
+  const shY = y + s * 0.38;
+  const penGrad = ctx.createRadialGradient(shX, shY, s * 0.12, shX, shY, s * 0.6);
+  penGrad.addColorStop(0, "rgba(0,0,0,0.26)");
+  penGrad.addColorStop(0.5, "rgba(0,0,0,0.14)");
+  penGrad.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = penGrad;
   ctx.beginPath();
-  ctx.ellipse(x, y + s * 0.36, s * 0.5, s * 0.25, 0, 0, Math.PI * 2);
+  ctx.ellipse(shX, shY, s * 0.58, s * 0.29, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
+  ctx.beginPath();
+  ctx.ellipse(shX, shY, s * 0.38, s * 0.19, 0, 0, Math.PI * 2);
   ctx.fill();
 
   // ── SANDBAG RING ──
@@ -148,552 +406,457 @@ export function drawTurretTroop(
   for (let i = 0; i < 8; i++) {
     const ang = (i / 8) * Math.PI * 2 + 0.25;
     const bx = x + Math.cos(ang) * s * 0.38;
-    const by = y + s * 0.3 + Math.sin(ang) * s * 0.15;
+    const by = y + s * 0.32 + Math.sin(ang) * s * 0.15;
     ctx.fillStyle = sandbagHues[i % sandbagHues.length];
     ctx.beginPath();
-    ctx.ellipse(bx, by, s * 0.075, s * 0.032, ang * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(bx, by, s * 0.07, s * 0.03, ang * 0.3, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "rgba(45, 40, 30, 0.35)";
+    ctx.strokeStyle = "rgba(45,40,30,0.3)";
     ctx.lineWidth = s * 0.004;
     ctx.beginPath();
-    ctx.ellipse(bx, by, s * 0.055, s * 0.018, ang * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(bx, by, s * 0.05, s * 0.016, ang * 0.3, 0, Math.PI * 2);
     ctx.stroke();
   }
 
-  // ── TRIPOD LEGS ──
-  const platformTop = y + s * 0.02 + idleBob;
-  const tripodOriginX = x - s * 0.01;
-  const tripodOriginY = platformTop + s * 0.12;
-  const legs = [
+  // ── ISOMETRIC TRIPOD ──
+  const hubX = x + shakeX * 0.15;
+  const hubBaseY = y + s * 0.18 + idleBob;
+  const hubHeight = s * 0.14;
+  const hubTopY = hubBaseY - hubHeight;
+  const legStartY = hubBaseY - hubHeight * 0.25;
+  const legW = s * 0.048;
+  const legEndW = s * 0.022;
+  const legThick = s * 0.032;
+
+  const legFeet = [
     { ex: x - s * 0.4, ey: y + s * 0.37 },
-    { ex: x + s * 0.32, ey: y + s * 0.35 },
-    { ex: x - s * 0.01, ey: y + s * 0.43 },
+    { ex: x + s * 0.34, ey: y + s * 0.35 },
+    { ex: x + s * 0.01, ey: y + s * 0.44 },
   ];
 
+  // Sort legs by foot Y (ascending = farthest from camera first)
+  const sortedLegs = [...legFeet].sort((a, b) => a.ey - b.ey);
+
+  // Draw back two legs
+  drawIsoTripodLeg(
+    ctx, hubX, legStartY, sortedLegs[0].ex, sortedLegs[0].ey,
+    legW, legEndW, legThick, "#464e5c", "#5a6472", "#3a4250",
+  );
+  drawIsoTripodLeg(
+    ctx, hubX, legStartY, sortedLegs[1].ex, sortedLegs[1].ey,
+    legW, legEndW, legThick, "#4a5260", "#5e6878", "#3e4856",
+  );
+
+  // Hub cylinder (between back legs and front leg)
+  drawIsoCylinder(
+    ctx, hubX, hubBaseY, s * 0.09, hubHeight,
+    "#5a6472", ["#3a4250", "#58626e", "#404a58"], "rgba(170,178,190,0.18)",
+  );
+
+  // Hub pivot bolt
+  ctx.fillStyle = "#6a7280";
+  ctx.beginPath();
+  ctx.ellipse(hubX, hubTopY, s * 0.038, s * 0.019, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3e4650";
+  ctx.beginPath();
+  ctx.ellipse(hubX, hubTopY, s * 0.02, s * 0.01, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Front leg (closest to camera, drawn on top)
+  drawIsoTripodLeg(
+    ctx, hubX, legStartY, sortedLegs[2].ex, sortedLegs[2].ey,
+    legW, legEndW, legThick, "#4e5868", "#626e7e", "#424c5a",
+  );
+
+  // Cross-braces (triangular reinforcement ring)
+  const braceT = 0.55;
+  const bracePoints: Position[] = [];
+  for (const leg of legFeet) {
+    bracePoints.push({
+      x: hubX + (leg.ex - hubX) * braceT,
+      y: legStartY + (leg.ey - legStartY) * braceT - legThick * 0.15,
+    });
+  }
+  ctx.strokeStyle = "#555d6c";
+  ctx.lineWidth = s * 0.013;
   ctx.lineCap = "round";
-  for (const leg of legs) {
-    ctx.strokeStyle = "#464c5a";
-    ctx.lineWidth = s * 0.052;
+  for (let i = 0; i < 3; i++) {
+    const j = (i + 1) % 3;
     ctx.beginPath();
-    ctx.moveTo(tripodOriginX, tripodOriginY);
-    ctx.lineTo(leg.ex, leg.ey);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#6a7180";
-    ctx.lineWidth = s * 0.014;
-    const t1 = 0.3;
-    const t2 = 0.7;
-    ctx.beginPath();
-    ctx.moveTo(
-      tripodOriginX + (leg.ex - tripodOriginX) * t1,
-      tripodOriginY + (leg.ey - tripodOriginY) * t1,
-    );
-    ctx.lineTo(
-      tripodOriginX + (leg.ex - tripodOriginX) * t2,
-      tripodOriginY + (leg.ey - tripodOriginY) * t2,
-    );
-    ctx.stroke();
-
-    ctx.fillStyle = "#555d6c";
-    ctx.beginPath();
-    ctx.arc(
-      tripodOriginX + (leg.ex - tripodOriginX) * 0.12,
-      tripodOriginY + (leg.ey - tripodOriginY) * 0.12,
-      s * 0.016,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-
-    ctx.fillStyle = "#1e2228";
-    ctx.beginPath();
-    ctx.ellipse(leg.ex, leg.ey, s * 0.06, s * 0.03, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#15191e";
-    ctx.lineWidth = s * 0.006;
-    ctx.beginPath();
-    ctx.ellipse(leg.ex, leg.ey, s * 0.05, s * 0.025, 0, 0, Math.PI * 2);
+    ctx.moveTo(bracePoints[i].x, bracePoints[i].y);
+    ctx.lineTo(bracePoints[j].x, bracePoints[j].y);
     ctx.stroke();
   }
-
-  // ── BASE PLATFORM ──
-  const platformLeft = x - s * 0.26;
-
-  drawTurretIsometricCrate(
-    ctx,
-    platformLeft,
-    platformTop,
-    s * 0.4,
-    s * 0.15,
-    s * 0.13,
-    {
-      top: "#5e6b56",
-      side: "#465040",
-      front: "#313930",
-      outline: "rgba(225, 222, 196, 0.1)",
-    },
-  );
-
-  drawTurretIsometricCrate(
-    ctx,
-    platformLeft + s * 0.04,
-    platformTop - s * 0.04,
-    s * 0.18,
-    s * 0.09,
-    s * 0.07,
-    {
-      top: "#4d5847",
-      side: "#3a4536",
-      front: "#2d352a",
-      outline: "rgba(225, 222, 196, 0.07)",
-    },
-  );
-
-  drawTurretBoltRow(
-    ctx,
-    platformLeft + s * 0.03,
-    platformTop + s * 0.028,
-    4,
-    s * 0.08,
-    s * 0.006,
-    "rgba(206, 197, 150, 0.65)",
-  );
-
-  ctx.fillStyle = engineerAccent;
-  ctx.globalAlpha = 0.7;
-  ctx.fillRect(
-    platformLeft + s * 0.02,
-    platformTop + s * 0.1,
-    s * 0.24,
-    s * 0.022,
-  );
-  ctx.globalAlpha = 1;
-
-  ctx.strokeStyle = "rgba(18, 18, 18, 0.7)";
-  ctx.lineWidth = s * 0.007;
-  for (let i = 0; i < 4; i++) {
-    const sx = platformLeft + s * (0.03 + i * 0.055);
+  ctx.fillStyle = "#6a7482";
+  for (const bp of bracePoints) {
     ctx.beginPath();
-    ctx.moveTo(sx, platformTop + s * 0.12);
-    ctx.lineTo(sx + s * 0.035, platformTop + s * 0.085);
-    ctx.stroke();
-  }
-
-  // ── TURRET RING ──
-  const ringX = x;
-  const ringY = platformTop - s * 0.015;
-
-  ctx.fillStyle = "#3a4240";
-  ctx.beginPath();
-  ctx.ellipse(ringX, ringY + s * 0.1, s * 0.19, s * 0.095, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  const ringGrad = ctx.createLinearGradient(
-    ringX - s * 0.14,
-    ringY,
-    ringX + s * 0.14,
-    ringY,
-  );
-  ringGrad.addColorStop(0, "#2a3035");
-  ringGrad.addColorStop(0.2, "#555d62");
-  ringGrad.addColorStop(0.5, "#7a8486");
-  ringGrad.addColorStop(0.8, "#555d62");
-  ringGrad.addColorStop(1, "#2a3035");
-  ctx.fillStyle = ringGrad;
-  ctx.beginPath();
-  ctx.ellipse(
-    ringX,
-    ringY + s * 0.06,
-    s * 0.155,
-    s * 0.0775,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  ctx.fillStyle = "#282e2d";
-  ctx.beginPath();
-  ctx.ellipse(
-    ringX,
-    ringY + s * 0.06,
-    s * 0.075,
-    s * 0.0375,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  for (let i = 0; i < 8; i++) {
-    const rivetAngle = (i / 8) * Math.PI * 2 + time * 0.12;
-    ctx.fillStyle = "rgba(194, 186, 150, 0.6)";
-    ctx.beginPath();
-    ctx.arc(
-      ringX + Math.cos(rivetAngle) * s * 0.12,
-      ringY + s * 0.06 + Math.sin(rivetAngle) * s * 0.06,
-      s * 0.006,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(bp.x, bp.y, s * 0.007, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // ── AMMO BOX ──
-  const ammoLeft = x - s * 0.4;
-  const ammoTop = platformTop - s * 0.01;
-
+  const ammoLeft = x - s * 0.42;
+  const ammoTop = hubTopY + s * 0.04;
   drawTurretIsometricCrate(ctx, ammoLeft, ammoTop, s * 0.15, s * 0.12, s * 0.06, {
-    top: "#55654f",
-    side: "#3f4b3c",
-    front: "#2b3329",
-    outline: "rgba(225, 222, 196, 0.06)",
+    top: "#55654f", side: "#3f4b3c", front: "#2b3329",
+    outline: "rgba(225,222,196,0.06)",
   });
-
-  drawTurretBoltRow(
-    ctx,
-    ammoLeft + s * 0.02,
-    ammoTop + s * 0.03,
-    2,
-    s * 0.045,
-    s * 0.005,
-    "rgba(209, 198, 150, 0.6)",
-  );
-
+  drawTurretBoltRow(ctx, ammoLeft + s * 0.02, ammoTop + s * 0.03, 2, s * 0.045, s * 0.005, "rgba(209,198,150,0.6)");
   ctx.fillStyle = engineerAccent;
   ctx.globalAlpha = 0.75;
   ctx.fillRect(ammoLeft + s * 0.015, ammoTop + s * 0.08, s * 0.09, s * 0.02);
   ctx.globalAlpha = 1;
-
-  ctx.strokeStyle = "rgba(18, 18, 18, 0.75)";
+  ctx.strokeStyle = "rgba(18,18,18,0.75)";
   ctx.lineWidth = s * 0.006;
   for (let i = 0; i < 2; i++) {
-    const sx = ammoLeft + s * (0.02 + i * 0.03);
+    const lx = ammoLeft + s * (0.02 + i * 0.03);
     ctx.beginPath();
-    ctx.moveTo(sx, ammoTop + s * 0.098);
-    ctx.lineTo(sx + s * 0.02, ammoTop + s * 0.08);
+    ctx.moveTo(lx, ammoTop + s * 0.098);
+    ctx.lineTo(lx + s * 0.02, ammoTop + s * 0.08);
     ctx.stroke();
   }
-
   const ammoLedPulse = 0.4 + Math.sin(time * 4.2) * 0.15;
-  ctx.fillStyle = `rgba(110, 255, 160, ${ammoLedPulse})`;
+  ctx.fillStyle = `rgba(110,255,160,${ammoLedPulse})`;
   ctx.beginPath();
   ctx.arc(ammoLeft + s * 0.11, ammoTop + s * 0.022, s * 0.008, 0, Math.PI * 2);
   ctx.fill();
 
-  // ======== GUN ASSEMBLY (rotated + isometric squash) ========
-  const gunPivotX = ringX + shakeX;
-  const gunPivotY = ringY - s * 0.02 + idleHum + shakeY;
+  // ======== GUN ASSEMBLY (proper isometric 3D projection) ========
+  const gunPivotX = hubX + shakeX;
+  const gunPivotY = hubTopY - s * 0.015 + idleHum + shakeY;
 
-  ctx.save();
-  ctx.translate(gunPivotX, gunPivotY);
-  ctx.rotate(rotation);
-  ctx.scale(1, squashY);
+  const proj = (fwd: number, right: number, up: number = 0): Position =>
+    isoProject3D(gunPivotX, gunPivotY, cosR, sinR, fwd, right, up);
 
-  // Rear ammo feed housing
-  ctx.fillStyle = "#33392e";
-  ctx.beginPath();
-  ctx.roundRect(-s * 0.19, -s * 0.08, s * 0.12, s * 0.16, s * 0.02);
-  ctx.fill();
+  // ── Rear ammo feed housing ──
+  drawIsoBox(ctx, cosR, sinR, {
+    tnl: proj(-s * 0.2, -s * 0.055, s * 0.04),
+    tnr: proj(-s * 0.2, s * 0.055, s * 0.04),
+    tfl: proj(-s * 0.08, -s * 0.055, s * 0.04),
+    tfr: proj(-s * 0.08, s * 0.055, s * 0.04),
+    bnl: proj(-s * 0.2, -s * 0.055, -s * 0.04),
+    bnr: proj(-s * 0.2, s * 0.055, -s * 0.04),
+    bfl: proj(-s * 0.08, -s * 0.055, -s * 0.04),
+    bfr: proj(-s * 0.08, s * 0.055, -s * 0.04),
+  }, {
+    top: "#38423a", sideLight: "#2e3630", sideDark: "#252c28",
+    endLight: "#2a322c", endDark: "#283028",
+  });
 
-  // Main gun housing
-  ctx.fillStyle = "#505c4a";
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.07, -s * 0.14);
-  ctx.lineTo(s * 0.12, -s * 0.17);
-  ctx.lineTo(s * 0.2, 0);
-  ctx.lineTo(s * 0.12, s * 0.17);
-  ctx.lineTo(-s * 0.07, s * 0.14);
-  ctx.lineTo(-s * 0.12, 0);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = "#434d3e";
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.02, -s * 0.11);
-  ctx.lineTo(s * 0.1, -s * 0.12);
-  ctx.lineTo(s * 0.15, 0);
-  ctx.lineTo(s * 0.1, s * 0.12);
-  ctx.lineTo(-s * 0.02, s * 0.11);
-  ctx.closePath();
-  ctx.fill();
-
-  // Receiver body
-  const receiverGrad = ctx.createLinearGradient(-s * 0.08, 0, s * 0.18, 0);
-  receiverGrad.addColorStop(0, "#2a2e38");
-  receiverGrad.addColorStop(0.15, "#4a5060");
-  receiverGrad.addColorStop(0.45, "#6a7484");
-  receiverGrad.addColorStop(0.75, "#4a5060");
-  receiverGrad.addColorStop(1, "#2e3340");
-  ctx.fillStyle = receiverGrad;
-  ctx.beginPath();
-  ctx.roundRect(-s * 0.06, -s * 0.078, s * 0.26, s * 0.156, s * 0.028);
-  ctx.fill();
-
-  // Gun shield - thin integrated plate at barrel root
-  const shieldX = s * 0.11;
-  const shieldGrad = ctx.createLinearGradient(
-    shieldX,
-    -s * 0.18,
-    shieldX,
-    s * 0.18,
-  );
-  shieldGrad.addColorStop(0, "#505a68");
-  shieldGrad.addColorStop(0.3, "#667080");
-  shieldGrad.addColorStop(0.5, "#748296");
-  shieldGrad.addColorStop(0.7, "#667080");
-  shieldGrad.addColorStop(1, "#4c5664");
-  ctx.fillStyle = shieldGrad;
-  ctx.beginPath();
-  ctx.roundRect(shieldX - s * 0.015, -s * 0.17, s * 0.03, s * 0.34, s * 0.008);
-  ctx.fill();
-
-  ctx.strokeStyle = "rgba(160, 175, 195, 0.2)";
-  ctx.lineWidth = s * 0.005;
-  ctx.beginPath();
-  ctx.moveTo(shieldX + s * 0.015, -s * 0.16);
-  ctx.lineTo(shieldX + s * 0.015, s * 0.16);
-  ctx.stroke();
+  // ── Main gun housing (3D isometric box) ──
+  const hNear = -s * 0.06;
+  const hFar = s * 0.2;
+  const hHW = s * 0.078;
+  const hHH = s * 0.058;
+  drawIsoBox(ctx, cosR, sinR, {
+    tnl: proj(hNear, -hHW, hHH), tnr: proj(hNear, hHW, hHH),
+    tfl: proj(hFar, -hHW, hHH), tfr: proj(hFar, hHW, hHH),
+    bnl: proj(hNear, -hHW, -hHH), bnr: proj(hNear, hHW, -hHH),
+    bfl: proj(hFar, -hHW, -hHH), bfr: proj(hFar, hHW, -hHH),
+  }, {
+    top: "#6a7888", sideLight: "#4a5462", sideDark: "#3c4652",
+    endLight: "#42505c", endDark: "#3a4854",
+  });
 
   // Top rail
-  ctx.fillStyle = "#5c6675";
-  ctx.beginPath();
-  ctx.roundRect(-s * 0.02, -s * 0.1, s * 0.13, s * 0.04, s * 0.012);
-  ctx.fill();
-
-  drawTurretBoltRow(
+  fillQuad(
     ctx,
-    0,
-    -s * 0.08,
-    3,
-    s * 0.035,
-    s * 0.007,
-    "rgba(220, 220, 215, 0.38)",
+    proj(-s * 0.01, -s * 0.02, hHH + s * 0.012),
+    proj(-s * 0.01, s * 0.02, hHH + s * 0.012),
+    proj(s * 0.12, s * 0.02, hHH + s * 0.012),
+    proj(s * 0.12, -s * 0.02, hHH + s * 0.012),
+    "#5c6878", "rgba(0,0,0,0.1)", 0.4,
   );
-
-  // Optic sight
-  ctx.fillStyle = "#3a424c";
-  ctx.beginPath();
-  ctx.roundRect(s * 0.015, -s * 0.14, s * 0.1, s * 0.055, s * 0.014);
-  ctx.fill();
-
-  ctx.fillStyle = targetPos
-    ? `rgba(255, 96, 80, ${0.7 + Math.sin(time * 6.5) * 0.18})`
-    : `rgba(104, 189, 255, ${0.4 + Math.sin(time * 2.8) * 0.12})`;
-  ctx.beginPath();
-  ctx.ellipse(s * 0.065, -s * 0.113, s * 0.03, s * 0.018, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255,255,255,0.22)";
-  ctx.beginPath();
-  ctx.ellipse(s * 0.055, -s * 0.12, s * 0.01, s * 0.006, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Barrel with cooling jacket
-  const barrelStart = s * 0.13 - recoilOffset;
-  const barrelEnd = s * 0.44 - recoilOffset + barrelVibration;
-  const jacketLen = s * 0.2;
-
-  for (let ring = 0; ring < 7; ring++) {
-    const t = ring / 6;
-    const rx = barrelStart + jacketLen * t;
-    const radX = s * (0.046 - t * 0.006);
-    const radY = s * (0.026 - t * 0.003);
-
-    ctx.fillStyle = "#4e5664";
+  for (let i = 0; i < 3; i++) {
+    const bp = proj(s * (0.0 + i * 0.04), 0, hHH + s * 0.013);
+    ctx.fillStyle = "rgba(200,205,215,0.35)";
     ctx.beginPath();
-    ctx.ellipse(rx, 0, radX, radY, 0, 0, Math.PI * 2);
+    ctx.arc(bp.x, bp.y, s * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Engineer accent stripe on visible housing side
+  const stripeDir = cosR > 0 ? -1 : 1;
+  const stripeA = proj((hNear + hFar) * 0.5 - s * 0.04, stripeDir * (hHW + s * 0.001), 0);
+  const stripeB = proj((hNear + hFar) * 0.5 + s * 0.06, stripeDir * (hHW + s * 0.001), 0);
+  ctx.strokeStyle = engineerAccent;
+  ctx.globalAlpha = 0.6;
+  ctx.lineWidth = s * 0.01;
+  ctx.beginPath();
+  ctx.moveTo(stripeA.x, stripeA.y);
+  ctx.lineTo(stripeB.x, stripeB.y);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Feed rail (underneath barrel)
+  const feedA = proj(-s * 0.02, 0, -s * 0.06);
+  const feedB = proj(s * 0.16, 0, -s * 0.065);
+  ctx.strokeStyle = "#3e444e";
+  ctx.lineWidth = s * 0.016;
+  ctx.beginPath();
+  ctx.moveTo(feedA.x, feedA.y);
+  ctx.lineTo(feedB.x, feedB.y);
+  ctx.stroke();
+
+  // ── Gun shield (plate perpendicular to barrel) ──
+  {
+    const shFwd = s * 0.14;
+    const shHalfSpan = s * 0.13;
+    const shThick = s * 0.012;
+    const shVOff = s * 0.02;
+    const sc = {
+      tl: proj(shFwd - shThick, -shHalfSpan, shVOff + shHalfSpan * 0.5),
+      tr: proj(shFwd - shThick, shHalfSpan, shVOff + shHalfSpan * 0.5),
+      bl: proj(shFwd - shThick, -shHalfSpan, shVOff - shHalfSpan * 0.7),
+      br: proj(shFwd - shThick, shHalfSpan, shVOff - shHalfSpan * 0.7),
+    };
+    const shieldGrad = ctx.createLinearGradient(sc.tl.x, sc.tl.y, sc.br.x, sc.br.y);
+    shieldGrad.addColorStop(0, "#505a68");
+    shieldGrad.addColorStop(0.3, "#667080");
+    shieldGrad.addColorStop(0.5, "#748296");
+    shieldGrad.addColorStop(0.7, "#667080");
+    shieldGrad.addColorStop(1, "#4c5664");
+    ctx.fillStyle = shieldGrad;
+    ctx.beginPath();
+    ctx.moveTo(sc.tl.x, sc.tl.y);
+    ctx.lineTo(sc.tr.x, sc.tr.y);
+    ctx.lineTo(sc.br.x, sc.br.y);
+    ctx.lineTo(sc.bl.x, sc.bl.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(160,175,195,0.18)";
+    ctx.lineWidth = s * 0.004;
+    ctx.beginPath();
+    ctx.moveTo(sc.tl.x, sc.tl.y);
+    ctx.lineTo(sc.tr.x, sc.tr.y);
+    ctx.stroke();
+  }
+
+  // ── Barrel (3D cylindrical silhouette + cooling jacket) ──
+  {
+    const barrelStart = s * 0.15 - recoilOffset;
+    const barrelEnd = s * 0.46 - recoilOffset + barrelVibration;
+    const barrelR = s * 0.022;
+
+    // Compute barrel silhouette edges (topmost/bottommost screen points of cross-section)
+    const tTop = Math.atan2(-1, cosR * ISO_Y_RATIO);
+    const tBot = tTop + Math.PI;
+    const toCT = Math.cos(tTop);
+    const toST = Math.sin(tTop);
+    const boCT = Math.cos(tBot);
+    const boST = Math.sin(tBot);
+    const topOff = { x: barrelR * (-sinR * toCT), y: barrelR * (cosR * ISO_Y_RATIO * toCT - toST) };
+    const botOff = { x: barrelR * (-sinR * boCT), y: barrelR * (cosR * ISO_Y_RATIO * boCT - boST) };
+
+    const nearC = proj(barrelStart, 0, 0);
+    const farC = proj(barrelEnd, 0, 0);
+
+    const sil = {
+      nearTop: { x: nearC.x + topOff.x, y: nearC.y + topOff.y },
+      farTop: { x: farC.x + topOff.x, y: farC.y + topOff.y },
+      farBot: { x: farC.x + botOff.x, y: farC.y + botOff.y },
+      nearBot: { x: nearC.x + botOff.x, y: nearC.y + botOff.y },
+    };
+
+    // Barrel body with gradient (light on top, dark on bottom)
+    const barrelGrad = ctx.createLinearGradient(
+      sil.nearTop.x, sil.nearTop.y, sil.nearBot.x, sil.nearBot.y,
+    );
+    barrelGrad.addColorStop(0, "#58626e");
+    barrelGrad.addColorStop(0.3, "#3e4858");
+    barrelGrad.addColorStop(0.7, "#2a3040");
+    barrelGrad.addColorStop(1, "#1e242e");
+    ctx.fillStyle = barrelGrad;
+    ctx.beginPath();
+    ctx.moveTo(sil.nearTop.x, sil.nearTop.y);
+    ctx.lineTo(sil.farTop.x, sil.farTop.y);
+    ctx.lineTo(sil.farBot.x, sil.farBot.y);
+    ctx.lineTo(sil.nearBot.x, sil.nearBot.y);
+    ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#2a2f38";
+    // Top edge highlight
+    ctx.strokeStyle = "rgba(140,155,180,0.28)";
+    ctx.lineWidth = s * 0.004;
     ctx.beginPath();
-    ctx.ellipse(rx, 0, radX * 0.6, radY * 0.4, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(sil.nearTop.x, sil.nearTop.y);
+    ctx.lineTo(sil.farTop.x, sil.farTop.y);
+    ctx.stroke();
 
-    if (heatGlow > 0.15) {
-      ctx.fillStyle = `rgba(255, 160, 70, ${heatGlow * 0.14 * (1 - t * 0.6)})`;
+    // Cooling jacket rings (properly oriented iso ellipses)
+    const jacketLen = s * 0.22;
+    for (let ring = 0; ring < 7; ring++) {
+      const t = ring / 6;
+      const ringFwd = barrelStart + jacketLen * t;
+      const ringCenter = proj(ringFwd, 0, 0);
+      const ringR = s * (0.04 - t * 0.005);
+
+      drawIsoBarrelRing(ctx, ringCenter.x, ringCenter.y, ringR, sinR, cosR, "#4e5868");
+      drawIsoBarrelRing(ctx, ringCenter.x, ringCenter.y, ringR * 0.55, sinR, cosR, "#2a3040");
+
+      if (heatGlow > 0.15) {
+        drawIsoBarrelRing(
+          ctx, ringCenter.x, ringCenter.y, ringR * 0.75, sinR, cosR,
+          `rgba(255,160,70,${heatGlow * 0.14 * (1 - t * 0.6)})`,
+        );
+      }
+    }
+
+    // Muzzle brake (3D box)
+    drawIsoBox(ctx, cosR, sinR, {
+      tnl: proj(barrelEnd - s * 0.004, -s * 0.03, s * 0.03),
+      tnr: proj(barrelEnd - s * 0.004, s * 0.03, s * 0.03),
+      tfl: proj(barrelEnd + s * 0.06, -s * 0.03, s * 0.03),
+      tfr: proj(barrelEnd + s * 0.06, s * 0.03, s * 0.03),
+      bnl: proj(barrelEnd - s * 0.004, -s * 0.03, -s * 0.03),
+      bnr: proj(barrelEnd - s * 0.004, s * 0.03, -s * 0.03),
+      bfl: proj(barrelEnd + s * 0.06, -s * 0.03, -s * 0.03),
+      bfr: proj(barrelEnd + s * 0.06, s * 0.03, -s * 0.03),
+    }, {
+      top: "#505c6c", sideLight: "#404a56", sideDark: "#363e4a",
+      endLight: "#3e4854", endDark: "#3a444e",
+    });
+
+    // Muzzle slots
+    ctx.strokeStyle = "#1a1e26";
+    ctx.lineWidth = s * 0.004;
+    for (let slot = 0; slot < 3; slot++) {
+      const slotFwd = barrelEnd + s * (0.01 + slot * 0.016);
+      const slotT = proj(slotFwd, 0, s * 0.026);
+      const slotTM = proj(slotFwd, 0, s * 0.01);
+      const slotB = proj(slotFwd, 0, -s * 0.026);
+      const slotBM = proj(slotFwd, 0, -s * 0.01);
       ctx.beginPath();
-      ctx.ellipse(rx, 0, radX * 0.8, radY * 0.7, 0, 0, Math.PI * 2);
+      ctx.moveTo(slotT.x, slotT.y);
+      ctx.lineTo(slotTM.x, slotTM.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(slotB.x, slotB.y);
+      ctx.lineTo(slotBM.x, slotBM.y);
+      ctx.stroke();
+    }
+
+    // Barrel bore
+    const boreCenter = proj(barrelEnd + s * 0.058, 0, 0);
+    drawIsoBarrelRing(ctx, boreCenter.x, boreCenter.y, s * 0.018, sinR, cosR, "#0e1218");
+  }
+
+  // ── Optic sight (on top of receiver) ──
+  {
+    const opBottom = hHH;
+    const opH = s * 0.04;
+    drawIsoBox(ctx, cosR, sinR, {
+      tnl: proj(s * 0.02, -s * 0.02, opBottom + opH),
+      tnr: proj(s * 0.02, s * 0.02, opBottom + opH),
+      tfl: proj(s * 0.11, -s * 0.02, opBottom + opH),
+      tfr: proj(s * 0.11, s * 0.02, opBottom + opH),
+      bnl: proj(s * 0.02, -s * 0.02, opBottom),
+      bnr: proj(s * 0.02, s * 0.02, opBottom),
+      bfl: proj(s * 0.11, -s * 0.02, opBottom),
+      bfr: proj(s * 0.11, s * 0.02, opBottom),
+    }, {
+      top: "#4a5564", sideLight: "#3a424e", sideDark: "#323a44",
+      endLight: "#3e4854", endDark: "#364048",
+    }, "rgba(0,0,0,0.12)", 0.4);
+
+    const lensCenter = proj(s * 0.065, 0, opBottom + opH * 0.5);
+    const lensColor = targetPos
+      ? `rgba(255,96,80,${0.7 + Math.sin(time * 6.5) * 0.18})`
+      : `rgba(104,189,255,${0.4 + Math.sin(time * 2.8) * 0.12})`;
+    ctx.fillStyle = lensColor;
+    ctx.beginPath();
+    ctx.arc(lensCenter.x, lensCenter.y, s * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.22)";
+    ctx.beginPath();
+    ctx.arc(lensCenter.x - s * 0.004, lensCenter.y - s * 0.004, s * 0.005, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // ── Rear sight crosshair ──
+  {
+    const sightCenter = proj(-s * 0.14, 0, s * 0.1);
+    ctx.strokeStyle = "rgba(206,195,145,0.3)";
+    ctx.lineWidth = s * 0.007;
+    ctx.beginPath();
+    ctx.arc(sightCenter.x, sightCenter.y, s * 0.03, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(sightCenter.x, sightCenter.y - s * 0.03);
+    ctx.lineTo(sightCenter.x, sightCenter.y + s * 0.03);
+    ctx.moveTo(sightCenter.x - s * 0.03, sightCenter.y);
+    ctx.lineTo(sightCenter.x + s * 0.03, sightCenter.y);
+    ctx.stroke();
+  }
+
+  // ── AMMO BELT ──
+  {
+    const beltStart = { x: ammoLeft + s * 0.12, y: ammoTop - s * 0.008 };
+    const beltControl = {
+      x: x - s * 0.14 - sinR * s * 0.02,
+      y: hubTopY - s * 0.06 - Math.abs(cosR) * s * 0.015,
+    };
+    const beltFeed = proj(s * 0.02, -s * 0.04, -s * 0.03);
+
+    const beltWave = isAttacking ? time * 20 : time * 3;
+    for (let i = 0; i < 6; i++) {
+      const t = i / 5;
+      const nextT = Math.min(1, (i + 1) / 5);
+      const wobble = Math.sin(beltWave + i * 0.9) * s * 0.006;
+      const nextWobble = Math.sin(beltWave + (i + 1) * 0.9) * s * 0.006;
+
+      const linkX =
+        (1 - t) * (1 - t) * beltStart.x +
+        2 * (1 - t) * t * beltControl.x +
+        t * t * beltFeed.x;
+      const linkY =
+        (1 - t) * (1 - t) * beltStart.y +
+        2 * (1 - t) * t * beltControl.y +
+        t * t * beltFeed.y + wobble;
+      const nextLinkX =
+        (1 - nextT) * (1 - nextT) * beltStart.x +
+        2 * (1 - nextT) * nextT * beltControl.x +
+        nextT * nextT * beltFeed.x;
+      const nextLinkY =
+        (1 - nextT) * (1 - nextT) * beltStart.y +
+        2 * (1 - nextT) * nextT * beltControl.y +
+        nextT * nextT * beltFeed.y + nextWobble;
+
+      ctx.strokeStyle = "#5b4d3c";
+      ctx.lineWidth = s * 0.01;
+      ctx.beginPath();
+      ctx.moveTo(linkX, linkY);
+      ctx.lineTo(nextLinkX, nextLinkY);
+      ctx.stroke();
+
+      const bulletAngle = Math.atan2(nextLinkY - linkY, nextLinkX - linkX);
+      ctx.fillStyle = "#caa24d";
+      ctx.beginPath();
+      ctx.ellipse(linkX, linkY, s * 0.015, s * 0.007, bulletAngle, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#e5d0a7";
+      ctx.beginPath();
+      ctx.ellipse(
+        linkX + Math.cos(bulletAngle) * s * 0.009,
+        linkY + Math.sin(bulletAngle) * s * 0.009,
+        s * 0.006, s * 0.003, bulletAngle, 0, Math.PI * 2,
+      );
       ctx.fill();
     }
   }
 
-  // Inner barrel tube
-  ctx.fillStyle = "#1e222a";
-  ctx.beginPath();
-  ctx.roundRect(
-    barrelStart - s * 0.006,
-    -s * 0.016,
-    barrelEnd - barrelStart,
-    s * 0.032,
-    s * 0.008,
-  );
-  ctx.fill();
-
-  // Feed rail (underneath)
-  ctx.strokeStyle = "#3e444e";
-  ctx.lineWidth = s * 0.018;
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.02, s * 0.07);
-  ctx.lineTo(s * 0.16, s * 0.08);
-  ctx.stroke();
-
-  // Muzzle brake
-  ctx.fillStyle = "#3a424c";
-  ctx.beginPath();
-  ctx.roundRect(barrelEnd - s * 0.004, -s * 0.032, s * 0.06, s * 0.064, s * 0.012);
-  ctx.fill();
-
-  ctx.strokeStyle = "#1a1e24";
-  ctx.lineWidth = s * 0.004;
-  for (let slot = 0; slot < 3; slot++) {
-    const slotX = barrelEnd + s * (0.008 + slot * 0.015);
-    ctx.beginPath();
-    ctx.moveTo(slotX, -s * 0.026);
-    ctx.lineTo(slotX, -s * 0.012);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(slotX, s * 0.012);
-    ctx.lineTo(slotX, s * 0.026);
-    ctx.stroke();
-  }
-
-  // Barrel bore
-  ctx.fillStyle = "#0e1218";
-  ctx.beginPath();
-  ctx.ellipse(
-    barrelEnd + s * 0.054,
-    0,
-    s * 0.014 * foreshorten + s * 0.005,
-    s * 0.018,
-    0,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fill();
-
-  // Rear sight crosshair
-  ctx.strokeStyle = "rgba(206, 195, 145, 0.35)";
-  ctx.lineWidth = s * 0.008;
-  ctx.beginPath();
-  ctx.arc(-s * 0.14, -s * 0.11, s * 0.035, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.14, -s * 0.145);
-  ctx.lineTo(-s * 0.14, -s * 0.075);
-  ctx.moveTo(-s * 0.175, -s * 0.11);
-  ctx.lineTo(-s * 0.105, -s * 0.11);
-  ctx.stroke();
-
-  ctx.restore();
-
-  // ── AMMO BELT ──
-  const beltStart = {
-    x: ammoLeft + s * 0.12,
-    y: ammoTop - s * 0.008,
-  };
-  const beltControl = {
-    x: x - s * 0.14 - sinR * s * 0.03,
-    y: platformTop - s * 0.14 - Math.abs(cosR) * s * 0.02,
-  };
-  const beltFeed = projectTurretLocalPoint(
-    gunPivotX,
-    gunPivotY,
-    rotation,
-    squashY,
-    s * 0.02,
-    -s * 0.08,
-  );
-
-  const beltWave = isAttacking ? time * 20 : time * 3;
-  for (let i = 0; i < 6; i++) {
-    const t = i / 5;
-    const nextT = Math.min(1, (i + 1) / 5);
-    const wobble = Math.sin(beltWave + i * 0.9) * s * 0.006;
-    const nextWobble = Math.sin(beltWave + (i + 1) * 0.9) * s * 0.006;
-
-    const linkX =
-      (1 - t) * (1 - t) * beltStart.x +
-      2 * (1 - t) * t * beltControl.x +
-      t * t * beltFeed.x;
-    const linkY =
-      (1 - t) * (1 - t) * beltStart.y +
-      2 * (1 - t) * t * beltControl.y +
-      t * t * beltFeed.y +
-      wobble;
-    const nextLinkX =
-      (1 - nextT) * (1 - nextT) * beltStart.x +
-      2 * (1 - nextT) * nextT * beltControl.x +
-      nextT * nextT * beltFeed.x;
-    const nextLinkY =
-      (1 - nextT) * (1 - nextT) * beltStart.y +
-      2 * (1 - nextT) * nextT * beltControl.y +
-      nextT * nextT * beltFeed.y +
-      nextWobble;
-
-    ctx.strokeStyle = "#5b4d3c";
-    ctx.lineWidth = s * 0.01;
-    ctx.beginPath();
-    ctx.moveTo(linkX, linkY);
-    ctx.lineTo(nextLinkX, nextLinkY);
-    ctx.stroke();
-
-    const bulletAngle = Math.atan2(nextLinkY - linkY, nextLinkX - linkX);
-    ctx.fillStyle = "#caa24d";
-    ctx.beginPath();
-    ctx.ellipse(
-      linkX,
-      linkY,
-      s * 0.015,
-      s * 0.007,
-      bulletAngle,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-    ctx.fillStyle = "#e5d0a7";
-    ctx.beginPath();
-    ctx.ellipse(
-      linkX + Math.cos(bulletAngle) * s * 0.009,
-      linkY + Math.sin(bulletAngle) * s * 0.009,
-      s * 0.006,
-      s * 0.003,
-      bulletAngle,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
-
   // ======== ATTACK EFFECTS ========
-  const muzzleTip = projectTurretLocalPoint(
-    gunPivotX,
-    gunPivotY,
-    rotation,
-    squashY,
-    s * 0.52 - recoilOffset + barrelVibration,
-    0,
-  );
-  const ejectPort = projectTurretLocalPoint(
-    gunPivotX,
-    gunPivotY,
-    rotation,
-    squashY,
-    s * 0.02,
-    s * 0.06,
-  );
-  const opticLens = projectTurretLocalPoint(
-    gunPivotX,
-    gunPivotY,
-    rotation,
-    squashY,
-    s * 0.065,
-    -s * 0.113,
-  );
+  const muzzleTip = proj(s * 0.54 - recoilOffset + barrelVibration, 0, 0);
+  const ejectPort = proj(s * 0.02, s * 0.03, -s * 0.04);
+  const opticLens = proj(s * 0.065, 0, s * 0.09);
 
   if (targetPos) {
     const lockPulse = 0.14 + Math.sin(time * 8) * 0.04;
-    ctx.strokeStyle = `rgba(255, 175, 80, ${lockPulse})`;
+    ctx.strokeStyle = `rgba(255,175,80,${lockPulse})`;
     ctx.lineWidth = 1.2 * zoom;
     ctx.setLineDash([4 * zoom, 3 * zoom]);
     ctx.beginPath();
@@ -702,42 +865,28 @@ export function drawTurretTroop(
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = `rgba(255, 110, 80, ${0.5 + Math.sin(time * 7) * 0.15})`;
+    ctx.fillStyle = `rgba(255,110,80,${0.5 + Math.sin(time * 7) * 0.15})`;
     ctx.beginPath();
     ctx.arc(targetPos.x, targetPos.y, s * 0.012, 0, Math.PI * 2);
     ctx.fill();
   }
 
   if (isAttacking && inBurst) {
-    const flashIntensity =
-      0.62 + Math.sin(time * fireRate * Math.PI * 2) * 0.38;
+    const flashIntensity = 0.62 + Math.sin(time * fireRate * Math.PI * 2) * 0.38;
     const flashSize = s * 0.1 * flashIntensity;
     const flashX = muzzleTip.x + cosR * s * 0.012;
-    const flashY = muzzleTip.y + sinR * s * 0.012;
-    const flashGrad = ctx.createRadialGradient(
-      flashX,
-      flashY,
-      0,
-      flashX,
-      flashY,
-      flashSize,
-    );
+    const flashY = muzzleTip.y + sinR * s * 0.006;
+    const flashGrad = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize);
     flashGrad.addColorStop(0, `rgba(255,255,255,${flashIntensity})`);
-    flashGrad.addColorStop(
-      0.2,
-      `rgba(255,236,174,${flashIntensity * 0.88})`,
-    );
-    flashGrad.addColorStop(
-      0.5,
-      `rgba(255,170,78,${flashIntensity * 0.52})`,
-    );
+    flashGrad.addColorStop(0.2, `rgba(255,236,174,${flashIntensity * 0.88})`);
+    flashGrad.addColorStop(0.5, `rgba(255,170,78,${flashIntensity * 0.52})`);
     flashGrad.addColorStop(1, "rgba(255,80,20,0)");
     ctx.fillStyle = flashGrad;
     ctx.beginPath();
     ctx.arc(flashX, flashY, flashSize, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = `rgba(255, 205, 120, ${flashIntensity * 0.4})`;
+    ctx.fillStyle = `rgba(255,205,120,${flashIntensity * 0.4})`;
     ctx.beginPath();
     ctx.moveTo(flashX, flashY);
     ctx.lineTo(
@@ -763,12 +912,9 @@ export function drawTurretTroop(
       const tailY = headY - sinR * s * 0.05;
       const tracerAlpha = 1 - tracerPhase * 0.75;
       const tracerGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
-      tracerGrad.addColorStop(0, "rgba(255, 210, 90, 0)");
-      tracerGrad.addColorStop(
-        0.5,
-        `rgba(255, 218, 126, ${tracerAlpha * 0.45})`,
-      );
-      tracerGrad.addColorStop(1, `rgba(255, 245, 210, ${tracerAlpha})`);
+      tracerGrad.addColorStop(0, "rgba(255,210,90,0)");
+      tracerGrad.addColorStop(0.5, `rgba(255,218,126,${tracerAlpha * 0.45})`);
+      tracerGrad.addColorStop(1, `rgba(255,245,210,${tracerAlpha})`);
       ctx.strokeStyle = tracerGrad;
       ctx.lineWidth = 2.0 * zoom;
       ctx.beginPath();
@@ -797,15 +943,7 @@ export function drawTurretTroop(
 
       ctx.fillStyle = "#d0a54f";
       ctx.beginPath();
-      ctx.ellipse(
-        casingX,
-        casingY,
-        s * 0.012,
-        s * 0.005,
-        spin,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(casingX, casingY, s * 0.012, s * 0.005, spin, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -822,7 +960,7 @@ export function drawTurretTroop(
         sinR * s * (0.015 + smokePhase * 0.03) -
         smokePhase * s * 0.08;
       const smokeSize = s * (0.018 + smokePhase * 0.025);
-      ctx.fillStyle = `rgba(132, 136, 144, ${(1 - smokePhase) * (0.15 + heatGlow * 0.1)})`;
+      ctx.fillStyle = `rgba(132,136,144,${(1 - smokePhase) * (0.15 + heatGlow * 0.1)})`;
       ctx.beginPath();
       ctx.arc(smokeX, smokeY, smokeSize, 0, Math.PI * 2);
       ctx.fill();
@@ -832,39 +970,36 @@ export function drawTurretTroop(
   // ── STATUS INDICATORS ──
   if (heatGlow > 0.35) {
     const heatPulse = Math.sin(time * 14) > 0 ? 1 : 0.35;
-    ctx.fillStyle = `rgba(255, 92, 48, ${heatPulse})`;
+    ctx.fillStyle = `rgba(255,92,48,${heatPulse})`;
+    const heatPos = proj(s * 0.05, 0, s * 0.08);
     ctx.beginPath();
-    ctx.arc(
-      gunPivotX + s * 0.05,
-      gunPivotY - s * 0.08,
-      s * 0.01,
-      0,
-      Math.PI * 2,
-    );
+    ctx.arc(heatPos.x, heatPos.y, s * 0.01, 0, Math.PI * 2);
     ctx.fill();
   }
 
   // ── ENGINEER EMBLEM ──
-  ctx.strokeStyle = engineerAccent;
-  ctx.lineWidth = 1.2 * zoom;
-  const emblemX = x + s * 0.04;
-  const emblemY = platformTop + s * 0.08;
-  ctx.beginPath();
-  ctx.arc(emblemX, emblemY, s * 0.025, 0, Math.PI * 2);
-  ctx.stroke();
-  for (let i = 0; i < 6; i++) {
-    const toothAngle =
-      (i / 6) * Math.PI * 2 + time * (isAttacking ? 1.7 : 0.35);
+  {
+    const emblemX = x + s * 0.04;
+    const emblemY = hubTopY + s * 0.04;
+    ctx.strokeStyle = engineerAccent;
+    ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(
-      emblemX + Math.cos(toothAngle) * s * 0.025,
-      emblemY + Math.sin(toothAngle) * s * 0.025,
-    );
-    ctx.lineTo(
-      emblemX + Math.cos(toothAngle) * s * 0.038,
-      emblemY + Math.sin(toothAngle) * s * 0.038,
-    );
+    ctx.arc(emblemX, emblemY, s * 0.025, 0, Math.PI * 2);
     ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      const toothAngle =
+        (i / 6) * Math.PI * 2 + time * (isAttacking ? 1.7 : 0.35);
+      ctx.beginPath();
+      ctx.moveTo(
+        emblemX + Math.cos(toothAngle) * s * 0.025,
+        emblemY + Math.sin(toothAngle) * s * 0.025,
+      );
+      ctx.lineTo(
+        emblemX + Math.cos(toothAngle) * s * 0.038,
+        emblemY + Math.sin(toothAngle) * s * 0.038,
+      );
+      ctx.stroke();
+    }
   }
 
   ctx.restore();

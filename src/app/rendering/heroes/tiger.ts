@@ -6,17 +6,19 @@ export function drawTigerHero(
   color: string,
   time: number,
   zoom: number,
-  attackPhase: number = 0
+  attackPhase: number = 0,
 ) {
   // ARMORED WAR TIGER - Colossal beast warrior with devastating claw attacks
   const breathe = Math.sin(time * 1.8) * 3; // More pronounced breathing
   const idleSway = Math.sin(time * 1.2) * 1.5; // Subtle idle body sway
   const isAttacking = attackPhase > 0;
   const clawSwipe = isAttacking ? Math.sin(attackPhase * Math.PI * 2) * 1.8 : 0;
-  const bodyLean = isAttacking ? Math.sin(attackPhase * Math.PI) * 0.2 : Math.sin(time * 1.5) * 0.03; // Idle lean
+  const bodyLean = isAttacking
+    ? Math.sin(attackPhase * Math.PI) * 0.2
+    : Math.sin(time * 1.5) * 0.03; // Idle lean
   const attackIntensity = attackPhase; // Linear decay from 1 (attack start) to 0
   const gemPulse = Math.sin(time * 2.5) * 0.3 + 0.7;
-  
+
   // Arm raise animation - arms swing UP first, then DOWN during attack
   // Phase 0-0.4: Arms raise up
   // Phase 0.4-1.0: Arms swing down powerfully
@@ -27,7 +29,11 @@ export function drawTigerHero(
       armRaise = Math.sin((attackPhase / 0.4) * Math.PI * 0.5) * size * 0.35;
     } else {
       // Swing down - arms come down fast
-      armRaise = Math.cos(((attackPhase - 0.4) / 0.6) * Math.PI * 0.5) * size * 0.35 * (1 - (attackPhase - 0.4) / 0.6);
+      armRaise =
+        Math.cos(((attackPhase - 0.4) / 0.6) * Math.PI * 0.5) *
+        size *
+        0.35 *
+        (1 - (attackPhase - 0.4) / 0.6);
     }
   }
 
@@ -37,7 +43,7 @@ export function drawTigerHero(
     const attackGlow = attackIntensity * 0.7;
     ctx.shadowColor = "#ff6600";
     ctx.shadowBlur = 25 * zoom * attackIntensity;
-    
+
     // Pulsing attack ring
     for (let ring = 0; ring < 3; ring++) {
       const ringSize = size * (0.85 + ring * 0.15 + attackIntensity * 0.1);
@@ -57,16 +63,37 @@ export function drawTigerHero(
   for (let auraLayer = 0; auraLayer < 4; auraLayer++) {
     const layerOffset = auraLayer * 0.1;
     const auraGrad = ctx.createRadialGradient(
-      x, y, size * (0.1 + layerOffset),
-      x, y, size * (1.0 + layerOffset * 0.3)
+      x,
+      y,
+      size * (0.1 + layerOffset),
+      x,
+      y,
+      size * (1.0 + layerOffset * 0.3),
     );
-    auraGrad.addColorStop(0, `rgba(255, 100, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.08)})`);
-    auraGrad.addColorStop(0.4, `rgba(255, 60, 0, ${auraIntensity * auraPulse * (0.25 - auraLayer * 0.05)})`);
-    auraGrad.addColorStop(0.7, `rgba(200, 50, 0, ${auraIntensity * auraPulse * (0.12 - auraLayer * 0.02)})`);
+    auraGrad.addColorStop(
+      0,
+      `rgba(255, 100, 0, ${auraIntensity * auraPulse * (0.4 - auraLayer * 0.08)})`,
+    );
+    auraGrad.addColorStop(
+      0.4,
+      `rgba(255, 60, 0, ${auraIntensity * auraPulse * (0.25 - auraLayer * 0.05)})`,
+    );
+    auraGrad.addColorStop(
+      0.7,
+      `rgba(200, 50, 0, ${auraIntensity * auraPulse * (0.12 - auraLayer * 0.02)})`,
+    );
     auraGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
     ctx.fillStyle = auraGrad;
     ctx.beginPath();
-    ctx.ellipse(x, y, size * (0.95 + layerOffset * 0.2), size * (0.75 + layerOffset * 0.15), 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      x,
+      y,
+      size * (0.95 + layerOffset * 0.2),
+      size * (0.75 + layerOffset * 0.15),
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -75,9 +102,15 @@ export function drawTigerHero(
     const pAngle = (time * 1.2 + p * Math.PI * 0.143) % (Math.PI * 2);
     const pDist = size * 0.75 + Math.sin(time * 2 + p * 0.5) * size * 0.1;
     const px = x + Math.cos(pAngle) * pDist;
-    const py = y + Math.sin(pAngle) * pDist * 0.6 - Math.abs(Math.sin(time * 4 + p)) * size * 0.1;
+    const py =
+      y +
+      Math.sin(pAngle) * pDist * 0.6 -
+      Math.abs(Math.sin(time * 4 + p)) * size * 0.1;
     const pAlpha = 0.6 + Math.sin(time * 4 + p * 0.4) * 0.3;
-    ctx.fillStyle = p % 3 === 0 ? `rgba(255, 200, 50, ${pAlpha})` : `rgba(255, 100, 0, ${pAlpha})`;
+    ctx.fillStyle =
+      p % 3 === 0
+        ? `rgba(255, 200, 50, ${pAlpha})`
+        : `rgba(255, 100, 0, ${pAlpha})`;
     ctx.beginPath();
     ctx.moveTo(px, py + size * 0.02);
     ctx.quadraticCurveTo(px - size * 0.01, py, px, py - size * 0.025);
@@ -86,7 +119,14 @@ export function drawTigerHero(
   }
 
   // === DEEP SHADOW ===
-  const shadowGrad = ctx.createRadialGradient(x, y + size * 0.6, 0, x, y + size * 0.6, size * 0.65);
+  const shadowGrad = ctx.createRadialGradient(
+    x,
+    y + size * 0.6,
+    0,
+    x,
+    y + size * 0.6,
+    size * 0.65,
+  );
   shadowGrad.addColorStop(0, "rgba(0, 0, 0, 0.6)");
   shadowGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.35)");
   shadowGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
@@ -106,8 +146,15 @@ export function drawTigerHero(
     ctx.shadowColor = "#ff6600";
     ctx.shadowBlur = 15 * zoom * attackIntensity;
   }
-  
-  const bodyGrad = ctx.createRadialGradient(x, y + size * 0.05 + breathe * 0.3, 0, x, y + size * 0.05 + breathe * 0.3, size * 0.7);
+
+  const bodyGrad = ctx.createRadialGradient(
+    x,
+    y + size * 0.05 + breathe * 0.3,
+    0,
+    x,
+    y + size * 0.05 + breathe * 0.3,
+    size * 0.7,
+  );
   bodyGrad.addColorStop(0, isAttacking ? "#ffbb55" : "#ffaa44");
   bodyGrad.addColorStop(0.3, isAttacking ? "#ff9933" : "#ff8822");
   bodyGrad.addColorStop(0.6, "#dd5500");
@@ -123,13 +170,18 @@ export function drawTigerHero(
     size * 0.68 + breathe * 0.025,
     0,
     0,
-    Math.PI * 2
+    Math.PI * 2,
   );
   ctx.fill();
   ctx.shadowBlur = 0;
 
   // === HEAVY WAR ARMOR - CHEST PLATE ===
-  const chestArmorGrad = ctx.createLinearGradient(x - size * 0.4, y - size * 0.3, x + size * 0.4, y + size * 0.3);
+  const chestArmorGrad = ctx.createLinearGradient(
+    x - size * 0.4,
+    y - size * 0.3,
+    x + size * 0.4,
+    y + size * 0.3,
+  );
   chestArmorGrad.addColorStop(0, "#2a2218");
   chestArmorGrad.addColorStop(0.2, "#4a3a28");
   chestArmorGrad.addColorStop(0.4, "#5a4a38");
@@ -154,7 +206,12 @@ export function drawTigerHero(
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.36, y - size * 0.33);
-  ctx.quadraticCurveTo(x - size * 0.43, y - size * 0.05, x - size * 0.33, y + size * 0.28);
+  ctx.quadraticCurveTo(
+    x - size * 0.43,
+    y - size * 0.05,
+    x - size * 0.33,
+    y + size * 0.28,
+  );
   ctx.stroke();
 
   // Armor border
@@ -231,7 +288,13 @@ export function drawTigerHero(
       ctx.fill();
       ctx.fillStyle = "#f0c040";
       ctx.beginPath();
-      ctx.arc(studX - size * 0.006, studY - size * 0.006, size * 0.01, 0, Math.PI * 2);
+      ctx.arc(
+        studX - size * 0.006,
+        studY - size * 0.006,
+        size * 0.01,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
@@ -246,24 +309,36 @@ export function drawTigerHero(
     // Left side stripes - longer and more visible
     ctx.beginPath();
     ctx.moveTo(x - size * 0.58, stripeY);
-    ctx.quadraticCurveTo(x - size * 0.5, stripeY - size * 0.06, x - size * 0.4, stripeY + size * 0.01);
+    ctx.quadraticCurveTo(
+      x - size * 0.5,
+      stripeY - size * 0.06,
+      x - size * 0.4,
+      stripeY + size * 0.01,
+    );
     ctx.stroke();
     // Right side stripes
     ctx.beginPath();
     ctx.moveTo(x + size * 0.58, stripeY);
-    ctx.quadraticCurveTo(x + size * 0.5, stripeY - size * 0.06, x + size * 0.4, stripeY + size * 0.01);
+    ctx.quadraticCurveTo(
+      x + size * 0.5,
+      stripeY - size * 0.06,
+      x + size * 0.4,
+      stripeY + size * 0.01,
+    );
     ctx.stroke();
   }
 
   // === COLOSSAL ARMORED SHOULDERS/PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
-    const shoulderX = x + side * size * 0.52 + (isAttacking ? 0 : idleSway * 0.2);
-    const shoulderY = y - size * 0.15 - armRaise + (isAttacking ? 0 : breathe * 0.15); // Arms raise up during attack
+    const shoulderX =
+      x + side * size * 0.52 + (isAttacking ? 0 : idleSway * 0.2);
+    const shoulderY =
+      y - size * 0.15 - armRaise + (isAttacking ? 0 : breathe * 0.15); // Arms raise up during attack
     const armOffset = isAttacking ? clawSwipe * size * 0.15 * side : 0;
-    
+
     // Arm rotation during attack - arms rotate outward when raised
-    const armRotation = isAttacking 
-      ? side * (-0.25 - clawSwipe * 0.25 - (armRaise / size) * 0.5) 
+    const armRotation = isAttacking
+      ? side * (-0.25 - clawSwipe * 0.25 - (armRaise / size) * 0.5)
       : side * (-0.25 + Math.sin(time * 1.5) * 0.05);
 
     // Attack glow on arms
@@ -274,8 +349,12 @@ export function drawTigerHero(
 
     // Massive arm/shoulder muscle
     const armGrad = ctx.createRadialGradient(
-      shoulderX + armOffset, shoulderY, 0,
-      shoulderX + armOffset, shoulderY, size * 0.35
+      shoulderX + armOffset,
+      shoulderY,
+      0,
+      shoulderX + armOffset,
+      shoulderY,
+      size * 0.35,
     );
     armGrad.addColorStop(0, isAttacking ? "#ffaa55" : "#ff9944");
     armGrad.addColorStop(0.4, isAttacking ? "#ff8833" : "#ff7722");
@@ -290,7 +369,7 @@ export function drawTigerHero(
       size * 0.35,
       armRotation,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -301,10 +380,15 @@ export function drawTigerHero(
     for (let stripe = 0; stripe < 5; stripe++) {
       const stripeOffset = -size * 0.22 + stripe * size * 0.1;
       ctx.beginPath();
-      ctx.moveTo(shoulderX + armOffset + side * size * 0.22, shoulderY + stripeOffset);
+      ctx.moveTo(
+        shoulderX + armOffset + side * size * 0.22,
+        shoulderY + stripeOffset,
+      );
       ctx.quadraticCurveTo(
-        shoulderX + armOffset + side * size * 0.14, shoulderY + stripeOffset - size * 0.035,
-        shoulderX + armOffset + side * size * 0.06, shoulderY + stripeOffset + size * 0.01
+        shoulderX + armOffset + side * size * 0.14,
+        shoulderY + stripeOffset - size * 0.035,
+        shoulderX + armOffset + side * size * 0.06,
+        shoulderY + stripeOffset + size * 0.01,
       );
       ctx.stroke();
     }
@@ -315,8 +399,12 @@ export function drawTigerHero(
       ctx.shadowBlur = 10 * zoom * attackIntensity;
     }
     const pauldronGrad = ctx.createRadialGradient(
-      shoulderX + armOffset, shoulderY - size * 0.1, 0,
-      shoulderX + armOffset, shoulderY - size * 0.1, size * 0.25
+      shoulderX + armOffset,
+      shoulderY - size * 0.1,
+      0,
+      shoulderX + armOffset,
+      shoulderY - size * 0.1,
+      size * 0.25,
     );
     pauldronGrad.addColorStop(0, isAttacking ? "#7a6a58" : "#6a5a48");
     pauldronGrad.addColorStop(0.4, "#5a4a38");
@@ -331,7 +419,7 @@ export function drawTigerHero(
       size * 0.18,
       armRotation * 0.5,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.fill();
     ctx.shadowBlur = 0;
@@ -339,10 +427,16 @@ export function drawTigerHero(
     // Pauldron spikes
     for (let spike = -1; spike <= 1; spike++) {
       const spikeAngle = armRotation * 0.5 + spike * 0.4;
-      const spikeX = shoulderX + armOffset + Math.cos(spikeAngle - Math.PI * 0.5) * size * 0.15;
-      const spikeY = shoulderY - size * 0.08 + Math.sin(spikeAngle - Math.PI * 0.5) * size * 0.1;
+      const spikeX =
+        shoulderX +
+        armOffset +
+        Math.cos(spikeAngle - Math.PI * 0.5) * size * 0.15;
+      const spikeY =
+        shoulderY -
+        size * 0.08 +
+        Math.sin(spikeAngle - Math.PI * 0.5) * size * 0.1;
       const spikeLen = spike === 0 ? size * 0.2 : size * 0.14;
-      
+
       ctx.fillStyle = "#3a3028";
       ctx.beginPath();
       ctx.moveTo(spikeX - size * 0.025, spikeY);
@@ -355,12 +449,17 @@ export function drawTigerHero(
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(spikeX - size * 0.015, spikeY);
-      ctx.lineTo(spikeX + side * spikeLen * 0.25, spikeY - spikeLen + size * 0.02);
+      ctx.lineTo(
+        spikeX + side * spikeLen * 0.25,
+        spikeY - spikeLen + size * 0.02,
+      );
       ctx.stroke();
     }
 
     // Gold trim on pauldron - glows during attack
-    ctx.strokeStyle = isAttacking ? `rgba(255, 180, 50, ${0.8 + attackIntensity * 0.2})` : "#c9a227";
+    ctx.strokeStyle = isAttacking
+      ? `rgba(255, 180, 50, ${0.8 + attackIntensity * 0.2})`
+      : "#c9a227";
     ctx.lineWidth = (2 + (isAttacking ? attackIntensity : 0)) * zoom;
     if (isAttacking) {
       ctx.shadowColor = "#ffaa00";
@@ -374,7 +473,7 @@ export function drawTigerHero(
       size * 0.18,
       armRotation * 0.5,
       0,
-      Math.PI * 2
+      Math.PI * 2,
     );
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -382,9 +481,16 @@ export function drawTigerHero(
     // Pauldron gem - glows intensely during attack
     ctx.fillStyle = isAttacking ? "#ff6600" : "#ff4400";
     ctx.shadowColor = "#ff6600";
-    ctx.shadowBlur = (isAttacking ? 12 + attackIntensity * 10 : 5) * zoom * gemPulse;
+    ctx.shadowBlur =
+      (isAttacking ? 12 + attackIntensity * 10 : 5) * zoom * gemPulse;
     ctx.beginPath();
-    ctx.arc(shoulderX + armOffset, shoulderY - size * 0.1, size * (0.03 + (isAttacking ? attackIntensity * 0.01 : 0)), 0, Math.PI * 2);
+    ctx.arc(
+      shoulderX + armOffset,
+      shoulderY - size * 0.1,
+      size * (0.03 + (isAttacking ? attackIntensity * 0.01 : 0)),
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
 
@@ -399,18 +505,38 @@ export function drawTigerHero(
       ctx.shadowColor = "#ff6600";
       ctx.shadowBlur = 15 * zoom * attackIntensity;
     }
-    const pawGrad = ctx.createRadialGradient(clawX, clawY - size * 0.06, 0, clawX, clawY - size * 0.06, size * 0.16);
+    const pawGrad = ctx.createRadialGradient(
+      clawX,
+      clawY - size * 0.06,
+      0,
+      clawX,
+      clawY - size * 0.06,
+      size * 0.16,
+    );
     pawGrad.addColorStop(0, isAttacking ? "#ffbb66" : "#ffaa55");
     pawGrad.addColorStop(0.6, isAttacking ? "#ff9944" : "#ff8833");
     pawGrad.addColorStop(1, "#cc5500");
     ctx.fillStyle = pawGrad;
     ctx.beginPath();
-    ctx.ellipse(clawX, clawY - size * 0.04, size * 0.14, size * 0.12, armRotation * 0.3, 0, Math.PI * 2);
+    ctx.ellipse(
+      clawX,
+      clawY - size * 0.04,
+      size * 0.14,
+      size * 0.12,
+      armRotation * 0.3,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
     ctx.shadowBlur = 0;
 
     // Metal claw guards/gauntlet
-    const gauntletGrad = ctx.createLinearGradient(clawX - size * 0.1, clawY, clawX + size * 0.1, clawY);
+    const gauntletGrad = ctx.createLinearGradient(
+      clawX - size * 0.1,
+      clawY,
+      clawX + size * 0.1,
+      clawY,
+    );
     gauntletGrad.addColorStop(0, "#2a2218");
     gauntletGrad.addColorStop(0.3, "#4a3a28");
     gauntletGrad.addColorStop(0.5, "#5a4a38");
@@ -433,27 +559,42 @@ export function drawTigerHero(
       const clawAngle = (c - 1.5) * 0.35 + side * (clawSwipe * 0.4);
       const clawBaseX = clawX + Math.sin(clawAngle) * size * 0.12;
       const clawBaseY = clawY + size * 0.04 + Math.cos(clawAngle) * size * 0.04;
-      
+
       ctx.save();
       ctx.translate(clawBaseX, clawBaseY);
       ctx.rotate(clawAngle * 0.4);
-      
+
       // Metal-reinforced claw
-      const metalClawGrad = ctx.createLinearGradient(0, 0, 0, size * 0.16 + clawExtend);
+      const metalClawGrad = ctx.createLinearGradient(
+        0,
+        0,
+        0,
+        size * 0.16 + clawExtend,
+      );
       metalClawGrad.addColorStop(0, "#4a4a4a");
       metalClawGrad.addColorStop(0.2, "#2a2a2a");
       metalClawGrad.addColorStop(0.6, "#1a1a1a");
       metalClawGrad.addColorStop(0.85, "#3a3a3a");
       metalClawGrad.addColorStop(1, "#ffffff");
       ctx.fillStyle = metalClawGrad;
-      
+
       ctx.beginPath();
       ctx.moveTo(-size * 0.028, 0);
-      ctx.quadraticCurveTo(-size * 0.032, size * 0.08 + clawExtend * 0.5, 0, size * 0.16 + clawExtend);
-      ctx.quadraticCurveTo(size * 0.032, size * 0.08 + clawExtend * 0.5, size * 0.028, 0);
+      ctx.quadraticCurveTo(
+        -size * 0.032,
+        size * 0.08 + clawExtend * 0.5,
+        0,
+        size * 0.16 + clawExtend,
+      );
+      ctx.quadraticCurveTo(
+        size * 0.032,
+        size * 0.08 + clawExtend * 0.5,
+        size * 0.028,
+        0,
+      );
       ctx.closePath();
       ctx.fill();
-      
+
       // Claw highlight
       ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
       ctx.lineWidth = 1.5 * zoom;
@@ -461,7 +602,7 @@ export function drawTigerHero(
       ctx.moveTo(-size * 0.012, size * 0.025);
       ctx.lineTo(0, size * 0.14 + clawExtend * 0.85);
       ctx.stroke();
-      
+
       ctx.restore();
     }
 
@@ -470,58 +611,73 @@ export function drawTigerHero(
     if (isAttacking && attackPhase > 0.35 && attackPhase < 0.95) {
       const slashProgress = (attackPhase - 0.35) / 0.6;
       const slashAlpha = Math.sin(slashProgress * Math.PI) * 0.95;
-      
+
       // Starting position matches raised arm position
       const slashStartX = shoulderX + side * size * 0.2;
       const slashStartY = y - size * 0.5; // High starting point
-      
+
       // Four parallel slash marks sweeping down diagonally
       for (let s = 0; s < 4; s++) {
         const slashOffset = s * size * 0.065;
         const slashEndX = shoulderX + side * size * 0.7 * slashProgress;
         const slashEndY = y + size * 0.65 * slashProgress;
-        
+
         // Main slash trail gradient - brighter and more intense
         const slashGrad = ctx.createLinearGradient(
-          slashStartX + slashOffset * side, slashStartY,
-          slashEndX + slashOffset * side, slashEndY
+          slashStartX + slashOffset * side,
+          slashStartY,
+          slashEndX + slashOffset * side,
+          slashEndY,
         );
         slashGrad.addColorStop(0, `rgba(255, 255, 220, ${slashAlpha * 0.4})`);
         slashGrad.addColorStop(0.15, `rgba(255, 240, 120, ${slashAlpha})`);
         slashGrad.addColorStop(0.4, `rgba(255, 160, 20, ${slashAlpha * 0.9})`);
         slashGrad.addColorStop(0.7, `rgba(255, 100, 0, ${slashAlpha * 0.6})`);
         slashGrad.addColorStop(1, `rgba(255, 60, 0, 0)`);
-        
+
         ctx.strokeStyle = slashGrad;
         ctx.lineWidth = (7 - s * 1.2) * zoom;
         ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(slashStartX + slashOffset * side, slashStartY + slashOffset * 0.4);
+        ctx.moveTo(
+          slashStartX + slashOffset * side,
+          slashStartY + slashOffset * 0.4,
+        );
         ctx.bezierCurveTo(
-          slashStartX + side * size * 0.35 + slashOffset * side, slashStartY + size * 0.25,
-          shoulderX + side * size * 0.5 + slashOffset * side, y + size * 0.15,
-          slashEndX + slashOffset * side, slashEndY + slashOffset * 0.6
+          slashStartX + side * size * 0.35 + slashOffset * side,
+          slashStartY + size * 0.25,
+          shoulderX + side * size * 0.5 + slashOffset * side,
+          y + size * 0.15,
+          slashEndX + slashOffset * side,
+          slashEndY + slashOffset * 0.6,
         );
         ctx.stroke();
       }
-      
+
       // Add spark particles along the slash - more particles, more dynamic
       if (slashProgress > 0.2 && slashProgress < 0.85) {
         for (let spark = 0; spark < 12; spark++) {
           const sparkProgress = slashProgress * 0.75 + spark * 0.04;
-          const sparkX = slashStartX + (shoulderX + side * size * 0.55 - slashStartX) * sparkProgress + side * Math.sin(spark * 2.5 + time * 10) * size * 0.06;
-          const sparkY = slashStartY + (y + size * 0.45 - slashStartY) * sparkProgress + Math.cos(spark * 3.5 + time * 8) * size * 0.05;
+          const sparkX =
+            slashStartX +
+            (shoulderX + side * size * 0.55 - slashStartX) * sparkProgress +
+            side * Math.sin(spark * 2.5 + time * 10) * size * 0.06;
+          const sparkY =
+            slashStartY +
+            (y + size * 0.45 - slashStartY) * sparkProgress +
+            Math.cos(spark * 3.5 + time * 8) * size * 0.05;
           const sparkAlpha = slashAlpha * (1 - spark * 0.07);
           const sparkSize = size * (0.022 - spark * 0.0012);
-          
+
           // Glow behind sparks
           ctx.shadowColor = "#ff8800";
           ctx.shadowBlur = 6 * zoom;
-          ctx.fillStyle = spark % 3 === 0 
-            ? `rgba(255, 255, 180, ${sparkAlpha})` 
-            : spark % 3 === 1
-            ? `rgba(255, 200, 80, ${sparkAlpha * 0.9})`
-            : `rgba(255, 140, 20, ${sparkAlpha * 0.8})`;
+          ctx.fillStyle =
+            spark % 3 === 0
+              ? `rgba(255, 255, 180, ${sparkAlpha})`
+              : spark % 3 === 1
+                ? `rgba(255, 200, 80, ${sparkAlpha * 0.9})`
+                : `rgba(255, 140, 20, ${sparkAlpha * 0.8})`;
           ctx.beginPath();
           ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI * 2);
           ctx.fill();
@@ -535,15 +691,20 @@ export function drawTigerHero(
   for (let side = -1; side <= 1; side += 2) {
     const legX = x + side * size * 0.28;
     const legY = y + size * 0.5;
-    
+
     // Leg fur
     ctx.fillStyle = "#dd6600";
     ctx.beginPath();
     ctx.ellipse(legX, legY, size * 0.12, size * 0.15, 0, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Leg armor
-    const legArmorGrad = ctx.createLinearGradient(legX - size * 0.08, legY - size * 0.1, legX + size * 0.08, legY + size * 0.1);
+    const legArmorGrad = ctx.createLinearGradient(
+      legX - size * 0.08,
+      legY - size * 0.1,
+      legX + size * 0.08,
+      legY + size * 0.1,
+    );
     legArmorGrad.addColorStop(0, "#3a3028");
     legArmorGrad.addColorStop(0.5, "#5a4a38");
     legArmorGrad.addColorStop(1, "#3a3028");
@@ -564,16 +725,20 @@ export function drawTigerHero(
   // Head bobs slightly with breathing
   const headY = y - size * 0.55 + breathe * 0.1;
   const headX = x + idleSway * 0.15;
-  
+
   // Attack glow on head
   if (isAttacking) {
     ctx.shadowColor = "#ff6600";
     ctx.shadowBlur = 18 * zoom * attackIntensity;
   }
-  
+
   const headGrad = ctx.createRadialGradient(
-    headX, headY, 0,
-    headX, headY, size * 0.42
+    headX,
+    headY,
+    0,
+    headX,
+    headY,
+    size * 0.42,
   );
   headGrad.addColorStop(0, isAttacking ? "#ffbb55" : "#ffaa44");
   headGrad.addColorStop(0.4, isAttacking ? "#ff9933" : "#ff8822");
@@ -586,7 +751,12 @@ export function drawTigerHero(
   ctx.shadowBlur = 0;
 
   // === WAR CROWN/HELMET ===
-  const crownGrad = ctx.createLinearGradient(x - size * 0.35, y - size * 0.85, x + size * 0.35, y - size * 0.85);
+  const crownGrad = ctx.createLinearGradient(
+    x - size * 0.35,
+    y - size * 0.85,
+    x + size * 0.35,
+    y - size * 0.85,
+  );
   crownGrad.addColorStop(0, "#2a2218");
   crownGrad.addColorStop(0.3, "#5a4a38");
   crownGrad.addColorStop(0.5, "#6a5a48");
@@ -615,7 +785,7 @@ export function drawTigerHero(
   const crownGemPositions = [
     { x: x - size * 0.12, y: y - size * 0.9 },
     { x: x, y: y - size * 0.78 },
-    { x: x + size * 0.12, y: y - size * 0.9 }
+    { x: x + size * 0.12, y: y - size * 0.9 },
   ];
   ctx.shadowColor = "#ff6600";
   ctx.shadowBlur = 6 * zoom * gemPulse;
@@ -693,7 +863,13 @@ export function drawTigerHero(
     // Ear armor ring
     ctx.fillStyle = "#c9a227";
     ctx.beginPath();
-    ctx.arc(x + side * size * 0.3, y - size * 0.78, size * 0.025, 0, Math.PI * 2);
+    ctx.arc(
+      x + side * size * 0.3,
+      y - size * 0.78,
+      size * 0.025,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -728,18 +904,42 @@ export function drawTigerHero(
   // Nose highlight
   ctx.fillStyle = "#3a2a20";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.02, y - size * 0.48, size * 0.015, size * 0.01, -0.3, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.02,
+    y - size * 0.48,
+    size * 0.015,
+    size * 0.01,
+    -0.3,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === GLOWING FIERCE EYES ===
   const eyeGlow = 0.9 + Math.sin(time * 4) * 0.1 + attackIntensity * 0.3;
   const eyeY = y - size * 0.62 + breathe * 0.08; // Eyes move slightly with breathing
-  
+
   // Eye socket shadows
   ctx.fillStyle = "#1a0a05";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.15, eyeY, size * 0.11, size * 0.085, -0.15, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.15, eyeY, size * 0.11, size * 0.085, 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.15,
+    eyeY,
+    size * 0.11,
+    size * 0.085,
+    -0.15,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.15,
+    eyeY,
+    size * 0.11,
+    size * 0.085,
+    0.15,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Glowing eyes - INTENSE glow during attack
@@ -749,8 +949,24 @@ export function drawTigerHero(
     ? `rgba(255, 100, 0, ${eyeGlow})`
     : `rgba(255, 180, 0, ${eyeGlow})`;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.15, eyeY, size * (0.1 + attackIntensity * 0.015), size * (0.07 + attackIntensity * 0.01), -0.15, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.15, eyeY, size * (0.1 + attackIntensity * 0.015), size * (0.07 + attackIntensity * 0.01), 0.15, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.15,
+    eyeY,
+    size * (0.1 + attackIntensity * 0.015),
+    size * (0.07 + attackIntensity * 0.01),
+    -0.15,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.15,
+    eyeY,
+    size * (0.1 + attackIntensity * 0.015),
+    size * (0.07 + attackIntensity * 0.01),
+    0.15,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
   ctx.shadowBlur = 0;
 
@@ -759,19 +975,45 @@ export function drawTigerHero(
   ctx.lineWidth = 3 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.25, y - size * 0.68);
-  ctx.quadraticCurveTo(x - size * 0.15, y - size * 0.72, x - size * 0.08, y - size * 0.68);
+  ctx.quadraticCurveTo(
+    x - size * 0.15,
+    y - size * 0.72,
+    x - size * 0.08,
+    y - size * 0.68,
+  );
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x + size * 0.25, y - size * 0.68);
-  ctx.quadraticCurveTo(x + size * 0.15, y - size * 0.72, x + size * 0.08, y - size * 0.68);
+  ctx.quadraticCurveTo(
+    x + size * 0.15,
+    y - size * 0.72,
+    x + size * 0.08,
+    y - size * 0.68,
+  );
   ctx.stroke();
 
   // Slit pupils (menacing) - narrow during attack
   const pupilWidth = isAttacking ? size * 0.018 : size * 0.025;
   ctx.fillStyle = "#0a0505";
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.15, eyeY, pupilWidth, size * 0.06, 0, 0, Math.PI * 2);
-  ctx.ellipse(x + size * 0.15, eyeY, pupilWidth, size * 0.06, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x - size * 0.15,
+    eyeY,
+    pupilWidth,
+    size * 0.06,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.15,
+    eyeY,
+    pupilWidth,
+    size * 0.06,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // Eye glints
@@ -785,17 +1027,33 @@ export function drawTigerHero(
   const mouthOpen = isAttacking
     ? size * 0.06 + attackIntensity * size * 0.08
     : size * 0.04;
-  
+
   // Mouth interior
   ctx.fillStyle = "#2a0000";
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.34, size * 0.14 + attackIntensity * 0.04, mouthOpen, 0, 0, Math.PI);
+  ctx.ellipse(
+    x,
+    y - size * 0.34,
+    size * 0.14 + attackIntensity * 0.04,
+    mouthOpen,
+    0,
+    0,
+    Math.PI,
+  );
   ctx.fill();
 
   // Tongue
   ctx.fillStyle = "#cc4466";
   ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.32 + mouthOpen * 0.4, size * 0.08, size * 0.04, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    x,
+    y - size * 0.32 + mouthOpen * 0.4,
+    size * 0.08,
+    size * 0.04,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   // === MASSIVE FANGS ===
@@ -832,15 +1090,14 @@ export function drawTigerHero(
     const roarAlpha = Math.sin(roarProgress * Math.PI) * 0.6;
     for (let w = 0; w < 4; w++) {
       const waveRadius = size * 0.4 + w * size * 0.2 * roarProgress;
-      ctx.strokeStyle = w % 2 === 0
-        ? `rgba(255, 150, 0, ${roarAlpha * (1 - w * 0.2)})`
-        : `rgba(255, 80, 0, ${roarAlpha * (1 - w * 0.2)})`;
+      ctx.strokeStyle =
+        w % 2 === 0
+          ? `rgba(255, 150, 0, ${roarAlpha * (1 - w * 0.2)})`
+          : `rgba(255, 80, 0, ${roarAlpha * (1 - w * 0.2)})`;
       ctx.lineWidth = (4 - w * 0.8) * zoom;
       ctx.beginPath();
       ctx.arc(x, y - size * 0.45, waveRadius, -0.9, 0.9);
       ctx.stroke();
     }
   }
-
 }
-

@@ -105,13 +105,13 @@ export function renderHero(
         y: targetScreenPos.y - (screenPos.y - size / 2),
       }
     : undefined;
-  if (!facingRight && localTargetPos) {
+  if (facingRight && localTargetPos) {
     localTargetPos.x *= -1;
   }
 
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y - size / 2);
-  ctx.scale(facingRight ? attackScale : -attackScale, attackScale);
+  ctx.scale(facingRight ? -attackScale : attackScale, attackScale);
 
   // Draw specific hero type with attack animation
   drawHeroSprite(
