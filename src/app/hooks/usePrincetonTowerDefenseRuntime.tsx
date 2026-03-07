@@ -439,7 +439,9 @@ const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
   "giant_sphinx",
   "nassau_hall",
   "carnegie_lake",
+  "glacier",
   "ice_fortress",
+  "ice_throne",
   "obsidian_castle",
   "witch_cottage",
   "volcano_rim",
@@ -1340,6 +1342,17 @@ export function usePrincetonTowerDefenseRuntime() {
           setCameraZoom((prev) => Math.max(prev - 0.1, 0.5));
           break;
         case "escape":
+          // Cancel spell targeting/placement with PP refund
+          if (targetingSpellRef.current) {
+            const refundCost = SPELL_DATA[targetingSpellRef.current]?.cost ?? 0;
+            if (refundCost > 0) addPawPoints(refundCost);
+            setTargetingSpell(null);
+          }
+          if (placingTroopRef.current) {
+            const refundCost = SPELL_DATA["reinforcements"]?.cost ?? 0;
+            if (refundCost > 0) addPawPoints(refundCost);
+            setPlacingTroop(false);
+          }
           // Unselect all towers, heroes, and troops
           setSelectedTower(null);
           setActiveSentinelTargetKey(null);
@@ -1351,7 +1364,7 @@ export function usePrincetonTowerDefenseRuntime() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [gameState, battleOutcome, setTroops]);
+  }, [gameState, battleOutcome, setTroops, addPawPoints]);
 
   useEffect(() => {
     if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
@@ -9364,6 +9377,11 @@ export function usePrincetonTowerDefenseRuntime() {
         addParticles(castCenter, "glow", 20);
         addParticles({ x: castCenter.x - 20, y: castCenter.y + 15 }, "spark", 8);
         addParticles({ x: castCenter.x + 20, y: castCenter.y + 15 }, "spark", 8);
+        setSpells((prev) =>
+          prev.map((s) =>
+            s.type === "reinforcements" ? { ...s, cooldown: s.maxCooldown } : s
+          )
+        );
         setPlacingTroop(false);
         return;
       }
@@ -9376,7 +9394,13 @@ export function usePrincetonTowerDefenseRuntime() {
           cameraOffset,
           cameraZoom
         );
+        const castType = targetingSpell;
         executeTargetedSpellRef.current(targetingSpell, worldPos);
+        setSpells((prev) =>
+          prev.map((s) =>
+            s.type === castType ? { ...s, cooldown: s.maxCooldown } : s
+          )
+        );
         setTargetingSpell(null);
         return;
       }
@@ -9686,6 +9710,7 @@ export function usePrincetonTowerDefenseRuntime() {
       setNextWaveTimer,
       setTowers,
       setTroops,
+      setSpells,
       waveStartConfirm,
       currentWave,
       spellUpgradeLevels,
@@ -10297,26 +10322,28 @@ export function usePrincetonTowerDefenseRuntime() {
       // Cancel targeting if clicking the same spell again
       if (targetingSpell === spellType) {
         setTargetingSpell(null);
-        // Refund the PP and reset cooldown
         const refundCost = SPELL_DATA[spellType]?.cost ?? 0;
         if (refundCost > 0) addPawPoints(refundCost);
-        setSpells((prev) =>
-          prev.map((s) =>
-            s.type === spellType ? { ...s, cooldown: 0 } : s
-          )
-        );
+        return;
+      }
+      // Cancel reinforcement placement if clicking reinforcements again
+      if (placingTroop && spellType === "reinforcements") {
+        setPlacingTroop(false);
+        const refundCost = SPELL_DATA["reinforcements"]?.cost ?? 0;
+        if (refundCost > 0) addPawPoints(refundCost);
         return;
       }
       // Cancel any existing targeting if switching to a different spell
       if (targetingSpell) {
         const prevCost = SPELL_DATA[targetingSpell]?.cost ?? 0;
         if (prevCost > 0) addPawPoints(prevCost);
-        setSpells((prev) =>
-          prev.map((s) =>
-            s.type === targetingSpell ? { ...s, cooldown: 0 } : s
-          )
-        );
         setTargetingSpell(null);
+      }
+      // Cancel reinforcement placement if switching to a different spell
+      if (placingTroop) {
+        const prevCost = SPELL_DATA["reinforcements"]?.cost ?? 0;
+        if (prevCost > 0) addPawPoints(prevCost);
+        setPlacingTroop(false);
       }
 
       const spell = spells.find((s) => s.type === spellType);
@@ -10331,12 +10358,14 @@ export function usePrincetonTowerDefenseRuntime() {
       }
       if (!spendPawPoints(cost)) return;
 
+      let enteredTargeting = false;
       switch (spellType) {
         case "fireball":
         case "lightning": {
           const level = spellUpgradeLevels[spellType] ?? 0;
           if (level >= 2) {
             setTargetingSpell(spellType);
+            enteredTargeting = true;
           } else {
             // Auto-target: pick center of enemies as the cast point
             const enemyPositions = enemies.map((e) => getEnemyPosWithPath(e, selectedMap));
@@ -10423,13 +10452,16 @@ export function usePrincetonTowerDefenseRuntime() {
 
         case "reinforcements":
           setPlacingTroop(true);
+          enteredTargeting = true;
           break;
       }
-      setSpells((prev) =>
-        prev.map((s) =>
-          s.type === spellType ? { ...s, cooldown: s.maxCooldown } : s
-        )
-      );
+      if (!enteredTargeting) {
+        setSpells((prev) =>
+          prev.map((s) =>
+            s.type === spellType ? { ...s, cooldown: s.maxCooldown } : s
+          )
+        );
+      }
     },
     [
       spells,
@@ -10438,6 +10470,7 @@ export function usePrincetonTowerDefenseRuntime() {
       addParticles,
       gameSpeed,
       targetingSpell,
+      placingTroop,
       onEnemyKill,
       canAffordPawPoints,
       spendPawPoints,
@@ -11663,6 +11696,7 @@ export function usePrincetonTowerDefenseRuntime() {
               enemies={enemies}
               spellUpgradeLevels={spellUpgradeLevels}
               targetingSpell={targetingSpell}
+              placingTroop={placingTroop}
               toggleHeroSelection={toggleHeroSelection}
               onUseHeroAbility={triggerHeroAbility}
               castSpell={castSpell}

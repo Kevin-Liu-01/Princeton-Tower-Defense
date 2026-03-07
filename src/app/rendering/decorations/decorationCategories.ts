@@ -21,7 +21,7 @@ export function getDecorationCategories(theme: string): DecorationCategorySet {
           "ruins",
           "fence",
           "snow_lantern",
-          "ice_throne",
+          "ice_spire",
           "frozen_pond",
           "broken_wall",
         ],

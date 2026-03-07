@@ -53,6 +53,7 @@ interface HeroSpellBarProps {
   enemies: Enemy[];
   spellUpgradeLevels: SpellUpgradeLevels;
   targetingSpell: SpellType | null;
+  placingTroop: boolean;
   toggleHeroSelection: () => void;
   onUseHeroAbility: () => void;
   castSpell: (spellType: SpellType) => void;
@@ -65,6 +66,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
   enemies,
   spellUpgradeLevels,
   targetingSpell,
+  placingTroop,
   toggleHeroSelection,
   onUseHeroAbility,
   castSpell,
@@ -435,7 +437,7 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
               enemies.length === 0
             );
           const isHovered = hoveredSpell === spell.type;
-          const isTargeting = targetingSpell === spell.type;
+          const isTargeting = targetingSpell === spell.type || (spell.type === "reinforcements" && placingTroop);
           return (
             <div key={spell.type} className="relative self-stretch flex">
               <button
@@ -461,8 +463,8 @@ export const HeroSpellBar: React.FC<HeroSpellBarProps> = ({
                       ? `inset 0 0 12px ${OVERLAY.white03}`
                       : "none",
                   ...(isTargeting ? { ringColor: theme?.panelBorder } : {}),
-                  opacity: canCast ? 1 : 0.5,
-                  cursor: canCast ? "pointer" : "not-allowed",
+                  opacity: (canCast || isTargeting) ? 1 : 0.5,
+                  cursor: (canCast || isTargeting) ? "pointer" : "not-allowed",
                 }}
               >
                 <div

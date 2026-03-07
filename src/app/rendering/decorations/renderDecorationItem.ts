@@ -16012,292 +16012,387 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
     case "snowman": {
-      // Enhanced 3D isometric snowman with detailed features
+      const smVar = variant % 3;
       const snowBase = "#f5f5f5";
       const snowShade = "#e0e0e0";
       const snowHighlight = "#ffffff";
       const snowBlueShade = "#e3f2fd";
 
-      // Ground shadow with gradient
+      // Ground shadow
       const snowmanShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        22 * s,
+        screenPos.x + 4 * s, screenPos.y + 8 * s, 0,
+        screenPos.x + 4 * s, screenPos.y + 8 * s, 22 * s,
       );
       snowmanShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
       snowmanShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
       snowmanShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = snowmanShadowGrad;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        22 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 8 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bottom ball with 3D shading
-      const bottomGrad = ctx.createRadialGradient(
-        screenPos.x - 5 * s,
-        screenPos.y - 10 * s,
-        0,
-        screenPos.x,
-        screenPos.y - 5 * s,
-        18 * s,
-      );
-      bottomGrad.addColorStop(0, snowHighlight);
-      bottomGrad.addColorStop(0.4, snowBase);
-      bottomGrad.addColorStop(0.8, snowShade);
-      bottomGrad.addColorStop(1, snowBlueShade);
-      ctx.fillStyle = bottomGrad;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 5 * s, 16 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bottom ball shadow curve
-      ctx.strokeStyle = "rgba(0,0,0,0.08)";
-      ctx.lineWidth = 2 * s;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 5 * s, 15 * s, 0.3, Math.PI - 0.3);
-      ctx.stroke();
-
-      // Middle ball with 3D shading
-      const middleGrad = ctx.createRadialGradient(
-        screenPos.x - 4 * s,
-        screenPos.y - 26 * s,
-        0,
-        screenPos.x,
-        screenPos.y - 22 * s,
-        13 * s,
-      );
-      middleGrad.addColorStop(0, snowHighlight);
-      middleGrad.addColorStop(0.4, snowBase);
-      middleGrad.addColorStop(0.85, snowShade);
-      middleGrad.addColorStop(1, snowBlueShade);
-      ctx.fillStyle = middleGrad;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 22 * s, 12 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Buttons on middle ball
-      ctx.fillStyle = "#37474f";
-      for (let btn = 0; btn < 3; btn++) {
+      // Shared snow-ball helper with surface detail
+      const drawSnowBall = (bx: number, by: number, br: number) => {
+        const sbGrad = ctx.createRadialGradient(bx - br * 0.35, by - br * 0.35, 0, bx, by, br);
+        sbGrad.addColorStop(0, snowHighlight);
+        sbGrad.addColorStop(0.3, snowBase);
+        sbGrad.addColorStop(0.65, snowShade);
+        sbGrad.addColorStop(0.9, snowBlueShade);
+        sbGrad.addColorStop(1, "#ccdce8");
+        ctx.fillStyle = sbGrad;
         ctx.beginPath();
-        ctx.arc(
-          screenPos.x + 2 * s,
-          screenPos.y - 16 * s - btn * 6 * s,
-          1.8 * s,
-          0,
-          Math.PI * 2,
-        );
+        ctx.arc(bx, by, br, 0, Math.PI * 2);
+        ctx.fill();
+        // Rim shadow for roundness
+        ctx.strokeStyle = "rgba(0,0,0,0.1)";
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.arc(bx, by, br - 1 * s, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+        // Top rim highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.arc(bx, by, br - 1 * s, Math.PI + 0.5, Math.PI * 2 - 0.5);
+        ctx.stroke();
+        // Surface sparkle specks
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath();
+        ctx.arc(bx - br * 0.25, by - br * 0.35, br * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bx + br * 0.15, by - br * 0.45, br * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      // Shared eyes
+      const drawSnowEyes = (ex: number, ey: number, esp: number) => {
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.ellipse(ex - esp, ey, 2 * s, 2.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(ex + esp, ey, 2 * s, 2.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.beginPath();
+        ctx.arc(ex - esp - 0.5 * s, ey - 1 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(ex + esp - 0.5 * s, ey - 1 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      // Shared carrot nose
+      const drawCarrotNose = (nx: number, ny: number, nLen: number) => {
+        const snNoseGrad = ctx.createLinearGradient(nx, ny, nx + nLen, ny + 1 * s);
+        snNoseGrad.addColorStop(0, "#ff8c00");
+        snNoseGrad.addColorStop(0.5, "#ff6b00");
+        snNoseGrad.addColorStop(1, "#e65100");
+        ctx.fillStyle = snNoseGrad;
+        ctx.beginPath();
+        ctx.moveTo(nx, ny - 2 * s);
+        ctx.lineTo(nx + nLen, ny + 1 * s);
+        ctx.lineTo(nx, ny + 3 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.beginPath();
+        ctx.moveTo(nx + 1 * s, ny - 1 * s);
+        ctx.lineTo(nx + nLen * 0.5, ny);
+        ctx.lineTo(nx + 1 * s, ny + 1 * s);
+        ctx.closePath();
+        ctx.fill();
+      };
+
+      if (smVar === 0) {
+        // Classic top-hat snowman
+        drawSnowBall(screenPos.x, screenPos.y - 5 * s, 16 * s);
+        drawSnowBall(screenPos.x, screenPos.y - 22 * s, 12 * s);
+        // Buttons
+        ctx.fillStyle = "#37474f";
+        for (let btn = 0; btn < 3; btn++) {
+          ctx.beginPath();
+          ctx.arc(screenPos.x + 2 * s, screenPos.y - 16 * s - btn * 6 * s, 1.8 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Stick arms with twigs
+        ctx.strokeStyle = "#5d4037";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x - 22 * s, screenPos.y - 28 * s);
+        ctx.stroke();
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 18 * s, screenPos.y - 26 * s);
+        ctx.lineTo(screenPos.x - 22 * s, screenPos.y - 32 * s);
+        ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 27 * s);
+        ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 25 * s);
+        ctx.stroke();
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 18 * s);
+        ctx.stroke();
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 17 * s, screenPos.y - 18 * s);
+        ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 14 * s);
+        ctx.moveTo(screenPos.x + 19 * s, screenPos.y - 18 * s);
+        ctx.lineTo(screenPos.x + 24 * s, screenPos.y - 20 * s);
+        ctx.stroke();
+        // Head
+        drawSnowBall(screenPos.x, screenPos.y - 38 * s, 9 * s);
+        // Top hat with gradient
+        ctx.fillStyle = "#1a1a1a";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 46 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        const hatG = ctx.createLinearGradient(screenPos.x - 6 * s, screenPos.y - 62 * s, screenPos.x + 6 * s, screenPos.y - 46 * s);
+        hatG.addColorStop(0, "#263238");
+        hatG.addColorStop(0.3, "#37474f");
+        hatG.addColorStop(0.7, "#1a1a1a");
+        hatG.addColorStop(1, "#0d0d0d");
+        ctx.fillStyle = hatG;
+        ctx.fillRect(screenPos.x - 6 * s, screenPos.y - 62 * s, 12 * s, 16 * s);
+        // Hat top
+        ctx.fillStyle = "#37474f";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 62 * s, 6 * s, 2.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Hat highlight
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(screenPos.x - 5 * s, screenPos.y - 61 * s, 3 * s, 14 * s);
+        // Hat ribbon
+        const ribbonG = ctx.createLinearGradient(screenPos.x - 6 * s, screenPos.y - 55 * s, screenPos.x + 6 * s, screenPos.y - 52 * s);
+        ribbonG.addColorStop(0, "#b71c1c");
+        ribbonG.addColorStop(0.5, "#e53935");
+        ribbonG.addColorStop(1, "#c62828");
+        ctx.fillStyle = ribbonG;
+        ctx.fillRect(screenPos.x - 6 * s, screenPos.y - 54 * s, 12 * s, 3 * s);
+        // Snow dusting on hat brim
+        ctx.fillStyle = "rgba(240,248,255,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x + 2 * s, screenPos.y - 46 * s, 6 * s, 2 * s, 0.2, Math.PI, Math.PI * 2);
+        ctx.fill();
+        // Face
+        drawSnowEyes(screenPos.x, screenPos.y - 40 * s, 3 * s);
+        drawCarrotNose(screenPos.x, screenPos.y - 37 * s, 10 * s);
+        // Smile
+        ctx.fillStyle = "#37474f";
+        for (let i = 0; i < 5; i++) {
+          const smA = Math.PI * 0.15 + (i / 4) * Math.PI * 0.3;
+          ctx.beginPath();
+          ctx.arc(screenPos.x + Math.cos(smA) * 5 * s, screenPos.y - 34 * s + Math.sin(smA) * 3 * s, 1 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Red scarf with gradient
+        const sm0ScarfG = ctx.createLinearGradient(screenPos.x - 10 * s, screenPos.y - 30 * s, screenPos.x + 10 * s, screenPos.y - 30 * s);
+        sm0ScarfG.addColorStop(0, "#b71c1c");
+        sm0ScarfG.addColorStop(0.4, "#e53935");
+        sm0ScarfG.addColorStop(0.7, "#c62828");
+        sm0ScarfG.addColorStop(1, "#b71c1c");
+        ctx.fillStyle = sm0ScarfG;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 30 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#c62828";
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 6 * s, screenPos.y - 30 * s);
+        ctx.quadraticCurveTo(screenPos.x + 12 * s, screenPos.y - 28 * s, screenPos.x + 10 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 21 * s);
+        ctx.quadraticCurveTo(screenPos.x + 8 * s, screenPos.y - 27 * s, screenPos.x + 4 * s, screenPos.y - 29 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Scarf fringe
+        ctx.strokeStyle = "#c62828";
+        ctx.lineWidth = 1 * s;
+        for (let sf = 0; sf < 3; sf++) {
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + (7 + sf * 1.5) * s, screenPos.y - 20 * s);
+          ctx.lineTo(screenPos.x + (7 + sf * 1.5) * s, screenPos.y - 17 * s);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#ffeb3b";
+        ctx.fillRect(screenPos.x - 8 * s, screenPos.y - 31 * s, 2 * s, 3 * s);
+        ctx.fillRect(screenPos.x + 6 * s, screenPos.y - 31 * s, 2 * s, 3 * s);
+      } else if (smVar === 1) {
+        // Chubby snowman with earmuffs and broom
+        drawSnowBall(screenPos.x, screenPos.y - 3 * s, 18 * s);
+        drawSnowBall(screenPos.x, screenPos.y - 22 * s, 13 * s);
+        drawSnowBall(screenPos.x, screenPos.y - 40 * s, 10 * s);
+        // Buttons - wooden toggles
+        ctx.fillStyle = "#5d4037";
+        for (let btn = 0; btn < 2; btn++) {
+          ctx.beginPath();
+          ctx.ellipse(screenPos.x + 2 * s, screenPos.y - 16 * s - btn * 7 * s, 2.5 * s, 1.5 * s, 0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Earmuffs band
+        ctx.strokeStyle = "#1565C0";
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 42 * s, 10 * s, Math.PI + 0.3, -0.3);
+        ctx.stroke();
+        // Earmuff puffs
+        ctx.fillStyle = "#1565C0";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 9 * s, screenPos.y - 39 * s, 3.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 9 * s, screenPos.y - 39 * s, 3.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Fluffy trim on earmuffs
+        ctx.fillStyle = "#E3F2FD";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 9 * s, screenPos.y - 39 * s, 2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 9 * s, screenPos.y - 39 * s, 2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Face
+        drawSnowEyes(screenPos.x, screenPos.y - 42 * s, 3 * s);
+        drawCarrotNose(screenPos.x, screenPos.y - 39 * s, 9 * s);
+        // Buck-tooth smile
+        ctx.fillStyle = "#37474f";
+        for (let i = 0; i < 4; i++) {
+          const smA = Math.PI * 0.2 + (i / 3) * Math.PI * 0.25;
+          ctx.beginPath();
+          ctx.arc(screenPos.x + Math.cos(smA) * 5 * s, screenPos.y - 36 * s + Math.sin(smA) * 2.5 * s, 1 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Green scarf
+        ctx.fillStyle = "#2E7D32";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 31 * s, 11 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 31 * s);
+        ctx.quadraticCurveTo(screenPos.x - 14 * s, screenPos.y - 28 * s, screenPos.x - 12 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 21 * s);
+        ctx.quadraticCurveTo(screenPos.x - 10 * s, screenPos.y - 27 * s, screenPos.x - 3 * s, screenPos.y - 30 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Broom in right arm
+        ctx.strokeStyle = "#5d4037";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 11 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 48 * s);
+        ctx.stroke();
+        // Broom head
+        ctx.strokeStyle = "#8D6E63";
+        ctx.lineWidth = 1.5 * s;
+        for (let br = -3; br <= 3; br++) {
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + 22 * s + br * 1.5 * s, screenPos.y - 48 * s);
+          ctx.lineTo(screenPos.x + 20 * s + br * 2 * s, screenPos.y - 55 * s);
+          ctx.stroke();
+        }
+        // Left arm waving
+        ctx.strokeStyle = "#5d4037";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 11 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x - 20 * s, screenPos.y - 30 * s);
+        ctx.stroke();
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 17 * s, screenPos.y - 28 * s);
+        ctx.lineTo(screenPos.x - 21 * s, screenPos.y - 34 * s);
+        ctx.moveTo(screenPos.x - 19 * s, screenPos.y - 29 * s);
+        ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 28 * s);
+        ctx.stroke();
+      } else {
+        // Small jolly snowman with bucket hat and mittens
+        drawSnowBall(screenPos.x, screenPos.y - 2 * s, 14 * s);
+        drawSnowBall(screenPos.x, screenPos.y - 18 * s, 10 * s);
+        drawSnowBall(screenPos.x, screenPos.y - 32 * s, 8 * s);
+        // Pebble buttons
+        ctx.fillStyle = "#455A64";
+        for (let btn = 0; btn < 2; btn++) {
+          ctx.beginPath();
+          ctx.arc(screenPos.x + 1 * s, screenPos.y - 13 * s - btn * 5 * s, 1.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Bucket hat
+        ctx.fillStyle = "#546E7A";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 39 * s, 9 * s, 3.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#455A64";
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 39 * s);
+        ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 50 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 50 * s);
+        ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 39 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#607D8B";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 50 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Face
+        drawSnowEyes(screenPos.x, screenPos.y - 34 * s, 2.5 * s);
+        drawCarrotNose(screenPos.x, screenPos.y - 32 * s, 8 * s);
+        // Happy grin
+        ctx.strokeStyle = "#37474f";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 1 * s, screenPos.y - 30 * s, 3.5 * s, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+        // Blue scarf
+        ctx.fillStyle = "#1976D2";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 25 * s, 9 * s, 3.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 25 * s);
+        ctx.quadraticCurveTo(screenPos.x + 10 * s, screenPos.y - 23 * s, screenPos.x + 9 * s, screenPos.y - 17 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 18 * s);
+        ctx.quadraticCurveTo(screenPos.x + 7 * s, screenPos.y - 23 * s, screenPos.x + 3 * s, screenPos.y - 24 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Arms with mittens
+        ctx.strokeStyle = "#5d4037";
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 18 * s);
+        ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 22 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 18 * s);
+        ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 14 * s);
+        ctx.stroke();
+        // Mittens
+        ctx.fillStyle = "#E53935";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 18 * s, screenPos.y - 22 * s, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 18 * s, screenPos.y - 14 * s, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Mitten thumbs
+        ctx.fillStyle = "#C62828";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 19 * s, screenPos.y - 20 * s, 1.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 19 * s, screenPos.y - 12 * s, 1.5 * s, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      // Stick arms
-      ctx.strokeStyle = "#5d4037";
-      ctx.lineWidth = 2.5 * s;
-      // Left arm
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 22 * s);
-      ctx.lineTo(screenPos.x - 22 * s, screenPos.y - 28 * s);
-      ctx.stroke();
-      // Left arm twigs
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 18 * s, screenPos.y - 26 * s);
-      ctx.lineTo(screenPos.x - 22 * s, screenPos.y - 32 * s);
-      ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 27 * s);
-      ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 25 * s);
-      ctx.stroke();
-      // Right arm
-      ctx.lineWidth = 2.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 22 * s);
-      ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 18 * s);
-      ctx.stroke();
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 17 * s, screenPos.y - 18 * s);
-      ctx.lineTo(screenPos.x + 20 * s, screenPos.y - 14 * s);
-      ctx.moveTo(screenPos.x + 19 * s, screenPos.y - 18 * s);
-      ctx.lineTo(screenPos.x + 24 * s, screenPos.y - 20 * s);
-      ctx.stroke();
-
-      // Head with 3D shading
-      const headGrad = ctx.createRadialGradient(
-        screenPos.x - 3 * s,
-        screenPos.y - 42 * s,
-        0,
-        screenPos.x,
-        screenPos.y - 38 * s,
-        10 * s,
-      );
-      headGrad.addColorStop(0, snowHighlight);
-      headGrad.addColorStop(0.4, snowBase);
-      headGrad.addColorStop(0.85, snowShade);
-      headGrad.addColorStop(1, snowBlueShade);
-      ctx.fillStyle = headGrad;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 38 * s, 9 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Top hat
-      ctx.fillStyle = "#1a1a1a";
-      // Hat brim
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 46 * s,
-        10 * s,
-        4 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Hat top
-      ctx.fillRect(screenPos.x - 6 * s, screenPos.y - 62 * s, 12 * s, 16 * s);
-      // Hat rim edge
-      ctx.fillStyle = "#37474f";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 62 * s,
-        6 * s,
-        2.5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Hat band
-      ctx.fillStyle = "#c62828";
-      ctx.fillRect(screenPos.x - 6 * s, screenPos.y - 54 * s, 12 * s, 3 * s);
-
-      // Eyes (coal)
-      ctx.fillStyle = "#1a1a1a";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 3 * s,
-        screenPos.y - 40 * s,
-        2 * s,
-        2.5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y - 40 * s,
-        2 * s,
-        2.5 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Eye highlights
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x - 3.5 * s,
-        screenPos.y - 41 * s,
-        0.8 * s,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(
-        screenPos.x + 2.5 * s,
-        screenPos.y - 41 * s,
-        0.8 * s,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Carrot nose with gradient
-      const noseGrad = ctx.createLinearGradient(
-        screenPos.x,
-        screenPos.y - 38 * s,
-        screenPos.x + 10 * s,
-        screenPos.y - 36 * s,
-      );
-      noseGrad.addColorStop(0, "#ff8c00");
-      noseGrad.addColorStop(0.5, "#ff6b00");
-      noseGrad.addColorStop(1, "#e65100");
-      ctx.fillStyle = noseGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - 39 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 36 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 33 * s);
-      ctx.closePath();
-      ctx.fill();
-      // Nose highlight
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 1 * s, screenPos.y - 38 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 37 * s);
-      ctx.lineTo(screenPos.x + 1 * s, screenPos.y - 36 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Smile (coal pieces)
-      ctx.fillStyle = "#37474f";
-      for (let i = 0; i < 5; i++) {
-        const smileAngle = Math.PI * 0.15 + (i / 4) * Math.PI * 0.3;
-        const smileX = screenPos.x + Math.cos(smileAngle) * 5 * s;
-        const smileY = screenPos.y - 34 * s + Math.sin(smileAngle) * 3 * s;
+      // Ambient snow flurry particles around all snowmen
+      ctx.fillStyle = "rgba(230,240,255,0.65)";
+      for (let snp = 0; snp < 6; snp++) {
+        const snpA = (snp / 6) * Math.PI * 2 + decorTime * 0.3;
+        const snpR = (18 + Math.sin(decorTime * 0.5 + snp * 1.4) * 6) * s;
+        const snpY = screenPos.y - 20 * s + Math.cos(decorTime * 0.35 + snp) * 10 * s;
+        const snpSize = (0.6 + Math.sin(decorTime + snp) * 0.3) * s;
         ctx.beginPath();
-        ctx.arc(smileX, smileY, 1 * s, 0, Math.PI * 2);
+        ctx.arc(screenPos.x + Math.cos(snpA) * snpR, snpY, snpSize, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      // Scarf
-      ctx.fillStyle = "#c62828";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 30 * s,
-        10 * s,
-        4 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      // Scarf tail
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 6 * s, screenPos.y - 30 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x + 12 * s,
-        screenPos.y - 28 * s,
-        screenPos.x + 10 * s,
-        screenPos.y - 20 * s,
-      );
-      ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 21 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x + 8 * s,
-        screenPos.y - 27 * s,
-        screenPos.x + 4 * s,
-        screenPos.y - 29 * s,
-      );
-      ctx.closePath();
-      ctx.fill();
-      // Scarf stripes
-      ctx.fillStyle = "#ffeb3b";
-      ctx.fillRect(screenPos.x - 8 * s, screenPos.y - 31 * s, 2 * s, 3 * s);
-      ctx.fillRect(screenPos.x + 6 * s, screenPos.y - 31 * s, 2 * s, 3 * s);
       break;
     }
     case "ice_crystal": {
@@ -16881,142 +16976,1092 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.stroke();
       break;
     }
-    case "ice_fortress":
-      // Crystalline structure using faceted polygons
-      const iceLight = "#B3E5FC";
-      const iceMid = "#81D4FA";
-      const iceDark = "#29B6F6";
-      const iceShadow = "rgba(0, 96, 100, 0.4)";
+    case "glacier": {
+      const gVar = variant % 3;
 
-      // Ground shadow blob
-      ctx.fillStyle = iceShadow;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 25,
-        40 * s,
-        15 * s,
-        0,
-        0,
-        Math.PI * 2,
+      // Gradient shadow
+      const glShadG = ctx.createRadialGradient(
+        screenPos.x + 3 * s, screenPos.y + 6 * s, 0,
+        screenPos.x + 3 * s, screenPos.y + 6 * s, 45 * s,
       );
+      glShadG.addColorStop(0, "rgba(0,70,100,0.35)");
+      glShadG.addColorStop(0.5, "rgba(0,70,100,0.12)");
+      glShadG.addColorStop(1, "transparent");
+      ctx.fillStyle = glShadG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 6 * s, 45 * s, 18 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Helper to draw crystal spires
-      const drawSpire = (x, y, h, w) => {
-        // Left face (Mid)
-        ctx.fillStyle = iceMid;
+      // Snow mound base with gradient
+      const glSnowG = ctx.createRadialGradient(
+        screenPos.x - 4 * s, screenPos.y - 2 * s, 0,
+        screenPos.x, screenPos.y + 2 * s, 35 * s,
+      );
+      glSnowG.addColorStop(0, "#ffffff");
+      glSnowG.addColorStop(0.4, "#edf4f8");
+      glSnowG.addColorStop(0.8, "#d4e4ee");
+      glSnowG.addColorStop(1, "#b8d4e8");
+      ctx.fillStyle = glSnowG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y + 2 * s, 35 * s, 12 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Frost bloom glow at base
+      const glBloom = ctx.createRadialGradient(
+        screenPos.x, screenPos.y - 20 * s, 0,
+        screenPos.x, screenPos.y - 20 * s, 40 * s,
+      );
+      glBloom.addColorStop(0, "rgba(144,202,249,0.18)");
+      glBloom.addColorStop(0.5, "rgba(144,202,249,0.06)");
+      glBloom.addColorStop(1, "transparent");
+      ctx.fillStyle = glBloom;
+      ctx.beginPath();
+      ctx.arc(screenPos.x, screenPos.y - 20 * s, 40 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      const drawGlSpire = (gx: number, gy: number, gh: number, gw: number, seed: number) => {
+        // Left face gradient
+        const lG = ctx.createLinearGradient(gx - gw, gy, gx, gy - gh);
+        lG.addColorStop(0, "#4fc3f7");
+        lG.addColorStop(0.3, "#81d4fa");
+        lG.addColorStop(0.7, "#b3e5fc");
+        lG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = lG;
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x - w, y - h * 0.2);
-        ctx.lineTo(x, y - h);
-        ctx.lineTo(x + w * 0.5, y - h * 0.8);
+        ctx.moveTo(gx, gy);
+        ctx.lineTo(gx - gw, gy - gh * 0.18);
+        ctx.lineTo(gx - gw * 0.3, gy - gh * 0.7);
+        ctx.lineTo(gx, gy - gh);
+        ctx.lineTo(gx + gw * 0.4, gy - gh * 0.82);
+        ctx.closePath();
         ctx.fill();
-        // Right face (Dark)
-        ctx.fillStyle = iceDark;
+        // Right face gradient
+        const rG = ctx.createLinearGradient(gx, gy - gh, gx + gw, gy);
+        rG.addColorStop(0, "#b3e5fc");
+        rG.addColorStop(0.3, "#4fc3f7");
+        rG.addColorStop(0.6, "#29b6f6");
+        rG.addColorStop(1, "#0288d1");
+        ctx.fillStyle = rG;
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + w, y - h * 0.2);
-        ctx.lineTo(x + w * 0.5, y - h * 0.8);
+        ctx.moveTo(gx, gy);
+        ctx.lineTo(gx + gw, gy - gh * 0.18);
+        ctx.lineTo(gx + gw * 0.4, gy - gh * 0.82);
+        ctx.closePath();
         ctx.fill();
-        // Top face (Light)
-        ctx.fillStyle = iceLight;
+        // Bright top cap
+        ctx.fillStyle = "#e1f5fe";
         ctx.beginPath();
-        ctx.moveTo(x, y - h);
-        ctx.lineTo(x - w, y - h * 0.2);
-        ctx.lineTo(x + w * 0.5, y - h * 0.8);
+        ctx.moveTo(gx, gy - gh);
+        ctx.lineTo(gx - gw * 0.3, gy - gh * 0.7);
+        ctx.lineTo(gx + gw * 0.4, gy - gh * 0.82);
+        ctx.closePath();
         ctx.fill();
-        // Edge highlight
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 1 * s;
+        // Internal fracture veins
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.lineWidth = 0.8 * s;
         ctx.beginPath();
-        ctx.moveTo(x, y - h);
-        ctx.lineTo(x, y);
+        ctx.moveTo(gx, gy - gh);
+        ctx.lineTo(gx - gw * 0.15, gy - gh * 0.4);
+        ctx.lineTo(gx + gw * 0.1, gy);
         ctx.stroke();
+        ctx.strokeStyle = "rgba(200,230,255,0.25)";
+        ctx.beginPath();
+        ctx.moveTo(gx - gw * 0.5, gy - gh * 0.35);
+        ctx.lineTo(gx - gw * 0.1, gy - gh * 0.55);
+        ctx.lineTo(gx + gw * 0.2, gy - gh * 0.45);
+        ctx.stroke();
+        // Edge highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy - gh);
+        ctx.lineTo(gx, gy);
+        ctx.stroke();
+        // Snow cap on ledge
+        if (gh > 35 * s) {
+          ctx.fillStyle = "rgba(240,248,255,0.7)";
+          ctx.beginPath();
+          ctx.ellipse(gx - gw * 0.15, gy - gh * 0.65, gw * 0.35, gw * 0.12, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Icicle drips from ledges
+        ctx.fillStyle = "rgba(179,229,252,0.6)";
+        const icicleCount = Math.max(2, Math.floor(gw / (5 * s)));
+        for (let ic = 0; ic < icicleCount; ic++) {
+          const icx = gx - gw * 0.6 + (ic / (icicleCount - 1)) * gw * 0.8;
+          const icy = gy - gh * (0.15 + (seed + ic) * 0.03 % 0.1);
+          const icLen = (4 + (seed + ic) * 1.7 % 6) * s;
+          ctx.beginPath();
+          ctx.moveTo(icx - 1 * s, icy);
+          ctx.lineTo(icx, icy + icLen);
+          ctx.lineTo(icx + 1 * s, icy);
+          ctx.closePath();
+          ctx.fill();
+        }
       };
 
-      // Draw cluster of spires back to front
-      drawSpire(screenPos.x - 20 * s, screenPos.y - 5 * s, 50 * s, 15 * s);
-      drawSpire(screenPos.x + 15 * s, screenPos.y - 8 * s, 45 * s, 12 * s);
-      drawSpire(screenPos.x, screenPos.y, 65 * s, 20 * s); // Main spire
-      drawSpire(screenPos.x - 10 * s, screenPos.y + 5 * s, 30 * s, 10 * s);
+      if (gVar === 0) {
+        drawGlSpire(screenPos.x - 20 * s, screenPos.y - 5 * s, 52 * s, 16 * s, 1);
+        drawGlSpire(screenPos.x + 16 * s, screenPos.y - 8 * s, 47 * s, 13 * s, 2);
+        drawGlSpire(screenPos.x, screenPos.y, 68 * s, 21 * s, 3);
+        drawGlSpire(screenPos.x - 10 * s, screenPos.y + 5 * s, 32 * s, 11 * s, 4);
+        drawGlSpire(screenPos.x + 6 * s, screenPos.y - 12 * s, 25 * s, 8 * s, 5);
+      } else if (gVar === 1) {
+        drawGlSpire(screenPos.x - 15 * s, screenPos.y + 2 * s, 58 * s, 19 * s, 6);
+        drawGlSpire(screenPos.x + 10 * s, screenPos.y - 3 * s, 50 * s, 15 * s, 7);
+        drawGlSpire(screenPos.x + 24 * s, screenPos.y + 4 * s, 36 * s, 12 * s, 8);
+        drawGlSpire(screenPos.x - 5 * s, screenPos.y - 6 * s, 63 * s, 17 * s, 9);
+        drawGlSpire(screenPos.x - 24 * s, screenPos.y + 6 * s, 28 * s, 9 * s, 10);
+      } else {
+        drawGlSpire(screenPos.x, screenPos.y - 2 * s, 72 * s, 23 * s, 11);
+        drawGlSpire(screenPos.x - 24 * s, screenPos.y + 3 * s, 42 * s, 14 * s, 12);
+        drawGlSpire(screenPos.x + 20 * s, screenPos.y + 1 * s, 44 * s, 13 * s, 13);
+        drawGlSpire(screenPos.x - 8 * s, screenPos.y + 6 * s, 30 * s, 10 * s, 14);
+        drawGlSpire(screenPos.x + 8 * s, screenPos.y - 10 * s, 40 * s, 11 * s, 15);
+        drawGlSpire(screenPos.x - 16 * s, screenPos.y - 8 * s, 22 * s, 7 * s, 16);
+      }
+
+      // Ambient ice particles
+      ctx.fillStyle = "rgba(200,235,255,0.7)";
+      for (let gp = 0; gp < 10; gp++) {
+        const gpA = (gp / 10) * Math.PI * 2 + decorTime * 0.25;
+        const gpR = (28 + Math.sin(decorTime * 0.6 + gp * 1.1) * 10) * s;
+        const gpY = screenPos.y - 25 * s + Math.cos(decorTime * 0.4 + gp * 0.9) * 12 * s;
+        const gpSize = (0.8 + Math.sin(decorTime + gp) * 0.4) * s;
+        ctx.beginPath();
+        ctx.arc(screenPos.x + Math.cos(gpA) * gpR, gpY, gpSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
       break;
+    }
 
-    case "ice_throne":
-      // Jagged ice shards forming a chair
-      ctx.fillStyle = "rgba(0, 96, 100, 0.3)"; // Shadow
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 10 * s,
-        20 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
+    case "ice_fortress": {
+      const ifVar = variant % 3;
+
+      // Ground shadow
+      const ifShadG = ctx.createRadialGradient(
+        screenPos.x + 4 * s, screenPos.y + 14 * s, 0,
+        screenPos.x + 4 * s, screenPos.y + 14 * s, 60 * s,
       );
+      ifShadG.addColorStop(0, "rgba(0,50,70,0.4)");
+      ifShadG.addColorStop(0.5, "rgba(0,50,70,0.12)");
+      ifShadG.addColorStop(1, "transparent");
+      ctx.fillStyle = ifShadG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 14 * s, 60 * s, 24 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      const throneBase = "#4FC3F7";
-      const throneHighlight = "#B3E5FC";
-
-      // Base block
-      ctx.fillStyle = throneBase;
+      // Snow mound base
+      const ifSnowG = ctx.createRadialGradient(
+        screenPos.x - 5 * s, screenPos.y + 2 * s, 0,
+        screenPos.x, screenPos.y + 7 * s, 46 * s,
+      );
+      ifSnowG.addColorStop(0, "#ffffff");
+      ifSnowG.addColorStop(0.4, "#eaf2f8");
+      ifSnowG.addColorStop(0.8, "#cde0ec");
+      ifSnowG.addColorStop(1, "#b0cede");
+      ctx.fillStyle = ifSnowG;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 15 * s, screenPos.y + 2);
-      ctx.lineTo(screenPos.x, screenPos.y + 7 * s);
-      ctx.lineTo(screenPos.x + 15 * s, screenPos.y + 2);
+      ctx.ellipse(screenPos.x, screenPos.y + 7 * s, 46 * s, 15 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const ifDrawWall = (wx: number, wy: number, ww: number, wh: number, wd: number) => {
+        // Front face with gradient
+        const wfG = ctx.createLinearGradient(wx, wy, wx, wy - wh);
+        wfG.addColorStop(0, "#0277BD");
+        wfG.addColorStop(0.3, "#29B6F6");
+        wfG.addColorStop(0.6, "#81D4FA");
+        wfG.addColorStop(1, "#d6eef8");
+        ctx.fillStyle = wfG;
+        ctx.beginPath();
+        ctx.moveTo(wx - ww / 2, wy);
+        ctx.lineTo(wx - ww / 2, wy - wh);
+        ctx.lineTo(wx + ww / 2, wy - wh);
+        ctx.lineTo(wx + ww / 2, wy);
+        ctx.closePath();
+        ctx.fill();
+        // Right face gradient
+        const wrG = ctx.createLinearGradient(wx + ww / 2, wy, wx + ww / 2 + wd, wy - wd * 0.5);
+        wrG.addColorStop(0, "#0277BD");
+        wrG.addColorStop(0.5, "#01579B");
+        wrG.addColorStop(1, "#003c5e");
+        ctx.fillStyle = wrG;
+        ctx.beginPath();
+        ctx.moveTo(wx + ww / 2, wy);
+        ctx.lineTo(wx + ww / 2, wy - wh);
+        ctx.lineTo(wx + ww / 2 + wd, wy - wh - wd * 0.5);
+        ctx.lineTo(wx + ww / 2 + wd, wy - wd * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Top face
+        const wtG = ctx.createLinearGradient(wx - ww / 2, wy - wh, wx + ww / 2 + wd, wy - wh - wd * 0.5);
+        wtG.addColorStop(0, "#e1f5fe");
+        wtG.addColorStop(0.5, "#b3e5fc");
+        wtG.addColorStop(1, "#81d4fa");
+        ctx.fillStyle = wtG;
+        ctx.beginPath();
+        ctx.moveTo(wx - ww / 2, wy - wh);
+        ctx.lineTo(wx + ww / 2, wy - wh);
+        ctx.lineTo(wx + ww / 2 + wd, wy - wh - wd * 0.5);
+        ctx.lineTo(wx - ww / 2 + wd, wy - wh - wd * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Snow on top
+        ctx.fillStyle = "rgba(240,248,255,0.55)";
+        ctx.beginPath();
+        ctx.moveTo(wx - ww / 2 + 2 * s, wy - wh);
+        ctx.quadraticCurveTo(wx, wy - wh - 3 * s, wx + ww / 2 - 2 * s, wy - wh);
+        ctx.lineTo(wx + ww / 2 + wd - 2 * s, wy - wh - wd * 0.5);
+        ctx.quadraticCurveTo(wx + wd / 2, wy - wh - wd * 0.5 - 2 * s, wx - ww / 2 + wd + 2 * s, wy - wh - wd * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        // Stone block lines
+        ctx.strokeStyle = "rgba(0,40,60,0.12)";
+        ctx.lineWidth = 0.6 * s;
+        for (let sl = 1; sl < Math.floor(wh / (6 * s)); sl++) {
+          const sly = wy - sl * 6 * s;
+          ctx.beginPath();
+          ctx.moveTo(wx - ww / 2 + 1 * s, sly);
+          ctx.lineTo(wx + ww / 2 - 1 * s, sly);
+          ctx.stroke();
+        }
+        // Crenellations
+        const crenW = 4 * s;
+        const crenH = 4 * s;
+        const crenCount = Math.max(2, Math.floor(ww / (crenW * 2)));
+        ctx.fillStyle = "#b3e5fc";
+        for (let cr = 0; cr < crenCount; cr++) {
+          const cx = wx - ww / 2 + crenW + cr * (ww - crenW * 2) / Math.max(1, crenCount - 1);
+          ctx.fillRect(cx - crenW * 0.4, wy - wh - crenH, crenW * 0.8, crenH);
+        }
+        // Icicles hanging from wall edge
+        ctx.fillStyle = "rgba(179,229,252,0.55)";
+        for (let wic = 0; wic < 5; wic++) {
+          const wicx = wx - ww / 2 + ww * 0.15 + wic * ww * 0.18;
+          const wicLen = (3 + wic * 1.3 % 5) * s;
+          ctx.beginPath();
+          ctx.moveTo(wicx - 0.8 * s, wy);
+          ctx.lineTo(wicx, wy + wicLen);
+          ctx.lineTo(wicx + 0.8 * s, wy);
+          ctx.closePath();
+          ctx.fill();
+        }
+      };
+
+      const ifDrawTower = (tx: number, ty: number, tr: number, th: number, hasBanner: boolean) => {
+        // Tower body left face gradient
+        const tlG = ctx.createLinearGradient(tx - tr, ty, tx, ty - th);
+        tlG.addColorStop(0, "#29B6F6");
+        tlG.addColorStop(0.4, "#81D4FA");
+        tlG.addColorStop(0.8, "#b3e5fc");
+        tlG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = tlG;
+        ctx.beginPath();
+        ctx.moveTo(tx - tr, ty);
+        ctx.lineTo(tx - tr, ty - th);
+        ctx.lineTo(tx, ty - th - tr * 0.5);
+        ctx.lineTo(tx, ty);
+        ctx.closePath();
+        ctx.fill();
+        // Tower body right face gradient
+        const trG = ctx.createLinearGradient(tx, ty - th, tx + tr, ty);
+        trG.addColorStop(0, "#81D4FA");
+        trG.addColorStop(0.4, "#0288D1");
+        trG.addColorStop(1, "#01579B");
+        ctx.fillStyle = trG;
+        ctx.beginPath();
+        ctx.moveTo(tx + tr, ty);
+        ctx.lineTo(tx + tr, ty - th);
+        ctx.lineTo(tx, ty - th - tr * 0.5);
+        ctx.lineTo(tx, ty);
+        ctx.closePath();
+        ctx.fill();
+        // Stone lines on tower
+        ctx.strokeStyle = "rgba(0,40,60,0.1)";
+        ctx.lineWidth = 0.5 * s;
+        for (let tsl = 1; tsl < Math.floor(th / (7 * s)); tsl++) {
+          const tsly = ty - tsl * 7 * s;
+          ctx.beginPath();
+          ctx.moveTo(tx - tr + 1 * s, tsly);
+          ctx.lineTo(tx, tsly - 1 * s);
+          ctx.stroke();
+        }
+        // Parapet platform
+        ctx.fillStyle = "#d6eef8";
+        ctx.beginPath();
+        ctx.ellipse(tx, ty - th - tr * 0.25, tr * 1.2, tr * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Snow on parapet
+        ctx.fillStyle = "rgba(240,248,255,0.6)";
+        ctx.beginPath();
+        ctx.ellipse(tx, ty - th - tr * 0.3, tr * 0.9, tr * 0.35, 0, Math.PI, Math.PI * 2);
+        ctx.fill();
+        // Battlement spikes
+        for (let bp = 0; bp < 5; bp++) {
+          const ba = (bp / 5) * Math.PI * 2;
+          const bpx = tx + Math.cos(ba) * tr;
+          const bpy = ty - th - tr * 0.25 + Math.sin(ba) * tr * 0.4;
+          const spikeG = ctx.createLinearGradient(bpx, bpy, bpx, bpy - 10 * s);
+          spikeG.addColorStop(0, "#81D4FA");
+          spikeG.addColorStop(1, "#e1f5fe");
+          ctx.fillStyle = spikeG;
+          ctx.beginPath();
+          ctx.moveTo(bpx - 2 * s, bpy);
+          ctx.lineTo(bpx, bpy - 10 * s);
+          ctx.lineTo(bpx + 2 * s, bpy);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // Window arches at multiple heights
+        for (let wn = 0; wn < 2; wn++) {
+          const wny = ty - th * (0.35 + wn * 0.25);
+          ctx.fillStyle = "rgba(0,30,50,0.5)";
+          ctx.beginPath();
+          ctx.arc(tx - tr * 0.35, wny, 2.5 * s, Math.PI, 0);
+          ctx.lineTo(tx - tr * 0.35 + 2.5 * s, wny + 4 * s);
+          ctx.lineTo(tx - tr * 0.35 - 2.5 * s, wny + 4 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Window glow
+          ctx.fillStyle = "rgba(100,200,255,0.15)";
+          ctx.beginPath();
+          ctx.arc(tx - tr * 0.35, wny + 1 * s, 1.5 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Frost sparkles on tower
+        ctx.fillStyle = "rgba(255,255,255,0.65)";
+        ctx.beginPath();
+        ctx.arc(tx - tr * 0.6, ty - th * 0.7, 1.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(tx + tr * 0.3, ty - th * 0.4, 1 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Banner
+        if (hasBanner) {
+          ctx.strokeStyle = "#455A64";
+          ctx.lineWidth = 1.5 * s;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty - th - tr * 0.5);
+          ctx.lineTo(tx, ty - th - tr * 0.5 - 16 * s);
+          ctx.stroke();
+          const banG = ctx.createLinearGradient(tx, ty - th - tr * 0.5 - 16 * s, tx + 10 * s, ty - th - tr * 0.5 - 8 * s);
+          banG.addColorStop(0, "#0D47A1");
+          banG.addColorStop(1, "#1565C0");
+          ctx.fillStyle = banG;
+          ctx.beginPath();
+          ctx.moveTo(tx, ty - th - tr * 0.5 - 16 * s);
+          ctx.lineTo(tx + 10 * s, ty - th - tr * 0.5 - 14 * s);
+          ctx.lineTo(tx + 8 * s, ty - th - tr * 0.5 - 10 * s);
+          ctx.lineTo(tx + 10 * s, ty - th - tr * 0.5 - 6 * s);
+          ctx.lineTo(tx, ty - th - tr * 0.5 - 8 * s);
+          ctx.closePath();
+          ctx.fill();
+          // Snowflake emblem on banner
+          ctx.strokeStyle = "rgba(255,255,255,0.5)";
+          ctx.lineWidth = 0.6 * s;
+          const bex = tx + 5 * s;
+          const bey = ty - th - tr * 0.5 - 11 * s;
+          for (let be = 0; be < 6; be++) {
+            const bea = (be / 6) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(bex, bey);
+            ctx.lineTo(bex + Math.cos(bea) * 3 * s, bey + Math.sin(bea) * 3 * s);
+            ctx.stroke();
+          }
+        }
+      };
+
+      if (ifVar === 0) {
+        ifDrawWall(screenPos.x, screenPos.y + 2 * s, 42 * s, 32 * s, 13 * s);
+        ifDrawTower(screenPos.x - 26 * s, screenPos.y + 3 * s, 11 * s, 54 * s, true);
+        ifDrawTower(screenPos.x + 26 * s, screenPos.y - 3 * s, 11 * s, 54 * s, false);
+        // Gate arch with gradient
+        const gateG = ctx.createLinearGradient(screenPos.x, screenPos.y + 2 * s, screenPos.x, screenPos.y - 14 * s);
+        gateG.addColorStop(0, "rgba(0,30,50,0.7)");
+        gateG.addColorStop(1, "rgba(0,50,70,0.4)");
+        ctx.fillStyle = gateG;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 6 * s, 8 * s, Math.PI, 0);
+        ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Portcullis
+        ctx.strokeStyle = "#546E7A";
+        ctx.lineWidth = 1.2 * s;
+        for (let pb = -5; pb <= 5; pb += 2.5) {
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + pb * s, screenPos.y - 13 * s);
+          ctx.lineTo(screenPos.x + pb * s, screenPos.y + 2 * s);
+          ctx.stroke();
+        }
+        for (let ph = 0; ph < 3; ph++) {
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 2 * s - ph * 4 * s);
+          ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 2 * s - ph * 4 * s);
+          ctx.stroke();
+        }
+      } else if (ifVar === 1) {
+        ifDrawWall(screenPos.x - 8 * s, screenPos.y + 3 * s, 52 * s, 24 * s, 15 * s);
+        ifDrawWall(screenPos.x + 4 * s, screenPos.y - 20 * s, 32 * s, 20 * s, 11 * s);
+        ifDrawTower(screenPos.x + 22 * s, screenPos.y - 1 * s, 12 * s, 62 * s, true);
+        // Arrow slits with glow
+        for (let asl = 0; asl < 4; asl++) {
+          const asx = screenPos.x - 26 * s + asl * 13 * s;
+          ctx.fillStyle = "rgba(0,30,50,0.5)";
+          ctx.beginPath();
+          ctx.ellipse(asx, screenPos.y - 8 * s, 1.5 * s, 4.5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "rgba(100,200,255,0.1)";
+          ctx.beginPath();
+          ctx.arc(asx, screenPos.y - 8 * s, 3 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Icicles from upper keep
+        ctx.fillStyle = "rgba(179,229,252,0.6)";
+        for (let ic = 0; ic < 5; ic++) {
+          const icx = screenPos.x - 8 * s + ic * 7 * s;
+          const icLen = (5 + ic * 1.7 % 6) * s;
+          ctx.beginPath();
+          ctx.moveTo(icx - 1.2 * s, screenPos.y - 20 * s);
+          ctx.lineTo(icx, screenPos.y - 20 * s + icLen);
+          ctx.lineTo(icx + 1.2 * s, screenPos.y - 20 * s);
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else {
+        ifDrawWall(screenPos.x, screenPos.y + 3 * s, 38 * s, 28 * s, 11 * s);
+        ifDrawTower(screenPos.x - 24 * s, screenPos.y + 5 * s, 10 * s, 48 * s, false);
+        ifDrawTower(screenPos.x + 24 * s, screenPos.y - 1 * s, 10 * s, 48 * s, false);
+        ifDrawTower(screenPos.x, screenPos.y - 7 * s, 13 * s, 65 * s, true);
+        // Frost aura around central tower
+        const ifAura = ctx.createRadialGradient(
+          screenPos.x, screenPos.y - 40 * s, 0,
+          screenPos.x, screenPos.y - 40 * s, 30 * s,
+        );
+        ifAura.addColorStop(0, "rgba(128,222,234,0.15)");
+        ifAura.addColorStop(0.6, "rgba(128,222,234,0.05)");
+        ifAura.addColorStop(1, "transparent");
+        ctx.fillStyle = ifAura;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 40 * s, 30 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Frost particles
+      ctx.fillStyle = "rgba(200,235,255,0.65)";
+      for (let fp = 0; fp < 10; fp++) {
+        const fAngle = (fp / 10) * Math.PI * 2 + decorTime * 0.25;
+        const fR = (32 + Math.sin(decorTime * 0.7 + fp * 1.1) * 10) * s;
+        const fy = screenPos.y - 28 * s + Math.cos(decorTime * 0.4 + fp) * 10 * s;
+        const fpSize = (0.9 + Math.sin(decorTime * 0.8 + fp) * 0.3) * s;
+        ctx.beginPath();
+        ctx.arc(screenPos.x + Math.cos(fAngle) * fR, fy, fpSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "ice_spire": {
+      const isVar = variant % 3;
+
+      // Ground shadow
+      const isShadG = ctx.createRadialGradient(
+        screenPos.x + 2 * s, screenPos.y + 10 * s, 0,
+        screenPos.x + 2 * s, screenPos.y + 10 * s, 25 * s,
+      );
+      isShadG.addColorStop(0, "rgba(0,60,80,0.35)");
+      isShadG.addColorStop(0.6, "rgba(0,60,80,0.1)");
+      isShadG.addColorStop(1, "transparent");
+      ctx.fillStyle = isShadG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x + 2 * s, screenPos.y + 10 * s, 25 * s, 10 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Isometric base platform helper
+      const isDrawBase = (bw: number, bd: number) => {
+        // Top face
+        const btG = ctx.createLinearGradient(screenPos.x - bw, screenPos.y, screenPos.x + bw, screenPos.y + bd);
+        btG.addColorStop(0, "#b3e5fc");
+        btG.addColorStop(0.5, "#81d4fa");
+        btG.addColorStop(1, "#4fc3f7");
+        ctx.fillStyle = btG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - bw, screenPos.y + 4 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd);
+        ctx.lineTo(screenPos.x + bw, screenPos.y + 4 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 4 * s - bd);
+        ctx.closePath();
+        ctx.fill();
+        // Left face
+        const blG = ctx.createLinearGradient(screenPos.x - bw, screenPos.y, screenPos.x, screenPos.y + 18 * s);
+        blG.addColorStop(0, "#4fc3f7");
+        blG.addColorStop(1, "#0277BD");
+        ctx.fillStyle = blG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - bw, screenPos.y + 4 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd);
+        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd + 8 * s);
+        ctx.lineTo(screenPos.x - bw, screenPos.y + 12 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Right face
+        const brG = ctx.createLinearGradient(screenPos.x, screenPos.y, screenPos.x + bw, screenPos.y + 18 * s);
+        brG.addColorStop(0, "#0288D1");
+        brG.addColorStop(1, "#01579B");
+        ctx.fillStyle = brG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + bw, screenPos.y + 4 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd);
+        ctx.lineTo(screenPos.x, screenPos.y + 4 * s + bd + 8 * s);
+        ctx.lineTo(screenPos.x + bw, screenPos.y + 12 * s);
+        ctx.closePath();
+        ctx.fill();
+      };
+
+      // Gradient spire helper
+      const isDrawSpire = (sx: number, sy: number, sh: number, sw: number, bright: boolean) => {
+        // Left face gradient
+        const slG = ctx.createLinearGradient(sx - sw, sy, sx, sy - sh);
+        slG.addColorStop(0, bright ? "#81d4fa" : "#4fc3f7");
+        slG.addColorStop(0.5, bright ? "#b3e5fc" : "#81d4fa");
+        slG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = slG;
+        ctx.beginPath();
+        ctx.moveTo(sx - sw, sy);
+        ctx.lineTo(sx, sy - sh);
+        ctx.lineTo(sx + sw * 0.15, sy);
+        ctx.closePath();
+        ctx.fill();
+        // Right face gradient
+        const srG = ctx.createLinearGradient(sx, sy - sh, sx + sw, sy);
+        srG.addColorStop(0, "#b3e5fc");
+        srG.addColorStop(0.4, "#29B6F6");
+        srG.addColorStop(1, "#0277BD");
+        ctx.fillStyle = srG;
+        ctx.beginPath();
+        ctx.moveTo(sx + sw * 0.15, sy);
+        ctx.lineTo(sx, sy - sh);
+        ctx.lineTo(sx + sw, sy);
+        ctx.closePath();
+        ctx.fill();
+        // Center edge highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy - sh);
+        ctx.lineTo(sx + sw * 0.15, sy);
+        ctx.stroke();
+        // Internal fracture veins
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(sx - sw * 0.4, sy - sh * 0.3);
+        ctx.lineTo(sx, sy - sh * 0.6);
+        ctx.lineTo(sx + sw * 0.3, sy - sh * 0.35);
+        ctx.stroke();
+        // Snow cap
+        if (sh > 30 * s) {
+          ctx.fillStyle = "rgba(240,248,255,0.5)";
+          ctx.beginPath();
+          ctx.moveTo(sx - sw * 0.3, sy - sh * 0.85);
+          ctx.quadraticCurveTo(sx, sy - sh * 0.9, sx + sw * 0.2, sy - sh * 0.85);
+          ctx.lineTo(sx + sw * 0.15, sy - sh * 0.8);
+          ctx.quadraticCurveTo(sx - sw * 0.1, sy - sh * 0.82, sx - sw * 0.25, sy - sh * 0.8);
+          ctx.closePath();
+          ctx.fill();
+        }
+      };
+
+      if (isVar === 0) {
+        isDrawBase(16 * s, 7 * s);
+        isDrawSpire(screenPos.x - 12 * s, screenPos.y, 32 * s, 7 * s, false);
+        isDrawSpire(screenPos.x + 5 * s, screenPos.y - 2 * s, 30 * s, 8 * s, false);
+        isDrawSpire(screenPos.x, screenPos.y - 4 * s, 58 * s, 8 * s, true);
+        // Rune marking on main spire
+        ctx.strokeStyle = "rgba(128,222,234,0.3)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 25 * s);
+        ctx.lineTo(screenPos.x - 1 * s, screenPos.y - 30 * s);
+        ctx.stroke();
+      } else if (isVar === 1) {
+        isDrawBase(19 * s, 8 * s);
+        // Twin spires
+        isDrawSpire(screenPos.x - 10 * s, screenPos.y, 48 * s, 7 * s, true);
+        isDrawSpire(screenPos.x + 10 * s, screenPos.y - 2 * s, 48 * s, 7 * s, true);
+        isDrawSpire(screenPos.x - 3 * s, screenPos.y + 2 * s, 22 * s, 5 * s, false);
+        isDrawSpire(screenPos.x + 15 * s, screenPos.y + 1 * s, 20 * s, 4 * s, false);
+        // Connecting arch with gradient
+        const archG = ctx.createLinearGradient(screenPos.x - 10 * s, screenPos.y - 28 * s, screenPos.x + 10 * s, screenPos.y - 28 * s);
+        archG.addColorStop(0, "#b3e5fc");
+        archG.addColorStop(0.5, "#e1f5fe");
+        archG.addColorStop(1, "#b3e5fc");
+        ctx.strokeStyle = archG;
+        ctx.lineWidth = 3.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 28 * s);
+        ctx.quadraticCurveTo(screenPos.x, screenPos.y - 38 * s, screenPos.x + 10 * s, screenPos.y - 28 * s);
+        ctx.stroke();
+        // Rune on arch
+        ctx.strokeStyle = "rgba(128,222,234,0.35)";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 32 * s, 3 * s, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // Clustered crystal formation
+        isDrawBase(17 * s, 8 * s);
+        isDrawSpire(screenPos.x, screenPos.y - 2 * s, 54 * s, 7 * s, true);
+        const csAngles = [0.7, 1.9, 3.3, 4.8];
+        const csHeights = [34, 28, 38, 24];
+        const csWidths = [5, 4, 6, 4];
+        csAngles.forEach((ca, ci) => {
+          isDrawSpire(
+            screenPos.x + Math.cos(ca) * 11 * s,
+            screenPos.y + 2 * s + Math.sin(ca) * 5 * s,
+            csHeights[ci] * s, csWidths[ci] * s, ci % 2 === 0,
+          );
+        });
+        // Glowing core
+        const isCore = ctx.createRadialGradient(
+          screenPos.x, screenPos.y - 16 * s, 0,
+          screenPos.x, screenPos.y - 16 * s, 14 * s,
+        );
+        isCore.addColorStop(0, "rgba(128,222,234,0.4)");
+        isCore.addColorStop(0.4, "rgba(179,229,252,0.15)");
+        isCore.addColorStop(1, "transparent");
+        ctx.fillStyle = isCore;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 16 * s, 14 * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Frost sparkles
+      ctx.fillStyle = "rgba(220,245,255,0.75)";
+      for (let isp = 0; isp < 6; isp++) {
+        const spA = (isp / 6) * Math.PI * 2 + decorTime * 0.5;
+        const spR = (14 + Math.sin(decorTime * 0.8 + isp * 1.3) * 5) * s;
+        const spSize = (0.8 + Math.sin(decorTime + isp) * 0.3) * s;
+        ctx.beginPath();
+        ctx.arc(
+          screenPos.x + Math.cos(spA) * spR,
+          screenPos.y - 22 * s + Math.sin(spA) * spR * 0.35,
+          spSize, 0, Math.PI * 2,
+        );
+        ctx.fill();
+      }
+      break;
+    }
+
+    case "ice_throne": {
+      const itVar = variant % 3;
+
+      // Ground shadow
+      const itShadG = ctx.createRadialGradient(
+        screenPos.x + 4 * s, screenPos.y + 16 * s, 0,
+        screenPos.x + 4 * s, screenPos.y + 16 * s, 45 * s,
+      );
+      itShadG.addColorStop(0, "rgba(0,50,70,0.4)");
+      itShadG.addColorStop(0.5, "rgba(0,50,70,0.12)");
+      itShadG.addColorStop(1, "transparent");
+      ctx.fillStyle = itShadG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 16 * s, 45 * s, 18 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Snow base mound
+      const itSnowG = ctx.createRadialGradient(
+        screenPos.x - 4 * s, screenPos.y + 4 * s, 0,
+        screenPos.x, screenPos.y + 10 * s, 34 * s,
+      );
+      itSnowG.addColorStop(0, "#ffffff");
+      itSnowG.addColorStop(0.4, "#eaf2f8");
+      itSnowG.addColorStop(0.8, "#cde0ec");
+      itSnowG.addColorStop(1, "#b0cede");
+      ctx.fillStyle = itSnowG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y + 10 * s, 34 * s, 12 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dais lower step - top
+      const itD1G = ctx.createLinearGradient(screenPos.x - 28 * s, screenPos.y, screenPos.x + 28 * s, screenPos.y + 12 * s);
+      itD1G.addColorStop(0, "#81d4fa");
+      itD1G.addColorStop(0.5, "#b3e5fc");
+      itD1G.addColorStop(1, "#4fc3f7");
+      ctx.fillStyle = itD1G;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 28 * s, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
+      ctx.lineTo(screenPos.x + 28 * s, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y - 4 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Dais lower step - left face
+      const itD1L = ctx.createLinearGradient(screenPos.x - 28 * s, screenPos.y, screenPos.x, screenPos.y + 20 * s);
+      itD1L.addColorStop(0, "#29B6F6");
+      itD1L.addColorStop(1, "#0277BD");
+      ctx.fillStyle = itD1L;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 28 * s, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 20 * s);
+      ctx.lineTo(screenPos.x - 28 * s, screenPos.y + 12 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Dais lower step - right face
+      ctx.fillStyle = "#01579B";
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x + 28 * s, screenPos.y + 4 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 12 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 20 * s);
+      ctx.lineTo(screenPos.x + 28 * s, screenPos.y + 12 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Rune engravings on dais face
+      ctx.strokeStyle = "rgba(128,222,234,0.2)";
+      ctx.lineWidth = 0.8 * s;
+      for (let dr = 0; dr < 3; dr++) {
+        const drx = screenPos.x - 18 * s + dr * 12 * s;
+        const dry = screenPos.y + 8 * s + dr * 2 * s;
+        ctx.beginPath();
+        ctx.moveTo(drx, dry);
+        ctx.lineTo(drx + 3 * s, dry - 2 * s);
+        ctx.lineTo(drx + 6 * s, dry);
+        ctx.lineTo(drx + 3 * s, dry + 2 * s);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // Upper step - top
+      const itD2G = ctx.createLinearGradient(screenPos.x - 20 * s, screenPos.y - 6 * s, screenPos.x + 20 * s, screenPos.y + 6 * s);
+      itD2G.addColorStop(0, "#b3e5fc");
+      itD2G.addColorStop(0.5, "#e1f5fe");
+      itD2G.addColorStop(1, "#81d4fa");
+      ctx.fillStyle = itD2G;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x - 20 * s, screenPos.y);
+      ctx.lineTo(screenPos.x, screenPos.y + 6 * s);
+      ctx.lineTo(screenPos.x + 20 * s, screenPos.y);
       ctx.lineTo(screenPos.x, screenPos.y - 7 * s);
+      ctx.closePath();
       ctx.fill();
-      //throneBase but darker
-      ctx.fillStyle = "#29B6F6";
+      // Upper step - left face
+      ctx.fillStyle = "#4fc3f7";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 15 * s, screenPos.y + 2);
-      ctx.lineTo(screenPos.x, screenPos.y + 7 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 17 * s);
-      ctx.lineTo(screenPos.x - 15 * s, screenPos.y + 10 * s);
-      ctx.fill();
-      // right side, darkest
-      ctx.fillStyle = "#0288D1";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 15 * s, screenPos.y + 2);
-      ctx.lineTo(screenPos.x, screenPos.y + 7 * s);
-      ctx.lineTo(screenPos.x, screenPos.y + 17 * s);
-      ctx.lineTo(screenPos.x + 15 * s, screenPos.y + 10 * s);
-      ctx.fill();
-
-      // connector
-      ctx.fillStyle = "#0288D1";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 5 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 5 * s);
-      ctx.lineTo(screenPos.x + 5 * s, screenPos.y + 2 * s);
-      ctx.lineTo(screenPos.x - 5 * s, screenPos.y + 2 * s);
-      ctx.fill();
-
-      // Seat and Backrest (jagged polygons)
-      ctx.fillStyle = throneHighlight;
-      ctx.beginPath();
-      // Seat area
-      ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 5 * s);
-      ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 5 * s);
-      // Backrest rising up
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 35 * s); // Right point
-      ctx.lineTo(screenPos.x, screenPos.y - 50 * s); // Top point
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 35 * s); // Left point
+      ctx.moveTo(screenPos.x - 20 * s, screenPos.y);
+      ctx.lineTo(screenPos.x, screenPos.y + 6 * s);
+      ctx.lineTo(screenPos.x, screenPos.y + 11 * s);
+      ctx.lineTo(screenPos.x - 20 * s, screenPos.y + 4 * s);
       ctx.closePath();
       ctx.fill();
 
-      // Facet definitions
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 2 * s;
+      if (itVar === 0) {
+        // Grand spiked throne
+        // Seat diamond
+        const itSeatG = ctx.createLinearGradient(screenPos.x, screenPos.y - 12 * s, screenPos.x, screenPos.y - 2 * s);
+        itSeatG.addColorStop(0, "#4fc3f7");
+        itSeatG.addColorStop(1, "#0288D1");
+        ctx.fillStyle = itSeatG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 6 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 1 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 6 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 12 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Fur cushion on seat
+        const itFurG = ctx.createRadialGradient(screenPos.x, screenPos.y - 7 * s, 0, screenPos.x, screenPos.y - 7 * s, 10 * s);
+        itFurG.addColorStop(0, "rgba(230,240,250,0.6)");
+        itFurG.addColorStop(0.6, "rgba(200,220,235,0.3)");
+        itFurG.addColorStop(1, "transparent");
+        ctx.fillStyle = itFurG;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 7 * s, 10 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Armrests - gradient pillars
+        const itArmLG = ctx.createLinearGradient(screenPos.x - 15 * s, screenPos.y - 4 * s, screenPos.x - 15 * s, screenPos.y - 20 * s);
+        itArmLG.addColorStop(0, "#0288D1");
+        itArmLG.addColorStop(0.5, "#4fc3f7");
+        itArmLG.addColorStop(1, "#b3e5fc");
+        ctx.fillStyle = itArmLG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 16 * s, screenPos.y - 4 * s);
+        ctx.lineTo(screenPos.x - 16 * s, screenPos.y - 18 * s);
+        ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 4 * s);
+        ctx.closePath();
+        ctx.fill();
+        const itArmRG = ctx.createLinearGradient(screenPos.x + 12 * s, screenPos.y - 4 * s, screenPos.x + 12 * s, screenPos.y - 20 * s);
+        itArmRG.addColorStop(0, "#01579B");
+        itArmRG.addColorStop(0.5, "#0288D1");
+        itArmRG.addColorStop(1, "#4fc3f7");
+        ctx.fillStyle = itArmRG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 12 * s, screenPos.y - 4 * s);
+        ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 18 * s);
+        ctx.lineTo(screenPos.x + 16 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x + 16 * s, screenPos.y - 4 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Armrest caps
+        ctx.fillStyle = "#e1f5fe";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x - 14 * s, screenPos.y - 20 * s, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x + 14 * s, screenPos.y - 20 * s, 3 * s, 1.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Backrest - gradient with spiked crown
+        const itBackG = ctx.createLinearGradient(screenPos.x, screenPos.y - 10 * s, screenPos.x, screenPos.y - 72 * s);
+        itBackG.addColorStop(0, "#0277BD");
+        itBackG.addColorStop(0.3, "#29B6F6");
+        itBackG.addColorStop(0.6, "#81D4FA");
+        itBackG.addColorStop(0.85, "#b3e5fc");
+        itBackG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = itBackG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 10 * s);
+        ctx.lineTo(screenPos.x - 17 * s, screenPos.y - 46 * s);
+        ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 57 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 72 * s);
+        ctx.lineTo(screenPos.x + 9 * s, screenPos.y - 57 * s);
+        ctx.lineTo(screenPos.x + 17 * s, screenPos.y - 46 * s);
+        ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 10 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Facet lines
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y - 10 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 72 * s);
+        ctx.moveTo(screenPos.x - 9 * s, screenPos.y - 12 * s);
+        ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 57 * s);
+        ctx.moveTo(screenPos.x + 9 * s, screenPos.y - 12 * s);
+        ctx.lineTo(screenPos.x + 9 * s, screenPos.y - 57 * s);
+        ctx.stroke();
+        // Frost rune carvings on backrest
+        ctx.strokeStyle = "rgba(128,222,234,0.3)";
+        ctx.lineWidth = 0.8 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 25 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 30 * s);
+        ctx.lineTo(screenPos.x + 4 * s, screenPos.y - 25 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 20 * s);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y - 38 * s);
+        ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 42 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 46 * s);
+        ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 42 * s);
+        ctx.closePath();
+        ctx.stroke();
+        // Crown jewel with glow
+        const itJewelG = ctx.createRadialGradient(screenPos.x, screenPos.y - 67 * s, 0, screenPos.x, screenPos.y - 67 * s, 6 * s);
+        itJewelG.addColorStop(0, "rgba(128,222,234,0.7)");
+        itJewelG.addColorStop(0.4, "rgba(128,222,234,0.2)");
+        itJewelG.addColorStop(1, "transparent");
+        ctx.fillStyle = itJewelG;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 67 * s, 6 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#80DEEA";
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 67 * s, 3 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 1 * s, screenPos.y - 68 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (itVar === 1) {
+        // Curved elegant throne
+        // Seat
+        const itSeatG2 = ctx.createRadialGradient(screenPos.x, screenPos.y - 8 * s, 0, screenPos.x, screenPos.y - 8 * s, 13 * s);
+        itSeatG2.addColorStop(0, "#4fc3f7");
+        itSeatG2.addColorStop(0.7, "#0288D1");
+        itSeatG2.addColorStop(1, "#01579B");
+        ctx.fillStyle = itSeatG2;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 8 * s, 13 * s, 7 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Fur cushion
+        ctx.fillStyle = "rgba(230,240,250,0.45)";
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 9 * s, 9 * s, 4 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Curved backrest with gradient
+        const itCurveG = ctx.createLinearGradient(screenPos.x, screenPos.y - 8 * s, screenPos.x, screenPos.y - 62 * s);
+        itCurveG.addColorStop(0, "#0288D1");
+        itCurveG.addColorStop(0.4, "#4fc3f7");
+        itCurveG.addColorStop(0.7, "#81d4fa");
+        itCurveG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = itCurveG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 8 * s);
+        ctx.quadraticCurveTo(screenPos.x - 19 * s, screenPos.y - 42 * s, screenPos.x - 7 * s, screenPos.y - 62 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 57 * s);
+        ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 62 * s);
+        ctx.quadraticCurveTo(screenPos.x + 19 * s, screenPos.y - 42 * s, screenPos.x + 15 * s, screenPos.y - 8 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Inner backrest highlight
+        ctx.fillStyle = "rgba(225,245,254,0.4)";
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 11 * s, screenPos.y - 10 * s);
+        ctx.quadraticCurveTo(screenPos.x - 13 * s, screenPos.y - 37 * s, screenPos.x - 5 * s, screenPos.y - 52 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 52 * s);
+        ctx.quadraticCurveTo(screenPos.x + 13 * s, screenPos.y - 37 * s, screenPos.x + 11 * s, screenPos.y - 10 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Sweeping armrests with gradient
+        ctx.strokeStyle = "#29B6F6";
+        ctx.lineWidth = 3.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 8 * s);
+        ctx.quadraticCurveTo(screenPos.x - 22 * s, screenPos.y - 13 * s, screenPos.x - 20 * s, screenPos.y - 3 * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 15 * s, screenPos.y - 8 * s);
+        ctx.quadraticCurveTo(screenPos.x + 22 * s, screenPos.y - 13 * s, screenPos.x + 20 * s, screenPos.y - 3 * s);
+        ctx.stroke();
+        // Armrest tips
+        ctx.fillStyle = "#e1f5fe";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 20 * s, screenPos.y - 3 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 20 * s, screenPos.y - 3 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Snowflake emblem
+        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+        ctx.lineWidth = 1 * s;
+        for (let sf = 0; sf < 6; sf++) {
+          const sfAngle = (sf / 6) * Math.PI * 2;
+          const sfR = 6 * s;
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x, screenPos.y - 37 * s);
+          ctx.lineTo(screenPos.x + Math.cos(sfAngle) * sfR, screenPos.y - 37 * s + Math.sin(sfAngle) * sfR);
+          ctx.stroke();
+          // Branch tips
+          const bx = screenPos.x + Math.cos(sfAngle) * sfR * 0.6;
+          const by = screenPos.y - 37 * s + Math.sin(sfAngle) * sfR * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(bx, by);
+          ctx.lineTo(bx + Math.cos(sfAngle + 0.8) * 2 * s, by + Math.sin(sfAngle + 0.8) * 2 * s);
+          ctx.stroke();
+        }
+      } else {
+        // Jagged crystal throne
+        // Seat
+        const itSeatG3 = ctx.createLinearGradient(screenPos.x - 13 * s, screenPos.y - 10 * s, screenPos.x + 13 * s, screenPos.y + 2 * s);
+        itSeatG3.addColorStop(0, "#4fc3f7");
+        itSeatG3.addColorStop(0.5, "#0288D1");
+        itSeatG3.addColorStop(1, "#01579B");
+        ctx.fillStyle = itSeatG3;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 4 * s);
+        ctx.lineTo(screenPos.x, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 4 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 11 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Jagged backrest - left bright face
+        const itJagLG = ctx.createLinearGradient(screenPos.x - 16 * s, screenPos.y - 8 * s, screenPos.x, screenPos.y - 64 * s);
+        itJagLG.addColorStop(0, "#29B6F6");
+        itJagLG.addColorStop(0.4, "#4fc3f7");
+        itJagLG.addColorStop(0.7, "#81d4fa");
+        itJagLG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = itJagLG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 8 * s);
+        ctx.lineTo(screenPos.x - 17 * s, screenPos.y - 42 * s);
+        ctx.lineTo(screenPos.x - 11 * s, screenPos.y - 50 * s);
+        ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 40 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 64 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 8 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Right dark face
+        const itJagRG = ctx.createLinearGradient(screenPos.x, screenPos.y - 64 * s, screenPos.x + 15 * s, screenPos.y - 8 * s);
+        itJagRG.addColorStop(0, "#81d4fa");
+        itJagRG.addColorStop(0.3, "#29B6F6");
+        itJagRG.addColorStop(0.6, "#0288D1");
+        itJagRG.addColorStop(1, "#01579B");
+        ctx.fillStyle = itJagRG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y - 8 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 64 * s);
+        ctx.lineTo(screenPos.x + 6 * s, screenPos.y - 44 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 54 * s);
+        ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 36 * s);
+        ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 8 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Edge highlights
+        ctx.strokeStyle = "rgba(255,255,255,0.45)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 11 * s, screenPos.y - 50 * s);
+        ctx.lineTo(screenPos.x, screenPos.y - 64 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 54 * s);
+        ctx.stroke();
+        // Fracture veins
+        ctx.strokeStyle = "rgba(200,235,255,0.25)";
+        ctx.lineWidth = 0.7 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 35 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 25 * s);
+        ctx.stroke();
+        // Icy armrests with gradient
+        const itArmJG = ctx.createLinearGradient(screenPos.x - 19 * s, screenPos.y - 15 * s, screenPos.x - 15 * s, screenPos.y - 5 * s);
+        itArmJG.addColorStop(0, "#e1f5fe");
+        itArmJG.addColorStop(1, "#81d4fa");
+        ctx.fillStyle = itArmJG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 8 * s);
+        ctx.lineTo(screenPos.x - 19 * s, screenPos.y - 15 * s);
+        ctx.lineTo(screenPos.x - 17 * s, screenPos.y - 5 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#4fc3f7";
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 15 * s, screenPos.y - 8 * s);
+        ctx.lineTo(screenPos.x + 19 * s, screenPos.y - 15 * s);
+        ctx.lineTo(screenPos.x + 17 * s, screenPos.y - 5 * s);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Magical frost aura
+      const itAuraG = ctx.createRadialGradient(
+        screenPos.x, screenPos.y - 32 * s, 0,
+        screenPos.x, screenPos.y - 32 * s, 28 * s,
+      );
+      itAuraG.addColorStop(0, "rgba(128,222,234,0.18)");
+      itAuraG.addColorStop(0.5, "rgba(128,222,234,0.06)");
+      itAuraG.addColorStop(1, "transparent");
+      ctx.fillStyle = itAuraG;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - 5 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 50 * s);
-      ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 5 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 35 * s);
-      ctx.stroke();
+      ctx.arc(screenPos.x, screenPos.y - 32 * s, 28 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Floating ice motes
+      ctx.fillStyle = "rgba(220,245,255,0.7)";
+      for (let tm = 0; tm < 8; tm++) {
+        const tmA = (tm / 8) * Math.PI * 2 + decorTime * 0.35;
+        const tmR = (20 + Math.sin(decorTime * 0.6 + tm * 1.2) * 6) * s;
+        const tmY = screenPos.y - 32 * s + Math.cos(decorTime * 0.45 + tm) * 10 * s;
+        const tmSize = (0.8 + Math.sin(decorTime + tm * 0.7) * 0.4) * s;
+        ctx.beginPath();
+        ctx.arc(screenPos.x + Math.cos(tmA) * tmR, tmY, tmSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
       break;
+    }
 
     case "icicles": {
       const icicleBlue = "#b3e5fc";
@@ -17427,206 +18472,506 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "frozen_soldier": {
-      const iceBlock = "#b3e5fc";
-      const iceBlockDark = "#4fc3f7";
-      const iceBlockDeep = "#0288d1";
-      const armorDark = "rgba(60,80,100,0.5)";
-      const armorMid = "rgba(80,100,120,0.4)";
+      const fsVar = variant % 3;
 
       // Ground shadow
-      const soldierShadow = ctx.createRadialGradient(
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        22 * s,
+      const fsShadG = ctx.createRadialGradient(
+        screenPos.x + 3 * s, screenPos.y + 8 * s, 0,
+        screenPos.x + 3 * s, screenPos.y + 8 * s, 26 * s,
       );
-      soldierShadow.addColorStop(0, "rgba(0,60,80,0.3)");
-      soldierShadow.addColorStop(0.6, "rgba(0,60,80,0.1)");
-      soldierShadow.addColorStop(1, "transparent");
-      ctx.fillStyle = soldierShadow;
+      fsShadG.addColorStop(0, "rgba(0,60,80,0.35)");
+      fsShadG.addColorStop(0.5, "rgba(0,60,80,0.1)");
+      fsShadG.addColorStop(1, "transparent");
+      ctx.fillStyle = fsShadG;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        22 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
+      ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 8 * s, 26 * s, 11 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Snow mound base
+      const fsSnowG = ctx.createRadialGradient(
+        screenPos.x - 3 * s, screenPos.y, 0,
+        screenPos.x, screenPos.y + 3 * s, 20 * s,
       );
+      fsSnowG.addColorStop(0, "#ffffff");
+      fsSnowG.addColorStop(0.4, "#eaf2f8");
+      fsSnowG.addColorStop(0.8, "#d0dfe8");
+      fsSnowG.addColorStop(1, "#b8ceda");
+      ctx.fillStyle = fsSnowG;
+      ctx.beginPath();
+      ctx.ellipse(screenPos.x, screenPos.y + 3 * s, 20 * s, 8 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Snow at base
-      ctx.fillStyle = "#e8f0f6";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 3 * s,
-        16 * s,
-        6 * s,
-        0,
-        0,
-        Math.PI * 2,
+      // Ice block with gradients
+      const fsDrawIce = (bx: number, by: number, bw: number, bh: number, bd: number) => {
+        // Back face (darkest)
+        ctx.fillStyle = "#0277BD";
+        ctx.beginPath();
+        ctx.moveTo(bx - bw * 0.4, by);
+        ctx.lineTo(bx - bw * 0.35, by - bh);
+        ctx.lineTo(bx + bw * 0.35, by - bh * 0.97);
+        ctx.lineTo(bx + bw * 0.4, by);
+        ctx.closePath();
+        ctx.fill();
+        // Left face gradient
+        const lG = ctx.createLinearGradient(bx - bw * 0.55, by, bx - bw * 0.2, by - bh);
+        lG.addColorStop(0, "#29B6F6");
+        lG.addColorStop(0.3, "#4fc3f7");
+        lG.addColorStop(0.6, "#81d4fa");
+        lG.addColorStop(0.85, "#b3e5fc");
+        lG.addColorStop(1, "#e1f5fe");
+        ctx.fillStyle = lG;
+        ctx.beginPath();
+        ctx.moveTo(bx - bw * 0.55, by + bd * 0.3);
+        ctx.lineTo(bx - bw * 0.5, by - bh - bd * 0.1);
+        ctx.lineTo(bx - bw * 0.35, by - bh);
+        ctx.lineTo(bx - bw * 0.4, by);
+        ctx.closePath();
+        ctx.fill();
+        // Right face gradient
+        const rG = ctx.createLinearGradient(bx + bw * 0.2, by - bh, bx + bw * 0.55, by);
+        rG.addColorStop(0, "#b3e5fc");
+        rG.addColorStop(0.3, "#81d4fa");
+        rG.addColorStop(0.6, "#4fc3f7");
+        rG.addColorStop(0.85, "#29B6F6");
+        rG.addColorStop(1, "#0288D1");
+        ctx.fillStyle = rG;
+        ctx.beginPath();
+        ctx.moveTo(bx + bw * 0.55, by + bd * 0.3);
+        ctx.lineTo(bx + bw * 0.5, by - bh - bd * 0.1);
+        ctx.lineTo(bx + bw * 0.35, by - bh * 0.97);
+        ctx.lineTo(bx + bw * 0.4, by);
+        ctx.closePath();
+        ctx.fill();
+        // Top face gradient
+        const tG = ctx.createLinearGradient(bx - bw * 0.5, by - bh, bx + bw * 0.5, by - bh - bd * 0.4);
+        tG.addColorStop(0, "#e1f5fe");
+        tG.addColorStop(0.5, "#e3f2fd");
+        tG.addColorStop(1, "#b3e5fc");
+        ctx.fillStyle = tG;
+        ctx.beginPath();
+        ctx.moveTo(bx - bw * 0.5, by - bh - bd * 0.1);
+        ctx.lineTo(bx, by - bh - bd * 0.4);
+        ctx.lineTo(bx + bw * 0.5, by - bh - bd * 0.1);
+        ctx.lineTo(bx, by - bh + bd * 0.15);
+        ctx.closePath();
+        ctx.fill();
+        // Primary highlight streak
+        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.beginPath();
+        ctx.moveTo(bx - bw * 0.49, by - bh * 0.82);
+        ctx.lineTo(bx - bw * 0.43, by - bh * 0.87);
+        ctx.lineTo(bx - bw * 0.39, by - bh * 0.25);
+        ctx.lineTo(bx - bw * 0.45, by - bh * 0.2);
+        ctx.closePath();
+        ctx.fill();
+        // Secondary highlight
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.beginPath();
+        ctx.moveTo(bx + bw * 0.34, by - bh * 0.72);
+        ctx.lineTo(bx + bw * 0.39, by - bh * 0.77);
+        ctx.lineTo(bx + bw * 0.41, by - bh * 0.18);
+        ctx.lineTo(bx + bw * 0.36, by - bh * 0.13);
+        ctx.closePath();
+        ctx.fill();
+        // Ice crack patterns
+        ctx.strokeStyle = "rgba(200,235,255,0.25)";
+        ctx.lineWidth = 0.7 * s;
+        ctx.beginPath();
+        ctx.moveTo(bx - bw * 0.1, by - bh * 0.9);
+        ctx.lineTo(bx + bw * 0.05, by - bh * 0.55);
+        ctx.lineTo(bx - bw * 0.15, by - bh * 0.3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bx + bw * 0.05, by - bh * 0.55);
+        ctx.lineTo(bx + bw * 0.2, by - bh * 0.45);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bx - bw * 0.3, by - bh * 0.6);
+        ctx.lineTo(bx - bw * 0.15, by - bh * 0.5);
+        ctx.lineTo(bx - bw * 0.2, by - bh * 0.35);
+        ctx.stroke();
+        // Internal glow
+        const fsGlow = ctx.createRadialGradient(bx, by - bh * 0.5, 0, bx, by - bh * 0.5, bw * 0.4);
+        fsGlow.addColorStop(0, "rgba(144,202,249,0.12)");
+        fsGlow.addColorStop(1, "transparent");
+        ctx.fillStyle = fsGlow;
+        ctx.beginPath();
+        ctx.ellipse(bx, by - bh * 0.5, bw * 0.35, bh * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      fsDrawIce(screenPos.x, screenPos.y, 30 * s, 56 * s, 9 * s);
+
+      if (fsVar === 0) {
+        // Knight with sword and shield
+        // Body torso with gradient
+        const fsTorsoG = ctx.createLinearGradient(screenPos.x, screenPos.y - 7 * s, screenPos.x, screenPos.y - 29 * s);
+        fsTorsoG.addColorStop(0, "rgba(55,75,95,0.55)");
+        fsTorsoG.addColorStop(0.5, "rgba(75,95,115,0.5)");
+        fsTorsoG.addColorStop(1, "rgba(95,115,135,0.4)");
+        ctx.fillStyle = fsTorsoG;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 18 * s, 6.5 * s, 11.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Chainmail texture
+        ctx.strokeStyle = "rgba(130,150,170,0.3)";
+        ctx.lineWidth = 0.5 * s;
+        for (let cm = 0; cm < 5; cm++) {
+          ctx.beginPath();
+          ctx.arc(screenPos.x, screenPos.y - 12 * s - cm * 3 * s, 4.5 * s, 0.4, Math.PI - 0.4);
+          ctx.stroke();
+        }
+        // Belt
+        ctx.strokeStyle = "rgba(80,60,40,0.4)";
+        ctx.lineWidth = 2 * s;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 12 * s, 5.5 * s, 2 * s, 0, 0.2, Math.PI - 0.2);
+        ctx.stroke();
+        // Belt buckle
+        ctx.fillStyle = "rgba(180,160,100,0.35)";
+        ctx.beginPath();
+        ctx.rect(screenPos.x - 1.5 * s, screenPos.y - 13 * s, 3 * s, 2 * s);
+        ctx.fill();
+        // Full helm with gradient
+        const fsHelmG = ctx.createRadialGradient(screenPos.x - 1 * s, screenPos.y - 36 * s, 0, screenPos.x, screenPos.y - 34 * s, 6 * s);
+        fsHelmG.addColorStop(0, "rgba(120,140,160,0.45)");
+        fsHelmG.addColorStop(0.6, "rgba(80,100,120,0.5)");
+        fsHelmG.addColorStop(1, "rgba(55,75,95,0.55)");
+        ctx.fillStyle = fsHelmG;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 34 * s, 6 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Visor slit with interior glow
+        ctx.fillStyle = "rgba(15,25,35,0.5)";
+        ctx.fillRect(screenPos.x - 4 * s, screenPos.y - 35.5 * s, 8 * s, 2 * s);
+        ctx.fillStyle = "rgba(80,160,200,0.1)";
+        ctx.fillRect(screenPos.x - 3 * s, screenPos.y - 35 * s, 6 * s, 1 * s);
+        // Helmet crest
+        const fsCrestG = ctx.createLinearGradient(screenPos.x, screenPos.y - 43 * s, screenPos.x, screenPos.y - 37 * s);
+        fsCrestG.addColorStop(0, "rgba(100,120,140,0.5)");
+        fsCrestG.addColorStop(1, "rgba(65,85,105,0.55)");
+        ctx.fillStyle = fsCrestG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x, screenPos.y - 43 * s);
+        ctx.lineTo(screenPos.x - 2.5 * s, screenPos.y - 37 * s);
+        ctx.lineTo(screenPos.x + 2.5 * s, screenPos.y - 37 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Sword arm
+        ctx.strokeStyle = "rgba(65,85,105,0.55)";
+        ctx.lineWidth = 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 5.5 * s, screenPos.y - 23 * s);
+        ctx.lineTo(screenPos.x + 11 * s, screenPos.y - 31 * s);
+        ctx.stroke();
+        // Sword with gradient
+        const fsSwordG = ctx.createLinearGradient(screenPos.x + 10 * s, screenPos.y - 31 * s, screenPos.x + 8 * s, screenPos.y - 48 * s);
+        fsSwordG.addColorStop(0, "rgba(160,180,200,0.5)");
+        fsSwordG.addColorStop(0.5, "rgba(200,215,230,0.45)");
+        fsSwordG.addColorStop(1, "rgba(220,235,250,0.4)");
+        ctx.strokeStyle = fsSwordG;
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 31 * s);
+        ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 48 * s);
+        ctx.stroke();
+        // Fuller line
+        ctx.strokeStyle = "rgba(220,240,255,0.3)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 9.5 * s, screenPos.y - 33 * s);
+        ctx.lineTo(screenPos.x + 8.3 * s, screenPos.y - 46 * s);
+        ctx.stroke();
+        // Crossguard
+        ctx.strokeStyle = "rgba(170,150,100,0.4)";
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 31 * s);
+        ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 30 * s);
+        ctx.stroke();
+        // Shield with gradient
+        const fsShieldG = ctx.createLinearGradient(screenPos.x - 12 * s, screenPos.y - 28 * s, screenPos.x - 5 * s, screenPos.y - 14 * s);
+        fsShieldG.addColorStop(0, "rgba(100,120,140,0.45)");
+        fsShieldG.addColorStop(0.5, "rgba(80,100,120,0.5)");
+        fsShieldG.addColorStop(1, "rgba(60,80,100,0.55)");
+        ctx.fillStyle = fsShieldG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 29 * s);
+        ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 13 * s);
+        ctx.lineTo(screenPos.x - 4 * s, screenPos.y - 22 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Shield emblem (cross)
+        ctx.strokeStyle = "rgba(140,160,180,0.35)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 25 * s);
+        ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 19 * s);
+        ctx.moveTo(screenPos.x - 11 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 22 * s);
+        ctx.stroke();
+        // Legs with greaves
+        ctx.strokeStyle = "rgba(65,85,105,0.55)";
+        ctx.lineWidth = 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 7 * s);
+        ctx.lineTo(screenPos.x - 4.5 * s, screenPos.y + 2 * s);
+        ctx.moveTo(screenPos.x + 2 * s, screenPos.y - 7 * s);
+        ctx.lineTo(screenPos.x + 4.5 * s, screenPos.y + 2 * s);
+        ctx.stroke();
+      } else if (fsVar === 1) {
+        // Archer frozen mid-draw
+        const fsArchTorso = ctx.createLinearGradient(screenPos.x, screenPos.y - 8 * s, screenPos.x, screenPos.y - 28 * s);
+        fsArchTorso.addColorStop(0, "rgba(55,75,95,0.55)");
+        fsArchTorso.addColorStop(0.5, "rgba(70,90,110,0.5)");
+        fsArchTorso.addColorStop(1, "rgba(85,105,125,0.4)");
+        ctx.fillStyle = fsArchTorso;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x + 1 * s, screenPos.y - 18 * s, 5.5 * s, 10.5 * s, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+        // Hooded head with gradient
+        const fsHoodG = ctx.createRadialGradient(screenPos.x - 1 * s, screenPos.y - 35 * s, 0, screenPos.x, screenPos.y - 33 * s, 6 * s);
+        fsHoodG.addColorStop(0, "rgba(105,125,145,0.45)");
+        fsHoodG.addColorStop(0.7, "rgba(75,95,115,0.5)");
+        fsHoodG.addColorStop(1, "rgba(55,75,95,0.55)");
+        ctx.fillStyle = fsHoodG;
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 33 * s, 5.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Hood peak
+        ctx.fillStyle = "rgba(60,80,100,0.55)";
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 5.5 * s, screenPos.y - 34 * s);
+        ctx.quadraticCurveTo(screenPos.x, screenPos.y - 43 * s, screenPos.x + 3 * s, screenPos.y - 36 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Face shadow
+        ctx.fillStyle = "rgba(20,35,50,0.3)";
+        ctx.beginPath();
+        ctx.arc(screenPos.x, screenPos.y - 33 * s, 3.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Bow arm extended
+        ctx.strokeStyle = "rgba(65,85,105,0.55)";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 25 * s);
+        ctx.stroke();
+        // Bow with gradient
+        ctx.strokeStyle = "rgba(110,80,50,0.45)";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 37 * s);
+        ctx.quadraticCurveTo(screenPos.x - 17 * s, screenPos.y - 25 * s, screenPos.x - 13 * s, screenPos.y - 13 * s);
+        ctx.stroke();
+        // Bow highlight
+        ctx.strokeStyle = "rgba(160,130,90,0.2)";
+        ctx.lineWidth = 1 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 12.5 * s, screenPos.y - 35 * s);
+        ctx.quadraticCurveTo(screenPos.x - 15 * s, screenPos.y - 25 * s, screenPos.x - 12.5 * s, screenPos.y - 15 * s);
+        ctx.stroke();
+        // Bowstring
+        ctx.strokeStyle = "rgba(200,200,200,0.35)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 37 * s);
+        ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 13 * s);
+        ctx.stroke();
+        // Draw arm pulled back
+        ctx.strokeStyle = "rgba(65,85,105,0.55)";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 4 * s, screenPos.y - 22 * s);
+        ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 28 * s);
+        ctx.stroke();
+        // Arrow
+        ctx.strokeStyle = "rgba(140,105,65,0.45)";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 3 * s, screenPos.y - 28 * s);
+        ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
+        ctx.stroke();
+        // Arrowhead
+        ctx.fillStyle = "rgba(180,200,220,0.4)";
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 15 * s, screenPos.y - 25 * s);
+        ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 26.5 * s);
+        ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 23.5 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Quiver with gradient
+        const fsQuiverG = ctx.createLinearGradient(screenPos.x + 3 * s, screenPos.y - 30 * s, screenPos.x + 7 * s, screenPos.y - 14 * s);
+        fsQuiverG.addColorStop(0, "rgba(90,70,50,0.4)");
+        fsQuiverG.addColorStop(1, "rgba(70,50,30,0.35)");
+        ctx.fillStyle = fsQuiverG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 4 * s, screenPos.y - 31 * s);
+        ctx.lineTo(screenPos.x + 7.5 * s, screenPos.y - 31 * s);
+        ctx.lineTo(screenPos.x + 6.5 * s, screenPos.y - 13 * s);
+        ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 13 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Arrow fletching peeking
+        ctx.strokeStyle = "rgba(170,180,190,0.35)";
+        ctx.lineWidth = 0.8 * s;
+        for (let af = 0; af < 3; af++) {
+          ctx.beginPath();
+          ctx.moveTo(screenPos.x + (4 + af * 1.2) * s, screenPos.y - 31 * s);
+          ctx.lineTo(screenPos.x + (4 + af * 1.2) * s, screenPos.y - 34 * s);
+          ctx.stroke();
+        }
+        // Legs
+        ctx.strokeStyle = "rgba(65,85,105,0.55)";
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 1 * s, screenPos.y - 8 * s);
+        ctx.lineTo(screenPos.x - 3 * s, screenPos.y + 2 * s);
+        ctx.moveTo(screenPos.x + 3 * s, screenPos.y - 8 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y + 2 * s);
+        ctx.stroke();
+      } else {
+        // Spearman with banner
+        const fsSpearTorso = ctx.createLinearGradient(screenPos.x, screenPos.y - 7 * s, screenPos.x, screenPos.y - 29 * s);
+        fsSpearTorso.addColorStop(0, "rgba(55,75,95,0.55)");
+        fsSpearTorso.addColorStop(0.5, "rgba(70,90,110,0.5)");
+        fsSpearTorso.addColorStop(1, "rgba(85,105,125,0.42)");
+        ctx.fillStyle = fsSpearTorso;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x, screenPos.y - 18 * s, 7 * s, 11.5 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Shoulder pauldrons with gradient
+        const fsPauld = "rgba(85,105,125,0.48)";
+        ctx.fillStyle = fsPauld;
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x - 6.5 * s, screenPos.y - 26 * s, 3.5 * s, 2.5 * s, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(screenPos.x + 6.5 * s, screenPos.y - 26 * s, 3.5 * s, 2.5 * s, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        // Pauldron rivet dots
+        ctx.fillStyle = "rgba(140,160,180,0.3)";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 6.5 * s, screenPos.y - 26 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(screenPos.x + 6.5 * s, screenPos.y - 26 * s, 0.8 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Bucket helm gradient
+        const fsBucketG = ctx.createLinearGradient(screenPos.x - 5.5 * s, screenPos.y - 41 * s, screenPos.x + 5.5 * s, screenPos.y - 28 * s);
+        fsBucketG.addColorStop(0, "rgba(100,120,140,0.45)");
+        fsBucketG.addColorStop(0.4, "rgba(80,100,120,0.5)");
+        fsBucketG.addColorStop(1, "rgba(60,80,100,0.55)");
+        ctx.fillStyle = fsBucketG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 5.5 * s, screenPos.y - 28 * s);
+        ctx.lineTo(screenPos.x - 5.5 * s, screenPos.y - 41 * s);
+        ctx.lineTo(screenPos.x + 5.5 * s, screenPos.y - 41 * s);
+        ctx.lineTo(screenPos.x + 5.5 * s, screenPos.y - 28 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Helm slit with interior glow
+        ctx.fillStyle = "rgba(15,25,35,0.5)";
+        ctx.fillRect(screenPos.x - 4.5 * s, screenPos.y - 37 * s, 9 * s, 2 * s);
+        ctx.fillStyle = "rgba(80,160,200,0.08)";
+        ctx.fillRect(screenPos.x - 3.5 * s, screenPos.y - 36.5 * s, 7 * s, 1 * s);
+        // Helm highlight
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        ctx.fillRect(screenPos.x - 4 * s, screenPos.y - 40 * s, 2.5 * s, 11 * s);
+        // Spear shaft with gradient
+        const fsShaftG = ctx.createLinearGradient(screenPos.x + 6 * s, screenPos.y + 2 * s, screenPos.x + 5 * s, screenPos.y - 50 * s);
+        fsShaftG.addColorStop(0, "rgba(100,75,50,0.45)");
+        fsShaftG.addColorStop(0.5, "rgba(130,100,70,0.4)");
+        fsShaftG.addColorStop(1, "rgba(100,75,50,0.45)");
+        ctx.strokeStyle = fsShaftG;
+        ctx.lineWidth = 2.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 6 * s, screenPos.y + 2 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 50 * s);
+        ctx.stroke();
+        // Spearhead gradient
+        const fsSpearH = ctx.createLinearGradient(screenPos.x + 5 * s, screenPos.y - 50 * s, screenPos.x + 5 * s, screenPos.y - 44 * s);
+        fsSpearH.addColorStop(0, "rgba(210,225,240,0.5)");
+        fsSpearH.addColorStop(1, "rgba(170,190,210,0.45)");
+        ctx.fillStyle = fsSpearH;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 50 * s);
+        ctx.lineTo(screenPos.x + 2.5 * s, screenPos.y - 44 * s);
+        ctx.lineTo(screenPos.x + 7.5 * s, screenPos.y - 44 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Tattered banner
+        const fsBannerG = ctx.createLinearGradient(screenPos.x + 5 * s, screenPos.y - 45 * s, screenPos.x + 13 * s, screenPos.y - 39 * s);
+        fsBannerG.addColorStop(0, "rgba(100,45,45,0.38)");
+        fsBannerG.addColorStop(0.5, "rgba(120,55,55,0.32)");
+        fsBannerG.addColorStop(1, "rgba(80,35,35,0.28)");
+        ctx.fillStyle = fsBannerG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 45 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 43 * s);
+        ctx.lineTo(screenPos.x + 11 * s, screenPos.y - 39 * s);
+        ctx.lineTo(screenPos.x + 13 * s, screenPos.y - 37 * s);
+        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 39 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Shield with gradient
+        const fsSpShieldG = ctx.createLinearGradient(screenPos.x - 13 * s, screenPos.y - 27 * s, screenPos.x - 4 * s, screenPos.y - 12 * s);
+        fsSpShieldG.addColorStop(0, "rgba(90,110,130,0.48)");
+        fsSpShieldG.addColorStop(0.5, "rgba(75,95,115,0.5)");
+        fsSpShieldG.addColorStop(1, "rgba(60,80,100,0.52)");
+        ctx.fillStyle = fsSpShieldG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 27 * s);
+        ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x - 7 * s, screenPos.y - 11 * s);
+        ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 20 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Shield boss
+        ctx.fillStyle = "rgba(130,150,170,0.3)";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 7.5 * s, screenPos.y - 20 * s, 2.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(160,180,200,0.2)";
+        ctx.beginPath();
+        ctx.arc(screenPos.x - 7.5 * s, screenPos.y - 20 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Legs
+        ctx.strokeStyle = "rgba(65,85,105,0.55)";
+        ctx.lineWidth = 3 * s;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 7 * s);
+        ctx.lineTo(screenPos.x - 4.5 * s, screenPos.y + 2 * s);
+        ctx.moveTo(screenPos.x + 2 * s, screenPos.y - 7 * s);
+        ctx.lineTo(screenPos.x + 4.5 * s, screenPos.y + 2 * s);
+        ctx.stroke();
+      }
+
+      // Frost bloom around ice block
+      const fsFrostB = ctx.createRadialGradient(
+        screenPos.x, screenPos.y - 25 * s, 0,
+        screenPos.x, screenPos.y - 25 * s, 20 * s,
       );
-      ctx.fill();
-
-      // Ice block - back face
-      ctx.fillStyle = iceBlockDeep;
+      fsFrostB.addColorStop(0, "rgba(144,202,249,0.1)");
+      fsFrostB.addColorStop(1, "transparent");
+      ctx.fillStyle = fsFrostB;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 10 * s, screenPos.y);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 48 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ice block - left face
-      const soldierLeftGrad = ctx.createLinearGradient(
-        screenPos.x - 14 * s,
-        screenPos.y,
-        screenPos.x,
-        screenPos.y - 25 * s,
-      );
-      soldierLeftGrad.addColorStop(0, iceBlockDark);
-      soldierLeftGrad.addColorStop(0.5, iceBlock);
-      soldierLeftGrad.addColorStop(1, "#e3f2fd");
-      ctx.fillStyle = soldierLeftGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 14 * s, screenPos.y + 4 * s);
-      ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 52 * s);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 50 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ice block - right face
-      const soldierRightGrad = ctx.createLinearGradient(
-        screenPos.x,
-        screenPos.y - 25 * s,
-        screenPos.x + 14 * s,
-        screenPos.y,
-      );
-      soldierRightGrad.addColorStop(0, "#e3f2fd");
-      soldierRightGrad.addColorStop(0.5, iceBlock);
-      soldierRightGrad.addColorStop(1, iceBlockDark);
-      ctx.fillStyle = soldierRightGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 14 * s, screenPos.y + 4 * s);
-      ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 52 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 48 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ice block - top face
-      ctx.fillStyle = "#e3f2fd";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 52 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 56 * s);
-      ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 52 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 48 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Frozen soldier silhouette inside ice
-      // Body
-      ctx.fillStyle = armorDark;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y - 18 * s,
-        6 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Head + helmet
-      ctx.fillStyle = armorMid;
-      ctx.beginPath();
-      ctx.arc(screenPos.x, screenPos.y - 33 * s, 5 * s, 0, Math.PI * 2);
-      ctx.fill();
-      // Helmet crest
-      ctx.fillStyle = armorDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - 40 * s);
-      ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 35 * s);
-      ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 35 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      // Sword arm (reaching forward)
-      ctx.strokeStyle = armorDark;
-      ctx.lineWidth = 2.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 5 * s, screenPos.y - 22 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 30 * s);
-      ctx.stroke();
-
-      // Sword blade
-      ctx.strokeStyle = "rgba(180,200,220,0.4)";
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 30 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 44 * s);
-      ctx.stroke();
-
-      // Shield arm
-      ctx.fillStyle = armorMid;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 8 * s,
-        screenPos.y - 22 * s,
-        4 * s,
-        5 * s,
-        0.3,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Legs
-      ctx.strokeStyle = armorDark;
-      ctx.lineWidth = 2 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 8 * s);
-      ctx.lineTo(screenPos.x - 4 * s, screenPos.y + 2 * s);
-      ctx.moveTo(screenPos.x + 2 * s, screenPos.y - 8 * s);
-      ctx.lineTo(screenPos.x + 4 * s, screenPos.y + 2 * s);
-      ctx.stroke();
-
-      // Ice surface highlights and reflections
-      ctx.fillStyle = "rgba(255,255,255,0.4)";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 40 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 42 * s);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 20 * s);
-      ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 18 * s);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(255,255,255,0.25)";
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 8 * s, screenPos.y - 35 * s);
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 38 * s);
-      ctx.lineTo(screenPos.x + 11 * s, screenPos.y - 10 * s);
-      ctx.lineTo(screenPos.x + 9 * s, screenPos.y - 8 * s);
-      ctx.closePath();
+      ctx.arc(screenPos.x, screenPos.y - 25 * s, 20 * s, 0, Math.PI * 2);
       ctx.fill();
 
       // Frost particles
-      ctx.fillStyle = "rgba(200,230,255,0.6)";
-      for (let fp = 0; fp < 6; fp++) {
-        const frostAngle = (fp * Math.PI) / 3 + decorTime * 0.5;
-        const frostR = (14 + Math.sin(decorTime + fp) * 3) * s;
-        const fx = screenPos.x + Math.cos(frostAngle) * frostR * 0.8;
-        const fy = screenPos.y - 25 * s + Math.sin(frostAngle) * frostR * 0.4;
+      ctx.fillStyle = "rgba(210,240,255,0.65)";
+      for (let fsp = 0; fsp < 8; fsp++) {
+        const frostA = (fsp / 8) * Math.PI * 2 + decorTime * 0.4;
+        const frostRad = (16 + Math.sin(decorTime * 0.7 + fsp * 1.1) * 4) * s;
+        const fspSize = (0.7 + Math.sin(decorTime + fsp * 0.8) * 0.3) * s;
         ctx.beginPath();
-        ctx.arc(fx, fy, 1 * s, 0, Math.PI * 2);
+        ctx.arc(
+          screenPos.x + Math.cos(frostA) * frostRad * 0.8,
+          screenPos.y - 25 * s + Math.sin(frostA) * frostRad * 0.4,
+          fspSize, 0, Math.PI * 2,
+        );
         ctx.fill();
       }
       break;

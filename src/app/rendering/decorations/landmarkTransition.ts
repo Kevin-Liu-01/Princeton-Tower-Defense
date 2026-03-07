@@ -21,6 +21,7 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "sphinx",
   "giant_sphinx",
   "nassau_hall",
+  "glacier",
   "ice_fortress",
   "obsidian_castle",
   "witch_cottage",
@@ -55,6 +56,7 @@ export const GROUND_TRANSITION_TYPES = new Set<string>([
   "fountain",
   "ruins",
   "dock",
+  "ice_spire",
   "ice_throne",
 ]);
 

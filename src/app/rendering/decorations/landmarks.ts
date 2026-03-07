@@ -61,6 +61,16 @@ export function drawNassauHall(
   renderLandmark(ctx, x, y, scale, "nassau_hall", 0, time);
 }
 
+export function drawGlacier(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "glacier", 0, time);
+}
+
 export function drawIceFortress(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -69,6 +79,16 @@ export function drawIceFortress(
   time: number,
 ): void {
   renderLandmark(ctx, x, y, scale, "ice_fortress", 0, time);
+}
+
+export function drawIceThrone(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  scale: number,
+  time: number,
+): void {
+  renderLandmark(ctx, x, y, scale, "ice_throne", 0, time);
 }
 
 export function drawObsidianCastle(

@@ -626,11 +626,23 @@ const LANDMARK_INFO: Record<string, { name: string; icon: React.ReactNode; desc:
     desc: "The historic heart of Princeton University, est. 1756.",
     lore: "Once served as the capitol of the United States. Now it serves as the last bastion against the dark horde.",
   },
+  glacier: {
+    name: "Glacier",
+    icon: <Snowflake className="text-cyan-400" size={16} />,
+    desc: "A towering block of ancient ice sculpted by millennia of wind and frost.",
+    lore: "These crystalline monoliths predate all memory, slowly creeping across the frozen highlands like silent sentinels.",
+  },
   ice_fortress: {
     name: "Ice Fortress",
     icon: <Snowflake className="text-cyan-400" size={16} />,
-    desc: "A crystalline citadel forged from eternal frost.",
+    desc: "A massive fortification carved from living ice, bristling with frozen battlements.",
     lore: "Built during the Great Frost by ice mages who froze an entire river to create its foundations.",
+  },
+  ice_throne: {
+    name: "Ice Throne",
+    icon: <Snowflake className="text-cyan-300" size={16} />,
+    desc: "A grand seat of power carved from a single colossal block of enchanted ice.",
+    lore: "The throne of the Frost Queen, from which she commanded the eternal winter that once blanketed these peaks.",
   },
   obsidian_castle: {
     name: "Obsidian Castle",

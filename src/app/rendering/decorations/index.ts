@@ -13,7 +13,9 @@ import {
   drawPyramid,
   drawSphinx,
   drawNassauHall,
+  drawGlacier,
   drawIceFortress,
+  drawIceThrone,
   drawObsidianCastle,
   drawWitchCottage,
 } from "./landmarks";
@@ -148,8 +150,14 @@ export function renderDecoration(
     case "nassau_hall":
       drawNassauHall(ctx, screenPos.x, screenPos.y, scale, time);
       break;
+    case "glacier":
+      drawGlacier(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
     case "ice_fortress":
       drawIceFortress(ctx, screenPos.x, screenPos.y, scale, time);
+      break;
+    case "ice_throne":
+      drawIceThrone(ctx, screenPos.x, screenPos.y, scale, time);
       break;
     case "obsidian_castle":
       drawObsidianCastle(ctx, screenPos.x, screenPos.y, scale, time);

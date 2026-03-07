@@ -1109,16 +1109,18 @@ export const LEVEL_DATA: Record<
       { type: "ice_crystal", pos: { x: 8, y: 6 }, variant: 0, size: 1 },
       { type: "ice_crystal", pos: { x: 28, y: 4 }, variant: 1, size: 1 },
       { type: "ice_crystal", pos: { x: 12, y: 2 }, variant: 2, size: 1 },
-      // Ice fortress as major landmark
-      { type: "ice_fortress", pos: { x: 20, y: 6 }, variant: 0, size: 2 },
-      { type: "ice_fortress", pos: { x: 4, y: 18 }, variant: 1, size: 1 },
+      // Glacier formations as major landmark
+      { type: "glacier", pos: { x: 20, y: 6 }, variant: 0, size: 2 },
+      { type: "glacier", pos: { x: 4, y: 18 }, variant: 1, size: 1 },
+      // Ice fortress guarding the path
+      { type: "ice_fortress", pos: { x: 26, y: 4 }, variant: 0, size: 1.5 },
       // Frozen waterfall - dramatic centerpiece
       { type: "frozen_waterfall", pos: { x: 30, y: 8 }, variant: 0, size: 2 },
       // Aurora crystal - magical glow
       { type: "aurora_crystal", pos: { x: 2, y: 4 }, variant: 0, size: 1 },
       { type: "aurora_crystal", pos: { x: 24, y: 16 }, variant: 1, size: 1 },
-      // Ice throne focal point
-      { type: "ice_throne", pos: { x: 10, y: 4 }, variant: 0, size: 2 },
+      // Ice spire focal point
+      { type: "ice_spire", pos: { x: 10, y: 4 }, variant: 0, size: 2 },
       // Frozen ponds
       { type: "frozen_pond", pos: { x: 15, y: 14 }, variant: 0, size: 1.5 },
       { type: "frozen_pond", pos: { x: 26, y: 12 }, variant: 1, size: 2 },
@@ -1135,8 +1137,10 @@ export const LEVEL_DATA: Record<
       { type: "snow_pile", pos: { x: 22, y: 20 }, variant: 1 },
       { type: "snowman", pos: { x: 10, y: 20 }, variant: 0 },
       { type: "snowman", pos: { x: 28, y: 10 }, variant: 1 },
+      { type: "snowman", pos: { x: 18, y: 22 }, variant: 2 },
       // Frozen soldier and battlefield remnants
       { type: "frozen_soldier", pos: { x: 2, y: 16 }, variant: 0 },
+      { type: "frozen_soldier", pos: { x: 22, y: 18 }, variant: 1 },
       { type: "broken_wall", pos: { x: 8, y: 24 }, variant: 0 },
       { type: "bones", pos: { x: 26, y: 18 }, variant: 1 },
       // Frozen hero statues guarding the glacier path
@@ -1163,17 +1167,20 @@ export const LEVEL_DATA: Record<
     decorations: [
       // Grand frozen gate - fortress entrance
       { type: "frozen_gate", pos: { x: 14, y: 4 }, variant: 0, size: 2 },
-      // Ice fortresses flanking the entrance
-      { type: "ice_fortress", pos: { x: 6, y: 4 }, variant: 0, size: 2 },
-      { type: "ice_fortress", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
+      // Glacier formations flanking the entrance
+      { type: "glacier", pos: { x: 6, y: 4 }, variant: 0, size: 2 },
+      { type: "glacier", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
+      // Ice fortresses guarding the fortress
+      { type: "ice_fortress", pos: { x: 2, y: 12 }, variant: 1, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 28, y: 8 }, variant: 2, size: 1.5 },
       // Ruined temple in the courtyard (variant 5 = frost ruins)
       { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 5, size: 2 },
       // Guardian statues flanking the ruins
       { type: "statue", pos: { x: 10, y: 8 }, variant: 0, size: 1 },
       { type: "statue", pos: { x: 18, y: 8 }, variant: 1, size: 1 },
-      // Ice thrones - commanding positions
-      { type: "ice_throne", pos: { x: 4, y: 8 }, variant: 0, size: 3 },
-      { type: "ice_throne", pos: { x: 26, y: 8 }, variant: 1, size: 2 },
+      // Ice spires - commanding positions
+      { type: "ice_spire", pos: { x: 4, y: 8 }, variant: 0, size: 3 },
+      { type: "ice_spire", pos: { x: 26, y: 8 }, variant: 1, size: 2 },
       // Aurora crystals illuminating the fortress ruins
       { type: "aurora_crystal", pos: { x: 8, y: 24 }, variant: 0, size: 2 },
       { type: "aurora_crystal", pos: { x: 24, y: 26 }, variant: 1, size: 1 },
@@ -1196,7 +1203,7 @@ export const LEVEL_DATA: Record<
       // Frozen soldiers and battle remnants
       { type: "frozen_soldier", pos: { x: 8, y: 16 }, variant: 0, size: 1 },
       { type: "frozen_soldier", pos: { x: 22, y: 10 }, variant: 1, size: 1 },
-      { type: "frozen_soldier", pos: { x: 26, y: 18 }, variant: 0, size: 1 },
+      { type: "frozen_soldier", pos: { x: 26, y: 18 }, variant: 2, size: 1 },
       { type: "battle_crater", pos: { x: 14, y: 18 }, variant: 0 },
       { type: "battle_crater", pos: { x: 24, y: 16 }, variant: 1 },
       // Frozen pond in fortress courtyard
@@ -1212,6 +1219,7 @@ export const LEVEL_DATA: Record<
       // Snow features
       { type: "snow_pile", pos: { x: 6, y: 24 }, variant: 0 },
       { type: "snowman", pos: { x: 30, y: 20 }, variant: 0 },
+      { type: "snowman", pos: { x: 12, y: 24 }, variant: 2 },
       // Guardian statues flanking the fortress gate
       { type: "statue", pos: { x: 12, y: 8 }, variant: 7 },
       { type: "statue", pos: { x: 20, y: 8 }, variant: 0 },
@@ -1238,7 +1246,10 @@ export const LEVEL_DATA: Record<
     },
     decorations: [
       // Grand ice throne centerpiece - the summit crown
-      { type: "ice_throne", pos: { x: 10, y: 7 }, variant: 0, size: 3 },
+      { type: "ice_throne", pos: { x: 10, y: 7 }, variant: 0, size: 2.5 },
+      // Ice spires flanking the throne
+      { type: "ice_spire", pos: { x: 6, y: 10 }, variant: 0, size: 2 },
+      { type: "ice_spire", pos: { x: 18, y: 8 }, variant: 2, size: 1.5 },
       // Frozen waterfall - dramatic cliff cascade
       { type: "frozen_waterfall", pos: { x: 4, y: 6 }, variant: 0, size: 2 },
       { type: "frozen_waterfall", pos: { x: 27, y: 6 }, variant: 1, size: 2 },
@@ -1248,9 +1259,12 @@ export const LEVEL_DATA: Record<
       { type: "aurora_crystal", pos: { x: 32, y: 10 }, variant: 2, size: 1 },
       // Frozen gate at mountain pass
       { type: "frozen_gate", pos: { x: 28, y: 3 }, variant: 0, size: 2 },
-      // Ice fortresses guarding the peak
-      { type: "ice_fortress", pos: { x: 4, y: 22 }, variant: 0, size: 1.5 },
-      { type: "ice_fortress", pos: { x: 26, y: 22 }, variant: 1, size: 1.5 },
+      // Glacier formations guarding the peak
+      { type: "glacier", pos: { x: 4, y: 22 }, variant: 0, size: 1.5 },
+      { type: "glacier", pos: { x: 26, y: 22 }, variant: 2, size: 1.5 },
+      // Ice fortresses at the summit approaches
+      { type: "ice_fortress", pos: { x: 2, y: 8 }, variant: 0, size: 1.5 },
+      { type: "ice_fortress", pos: { x: 30, y: 8 }, variant: 2, size: 1.5 },
       // Frozen ponds - mountain lakes
       { type: "frozen_pond", pos: { x: 10, y: 14 }, variant: 0, size: 2 },
       { type: "frozen_pond", pos: { x: 22, y: 14 }, variant: 1, size: 2 },
@@ -1282,9 +1296,11 @@ export const LEVEL_DATA: Record<
       { type: "snow_pile", pos: { x: 12, y: 20 }, variant: 0 },
       { type: "snow_pile", pos: { x: 20, y: 20 }, variant: 1 },
       { type: "snowman", pos: { x: 2, y: 4 }, variant: 0 },
+      { type: "snowman", pos: { x: 24, y: 20 }, variant: 1 },
       // Battle remnants
       { type: "frozen_soldier", pos: { x: 4, y: 16 }, variant: 0, size: 1 },
       { type: "frozen_soldier", pos: { x: 26, y: 12 }, variant: 1, size: 1 },
+      { type: "frozen_soldier", pos: { x: 14, y: 22 }, variant: 2, size: 1 },
       { type: "bones", pos: { x: 22, y: 8 }, variant: 1 },
       // Summit heroic statues
       { type: "statue", pos: { x: 14, y: 4 }, variant: 4 },
@@ -1615,6 +1631,7 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "frost_citadel", pos: { x: 16, y: 5 }, variant: 0, size: 2 },
+      { type: "ice_fortress", pos: { x: 4, y: 8 }, variant: 1, size: 1.2 },
       { type: "ice_bridge", pos: { x: 5, y: 14 }, variant: 0, size: 1.4 },
       { type: "ice_bridge", pos: { x: 27, y: 14 }, variant: 1, size: 1.4 },
       { type: "frozen_waterfall", pos: { x: 2, y: 9 }, variant: 0, size: 1.2 },
@@ -1622,6 +1639,11 @@ export const LEVEL_DATA: Record<
       { type: "aurora_crystal", pos: { x: 10, y: 23 }, variant: 0, size: 1.2 },
       { type: "aurora_crystal", pos: { x: 24, y: 23 }, variant: 1, size: 1.2 },
       { type: "ice_crystal", pos: { x: 20, y: 14 }, variant: 2, size: 1.1 },
+      { type: "ice_spire", pos: { x: 28, y: 18 }, variant: 1, size: 1.3 },
+      { type: "glacier", pos: { x: 6, y: 20 }, variant: 2, size: 1.2 },
+      { type: "snowman", pos: { x: 12, y: 20 }, variant: 0 },
+      { type: "snowman", pos: { x: 20, y: 20 }, variant: 2 },
+      { type: "frozen_soldier", pos: { x: 14, y: 14 }, variant: 1 },
       { type: "pine_tree", pos: { x: 3, y: 4 }, variant: 0 },
       { type: "pine_tree", pos: { x: 28, y: 4 }, variant: 1 },
       { type: "snow_lantern", pos: { x: 13, y: 17 }, variant: 0, size: 1 },
@@ -1785,6 +1807,8 @@ export const LEVEL_DATA: Record<
     ],
     decorations: [
       { type: "frost_citadel", pos: { x: 16, y: 4 }, variant: 1, size: 1.8 },
+      { type: "ice_fortress", pos: { x: 4, y: 6 }, variant: 2, size: 1.3 },
+      { type: "ice_fortress", pos: { x: 28, y: 6 }, variant: 0, size: 1.3 },
       { type: "ice_bridge", pos: { x: 6, y: 14 }, variant: 0, size: 1.3 },
       { type: "ice_bridge", pos: { x: 27, y: 14 }, variant: 1, size: 1.3 },
       { type: "frozen_waterfall", pos: { x: 2, y: 10 }, variant: 0, size: 1.2 },
@@ -1796,6 +1820,11 @@ export const LEVEL_DATA: Record<
       },
       { type: "aurora_crystal", pos: { x: 10, y: 23 }, variant: 0, size: 1.2 },
       { type: "aurora_crystal", pos: { x: 24, y: 23 }, variant: 1, size: 1.2 },
+      { type: "ice_spire", pos: { x: 8, y: 20 }, variant: 0, size: 1.2 },
+      { type: "glacier", pos: { x: 24, y: 18 }, variant: 1, size: 1.2 },
+      { type: "snowman", pos: { x: 6, y: 22 }, variant: 1 },
+      { type: "frozen_soldier", pos: { x: 20, y: 18 }, variant: 2 },
+      { type: "frozen_soldier", pos: { x: 12, y: 20 }, variant: 0 },
       { type: "pine_tree", pos: { x: 3, y: 4 }, variant: 0 },
       { type: "pine_tree", pos: { x: 28, y: 4 }, variant: 1 },
       { type: "snow_lantern", pos: { x: 13, y: 17 }, variant: 0, size: 1 },
