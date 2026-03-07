@@ -348,10 +348,10 @@ export function drawTenorHero(
   }
 
   drawShadow(ctx, x, y, s);
-  drawFlowingCapes(ctx, x, y, s, time, zoom);
   drawDressShoes(ctx, x, y, s, zoom);
   drawTuxedoBody(ctx, x, y, s, breathe, zoom);
   drawTenorSkirtArmor(ctx, x, y, s, time, zoom, isAttacking, attackIntensity, gemPulse);
+  drawFlowingCapes(ctx, x, y, s, time, zoom);
   drawCummerbund(ctx, x, y, s, zoom);
   drawConductorArms(ctx, x, y, s, time, zoom, isAttacking, attackPhase, attackIntensity);
   drawShirtAndBowTie(ctx, x, y, s, breathe, isAttacking, attackIntensity, gemPulse, zoom);

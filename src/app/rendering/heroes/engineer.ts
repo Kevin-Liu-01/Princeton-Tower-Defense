@@ -33,7 +33,7 @@ export function drawEngineerHero(
   drawShadow(ctx, x, y, s);
   drawBackpack(ctx, x + idleSway, y + bodyBob, s, time, dataPulse, zoom, isAttacking, attackIntensity);
   drawBody(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse, zoom);
-  drawArmorSkirt(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse);
+  drawEngineerSkirtArmor(ctx, x + idleSway, y + bodyBob, s, time, zoom, isAttacking, attackIntensity, dataPulse);
   drawBeltAndPouches(ctx, x + idleSway, y + bodyBob, s, time, dataPulse);
   drawThighRigs(ctx, x + idleSway, y + bodyBob, s, breathe, time, dataPulse);
   drawArmsAndRifle(
@@ -563,47 +563,67 @@ function drawBody(
 
 // ─── ARMORED SKIRT ───────────────────────────────────────────────────────────
 
-function drawArmorSkirt(
+function drawEngineerSkirtArmor(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   s: number,
-  breathe: number,
   time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
   dataPulse: number,
 ) {
+  drawEngineerTassetSide(ctx, x, y, s, time, dataPulse, true);
+  drawEngineerTassetSide(ctx, x, y, s, time, dataPulse, false);
+  drawEngineerCenterBanner(ctx, x, y, s, dataPulse);
+  drawEngineerSkirtChain(ctx, x, y, s);
+  drawEngineerSkirtBelt(ctx, x, y, s, dataPulse);
+}
+
+function drawEngineerTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  time: number,
+  dataPulse: number,
+  isLeft: boolean,
+) {
   const skirtTop = y + s * 0.28;
-  const skirtBottom = y + s * 0.5 + breathe;
-  const numPlates = 7;
-  const totalWidth = s * 0.84;
-  const plateWidth = totalWidth / numPlates + s * 0.025;
-  const startX = x - totalWidth / 2;
+  const bandCount = 4;
+  const totalHeight = s * 0.30;
+  const gapHalf = s * 0.10;
+  const shear = isLeft ? s * 0.10 : s * -0.10;
+  const bandHeight = totalHeight / bandCount;
+  const sideWidth = s * 0.28;
+  const sideX = isLeft ? x - sideWidth - gapHalf : x + gapHalf;
 
-  for (let i = 0; i < numPlates; i++) {
-    const px = startX + i * (totalWidth / numPlates);
-    const distFromCenter = Math.abs(i - (numPlates - 1) / 2) / ((numPlates - 1) / 2);
-    const plateLen = (skirtBottom - skirtTop) * (1 - distFromCenter * 0.18);
-    const sway = Math.sin(time * 1.8 + i * 0.5) * s * 0.008;
+  const oliveColors = ["#3a4a2e", "#4a5a36"];
+  const tanColors = ["#7a6a4e", "#8a7a5a"];
+  const gunmetalColors = ["#3a3a42", "#4a4a52"];
+  const accentAlpha = 0.4 + dataPulse * 0.4;
 
-    // Alternating plate colors: olive, tan, dark gray
-    const plateColors = [
-      ["#3a4a2e", "#4a5a3a", "#3e4e30", "#2a3a22"],
-      ["#6a5a3e", "#7a6a50", "#6a5a42", "#5a4a32"],
-      ["#3a3a42", "#4a4a52", "#3e3e48", "#2e2e38"],
-    ];
-    const colorSet = plateColors[i % 3];
-    const pg = ctx.createLinearGradient(px, skirtTop, px + plateWidth, skirtTop + plateLen);
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const outerTopY = innerTopY;
+    const outerBotY = innerTopY + bandHeight;
+    const innerBotY = outerBotY;
+
+    const colorSet = band % 2 === 1 ? gunmetalColors : (isLeft ? oliveColors : tanColors);
+    const pg = ctx.createLinearGradient(sideX, innerTopY, sideX + sideWidth, innerBotY);
     pg.addColorStop(0, colorSet[0]);
-    pg.addColorStop(0.3, colorSet[1]);
-    pg.addColorStop(0.7, colorSet[2]);
-    pg.addColorStop(1, colorSet[3]);
+    pg.addColorStop(1, colorSet[1]);
     ctx.fillStyle = pg;
 
+    const topShear = shear * (band / bandCount);
+    const botShear = shear * ((band + 1) / bandCount);
+
     ctx.beginPath();
-    ctx.moveTo(px + s * 0.005, skirtTop);
-    ctx.lineTo(px + plateWidth - s * 0.005, skirtTop);
-    ctx.lineTo(px + plateWidth + sway + s * 0.005, skirtTop + plateLen);
-    ctx.lineTo(px + sway - s * 0.005, skirtTop + plateLen);
+    ctx.moveTo(sideX, innerTopY);
+    ctx.lineTo(sideX + sideWidth, outerTopY);
+    ctx.lineTo(sideX + sideWidth + botShear, outerBotY);
+    ctx.lineTo(sideX + topShear, innerBotY);
     ctx.closePath();
     ctx.fill();
 
@@ -611,34 +631,145 @@ function drawArmorSkirt(
     ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    // Plate rivet at top
-    ctx.fillStyle = "#7a7a7a";
+    if (band % 2 === 0) {
+      const pocketW = sideWidth * 0.4;
+      const pocketH = bandHeight * 0.5;
+      const pocketX = sideX + sideWidth * 0.3;
+      const pocketY = innerTopY + bandHeight * 0.25;
+      ctx.fillStyle = "#2a3a22";
+      ctx.fillRect(pocketX, pocketY, pocketW, pocketH);
+      ctx.strokeStyle = "#222e1a";
+      ctx.lineWidth = 0.8;
+      ctx.strokeRect(pocketX, pocketY, pocketW, pocketH);
+    }
+
+    ctx.fillStyle = `rgba(234, 179, 8, ${accentAlpha})`;
+    ctx.fillRect(sideX + sideWidth * 0.05, innerTopY + bandHeight * 0.1, sideWidth * 0.08, bandHeight * 0.15);
+
+    ctx.fillStyle = band % 2 === 0 ? "#7a7a7a" : "#5a5a5a";
     ctx.beginPath();
-    ctx.arc(px + plateWidth / 2, skirtTop + s * 0.025, s * 0.012, 0, Math.PI * 2);
+    ctx.arc(sideX + sideWidth * 0.5, innerTopY + s * 0.02, s * 0.01, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "#5a5a5a";
-    ctx.lineWidth = 0.8;
+    ctx.strokeStyle = "#4a4a4a";
+    ctx.lineWidth = 0.6;
     ctx.stroke();
-
-    // Plate edge highlight
-    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.fillRect(px + s * 0.008, skirtTop + s * 0.005, s * 0.015, plateLen * 0.85);
-
-    // Bottom edge wear/metallic trim
-    ctx.fillStyle = "#5a5a5a";
-    ctx.fillRect(px + sway, skirtTop + plateLen - s * 0.008, plateWidth, s * 0.008);
   }
+}
 
-  // Metal trim strip at top of skirt
-  const trimG = ctx.createLinearGradient(x - totalWidth / 2, skirtTop, x + totalWidth / 2, skirtTop);
-  trimG.addColorStop(0, "#3a3a3a");
-  trimG.addColorStop(0.5, "#5a5a5a");
-  trimG.addColorStop(1, "#3a3a3a");
-  ctx.fillStyle = trimG;
-  ctx.fillRect(x - totalWidth / 2, skirtTop - s * 0.015, totalWidth, s * 0.025);
-  ctx.strokeStyle = "#5a5a5a";
+function drawEngineerCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  dataPulse: number,
+) {
+  const skirtTop = y + s * 0.28;
+  const totalHeight = s * 0.30;
+  const panelW = s * 0.18;
+  const panelH = totalHeight * 0.9;
+  const panelX = x - panelW / 2;
+  const panelY = skirtTop;
+
+  const pg = ctx.createLinearGradient(panelX, panelY, panelX + panelW, panelY + panelH);
+  pg.addColorStop(0, "#3a4a2e");
+  pg.addColorStop(0.5, "#4a5a36");
+  pg.addColorStop(1, "#2a3a22");
+  ctx.fillStyle = pg;
+  ctx.fillRect(panelX, panelY, panelW, panelH);
+  ctx.strokeStyle = "#222e1a";
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+  const flapH = panelH * 0.2;
+  ctx.fillStyle = "#2a3a22";
+  ctx.fillRect(panelX, panelY, panelW, flapH);
+  ctx.strokeStyle = "#222e1a";
   ctx.lineWidth = 0.8;
-  ctx.strokeRect(x - totalWidth / 2, skirtTop - s * 0.015, totalWidth, s * 0.025);
+  ctx.strokeRect(panelX, panelY, panelW, flapH);
+
+  ctx.fillStyle = "#eab308";
+  ctx.beginPath();
+  ctx.arc(panelX + panelW / 2, panelY + flapH / 2, s * 0.015, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(234, 179, 8, ${0.5 + dataPulse * 0.5})`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const bulletW = s * 0.015;
+  const bulletH = s * 0.04;
+  const bulletY = panelY + panelH * 0.45;
+  for (let i = 0; i < 3; i++) {
+    const bx = panelX + panelW / 2 - bulletW * 1.5 + i * bulletW * 1.2;
+    ctx.fillStyle = "rgba(234, 179, 8, 0.9)";
+    ctx.fillRect(bx, bulletY, bulletW, bulletH);
+  }
+}
+
+function drawEngineerSkirtChain(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+) {
+  const skirtTop = y + s * 0.28;
+  const totalHeight = s * 0.30;
+  const gapHalf = s * 0.10;
+  const strapWidth = s * 0.04;
+  const leftX = x - gapHalf - strapWidth / 2;
+  const rightX = x + gapHalf - strapWidth / 2;
+
+  const wg = ctx.createLinearGradient(leftX, skirtTop, rightX, skirtTop + totalHeight);
+  wg.addColorStop(0, "#2e3e24");
+  wg.addColorStop(0.5, "#3a4a2e");
+  wg.addColorStop(1, "#2e3e24");
+  ctx.fillStyle = wg;
+  ctx.fillRect(leftX, skirtTop, strapWidth, totalHeight);
+  ctx.fillRect(rightX, skirtTop, strapWidth, totalHeight);
+  ctx.strokeStyle = "#222e1a";
+  ctx.lineWidth = 0.8;
+  ctx.strokeRect(leftX, skirtTop, strapWidth, totalHeight);
+  ctx.strokeRect(rightX, skirtTop, strapWidth, totalHeight);
+}
+
+function drawEngineerSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  dataPulse: number,
+) {
+  const skirtTop = y + s * 0.28;
+  const beltWidth = s * 0.06;
+  const beltSpan = s * 0.5;
+
+  const bg = ctx.createLinearGradient(x - beltSpan, skirtTop, x + beltSpan, skirtTop);
+  bg.addColorStop(0, "#2a2a2a");
+  bg.addColorStop(0.25, "#3a3a3a");
+  bg.addColorStop(0.5, "#4a4a4a");
+  bg.addColorStop(0.75, "#3a3a3a");
+  bg.addColorStop(1, "#2a2a2a");
+  ctx.fillStyle = bg;
+
+  ctx.beginPath();
+  ctx.moveTo(x - beltSpan, skirtTop - beltWidth / 2);
+  ctx.lineTo(x, skirtTop + beltWidth / 2);
+  ctx.lineTo(x + beltSpan, skirtTop - beltWidth / 2);
+  ctx.lineTo(x + beltSpan, skirtTop - beltWidth / 2 + beltWidth);
+  ctx.lineTo(x, skirtTop + beltWidth / 2 + beltWidth);
+  ctx.lineTo(x - beltSpan, skirtTop - beltWidth / 2 + beltWidth);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a3a3a";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "#eab308";
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + beltWidth / 2, s * 0.025, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(234, 179, 8, ${0.6 + dataPulse * 0.4})`;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
 }
 
 // ─── BELT AND POUCHES ────────────────────────────────────────────────────────

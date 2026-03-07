@@ -1,5 +1,285 @@
 import { ISO_Y_RATIO } from "../../constants";
 
+function drawStoneSkirtArmor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  s: number,
+  hop: number,
+  time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const skirtTop = y - hop + s * 0.24;
+  const bandCount = 4;
+  const totalHeight = s * 0.32;
+  const bandHeight = totalHeight / bandCount;
+  const gapHalf = s * 0.10;
+
+  drawStoneCenterBanner(ctx, x, s, zoom, skirtTop, totalHeight, gapHalf);
+  for (let side = -1; side <= 1; side += 2) {
+    drawStoneTassetSide(
+      ctx,
+      x,
+      s,
+      zoom,
+      side,
+      skirtTop,
+      bandCount,
+      bandHeight,
+      totalHeight,
+      gapHalf,
+      isAttacking,
+      attackIntensity,
+    );
+  }
+  const bridgeY = skirtTop + s * 0.025;
+  const bridgeLeft = x - gapHalf + s * 0.01;
+  const bridgeRight = x + gapHalf - s * 0.01;
+  const bridgeThick = s * 0.018;
+  const bridgeGrad = ctx.createLinearGradient(bridgeLeft, bridgeY, bridgeRight, bridgeY);
+  bridgeGrad.addColorStop(0, "#484038");
+  bridgeGrad.addColorStop(0.3, "#585050");
+  bridgeGrad.addColorStop(0.5, "#686058");
+  bridgeGrad.addColorStop(0.7, "#585050");
+  bridgeGrad.addColorStop(1, "#484038");
+  ctx.fillStyle = bridgeGrad;
+  ctx.beginPath();
+  ctx.moveTo(bridgeLeft, bridgeY - bridgeThick * 0.5);
+  ctx.lineTo(bridgeRight, bridgeY - bridgeThick * 0.5);
+  ctx.lineTo(bridgeRight, bridgeY + bridgeThick * 0.5);
+  ctx.lineTo(bridgeLeft, bridgeY + bridgeThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#3a3430";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+  drawStoneSkirtBelt(ctx, x, s, zoom, skirtTop);
+}
+
+function drawStoneTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  s: number,
+  zoom: number,
+  side: number,
+  skirtTop: number,
+  bandCount: number,
+  bandHeight: number,
+  totalHeight: number,
+  gapHalf: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const shear = s * -0.10;
+  const sway = 0;
+
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const innerBotY = innerTopY + bandHeight;
+    const outerTopY = innerTopY + shear;
+    const outerBotY = innerBotY + shear;
+
+    const outerW = s * (0.42 + band * 0.035);
+    const innerGap = gapHalf + band * s * 0.008;
+    const innerX = x + side * innerGap + sway;
+    const outerX = x + side * outerW + sway;
+
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#848078");
+      plateG.addColorStop(0.25, "#787068");
+      plateG.addColorStop(0.55, "#686058");
+      plateG.addColorStop(1, "#585050");
+    } else {
+      plateG.addColorStop(0, "#585050");
+      plateG.addColorStop(0.45, "#686058");
+      plateG.addColorStop(0.75, "#787068");
+      plateG.addColorStop(1, "#848078");
+    }
+
+    ctx.fillStyle = plateG;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * s * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * s * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#3a3430";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * s * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * s * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.stroke();
+
+    const rivetMidT = 0.75;
+    const rivetX = innerX + rivetMidT * (outerX - innerX);
+    const rivetY =
+      innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - s * 0.002,
+      rivetY - s * 0.002,
+      0,
+      rivetX,
+      rivetY,
+      s * 0.009,
+    );
+    rg.addColorStop(0, "#686058");
+    rg.addColorStop(0.4, "#585050");
+    rg.addColorStop(1, "#484038");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, s * 0.008, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (band % 2 === 0) {
+      ctx.strokeStyle = "rgba(40, 35, 30, 0.5)";
+      ctx.lineWidth = 0.8 * zoom;
+      const crackCount = 2;
+      for (let c = 0; c < crackCount; c++) {
+        const t = (c + 0.5) / crackCount;
+        const crackX = innerX + t * (outerX - innerX);
+        const crackYBase =
+          innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(crackX, crackYBase - s * 0.01);
+        ctx.lineTo(crackX + s * 0.008, crackYBase + s * 0.012);
+        ctx.lineTo(crackX - s * 0.005, crackYBase + s * 0.018);
+        ctx.stroke();
+      }
+    }
+
+    if (band % 2 === 1) {
+      const midT = 0.5;
+      const accentInnerX = innerX + side * s * 0.015;
+      const accentOuterX = outerX - side * s * 0.015;
+      const accentInnerY = innerTopY + bandHeight * midT;
+      const accentOuterY = outerTopY + bandHeight * midT;
+      const cyanAlpha = 0.2 + (isAttacking ? attackIntensity * 0.15 : 0);
+      ctx.strokeStyle = `rgba(0, 200, 240, ${cyanAlpha})`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(accentInnerX, accentInnerY);
+      ctx.lineTo(accentOuterX, accentOuterY);
+      ctx.stroke();
+    }
+
+    const hasMoss =
+      (band === 1 && side === -1) ||
+      (band === 2 && side === 1) ||
+      (band === 3 && side === -1);
+    if (hasMoss) {
+      ctx.fillStyle = "rgba(80, 100, 50, 0.3)";
+      const mossX = innerX + 0.6 * (outerX - innerX);
+      const mossY = innerTopY + bandHeight * 0.5;
+      ctx.beginPath();
+      ctx.arc(mossX, mossY, s * 0.012, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(mossX - s * 0.02, mossY + s * 0.01, s * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawStoneCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  s: number,
+  zoom: number,
+  skirtTop: number,
+  totalHeight: number,
+  gapHalf: number,
+) {
+  const tabletTop = skirtTop + s * 0.04;
+  const tabletBottom = skirtTop + totalHeight * 0.92;
+  const tabletHalfW = gapHalf * 0.75;
+
+  const tabletGrad = ctx.createLinearGradient(x, tabletTop, x, tabletBottom);
+  tabletGrad.addColorStop(0, "#605850");
+  tabletGrad.addColorStop(0.25, "#706860");
+  tabletGrad.addColorStop(0.5, "#807870");
+  tabletGrad.addColorStop(0.75, "#706860");
+  tabletGrad.addColorStop(1, "#605850");
+
+  ctx.fillStyle = tabletGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - tabletHalfW, tabletTop);
+  ctx.lineTo(x + tabletHalfW, tabletTop);
+  ctx.lineTo(x + tabletHalfW, tabletBottom);
+  ctx.lineTo(x - tabletHalfW, tabletBottom);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#484038";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  const emblemY = (tabletTop + tabletBottom) * 0.5;
+  ctx.strokeStyle = "#908880";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - s * 0.02, emblemY - s * 0.02);
+  ctx.lineTo(x + s * 0.015, emblemY + s * 0.01);
+  ctx.moveTo(x, emblemY - s * 0.015);
+  ctx.lineTo(x - s * 0.01, emblemY + s * 0.02);
+  ctx.moveTo(x + s * 0.02, emblemY);
+  ctx.lineTo(x + s * 0.005, emblemY + s * 0.018);
+  ctx.stroke();
+}
+
+function drawStoneSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  s: number,
+  zoom: number,
+  skirtTop: number,
+) {
+  const beltHalfW = s * 0.43;
+  const beltThick = s * 0.048;
+  const vDip = s * 0.08;
+
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHalfW,
+    skirtTop,
+    x + beltHalfW,
+    skirtTop,
+  );
+  beltGrad.addColorStop(0, "#484038");
+  beltGrad.addColorStop(0.25, "#585050");
+  beltGrad.addColorStop(0.5, "#686058");
+  beltGrad.addColorStop(0.75, "#585050");
+  beltGrad.addColorStop(1, "#484038");
+
+  ctx.fillStyle = beltGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.lineTo(x, skirtTop + beltThick * 0.5 + vDip);
+  ctx.lineTo(x - beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#3a3430";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  ctx.fillStyle = "#00e0ff";
+  ctx.shadowColor = "#00c8e0";
+  ctx.shadowBlur = 4 * zoom;
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + vDip * 0.35, s * 0.028, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 export function drawRockyHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -32,6 +312,7 @@ export function drawRockyHero(
   drawWing(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity, -1);
   drawWing(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity, 1);
   drawBody(ctx, x, y, s, hop, breathe, zoom, time);
+  drawStoneSkirtArmor(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity);
   drawStoneClaws(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity);
   drawShoulderPads(ctx, x, y, s, hop, time, zoom);
   drawStoneArms(
