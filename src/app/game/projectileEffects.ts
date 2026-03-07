@@ -15,6 +15,7 @@ export function getImpactEffect(projType: string): EffectType {
       return "poison_splash";
     case "magicBolt":
     case "darkBolt":
+    case "wyvernBolt":
       return "magic_impact";
     case "arrow":
     case "bolt":

@@ -16502,12 +16502,50 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+const CHALLENGE_SIGIL_PALETTES: Record<RegionType, {
+  sigilFill: string; sigilStroke: string; centerDot: string;
+}> = {
+  grassland: { sigilFill: "#2E7F42", sigilStroke: "#D2F7B0", centerDot: "#E7FFD6" },
+  swamp:     { sigilFill: "#2D7268", sigilStroke: "#C8FFF1", centerDot: "#DBFFF8" },
+  desert:    { sigilFill: "#A9782D", sigilStroke: "#FFE8AE", centerDot: "#FFF1CA" },
+  winter:    { sigilFill: "#3A79A9", sigilStroke: "#D5EEFF", centerDot: "#E8F6FF" },
+  volcanic:  { sigilFill: "#9D2D19", sigilStroke: "#FFD8A6", centerDot: "#FFF3CC" },
+};
+
+function drawChallengeSigil(ctx: CanvasRenderingContext2D, scale: number, type: RegionType) {
+  const p = CHALLENGE_SIGIL_PALETTES[type];
+
+  ctx.fillStyle = p.sigilFill;
+  ctx.beginPath();
+  ctx.moveTo(0, -11 * scale);
+  ctx.lineTo(9 * scale, 0);
+  ctx.lineTo(0, 11 * scale);
+  ctx.lineTo(-9 * scale, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = p.sigilStroke;
+  ctx.lineWidth = 1.1 * scale;
+  ctx.beginPath();
+  ctx.moveTo(-6.5 * scale, 6 * scale);
+  ctx.lineTo(6.5 * scale, -6 * scale);
+  ctx.moveTo(-6.5 * scale, -6 * scale);
+  ctx.lineTo(6.5 * scale, 6 * scale);
+  ctx.stroke();
+
+  ctx.fillStyle = p.centerDot;
+  ctx.beginPath();
+  ctx.arc(0, 0, 2.5 * scale, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 export const RegionIcon: React.FC<{
   type: RegionType;
   size?: number;
   locked?: boolean;
   framed?: boolean;
-}> = ({ type, size = 60, locked = false, framed = false }) => {
+  challenge?: boolean;
+}> = ({ type, size = 60, locked = false, framed = false, challenge = false }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -16523,6 +16561,16 @@ export const RegionIcon: React.FC<{
 
     if (locked && !framed) {
       ctx.globalAlpha = 0.35;
+    }
+
+    if (challenge) {
+      const sigScale = framed ? size / 48 : size / 32;
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (locked) ctx.globalAlpha = 0.35;
+      drawChallengeSigil(ctx, sigScale, type);
+      ctx.restore();
+      return;
     }
 
     const iconScale = framed ? size / 42 : size / 28;
@@ -16724,7 +16772,7 @@ export const RegionIcon: React.FC<{
       }
     }
     ctx.restore();
-  }, [type, size, locked, framed]);
+  }, [type, size, locked, framed, challenge]);
   return <canvas ref={canvasRef} style={{ width: size, height: size }} />;
 };
 // =============================================================================

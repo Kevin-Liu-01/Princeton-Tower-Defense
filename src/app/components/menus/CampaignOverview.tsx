@@ -154,13 +154,13 @@ function findLastPlayedLevel(
   levelStats: Record<string, LevelStats>
 ): { id: string; stats: LevelStats } | null {
   let bestEntry: { id: string; stats: LevelStats } | null = null;
-  let bestPlayed = 0;
+  let bestTimestamp = 0;
   for (const [id, stats] of Object.entries(levelStats)) {
-    if (stats.timesPlayed && stats.timesPlayed > 0) {
-      if (!bestEntry || (stats.lastTime !== undefined && stats.timesPlayed >= bestPlayed)) {
-        bestEntry = { id, stats };
-        bestPlayed = stats.timesPlayed || 0;
-      }
+    if (!stats.timesPlayed || stats.timesPlayed <= 0) continue;
+    const playedAt = stats.lastPlayedAt ?? 0;
+    if (!bestEntry || playedAt > bestTimestamp) {
+      bestEntry = { id, stats };
+      bestTimestamp = playedAt;
     }
   }
   return bestEntry;

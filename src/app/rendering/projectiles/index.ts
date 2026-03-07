@@ -1222,6 +1222,62 @@ function renderDragonBreath(
 }
 
 // ============================================================================
+// ENERGY BALL - Wyvern pulsing energy orb
+// ============================================================================
+function renderEnergyBall(
+  ctx: CanvasRenderingContext2D,
+  zoom: number,
+  time: number,
+  baseColor: { r: number; g: number; b: number }
+) {
+  const size = 10 * zoom;
+  const pulse = 1 + Math.sin(time * 10) * 0.15;
+
+  // Outer glow halo
+  const outerGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 1.6 * pulse);
+  outerGrad.addColorStop(0, colorWithAlpha(baseColor, 0.35));
+  outerGrad.addColorStop(0.5, colorWithAlpha(baseColor, 0.12));
+  outerGrad.addColorStop(1, colorWithAlpha(baseColor, 0));
+  ctx.fillStyle = outerGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 1.6 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Orbiting energy wisps
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2 + time * 6;
+    const orbitRadius = size * 0.7 * pulse;
+    const wx = Math.cos(angle) * orbitRadius;
+    const wy = Math.sin(angle) * orbitRadius * 0.5;
+    const wispSize = (2.5 + Math.sin(time * 12 + i * 1.7)) * zoom;
+    ctx.fillStyle = colorWithAlpha(baseColor, 0.5 + Math.sin(time * 8 + i) * 0.2);
+    ctx.beginPath();
+    ctx.arc(wx, wy, wispSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Bright inner core
+  const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.55 * pulse);
+  coreGrad.addColorStop(0, "#ffffff");
+  coreGrad.addColorStop(0.3, lightenColor(baseColor, 100));
+  coreGrad.addColorStop(0.65, `rgb(${baseColor.r}, ${baseColor.g}, ${baseColor.b})`);
+  coreGrad.addColorStop(1, darkenColor(baseColor, 30));
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.55 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Hot white center spark
+  const sparkGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.15);
+  sparkGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+  sparkGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = sparkGrad;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ============================================================================
 // PREDEFINED COLORS
 // ============================================================================
 const COLORS = {
@@ -1262,6 +1318,9 @@ const COLORS = {
   
   // Banshee
   banshee: { r: 200, g: 150, b: 255 },
+
+  // Wyvern energy
+  wyvern: { r: 5, g: 200, b: 120 },
 };
 
 // ============================================================================
@@ -1326,6 +1385,7 @@ export function renderProjectile(
       case "sonicWave": case "arch": baseColor = COLORS.sonic; break;
       case "bullet": baseColor = COLORS.tracer; break;
       case "bansheeScream": baseColor = COLORS.banshee; break;
+      case "wyvernBolt": baseColor = COLORS.wyvern; break;
       case "hero": baseColor = COLORS.mathey; break;
       default: baseColor = COLORS.arcane; break;
     }
@@ -1475,6 +1535,10 @@ export function renderProjectile(
       
     case "bansheeScream":
       renderBansheeScream(ctx, zoom, t, baseColor);
+      break;
+
+    case "wyvernBolt":
+      renderEnergyBall(ctx, zoom, time, baseColor);
       break;
       
     default:

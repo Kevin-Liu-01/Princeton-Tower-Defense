@@ -792,7 +792,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       <div className="flex-1 flex flex-col sm:flex-row overflow-y-auto sm:overflow-hidden min-h-0">
 
         {/* MOBILE: Campaign / Level detail panel above map */}
-        <div className="sm:hidden h-[28vh] flex-shrink-0 flex flex-col overflow-hidden px-2 pt-1.5 pb-1" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
+        <div className="sm:hidden h-[36vh] flex-shrink-0 flex flex-col overflow-hidden px-2 pt-1.5 pb-1" style={{ background: `linear-gradient(180deg, ${PANEL.bgLight} 0%, ${PANEL.bgDark} 100%)` }}>
           <div className="flex-1 flex flex-col overflow-hidden rounded-lg relative" style={{ background: panelGradient, border: `1.5px solid ${GOLD.border25}`, boxShadow: `inset 0 0 12px ${GOLD.glow04}` }}>
             <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
             {selectedLevel && currentLevel ? (() => {
@@ -805,10 +805,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${PANEL.bgDark} 35%, transparent 75%)` }} />
                     </div>
                   )}
-                  <div className="flex-1 flex flex-col overflow-auto p-2 relative z-10">
+                  <div className="flex-1 flex flex-col overflow-auto p-2 pb-1 relative z-10 min-h-0">
                     {/* Row 1: Icon + Name + nav + close */}
                     <div className="flex items-center gap-2 mb-1">
-                      <RegionIcon type={currentLevel.region} size={22} framed />
+                      <RegionIcon type={currentLevel.region} size={22} framed challenge={isCurrentChallengeLevel} />
                       <div className="flex-1 min-w-0">
                         <h2 className="text-sm font-bold text-amber-100 truncate">{currentLevel.name}</h2>
                         <p className="text-[9px] text-amber-400/60 italic truncate leading-tight">&ldquo;{currentLevel.description}&rdquo;</p>
@@ -825,8 +825,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         </button>
                       </div>
                     </div>
-                    {/* Row 2: Tags + stats side by side */}
-                    <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                    {/* Row 2: Tags + difficulty + waves */}
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
                       {isCurrentChallengeLevel && (
                         <span className="text-[8px] font-bold px-1.5 py-px rounded tracking-wider uppercase" style={challengeBadgeStyle}>Challenge</span>
                       )}
@@ -845,6 +845,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <Flag size={10} className="text-amber-300" />
                         <span className="text-amber-200 font-bold text-[9px]">{waveCount}W</span>
                       </div>
+                    </div>
+                    {/* Row 3: Stars + hearts + time */}
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
                       <div className="flex items-center gap-0.5 px-1.5 py-px rounded" style={{ background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`, border: `1px solid ${AMBER_CARD.border}` }}>
                         <Trophy size={10} className="text-yellow-500" />
                         <div className="flex gap-px">
@@ -866,7 +869,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         </>
                       )}
                     </div>
-                    {/* Row 3: Region levels */}
+                    {/* Row 4: Region levels */}
                     <div className="flex-1 overflow-y-auto">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${GOLD.border25}, transparent)` }} />
@@ -894,6 +897,28 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         ))}
                       </div>
                     </div>
+                  </div>
+                  {/* Battle button pinned at bottom */}
+                  <div className="flex-shrink-0 px-2 pb-1.5 pt-1 relative z-10" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
+                    <button
+                      onClick={canStart ? startGame : onStartWithRandomLoadout}
+                      className="w-full py-2 rounded-lg font-bold text-sm transition-all relative overflow-hidden group"
+                      style={{
+                        background: `linear-gradient(135deg, rgba(170,120,20,0.95), rgba(140,90,15,0.95))`,
+                        border: `1.5px solid ${GOLD.accentBorder50}`,
+                        boxShadow: `0 0 16px ${GOLD.accentGlow10}, inset 0 0 10px ${GOLD.accentGlow08}`,
+                        color: "rgba(253, 230, 138, 0.9)",
+                        textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                      <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}` }} />
+                      <div className="relative flex items-center justify-center gap-2">
+                        <Swords size={16} />
+                        <span className="tracking-wider">BATTLE</span>
+                        <Play size={14} />
+                      </div>
+                    </button>
                   </div>
                 </div>
               );
@@ -1064,26 +1089,26 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </p>
 
                       {/* Difficulty + Waves + Stars row */}
-                      <div className="flex items-center gap-2 sm:mb-3 relative z-10 flex-wrap">
+                      <div className="flex items-center gap-1.5 sm:mb-2 relative z-10 flex-wrap">
                         {/* Difficulty card */}
-                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg" style={{
+                        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md" style={{
                           background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
-                          border: `1.5px solid ${NEUTRAL.border}`,
-                          boxShadow: `inset 0 0 8px ${NEUTRAL.glow}`
+                          border: `1px solid ${NEUTRAL.border}`,
+                          boxShadow: `inset 0 0 6px ${NEUTRAL.glow}`
                         }}>
-                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
-                          <Skull size={14} className="text-amber-400" />
-                          <div className="flex gap-1">
+                          <div className="absolute inset-[2px] rounded-[4px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
+                          <Skull size={12} className="text-amber-400" />
+                          <div className="flex gap-0.5">
                             {[1, 2, 3].map((d) => (
                               <div
                                 key={d}
-                                className={`w-3 h-3 rounded-full transition-all ${d <= currentLevel.difficulty
+                                className={`w-2.5 h-2.5 rounded-full transition-all ${d <= currentLevel.difficulty
                                   ? `${currentLevel.difficulty === 1
                                     ? "bg-green-500 shadow-green-500/50"
                                     : currentLevel.difficulty === 2
                                       ? "bg-yellow-500 shadow-yellow-500/50"
                                       : "bg-red-500 shadow-red-500/50"
-                                  } shadow-lg`
+                                  } shadow-md`
                                   : "bg-stone-700"
                                   }`}
                               />
@@ -1092,31 +1117,31 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         </div>
 
                         {/* Waves card */}
-                        <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-md relative" style={{
                           background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                          border: `1.5px solid ${AMBER_CARD.border}`,
-                          boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
+                          border: `1px solid ${AMBER_CARD.border}`,
+                          boxShadow: `inset 0 0 6px ${AMBER_CARD.glow}`
                         }}>
-                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                          <Flag size={14} className="text-amber-300" />
-                          <span className="text-amber-200 font-bold text-sm">
+                          <div className="absolute inset-[2px] rounded-[4px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                          <Flag size={12} className="text-amber-300" />
+                          <span className="text-amber-200 font-bold text-xs">
                             {waveCount} Waves
                           </span>
                         </div>
 
                         {/* Stars (mobile) */}
-                        <div className="flex sm:hidden items-center gap-2 px-2.5 py-1.5 rounded-lg relative" style={{
+                        <div className="flex sm:hidden items-center gap-1.5 px-2 py-1 rounded-md relative" style={{
                           background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                          border: `1.5px solid ${AMBER_CARD.border}`,
-                          boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
+                          border: `1px solid ${AMBER_CARD.border}`,
+                          boxShadow: `inset 0 0 6px ${AMBER_CARD.glow}`
                         }}>
-                          <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                          <Trophy size={14} className="text-yellow-500" />
+                          <div className="absolute inset-[2px] rounded-[4px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                          <Trophy size={12} className="text-yellow-500" />
                           <div className="flex gap-0.5">
                             {[1, 2, 3].map((s) => (
                               <Star
                                 key={s}
-                                size={16}
+                                size={14}
                                 className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
                                   ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
                                   : "text-stone-600"
@@ -1128,19 +1153,19 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       </div>
 
                       {/* Best Stars (desktop) */}
-                      <div className="hidden sm:flex items-center gap-3 p-2.5 rounded-lg relative" style={{
+                      <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-md relative" style={{
                         background: `linear-gradient(135deg, ${AMBER_CARD.bgBase}, ${AMBER_CARD.bgDark})`,
-                        border: `1.5px solid ${AMBER_CARD.border}`,
-                        boxShadow: `inset 0 0 10px ${AMBER_CARD.glow}`
+                        border: `1px solid ${AMBER_CARD.border}`,
+                        boxShadow: `inset 0 0 8px ${AMBER_CARD.glow}`
                       }}>
-                        <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
-                        <Trophy size={18} className="text-yellow-500" />
-                        <span className="text-amber-400 text-sm font-medium">Best:</span>
-                        <div className="flex gap-1">
+                        <div className="absolute inset-[2px] rounded-[4px] pointer-events-none" style={{ border: `1px solid ${AMBER_CARD.innerBorder}` }} />
+                        <Trophy size={14} className="text-yellow-500" />
+                        <span className="text-amber-400 text-xs font-medium">Best:</span>
+                        <div className="flex gap-0.5">
                           {[1, 2, 3].map((s) => (
                             <Star
                               key={s}
-                              size={18}
+                              size={15}
                               className={`transition-all ${(levelStars[currentLevel.id] || 0) >= s
                                 ? "text-yellow-400 fill-yellow-400 drop-shadow-lg"
                                 : "text-stone-600"
@@ -1152,26 +1177,26 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
                       {/* Stats cards (hearts + time) */}
                       {levelStats[currentLevel.id] && (
-                        <div className="grid grid-cols-2 gap-2 mt-2 relative z-10">
-                          <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
+                        <div className="grid grid-cols-2 gap-1.5 mt-1.5 relative z-10">
+                          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md relative" style={{
                             background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`,
-                            border: `1.5px solid ${RED_CARD.border}`,
-                            boxShadow: `inset 0 0 10px ${RED_CARD.glow06}`
+                            border: `1px solid ${RED_CARD.border}`,
+                            boxShadow: `inset 0 0 8px ${RED_CARD.glow06}`
                           }}>
-                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
-                            <Heart size={16} className="text-red-400 fill-red-400" />
-                            <div className="text-sm text-red-200 font-mono font-bold">
+                            <div className="absolute inset-[2px] rounded-[4px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
+                            <Heart size={13} className="text-red-400 fill-red-400" />
+                            <div className="text-xs text-red-200 font-mono font-bold">
                               {levelStats[currentLevel.id]?.bestHearts}/20
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 p-2.5 rounded-lg relative" style={{
+                          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md relative" style={{
                             background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`,
-                            border: `1.5px solid ${BLUE_CARD.border}`,
-                            boxShadow: `inset 0 0 10px ${BLUE_CARD.glow}`
+                            border: `1px solid ${BLUE_CARD.border}`,
+                            boxShadow: `inset 0 0 8px ${BLUE_CARD.glow}`
                           }}>
-                            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
-                            <Clock size={16} className="text-blue-400" />
-                            <span className="text-blue-200 text-sm font-mono font-bold">
+                            <div className="absolute inset-[2px] rounded-[4px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
+                            <Clock size={13} className="text-blue-400" />
+                            <span className="text-blue-200 text-xs font-mono font-bold">
                               {levelStats[currentLevel.id]?.bestTime
                                 ? `${Math.floor(
                                   levelStats[currentLevel.id]!.bestTime! / 60
@@ -1225,18 +1250,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             } flex items-center justify-center`}
                         >
                           <div className="text-center">
-                            <div className="text-4xl mb-2">
-                              {isCurrentChallengeLevel
-                                ? "⚔️"
-                                : currentLevel.region === "grassland"
-                                  ? "🌲"
-                                  : currentLevel.region === "swamp"
-                                    ? "🦆"
-                                    : currentLevel.region === "desert"
-                                      ? "🏜️"
-                                      : currentLevel.region === "winter"
-                                        ? "❄️"
-                                        : "🌋"}
+                            <div className="mb-2">
+                              <RegionIcon type={currentLevel.region} size={48} framed challenge={isCurrentChallengeLevel} />
                             </div>
                             <span className="text-amber-400/60 text-xs font-medium tracking-wide">
                               Preview Coming
@@ -1331,26 +1346,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
                                 border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
                               }} />
-                              <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg relative"
-                                style={{
-                                  background: isLevelUnlocked(l.id) ? PANEL.bgDeep : NEUTRAL.bgDark,
-                                  border: `1px solid ${isLevelUnlocked(l.id) ? GOLD.border25 : NEUTRAL.border}`
-                                }}
-                              >
+                              <div className="w-8 h-8 flex items-center justify-center relative">
                                 {isLevelUnlocked(l.id)
-                                  ? l.kind === "challenge"
-                                    ? "⚔️"
-                                    : l.region === "grassland"
-                                      ? "🌲"
-                                      : l.region === "swamp"
-                                        ? "🦆"
-                                        : l.region === "desert"
-                                          ? "🏜️"
-                                          : l.region === "winter"
-                                            ? "❄️"
-                                            : "🌋"
-                                  : "🔒"}
+                                  ? <RegionIcon type={l.region} size={32} framed challenge={l.kind === "challenge"} />
+                                  : <RegionIcon type={l.region} size={32} framed locked challenge={l.kind === "challenge"} />
+                                }
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>

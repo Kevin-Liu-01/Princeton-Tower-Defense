@@ -1,8 +1,5 @@
 import type { Position } from "../../types";
-import {
-  TROOP_MASTERWORK_STYLES,
-  drawTroopMasterworkFinish,
-} from "./troopHelpers";
+import { ISO_Y_RATIO } from "../../constants";
 
 export function drawTurretIsometricCrate(
   ctx: CanvasRenderingContext2D,
@@ -14,7 +11,7 @@ export function drawTurretIsometricCrate(
   colors: { top: string; side: string; front: string; outline?: string },
 ) {
   const depthX = depth;
-  const depthY = depth * 0.58;
+  const depthY = depth * ISO_Y_RATIO;
 
   ctx.fillStyle = colors.top;
   ctx.beginPath();
@@ -101,7 +98,7 @@ export function drawTurretTroop(
 ) {
   const y = y2 + 10;
   const s = size * 1.72;
-  const squashY = 0.58;
+  const squashY = ISO_Y_RATIO;
   const engineerAccent = color || "#f59e0b";
 
   let rotation = 0;
@@ -109,14 +106,14 @@ export function drawTurretTroop(
     rotation = Math.atan2(targetPos.y - (y - s * 0.08), targetPos.x - x);
   } else {
     rotation =
-      -0.42 +
+      Math.PI * 0.75 +
       Math.sin(time * 0.55) * 0.24 +
       Math.sin(time * 1.45 + 0.8) * 0.07;
   }
 
   const cosR = Math.cos(rotation);
   const sinR = Math.sin(rotation);
-  const foreshorten = 0.56 + Math.abs(cosR) * 0.44;
+  const foreshorten = ISO_Y_RATIO + Math.abs(cosR) * (1 - ISO_Y_RATIO);
   const isAttacking = attackPhase > 0;
   const fireRate = 18;
   const burstPhase = (time * fireRate) % 1;
@@ -142,7 +139,7 @@ export function drawTurretTroop(
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.36)";
   ctx.beginPath();
-  ctx.ellipse(x, y + s * 0.42, s * 0.58, s * 0.16, 0, 0, Math.PI * 2);
+  ctx.ellipse(x, y + s * 0.42, s * 0.58, s * 0.29, 0, 0, Math.PI * 2);
   ctx.fill();
 
   const platformLeft = x - s * 0.36;
@@ -246,7 +243,7 @@ export function drawTurretTroop(
       stabilizer.endX,
       stabilizer.endY,
       s * 0.07,
-      s * 0.03,
+      s * 0.035,
       0,
       0,
       Math.PI * 2,
@@ -259,7 +256,15 @@ export function drawTurretTroop(
 
   ctx.fillStyle = "#404947";
   ctx.beginPath();
-  ctx.ellipse(ringX, ringY + s * 0.12, s * 0.22, s * 0.08, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    ringX,
+    ringY + s * 0.12,
+    s * 0.22,
+    s * 0.11,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   const ringGrad = ctx.createLinearGradient(
@@ -275,12 +280,28 @@ export function drawTurretTroop(
   ringGrad.addColorStop(1, "#252a30");
   ctx.fillStyle = ringGrad;
   ctx.beginPath();
-  ctx.ellipse(ringX, ringY + s * 0.08, s * 0.17, s * 0.06, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    ringX,
+    ringY + s * 0.08,
+    s * 0.17,
+    s * 0.085,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   ctx.fillStyle = "#2a302f";
   ctx.beginPath();
-  ctx.ellipse(ringX, ringY + s * 0.08, s * 0.095, s * 0.035, 0, 0, Math.PI * 2);
+  ctx.ellipse(
+    ringX,
+    ringY + s * 0.08,
+    s * 0.095,
+    s * 0.0475,
+    0,
+    0,
+    Math.PI * 2,
+  );
   ctx.fill();
 
   for (let i = 0; i < 10; i++) {
@@ -289,7 +310,7 @@ export function drawTurretTroop(
     ctx.beginPath();
     ctx.arc(
       ringX + Math.cos(rivetAngle) * s * 0.135,
-      ringY + s * 0.08 + Math.sin(rivetAngle) * s * 0.045,
+      ringY + s * 0.08 + Math.sin(rivetAngle) * s * 0.0675,
       s * 0.008,
       0,
       Math.PI * 2,
@@ -343,6 +364,54 @@ export function drawTurretTroop(
   ctx.translate(gunPivotX, gunPivotY);
   ctx.rotate(rotation);
   ctx.scale(1, squashY);
+
+  // Gun shield - protective armor plate facing the target
+  const shieldGrad = ctx.createLinearGradient(
+    s * 0.06,
+    -s * 0.32,
+    s * 0.06,
+    s * 0.32,
+  );
+  shieldGrad.addColorStop(0, "#4e5868");
+  shieldGrad.addColorStop(0.2, "#6a7888");
+  shieldGrad.addColorStop(0.4, "#788a9e");
+  shieldGrad.addColorStop(0.6, "#6a7888");
+  shieldGrad.addColorStop(0.8, "#586878");
+  shieldGrad.addColorStop(1, "#4a5464");
+  ctx.fillStyle = shieldGrad;
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.02, -s * 0.3);
+  ctx.quadraticCurveTo(s * 0.08, -s * 0.34, s * 0.14, -s * 0.28);
+  ctx.lineTo(s * 0.16, s * 0.28);
+  ctx.quadraticCurveTo(s * 0.08, s * 0.34, -s * 0.02, s * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(140, 155, 175, 0.25)";
+  ctx.lineWidth = s * 0.008;
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.02, -s * 0.3);
+  ctx.quadraticCurveTo(s * 0.08, -s * 0.34, s * 0.14, -s * 0.28);
+  ctx.stroke();
+
+  for (let i = 0; i < 5; i++) {
+    const rivetY = -s * 0.22 + i * s * 0.11;
+    ctx.fillStyle = "rgba(200, 195, 170, 0.45)";
+    ctx.beginPath();
+    ctx.arc(s * 0.11, rivetY, s * 0.006, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.strokeStyle = "rgba(80, 90, 110, 0.3)";
+  ctx.lineWidth = s * 0.003;
+  ctx.beginPath();
+  ctx.moveTo(s * 0.02, -s * 0.15);
+  ctx.lineTo(s * 0.08, -s * 0.08);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(s * 0.04, s * 0.1);
+  ctx.lineTo(s * 0.1, s * 0.18);
+  ctx.stroke();
 
   ctx.fillStyle = "#31392d";
   ctx.beginPath();
@@ -415,23 +484,39 @@ export function drawTurretTroop(
   const jacketLength = s * 0.34;
   for (let ring = 0; ring < 9; ring++) {
     const t = ring / 8;
-    const ringX = barrelStartLocalX + jacketLength * t;
+    const ringLocalX = barrelStartLocalX + jacketLength * t;
     const radiusX = s * (0.06 - t * 0.008);
     const radiusY = s * (0.034 - t * 0.004);
     ctx.fillStyle = "#525a67";
     ctx.beginPath();
-    ctx.ellipse(ringX, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
+    ctx.ellipse(ringLocalX, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.fillStyle = "#2a2f39";
     ctx.beginPath();
-    ctx.ellipse(ringX, 0, radiusX * 0.65, radiusY * 0.45, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      ringLocalX,
+      0,
+      radiusX * 0.65,
+      radiusY * 0.45,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
 
     if (heatGlow > 0.15) {
       ctx.fillStyle = `rgba(255, 160, 70, ${heatGlow * 0.16 * (1 - t * 0.65)})`;
       ctx.beginPath();
-      ctx.ellipse(ringX, 0, radiusX * 0.82, radiusY * 0.75, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        ringLocalX,
+        0,
+        radiusX * 0.82,
+        radiusY * 0.75,
+        0,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
@@ -652,7 +737,10 @@ export function drawTurretTroop(
       const tracerAlpha = 1 - tracerPhase * 0.75;
       const tracerGrad = ctx.createLinearGradient(tailX, tailY, headX, headY);
       tracerGrad.addColorStop(0, "rgba(255, 210, 90, 0)");
-      tracerGrad.addColorStop(0.5, `rgba(255, 218, 126, ${tracerAlpha * 0.45})`);
+      tracerGrad.addColorStop(
+        0.5,
+        `rgba(255, 218, 126, ${tracerAlpha * 0.45})`,
+      );
       tracerGrad.addColorStop(1, `rgba(255, 245, 210, ${tracerAlpha})`);
       ctx.strokeStyle = tracerGrad;
       ctx.lineWidth = 2.2 * zoom;
@@ -724,7 +812,13 @@ export function drawTurretTroop(
     const heatPulse = Math.sin(time * 14) > 0 ? 1 : 0.35;
     ctx.fillStyle = `rgba(255, 92, 48, ${heatPulse})`;
     ctx.beginPath();
-    ctx.arc(gunPivotX + s * 0.08, gunPivotY - s * 0.12, s * 0.014, 0, Math.PI * 2);
+    ctx.arc(
+      gunPivotX + s * 0.08,
+      gunPivotY - s * 0.12,
+      s * 0.014,
+      0,
+      Math.PI * 2,
+    );
     ctx.fill();
   }
 
@@ -736,7 +830,8 @@ export function drawTurretTroop(
   ctx.arc(emblemX, emblemY, s * 0.032, 0, Math.PI * 2);
   ctx.stroke();
   for (let i = 0; i < 6; i++) {
-    const toothAngle = (i / 6) * Math.PI * 2 + time * (isAttacking ? 1.7 : 0.35);
+    const toothAngle =
+      (i / 6) * Math.PI * 2 + time * (isAttacking ? 1.7 : 0.35);
     ctx.beginPath();
     ctx.moveTo(
       emblemX + Math.cos(toothAngle) * s * 0.032,
@@ -749,15 +844,5 @@ export function drawTurretTroop(
     ctx.stroke();
   }
 
-  drawTroopMasterworkFinish(
-    ctx,
-    x,
-    y,
-    size,
-    time,
-    zoom,
-    TROOP_MASTERWORK_STYLES.turret,
-    { vanguard: true },
-  );
   ctx.restore();
 }

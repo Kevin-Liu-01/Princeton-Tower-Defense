@@ -168,6 +168,7 @@ export interface LevelStats {
   lastHearts?: number; // Last hearts remaining
   timesPlayed?: number; // Number of attempts
   timesWon?: number; // Number of victories
+  lastPlayedAt?: number; // Epoch ms of the most recent attempt
 }
 
 export interface GameProgress {
@@ -274,6 +275,7 @@ export function useGameProgress() {
           lastHearts: hearts,
           timesPlayed,
           timesWon,
+          lastPlayedAt: Date.now(),
         };
 
         // Only update best time/hearts on victory
@@ -292,6 +294,7 @@ export function useGameProgress() {
             ...prev.levelStats,
             [levelId]: newStats,
           },
+          lastPlayedLevel: levelId,
         };
       });
     },

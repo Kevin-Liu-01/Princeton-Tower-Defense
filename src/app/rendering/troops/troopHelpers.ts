@@ -20,8 +20,7 @@ export const TROOP_MASTERWORK_STYLES: Record<
   | "centaur"
   | "thesis"
   | "rowing"
-  | "knight"
-  | "turret",
+  | "knight",
   TroopMasterworkStyle
 > = {
   soldier: {
@@ -79,13 +78,6 @@ export const TROOP_MASTERWORK_STYLES: Record<
     rune: "rgba(181, 220, 255, ",
     metalSheen: "rgba(231, 242, 255, ",
     crest: "#78b2ff",
-  },
-  turret: {
-    rimLight: "rgba(255, 194, 122, 0.58)",
-    aura: "rgba(255, 117, 54, ",
-    rune: "rgba(255, 213, 152, ",
-    metalSheen: "rgba(255, 233, 203, ",
-    crest: "#ff8e4d",
   },
 };
 

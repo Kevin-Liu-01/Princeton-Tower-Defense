@@ -50,9 +50,9 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
   },
   rocky: {
     name: "Rocky Raccoon",
-    icon: "🌰",
+    icon: "🐿️",
     description:
-      "A legendary gargoyle awakened from campus rooftops. Hurls massive boulders that devastate enemies.",
+      "A campus squirrel fused with an ancient gargoyle. Half fur, half stone — all fury. Hurls boulders with terrifying force.",
     hp: 2750,
     damage: 90,
     range: 180,
@@ -60,7 +60,7 @@ export const HERO_DATA: Record<HeroType, HeroData> = {
     speed: 2.8,
     ability: "Boulder Bash",
     abilityDesc: "Throws massive boulders dealing huge AoE damage",
-    color: "#78716c",
+    color: "#8a7020",
     isRanged: true,
   },
   scott: {
@@ -155,10 +155,10 @@ export const HERO_COLORS: Record<
     light: "#5ce65c",
   },
   rocky: {
-    base: "#a0522d",
-    dark: "#72391f",
-    accent: "#00ffff",
-    light: "#c07044",
+    base: "#a07020",
+    dark: "#5a4010",
+    accent: "#00e0ff",
+    light: "#c8a040",
   },
   scott: {
     base: "#800080",

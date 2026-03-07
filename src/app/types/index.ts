@@ -565,6 +565,7 @@ export type ProjectileType =
   | "infernalFire" // Infernal demon fire
   | "bansheeScream" // Banshee wail
   | "dragonBreath" // Dragon fire
+  | "wyvernBolt" // Wyvern energy ball
   | "mortarShell" // Mortar explosive shell (high arc)
   | "missile" // Missile battery projectile (4A)
   | "ember"; // Burning ember glob (4B)

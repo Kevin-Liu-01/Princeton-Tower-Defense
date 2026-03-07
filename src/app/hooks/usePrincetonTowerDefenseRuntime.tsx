@@ -800,6 +800,7 @@ export function usePrincetonTowerDefenseRuntime() {
   const gameSpeedRef = useRef(gameSpeed);
   gameSpeedRef.current = gameSpeed;
   const pausedAtRef = useRef<number | null>(null);
+  const totalPausedTimeRef = useRef<number>(0);
   // Track pausable timeouts: { id, callback, remainingTime, startedAt }
   const pausableTimeoutsRef = useRef<PausableTimeoutEntry[]>([]);
   const pausableTimeoutIdCounter = useRef(0);
@@ -1447,6 +1448,7 @@ export function usePrincetonTowerDefenseRuntime() {
       // Reset pausable timer system state
       prevGameSpeedRef.current = 1;
       pausedAtRef.current = null;
+      totalPausedTimeRef.current = 0;
       pausableTimeoutsRef.current = [];
       // Reset spawn timing refs
       lastBarracksSpawnRef.current = 0;
@@ -1608,6 +1610,7 @@ export function usePrincetonTowerDefenseRuntime() {
       // so effects don't expire prematurely from real time advancing while paused
       const pauseDuration = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
       if (pauseDuration > 0) {
+        totalPausedTimeRef.current += pauseDuration;
         setTroops((prev) =>
           prev.map((troop) => {
             const updates: Partial<typeof troop> = {};
@@ -2941,8 +2944,8 @@ export function usePrincetonTowerDefenseRuntime() {
         enemies.forEach((enemy) => {
           if (enemy.frozen || now < enemy.stunUntil) return;
           const flyingData = ENEMY_DATA[enemy.type];
-          // Only process flying enemies that can target troops
-          if (!flyingData.flying || !flyingData.targetsTroops) return;
+          // Only process non-ranged flying enemies (ranged flyers use the projectile path)
+          if (!flyingData.flying || !flyingData.targetsTroops || flyingData.isRanged) return;
 
           const attackSpeed = flyingData.troopAttackSpeed || 2000;
           const effectiveAttackInterval = gameSpeed > 0 ? attackSpeed / gameSpeed : attackSpeed;
@@ -3201,12 +3204,15 @@ export function usePrincetonTowerDefenseRuntime() {
               };
             }
             if (enemy.inCombat && !nearbyTroop && !nearbyHero) {
-              return {
-                ...enemy,
-                inCombat: false,
-                combatTarget: undefined,
-                damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
-              };
+              // Ranged enemies: let the ranged targeting path manage their combat state
+              if (!ENEMY_DATA[enemy.type].isRanged) {
+                return {
+                  ...enemy,
+                  inCombat: false,
+                  combatTarget: undefined,
+                  damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                };
+              }
             }
             // Ranged enemy attacks - they stop and attack when target in range
             const enemyData = ENEMY_DATA[enemy.type];
@@ -3276,7 +3282,7 @@ export function usePrincetonTowerDefenseRuntime() {
                       case "harpy":
                         return "arrow";
                       case "wyvern":
-                        return "fireball";
+                        return "wyvernBolt";
                       case "frostling":
                         return "frostBolt";
                       case "infernal":
@@ -3284,18 +3290,23 @@ export function usePrincetonTowerDefenseRuntime() {
                       case "banshee":
                         return "bansheeScream";
                       case "dragon":
-                        return "dragonBreath";
+                        return "fireball";
                       default:
                         return "arrow";
                     }
                   })();
 
                   // Determine if this is an AoE attack
-                  const isAoEAttack = ["catapult", "dragon", "infernal"].includes(enemy.type);
-                  const aoeRadius = isAoEAttack ? (enemy.type === "dragon" ? 80 : enemy.type === "catapult" ? 60 : 50) : 0;
+                  const isAoEAttack = ["catapult", "dragon", "infernal", "wyvern"].includes(enemy.type);
+                  const aoeRadius = isAoEAttack
+                    ? (enemy.type === "dragon" ? 80 : enemy.type === "wyvern" ? 70 : enemy.type === "catapult" ? 60 : 50)
+                    : 0;
 
                   // Calculate arc height for projectiles that should arc
                   const arcHeight = ["rock", "fireball"].includes(projType) ? 50 : 0;
+
+                  // Flying enemies shoot from above — projectile starts elevated and descends
+                  const elevation = enemyData.flying ? 30 : 0;
 
                   setProjectiles((proj) => [
                     ...proj,
@@ -3313,8 +3324,10 @@ export function usePrincetonTowerDefenseRuntime() {
                       targetType: rangedTarget!.type,
                       targetId: rangedTarget!.id,
                       arcHeight: arcHeight,
+                      elevation: elevation,
                       isAoE: isAoEAttack,
                       aoeRadius: aoeRadius,
+                      scale: enemy.type === "dragon" ? 1.5 : undefined,
                     },
                   ]);
                   return {
@@ -3330,6 +3343,10 @@ export function usePrincetonTowerDefenseRuntime() {
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
                   // Don't move - waiting for attack cooldown
                 };
+              }
+              // Ranged enemy lost its target — clear combat state
+              if (enemy.inCombat) {
+                enemy = { ...enemy, inCombat: false, combatTarget: undefined };
               }
             }
             // Update slowed visual indicator
@@ -6031,8 +6048,8 @@ export function usePrincetonTowerDefenseRuntime() {
       ) {
         gameEndHandledRef.current = true;
 
-        // Calculate time spent on defeat
-        const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
+        // Calculate time spent on defeat (subtract accumulated pause time)
+        const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
         setTimeSpent(finalTime);
 
         // Freeze battle in-place and show overlay without leaving the battle screen.
@@ -6056,8 +6073,8 @@ export function usePrincetonTowerDefenseRuntime() {
       ) {
         gameEndHandledRef.current = true;
 
-        // Calculate time spent
-        const finalTime = Math.floor((Date.now() - levelStartTime) / 1000);
+        // Calculate time spent on victory (subtract accumulated pause time)
+        const finalTime = Math.floor((Date.now() - levelStartTime - totalPausedTimeRef.current) / 1000);
         setTimeSpent(finalTime);
 
         // Calculate stars from multi-category ratings
@@ -11256,6 +11273,7 @@ export function usePrincetonTowerDefenseRuntime() {
           gameEndHandledRef,
           prevGameSpeedRef,
           pausedAtRef,
+          totalPausedTimeRef,
           pausableTimeoutsRef,
           lastBarracksSpawnRef,
           gameResetTimeRef,

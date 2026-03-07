@@ -1,4 +1,5 @@
 import type { EnemyType } from "../../types";
+import { ISO_Y_RATIO } from "../../constants";
 
 // ============================================================================
 // ATTACK TYPE CLASSIFICATION
@@ -222,10 +223,10 @@ function renderGroundSlam(
     const shockProgress = easeOutCubic(1 - phase / 0.85);
     const baseRadius = size * (0.3 + shockProgress * 0.9) * intensity;
 
-    // Directional ellipse - wider toward the forward direction
+    // Isometric ground-plane shockwave (slightly biased forward)
     ctx.save();
     ctx.translate(impactX, impactY);
-    ctx.scale(1.4, 0.35);
+    ctx.scale(1.15, ISO_Y_RATIO);
 
     // Outer shockwave ring
     const shockAlpha = phase * 0.6;
@@ -268,7 +269,7 @@ function renderGroundSlam(
       for (let j = 1; j <= segments; j++) {
         const jitter = stableNoise(seed + i * 7.3 + j * 3.1) * 0.25 - 0.125;
         cx += Math.cos(baseAngle + jitter) * (crackLen / segments);
-        cy += Math.sin(baseAngle + jitter) * (crackLen / segments) * 0.35;
+        cy += Math.sin(baseAngle + jitter) * (crackLen / segments) * ISO_Y_RATIO;
         ctx.lineTo(cx, cy);
       }
       ctx.stroke();
@@ -281,7 +282,7 @@ function renderGroundSlam(
         ctx.moveTo(cx, cy);
         ctx.lineTo(
           cx + Math.cos(branchAngle) * crackLen * 0.25,
-          cy + Math.sin(branchAngle) * crackLen * 0.25 * 0.35,
+          cy + Math.sin(branchAngle) * crackLen * 0.25 * ISO_Y_RATIO,
         );
         ctx.stroke();
       }
@@ -297,7 +298,7 @@ function renderGroundSlam(
     grad.addColorStop(1, `rgba(${style.crackRgb}, 0)`);
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.ellipse(impactX, impactY, glowRadius * 1.2, glowRadius * 0.4, 0, 0, Math.PI * 2);
+    ctx.ellipse(impactX, impactY, glowRadius, glowRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -311,7 +312,7 @@ function renderGroundSlam(
       const arcHeight = Math.sin(debrisProgress * Math.PI) * size * 0.4;
 
       const dx = Math.cos(angle) * dist;
-      const dy = Math.sin(angle) * dist * 0.35 - arcHeight;
+      const dy = Math.sin(angle) * dist * ISO_Y_RATIO - arcHeight;
       const debrisSize = size * 0.03 * (1 - debrisProgress * 0.6);
       const alpha = (1 - debrisProgress) * 0.7;
 
@@ -327,7 +328,7 @@ function renderGroundSlam(
     const dustAlpha = phase / 0.4 * 0.15;
     ctx.fillStyle = `rgba(${style.debrisRgb}, ${dustAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(impactX - size * 0.1, impactY, size * 0.5 * intensity, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.ellipse(impactX - size * 0.1, impactY, size * 0.5 * intensity, size * 0.5 * intensity * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -548,34 +549,37 @@ function renderMagicAttack(
       ctx.save();
       ctx.globalAlpha = phase * 0.5;
 
-      // Multiple wave arcs expanding forward
+      // Multiple wave arcs expanding forward — isometric ground projection
       for (let w = 0; w < 3; w++) {
         const wOffset = w * 0.15;
         const wPhase = Math.max(0, waveProgress - wOffset);
         if (wPhase <= 0) continue;
 
         const wDist = size * wPhase * 1.0;
+        const wArcR = wDist * 0.5 + w * size * 0.05;
         const wAlpha = (1 - wPhase) * 0.6;
         ctx.strokeStyle = `rgba(${style.coreRgb}, ${wAlpha})`;
         ctx.lineWidth = (3 - w) * zoom;
         ctx.beginPath();
-        ctx.arc(
+        ctx.ellipse(
           castX - wDist * 0.3, castY,
-          wDist * 0.5 + w * size * 0.05,
+          wArcR, wArcR * ISO_Y_RATIO,
+          0,
           -Math.PI * 0.4, Math.PI * 0.4,
         );
         ctx.stroke();
       }
       ctx.restore();
 
-      // Forward-moving glow
+      // Forward-moving glow — isometric ellipse
       const glowX = castX - waveLength * 0.4;
-      const glowGrad = ctx.createRadialGradient(glowX, castY, 0, glowX, castY, waveHeight);
+      const glowRx = waveHeight * 1.3;
+      const glowGrad = ctx.createRadialGradient(glowX, castY, 0, glowX, castY, glowRx);
       glowGrad.addColorStop(0, `rgba(${style.coreRgb}, ${phase * 0.3})`);
       glowGrad.addColorStop(1, `rgba(${style.glowRgb}, 0)`);
       ctx.fillStyle = glowGrad;
       ctx.beginPath();
-      ctx.ellipse(glowX, castY, waveHeight * 1.5, waveHeight, 0, 0, Math.PI * 2);
+      ctx.ellipse(glowX, castY, glowRx, glowRx * ISO_Y_RATIO, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -587,7 +591,7 @@ function renderMagicAttack(
       const sAngle = time * 6 + (i / swirlCount) * Math.PI * 2;
       const sDist = size * 0.2 * pulse;
       const sx = castX + Math.cos(sAngle) * sDist;
-      const sy = castY + Math.sin(sAngle) * sDist * 0.5;
+      const sy = castY + Math.sin(sAngle) * sDist * ISO_Y_RATIO;
       ctx.fillStyle = `rgba(${style.runeRgb}, ${pulse * 0.4})`;
       ctx.beginPath();
       ctx.arc(sx, sy, size * 0.025, 0, Math.PI * 2);
@@ -602,7 +606,7 @@ function renderMagicAttack(
     ctx.lineWidth = 1.5 * zoom;
     const runeRadius = size * 0.35;
     ctx.beginPath();
-    ctx.ellipse(x, y + size * 0.35, runeRadius, runeRadius * 0.3, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y + size * 0.35, runeRadius, runeRadius * ISO_Y_RATIO, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // Rune markers on the circle
@@ -610,7 +614,7 @@ function renderMagicAttack(
     for (let i = 0; i < markerCount; i++) {
       const mAngle = (i / markerCount) * Math.PI * 2 + time * 1.5;
       const mx = x + Math.cos(mAngle) * runeRadius;
-      const my = y + size * 0.35 + Math.sin(mAngle) * runeRadius * 0.3;
+      const my = y + size * 0.35 + Math.sin(mAngle) * runeRadius * ISO_Y_RATIO;
       ctx.fillStyle = `rgba(${style.runeRgb}, ${runeAlpha * 1.5})`;
       ctx.beginPath();
       ctx.moveTo(mx, my - size * 0.03);
