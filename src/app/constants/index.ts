@@ -9,3 +9,4 @@ export * from "./maps";
 export * from "./pathing";
 export * from "./waves";
 export * from "./particles";
+export * from "./settings";

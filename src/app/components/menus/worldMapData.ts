@@ -305,6 +305,25 @@ export const WORLD_LEVELS: LevelNode[] = [
   },
 ];
 
+export const DEV_LEVEL_IDS: ReadonlySet<string> = new Set([
+  "dev_enemy_showcase",
+]);
+
+export const DEV_LEVELS: LevelNode[] = [
+  {
+    id: "dev_enemy_showcase",
+    name: "Enemy Showcase",
+    description:
+      "Every enemy type, one per wave.\nDev-only testing sandbox.",
+    region: "grassland",
+    difficulty: 1,
+    tags: ["Dev", "All Enemies"],
+    x: 50,
+    y: 40,
+    connectsTo: [],
+  },
+];
+
 export const MAP_WIDTH = 1800;
 
 export const getWaveCount = (levelId: string): number => {

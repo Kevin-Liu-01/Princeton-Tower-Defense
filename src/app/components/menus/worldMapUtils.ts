@@ -1,4 +1,4 @@
-import { WORLD_LEVELS, type LevelNode } from "./worldMapData";
+import { WORLD_LEVELS, DEV_LEVELS, type LevelNode } from "./worldMapData";
 
 export const getWorldMapY = (pct: number, mapHeight: number): number => {
   const topMargin = 80;
@@ -14,7 +14,8 @@ export const seededRandom = (seed: number): number => {
 };
 
 export const getWorldLevelById = (id: string): LevelNode | undefined =>
-  WORLD_LEVELS.find((level) => level.id === id);
+  WORLD_LEVELS.find((level) => level.id === id) ??
+  DEV_LEVELS.find((level) => level.id === id);
 
 export const isWorldLevelUnlocked = (
   levelId: string,

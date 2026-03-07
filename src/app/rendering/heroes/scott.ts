@@ -37,10 +37,10 @@ export function drawFScottHero(
   drawShirtAndTie(ctx, x, y, size, isAttacking, attackIntensity, zoom);
   drawArms(ctx, x, y, size, time, zoom, isAttacking, attackPhase, penStrokeX, penStrokeY);
   drawHead(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
+  drawStormCollar(ctx, x, y, size, zoom);
   drawBook(ctx, x, y, size, time, zoom, isAttacking, writeCycle);
   drawPen(ctx, x, y, size, time, zoom, isAttacking, attackPhase, attackIntensity, penStrokeX, penStrokeY, targetPos);
   drawFloatingWords(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
-  drawLiteraryAura(ctx, x, y, size, time, zoom, attackIntensity);
 }
 
 // ─── AURA ────────────────────────────────────────────────────────────────────
@@ -60,10 +60,10 @@ function drawAura(
       x, y - size * 0.1, size * (0.95 + off * 0.3)
     );
     const a = (auraBase - layer * 0.04) * auraPulse;
-    g.addColorStop(0, `rgba(60, 200, 200, ${a * 0.5})`);
-    g.addColorStop(0.3, `rgba(40, 170, 170, ${a * 0.35})`);
-    g.addColorStop(0.6, `rgba(30, 140, 140, ${a * 0.2})`);
-    g.addColorStop(1, "rgba(60, 200, 200, 0)");
+    g.addColorStop(0, `rgba(130, 185, 220, ${a * 0.5})`);
+    g.addColorStop(0.3, `rgba(100, 155, 190, ${a * 0.35})`);
+    g.addColorStop(0.6, `rgba(80, 130, 170, ${a * 0.2})`);
+    g.addColorStop(1, "rgba(130, 185, 220, 0)");
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.ellipse(x, y - size * 0.1, size * (0.85 + off * 0.15), size * (0.75 + off * 0.12), 0, 0, Math.PI * 2);
@@ -129,82 +129,292 @@ function drawSuit(
   x: number, y: number, size: number,
   breathe: number, zoom: number
 ) {
-  const suitGrad = ctx.createLinearGradient(x - size * 0.4, y - size * 0.1, x + size * 0.4, y + size * 0.3);
-  suitGrad.addColorStop(0, "#1a1a28");
-  suitGrad.addColorStop(0.25, "#2a2a3a");
-  suitGrad.addColorStop(0.5, "#353548");
-  suitGrad.addColorStop(0.75, "#2a2a3a");
-  suitGrad.addColorStop(1, "#1a1a28");
-  ctx.fillStyle = suitGrad;
+  // Trench coat body
+  const coatG = ctx.createLinearGradient(x - size * 0.45, y - size * 0.1, x + size * 0.45, y + size * 0.4);
+  coatG.addColorStop(0, "#3a3528");
+  coatG.addColorStop(0.25, "#4a4535");
+  coatG.addColorStop(0.5, "#555040");
+  coatG.addColorStop(0.75, "#4a4535");
+  coatG.addColorStop(1, "#3a3528");
+  ctx.fillStyle = coatG;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.38, y + size * 0.5 + breathe);
-  ctx.lineTo(x - size * 0.42, y - size * 0.1);
+  ctx.moveTo(x - size * 0.44, y + size * 0.55 + breathe);
+  ctx.bezierCurveTo(x - size * 0.46, y + size * 0.35, x - size * 0.44, y, x - size * 0.42, y - size * 0.1);
   ctx.quadraticCurveTo(x - size * 0.35, y - size * 0.28, x, y - size * 0.32);
   ctx.quadraticCurveTo(x + size * 0.35, y - size * 0.28, x + size * 0.42, y - size * 0.1);
-  ctx.lineTo(x + size * 0.38, y + size * 0.5 + breathe);
+  ctx.bezierCurveTo(x + size * 0.44, y, x + size * 0.46, y + size * 0.35, x + size * 0.44, y + size * 0.55 + breathe);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#0a0a15";
+  ctx.strokeStyle = "#2a2518";
   ctx.lineWidth = 2 * zoom;
   ctx.stroke();
 
-  // Pinstripes
-  ctx.strokeStyle = "rgba(60, 60, 80, 0.3)";
-  ctx.lineWidth = 0.8;
-  for (let s = 0; s < 8; s++) {
-    const sx = x - size * 0.32 + s * size * 0.09;
+  // GUN FLAP (right side — extra fabric panel overlapping right chest)
+  const gfG = ctx.createLinearGradient(x + size * 0.04, y - size * 0.22, x + size * 0.28, y + size * 0.08);
+  gfG.addColorStop(0, "#4e4938");
+  gfG.addColorStop(0.5, "#585342");
+  gfG.addColorStop(1, "#4a4535");
+  ctx.fillStyle = gfG;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06, y - size * 0.24);
+  ctx.lineTo(x + size * 0.28, y - size * 0.2);
+  ctx.lineTo(x + size * 0.26, y + size * 0.08);
+  ctx.lineTo(x + size * 0.06, y + size * 0.1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(35, 30, 20, 0.35)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.stroke();
+  // Gun flap stitch line
+  ctx.strokeStyle = "rgba(80, 75, 60, 0.3)";
+  ctx.lineWidth = 0.7 * zoom;
+  ctx.setLineDash([2 * zoom, 2 * zoom]);
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.08, y - size * 0.22);
+  ctx.lineTo(x + size * 0.08, y + size * 0.08);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Coat hem flare detail
+  ctx.strokeStyle = "rgba(35, 30, 20, 0.4)";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.44, y + size * 0.54 + breathe);
+  ctx.quadraticCurveTo(x, y + size * 0.58 + breathe, x + size * 0.44, y + size * 0.54 + breathe);
+  ctx.stroke();
+
+  // Coat stitching lines
+  ctx.strokeStyle = "rgba(60, 55, 40, 0.2)";
+  ctx.lineWidth = 0.7;
+  for (let i = 0; i < 6; i++) {
+    const sx = x - size * 0.3 + i * size * 0.12;
     ctx.beginPath();
-    ctx.moveTo(sx, y - size * 0.15);
-    ctx.lineTo(sx - size * 0.02, y + size * 0.45);
+    ctx.moveTo(sx, y - size * 0.12);
+    ctx.lineTo(sx - size * 0.01, y + size * 0.5);
     ctx.stroke();
   }
 
-  // Left lapel
-  const lapelG = ctx.createLinearGradient(x - size * 0.25, y - size * 0.2, x - size * 0.08, y + size * 0.18);
-  lapelG.addColorStop(0, "#1a1a28");
-  lapelG.addColorStop(0.4, "#252535");
-  lapelG.addColorStop(1, "#1a1a28");
-  ctx.fillStyle = lapelG;
+  // LAPELS (drawn before the head — lower portion of the collar)
+  for (let side = -1; side <= 1; side += 2) {
+    const lapG = ctx.createLinearGradient(
+      x + side * size * 0.08, y - size * 0.26,
+      x + side * size * 0.28, y + size * 0.08
+    );
+    lapG.addColorStop(0, "#4a4535");
+    lapG.addColorStop(0.5, "#555040");
+    lapG.addColorStop(1, "#3a3528");
+    ctx.fillStyle = lapG;
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.08, y - size * 0.24);
+    ctx.lineTo(x + side * size * 0.26, y - size * 0.18);
+    ctx.lineTo(x + side * size * 0.24, y + size * 0.06);
+    ctx.lineTo(x + side * size * 0.08, y + size * 0.08);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "rgba(35, 30, 20, 0.3)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.stroke();
+  }
+
+  // BELT (wider, with D-rings and hanging tail)
+  ctx.fillStyle = "#3a3020";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, y - size * 0.24);
-  ctx.lineTo(x - size * 0.28, y + size * 0.18);
-  ctx.lineTo(x - size * 0.1, y + size * 0.2);
-  ctx.lineTo(x - size * 0.12, y - size * 0.2);
+  ctx.moveTo(x - size * 0.42, y + size * 0.16);
+  ctx.lineTo(x + size * 0.42, y + size * 0.16);
+  ctx.lineTo(x + size * 0.42, y + size * 0.22);
+  ctx.lineTo(x - size * 0.42, y + size * 0.22);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#40b0b0";
-  ctx.shadowColor = "#50d0d0";
-  ctx.shadowBlur = 3 * zoom;
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "#2a2015";
+  ctx.lineWidth = 0.8 * zoom;
   ctx.stroke();
-  ctx.shadowBlur = 0;
 
-  // Right lapel
+  // Belt keeper loops
+  for (const lx of [-0.22, -0.08, 0.08, 0.22]) {
+    ctx.fillStyle = "#332a1a";
+    ctx.beginPath();
+    ctx.roundRect(x + lx * size - size * 0.012, y + size * 0.155, size * 0.024, size * 0.072, size * 0.003);
+    ctx.fill();
+    ctx.strokeStyle = "#2a2015";
+    ctx.lineWidth = 0.5 * zoom;
+    ctx.stroke();
+  }
+
+  // Belt buckle (silvery blue)
+  const buckG = ctx.createLinearGradient(x - size * 0.04, y + size * 0.16, x + size * 0.04, y + size * 0.22);
+  buckG.addColorStop(0, "#8ab0c8");
+  buckG.addColorStop(0.3, "#a0c8e0");
+  buckG.addColorStop(0.5, "#c0ddf0");
+  buckG.addColorStop(0.7, "#a0c8e0");
+  buckG.addColorStop(1, "#8ab0c8");
+  ctx.fillStyle = buckG;
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.2, y - size * 0.24);
-  ctx.lineTo(x + size * 0.28, y + size * 0.18);
-  ctx.lineTo(x + size * 0.1, y + size * 0.2);
-  ctx.lineTo(x + size * 0.12, y - size * 0.2);
+  ctx.roundRect(x - size * 0.04, y + size * 0.155, size * 0.08, size * 0.07, size * 0.008);
+  ctx.fill();
+  ctx.strokeStyle = "#6a90a8";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+  // Buckle prong
+  ctx.strokeStyle = "#b0d0e8";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y + size * 0.165);
+  ctx.lineTo(x, y + size * 0.215);
+  ctx.stroke();
+
+  // Belt hanging tail (excess strap hanging down)
+  ctx.fillStyle = "#3a3020";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.04, y + size * 0.19);
+  ctx.lineTo(x + size * 0.14, y + size * 0.2);
+  ctx.lineTo(x + size * 0.15, y + size * 0.28);
+  ctx.lineTo(x + size * 0.13, y + size * 0.29);
+  ctx.lineTo(x + size * 0.12, y + size * 0.21);
+  ctx.lineTo(x + size * 0.04, y + size * 0.2);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#40b0b0";
-  ctx.shadowColor = "#50d0d0";
-  ctx.shadowBlur = 3 * zoom;
+  ctx.strokeStyle = "#2a2015";
+  ctx.lineWidth = 0.6 * zoom;
   ctx.stroke();
-  ctx.shadowBlur = 0;
+  // Tail tip hardware
+  ctx.fillStyle = "#8ab0c8";
+  ctx.beginPath();
+  ctx.roundRect(x + size * 0.125, y + size * 0.275, size * 0.02, size * 0.018, size * 0.003);
+  ctx.fill();
 
-  // Lapel flower
-  ctx.fillStyle = "#cc2233";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.22, y - size * 0.08, size * 0.03, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#dd4455";
-  ctx.beginPath();
-  ctx.arc(x - size * 0.215, y - size * 0.085, size * 0.015, 0, Math.PI * 2);
-  ctx.fill();
+  // D-rings (silvery blue, on left hip)
+  for (let d = 0; d < 2; d++) {
+    const dx = x - size * (0.32 + d * 0.06);
+    const dy = y + size * 0.19;
+    ctx.strokeStyle = "#90b8d0";
+    ctx.lineWidth = 1.4 * zoom;
+    ctx.beginPath();
+    ctx.arc(dx, dy, size * 0.018, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.lineTo(dx - size * 0.015, dy + size * 0.018);
+    ctx.lineTo(dx - size * 0.015, dy - size * 0.018);
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  // BUTTONS (silvery blue, double-breasted)
+  for (let row = 0; row < 3; row++) {
+    for (let col = -1; col <= 1; col += 2) {
+      const bx = x + col * size * 0.1;
+      const by2 = y - size * 0.06 + row * size * 0.1;
+      const bg = ctx.createRadialGradient(bx - size * 0.003, by2 - size * 0.003, 0, bx, by2, size * 0.018);
+      bg.addColorStop(0, "#d0e8f5");
+      bg.addColorStop(0.5, "#a0c0d8");
+      bg.addColorStop(1, "#7098b0");
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.arc(bx, by2, size * 0.018, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#6088a0";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.stroke();
+      // Button highlight
+      ctx.fillStyle = "rgba(220, 240, 255, 0.4)";
+      ctx.beginPath();
+      ctx.arc(bx - size * 0.005, by2 - size * 0.005, size * 0.007, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 }
 
-// ─── EPAULETTES (TEAL) ──────────────────────────────────────────────────────
+// ─── STORM COLLAR (drawn after head so it overlaps the jaw/cheeks) ──────────
+
+function drawStormCollar(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, size: number,
+  zoom: number
+) {
+  const headY = y - size * 0.5;
+
+  for (let side = -1; side <= 1; side += 2) {
+    // Turned-up collar flap — narrow strip that hugs the jawline
+    const colG = ctx.createLinearGradient(
+      x + side * size * 0.14, headY + size * 0.18,
+      x + side * size * 0.3, headY - size * 0.08
+    );
+    colG.addColorStop(0, "#4a4535");
+    colG.addColorStop(0.4, "#585248");
+    colG.addColorStop(0.7, "#605a48");
+    colG.addColorStop(1, "#555040");
+    ctx.fillStyle = colG;
+    ctx.beginPath();
+    // Bottom inner edge (near neck)
+    ctx.moveTo(x + side * size * 0.12, headY + size * 0.22);
+    // Up along the jaw, curving outward
+    ctx.bezierCurveTo(
+      x + side * size * 0.14, headY + size * 0.1,
+      x + side * size * 0.18, headY - size * 0.02,
+      x + side * size * 0.2, headY - size * 0.1
+    );
+    // Collar peak (pointed tip)
+    ctx.lineTo(x + side * size * 0.24, headY - size * 0.14);
+    // Outer edge going back down
+    ctx.bezierCurveTo(
+      x + side * size * 0.28, headY - size * 0.04,
+      x + side * size * 0.3, headY + size * 0.08,
+      x + side * size * 0.28, headY + size * 0.2
+    );
+    // Bottom outer edge
+    ctx.lineTo(x + side * size * 0.24, headY + size * 0.24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#2a2518";
+    ctx.lineWidth = 1.3 * zoom;
+    ctx.stroke();
+
+    // Fold crease — diagonal line where the collar turns over
+    ctx.strokeStyle = "rgba(80, 75, 55, 0.45)";
+    ctx.lineWidth = 0.9 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.14, headY + size * 0.18);
+    ctx.bezierCurveTo(
+      x + side * size * 0.18, headY + size * 0.06,
+      x + side * size * 0.22, headY - size * 0.04,
+      x + side * size * 0.23, headY - size * 0.1
+    );
+    ctx.stroke();
+
+    // Lighter inner lining visible above the fold
+    const innerG = ctx.createLinearGradient(
+      x + side * size * 0.18, headY - size * 0.12,
+      x + side * size * 0.28, headY + size * 0.06
+    );
+    innerG.addColorStop(0, "#6a6455");
+    innerG.addColorStop(0.5, "#73705e");
+    innerG.addColorStop(1, "#605a48");
+    ctx.fillStyle = innerG;
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.2, headY - size * 0.1);
+    ctx.lineTo(x + side * size * 0.24, headY - size * 0.14);
+    ctx.bezierCurveTo(
+      x + side * size * 0.28, headY - size * 0.04,
+      x + side * size * 0.3, headY + size * 0.08,
+      x + side * size * 0.28, headY + size * 0.2
+    );
+    ctx.lineTo(x + side * size * 0.26, headY + size * 0.18);
+    ctx.bezierCurveTo(
+      x + side * size * 0.27, headY + size * 0.06,
+      x + side * size * 0.26, headY - size * 0.02,
+      x + side * size * 0.23, headY - size * 0.1
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // Top edge highlight
+    ctx.strokeStyle = "rgba(120, 115, 95, 0.35)";
+    ctx.lineWidth = 0.7 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x + side * size * 0.2, headY - size * 0.1);
+    ctx.lineTo(x + side * size * 0.24, headY - size * 0.14);
+    ctx.stroke();
+  }
+}
+
+// ─── EPAULETTES (silvery blue) ──────────────────────────────────────────────
 
 function drawEpaulettes(
   ctx: CanvasRenderingContext2D,
@@ -222,31 +432,31 @@ function drawEpaulettes(
     const epW = size * 0.18;
     const epH = size * 0.08;
 
-    // Base pad (dark navy)
+    // Base pad
     const padG = ctx.createLinearGradient(-epW, -epH, epW, epH);
-    padG.addColorStop(0, "#1a2a30");
-    padG.addColorStop(0.3, "#203840");
-    padG.addColorStop(0.5, "#254048");
-    padG.addColorStop(0.7, "#203840");
-    padG.addColorStop(1, "#1a2a30");
+    padG.addColorStop(0, "#1a2530");
+    padG.addColorStop(0.3, "#253545");
+    padG.addColorStop(0.5, "#2a3a4a");
+    padG.addColorStop(0.7, "#253545");
+    padG.addColorStop(1, "#1a2530");
     ctx.fillStyle = padG;
     ctx.beginPath();
     ctx.ellipse(0, 0, epW, epH, side * 0.1, 0, Math.PI * 2);
     ctx.fill();
 
-    // Teal border
-    ctx.strokeStyle = "#40c0c0";
+    // Silvery blue border
+    ctx.strokeStyle = "#80b8d0";
     ctx.lineWidth = 2 * zoom;
     ctx.stroke();
 
-    // Inner teal trim ring
-    ctx.strokeStyle = "#309090";
+    // Inner trim ring
+    ctx.strokeStyle = "#6898b0";
     ctx.lineWidth = 1 * zoom;
     ctx.beginPath();
     ctx.ellipse(0, 0, epW * 0.75, epH * 0.65, side * 0.1, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Teal fringe strands
+    // Silvery blue fringe strands
     const fringeCount = 9;
     for (let f = 0; f < fringeCount; f++) {
       const fAngle = (side === -1 ? 0.2 : -0.2) + Math.PI * 0.3 + f * (Math.PI * 0.5 / (fringeCount - 1));
@@ -256,10 +466,10 @@ function drawEpaulettes(
       const fWave = Math.sin(time * 3 + f * 0.6) * size * 0.008;
 
       const fringeG = ctx.createLinearGradient(fx, fy, fx + fWave, fy + fLen);
-      fringeG.addColorStop(0, "#50d0d0");
-      fringeG.addColorStop(0.4, "#70e8e8");
-      fringeG.addColorStop(0.7, "#40b8b8");
-      fringeG.addColorStop(1, "#2a9090");
+      fringeG.addColorStop(0, "#90c0d8");
+      fringeG.addColorStop(0.4, "#b0d8e8");
+      fringeG.addColorStop(0.7, "#80b0c8");
+      fringeG.addColorStop(1, "#608898");
       ctx.strokeStyle = fringeG;
       ctx.lineWidth = 1.8 * zoom;
       ctx.lineCap = "round";
@@ -268,16 +478,15 @@ function drawEpaulettes(
       ctx.quadraticCurveTo(fx + fWave * 0.6, fy + fLen * 0.5, fx + fWave, fy + fLen);
       ctx.stroke();
 
-      // Tip bead
-      ctx.fillStyle = "#60e0e0";
+      ctx.fillStyle = "#b0d8e8";
       ctx.beginPath();
       ctx.arc(fx + fWave, fy + fLen, size * 0.008, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Center star emblem (teal)
-    ctx.fillStyle = "#60e8e8";
-    ctx.shadowColor = "#50d0d0";
+    // Center star emblem (silvery blue)
+    ctx.fillStyle = "#b0d8f0";
+    ctx.shadowColor = "#80b8d8";
     ctx.shadowBlur = 5 * zoom;
     ctx.beginPath();
     for (let s = 0; s < 5; s++) {
@@ -293,8 +502,7 @@ function drawEpaulettes(
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Star highlight
-    ctx.fillStyle = "#b0ffff";
+    ctx.fillStyle = "#d8f0ff";
     ctx.beginPath();
     ctx.arc(-size * 0.005, -size * 0.008, size * 0.008, 0, Math.PI * 2);
     ctx.fill();
@@ -303,7 +511,7 @@ function drawEpaulettes(
   }
 }
 
-// ─── AIGUILLETTE (teal braided cord from right shoulder) ────────────────────
+// ─── AIGUILLETTE & DECORATIONS (silvery blue) ──────────────────────────────
 
 function drawAiguillette(
   ctx: CanvasRenderingContext2D,
@@ -320,7 +528,7 @@ function drawAiguillette(
     const loopWidth = size * (0.2 + loop * 0.05);
     const alpha = 0.7 - loop * 0.12;
 
-    ctx.strokeStyle = `rgba(64, 192, 192, ${alpha})`;
+    ctx.strokeStyle = `rgba(130, 180, 210, ${alpha})`;
     ctx.lineWidth = (2 - loop * 0.3) * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -333,22 +541,21 @@ function drawAiguillette(
     );
     ctx.stroke();
 
-    // Subtle glow version underneath
-    ctx.strokeStyle = `rgba(80, 220, 220, ${alpha * 0.25})`;
+    ctx.strokeStyle = `rgba(160, 200, 230, ${alpha * 0.25})`;
     ctx.lineWidth = (3.5 - loop * 0.4) * zoom;
     ctx.stroke();
   }
 
   // Tip ferrule
-  ctx.fillStyle = "#50d0d0";
+  ctx.fillStyle = "#90c0d8";
   ctx.beginPath();
   ctx.arc(startX - size * 0.35, startY + size * 0.04, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
 
-  // Pocket square (teal, peeking from left breast pocket)
+  // Pocket square (silvery blue, peeking from left breast pocket)
   const pqX = x - size * 0.2;
   const pqY = y + size * 0.02;
-  ctx.fillStyle = "#3ab8b8";
+  ctx.fillStyle = "#7ab0c8";
   ctx.beginPath();
   ctx.moveTo(pqX - size * 0.03, pqY);
   ctx.lineTo(pqX - size * 0.015, pqY - size * 0.06);
@@ -357,38 +564,85 @@ function drawAiguillette(
   ctx.lineTo(pqX + size * 0.035, pqY);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#2a9898";
+  ctx.strokeStyle = "#5a8898";
   ctx.lineWidth = 0.8;
   ctx.stroke();
 
-  // Decorative teal piping along jacket hem
-  ctx.strokeStyle = "rgba(60, 190, 190, 0.35)";
+  // Decorative piping along jacket hem
+  ctx.strokeStyle = "rgba(130, 180, 210, 0.35)";
   ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.36, y + size * 0.48);
   ctx.quadraticCurveTo(x, y + size * 0.52, x + size * 0.36, y + size * 0.48);
   ctx.stroke();
 
-  // Teal pocket watch chain across vest
-  ctx.strokeStyle = "#40b0b0";
+  // Pocket watch chain across vest
+  ctx.strokeStyle = "#80b0c8";
   ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
   ctx.moveTo(x - size * 0.02, y + size * 0.05);
   ctx.quadraticCurveTo(x + size * 0.08, y + size * 0.12, x + size * 0.14, y + size * 0.08);
   ctx.stroke();
   // Watch fob
-  ctx.fillStyle = "#50d0d0";
-  ctx.shadowColor = "#50d0d0";
+  ctx.fillStyle = "#90c0d8";
+  ctx.shadowColor = "#80b8d8";
   ctx.shadowBlur = 3 * zoom;
   ctx.beginPath();
   ctx.arc(x + size * 0.14, y + size * 0.08, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
-  // Watch fob highlight
-  ctx.fillStyle = "#a0f0f0";
+  ctx.fillStyle = "#c8e0f0";
   ctx.beginPath();
   ctx.arc(x + size * 0.136, y + size * 0.075, size * 0.005, 0, Math.PI * 2);
   ctx.fill();
+
+  // SHOULDER RANK PINS (silvery blue small bars on left collar)
+  for (let pin = 0; pin < 3; pin++) {
+    const px = x - size * 0.14;
+    const py = y - size * 0.2 + pin * size * 0.025;
+    ctx.fillStyle = "#a0c8e0";
+    ctx.beginPath();
+    ctx.roundRect(px, py, size * 0.04, size * 0.008, size * 0.002);
+    ctx.fill();
+    ctx.strokeStyle = "#7aa0b8";
+    ctx.lineWidth = 0.4 * zoom;
+    ctx.stroke();
+  }
+
+  // THROAT LATCH button (small silvery blue button at collar)
+  const bg = ctx.createRadialGradient(x, y - size * 0.31, 0, x, y - size * 0.31, size * 0.012);
+  bg.addColorStop(0, "#d0e8f5");
+  bg.addColorStop(0.5, "#a0c0d8");
+  bg.addColorStop(1, "#7098b0");
+  ctx.fillStyle = bg;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.31, size * 0.012, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = "#6088a0";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.stroke();
+
+  // MEDAL RIBBON (small rectangular ribbon on left chest)
+  const medX = x - size * 0.28;
+  const medY = y - size * 0.08;
+  const stripeW = size * 0.008;
+  const ribbonColors = ["#708898", "#a0c0d8", "#e0f0ff", "#a0c0d8", "#708898"];
+  for (let ri = 0; ri < ribbonColors.length; ri++) {
+    ctx.fillStyle = ribbonColors[ri];
+    ctx.fillRect(medX + ri * stripeW, medY, stripeW, size * 0.025);
+  }
+  ctx.strokeStyle = "#506878";
+  ctx.lineWidth = 0.4 * zoom;
+  ctx.strokeRect(medX, medY, stripeW * ribbonColors.length, size * 0.025);
+
+  // BACK VENT DETAIL (subtle V at the bottom of coat)
+  ctx.strokeStyle = "rgba(55, 50, 35, 0.5)";
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.04, y + size * 0.55);
+  ctx.lineTo(x, y + size * 0.48);
+  ctx.lineTo(x + size * 0.04, y + size * 0.55);
+  ctx.stroke();
 }
 
 // ─── VEST ────────────────────────────────────────────────────────────────────
@@ -435,22 +689,22 @@ function drawVest(
   ctx.lineTo(x + size * 0.16, y + size * 0.3);
   ctx.stroke();
 
-  // Gold buttons
+  // Silvery blue buttons
   for (let i = 0; i < 4; i++) {
     const by = y - size * 0.1 + i * size * 0.095;
-    ctx.fillStyle = "#8b6914";
+    ctx.fillStyle = "#607888";
     ctx.beginPath();
     ctx.arc(x + size * 0.005, by + size * 0.005, size * 0.022, 0, Math.PI * 2);
     ctx.fill();
     const bg = ctx.createRadialGradient(x - size * 0.005, by - size * 0.005, 0, x, by, size * 0.022);
-    bg.addColorStop(0, "#ffec8b");
-    bg.addColorStop(0.5, "#daa520");
-    bg.addColorStop(1, "#b8860b");
+    bg.addColorStop(0, "#d0e8f5");
+    bg.addColorStop(0.5, "#a0c0d8");
+    bg.addColorStop(1, "#7098b0");
     ctx.fillStyle = bg;
     ctx.beginPath();
     ctx.arc(x, by, size * 0.022, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = "rgba(255,255,220,0.5)";
+    ctx.fillStyle = "rgba(220, 240, 255, 0.4)";
     ctx.beginPath();
     ctx.arc(x - size * 0.008, by - size * 0.008, size * 0.008, 0, Math.PI * 2);
     ctx.fill();
@@ -488,15 +742,15 @@ function drawShirtAndTie(
   ctx.closePath();
   ctx.fill();
 
-  // Tie
-  ctx.shadowColor = "#50d0d0";
+  // Tie (silvery blue)
+  ctx.shadowColor = "#80b8d8";
   ctx.shadowBlur = isAttacking ? 10 * zoom * attackIntensity : 4 * zoom;
   const tG = ctx.createLinearGradient(x, y - size * 0.18, x, y + size * 0.22);
-  tG.addColorStop(0, "#40c0c0");
-  tG.addColorStop(0.2, "#35a5a5");
-  tG.addColorStop(0.5, "#2a8a8a");
-  tG.addColorStop(0.8, "#206a6a");
-  tG.addColorStop(1, "#185050");
+  tG.addColorStop(0, "#80b8d0");
+  tG.addColorStop(0.2, "#6898b0");
+  tG.addColorStop(0.5, "#507898");
+  tG.addColorStop(0.8, "#3a6080");
+  tG.addColorStop(1, "#2a4860");
   ctx.fillStyle = tG;
   ctx.beginPath();
   ctx.moveTo(x, y - size * 0.18);
@@ -507,7 +761,7 @@ function drawShirtAndTie(
   ctx.fill();
 
   // Tie stripes
-  ctx.strokeStyle = "rgba(20, 60, 60, 0.4)";
+  ctx.strokeStyle = "rgba(30, 60, 80, 0.4)";
   ctx.lineWidth = 1.5;
   for (let s = 0; s < 5; s++) {
     const sy = y - size * 0.1 + s * size * 0.06;
@@ -518,7 +772,7 @@ function drawShirtAndTie(
   }
 
   // Tie knot
-  ctx.fillStyle = "#50d0d0";
+  ctx.fillStyle = "#90c0d8";
   ctx.beginPath();
   ctx.ellipse(x, y - size * 0.16, size * 0.045, size * 0.028, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -534,18 +788,18 @@ function drawArms(
   isAttacking: boolean, attackPhase: number,
   penStrokeX: number, penStrokeY: number
 ) {
-  // Left arm: curls inward to hold book at center body
+  // Left arm: reaches inward (right) to hold book at center
   const leftGesture = isAttacking
-    ? Math.sin(attackPhase * Math.PI) * 0.5
-    : 0.15 + Math.sin(time * 1.2) * 0.03;
+    ? Math.sin(attackPhase * Math.PI) * 0.4
+    : 0.1 + Math.sin(time * 1.2) * 0.03;
 
   ctx.save();
-  ctx.translate(x - size * 0.38, y - size * 0.08);
-  ctx.rotate(0.55 + leftGesture * 0.3);
+  ctx.translate(x - size * 0.36, y - size * 0.08);
+  ctx.rotate(-0.65 - leftGesture * 0.2);
 
   drawSuitSleeve(ctx, size, zoom, 1);
 
-  // Left hand (holding book from beneath)
+  // Left hand (cupping under book)
   ctx.fillStyle = "#ffe0bd";
   ctx.beginPath();
   ctx.ellipse(size * 0.01, size * 0.34, size * 0.04, size * 0.045, 0.2, 0, Math.PI * 2);
@@ -559,14 +813,14 @@ function drawArms(
 
   ctx.restore();
 
-  // Right arm: curls inward to write on book at center body
+  // Right arm: reaches inward (left) to write with pen on book
   const rightFlourish = isAttacking
-    ? Math.sin(attackPhase * Math.PI * 1.5) * 0.6 + 0.3
-    : 0.15 + Math.sin(time * 2) * 0.03;
+    ? Math.sin(attackPhase * Math.PI * 1.5) * 0.5 + 0.2
+    : 0.1 + Math.sin(time * 2) * 0.03;
 
   ctx.save();
-  ctx.translate(x + size * 0.38, y - size * 0.1);
-  ctx.rotate(-0.55 - rightFlourish * 0.3);
+  ctx.translate(x + size * 0.36, y - size * 0.1);
+  ctx.rotate(0.65 + rightFlourish * 0.2);
 
   drawSuitSleeve(ctx, size, zoom, -1);
 
@@ -596,10 +850,11 @@ function drawSuitSleeve(
   ctx: CanvasRenderingContext2D,
   size: number, zoom: number, dir: number
 ) {
+  // Trench coat sleeve (olive/khaki)
   const sg = ctx.createLinearGradient(0, 0, dir * size * 0.1, size * 0.35);
-  sg.addColorStop(0, "#2a2a3a");
-  sg.addColorStop(0.5, "#353548");
-  sg.addColorStop(1, "#1a1a28");
+  sg.addColorStop(0, "#4a4535");
+  sg.addColorStop(0.5, "#555040");
+  sg.addColorStop(1, "#3a3528");
   ctx.fillStyle = sg;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -608,28 +863,59 @@ function drawSuitSleeve(
   ctx.quadraticCurveTo(-dir * size * 0.08, size * 0.12, 0, 0);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#0a0a15";
+  ctx.strokeStyle = "#2a2518";
   ctx.lineWidth = 1.2;
   ctx.stroke();
 
-  // Cuff
-  ctx.fillStyle = "#ffffff";
+  // Sleeve strap loop (leather strap wrapping around wrist)
+  ctx.fillStyle = "#3a3020";
   ctx.beginPath();
-  ctx.ellipse(-dir * size * 0.01, size * 0.29, size * 0.055, size * 0.022, -dir * 0.15, 0, Math.PI * 2);
+  ctx.moveTo(-dir * size * 0.06, size * 0.235);
+  ctx.lineTo(dir * size * 0.05, size * 0.235);
+  ctx.lineTo(dir * size * 0.05, size * 0.26);
+  ctx.lineTo(-dir * size * 0.06, size * 0.26);
+  ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = "#e8e8e8";
-  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = "#2a2015";
+  ctx.lineWidth = 0.6;
   ctx.stroke();
 
-  // Cufflink (teal)
-  ctx.fillStyle = "#40b8b8";
+  // Strap stitch detail
+  ctx.strokeStyle = "rgba(80, 70, 50, 0.35)";
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([1.5, 1.5]);
   ctx.beginPath();
-  ctx.arc(-dir * size * 0.01, size * 0.29, size * 0.012, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#a0f0f0";
+  ctx.moveTo(-dir * size * 0.055, size * 0.243);
+  ctx.lineTo(dir * size * 0.045, size * 0.243);
+  ctx.stroke();
   ctx.beginPath();
-  ctx.arc(-dir * size * 0.014, size * 0.286, size * 0.005, 0, Math.PI * 2);
+  ctx.moveTo(-dir * size * 0.055, size * 0.252);
+  ctx.lineTo(dir * size * 0.045, size * 0.252);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Silvery blue buckle on strap
+  const buckleG = ctx.createRadialGradient(
+    -dir * size * 0.005, size * 0.248, 0,
+    -dir * size * 0.005, size * 0.248, size * 0.01
+  );
+  buckleG.addColorStop(0, "#d0e8f5");
+  buckleG.addColorStop(0.5, "#a0c0d8");
+  buckleG.addColorStop(1, "#7098b0");
+  ctx.fillStyle = buckleG;
+  ctx.beginPath();
+  ctx.roundRect(-dir * size * 0.015, size * 0.239, size * 0.02, size * 0.018, size * 0.002);
   ctx.fill();
+  ctx.strokeStyle = "#6088a0";
+  ctx.lineWidth = 0.4;
+  ctx.stroke();
+  // Buckle prong
+  ctx.strokeStyle = "#b0d0e8";
+  ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(-dir * size * 0.005, size * 0.241);
+  ctx.lineTo(-dir * size * 0.005, size * 0.255);
+  ctx.stroke();
 }
 
 // ─── HEAD ────────────────────────────────────────────────────────────────────
@@ -642,32 +928,46 @@ function drawHead(
 ) {
   const headY = y - size * 0.5;
 
-  // Face
-  const fg = ctx.createRadialGradient(x - size * 0.05, headY - size * 0.05, 0, x, headY, size * 0.28);
+  // Face (bezier shaped — slightly narrower chin)
+  const fg = ctx.createRadialGradient(x - size * 0.04, headY - size * 0.04, 0, x, headY, size * 0.28);
   fg.addColorStop(0, "#ffe8d0");
-  fg.addColorStop(0.5, "#ffe0bd");
-  fg.addColorStop(1, "#f0c8a0");
+  fg.addColorStop(0.4, "#ffe0bd");
+  fg.addColorStop(0.8, "#f5d0a8");
+  fg.addColorStop(1, "#e8c098");
   ctx.fillStyle = fg;
   ctx.beginPath();
-  ctx.arc(x, headY, size * 0.28, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Jaw
-  ctx.fillStyle = "#f5d5b0";
-  ctx.beginPath();
-  ctx.moveTo(x - size * 0.16, headY + size * 0.12);
-  ctx.quadraticCurveTo(x - size * 0.1, headY + size * 0.22, x, headY + size * 0.26);
-  ctx.quadraticCurveTo(x + size * 0.1, headY + size * 0.22, x + size * 0.16, headY + size * 0.12);
+  ctx.moveTo(x, headY - size * 0.27);
+  ctx.bezierCurveTo(x + size * 0.18, headY - size * 0.27, x + size * 0.28, headY - size * 0.14, x + size * 0.27, headY + size * 0.02);
+  ctx.bezierCurveTo(x + size * 0.26, headY + size * 0.14, x + size * 0.14, headY + size * 0.25, x, headY + size * 0.28);
+  ctx.bezierCurveTo(x - size * 0.14, headY + size * 0.25, x - size * 0.26, headY + size * 0.14, x - size * 0.27, headY + size * 0.02);
+  ctx.bezierCurveTo(x - size * 0.28, headY - size * 0.14, x - size * 0.18, headY - size * 0.27, x, headY - size * 0.27);
   ctx.closePath();
   ctx.fill();
 
-  // Cheekbone shadows
-  ctx.fillStyle = "rgba(200, 160, 120, 0.2)";
+  // Jawline definition
+  ctx.strokeStyle = "rgba(180, 140, 100, 0.15)";
+  ctx.lineWidth = 1.2 * zoom;
   ctx.beginPath();
-  ctx.ellipse(x - size * 0.15, headY + size * 0.02, size * 0.06, size * 0.04, -0.3, 0, Math.PI * 2);
+  ctx.moveTo(x - size * 0.2, headY + size * 0.1);
+  ctx.bezierCurveTo(x - size * 0.12, headY + size * 0.22, x + size * 0.12, headY + size * 0.22, x + size * 0.2, headY + size * 0.1);
+  ctx.stroke();
+
+  // Cheekbone shadows
+  ctx.fillStyle = "rgba(200, 160, 120, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.15, headY + size * 0.02, size * 0.06, size * 0.035, -0.3, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(x + size * 0.15, headY + size * 0.02, size * 0.06, size * 0.04, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(x + size * 0.15, headY + size * 0.02, size * 0.06, size * 0.035, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Temple shadow (adds depth near hairline)
+  ctx.fillStyle = "rgba(190, 150, 110, 0.12)";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.2, headY - size * 0.08, size * 0.04, size * 0.06, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.2, headY - size * 0.08, size * 0.04, size * 0.06, 0.2, 0, Math.PI * 2);
   ctx.fill();
 
   drawHair(ctx, x, headY, size, zoom);
@@ -679,46 +979,85 @@ function drawHair(
   ctx: CanvasRenderingContext2D,
   x: number, headY: number, size: number, zoom: number
 ) {
-  const hg = ctx.createLinearGradient(x - size * 0.2, headY - size * 0.2, x + size * 0.2, headY - size * 0.1);
-  hg.addColorStop(0, "#2a1810");
-  hg.addColorStop(0.3, "#3a2515");
-  hg.addColorStop(0.7, "#3a2515");
-  hg.addColorStop(1, "#2a1810");
-  ctx.fillStyle = hg;
+  // Slicked-back 1920s pompadour with volume on top
+  // Back/base layer
+  const baseG = ctx.createLinearGradient(x - size * 0.2, headY - size * 0.3, x + size * 0.15, headY);
+  baseG.addColorStop(0, "#1a0e08");
+  baseG.addColorStop(0.4, "#2a1810");
+  baseG.addColorStop(0.8, "#3a2515");
+  baseG.addColorStop(1, "#2a1810");
+  ctx.fillStyle = baseG;
   ctx.beginPath();
-  ctx.ellipse(x, headY - size * 0.14, size * 0.27, size * 0.16, 0, Math.PI, Math.PI * 2);
+  ctx.moveTo(x - size * 0.27, headY + size * 0.04);
+  ctx.bezierCurveTo(x - size * 0.3, headY - size * 0.08, x - size * 0.28, headY - size * 0.2, x - size * 0.18, headY - size * 0.28);
+  ctx.bezierCurveTo(x - size * 0.08, headY - size * 0.34, x + size * 0.05, headY - size * 0.36, x + size * 0.15, headY - size * 0.3);
+  ctx.bezierCurveTo(x + size * 0.24, headY - size * 0.24, x + size * 0.28, headY - size * 0.14, x + size * 0.26, headY + size * 0.02);
+  ctx.bezierCurveTo(x + size * 0.24, headY + size * 0.08, x + size * 0.2, headY + size * 0.1, x + size * 0.16, headY + size * 0.06);
+  ctx.closePath();
   ctx.fill();
 
-  // Hair wave left
-  ctx.strokeStyle = "#3a2515";
-  ctx.lineWidth = 5 * zoom;
+  // Pompadour volume on top (swept right)
+  const pompG = ctx.createLinearGradient(x - size * 0.1, headY - size * 0.35, x + size * 0.12, headY - size * 0.18);
+  pompG.addColorStop(0, "#3a2515");
+  pompG.addColorStop(0.4, "#4a3520");
+  pompG.addColorStop(1, "#2a1810");
+  ctx.fillStyle = pompG;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.2, headY - size * 0.12);
-  ctx.quadraticCurveTo(x - size * 0.28, headY, x - size * 0.26, headY + size * 0.1);
+  ctx.moveTo(x - size * 0.2, headY - size * 0.22);
+  ctx.bezierCurveTo(x - size * 0.18, headY - size * 0.32, x - size * 0.06, headY - size * 0.38, x + size * 0.06, headY - size * 0.36);
+  ctx.bezierCurveTo(x + size * 0.16, headY - size * 0.34, x + size * 0.22, headY - size * 0.28, x + size * 0.2, headY - size * 0.2);
+  ctx.bezierCurveTo(x + size * 0.15, headY - size * 0.24, x + size * 0.02, headY - size * 0.26, x - size * 0.08, headY - size * 0.24);
+  ctx.closePath();
+  ctx.fill();
+
+  // Side-swept wave strands (slicked texture)
+  ctx.strokeStyle = "#1a0e08";
+  ctx.lineWidth = 1.4 * zoom;
+  ctx.lineCap = "round";
+  for (let i = 0; i < 6; i++) {
+    const t = i / 5;
+    const startX = x - size * (0.22 - t * 0.12);
+    const startY = headY - size * (0.18 + t * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.bezierCurveTo(
+      startX + size * 0.12, startY - size * 0.06,
+      startX + size * 0.24, startY - size * 0.02,
+      startX + size * 0.32, startY + size * 0.04
+    );
+    ctx.stroke();
+  }
+
+  // Hair shine highlights (pomade sheen)
+  ctx.strokeStyle = "rgba(120, 90, 60, 0.35)";
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.12, headY - size * 0.28);
+  ctx.bezierCurveTo(x - size * 0.02, headY - size * 0.33, x + size * 0.08, headY - size * 0.32, x + size * 0.16, headY - size * 0.26);
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(140, 110, 70, 0.25)";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.08, headY - size * 0.25);
+  ctx.bezierCurveTo(x + size * 0.02, headY - size * 0.29, x + size * 0.1, headY - size * 0.28, x + size * 0.18, headY - size * 0.22);
   ctx.stroke();
 
-  // Hair right
-  ctx.lineWidth = 4 * zoom;
+  // Sideburn left
+  ctx.fillStyle = "#2a1810";
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.18, headY - size * 0.12);
-  ctx.quadraticCurveTo(x + size * 0.24, headY - size * 0.02, x + size * 0.22, headY + size * 0.06);
-  ctx.stroke();
+  ctx.moveTo(x - size * 0.26, headY - size * 0.02);
+  ctx.bezierCurveTo(x - size * 0.28, headY + size * 0.02, x - size * 0.27, headY + size * 0.1, x - size * 0.24, headY + size * 0.14);
+  ctx.lineTo(x - size * 0.22, headY + size * 0.08);
+  ctx.closePath();
+  ctx.fill();
 
-  // Hair shine
-  ctx.strokeStyle = "rgba(80, 60, 40, 0.4)";
-  ctx.lineWidth = 2;
+  // Sideburn right
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.1, headY - size * 0.22);
-  ctx.quadraticCurveTo(x, headY - size * 0.26, x + size * 0.1, headY - size * 0.22);
-  ctx.stroke();
-
-  // Part line
-  ctx.strokeStyle = "#1a0a00";
-  ctx.lineWidth = 1.5 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(x + size * 0.1, headY - size * 0.24);
-  ctx.lineTo(x + size * 0.14, headY - size * 0.08);
-  ctx.stroke();
+  ctx.moveTo(x + size * 0.24, headY - size * 0.02);
+  ctx.bezierCurveTo(x + size * 0.26, headY + size * 0.02, x + size * 0.25, headY + size * 0.1, x + size * 0.22, headY + size * 0.14);
+  ctx.lineTo(x + size * 0.2, headY + size * 0.08);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawEyes(
@@ -745,9 +1084,9 @@ function drawEyes(
 
   // Irises
   if (isAttacking) {
-    ctx.shadowColor = "#50d0d0";
+    ctx.shadowColor = "#80b8d8";
     ctx.shadowBlur = 8 * zoom * attackIntensity;
-    ctx.fillStyle = `rgba(60, 200, 200, ${0.85 + attackIntensity * 0.15})`;
+    ctx.fillStyle = `rgba(130, 185, 220, ${0.85 + attackIntensity * 0.15})`;
   } else {
     ctx.fillStyle = "#4a6080";
   }
@@ -759,8 +1098,8 @@ function drawEyes(
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Iris rings
-  ctx.strokeStyle = isAttacking ? "#2a9090" : "#3a5070";
+  // Iris detail ring
+  ctx.strokeStyle = isAttacking ? "#5a8898" : "#3a5070";
   ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.arc(x - size * 0.1, headY - size * 0.02, size * 0.035, 0, Math.PI * 2);
@@ -783,17 +1122,69 @@ function drawEyes(
   ctx.arc(x + size * 0.085, headY - size * 0.035, size * 0.015, 0, Math.PI * 2);
   ctx.fill();
 
-  // Eyebrows
-  ctx.strokeStyle = "#3a2515";
+  // ── GLASSES ──
+  const glassColor = isAttacking ? "rgba(130, 185, 220, 0.15)" : "rgba(180, 200, 220, 0.12)";
+  const frameColor = isAttacking ? "#6898b0" : "#3a3a3a";
+  const glassR = size * 0.08;
+
+  // Lens fill (subtle tint)
+  ctx.fillStyle = glassColor;
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.1, headY - size * 0.02, glassR, glassR * 0.85, -0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.1, headY - size * 0.02, glassR, glassR * 0.85, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Lens glare
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.12, headY - size * 0.04, glassR * 0.4, glassR * 0.25, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.08, headY - size * 0.04, glassR * 0.4, glassR * 0.25, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Frames
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.beginPath();
+  ctx.ellipse(x - size * 0.1, headY - size * 0.02, glassR, glassR * 0.85, -0.05, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(x + size * 0.1, headY - size * 0.02, glassR, glassR * 0.85, 0.05, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Bridge
+  ctx.strokeStyle = frameColor;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.02, headY - size * 0.025);
+  ctx.bezierCurveTo(x - size * 0.008, headY - size * 0.04, x + size * 0.008, headY - size * 0.04, x + size * 0.02, headY - size * 0.025);
+  ctx.stroke();
+
+  // Temple arms (sides going to ears)
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.18, headY - size * 0.02);
+  ctx.lineTo(x - size * 0.24, headY + size * 0.01);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.18, headY - size * 0.02);
+  ctx.lineTo(x + size * 0.24, headY + size * 0.01);
+  ctx.stroke();
+
+  // Eyebrows (above the glasses)
+  ctx.strokeStyle = "#2a1810";
   ctx.lineWidth = 2.5 * zoom;
   ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.18, headY - size * 0.08);
-  ctx.quadraticCurveTo(x - size * 0.1, headY - size * 0.11, x - size * 0.04, headY - size * 0.08);
+  ctx.moveTo(x - size * 0.18, headY - size * 0.1);
+  ctx.bezierCurveTo(x - size * 0.14, headY - size * 0.13, x - size * 0.08, headY - size * 0.13, x - size * 0.04, headY - size * 0.1);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x + size * 0.18, headY - size * 0.08);
-  ctx.quadraticCurveTo(x + size * 0.1, headY - size * 0.11, x + size * 0.04, headY - size * 0.08);
+  ctx.moveTo(x + size * 0.18, headY - size * 0.1);
+  ctx.bezierCurveTo(x + size * 0.14, headY - size * 0.13, x + size * 0.08, headY - size * 0.13, x + size * 0.04, headY - size * 0.1);
   ctx.stroke();
 }
 
@@ -801,21 +1192,60 @@ function drawNoseAndMouth(
   ctx: CanvasRenderingContext2D,
   x: number, headY: number, size: number, zoom: number
 ) {
-  // Nose
+  // Nose bridge
   ctx.strokeStyle = "#c8a888";
   ctx.lineWidth = 1.2;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.moveTo(x, headY - size * 0.02);
-  ctx.lineTo(x - size * 0.02, headY + size * 0.08);
-  ctx.quadraticCurveTo(x, headY + size * 0.1, x + size * 0.02, headY + size * 0.08);
+  ctx.moveTo(x, headY - size * 0.01);
+  ctx.bezierCurveTo(x - size * 0.005, headY + size * 0.04, x - size * 0.018, headY + size * 0.07, x - size * 0.022, headY + size * 0.08);
   ctx.stroke();
 
-  // Smile
+  // Nose tip and nostril curve
+  ctx.strokeStyle = "#c0a080";
+  ctx.lineWidth = 1.4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.025, headY + size * 0.08);
+  ctx.quadraticCurveTo(x, headY + size * 0.1, x + size * 0.025, headY + size * 0.08);
+  ctx.stroke();
+
+  // Nostril dots
+  ctx.fillStyle = "rgba(160, 120, 80, 0.3)";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.015, headY + size * 0.085, size * 0.006, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.015, headY + size * 0.085, size * 0.006, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Philtrum (subtle line between nose and lip)
+  ctx.strokeStyle = "rgba(180, 140, 100, 0.15)";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(x, headY + size * 0.095);
+  ctx.lineTo(x, headY + size * 0.12);
+  ctx.stroke();
+
+  // Upper lip
+  ctx.strokeStyle = "#b08878";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.055, headY + size * 0.14);
+  ctx.bezierCurveTo(x - size * 0.02, headY + size * 0.125, x, headY + size * 0.13, x, headY + size * 0.13);
+  ctx.bezierCurveTo(x, headY + size * 0.13, x + size * 0.02, headY + size * 0.125, x + size * 0.055, headY + size * 0.14);
+  ctx.stroke();
+
+  // Lower lip / smile
   ctx.strokeStyle = "#a08070";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(x - size * 0.08, headY + size * 0.14);
-  ctx.quadraticCurveTo(x, headY + size * 0.16, x + size * 0.08, headY + size * 0.14);
+  ctx.moveTo(x - size * 0.06, headY + size * 0.14);
+  ctx.bezierCurveTo(x - size * 0.03, headY + size * 0.17, x + size * 0.03, headY + size * 0.17, x + size * 0.06, headY + size * 0.14);
+  ctx.stroke();
+
+  // Chin dimple (subtle)
+  ctx.strokeStyle = "rgba(180, 140, 110, 0.15)";
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.arc(x, headY + size * 0.21, size * 0.012, 0.2 * Math.PI, 0.8 * Math.PI);
   ctx.stroke();
 }
 
@@ -914,14 +1344,14 @@ function drawBook(
     }
   }
 
-  // Teal title emboss on left page header
-  ctx.fillStyle = "#40b0b0";
+  // Silvery blue title emboss on left page header
+  ctx.fillStyle = "#80b0c8";
   ctx.font = `bold ${4.5 * zoom}px Georgia`;
   ctx.textAlign = "center";
   ctx.fillText("GATSBY", -bW * 0.24, -bH * 0.38);
 
-  // Teal corner decorations on covers
-  ctx.strokeStyle = "#309090";
+  // Silvery blue corner decorations on covers
+  ctx.strokeStyle = "#6898b0";
   ctx.lineWidth = 0.8;
   const corners = [
     { cx: -bW * 0.47, cy: -bH * 0.47, dx: 1, dy: 1 },
@@ -937,8 +1367,8 @@ function drawBook(
     ctx.stroke();
   }
 
-  // Teal ribbon bookmark hanging out bottom
-  ctx.strokeStyle = "#40c0c0";
+  // Silvery blue ribbon bookmark hanging out bottom
+  ctx.strokeStyle = "#80b8d0";
   ctx.lineWidth = 1.5 * zoom;
   ctx.lineCap = "round";
   ctx.beginPath();
@@ -982,7 +1412,7 @@ function drawPen(
   ctx.rotate(penRot);
 
   if (isAttacking) {
-    ctx.shadowColor = "#50d0d0";
+    ctx.shadowColor = "#80b8d8";
     ctx.shadowBlur = 15 * zoom * attackIntensity;
   }
 
@@ -1006,13 +1436,13 @@ function drawPen(
   ctx.lineTo(-size * 0.015, size * 0.06);
   ctx.stroke();
 
-  // Teal bands (instead of gold)
+  // Silvery blue bands
   const tbg = ctx.createLinearGradient(-size * 0.03, 0, size * 0.03, 0);
-  tbg.addColorStop(0, "#2a8888");
-  tbg.addColorStop(0.3, "#40b8b8");
-  tbg.addColorStop(0.5, "#70e8e8");
-  tbg.addColorStop(0.7, "#40b8b8");
-  tbg.addColorStop(1, "#2a8888");
+  tbg.addColorStop(0, "#607898");
+  tbg.addColorStop(0.3, "#80a8c0");
+  tbg.addColorStop(0.5, "#b0d0e8");
+  tbg.addColorStop(0.7, "#80a8c0");
+  tbg.addColorStop(1, "#607898");
   ctx.fillStyle = tbg;
   ctx.fillRect(-size * 0.028, -size * 0.16, size * 0.056, size * 0.02);
   ctx.fillRect(-size * 0.028, -size * 0.09, size * 0.056, size * 0.012);
@@ -1036,11 +1466,11 @@ function drawPen(
   ctx.closePath();
   ctx.fill();
 
-  // Teal nib
+  // Silvery blue nib
   const ng = ctx.createLinearGradient(-size * 0.012, -size * 0.24, size * 0.012, -size * 0.24);
-  ng.addColorStop(0, "#2a9090");
-  ng.addColorStop(0.5, "#60e0e0");
-  ng.addColorStop(1, "#2a9090");
+  ng.addColorStop(0, "#607898");
+  ng.addColorStop(0.5, "#a0c8e0");
+  ng.addColorStop(1, "#607898");
   ctx.fillStyle = ng;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.24);
@@ -1051,7 +1481,7 @@ function drawPen(
   ctx.fill();
 
   // Nib slit
-  ctx.strokeStyle = "#1a5050";
+  ctx.strokeStyle = "#304858";
   ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.moveTo(0, -size * 0.26);
@@ -1077,51 +1507,28 @@ function drawPen(
 
 // ─── FLOATING WORDS ──────────────────────────────────────────────────────────
 
+const FLOAT_WORDS = ["dream", "green", "light", "hope", "glory", "jazz", "Gatsby", "beauty"];
+
 function drawFloatingWords(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, size: number,
   time: number, zoom: number,
   isAttacking: boolean, attackIntensity: number
 ) {
-  const count = isAttacking ? 8 : 5;
-  const words = ["dream", "green", "light", "hope", "glory", "jazz", "Gatsby", "beauty"];
+  const count = isAttacking ? 6 : 4;
+  const fontPx = Math.round((isAttacking ? 11 : 9) * zoom);
+  ctx.font = `italic ${fontPx}px Georgia`;
+  ctx.textAlign = "center";
+
   for (let i = 0; i < count; i++) {
-    const phase = (time * 0.6 + i * 0.4) % 3.5;
-    const angle = -0.6 + (i / count) * 1.2;
-    const wx = x - size * 0.3 + Math.sin(angle + phase * Math.PI * 0.4) * size * 0.65;
-    const wy = y - size * 0.6 - phase * size * 0.3;
-    const wa = (1 - phase / 3.5) * (isAttacking ? 0.95 : 0.6);
-    const ws = 1 + (isAttacking ? attackIntensity * 0.3 : 0);
+    const phase = (time * 0.5 + i * 0.55) % 3;
+    const angle = i * Math.PI * 2 / count + time * 0.4;
+    const dist = size * (0.45 + phase * 0.08);
+    const wx = x + Math.cos(angle) * dist;
+    const wy = y - size * 0.3 - phase * size * 0.2;
+    const alpha = (1 - phase / 3) * (isAttacking ? 0.8 + attackIntensity * 0.2 : 0.5);
 
-    ctx.fillStyle = `rgba(60, 200, 200, ${wa})`;
-    ctx.shadowColor = "#50d0d0";
-    ctx.shadowBlur = isAttacking ? 8 * zoom : 4 * zoom;
-    ctx.font = `italic ${(10 + (isAttacking ? 4 : 0)) * zoom * ws}px Georgia`;
-    ctx.textAlign = "center";
-    ctx.fillText(words[i % words.length], wx, wy);
+    ctx.fillStyle = `rgba(130, 185, 220, ${alpha})`;
+    ctx.fillText(FLOAT_WORDS[i % FLOAT_WORDS.length], wx, wy);
   }
-  ctx.shadowBlur = 0;
-}
-
-// ─── LITERARY AURA ───────────────────────────────────────────────────────────
-
-function drawLiteraryAura(
-  ctx: CanvasRenderingContext2D,
-  x: number, y: number, size: number,
-  time: number, zoom: number, attackIntensity: number
-) {
-  const glow = 0.3 + Math.sin(time * 3.5) * 0.1 + attackIntensity * 0.3;
-  ctx.strokeStyle = `rgba(60, 200, 200, ${glow})`;
-  ctx.lineWidth = (2 + attackIntensity * 2) * zoom;
-  ctx.setLineDash([5 * zoom, 4 * zoom]);
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.08, size * 0.55, size * 0.7, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.strokeStyle = `rgba(80, 220, 220, ${glow * 0.4})`;
-  ctx.lineWidth = (1.2 + attackIntensity * 1) * zoom;
-  ctx.beginPath();
-  ctx.ellipse(x, y - size * 0.08, size * 0.5, size * 0.65, 0, 0, Math.PI * 2);
-  ctx.stroke();
 }

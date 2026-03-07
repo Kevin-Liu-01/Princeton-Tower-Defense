@@ -202,6 +202,15 @@ import {
   type StaticMapFogEndpoint,
 } from "../rendering/maps/staticLayer";
 import { setPerformanceSettings } from "../rendering/performance";
+import { getGameSettings, getSettingsVersion } from "./useSettings";
+import {
+  DECORATION_DENSITY_MULTIPLIER,
+  TREE_CLUSTER_COUNT,
+  GROVE_COUNT,
+  VILLAGE_COUNT,
+  BATTLE_DEBRIS_COUNT,
+  DECORATION_SCALE_RANGE,
+} from "../constants/settings";
 import {
   getChallengePathSegments,
   isWorldPosInChallengeDecorationFootprint,
@@ -6377,8 +6386,9 @@ export function usePrincetonTowerDefenseRuntime() {
     // This was a major cause of freezing on mobile devices
     let decorations: RuntimeDecoration[];
 
-    if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === selectedMap) {
-      // Use cached decorations
+    const settingsVer = getSettingsVersion();
+    const decorCacheKey = `${selectedMap}:${settingsVer}`;
+    if (cachedDecorationsRef.current && cachedDecorationsRef.current.mapKey === decorCacheKey) {
       decorations = cachedDecorationsRef.current.decorations;
     } else {
       // Generate decorations and cache them
@@ -6467,8 +6477,12 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // Main environment decorations — increased density
-      for (let i = 0; i < 300; i++) {
+      const landscapeSettings = getGameSettings().landscaping;
+      const decoMultiplier = DECORATION_DENSITY_MULTIPLIER[landscapeSettings.decorationDensity];
+      const scaleRange = DECORATION_SCALE_RANGE[landscapeSettings.decorationScale];
+
+      const mainDecoCount = Math.round(300 * decoMultiplier);
+      for (let i = 0; i < mainDecoCount; i++) {
         const zoneX = Math.floor(seededRandom() * zonesX);
         const zoneY = Math.floor(seededRandom() * zonesY);
         const category = zoneAssignments[zoneX][zoneY];
@@ -6496,17 +6510,17 @@ export function usePrincetonTowerDefenseRuntime() {
         const typeIndex = Math.floor(seededRandom() * seededRandom() * categoryDecors.length);
         const type = categoryDecors[typeIndex] as DecorationType;
 
-        let baseScale = 0.7;
-        let scaleVar = 0.5;
+        let baseScale = scaleRange.base;
+        let scaleVar = scaleRange.variance;
         if (category === "trees") {
-          baseScale = 0.75;
-          scaleVar = 0.6;
+          baseScale = Math.max(baseScale, 0.75);
+          scaleVar = Math.max(scaleVar, 0.5);
         } else if (category === "structures") {
-          baseScale = 0.85;
-          scaleVar = 0.4;
+          baseScale = Math.max(baseScale, 0.8);
+          scaleVar = Math.min(scaleVar, 0.45);
         } else if (category === "scattered") {
-          baseScale = 0.45;
-          scaleVar = 0.45;
+          baseScale = Math.min(baseScale, 0.55);
+          scaleVar = Math.min(scaleVar, 0.45);
         }
 
         const scale = baseScale + seededRandom() * scaleVar;
@@ -6526,8 +6540,8 @@ export function usePrincetonTowerDefenseRuntime() {
         });
       }
 
-      // Tree clusters — uniformly distributed, reduced beyond grid
-      for (let cluster = 0; cluster < 40; cluster++) {
+      const treeClusterCount = TREE_CLUSTER_COUNT[landscapeSettings.treeClusterDensity];
+      for (let cluster = 0; cluster < treeClusterCount; cluster++) {
         const clusterX = minX + seededRandom() * (maxX - minX);
         const clusterY = minY + seededRandom() * (maxY - minY);
 
@@ -6562,8 +6576,8 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // Interior tree groves — dense pockets away from paths
-      for (let grove = 0; grove < 12; grove++) {
+      const groveCount = GROVE_COUNT[landscapeSettings.treeClusterDensity];
+      for (let grove = 0; grove < groveCount; grove++) {
         const groveX = minX + 3 + seededRandom() * (maxX - minX - 6);
         const groveY = minY + 3 + seededRandom() * (maxY - minY - 6);
         const groveDist = distFromPath(groveX, groveY);
@@ -6598,8 +6612,8 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // Lively village clusters — spaced structures with surrounding decorations
-      for (let village = 0; village < 12; village++) {
+      const villageCount = VILLAGE_COUNT[landscapeSettings.villageDensity];
+      for (let village = 0; village < villageCount; village++) {
         const villageX = minX + 5 + seededRandom() * (maxX - minX - 10);
         const villageY = minY + 5 + seededRandom() * (maxY - minY - 10);
         const villageCenterWorld = gridToWorld({ x: villageX, y: villageY });
@@ -6702,8 +6716,8 @@ export function usePrincetonTowerDefenseRuntime() {
         }
       }
 
-      // Uniform density fill, reduced beyond grid
-      for (let i = 0; i < 350; i++) {
+      const uniformFillCount = Math.round(350 * decoMultiplier);
+      for (let i = 0; i < uniformFillCount; i++) {
         const gx = minX + seededRandom() * (maxX - minX);
         const gy = minY + seededRandom() * (maxY - minY);
         const pathDist = distFromPath(gx, gy);
@@ -6749,7 +6763,8 @@ export function usePrincetonTowerDefenseRuntime() {
               : currentTheme === "swamp"
                 ? ["crater", "skeleton", "bones", "debris"]
                 : ["crater", "debris", "cart", "sword", "arrow", "skeleton", "fire"];
-      for (let i = 0; i < 280; i++) {
+      const battleDebrisCount = BATTLE_DEBRIS_COUNT[landscapeSettings.battleDebrisDensity];
+      for (let i = 0; i < battleDebrisCount; i++) {
         const gridX = seededRandom() * (GRID_WIDTH + 23) - 11.5;
         const gridY = seededRandom() * (GRID_HEIGHT + 23) - 11.5;
 
@@ -7010,7 +7025,7 @@ export function usePrincetonTowerDefenseRuntime() {
       });
 
       // Cache the generated decorations
-      cachedDecorationsRef.current = { mapKey: selectedMap, decorations };
+      cachedDecorationsRef.current = { mapKey: decorCacheKey, decorations };
 
       // Add blocked positions from procedural background decorations (water, lava, etc.)
       for (const dec of decorations) {
@@ -11562,6 +11577,7 @@ export function usePrincetonTowerDefenseRuntime() {
           onDeleteCustomLevel={deleteCustomLevel}
           gameState={gameState}
           onStartWithRandomLoadout={startWithRandomLoadout}
+          isDevMode={DEV_CONFIG_MENU_ENABLED}
         />
         {devConfigMenu}
       </>

@@ -24,6 +24,7 @@ import {
   Map as MapIcon,
   Sparkles,
   ChessKnight,
+  Settings,
 } from "lucide-react";
 import type {
   GameState,
@@ -44,7 +45,7 @@ import {
 } from "../../constants";
 import PrincetonTDLogo from "../ui/PrincetonTDLogo";
 import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, GREEN_CARD, PURPLE_CARD, NEUTRAL, DIVIDER, SELECTED, OVERLAY, panelGradient, dividerGradient } from "../ui/theme";
-import { WORLD_LEVELS, MAP_WIDTH, getWaveCount } from "./worldMapData";
+import { WORLD_LEVELS, MAP_WIDTH, getWaveCount, DEV_LEVELS, DEV_LEVEL_IDS } from "./worldMapData";
 import { CodexModal, type CodexTabId } from "./CodexModal";
 import { CampaignOverview } from "./CampaignOverview";
 import { BattlefieldPreview } from "./BattlefieldPreview";
@@ -54,6 +55,8 @@ import { SpellSelector } from "./SpellSelector";
 import { CustomLevelCreatorModal } from "./CustomLevelCreatorModal";
 import { drawWorldMapCanvas } from "./worldMapCanvasRenderer";
 import { getWorldLevelById, getWorldMapY } from "./worldMapUtils";
+import { SettingsModal } from "./SettingsModal";
+import { useSettings } from "../../hooks/useSettings";
 
 const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as const;
 
@@ -139,6 +142,7 @@ interface WorldMapProps {
   gameState: GameState;
   /** When Battle is clicked without hero/spells selected, run this to pick random loadout and start */
   onStartWithRandomLoadout?: () => void;
+  isDevMode?: boolean;
 }
 
 type SelectableLevel = {
@@ -171,6 +175,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   spellUpgradeLevels,
   upgradeSpell,
   onStartWithRandomLoadout,
+  isDevMode,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -182,6 +187,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCodex, setShowCodex] = useState(false);
   const [codexTab, setCodexTab] = useState<CodexTabId>("towers");
   const [showCreator, setShowCreator] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const { settings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
   const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
   const [animTime, setAnimTime] = useState(0);
   const animTimeRef = useRef(0);
@@ -245,9 +252,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     (levelId: string) => customLevelById.has(levelId),
     [customLevelById]
   );
+  const visibleWorldLevels = useMemo(
+    () => (isDevMode ? [...WORLD_LEVELS, ...DEV_LEVELS] : WORLD_LEVELS),
+    [isDevMode]
+  );
   const isLevelUnlocked = useCallback(
-    (levelId: string) => isCustomLevel(levelId) || unlockedMapSet.has(levelId),
-    [isCustomLevel, unlockedMapSet]
+    (levelId: string) =>
+      isCustomLevel(levelId) ||
+      unlockedMapSet.has(levelId) ||
+      (isDevMode === true && DEV_LEVEL_IDS.has(levelId)),
+    [isCustomLevel, unlockedMapSet, isDevMode]
   );
   const getLevelById = useCallback(
     (id: string): SelectableLevel | undefined => {
@@ -319,6 +333,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       imageCache,
       lastCanvasSizeRef,
       animTimeRef,
+      levels: visibleWorldLevels,
     });
   };
 
@@ -378,7 +393,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const mouseY = (e.clientY - rect.top) * scaleY;
 
     let nextHoveredLevel: string | null = null;
-    for (const level of WORLD_LEVELS) {
+    for (const level of visibleWorldLevels) {
       const ly = getY(level.y);
       const distSq = (mouseX - level.x) ** 2 + (mouseY - ly) ** 2;
       if (distSq < 28 * 28) {
@@ -401,7 +416,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const mouseX = (e.clientX - rect.left) * scaleX;
     const mouseY = (e.clientY - rect.top) * scaleY;
 
-    for (const level of WORLD_LEVELS) {
+    for (const level of visibleWorldLevels) {
       const ly = getY(level.y);
       const distSq = (mouseX - level.x) ** 2 + (mouseY - ly) ** 2;
       if (distSq < 28 * 28) {
@@ -565,14 +580,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const currentLevelPreviewImage = currentLevel
     ? LEVEL_DATA[currentLevel.id]?.previewImage
     : undefined;
+  const fallbackPreviewImage = currentLevel && !currentLevelPreviewImage
+    ? visibleWorldLevels
+      .filter(l => l.region === currentLevel.region)
+      .map(l => LEVEL_DATA[l.id]?.previewImage)
+      .find(Boolean) ?? LEVEL_DATA.poe?.previewImage
+    : undefined;
 
   function goToNextLevel() {
     // If no level is selected, go to level 1
     if (!currentLevel || isCurrentCustomLevel) {
-      handleLevelClick(WORLD_LEVELS[0].id);
+      handleLevelClick(visibleWorldLevels[0].id);
       return;
     }
-    const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
+    const unlockedLevels = visibleWorldLevels.filter((lvl) =>
       isLevelUnlocked(lvl.id)
     ).map((lvl) => lvl.id);
     const currentIndex = unlockedLevels.indexOf(currentLevel.id);
@@ -589,18 +610,18 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   function goToPreviousLevel() {
     // If no level is selected, go to level 1
     if (!currentLevel || isCurrentCustomLevel) {
-      handleLevelClick(WORLD_LEVELS[0].id);
+      handleLevelClick(visibleWorldLevels[0].id);
       return;
     }
-    if (currentLevel.id === WORLD_LEVELS[0].id) {
-      const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
+    if (currentLevel.id === visibleWorldLevels[0].id) {
+      const unlockedLevels = visibleWorldLevels.filter((lvl) =>
         isLevelUnlocked(lvl.id)
       ).map((lvl) => lvl.id);
       const lastLevelId = unlockedLevels[unlockedLevels.length - 1];
       handleLevelClick(lastLevelId);
       return;
     }
-    const unlockedLevels = WORLD_LEVELS.filter((lvl) =>
+    const unlockedLevels = visibleWorldLevels.filter((lvl) =>
       isLevelUnlocked(lvl.id)
     ).map((lvl) => lvl.id);
     const currentIndex = unlockedLevels.indexOf(currentLevel.id);
@@ -633,27 +654,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           <div className="px-3 sm:px-5 py-2 flex items-center justify-between gap-2">
             {/* Left: Logo */}
             <PrincetonLogo />
-
-            {/* Center: Current level / region breadcrumb */}
-            {currentLevel && (
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{
-                background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                border: `1px solid ${GOLD.border25}`,
-              }}>
-                <MapPin size={13} className="text-amber-400" />
-                <span className="text-[10px] text-amber-400/70 font-medium uppercase tracking-wider">
-                  {currentLevel.region === "grassland" ? "Princeton Grounds"
-                    : currentLevel.region === "swamp" ? "Mathey Marshes"
-                      : currentLevel.region === "desert" ? "Stadium Sands"
-                        : currentLevel.region === "winter" ? "Frist Frontier"
-                          : "Dormitory Depths"}
-                </span>
-                <ChevronRight size={12} className="text-amber-500/50" />
-                <span className="text-sm font-bold text-amber-200 tracking-wide">
-                  {currentLevel.name}
-                </span>
-              </div>
-            )}
 
             {/* Right: Stats strip */}
             <div className="flex items-center gap-2 sm:gap-2.5">
@@ -759,6 +759,21 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 <span className="hidden sm:inline text-sm text-amber-200/90 font-bold tracking-wider uppercase">Creator</span>
               </button>
 
+              {/* Settings */}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="relative flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 hover:brightness-110"
+                style={{
+                  background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
+                  border: `1.5px solid ${NEUTRAL.border}`,
+                  boxShadow: `inset 0 0 12px ${NEUTRAL.glow}`,
+                }}
+              >
+                <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${NEUTRAL.innerBorder}` }} />
+                <Settings size={15} className="text-amber-400/70 shrink-0" />
+                <span className="hidden sm:inline text-sm text-amber-200/60 font-bold tracking-wider uppercase">Settings</span>
+              </button>
+
               {/* Nav arrows — grouped pill */}
               <div className="hidden sm:flex relative items-center rounded-xl overflow-hidden" style={{
                 background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
@@ -796,12 +811,12 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           <div className="flex-1 flex flex-col overflow-hidden rounded-lg relative" style={{ background: panelGradient, border: `1.5px solid ${GOLD.border25}`, boxShadow: `inset 0 0 12px ${GOLD.glow04}` }}>
             <div className="absolute inset-[2px] rounded-[6px] pointer-events-none z-10" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
             {selectedLevel && currentLevel ? (() => {
-              const previewImg = LEVEL_DATA[currentLevel.id]?.previewImage;
+              const previewImg = LEVEL_DATA[currentLevel.id]?.previewImage ?? fallbackPreviewImage;
               return (
                 <div className="flex-1 flex flex-col overflow-hidden relative">
                   {previewImg && (
                     <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
-                      <img src={previewImg} alt="" className="absolute right-0 top-0 h-full w-[60%] object-cover opacity-25" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)" }} />
+                      <img src={previewImg} alt="" className={`absolute right-0 top-0 h-full w-[60%] object-cover ${LEVEL_DATA[currentLevel.id]?.previewImage ? "opacity-25" : "opacity-40 blur-[1px]"}`} style={{ maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 70%, transparent 100%)" }} />
                       <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${PANEL.bgDark} 35%, transparent 75%)` }} />
                     </div>
                   )}
@@ -877,7 +892,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, transparent, ${GOLD.border25})` }} />
                       </div>
                       <div className="flex gap-1 flex-wrap">
-                        {WORLD_LEVELS.filter((l) => l.region === currentLevel.region).map((l) => (
+                        {visibleWorldLevels.filter((l) => l.region === currentLevel.region && !DEV_LEVEL_IDS.has(l.id)).map((l) => (
                           <button
                             key={l.id}
                             onClick={() => handleLevelClick(l.id)}
@@ -948,22 +963,29 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                 </div>
                 {/* Stats row */}
                 <div className="grid grid-cols-3 gap-1 mb-2">
-                  {[
-                    { icon: <Swords size={10} className="text-blue-400/80" />, value: Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0), color: "text-blue-300/90", bg: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`, border: BLUE_CARD.border, label: "Battles" },
-                    { icon: <Trophy size={10} className="text-emerald-400/80" />, value: Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0), color: "text-emerald-300/90", bg: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`, border: GREEN_CARD.border, label: "Wins" },
-                    { icon: <Heart size={10} className="text-red-400 fill-red-400" />, value: Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0), color: "text-red-300/90", bg: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`, border: RED_CARD.border, label: "Hearts" },
-                  ].map((s) => (
-                    <div key={s.label} className="flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-                      {s.icon}
-                      <span className={`text-[9px] font-bold ${s.color}`}>{s.value}</span>
-                      <span className="text-[7px] text-stone-500">{s.label}</span>
-                    </div>
-                  ))}
+                  <div className="relative flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: `linear-gradient(135deg, ${BLUE_CARD.bgLight}, ${BLUE_CARD.bgDark})`, border: `1px solid ${BLUE_CARD.border}` }}>
+                    <div className="absolute inset-[1.5px] rounded-[3px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
+                    <Swords size={10} className="text-blue-400/80" />
+                    <span className="text-[9px] font-bold text-blue-300/90">{Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0)}</span>
+                    <span className="text-[7px] text-blue-500/60 font-bold uppercase tracking-wider">Games</span>
+                  </div>
+                  <div className="relative flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: `linear-gradient(135deg, ${GREEN_CARD.bgLight}, ${GREEN_CARD.bgDark})`, border: `1px solid ${GREEN_CARD.border}` }}>
+                    <div className="absolute inset-[1.5px] rounded-[3px] pointer-events-none" style={{ border: `1px solid ${GREEN_CARD.innerBorder}` }} />
+                    <Trophy size={10} className="text-emerald-400/80" />
+                    <span className="text-[9px] font-bold text-emerald-300/90">{Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0)}</span>
+                    <span className="text-[7px] text-emerald-500/60 font-bold uppercase tracking-wider">Wins</span>
+                  </div>
+                  <div className="relative flex items-center gap-1 px-1.5 py-1 rounded" style={{ background: `linear-gradient(135deg, ${RED_CARD.bgLight}, ${RED_CARD.bgDark})`, border: `1px solid ${RED_CARD.border}` }}>
+                    <div className="absolute inset-[1.5px] rounded-[3px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
+                    <Heart size={10} className="text-red-400 fill-red-400" />
+                    <span className="text-[9px] font-bold text-red-300/90">{Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0)}</span>
+                    <span className="text-[7px] text-red-700 font-semibold">/{visibleWorldLevels.length * 20}</span>
+                  </div>
                 </div>
                 {/* Region list with icons and preview gradients */}
                 <div className="flex-1 overflow-y-auto space-y-1">
                   {REGION_ORDER.map((region) => {
-                    const levels = WORLD_LEVELS.filter((l) => l.region === region);
+                    const levels = visibleWorldLevels.filter((l) => l.region === region && !DEV_LEVEL_IDS.has(l.id));
                     const stars = levels.reduce((s, l) => s + (levelStars[l.id] || 0), 0);
                     const rMax = levels.length * 3;
                     const completed = levels.filter((l) => (levelStars[l.id] || 0) > 0).length;
@@ -1091,7 +1113,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       {/* Difficulty + Waves + Stars row */}
                       <div className="flex items-center gap-1.5 sm:mb-2 relative z-10 flex-wrap">
                         {/* Difficulty card */}
-                        <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md" style={{
+                        <div className="relative flex items-center gap-1.5 px-2 py-1.5 rounded-md" style={{
                           background: `linear-gradient(135deg, ${NEUTRAL.bgLight}, ${NEUTRAL.bgDark})`,
                           border: `1px solid ${NEUTRAL.border}`,
                           boxShadow: `inset 0 0 6px ${NEUTRAL.glow}`
@@ -1230,35 +1252,34 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           sizes="(max-width: 640px) 100vw, 520px"
                           className="absolute inset-0 w-full h-full object-cover"
                         />
-                      ) : null}
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center ${currentLevelPreviewImage
-                          ? "opacity-0"
-                          : "opacity-100"
-                          }`}
-                      >
-                        <div
-                          className={`w-full h-full ${currentLevel.region === "grassland"
-                            ? "bg-gradient-to-br from-green-900/80 via-green-800/60 to-amber-900/40"
-                            : currentLevel.region === "swamp"
-                              ? "bg-gradient-to-br from-emerald-900/80 via-teal-900/65 to-stone-900/45"
-                              : currentLevel.region === "desert"
-                                ? "bg-gradient-to-br from-amber-800/80 via-yellow-900/60 to-orange-900/40"
-                                : currentLevel.region === "winter"
-                                  ? "bg-gradient-to-br from-blue-900/80 via-slate-700/60 to-cyan-900/40"
-                                  : "bg-gradient-to-br from-red-900/80 via-orange-900/60 to-stone-900/40"
-                            } flex items-center justify-center`}
-                        >
-                          <div className="text-center">
-                            <div className="mb-2">
-                              <RegionIcon type={currentLevel.region} size={48} framed challenge={isCurrentChallengeLevel} />
-                            </div>
-                            <span className="text-amber-400/60 text-xs font-medium tracking-wide">
-                              Preview Coming
-                            </span>
+                      ) : fallbackPreviewImage ? (
+                        <>
+                          <Image
+                            src={fallbackPreviewImage}
+                            alt=""
+                            fill
+                            sizes="(max-width: 640px) 100vw, 520px"
+                            className="absolute inset-0 w-full h-full object-cover opacity-50 blur-[1px]"
+                          />
+                          <div className="absolute inset-0" style={{
+                            background: currentLevel.region === "grassland"
+                              ? "linear-gradient(135deg, rgba(20,40,15,0.55), rgba(30,50,20,0.4))"
+                              : currentLevel.region === "swamp"
+                                ? "linear-gradient(135deg, rgba(15,35,32,0.55), rgba(20,40,35,0.4))"
+                                : currentLevel.region === "desert"
+                                  ? "linear-gradient(135deg, rgba(50,35,12,0.55), rgba(40,28,10,0.4))"
+                                  : currentLevel.region === "winter"
+                                    ? "linear-gradient(135deg, rgba(20,30,45,0.55), rgba(15,25,40,0.4))"
+                                    : "linear-gradient(135deg, rgba(45,20,15,0.55), rgba(35,15,10,0.4))"
+                          }} />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <RegionIcon type={currentLevel.region} size={56} framed challenge={isCurrentChallengeLevel} />
+                            <p className="mt-2 text-amber-300/70 text-[10px] font-bold uppercase tracking-widest drop-shadow-lg">
+                              {currentLevel.name}
+                            </p>
                           </div>
-                        </div>
-                      </div>
+                        </>
+                      ) : null}
                       <div className="absolute top-2 right-2 z-20 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider" style={{
                         background: PANEL.bgDark,
                         color: "rgb(252,211,77)",
@@ -1316,8 +1337,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                         );
                       }
 
-                      const regionLevels = WORLD_LEVELS.filter(
-                        (l) => l.region === currentLevel.region
+                      const regionLevels = visibleWorldLevels.filter(
+                        (l) => l.region === currentLevel.region && !DEV_LEVEL_IDS.has(l.id)
                       );
                       const regionStars = regionLevels.reduce(
                         (sum, l) => sum + (levelStars[l.id] || 0),
@@ -1466,7 +1487,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <BattlefieldPreview
                         animTime={animTime}
                         onSelectFarthestLevel={() => {
-                          const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
+                          const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
                           if (unlockedLevelsList.length > 0) {
                             const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
                             handleLevelClick(farthestLevel.id);
@@ -1538,7 +1559,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     onClick={handleClick}
                   />
                   {selectedLevel && !hasAlternateTooltipOpen && (() => {
-                    const worldLevel = WORLD_LEVELS.find((l) => l.id === selectedLevel);
+                    const worldLevel = visibleWorldLevels.find((l) => l.id === selectedLevel);
                     if (!worldLevel) return null;
                     const scale = mapScale;
                     const yMap = getY(worldLevel.y);
@@ -1589,10 +1610,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                           }}
                         >
                           <div className="absolute inset-[1px] top-0 rounded-b-[4px] pointer-events-none" style={{ border: `1px solid ${GOLD.accentBorder15}`, borderTop: 'none' }} />
-                          <span className="flex items-center text-[10px] font-bold justify-center gap-1 relative z-10">
-                            <Swords size={12} />
+                          <span className="flex items-center text-xs font-bold justify-center gap-1.5 relative z-10 tracking-wide">
+                            <Swords size={14} />
                             BATTLE
-                            <Play size={10} />
+                            <Play size={12} />
                           </span>
                         </button>
                       </div>
@@ -1664,7 +1685,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       <div className="w-full h-px my-0.5" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.25) 20%, rgba(255,200,80,0.3) 50%, rgba(180,140,60,0.25) 80%, transparent)' }} />
                       <button
                         onClick={() => {
-                          const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
+                          const unlockedLevelsList = visibleWorldLevels.filter(l => isLevelUnlocked(l.id));
                           if (unlockedLevelsList.length > 0) {
                             const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
                             handleLevelClick(farthestLevel.id);
@@ -1735,6 +1756,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       </div>
 
       {showCodex && <CodexModal onClose={() => setShowCodex(false)} defaultTab={codexTab} />}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          settings={settings}
+          updateCategory={updateCategory}
+          applyPreset={applyPreset}
+          resetToDefaults={resetToDefaults}
+          resetCategory={resetCategory}
+        />
+      )}
       {showCreator && (
         <CustomLevelCreatorModal
           isOpen={showCreator}

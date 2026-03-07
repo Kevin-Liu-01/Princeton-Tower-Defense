@@ -192,6 +192,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
   const totalBattles = Object.values(levelStats).reduce((a, s) => a + (s.timesPlayed || 0), 0);
   const totalWins = Object.values(levelStats).reduce((a, s) => a + (s.timesWon || 0), 0);
   const totalHearts = Object.values(levelStats).reduce((a, s) => a + (s.bestHearts || 0), 0);
+  const maxHearts = WORLD_LEVELS.length * 20;
 
   const lastPlayed = useMemo(() => findLastPlayedLevel(levelStats), [levelStats]);
   const lastPlayedLevel = lastPlayed
@@ -279,10 +280,12 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               boxShadow: `inset 0 0 8px ${BLUE_CARD.glow}`,
             }}
           >
+            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${BLUE_CARD.innerBorder}` }} />
             <Swords size={12} className="text-blue-400/80 shrink-0" />
             <span className="text-xs font-bold text-blue-300/90">
               {totalBattles}
             </span>
+            <span className="text-[7px] text-blue-500/60 font-bold uppercase tracking-wider">Played</span>
           </div>
           <div
             className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg relative"
@@ -292,10 +295,12 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               boxShadow: `inset 0 0 8px ${GREEN_CARD.glow}`,
             }}
           >
+            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${GREEN_CARD.innerBorder}` }} />
             <Trophy size={12} className="text-emerald-400/80 shrink-0" />
             <span className="text-xs font-bold text-emerald-300/90">
               {totalWins}
             </span>
+            <span className="text-[7px] text-emerald-500/60 font-bold uppercase tracking-wider">Wins</span>
           </div>
           <div
             className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg relative"
@@ -305,10 +310,12 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
               boxShadow: `inset 0 0 8px ${RED_CARD.glow06}`,
             }}
           >
+            <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{ border: `1px solid ${RED_CARD.innerBorder12}` }} />
             <Heart size={12} className="text-red-400 fill-red-400 shrink-0" />
             <span className="text-xs font-bold text-red-300/90">
               {totalHearts}
             </span>
+            <span className="text-[8px] text-red-700 font-semibold">/{maxHearts}</span>
           </div>
         </div>
       </div>

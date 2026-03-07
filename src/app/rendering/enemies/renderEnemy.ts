@@ -1,5 +1,5 @@
-import type { Enemy, Position } from "../../types";
-import { ENEMY_DATA, ISO_Y_RATIO } from "../../constants";
+import type { Enemy, Position, MapTheme } from "../../types";
+import { ENEMY_DATA, ISO_Y_RATIO, LEVEL_DATA } from "../../constants";
 import {
   worldToScreen,
   worldToScreenRounded,
@@ -10,6 +10,18 @@ import {
 import { renderInspectIndicator } from "../effects/inspectIndicator";
 import { renderEnemyAttackEffect } from "./attackEffects";
 import { getSlowAuraColors, getEnemyFlashProfile, enemyPaletteCache } from "./types";
+import { drawRegionOverlay } from "./regionOverlays";
+
+const mapThemeCache = new Map<string, MapTheme>();
+
+function getMapTheme(selectedMap: string): MapTheme {
+  const cached = mapThemeCache.get(selectedMap);
+  if (cached) return cached;
+  const levelData = LEVEL_DATA[selectedMap];
+  const theme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
+  mapThemeCache.set(selectedMap, theme);
+  return theme;
+}
 
 import {
   drawFreshmanEnemy,
@@ -173,6 +185,8 @@ export function renderEnemy(
   );
   ctx.translate(-screenPos.x, -drawY);
 
+  const region = getMapTheme(selectedMap);
+
   drawEnemySprite(
     ctx,
     screenPos.x,
@@ -185,6 +199,7 @@ export function renderEnemy(
     isFlying,
     zoom,
     attackPhase,
+    region,
   );
 
   if (damageFlashIntensity > 0) {
@@ -769,6 +784,7 @@ function drawEnemySprite(
   isFlying: boolean,
   zoom: number,
   attackPhase: number = 0,
+  region: MapTheme = "grassland",
 ) {
   let bodyColor = color;
   let bodyColorDark: string;
@@ -934,4 +950,6 @@ function drawEnemySprite(
     default:
       drawDefaultEnemy(ctx, x, y, size, bodyColor, bodyColorDark, bodyColorLight, time, zoom, attackPhase);
   }
+
+  drawRegionOverlay(ctx, x, y, size, type, region, time, zoom);
 }

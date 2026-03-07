@@ -1,6 +1,7 @@
 import type { MutableRefObject, RefObject } from "react";
 import type { LevelStars } from "../../types";
 import { LEVEL_DATA } from "../../constants";
+import type { LevelNode } from "./worldMapData";
 import { MAP_WIDTH, WORLD_LEVELS } from "./worldMapData";
 import {
   getWorldLevelById,
@@ -20,6 +21,7 @@ interface DrawWorldMapParams {
   imageCache: MutableRefObject<Record<string, HTMLImageElement>>;
   lastCanvasSizeRef: MutableRefObject<{ w: number; h: number }>;
   animTimeRef: MutableRefObject<number>;
+  levels?: LevelNode[];
 }
 
 export const drawWorldMapCanvas = ({
@@ -33,7 +35,9 @@ export const drawWorldMapCanvas = ({
   imageCache,
   lastCanvasSizeRef,
   animTimeRef,
+  levels: levelsOverride,
 }: DrawWorldMapParams): void => {
+  const allLevels = levelsOverride ?? WORLD_LEVELS;
   const getY = (pct: number) => getWorldMapY(pct, mapHeight);
   const isLevelUnlocked = (levelId: string) =>
     isWorldLevelUnlocked(levelId, unlockedMaps);
@@ -8554,7 +8558,7 @@ export const drawWorldMapCanvas = ({
     winter: { partial: "#8aa8c4", locked: "#5a7a98" },
     volcanic: { partial: "#b07060", locked: "#7a4838" },
   };
-  WORLD_LEVELS.forEach((level) => {
+  allLevels.forEach((level) => {
     const fromX = level.x;
     const fromY = getY(level.y);
 
@@ -8864,7 +8868,7 @@ export const drawWorldMapCanvas = ({
   };
 
   // --- LEVEL NODES ---
-  WORLD_LEVELS.forEach((level) => {
+  allLevels.forEach((level) => {
     const x = level.x;
     const y = getY(level.y);
     const isChallenge = level.kind === "challenge";
@@ -9837,15 +9841,26 @@ export const drawWorldMapCanvas = ({
       ctx.fill();
       ctx.stroke();
 
-      // Draw Image
+      // Draw Image (use fallback from same region if no direct preview)
       const lvlData = LEVEL_DATA[level.id];
-      if (lvlData?.previewImage) {
-        if (!imageCache.current[level.id]) {
+      const directPreview = lvlData?.previewImage;
+      const fallbackPreview = !directPreview
+        ? allLevels
+            .filter(l => l.region === level.region)
+            .map(l => LEVEL_DATA[l.id]?.previewImage)
+            .find(Boolean) ?? LEVEL_DATA.poe?.previewImage
+        : undefined;
+      const previewSrc = directPreview ?? fallbackPreview;
+      const isFallback = !directPreview && !!fallbackPreview;
+      const cacheKey = isFallback ? `__fallback_${level.region}` : level.id;
+
+      if (previewSrc) {
+        if (!imageCache.current[cacheKey]) {
           const img = new Image();
-          img.src = lvlData.previewImage;
-          imageCache.current[level.id] = img;
+          img.src = previewSrc;
+          imageCache.current[cacheKey] = img;
         }
-        const img = imageCache.current[level.id];
+        const img = imageCache.current[cacheKey];
 
         if (img.complete && img.naturalWidth > 0) {
           ctx.save();
@@ -9858,6 +9873,7 @@ export const drawWorldMapCanvas = ({
             [4, 4, 0, 0],
           );
           ctx.clip();
+          if (isFallback) ctx.globalAlpha = 0.5;
           ctx.drawImage(
             img,
             cardX + 2,
@@ -9865,6 +9881,7 @@ export const drawWorldMapCanvas = ({
             cardWidth - 4,
             cardHeight - 24,
           );
+          if (isFallback) ctx.globalAlpha = 1;
           ctx.restore();
         } else {
           ctx.fillStyle = "#222";

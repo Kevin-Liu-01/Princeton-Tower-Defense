@@ -17,6 +17,14 @@ import { drawFScottHero } from "./scott";
 import { drawCaptainHero } from "./captain";
 import { drawEngineerHero } from "./engineer";
 
+const HERO_SIZE_OVERRIDES: Record<string, number> = {
+  rocky: 1.15,
+};
+
+const HERO_BAR_OFFSET: Record<string, number> = {
+  rocky: -18,
+};
+
 export function renderHero(
   ctx: CanvasRenderingContext2D,
   hero: Hero,
@@ -72,7 +80,8 @@ export function renderHero(
   );
   ctx.fill();
 
-  const size = 32 * zoom;
+  const heroScale = HERO_SIZE_OVERRIDES[hero.type] ?? 1;
+  const size = 32 * zoom * heroScale;
   const attackPhase = hero.attackAnim > 0 ? hero.attackAnim / 300 : 0;
   const attackScale = attackPhase > 0 ? 1 + attackPhase * 0.2 : 1;
   const facingRight =
@@ -195,7 +204,8 @@ export function renderHero(
   // HP Bar - Premium hero style
   const barWidth = 48 * zoom;
   const barHeight = 7 * zoom;
-  const barY = screenPos.y - size - 20 * zoom;
+  const barExtraOffset = (HERO_BAR_OFFSET[hero.type] ?? 0) * zoom;
+  const barY = screenPos.y - size - 20 * zoom + barExtraOffset;
   const barX = screenPos.x - barWidth / 2;
   const cornerRadius = 3.5 * zoom;
 

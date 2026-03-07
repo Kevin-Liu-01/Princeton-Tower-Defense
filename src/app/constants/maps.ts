@@ -330,6 +330,13 @@ export const MAP_PATHS: Record<string, { x: number; y: number }[]> = {
     { x: 39, y: 14 },
   ],
   // =====================
+  // DEV TEST LEVELS
+  // =====================
+  dev_enemy_showcase: [
+    { x: -5, y: 15 },
+    { x: 35, y: 15 },
+  ],
+  // =====================
   // REGION CHALLENGES
   // =====================
   ivy_crossroads: [
@@ -1834,6 +1841,21 @@ export const LEVEL_DATA: Record<
       { type: "statue", pos: { x: 22, y: 8 }, variant: 5 },
     ],
     previewImage: "/images/previews/peak.png",
+  },
+  // =====================
+  // DEV TEST LEVELS
+  // =====================
+  dev_enemy_showcase: {
+    name: "Enemy Showcase",
+    position: { x: 60, y: 60 },
+    description: "Dev-only test level. Every enemy type, one at a time.",
+    camera: { offset: { x: -100, y: -390 }, zoom: 1.05 },
+    region: "grassland",
+    theme: "grassland",
+    difficulty: 1,
+    levelKind: "custom",
+    startingPawPoints: 99999,
+    heroSpawn: { x: 15, y: 15 },
   },
 };
 

@@ -2102,6 +2102,67 @@ export const LEVEL_WAVES: Record<string, WaveGroup[][]> = {
       { type: "shadow_knight", count: 10, interval: 660, delay: 1450 },
     ],
   ],
+  // =====================
+  // DEV TEST LEVELS
+  // =====================
+  dev_enemy_showcase: [
+    [
+      // Academic progression
+      { type: "frosh", count: 1, interval: 1000 },
+      { type: "sophomore", count: 1, interval: 1000, delay: 3000 },
+      { type: "junior", count: 1, interval: 1000, delay: 3000 },
+      { type: "senior", count: 1, interval: 1000, delay: 3000 },
+      { type: "gradstudent", count: 1, interval: 1000, delay: 3000 },
+      { type: "professor", count: 1, interval: 1000, delay: 3000 },
+      { type: "dean", count: 1, interval: 1000, delay: 3000 },
+      { type: "trustee", count: 1, interval: 1000, delay: 3000 },
+      // Campus
+      { type: "mascot", count: 1, interval: 1000, delay: 3000 },
+      { type: "athlete", count: 1, interval: 1000, delay: 3000 },
+      { type: "protestor", count: 1, interval: 1000, delay: 3000 },
+      // Ranged
+      { type: "archer", count: 1, interval: 1000, delay: 3000 },
+      { type: "mage", count: 1, interval: 1000, delay: 3000 },
+      { type: "catapult", count: 1, interval: 1000, delay: 3000 },
+      { type: "warlock", count: 1, interval: 1000, delay: 3000 },
+      { type: "crossbowman", count: 1, interval: 1000, delay: 3000 },
+      // Swamp
+      { type: "hexer", count: 1, interval: 1000, delay: 3000 },
+      { type: "harpy", count: 1, interval: 1000, delay: 3000 },
+      { type: "wyvern", count: 1, interval: 1000, delay: 3000 },
+      { type: "specter", count: 1, interval: 1000, delay: 3000 },
+      { type: "berserker", count: 1, interval: 1000, delay: 3000 },
+      { type: "golem", count: 1, interval: 1000, delay: 3000 },
+      { type: "necromancer", count: 1, interval: 1000, delay: 3000 },
+      { type: "shadow_knight", count: 1, interval: 1000, delay: 3000 },
+      { type: "cultist", count: 1, interval: 1000, delay: 3000 },
+      { type: "plaguebearer", count: 1, interval: 1000, delay: 3000 },
+      { type: "thornwalker", count: 1, interval: 1000, delay: 3000 },
+      { type: "bog_creature", count: 1, interval: 1000, delay: 3000 },
+      { type: "will_o_wisp", count: 1, interval: 1000, delay: 3000 },
+      { type: "swamp_troll", count: 1, interval: 1000, delay: 3000 },
+      // Desert
+      { type: "sandworm", count: 1, interval: 1000, delay: 3000 },
+      { type: "nomad", count: 1, interval: 1000, delay: 3000 },
+      { type: "scorpion", count: 1, interval: 1000, delay: 3000 },
+      { type: "scarab", count: 1, interval: 1000, delay: 3000 },
+      // Winter
+      { type: "frostling", count: 1, interval: 1000, delay: 3000 },
+      { type: "snow_goblin", count: 1, interval: 1000, delay: 3000 },
+      { type: "yeti", count: 1, interval: 1000, delay: 3000 },
+      { type: "ice_witch", count: 1, interval: 1000, delay: 3000 },
+      // Volcanic
+      { type: "infernal", count: 1, interval: 1000, delay: 3000 },
+      { type: "magma_spawn", count: 1, interval: 1000, delay: 3000 },
+      { type: "fire_imp", count: 1, interval: 1000, delay: 3000 },
+      { type: "ember_guard", count: 1, interval: 1000, delay: 3000 },
+      // Boss / Special
+      { type: "banshee", count: 1, interval: 1000, delay: 3000 },
+      { type: "juggernaut", count: 1, interval: 1000, delay: 3000 },
+      { type: "assassin", count: 1, interval: 1000, delay: 3000 },
+      { type: "dragon", count: 1, interval: 1000, delay: 3000 },
+    ],
+  ],
 };
 
 export const WAVES: WaveGroup[][] = LEVEL_WAVES.poe;

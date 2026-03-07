@@ -14,6 +14,7 @@ import {
   X,
   Sparkles,
   Landmark,
+  Settings,
 } from "lucide-react";
 import {
   getPerformanceSettings,
@@ -21,7 +22,9 @@ import {
 } from "../../rendering/performance";
 import PrincetonTDLogo from "./PrincetonTDLogo";
 import { OrnateFrame } from "./OrnateFrame";
-import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, DIVIDER, SELECTED, SPEED, MANA, OVERLAY, panelGradient, dividerGradient } from "./theme";
+import { PANEL, GOLD, AMBER_CARD, RED_CARD, BLUE_CARD, DIVIDER, SELECTED, SPEED, MANA, OVERLAY, NEUTRAL, panelGradient, dividerGradient } from "./theme";
+import { SettingsModal } from "../menus/SettingsModal";
+import { useSettings } from "../../hooks/useSettings";
 
 // =============================================================================
 // TOP HUD COMPONENT
@@ -75,6 +78,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
     const settings = getPerformanceSettings();
     return settings.disableShadows;
   });
+
+  // Settings modal
+  const [showSettings, setShowSettings] = useState(false);
+  const { settings: gameSettings, updateCategory, applyPreset, resetToDefaults, resetCategory } = useSettings();
 
   // FPS tracking for auto-toggle
   const [currentFps, setCurrentFps] = useState(60);
@@ -274,6 +281,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   }, [lives]);
 
   return (
+    <>
     <OrnateFrame
       className="border-b-2 border-amber-700/50 shadow-xl relative flex-shrink-0"
       cornerSize={28}
@@ -679,6 +687,17 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 </span>
               </button>
               <button
+                onClick={() => setShowSettings(true)}
+                title="Open settings"
+                className="relative z-10 p-1.5 hidden sm:flex items-center justify-center rounded-lg transition-colors hover:brightness-125"
+                style={{
+                  background: "linear-gradient(135deg, rgba(140,70,10,0.5), rgba(95,45,5,0.3))",
+                  border: "1px solid rgba(217,119,6,0.4)",
+                }}
+              >
+                <Settings size={15} className="text-orange-300" />
+              </button>
+              <button
                 onClick={() => {
                   retryLevel();
                 }}
@@ -712,5 +731,17 @@ export const TopHUD: React.FC<TopHUDProps> = ({
         <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${DIVIDER.gold40} 20%, ${DIVIDER.goldCenter} 50%, ${DIVIDER.gold40} 80%, transparent)` }} />
       </div>
     </OrnateFrame>
+
+    {showSettings && (
+      <SettingsModal
+        onClose={() => setShowSettings(false)}
+        settings={gameSettings}
+        updateCategory={updateCategory}
+        applyPreset={applyPreset}
+        resetToDefaults={resetToDefaults}
+        resetCategory={resetCategory}
+      />
+    )}
+    </>
   );
 };
