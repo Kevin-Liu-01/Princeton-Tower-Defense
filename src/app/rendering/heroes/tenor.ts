@@ -1,3 +1,328 @@
+function drawTenorSkirtArmor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+  gemPulse: number,
+) {
+  const skirtTop = y + size * 0.28;
+  const bandCount = 4;
+  const totalHeight = size * 0.32;
+  const bandHeight = totalHeight / bandCount;
+  const gapHalf = size * 0.10;
+
+  drawTenorCenterBanner(ctx, x, size, time, zoom, skirtTop, totalHeight, gapHalf, gemPulse);
+
+  for (let side = -1; side <= 1; side += 2) {
+    drawTenorTassetSide(ctx, x, size, time, zoom, side, skirtTop, bandCount, bandHeight, totalHeight, gapHalf, gemPulse, isAttacking, attackIntensity);
+  }
+
+  drawTenorSkirtChain(ctx, x, size, zoom, skirtTop, gapHalf, gemPulse, time);
+  drawTenorSkirtBelt(ctx, x, size, zoom, skirtTop, gemPulse);
+}
+
+function drawTenorTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  time: number,
+  zoom: number,
+  side: number,
+  skirtTop: number,
+  bandCount: number,
+  bandHeight: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const shear = size * -0.10;
+
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const innerBotY = innerTopY + bandHeight;
+    const outerTopY = innerTopY + shear;
+    const outerBotY = innerBotY + shear;
+
+    const outerW = size * (0.42 + band * 0.035);
+    const innerGap = gapHalf + band * size * 0.008;
+    const sway =
+      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
+
+    const innerX = x + side * innerGap + sway;
+    const outerX = x + side * outerW + sway;
+
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#0a0515");
+      plateG.addColorStop(0.25, "#151028");
+      plateG.addColorStop(0.55, "#1f1535");
+      plateG.addColorStop(1, "#281a42");
+    } else {
+      plateG.addColorStop(0, "#281a42");
+      plateG.addColorStop(0.45, "#1f1535");
+      plateG.addColorStop(0.75, "#151028");
+      plateG.addColorStop(1, "#0a0515");
+    }
+
+    ctx.fillStyle = plateG;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(10, 5, 20, 0.4)";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.stroke();
+
+    const rivetMidT = 0.75;
+    const rivetX = innerX + rivetMidT * (outerX - innerX);
+    const rivetY = innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - size * 0.002, rivetY - size * 0.002, 0,
+      rivetX, rivetY, size * 0.009,
+    );
+    rg.addColorStop(0, "#f0c040");
+    rg.addColorStop(0.4, "#c9a227");
+    rg.addColorStop(1, "#8a6a10");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (band % 2 === 0) {
+      const pleatCount = 2 + Math.floor(band / 2);
+      for (let pc = 0; pc < pleatCount; pc++) {
+        const t = (pc + 0.5) / pleatCount;
+        const pleatX = innerX + t * (outerX - innerX);
+        const pleatYBase = innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+        ctx.strokeStyle = "rgba(40, 26, 66, 0.6)";
+        ctx.lineWidth = 0.6 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(pleatX, pleatYBase - bandHeight * 0.2);
+        ctx.lineTo(pleatX, pleatYBase + bandHeight * 0.2);
+        ctx.stroke();
+      }
+    }
+
+    if (band % 2 === 1) {
+      const midT = 0.5;
+      const accentInnerX = innerX + side * size * 0.015;
+      const accentOuterX = outerX - side * size * 0.015;
+      const accentInnerY = innerTopY + bandHeight * midT;
+      const accentOuterY = outerTopY + bandHeight * midT;
+      ctx.strokeStyle = `rgba(240, 192, 64, ${0.25 + gemPulse * 0.25})`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.shadowColor = "#f0c040";
+      ctx.shadowBlur = 3 * zoom * gemPulse;
+      ctx.beginPath();
+      ctx.moveTo(accentInnerX, accentInnerY);
+      ctx.lineTo(accentOuterX, accentOuterY);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+function drawTenorCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  time: number,
+  zoom: number,
+  skirtTop: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+) {
+  const bannerTop = skirtTop + size * 0.04;
+  const bannerBottom = skirtTop + totalHeight * 0.92;
+  const bannerHalfW = gapHalf * 0.75;
+  const wave = Math.sin(time * 2.5) * size * 0.008;
+  const wave2 = Math.sin(time * 3.2 + 0.5) * size * 0.005;
+
+  const bannerGrad = ctx.createLinearGradient(x, bannerTop, x, bannerBottom);
+  bannerGrad.addColorStop(0, "#1a0a30");
+  bannerGrad.addColorStop(0.15, "#301850");
+  bannerGrad.addColorStop(0.4, "#452870");
+  bannerGrad.addColorStop(0.7, "#301850");
+  bannerGrad.addColorStop(1, "#1a0a30");
+  ctx.fillStyle = bannerGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - bannerHalfW, bannerTop);
+  ctx.lineTo(x + bannerHalfW, bannerTop);
+  ctx.bezierCurveTo(
+    x + bannerHalfW + wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85, bannerBottom,
+  );
+  ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
+  ctx.bezierCurveTo(
+    x - bannerHalfW * 0.9 - wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW, bannerTop,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#f0c040";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  const emblemY = (bannerTop + bannerBottom) * 0.5 - size * 0.03;
+  ctx.strokeStyle = `rgba(240, 192, 64, ${0.6 + gemPulse * 0.3})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.shadowColor = "#ffdd00";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.01, emblemY - size * 0.02, size * 0.04, Math.PI * 0.6, Math.PI * 1.4);
+  ctx.stroke();
+  ctx.fillStyle = "#f0c040";
+  ctx.beginPath();
+  ctx.arc(x + size * 0.02, emblemY + size * 0.02, size * 0.012, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawTenorSkirtChain(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gapHalf: number,
+  gemPulse: number,
+  time: number,
+) {
+  const chainY = skirtTop + size * 0.025;
+  const leftAnchor = x - gapHalf + size * 0.01;
+  const rightAnchor = x + gapHalf - size * 0.01;
+  const sag = size * 0.035 + Math.sin(time * 2) * size * 0.004;
+  const linkCount = 7;
+
+  for (let i = 0; i <= linkCount; i++) {
+    const t = i / linkCount;
+    const lx = leftAnchor + t * (rightAnchor - leftAnchor);
+    const sagT = 4 * t * (1 - t);
+    const ly = chainY + sag * sagT;
+
+    const linkGrad = ctx.createRadialGradient(
+      lx - size * 0.002, ly - size * 0.002, 0,
+      lx, ly, size * 0.012,
+    );
+    linkGrad.addColorStop(0, "#f0c040");
+    linkGrad.addColorStop(0.5, "#c9a227");
+    linkGrad.addColorStop(1, "#8a6a10");
+    ctx.fillStyle = linkGrad;
+    ctx.beginPath();
+    const linkW = size * 0.011;
+    const linkH = size * 0.007;
+    const angle = i % 2 === 0 ? 0.3 : -0.3;
+    ctx.ellipse(lx, ly, linkW, linkH, angle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#8a6a10";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = `rgba(240, 192, 64, ${0.5 + gemPulse * 0.2})`;
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.shadowColor = "#ffdd00";
+  ctx.shadowBlur = 3 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.moveTo(leftAnchor, chainY);
+  ctx.quadraticCurveTo(x, chainY + sag, rightAnchor, chainY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  for (let side = -1; side <= 1; side += 2) {
+    const anchorX = side === -1 ? leftAnchor : rightAnchor;
+    ctx.fillStyle = "#c9a227";
+    ctx.shadowColor = "#ffdd00";
+    ctx.shadowBlur = 3 * zoom * gemPulse;
+    ctx.beginPath();
+    ctx.arc(anchorX, chainY, size * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#8a6a10";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawTenorSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gemPulse: number,
+) {
+  const beltHalfW = size * 0.43;
+  const beltThick = size * 0.048;
+  const vDip = size * 0.08;
+
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
+  );
+  beltGrad.addColorStop(0, "#8a6a10");
+  beltGrad.addColorStop(0.2, "#c9a227");
+  beltGrad.addColorStop(0.4, "#f0c040");
+  beltGrad.addColorStop(0.5, "#ffd860");
+  beltGrad.addColorStop(0.6, "#f0c040");
+  beltGrad.addColorStop(0.8, "#c9a227");
+  beltGrad.addColorStop(1, "#8a6a10");
+
+  ctx.fillStyle = beltGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.lineTo(x, skirtTop + beltThick * 0.5 + vDip);
+  ctx.lineTo(x - beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#8a6a10";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "#ffd860";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.stroke();
+
+  ctx.fillStyle = "#f0c040";
+  ctx.shadowColor = "#ffdd00";
+  ctx.shadowBlur = 6 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + vDip * 0.35, size * 0.032, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffd860";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 export function drawTenorHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -26,6 +351,7 @@ export function drawTenorHero(
   drawFlowingCapes(ctx, x, y, s, time, zoom);
   drawDressShoes(ctx, x, y, s, zoom);
   drawTuxedoBody(ctx, x, y, s, breathe, zoom);
+  drawTenorSkirtArmor(ctx, x, y, s, time, zoom, isAttacking, attackIntensity, gemPulse);
   drawCummerbund(ctx, x, y, s, zoom);
   drawConductorArms(ctx, x, y, s, time, zoom, isAttacking, attackPhase, attackIntensity);
   drawShirtAndBowTie(ctx, x, y, s, breathe, isAttacking, attackIntensity, gemPulse, zoom);

@@ -1,3 +1,323 @@
+function drawTigerSkirtArmor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+  gemPulse: number,
+) {
+  const skirtTop = y + size * 0.28;
+  const bandCount = 4;
+  const totalHeight = size * 0.34;
+  const bandHeight = totalHeight / bandCount;
+  const gapHalf = size * 0.11;
+
+  drawTigerCenterBanner(ctx, x, size, time, zoom, skirtTop, totalHeight, gapHalf, gemPulse);
+
+  for (let side = -1; side <= 1; side += 2) {
+    drawTigerTassetSide(
+      ctx,
+      x,
+      size,
+      time,
+      zoom,
+      side,
+      skirtTop,
+      bandCount,
+      bandHeight,
+      totalHeight,
+      gapHalf,
+      gemPulse,
+      isAttacking,
+      attackIntensity,
+    );
+  }
+
+  const strapY = skirtTop + size * 0.025;
+  const leftAnchor = x - gapHalf + size * 0.01;
+  const rightAnchor = x + gapHalf - size * 0.01;
+  const sag = size * 0.035 + Math.sin(time * 2) * size * 0.004;
+  ctx.strokeStyle = "#3a2515";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(leftAnchor, strapY);
+  ctx.quadraticCurveTo(x, strapY + sag, rightAnchor, strapY);
+  ctx.stroke();
+
+  drawTigerSkirtBelt(ctx, x, size, zoom, skirtTop, gemPulse);
+}
+
+function drawTigerTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  time: number,
+  zoom: number,
+  side: number,
+  skirtTop: number,
+  bandCount: number,
+  bandHeight: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const shear = size * -0.12;
+
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const innerBotY = innerTopY + bandHeight;
+    const outerTopY = innerTopY + shear;
+    const outerBotY = innerBotY + shear;
+
+    const outerW = size * (0.42 + band * 0.035);
+    const innerGap = gapHalf + band * size * 0.008;
+    const sway =
+      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
+
+    const innerX = x + side * innerGap + sway;
+    const outerX = x + side * outerW + sway;
+
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#4a3a28");
+      plateG.addColorStop(0.25, "#5a4a38");
+      plateG.addColorStop(0.55, "#3a2a18");
+      plateG.addColorStop(1, "#3a2a18");
+    } else {
+      plateG.addColorStop(0, "#3a2a18");
+      plateG.addColorStop(0.45, "#3a2a18");
+      plateG.addColorStop(0.75, "#5a4a38");
+      plateG.addColorStop(1, "#4a3a28");
+    }
+
+    ctx.fillStyle = plateG;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#1a1008";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.stroke();
+
+    const rivetMidT = 0.75;
+    const rivetX = innerX + rivetMidT * (outerX - innerX);
+    const rivetY =
+      innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - size * 0.002,
+      rivetY - size * 0.002,
+      0,
+      rivetX,
+      rivetY,
+      size * 0.009,
+    );
+    rg.addColorStop(0, "#c09040");
+    rg.addColorStop(0.4, "#a07030");
+    rg.addColorStop(1, "#704820");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (band % 2 === 0) {
+      const scaleCount = 2 + Math.floor(band / 2);
+      for (let sc = 0; sc < scaleCount; sc++) {
+        const t = (sc + 0.5) / scaleCount;
+        const scaleX = innerX + t * (outerX - innerX);
+        const scaleYBase =
+          innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+        const scaleSize = size * 0.026;
+        const scaleG = ctx.createRadialGradient(
+          scaleX - scaleSize * 0.3,
+          scaleYBase - scaleSize * 0.2,
+          0,
+          scaleX,
+          scaleYBase,
+          scaleSize,
+        );
+        scaleG.addColorStop(0, "#8a6a48");
+        scaleG.addColorStop(0.5, "#6a4a28");
+        scaleG.addColorStop(1, "#4a3a18");
+        ctx.fillStyle = scaleG;
+        ctx.beginPath();
+        ctx.moveTo(scaleX, scaleYBase - scaleSize * 0.3);
+        ctx.quadraticCurveTo(
+          scaleX + scaleSize,
+          scaleYBase,
+          scaleX,
+          scaleYBase + scaleSize * 0.6,
+        );
+        ctx.quadraticCurveTo(
+          scaleX - scaleSize,
+          scaleYBase,
+          scaleX,
+          scaleYBase - scaleSize * 0.3,
+        );
+        ctx.fill();
+      }
+    }
+
+    if (band % 2 === 1) {
+      const midT = 0.5;
+      const accentInnerX = innerX + side * size * 0.015;
+      const accentOuterX = outerX - side * size * 0.015;
+      const accentInnerY = innerTopY + bandHeight * midT;
+      const accentOuterY = outerTopY + bandHeight * midT;
+      ctx.strokeStyle = `rgba(255, 140, 30, ${0.25 + gemPulse * 0.2})`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.shadowColor = "#ff8c1a";
+      ctx.shadowBlur = 3 * zoom * gemPulse;
+      ctx.beginPath();
+      ctx.moveTo(accentInnerX, accentInnerY);
+      ctx.lineTo(accentOuterX, accentOuterY);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+function drawTigerCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  time: number,
+  zoom: number,
+  skirtTop: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+) {
+  const bannerTop = skirtTop + size * 0.04;
+  const bannerBottom = skirtTop + totalHeight * 0.92;
+  const bannerHalfW = gapHalf * 0.75;
+  const wave = Math.sin(time * 2.5) * size * 0.008;
+  const wave2 = Math.sin(time * 3.2 + 0.5) * size * 0.005;
+
+  const bannerGrad = ctx.createLinearGradient(x, bannerTop, x, bannerBottom);
+  bannerGrad.addColorStop(0, "#8b3a00");
+  bannerGrad.addColorStop(0.15, "#cc5500");
+  bannerGrad.addColorStop(0.4, "#ff7700");
+  bannerGrad.addColorStop(0.7, "#cc5500");
+  bannerGrad.addColorStop(1, "#8b3a00");
+  ctx.fillStyle = bannerGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - bannerHalfW, bannerTop);
+  ctx.lineTo(x + bannerHalfW, bannerTop);
+  ctx.bezierCurveTo(
+    x + bannerHalfW + wave,
+    bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2,
+    bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85,
+    bannerBottom,
+  );
+  ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
+  ctx.bezierCurveTo(
+    x - bannerHalfW * 0.9 - wave2,
+    bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave,
+    bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW,
+    bannerTop,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#a07030";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  const emblemY = (bannerTop + bannerBottom) * 0.5 - size * 0.03;
+  ctx.strokeStyle = "#c09040";
+  ctx.lineWidth = 2 * zoom;
+  ctx.shadowColor = "#daa050";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.02, emblemY - size * 0.02);
+  ctx.lineTo(x + size * 0.025, emblemY + size * 0.02);
+  ctx.moveTo(x - size * 0.01, emblemY);
+  ctx.lineTo(x + size * 0.02, emblemY + size * 0.03);
+  ctx.moveTo(x, emblemY - size * 0.01);
+  ctx.lineTo(x + size * 0.018, emblemY + size * 0.025);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function drawTigerSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gemPulse: number,
+) {
+  const beltHalfW = size * 0.43;
+  const beltThick = size * 0.048;
+  const vDip = size * 0.08;
+
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHalfW,
+    skirtTop,
+    x + beltHalfW,
+    skirtTop,
+  );
+  beltGrad.addColorStop(0, "#704820");
+  beltGrad.addColorStop(0.25, "#c09040");
+  beltGrad.addColorStop(0.5, "#daa050");
+  beltGrad.addColorStop(0.75, "#c09040");
+  beltGrad.addColorStop(1, "#704820");
+
+  ctx.fillStyle = beltGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.lineTo(x, skirtTop + beltThick * 0.5 + vDip);
+  ctx.lineTo(x - beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#1a1008";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  ctx.fillStyle = "#ff6600";
+  ctx.shadowColor = "#ff8c1a";
+  ctx.shadowBlur = 6 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + vDip * 0.35, size * 0.032, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ffaa44";
+  ctx.beginPath();
+  ctx.arc(
+    x - size * 0.008,
+    skirtTop + vDip * 0.35 - size * 0.008,
+    size * 0.013,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 export function drawTigerHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -327,6 +647,8 @@ export function drawTigerHero(
     );
     ctx.stroke();
   }
+
+  drawTigerSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, gemPulse);
 
   // === COLOSSAL ARMORED SHOULDERS/PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {

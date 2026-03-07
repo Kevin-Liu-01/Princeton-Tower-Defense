@@ -54,7 +54,7 @@ export function drawFScottHero(
   drawShadow(ctx, x, y, size);
   drawCape(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
   drawSuit(ctx, x, y, size, breathe, zoom);
-  drawArmoredSkirt(ctx, x, y, size, time, zoom, isAttacking, attackIntensity);
+  drawScottSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, goldPulse);
   drawEpaulettes(ctx, x, y, size, time, zoom);
   drawAiguillette(ctx, x, y, size, time, zoom);
   drawVest(ctx, x, y, size, zoom);
@@ -685,9 +685,9 @@ function drawSuit(
   }
 }
 
-// ─── ARMORED SIDE TASSETS (hip plates integrated into coat) ──────────────────
+// ─── ARMORED SIDE TASSETS (split parallelogram skirt, captain structure) ───────
 
-function drawArmoredSkirt(
+function drawScottSkirtArmor(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -696,189 +696,359 @@ function drawArmoredSkirt(
   zoom: number,
   isAttacking: boolean,
   attackIntensity: number,
+  goldPulse: number,
 ) {
+  const skirtTop = y + size * 0.22;
+  const bandCount = 4;
+  const totalHeight = size * 0.30;
+  const bandHeight = totalHeight / bandCount;
+  const gapHalf = size * 0.10;
+
+  drawScottCenterBanner(ctx, x, y, size, time, zoom, skirtTop, totalHeight, gapHalf, goldPulse);
+
   for (let side = -1; side <= 1; side += 2) {
-    const hipX = x + side * size * 0.3;
-    const hipY = y + size * 0.19;
-    const plateCount = 4;
-    const plateH = size * 0.065;
-    const tiltAngle = side * 0.15;
+    drawScottTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, bandCount, bandHeight, totalHeight, gapHalf, goldPulse, isAttacking, attackIntensity);
+  }
 
-    ctx.save();
-    ctx.translate(hipX, hipY);
-    ctx.rotate(tiltAngle);
+  drawScottSkirtChain(ctx, x, size, zoom, skirtTop, gapHalf, goldPulse, time);
+  drawScottSkirtBelt(ctx, x, size, zoom, skirtTop, goldPulse);
+}
 
-    // Coat-fabric backing strip that integrates plates into the trench coat
-    const backG = ctx.createLinearGradient(
-      -size * 0.09,
-      -size * 0.01,
-      size * 0.09,
-      plateCount * plateH * 0.85 + size * 0.02,
-    );
-    backG.addColorStop(0, "#4a4535");
-    backG.addColorStop(0.5, "#555040");
-    backG.addColorStop(1, "#3a3528");
-    ctx.fillStyle = backG;
-    ctx.beginPath();
-    ctx.roundRect(
-      -size * 0.09,
-      -size * 0.012,
-      size * 0.18,
-      plateCount * plateH * 0.85 + size * 0.025,
-      size * 0.006,
-    );
-    ctx.fill();
-    ctx.strokeStyle = "#2a2518";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.stroke();
+function drawScottTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  _y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  side: number,
+  skirtTop: number,
+  bandCount: number,
+  bandHeight: number,
+  totalHeight: number,
+  gapHalf: number,
+  goldPulse: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const shear = size * -0.10;
 
-    for (let p = 0; p < plateCount; p++) {
-      const py = p * plateH * 0.85;
-      const plateW = size * (0.16 - p * 0.006);
-      const sway =
-        Math.sin(time * 1.5 + p * 0.7 + side) * size * 0.001 * (p + 1);
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const innerBotY = innerTopY + bandHeight;
+    const outerTopY = innerTopY + shear;
+    const outerBotY = innerBotY + shear;
 
-      const pg = ctx.createLinearGradient(
-        -plateW * 0.5 + sway,
-        py,
-        plateW * 0.5 + sway,
-        py + plateH,
-      );
-      pg.addColorStop(0, "#5a7a90");
-      pg.addColorStop(0.15, "#7098b0");
-      pg.addColorStop(0.35, "#8ab0c8");
-      pg.addColorStop(0.5, "#9cc0d8");
-      pg.addColorStop(0.65, "#8ab0c8");
-      pg.addColorStop(0.85, "#7098b0");
-      pg.addColorStop(1, "#5a7a90");
+    const outerW = size * (0.42 + band * 0.035);
+    const innerGap = gapHalf + band * size * 0.008;
+    const sway =
+      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
 
-      ctx.fillStyle = pg;
-      ctx.beginPath();
-      ctx.moveTo(-plateW * 0.5 + sway, py);
-      ctx.lineTo(plateW * 0.5 + sway, py);
-      ctx.quadraticCurveTo(
-        plateW * 0.52 + sway,
-        py + plateH * 0.5,
-        plateW * 0.5 + sway,
-        py + plateH,
-      );
-      ctx.quadraticCurveTo(
-        sway,
-        py + plateH + size * 0.008,
-        -plateW * 0.5 + sway,
-        py + plateH,
-      );
-      ctx.closePath();
-      ctx.fill();
+    const innerX = x + side * innerGap + sway;
+    const outerX = x + side * outerW + sway;
 
-      ctx.strokeStyle = "rgba(180, 215, 240, 0.45)";
-      ctx.lineWidth = 0.7 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(-plateW * 0.45 + sway, py + size * 0.002);
-      ctx.lineTo(plateW * 0.45 + sway, py + size * 0.002);
-      ctx.stroke();
-
-      ctx.strokeStyle = "rgba(30, 50, 70, 0.45)";
-      ctx.lineWidth = 0.8 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(-plateW * 0.45 + sway, py + plateH);
-      ctx.quadraticCurveTo(
-        sway,
-        py + plateH + size * 0.006,
-        plateW * 0.45 + sway,
-        py + plateH,
-      );
-      ctx.stroke();
-
-      if (p < 3) {
-        const rg = ctx.createRadialGradient(
-          sway - size * 0.002,
-          py + plateH * 0.4 - size * 0.002,
-          0,
-          sway,
-          py + plateH * 0.4,
-          size * 0.006,
-        );
-        rg.addColorStop(0, "#d0e8f5");
-        rg.addColorStop(0.5, "#a0c0d8");
-        rg.addColorStop(1, "#6898b0");
-        ctx.fillStyle = rg;
-        ctx.beginPath();
-        ctx.arc(sway, py + plateH * 0.4, size * 0.005, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#5a7a90");
+      plateG.addColorStop(0.25, "#7098b0");
+      plateG.addColorStop(0.55, "#8ab0c8");
+      plateG.addColorStop(1, "#9cc0d8");
+    } else {
+      plateG.addColorStop(0, "#9cc0d8");
+      plateG.addColorStop(0.45, "#8ab0c8");
+      plateG.addColorStop(0.75, "#7098b0");
+      plateG.addColorStop(1, "#5a7a90");
     }
 
-    // Belt attachment hardware
-    ctx.fillStyle = "#3a3020";
+    ctx.fillStyle = plateG;
     ctx.beginPath();
-    ctx.roundRect(
-      -size * 0.025,
-      -size * 0.015,
-      size * 0.05,
-      size * 0.025,
-      size * 0.003,
-    );
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#2a2015";
-    ctx.lineWidth = 0.6 * zoom;
+
+    ctx.strokeStyle = `rgba(130, 185, 220, ${0.35 + goldPulse * 0.2})`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.002);
+    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.002);
     ctx.stroke();
 
-    const abg = ctx.createRadialGradient(
-      0,
-      -size * 0.003,
-      0,
-      0,
-      -size * 0.003,
-      size * 0.01,
-    );
-    abg.addColorStop(0, "#d0e8f5");
-    abg.addColorStop(0.5, "#a0c0d8");
-    abg.addColorStop(1, "#7098b0");
-    ctx.fillStyle = abg;
+    ctx.strokeStyle = "#3a5060";
+    ctx.lineWidth = 1.2 * zoom;
     ctx.beginPath();
-    ctx.roundRect(
-      -size * 0.012,
-      -size * 0.01,
-      size * 0.024,
-      size * 0.015,
-      size * 0.002,
+    ctx.moveTo(innerX - side * size * 0.002, innerBotY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#3a5060";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.stroke();
+
+    const rivetMidT = 0.75;
+    const rivetX = innerX + rivetMidT * (outerX - innerX);
+    const rivetY = innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - size * 0.002, rivetY - size * 0.002, 0,
+      rivetX, rivetY, size * 0.009,
     );
+    rg.addColorStop(0, "#d0e8f5");
+    rg.addColorStop(0.4, "#a0c0d8");
+    rg.addColorStop(1, "#6898b0");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.restore();
+    const etchCount = 2 + Math.floor(band / 2);
+    for (let e = 0; e < etchCount; e++) {
+      const t = (e + 0.5) / etchCount;
+      const etchX = innerX + t * (outerX - innerX);
+      const etchYBase = innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+      ctx.strokeStyle = "rgba(58, 80, 96, 0.4)";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(etchX - size * 0.02, etchYBase);
+      ctx.lineTo(etchX + size * 0.02, etchYBase);
+      ctx.stroke();
+    }
+
+    const midT = 0.5;
+    const accentInnerX = innerX + side * size * 0.015;
+    const accentOuterX = outerX - side * size * 0.015;
+    const accentInnerY = innerTopY + bandHeight * midT;
+    const accentOuterY = outerTopY + bandHeight * midT;
+    ctx.strokeStyle = `rgba(130, 185, 220, ${0.25 + goldPulse * 0.15})`;
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(accentInnerX, accentInnerY);
+    ctx.lineTo(accentOuterX, accentOuterY);
+    ctx.stroke();
   }
 
   if (isAttacking) {
-    for (let side = -1; side <= 1; side += 2) {
-      const glowAlpha = 0.12 * attackIntensity;
-      const gx = x + side * size * 0.3;
-      const gy = y + size * 0.25;
-      const gg = ctx.createRadialGradient(
-        gx,
-        gy,
-        0,
-        gx,
-        gy,
-        size * 0.18,
-      );
-      gg.addColorStop(0, `rgba(80, 210, 210, ${glowAlpha})`);
-      gg.addColorStop(0.5, `rgba(130, 185, 220, ${glowAlpha * 0.6})`);
-      gg.addColorStop(1, "rgba(80, 210, 210, 0)");
-      ctx.fillStyle = gg;
-      ctx.beginPath();
-      ctx.ellipse(
-        gx,
-        gy,
-        size * 0.14,
-        size * 0.17,
-        side * 0.12,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-    }
+    const glowAlpha = 0.12 * attackIntensity;
+    const gx = x + side * size * 0.3;
+    const gy = skirtTop + totalHeight * 0.5;
+    const gg = ctx.createRadialGradient(
+      gx,
+      gy,
+      0,
+      gx,
+      gy,
+      size * 0.18,
+    );
+    gg.addColorStop(0, `rgba(80, 210, 210, ${glowAlpha})`);
+    gg.addColorStop(0.5, `rgba(130, 185, 220, ${glowAlpha * 0.6})`);
+    gg.addColorStop(1, "rgba(80, 210, 210, 0)");
+    ctx.fillStyle = gg;
+    ctx.beginPath();
+    ctx.ellipse(
+      gx,
+      gy,
+      size * 0.14,
+      size * 0.17,
+      side * 0.12,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
+}
+
+function drawScottCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  _y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  skirtTop: number,
+  totalHeight: number,
+  gapHalf: number,
+  goldPulse: number,
+) {
+  const bannerTop = skirtTop + size * 0.04;
+  const bannerBottom = skirtTop + totalHeight * 0.92;
+  const bannerHalfW = gapHalf * 0.75;
+  const wave = Math.sin(time * 2.5) * size * 0.008;
+  const wave2 = Math.sin(time * 3.2 + 0.5) * size * 0.005;
+
+  const bannerGrad = ctx.createLinearGradient(x, bannerTop, x, bannerBottom);
+  bannerGrad.addColorStop(0, "#3a3020");
+  bannerGrad.addColorStop(0.15, "#4a4030");
+  bannerGrad.addColorStop(0.4, "#5a5040");
+  bannerGrad.addColorStop(0.7, "#4a4030");
+  bannerGrad.addColorStop(1, "#3a3020");
+  ctx.fillStyle = bannerGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - bannerHalfW, bannerTop);
+  ctx.lineTo(x + bannerHalfW, bannerTop);
+  ctx.bezierCurveTo(
+    x + bannerHalfW + wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85, bannerBottom,
+  );
+  ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
+  ctx.bezierCurveTo(
+    x - bannerHalfW * 0.9 - wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW, bannerTop,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#a0c8e0";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  const emblemY = (bannerTop + bannerBottom) * 0.5 - size * 0.03;
+  ctx.strokeStyle = "#a0c8e0";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.shadowColor = "#a0c8e0";
+  ctx.shadowBlur = 4 * zoom * goldPulse;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.02, emblemY + size * 0.02);
+  ctx.lineTo(x + size * 0.025, emblemY - size * 0.03);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#daa520";
+  ctx.beginPath();
+  ctx.arc(x + size * 0.028, emblemY - size * 0.035, size * 0.006, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawScottSkirtChain(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gapHalf: number,
+  goldPulse: number,
+  time: number,
+) {
+  const chainY = skirtTop + size * 0.025;
+  const leftAnchor = x - gapHalf + size * 0.01;
+  const rightAnchor = x + gapHalf - size * 0.01;
+  const sag = size * 0.035 + Math.sin(time * 2) * size * 0.004;
+  const linkCount = 7;
+
+  for (let i = 0; i <= linkCount; i++) {
+    const t = i / linkCount;
+    const lx = leftAnchor + t * (rightAnchor - leftAnchor);
+    const sagT = 4 * t * (1 - t);
+    const ly = chainY + sag * sagT;
+
+    const linkGrad = ctx.createRadialGradient(
+      lx - size * 0.002, ly - size * 0.002, 0,
+      lx, ly, size * 0.012,
+    );
+    linkGrad.addColorStop(0, "#a0c0d8");
+    linkGrad.addColorStop(0.5, "#80a8c0");
+    linkGrad.addColorStop(1, "#6090a8");
+    ctx.fillStyle = linkGrad;
+    ctx.beginPath();
+    const linkW = size * 0.011;
+    const linkH = size * 0.007;
+    const angle = i % 2 === 0 ? 0.3 : -0.3;
+    ctx.ellipse(lx, ly, linkW, linkH, angle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#3a5060";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = `rgba(130, 185, 220, ${0.5 + goldPulse * 0.2})`;
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.shadowColor = "#a0c8e0";
+  ctx.shadowBlur = 3 * zoom * goldPulse;
+  ctx.beginPath();
+  ctx.moveTo(leftAnchor, chainY);
+  ctx.quadraticCurveTo(x, chainY + sag, rightAnchor, chainY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  for (let side = -1; side <= 1; side += 2) {
+    const anchorX = side === -1 ? leftAnchor : rightAnchor;
+    ctx.fillStyle = "#80a8c0";
+    ctx.shadowColor = "#a0c8e0";
+    ctx.shadowBlur = 3 * zoom * goldPulse;
+    ctx.beginPath();
+    ctx.arc(anchorX, chainY, size * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#3a5060";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawScottSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  goldPulse: number,
+) {
+  const beltHalfW = size * 0.43;
+  const beltThick = size * 0.048;
+  const vDip = size * 0.08;
+
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
+  );
+  beltGrad.addColorStop(0, "#2a2518");
+  beltGrad.addColorStop(0.2, "#4a4535");
+  beltGrad.addColorStop(0.4, "#555040");
+  beltGrad.addColorStop(0.5, "#555040");
+  beltGrad.addColorStop(0.6, "#4a4535");
+  beltGrad.addColorStop(0.8, "#4a4535");
+  beltGrad.addColorStop(1, "#2a2518");
+
+  ctx.fillStyle = beltGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.lineTo(x, skirtTop + beltThick * 0.5 + vDip);
+  ctx.lineTo(x - beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#2a2015";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(160, 200, 230, 0.5)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.stroke();
+
+  ctx.fillStyle = "#a0c8e0";
+  ctx.shadowColor = "#a0c8e0";
+  ctx.shadowBlur = 6 * zoom * goldPulse;
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + vDip * 0.35, size * 0.032, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#d0e8f5";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
 }
 
 // ─── STORM COLLAR (drawn after head so it overlaps the jaw/cheeks) ──────────

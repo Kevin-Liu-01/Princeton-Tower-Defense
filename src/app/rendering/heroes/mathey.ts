@@ -1,6 +1,362 @@
 import type { Position } from "../../types";
 import { resolveWeaponRotation, WEAPON_LIMITS } from "./helpers";
 
+function drawFrostSkirtArmor(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+  gemPulse: number,
+) {
+  const skirtTop = y + size * 0.30;
+  const bandCount = 5;
+  const totalHeight = size * 0.38;
+  const gapHalf = size * 0.12;
+
+  drawFrostCenterBanner(ctx, x, y, size, time, zoom, skirtTop, totalHeight, gapHalf, gemPulse);
+
+  for (let side = -1; side <= 1; side += 2) {
+    drawFrostTassetSide(ctx, x, y, size, time, zoom, side, skirtTop, bandCount, totalHeight, gapHalf, gemPulse, isAttacking, attackIntensity);
+  }
+
+  drawFrostChain(ctx, x, size, zoom, skirtTop, gapHalf, gemPulse, time);
+  drawFrostSkirtBelt(ctx, x, size, zoom, skirtTop, gemPulse);
+}
+
+function drawFrostTassetSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  _y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  side: number,
+  skirtTop: number,
+  bandCount: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+  isAttacking: boolean,
+  attackIntensity: number,
+) {
+  const shear = size * -0.12;
+  const bandHeight = totalHeight / bandCount;
+
+  for (let band = 0; band < bandCount; band++) {
+    const innerTopY = skirtTop + band * bandHeight;
+    const innerBotY = innerTopY + bandHeight;
+    const outerTopY = innerTopY + shear;
+    const outerBotY = innerBotY + shear;
+
+    const outerW = size * (0.42 + band * 0.035);
+    const innerGap = gapHalf + band * size * 0.008;
+    const sway =
+      Math.sin(time * 1.5 + band * 0.7 + side * 0.4) * size * 0.003 * (band + 1);
+
+    const innerX = x + side * innerGap + sway;
+    const outerX = x + side * outerW + sway;
+
+    const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
+    if (side === -1) {
+      plateG.addColorStop(0, "#454560");
+      plateG.addColorStop(0.25, "#353548");
+      plateG.addColorStop(0.55, "#252535");
+      plateG.addColorStop(1, "#252535");
+    } else {
+      plateG.addColorStop(0, "#252535");
+      plateG.addColorStop(0.45, "#252535");
+      plateG.addColorStop(0.75, "#353548");
+      plateG.addColorStop(1, "#454560");
+    }
+
+    ctx.fillStyle = plateG;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = `rgba(128, 192, 255, ${0.25 + gemPulse * 0.2})`;
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX + side * size * 0.005, innerTopY + size * 0.002);
+    ctx.lineTo(outerX - side * size * 0.005, outerTopY + size * 0.002);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#151525";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX - side * size * 0.002, innerBotY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#151525";
+    ctx.lineWidth = 1 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerTopY);
+    ctx.lineTo(outerX, outerTopY);
+    ctx.lineTo(outerX + side * size * 0.004, outerBotY);
+    ctx.lineTo(innerX - side * size * 0.002, innerBotY);
+    ctx.closePath();
+    ctx.stroke();
+
+    const rivetMidT = 0.75;
+    const rivetX = innerX + rivetMidT * (outerX - innerX);
+    const rivetY = innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+    const rg = ctx.createRadialGradient(
+      rivetX - size * 0.002, rivetY - size * 0.002, 0,
+      rivetX, rivetY, size * 0.009,
+    );
+    rg.addColorStop(0, "#d0e8f5");
+    rg.addColorStop(0.4, "#a0c0d8");
+    rg.addColorStop(1, "#6898b0");
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.arc(rivetX, rivetY, size * 0.008, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (band % 2 === 0) {
+      ctx.fillStyle = "#555570";
+      const scaleCount = 2 + Math.floor(band / 2);
+      for (let sc = 0; sc < scaleCount; sc++) {
+        const t = (sc + 0.5) / scaleCount;
+        const scaleX = innerX + t * (outerX - innerX);
+        const scaleYBase = innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+        const scaleSize = size * 0.026;
+        ctx.beginPath();
+        ctx.moveTo(scaleX, scaleYBase - scaleSize * 0.3);
+        ctx.quadraticCurveTo(scaleX + scaleSize, scaleYBase, scaleX, scaleYBase + scaleSize * 0.6);
+        ctx.quadraticCurveTo(scaleX - scaleSize, scaleYBase, scaleX, scaleYBase - scaleSize * 0.3);
+        ctx.fill();
+      }
+    }
+
+    if (band % 2 === 1) {
+      const midT = 0.5;
+      const accentInnerX = innerX + side * size * 0.015;
+      const accentOuterX = outerX - side * size * 0.015;
+      const accentInnerY = innerTopY + bandHeight * midT;
+      const accentOuterY = outerTopY + bandHeight * midT;
+      ctx.strokeStyle = `rgba(128, 192, 255, ${0.25 + gemPulse * 0.15})`;
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.shadowColor = "#80c0ff";
+      ctx.shadowBlur = 3 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(accentInnerX, accentInnerY);
+      ctx.lineTo(accentOuterX, accentOuterY);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+}
+
+function drawFrostCenterBanner(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  _y: number,
+  size: number,
+  time: number,
+  zoom: number,
+  skirtTop: number,
+  totalHeight: number,
+  gapHalf: number,
+  gemPulse: number,
+) {
+  const bannerTop = skirtTop + size * 0.04;
+  const bannerBottom = skirtTop + totalHeight * 0.92;
+  const bannerHalfW = gapHalf * 0.75;
+  const wave = Math.sin(time * 2.5) * size * 0.008;
+  const wave2 = Math.sin(time * 3.2 + 0.5) * size * 0.005;
+
+  const bannerGrad = ctx.createLinearGradient(x, bannerTop, x, bannerBottom);
+  bannerGrad.addColorStop(0, "#1a2040");
+  bannerGrad.addColorStop(0.15, "#253060");
+  bannerGrad.addColorStop(0.4, "#304080");
+  bannerGrad.addColorStop(0.7, "#253060");
+  bannerGrad.addColorStop(1, "#1a2040");
+  ctx.fillStyle = bannerGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - bannerHalfW, bannerTop);
+  ctx.lineTo(x + bannerHalfW, bannerTop);
+  ctx.bezierCurveTo(
+    x + bannerHalfW + wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x + bannerHalfW * 0.9 + wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x + bannerHalfW * 0.85, bannerBottom,
+  );
+  ctx.lineTo(x + size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - size * 0.015, bannerBottom - size * 0.04);
+  ctx.lineTo(x - bannerHalfW * 0.85, bannerBottom);
+  ctx.bezierCurveTo(
+    x - bannerHalfW * 0.9 - wave2, bannerTop + (bannerBottom - bannerTop) * 0.65,
+    x - bannerHalfW - wave, bannerTop + (bannerBottom - bannerTop) * 0.35,
+    x - bannerHalfW, bannerTop,
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#80c0ff";
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.stroke();
+
+  const emblemY = (bannerTop + bannerBottom) * 0.5 - size * 0.03;
+  ctx.strokeStyle = `rgba(128, 192, 255, ${0.5 + gemPulse * 0.2})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, emblemY - size * 0.05);
+  ctx.lineTo(x + size * 0.02, emblemY);
+  ctx.lineTo(x, emblemY + size * 0.05);
+  ctx.lineTo(x - size * 0.02, emblemY);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.025, emblemY - size * 0.025);
+  ctx.lineTo(x + size * 0.025, emblemY + size * 0.025);
+  ctx.moveTo(x - size * 0.025, emblemY + size * 0.025);
+  ctx.lineTo(x + size * 0.025, emblemY - size * 0.025);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.018, emblemY);
+  ctx.lineTo(x + size * 0.018, emblemY);
+  ctx.moveTo(x, emblemY - size * 0.018);
+  ctx.lineTo(x, emblemY + size * 0.018);
+  ctx.stroke();
+
+  ctx.fillStyle = "#80c0ff";
+  ctx.shadowColor = "#80c0ff";
+  ctx.shadowBlur = 4 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, emblemY, size * 0.015, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawFrostChain(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gapHalf: number,
+  gemPulse: number,
+  time: number,
+) {
+  const chainY = skirtTop + size * 0.025;
+  const leftAnchor = x - gapHalf + size * 0.01;
+  const rightAnchor = x + gapHalf - size * 0.01;
+  const sag = size * 0.035 + Math.sin(time * 2) * size * 0.004;
+  const linkCount = 7;
+
+  for (let i = 0; i <= linkCount; i++) {
+    const t = i / linkCount;
+    const lx = leftAnchor + t * (rightAnchor - leftAnchor);
+    const sagT = 4 * t * (1 - t);
+    const ly = chainY + sag * sagT;
+
+    const linkGrad = ctx.createRadialGradient(
+      lx - size * 0.002, ly - size * 0.002, 0,
+      lx, ly, size * 0.012,
+    );
+    linkGrad.addColorStop(0, "#a0c0d8");
+    linkGrad.addColorStop(0.5, "#80b0c8");
+    linkGrad.addColorStop(1, "#6090a8");
+    ctx.fillStyle = linkGrad;
+    ctx.beginPath();
+    const linkW = size * 0.011;
+    const linkH = size * 0.007;
+    const angle = i % 2 === 0 ? 0.3 : -0.3;
+    ctx.ellipse(lx, ly, linkW, linkH, angle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#405060";
+    ctx.lineWidth = 0.6 * zoom;
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = `rgba(128, 192, 255, ${0.5 + gemPulse * 0.2})`;
+  ctx.lineWidth = 1.8 * zoom;
+  ctx.shadowColor = "#80c0ff";
+  ctx.shadowBlur = 3 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.moveTo(leftAnchor, chainY);
+  ctx.quadraticCurveTo(x, chainY + sag, rightAnchor, chainY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  for (let side = -1; side <= 1; side += 2) {
+    const anchorX = side === -1 ? leftAnchor : rightAnchor;
+    ctx.fillStyle = "#80b0c8";
+    ctx.shadowColor = "#80c0ff";
+    ctx.shadowBlur = 3 * zoom * gemPulse;
+    ctx.beginPath();
+    ctx.arc(anchorX, chainY, size * 0.014, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#6090a8";
+    ctx.lineWidth = 1 * zoom;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawFrostSkirtBelt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  size: number,
+  zoom: number,
+  skirtTop: number,
+  gemPulse: number,
+) {
+  const beltHalfW = size * 0.43;
+  const beltThick = size * 0.048;
+  const vDip = size * 0.08;
+
+  const beltGrad = ctx.createLinearGradient(
+    x - beltHalfW, skirtTop, x + beltHalfW, skirtTop,
+  );
+  beltGrad.addColorStop(0, "#303048");
+  beltGrad.addColorStop(0.25, "#505070");
+  beltGrad.addColorStop(0.5, "#707098");
+  beltGrad.addColorStop(0.75, "#505070");
+  beltGrad.addColorStop(1, "#303048");
+
+  ctx.fillStyle = beltGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop - beltThick * 0.5);
+  ctx.lineTo(x + beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.lineTo(x, skirtTop + beltThick * 0.5 + vDip);
+  ctx.lineTo(x - beltHalfW, skirtTop + beltThick * 0.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#151525";
+  ctx.lineWidth = 1.2 * zoom;
+  ctx.stroke();
+
+  ctx.strokeStyle = "#80c0ff";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - beltHalfW + size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.lineTo(x + beltHalfW - size * 0.01, skirtTop - beltThick * 0.5 + size * 0.004);
+  ctx.stroke();
+
+  ctx.fillStyle = "#80c0ff";
+  ctx.shadowColor = "#80c0ff";
+  ctx.shadowBlur = 6 * zoom * gemPulse;
+  ctx.beginPath();
+  ctx.arc(x, skirtTop + vDip * 0.35, size * 0.032, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#a0e0ff";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.008, skirtTop + vDip * 0.35 - size * 0.008, size * 0.013, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
 export function drawMatheyKnightHero(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -235,6 +591,8 @@ export function drawMatheyKnightHero(
   ctx.font = `bold ${14 * zoom}px serif`;
   ctx.textAlign = "center";
   ctx.fillText("M", x, y + size * 0.14);
+
+  drawFrostSkirtArmor(ctx, x, y, size, time, zoom, isAttacking, attackIntensity, gemPulse);
 
   // === COLOSSAL SHOULDER PAULDRONS ===
   for (let side = -1; side <= 1; side += 2) {
