@@ -135,6 +135,7 @@ import {
 import { buildPathSegments, minDistanceToPath, type PathSegment } from "../utils/pathUtils";
 import { createSeededRandom } from "../utils/seededRandom";
 import { darkenRgbChannel } from "../utils/colorUtils";
+import { DecorationSpatialGrid, getExclusionRadius } from "../utils/decorationSpacing";
 import {
   getDecorationRenderLayer,
   getDecorationIsoY,
@@ -5115,38 +5116,38 @@ export function usePrincetonTowerDefenseRuntime() {
                   queueTowerPatch(tower.id, { lastAttack: now });
                   addParticles(towerWorldPos, "fire", 5);
                 } else {
-                // Base mortar: single high-arc explosive shell
-                const target = validEnemies[0];
-                const targetAimPos = getEnemyAimPosCached(target);
-                const dx = targetAimPos.x - towerWorldPos.x;
-                const dy = targetAimPos.y - towerWorldPos.y;
-                const rotation = Math.atan2(dx + dy, dx - dy);
-                queuedTowerProjectiles.push({
-                  id: generateId("mrt"),
-                  from: towerWorldPos,
-                  to: targetAimPos,
-                  progress: 0,
-                  type: "mortarShell",
-                  rotation,
-                  arcHeight: 120,
-                  damage,
-                  targetType: "enemy",
-                  isAoE: true,
-                  aoeRadius: splashRadius,
-                  speed: 0.3,
-                });
-                queueTowerPatch(tower.id, { lastAttack: now });
-                queuedTowerEffects.push({
-                  id: generateId("mrt"),
-                  pos: towerWorldPos,
-                  type: "mortar_launch",
-                  progress: 0,
-                  size: 40,
-                  towerId: tower.id,
-                  towerLevel: tower.level,
-                  rotation,
-                });
-                addParticles(towerWorldPos, "smoke", 4);
+                  // Base mortar: single high-arc explosive shell
+                  const target = validEnemies[0];
+                  const targetAimPos = getEnemyAimPosCached(target);
+                  const dx = targetAimPos.x - towerWorldPos.x;
+                  const dy = targetAimPos.y - towerWorldPos.y;
+                  const rotation = Math.atan2(dx + dy, dx - dy);
+                  queuedTowerProjectiles.push({
+                    id: generateId("mrt"),
+                    from: towerWorldPos,
+                    to: targetAimPos,
+                    progress: 0,
+                    type: "mortarShell",
+                    rotation,
+                    arcHeight: 120,
+                    damage,
+                    targetType: "enemy",
+                    isAoE: true,
+                    aoeRadius: splashRadius,
+                    speed: 0.3,
+                  });
+                  queueTowerPatch(tower.id, { lastAttack: now });
+                  queuedTowerEffects.push({
+                    id: generateId("mrt"),
+                    pos: towerWorldPos,
+                    type: "mortar_launch",
+                    progress: 0,
+                    size: 40,
+                    towerId: tower.id,
+                    towerLevel: tower.level,
+                    rotation,
+                  });
+                  addParticles(towerWorldPos, "smoke", 4);
                 }
               }
             }
@@ -5495,8 +5496,8 @@ export function usePrincetonTowerDefenseRuntime() {
                   isReinforcementLancer
                     ? "impact_hit"
                     : troop.type === "knight" ||
-                        troop.type === "reinforcement" ||
-                        troop.type === "cavalry"
+                      troop.type === "reinforcement" ||
+                      troop.type === "cavalry"
                       ? "melee_slash"
                       : troop.type === "armored" || troop.type === "elite"
                         ? "melee_swipe"
@@ -6204,6 +6205,7 @@ export function usePrincetonTowerDefenseRuntime() {
     } else {
       // Generate decorations and cache them
       decorations = [];
+      const spacingGrid = new DecorationSpatialGrid();
       seededRandom = createSeededRandom(mapSeed + 400);
       const currentTheme = mapTheme;
 
@@ -6329,13 +6331,20 @@ export function usePrincetonTowerDefenseRuntime() {
           scaleVar = 0.45;
         }
 
+        const scale = baseScale + seededRandom() * scaleVar;
+        const rotation = seededRandom() * Math.PI * 2;
+        const variant = Math.floor(seededRandom() * 4);
+
+        const exR = getExclusionRadius(type, scale);
+        if (!spacingGrid.tryPlace(gridX, gridY, exR)) continue;
+
         decorations.push({
           type,
           x: worldPos.x,
           y: worldPos.y,
-          scale: baseScale + seededRandom() * scaleVar,
-          rotation: seededRandom() * Math.PI * 2,
-          variant: Math.floor(seededRandom() * 4),
+          scale,
+          rotation,
+          variant,
         });
       }
 
@@ -6349,20 +6358,28 @@ export function usePrincetonTowerDefenseRuntime() {
         const treesInCluster = 8 + Math.floor(seededRandom() * 10);
         const treeTypes = categories.trees;
         for (let t = 0; t < treesInCluster; t++) {
-          const treeX = clusterX + (seededRandom() - 0.5) * 2.5;
-          const treeY = clusterY + (seededRandom() - 0.5) * 2.5;
+          const treeX = clusterX + (seededRandom() - 0.5) * 2.9;
+          const treeY = clusterY + (seededRandom() - 0.5) * 2.9;
           const worldPos = gridToWorld({ x: treeX, y: treeY });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(treeX, treeY, landmarkZones)) continue;
           if (isInSpecialTowerZone(treeX, treeY, 1.9, specialTowerZones)) continue;
 
+          const treeType = treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType;
+          const treeScale = 0.6 + seededRandom() * 0.7;
+          const treeRot = seededRandom() * Math.PI * 2;
+          const treeVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(treeType, treeScale);
+          if (!spacingGrid.tryPlace(treeX, treeY, exR)) continue;
+
           decorations.push({
-            type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+            type: treeType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.6 + seededRandom() * 0.7,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: treeScale,
+            rotation: treeRot,
+            variant: treeVar,
           });
         }
       }
@@ -6377,25 +6394,33 @@ export function usePrincetonTowerDefenseRuntime() {
         const groveSize = 6 + Math.floor(seededRandom() * 8);
         const treeTypes = categories.trees;
         for (let t = 0; t < groveSize; t++) {
-          const tx = groveX + (seededRandom() - 0.5) * 2.2;
-          const ty = groveY + (seededRandom() - 0.5) * 2.2;
+          const tx = groveX + (seededRandom() - 0.5) * 2.62;
+          const ty = groveY + (seededRandom() - 0.5) * 2.62;
           const worldPos = gridToWorld({ x: tx, y: ty });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(tx, ty, landmarkZones)) continue;
           if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) continue;
 
+          const groveType = treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType;
+          const groveScale = 0.65 + seededRandom() * 0.65;
+          const groveRot = seededRandom() * Math.PI * 2;
+          const groveVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(groveType, groveScale);
+          if (!spacingGrid.tryPlace(tx, ty, exR)) continue;
+
           decorations.push({
-            type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+            type: groveType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.65 + seededRandom() * 0.65,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: groveScale,
+            rotation: groveRot,
+            variant: groveVar,
           });
         }
       }
 
-      // Lively village clusters — tighter spacing with surrounding decorations
+      // Lively village clusters — spaced structures with surrounding decorations
       for (let village = 0; village < 12; village++) {
         const villageX = minX + 5 + seededRandom() * (maxX - minX - 10);
         const villageY = minY + 5 + seededRandom() * (maxY - minY - 10);
@@ -6408,22 +6433,30 @@ export function usePrincetonTowerDefenseRuntime() {
         const scatteredTypes = categories.scattered;
         const structCount = 6 + Math.floor(seededRandom() * 7);
 
-        // Core structures — tight cluster
+        // Core structures
         for (let si = 0; si < structCount; si++) {
-          const structX = villageX + (seededRandom() - 0.5) * 2.8;
-          const structY = villageY + (seededRandom() - 0.5) * 2.8;
+          const structX = villageX + (seededRandom() - 0.5) * 3.0;
+          const structY = villageY + (seededRandom() - 0.5) * 3.0;
           const worldPos = gridToWorld({ x: structX, y: structY });
           if (isOnPath(worldPos)) continue;
           if (isInLandmarkCore(structX, structY, landmarkZones)) continue;
           if (isInSpecialTowerZone(structX, structY, 1.9, specialTowerZones)) continue;
 
+          const sType = structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType;
+          const sScale = 0.7 + seededRandom() * 0.5;
+          const sRot = seededRandom() * Math.PI * 0.3 - Math.PI * 0.15;
+          const sVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(sType, sScale);
+          if (!spacingGrid.tryPlace(structX, structY, exR)) continue;
+
           decorations.push({
-            type: structureTypes[Math.floor(seededRandom() * structureTypes.length)] as DecorationType,
+            type: sType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.7 + seededRandom() * 0.5,
-            rotation: seededRandom() * Math.PI * 0.3 - Math.PI * 0.15,
-            variant: Math.floor(seededRandom() * 4),
+            scale: sScale,
+            rotation: sRot,
+            variant: sVar,
           });
         }
 
@@ -6439,16 +6472,23 @@ export function usePrincetonTowerDefenseRuntime() {
           if (isInLandmarkFull(sx, sy, landmarkZones)) continue;
           if (isInSpecialTowerZone(sx, sy, 1.15, specialTowerZones)) continue;
 
-          const scType = scatteredTypes.length > 0
+          const scType = (scatteredTypes.length > 0
             ? scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)]
-            : structureTypes[Math.floor(seededRandom() * structureTypes.length)];
+            : structureTypes[Math.floor(seededRandom() * structureTypes.length)]) as DecorationType;
+          const scScale = 0.5 + seededRandom() * 0.4;
+          const scRot = seededRandom() * Math.PI * 2;
+          const scVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(scType, scScale);
+          if (!spacingGrid.tryPlace(sx, sy, exR)) continue;
+
           decorations.push({
-            type: scType as DecorationType,
+            type: scType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.5 + seededRandom() * 0.4,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: scScale,
+            rotation: scRot,
+            variant: scVar,
           });
         }
 
@@ -6465,13 +6505,21 @@ export function usePrincetonTowerDefenseRuntime() {
           if (isInLandmarkCore(tx, ty, landmarkZones)) continue;
           if (isInSpecialTowerZone(tx, ty, 1.9, specialTowerZones)) continue;
 
+          const ptType = treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType;
+          const ptScale = 0.6 + seededRandom() * 0.5;
+          const ptRot = seededRandom() * Math.PI * 2;
+          const ptVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(ptType, ptScale);
+          if (!spacingGrid.tryPlace(tx, ty, exR)) continue;
+
           decorations.push({
-            type: treeTypes[Math.floor(seededRandom() * treeTypes.length)] as DecorationType,
+            type: ptType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.6 + seededRandom() * 0.5,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: ptScale,
+            rotation: ptRot,
+            variant: ptVar,
           });
         }
       }
@@ -6494,14 +6542,20 @@ export function usePrincetonTowerDefenseRuntime() {
 
         const allDecorTypes = [...categories.trees, ...categories.terrain];
         const fillType = allDecorTypes[Math.floor(seededRandom() * allDecorTypes.length)] as DecorationType;
+        const fillScale = 0.5 + seededRandom() * 0.6;
+        const fillRot = seededRandom() * Math.PI * 2;
+        const fillVar = Math.floor(seededRandom() * 4);
+
+        const exR = getExclusionRadius(fillType, fillScale);
+        if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
 
         decorations.push({
           type: fillType,
           x: worldPos.x,
           y: worldPos.y,
-          scale: 0.5 + seededRandom() * 0.6,
-          rotation: seededRandom() * Math.PI * 2,
-          variant: Math.floor(seededRandom() * 4),
+          scale: fillScale,
+          rotation: fillRot,
+          variant: fillVar,
         });
       }
 
@@ -6526,15 +6580,22 @@ export function usePrincetonTowerDefenseRuntime() {
         if (isInSpecialTowerZone(gridX, gridY, 1.15, specialTowerZones)) continue;
 
         const worldPos = gridToWorld({ x: gridX, y: gridY });
-        const type =
+        const bdType =
           battleDecors[Math.floor(seededRandom() * battleDecors.length)];
+        const bdScale = 0.4 + seededRandom() * 0.55;
+        const bdRot = seededRandom() * Math.PI * 2;
+        const bdVar = Math.floor(seededRandom() * 4);
+
+        const exR = getExclusionRadius(bdType, bdScale);
+        if (!spacingGrid.tryPlace(gridX, gridY, exR)) continue;
+
         decorations.push({
-          type,
+          type: bdType,
           x: worldPos.x,
           y: worldPos.y,
-          scale: 0.4 + seededRandom() * 0.55,
-          rotation: seededRandom() * Math.PI * 2,
-          variant: Math.floor(seededRandom() * 4),
+          scale: bdScale,
+          rotation: bdRot,
+          variant: bdVar,
         });
       }
 
@@ -6572,17 +6633,23 @@ export function usePrincetonTowerDefenseRuntime() {
           if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
 
           const isTree = seededRandom() > 0.3;
-          const type = isTree
+          const edgeType = (isTree
             ? edgeTreeTypes[Math.floor(seededRandom() * edgeTreeTypes.length)]
-            : edgeTerrainTypes[Math.floor(seededRandom() * edgeTerrainTypes.length)];
+            : edgeTerrainTypes[Math.floor(seededRandom() * edgeTerrainTypes.length)]) as DecorationType;
+          const edgeScale = isTree ? 0.7 + seededRandom() * 0.6 : 0.5 + seededRandom() * 0.5;
+          const edgeRot = seededRandom() * Math.PI * 2;
+          const edgeVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(edgeType, edgeScale);
+          if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
 
           decorations.push({
-            type: type as DecorationType,
+            type: edgeType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: isTree ? 0.7 + seededRandom() * 0.6 : 0.5 + seededRandom() * 0.5,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: edgeScale,
+            rotation: edgeRot,
+            variant: edgeVar,
           });
         }
       }
@@ -6612,17 +6679,23 @@ export function usePrincetonTowerDefenseRuntime() {
           if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
           if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
 
-          const type = seededRandom() > 0.3
+          const epInType = (seededRandom() > 0.3
             ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
-            : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)];
+            : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)]) as DecorationType;
+          const epInScale = 0.8 + seededRandom() * 0.7;
+          const epInRot = seededRandom() * Math.PI * 2;
+          const epInVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(epInType, epInScale);
+          if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
 
           decorations.push({
-            type: type as DecorationType,
+            type: epInType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.8 + seededRandom() * 0.7,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: epInScale,
+            rotation: epInRot,
+            variant: epInVar,
           });
         }
 
@@ -6638,17 +6711,23 @@ export function usePrincetonTowerDefenseRuntime() {
           if (isInLandmarkCore(gx, gy, landmarkZones)) continue;
           if (isInSpecialTowerZone(gx, gy, 1.9, specialTowerZones)) continue;
 
-          const type = seededRandom() > 0.25
+          const epMidType = (seededRandom() > 0.25
             ? endpointTreeTypes[Math.floor(seededRandom() * endpointTreeTypes.length)]
-            : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)];
+            : endpointTerrainTypes[Math.floor(seededRandom() * endpointTerrainTypes.length)]) as DecorationType;
+          const epMidScale = 0.65 + seededRandom() * 0.65;
+          const epMidRot = seededRandom() * Math.PI * 2;
+          const epMidVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(epMidType, epMidScale);
+          if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
 
           decorations.push({
-            type: type as DecorationType,
+            type: epMidType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.65 + seededRandom() * 0.65,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: epMidScale,
+            rotation: epMidRot,
+            variant: epMidVar,
           });
         }
 
@@ -6664,16 +6743,22 @@ export function usePrincetonTowerDefenseRuntime() {
           if (isInLandmarkFull(gx, gy, landmarkZones)) continue;
           if (isInSpecialTowerZone(gx, gy, 1.15, specialTowerZones)) continue;
 
-          const scatteredTypes = [...categories.scattered, ...endpointTerrainTypes];
-          const type = scatteredTypes[Math.floor(seededRandom() * scatteredTypes.length)];
+          const epOutTypes = [...categories.scattered, ...endpointTerrainTypes];
+          const epOutType = epOutTypes[Math.floor(seededRandom() * epOutTypes.length)] as DecorationType;
+          const epOutScale = 0.4 + seededRandom() * 0.5;
+          const epOutRot = seededRandom() * Math.PI * 2;
+          const epOutVar = Math.floor(seededRandom() * 4);
+
+          const exR = getExclusionRadius(epOutType, epOutScale);
+          if (!spacingGrid.tryPlace(gx, gy, exR)) continue;
 
           decorations.push({
-            type: type as DecorationType,
+            type: epOutType,
             x: worldPos.x,
             y: worldPos.y,
-            scale: 0.4 + seededRandom() * 0.5,
-            rotation: seededRandom() * Math.PI * 2,
-            variant: Math.floor(seededRandom() * 4),
+            scale: epOutScale,
+            rotation: epOutRot,
+            variant: epOutVar,
           });
         }
       }

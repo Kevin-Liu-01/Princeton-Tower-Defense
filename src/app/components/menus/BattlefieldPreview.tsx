@@ -5716,7 +5716,7 @@ export const BattlefieldPreview: React.FC<{ animTime: number; onSelectFarthestLe
   }, [drawScene, currentScene, isMobile]);
 
   return (
-    <div ref={containerRef} className="flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden">
+    <div ref={containerRef} className="flex-1 flex h-full flex-col items-center justify-center text-center relative overflow-hidden">
       <div className="relative z-10 w-full h-full overflow-hidden">
         {/* Canvas Battle Scene — hidden on mobile for performance */}
         {!isMobile && (

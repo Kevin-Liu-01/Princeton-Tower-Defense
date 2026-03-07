@@ -21,6 +21,7 @@ import {
   Eye,
   BarChart3,
   Shield,
+  Scroll,
   Sparkles,
 } from "lucide-react";
 import type {
@@ -60,18 +61,11 @@ const REGION_ORDER = ["grassland", "swamp", "desert", "winter", "volcanic"] as c
 // =============================================================================
 
 const PrincetonLogo: React.FC = () => {
-  const [pulse, setPulse] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setPulse((p) => (p + 1) % 100), 50);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="relative flex items-center gap-2">
       <div className="absolute -inset-4 blur-2xl opacity-60">
         <div
-          className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40"
-          style={{ transform: `scale(${1 + Math.sin(pulse * 0.1) * 0.1})` }}
+          className="absolute inset-0 bg-gradient-to-r from-orange-600/40 via-amber-400/50 to-orange-600/40 animate-pulse"
         />
       </div>
       <PrincetonTDLogo size="h-11 w-11" />
@@ -187,7 +181,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const [showCodex, setShowCodex] = useState(false);
   const [codexTab, setCodexTab] = useState<CodexTabId>("towers");
   const [showCreator, setShowCreator] = useState(false);
-  const [showBattlefieldPreview, setShowBattlefieldPreview] = useState(false);
+  const [showBattlefieldPreview, setShowBattlefieldPreview] = useState<boolean | null>(null);
   const [animTime, setAnimTime] = useState(0);
   const animTimeRef = useRef(0);
   const [mapHeight, setMapHeight] = useState(500);
@@ -198,6 +192,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const lastCanvasSizeRef = useRef({ w: 0, h: 0 });
   const dragRef = useRef({
     hasDragged: false,
+    isDragging: false,
     dragStartX: 0,
     dragStartY: 0,
     scrollStartLeft: 0,
@@ -205,8 +200,10 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     resetTimeoutId: 0 as number | undefined,
   });
 
-  // Drag-to-scroll state
-  const [isDragging, setIsDragging] = useState(false);
+  // Drag cursor style — only the cursor visual needs React state; all other
+  // drag logic reads from `dragRef.current.isDragging` to avoid re-renders on
+  // every mouse-move.
+  const [dragCursor, setDragCursor] = useState(false);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -307,9 +304,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       setSelectedSpells([...selectedSpells, spell]);
   };
 
-  const drawMapRef = useRef<() => void>(() => {
-    // Initialized by render below.
-  });
+  const drawMapRef = useRef<() => void>(() => {});
 
   drawMapRef.current = () => {
     drawWorldMapCanvas({
@@ -341,10 +336,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     };
   }, []);
 
+  // Track whether the preview overlay needs animTime state updates.
+  // Reading a ref inside rAF avoids coupling the effect to React state.
+  // (assigned after showPreview is derived, below)
+  const showPreviewRef = useRef(false);
+
   useEffect(() => {
     let animationId: number;
     let lastDrawTime = 0;
-    let lastStateTime = 0;
+    let lastPreviewTime = 0;
+
     const animate = (timestamp: number) => {
       // Canvas drawing throttled to ~50fps (20ms)
       if (timestamp - lastDrawTime > 20) {
@@ -352,11 +353,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
         lastDrawTime = timestamp;
         drawMapRef.current();
       }
+
       // React state for BattlefieldPreview (~10fps)
-      if (timestamp - lastStateTime > 100) {
+      if (showPreviewRef.current && timestamp - lastPreviewTime > 100) {
         setAnimTime(timestamp / 1000);
-        lastStateTime = timestamp;
+        lastPreviewTime = timestamp;
       }
+
       animationId = requestAnimationFrame(animate);
     };
     animate(0);
@@ -364,6 +367,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragRef.current.isDragging) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -411,16 +415,17 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    setIsDragging(true);
+    dragRef.current.isDragging = true;
     dragRef.current.hasDragged = false;
     dragRef.current.dragStartX = e.pageX - container.offsetLeft;
     dragRef.current.dragStartY = e.pageY - container.offsetTop;
     dragRef.current.scrollStartLeft = container.scrollLeft;
     dragRef.current.scrollStartTop = container.scrollTop;
+    setDragCursor(true);
   };
 
   const handleDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+    if (!dragRef.current.isDragging) return;
     e.preventDefault();
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -436,11 +441,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   };
 
   const handleDragEnd = () => {
-    setIsDragging(false);
+    dragRef.current.isDragging = false;
+    setDragCursor(false);
     if (dragRef.current.resetTimeoutId) {
       window.clearTimeout(dragRef.current.resetTimeoutId);
     }
-    // Reset drag marker after a short delay to allow click handler to check it.
     dragRef.current.resetTimeoutId = window.setTimeout(() => {
       dragRef.current.hasDragged = false;
       dragRef.current.resetTimeoutId = undefined;
@@ -451,16 +456,17 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     const container = scrollContainerRef.current;
     if (!container || e.touches.length !== 1) return;
-    setIsDragging(true);
+    dragRef.current.isDragging = true;
     dragRef.current.hasDragged = false;
     dragRef.current.dragStartX = e.touches[0].pageX - container.offsetLeft;
     dragRef.current.dragStartY = e.touches[0].pageY - container.offsetTop;
     dragRef.current.scrollStartLeft = container.scrollLeft;
     dragRef.current.scrollStartTop = container.scrollTop;
+    setDragCursor(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+    if (!dragRef.current.isDragging) return;
     const container = scrollContainerRef.current;
     if (!container || e.touches.length !== 1) return;
     const x = e.touches[0].pageX - container.offsetLeft;
@@ -475,7 +481,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
+    dragRef.current.isDragging = false;
+    setDragCursor(false);
     if (dragRef.current.resetTimeoutId) {
       window.clearTimeout(dragRef.current.resetTimeoutId);
     }
@@ -495,7 +502,20 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     [levelStats]
   );
 
-  const showPreview = !selectedLevel && (showBattlefieldPreview || !hasBattles);
+  // Wait for localStorage hydration before trusting hasBattles.
+  // useLocalStorage initialises with DEFAULT (levelStats: {}) and hydrates
+  // via an effect, so hasBattles is unreliable on the very first render.
+  // The ref flips to true inside the same micro-task as the hydration effect,
+  // meaning the next render that has real data will also see postHydration=true.
+  const postHydrationRef = useRef(false);
+  useEffect(() => { postHydrationRef.current = true; }, []);
+
+  const showPreview = !selectedLevel && (
+    showBattlefieldPreview !== null
+      ? showBattlefieldPreview
+      : postHydrationRef.current && !hasBattles
+  );
+  showPreviewRef.current = showPreview;
 
   const canStart = selectedLevel && selectedHero && selectedSpells.length === 3;
   const hasAlternateTooltipOpen = Boolean(
@@ -880,7 +900,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               <div className="flex-1 flex flex-col overflow-auto p-2 relative z-10">
                 {/* Campaign header + progress */}
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Shield size={14} className="text-amber-400" />
+                  <Scroll size={14} className="text-amber-400" />
                   <span className="text-xs font-bold text-amber-100 tracking-wide">Campaign</span>
                   <div className="flex-1" />
                   <div className="flex items-center gap-1">
@@ -1429,55 +1449,48 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     </button>
                   </div>
                 </div>
-              ) : showPreview ? (
-                <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                  <BattlefieldPreview
-                    animTime={animTime}
-                    onSelectFarthestLevel={() => {
-                      const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
-                      if (unlockedLevelsList.length > 0) {
-                        const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
-                        handleLevelClick(farthestLevel.id);
-                      }
-                    }}
-                  />
-                  {hasBattles && (
-                    <button
-                      onClick={() => setShowBattlefieldPreview(false)}
-                      className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 hover:brightness-110"
-                      style={{
-                        background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                        border: `1px solid ${GOLD.border25}`,
-                        boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
-                      }}
-                      title="Show Campaign Stats"
-                    >
-                      <BarChart3 size={12} className="text-amber-400/80" />
-                      <span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Stats</span>
-                    </button>
-                  )}
-                </div>
               ) : (
                 <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-                  <button
-                    onClick={() => setShowBattlefieldPreview(true)}
-                    className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 hover:brightness-110"
-                    style={{
-                      background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
-                      border: `1px solid ${GOLD.border25}`,
-                      boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
-                    }}
-                    title="Show Battle Scene"
-                  >
-                    <Eye size={12} className="text-amber-400/80" />
-                    <span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Preview</span>
-                  </button>
+                  {/* CampaignOverview always renders as the base layer */}
                   <CampaignOverview
                     levelStars={levelStars}
                     levelStats={levelStats}
                     unlockedMaps={unlockedMaps}
                     onSelectLevel={handleLevelClick}
                   />
+
+                  {/* BattlefieldPreview overlays on top (first-time users or manual toggle) */}
+                  {showPreview && (
+                    <div className="absolute h-full inset-0 z-20 bg-[#0a0806]">
+                      <BattlefieldPreview
+                        animTime={animTime}
+                        onSelectFarthestLevel={() => {
+                          const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
+                          if (unlockedLevelsList.length > 0) {
+                            const farthestLevel = unlockedLevelsList[unlockedLevelsList.length - 1];
+                            handleLevelClick(farthestLevel.id);
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Toggle button */}
+                  <button
+                    onClick={() => setShowBattlefieldPreview(!showPreview)}
+                    className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 hover:brightness-110"
+                    style={{
+                      background: `linear-gradient(135deg, ${PANEL.bgWarmLight}, ${PANEL.bgWarmMid})`,
+                      border: `1px solid ${GOLD.border25}`,
+                      boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
+                    }}
+                    title={showPreview ? "Show Campaign Stats" : "Show Battle Scene"}
+                  >
+                    {showPreview
+                      ? <><BarChart3 size={12} className="text-amber-400/80" /><span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Stats</span></>
+                      : <><Eye size={12} className="text-amber-400/80" /><span className="text-[9px] font-bold text-amber-300/80 uppercase tracking-wider">Preview</span></>
+                    }
+                  </button>
                 </div>
               )}
             </div>
@@ -1497,7 +1510,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               <div
                 ref={scrollContainerRef}
                 className="absolute h-full inset-0 overflow-auto z-10"
-                style={{ cursor: isDragging ? 'grabbing' : 'grab', touchAction: 'none', background: '#0a0806' }}
+                style={{ cursor: dragCursor ? 'grabbing' : 'grab', touchAction: 'none', background: '#0a0806' }}
                 onMouseDown={handleDragStart}
                 onMouseMove={handleDragMove}
                 onMouseUp={handleDragEnd}
@@ -1518,7 +1531,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                   <canvas
                     ref={canvasRef}
                     className="block game-start-fade"
-                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                    style={{ cursor: dragCursor ? 'grabbing' : 'grab' }}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={() => setHoveredLevel(null)}
                     onClick={handleClick}
@@ -1593,49 +1606,61 @@ export const WorldMap: React.FC<WorldMapProps> = ({
               }}>
                 <div ref={bottomPanelRef} className="flex w-full mt-auto gap-3 pointer-events-auto items-stretch">
                   {/* --- Flavor / Battle Summary Panel --- */}
-                  <div className="hidden sm:flex sm:flex-col w-40 flex-shrink-0 relative rounded-xl"
+                  <div className="hidden sm:flex sm:flex-col w-44 flex-shrink-0 relative rounded-xl"
                     style={{
                       background: 'linear-gradient(180deg, rgba(41,32,20,0.97) 0%, rgba(28,22,15,0.99) 100%)',
                       border: '1.5px solid rgba(180,140,60,0.45)',
                       boxShadow: 'inset 0 0 20px rgba(180,140,60,0.06), 0 4px 24px rgba(0,0,0,0.5)',
                     }}>
                     <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.12)' }} />
-                    {/* Header — matches HeroSelector header height */}
-                    <div className="px-2 sm:px-3 py-1.5 sm:py-2 relative"
-                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.18), rgba(120,80,20,0.08), transparent)' }}>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Book size={11} className="text-amber-400 sm:w-[13px] sm:h-[13px]" />
-                        <span className="text-[8px] sm:text-[9px] text-nowrap font-bold text-amber-300/90 tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                          Codex
-                        </span>
+                    <div className="px-2 sm:px-3 py-2 sm:py-2.5 relative"
+                      style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.22), rgba(120,80,20,0.1), transparent)' }}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Book size={13} className="text-amber-400 shrink-0" />
+                          <span className="text-[9px] sm:text-[10px] text-nowrap font-bold text-amber-300 tracking-[0.2em] uppercase">
+                            Codex
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => openCodexTo("guide")}
+                          className="flex items-center justify-center w-5 h-5 rounded-md text-blue-300/80 transition-all hover:brightness-150 hover:scale-110"
+                          style={{
+                            background: 'rgba(30,50,100,0.3)',
+                            border: '1px solid rgba(80,120,200,0.25)',
+                          }}
+                          title="Guide"
+                        >
+                          <Book size={10} />
+                        </button>
                       </div>
                       <div className="absolute bottom-0 left-2 sm:left-3 right-2 sm:right-3 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.35) 20%, rgba(255,200,80,0.45) 50%, rgba(180,140,60,0.35) 80%, transparent)' }} />
                     </div>
-                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
-                      <div className="grid grid-cols-2 gap-1">
+                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-2">
+                      <div className="grid grid-cols-2 gap-1.5">
                         {([
-                          { label: "Towers", tab: "towers" as CodexTabId, icon: <Shield size={10} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)", span: false },
-                          { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={10} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)", span: false },
-                          { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={10} />, color: "text-purple-300", bg: "rgba(80,40,120,0.25)", border: "rgba(140,80,200,0.22)", span: false },
-                          { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={10} />, color: "text-red-300", bg: "rgba(100,30,30,0.25)", border: "rgba(180,60,60,0.22)", span: false },
-                          { label: "Special", tab: "special_towers" as CodexTabId, icon: <Star size={10} />, color: "text-yellow-300", bg: "rgba(100,80,20,0.25)", border: "rgba(200,160,40,0.22)", span: false },
-                          { label: "Hazards", tab: "hazards" as CodexTabId, icon: <AlertTriangle size={10} />, color: "text-orange-300", bg: "rgba(100,50,15,0.25)", border: "rgba(200,100,30,0.22)", span: false },
-                          { label: "Guide", tab: "guide" as CodexTabId, icon: <Book size={10} />, color: "text-blue-300", bg: "rgba(30,50,100,0.25)", border: "rgba(80,120,200,0.22)", span: true },
+                          { label: "Towers", tab: "towers" as CodexTabId, icon: <Shield size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
+                          { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
+                          { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={11} />, color: "text-purple-300", bg: "rgba(80,40,120,0.25)", border: "rgba(140,80,200,0.22)" },
+                          { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={11} />, color: "text-red-300", bg: "rgba(100,30,30,0.25)", border: "rgba(180,60,60,0.22)" },
+                          { label: "Special", tab: "special_towers" as CodexTabId, icon: <Star size={11} />, color: "text-yellow-300", bg: "rgba(100,80,20,0.25)", border: "rgba(200,160,40,0.22)" },
+                          { label: "Hazards", tab: "hazards" as CodexTabId, icon: <AlertTriangle size={11} />, color: "text-orange-300", bg: "rgba(100,50,15,0.25)", border: "rgba(200,100,30,0.22)" },
                         ]).map((item) => (
                           <button
                             key={item.tab}
                             onClick={() => openCodexTo(item.tab)}
-                            className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-[8px] font-semibold ${item.color} tracking-wide uppercase transition-all hover:brightness-130 hover:scale-105 ${item.span ? "col-span-2" : ""}`}
+                            className={`flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-md text-[8px] font-semibold ${item.color} tracking-wide uppercase transition-all hover:brightness-130 hover:scale-105`}
                             style={{
                               background: `linear-gradient(135deg, ${item.bg}, rgba(30,22,12,0.2))`,
                               border: `1px solid ${item.border}`,
                             }}
                           >
-                            {item.icon}
+                            <span className="shrink-0 flex items-center justify-center w-[11px] h-[11px]">{item.icon}</span>
                             {item.label}
                           </button>
                         ))}
                       </div>
+                      <div className="w-full h-px my-0.5" style={{ background: 'linear-gradient(90deg, transparent, rgba(180,140,60,0.25) 20%, rgba(255,200,80,0.3) 50%, rgba(180,140,60,0.25) 80%, transparent)' }} />
                       <button
                         onClick={() => {
                           const unlockedLevelsList = WORLD_LEVELS.filter(l => isLevelUnlocked(l.id));
@@ -1644,14 +1669,14 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                             handleLevelClick(farthestLevel.id);
                           }
                         }}
-                        className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 transition-all hover:brightness-110 hover:scale-[1.02]"
+                        className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2.5 transition-all hover:brightness-125 hover:scale-[1.03] active:scale-[0.98]"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(140,95,20,0.5), rgba(100,65,12,0.4))',
-                          border: '1px solid rgba(180,140,60,0.3)',
-                          boxShadow: 'inset 0 1px 0 rgba(255,200,80,0.08)',
+                          background: 'linear-gradient(135deg, rgba(160,110,25,0.55), rgba(120,75,15,0.45))',
+                          border: '1px solid rgba(200,160,60,0.4)',
+                          boxShadow: 'inset 0 1px 0 rgba(255,210,100,0.12), 0 2px 8px rgba(0,0,0,0.3)',
                         }}>
-                        <Swords size={12} className="text-amber-400" />
-                        <span className="text-[9px] font-bold text-amber-300 tracking-wider uppercase">Defend the Realm</span>
+                        <Swords size={13} className="text-amber-400 shrink-0" />
+                        <span className="text-[9px] font-bold text-amber-200 tracking-wider uppercase">Defend the Realm</span>
                       </button>
                     </div>
                   </div>

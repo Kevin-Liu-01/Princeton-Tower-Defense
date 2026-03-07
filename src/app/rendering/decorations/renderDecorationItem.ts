@@ -9,6 +9,7 @@ import {
   drawBrickFace as sharedBrickFace,
 } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import { drawIsoGothicWindow } from "../towers/towerHelpers";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -1654,67 +1655,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.ellipse(cx + 6 * s, cy + 8 * s, 42 * s, 18 * s, 0.15, 0, Math.PI * 2);
       ctx.fill();
 
-      // Shared helpers
-      const hutWin = (
-        wx: number,
-        wy: number,
-        ww: number,
-        wh: number,
-        shutters: boolean = false,
-      ) => {
-        if (shutters) {
-          ctx.fillStyle = "#3A2A1A";
-          ctx.fillRect(
-            wx - ww - 1.5 * s,
-            wy - wh * 0.3,
-            1.5 * s,
-            wh * 0.8 + ww * 0.5,
-          );
-          ctx.fillStyle = "#4A3828";
-          ctx.fillRect(wx + ww, wy - wh * 0.3, 1.5 * s, wh * 0.8 + ww * 0.5);
-        }
-        ctx.fillStyle = "#1A1008";
-        ctx.beginPath();
-        ctx.moveTo(wx - ww, wy + wh * 0.5);
-        ctx.lineTo(wx - ww, wy - wh * 0.3);
-        ctx.arc(wx, wy - wh * 0.3, ww, Math.PI, 0);
-        ctx.lineTo(wx + ww, wy + wh * 0.5);
-        ctx.closePath();
-        ctx.fill();
-        const wG = ctx.createRadialGradient(wx, wy, 0, wx, wy, wh * 0.8);
-        wG.addColorStop(0, "rgba(255,200,100,0.55)");
-        wG.addColorStop(0.5, "rgba(220,160,60,0.35)");
-        wG.addColorStop(1, "rgba(180,120,40,0.1)");
-        ctx.fillStyle = wG;
-        ctx.beginPath();
-        ctx.moveTo(wx - ww + 0.5 * s, wy + wh * 0.45);
-        ctx.lineTo(wx - ww + 0.5 * s, wy - wh * 0.25);
-        ctx.arc(wx, wy - wh * 0.25, ww - 0.5 * s, Math.PI, 0);
-        ctx.lineTo(wx + ww - 0.5 * s, wy + wh * 0.45);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = "#3A2518";
-        ctx.lineWidth = 0.8 * s;
-        ctx.beginPath();
-        ctx.moveTo(wx - ww, wy + wh * 0.5);
-        ctx.lineTo(wx - ww, wy - wh * 0.3);
-        ctx.arc(wx, wy - wh * 0.3, ww, Math.PI, 0);
-        ctx.lineTo(wx + ww, wy + wh * 0.5);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(wx, wy - wh * 0.3 - ww);
-        ctx.lineTo(wx, wy + wh * 0.5);
-        ctx.stroke();
-        ctx.fillStyle = "#3A2518";
-        ctx.fillRect(
-          wx - ww - 0.3 * s,
-          wy + wh * 0.5,
-          ww * 2 + 0.6 * s,
-          1.2 * s,
-        );
-      };
-
       const hutDoor = (dx: number, dy: number, dw: number, dh: number) => {
         ctx.fillStyle = "#5A4A38";
         ctx.beginPath();
@@ -2018,9 +1958,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Door
         hutDoor(cx + iW * 0.35, cy + iD * 0.35, 7 * s, 14 * s);
 
-        // Windows
-        hutWin(cx + iW * 0.72, cy - wH * 0.4 + iD * 0.15, 3.5 * s, 6 * s, true);
-        hutWin(cx - iW * 0.5, cy - wH * 0.45, 3 * s, 5.5 * s, true);
+        // Windows — isometric gothic flush with walls
+        drawIsoGothicWindow(ctx, cx + iW * 0.72, cy - wH * 0.4 + iD * 0.15, 5, 8, "right", s,
+          "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+        drawIsoGothicWindow(ctx, cx - iW * 0.5, cy - wH * 0.45, 4.5, 7.5, "left", s,
+          "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
         // Roof
         hutRoof(
@@ -2037,36 +1979,46 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Chimney
         hutChimney(cx + iW * 0.35, cy - wH - rH - 5 * s, rH * 0.55);
       } else if (v === 1) {
-        // === WATCHTOWER ===
-        const tW = 16 * s,
-          tH = 38 * s,
-          batH = 5 * s;
+        // === WATCHTOWER — tall isometric stone tower with battlements ===
+        const tW = 18 * s,
+          tH = 42 * s,
+          batH = 6 * s;
         const tiW = tW * ISO_COS,
           tiD = tiW * ISO_Y_RATIO;
 
-        // Platform
+        // Platform — stepped stone base
         ctx.fillStyle = "#3E3028";
         ctx.beginPath();
-        ctx.moveTo(cx, cy + tiD + 3 * s);
-        ctx.lineTo(cx + tiW + 5 * s, cy + 3 * s);
-        ctx.lineTo(cx, cy - tiD + 3 * s);
-        ctx.lineTo(cx - tiW - 5 * s, cy + 3 * s);
+        ctx.moveTo(cx, cy + tiD + 4 * s);
+        ctx.lineTo(cx + tiW + 6 * s, cy + 4 * s);
+        ctx.lineTo(cx, cy - tiD + 4 * s);
+        ctx.lineTo(cx - tiW - 6 * s, cy + 4 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Second step
+        ctx.fillStyle = "#4A3A2C";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + tiD + 2 * s);
+        ctx.lineTo(cx + tiW + 4 * s, cy + 2 * s);
+        ctx.lineTo(cx, cy - tiD + 2 * s);
+        ctx.lineTo(cx - tiW - 4 * s, cy + 2 * s);
         ctx.closePath();
         ctx.fill();
 
-        // Left wall
+        // Left wall with stone texture
         hutStoneWall(
           [cx - tiW, cy],
           [cx, cy + tiD],
           [cx, cy + tiD - tH],
           [cx - tiW, cy - tH],
           "#504840",
-          10,
+          12,
         );
 
-        // Right wall
+        // Right wall with gradient + stone mortar
         const twG = ctx.createLinearGradient(cx, cy, cx + tiW, cy);
         twG.addColorStop(0, "#7A6A58");
+        twG.addColorStop(0.5, "#6A5A48");
         twG.addColorStop(1, "#5A4A3C");
         ctx.fillStyle = twG;
         ctx.beginPath();
@@ -2078,32 +2030,45 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fill();
         ctx.strokeStyle = "rgba(30,20,10,0.2)";
         ctx.lineWidth = 0.5 * s;
-        for (let r = 0; r < 10; r++) {
-          const t = (r + 0.5) / 10;
+        for (let r = 0; r < 12; r++) {
+          const t = (r + 0.5) / 12;
           const ly = cy + tiD + (cy + tiD - tH - cy - tiD) * t;
           const ry = cy + (cy - tH - cy) * t;
           ctx.beginPath();
           ctx.moveTo(cx + 1 * s, ly);
           ctx.lineTo(cx + tiW - 1 * s, ry);
           ctx.stroke();
+          const cols = 2 + (r % 2);
+          for (let c = 1; c <= cols; c++) {
+            const ct = c / (cols + 1);
+            const jx = cx + 1 * s + (tiW - 2 * s) * ct;
+            const jy = ly + (ry - ly) * ct;
+            ctx.beginPath();
+            ctx.moveTo(jx, jy);
+            ctx.lineTo(jx, jy - tH / 12 * 0.8);
+            ctx.stroke();
+          }
         }
 
-        // Stone bands
-        ctx.fillStyle = "#4A3A2A";
+        // Stone band dividers at 1/3 and 2/3 height
         for (const frac of [0.33, 0.66]) {
           const bandY = cy - tH * frac;
+          // Right band
+          ctx.fillStyle = "#4A3A2A";
           ctx.beginPath();
           ctx.moveTo(cx, cy + tiD - tH * frac);
-          ctx.lineTo(cx + tiW + 1 * s, bandY);
-          ctx.lineTo(cx + tiW + 1 * s, bandY + 2 * s);
-          ctx.lineTo(cx, cy + tiD - tH * frac + 2 * s);
+          ctx.lineTo(cx + tiW + 1.5 * s, bandY);
+          ctx.lineTo(cx + tiW + 1.5 * s, bandY + 2.5 * s);
+          ctx.lineTo(cx, cy + tiD - tH * frac + 2.5 * s);
           ctx.closePath();
           ctx.fill();
+          // Left band
+          ctx.fillStyle = "#3A2A1A";
           ctx.beginPath();
-          ctx.moveTo(cx - tiW - 1 * s, bandY);
+          ctx.moveTo(cx - tiW - 1.5 * s, bandY);
           ctx.lineTo(cx, cy + tiD - tH * frac);
-          ctx.lineTo(cx, cy + tiD - tH * frac + 2 * s);
-          ctx.lineTo(cx - tiW - 1 * s, bandY + 2 * s);
+          ctx.lineTo(cx, cy + tiD - tH * frac + 2.5 * s);
+          ctx.lineTo(cx - tiW - 1.5 * s, bandY + 2.5 * s);
           ctx.closePath();
           ctx.fill();
         }
@@ -2111,18 +2076,23 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Door
         hutDoor(cx + tiW * 0.4, cy + tiD * 0.25, 5 * s, 11 * s);
 
-        // Arrow slits
+        // Isometric arrow slits on right wall (properly skewed)
         for (let w = 0; w < 3; w++) {
-          const wy = cy - tH * (0.2 + w * 0.25);
-          const wx = cx + tiW * 0.55 - w * tiD * 0.12;
-          ctx.fillStyle = "#1A1008";
-          ctx.fillRect(wx - 1 * s, wy - 3.5 * s, 2 * s, 7 * s);
-          ctx.fillStyle = "rgba(200,150,70,0.35)";
-          ctx.fillRect(wx - 0.7 * s, wy - 3 * s, 1.4 * s, 6 * s);
+          const slitT = 0.2 + w * 0.25;
+          const slitCX = cx + tiW * 0.55;
+          const slitCY = cy - tH * slitT + tiD * (0.5 - slitT * 0.5);
+          drawIsoGothicWindow(ctx, slitCX, slitCY, 2, 5, "right", s,
+            "rgba(200, 150, 70", 0.25,
+            { frame: "#2a2018", void: "#1A1008", sill: "#4a3a2a" });
         }
 
-        // Left window
-        hutWin(cx - tiW * 0.5, cy - tH * 0.55, 3 * s, 6 * s);
+        // Left wall window — proper isometric gothic window
+        drawIsoGothicWindow(ctx, cx - tiW * 0.5, cy - tH * 0.55, 5, 8, "left", s,
+          "rgba(255, 200, 100", 0.35);
+
+        // Second left wall window (lower)
+        drawIsoGothicWindow(ctx, cx - tiW * 0.5, cy - tH * 0.3, 4, 6, "left", s,
+          "rgba(255, 180, 80", 0.25);
 
         // Battlements top
         const batBase = cy - tH;
@@ -2130,19 +2100,29 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.fillStyle = "#6A5A48";
         ctx.beginPath();
         ctx.moveTo(cx, batBase - batH - tiD);
-        ctx.lineTo(cx + tiW + 2 * s, batBase - batH);
+        ctx.lineTo(cx + tiW + 3 * s, batBase - batH);
         ctx.lineTo(cx, batBase + tiD - batH);
-        ctx.lineTo(cx - tiW - 2 * s, batBase - batH);
+        ctx.lineTo(cx - tiW - 3 * s, batBase - batH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Walkway inner floor
+        ctx.fillStyle = "#5A4A38";
+        ctx.beginPath();
+        ctx.moveTo(cx, batBase - tiD * 0.5);
+        ctx.lineTo(cx + tiW * 0.6, batBase);
+        ctx.lineTo(cx, batBase + tiD * 0.5);
+        ctx.lineTo(cx - tiW * 0.6, batBase);
         ctx.closePath();
         ctx.fill();
 
         // Isometric merlons along front edge
-        const mW = 3 * s,
-          mH = 5 * s,
-          mD = 2 * s;
+        const mW = 3.5 * s,
+          mH = 6 * s,
+          mD = 2.5 * s;
         for (let m = 0; m < 4; m++) {
           const t = (m + 0.25) / 4;
-          const mx = cx - tiW - 2 * s + (tiW * 2 + 4 * s) * t;
+          const mx = cx - tiW - 3 * s + (tiW * 2 + 6 * s) * t;
           const my = batBase - batH;
           // Front face
           ctx.fillStyle = "#7A6A58";
@@ -2162,27 +2142,36 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           ctx.lineTo(mx, my - mH + mD * 0.3);
           ctx.closePath();
           ctx.fill();
+          // Side face for depth
+          ctx.fillStyle = "#6A5A48";
+          ctx.beginPath();
+          ctx.moveTo(mx + mW * 0.5, my - mH);
+          ctx.lineTo(mx + mW * 0.5, my);
+          ctx.lineTo(mx + mW * 0.5 + mD * 0.4, my - mD * 0.3);
+          ctx.lineTo(mx + mW * 0.5 + mD * 0.4, my - mH - mD * 0.3);
+          ctx.closePath();
+          ctx.fill();
         }
 
         // Isometric merlons along right edge
         for (let m = 0; m < 3; m++) {
           const t = (m + 0.3) / 3;
-          const mx = cx + (tiW + 2 * s) * t;
+          const mx = cx + (tiW + 3 * s) * t;
           const my = batBase - batH + tiD * (1 - t);
           // Right face (visible side)
           ctx.fillStyle = "#5A4A3C";
           ctx.beginPath();
           ctx.moveTo(mx, my);
           ctx.lineTo(mx, my - mH);
-          ctx.lineTo(mx + mW * 0.4, my - mH - mD * 0.5);
-          ctx.lineTo(mx + mW * 0.4, my - mD * 0.5);
+          ctx.lineTo(mx + mW * 0.45, my - mH - mD * 0.5);
+          ctx.lineTo(mx + mW * 0.45, my - mD * 0.5);
           ctx.closePath();
           ctx.fill();
           // Front face
           ctx.fillStyle = "#6A5A48";
           ctx.beginPath();
-          ctx.moveTo(mx - mW * 0.4, my + mD * 0.3);
-          ctx.lineTo(mx - mW * 0.4, my + mD * 0.3 - mH);
+          ctx.moveTo(mx - mW * 0.45, my + mD * 0.3);
+          ctx.lineTo(mx - mW * 0.45, my + mD * 0.3 - mH);
           ctx.lineTo(mx, my - mH);
           ctx.lineTo(mx, my);
           ctx.closePath();
@@ -2190,39 +2179,85 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           // Top
           ctx.fillStyle = "#7A6A58";
           ctx.beginPath();
-          ctx.moveTo(mx - mW * 0.4, my + mD * 0.3 - mH);
+          ctx.moveTo(mx - mW * 0.45, my + mD * 0.3 - mH);
           ctx.lineTo(mx, my - mH - mD * 0.5);
-          ctx.lineTo(mx + mW * 0.4, my - mH - mD * 0.5);
+          ctx.lineTo(mx + mW * 0.45, my - mH - mD * 0.5);
           ctx.lineTo(mx, my - mH);
           ctx.closePath();
           ctx.fill();
         }
 
-        // Conical roof — single gradient fill, zero internal edges
-        const roofBot = batBase - batH + 6 * s;
-        const pk = roofBot - 20 * s;
-        const cLX = cx - tiW - 4 * s,
-          cRX = cx + tiW + 4 * s;
-        const cFY = roofBot + tiD;
+        // Merlons along left edge
+        for (let m = 0; m < 3; m++) {
+          const t = (m + 0.3) / 3;
+          const mx = cx - (tiW + 3 * s) * t;
+          const my = batBase - batH + tiD * (1 - t);
+          ctx.fillStyle = "#4A3A30";
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(mx, my - mH);
+          ctx.lineTo(mx - mW * 0.45, my - mH - mD * 0.5);
+          ctx.lineTo(mx - mW * 0.45, my - mD * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#5A4A3C";
+          ctx.beginPath();
+          ctx.moveTo(mx + mW * 0.45, my + mD * 0.3);
+          ctx.lineTo(mx + mW * 0.45, my + mD * 0.3 - mH);
+          ctx.lineTo(mx, my - mH);
+          ctx.lineTo(mx, my);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#6A5A48";
+          ctx.beginPath();
+          ctx.moveTo(mx + mW * 0.45, my + mD * 0.3 - mH);
+          ctx.lineTo(mx, my - mH - mD * 0.5);
+          ctx.lineTo(mx - mW * 0.45, my - mH - mD * 0.5);
+          ctx.lineTo(mx, my - mH);
+          ctx.closePath();
+          ctx.fill();
+        }
 
-        const crG = ctx.createLinearGradient(cLX, roofBot, cRX, roofBot);
-        crG.addColorStop(0, "#3A2E20");
-        crG.addColorStop(0.45, "#4A3828");
-        crG.addColorStop(1, "#6A5840");
-        ctx.fillStyle = crG;
+        // Conical roof — three-face isometric pyramid
+        const roofBot = batBase - batH + 6 * s;
+        const pk = roofBot - 22 * s;
+        const cLX = cx - tiW - 5 * s,
+          cRX = cx + tiW + 5 * s;
+        const cFY = roofBot + tiD + 2 * s;
+
+        // Left slope (dark)
+        ctx.fillStyle = "#3A2E20";
         ctx.beginPath();
         ctx.moveTo(cx, pk);
         ctx.lineTo(cLX, roofBot);
         ctx.lineTo(cx, cFY);
+        ctx.closePath();
+        ctx.fill();
+        // Right slope (lit) with gradient
+        const crG = ctx.createLinearGradient(cx, pk, cRX, roofBot);
+        crG.addColorStop(0, "#6A5840");
+        crG.addColorStop(1, "#4A3828");
+        ctx.fillStyle = crG;
+        ctx.beginPath();
+        ctx.moveTo(cx, pk);
+        ctx.lineTo(cRX, roofBot);
+        ctx.lineTo(cx, cFY);
+        ctx.closePath();
+        ctx.fill();
+        // Front slope
+        ctx.fillStyle = "#4A3828";
+        ctx.beginPath();
+        ctx.moveTo(cx, pk);
+        ctx.lineTo(cLX, roofBot);
         ctx.lineTo(cRX, roofBot);
         ctx.closePath();
         ctx.fill();
 
         // Shingle lines
-        ctx.strokeStyle = "rgba(20,10,5,0.13)";
+        ctx.strokeStyle = "rgba(20,10,5,0.15)";
         ctx.lineWidth = 0.6 * s;
-        for (let r = 0; r < 6; r++) {
-          const t = (r + 1) / 7;
+        for (let r = 0; r < 7; r++) {
+          const t = (r + 1) / 8;
           ctx.beginPath();
           ctx.moveTo(cx + (cLX - cx) * t, pk + (roofBot - pk) * t);
           ctx.lineTo(cx, pk + (cFY - pk) * t);
@@ -2231,42 +2266,72 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         }
 
         // Ridge highlight
-        ctx.strokeStyle = "rgba(140,120,80,0.2)";
-        ctx.lineWidth = 1 * s;
+        ctx.strokeStyle = "rgba(140,120,80,0.22)";
+        ctx.lineWidth = 1.2 * s;
         ctx.beginPath();
         ctx.moveTo(cx, pk);
         ctx.lineTo(cRX, roofBot);
         ctx.stroke();
 
-        // Flag
+        // Flag pole + banner
         ctx.strokeStyle = "#3A2A1A";
-        ctx.lineWidth = 1.2 * s;
+        ctx.lineWidth = 1.5 * s;
         ctx.beginPath();
         ctx.moveTo(cx, pk);
-        ctx.lineTo(cx, pk - 10 * s);
+        ctx.lineTo(cx, pk - 12 * s);
         ctx.stroke();
-        const fWave = Math.sin(decorTime * 3 + decorX * 0.1) * 2 * s;
-        ctx.fillStyle = "#B03030";
-        ctx.beginPath();
-        ctx.moveTo(cx + 1 * s, pk - 10 * s);
-        ctx.quadraticCurveTo(
-          cx + 4 * s + fWave,
-          pk - 8 * s,
-          cx + 7 * s,
-          pk - 7 * s + fWave * 0.5,
-        );
-        ctx.lineTo(cx + 7 * s, pk - 4 * s + fWave * 0.5);
-        ctx.quadraticCurveTo(
-          cx + 4 * s + fWave * 0.5,
-          pk - 5 * s,
-          cx + 1 * s,
-          pk - 7 * s,
-        );
-        ctx.closePath();
-        ctx.fill();
+        // Pole finial
         ctx.fillStyle = "#D8A838";
         ctx.beginPath();
-        ctx.arc(cx, pk - 10.5 * s, 1 * s, 0, Math.PI * 2);
+        ctx.arc(cx, pk - 12.5 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        // Waving banner
+        const fWave = Math.sin(decorTime * 3 + decorX * 0.1) * 2.5 * s;
+        ctx.fillStyle = "#B03030";
+        ctx.beginPath();
+        ctx.moveTo(cx + 1 * s, pk - 12 * s);
+        ctx.quadraticCurveTo(cx + 5 * s + fWave, pk - 10 * s, cx + 8 * s, pk - 9 * s + fWave * 0.5);
+        ctx.lineTo(cx + 8 * s, pk - 5 * s + fWave * 0.5);
+        ctx.quadraticCurveTo(cx + 5 * s + fWave * 0.5, pk - 6 * s, cx + 1 * s, pk - 8 * s);
+        ctx.closePath();
+        ctx.fill();
+        // Banner stripe
+        ctx.fillStyle = "#D8A838";
+        ctx.beginPath();
+        ctx.moveTo(cx + 1 * s, pk - 10 * s);
+        ctx.quadraticCurveTo(cx + 5 * s + fWave * 0.8, pk - 8.5 * s, cx + 8 * s, pk - 7.5 * s + fWave * 0.5);
+        ctx.lineTo(cx + 8 * s, pk - 6.5 * s + fWave * 0.5);
+        ctx.quadraticCurveTo(cx + 5 * s + fWave * 0.6, pk - 7.5 * s, cx + 1 * s, pk - 9 * s);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brazier on battlements
+        const brx = cx - tiW * 0.3, bry = batBase - batH;
+        ctx.fillStyle = "#4A3A2A";
+        ctx.beginPath();
+        ctx.moveTo(brx - 2.5 * s, bry);
+        ctx.lineTo(brx - 2 * s, bry - 4 * s);
+        ctx.lineTo(brx + 2 * s, bry - 4 * s);
+        ctx.lineTo(brx + 2.5 * s, bry);
+        ctx.closePath();
+        ctx.fill();
+        // Fire glow
+        const firePulse = 0.5 + Math.sin(decorTime * 4) * 0.2;
+        ctx.fillStyle = `rgba(255,120,30,${firePulse * 0.6})`;
+        ctx.beginPath();
+        ctx.ellipse(brx, bry - 5 * s, 2 * s, 3 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = `rgba(255,200,50,${firePulse * 0.4})`;
+        ctx.beginPath();
+        ctx.ellipse(brx, bry - 6 * s, 1.2 * s, 2 * s, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Fire glow on surroundings
+        const fireGlowG = ctx.createRadialGradient(brx, bry - 5 * s, 0, brx, bry - 5 * s, 10 * s);
+        fireGlowG.addColorStop(0, `rgba(255,150,50,${firePulse * 0.12})`);
+        fireGlowG.addColorStop(1, "rgba(255,150,50,0)");
+        ctx.fillStyle = fireGlowG;
+        ctx.beginPath();
+        ctx.arc(brx, bry - 5 * s, 10 * s, 0, Math.PI * 2);
         ctx.fill();
       } else if (v === 2) {
         // === HALF-TIMBER MANOR ===
@@ -2403,13 +2468,15 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         // Door
         hutDoor(cx + iW * 0.2, cy + iD * 0.7, 8 * s, 15 * s);
 
-        // Windows
+        // Windows — isometric gothic flush with walls
         for (let wi = 0; wi < 3; wi++) {
           const wwx = cx + iW * (0.15 + wi * 0.32);
           const wwy = cy + iD * (0.65 - wi * 0.32) - wH * 0.58;
-          hutWin(wwx, wwy, 3 * s, 5.5 * s);
+          drawIsoGothicWindow(ctx, wwx, wwy, 4.5, 7, "right", s,
+            "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
         }
-        hutWin(cx - iW * 0.55, cy - wH * 0.6, 3.5 * s, 6 * s, true);
+        drawIsoGothicWindow(ctx, cx - iW * 0.55, cy - wH * 0.6, 5, 8, "left", s,
+          "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
         // Roof
         hutRoof(
@@ -2580,9 +2647,11 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
           12 * s,
         );
 
-        // Windows
-        hutWin(cx - hR * 0.62, cy - hH * 0.45, 3 * s, 5 * s);
-        hutWin(cx + hR * 0.12, cy - hH * 0.5 + hR * 0.1, 2.5 * s, 4.5 * s);
+        // Windows — isometric gothic flush with curved wall
+        drawIsoGothicWindow(ctx, cx - hR * 0.62, cy - hH * 0.45, 4.5, 7, "left", s,
+          "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+        drawIsoGothicWindow(ctx, cx + hR * 0.12, cy - hH * 0.5 + hR * 0.1, 3.5, 6, "right", s,
+          "rgba(255, 200, 100", 0.25, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
         // Thatched roof — single gradient fill, zero internal edges
         const roofBase = cy - hH;
@@ -5932,81 +6001,157 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
 
     case "hedge": {
-      const hedgeGreen = "#2e7d32";
-      const hedgeDark = "#1b5e20";
-      const hedgeLight = "#43a047";
+      const hx = screenPos.x, hy = screenPos.y;
+      const hSeed = decorX * 73 + hy * 41;
+      const hw = 22 * s, hd = 10 * s, hh = 20 * s;
 
-      // Shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      // Ground shadow
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 5 * s,
-        20 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(hx + 3 * s, hy + 5 * s, hw * 0.6, hd * 0.55, 0.1, 0, Math.PI * 2);
       ctx.fill();
 
-      // Hedge body - isometric box shape
-      const hw = 18 * s,
-        hd = 8 * s,
-        hh = 16 * s;
-      // Top face
-      ctx.fillStyle = hedgeLight;
+      // Woody stems visible at base
+      ctx.fillStyle = "#3d2b1a";
+      ctx.fillRect(hx - 3 * s, hy - 2 * s, 2 * s, 4 * s);
+      ctx.fillRect(hx + 2 * s, hy - 1 * s, 1.5 * s, 3 * s);
+      ctx.fillStyle = "#4a3520";
+      ctx.fillRect(hx - hw * 0.2, hy - 1 * s, 1.5 * s, 3 * s);
+
+      // Left face (shadow side) — organic curved silhouette
+      ctx.fillStyle = "#1a4a1a";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x, screenPos.y - hh - hd * 0.5);
-      ctx.lineTo(screenPos.x + hw * 0.5, screenPos.y - hh);
-      ctx.lineTo(screenPos.x, screenPos.y - hh + hd * 0.5);
-      ctx.lineTo(screenPos.x - hw * 0.5, screenPos.y - hh);
-      ctx.closePath();
-      ctx.fill();
-      // Left face
-      ctx.fillStyle = hedgeDark;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - hw * 0.5, screenPos.y - hh);
-      ctx.lineTo(screenPos.x, screenPos.y - hh + hd * 0.5);
-      ctx.lineTo(screenPos.x, screenPos.y + hd * 0.5);
-      ctx.lineTo(screenPos.x - hw * 0.5, screenPos.y);
-      ctx.closePath();
-      ctx.fill();
-      // Right face
-      ctx.fillStyle = hedgeGreen;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + hw * 0.5, screenPos.y - hh);
-      ctx.lineTo(screenPos.x, screenPos.y - hh + hd * 0.5);
-      ctx.lineTo(screenPos.x, screenPos.y + hd * 0.5);
-      ctx.lineTo(screenPos.x + hw * 0.5, screenPos.y);
+      ctx.moveTo(hx - hw * 0.48, hy + 1 * s);
+      ctx.lineTo(hx - hw * 0.5, hy - hh * 0.15);
+      ctx.quadraticCurveTo(hx - hw * 0.46, hy - hh * 0.6, hx - hw * 0.28, hy - hh * 0.82);
+      ctx.quadraticCurveTo(hx - hw * 0.1, hy - hh * 0.98, hx, hy - hh * 0.88 + hd * 0.35);
+      ctx.lineTo(hx, hy + hd * 0.45);
       ctx.closePath();
       ctx.fill();
 
-      // Leaf texture dots on faces
-      ctx.fillStyle = "#4caf50";
-      for (let d = 0; d < 8; d++) {
-        const dx = screenPos.x + Math.sin(d * 2.3) * hw * 0.3;
-        const dy = screenPos.y - hh * 0.3 + Math.cos(d * 1.7) * hh * 0.3;
+      // Right face (lit side) — organic curved silhouette
+      const rfG = ctx.createLinearGradient(hx, hy, hx + hw * 0.5, hy);
+      rfG.addColorStop(0, "#2e7a2e");
+      rfG.addColorStop(1, "#267026");
+      ctx.fillStyle = rfG;
+      ctx.beginPath();
+      ctx.moveTo(hx + hw * 0.48, hy + 1 * s);
+      ctx.lineTo(hx + hw * 0.5, hy - hh * 0.15);
+      ctx.quadraticCurveTo(hx + hw * 0.46, hy - hh * 0.55, hx + hw * 0.28, hy - hh * 0.78);
+      ctx.quadraticCurveTo(hx + hw * 0.1, hy - hh * 0.92, hx, hy - hh * 0.88 + hd * 0.35);
+      ctx.lineTo(hx, hy + hd * 0.45);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top surface — rounded elliptical crown
+      const topG = ctx.createRadialGradient(hx - 2 * s, hy - hh * 0.88, 0, hx, hy - hh * 0.85, hw * 0.45);
+      topG.addColorStop(0, "#5abf5a");
+      topG.addColorStop(0.5, "#43a043");
+      topG.addColorStop(1, "#369036");
+      ctx.fillStyle = topG;
+      ctx.beginPath();
+      ctx.ellipse(hx, hy - hh * 0.85, hw * 0.44, hd * 0.42, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Layered leaf clusters on left face
+      for (let i = 0; i < 14; i++) {
+        const lx = hx - hw * 0.33 + Math.sin(hSeed + i * 2.7) * hw * 0.14;
+        const ly = hy - hh * 0.1 - i * hh * 0.052 + Math.cos(hSeed + i * 1.9) * 1.5 * s;
+        const lr = (2.8 + Math.sin(hSeed + i * 3.1) * 0.9) * s;
+        ctx.fillStyle = i % 4 === 0 ? "#1d5a1d" : i % 4 === 1 ? "#226822" : i % 4 === 2 ? "#1a521a" : "#1f601f";
         ctx.beginPath();
-        ctx.arc(dx, dy, 1.5 * s, 0, Math.PI * 2);
+        ctx.ellipse(lx, ly, lr * 1.4, lr * 0.85, 0.3 * (i % 5 - 2), 0, Math.PI * 2);
         ctx.fill();
       }
 
-      // Small flowers in hedge
+      // Layered leaf clusters on right face
+      for (let i = 0; i < 14; i++) {
+        const rx = hx + hw * 0.33 + Math.sin(hSeed + i * 2.3) * hw * 0.11;
+        const ry = hy - hh * 0.1 - i * hh * 0.052 + Math.cos(hSeed + i * 1.7) * 1.5 * s;
+        const rr = (2.8 + Math.sin(hSeed + i * 2.9) * 0.9) * s;
+        ctx.fillStyle = i % 4 === 0 ? "#3a8a3a" : i % 4 === 1 ? "#348234" : i % 4 === 2 ? "#2e7a2e" : "#368636";
+        ctx.beginPath();
+        ctx.ellipse(rx, ry, rr * 1.4, rr * 0.85, -0.3 * (i % 5 - 2), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Top crown leaf clusters — overlapping circles for bushy dome
+      for (let i = 0; i < 10; i++) {
+        const angle = (i / 10) * Math.PI * 2;
+        const dist = hw * 0.26 + Math.sin(hSeed + i * 3.7) * 2 * s;
+        const tx = hx + Math.cos(angle) * dist;
+        const ty = hy - hh * 0.85 + Math.sin(angle) * hd * 0.24;
+        const tr = (3.2 + Math.sin(hSeed + i * 4.1) * 1.2) * s;
+        ctx.fillStyle = i % 3 === 0 ? "#43a043" : i % 3 === 1 ? "#3a963a" : "#4aaa4a";
+        ctx.beginPath();
+        ctx.arc(tx, ty, tr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Highlight clusters on top-right (sun-facing)
+      ctx.globalAlpha = 0.45;
+      for (let i = 0; i < 6; i++) {
+        const hlx = hx + hw * 0.08 + Math.sin(hSeed + i * 5.3) * hw * 0.2;
+        const hly = hy - hh * 0.88 + Math.cos(hSeed + i * 3.3) * hd * 0.14;
+        ctx.fillStyle = "#5abf5a";
+        ctx.beginPath();
+        ctx.arc(hlx, hly, (2.2 + Math.sin(hSeed + i * 2.1)) * s, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Subtle dark leaf edges around the silhouette
+      ctx.fillStyle = "rgba(15,50,15,0.25)";
+      for (let i = 0; i < 12; i++) {
+        const angle = (i / 12) * Math.PI * 2;
+        const ex = hx + Math.cos(angle) * hw * 0.4;
+        const ey = hy - hh * 0.85 + Math.sin(angle) * hd * 0.36;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 1.8 * s, angle - 0.5, angle + 0.5);
+        ctx.fill();
+      }
+
+      // Flowers integrated into foliage (even variants)
       if (variant % 2 === 0) {
-        const flowerColors = ["#ff4081", "#ffffff", "#ffeb3b"];
-        for (let f = 0; f < 3; f++) {
-          ctx.fillStyle = flowerColors[f];
+        const flwC = ["#ff4081", "#ffffff", "#ffeb3b", "#ff80ab", "#e8f5e9"];
+        for (let f = 0; f < 7; f++) {
+          const fx = hx + Math.sin(hSeed + f * 4.7) * hw * 0.32;
+          const fy = hy - hh * 0.2 - f * hh * 0.09 + Math.cos(hSeed + f * 3.1) * 2 * s;
+          ctx.fillStyle = flwC[f % flwC.length];
+          for (let p = 0; p < 4; p++) {
+            const pa = (p / 4) * Math.PI * 2 + hSeed * 0.01;
+            ctx.beginPath();
+            ctx.ellipse(fx + Math.cos(pa) * 1.3 * s, fy + Math.sin(pa) * 0.8 * s, 1.3 * s, 0.7 * s, pa, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = "#ffd740";
           ctx.beginPath();
-          ctx.arc(
-            screenPos.x + (f - 1) * 6 * s,
-            screenPos.y - hh * 0.5 + Math.sin(f * 1.5) * 3 * s,
-            1.8 * s,
-            0,
-            Math.PI * 2,
-          );
+          ctx.arc(fx, fy, 0.9 * s, 0, Math.PI * 2);
           ctx.fill();
         }
+      }
+
+      // Bird perched on top (variant 1 or 3)
+      if (variant % 4 === 1 || variant % 4 === 3) {
+        const bx = hx + 3 * s, by = hy - hh * 0.95;
+        ctx.fillStyle = variant % 4 === 1 ? "#5a3a2a" : "#3a4a6a";
+        ctx.beginPath();
+        ctx.ellipse(bx, by, 2.5 * s, 1.5 * s, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(bx + 2 * s, by - 1 * s, 1.2 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#ffa000";
+        ctx.beginPath();
+        ctx.moveTo(bx + 3.2 * s, by - 1 * s);
+        ctx.lineTo(bx + 4.5 * s, by - 0.8 * s);
+        ctx.lineTo(bx + 3.2 * s, by - 0.5 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#111";
+        ctx.beginPath();
+        ctx.arc(bx + 2.5 * s, by - 1.3 * s, 0.4 * s, 0, Math.PI * 2);
+        ctx.fill();
       }
       break;
     }
@@ -6543,110 +6688,242 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     }
 
     case "fishing_spot": {
-      const fsDock = "#6d4c41";
-      const fsWater = "rgba(70,130,180,0.5)";
+      const fx = screenPos.x, fy = screenPos.y;
 
-      // Water
-      ctx.fillStyle = fsWater;
+      // Water body — organic shape with depth gradient
+      const waterG = ctx.createRadialGradient(fx - 2 * s, fy + 4 * s, 2 * s, fx, fy + 5 * s, 20 * s);
+      waterG.addColorStop(0, "rgba(30,80,130,0.65)");
+      waterG.addColorStop(0.4, "rgba(50,110,160,0.55)");
+      waterG.addColorStop(0.7, "rgba(70,140,190,0.45)");
+      waterG.addColorStop(1, "rgba(100,170,210,0.3)");
+      ctx.fillStyle = waterG;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x,
-        screenPos.y + 5 * s,
-        18 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(fx, fy + 5 * s, 20 * s, 9 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Small platform
-      ctx.fillStyle = fsDock;
+      // Water surface sheen
+      ctx.fillStyle = "rgba(180,220,255,0.12)";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x - 8 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y - 4 * s);
-      ctx.lineTo(screenPos.x + 8 * s, screenPos.y);
-      ctx.lineTo(screenPos.x, screenPos.y + 4 * s);
+      ctx.ellipse(fx + 3 * s, fy + 3 * s, 12 * s, 5 * s, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Fish shadow under water
+      const fishPhase = decorTime * 0.8;
+      const fishSx = fx - 6 * s + Math.sin(fishPhase) * 8 * s;
+      const fishSy = fy + 6 * s + Math.cos(fishPhase * 0.7) * 2 * s;
+      ctx.fillStyle = "rgba(20,50,80,0.2)";
+      ctx.save();
+      ctx.translate(fishSx, fishSy);
+      ctx.rotate(Math.cos(fishPhase) * 0.3);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 4 * s, 1.5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(4 * s, 0);
+      ctx.lineTo(6 * s, -1.5 * s);
+      ctx.lineTo(6 * s, 1.5 * s);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Lily pads
+      for (let lp = 0; lp < 3; lp++) {
+        const lpSeed = decorX * 31 + lp * 47;
+        const lpx = fx - 10 * s + lp * 8 * s + Math.sin(lpSeed) * 3 * s;
+        const lpy = fy + 2 * s + lp * 2 * s + Math.cos(lpSeed) * 1.5 * s;
+        ctx.fillStyle = lp % 2 === 0 ? "#2e7d32" : "#388e3c";
+        ctx.beginPath();
+        ctx.ellipse(lpx, lpy, 3 * s, 1.5 * s, lpSeed * 0.2, 0.2, Math.PI * 1.9);
+        ctx.fill();
+        if (lp === 1) {
+          ctx.fillStyle = "#e91e63";
+          ctx.beginPath();
+          ctx.arc(lpx, lpy - 1 * s, 1 * s, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffc107";
+          ctx.beginPath();
+          ctx.arc(lpx, lpy - 1 * s, 0.4 * s, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Reeds/cattails on far side
+      for (let r = 0; r < 4; r++) {
+        const rx = fx - 14 * s + r * 5 * s;
+        const rBase = fy + 1 * s - r * 0.5 * s;
+        const rSway = Math.sin(decorTime * 1.5 + r * 1.2) * 1.5 * s;
+        ctx.strokeStyle = "#558b2f";
+        ctx.lineWidth = 1.2 * s;
+        ctx.beginPath();
+        ctx.moveTo(rx, rBase);
+        ctx.quadraticCurveTo(rx + rSway * 0.3, rBase - 12 * s, rx + rSway, rBase - 22 * s);
+        ctx.stroke();
+        if (r % 2 === 0) {
+          ctx.fillStyle = "#5d4037";
+          ctx.beginPath();
+          ctx.ellipse(rx + rSway * 0.8, rBase - 20 * s, 1.2 * s, 3 * s, rSway * 0.05, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#7cb342";
+        ctx.beginPath();
+        ctx.ellipse(rx + rSway * 0.3, rBase - 6 * s, 1 * s, 5 * s, rSway * 0.03, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Dock platform — isometric with plank detail
+      const dW = 10 * s, dD = 5 * s, dH = 3 * s;
+      const dkx = fx + 4 * s, dky = fy - 1 * s;
+
+      // Support posts
+      ctx.fillStyle = "#4e342e";
+      for (let p = 0; p < 3; p++) {
+        const pt = p / 2;
+        const ppx = dkx - dW * ISO_COS * (1 - pt) + dW * ISO_COS * pt;
+        const ppy = dky - dD * 0.5 + dD * pt;
+        ctx.fillRect(ppx - 1 * s, ppy, 2 * s, 6 * s);
+      }
+
+      // Dock top face
+      ctx.fillStyle = "#6d4c41";
+      ctx.beginPath();
+      ctx.moveTo(dkx, dky - dD);
+      ctx.lineTo(dkx + dW * ISO_COS, dky - dD * 0.5);
+      ctx.lineTo(dkx, dky);
+      ctx.lineTo(dkx - dW * ISO_COS, dky - dD * 0.5);
       ctx.closePath();
       ctx.fill();
 
-      // Fishing rod
-      ctx.strokeStyle = "#5d4037";
-      ctx.lineWidth = 1.5 * s;
+      // Plank lines on dock
+      ctx.strokeStyle = "rgba(30,20,10,0.3)";
+      ctx.lineWidth = 0.5 * s;
+      for (let pl = 1; pl < 4; pl++) {
+        const pt = pl / 4;
+        ctx.beginPath();
+        ctx.moveTo(dkx - dW * ISO_COS * (1 - pt), dky - dD * (1 - pt * 0.5));
+        ctx.lineTo(dkx + dW * ISO_COS * pt, dky - dD * pt * 0.5);
+        ctx.stroke();
+      }
+
+      // Dock front edge (thickness)
+      ctx.fillStyle = "#5d4037";
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + 2 * s, screenPos.y - 2 * s);
-      ctx.quadraticCurveTo(
-        screenPos.x + 15 * s,
-        screenPos.y - 25 * s,
-        screenPos.x + 20 * s,
-        screenPos.y - 20 * s,
-      );
+      ctx.moveTo(dkx - dW * ISO_COS, dky - dD * 0.5);
+      ctx.lineTo(dkx, dky);
+      ctx.lineTo(dkx, dky + dH);
+      ctx.lineTo(dkx - dW * ISO_COS, dky - dD * 0.5 + dH);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#4e342e";
+      ctx.beginPath();
+      ctx.moveTo(dkx, dky);
+      ctx.lineTo(dkx + dW * ISO_COS, dky - dD * 0.5);
+      ctx.lineTo(dkx + dW * ISO_COS, dky - dD * 0.5 + dH);
+      ctx.lineTo(dkx, dky + dH);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fishing rod propped on dock
+      ctx.strokeStyle = "#5d4037";
+      ctx.lineWidth = 1.8 * s;
+      ctx.beginPath();
+      ctx.moveTo(dkx + 3 * s, dky - 2 * s);
+      ctx.quadraticCurveTo(dkx + 14 * s, dky - 28 * s, dkx + 20 * s, dky - 22 * s);
       ctx.stroke();
+      // Rod handle
+      ctx.strokeStyle = "#3e2723";
+      ctx.lineWidth = 2.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(dkx + 1 * s, dky - 1 * s);
+      ctx.lineTo(dkx + 3 * s, dky - 2 * s);
+      ctx.stroke();
+      // Reel
+      ctx.fillStyle = "#616161";
+      ctx.beginPath();
+      ctx.arc(dkx + 5 * s, dky - 5 * s, 1.8 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#9e9e9e";
+      ctx.beginPath();
+      ctx.arc(dkx + 5 * s, dky - 5 * s, 0.8 * s, 0, Math.PI * 2);
+      ctx.fill();
 
       // Fishing line
-      ctx.strokeStyle = "rgba(200,200,200,0.6)";
+      ctx.strokeStyle = "rgba(200,200,200,0.55)";
       ctx.lineWidth = 0.5 * s;
+      const bobSway = Math.sin(decorTime * 2) * 2 * s;
       ctx.beginPath();
-      ctx.moveTo(screenPos.x + 20 * s, screenPos.y - 20 * s);
-      ctx.lineTo(
-        screenPos.x + 14 * s + Math.sin(decorTime * 2) * 2 * s,
-        screenPos.y + 3 * s,
-      );
+      ctx.moveTo(dkx + 20 * s, dky - 22 * s);
+      ctx.quadraticCurveTo(dkx + 18 * s + bobSway * 0.5, dky - 5 * s, dkx + 14 * s + bobSway, fy + 3 * s);
       ctx.stroke();
 
-      // Bobber
-      const bobY = screenPos.y + 3 * s + Math.sin(decorTime * 2) * 1.5 * s;
-      ctx.fillStyle = "#f44336";
+      // Bobber with detail
+      const bobberY = fy + 3 * s + Math.sin(decorTime * 2) * 1.5 * s;
+      const bobberX = dkx + 14 * s + bobSway;
+      ctx.fillStyle = "#d32f2f";
       ctx.beginPath();
-      ctx.arc(
-        screenPos.x + 14 * s + Math.sin(decorTime * 2) * 2 * s,
-        bobY,
-        1.5 * s,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(bobberX, bobberY, 1.8 * s, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
-      ctx.arc(
-        screenPos.x + 14 * s + Math.sin(decorTime * 2) * 2 * s,
-        bobY - 1 * s,
-        0.8 * s,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(bobberX, bobberY - 1.2 * s, 1 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f44336";
+      ctx.beginPath();
+      ctx.arc(bobberX, bobberY - 0.3 * s, 0.4 * s, 0, Math.PI * 2);
       ctx.fill();
 
-      // Bucket
+      // Bucket with fish
+      const bkx = dkx - 6 * s, bky = dky - 1 * s;
       ctx.fillStyle = "#5d4037";
-      ctx.fillRect(screenPos.x - 5 * s, screenPos.y - 4 * s, 4 * s, 4 * s);
+      ctx.beginPath();
+      ctx.moveTo(bkx - 2.5 * s, bky);
+      ctx.lineTo(bkx - 2 * s, bky - 5 * s);
+      ctx.lineTo(bkx + 2 * s, bky - 5 * s);
+      ctx.lineTo(bkx + 2.5 * s, bky);
+      ctx.closePath();
+      ctx.fill();
+      // Bucket rim
       ctx.fillStyle = "#8d6e63";
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 3 * s,
-        screenPos.y - 4 * s,
-        2.5 * s,
-        1 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.ellipse(bkx, bky - 5 * s, 2.5 * s, 1 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Ripples from bobber
-      const fishRip = (decorTime % 2) / 2;
-      ctx.strokeStyle = `rgba(150,200,255,${0.3 - fishRip * 0.3})`;
+      // Water in bucket
+      ctx.fillStyle = "rgba(70,130,180,0.5)";
+      ctx.beginPath();
+      ctx.ellipse(bkx, bky - 4.5 * s, 2 * s, 0.7 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Fish tail peeking out
+      ctx.fillStyle = "#90a4ae";
+      ctx.beginPath();
+      ctx.moveTo(bkx + 0.5 * s, bky - 5.5 * s);
+      ctx.lineTo(bkx + 2.5 * s, bky - 7 * s);
+      ctx.lineTo(bkx + 2 * s, bky - 5 * s);
+      ctx.closePath();
+      ctx.fill();
+      // Bucket handle
+      ctx.strokeStyle = "#4e342e";
       ctx.lineWidth = 0.8 * s;
       ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 14 * s,
-        screenPos.y + 4 * s,
-        3 * s * fishRip + 2 * s,
-        1.5 * s * fishRip + 1 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
+      ctx.arc(bkx, bky - 7 * s, 2.5 * s, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
+
+      // Multiple ripple rings from bobber
+      for (let rp = 0; rp < 3; rp++) {
+        const ripPhase = ((decorTime + rp * 0.6) % 2) / 2;
+        const ripAlpha = 0.3 - ripPhase * 0.3;
+        if (ripAlpha > 0) {
+          ctx.strokeStyle = `rgba(150,200,255,${ripAlpha})`;
+          ctx.lineWidth = 0.7 * s;
+          ctx.beginPath();
+          ctx.ellipse(bobberX, fy + 4 * s, 3 * s * ripPhase + 2 * s, 1.2 * s * ripPhase + 0.8 * s, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      // Water edge highlight
+      ctx.strokeStyle = "rgba(180,220,255,0.2)";
+      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.ellipse(fx, fy + 5 * s, 20 * s, 9 * s, 0, Math.PI * 1.1, Math.PI * 1.9);
       ctx.stroke();
       break;
     }

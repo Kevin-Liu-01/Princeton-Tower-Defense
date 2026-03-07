@@ -8,7 +8,7 @@ import {
   Clock,
   ChevronRight,
   MapPin,
-  Shield,
+  Scroll,
   Crown,
 } from "lucide-react";
 import type { LevelStars } from "../../types";
@@ -217,7 +217,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
       >
         <div className="flex items-center gap-2 mb-3">
           <div className="relative">
-            <Shield size={22} className="text-amber-400 drop-shadow-lg" />
+            <Scroll size={22} className="text-amber-400 drop-shadow-lg" />
           </div>
           <h2 className="text-lg font-bold text-amber-100 tracking-wide">
             Campaign

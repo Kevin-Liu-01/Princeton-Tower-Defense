@@ -257,7 +257,6 @@ interface NodeVisuals {
   background: string;
   borderColor: string;
   textColor: string;
-  titleColor: string;
 }
 
 const NODE_VISUALS: Record<NodeState, NodeVisuals> = {
@@ -265,19 +264,16 @@ const NODE_VISUALS: Record<NodeState, NodeVisuals> = {
     background: "rgba(16, 56, 36, 0.85)",
     borderColor: "rgba(74, 222, 128, 0.55)",
     textColor: "#bbf7d0",
-    titleColor: "#ecfdf5",
   },
   next: {
     background: "rgba(90, 68, 20, 0.85)",
     borderColor: "rgba(250, 204, 21, 0.6)",
     textColor: "#fde68a",
-    titleColor: "#fef9c3",
   },
   locked: {
     background: "rgba(38, 34, 30, 0.78)",
     borderColor: "rgba(100, 93, 88, 0.35)",
     textColor: "#a8a29e",
-    titleColor: "#d6d3d1",
   },
 };
 
@@ -902,9 +898,9 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                                 </div>
 
                                 {/* Spell sprite with corner upgrade icon */}
-                                <div className="mt-0.5 flex justify-center">
+                                <div className=" flex justify-center">
                                   <div
-                                    className="relative h-11 w-11 rounded-md border flex items-center justify-center"
+                                    className="relative h-10 w-10 rounded-md border flex items-center justify-center"
                                     style={{
                                       borderColor:
                                         state === "locked"
@@ -936,29 +932,23 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
 
                                 {/* Title label */}
                                 <div
-                                  className="mt-1 flex-1 rounded-md border px-1.5 py-1"
+                                  className={`mt-1 flex flex-col items-center justify-center text-center font-bold leading-[1.15] ${nodeTitle.compact
+                                    ? "text-[8.5px]"
+                                    : "text-[10px]"
+                                    }`}
                                   style={{
-                                    borderColor: `${visuals.borderColor}60`,
-                                    background: "rgba(10, 8, 8, 0.5)",
+                                    color: state === "locked" ? "#a8a29e" : theme.glow,
+                                    textShadow: state === "locked"
+                                      ? "0 1px 2px rgba(0,0,0,0.6)"
+                                      : `0 0 6px ${theme.glow}55, 0 1px 2px rgba(0,0,0,0.8)`,
                                     opacity: state === "locked" ? 0.5 : 1,
                                   }}
                                   title={node.title}
                                 >
-                                  <div
-                                    className={`flex h-full flex-col items-center justify-center text-center font-semibold leading-[1.1] ${nodeTitle.compact
-                                        ? "text-[8.5px]"
-                                        : "text-[10px]"
-                                      }`}
-                                    style={{
-                                      color: visuals.titleColor,
-                                      textShadow: "0 1px 2px rgba(0,0,0,0.8)",
-                                    }}
-                                  >
-                                    <span>{nodeTitle.line1}</span>
-                                    {nodeTitle.line2 ? (
-                                      <span>{nodeTitle.line2}</span>
-                                    ) : null}
-                                  </div>
+                                  <span>{nodeTitle.line1}</span>
+                                  {nodeTitle.line2 ? (
+                                    <span>{nodeTitle.line2}</span>
+                                  ) : null}
                                 </div>
                               </div>
                             </button>
@@ -1117,10 +1107,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                 {/* Status indicator */}
                 <div
                   className={`mt-3 rounded-lg border px-3 py-2 text-xs flex items-center gap-2 ${selectedState === "unlocked"
-                      ? "border-emerald-500/30 bg-emerald-950/30"
-                      : selectedState === "next"
-                        ? "border-yellow-500/30 bg-yellow-950/30"
-                        : "border-stone-600/30 bg-stone-950/40"
+                    ? "border-emerald-500/30 bg-emerald-950/30"
+                    : selectedState === "next"
+                      ? "border-yellow-500/30 bg-yellow-950/30"
+                      : "border-stone-600/30 bg-stone-950/40"
                     }`}
                 >
                   {selectedState === "unlocked" && (
@@ -1160,8 +1150,8 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                   }}
                   disabled={!canBuySelected}
                   className={`mt-3 w-full rounded-lg border px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${canBuySelected
-                      ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70"
-                      : "border-stone-600/40 bg-stone-800/40 text-stone-500 cursor-not-allowed"
+                    ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70"
+                    : "border-stone-600/40 bg-stone-800/40 text-stone-500 cursor-not-allowed"
                     }`}
                 >
                   {selectedState === "unlocked"

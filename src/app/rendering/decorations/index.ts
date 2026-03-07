@@ -6,6 +6,7 @@ import { worldToScreen } from "../../utils";
 import { ISO_COS, ISO_SIN, ISO_Y_RATIO } from "../../constants";
 import { lightenColor, darkenColor, drawIsometricPrism, drawGroundShadow } from "../helpers";
 import { setShadowBlur, clearShadow } from "../performance";
+import { drawIsoGothicWindow } from "../towers/towerHelpers";
 
 // Import landmark renderers
 import {
@@ -1007,68 +1008,6 @@ function drawBldgStoneWall(
   }
 }
 
-function drawBldgArchWin(
-  ctx: CanvasRenderingContext2D,
-  wx: number,
-  wy: number,
-  ww: number,
-  wh: number,
-  s: number,
-  hasShutters: boolean = false,
-): void {
-  const glowG = ctx.createRadialGradient(wx, wy, 0, wx, wy, wh * 0.8);
-  glowG.addColorStop(0, "rgba(255,200,100,0.55)");
-  glowG.addColorStop(0.5, "rgba(220,160,60,0.35)");
-  glowG.addColorStop(1, "rgba(180,120,40,0.1)");
-
-  if (hasShutters) {
-    ctx.fillStyle = "#3A2A1A";
-    ctx.fillRect(
-      wx - ww - 1.5 * s,
-      wy - wh * 0.3,
-      1.5 * s,
-      wh * 0.8 + ww * 0.5,
-    );
-    ctx.fillStyle = "#4A3828";
-    ctx.fillRect(wx + ww, wy - wh * 0.3, 1.5 * s, wh * 0.8 + ww * 0.5);
-  }
-
-  ctx.fillStyle = "#1A1008";
-  ctx.beginPath();
-  ctx.moveTo(wx - ww, wy + wh * 0.5);
-  ctx.lineTo(wx - ww, wy - wh * 0.3);
-  ctx.arc(wx, wy - wh * 0.3, ww, Math.PI, 0);
-  ctx.lineTo(wx + ww, wy + wh * 0.5);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle = glowG;
-  ctx.beginPath();
-  ctx.moveTo(wx - ww + 0.5 * s, wy + wh * 0.45);
-  ctx.lineTo(wx - ww + 0.5 * s, wy - wh * 0.25);
-  ctx.arc(wx, wy - wh * 0.25, ww - 0.5 * s, Math.PI, 0);
-  ctx.lineTo(wx + ww - 0.5 * s, wy + wh * 0.45);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle = "#3A2518";
-  ctx.lineWidth = 0.8 * s;
-  ctx.beginPath();
-  ctx.moveTo(wx - ww, wy + wh * 0.5);
-  ctx.lineTo(wx - ww, wy - wh * 0.3);
-  ctx.arc(wx, wy - wh * 0.3, ww, Math.PI, 0);
-  ctx.lineTo(wx + ww, wy + wh * 0.5);
-  ctx.closePath();
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(wx, wy - wh * 0.3 - ww);
-  ctx.lineTo(wx, wy + wh * 0.5);
-  ctx.stroke();
-
-  ctx.fillStyle = "#3A2518";
-  ctx.fillRect(wx - ww - 0.3 * s, wy + wh * 0.5, ww * 2 + 0.6 * s, 1.2 * s);
-}
-
 function drawBldgDoor(
   ctx: CanvasRenderingContext2D,
   dx: number,
@@ -1398,19 +1337,13 @@ function drawBuilding(
     // Door
     drawBldgDoor(ctx, x + iW * 0.35, y + iD * 0.35, 7 * s, 14 * s, s);
 
-    // Right wall windows with shutters
-    drawBldgArchWin(
-      ctx,
-      x + iW * 0.72,
-      y - wH * 0.4 + iD * 0.15,
-      3.5 * s,
-      6 * s,
-      s,
-      true,
-    );
+    // Right wall window — isometric gothic flush with wall
+    drawIsoGothicWindow(ctx, x + iW * 0.72, y - wH * 0.4 + iD * 0.15, 5, 8, "right", s,
+      "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
-    // Left wall window
-    drawBldgArchWin(ctx, x - iW * 0.5, y - wH * 0.45, 3 * s, 5.5 * s, s, true);
+    // Left wall window — isometric gothic flush with wall
+    drawIsoGothicWindow(ctx, x - iW * 0.5, y - wH * 0.45, 4.5, 7.5, "left", s,
+      "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
     // Window glow cast on ground
     const glowR = ctx.createRadialGradient(
@@ -1580,8 +1513,9 @@ function drawBuilding(
       ctx.fillRect(wx - 0.7 * s, wy - 3 * s, 1.4 * s, 6 * s);
     }
 
-    // Arched window on left wall
-    drawBldgArchWin(ctx, x - tiW * 0.5, y - tH * 0.55, 3 * s, 6 * s, s);
+    // Left wall window — isometric gothic flush with wall
+    drawIsoGothicWindow(ctx, x - tiW * 0.5, y - tH * 0.55, 4.5, 8, "left", s,
+      "rgba(255, 200, 100", 0.35);
 
     // Battlements top face
     const batBase = y - tH;
@@ -1850,15 +1784,17 @@ function drawBuilding(
     // Large door
     drawBldgDoor(ctx, x + iW * 0.2, y + iD * 0.7, 8 * s, 15 * s, s);
 
-    // Right wall windows (upper)
+    // Right wall windows (upper) — isometric gothic flush with wall
     for (let wi = 0; wi < 3; wi++) {
       const wwx = x + iW * (0.15 + wi * 0.32);
       const wwy = y + iD * (0.65 - wi * 0.32) - wH * 0.58;
-      drawBldgArchWin(ctx, wwx, wwy, 3 * s, 5.5 * s, s);
+      drawIsoGothicWindow(ctx, wwx, wwy, 4.5, 7, "right", s,
+        "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
     }
 
-    // Left wall window
-    drawBldgArchWin(ctx, x - iW * 0.55, y - wH * 0.6, 3.5 * s, 6 * s, s, true);
+    // Left wall window — isometric gothic flush with wall
+    drawIsoGothicWindow(ctx, x - iW * 0.55, y - wH * 0.6, 5, 8, "left", s,
+      "rgba(255, 200, 100", 0.35, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
     // Steep roof
     drawBldgRoof(
@@ -1986,16 +1922,11 @@ function drawBuilding(
     const dBaseY = y + Math.sin(dAngle) * hR * 0.3;
     drawBldgDoor(ctx, dX, dBaseY, 6 * s, 12 * s, s);
 
-    // Windows
-    drawBldgArchWin(ctx, x - hR * 0.62, y - hH * 0.45, 3 * s, 5 * s, s);
-    drawBldgArchWin(
-      ctx,
-      x + hR * 0.12,
-      y - hH * 0.5 + hR * 0.1,
-      2.5 * s,
-      4.5 * s,
-      s,
-    );
+    // Windows — isometric gothic flush with wall
+    drawIsoGothicWindow(ctx, x - hR * 0.62, y - hH * 0.45, 4.5, 7, "left", s,
+      "rgba(255, 200, 100", 0.3, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
+    drawIsoGothicWindow(ctx, x + hR * 0.12, y - hH * 0.5 + hR * 0.1, 3.5, 6, "right", s,
+      "rgba(255, 200, 100", 0.25, { frame: "#3A2518", void: "#1A1008", sill: "#5A4A38" });
 
     // Thatched conical roof
     const roofBase = y - hH;
