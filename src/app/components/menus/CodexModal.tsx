@@ -4,6 +4,7 @@ import {
   Star,
   Book,
   Shield,
+  ChessRook,
   Zap,
   Swords,
   Crown,
@@ -1371,7 +1372,7 @@ export const CodexModal: React.FC<CodexModalProps> = ({ onClose, defaultTab }) =
               {
                 id: "towers",
                 label: "Towers",
-                icon: <Shield size={16} />,
+                icon: <ChessRook size={16} />,
                 count: towerTypes.length,
               },
               {

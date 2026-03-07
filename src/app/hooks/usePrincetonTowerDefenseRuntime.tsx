@@ -438,6 +438,7 @@ const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
   "sphinx",
   "giant_sphinx",
   "nassau_hall",
+  "carnegie_lake",
   "ice_fortress",
   "obsidian_castle",
   "witch_cottage",
@@ -458,6 +459,7 @@ const DEPTH_SENSITIVE_DECORATION_TYPES = new Set<string>([
 // Some oversized landmarks should always interleave by depth, regardless of path proximity.
 const ALWAYS_DEPTH_SENSITIVE_DECORATION_TYPES = new Set<DecorationType>([
   "nassau_hall",
+  "carnegie_lake",
   "ruins",
   "sunken_pillar",
   "war_monument",
@@ -6960,6 +6962,7 @@ export function usePrincetonTowerDefenseRuntime() {
           decorX: dec.x,
           decorY: dec.y,
           selectedMap,
+          mapTheme,
           shadowOnly: !!entry.shadowOnly,
           skipShadow: hasBackgroundShadowPass && !entry.shadowOnly,
         });
@@ -7196,6 +7199,7 @@ export function usePrincetonTowerDefenseRuntime() {
               decorX: dec.x,
               decorY: dec.y,
               selectedMap,
+              mapTheme,
               skipShadow: getDecorationVolumeSpec(dec.type, dec.heightTag)
                 .backgroundShadowOnly,
             });
@@ -7993,6 +7997,7 @@ export function usePrincetonTowerDefenseRuntime() {
             decorX: decData.x,
             decorY: decData.y,
             selectedMap: decData.selectedMap,
+            mapTheme,
             skipShadow: getDecorationVolumeSpec(
               decData.type,
               decData.heightTag

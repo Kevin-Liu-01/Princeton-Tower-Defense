@@ -19,7 +19,7 @@ import {
   Save,
   Search,
   Settings2,
-  Shield,
+  ChessRook,
   Sparkles,
   Swords,
   Target,
@@ -424,7 +424,7 @@ const TOOL_OPTIONS: Array<{
     { key: "path_primary", label: "Path A", icon: Route },
     { key: "path_secondary", label: "Path B", icon: GitBranch },
     { key: "hero_spawn", label: "Hero", icon: User },
-    { key: "special_tower", label: "Objective", icon: Shield },
+    { key: "special_tower", label: "Objective", icon: ChessRook },
   ];
 
 const samePoint = (a: GridPoint | null, b: GridPoint | null): boolean =>
@@ -2359,7 +2359,7 @@ export const CustomLevelCreatorModal: React.FC<CustomLevelCreatorModalProps> = (
                   />
                 ) : (
                   <div className="rounded border border-amber-900/60 bg-black/25 px-2 py-1 text-amber-400/80 inline-flex items-center gap-1.5">
-                    <Shield size={11} />
+                    <ChessRook size={11} />
                     hp auto
                   </div>
                 )}
@@ -2381,7 +2381,7 @@ export const CustomLevelCreatorModal: React.FC<CustomLevelCreatorModalProps> = (
                 </div>
               </div>
               <div className="rounded border border-fuchsia-700/60 bg-fuchsia-900/20 px-2 py-1.5 text-[11px] text-fuchsia-100 inline-flex items-center gap-1.5">
-                <Shield size={11} />
+                <ChessRook size={11} />
                 Select `Objective` in toolbelt, then click map to place or move it.
               </div>
               <div className="mt-1 text-[10px] text-amber-400/80 inline-flex items-center gap-1.5">

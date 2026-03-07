@@ -14,6 +14,8 @@ import {
   drawIsoFlushDoor,
   traceIsoFlushRect,
 } from "../isoFlush";
+import { getRockConfig } from "./rockPalettes";
+import { drawBoulderRock, drawSlabRock, drawSpireRock } from "./rockShapes";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -26,6 +28,7 @@ export interface DecorationRenderParams {
   decorX: number; // Original decoration x position for seeding
   decorY: number; // Original decoration y position for seeding
   selectedMap: string;
+  mapTheme?: string;
   // Optional split-pass controls used for large landmarks with ground shadows.
   shadowOnly?: boolean;
   skipShadow?: boolean;
@@ -79,6 +82,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     decorX,
     decorY,
     selectedMap,
+    mapTheme = "",
     shadowOnly = false,
     skipShadow = false,
   } = params;
@@ -319,212 +323,12 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       break;
     }
     case "rock": {
-      // Enhanced 3D isometric rock with detailed texture and moss
-      const rockVariants = [
-        {
-          base: "#6d4c41",
-          mid: "#8d6e63",
-          light: "#a1887f",
-          dark: "#4e342e",
-          moss: "#4a6741",
-        },
-        {
-          base: "#5d4037",
-          mid: "#795548",
-          light: "#8d6e63",
-          dark: "#3e2723",
-          moss: "#2e7d32",
-        },
-        {
-          base: "#757575",
-          mid: "#9e9e9e",
-          light: "#bdbdbd",
-          dark: "#424242",
-          moss: "#455a64",
-        },
-        {
-          base: "#616161",
-          mid: "#757575",
-          light: "#9e9e9e",
-          dark: "#424242",
-          moss: "#37474f",
-        },
-      ];
-      const rv = rockVariants[variant % 4];
-
-      // Ground shadow with soft edge
-      const rockShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 3 * s,
-        screenPos.y + 5 * s,
-        0,
-        screenPos.x + 3 * s,
-        screenPos.y + 5 * s,
-        18 * s,
-      );
-      rockShadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
-      rockShadowGrad.addColorStop(0.7, "rgba(0,0,0,0.1)");
-      rockShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = rockShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y + 5 * s,
-        18 * s,
-        9 * s,
-        0.1,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-
-      // Main rock body - proper isometric 3D shape
-      // Key vertices for consistent isometric rock:
-      // topPeak: (0, -16) - highest point
-      // topLeft: (-8, -12) - top left corner
-      // topRight: (+10, -10) - top right corner
-      // frontPeak: (0, -2) - front edge where faces meet
-      // bottomLeft: (-12, +2) - bottom left
-      // bottomRight: (+12, +4) - bottom right
-
-      // Top face (brightest - faces up)
-      const topFaceGrad = ctx.createLinearGradient(
-        screenPos.x - 8 * s,
-        screenPos.y - 14 * s,
-        screenPos.x + 10 * s,
-        screenPos.y - 8 * s,
-      );
-      topFaceGrad.addColorStop(0, rv.light);
-      topFaceGrad.addColorStop(1, rv.mid);
-      ctx.fillStyle = topFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 12 * s); // topLeft
-      ctx.lineTo(screenPos.x, screenPos.y - 16 * s); // topPeak
-      ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 10 * s); // topRight
-      ctx.lineTo(screenPos.x, screenPos.y - 6 * s); // center point
-      ctx.closePath();
-      ctx.fill();
-
-      // Front face (medium - faces viewer)
-      const frontFaceGrad = ctx.createLinearGradient(
-        screenPos.x - 12 * s,
-        screenPos.y - 8 * s,
-        screenPos.x + 4 * s,
-        screenPos.y + 4 * s,
-      );
-      frontFaceGrad.addColorStop(0, rv.mid);
-      frontFaceGrad.addColorStop(0.5, rv.base);
-      frontFaceGrad.addColorStop(1, rv.dark);
-      ctx.fillStyle = frontFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 12 * s); // topLeft
-      ctx.lineTo(screenPos.x, screenPos.y - 6 * s); // center point
-      ctx.lineTo(screenPos.x, screenPos.y + 2 * s); // frontPeak
-      ctx.lineTo(screenPos.x - 12 * s, screenPos.y + 2 * s); // bottomLeft
-      ctx.closePath();
-      ctx.fill();
-
-      // Right side face (darkest - faces right/away)
-      const rightFaceGrad = ctx.createLinearGradient(
-        screenPos.x,
-        screenPos.y - 10 * s,
-        screenPos.x + 12 * s,
-        screenPos.y + 2 * s,
-      );
-      rightFaceGrad.addColorStop(0, rv.base);
-      rightFaceGrad.addColorStop(0.6, rv.dark);
-      rightFaceGrad.addColorStop(1, rv.dark);
-      ctx.fillStyle = rightFaceGrad;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 10 * s, screenPos.y - 10 * s); // topRight
-      ctx.lineTo(screenPos.x + 12 * s, screenPos.y + 4 * s); // bottomRight
-      ctx.lineTo(screenPos.x, screenPos.y + 2 * s); // frontPeak
-      ctx.lineTo(screenPos.x, screenPos.y - 6 * s); // center point
-      ctx.closePath();
-      ctx.fill();
-
-      // Stone texture - cracks and facets
-      ctx.strokeStyle = rv.dark;
-      ctx.lineWidth = 0.8 * s;
-      // Crack on front face
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 10 * s);
-      ctx.lineTo(screenPos.x - 6 * s, screenPos.y - 4 * s);
-      ctx.lineTo(screenPos.x - 8 * s, screenPos.y);
-      ctx.stroke();
-      // Crack on right face
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x + 6 * s, screenPos.y - 8 * s);
-      ctx.lineTo(screenPos.x + 7 * s, screenPos.y - 2 * s);
-      ctx.stroke();
-      // Crack on top face
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 12 * s);
-      ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 9 * s);
-      ctx.stroke();
-
-      // Highlight on top edges
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
-      ctx.lineWidth = 1 * s;
-      ctx.beginPath();
-      ctx.moveTo(screenPos.x - 7 * s, screenPos.y - 12 * s);
-      ctx.lineTo(screenPos.x, screenPos.y - 16 * s);
-      ctx.lineTo(screenPos.x + 9 * s, screenPos.y - 10 * s);
-      ctx.stroke();
-
-      // Moss patches (on some variants)
-      if (variant === 0 || variant === 1) {
-        ctx.fillStyle = rv.moss;
-        ctx.globalAlpha = 0.6;
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x - 3 * s,
-          screenPos.y - 5 * s,
-          4 * s,
-          2 * s,
-          0.3,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x + 5 * s,
-          screenPos.y - 2 * s,
-          3 * s,
-          1.5 * s,
-          -0.2,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-
-      // Small pebbles around base
-      ctx.fillStyle = rv.mid;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x - 12 * s,
-        screenPos.y + 4 * s,
-        2 * s,
-        1.2 * s,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
-      ctx.fillStyle = rv.dark;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 12 * s,
-        screenPos.y + 3 * s,
-        1.5 * s,
-        1 * s,
-        -0.3,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      const rockConfig = getRockConfig(mapTheme);
+      const paletteIdx = variant % 3;
+      const shapeIdx = variant % 3;
+      const pal = rockConfig.palettes[paletteIdx];
+      const drawFn = [drawBoulderRock, drawSlabRock, drawSpireRock][shapeIdx];
+      drawFn(ctx, screenPos.x, screenPos.y, s, pal, rockConfig, decorTime);
       break;
     }
     case "nassau_hall": {
@@ -12036,7 +11840,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         ctx.ellipse(cbx, cby, 2.5 * s, 1.5 * s, cba + 0.3, 0, Math.PI * 2);
         ctx.fill();
       }
-
       // === ENCHANTED WATER BODY ===
       // Teal/emerald magical water
       const wGrad = ctx.createRadialGradient(
@@ -24649,7 +24452,6 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "ruins": {
       // 7 ruin variants: 0-3 generic, 4 sunken_temple, 5 small pillar (frost), 6 grand temple (swamp)
       const ruinVariant = selectedMap === "sunken_temple" ? 4 : variant % 7;
-      const stoneBase = "#5a5a5a";
       const stoneDark = "#3a3a3a";
       const stoneLight = "#7a7a7a";
       const mossColor = "#4a5d3a";
@@ -24680,348 +24482,571 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       if (ruinVariant === 0) {
-        // VARIANT 0: Broken Roman column with scattered debris
-        ctx.fillStyle = stoneLight;
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y + 5 * s,
-          12 * s,
-          6 * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        ctx.fillStyle = stoneDark;
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y + 8 * s,
-          12 * s,
-          6 * s,
-          0,
-          0,
-          Math.PI,
-        );
-        ctx.fill();
+        // VARIANT 0: Broken column ruins — tall column, wall fragment, rubble field
+        const stoneMid = "#5a5a5a";
+        const stoneShadow = "#2a2a2a";
 
-        ctx.fillStyle = stoneBase;
+        // === HEXAGONAL BASE ===
+        const hexR = 24 * s;
+        const hexH = 5 * s;
+        const hexY = screenPos.y + 2 * s;
+        const hexPts: { x: number; y: number }[] = [];
+        for (let i = 0; i < 6; i++) {
+          const ang = (Math.PI / 3) * i - Math.PI / 2;
+          hexPts.push({ x: screenPos.x + Math.cos(ang) * hexR, y: hexY + Math.sin(ang) * hexR * 0.5 });
+        }
+        const hexTopGrad = ctx.createLinearGradient(screenPos.x - hexR, hexY, screenPos.x + hexR, hexY);
+        hexTopGrad.addColorStop(0, stoneMid);
+        hexTopGrad.addColorStop(0.3, stoneLight);
+        hexTopGrad.addColorStop(0.7, stoneMid);
+        hexTopGrad.addColorStop(1, stoneDark);
+        ctx.fillStyle = hexTopGrad;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x - 8 * s, screenPos.y + 2 * s);
-        ctx.lineTo(screenPos.x - 7 * s, screenPos.y - 35 * s);
-        ctx.lineTo(screenPos.x + 2 * s, screenPos.y - 40 * s);
-        ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 38 * s);
-        ctx.lineTo(screenPos.x + 8 * s, screenPos.y + 2 * s);
+        ctx.moveTo(hexPts[0].x, hexPts[0].y);
+        for (let i = 1; i < 6; i++) ctx.lineTo(hexPts[i].x, hexPts[i].y);
         ctx.closePath();
         ctx.fill();
-
-        ctx.strokeStyle = stoneDark;
-        ctx.lineWidth = 0.5 * s;
-        for (let i = -5; i <= 5; i += 2) {
+        ctx.strokeStyle = stoneShadow;
+        ctx.lineWidth = 0.4 * s;
+        for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(screenPos.x, hexY); ctx.lineTo(hexPts[i].x, hexPts[i].y); ctx.stroke(); }
+        for (let i = 2; i <= 4; i++) {
+          const ni = (i + 1) % 6;
+          ctx.fillStyle = i === 3 ? stoneShadow : stoneDark;
           ctx.beginPath();
-          ctx.moveTo(screenPos.x + i * s, screenPos.y + 2 * s);
-          ctx.lineTo(screenPos.x + i * s - 1, screenPos.y - 35 * s);
-          ctx.stroke();
+          ctx.moveTo(hexPts[i].x, hexPts[i].y); ctx.lineTo(hexPts[ni].x, hexPts[ni].y);
+          ctx.lineTo(hexPts[ni].x, hexPts[ni].y + hexH); ctx.lineTo(hexPts[i].x, hexPts[i].y + hexH);
+          ctx.closePath(); ctx.fill();
         }
 
+        // === CRUMBLING WALL (back-left) ===
+        const wX = screenPos.x - 24 * s;
+        const wTopY = screenPos.y - 36 * s;
+        const wW = 28 * s;
+        const wThick = 5 * s;
+        ctx.fillStyle = stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(wX - wThick, screenPos.y + 2 * s); ctx.lineTo(wX - wThick, wTopY + 8 * s);
+        ctx.lineTo(wX - wThick + 2 * s, wTopY + 4 * s); ctx.lineTo(wX, wTopY + 2 * s);
+        ctx.lineTo(wX, screenPos.y - 2 * s); ctx.closePath(); ctx.fill();
+        const wFG = ctx.createLinearGradient(wX, wTopY, wX + wW, screenPos.y);
+        wFG.addColorStop(0, stoneMid); wFG.addColorStop(0.4, stoneLight); wFG.addColorStop(1, stoneDark);
+        ctx.fillStyle = wFG;
+        ctx.beginPath();
+        ctx.moveTo(wX, screenPos.y - 2 * s); ctx.lineTo(wX, wTopY + 2 * s);
+        ctx.lineTo(wX + 6 * s, wTopY); ctx.lineTo(wX + 14 * s, wTopY + 6 * s);
+        ctx.lineTo(wX + 20 * s, wTopY + 2 * s); ctx.lineTo(wX + wW, wTopY + 8 * s);
+        ctx.lineTo(wX + wW, screenPos.y + 1 * s); ctx.closePath(); ctx.fill();
         ctx.fillStyle = stoneLight;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x + 18 * s, screenPos.y + 3 * s);
-        ctx.lineTo(screenPos.x + 25 * s, screenPos.y - 2 * s);
-        ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 5 * s);
-        ctx.lineTo(screenPos.x + 22 * s, screenPos.y + 8 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = stoneDark;
-        for (let r = 0; r < 5; r++) {
-          const rx =
-            screenPos.x - 25 * s + r * 12 * s + Math.sin(r * 2.5) * 8 * s;
-          const ry = screenPos.y + 5 * s + Math.cos(r * 1.7) * 5 * s;
-          ctx.beginPath();
-          ctx.ellipse(
-            rx,
-            ry,
-            (4 + (r % 3)) * s,
-            (2 + (r % 2)) * s,
-            r * 0.5,
-            0,
-            Math.PI * 2,
-          );
-          ctx.fill();
-        }
-
-        ctx.fillStyle = mossColor;
-        ctx.globalAlpha = 0.6;
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x - 5 * s,
-          screenPos.y - 15 * s,
-          4 * s,
-          2.5 * s,
-          0.3,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x + 3 * s,
-          screenPos.y - 5 * s,
-          3 * s,
-          2 * s,
-          -0.2,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      } else if (ruinVariant === 1) {
-        // VARIANT 1: Crumbling archway
-        // Left pillar
-        ctx.fillStyle = stoneDark;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 25 * s, screenPos.y + 10 * s);
-        ctx.lineTo(screenPos.x - 28 * s, screenPos.y - 30 * s);
-        ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 35 * s);
-        ctx.lineTo(screenPos.x - 15 * s, screenPos.y + 8 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Left pillar highlight
-        ctx.fillStyle = stoneBase;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 15 * s, screenPos.y + 8 * s);
-        ctx.lineTo(screenPos.x - 18 * s, screenPos.y - 35 * s);
-        ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 32 * s);
-        ctx.lineTo(screenPos.x - 10 * s, screenPos.y + 10 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Right pillar (broken shorter)
-        ctx.fillStyle = stoneDark;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x + 15 * s, screenPos.y + 10 * s);
-        ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 15 * s);
-        ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 18 * s);
-        ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 8 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = stoneBase;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x + 25 * s, screenPos.y + 8 * s);
-        ctx.lineTo(screenPos.x + 22 * s, screenPos.y - 18 * s);
-        ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 15 * s);
-        ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 10 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Partial arch connecting
-        ctx.strokeStyle = stoneBase;
-        ctx.lineWidth = 6 * s;
-        ctx.beginPath();
-        ctx.arc(
-          screenPos.x,
-          screenPos.y - 20 * s,
-          22 * s,
-          Math.PI * 1.1,
-          Math.PI * 1.6,
-        );
-        ctx.stroke();
-
-        // Fallen arch stones
-        ctx.fillStyle = stoneLight;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x + 5 * s, screenPos.y + 2 * s);
-        ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 5 * s);
-        ctx.lineTo(screenPos.x + 18 * s, screenPos.y + 3 * s);
-        ctx.lineTo(screenPos.x + 10 * s, screenPos.y + 8 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Scattered debris
-        ctx.fillStyle = stoneDark;
-        for (let r = 0; r < 4; r++) {
-          const rx = screenPos.x - 8 * s + r * 8 * s;
-          const ry = screenPos.y + 6 * s + Math.sin(r * 2) * 3 * s;
-          ctx.beginPath();
-          ctx.ellipse(rx, ry, 3 * s, 1.8 * s, r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (ruinVariant === 2) {
-        // VARIANT 2: Collapsed wall section with vegetation
-        // Back wall segment
-        ctx.fillStyle = stoneDark;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 30 * s, screenPos.y + 5 * s);
-        ctx.lineTo(screenPos.x - 28 * s, screenPos.y - 25 * s);
-        ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 35 * s);
-        ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 5 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Wall texture - brick lines
-        ctx.strokeStyle = "#2a2a2a";
-        ctx.lineWidth = 0.5 * s;
+        ctx.moveTo(wX - wThick, wTopY + 8 * s); ctx.lineTo(wX, wTopY + 2 * s);
+        ctx.lineTo(wX + 6 * s, wTopY); ctx.lineTo(wX + 14 * s, wTopY + 6 * s);
+        ctx.lineTo(wX + 20 * s, wTopY + 2 * s); ctx.lineTo(wX + wW, wTopY + 8 * s);
+        ctx.lineTo(wX + wW - wThick, wTopY + 5 * s); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.5 * s;
         for (let row = 0; row < 5; row++) {
-          const yOff = -5 - row * 6;
-          ctx.beginPath();
-          ctx.moveTo(screenPos.x - 28 * s, screenPos.y + yOff * s);
-          ctx.lineTo(screenPos.x + 6 * s, screenPos.y + (yOff - 8) * s);
-          ctx.stroke();
+          const rowY = wTopY + 12 * s + row * 6 * s;
+          if (rowY < screenPos.y) { ctx.beginPath(); ctx.moveTo(wX + 2 * s, rowY); ctx.lineTo(wX + wW - 2 * s, rowY + 1 * s); ctx.stroke(); }
         }
 
-        // Collapsed section (pile of stones)
-        ctx.fillStyle = stoneBase;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x + 8 * s, screenPos.y + 8 * s);
-        ctx.lineTo(screenPos.x + 15 * s, screenPos.y - 8 * s);
-        ctx.lineTo(screenPos.x + 28 * s, screenPos.y + 2 * s);
-        ctx.lineTo(screenPos.x + 30 * s, screenPos.y + 10 * s);
-        ctx.closePath();
-        ctx.fill();
-
+        // === MAIN TALL COLUMN ===
+        const colR = 7 * s; const colH = 48 * s; const colX = screenPos.x + 2 * s;
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(colX, screenPos.y + 2 * s, colR + 3 * s, (colR + 3 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(colX, screenPos.y, colR, colR * 0.5, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(colX + colR, screenPos.y - colH + 10 * s);
+        ctx.ellipse(colX, screenPos.y - colH + 10 * s, colR, colR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        const cGrad = ctx.createLinearGradient(colX - colR, screenPos.y, colX + colR, screenPos.y);
+        cGrad.addColorStop(0, stoneMid); cGrad.addColorStop(0.25, stoneLight); cGrad.addColorStop(0.6, stoneMid); cGrad.addColorStop(1, stoneDark);
+        ctx.fillStyle = cGrad;
+        ctx.beginPath(); ctx.ellipse(colX, screenPos.y, colR, colR * 0.5, 0, 0, Math.PI);
+        ctx.lineTo(colX - colR, screenPos.y - colH + 10 * s);
+        ctx.ellipse(colX, screenPos.y - colH + 10 * s, colR, colR * 0.5, 0, Math.PI, Math.PI * 2, true);
+        ctx.closePath(); ctx.fill();
         ctx.fillStyle = stoneLight;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x + 12 * s, screenPos.y + 5 * s);
-        ctx.lineTo(screenPos.x + 18 * s, screenPos.y - 3 * s);
-        ctx.lineTo(screenPos.x + 25 * s, screenPos.y + 4 * s);
-        ctx.lineTo(screenPos.x + 20 * s, screenPos.y + 8 * s);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(colX - colR, screenPos.y - colH + 10 * s);
+        ctx.lineTo(colX - colR + 2 * s, screenPos.y - colH + 3 * s); ctx.lineTo(colX - 2 * s, screenPos.y - colH + 8 * s);
+        ctx.lineTo(colX + 1 * s, screenPos.y - colH); ctx.lineTo(colX + colR, screenPos.y - colH + 10 * s);
+        ctx.ellipse(colX, screenPos.y - colH + 10 * s, colR, colR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.7 * s;
+        for (let fl = 0; fl < 5; fl++) { const flA = (fl / 5) * Math.PI - Math.PI / 2; const flX = colX + Math.cos(flA) * colR * 0.85; ctx.beginPath(); ctx.moveTo(flX, screenPos.y - 1 * s); ctx.lineTo(flX, screenPos.y - colH + 13 * s); ctx.stroke(); }
+        ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 2 * s;
+        ctx.beginPath(); ctx.moveTo(colX - colR * 0.4, screenPos.y - 2 * s); ctx.lineTo(colX - colR * 0.4, screenPos.y - colH + 14 * s); ctx.stroke();
 
-        // Vegetation growing through cracks
+        // === SECONDARY SHORT COLUMN (right) ===
+        const col2X = screenPos.x + 22 * s; const col2R = 5 * s; const col2H = 22 * s;
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(col2X, screenPos.y + 4 * s, col2R + 2 * s, (col2R + 2 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(col2X, screenPos.y + 1 * s, col2R, col2R * 0.5, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(col2X + col2R, screenPos.y - col2H + 8 * s);
+        ctx.ellipse(col2X, screenPos.y - col2H + 8 * s, col2R, col2R * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        const c2G = ctx.createLinearGradient(col2X - col2R, 0, col2X + col2R, 0);
+        c2G.addColorStop(0, stoneMid); c2G.addColorStop(0.3, stoneLight); c2G.addColorStop(1, stoneDark);
+        ctx.fillStyle = c2G;
+        ctx.beginPath(); ctx.ellipse(col2X, screenPos.y + 1 * s, col2R, col2R * 0.5, 0, 0, Math.PI);
+        ctx.lineTo(col2X - col2R, screenPos.y - col2H + 8 * s);
+        ctx.ellipse(col2X, screenPos.y - col2H + 8 * s, col2R, col2R * 0.5, 0, Math.PI, Math.PI * 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath(); ctx.moveTo(col2X - col2R, screenPos.y - col2H + 8 * s);
+        ctx.lineTo(col2X - col2R + 2 * s, screenPos.y - col2H + 3 * s); ctx.lineTo(col2X + col2R, screenPos.y - col2H + 8 * s);
+        ctx.ellipse(col2X, screenPos.y - col2H + 8 * s, col2R, col2R * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+
+        // === FALLEN COLUMN SEGMENT ===
+        const fcX = screenPos.x - 6 * s; const fcY = screenPos.y + 11 * s; const fcR = 4.5 * s; const fcLen = 16 * s;
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(fcX + fcLen * 0.65, fcY - fcLen * 0.32, fcR, fcR * 0.5, 0.6, 0, Math.PI * 2); ctx.fill();
+        const fcG = ctx.createLinearGradient(fcX, fcY - fcR, fcX, fcY + fcR);
+        fcG.addColorStop(0, stoneLight); fcG.addColorStop(0.5, stoneMid); fcG.addColorStop(1, stoneDark);
+        ctx.fillStyle = fcG;
+        ctx.beginPath(); ctx.moveTo(fcX, fcY - fcR * 0.5);
+        ctx.lineTo(fcX + fcLen * 0.65, fcY - fcLen * 0.32 - fcR * 0.5);
+        ctx.ellipse(fcX + fcLen * 0.65, fcY - fcLen * 0.32, fcR, fcR * 0.5, 0.6, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(fcX, fcY + fcR * 0.5);
+        ctx.ellipse(fcX, fcY, fcR, fcR * 0.5, 0, Math.PI / 2, -Math.PI / 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(fcX, fcY, fcR, fcR * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+
+        // === ARCH FRAGMENT (right-back) ===
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 26 * s, screenPos.y); ctx.lineTo(screenPos.x + 24 * s, screenPos.y - 16 * s);
+        ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 20 * s); ctx.lineTo(screenPos.x + 34 * s, screenPos.y - 14 * s);
+        ctx.lineTo(screenPos.x + 34 * s, screenPos.y + 3 * s); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 34 * s, screenPos.y + 3 * s); ctx.lineTo(screenPos.x + 34 * s, screenPos.y - 14 * s);
+        ctx.lineTo(screenPos.x + 38 * s, screenPos.y - 10 * s); ctx.lineTo(screenPos.x + 38 * s, screenPos.y + 6 * s);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x + 24 * s, screenPos.y - 16 * s); ctx.lineTo(screenPos.x + 28 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x + 34 * s, screenPos.y - 14 * s); ctx.lineTo(screenPos.x + 38 * s, screenPos.y - 10 * s);
+        ctx.closePath(); ctx.fill();
+
+        // === 3D RUBBLE FIELD ===
+        [{ x: -34, y: 10, sz: 5 }, { x: -20, y: 14, sz: 4 }, { x: -12, y: 15, sz: 3.5 }, { x: 10, y: 14, sz: 4.5 }, { x: 20, y: 12, sz: 3.5 }, { x: 32, y: 9, sz: 4 }, { x: -28, y: 12, sz: 3 }, { x: 14, y: 8, sz: 3 }, { x: 36, y: 5, sz: 3 }, { x: -4, y: 17, sz: 2.5 }, { x: 6, y: 18, sz: 3 }, { x: -38, y: 5, sz: 3.5 }].forEach((rb, idx) => {
+          const rx = screenPos.x + rb.x * s; const ry = screenPos.y + rb.y * s; const rSz = rb.sz * s;
+          ctx.fillStyle = idx % 3 === 0 ? stoneLight : idx % 3 === 1 ? stoneMid : stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx, ry - rSz * 0.8); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx - rSz * 0.7, ry - rSz * 0.2); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.8, ry + rSz * 0.2); ctx.lineTo(rx + rSz * 0.2, ry + rSz * 0.6); ctx.closePath(); ctx.fill();
+        });
+        ctx.fillStyle = stoneShadow;
+        [[-30, 15], [-16, 17], [-2, 19], [8, 18], [18, 16], [28, 12], [36, 8], [-24, 18]].forEach(([px, py], i) => {
+          ctx.beginPath(); ctx.ellipse(screenPos.x + px * s, screenPos.y + py * s, (1.5 + (i % 3) * 0.5) * s, (0.8 + (i % 2) * 0.3) * s, i * 0.6, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // === FLOOR TILES ===
+        [{ x: -16, y: 5, w: 7, d: 3.5 }, { x: 12, y: 6, w: 6, d: 3 }, { x: -6, y: 3, w: 5, d: 2.5 }, { x: 20, y: 3, w: 5, d: 2.5 }].forEach((t) => {
+          const tx = screenPos.x + t.x * s; const ty = screenPos.y + t.y * s;
+          ctx.fillStyle = stoneMid; ctx.beginPath();
+          ctx.moveTo(tx, ty - t.d * s); ctx.lineTo(tx + t.w * s, ty); ctx.lineTo(tx, ty + t.d * s); ctx.lineTo(tx - t.w * s, ty); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.3 * s; ctx.stroke();
+        });
+
+        // === MOSS ===
+        ctx.fillStyle = mossColor; ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.ellipse(colX - 2 * s, screenPos.y - 18 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(colX + 4 * s, screenPos.y - 6 * s, 3.5 * s, 1.8 * s, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(wX + 10 * s, screenPos.y - 8 * s, 4 * s, 2 * s, 0.1, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x + 30 * s, screenPos.y - 2 * s, 3 * s, 1.5 * s, -0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // === CRACKS ===
+        ctx.strokeStyle = "#2a2a1a"; ctx.lineWidth = 0.7 * s;
+        ctx.beginPath(); ctx.moveTo(wX + 12 * s, wTopY + 8 * s); ctx.lineTo(wX + 14 * s, screenPos.y - 16 * s); ctx.lineTo(wX + 12 * s, screenPos.y - 8 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 6 * s, hexY - 3 * s); ctx.lineTo(screenPos.x - 3 * s, hexY + 4 * s); ctx.stroke();
+
+      } else if (ruinVariant === 1) {
+        // VARIANT 1: Grand crumbling archway with thick pillars
+        const stoneMid = "#5a5a5a";
+        const stoneShadow = "#2a2a2a";
+
+        // === LEFT PILLAR (tall, 3D cylinder) ===
+        const lpX = screenPos.x - 18 * s; const lpR = 7 * s; const lpH = 46 * s;
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(lpX, screenPos.y + 3 * s, lpR + 2 * s, (lpR + 2 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(lpX, screenPos.y + 1 * s, lpR, lpR * 0.5, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(lpX + lpR, screenPos.y - lpH + 10 * s);
+        ctx.ellipse(lpX, screenPos.y - lpH + 10 * s, lpR, lpR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        const lpG = ctx.createLinearGradient(lpX - lpR, screenPos.y, lpX + lpR, screenPos.y);
+        lpG.addColorStop(0, stoneMid); lpG.addColorStop(0.25, stoneLight); lpG.addColorStop(0.6, stoneMid); lpG.addColorStop(1, stoneDark);
+        ctx.fillStyle = lpG;
+        ctx.beginPath(); ctx.ellipse(lpX, screenPos.y + 1 * s, lpR, lpR * 0.5, 0, 0, Math.PI);
+        ctx.lineTo(lpX - lpR, screenPos.y - lpH + 10 * s);
+        ctx.ellipse(lpX, screenPos.y - lpH + 10 * s, lpR, lpR * 0.5, 0, Math.PI, Math.PI * 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath(); ctx.ellipse(lpX, screenPos.y - lpH + 6 * s, lpR + 2 * s, (lpR + 2 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.6 * s;
+        for (let fl = 0; fl < 4; fl++) { const flA = (fl / 4) * Math.PI - Math.PI / 2; const flX = lpX + Math.cos(flA) * lpR * 0.85; ctx.beginPath(); ctx.moveTo(flX, screenPos.y); ctx.lineTo(flX, screenPos.y - lpH + 13 * s); ctx.stroke(); }
+
+        // === RIGHT PILLAR (broken shorter) ===
+        const rpX = screenPos.x + 18 * s; const rpR = 7 * s; const rpH = 28 * s;
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(rpX, screenPos.y + 3 * s, rpR + 2 * s, (rpR + 2 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(rpX, screenPos.y + 1 * s, rpR, rpR * 0.5, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(rpX + rpR, screenPos.y - rpH + 8 * s);
+        ctx.ellipse(rpX, screenPos.y - rpH + 8 * s, rpR, rpR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        const rpG = ctx.createLinearGradient(rpX - rpR, screenPos.y, rpX + rpR, screenPos.y);
+        rpG.addColorStop(0, stoneMid); rpG.addColorStop(0.25, stoneLight); rpG.addColorStop(0.6, stoneMid); rpG.addColorStop(1, stoneDark);
+        ctx.fillStyle = rpG;
+        ctx.beginPath(); ctx.ellipse(rpX, screenPos.y + 1 * s, rpR, rpR * 0.5, 0, 0, Math.PI);
+        ctx.lineTo(rpX - rpR, screenPos.y - rpH + 8 * s);
+        ctx.ellipse(rpX, screenPos.y - rpH + 8 * s, rpR, rpR * 0.5, 0, Math.PI, Math.PI * 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath(); ctx.moveTo(rpX - rpR, screenPos.y - rpH + 8 * s);
+        ctx.lineTo(rpX - rpR + 2 * s, screenPos.y - rpH + 3 * s); ctx.lineTo(rpX + 1 * s, screenPos.y - rpH + 6 * s);
+        ctx.lineTo(rpX + rpR, screenPos.y - rpH + 8 * s);
+        ctx.ellipse(rpX, screenPos.y - rpH + 8 * s, rpR, rpR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.6 * s;
+        for (let fl = 0; fl < 4; fl++) { const flA = (fl / 4) * Math.PI - Math.PI / 2; const flX = rpX + Math.cos(flA) * rpR * 0.85; ctx.beginPath(); ctx.moveTo(flX, screenPos.y); ctx.lineTo(flX, screenPos.y - rpH + 10 * s); ctx.stroke(); }
+
+        // === PARTIAL ARCH (thick, 3D) ===
+        ctx.strokeStyle = stoneDark; ctx.lineWidth = 8 * s; ctx.lineCap = "butt";
+        ctx.beginPath(); ctx.arc(screenPos.x, screenPos.y - 22 * s, 20 * s, Math.PI * 1.05, Math.PI * 1.55); ctx.stroke();
+        ctx.strokeStyle = stoneLight; ctx.lineWidth = 6 * s;
+        ctx.beginPath(); ctx.arc(screenPos.x, screenPos.y - 22 * s, 20 * s, Math.PI * 1.05, Math.PI * 1.55); ctx.stroke();
+        ctx.strokeStyle = stoneMid; ctx.lineWidth = 4 * s;
+        ctx.beginPath(); ctx.arc(screenPos.x, screenPos.y - 22 * s, 20 * s, Math.PI * 1.05, Math.PI * 1.55); ctx.stroke();
+
+        // === LINTEL FRAGMENT on left pillar ===
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(lpX - lpR - 2 * s, screenPos.y - lpH + 4 * s); ctx.lineTo(lpX + lpR + 6 * s, screenPos.y - lpH + 2 * s);
+        ctx.lineTo(lpX + lpR + 6 * s, screenPos.y - lpH + 8 * s); ctx.lineTo(lpX - lpR - 2 * s, screenPos.y - lpH + 10 * s);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(lpX - lpR - 2 * s, screenPos.y - lpH + 4 * s); ctx.lineTo(lpX + lpR + 6 * s, screenPos.y - lpH + 2 * s);
+        ctx.lineTo(lpX + lpR + 4 * s, screenPos.y - lpH); ctx.lineTo(lpX - lpR - 4 * s, screenPos.y - lpH + 2 * s);
+        ctx.closePath(); ctx.fill();
+
+        // === KEYSTONE on ground ===
+        const ksX = screenPos.x + 4 * s; const ksY = screenPos.y + 6 * s;
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath(); ctx.moveTo(ksX, ksY - 5 * s); ctx.lineTo(ksX + 8 * s, ksY - 2 * s); ctx.lineTo(ksX + 6 * s, ksY + 4 * s); ctx.lineTo(ksX - 2 * s, ksY + 2 * s); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.moveTo(ksX + 8 * s, ksY - 2 * s); ctx.lineTo(ksX + 6 * s, ksY + 4 * s); ctx.lineTo(ksX + 4 * s, ksY + 2 * s); ctx.lineTo(ksX + 6 * s, ksY - 3 * s); ctx.closePath(); ctx.fill();
+
+        // === 3D RUBBLE FIELD ===
+        [{ x: -32, y: 10, sz: 4.5 }, { x: -10, y: 14, sz: 3.5 }, { x: 6, y: 15, sz: 4 }, { x: 26, y: 12, sz: 3.5 }, { x: -24, y: 13, sz: 3 }, { x: 14, y: 16, sz: 3 }, { x: 30, y: 8, sz: 4 }, { x: -16, y: 16, sz: 2.5 }, { x: 34, y: 4, sz: 3 }, { x: -36, y: 6, sz: 3 }].forEach((rb, idx) => {
+          const rx = screenPos.x + rb.x * s; const ry = screenPos.y + rb.y * s; const rSz = rb.sz * s;
+          ctx.fillStyle = idx % 3 === 0 ? stoneLight : idx % 3 === 1 ? stoneMid : stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx, ry - rSz * 0.8); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx - rSz * 0.7, ry - rSz * 0.2); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.8, ry + rSz * 0.2); ctx.lineTo(rx + rSz * 0.2, ry + rSz * 0.6); ctx.closePath(); ctx.fill();
+        });
+        ctx.fillStyle = stoneShadow;
+        [[-28, 15], [-14, 18], [0, 19], [12, 17], [22, 15], [32, 11], [-8, 12], [18, 8]].forEach(([px, py], i) => {
+          ctx.beginPath(); ctx.ellipse(screenPos.x + px * s, screenPos.y + py * s, (1.5 + (i % 3) * 0.5) * s, (0.8 + (i % 2) * 0.3) * s, i * 0.6, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // === FLOOR TILES ===
+        [{ x: -8, y: 4, w: 6, d: 3 }, { x: 10, y: 3, w: 5, d: 2.5 }, { x: -20, y: 6, w: 7, d: 3.5 }].forEach((t) => {
+          const tx = screenPos.x + t.x * s; const ty = screenPos.y + t.y * s;
+          ctx.fillStyle = stoneMid; ctx.beginPath();
+          ctx.moveTo(tx, ty - t.d * s); ctx.lineTo(tx + t.w * s, ty); ctx.lineTo(tx, ty + t.d * s); ctx.lineTo(tx - t.w * s, ty); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.3 * s; ctx.stroke();
+        });
+
+        // === MOSS ===
+        ctx.fillStyle = mossColor; ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.ellipse(lpX + 2 * s, screenPos.y - 18 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(rpX - 2 * s, screenPos.y - 10 * s, 3.5 * s, 1.8 * s, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x + 2 * s, screenPos.y - 30 * s, 3 * s, 1.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x - 30 * s, screenPos.y + 4 * s, 4 * s, 2 * s, 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+
+      } else if (ruinVariant === 2) {
+        // VARIANT 2: L-shaped collapsed wall with vegetation
+        const stoneMid = "#5a5a5a";
+        const stoneShadow = "#2a2a2a";
+        const vineColor = "#2d5a2d";
+
+        // === BACK WALL SECTION ===
+        const w1X = screenPos.x - 28 * s; const w1TopY = screenPos.y - 34 * s;
+        const w1W = 36 * s; const w1Th = 5 * s;
+        ctx.fillStyle = stoneShadow;
+        ctx.beginPath();
+        ctx.moveTo(w1X - w1Th, screenPos.y + 2 * s); ctx.lineTo(w1X - w1Th, w1TopY + 8 * s);
+        ctx.lineTo(w1X - w1Th + 2 * s, w1TopY + 4 * s); ctx.lineTo(w1X, w1TopY + 2 * s);
+        ctx.lineTo(w1X, screenPos.y - 2 * s); ctx.closePath(); ctx.fill();
+        const w1G = ctx.createLinearGradient(w1X, w1TopY, w1X + w1W, screenPos.y);
+        w1G.addColorStop(0, stoneMid); w1G.addColorStop(0.4, stoneLight); w1G.addColorStop(1, stoneDark);
+        ctx.fillStyle = w1G;
+        ctx.beginPath();
+        ctx.moveTo(w1X, screenPos.y - 2 * s); ctx.lineTo(w1X, w1TopY + 2 * s);
+        ctx.lineTo(w1X + 8 * s, w1TopY); ctx.lineTo(w1X + 16 * s, w1TopY + 6 * s);
+        ctx.lineTo(w1X + 24 * s, w1TopY + 2 * s); ctx.lineTo(w1X + w1W, w1TopY + 10 * s);
+        ctx.lineTo(w1X + w1W, screenPos.y + 1 * s); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(w1X - w1Th, w1TopY + 8 * s); ctx.lineTo(w1X, w1TopY + 2 * s);
+        ctx.lineTo(w1X + 8 * s, w1TopY); ctx.lineTo(w1X + 16 * s, w1TopY + 6 * s);
+        ctx.lineTo(w1X + 24 * s, w1TopY + 2 * s); ctx.lineTo(w1X + w1W, w1TopY + 10 * s);
+        ctx.lineTo(w1X + w1W - w1Th, w1TopY + 7 * s); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.5 * s;
+        for (let row = 0; row < 5; row++) {
+          const rowY = w1TopY + 14 * s + row * 5 * s;
+          if (rowY < screenPos.y) { ctx.beginPath(); ctx.moveTo(w1X + 2 * s, rowY); ctx.lineTo(w1X + w1W - 2 * s, rowY + 1 * s); ctx.stroke(); }
+        }
+
+        // === PERPENDICULAR WALL (right side) ===
+        const w2X = screenPos.x + 10 * s; const w2TopY = screenPos.y - 24 * s;
+        const w2W = 22 * s; const w2Th = 5 * s;
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath();
+        ctx.moveTo(w2X, screenPos.y + 2 * s); ctx.lineTo(w2X, w2TopY + 4 * s);
+        ctx.lineTo(w2X + 5 * s, w2TopY); ctx.lineTo(w2X + 12 * s, w2TopY + 6 * s);
+        ctx.lineTo(w2X + w2W, w2TopY + 3 * s);
+        ctx.lineTo(w2X + w2W, screenPos.y + 4 * s); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(w2X + w2W, screenPos.y + 4 * s); ctx.lineTo(w2X + w2W, w2TopY + 3 * s);
+        ctx.lineTo(w2X + w2W + w2Th, w2TopY + 6 * s);
+        ctx.lineTo(w2X + w2W + w2Th, screenPos.y + 7 * s); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(w2X, w2TopY + 4 * s); ctx.lineTo(w2X + 5 * s, w2TopY);
+        ctx.lineTo(w2X + 12 * s, w2TopY + 6 * s); ctx.lineTo(w2X + w2W, w2TopY + 3 * s);
+        ctx.lineTo(w2X + w2W + w2Th, w2TopY + 6 * s); ctx.closePath(); ctx.fill();
+
+        // === COLUMN STUMP ===
+        const csX = screenPos.x - 6 * s; const csR = 5 * s; const csH = 12 * s;
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(csX, screenPos.y + 3 * s, csR + 2 * s, (csR + 2 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(csX, screenPos.y + 1 * s, csR, csR * 0.5, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(csX + csR, screenPos.y - csH + 6 * s);
+        ctx.ellipse(csX, screenPos.y - csH + 6 * s, csR, csR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        const csG = ctx.createLinearGradient(csX - csR, 0, csX + csR, 0);
+        csG.addColorStop(0, stoneMid); csG.addColorStop(0.3, stoneLight); csG.addColorStop(1, stoneDark);
+        ctx.fillStyle = csG;
+        ctx.beginPath(); ctx.ellipse(csX, screenPos.y + 1 * s, csR, csR * 0.5, 0, 0, Math.PI);
+        ctx.lineTo(csX - csR, screenPos.y - csH + 6 * s);
+        ctx.ellipse(csX, screenPos.y - csH + 6 * s, csR, csR * 0.5, 0, Math.PI, Math.PI * 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath(); ctx.moveTo(csX - csR, screenPos.y - csH + 6 * s);
+        ctx.lineTo(csX - 1 * s, screenPos.y - csH + 2 * s); ctx.lineTo(csX + csR, screenPos.y - csH + 6 * s);
+        ctx.ellipse(csX, screenPos.y - csH + 6 * s, csR, csR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+
+        // === VEGETATION ===
         ctx.fillStyle = "#3d5c2a";
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 15 * s);
-        ctx.quadraticCurveTo(
-          screenPos.x - 15 * s,
-          screenPos.y - 30 * s,
-          screenPos.x - 8 * s,
-          screenPos.y - 28 * s,
-        );
-        ctx.quadraticCurveTo(
-          screenPos.x - 5 * s,
-          screenPos.y - 22 * s,
-          screenPos.x - 10 * s,
-          screenPos.y - 15 * s,
-        );
-        ctx.fill();
-
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 10 * s, screenPos.y - 16 * s);
+        ctx.quadraticCurveTo(screenPos.x - 15 * s, screenPos.y - 32 * s, screenPos.x - 8 * s, screenPos.y - 30 * s);
+        ctx.quadraticCurveTo(screenPos.x - 5 * s, screenPos.y - 22 * s, screenPos.x - 10 * s, screenPos.y - 16 * s); ctx.fill();
         ctx.fillStyle = "#4a7a35";
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 18 * s);
-        ctx.quadraticCurveTo(
-          screenPos.x - 2 * s,
-          screenPos.y - 32 * s,
-          screenPos.x + 3 * s,
-          screenPos.y - 25 * s,
-        );
-        ctx.quadraticCurveTo(
-          screenPos.x,
-          screenPos.y - 20 * s,
-          screenPos.x - 5 * s,
-          screenPos.y - 18 * s,
-        );
-        ctx.fill();
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 20 * s);
+        ctx.quadraticCurveTo(screenPos.x - 1 * s, screenPos.y - 34 * s, screenPos.x + 4 * s, screenPos.y - 27 * s);
+        ctx.quadraticCurveTo(screenPos.x + 1 * s, screenPos.y - 22 * s, screenPos.x - 4 * s, screenPos.y - 20 * s); ctx.fill();
+        ctx.fillStyle = "#5a8a42";
+        ctx.beginPath(); ctx.moveTo(screenPos.x + 2 * s, screenPos.y - 18 * s);
+        ctx.quadraticCurveTo(screenPos.x + 6 * s, screenPos.y - 28 * s, screenPos.x + 8 * s, screenPos.y - 22 * s);
+        ctx.quadraticCurveTo(screenPos.x + 5 * s, screenPos.y - 19 * s, screenPos.x + 2 * s, screenPos.y - 18 * s); ctx.fill();
 
-        // Ivy tendrils
-        ctx.strokeStyle = mossColor;
-        ctx.lineWidth = 1.5 * s;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 10 * s);
-        ctx.quadraticCurveTo(
-          screenPos.x - 15 * s,
-          screenPos.y - 5 * s,
-          screenPos.x - 18 * s,
-          screenPos.y + 2 * s,
-        );
-        ctx.stroke();
+        // === IVY VINES ===
+        ctx.strokeStyle = vineColor; ctx.lineWidth = 1.5 * s; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(w1X + 10 * s, w1TopY + 6 * s); ctx.quadraticCurveTo(w1X + 6 * s, screenPos.y - 14 * s, w1X + 12 * s, screenPos.y - 4 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w1X + 28 * s, w1TopY + 10 * s); ctx.quadraticCurveTo(w1X + 32 * s, screenPos.y - 10 * s, w1X + 26 * s, screenPos.y - 2 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w2X + 8 * s, w2TopY + 4 * s); ctx.quadraticCurveTo(w2X + 12 * s, screenPos.y - 8 * s, w2X + 6 * s, screenPos.y); ctx.stroke();
+        ctx.fillStyle = mossColor; ctx.globalAlpha = 0.85;
+        [[w1X + 8 * s, screenPos.y - 10 * s], [w1X + 11 * s, screenPos.y - 6 * s], [w1X + 28 * s, screenPos.y - 6 * s], [w2X + 8 * s, screenPos.y - 4 * s]].forEach(([lx, ly]) => {
+          ctx.beginPath(); ctx.ellipse(lx, ly, 2.5 * s, 1.2 * s, 0.5, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        // === 3D RUBBLE FIELD ===
+        [{ x: -34, y: 10, sz: 5 }, { x: -18, y: 14, sz: 4 }, { x: 4, y: 15, sz: 3.5 }, { x: 18, y: 12, sz: 4 }, { x: 30, y: 10, sz: 3.5 }, { x: -24, y: 12, sz: 3 }, { x: 10, y: 16, sz: 3 }, { x: 34, y: 7, sz: 3 }, { x: -10, y: 16, sz: 2.5 }, { x: 24, y: 14, sz: 4 }].forEach((rb, idx) => {
+          const rx = screenPos.x + rb.x * s; const ry = screenPos.y + rb.y * s; const rSz = rb.sz * s;
+          ctx.fillStyle = idx % 3 === 0 ? stoneLight : idx % 3 === 1 ? stoneMid : stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx, ry - rSz * 0.8); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx - rSz * 0.7, ry - rSz * 0.2); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.8, ry + rSz * 0.2); ctx.lineTo(rx + rSz * 0.2, ry + rSz * 0.6); ctx.closePath(); ctx.fill();
+        });
+        ctx.fillStyle = stoneShadow;
+        [[-30, 15], [-14, 17], [2, 19], [14, 18], [26, 14], [34, 10], [-20, 17], [8, 12]].forEach(([px, py], i) => {
+          ctx.beginPath(); ctx.ellipse(screenPos.x + px * s, screenPos.y + py * s, (1.5 + (i % 3) * 0.5) * s, (0.8 + (i % 2) * 0.3) * s, i * 0.6, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // === FLOOR TILES ===
+        [{ x: -14, y: 5, w: 6, d: 3 }, { x: 6, y: 4, w: 5, d: 2.5 }, { x: -24, y: 6, w: 5, d: 2.5 }].forEach((t) => {
+          const tx = screenPos.x + t.x * s; const ty = screenPos.y + t.y * s;
+          ctx.fillStyle = stoneMid; ctx.beginPath();
+          ctx.moveTo(tx, ty - t.d * s); ctx.lineTo(tx + t.w * s, ty); ctx.lineTo(tx, ty + t.d * s); ctx.lineTo(tx - t.w * s, ty); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.3 * s; ctx.stroke();
+        });
+
+        // === CRACKS ===
+        ctx.strokeStyle = "#2a2a1a"; ctx.lineWidth = 0.7 * s;
+        ctx.beginPath(); ctx.moveTo(w1X + 16 * s, w1TopY + 10 * s); ctx.lineTo(w1X + 18 * s, screenPos.y - 14 * s); ctx.lineTo(w1X + 16 * s, screenPos.y - 6 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w2X + 14 * s, w2TopY + 8 * s); ctx.lineTo(w2X + 16 * s, screenPos.y - 6 * s); ctx.stroke();
+
+        // === MOSS ===
+        ctx.fillStyle = mossColor; ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.ellipse(csX + 2 * s, screenPos.y - 4 * s, 4 * s, 2 * s, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x + 30 * s, screenPos.y + 2 * s, 3 * s, 1.5 * s, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x - 30 * s, screenPos.y + 4 * s, 3.5 * s, 1.8 * s, 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+
       } else if (ruinVariant === 3) {
-        // VARIANT 3: Ruined tower base with spiral staircase remains
-        // Circular base
+        // VARIANT 3: Ruined tower base — circular 3D wall, hollow interior, spiral stairs
+        const stoneMid = "#5a5a5a";
+        const stoneShadow = "#2a2a2a";
+
+        // === CIRCULAR BASE ===
+        const bRx = 26 * s; const bRy = 14 * s; const bH = 5 * s;
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(screenPos.x, screenPos.y + 3 * s, bRx, bRy, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneShadow;
+        ctx.beginPath(); ctx.ellipse(screenPos.x, screenPos.y + 3 * s, bRx, bRy, 0, 0, Math.PI);
+        ctx.lineTo(screenPos.x - bRx, screenPos.y + 3 * s + bH);
+        ctx.ellipse(screenPos.x, screenPos.y + 3 * s + bH, bRx, bRy, 0, Math.PI, 0, true);
+        ctx.closePath(); ctx.fill();
+
+        // === TOWER WALL ===
+        const wallG = ctx.createLinearGradient(screenPos.x - bRx, screenPos.y, screenPos.x + bRx, screenPos.y);
+        wallG.addColorStop(0, stoneMid); wallG.addColorStop(0.3, stoneLight); wallG.addColorStop(0.7, stoneMid); wallG.addColorStop(1, stoneDark);
+        ctx.fillStyle = wallG;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 3 * s);
+        ctx.lineTo(screenPos.x - 20 * s, screenPos.y - 34 * s);
+        ctx.quadraticCurveTo(screenPos.x - 5 * s, screenPos.y - 42 * s, screenPos.x + 12 * s, screenPos.y - 28 * s);
+        ctx.lineTo(screenPos.x + 14 * s, screenPos.y + 1 * s);
+        ctx.closePath(); ctx.fill();
         ctx.fillStyle = stoneDark;
         ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x,
-          screenPos.y + 5 * s,
-          25 * s,
-          15 * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Tower wall remains (partial cylinder)
-        ctx.fillStyle = stoneBase;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 5 * s);
-        ctx.lineTo(screenPos.x - 20 * s, screenPos.y - 30 * s);
-        ctx.quadraticCurveTo(
-          screenPos.x - 5 * s,
-          screenPos.y - 38 * s,
-          screenPos.x + 10 * s,
-          screenPos.y - 25 * s,
-        );
-        ctx.lineTo(screenPos.x + 12 * s, screenPos.y + 3 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Inner darkness (hollow center)
-        ctx.fillStyle = "#1a1a1a";
-        ctx.beginPath();
-        ctx.ellipse(
-          screenPos.x - 2 * s,
-          screenPos.y,
-          14 * s,
-          8 * s,
-          0,
-          0,
-          Math.PI * 2,
-        );
-        ctx.fill();
-
-        // Spiral stair remains
+        ctx.moveTo(screenPos.x - 22 * s, screenPos.y + 3 * s);
+        ctx.lineTo(screenPos.x - 20 * s, screenPos.y - 34 * s);
+        ctx.lineTo(screenPos.x - 24 * s, screenPos.y - 32 * s);
+        ctx.lineTo(screenPos.x - 26 * s, screenPos.y + 5 * s);
+        ctx.closePath(); ctx.fill();
         ctx.fillStyle = stoneLight;
         ctx.beginPath();
-        ctx.moveTo(screenPos.x - 8 * s, screenPos.y - 2 * s);
-        ctx.lineTo(screenPos.x - 12 * s, screenPos.y - 10 * s);
-        ctx.lineTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
-        ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 5 * s);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 5 * s, screenPos.y - 12 * s);
-        ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 20 * s);
-        ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 22 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 15 * s);
-        ctx.closePath();
-        ctx.fill();
-
-        // Broken top edge detail
-        ctx.strokeStyle = stoneDark;
-        ctx.lineWidth = 2 * s;
-        ctx.beginPath();
-        ctx.moveTo(screenPos.x - 20 * s, screenPos.y - 30 * s);
-        ctx.lineTo(screenPos.x - 15 * s, screenPos.y - 32 * s);
-        ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 28 * s);
-        ctx.lineTo(screenPos.x, screenPos.y - 32 * s);
-        ctx.lineTo(screenPos.x + 10 * s, screenPos.y - 25 * s);
-        ctx.stroke();
-
-        // Rubble around base
-        ctx.fillStyle = stoneDark;
-        for (let r = 0; r < 6; r++) {
-          const angle = r * 1.1 + 0.5;
-          const rx = screenPos.x + Math.cos(angle) * 28 * s;
-          const ry = screenPos.y + Math.sin(angle) * 14 * s + 3 * s;
-          ctx.beginPath();
-          ctx.ellipse(rx, ry, 4 * s, 2.5 * s, angle, 0, Math.PI * 2);
-          ctx.fill();
+        ctx.moveTo(screenPos.x - 24 * s, screenPos.y - 32 * s); ctx.lineTo(screenPos.x - 20 * s, screenPos.y - 34 * s);
+        ctx.lineTo(screenPos.x - 14 * s, screenPos.y - 37 * s); ctx.lineTo(screenPos.x - 8 * s, screenPos.y - 32 * s);
+        ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 38 * s); ctx.lineTo(screenPos.x + 4 * s, screenPos.y - 34 * s);
+        ctx.lineTo(screenPos.x + 12 * s, screenPos.y - 28 * s); ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 30 * s);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.5 * s;
+        for (let row = 0; row < 5; row++) {
+          const rowY = screenPos.y - 28 * s + row * 7 * s;
+          if (rowY < screenPos.y) {
+            ctx.beginPath();
+            ctx.moveTo(screenPos.x - 20 * s, rowY);
+            ctx.quadraticCurveTo(screenPos.x - 4 * s, rowY - 3 * s, screenPos.x + 12 * s, rowY + 2 * s);
+            ctx.stroke();
+          }
         }
+
+        // === HOLLOW INTERIOR ===
+        ctx.fillStyle = "#1a1a15";
+        ctx.beginPath(); ctx.ellipse(screenPos.x - 2 * s, screenPos.y + 1 * s, 15 * s, 9 * s, 0, 0, Math.PI * 2); ctx.fill();
+
+        // === SPIRAL STAIRCASE ===
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 9 * s, screenPos.y); ctx.lineTo(screenPos.x - 13 * s, screenPos.y - 10 * s);
+        ctx.lineTo(screenPos.x - 6 * s, screenPos.y - 12 * s); ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 4 * s);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 6 * s, screenPos.y - 12 * s); ctx.lineTo(screenPos.x - 9 * s, screenPos.y - 20 * s);
+        ctx.lineTo(screenPos.x - 2 * s, screenPos.y - 22 * s); ctx.lineTo(screenPos.x, screenPos.y - 14 * s);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = stoneLight;
+        ctx.beginPath();
+        ctx.moveTo(screenPos.x - 2 * s, screenPos.y - 22 * s); ctx.lineTo(screenPos.x - 4 * s, screenPos.y - 28 * s);
+        ctx.lineTo(screenPos.x + 3 * s, screenPos.y - 30 * s); ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 24 * s);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.6 * s;
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 13 * s, screenPos.y - 10 * s); ctx.lineTo(screenPos.x - 3 * s, screenPos.y - 4 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 9 * s, screenPos.y - 20 * s); ctx.lineTo(screenPos.x, screenPos.y - 14 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 4 * s, screenPos.y - 28 * s); ctx.lineTo(screenPos.x + 5 * s, screenPos.y - 24 * s); ctx.stroke();
+
+        // === BROKEN PARAPET ===
+        const parY = screenPos.y - 36 * s;
+        [{ x: -16, y: parY }, { x: -6, y: parY - 4 * s }, { x: 4, y: parY + 2 * s }].forEach((m) => {
+          const mx = screenPos.x + m.x * s;
+          ctx.fillStyle = stoneMid;
+          ctx.beginPath();
+          ctx.moveTo(mx - 2 * s, m.y + 4 * s); ctx.lineTo(mx - 2 * s, m.y);
+          ctx.lineTo(mx + 2 * s, m.y); ctx.lineTo(mx + 2 * s, m.y + 4 * s);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle = stoneLight;
+          ctx.beginPath();
+          ctx.moveTo(mx - 2 * s, m.y); ctx.lineTo(mx, m.y - 2 * s);
+          ctx.lineTo(mx + 2 * s, m.y); ctx.closePath(); ctx.fill();
+        });
+
+        // === COLUMN REMNANT ===
+        const crX = screenPos.x + 22 * s; const crR = 4 * s; const crH = 16 * s;
+        ctx.fillStyle = stoneMid;
+        ctx.beginPath(); ctx.ellipse(crX, screenPos.y + 4 * s, crR + 1.5 * s, (crR + 1.5 * s) * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = stoneDark;
+        ctx.beginPath(); ctx.ellipse(crX, screenPos.y + 2 * s, crR, crR * 0.5, 0, Math.PI, Math.PI * 2);
+        ctx.lineTo(crX + crR, screenPos.y - crH + 6 * s);
+        ctx.ellipse(crX, screenPos.y - crH + 6 * s, crR, crR * 0.5, 0, 0, Math.PI, true);
+        ctx.closePath(); ctx.fill();
+        const crG = ctx.createLinearGradient(crX - crR, 0, crX + crR, 0);
+        crG.addColorStop(0, stoneMid); crG.addColorStop(0.3, stoneLight); crG.addColorStop(1, stoneDark);
+        ctx.fillStyle = crG;
+        ctx.beginPath(); ctx.ellipse(crX, screenPos.y + 2 * s, crR, crR * 0.5, 0, 0, Math.PI);
+        ctx.lineTo(crX - crR, screenPos.y - crH + 6 * s);
+        ctx.ellipse(crX, screenPos.y - crH + 6 * s, crR, crR * 0.5, 0, Math.PI, Math.PI * 2, true);
+        ctx.closePath(); ctx.fill();
+
+        // === 3D RUBBLE RING ===
+        [{ x: -30, y: 8, sz: 4.5 }, { x: -20, y: 13, sz: 4 }, { x: -8, y: 15, sz: 3.5 }, { x: 8, y: 14, sz: 4 }, { x: 20, y: 11, sz: 3.5 }, { x: 28, y: 7, sz: 4 }, { x: -26, y: 11, sz: 3 }, { x: 14, y: 13, sz: 3 }, { x: 32, y: 4, sz: 3 }, { x: -34, y: 4, sz: 3 }, { x: -14, y: 14, sz: 2.5 }, { x: 24, y: 10, sz: 2.5 }].forEach((rb, idx) => {
+          const rx = screenPos.x + rb.x * s; const ry = screenPos.y + rb.y * s; const rSz = rb.sz * s;
+          ctx.fillStyle = idx % 3 === 0 ? stoneLight : idx % 3 === 1 ? stoneMid : stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx, ry - rSz * 0.8); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx - rSz * 0.7, ry - rSz * 0.2); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = stoneDark;
+          ctx.beginPath(); ctx.moveTo(rx + rSz * 0.3, ry + rSz * 0.2); ctx.lineTo(rx + rSz, ry - rSz * 0.3); ctx.lineTo(rx + rSz * 0.8, ry + rSz * 0.2); ctx.lineTo(rx + rSz * 0.2, ry + rSz * 0.6); ctx.closePath(); ctx.fill();
+        });
+        ctx.fillStyle = stoneShadow;
+        [[-28, 12], [-16, 16], [-2, 18], [10, 17], [22, 14], [30, 9], [-8, 10], [16, 8]].forEach(([px, py], i) => {
+          ctx.beginPath(); ctx.ellipse(screenPos.x + px * s, screenPos.y + py * s, (1.5 + (i % 3) * 0.5) * s, (0.8 + (i % 2) * 0.3) * s, i * 0.6, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // === FLOOR TILES ===
+        [{ x: -18, y: 7, w: 5, d: 2.5 }, { x: 16, y: 6, w: 6, d: 3 }, { x: 28, y: 2, w: 5, d: 2.5 }, { x: -30, y: 3, w: 4, d: 2 }].forEach((t) => {
+          const tx = screenPos.x + t.x * s; const ty = screenPos.y + t.y * s;
+          ctx.fillStyle = stoneMid; ctx.beginPath();
+          ctx.moveTo(tx, ty - t.d * s); ctx.lineTo(tx + t.w * s, ty); ctx.lineTo(tx, ty + t.d * s); ctx.lineTo(tx - t.w * s, ty); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = stoneShadow; ctx.lineWidth = 0.3 * s; ctx.stroke();
+        });
+
+        // === MOSS ===
+        ctx.fillStyle = mossColor; ctx.globalAlpha = 0.6;
+        ctx.beginPath(); ctx.ellipse(screenPos.x - 16 * s, screenPos.y - 20 * s, 4 * s, 2 * s, 0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x + 8 * s, screenPos.y - 14 * s, 3.5 * s, 1.8 * s, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(crX + 2 * s, screenPos.y - 4 * s, 3 * s, 1.5 * s, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(screenPos.x - 28 * s, screenPos.y + 6 * s, 4 * s, 2 * s, -0.3, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // === CRACKS ===
+        ctx.strokeStyle = "#2a2a1a"; ctx.lineWidth = 0.7 * s;
+        ctx.beginPath(); ctx.moveTo(screenPos.x - 12 * s, screenPos.y - 30 * s); ctx.lineTo(screenPos.x - 10 * s, screenPos.y - 18 * s); ctx.lineTo(screenPos.x - 14 * s, screenPos.y - 10 * s); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(screenPos.x + 6 * s, screenPos.y - 26 * s); ctx.lineTo(screenPos.x + 8 * s, screenPos.y - 16 * s); ctx.stroke();
+
       } else if (ruinVariant === 4) {
         // VARIANT 4: Properly isometric 3D sunken temple ruins
 

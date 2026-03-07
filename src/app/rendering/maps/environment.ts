@@ -17,8 +17,6 @@
 import { colorWithAlpha } from "../helpers";
 import { ISO_Y_RATIO } from "../../constants";
 import {
-  setShadowBlur,
-  clearShadow,
   shouldRenderEnvironment,
   shouldSpawnParticle,
   getAdjustedParticleCount,
@@ -62,6 +60,69 @@ function getParticlePool(
     pool.length = maxSize;
   }
   return pool;
+}
+
+// ============================================================================
+// PARTICLE GLOW TEMPLATES – Pre-rendered radial glows for GPU-friendly drawImage
+// ============================================================================
+
+let _glowTemplates: Map<string, HTMLCanvasElement> | null = null;
+const GLOW_SIZE = 64;
+
+function createSoftGlow(
+  size: number,
+  r: number,
+  g: number,
+  b: number
+): HTMLCanvasElement {
+  const c = document.createElement("canvas");
+  c.width = size;
+  c.height = size;
+  const half = size / 2;
+  const ctx = c.getContext("2d")!;
+  const grad = ctx.createRadialGradient(half, half, 0, half, half, half);
+  grad.addColorStop(0, `rgba(${r},${g},${b},1)`);
+  grad.addColorStop(0.18, `rgba(${r},${g},${b},0.65)`);
+  grad.addColorStop(0.4, `rgba(${r},${g},${b},0.22)`);
+  grad.addColorStop(0.65, `rgba(${r},${g},${b},0.06)`);
+  grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(half, half, half, 0, Math.PI * 2);
+  ctx.fill();
+  return c;
+}
+
+function getGlowTemplates(): Map<string, HTMLCanvasElement> {
+  if (_glowTemplates) return _glowTemplates;
+  if (typeof document === "undefined") return new Map();
+  const s = GLOW_SIZE;
+  _glowTemplates = new Map([
+    ["white", createSoftGlow(s, 255, 255, 255)],
+    ["warm", createSoftGlow(s, 255, 245, 210)],
+    ["ember_orange", createSoftGlow(s, 255, 130, 30)],
+    ["ember_yellow", createSoftGlow(s, 255, 210, 50)],
+    ["firefly", createSoftGlow(s, 160, 255, 160)],
+    ["sparkle", createSoftGlow(s, 170, 220, 255)],
+    ["spore", createSoftGlow(s, 136, 204, 136)],
+    ["sand", createSoftGlow(s, 212, 168, 118)],
+  ]);
+  return _glowTemplates;
+}
+
+function drawGlow(
+  ctx: CanvasRenderingContext2D,
+  tmpl: HTMLCanvasElement,
+  x: number,
+  y: number,
+  diameter: number,
+  alpha: number
+): void {
+  if (alpha < 0.008) return;
+  const half = diameter * 0.5;
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(tmpl, x - half, y - half, diameter, diameter);
+  ctx.globalAlpha = 1;
 }
 
 // ============================================================================
@@ -298,6 +359,9 @@ export function renderGrasslandEnvironment(
   }
 
   // --- Update & render (swap-and-pop removal) ---
+  const grassTmpls = getGlowTemplates();
+  const pollenGlow = grassTmpls.get("warm");
+
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
     p.x += p.vx * 0.016;
@@ -360,19 +424,23 @@ export function renderGrasslandEnvironment(
       ctx.fill();
       ctx.restore();
     } else if (p.type === "leaf") {
+      const leafAngle = time * 0.8 + i * 2;
       ctx.save();
       ctx.translate(p.x, p.y);
-      ctx.rotate(time * 0.5 + i * 2);
+      ctx.rotate(leafAngle);
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
       ctx.beginPath();
-      ctx.ellipse(0, 0, p.size, p.size * 0.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, p.size, p.size * 0.35, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
-    } else {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.3);
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.5);
+      ctx.lineWidth = 0.5;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(-p.size * 0.7, 0);
+      ctx.lineTo(p.size * 0.7, 0);
+      ctx.stroke();
+      ctx.restore();
+    } else if (pollenGlow) {
+      drawGlow(ctx, pollenGlow, p.x, p.y, p.size * 4.5, p.alpha * 0.55);
     }
   }
 
@@ -514,6 +582,9 @@ export function renderDesertEnvironment(
   }
 
   // --- Update & render ---
+  const desertTmpls = getGlowTemplates();
+  const sandGlow = desertTmpls.get("sand");
+
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
     p.x += p.vx * 0.016;
@@ -542,23 +613,45 @@ export function renderDesertEnvironment(
     }
 
     if (p.type === "streak") {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
+      // Motion-blur elongated streak with tapered glow
+      const streakAngle = Math.atan2(p.vy, p.vx);
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(streakAngle);
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.7);
       ctx.beginPath();
-      ctx.ellipse(
-        p.x,
-        p.y,
-        p.size * 5,
-        p.size * 0.25,
-        0,
-        0,
-        Math.PI * 2
-      );
+      ctx.ellipse(0, 0, p.size * 6, p.size * 0.35, 0, 0, Math.PI * 2);
       ctx.fill();
-    } else {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
+      // Bright core
+      ctx.fillStyle = colorWithAlpha("#e8c89a", p.alpha * 0.4);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, p.size * 3, p.size * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    } else if (p.type === "dustdevil" && sandGlow) {
+      drawGlow(ctx, sandGlow, p.x, p.y, p.size * 4, p.alpha * 0.6);
+    } else if (sandGlow) {
+      // Sand particles – elongated in velocity direction for motion blur
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+      const stretch = Math.min(speed * 0.02, 2.5);
+      if (stretch > 0.3) {
+        const sandAngle = Math.atan2(p.vy, p.vx);
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(sandAngle);
+        ctx.globalAlpha = p.alpha * 0.7;
+        ctx.drawImage(
+          sandGlow,
+          -p.size * (1.5 + stretch),
+          -p.size * 1.2,
+          p.size * (3 + stretch * 2),
+          p.size * 2.4
+        );
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      } else {
+        drawGlow(ctx, sandGlow, p.x, p.y, p.size * 3.5, p.alpha * 0.7);
+      }
     }
   }
 
@@ -682,6 +775,10 @@ export function renderWinterEnvironment(
   }
 
   // --- Update & render ---
+  const winterTmpls = getGlowTemplates();
+  const snowGlow = winterTmpls.get("white");
+  const sparkleGlow = winterTmpls.get("sparkle");
+
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
     p.x += p.vx * 0.016;
@@ -709,31 +806,56 @@ export function renderWinterEnvironment(
     }
 
     if (p.type === "crystal") {
+      // Glow halo behind crystal
+      if (sparkleGlow) {
+        drawGlow(ctx, sparkleGlow, p.x, p.y, p.size * 5, p.alpha * 0.25);
+      }
+      // 6-pointed crystal with branch details
       ctx.save();
-      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.6);
-      ctx.lineWidth = 1.5;
       ctx.translate(p.x, p.y);
-      ctx.rotate(time * 0.5 + i);
+      ctx.rotate(time * 0.3 + i);
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.7);
+      ctx.lineWidth = 1.2;
       for (let j = 0; j < 6; j++) {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(0, -p.size);
         ctx.stroke();
+        // Side branches at 60% of arm
+        ctx.beginPath();
+        ctx.moveTo(0, -p.size * 0.55);
+        ctx.lineTo(p.size * 0.22, -p.size * 0.78);
+        ctx.moveTo(0, -p.size * 0.55);
+        ctx.lineTo(-p.size * 0.22, -p.size * 0.78);
+        ctx.stroke();
         ctx.rotate(Math.PI / 3);
       }
       ctx.restore();
     } else if (p.type === "sparkle") {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.55);
-      setShadowBlur(ctx, 4, p.color);
+      // Radial glow + 4-pointed star cross
+      if (sparkleGlow) {
+        drawGlow(ctx, sparkleGlow, p.x, p.y, p.size * 6, p.alpha * 0.45);
+      }
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.6);
+      ctx.lineWidth = 0.8;
+      const arm = p.size * 1.8;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      clearShadow(ctx);
-    } else {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.5);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(p.x - arm, p.y);
+      ctx.lineTo(p.x + arm, p.y);
+      ctx.moveTo(p.x, p.y - arm);
+      ctx.lineTo(p.x, p.y + arm);
+      ctx.stroke();
+    } else if (p.type === "gust") {
+      // Wind gust: elongated glow with motion trail
+      if (snowGlow) {
+        const trailX = p.x - p.vx * 0.01;
+        const trailY = p.y - p.vy * 0.01;
+        drawGlow(ctx, snowGlow, trailX, trailY, p.size * 3.5, p.alpha * 0.2);
+        drawGlow(ctx, snowGlow, p.x, p.y, p.size * 4, p.alpha * 0.5);
+      }
+    } else if (snowGlow) {
+      // Snow: soft atmospheric glow (larger particles = more diffuse)
+      drawGlow(ctx, snowGlow, p.x, p.y, p.size * 4, p.alpha * 0.55);
     }
   }
 
@@ -874,6 +996,10 @@ export function renderVolcanicEnvironment(
   }
 
   // --- Update & render ---
+  const volcanicTmpls = getGlowTemplates();
+  const emberOrange = volcanicTmpls.get("ember_orange");
+  const emberYellow = volcanicTmpls.get("ember_yellow");
+
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
     p.x += p.vx * 0.016;
@@ -897,17 +1023,26 @@ export function renderVolcanicEnvironment(
     }
 
     if (p.type === "ember") {
-      ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
-      setShadowBlur(ctx, 10, p.color);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
-      clearShadow(ctx);
+      const tmpl =
+        p.color === "#ffcc00" ? emberYellow : emberOrange;
+      if (tmpl) {
+        // Motion trail behind ember
+        const trailX = p.x - p.vx * 0.012;
+        const trailY = p.y - p.vy * 0.012;
+        drawGlow(ctx, tmpl, trailX, trailY, p.size * 4, p.alpha * 0.2);
+        // Bright core glow
+        drawGlow(ctx, tmpl, p.x, p.y, p.size * 5, p.alpha * 0.75);
+      }
     } else {
+      // Ash: tumbling irregular flakes
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(time * 2.2 + i * 3.7);
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, p.size, p.size * 0.45, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
   }
 
@@ -1123,6 +1258,10 @@ export function renderSwampEnvironment(
   }
 
   // --- Update & render ---
+  const swampTmpls = getGlowTemplates();
+  const fireflyGlow = swampTmpls.get("firefly");
+  const sporeGlow = swampTmpls.get("spore");
+
   for (let i = pool.length - 1; i >= 0; i--) {
     const p = pool[i];
     p.x += p.vx * 0.016;
@@ -1158,35 +1297,45 @@ export function renderSwampEnvironment(
     }
 
     if (p.type === "firefly") {
-      if (p.alpha > 0.15) {
-        ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.7);
-        setShadowBlur(ctx, 10, p.color);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        clearShadow(ctx);
+      // Large ethereal glow – no shadowBlur needed
+      if (p.alpha > 0.1 && fireflyGlow) {
+        drawGlow(ctx, fireflyGlow, p.x, p.y, p.size * 8, p.alpha * 0.6);
       }
     } else if (p.type === "bubble") {
-      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha);
-      ctx.lineWidth = 1.5;
+      // Translucent sphere with highlight and rim
+      ctx.strokeStyle = colorWithAlpha(p.color, p.alpha * 0.8);
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.fillStyle = colorWithAlpha("#ffffff", p.alpha * 0.45);
+      // Interior gradient for depth
+      ctx.fillStyle = colorWithAlpha(p.color, p.alpha * 0.12);
+      ctx.fill();
+      // Specular highlight
+      ctx.fillStyle = colorWithAlpha("#ffffff", p.alpha * 0.5);
       ctx.beginPath();
-      ctx.arc(
-        p.x - p.size * 0.3,
-        p.y - p.size * 0.3,
-        p.size * 0.35,
+      ctx.ellipse(
+        p.x - p.size * 0.28,
+        p.y - p.size * 0.28,
+        p.size * 0.3,
+        p.size * 0.2,
+        -0.5,
         0,
         Math.PI * 2
       );
       ctx.fill();
-    } else {
+    } else if (p.type === "spore" && sporeGlow) {
+      drawGlow(ctx, sporeGlow, p.x, p.y, p.size * 4, p.alpha * 0.55);
+    } else if (p.type === "moss") {
+      // Wispy elongated tendril
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(time * 0.3 + i * 1.4);
       ctx.fillStyle = colorWithAlpha(p.color, p.alpha);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, p.size * 0.4, p.size * 1.6, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
   }
 

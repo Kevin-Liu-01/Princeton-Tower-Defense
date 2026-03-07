@@ -9758,37 +9758,48 @@ export const drawWorldMapCanvas = ({
       const ly = getY(level.y);
 
       for (let i = 0; i < 5; i++) {
-        const offset = i * 16;
-        const ex = lx + 50 + offset + Math.sin(time * 3 + i) * 3;
+        const offset = i * 18;
+        const marchPhase = time * 3 + i * 1.2;
+        const ex = lx + 50 + offset + Math.sin(marchPhase) * 3;
         const ey = ly + 6 + Math.sin(time * 2 + i * 0.7) * 2;
         const bobble = Math.sin(time * 6 + i * 2) * 2;
+        const bodyColors = ["#4a1515", "#3a1010", "#5a2020", "#451818", "#3d1212"];
 
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillStyle = "rgba(0,0,0,0.25)";
         ctx.beginPath();
-        ctx.ellipse(ex, ey + 10, 5, 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(ex, ey + 10, 6, 2.5, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = ["#4a1515", "#3a1010", "#5a2020"][i % 3];
+        ctx.fillStyle = bodyColors[i % 5];
         ctx.beginPath();
         ctx.ellipse(ex, ey + bobble, 6, 9, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.fillStyle = "#2a0808";
         ctx.beginPath();
-        ctx.arc(ex, ey - 11 + bobble, 5, 0, Math.PI * 2);
+        ctx.ellipse(ex, ey + bobble, 5, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = bodyColors[i % 5];
+        ctx.beginPath();
+        ctx.arc(ex, ey - 11 + bobble, 5.5, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = "#ff3333";
-        ctx.globalAlpha = 0.9;
+        ctx.globalAlpha = 0.7 + Math.sin(time * 4 + i) * 0.3;
         ctx.beginPath();
-        ctx.arc(ex - 2, ey - 12 + bobble, 1.5, 0, Math.PI * 2);
-        ctx.arc(ex + 2, ey - 12 + bobble, 1.5, 0, Math.PI * 2);
+        ctx.arc(ex - 2.2, ey - 12 + bobble, 1.8, 0, Math.PI * 2);
+        ctx.arc(ex + 2.2, ey - 12 + bobble, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = "#ff6666";
+        ctx.beginPath();
+        ctx.arc(ex - 2.2, ey - 12.3 + bobble, 0.7, 0, Math.PI * 2);
+        ctx.arc(ex + 2.2, ey - 12.3 + bobble, 0.7, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
       }
-
-      ctx.font = "bold 10px 'bc-novatica-cyr', serif";
-      ctx.textAlign = "left";
-      ctx.fillStyle = "rgba(180, 20, 20, 0.9)";
-      ctx.fillText("⚔ ENEMIES APPROACH!", lx + 45, ly - 24);
     }
   }
 
@@ -10043,4 +10054,5 @@ export const drawWorldMapCanvas = ({
   brGrad.addColorStop(1, "rgba(5,3,1,0)");
   ctx.fillStyle = brGrad;
   ctx.fillRect(width - cornerSize, height - cornerSize, cornerSize, cornerSize);
+
 };

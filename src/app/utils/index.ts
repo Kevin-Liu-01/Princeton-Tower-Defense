@@ -642,6 +642,15 @@ const DECORATION_VOLUME_OVERRIDES: Partial<
     landmarkCoreRadius: 1.25,
     landmarkFullPadding: 0.8,
   },
+  carnegie_lake: {
+    width: 280,
+    length: 240,
+    height: 120,
+    anchorOffsetY: 0,
+    frontDepthPadding: 20,
+    landmarkCoreRadius: 2.5,
+    landmarkFullPadding: 1.5,
+  },
 };
 
 export function getDecorationVolumeSpec(

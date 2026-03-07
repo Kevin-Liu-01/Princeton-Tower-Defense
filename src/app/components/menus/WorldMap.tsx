@@ -20,9 +20,10 @@ import {
   Hammer,
   Eye,
   BarChart3,
-  Shield,
+  ChessRook,
   Map as MapIcon,
   Sparkles,
+  ChessKnight,
 } from "lucide-react";
 import type {
   GameState,
@@ -1617,9 +1618,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.22), rgba(120,80,20,0.1), transparent)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Book size={13} className="text-amber-400 shrink-0" />
+                          <ChessKnight size={13} className="text-amber-400 shrink-0" />
                           <span className="text-[9px] sm:text-[10px] text-nowrap font-bold text-amber-300 tracking-[0.2em] uppercase">
-                            Play
+                            Guide
                           </span>
                         </div>
                         <button
@@ -1639,7 +1640,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                     <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-2">
                       <div className="grid grid-cols-2 gap-1.5">
                         {([
-                          { label: "Towers", tab: "towers" as CodexTabId, icon: <Shield size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
+                          { label: "Towers", tab: "towers" as CodexTabId, icon: <ChessRook size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
                           { label: "Heroes", tab: "heroes" as CodexTabId, icon: <Crown size={11} />, color: "text-amber-300", bg: "rgba(120,85,20,0.3)", border: "rgba(180,140,60,0.22)" },
                           { label: "Spells", tab: "spells" as CodexTabId, icon: <Sparkles size={11} />, color: "text-purple-300", bg: "rgba(80,40,120,0.25)", border: "rgba(140,80,200,0.22)" },
                           { label: "Enemies", tab: "enemies" as CodexTabId, icon: <Skull size={11} />, color: "text-red-300", bg: "rgba(100,30,30,0.25)", border: "rgba(180,60,60,0.22)" },
