@@ -1604,10 +1604,53 @@ export function usePrincetonTowerDefenseRuntime() {
       // Just paused - pause all timeouts
       pauseAllTimeouts();
     } else if (prevSpeed === 0 && gameSpeed !== 0) {
-      // Just resumed - resume all timeouts
+      // Just resumed - extend status effect timestamps by pause duration
+      // so effects don't expire prematurely from real time advancing while paused
+      const pauseDuration = pausedAtRef.current ? Date.now() - pausedAtRef.current : 0;
+      if (pauseDuration > 0) {
+        setTroops((prev) =>
+          prev.map((troop) => {
+            const updates: Partial<typeof troop> = {};
+            if (troop.burnUntil) updates.burnUntil = troop.burnUntil + pauseDuration;
+            if (troop.slowUntil) updates.slowUntil = troop.slowUntil + pauseDuration;
+            if (troop.poisonUntil) updates.poisonUntil = troop.poisonUntil + pauseDuration;
+            if (troop.stunUntil) updates.stunUntil = troop.stunUntil + pauseDuration;
+            return Object.keys(updates).length > 0 ? { ...troop, ...updates } : troop;
+          })
+        );
+        setHero((prev) => {
+          if (!prev) return prev;
+          const updates: Partial<typeof prev> = {};
+          if (prev.burnUntil) updates.burnUntil = prev.burnUntil + pauseDuration;
+          if (prev.slowUntil) updates.slowUntil = prev.slowUntil + pauseDuration;
+          if (prev.poisonUntil) updates.poisonUntil = prev.poisonUntil + pauseDuration;
+          if (prev.stunUntil) updates.stunUntil = prev.stunUntil + pauseDuration;
+          return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+        });
+        setEnemies((prev) =>
+          prev.map((enemy) => {
+            const updates: Partial<typeof enemy> = {};
+            if (enemy.burnUntil) updates.burnUntil = enemy.burnUntil + pauseDuration;
+            if (enemy.stunUntil) updates.stunUntil = enemy.stunUntil + pauseDuration;
+            return Object.keys(updates).length > 0 ? { ...enemy, ...updates } : enemy;
+          })
+        );
+        setTowers((prev) =>
+          prev.map((tower) => {
+            const updates: Partial<typeof tower> = {};
+            if (tower.disabledUntil) updates.disabledUntil = tower.disabledUntil + pauseDuration;
+            if (tower.boostEnd) updates.boostEnd = tower.boostEnd + pauseDuration;
+            if (tower.debuffs && tower.debuffs.length > 0) {
+              updates.debuffs = tower.debuffs.map((d) => ({ ...d, until: d.until + pauseDuration }));
+            }
+            return Object.keys(updates).length > 0 ? { ...tower, ...updates } : tower;
+          })
+        );
+      }
+      // Resume all timeouts (this also clears pausedAtRef)
       resumeAllTimeouts();
     }
-  }, [gameSpeed, pauseAllTimeouts, resumeAllTimeouts]);
+  }, [gameSpeed, pauseAllTimeouts, resumeAllTimeouts, setTroops, setHero, setEnemies, setTowers]);
 
   // Start wave function
   const startWave = useCallback(() => {
@@ -2439,7 +2482,16 @@ export function usePrincetonTowerDefenseRuntime() {
           setEnemies((prev) =>
             prev.map((entry) =>
               entry.id === enemy.id
-                ? { ...entry, inCombat: true, lastTroopAttack: now }
+                ? {
+                    ...entry,
+                    inCombat: true,
+                    lastTroopAttack: now,
+                    facingRight: getFacingRightFromDelta(
+                      vaultImpactPos.x - enemyPos.x,
+                      vaultImpactPos.y - enemyPos.y,
+                      entry.facingRight,
+                    ),
+                  }
                 : entry
             )
           );
@@ -2509,9 +2561,23 @@ export function usePrincetonTowerDefenseRuntime() {
                     combatTarget: hero.id,
                     lastHeroAttack: now,
                     lastAbilityUse: now,
+                    facingRight: getFacingRightFromDelta(
+                      hero.pos.x - enemyPos.x,
+                      hero.pos.y - enemyPos.y,
+                      enemy.facingRight,
+                    ),
                   };
                 }
-                return { ...enemy, inCombat: true, combatTarget: hero.id };
+                return {
+                  ...enemy,
+                  inCombat: true,
+                  combatTarget: hero.id,
+                  facingRight: getFacingRightFromDelta(
+                    hero.pos.x - enemyPos.x,
+                    hero.pos.y - enemyPos.y,
+                    enemy.facingRight,
+                  ),
+                };
               } else {
                 // TAUNTED MOVEMENT: Enemy moves toward hero instead of following path
                 const speedMult = (1 - enemy.slowEffect) * ENEMY_SPEED_MODIFIER;
@@ -2567,12 +2633,22 @@ export function usePrincetonTowerDefenseRuntime() {
                     inCombat: true,
                     combatTarget: "vault_objective",
                     lastTroopAttack: now,
+                    facingRight: getFacingRightFromDelta(
+                      vaultImpactPos.x - enemyPos.x,
+                      vaultImpactPos.y - enemyPos.y,
+                      enemy.facingRight,
+                    ),
                   };
                 }
                 return {
                   ...enemy,
                   inCombat: true,
                   combatTarget: "vault_objective",
+                  facingRight: getFacingRightFromDelta(
+                    vaultImpactPos.x - enemyPos.x,
+                    vaultImpactPos.y - enemyPos.y,
+                    enemy.facingRight,
+                  ),
                 };
               }
             }
@@ -2654,10 +2730,24 @@ export function usePrincetonTowerDefenseRuntime() {
                   inCombat: true,
                   combatTarget: nearbyHero.id,
                   lastHeroAttack: now,
+                  facingRight: getFacingRightFromDelta(
+                    nearbyHero.pos.x - enemyPos.x,
+                    nearbyHero.pos.y - enemyPos.y,
+                    enemy.facingRight,
+                  ),
                 };
               }
 
-              return { ...enemy, inCombat: true, combatTarget: nearbyHero.id };
+              return {
+                ...enemy,
+                inCombat: true,
+                combatTarget: nearbyHero.id,
+                facingRight: getFacingRightFromDelta(
+                  nearbyHero.pos.x - enemyPos.x,
+                  nearbyHero.pos.y - enemyPos.y,
+                  enemy.facingRight,
+                ),
+              };
             }
 
             // Troop Combat Check - skip if enemy has breakthrough or is flying
@@ -2667,7 +2757,16 @@ export function usePrincetonTowerDefenseRuntime() {
               ? getNearestTroop(enemyPos, 60)
               : null;
             if (nearbyTroop) {
-              return { ...enemy, inCombat: true, combatTarget: nearbyTroop.id };
+              return {
+                ...enemy,
+                inCombat: true,
+                combatTarget: nearbyTroop.id,
+                facingRight: getFacingRightFromDelta(
+                  nearbyTroop.pos.x - enemyPos.x,
+                  nearbyTroop.pos.y - enemyPos.y,
+                  enemy.facingRight,
+                ),
+              };
             }
 
             // Movement logic - normalize speed by segment length for consistent world-space speed
@@ -3048,6 +3147,11 @@ export function usePrincetonTowerDefenseRuntime() {
                   combatTarget: nearbyHero.id,
                   lastHeroAttack: now,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                  facingRight: getFacingRightFromDelta(
+                    nearbyHero.pos.x - enemyPosForCombat.x,
+                    nearbyHero.pos.y - enemyPosForCombat.y,
+                    enemy.facingRight,
+                  ),
                 };
               }
               return {
@@ -3055,6 +3159,11 @@ export function usePrincetonTowerDefenseRuntime() {
                 inCombat: true,
                 combatTarget: nearbyHero.id,
                 damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                facingRight: getFacingRightFromDelta(
+                  nearbyHero.pos.x - enemyPosForCombat.x,
+                  nearbyHero.pos.y - enemyPosForCombat.y,
+                  enemy.facingRight,
+                ),
               };
             }
             // Check for nearby troop combat (damage already applied above)
@@ -3068,6 +3177,11 @@ export function usePrincetonTowerDefenseRuntime() {
               // Check if this enemy attacked this frame
               const attackedThisFrame =
                 enemiesAttackingTroops[enemy.id] === nearbyTroop.id;
+              const troopFacing = getFacingRightFromDelta(
+                nearbyTroop.pos.x - enemyPosForCombat.x,
+                nearbyTroop.pos.y - enemyPosForCombat.y,
+                enemy.facingRight,
+              );
               if (attackedThisFrame) {
                 return {
                   ...enemy,
@@ -3075,6 +3189,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   combatTarget: nearbyTroop.id,
                   lastTroopAttack: now,
                   damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                  facingRight: troopFacing,
                 };
               }
               return {
@@ -3082,6 +3197,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 inCombat: true,
                 combatTarget: nearbyTroop.id,
                 damageFlash: Math.max(0, enemy.damageFlash - deltaTime),
+                facingRight: troopFacing,
               };
             }
             if (enemy.inCombat && !nearbyTroop && !nearbyHero) {
@@ -3128,11 +3244,15 @@ export function usePrincetonTowerDefenseRuntime() {
 
               // If ranged enemy has a target in range, stop and attack
               if (rangedTarget) {
-                // set inCombat state
                 enemy = {
                   ...enemy,
                   inCombat: true,
                   combatTarget: rangedTarget.id,
+                  facingRight: getFacingRightFromDelta(
+                    rangedTarget.pos.x - enemyPos.x,
+                    rangedTarget.pos.y - enemyPos.y,
+                    enemy.facingRight,
+                  ),
                 };
 
                 // Scale ranged enemy attack speed with game speed - skip when paused
@@ -5004,7 +5124,7 @@ export function usePrincetonTowerDefenseRuntime() {
               queueTowerPatch(tower.id, { rotation: trackRotation });
 
               if (now - tower.lastAttack > effectiveAttackCooldown) {
-                const missileCount = 3;
+                const missileCount = 4;
                 for (let i = 0; i < missileCount; i++) {
                   const spread = 20;
                   const offsetX = (Math.random() - 0.5) * spread * 2;
@@ -5024,7 +5144,7 @@ export function usePrincetonTowerDefenseRuntime() {
                     type: "missile",
                     rotation,
                     arcHeight: 140 + i * 20,
-                    damage: damage * 0.6,
+                    damage: damage * 0.5,
                     targetType: "enemy",
                     isAoE: true,
                     aoeRadius: splashRadius,
@@ -5047,7 +5167,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 queueTowerPatch(tower.id, { rotation: aRot, targetId: autoTarget.id });
 
                 if (now - tower.lastAttack > effectiveAttackCooldown) {
-                  const missileCount = 3;
+                  const missileCount = 4;
                   for (let i = 0; i < missileCount; i++) {
                     const spread = 20;
                     const offsetX = (Math.random() - 0.5) * spread * 2;
@@ -5067,7 +5187,7 @@ export function usePrincetonTowerDefenseRuntime() {
                       type: "missile",
                       rotation,
                       arcHeight: 140 + i * 20,
-                      damage: damage * 0.6,
+                      damage: damage * 0.5,
                       targetType: "enemy",
                       isAoE: true,
                       aoeRadius: splashRadius,
@@ -8048,7 +8168,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 cameraZoom
               );
               // Pass tower with only active debuffs for rendering
-              renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom);
+              renderTowerDebuffEffects(ctx, { ...tower, debuffs: activeDebuffs }, towerScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
             }
             // Missile Battery target reticle
             if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarTarget) {
@@ -8113,7 +8233,7 @@ export function usePrincetonTowerDefenseRuntime() {
                   cameraOffset,
                   cameraZoom
                 );
-                renderUnitStatusEffects(ctx, heroData, heroScreenPos, cameraZoom);
+                renderUnitStatusEffects(ctx, heroData, heroScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
               }
             }
             break;
@@ -8149,7 +8269,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 cameraOffset,
                 cameraZoom
               );
-              renderUnitStatusEffects(ctx, troopData, troopScreenPos, cameraZoom);
+              renderUnitStatusEffects(ctx, troopData, troopScreenPos, cameraZoom, pausedAtRef.current ?? undefined);
             }
           }
           break;
@@ -9281,7 +9401,7 @@ export function usePrincetonTowerDefenseRuntime() {
             towerToPlace.type
           )
         ) {
-          const defaultRotation = towerToPlace.type === "cannon" ? Math.PI * 0.75 : 0;
+          const defaultRotation = towerToPlace.type === "cannon" ? Math.PI * 0.75 : towerToPlace.type === "mortar" ? -Math.PI / 2 : 0;
           const newTower: Tower = {
             id: generateId("tower"),
             type: towerToPlace.type,

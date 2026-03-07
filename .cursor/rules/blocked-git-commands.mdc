@@ -1,0 +1,14 @@
+---
+description: Prevent destructive git commands that discard uncommitted work
+alwaysApply: true
+---
+
+# Blocked Git Commands
+
+NEVER run the following git commands:
+
+- `git checkout` — can silently discard uncommitted changes
+- `git restore` — can silently discard uncommitted changes
+
+If you need to switch branches, use `git switch` instead.
+If you need to discard changes, ask the user for explicit confirmation first and explain what will be lost.

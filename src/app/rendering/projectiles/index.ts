@@ -641,7 +641,7 @@ function renderCannonball(
 }
 
 // ============================================================================
-// MORTAR SHELL - Heavy explosive with fire trail and tumble
+// MORTAR SHELL - Heavy explosive with stabilizer fins and layered exhaust
 // ============================================================================
 function renderMortarShell(
   ctx: CanvasRenderingContext2D,
@@ -649,58 +649,135 @@ function renderMortarShell(
   progress: number,
   time: number,
 ) {
-  const tumble = progress * Math.PI * 2;
   const size = 7 * zoom;
+  const wobble = Math.sin(progress * Math.PI * 6) * 0.12;
 
   ctx.save();
-  ctx.rotate(tumble * 0.5);
+  ctx.rotate(wobble);
 
-  // Fiery trail (larger than cannonball)
-  const trailLen = 10 * zoom;
-  for (let i = 0; i < 3; i++) {
-    const tOff = -trailLen + i * 3 * zoom + Math.sin(time * 10 + i) * zoom;
-    const tSize = (6 - i * 1.5) * zoom;
-    const tAlpha = 0.6 - i * 0.15;
-    const tGrad = ctx.createRadialGradient(tOff, 0, 0, tOff, 0, tSize);
-    tGrad.addColorStop(0, `rgba(255, 200, 60, ${tAlpha})`);
-    tGrad.addColorStop(0.5, `rgba(255, 120, 20, ${tAlpha * 0.6})`);
-    tGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
-    ctx.fillStyle = tGrad;
+  // Outer smoke puffs
+  for (let i = 0; i < 5; i++) {
+    const tOff = -(8 + i * 4) * zoom;
+    const tSize = (3 + i * 2) * zoom;
+    const tAlpha = 0.18 - i * 0.03;
+    const drift = Math.sin(time * 5 + i * 2.3) * zoom * 0.8;
+    ctx.fillStyle = `rgba(140, 130, 120, ${tAlpha})`;
     ctx.beginPath();
-    ctx.arc(tOff, Math.sin(time * 8 + i) * zoom, tSize, 0, Math.PI * 2);
+    ctx.arc(tOff, drift, tSize, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Shell body - dark iron with copper bands
-  const shellGrad = ctx.createRadialGradient(-1 * zoom, -1 * zoom, 0, 0, 0, size);
-  shellGrad.addColorStop(0, "#7a6a5a");
-  shellGrad.addColorStop(0.4, "#4a3a2a");
-  shellGrad.addColorStop(1, "#2a1a0a");
-  ctx.fillStyle = shellGrad;
+  // Inner flame trail
+  for (let i = 0; i < 4; i++) {
+    const tOff = -(5 + i * 3.5) * zoom;
+    const tSize = (4 - i * 0.8) * zoom;
+    const tAlpha = 0.6 - i * 0.12;
+    const flicker = Math.sin(time * 12 + i * 3.1) * zoom * 0.6;
+    const grad = ctx.createRadialGradient(tOff, flicker, 0, tOff, flicker, tSize);
+    grad.addColorStop(0, `rgba(255, 220, 80, ${tAlpha})`);
+    grad.addColorStop(0.4, `rgba(255, 130, 20, ${tAlpha * 0.7})`);
+    grad.addColorStop(1, "rgba(200, 60, 0, 0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(tOff, flicker, tSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
-  // Elongated shell shape
+  // Exhaust flash at base
+  const flashIntensity = 0.4 + Math.sin(time * 18) * 0.2;
+  const flashGrad = ctx.createRadialGradient(-size * 1.1, 0, 0, -size * 1.1, 0, 4 * zoom);
+  flashGrad.addColorStop(0, `rgba(255, 255, 200, ${flashIntensity})`);
+  flashGrad.addColorStop(0.5, `rgba(255, 160, 40, ${flashIntensity * 0.5})`);
+  flashGrad.addColorStop(1, "rgba(255, 80, 0, 0)");
+  ctx.fillStyle = flashGrad;
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 1.2, size * 0.8, 0, 0, Math.PI * 2);
+  ctx.arc(-size * 1.1, 0, 4 * zoom, 0, Math.PI * 2);
   ctx.fill();
 
-  // Copper band
-  ctx.strokeStyle = "#c9a227";
-  ctx.lineWidth = 1.5 * zoom;
+  // Stabilizer fins
+  ctx.fillStyle = "#4a4a4a";
   ctx.beginPath();
-  ctx.ellipse(0, 0, size * 0.7, size * 0.5, 0, 0, Math.PI * 2);
+  ctx.moveTo(-size * 0.9, -size * 0.35);
+  ctx.lineTo(-size * 1.05, -size * 0.35 - 2.5 * zoom);
+  ctx.lineTo(-size * 1.15, -size * 0.35 - 1.5 * zoom);
+  ctx.lineTo(-size * 1.15, -size * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.9, size * 0.35);
+  ctx.lineTo(-size * 1.05, size * 0.35 + 2.5 * zoom);
+  ctx.lineTo(-size * 1.15, size * 0.35 + 1.5 * zoom);
+  ctx.lineTo(-size * 1.15, size * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.9, -size * 0.35);
+  ctx.lineTo(-size * 1.05, -size * 0.35 - 2.5 * zoom);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.9, size * 0.35);
+  ctx.lineTo(-size * 1.05, size * 0.35 + 2.5 * zoom);
   ctx.stroke();
 
-  // Nose highlight
-  ctx.fillStyle = "rgba(255, 200, 150, 0.3)";
+  // Shell body — rounded cylinder with nose cone
+  const bodyGrad = ctx.createLinearGradient(0, -size * 0.6, 0, size * 0.6);
+  bodyGrad.addColorStop(0, "#6a5a4a");
+  bodyGrad.addColorStop(0.25, "#8a7a6a");
+  bodyGrad.addColorStop(0.5, "#5a4a3a");
+  bodyGrad.addColorStop(0.75, "#4a3a2a");
+  bodyGrad.addColorStop(1, "#3a2a1a");
+  ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.ellipse(-2 * zoom, -1.5 * zoom, 2 * zoom, 1.5 * zoom, -0.3, 0, Math.PI * 2);
+  ctx.moveTo(size * 0.5, -size * 0.5);
+  ctx.quadraticCurveTo(size * 1.1, -size * 0.3, size * 1.3, 0);
+  ctx.quadraticCurveTo(size * 1.1, size * 0.3, size * 0.5, size * 0.5);
+  ctx.lineTo(-size * 0.9, size * 0.45);
+  ctx.lineTo(-size * 0.9, -size * 0.45);
+  ctx.closePath();
   ctx.fill();
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.3)";
+  ctx.lineWidth = 0.8 * zoom;
+  ctx.stroke();
+
+  // Copper driving bands
+  ctx.fillStyle = "#c9a227";
+  ctx.fillRect(-size * 0.15, -size * 0.53, 2.5 * zoom, size * 1.06);
+  ctx.fillStyle = "rgba(255, 220, 100, 0.3)";
+  ctx.fillRect(-size * 0.15, -size * 0.53, 1.2 * zoom, size * 1.06);
+  ctx.fillStyle = "#b0901d";
+  ctx.fillRect(-size * 0.55, -size * 0.48, 2 * zoom, size * 0.96);
+
+  // Nose fuze
+  ctx.fillStyle = "#5a5a62";
+  ctx.beginPath();
+  ctx.arc(size * 1.2, 0, 2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#3a3a42";
+  ctx.beginPath();
+  ctx.arc(size * 1.2, 0, 1.2 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Top metallic highlight
+  ctx.fillStyle = "rgba(255, 240, 200, 0.2)";
+  ctx.beginPath();
+  ctx.ellipse(size * 0.2, -size * 0.32, size * 0.7, zoom * 1.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Panel line
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(size * 0.3, -size * 0.5);
+  ctx.lineTo(size * 0.3, size * 0.5);
+  ctx.stroke();
 
   ctx.restore();
 }
 
 // ============================================================================
-// MISSILE - Sleek rocket with smoke trail
+// MISSILE - Sleek guided rocket with multi-layer exhaust and arc-following
 // ============================================================================
 function renderMissile(
   ctx: CanvasRenderingContext2D,
@@ -710,72 +787,162 @@ function renderMissile(
 ) {
   const size = 5 * zoom;
 
-  // Smoke trail
-  for (let i = 0; i < 4; i++) {
-    const tOff = -(4 + i * 3) * zoom;
-    const tSize = (2 + i * 1.5) * zoom;
-    const tAlpha = 0.3 - i * 0.06;
-    ctx.fillStyle = `rgba(180, 180, 180, ${tAlpha})`;
+  // Outer smoke plume (expanding, drifting puffs)
+  for (let i = 0; i < 6; i++) {
+    const tOff = -(6 + i * 3.5) * zoom;
+    const tSize = (2 + i * 1.8) * zoom;
+    const tAlpha = 0.22 - i * 0.03;
+    const drift = Math.sin(time * 4 + i * 1.7) * zoom * (0.3 + i * 0.15);
+    ctx.fillStyle = `rgba(200, 195, 190, ${tAlpha})`;
     ctx.beginPath();
-    ctx.arc(tOff, Math.sin(time * 6 + i * 2) * zoom * 0.5, tSize, 0, Math.PI * 2);
+    ctx.arc(tOff, drift, tSize, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Exhaust flame
-  const exhaustGrad = ctx.createRadialGradient(-6 * zoom, 0, 0, -6 * zoom, 0, 5 * zoom);
-  exhaustGrad.addColorStop(0, `rgba(255, 255, 150, ${0.5 + Math.sin(time * 15) * 0.2})`);
-  exhaustGrad.addColorStop(0.5, "rgba(255, 100, 0, 0.4)");
-  exhaustGrad.addColorStop(1, "rgba(200, 50, 0, 0)");
-  ctx.fillStyle = exhaustGrad;
+  // Exhaust flame cone (triangular, flickering)
+  const flameLen = (8 + Math.sin(time * 20) * 2) * zoom;
+  const flameGrad = ctx.createLinearGradient(-size * 1.2 - flameLen, 0, -size * 1.2, 0);
+  flameGrad.addColorStop(0, "rgba(255, 50, 0, 0)");
+  flameGrad.addColorStop(0.3, "rgba(255, 120, 20, 0.5)");
+  flameGrad.addColorStop(0.6, "rgba(255, 200, 50, 0.8)");
+  flameGrad.addColorStop(1, "rgba(255, 255, 200, 0.9)");
+  ctx.fillStyle = flameGrad;
   ctx.beginPath();
-  ctx.arc(-6 * zoom, 0, 5 * zoom, 0, Math.PI * 2);
+  ctx.moveTo(-size * 1.2, -size * 0.35);
+  ctx.lineTo(-size * 1.2 - flameLen, 0);
+  ctx.lineTo(-size * 1.2, size * 0.35);
+  ctx.closePath();
   ctx.fill();
 
-  // Missile body
-  const bodyGrad = ctx.createLinearGradient(0, -size, 0, size);
-  bodyGrad.addColorStop(0, "#888");
-  bodyGrad.addColorStop(0.3, "#bbb");
-  bodyGrad.addColorStop(0.7, "#777");
+  // White-hot exhaust core
+  const coreFlame = (4 + Math.sin(time * 25) * 1) * zoom;
+  const coreGrad = ctx.createRadialGradient(-size * 1.2, 0, 0, -size * 1.2, 0, coreFlame);
+  coreGrad.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+  coreGrad.addColorStop(0.4, "rgba(255, 255, 150, 0.6)");
+  coreGrad.addColorStop(1, "rgba(255, 200, 50, 0)");
+  ctx.fillStyle = coreGrad;
+  ctx.beginPath();
+  ctx.arc(-size * 1.2, 0, coreFlame, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tail fins (4 fins, top/bottom visible)
+  ctx.fillStyle = "#555";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.8, -size * 0.5);
+  ctx.lineTo(-size * 1.3, -size * 1.2);
+  ctx.lineTo(-size * 1.5, -size * 1.1);
+  ctx.lineTo(-size * 1.3, -size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.8, size * 0.5);
+  ctx.lineTo(-size * 1.3, size * 1.2);
+  ctx.lineTo(-size * 1.5, size * 1.1);
+  ctx.lineTo(-size * 1.3, size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+  ctx.lineWidth = 0.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.8, -size * 0.5);
+  ctx.lineTo(-size * 1.3, -size * 1.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.8, size * 0.5);
+  ctx.lineTo(-size * 1.3, size * 1.2);
+  ctx.stroke();
+
+  // Missile body — sleek metallic cylinder
+  const bodyGrad = ctx.createLinearGradient(0, -size * 0.55, 0, size * 0.55);
+  bodyGrad.addColorStop(0, "#999");
+  bodyGrad.addColorStop(0.2, "#ccc");
+  bodyGrad.addColorStop(0.5, "#aaa");
+  bodyGrad.addColorStop(0.8, "#777");
   bodyGrad.addColorStop(1, "#555");
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.moveTo(size * 1.8, 0);
-  ctx.lineTo(size * 0.5, -size * 0.6);
-  ctx.lineTo(-size * 1.2, -size * 0.5);
-  ctx.lineTo(-size * 1.2, size * 0.5);
-  ctx.lineTo(size * 0.5, size * 0.6);
+  ctx.moveTo(size * 1.6, 0);
+  ctx.quadraticCurveTo(size * 1.4, -size * 0.35, size * 0.6, -size * 0.5);
+  ctx.lineTo(-size * 1.2, -size * 0.45);
+  ctx.lineTo(-size * 1.2, size * 0.45);
+  ctx.lineTo(size * 0.6, size * 0.5);
+  ctx.quadraticCurveTo(size * 1.4, size * 0.35, size * 1.6, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
+  ctx.lineWidth = 0.6 * zoom;
+  ctx.stroke();
+
+  // Canard fins (small forward steering fins)
+  ctx.fillStyle = "#777";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.4, -size * 0.5);
+  ctx.lineTo(size * 0.2, -size * 0.85);
+  ctx.lineTo(size * 0.0, -size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.4, size * 0.5);
+  ctx.lineTo(size * 0.2, size * 0.85);
+  ctx.lineTo(size * 0.0, size * 0.5);
   ctx.closePath();
   ctx.fill();
 
-  // Red nose cone
-  ctx.fillStyle = "#cc1100";
+  // Red warhead section
+  const warheadGrad = ctx.createLinearGradient(size * 0.6, 0, size * 1.6, 0);
+  warheadGrad.addColorStop(0, "#cc1100");
+  warheadGrad.addColorStop(0.5, "#ee2200");
+  warheadGrad.addColorStop(1, "#991100");
+  ctx.fillStyle = warheadGrad;
   ctx.beginPath();
-  ctx.moveTo(size * 1.8, 0);
-  ctx.lineTo(size * 0.8, -size * 0.4);
-  ctx.lineTo(size * 0.8, size * 0.4);
+  ctx.moveTo(size * 1.6, 0);
+  ctx.quadraticCurveTo(size * 1.3, -size * 0.28, size * 0.8, -size * 0.42);
+  ctx.lineTo(size * 0.8, size * 0.42);
+  ctx.quadraticCurveTo(size * 1.3, size * 0.28, size * 1.6, 0);
   ctx.closePath();
   ctx.fill();
 
-  // Fins
-  ctx.fillStyle = "#666";
+  // Warhead hazard stripe
+  ctx.strokeStyle = "#ffcc00";
+  ctx.lineWidth = 1 * zoom;
   ctx.beginPath();
-  ctx.moveTo(-size * 1.0, -size * 0.5);
-  ctx.lineTo(-size * 1.4, -size * 1.0);
-  ctx.lineTo(-size * 1.2, -size * 0.5);
-  ctx.closePath();
+  ctx.moveTo(size * 0.85, -size * 0.42);
+  ctx.lineTo(size * 0.85, size * 0.42);
+  ctx.stroke();
+
+  // Panel lines
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+  ctx.lineWidth = 0.4 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, -size * 0.5);
+  ctx.lineTo(0, size * 0.5);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.5, -size * 0.47);
+  ctx.lineTo(-size * 0.5, size * 0.47);
+  ctx.stroke();
+
+  // Seeker window
+  ctx.fillStyle = "#223";
+  ctx.beginPath();
+  ctx.arc(size * 1.45, 0, 1.2 * zoom, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = "rgba(100, 200, 255, 0.4)";
   ctx.beginPath();
-  ctx.moveTo(-size * 1.0, size * 0.5);
-  ctx.lineTo(-size * 1.4, size * 1.0);
-  ctx.lineTo(-size * 1.2, size * 0.5);
-  ctx.closePath();
+  ctx.arc(size * 1.45, 0, 0.8 * zoom, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Top-edge highlight
+  ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(0, -size * 0.3, size * 0.8, zoom, 0, 0, Math.PI * 2);
   ctx.fill();
 
   void progress;
 }
 
 // ============================================================================
-// EMBER - Glowing burning glob
+// EMBER - Molten fiery glob with flame tongues, sparks, and smoke
 // ============================================================================
 function renderEmber(
   ctx: CanvasRenderingContext2D,
@@ -783,41 +950,130 @@ function renderEmber(
   progress: number,
   time: number,
 ) {
-  const size = 5 * zoom;
-  const tumble = progress * Math.PI * 4;
+  const size = 6 * zoom;
+  const tumble = progress * Math.PI * 3;
+
+  // Trailing sparks & cinders (drawn before tumble rotation)
+  for (let i = 0; i < 6; i++) {
+    const sparkPhase = (time * 3 + i * 1.7) % 2;
+    const sparkOff = -(4 + i * 3 + sparkPhase * 3) * zoom;
+    const sparkDrift = Math.sin(time * 7 + i * 2.5) * (2 + i * 0.5) * zoom;
+    const sparkSize = Math.max(0.5, (1.8 - sparkPhase * 0.6)) * zoom;
+    const sparkAlpha = Math.max(0, 0.7 - sparkPhase * 0.25);
+    const sparkG = Math.floor(150 + Math.sin(i * 3.1) * 60);
+    const sparkB = Math.floor(30 + Math.sin(i * 1.7) * 20);
+    ctx.fillStyle = `rgba(255, ${sparkG}, ${sparkB}, ${sparkAlpha})`;
+    ctx.beginPath();
+    ctx.arc(sparkOff, sparkDrift, sparkSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Smoke wisps
+  for (let i = 0; i < 3; i++) {
+    const smokeOff = -(6 + i * 5) * zoom;
+    const smokeDrift = Math.sin(time * 3 + i * 2.1) * (1 + i) * zoom - i * zoom;
+    const smokeSize = (2.5 + i * 1.5) * zoom;
+    const smokeAlpha = 0.12 - i * 0.03;
+    ctx.fillStyle = `rgba(80, 60, 40, ${smokeAlpha})`;
+    ctx.beginPath();
+    ctx.arc(smokeOff, smokeDrift, smokeSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.save();
   ctx.rotate(tumble);
 
-  // Glow halo
-  const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 2);
-  glowGrad.addColorStop(0, `rgba(255, 150, 30, ${0.4 + Math.sin(time * 8) * 0.15})`);
-  glowGrad.addColorStop(0.5, "rgba(255, 80, 0, 0.2)");
-  glowGrad.addColorStop(1, "rgba(200, 30, 0, 0)");
+  // Outer heat glow
+  const glowPulse = 0.35 + Math.sin(time * 6) * 0.1;
+  const glowGrad = ctx.createRadialGradient(0, 0, size * 0.3, 0, 0, size * 2.8);
+  glowGrad.addColorStop(0, `rgba(255, 160, 40, ${glowPulse})`);
+  glowGrad.addColorStop(0.4, `rgba(255, 80, 10, ${glowPulse * 0.5})`);
+  glowGrad.addColorStop(0.7, `rgba(200, 40, 0, ${glowPulse * 0.2})`);
+  glowGrad.addColorStop(1, "rgba(150, 20, 0, 0)");
   ctx.fillStyle = glowGrad;
   ctx.beginPath();
-  ctx.arc(0, 0, size * 2, 0, Math.PI * 2);
+  ctx.arc(0, 0, size * 2.8, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ember body - irregular hot rock
-  const emberGrad = ctx.createRadialGradient(-zoom, -zoom, 0, 0, 0, size);
-  emberGrad.addColorStop(0, "#ffcc44");
-  emberGrad.addColorStop(0.4, "#ff6600");
-  emberGrad.addColorStop(0.8, "#cc3300");
-  emberGrad.addColorStop(1, "#661100");
-  ctx.fillStyle = emberGrad;
+  // Flame tongues radiating from core
+  for (let i = 0; i < 5; i++) {
+    const flameAngle = (i / 5) * Math.PI * 2 + time * 4 + progress * 2;
+    const flameLen = size * 0.8 + Math.sin(time * 10 + i * 2.3) * size * 0.4;
+    const flameWidth = size * 0.35 + Math.sin(time * 8 + i * 1.7) * size * 0.1;
+    const fx = Math.cos(flameAngle) * size * 0.5;
+    const fy = Math.sin(flameAngle) * size * 0.5;
+    const tipX = Math.cos(flameAngle) * (size * 0.5 + flameLen);
+    const tipY = Math.sin(flameAngle) * (size * 0.5 + flameLen);
+
+    const flameGrad = ctx.createLinearGradient(fx, fy, tipX, tipY);
+    flameGrad.addColorStop(0, "rgba(255, 220, 80, 0.8)");
+    flameGrad.addColorStop(0.3, "rgba(255, 140, 20, 0.6)");
+    flameGrad.addColorStop(0.7, "rgba(220, 60, 0, 0.3)");
+    flameGrad.addColorStop(1, "rgba(150, 30, 0, 0)");
+    ctx.fillStyle = flameGrad;
+
+    const perpX = -Math.sin(flameAngle) * flameWidth;
+    const perpY = Math.cos(flameAngle) * flameWidth;
+    ctx.beginPath();
+    ctx.moveTo(fx + perpX, fy + perpY);
+    ctx.quadraticCurveTo(
+      (fx + tipX) * 0.5 + perpX * 0.6 + Math.sin(time * 12 + i) * zoom,
+      (fy + tipY) * 0.5 + perpY * 0.6 + Math.cos(time * 11 + i) * zoom,
+      tipX, tipY
+    );
+    ctx.quadraticCurveTo(
+      (fx + tipX) * 0.5 - perpX * 0.6 - Math.sin(time * 12 + i) * zoom,
+      (fy + tipY) * 0.5 - perpY * 0.6 - Math.cos(time * 11 + i) * zoom,
+      fx - perpX, fy - perpY
+    );
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Molten core body (irregular lava rock)
+  const coreGrad = ctx.createRadialGradient(-zoom * 0.5, -zoom * 0.5, 0, 0, 0, size);
+  coreGrad.addColorStop(0, "#ffffcc");
+  coreGrad.addColorStop(0.2, "#ffdd44");
+  coreGrad.addColorStop(0.45, "#ff8800");
+  coreGrad.addColorStop(0.7, "#cc3300");
+  coreGrad.addColorStop(1, "#661100");
+  ctx.fillStyle = coreGrad;
   ctx.beginPath();
-  ctx.moveTo(size * 0.8, 0);
-  ctx.quadraticCurveTo(size * 0.6, -size * 0.7, 0, -size * 0.9);
-  ctx.quadraticCurveTo(-size * 0.8, -size * 0.5, -size * 0.9, 0);
-  ctx.quadraticCurveTo(-size * 0.6, size * 0.8, 0, size * 0.7);
-  ctx.quadraticCurveTo(size * 0.7, size * 0.5, size * 0.8, 0);
+  ctx.moveTo(size * 0.85, 0);
+  ctx.quadraticCurveTo(size * 0.7, -size * 0.75, size * 0.1, -size * 0.9);
+  ctx.quadraticCurveTo(-size * 0.7, -size * 0.65, -size * 0.85, -size * 0.1);
+  ctx.quadraticCurveTo(-size * 0.8, size * 0.6, -size * 0.15, size * 0.85);
+  ctx.quadraticCurveTo(size * 0.5, size * 0.75, size * 0.85, size * 0.15);
+  ctx.quadraticCurveTo(size * 0.9, size * 0.05, size * 0.85, 0);
   ctx.fill();
 
-  // Hot spot
-  ctx.fillStyle = "rgba(255, 255, 200, 0.6)";
+  // Molten veins on surface
+  ctx.strokeStyle = "rgba(255, 255, 100, 0.5)";
+  ctx.lineWidth = 0.8 * zoom;
   ctx.beginPath();
-  ctx.arc(-zoom, -zoom, size * 0.3, 0, Math.PI * 2);
+  ctx.moveTo(-size * 0.3, -size * 0.6);
+  ctx.quadraticCurveTo(size * 0.1, -size * 0.1, -size * 0.2, size * 0.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(size * 0.4, -size * 0.3);
+  ctx.quadraticCurveTo(size * 0.1, size * 0.2, size * 0.5, size * 0.5);
+  ctx.stroke();
+
+  // Hot-spot highlights
+  const hotPulse = 0.5 + Math.sin(time * 10) * 0.2;
+  ctx.fillStyle = `rgba(255, 255, 220, ${hotPulse})`;
+  ctx.beginPath();
+  ctx.arc(-zoom * 1.5, -zoom * 1.5, size * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 255, 180, ${hotPulse * 0.6})`;
+  ctx.beginPath();
+  ctx.arc(zoom, zoom * 0.5, size * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dark cooling spots
+  ctx.fillStyle = "rgba(50, 20, 0, 0.3)";
+  ctx.beginPath();
+  ctx.ellipse(size * 0.3, -size * 0.15, size * 0.15, size * 0.1, 0.5, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
@@ -1106,9 +1362,26 @@ export function renderProjectile(
   ctx.save();
   ctx.translate(screenPos.x, screenPos.y);
   
-  // Calculate rotation
-  const effectiveRotation = proj.rotation !== undefined ? proj.rotation : 
-    Math.atan2(proj.to.y - proj.from.y, proj.to.x - proj.from.x);
+  // Calculate rotation — for arcing mortar-family projectiles, follow the arc tangent
+  let effectiveRotation: number;
+  const arcAwareTypes = ["mortarShell", "missile", "ember"];
+  if (proj.arcHeight && arcAwareTypes.includes(proj.type)) {
+    const dt = 0.01;
+    const t1 = Math.min(1, t + dt);
+    const x1 = proj.from.x + (proj.to.x - proj.from.x) * t1;
+    const y1 = proj.from.y + (proj.to.y - proj.from.y) * t1;
+    const screen1 = worldToScreen(
+      { x: x1, y: y1 }, canvasWidth, canvasHeight, dpr, cameraOffset, cameraZoom
+    );
+    const arc1 = Math.sin(t1 * Math.PI) * proj.arcHeight * zoom;
+    const elev1 = proj.elevation ? proj.elevation * (1 - t1) * zoom : 0;
+    const dx = screen1.x - groundScreenPos.x;
+    const dy = (screen1.y - arc1 - elev1) - (groundScreenPos.y - arcOffset - elevationFade);
+    effectiveRotation = Math.atan2(dy, dx);
+  } else {
+    effectiveRotation = proj.rotation !== undefined ? proj.rotation :
+      Math.atan2(proj.to.y - proj.from.y, proj.to.x - proj.from.x);
+  }
   ctx.rotate(effectiveRotation);
 
   // Apply scale if provided

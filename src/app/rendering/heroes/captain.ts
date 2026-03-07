@@ -498,23 +498,23 @@ export function drawCaptainHero(
   // Flame aura around blade
   if (isAttacking || true) {
     ctx.shadowColor = "#ff4400";
-    ctx.shadowBlur = 15 * zoom * (0.7 + attackIntensity * 0.3);
+    ctx.shadowBlur = 18 * zoom * (0.7 + attackIntensity * 0.3);
     
-    // Flame particles along blade
-    for (let flame = 0; flame < 8; flame++) {
-      const flameY = -size * 0.1 - flame * size * 0.08;
-      const flameX = Math.sin(time * 8 + flame * 0.7) * size * 0.03;
+    // Flame particles along greatsword blade
+    for (let flame = 0; flame < 12; flame++) {
+      const flameY = -size * 0.12 - flame * size * 0.085;
+      const flameX = Math.sin(time * 8 + flame * 0.7) * size * 0.04;
       const flameAlpha = 0.4 + Math.sin(time * 6 + flame) * 0.2;
-      ctx.fillStyle = `rgba(255, ${150 - flame * 10}, 50, ${flameAlpha})`;
+      ctx.fillStyle = `rgba(255, ${150 - flame * 8}, 50, ${flameAlpha})`;
       ctx.beginPath();
-      ctx.ellipse(flameX, flameY, size * 0.025, size * 0.04, 0, 0, Math.PI * 2);
+      ctx.ellipse(flameX, flameY, size * 0.03, size * 0.05, 0, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.shadowBlur = 0;
   }
 
-  // Blade with fire gradient
-  const bladeGrad = ctx.createLinearGradient(-size * 0.05, -size * 0.4, size * 0.05, -size * 0.4);
+  // Greatsword blade with fire gradient
+  const bladeGrad = ctx.createLinearGradient(-size * 0.07, -size * 0.55, size * 0.07, -size * 0.55);
   bladeGrad.addColorStop(0, "#606068");
   bladeGrad.addColorStop(0.15, "#909098");
   bladeGrad.addColorStop(0.3, "#c0c0c8");
@@ -524,26 +524,26 @@ export function drawCaptainHero(
   bladeGrad.addColorStop(1, "#606068");
   ctx.fillStyle = bladeGrad;
   ctx.beginPath();
-  ctx.moveTo(-size * 0.05, 0);
-  ctx.lineTo(-size * 0.055, -size * 0.55);
-  ctx.lineTo(-size * 0.03, -size * 0.7);
-  ctx.lineTo(0, -size * 0.78);
-  ctx.lineTo(size * 0.03, -size * 0.7);
-  ctx.lineTo(size * 0.055, -size * 0.55);
-  ctx.lineTo(size * 0.05, 0);
+  ctx.moveTo(-size * 0.07, 0);
+  ctx.lineTo(-size * 0.075, -size * 0.78);
+  ctx.lineTo(-size * 0.04, -size * 0.98);
+  ctx.lineTo(0, -size * 1.1);
+  ctx.lineTo(size * 0.04, -size * 0.98);
+  ctx.lineTo(size * 0.075, -size * 0.78);
+  ctx.lineTo(size * 0.07, 0);
   ctx.closePath();
   ctx.fill();
 
   // Blade fire edge glow
   ctx.strokeStyle = "#ff6630";
-  ctx.lineWidth = 2 * zoom;
+  ctx.lineWidth = 2.5 * zoom;
   ctx.shadowColor = "#ff4400";
-  ctx.shadowBlur = 8 * zoom * flamePulse;
+  ctx.shadowBlur = 10 * zoom * flamePulse;
   ctx.beginPath();
-  ctx.moveTo(-size * 0.05, -size * 0.05);
-  ctx.lineTo(-size * 0.05, -size * 0.53);
-  ctx.lineTo(-size * 0.025, -size * 0.68);
-  ctx.lineTo(0, -size * 0.76);
+  ctx.moveTo(-size * 0.07, -size * 0.05);
+  ctx.lineTo(-size * 0.075, -size * 0.76);
+  ctx.lineTo(-size * 0.035, -size * 0.96);
+  ctx.lineTo(0, -size * 1.08);
   ctx.stroke();
   ctx.shadowBlur = 0;
 
@@ -551,14 +551,13 @@ export function drawCaptainHero(
   ctx.fillStyle = `rgba(255, 100, 50, ${0.6 + attackIntensity * 0.4})`;
   ctx.shadowColor = "#ff4400";
   ctx.shadowBlur = 6 * zoom;
-  for (let rune = 0; rune < 4; rune++) {
-    const runeY = -size * 0.12 - rune * size * 0.14;
-    // Diamond rune shape
+  for (let rune = 0; rune < 6; rune++) {
+    const runeY = -size * 0.14 - rune * size * 0.14;
     ctx.beginPath();
-    ctx.moveTo(0, runeY - size * 0.025);
-    ctx.lineTo(size * 0.015, runeY);
-    ctx.lineTo(0, runeY + size * 0.025);
-    ctx.lineTo(-size * 0.015, runeY);
+    ctx.moveTo(0, runeY - size * 0.028);
+    ctx.lineTo(size * 0.018, runeY);
+    ctx.lineTo(0, runeY + size * 0.028);
+    ctx.lineTo(-size * 0.018, runeY);
     ctx.closePath();
     ctx.fill();
   }
@@ -568,18 +567,18 @@ export function drawCaptainHero(
   ctx.strokeStyle = "#404048";
   ctx.lineWidth = 1.5 * zoom;
   ctx.beginPath();
-  ctx.moveTo(-size * 0.05, 0);
-  ctx.lineTo(-size * 0.055, -size * 0.55);
-  ctx.lineTo(-size * 0.03, -size * 0.7);
-  ctx.lineTo(0, -size * 0.78);
-  ctx.lineTo(size * 0.03, -size * 0.7);
-  ctx.lineTo(size * 0.055, -size * 0.55);
-  ctx.lineTo(size * 0.05, 0);
+  ctx.moveTo(-size * 0.07, 0);
+  ctx.lineTo(-size * 0.075, -size * 0.78);
+  ctx.lineTo(-size * 0.04, -size * 0.98);
+  ctx.lineTo(0, -size * 1.1);
+  ctx.lineTo(size * 0.04, -size * 0.98);
+  ctx.lineTo(size * 0.075, -size * 0.78);
+  ctx.lineTo(size * 0.07, 0);
   ctx.closePath();
   ctx.stroke();
 
-  // Dragon crossguard
-  const guardGrad = ctx.createLinearGradient(-size * 0.18, 0, size * 0.18, 0);
+  // Dragon crossguard (wider for greatsword)
+  const guardGrad = ctx.createLinearGradient(-size * 0.24, 0, size * 0.24, 0);
   guardGrad.addColorStop(0, "#805010");
   guardGrad.addColorStop(0.2, "#c9a227");
   guardGrad.addColorStop(0.4, "#f0c040");
@@ -588,16 +587,15 @@ export function drawCaptainHero(
   guardGrad.addColorStop(0.8, "#c9a227");
   guardGrad.addColorStop(1, "#805010");
   ctx.fillStyle = guardGrad;
-  // Dragon wing crossguard shape
   ctx.beginPath();
-  ctx.moveTo(-size * 0.18, size * 0.02);
-  ctx.quadraticCurveTo(-size * 0.2, -size * 0.04, -size * 0.15, -size * 0.06);
-  ctx.lineTo(-size * 0.05, -size * 0.04);
-  ctx.lineTo(size * 0.05, -size * 0.04);
-  ctx.lineTo(size * 0.15, -size * 0.06);
-  ctx.quadraticCurveTo(size * 0.2, -size * 0.04, size * 0.18, size * 0.02);
-  ctx.quadraticCurveTo(size * 0.1, size * 0.04, 0, size * 0.02);
-  ctx.quadraticCurveTo(-size * 0.1, size * 0.04, -size * 0.18, size * 0.02);
+  ctx.moveTo(-size * 0.24, size * 0.02);
+  ctx.quadraticCurveTo(-size * 0.27, -size * 0.05, -size * 0.2, -size * 0.07);
+  ctx.lineTo(-size * 0.07, -size * 0.05);
+  ctx.lineTo(size * 0.07, -size * 0.05);
+  ctx.lineTo(size * 0.2, -size * 0.07);
+  ctx.quadraticCurveTo(size * 0.27, -size * 0.05, size * 0.24, size * 0.02);
+  ctx.quadraticCurveTo(size * 0.13, size * 0.05, 0, size * 0.03);
+  ctx.quadraticCurveTo(-size * 0.13, size * 0.05, -size * 0.24, size * 0.02);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#604008";
@@ -609,43 +607,42 @@ export function drawCaptainHero(
   ctx.shadowColor = "#ff4444";
   ctx.shadowBlur = 5 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.ellipse(-size * 0.1, -size * 0.02, size * 0.025, size * 0.018, 0, 0, Math.PI * 2);
+  ctx.ellipse(-size * 0.13, -size * 0.02, size * 0.028, size * 0.02, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.ellipse(size * 0.1, -size * 0.02, size * 0.025, size * 0.018, 0, 0, Math.PI * 2);
+  ctx.ellipse(size * 0.13, -size * 0.02, size * 0.028, size * 0.02, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
 
-  // Ornate hilt
-  const hiltGrad = ctx.createLinearGradient(-size * 0.035, 0, size * 0.035, 0);
+  // Extended two-handed hilt
+  const hiltGrad = ctx.createLinearGradient(-size * 0.04, 0, size * 0.04, 0);
   hiltGrad.addColorStop(0, "#1a0805");
   hiltGrad.addColorStop(0.3, "#3a1810");
   hiltGrad.addColorStop(0.5, "#5a2818");
   hiltGrad.addColorStop(0.7, "#3a1810");
   hiltGrad.addColorStop(1, "#1a0805");
   ctx.fillStyle = hiltGrad;
-  ctx.fillRect(-size * 0.035, size * 0.01, size * 0.07, size * 0.18);
+  ctx.fillRect(-size * 0.04, size * 0.01, size * 0.08, size * 0.26);
   
-  // Hilt gold wrapping
+  // Hilt gold wrapping (more wraps for longer grip)
   ctx.strokeStyle = "#daa520";
   ctx.lineWidth = 2 * zoom;
-  for (let wrap = 0; wrap < 5; wrap++) {
+  for (let wrap = 0; wrap < 7; wrap++) {
     ctx.beginPath();
-    ctx.moveTo(-size * 0.035, size * 0.03 + wrap * size * 0.032);
-    ctx.lineTo(size * 0.035, size * 0.045 + wrap * size * 0.032);
+    ctx.moveTo(-size * 0.04, size * 0.03 + wrap * size * 0.034);
+    ctx.lineTo(size * 0.04, size * 0.048 + wrap * size * 0.034);
     ctx.stroke();
   }
 
-  // Dragon head pommel
+  // Dragon head pommel (shifted down for longer hilt)
   ctx.fillStyle = "#daa520";
   ctx.beginPath();
-  // Dragon head shape
-  ctx.moveTo(0, size * 0.19);
-  ctx.lineTo(-size * 0.05, size * 0.22);
-  ctx.quadraticCurveTo(-size * 0.07, size * 0.26, -size * 0.05, size * 0.3);
-  ctx.quadraticCurveTo(-size * 0.02, size * 0.33, 0, size * 0.32);
-  ctx.quadraticCurveTo(size * 0.02, size * 0.33, size * 0.05, size * 0.3);
-  ctx.quadraticCurveTo(size * 0.07, size * 0.26, size * 0.05, size * 0.22);
+  ctx.moveTo(0, size * 0.27);
+  ctx.lineTo(-size * 0.06, size * 0.3);
+  ctx.quadraticCurveTo(-size * 0.08, size * 0.35, -size * 0.06, size * 0.39);
+  ctx.quadraticCurveTo(-size * 0.025, size * 0.42, 0, size * 0.41);
+  ctx.quadraticCurveTo(size * 0.025, size * 0.42, size * 0.06, size * 0.39);
+  ctx.quadraticCurveTo(size * 0.08, size * 0.35, size * 0.06, size * 0.3);
   ctx.closePath();
   ctx.fill();
   ctx.strokeStyle = "#805010";
@@ -657,7 +654,7 @@ export function drawCaptainHero(
   ctx.shadowColor = "#ff4444";
   ctx.shadowBlur = 4 * zoom * gemPulse;
   ctx.beginPath();
-  ctx.arc(0, size * 0.26, size * 0.025, 0, Math.PI * 2);
+  ctx.arc(0, size * 0.345, size * 0.028, 0, Math.PI * 2);
   ctx.fill();
   ctx.shadowBlur = 0;
   ctx.restore();

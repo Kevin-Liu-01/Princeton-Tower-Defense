@@ -2982,6 +2982,7 @@ export function renderTowerDebuffEffects(
   tower: Tower,
   screenPos: Position,
   zoom: number,
+  effectiveNow?: number,
 ): void {
   if (!tower.debuffs || tower.debuffs.length === 0) return;
 
@@ -2996,7 +2997,7 @@ export function renderTowerDebuffEffects(
     return;
   }
 
-  const now = Date.now();
+  const now = effectiveNow ?? Date.now();
   const activeDebuffs = tower.debuffs.filter((d) => d.until > now);
 
   if (activeDebuffs.length === 0) return;
@@ -3418,6 +3419,7 @@ export function renderUnitStatusEffects(
   unit: Troop | Hero,
   screenPos: Position,
   zoom: number,
+  effectiveNow?: number,
 ): void {
   if (
     !screenPos ||
@@ -3429,7 +3431,7 @@ export function renderUnitStatusEffects(
     return;
   }
 
-  const now = Date.now();
+  const now = effectiveNow ?? Date.now();
   ctx.save();
 
   const baseSize = 15;

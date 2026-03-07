@@ -1,0 +1,1631 @@
+// Volcanic region enemy sprites
+
+import { setShadowBlur, clearShadow } from "../performance";
+import { drawEnemyShadow } from "./helpers";
+
+// =====================================================
+// VOLCANIC REGION TROOPS
+// =====================================================
+
+export function drawMagmaSpawnEnemy(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  bodyColor: string,
+  bodyColorDark: string,
+  bodyColorLight: string,
+  time: number,
+  zoom: number,
+  attackPhase: number = 0,
+) {
+  // MAGMA SPAWN - Primordial elemental of living molten rock, born from volcanic fury
+  const isAttacking = attackPhase > 0;
+  const bubble = Math.sin(time * 4);
+  const flow = (time * 2) % 1;
+  const glow = 0.65 + Math.sin(time * 3) * 0.35;
+  const surge = Math.sin(time * 2.5) * 0.04;
+  const rage = isAttacking ? Math.sin(attackPhase * Math.PI * 3) * 0.15 : 0;
+  size *= 1.5; // Larger size
+
+  // Intense heat distortion aura
+  const heatGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.9);
+  heatGrad.addColorStop(0, `rgba(251, 146, 60, ${glow * 0.15})`);
+  heatGrad.addColorStop(0.4, `rgba(234, 88, 12, ${glow * 0.1})`);
+  heatGrad.addColorStop(0.7, `rgba(194, 65, 12, ${glow * 0.05})`);
+  heatGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
+  ctx.fillStyle = heatGrad;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Scorched earth underneath
+  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.55, size * 0.2, 0.5);
+
+  // Lava pool beneath
+  const poolGrad = ctx.createRadialGradient(
+    x,
+    y + size * 0.32,
+    0,
+    x,
+    y + size * 0.32,
+    size * 0.45,
+  );
+  poolGrad.addColorStop(0, `rgba(251, 191, 36, ${glow * 0.6})`);
+  poolGrad.addColorStop(0.5, `rgba(234, 88, 12, ${glow * 0.4})`);
+  poolGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
+  ctx.fillStyle = poolGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.32, size * 0.4, size * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Dripping lava trails to ground
+  ctx.fillStyle = `rgba(251, 191, 36, ${0.6 + glow * 0.3})`;
+  for (let drip = 0; drip < 4; drip++) {
+    const dripX = x - size * 0.25 + drip * size * 0.18;
+    const dripPhase = (flow + drip * 0.25) % 1;
+    const dripY = y + size * 0.1 + dripPhase * size * 0.25;
+    ctx.beginPath();
+    ctx.ellipse(
+      dripX,
+      dripY,
+      size * 0.025,
+      size * 0.06 * (1 - dripPhase * 0.5),
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Main molten body - amorphous shifting mass
+  const bodyGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.1,
+    0,
+    x,
+    y,
+    size * 0.45,
+  );
+  bodyGrad.addColorStop(0, "#fef3c7");
+  bodyGrad.addColorStop(0.2, bodyColorLight);
+  bodyGrad.addColorStop(0.5, bodyColor);
+  bodyGrad.addColorStop(0.8, bodyColorDark);
+  bodyGrad.addColorStop(1, "#7c2d12");
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.4, y + size * 0.22);
+  ctx.quadraticCurveTo(
+    x - size * 0.48 + surge * size,
+    y - size * 0.05 + bubble * size * 0.06,
+    x - size * 0.3,
+    y - size * 0.38,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.15,
+    y - size * 0.52 + bubble * size * 0.04,
+    x,
+    y - size * 0.5 + bubble * size * 0.03,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.15,
+    y - size * 0.52 + bubble * size * 0.04,
+    x + size * 0.3,
+    y - size * 0.38,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.48 - surge * size,
+    y - size * 0.05 - bubble * size * 0.06,
+    x + size * 0.4,
+    y + size * 0.22,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.2,
+    y + size * 0.32 + surge * size,
+    x,
+    y + size * 0.3,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.2,
+    y + size * 0.32 - surge * size,
+    x - size * 0.4,
+    y + size * 0.22,
+  );
+  ctx.fill();
+
+  // Cooled rock patches (darker areas)
+  ctx.fillStyle = "#451a03";
+  for (let rock = 0; rock < 6; rock++) {
+    const rockX = x + Math.sin(rock * 1.1 + time * 0.2) * size * 0.25;
+    const rockY = y - size * 0.15 + Math.cos(rock * 1.4) * size * 0.2;
+    const rockSize = size * (0.06 + Math.sin(rock) * 0.02);
+    ctx.beginPath();
+    ctx.ellipse(
+      rockX,
+      rockY,
+      rockSize,
+      rockSize * 0.7,
+      rock * 0.5,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+
+  // Glowing molten crack network
+  ctx.strokeStyle = `rgba(251, 191, 36, ${glow})`;
+  ctx.lineWidth = 3 * zoom;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
+  // Main crack patterns
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.25, y - size * 0.3);
+  ctx.quadraticCurveTo(
+    x - size * 0.15,
+    y - size * 0.1,
+    x - size * 0.2,
+    y + size * 0.1,
+  );
+  ctx.lineTo(x - size * 0.28, y + size * 0.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.2, y - size * 0.35);
+  ctx.quadraticCurveTo(
+    x + size * 0.25,
+    y - size * 0.15,
+    x + size * 0.15,
+    y + size * 0.05,
+  );
+  ctx.lineTo(x + size * 0.22, y + size * 0.18);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.05, y - size * 0.25);
+  ctx.lineTo(x + size * 0.08, y - size * 0.05);
+  ctx.lineTo(x, y + size * 0.12);
+  ctx.stroke();
+  // Branching cracks
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.1);
+  ctx.lineTo(x - size * 0.08, y - size * 0.05);
+  ctx.moveTo(x + size * 0.25, y - size * 0.15);
+  ctx.lineTo(x + size * 0.32, y - size * 0.08);
+  ctx.stroke();
+  clearShadow(ctx);
+
+  // Intensely bright molten core
+  const coreGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.12,
+    0,
+    x,
+    y - size * 0.12,
+    size * 0.28,
+  );
+  coreGrad.addColorStop(0, `rgba(255, 255, 230, ${glow})`);
+  coreGrad.addColorStop(0.3, `rgba(254, 243, 199, ${glow * 0.8})`);
+  coreGrad.addColorStop(0.6, `rgba(251, 191, 36, ${glow * 0.5})`);
+  coreGrad.addColorStop(1, "rgba(251, 146, 60, 0)");
+  ctx.fillStyle = coreGrad;
+  setShadowBlur(ctx, 15 * zoom, "#fbbf24");
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.12, size * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Magma pseudopod arms
+  ctx.fillStyle = bodyColor;
+  // Left arm extending
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y - size * 0.1);
+  ctx.quadraticCurveTo(
+    x - size * 0.5,
+    y - size * 0.05 + rage * size,
+    x - size * 0.45,
+    y + size * 0.15,
+  );
+  ctx.quadraticCurveTo(
+    x - size * 0.35,
+    y + size * 0.2,
+    x - size * 0.32,
+    y + size * 0.1,
+  );
+  ctx.quadraticCurveTo(x - size * 0.4, y, x - size * 0.35, y - size * 0.1);
+  ctx.fill();
+  // Right arm
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.35, y - size * 0.1);
+  ctx.quadraticCurveTo(
+    x + size * 0.5,
+    y - rage * size,
+    x + size * 0.48,
+    y + size * 0.12,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.38,
+    y + size * 0.18,
+    x + size * 0.34,
+    y + size * 0.08,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.42,
+    y - size * 0.02,
+    x + size * 0.35,
+    y - size * 0.1,
+  );
+  ctx.fill();
+
+  // Arm lava glow
+  ctx.strokeStyle = `rgba(251, 191, 36, ${glow * 0.7})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.42, y + size * 0.02);
+  ctx.lineTo(x - size * 0.38, y + size * 0.12);
+  ctx.moveTo(x + size * 0.42, y + size * 0.05);
+  ctx.lineTo(x + size * 0.4, y + size * 0.13);
+  ctx.stroke();
+
+  // Fierce glowing eyes - deep set in molten face
+  ctx.fillStyle = "#0a0502";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.12,
+    y - size * 0.22,
+    size * 0.07,
+    size * 0.055,
+    -0.15,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.12,
+    y - size * 0.22,
+    size * 0.07,
+    size * 0.055,
+    0.15,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Inner eye fire
+  ctx.fillStyle = `rgba(255, 255, 200, ${glow})`;
+  setShadowBlur(ctx, 12 * zoom, "#fbbf24");
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.12,
+    y - size * 0.22,
+    size * 0.045,
+    size * 0.035,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.12,
+    y - size * 0.22,
+    size * 0.045,
+    size * 0.035,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Burning pupils
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.12, y - size * 0.22, size * 0.018, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.12, y - size * 0.22, size * 0.018, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Jagged mouth crack
+  ctx.fillStyle = `rgba(255, 255, 200, ${glow * 0.9})`;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.12, y - size * 0.08);
+  ctx.lineTo(x - size * 0.08, y - size * 0.04);
+  ctx.lineTo(x - size * 0.03, y - size * 0.07);
+  ctx.lineTo(x + size * 0.02, y - size * 0.03);
+  ctx.lineTo(x + size * 0.08, y - size * 0.06);
+  ctx.lineTo(x + size * 0.12, y - size * 0.02);
+  ctx.lineTo(x + size * 0.08, y + size * 0.02);
+  ctx.lineTo(x + size * 0.02, y - size * 0.01);
+  ctx.lineTo(x - size * 0.04, y + size * 0.02);
+  ctx.lineTo(x - size * 0.1, y - size * 0.02);
+  ctx.closePath();
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Bubbling lava on surface
+  ctx.fillStyle = `rgba(251, 191, 36, ${glow * 0.8})`;
+  for (let b = 0; b < 5; b++) {
+    const bx = x - size * 0.2 + b * size * 0.1;
+    const bubblePhase = Math.abs(Math.sin(time * 3 + b * 1.2));
+    const by = y - size * 0.4 - bubblePhase * size * 0.12;
+    const bSize = size * (0.035 + bubblePhase * 0.02);
+    ctx.beginPath();
+    ctx.arc(bx, by, bSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Rising embers/sparks
+  ctx.fillStyle = `rgba(251, 191, 36, ${0.7 + glow * 0.3})`;
+  for (let ember = 0; ember < 8; ember++) {
+    const emberPhase = (time * 1.5 + ember * 0.12) % 1;
+    const ex = x + Math.sin(ember * 1.3 + time * 2) * size * 0.35;
+    const ey = y - size * 0.3 - emberPhase * size * 0.5;
+    const emberSize = size * 0.02 * (1 - emberPhase);
+    ctx.beginPath();
+    ctx.arc(ex, ey, emberSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Smoke wisps
+  ctx.fillStyle = `rgba(100, 80, 60, ${0.3 - flow * 0.2})`;
+  for (let smoke = 0; smoke < 3; smoke++) {
+    const sx = x + Math.sin(smoke * 2.1 + time) * size * 0.2;
+    const smokePhase = (flow + smoke * 0.3) % 1;
+    const sy = y - size * 0.5 - smokePhase * size * 0.4;
+    ctx.beginPath();
+    ctx.arc(sx, sy, size * (0.06 + smokePhase * 0.04), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Attack eruption effect
+  if (isAttacking) {
+    ctx.fillStyle = `rgba(251, 191, 36, ${attackPhase * 0.7})`;
+    for (let erupt = 0; erupt < 6; erupt++) {
+      const eruptAngle = -Math.PI * 0.8 + erupt * 0.25;
+      const eruptDist = attackPhase * size * 0.5;
+      ctx.beginPath();
+      ctx.arc(
+        x + Math.cos(eruptAngle) * eruptDist,
+        y - size * 0.35 + Math.sin(eruptAngle) * eruptDist * 0.6,
+        size * 0.04,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+  }
+}
+
+export function drawFireImpEnemy(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  bodyColor: string,
+  bodyColorDark: string,
+  bodyColorLight: string,
+  time: number,
+  zoom: number,
+  attackPhase: number = 0,
+) {
+  // FIRE IMP - Mischievous demon of infernal flames, delighting in chaos and destruction
+  const isAttacking = attackPhase > 0;
+  const hop = Math.abs(Math.sin(time * 8)) * size * 0.15;
+  const armWave = Math.sin(time * 6) * 0.5;
+  const flameFlicker = 0.75 + Math.random() * 0.25;
+  const bodyPulse = 0.95 + Math.sin(time * 5) * 0.05;
+  const cackleBounce = Math.sin(time * 12) * size * 0.02;
+  size *= 1.7; // Much larger size
+
+  // Intense fiery aura
+  const auraGrad = ctx.createRadialGradient(
+    x,
+    y - hop,
+    0,
+    x,
+    y - hop,
+    size * 0.7,
+  );
+  auraGrad.addColorStop(0, `rgba(251, 191, 36, ${flameFlicker * 0.2})`);
+  auraGrad.addColorStop(0.4, `rgba(251, 146, 60, ${flameFlicker * 0.15})`);
+  auraGrad.addColorStop(0.7, `rgba(234, 88, 12, ${flameFlicker * 0.08})`);
+  auraGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+  ctx.fillStyle = auraGrad;
+  ctx.beginPath();
+  ctx.arc(x, y - hop, size * 0.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Scorched ground shadow
+  drawEnemyShadow(ctx, x, y + size * 0.35, size * 0.3, size * 0.1);
+
+  // Ember trail on ground
+  ctx.fillStyle = `rgba(251, 146, 60, ${0.4 + flameFlicker * 0.2})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.32, size * 0.15, size * 0.05, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Clawed feet with fire wisps
+  ctx.fillStyle = "#7c2d12";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.12 + cackleBounce,
+    y + size * 0.2 - hop,
+    size * 0.08,
+    size * 0.12,
+    -0.25,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.12 - cackleBounce,
+    y + size * 0.2 - hop,
+    size * 0.08,
+    size * 0.12,
+    0.25,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Foot claws
+  ctx.fillStyle = "#451a03";
+  for (let foot = -1; foot <= 1; foot += 2) {
+    for (let claw = 0; claw < 3; claw++) {
+      const clawX = x + foot * size * 0.12 + (claw - 1) * size * 0.03 * foot;
+      const clawY = y + size * 0.28 - hop;
+      ctx.beginPath();
+      ctx.moveTo(clawX, clawY);
+      ctx.lineTo(clawX + foot * size * 0.02, clawY + size * 0.04);
+      ctx.lineTo(clawX - foot * size * 0.01, clawY + size * 0.02);
+      ctx.fill();
+    }
+  }
+
+  // Sinuous demonic body
+  const bodyGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.05 - hop,
+    0,
+    x,
+    y - size * 0.05 - hop,
+    size * 0.25,
+  );
+  bodyGrad.addColorStop(0, bodyColorLight);
+  bodyGrad.addColorStop(0.5, bodyColor);
+  bodyGrad.addColorStop(1, bodyColorDark);
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y - size * 0.05 - hop,
+    size * 0.22 * bodyPulse,
+    size * 0.25 * bodyPulse,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Body flame patterns
+  ctx.strokeStyle = `rgba(251, 191, 36, ${flameFlicker * 0.5})`;
+  ctx.lineWidth = 1.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, y - size * 0.2 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.05,
+    y - size * 0.1 - hop,
+    x - size * 0.12,
+    y + size * 0.05 - hop,
+  );
+  ctx.moveTo(x + size * 0.08, y - size * 0.15 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.12,
+    y - size * 0.05 - hop,
+    x + size * 0.06,
+    y + size * 0.08 - hop,
+  );
+  ctx.stroke();
+
+  // Belly ember glow
+  ctx.fillStyle = `rgba(251, 191, 36, ${flameFlicker * 0.4})`;
+  ctx.beginPath();
+  ctx.ellipse(
+    x,
+    y + size * 0.02 - hop,
+    size * 0.1,
+    size * 0.08,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Wiry muscular arms reaching outward
+  ctx.fillStyle = bodyColor;
+  // Left arm raised in mischief
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.2, y - size * 0.1 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.35 + armWave * size * 0.12,
+    y - size * 0.2 - hop,
+    x - size * 0.32 + armWave * size * 0.1,
+    y - size * 0.35 - hop,
+  );
+  ctx.lineTo(x - size * 0.26 + armWave * size * 0.08, y - size * 0.32 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.28,
+    y - size * 0.15 - hop,
+    x - size * 0.18,
+    y - size * 0.08 - hop,
+  );
+  ctx.fill();
+  // Right arm
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.2, y - size * 0.1 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.35 - armWave * size * 0.12,
+    y - size * 0.15 - hop,
+    x + size * 0.32 - armWave * size * 0.1,
+    y - size * 0.3 - hop,
+  );
+  ctx.lineTo(x + size * 0.26 - armWave * size * 0.08, y - size * 0.27 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y - size * 0.12 - hop,
+    x + size * 0.18,
+    y - size * 0.08 - hop,
+  );
+  ctx.fill();
+
+  // Clawed hands with fire
+  ctx.fillStyle = "#7c2d12";
+  ctx.beginPath();
+  ctx.arc(
+    x - size * 0.32 + armWave * size * 0.1,
+    y - size * 0.37 - hop,
+    size * 0.06,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.32 - armWave * size * 0.1,
+    y - size * 0.32 - hop,
+    size * 0.06,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Hand claws
+  ctx.fillStyle = "#451a03";
+  for (let hand = -1; hand <= 1; hand += 2) {
+    const handX =
+      hand < 0
+        ? x - size * 0.32 + armWave * size * 0.1
+        : x + size * 0.32 - armWave * size * 0.1;
+    const handY = hand < 0 ? y - size * 0.37 - hop : y - size * 0.32 - hop;
+    for (let claw = 0; claw < 3; claw++) {
+      const clawAngle =
+        (hand < 0 ? -Math.PI * 0.6 : -Math.PI * 0.4) + claw * 0.25 * hand;
+      ctx.beginPath();
+      ctx.moveTo(
+        handX + Math.cos(clawAngle) * size * 0.04,
+        handY + Math.sin(clawAngle) * size * 0.04,
+      );
+      ctx.lineTo(
+        handX + Math.cos(clawAngle) * size * 0.1,
+        handY + Math.sin(clawAngle) * size * 0.08,
+      );
+      ctx.lineTo(
+        handX + Math.cos(clawAngle + 0.15) * size * 0.04,
+        handY + Math.sin(clawAngle + 0.15) * size * 0.04,
+      );
+      ctx.fill();
+    }
+  }
+
+  // Fireball forming in hand when attacking
+  if (isAttacking) {
+    const fireballGrad = ctx.createRadialGradient(
+      x - size * 0.32 + armWave * size * 0.1,
+      y - size * 0.42 - hop,
+      0,
+      x - size * 0.32 + armWave * size * 0.1,
+      y - size * 0.42 - hop,
+      size * 0.08 * attackPhase,
+    );
+    fireballGrad.addColorStop(0, `rgba(255, 255, 200, ${attackPhase})`);
+    fireballGrad.addColorStop(0.5, `rgba(251, 191, 36, ${attackPhase * 0.8})`);
+    fireballGrad.addColorStop(1, `rgba(234, 88, 12, ${attackPhase * 0.4})`);
+    ctx.fillStyle = fireballGrad;
+    setShadowBlur(ctx, 10 * zoom * attackPhase, "#fbbf24");
+    ctx.beginPath();
+    ctx.arc(
+      x - size * 0.32 + armWave * size * 0.1,
+      y - size * 0.42 - hop,
+      size * 0.08 * attackPhase,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    clearShadow(ctx);
+  }
+
+  // Large impish head
+  const headGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.35 - hop,
+    0,
+    x,
+    y - size * 0.35 - hop,
+    size * 0.2,
+  );
+  headGrad.addColorStop(0, bodyColorLight);
+  headGrad.addColorStop(0.6, bodyColor);
+  headGrad.addColorStop(1, bodyColorDark);
+  ctx.fillStyle = headGrad;
+  ctx.beginPath();
+  ctx.arc(x + cackleBounce, y - size * 0.35 - hop, size * 0.18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pointed ears
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.38 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.25,
+    y - size * 0.42 - hop,
+    x - size * 0.28,
+    y - size * 0.5 - hop,
+  );
+  ctx.lineTo(x - size * 0.2, y - size * 0.42 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.17,
+    y - size * 0.4 - hop,
+    x - size * 0.14,
+    y - size * 0.36 - hop,
+  );
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.15, y - size * 0.38 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.25,
+    y - size * 0.42 - hop,
+    x + size * 0.28,
+    y - size * 0.5 - hop,
+  );
+  ctx.lineTo(x + size * 0.2, y - size * 0.42 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.17,
+    y - size * 0.4 - hop,
+    x + size * 0.14,
+    y - size * 0.36 - hop,
+  );
+  ctx.fill();
+
+  // Wicked curved horns
+  ctx.fillStyle = "#451a03";
+  // Left horn
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.1, y - size * 0.48 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.18,
+    y - size * 0.6 - hop,
+    x - size * 0.08,
+    y - size * 0.7 - hop,
+  );
+  ctx.lineTo(x - size * 0.05, y - size * 0.62 - hop);
+  ctx.quadraticCurveTo(
+    x - size * 0.12,
+    y - size * 0.55 - hop,
+    x - size * 0.07,
+    y - size * 0.48 - hop,
+  );
+  ctx.fill();
+  // Right horn
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.1, y - size * 0.48 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.18,
+    y - size * 0.6 - hop,
+    x + size * 0.08,
+    y - size * 0.7 - hop,
+  );
+  ctx.lineTo(x + size * 0.05, y - size * 0.62 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.12,
+    y - size * 0.55 - hop,
+    x + size * 0.07,
+    y - size * 0.48 - hop,
+  );
+  ctx.fill();
+
+  // Horn glow tips
+  ctx.fillStyle = `rgba(251, 191, 36, ${flameFlicker * 0.7})`;
+  ctx.beginPath();
+  ctx.arc(x - size * 0.08, y - size * 0.7 - hop, size * 0.02, 0, Math.PI * 2);
+  ctx.arc(x + size * 0.08, y - size * 0.7 - hop, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Large mischievous eyes
+  ctx.fillStyle = "#0a0502";
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.08 + cackleBounce,
+    y - size * 0.38 - hop,
+    size * 0.055,
+    size * 0.06,
+    -0.1,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.08 + cackleBounce,
+    y - size * 0.38 - hop,
+    size * 0.055,
+    size * 0.06,
+    0.1,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Glowing irises
+  ctx.fillStyle = `rgba(254, 243, 199, ${flameFlicker})`;
+  setShadowBlur(ctx, 8 * zoom, "#fbbf24");
+  ctx.beginPath();
+  ctx.arc(
+    x - size * 0.08 + cackleBounce,
+    y - size * 0.38 - hop,
+    size * 0.035,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.08 + cackleBounce,
+    y - size * 0.38 - hop,
+    size * 0.035,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Sinister red pupils
+  ctx.fillStyle = "#b91c1c";
+  ctx.beginPath();
+  ctx.arc(
+    x - size * 0.08 + cackleBounce,
+    y - size * 0.38 - hop,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
+  ctx.arc(
+    x + size * 0.08 + cackleBounce,
+    y - size * 0.38 - hop,
+    size * 0.015,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Wide cackling grin with fangs
+  ctx.fillStyle = "#0a0502";
+  ctx.beginPath();
+  ctx.ellipse(
+    x + cackleBounce,
+    y - size * 0.28 - hop,
+    size * 0.1,
+    size * 0.05 + Math.abs(cackleBounce),
+    0,
+    0,
+    Math.PI,
+  );
+  ctx.fill();
+
+  // Sharp fangs
+  ctx.fillStyle = "#fef3c7";
+  // Upper fangs
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.06 + cackleBounce, y - size * 0.3 - hop);
+  ctx.lineTo(x - size * 0.05 + cackleBounce, y - size * 0.24 - hop);
+  ctx.lineTo(x - size * 0.04 + cackleBounce, y - size * 0.3 - hop);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.06 + cackleBounce, y - size * 0.3 - hop);
+  ctx.lineTo(x + size * 0.05 + cackleBounce, y - size * 0.24 - hop);
+  ctx.lineTo(x + size * 0.04 + cackleBounce, y - size * 0.3 - hop);
+  ctx.fill();
+  // Lower fangs
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.03 + cackleBounce, y - size * 0.26 - hop);
+  ctx.lineTo(x - size * 0.02 + cackleBounce, y - size * 0.3 - hop);
+  ctx.lineTo(x - size * 0.01 + cackleBounce, y - size * 0.26 - hop);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.03 + cackleBounce, y - size * 0.26 - hop);
+  ctx.lineTo(x + size * 0.02 + cackleBounce, y - size * 0.3 - hop);
+  ctx.lineTo(x + size * 0.01 + cackleBounce, y - size * 0.26 - hop);
+  ctx.fill();
+
+  // Flaming hair/crown
+  ctx.fillStyle = bodyColorLight;
+  for (let f = 0; f < 5; f++) {
+    const fx = x - size * 0.12 + f * size * 0.06 + cackleBounce;
+    const fHeight = size * (0.18 + Math.sin(time * 10 + f * 1.5) * 0.06);
+    const fWave = Math.sin(time * 8 + f) * size * 0.02;
+    ctx.beginPath();
+    ctx.moveTo(fx - size * 0.025, y - size * 0.5 - hop);
+    ctx.quadraticCurveTo(
+      fx + fWave,
+      y - size * 0.5 - fHeight - hop,
+      fx + size * 0.025,
+      y - size * 0.5 - hop,
+    );
+    ctx.fill();
+  }
+
+  // Flame wisps around flames
+  ctx.fillStyle = `rgba(251, 191, 36, ${flameFlicker * 0.5})`;
+  for (let wisp = 0; wisp < 4; wisp++) {
+    const wispX = x + Math.sin(time * 6 + wisp * 1.5) * size * 0.15;
+    const wispY =
+      y - size * 0.55 - hop - Math.abs(Math.sin(time * 8 + wisp)) * size * 0.15;
+    ctx.beginPath();
+    ctx.arc(wispX, wispY, size * 0.02, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Flame tail curling behind
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.moveTo(x, y + size * 0.15 - hop);
+  ctx.quadraticCurveTo(
+    x + size * 0.15,
+    y + size * 0.22 - hop,
+    x + size * 0.22,
+    y + size * 0.15 - hop + Math.sin(time * 6) * size * 0.06,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y + size * 0.08 - hop,
+    x + size * 0.25,
+    y + size * 0.02 - hop,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.18,
+    y + size * 0.12 - hop,
+    x + size * 0.1,
+    y + size * 0.18 - hop,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.05,
+    y + size * 0.17 - hop,
+    x,
+    y + size * 0.15 - hop,
+  );
+  ctx.fill();
+
+  // Tail flame tip
+  ctx.fillStyle = `rgba(251, 191, 36, ${flameFlicker})`;
+  ctx.beginPath();
+  ctx.arc(
+    x + size * 0.25,
+    y + size * 0.02 - hop + Math.sin(time * 8) * size * 0.03,
+    size * 0.035,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Rising embers
+  ctx.fillStyle = `rgba(251, 191, 36, ${0.6 + flameFlicker * 0.3})`;
+  for (let ember = 0; ember < 6; ember++) {
+    const emberPhase = (time * 2 + ember * 0.15) % 1;
+    const ex = x + Math.sin(ember * 1.8 + time * 3) * size * 0.25;
+    const ey = y - size * 0.3 - hop - emberPhase * size * 0.4;
+    const emberSize = size * 0.015 * (1 - emberPhase);
+    ctx.beginPath();
+    ctx.arc(ex, ey, emberSize, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+export function drawEmberGuardEnemy(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  size: number,
+  bodyColor: string,
+  bodyColorDark: string,
+  bodyColorLight: string,
+  time: number,
+  zoom: number,
+  attackPhase: number = 0,
+) {
+  // EMBER GUARD - Elite infernal knight forged in volcanic fire, wielding a blade of living flame
+  const isAttacking = attackPhase > 0;
+  const walkCycle = time * 2.2;
+  const leftHipAngle = Math.sin(walkCycle) * 0.35;
+  const rightHipAngle = Math.sin(walkCycle + Math.PI) * 0.35;
+  const leftKneeBend = Math.max(0, Math.sin(walkCycle)) * 0.5;
+  const rightKneeBend = Math.max(0, Math.sin(walkCycle + Math.PI)) * 0.5;
+  const bodyBob = Math.abs(Math.sin(walkCycle)) * 0.02;
+  const flamePulse = 0.6 + Math.sin(time * 2.5) * 0.4;
+  const breathe = Math.sin(time * 2) * 0.02 + bodyBob;
+  const leftArmSwing = Math.sin(walkCycle + Math.PI) * 0.12;
+  const rightArmSwing = Math.sin(walkCycle) * 0.12;
+  const swordSwing = isAttacking
+    ? Math.sin(attackPhase * Math.PI * 2) * 0.3
+    : 0;
+  size *= 1.4; // Larger size
+
+  // Intense heat aura
+  const heatGrad = ctx.createRadialGradient(x, y, 0, x, y, size * 0.85);
+  heatGrad.addColorStop(0, `rgba(251, 191, 36, ${flamePulse * 0.12})`);
+  heatGrad.addColorStop(0.5, `rgba(249, 115, 22, ${flamePulse * 0.08})`);
+  heatGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+  ctx.fillStyle = heatGrad;
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.85, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Fire glow pool underneath
+  const poolGrad = ctx.createRadialGradient(
+    x,
+    y + size * 0.48,
+    0,
+    x,
+    y + size * 0.48,
+    size * 0.5,
+  );
+  poolGrad.addColorStop(0, `rgba(251, 191, 36, ${flamePulse * 0.35})`);
+  poolGrad.addColorStop(0.5, `rgba(249, 115, 22, ${flamePulse * 0.2})`);
+  poolGrad.addColorStop(1, "rgba(124, 45, 18, 0)");
+  ctx.fillStyle = poolGrad;
+  ctx.beginPath();
+  ctx.ellipse(x, y + size * 0.48, size * 0.5, size * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shadow
+  drawEnemyShadow(ctx, x, y + size * 0.5, size * 0.45, size * 0.15, 0.5);
+
+  // Articulated armored legs with molten joints
+  const thighLen = size * 0.17;
+  const shinLen = size * 0.17;
+  const legW = size * 0.06;
+
+  // --- Left leg ---
+  ctx.save();
+  ctx.translate(x - size * 0.17, y + size * 0.05);
+  ctx.rotate(leftHipAngle);
+
+  // Left thigh armor plate
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(-legW, 0);
+  ctx.lineTo(legW, 0);
+  ctx.lineTo(legW * 0.85, thighLen);
+  ctx.lineTo(-legW * 0.85, thighLen);
+  ctx.closePath();
+  ctx.fill();
+
+  // Thigh plate rivets
+  ctx.fillStyle = bodyColorLight;
+  ctx.beginPath();
+  ctx.arc(-legW * 0.5, thighLen * 0.2, size * 0.012, 0, Math.PI * 2);
+  ctx.arc(legW * 0.5, thighLen * 0.2, size * 0.012, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Thigh armor band
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-legW, thighLen * 0.45);
+  ctx.lineTo(legW, thighLen * 0.45);
+  ctx.stroke();
+
+  // Knee joint pivot
+  ctx.translate(0, thighLen);
+
+  // Molten knee glow
+  ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.7})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 255, 200, ${flamePulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shin with knee bend
+  ctx.save();
+  ctx.rotate(leftKneeBend);
+
+  // Left shin armor plate
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(-legW * 0.85, 0);
+  ctx.lineTo(legW * 0.85, 0);
+  ctx.lineTo(legW, shinLen);
+  ctx.lineTo(-legW, shinLen);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shin armor band
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-legW * 0.85, shinLen * 0.5);
+  ctx.lineTo(legW * 0.85, shinLen * 0.5);
+  ctx.stroke();
+
+  // Shin ember crack
+  ctx.strokeStyle = `rgba(249, 115, 22, ${flamePulse * 0.4})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, shinLen * 0.15);
+  ctx.lineTo(-legW * 0.3, shinLen * 0.6);
+  ctx.stroke();
+
+  // Left armored boot
+  ctx.fillStyle = "#451a03";
+  ctx.beginPath();
+  ctx.ellipse(0, shinLen + size * 0.02, size * 0.08, size * 0.045, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Boot toe spike
+  ctx.fillStyle = "#1a0a02";
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.07, shinLen);
+  ctx.lineTo(-size * 0.11, shinLen - size * 0.04);
+  ctx.lineTo(-size * 0.05, shinLen - size * 0.01);
+  ctx.fill();
+
+  // Boot sole ember glow
+  ctx.fillStyle = `rgba(251, 146, 60, ${flamePulse * 0.25})`;
+  ctx.beginPath();
+  ctx.ellipse(0, shinLen + size * 0.035, size * 0.06, size * 0.02, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore(); // left shin
+  ctx.restore(); // left leg
+
+  // --- Right leg ---
+  ctx.save();
+  ctx.translate(x + size * 0.15, y + size * 0.05);
+  ctx.rotate(rightHipAngle);
+
+  // Right thigh armor plate
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(-legW, 0);
+  ctx.lineTo(legW, 0);
+  ctx.lineTo(legW * 0.85, thighLen);
+  ctx.lineTo(-legW * 0.85, thighLen);
+  ctx.closePath();
+  ctx.fill();
+
+  // Thigh plate rivets
+  ctx.fillStyle = bodyColorLight;
+  ctx.beginPath();
+  ctx.arc(-legW * 0.5, thighLen * 0.2, size * 0.012, 0, Math.PI * 2);
+  ctx.arc(legW * 0.5, thighLen * 0.2, size * 0.012, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Thigh armor band
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-legW, thighLen * 0.45);
+  ctx.lineTo(legW, thighLen * 0.45);
+  ctx.stroke();
+
+  // Knee joint pivot
+  ctx.translate(0, thighLen);
+
+  // Molten knee glow
+  ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.7})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.04, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(255, 255, 200, ${flamePulse * 0.3})`;
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.02, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Shin with knee bend
+  ctx.save();
+  ctx.rotate(rightKneeBend);
+
+  // Right shin armor plate
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.moveTo(-legW * 0.85, 0);
+  ctx.lineTo(legW * 0.85, 0);
+  ctx.lineTo(legW, shinLen);
+  ctx.lineTo(-legW, shinLen);
+  ctx.closePath();
+  ctx.fill();
+
+  // Shin armor band
+  ctx.strokeStyle = bodyColor;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(-legW * 0.85, shinLen * 0.5);
+  ctx.lineTo(legW * 0.85, shinLen * 0.5);
+  ctx.stroke();
+
+  // Shin ember crack
+  ctx.strokeStyle = `rgba(249, 115, 22, ${flamePulse * 0.4})`;
+  ctx.lineWidth = 1 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(0, shinLen * 0.15);
+  ctx.lineTo(legW * 0.3, shinLen * 0.6);
+  ctx.stroke();
+
+  // Right armored boot
+  ctx.fillStyle = "#451a03";
+  ctx.beginPath();
+  ctx.ellipse(0, shinLen + size * 0.02, size * 0.08, size * 0.045, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Boot toe spike
+  ctx.fillStyle = "#1a0a02";
+  ctx.beginPath();
+  ctx.moveTo(size * 0.07, shinLen);
+  ctx.lineTo(size * 0.11, shinLen - size * 0.04);
+  ctx.lineTo(size * 0.05, shinLen - size * 0.01);
+  ctx.fill();
+
+  // Boot sole ember glow
+  ctx.fillStyle = `rgba(251, 146, 60, ${flamePulse * 0.25})`;
+  ctx.beginPath();
+  ctx.ellipse(0, shinLen + size * 0.035, size * 0.06, size * 0.02, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore(); // right shin
+  ctx.restore(); // right leg
+
+  // Massive armored torso
+  const armorGrad = ctx.createLinearGradient(
+    x - size * 0.35,
+    y - size * 0.35,
+    x + size * 0.35,
+    y + size * 0.1,
+  );
+  armorGrad.addColorStop(0, bodyColorDark);
+  armorGrad.addColorStop(0.3, bodyColor);
+  armorGrad.addColorStop(0.6, bodyColorDark);
+  armorGrad.addColorStop(1, "#451a03");
+  ctx.fillStyle = armorGrad;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.32, y + size * 0.1);
+  ctx.lineTo(x - size * 0.38, y - size * 0.15 + breathe * size);
+  ctx.lineTo(x - size * 0.35, y - size * 0.35);
+  ctx.lineTo(x - size * 0.2, y - size * 0.42);
+  ctx.lineTo(x, y - size * 0.45 + breathe * size);
+  ctx.lineTo(x + size * 0.2, y - size * 0.42);
+  ctx.lineTo(x + size * 0.35, y - size * 0.35);
+  ctx.lineTo(x + size * 0.38, y - size * 0.15 + breathe * size);
+  ctx.lineTo(x + size * 0.32, y + size * 0.1);
+  ctx.closePath();
+  ctx.fill();
+
+  // Chest plate segments
+  ctx.strokeStyle = "#1a0a02";
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.25, y - size * 0.35);
+  ctx.lineTo(x - size * 0.2, y - size * 0.1);
+  ctx.lineTo(x - size * 0.25, y + size * 0.05);
+  ctx.moveTo(x + size * 0.25, y - size * 0.35);
+  ctx.lineTo(x + size * 0.2, y - size * 0.1);
+  ctx.lineTo(x + size * 0.25, y + size * 0.05);
+  ctx.stroke();
+
+  // Horizontal armor bands
+  ctx.strokeStyle = bodyColorLight;
+  ctx.lineWidth = 2.5 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.25, y - size * 0.28);
+  ctx.lineTo(x + size * 0.25, y - size * 0.28);
+  ctx.moveTo(x - size * 0.22, y - size * 0.12);
+  ctx.lineTo(x + size * 0.22, y - size * 0.12);
+  ctx.stroke();
+
+  // Glowing infernal core in chest
+  const coreGrad = ctx.createRadialGradient(
+    x,
+    y - size * 0.2,
+    0,
+    x,
+    y - size * 0.2,
+    size * 0.15,
+  );
+  coreGrad.addColorStop(0, `rgba(255, 255, 200, ${flamePulse})`);
+  coreGrad.addColorStop(0.3, `rgba(251, 191, 36, ${flamePulse * 0.9})`);
+  coreGrad.addColorStop(0.6, `rgba(249, 115, 22, ${flamePulse * 0.6})`);
+  coreGrad.addColorStop(1, "rgba(194, 65, 12, 0)");
+  ctx.fillStyle = coreGrad;
+  setShadowBlur(ctx, 15 * zoom * flamePulse, "#fbbf24");
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.2, size * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Core rune symbol
+  ctx.strokeStyle = `rgba(255, 255, 200, ${flamePulse * 0.8})`;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.28);
+  ctx.lineTo(x, y - size * 0.12);
+  ctx.moveTo(x - size * 0.06, y - size * 0.2);
+  ctx.lineTo(x + size * 0.06, y - size * 0.2);
+  ctx.stroke();
+
+  // Heavily armored arms with walk swing
+  ctx.fillStyle = bodyColor;
+  // Left arm (swings opposite to left leg)
+  const leftSwingOff = leftArmSwing * size;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.35, y - size * 0.32);
+  ctx.quadraticCurveTo(
+    x - size * 0.48,
+    y - size * 0.2 + leftSwingOff * 0.5,
+    x - size * 0.45,
+    y + size * 0.05 + leftSwingOff,
+  );
+  ctx.lineTo(x - size * 0.35, y + size * 0.05 + leftSwingOff);
+  ctx.quadraticCurveTo(
+    x - size * 0.38,
+    y - size * 0.15 + leftSwingOff * 0.5,
+    x - size * 0.32,
+    y - size * 0.28,
+  );
+  ctx.fill();
+  // Right arm (sword arm - swings with walk, raised when attacking)
+  const rightSwingOff = rightArmSwing * size;
+  const armRaise = swordSwing * size * 0.2;
+  const rightArmOff = armRaise - rightSwingOff;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.35, y - size * 0.32);
+  ctx.quadraticCurveTo(
+    x + size * 0.5,
+    y - size * 0.25 - rightArmOff,
+    x + size * 0.48,
+    y - size * 0.05 - rightArmOff,
+  );
+  ctx.lineTo(x + size * 0.38, y - size * 0.05 - rightArmOff);
+  ctx.quadraticCurveTo(
+    x + size * 0.4,
+    y - size * 0.2 - rightArmOff,
+    x + size * 0.32,
+    y - size * 0.28,
+  );
+  ctx.fill();
+
+  // Arm armor details
+  ctx.strokeStyle = bodyColorDark;
+  ctx.lineWidth = 2 * zoom;
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.42, y - size * 0.15);
+  ctx.lineTo(x - size * 0.38, y - size * 0.15);
+  ctx.moveTo(x + size * 0.44, y - size * 0.15 - armRaise);
+  ctx.lineTo(x + size * 0.4, y - size * 0.15 - armRaise);
+  ctx.stroke();
+
+  // Massive spiked pauldrons
+  ctx.fillStyle = bodyColorDark;
+  // Left pauldron
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.4,
+    y - size * 0.35,
+    size * 0.15,
+    size * 0.1,
+    -0.4,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  // Right pauldron
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.4,
+    y - size * 0.35 - armRaise * 0.3,
+    size * 0.15,
+    size * 0.1,
+    0.4,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Pauldron spikes
+  ctx.fillStyle = "#1a0a02";
+  // Left spikes
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.48, y - size * 0.38);
+  ctx.lineTo(x - size * 0.55, y - size * 0.48);
+  ctx.lineTo(x - size * 0.45, y - size * 0.4);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.42, y - size * 0.42);
+  ctx.lineTo(x - size * 0.45, y - size * 0.52);
+  ctx.lineTo(x - size * 0.38, y - size * 0.44);
+  ctx.fill();
+  // Right spikes
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.48, y - size * 0.38 - armRaise * 0.3);
+  ctx.lineTo(x + size * 0.55, y - size * 0.48 - armRaise * 0.3);
+  ctx.lineTo(x + size * 0.45, y - size * 0.4 - armRaise * 0.3);
+  ctx.fill();
+
+  // Gauntlets with clawed fingers
+  ctx.fillStyle = "#451a03";
+  ctx.beginPath();
+  ctx.arc(x - size * 0.44, y + size * 0.08, size * 0.08, 0, Math.PI * 2);
+  ctx.arc(
+    x + size * 0.46,
+    y + size * 0.0 - armRaise,
+    size * 0.08,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Gauntlet claws
+  ctx.fillStyle = "#1a0a02";
+  for (let claw = 0; claw < 4; claw++) {
+    // Left hand
+    const lClawAngle = 0.3 + claw * 0.25;
+    ctx.beginPath();
+    ctx.moveTo(
+      x - size * 0.44 + Math.cos(lClawAngle) * size * 0.06,
+      y + size * 0.08 + Math.sin(lClawAngle) * size * 0.06,
+    );
+    ctx.lineTo(
+      x - size * 0.44 + Math.cos(lClawAngle) * size * 0.12,
+      y + size * 0.08 + Math.sin(lClawAngle) * size * 0.1,
+    );
+    ctx.lineTo(
+      x - size * 0.44 + Math.cos(lClawAngle + 0.1) * size * 0.06,
+      y + size * 0.08 + Math.sin(lClawAngle + 0.1) * size * 0.06,
+    );
+    ctx.fill();
+  }
+
+  // Imposing helmet with face guard
+  const helmetGrad = ctx.createLinearGradient(
+    x,
+    y - size * 0.7,
+    x,
+    y - size * 0.45,
+  );
+  helmetGrad.addColorStop(0, bodyColorDark);
+  helmetGrad.addColorStop(0.5, bodyColor);
+  helmetGrad.addColorStop(1, bodyColorDark);
+  ctx.fillStyle = helmetGrad;
+  ctx.beginPath();
+  ctx.arc(x, y - size * 0.52, size * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Helmet face plate
+  ctx.fillStyle = "#1a0a02";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.15, y - size * 0.55);
+  ctx.lineTo(x - size * 0.18, y - size * 0.45);
+  ctx.lineTo(x - size * 0.12, y - size * 0.4);
+  ctx.lineTo(x, y - size * 0.38);
+  ctx.lineTo(x + size * 0.12, y - size * 0.4);
+  ctx.lineTo(x + size * 0.18, y - size * 0.45);
+  ctx.lineTo(x + size * 0.15, y - size * 0.55);
+  ctx.closePath();
+  ctx.fill();
+
+  // Helmet crest/plume
+  ctx.fillStyle = bodyColor;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.72);
+  ctx.quadraticCurveTo(
+    x - size * 0.08,
+    y - size * 0.65,
+    x - size * 0.06,
+    y - size * 0.52,
+  );
+  ctx.lineTo(x + size * 0.06, y - size * 0.52);
+  ctx.quadraticCurveTo(x + size * 0.08, y - size * 0.65, x, y - size * 0.72);
+  ctx.fill();
+
+  // Crest flame effect
+  ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.8})`;
+  ctx.beginPath();
+  ctx.moveTo(x, y - size * 0.72);
+  ctx.quadraticCurveTo(
+    x + Math.sin(time * 8) * size * 0.05,
+    y - size * 0.82,
+    x,
+    y - size * 0.9 + Math.sin(time * 6) * size * 0.05,
+  );
+  ctx.quadraticCurveTo(
+    x - Math.sin(time * 8) * size * 0.05,
+    y - size * 0.8,
+    x,
+    y - size * 0.72,
+  );
+  ctx.fill();
+
+  // Helmet horns
+  ctx.fillStyle = "#451a03";
+  ctx.beginPath();
+  ctx.moveTo(x - size * 0.18, y - size * 0.6);
+  ctx.quadraticCurveTo(
+    x - size * 0.28,
+    y - size * 0.65,
+    x - size * 0.3,
+    y - size * 0.75,
+  );
+  ctx.lineTo(x - size * 0.24, y - size * 0.65);
+  ctx.quadraticCurveTo(
+    x - size * 0.2,
+    y - size * 0.58,
+    x - size * 0.16,
+    y - size * 0.55,
+  );
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.18, y - size * 0.6);
+  ctx.quadraticCurveTo(
+    x + size * 0.28,
+    y - size * 0.65,
+    x + size * 0.3,
+    y - size * 0.75,
+  );
+  ctx.lineTo(x + size * 0.24, y - size * 0.65);
+  ctx.quadraticCurveTo(
+    x + size * 0.2,
+    y - size * 0.58,
+    x + size * 0.16,
+    y - size * 0.55,
+  );
+  ctx.fill();
+
+  // Visor slit with burning eyes
+  ctx.fillStyle = "#050202";
+  ctx.fillRect(x - size * 0.13, y - size * 0.55, size * 0.26, size * 0.08);
+
+  // Fierce glowing eyes behind visor
+  ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse})`;
+  setShadowBlur(ctx, 10 * zoom, "#fbbf24");
+  ctx.beginPath();
+  ctx.ellipse(
+    x - size * 0.07,
+    y - size * 0.51,
+    size * 0.035,
+    size * 0.025,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.ellipse(
+    x + size * 0.07,
+    y - size * 0.51,
+    size * 0.035,
+    size * 0.025,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Fire breathing from visor when attacking
+  if (isAttacking && attackPhase > 0.5) {
+    ctx.fillStyle = `rgba(251, 191, 36, ${(attackPhase - 0.5) * 1.2})`;
+    for (let breath = 0; breath < 4; breath++) {
+      const bx = x + Math.sin(time * 12 + breath) * size * 0.1;
+      const bDist = (attackPhase - 0.5) * 2 * size * 0.3;
+      const by = y - size * 0.48 + bDist;
+      ctx.beginPath();
+      ctx.arc(bx, by, size * 0.03, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // FLAMING GREATSWORD
+  // Sword hilt/handle
+  ctx.fillStyle = "#451a03";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.48, y - size * 0.05 - armRaise);
+  ctx.lineTo(x + size * 0.52, y + size * 0.15 - armRaise);
+  ctx.lineTo(x + size * 0.46, y + size * 0.15 - armRaise);
+  ctx.closePath();
+  ctx.fill();
+
+  // Sword crossguard
+  ctx.fillStyle = bodyColorDark;
+  ctx.beginPath();
+  ctx.ellipse(
+    x + size * 0.49,
+    y - size * 0.08 - armRaise,
+    size * 0.08,
+    size * 0.03,
+    0.2 - swordSwing,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  // Blade base (metal)
+  ctx.fillStyle = "#78350f";
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.46, y - size * 0.1 - armRaise);
+  ctx.lineTo(
+    x + size * 0.55,
+    y - size * 0.45 - armRaise - swordSwing * size * 0.2,
+  );
+  ctx.lineTo(x + size * 0.52, y - size * 0.1 - armRaise);
+  ctx.closePath();
+  ctx.fill();
+
+  // Blade molten edge
+  const bladeGrad = ctx.createLinearGradient(
+    x + size * 0.46,
+    y - size * 0.1 - armRaise,
+    x + size * 0.55,
+    y - size * 0.45 - armRaise,
+  );
+  bladeGrad.addColorStop(0, `rgba(251, 191, 36, ${flamePulse})`);
+  bladeGrad.addColorStop(0.5, `rgba(254, 243, 199, ${flamePulse})`);
+  bladeGrad.addColorStop(1, `rgba(251, 191, 36, ${flamePulse * 0.8})`);
+  ctx.fillStyle = bladeGrad;
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.47, y - size * 0.12 - armRaise);
+  ctx.lineTo(
+    x + size * 0.54,
+    y - size * 0.43 - armRaise - swordSwing * size * 0.2,
+  );
+  ctx.lineTo(x + size * 0.51, y - size * 0.12 - armRaise);
+  ctx.closePath();
+  ctx.fill();
+
+  // Blade fire aura
+  ctx.fillStyle = `rgba(251, 191, 36, ${flamePulse * 0.5})`;
+  setShadowBlur(ctx, 12 * zoom, "#fbbf24");
+  ctx.beginPath();
+  ctx.moveTo(x + size * 0.45, y - size * 0.15 - armRaise);
+  ctx.quadraticCurveTo(
+    x + size * 0.6 + Math.sin(time * 8) * size * 0.04,
+    y - size * 0.3 - armRaise - swordSwing * size * 0.1,
+    x + size * 0.53,
+    y - size * 0.48 - armRaise - swordSwing * size * 0.2,
+  );
+  ctx.quadraticCurveTo(
+    x + size * 0.5,
+    y - size * 0.35 - armRaise - swordSwing * size * 0.15,
+    x + size * 0.45,
+    y - size * 0.15 - armRaise,
+  );
+  ctx.fill();
+  clearShadow(ctx);
+
+  // Blade embers
+  ctx.fillStyle = `rgba(255, 255, 200, ${flamePulse * 0.8})`;
+  for (let ember = 0; ember < 5; ember++) {
+    const emberPhase = (time * 2 + ember * 0.2) % 1;
+    const emberX =
+      x + size * 0.5 + Math.sin(ember * 2 + time * 6) * size * 0.08;
+    const emberY = y - size * 0.15 - armRaise - emberPhase * size * 0.35;
+    ctx.beginPath();
+    ctx.arc(emberX, emberY, size * 0.015 * (1 - emberPhase), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Rising heat from armor
+  ctx.fillStyle = `rgba(251, 146, 60, ${0.3 + Math.sin(time * 3) * 0.15})`;
+  for (let heat = 0; heat < 4; heat++) {
+    const hx = x + Math.sin(heat * 1.5 + time * 2) * size * 0.2;
+    const heatPhase = (time * 1.5 + heat * 0.25) % 1;
+    const hy = y - size * 0.3 - heatPhase * size * 0.3;
+    ctx.beginPath();
+    ctx.arc(hx, hy, size * 0.03 * (1 - heatPhase * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+}

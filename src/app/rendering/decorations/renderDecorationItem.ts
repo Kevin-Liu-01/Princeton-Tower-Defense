@@ -6532,87 +6532,417 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       if (bv === 0) {
-        // === ORNATE STONE BENCH — carved with lion armrests ===
-        const bW = 22 * s,
-          bD = 6 * s,
-          sH = 8 * s;
-        const biW = bW * 0.5,
-          biD = bD * 0.3;
+        // === ORNATE STONE BENCH — properly isometric with lion armrests ===
+        // All geometry uses 2:1 isometric projection.
+        // (cx, cy) anchors the front-bottom corner of the seat slab.
 
-        // Seat block - left face
-        ctx.fillStyle = "#607D8B";
-        ctx.beginPath();
-        ctx.moveTo(bx - biW, by);
-        ctx.lineTo(bx, by + biD);
-        ctx.lineTo(bx, by + biD - sH);
-        ctx.lineTo(bx - biW, by - sH);
-        ctx.closePath();
-        ctx.fill();
+        // Screen-space isometric half-extents
+        const seatHW = 13 * s; // seat half-width (left-right)
+        const seatHD = 6 * s; // seat half-depth (front-back)
+        const legH = 9 * s; // leg height (vertical)
+        const seatT = 2.5 * s; // seat slab thickness
+        const backH = 11 * s; // backrest height above seat top
+        const backTD = 1.5 * s; // backrest half-depth (thin slab)
+        const legHW = 3.5 * s; // leg half-width
+        const armPillarHW = 3 * s; // armrest pillar half-width
+        const armPillarHD = seatHD; // armrest depth matches seat
+        const armPillarH = 7 * s; // armrest pillar height above seat top
 
-        // Seat block - right face
-        const bsG = ctx.createLinearGradient(bx, by, bx + biW, by);
-        bsG.addColorStop(0, "#90A4AE");
-        bsG.addColorStop(1, "#78909C");
-        ctx.fillStyle = bsG;
-        ctx.beginPath();
-        ctx.moveTo(bx + biW, by);
-        ctx.lineTo(bx, by + biD);
-        ctx.lineTo(bx, by + biD - sH);
-        ctx.lineTo(bx + biW, by - sH);
-        ctx.closePath();
-        ctx.fill();
+        // Stone color palette
+        const stTop = "#C5BFBA";
+        const stTopHi = "#D8D2CC";
+        const stLeft = "#9E9690";
+        const stLeftHi = "#B0A8A2";
+        const stRight = "#706862";
+        const stRightDk = "#605850";
+        const stEdge = "#504840";
+        const stCarve = "rgba(60,50,42,0.35)";
+        const stLionTop = "#B8B0A8";
+        const stLionLeft = "#908880";
+        const stLionRight = "#686058";
+        const stLionDetail = "#585048";
 
-        // Seat top face
-        ctx.fillStyle = "#B0BEC5";
-        ctx.beginPath();
-        ctx.moveTo(bx, by - sH - biD);
-        ctx.lineTo(bx + biW, by - sH);
-        ctx.lineTo(bx, by + biD - sH);
-        ctx.lineTo(bx - biW, by - sH);
-        ctx.closePath();
-        ctx.fill();
+        // Anchor: center of bench at ground level
+        const cx = bx;
+        const cy = by;
 
-        // Carved decorative pattern on front face
-        ctx.strokeStyle = "rgba(38,50,56,0.3)";
-        ctx.lineWidth = 0.8 * s;
-        // Scroll pattern
-        ctx.beginPath();
-        ctx.arc(bx - biW * 0.3, by - sH * 0.5, 2 * s, 0, Math.PI);
-        ctx.arc(bx, by - sH * 0.5, 2 * s, Math.PI, 0);
-        ctx.arc(bx + biW * 0.3, by - sH * 0.5, 2 * s, 0, Math.PI);
-        ctx.stroke();
+        // --- LEG BLOCKS (two isometric prisms, left and right) ---
+        for (const dir of [-1, 1] as const) {
+          const lx = cx + dir * (seatHW - legHW);
+          const ly = cy;
 
-        // Lion armrests (left and right)
-        for (const dir of [-1, 1]) {
-          const lx = bx + dir * (biW + 2 * s);
-          const ly = by - sH;
-          // Lion body block
-          ctx.fillStyle = "#78909C";
+          // Left face (lit)
+          const llg = ctx.createLinearGradient(
+            lx - legHW,
+            ly,
+            lx,
+            ly + seatHD,
+          );
+          llg.addColorStop(0, stLeftHi);
+          llg.addColorStop(1, stLeft);
+          ctx.fillStyle = llg;
           ctx.beginPath();
-          ctx.moveTo(lx - 3 * s, ly + sH);
-          ctx.lineTo(lx + 3 * s, ly + sH);
-          ctx.lineTo(lx + 2.5 * s, ly - 4 * s);
-          ctx.lineTo(lx - 2.5 * s, ly - 4 * s);
+          ctx.moveTo(lx - legHW, ly);
+          ctx.lineTo(lx, ly + seatHD);
+          ctx.lineTo(lx, ly + seatHD - legH);
+          ctx.lineTo(lx - legHW, ly - legH);
           ctx.closePath();
           ctx.fill();
-          // Lion head
-          ctx.fillStyle = "#90A4AE";
+
+          // Right face (shadow)
+          ctx.fillStyle = stRight;
           ctx.beginPath();
-          ctx.arc(lx, ly - 5 * s, 3 * s, 0, Math.PI * 2);
+          ctx.moveTo(lx + legHW, ly);
+          ctx.lineTo(lx, ly + seatHD);
+          ctx.lineTo(lx, ly + seatHD - legH);
+          ctx.lineTo(lx + legHW, ly - legH);
+          ctx.closePath();
           ctx.fill();
-          // Mane
-          ctx.fillStyle = "#78909C";
+
+          // Top face
+          ctx.fillStyle = stTop;
           ctx.beginPath();
-          ctx.arc(lx, ly - 5.5 * s, 3.5 * s, Math.PI * 0.3, Math.PI * 1.2);
+          ctx.moveTo(lx, ly - legH - seatHD);
+          ctx.lineTo(lx + legHW, ly - legH);
+          ctx.lineTo(lx, ly + seatHD - legH);
+          ctx.lineTo(lx - legHW, ly - legH);
+          ctx.closePath();
           ctx.fill();
-          // Eyes
-          ctx.fillStyle = "#263238";
+
+          // Front bottom edge
+          ctx.strokeStyle = stEdge;
+          ctx.lineWidth = 0.6 * s;
           ctx.beginPath();
-          ctx.arc(lx - 1 * s, ly - 5.5 * s, 0.5 * s, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(lx - legHW, ly);
+          ctx.lineTo(lx, ly + seatHD);
+          ctx.lineTo(lx + legHW, ly);
+          ctx.stroke();
+        }
+
+        // --- SEAT SLAB (wide flat isometric prism) ---
+        const seatBaseY = cy - legH;
+
+        // Left face (lit)
+        const slg = ctx.createLinearGradient(
+          cx - seatHW,
+          seatBaseY,
+          cx,
+          seatBaseY + seatHD,
+        );
+        slg.addColorStop(0, stLeftHi);
+        slg.addColorStop(0.6, stLeft);
+        slg.addColorStop(1, stLeft);
+        ctx.fillStyle = slg;
+        ctx.beginPath();
+        ctx.moveTo(cx - seatHW, seatBaseY);
+        ctx.lineTo(cx, seatBaseY + seatHD);
+        ctx.lineTo(cx, seatBaseY + seatHD - seatT);
+        ctx.lineTo(cx - seatHW, seatBaseY - seatT);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (shadow)
+        ctx.fillStyle = stRight;
+        ctx.beginPath();
+        ctx.moveTo(cx + seatHW, seatBaseY);
+        ctx.lineTo(cx, seatBaseY + seatHD);
+        ctx.lineTo(cx, seatBaseY + seatHD - seatT);
+        ctx.lineTo(cx + seatHW, seatBaseY - seatT);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top face with subtle gradient
+        const stg = ctx.createLinearGradient(
+          cx - seatHW,
+          seatBaseY - seatT,
+          cx + seatHW,
+          seatBaseY - seatT,
+        );
+        stg.addColorStop(0, stTopHi);
+        stg.addColorStop(0.4, stTop);
+        stg.addColorStop(1, stTop);
+        ctx.fillStyle = stg;
+        ctx.beginPath();
+        ctx.moveTo(cx, seatBaseY - seatT - seatHD);
+        ctx.lineTo(cx + seatHW, seatBaseY - seatT);
+        ctx.lineTo(cx, seatBaseY + seatHD - seatT);
+        ctx.lineTo(cx - seatHW, seatBaseY - seatT);
+        ctx.closePath();
+        ctx.fill();
+
+        // Seat front edge highlight
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx - seatHW, seatBaseY - seatT);
+        ctx.lineTo(cx, seatBaseY + seatHD - seatT);
+        ctx.stroke();
+
+        // Seat front edge shadow
+        ctx.strokeStyle = stEdge;
+        ctx.lineWidth = 0.5 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx - seatHW, seatBaseY);
+        ctx.lineTo(cx, seatBaseY + seatHD);
+        ctx.lineTo(cx + seatHW, seatBaseY);
+        ctx.stroke();
+
+        // Carved scroll pattern on left face of seat
+        ctx.strokeStyle = stCarve;
+        ctx.lineWidth = 0.7 * s;
+        const scrollY = seatBaseY - seatT * 0.35;
+        const scrollStep = seatHW * 0.28;
+        ctx.beginPath();
+        for (let si = 0; si < 3; si++) {
+          const sx = cx - seatHW + scrollStep * (si + 0.5);
+          const sy =
+            scrollY + (seatHD / seatHW) * scrollStep * (si + 0.5);
+          const sr = 1.8 * s;
+          ctx.moveTo(sx + sr, sy);
+          ctx.arc(sx, sy, sr, 0, Math.PI, si % 2 === 0);
+        }
+        ctx.stroke();
+
+        // --- BACKREST (thin tall slab behind the seat) ---
+        const backBaseY = seatBaseY - seatT;
+        const backOffD = seatHD - backTD;
+
+        // Left face (lit)
+        const blg = ctx.createLinearGradient(
+          cx - seatHW,
+          backBaseY - backOffD,
+          cx,
+          backBaseY - backOffD + backTD,
+        );
+        blg.addColorStop(0, stLeftHi);
+        blg.addColorStop(1, stLeft);
+        ctx.fillStyle = blg;
+        ctx.beginPath();
+        ctx.moveTo(cx - seatHW, backBaseY - backOffD);
+        ctx.lineTo(cx, backBaseY - backOffD + backTD);
+        ctx.lineTo(cx, backBaseY - backOffD + backTD - backH);
+        ctx.lineTo(cx - seatHW, backBaseY - backOffD - backH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right face (shadow)
+        ctx.fillStyle = stRightDk;
+        ctx.beginPath();
+        ctx.moveTo(cx + seatHW, backBaseY - backOffD);
+        ctx.lineTo(cx, backBaseY - backOffD + backTD);
+        ctx.lineTo(cx, backBaseY - backOffD + backTD - backH);
+        ctx.lineTo(cx + seatHW, backBaseY - backOffD - backH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top face
+        ctx.fillStyle = stTopHi;
+        ctx.beginPath();
+        ctx.moveTo(cx, backBaseY - backOffD - backH - backTD);
+        ctx.lineTo(cx + seatHW, backBaseY - backOffD - backH);
+        ctx.lineTo(cx, backBaseY - backOffD + backTD - backH);
+        ctx.lineTo(cx - seatHW, backBaseY - backOffD - backH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Vertical groove lines on backrest left face
+        ctx.strokeStyle = stCarve;
+        ctx.lineWidth = 0.5 * s;
+        const grooveCount = 5;
+        for (let gi = 1; gi < grooveCount; gi++) {
+          const gt = gi / grooveCount;
+          const gx =
+            cx - seatHW + gt * seatHW;
+          const gyOff = gt * backTD;
           ctx.beginPath();
-          ctx.arc(lx + 1 * s, ly - 5.5 * s, 0.5 * s, 0, Math.PI * 2);
+          ctx.moveTo(gx, backBaseY - backOffD + gyOff - backH * 0.85);
+          ctx.lineTo(gx, backBaseY - backOffD + gyOff - 1.5 * s);
+          ctx.stroke();
+        }
+
+        // Top edge highlight on backrest
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.lineWidth = 0.6 * s;
+        ctx.beginPath();
+        ctx.moveTo(cx - seatHW, backBaseY - backOffD - backH);
+        ctx.lineTo(cx, backBaseY - backOffD + backTD - backH);
+        ctx.stroke();
+
+        // --- ARMREST PILLARS WITH LION HEADS ---
+        for (const dir of [-1, 1] as const) {
+          const ax = cx + dir * (seatHW + 0.5 * s);
+          const aBaseY = seatBaseY - seatT;
+          const aHD = armPillarHD * 0.65;
+
+          // Pillar left face
+          const plg = ctx.createLinearGradient(
+            ax - armPillarHW,
+            aBaseY,
+            ax,
+            aBaseY + aHD,
+          );
+          plg.addColorStop(0, stLionLeft);
+          plg.addColorStop(1, stLionRight);
+          ctx.fillStyle = plg;
+          ctx.beginPath();
+          ctx.moveTo(ax - armPillarHW, aBaseY);
+          ctx.lineTo(ax, aBaseY + aHD);
+          ctx.lineTo(ax, aBaseY + aHD - armPillarH);
+          ctx.lineTo(ax - armPillarHW, aBaseY - armPillarH);
+          ctx.closePath();
           ctx.fill();
+
+          // Pillar right face
+          ctx.fillStyle = stLionRight;
+          ctx.beginPath();
+          ctx.moveTo(ax + armPillarHW, aBaseY);
+          ctx.lineTo(ax, aBaseY + aHD);
+          ctx.lineTo(ax, aBaseY + aHD - armPillarH);
+          ctx.lineTo(ax + armPillarHW, aBaseY - armPillarH);
+          ctx.closePath();
+          ctx.fill();
+
+          // Pillar top face
+          ctx.fillStyle = stLionTop;
+          ctx.beginPath();
+          ctx.moveTo(ax, aBaseY - armPillarH - aHD);
+          ctx.lineTo(ax + armPillarHW, aBaseY - armPillarH);
+          ctx.lineTo(ax, aBaseY + aHD - armPillarH);
+          ctx.lineTo(ax - armPillarHW, aBaseY - armPillarH);
+          ctx.closePath();
+          ctx.fill();
+
+          // Lion head sculpture on top of pillar (isometric sphere approximation)
+          const headCx = ax;
+          const headCy = aBaseY - armPillarH - aHD * 0.5;
+          const headR = 2.8 * s;
+
+          // Mane (slightly larger circle behind head)
+          const maneG = ctx.createRadialGradient(
+            headCx - 0.5 * s,
+            headCy - 0.3 * s,
+            0,
+            headCx,
+            headCy,
+            headR * 1.5,
+          );
+          maneG.addColorStop(0, stLionLeft);
+          maneG.addColorStop(0.6, stLionRight);
+          maneG.addColorStop(1, stLionDetail);
+          ctx.fillStyle = maneG;
+          ctx.beginPath();
+          ctx.ellipse(
+            headCx,
+            headCy - 1.2 * s,
+            headR * 1.35,
+            headR * 1.1,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+
+          // Mane texture tufts
+          ctx.strokeStyle = stLionDetail;
+          ctx.lineWidth = 0.4 * s;
+          for (let mi = 0; mi < 5; mi++) {
+            const ma = Math.PI * 0.6 + (mi / 4) * Math.PI * 0.9;
+            const mr1 = headR * 1.0;
+            const mr2 = headR * 1.4;
+            ctx.beginPath();
+            ctx.moveTo(
+              headCx + Math.cos(ma) * mr1,
+              headCy - 1.2 * s + Math.sin(ma) * mr1 * 0.8,
+            );
+            ctx.lineTo(
+              headCx + Math.cos(ma) * mr2,
+              headCy - 1.2 * s + Math.sin(ma) * mr2 * 0.8,
+            );
+            ctx.stroke();
+          }
+
+          // Head (lit sphere)
+          const headG = ctx.createRadialGradient(
+            headCx - 0.8 * s,
+            headCy - 0.8 * s,
+            0,
+            headCx,
+            headCy,
+            headR * 1.2,
+          );
+          headG.addColorStop(0, stTopHi);
+          headG.addColorStop(0.4, stLionTop);
+          headG.addColorStop(0.8, stLionLeft);
+          headG.addColorStop(1, stLionRight);
+          ctx.fillStyle = headG;
+          ctx.beginPath();
+          ctx.ellipse(
+            headCx,
+            headCy,
+            headR,
+            headR * 0.85,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+
+          // Brow ridge
+          ctx.strokeStyle = stLionDetail;
+          ctx.lineWidth = 0.5 * s;
+          ctx.beginPath();
+          ctx.ellipse(
+            headCx,
+            headCy - 0.6 * s,
+            headR * 0.7,
+            headR * 0.2,
+            0,
+            Math.PI,
+            Math.PI * 2,
+          );
+          ctx.stroke();
+
+          // Eyes (small dark dots)
+          ctx.fillStyle = stLionDetail;
+          for (const ed of [-1, 1]) {
+            ctx.beginPath();
+            ctx.arc(
+              headCx + ed * 1 * s,
+              headCy - 0.3 * s,
+              0.45 * s,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
+
+          // Snout
+          ctx.fillStyle = stLionLeft;
+          ctx.beginPath();
+          ctx.ellipse(
+            headCx,
+            headCy + 1 * s,
+            1.2 * s,
+            0.7 * s,
+            0,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fill();
+
+          // Nostrils
+          ctx.fillStyle = stLionDetail;
+          for (const nd of [-1, 1]) {
+            ctx.beginPath();
+            ctx.arc(
+              headCx + nd * 0.5 * s,
+              headCy + 1 * s,
+              0.25 * s,
+              0,
+              Math.PI * 2,
+            );
+            ctx.fill();
+          }
         }
       } else if (bv === 1) {
         // === RUSTIC LOG BENCH — split log on tree stumps ===
