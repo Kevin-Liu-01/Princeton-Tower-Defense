@@ -492,7 +492,61 @@ function drawRegionDetails(
   }
 }
 
-export function renderDecorationGroundTransitions(
+export function renderDecorationTransitions(
+  ctx: CanvasRenderingContext2D,
+  selectedMap: string,
+  canvasWidth: number,
+  canvasHeight: number,
+  dpr: number,
+  cameraOffset?: Position,
+  cameraZoom?: number,
+): void {
+  const levelData = LEVEL_DATA[selectedMap];
+  if (!levelData?.decorations) return;
+
+  const mapTheme: MapTheme = (levelData?.theme as MapTheme) || "grassland";
+  const zoom = cameraZoom || 1;
+  const time = Date.now() / 1000;
+
+  for (const deco of levelData.decorations) {
+    const decoType = (deco.category || deco.type) as
+      | DecorationType
+      | undefined;
+    if (!decoType || !GROUND_TRANSITION_TYPES.has(decoType)) continue;
+
+    const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
+    if (!resolvedPlacement) continue;
+
+    const worldPos = getMapDecorationWorldPos(deco);
+    const screenPos = worldToScreen(
+      worldPos,
+      canvasWidth,
+      canvasHeight,
+      dpr,
+      cameraOffset,
+      cameraZoom,
+    );
+
+    const radii = getDecorationTransitionRadii(
+      decoType,
+      resolvedPlacement.scale,
+      zoom,
+    );
+    drawTransitionBlob(
+      ctx,
+      screenPos,
+      zoom,
+      time,
+      mapTheme,
+      radii,
+      deco.pos.x,
+      deco.pos.y,
+      selectedMap,
+    );
+  }
+}
+
+export function renderSpecialTowerTransitions(
   ctx: CanvasRenderingContext2D,
   selectedMap: string,
   canvasWidth: number,
@@ -506,47 +560,6 @@ export function renderDecorationGroundTransitions(
   const zoom = cameraZoom || 1;
   const time = Date.now() / 1000;
 
-  // Manually-placed decorations from level data
-  if (levelData?.decorations) {
-    for (const deco of levelData.decorations) {
-      const decoType = (deco.category || deco.type) as
-        | DecorationType
-        | undefined;
-      if (!decoType || !GROUND_TRANSITION_TYPES.has(decoType)) continue;
-
-      const resolvedPlacement = resolveMapDecorationRuntimePlacement(deco);
-      if (!resolvedPlacement) continue;
-
-      const worldPos = getMapDecorationWorldPos(deco);
-      const screenPos = worldToScreen(
-        worldPos,
-        canvasWidth,
-        canvasHeight,
-        dpr,
-        cameraOffset,
-        cameraZoom,
-      );
-
-      const radii = getDecorationTransitionRadii(
-        decoType,
-        resolvedPlacement.scale,
-        zoom,
-      );
-      drawTransitionBlob(
-        ctx,
-        screenPos,
-        zoom,
-        time,
-        mapTheme,
-        radii,
-        deco.pos.x,
-        deco.pos.y,
-        selectedMap,
-      );
-    }
-  }
-
-  // Special towers (beacon, vault, shrine, barracks, etc.)
   const specialTowers = getLevelSpecialTowers(selectedMap);
   for (const spec of specialTowers) {
     const worldPos = gridToWorld(spec.pos);

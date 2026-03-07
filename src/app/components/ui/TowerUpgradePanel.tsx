@@ -21,15 +21,16 @@ import {
   Flame,
   TrendingUp,
   TrendingDown,
-  Radio,
+  BowArrow,
   Music,
   Focus,
   Mountain,
-  Landmark,
+  Amphora,
   UserPlus,
   Repeat,
   CircleDot,
   Shield,
+  Radar,
   EyeOff,
   AlertTriangle,
   Ban,
@@ -165,7 +166,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     statsToShow.push({
       key: "range",
       label: "Range",
-      icon: <Target size={14} />,
+      icon: <Radar size={14} />,
       value: Math.floor(baseStats.range),
       buffedValue: hasRangeBuff ? Math.floor(buffedStats.range) : undefined,
       debuffedValue: debuffedRange,
@@ -310,7 +311,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       statsToShow.push({
         key: "rangeBuff",
         label: "Range Aura",
-        icon: <Target size={14} />,
+        icon: <Radar size={14} />,
         value: `+${Math.round(activeUpgradeStats.rangeBuff * 100)}%`,
         colorClass: "bg-cyan-950/60 border-cyan-800/50 text-cyan-400",
         buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
@@ -400,7 +401,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             <span className="text-[9px] text-yellow-300 font-bold">BUFFED</span>
             {hasRangeBuff && tower.type !== "station" && (
               <span className="flex items-center gap-1 px-1.5 py-0.5 bg-cyan-900/60 rounded text-cyan-300 text-[9px]">
-                <Target size={10} /> +{Math.round((rangeBoost - 1) * 100)}% Range
+                <Radar size={10} /> +{Math.round((rangeBoost - 1) * 100)}% Range
               </span>
             )}
             {hasRangeBuff && tower.type === "station" && (
@@ -605,7 +606,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                   {activeUpgradeStats.rangeBuff && (
                     <div className="bg-cyan-900/40 p-1.5 rounded border border-cyan-700/40 text-center">
                       <div className="flex items-center justify-center gap-1 mb-0.5">
-                        <Target size={12} className="text-cyan-400" />
+                        <Radar size={12} className="text-cyan-400" />
                       </div>
                       <div className="text-[8px] text-cyan-500">Range Aura</div>
                       <div className="text-cyan-300 font-bold text-sm">+{Math.round(activeUpgradeStats.rangeBuff * 100)}%</div>
@@ -702,11 +703,11 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             // Unique icons for each tower's upgrade paths
             const upgradeIcons: Record<string, { A: React.ReactNode; B: React.ReactNode }> = {
               cannon: { A: <Repeat size={12} />, B: <Flame size={12} /> },
-              arch: { A: <Radio size={12} />, B: <Music size={12} /> },
+              arch: { A: <BowArrow size={12} />, B: <Music size={12} /> },
               lab: { A: <Focus size={12} />, B: <Zap size={12} /> },
               library: { A: <Mountain size={12} />, B: <Snowflake size={12} /> },
               station: { A: <CircleDot size={12} />, B: <Shield size={12} /> },
-              club: { A: <Landmark size={12} />, B: <UserPlus size={12} /> },
+              club: { A: <Amphora size={12} />, B: <UserPlus size={12} /> },
             };
             const icons = upgradeIcons[tower.type] || { A: <Zap size={12} />, B: <Shield size={12} /> };
 

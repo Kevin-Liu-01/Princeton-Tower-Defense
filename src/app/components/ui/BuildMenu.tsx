@@ -3,7 +3,7 @@
 import React from "react";
 import {
   PawPrint,
-  Construction,
+  BrickWallShield,
   Swords,
   Info,
   Snowflake,
@@ -90,7 +90,7 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
           <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-max">
             <h3 className="text-[10px] font-bold text-amber-300 tracking-wider hidden sm:flex flex-col justify-center gap-1 whitespace-nowrap px-1">
               <div className="flex items-center gap-1">
-                <Construction size={14} /> <div>BUILD TOWERS</div>
+                <BrickWallShield size={14} /> <div>BUILD TOWERS</div>
               </div>
               <div className="text-[8px] text-amber-600 font-normal">
                 (Select, move+click, or drag-release)

@@ -304,7 +304,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       setSelectedSpells([...selectedSpells, spell]);
   };
 
-  const drawMapRef = useRef<() => void>(() => {});
+  const drawMapRef = useRef<() => void>(() => { });
 
   drawMapRef.current = () => {
     drawWorldMapCanvas({
@@ -1613,13 +1613,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       boxShadow: 'inset 0 0 20px rgba(180,140,60,0.06), 0 4px 24px rgba(0,0,0,0.5)',
                     }}>
                     <div className="absolute inset-[3px] rounded-[10px] pointer-events-none" style={{ border: '1px solid rgba(180,140,60,0.12)' }} />
-                    <div className="px-2 sm:px-3 py-2 sm:py-2.5 relative"
+                    <div className="px-2 sm:px-3 py-2  relative"
                       style={{ background: 'linear-gradient(90deg, rgba(180,130,40,0.22), rgba(120,80,20,0.1), transparent)' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Book size={13} className="text-amber-400 shrink-0" />
                           <span className="text-[9px] sm:text-[10px] text-nowrap font-bold text-amber-300 tracking-[0.2em] uppercase">
-                            Codex
+                            Play
                           </span>
                         </div>
                         <button

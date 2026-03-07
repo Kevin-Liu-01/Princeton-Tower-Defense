@@ -11,7 +11,7 @@ import {
   Target,
   Coins,
   Gauge,
-  Shield,
+  ShieldHalf,
   Info,
   Crown,
   Crosshair,
@@ -154,7 +154,7 @@ const getTraitInfo = (trait: EnemyTrait): { icon: React.ReactNode; label: string
     case "ranged":
       return { icon: <Crosshair size={12} />, label: "Ranged", color: "text-green-400", desc: "Attacks from a distance" };
     case "armored":
-      return { icon: <Shield size={12} />, label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage" };
+      return { icon: <ShieldHalf size={12} />, label: "Armored", color: "text-amber-400", desc: "Reduces incoming damage" };
     case "fast":
       return { icon: <Footprints size={12} />, label: "Fast", color: "text-yellow-400", desc: "Moves faster than normal enemies" };
     case "boss":
@@ -322,7 +322,7 @@ export const EnemyDetailTooltip: React.FC<EnemyDetailTooltipProps> = ({
             <div className="text-blue-200 font-bold text-sm">{eData.speed}</div>
           </div>
           <div className="bg-amber-950/40 p-2 rounded-lg border border-amber-900/40 text-center">
-            <Shield size={14} className="mx-auto text-amber-400 mb-1" />
+            <ShieldHalf size={14} className="mx-auto text-amber-400 mb-1" />
             <div className="text-[8px] text-amber-500">Armor</div>
             <div className="text-amber-200 font-bold text-sm">{Math.round(eData.armor * 100)}%</div>
           </div>

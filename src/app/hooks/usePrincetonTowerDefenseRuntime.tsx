@@ -196,7 +196,7 @@ import {
 // Decoration rendering
 import { renderDecorationItem } from "../rendering/decorations";
 import { getDecorationCategories } from "../rendering/decorations/decorationCategories";
-import { renderDecorationGroundTransitions } from "../rendering/decorations/landmarkTransition";
+import { renderDecorationTransitions, renderSpecialTowerTransitions } from "../rendering/decorations/landmarkTransition";
 import {
   renderStaticMapLayer,
   type StaticMapFogEndpoint,
@@ -6114,6 +6114,18 @@ export function usePrincetonTowerDefenseRuntime() {
       cameraOffset.y.toFixed(2),
     ].join("|");
 
+    const preRoadCallback = (drawCtx: CanvasRenderingContext2D) => {
+      renderDecorationTransitions(
+        drawCtx,
+        selectedMap,
+        canvas.width,
+        canvas.height,
+        dpr,
+        cameraOffset,
+        cameraZoom,
+      );
+    };
+
     let fogEndpoints: StaticMapFogEndpoint[] = [];
     const cachedStaticMapLayer = cachedStaticMapLayerRef.current;
     if (cachedStaticMapLayer && cachedStaticMapLayer.key === staticLayerKey) {
@@ -6140,6 +6152,7 @@ export function usePrincetonTowerDefenseRuntime() {
             dpr,
             cameraOffset,
             cameraZoom,
+            preRoadCallback,
           });
           fogEndpoints = staticLayerResult.fogEndpoints;
           cachedStaticMapLayerRef.current = {
@@ -6164,6 +6177,7 @@ export function usePrincetonTowerDefenseRuntime() {
           dpr,
           cameraOffset,
           cameraZoom,
+          preRoadCallback,
         });
         fogEndpoints = staticLayerResult.fogEndpoints;
       }
@@ -6195,8 +6209,8 @@ export function usePrincetonTowerDefenseRuntime() {
       });
     }
 
-    // Pre-pass: decoration ground transitions (above roads, below all decorations/towers)
-    renderDecorationGroundTransitions(
+    // Pre-pass: special tower ground transitions (above roads, below decorations/towers)
+    renderSpecialTowerTransitions(
       ctx,
       selectedMap,
       canvas.width,
@@ -8388,11 +8402,19 @@ export function usePrincetonTowerDefenseRuntime() {
     } else {
       let ambientCanvas: HTMLCanvasElement | null = null;
       if (typeof document !== "undefined") {
-        const layerCanvas = document.createElement("canvas");
-        layerCanvas.width = canvas.width;
-        layerCanvas.height = canvas.height;
+        let layerCanvas = cachedAmbientLayer?.canvas ?? null;
+        if (
+          !layerCanvas ||
+          layerCanvas.width !== canvas.width ||
+          layerCanvas.height !== canvas.height
+        ) {
+          layerCanvas = document.createElement("canvas");
+          layerCanvas.width = canvas.width;
+          layerCanvas.height = canvas.height;
+        }
         const layerCtx = layerCanvas.getContext("2d");
         if (layerCtx) {
+          layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height);
           layerCtx.setTransform(1, 0, 0, 1, 0, 0);
           layerCtx.scale(dpr, dpr);
           renderAmbientOverlay(layerCtx);

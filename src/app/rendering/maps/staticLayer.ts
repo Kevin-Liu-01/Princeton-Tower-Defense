@@ -49,6 +49,7 @@ export interface RenderStaticMapLayerParams {
   dpr: number;
   cameraOffset: Position;
   cameraZoom: number;
+  preRoadCallback?: (ctx: CanvasRenderingContext2D) => void;
 }
 
 export interface RoadGeometry {
@@ -1512,6 +1513,7 @@ export function renderStaticMapLayer({
   dpr,
   cameraOffset,
   cameraZoom,
+  preRoadCallback,
 }: RenderStaticMapLayerParams): { fogEndpoints: StaticMapFogEndpoint[] } {
   const mapSeed = selectedMap
     .split("")
@@ -1624,6 +1626,10 @@ export function renderStaticMapLayer({
         ctx.fill();
       }
     }
+  }
+
+  if (preRoadCallback) {
+    preRoadCallback(ctx);
   }
 
   const fogEndpoints: StaticMapFogEndpoint[] = [];

@@ -1166,8 +1166,11 @@ export const LEVEL_DATA: Record<
       // Ice fortresses flanking the entrance
       { type: "ice_fortress", pos: { x: 6, y: 4 }, variant: 0, size: 2 },
       { type: "ice_fortress", pos: { x: 24, y: 4 }, variant: 1, size: 2 },
-      // Ruined temple in the courtyard (variant 5 = small pillar for frost)
+      // Ruined temple in the courtyard (variant 5 = frost ruins)
       { type: "ruined_temple", pos: { x: 14, y: 6 }, variant: 5, size: 2 },
+      // Guardian statues flanking the ruins
+      { type: "statue", pos: { x: 10, y: 8 }, variant: 0, size: 1 },
+      { type: "statue", pos: { x: 18, y: 8 }, variant: 1, size: 1 },
       // Ice thrones - commanding positions
       { type: "ice_throne", pos: { x: 4, y: 8 }, variant: 0, size: 3 },
       { type: "ice_throne", pos: { x: 26, y: 8 }, variant: 1, size: 2 },
