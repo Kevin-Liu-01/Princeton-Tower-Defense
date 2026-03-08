@@ -213,7 +213,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
 
       {/* Header */}
       <div
-        className="flex-shrink-0 p-4 pb-3"
+        className="flex-shrink-0 px-4 py-3"
         style={{ borderBottom: `1px solid ${GOLD.border25}` }}
       >
         <div className="flex items-center gap-2 mb-3">
@@ -221,7 +221,7 @@ export const CampaignOverview: React.FC<CampaignOverviewProps> = ({
             <Map size={22} className="text-amber-400 drop-shadow-lg" />
           </div>
           <h2 className="text-lg font-bold text-amber-100 tracking-wide">
-            Campaign
+            CAMPAIGN
           </h2>
         </div>
 

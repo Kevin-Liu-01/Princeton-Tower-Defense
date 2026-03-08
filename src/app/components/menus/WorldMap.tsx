@@ -1347,10 +1347,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       const maxRegionStars = regionLevels.length * 3;
                       return (
                         <div className="space-y-1.5">
-                          {regionLevels.map((l) => (
+                          {regionLevels.map((l) => {
+                            const levelPreview = LEVEL_DATA[l.id]?.previewImage;
+                            const fadeColor = l.id === selectedLevel ? SELECTED.warmBgLight : PANEL.bgWarmLight;
+                            return (
                             <div
                               key={l.id}
-                              className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative"
+                              className="flex items-center gap-3 p-2.5 rounded-lg transition-all cursor-pointer relative overflow-hidden"
                               style={{
                                 background: l.id === selectedLevel
                                   ? `linear-gradient(135deg, ${SELECTED.warmBgLight}, ${SELECTED.warmBgDark})`
@@ -1364,22 +1367,28 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                               }}
                               onClick={() => handleLevelClick(l.id)}
                             >
+                              {levelPreview && (
+                                <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+                                  <img src={levelPreview} alt="" className="absolute right-0 top-0 h-full w-[60%] object-cover object-center opacity-25" style={{ maskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%, black 70%, transparent 100%)" }} />
+                                  <div className="absolute inset-0" style={{ background: `linear-gradient(to right, ${fadeColor} 30%, transparent 70%)` }} />
+                                </div>
+                              )}
                               <div className="absolute inset-[2px] rounded-[6px] pointer-events-none" style={{
                                 border: `1px solid ${l.id === selectedLevel ? GOLD.accentBorder15 : GOLD.innerBorder08}`
                               }} />
-                              <div className="w-8 h-8 flex items-center justify-center relative">
+                              <div className="relative z-10 w-8 h-8 flex items-center justify-center">
                                 {isLevelUnlocked(l.id)
                                   ? <RegionIcon type={l.region} size={32} framed challenge={l.kind === "challenge"} />
                                   : <RegionIcon type={l.region} size={32} framed locked challenge={l.kind === "challenge"} />
                                 }
                               </div>
-                              <div className="flex-1 min-w-0">
+                              <div className="relative z-10 flex-1 min-w-0">
                                 <div className={`text-sm font-medium truncate ${l.id === selectedLevel ? "text-amber-100" : "text-amber-200/90"}`}>
                                   {l.name}
                                   {l.kind === "challenge" ? " • Challenge" : ""}
                                 </div>
                               </div>
-                              <div className="flex gap-0.5">
+                              <div className="relative z-10 flex gap-0.5">
                                 {[1, 2, 3].map((s) => (
                                   <Star
                                     key={s}
@@ -1393,7 +1402,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                                 ))}
                               </div>
                             </div>
-                          ))}
+                          );})}
                           {/* Region Progress footer */}
                           <div className="mt-3 pt-3 flex items-center justify-between" style={{ borderTop: `1px solid ${GOLD.border25}` }}>
                             <span className="text-amber-400 text-sm font-medium">

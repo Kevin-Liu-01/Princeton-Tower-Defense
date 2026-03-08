@@ -829,13 +829,15 @@ export function renderMortarTower(
     const crateR = depotR * 0.7;
     const crateX = screenPos.x + Math.cos(crateAngle) * crateR;
     const crateY = depotBot.y + Math.sin(crateAngle) * crateR * ISO_Y_RATIO;
+    const cSize = 6 - c;
+    const cH = 5;
     drawIsometricPrism(
       ctx,
       crateX,
       crateY,
-      6 - c,
-      6 - c,
-      5,
+      cSize,
+      cSize,
+      cH,
       {
         top: c === 0 ? "#5a6a3a" : "#4a5a32",
         left: c === 0 ? "#4a5a2a" : "#3a4a22",
@@ -843,33 +845,135 @@ export function renderMortarTower(
       },
       zoom,
     );
-    ctx.fillStyle = isMissile ? "#cc2200" : isEmber ? "#ff6600" : "#ffaa00";
-    ctx.fillRect(crateX - 2 * zoom, crateY - 4 * zoom, 4 * zoom, 1.2 * zoom);
+
+    const cW = cSize * zoom * 0.5;  // half-width in screen space
+    const cD = cSize * zoom * 0.25; // half-depth in screen space
+    const cHp = cH * zoom;
+
+    // Iron corner straps (diagonal lines on front-right face)
+    ctx.strokeStyle = "rgba(60,55,40,0.5)";
+    ctx.lineWidth = 0.8 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(crateX + cW, crateY - cHp * 0.15);
+    ctx.lineTo(crateX + cW, crateY - cHp * 0.85);
+    ctx.stroke();
+
+    // Horizontal iron band across front-right face
+    ctx.strokeStyle = "rgba(80,75,55,0.45)";
+    ctx.lineWidth = 1.2 * zoom;
+    const bandY = crateY - cHp * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(crateX, bandY + cD);
+    ctx.lineTo(crateX + cW, bandY);
+    ctx.stroke();
+
+    // Stencil marking (colored label)
+    const labelColor = isMissile ? "#cc2200" : isEmber ? "#ff6600" : "#ffaa00";
+    ctx.fillStyle = labelColor;
+    const labelCx = crateX + cW * 0.5;
+    const labelCy = crateY - cHp * 0.65 + cD * 0.25;
+    ctx.fillRect(labelCx - 1.5 * zoom, labelCy - 0.6 * zoom, 3 * zoom, 1.2 * zoom);
+
+    // Wood plank lines on front-left face
+    ctx.strokeStyle = "rgba(0,0,0,0.08)";
+    ctx.lineWidth = 0.4 * zoom;
+    for (let pl = 1; pl <= 2; pl++) {
+      const plY = crateY - cHp * (pl / 3);
+      ctx.beginPath();
+      ctx.moveTo(crateX - cW, plY);
+      ctx.lineTo(crateX, plY + cD);
+      ctx.stroke();
+    }
+
+    // Corner rivets
+    ctx.fillStyle = "rgba(100,95,75,0.6)";
+    const rivetR = 0.5 * zoom;
+    for (const ry of [0.12, 0.88]) {
+      ctx.beginPath();
+      ctx.arc(crateX + cW * 0.9, crateY - cHp * ry, rivetR, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
-  // ========== PROPELLANT TANKS (level 2+) ==========
+  // ========== PROPELLANT TANKS (level 2+, isometric cylinders) ==========
   if (level >= 2) {
     for (let t = 0; t < Math.min(level - 1, 2); t++) {
       const tankAngle = -Math.PI * 0.35 - t * 0.5;
       const tankR = depotR * 0.75;
       const tankX = screenPos.x + Math.cos(tankAngle) * tankR;
       const tankY = depotBot.y + Math.sin(tankAngle) * tankR * ISO_Y_RATIO;
-      ctx.fillStyle = t === 0 ? "#5a2a1a" : "#4a3a2a";
+      const tRx = 4 * zoom;
+      const tRy = tRx * ISO_Y_RATIO;
+      const tH = 7 * zoom;
+
+      // Cylinder body (gradient for volume)
+      const tankGrad = ctx.createLinearGradient(tankX - tRx, 0, tankX + tRx, 0);
+      tankGrad.addColorStop(0, t === 0 ? "#3a1a0a" : "#2a2a1a");
+      tankGrad.addColorStop(0.35, t === 0 ? "#6a3a1a" : "#5a4a32");
+      tankGrad.addColorStop(0.65, t === 0 ? "#5a2a14" : "#4a3a2a");
+      tankGrad.addColorStop(1, t === 0 ? "#2a1008" : "#1a1a0a");
+      ctx.fillStyle = tankGrad;
       ctx.beginPath();
-      ctx.ellipse(tankX, tankY, 4 * zoom, 2.2 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(tankX, tankY, tRx, tRy, 0, 0, Math.PI);
+      ctx.lineTo(tankX - tRx, tankY - tH);
+      ctx.ellipse(tankX, tankY - tH, tRx, tRy, 0, Math.PI, 0, true);
+      ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#7a5a4a";
-      ctx.lineWidth = 1.5 * zoom;
-      ctx.stroke();
+
+      // Top cap (ellipse with highlight)
+      const capGrad = ctx.createRadialGradient(
+        tankX - 0.5 * zoom, tankY - tH - 0.5 * zoom, 0,
+        tankX, tankY - tH, tRx,
+      );
+      capGrad.addColorStop(0, t === 0 ? "#7a4a2a" : "#6a5a3a");
+      capGrad.addColorStop(0.7, t === 0 ? "#5a2a14" : "#4a3a28");
+      capGrad.addColorStop(1, t === 0 ? "#3a1a0a" : "#2a2a18");
+      ctx.fillStyle = capGrad;
+      ctx.beginPath();
+      ctx.ellipse(tankX, tankY - tH, tRx, tRy, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Metal band rings
+      ctx.strokeStyle = t === 0 ? "#8a5a3a" : "#6a5a42";
+      ctx.lineWidth = 0.8 * zoom;
+      for (const bandFrac of [0.25, 0.75]) {
+        const bY = tankY - tH * bandFrac;
+        ctx.beginPath();
+        ctx.ellipse(tankX, bY, tRx * 1.02, tRy * 1.02, 0, 0, Math.PI);
+        ctx.stroke();
+      }
+
+      // Pressure valve cap on top
       ctx.fillStyle = t === 0 ? "#cc4400" : "#aa6600";
       ctx.beginPath();
-      ctx.arc(tankX + 3 * zoom, tankY - 1 * zoom, 1 * zoom, 0, Math.PI * 2);
+      ctx.ellipse(tankX + 1.5 * zoom, tankY - tH - 0.5 * zoom, 1.2 * zoom, 0.7 * zoom, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = t === 0 ? "#ff6620" : "#cc8830";
+      ctx.beginPath();
+      ctx.arc(tankX + 1.5 * zoom, tankY - tH - 0.5 * zoom, 0.5 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Feed hose to depot
       ctx.strokeStyle = "#5a4a3a";
+      ctx.lineWidth = 1.2 * zoom;
+      ctx.setLineDash([2 * zoom, 1.5 * zoom]);
+      ctx.beginPath();
+      ctx.moveTo(tankX, tankY - tH);
+      ctx.quadraticCurveTo(
+        tankX + (screenPos.x - tankX) * 0.3,
+        tankY - tH - 4 * zoom,
+        screenPos.x,
+        topY + 3 * zoom,
+      );
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Highlight stripe (cylindrical light reflection)
+      ctx.strokeStyle = `rgba(255,200,140,0.08)`;
       ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.moveTo(tankX, tankY - 2 * zoom);
-      ctx.lineTo(screenPos.x, topY + 3 * zoom);
+      ctx.moveTo(tankX + tRx * 0.3, tankY - 1 * zoom);
+      ctx.lineTo(tankX + tRx * 0.3, tankY - tH + 1 * zoom);
       ctx.stroke();
     }
   }
@@ -880,27 +984,81 @@ export function renderMortarTower(
     const rackDist = depotR * 0.6;
     const rackX = screenPos.x + Math.cos(rackAngle) * rackDist;
     const rackY = depotBot.y + Math.sin(rackAngle) * rackDist * ISO_Y_RATIO;
+    const rackW = 5;
+    const rackD = 8;
+    const rackH = 12;
     drawIsometricPrism(
       ctx,
       rackX,
       rackY,
-      5,
-      8,
-      12,
+      rackW,
+      rackD,
+      rackH,
       { top: "#4a3a28", left: "#3a2818", right: "#2a1808" },
       zoom,
     );
+
+    // Rack shelf dividers (horizontal lines on front face)
+    const rW = rackW * zoom * 0.5;
+    const rD = rackD * zoom * 0.25;
+    const rH = rackH * zoom;
+    ctx.strokeStyle = "rgba(0,0,0,0.15)";
+    ctx.lineWidth = 0.5 * zoom;
+    for (let div = 1; div <= 3; div++) {
+      const divY = rackY - rH * (div / 4);
+      ctx.beginPath();
+      ctx.moveTo(rackX - rW, divY);
+      ctx.lineTo(rackX, divY + rD);
+      ctx.stroke();
+    }
+
+    // Shells (proper artillery rounds with casing, band, and nose cone)
     const shellCount = level + 1;
     const loadingIdx =
       timeSinceFire < 800 ? Math.floor((timeSinceFire / 800) * shellCount) : -1;
     for (let sh = 0; sh < shellCount; sh++) {
       if (sh === loadingIdx) continue;
       const shellY = rackY - (3 + sh * 3.5) * zoom;
-      ctx.fillStyle = isMissile ? "#aa1100" : isEmber ? "#cc5500" : "#7a6a50";
+      const sRx = 2.2 * zoom;
+      const sRy = 1.3 * zoom;
+
+      // Shell casing body (gradient for metallic volume)
+      const shellGrad = ctx.createLinearGradient(
+        rackX - sRx, shellY, rackX + sRx, shellY,
+      );
+      const shellBase = isMissile ? "#aa1100" : isEmber ? "#cc5500" : "#7a6a50";
+      const shellLight = isMissile ? "#cc3322" : isEmber ? "#ee7722" : "#9a8a68";
+      const shellDark = isMissile ? "#881100" : isEmber ? "#aa4400" : "#5a4a38";
+      shellGrad.addColorStop(0, shellDark);
+      shellGrad.addColorStop(0.4, shellLight);
+      shellGrad.addColorStop(0.7, shellBase);
+      shellGrad.addColorStop(1, shellDark);
+      ctx.fillStyle = shellGrad;
       ctx.beginPath();
-      ctx.ellipse(rackX, shellY, 2.2 * zoom, 1.3 * zoom, 0, 0, Math.PI * 2);
+      ctx.ellipse(rackX, shellY, sRx, sRy, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Driving band (copper ring on the shell)
+      ctx.strokeStyle = isMissile ? "#cc5533" : isEmber ? "#dd8844" : "#b09060";
+      ctx.lineWidth = 0.6 * zoom;
+      ctx.beginPath();
+      ctx.ellipse(rackX + sRx * 0.15, shellY, sRx * 0.2, sRy * 0.85, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Nose cone (pointed tip, darker)
+      ctx.fillStyle = isMissile ? "#661100" : isEmber ? "#884400" : "#4a4a52";
+      ctx.beginPath();
+      ctx.ellipse(rackX - sRx * 0.7, shellY, sRx * 0.35, sRy * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Highlight glint
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.beginPath();
+      ctx.ellipse(rackX - sRx * 0.2, shellY - sRy * 0.3, sRx * 0.35, sRy * 0.2, -0.3, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Loading arm mechanism (L2+)
     if (level >= 2 && timeSinceFire < 1200) {
       const loadT = Math.min(1, timeSinceFire / 1200);
       const armSwing =
@@ -910,18 +1068,40 @@ export function renderMortarTower(
       const armLen = 10 * zoom;
       const pivotX = rackX + 3 * zoom;
       const pivotY = rackY - 10 * zoom;
-      ctx.strokeStyle = "#7a6a5a";
-      ctx.lineWidth = 2 * zoom;
+      const armEndX = pivotX + Math.cos(-Math.PI * 0.4 + armSwing) * armLen;
+      const armEndY = pivotY + Math.sin(-Math.PI * 0.4 + armSwing) * armLen;
+
+      // Arm body (thicker with gradient)
+      ctx.strokeStyle = "#6a5a4a";
+      ctx.lineWidth = 2.5 * zoom;
+      ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(pivotX, pivotY);
-      ctx.lineTo(
-        pivotX + Math.cos(-Math.PI * 0.4 + armSwing) * armLen,
-        pivotY + Math.sin(-Math.PI * 0.4 + armSwing) * armLen,
-      );
+      ctx.lineTo(armEndX, armEndY);
       ctx.stroke();
-      ctx.fillStyle = "#aaa";
+      // Arm highlight edge
+      ctx.strokeStyle = "#8a7a6a";
+      ctx.lineWidth = 1 * zoom;
       ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 1.5 * zoom, 0, Math.PI * 2);
+      ctx.moveTo(pivotX, pivotY);
+      ctx.lineTo(armEndX, armEndY);
+      ctx.stroke();
+      ctx.lineCap = "butt";
+
+      // Pivot bolt (beveled)
+      ctx.fillStyle = "#8a8a90";
+      ctx.beginPath();
+      ctx.arc(pivotX, pivotY, 2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#b0b0b8";
+      ctx.beginPath();
+      ctx.arc(pivotX - 0.3 * zoom, pivotY - 0.3 * zoom, 1.2 * zoom, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Grabber claw at arm tip
+      ctx.fillStyle = "#5a5a62";
+      ctx.beginPath();
+      ctx.arc(armEndX, armEndY, 1.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -1410,427 +1590,117 @@ export function isoQuadPath(
   ctx.closePath();
 }
 
-export function drawCradlePlateSegment(
-  ctx: CanvasRenderingContext2D,
-  x0: number, y0: number, x1: number, y1: number,
-  plateW: number, plateH: number,
-  side: number, perpX: number, perpY: number,
-  topColor: string, sideColor: string, edgeColor: string,
-  zoom: number,
-  faceOutward = true,
-) {
-  const hw = plateW * 0.5;
-  // Top face (isometric parallelogram along the arm direction)
-  const t0ox = x0 + side * perpX * hw;
-  const t0oy = y0 + side * perpY * hw;
-  const t0ix = x0 - side * perpX * hw;
-  const t0iy = y0 - side * perpY * hw;
-  const t1ox = x1 + side * perpX * hw;
-  const t1oy = y1 + side * perpY * hw;
-  const t1ix = x1 - side * perpX * hw;
-  const t1iy = y1 - side * perpY * hw;
-
-  ctx.fillStyle = topColor;
-  ctx.beginPath();
-  ctx.moveTo(t0ix, t0iy);
-  ctx.lineTo(t0ox, t0oy);
-  ctx.lineTo(t1ox, t1oy);
-  ctx.lineTo(t1ix, t1iy);
-  ctx.closePath();
-  ctx.fill();
-  ctx.strokeStyle = edgeColor;
-  ctx.lineWidth = 0.5 * zoom;
-  ctx.stroke();
-
-  // Visible side face (drops down from the camera-facing edge)
-  const sfx0 = faceOutward ? t0ox : t0ix;
-  const sfy0 = faceOutward ? t0oy : t0iy;
-  const sfx1 = faceOutward ? t1ox : t1ix;
-  const sfy1 = faceOutward ? t1oy : t1iy;
-  ctx.fillStyle = sideColor;
-  ctx.beginPath();
-  ctx.moveTo(sfx0, sfy0);
-  ctx.lineTo(sfx1, sfy1);
-  ctx.lineTo(sfx1, sfy1 + plateH);
-  ctx.lineTo(sfx0, sfy0 + plateH);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // Bottom edge (darker underside hint)
-  ctx.fillStyle = edgeColor;
-  ctx.beginPath();
-  ctx.moveTo(t0ix, t0iy + plateH);
-  ctx.lineTo(t0ox, t0oy + plateH);
-  ctx.lineTo(t1ox, t1oy + plateH);
-  ctx.lineTo(t1ix, t1iy + plateH);
-  ctx.closePath();
-  ctx.fill();
-
-  // Top face highlight line
-  ctx.strokeStyle = `rgba(255,255,255,0.08)`;
-  ctx.lineWidth = 0.6 * zoom;
-  ctx.beginPath();
-  ctx.moveTo(t0ix + (t0ox - t0ix) * 0.15, t0iy + (t0oy - t0iy) * 0.15);
-  ctx.lineTo(t1ix + (t1ox - t1ix) * 0.15, t1iy + (t1oy - t1iy) * 0.15);
-  ctx.stroke();
+function parseHexColor(hex: string) {
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  };
 }
 
 export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmParams) {
   const { side, level, zoom, sinR, cosR, perpX, perpY, tiers, tierRecoils,
-    totalRecoil, posAtFrac, cradleW, cradleThick, metalDark, metalMid,
+    totalRecoil, posAtFrac, cradleW, metalDark, metalMid,
     metalLight, accent, time, timeSinceFire } = p;
 
+  const hexSides = 8;
+  const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
   const sideVis = side * (-sinR + 0.5 * cosR);
   const isFront = sideVis > 0;
-  const topCol = isFront ? metalLight : metalMid;
-  const sideCol = isFront ? metalMid : metalDark;
-  const edgeCol = metalDark;
-  const plateH = (level >= 3 ? 7 : level >= 2 ? 6 : 5) * zoom;
-  const plateW = cradleThick;
-  const channelD = plateW * 0.45;
-  const innerW = plateW * 0.35;
 
-  // Key points along the arm that follow barrel tilt & recoil
-  const baseFrac = 0.02;
-  const baseRecoil = tierRecoils[0] * 0.05;
-  const basePt = posAtFrac(baseFrac, baseRecoil);
-  const baseX = basePt.x + side * perpX * cradleW * 1.0;
-  const baseY = basePt.y + side * perpY * cradleW * 1.0 + 4 * zoom;
+  // Tapered octagonal prism — 4 key points defining 3 segments
+  const armR = (level >= 3 ? 7.5 : level >= 2 ? 6.5 : 5.5) * zoom;
+  const armDef = [
+    { frac: 0.02, recoil: tierRecoils[0] * 0.05, r: armR, offR: cradleW, yOff: 4 * zoom },
+    { frac: 0.18, recoil: tierRecoils[0] * 0.45, r: armR * 0.72, offR: cradleW, yOff: 0 },
+    { frac: 0.42, recoil: (tierRecoils[0] + tierRecoils[1]) * 0.55, r: armR * 0.48, offR: tiers[1].r * 1.05, yOff: 0 },
+    { frac: 0.62, recoil: totalRecoil * 0.7, r: armR * 0.28, offR: tiers[2].r * 0.85, yOff: 0 },
+  ];
 
-  const pivotFrac = 0.18;
-  const pivotRecoil = tierRecoils[0] * 0.45;
-  const pivotPt = posAtFrac(pivotFrac, pivotRecoil);
-  const pivotX = pivotPt.x + side * perpX * cradleW;
-  const pivotY = pivotPt.y + side * perpY * cradleW;
-
-  const midFrac = 0.42;
-  const midRecoil = (tierRecoils[0] + tierRecoils[1]) * 0.55;
-  const midPt = posAtFrac(midFrac, midRecoil);
-  const midX = midPt.x + side * perpX * tiers[1].r * 1.05;
-  const midY = midPt.y + side * perpY * tiers[1].r * 1.05;
-
-  const tipFrac = 0.68;
-  const tipRecoil = totalRecoil * 0.72;
-  const tipPt = posAtFrac(tipFrac, tipRecoil);
-  const tipX = tipPt.x + side * perpX * tiers[2].r * 0.85;
-  const tipY = tipPt.y + side * perpY * tiers[2].r * 0.85;
-
-  // ── GUIDE RAILS (outer + inner I-beam profiles spanning the channel) ──
-  {
-    const railOff = side * 2.5 * zoom;
-    const railPlateW = (level >= 3 ? 3.5 : 3) * zoom;
-    const railPlateH = (level >= 3 ? 6 : 5) * zoom;
-    const innerRailOff = side * (-channelD * 0.6);
-
-    const drawGuideRail = (isInner: boolean) => {
-      const off = isInner ? innerRailOff : railOff;
-      const rBaseX = baseX + perpX * off;
-      const rBaseY = baseY + perpY * off;
-      const rMidX = midX + perpX * off * 0.8;
-      const rMidY = midY + perpY * off * 0.8;
-      const topC = isInner ? (isFront ? metalMid : metalDark) : (isFront ? metalMid : metalDark);
-      const sideC = metalDark;
-      const rW = isInner ? railPlateW * 0.8 : railPlateW;
-      const rH = isInner ? railPlateH * 0.85 : railPlateH;
-
-      // Rail web (vertical part of I-beam)
-      ctx.strokeStyle = metalDark;
-      ctx.lineWidth = (isInner ? 1.4 : 1.8) * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rBaseX, rBaseY + rH * 0.15);
-      ctx.lineTo(rMidX, rMidY + rH * 0.15);
-      ctx.stroke();
-
-      // Rail top flange
-      drawCradlePlateSegment(ctx,
-        rBaseX, rBaseY, rMidX, rMidY,
-        rW, 1.5 * zoom,
-        side, perpX, perpY, topC, sideC, edgeCol, zoom, isFront,
-      );
-      // Rail bottom flange
-      drawCradlePlateSegment(ctx,
-        rBaseX, rBaseY + rH, rMidX, rMidY + rH,
-        rW, 1.5 * zoom,
-        side, perpX, perpY, sideC, sideC, edgeCol, zoom, isFront,
-      );
-
-      // Rail groove (sliding channel)
-      ctx.strokeStyle = `rgba(0,0,0,0.3)`;
-      ctx.lineWidth = 1 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(rBaseX, rBaseY + rH * 0.5);
-      ctx.lineTo(rMidX, rMidY + rH * 0.5);
-      ctx.stroke();
-
-      // Rail rivets
-      if (!isInner) {
-        ctx.fillStyle = accent;
-        const railLen = Math.hypot(rMidX - rBaseX, rMidY - rBaseY);
-        const rivetCount = Math.max(3, Math.round(railLen / (8 * zoom)));
-        for (let ri = 0; ri < rivetCount; ri++) {
-          const t = (ri + 0.5) / rivetCount;
-          const rx = rBaseX + (rMidX - rBaseX) * t;
-          const ry = rBaseY + (rMidY - rBaseY) * t;
-          ctx.beginPath();
-          ctx.arc(rx, ry - 0.3 * zoom, 0.6 * zoom, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+  const pts = armDef.map(a => {
+    const ap = posAtFrac(a.frac, a.recoil);
+    return {
+      center: { x: ap.x + side * perpX * a.offR, y: ap.y + side * perpY * a.offR + a.yOff } as Pt,
+      verts: generateIsoHexVertices(isoOff, a.r, hexSides),
+      r: a.r,
     };
+  });
 
-    drawGuideRail(true);
-    drawGuideRail(false);
-  }
+  // Depth sorting and normals — same system as barrel tiers, rotation-aware
+  const sideNormals = computeHexSideNormals(cosR, hexSides);
+  const sorted = sortSidesByDepth(sideNormals);
+  const dk = parseHexColor(metalDark);
+  const lt = parseHexColor(metalLight);
 
-  // ── MAIN ARM: BOX-CHANNEL STRUCTURE (outer rail + inner rail + flanges + web) ──
-  const segments: [number, number, number, number][] = [
-    [baseX, baseY, pivotX, pivotY],
-    [pivotX, pivotY, midX, midY],
-    [midX, midY, tipX, tipY],
-  ];
+  // ── BOTTOM CAP (base of arm, on the turntable) ──
+  drawHexCap(ctx, pts[0].center, pts[0].verts, metalDark, metalDark, 0.5 * zoom);
 
-  // Inner rail positions: offset inward (toward barrel) by channelD
-  const innerBaseX = basePt.x + side * perpX * (cradleW - channelD);
-  const innerBaseY = basePt.y + side * perpY * (cradleW - channelD) + 4 * zoom;
-  const innerPivotX = pivotPt.x + side * perpX * (cradleW - channelD);
-  const innerPivotY = pivotPt.y + side * perpY * (cradleW - channelD);
-  const innerMidX = midPt.x + side * perpX * (tiers[1].r * 1.05 - channelD);
-  const innerMidY = midPt.y + side * perpY * (tiers[1].r * 1.05 - channelD);
-  const innerTipX = tipPt.x + side * perpX * (tiers[2].r * 0.85 - channelD * 0.7);
-  const innerTipY = tipPt.y + side * perpY * (tiers[2].r * 0.85 - channelD * 0.7);
-  const innerSegs: [number, number, number, number][] = [
-    [innerBaseX, innerBaseY, innerPivotX, innerPivotY],
-    [innerPivotX, innerPivotY, innerMidX, innerMidY],
-    [innerMidX, innerMidY, innerTipX, innerTipY],
-  ];
-
-  // Draw INNER rail first (behind the channel)
-  for (let si = 0; si < innerSegs.length; si++) {
-    const [sx, sy, ex, ey] = innerSegs[si];
-    const segW = innerW * (si === 2 ? 0.7 : si === 1 ? 0.85 : 1.0);
-    const segH = plateH * (si === 2 ? 0.7 : 0.85);
-    const innerTopCol = isFront ? metalMid : metalDark;
-    const innerSideCol = isFront ? metalDark : metalDark;
-    drawCradlePlateSegment(ctx, sx, sy, ex, ey, segW, segH, side, perpX, perpY, innerTopCol, innerSideCol, edgeCol, zoom, isFront);
-  }
-
-  // Draw cross-brace WEBS between inner and outer rails (visible through the channel)
-  const webPoints = [0.08, 0.28, 0.42, 0.55];
-  if (level >= 2) webPoints.push(0.65);
-  for (const wFrac of webPoints) {
-    const wRecoil = (tierRecoils[0] + (tierRecoils[1] || 0) * Math.min(1, wFrac * 2)) * 0.5;
-    const wPt = posAtFrac(wFrac, wRecoil);
-    const tierIdx = wFrac < 0.33 ? 0 : wFrac < 0.66 ? 1 : 2;
-    const outerR = tierIdx === 0 ? cradleW : tierIdx === 1 ? tiers[1].r * 1.05 : tiers[2].r * 0.85;
-    const innerR = outerR - channelD * (tierIdx === 2 ? 0.7 : 1.0);
-    const outerWx = wPt.x + side * perpX * outerR;
-    const outerWy = wPt.y + side * perpY * outerR;
-    const innerWx = wPt.x + side * perpX * innerR;
-    const innerWy = wPt.y + side * perpY * innerR;
-
-    // Web plate connecting inner to outer (visible on top)
-    const webCol = isFront ? metalMid : metalDark;
-    ctx.fillStyle = webCol;
-    ctx.beginPath();
-    const whw = (level >= 3 ? 2.2 : 1.8) * zoom;
-    const segDir = wFrac < 0.33
-      ? { x: pivotX - baseX, y: pivotY - baseY }
-      : wFrac < 0.66
-        ? { x: midX - pivotX, y: midY - pivotY }
-        : { x: tipX - midX, y: tipY - midY };
-    const segL = Math.hypot(segDir.x, segDir.y) || 1;
-    const sdx = segDir.x / segL;
-    const sdy = segDir.y / segL;
-    ctx.moveTo(outerWx - sdx * whw, outerWy - sdy * whw);
-    ctx.lineTo(outerWx + sdx * whw, outerWy + sdy * whw);
-    ctx.lineTo(innerWx + sdx * whw, innerWy + sdy * whw);
-    ctx.lineTo(innerWx - sdx * whw, innerWy - sdy * whw);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.4 * zoom;
-    ctx.stroke();
-
-    // Web side face (drops down, giving depth)
-    ctx.fillStyle = metalDark;
-    ctx.beginPath();
-    ctx.moveTo(outerWx - sdx * whw, outerWy - sdy * whw);
-    ctx.lineTo(innerWx - sdx * whw, innerWy - sdy * whw);
-    ctx.lineTo(innerWx - sdx * whw, innerWy - sdy * whw + plateH * 0.7);
-    ctx.lineTo(outerWx - sdx * whw, outerWy - sdy * whw + plateH * 0.7);
-    ctx.closePath();
-    ctx.fill();
-
-    // Cross-brace diagonal stiffener (L2+)
-    if (level >= 2) {
-      ctx.strokeStyle = `rgba(${metalMid.slice(1).match(/../g)!.map(h => parseInt(h, 16)).join(",")},0.5)`;
-      ctx.lineWidth = 1 * zoom;
+  // ── TAPERED OCTAGONAL PRISM SEGMENTS (base → pivot → mid → tip) ──
+  for (let si = 0; si < pts.length - 1; si++) {
+    const bot = pts[si];
+    const top = pts[si + 1];
+    for (const i of sorted) {
+      const ni = (i + 1) % hexSides;
+      const n = sideNormals[i];
+      const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+      const fR = Math.floor(dk.r + (lt.r - dk.r) * bright);
+      const fG = Math.floor(dk.g + (lt.g - dk.g) * bright);
+      const fB = Math.floor(dk.b + (lt.b - dk.b) * bright);
+      const faceMidX = (bot.verts[i].x + bot.verts[ni].x) * 0.5;
+      const faceMidY = (bot.verts[i].y + bot.verts[ni].y) * 0.5;
+      const faceGrad = ctx.createLinearGradient(
+        top.center.x + faceMidX, top.center.y + faceMidY,
+        bot.center.x + faceMidX, bot.center.y + faceMidY,
+      );
+      faceGrad.addColorStop(0, `rgb(${Math.min(255, fR + 10)},${Math.min(255, fG + 8)},${Math.min(255, fB + 6)})`);
+      faceGrad.addColorStop(0.45, `rgb(${fR},${fG},${fB})`);
+      faceGrad.addColorStop(1, `rgb(${Math.max(0, fR - 12)},${Math.max(0, fG - 10)},${Math.max(0, fB - 8)})`);
+      ctx.fillStyle = faceGrad;
       ctx.beginPath();
-      ctx.moveTo(outerWx, outerWy + plateH * 0.15);
-      ctx.lineTo(innerWx, innerWy + plateH * 0.55);
+      ctx.moveTo(bot.center.x + bot.verts[i].x, bot.center.y + bot.verts[i].y);
+      ctx.lineTo(bot.center.x + bot.verts[ni].x, bot.center.y + bot.verts[ni].y);
+      ctx.lineTo(top.center.x + top.verts[ni].x, top.center.y + top.verts[ni].y);
+      ctx.lineTo(top.center.x + top.verts[i].x, top.center.y + top.verts[i].y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = `rgba(0,0,0,${0.08 + bright * 0.06})`;
+      ctx.lineWidth = 0.5 * zoom;
       ctx.stroke();
+      if (n < -0.5) continue;
+      if (si < 2) {
+        const t = 0.5;
+        const vLerp = { x: bot.verts[i].x + (top.verts[i].x - bot.verts[i].x) * t, y: bot.verts[i].y + (top.verts[i].y - bot.verts[i].y) * t };
+        const rx = bot.center.x + (top.center.x - bot.center.x) * t + vLerp.x * 0.8;
+        const ry = bot.center.y + (top.center.y - bot.center.y) * t + vLerp.y * 0.8;
+        ctx.fillStyle = accent;
+        ctx.beginPath();
+        ctx.arc(rx, ry, 0.6 * zoom, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    if (si > 0) {
+      drawHexBand(ctx, bot.verts, sideNormals,
+        { x: bot.center.x, y: bot.center.y + 1 * zoom },
+        { x: bot.center.x, y: bot.center.y - 1 * zoom },
+        1.06,
+        (n) => {
+          const b = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+          if (level >= 3) return accent;
+          return `rgb(${55 + Math.floor(b * 35)},${50 + Math.floor(b * 32)},${65 + Math.floor(b * 25)})`;
+        },
+        "rgba(0,0,0,0.15)", 0.4 * zoom, -0.3,
+      );
     }
   }
 
-  // Draw OUTER rail (main structural plate, on top for near arm)
-  for (let si = 0; si < segments.length; si++) {
-    const [sx, sy, ex, ey] = segments[si];
-    const segW = plateW * (si === 2 ? 0.7 : si === 1 ? 0.85 : 1.0);
-    const segH = plateH * (si === 2 ? 0.8 : 1.0);
-    drawCradlePlateSegment(ctx, sx, sy, ex, ey, segW, segH, side, perpX, perpY, topCol, sideCol, edgeCol, zoom, isFront);
+  // ── TOP CAP ──
+  const tipPt = pts[pts.length - 1];
+  drawHexCap(ctx, tipPt.center, tipPt.verts, isFront ? metalLight : metalMid, metalDark, 0.5 * zoom);
 
-    // Rivets along outer rail
-    ctx.fillStyle = accent;
-    const segLen = Math.hypot(ex - sx, ey - sy);
-    const segRivets = Math.max(2, Math.round(segLen / (7 * zoom)));
-    for (let ri = 0; ri < segRivets; ri++) {
-      const t = (ri + 0.5) / segRivets;
-      const rx = sx + (ex - sx) * t;
-      const ry = sy + (ey - sy) * t;
-      ctx.beginPath();
-      ctx.arc(rx, ry, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Weld seam on outer edge
-    ctx.strokeStyle = `rgba(100,100,110,0.25)`;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(sx + side * perpX * segW * 0.48, sy + side * perpY * segW * 0.48 + segH * 0.3);
-    ctx.lineTo(ex + side * perpX * segW * 0.48, ey + side * perpY * segW * 0.48 + segH * 0.3);
-    ctx.stroke();
-
-    // Inner weld seam (second rail)
-    ctx.strokeStyle = `rgba(80,80,90,0.18)`;
-    ctx.lineWidth = 0.4 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(sx - side * perpX * segW * 0.3, sy - side * perpY * segW * 0.3 + segH * 0.2);
-    ctx.lineTo(ex - side * perpX * segW * 0.3, ey - side * perpY * segW * 0.3 + segH * 0.2);
-    ctx.stroke();
-  }
-
-  // ── GUSSET PLATES at joints (triangular reinforcement spanning the channel) ──
-  const joints: [number, number, number, number, number, number][] = [
-    [baseX, baseY, pivotX, pivotY, pivotX, pivotY],
-    [pivotX, pivotY, midX, midY, midX, midY],
-  ];
-  for (let ji = 0; ji < joints.length; ji++) {
-    const [, , jx, jy, nx, ny] = joints[ji];
-    const prevSeg = segments[ji];
-    const nextSeg = segments[ji + 1];
-    const gussetSize = (level >= 3 ? 6 : level >= 2 ? 5 : 4) * zoom;
-
-    const inDx = jx - prevSeg[0];
-    const inDy = jy - prevSeg[1];
-    const inLen = Math.hypot(inDx, inDy) || 1;
-    const outDx = nextSeg[2] - nx;
-    const outDy = nextSeg[3] - ny;
-    const outLen = Math.hypot(outDx, outDy) || 1;
-
-    const g0x = jx - (inDx / inLen) * gussetSize;
-    const g0y = jy - (inDy / inLen) * gussetSize;
-    const g1x = jx + (outDx / outLen) * gussetSize;
-    const g1y = jy + (outDy / outLen) * gussetSize;
-
-    // Outer gusset plate
-    ctx.fillStyle = sideCol;
-    ctx.beginPath();
-    ctx.moveTo(jx + side * perpX * plateW * 0.35, jy + side * perpY * plateW * 0.35);
-    ctx.lineTo(g0x + side * perpX * plateW * 0.35, g0y + side * perpY * plateW * 0.35);
-    ctx.lineTo(g1x + side * perpX * plateW * 0.35, g1y + side * perpY * plateW * 0.35);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Gusset side face (thickness)
-    ctx.fillStyle = metalDark;
-    ctx.beginPath();
-    ctx.moveTo(g0x + side * perpX * plateW * 0.35, g0y + side * perpY * plateW * 0.35);
-    ctx.lineTo(g1x + side * perpX * plateW * 0.35, g1y + side * perpY * plateW * 0.35);
-    ctx.lineTo(g1x + side * perpX * plateW * 0.35, g1y + side * perpY * plateW * 0.35 + plateH * 0.4);
-    ctx.lineTo(g0x + side * perpX * plateW * 0.35, g0y + side * perpY * plateW * 0.35 + plateH * 0.4);
-    ctx.closePath();
-    ctx.fill();
-
-    // Gusset bolt (larger hex bolt)
-    ctx.fillStyle = accent;
-    ctx.beginPath();
-    ctx.arc(jx + side * perpX * plateW * 0.25, jy + side * perpY * plateW * 0.25, 1.2 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = `rgba(0,0,0,0.12)`;
-    ctx.beginPath();
-    ctx.arc(jx + side * perpX * plateW * 0.25, jy + side * perpY * plateW * 0.25, 0.5 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // ── BARREL SADDLE CLAMPS (iso-projected U-brackets spanning the channel) ──
-  const clampPoints = [
-    { frac: 0.30, recoil: (tierRecoils[0] + tierRecoils[1] * 0.3), barrelR: tiers[0].r * 0.95 },
-    { frac: 0.52, recoil: (tierRecoils[0] + tierRecoils[1]) * 0.7, barrelR: tiers[1].r * 0.92 },
-  ];
-  if (level >= 2) {
-    clampPoints.push({ frac: 0.62, recoil: totalRecoil * 0.65, barrelR: tiers[2].r * 0.88 });
-  }
-  // Compute barrel-axis direction for iso projection within the arm
-  const bTotalH = tiers[0].h + tiers[1].h + tiers[2].h;
-  const bMaxTiltX = cosR * 0.5 * 12 * zoom;
-  const bMaxTiltY = sinR * ISO_Y_RATIO * 0.5 * 12 * zoom;
-  const bLen = Math.hypot(bMaxTiltX, -bTotalH + bMaxTiltY);
-  const armAx = bLen > 0 ? bMaxTiltX / bLen : 0;
-  const armAy = bLen > 0 ? (-bTotalH + bMaxTiltY) / bLen : -1;
-  const armNx = -armAy;
-  const armNy = armAx;
-
-  for (const cp of clampPoints) {
-    const clampPt = posAtFrac(cp.frac, cp.recoil);
-    const cx = clampPt.x + side * perpX * cp.barrelR;
-    const cy = clampPt.y + side * perpY * cp.barrelR;
-    const clampW = (level >= 3 ? 5 : 4) * zoom;
-    const clampH = (level >= 3 ? 4 : 3) * zoom;
-
-    // Clamp top face (iso parallelogram — spans between outer and inner rail)
-    ctx.fillStyle = topCol;
-    ctx.beginPath();
-    const outOff = side * channelD * 0.3;
-    ctx.moveTo(cx - armNx * clampW * 0.5 + perpX * outOff, cy - armNy * clampW * 0.5 + perpY * outOff);
-    ctx.lineTo(cx + armNx * clampW * 0.5 + perpX * outOff, cy + armNy * clampW * 0.5 + perpY * outOff);
-    ctx.lineTo(cx + armNx * clampW * 0.5 - perpX * outOff, cy + armNy * clampW * 0.5 - perpY * outOff);
-    ctx.lineTo(cx - armNx * clampW * 0.5 - perpX * outOff, cy - armNy * clampW * 0.5 - perpY * outOff);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Clamp side face (depth — drops down from the camera-facing edge)
-    const sfSign = isFront ? 1 : -1;
-    ctx.fillStyle = sideCol;
-    ctx.beginPath();
-    ctx.moveTo(cx - armNx * clampW * 0.5 + perpX * outOff * sfSign, cy - armNy * clampW * 0.5 + perpY * outOff * sfSign);
-    ctx.lineTo(cx + armNx * clampW * 0.5 + perpX * outOff * sfSign, cy + armNy * clampW * 0.5 + perpY * outOff * sfSign);
-    ctx.lineTo(cx + armNx * clampW * 0.5 + perpX * outOff * sfSign, cy + armNy * clampW * 0.5 + perpY * outOff * sfSign + clampH);
-    ctx.lineTo(cx - armNx * clampW * 0.5 + perpX * outOff * sfSign, cy - armNy * clampW * 0.5 + perpY * outOff * sfSign + clampH);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Clamp bolts at corners
-    ctx.fillStyle = accent;
-    for (const nf of [-0.35, 0.35]) {
-      const bx = cx + armNx * clampW * nf;
-      const by = cy + armNy * clampW * nf;
-      ctx.beginPath();
-      ctx.arc(bx, by, 0.9 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // ── TRUNNION PIVOT ASSEMBLY (iso-projected ball-bearing housing) ──
+  // ── TRUNNION PIVOT (at second key point) ──
   {
-    const pinR = (level >= 3 ? 7 : level >= 2 ? 6 : 5) * zoom;
+    const piv = pts[1].center;
+    const pinR = (level >= 3 ? 6.5 : level >= 2 ? 5.5 : 4.5) * zoom;
     const pLen = Math.hypot(perpX, perpY) || 1;
     const pNx = perpX / pLen;
     const pNy = perpY / pLen;
@@ -1838,536 +1708,119 @@ export function drawMortarCradleArm(ctx: CanvasRenderingContext2D, p: CradleArmP
     const pTy = pNx;
     const fS = 0.55;
     const fAng = Math.atan2(pTy, pTx);
-
     const pivHex = (r: number, a: number) => ({
-      x: pivotX + (Math.cos(a) * pTx + Math.sin(a) * fS * pNx) * r,
-      y: pivotY + (Math.cos(a) * pTy + Math.sin(a) * fS * pNy) * r,
+      x: piv.x + (Math.cos(a) * pTx + Math.sin(a) * fS * pNx) * r,
+      y: piv.y + (Math.cos(a) * pTy + Math.sin(a) * fS * pNy) * r,
     });
-
-    // Shadow ring for depth
-    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
     ctx.beginPath();
-    ctx.ellipse(pivotX, pivotY + 1 * zoom, pinR * 1.05, pinR * 1.05 * fS, fAng, 0, Math.PI * 2);
+    ctx.ellipse(piv.x, piv.y + 1 * zoom, pinR * 1.05, pinR * fS * 1.05, fAng, 0, Math.PI * 2);
     ctx.fill();
-
-    // Housing thickness ring (3D depth behind the face)
-    ctx.strokeStyle = metalDark;
-    ctx.lineWidth = plateH * 0.35;
-    ctx.beginPath();
-    ctx.ellipse(pivotX, pivotY + plateH * 0.15, pinR * 0.98, pinR * 0.98 * fS, fAng, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Outer bearing housing (hexagonal forged steel, iso-projected)
-    const housingGrad = ctx.createRadialGradient(
-      pivotX - pTx * pinR * 0.2, pivotY - pTy * pinR * 0.2, 0,
-      pivotX, pivotY, pinR,
-    );
+    const housingGrad = ctx.createRadialGradient(piv.x - pTx * pinR * 0.15, piv.y - pTy * pinR * 0.15, 0, piv.x, piv.y, pinR);
     housingGrad.addColorStop(0, isFront ? metalLight : metalMid);
     housingGrad.addColorStop(0.6, metalMid);
     housingGrad.addColorStop(1, metalDark);
     ctx.fillStyle = housingGrad;
     ctx.beginPath();
-    for (let hi = 0; hi < 6; hi++) {
-      const p = pivHex(pinR, hi * Math.PI / 3);
-      if (hi === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-    }
+    for (let hi = 0; hi < 6; hi++) { const hp = pivHex(pinR, hi * Math.PI / 3); hi === 0 ? ctx.moveTo(hp.x, hp.y) : ctx.lineTo(hp.x, hp.y); }
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.7 * zoom;
+    ctx.strokeStyle = metalDark;
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
-
-    // Machined face plate (stepped inset hex)
-    ctx.fillStyle = isFront ? metalMid : metalDark;
-    ctx.beginPath();
-    for (let hi = 0; hi < 6; hi++) {
-      const p = pivHex(pinR * 0.8, hi * Math.PI / 3);
-      if (hi === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = `rgba(0,0,0,${0.1 + (isFront ? 0.02 : 0.06)})`;
-    ctx.lineWidth = 0.4 * zoom;
-    ctx.stroke();
-
-    // Bearing race groove (outer ring)
-    ctx.strokeStyle = `rgba(0,0,0,0.2)`;
-    ctx.lineWidth = 1.2 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(pivotX, pivotY, pinR * 0.6, pinR * 0.6 * fS, fAng, 0, Math.PI * 2);
-    ctx.stroke();
-    // Bearing race highlight
     ctx.strokeStyle = accent;
-    ctx.lineWidth = (level >= 3 ? 1.8 : 1.2) * zoom;
+    ctx.lineWidth = (level >= 3 ? 1.5 : 1) * zoom;
     ctx.beginPath();
-    ctx.ellipse(pivotX, pivotY, pinR * 0.55, pinR * 0.55 * fS, fAng, 0, Math.PI * 2);
+    ctx.ellipse(piv.x, piv.y, pinR * 0.55, pinR * 0.55 * fS, fAng, 0, Math.PI * 2);
     ctx.stroke();
-
-    // Ball bearings (projected in the race groove)
     if (level >= 2) {
-      const bearingCount = level >= 3 ? 10 : 8;
-      const bearingR = (level >= 3 ? 0.9 : 0.7) * zoom;
+      const bearingCount = level >= 3 ? 8 : 6;
       for (let bi = 0; bi < bearingCount; bi++) {
         const ba = (bi / bearingCount) * Math.PI * 2 + time * 0.3;
         const bp = pivHex(pinR * 0.55, ba);
         ctx.fillStyle = level >= 3 ? "#d0c060" : "#b0b0b8";
         ctx.beginPath();
-        ctx.arc(bp.x, bp.y, bearingR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = `rgba(255,255,255,0.25)`;
-        ctx.beginPath();
-        ctx.arc(bp.x - bearingR * 0.3, bp.y - bearingR * 0.3, bearingR * 0.4, 0, Math.PI * 2);
+        ctx.arc(bp.x, bp.y, 0.6 * zoom, 0, Math.PI * 2);
         ctx.fill();
       }
     }
-
-    // Inner bearing race
-    ctx.strokeStyle = `rgba(0,0,0,0.15)`;
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.beginPath();
-    ctx.ellipse(pivotX, pivotY, pinR * 0.4, pinR * 0.4 * fS, fAng, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Shaft center (polished trunnion pin)
-    const shaftCol = level >= 3 ? "#e8c840" : level >= 2 ? "#b0b0b8" : "#9a9a9a";
-    const shaftGrad = ctx.createRadialGradient(
-      pivotX - pTx * pinR * 0.05, pivotY - pTy * pinR * 0.05, 0,
-      pivotX, pivotY, pinR * 0.35,
-    );
+    const shaftGrad = ctx.createRadialGradient(piv.x - pTx * pinR * 0.05, piv.y - pTy * pinR * 0.05, 0, piv.x, piv.y, pinR * 0.35);
     shaftGrad.addColorStop(0, level >= 3 ? "#f0d860" : "#d0d0d8");
-    shaftGrad.addColorStop(0.5, shaftCol);
+    shaftGrad.addColorStop(0.5, level >= 3 ? "#e8c840" : "#b0b0b8");
     shaftGrad.addColorStop(1, level >= 3 ? "#a08020" : "#808088");
     ctx.fillStyle = shaftGrad;
     ctx.beginPath();
-    ctx.ellipse(pivotX, pivotY, pinR * 0.32, pinR * 0.32 * fS, fAng, 0, Math.PI * 2);
+    ctx.ellipse(piv.x, piv.y, pinR * 0.3, pinR * 0.3 * fS, fAng, 0, Math.PI * 2);
     ctx.fill();
-    // Shaft keyway slot (aligned with face tangent)
     ctx.strokeStyle = metalDark;
-    ctx.lineWidth = 0.9 * zoom;
+    ctx.lineWidth = 0.8 * zoom;
     ctx.beginPath();
-    ctx.moveTo(pivotX - pTx * pinR * 0.16, pivotY - pTy * pinR * 0.16);
-    ctx.lineTo(pivotX + pTx * pinR * 0.16, pivotY + pTy * pinR * 0.16);
+    ctx.moveTo(piv.x - pTx * pinR * 0.14, piv.y - pTy * pinR * 0.14);
+    ctx.lineTo(piv.x + pTx * pinR * 0.14, piv.y + pTy * pinR * 0.14);
     ctx.stroke();
-    // Shaft specular highlight
-    ctx.fillStyle = "rgba(255,255,255,0.25)";
-    ctx.beginPath();
-    ctx.ellipse(
-      pivotX - pTx * pinR * 0.1 - pNx * pinR * 0.05,
-      pivotY - pTy * pinR * 0.1 - pNy * pinR * 0.05,
-      pinR * 0.13, pinR * 0.08, fAng, 0, Math.PI * 2,
-    );
-    ctx.fill();
-
-    // Housing hex bolts at each corner
     ctx.fillStyle = accent;
-    for (let hi = 0; hi < 6; hi++) {
-      const bp = pivHex(pinR * 0.72, hi * Math.PI / 3);
-      ctx.beginPath();
-      ctx.arc(bp.x, bp.y, 0.8 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(0,0,0,0.15)`;
-      ctx.beginPath();
-      ctx.arc(bp.x, bp.y, 0.35 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = accent;
-    }
-
-    // Grease fitting (Zerk fitting on one side)
-    if (level >= 2) {
-      const gfP = pivHex(pinR * 0.88, Math.PI * 0.25);
-      ctx.fillStyle = level >= 3 ? "#c9a227" : "#8a8a8a";
-      ctx.beginPath();
-      ctx.arc(gfP.x, gfP.y, 0.7 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = level >= 3 ? "#e0c040" : "#b0b0b8";
-      ctx.beginPath();
-      ctx.arc(gfP.x, gfP.y - 0.8 * zoom, 0.5 * zoom, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    for (let hi = 0; hi < 6; hi++) { const bp = pivHex(pinR * 0.72, hi * Math.PI / 3); ctx.beginPath(); ctx.arc(bp.x, bp.y, 0.7 * zoom, 0, Math.PI * 2); ctx.fill(); }
   }
 
-  // ── BASE ANCHOR (iso-projected structural mount plate spanning the channel) ──
-  {
-    const anchorHW = plateW * 0.7;
-    const anchorHH = plateH * 0.6;
-    const anchorThick = plateH * 0.5;
-    // Anchor top face (iso parallelogram)
-    ctx.fillStyle = topCol;
-    ctx.beginPath();
-    isoQuadPath(ctx, baseX, baseY, anchorHW, anchorHH, armNx, armNy, armAx, armAy);
-    ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.6 * zoom;
-    ctx.stroke();
-    // Anchor side face (drops down from visible edge)
-    const asfx = isFront ? 1 : -1;
-    ctx.fillStyle = sideCol;
-    ctx.beginPath();
-    ctx.moveTo(baseX + anchorHW * armNx * asfx - anchorHH * armAx, baseY + anchorHW * armNy * asfx - anchorHH * armAy);
-    ctx.lineTo(baseX + anchorHW * armNx * asfx + anchorHH * armAx, baseY + anchorHW * armNy * asfx + anchorHH * armAy);
-    ctx.lineTo(baseX + anchorHW * armNx * asfx + anchorHH * armAx, baseY + anchorHW * armNy * asfx + anchorHH * armAy + anchorThick);
-    ctx.lineTo(baseX + anchorHW * armNx * asfx - anchorHH * armAx, baseY + anchorHW * armNy * asfx - anchorHH * armAy + anchorThick);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.4 * zoom;
-    ctx.stroke();
-    // Bottom face edge
-    ctx.fillStyle = metalDark;
-    ctx.beginPath();
-    isoQuadPath(ctx, baseX, baseY + anchorThick, anchorHW, anchorHH, armNx, armNy, armAx, armAy);
-    ctx.fill();
-    // Anchor bolts at corners
-    ctx.fillStyle = accent;
-    for (const nx of [-0.6, 0.6]) {
-      for (const ny of [-0.55, 0.55]) {
-        ctx.beginPath();
-        ctx.arc(
-          baseX + anchorHW * nx * armNx + anchorHH * ny * armAx,
-          baseY + anchorHW * nx * armNy + anchorHH * ny * armAy,
-          0.9 * zoom, 0, Math.PI * 2,
-        );
-        ctx.fill();
-      }
-    }
-  }
-
-  // ── TIP CRADLE END CAP (iso-projected rounded end spanning the channel) ──
-  {
-    const capR = plateW * 0.65;
-    const capAng = Math.atan2(armAy, armAx);
-    ctx.fillStyle = topCol;
-    ctx.beginPath();
-    ctx.ellipse(tipX, tipY, capR, capR * 0.5, capAng, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = edgeCol;
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-    // Inner recess
-    ctx.fillStyle = sideCol;
-    ctx.beginPath();
-    ctx.ellipse(tipX, tipY, capR * 0.6, capR * 0.3, capAng, 0, Math.PI * 2);
-    ctx.fill();
-    // Center pin
-    ctx.fillStyle = accent;
-    ctx.beginPath();
-    ctx.arc(tipX, tipY, 1 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    // Side thickness ring
-    ctx.strokeStyle = metalDark;
-    ctx.lineWidth = plateH * 0.3;
-    ctx.beginPath();
-    ctx.ellipse(tipX, tipY + plateH * 0.15, capR * 0.95, capR * 0.48, capAng, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // ── HYDRAULIC ELEVATION CYLINDER (L2+: runs parallel to arm, reacts to recoil) ──
+  // ── HYDRAULIC CYLINDER (L2+) ──
   if (level >= 2) {
     const hydOff = side * 3 * zoom;
-    const hydBaseX = baseX + perpX * hydOff;
-    const hydBaseY = baseY + perpY * hydOff - 0.5 * zoom;
-    const hydEndX = midX + perpX * hydOff * 0.7;
-    const hydEndY = midY + perpY * hydOff * 0.7;
+    const hydBase = { x: pts[0].center.x + perpX * hydOff, y: pts[0].center.y + perpY * hydOff - 0.5 * zoom };
+    const hydEnd = { x: pts[2].center.x + perpX * hydOff * 0.7, y: pts[2].center.y + perpY * hydOff * 0.7 };
     const recoilPhase = timeSinceFire < 800 ? (1 - timeSinceFire / 800) : 0;
     const hydSplit = 0.45 + recoilPhase * 0.08;
-    const hydMidX = hydBaseX + (hydEndX - hydBaseX) * hydSplit;
-    const hydMidY = hydBaseY + (hydEndY - hydBaseY) * hydSplit;
-    const cylW = (level >= 3 ? 3.8 : 3) * zoom;
-    const cylAng = Math.atan2(hydEndY - hydBaseY, hydEndX - hydBaseX);
-    const cylNx = -Math.sin(cylAng);
-    const cylNy = Math.cos(cylAng);
-
-    // Cylinder shadow (ground contact)
-    ctx.strokeStyle = "rgba(0,0,0,0.06)";
-    ctx.lineWidth = cylW + 2 * zoom;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(hydBaseX + 0.5 * zoom, hydBaseY + 1 * zoom);
-    ctx.lineTo(hydMidX + 0.5 * zoom, hydMidY + 1 * zoom);
-    ctx.stroke();
-
-    // Cylinder body gradient (dark steel tube with lit highlight band)
-    const cylGrad = ctx.createLinearGradient(
-      hydBaseX + cylNx * cylW * 0.5, hydBaseY + cylNy * cylW * 0.5,
-      hydBaseX - cylNx * cylW * 0.5, hydBaseY - cylNy * cylW * 0.5,
-    );
-    const cylDark = level >= 3 ? "#2a2a32" : "#22283a";
-    const cylMid = level >= 3 ? "#3e3e48" : "#333a4e";
-    const cylLight = level >= 3 ? "#58585e" : "#4a5268";
-    cylGrad.addColorStop(0, cylDark);
-    cylGrad.addColorStop(0.35, cylLight);
-    cylGrad.addColorStop(0.5, cylMid);
-    cylGrad.addColorStop(1, cylDark);
+    const hydMid = { x: hydBase.x + (hydEnd.x - hydBase.x) * hydSplit, y: hydBase.y + (hydEnd.y - hydBase.y) * hydSplit };
+    const cylW = (level >= 3 ? 3.5 : 2.8) * zoom;
+    const rodW = cylW * 0.5;
+    const cylAng = Math.atan2(hydEnd.y - hydBase.y, hydEnd.x - hydBase.x);
+    const cylNx = Math.cos(cylAng + Math.PI * 0.5);
+    const cylNy = Math.sin(cylAng + Math.PI * 0.5);
+    const cylGrad = ctx.createLinearGradient(hydBase.x - cylNx * cylW, hydBase.y - cylNy * cylW, hydBase.x + cylNx * cylW, hydBase.y + cylNy * cylW);
+    cylGrad.addColorStop(0, metalDark);
+    cylGrad.addColorStop(0.35, isFront ? metalLight : metalMid);
+    cylGrad.addColorStop(0.7, metalMid);
+    cylGrad.addColorStop(1, metalDark);
     ctx.strokeStyle = cylGrad;
     ctx.lineWidth = cylW;
+    ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(hydBaseX, hydBaseY);
-    ctx.lineTo(hydMidX, hydMidY);
+    ctx.moveTo(hydBase.x, hydBase.y);
+    ctx.lineTo(hydMid.x, hydMid.y);
     ctx.stroke();
-
-    // Cylinder specular highlight (chrome reflection band)
-    ctx.strokeStyle = `rgba(200,200,210,${0.12 + recoilPhase * 0.06})`;
-    ctx.lineWidth = 0.7 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(hydBaseX + cylNx * cylW * 0.22, hydBaseY + cylNy * cylW * 0.22);
-    ctx.lineTo(hydMidX + cylNx * cylW * 0.22, hydMidY + cylNy * cylW * 0.22);
-    ctx.stroke();
-
-    // Sealing bands on cylinder (dark rings at intervals)
-    for (const sf of [0.15, 0.4, 0.65]) {
-      const sbx = hydBaseX + (hydMidX - hydBaseX) * sf;
-      const sby = hydBaseY + (hydMidY - hydBaseY) * sf;
-      ctx.strokeStyle = "rgba(0,0,0,0.18)";
-      ctx.lineWidth = 1.2 * zoom;
-      ctx.beginPath();
-      ctx.moveTo(sbx + cylNx * cylW * 0.45, sby + cylNy * cylW * 0.45);
-      ctx.lineTo(sbx - cylNx * cylW * 0.45, sby - cylNy * cylW * 0.45);
-      ctx.stroke();
-    }
-
-    // Fluid window (viewport showing hydraulic fluid level, L3)
-    if (level >= 3) {
-      const fwFrac = 0.28;
-      const fwX = hydBaseX + (hydMidX - hydBaseX) * fwFrac;
-      const fwY = hydBaseY + (hydMidY - hydBaseY) * fwFrac;
-      const fluidLevel = 0.55 + recoilPhase * 0.25;
-      ctx.fillStyle = "rgba(30,30,35,0.5)";
-      ctx.beginPath();
-      ctx.ellipse(fwX, fwY, 1.6 * zoom, 1 * zoom, cylAng, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = `rgba(180,40,40,${0.35 + recoilPhase * 0.2})`;
-      ctx.beginPath();
-      ctx.ellipse(fwX, fwY, 1.6 * zoom * fluidLevel, 1 * zoom * fluidLevel, cylAng, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "rgba(100,100,110,0.3)";
-      ctx.lineWidth = 0.4 * zoom;
-      ctx.beginPath();
-      ctx.ellipse(fwX, fwY, 1.6 * zoom, 1 * zoom, cylAng, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // Piston rod (polished chrome)
-    const rodW = (level >= 3 ? 1.9 : 1.5) * zoom;
-    const rodGrad = ctx.createLinearGradient(
-      hydMidX + cylNx * rodW, hydMidY + cylNy * rodW,
-      hydMidX - cylNx * rodW, hydMidY - cylNy * rodW,
-    );
-    rodGrad.addColorStop(0, level >= 3 ? "#a8a8b0" : "#8088a0");
-    rodGrad.addColorStop(0.3, level >= 3 ? "#e0e0e4" : "#b8bcc8");
-    rodGrad.addColorStop(0.5, level >= 3 ? "#f0f0f2" : "#c8c8d0");
-    rodGrad.addColorStop(0.7, level >= 3 ? "#d0d0d4" : "#a0a8b4");
-    rodGrad.addColorStop(1, level >= 3 ? "#909098" : "#707888");
-    ctx.strokeStyle = rodGrad;
+    ctx.strokeStyle = level >= 3 ? "#d0c840" : "#c0c0c8";
     ctx.lineWidth = rodW;
     ctx.beginPath();
-    ctx.moveTo(hydMidX, hydMidY);
-    ctx.lineTo(hydEndX, hydEndY);
-    ctx.stroke();
-    // Rod specular (bright chrome reflection)
-    ctx.strokeStyle = `rgba(255,255,255,${0.18 + recoilPhase * 0.08})`;
-    ctx.lineWidth = 0.35 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(hydMidX + cylNx * rodW * 0.2, hydMidY + cylNy * rodW * 0.2);
-    ctx.lineTo(hydEndX + cylNx * rodW * 0.2, hydEndY + cylNy * rodW * 0.2);
+    ctx.moveTo(hydMid.x, hydMid.y);
+    ctx.lineTo(hydEnd.x, hydEnd.y);
     ctx.stroke();
     ctx.lineCap = "butt";
-
-    // Piston seal at cylinder mouth
-    ctx.fillStyle = "rgba(20,20,25,0.5)";
-    ctx.beginPath();
-    ctx.ellipse(hydMidX, hydMidY, cylW * 0.52, cylW * 0.35, cylAng, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = `rgba(80,80,90,0.3)`;
-    ctx.lineWidth = 0.5 * zoom;
-    ctx.stroke();
-
-    // Cylinder base end cap (machined face)
     ctx.fillStyle = metalDark;
     ctx.beginPath();
-    ctx.arc(hydBaseX, hydBaseY, cylW * 0.62, 0, Math.PI * 2);
+    ctx.arc(hydBase.x, hydBase.y, cylW * 0.55, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = metalMid;
-    ctx.beginPath();
-    ctx.arc(hydBaseX, hydBaseY, cylW * 0.4, 0, Math.PI * 2);
-    ctx.fill();
-    // Hex socket on cap
-    ctx.strokeStyle = "rgba(0,0,0,0.2)";
-    ctx.lineWidth = 0.4 * zoom;
-    const capHexR = cylW * 0.22;
-    ctx.beginPath();
-    for (let h = 0; h < 6; h++) {
-      const ha = h * Math.PI / 3;
-      const hx = hydBaseX + Math.cos(ha) * capHexR;
-      const hy = hydBaseY + Math.sin(ha) * capHexR;
-      h === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
-    }
-    ctx.closePath();
-    ctx.stroke();
-
-    // Piston end clevis (U-shaped fork with pin)
-    const clevW = 1.6 * zoom;
-    const clevD = 2.5 * zoom;
-    ctx.fillStyle = level >= 3 ? "#4a4a52" : "#3e3e48";
-    ctx.beginPath();
-    ctx.moveTo(hydEndX - cylNx * clevW, hydEndY - cylNy * clevW);
-    ctx.lineTo(hydEndX - cylNx * clevW + Math.cos(cylAng) * clevD, hydEndY - cylNy * clevW + Math.sin(cylAng) * clevD);
-    ctx.lineTo(hydEndX + cylNx * clevW + Math.cos(cylAng) * clevD, hydEndY + cylNy * clevW + Math.sin(cylAng) * clevD);
-    ctx.lineTo(hydEndX + cylNx * clevW, hydEndY + cylNy * clevW);
-    ctx.closePath();
-    ctx.fill();
-    // Clevis pin
     ctx.fillStyle = accent;
     ctx.beginPath();
-    ctx.arc(hydEndX + Math.cos(cylAng) * clevD * 0.7, hydEndY + Math.sin(cylAng) * clevD * 0.7, 1.2 * zoom, 0, Math.PI * 2);
+    ctx.arc(hydEnd.x, hydEnd.y, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = `rgba(255,255,255,0.15)`;
-    ctx.beginPath();
-    ctx.arc(hydEndX + Math.cos(cylAng) * clevD * 0.7 - 0.2 * zoom, hydEndY + Math.sin(cylAng) * clevD * 0.7 - 0.2 * zoom, 0.4 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Mounting bracket (trunnion block)
-    ctx.fillStyle = sideCol;
-    const brackW = 2.5 * zoom;
-    const brackH = 1.5 * zoom;
-    ctx.fillRect(hydBaseX - brackW, hydBaseY - brackH, brackW * 2, brackH * 2);
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 0.4 * zoom;
-    ctx.strokeRect(hydBaseX - brackW, hydBaseY - brackH, brackW * 2, brackH * 2);
-    ctx.fillStyle = accent;
-    ctx.beginPath();
-    ctx.arc(hydBaseX, hydBaseY, 0.8 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Hydraulic line connections (small tubes from cylinder to reservoir)
-    if (level >= 3) {
-      const lineOffX = cylNx * cylW * 0.55;
-      const lineOffY = cylNy * cylW * 0.55;
-      for (const ls of [-1, 1]) {
-        const lsx = hydBaseX + (hydMidX - hydBaseX) * 0.7 + ls * lineOffX;
-        const lsy = hydBaseY + (hydMidY - hydBaseY) * 0.7 + ls * lineOffY;
-        ctx.strokeStyle = "#2a2a2a";
-        ctx.lineWidth = 0.6 * zoom;
-        ctx.beginPath();
-        ctx.moveTo(lsx, lsy);
-        ctx.quadraticCurveTo(lsx + ls * 2 * zoom, lsy + 3 * zoom, lsx + ls * 1 * zoom, lsy + 5 * zoom);
-        ctx.stroke();
-        ctx.fillStyle = "#5a5a62";
-        ctx.beginPath();
-        ctx.arc(lsx, lsy, 0.6 * zoom, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
   }
 
-  // ── DIAGONAL TENSION BRACE (L2+: from base to mid for rigidity) ──
+  // ── STATUS LIGHT (L2+) ──
   if (level >= 2) {
-    const brOff = side * -1.5 * zoom;
-    const brStartX = baseX + perpX * brOff + (pivotX - baseX) * 0.3;
-    const brStartY = baseY + perpY * brOff + (pivotY - baseY) * 0.3;
-    const brEndX = pivotX + (midX - pivotX) * 0.6 + perpX * brOff;
-    const brEndY = pivotY + (midY - pivotY) * 0.6 + perpY * brOff;
-    ctx.strokeStyle = level >= 3 ? "#6a6a72" : "#5a5a68";
-    ctx.lineWidth = (level >= 3 ? 2 : 1.5) * zoom;
-    ctx.beginPath();
-    ctx.moveTo(brStartX, brStartY);
-    ctx.lineTo(brEndX, brEndY);
-    ctx.stroke();
-    // Turnbuckle in center of brace (L3)
-    if (level >= 3) {
-      const tbX = (brStartX + brEndX) * 0.5;
-      const tbY = (brStartY + brEndY) * 0.5;
-      ctx.fillStyle = accent;
-      ctx.beginPath();
-      ctx.ellipse(tbX, tbY, 2 * zoom, 1.2 * zoom, Math.atan2(brEndY - brStartY, brEndX - brStartX), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = metalDark;
-      ctx.lineWidth = 0.5 * zoom;
-      ctx.stroke();
-    }
-    // Brace end pins
-    ctx.fillStyle = accent;
-    ctx.beginPath();
-    ctx.arc(brStartX, brStartY, 1 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(brEndX, brEndY, 1 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // ── L3: SECONDARY LOWER BRACE (X-pattern with top brace) ──
-  if (level >= 3) {
-    const br2Off = side * -1.5 * zoom;
-    const br2StartX = baseX + perpX * br2Off + (pivotX - baseX) * 0.6;
-    const br2StartY = baseY + perpY * br2Off + (pivotY - baseY) * 0.6 + 2 * zoom;
-    const br2EndX = pivotX + (midX - pivotX) * 0.3 + perpX * br2Off;
-    const br2EndY = pivotY + (midY - pivotY) * 0.3 + perpY * br2Off + 2 * zoom;
-    ctx.strokeStyle = "#5a5a62";
-    ctx.lineWidth = 1.5 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(br2StartX, br2StartY);
-    ctx.lineTo(br2EndX, br2EndY);
-    ctx.stroke();
-    ctx.fillStyle = accent;
-    ctx.beginPath();
-    ctx.arc(br2StartX, br2StartY, 0.8 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(br2EndX, br2EndY, 0.8 * zoom, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  // ── RECOIL-REACTIVE STATUS LIGHT (blinks on fire) ──
-  if (level >= 2) {
-    const lightX = baseX + (pivotX - baseX) * 0.5 + side * perpX * plateW * 0.3;
-    const lightY = baseY + (pivotY - baseY) * 0.5 + side * perpY * plateW * 0.3 - 1.5 * zoom;
+    const lightPt = { x: pts[0].center.x + (pts[1].center.x - pts[0].center.x) * 0.5, y: pts[0].center.y + (pts[1].center.y - pts[0].center.y) * 0.5 - 1.5 * zoom };
     const isFlash = timeSinceFire < 400;
-    const lightCol = isFlash
-      ? (level >= 3 ? "#ff4400" : "#ff8800")
-      : (level >= 3 ? "#44aa44" : "#448844");
-    // Housing
     ctx.fillStyle = "#2a2a30";
     ctx.beginPath();
-    ctx.arc(lightX, lightY, 1.5 * zoom, 0, Math.PI * 2);
+    ctx.arc(lightPt.x, lightPt.y, 1.5 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    // Bulb
-    ctx.fillStyle = lightCol;
+    ctx.fillStyle = isFlash ? (level >= 3 ? "#ff4400" : "#ff8800") : (level >= 3 ? "#44aa44" : "#448844");
     ctx.beginPath();
-    ctx.arc(lightX, lightY, 1 * zoom, 0, Math.PI * 2);
+    ctx.arc(lightPt.x, lightPt.y, 1 * zoom, 0, Math.PI * 2);
     ctx.fill();
-    // Glow
     if (isFlash) {
       ctx.fillStyle = `rgba(255,${level >= 3 ? 68 : 136},0,0.15)`;
       ctx.beginPath();
-      ctx.arc(lightX, lightY, 3.5 * zoom, 0, Math.PI * 2);
+      ctx.arc(lightPt.x, lightPt.y, 3.5 * zoom, 0, Math.PI * 2);
       ctx.fill();
-    }
-  }
-
-  // ── CABLE CONDUIT (wire running along arm, sways slightly) ──
-  {
-    const cableOff = side * perpX * plateW * -0.2;
-    const cableOffY = side * perpY * plateW * -0.2 + plateH * 0.7;
-    const sway = Math.sin(time * 1.5) * 0.8 * zoom;
-    const recoilSway = timeSinceFire < 600 ? (1 - timeSinceFire / 600) * 2 * zoom : 0;
-    ctx.strokeStyle = level >= 3 ? "#2a2a30" : "#3a3a3a";
-    ctx.lineWidth = 0.8 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(baseX + cableOff, baseY + cableOffY);
-    ctx.quadraticCurveTo(
-      (baseX + pivotX) * 0.5 + cableOff, (baseY + pivotY) * 0.5 + cableOffY + sway + recoilSway,
-      pivotX + cableOff, pivotY + cableOffY,
-    );
-    ctx.quadraticCurveTo(
-      (pivotX + midX) * 0.5 + cableOff, (pivotY + midY) * 0.5 + cableOffY + sway * 0.7,
-      midX + cableOff * 0.7, midY + cableOffY * 0.7,
-    );
-    ctx.stroke();
-    // Cable clips
-    ctx.fillStyle = metalMid;
-    for (const t of [0.25, 0.55, 0.8]) {
-      const clipX = baseX + (midX - baseX) * t + cableOff * (1 - t * 0.3);
-      const clipY = baseY + (midY - baseY) * t + cableOffY * (1 - t * 0.3);
-      ctx.fillRect(clipX - 1 * zoom, clipY - 0.5 * zoom, 2 * zoom, 1 * zoom);
     }
   }
 }

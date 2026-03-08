@@ -4,12 +4,12 @@ import type { HeroType } from "../types";
 import {
   Volume2,
   Music2,
-  Shield,
   Mountain,
   Sparkles,
   Swords,
   Crosshair,
   Zap,
+  ShieldHalf,
 } from "lucide-react";
 
 export const HERO_ABILITY_ICON_COLORS: Record<HeroType, string> = {
@@ -25,7 +25,7 @@ export const HERO_ABILITY_ICON_COLORS: Record<HeroType, string> = {
 const HERO_ABILITY_ICONS: Record<HeroType, React.FC<{ size?: number; className?: string }>> = {
   tiger: ({ size = 14, className }) => <Volume2 size={size} className={className} />,
   tenor: ({ size = 14, className }) => <Music2 size={size} className={className} />,
-  mathey: ({ size = 14, className }) => <Shield size={size} className={className} />,
+  mathey: ({ size = 14, className }) => <ShieldHalf size={size} className={className} />,
   rocky: ({ size = 14, className }) => <Mountain size={size} className={className} />,
   scott: ({ size = 14, className }) => <Sparkles size={size} className={className} />,
   captain: ({ size = 14, className }) => <Swords size={size} className={className} />,

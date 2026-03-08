@@ -82,7 +82,7 @@ export const HeroSelector: React.FC<HeroSelectorProps> = ({
             onClick={() => setSelectedHero(heroType)}
             onMouseEnter={() => setHoveredHero(heroType)}
             onMouseLeave={() => setHoveredHero(null)}
-            className={`relative flex justify-center w-full p-0.5 sm:p-1 pt-1 sm:pt-1.5 pb-0.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
+            className={`relative flex justify-center w-full p-0.5 sm:p-1 pt-1.5 sm:pt-2.5 pb-1 sm:pb-1.5 rounded-md sm:rounded-lg transition-all duration-200 ${isSelected
               ? "scale-105 sm:scale-110 z-10"
               : "hover:scale-105 hover:brightness-110"
               }`}

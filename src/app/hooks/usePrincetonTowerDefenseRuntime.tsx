@@ -5227,10 +5227,12 @@ export function usePrincetonTowerDefenseRuntime() {
                 }
               }
             } else {
-              // Non-missile mortar types need enemies in range
+              // Non-missile mortar types need enemies in range (cannot hit flying)
               const validEnemies = getEnemiesInRange(
                 towerWorldPos,
-                finalRange
+                finalRange,
+                undefined,
+                (e) => !ENEMY_DATA[e.type as EnemyType]?.flying
               );
 
               // Track target for barrel rotation

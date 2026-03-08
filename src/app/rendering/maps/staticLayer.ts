@@ -105,12 +105,12 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     midRidge: "#4a7448",
     nearRidge: "#3d653a",
     mountainTop: "#6d9e60",
-    mountainLeft: "#42693b",
-    mountainRight: "#2f4d2c",
-    mountainFacetA: "#4f7b45",
-    mountainFacetB: "#3d6336",
-    mountainShadow: "#1f331d",
-    landHighlight: "#6fa35d",
+    mountainLeft: "#6b5a42",
+    mountainRight: "#8a7a5e",
+    mountainFacetA: "#7a6b4e",
+    mountainFacetB: "#5e5038",
+    mountainShadow: "#2a2218",
+    landHighlight: "#78a862",
     skyAccent: "rgba(255,255,255,0.2)",
     skyDecor: "rgba(89,130,96,0.58)",
   },
@@ -123,11 +123,11 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     midRidge: "#355046",
     nearRidge: "#28433a",
     mountainTop: "#456a5d",
-    mountainLeft: "#2d4c42",
-    mountainRight: "#1f3931",
-    mountainFacetA: "#396055",
-    mountainFacetB: "#2a4c42",
-    mountainShadow: "#132720",
+    mountainLeft: "#4a4032",
+    mountainRight: "#655a48",
+    mountainFacetA: "#584e3c",
+    mountainFacetB: "#3e3830",
+    mountainShadow: "#1a1612",
     landHighlight: "#4f7a66",
     skyAccent: "rgba(215,235,220,0.18)",
     skyDecor: "rgba(145,185,165,0.45)",
@@ -141,11 +141,11 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     midRidge: "#876338",
     nearRidge: "#6e4f2c",
     mountainTop: "#bb8f53",
-    mountainLeft: "#896334",
-    mountainRight: "#6b4a25",
-    mountainFacetA: "#a27842",
-    mountainFacetB: "#7f5a2f",
-    mountainShadow: "#4b3318",
+    mountainLeft: "#7a6340",
+    mountainRight: "#9a8058",
+    mountainFacetA: "#8a7048",
+    mountainFacetB: "#6a5535",
+    mountainShadow: "#3d2c18",
     landHighlight: "#c49456",
     skyAccent: "rgba(255,240,205,0.24)",
     skyDecor: "rgba(219,167,92,0.58)",
@@ -159,11 +159,11 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     midRidge: "#64819f",
     nearRidge: "#4f6d8b",
     mountainTop: "#89a9c7",
-    mountainLeft: "#57718f",
-    mountainRight: "#3e5875",
-    mountainFacetA: "#6e8cab",
-    mountainFacetB: "#5a7897",
-    mountainShadow: "#2d435c",
+    mountainLeft: "#6b7080",
+    mountainRight: "#8a8e98",
+    mountainFacetA: "#7a7e88",
+    mountainFacetB: "#5f6470",
+    mountainShadow: "#2d3038",
     landHighlight: "#9ec0da",
     skyAccent: "rgba(234,246,255,0.28)",
     skyDecor: "rgba(171,208,240,0.6)",
@@ -178,11 +178,11 @@ const CHALLENGE_BACKDROP_PALETTES: Record<
     midRidge: "#472423",
     nearRidge: "#341818",
     mountainTop: "#7a3b2f",
-    mountainLeft: "#4e251e",
-    mountainRight: "#351712",
-    mountainFacetA: "#612d24",
-    mountainFacetB: "#4a211b",
-    mountainShadow: "#1f0d0a",
+    mountainLeft: "#4a3a32",
+    mountainRight: "#6a5850",
+    mountainFacetA: "#5a4a40",
+    mountainFacetB: "#3d322c",
+    mountainShadow: "#1a1210",
     landHighlight: "#824336",
     skyAccent: "rgba(255,175,120,0.15)",
     skyDecor: "rgba(255,130,78,0.5)",
@@ -1225,269 +1225,282 @@ function renderChallengeWorldMountain(
       return a.screenPos.x - b.screenPos.x;
     });
 
-  renderCells.forEach((cell) => {
-    const noise = tileNoise(cell.gx, cell.gy, mapSeed + 743 + cell.rawLayerIndex * 17);
-    const layerNorm = cell.layerIndex / Math.max(1, maxLayerIndex);
-    const isTopPlateauCell = cell.layerIndex === 0;
-    const northNeighbor = getNeighborInfo(cell.gx, cell.gy - 1);
-    const westNeighbor = getNeighborInfo(cell.gx - 1, cell.gy);
-    const northwestNeighbor = getNeighborInfo(cell.gx - 1, cell.gy - 1);
-    const rawNorthwestDrop = northwestNeighbor.exists
-      ? Math.max(0, northwestNeighbor.depth - cell.depth)
-      : 0;
-    const rawNorthDrop = northNeighbor.exists
-      ? Math.max(0, northNeighbor.depth - cell.depth)
-      : 0;
-    const rawWestDrop = westNeighbor.exists
-      ? Math.max(0, westNeighbor.depth - cell.depth)
-      : 0;
-    const northwestDrop = isTopPlateauCell ? 0 : rawNorthwestDrop;
-    const northDrop = isTopPlateauCell ? 0 : rawNorthDrop;
-    const westDrop = isTopPlateauCell ? 0 : rawWestDrop;
-    const tileTopY = cell.screenPos.y + cell.depth;
+  type PrecomputedCell = {
+    cell: typeof renderCells[0];
+    topNoise: number; cliffNoise: number; layerNorm: number;
+    northDrop: number; westDrop: number; northwestDrop: number;
+    northeastDrop: number; southwestDrop: number;
+    rightDrop: number; southDrop: number; southeastDrop: number;
+    topX: number; topY: number; rightX: number; rightY: number;
+    leftX: number; leftY: number; bottomX: number; bottomY: number;
+  };
 
-    const topX = cell.screenPos.x;
-    const topY = tileTopY;
-    const rightX = cell.screenPos.x + tileWidth * 0.5;
-    const rightY = tileTopY + tileHeight * 0.5;
-    const leftX = cell.screenPos.x - tileWidth * 0.5;
-    const leftY = tileTopY + tileHeight * 0.5;
-
-    if (northDrop > 0.5) {
-      const northColor = shadeHexColor(
-        blendHexColors(
-          palette.mountainRight,
-          palette.mountainFacetB,
-          0.08 + layerNorm * 0.26 + noise * 0.1
-        ),
-        -10
-      );
-      ctx.fillStyle = northColor;
-      ctx.beginPath();
-      ctx.moveTo(topX, topY + seamOverlap);
-      ctx.lineTo(rightX, rightY + seamOverlap);
-      ctx.lineTo(rightX, rightY + northDrop + seamOverlap);
-      ctx.lineTo(topX, topY + northDrop + seamOverlap);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    if (westDrop > 0.5) {
-      const westColor = shadeHexColor(
-        blendHexColors(
-          palette.mountainLeft,
-          palette.mountainFacetA,
-          0.08 + layerNorm * 0.22 + noise * 0.1
-        ),
-        -8
-      );
-      ctx.fillStyle = westColor;
-      ctx.beginPath();
-      ctx.moveTo(topX, topY + seamOverlap);
-      ctx.lineTo(leftX, leftY + seamOverlap);
-      ctx.lineTo(leftX, leftY + westDrop + seamOverlap);
-      ctx.lineTo(topX, topY + westDrop + seamOverlap);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    const topCornerDrop = Math.max(
-      Math.min(northDrop, westDrop),
-      northwestDrop > 0.5 ? northwestDrop * 0.74 : 0
-    );
-    if (topCornerDrop > 0.5) {
-      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.16);
-      ctx.beginPath();
-      ctx.moveTo(topX, topY + seamOverlap * 0.3);
-      ctx.lineTo(topX + tileWidth * 0.06, topY + topCornerDrop * 0.74);
-      ctx.lineTo(topX - tileWidth * 0.06, topY + topCornerDrop * 0.74);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-  });
-
-  renderCells.forEach((cell) => {
+  const precomputed: PrecomputedCell[] = renderCells.map((cell) => {
     const topNoise = tileNoise(cell.gx, cell.gy, mapSeed + 257 + cell.rawLayerIndex * 11);
     const cliffNoise = tileNoise(cell.gx, cell.gy, mapSeed + 743 + cell.rawLayerIndex * 17);
     const layerNorm = cell.layerIndex / Math.max(1, maxLayerIndex);
     const isTopPlateauCell = cell.layerIndex === 0;
+
     const northNeighbor = getNeighborInfo(cell.gx, cell.gy - 1);
     const westNeighbor = getNeighborInfo(cell.gx - 1, cell.gy);
+    const northwestNeighbor = getNeighborInfo(cell.gx - 1, cell.gy - 1);
     const rightNeighbor = getNeighborInfo(cell.gx + 1, cell.gy);
     const southNeighbor = getNeighborInfo(cell.gx, cell.gy + 1);
     const northeastNeighbor = getNeighborInfo(cell.gx + 1, cell.gy - 1);
     const southwestNeighbor = getNeighborInfo(cell.gx - 1, cell.gy + 1);
     const southeastNeighbor = getNeighborInfo(cell.gx + 1, cell.gy + 1);
-    const rawNorthDrop = northNeighbor.exists
-      ? Math.max(0, northNeighbor.depth - cell.depth)
-      : 0;
-    const rawWestDrop = westNeighbor.exists
-      ? Math.max(0, westNeighbor.depth - cell.depth)
-      : 0;
-    const rawNortheastDrop = northeastNeighbor.exists
-      ? Math.max(0, northeastNeighbor.depth - cell.depth)
-      : 0;
-    const rawSouthwestDrop = southwestNeighbor.exists
-      ? Math.max(0, southwestNeighbor.depth - cell.depth)
-      : 0;
-    const northDrop = isTopPlateauCell ? 0 : rawNorthDrop;
-    const westDrop = isTopPlateauCell ? 0 : rawWestDrop;
-    const northeastDrop = isTopPlateauCell ? 0 : rawNortheastDrop;
-    const southwestDrop = isTopPlateauCell ? 0 : rawSouthwestDrop;
+
+    const rawNW = northwestNeighbor.exists ? Math.max(0, northwestNeighbor.depth - cell.depth) : 0;
+    const rawN = northNeighbor.exists ? Math.max(0, northNeighbor.depth - cell.depth) : 0;
+    const rawW = westNeighbor.exists ? Math.max(0, westNeighbor.depth - cell.depth) : 0;
+    const rawNE = northeastNeighbor.exists ? Math.max(0, northeastNeighbor.depth - cell.depth) : 0;
+    const rawSW = southwestNeighbor.exists ? Math.max(0, southwestNeighbor.depth - cell.depth) : 0;
+
+    const northwestDrop = isTopPlateauCell ? 0 : rawNW;
+    const northDrop = isTopPlateauCell ? 0 : rawN;
+    const westDrop = isTopPlateauCell ? 0 : rawW;
+    const northeastDrop = isTopPlateauCell ? 0 : rawNE;
+    const southwestDrop = isTopPlateauCell ? 0 : rawSW;
     const rightDrop = Math.max(0, rightNeighbor.depth - cell.depth);
     const southDrop = Math.max(0, southNeighbor.depth - cell.depth);
     const southeastDrop = Math.max(0, southeastNeighbor.depth - cell.depth);
+
     const tileTopY = cell.screenPos.y + cell.depth;
+    return {
+      cell, topNoise, cliffNoise, layerNorm,
+      northDrop, westDrop, northwestDrop, northeastDrop, southwestDrop,
+      rightDrop, southDrop, southeastDrop,
+      topX: cell.screenPos.x,
+      topY: tileTopY,
+      rightX: cell.screenPos.x + tileWidth * 0.5,
+      rightY: tileTopY + tileHeight * 0.5,
+      leftX: cell.screenPos.x - tileWidth * 0.5,
+      leftY: tileTopY + tileHeight * 0.5,
+      bottomX: cell.screenPos.x,
+      bottomY: tileTopY + tileHeight,
+    };
+  });
 
-    const rightX = cell.screenPos.x + tileWidth * 0.5;
-    const rightY = tileTopY + tileHeight * 0.5;
-    const leftX = cell.screenPos.x - tileWidth * 0.5;
-    const leftY = tileTopY + tileHeight * 0.5;
-    const bottomX = cell.screenPos.x;
-    const bottomY = tileTopY + tileHeight;
+  const cellsByLayer = new Map<number, PrecomputedCell[]>();
+  for (const d of precomputed) {
+    const arr = cellsByLayer.get(d.cell.layerIndex);
+    if (arr) arr.push(d);
+    else cellsByLayer.set(d.cell.layerIndex, [d]);
+  }
+  const sortedLayerIndices = Array.from(cellsByLayer.keys()).sort((a, b) => b - a);
 
+  const drawBackFaces = (d: PrecomputedCell) => {
+    if (d.northDrop > 0.5) {
+      const northColor = shadeHexColor(
+        blendHexColors(
+          palette.mountainRight, palette.mountainFacetB,
+          0.08 + d.layerNorm * 0.26 + d.cliffNoise * 0.1
+        ), -14
+      );
+      ctx.fillStyle = northColor;
+      ctx.beginPath();
+      ctx.moveTo(d.topX, d.topY + seamOverlap);
+      ctx.lineTo(d.rightX, d.rightY + seamOverlap);
+      ctx.lineTo(d.rightX, d.rightY + d.northDrop + seamOverlap);
+      ctx.lineTo(d.topX, d.topY + d.northDrop + seamOverlap);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    if (d.westDrop > 0.5) {
+      const westColor = shadeHexColor(
+        blendHexColors(
+          palette.mountainLeft, palette.mountainFacetA,
+          0.08 + d.layerNorm * 0.22 + d.cliffNoise * 0.1
+        ), -12
+      );
+      ctx.fillStyle = westColor;
+      ctx.beginPath();
+      ctx.moveTo(d.topX, d.topY + seamOverlap);
+      ctx.lineTo(d.leftX, d.leftY + seamOverlap);
+      ctx.lineTo(d.leftX, d.leftY + d.westDrop + seamOverlap);
+      ctx.lineTo(d.topX, d.topY + d.westDrop + seamOverlap);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    const topCornerDrop = Math.max(
+      Math.min(d.northDrop, d.westDrop),
+      d.northwestDrop > 0.5 ? d.northwestDrop * 0.74 : 0
+    );
+    if (topCornerDrop > 0.5) {
+      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.16);
+      ctx.beginPath();
+      ctx.moveTo(d.topX, d.topY + seamOverlap * 0.3);
+      ctx.lineTo(d.topX + tileWidth * 0.06, d.topY + topCornerDrop * 0.74);
+      ctx.lineTo(d.topX - tileWidth * 0.06, d.topY + topCornerDrop * 0.74);
+      ctx.closePath();
+      ctx.fill();
+    }
+  };
+
+  const drawTopTile = (d: PrecomputedCell) => {
     const topBase = blendHexColors(
-      palette.mountainTop,
-      palette.landHighlight,
-      0.32 + (1 - layerNorm) * 0.12 + topNoise * 0.15
+      palette.mountainTop, palette.landHighlight,
+      0.32 + (1 - d.layerNorm) * 0.12 + d.topNoise * 0.15
     );
     const topColor = shadeHexColor(
-      blendHexColors(
-        topBase,
-        palette.mountainFacetA,
-        layerNorm * 0.26
-      ),
-      Math.round((topNoise - 0.48) * 12)
+      blendHexColors(topBase, palette.mountainFacetA, d.layerNorm * 0.26),
+      Math.round((d.topNoise - 0.48) * 12)
     );
     drawIsoTile(
       ctx,
-      cell.screenPos.x,
-      cell.screenPos.y + cell.depth,
-      tileWidth,
-      tileHeight,
-      topColor
+      d.cell.screenPos.x,
+      d.cell.screenPos.y + d.cell.depth,
+      tileWidth, tileHeight, topColor
     );
 
-    if (topNoise > 0.34) {
-      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.14 + topNoise * 0.08);
+    if (d.topNoise > 0.34) {
+      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.14 + d.topNoise * 0.08);
       ctx.lineWidth = Math.max(0.52, tileHeight * 0.045);
       ctx.beginPath();
       ctx.moveTo(
-        cell.screenPos.x - tileWidth * 0.16,
-        cell.screenPos.y + cell.depth + tileHeight * (0.43 + topNoise * 0.06)
+        d.cell.screenPos.x - tileWidth * 0.16,
+        d.cell.screenPos.y + d.cell.depth + tileHeight * (0.43 + d.topNoise * 0.06)
       );
       ctx.lineTo(
-        cell.screenPos.x + tileWidth * (0.18 + topNoise * 0.05),
-        cell.screenPos.y + cell.depth + tileHeight * (0.5 + topNoise * 0.07)
+        d.cell.screenPos.x + tileWidth * (0.18 + d.topNoise * 0.05),
+        d.cell.screenPos.y + d.cell.depth + tileHeight * (0.5 + d.topNoise * 0.07)
       );
       ctx.stroke();
     }
+  };
 
-    if (rightDrop > 0.5) {
-      const rightColor = shadeHexColor(
+  const drawFrontFaces = (d: PrecomputedCell) => {
+    if (d.rightDrop > 0.5) {
+      const rightColorTop = shadeHexColor(
         blendHexColors(
-          palette.mountainRight,
-          palette.mountainFacetB,
-          0.22 + layerNorm * 0.45 + cliffNoise * 0.15
-        ),
-        -4
+          palette.mountainRight, palette.mountainFacetB,
+          0.22 + d.layerNorm * 0.45 + d.cliffNoise * 0.15
+        ), -4
       );
-      ctx.fillStyle = rightColor;
+      const rightColorBot = shadeHexColor(rightColorTop, -18 - Math.round(d.layerNorm * 8));
+      const rightGrad = ctx.createLinearGradient(
+        0, (d.rightY + d.bottomY) * 0.5,
+        0, (d.rightY + d.bottomY) * 0.5 + d.rightDrop
+      );
+      rightGrad.addColorStop(0, rightColorTop);
+      rightGrad.addColorStop(1, rightColorBot);
+      ctx.fillStyle = rightGrad;
       ctx.beginPath();
-      ctx.moveTo(rightX, rightY - seamOverlap);
-      ctx.lineTo(bottomX, bottomY - seamOverlap);
-      ctx.lineTo(bottomX, bottomY + rightDrop + seamOverlap);
-      ctx.lineTo(rightX, rightY + rightDrop + seamOverlap);
+      ctx.moveTo(d.rightX, d.rightY);
+      ctx.lineTo(d.bottomX, d.bottomY);
+      ctx.lineTo(d.bottomX, d.bottomY + d.rightDrop + seamOverlap);
+      ctx.lineTo(d.rightX, d.rightY + d.rightDrop + seamOverlap);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.16 + layerNorm * 0.16);
-      ctx.lineWidth = Math.max(0.55, tileHeight * 0.04);
-      const lineCount = Math.max(1, Math.floor(rightDrop / (blockHeight * 0.9)));
-      for (let i = 1; i <= lineCount; i++) {
-        const t = i / (lineCount + 1);
-        const lineY = rightY + rightDrop * t;
+      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.22 + d.layerNorm * 0.18);
+      ctx.lineWidth = Math.max(0.6, tileHeight * 0.05);
+      const rightLineCount = Math.max(1, Math.floor(d.rightDrop / (blockHeight * 0.9)));
+      for (let i = 1; i <= rightLineCount; i++) {
+        const t = i / (rightLineCount + 1);
+        const lineY = d.rightY + d.rightDrop * t;
         ctx.beginPath();
-        ctx.moveTo(rightX - tileWidth * 0.02, lineY);
-        ctx.lineTo(bottomX - tileWidth * 0.02, lineY + tileHeight * 0.5);
+        ctx.moveTo(d.rightX - tileWidth * 0.02, lineY);
+        ctx.lineTo(d.bottomX - tileWidth * 0.02, lineY + tileHeight * 0.5);
         ctx.stroke();
       }
     }
 
-    if (southDrop > 0.5) {
-      const leftColor = shadeHexColor(
+    if (d.southDrop > 0.5) {
+      const leftColorTop = shadeHexColor(
         blendHexColors(
-          palette.mountainLeft,
-          palette.mountainFacetA,
-          0.2 + layerNorm * 0.4 + cliffNoise * 0.12
-        ),
-        -2
+          palette.mountainLeft, palette.mountainFacetA,
+          0.2 + d.layerNorm * 0.4 + d.cliffNoise * 0.12
+        ), 0
       );
-      ctx.fillStyle = leftColor;
+      const leftColorBot = shadeHexColor(leftColorTop, -16 - Math.round(d.layerNorm * 6));
+      const leftGrad = ctx.createLinearGradient(
+        0, (d.leftY + d.bottomY) * 0.5,
+        0, (d.leftY + d.bottomY) * 0.5 + d.southDrop
+      );
+      leftGrad.addColorStop(0, leftColorTop);
+      leftGrad.addColorStop(1, leftColorBot);
+      ctx.fillStyle = leftGrad;
       ctx.beginPath();
-      ctx.moveTo(leftX, leftY - seamOverlap);
-      ctx.lineTo(bottomX, bottomY - seamOverlap);
-      ctx.lineTo(bottomX, bottomY + southDrop + seamOverlap);
-      ctx.lineTo(leftX, leftY + southDrop + seamOverlap);
+      ctx.moveTo(d.leftX, d.leftY);
+      ctx.lineTo(d.bottomX, d.bottomY);
+      ctx.lineTo(d.bottomX, d.bottomY + d.southDrop + seamOverlap);
+      ctx.lineTo(d.leftX, d.leftY + d.southDrop + seamOverlap);
       ctx.closePath();
       ctx.fill();
 
-      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.13 + layerNorm * 0.13);
-      ctx.lineWidth = Math.max(0.5, tileHeight * 0.038);
-      const lineCount = Math.max(1, Math.floor(southDrop / (blockHeight * 0.88)));
-      for (let i = 1; i <= lineCount; i++) {
-        const t = i / (lineCount + 1);
-        const lineY = leftY + southDrop * t;
+      ctx.strokeStyle = hexToRgba(palette.mountainShadow, 0.18 + d.layerNorm * 0.16);
+      ctx.lineWidth = Math.max(0.55, tileHeight * 0.045);
+      const southLineCount = Math.max(1, Math.floor(d.southDrop / (blockHeight * 0.88)));
+      for (let i = 1; i <= southLineCount; i++) {
+        const t = i / (southLineCount + 1);
+        const lineY = d.leftY + d.southDrop * t;
         ctx.beginPath();
-        ctx.moveTo(leftX + tileWidth * 0.02, lineY);
-        ctx.lineTo(bottomX + tileWidth * 0.02, lineY + tileHeight * 0.5);
+        ctx.moveTo(d.leftX + tileWidth * 0.02, lineY);
+        ctx.lineTo(d.bottomX + tileWidth * 0.02, lineY + tileHeight * 0.5);
         ctx.stroke();
       }
     }
 
     const rightCornerDrop = Math.max(
-      Math.min(northDrop, rightDrop),
-      northeastDrop > 0.5 ? northeastDrop * 0.74 : 0
+      Math.min(d.northDrop, d.rightDrop),
+      d.northeastDrop > 0.5 ? d.northeastDrop * 0.74 : 0
     );
     if (rightCornerDrop > 0.5) {
-      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.18);
+      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.24);
       ctx.beginPath();
-      ctx.moveTo(rightX + seamOverlap * 0.25, rightY);
-      ctx.lineTo(rightX + tileWidth * 0.06, rightY + rightCornerDrop * 0.74);
-      ctx.lineTo(rightX - tileWidth * 0.06, rightY + rightCornerDrop * 0.74);
+      ctx.moveTo(d.rightX + seamOverlap * 0.25, d.rightY);
+      ctx.lineTo(d.rightX + tileWidth * 0.08, d.rightY + rightCornerDrop * 0.78);
+      ctx.lineTo(d.rightX - tileWidth * 0.08, d.rightY + rightCornerDrop * 0.78);
       ctx.closePath();
       ctx.fill();
     }
 
     const leftCornerDrop = Math.max(
-      Math.min(westDrop, southDrop),
-      southwestDrop > 0.5 ? southwestDrop * 0.74 : 0
+      Math.min(d.westDrop, d.southDrop),
+      d.southwestDrop > 0.5 ? d.southwestDrop * 0.74 : 0
     );
     if (leftCornerDrop > 0.5) {
-      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.18);
+      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.24);
       ctx.beginPath();
-      ctx.moveTo(leftX - seamOverlap * 0.25, leftY);
-      ctx.lineTo(leftX + tileWidth * 0.06, leftY + leftCornerDrop * 0.74);
-      ctx.lineTo(leftX - tileWidth * 0.06, leftY + leftCornerDrop * 0.74);
+      ctx.moveTo(d.leftX - seamOverlap * 0.25, d.leftY);
+      ctx.lineTo(d.leftX + tileWidth * 0.08, d.leftY + leftCornerDrop * 0.78);
+      ctx.lineTo(d.leftX - tileWidth * 0.08, d.leftY + leftCornerDrop * 0.78);
       ctx.closePath();
       ctx.fill();
     }
 
     const bottomCornerDrop = Math.max(
-      Math.min(rightDrop, southDrop),
-      southeastDrop > 0.5 ? southeastDrop * 0.78 : 0
+      Math.min(d.rightDrop, d.southDrop),
+      d.southeastDrop > 0.5 ? d.southeastDrop * 0.78 : 0
     );
     if (bottomCornerDrop > 0.5) {
-      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.2);
+      ctx.fillStyle = hexToRgba(palette.mountainShadow, 0.28);
       ctx.beginPath();
-      ctx.moveTo(bottomX, bottomY - seamOverlap);
-      ctx.lineTo(bottomX + tileWidth * 0.07, bottomY + bottomCornerDrop * 0.76);
-      ctx.lineTo(bottomX - tileWidth * 0.07, bottomY + bottomCornerDrop * 0.76);
+      ctx.moveTo(d.bottomX, d.bottomY - seamOverlap);
+      ctx.lineTo(d.bottomX + tileWidth * 0.09, d.bottomY + bottomCornerDrop * 0.8);
+      ctx.lineTo(d.bottomX - tileWidth * 0.09, d.bottomY + bottomCornerDrop * 0.8);
       ctx.closePath();
       ctx.fill();
     }
-  });
+  };
+
+  for (const layerIdx of sortedLayerIndices) {
+    const layerCells = cellsByLayer.get(layerIdx)!;
+    layerCells.sort((a, b) => {
+      const ay = a.topY;
+      const by = b.topY;
+      if (Math.abs(ay - by) > 0.001) return ay - by;
+      return a.topX - b.topX;
+    });
+    for (const d of layerCells) {
+      drawBackFaces(d);
+      drawTopTile(d);
+      drawFrontFaces(d);
+    }
+  }
 
   const distanceByCell = new Array<number>(GRID_WIDTH * GRID_HEIGHT);
   for (let gy = 0; gy < GRID_HEIGHT; gy++) {

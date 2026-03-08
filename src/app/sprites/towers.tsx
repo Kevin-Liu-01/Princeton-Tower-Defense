@@ -1646,21 +1646,264 @@ export const TowerSprite: React.FC<{
         ctx.ellipse(cx, cy + 9 * s, 15 * s, 7.5 * s, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Ammo crates (right side)
-        for (let c = 0; c < Math.min(level, 3); c++) {
-          const crX = cx + (9 + c * 2) * s;
-          const crY = cy + (5 - c * 3) * s;
-          ctx.fillStyle = c === 0 ? "#4a5a2a" : "#3a4a22";
-          ctx.fillRect(crX - 2 * s, crY - 2.5 * s, 4 * s, 3.5 * s);
-          ctx.fillStyle = "#ffaa00";
-          ctx.fillRect(crX - 1 * s, crY - 1.5 * s, 2 * s, 0.7 * s);
+        // Isometric ammo crates (right side) and shell rack (left side)
+        {
+          const pw = 0.5;  // ISO_PRISM_W_FACTOR
+          const pd = 0.25; // ISO_PRISM_D_FACTOR
+
+          // Ammo crates (stacked isometric boxes)
+          for (let c = 0; c < Math.min(level, 3); c++) {
+            const crX = cx + (10 + c * 1.2) * s;
+            const crY = cy + (4.5 - c * 3.2) * s;
+            const cW = (3.2 - c * 0.3) * s;
+            const cD = (2.5 - c * 0.2) * s;
+            const cH = 2.8 * s;
+            const w = cW * pw;
+            const d = cD * pd;
+
+            const baseColors = c === 0
+              ? { top: "#5a6a3a", left: "#4a5a2a", right: "#3a4a1a" }
+              : { top: "#4a5a32", left: "#3a4a22", right: "#2a3a14" };
+
+            // Back-left face
+            ctx.fillStyle = baseColors.left;
+            ctx.beginPath();
+            ctx.moveTo(crX, crY - d);
+            ctx.lineTo(crX - w, crY);
+            ctx.lineTo(crX - w, crY - cH);
+            ctx.lineTo(crX, crY - cH - d);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.lineWidth = 0.3 * s;
+            ctx.stroke();
+
+            // Back-right face
+            ctx.fillStyle = baseColors.right;
+            ctx.beginPath();
+            ctx.moveTo(crX, crY - d);
+            ctx.lineTo(crX + w, crY);
+            ctx.lineTo(crX + w, crY - cH);
+            ctx.lineTo(crX, crY - cH - d);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.2)";
+            ctx.lineWidth = 0.3 * s;
+            ctx.stroke();
+
+            // Front-left face
+            ctx.fillStyle = baseColors.left;
+            ctx.beginPath();
+            ctx.moveTo(crX - w, crY);
+            ctx.lineTo(crX, crY + d);
+            ctx.lineTo(crX, crY + d - cH);
+            ctx.lineTo(crX - w, crY - cH);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.35)";
+            ctx.lineWidth = 0.3 * s;
+            ctx.stroke();
+
+            // Front-right face
+            ctx.fillStyle = baseColors.right;
+            ctx.beginPath();
+            ctx.moveTo(crX + w, crY);
+            ctx.lineTo(crX, crY + d);
+            ctx.lineTo(crX, crY + d - cH);
+            ctx.lineTo(crX + w, crY - cH);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.25)";
+            ctx.lineWidth = 0.3 * s;
+            ctx.stroke();
+
+            // Top face (isometric diamond)
+            ctx.fillStyle = baseColors.top;
+            ctx.beginPath();
+            ctx.moveTo(crX, crY - cH - d);
+            ctx.lineTo(crX - w, crY - cH);
+            ctx.lineTo(crX, crY - cH + d);
+            ctx.lineTo(crX + w, crY - cH);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "rgba(0,0,0,0.15)";
+            ctx.lineWidth = 0.3 * s;
+            ctx.stroke();
+
+            // Iron strap across front-right face
+            ctx.fillStyle = "rgba(80,75,60,0.5)";
+            const strapY = crY - cH * 0.45;
+            ctx.fillRect(crX + 0.3 * s, strapY - 0.4 * s, w * 0.85, 0.8 * s);
+
+            // Stencil label on front-right face
+            ctx.fillStyle = "#ffaa00";
+            ctx.fillRect(crX + w * 0.15, crY - cH * 0.7, w * 0.55, 0.6 * s);
+          }
+
+          // Shell rack (left side, isometric vertical rack with shell tips)
+          if (level >= 1) {
+            const rX = cx - 10 * s;
+            const rY = cy + 5 * s;
+            const rW = 2 * s * pw;
+            const rD = 3.5 * s * pd;
+            const rH = (4 + level * 2) * s;
+
+            // Rack frame (isometric box)
+            ctx.fillStyle = "#3a2818";
+            ctx.beginPath();
+            ctx.moveTo(rX - rW, rY);
+            ctx.lineTo(rX, rY + rD);
+            ctx.lineTo(rX, rY + rD - rH);
+            ctx.lineTo(rX - rW, rY - rH);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = "#2a1808";
+            ctx.beginPath();
+            ctx.moveTo(rX + rW, rY);
+            ctx.lineTo(rX, rY + rD);
+            ctx.lineTo(rX, rY + rD - rH);
+            ctx.lineTo(rX + rW, rY - rH);
+            ctx.closePath();
+            ctx.fill();
+
+            // Top face
+            ctx.fillStyle = "#4a3828";
+            ctx.beginPath();
+            ctx.moveTo(rX, rY - rH - rD);
+            ctx.lineTo(rX - rW, rY - rH);
+            ctx.lineTo(rX, rY - rH + rD);
+            ctx.lineTo(rX + rW, rY - rH);
+            ctx.closePath();
+            ctx.fill();
+
+            // Shells (isometric ellipses stacked vertically)
+            const shellCount = level + 1;
+            for (let sh = 0; sh < shellCount; sh++) {
+              const shY = rY - (1.5 + sh * 2.2) * s;
+              // Shell body
+              ctx.fillStyle = level >= 3 ? "#8a7a50" : "#7a6a48";
+              ctx.beginPath();
+              ctx.ellipse(rX, shY, 1.4 * s, 0.8 * s, 0, 0, Math.PI * 2);
+              ctx.fill();
+              // Shell tip
+              ctx.fillStyle = "#5a5a62";
+              ctx.beginPath();
+              ctx.arc(rX - 0.8 * s, shY - 0.3 * s, 0.5 * s, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
         }
 
-        // 3 stacked tiers (wide at bottom, narrow at top)
+        // Shared cradle arm geometry (isometric rectangular prism, same iso system as hex prisms)
+        const isoOff = (dx: number, dy: number) => ({ x: dx, y: dy * ISO_Y_RATIO });
+        const beamW = 3 * s;
+        const beamD = 3.5 * s;
+        const hw = beamW * 0.5;
+        const hd = beamD * 0.5;
+        const crossSection = [
+          isoOff(-hw, -hd), // back-left
+          isoOff(hw, -hd),  // back-right
+          isoOff(hw, hd),   // front-right
+          isoOff(-hw, hd),  // front-left
+        ];
+
         const tierRadii = [14 * s, 11 * s, 8 * s];
         const tierHeights = [6 * s, 5 * s, 4 * s];
         const tierDarks = ["#2a2a2e", "#2e2e34", "#32323a"];
         const tierLights = ["#606068", "#686870", "#72727a"];
+
+        // Pre-compute tierY for arm positioning (sum of tier heights)
+        const totalTierH = tierHeights[0] + tierHeights[1] + tierHeights[2];
+        const tierYFinal = cy + 6 * s - totalTierH;
+
+        // Helper to draw a single cradle arm
+        const drawCradleArm = (armSide: -1 | 1) => {
+          const armCx = cx + armSide * (tierRadii[0] + 2 * s);
+          const armTopYi = tierYFinal + 1 * s;
+          const armBotYi = cy + 5 * s;
+          const leanX = armSide * -1.5 * s;
+          const topX = armCx + leanX;
+          const topY = armTopYi;
+          const botX = armCx;
+          const botY = armBotYi;
+
+          const faceColors = [
+            "#423c4a", // back
+            armSide === 1 ? "#3a3442" : "#5e586a", // right
+            "#545060", // front
+            armSide === -1 ? "#3a3442" : "#5e586a", // left
+          ];
+          const drawOrder = armSide === 1 ? [0, 3, 1, 2] : [0, 1, 3, 2];
+
+          for (const fi of drawOrder) {
+            const ni = (fi + 1) % 4;
+            ctx.fillStyle = faceColors[fi];
+            ctx.beginPath();
+            ctx.moveTo(botX + crossSection[fi].x, botY + crossSection[fi].y);
+            ctx.lineTo(botX + crossSection[ni].x, botY + crossSection[ni].y);
+            ctx.lineTo(topX + crossSection[ni].x, topY + crossSection[ni].y);
+            ctx.lineTo(topX + crossSection[fi].x, topY + crossSection[fi].y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = "#302a36";
+            ctx.lineWidth = 0.4 * s;
+            ctx.stroke();
+          }
+
+          // Top cap (isometric parallelogram)
+          ctx.fillStyle = "#6a6478";
+          ctx.beginPath();
+          ctx.moveTo(topX + crossSection[0].x, topY + crossSection[0].y);
+          for (let ci = 1; ci < 4; ci++)
+            ctx.lineTo(topX + crossSection[ci].x, topY + crossSection[ci].y);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = "#302a36";
+          ctx.lineWidth = 0.4 * s;
+          ctx.stroke();
+
+          // Highlight edge on front-facing vertical edge
+          ctx.strokeStyle = "rgba(180,175,190,0.25)";
+          ctx.lineWidth = 0.6 * s;
+          ctx.beginPath();
+          ctx.moveTo(botX + crossSection[2].x, botY + crossSection[2].y);
+          ctx.lineTo(topX + crossSection[2].x, topY + crossSection[2].y);
+          ctx.stroke();
+
+          // Cross-brace detail (horizontal stiffener at mid-height)
+          const midY = (topY + botY) * 0.5;
+          const midX = (topX + botX) * 0.5;
+          ctx.strokeStyle = "#504a58";
+          ctx.lineWidth = 0.7 * s;
+          ctx.beginPath();
+          ctx.moveTo(midX + crossSection[2].x, midY + crossSection[2].y);
+          ctx.lineTo(midX + crossSection[3].x, midY + crossSection[3].y);
+          ctx.stroke();
+
+          // Trunnion pivot bolt (isometric ellipse)
+          const boltX = topX;
+          const boltY = topY + 3 * s;
+          ctx.fillStyle = "#5e586a";
+          ctx.beginPath();
+          ctx.ellipse(boltX, boltY, 1.6 * s, 1 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#908a9a";
+          ctx.beginPath();
+          ctx.ellipse(boltX - 0.2 * s, boltY - 0.15 * s, 0.85 * s, 0.55 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Bottom anchor rivet
+          ctx.fillStyle = "#605a6a";
+          ctx.beginPath();
+          ctx.ellipse(botX, botY - 1.5 * s, 0.8 * s, 0.5 * s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        };
+
+        // LEFT arm drawn FIRST (behind mortar body, isometric back)
+        drawCradleArm(-1);
+
+        // 3 stacked tiers (wide at bottom, narrow at top)
         let tierY = cy + 6 * s;
 
         for (let ti = 0; ti < 3; ti++) {
@@ -1714,29 +1957,8 @@ export const TowerSprite: React.FC<{
         ctx.ellipse(cx, tierY, rimR, rimR * 0.5, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Cradle arms (simplified side brackets)
-        for (const armSide of [-1, 1]) {
-          const armX = cx + armSide * tierRadii[0] * 0.85;
-          const armTopY = tierY + 2 * s;
-          const armBotY = cy + 5 * s;
-          ctx.strokeStyle = "#48424e";
-          ctx.lineWidth = 2.5 * s;
-          ctx.beginPath();
-          ctx.moveTo(armX, armBotY);
-          ctx.lineTo(armX + armSide * 1 * s, armTopY);
-          ctx.stroke();
-          ctx.strokeStyle = "#6a6270";
-          ctx.lineWidth = 1.2 * s;
-          ctx.beginPath();
-          ctx.moveTo(armX + 0.3 * s, armBotY);
-          ctx.lineTo(armX + armSide * 1.3 * s, armTopY);
-          ctx.stroke();
-          // Trunnion bolt
-          ctx.fillStyle = "#8a8290";
-          ctx.beginPath();
-          ctx.arc(armX + armSide * 0.5 * s, armTopY + 3 * s, 1.2 * s, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        // RIGHT arm drawn AFTER mortar body (isometric front)
+        drawCradleArm(1);
 
         // Dark bore opening
         ctx.fillStyle = "#0a0808";

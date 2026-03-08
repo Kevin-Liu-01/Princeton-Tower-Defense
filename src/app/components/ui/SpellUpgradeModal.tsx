@@ -292,6 +292,20 @@ const ANIMATIONS_CSS = `
   0% { stroke-dashoffset: 8; }
   100% { stroke-dashoffset: 0; }
 }
+@keyframes upgradeFlash {
+  0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.9), inset 0 0 30px rgba(74,222,128,0.4); }
+  25% { box-shadow: 0 0 0 8px rgba(74,222,128,0.4), inset 0 0 20px rgba(74,222,128,0.15); }
+  100% { box-shadow: 0 0 0 0 rgba(74,222,128,0), inset 0 0 0 rgba(74,222,128,0); }
+}
+@keyframes celebrateBounce {
+  0% { transform: scale(0.95); opacity: 0; }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes statSlideIn {
+  0% { opacity: 0; transform: translateX(-6px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
 `;
 
 // ── Helper Functions ───────────────────────────────────────────────────────
@@ -513,6 +527,60 @@ const getSpellStatsForDisplay = (
   }
 };
 
+// ── Stat Diff ──────────────────────────────────────────────────────────────
+
+interface StatDiff {
+  label: string;
+  fromValue: string;
+  toValue: string;
+  changed: boolean;
+  Icon: LucideIcon;
+  color: string;
+  isNew?: boolean;
+}
+
+const computeStatDiff = (
+  spellType: SpellType,
+  fromLevel: number,
+  toLevel: number,
+): StatDiff[] => {
+  const clampedFrom = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, fromLevel));
+  const clampedTo = Math.max(0, Math.min(MAX_SPELL_UPGRADE_LEVEL, toLevel));
+  if (clampedFrom === clampedTo) return [];
+
+  const fromStats = getSpellStatsForDisplay(spellType, clampedFrom);
+  const toStats = getSpellStatsForDisplay(spellType, clampedTo);
+  const maxLen = Math.max(fromStats.length, toStats.length);
+  const diffs: StatDiff[] = [];
+
+  for (let i = 0; i < maxLen; i++) {
+    const from = fromStats[i];
+    const to = toStats[i];
+    if (from && to) {
+      diffs.push({
+        label: from.label,
+        fromValue: from.value,
+        toValue: to.value,
+        changed: from.value !== to.value,
+        Icon: from.Icon,
+        color: from.color,
+      });
+    } else if (to && !from) {
+      diffs.push({
+        label: to.label,
+        fromValue: "—",
+        toValue: to.value,
+        changed: true,
+        Icon: to.Icon,
+        color: to.color,
+        isNew: true,
+      });
+    }
+  }
+
+  return diffs;
+};
+
 // ── Component ──────────────────────────────────────────────────────────────
 
 export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
@@ -528,6 +596,7 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
   const [selectedNode, setSelectedNode] = React.useState<SelectedNode>(() =>
     getDefaultSelection(spellUpgradeLevels),
   );
+  const [justUpgraded, setJustUpgraded] = React.useState<SelectedNode | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
@@ -544,6 +613,12 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
       return { spellType: current.spellType, tier: currentTier };
     });
   }, [isOpen, spellUpgradeLevels]);
+
+  React.useEffect(() => {
+    if (!justUpgraded) return;
+    const timer = setTimeout(() => setJustUpgraded(null), 2200);
+    return () => clearTimeout(timer);
+  }, [justUpgraded]);
 
   if (!isOpen || !mounted) return null;
 
@@ -563,6 +638,25 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
   const selectedTags = getUpgradeTags(selectedNode.spellType, selectedNode.tier);
   const selectedSpellStats = getSpellStatsForDisplay(selectedNode.spellType, selectedSpellLevel);
   const selectedSpellData = SPELL_DATA[selectedNode.spellType];
+  const selectedStatDiff = computeStatDiff(
+    selectedNode.spellType,
+    selectedNode.tier - 1,
+    selectedNode.tier,
+  );
+  const changedStats = selectedStatDiff.filter((s) => s.changed);
+
+  const handleUpgrade = () => {
+    if (!canBuySelected) return;
+    const upgradedSpell = selectedNode.spellType;
+    const upgradedTier = selectedNode.tier;
+    onUpgradeSpell(upgradedSpell);
+    setJustUpgraded({ spellType: upgradedSpell, tier: upgradedTier });
+    setTimeout(() => {
+      if (upgradedTier < MAX_SPELL_UPGRADE_LEVEL) {
+        setSelectedNode({ spellType: upgradedSpell, tier: upgradedTier + 1 });
+      }
+    }, 800);
+  };
 
   const modalContent = (
     <div className="fixed inset-0 z-[1300] isolate flex items-center justify-center p-2 sm:p-4 pointer-events-auto">
@@ -831,6 +925,9 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                           const UpgradeIcon = getUpgradeIcon(spellType, node.level);
                           const nodeTitle = toLabelLines(node.title);
                           const visuals = NODE_VISUALS[state];
+                          const isNodeJustUpgraded =
+                            justUpgraded?.spellType === spellType &&
+                            justUpgraded?.tier === node.level;
 
                           return (
                             <button
@@ -846,12 +943,21 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                                 width: TILE_SIZE,
                                 height: TILE_SIZE,
                                 background: visuals.background,
-                                borderColor: visuals.borderColor,
+                                borderColor: isNodeJustUpgraded
+                                  ? "rgba(74, 222, 128, 0.7)"
+                                  : visuals.borderColor,
                                 borderStyle: state === "next" ? "dashed" : "solid",
-                                boxShadow: getNodeBoxShadow(state, selected, theme),
-                                transform: selected ? "translateY(-1px)" : undefined,
-                                animation:
-                                  state === "next" && !selected
+                                boxShadow: isNodeJustUpgraded
+                                  ? `0 0 0 2px rgba(74,222,128,0.5), 0 0 16px rgba(74,222,128,0.3)`
+                                  : getNodeBoxShadow(state, selected, theme),
+                                transform: isNodeJustUpgraded
+                                  ? "scale(1.03)"
+                                  : selected
+                                    ? "translateY(-1px)"
+                                    : undefined,
+                                animation: isNodeJustUpgraded
+                                  ? "upgradeFlash 1.5s ease-out"
+                                  : state === "next" && !selected
                                     ? "spellNodePulse 2.5s ease-in-out infinite"
                                     : undefined,
                               }}
@@ -1011,6 +1117,168 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                   </div>
                 </div>
 
+                {/* Tier upgrade info */}
+                <div className="mt-3 rounded-xl border border-stone-700/45 bg-stone-900/50 p-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300/70">
+                      Tier {selectedNode.tier} Upgrade
+                    </div>
+                    <span className="text-[10px] text-amber-300/45 font-medium">
+                      {LEVEL_ICON_MAP[selectedNode.tier].label}
+                    </span>
+                  </div>
+
+                  <div
+                    className="font-bold text-sm leading-snug"
+                    style={{
+                      color: selectedState === "locked" ? "#a8a29e" : selectedTheme.glow,
+                      textShadow: selectedState === "locked"
+                        ? undefined
+                        : `0 0 8px ${selectedTheme.glow}33`,
+                    }}
+                  >
+                    {selectedNodeDef.title}
+                  </div>
+                  <p className="mt-1 mb-3 text-[11px] leading-relaxed text-stone-400 italic">
+                    &ldquo;{selectedNodeDef.description}&rdquo;
+                  </p>
+
+                  {selectedTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedTags.map((tag, i) =>
+                        tag.special ? (
+                          <div
+                            key={i}
+                            className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold"
+                            style={{
+                              borderColor: `${tag.accent}66`,
+                              background: `linear-gradient(135deg, ${tag.accent}22, ${tag.accent}08)`,
+                              boxShadow: `0 0 16px ${tag.accent}25, inset 0 1px 0 ${tag.accent}15`,
+                            }}
+                          >
+                            <Sparkles
+                              size={13}
+                              style={{
+                                color: tag.accent,
+                                filter: `drop-shadow(0 0 3px ${tag.accent})`,
+                              }}
+                            />
+                            <span
+                              style={{
+                                color: "#fef9c3",
+                                textShadow: `0 0 8px ${tag.accent}44`,
+                              }}
+                            >
+                              {tag.label}
+                            </span>
+                          </div>
+                        ) : (
+                          <div
+                            key={i}
+                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold"
+                            style={{
+                              borderColor: `${tag.accent}35`,
+                              background: `${tag.accent}12`,
+                              color: tag.accent,
+                            }}
+                          >
+                            <tag.icon size={10} />
+                            {tag.label}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Stat changes preview */}
+                {changedStats.length > 0 && (
+                  <div
+                    className="mt-3 rounded-xl border p-3"
+                    style={{
+                      borderColor:
+                        selectedState === "next"
+                          ? "rgba(250, 204, 21, 0.2)"
+                          : selectedState === "unlocked"
+                            ? "rgba(74, 222, 128, 0.2)"
+                            : "rgba(100, 93, 88, 0.25)",
+                      background:
+                        selectedState === "next"
+                          ? "rgba(90, 68, 20, 0.2)"
+                          : selectedState === "unlocked"
+                            ? "rgba(16, 56, 36, 0.18)"
+                            : "rgba(38, 34, 30, 0.3)",
+                    }}
+                  >
+                    <div
+                      className="text-[10px] uppercase tracking-[0.18em] mb-2 font-medium"
+                      style={{
+                        color:
+                          selectedState === "next"
+                            ? "rgba(253, 224, 71, 0.7)"
+                            : selectedState === "unlocked"
+                              ? "rgba(134, 239, 172, 0.7)"
+                              : "rgba(168, 162, 158, 0.6)",
+                      }}
+                    >
+                      {selectedState === "unlocked"
+                        ? "This Tier Added"
+                        : selectedState === "next"
+                          ? "After Upgrade"
+                          : "This Tier Adds"}
+                    </div>
+                    <div className="space-y-1">
+                      {changedStats.map((s, i) => (
+                        <div
+                          key={s.label}
+                          className="flex items-center justify-between rounded-md px-2 py-1.5"
+                          style={{
+                            background: "rgba(0,0,0,0.2)",
+                            animation: `statSlideIn 0.3s ease-out ${i * 0.06}s both`,
+                          }}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <s.Icon size={12} className={s.color} />
+                            <span className="text-[11px] text-stone-300 font-medium">
+                              {s.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            {s.isNew ? (
+                              <span
+                                className="font-bold px-1.5 py-0.5 rounded text-[10px]"
+                                style={{
+                                  color: "#a78bfa",
+                                  background: "rgba(88,28,135,0.25)",
+                                  border: "1px solid rgba(139,92,246,0.3)",
+                                }}
+                              >
+                                NEW
+                              </span>
+                            ) : (
+                              <span className="text-stone-500">{s.fromValue}</span>
+                            )}
+                            <span className="text-stone-600">→</span>
+                            <span
+                              className="font-bold"
+                              style={{
+                                color:
+                                  selectedState === "next"
+                                    ? "#fde68a"
+                                    : selectedState === "unlocked"
+                                      ? "#86efac"
+                                      : "#d6d3d1",
+                              }}
+                            >
+                              {s.toValue}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Spell stats */}
                 <div className="mt-3 rounded-xl border border-stone-700/45 bg-stone-900/50 p-3">
                   <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300/70 mb-2">
@@ -1033,53 +1301,6 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                   </div>
                 </div>
 
-                {/* Tier upgrade tags */}
-                <div className="mt-3 rounded-xl border border-stone-700/45 bg-stone-900/50 p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-amber-300/70">
-                      Tier {selectedNode.tier} Upgrade
-                    </div>
-                    <span className="text-[10px] text-amber-300/45 font-medium">
-                      {LEVEL_ICON_MAP[selectedNode.tier].label}
-                    </span>
-                  </div>
-                  {selectedTags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedTags.map((tag, i) =>
-                        tag.special ? (
-                          <div
-                            key={i}
-                            className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-bold"
-                            style={{
-                              borderColor: `${tag.accent}55`,
-                              background: `${tag.accent}18`,
-                              boxShadow: `0 0 10px ${tag.accent}15`,
-                            }}
-                          >
-                            <Sparkles size={11} style={{ color: tag.accent }} />
-                            <span style={{ color: "#fef9c3" }}>{tag.label}</span>
-                          </div>
-                        ) : (
-                          <div
-                            key={i}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-semibold"
-                            style={{
-                              borderColor: `${tag.accent}35`,
-                              background: `${tag.accent}12`,
-                              color: tag.accent,
-                            }}
-                          >
-                            <tag.icon size={10} />
-                            {tag.label}
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-[10px] text-stone-500 italic">No tags available</div>
-                  )}
-                </div>
-
                 {/* Cost & progress row */}
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                   <div className="rounded-lg border border-yellow-500/30 bg-yellow-900/20 px-2.5 py-2 text-yellow-200">
@@ -1100,6 +1321,18 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                     </div>
                     <div className="mt-0.5 font-bold">
                       {selectedSpellLevel} / {MAX_SPELL_UPGRADE_LEVEL}
+                    </div>
+                    <div className="mt-1.5 h-1.5 rounded-full bg-stone-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${(selectedSpellLevel / MAX_SPELL_UPGRADE_LEVEL) * 100}%`,
+                          background: `linear-gradient(90deg, ${selectedTheme.accent}, ${selectedTheme.glow})`,
+                          boxShadow: selectedSpellLevel > 0
+                            ? `0 0 6px ${selectedTheme.glow}55`
+                            : undefined,
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1144,13 +1377,10 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                 {/* Action button */}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!canBuySelected) return;
-                    onUpgradeSpell(selectedNode.spellType);
-                  }}
+                  onClick={handleUpgrade}
                   disabled={!canBuySelected}
                   className={`mt-3 w-full rounded-lg border px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${canBuySelected
-                    ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70"
+                    ? "border-yellow-500/60 bg-yellow-700/30 text-yellow-100 hover:bg-yellow-700/45 hover:border-yellow-400/70 hover:shadow-[0_0_20px_rgba(250,204,21,0.15)]"
                     : "border-stone-600/40 bg-stone-800/40 text-stone-500 cursor-not-allowed"
                     }`}
                 >
@@ -1162,6 +1392,26 @@ export const SpellUpgradeModal: React.FC<SpellUpgradeModalProps> = ({
                         ? `Upgrade · ${selectedNodeDef.cost} ★`
                         : `Need ${selectedNodeDef.cost - availableStars} more ★`}
                 </button>
+
+                {/* Upgrade celebration banner */}
+                {justUpgraded && (
+                  <div
+                    className="mt-2 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2.5 text-center"
+                    style={{ animation: "celebrateBounce 0.5s ease-out" }}
+                  >
+                    <div className="text-xs text-emerald-300 font-bold">
+                      ✨{" "}
+                      {getSpellUpgradeNodes(justUpgraded.spellType)[
+                        justUpgraded.tier - 1
+                      ]?.title ?? `Tier ${justUpgraded.tier}`}{" "}
+                      Unlocked!
+                    </div>
+                    <div className="text-[10px] text-emerald-400/60 mt-0.5">
+                      {SPELL_DATA[justUpgraded.spellType].name} upgraded to Lv{" "}
+                      {justUpgraded.tier}
+                    </div>
+                  </div>
+                )}
               </div>
             </OrnateFrame>
           </div>
