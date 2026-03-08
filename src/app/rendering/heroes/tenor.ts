@@ -517,7 +517,8 @@ function drawFlowingCapes(
     const flip = side;
     const shoulderX = x + flip * s * 0.38;
     const shoulderY = y - s * 0.22;
-    const capeBottomY = y + s * 0.7;
+    const capeBottomOuterY = y + s * 0.64;
+    const capeBottomInnerY = y + s * 0.76;
     const capeOuterX = x + flip * s * 0.72;
     const w1 = wave1 * flip;
     const w2 = wave2 * flip;
@@ -530,9 +531,9 @@ function drawFlowingCapes(
     ctx.bezierCurveTo(
       capeOuterX + w1 * 1.2 + flip * s * 0.04, shoulderY + s * 0.2,
       capeOuterX + w2 * 1.3 + flip * s * 0.06, y + s * 0.35,
-      capeOuterX + w3 + flip * s * 0.03, capeBottomY + s * 0.03
+      capeOuterX + w3 + flip * s * 0.03, capeBottomOuterY + s * 0.03
     );
-    ctx.lineTo(x + flip * s * 0.22, capeBottomY + s * 0.05);
+    ctx.lineTo(x + flip * s * 0.22, capeBottomInnerY + s * 0.05);
     ctx.bezierCurveTo(
       x + flip * s * 0.18, y + s * 0.3,
       shoulderX - flip * s * 0.05, shoulderY + s * 0.15,
@@ -542,7 +543,7 @@ function drawFlowingCapes(
     ctx.fill();
 
     // Main cape body — deep purple-black with gradient
-    const capeGrad = ctx.createLinearGradient(shoulderX, shoulderY, capeOuterX, capeBottomY);
+    const capeGrad = ctx.createLinearGradient(shoulderX, shoulderY, capeOuterX, capeBottomOuterY);
     capeGrad.addColorStop(0, "#1a0a30");
     capeGrad.addColorStop(0.2, "#25103d");
     capeGrad.addColorStop(0.5, "#1e0c35");
@@ -555,9 +556,9 @@ function drawFlowingCapes(
     ctx.bezierCurveTo(
       capeOuterX + w1, shoulderY + s * 0.15,
       capeOuterX + w2 * 1.2, y + s * 0.3,
-      capeOuterX + w3, capeBottomY
+      capeOuterX + w3, capeBottomOuterY
     );
-    ctx.lineTo(x + flip * s * 0.2, capeBottomY + s * 0.02);
+    ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
     ctx.bezierCurveTo(
       x + flip * s * 0.15, y + s * 0.25,
       shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
@@ -567,7 +568,7 @@ function drawFlowingCapes(
     ctx.fill();
 
     // Cape inner lining — rich satin purple, visible as a fold
-    const liningGrad = ctx.createLinearGradient(shoulderX, shoulderY, x + flip * s * 0.25, capeBottomY);
+    const liningGrad = ctx.createLinearGradient(shoulderX, shoulderY, x + flip * s * 0.25, capeBottomInnerY);
     liningGrad.addColorStop(0, "#5a2880");
     liningGrad.addColorStop(0.3, "#7a3aa8");
     liningGrad.addColorStop(0.6, "#6a30a0");
@@ -579,9 +580,9 @@ function drawFlowingCapes(
     ctx.bezierCurveTo(
       x + flip * s * 0.35 + w1 * 0.5, y + s * 0.05,
       x + flip * s * 0.28 + w2 * 0.4, y + s * 0.35,
-      x + flip * s * 0.22, capeBottomY - s * 0.05
+      x + flip * s * 0.22, capeBottomInnerY - s * 0.05
     );
-    ctx.lineTo(x + flip * s * 0.2, capeBottomY + s * 0.02);
+    ctx.lineTo(x + flip * s * 0.2, capeBottomInnerY + s * 0.02);
     ctx.bezierCurveTo(
       x + flip * s * 0.15, y + s * 0.25,
       shoulderX - flip * s * 0.08, shoulderY + s * 0.12,
@@ -598,7 +599,7 @@ function drawFlowingCapes(
       const foldStartX = shoulderX + flip * s * (0.02 + fold * 0.06) + wave1 * t;
       const foldStartY = shoulderY + s * 0.05 + fold * s * 0.03;
       const foldEndX = x + flip * s * (0.25 + fold * 0.08) + wave3 * (1 - t);
-      const foldEndY = capeBottomY - s * 0.1 + fold * s * 0.02;
+      const foldEndY = capeBottomInnerY - s * 0.1 + fold * s * 0.02;
       const foldMidX = (foldStartX + foldEndX) * 0.5 + wave2 * (0.5 + fold * 0.2);
       const foldMidY = (foldStartY + foldEndY) * 0.5;
 
@@ -618,7 +619,7 @@ function drawFlowingCapes(
     ctx.bezierCurveTo(
       capeOuterX + w1, shoulderY + s * 0.15,
       capeOuterX + w2 * 1.2, y + s * 0.3,
-      capeOuterX + w3, capeBottomY
+      capeOuterX + w3, capeBottomOuterY
     );
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -627,10 +628,10 @@ function drawFlowingCapes(
     ctx.strokeStyle = "#c9a227";
     ctx.lineWidth = 2 * zoom;
     ctx.beginPath();
-    ctx.moveTo(capeOuterX + w3, capeBottomY);
+    ctx.moveTo(capeOuterX + w3, capeBottomOuterY);
     ctx.quadraticCurveTo(
-      x + flip * s * 0.45, capeBottomY + s * 0.04 + wave2 * 0.3,
-      x + flip * s * 0.2, capeBottomY + s * 0.02
+      x + flip * s * 0.45, (capeBottomOuterY + capeBottomInnerY) * 0.5 + s * 0.04 + wave2 * 0.3,
+      x + flip * s * 0.2, capeBottomInnerY + s * 0.02
     );
     ctx.stroke();
 
@@ -639,7 +640,7 @@ function drawFlowingCapes(
     for (let dot = 0; dot < 5; dot++) {
       const dt = dot / 4;
       const dotX = capeOuterX + w3 + (x + flip * s * 0.2 - capeOuterX - w3) * dt;
-      const dotY = capeBottomY + s * 0.01 + Math.sin(dt * Math.PI) * s * 0.03;
+      const dotY = capeBottomOuterY + (capeBottomInnerY - capeBottomOuterY) * dt + s * 0.01 + Math.sin(dt * Math.PI) * s * 0.03;
       ctx.beginPath();
       ctx.arc(dotX, dotY, s * 0.01, 0, Math.PI * 2);
       ctx.fill();
@@ -1135,26 +1136,21 @@ function drawConductorArms(
   time: number, zoom: number,
   isAttacking: boolean, attackPhase: number, attackIntensity: number
 ) {
-  // Conductor pattern: continuous sweeping figure-8 / time-signature motions
-  // Left arm (baton arm) traces a smooth conducting pattern
-  const conductBeat = time * 2.8;
-  const beatPhase = conductBeat % (Math.PI * 2);
+  const beat = time * 2.8;
 
-  // 4/4 time conducting pattern for left arm: down-left-right-up
   const leftAngle = isAttacking
     ? -0.3 - Math.sin(attackPhase * Math.PI) * 1.5
-    : -0.3 - Math.sin(beatPhase) * 0.55 - Math.cos(beatPhase * 0.5) * 0.25;
+    : -0.3 - Math.sin(beat) * 0.5 - Math.sin(beat * 2 + 0.4) * 0.15 - Math.cos(beat * 3) * 0.06;
   const leftLift = isAttacking
     ? Math.sin(attackPhase * Math.PI) * s * 0.12
-    : Math.sin(beatPhase * 0.5) * s * 0.08 + Math.cos(beatPhase) * s * 0.04;
+    : Math.sin(beat) * s * 0.07 + Math.sin(beat * 2 + 0.4) * s * 0.03 + Math.cos(beat * 3) * s * 0.015;
 
-  // Right arm mirrors with delay and less amplitude (supporting/expressive arm)
   const rightAngle = isAttacking
     ? 0.3 + Math.sin(attackPhase * Math.PI + 0.3) * 1.3
-    : 0.3 + Math.sin(beatPhase + 1.2) * 0.4 + Math.cos(beatPhase * 0.5 + 0.8) * 0.2;
+    : 0.3 + Math.sin(beat + 1.2) * 0.38 + Math.sin(beat * 2 + 2.0) * 0.12 + Math.cos(beat * 3 + 0.8) * 0.05;
   const rightLift = isAttacking
     ? Math.sin(attackPhase * Math.PI + 0.3) * s * 0.1
-    : Math.sin(beatPhase * 0.5 + 1.0) * s * 0.06;
+    : Math.sin(beat + 1.0) * s * 0.05 + Math.sin(beat * 2 + 1.5) * s * 0.025;
 
   drawSingleArm(ctx, x, y, s, time, zoom, -1, leftAngle, leftLift, isAttacking, attackIntensity, true);
   drawSingleArm(ctx, x, y, s, time, zoom, 1, rightAngle, rightLift, isAttacking, attackIntensity, false);

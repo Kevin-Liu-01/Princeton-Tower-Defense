@@ -2039,7 +2039,7 @@ export function usePrincetonTowerDefenseRuntime() {
                 }
                 : null
             );
-            addParticles(hero.pos, "magic", 10);
+            addParticles(hero.pos, "heal", 10);
           }
         }
 
@@ -3594,7 +3594,7 @@ export function usePrincetonTowerDefenseRuntime() {
             pathKey: enemy.pathKey,
           };
           summoned.push(minion);
-          addParticles(getEnemyPosCached(enemy), "magic", 6);
+          addParticles(getEnemyPosCached(enemy), "summon", 6);
           hasSummonUpdates = true;
           return { ...enemy, lastSummon: now };
         });
@@ -10925,7 +10925,7 @@ export function usePrincetonTowerDefenseRuntime() {
         setTroops((prev) =>
           prev.map((t) => {
             if (!t.dead && distance(t.pos, hero.pos) < healRadius) {
-              addParticles(t.pos, "magic", 6);
+              addParticles(t.pos, "heal", 6);
               return {
                 ...t,
                 hp: Math.min(t.maxHp, t.hp + healAmount),
@@ -10948,7 +10948,7 @@ export function usePrincetonTowerDefenseRuntime() {
           },
         ]);
         addParticles(hero.pos, "light", 35);
-        addParticles(hero.pos, "magic", 20);
+        addParticles(hero.pos, "heal", 20);
         break;
       }
 

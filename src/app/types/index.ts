@@ -730,7 +730,13 @@ export type ParticleType =
   | "magic"
   | "gold"
   | "fire"
-  | "ice";
+  | "ice"
+  | "poison"
+  | "water"
+  | "heal"
+  | "sand"
+  | "summon"
+  | "storm";
 
 // Particle
 export interface Particle {

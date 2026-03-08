@@ -117,9 +117,8 @@ function calculateSingleHazardEffect(
   switch (hazard.type) {
     case "poison_fog":
       effect.poisonDamage += (15 * deltaTime) / 1000;
-      // Throttle particle spawns
       if (Math.random() < 0.1) {
-        particles.push({ pos: hazard.worldPos, type: "magic", count: 3 });
+        particles.push({ pos: hazard.worldPos, type: "poison", count: 3 });
       }
       break;
     case "deep_water": {
@@ -131,7 +130,7 @@ function calculateSingleHazardEffect(
         effect.environmentalSlowSource = "deep_water";
       }
       if (Math.random() < 0.08) {
-        particles.push({ pos: hazard.worldPos, type: "ice", count: 2 });
+        particles.push({ pos: hazard.worldPos, type: "water", count: 2 });
       }
       break;
     }
@@ -143,13 +142,12 @@ function calculateSingleHazardEffect(
         effect.environmentalSlow = 0.55;
         effect.environmentalSlowSource = "maelstrom";
       }
-      // Occasional lightning strike inside the maelstrom
       if (Math.random() < 0.04) {
         effect.lavaDamage += 12;
-        particles.push({ pos: enemyPos, type: "spark", count: 5 });
+        particles.push({ pos: enemyPos, type: "storm", count: 5 });
       }
       if (Math.random() < 0.12) {
-        particles.push({ pos: hazard.worldPos, type: "ice", count: 3 });
+        particles.push({ pos: hazard.worldPos, type: "water", count: 3 });
       }
       break;
     }
@@ -157,7 +155,7 @@ function calculateSingleHazardEffect(
       effect.environmentalSpeed = Math.max(effect.environmentalSpeed, 1.15);
       effect.lavaDamage += (6 * deltaTime) / 1000;
       if (Math.random() < 0.14) {
-        particles.push({ pos: hazard.worldPos, type: "spark", count: 3 });
+        particles.push({ pos: hazard.worldPos, type: "storm", count: 3 });
       }
       break;
     case "quicksand":
@@ -166,7 +164,7 @@ function calculateSingleHazardEffect(
         effect.environmentalSlowSource = "quicksand";
       }
       if (Math.random() < 0.1) {
-        particles.push({ pos: hazard.worldPos, type: "smoke", count: 3 });
+        particles.push({ pos: hazard.worldPos, type: "sand", count: 3 });
       }
       break;
     case "ice_sheet":

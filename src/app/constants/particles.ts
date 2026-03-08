@@ -9,4 +9,10 @@ export const PARTICLE_COLORS: Record<string, string[]> = {
   gold: ["#ffd700", "#ffcc00", "#ffaa00", "#fff8dc"],
   fire: ["#ff4400", "#ff6600", "#ff8800", "#ffaa00"],
   ice: ["#88ffff", "#aaffff", "#ffffff", "#66ddff"],
+  poison: ["#44cc44", "#33aa22", "#66dd44", "#228822"],
+  water: ["#2288cc", "#1166aa", "#44aadd", "#336699"],
+  heal: ["#44ee88", "#88ffaa", "#66ffcc", "#aaffdd"],
+  sand: ["#ccaa66", "#bb9944", "#ddbb77", "#aa8833"],
+  summon: ["#7722cc", "#5500aa", "#9944ee", "#6611bb"],
+  storm: ["#6688ff", "#4466dd", "#88aaff", "#aaccff"],
 };

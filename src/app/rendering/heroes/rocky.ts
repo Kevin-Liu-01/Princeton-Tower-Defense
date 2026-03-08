@@ -6,18 +6,29 @@ function drawStoneSkirtArmor(
   y: number,
   s: number,
   hop: number,
-  time: number,
+  _time: number,
   zoom: number,
   isAttacking: boolean,
   attackIntensity: number,
+  yOffset: number,
+  cracked: boolean,
 ) {
-  const skirtTop = y - hop + s * 0.24;
+  const skirtTop = y - hop + s * yOffset;
   const bandCount = 4;
   const totalHeight = s * 0.32;
   const bandHeight = totalHeight / bandCount;
-  const gapHalf = s * 0.10;
+  const gapHalf = s * 0.1;
 
-  drawStoneCenterBanner(ctx, x, s, zoom, skirtTop, totalHeight, gapHalf);
+  drawStoneCenterBanner(
+    ctx,
+    x,
+    s,
+    zoom,
+    skirtTop,
+    totalHeight,
+    gapHalf,
+    cracked,
+  );
   for (let side = -1; side <= 1; side += 2) {
     drawStoneTassetSide(
       ctx,
@@ -32,13 +43,19 @@ function drawStoneSkirtArmor(
       gapHalf,
       isAttacking,
       attackIntensity,
+      cracked,
     );
   }
   const bridgeY = skirtTop + s * 0.025;
   const bridgeLeft = x - gapHalf + s * 0.01;
   const bridgeRight = x + gapHalf - s * 0.01;
   const bridgeThick = s * 0.018;
-  const bridgeGrad = ctx.createLinearGradient(bridgeLeft, bridgeY, bridgeRight, bridgeY);
+  const bridgeGrad = ctx.createLinearGradient(
+    bridgeLeft,
+    bridgeY,
+    bridgeRight,
+    bridgeY,
+  );
   bridgeGrad.addColorStop(0, "#484038");
   bridgeGrad.addColorStop(0.3, "#585050");
   bridgeGrad.addColorStop(0.5, "#686058");
@@ -67,13 +84,13 @@ function drawStoneTassetSide(
   skirtTop: number,
   bandCount: number,
   bandHeight: number,
-  totalHeight: number,
+  _totalHeight: number,
   gapHalf: number,
   isAttacking: boolean,
   attackIntensity: number,
+  cracked: boolean,
 ) {
-  const shear = s * -0.10;
-  const sway = 0;
+  const shear = s * -0.1;
 
   for (let band = 0; band < bandCount; band++) {
     const innerTopY = skirtTop + band * bandHeight;
@@ -81,87 +98,132 @@ function drawStoneTassetSide(
     const outerTopY = innerTopY + shear;
     const outerBotY = innerBotY + shear;
 
-    const outerW = s * (0.42 + band * 0.035);
+    const baseOuterW = s * (0.42 + band * 0.035);
+    const tattered = cracked && side === 1;
+    const outerW = tattered ? baseOuterW * (1 - band * 0.14) : baseOuterW;
     const innerGap = gapHalf + band * s * 0.008;
-    const innerX = x + side * innerGap + sway;
-    const outerX = x + side * outerW + sway;
+    const innerX = x + side * innerGap;
+    const outerX = x + side * outerW;
+
+    const plateAlpha = tattered ? Math.max(0.15, 0.82 - band * 0.22) : 1;
+    ctx.globalAlpha = plateAlpha;
 
     const plateG = ctx.createLinearGradient(innerX, innerTopY, outerX, outerBotY);
-    if (side === -1) {
-      plateG.addColorStop(0, "#848078");
-      plateG.addColorStop(0.25, "#787068");
-      plateG.addColorStop(0.55, "#686058");
-      plateG.addColorStop(1, "#585050");
+    if (cracked) {
+      if (side === -1) {
+        plateG.addColorStop(0, "#706860");
+        plateG.addColorStop(0.25, "#605850");
+        plateG.addColorStop(0.55, "#504840");
+        plateG.addColorStop(1, "#484038");
+      } else {
+        plateG.addColorStop(0, "#484038");
+        plateG.addColorStop(0.45, "#504840");
+        plateG.addColorStop(0.75, "#605850");
+        plateG.addColorStop(1, "#706860");
+      }
     } else {
-      plateG.addColorStop(0, "#585050");
-      plateG.addColorStop(0.45, "#686058");
-      plateG.addColorStop(0.75, "#787068");
-      plateG.addColorStop(1, "#848078");
+      if (side === -1) {
+        plateG.addColorStop(0, "#848078");
+        plateG.addColorStop(0.25, "#787068");
+        plateG.addColorStop(0.55, "#686058");
+        plateG.addColorStop(1, "#585050");
+      } else {
+        plateG.addColorStop(0, "#585050");
+        plateG.addColorStop(0.45, "#686058");
+        plateG.addColorStop(0.75, "#787068");
+        plateG.addColorStop(1, "#848078");
+      }
     }
 
     ctx.fillStyle = plateG;
     ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * s * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * s * 0.002, innerBotY);
+    if (tattered) {
+      const chipI = side * s * 0.01 * band;
+      const chipO = -side * s * 0.015 * band;
+      const jagI = band >= 1 ? side * s * 0.012 * band : 0;
+      const jagO = band >= 1 ? -side * s * 0.018 * band : 0;
+      ctx.moveTo(innerX + chipI, innerTopY);
+      ctx.lineTo(outerX + chipO, outerTopY);
+      if (band >= 2) {
+        const mx = outerX + chipO + (side * s * 0.004 + chipO * 0.5 - chipO) * 0.5;
+        const my = (outerTopY + outerBotY) * 0.5;
+        ctx.lineTo(mx + jagO * 0.6, my);
+      }
+      ctx.lineTo(outerX + side * s * 0.004 + chipO * 0.5, outerBotY);
+      if (band >= 1) {
+        const mx = innerX + chipI + (-side * s * 0.002 + chipI * 0.5 - chipI) * 0.5;
+        const my = (innerBotY + innerTopY) * 0.5 + bandHeight * 0.1;
+        ctx.lineTo(mx + jagI * 0.5, my);
+      }
+    } else {
+      ctx.moveTo(innerX, innerTopY);
+      ctx.lineTo(outerX, outerTopY);
+      ctx.lineTo(outerX + side * s * 0.004, outerBotY);
+      ctx.lineTo(innerX - side * s * 0.002, innerBotY);
+    }
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = "#3a3430";
+    ctx.strokeStyle = cracked ? "#2a2420" : "#3a3430";
     ctx.lineWidth = 1 * zoom;
-    ctx.beginPath();
-    ctx.moveTo(innerX, innerTopY);
-    ctx.lineTo(outerX, outerTopY);
-    ctx.lineTo(outerX + side * s * 0.004, outerBotY);
-    ctx.lineTo(innerX - side * s * 0.002, innerBotY);
-    ctx.closePath();
     ctx.stroke();
 
-    const rivetMidT = 0.75;
-    const rivetX = innerX + rivetMidT * (outerX - innerX);
-    const rivetY =
-      innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
-    const rg = ctx.createRadialGradient(
-      rivetX - s * 0.002,
-      rivetY - s * 0.002,
-      0,
-      rivetX,
-      rivetY,
-      s * 0.009,
-    );
-    rg.addColorStop(0, "#686058");
-    rg.addColorStop(0.4, "#585050");
-    rg.addColorStop(1, "#484038");
-    ctx.fillStyle = rg;
-    ctx.beginPath();
-    ctx.arc(rivetX, rivetY, s * 0.008, 0, Math.PI * 2);
-    ctx.fill();
+    if (!tattered || band < 3) {
+      const rivetMidT = 0.75;
+      const rivetX = innerX + rivetMidT * (outerX - innerX);
+      const rivetY =
+        innerTopY + rivetMidT * (outerTopY - innerTopY) + bandHeight * 0.45;
+      const rg = ctx.createRadialGradient(
+        rivetX - s * 0.002, rivetY - s * 0.002, 0,
+        rivetX, rivetY, s * 0.009,
+      );
+      rg.addColorStop(0, "#686058");
+      rg.addColorStop(0.4, "#585050");
+      rg.addColorStop(1, "#484038");
+      ctx.fillStyle = rg;
+      ctx.beginPath();
+      ctx.arc(rivetX, rivetY, s * 0.008, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    if (band % 2 === 0) {
-      ctx.strokeStyle = "rgba(40, 35, 30, 0.5)";
-      ctx.lineWidth = 0.8 * zoom;
-      const crackCount = 2;
-      for (let c = 0; c < crackCount; c++) {
-        const t = (c + 0.5) / crackCount;
-        const crackX = innerX + t * (outerX - innerX);
-        const crackYBase =
-          innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+    const crackCount = cracked ? 6 + band * 2 : 2;
+    const crackAlpha = cracked ? 0.85 : 0.5;
+    const crackWidth = cracked ? 1.5 : 0.8;
+    ctx.strokeStyle = `rgba(40, 35, 30, ${crackAlpha})`;
+    ctx.lineWidth = crackWidth * zoom;
+    for (let c = 0; c < crackCount; c++) {
+      const t = (c + 0.5) / crackCount;
+      const crackX = innerX + t * (outerX - innerX);
+      const crackYBase =
+        innerTopY + t * (outerTopY - innerTopY) + bandHeight * 0.4;
+      const len = cracked ? s * 0.024 + c * s * 0.006 : s * 0.012;
+      ctx.beginPath();
+      ctx.moveTo(crackX, crackYBase - len * 0.5);
+      ctx.lineTo(crackX + s * 0.008, crackYBase + len * 0.3);
+      ctx.lineTo(crackX - s * 0.005, crackYBase + len * 0.7);
+      ctx.stroke();
+      if (cracked) {
         ctx.beginPath();
-        ctx.moveTo(crackX, crackYBase - s * 0.01);
-        ctx.lineTo(crackX + s * 0.008, crackYBase + s * 0.012);
-        ctx.lineTo(crackX - s * 0.005, crackYBase + s * 0.018);
+        ctx.moveTo(crackX + s * 0.008, crackYBase + len * 0.3);
+        ctx.lineTo(crackX + s * 0.022, crackYBase + len * 0.05);
         ctx.stroke();
+        if (c % 2 === 0) {
+          ctx.beginPath();
+          ctx.moveTo(crackX - s * 0.005, crackYBase + len * 0.7);
+          ctx.lineTo(crackX - s * 0.022, crackYBase + len);
+          ctx.stroke();
+        }
       }
     }
 
-    if (band % 2 === 1) {
-      const midT = 0.5;
+    if (band % 2 === 1 && (!tattered || band < 2)) {
       const accentInnerX = innerX + side * s * 0.015;
       const accentOuterX = outerX - side * s * 0.015;
-      const accentInnerY = innerTopY + bandHeight * midT;
-      const accentOuterY = outerTopY + bandHeight * midT;
-      const cyanAlpha = 0.2 + (isAttacking ? attackIntensity * 0.15 : 0);
+      const accentInnerY = innerTopY + bandHeight * 0.5;
+      const accentOuterY = outerTopY + bandHeight * 0.5;
+      const cyanAlpha = tattered
+        ? 0.06
+        : 0.2 + (isAttacking ? attackIntensity * 0.15 : 0);
       ctx.strokeStyle = `rgba(0, 200, 240, ${cyanAlpha})`;
       ctx.lineWidth = 1.2 * zoom;
       ctx.beginPath();
@@ -170,21 +232,61 @@ function drawStoneTassetSide(
       ctx.stroke();
     }
 
-    const hasMoss =
-      (band === 1 && side === -1) ||
-      (band === 2 && side === 1) ||
-      (band === 3 && side === -1);
-    if (hasMoss) {
-      ctx.fillStyle = "rgba(80, 100, 50, 0.3)";
-      const mossX = innerX + 0.6 * (outerX - innerX);
-      const mossY = innerTopY + bandHeight * 0.5;
+    if (tattered) {
+      ctx.fillStyle = `rgba(80, 100, 50, ${0.3 + band * 0.08})`;
+      const mossX = innerX + 0.35 * (outerX - innerX);
+      const mossY = innerTopY + bandHeight * 0.55;
       ctx.beginPath();
-      ctx.arc(mossX, mossY, s * 0.012, 0, Math.PI * 2);
+      ctx.arc(mossX, mossY, s * (0.013 + band * 0.005), 0, Math.PI * 2);
       ctx.fill();
-      ctx.beginPath();
-      ctx.arc(mossX - s * 0.02, mossY + s * 0.01, s * 0.008, 0, Math.PI * 2);
-      ctx.fill();
+      if (band >= 1) {
+        ctx.beginPath();
+        ctx.arc(mossX + s * 0.025, mossY - s * 0.006, s * (0.009 + band * 0.004), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (band >= 2) {
+        ctx.beginPath();
+        ctx.arc(mossX - s * 0.018, mossY + s * 0.016, s * (0.011 + band * 0.003), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(mossX + s * 0.04, mossY + s * 0.01, s * 0.007, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (cracked) {
+      const hasMoss =
+        (band === 1 && side === -1) ||
+        (band === 2 && side === 1) ||
+        (band === 3 && side === -1);
+      if (hasMoss) {
+        ctx.fillStyle = "rgba(80, 100, 50, 0.3)";
+        const mossX = innerX + 0.6 * (outerX - innerX);
+        const mossY = innerTopY + bandHeight * 0.5;
+        ctx.beginPath();
+        ctx.arc(mossX, mossY, s * 0.012, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(mossX - s * 0.02, mossY + s * 0.01, s * 0.008, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      const hasMoss =
+        (band === 1 && side === -1) ||
+        (band === 2 && side === 1) ||
+        (band === 3 && side === -1);
+      if (hasMoss) {
+        ctx.fillStyle = "rgba(80, 100, 50, 0.3)";
+        const mossX = innerX + 0.6 * (outerX - innerX);
+        const mossY = innerTopY + bandHeight * 0.5;
+        ctx.beginPath();
+        ctx.arc(mossX, mossY, s * 0.012, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(mossX - s * 0.02, mossY + s * 0.01, s * 0.008, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
+
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -196,17 +298,26 @@ function drawStoneCenterBanner(
   skirtTop: number,
   totalHeight: number,
   gapHalf: number,
+  cracked: boolean,
 ) {
   const tabletTop = skirtTop + s * 0.04;
   const tabletBottom = skirtTop + totalHeight * 0.92;
   const tabletHalfW = gapHalf * 0.75;
 
   const tabletGrad = ctx.createLinearGradient(x, tabletTop, x, tabletBottom);
-  tabletGrad.addColorStop(0, "#605850");
-  tabletGrad.addColorStop(0.25, "#706860");
-  tabletGrad.addColorStop(0.5, "#807870");
-  tabletGrad.addColorStop(0.75, "#706860");
-  tabletGrad.addColorStop(1, "#605850");
+  if (cracked) {
+    tabletGrad.addColorStop(0, "#504840");
+    tabletGrad.addColorStop(0.25, "#605850");
+    tabletGrad.addColorStop(0.5, "#686060");
+    tabletGrad.addColorStop(0.75, "#605850");
+    tabletGrad.addColorStop(1, "#504840");
+  } else {
+    tabletGrad.addColorStop(0, "#605850");
+    tabletGrad.addColorStop(0.25, "#706860");
+    tabletGrad.addColorStop(0.5, "#807870");
+    tabletGrad.addColorStop(0.75, "#706860");
+    tabletGrad.addColorStop(1, "#605850");
+  }
 
   ctx.fillStyle = tabletGrad;
   ctx.beginPath();
@@ -232,6 +343,19 @@ function drawStoneCenterBanner(
   ctx.moveTo(x + s * 0.02, emblemY);
   ctx.lineTo(x + s * 0.005, emblemY + s * 0.018);
   ctx.stroke();
+
+  if (cracked) {
+    ctx.strokeStyle = "rgba(40, 35, 30, 0.7)";
+    ctx.lineWidth = 1.2 * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x - tabletHalfW * 0.6, tabletTop + s * 0.01);
+    ctx.lineTo(x + tabletHalfW * 0.3, tabletBottom - s * 0.02);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + tabletHalfW * 0.5, tabletTop + s * 0.02);
+    ctx.lineTo(x - tabletHalfW * 0.2, emblemY);
+    ctx.stroke();
+  }
 }
 
 function drawStoneSkirtBelt(
@@ -312,7 +436,32 @@ export function drawRockyHero(
   drawWing(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity, -1);
   drawWing(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity, 1);
   drawBody(ctx, x, y, s, hop, breathe, zoom, time);
-  drawStoneSkirtArmor(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity);
+  drawStoneSkirtArmor(
+    ctx,
+    x,
+    y,
+    s,
+    hop,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity,
+    -0.32,
+    false,
+  );
+  drawStoneSkirtArmor(
+    ctx,
+    x,
+    y,
+    s,
+    hop,
+    time,
+    zoom,
+    isAttacking,
+    attackIntensity,
+    0.16,
+    true,
+  );
   drawStoneClaws(ctx, x, y, s, hop, time, zoom, isAttacking, attackIntensity);
   drawShoulderPads(ctx, x, y, s, hop, time, zoom);
   drawStoneArms(
