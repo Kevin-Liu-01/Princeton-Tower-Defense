@@ -287,6 +287,8 @@ import {
 import { useCustomLevels } from "./useCustomLevels";
 import { useEntityCollection } from "./useEntityCollection";
 import { usePawPoints } from "./usePawPoints";
+import { captureCanvas } from "../utils/screenshot";
+import { CameraModeOverlay } from "../components/ui/CameraModeOverlay";
 
 type RenderQuality = "high" | "medium" | "low";
 
@@ -731,6 +733,7 @@ export function usePrincetonTowerDefenseRuntime() {
   // Camera - start more zoomed in and centered
   const [cameraOffset, setCameraOffset] = useState<Position>(DEFAULT_CAMERA_OFFSET);
   const [cameraZoom, setCameraZoom] = useState(DEFAULT_CAMERA_ZOOM);
+  const [cameraModeActive, setCameraModeActive] = useState(false);
   const [renderDprCap, setRenderDprCap] = useState<number>(QUALITY_DPR_CAP.high);
   const [devPerfEnabled, setDevPerfEnabled] = useState<boolean>(
     () => DEV_CONFIG_MENU_ENABLED
@@ -1376,6 +1379,49 @@ export function usePrincetonTowerDefenseRuntime() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [gameState, battleOutcome, setTroops, addPawPoints]);
 
+  // Saved speed before pause-lock (camera or inspect mode)
+  const preLockSpeedRef = useRef<number | null>(null);
+
+  const enterCameraMode = useCallback(() => {
+    if (cameraModeActive) return;
+    preLockSpeedRef.current = gameSpeed;
+    setGameSpeed(0);
+    setCameraModeActive(true);
+  }, [cameraModeActive, gameSpeed]);
+
+  const exitCameraMode = useCallback(() => {
+    if (!cameraModeActive) return;
+    setCameraModeActive(false);
+    const restored = preLockSpeedRef.current;
+    setGameSpeed(restored != null && restored > 0 ? restored : 1);
+    preLockSpeedRef.current = null;
+  }, [cameraModeActive]);
+
+  const toggleCameraMode = useCallback(() => {
+    if (cameraModeActive) exitCameraMode();
+    else enterCameraMode();
+  }, [cameraModeActive, enterCameraMode, exitCameraMode]);
+
+  // F2 toggles camera/photo mode
+  useEffect(() => {
+    if (gameState !== "playing") return;
+    const handleCameraModeKey = (e: KeyboardEvent) => {
+      if (e.key !== "F2") return;
+      e.preventDefault();
+      toggleCameraMode();
+    };
+    window.addEventListener("keydown", handleCameraModeKey);
+    return () => window.removeEventListener("keydown", handleCameraModeKey);
+  }, [gameState, toggleCameraMode]);
+
+  const handleCameraModeCapture = useCallback(async (): Promise<boolean> => {
+    const canvas = canvasRef.current;
+    if (!canvas) return false;
+    return captureCanvas(canvas);
+  }, []);
+
+  const pauseLocked = cameraModeActive || inspectorActive;
+
   useEffect(() => {
     if (!DEV_CONFIG_MENU_ENABLED || typeof window === "undefined") return;
     try {
@@ -1602,7 +1648,7 @@ export function usePrincetonTowerDefenseRuntime() {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
     return () => window.removeEventListener("resize", resizeCanvas);
-  }, [gameState, getRenderDpr]);
+  }, [gameState, getRenderDpr, cameraModeActive]);
 
   // Handle pause/resume of spawn timers when gameSpeed changes
   const prevGameSpeedRef = useRef(gameSpeed);
@@ -11620,7 +11666,7 @@ export function usePrincetonTowerDefenseRuntime() {
         nextWaveTimer={nextWaveTimer}
         gameSpeed={gameSpeed}
         setGameSpeed={(nextSpeed) => {
-          if (battleOutcome) return;
+          if (battleOutcome || pauseLocked) return;
           setGameSpeed(nextSpeed);
         }}
         goldSpellActive={goldSpellActive}
@@ -11633,8 +11679,11 @@ export function usePrincetonTowerDefenseRuntime() {
         setSelectedInspectEnemy={setSelectedInspectEnemy}
         quitLevel={quitLevel}
         retryLevel={retryLevel}
+        cameraModeActive={cameraModeActive}
+        onTogglePhotoMode={toggleCameraMode}
+        pauseLocked={pauseLocked}
       />
-      {devConfigMenu}
+      {!cameraModeActive && devConfigMenu}
       <div className="flex-1 relative overflow-hidden">
         <div
           ref={containerRef}
@@ -11653,231 +11702,247 @@ export function usePrincetonTowerDefenseRuntime() {
                 hoveredWaveBubblePathKey ? 'cursor-pointer' : 'cursor-crosshair'
               }`}
           />
-          <CameraControls
-            setCameraOffset={setCameraOffset}
-            setCameraZoom={setCameraZoom}
-            defaultOffset={selectedLevelData?.camera?.offset}
-          />
-          {/* Tooltips - hide on touch devices (too cluttered) and when upgrade panel is open */}
-          {!isTouchDeviceRef.current && hoveredTower && !selectedTower &&
-            (() => {
-              const tower = towers.find((t) => t.id === hoveredTower);
-              if (!tower) return null;
-              return <TowerHoverTooltip tower={tower} position={mousePos} />;
-            })()}
-          {!isTouchDeviceRef.current && hoveredHero && hero && !hero.dead && (
-            <HeroHoverTooltip hero={hero} position={mousePos} />
+          {cameraModeActive && (
+            <CameraModeOverlay
+              onCapture={handleCameraModeCapture}
+              onExit={exitCameraMode}
+            />
           )}
-          {/* Tower upgrade panel */}
-          {selectedTower &&
-            (() => {
-              const tower = towers.find((t) => t.id === selectedTower);
-              if (!tower) return null;
-              const worldPos = gridToWorld(tower.pos);
-              const screenPos = worldToScreen(
-                worldPos,
-                width,
-                height,
-                dpr,
-                cameraOffset,
-                cameraZoom
-              );
-              return (
-                <TowerUpgradePanel
-                  tower={tower}
-                  screenPos={screenPos}
-                  pawPoints={pawPoints}
-                  upgradeTower={upgradeTower}
-                  sellTower={sellTower}
-                  onClose={() => setSelectedTower(null)}
-                  onRetargetMissile={(towerId) => {
-                    setMissileMortarTargetingId(towerId);
-                    setSelectedTower(null);
+          {!cameraModeActive && (
+            <CameraControls
+              setCameraOffset={setCameraOffset}
+              setCameraZoom={setCameraZoom}
+              defaultOffset={selectedLevelData?.camera?.offset}
+            />
+          )}
+          {!cameraModeActive && (
+            <>
+              {!isTouchDeviceRef.current && hoveredTower && !selectedTower &&
+                (() => {
+                  const tower = towers.find((t) => t.id === hoveredTower);
+                  if (!tower) return null;
+                  return <TowerHoverTooltip tower={tower} position={mousePos} />;
+                })()}
+              {!isTouchDeviceRef.current && hoveredHero && hero && !hero.dead && (
+                <HeroHoverTooltip hero={hero} position={mousePos} />
+              )}
+              {selectedTower &&
+                (() => {
+                  const tower = towers.find((t) => t.id === selectedTower);
+                  if (!tower) return null;
+                  const worldPos = gridToWorld(tower.pos);
+                  const screenPos = worldToScreen(
+                    worldPos,
+                    width,
+                    height,
+                    dpr,
+                    cameraOffset,
+                    cameraZoom
+                  );
+                  return (
+                    <TowerUpgradePanel
+                      tower={tower}
+                      screenPos={screenPos}
+                      pawPoints={pawPoints}
+                      upgradeTower={upgradeTower}
+                      sellTower={sellTower}
+                      onClose={() => setSelectedTower(null)}
+                      onRetargetMissile={(towerId) => {
+                        setMissileMortarTargetingId(towerId);
+                        setSelectedTower(null);
+                      }}
+                      onToggleMissileAutoAim={(towerId) => {
+                        setTowers((prev) =>
+                          prev.map((t) =>
+                            t.id === towerId
+                              ? { ...t, mortarAutoAim: !t.mortarAutoAim }
+                              : t
+                          )
+                        );
+                      }}
+                      onRallyTroops={(towerId) => {
+                        setTroops((prev) =>
+                          prev.map((t) => ({
+                            ...t,
+                            selected: t.ownerId === towerId,
+                          }))
+                        );
+                        setSelectedTower(null);
+                      }}
+                    />
+                  );
+                })()}
+              {placingTroop && <PlacingTroopIndicator />}
+              {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} />}
+              {activeSentinelTargetKey && (
+                <div
+                  className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
+                  style={{
+                    zIndex: 180,
+                    background: "rgba(69, 10, 10, 0.86)",
+                    border: "1px solid rgba(251, 113, 133, 0.58)",
+                    color: "#ffe4e6",
+                    boxShadow: "0 0 18px rgba(244, 63, 94, 0.35)",
                   }}
-                  onToggleMissileAutoAim={(towerId) => {
-                    setTowers((prev) =>
-                      prev.map((t) =>
-                        t.id === towerId
-                          ? { ...t, mortarAutoAim: !t.mortarAutoAim }
-                          : t
-                      )
-                    );
+                >
+                  Imperial Sentinel targeting mode: click any map location.
+                </div>
+              )}
+              {missileMortarTargetingId && (
+                <div
+                  className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
+                  style={{
+                    zIndex: 180,
+                    background: "rgba(74, 32, 0, 0.9)",
+                    border: "1px solid rgba(255, 140, 0, 0.6)",
+                    color: "#ffcc88",
+                    boxShadow: "0 0 18px rgba(255, 100, 0, 0.35)",
                   }}
+                >
+                  Missile Battery targeting: click any map location to set strike zone.
+                </div>
+              )}
+              {!isTouchDeviceRef.current && hoveredSpecialTower && (
+                <SpecialBuildingTooltip
+                  type={hoveredSpecialTower.type}
+                  hp={hoveredSpecialTower.type === "vault" ? specialTowerHp : null}
+                  maxHp={
+                    hoveredSpecialTower.type === "vault"
+                      ? getLevelSpecialTowerHp(selectedMap) ?? hoveredSpecialTower.hp
+                      : hoveredSpecialTower.hp
+                  }
+                  position={mousePos}
+                  sentinelTarget={
+                    hoveredSpecialTower.type === "sentinel_nexus"
+                      ? sentinelTargets[
+                      getSpecialTowerKey(hoveredSpecialTower)
+                      ] ?? null
+                      : undefined
+                  }
+                  sentinelTargeting={
+                    hoveredSpecialTower.type === "sentinel_nexus" &&
+                    activeSentinelTargetKey ===
+                    getSpecialTowerKey(hoveredSpecialTower)
+                  }
                 />
-              );
-            })()}
-          {placingTroop && <PlacingTroopIndicator />}
-          {targetingSpell && <TargetingSpellIndicator spellType={targetingSpell} />}
-          {activeSentinelTargetKey && (
-            <div
-              className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
-              style={{
-                zIndex: 180,
-                background: "rgba(69, 10, 10, 0.86)",
-                border: "1px solid rgba(251, 113, 133, 0.58)",
-                color: "#ffe4e6",
-                boxShadow: "0 0 18px rgba(244, 63, 94, 0.35)",
-              }}
-            >
-              Imperial Sentinel targeting mode: click any map location.
-            </div>
-          )}
-          {missileMortarTargetingId && (
-            <div
-              className="absolute top-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-xs font-semibold tracking-wide pointer-events-none"
-              style={{
-                zIndex: 180,
-                background: "rgba(74, 32, 0, 0.9)",
-                border: "1px solid rgba(255, 140, 0, 0.6)",
-                color: "#ffcc88",
-                boxShadow: "0 0 18px rgba(255, 100, 0, 0.35)",
-              }}
-            >
-              Missile Battery targeting: click any map location to set strike zone.
-            </div>
-          )}
-          {!isTouchDeviceRef.current && hoveredSpecialTower && (
-            <SpecialBuildingTooltip
-              type={hoveredSpecialTower.type}
-              hp={hoveredSpecialTower.type === "vault" ? specialTowerHp : null}
-              maxHp={
-                hoveredSpecialTower.type === "vault"
-                  ? getLevelSpecialTowerHp(selectedMap) ?? hoveredSpecialTower.hp
-                  : hoveredSpecialTower.hp
-              }
-              position={mousePos}
-              sentinelTarget={
-                hoveredSpecialTower.type === "sentinel_nexus"
-                  ? sentinelTargets[
-                  getSpecialTowerKey(hoveredSpecialTower)
-                  ] ?? null
-                  : undefined
-              }
-              sentinelTargeting={
-                hoveredSpecialTower.type === "sentinel_nexus" &&
-                activeSentinelTargetKey ===
-                getSpecialTowerKey(hoveredSpecialTower)
-              }
-            />
-          )}
-          {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !selectedTower && (
-            <LandmarkTooltip landmarkType={hoveredLandmark} position={mousePos} />
-          )}
-          {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !selectedTower && (
-            <HazardTooltip hazardType={hoveredHazardType} position={mousePos} />
-          )}
-          {/* Enemy Inspector UI */}
-          <EnemyInspector
-            isActive={inspectorActive}
-            setIsActive={setInspectorActive}
-            selectedEnemy={selectedInspectEnemy}
-            setSelectedEnemy={setSelectedInspectEnemy}
-            enemies={enemies}
-            troops={troops}
-            setGameSpeed={(nextSpeed) => {
-              if (battleOutcome) return;
-              setGameSpeed(nextSpeed);
-            }}
-            previousGameSpeed={previousGameSpeed}
-            setPreviousGameSpeed={setPreviousGameSpeed}
-            gameSpeed={gameSpeed}
-            onDeactivate={() => {
-              setSelectedInspectTroop(null);
-              setSelectedInspectHero(false);
-            }}
-          />
-          {/* Enemy Detail Tooltip when enemy is selected in inspect mode */}
-          {inspectorActive && selectedInspectEnemy && (() => {
-            const enemyPos = getEnemyPosWithPath(selectedInspectEnemy, selectedMap);
-            const screenPos = worldToScreen(
-              enemyPos,
-              width,
-              height,
-              dpr,
-              cameraOffset,
-              cameraZoom
-            );
-            return (
-              <EnemyDetailTooltip
-                enemy={selectedInspectEnemy}
-                position={screenPos}
-                onClose={() => setSelectedInspectEnemy(null)}
+              )}
+              {!isTouchDeviceRef.current && hoveredLandmark && !hoveredTower && !selectedTower && (
+                <LandmarkTooltip landmarkType={hoveredLandmark} position={mousePos} />
+              )}
+              {!isTouchDeviceRef.current && hoveredHazardType && !hoveredTower && !selectedTower && (
+                <HazardTooltip hazardType={hoveredHazardType} position={mousePos} />
+              )}
+              <EnemyInspector
+                isActive={inspectorActive}
+                setIsActive={setInspectorActive}
+                selectedEnemy={selectedInspectEnemy}
+                setSelectedEnemy={setSelectedInspectEnemy}
+                enemies={enemies}
+                troops={troops}
+                setGameSpeed={(nextSpeed) => {
+                  if (battleOutcome) return;
+                  setGameSpeed(nextSpeed);
+                }}
+                previousGameSpeed={previousGameSpeed}
+                setPreviousGameSpeed={setPreviousGameSpeed}
+                gameSpeed={gameSpeed}
+                onDeactivate={() => {
+                  setSelectedInspectTroop(null);
+                  setSelectedInspectHero(false);
+                }}
               />
-            );
-          })()}
-          {/* Troop Detail Tooltip when troop is selected in inspect mode */}
-          {inspectorActive && selectedInspectTroop && (() => {
-            const liveTroop = troops.find(t => t.id === selectedInspectTroop.id);
-            if (!liveTroop) return null;
-            const screenPos = worldToScreen(
-              liveTroop.pos,
-              width,
-              height,
-              dpr,
-              cameraOffset,
-              cameraZoom
-            );
-            return (
-              <TroopDetailTooltip
-                troop={liveTroop}
-                position={screenPos}
-                onClose={() => setSelectedInspectTroop(null)}
-              />
-            );
-          })()}
-          {/* Hero Detail Tooltip when hero is selected in inspect mode */}
-          {inspectorActive && selectedInspectHero && hero && (() => {
-            const screenPos = worldToScreen(
-              hero.pos,
-              width,
-              height,
-              dpr,
-              cameraOffset,
-              cameraZoom
-            );
-            return (
-              <HeroDetailTooltip
-                hero={hero}
-                position={screenPos}
-                onClose={() => setSelectedInspectHero(false)}
-              />
-            );
-          })()}
-          {/* Hero and Spell Bar - overlaid on map at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
-            <HeroSpellBar
-              hero={hero}
-              spells={spells}
-              pawPoints={pawPoints}
-              enemies={enemies}
-              spellUpgradeLevels={spellUpgradeLevels}
-              targetingSpell={targetingSpell}
-              placingTroop={placingTroop}
-              toggleHeroSelection={toggleHeroSelection}
-              onUseHeroAbility={triggerHeroAbility}
-              castSpell={castSpell}
-            />
-          </div>
+              {inspectorActive && selectedInspectEnemy && (() => {
+                const enemyPos = getEnemyPosWithPath(selectedInspectEnemy, selectedMap);
+                const screenPos = worldToScreen(
+                  enemyPos,
+                  width,
+                  height,
+                  dpr,
+                  cameraOffset,
+                  cameraZoom
+                );
+                return (
+                  <EnemyDetailTooltip
+                    enemy={selectedInspectEnemy}
+                    position={screenPos}
+                    onClose={() => setSelectedInspectEnemy(null)}
+                  />
+                );
+              })()}
+              {inspectorActive && selectedInspectTroop && (() => {
+                const liveTroop = troops.find(t => t.id === selectedInspectTroop.id);
+                if (!liveTroop) return null;
+                const screenPos = worldToScreen(
+                  liveTroop.pos,
+                  width,
+                  height,
+                  dpr,
+                  cameraOffset,
+                  cameraZoom
+                );
+                return (
+                  <TroopDetailTooltip
+                    troop={liveTroop}
+                    position={screenPos}
+                    onClose={() => setSelectedInspectTroop(null)}
+                  />
+                );
+              })()}
+              {inspectorActive && selectedInspectHero && hero && (() => {
+                const screenPos = worldToScreen(
+                  hero.pos,
+                  width,
+                  height,
+                  dpr,
+                  cameraOffset,
+                  cameraZoom
+                );
+                return (
+                  <HeroDetailTooltip
+                    hero={hero}
+                    position={screenPos}
+                    onClose={() => setSelectedInspectHero(false)}
+                  />
+                );
+              })()}
+              <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 100 }}>
+                <HeroSpellBar
+                  hero={hero}
+                  spells={spells}
+                  pawPoints={pawPoints}
+                  enemies={enemies}
+                  spellUpgradeLevels={spellUpgradeLevels}
+                  targetingSpell={targetingSpell}
+                  placingTroop={placingTroop}
+                  toggleHeroSelection={toggleHeroSelection}
+                  onUseHeroAbility={triggerHeroAbility}
+                  castSpell={castSpell}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
-      <div className="flex flex-col flex-shrink-0">
-        <BuildMenu
-          pawPoints={pawPoints}
-          buildingTower={buildingTower}
-          setBuildingTower={setBuildingTower}
-          setIsBuildDragging={setIsBuildDragging}
-          setHoveredBuildTower={setHoveredBuildTower}
-          hoveredTower={hoveredTower}
-          setHoveredTower={setHoveredTower}
-          setDraggingTower={setDraggingTower}
-          placedTowers={towers.reduce((acc, t) => {
-            acc[t.type] = (acc[t.type] || 0) + 1;
-            return acc;
-          }, {} as Record<TowerType, number>)}
-          allowedTowers={levelAllowedTowers}
-        />
-      </div>{" "}
-      {isVictory && (
+      {!cameraModeActive && (
+        <div className="flex flex-col flex-shrink-0">
+          <BuildMenu
+            pawPoints={pawPoints}
+            buildingTower={buildingTower}
+            setBuildingTower={setBuildingTower}
+            setIsBuildDragging={setIsBuildDragging}
+            setHoveredBuildTower={setHoveredBuildTower}
+            hoveredTower={hoveredTower}
+            setHoveredTower={setHoveredTower}
+            setDraggingTower={setDraggingTower}
+            placedTowers={towers.reduce((acc, t) => {
+              acc[t.type] = (acc[t.type] || 0) + 1;
+              return acc;
+            }, {} as Record<TowerType, number>)}
+            allowedTowers={levelAllowedTowers}
+          />
+        </div>
+      )}
+      {!cameraModeActive && isVictory && (
         <VictoryScreen
           starsEarned={starsEarned}
           lives={lives}
@@ -11890,7 +11955,7 @@ export function usePrincetonTowerDefenseRuntime() {
           overlay
         />
       )}
-      {isDefeat && (
+      {!cameraModeActive && isDefeat && (
         <DefeatScreen
           resetGame={retryLevel}
           onBackToMap={quitLevel}

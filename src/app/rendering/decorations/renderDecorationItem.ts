@@ -16,6 +16,7 @@ import {
 } from "../isoFlush";
 import { getRockConfig } from "./rockPalettes";
 import { drawBoulderRock, drawSlabRock, drawSpireRock } from "./rockShapes";
+import { drawDirectionalShadow } from "./shadowHelpers";
 
 export interface DecorationRenderParams {
   ctx: CanvasRenderingContext2D;
@@ -117,30 +118,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ];
       const tv = treeVariants[variant % 4];
 
-      // Ground shadow with gradient
-      const shadowGrad = ctx.createRadialGradient(
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        0,
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        28 * s,
-      );
-      shadowGrad.addColorStop(0, "rgba(0,0,0,0.35)");
-      shadowGrad.addColorStop(0.6, "rgba(0,0,0,0.15)");
-      shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = shadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        28 * s,
-        14 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      // Ground shadow
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 5 * s, s, 18 * s, 10 * s, 35 * s, 0.3);
 
       // Trunk with 3D isometric faces
       // Left face (shadow)
@@ -338,10 +317,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
 
       // 1. Ground Shadow
       if (!skipShadow) {
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.beginPath();
-        ctx.ellipse(nx, ny + 12 * s, 70 * s, 28 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
+        drawDirectionalShadow(ctx, nx, ny + 6 * s, s, 55 * s, 22 * s, 80 * s, 0.3);
       }
       if (shadowOnly) break;
 
@@ -941,29 +917,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const bv = bushVariants[variant % 4];
 
       // Ground shadow
-      const bushShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 2 * s,
-        screenPos.y + 5 * s,
-        0,
-        screenPos.x + 2 * s,
-        screenPos.y + 5 * s,
-        20 * s,
-      );
-      bushShadowGrad.addColorStop(0, "rgba(0,0,0,0.28)");
-      bushShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
-      bushShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = bushShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 2 * s,
-        screenPos.y + 5 * s,
-        20 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 2 * s, s, 14 * s, 7 * s, 18 * s, 0.25);
 
       // Base foliage mass (darker, bottom layer)
       const baseGrad = ctx.createRadialGradient(
@@ -1418,29 +1372,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ctD = 5 * s;
 
       // Ground shadow
-      const ctShadG = ctx.createRadialGradient(
-        ctX + 3 * s,
-        ctY + 6 * s,
-        0,
-        ctX + 3 * s,
-        ctY + 6 * s,
-        32 * s,
-      );
-      ctShadG.addColorStop(0, "rgba(0,0,0,0.3)");
-      ctShadG.addColorStop(0.5, "rgba(0,0,0,0.1)");
-      ctShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = ctShadG;
-      ctx.beginPath();
-      ctx.ellipse(
-        ctX + 3 * s,
-        ctY + 6 * s,
-        32 * s,
-        14 * s,
-        0.15,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, ctX, ctY + 3 * s, s, 22 * s, 10 * s, 25 * s, 0.28);
 
       // Isometric cart aligned to ground plane
       const woodDark = "#3e2723";
@@ -1784,21 +1716,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const v = variant % 4;
 
       // Shadow
-      const hutSG = ctx.createRadialGradient(
-        cx + 6 * s,
-        cy + 8 * s,
-        0,
-        cx + 6 * s,
-        cy + 8 * s,
-        42 * s,
-      );
-      hutSG.addColorStop(0, "rgba(0,0,0,0.38)");
-      hutSG.addColorStop(0.5, "rgba(0,0,0,0.14)");
-      hutSG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = hutSG;
-      ctx.beginPath();
-      ctx.ellipse(cx + 6 * s, cy + 8 * s, 42 * s, 18 * s, 0.15, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, cx, cy + 4 * s, s, 28 * s, 12 * s, 40 * s, 0.35);
 
       const hutRoof = (
         peakY: number,
@@ -4777,21 +4695,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const tv = variant % 4;
 
       // Ground shadow
-      const tShadG = ctx.createRadialGradient(
-        tx + 3 * s,
-        ty + 5 * s,
-        0,
-        tx + 3 * s,
-        ty + 5 * s,
-        28 * s,
-      );
-      tShadG.addColorStop(0, "rgba(0,0,0,0.3)");
-      tShadG.addColorStop(0.6, "rgba(0,0,0,0.08)");
-      tShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = tShadG;
-      ctx.beginPath();
-      ctx.ellipse(tx + 3 * s, ty + 5 * s, 28 * s, 12 * s, 0.1, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, tx, ty + 2 * s, s, 20 * s, 9 * s, 28 * s, 0.28);
 
       if (tv === 0) {
         // === MILITARY COMMAND TENT — large A-frame with war banner ===
@@ -5480,21 +5384,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const sv = variant % 4;
 
       // Ground shadow
-      const sShadG = ctx.createRadialGradient(
-        sx + 2 * s,
-        sy + 3 * s,
-        0,
-        sx + 2 * s,
-        sy + 3 * s,
-        14 * s,
-      );
-      sShadG.addColorStop(0, "rgba(0,0,0,0.25)");
-      sShadG.addColorStop(0.6, "rgba(0,0,0,0.06)");
-      sShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = sShadG;
-      ctx.beginPath();
-      ctx.ellipse(sx + 2 * s, sy + 3 * s, 14 * s, 6 * s, 0.15, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, sx, sy + 1 * s, s, 8 * s, 4 * s, 24 * s, 0.22);
 
       if (sv === 0) {
         // === CROSSROADS SIGN — 3 arrow boards at different angles, skull decoration ===
@@ -6280,18 +6170,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const waterTime = decorTime * 3;
 
       // Ground shadow
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(
-        fountainBaseX,
-        fountainBaseY + 5 * s,
-        25 * s,
-        12 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, fountainBaseX, fountainBaseY + 2 * s, s, 18 * s, 9 * s, 30 * s, 0.25);
 
       // Outer basin - stone rim
       const stoneGrad = ctx.createLinearGradient(
@@ -6515,21 +6394,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const bv = variant % 4;
 
       // Ground shadow
-      const bShadG = ctx.createRadialGradient(
-        bx + 2 * s,
-        by + 3 * s,
-        0,
-        bx + 2 * s,
-        by + 3 * s,
-        18 * s,
-      );
-      bShadG.addColorStop(0, "rgba(0,0,0,0.22)");
-      bShadG.addColorStop(0.6, "rgba(0,0,0,0.06)");
-      bShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = bShadG;
-      ctx.beginPath();
-      ctx.ellipse(bx + 2 * s, by + 3 * s, 18 * s, 7 * s, 0.1, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, bx, by + 1 * s, s, 12 * s, 5 * s, 16 * s, 0.2);
 
       if (bv === 0) {
         // === ORNATE STONE BENCH — properly isometric with lion armrests ===
@@ -9313,10 +9178,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
         pCrownY = pb3y;
 
       // Ground shadow
-      ctx.fillStyle = "rgba(0,0,0,0.15)";
-      ctx.beginPath();
-      ctx.ellipse(px + 8 * s, py + 4 * s, 14 * s, 6 * s, 0.15, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, px, py + 2 * s, s, 10 * s, 4 * s, 40 * s, 0.2);
 
       // Trunk: 6 segments, 3 faces each
       const pWBase = 12 * s,
@@ -9541,28 +9403,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const cacBaseY = screenPos.y;
 
       // Ground shadow
-      const cacShadowGrad = ctx.createRadialGradient(
-        cacBaseX + 5 * s,
-        cacBaseY + 5 * s,
-        0,
-        cacBaseX + 5 * s,
-        cacBaseY + 5 * s,
-        20 * s,
-      );
-      cacShadowGrad.addColorStop(0, "rgba(0,0,0,0.2)");
-      cacShadowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = cacShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        cacBaseX + 5 * s,
-        cacBaseY + 5 * s,
-        20 * s,
-        8 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, cacBaseX, cacBaseY + 2 * s, s, 14 * s, 6 * s, 38 * s, 0.25);
 
       // Main body gradient for 3D roundness
       const cacGrad = ctx.createLinearGradient(
@@ -10351,11 +10192,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const oBaseW = 10 * s;
       const oTopW = 6 * s;
 
-      // Ground shadow (flat)
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      ctx.beginPath();
-      ctx.ellipse(ox + 6 * s, oy + 6 * s, 18 * s, 8 * s, 0.2, 0, Math.PI * 2);
-      ctx.fill();
+      // Ground shadow
+      drawDirectionalShadow(ctx, ox, oy + 3 * s, s, 12 * s, 6 * s, 55 * s, 0.25);
 
       // Single merged pedestal
       const pedW = 13 * s;
@@ -10516,18 +10354,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const mysticPulse = 0.6 + Math.sin(time * 1.5) * 0.2;
 
       // ========== GROUND SHADOW ==========
-      ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 5 * s,
-        screenPos.y + 18 * s,
-        55 * s,
-        22 * s,
-        0.1,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 12 * s, s, 42 * s, 17 * s, 60 * s, 0.35);
 
       // ========== SAND AROUND BASE ==========
       const sandGrad = ctx.createRadialGradient(
@@ -11871,11 +11698,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const hw = bodyW * 0.5 * ISO_COS;
       const hd = bodyW * 0.5 * ISO_SIN * 0.5;
 
-      // === GROUND SHADOW (flat) ===
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.beginPath();
-      ctx.ellipse(sx + 4 * s, sy + 6 * s, 38 * s, 14 * s, 0.08, 0, Math.PI * 2);
-      ctx.fill();
+      // === GROUND SHADOW ===
+      drawDirectionalShadow(ctx, sx, sy + 3 * s, s, 28 * s, 10 * s, 35 * s, 0.25);
 
       // === PEDESTAL ===
       const pdW = 32 * s,
@@ -14785,28 +14609,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const sarcGoldDark = "#a08030";
 
       // Shadow
-      const sarcShadow = ctx.createRadialGradient(
-        screenPos.x + 4 * s,
-        screenPos.y + 6 * s,
-        0,
-        screenPos.x + 4 * s,
-        screenPos.y + 6 * s,
-        25 * s,
-      );
-      sarcShadow.addColorStop(0, "rgba(0,0,0,0.3)");
-      sarcShadow.addColorStop(1, "transparent");
-      ctx.fillStyle = sarcShadow;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 4 * s,
-        screenPos.y + 6 * s,
-        25 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 3 * s, s, 16 * s, 7 * s, 28 * s, 0.28);
 
       // Base - isometric box
       const bw = 12 * s,
@@ -14929,21 +14732,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const csGoldDark = "#a08020";
 
       // Ground shadow
-      const cobraShadGrad = ctx.createRadialGradient(
-        cx + 4 * s,
-        cy + 7 * s,
-        0,
-        cx + 4 * s,
-        cy + 7 * s,
-        24 * s,
-      );
-      cobraShadGrad.addColorStop(0, "rgba(0,0,0,0.35)");
-      cobraShadGrad.addColorStop(0.5, "rgba(0,0,0,0.12)");
-      cobraShadGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = cobraShadGrad;
-      ctx.beginPath();
-      ctx.ellipse(cx + 4 * s, cy + 7 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, cx, cy + 3 * s, s, 15 * s, 7 * s, 35 * s, 0.3);
 
       // === 3D ISOMETRIC PEDESTAL (2-tier) ===
       const pedW1 = 14 * s;
@@ -15574,21 +15363,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ];
 
       // Ground shadow
-      const ptShadG = ctx.createRadialGradient(
-        ptX + 2 * s,
-        ptY + 4 * s,
-        0,
-        ptX + 2 * s,
-        ptY + 4 * s,
-        22 * s,
-      );
-      ptShadG.addColorStop(0, "rgba(0,0,0,0.22)");
-      ptShadG.addColorStop(0.6, "rgba(0,0,0,0.06)");
-      ptShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = ptShadG;
-      ctx.beginPath();
-      ctx.ellipse(ptX + 2 * s, ptY + 4 * s, 22 * s, 9 * s, 0.1, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, ptX, ptY + 2 * s, s, 15 * s, 6 * s, 22 * s, 0.22);
 
       // Scattered sand/dirt under pots
       ctx.fillStyle = "rgba(180,150,100,0.12)";
@@ -16134,30 +15909,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const snowWhite = "#f8f9fa";
       const snowBlue = "#e3f2fd";
 
-      // Ground shadow with gradient
-      const pineShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        0,
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        25 * s,
-      );
-      pineShadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
-      pineShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
-      pineShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = pineShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        25 * s,
-        12 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      // Ground shadow
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 5 * s, s, 18 * s, 10 * s, 50 * s, 0.28);
 
       // Snow mound at base
       ctx.fillStyle = snowBlue;
@@ -16348,17 +16101,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const snowBlueShade = "#e3f2fd";
 
       // Ground shadow
-      const snowmanShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 4 * s, screenPos.y + 8 * s, 0,
-        screenPos.x + 4 * s, screenPos.y + 8 * s, 22 * s,
-      );
-      snowmanShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
-      snowmanShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
-      snowmanShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = snowmanShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 8 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 16 * s, 8 * s, 35 * s, 0.25);
 
       // Shared snow-ball helper with surface detail
       const drawSnowBall = (bx: number, by: number, br: number) => {
@@ -16925,30 +16668,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const frontPt = { x: snowBaseX, y: snowBaseY + isoDepth };
       const peakPt = { x: snowBaseX - 5 * s, y: snowBaseY - snowHeight };
 
-      // Soft shadow on ground (isometric ellipse)
-      const shadowGrad = ctx.createRadialGradient(
-        snowBaseX + 8 * s,
-        snowBaseY + 5 * s,
-        0,
-        snowBaseX + 8 * s,
-        snowBaseY + 5 * s,
-        50 * s,
-      );
-      shadowGrad.addColorStop(0, "rgba(70, 90, 120, 0.3)");
-      shadowGrad.addColorStop(0.6, "rgba(80, 100, 130, 0.12)");
-      shadowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = shadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        snowBaseX + 8 * s,
-        snowBaseY + 5 * s,
-        45 * s,
-        22 * s,
-        0.1,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      // Soft shadow on ground
+      drawDirectionalShadow(ctx, snowBaseX, snowBaseY + 2 * s, s, 35 * s, 18 * s, 30 * s, 0.28, "70,90,120");
 
       // Back face (darker, more blue - facing away from light)
       const backFaceGrad = ctx.createLinearGradient(
@@ -17308,18 +17029,8 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
     case "glacier": {
       const gVar = variant % 3;
 
-      // Gradient shadow
-      const glShadG = ctx.createRadialGradient(
-        screenPos.x + 3 * s, screenPos.y + 6 * s, 0,
-        screenPos.x + 3 * s, screenPos.y + 6 * s, 45 * s,
-      );
-      glShadG.addColorStop(0, "rgba(0,70,100,0.35)");
-      glShadG.addColorStop(0.5, "rgba(0,70,100,0.12)");
-      glShadG.addColorStop(1, "transparent");
-      ctx.fillStyle = glShadG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 6 * s, 45 * s, 18 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      // Ground shadow
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 3 * s, s, 32 * s, 14 * s, 45 * s, 0.3, "0,70,100");
 
       // Snow mound base with gradient
       const glSnowG = ctx.createRadialGradient(
@@ -17468,17 +17179,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ifVar = variant % 3;
 
       // Ground shadow
-      const ifShadG = ctx.createRadialGradient(
-        screenPos.x + 4 * s, screenPos.y + 14 * s, 0,
-        screenPos.x + 4 * s, screenPos.y + 14 * s, 60 * s,
-      );
-      ifShadG.addColorStop(0, "rgba(0,50,70,0.4)");
-      ifShadG.addColorStop(0.5, "rgba(0,50,70,0.12)");
-      ifShadG.addColorStop(1, "transparent");
-      ctx.fillStyle = ifShadG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 14 * s, 60 * s, 24 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 8 * s, s, 44 * s, 18 * s, 65 * s, 0.35, "0,50,70");
 
       // Snow mound base
       const ifSnowG = ctx.createRadialGradient(
@@ -17795,17 +17496,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const isVar = variant % 3;
 
       // Ground shadow
-      const isShadG = ctx.createRadialGradient(
-        screenPos.x + 2 * s, screenPos.y + 10 * s, 0,
-        screenPos.x + 2 * s, screenPos.y + 10 * s, 25 * s,
-      );
-      isShadG.addColorStop(0, "rgba(0,60,80,0.35)");
-      isShadG.addColorStop(0.6, "rgba(0,60,80,0.1)");
-      isShadG.addColorStop(1, "transparent");
-      ctx.fillStyle = isShadG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 2 * s, screenPos.y + 10 * s, 25 * s, 10 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 6 * s, s, 18 * s, 8 * s, 50 * s, 0.3, "0,60,80");
 
       // Isometric base platform helper
       const isDrawBase = (bw: number, bd: number) => {
@@ -17988,17 +17679,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const itVar = variant % 3;
 
       // Ground shadow
-      const itShadG = ctx.createRadialGradient(
-        screenPos.x + 4 * s, screenPos.y + 16 * s, 0,
-        screenPos.x + 4 * s, screenPos.y + 16 * s, 45 * s,
-      );
-      itShadG.addColorStop(0, "rgba(0,50,70,0.4)");
-      itShadG.addColorStop(0.5, "rgba(0,50,70,0.12)");
-      itShadG.addColorStop(1, "transparent");
-      ctx.fillStyle = itShadG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 4 * s, screenPos.y + 16 * s, 45 * s, 18 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 10 * s, s, 32 * s, 14 * s, 55 * s, 0.35, "0,50,70");
 
       // Snow base mound
       const itSnowG = ctx.createRadialGradient(
@@ -18402,29 +18083,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const rockLight = "#8a9aaa";
 
       // Ground shadow
-      const icicleShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        30 * s,
-      );
-      icicleShadowGrad.addColorStop(0, "rgba(0,0,0,0.25)");
-      icicleShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.08)");
-      icicleShadowGrad.addColorStop(1, "transparent");
-      ctx.fillStyle = icicleShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        30 * s,
-        14 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 22 * s, 10 * s, 35 * s, 0.25);
 
       // Snow mound at base
       ctx.fillStyle = "#f0f4f8";
@@ -18804,17 +18463,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const fsVar = variant % 3;
 
       // Ground shadow
-      const fsShadG = ctx.createRadialGradient(
-        screenPos.x + 3 * s, screenPos.y + 8 * s, 0,
-        screenPos.x + 3 * s, screenPos.y + 8 * s, 26 * s,
-      );
-      fsShadG.addColorStop(0, "rgba(0,60,80,0.35)");
-      fsShadG.addColorStop(0.5, "rgba(0,60,80,0.1)");
-      fsShadG.addColorStop(1, "transparent");
-      ctx.fillStyle = fsShadG;
-      ctx.beginPath();
-      ctx.ellipse(screenPos.x + 3 * s, screenPos.y + 8 * s, 26 * s, 11 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 18 * s, 8 * s, 40 * s, 0.3, "0,60,80");
 
       // Snow mound base
       const fsSnowG = ctx.createRadialGradient(
@@ -20681,29 +20330,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const lanternStoneLight = "#b0bfcf";
 
       // Ground shadow
-      const lanternShadow = ctx.createRadialGradient(
-        screenPos.x + 2 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 2 * s,
-        screenPos.y + 8 * s,
-        20 * s,
-      );
-      lanternShadow.addColorStop(0, "rgba(0,0,0,0.25)");
-      lanternShadow.addColorStop(0.5, "rgba(0,0,0,0.1)");
-      lanternShadow.addColorStop(1, "transparent");
-      ctx.fillStyle = lanternShadow;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 2 * s,
-        screenPos.y + 8 * s,
-        20 * s,
-        10 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 14 * s, 7 * s, 30 * s, 0.25);
 
       // Snow around base
       ctx.fillStyle = "#f0f4f8";
@@ -21258,29 +20885,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const emberRed = "#ff3300";
 
       // Ground shadow
-      const charShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        22 * s,
-      );
-      charShadowGrad.addColorStop(0, "rgba(0,0,0,0.35)");
-      charShadowGrad.addColorStop(0.6, "rgba(0,0,0,0.15)");
-      charShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = charShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 4 * s,
-        screenPos.y + 8 * s,
-        22 * s,
-        11 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 16 * s, 8 * s, 40 * s, 0.35);
 
       // Ash pile at base
       ctx.fillStyle = charMid;
@@ -21549,20 +21154,18 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const cPulse = 0.5 + Math.sin(decorTime * 2.4) * 0.25;
       const fY = oy - 16 * s;
 
+      drawDirectionalShadow(ctx, ox, fY, s, 36 * s, 16 * s, 60 * s, 0.4);
+      // Lava underglow at base
       const gGrad = ctx.createRadialGradient(
-        ox + 3 * s,
-        fY + 4 * s,
-        0,
-        ox + 3 * s,
-        fY + 4 * s,
-        48 * s,
+        ox, fY + 2 * s, 0,
+        ox, fY + 2 * s, 28 * s,
       );
-      gGrad.addColorStop(0, "rgba(255,61,0,0.28)");
-      gGrad.addColorStop(0.4, "rgba(0,0,0,0.45)");
-      gGrad.addColorStop(1, "rgba(0,0,0,0)");
+      gGrad.addColorStop(0, "rgba(255,61,0,0.22)");
+      gGrad.addColorStop(0.6, "rgba(255,61,0,0.06)");
+      gGrad.addColorStop(1, "transparent");
       ctx.fillStyle = gGrad;
       ctx.beginPath();
-      ctx.ellipse(ox + 3 * s, fY + 4 * s, 48 * s, 22 * s, 0.1, 0, Math.PI * 2);
+      ctx.ellipse(ox, fY + 2 * s, 28 * s, 12 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
       drawIsometricPrism(
@@ -22224,10 +21827,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const peaked = variant === 2;
       const hasFlag = variant === 2;
 
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.beginPath();
-      ctx.ellipse(bx + 4 * s, by + 7 * s, 40 * s, 16 * s, 0.15, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, bx, by + 3 * s, s, 28 * s, 12 * s, 50 * s, 0.4);
 
       drawIsometricPrism(
         ctx,
@@ -22615,10 +22215,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const brassHi = "#c8a55a";
       const rPulse = 0.5 + Math.sin(decorTime * 2.2 + variant * 0.7) * 0.25;
 
-      ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.beginPath();
-      ctx.ellipse(tx + 4 * s, ty + 8 * s, 36 * s, 16 * s, 0.15, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, tx, ty + 4 * s, s, 24 * s, 12 * s, 45 * s, 0.38);
 
       drawIsometricPrism(
         ctx,
@@ -22882,18 +22479,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const dsHM = [1.0, 0.85, 1.15][variant % 3];
       const dsWM = [1.0, 1.1, 0.9][variant % 3];
 
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.ellipse(
-        dx + 4 * s,
-        dy + 5 * s,
-        18 * s * dsWM,
-        8 * s,
-        0.15,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, dx, dy + 2 * s, s, 14 * s * dsWM, 6 * s, 55 * s * dsHM, 0.35);
 
       drawIsometricPrism(
         ctx,
@@ -23092,10 +22678,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.ellipse(lx, ly, 45 * s, 22 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.beginPath();
-      ctx.ellipse(lx + 3 * s, ly + 6 * s, 30 * s, 13 * s, 0.1, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, lx, ly + 3 * s, s, 22 * s, 10 * s, 52 * s, 0.32);
 
       const debrisData: number[][] = wide
         ? [
@@ -23469,18 +23052,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const hM = variant === 0 ? 1.0 : 0.82;
       const wM = variant === 0 ? 1.0 : 1.18;
 
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.ellipse(
-        px + 4 * s,
-        py + 6 * s,
-        22 * s * wM,
-        10 * s,
-        0.15,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, px, py + 3 * s, s, 16 * s * wM, 7 * s, 50 * s * hM, 0.35);
 
       drawIsometricPrism(
         ctx,
@@ -24353,29 +23925,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const swampFoliage = ["#1a3a1a", "#2a4a2a", "#1a2a1a", "#2a3a2a"];
 
       // Ground shadow/murky water reflection
-      const swampShadowGrad = ctx.createRadialGradient(
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        0,
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        28 * s,
-      );
-      swampShadowGrad.addColorStop(0, "rgba(10,20,10,0.4)");
-      swampShadowGrad.addColorStop(0.5, "rgba(20,40,20,0.2)");
-      swampShadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = swampShadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 5 * s,
-        screenPos.y + 10 * s,
-        28 * s,
-        14 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 5 * s, s, 20 * s, 10 * s, 45 * s, 0.35, "10,20,10");
 
       // Exposed roots in water
       ctx.strokeStyle = swampTrunkDark;
@@ -25140,18 +24690,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const ambientPulse = 0.6 + Math.sin(time * 2) * 0.15;
 
       // ========== GROUND SHADOW ==========
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 5 * s,
-        screenPos.y + 5 * s,
-        45 * s,
-        18 * s,
-        0.2,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 2 * s, s, 32 * s, 14 * s, 45 * s, 0.4);
 
       // ========== DEAD GROUND / CORRUPTION ==========
       // Corrupted earth around cottage
@@ -26763,21 +26302,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Ground shadow
-      const idolShadGrad = ctx.createRadialGradient(
-        ix + 3 * s,
-        iy + 6 * s,
-        0,
-        ix + 3 * s,
-        iy + 6 * s,
-        22 * s,
-      );
-      idolShadGrad.addColorStop(0, "rgba(0,0,0,0.35)");
-      idolShadGrad.addColorStop(0.6, "rgba(0,0,0,0.1)");
-      idolShadGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = idolShadGrad;
-      ctx.beginPath();
-      ctx.ellipse(ix + 3 * s, iy + 6 * s, 20 * s, 10 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, ix, iy + 3 * s, s, 14 * s, 7 * s, 40 * s, 0.3);
 
       // === BOTTOM PEDESTAL TIER ===
       const pedW1 = 14 * s;
@@ -27587,29 +27112,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const mossColor = "#4a5d3a";
 
       // Ground shadow for all variants
-      const shadowGrad = ctx.createRadialGradient(
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        0,
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        45 * s,
-      );
-      shadowGrad.addColorStop(0, "rgba(0,0,0,0.3)");
-      shadowGrad.addColorStop(0.7, "rgba(0,0,0,0.1)");
-      shadowGrad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = shadowGrad;
-      ctx.beginPath();
-      ctx.ellipse(
-        screenPos.x + 3 * s,
-        screenPos.y + 8 * s,
-        45 * s,
-        22 * s,
-        0,
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      drawDirectionalShadow(ctx, screenPos.x, screenPos.y + 4 * s, s, 32 * s, 16 * s, 40 * s, 0.28);
 
       if (ruinVariant === 0) {
         // VARIANT 0: Broken column ruins — tall column, wall fragment, rubble field
@@ -31522,21 +31025,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       ctx.fill();
 
       // Ground shadow
-      const tcShadG = ctx.createRadialGradient(
-        tcX + 2 * s,
-        tcY + 4 * s,
-        0,
-        tcX + 2 * s,
-        tcY + 4 * s,
-        12 * s,
-      );
-      tcShadG.addColorStop(0, "rgba(0,0,0,0.25)");
-      tcShadG.addColorStop(0.6, "rgba(0,0,0,0.08)");
-      tcShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = tcShadG;
-      ctx.beginPath();
-      ctx.ellipse(tcX + 2 * s, tcY + 4 * s, 12 * s, 5 * s, 0.2, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, tcX, tcY + 2 * s, s, 8 * s, 3 * s, 30 * s, 0.22);
 
       // Stone base — isometric slab
       const baseG = ctx.createLinearGradient(
@@ -31804,22 +31293,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const py = screenPos.y;
 
       // Ground shadow
-      const statueShadG = ctx.createRadialGradient(
-        px + 4 * s,
-        py + 8 * s,
-        0,
-        px + 4 * s,
-        py + 8 * s,
-        28 * s,
-      );
-      statueShadG.addColorStop(0, "rgba(0,0,0,0.45)");
-      statueShadG.addColorStop(0.4, "rgba(0,0,0,0.18)");
-      statueShadG.addColorStop(0.7, "rgba(0,0,0,0.06)");
-      statueShadG.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = statueShadG;
-      ctx.beginPath();
-      ctx.ellipse(px + 4 * s, py + 8 * s, 25 * s, 12 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
+      drawDirectionalShadow(ctx, px, py + 4 * s, s, 18 * s, 9 * s, 45 * s, 0.35);
 
       // Helper: draw a gradient-lit isometric tier
       const drawPedTier = (
@@ -34870,21 +34344,7 @@ export function renderDecorationItem(params: DecorationRenderParams): void {
       const cy = screenPos.y;
 
       if (!skipShadow) {
-        const shGrad = ctx.createRadialGradient(
-          cx + 3 * s,
-          cy + 7 * s,
-          0,
-          cx + 3 * s,
-          cy + 7 * s,
-          22 * s,
-        );
-        shGrad.addColorStop(0, "rgba(0,0,0,0.4)");
-        shGrad.addColorStop(0.6, "rgba(0,0,0,0.15)");
-        shGrad.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = shGrad;
-        ctx.beginPath();
-        ctx.ellipse(cx + 3 * s, cy + 7 * s, 22 * s, 10 * s, 0, 0, Math.PI * 2);
-        ctx.fill();
+        drawDirectionalShadow(ctx, cx, cy + 3 * s, s, 14 * s, 7 * s, 30 * s, 0.32);
       }
       if (shadowOnly) break;
 

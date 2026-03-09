@@ -15,6 +15,8 @@ import {
   Sparkles,
   Landmark,
   Settings,
+  Camera,
+  Lock,
 } from "lucide-react";
 import {
   getPerformanceSettings,
@@ -52,6 +54,11 @@ interface TopHUDProps {
   inspectorActive?: boolean;
   setInspectorActive?: (active: boolean) => void;
   setSelectedInspectEnemy?: (enemy: null) => void;
+  // Photo mode
+  cameraModeActive?: boolean;
+  onTogglePhotoMode?: () => void;
+  // Pause lock (camera mode or inspect mode active)
+  pauseLocked?: boolean;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -72,6 +79,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   inspectorActive = false,
   setInspectorActive,
   setSelectedInspectEnemy,
+  cameraModeActive = false,
+  onTogglePhotoMode,
+  pauseLocked = false,
 }) => {
   // Performance mode state - starts based on browser detection
   const [performanceMode, setPerformanceMode] = useState(() => {
@@ -554,6 +564,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               </span>
               <button
                 onClick={() => {
+                  if (pauseLocked) return;
                   setGameSpeed((prev) => Math.max(prev - 0.25, 0));
                   if (inspectorActive && setInspectorActive) {
                     setInspectorActive(false);
@@ -562,8 +573,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     }
                   }
                 }}
-                title="Decrease game speed (-0.25x)"
-                className="relative z-10 p-1 rounded-lg transition-colors hover:bg-green-800/40"
+                disabled={pauseLocked}
+                title={pauseLocked ? "Speed locked during Photo/Inspect mode" : "Decrease game speed (-0.25x)"}
+                className={`relative z-10 p-1 rounded-lg transition-colors ${pauseLocked ? "opacity-40 cursor-not-allowed" : "hover:bg-green-800/40"}`}
                 style={{ border: "1px solid rgba(80,120,60,0.3)" }}
               >
                 <Rewind size={14} className="text-green-300/80" />
@@ -584,6 +596,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               </span>
               <button
                 onClick={() => {
+                  if (pauseLocked) return;
                   setGameSpeed((prev) => Math.min(prev + 0.25, 5));
                   if (inspectorActive && setInspectorActive) {
                     setInspectorActive(false);
@@ -592,8 +605,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     }
                   }
                 }}
-                title="Increase game speed (+0.25x)"
-                className="relative z-10 p-1 rounded-lg transition-colors hover:bg-green-800/40"
+                disabled={pauseLocked}
+                title={pauseLocked ? "Speed locked during Photo/Inspect mode" : "Increase game speed (+0.25x)"}
+                className={`relative z-10 p-1 rounded-lg transition-colors ${pauseLocked ? "opacity-40 cursor-not-allowed" : "hover:bg-green-800/40"}`}
                 style={{ border: "1px solid rgba(80,120,60,0.3)" }}
               >
                 <FastForward size={14} className="text-green-300/80" />
@@ -602,6 +616,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                 <button
                   key={speed}
                   onClick={() => {
+                    if (pauseLocked) return;
                     setGameSpeed(speed);
                     if (inspectorActive && setInspectorActive) {
                       setInspectorActive(false);
@@ -610,8 +625,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                       }
                     }
                   }}
-                  title={`Set game speed to ${speed}x`}
-                  className="relative z-10 px-2 py-1 rounded-lg font-black text-[11px] transition-all"
+                  disabled={pauseLocked}
+                  title={pauseLocked ? "Speed locked during Photo/Inspect mode" : `Set game speed to ${speed}x`}
+                  className={`relative z-10 px-2 py-1 rounded-lg font-black text-[11px] transition-all ${pauseLocked ? "opacity-40 cursor-not-allowed" : ""}`}
                   style={{
                     background: gameSpeed === speed
                       ? `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`
@@ -636,6 +652,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               <div className="absolute inset-[2px] rounded-[10px] pointer-events-none" style={{ border: `1px solid ${GOLD.innerBorder08}` }} />
               <button
                 onClick={() => {
+                  if (pauseLocked) return;
                   if (gameSpeed === 0) {
                     setGameSpeed(1);
                     if (inspectorActive && setInspectorActive) {
@@ -648,14 +665,17 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                     setGameSpeed(0);
                   }
                 }}
-                title={gameSpeed === 0 ? "Resume game (Spacebar)" : "Pause game (Spacebar)"}
-                className="relative z-10 p-1.5 rounded-lg transition-colors hover:brightness-125"
+                disabled={pauseLocked}
+                title={pauseLocked ? "Paused — exit Photo/Inspect mode first" : gameSpeed === 0 ? "Resume game (Spacebar)" : "Pause game (Spacebar)"}
+                className={`relative z-10 p-1.5 rounded-lg transition-colors ${pauseLocked ? "opacity-40 cursor-not-allowed" : "hover:brightness-125"}`}
                 style={{
                   background: `linear-gradient(135deg, ${SELECTED.bgLight}, ${SELECTED.bgDark})`,
                   border: `1px solid ${GOLD.border35}`,
                 }}
               >
-                {gameSpeed === 0 ? (
+                {pauseLocked ? (
+                  <Lock size={15} className="text-amber-300/60" />
+                ) : gameSpeed === 0 ? (
                   <Play size={15} className="text-amber-300" />
                 ) : (
                   <Pause size={15} className="text-amber-300" />
@@ -686,6 +706,24 @@ export const TopHUD: React.FC<TopHUDProps> = ({
                   {currentFps}
                 </span>
               </button>
+              {onTogglePhotoMode && (
+                <button
+                  onClick={onTogglePhotoMode}
+                  title={cameraModeActive ? "Exit Photo Mode (F2)" : "Photo Mode (F2)"}
+                  className="relative z-10 p-1.5 rounded-lg transition-colors hover:brightness-125"
+                  style={{
+                    background: cameraModeActive
+                      ? "linear-gradient(135deg, rgba(100,80,180,0.6), rgba(70,50,140,0.4))"
+                      : "linear-gradient(135deg, rgba(60,60,100,0.5), rgba(35,35,70,0.3))",
+                    border: cameraModeActive
+                      ? "1px solid rgba(160,140,255,0.5)"
+                      : "1px solid rgba(120,120,200,0.35)",
+                    boxShadow: cameraModeActive ? "0 0 8px rgba(140,120,255,0.3)" : "none",
+                  }}
+                >
+                  <Camera size={15} className={cameraModeActive ? "text-indigo-200" : "text-indigo-300"} />
+                </button>
+              )}
               <button
                 onClick={() => setShowSettings(true)}
                 title="Open settings"

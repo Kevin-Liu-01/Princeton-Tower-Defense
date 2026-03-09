@@ -123,6 +123,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             <ZoomOut size={14} className="text-amber-400" />
           </button>
         </div>
+
       </div>
 
       {/* Controls help panel */}
@@ -149,6 +150,7 @@ export const CameraControls: React.FC<CameraControlsProps> = ({
             { key: "WASD", desc: "Move Camera" },
             { key: "+/−", desc: "Zoom In / Out" },
             { key: "ESC", desc: "Unselect" },
+            { key: "F2", desc: "Photo Mode" },
           ].map((item) => (
             <div key={item.key} className="flex items-center gap-2 text-[9px]">
               <span

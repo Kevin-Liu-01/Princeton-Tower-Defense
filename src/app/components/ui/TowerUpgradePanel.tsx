@@ -11,9 +11,7 @@ import {
   X,
   Swords,
   Target,
-  Coins,
   Gauge,
-  Crown,
   Crosshair,
   CoinsIcon,
   Snowflake,
@@ -36,6 +34,7 @@ import {
   Ban,
   Lock,
   Fence,
+  Flag,
 } from "lucide-react";
 import type { Tower, Position } from "../../types";
 import { TOWER_DATA, TROOP_DATA } from "../../constants";
@@ -43,6 +42,11 @@ import { calculateTowerStats, getUpgradeCost, TOWER_STATS } from "../../constant
 import { TowerSprite } from "../../sprites";
 import { useResponsiveSizes } from "./hooks";
 import { PANEL, GOLD, panelGradient } from "./theme";
+import { CircleActionButton } from "./CircleActionButton";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface TowerUpgradePanelProps {
   tower: Tower;
@@ -54,7 +58,311 @@ interface TowerUpgradePanelProps {
   onClose: () => void;
   onRetargetMissile?: (towerId: string) => void;
   onToggleMissileAutoAim?: (towerId: string) => void;
+  onRallyTroops?: (towerId: string) => void;
 }
+
+interface ActionButtonDef {
+  id: string;
+  angle: number;
+  icon: React.ReactNode;
+  label: string;
+  subLabel?: string;
+  onClick: () => void;
+  disabled?: boolean;
+  borderColor: string;
+  glowColor: string;
+  bgGradient: string;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const DEG_TO_RAD = Math.PI / 180;
+
+function getUpgradeIcons(towerType: string): { A: React.ReactNode; B: React.ReactNode } {
+  const map: Record<string, { A: React.ReactNode; B: React.ReactNode }> = {
+    cannon: { A: <Repeat size={18} />, B: <Flame size={18} /> },
+    arch: { A: <BowArrow size={18} />, B: <Music size={18} /> },
+    lab: { A: <Focus size={18} />, B: <Zap size={18} /> },
+    library: { A: <Mountain size={18} />, B: <Snowflake size={18} /> },
+    station: { A: <CircleDot size={18} />, B: <Shield size={18} /> },
+    club: { A: <Amphora size={18} />, B: <UserPlus size={18} /> },
+  };
+  return map[towerType] || { A: <Zap size={18} />, B: <Shield size={18} /> };
+}
+
+function buildActionButtons(
+  tower: Tower,
+  towerData: (typeof TOWER_DATA)[keyof typeof TOWER_DATA],
+  upgradeCost: number,
+  sellValue: number,
+  pawPoints: number,
+  upgradeTower: (id: string, choice?: "A" | "B") => void,
+  sellTower: (id: string) => void,
+  onToggleMissileAutoAim?: (id: string) => void,
+  onRetargetMissile?: (id: string) => void,
+  onRallyTroops?: (id: string) => void,
+): ActionButtonDef[] {
+  const buttons: ActionButtonDef[] = [];
+  const icons = getUpgradeIcons(tower.type);
+
+  // --- Upgrade buttons ---
+  if (tower.level <= 2) {
+    buttons.push({
+      id: "upgrade",
+      angle: -90,
+      icon: <ArrowUp size={20} className="text-green-200" />,
+      label: `Level ${tower.level + 1}`,
+      subLabel: `${upgradeCost} PP`,
+      onClick: () => upgradeTower(tower.id),
+      disabled: pawPoints < upgradeCost,
+      borderColor: "rgba(34,197,94,0.7)",
+      glowColor: "rgba(34,197,94,0.3)",
+      bgGradient: "linear-gradient(180deg, #166534 0%, #14532d 100%)",
+    });
+  }
+
+  if (tower.level === 3) {
+    buttons.push({
+      id: "upgradeA",
+      angle: -140,
+      icon: <span className="text-red-200">{icons.A}</span>,
+      label: towerData.upgrades.A.name,
+      subLabel: `${upgradeCost} PP`,
+      onClick: () => upgradeTower(tower.id, "A"),
+      disabled: pawPoints < upgradeCost,
+      borderColor: "rgba(239,68,68,0.7)",
+      glowColor: "rgba(239,68,68,0.3)",
+      bgGradient: "linear-gradient(180deg, #991b1b 0%, #7f1d1d 100%)",
+    });
+    buttons.push({
+      id: "upgradeB",
+      angle: -40,
+      icon: <span className="text-blue-200">{icons.B}</span>,
+      label: towerData.upgrades.B.name,
+      subLabel: `${upgradeCost} PP`,
+      onClick: () => upgradeTower(tower.id, "B"),
+      disabled: pawPoints < upgradeCost,
+      borderColor: "rgba(59,130,246,0.7)",
+      glowColor: "rgba(59,130,246,0.3)",
+      bgGradient: "linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%)",
+    });
+  }
+
+  // --- Mortar special buttons (bottom-right quadrant) ---
+  if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A") {
+    const hasRetarget = onRetargetMissile && !tower.mortarAutoAim;
+    if (onToggleMissileAutoAim) {
+      buttons.push({
+        id: "autoaim",
+        angle: hasRetarget ? -60 : 30,
+        icon: <Focus size={18} className={tower.mortarAutoAim ? "text-green-300" : "text-amber-300"} />,
+        label: tower.mortarAutoAim ? "Auto-Aim" : "Manual",
+        onClick: () => onToggleMissileAutoAim(tower.id),
+        borderColor: tower.mortarAutoAim ? "rgba(0,200,100,0.6)" : "rgba(180,140,60,0.5)",
+        glowColor: tower.mortarAutoAim ? "rgba(0,200,100,0.3)" : "rgba(180,140,60,0.2)",
+        bgGradient: tower.mortarAutoAim
+          ? "linear-gradient(180deg, #1a3a1a 0%, #0a200a 100%)"
+          : "linear-gradient(180deg, #3a2a1a 0%, #1a1008 100%)",
+      });
+    }
+    if (hasRetarget) {
+      buttons.push({
+        id: "retarget",
+        angle: 60,
+        icon: <Crosshair size={18} className="text-orange-300" />,
+        label: "Retarget",
+        onClick: () => onRetargetMissile!(tower.id),
+        borderColor: "rgba(255,100,0,0.6)",
+        glowColor: "rgba(255,100,0,0.3)",
+        bgGradient: "linear-gradient(180deg, #4a2000 0%, #2a1000 100%)",
+      });
+    }
+  }
+
+  // --- Station deploy/rally button (bottom-right) ---
+  if (tower.type === "station") {
+    buttons.push({
+      id: "deploy",
+      angle: 30,
+      icon: <Flag size={18} className="text-emerald-200" />,
+      label: "Deploy",
+      onClick: () => onRallyTroops?.(tower.id),
+      borderColor: "rgba(52,211,153,0.65)",
+      glowColor: "rgba(52,211,153,0.3)",
+      bgGradient: "linear-gradient(180deg, #064e3b 0%, #022c22 100%)",
+    });
+  }
+
+  // --- Sell button (bottom-left) ---
+  buttons.push({
+    id: "sell",
+    angle: 150,
+    icon: <CircleDollarSign size={18} className="text-amber-300" />,
+    label: "Sell",
+    subLabel: `+${sellValue} PP`,
+    onClick: () => sellTower(tower.id),
+    borderColor: GOLD.border35,
+    glowColor: "rgba(180,140,60,0.25)",
+    bgGradient: `linear-gradient(180deg, ${PANEL.bgWarmLight} 0%, ${PANEL.bgDark} 100%)`,
+  });
+
+  return buttons;
+}
+
+// ---------------------------------------------------------------------------
+// Elaborate Ring (SVG)
+// ---------------------------------------------------------------------------
+
+function ElaborateRing({
+  cx,
+  cy,
+  radius,
+  buttons,
+}: {
+  cx: number;
+  cy: number;
+  radius: number;
+  buttons: ActionButtonDef[];
+}) {
+  const outerR = radius + 12;
+  const pad = 4;
+  const size = (outerR + pad) * 2;
+  const c = size / 2;
+
+  return (
+    <svg
+      className="fixed pointer-events-none"
+      style={{
+        left: cx - size / 2,
+        top: cy - size / 2,
+        width: size,
+        height: size,
+        zIndex: 199,
+      }}
+      viewBox={`0 0 ${size} ${size}`}
+    >
+      <defs>
+        <filter id="ringGlow">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* Glow halo behind main ring */}
+      <circle
+        cx={c}
+        cy={c}
+        r={radius}
+        fill="none"
+        stroke="rgba(255,215,0,0.12)"
+        strokeWidth="8"
+        filter="url(#ringGlow)"
+      />
+
+      {/* Outer spinning dashed ring */}
+      <circle
+        cx={c}
+        cy={c}
+        r={outerR}
+        fill="none"
+        stroke="rgba(255,215,0,0.18)"
+        strokeWidth="1"
+        strokeDasharray="10 6"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from={`0 ${c} ${c}`}
+          to={`360 ${c} ${c}`}
+          dur="30s"
+          repeatCount="indefinite"
+        />
+      </circle>
+
+      {/* Counter-rotating inner dashed ring */}
+      <circle
+        cx={c}
+        cy={c}
+        r={radius - 6}
+        fill="none"
+        stroke="rgba(255,215,0,0.1)"
+        strokeWidth="0.75"
+        strokeDasharray="4 8"
+      >
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from={`360 ${c} ${c}`}
+          to={`0 ${c} ${c}`}
+          dur="20s"
+          repeatCount="indefinite"
+        />
+      </circle>
+
+      {/* Main solid ring */}
+      <circle
+        cx={c}
+        cy={c}
+        r={radius}
+        fill="none"
+        stroke="rgba(255,215,0,0.5)"
+        strokeWidth="2.5"
+      />
+
+      {/* Inner subtle ring */}
+      <circle
+        cx={c}
+        cy={c}
+        r={radius - 4}
+        fill="none"
+        stroke="rgba(255,215,0,0.15)"
+        strokeWidth="1"
+      />
+
+      {/* Decorative tick marks at button positions */}
+      {buttons.map((btn) => {
+        const rad = btn.angle * DEG_TO_RAD;
+        const inner = radius - 5;
+        const outer = radius + 5;
+        return (
+          <line
+            key={btn.id}
+            x1={c + Math.cos(rad) * inner}
+            y1={c + Math.sin(rad) * inner}
+            x2={c + Math.cos(rad) * outer}
+            y2={c + Math.sin(rad) * outer}
+            stroke="rgba(255,215,0,0.4)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        );
+      })}
+
+      {/* Small ornamental dots between ticks */}
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => {
+        const rad = deg * DEG_TO_RAD;
+        return (
+          <circle
+            key={deg}
+            cx={c + Math.cos(rad) * radius}
+            cy={c + Math.sin(rad) * radius}
+            r={1.5}
+            fill="rgba(255,215,0,0.2)"
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
 
 export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   tower,
@@ -66,6 +374,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   onClose,
   onRetargetMissile,
   onToggleMissileAutoAim,
+  onRallyTroops,
 }) => {
   const sizes = useResponsiveSizes();
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -85,10 +394,8 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const towerData = TOWER_DATA[tower.type];
   const towerStatsDef = TOWER_STATS[tower.type];
 
-  // Get upgrade cost from towerStats.ts
   const upgradeCost = getUpgradeCost(tower.type, tower.level, tower.upgrade);
 
-  // Calculate sell value based on invested costs
   const baseCost = TOWER_DATA[tower.type].cost;
   const level2Cost = tower.level >= 2 ? (TOWER_STATS[tower.type]?.levels[2]?.cost || 150) : 0;
   const level3Cost = tower.level >= 3 ? (TOWER_STATS[tower.type]?.levels[3]?.cost || 250) : 0;
@@ -96,30 +403,21 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const totalInvested = baseCost + level2Cost + level3Cost + level4Cost;
   const sellValue = Math.round(totalInvested * 0.7);
 
-  // Get current stats using calculateTowerStats (without external buffs for base display)
   const baseStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, 1, 1);
-
-  // Apply tower's current buffs for buffed display
   const rangeBoost = tower.rangeBoost || 1;
   const damageBoost = tower.damageBoost || 1;
   const attackSpeedBoost = tower.attackSpeedBoost || 1;
   const buffedStats = calculateTowerStats(tower.type, tower.level, tower.upgrade, rangeBoost, damageBoost);
-
-  // Get next level stats for comparison
   const nextStats = tower.level < 4
     ? calculateTowerStats(tower.type, tower.level + 1, undefined, 1, 1)
     : null;
-
-  // Get upgrade path stats for level 3 preview
   const upgradeAStats = tower.level === 3 ? calculateTowerStats(tower.type, 4, "A", 1, 1) : null;
   const upgradeBStats = tower.level === 3 ? calculateTowerStats(tower.type, 4, "B", 1, 1) : null;
 
-  // Determine if stats are being buffed
   const hasRangeBuff = rangeBoost > 1;
   const hasDamageBuff = damageBoost > 1;
   const hasAttackSpeedBuff = attackSpeedBoost > 1;
 
-  // Calculate debuff modifiers from active debuffs
   const now = Date.now();
   const activeDebuffs = tower.debuffs?.filter(d => d.until > now) || [];
   let attackSpeedDebuff = 0;
@@ -136,7 +434,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
   const hasDamageDebuff = damageDebuff > 0;
   const hasRangeDebuff = rangeDebuff > 0;
 
-  // Build dynamic stats array based on what this tower has
+  // ---- Stats array ----
   const statsToShow: Array<{
     key: string;
     label: string;
@@ -155,19 +453,15 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     debuffColorClass: string;
   }> = [];
 
-  // Damage
   if (baseStats.damage > 0) {
     const debuffedDamage = hasDamageDebuff ? Math.floor(buffedStats.damage * (1 - damageDebuff)) : undefined;
     statsToShow.push({
-      key: "damage",
-      label: "Damage",
-      icon: <Swords size={14} />,
+      key: "damage", label: "Damage", icon: <Swords size={14} />,
       value: Math.floor(baseStats.damage),
       buffedValue: hasDamageBuff ? Math.floor(buffedStats.damage) : undefined,
       debuffedValue: debuffedDamage,
       nextValue: nextStats && nextStats.damage > baseStats.damage ? Math.floor(nextStats.damage) : undefined,
-      isBoosted: hasDamageBuff,
-      isDebuffed: hasDamageDebuff,
+      isBoosted: hasDamageBuff, isDebuffed: hasDamageDebuff,
       boostAmount: hasDamageBuff ? Math.round((damageBoost - 1) * 100) : undefined,
       debuffAmount: hasDamageDebuff ? Math.round(damageDebuff * 100) : undefined,
       colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
@@ -176,19 +470,15 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Range  
   if (baseStats.range > 0 && tower.type !== "club") {
     const debuffedRange = hasRangeDebuff ? Math.floor(buffedStats.range * (1 - rangeDebuff)) : undefined;
     statsToShow.push({
-      key: "range",
-      label: "Range",
-      icon: <Radar size={14} />,
+      key: "range", label: "Range", icon: <Radar size={14} />,
       value: Math.floor(baseStats.range),
       buffedValue: hasRangeBuff ? Math.floor(buffedStats.range) : undefined,
       debuffedValue: debuffedRange,
       nextValue: nextStats && nextStats.range > baseStats.range ? Math.floor(nextStats.range) : undefined,
-      isBoosted: hasRangeBuff,
-      isDebuffed: hasRangeDebuff,
+      isBoosted: hasRangeBuff, isDebuffed: hasRangeDebuff,
       boostAmount: hasRangeBuff ? Math.round((rangeBoost - 1) * 100) : undefined,
       debuffAmount: hasRangeDebuff ? Math.round(rangeDebuff * 100) : undefined,
       colorClass: "bg-blue-950/60 border-blue-800/50 text-blue-400",
@@ -197,7 +487,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Attack Speed (debuff makes it SLOWER, so increase the time value)
   if (baseStats.attackSpeed > 0) {
     const buffedAttackSpeedMs = hasAttackSpeedBuff
       ? Math.max(60, Math.floor(baseStats.attackSpeed / attackSpeedBoost))
@@ -207,21 +496,14 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
       ? Math.floor(speedBaseForDebuff / (1 - attackSpeedDebuff))
       : undefined;
     statsToShow.push({
-      key: "speed",
-      label: "Speed",
-      icon: <Gauge size={14} />,
+      key: "speed", label: "Speed", icon: <Gauge size={14} />,
       value: `${(baseStats.attackSpeed / 1000).toFixed(1)}s`,
-      buffedValue: buffedAttackSpeedMs
-        ? `${(buffedAttackSpeedMs / 1000).toFixed(2)}s`
-        : undefined,
+      buffedValue: buffedAttackSpeedMs ? `${(buffedAttackSpeedMs / 1000).toFixed(2)}s` : undefined,
       debuffedValue: debuffedSpeed ? `${(debuffedSpeed / 1000).toFixed(1)}s` : undefined,
       nextValue: nextStats && nextStats.attackSpeed !== baseStats.attackSpeed && nextStats.attackSpeed > 0
         ? `${(nextStats.attackSpeed / 1000).toFixed(1)}s` : undefined,
-      isBoosted: hasAttackSpeedBuff,
-      isDebuffed: hasSpeedDebuff,
-      boostAmount: hasAttackSpeedBuff
-        ? Math.round((attackSpeedBoost - 1) * 100)
-        : undefined,
+      isBoosted: hasAttackSpeedBuff, isDebuffed: hasSpeedDebuff,
+      boostAmount: hasAttackSpeedBuff ? Math.round((attackSpeedBoost - 1) * 100) : undefined,
       debuffAmount: hasSpeedDebuff ? Math.round(attackSpeedDebuff * 100) : undefined,
       colorClass: "bg-green-950/60 border-green-800/50 text-green-400",
       buffColorClass: "bg-indigo-950/60 border-indigo-500/70 text-indigo-300",
@@ -229,12 +511,9 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Slow Amount
   if (baseStats.slowAmount && baseStats.slowAmount > 0) {
     statsToShow.push({
-      key: "slow",
-      label: "Slow",
-      icon: <Snowflake size={14} />,
+      key: "slow", label: "Slow", icon: <Snowflake size={14} />,
       value: `${Math.round(baseStats.slowAmount * 100)}%`,
       nextValue: nextStats && nextStats.slowAmount && nextStats.slowAmount > baseStats.slowAmount
         ? `${Math.round(nextStats.slowAmount * 100)}%` : undefined,
@@ -244,12 +523,9 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Chain Targets - Changed to "Targets" with Users icon
   if (baseStats.chainTargets && baseStats.chainTargets > 1) {
     statsToShow.push({
-      key: "chain",
-      label: "Targets",
-      icon: <Users size={14} />,
+      key: "chain", label: "Targets", icon: <Users size={14} />,
       value: `${baseStats.chainTargets}`,
       nextValue: nextStats && nextStats.chainTargets && nextStats.chainTargets > baseStats.chainTargets
         ? `${nextStats.chainTargets}` : undefined,
@@ -259,12 +535,9 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Splash Radius
   if (baseStats.splashRadius && baseStats.splashRadius > 0) {
     statsToShow.push({
-      key: "splash",
-      label: "Splash",
-      icon: <Target size={14} />,
+      key: "splash", label: "Splash", icon: <Target size={14} />,
       value: Math.floor(baseStats.splashRadius),
       colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
       buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
@@ -272,12 +545,9 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Stun Chance (for towers like Blizzard)
   if (baseStats.stunChance && baseStats.stunChance > 0) {
     statsToShow.push({
-      key: "stun",
-      label: "Freeze",
-      icon: <Snowflake size={14} />,
+      key: "stun", label: "Freeze", icon: <Snowflake size={14} />,
       value: `${Math.round(baseStats.stunChance * 100)}%`,
       colorClass: "bg-indigo-950/60 border-indigo-800/50 text-indigo-400",
       buffColorClass: "bg-indigo-950/60 border-indigo-500/70 text-indigo-400",
@@ -285,12 +555,9 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Burn Damage (for towers like Flamethrower)
   if (baseStats.burnDamage && baseStats.burnDamage > 0) {
     statsToShow.push({
-      key: "burn",
-      label: "Burn",
-      icon: <Flame size={14} />,
+      key: "burn", label: "Burn", icon: <Flame size={14} />,
       value: `${baseStats.burnDamage}/s`,
       colorClass: "bg-red-950/60 border-red-800/50 text-red-400",
       buffColorClass: "bg-red-950/60 border-red-500/70 text-red-400",
@@ -298,14 +565,11 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Deploy Range (Station only)
   if (tower.type === "station") {
     const baseDeployRange = TOWER_DATA.station.spawnRange || 180;
     const boostedDeployRange = Math.floor(baseDeployRange * rangeBoost);
     statsToShow.push({
-      key: "deployRange",
-      label: "Deploy",
-      icon: <Fence size={14} />,
+      key: "deployRange", label: "Deploy", icon: <Fence size={14} />,
       value: baseDeployRange,
       buffedValue: hasRangeBuff ? boostedDeployRange : undefined,
       isBoosted: hasRangeBuff,
@@ -317,29 +581,21 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     });
   }
 
-  // Support tower buffs - Check the active upgrade path for buffs
   const activeUpgradeStats = tower.level === 4 && tower.upgrade ? towerStatsDef?.upgrades?.[tower.upgrade]?.stats : null;
 
-  // For non-club towers, show aura buffs in main stats grid
-  // For club towers, we'll show them in the Paw Points Generation box instead
   if (tower.type !== "club") {
     if (activeUpgradeStats?.rangeBuff) {
       statsToShow.push({
-        key: "rangeBuff",
-        label: "Range Aura",
-        icon: <Radar size={14} />,
+        key: "rangeBuff", label: "Range Aura", icon: <Radar size={14} />,
         value: `+${Math.round(activeUpgradeStats.rangeBuff * 100)}%`,
         colorClass: "bg-cyan-950/60 border-cyan-800/50 text-cyan-400",
         buffColorClass: "bg-cyan-950/60 border-cyan-500/70 text-cyan-400",
         debuffColorClass: "bg-rose-950/60 border-rose-500/70 text-rose-400",
       });
     }
-
     if (activeUpgradeStats?.damageBuff) {
       statsToShow.push({
-        key: "damageBuff",
-        label: "DMG Aura",
-        icon: <TrendingUp size={14} />,
+        key: "damageBuff", label: "DMG Aura", icon: <TrendingUp size={14} />,
         value: `+${Math.round(activeUpgradeStats.damageBuff * 100)}%`,
         colorClass: "bg-orange-950/60 border-orange-800/50 text-orange-400",
         buffColorClass: "bg-orange-950/60 border-orange-500/70 text-orange-400",
@@ -348,24 +604,32 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     }
   }
 
-  // Determine grid columns based on stat count
   const gridCols = statsToShow.length <= 2 ? 2 : statsToShow.length <= 3 ? 3 : 4;
 
-  // Circle cutout centered on the tower's visual center (towers render upward from screenPos)
-  const towerVisualOffsetY = 45 * cameraZoom;
+  // ---- Circle geometry ----
+  const towerVisualOffsetY = 35 * cameraZoom;
   const circleCenterX = screenPos.x;
   const circleCenterY = screenPos.y + towerVisualOffsetY;
   const circleRadius = Math.round(70 * cameraZoom);
+  const btnOrbitRadius = circleRadius;
+  const btnSize = 44;
   const panelCircleGap = 8;
 
+  // ---- Action buttons ----
+  const circleButtons = buildActionButtons(
+    tower, towerData as (typeof TOWER_DATA)[keyof typeof TOWER_DATA],
+    upgradeCost, sellValue, pawPoints,
+    upgradeTower, sellTower, onToggleMissileAutoAim, onRetargetMissile, onRallyTroops,
+  );
+
+  // ---- Panel positioning ----
   const panelWidth = 235;
   let panelX = screenPos.x - panelWidth / 2;
   panelX = Math.max(10, Math.min(panelX, window.innerWidth - panelWidth - 10));
 
-  // Position panel above or below the circle cutout so it never hides the tower
-  const aboveAnchorY = circleCenterY - circleRadius - panelCircleGap;
-  const belowAnchorY = circleCenterY + circleRadius + panelCircleGap;
-  const estimatedHeight = measuredHeight || 330;
+  const aboveAnchorY = circleCenterY - circleRadius - panelCircleGap - 28;
+  const belowAnchorY = circleCenterY + circleRadius + panelCircleGap + 28;
+  const estimatedHeight = measuredHeight || 280;
   const fitsAbove = aboveAnchorY - estimatedHeight >= 10;
   const flipBelow = !fitsAbove;
   const panelY = flipBelow ? belowAnchorY : aboveAnchorY;
@@ -374,9 +638,12 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
     ? window.innerHeight - belowAnchorY - 10
     : aboveAnchorY - 10;
 
+  // =========================================================================
+  // RENDER
+  // =========================================================================
   return (
     <>
-      {/* Semi-transparent overlay with circular cutout around the tower */}
+      {/* Semi-transparent overlay with circular cutout */}
       <div
         className="fixed inset-0"
         style={{
@@ -385,20 +652,34 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
           pointerEvents: "none",
         }}
       />
-      {/* Golden circle ring highlighting the tower */}
-      <div
-        className="fixed rounded-full"
-        style={{
-          zIndex: 199,
-          left: circleCenterX - circleRadius,
-          top: circleCenterY - circleRadius,
-          width: circleRadius * 2,
-          height: circleRadius * 2,
-          border: "2px solid rgba(255, 215, 0, 0.5)",
-          boxShadow: "0 0 12px rgba(255, 215, 0, 0.25), inset 0 0 8px rgba(255, 215, 0, 0.1)",
-          pointerEvents: "none",
-        }}
-      />
+
+      {/* Elaborate SVG ring */}
+      <ElaborateRing cx={circleCenterX} cy={circleCenterY} radius={circleRadius} buttons={circleButtons} />
+
+      {/* Circle action buttons */}
+      {circleButtons.map((btn) => {
+        const rad = btn.angle * DEG_TO_RAD;
+        const bx = circleCenterX + Math.cos(rad) * btnOrbitRadius;
+        const by = circleCenterY + Math.sin(rad) * btnOrbitRadius;
+        return (
+          <CircleActionButton
+            key={btn.id}
+            x={bx}
+            y={by}
+            size={btnSize}
+            icon={btn.icon}
+            label={btn.label}
+            subLabel={btn.subLabel}
+            onClick={btn.onClick}
+            disabled={btn.disabled}
+            borderColor={btn.borderColor}
+            glowColor={btn.glowColor}
+            bgGradient={btn.bgGradient}
+          />
+        );
+      })}
+
+      {/* Info panel (stats only) */}
       <div
         ref={panelRef}
         className="fixed pointer-events-none"
@@ -418,6 +699,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
         >
           {/* Inner ghost border */}
           <div className="absolute inset-[2px] rounded-[7px] pointer-events-none" style={{ border: '1px solid ' + GOLD.innerBorder10 }} />
+
           <button
             onClick={() => onClose()}
             className="absolute top-1.5 right-1.5 p-0.5 rounded-md transition-all hover:scale-110 z-20"
@@ -426,7 +708,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             <X size={12} className="text-amber-400" />
           </button>
 
-          {/* Header with tower name, level and description */}
+          {/* Header */}
           <div className="flex items-center gap-2 mb-1.5 pb-1.5" style={{ borderBottom: '1px solid ' + GOLD.border25 }}>
             <div className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: PANEL.bgDeep, border: '1.5px solid ' + GOLD.border30 }}>
               <TowerSprite type={tower.type} size={sizes.towerIconLarge} level={tower.level} />
@@ -453,7 +735,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
           </div>
 
-          {/* Buff Banner with icons */}
+          {/* Buff Banner */}
           {(hasRangeBuff || hasDamageBuff || hasAttackSpeedBuff) && (
             <div className="mb-1.5 p-1 bg-gradient-to-r from-cyan-950/70 to-orange-950/70 rounded-md border border-yellow-600/40 flex items-center justify-center gap-1.5 flex-wrap">
               <Sparkles size={10} className="text-yellow-400" />
@@ -481,11 +763,11 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
           )}
 
-          {/* Debuff Banner - show active debuffs from enemies */}
+          {/* Debuff Banner */}
           {tower.debuffs && tower.debuffs.filter(d => d.until > Date.now()).length > 0 && (() => {
-            const activeDebuffs = tower.debuffs!.filter(d => d.until > Date.now());
-            const disableDebuff = activeDebuffs.find(d => d.type === 'disable');
-            const otherDebuffs = activeDebuffs.filter(d => d.type !== 'disable');
+            const liveDebuffs = tower.debuffs!.filter(d => d.until > Date.now());
+            const disableDebuff = liveDebuffs.find(d => d.type === 'disable');
+            const otherDebuffs = liveDebuffs.filter(d => d.type !== 'disable');
 
             const consolidatedDebuffs = new Map<string, { type: string; intensity: number; until: number }>();
             for (const d of otherDebuffs) {
@@ -504,7 +786,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
 
             return (
               <>
-                {/* Prominent disable banner */}
                 {disableDebuff && (() => {
                   const flavor = ((disableDebuff as typeof disableDebuff & { disableFlavor?: string }).disableFlavor || 'stun') as keyof typeof disableThemes;
                   const theme = disableThemes[flavor] || disableThemes.stun;
@@ -543,7 +824,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                   );
                 })()}
 
-                {/* Other debuffs */}
                 {consolidatedDebuffs.size > 0 && (
                   <div className="mb-1.5 p-1 bg-gradient-to-r from-red-950/70 to-rose-950/70 rounded-md border border-red-600/50">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
@@ -575,7 +855,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             );
           })()}
 
-          {/* Dynamic Stats Grid - Combat towers */}
+          {/* Stats Grid */}
           {statsToShow.length > 0 && (
             <div className={`grid gap-1 mb-1.5`} style={{ gridTemplateColumns: `repeat(${gridCols}, 1fr)` }}>
               {statsToShow.map((stat) => {
@@ -654,7 +934,6 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
                 Earns <span className="font-bold text-amber-300">+{baseStats.income || 8} PP</span> every <span className="font-bold text-amber-300">{(baseStats.incomeInterval || 8000) / 1000}s</span>
               </div>
 
-              {/* Level 4 Eating Club Aura Stats - shown inside Paw Points box */}
               {tower.level === 4 && tower.upgrade && activeUpgradeStats && (activeUpgradeStats.rangeBuff || activeUpgradeStats.damageBuff) && (
                 <div className="pt-1 border-t border-amber-700/40">
                   <div className="grid grid-cols-1 gap-1.5">
@@ -682,7 +961,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
           )}
 
-          {/* Dinky Station Troop Display with description */}
+          {/* Dinky Station Troop Display */}
           {tower.type === "station" && (() => {
             const getTroopKey = () => {
               if (tower.level === 1) return "footsoldier";
@@ -731,85 +1010,9 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             );
           })()}
 
-          {/* Upgrade buttons */}
-          <div className="flex gap-1.5 mb-1.5">
-            {(tower.level === 1 || tower.level === 2) && (
-              <button
-                onClick={(e) => { e.stopPropagation(); upgradeTower(tower.id); }}
-                disabled={pawPoints < upgradeCost}
-                className={`flex-1 py-1.5 rounded-md font-bold transition-all border ${pawPoints >= upgradeCost
-                  ? "bg-gradient-to-b from-green-600 to-green-800 border-green-500 hover:from-green-500 hover:to-green-700"
-                  : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                  }`}
-              >
-                <div className="flex items-center justify-center gap-1 text-[10px]">
-                  <ArrowUp size={12} />
-                  <span>Upgrade to Level {tower.level + 1}</span>
-                </div>
-                <div className="text-[8px] flex items-center justify-center gap-0.5 mt-0.5 opacity-90">
-                  <Coins size={9} /> {upgradeCost} PP
-                </div>
-              </button>
-            )}
-
-            {tower.level === 3 && (() => {
-              // Unique icons for each tower's upgrade paths
-              const upgradeIcons: Record<string, { A: React.ReactNode; B: React.ReactNode }> = {
-                cannon: { A: <Repeat size={12} />, B: <Flame size={12} /> },
-                arch: { A: <BowArrow size={12} />, B: <Music size={12} /> },
-                lab: { A: <Focus size={12} />, B: <Zap size={12} /> },
-                library: { A: <Mountain size={12} />, B: <Snowflake size={12} /> },
-                station: { A: <CircleDot size={12} />, B: <Shield size={12} /> },
-                club: { A: <Amphora size={12} />, B: <UserPlus size={12} /> },
-              };
-              const icons = upgradeIcons[tower.type] || { A: <Zap size={10} />, B: <Shield size={10} /> };
-
-              return (
-                <>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); upgradeTower(tower.id, "A"); }}
-                    disabled={pawPoints < upgradeCost}
-                    className={`flex-1 py-1.5 rounded-md font-bold transition-all border ${pawPoints >= upgradeCost
-                      ? "bg-gradient-to-b from-red-600 to-red-800 border-red-500 hover:from-red-500 hover:to-red-700"
-                      : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                      }`}
-                  >
-                    <div className="text-[9px] text-red-200 font-bold truncate px-0.5 flex items-center justify-center gap-0.5">
-                      {icons.A} {towerData.upgrades.A.name}
-                    </div>
-                    <div className="text-[7px] flex items-center justify-center gap-0.5 mt-0.5 opacity-90">
-                      <Coins size={8} /> {upgradeCost} PP
-                    </div>
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); upgradeTower(tower.id, "B"); }}
-                    disabled={pawPoints < upgradeCost}
-                    className={`flex-1 py-1.5 rounded-md font-bold transition-all border ${pawPoints >= upgradeCost
-                      ? "bg-gradient-to-b from-blue-600 to-blue-800 border-blue-500 hover:from-blue-500 hover:to-blue-700"
-                      : "bg-stone-800 border-stone-600 opacity-50 cursor-not-allowed"
-                      }`}
-                  >
-                    <div className="text-[9px] text-blue-200 font-bold truncate px-0.5 flex items-center justify-center gap-0.5">
-                      {icons.B} {towerData.upgrades.B.name}
-                    </div>
-                    <div className="text-[7px] flex items-center justify-center gap-0.5 mt-0.5 opacity-90">
-                      <Coins size={8} /> {upgradeCost} PP
-                    </div>
-                  </button>
-                </>
-              );
-            })()}
-
-            {tower.level === 4 && (
-              <div className="flex-1 py-1.5 text-center text-amber-400 text-[9px] bg-amber-950/30 rounded-md border border-amber-700 flex items-center justify-center gap-1">
-                <Crown size={12} /> Maximum Level
-              </div>
-            )}
-          </div>
-
           {/* Upgrade Preview for Level 3 */}
           {tower.level === 3 && upgradeAStats && upgradeBStats && (
-            <div className="grid grid-cols-2 gap-1 text-[7px] mb-1.5">
+            <div className="grid grid-cols-2 gap-1 text-[7px]">
               <div className="bg-red-950/40 p-1 rounded-md border border-red-800/40">
                 <div className="text-red-300 text-center">{towerData.upgrades.A.effect}</div>
               </div>
@@ -819,60 +1022,7 @@ export const TowerUpgradePanel: React.FC<TowerUpgradePanelProps> = ({
             </div>
           )}
 
-          {/* Missile Battery controls (4A): Auto-Aim toggle + Retarget side by side */}
-          {tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && (
-            <div className="flex gap-1 mb-1">
-              {onToggleMissileAutoAim && (
-                <button
-                  onClick={() => onToggleMissileAutoAim(tower.id)}
-                  className="flex-1 py-1 rounded-md transition-all flex items-center justify-center gap-0.5 text-[9px]"
-                  style={{
-                    background: tower.mortarAutoAim
-                      ? `linear-gradient(180deg, #1a3a1a 0%, #0a200a 100%)`
-                      : `linear-gradient(180deg, #3a2a1a 0%, #1a1008 100%)`,
-                    border: tower.mortarAutoAim
-                      ? "1px solid rgba(0, 200, 100, 0.55)"
-                      : "1px solid rgba(150, 100, 50, 0.4)",
-                    color: tower.mortarAutoAim ? "#66ffaa" : "#aa9977",
-                  }}
-                >
-                  <Focus size={10} />
-                  <span>{tower.mortarAutoAim ? "Auto-Aim" : "Manual"}</span>
-                </button>
-              )}
-              {onRetargetMissile && !tower.mortarAutoAim && (
-                <button
-                  onClick={() => onRetargetMissile(tower.id)}
-                  className="flex-1 py-1 rounded-md transition-all flex items-center justify-center gap-0.5 text-[9px]"
-                  style={{
-                    background: `linear-gradient(180deg, #4a2000 0%, #2a1000 100%)`,
-                    border: "1px solid rgba(255, 100, 0, 0.45)",
-                    color: "#ffaa66",
-                  }}
-                >
-                  <Crosshair size={10} />
-                  <span>Retarget</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Sell button */}
-          <button
-            onClick={() => sellTower(tower.id)}
-            className="w-full py-1 hover:from-red-700 hover:to-red-900 hover:border-red-500 rounded-md transition-all flex items-center justify-center gap-1 text-[9px]"
-            style={{ background: `linear-gradient(180deg, ${PANEL.bgWarmLight} 0%, ${PANEL.bgWarmMid} 100%)`, border: '1px solid ' + GOLD.border25 }}
-          >
-            <CircleDollarSign size={10} />
-            <span>Sell Tower</span>
-            <span className="text-amber-400 font-bold">+{sellValue} PP</span>
-          </button>
-
-          <div className="flex items-center justify-center mt-0.5 text-[7px] text-amber-400/40">
-            <span>Sell Value based on total investment.</span>
-          </div>
-
-          {/* Arrow pointer - points toward the tower */}
+          {/* Arrow pointer */}
           {!flipBelow ? (
             <div className="absolute left-1/2 -bottom-2 transform -translate-x-1/2">
               <div className="w-3 h-3 transform rotate-45" style={{ background: PANEL.bgDark, borderBottom: `1px solid ${GOLD.border35}`, borderRight: `1px solid ${GOLD.border35}` }} />

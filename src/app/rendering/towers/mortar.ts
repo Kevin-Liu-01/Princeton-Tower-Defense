@@ -26,7 +26,7 @@ export function renderMortarTower(
   const isMissile = level === 4 && tower.upgrade === "A";
   const isEmber = level === 4 && tower.upgrade === "B";
   const baseW = 38 + level * 5;
-  const depotH = (22 + level * 10) * 0.35;
+  const depotH = (22 + level * 10) * 0.42;
   const rot = tower.rotation || 0;
   const cosR = Math.cos(rot);
   const sinR = Math.sin(rot);
@@ -56,44 +56,50 @@ export function renderMortarTower(
 
   // ========== GROUND SHADOW (multi-layered, soft edge) ==========
   {
-    const shX = screenPos.x + 1.5 * zoom;
-    const shY = screenPos.y + 10 * zoom;
-    const shW = baseW * 0.65 * zoom;
-    const shH = baseW * 0.3 * zoom;
+    const shX = screenPos.x + 2 * zoom;
+    const shY = screenPos.y + 12 * zoom;
+    const shW = baseW * 0.72 * zoom;
+    const shH = baseW * 0.34 * zoom;
     // Outer soft penumbra
     const penGrad = ctx.createRadialGradient(
       shX,
       shY,
-      shW * 0.4,
+      shW * 0.35,
       shX,
       shY,
-      shW * 1.15,
+      shW * 1.25,
     );
-    penGrad.addColorStop(0, "rgba(0,0,0,0.22)");
-    penGrad.addColorStop(0.6, "rgba(0,0,0,0.12)");
+    penGrad.addColorStop(0, "rgba(0,0,0,0.30)");
+    penGrad.addColorStop(0.5, "rgba(0,0,0,0.16)");
+    penGrad.addColorStop(0.8, "rgba(0,0,0,0.06)");
     penGrad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = penGrad;
     ctx.beginPath();
-    ctx.ellipse(shX, shY, shW * 1.15, shH * 1.15, 0, 0, Math.PI * 2);
+    ctx.ellipse(shX, shY, shW * 1.25, shH * 1.25, 0, 0, Math.PI * 2);
     ctx.fill();
     // Core umbra
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.fillStyle = "rgba(0,0,0,0.36)";
     ctx.beginPath();
-    ctx.ellipse(shX, shY, shW * 0.85, shH * 0.85, 0, 0, Math.PI * 2);
+    ctx.ellipse(shX, shY, shW * 0.8, shH * 0.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Contact shadow (darkest, smallest)
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath();
+    ctx.ellipse(shX, shY, shW * 0.5, shH * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
     // Fire-time ground illumination (warm tint when firing)
     if (timeSinceFire < 600) {
-      const fGlow = (1 - timeSinceFire / 600) * 0.06;
+      const fGlow = (1 - timeSinceFire / 600) * 0.1;
       ctx.fillStyle = `rgba(255,140,40,${fGlow})`;
       ctx.beginPath();
-      ctx.ellipse(shX, shY - 2 * zoom, shW * 1.3, shH * 1.3, 0, 0, Math.PI * 2);
+      ctx.ellipse(shX, shY - 2 * zoom, shW * 1.4, shH * 1.4, 0, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
   // ========== HEX-PRISM FOUNDATION WALL (sandbag replacement) ==========
   const wallR = (baseW + 12) * 0.5 * zoom;
-  const wallH = 6 * zoom;
+  const wallH = 8 * zoom;
   const wallBaseY = screenPos.y + 6 * zoom;
   const wallVerts = generateIsoHexVertices(isoOff, wallR, hexSides);
   const wallNormals = computeHexSideNormals(0, hexSides);
@@ -104,23 +110,21 @@ export function renderMortarTower(
   for (const i of wallSorted) {
     const ni = (i + 1) % hexSides;
     const n = wallNormals[i];
-    const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
-    // Level-dependent wall material (dark iron/gunmetal base)
+    const bright = Math.max(0, Math.min(1, 0.1 + (n + 1) * 0.45));
     let r: number, g: number, b: number;
     if (level >= 3) {
-      r = Math.floor(48 + bright * 35);
-      g = Math.floor(44 + bright * 32);
-      b = Math.floor(52 + bright * 30);
+      r = Math.floor(36 + bright * 52);
+      g = Math.floor(32 + bright * 46);
+      b = Math.floor(44 + bright * 48);
     } else if (level >= 2) {
-      r = Math.floor(44 + bright * 38);
-      g = Math.floor(46 + bright * 40);
-      b = Math.floor(52 + bright * 36);
+      r = Math.floor(32 + bright * 54);
+      g = Math.floor(36 + bright * 56);
+      b = Math.floor(44 + bright * 52);
     } else {
-      r = Math.floor(50 + bright * 40);
-      g = Math.floor(50 + bright * 38);
-      b = Math.floor(54 + bright * 34);
+      r = Math.floor(40 + bright * 55);
+      g = Math.floor(42 + bright * 50);
+      b = Math.floor(46 + bright * 44);
     }
-    // Wall face gradient (lighter top to darker bottom for depth)
     const wallGrad = ctx.createLinearGradient(
       wallTop.x + (wallVerts[i].x + wallVerts[ni].x) * 0.5,
       wallTop.y + (wallVerts[i].y + wallVerts[ni].y) * 0.5,
@@ -129,12 +133,12 @@ export function renderMortarTower(
     );
     wallGrad.addColorStop(
       0,
-      `rgb(${Math.min(255, r + 8)},${Math.min(255, g + 6)},${Math.min(255, b + 5)})`,
+      `rgb(${Math.min(255, r + 18)},${Math.min(255, g + 16)},${Math.min(255, b + 14)})`,
     );
-    wallGrad.addColorStop(0.6, `rgb(${r},${g},${b})`);
+    wallGrad.addColorStop(0.5, `rgb(${r},${g},${b})`);
     wallGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, r - 10)},${Math.max(0, g - 8)},${Math.max(0, b - 6)})`,
+      `rgb(${Math.max(0, r - 18)},${Math.max(0, g - 14)},${Math.max(0, b - 12)})`,
     );
     ctx.fillStyle = wallGrad;
     ctx.beginPath();
@@ -144,9 +148,19 @@ export function renderMortarTower(
     ctx.lineTo(wallTop.x + wallVerts[i].x, wallTop.y + wallVerts[i].y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.06})`;
-    ctx.lineWidth = 0.6 * zoom;
+    ctx.strokeStyle = `rgba(0,0,0,${0.14 + bright * 0.1})`;
+    ctx.lineWidth = 0.7 * zoom;
     ctx.stroke();
+
+    // Rim highlight on lit wall edges
+    if (bright > 0.6) {
+      ctx.strokeStyle = `rgba(160,170,180,${(bright - 0.6) * 0.2})`;
+      ctx.lineWidth = 0.35 * zoom;
+      ctx.beginPath();
+      ctx.moveTo(wallTop.x + wallVerts[ni].x, wallTop.y + wallVerts[ni].y);
+      ctx.lineTo(wallBot.x + wallVerts[ni].x, wallBot.y + wallVerts[ni].y);
+      ctx.stroke();
+    }
 
     if (n < -0.5) continue;
     const mx = (wallVerts[i].x + wallVerts[ni].x) * 0.5;
@@ -464,14 +478,14 @@ export function renderMortarTower(
     }
   }
   const wallCapColor =
-    level >= 3 ? "#5a5662" : level >= 2 ? "#585c64" : "#606268";
+    level >= 3 ? "#525060" : level >= 2 ? "#505868" : "#58606a";
   drawHexCap(
     ctx,
     wallTop,
     wallVerts,
     wallCapColor,
-    "rgba(0,0,0,0.1)",
-    0.6 * zoom,
+    "rgba(0,0,0,0.16)",
+    0.7 * zoom,
   );
 
   // ========== HEX-PRISM CONCRETE PLATFORM ==========
@@ -487,8 +501,20 @@ export function renderMortarTower(
   for (const i of platSorted) {
     const ni = (i + 1) % hexSides;
     const n = platNormals[i];
-    const bright = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.32));
-    ctx.fillStyle = `rgb(${Math.floor(50 + bright * 30)},${Math.floor(50 + bright * 30)},${Math.floor(58 + bright * 24)})`;
+    const bright = Math.max(0, Math.min(1, 0.1 + (n + 1) * 0.45));
+    const pR = Math.floor(38 + bright * 42);
+    const pG = Math.floor(40 + bright * 44);
+    const pB = Math.floor(48 + bright * 38);
+    const platGrad = ctx.createLinearGradient(
+      platTop.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
+      platTop.y,
+      platBot.x + (platVerts[i].x + platVerts[ni].x) * 0.5,
+      platBot.y,
+    );
+    platGrad.addColorStop(0, `rgb(${Math.min(255, pR + 14)},${Math.min(255, pG + 12)},${Math.min(255, pB + 10)})`);
+    platGrad.addColorStop(0.5, `rgb(${pR},${pG},${pB})`);
+    platGrad.addColorStop(1, `rgb(${Math.max(0, pR - 16)},${Math.max(0, pG - 14)},${Math.max(0, pB - 10)})`);
+    ctx.fillStyle = platGrad;
     ctx.beginPath();
     ctx.moveTo(platBot.x + platVerts[i].x, platBot.y + platVerts[i].y);
     ctx.lineTo(platBot.x + platVerts[ni].x, platBot.y + platVerts[ni].y);
@@ -496,11 +522,11 @@ export function renderMortarTower(
     ctx.lineTo(platTop.x + platVerts[i].x, platTop.y + platVerts[i].y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeStyle = `rgba(0,0,0,${0.14 + bright * 0.08})`;
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
   }
-  drawHexCap(ctx, platTop, platVerts, "#4a4a52", "rgba(0,0,0,0.1)", 0.5 * zoom);
+  drawHexCap(ctx, platTop, platVerts, "#484858", "rgba(0,0,0,0.14)", 0.6 * zoom);
 
   // ========== ANCHOR BOLTS at hex vertices ==========
   ctx.fillStyle = "#7a7a82";
@@ -597,22 +623,21 @@ export function renderMortarTower(
   for (const i of depotSorted) {
     const ni = (i + 1) % hexSides;
     const n = depotNormals[i];
-    const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+    const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
     let dr: number, dg: number, db: number;
     if (level >= 3) {
-      dr = Math.floor(48 + bright * 42);
-      dg = Math.floor(42 + bright * 38);
-      db = Math.floor(30 + bright * 24);
+      dr = Math.floor(38 + bright * 56);
+      dg = Math.floor(32 + bright * 48);
+      db = Math.floor(22 + bright * 34);
     } else if (level >= 2) {
-      dr = Math.floor(52 + bright * 45);
-      dg = Math.floor(44 + bright * 38);
-      db = Math.floor(28 + bright * 22);
+      dr = Math.floor(40 + bright * 60);
+      dg = Math.floor(34 + bright * 50);
+      db = Math.floor(20 + bright * 32);
     } else {
-      dr = Math.floor(58 + bright * 48);
-      dg = Math.floor(48 + bright * 38);
-      db = Math.floor(28 + bright * 22);
+      dr = Math.floor(46 + bright * 62);
+      dg = Math.floor(38 + bright * 50);
+      db = Math.floor(22 + bright * 30);
     }
-    // Depot face gradient (top-lit for volume)
     const depotGrad = ctx.createLinearGradient(
       depotTop.x + (depotVerts[i].x + depotVerts[ni].x) * 0.5,
       depotTop.y + (depotVerts[i].y + depotVerts[ni].y) * 0.5,
@@ -621,12 +646,12 @@ export function renderMortarTower(
     );
     depotGrad.addColorStop(
       0,
-      `rgb(${Math.min(255, dr + 10)},${Math.min(255, dg + 8)},${Math.min(255, db + 5)})`,
+      `rgb(${Math.min(255, dr + 18)},${Math.min(255, dg + 16)},${Math.min(255, db + 12)})`,
     );
-    depotGrad.addColorStop(0.5, `rgb(${dr},${dg},${db})`);
+    depotGrad.addColorStop(0.45, `rgb(${dr},${dg},${db})`);
     depotGrad.addColorStop(
       1,
-      `rgb(${Math.max(0, dr - 12)},${Math.max(0, dg - 10)},${Math.max(0, db - 6)})`,
+      `rgb(${Math.max(0, dr - 20)},${Math.max(0, dg - 16)},${Math.max(0, db - 10)})`,
     );
     ctx.fillStyle = depotGrad;
     ctx.beginPath();
@@ -818,14 +843,14 @@ export function renderMortarTower(
     }
   }
   const depotCapColor =
-    level >= 3 ? "#5a5240" : level >= 2 ? "#605840" : "#6a5a40";
+    level >= 3 ? "#524a38" : level >= 2 ? "#584e36" : "#625434";
   drawHexCap(
     ctx,
     depotTop,
     depotVerts,
     depotCapColor,
-    "rgba(0,0,0,0.1)",
-    0.5 * zoom,
+    "rgba(0,0,0,0.14)",
+    0.6 * zoom,
   );
 
   // Depot metal band at top
@@ -1750,26 +1775,27 @@ export function renderMortarTower(
   const steamCount = 1 + level;
   for (let s = 0; s < steamCount; s++) {
     const st = time * 0.8 + s * 1.7;
-    const sx = screenPos.x + Math.sin(st * 1.3) * 5 * zoom;
-    const sy = topY - 15 * zoom - (st % 3) * 6 * zoom;
-    const sa = Math.max(0, 0.1 - ((st % 3) / 3) * 0.1);
-    ctx.fillStyle = `rgba(180, 160, 140, ${sa})`;
+    const sx = screenPos.x + Math.sin(st * 1.3) * 6 * zoom;
+    const sy = topY - 18 * zoom - (st % 3) * 7 * zoom;
+    const sa = Math.max(0, 0.14 - ((st % 3) / 3) * 0.14);
+    ctx.fillStyle = `rgba(160, 150, 140, ${sa})`;
     ctx.beginPath();
-    ctx.arc(sx, sy, (2 + (st % 3) * 1.5) * zoom, 0, Math.PI * 2);
+    ctx.arc(sx, sy, (2.5 + (st % 3) * 2) * zoom, 0, Math.PI * 2);
     ctx.fill();
   }
-  if (timeSinceFire < 2000) {
-    const smokeT = timeSinceFire / 2000;
-    for (let p = 0; p < 3; p++) {
-      const ang = time * 2 + p * 2.09;
-      const dist = (5 + smokeT * 12) * zoom;
-      const smokeA = Math.max(0, (1 - smokeT) * 0.12);
-      ctx.fillStyle = `rgba(140, 130, 120, ${smokeA})`;
+  if (timeSinceFire < 2500) {
+    const smokeT = timeSinceFire / 2500;
+    for (let p = 0; p < 4; p++) {
+      const ang = time * 2 + p * 1.57;
+      const dist = (6 + smokeT * 15) * zoom;
+      const smokeA = Math.max(0, (1 - smokeT) * 0.16);
+      const smokeSize = (3 + smokeT * 4 + p * 0.5) * zoom;
+      ctx.fillStyle = `rgba(130, 120, 110, ${smokeA})`;
       ctx.beginPath();
       ctx.arc(
         screenPos.x + Math.cos(ang) * dist * 0.4,
-        topY - 8 * zoom - smokeT * 10 * zoom + Math.sin(ang) * dist * 0.2,
-        (3 + smokeT * 3) * zoom,
+        topY - 10 * zoom - smokeT * 14 * zoom + Math.sin(ang) * dist * 0.2,
+        smokeSize,
         0,
         Math.PI * 2,
       );
@@ -2026,7 +2052,7 @@ export function drawMortarCradleArm(
     for (const i of sorted) {
       const ni = (i + 1) % hexSides;
       const n = sideNormals[i];
-      const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+      const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
       const fR = Math.floor(dk.r + (lt.r - dk.r) * bright);
       const fG = Math.floor(dk.g + (lt.g - dk.g) * bright);
       const fB = Math.floor(dk.b + (lt.b - dk.b) * bright);
@@ -2041,12 +2067,12 @@ export function drawMortarCradleArm(
       );
       faceGrad.addColorStop(
         0,
-        `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`,
+        `rgb(${Math.min(255, fR + 20)},${Math.min(255, fG + 18)},${Math.min(255, fB + 16)})`,
       );
-      faceGrad.addColorStop(0.4, `rgb(${fR},${fG},${fB})`);
+      faceGrad.addColorStop(0.35, `rgb(${fR},${fG},${fB})`);
       faceGrad.addColorStop(
         1,
-        `rgb(${Math.max(0, fR - 14)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`,
+        `rgb(${Math.max(0, fR - 22)},${Math.max(0, fG - 18)},${Math.max(0, fB - 14)})`,
       );
 
       ctx.fillStyle = faceGrad;
@@ -2063,8 +2089,8 @@ export function drawMortarCradleArm(
       ctx.lineTo(top.center.x + top.verts[i].x, top.center.y + top.verts[i].y);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = `rgba(0,0,0,${0.06 + bright * 0.08})`;
-      ctx.lineWidth = 0.5 * zoom;
+      ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.12})`;
+      ctx.lineWidth = 0.6 * zoom;
       ctx.stroke();
 
       if (n < -0.5) continue;
@@ -2656,31 +2682,31 @@ export function renderMortarStandardBarrel(
   const isoOff: IsoOffFn = (dx, dy) => ({ x: dx, y: dy * ISO_Y_RATIO });
 
   const fireTiltBoost =
-    timeSinceFire < 600 ? (1 - timeSinceFire / 600) * 0.12 : 0;
-  const tiltStr = 0.25 + level * 0.03 + fireTiltBoost;
+    timeSinceFire < 600 ? (1 - timeSinceFire / 600) * 0.15 : 0;
+  const tiltStr = 0.32 + level * 0.04 + fireTiltBoost;
   const tierRecoils = [recoilBase * 0.15, recoilMid * 0.35, recoilTip * 0.65];
 
   const tiers = [
     {
       r: (17 + level * 2.5) * zoom,
       h: (8 + level) * zoom,
-      dark: level >= 3 ? "#28222a" : level >= 2 ? "#262a30" : "#2a2a2e",
-      mid: level >= 3 ? "#4a4048" : level >= 2 ? "#3e4450" : "#48484e",
-      light: level >= 3 ? "#6a5a60" : level >= 2 ? "#586070" : "#686870",
+      dark: level >= 3 ? "#1c1520" : level >= 2 ? "#1a2230" : "#1e2228",
+      mid: level >= 3 ? "#3e3044" : level >= 2 ? "#34405a" : "#384450",
+      light: level >= 3 ? "#5e4c58" : level >= 2 ? "#526880" : "#5a6878",
     },
     {
       r: (13 + level * 2) * zoom,
       h: (8 + level) * zoom,
-      dark: level >= 3 ? "#2e2830" : level >= 2 ? "#2a2e36" : "#303034",
-      mid: level >= 3 ? "#524850" : level >= 2 ? "#444a58" : "#505056",
-      light: level >= 3 ? "#786870" : level >= 2 ? "#666e80" : "#747478",
+      dark: level >= 3 ? "#221a28" : level >= 2 ? "#1e2838" : "#222830",
+      mid: level >= 3 ? "#463a4e" : level >= 2 ? "#3c4c66" : "#404a58",
+      light: level >= 3 ? "#6c5c68" : level >= 2 ? "#5e7492" : "#667280",
     },
     {
       r: (10 + level * 1.5) * zoom,
       h: (6 + level * 0.5) * zoom,
-      dark: level >= 3 ? "#342e38" : level >= 2 ? "#30343c" : "#35353a",
-      mid: level >= 3 ? "#5e5460" : level >= 2 ? "#4e5466" : "#5a5a60",
-      light: level >= 3 ? "#887880" : level >= 2 ? "#767e90" : "#808086",
+      dark: level >= 3 ? "#28202e" : level >= 2 ? "#242e3e" : "#282e34",
+      mid: level >= 3 ? "#504458" : level >= 2 ? "#465876" : "#4e5862",
+      light: level >= 3 ? "#7e6a78" : level >= 2 ? "#6e82a0" : "#748088",
     },
   ];
 
@@ -2743,7 +2769,7 @@ export function renderMortarStandardBarrel(
     const kneeY = (footY + attachPt.y) * (level >= 2 ? 0.55 : 0.6);
 
     ctx.strokeStyle =
-      level >= 3 ? "#484050" : level >= 2 ? "#3e424e" : "#444448";
+      level >= 3 ? "#3a3048" : level >= 2 ? "#2e3648" : "#363840";
     ctx.lineWidth = legThick * zoom;
     ctx.lineCap = "round";
     ctx.beginPath();
@@ -2752,14 +2778,14 @@ export function renderMortarStandardBarrel(
     ctx.stroke();
 
     ctx.strokeStyle =
-      level >= 3 ? "#6a6270" : level >= 2 ? "#586068" : "#606066";
+      level >= 3 ? "#5a5068" : level >= 2 ? "#4a5468" : "#505460";
     ctx.lineWidth = rodThick * zoom;
     ctx.beginPath();
     ctx.moveTo(kneeX, kneeY);
     ctx.lineTo(attachPt.x + (li % 2 === 0 ? -3 : 3) * zoom, attachPt.y);
     ctx.stroke();
 
-    ctx.fillStyle = level >= 3 ? "#484050" : level >= 2 ? "#3e4248" : "#444448";
+    ctx.fillStyle = level >= 3 ? "#3a3048" : level >= 2 ? "#303a48" : "#383a40";
     ctx.beginPath();
     ctx.ellipse(
       footX,
@@ -2772,7 +2798,7 @@ export function renderMortarStandardBarrel(
     );
     ctx.fill();
 
-    ctx.fillStyle = level >= 3 ? "#6a6270" : level >= 2 ? "#5a5e68" : "#585860";
+    ctx.fillStyle = level >= 3 ? "#5a5068" : level >= 2 ? "#4c5668" : "#505460";
     ctx.beginPath();
     ctx.arc(kneeX, kneeY, (level >= 2 ? 2.8 : 2) * zoom, 0, Math.PI * 2);
     ctx.fill();
@@ -2926,12 +2952,12 @@ export function renderMortarStandardBarrel(
     const carrD = (level >= 3 ? 6 : level >= 2 ? 5 : 4) * zoom;
     const platThick = (level >= 3 ? 3 : 2.5) * zoom;
     const metalDark =
-      level >= 3 ? "#28242e" : level >= 2 ? "#262a32" : "#2c2c30";
+      level >= 3 ? "#1e1824" : level >= 2 ? "#1a222e" : "#222428";
     const metalMid =
-      level >= 3 ? "#48424e" : level >= 2 ? "#3e4450" : "#484850";
+      level >= 3 ? "#3e3448" : level >= 2 ? "#344058" : "#3c4250";
     const metalLight =
-      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068";
-    const accent = level >= 3 ? "#c9a227" : level >= 2 ? "#8a4428" : "#6a3a28";
+      level >= 3 ? "#605470" : level >= 2 ? "#506480" : "#58626e";
+    const accent = level >= 3 ? "#d4aa2a" : level >= 2 ? "#944830" : "#7a4230";
 
     // Perpendicular direction to barrel aim for carriage width
     const perpX = -sinR;
@@ -3246,12 +3272,12 @@ export function renderMortarStandardBarrel(
     const cradleThick = (level >= 3 ? 10 : level >= 2 ? 9 : 7.5) * zoom;
     const cradleW = carrWB * (level >= 3 ? 1.35 : level >= 2 ? 1.28 : 1.2);
     const metalDarkB =
-      level >= 3 ? "#28242e" : level >= 2 ? "#262a32" : "#2c2c30";
+      level >= 3 ? "#1e1824" : level >= 2 ? "#1a222e" : "#222428";
     const metalMidB =
-      level >= 3 ? "#48424e" : level >= 2 ? "#3e4450" : "#484850";
+      level >= 3 ? "#3e3448" : level >= 2 ? "#344058" : "#3c4250";
     const metalLightB =
-      level >= 3 ? "#6a6270" : level >= 2 ? "#5a6270" : "#606068";
-    const accentB = level >= 3 ? "#c9a227" : level >= 2 ? "#8a4428" : "#6a3a28";
+      level >= 3 ? "#605470" : level >= 2 ? "#506480" : "#58626e";
+    const accentB = level >= 3 ? "#d4aa2a" : level >= 2 ? "#944830" : "#7a4230";
     const totalRecoilEst = tierRecoils[0] + tierRecoils[1] + tierRecoils[2];
     drawMortarCradleArm(ctx, {
       side: farSide,
@@ -3292,11 +3318,10 @@ export function renderMortarStandardBarrel(
     const sideNormals = computeHexSideNormals(cosR, hexSides);
     const sorted = sortSidesByDepth(sideNormals);
 
-    // Draw hex faces with per-level surface detail
     for (const i of sorted) {
       const ni = (i + 1) % hexSides;
       const n = sideNormals[i];
-      const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
+      const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
       const dr = parseInt(tier.dark.slice(1, 3), 16);
       const dg = parseInt(tier.dark.slice(3, 5), 16);
       const db = parseInt(tier.dark.slice(5, 7), 16);
@@ -3307,7 +3332,6 @@ export function renderMortarStandardBarrel(
       const fG = Math.floor(dg + (lg - dg) * bright);
       const fB = Math.floor(db + (lb - db) * bright);
 
-      // Barrel face gradient: lighter at top (illuminated), darker at bottom (shadow)
       const faceMidX = (hexVerts[i].x + hexVerts[ni].x) * 0.5;
       const faceMidY = (hexVerts[i].y + hexVerts[ni].y) * 0.5;
       const faceGrad = ctx.createLinearGradient(
@@ -3318,12 +3342,12 @@ export function renderMortarStandardBarrel(
       );
       faceGrad.addColorStop(
         0,
-        `rgb(${Math.min(255, fR + 12)},${Math.min(255, fG + 10)},${Math.min(255, fB + 8)})`,
+        `rgb(${Math.min(255, fR + 22)},${Math.min(255, fG + 20)},${Math.min(255, fB + 18)})`,
       );
-      faceGrad.addColorStop(0.4, `rgb(${fR},${fG},${fB})`);
+      faceGrad.addColorStop(0.35, `rgb(${fR},${fG},${fB})`);
       faceGrad.addColorStop(
         1,
-        `rgb(${Math.max(0, fR - 15)},${Math.max(0, fG - 12)},${Math.max(0, fB - 10)})`,
+        `rgb(${Math.max(0, fR - 24)},${Math.max(0, fG - 20)},${Math.max(0, fB - 16)})`,
       );
       ctx.fillStyle = faceGrad;
       ctx.beginPath();
@@ -3333,10 +3357,19 @@ export function renderMortarStandardBarrel(
       ctx.lineTo(topCenter.x + hexVerts[i].x, topCenter.y + hexVerts[i].y);
       ctx.closePath();
       ctx.fill();
-      // Edge lines with variable opacity based on facing
-      ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.08})`;
-      ctx.lineWidth = 0.6 * zoom;
+      ctx.strokeStyle = `rgba(0,0,0,${0.14 + bright * 0.12})`;
+      ctx.lineWidth = 0.7 * zoom;
       ctx.stroke();
+
+      // Specular rim highlight on brightest edges
+      if (bright > 0.65) {
+        ctx.strokeStyle = `rgba(180,200,220,${(bright - 0.65) * 0.25})`;
+        ctx.lineWidth = 0.4 * zoom;
+        ctx.beginPath();
+        ctx.moveTo(topCenter.x + hexVerts[ni].x, topCenter.y + hexVerts[ni].y);
+        ctx.lineTo(botCenter.x + hexVerts[ni].x, botCenter.y + hexVerts[ni].y);
+        ctx.stroke();
+      }
 
       // Heat tint on barrel faces (subtle orange toward the muzzle end)
       if (ti >= 1) {
@@ -3610,7 +3643,7 @@ export function renderMortarStandardBarrel(
     const bandH = (level >= 3 ? 2.5 : 2) * zoom;
     const bandBot: Pt = { x: topCenter.x, y: topCenter.y + bandH };
     const bandColor =
-      level >= 3 ? "#c9a227" : level >= 2 ? "#7a8090" : "#6a5a4a";
+      level >= 3 ? "#d4aa2a" : level >= 2 ? "#6a7a96" : "#6a5844";
     drawHexBand(
       ctx,
       hexVerts,
@@ -4495,9 +4528,9 @@ export function renderMortarStandardBarrel(
 
   // ===== BARREL BORE GLOW (inner heat that intensifies toward the top) =====
   {
-    const glowIntensity = level >= 3 ? 0.35 : level >= 2 ? 0.25 : 0.15;
+    const glowIntensity = level >= 3 ? 0.42 : level >= 2 ? 0.32 : 0.2;
     const fireBoost =
-      timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.5 : 0;
+      timeSinceFire < 3000 ? (1 - timeSinceFire / 3000) * 0.6 : 0;
     const pulse = Math.sin(time * 1.5) * 0.05;
     const totalGlow = glowIntensity + fireBoost + pulse;
 
@@ -4517,13 +4550,14 @@ export function renderMortarStandardBarrel(
         const gcx = (botCenter.x + topCenter.x) * 0.5;
         const gcy = (botCenter.y + topCenter.y) * 0.5;
         const glowR = tier.r * 0.6;
+        const glowTiltA = Math.atan2(bNy, bNx);
         const grad = ctx.createRadialGradient(gcx, gcy, 0, gcx, gcy, glowR);
         grad.addColorStop(0, `rgba(255, 140, 40, ${tierGlowTop * 0.4})`);
         grad.addColorStop(0.5, `rgba(255, 80, 10, ${tierGlowTop * 0.2})`);
         grad.addColorStop(1, `rgba(255, 40, 0, 0)`);
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.ellipse(gcx, gcy, glowR, glowR * 0.6, 0, 0, Math.PI * 2);
+        ctx.ellipse(gcx, gcy, glowR, glowR * 0.6, glowTiltA, 0, Math.PI * 2);
         ctx.fill();
       }
       glowCumH += tier.h;
@@ -4556,20 +4590,21 @@ export function renderMortarStandardBarrel(
       );
       mGrad.addColorStop(1, `rgba(200, 50, 0, 0)`);
       ctx.fillStyle = mGrad;
+      const mouthTiltA = Math.atan2(bNy, bNx);
       ctx.beginPath();
       ctx.ellipse(
         mouthPt.x,
         mouthPt.y,
         mouthR,
         mouthR * 0.5,
-        0,
+        mouthTiltA,
         0,
         Math.PI * 2,
       );
       ctx.fill();
     }
 
-    // Heat shimmer effect above barrel mouth (distortion illusion via oscillating transparent blobs)
+    // Heat shimmer effect above barrel mouth (rises along barrel axis)
     if (totalGlow > 0.12 || timeSinceFire < 4000) {
       const shimmerStr = Math.min(
         0.05,
@@ -4577,15 +4612,17 @@ export function renderMortarStandardBarrel(
           (timeSinceFire < 4000 ? (1 - timeSinceFire / 4000) * 0.04 : 0),
       );
       const shimmerCount = level >= 3 ? 5 : level >= 2 ? 4 : 3;
+      const shimTiltA = Math.atan2(bNy, bNx);
       for (let si = 0; si < shimmerCount; si++) {
         const shimPhase = time * (1.5 + si * 0.4) + si * 2.7;
-        const shimX = mouthPt.x + Math.sin(shimPhase) * 3 * zoom;
+        const shimDist = (3 + si * 3) * zoom;
+        const shimX = mouthPt.x + bAx * shimDist + Math.sin(shimPhase) * 3 * zoom;
         const shimY =
-          mouthPt.y - (3 + si * 3) * zoom + Math.cos(shimPhase * 0.7) * zoom;
+          mouthPt.y + bAy * shimDist + Math.cos(shimPhase * 0.7) * zoom;
         const shimR = (2 + si * 0.8) * zoom;
         ctx.fillStyle = `rgba(255,200,100,${shimmerStr * (1 - si / shimmerCount)})`;
         ctx.beginPath();
-        ctx.ellipse(shimX, shimY, shimR, shimR * 0.5, 0, 0, Math.PI * 2);
+        ctx.ellipse(shimX, shimY, shimR, shimR * 0.5, shimTiltA, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -5701,19 +5738,35 @@ export function renderMortarStandardBarrel(
     if (legDepths[li] >= medianDepth) drawLeg(li);
   }
 
-  // ===== TOP RIM =====
+  // ===== TOP RIM (tilted to follow barrel axis) =====
   const topTier = tiers[2];
   const rimPt = posAtFrac(1.0, cumRecoil);
   const rimR = (topTier.r / zoom + (level >= 3 ? 2.5 : 2)) * zoom;
-  const rimVerts = generateIsoHexVertices(isoOff, rimR, hexSides);
-  const rimInnerVerts = generateIsoHexVertices(
-    isoOff,
-    topTier.r * 0.92,
-    hexSides,
-  );
+  const muzzleTiltAngle = Math.atan2(bNy, bNx);
+
+  // Generate hex vertices in the plane perpendicular to the barrel axis
+  const genTiltedVerts = (r: number): Pt[] => {
+    const verts: Pt[] = [];
+    for (let vi = 0; vi < hexSides; vi++) {
+      const a = (vi / hexSides) * Math.PI * 2;
+      const lateral = Math.cos(a) * r;
+      const depth = Math.sin(a) * r * ISO_Y_RATIO;
+      verts.push({
+        x: lateral * bNx + depth * bAx,
+        y: lateral * bNy + depth * bAy,
+      });
+    }
+    return verts;
+  };
+
+  const rimVerts = genTiltedVerts(rimR);
+  const rimInnerVerts = genTiltedVerts(topTier.r * 0.92);
   const rimNormals = computeHexSideNormals(cosR, hexSides);
   const rimBandH = (level >= 3 ? 3 : 2.5) * zoom;
-  const rimBotPt: Pt = { x: rimPt.x, y: rimPt.y + rimBandH };
+  const rimBotPt: Pt = {
+    x: rimPt.x - bAx * rimBandH,
+    y: rimPt.y - bAy * rimBandH,
+  };
   const rimColor = level >= 3 ? "#c9a227" : level >= 2 ? "#6a7080" : "#585860";
   const rimSorted = sortSidesByDepth(rimNormals);
   for (const i of rimSorted) {
@@ -5779,7 +5832,7 @@ export function renderMortarStandardBarrel(
       }
     }
 
-    // Hot core after firing
+    // Hot core after firing (tilted ellipse matching barrel orientation)
     if (timeSinceFire < 2500) {
       const coreT = timeSinceFire / 2500;
       const coreAlpha = (1 - coreT) * 0.55;
@@ -5798,7 +5851,15 @@ export function renderMortarStandardBarrel(
       coreGrad.addColorStop(1, "rgba(200, 30, 0, 0)");
       ctx.fillStyle = coreGrad;
       ctx.beginPath();
-      ctx.ellipse(rimPt.x, rimPt.y, coreR, coreR * 0.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        rimPt.x,
+        rimPt.y,
+        coreR,
+        coreR * 0.5,
+        muzzleTiltAngle,
+        0,
+        Math.PI * 2,
+      );
       ctx.fill();
     }
   }
@@ -5956,11 +6017,20 @@ export function renderMortarEmberTurret(
   for (const i of ePlatSorted) {
     const ni = (i + 1) % hexSides;
     const n = ePlatNormals[i];
-    const bright = Math.max(0, Math.min(1, 0.3 + (n + 1) * 0.35));
-    const cr = Math.floor(58 + bright * 50);
-    const cg = Math.floor(28 + bright * 22);
-    const cb = Math.floor(12 + bright * 10);
-    ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
+    const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
+    const cr = Math.floor(44 + bright * 64);
+    const cg = Math.floor(20 + bright * 30);
+    const cb = Math.floor(8 + bright * 16);
+    const ePlatGrad = ctx.createLinearGradient(
+      ePlatTop.x + (ePlatVerts[i].x + ePlatVerts[ni].x) * 0.5,
+      ePlatTop.y,
+      ePlatBot.x + (ePlatVerts[i].x + ePlatVerts[ni].x) * 0.5,
+      ePlatBot.y,
+    );
+    ePlatGrad.addColorStop(0, `rgb(${Math.min(255, cr + 16)},${Math.min(255, cg + 10)},${Math.min(255, cb + 8)})`);
+    ePlatGrad.addColorStop(0.45, `rgb(${cr},${cg},${cb})`);
+    ePlatGrad.addColorStop(1, `rgb(${Math.max(0, cr - 18)},${Math.max(0, cg - 10)},${Math.max(0, cb - 6)})`);
+    ctx.fillStyle = ePlatGrad;
     ctx.beginPath();
     ctx.moveTo(ePlatBot.x + ePlatVerts[i].x, ePlatBot.y + ePlatVerts[i].y);
     ctx.lineTo(ePlatBot.x + ePlatVerts[ni].x, ePlatBot.y + ePlatVerts[ni].y);
@@ -5968,8 +6038,8 @@ export function renderMortarEmberTurret(
     ctx.lineTo(ePlatTop.x + ePlatVerts[i].x, ePlatTop.y + ePlatVerts[i].y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.15)";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeStyle = `rgba(0,0,0,${0.12 + bright * 0.1})`;
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
 
     if (n > -0.5) {
@@ -7078,9 +7148,18 @@ export function renderMortarMissileSilo(
   for (const i of mPlatSorted) {
     const ni = (i + 1) % hexSides;
     const n = mPlatNormals[i];
-    const bright = Math.max(0, Math.min(1, 0.35 + (n + 1) * 0.32));
-    const cv = Math.floor(36 + bright * 36);
-    ctx.fillStyle = `rgb(${cv},${cv + 6},${cv + 2})`;
+    const bright = Math.max(0, Math.min(1, 0.08 + (n + 1) * 0.46));
+    const cv = Math.floor(26 + bright * 50);
+    const mPlatGrad = ctx.createLinearGradient(
+      mPlatTop.x + (mPlatVerts[i].x + mPlatVerts[ni].x) * 0.5,
+      mPlatTop.y,
+      mPlatBot.x + (mPlatVerts[i].x + mPlatVerts[ni].x) * 0.5,
+      mPlatBot.y,
+    );
+    mPlatGrad.addColorStop(0, `rgb(${cv + 14},${cv + 20},${cv + 12})`);
+    mPlatGrad.addColorStop(0.45, `rgb(${cv},${cv + 6},${cv + 2})`);
+    mPlatGrad.addColorStop(1, `rgb(${Math.max(0, cv - 14)},${Math.max(0, cv - 8)},${Math.max(0, cv - 10)})`);
+    ctx.fillStyle = mPlatGrad;
     ctx.beginPath();
     ctx.moveTo(mPlatBot.x + mPlatVerts[i].x, mPlatBot.y + mPlatVerts[i].y);
     ctx.lineTo(mPlatBot.x + mPlatVerts[ni].x, mPlatBot.y + mPlatVerts[ni].y);
@@ -7088,17 +7167,17 @@ export function renderMortarMissileSilo(
     ctx.lineTo(mPlatTop.x + mPlatVerts[i].x, mPlatTop.y + mPlatVerts[i].y);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 0.5 * zoom;
+    ctx.strokeStyle = `rgba(0,0,0,${0.1 + bright * 0.1})`;
+    ctx.lineWidth = 0.6 * zoom;
     ctx.stroke();
   }
   drawHexCap(
     ctx,
     mPlatTop,
     mPlatVerts,
-    "#3a4238",
-    "rgba(0,0,0,0.1)",
-    0.5 * zoom,
+    "#323e30",
+    "rgba(0,0,0,0.14)",
+    0.6 * zoom,
   );
 
   // Hex gear ring
