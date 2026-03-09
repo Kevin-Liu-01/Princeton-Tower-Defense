@@ -3387,7 +3387,8 @@ export function renderMissileTargetReticle(
   ctx: CanvasRenderingContext2D,
   screenPos: Position,
   zoom: number,
-  timeSeconds: number
+  timeSeconds: number,
+  cooldownProgress?: number,
 ): void {
   renderTargetingReticle(ctx, {
     x: screenPos.x,
@@ -3396,7 +3397,9 @@ export function renderMissileTargetReticle(
     time: timeSeconds,
     color: RETICLE_COLORS.orange,
     glowColor: { r: 255, g: 80, b: 0 },
-    radius: 48,
+    radius: 62,
+    cooldownProgress,
+    cooldownColor: RETICLE_COLORS.orange,
   });
 }
 

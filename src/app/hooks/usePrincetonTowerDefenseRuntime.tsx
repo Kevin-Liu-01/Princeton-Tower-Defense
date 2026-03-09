@@ -2182,7 +2182,8 @@ export function usePrincetonTowerDefenseRuntime() {
 
       // B2. SENTINEL NEXUS: Locked-coordinate lightning strike every 10 seconds.
       if (sentinelNexuses.length > 0) {
-        const strikeIntervalMs = 10000;
+        const baseStrikeIntervalMs = 10000;
+        const strikeIntervalMs = gameSpeed > 0 ? baseStrikeIntervalMs / gameSpeed : baseStrikeIntervalMs;
         const strikeRadius = 140;
         const strikeDamage = 240;
         const sentinelKeys = new Set<string>();
@@ -2195,7 +2196,7 @@ export function usePrincetonTowerDefenseRuntime() {
           const strikeKey = getSpecialTowerKey(nexus);
           sentinelKeys.add(strikeKey);
           if (!nextTargets[strikeKey]) {
-            nextTargets[strikeKey] = getRandomMapTarget();
+            nextTargets[strikeKey] = gridToWorld(nexus.pos);
             targetsChanged = true;
           }
         }
@@ -7918,6 +7919,9 @@ export function usePrincetonTowerDefenseRuntime() {
     // Sentinel nexus targeting overlays — uses centralized targeting reticle with laser line.
     // When actively retargeting, the overlay follows the cursor instead of the stored position.
     const sentinelStrikeRadiusWorld = 140;
+    const sentinelSpeed = gameSpeedRef.current;
+    const sentinelVisualInterval = sentinelSpeed > 0 ? 10000 / sentinelSpeed : 10000;
+    const sentinelReticleNow = Date.now();
     const sentinelCursorPos = mousePosRef.current;
     levelSpecialTowersForRenderable.forEach((spec) => {
       if (spec.type !== "sentinel_nexus") return;
@@ -7931,20 +7935,26 @@ export function usePrincetonTowerDefenseRuntime() {
         ? { x: sentinelCursorPos.x, y: sentinelCursorPos.y }
         : toScreen(targetPos);
 
+      const lastStrike = lastSentinelStrikeRef.current.get(key) ?? 0;
+      const sentinelCooldown = lastStrike === 0
+        ? 1
+        : Math.min(1, (sentinelReticleNow - lastStrike) / sentinelVisualInterval);
+
       renderTargetingReticle(ctx, {
         x: targetScreenPos.x,
         y: targetScreenPos.y,
         zoom: cameraZoom,
         time: nowSeconds,
-        color: RETICLE_COLORS.rose,
-        glowColor: { r: 190, g: 24, b: 93 },
-        radius: 52,
+        color: RETICLE_COLORS.red,
+        glowColor: { r: 220, g: 30, b: 30 },
+        radius: 58,
         aoeRadius: sentinelStrikeRadiusWorld,
         laserLine: {
           fromX: sourceScreenPos.x,
           fromY: sourceScreenPos.y - 30 * cameraZoom,
         },
         active: isActiveTargeting,
+        cooldownProgress: sentinelCooldown,
       });
     });
 
@@ -8019,13 +8029,21 @@ export function usePrincetonTowerDefenseRuntime() {
     // 4. Missile battery target reticle (follows cursor when retargeting)
     const rMouse = mousePosRef.current;
     const activeRetargetMortarId = missileMortarTargetingIdRef.current;
+    const missileReticleNow = Date.now();
     for (const tower of towers) {
       if (tower.type === "mortar" && tower.level === 4 && tower.upgrade === "A" && tower.mortarAutoAim === false && tower.mortarTarget) {
         const isBeingRetargeted = activeRetargetMortarId === tower.id;
         const targetScreenPos = isBeingRetargeted && rMouse.x > 0 && rMouse.y > 0
           ? { x: rMouse.x, y: rMouse.y }
           : worldToScreen(tower.mortarTarget, canvas.width, canvas.height, dpr, cameraOffset, cameraZoom);
-        renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds);
+        const tStats = calculateTowerStats(tower.type, tower.level, tower.upgrade);
+        const missileSpeed = gameSpeedRef.current;
+        const cd = missileSpeed > 0
+          ? tStats.attackSpeed / (tower.attackSpeedBoost || 1) / missileSpeed
+          : tStats.attackSpeed / (tower.attackSpeedBoost || 1);
+        const elapsed = missileReticleNow - tower.lastAttack;
+        const cooldownProgress = Math.min(1, elapsed / cd);
+        renderMissileTargetReticle(ctx, targetScreenPos, cameraZoom, nowSeconds, cooldownProgress);
       }
     }
 

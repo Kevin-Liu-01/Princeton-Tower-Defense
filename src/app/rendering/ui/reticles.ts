@@ -46,7 +46,7 @@ export interface ReticleStyle {
 
 export const RETICLE_COLORS = {
   orange:   { r: 255, g: 120, b: 20 }  as ReticleColor,
-  red:      { r: 255, g: 80,  b: 60 }  as ReticleColor,
+  red:      { r: 255, g: 40,  b: 40 }  as ReticleColor,
   blue:     { r: 120, g: 180, b: 255 } as ReticleColor,
   cyan:     { r: 0,   g: 230, b: 200 } as ReticleColor,
   green:    { r: 100, g: 220, b: 140 } as ReticleColor,
@@ -268,6 +268,10 @@ export interface TargetingReticleConfig {
   aoeRadius?: number;
   laserLine?: { fromX: number; fromY: number };
   active?: boolean;
+  /** 0-1 progress toward next attack; drives the filling arc border */
+  cooldownProgress?: number;
+  /** Color for the cooldown fill arc; defaults to color */
+  cooldownColor?: ReticleColor;
 }
 
 export function renderTargetingReticle(
@@ -286,11 +290,24 @@ export function renderTargetingReticle(
     aoeRadius,
     laserLine,
     active = false,
+    cooldownProgress,
+    cooldownColor,
   } = config;
 
   const p = pulse(time, 3, 0.6, 1.0);
   const rot = time * 0.8;
-  const innerR = radius * 0.29;
+
+  // Scale radius from 70% to 100% as cooldown fills
+  const cdScale = cooldownProgress !== undefined
+    ? 0.7 + cooldownProgress * 0.3
+    : 1;
+  const r = radius * cdScale;
+  const innerR = r * 0.29;
+
+  const aboutToFire = cooldownProgress !== undefined && cooldownProgress > 0.85;
+  const fireFlash = aboutToFire
+    ? 0.5 + Math.sin(time * 18) * 0.5
+    : 0;
 
   ctx.save();
 
@@ -316,21 +333,62 @@ export function renderTargetingReticle(
     });
   }
 
-  // Radial glow
+  // Radial glow (intensifies when about to fire)
   if (showGlow) {
-    drawRadialGlow(ctx, x, y, innerR * 2, zoom, glowColor, 0.25 * p);
+    const glowAlpha = aboutToFire ? 0.35 + fireFlash * 0.25 : 0.25 * p;
+    drawRadialGlow(ctx, x, y, innerR * 2, zoom, glowColor, glowAlpha);
   }
 
-  // Outer pulsing dashed ring
-  drawIsometricEllipse(ctx, x, y, radius, zoom, {
-    strokeColor: rgba(color, 0.35 + p * 0.25),
-    lineWidth: 2,
+  // Cooldown fill arc (isometric) — a border ring that fills clockwise
+  if (cooldownProgress !== undefined && cooldownProgress > 0) {
+    const cdColor = cooldownColor ?? color;
+    const cdR = radius * 1.12;
+    const rX = cdR * zoom;
+    const rY = rX * ISO_Y_RATIO;
+    const fillAngle = cooldownProgress * Math.PI * 2;
+    const startAngle = -Math.PI / 2;
+
+    // Filled arc background (dim track)
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1, ISO_Y_RATIO);
+    ctx.beginPath();
+    ctx.arc(0, 0, rX, 0, Math.PI * 2);
+    ctx.strokeStyle = rgba(cdColor, 0.1);
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.stroke();
+
+    // Filled arc foreground
+    ctx.beginPath();
+    ctx.arc(0, 0, rX, startAngle, startAngle + fillAngle);
+    const arcAlpha = aboutToFire ? 0.7 + fireFlash * 0.3 : 0.35 + cooldownProgress * 0.35;
+    ctx.strokeStyle = rgba(cdColor, arcAlpha);
+    ctx.lineWidth = 3.5 * zoom;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.restore();
+
+    // Fill wash inside when near fire
+    if (aboutToFire) {
+      drawIsometricEllipse(ctx, x, y, r * 0.9, zoom, {
+        fillColor: rgba(glowColor, 0.06 + fireFlash * 0.08),
+      });
+    }
+  }
+
+  // Outer pulsing dashed ring (brighter when about to fire)
+  const outerAlpha = aboutToFire
+    ? 0.55 + fireFlash * 0.3
+    : 0.35 + p * 0.25;
+  drawIsometricEllipse(ctx, x, y, r, zoom, {
+    strokeColor: rgba(color, outerAlpha),
+    lineWidth: aboutToFire ? 2.5 : 2,
     dash: [6, 4],
     dashOffset: -time * 40,
   });
 
   // Inner solid ring
-  drawIsometricEllipse(ctx, x, y, radius * 0.6, zoom, {
+  drawIsometricEllipse(ctx, x, y, r * 0.6, zoom, {
     strokeColor: rgba(color, 0.45 * p),
     lineWidth: 1.5,
   });
@@ -338,7 +396,7 @@ export function renderTargetingReticle(
   // Rotating crosshair arms
   if (showRotatingArms) {
     drawRotatingCrosshairArms(
-      ctx, x, y, innerR, radius * 0.7, rot, zoom,
+      ctx, x, y, innerR, r * 0.7, rot, zoom,
       rgba(color, 0.5 + p * 0.3), 4, 1.5,
     );
   }
@@ -346,7 +404,7 @@ export function renderTargetingReticle(
   // Rotating tick marks
   if (showTicks) {
     drawRotatingTicks(
-      ctx, x, y, radius * 0.85, 6, tickCount, rot, zoom,
+      ctx, x, y, r * 0.85, 6, tickCount, rot, zoom,
       rgba(color, 0.5 * p), 2,
     );
   }
